@@ -1,12 +1,11 @@
 # LOWESS Project
 
+[![Rust](https://img.shields.io/badge/rust-1.89%2B-orange.svg)](https://www.rust-lang.org)
+[![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE-MIT)
 [![Crates.io](https://img.shields.io/crates/v/lowess.svg)](https://crates.io/crates/lowess)
 [![PyPI](https://img.shields.io/pypi/v/fastlowess.svg)](https://pypi.org/project/fastlowess/)
 [![Conda](https://anaconda.org/conda-forge/fastlowess/badges/version.svg)](https://anaconda.org/conda-forge/fastlowess)
 [![R-universe](https://thisisamirv.r-universe.dev/badges/rfastlowess)](https://thisisamirv.r-universe.dev/rfastlowess)
-[![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE-MIT)
-[![Rust](https://img.shields.io/badge/rust-1.89%2B-orange.svg)](https://www.rust-lang.org)
-[![Project Status](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 
 **High-performance LOWESS (Locally Weighted Scatterplot Smoothing) implementations** — A comprehensive monorepo providing core algorithms, parallel/GPU acceleration, and language bindings for Python and R.
 
