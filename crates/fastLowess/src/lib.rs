@@ -1356,14 +1356,13 @@ pub mod prelude {
         Adapter::{Batch, Online, Streaming},
         Backend::{CPU, GPU},
         BoundaryPolicy::{Extend, NoBoundary, Reflect, Zero},
-        KFold, LowessBuilder as Lowess, LowessError, LowessResult,
+        KFold, LOOCV, LowessBuilder as Lowess, LowessError, LowessResult,
         MergeStrategy::{Average, TakeFirst, WeightedAverage},
         RobustnessMethod::{Bisquare, Huber, Talwar},
         ScalingMethod::{MAD, MAR},
         UpdateMode::{Full, Incremental},
         WeightFunction::{Biweight, Cosine, Epanechnikov, Gaussian, Triangle, Tricube, Uniform},
         ZeroWeightFallback::{ReturnNone, ReturnOriginal, UseLocalMean},
-        LOOCV,
     };
 }
 

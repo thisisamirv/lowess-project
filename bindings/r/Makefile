@@ -19,18 +19,14 @@ install-dev-packages:
 vendor: vendor-update extract-vendor
 
 vendor-update:
-	@echo "Updating and re-vendoring crates.io dependencies..."
-	@sed -i 's|fastLowess = { path = "vendor/fastLowess",|fastLowess = {|g' src/Cargo.toml
-	@sed -i '/\[patch.crates-io\]/,/lowess = { path = "vendor\/lowess" }/d' src/Cargo.toml
-	@# Remove trailing newlines to prevent accumulation
-	@perl -i -0pe 's/\s+$$/\n/' src/Cargo.toml
+	@echo "Updating and re-vendoring crate.io dependencies..."
 	@rm -rf src/vendor src/vendor.tar.xz
-	@(cd src && cargo vendor vendor)
+	@# Temporarily isolate to allow cargo vendor to resolve from crates.io
+	@cp src/Cargo.toml src/Cargo.toml.orig
+	@echo '[workspace]' >> src/Cargo.toml
+	@(cd src && cargo vendor vendor || (mv Cargo.toml.orig Cargo.toml && exit 1))
+	@mv src/Cargo.toml.orig src/Cargo.toml
 	@./scripts/clean_checksums.py src/vendor
-	@sed -i 's|fastLowess = {|fastLowess = { path = "vendor/fastLowess",|g' src/Cargo.toml
-	@echo "" >> src/Cargo.toml
-	@echo "[patch.crates-io]" >> src/Cargo.toml
-	@echo "lowess = { path = \"vendor/lowess\" }" >> src/Cargo.toml
 	@echo "Creating vendor.tar.xz archive..."
 	@(cd src && tar --sort=name --mtime='1970-01-01 00:00:00Z' --owner=0 --group=0 --numeric-owner --xz --create --file=vendor.tar.xz vendor)
 	@rm -rf src/vendor
@@ -49,7 +45,13 @@ build: build-rust build-r
 
 build-rust:
 	@echo "Building Rust crate..."
-	@(cd src && cargo build --release)
+	@cp src/Cargo.toml src/Cargo.toml.orig
+	@echo '[workspace]' >> src/Cargo.toml
+	@# Ensure .cargo/config.toml exists if vendor exists (it should from extract-vendor)
+	@mkdir -p src/.cargo && cp src/cargo-config.toml src/.cargo/config.toml
+	@(cd src && cargo build --release || (mv Cargo.toml.orig Cargo.toml && exit 1))
+	@mv src/Cargo.toml.orig src/Cargo.toml
+	@rm -rf src/.cargo
 
 build-r: doc-r
 	@echo "Building R package tarball..."
