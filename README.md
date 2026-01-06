@@ -366,6 +366,7 @@ The `fastLowess` crate achieves massive performance gains over Python's `statsmo
 | scale_500000**        |      -      |      -      |    1-1.3x     |   0.3x    |
 
 \* **Rust (CPU)**: Shows range `Seq - Par`. E.g., `12-48x` means 12x speedup (Sequential) and 48x speedup (Parallel). Rank determined by Parallel speedup.
+
 \*\* **Large Scale**: `Rust (Serial)` is the baseline (1x).
 
 ¹ Winner (Fastest implementation)
