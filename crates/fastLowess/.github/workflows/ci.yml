@@ -1,0 +1,160 @@
+name: Rust CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  # ============================================================================
+  # BUILD JOB
+  # ============================================================================
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        feature: [cpu, gpu]
+        rust: [stable]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Setup
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.os }}-${{ matrix.feature }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      # Build
+      - name: Build (${{ matrix.feature }} feature)
+        run: cargo build --features ${{ matrix.feature }}
+
+  # ============================================================================
+  # TEST JOB
+  # ============================================================================
+  test:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        feature: [cpu]
+        rust: [stable]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Setup
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.os }}-${{ matrix.feature }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      # Execution
+      - name: Run Tests (${{ matrix.feature }} feature)
+        run: cargo test --features ${{ matrix.feature }}
+
+  # ============================================================================
+  # LINT JOB
+  # ============================================================================
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Setup
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      # Checks
+      - name: Check Formatting
+        run: cargo fmt --all -- --check
+
+      - name: Run Clippy (cpu feature)
+        run: cargo clippy --all-targets --features cpu -- -D warnings
+
+      - name: Run Clippy (gpu feature)
+        run: cargo clippy --all-targets --features gpu -- -D warnings
+
+  # ============================================================================
+  # DOCS JOB
+  # ============================================================================
+  docs:
+    name: Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Setup
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      # Build
+      - name: Check Documentation (cpu feature)
+        run: cargo doc --no-deps --features cpu
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+      - name: Check Documentation (gpu feature)
+        run: cargo doc --no-deps --features gpu
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+  # ============================================================================
+  # EXAMPLES JOB
+  # ============================================================================
+  examples:
+    name: Examples
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Setup
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      # Run examples
+      - name: Run batch_smoothing example
+        run: cargo run --example batch_smoothing --features cpu
+
+      - name: Run online_smoothing example
+        run: cargo run --example online_smoothing --features cpu
+
+      - name: Run streaming_smoothing example
+        run: cargo run --example streaming_smoothing --features cpu

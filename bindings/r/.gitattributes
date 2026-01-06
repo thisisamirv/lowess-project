@@ -1,0 +1,2 @@
+# Force LF line endings for vendored dependencies to ensure checksum consistency
+src/vendor/** text eol=lf

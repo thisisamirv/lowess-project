@@ -1,0 +1,109 @@
+name: Rust CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  # ============================================================================
+  # TEST JOB
+  # ============================================================================
+  test:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        rust: [stable]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Setup
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+
+      - name: Install Rust GNU (Windows)
+        if: matrix.os == 'windows-latest'
+        run: rustup toolchain install stable-x86_64-pc-windows-gnu
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      # Execution
+      - name: Run Tests (std)
+        shell: bash
+        run: cargo test --workspace
+
+      - name: Run Tests (no-std)
+        if: matrix.os == 'ubuntu-latest'
+        run: cargo test --no-default-features
+
+  # ============================================================================
+  # LINT JOB
+  # ============================================================================
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Setup
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      # Checks
+      - name: Check Formatting
+        run: cargo fmt --all -- --check
+
+      - name: Run Clippy (std)
+        run: cargo clippy --all-targets --features std -- -D warnings
+
+      - name: Run Clippy (no-std)
+        run: cargo clippy --all-targets --no-default-features -- -D warnings
+
+  # ============================================================================
+  # DOCS JOB
+  # ============================================================================
+  docs:
+    name: Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Setup
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      # Build
+      - name: Check Documentation (std)
+        run: cargo doc --no-deps --features std
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+      - name: Check Documentation (no-std)
+        run: cargo doc --no-deps --no-default-features
+        env:
+          RUSTDOCFLAGS: -D warnings

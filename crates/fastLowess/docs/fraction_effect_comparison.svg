@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 450" width="1200" height="450">
+  <!-- Title -->
+  <text x="600" y="30" font-family="Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="#1f2937">
+    Effect of Fraction Parameter on Smoothing
+  </text>
+  
+  <!-- Left panel: Under-smoothing (small fraction) -->
+  <g id="undersmooth-panel">
+    <!-- Panel title -->
+    <text x="200" y="65" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#374151">
+      Under-smoothing
+    </text>
+    <text x="200" y="85" font-family="Arial, sans-serif" font-size="14" text-anchor="middle" fill="#dc2626">
+      fraction = 0.2 (too small)
+    </text>
+    <text x="200" y="102" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#6b7280" font-style="italic">
+      Follows noise, overfits
+    </text>
+    
+    <!-- Axes -->
+    <line x1="50" y1="380" x2="350" y2="380" stroke="#374151" stroke-width="2"/>
+    <line x1="50" y1="380" x2="50" y2="120" stroke="#374151" stroke-width="2"/>
+    
+    <!-- Grid -->
+    <line x1="50" y1="310" x2="350" y2="310" stroke="#e5e7eb" stroke-width="1"/>
+    <line x1="50" y1="240" x2="350" y2="240" stroke="#e5e7eb" stroke-width="1"/>
+    <line x1="50" y1="170" x2="350" y2="170" stroke="#e5e7eb" stroke-width="1"/>
+    
+    <!-- Under-smoothed curve (wiggly, follows noise closely) -->
+    <path d="M 70,345 Q 85,365 100,340 T 130,330 Q 145,350 160,315 T 190,285 Q 205,300 220,265 T 250,235 Q 265,250 280,220 T 310,195 L 330,185" 
+          fill="none" stroke="#dc2626" stroke-width="3" stroke-linecap="round"/>
+    
+    <!-- Data points with significant scatter -->
+    <circle cx="70" cy="350" r="4" fill="#2563eb"/>
+    <circle cx="85" cy="365" r="4" fill="#2563eb"/>
+    <circle cx="100" cy="335" r="4" fill="#2563eb"/>
+    <circle cx="115" cy="345" r="4" fill="#2563eb"/>
+    <circle cx="130" cy="325" r="4" fill="#2563eb"/>
+    <circle cx="145" cy="355" r="4" fill="#2563eb"/>
+    <circle cx="160" cy="310" r="4" fill="#2563eb"/>
+    <circle cx="175" cy="310" r="4" fill="#2563eb"/>
+    <circle cx="190" cy="280" r="4" fill="#2563eb"/>
+    <circle cx="205" cy="305" r="4" fill="#2563eb"/>
+    <circle cx="220" cy="260" r="4" fill="#2563eb"/>
+    <circle cx="235" cy="265" r="4" fill="#2563eb"/>
+    <circle cx="250" cy="230" r="4" fill="#2563eb"/>
+    <circle cx="265" cy="255" r="4" fill="#2563eb"/>
+    <circle cx="280" cy="215" r="4" fill="#2563eb"/>
+    <circle cx="295" cy="220" r="4" fill="#2563eb"/>
+    <circle cx="310" cy="190" r="4" fill="#2563eb"/>
+    <circle cx="330" cy="185" r="4" fill="#2563eb"/>
+    
+    <!-- True trend (curved, not linear) -->
+    <path d="M 70,350 Q 150,320 200,280 T 330,185" 
+          fill="none" stroke="#9ca3af" stroke-width="2" stroke-dasharray="5,5" opacity="0.6"/>
+    
+    <!-- Axis labels -->
+    <text x="350" y="400" font-family="Arial, sans-serif" font-size="12" fill="#374151">x</text>
+    <text x="35" y="115" font-family="Arial, sans-serif" font-size="12" fill="#374151">y</text>
+  </g>
+  
+  <!-- Middle panel: Optimal smoothing -->
+  <g id="optimal-panel">
+    <!-- Panel title -->
+    <text x="600" y="65" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#374151">
+      Optimal Smoothing
+    </text>
+    <text x="600" y="85" font-family="Arial, sans-serif" font-size="14" text-anchor="middle" fill="#059669">
+      fraction = 0.5 (balanced)
+    </text>
+    <text x="600" y="102" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#6b7280" font-style="italic">
+      Captures trend, filters noise
+    </text>
+    
+    <!-- Axes -->
+    <line x1="450" y1="380" x2="750" y2="380" stroke="#374151" stroke-width="2"/>
+    <line x1="450" y1="380" x2="450" y2="120" stroke="#374151" stroke-width="2"/>
+    
+    <!-- Grid -->
+    <line x1="450" y1="310" x2="750" y2="310" stroke="#e5e7eb" stroke-width="1"/>
+    <line x1="450" y1="240" x2="750" y2="240" stroke="#e5e7eb" stroke-width="1"/>
+    <line x1="450" y1="170" x2="750" y2="170" stroke="#e5e7eb" stroke-width="1"/>
+    
+    <!-- Optimally smoothed curve (smooth, follows curved trend well) -->
+    <path d="M 470,350 Q 550,320 600,280 T 730,185" 
+          fill="none" stroke="#059669" stroke-width="3" stroke-linecap="round"/>
+    
+    <!-- Data points with same scatter as left panel -->
+    <circle cx="470" cy="350" r="4" fill="#2563eb"/>
+    <circle cx="485" cy="365" r="4" fill="#2563eb"/>
+    <circle cx="500" cy="335" r="4" fill="#2563eb"/>
+    <circle cx="515" cy="345" r="4" fill="#2563eb"/>
+    <circle cx="530" cy="325" r="4" fill="#2563eb"/>
+    <circle cx="545" cy="355" r="4" fill="#2563eb"/>
+    <circle cx="560" cy="310" r="4" fill="#2563eb"/>
+    <circle cx="575" cy="310" r="4" fill="#2563eb"/>
+    <circle cx="590" cy="280" r="4" fill="#2563eb"/>
+    <circle cx="605" cy="305" r="4" fill="#2563eb"/>
+    <circle cx="620" cy="260" r="4" fill="#2563eb"/>
+    <circle cx="635" cy="265" r="4" fill="#2563eb"/>
+    <circle cx="650" cy="230" r="4" fill="#2563eb"/>
+    <circle cx="665" cy="255" r="4" fill="#2563eb"/>
+    <circle cx="680" cy="215" r="4" fill="#2563eb"/>
+    <circle cx="695" cy="220" r="4" fill="#2563eb"/>
+    <circle cx="710" cy="190" r="4" fill="#2563eb"/>
+    <circle cx="730" cy="185" r="4" fill="#2563eb"/>
+    
+    <!-- True trend (curved) -->
+    <path d="M 470,350 Q 550,320 600,280 T 730,185" 
+          fill="none" stroke="#9ca3af" stroke-width="2" stroke-dasharray="5,5" opacity="0.6"/>
+    
+    <!-- Axis labels -->
+    <text x="750" y="400" font-family="Arial, sans-serif" font-size="12" fill="#374151">x</text>
+    <text x="435" y="115" font-family="Arial, sans-serif" font-size="12" fill="#374151">y</text>
+  </g>
+  
+  <!-- Right panel: Over-smoothing (large fraction) -->
+  <g id="oversmooth-panel">
+    <!-- Panel title -->
+    <text x="1000" y="65" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#374151">
+      Over-smoothing
+    </text>
+    <text x="1000" y="85" font-family="Arial, sans-serif" font-size="14" text-anchor="middle" fill="#f59e0b">
+      fraction = 0.9 (too large)
+    </text>
+    <text x="1000" y="102" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#6b7280" font-style="italic">
+      Loses detail, too smooth
+    </text>
+    
+    <!-- Axes -->
+    <line x1="850" y1="380" x2="1150" y2="380" stroke="#374151" stroke-width="2"/>
+    <line x1="850" y1="380" x2="850" y2="120" stroke="#374151" stroke-width="2"/>
+    
+    <!-- Grid -->
+    <line x1="850" y1="310" x2="1150" y2="310" stroke="#e5e7eb" stroke-width="1"/>
+    <line x1="850" y1="240" x2="1150" y2="240" stroke="#e5e7eb" stroke-width="1"/>
+    <line x1="850" y1="170" x2="1150" y2="170" stroke="#e5e7eb" stroke-width="1"/>
+    
+    <!-- Over-smoothed curve (too smooth, misses the curve - almost linear) -->
+    <path d="M 870,350 C 950,310 1030,265 1130,200" 
+          fill="none" stroke="#f59e0b" stroke-width="3" stroke-linecap="round"/>
+    
+    <!-- Data points with same scatter -->
+    <circle cx="870" cy="350" r="4" fill="#2563eb"/>
+    <circle cx="885" cy="365" r="4" fill="#2563eb"/>
+    <circle cx="900" cy="335" r="4" fill="#2563eb"/>
+    <circle cx="915" cy="345" r="4" fill="#2563eb"/>
+    <circle cx="930" cy="325" r="4" fill="#2563eb"/>
+    <circle cx="945" cy="355" r="4" fill="#2563eb"/>
+    <circle cx="960" cy="310" r="4" fill="#2563eb"/>
+    <circle cx="975" cy="310" r="4" fill="#2563eb"/>
+    <circle cx="990" cy="280" r="4" fill="#2563eb"/>
+    <circle cx="1005" cy="305" r="4" fill="#2563eb"/>
+    <circle cx="1020" cy="260" r="4" fill="#2563eb"/>
+    <circle cx="1035" cy="265" r="4" fill="#2563eb"/>
+    <circle cx="1050" cy="230" r="4" fill="#2563eb"/>
+    <circle cx="1065" cy="255" r="4" fill="#2563eb"/>
+    <circle cx="1080" cy="215" r="4" fill="#2563eb"/>
+    <circle cx="1095" cy="220" r="4" fill="#2563eb"/>
+    <circle cx="1110" cy="190" r="4" fill="#2563eb"/>
+    <circle cx="1130" cy="185" r="4" fill="#2563eb"/>
+    
+    <!-- True trend (curved) -->
+    <path d="M 870,350 Q 950,320 1000,280 T 1130,185" 
+          fill="none" stroke="#9ca3af" stroke-width="2" stroke-dasharray="5,5" opacity="0.6"/>
+    
+    <!-- Axis labels -->
+    <text x="1150" y="400" font-family="Arial, sans-serif" font-size="12" fill="#374151">x</text>
+    <text x="835" y="115" font-family="Arial, sans-serif" font-size="12" fill="#374151">y</text>
+  </g>
+  
+  <!-- Legend -->
+  <g transform="translate(500, 410)">
+    <rect x="0" y="0" width="200" height="35" fill="white" stroke="#d1d5db" stroke-width="1" rx="5"/>
+    
+    <!-- Data points -->
+    <circle cx="15" cy="12" r="4" fill="#2563eb"/>
+    <text x="25" y="17" font-family="Arial, sans-serif" font-size="12" fill="#374151">Data points</text>
+    
+    <!-- True trend -->
+    <line x1="110" y1="12" x2="130" y2="12" stroke="#9ca3af" stroke-width="2" stroke-dasharray="3,3"/>
+    <text x="135" y="17" font-family="Arial, sans-serif" font-size="12" fill="#374151">True trend</text>
+  </g>
+</svg>

@@ -1,0 +1,53 @@
+url: https://thisisamirv.github.io/rfastlowess/
+
+template:
+  bootstrap: 5
+  bootswatch: flatly
+
+home:
+  title: rfastlowess - High-Performance LOWESS Smoothing for R
+  description: >
+    Rust-powered LOWESS smoothing with parallel execution, robustness iterations,
+    and uncertainty quantification for genomic and time-series data.
+
+navbar:
+  structure:
+    left: [home, reference, articles, news]
+    right: [github]
+  components:
+    home:
+      icon: fas fa-home fa-lg
+      href: index.html
+      aria-label: Home
+    reference:
+      text: Reference
+      href: reference/index.html
+    articles:
+      text: Articles
+      menu:
+        - text: Introduction to rfastlowess
+          href: articles/rfastlowess-intro.html
+    news:
+      text: Changelog
+      href: news/index.html
+    github:
+      icon: fab fa-github fa-lg
+      href: https://github.com/thisisamirv/rfastlowess
+      aria-label: GitHub
+
+reference:
+  - title: Package Overview
+    desc: High-level package documentation
+    contents:
+      - rfastlowess-package
+  - title: Main Functions
+    desc: Core LOWESS smoothing functions
+    contents:
+      - fastlowess
+      - fastlowess_streaming
+      - fastlowess_online
+
+footer:
+  structure:
+    left: developed_by
+    right: built_with

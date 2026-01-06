@@ -1,0 +1,15 @@
+# Vendored dependencies configuration
+[source.crates-io]
+replace-with = "vendored-sources"
+
+[source.vendored-sources]
+directory = "vendor"
+
+# Critical for WASM/emscripten: use v0 symbol mangling to avoid
+# invalid export names with special characters like $, <, >
+[build]
+rustflags = ["-C", "symbol-mangling-version=v0"]
+
+# WASM/Emscripten target configuration
+[target.wasm32-unknown-emscripten]
+rustflags = ["-C", "symbol-mangling-version=v0"]

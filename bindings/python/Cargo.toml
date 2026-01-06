@@ -1,0 +1,54 @@
+[package]
+name = "fastLowess-py"
+version = "0.4.0"
+edition = "2024"
+rust-version = "1.85.0"
+
+# Metadata
+description = "High-level, fast LOWESS smoothing built on top of the fastLowess Rust crate."
+authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+
+# Links
+repository = "https://github.com/thisisamirv/fastLowess-py"
+homepage = "https://github.com/thisisamirv/fastLowess-py"
+
+# Categories
+keywords = ["lowess", "smoothing", "statistics", "regression", "bioinformatics"]
+categories = ["science", "algorithms"]
+
+include = [
+    "src/**/*",
+    "docs/**/*.svg",
+    "fastlowess/**/*",
+    "Cargo.toml",
+    "README.md",
+    "LICENSE-MIT",
+    "LICENSE-APACHE",
+    "CHANGELOG.md",
+]
+
+# Build
+[dependencies]
+fastLowess = { version = "0.4", features = ["dev", "cpu"] }
+pyo3 = { version = "0.27.2", features = ["extension-module"] }
+numpy = "0.27.1"
+
+[lib]
+name = "fastlowess"
+crate-type = ["cdylib"]
+
+[features]
+default = []
+dev = []
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+
+# Document all features
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

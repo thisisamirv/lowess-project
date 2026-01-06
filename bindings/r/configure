@@ -1,0 +1,93 @@
+#!/bin/sh
+
+# Detect OS
+# This script configures the package for cross-platform builds
+UNAME=$(uname)
+
+# Check for Cargo (Rust package manager)
+if ! command -v cargo >/dev/null 2>&1; then
+    echo "-------------------------------------------------------------------"
+    echo "Error: Cargo (Rust package manager) not found in PATH."
+    echo "Please install Rust to build this package."
+    echo "Visit https://rustup.rs/ for installation instructions."
+    echo "-------------------------------------------------------------------"
+    exit 1
+fi
+
+# Default target directory
+TARGET_DIR="../target"
+
+# Robust WASM detection
+IS_WASM=0
+
+# 1. Check for WEBR_ROOT (R-Universe / rwasm environment)
+if [ -n "$WEBR_ROOT" ]; then
+    IS_WASM=1
+fi
+
+# 2. Check for CARGO_BUILD_TARGET or HOST variables
+if [ "$CARGO_BUILD_TARGET" = "wasm32-unknown-emscripten" ] || [ "$HOST" = "wasm32-unknown-emscripten" ] || [ "$TGT" = "wasm32-unknown-emscripten" ]; then
+    IS_WASM=1
+fi
+
+# 3. Check arguments for wasm32-unknown-emscripten
+for arg in "$@"; do
+    case "$arg" in
+        *wasm32-unknown-emscripten*)
+            IS_WASM=1
+            ;;
+    esac
+done
+
+# 4. Check if CC explicitly contains emcc (safer than checking PATH)
+if [ "$IS_WASM" = "0" ]; then
+    if echo "$CC" | grep -q "emcc"; then
+        IS_WASM=1
+    fi
+fi
+
+if [ "$IS_WASM" = "1" ]; then
+    echo "Configuring for WebAssembly..."
+    # For WASM/WebR, keep target dir local to avoid rwasm copy issues
+    TARGET_DIR="./target"
+    # When cargo is invoked with CARGO_BUILD_TARGET=wasm32-unknown-emscripten,
+    # it outputs to target/wasm32-unknown-emscripten/release/ not target/release/
+    WASM_LIBDIR="${TARGET_DIR}/wasm32-unknown-emscripten/release"
+    GC_SECTIONS="-Wl,--gc-sections"
+    # For WASM, we need to:
+    # 1. Use SIDE_MODULE=2 (new side module format)
+    # 2. Set EXPORT_ALL=0 to only export specified functions
+    # 3. List our entry points - extendr generates R_init_<package>_extendr, not R_init_<package>
+    # 4. Set ERROR_ON_UNDEFINED_SYMBOLS=0 - undefined Rust std symbols will be resolved at runtime
+    UNDEFINED_FLAGS="-s SIDE_MODULE=2 -L${WASM_LIBDIR} -lrfastlowess -s EXPORT_ALL=0 -s ERROR_ON_UNDEFINED_SYMBOLS=0 -s EXPORTED_FUNCTIONS=['_R_init_rfastlowess_extendr'] -s ASSERTIONS=0"
+elif [ "$UNAME" = "Darwin" ]; then
+    echo "Configuring for macOS..."
+    # On macOS, use -force_load with explicit path to include only needed symbols
+    GC_SECTIONS=""
+    UNDEFINED_FLAGS="-Wl,-force_load,${TARGET_DIR}/release/librfastlowess.a"
+else
+    echo "Configuring for Linux/Unix..."
+    # Default to Linux flags - use whole-archive to include all symbols
+    GC_SECTIONS=""
+    UNDEFINED_FLAGS="-Wl,--whole-archive,${TARGET_DIR}/release/librfastlowess.a -Wl,--no-whole-archive"
+fi
+
+# Check if template exists
+if [ ! -f "src/Makevars.in" ]; then
+    echo "ERROR: src/Makevars.in not found!"
+    exit 1
+fi
+
+# Substitute variables in src/Makevars.in
+sed -e "s|@GC_SECTIONS@|${GC_SECTIONS}|g" \
+    -e "s|@UNDEFINED_FLAGS@|${UNDEFINED_FLAGS}|g" \
+    -e "s|@TARGET_DIR@|${TARGET_DIR}|g" \
+    -e "s|@IS_WASM@|${IS_WASM}|g" \
+    src/Makevars.in > src/Makevars
+
+# Ensure final newline
+echo "" >> src/Makevars
+
+echo "Generated src/Makevars"
+echo "Target Directory: ${TARGET_DIR}"
+echo "WASM detected: ${IS_WASM}"

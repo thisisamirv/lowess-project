@@ -1,0 +1,464 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>fastlowess: High-performance LOWESS for Python &mdash; fastlowess 0.4.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=6c02275b"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            fastlowess
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced_usage.html">Advanced Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="execution_modes.html">Execution Modes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parameters.html">Parameter Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">fastlowess</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">fastlowess: High-performance LOWESS for Python</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="fastlowess-high-performance-lowess-for-python">
+<h1>fastlowess: High-performance LOWESS for Python<a class="headerlink" href="#fastlowess-high-performance-lowess-for-python" title="Link to this heading"></a></h1>
+<p><strong>High-performance parallel LOWESS (Locally Weighted Scatterplot Smoothing) for Python</strong></p>
+<p>A production-ready implementation built on top of a highly optimized Rust core. It offers <strong>12-3800x speed improvements</strong> over standard implementations while providing robust statistics, uncertainty quantification, and memory-efficient streaming.</p>
+<section id="what-is-lowess">
+<h2>What is LOWESS?<a class="headerlink" href="#what-is-lowess" title="Link to this heading"></a></h2>
+<p>LOWESS (Locally Weighted Scatterplot Smoothing) is a nonparametric regression method that fits smooth curves through scatter plots. At each point, it fits a weighted polynomial (typically linear) using nearby data points.</p>
+<a class="reference internal image-reference" href="_images/lowess_smoothing_concept.svg"><img alt="LOWESS Smoothing Concept" class="align-center" src="_images/lowess_smoothing_concept.svg" style="width: 800px;" />
+</a>
+<p>Key advantages:
+*   <strong>No parametric assumptions</strong>: Adapts to the data’s local structure.
+*   <strong>Robustness</strong>: Handles outliers using iterative re-weighted least squares (IRLS).
+*   <strong>Uncertainty Quantification</strong>: Provides confidence and prediction intervals.
+*   <strong>Scale</strong>: Handles millions of points with parallel execution and streaming.</p>
+</section>
+<section id="how-lowess-works">
+<h2>How LOWESS Works<a class="headerlink" href="#how-lowess-works" title="Link to this heading"></a></h2>
+<p>LOWESS creates smooth curves through scattered data using local weighted neighborhoods:</p>
+<ol class="arabic simple">
+<li><p>For each point, select nearby neighbors (controlled by <code class="docutils literal notranslate"><span class="pre">fraction</span></code>).</p></li>
+<li><p>Fit a weighted polynomial (closer points get higher weight).</p></li>
+<li><p>Use the fitted value as the smoothed estimate.</p></li>
+<li><p>Optionally iterate to downweight outliers (robustness).</p></li>
+</ol>
+</section>
+<section id="robustness-advantages">
+<h2>Robustness Advantages<a class="headerlink" href="#robustness-advantages" title="Link to this heading"></a></h2>
+<p>This implementation is <strong>more robust than statsmodels</strong> due to:</p>
+<section id="mad-based-scale-estimation">
+<h3>MAD-Based Scale Estimation<a class="headerlink" href="#mad-based-scale-estimation" title="Link to this heading"></a></h3>
+<p>We use <strong>Median Absolute Deviation (MAD)</strong> for scale estimation, which is breakdown-point-optimal:</p>
+<div class="math notranslate nohighlight">
+\[s = \text{median}(|r_i - \text{median}(r)|)\]</div>
+</section>
+<section id="boundary-padding">
+<h3>Boundary Padding<a class="headerlink" href="#boundary-padding" title="Link to this heading"></a></h3>
+<p>We apply <strong>boundary policies</strong> (Extend, Reflect, Zero) at dataset edges to maintain symmetric local neighborhoods, preventing the edge bias common in other implementations.</p>
+</section>
+<section id="gaussian-consistency-factor">
+<h3>Gaussian Consistency Factor<a class="headerlink" href="#gaussian-consistency-factor" title="Link to this heading"></a></h3>
+<p>For precision in intervals, residual scale is computed using:</p>
+<div class="math notranslate nohighlight">
+\[\hat{\sigma} = 1.4826 \times \text{MAD}\]</div>
+</section>
+</section>
+<section id="performance-advantages">
+<h2>Performance Advantages<a class="headerlink" href="#performance-advantages" title="Link to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">fastlowess</span></code> Python package demonstrates massive performance gains over Python’s <code class="docutils literal notranslate"><span class="pre">statsmodels</span></code> and R’s <code class="docutils literal notranslate"><span class="pre">stats::lowess</span></code>. The benchmarks compare <code class="docutils literal notranslate"><span class="pre">fastlowess</span></code> (both Serial and Parallel execution modes) against these standard implementations.</p>
+<p>The results show that <code class="docutils literal notranslate"><span class="pre">fastlowess</span></code> is the decisive winner across all benchmarks, achieving an <strong>average speedup of 280x</strong> and a <strong>maximum speedup of 1169x</strong>.</p>
+<p>The table below shows speedups relative to the <strong>statsmodels baseline</strong>.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>statsmodels</p></th>
+<th class="head"><p>R</p></th>
+<th class="head"><p>fastlowess</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>clustered</p></td>
+<td><p>162.77ms</p></td>
+<td><p>[82.8x]²</p></td>
+<td><p>[170-432x]¹</p></td>
+</tr>
+<tr class="row-odd"><td><p>constant_y</p></td>
+<td><p>133.63ms</p></td>
+<td><p>[92.3x]²</p></td>
+<td><p>[176-372x]¹</p></td>
+</tr>
+<tr class="row-even"><td><p>delta_large</p></td>
+<td><p>0.51ms</p></td>
+<td><p>[0.8x]²</p></td>
+<td><p>[3.3-2.0x]¹</p></td>
+</tr>
+<tr class="row-odd"><td><p>delta_medium</p></td>
+<td><p>0.79ms</p></td>
+<td><p>[1.3x]²</p></td>
+<td><p>[3.7-3.3x]¹</p></td>
+</tr>
+<tr class="row-even"><td><p>delta_none</p></td>
+<td><p>414.86ms</p></td>
+<td><p>[2.5x]²</p></td>
+<td><p>[3.2-16x]¹</p></td>
+</tr>
+<tr class="row-odd"><td><p>delta_small</p></td>
+<td><p>1.45ms</p></td>
+<td><p>[1.7x]²</p></td>
+<td><p>[3.6-4.4x]¹</p></td>
+</tr>
+<tr class="row-even"><td><p>extreme_outliers</p></td>
+<td><p>488.96ms</p></td>
+<td><p>[106.4x]²</p></td>
+<td><p>[168-373x]¹</p></td>
+</tr>
+<tr class="row-odd"><td><p>financial_1000</p></td>
+<td><p>13.55ms</p></td>
+<td><p>[76.6x]²</p></td>
+<td><p>[135-105x]¹</p></td>
+</tr>
+<tr class="row-even"><td><p>financial_10000</p></td>
+<td><p>302.20ms</p></td>
+<td><p>[168.3x]²</p></td>
+<td><p>[379-480x]¹</p></td>
+</tr>
+<tr class="row-odd"><td><p>financial_500</p></td>
+<td><p>6.49ms</p></td>
+<td><p>[58.0x]¹</p></td>
+<td><p>[92-54x]²</p></td>
+</tr>
+<tr class="row-even"><td><p>financial_5000</p></td>
+<td><p>103.94ms</p></td>
+<td><p>[117.3x]²</p></td>
+<td><p>[252-336x]¹</p></td>
+</tr>
+<tr class="row-odd"><td><p>fraction_0.05</p></td>
+<td><p>122.00ms</p></td>
+<td><p>[177.6x]²</p></td>
+<td><p>[376-274x]¹</p></td>
+</tr>
+<tr class="row-even"><td><p>fraction_0.1</p></td>
+<td><p>140.59ms</p></td>
+<td><p>[112.8x]²</p></td>
+<td><p>[252-219x]¹</p></td>
+</tr>
+<tr class="row-odd"><td><p>fraction_0.2</p></td>
+<td><p>181.57ms</p></td>
+<td><p>[85.3x]²</p></td>
+<td><p>[180-283x]¹</p></td>
+</tr>
+<tr class="row-even"><td><p>fraction_0.3</p></td>
+<td><p>220.98ms</p></td>
+<td><p>[84.8x]²</p></td>
+<td><p>[151-304x]¹</p></td>
+</tr>
+<tr class="row-odd"><td><p>fraction_0.5</p></td>
+<td><p>296.47ms</p></td>
+<td><p>[80.9x]²</p></td>
+<td><p>[125-366x]¹</p></td>
+</tr>
+<tr class="row-even"><td><p>fraction_0.67</p></td>
+<td><p>362.59ms</p></td>
+<td><p>[83.1x]²</p></td>
+<td><p>[115-428x]¹</p></td>
+</tr>
+<tr class="row-odd"><td><p>genomic_1000</p></td>
+<td><p>17.82ms</p></td>
+<td><p>[15.9x]²</p></td>
+<td><p>[16-23x]¹</p></td>
+</tr>
+<tr class="row-even"><td><p>genomic_10000</p></td>
+<td><p>399.90ms</p></td>
+<td><p>[3.6x]²</p></td>
+<td><p>[4.5-18x]¹</p></td>
+</tr>
+<tr class="row-odd"><td><p>genomic_5000</p></td>
+<td><p>138.49ms</p></td>
+<td><p>[5.0x]²</p></td>
+<td><p>[6.1-21x]¹</p></td>
+</tr>
+<tr class="row-even"><td><p>genomic_50000</p></td>
+<td><p>6776.57ms</p></td>
+<td><p>[2.4x]²</p></td>
+<td><p>[3.1-12x]¹</p></td>
+</tr>
+<tr class="row-odd"><td><p>high_noise</p></td>
+<td><p>435.85ms</p></td>
+<td><p>[132.6x]²</p></td>
+<td><p>[118-381x]¹</p></td>
+</tr>
+<tr class="row-even"><td><p>iterations_0</p></td>
+<td><p>45.18ms</p></td>
+<td><p>[128.4x]²</p></td>
+<td><p>[212-497x]¹</p></td>
+</tr>
+<tr class="row-odd"><td><p>iterations_1</p></td>
+<td><p>94.10ms</p></td>
+<td><p>[114.3x]²</p></td>
+<td><p>[195-460x]¹</p></td>
+</tr>
+<tr class="row-even"><td><p>iterations_10</p></td>
+<td><p>495.65ms</p></td>
+<td><p>[116.0x]²</p></td>
+<td><p>[172-428x]¹</p></td>
+</tr>
+<tr class="row-odd"><td><p>iterations_2</p></td>
+<td><p>135.48ms</p></td>
+<td><p>[109.0x]²</p></td>
+<td><p>[180-399x]¹</p></td>
+</tr>
+<tr class="row-even"><td><p>iterations_3</p></td>
+<td><p>181.56ms</p></td>
+<td><p>[108.8x]²</p></td>
+<td><p>[178-408x]¹</p></td>
+</tr>
+<tr class="row-odd"><td><p>iterations_5</p></td>
+<td><p>270.58ms</p></td>
+<td><p>[110.4x]²</p></td>
+<td><p>[174-356x]¹</p></td>
+</tr>
+<tr class="row-even"><td><p>scale_1000</p></td>
+<td><p>17.95ms</p></td>
+<td><p>[82.6x]¹</p></td>
+<td><p>[131-51x]²</p></td>
+</tr>
+<tr class="row-odd"><td><p>scale_10000</p></td>
+<td><p>408.13ms</p></td>
+<td><p>[178.1x]²</p></td>
+<td><p>[378-270x]¹</p></td>
+</tr>
+<tr class="row-even"><td><p>scale_5000</p></td>
+<td><p>139.81ms</p></td>
+<td><p>[133.6x]²</p></td>
+<td><p>[254-224x]¹</p></td>
+</tr>
+<tr class="row-odd"><td><p>scale_50000</p></td>
+<td><p>6798.58ms</p></td>
+<td><p>[661.0x]²</p></td>
+<td><p>[987-1169x]¹</p></td>
+</tr>
+<tr class="row-even"><td><p>scientific_1000</p></td>
+<td><p>19.04ms</p></td>
+<td><p>[70.1x]²</p></td>
+<td><p>[103-75x]¹</p></td>
+</tr>
+<tr class="row-odd"><td><p>scientific_10000</p></td>
+<td><p>479.57ms</p></td>
+<td><p>[190.7x]²</p></td>
+<td><p>[316-461x]¹</p></td>
+</tr>
+<tr class="row-even"><td><p>scientific_500</p></td>
+<td><p>8.59ms</p></td>
+<td><p>[49.6x]¹</p></td>
+<td><p>[69-45x]²</p></td>
+</tr>
+<tr class="row-odd"><td><p>scientific_5000</p></td>
+<td><p>161.42ms</p></td>
+<td><p>[124.9x]²</p></td>
+<td><p>[205-273x]¹</p></td>
+</tr>
+<tr class="row-even"><td><p>scale_100000**</p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p>1-1.5x</p></td>
+</tr>
+</tbody>
+</table>
+<p>* <strong>fastlowess</strong>: Shows speedup range <code class="docutils literal notranslate"><span class="pre">[Serial-Parallel]</span></code>. E.g., <code class="docutils literal notranslate"><span class="pre">[12-48x]</span></code> means 12x speedup (Sequential) and 48x speedup (Parallel).</p>
+<p>** <strong>Large Scale</strong>: <code class="docutils literal notranslate"><span class="pre">fastlowess</span> <span class="pre">(Serial)</span></code> is the baseline (1x).</p>
+<p>¹ Winner (Fastest implementation)</p>
+<p>² Runner-up (Second fastest implementation)</p>
+<p><strong>Key Takeaways</strong>:</p>
+<ol class="arabic simple">
+<li><p><strong>Dominant Performance</strong>: <code class="docutils literal notranslate"><span class="pre">fastlowess</span></code> is consistently the fastest implementation. Even in <strong>Serial</strong> mode, it significantly outperforms <code class="docutils literal notranslate"><span class="pre">statsmodels</span></code> and <code class="docutils literal notranslate"><span class="pre">R</span></code>.</p></li>
+<li><p><strong>Parallel Scaling</strong>:</p>
+<ul class="simple">
+<li><p><strong>Large Datasets</strong>: Parallel execution provides massive gains. For example, <code class="docutils literal notranslate"><span class="pre">scale_50000</span></code> shows a jump from ~987x (Serial) to ~1169x (Parallel) speedup.</p></li>
+<li><p><strong>Small Datasets</strong>: For very small datasets (e.g., <code class="docutils literal notranslate"><span class="pre">scale_1000</span></code>, <code class="docutils literal notranslate"><span class="pre">financial_500</span></code>), Serial execution is often faster than Parallel due to thread overhead (e.g., <code class="docutils literal notranslate"><span class="pre">[131-51x]</span></code>).</p></li>
+</ul>
+</li>
+<li><p><strong>R vs Statsmodels</strong>: <code class="docutils literal notranslate"><span class="pre">R</span></code> is a strong runner-up, generally ~80-150x faster than <code class="docutils literal notranslate"><span class="pre">statsmodels</span></code>, but <code class="docutils literal notranslate"><span class="pre">fastlowess</span></code> extends this lead further.</p></li>
+<li><p><strong>Handling Complex Cases</strong>: <code class="docutils literal notranslate"><span class="pre">fastlowess</span></code> maintains its performance advantage even in pathological cases like <code class="docutils literal notranslate"><span class="pre">high_noise</span></code> and <code class="docutils literal notranslate"><span class="pre">extreme_outliers</span></code>.</p></li>
+</ol>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#install-via-pypi">Install via PyPI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#install-via-conda">Install via Conda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#building-from-source">Building from Source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#verifying-installation">Verifying Installation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#basic-smoothing">Basic Smoothing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#understanding-the-result">Understanding the Result</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#customizing-parameters">Customizing Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#uncertainty-quantification">Uncertainty Quantification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#getting-diagnostics">Getting Diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#next-steps">Next Steps</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#batch-smoothing-standard">1. Batch Smoothing (Standard)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#streaming-large-datasets">2. Streaming (Large Datasets)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#online-smoothing-real-time">3. Online Smoothing (Real-time)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#running-the-examples">Running the Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="advanced_usage.html">Advanced Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="advanced_usage.html#robust-smoothing">Robust Smoothing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_usage.html#boundary-sparse-data-handling">Boundary &amp; Sparse Data Handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_usage.html#cross-validation">Cross-Validation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_usage.html#diagnostics-detailed-outputs">Diagnostics &amp; Detailed Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_usage.html#confidence-prediction-intervals">Confidence &amp; Prediction Intervals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_usage.html#kernel-selection">Kernel Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_usage.html#performance-tuning">Performance Tuning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="execution_modes.html">Execution Modes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="execution_modes.html#execution-mode-comparison">Execution Mode Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="execution_modes.html#batch-mode-standard">1. Batch Mode (Standard)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="execution_modes.html#streaming-mode-large-datasets">2. Streaming Mode (Large Datasets)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="execution_modes.html#online-mode-real-time">3. Online Mode (Real-time)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="execution_modes.html#performance-tuning">Performance &amp; Tuning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="parameters.html">Parameter Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="parameters.html#smooth-parameters">smooth() Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parameters.html#smooth-streaming-parameters">smooth_streaming() Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parameters.html#smooth-online-parameters">smooth_online() Parameters</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api.html#what-is-lowess">What is LOWESS?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#quick-start">Quick Start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#functions">Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#classes">Classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#choosing-the-right-function">Choosing the Right Function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#parameter-guidelines">Parameter Guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#version-information">Version Information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#fastlowess.Diagnostics"><code class="docutils literal notranslate"><span class="pre">Diagnostics</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#fastlowess.LowessResult"><code class="docutils literal notranslate"><span class="pre">LowessResult</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#fastlowess.smooth"><code class="docutils literal notranslate"><span class="pre">smooth()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#fastlowess.smooth_online"><code class="docutils literal notranslate"><span class="pre">smooth_online()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#fastlowess.smooth_streaming"><code class="docutils literal notranslate"><span class="pre">smooth_streaming()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+<section id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading"></a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Amir Valizadeh.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

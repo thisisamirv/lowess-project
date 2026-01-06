@@ -1,0 +1,122 @@
+Authors and Copyright Holders for Rust Dependencies:
+
+Package: autocfg (1.5.0)
+Authors: Josh Stone <cuviper@gmail.com>
+License: Apache-2.0 OR MIT
+----------------------------------------
+Package: bytemuck (1.24.0)
+Authors: Lokathor <zefria@gmail.com>
+License: Zlib OR Apache-2.0 OR MIT
+----------------------------------------
+Package: crossbeam-deque (0.8.6)
+Authors: 
+License: MIT OR Apache-2.0
+----------------------------------------
+Package: crossbeam-epoch (0.9.18)
+Authors: 
+License: MIT OR Apache-2.0
+----------------------------------------
+Package: crossbeam-utils (0.8.21)
+Authors: 
+License: MIT OR Apache-2.0
+----------------------------------------
+Package: either (1.15.0)
+Authors: bluss
+License: MIT OR Apache-2.0
+----------------------------------------
+Package: extendr-api (0.8.1)
+Authors: andy-thomason <andy@andythomason.com>, Thomas Down, Mossa Merhi Reimert <mossa@sund.ku.dk>, Josiah Parry <josiah.parry@gmail.com>, Claus O. Wilke <wilke@austin.utexas.edu>, Hiroaki Yutani, Ilia A. Kosenkov <ilia.kosenkov@outlook.com>, Michael Milton <michael.r.milton@gmail.com>
+License: MIT
+----------------------------------------
+Package: extendr-ffi (0.8.1)
+Authors: andy-thomason <andy@andythomason.com>, Thomas Down, Mossa Merhi Reimert <mossa@sund.ku.dk>, Josiah Parry <josiah.parry@gmail.com>, Claus O. Wilke <wilke@austin.utexas.edu>, Hiroaki Yutani, Ilia A. Kosenkov <ilia.kosenkov@outlook.com>, Michael Milton <michael.r.milton@gmail.com>
+License: MIT
+----------------------------------------
+Package: extendr-macros (0.8.1)
+Authors: andy-thomason <andy@andythomason.com>, Thomas Down, Mossa Merhi Reimert <mossa@sund.ku.dk>, Josiah Parry <josiah.parry@gmail.com>, Claus O. Wilke <wilke@austin.utexas.edu>, Hiroaki Yutani, Ilia A. Kosenkov <ilia.kosenkov@outlook.com>, Michael Milton <michael.r.milton@gmail.com>
+License: MIT
+----------------------------------------
+Package: fastLowess (0.4.0)
+Authors: Amir Valizadeh <thisisamirv@gmail.com>
+License: MIT OR Apache-2.0
+----------------------------------------
+Package: libm (0.2.15)
+Authors: Jorge Aparicio <jorge@japaric.io>
+License: MIT
+----------------------------------------
+Package: lowess (0.7.0)
+Authors: Amir Valizadeh <thisisamirv@gmail.com>
+License: MIT OR Apache-2.0
+----------------------------------------
+Package: matrixmultiply (0.3.10)
+Authors: bluss, R. Janis Goldschmidt
+License: MIT/Apache-2.0
+----------------------------------------
+Package: ndarray (0.17.1)
+Authors: Ulrik Sverdrup "bluss", Jim Turner
+License: MIT OR Apache-2.0
+----------------------------------------
+Package: num-complex (0.4.6)
+Authors: The Rust Project Developers
+License: MIT OR Apache-2.0
+----------------------------------------
+Package: num-integer (0.1.46)
+Authors: The Rust Project Developers
+License: MIT OR Apache-2.0
+----------------------------------------
+Package: num-traits (0.2.19)
+Authors: The Rust Project Developers
+License: MIT OR Apache-2.0
+----------------------------------------
+Package: once_cell (1.21.3)
+Authors: Aleksey Kladov <aleksey.kladov@gmail.com>
+License: MIT OR Apache-2.0
+----------------------------------------
+Package: paste (1.0.15)
+Authors: David Tolnay <dtolnay@gmail.com>
+License: MIT OR Apache-2.0
+----------------------------------------
+Package: portable-atomic (1.12.0)
+Authors: 
+License: Apache-2.0 OR MIT
+----------------------------------------
+Package: portable-atomic-util (0.2.4)
+Authors: 
+License: Apache-2.0 OR MIT
+----------------------------------------
+Package: proc-macro2 (1.0.103)
+Authors: David Tolnay <dtolnay@gmail.com>, Alex Crichton <alex@alexcrichton.com>
+License: MIT OR Apache-2.0
+----------------------------------------
+Package: quote (1.0.42)
+Authors: David Tolnay <dtolnay@gmail.com>
+License: MIT OR Apache-2.0
+----------------------------------------
+Package: rawpointer (0.2.1)
+Authors: bluss
+License: MIT/Apache-2.0
+----------------------------------------
+Package: rayon (1.11.0)
+Authors: 
+License: MIT OR Apache-2.0
+----------------------------------------
+Package: rayon-core (1.13.0)
+Authors: 
+License: MIT OR Apache-2.0
+----------------------------------------
+Package: safe_arch (1.0.0)
+Authors: Lokathor <zefria@gmail.com>
+License: Zlib OR Apache-2.0 OR MIT
+----------------------------------------
+Package: syn (2.0.111)
+Authors: David Tolnay <dtolnay@gmail.com>
+License: MIT OR Apache-2.0
+----------------------------------------
+Package: unicode-ident (1.0.22)
+Authors: David Tolnay <dtolnay@gmail.com>
+License: (MIT OR Apache-2.0) AND Unicode-3.0
+----------------------------------------
+Package: wide (1.1.1)
+Authors: Lokathor <zefria@gmail.com>
+License: Zlib OR Apache-2.0 OR MIT
+----------------------------------------

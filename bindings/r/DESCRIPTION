@@ -1,0 +1,17 @@
+Package: rfastlowess
+Title: 'Rust'-Based High-Performance Parallel LOWESS Smoothing
+Version: 0.99.2
+Authors@R: person("Amir", "Valizadeh", email = "thisisamirv@gmail.com", role = c("aut", "cre"), comment = c(ORCID = "0000-0001-5983-8527"))
+Description: Provides high-performance LOWESS smoothing (Locally Weighted Scatterplot Smoothing) 
+    using a 'Rust' backend. Supports various weight functions, robustness iterations, 
+    streaming/online processing, cross-validation, and uncertainty quantification.
+    Applicable to genomic data, time series, and general-purpose smoothing tasks.
+License: MIT + file LICENSE | Apache License (== 2.0)
+SystemRequirements: 'Rust' programming language (via 'rustup' or system tools)
+Encoding: UTF-8
+RoxygenNote: 7.3.3
+biocViews: Preprocessing, StatisticalMethod, Regression, FunctionalPrediction, QualityControl
+Suggests: BiocStyle, knitr, rmarkdown, testthat (>= 3.0.0)
+VignetteBuilder: knitr
+BugReports: https://github.com/thisisamirv/rfastlowess/issues
+URL: https://github.com/thisisamirv/rfastlowess, https://thisisamirv.github.io/rfastlowess/

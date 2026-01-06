@@ -1,0 +1,23 @@
+citHeader("To cite rfastlowess in publications use:")
+
+bibentry(
+  bibtype = "Manual",
+  title   = "rfastlowess: High-Performance LOWESS Smoothing for R",
+  author  = person("Amir", "Valizadeh", role = c("aut", "cre")),
+  year    = "2025",
+  note    = "R package version 0.99.2",
+  url     = "https://github.com/thisisamirv/rfastlowess"
+)
+
+bibentry(
+  bibtype = "Article",
+  key     = "Cleveland1979",
+  title   = "Robust Locally Weighted Regression and Smoothing Scatterplots",
+  author  = person("William S.", "Cleveland"),
+  journal = "Journal of the American Statistical Association",
+  year    = "1979",
+  volume  = "74",
+  number  = "368",
+  pages   = "829-836",
+  doi     = "10.1080/01621459.1979.10481038"
+)

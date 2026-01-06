@@ -1,0 +1,48 @@
+[package]
+name = "rfastlowess"
+version = "0.99.2"
+edition = "2024"
+rust-version = "1.89.0"
+
+# Metadata
+description = "High-level, fast LOWESS smoothing built on top of the fastLowess Rust crate."
+authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+
+# Links
+repository = "https://github.com/thisisamirv/rfastlowess"
+homepage = "https://github.com/thisisamirv/rfastlowess"
+
+# Categories
+keywords = ["lowess", "smoothing", "statistics", "regression", "bioinformatics"]
+categories = ["science", "algorithms"]
+
+include = ["Cargo.toml", "lib.rs", "vendor/**/*", "README.md", "LICENSE"]
+
+# Build
+[dependencies]
+fastLowess = { path = "vendor/fastLowess", version = "0.4", features = ["dev"] }
+extendr-api = "0.8.1"
+
+[lib]
+name = "rfastlowess"
+path = "lib.rs"
+crate-type = ["staticlib", "rlib"]
+
+[features]
+default = []
+dev = []
+
+[profile.release]
+opt-level = 3
+lto = false
+codegen-units = 1
+
+# Document all features
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[patch.crates-io]
+lowess = { path = "vendor/lowess" }

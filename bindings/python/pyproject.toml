@@ -1,0 +1,49 @@
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "fastlowess"
+version = "0.4.0"
+description = "High-level, fast LOWESS smoothing built on top of the fastLowess Rust crate."
+authors = [{ name = "Amir Valizadeh", email = "thisisamirv@gmail.com" }]
+license = { text = "MIT OR Apache-2.0" }
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Operating System :: OS Independent",
+]
+keywords = ["lowess", "smoothing", "statistics", "regression", "numpy"]
+dependencies = ["numpy>=1.20.0"]
+
+[tool.maturin]
+module-name = "fastlowess.fastlowess"
+include = [
+    "fastlowess/**",
+    "src/**",
+    "Cargo.toml",
+    "pyproject.toml",
+    "README.md",
+    "LICENSE-APACHE",
+    "LICENSE-MIT",
+    "CHANGELOG.md",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
