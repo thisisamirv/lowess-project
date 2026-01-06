@@ -1,4 +1,4 @@
-# Contributing to fastlowess
+# Contributing to the lowess-project
 
 We welcome contributions via bug reports, feature requests, documentation improvements, and code changes.
 

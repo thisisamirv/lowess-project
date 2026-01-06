@@ -1,26 +1,63 @@
-# Rust
+# Rust / Cargo
+debug/
 target/
-**/*.rs.bk
+**/target/
 Cargo.lock
+**/*.rs.bk
+*.pdb
+**/mutants.out*/
+
+# R Package
+*.Rcheck/
+*.tar.gz
+*.tgz
+*.o
+*.so
+src/Makevars
+src/*.o
+src/*.so
+rfastlowess.BiocCheck/
+bindings/r/src/vendor/
+bindings/r/src/.cargo/
+bindings/r/docs/
+bindings/r/doc/
+bindings/r/Meta/
+bindings/r/README.html
+.Rprofile
 
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
+.eggs/
 .venv/
 env/
 venv/
 *.egg-info/
+.pytest_cache/
+.ruff_cache/
+.pyc
 
-# R
-.Rproj.user
-.Rhistory
-.RData
-.Ruserdata
-
-# IDE
-.vscode/
+# IDEs & Editors
 .idea/
+.vscode/
 *.swp
+*.swo
+*~
+
+# OS / System
 .DS_Store
-bindings/r/src/vendor/
+
+# Documentation
+/target/doc/
+doc/
+Meta/
+
+# Benchmarks
+/target/criterion/
+
+# Test Coverage
+cobertura.xml
+tarpaulin-report.html
+coverage_html/
+coverage_detail.txt

@@ -1,0 +1,38 @@
+TARGET_DIR = ../target
+LIBDIR = $(TARGET_DIR)/release
+STATLIB = $(LIBDIR)/librfastlowess.a
+
+# Linking flags (substituted by configure)
+PKG_LIBS = -Wl,--whole-archive,../target/release/librfastlowess.a -Wl,--no-whole-archive 
+
+all: clean
+
+$(SHLIB): $(STATLIB)
+
+$(STATLIB):
+	@cargo --version
+	@rustc --version
+	# Extract vendored dependencies if archive exists and vendor dir doesn't
+	@if [ -f vendor.tar.xz ] && [ ! -d vendor ]; then \
+		tar --extract --xz -f vendor.tar.xz; \
+	fi
+	# Create .cargo/config.toml from non-hidden source (avoids R CMD check NOTE)
+	@mkdir -p .cargo
+	@cp cargo-config.toml .cargo/config.toml
+	# Temporarily isolate from workspace to allow vendored build
+	@cp Cargo.toml Cargo.toml.orig
+	@echo '[workspace]' >> Cargo.toml
+	@mkdir -p $(TARGET_DIR)
+	@if [ "0" = "1" ]; then \
+		rm -f .cargo/config.toml && \
+		export RUSTFLAGS="-C symbol-mangling-version=v0 -C panic=abort" && \
+		cargo build -Z build-std=std,panic_abort --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR) --target wasm32-unknown-emscripten || (mv Cargo.toml.orig Cargo.toml && exit 1); \
+	else \
+		cargo build --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR) || (mv Cargo.toml.orig Cargo.toml && exit 1); \
+	fi
+	@mv Cargo.toml.orig Cargo.toml
+	@rm -rf .cargo
+
+clean:
+	rm -Rf $(SHLIB) $(STATLIB) $(OBJECTS)
+
