@@ -1,13 +1,13 @@
 [package]
 name = "lowess"
-version = "0.7.0"
-edition = "2024"
-rust-version = "1.85.0"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+rust-version = { workspace = true }
 
 # Metadata
 description = "LOWESS (Locally Weighted Scatterplot Smoothing) implementation in Rust"
-authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
-license = "MIT OR Apache-2.0"
 readme = "README.md"
 
 # Links
@@ -16,8 +16,8 @@ documentation = "https://docs.rs/lowess"
 homepage = "https://github.com/thisisamirv/lowess"
 
 # Categories
-keywords = ["lowess", "smoothing", "statistics", "regression", "bioinformatics"]
-categories = ["science", "algorithms"]
+keywords = { workspace = true }
+categories = { workspace = true }
 
 # Build
 include = [
@@ -31,13 +31,11 @@ include = [
 ]
 
 [dependencies]
-num-traits = { version = "0.2.19", default-features = false, features = [
-    "libm",
-] }
-wide = { version = "1.1.1", default-features = false }
+num-traits = { workspace = true, features = ["libm"] }
+wide = { workspace = true }
 
 [dev-dependencies]
-approx = "0.5.1"
+approx = { workspace = true }
 
 [features]
 default = ["std"]

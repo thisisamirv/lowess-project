@@ -8,6 +8,43 @@ members = [
 ]
 exclude = ["bindings/r/src/vendor"]
 
+[workspace.package]
+version = "0.99.3"
+authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
+edition = "2024"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/thisisamirv/lowess-project"
+homepage = "https://github.com/thisisamirv/lowess-project"
+rust-version = "1.85.0"
+description = "LOWESS (Locally Weighted Scatterplot Smoothing) implementation"
+keywords = ["lowess", "smoothing", "statistics", "regression", "bioinformatics"]
+categories = ["science", "algorithms"]
+
+[workspace.dependencies]
+# Core dependencies
+lowess = { version = "0.99.3", path = "crates/lowess" }
+fastLowess = { version = "0.99.3", path = "crates/fastLowess" }
+
+# Shared dependencies
+num-traits = { version = "0.2.19", default-features = false }
+ndarray = { version = "0.17.1", default-features = false }
+rayon = { version = "1.11.0" }
+wide = { version = "1.1.1", default-features = false }
+approx = "0.5.1"
+
+# GPU dependencies
+wgpu = { version = "28.0.0" }
+bytemuck = { version = "1.24.0", features = ["derive"] }
+pollster = { version = "0.4.0" }
+futures-intrusive = { version = "0.5.0" }
+
+# Python bindings
+pyo3 = { version = "0.27", features = ["extension-module"] }
+numpy = "0.27"
+
+# R bindings
+extendr-api = "0.8.1"
+
 [profile.release]
 opt-level = 3
 lto = true

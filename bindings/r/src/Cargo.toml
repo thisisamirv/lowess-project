@@ -1,14 +1,13 @@
 [package]
 name = "rfastlowess"
-version = "0.99.2"
-edition = "2024"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
 rust-version = "1.89.0"
-
 
 # Metadata
 description = "High-level, fast LOWESS smoothing built on top of the fastLowess Rust crate."
-authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
-license = "MIT OR Apache-2.0"
 readme = "README.md"
 
 # Links
@@ -16,15 +15,15 @@ repository = "https://github.com/thisisamirv/rfastlowess"
 homepage = "https://github.com/thisisamirv/rfastlowess"
 
 # Categories
-keywords = ["lowess", "smoothing", "statistics", "regression", "bioinformatics"]
-categories = ["science", "algorithms"]
+keywords = { workspace = true }
+categories = { workspace = true }
 
 include = ["Cargo.toml", "lib.rs", "vendor/**/*", "README.md", "LICENSE"]
 
 # Build
 [dependencies]
-fastLowess = { version = "0.4", features = ["dev"] }
-extendr-api = "0.8.1"
+fastLowess = { workspace = true, features = ["dev"] }
+extendr-api = { workspace = true }
 
 [lib]
 name = "rfastlowess"
