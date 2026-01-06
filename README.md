@@ -1,24 +1,9 @@
 # LOWESS Project
 
-<!-- Rust Crates -->
-[![Crates.io (lowess)](https://img.shields.io/crates/v/lowess.svg)](https://crates.io/crates/lowess)
-[![Crates.io (fastLowess)](https://img.shields.io/crates/v/fastLowess.svg)](https://crates.io/crates/fastLowess)
-[![Documentation (lowess)](https://docs.rs/lowess/badge.svg)](https://docs.rs/lowess)
-[![Documentation (fastLowess)](https://docs.rs/fastLowess/badge.svg)](https://docs.rs/fastLowess)
-
-<!-- Python Package -->
+[![Crates.io](https://img.shields.io/crates/v/lowess.svg)](https://crates.io/crates/lowess)
 [![PyPI](https://img.shields.io/pypi/v/fastlowess.svg)](https://pypi.org/project/fastlowess/)
-[![Python Versions](https://img.shields.io/pypi/pyversions/fastlowess.svg)](https://pypi.org/project/fastlowess/)
 [![Conda](https://anaconda.org/conda-forge/fastlowess/badges/version.svg)](https://anaconda.org/conda-forge/fastlowess)
-[![Python Docs](https://readthedocs.org/projects/fastlowess-py/badge/?version=latest)](https://fastlowess-py.readthedocs.io/)
-
-<!-- R Package -->
 [![R-universe](https://thisisamirv.r-universe.dev/badges/rfastlowess)](https://thisisamirv.r-universe.dev/rfastlowess)
-[![R Docs](https://img.shields.io/badge/docs-pkgdown-blue.svg)](https://thisisamirv.github.io/rfastlowess/)
-[![pkgcheck](https://github.com/thisisamirv/rfastlowess/workflows/pkgcheck/badge.svg)](https://github.com/thisisamirv/rfastlowess/actions)
-[![codecov](https://codecov.io/gh/thisisamirv/rfastlowess/branch/main/graph/badge.svg)](https://app.codecov.io/gh/thisisamirv/rfastlowess)
-
-<!-- General -->
 [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE-MIT)
 [![Rust](https://img.shields.io/badge/rust-1.89%2B-orange.svg)](https://www.rust-lang.org)
 [![Project Status](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
@@ -57,7 +42,7 @@ This implementation is **more robust** than both R and Python alternatives:
 
 1. **MAD-Based Scale**: Breakdown-point-optimal estimator (50% outlier tolerance)
 
-   ```
+   ```plaintext
    s = median(|r_i - median(r)|)
    ```
 
@@ -419,7 +404,7 @@ Average speedup: **280x** | Maximum speedup: **1169x**
 
 All implementations are **numerical twins** of R's `lowess`:
 
-| Aspect          | Status         | Details                                    |
+| Aspect          | Status         | Details                                   |
 |-----------------|----------------|-------------------------------------------|
 | **Accuracy**    | ✅ EXACT MATCH | Max diff < 1e-12 across all scenarios     |
 | **Consistency** | ✅ PERFECT     | 15/15 scenarios pass with strict tolerance|

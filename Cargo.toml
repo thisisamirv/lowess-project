@@ -16,6 +16,7 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/thisisamirv/lowess-project"
 homepage = "https://github.com/thisisamirv/lowess-project"
 rust-version = "1.89.0"
+readme = "README.md"
 description = "LOWESS (Locally Weighted Scatterplot Smoothing) implementation"
 keywords = ["lowess", "smoothing", "statistics", "regression", "bioinformatics"]
 categories = ["science", "algorithms"]
