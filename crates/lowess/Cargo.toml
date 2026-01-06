@@ -7,13 +7,13 @@ license = { workspace = true }
 rust-version = { workspace = true }
 
 # Metadata
-description = "LOWESS (Locally Weighted Scatterplot Smoothing) implementation in Rust"
+description = { workspace = true }
 readme = "README.md"
 
 # Links
-repository = "https://github.com/thisisamirv/lowess"
+repository = { workspace = true }
 documentation = "https://docs.rs/lowess"
-homepage = "https://github.com/thisisamirv/lowess"
+homepage = { workspace = true }
 
 # Categories
 keywords = { workspace = true }

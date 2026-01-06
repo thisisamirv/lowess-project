@@ -7,13 +7,13 @@ license = { workspace = true }
 rust-version = { workspace = true }
 
 # Metadata
-description = "High-level, parallel LOWESS smoothing built on top of the lowess crate, with ndarray integration and rayon-based parallelism."
+description = { workspace = true }
 readme = "README.md"
 
 # Links
-repository = "https://github.com/thisisamirv/fastLowess"
+repository = { workspace = true }
 documentation = "https://docs.rs/fastLowess"
-homepage = "https://github.com/thisisamirv/fastLowess"
+homepage = { workspace = true }
 
 # Categories
 keywords = { workspace = true }

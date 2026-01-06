@@ -7,12 +7,12 @@ license = { workspace = true }
 rust-version = "1.89.0"
 
 # Metadata
-description = "High-level, fast LOWESS smoothing built on top of the fastLowess Rust crate."
+description = { workspace = true }
 readme = "README.md"
 
 # Links
-repository = "https://github.com/thisisamirv/rfastlowess"
-homepage = "https://github.com/thisisamirv/rfastlowess"
+repository = { workspace = true }
+homepage = { workspace = true }
 
 # Categories
 keywords = { workspace = true }
