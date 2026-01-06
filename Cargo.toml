@@ -6,6 +6,7 @@ members = [
     "bindings/python",
     "bindings/r/src",
 ]
+exclude = ["bindings/r/src/vendor"]
 
 [profile.release]
 opt-level = 3

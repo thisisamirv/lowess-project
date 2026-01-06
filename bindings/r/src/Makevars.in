@@ -19,14 +19,19 @@ $(STATLIB):
 	# Create .cargo/config.toml from non-hidden source (avoids R CMD check NOTE)
 	@mkdir -p .cargo
 	@cp cargo-config.toml .cargo/config.toml
+	# Temporarily isolate from workspace to allow vendored build
+	@cp Cargo.toml Cargo.toml.orig
+	@echo '[workspace]' >> Cargo.toml
 	@mkdir -p $(TARGET_DIR)
 	@if [ "@IS_WASM@" = "1" ]; then \
 		rm -f .cargo/config.toml && \
 		export RUSTFLAGS="-C symbol-mangling-version=v0 -C panic=abort" && \
-		cargo build -Z build-std=std,panic_abort --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR) --target wasm32-unknown-emscripten; \
+		cargo build -Z build-std=std,panic_abort --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR) --target wasm32-unknown-emscripten || (mv Cargo.toml.orig Cargo.toml && exit 1); \
 	else \
-		cargo build --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR); \
+		cargo build --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR) || (mv Cargo.toml.orig Cargo.toml && exit 1); \
 	fi
+	@mv Cargo.toml.orig Cargo.toml
+	@rm -rf .cargo
 
 clean:
 	rm -Rf $(SHLIB) $(STATLIB) $(OBJECTS)
