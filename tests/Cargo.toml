@@ -1,0 +1,26 @@
+[package]
+name = "lowess-project-tests"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+lowess = { path = "../crates/lowess", features = ["dev"] }
+fastLowess = { path = "../crates/fastLowess", features = ["dev"] }
+approx = { workspace = true }
+ndarray = { workspace = true }
+num-traits = { workspace = true }
+rayon = { workspace = true }
+
+[features]
+default = ["dev"]
+dev = []
+gpu = []
+
+[[test]]
+name = "lowess"
+path = "lowess/mod.rs"
+
+[[test]]
+name = "fastLowess"
+path = "fastLowess/mod.rs"

@@ -1303,6 +1303,7 @@
 
 #![allow(non_snake_case)]
 #![deny(missing_docs)]
+#![allow(unused_imports)]
 
 // ============================================================================
 // Internal Modules

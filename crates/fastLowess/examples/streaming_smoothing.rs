@@ -413,10 +413,10 @@ fn example_5_outlier_handling() -> Result<(), LowessError> {
 
             let result = processor.process_chunk(x_chunk, y_chunk)?;
 
-            if !result.x.is_empty() {
-                if let Some(residuals) = &result.residuals {
-                    large_residuals += residuals.iter().filter(|&&r| r.abs() > 10.0).count();
-                }
+            if !result.x.is_empty()
+                && let Some(residuals) = &result.residuals
+            {
+                large_residuals += residuals.iter().filter(|&&r| r.abs() > 10.0).count();
             }
         }
 

@@ -159,45 +159,45 @@ pub fn smooth_pass_parallel<T>(
         }
 
         // Handle any remaining points after the last anchor
-        if let Some(&last_anchor) = anchors.last() {
-            if last_anchor < n - 1 {
-                // Check if last point is a tie with the last anchor
-                if x[n - 1] == x[last_anchor] {
-                    y_smooth[n - 1] = y_smooth[last_anchor];
-                } else {
-                    // Fit the last point sequentially using a reused weights buffer to avoid allocation
-                    let mut weights = vec![T::zero(); n];
-                    let mut window = Window::initialize(n - 1, window_size, n);
-                    window.recenter(x, n - 1, n);
+        if let Some(&last_anchor) = anchors.last()
+            && last_anchor < n - 1
+        {
+            // Check if last point is a tie with the last anchor
+            if x[n - 1] == x[last_anchor] {
+                y_smooth[n - 1] = y_smooth[last_anchor];
+            } else {
+                // Fit the last point sequentially using a reused weights buffer to avoid allocation
+                let mut weights = vec![T::zero(); n];
+                let mut window = Window::initialize(n - 1, window_size, n);
+                window.recenter(x, n - 1, n);
 
-                    let mut ctx = RegressionContext {
-                        x,
-                        y,
-                        idx: n - 1,
-                        window,
-                        use_robustness,
-                        robustness_weights: if use_robustness {
-                            robustness_weights
-                        } else {
-                            &[]
-                        },
-                        weights: &mut weights,
-                        weight_function,
-                        zero_weight_fallback,
-                    };
+                let mut ctx = RegressionContext {
+                    x,
+                    y,
+                    idx: n - 1,
+                    window,
+                    use_robustness,
+                    robustness_weights: if use_robustness {
+                        robustness_weights
+                    } else {
+                        &[]
+                    },
+                    weights: &mut weights,
+                    weight_function,
+                    zero_weight_fallback,
+                };
 
-                    y_smooth[n - 1] = ctx.fit().unwrap_or(y[n - 1]);
+                y_smooth[n - 1] = ctx.fit().unwrap_or(y[n - 1]);
+            }
 
-                    // Same tie/gap logic for the final stretch
-                    let mut gap_start = last_anchor;
-                    let x_start = x[last_anchor];
-                    while gap_start < n - 1 && x[gap_start] == x_start {
-                        gap_start += 1;
-                    }
-                    if gap_start < n - 1 {
-                        interpolate_gap(x, y_smooth, gap_start - 1, n - 1);
-                    }
-                }
+            // Same tie/gap logic for the final stretch
+            let mut gap_start = last_anchor;
+            let x_start = x[last_anchor];
+            while gap_start < n - 1 && x[gap_start] == x_start {
+                gap_start += 1;
+            }
+            if gap_start < n - 1 {
+                interpolate_gap(x, y_smooth, gap_start - 1, n - 1);
             }
         }
     } else {

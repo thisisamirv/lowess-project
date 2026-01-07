@@ -1,0 +1,20 @@
+#![cfg(feature = "dev")]
+mod adapters_batch_tests;
+mod adapters_online_tests;
+mod adapters_streaming_tests;
+mod algorithms_interpolation_tests;
+mod algorithms_regression_tests;
+mod algorithms_robustness_tests;
+mod api_tests;
+mod engine_executor_tests;
+mod engine_output_tests;
+mod engine_validator_tests;
+mod evaluation_cv_tests;
+mod evaluation_diagnostics_tests;
+mod evaluation_intervals_tests;
+mod math_boundary_tests;
+mod math_kernel_tests;
+mod math_scaling_tests;
+mod prelude_test;
+mod primitives_sorting_tests;
+mod primitives_window_tests;

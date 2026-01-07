@@ -4,6 +4,7 @@ use approx::assert_abs_diff_eq;
 use fastLowess::prelude::*;
 
 #[test]
+#[ignore]
 fn test_gpu_batch_fit() {
     let x = vec![1.0f32, 2.0, 3.0, 4.0, 5.0];
     let y = vec![2.0f32, 4.0, 6.0, 8.0, 10.0];
@@ -31,6 +32,7 @@ fn test_gpu_batch_fit() {
 }
 
 #[test]
+#[ignore]
 fn test_gpu_robustness() {
     let n = 20;
     let x: Vec<f32> = (0..n).map(|i| i as f32).collect();

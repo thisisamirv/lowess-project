@@ -143,10 +143,10 @@ impl<T: Float + Display + Debug> Display for LowessResult<T> {
             writeln!(f, "  Robustness: Applied")?;
         }
 
-        if self.has_cv_scores() {
-            if let Some(best_score) = self.best_cv_score() {
-                writeln!(f, "  Best CV score: {}", best_score)?;
-            }
+        if self.has_cv_scores()
+            && let Some(best_score) = self.best_cv_score()
+        {
+            writeln!(f, "  Best CV score: {}", best_score)?;
         }
         writeln!(f)?;
 
@@ -211,40 +211,32 @@ impl<T: Float + Display + Debug> Display for LowessResult<T> {
             write!(f, "{:>8.2} {:>12.6}", self.x[idx], self.y[idx])?;
 
             // Standard error
-            if has_std_err {
-                if let Some(se) = &self.standard_errors {
-                    write!(f, " {:>12.6}", se[idx])?;
-                }
+            if has_std_err && let Some(se) = &self.standard_errors {
+                write!(f, " {:>12.6}", se[idx])?;
             }
 
             // Confidence intervals
-            if has_conf {
-                if let (Some(lower), Some(upper)) = (&self.confidence_lower, &self.confidence_upper)
-                {
-                    write!(f, " {:>12.6} {:>12.6}", lower[idx], upper[idx])?;
-                }
+            if has_conf
+                && let (Some(lower), Some(upper)) = (&self.confidence_lower, &self.confidence_upper)
+            {
+                write!(f, " {:>12.6} {:>12.6}", lower[idx], upper[idx])?;
             }
 
             // Prediction intervals
-            if has_pred {
-                if let (Some(lower), Some(upper)) = (&self.prediction_lower, &self.prediction_upper)
-                {
-                    write!(f, " {:>12.6} {:>12.6}", lower[idx], upper[idx])?;
-                }
+            if has_pred
+                && let (Some(lower), Some(upper)) = (&self.prediction_lower, &self.prediction_upper)
+            {
+                write!(f, " {:>12.6} {:>12.6}", lower[idx], upper[idx])?;
             }
 
             // Residuals
-            if has_resid {
-                if let Some(resid) = &self.residuals {
-                    write!(f, " {:>12.6}", resid[idx])?;
-                }
+            if has_resid && let Some(resid) = &self.residuals {
+                write!(f, " {:>12.6}", resid[idx])?;
             }
 
             // Robustness weights
-            if has_weights {
-                if let Some(weights) = &self.robustness_weights {
-                    write!(f, " {:>10.4}", weights[idx])?;
-                }
+            if has_weights && let Some(weights) = &self.robustness_weights {
+                write!(f, " {:>10.4}", weights[idx])?;
             }
 
             writeln!(f)?;

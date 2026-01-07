@@ -748,10 +748,11 @@ impl<T: Float> LowessExecutor<T> {
             }
 
             // Check convergence if tolerance is provided (skip on first iteration)
-            if let Some(tol) = convergence_tolerance {
-                if iter > 0 && Self::check_convergence(&buffers.y_smooth, &buffers.y_prev, tol) {
-                    break;
-                }
+            if let Some(tol) = convergence_tolerance
+                && iter > 0
+                && Self::check_convergence(&buffers.y_smooth, &buffers.y_prev, tol)
+            {
+                break;
             }
 
             // Update robustness weights for next iteration (skip last)

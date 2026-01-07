@@ -49,11 +49,6 @@ cpu = ["dep:rayon", "dep:ndarray"]
 gpu = ["dep:wgpu", "dep:bytemuck", "dep:pollster", "dep:futures-intrusive"]
 dev = []
 
-[profile.release]
-opt-level = 3
-lto = true
-codegen-units = 1
-
 # Document all features
 [package.metadata.docs.rs]
 all-features = true

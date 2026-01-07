@@ -8,10 +8,10 @@ output:
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
-    collapse = TRUE,
-    comment = "#>",
-    fig.path = "man/figures/README-",
-    out.width = "100%"
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
 )
 ```
 
@@ -214,8 +214,8 @@ lines(result$x, result$y, col = "red", lwd = 2)
 # Add heavy contamination (20 outliers)
 y_out <- y
 outlier_idx <- c(
-    10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70,
-    75, 80, 85, 90, 95, 5, 98
+  10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70,
+  75, 80, 85, 90, 95, 5, 98
 )
 y_out[outlier_idx] <- y_out[outlier_idx] + rep(c(3, -3, 4, -4), length.out = 20)
 
@@ -228,8 +228,8 @@ plot(x, y_out, main = "Robustness to Outliers", pch = 16, col = "gray")
 lines(fit_standard$x, fit_standard$y, col = "blue", lwd = 2, lty = 2)
 lines(fit_robust$x, fit_robust$y, col = "red", lwd = 2)
 legend("topright",
-    legend = c("Standard (iter=0)", "Robust (iter=3)"),
-    col = c("blue", "red"), lwd = 2, lty = c(2, 1)
+  legend = c("Standard (iter=0)", "Robust (iter=3)"),
+  col = c("blue", "red"), lwd = 2, lty = c(2, 1)
 )
 ```
 
@@ -239,47 +239,47 @@ legend("topright",
 library(rfastlowess)
 
 fastlowess(
-    x, y,
-    # Smoothing span (0, 1]
-    fraction = 0.5,
+  x, y,
+  # Smoothing span (0, 1]
+  fraction = 0.5,
 
-    # Robustness iterations
-    iterations = 3L,
+  # Robustness iterations
+  iterations = 3L,
 
-    # Interpolation threshold
-    delta = 0.01,
+  # Interpolation threshold
+  delta = 0.01,
 
-    # Kernel function
-    weight_function = "tricube",
+  # Kernel function
+  weight_function = "tricube",
 
-    # Robustness method
-    robustness_method = "bisquare",
+  # Robustness method
+  robustness_method = "bisquare",
 
-    # Zero-weight fallback
-    zero_weight_fallback = "use_local_mean",
+  # Zero-weight fallback
+  zero_weight_fallback = "use_local_mean",
 
-    # Boundary handling
-    boundary_policy = "extend",
+  # Boundary handling
+  boundary_policy = "extend",
 
-    # Intervals
-    confidence_intervals = 0.95,
-    prediction_intervals = 0.95,
+  # Intervals
+  confidence_intervals = 0.95,
+  prediction_intervals = 0.95,
 
-    # Diagnostics
-    return_diagnostics = TRUE,
-    return_residuals = TRUE,
-    return_robustness_weights = TRUE,
+  # Diagnostics
+  return_diagnostics = TRUE,
+  return_residuals = TRUE,
+  return_robustness_weights = TRUE,
 
-    # Cross-validation
-    cv_fractions = c(0.3, 0.5, 0.7),
-    cv_method = "kfold",
-    cv_k = 5L,
+  # Cross-validation
+  cv_fractions = c(0.3, 0.5, 0.7),
+  cv_method = "kfold",
+  cv_k = 5L,
 
-    # Convergence
-    auto_converge = 1e-4,
+  # Convergence
+  auto_converge = 1e-4,
 
-    # Parallelism
-    parallel = TRUE
+  # Parallelism
+  parallel = TRUE
 )
 ```
 

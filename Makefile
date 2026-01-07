@@ -1,0 +1,317 @@
+# ==============================================================================
+# Configuration
+# ==============================================================================
+FEATURE_SET ?= all
+
+# Make shell commands fail on error
+.SHELLFLAGS := -ec
+
+# lowess crate
+LOWESS_PKG := lowess
+LOWESS_DIR := crates/lowess
+LOWESS_FEATURES := std dev
+LOWESS_EXAMPLES := batch_smoothing online_smoothing streaming_smoothing
+
+# fastLowess crate
+FASTLOWESS_PKG := fastLowess
+FASTLOWESS_DIR := crates/fastLowess
+FASTLOWESS_FEATURES := cpu gpu dev
+FASTLOWESS_EXAMPLES := batch_smoothing online_smoothing streaming_smoothing
+
+# Python bindings
+PY_PKG := fastLowess-py
+PY_DIR := bindings/python
+PY_VENV := .venv
+PY_TEST_DIR := tests/python
+
+# R bindings
+R_PKG_NAME := rfastlowess
+R_PKG_VERSION := $(shell grep "^Version:" bindings/r/DESCRIPTION | sed 's/Version: //')
+R_PKG_TARBALL := $(R_PKG_NAME)_$(R_PKG_VERSION).tar.gz
+R_DIR := bindings/r
+
+# ==============================================================================
+# lowess crate
+# ==============================================================================
+lowess:
+	@echo "Running $(LOWESS_PKG) crate checks..."
+	@echo "=============================================================================="
+	@echo "1. Formatting..."
+	@echo "=============================================================================="
+	@cargo fmt -p $(LOWESS_PKG) -- --check
+	@echo "=============================================================================="
+	@echo "2. Linting & Building..."
+	@echo "=============================================================================="
+	@if [ "$(FEATURE_SET)" = "all" ]; then \
+		echo "Checking $(LOWESS_PKG) (no-default-features)..."; \
+		cargo clippy -p $(LOWESS_PKG) --all-targets --no-default-features -- -D warnings || exit 1; \
+		cargo build -p $(LOWESS_PKG) --no-default-features || exit 1; \
+		RUSTDOCFLAGS="-D warnings" cargo doc -p $(LOWESS_PKG) --no-deps --no-default-features || exit 1; \
+		for feature in $(LOWESS_FEATURES); do \
+			echo "Checking $(LOWESS_PKG) ($$feature)..."; \
+			cargo clippy -p $(LOWESS_PKG) --all-targets --features $$feature -- -D warnings || exit 1; \
+			cargo build -p $(LOWESS_PKG) --features $$feature || exit 1; \
+			RUSTDOCFLAGS="-D warnings" cargo doc -p $(LOWESS_PKG) --no-deps --features $$feature || exit 1; \
+		done; \
+	else \
+		cargo clippy -p $(LOWESS_PKG) --all-targets --features $(FEATURE_SET) -- -D warnings || exit 1; \
+		cargo build -p $(LOWESS_PKG) --features $(FEATURE_SET) || exit 1; \
+		RUSTDOCFLAGS="-D warnings" cargo doc -p $(LOWESS_PKG) --no-deps --features $(FEATURE_SET) || exit 1; \
+	fi
+	@echo "=============================================================================="
+	@echo "3. Testing..."
+	@echo "=============================================================================="
+	@if [ "$(FEATURE_SET)" = "all" ]; then \
+		cargo test -p $(LOWESS_PKG) --lib --no-default-features --features dev || exit 1; \
+		for feature in $(LOWESS_FEATURES); do \
+			echo "Testing $(LOWESS_PKG) ($$feature)..."; \
+			cargo test -p $(LOWESS_PKG) --lib --features $$feature,dev || exit 1; \
+		done; \
+		echo "Running integration tests..."; \
+		cargo test -p lowess-project-tests --test $(LOWESS_PKG) || exit 1; \
+	else \
+		cargo test -p $(LOWESS_PKG) --lib --features $(FEATURE_SET) || exit 1; \
+		cargo test -p lowess-project-tests --test $(LOWESS_PKG) || exit 1; \
+	fi
+	@echo "=============================================================================="
+	@echo "4. Examples..."
+	@echo "=============================================================================="
+	@for example in $(LOWESS_EXAMPLES); do \
+		echo "Running example: $$example"; \
+		cargo run -p $(LOWESS_PKG) --example $$example --features dev || exit 1; \
+	done
+	@echo "=============================================================================="
+	@echo "All $(LOWESS_PKG) crate checks completed successfully!"
+
+lowess-coverage:
+	@echo "Running $(LOWESS_PKG) coverage..."
+	@cd $(LOWESS_DIR) && LLVM_COV=llvm-cov LLVM_PROFDATA=llvm-profdata cargo llvm-cov --all-targets --all-features
+
+lowess-clean:
+	@echo "Cleaning $(LOWESS_PKG) crate..."
+	@cargo clean -p $(LOWESS_PKG)
+	@rm -rf $(LOWESS_DIR)/coverage_html
+	@rm -rf $(LOWESS_DIR)/benchmarks
+	@rm -rf $(LOWESS_DIR)/validation
+	@echo "$(LOWESS_PKG) clean complete!"
+
+# ==============================================================================
+# fastLowess crate
+# ==============================================================================
+fastLowess:
+	@echo "Running $(FASTLOWESS_PKG) crate checks..."
+	@echo "=============================================================================="
+	@echo "1. Formatting..."
+	@echo "=============================================================================="
+	@cargo fmt -p $(FASTLOWESS_PKG) -- --check
+	@echo "=============================================================================="
+	@echo "2. Linting & Building..."
+	@echo "=============================================================================="
+	@for feature in $(FASTLOWESS_FEATURES) no-default-features; do \
+		if [ "$$feature" = "no-default-features" ]; then \
+			echo "Checking $(FASTLOWESS_PKG) (no-default-features)..."; \
+			cargo clippy -p $(FASTLOWESS_PKG) --all-targets --no-default-features -- -D warnings || exit 1; \
+			cargo build -p $(FASTLOWESS_PKG) --no-default-features || exit 1; \
+			RUSTDOCFLAGS="-D warnings" cargo doc -p $(FASTLOWESS_PKG) --no-deps --no-default-features || exit 1; \
+		else \
+			echo "Checking $(FASTLOWESS_PKG) ($$feature)..."; \
+			cargo clippy -p $(FASTLOWESS_PKG) --all-targets --features $$feature -- -D warnings || exit 1; \
+			cargo build -p $(FASTLOWESS_PKG) --features $$feature || exit 1; \
+			RUSTDOCFLAGS="-D warnings" cargo doc -p $(FASTLOWESS_PKG) --no-deps --features $$feature || exit 1; \
+		fi; \
+	done
+	@echo "=============================================================================="
+	@echo "3. Testing..."
+	@echo "=============================================================================="
+	@for feature in $(FASTLOWESS_FEATURES) no-default-features; do \
+		if [ "$$feature" = "no-default-features" ]; then \
+			cargo test -p $(FASTLOWESS_PKG) --no-default-features --features dev || exit 1; \
+		elif [ "$$feature" = "gpu" ]; then \
+			cargo test -p $(FASTLOWESS_PKG) --features $$feature,dev -- --test-threads=1 || exit 1; \
+		else \
+			cargo test -p $(FASTLOWESS_PKG) --features $$feature,dev || exit 1; \
+		fi; \
+	done
+	@echo "Running integration tests..."
+	@cargo test -p lowess-project-tests --test $(FASTLOWESS_PKG) --features dev || exit 1
+	@echo "=============================================================================="
+	@echo "4. Examples..."
+	@echo "=============================================================================="
+	@for feature in $(FASTLOWESS_FEATURES); do \
+		echo "Running examples with feature: $$feature"; \
+		for example in $(FASTLOWESS_EXAMPLES); do \
+			cargo run -p $(FASTLOWESS_PKG) --example $$example --features $$feature || exit 1; \
+		done; \
+	done
+	@echo "=============================================================================="
+	@echo "All $(FASTLOWESS_PKG) crate checks completed successfully!"
+
+fastLowess-coverage:
+	@echo "Running $(FASTLOWESS_PKG) coverage..."
+	@cd $(FASTLOWESS_DIR) && LLVM_COV=llvm-cov LLVM_PROFDATA=llvm-profdata cargo llvm-cov --all-targets --all-features
+
+fastLowess-clean:
+	@echo "Cleaning $(FASTLOWESS_PKG) crate..."
+	@cargo clean -p $(FASTLOWESS_PKG)
+	@rm -rf $(FASTLOWESS_DIR)/coverage_html
+	@rm -rf $(FASTLOWESS_DIR)/benchmarks
+	@rm -rf $(FASTLOWESS_DIR)/validation
+	@echo "$(FASTLOWESS_PKG) clean complete!"
+
+# ==============================================================================
+# Python bindings
+# ==============================================================================
+python:
+	@echo "Running $(PY_PKG) checks..."
+	@echo "=============================================================================="
+	@echo "1. Formatting..."
+	@echo "=============================================================================="
+	@cargo fmt -p $(PY_PKG) -- --check
+	@ruff format --check $(PY_DIR)/fastlowess/ $(PY_TEST_DIR)/ || true
+	@echo "=============================================================================="
+	@echo "2. Linting..."
+	@echo "=============================================================================="
+	@cargo clippy -p $(PY_PKG) --all-targets -- -D warnings
+	@ruff check $(PY_DIR)/fastlowess/ $(PY_TEST_DIR)/
+	@echo "=============================================================================="
+	@echo "3. Environment Setup..."
+	@echo "=============================================================================="
+	@if [ ! -d "$(PY_VENV)" ]; then python3 -m venv $(PY_VENV); fi
+	@. $(PY_VENV)/bin/activate && pip install pytest numpy maturin
+	@echo "=============================================================================="
+	@echo "4. Building..."
+	@echo "=============================================================================="
+	@. $(PY_VENV)/bin/activate && cd $(PY_DIR) && maturin develop
+	@echo "=============================================================================="
+	@echo "5. Testing..."
+	@echo "=============================================================================="
+	@cargo test -p $(PY_PKG)
+	@. $(PY_VENV)/bin/activate && python -m pytest $(PY_TEST_DIR) -v
+	@echo "=============================================================================="
+	@echo "6. Documentation..."
+	@echo "=============================================================================="
+	@RUSTDOCFLAGS="-D warnings" cargo doc -p $(PY_PKG) --no-deps
+	@echo "=============================================================================="
+	@echo "$(PY_PKG) checks completed successfully!"
+
+python-coverage:
+	@echo "Running $(PY_PKG) coverage..."
+	@cd $(PY_DIR) && LLVM_COV=llvm-cov LLVM_PROFDATA=llvm-profdata cargo llvm-cov -p $(PY_PKG) --all-targets
+
+python-clean:
+	@echo "Cleaning $(PY_PKG)..."
+	@cargo clean -p $(PY_PKG)
+	@rm -rf $(PY_DIR)/coverage_html
+	@rm -rf $(PY_DIR)/benchmarks
+	@rm -rf $(PY_DIR)/validation
+	@rm -rf $(PY_DIR)/.benchmarks
+	@rm -rf $(PY_DIR)/target/wheels
+	@rm -rf $(PY_DIR)/.pytest_cache
+	@rm -rf $(PY_DIR)/__pycache__
+	@rm -rf $(PY_DIR)/fastlowess/__pycache__
+	@rm -rf $(PY_TEST_DIR)/__pycache__
+	@rm -rf $(PY_DIR)/*.egg-info
+	@rm -rf $(PY_DIR)/.ruff_cache
+	@rm -rf $(PY_DIR)/*.so
+	@echo "$(PY_PKG) clean complete!"
+
+# ==============================================================================
+# R bindings
+# ==============================================================================
+r:
+	@echo "Running $(R_PKG_NAME) checks..."
+	@echo "=============================================================================="
+	@echo "1. Installing R packages..."
+	@echo "=============================================================================="
+	@Rscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); install.packages(c('styler', 'prettycode', 'covr', 'codemetar', 'BiocManager', 'urlchecker', 'pkgdown'), quiet = TRUE); BiocManager::install('BiocCheck', quiet = TRUE)" || true
+	@echo "=============================================================================="
+	@echo "2. Vendoring..."
+	@echo "=============================================================================="
+	@if [ -f $(R_DIR)/src/vendor.tar.xz ] && [ ! -d $(R_DIR)/src/vendor ]; then \
+		echo "Extracting vendored dependencies..."; \
+		(cd $(R_DIR)/src && tar --extract --xz -f vendor.tar.xz); \
+	fi
+	@echo "=============================================================================="
+	@echo "3. Formatting..."
+	@echo "=============================================================================="
+	@cd $(R_DIR)/src && cargo fmt --all
+	@cd $(R_DIR) && Rscript -e "if (requireNamespace('styler', quietly=TRUE)) styler::style_pkg()" || true
+	@cd $(R_DIR)/src && cargo fmt --all -- --check || (echo "Run 'cargo fmt' to fix"; exit 1)
+	@cd $(R_DIR)/src && cargo clippy --all-targets -- -D warnings
+	@cd $(R_DIR) && Rscript -e "if (requireNamespace('lintr', quietly=TRUE)) lintr::lint_package()" || true
+	@echo "=============================================================================="
+	@echo "4. Documentation..."
+	@echo "=============================================================================="
+	@cd $(R_DIR)/src && RUSTDOCFLAGS="-D warnings" cargo doc --no-deps
+	@cd $(R_DIR) && Rscript -e "devtools::document()"
+	@cd $(R_DIR) && Rscript -e "devtools::build_vignettes()" || true
+	@cd $(R_DIR) && Rscript -e "if (requireNamespace('codemetar', quietly=TRUE)) codemetar::write_codemeta()" || true
+	@cd $(R_DIR) && Rscript -e "if (file.exists('README.Rmd')) rmarkdown::render('README.Rmd')" || true
+	@cd $(R_DIR) && Rscript -e "if (requireNamespace('pkgdown', quietly=TRUE)) pkgdown::build_site()" || true
+	@echo "=============================================================================="
+	@echo "5. Building..."
+	@echo "=============================================================================="
+	@cp $(R_DIR)/src/Cargo.toml $(R_DIR)/src/Cargo.toml.orig
+	@echo '[workspace]' >> $(R_DIR)/src/Cargo.toml
+	@mkdir -p $(R_DIR)/src/.cargo && cp $(R_DIR)/src/cargo-config.toml $(R_DIR)/src/.cargo/config.toml
+	@(cd $(R_DIR)/src && cargo build --release || (mv Cargo.toml.orig Cargo.toml && exit 1))
+	@mv $(R_DIR)/src/Cargo.toml.orig $(R_DIR)/src/Cargo.toml
+	@rm -rf $(R_DIR)/src/.cargo
+	@cd $(R_DIR) && R CMD build .
+	@echo "=============================================================================="
+	@echo "6. Installing..."
+	@echo "=============================================================================="
+	@cd $(R_DIR) && R CMD INSTALL $(R_PKG_TARBALL) || true
+	@cd $(R_DIR) && Rscript -e "devtools::install()"
+	@echo "=============================================================================="
+	@echo "7. Testing..."
+	@echo "=============================================================================="
+	@cd $(R_DIR)/src && cargo test
+	@cd $(R_DIR) && Rscript -e "Sys.setenv(NOT_CRAN='true'); devtools::test()"
+	@echo "=============================================================================="
+	@echo "8. Submission checks..."
+	@echo "=============================================================================="
+	@cd $(R_DIR) && R_MAKEVARS_USER=$(PWD)/$(R_DIR)/scripts/Makevars.check R CMD check --as-cran $(R_PKG_TARBALL) || true
+	@cd $(R_DIR) && Rscript -e "if (requireNamespace('urlchecker', quietly=TRUE)) urlchecker::url_check()" || true
+	@cd $(R_DIR) && Rscript -e "if (requireNamespace('BiocCheck', quietly=TRUE)) BiocCheck::BiocCheck('$(R_PKG_TARBALL)')" || true
+	@echo "Package size (Limit: 5MB):"
+	@ls -lh $(R_DIR)/$(R_PKG_TARBALL) || true
+	@echo "=============================================================================="
+	@echo "All $(R_PKG_NAME) checks completed successfully!"
+
+r-coverage:
+	@echo "Calculating $(R_PKG_NAME) coverage..."
+	@cd $(R_DIR) && Rscript -e "if (!requireNamespace('covr', quietly = TRUE)) { message('covr missing'); quit(status=0) } else { Sys.setenv(NOT_CRAN='true'); covr::package_coverage() }"
+
+r-clean:
+	@echo "Cleaning $(R_PKG_NAME)..."
+	@if [ -d $(R_DIR)/src/target ]; then \
+		rm -rf $(R_DIR)/src/target 2>/dev/null || \
+		(command -v docker >/dev/null && docker run --rm -v "$(PWD)/$(R_DIR)":/pkg ghcr.io/r-universe-org/build-wasm:latest rm -rf /pkg/src/target) || \
+		echo "Warning: Failed to clean src/target"; \
+	fi
+	@(cd $(R_DIR)/src && cargo clean 2>/dev/null || true)
+	@rm -rf $(R_DIR)/src/vendor $(R_DIR)/target
+	@rm -rf $(R_DIR)/$(R_PKG_NAME).Rcheck $(R_DIR)/$(R_PKG_NAME).BiocCheck
+	@rm -f $(R_DIR)/$(R_PKG_NAME)_*.tar.gz
+	@rm -rf $(R_DIR)/src/*.o $(R_DIR)/src/*.so $(R_DIR)/src/*.dll
+	@rm -rf $(R_DIR)/doc $(R_DIR)/Meta $(R_DIR)/vignettes/*.html $(R_DIR)/README.html
+	@find $(R_DIR) -name "*.Rout" -delete
+	@Rscript -e "try(remove.packages('$(R_PKG_NAME)'), silent = TRUE)" || true
+	@rm -rf $(R_DIR)/src/Makevars $(R_DIR)/rfastlowess*.tgz
+	@rm -rf $(R_DIR)/benchmarks $(R_DIR)/validation $(R_DIR)/docs
+	@echo "$(R_PKG_NAME) clean complete!"
+
+# ==============================================================================
+# All targets
+# ==============================================================================
+all: lowess fastLowess python r
+	@echo "All checks completed successfully!"
+
+all-coverage: lowess-coverage fastLowess-coverage python-coverage r-coverage
+	@echo "All coverage completed!"
+
+all-clean: lowess-clean fastLowess-clean python-clean r-clean
+	@echo "All clean completed!"
+
+.PHONY: lowess lowess-coverage lowess-clean fastLowess fastLowess-coverage fastLowess-clean python python-coverage python-clean r r-coverage r-clean all all-coverage all-clean

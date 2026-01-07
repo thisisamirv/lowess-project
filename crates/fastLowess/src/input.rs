@@ -28,6 +28,7 @@
 //! * This module does not handle data reshaping or dimensionality reduction.
 
 // External dependencies
+#[cfg(feature = "cpu")]
 use ndarray::{ArrayBase, Data, Ix1};
 use num_traits::Float;
 
@@ -52,6 +53,7 @@ impl<T: Float> LowessInput<T> for Vec<T> {
     }
 }
 
+#[cfg(feature = "cpu")]
 impl<T: Float, S> LowessInput<T> for ArrayBase<S, Ix1>
 where
     S: Data<Elem = T>,

@@ -603,10 +603,10 @@ impl GpuExecutor {
         usage: BufferUsages,
     ) -> bool {
         let mut created_new = false;
-        if let Some(buffer) = buffer_opt.as_ref() {
-            if buffer.size() < size_required {
-                *buffer_opt = None;
-            }
+        if let Some(buffer) = buffer_opt.as_ref()
+            && buffer.size() < size_required
+        {
+            *buffer_opt = None;
         }
 
         if buffer_opt.is_none() {
@@ -923,10 +923,7 @@ impl GpuExecutor {
         let slice = self.staging_buffer.as_ref().unwrap().slice(..);
         let (tx, rx) = futures_intrusive::channel::shared::oneshot_channel();
         slice.map_async(MapMode::Read, move |v| tx.send(v).unwrap());
-        let _ = self.device.poll(PollType::Wait {
-            submission_index: None,
-            timeout: None,
-        });
+        let _ = self.device.poll(PollType::Wait);
 
         if let Some(Ok(())) = rx.receive().await {
             let data = slice.get_mapped_range();

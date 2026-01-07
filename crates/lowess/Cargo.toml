@@ -42,11 +42,6 @@ default = ["std"]
 std = ["num-traits/std", "wide/std"]
 dev = []
 
-[profile.release]
-opt-level = 3
-lto = true
-codegen-units = 1
-
 # Document all features
 [package.metadata.docs.rs]
 all-features = true

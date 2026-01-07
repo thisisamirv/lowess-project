@@ -25,11 +25,8 @@
 //! 3. Select an adapter via `.adapter(Batch)` to get a parallel execution builder.
 
 // Feature-gated imports
-#[cfg(feature = "cpu")]
 use crate::adapters::batch::ParallelBatchLowessBuilder;
-#[cfg(feature = "cpu")]
 use crate::adapters::online::ParallelOnlineLowessBuilder;
-#[cfg(feature = "cpu")]
 use crate::adapters::streaming::ParallelStreamingLowessBuilder;
 
 // External dependencies

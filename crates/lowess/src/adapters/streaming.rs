@@ -486,31 +486,31 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
 
         // Merge robustness weights if requested
         let mut rob_weights_out: Option<Vec<T>> = if self.config.return_robustness_weights {
-            Some(Vec::new())
+            Some(Vec::with_capacity(prev_overlap_len))
         } else {
             None
         };
 
-        if let Some(ref mut rw_out) = rob_weights_out {
-            if prev_overlap_len > 0 {
-                let prev_rw = self.buffer.overlap_robustness_weights.as_vec();
-                for (i, (&prev_val, &curr_val)) in prev_rw
-                    .iter()
-                    .zip(robustness_weights.iter())
-                    .take(prev_overlap_len)
-                    .enumerate()
-                {
-                    let merged = match self.config.merge_strategy {
-                        MergeStrategy::Average => (prev_val + curr_val) / T::from(2.0).unwrap(),
-                        MergeStrategy::WeightedAverage => {
-                            let weight = T::from(i as f64 / prev_overlap_len as f64).unwrap();
-                            prev_val * (T::one() - weight) + curr_val * weight
-                        }
-                        MergeStrategy::TakeFirst => prev_val,
-                        MergeStrategy::TakeLast => curr_val,
-                    };
-                    rw_out.push(merged);
-                }
+        if let Some(ref mut rw_out) = rob_weights_out
+            && prev_overlap_len > 0
+        {
+            let prev_rw = self.buffer.overlap_robustness_weights.as_vec();
+            for (i, (&prev_val, &curr_val)) in prev_rw
+                .iter()
+                .zip(robustness_weights.iter())
+                .take(prev_overlap_len)
+                .enumerate()
+            {
+                let merged = match self.config.merge_strategy {
+                    MergeStrategy::Average => (prev_val + curr_val) / T::from(2.0).unwrap(),
+                    MergeStrategy::WeightedAverage => {
+                        let weight = T::from(i as f64 / prev_overlap_len as f64).unwrap();
+                        prev_val * (T::one() - weight) + curr_val * weight
+                    }
+                    MergeStrategy::TakeFirst => prev_val,
+                    MergeStrategy::TakeLast => curr_val,
+                };
+                rw_out.push(merged);
             }
         }
 

@@ -95,9 +95,9 @@
 #'
 #' # Robust smoothing with intervals
 #' result <- fastlowess(x, y,
-#'     fraction = 0.5, iterations = 5,
-#'     confidence_intervals = 0.95,
-#'     prediction_intervals = 0.95
+#'   fraction = 0.5, iterations = 5,
+#'   confidence_intervals = 0.95,
+#'   prediction_intervals = 0.95
 #' )
 #' lines(result$x, result$confidence_lower, col = "blue", lty = 2)
 #' lines(result$x, result$confidence_upper, col = "blue", lty = 2)
@@ -106,41 +106,41 @@
 #' @family fastlowess
 #' @export
 fastlowess <- function(
-    x,
-    y,
-    fraction = 0.67,
-    iterations = 3L,
-    delta = NULL,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    scaling_method = "mad",
-    boundary_policy = "extend",
-    confidence_intervals = NULL,
-    prediction_intervals = NULL,
-    return_diagnostics = FALSE,
-    return_residuals = FALSE,
-    return_robustness_weights = FALSE,
-    zero_weight_fallback = "use_local_mean",
-    auto_converge = NULL,
-    cv_fractions = NULL,
-    cv_method = "kfold",
-    cv_k = 5L,
-    parallel = TRUE
+  x,
+  y,
+  fraction = 0.67,
+  iterations = 3L,
+  delta = NULL,
+  weight_function = "tricube",
+  robustness_method = "bisquare",
+  scaling_method = "mad",
+  boundary_policy = "extend",
+  confidence_intervals = NULL,
+  prediction_intervals = NULL,
+  return_diagnostics = FALSE,
+  return_residuals = FALSE,
+  return_robustness_weights = FALSE,
+  zero_weight_fallback = "use_local_mean",
+  auto_converge = NULL,
+  cv_fractions = NULL,
+  cv_method = "kfold",
+  cv_k = 5L,
+  parallel = TRUE
 ) {
-    args <- validate_common_args(x, y, fraction, iterations)
-    x <- args$x
-    y <- args$y
-    fraction <- args$fraction
-    iterations <- args$iterations
+  args <- validate_common_args(x, y, fraction, iterations)
+  x <- args$x
+  y <- args$y
+  fraction <- args$fraction
+  iterations <- args$iterations
 
-    cv_k <- as.integer(cv_k)
+  cv_k <- as.integer(cv_k)
 
-    # Call the Rust function
-    .Call("wrap__fastlowess", x, y, fraction, iterations, delta,
-        weight_function, robustness_method, scaling_method, boundary_policy,
-        confidence_intervals, prediction_intervals, return_diagnostics,
-        return_residuals, return_robustness_weights, zero_weight_fallback,
-        auto_converge, cv_fractions, cv_method, cv_k, parallel,
-        PACKAGE = "rfastlowess"
-    )
+  # Call the Rust function
+  .Call("wrap__fastlowess", x, y, fraction, iterations, delta,
+    weight_function, robustness_method, scaling_method, boundary_policy,
+    confidence_intervals, prediction_intervals, return_diagnostics,
+    return_residuals, return_robustness_weights, zero_weight_fallback,
+    auto_converge, cv_fractions, cv_method, cv_k, parallel,
+    PACKAGE = "rfastlowess"
+  )
 }

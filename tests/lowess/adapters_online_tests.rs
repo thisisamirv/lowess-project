@@ -734,10 +734,10 @@ fn test_online_window_exactly_min_points() {
     // Add exactly min_points
     for i in 0..5 {
         let output = processor.add_point(i as f64, (i * 2) as f64).unwrap();
-        if i >= 4 {
-            if let Some(output) = output {
-                assert!(output.smoothed.is_finite());
-            };
+        if i >= 4
+            && let Some(output) = output
+        {
+            assert!(output.smoothed.is_finite());
         }
     }
 
@@ -759,10 +759,10 @@ fn test_online_all_points_identical() {
     for _ in 0..10 {
         let output = processor.add_point(5.0, 10.0).unwrap();
         // Should return the constant value
-        if processor.window_size() >= 3 {
-            if let Some(output) = output {
-                assert_relative_eq!(output.smoothed, 10.0, epsilon = 1e-6);
-            };
+        if processor.window_size() >= 3
+            && let Some(output) = output
+        {
+            assert_relative_eq!(output.smoothed, 10.0, epsilon = 1e-6);
         }
     }
 }
@@ -785,10 +785,10 @@ fn test_online_decreasing_x_values() {
         let output = processor.add_point(x, y).unwrap();
 
         // Should still produce valid output
-        if processor.window_size() >= 3 {
-            if let Some(output) = output {
-                assert!(output.smoothed.is_finite());
-            };
+        if processor.window_size() >= 3
+            && let Some(output) = output
+        {
+            assert!(output.smoothed.is_finite());
         }
     }
 }
@@ -846,10 +846,10 @@ fn test_online_fraction_boundaries() {
 
     for i in 0..10 {
         let output = proc_one.add_point(i as f64, (i * 2) as f64).unwrap();
-        if proc_one.window_size() >= 5 {
-            if let Some(output) = output {
-                assert!(output.smoothed.is_finite());
-            };
+        if proc_one.window_size() >= 5
+            && let Some(output) = output
+        {
+            assert!(output.smoothed.is_finite());
         }
     }
 }
