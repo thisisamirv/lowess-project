@@ -154,7 +154,7 @@ Parameters for ``fastlowess.smooth_online()`` (Online/Real-time Mode).
    * - **window_capacity**
      - Integer. Maximum number of points to keep in history.
    * - **min_points**
-     - Integer. Minimum points required before producing output. Default: 3.
+     - Integer. Minimum points required before producing output. Default: 2.
    * - **update_mode**
      - String.
        

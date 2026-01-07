@@ -12,7 +12,7 @@ use fastLowess::internals::api::{
     UpdateMode, WeightFunction, ZeroWeightFallback,
 };
 use fastLowess::prelude::{
-    Batch, KFold, LOOCV, Lowess as LowessBuilder, LowessResult, Online, Streaming,
+    Batch, KFold, Lowess as LowessBuilder, LowessResult, Online, Streaming, LOOCV,
 };
 
 // ============================================================================
@@ -392,7 +392,7 @@ fn fastlowess_streaming(
 /// @param y Numeric vector of dependent variable values.
 /// @param fraction Smoothing fraction (default: 0.2).
 /// @param window_capacity Maximum points to retain in window (default: 100).
-/// @param min_points Minimum points before smoothing starts (default: 3).
+/// @param min_points Minimum points before smoothing starts (default: 2).
 /// @param iterations Number of robustness iterations (default: 3).
 /// @param delta Interpolation optimization threshold (NULL to auto-calculate).
 /// @param weight_function Kernel function: "tricube", "epanechnikov", "gaussian", "uniform", "biweight", "triangle".

@@ -22,7 +22,7 @@
 #'   window (default: 100). When capacity is reached, the oldest points are
 #'   removed as new ones arrive.
 #' @param min_points Minimum number of points required before smoothing starts
-#'   (default: 3). Points before this threshold return their original y values.
+#'   (default: 2). Points before this threshold return their original y values.
 #' @param iterations Number of robustness iterations (default: 3).
 #'   \itemize{
 #'     \item **0**: Fastest; no outlier weighting.

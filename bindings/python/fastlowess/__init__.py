@@ -250,7 +250,7 @@ smooth_streaming(x, y, fraction=0.3, chunk_size=5000, overlap=None,
     >>> result = fastlowess.smooth_streaming(x, y, chunk_size=10000)
 
 
-smooth_online(x, y, fraction=0.2, window_capacity=100, min_points=3,
+smooth_online(x, y, fraction=0.2, window_capacity=100, min_points=2,
     iterations=3, delta=None, weight_function="tricube",
     robustness_method="bisquare", scaling_method="mad", boundary_policy="extend",
     update_mode="full", auto_converge=None,
@@ -272,7 +272,7 @@ smooth_online(x, y, fraction=0.2, window_capacity=100, min_points=3,
     window_capacity : int, optional
         Maximum points to retain in the sliding window. Default: 100.
     min_points : int, optional
-        Minimum points before smoothing starts. Default: 3.
+        Minimum points before smoothing starts. Default: 2.
     iterations : int, optional
         Number of robustness iterations. Default: 3.
     delta : float, optional

@@ -81,7 +81,7 @@ For real-time data streams, such as sensor data, use `fastlowess.smooth_online()
         x, y,
         fraction=0.4,
         window_capacity=12,
-        min_points=3,
+        min_points=2,
         update_mode="incremental", # "incremental" (default) or "full"
         parallel=False
     )

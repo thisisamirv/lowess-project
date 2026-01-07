@@ -671,7 +671,7 @@ fn smooth_streaming<'py>(
 /// window_capacity : int, optional
 ///     Maximum points to retain in window (default: 100).
 /// min_points : int, optional
-///     Minimum points before smoothing starts (default: 3).
+///     Minimum points before smoothing starts (default: 2).
 /// iterations : int, optional
 ///     Number of robustness iterations (default: 3).
 /// delta : float, optional
@@ -701,7 +701,7 @@ fn smooth_streaming<'py>(
     x, y,
     fraction=0.2,
     window_capacity=100,
-    min_points=3,
+    min_points=2,
     iterations=3,
     delta=None,
     weight_function="tricube",
