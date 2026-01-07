@@ -265,6 +265,8 @@ r:
 	@# Step 1: Copy local crates FIRST
 	@cp -rL crates/fastLowess $(R_DIR)/src/vendor/
 	@cp -rL crates/lowess $(R_DIR)/src/vendor/
+	@rm -rf $(R_DIR)/src/vendor/fastLowess/target $(R_DIR)/src/vendor/lowess/target
+	@rm -f $(R_DIR)/src/vendor/fastLowess/Cargo.lock $(R_DIR)/src/vendor/lowess/Cargo.lock
 	@rm -f $(R_DIR)/src/vendor/fastLowess/README.md $(R_DIR)/src/vendor/fastLowess/CHANGELOG.md
 	@rm -f $(R_DIR)/src/vendor/lowess/README.md $(R_DIR)/src/vendor/lowess/CHANGELOG.md
 	@# Step 2: Patch local crates to remove workspace inheritance BEFORE vendoring
@@ -329,11 +331,8 @@ r:
 	@(cd $(R_DIR)/src && cargo vendor -q --no-delete vendor)
 	@# Step 8: Restore root Cargo.toml
 	@mv Cargo.toml.vendor-backup Cargo.toml
+	@# Step 9: Regenerate checksums after file cleanup
 	@$(R_DIR)/scripts/clean_checksums.py -q $(R_DIR)/src/vendor
-	@# Step 9: Clean up vendored files
-	@find $(R_DIR)/src/vendor -name "CITATION.cff" -delete
-	@find $(R_DIR)/src/vendor -name "CITATION" -delete
-	@find $(R_DIR)/src/vendor -name "Makefile" -delete
 	@echo "Creating vendor.tar.xz archive..."
 	@(cd $(R_DIR)/src && tar --sort=name --mtime='1970-01-01 00:00:00Z' --owner=0 --group=0 --numeric-owner --xz --create --file=vendor.tar.xz vendor)
 	@rm -rf $(R_DIR)/src/vendor
