@@ -87,7 +87,7 @@
   "softwareRequirements": {
     "SystemRequirements": "'Rust' programming language (via 'rustup' or system tools)"
   },
-  "fileSize": "42468.174KB",
+  "fileSize": "16390.58KB",
   "citation": [
     {
       "@type": "SoftwareSourceCode",

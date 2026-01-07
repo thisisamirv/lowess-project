@@ -256,15 +256,18 @@ r:
 	@echo "3. Vendoring..."
 	@echo "=============================================================================="
 	@echo "Updating and re-vendoring crates.io dependencies..."
-	@cd $(R_DIR) && sed -i 's|fastLowess = { path = "vendor/fastLowess",|fastLowess = { workspace = true,|g' src/Cargo.toml
+	@# First, prepare the R package Cargo.toml for isolated vendoring
+	@cd $(R_DIR) && sed -i 's|fastLowess = { path = "vendor/fastLowess",|fastLowess = { path = "vendor/fastLowess",|g' src/Cargo.toml
 	@cd $(R_DIR) && sed -i '/\[patch.crates-io\]/,/lowess = { path = "vendor\/lowess" }/d' src/Cargo.toml
 	@cd $(R_DIR) && perl -i -0pe 's/\s+$$/\n/' src/Cargo.toml
 	@rm -rf $(R_DIR)/src/vendor $(R_DIR)/src/vendor.tar.xz
-	@(cd $(R_DIR)/src && cargo vendor -q vendor)
+	@mkdir -p $(R_DIR)/src/vendor
+	@# Step 1: Copy local crates FIRST
 	@cp -rL crates/fastLowess $(R_DIR)/src/vendor/
 	@cp -rL crates/lowess $(R_DIR)/src/vendor/
 	@rm -f $(R_DIR)/src/vendor/fastLowess/README.md $(R_DIR)/src/vendor/fastLowess/CHANGELOG.md
 	@rm -f $(R_DIR)/src/vendor/lowess/README.md $(R_DIR)/src/vendor/lowess/CHANGELOG.md
+	@# Step 2: Patch local crates to remove workspace inheritance BEFORE vendoring
 	@EDITION=$$(grep 'edition = ' Cargo.toml | head -1 | sed 's/.*edition = "\([^"]*\)".*/\1/'); \
 	VERSION=$$(grep 'version = ' Cargo.toml | head -1 | sed 's/.*version = "\([^"]*\)".*/\1/'); \
 	AUTHORS=$$(grep 'authors = ' Cargo.toml | head -1 | sed 's/.*authors = \[\(.*\)\]/\1/'); \
@@ -303,19 +306,31 @@ r:
 		sed -i "s/^futures-intrusive = { workspace = true/futures-intrusive = { version = \"$$V_FUTURES\"/" $$toml; \
 	done; \
 	sed -i 's/^lowess = { workspace = true/lowess = { path = "..\/lowess"/' $(R_DIR)/src/vendor/fastLowess/Cargo.toml
-	@# Create dummy checksum files for local crates so cargo doesn't complain
+	@# Step 3: Remove GPU dependencies from fastLowess (not needed for R binding)
+	@sed -i '/^wgpu = /d' $(R_DIR)/src/vendor/fastLowess/Cargo.toml
+	@sed -i '/^bytemuck = /d' $(R_DIR)/src/vendor/fastLowess/Cargo.toml
+	@sed -i '/^pollster = /d' $(R_DIR)/src/vendor/fastLowess/Cargo.toml
+	@sed -i '/^futures-intrusive = /d' $(R_DIR)/src/vendor/fastLowess/Cargo.toml
+	@sed -i 's/^gpu = .*/gpu = []/' $(R_DIR)/src/vendor/fastLowess/Cargo.toml
+	@# Step 4: Create dummy checksum files for local crates
 	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/lowess/.cargo-checksum.json
 	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/fastLowess/.cargo-checksum.json
-	@$(R_DIR)/scripts/clean_checksums.py -q $(R_DIR)/src/vendor
-	@# Restore path-based dependency for isolated build
-	@cd $(R_DIR) && sed -i 's|fastLowess = { workspace = true,|fastLowess = { path = "vendor/fastLowess",|g' src/Cargo.toml
-	@# Ensure [workspace] is at the end to isolate from main workspace
+	@# Step 5: Add [workspace] and [patch.crates-io] to isolate from main workspace
 	@sed -i '/^\[workspace\]/d' $(R_DIR)/src/Cargo.toml
 	@echo "" >> $(R_DIR)/src/Cargo.toml
-	@if ! grep -q "^\[workspace\]" $(R_DIR)/src/Cargo.toml; then echo "[workspace]" >> $(R_DIR)/src/Cargo.toml; fi
+	@echo "[workspace]" >> $(R_DIR)/src/Cargo.toml
 	@echo "" >> $(R_DIR)/src/Cargo.toml
 	@echo "[patch.crates-io]" >> $(R_DIR)/src/Cargo.toml
 	@echo "lowess = { path = \"vendor/lowess\" }" >> $(R_DIR)/src/Cargo.toml
+	@# Step 6: Temporarily exclude R package from root workspace so cargo vendor is truly isolated
+	@cp Cargo.toml Cargo.toml.vendor-backup
+	@sed -i 's|"bindings/r/src",|# "bindings/r/src", # temporarily excluded for vendoring|' Cargo.toml
+	@# Step 7: Now vendor crates.io dependencies with --no-delete to preserve local crates
+	@(cd $(R_DIR)/src && cargo vendor -q --no-delete vendor)
+	@# Step 8: Restore root Cargo.toml
+	@mv Cargo.toml.vendor-backup Cargo.toml
+	@$(R_DIR)/scripts/clean_checksums.py -q $(R_DIR)/src/vendor
+	@# Step 9: Clean up vendored files
 	@find $(R_DIR)/src/vendor -name "CITATION.cff" -delete
 	@find $(R_DIR)/src/vendor -name "CITATION" -delete
 	@find $(R_DIR)/src/vendor -name "Makefile" -delete

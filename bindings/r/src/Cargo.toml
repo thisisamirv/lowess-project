@@ -9,7 +9,7 @@ publish = false
 
 # Build
 [dependencies]
-fastLowess = { path = "vendor/fastLowess", features = ["dev"] }
+fastLowess = { path = "vendor/fastLowess", features = ["dev", "cpu"] }
 extendr-api = "0.8.1"
 
 [lib]
