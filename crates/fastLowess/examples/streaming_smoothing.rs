@@ -17,8 +17,10 @@
 //!
 //! Each scenario includes the expected output as comments.
 
+#[cfg(feature = "cpu")]
 use fastLowess::prelude::*;
 
+#[cfg(feature = "cpu")]
 fn main() -> Result<(), LowessError> {
     println!("{}", "=".repeat(80));
     println!("LOWESS Streaming Smoothing - Comprehensive Examples");
@@ -38,6 +40,12 @@ fn main() -> Result<(), LowessError> {
     Ok(())
 }
 
+#[cfg(not(feature = "cpu"))]
+fn main() {
+    // Empty main for no-std
+}
+
+#[cfg(feature = "cpu")]
 /// Example 1: Basic Chunked Processing
 /// Demonstrates the fundamental streaming workflow
 fn example_1_basic_chunked_processing() -> Result<(), LowessError> {
@@ -120,6 +128,7 @@ fn example_1_basic_chunked_processing() -> Result<(), LowessError> {
     Ok(())
 }
 
+#[cfg(feature = "cpu")]
 /// Example 2: Chunk Size Comparison
 /// Shows how different chunk sizes affect processing
 fn example_2_chunk_size_comparison() -> Result<(), LowessError> {
@@ -195,6 +204,7 @@ fn example_2_chunk_size_comparison() -> Result<(), LowessError> {
     Ok(())
 }
 
+#[cfg(feature = "cpu")]
 /// Example 3: Overlap Strategies
 /// Demonstrates different overlap configurations
 fn example_3_overlap_strategies() -> Result<(), LowessError> {
@@ -277,6 +287,7 @@ fn example_3_overlap_strategies() -> Result<(), LowessError> {
     Ok(())
 }
 
+#[cfg(feature = "cpu")]
 /// Example 4: Large Dataset Processing
 /// Simulates processing a very large dataset
 fn example_4_large_dataset_processing() -> Result<(), LowessError> {
@@ -362,6 +373,7 @@ fn example_4_large_dataset_processing() -> Result<(), LowessError> {
     Ok(())
 }
 
+#[cfg(feature = "cpu")]
 /// Example 5: Outlier Handling in Streaming Mode
 /// Demonstrates robust smoothing with chunked data
 fn example_5_outlier_handling() -> Result<(), LowessError> {
@@ -447,6 +459,7 @@ fn example_5_outlier_handling() -> Result<(), LowessError> {
     Ok(())
 }
 
+#[cfg(feature = "cpu")]
 /// Example 6: File-Based Streaming Simulation
 /// Simulates reading from a file and writing results incrementally
 fn example_6_file_simulation() -> Result<(), LowessError> {
@@ -547,6 +560,7 @@ fn example_6_file_simulation() -> Result<(), LowessError> {
     Ok(())
 }
 
+#[cfg(feature = "cpu")]
 /// Example 7: Parallel Streaming Benchmark
 /// Measure execution time for a large dataset using the parallel Streaming adapter
 fn example_7_parallel_benchmark() -> Result<(), LowessError> {
@@ -601,6 +615,7 @@ fn example_7_parallel_benchmark() -> Result<(), LowessError> {
     Ok(())
 }
 
+#[cfg(feature = "cpu")]
 /// Example 8: Sequential Streaming Benchmark
 /// Measure execution time for a large dataset using the sequential Streaming adapter
 fn example_8_sequential_benchmark() -> Result<(), LowessError> {

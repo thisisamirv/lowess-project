@@ -14,8 +14,12 @@ rayon = { workspace = true }
 
 [features]
 default = ["dev"]
-dev = []
-gpu = []
+# lowess features
+std = ["lowess/std"]
+dev = ["lowess/dev", "fastLowess/dev"]
+# fastLowess features  
+cpu = ["fastLowess/cpu"]
+gpu = ["fastLowess/gpu"]
 
 [[test]]
 name = "lowess"

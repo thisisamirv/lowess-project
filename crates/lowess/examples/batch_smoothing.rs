@@ -10,9 +10,12 @@
 //!
 //! Each scenario includes the expected output as comments.
 
+#[cfg(feature = "std")]
 use lowess::prelude::*;
+#[cfg(feature = "std")]
 use std::time::Instant;
 
+#[cfg(feature = "std")]
 fn main() -> Result<(), LowessError> {
     println!("{}", "=".repeat(80));
     println!("LOWESS Batch Smoothing - Comprehensive Examples");
@@ -32,6 +35,10 @@ fn main() -> Result<(), LowessError> {
     Ok(())
 }
 
+#[cfg(not(feature = "std"))]
+fn main() {}
+
+#[cfg(feature = "std")]
 /// Example 1: Basic Smoothing
 /// Demonstrates the simplest usage with minimal configuration
 fn example_1_basic_smoothing() -> Result<(), LowessError> {
@@ -70,6 +77,7 @@ fn example_1_basic_smoothing() -> Result<(), LowessError> {
     Ok(())
 }
 
+#[cfg(feature = "std")]
 /// Example 2: Robust Smoothing with Outliers
 /// Shows how LOWESS handles outliers with robustness iterations
 fn example_2_robust_with_outliers() -> Result<(), LowessError> {
@@ -131,6 +139,7 @@ fn example_2_robust_with_outliers() -> Result<(), LowessError> {
     Ok(())
 }
 
+#[cfg(feature = "std")]
 /// Example 3: Uncertainty Quantification
 /// Demonstrates confidence and prediction intervals
 fn example_3_uncertainty_quantification() -> Result<(), LowessError> {
@@ -173,6 +182,7 @@ fn example_3_uncertainty_quantification() -> Result<(), LowessError> {
     Ok(())
 }
 
+#[cfg(feature = "std")]
 /// Example 4: Cross-Validation
 /// Automatic selection of optimal smoothing fraction
 fn example_4_cross_validation() -> Result<(), LowessError> {
@@ -221,6 +231,7 @@ fn example_4_cross_validation() -> Result<(), LowessError> {
     Ok(())
 }
 
+#[cfg(feature = "std")]
 /// Example 5: Complete Diagnostic Analysis
 /// Full feature demonstration with all diagnostics
 fn example_5_complete_diagnostics() -> Result<(), LowessError> {
@@ -276,6 +287,7 @@ fn example_5_complete_diagnostics() -> Result<(), LowessError> {
     Ok(())
 }
 
+#[cfg(feature = "std")]
 /// Example 6: Different Weight Functions (Kernels)
 /// Comparison of various kernel functions
 fn example_6_different_kernels() -> Result<(), LowessError> {
@@ -329,6 +341,7 @@ fn example_6_different_kernels() -> Result<(), LowessError> {
     Ok(())
 }
 
+#[cfg(feature = "std")]
 /// Example 7: Robustness Methods Comparison
 /// Different methods for handling outliers
 fn example_7_robustness_methods() -> Result<(), LowessError> {
@@ -392,6 +405,7 @@ fn example_7_robustness_methods() -> Result<(), LowessError> {
     Ok(())
 }
 
+#[cfg(feature = "std")]
 /// Example 8: Benchmark (Sequential Batch)
 /// Measure execution time for a large dataset using the sequential Batch adapter
 fn example_8_benchmark() -> Result<(), LowessError> {

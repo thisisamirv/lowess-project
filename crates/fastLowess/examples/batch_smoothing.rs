@@ -7,25 +7,36 @@
 //! - Cross-validation for automatic parameter selection
 //! - Performance comparison (simulated)
 
+#[cfg(feature = "cpu")]
 use fastLowess::prelude::*;
+
+#[cfg(feature = "cpu")]
 use ndarray::Array1;
+#[cfg(feature = "cpu")]
 use std::time::Instant;
 
+#[cfg(feature = "cpu")]
 fn main() -> Result<(), LowessError> {
-    println!("{}", "=".repeat(80));
-    println!("fastLowess Parallel Smoothing Examples");
-    println!("{}", "=".repeat(80));
-    println!();
+    #[cfg(feature = "cpu")]
+    {
+        println!("{}", "=".repeat(80));
+        println!("fastLowess Parallel Smoothing Examples");
+        println!("{}", "=".repeat(80));
+        println!();
 
-    example_1_parallel_execution()?;
-    example_2_sequential_fallback()?;
-    example_3_ndarray_integration()?;
-    example_4_robust_parallel()?;
-    example_5_cross_validation()?;
-
+        example_1_parallel_execution()?;
+        example_2_sequential_fallback()?;
+        example_3_ndarray_integration()?;
+        example_4_robust_parallel()?;
+        example_5_cross_validation()?;
+    }
     Ok(())
 }
 
+#[cfg(not(feature = "cpu"))]
+fn main() {}
+
+#[cfg(feature = "cpu")]
 /// Example 1: Parallel Execution
 /// Demonstrates the default parallel execution mode
 fn example_1_parallel_execution() -> Result<(), LowessError> {
@@ -59,6 +70,7 @@ fn example_1_parallel_execution() -> Result<(), LowessError> {
     Ok(())
 }
 
+#[cfg(feature = "cpu")]
 /// Example 2: Sequential Fallback
 /// Demonstrates explicitly disabling parallelism
 fn example_2_sequential_fallback() -> Result<(), LowessError> {
@@ -89,6 +101,7 @@ fn example_2_sequential_fallback() -> Result<(), LowessError> {
     Ok(())
 }
 
+#[cfg(feature = "cpu")]
 /// Example 3: NdArray Integration
 /// Demonstrates direct usage with ndarray types
 fn example_3_ndarray_integration() -> Result<(), LowessError> {
@@ -119,6 +132,7 @@ fn example_3_ndarray_integration() -> Result<(), LowessError> {
     Ok(())
 }
 
+#[cfg(feature = "cpu")]
 /// Example 4: Robust Parallel Smoothing
 /// Demonstrates parallel execution with robustness iterations
 fn example_4_robust_parallel() -> Result<(), LowessError> {
@@ -157,6 +171,7 @@ fn example_4_robust_parallel() -> Result<(), LowessError> {
     Ok(())
 }
 
+#[cfg(feature = "cpu")]
 /// Example 5: Cross-Validation for Parameter Selection
 /// Automatic selection of optimal smoothing fraction using parallel CV
 fn example_5_cross_validation() -> Result<(), LowessError> {

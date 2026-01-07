@@ -39,46 +39,41 @@ lowess:
 	@echo "1. Formatting..."
 	@echo "=============================================================================="
 	@cargo fmt -p $(LOWESS_PKG) -- --check
+	@echo "Formatting complete!"
 	@echo "=============================================================================="
 	@echo "2. Linting & Building..."
 	@echo "=============================================================================="
 	@if [ "$(FEATURE_SET)" = "all" ]; then \
 		echo "Checking $(LOWESS_PKG) (no-default-features)..."; \
-		cargo clippy -p $(LOWESS_PKG) --all-targets --no-default-features -- -D warnings || exit 1; \
-		cargo build -p $(LOWESS_PKG) --no-default-features || exit 1; \
-		RUSTDOCFLAGS="-D warnings" cargo doc -p $(LOWESS_PKG) --no-deps --no-default-features || exit 1; \
+		cargo clippy -q -p $(LOWESS_PKG) --all-targets --no-default-features -- -D warnings || exit 1; \
+		cargo build -q -p $(LOWESS_PKG) --no-default-features || exit 1; \
+		RUSTDOCFLAGS="-D warnings" cargo doc -q -p $(LOWESS_PKG) --no-deps --no-default-features || exit 1; \
 		for feature in $(LOWESS_FEATURES); do \
 			echo "Checking $(LOWESS_PKG) ($$feature)..."; \
-			cargo clippy -p $(LOWESS_PKG) --all-targets --features $$feature -- -D warnings || exit 1; \
-			cargo build -p $(LOWESS_PKG) --features $$feature || exit 1; \
-			RUSTDOCFLAGS="-D warnings" cargo doc -p $(LOWESS_PKG) --no-deps --features $$feature || exit 1; \
+			cargo clippy -q -p $(LOWESS_PKG) --all-targets --features $$feature -- -D warnings || exit 1; \
+			cargo build -q -p $(LOWESS_PKG) --features $$feature || exit 1; \
+			RUSTDOCFLAGS="-D warnings" cargo doc -q -p $(LOWESS_PKG) --no-deps --features $$feature || exit 1; \
 		done; \
 	else \
-		cargo clippy -p $(LOWESS_PKG) --all-targets --features $(FEATURE_SET) -- -D warnings || exit 1; \
-		cargo build -p $(LOWESS_PKG) --features $(FEATURE_SET) || exit 1; \
-		RUSTDOCFLAGS="-D warnings" cargo doc -p $(LOWESS_PKG) --no-deps --features $(FEATURE_SET) || exit 1; \
+		cargo clippy -q -p $(LOWESS_PKG) --all-targets --features $(FEATURE_SET) -- -D warnings || exit 1; \
+		cargo build -q -p $(LOWESS_PKG) --features $(FEATURE_SET) || exit 1; \
+		RUSTDOCFLAGS="-D warnings" cargo doc -q -p $(LOWESS_PKG) --no-deps --features $(FEATURE_SET) || exit 1; \
 	fi
 	@echo "=============================================================================="
 	@echo "3. Testing..."
 	@echo "=============================================================================="
-	@if [ "$(FEATURE_SET)" = "all" ]; then \
-		cargo test -p $(LOWESS_PKG) --lib --no-default-features --features dev || exit 1; \
-		for feature in $(LOWESS_FEATURES); do \
-			echo "Testing $(LOWESS_PKG) ($$feature)..."; \
-			cargo test -p $(LOWESS_PKG) --lib --features $$feature,dev || exit 1; \
-		done; \
-		echo "Running integration tests..."; \
-		cargo test -p lowess-project-tests --test $(LOWESS_PKG) || exit 1; \
-	else \
-		cargo test -p $(LOWESS_PKG) --lib --features $(FEATURE_SET) || exit 1; \
-		cargo test -p lowess-project-tests --test $(LOWESS_PKG) || exit 1; \
-	fi
+	@echo "Testing (no-default-features)..."
+	@cargo test -q -p lowess-project-tests --test $(LOWESS_PKG) --no-default-features
+	@for feature in $(LOWESS_FEATURES); do \
+		echo "Testing ($$feature)..."; \
+		cargo test -q -p lowess-project-tests --test $(LOWESS_PKG) --features $$feature || exit 1; \
+	done
 	@echo "=============================================================================="
 	@echo "4. Examples..."
 	@echo "=============================================================================="
 	@for example in $(LOWESS_EXAMPLES); do \
 		echo "Running example: $$example"; \
-		cargo run -p $(LOWESS_PKG) --example $$example --features dev || exit 1; \
+		cargo run -q -p $(LOWESS_PKG) --example $$example --features dev || exit 1; \
 	done
 	@echo "=============================================================================="
 	@echo "All $(LOWESS_PKG) crate checks completed successfully!"
@@ -104,43 +99,43 @@ fastLowess:
 	@echo "1. Formatting..."
 	@echo "=============================================================================="
 	@cargo fmt -p $(FASTLOWESS_PKG) -- --check
+	@echo "Formatting complete!"
 	@echo "=============================================================================="
 	@echo "2. Linting & Building..."
 	@echo "=============================================================================="
 	@for feature in $(FASTLOWESS_FEATURES) no-default-features; do \
 		if [ "$$feature" = "no-default-features" ]; then \
 			echo "Checking $(FASTLOWESS_PKG) (no-default-features)..."; \
-			cargo clippy -p $(FASTLOWESS_PKG) --all-targets --no-default-features -- -D warnings || exit 1; \
-			cargo build -p $(FASTLOWESS_PKG) --no-default-features || exit 1; \
-			RUSTDOCFLAGS="-D warnings" cargo doc -p $(FASTLOWESS_PKG) --no-deps --no-default-features || exit 1; \
+			cargo clippy -q -p $(FASTLOWESS_PKG) --all-targets --no-default-features -- -D warnings || exit 1; \
+			cargo build -q -p $(FASTLOWESS_PKG) --no-default-features || exit 1; \
+			RUSTDOCFLAGS="-D warnings" cargo doc -q -p $(FASTLOWESS_PKG) --no-deps --no-default-features || exit 1; \
 		else \
 			echo "Checking $(FASTLOWESS_PKG) ($$feature)..."; \
-			cargo clippy -p $(FASTLOWESS_PKG) --all-targets --features $$feature -- -D warnings || exit 1; \
-			cargo build -p $(FASTLOWESS_PKG) --features $$feature || exit 1; \
-			RUSTDOCFLAGS="-D warnings" cargo doc -p $(FASTLOWESS_PKG) --no-deps --features $$feature || exit 1; \
+			cargo clippy -q -p $(FASTLOWESS_PKG) --all-targets --features $$feature -- -D warnings || exit 1; \
+			cargo build -q -p $(FASTLOWESS_PKG) --features $$feature || exit 1; \
+			RUSTDOCFLAGS="-D warnings" cargo doc -q -p $(FASTLOWESS_PKG) --no-deps --features $$feature || exit 1; \
 		fi; \
 	done
 	@echo "=============================================================================="
 	@echo "3. Testing..."
 	@echo "=============================================================================="
-	@for feature in $(FASTLOWESS_FEATURES) no-default-features; do \
-		if [ "$$feature" = "no-default-features" ]; then \
-			cargo test -p $(FASTLOWESS_PKG) --no-default-features --features dev || exit 1; \
-		elif [ "$$feature" = "gpu" ]; then \
-			cargo test -p $(FASTLOWESS_PKG) --features $$feature,dev -- --test-threads=1 || exit 1; \
+	@echo "Testing (no-default-features)..."
+	@cargo test -q -p lowess-project-tests --test $(FASTLOWESS_PKG) --no-default-features
+	@for feature in $(FASTLOWESS_FEATURES); do \
+		echo "Testing ($$feature)..."; \
+		if [ "$$feature" = "gpu" ]; then \
+			cargo test -q -p lowess-project-tests --test $(FASTLOWESS_PKG) --features $$feature -- --test-threads=1 || exit 1; \
 		else \
-			cargo test -p $(FASTLOWESS_PKG) --features $$feature,dev || exit 1; \
+			cargo test -q -p lowess-project-tests --test $(FASTLOWESS_PKG) --features $$feature || exit 1; \
 		fi; \
 	done
-	@echo "Running integration tests..."
-	@cargo test -p lowess-project-tests --test $(FASTLOWESS_PKG) --features dev || exit 1
 	@echo "=============================================================================="
 	@echo "4. Examples..."
 	@echo "=============================================================================="
 	@for feature in $(FASTLOWESS_FEATURES); do \
 		echo "Running examples with feature: $$feature"; \
 		for example in $(FASTLOWESS_EXAMPLES); do \
-			cargo run -p $(FASTLOWESS_PKG) --example $$example --features $$feature || exit 1; \
+			cargo run -q -p $(FASTLOWESS_PKG) --example $$example --features $$feature || exit 1; \
 		done; \
 	done
 	@echo "=============================================================================="
@@ -171,7 +166,7 @@ python:
 	@echo "=============================================================================="
 	@echo "2. Linting..."
 	@echo "=============================================================================="
-	@cargo clippy -p $(PY_PKG) --all-targets -- -D warnings
+	@cargo clippy -q -p $(PY_PKG) --all-targets -- -D warnings
 	@ruff check $(PY_DIR)/fastlowess/ $(PY_TEST_DIR)/
 	@echo "=============================================================================="
 	@echo "3. Environment Setup..."
@@ -181,16 +176,16 @@ python:
 	@echo "=============================================================================="
 	@echo "4. Building..."
 	@echo "=============================================================================="
-	@. $(PY_VENV)/bin/activate && cd $(PY_DIR) && maturin develop
+	@. $(PY_VENV)/bin/activate && cd $(PY_DIR) && maturin develop -q
 	@echo "=============================================================================="
 	@echo "5. Testing..."
 	@echo "=============================================================================="
-	@cargo test -p $(PY_PKG)
-	@. $(PY_VENV)/bin/activate && python -m pytest $(PY_TEST_DIR) -v
+	@cargo test -q -p $(PY_PKG)
+	@. $(PY_VENV)/bin/activate && python -m pytest $(PY_TEST_DIR) -q
 	@echo "=============================================================================="
 	@echo "6. Documentation..."
 	@echo "=============================================================================="
-	@RUSTDOCFLAGS="-D warnings" cargo doc -p $(PY_PKG) --no-deps
+	@RUSTDOCFLAGS="-D warnings" cargo doc -q -p $(PY_PKG) --no-deps
 	@echo "=============================================================================="
 	@echo "$(PY_PKG) checks completed successfully!"
 
@@ -266,7 +261,7 @@ r:
 	@echo "=============================================================================="
 	@echo "7. Testing..."
 	@echo "=============================================================================="
-	@cd $(R_DIR)/src && cargo test
+	@cd $(R_DIR)/src && cargo test -q
 	@cd $(R_DIR) && Rscript -e "Sys.setenv(NOT_CRAN='true'); devtools::test()"
 	@echo "=============================================================================="
 	@echo "8. Submission checks..."

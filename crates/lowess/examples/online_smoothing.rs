@@ -16,8 +16,10 @@
 //!
 //! Each scenario includes the expected output as comments.
 
+#[cfg(feature = "std")]
 use lowess::prelude::*;
 
+#[cfg(feature = "std")]
 fn main() -> Result<(), LowessError> {
     println!("{}", "=".repeat(80));
     println!("LOWESS Online Smoothing - Comprehensive Examples");
@@ -36,6 +38,10 @@ fn main() -> Result<(), LowessError> {
     Ok(())
 }
 
+#[cfg(not(feature = "std"))]
+fn main() {}
+
+#[cfg(feature = "std")]
 /// Example 1: Basic Streaming Processing
 /// Demonstrates incremental data processing with online LOWESS
 fn example_1_basic_streaming() -> Result<(), LowessError> {
@@ -105,6 +111,7 @@ fn example_1_basic_streaming() -> Result<(), LowessError> {
     Ok(())
 }
 
+#[cfg(feature = "std")]
 /// Example 2: Real-Time Sensor Data Simulation
 /// Simulates processing temperature sensor readings in real-time
 fn example_2_sensor_data_simulation() -> Result<(), LowessError> {
@@ -174,6 +181,7 @@ fn example_2_sensor_data_simulation() -> Result<(), LowessError> {
     Ok(())
 }
 
+#[cfg(feature = "std")]
 /// Example 3: Outlier Handling in Online Mode
 /// Demonstrates how online LOWESS handles outliers with robustness iterations
 fn example_3_outlier_handling() -> Result<(), LowessError> {
@@ -254,6 +262,7 @@ fn example_3_outlier_handling() -> Result<(), LowessError> {
     Ok(())
 }
 
+#[cfg(feature = "std")]
 /// Example 4: Window Size Comparison
 /// Shows how different window sizes affect smoothing behavior
 fn example_4_window_size_comparison() -> Result<(), LowessError> {
@@ -311,6 +320,7 @@ fn example_4_window_size_comparison() -> Result<(), LowessError> {
     Ok(())
 }
 
+#[cfg(feature = "std")]
 /// Example 5: Memory-Bounded Processing
 /// Demonstrates efficient processing for embedded/resource-constrained systems
 fn example_5_memory_bounded_processing() -> Result<(), LowessError> {
@@ -374,6 +384,7 @@ fn example_5_memory_bounded_processing() -> Result<(), LowessError> {
     Ok(())
 }
 
+#[cfg(feature = "std")]
 /// Example 6: Sliding Window Behavior
 /// Demonstrates how the sliding window processes sequential data
 fn example_6_sliding_window_behavior() -> Result<(), LowessError> {
@@ -454,6 +465,7 @@ fn example_6_sliding_window_behavior() -> Result<(), LowessError> {
     Ok(())
 }
 
+#[cfg(feature = "std")]
 /// Example 7: Benchmark (Sequential Online)
 /// Measure execution time for a large dataset using the sequential Online adapter
 fn example_7_benchmark() -> Result<(), LowessError> {
