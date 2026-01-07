@@ -52,3 +52,5 @@ target/
 ^paper\.md$
 ^misc$
 ^\.Rprofile$
+^src/vendor/.*CITATION\.cff$
+^src/vendor/pyo3/CITATION.cff$

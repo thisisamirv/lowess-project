@@ -6,6 +6,7 @@ Cargo.lock
 **/*.rs.bk
 *.pdb
 **/mutants.out*/
+Cargo.toml.test
 
 # R Package
 *.Rcheck/
@@ -23,6 +24,7 @@ bindings/r/docs/
 bindings/r/doc/
 bindings/r/Meta/
 bindings/r/README.html
+bindings/r/src/Makevars
 .Rprofile
 
 # Python

@@ -89,5 +89,3 @@ sed -e "s|@GC_SECTIONS@|${GC_SECTIONS}|g" \
 echo "" >> src/Makevars
 
 echo "Generated src/Makevars"
-echo "Target Directory: ${TARGET_DIR}"
-echo "WASM detected: ${IS_WASM}"

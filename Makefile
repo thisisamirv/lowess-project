@@ -215,87 +215,152 @@ python-clean:
 # ==============================================================================
 r:
 	@echo "Running $(R_PKG_NAME) checks..."
+	@if [ -f $(R_DIR)/src/Cargo.toml.orig ]; then \
+		mv $(R_DIR)/src/Cargo.toml.orig $(R_DIR)/src/Cargo.toml; \
+	elif [ ! -f $(R_DIR)/src/Cargo.toml ] && [ -f $(R_DIR)/src/Cargo.toml.test ]; then \
+		cp $(R_DIR)/src/Cargo.toml.test $(R_DIR)/src/Cargo.toml; \
+	fi
 	@echo "=============================================================================="
-	@echo "1. Installing R packages..."
+	@echo "1. Patching Cargo.toml for isolated build..."
 	@echo "=============================================================================="
-	@Rscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); install.packages(c('styler', 'prettycode', 'covr', 'codemetar', 'BiocManager', 'urlchecker', 'pkgdown'), quiet = TRUE)" || true
-	@Rscript -e "BiocManager::install('BiocCheck', quiet = TRUE)" || true
+	@cp $(R_DIR)/src/Cargo.toml $(R_DIR)/src/Cargo.toml.orig
+	@# Extract values from root Cargo.toml [workspace.package] section and update R binding's Cargo.toml
+	@WS_EDITION=$$(grep 'edition = ' Cargo.toml | head -1 | sed 's/.*edition = "\([^"]*\)".*/\1/'); \
+	WS_VERSION=$$(grep 'version = ' Cargo.toml | head -1 | sed 's/.*version = "\([^"]*\)".*/\1/'); \
+	WS_AUTHORS=$$(grep 'authors = ' Cargo.toml | head -1 | sed 's/.*authors = \[\(.*\)\]/\1/'); \
+	WS_LICENSE=$$(grep 'license = ' Cargo.toml | head -1 | sed 's/.*license = "\([^"]*\)".*/\1/'); \
+	WS_RUST_VERSION=$$(grep 'rust-version = ' Cargo.toml | head -1 | sed 's/.*rust-version = "\([^"]*\)".*/\1/'); \
+	WS_EXTENDR=$$(grep 'extendr-api = ' Cargo.toml | head -1 | sed 's/.*extendr-api = "\([^"]*\)".*/\1/'); \
+	sed -i "s/^version = \".*\"/version = \"$$WS_VERSION\"/" $(R_DIR)/src/Cargo.toml; \
+	sed -i "s/^edition = \".*\"/edition = \"$$WS_EDITION\"/" $(R_DIR)/src/Cargo.toml; \
+	sed -i "s/^authors = \\[.*\\]/authors = [$$WS_AUTHORS]/" $(R_DIR)/src/Cargo.toml; \
+	sed -i "s/^license = \".*\"/license = \"$$WS_LICENSE\"/" $(R_DIR)/src/Cargo.toml; \
+	sed -i "s/^rust-version = \".*\"/rust-version = \"$$WS_RUST_VERSION\"/" $(R_DIR)/src/Cargo.toml; \
+	sed -i "s/^extendr-api = \".*\"/extendr-api = \"$$WS_EXTENDR\"/" $(R_DIR)/src/Cargo.toml; \
+	sed -i '/^\[workspace\]/d' $(R_DIR)/src/Cargo.toml; \
+	sed -i '/^\[patch\.crates-io\]/d' $(R_DIR)/src/Cargo.toml; \
+	sed -i '/^lowess = { path = "vendor\/lowess" }/d' $(R_DIR)/src/Cargo.toml; \
+	sed -i "s/^Version: .*/Version: $$WS_VERSION/" $(R_DIR)/DESCRIPTION; \
+	rm -rf $(R_DIR)/*.Rcheck $(R_DIR)/*.BiocCheck $(R_DIR)/src/target $(R_DIR)/target $(R_DIR)/src/vendor; \
+	(cd $(R_DIR) && Rscript -e "if (requireNamespace('codemetar', quietly=TRUE)) codemetar::write_codemeta()") || true; \
+	echo "" >> $(R_DIR)/src/Cargo.toml
+	@mkdir -p $(R_DIR)/src/.cargo && cp $(R_DIR)/src/cargo-config.toml $(R_DIR)/src/.cargo/config.toml
+	@echo "Patched $(R_DIR)/src/Cargo.toml"
 	@echo "=============================================================================="
-	@echo "2. Vendoring..."
+	@echo "2. Installing R development packages..."
+	@echo "=============================================================================="
+	@Rscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); suppressWarnings(install.packages(c('styler', 'prettycode', 'covr', 'codemetar', 'BiocManager', 'urlchecker', 'pkgdown'), quiet = TRUE))" || true
+	@Rscript -e "suppressWarnings(BiocManager::install('BiocCheck', quiet = TRUE, update = FALSE, ask = FALSE))" || true
+	@echo "R development packages installed!"
+	@echo "=============================================================================="
+	@echo "3. Vendoring..."
 	@echo "=============================================================================="
 	@echo "Updating and re-vendoring crates.io dependencies..."
-	@cd $(R_DIR) && sed -i 's|fastLowess = { path = "vendor/fastLowess",|fastLowess = {|g' src/Cargo.toml
+	@cd $(R_DIR) && sed -i 's|fastLowess = { path = "vendor/fastLowess",|fastLowess = { workspace = true,|g' src/Cargo.toml
 	@cd $(R_DIR) && sed -i '/\[patch.crates-io\]/,/lowess = { path = "vendor\/lowess" }/d' src/Cargo.toml
-	@# Remove trailing newlines to prevent accumulation
 	@cd $(R_DIR) && perl -i -0pe 's/\s+$$/\n/' src/Cargo.toml
 	@rm -rf $(R_DIR)/src/vendor $(R_DIR)/src/vendor.tar.xz
 	@(cd $(R_DIR)/src && cargo vendor -q vendor)
+	@cp -rL crates/fastLowess $(R_DIR)/src/vendor/
+	@cp -rL crates/lowess $(R_DIR)/src/vendor/
+	@rm -f $(R_DIR)/src/vendor/fastLowess/README.md $(R_DIR)/src/vendor/fastLowess/CHANGELOG.md
+	@rm -f $(R_DIR)/src/vendor/lowess/README.md $(R_DIR)/src/vendor/lowess/CHANGELOG.md
+	@EDITION=$$(grep 'edition = ' Cargo.toml | head -1 | sed 's/.*edition = "\([^"]*\)".*/\1/'); \
+	VERSION=$$(grep 'version = ' Cargo.toml | head -1 | sed 's/.*version = "\([^"]*\)".*/\1/'); \
+	AUTHORS=$$(grep 'authors = ' Cargo.toml | head -1 | sed 's/.*authors = \[\(.*\)\]/\1/'); \
+	LICENSE=$$(grep 'license = ' Cargo.toml | head -1 | sed 's/.*license = "\([^"]*\)".*/\1/'); \
+	RUST_VERSION=$$(grep 'rust-version = ' Cargo.toml | head -1 | sed 's/.*rust-version = "\([^"]*\)".*/\1/'); \
+	V_NUM_TRAITS=$$(grep 'num-traits = ' Cargo.toml | head -1 | sed 's/.*version = "\([^"]*\)".*/\1/'); \
+	V_NDARRAY=$$(grep 'ndarray = ' Cargo.toml | head -1 | sed 's/.*version = "\([^"]*\)".*/\1/'); \
+	V_RAYON=$$(grep 'rayon = ' Cargo.toml | head -1 | sed 's/.*version = "\([^"]*\)".*/\1/'); \
+	V_WIDE=$$(grep 'wide = ' Cargo.toml | head -1 | sed 's/.*version = "\([^"]*\)".*/\1/'); \
+	V_APPROX=$$(grep 'approx = ' Cargo.toml | head -1 | sed 's/.*approx = "\([^"]*\)".*/\1/'); \
+	V_WGPU=$$(grep 'wgpu = ' Cargo.toml | head -1 | sed 's/.*version = "\([^"]*\)".*/\1/'); \
+	V_BYTEMUCK=$$(grep 'bytemuck = ' Cargo.toml | head -1 | sed 's/.*version = "\([^"]*\)".*/\1/'); \
+	V_POLLSTER=$$(grep 'pollster = ' Cargo.toml | head -1 | sed 's/.*version = "\([^"]*\)".*/\1/'); \
+	V_FUTURES=$$(grep 'futures-intrusive = ' Cargo.toml | head -1 | sed 's/.*version = "\([^"]*\)".*/\1/'); \
+	for crate in fastLowess lowess; do \
+		toml=$(R_DIR)/src/vendor/$$crate/Cargo.toml; \
+		sed -i "s/^version = { workspace = true }/version = \"$$VERSION\"/" $$toml; \
+		sed -i "s/^authors = { workspace = true }/authors = [$$AUTHORS]/" $$toml; \
+		sed -i "s/^edition = { workspace = true }/edition = \"$$EDITION\"/" $$toml; \
+		sed -i "s/^license = { workspace = true }/license = \"$$LICENSE\"/" $$toml; \
+		sed -i "s/^rust-version = { workspace = true }/rust-version = \"$$RUST_VERSION\"/" $$toml; \
+		sed -i '/^description = { workspace = true }/d' $$toml; \
+		sed -i '/^readme = { workspace = true }/d' $$toml; \
+		sed -i '/^repository = { workspace = true }/d' $$toml; \
+		sed -i '/^homepage = { workspace = true }/d' $$toml; \
+		sed -i '/^keywords = { workspace = true }/d' $$toml; \
+		sed -i '/^categories = { workspace = true }/d' $$toml; \
+		sed -i "s/^num-traits = { workspace = true/num-traits = { version = \"$$V_NUM_TRAITS\"/" $$toml; \
+		sed -i "s/^ndarray = { workspace = true/ndarray = { version = \"$$V_NDARRAY\"/" $$toml; \
+		sed -i "s/^rayon = { workspace = true/rayon = { version = \"$$V_RAYON\"/" $$toml; \
+		sed -i "s/^wide = { workspace = true/wide = { version = \"$$V_WIDE\"/" $$toml; \
+		sed -i "s/^approx = { workspace = true }/approx = \"$$V_APPROX\"/" $$toml; \
+		sed -i "s/^wgpu = { workspace = true/wgpu = { version = \"$$V_WGPU\"/" $$toml; \
+		sed -i "s/^bytemuck = { workspace = true/bytemuck = { version = \"$$V_BYTEMUCK\"/" $$toml; \
+		sed -i "s/^pollster = { workspace = true/pollster = { version = \"$$V_POLLSTER\"/" $$toml; \
+		sed -i "s/^futures-intrusive = { workspace = true/futures-intrusive = { version = \"$$V_FUTURES\"/" $$toml; \
+	done; \
+	sed -i 's/^lowess = { workspace = true/lowess = { path = "..\/lowess"/' $(R_DIR)/src/vendor/fastLowess/Cargo.toml
+	@# Create dummy checksum files for local crates so cargo doesn't complain
+	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/lowess/.cargo-checksum.json
+	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/fastLowess/.cargo-checksum.json
 	@$(R_DIR)/scripts/clean_checksums.py -q $(R_DIR)/src/vendor
-	@cd $(R_DIR) && sed -i 's|fastLowess = {|fastLowess = { path = "vendor/fastLowess",|g' src/Cargo.toml
+	@# Restore path-based dependency for isolated build
+	@cd $(R_DIR) && sed -i 's|fastLowess = { workspace = true,|fastLowess = { path = "vendor/fastLowess",|g' src/Cargo.toml
+	@# Ensure [workspace] is at the end to isolate from main workspace
+	@sed -i '/^\[workspace\]/d' $(R_DIR)/src/Cargo.toml
+	@echo "" >> $(R_DIR)/src/Cargo.toml
+	@if ! grep -q "^\[workspace\]" $(R_DIR)/src/Cargo.toml; then echo "[workspace]" >> $(R_DIR)/src/Cargo.toml; fi
 	@echo "" >> $(R_DIR)/src/Cargo.toml
 	@echo "[patch.crates-io]" >> $(R_DIR)/src/Cargo.toml
 	@echo "lowess = { path = \"vendor/lowess\" }" >> $(R_DIR)/src/Cargo.toml
+	@find $(R_DIR)/src/vendor -name "CITATION.cff" -delete
+	@find $(R_DIR)/src/vendor -name "CITATION" -delete
+	@find $(R_DIR)/src/vendor -name "Makefile" -delete
 	@echo "Creating vendor.tar.xz archive..."
 	@(cd $(R_DIR)/src && tar --sort=name --mtime='1970-01-01 00:00:00Z' --owner=0 --group=0 --numeric-owner --xz --create --file=vendor.tar.xz vendor)
 	@rm -rf $(R_DIR)/src/vendor
 	@echo "Vendor update complete. Archive: $(R_DIR)/src/vendor.tar.xz"
 	@if [ -f $(R_DIR)/src/vendor.tar.xz ] && [ ! -d $(R_DIR)/src/vendor ]; then \
-		echo "Extracting vendored dependencies..."; \
-		(cd $(R_DIR)/src && tar --extract --xz -f vendor.tar.xz); \
+		(cd $(R_DIR)/src && tar --extract --xz -f vendor.tar.xz) && \
+		find $(R_DIR)/src/vendor -name "CITATION.cff" -delete && \
+		find $(R_DIR)/src/vendor -name "CITATION" -delete; \
 	fi
 	@echo "=============================================================================="
-	@echo "3. Formatting..."
-	@echo "=============================================================================="
-	@cd $(R_DIR)/src && cargo fmt --all -q
-	@cd $(R_DIR) && Rscript scripts/style_pkg.R || true
-	@cd $(R_DIR)/src && cargo fmt --all -- --check || (echo "Run 'cargo fmt' to fix"; exit 1)
-	@cd $(R_DIR)/src && cargo clippy -q --all-targets -- -D warnings
-	@cd $(R_DIR) && Rscript -e "lints <- lintr::lint_package(); print(lints); if (length(lints) > 0) quit(status = 1)"
-	@echo "=============================================================================="
-	@echo "4. Patching Cargo.toml for isolated build..."
-	@echo "=============================================================================="
-	@cp $(R_DIR)/src/Cargo.toml $(R_DIR)/src/Cargo.toml.orig
-	@sed -i 's/edition = { workspace = true }/edition = "2021"/' $(R_DIR)/src/Cargo.toml
-	@sed -i 's/version = { workspace = true }/version = "0.99.3"/' $(R_DIR)/src/Cargo.toml
-	@sed -i 's/authors = { workspace = true }/authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]/' $(R_DIR)/src/Cargo.toml
-	@sed -i 's/license = { workspace = true }/license = "MIT OR Apache-2.0"/' $(R_DIR)/src/Cargo.toml
-	@sed -i 's/rust-version = { workspace = true }/rust-version = "1.85.0"/' $(R_DIR)/src/Cargo.toml
-	@sed -i 's/extendr-api = { workspace = true }/extendr-api = "0.8.1"/' $(R_DIR)/src/Cargo.toml
-	@sed -i 's|fastLowess = { workspace = true, features = \["dev"\] }|fastLowess = { path = "../../../crates/fastLowess", features = ["dev"] }|' $(R_DIR)/src/Cargo.toml
-	@sed -i '/description = { workspace = true }/d' $(R_DIR)/src/Cargo.toml
-	@sed -i '/readme = { workspace = true }/d' $(R_DIR)/src/Cargo.toml
-	@sed -i '/repository = { workspace = true }/d' $(R_DIR)/src/Cargo.toml
-	@sed -i '/homepage = { workspace = true }/d' $(R_DIR)/src/Cargo.toml
-	@sed -i '/keywords = { workspace = true }/d' $(R_DIR)/src/Cargo.toml
-	@sed -i '/categories = { workspace = true }/d' $(R_DIR)/src/Cargo.toml
-	@echo '[workspace]' >> $(R_DIR)/src/Cargo.toml
-	@mkdir -p $(R_DIR)/src/.cargo && cp $(R_DIR)/src/cargo-config.toml $(R_DIR)/src/.cargo/config.toml
-	@echo "=============================================================================="
-	@echo "5. Documentation..."
-	@echo "=============================================================================="
-	@cd $(R_DIR)/src && RUSTDOCFLAGS="-D warnings" cargo doc -q --no-deps
-	@cd $(R_DIR) && Rscript -e "devtools::document()"
-	@cd $(R_DIR) && Rscript -e "devtools::build_vignettes()" || true
-	@cd $(R_DIR) && Rscript -e "if (requireNamespace('codemetar', quietly=TRUE)) codemetar::write_codemeta()" || true
-	@cd $(R_DIR) && Rscript -e "if (file.exists('README.Rmd')) rmarkdown::render('README.Rmd')" || true
-	@cd $(R_DIR) && Rscript -e "if (requireNamespace('pkgdown', quietly=TRUE)) pkgdown::build_site()" || true
-	@echo "=============================================================================="
-	@echo "6. Building..."
+	@echo "4. Building..."
 	@echo "=============================================================================="
 	@(cd $(R_DIR)/src && cargo build -q --release || (mv Cargo.toml.orig Cargo.toml && exit 1))
-	@mv $(R_DIR)/src/Cargo.toml.orig $(R_DIR)/src/Cargo.toml
 	@rm -rf $(R_DIR)/src/.cargo
 	@cd $(R_DIR) && R CMD build .
 	@echo "=============================================================================="
-	@echo "7. Installing..."
+	@echo "5. Installing..."
 	@echo "=============================================================================="
 	@cd $(R_DIR) && R CMD INSTALL $(R_PKG_TARBALL) || true
-	@cd $(R_DIR) && Rscript -e "devtools::install()"
+	@cd $(R_DIR) && Rscript -e "devtools::install(quiet = TRUE)"
+	@echo "=============================================================================="
+	@echo "6. Formatting..."
+	@echo "=============================================================================="
+	@cd $(R_DIR)/src && cargo fmt -q
+	@cd $(R_DIR) && Rscript scripts/style_pkg.R || true
+	@cd $(R_DIR)/src && cargo fmt -- --check || (echo "Run 'cargo fmt' to fix"; exit 1)
+	@cd $(R_DIR)/src && cargo clippy -q -- -D warnings
+	@cd $(R_DIR) && Rscript -e "lints <- lintr::lint_package(); print(lints); if (length(lints) > 0) quit(status = 1)"
+	@echo "=============================================================================="
+	@echo "7. Documentation..."
+	@echo "=============================================================================="
+	@rm -rf $(R_DIR)/*.Rcheck
+	@cd $(R_DIR)/src && RUSTDOCFLAGS="-D warnings" cargo doc -q --no-deps
+	@cd $(R_DIR) && Rscript -e "devtools::document(quiet = TRUE)"
+	@cd $(R_DIR) && Rscript -e "devtools::build_vignettes(quiet = TRUE)" || true
+	@cd $(R_DIR) && Rscript -e "if (file.exists('README.Rmd')) rmarkdown::render('README.Rmd', quiet = TRUE)" || true
+	@cd $(R_DIR) && Rscript -e "if (requireNamespace('pkgdown', quietly=TRUE)) pkgdown::build_site(quiet = TRUE)" || true
 	@echo "=============================================================================="
 	@echo "8. Testing..."
 	@echo "=============================================================================="
 	@cd $(R_DIR)/src && cargo test -q
-	@cd $(R_DIR) && Rscript -e "Sys.setenv(NOT_CRAN='true'); devtools::test()"
+	@Rscript -e "Sys.setenv(NOT_CRAN='true'); testthat::test_dir('tests/r/testthat', package = 'rfastlowess')"
 	@echo "=============================================================================="
 	@echo "9. Submission checks..."
 	@echo "=============================================================================="
@@ -304,6 +369,7 @@ r:
 	@cd $(R_DIR) && Rscript -e "if (requireNamespace('BiocCheck', quietly=TRUE)) BiocCheck::BiocCheck('$(R_PKG_TARBALL)')" || true
 	@echo "Package size (Limit: 5MB):"
 	@ls -lh $(R_DIR)/$(R_PKG_TARBALL) || true
+	@if [ -f $(R_DIR)/src/Cargo.toml.orig ]; then mv $(R_DIR)/src/Cargo.toml.orig $(R_DIR)/src/Cargo.toml; fi
 	@echo "=============================================================================="
 	@echo "All $(R_PKG_NAME) checks completed successfully!"
 
@@ -322,7 +388,7 @@ r-clean:
 	@rm -rf $(R_DIR)/src/vendor $(R_DIR)/target
 	@rm -rf $(R_DIR)/$(R_PKG_NAME).Rcheck $(R_DIR)/$(R_PKG_NAME).BiocCheck
 	@rm -f $(R_DIR)/$(R_PKG_NAME)_*.tar.gz
-	@rm -rf $(R_DIR)/src/*.o $(R_DIR)/src/*.so $(R_DIR)/src/*.dll
+	@rm -rf $(R_DIR)/src/*.o $(R_DIR)/src/*.so $(R_DIR)/src/*.dll $(R_DIR)/src/Cargo.toml.orig
 	@rm -rf $(R_DIR)/doc $(R_DIR)/Meta $(R_DIR)/vignettes/*.html $(R_DIR)/README.html
 	@find $(R_DIR) -name "*.Rout" -delete
 	@Rscript -e "try(remove.packages('$(R_PKG_NAME)'), silent = TRUE)" || true

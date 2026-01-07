@@ -1,29 +1,16 @@
 [package]
 name = "rfastlowess"
-version = { workspace = true }
-authors = { workspace = true }
-edition = { workspace = true }
-license = { workspace = true }
-rust-version = { workspace = true }
-
-# Metadata
-description = { workspace = true }
-readme = { workspace = true }
-
-# Links
-repository = { workspace = true }
-homepage = { workspace = true }
-
-# Categories
-keywords = { workspace = true }
-categories = { workspace = true }
-
-include = ["Cargo.toml", "lib.rs", "vendor/**/*", "README.md", "LICENSE"]
+version = "0.99.3"
+authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
+edition = "2024"
+license = "MIT OR Apache-2.0"
+rust-version = "1.85.0"
+publish = false
 
 # Build
 [dependencies]
-fastLowess = { path = "vendor/fastLowess", workspace = true, features = ["dev"] }
-extendr-api = { workspace = true }
+fastLowess = { path = "vendor/fastLowess", features = ["dev"] }
+extendr-api = "0.8.1"
 
 [lib]
 name = "rfastlowess"
@@ -34,10 +21,7 @@ crate-type = ["staticlib", "rlib"]
 default = []
 dev = []
 
-# Document all features
-[package.metadata.docs.rs]
-all-features = true
-rustdoc-args = ["--cfg", "docsrs"]
+[workspace]
 
 [patch.crates-io]
 lowess = { path = "vendor/lowess" }

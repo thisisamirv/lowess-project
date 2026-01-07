@@ -8,7 +8,7 @@
   "codeRepository": "https://github.com/thisisamirv/rfastlowess",
   "issueTracker": "https://github.com/thisisamirv/rfastlowess/issues",
   "license": "https://spdx.org/licenses/MIT",
-  "version": "0.99.2",
+  "version": "0.99.3",
   "programmingLanguage": {
     "@type": "ComputerLanguage",
     "name": "R",
@@ -87,7 +87,7 @@
   "softwareRequirements": {
     "SystemRequirements": "'Rust' programming language (via 'rustup' or system tools)"
   },
-  "fileSize": "7266.956KB",
+  "fileSize": "42468.174KB",
   "citation": [
     {
       "@type": "SoftwareSourceCode",
@@ -130,7 +130,6 @@
       }
     }
   ],
-  "releaseNotes": "https://github.com/thisisamirv/rfastlowess/blob/main/NEWS.md",
   "readme": "https://github.com/thisisamirv/rfastlowess/blob/main/README.md",
   "contIntegration": ["https://github.com/thisisamirv/rfastlowess/actions?query=workflow%3Apkgcheck", "https://app.codecov.io/gh/thisisamirv/rfastlowess"],
   "developmentStatus": "https://www.repostatus.org/#active"

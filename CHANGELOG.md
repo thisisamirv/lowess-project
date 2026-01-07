@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.99.3] - 2026-01-06
+## 0.99.3
 
 ### Changed
 
@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Created unified `.gitignore` for all crates/packages
 - Added comprehensive badges from all packages
 
-## [0.99.2]
+## 0.99.2
 
 ### Changed
 
@@ -52,7 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Package startup messages
 - `pkgcheck` workflow to run on host runner
 
-## [0.99.1]
+## 0.99.1
 
 ### Changed
 
@@ -60,7 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Modified package for Bioconductor submission
 
-## [0.99.0]
+## 0.99.0
 
 ### Added
 
@@ -75,7 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed license from AGPL-3.0-or-later to dual MIT OR Apache-2.0
 - Updated documentation
 
-## [0.7.0]
+## 0.7.0
 
 ### Added
 
@@ -102,7 +102,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Refactored `LowessExecutor` to accept optional external buffers
 - Optimized K-Fold Cross-Validation performance
 
-## [0.6.0]
+## 0.6.0
 
 ### Added
 
@@ -140,7 +140,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Type exports from `prelude` that caused ambiguity
 - `.cargo/config.toml`
 
-## [0.5.3]
+## 0.5.3
 
 ### Changed
 
@@ -152,7 +152,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimized interpolation and cross-validation
 - Optimized delta interpolation with binary search
 
-## [0.4.0]
+## 0.4.0
 
 ### Added
 
@@ -208,7 +208,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Benchmarking code
 - Convenience re-exports
 
-## [0.3.0]
+## 0.3.0
 
 ### Added
 
@@ -273,7 +273,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Type exports from `prelude` that shadowed std types
 - Sequential, parallel, and ndarray adaptors
 
-## [0.2.0]
+## 0.2.0
 
 ### Added
 
@@ -310,7 +310,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Improved documentation
 
-## [0.1.0]
+## 0.1.0
 
 ### Added
 

@@ -180,14 +180,6 @@ To install the latest development version from GitHub (requires [Rust](https://r
 remotes::install_github("thisisamirv/rfastlowess")
 ```
 
-### Latest Changes
-
-To check the latest changes and release notes:
-
-```r
-news(package = "rfastlowess")
-```
-
 ## Quick Start
 
 ```{r plot-demo, message=FALSE, warning=FALSE}

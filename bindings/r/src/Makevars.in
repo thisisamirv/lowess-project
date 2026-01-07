@@ -1,3 +1,4 @@
+# Silencing is handled by @ prefix on commands
 TARGET_DIR = @TARGET_DIR@
 LIBDIR = $(TARGET_DIR)/release
 STATLIB = $(LIBDIR)/librfastlowess.a
@@ -10,28 +11,31 @@ all: clean
 $(SHLIB): $(STATLIB)
 
 $(STATLIB):
-	@cargo --version
-	@rustc --version
-	# Extract vendored dependencies if archive exists and vendor dir doesn't
+	@# Silence informational tool output
+	@cargo --version > /dev/null 2>&1
+	@rustc --version > /dev/null 2>&1
 	@if [ -f vendor.tar.xz ] && [ ! -d vendor ]; then \
-		tar --extract --xz -f vendor.tar.xz; \
+		tar --extract --xz -f vendor.tar.xz && \
+		find vendor -name "CITATION.cff" -delete && \
+		find vendor -name "CITATION" -delete; \
 	fi
-	# Create .cargo/config.toml from non-hidden source (avoids R CMD check NOTE)
 	@mkdir -p .cargo
 	@cp cargo-config.toml .cargo/config.toml
-	# Temporarily isolate from workspace to allow vendored build
 	@cp Cargo.toml Cargo.toml.orig
-	@echo '[workspace]' >> Cargo.toml
+	@if ! grep -q "^\[workspace\]" Cargo.toml; then echo '[workspace]' >> Cargo.toml; fi
 	@mkdir -p $(TARGET_DIR)
 	@if [ "@IS_WASM@" = "1" ]; then \
 		rm -f .cargo/config.toml && \
 		export RUSTFLAGS="-C symbol-mangling-version=v0 -C panic=abort" && \
-		cargo build -Z build-std=std,panic_abort --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR) --target wasm32-unknown-emscripten || (mv Cargo.toml.orig Cargo.toml && exit 1); \
+		cargo build -q -Z build-std=std,panic_abort --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR) --target wasm32-unknown-emscripten || (mv Cargo.toml.orig Cargo.toml && exit 1); \
 	else \
-		cargo build --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR) || (mv Cargo.toml.orig Cargo.toml && exit 1); \
+		cargo build -q --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR) || (mv Cargo.toml.orig Cargo.toml && exit 1); \
 	fi
 	@mv Cargo.toml.orig Cargo.toml
 	@rm -rf .cargo
 
 clean:
-	rm -Rf $(SHLIB) $(STATLIB) $(OBJECTS)
+	@rm -Rf $(SHLIB) $(STATLIB) $(OBJECTS)
+
+dummy.o: dummy.c
+	@$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -c dummy.c -o dummy.o
