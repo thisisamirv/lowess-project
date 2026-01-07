@@ -11,10 +11,10 @@ vignette: >
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  fig.width = 7,
-  fig.height = 5
+    collapse = TRUE,
+    comment = "#>",
+    fig.width = 7,
+    fig.height = 5
 )
 ```
 
@@ -85,7 +85,7 @@ plot(x, y_outliers, pch = 16, col = "gray", main = "Robust LOWESS")
 lines(result$x, result$y, col = "blue", lwd = 2, lty = 2)
 lines(result_robust$x, result_robust$y, col = "red", lwd = 2)
 legend("topright", c("Clean data", "With outliers"),
-  col = c("blue", "red"), lwd = 2, lty = c(2, 1)
+    col = c("blue", "red"), lwd = 2, lty = c(2, 1)
 )
 ```
 
@@ -106,17 +106,17 @@ methylation <- pmax(0, pmin(1, methylation)) # Bound to [0, 1]
 
 # Smooth methylation profile
 result_meth <- fastlowess(
-  positions, methylation,
-  fraction = 0.1,
-  iterations = 3,
-  confidence_intervals = 0.95
+    positions, methylation,
+    fraction = 0.1,
+    iterations = 3,
+    confidence_intervals = 0.95
 )
 
 # Plot
 plot(positions, methylation,
-  pch = ".", col = "gray",
-  main = "Methylation Profile Smoothing",
-  xlab = "Genomic Position (bp)", ylab = "Methylation Level"
+    pch = ".", col = "gray",
+    main = "Methylation Profile Smoothing",
+    xlab = "Genomic Position (bp)", ylab = "Methylation Level"
 )
 lines(result_meth$x, result_meth$y, col = "blue", lwd = 2)
 lines(result_meth$x, result_meth$confidence_lower, col = "blue", lty = 2)
@@ -131,22 +131,22 @@ Smoothing temporal gene expression data:
 # Simulate gene expression over time
 time_points <- seq(0, 24, by = 0.5) # Hours
 expression <- 100 * (1 + 0.5 * sin(time_points * pi / 12)) +
-  rnorm(length(time_points), sd = 10)
+    rnorm(length(time_points), sd = 10)
 
 # Smooth with prediction intervals
 result_expr <- fastlowess(
-  time_points, expression,
-  fraction = 0.3,
-  iterations = 3,
-  prediction_intervals = 0.95,
-  return_diagnostics = TRUE
+    time_points, expression,
+    fraction = 0.3,
+    iterations = 3,
+    prediction_intervals = 0.95,
+    return_diagnostics = TRUE
 )
 
 # Plot
 plot(time_points, expression,
-  pch = 16, col = "gray",
-  main = "Gene Expression Time Course",
-  xlab = "Time (hours)", ylab = "Expression Level"
+    pch = 16, col = "gray",
+    main = "Gene Expression Time Course",
+    xlab = "Time (hours)", ylab = "Expression Level"
 )
 lines(result_expr$x, result_expr$y, col = "red", lwd = 2)
 lines(result_expr$x, result_expr$prediction_lower, col = "red", lty = 2)
@@ -166,10 +166,10 @@ Automatically select the optimal smoothing fraction:
 ```{r cv_example}
 # Test multiple fractions
 result_cv <- fastlowess(
-  x, y,
-  cv_fractions = c(0.1, 0.2, 0.3, 0.5, 0.7),
-  cv_method = "kfold",
-  cv_k = 5
+    x, y,
+    cv_fractions = c(0.1, 0.2, 0.3, 0.5, 0.7),
+    cv_method = "kfold",
+    cv_k = 5
 )
 
 cat("Optimal fraction:", result_cv$fraction_used, "\n")
@@ -188,10 +188,10 @@ y_large <- sin(x_large / 10) + rnorm(n_large, sd = 0.1)
 
 # Streaming smoothing
 result_stream <- fastlowess_streaming(
-  x_large, y_large,
-  fraction = 0.1,
-  chunk_size = 5000,
-  overlap = 500
+    x_large, y_large,
+    fraction = 0.1,
+    chunk_size = 5000,
+    overlap = 500
 )
 ```
 
@@ -206,16 +206,16 @@ sensor_values <- 20 + 5 * sin(sensor_times / 10) + rnorm(100, sd = 1)
 
 # Online smoothing with sliding window
 result_online <- fastlowess_online(
-  sensor_times, sensor_values,
-  window_capacity = 25,
-  fraction = 0.3,
-  min_points = 10
+    sensor_times, sensor_values,
+    window_capacity = 25,
+    fraction = 0.3,
+    min_points = 10
 )
 
 plot(sensor_times, sensor_values,
-  pch = 16, col = "gray",
-  main = "Online Sensor Data Smoothing",
-  xlab = "Time", ylab = "Sensor Value"
+    pch = 16, col = "gray",
+    main = "Online Sensor Data Smoothing",
+    xlab = "Time", ylab = "Sensor Value"
 )
 lines(result_online$x, result_online$y, col = "green", lwd = 2)
 ```

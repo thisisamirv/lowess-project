@@ -218,10 +218,27 @@ r:
 	@echo "=============================================================================="
 	@echo "1. Installing R packages..."
 	@echo "=============================================================================="
-	@Rscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); install.packages(c('styler', 'prettycode', 'covr', 'codemetar', 'BiocManager', 'urlchecker', 'pkgdown'), quiet = TRUE); BiocManager::install('BiocCheck', quiet = TRUE)" || true
+	@Rscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); install.packages(c('styler', 'prettycode', 'covr', 'codemetar', 'BiocManager', 'urlchecker', 'pkgdown'), quiet = TRUE)" || true
+	@Rscript -e "BiocManager::install('BiocCheck', quiet = TRUE)" || true
 	@echo "=============================================================================="
 	@echo "2. Vendoring..."
 	@echo "=============================================================================="
+	@echo "Updating and re-vendoring crates.io dependencies..."
+	@cd $(R_DIR) && sed -i 's|fastLowess = { path = "vendor/fastLowess",|fastLowess = {|g' src/Cargo.toml
+	@cd $(R_DIR) && sed -i '/\[patch.crates-io\]/,/lowess = { path = "vendor\/lowess" }/d' src/Cargo.toml
+	@# Remove trailing newlines to prevent accumulation
+	@cd $(R_DIR) && perl -i -0pe 's/\s+$$/\n/' src/Cargo.toml
+	@rm -rf $(R_DIR)/src/vendor $(R_DIR)/src/vendor.tar.xz
+	@(cd $(R_DIR)/src && cargo vendor -q vendor)
+	@$(R_DIR)/scripts/clean_checksums.py -q $(R_DIR)/src/vendor
+	@cd $(R_DIR) && sed -i 's|fastLowess = {|fastLowess = { path = "vendor/fastLowess",|g' src/Cargo.toml
+	@echo "" >> $(R_DIR)/src/Cargo.toml
+	@echo "[patch.crates-io]" >> $(R_DIR)/src/Cargo.toml
+	@echo "lowess = { path = \"vendor/lowess\" }" >> $(R_DIR)/src/Cargo.toml
+	@echo "Creating vendor.tar.xz archive..."
+	@(cd $(R_DIR)/src && tar --sort=name --mtime='1970-01-01 00:00:00Z' --owner=0 --group=0 --numeric-owner --xz --create --file=vendor.tar.xz vendor)
+	@rm -rf $(R_DIR)/src/vendor
+	@echo "Vendor update complete. Archive: $(R_DIR)/src/vendor.tar.xz"
 	@if [ -f $(R_DIR)/src/vendor.tar.xz ] && [ ! -d $(R_DIR)/src/vendor ]; then \
 		echo "Extracting vendored dependencies..."; \
 		(cd $(R_DIR)/src && tar --extract --xz -f vendor.tar.xz); \
@@ -229,42 +246,58 @@ r:
 	@echo "=============================================================================="
 	@echo "3. Formatting..."
 	@echo "=============================================================================="
-	@cd $(R_DIR)/src && cargo fmt --all
-	@cd $(R_DIR) && Rscript -e "if (requireNamespace('styler', quietly=TRUE)) styler::style_pkg()" || true
+	@cd $(R_DIR)/src && cargo fmt --all -q
+	@cd $(R_DIR) && Rscript scripts/style_pkg.R || true
 	@cd $(R_DIR)/src && cargo fmt --all -- --check || (echo "Run 'cargo fmt' to fix"; exit 1)
-	@cd $(R_DIR)/src && cargo clippy --all-targets -- -D warnings
-	@cd $(R_DIR) && Rscript -e "if (requireNamespace('lintr', quietly=TRUE)) lintr::lint_package()" || true
+	@cd $(R_DIR)/src && cargo clippy -q --all-targets -- -D warnings
+	@cd $(R_DIR) && Rscript -e "lints <- lintr::lint_package(); print(lints); if (length(lints) > 0) quit(status = 1)"
 	@echo "=============================================================================="
-	@echo "4. Documentation..."
+	@echo "4. Patching Cargo.toml for isolated build..."
 	@echo "=============================================================================="
-	@cd $(R_DIR)/src && RUSTDOCFLAGS="-D warnings" cargo doc --no-deps
+	@cp $(R_DIR)/src/Cargo.toml $(R_DIR)/src/Cargo.toml.orig
+	@sed -i 's/edition = { workspace = true }/edition = "2021"/' $(R_DIR)/src/Cargo.toml
+	@sed -i 's/version = { workspace = true }/version = "0.99.3"/' $(R_DIR)/src/Cargo.toml
+	@sed -i 's/authors = { workspace = true }/authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]/' $(R_DIR)/src/Cargo.toml
+	@sed -i 's/license = { workspace = true }/license = "MIT OR Apache-2.0"/' $(R_DIR)/src/Cargo.toml
+	@sed -i 's/rust-version = { workspace = true }/rust-version = "1.85.0"/' $(R_DIR)/src/Cargo.toml
+	@sed -i 's/extendr-api = { workspace = true }/extendr-api = "0.8.1"/' $(R_DIR)/src/Cargo.toml
+	@sed -i 's|fastLowess = { workspace = true, features = \["dev"\] }|fastLowess = { path = "../../../crates/fastLowess", features = ["dev"] }|' $(R_DIR)/src/Cargo.toml
+	@sed -i '/description = { workspace = true }/d' $(R_DIR)/src/Cargo.toml
+	@sed -i '/readme = { workspace = true }/d' $(R_DIR)/src/Cargo.toml
+	@sed -i '/repository = { workspace = true }/d' $(R_DIR)/src/Cargo.toml
+	@sed -i '/homepage = { workspace = true }/d' $(R_DIR)/src/Cargo.toml
+	@sed -i '/keywords = { workspace = true }/d' $(R_DIR)/src/Cargo.toml
+	@sed -i '/categories = { workspace = true }/d' $(R_DIR)/src/Cargo.toml
+	@echo '[workspace]' >> $(R_DIR)/src/Cargo.toml
+	@mkdir -p $(R_DIR)/src/.cargo && cp $(R_DIR)/src/cargo-config.toml $(R_DIR)/src/.cargo/config.toml
+	@echo "=============================================================================="
+	@echo "5. Documentation..."
+	@echo "=============================================================================="
+	@cd $(R_DIR)/src && RUSTDOCFLAGS="-D warnings" cargo doc -q --no-deps
 	@cd $(R_DIR) && Rscript -e "devtools::document()"
 	@cd $(R_DIR) && Rscript -e "devtools::build_vignettes()" || true
 	@cd $(R_DIR) && Rscript -e "if (requireNamespace('codemetar', quietly=TRUE)) codemetar::write_codemeta()" || true
 	@cd $(R_DIR) && Rscript -e "if (file.exists('README.Rmd')) rmarkdown::render('README.Rmd')" || true
 	@cd $(R_DIR) && Rscript -e "if (requireNamespace('pkgdown', quietly=TRUE)) pkgdown::build_site()" || true
 	@echo "=============================================================================="
-	@echo "5. Building..."
+	@echo "6. Building..."
 	@echo "=============================================================================="
-	@cp $(R_DIR)/src/Cargo.toml $(R_DIR)/src/Cargo.toml.orig
-	@echo '[workspace]' >> $(R_DIR)/src/Cargo.toml
-	@mkdir -p $(R_DIR)/src/.cargo && cp $(R_DIR)/src/cargo-config.toml $(R_DIR)/src/.cargo/config.toml
-	@(cd $(R_DIR)/src && cargo build --release || (mv Cargo.toml.orig Cargo.toml && exit 1))
+	@(cd $(R_DIR)/src && cargo build -q --release || (mv Cargo.toml.orig Cargo.toml && exit 1))
 	@mv $(R_DIR)/src/Cargo.toml.orig $(R_DIR)/src/Cargo.toml
 	@rm -rf $(R_DIR)/src/.cargo
 	@cd $(R_DIR) && R CMD build .
 	@echo "=============================================================================="
-	@echo "6. Installing..."
+	@echo "7. Installing..."
 	@echo "=============================================================================="
 	@cd $(R_DIR) && R CMD INSTALL $(R_PKG_TARBALL) || true
 	@cd $(R_DIR) && Rscript -e "devtools::install()"
 	@echo "=============================================================================="
-	@echo "7. Testing..."
+	@echo "8. Testing..."
 	@echo "=============================================================================="
 	@cd $(R_DIR)/src && cargo test -q
 	@cd $(R_DIR) && Rscript -e "Sys.setenv(NOT_CRAN='true'); devtools::test()"
 	@echo "=============================================================================="
-	@echo "8. Submission checks..."
+	@echo "9. Submission checks..."
 	@echo "=============================================================================="
 	@cd $(R_DIR) && R_MAKEVARS_USER=$(PWD)/$(R_DIR)/scripts/Makevars.check R CMD check --as-cran $(R_PKG_TARBALL) || true
 	@cd $(R_DIR) && Rscript -e "if (requireNamespace('urlchecker', quietly=TRUE)) urlchecker::url_check()" || true

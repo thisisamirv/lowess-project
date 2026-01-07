@@ -22,7 +22,7 @@ include = ["Cargo.toml", "lib.rs", "vendor/**/*", "README.md", "LICENSE"]
 
 # Build
 [dependencies]
-fastLowess = { workspace = true, features = ["dev"] }
+fastLowess = { path = "vendor/fastLowess", workspace = true, features = ["dev"] }
 extendr-api = { workspace = true }
 
 [lib]
@@ -38,3 +38,6 @@ dev = []
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
+
+[patch.crates-io]
+lowess = { path = "vendor/lowess" }
