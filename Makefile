@@ -249,89 +249,38 @@ r:
 	@echo "=============================================================================="
 	@echo "2. Installing R development packages..."
 	@echo "=============================================================================="
-	@Rscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); suppressWarnings(install.packages(c('styler', 'prettycode', 'covr', 'codemetar', 'BiocManager', 'urlchecker', 'pkgdown'), quiet = TRUE))" || true
+	@Rscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); suppressWarnings(install.packages(c('styler', 'prettycode', 'covr', 'codemetar', 'BiocManager', 'urlchecker', 'pkgdown', 'toml', 'V8'), quiet = TRUE))" || true
 	@Rscript -e "suppressWarnings(BiocManager::install('BiocCheck', quiet = TRUE, update = FALSE, ask = FALSE))" || true
 	@echo "R development packages installed!"
 	@echo "=============================================================================="
 	@echo "3. Vendoring..."
 	@echo "=============================================================================="
 	@echo "Updating and re-vendoring crates.io dependencies..."
-	@# First, prepare the R package Cargo.toml for isolated vendoring
-	@cd $(R_DIR) && sed -i 's|fastLowess = { path = "vendor/fastLowess",|fastLowess = { path = "vendor/fastLowess",|g' src/Cargo.toml
-	@cd $(R_DIR) && sed -i '/\[patch.crates-io\]/,/lowess = { path = "vendor\/lowess" }/d' src/Cargo.toml
-	@cd $(R_DIR) && perl -i -0pe 's/\s+$$/\n/' src/Cargo.toml
+	@# Step 1: Clean R package Cargo.toml for vendoring
+	@$(R_DIR)/scripts/prepare_cargo.py clean $(R_DIR)/src/Cargo.toml -q
+	@# Step 2: Prepare vendor directory with local crates
 	@rm -rf $(R_DIR)/src/vendor $(R_DIR)/src/vendor.tar.xz
 	@mkdir -p $(R_DIR)/src/vendor
-	@# Step 1: Copy local crates FIRST
 	@cp -rL crates/fastLowess $(R_DIR)/src/vendor/
 	@cp -rL crates/lowess $(R_DIR)/src/vendor/
 	@rm -rf $(R_DIR)/src/vendor/fastLowess/target $(R_DIR)/src/vendor/lowess/target
 	@rm -f $(R_DIR)/src/vendor/fastLowess/Cargo.lock $(R_DIR)/src/vendor/lowess/Cargo.lock
 	@rm -f $(R_DIR)/src/vendor/fastLowess/README.md $(R_DIR)/src/vendor/fastLowess/CHANGELOG.md
 	@rm -f $(R_DIR)/src/vendor/lowess/README.md $(R_DIR)/src/vendor/lowess/CHANGELOG.md
-	@# Step 2: Patch local crates to remove workspace inheritance BEFORE vendoring
-	@EDITION=$$(grep 'edition = ' Cargo.toml | head -1 | sed 's/.*edition = "\([^"]*\)".*/\1/'); \
-	VERSION=$$(grep 'version = ' Cargo.toml | head -1 | sed 's/.*version = "\([^"]*\)".*/\1/'); \
-	AUTHORS=$$(grep 'authors = ' Cargo.toml | head -1 | sed 's/.*authors = \[\(.*\)\]/\1/'); \
-	LICENSE=$$(grep 'license = ' Cargo.toml | head -1 | sed 's/.*license = "\([^"]*\)".*/\1/'); \
-	RUST_VERSION=$$(grep 'rust-version = ' Cargo.toml | head -1 | sed 's/.*rust-version = "\([^"]*\)".*/\1/'); \
-	V_NUM_TRAITS=$$(grep 'num-traits = ' Cargo.toml | head -1 | sed 's/.*version = "\([^"]*\)".*/\1/'); \
-	V_NDARRAY=$$(grep 'ndarray = ' Cargo.toml | head -1 | sed 's/.*version = "\([^"]*\)".*/\1/'); \
-	V_RAYON=$$(grep 'rayon = ' Cargo.toml | head -1 | sed 's/.*version = "\([^"]*\)".*/\1/'); \
-	V_WIDE=$$(grep 'wide = ' Cargo.toml | head -1 | sed 's/.*version = "\([^"]*\)".*/\1/'); \
-	V_APPROX=$$(grep 'approx = ' Cargo.toml | head -1 | sed 's/.*approx = "\([^"]*\)".*/\1/'); \
-	V_WGPU=$$(grep 'wgpu = ' Cargo.toml | head -1 | sed 's/.*version = "\([^"]*\)".*/\1/'); \
-	V_BYTEMUCK=$$(grep 'bytemuck = ' Cargo.toml | head -1 | sed 's/.*version = "\([^"]*\)".*/\1/'); \
-	V_POLLSTER=$$(grep 'pollster = ' Cargo.toml | head -1 | sed 's/.*version = "\([^"]*\)".*/\1/'); \
-	V_FUTURES=$$(grep 'futures-intrusive = ' Cargo.toml | head -1 | sed 's/.*version = "\([^"]*\)".*/\1/'); \
-	for crate in fastLowess lowess; do \
-		toml=$(R_DIR)/src/vendor/$$crate/Cargo.toml; \
-		sed -i "s/^version = { workspace = true }/version = \"$$VERSION\"/" $$toml; \
-		sed -i "s/^authors = { workspace = true }/authors = [$$AUTHORS]/" $$toml; \
-		sed -i "s/^edition = { workspace = true }/edition = \"$$EDITION\"/" $$toml; \
-		sed -i "s/^license = { workspace = true }/license = \"$$LICENSE\"/" $$toml; \
-		sed -i "s/^rust-version = { workspace = true }/rust-version = \"$$RUST_VERSION\"/" $$toml; \
-		sed -i '/^description = { workspace = true }/d' $$toml; \
-		sed -i '/^readme = { workspace = true }/d' $$toml; \
-		sed -i '/^repository = { workspace = true }/d' $$toml; \
-		sed -i '/^homepage = { workspace = true }/d' $$toml; \
-		sed -i '/^keywords = { workspace = true }/d' $$toml; \
-		sed -i '/^categories = { workspace = true }/d' $$toml; \
-		sed -i "s/^num-traits = { workspace = true/num-traits = { version = \"$$V_NUM_TRAITS\"/" $$toml; \
-		sed -i "s/^ndarray = { workspace = true/ndarray = { version = \"$$V_NDARRAY\"/" $$toml; \
-		sed -i "s/^rayon = { workspace = true/rayon = { version = \"$$V_RAYON\"/" $$toml; \
-		sed -i "s/^wide = { workspace = true/wide = { version = \"$$V_WIDE\"/" $$toml; \
-		sed -i "s/^approx = { workspace = true }/approx = \"$$V_APPROX\"/" $$toml; \
-		sed -i "s/^wgpu = { workspace = true/wgpu = { version = \"$$V_WGPU\"/" $$toml; \
-		sed -i "s/^bytemuck = { workspace = true/bytemuck = { version = \"$$V_BYTEMUCK\"/" $$toml; \
-		sed -i "s/^pollster = { workspace = true/pollster = { version = \"$$V_POLLSTER\"/" $$toml; \
-		sed -i "s/^futures-intrusive = { workspace = true/futures-intrusive = { version = \"$$V_FUTURES\"/" $$toml; \
-	done; \
-	sed -i 's/^lowess = { workspace = true/lowess = { path = "..\/lowess"/' $(R_DIR)/src/vendor/fastLowess/Cargo.toml
-	@# Step 3: Remove GPU dependencies from fastLowess (not needed for R binding)
-	@sed -i '/^wgpu = /d' $(R_DIR)/src/vendor/fastLowess/Cargo.toml
-	@sed -i '/^bytemuck = /d' $(R_DIR)/src/vendor/fastLowess/Cargo.toml
-	@sed -i '/^pollster = /d' $(R_DIR)/src/vendor/fastLowess/Cargo.toml
-	@sed -i '/^futures-intrusive = /d' $(R_DIR)/src/vendor/fastLowess/Cargo.toml
-	@sed -i 's/^gpu = .*/gpu = []/' $(R_DIR)/src/vendor/fastLowess/Cargo.toml
+	@# Step 3: Patch local crates (remove workspace inheritance, strip GPU deps)
+	@$(R_DIR)/scripts/patch_vendor_crates.py Cargo.toml $(R_DIR)/src/vendor -q
 	@# Step 4: Create dummy checksum files for local crates
 	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/lowess/.cargo-checksum.json
 	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/fastLowess/.cargo-checksum.json
-	@# Step 5: Add [workspace] and [patch.crates-io] to isolate from main workspace
-	@sed -i '/^\[workspace\]/d' $(R_DIR)/src/Cargo.toml
-	@echo "" >> $(R_DIR)/src/Cargo.toml
-	@echo "[workspace]" >> $(R_DIR)/src/Cargo.toml
-	@echo "" >> $(R_DIR)/src/Cargo.toml
-	@echo "[patch.crates-io]" >> $(R_DIR)/src/Cargo.toml
-	@echo "lowess = { path = \"vendor/lowess\" }" >> $(R_DIR)/src/Cargo.toml
-	@# Step 6: Temporarily exclude R package from root workspace so cargo vendor is truly isolated
-	@cp Cargo.toml Cargo.toml.vendor-backup
-	@sed -i 's|"bindings/r/src",|# "bindings/r/src", # temporarily excluded for vendoring|' Cargo.toml
-	@# Step 7: Now vendor crates.io dependencies with --no-delete to preserve local crates
+	@# Step 5: Add workspace isolation to R package
+	@$(R_DIR)/scripts/prepare_cargo.py isolate $(R_DIR)/src/Cargo.toml -q
+	@# Step 6: Temporarily exclude R package from root workspace
+	@$(R_DIR)/scripts/prepare_cargo.py exclude Cargo.toml --member "bindings/r/src" -q
+	@# Step 7: Vendor crates.io dependencies
 	@(cd $(R_DIR)/src && cargo vendor -q --no-delete vendor)
 	@# Step 8: Restore root Cargo.toml
-	@mv Cargo.toml.vendor-backup Cargo.toml
-	@# Step 9: Regenerate checksums after file cleanup
+	@$(R_DIR)/scripts/prepare_cargo.py restore Cargo.toml -q
+	@# Step 9: Regenerate checksums after vendoring
 	@$(R_DIR)/scripts/clean_checksums.py -q $(R_DIR)/src/vendor
 	@echo "Creating vendor.tar.xz archive..."
 	@(cd $(R_DIR)/src && tar --sort=name --mtime='1970-01-01 00:00:00Z' --owner=0 --group=0 --numeric-owner --xz --create --file=vendor.tar.xz vendor)
