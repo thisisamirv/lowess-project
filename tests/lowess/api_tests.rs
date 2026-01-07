@@ -744,7 +744,7 @@ fn test_online_propagates_options() {
     let mut online = ob.build().expect("online builder build ok");
 
     assert_eq!(online.add_point(0.0, 1.0).expect("ok"), None);
-    assert_eq!(online.add_point(1.0, 3.0).expect("ok"), None);
+    assert!(online.add_point(1.0, 3.0).expect("ok").is_some());
 
     let third = online.add_point(2.0, 5.0).expect("ok");
     assert!(third.is_some());

@@ -167,7 +167,7 @@ impl<T: Float> OnlineLowessBuilder<T> {
     fn new() -> Self {
         Self {
             window_capacity: 1000,
-            min_points: 3,
+            min_points: 2,
             fraction: T::from(0.2).unwrap(),
             delta: T::zero(),
             iterations: 1,

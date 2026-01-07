@@ -523,7 +523,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
         }
         // Calculate residuals for output
         let residuals_out = if self.config.compute_residuals {
-            let y_slice = &combined_y[return_start..return_start + y_smooth_out.len()];
+            let y_slice = &combined_y[0..y_smooth_out.len()];
             Some(
                 y_slice
                     .iter()
@@ -565,11 +565,11 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
         // Note: We return results in sorted order (by x) for streaming chunks.
         // Unsorting partial results is ambiguous since we only return a subset of the chunk.
         // The full batch adapter handles global unsorting when processing complete datasets.
-        let x_out = combined_x[return_start..return_start + y_smooth_out.len()].to_vec();
+        let x_out = combined_x[0..y_smooth_out.len()].to_vec();
 
         // Update diagnostics cumulatively
         let diagnostics = if let Some(ref mut state) = self.diagnostics_state {
-            let y_emitted = &combined_y[return_start..return_start + y_smooth_out.len()];
+            let y_emitted = &combined_y[0..y_smooth_out.len()];
             state.update(y_emitted, &y_smooth_out);
             Some(state.finalize())
         } else {

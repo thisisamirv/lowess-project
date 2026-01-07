@@ -308,7 +308,7 @@ fn example_6_different_kernels() -> Result<(), LowessError> {
         println!("Using {} kernel:", name);
 
         let model = Lowess::new()
-            .fraction(0.5)
+            .fraction(0.8)
             .weight_function(kernel)
             .adapter(Batch)
             .build()?;
@@ -358,7 +358,7 @@ fn example_7_robustness_methods() -> Result<(), LowessError> {
         println!("Using {} robustness method:", name);
 
         let model = Lowess::new()
-            .fraction(0.5)
+            .fraction(0.99) // Use large fraction but stay in local regression for robustness
             .iterations(5)
             .robustness_method(method)
             .return_robustness_weights()
@@ -391,14 +391,14 @@ fn example_7_robustness_methods() -> Result<(), LowessError> {
 
     /* Expected Output:
     Using Bisquare robustness method:
-      Smoothed Y: [2.00, 4.10, 5.90, 8.20, 9.80]
-      Weights:    [1.000, 1.000, 0.000, 1.000, 1.000]
+      Smoothed Y: [0.45, 7.97, 11.69, 11.96, 8.29]
+      Weights:    [0.995, 0.970, 0.866, 0.972, 0.995]
     Using Huber robustness method:
-      Smoothed Y: [2.00, 4.10, 6.15, 8.20, 9.80]
-      Weights:    [1.000, 1.000, 0.123, 1.000, 1.000]
+      Smoothed Y: [0.47, 7.86, 11.36, 11.85, 8.32]
+      Weights:    [1.000, 1.000, 0.809, 1.000, 1.000]
     Using Talwar robustness method:
-      Smoothed Y: [2.00, 4.10, 5.90, 8.20, 9.80]
-      Weights:    [1.000, 1.000, 0.000, 1.000, 1.000]
+      Smoothed Y: [0.35, 8.05, 12.07, 12.04, 8.20]
+      Weights:    [1.000, 1.000, 1.000, 1.000, 1.000]
     */
 
     println!();

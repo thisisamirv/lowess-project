@@ -178,12 +178,12 @@ fn test_streaming_multi_chunk_overlap() {
         "First chunk values should match"
     );
 
-    // Second chunk (indices 8..15)
-    let x_b = &x_all[8..15];
-    let y_b = &y_all[8..15];
+    // Second chunk (indices 10..15)
+    let x_b = &x_all[10..15];
+    let y_b = &y_all[10..15];
     let out_b = processor.process_chunk(x_b, y_b).expect("process_chunk ok");
 
-    assert_eq!(out_b.y.len(), 7, "Second chunk should return 7 values");
+    assert_eq!(out_b.y.len(), 5, "Second chunk should return 5 values");
     assert!(
         out_b.y.iter().all(|v| v.is_finite()),
         "All values should be finite"
@@ -456,7 +456,7 @@ fn test_streaming_with_robustness() {
     let result1 = processor.process_chunk(&x[0..20], &y[0..20]).expect("ok");
     assert!(result1.y.iter().all(|v| v.is_finite()));
 
-    let result2 = processor.process_chunk(&x[15..30], &y[15..30]).expect("ok");
+    let result2 = processor.process_chunk(&x[20..30], &y[20..30]).expect("ok");
     assert!(result2.y.iter().all(|v| v.is_finite()));
 
     let final_result = processor.finalize().expect("ok");
@@ -513,11 +513,10 @@ fn test_streaming_large_dataset() {
     let total_points = 1000;
     let chunk_size = 100;
     let overlap = 10;
-    let step = chunk_size - overlap;
 
     let mut total_output = 0;
 
-    for chunk_start in (0..total_points).step_by(step) {
+    for chunk_start in (0..total_points).step_by(chunk_size) {
         let chunk_end = (chunk_start + chunk_size).min(total_points);
         let x: Vec<f64> = (chunk_start..chunk_end).map(|i| i as f64).collect();
         let y: Vec<f64> = x.iter().map(|&xi| 2.0 * xi + 1.0).collect();
@@ -754,7 +753,7 @@ fn test_streaming_all_merge_strategies_identical_data() {
         let y: Vec<f64> = x.iter().map(|&xi| xi * 2.0).collect();
 
         let result1 = processor.process_chunk(&x[0..10], &y[0..10]).unwrap();
-        let result2 = processor.process_chunk(&x[7..15], &y[7..15]).unwrap();
+        let result2 = processor.process_chunk(&x[10..15], &y[10..15]).unwrap();
 
         // All strategies should produce valid results
         assert!(!result1.x.is_empty());

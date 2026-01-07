@@ -231,7 +231,14 @@ impl<T: Float + Display + Debug> Display for LowessResult<T> {
 
             // Residuals
             if has_resid && let Some(resid) = &self.residuals {
-                write!(f, " {:>12.6}", resid[idx])?;
+                let r = resid[idx];
+                // Sanitize near-zero residuals to avoid "-0.0000" display
+                let r_clean = if r.abs() < T::from(1e-10).unwrap() {
+                    T::zero()
+                } else {
+                    r
+                };
+                write!(f, " {:>12.6}", r_clean)?;
             }
 
             // Robustness weights

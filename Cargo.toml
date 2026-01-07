@@ -1,12 +1,6 @@
 [workspace]
 resolver = "3"
-members = [
-    "crates/lowess",
-    "crates/fastLowess",
-    "bindings/python",
-    "bindings/r/src",
-    "tests",
-]
+members = ["crates/lowess", "crates/fastLowess", "bindings/python", "tests"]
 exclude = ["bindings/r/src/vendor"]
 
 [workspace.package]

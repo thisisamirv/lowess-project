@@ -274,13 +274,9 @@ r:
 	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/fastLowess/.cargo-checksum.json
 	@# Step 5: Add workspace isolation to R package
 	@$(R_DIR)/scripts/prepare_cargo.py isolate $(R_DIR)/src/Cargo.toml -q
-	@# Step 6: Temporarily exclude R package from root workspace
-	@$(R_DIR)/scripts/prepare_cargo.py exclude Cargo.toml --member "bindings/r/src" -q
-	@# Step 7: Vendor crates.io dependencies
+	@# Step 6: Vendor crates.io dependencies
 	@(cd $(R_DIR)/src && cargo vendor -q --no-delete vendor)
-	@# Step 8: Restore root Cargo.toml
-	@$(R_DIR)/scripts/prepare_cargo.py restore Cargo.toml -q
-	@# Step 9: Regenerate checksums after vendoring
+	@# Step 7: Regenerate checksums after vendoring
 	@$(R_DIR)/scripts/clean_checksums.py -q $(R_DIR)/src/vendor
 	@echo "Creating vendor.tar.xz archive..."
 	@(cd $(R_DIR)/src && tar --sort=name --mtime='1970-01-01 00:00:00Z' --owner=0 --group=0 --numeric-owner --xz --create --file=vendor.tar.xz vendor)
@@ -368,7 +364,10 @@ all: lowess fastLowess python r
 all-coverage: lowess-coverage fastLowess-coverage python-coverage r-coverage
 	@echo "All coverage completed!"
 
-all-clean: lowess-clean fastLowess-clean python-clean r-clean
+all-clean: r-clean lowess-clean fastLowess-clean python-clean
+	@echo "Cleaning project root..."
+	@cargo clean
+	@rm -rf target Cargo.lock .venv .ruff_cache .pytest_cache
 	@echo "All clean completed!"
 
 .PHONY: lowess lowess-coverage lowess-clean fastLowess fastLowess-coverage fastLowess-clean python python-coverage python-clean r r-coverage r-clean all all-coverage all-clean

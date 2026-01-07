@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Monorepo:**
 
 - Implemented comprehensive Cargo workspace inheritance pattern
+- Unified MSRV to 1.85.0
 - Centralized all metadata (version, authors, edition, license, etc.) in root `Cargo.toml`
 - All crates now use `workspace = true` for shared configuration
 - Created unified `README.md` for all crates/packages
@@ -19,6 +20,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Created unified `LICENSE` for all crates/packages
 - Created unified `.gitignore` for all crates/packages
 - Added comprehensive badges from all packages
+
+### Fixed
+
+**lowess:**
+
+- Fixed `StreamingAdapter` indexing bug that caused merged overlap points to be skipped in output
+- Simplified `StreamingAdapter` API: user now provides contiguous, non-overlapping chunks while the adapter handles internal buffering and merging
+- Standardized `OnlineLowess` default `min_points` to 2 (enabling smoothing after just one point)
+- Sanitized residual output to avoid "negative zero" (`-0.0000`) display for near-zero values
 
 ## 0.99.2
 
