@@ -359,10 +359,18 @@ r-clean:
 	@rm -rf $(R_DIR)/benchmarks $(R_DIR)/validation $(R_DIR)/docs
 	@echo "$(R_PKG_NAME) clean complete!"
 
+
+# ==============================================================================
+# Development checks
+# ==============================================================================
+check-msrv:
+	@echo "Checking MSRV..."
+	@python3 dev/check_msrv.py
+
 # ==============================================================================
 # All targets
 # ==============================================================================
-all: lowess fastLowess python r
+all: lowess fastLowess python r check-msrv
 	@echo "All checks completed successfully!"
 
 all-coverage: lowess-coverage fastLowess-coverage python-coverage r-coverage
@@ -374,4 +382,4 @@ all-clean: r-clean lowess-clean fastLowess-clean python-clean
 	@rm -rf target Cargo.lock .venv .ruff_cache .pytest_cache
 	@echo "All clean completed!"
 
-.PHONY: lowess lowess-coverage lowess-clean fastLowess fastLowess-coverage fastLowess-clean python python-coverage python-clean r r-coverage r-clean all all-coverage all-clean
+.PHONY: lowess lowess-coverage lowess-clean fastLowess fastLowess-coverage fastLowess-clean python python-coverage python-clean r r-coverage r-clean check-msrv all all-coverage all-clean
