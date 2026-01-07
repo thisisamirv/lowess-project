@@ -82,12 +82,13 @@ fn example_1_basic_streaming() -> Result<(), LowessError> {
 
     for (x, y) in data_points {
         if let Some(output) = processor.add_point(x, y)? {
+            let res = output.residual.unwrap_or(0.0);
+            // Sanitize near-zero residuals to avoid "-0.0000" display
+            let res_clean = if res.abs() < 1e-10f64 { 0.0f64 } else { res };
+
             println!(
                 "{:8.2} {:12.2} {:12.2} {:12.4}",
-                x,
-                y,
-                output.smoothed,
-                output.residual.unwrap_or(0.0)
+                x, y, output.smoothed, res_clean
             );
         } else {
             println!("{:8.2} {:12.2} {:>12} {:>12}", x, y, "(buffering)", "");
@@ -99,7 +100,7 @@ fn example_1_basic_streaming() -> Result<(), LowessError> {
            X   Y_observed     Y_smooth     Residual
     --------------------------------------------------
         1.00         3.10  (buffering)
-        2.00         5.00  (buffering)
+        2.00         5.00         5.00       0.0000
         3.00         7.20         7.20       0.0000
         4.00         8.90         8.90       0.0000
         5.00        11.10        11.10       0.0000
@@ -152,12 +153,13 @@ fn example_2_sensor_data_simulation() -> Result<(), LowessError> {
 
     for (time, temp) in sensor_data {
         if let Some(output) = processor.add_point(time, temp)? {
+            let res = output.residual.unwrap_or(0.0);
+            // Sanitize near-zero residuals to avoid "-0.0000" display
+            let res_clean = if res.abs() < 1e-10f64 { 0.0f64 } else { res };
+
             println!(
                 "{:6.0} {:12.2}°C {:12.2}°C {:12.3}°C",
-                time,
-                temp,
-                output.smoothed,
-                output.residual.unwrap_or(0.0)
+                time, temp, output.smoothed, res_clean
             );
         } else {
             println!(
@@ -173,11 +175,10 @@ fn example_2_sensor_data_simulation() -> Result<(), LowessError> {
       Hour     Raw Temp     Smoothed        Noise
     --------------------------------------------------
          0        18.50°C (warming up)
-         1        21.41°C (warming up)
-         2        22.72°C (warming up)
-         3        24.73°C      24.73°C      0.000°C
-         4        25.34°C      25.34°C      0.000°C
-         ... (continues for 24 hours)
+         1        21.89°C        21.89°C        0.000°C
+         2        21.90°C        21.90°C        0.000°C
+    ...
+        14        19.00°C        18.56°C        0.441°C
     */
 
     println!();

@@ -135,7 +135,11 @@ fastLowess:
 	@for feature in $(FASTLOWESS_FEATURES); do \
 		echo "Running examples with feature: $$feature"; \
 		for example in $(FASTLOWESS_EXAMPLES); do \
-			cargo run -q -p $(FASTLOWESS_PKG) --example $$example --features $$feature || exit 1; \
+			if [ "$$feature" = "dev" ]; then \
+				cargo run -q -p $(FASTLOWESS_PKG) --example $$example --features $$feature || exit 1; \
+			else \
+				cargo run -q -p $(FASTLOWESS_PKG) --example $$example --features $$feature > /dev/null || exit 1; \
+			fi; \
 		done; \
 	done
 	@echo "=============================================================================="

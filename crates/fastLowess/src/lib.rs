@@ -246,7 +246,7 @@
 //! | **merge_strategy**            | `Average`                                     | 4 strategies         | How to merge overlapping regions               | Streaming        |
 //! | **update_mode**               | `Incremental`                                 | 2 modes              | Online update strategy (Incremental vs Full)   | Online           |
 //! | **window_capacity**           | 1000                                          | [3, ∞)               | Maximum points in sliding window               | Online           |
-//! | **min_points**                | 3                                             | [2, window_capacity] | Minimum points before smoothing starts         | Online           |
+//! | **min_points**                | 2                                             | [2, window_capacity] | Minimum points before smoothing starts         | Online           |
 //!
 //! ### Parameter Options Reference
 //!

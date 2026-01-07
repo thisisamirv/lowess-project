@@ -77,7 +77,7 @@ fn example_1_basic_chunked_processing() -> Result<(), LowessError> {
     let chunk_size = 15;
 
     // Process in chunks
-    for (chunk_idx, chunk_start) in (0..x.len()).step_by(chunk_size - 5).enumerate() {
+    for (chunk_idx, chunk_start) in (0..x.len()).step_by(chunk_size).enumerate() {
         let chunk_end = (chunk_start + chunk_size).min(x.len());
         let x_chunk = &x[chunk_start..chunk_end];
         let y_chunk = &y[chunk_start..chunk_end];
@@ -163,7 +163,7 @@ fn example_2_chunk_size_comparison() -> Result<(), LowessError> {
         let mut chunk_count = 0;
         let mut total_processed = 0;
 
-        for chunk_start in (0..x.len()).step_by(chunk_size - overlap) {
+        for chunk_start in (0..x.len()).step_by(chunk_size) {
             let chunk_end = (chunk_start + chunk_size).min(x.len());
             let x_chunk = &x[chunk_start..chunk_end];
             let y_chunk = &y[chunk_start..chunk_end];
@@ -246,7 +246,7 @@ fn example_3_overlap_strategies() -> Result<(), LowessError> {
 
         let mut results = Vec::new();
 
-        for chunk_start in (0..x.len()).step_by(chunk_size.saturating_sub(overlap)) {
+        for chunk_start in (0..x.len()).step_by(chunk_size) {
             let chunk_end = (chunk_start + chunk_size).min(x.len());
             let x_chunk = &x[chunk_start..chunk_end];
             let y_chunk = &y[chunk_start..chunk_end];
@@ -311,9 +311,11 @@ fn example_4_large_dataset_processing() -> Result<(), LowessError> {
     let overlap = 50;
     let mut total_processed = 0;
     let mut chunk_count = 0;
+    // overlap is not used in loop step as adapter handles it
+    let _ = overlap;
 
     // Simulate streaming from a large data source
-    for chunk_start in (0..n).step_by(chunk_size - overlap) {
+    for chunk_start in (0..n).step_by(chunk_size) {
         let chunk_end = (chunk_start + chunk_size).min(n);
 
         // Generate chunk on-the-fly (simulating reading from disk/network)
@@ -486,8 +488,8 @@ fn example_6_file_simulation() -> Result<(), LowessError> {
     println!("Processing in chunks...\n");
 
     // Simulate reading and processing file chunks
-    for chunk_idx in 0..(total_lines / (chunk_size - 10)) {
-        let chunk_start = chunk_idx * (chunk_size - 10);
+    for chunk_idx in 0..(total_lines / chunk_size) {
+        let chunk_start = chunk_idx * chunk_size;
         let chunk_end = (chunk_start + chunk_size).min(total_lines);
 
         // Simulate reading chunk from file
