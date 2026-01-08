@@ -398,11 +398,14 @@ at your option.
 
 ## Citation
 
+If you use this software in your research, please cite it using the [CITATION.cff](CITATION.cff) file or the BibTeX entry below:
+
 ```bibtex
-@software{lowess_rust,
+@software{lowess_project,
   author = {Valizadeh, Amir},
-  title = {LOWESS: High-Performance Locally Weighted Scatterplot Smoothing},
+  title = {LOWESS Project: High-Performance Locally Weighted Scatterplot Smoothing},
   year = {2026},
-  url = {https://github.com/thisisamirv/lowess-project}
+  url = {https://github.com/thisisamirv/lowess-project},
+  license = {MIT OR Apache-2.0}
 }
 ```

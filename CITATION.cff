@@ -1,0 +1,45 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "LOWESS Project"
+abstract: "The fastest, most robust, and most feature-complete language-agnostic LOWESS (Locally Weighted Scatterplot Smoothing) implementations for Rust, Python, and R."
+authors:
+  - family-names: "Valizadeh"
+    given-names: "Amir"
+    email: "thisisamirv@gmail.com"
+    orcid: "https://orcid.org/0000-0000-0000-0000"
+license: "MIT OR Apache-2.0"
+repository-code: "https://github.com/thisisamirv/lowess-project"
+url: "https://lowess.readthedocs.io/"
+keywords:
+  - lowess
+  - smoothing
+  - regression
+  - statistics
+  - rust
+  - python
+  - r
+date-released: "2026-01-01"
+version: "0.99.0"
+references:
+  - type: article
+    authors:
+      - family-names: "Cleveland"
+        given-names: "William S."
+    title: "Robust Locally Weighted Regression and Smoothing Scatterplots"
+    journal: "Journal of the American Statistical Association"
+    year: 1979
+    volume: 74
+    issue: 368
+    start: 829
+    end: 836
+  - type: article
+    authors:
+      - family-names: "Cleveland"
+        given-names: "William S."
+    title: "LOWESS: A Program for Smoothing Scatterplots by Robust Locally Weighted Regression"
+    journal: "The American Statistician"
+    year: 1981
+    volume: 35
+    issue: 1
+    start: 54
