@@ -1,380 +1,408 @@
+# LOWESS Project
 
-<!-- README.md is generated from README.Rmd. Please edit that file -->
+[![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE-MIT)
+[![Docs](https://img.shields.io/badge/docs-readthedocs-blue.svg)](https://lowess.readthedocs.io/)
+[![Crates.io](https://img.shields.io/crates/v/lowess.svg)](https://crates.io/crates/lowess)
+[![PyPI](https://img.shields.io/pypi/v/fastlowess.svg)](https://pypi.org/project/fastlowess/)
+[![Conda](https://anaconda.org/conda-forge/fastlowess/badges/version.svg)](https://anaconda.org/conda-forge/fastlowess)
+[![R-universe](https://thisisamirv.r-universe.dev/badges/rfastlowess)](https://thisisamirv.r-universe.dev/rfastlowess)
 
-# rfastlowess
+The fastest, most robust, and most feature-complete language-agnostic LOWESS (Locally Weighted Scatterplot Smoothing) implementations for **Rust**, **Python**, and **R**.
 
-<!-- badges: start -->
+## Overview
 
-[![Documentation](https://img.shields.io/badge/docs-pkgdown-blue.svg)](https://thisisamirv.github.io/rfastlowess/) [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE-MIT) [![R-universe status](https://thisisamirv.r-universe.dev/badges/rfastlowess)](https://thisisamirv.r-universe.dev/rfastlowess) [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active) [![pkgcheck](https://github.com/thisisamirv/rfastlowess/workflows/pkgcheck/badge.svg)](https://github.com/thisisamirv/rfastlowess/actions?query=workflow%3Apkgcheck) [![codecov](https://codecov.io/gh/thisisamirv/rfastlowess/branch/main/graph/badge.svg)](https://app.codecov.io/gh/thisisamirv/rfastlowess) <!-- badges: end -->
+This monorepo contains a complete ecosystem for LOWESS smoothing:
 
-**High-performance parallel LOWESS (Locally Weighted Scatterplot Smoothing) for R** — A high-level wrapper around the [`fastLowess`](https://github.com/thisisamirv/fastLowess) Rust crate that adds rayon-based parallelism and seamless R integration.
+- **[`lowess`](crates/lowess)** - Core single-threaded implementation with `no_std` support
+- **[`fastLowess`](crates/fastLowess)** - Parallel CPU and GPU-accelerated wrapper with ndarray integration  
+- **[`Python bindings`](bindings/python)** - PyO3-based Python package
+- **[`R bindings`](bindings/r)** - extendr-based R package
 
-**Full Documentation:** <https://thisisamirv.github.io/rfastlowess/>
+## Documentation
 
-## Features
+> [!NOTE]
+>
+> ### 📚 [View the full documentation](https://lowess.readthedocs.io/)
 
-- **Parallel by Default**: Multi-core regression fits via rayon, achieving substantial speedups on large datasets.
-- **Robust Statistics**: MAD-based scale estimation and IRLS with Bisquare, Huber, or Talwar weighting.
-- **Uncertainty Quantification**: Point-wise standard errors, confidence intervals, and prediction intervals.
-- **Optimized Performance**: Delta optimization for skipping dense regions and streaming/online modes.
-- **Parameter Selection**: Built-in cross-validation for automatic smoothing fraction selection.
-- **Production-Ready**: Comprehensive error handling, numerical stability, and high-performance numerical core.
+## Why this package?
 
-## Robustness Advantages
+### Speed
 
-Built on the same core as `lowess` Rust crate, this implementation is **more robust than statsmodels** due to two key design choices:
+The `lowess` project crushes the competition in terms of speed, wether in single-threaded or multi-threaded parallel execution.
 
-### MAD-Based Scale Estimation
+Speedup relative to Python's `statsmodels.lowess` (higher is better):
 
-For robustness weight calculations, this crate uses **Median Absolute Deviation (MAD)** for scale estimation:
+| Category                        | statsmodels | R (stats) | Serial | Parallel | GPU     |
+|---------------------------------|-------------|-----------|--------|----------|---------|
+| **Clustered**                   | 163ms       | 83×       | 203×   | **433×** | 32×     |
+| **Constant Y**                  | 134ms       | 92×       | 212×   | **410×** | 18×     |
+| **Delta** (large–none)          | 105ms       | 2×        | 4×     | 6×       | **16×** |
+| **Extreme Outliers**            | 489ms       | 106×      | 201×   | **388×** | 29×     |
+| **Financial** (500–10K)         | 106ms       | 105×      | 252×   | **293×** | 12×     |
+| **Fraction** (0.05–0.67)        | 221ms       | 104×      | 228×   | **391×** | 22×     |
+| **Genomic** (1K–50K)            | 1833ms      | 7×        | 9×     | 20×      | **95×** |
+| **High Noise**                  | 435ms       | 133×      | 134×   | **375×** | 32×     |
+| **Iterations** (0–10)           | 204ms       | 115×      | 224×   | **386×** | 18×     |
+| **Scale** (1K–50K)              | 1841ms      | 264×      | 487×   | **581×** | 98×     |
+| **Scientific** (500–10K)        | 167ms       | 109×      | 205×   | **314×** | 15×     |
+| **Scale Large**\* (100K–2M)     | —           | —         | 1×     | **1.4×** | 0.3×    |
 
-``` text
+\*Scale Large benchmarks are relative to Serial (statsmodels cannot handle these sizes)
+
+*The numbers are the average across a range of scenarios for each category (e.g., Delta from none, to small, medium, and large).*
+
+### Robustness
+
+This implementation is *more robust* than R's `lowess` and Python's `statsmodels` due to two key design choices:
+
+**MAD-Based Scale Estimation:**
+
+For robustness weight calculations, this crate uses *Median Absolute Deviation (MAD)* for scale estimation:
+
+```text
 s = median(|r_i - median(r)|)
 ```
 
-In contrast, statsmodels uses median of absolute residuals:
+In contrast, `statsmodels` and R's `lowess` uses the median of absolute residuals (MAR):
 
-``` text
+```text
 s = median(|r_i|)
 ```
 
-**Why MAD is more robust:**
-
-- MAD is a **breakdown-point-optimal** estimator—it remains valid even when up to 50% of data are outliers.
+- MAD is a *breakdown-point-optimal* estimator—it remains valid even when up to 50% of data are outliers.
 - The median-centering step removes asymmetric bias from residual distributions.
 - MAD provides consistent outlier detection regardless of whether residuals are centered around zero.
 
-### Boundary Padding
+**Boundary Padding:**
 
-This crate applies **boundary policies** (Extend, Reflect, Zero) at dataset edges:
+This crate applies a range of different *boundary policies* at dataset edges:
 
 - **Extend**: Repeats edge values to maintain local neighborhood size.
 - **Reflect**: Mirrors data symmetrically around boundaries.
 - **Zero**: Pads with zeros (useful for signal processing).
+- **NoBoundary**: Original Cleveland behavior
 
-statsmodels does not apply boundary padding, which can lead to:
+`statsmodels` and R's `lowess` do not apply boundary padding, which can lead to:
 
 - Biased estimates near boundaries due to asymmetric local neighborhoods.
 - Increased variance at the edges of the smoothed curve.
 
-### Gaussian Consistency Factor
+### Features
 
-For interval estimation (confidence/prediction), residual scale is computed using:
+A variety of features, supporting a range of use cases:
 
-``` text
-sigma = 1.4826 * MAD
-```
+| Feature              | This package  | statsmodels  | R (stats)    |
+|----------------------|:-------------:|:------------:|:------------:|
+| Kernel               | 7 options     | only Tricube | only Tricube |
+| Robustness Weighting | 3 options     | only Huber   | only Huber   |
+| Scale Estimation     | 2 options     | only MAR     | only MAR     |
+| Boundary Padding     | 4 options     | no padding   | no padding   |
+| Zero Weight Fallback | 3 options     | no           | no           |
+| Auto Convergence     | yes           | no           | no           |
+| Online Mode          | yes           | no           | no           |
+| Streaming Mode       | yes           | no           | no           |
+| Confidence Intervals | yes           | no           | no           |
+| Prediction Intervals | yes           | no           | no           |
+| Cross-Validation     | 2 options     | no           | no           |
+| Parallel Execution   | yes           | no           | no           |
+| GPU Acceleration     | yes*          | no           | no           |
+| `no-std` Support     | yes           | no           | no           |
 
-The factor 1.4826 = 1/Phi^-1(3/4) ensures consistency with the standard deviation under Gaussian assumptions.
-
-## Performance Advantages
-
-The `rfastlowess` R package demonstrates significant performance gains over R’s `stats::lowess`. The benchmarks compare `rfastlowess` (both Serial and Parallel execution modes) against the standard R implementation.
-
-The results show that `rfastlowess` consistently outperforms `stats::lowess`, achieving speedups ranging from **1.1x to 6.8x**, with an **average speedup of approximately 2.3x**.
-
-The table below shows speedups relative to the **R `stats::lowess` baseline**.
-
-| Name             | R         | rfastlowess |
-|------------------|-----------|-------------|
-| clustered        | 2.16ms    | 2.4-4.7x    |
-| constant_y       | 1.41ms    | 2.1-3.9x    |
-| delta_large      | 0.53ms    | 3.4-2.0x    |
-| delta_medium     | 0.73ms    | 3.3-2.8x    |
-| delta_none       | 164.35ms  | 1.5-6.8x    |
-| delta_small      | 0.97ms    | 2.6-3.3x    |
-| extreme_outliers | 4.76ms    | 1.9-3.9x    |
-| financial_1000   | 0.18ms    | 1.8-1.2x    |
-| financial_10000  | 1.73ms    | 2.2-2.6x    |
-| financial_500    | 0.12ms    | 1.6-0.9x    |
-| financial_5000   | 1.00ms    | 2.6-2.7x    |
-| fraction_0.05    | 0.69ms    | 2.3-1.5x    |
-| fraction_0.1     | 1.07ms    | 2.0-2.6x    |
-| fraction_0.2     | 1.62ms    | 1.7-2.9x    |
-| fraction_0.3     | 2.24ms    | 1.7-3.4x    |
-| fraction_0.5     | 3.35ms    | 1.6-3.6x    |
-| fraction_0.67    | 4.33ms    | 1.6-4.2x    |
-| genomic_1000     | 1.14ms    | 1.2-1.4x    |
-| genomic_10000    | 111.74ms  | 1.5-5.3x    |
-| genomic_5000     | 27.73ms   | 1.4-4.3x    |
-| genomic_50000    | 2818.61ms | 1.6-5.5x    |
-| high_noise       | 3.45ms    | 1.1-3.2x    |
-| iterations_0     | 0.36ms    | 1.9-2.6x    |
-| iterations_1     | 0.76ms    | 1.7-2.9x    |
-| iterations_10    | 4.33ms    | 1.7-2.6x    |
-| iterations_2     | 1.17ms    | 1.7-2.3x    |
-| iterations_3     | 1.60ms    | 1.7-2.6x    |
-| iterations_5     | 2.41ms    | 1.7-2.5x    |
-| scale_1000       | 0.21ms    | 1.5-1.0x    |
-| scale_10000      | 2.11ms    | 2.1-2.5x    |
-| scale_5000       | 0.99ms    | 1.9-2.4x    |
-| scale_50000      | 10.13ms   | 2.2-2.1x    |
-| scientific_1000  | 0.28ms    | 1.5-0.8x    |
-| scientific_10000 | 2.36ms    | 1.6-2.2x    |
-| scientific_500   | 0.15ms    | 1.3-0.6x    |
-| scientific_5000  | 1.22ms    | 1.6-1.7x    |
-
-\* **rfastlowess**: Shows speedup range `[Serial-Parallel]`. E.g., `[2.0-2.5x]` means 2.0x speedup (Serial) and 2.5x speedup (Parallel).
-
-**Key Takeaways**:
-
-1.  **Consistent Performance Gains**: `rfastlowess` is consistently faster than `stats::lowess` across all benchmark categories, with speedups ranging from 1.1x to 6.8x.
-2.  **Parallel Scaling**:
-    - **Large Datasets**: Parallel execution provides significant gains. For example, `delta_none` shows a jump from 1.5x (Serial) to 6.8x (Parallel) speedup, and `genomic_10000` shows 1.5x to 5.3x.
-    - **Small Datasets**: For very small datasets (e.g., `scale_1000`, `financial_500`, `scientific_500`), Serial execution may be faster than Parallel due to thread overhead (e.g., `[1.5-1.0x]`, `[1.6-0.9x]`, `[1.3-0.6x]`).
-3.  **Best Performance Scenarios**:
-    - **Delta optimization**: When delta is enabled (non-zero), speedups are moderate (2-3.5x). When delta is disabled (`delta_none`), parallel execution shines with up to 6.8x speedup.
-    - **Large-scale genomic data**: Shows excellent scaling with parallel execution (up to 5.5x for 50,000 points).
-    - **Pathological cases**: `rfastlowess` maintains good performance even with challenging data like `extreme_outliers` (1.9-3.9x) and `high_noise` (1.1-3.2x).
-4.  **Robustness Iterations**: Performance remains consistent across different iteration counts (1.7-2.9x speedup range), showing that `rfastlowess` handles robustness efficiently.
-
-Check [Benchmarks for rfastlowess](https://github.com/thisisamirv/rfastlowess/tree/bench/benchmarks) for detailed results and reproducible benchmarking code.
+\* GPU acceleration is currently in beta and may not be available on all platforms.
 
 ## Validation
 
-The `rfastlowess` package is a **numerical twin** of R’s `lowess` implementation:
+All implementations are **numerical twins** of R's `lowess`:
 
-| Aspect          | Status         | Details                                    |
-|-----------------|----------------|--------------------------------------------|
-| **Accuracy**    | ✅ EXACT MATCH | Max diff \< 1e-12 across all scenarios     |
-| **Consistency** | ✅ PERFECT     | 15/15 scenarios pass with strict tolerance |
-| **Robustness**  | ✅ VERIFIED    | Robust smoothing matches R exactly         |
-
-Check [Validation](https://github.com/thisisamirv/rfastlowess/tree/bench/validation) for detailed scenario results.
+| Aspect          | Status         | Details                                       |
+|-----------------|----------------|-----------------------------------------------|
+| **Accuracy**    | ✅ EXACT MATCH | Max diff < 1e-12 across all scenarios         |
+| **Consistency** | ✅ PERFECT     | Multiple scenarios pass with strict tolerance |
+| **Robustness**  | ✅ VERIFIED    | Robust smoothing matches R exactly            |
 
 ## Installation
 
-### Stable Release
+Currently available for R, Python, and Rust:
 
-You can install the pre-built binaries from R-universe (no Rust required):
+**R** (from R-universe, recommended):
 
-``` r
+```r
 install.packages("rfastlowess", repos = "https://thisisamirv.r-universe.dev")
 ```
 
-### Development Version
+**Python** (from PyPI):
 
-To install the latest development version from GitHub (requires [Rust](https://rustup.rs/) toolchain):
-
-``` r
-# install.packages("remotes")
-remotes::install_github("thisisamirv/rfastlowess")
+```bash
+pip install fastlowess
 ```
 
-## Quick Start
+Or from conda-forge:
 
-``` r
+```bash
+conda install -c conda-forge fastlowess
+```
+
+**Rust** (lowess, no_std compatible):
+
+```toml
+[dependencies]
+lowess = "0.99"
+```
+
+**Rust** (fastLowess, parallel + GPU):
+
+```toml
+[dependencies]
+fastLowess = { version = "0.99", features = ["cpu"] }
+```
+
+## Quick Example
+
+**R:**
+
+```r
 library(rfastlowess)
 
-# Simulate noisy data
-set.seed(42)
-x <- seq(1, 10, length.out = 100)
-y <- sin(x) + rnorm(100, sd = 0.2)
+x <- c(1, 2, 3, 4, 5)
+y <- c(2.0, 4.1, 5.9, 8.2, 9.8)
 
-# Basic smoothing (parallel by default)
-result <- fastlowess(x, y, fraction = 0.3)
-
-# Visualize
-plot(x, y, main = "rfastlowess Smoothing")
-lines(result$x, result$y, col = "red", lwd = 2)
+result <- fastlowess(x, y, fraction = 0.5, iterations = 3)
+print(result$y)
 ```
 
-<img src="man/figures/README-plot-demo-1.png" alt="" width="100%" />
+**Python:**
 
-## Outlier Robustness
+```python
+import fastlowess as fl
+import numpy as np
 
-`rfastlowess` handles outliers gracefully. Here is a comparison of standard smoothing vs. robust smoothing (3 iterations) on data with extreme outliers.
+x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+y = np.array([2.0, 4.1, 5.9, 8.2, 9.8])
 
-``` r
-# Add heavy contamination (20 outliers)
-y_out <- y
-outlier_idx <- c(
-    10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70,
-    75, 80, 85, 90, 95, 5, 98
-)
-y_out[outlier_idx] <- y_out[outlier_idx] + rep(c(3, -3, 4, -4), length.out = 20)
+result = fl.smooth(x, y, fraction=0.5, iterations=3)
+print(result["y"])
+```
 
-# Fit with 0 iterations (standard) vs 3 iterations (robust)
-fit_standard <- fastlowess(x, y_out, fraction = 0.3, iterations = 0L)
-fit_robust <- fastlowess(x, y_out, fraction = 0.3, iterations = 3L)
+**Rust:**
 
-# Plot
-plot(x, y_out, main = "Robustness to Outliers", pch = 16, col = "gray")
-lines(fit_standard$x, fit_standard$y, col = "blue", lwd = 2, lty = 2)
-lines(fit_robust$x, fit_robust$y, col = "red", lwd = 2)
-legend("topright",
-    legend = c("Standard (iter=0)", "Robust (iter=3)"),
-    col = c("blue", "red"), lwd = 2, lty = c(2, 1)
+```rust
+use lowess::prelude::*;
+
+let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+let y = vec![2.0, 4.1, 5.9, 8.2, 9.8];
+
+let model = Lowess::new()
+    .fraction(0.5)
+    .iterations(3)
+    .adapter(Batch)
+    .build()?;
+
+let result = model.fit(&x, &y)?;
+println!("{}", result);
+```
+
+---
+
+## API Reference
+
+**Rust:**
+
+```rust
+Lowess::new()
+    .fraction(0.5)              // Smoothing span (0, 1]
+    .iterations(3)              // Robustness iterations
+    .delta(0.01)                // Interpolation threshold
+    .weight_function(Tricube)   // Kernel selection
+    .robustness_method(Bisquare)
+    .zero_weight_fallback(UseLocalMean)
+    .boundary_policy(Extend)
+    .confidence_intervals(0.95)
+    .prediction_intervals(0.95)
+    .return_diagnostics()
+    .return_residuals()
+    .return_robustness_weights()
+    .cross_validate(KFold(5, &[0.3, 0.5, 0.7]).seed(123))
+    .auto_converge(1e-4)
+    .adapter(Batch)             // or Streaming, Online
+    .parallel(true)             // fastLowess only
+    .backend(CPU)               // fastLowess only: CPU or GPU
+    .build()?;
+```
+
+**Python:**
+
+```python
+fastlowess.smooth(
+    x, y,
+    fraction=0.5,
+    iterations=3,
+    delta=0.01,
+    weight_function="tricube",
+    robustness_method="bisquare",
+    zero_weight_fallback="use_local_mean",
+    boundary_policy="extend",
+    confidence_intervals=0.95,
+    prediction_intervals=0.95,
+    return_diagnostics=True,
+    return_residuals=True,
+    return_robustness_weights=True,
+    cv_fractions=[0.3, 0.5, 0.7],
+    cv_method="kfold",
+    cv_k=5,
+    auto_converge=1e-4,
+    parallel=True
 )
 ```
 
-<img src="man/figures/README-plot-robust-1.png" alt="" width="100%" />
+**R:**
 
-## Smoothing Parameters
-
-``` r
-library(rfastlowess)
-
+```r
 fastlowess(
     x, y,
-    # Smoothing span (0, 1]
     fraction = 0.5,
-
-    # Robustness iterations
     iterations = 3L,
-
-    # Interpolation threshold
     delta = 0.01,
-
-    # Kernel function
     weight_function = "tricube",
-
-    # Robustness method
     robustness_method = "bisquare",
-
-    # Zero-weight fallback
     zero_weight_fallback = "use_local_mean",
-
-    # Boundary handling
     boundary_policy = "extend",
-
-    # Intervals
     confidence_intervals = 0.95,
     prediction_intervals = 0.95,
-
-    # Diagnostics
     return_diagnostics = TRUE,
     return_residuals = TRUE,
     return_robustness_weights = TRUE,
-
-    # Cross-validation
     cv_fractions = c(0.3, 0.5, 0.7),
     cv_method = "kfold",
     cv_k = 5L,
-
-    # Convergence
     auto_converge = 1e-4,
-
-    # Parallelism
     parallel = TRUE
 )
 ```
+
+---
 
 ## Result Structure
 
-The `fastlowess()` function returns a named list:
+**Rust:**
 
-``` r
-result$x                    # Sorted independent variable values
-result$y                    # Smoothed dependent variable values
-result$standard_errors      # Point-wise standard errors
-result$confidence_lower     # Lower bound of confidence interval
-result$confidence_upper     # Upper bound of confidence interval
-result$prediction_lower     # Lower bound of prediction interval
-result$prediction_upper     # Upper bound of prediction interval
-result$residuals            # Residuals (y - fit)
-result$robustness_weights   # Final robustness weights
-result$diagnostics          # Diagnostics (RMSE, R², etc.)
-result$iterations_used      # Number of iterations performed
-result$fraction_used        # Smoothing fraction used
-result$cv_scores            # CV scores for each candidate
+```rust
+pub struct LowessResult<T> {
+    pub x: Vec<T>,                           // Sorted x values
+    pub y: Vec<T>,                           // Smoothed y values
+    pub standard_errors: Option<Vec<T>>,
+    pub confidence_lower: Option<Vec<T>>,
+    pub confidence_upper: Option<Vec<T>>,
+    pub prediction_lower: Option<Vec<T>>,
+    pub prediction_upper: Option<Vec<T>>,
+    pub residuals: Option<Vec<T>>,
+    pub robustness_weights: Option<Vec<T>>,
+    pub diagnostics: Option<Diagnostics<T>>,
+    pub iterations_used: Option<usize>,
+    pub fraction_used: T,
+    pub cv_scores: Option<Vec<T>>,
+}
 ```
 
-## Streaming Processing
+**Python:**
 
-For datasets that don’t fit in memory:
-
-``` r
-result <- fastlowess_streaming(
-    x, y,
-    fraction = 0.3,
-    chunk_size = 5000L,
-    overlap = 500L,
-    parallel = TRUE
-)
+```python
+result.x, result.y, result.standard_errors
+result.confidence_lower, result.confidence_upper
+result.prediction_lower, result.prediction_upper
+result.residuals, result.robustness_weights
+result.diagnostics, result.iterations_used
+result.fraction_used, result.cv_scores
 ```
 
-## Online Processing
+**R:**
 
-For real-time data streams:
-
-``` r
-result <- fastlowess_online(
-    x, y,
-    fraction = 0.2,
-    window_capacity = 100L,
-    update_mode = "incremental" # or "full"
-)
+```r
+result$x, result$y, result$standard_errors
+result$confidence_lower, result$confidence_upper
+result$prediction_lower, result$prediction_upper
+result$residuals, result$robustness_weights
+result$diagnostics, result$iterations_used
+result$fraction_used, result$cv_scores
 ```
 
-## Parameter Selection Guide
+---
 
-### Fraction (Smoothing Span)
+## LOESS vs. LOWESS
 
-- **0.1-0.3**: Local, captures rapid changes
-- **0.4-0.6**: Balanced, general-purpose
-- **0.7-1.0**: Global, smooth trends only
-- **Default: 0.67** (2/3, Cleveland’s choice)
+| Feature               | LOESS (This Crate)                | LOWESS                         |
+|-----------------------|-----------------------------------|--------------------------------|
+| **Polynomial Degree** | Linear, Quadratic, Cubic, Quartic | Linear (Degree 1)              |
+| **Dimensions**        | Multivariate (n-D support)        | Univariate (1-D only)          |
+| **Flexibility**       | High (Distance metrics)           | Standard                       |
+| **Complexity**        | Higher (Matrix inversion)         | Lower (Weighted average/slope) |
 
-### Robustness Iterations
+> [!TIP]
+> **Note:** For a **LOESS** implementation, use [`loess-project`](https://github.com/thisisamirv/loess-project).
 
-- **0**: Clean data, speed critical
-- **1-3**: Default, good balance
-- **4-5**: Heavy outliers
+## Development
 
-### Kernel Function
+### Workspace Structure
 
-- **Tricube** (default): Best all-around
-- **Epanechnikov**: Optimal MSE
-- **Gaussian**: Very smooth
-- **Uniform**: Moving average
+This monorepo uses **Cargo workspace inheritance** for centralized configuration:
 
-### Delta Optimization
+```toml
+# Root Cargo.toml
+[workspace.package]
+version = "0.99.3"
+authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
+edition = "2024"
+license = "MIT OR Apache-2.0"
+rust-version = "1.85.0"
+readme = "README.md"
+# ... and more
 
-- **None**: Small datasets (n \< 1000)
-- **0.01 × range(x)**: Good starting point for dense data
-- **Manual tuning**: Adjust based on data density
-
-## Demos
-
-Check the included demos:
-
-``` r
-demo(package = "rfastlowess")
-demo("batch_smoothing")
-demo("online_smoothing")
-demo("streaming_smoothing")
+[workspace.dependencies]
+lowess = { version = "0.99", path = "crates/lowess" }
+fastLowess = { version = "0.99", path = "crates/fastLowess" }
+# ... shared dependencies
 ```
 
-## Related Work
+All member crates inherit from workspace:
 
-- [fastLowess (Rust core)](https://github.com/thisisamirv/fastLowess)
-- [fastLowess-py (Python wrapper)](https://github.com/thisisamirv/fastLowess-py)
-
-## Citation
-
-To cite `rfastlowess` in publications, please use:
-
-``` r
-citation("rfastlowess")
+```toml
+# Individual crate Cargo.toml
+[package]
+name = "lowess"
+version = { workspace = true }
+authors = { workspace = true }
+readme = { workspace = true }
+# ...
 ```
 
-## Contributing
+**Benefits:**
 
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+- Single source of truth for versions and metadata
+- Update once → all crates bump together
+- Consistent MSRV across all packages
 
-Please note that this package is released with a [Contributor Code of Conduct](https://ropensci.org/code-of-conduct/). By contributing to this project, you agree to abide by its terms.
+---
 
 ## License
 
-Licensed under either of
+Licensed under either of:
 
-- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or <https://www.apache.org/licenses/LICENSE-2.0>)
-- MIT license ([LICENSE-MIT](LICENSE-MIT) or <https://opensource.org/licenses/MIT>)
+- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
+- MIT license ([LICENSE-MIT](LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
 
 at your option.
 
 ## References
 
-- Cleveland, W.S. (1979). “Robust Locally Weighted Regression and Smoothing Scatterplots”. *JASA*.
-- Cleveland, W.S. (1981). “LOWESS: A Program for Smoothing Scatterplots”. *The American Statistician*.
+- Cleveland, W.S. (1979). "Robust Locally Weighted Regression and Smoothing Scatterplots". *JASA*.
+- Cleveland, W.S. (1981). "LOWESS: A Program for Smoothing Scatterplots". *The American Statistician*.
+
+## Citation
+
+```bibtex
+@software{lowess_rust,
+  author = {Valizadeh, Amir},
+  title = {LOWESS: High-Performance Locally Weighted Scatterplot Smoothing},
+  year = {2026},
+  url = {https://github.com/thisisamirv/lowess-project}
+}
+```

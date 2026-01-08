@@ -50,15 +50,11 @@ This implementation is *more robust* than R's `lowess` and Python's `statsmodels
 
 For robustness weight calculations, this crate uses *Median Absolute Deviation (MAD)* for scale estimation:
 
-```text
-s = median(|r_i - median(r)|)
-```
+$$s = \text{median}(|r_i - \text{median}(r)|)$$
 
 In contrast, `statsmodels` and R's `lowess` uses the median of absolute residuals (MAR):
 
-```text
-s = median(|r_i|)
-```
+$$s = \text{median}(|r_i|)$$
 
 - MAD is a *breakdown-point-optimal* estimator—it remains valid even when up to 50% of data are outliers.
 - The median-centering step removes asymmetric bias from residual distributions.
