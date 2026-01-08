@@ -93,16 +93,15 @@ Standard LOWESS is sensitive to outliers. **Robustness iterations** downweight p
 Choose the right mode based on your use case:
 
 ```mermaid
-graph TD
+flowchart TD
     A[Data Source] --> B{Fits in memory?}
-    B -->|Yes| C{Real-time?}
-    B -->|No| D[Streaming]
-    C -->|No| E[Batch]
-    C -->|Yes| F[Online]
-    
-    E --> G[Full features:<br/>intervals, CV, diagnostics]
-    D --> H[Chunked processing:<br/>large datasets]
-    F --> I[Sliding window:<br/>sensor data]
+    B -- Yes --> C{Real-time?}
+    B -- No --> D[Streaming]
+    C -- No --> E[Batch]
+    C -- Yes --> F[Online]
+    E --> G[Full features]
+    D --> H[Chunked processing]
+    F --> I[Sliding window]
 ```
 
 | Mode          | Use Case                   | Memory         | Features              |

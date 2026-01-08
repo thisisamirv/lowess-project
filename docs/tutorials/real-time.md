@@ -14,6 +14,23 @@ For true real-time applications where each point must be processed immediately.
 
 ### Sensor Data Example
 
+=== "R"
+    ```r
+    library(rfastlowess)
+
+    set.seed(42)
+    times <- 1:100
+    temperatures <- 20 + 5 * sin(times / 10) + rnorm(100)
+
+    result <- fastlowess_online(
+        times, temperatures,
+        fraction = 0.3,
+        window_capacity = 25,
+        min_points = 5,
+        update_mode = "incremental"
+    )
+    ```
+
 === "Python"
     ```python
     import fastlowess as fl
@@ -36,23 +53,6 @@ For true real-time applications where each point must be processed immediately.
 
     # Result contains smoothed values for each valid point
     print("Smoothed temperatures:", result["y"])
-    ```
-
-=== "R"
-    ```r
-    library(rfastlowess)
-
-    set.seed(42)
-    times <- 1:100
-    temperatures <- 20 + 5 * sin(times / 10) + rnorm(100)
-
-    result <- fastlowess_online(
-        times, temperatures,
-        fraction = 0.3,
-        window_capacity = 25,
-        min_points = 5,
-        update_mode = "incremental"
-    )
     ```
 
 === "Rust"
@@ -86,6 +86,20 @@ For true real-time applications where each point must be processed immediately.
 For large datasets that arrive in batches or files.
 
 ### Log File Processing
+
+=== "R"
+    ```r
+    x <- seq(0, 100000, by = 1)
+    y <- sin(x / 1000) + rnorm(length(x), sd = 0.1)
+
+    result <- fastlowess_streaming(
+        x, y,
+        fraction = 0.05,
+        chunk_size = 10000,
+        overlap = 1000,
+        merge_strategy = "weighted"
+    )
+    ```
 
 === "Python"
     ```python
@@ -123,48 +137,30 @@ For large datasets that arrive in batches or files.
     print(f"Processed {len(result['y'])} points")
     ```
 
-=== "R"
-    ```r
-    x <- seq(0, 100000, by = 1)
-    y <- sin(x / 1000) + rnorm(length(x), sd = 0.1)
+=== "Rust"
+    ```rust
+    use fastLowess::prelude::*;
 
-    result <- fastlowess_streaming(
-        x, y,
-        fraction = 0.05,
-        chunk_size = 10000,
-        overlap = 1000,
-        merge_strategy = "weighted"
-    )
-    ```
+    let mut processor = Lowess::new()
+        .fraction(0.1)
+        .iterations(2)
+        .adapter(Streaming)
+        .chunk_size(5000)
+        .overlap(500)
+        .merge_strategy(Weighted)
+        .build()?;
 
----
+    // Process chunks as they arrive
+    let chunk1_result = processor.process_chunk(&chunk1_x, &chunk1_y)?;
+    write_output(&chunk1_result.y);
 
-## Rust: True Streaming API
+    let chunk2_result = processor.process_chunk(&chunk2_x, &chunk2_y)?;
+    write_output(&chunk2_result.y);
 
-For maximum control, use Rust's streaming adapter:
+    // CRITICAL: Get buffered overlap data
+    let final_result = processor.finalize()?;
+    write_output(&final_result.y);
 
-```rust
-use fastLowess::prelude::*;
-
-let mut processor = Lowess::new()
-    .fraction(0.1)
-    .iterations(2)
-    .adapter(Streaming)
-    .chunk_size(5000)
-    .overlap(500)
-    .merge_strategy(Weighted)
-    .build()?;
-
-// Process chunks as they arrive
-let chunk1_result = processor.process_chunk(&chunk1_x, &chunk1_y)?;
-write_output(&chunk1_result.y);
-
-let chunk2_result = processor.process_chunk(&chunk2_x, &chunk2_y)?;
-write_output(&chunk2_result.y);
-
-// CRITICAL: Get buffered overlap data
-let final_result = processor.finalize()?;
-write_output(&final_result.y);
 ```
 
 !!! warning "Always call finalize()"
@@ -173,6 +169,40 @@ write_output(&final_result.y);
 ---
 
 ## Real-Time Dashboard Example
+
+=== "R"
+    ```r
+    library(rfastlowess)
+
+    # Simulated real-time dashboard
+    window_capacity <- 50
+    data_x <- numeric(0)
+    data_y <- numeric(0)
+
+    for (i in 1:200) {
+        # Simulate sensor reading
+        x <- i
+        y <- 25.0 + 10 * sin(i / 20) + rnorm(1, sd = 2)
+        
+        data_x <- c(data_x, x)
+        data_y <- c(data_y, y)
+        
+        # Keep sliding window
+        if (length(data_x) > window_capacity) {
+            data_x <- tail(data_x, window_capacity)
+            data_y <- tail(data_y, window_capacity)
+        }
+        
+        # Smooth current window
+        if (length(data_x) >= 5) {
+            result <- fastlowess(data_x, data_y, fraction = 0.4)
+            current_smoothed <- tail(result$y, 1)
+            cat(sprintf("Reading %d: raw=%.1f, smoothed=%.1f\n", i, y, current_smoothed))
+        }
+        
+        Sys.sleep(0.1)  # Simulate 10 Hz sampling
+    }
+    ```
 
 === "Python"
     ```python
@@ -211,6 +241,42 @@ write_output(&final_result.y);
         time.sleep(0.1)  # Simulate 10 Hz sampling
     ```
 
+=== "Rust"
+    ```rust
+    use fastLowess::prelude::*;
+    use std::{thread, time::Duration};
+
+    let mut window_x: Vec<f64> = Vec::with_capacity(50);
+    let mut window_y: Vec<f64> = Vec::with_capacity(50);
+
+    for i in 0..200 {
+        let x = i as f64;
+        let y = 25.0 + 10.0 * (x / 20.0).sin() + rand::random::<f64>() * 4.0 - 2.0;
+        
+        window_x.push(x);
+        window_y.push(y);
+        
+        // Keep sliding window
+        if window_x.len() > 50 {
+            window_x.remove(0);
+            window_y.remove(0);
+        }
+        
+        // Smooth current window
+        if window_x.len() >= 5 {
+            let model = Lowess::new()
+                .fraction(0.4)
+                .adapter(Batch)
+                .build()?;
+            let result = model.fit(&window_x, &window_y)?;
+            let current_smoothed = result.y.last().unwrap();
+            println!("Reading {}: raw={:.1}, smoothed={:.1}", i, y, current_smoothed);
+        }
+        
+        thread::sleep(Duration::from_millis(100));
+    }
+    ```
+
 ---
 
 ## Choosing Parameters
@@ -245,13 +311,40 @@ write_output(&final_result.y);
 
 ## Error Handling
 
-```python
-try:
-    result = fl.smooth_online(x, y, window_capacity=10)
-except fl.LowessError as e:
-    print(f"Smoothing failed: {e}")
-    # Fall back to raw data or last known good value
-```
+=== "R"
+    ```r
+    tryCatch({
+        result <- fastlowess_online(x, y, window_capacity = 10)
+    }, error = function(e) {
+        cat("Smoothing failed:", conditionMessage(e), "\n")
+        # Fall back to raw data or last known good value
+    })
+    ```
+
+=== "Python"
+    ```python
+    try:
+        result = fl.smooth_online(x, y, window_capacity=10)
+    except fl.LowessError as e:
+        print(f"Smoothing failed: {e}")
+        # Fall back to raw data or last known good value
+    ```
+
+=== "Rust"
+    ```rust
+    match processor.add_point(x, y) {
+        Ok(Some(output)) => {
+            println!("Smoothed: {:.2}", output.smoothed);
+        }
+        Ok(None) => {
+            // Not enough points yet
+        }
+        Err(e) => {
+            eprintln!("Smoothing failed: {}", e);
+            // Fall back to raw data
+        }
+    }
+    ```
 
 ---
 

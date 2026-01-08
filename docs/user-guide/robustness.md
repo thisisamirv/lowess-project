@@ -24,12 +24,12 @@ Smooth downweighting. Points transition gradually from full weight to zero.
 
 $$w(u) = \begin{cases} (1 - u^2)^2 & |u| < 1 \\ 0 & |u| \geq 1 \end{cases}$$
 
+**Use when**: General purpose, balanced approach.
+
 === "R"
     ```r
     result <- fastlowess(x, y, iterations = 3, robustness_method = "bisquare")
     ```
-
-**Use when**: General purpose, balanced approach.
 
 === "Python"
     ```python
@@ -53,12 +53,12 @@ Linear penalty beyond threshold. Less aggressive than Bisquare.
 
 $$w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}$$
 
+**Use when**: Moderate outliers, want to retain some influence.
+
 === "R"
     ```r
     result <- fastlowess(x, y, iterations = 3, robustness_method = "huber")
     ```
-
-**Use when**: Moderate outliers, want to retain some influence.
 
 === "Python"
     ```python
@@ -82,12 +82,12 @@ Hard threshold. Points are either fully weighted or completely excluded.
 
 $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
 
+**Use when**: Extreme outliers, want binary exclusion.
+
 === "R"
     ```r
     result <- fastlowess(x, y, iterations = 3, robustness_method = "talwar")
     ```
-
-**Use when**: Extreme outliers, want binary exclusion.
 
 === "Python"
     ```python
@@ -194,13 +194,13 @@ Residuals are scaled before computing robustness weights. Two methods:
 
 Stop iterations early when weights stabilize:
 
+!!! tip "Performance"
+    Auto-convergence can significantly reduce computation when weights stabilize before reaching max iterations.
+
 === "R"
     ```r
     result <- fastlowess(x, y, iterations = 10, auto_converge = 1e-6)
     ```
-
-!!! tip "Performance"
-    Auto-convergence can significantly reduce computation when weights stabilize before reaching max iterations.
 
 === "Python"
     ```python

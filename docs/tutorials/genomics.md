@@ -16,6 +16,39 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
 
 ### Solution
 
+=== "R"
+    ```r
+    library(rfastlowess)
+
+    # Simulate methylation data
+    set.seed(42)
+    n <- 1000
+    positions <- sort(runif(n, 0, 1e6))
+    
+    # True pattern
+    true_meth <- 0.5 + 0.3 * sin(positions / 1e5)
+    
+    # Observed with noise
+    observed <- true_meth + rnorm(n, sd = 0.15)
+    observed <- pmax(0, pmin(1, observed))
+
+    # Smooth
+    result <- fastlowess(
+        positions, observed,
+        fraction = 0.1,
+        iterations = 3,
+        confidence_intervals = 0.95
+    )
+
+    # Plot
+    plot(positions, observed, pch = ".", col = "gray",
+         xlab = "Genomic Position (bp)", ylab = "Methylation Level",
+         main = "Methylation Profile Smoothing")
+    lines(result$x, result$y, col = "blue", lwd = 2)
+    lines(result$x, result$confidence_lower, col = "blue", lty = 2)
+    lines(result$x, result$confidence_upper, col = "blue", lty = 2)
+    ```
+
 === "Python"
     ```python
     import fastlowess as fl
@@ -59,37 +92,24 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
     plt.show()
     ```
 
-=== "R"
-    ```r
-    library(rfastlowess)
+=== "Rust"
+    ```rust
+    use fastLowess::prelude::*;
+    use ndarray::Array1;
 
-    # Simulate methylation data
-    set.seed(42)
-    n <- 1000
-    positions <- sort(runif(n, 0, 1e6))
-    
-    # True pattern
-    true_meth <- 0.5 + 0.3 * sin(positions / 1e5)
-    
-    # Observed with noise
-    observed <- true_meth + rnorm(n, sd = 0.15)
-    observed <- pmax(0, pmin(1, observed))
+    let positions: Array1<f64> = /* sorted genomic positions */;
+    let observed: Array1<f64> = /* methylation levels 0-1 */;
 
-    # Smooth
-    result <- fastlowess(
-        positions, observed,
-        fraction = 0.1,
-        iterations = 3,
-        confidence_intervals = 0.95
-    )
+    let model = Lowess::new()
+        .fraction(0.1)
+        .iterations(3)
+        .confidence_intervals(0.95)
+        .adapter(Batch)
+        .build()?;
 
-    # Plot
-    plot(positions, observed, pch = ".", col = "gray",
-         xlab = "Genomic Position (bp)", ylab = "Methylation Level",
-         main = "Methylation Profile Smoothing")
-    lines(result$x, result$y, col = "blue", lwd = 2)
-    lines(result$x, result$confidence_lower, col = "blue", lty = 2)
-    lines(result$x, result$confidence_upper, col = "blue", lty = 2)
+    let result = model.fit(&positions, &observed)?;
+    // result.y contains smoothed methylation profile
+    // result.confidence_lower/upper contain 95% CI bounds
     ```
 
 ---
@@ -99,6 +119,32 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
 ### Application
 
 ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identify binding regions.
+
+=== "R"
+    ```r
+    set.seed(123)
+    positions <- seq(0, 10000, by = 10)
+    n <- length(positions)
+
+    # Simulate peaks
+    background <- 10
+    peak1 <- 50 * exp(-((positions - 2000)^2) / (2 * 200^2))
+    peak2 <- 80 * exp(-((positions - 5000)^2) / (2 * 300^2))
+    peak3 <- 40 * exp(-((positions - 8000)^2) / (2 * 150^2))
+    
+    true_signal <- background + peak1 + peak2 + peak3
+    observed <- rpois(n, true_signal)
+
+    result <- fastlowess(
+        positions, observed,
+        fraction = 0.05,
+        iterations = 5
+    )
+
+    # Find peaks
+    threshold <- quantile(result$y, 0.75)
+    peak_positions <- positions[result$y > threshold]
+    ```
 
 === "Python"
     ```python
@@ -130,30 +176,28 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
     print(f"Peak regions: {peaks}")
     ```
 
-=== "R"
-    ```r
-    set.seed(123)
-    positions <- seq(0, 10000, by = 10)
-    n <- length(positions)
+=== "Rust"
+    ```rust
+    let positions: Array1<f64> = Array1::range(0.0, 10000.0, 10.0);
+    let observed: Array1<f64> = /*ChIP-seq counts*/;
 
-    # Simulate peaks
-    background <- 10
-    peak1 <- 50 * exp(-((positions - 2000)^2) / (2 * 200^2))
-    peak2 <- 80 * exp(-((positions - 5000)^2) / (2 * 300^2))
-    peak3 <- 40 * exp(-((positions - 8000)^2) / (2 * 150^2))
-    
-    true_signal <- background + peak1 + peak2 + peak3
-    observed <- rpois(n, true_signal)
+    let model = Lowess::new()
+        .fraction(0.05)
+        .iterations(5)
+        .return_residuals()
+        .adapter(Batch)
+        .build()?;
 
-    result <- fastlowess(
-        positions, observed,
-        fraction = 0.05,
-        iterations = 5
-    )
+    let result = model.fit(&positions, &observed)?;
 
-    # Find peaks
-    threshold <- quantile(result$y, 0.75)
-    peak_positions <- positions[result$y > threshold]
+    // Find peaks above threshold
+    let threshold = /* compute 75th percentile */;
+    let peak_positions: Vec<f64> = positions
+        .iter()
+        .zip(result.y.iter())
+        .filter(|(_, &y)| y > threshold)
+        .map(|(&p, _)| p)
+        .collect();
     ```
 
 ---
@@ -161,6 +205,17 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
 ## Large Genome Coverage (Streaming)
 
 For whole-genome data that doesn't fit in memory:
+
+=== "R"
+    ```r
+    result <- fastlowess_streaming(
+        positions, coverage,
+        fraction = 0.05,
+        chunk_size = 100000,
+        overlap = 10000,
+        merge_strategy = "weighted"
+    )
+    ```
 
 === "Python"
     ```python
@@ -174,15 +229,26 @@ For whole-genome data that doesn't fit in memory:
     )
     ```
 
-=== "R"
-    ```r
-    result <- fastlowess_streaming(
-        positions, coverage,
-        fraction = 0.05,
-        chunk_size = 100000,
-        overlap = 10000,
-        merge_strategy = "weighted"
-    )
+=== "Rust"
+    ```rust
+    use fastLowess::prelude::*;
+
+    let model = Lowess::new()
+        .fraction(0.05)
+        .iterations(3)
+        .adapter(Streaming {
+            chunk_size: 100_000,
+            overlap: 10_000,
+            merge_strategy: Weighted,
+        })
+        .build()?;
+
+    // Process chunks from file or stream
+    let mut processor = model.processor();
+    for chunk in chromosome_chunks {
+        processor.process_chunk(&chunk.positions, &chunk.coverage)?;
+    }
+    let result = processor.finalize()?;
     ```
 
 ---

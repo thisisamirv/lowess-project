@@ -10,6 +10,23 @@ Time series data often contains noise, seasonality, and trends. LOWESS provides 
 
 ## Basic Trend Extraction
 
+=== "R"
+    ```r
+    library(rfastlowess)
+
+    set.seed(42)
+    t <- seq(0, 100, length.out = 500)
+    trend <- 10 + 0.5 * t + 3 * sin(t / 10)
+    noise <- rnorm(500, sd = 3)
+    y <- trend + noise
+
+    result <- fastlowess(t, y, fraction = 0.1, iterations = 3)
+
+    plot(t, y, col = "gray", pch = ".",
+         xlab = "Time", ylab = "Value", main = "Trend Extraction")
+    lines(result$x, result$y, col = "blue", lwd = 2)
+    ```
+
 === "Python"
     ```python
     import fastlowess as fl
@@ -37,23 +54,6 @@ Time series data often contains noise, seasonality, and trends. LOWESS provides 
     plt.show()
     ```
 
-=== "R"
-    ```r
-    library(rfastlowess)
-
-    set.seed(42)
-    t <- seq(0, 100, length.out = 500)
-    trend <- 10 + 0.5 * t + 3 * sin(t / 10)
-    noise <- rnorm(500, sd = 3)
-    y <- trend + noise
-
-    result <- fastlowess(t, y, fraction = 0.1, iterations = 3)
-
-    plot(t, y, col = "gray", pch = ".",
-         xlab = "Time", ylab = "Value", main = "Trend Extraction")
-    lines(result$x, result$y, col = "blue", lwd = 2)
-    ```
-
 === "Rust"
     ```rust
     use fastLowess::prelude::*;
@@ -78,6 +78,18 @@ Time series data often contains noise, seasonality, and trends. LOWESS provides 
 
 Remove trend to analyze residual patterns:
 
+=== "R"
+    ```r
+    result <- fastlowess(t, y, fraction = 0.3, iterations = 3, return_residuals = TRUE)
+
+    trend <- result$y
+    detrended <- result$residuals
+
+    par(mfrow = c(1, 2))
+    plot(t, trend, type = "l", main = "Trend")
+    plot(t, detrended, type = "l", main = "Detrended")
+    ```
+
 === "Python"
     ```python
     # Smooth to get trend
@@ -98,21 +110,39 @@ Remove trend to analyze residual patterns:
     plt.tight_layout()
     ```
 
-=== "R"
-    ```r
-    result <- fastlowess(t, y, fraction = 0.3, iterations = 3, return_residuals = TRUE)
+=== "Rust"
+    ```rust
+    let model = Lowess::new()
+        .fraction(0.3)
+        .iterations(3)
+        .return_residuals()
+        .adapter(Batch)
+        .build()?;
 
-    trend <- result$y
-    detrended <- result$residuals
-
-    par(mfrow = c(1, 2))
-    plot(t, trend, type = "l", main = "Trend")
-    plot(t, detrended, type = "l", main = "Detrended")
+    let result = model.fit(&t, &y)?;
+    let trend = &result.y;
+    let detrended = result.residuals.as_ref().unwrap();
     ```
 
 ---
 
 ## Forecasting with Prediction Intervals
+
+=== "R"
+    ```r
+    result <- fastlowess(
+        t, y,
+        fraction = 0.2,
+        iterations = 3,
+        confidence_intervals = 0.95,
+        prediction_intervals = 0.95
+    )
+
+    plot(t, y, col = "gray", pch = 16)
+    lines(result$x, result$y, col = "blue", lwd = 2)
+    lines(result$x, result$prediction_lower, col = "blue", lty = 2)
+    lines(result$x, result$prediction_upper, col = "blue", lty = 2)
+    ```
 
 === "Python"
     ```python
@@ -137,11 +167,33 @@ Remove trend to analyze residual patterns:
     plt.legend()
     ```
 
+=== "Rust"
+    ```rust
+    let model = Lowess::new()
+        .fraction(0.2)
+        .iterations(3)
+        .confidence_intervals(0.95)
+        .prediction_intervals(0.95)
+        .adapter(Batch)
+        .build()?;
+
+    let result = model.fit(&t, &y)?;
+    // Access result.prediction_lower and result.prediction_upper
+    ```
+
 ---
 
 ## Handling Missing Data
 
 LOWESS naturally handles irregular time sampling:
+
+=== "R"
+    ```r
+    t_irregular <- sort(runif(200, 0, 100))
+    y_irregular <- 10 + 0.3 * t_irregular + rnorm(200, sd = 2)
+
+    result <- fastlowess(t_irregular, y_irregular, fraction = 0.2)
+    ```
 
 === "Python"
     ```python
@@ -153,12 +205,18 @@ LOWESS naturally handles irregular time sampling:
     result = fl.smooth(t_irregular, y_irregular, fraction=0.2)
     ```
 
-=== "R"
-    ```r
-    t_irregular <- sort(runif(200, 0, 100))
-    y_irregular <- 10 + 0.3 * t_irregular + rnorm(200, sd = 2)
+=== "Rust"
+    ```rust
+    // Irregular sampling - no special handling needed
+    let t_irregular: Array1<f64> = /*sorted irregular times */;
+    let y_irregular: Array1<f64> = /* corresponding values*/;
 
-    result <- fastlowess(t_irregular, y_irregular, fraction = 0.2)
+    let model = Lowess::new()
+        .fraction(0.2)
+        .adapter(Batch)
+        .build()?;
+
+    let result = model.fit(&t_irregular, &y_irregular)?;
     ```
 
 ---
@@ -166,6 +224,19 @@ LOWESS naturally handles irregular time sampling:
 ## Multi-Scale Analysis
 
 Use different fractions to extract features at different scales:
+
+=== "R"
+    ```r
+    fractions <- c(0.05, 0.2, 0.5)
+
+    plot(t, y, col = "gray", pch = ".", main = "Multi-Scale LOWESS")
+    colors <- c("red", "blue", "green")
+    for (i in seq_along(fractions)) {
+        result <- fastlowess(t, y, fraction = fractions[i])
+        lines(result$x, result$y, col = colors[i], lwd = 2)
+    }
+    legend("topleft", legend = paste("f =", fractions), col = colors, lwd = 2)
+    ```
 
 === "Python"
     ```python
@@ -181,6 +252,20 @@ Use different fractions to extract features at different scales:
     
     plt.legend()
     plt.title("Multi-Scale LOWESS")
+    ```
+
+=== "Rust"
+    ```rust
+    let fractions = [0.05, 0.2, 0.5];
+
+    for f in fractions {
+        let model = Lowess::new()
+            .fraction(f)
+            .adapter(Batch)
+            .build()?;
+        let result = model.fit(&t, &y)?;
+        // Store or plot result.y for each scale
+    }
     ```
 
 ---
@@ -214,6 +299,45 @@ Biological application:
     lines(result$x, result$confidence_upper, col = "red", lty = 2)
 
     cat("R²:", result$diagnostics$r_squared, "\n")
+    ```
+
+=== "Python"
+    ```python
+    import numpy as np
+    import fastlowess as fl
+
+    # Gene expression over 24 hours
+    hours = np.arange(0, 24.5, 0.5)
+    expression = 100 * (1 + 0.5 * np.sin(hours * np.pi / 12)) + np.random.normal(0, 10, len(hours))
+
+    result = fl.smooth(
+        hours, expression,
+        fraction=0.3,
+        iterations=3,
+        confidence_intervals=0.95,
+        return_diagnostics=True
+    )
+
+    print(f"R²: {result['diagnostics']['r_squared']:.3f}")
+    ```
+
+=== "Rust"
+    ```rust
+    let hours: Array1<f64> = Array1::range(0.0, 24.5, 0.5);
+    let expression: Array1<f64> = /*circadian data*/;
+
+    let model = Lowess::new()
+        .fraction(0.3)
+        .iterations(3)
+        .confidence_intervals(0.95)
+        .return_diagnostics()
+        .adapter(Batch)
+        .build()?;
+
+    let result = model.fit(&hours, &expression)?;
+    if let Some(diag) = &result.diagnostics {
+        println!("R²: {:.3}", diag.r_squared);
+    }
     ```
 
 ---

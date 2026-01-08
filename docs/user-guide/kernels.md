@@ -32,12 +32,12 @@ Cleveland's original choice. Best all-around performance.
 
 $$w(u) = (1 - |u|^3)^3$$
 
+**Use when**: Default choice for most applications.
+
 === "R"
     ```r
     result <- fastlowess(x, y, weight_function = "tricube")
     ```
-
-**Use when**: Default choice for most applications.
 
 === "Python"
     ```python
@@ -60,12 +60,12 @@ Theoretically optimal for kernel density estimation.
 
 $$w(u) = \frac{3}{4}(1 - u^2)$$
 
+**Use when**: Optimal MSE properties desired.
+
 === "R"
     ```r
     result <- fastlowess(x, y, weight_function = "epanechnikov")
     ```
-
-**Use when**: Optimal MSE properties desired.
 
 === "Python"
     ```python
@@ -88,12 +88,12 @@ Infinitely smooth. No boundary effects.
 
 $$w(u) = \exp(-u^2/2)$$
 
+**Use when**: Maximum smoothness needed, computational cost acceptable.
+
 === "R"
     ```r
     result <- fastlowess(x, y, weight_function = "gaussian")
     ```
-
-**Use when**: Maximum smoothness needed, computational cost acceptable.
 
 === "Python"
     ```python
@@ -116,12 +116,12 @@ Good balance of efficiency and smoothness.
 
 $$w(u) = (1 - u^2)^2$$
 
+**Use when**: Alternative to Tricube with slightly different properties.
+
 === "R"
     ```r
     result <- fastlowess(x, y, weight_function = "biweight")
     ```
-
-**Use when**: Alternative to Tricube with slightly different properties.
 
 === "Python"
     ```python
@@ -144,12 +144,12 @@ Smooth and computationally efficient.
 
 $$w(u) = \cos(\pi u / 2)$$
 
+**Use when**: Want smooth kernel with simple form.
+
 === "R"
     ```r
     result <- fastlowess(x, y, weight_function = "cosine")
     ```
-
-**Use when**: Want smooth kernel with simple form.
 
 === "Python"
     ```python
@@ -172,12 +172,12 @@ Simple linear taper.
 
 $$w(u) = 1 - |u|$$
 
+**Use when**: Simple, interpretable weights.
+
 === "R"
     ```r
     result <- fastlowess(x, y, weight_function = "triangle")
     ```
-
-**Use when**: Simple, interpretable weights.
 
 === "Python"
     ```python
@@ -200,12 +200,12 @@ Equal weights within window. Fastest but least smooth.
 
 $$w(u) = 1$$
 
+**Use when**: Speed is critical, smoothness less important.
+
 === "R"
     ```r
     result <- fastlowess(x, y, weight_function = "uniform")
     ```
-
-**Use when**: Speed is critical, smoothness less important.
 
 === "Python"
     ```python
@@ -225,16 +225,16 @@ $$w(u) = 1$$
 ## Choosing a Kernel
 
 ```mermaid
-graph TD
-    A[Choose Kernel] --> B{Need maximum<br/>smoothness?}
-    B -->|Yes| C[Gaussian]
-    B -->|No| D{Default<br/>acceptable?}
-    D -->|Yes| E[Tricube]
-    D -->|No| F{Optimal<br/>MSE?}
-    F -->|Yes| G[Epanechnikov]
-    F -->|No| H{Speed<br/>critical?}
-    H -->|Yes| I[Uniform]
-    H -->|No| J[Biweight]
+flowchart TD
+    A[Choose Kernel] --> B{Need maximum smooth}
+    B -- Yes --> C[Gaussian]
+    B -- No --> D{Default acceptable}
+    D -- Yes --> E[Tricube]
+    D -- No --> F{Optimal MSE}
+    F -- Yes --> G[Epanechnikov]
+    F -- No --> H{Speed critical}
+    H -- Yes --> I[Uniform]
+    H -- No --> J[Biweight]
 ```
 
 !!! tip "Recommendation"
