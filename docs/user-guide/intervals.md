@@ -17,6 +17,26 @@ Confidence and prediction intervals for uncertainty quantification.
 
 Estimate uncertainty in the smoothed curve itself.
 
+=== "R"
+    ```r
+    result <- fastlowess(x, y, fraction = 0.5, confidence_intervals = 0.95)
+
+    # Plot with bands
+    plot(x, y, pch = 16, col = "gray")
+    lines(result$x, result$y, col = "blue", lwd = 2)
+    lines(result$x, result$confidence_lower, col = "blue", lty = 2)
+    lines(result$x, result$confidence_upper, col = "blue", lty = 2)
+    ```
+
+=== "Python"
+    ```python
+    result = fl.smooth(x, y, fraction=0.5, confidence_intervals=0.95)
+
+    print("Smoothed:", result["y"])
+    print("CI Lower:", result["confidence_lower"])
+    print("CI Upper:", result["confidence_upper"])
+    ```
+
 === "Rust"
     ```rust
     use fastLowess::prelude::*;
@@ -38,31 +58,31 @@ Estimate uncertainty in the smoothed curve itself.
     }
     ```
 
-=== "Python"
-    ```python
-    result = fl.smooth(x, y, fraction=0.5, confidence_intervals=0.95)
-
-    print("Smoothed:", result["y"])
-    print("CI Lower:", result["confidence_lower"])
-    print("CI Upper:", result["confidence_upper"])
-    ```
-
-=== "R"
-    ```r
-    result <- fastlowess(x, y, fraction = 0.5, confidence_intervals = 0.95)
-
-    # Plot with bands
-    plot(x, y, pch = 16, col = "gray")
-    lines(result$x, result$y, col = "blue", lwd = 2)
-    lines(result$x, result$confidence_lower, col = "blue", lty = 2)
-    lines(result$x, result$confidence_upper, col = "blue", lty = 2)
-    ```
-
 ---
 
 ## Prediction Intervals
 
 Estimate where new observations might fall.
+
+=== "R"
+    ```r
+    result <- fastlowess(x, y, fraction = 0.5, prediction_intervals = 0.95)
+
+    # Wider than confidence intervals
+    polygon(
+        c(result$x, rev(result$x)),
+        c(result$prediction_lower, rev(result$prediction_upper)),
+        col = rgb(1, 0, 0, 0.2), border = NA
+    )
+    ```
+
+=== "Python"
+    ```python
+    result = fl.smooth(x, y, fraction=0.5, prediction_intervals=0.95)
+
+    print("PI Lower:", result["prediction_lower"])
+    print("PI Upper:", result["prediction_upper"])
+    ```
 
 === "Rust"
     ```rust
@@ -79,40 +99,20 @@ Estimate where new observations might fall.
     }
     ```
 
-=== "Python"
-    ```python
-    result = fl.smooth(x, y, fraction=0.5, prediction_intervals=0.95)
-
-    print("PI Lower:", result["prediction_lower"])
-    print("PI Upper:", result["prediction_upper"])
-    ```
-
-=== "R"
-    ```r
-    result <- fastlowess(x, y, fraction = 0.5, prediction_intervals = 0.95)
-
-    # Wider than confidence intervals
-    polygon(
-        c(result$x, rev(result$x)),
-        c(result$prediction_lower, rev(result$prediction_upper)),
-        col = rgb(1, 0, 0, 0.2), border = NA
-    )
-    ```
-
 ---
 
 ## Both Intervals
 
 Request both types simultaneously:
 
-=== "Rust"
-    ```rust
-    let model = Lowess::new()
-        .fraction(0.5)
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.95)
-        .adapter(Batch)
-        .build()?;
+=== "R"
+    ```r
+    result <- fastlowess(
+        x, y,
+        fraction = 0.5,
+        confidence_intervals = 0.95,
+        prediction_intervals = 0.95
+    )
     ```
 
 === "Python"
@@ -125,14 +125,14 @@ Request both types simultaneously:
     )
     ```
 
-=== "R"
-    ```r
-    result <- fastlowess(
-        x, y,
-        fraction = 0.5,
-        confidence_intervals = 0.95,
-        prediction_intervals = 0.95
-    )
+=== "Rust"
+    ```rust
+    let model = Lowess::new()
+        .fraction(0.5)
+        .confidence_intervals(0.95)
+        .prediction_intervals(0.95)
+        .adapter(Batch)
+        .build()?;
     ```
 
 ---
@@ -147,6 +147,18 @@ Common levels and their z-values:
 | 0.95  | 1.960   | 95% of intervals contain true value |
 | 0.99  | 2.576   | 99% of intervals contain true value |
 
+=== "R"
+    ```r
+    # 99% confidence interval (wider)
+    result <- fastlowess(x, y, confidence_intervals = 0.99)
+    ```
+
+=== "Python"
+    ```python
+    # 90% confidence interval (narrower)
+    result = fl.smooth(x, y, confidence_intervals=0.90)
+    ```
+
 === "Rust"
     ```rust
     // 99% confidence interval
@@ -156,23 +168,23 @@ Common levels and their z-values:
         .build()?;
     ```
 
-=== "Python"
-    ```python
-    # 90% confidence interval (narrower)
-    result = fl.smooth(x, y, confidence_intervals=0.90)
-    ```
-
-=== "R"
-    ```r
-    # 99% confidence interval (wider)
-    result <- fastlowess(x, y, confidence_intervals = 0.99)
-    ```
-
 ---
 
 ## Standard Errors
 
 Access standard errors directly (available when intervals are computed):
+
+=== "R"
+    ```r
+    result <- fastlowess(x, y, confidence_intervals = 0.95)
+    print(result$std_err)
+    ```
+
+=== "Python"
+    ```python
+    result = fl.smooth(x, y, confidence_intervals=0.95)
+    print("Standard errors:", result["std_err"])
+    ```
 
 === "Rust"
     ```rust
@@ -183,18 +195,6 @@ Access standard errors directly (available when intervals are computed):
             println!("Point {}: SE = {:.4}", i, se);
         }
     }
-    ```
-
-=== "Python"
-    ```python
-    result = fl.smooth(x, y, confidence_intervals=0.95)
-    print("Standard errors:", result["std_err"])
-    ```
-
-=== "R"
-    ```r
-    result <- fastlowess(x, y, confidence_intervals = 0.95)
-    print(result$std_err)
     ```
 
 ---

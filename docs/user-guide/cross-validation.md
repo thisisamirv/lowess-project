@@ -14,6 +14,32 @@ Cross-validation helps select optimal parameters (especially `fraction`) by eval
 
 Split data into K folds, train on K-1, validate on 1.
 
+=== "R"
+    ```r
+    result <- fastlowess(
+        x, y,
+        cv_method = "kfold",
+        cv_k = 5,
+        cv_fractions = c(0.2, 0.3, 0.5, 0.7)
+    )
+
+    cat("Selected fraction:", result$fraction_used, "\n")
+    cat("CV scores:", result$cv_scores, "\n")
+    ```
+
+=== "Python"
+    ```python
+    result = fl.smooth(
+        x, y,
+        cv_method="kfold",
+        cv_k=5,
+        cv_fractions=[0.2, 0.3, 0.5, 0.7]
+    )
+
+    print(f"Selected fraction: {result['fraction_used']}")
+    print(f"CV scores: {result['cv_scores']}")
+    ```
+
 === "Rust"
     ```rust
     use fastLowess::prelude::*;
@@ -34,44 +60,19 @@ Split data into K folds, train on K-1, validate on 1.
     }
     ```
 
-=== "Python"
-    ```python
-    result = fl.smooth(
-        x, y,
-        cv_method="kfold",
-        cv_k=5,
-        cv_fractions=[0.2, 0.3, 0.5, 0.7]
-    )
-
-    print(f"Selected fraction: {result['fraction_used']}")
-    print(f"CV scores: {result['cv_scores']}")
-    ```
-
-=== "R"
-    ```r
-    result <- fastlowess(
-        x, y,
-        cv_method = "kfold",
-        cv_k = 5,
-        cv_fractions = c(0.2, 0.3, 0.5, 0.7)
-    )
-
-    cat("Selected fraction:", result$fraction_used, "\n")
-    cat("CV scores:", result$cv_scores, "\n")
-    ```
-
 ---
 
 ## Leave-One-Out (LOOCV)
 
 Each point is held out once. Most thorough but slowest.
 
-=== "Rust"
-    ```rust
-    let model = Lowess::new()
-        .cross_validate(LOOCV(&[0.2, 0.3, 0.5, 0.7]))
-        .adapter(Batch)
-        .build()?;
+=== "R"
+    ```r
+    result <- fastlowess(
+        x, y,
+        cv_method = "loocv",
+        cv_fractions = c(0.2, 0.3, 0.5, 0.7)
+    )
     ```
 
 === "Python"
@@ -83,13 +84,12 @@ Each point is held out once. Most thorough but slowest.
     )
     ```
 
-=== "R"
-    ```r
-    result <- fastlowess(
-        x, y,
-        cv_method = "loocv",
-        cv_fractions = c(0.2, 0.3, 0.5, 0.7)
-    )
+=== "Rust"
+    ```rust
+    let model = Lowess::new()
+        .cross_validate(LOOCV(&[0.2, 0.3, 0.5, 0.7]))
+        .adapter(Batch)
+        .build()?;
     ```
 
 ---
@@ -98,12 +98,15 @@ Each point is held out once. Most thorough but slowest.
 
 Set a seed for reproducible fold assignments:
 
-=== "Rust"
-    ```rust
-    let model = Lowess::new()
-        .cross_validate(KFold(5, &[0.3, 0.5, 0.7]).seed(42))
-        .adapter(Batch)
-        .build()?;
+=== "R"
+    ```r
+    result <- fastlowess(
+        x, y,
+        cv_method = "kfold",
+        cv_k = 5,
+        cv_fractions = c(0.3, 0.5, 0.7),
+        cv_seed = 42
+    )
     ```
 
 === "Python"
@@ -117,15 +120,12 @@ Set a seed for reproducible fold assignments:
     )
     ```
 
-=== "R"
-    ```r
-    result <- fastlowess(
-        x, y,
-        cv_method = "kfold",
-        cv_k = 5,
-        cv_fractions = c(0.3, 0.5, 0.7),
-        cv_seed = 42
-    )
+=== "Rust"
+    ```rust
+    let model = Lowess::new()
+        .cross_validate(KFold(5, &[0.3, 0.5, 0.7]).seed(42))
+        .adapter(Batch)
+        .build()?;
     ```
 
 ---

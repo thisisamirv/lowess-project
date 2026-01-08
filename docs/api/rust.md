@@ -222,10 +222,3 @@ This imports:
 - `KFold`, `LOOCV` — Cross-validation types
 
 ---
-
-## Full Documentation
-
-For complete API documentation including all methods and types:
-
-- [`lowess` on docs.rs](https://docs.rs/lowess)
-- [`fastLowess` on docs.rs](https://docs.rs/fastLowess)

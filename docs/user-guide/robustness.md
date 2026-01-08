@@ -24,6 +24,18 @@ Smooth downweighting. Points transition gradually from full weight to zero.
 
 $$w(u) = \begin{cases} (1 - u^2)^2 & |u| < 1 \\ 0 & |u| \geq 1 \end{cases}$$
 
+=== "R"
+    ```r
+    result <- fastlowess(x, y, iterations = 3, robustness_method = "bisquare")
+    ```
+
+**Use when**: General purpose, balanced approach.
+
+=== "Python"
+    ```python
+    result = fl.smooth(x, y, iterations=3, robustness_method="bisquare")
+    ```
+
 === "Rust"
     ```rust
     let model = Lowess::new()
@@ -33,18 +45,6 @@ $$w(u) = \begin{cases} (1 - u^2)^2 & |u| < 1 \\ 0 & |u| \geq 1 \end{cases}$$
         .build()?;
     ```
 
-=== "Python"
-    ```python
-    result = fl.smooth(x, y, iterations=3, robustness_method="bisquare")
-    ```
-
-=== "R"
-    ```r
-    result <- fastlowess(x, y, iterations = 3, robustness_method = "bisquare")
-    ```
-
-**Use when**: General purpose, balanced approach.
-
 ---
 
 ### Huber
@@ -52,6 +52,18 @@ $$w(u) = \begin{cases} (1 - u^2)^2 & |u| < 1 \\ 0 & |u| \geq 1 \end{cases}$$
 Linear penalty beyond threshold. Less aggressive than Bisquare.
 
 $$w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}$$
+
+=== "R"
+    ```r
+    result <- fastlowess(x, y, iterations = 3, robustness_method = "huber")
+    ```
+
+**Use when**: Moderate outliers, want to retain some influence.
+
+=== "Python"
+    ```python
+    result = fl.smooth(x, y, iterations=3, robustness_method="huber")
+    ```
 
 === "Rust"
     ```rust
@@ -62,18 +74,6 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}$$
         .build()?;
     ```
 
-=== "Python"
-    ```python
-    result = fl.smooth(x, y, iterations=3, robustness_method="huber")
-    ```
-
-=== "R"
-    ```r
-    result <- fastlowess(x, y, iterations = 3, robustness_method = "huber")
-    ```
-
-**Use when**: Moderate outliers, want to retain some influence.
-
 ---
 
 ### Talwar
@@ -81,6 +81,18 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}$$
 Hard threshold. Points are either fully weighted or completely excluded.
 
 $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
+
+=== "R"
+    ```r
+    result <- fastlowess(x, y, iterations = 3, robustness_method = "talwar")
+    ```
+
+**Use when**: Extreme outliers, want binary exclusion.
+
+=== "Python"
+    ```python
+    result = fl.smooth(x, y, iterations=3, robustness_method="talwar")
+    ```
 
 === "Rust"
     ```rust
@@ -90,18 +102,6 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
         .adapter(Batch)
         .build()?;
     ```
-
-=== "Python"
-    ```python
-    result = fl.smooth(x, y, iterations=3, robustness_method="talwar")
-    ```
-
-=== "R"
-    ```r
-    result <- fastlowess(x, y, iterations = 3, robustness_method = "talwar")
-    ```
-
-**Use when**: Extreme outliers, want binary exclusion.
 
 ---
 
@@ -118,6 +118,24 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
 ## Detecting Outliers
 
 Use robustness weights to identify potential outliers:
+
+=== "R"
+    ```r
+    result <- fastlowess(x, y, iterations = 5, return_robustness_weights = TRUE)
+
+    weights <- result$robustness_weights
+    outliers <- which(weights < 0.5)
+    cat("Potential outliers at indices:", outliers, "\n")
+    ```
+
+=== "Python"
+    ```python
+    result = fl.smooth(x, y, iterations=5, return_robustness_weights=True)
+
+    for i, w in enumerate(result["robustness_weights"]):
+        if w < 0.5:
+            print(f"Potential outlier at index {i}: weight = {w:.3f}")
+    ```
 
 === "Rust"
     ```rust
@@ -138,24 +156,6 @@ Use robustness weights to identify potential outliers:
     }
     ```
 
-=== "Python"
-    ```python
-    result = fl.smooth(x, y, iterations=5, return_robustness_weights=True)
-
-    for i, w in enumerate(result["robustness_weights"]):
-        if w < 0.5:
-            print(f"Potential outlier at index {i}: weight = {w:.3f}")
-    ```
-
-=== "R"
-    ```r
-    result <- fastlowess(x, y, iterations = 5, return_robustness_weights = TRUE)
-
-    weights <- result$robustness_weights
-    outliers <- which(weights < 0.5)
-    cat("Potential outliers at indices:", outliers, "\n")
-    ```
-
 ---
 
 ## Scale Estimation
@@ -167,13 +167,9 @@ Residuals are scaled before computing robustness weights. Two methods:
 | **MAD** | Median Absolute Deviation | Very robust         |
 | **MAR** | Mean Absolute Residual    | Less robust, faster |
 
-=== "Rust"
-    ```rust
-    let model = Lowess::new()
-        .iterations(3)
-        .scaling_method(MAD)  // Default
-        .adapter(Batch)
-        .build()?;
+=== "R"
+    ```r
+    result <- fastlowess(x, y, iterations = 3, scaling_method = "mad")
     ```
 
 === "Python"
@@ -181,9 +177,13 @@ Residuals are scaled before computing robustness weights. Two methods:
     result = fl.smooth(x, y, iterations=3, scaling_method="mad")
     ```
 
-=== "R"
-    ```r
-    result <- fastlowess(x, y, iterations = 3, scaling_method = "mad")
+=== "Rust"
+    ```rust
+    let model = Lowess::new()
+        .iterations(3)
+        .scaling_method(MAD)  // Default
+        .adapter(Batch)
+        .build()?;
     ```
 
 ---
@@ -194,6 +194,19 @@ Residuals are scaled before computing robustness weights. Two methods:
 
 Stop iterations early when weights stabilize:
 
+=== "R"
+    ```r
+    result <- fastlowess(x, y, iterations = 10, auto_converge = 1e-6)
+    ```
+
+!!! tip "Performance"
+    Auto-convergence can significantly reduce computation when weights stabilize before reaching max iterations.
+
+=== "Python"
+    ```python
+    result = fl.smooth(x, y, iterations=10, auto_converge=1e-6)
+    ```
+
 === "Rust"
     ```rust
     let model = Lowess::new()
@@ -202,16 +215,3 @@ Stop iterations early when weights stabilize:
         .adapter(Batch)
         .build()?;
     ```
-
-=== "Python"
-    ```python
-    result = fl.smooth(x, y, iterations=10, auto_converge=1e-6)
-    ```
-
-=== "R"
-    ```r
-    result <- fastlowess(x, y, iterations = 10, auto_converge = 1e-6)
-    ```
-
-!!! tip "Performance"
-    Auto-convergence can significantly reduce computation when weights stabilize before reaching max iterations.

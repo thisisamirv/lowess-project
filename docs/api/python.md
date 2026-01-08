@@ -4,8 +4,16 @@ API reference for the `fastlowess` Python package.
 
 ## Installation
 
+Install from PyPI:
+
 ```bash
 pip install fastlowess
+```
+
+Or install from conda-forge:
+
+```bash
+conda install -c conda-forge fastlowess
 ```
 
 ---

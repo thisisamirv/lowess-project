@@ -87,21 +87,16 @@ devtools::install_github("thisisamirv/lowess-project", subdir = "bindings/r")
 
 ## Verify Installation
 
-=== "Rust"
+=== "R"
 
-    ```rust
-    use lowess::prelude::*;
+    ```r
+    library(rfastlowess)
     
-    fn main() -> Result<(), LowessError> {
-        let x = vec![1.0, 2.0, 3.0];
-        let y = vec![2.0, 4.0, 6.0];
-        
-        let model = Lowess::new().adapter(Batch).build()?;
-        let result = model.fit(&x, &y)?;
-        
-        println!("Installed successfully!");
-        Ok(())
-    }
+    x <- c(1, 2, 3)
+    y <- c(2, 4, 6)
+    
+    result <- fastlowess(x, y)
+    print("Installed successfully!")
     ```
 
 === "Python"
@@ -117,14 +112,19 @@ devtools::install_github("thisisamirv/lowess-project", subdir = "bindings/r")
     print("Installed successfully!")
     ```
 
-=== "R"
+=== "Rust"
 
-    ```r
-    library(rfastlowess)
+    ```rust
+    use lowess::prelude::*;
     
-    x <- c(1, 2, 3)
-    y <- c(2, 4, 6)
-    
-    result <- fastlowess(x, y)
-    print("Installed successfully!")
+    fn main() -> Result<(), LowessError> {
+        let x = vec![1.0, 2.0, 3.0];
+        let y = vec![2.0, 4.0, 6.0];
+        
+        let model = Lowess::new().adapter(Batch).build()?;
+        let result = model.fit(&x, &y)?;
+        
+        println!("Installed successfully!");
+        Ok(())
+    }
     ```

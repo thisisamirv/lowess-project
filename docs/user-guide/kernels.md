@@ -32,6 +32,18 @@ Cleveland's original choice. Best all-around performance.
 
 $$w(u) = (1 - |u|^3)^3$$
 
+=== "R"
+    ```r
+    result <- fastlowess(x, y, weight_function = "tricube")
+    ```
+
+**Use when**: Default choice for most applications.
+
+=== "Python"
+    ```python
+    result = fl.smooth(x, y, weight_function="tricube")
+    ```
+
 === "Rust"
     ```rust
     let model = Lowess::new()
@@ -39,18 +51,6 @@ $$w(u) = (1 - |u|^3)^3$$
         .adapter(Batch)
         .build()?;
     ```
-
-=== "Python"
-    ```python
-    result = fl.smooth(x, y, weight_function="tricube")
-    ```
-
-=== "R"
-    ```r
-    result <- fastlowess(x, y, weight_function = "tricube")
-    ```
-
-**Use when**: Default choice for most applications.
 
 ---
 
@@ -60,6 +60,18 @@ Theoretically optimal for kernel density estimation.
 
 $$w(u) = \frac{3}{4}(1 - u^2)$$
 
+=== "R"
+    ```r
+    result <- fastlowess(x, y, weight_function = "epanechnikov")
+    ```
+
+**Use when**: Optimal MSE properties desired.
+
+=== "Python"
+    ```python
+    result = fl.smooth(x, y, weight_function="epanechnikov")
+    ```
+
 === "Rust"
     ```rust
     let model = Lowess::new()
@@ -67,18 +79,6 @@ $$w(u) = \frac{3}{4}(1 - u^2)$$
         .adapter(Batch)
         .build()?;
     ```
-
-=== "Python"
-    ```python
-    result = fl.smooth(x, y, weight_function="epanechnikov")
-    ```
-
-=== "R"
-    ```r
-    result <- fastlowess(x, y, weight_function = "epanechnikov")
-    ```
-
-**Use when**: Optimal MSE properties desired.
 
 ---
 
@@ -88,6 +88,18 @@ Infinitely smooth. No boundary effects.
 
 $$w(u) = \exp(-u^2/2)$$
 
+=== "R"
+    ```r
+    result <- fastlowess(x, y, weight_function = "gaussian")
+    ```
+
+**Use when**: Maximum smoothness needed, computational cost acceptable.
+
+=== "Python"
+    ```python
+    result = fl.smooth(x, y, weight_function="gaussian")
+    ```
+
 === "Rust"
     ```rust
     let model = Lowess::new()
@@ -95,18 +107,6 @@ $$w(u) = \exp(-u^2/2)$$
         .adapter(Batch)
         .build()?;
     ```
-
-=== "Python"
-    ```python
-    result = fl.smooth(x, y, weight_function="gaussian")
-    ```
-
-=== "R"
-    ```r
-    result <- fastlowess(x, y, weight_function = "gaussian")
-    ```
-
-**Use when**: Maximum smoothness needed, computational cost acceptable.
 
 ---
 
@@ -116,6 +116,18 @@ Good balance of efficiency and smoothness.
 
 $$w(u) = (1 - u^2)^2$$
 
+=== "R"
+    ```r
+    result <- fastlowess(x, y, weight_function = "biweight")
+    ```
+
+**Use when**: Alternative to Tricube with slightly different properties.
+
+=== "Python"
+    ```python
+    result = fl.smooth(x, y, weight_function="biweight")
+    ```
+
 === "Rust"
     ```rust
     let model = Lowess::new()
@@ -123,18 +135,6 @@ $$w(u) = (1 - u^2)^2$$
         .adapter(Batch)
         .build()?;
     ```
-
-=== "Python"
-    ```python
-    result = fl.smooth(x, y, weight_function="biweight")
-    ```
-
-=== "R"
-    ```r
-    result <- fastlowess(x, y, weight_function = "biweight")
-    ```
-
-**Use when**: Alternative to Tricube with slightly different properties.
 
 ---
 
@@ -144,6 +144,18 @@ Smooth and computationally efficient.
 
 $$w(u) = \cos(\pi u / 2)$$
 
+=== "R"
+    ```r
+    result <- fastlowess(x, y, weight_function = "cosine")
+    ```
+
+**Use when**: Want smooth kernel with simple form.
+
+=== "Python"
+    ```python
+    result = fl.smooth(x, y, weight_function="cosine")
+    ```
+
 === "Rust"
     ```rust
     let model = Lowess::new()
@@ -151,18 +163,6 @@ $$w(u) = \cos(\pi u / 2)$$
         .adapter(Batch)
         .build()?;
     ```
-
-=== "Python"
-    ```python
-    result = fl.smooth(x, y, weight_function="cosine")
-    ```
-
-=== "R"
-    ```r
-    result <- fastlowess(x, y, weight_function = "cosine")
-    ```
-
-**Use when**: Want smooth kernel with simple form.
 
 ---
 
@@ -172,6 +172,18 @@ Simple linear taper.
 
 $$w(u) = 1 - |u|$$
 
+=== "R"
+    ```r
+    result <- fastlowess(x, y, weight_function = "triangle")
+    ```
+
+**Use when**: Simple, interpretable weights.
+
+=== "Python"
+    ```python
+    result = fl.smooth(x, y, weight_function="triangle")
+    ```
+
 === "Rust"
     ```rust
     let model = Lowess::new()
@@ -179,18 +191,6 @@ $$w(u) = 1 - |u|$$
         .adapter(Batch)
         .build()?;
     ```
-
-=== "Python"
-    ```python
-    result = fl.smooth(x, y, weight_function="triangle")
-    ```
-
-=== "R"
-    ```r
-    result <- fastlowess(x, y, weight_function = "triangle")
-    ```
-
-**Use when**: Simple, interpretable weights.
 
 ---
 
@@ -200,6 +200,18 @@ Equal weights within window. Fastest but least smooth.
 
 $$w(u) = 1$$
 
+=== "R"
+    ```r
+    result <- fastlowess(x, y, weight_function = "uniform")
+    ```
+
+**Use when**: Speed is critical, smoothness less important.
+
+=== "Python"
+    ```python
+    result = fl.smooth(x, y, weight_function="uniform")
+    ```
+
 === "Rust"
     ```rust
     let model = Lowess::new()
@@ -207,18 +219,6 @@ $$w(u) = 1$$
         .adapter(Batch)
         .build()?;
     ```
-
-=== "Python"
-    ```python
-    result = fl.smooth(x, y, weight_function="uniform")
-    ```
-
-=== "R"
-    ```r
-    result <- fastlowess(x, y, weight_function = "uniform")
-    ```
-
-**Use when**: Speed is critical, smoothness less important.
 
 ---
 

@@ -4,33 +4,99 @@ Complete reference for all LOWESS configuration options.
 
 ## Quick Reference
 
-| Parameter                     | Default        | Range/Options | Description             | Adapter          |
-|-------------------------------|----------------|---------------|-------------------------|------------------|
-| **fraction**                  | 0.67           | (0, 1]        | Smoothing span          | All              |
-| **iterations**                | 3              | [0, 1000]     | Robustness iterations   | All              |
-| **delta**                     | 1% x-range     | [0, ∞)        | Interpolation threshold | All              |
-| **weight_function**           | `Tricube`      | 7 options     | Distance kernel         | All              |
-| **robustness_method**         | `Bisquare`     | 3 options     | Outlier weighting       | All              |
-| **zero_weight_fallback**      | `UseLocalMean` | 3 options     | Zero-weight behavior    | All              |
-| **boundary_policy**           | `Extend`       | 4 options     | Edge handling           | All              |
-| **scaling_method**            | `MAD`          | 2 options     | Scale estimation        | All              |
-| **auto_converge**             | None           | tolerance     | Early stopping          | All              |
-| **return_residuals**          | false          | bool          | Include residuals       | All              |
-| **return_robustness_weights** | false          | bool          | Include weights         | All              |
-| **return_diagnostics**        | false          | bool          | Include metrics         | Batch, Streaming |
-| **confidence_intervals**      | None           | (0, 1)        | CI level                | Batch            |
-| **prediction_intervals**      | None           | (0, 1)        | PI level                | Batch            |
-| **cross_validate**            | None           | method        | Auto-select fraction    | Batch            |
-| **chunk_size**                | 5000           | [10, ∞)       | Points per chunk        | Streaming        |
-| **overlap**                   | 500            | [0, chunk)    | Overlap between chunks  | Streaming        |
-| **merge_strategy**            | `Average`      | 4 options     | Merge overlaps          | Streaming        |
-| **window_capacity**           | 1000           | [3, ∞)        | Max window size         | Online           |
-| **min_points**                | 2              | [2, window]   | Min before output       | Online           |
-| **update_mode**               | `Incremental`  | 2 options     | Update strategy         | Online           |
+=== "R"
+
+    | Parameter                     | Default            | Range/Options | Description             | Adapter          |
+    |-------------------------------|--------------------|---------------|-------------------------|------------------|
+    | **fraction**                  | 0.67               | (0, 1]        | Smoothing span          | All              |
+    | **iterations**                | 3                  | [0, 1000]     | Robustness iterations   | All              |
+    | **delta**                     | NULL (auto)        | [0, ∞)        | Interpolation threshold | All              |
+    | **weight_function**           | `"tricube"`        | 7 options     | Distance kernel         | All              |
+    | **robustness_method**         | `"bisquare"`       | 3 options     | Outlier weighting       | All              |
+    | **zero_weight_fallback**      | `"use_local_mean"` | 3 options     | Zero-weight behavior    | All              |
+    | **boundary_policy**           | `"extend"`         | 4 options     | Edge handling           | All              |
+    | **scaling_method**            | `"mad"`            | 2 options     | Scale estimation        | All              |
+    | **auto_converge**             | NULL               | tolerance     | Early stopping          | All              |
+    | **return_residuals**          | FALSE              | logical       | Include residuals       | All              |
+    | **return_robustness_weights** | FALSE              | logical       | Include weights         | All              |
+    | **return_diagnostics**        | FALSE              | logical       | Include metrics         | Batch, Streaming |
+    | **confidence_intervals**      | NULL               | (0, 1)        | CI level                | Batch            |
+    | **prediction_intervals**      | NULL               | (0, 1)        | PI level                | Batch            |
+    | **cv_method**                 | NULL               | method        | Auto-select fraction    | Batch            |
+    | **chunk_size**                | 5000               | [10, ∞)       | Points per chunk        | Streaming        |
+    | **overlap**                   | 500                | [0, chunk)    | Overlap between chunks  | Streaming        |
+    | **merge_strategy**            | `"average"`        | 4 options     | Merge overlaps          | Streaming        |
+    | **window_capacity**           | 1000               | [3, ∞)        | Max window size         | Online           |
+    | **min_points**                | 2                  | [2, window]   | Min before output       | Online           |
+    | **update_mode**               | `"incremental"`    | 2 options     | Update strategy         | Online           |
+
+=== "Python"
+
+    | Parameter                     | Default            | Range/Options | Description             | Adapter          |
+    |-------------------------------|--------------------|---------------|-------------------------|------------------|
+    | **fraction**                  | 0.67               | (0, 1]        | Smoothing span          | All              |
+    | **iterations**                | 3                  | [0, 1000]     | Robustness iterations   | All              |
+    | **delta**                     | None (auto)        | [0, ∞)        | Interpolation threshold | All              |
+    | **weight_function**           | `"tricube"`        | 7 options     | Distance kernel         | All              |
+    | **robustness_method**         | `"bisquare"`       | 3 options     | Outlier weighting       | All              |
+    | **zero_weight_fallback**      | `"use_local_mean"` | 3 options     | Zero-weight behavior    | All              |
+    | **boundary_policy**           | `"extend"`         | 4 options     | Edge handling           | All              |
+    | **scaling_method**            | `"mad"`            | 2 options     | Scale estimation        | All              |
+    | **auto_converge**             | None               | tolerance     | Early stopping          | All              |
+    | **return_residuals**          | False              | bool          | Include residuals       | All              |
+    | **return_robustness_weights** | False              | bool          | Include weights         | All              |
+    | **return_diagnostics**        | False              | bool          | Include metrics         | Batch, Streaming |
+    | **confidence_intervals**      | None               | (0, 1)        | CI level                | Batch            |
+    | **prediction_intervals**      | None               | (0, 1)        | PI level                | Batch            |
+    | **cv_method**                 | None               | method        | Auto-select fraction    | Batch            |
+    | **chunk_size**                | 5000               | [10, ∞)       | Points per chunk        | Streaming        |
+    | **overlap**                   | 500                | [0, chunk)    | Overlap between chunks  | Streaming        |
+    | **merge_strategy**            | `"average"`        | 4 options     | Merge overlaps          | Streaming        |
+    | **window_capacity**           | 1000               | [3, ∞)        | Max window size         | Online           |
+    | **min_points**                | 2                  | [2, window]   | Min before output       | Online           |
+    | **update_mode**               | `"incremental"`    | 2 options     | Update strategy         | Online           |
+
+=== "Rust"
+
+    | Parameter                     | Default        | Range/Options | Description             | Adapter          |
+    |-------------------------------|----------------|---------------|-------------------------|------------------|
+    | **fraction**                  | 0.67           | (0, 1]        | Smoothing span          | All              |
+    | **iterations**                | 3              | [0, 1000]     | Robustness iterations   | All              |
+    | **delta**                     | auto           | [0, ∞)        | Interpolation threshold | All              |
+    | **weight_function**           | `Tricube`      | 7 options     | Distance kernel         | All              |
+    | **robustness_method**         | `Bisquare`     | 3 options     | Outlier weighting       | All              |
+    | **zero_weight_fallback**      | `UseLocalMean` | 3 options     | Zero-weight behavior    | All              |
+    | **boundary_policy**           | `Extend`       | 4 options     | Edge handling           | All              |
+    | **scaling_method**            | `MAD`          | 2 options     | Scale estimation        | All              |
+    | **auto_converge**             | None           | tolerance     | Early stopping          | All              |
+    | **return_residuals**          | false          | bool          | Include residuals       | All              |
+    | **return_robustness_weights** | false          | bool          | Include weights         | All              |
+    | **return_diagnostics**        | false          | bool          | Include metrics         | Batch, Streaming |
+    | **confidence_intervals**      | None           | (0, 1)        | CI level                | Batch            |
+    | **prediction_intervals**      | None           | (0, 1)        | PI level                | Batch            |
+    | **cross_validate**            | None           | method        | Auto-select fraction    | Batch            |
+    | **chunk_size**                | 5000           | [10, ∞)       | Points per chunk        | Streaming        |
+    | **overlap**                   | 500            | [0, chunk)    | Overlap between chunks  | Streaming        |
+    | **merge_strategy**            | `Average`      | 4 options     | Merge overlaps          | Streaming        |
+    | **window_capacity**           | 1000           | [3, ∞)        | Max window size         | Online           |
+    | **min_points**                | 2              | [2, window]   | Min before output       | Online           |
+    | **update_mode**               | `Incremental`  | 2 options     | Update strategy         | Online           |
 
 ---
 
 ## Parameter Options Summary
+
+=== "R / Python"
+
+    | Parameter                | Available Options                                                                            |
+    |--------------------------|----------------------------------------------------------------------------------------------|
+    | **weight_function**      | `"tricube"`, `"epanechnikov"`, `"gaussian"`, `"biweight"`, `"cosine"`, `"triangle"`, `"uniform"` |
+    | **robustness_method**    | `"bisquare"`, `"huber"`, `"talwar"`                                                          |
+    | **zero_weight_fallback** | `"use_local_mean"`, `"return_original"`, `"return_none"`                                     |
+    | **boundary_policy**      | `"extend"`, `"reflect"`, `"zero"`, `"no_boundary"`                                           |
+    | **scaling_method**       | `"mad"`, `"mar"`                                                                             |
+    | **merge_strategy**       | `"average"`, `"left"`, `"right"`, `"weighted"`                                               |
+    | **update_mode**          | `"incremental"`, `"full"`                                                                    |
 
 === "Rust"
 
@@ -43,30 +109,6 @@ Complete reference for all LOWESS configuration options.
     | **scaling_method**       | `MAD`, `MAR`                                                                       |
     | **merge_strategy**       | `Average`, `Left`, `Right`, `Weighted`                                             |
     | **update_mode**          | `Incremental`, `Full`                                                              |
-
-=== "Python"
-
-    | Parameter                | Available Options                                                                            |
-    |--------------------------|----------------------------------------------------------------------------------------------|
-    | **weight_function**      | `"tricube"`, `"epanechnikov"`, `"gaussian"`, `"biweight"`, `"cosine"`, `"triangle"`, `"uniform"` |
-    | **robustness_method**    | `"bisquare"`, `"huber"`, `"talwar"`                                                          |
-    | **zero_weight_fallback** | `"use_local_mean"`, `"return_original"`, `"return_none"`                                     |
-    | **boundary_policy**      | `"extend"`, `"reflect"`, `"zero"`, `"no_boundary"`                                           |
-    | **scaling_method**       | `"mad"`, `"mar"`                                                                             |
-    | **merge_strategy**       | `"average"`, `"left"`, `"right"`, `"weighted"`                                               |
-    | **update_mode**          | `"incremental"`, `"full"`                                                                    |
-
-=== "R"
-
-    | Parameter                | Available Options                                                                            |
-    |--------------------------|----------------------------------------------------------------------------------------------|
-    | **weight_function**      | `"tricube"`, `"epanechnikov"`, `"gaussian"`, `"biweight"`, `"cosine"`, `"triangle"`, `"uniform"` |
-    | **robustness_method**    | `"bisquare"`, `"huber"`, `"talwar"`                                                          |
-    | **zero_weight_fallback** | `"use_local_mean"`, `"return_original"`, `"return_none"`                                     |
-    | **boundary_policy**      | `"extend"`, `"reflect"`, `"zero"`, `"no_boundary"`                                           |
-    | **scaling_method**       | `"mad"`, `"mar"`                                                                             |
-    | **merge_strategy**       | `"average"`, `"left"`, `"right"`, `"weighted"`                                               |
-    | **update_mode**          | `"incremental"`, `"full"`                                                                    |
 
 ---
 
@@ -83,12 +125,9 @@ The proportion of data used for each local fit. **Most important parameter.**
 | 0.5–0.7 | Heavy smoothing | Noisy data               |
 | 0.7–1.0 | Very smooth     | Trend extraction         |
 
-=== "Rust"
-    ```rust
-    let model = Lowess::new()
-        .fraction(0.3)
-        .adapter(Batch)
-        .build()?;
+=== "R"
+    ```r
+    result <- fastlowess(x, y, fraction = 0.3)
     ```
 
 === "Python"
@@ -96,9 +135,12 @@ The proportion of data used for each local fit. **Most important parameter.**
     result = fl.smooth(x, y, fraction=0.3)
     ```
 
-=== "R"
-    ```r
-    result <- fastlowess(x, y, fraction = 0.3)
+=== "Rust"
+    ```rust
+    let model = Lowess::new()
+        .fraction(0.3)
+        .adapter(Batch)
+        .build()?;
     ```
 
 ---
@@ -114,12 +156,9 @@ Number of robustness iterations for outlier resistance.
 | 4–6   | Strong        | Contaminated data |
 | 7+    | Very strong   | Heavy outliers    |
 
-=== "Rust"
-    ```rust
-    let model = Lowess::new()
-        .iterations(5)
-        .adapter(Batch)
-        .build()?;
+=== "R"
+    ```r
+    result <- fastlowess(x, y, iterations = 5)
     ```
 
 === "Python"
@@ -127,9 +166,12 @@ Number of robustness iterations for outlier resistance.
     result = fl.smooth(x, y, iterations=5)
     ```
 
-=== "R"
-    ```r
-    result <- fastlowess(x, y, iterations = 5)
+=== "Rust"
+    ```rust
+    let model = Lowess::new()
+        .iterations(5)
+        .adapter(Batch)
+        .build()?;
     ```
 
 ---
@@ -141,6 +183,16 @@ Interpolation optimization threshold. Points within `delta` distance reuse the p
 - **Default**: 1% of x-range (Batch), 0.0 (Streaming/Online)
 - **Effect**: Higher values = faster but less accurate
 
+=== "R"
+    ```r
+    result <- fastlowess(x, y, delta = 0.05)
+    ```
+
+=== "Python"
+    ```python
+    result = fl.smooth(x, y, delta=0.05)
+    ```
+
 === "Rust"
     ```rust
     let model = Lowess::new()
@@ -149,33 +201,47 @@ Interpolation optimization threshold. Points within `delta` distance reuse the p
         .build()?;
     ```
 
-=== "Python"
-    ```python
-    result = fl.smooth(x, y, delta=0.05)
-    ```
-
-=== "R"
-    ```r
-    result <- fastlowess(x, y, delta = 0.05)
-    ```
-
 ---
 
 ### weight_function
 
 Distance weighting kernel for local fits.
 
-| Kernel         | Efficiency | Smoothness    |
-|----------------|:----------:|:-------------:|
-| `Tricube`      | 0.998      | Very smooth   |
-| `Epanechnikov` | 1.000      | Smooth        |
-| `Gaussian`     | 0.961      | Infinite      |
-| `Biweight`     | 0.995      | Very smooth   |
-| `Cosine`       | 0.999      | Smooth        |
-| `Triangle`     | 0.989      | Moderate      |
-| `Uniform`      | 0.943      | None          |
+=== "R / Python"
+
+    | Kernel           | Efficiency | Smoothness  |
+    |------------------|:----------:|:-----------:|
+    | `"tricube"`      | 0.998      | Very smooth |
+    | `"epanechnikov"` | 1.000      | Smooth      |
+    | `"gaussian"`     | 0.961      | Infinite    |
+    | `"biweight"`     | 0.995      | Very smooth |
+    | `"cosine"`       | 0.999      | Smooth      |
+    | `"triangle"`     | 0.989      | Moderate    |
+    | `"uniform"`      | 0.943      | None        |
+
+=== "Rust"
+
+    | Kernel         | Efficiency | Smoothness  |
+    |----------------|:----------:|:-----------:|
+    | `Tricube`      | 0.998      | Very smooth |
+    | `Epanechnikov` | 1.000      | Smooth      |
+    | `Gaussian`     | 0.961      | Infinite    |
+    | `Biweight`     | 0.995      | Very smooth |
+    | `Cosine`       | 0.999      | Smooth      |
+    | `Triangle`     | 0.989      | Moderate    |
+    | `Uniform`      | 0.943      | None        |
 
 See [Weight Functions](kernels.md) for detailed comparison.
+
+=== "R"
+    ```r
+    result <- fastlowess(x, y, weight_function = "epanechnikov")
+    ```
+
+=== "Python"
+    ```python
+    result = fl.smooth(x, y, weight_function="epanechnikov")
+    ```
 
 === "Rust"
     ```rust
@@ -185,36 +251,33 @@ See [Weight Functions](kernels.md) for detailed comparison.
         .build()?;
     ```
 
-=== "Python"
-    ```python
-    result = fl.smooth(x, y, weight_function="epanechnikov")
-    ```
-
-=== "R"
-    ```r
-    result <- fastlowess(x, y, weight_function = "epanechnikov")
-    ```
-
 ---
 
 ### robustness_method
 
 Method for downweighting outliers during iterative refinement.
 
-| Method     | Behavior                | Use Case              |
-|------------|-------------------------|-----------------------|
-| `Bisquare` | Smooth downweighting    | General-purpose       |
-| `Huber`    | Linear beyond threshold | Moderate outliers     |
-| `Talwar`   | Hard threshold (0 or 1) | Extreme contamination |
+=== "R / Python"
+
+    | Method       | Behavior                | Use Case              |
+    |--------------|-------------------------|-----------------------|
+    | `"bisquare"` | Smooth downweighting    | General-purpose       |
+    | `"huber"`    | Linear beyond threshold | Moderate outliers     |
+    | `"talwar"`   | Hard threshold (0 or 1) | Extreme contamination |
+
+=== "Rust"
+
+    | Method     | Behavior                | Use Case              |
+    |------------|-------------------------|-----------------------|
+    | `Bisquare` | Smooth downweighting    | General-purpose       |
+    | `Huber`    | Linear beyond threshold | Moderate outliers     |
+    | `Talwar`   | Hard threshold (0 or 1) | Extreme contamination |
 
 See [Robustness](robustness.md) for detailed comparison.
 
-=== "Rust"
-    ```rust
-    let model = Lowess::new()
-        .robustness_method(Talwar)
-        .adapter(Batch)
-        .build()?;
+=== "R"
+    ```r
+    result <- fastlowess(x, y, robustness_method = "talwar")
     ```
 
 === "Python"
@@ -222,9 +285,12 @@ See [Robustness](robustness.md) for detailed comparison.
     result = fl.smooth(x, y, robustness_method="talwar")
     ```
 
-=== "R"
-    ```r
-    result <- fastlowess(x, y, robustness_method = "talwar")
+=== "Rust"
+    ```rust
+    let model = Lowess::new()
+        .robustness_method(Talwar)
+        .adapter(Batch)
+        .build()?;
     ```
 
 ---
@@ -235,12 +301,33 @@ Edge handling strategy to reduce boundary bias.
 
 ![Boundary Policy](../assets/diagrams/boundary_handling.svg)
 
-| Policy       | Behavior                   | Use Case                    |
-|--------------|----------------------------|-----------------------------|
-| `Extend`     | Pad with first/last values | Most cases (default)        |
-| `Reflect`    | Mirror data at boundaries  | Periodic/symmetric data     |
-| `Zero`       | Pad with zeros             | Data approaches zero        |
-| `NoBoundary` | No padding                 | Original Cleveland behavior |
+=== "R / Python"
+
+    | Policy          | Behavior                   | Use Case                    |
+    |-----------------|----------------------------|-----------------------------|
+    | `"extend"`      | Pad with first/last values | Most cases (default)        |
+    | `"reflect"`     | Mirror data at boundaries  | Periodic/symmetric data     |
+    | `"zero"`        | Pad with zeros             | Data approaches zero        |
+    | `"no_boundary"` | No padding                 | Original Cleveland behavior |
+
+=== "Rust"
+
+    | Policy       | Behavior                   | Use Case                    |
+    |--------------|----------------------------|-----------------------------|
+    | `Extend`     | Pad with first/last values | Most cases (default)        |
+    | `Reflect`    | Mirror data at boundaries  | Periodic/symmetric data     |
+    | `Zero`       | Pad with zeros             | Data approaches zero        |
+    | `NoBoundary` | No padding                 | Original Cleveland behavior |
+
+=== "R"
+    ```r
+    result <- fastlowess(x, y, boundary_policy = "reflect")
+    ```
+
+=== "Python"
+    ```python
+    result = fl.smooth(x, y, boundary_policy="reflect")
+    ```
 
 === "Rust"
     ```rust
@@ -250,26 +337,35 @@ Edge handling strategy to reduce boundary bias.
         .build()?;
     ```
 
-=== "Python"
-    ```python
-    result = fl.smooth(x, y, boundary_policy="reflect")
-    ```
-
-=== "R"
-    ```r
-    result <- fastlowess(x, y, boundary_policy = "reflect")
-    ```
-
 ---
 
 ### scaling_method
 
 Method for estimating residual scale during robustness iterations.
 
-| Method | Description               | Robustness          |
-|--------|---------------------------|---------------------|
-| `MAD`  | Median Absolute Deviation | Very robust         |
-| `MAR`  | Mean Absolute Residual    | Less robust, faster |
+=== "R / Python"
+
+    | Method  | Description               | Robustness          |
+    |---------|---------------------------|---------------------|
+    | `"mad"` | Median Absolute Deviation | Very robust         |
+    | `"mar"` | Mean Absolute Residual    | Less robust, faster |
+
+=== "Rust"
+
+    | Method | Description               | Robustness          |
+    |--------|---------------------------|---------------------|
+    | `MAD`  | Median Absolute Deviation | Very robust         |
+    | `MAR`  | Mean Absolute Residual    | Less robust, faster |
+
+=== "R"
+    ```r
+    result <- fastlowess(x, y, scaling_method = "mad")
+    ```
+
+=== "Python"
+    ```python
+    result = fl.smooth(x, y, scaling_method="mad")
+    ```
 
 === "Rust"
     ```rust
@@ -279,34 +375,31 @@ Method for estimating residual scale during robustness iterations.
         .build()?;
     ```
 
-=== "Python"
-    ```python
-    result = fl.smooth(x, y, scaling_method="mad")
-    ```
-
-=== "R"
-    ```r
-    result <- fastlowess(x, y, scaling_method = "mad")
-    ```
-
 ---
 
 ### zero_weight_fallback
 
 Behavior when all neighborhood weights are zero.
 
-| Option           | Behavior                                  |
-|------------------|-------------------------------------------|
-| `UseLocalMean`   | Use mean of neighborhood (default)        |
-| `ReturnOriginal` | Return original y value                   |
-| `ReturnNone`     | Return NaN                                |
+=== "R / Python"
+
+    | Option              | Behavior                           |
+    |---------------------|------------------------------------|
+    | `"use_local_mean"`  | Use mean of neighborhood (default) |
+    | `"return_original"` | Return original y value            |
+    | `"return_none"`     | Return NaN                         |
 
 === "Rust"
-    ```rust
-    let model = Lowess::new()
-        .zero_weight_fallback(UseLocalMean)
-        .adapter(Batch)
-        .build()?;
+
+    | Option           | Behavior                           |
+    |------------------|------------------------------------|  
+    | `UseLocalMean`   | Use mean of neighborhood (default) |
+    | `ReturnOriginal` | Return original y value            |
+    | `ReturnNone`     | Return NaN                         |
+
+=== "R"
+    ```r
+    result <- fastlowess(x, y, zero_weight_fallback = "use_local_mean")
     ```
 
 === "Python"
@@ -314,9 +407,12 @@ Behavior when all neighborhood weights are zero.
     result = fl.smooth(x, y, zero_weight_fallback="use_local_mean")
     ```
 
-=== "R"
-    ```r
-    result <- fastlowess(x, y, zero_weight_fallback = "use_local_mean")
+=== "Rust"
+    ```rust
+    let model = Lowess::new()
+        .zero_weight_fallback(UseLocalMean)
+        .adapter(Batch)
+        .build()?;
     ```
 
 ---
@@ -327,6 +423,16 @@ Enable early stopping when robustness weights stabilize.
 
 ![Auto-Convergence](../assets/diagrams/auto_converge.svg)
 
+=== "R"
+    ```r
+    result <- fastlowess(x, y, iterations = 20, auto_converge = 1e-6)
+    ```
+
+=== "Python"
+    ```python
+    result = fl.smooth(x, y, iterations=20, auto_converge=1e-6)
+    ```
+
 === "Rust"
     ```rust
     let model = Lowess::new()
@@ -336,16 +442,6 @@ Enable early stopping when robustness weights stabilize.
         .build()?;
     ```
 
-=== "Python"
-    ```python
-    result = fl.smooth(x, y, iterations=20, auto_converge=1e-6)
-    ```
-
-=== "R"
-    ```r
-    result <- fastlowess(x, y, iterations = 20, auto_converge = 1e-6)
-    ```
-
 ---
 
 ## Output Options
@@ -353,6 +449,18 @@ Enable early stopping when robustness weights stabilize.
 ### return_residuals
 
 Include residuals (`y - smoothed`) in the output.
+
+=== "R"
+    ```r
+    result <- fastlowess(x, y, return_residuals = TRUE)
+    print(result$residuals)
+    ```
+
+=== "Python"
+    ```python
+    result = fl.smooth(x, y, return_residuals=True)
+    print(result["residuals"])
+    ```
 
 === "Rust"
     ```rust
@@ -365,18 +473,6 @@ Include residuals (`y - smoothed`) in the output.
     if let Some(residuals) = result.residuals {
         println!("Residuals: {:?}", residuals);
     }
-    ```
-
-=== "Python"
-    ```python
-    result = fl.smooth(x, y, return_residuals=True)
-    print(result["residuals"])
-    ```
-
-=== "R"
-    ```r
-    result <- fastlowess(x, y, return_residuals = TRUE)
-    print(result$residuals)
     ```
 
 ---
@@ -395,6 +491,18 @@ Include fit quality metrics (Batch and Streaming only).
 | `aic`          | Akaike Information Criterion |
 | `aicc`         | Corrected AIC                |
 
+=== "R"
+    ```r
+    result <- fastlowess(x, y, return_diagnostics = TRUE)
+    cat(sprintf("R²: %.4f\n", result$diagnostics$r_squared))
+    ```
+
+=== "Python"
+    ```python
+    result = fl.smooth(x, y, return_diagnostics=True)
+    print(f"R²: {result['diagnostics']['r_squared']:.4f}")
+    ```
+
 === "Rust"
     ```rust
     let model = Lowess::new()
@@ -409,23 +517,23 @@ Include fit quality metrics (Batch and Streaming only).
     }
     ```
 
-=== "Python"
-    ```python
-    result = fl.smooth(x, y, return_diagnostics=True)
-    print(f"R²: {result['diagnostics']['r_squared']:.4f}")
-    ```
-
-=== "R"
-    ```r
-    result <- fastlowess(x, y, return_diagnostics = TRUE)
-    cat(sprintf("R²: %.4f\n", result$diagnostics$r_squared))
-    ```
-
 ---
 
 ### return_robustness_weights
 
 Include final robustness weights (useful for outlier detection).
+
+=== "R"
+    ```r
+    result <- fastlowess(x, y, iterations = 3, return_robustness_weights = TRUE)
+    outliers <- which(result$robustness_weights < 0.5)
+    ```
+
+=== "Python"
+    ```python
+    result = fl.smooth(x, y, iterations=3, return_robustness_weights=True)
+    outliers = [i for i, w in enumerate(result["robustness_weights"]) if w < 0.5]
+    ```
 
 === "Rust"
     ```rust
@@ -439,18 +547,6 @@ Include final robustness weights (useful for outlier detection).
     // Points with weight < 0.5 are likely outliers
     ```
 
-=== "Python"
-    ```python
-    result = fl.smooth(x, y, iterations=3, return_robustness_weights=True)
-    outliers = [i for i, w in enumerate(result["robustness_weights"]) if w < 0.5]
-    ```
-
-=== "R"
-    ```r
-    result <- fastlowess(x, y, iterations = 3, return_robustness_weights = TRUE)
-    outliers <- which(result$robustness_weights < 0.5)
-    ```
-
 ---
 
 ### confidence_intervals / prediction_intervals
@@ -458,6 +554,16 @@ Include final robustness weights (useful for outlier detection).
 Request uncertainty estimates (Batch only).
 
 See [Intervals](intervals.md) for detailed usage.
+
+=== "R"
+    ```r
+    result <- fastlowess(x, y, confidence_intervals = 0.95, prediction_intervals = 0.95)
+    ```
+
+=== "Python"
+    ```python
+    result = fl.smooth(x, y, confidence_intervals=0.95, prediction_intervals=0.95)
+    ```
 
 === "Rust"
     ```rust
@@ -468,16 +574,6 @@ See [Intervals](intervals.md) for detailed usage.
         .build()?;
     ```
 
-=== "Python"
-    ```python
-    result = fl.smooth(x, y, confidence_intervals=0.95, prediction_intervals=0.95)
-    ```
-
-=== "R"
-    ```r
-    result <- fastlowess(x, y, confidence_intervals = 0.95, prediction_intervals = 0.95)
-    ```
-
 ---
 
 ### cross_validate
@@ -486,12 +582,9 @@ Automated fraction selection via cross-validation (Batch only).
 
 See [Cross-Validation](cross-validation.md) for detailed usage.
 
-=== "Rust"
-    ```rust
-    let model = Lowess::new()
-        .cross_validate(KFold(5, &[0.2, 0.3, 0.5, 0.7]).seed(42))
-        .adapter(Batch)
-        .build()?;
+=== "R"
+    ```r
+    result <- fastlowess(x, y, cv_method = "kfold", cv_k = 5, cv_fractions = c(0.2, 0.3, 0.5, 0.7))
     ```
 
 === "Python"
@@ -499,9 +592,12 @@ See [Cross-Validation](cross-validation.md) for detailed usage.
     result = fl.smooth(x, y, cv_method="kfold", cv_k=5, cv_fractions=[0.2, 0.3, 0.5, 0.7])
     ```
 
-=== "R"
-    ```r
-    result <- fastlowess(x, y, cv_method = "kfold", cv_k = 5, cv_fractions = c(0.2, 0.3, 0.5, 0.7))
+=== "Rust"
+    ```rust
+    let model = Lowess::new()
+        .cross_validate(KFold(5, &[0.2, 0.3, 0.5, 0.7]).seed(42))
+        .adapter(Batch)
+        .build()?;
     ```
 
 ---

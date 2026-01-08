@@ -33,21 +33,17 @@ Standard mode for complete datasets. **Supports all features.**
 
 ### Example
 
-=== "Rust"
-    ```rust
-    use fastLowess::prelude::*;
-
-    let model = Lowess::new()
-        .fraction(0.5)
-        .iterations(3)
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.95)
-        .return_diagnostics()
-        .adapter(Batch)
-        .parallel(true)
-        .build()?;
-
-    let result = model.fit(&x, &y)?;
+=== "R"
+    ```r
+    result <- fastlowess(
+        x, y,
+        fraction = 0.5,
+        iterations = 3,
+        confidence_intervals = 0.95,
+        prediction_intervals = 0.95,
+        return_diagnostics = TRUE,
+        parallel = TRUE
+    )
     ```
 
 === "Python"
@@ -63,17 +59,21 @@ Standard mode for complete datasets. **Supports all features.**
     )
     ```
 
-=== "R"
-    ```r
-    result <- fastlowess(
-        x, y,
-        fraction = 0.5,
-        iterations = 3,
-        confidence_intervals = 0.95,
-        prediction_intervals = 0.95,
-        return_diagnostics = TRUE,
-        parallel = TRUE
-    )
+=== "Rust"
+    ```rust
+    use fastLowess::prelude::*;
+
+    let model = Lowess::new()
+        .fraction(0.5)
+        .iterations(3)
+        .confidence_intervals(0.95)
+        .prediction_intervals(0.95)
+        .return_diagnostics()
+        .adapter(Batch)
+        .parallel(true)
+        .build()?;
+
+    let result = model.fit(&x, &y)?;
     ```
 
 ---
@@ -107,6 +107,33 @@ Process large datasets in chunks with configurable overlap.
 
 ### Example
 
+=== "R"
+    ```r
+    result <- fastlowess_streaming(
+        x, y,
+        fraction = 0.3,
+        iterations = 2,
+        chunk_size = 5000,
+        overlap = 500,
+        merge_strategy = "average"
+    )
+    ```
+
+!!! warning "Always call finalize()"
+    In Rust, always call `processor.finalize()` after processing all chunks to retrieve buffered overlap data.
+
+=== "Python"
+    ```python
+    result = fl.smooth_streaming(
+        x, y,
+        fraction=0.3,
+        iterations=2,
+        chunk_size=5000,
+        overlap=500,
+        merge_strategy="average"
+    )
+    ```
+
 === "Rust"
     ```rust
     use fastLowess::prelude::*;
@@ -130,33 +157,6 @@ Process large datasets in chunks with configurable overlap.
     let final_result = processor.finalize()?;
     write_output(&final_result.y);
     ```
-
-=== "Python"
-    ```python
-    result = fl.smooth_streaming(
-        x, y,
-        fraction=0.3,
-        iterations=2,
-        chunk_size=5000,
-        overlap=500,
-        merge_strategy="average"
-    )
-    ```
-
-=== "R"
-    ```r
-    result <- fastlowess_streaming(
-        x, y,
-        fraction = 0.3,
-        iterations = 2,
-        chunk_size = 5000,
-        overlap = 500,
-        merge_strategy = "average"
-    )
-    ```
-
-!!! warning "Always call finalize()"
-    In Rust, always call `processor.finalize()` after processing all chunks to retrieve buffered overlap data.
 
 ---
 
@@ -187,6 +187,33 @@ Incremental updates with a sliding window for real-time data.
 
 ### Example
 
+=== "R"
+    ```r
+    result <- fastlowess_online(
+        x, y,
+        fraction = 0.2,
+        iterations = 1,
+        window_capacity = 100,
+        min_points = 5,
+        update_mode = "incremental"
+    )
+    ```
+
+=== "Python"
+    ```python
+    result = fl.smooth_online(
+        x, y,
+        fraction=0.2,
+        iterations=1,
+        window_capacity=100,
+        min_points=5,
+        update_mode="incremental"
+    )
+
+    # result contains smoothed values for all points
+    print(result["y"])
+    ```
+
 === "Rust"
     ```rust
     use fastLowess::prelude::*;
@@ -206,33 +233,6 @@ Incremental updates with a sliding window for real-time data.
             println!("Smoothed: {:.2}", output.smoothed);
         }
     }
-    ```
-
-=== "Python"
-    ```python
-    result = fl.smooth_online(
-        x, y,
-        fraction=0.2,
-        iterations=1,
-        window_capacity=100,
-        min_points=5,
-        update_mode="incremental"
-    )
-
-    # result contains smoothed values for all points
-    print(result["y"])
-    ```
-
-=== "R"
-    ```r
-    result <- fastlowess_online(
-        x, y,
-        fraction = 0.2,
-        iterations = 1,
-        window_capacity = 100,
-        min_points = 5,
-        update_mode = "incremental"
-    )
     ```
 
 ---
