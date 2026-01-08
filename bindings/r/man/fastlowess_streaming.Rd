@@ -27,85 +27,46 @@ fastlowess_streaming(
 
 \item{y}{Numeric vector of dependent variable values (same length as x).}
 
-\item{fraction}{Smoothing fraction (default: 0.3). Lower values (0.1-0.3)
-are typically recommended for streaming to maintain good local precision
-within small chunks.}
+\item{fraction}{Smoothing fraction. Default: 0.3.}
 
-\item{chunk_size}{Number of points to process in each chunk (default: 5000).
-Larger chunks improve smoothness but increase memory usage.}
+\item{chunk_size}{Points per chunk. Default: 5000.}
 
-\item{overlap}{Number of points to overlap between chunks (default: 10
-percent of chunk_size). Overlap ensures smooth transitions and consistent
-fits across chunk boundaries. Overlapping values are merged (typically
-averaged).}
+\item{overlap}{Points overlapping between chunks. NULL = 10% of chunk_size.}
 
-\item{iterations}{Number of robustness iterations (default: 3).
-\itemize{
-  \item **0**: Fastest; standard least-squares within chunks.
-  \item **1-2**: Recommended for light to moderate outliers.
-  \item **3**: Default; high resistance to noise.
-}}
+\item{iterations}{Robustness iterations. Default: 3.}
 
-\item{delta}{Interpolation optimization threshold. NULL (default)
-auto-calculates. Set to 0 to disable interpolation.}
+\item{delta}{Interpolation threshold. NULL = auto.}
 
-\item{weight_function}{Kernel function for distance weighting. Options:
-"tricube" (default), "epanechnikov", "gaussian", "uniform", "biweight",
-"triangle", "cosine".}
+\item{weight_function}{Kernel function. Default: "tricube".}
 
-\item{robustness_method}{Method for computing robustness weights. Options:
-"bisquare" (default), "huber", "talwar".}
+\item{robustness_method}{Robustness method. Default: "bisquare".}
 
-\item{scaling_method}{Scaling method for robustness weight calculation.
-Options: "mad" (default), "mar" (Median Absolute Residual).}
+\item{scaling_method}{Scale estimation. Default: "mad".}
 
-\item{boundary_policy}{Handling of edge effects. Options: "extend" (default),
-"reflect", "zero", "noboundary".}
+\item{boundary_policy}{Edge handling. Default: "extend".}
 
-\item{auto_converge}{Tolerance for automatic convergence. NULL (default)
-disables.}
+\item{auto_converge}{Convergence tolerance. NULL disables.}
 
-\item{return_diagnostics}{Logical, whether to compute cumulative fit
-quality metrics across all chunks. Default: FALSE.}
+\item{return_diagnostics}{Return cumulative metrics. Default: FALSE.}
 
-\item{return_robustness_weights}{Logical, whether to include robustness
-weights in output. Default: FALSE.}
+\item{return_robustness_weights}{Return weights. Default: FALSE.}
 
-\item{parallel}{Logical, whether to enable parallel chunk processing
-(default: TRUE). Chunks are processed in parallel via Rayon, significantly
-improving throughput for large datasets.}
+\item{parallel}{Enable parallel processing. Default: TRUE.}
 }
 \value{
-A list containing:
-\itemize{
-  \item \code{x}: Sorted independent variable values.
-  \item \code{y}: Smoothed dependent variable values.
-  \item \code{fraction_used}: The fraction used for smoothing.
-  \item \code{diagnostics}: Cumulative metrics (RMSE, etc.) (if requested).
-  \item \code{robustness_weights}: Weights for each point (if requested).
-}
+A list with x, y (smoothed), fraction_used, and optional fields.
 }
 \description{
-Perform LOWESS smoothing using a streaming/chunked approach for large
-datasets. Processes data in chunks to maintain constant memory usage,
-suitable for datasets too large to fit in memory.
+Chunked LOWESS for large datasets. Processes data in chunks to maintain
+constant memory usage.
 
-## When to use streaming smoothing:
-\itemize{
-  \item Dataset size exceeds available system memory (>100K points).
-  \item Processing large data files in a pipeline.
-  \item Memory usage must be strictly bounded.
-}
+For full documentation, see: \url{https://lowess.readthedocs.io/}
 }
 \examples{
-# Process a large dataset in chunks
 n <- 20000
 x <- seq(0, 100, length.out = n)
 y <- sin(x / 10) + rnorm(n, sd = 0.5)
-
-# streaming approach maintains low memory footprint
-result <- fastlowess_streaming(x, y, chunk_size = 5000L, overlap = 500L)
-
+result <- fastlowess_streaming(x, y, chunk_size = 5000L)
 plot(x, y, pch = ".")
 lines(result$x, result$y, col = "red", lwd = 2)
 

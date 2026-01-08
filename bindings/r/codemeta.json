@@ -87,7 +87,7 @@
   "softwareRequirements": {
     "SystemRequirements": "'Rust' programming language (via 'rustup' or system tools)"
   },
-  "fileSize": "1566.728KB",
+  "fileSize": "1487.476KB",
   "citation": [
     {
       "@type": "SoftwareSourceCode",
@@ -100,8 +100,8 @@
         }
       ],
       "name": "rfastlowess: High-Performance LOWESS Smoothing for R",
-      "url": "https://github.com/thisisamirv/rfastlowess",
-      "description": "R package version 0.99.2"
+      "url": "https://github.com/thisisamirv/lowess-project",
+      "description": "R package version 0.99.5"
     },
     {
       "@type": "ScholarlyArticle",
@@ -130,7 +130,5 @@
       }
     }
   ],
-  "readme": "https://github.com/thisisamirv/rfastlowess/blob/main/README.md",
-  "contIntegration": ["https://github.com/thisisamirv/rfastlowess/actions?query=workflow%3Apkgcheck", "https://app.codecov.io/gh/thisisamirv/rfastlowess"],
-  "developmentStatus": "https://www.repostatus.org/#active"
+  "readme": "https://github.com/thisisamirv/rfastlowess/blob/main/README.md"
 }

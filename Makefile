@@ -251,12 +251,13 @@ r:
 	rm -rf $(R_DIR)/*.Rcheck $(R_DIR)/*.BiocCheck $(R_DIR)/src/target $(R_DIR)/target $(R_DIR)/src/vendor; \
 	(cd $(R_DIR) && Rscript -e "if (requireNamespace('codemetar', quietly=TRUE)) codemetar::write_codemeta()") || true; \
 	echo "" >> $(R_DIR)/src/Cargo.toml
+	@dev/update_citation.py Cargo.toml $(R_DIR)/inst/CITATION -q
 	@mkdir -p $(R_DIR)/src/.cargo && cp $(R_DIR)/src/cargo-config.toml $(R_DIR)/src/.cargo/config.toml
 	@echo "Patched $(R_DIR)/src/Cargo.toml"
 	@echo "=============================================================================="
 	@echo "2. Installing R development packages..."
 	@echo "=============================================================================="
-	@Rscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); suppressWarnings(install.packages(c('styler', 'prettycode', 'covr', 'codemetar', 'BiocManager', 'urlchecker', 'pkgdown', 'toml', 'V8'), quiet = TRUE))" || true
+	@Rscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); suppressWarnings(install.packages(c('styler', 'prettycode', 'covr', 'codemetar', 'BiocManager', 'urlchecker', 'toml', 'V8'), quiet = TRUE))" || true
 	@Rscript -e "suppressWarnings(BiocManager::install('BiocCheck', quiet = TRUE, update = FALSE, ask = FALSE))" || true
 	@echo "R development packages installed!"
 	@echo "=============================================================================="
@@ -264,7 +265,7 @@ r:
 	@echo "=============================================================================="
 	@echo "Updating and re-vendoring crates.io dependencies..."
 	@# Step 1: Clean R package Cargo.toml for vendoring
-	@$(R_DIR)/scripts/prepare_cargo.py clean $(R_DIR)/src/Cargo.toml -q
+	@dev/prepare_cargo.py clean $(R_DIR)/src/Cargo.toml -q
 	@# Step 2: Prepare vendor directory with local crates
 	@rm -rf $(R_DIR)/src/vendor $(R_DIR)/src/vendor.tar.xz
 	@mkdir -p $(R_DIR)/src/vendor
@@ -275,16 +276,16 @@ r:
 	@rm -f $(R_DIR)/src/vendor/fastLowess/README.md $(R_DIR)/src/vendor/fastLowess/CHANGELOG.md
 	@rm -f $(R_DIR)/src/vendor/lowess/README.md $(R_DIR)/src/vendor/lowess/CHANGELOG.md
 	@# Step 3: Patch local crates (remove workspace inheritance, strip GPU deps)
-	@$(R_DIR)/scripts/patch_vendor_crates.py Cargo.toml $(R_DIR)/src/vendor -q
+	@dev/patch_vendor_crates.py Cargo.toml $(R_DIR)/src/vendor -q
 	@# Step 4: Create dummy checksum files for local crates
 	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/lowess/.cargo-checksum.json
 	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/fastLowess/.cargo-checksum.json
 	@# Step 5: Add workspace isolation to R package
-	@$(R_DIR)/scripts/prepare_cargo.py isolate $(R_DIR)/src/Cargo.toml -q
+	@dev/prepare_cargo.py isolate $(R_DIR)/src/Cargo.toml -q
 	@# Step 6: Vendor crates.io dependencies
 	@(cd $(R_DIR)/src && cargo vendor -q --no-delete vendor)
 	@# Step 7: Regenerate checksums after vendoring
-	@$(R_DIR)/scripts/clean_checksums.py -q $(R_DIR)/src/vendor
+	@dev/clean_checksums.py -q $(R_DIR)/src/vendor
 	@echo "Creating vendor.tar.xz archive..."
 	@(cd $(R_DIR)/src && tar --sort=name --mtime='1970-01-01 00:00:00Z' --owner=0 --group=0 --numeric-owner --xz --create --file=vendor.tar.xz vendor)
 	@rm -rf $(R_DIR)/src/vendor
@@ -309,7 +310,7 @@ r:
 	@echo "6. Formatting..."
 	@echo "=============================================================================="
 	@cd $(R_DIR)/src && cargo fmt -q
-	@cd $(R_DIR) && Rscript scripts/style_pkg.R || true
+	@cd $(R_DIR) && Rscript $(PWD)/dev/style_pkg.R || true
 	@cd $(R_DIR)/src && cargo fmt -- --check || (echo "Run 'cargo fmt' to fix"; exit 1)
 	@cd $(R_DIR)/src && cargo clippy -q -- -D warnings
 	@cd $(R_DIR) && Rscript -e "lints <- lintr::lint_package(); print(lints); if (length(lints) > 0) quit(status = 1)"
@@ -320,8 +321,7 @@ r:
 	@cd $(R_DIR)/src && RUSTDOCFLAGS="-D warnings" cargo doc -q --no-deps
 	@cd $(R_DIR) && Rscript -e "devtools::document(quiet = TRUE)"
 	@cd $(R_DIR) && Rscript -e "devtools::build_vignettes(quiet = TRUE)" || true
-	@cd $(R_DIR) && Rscript -e "if (file.exists('README.Rmd')) rmarkdown::render('README.Rmd', quiet = TRUE)" || true
-	@cd $(R_DIR) && Rscript -e "if (requireNamespace('pkgdown', quietly=TRUE)) pkgdown::build_site(quiet = TRUE)" || true
+	@rm -f $(R_DIR)/.gitignore
 	@echo "=============================================================================="
 	@echo "8. Testing..."
 	@echo "=============================================================================="
@@ -330,7 +330,7 @@ r:
 	@echo "=============================================================================="
 	@echo "9. Submission checks..."
 	@echo "=============================================================================="
-	@cd $(R_DIR) && R_MAKEVARS_USER=$(PWD)/$(R_DIR)/scripts/Makevars.check R CMD check --as-cran $(R_PKG_TARBALL) || true
+	@cd $(R_DIR) && R_MAKEVARS_USER=$(PWD)/dev/Makevars.check R CMD check --as-cran $(R_PKG_TARBALL) || true
 	@cd $(R_DIR) && Rscript -e "if (requireNamespace('urlchecker', quietly=TRUE)) urlchecker::url_check()" || true
 	@cd $(R_DIR) && Rscript -e "if (requireNamespace('BiocCheck', quietly=TRUE)) BiocCheck::BiocCheck('$(R_PKG_TARBALL)')" || true
 	@echo "Package size (Limit: 5MB):"

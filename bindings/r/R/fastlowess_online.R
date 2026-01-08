@@ -1,76 +1,33 @@
 #' Online LOWESS with Sliding Window
 #'
 #' @description
-#' Perform LOWESS smoothing using an online/sliding window approach for
-#' real-time data streams. Maintains a sliding window of recent points for
-#' incremental updates without reprocessing the entire dataset.
+#' Sliding window LOWESS for real-time data streams. Maintains a window of
+#' recent points for incremental updates.
 #'
-#' ## When to use online smoothing:
-#' \itemize{
-#'   \item Data arrives incrementally (e.g., sensor readings, live feeds).
-#'   \item Need real-time updates for each new observation.
-#'   \item Maintaining a sliding window of the most recent history.
-#'   \item Performance/latency is critical for individually arriving points.
-#' }
+#' For full documentation, see: \url{https://lowess.readthedocs.io/}
 #'
 #' @param x Numeric vector of independent variable values.
 #' @param y Numeric vector of dependent variable values (same length as x).
-#' @param fraction Smoothing fraction (default: 0.2). Lower values (0.1-0.3)
-#'   are recommended for online processing with small windows to ensure
-#'   responsiveness to local changes.
-#' @param window_capacity Maximum number of points to retain in the sliding
-#'   window (default: 100). When capacity is reached, the oldest points are
-#'   removed as new ones arrive.
-#' @param min_points Minimum number of points required before smoothing starts
-#'   (default: 2). Points before this threshold return their original y values.
-#' @param iterations Number of robustness iterations (default: 3).
-#'   \itemize{
-#'     \item **0**: Fastest; no outlier weighting.
-#'     \item **1-2**: Recommended balance for real-time applications.
-#'   }
-#' @param delta Interpolation optimization threshold. NULL (default)
-#'   auto-calculates. Note: Online mode usually uses small deltas (or 0) for
-#'   maximum responsive precision.
-#' @param weight_function Kernel function for distance weighting. Options:
-#'   "tricube" (default), "epanechnikov", "gaussian", "uniform", "biweight",
-#'   "triangle", "cosine".
-#' @param robustness_method Method for computing robustness weights. Options:
-#'   "bisquare" (default), "huber", "talwar".
-#' @param scaling_method Scaling method for robustness weight calculation.
-#'   Options: "mad" (default), "mar" (Median Absolute Residual).
-#' @param boundary_policy Handling of edge effects. Options: "extend" (default),
-#'   "reflect", "zero", "noboundary".
-#' @param update_mode Update strategy. Options: "full" (default) or
-#'   "incremental".
-#'   \itemize{
-#'     \item **"full"**: Re-smooths all points in the window for each update.
-#'     \item **"incremental"**: Only computes the estimate for the latest point.
-#'   }
-#' @param auto_converge Tolerance for automatic convergence. NULL (default)
-#'   disables.
-#' @param return_robustness_weights Logical, whether to include robustness
-#'   weights in output. Default: FALSE.
-#' @param parallel Logical, whether to enable parallel processing
-#'   (default: FALSE). Online mode typically processes points sequentially
-#'   to minimize per-point latency.
+#' @param fraction Smoothing fraction. Default: 0.2.
+#' @param window_capacity Max points in sliding window. Default: 100.
+#' @param min_points Min points before smoothing starts. Default: 3.
+#' @param iterations Robustness iterations. Default: 3.
+#' @param delta Interpolation threshold. NULL = auto.
+#' @param weight_function Kernel function. Default: "tricube".
+#' @param robustness_method Robustness method. Default: "bisquare".
+#' @param scaling_method Scale estimation. Default: "mad".
+#' @param boundary_policy Edge handling. Default: "extend".
+#' @param update_mode "full" or "incremental". Default: "full".
+#' @param auto_converge Convergence tolerance. NULL disables.
+#' @param return_robustness_weights Return weights. Default: FALSE.
+#' @param parallel Enable parallel processing. Default: FALSE.
 #'
-#' @return A list containing:
-#' \itemize{
-#'   \item \code{x}: Input independent variable values.
-#'   \item \code{y}: Smoothed dependent variable values.
-#'   \item \code{fraction_used}: The fraction used for smoothing.
-#'   \item \code{robustness_weights}: Weights for the window points (if
-#'     requested).
-#' }
+#' @return A list with x, y (smoothed), fraction_used, and optional fields.
 #'
 #' @examples
-#' # Real-time sensor data smoothing simulation
 #' x <- 1:100
 #' y <- sin(x / 10) + rnorm(100, sd = 0.3)
-#'
-#' # online approach processes points as a sequence
-#' result <- fastlowess_online(x, y, window_capacity = 25L, min_points = 10L)
-#'
+#' result <- fastlowess_online(x, y, window_capacity = 25L)
 #' plot(x, y)
 #' lines(result$x, result$y, col = "red", lwd = 2)
 #'
