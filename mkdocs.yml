@@ -1,0 +1,145 @@
+site_name: LOWESS Project
+site_description: High-performance LOWESS smoothing for Rust, Python, and R
+site_author: Amir Valizadeh
+site_url: https://lowess.readthedocs.io/
+
+repo_name: thisisamirv/lowess-project
+repo_url: https://github.com/thisisamirv/lowess-project
+edit_uri: edit/main/docs/
+
+copyright: Copyright &copy; 2025-2026 Amir Valizadeh
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: amber
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: amber
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  font:
+    text: Inter
+    code: JetBrains Mono
+  features:
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - navigation.indexes
+    - navigation.top
+    - navigation.footer
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.tabs.link
+    - content.code.copy
+    - content.code.annotate
+  icon:
+    repo: fontawesome/brands/github
+    logo: material/chart-bell-curve-cumulative
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/thisisamirv/lowess-project
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/fastlowess/
+  generator: false
+  version:
+    provider: mike
+
+plugins:
+  - search
+  - git-revision-date-localized:
+      enable_creation_date: true
+      type: timeago
+      fallback_to_build_date: true
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - getting-started/index.md
+      - Installation: getting-started/installation.md
+      - Quick Start: getting-started/quickstart.md
+      - Concepts: getting-started/concepts.md
+  - User Guide:
+      - user-guide/index.md
+      - Parameters: user-guide/parameters.md
+      - Execution Modes: user-guide/adapters.md
+      - Weight Functions: user-guide/kernels.md
+      - Robustness: user-guide/robustness.md
+      - Intervals: user-guide/intervals.md
+      - Cross-Validation: user-guide/cross-validation.md
+  - API Reference:
+      - api/index.md
+      - Rust: api/rust.md
+      - Python: api/python.md
+      - R: api/r.md
+  - Tutorials:
+      - tutorials/index.md
+      - Genomics: tutorials/genomics.md
+      - Time Series: tutorials/time-series.md
+      - Real-Time Processing: tutorials/real-time.md
+  - Examples:
+      - examples/index.md
+      - Rust Examples: examples/rust.md
+      - Python Examples: examples/python.md
+      - R Examples: examples/r.md
+  - Changelog: changelog.md
+  - Contributing: contributing.md

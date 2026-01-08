@@ -368,6 +368,26 @@ check-msrv:
 	@python3 dev/check_msrv.py
 
 # ==============================================================================
+# Documentation
+# ==============================================================================
+DOCS_VENV := docs-venv
+
+docs:
+	@echo "Building documentation..."
+	@if [ ! -d "$(DOCS_VENV)" ]; then python3 -m venv $(DOCS_VENV); fi
+	@. $(DOCS_VENV)/bin/activate && pip install -q -r docs/requirements.txt && mkdocs build
+
+docs-serve:
+	@echo "Starting documentation server..."
+	@if [ ! -d "$(DOCS_VENV)" ]; then python3 -m venv $(DOCS_VENV); fi
+	@. $(DOCS_VENV)/bin/activate && pip install -q -r docs/requirements.txt && mkdocs serve
+
+docs-clean:
+	@echo "Cleaning documentation build..."
+	@rm -rf site/ $(DOCS_VENV)/
+	@echo "Documentation clean complete!"
+
+# ==============================================================================
 # All targets
 # ==============================================================================
 all: lowess fastLowess python r check-msrv
@@ -382,4 +402,4 @@ all-clean: r-clean lowess-clean fastLowess-clean python-clean
 	@rm -rf target Cargo.lock .venv .ruff_cache .pytest_cache
 	@echo "All clean completed!"
 
-.PHONY: lowess lowess-coverage lowess-clean fastLowess fastLowess-coverage fastLowess-clean python python-coverage python-clean r r-coverage r-clean check-msrv all all-coverage all-clean
+.PHONY: lowess lowess-coverage lowess-clean fastLowess fastLowess-coverage fastLowess-clean python python-coverage python-clean r r-coverage r-clean check-msrv docs docs-serve docs-clean all all-coverage all-clean

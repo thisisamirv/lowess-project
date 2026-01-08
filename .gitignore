@@ -55,6 +55,8 @@ venv/
 /target/doc/
 doc/
 Meta/
+docs-venv/
+site/
 
 # Benchmarks
 /target/criterion/

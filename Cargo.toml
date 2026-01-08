@@ -12,7 +12,7 @@ repository = "https://github.com/thisisamirv/lowess-project"
 homepage = "https://github.com/thisisamirv/lowess-project"
 rust-version = "1.85.0"
 readme = "README.md"
-description = "LOWESS (Locally Weighted Scatterplot Smoothing) implementation"
+description = "High-performance LOWESS (Locally Weighted Scatterplot Smoothing)"
 keywords = ["lowess", "smoothing", "statistics", "regression", "bioinformatics"]
 categories = ["science", "algorithms"]
 
