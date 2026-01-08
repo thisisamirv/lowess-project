@@ -57,6 +57,7 @@ doc/
 Meta/
 docs-venv/
 site/
+bindings/python/examples/plots/
 
 # Benchmarks
 /target/criterion/

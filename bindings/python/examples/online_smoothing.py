@@ -20,6 +20,10 @@ import fastlowess
 from fastlowess import smooth_online
 import os
 
+# Get script directory for relative paths
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PLOTS_DIR = os.path.join(SCRIPT_DIR, "plots")
+
 def main():
     print("=== fastlowess Online Smoothing Example ===")
     
@@ -58,7 +62,7 @@ def main():
     )
 
     # Plotting
-    os.makedirs("examples/plots", exist_ok=True)
+    os.makedirs(PLOTS_DIR, exist_ok=True)
     
     fig1 = plt.figure(figsize=(12, 7))
     
@@ -92,9 +96,9 @@ def main():
     
     plt.tight_layout()
     
-    print("\nSaving plots to examples/plots/...")
-    fig1.savefig("examples/plots/online_main.png")
-    fig2.savefig("examples/plots/online_zoom.png")
+    print(f"\nSaving plots to {PLOTS_DIR}/...")
+    fig1.savefig(os.path.join(PLOTS_DIR, "online_main.png"))
+    fig2.savefig(os.path.join(PLOTS_DIR, "online_zoom.png"))
     print("Done!")
 
 if __name__ == "__main__":

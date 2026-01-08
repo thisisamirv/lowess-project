@@ -5,31 +5,8 @@ authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
 rust-version = { workspace = true }
+publish = false
 
-# Metadata
-description = { workspace = true }
-readme = { workspace = true }
-
-# Links
-repository = { workspace = true }
-homepage = { workspace = true }
-
-# Categories
-keywords = { workspace = true }
-categories = { workspace = true }
-
-include = [
-    "src/**/*",
-    "docs/**/*.svg",
-    "fastlowess/**/*",
-    "Cargo.toml",
-    "README.md",
-    "LICENSE-MIT",
-    "LICENSE-APACHE",
-    "CHANGELOG.md",
-]
-
-# Build
 [dependencies]
 fastLowess = { workspace = true, features = ["dev", "cpu"] }
 pyo3 = { workspace = true }
@@ -42,8 +19,3 @@ crate-type = ["cdylib"]
 [features]
 default = []
 dev = []
-
-# Document all features
-[package.metadata.docs.rs]
-all-features = true
-rustdoc-args = ["--cfg", "docsrs"]

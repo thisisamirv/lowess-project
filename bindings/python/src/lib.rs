@@ -1,9 +1,6 @@
 //! Python bindings for fastLowess.
-//!
-//! Provides Python access to the fastLowess Rust library via PyO3.
 
 #![allow(non_snake_case)]
-#![deny(missing_docs)]
 
 use numpy::{PyArray1, PyReadonlyArray1};
 use pyo3::exceptions::PyValueError;
@@ -287,9 +284,6 @@ impl PyLowessResult {
 
 /// LOWESS smoothing with the batch adapter.
 ///
-/// This is the primary interface for LOWESS smoothing. Processes the entire
-/// dataset in memory with optional parallel execution.
-///
 /// Parameters
 /// ----------
 /// x : array_like
@@ -331,11 +325,6 @@ impl PyLowessResult {
 ///     CV method: "loocv" (leave-one-out) or "kfold". Default: "kfold".
 /// cv_k : int, optional
 ///     Number of folds for k-fold CV (default: 5).
-///
-/// Returns
-/// -------
-/// LowessResult
-///     Result object with smoothed values and optional outputs.
 #[pyfunction]
 #[pyo3(signature = (
     x, y,
@@ -458,9 +447,6 @@ fn smooth<'py>(
 
 /// Streaming LOWESS for large datasets.
 ///
-/// Processes data in chunks to maintain constant memory usage.
-/// Calls process_chunk() followed by finalize() internally.
-///
 /// Parameters
 /// ----------
 /// x : array_like
@@ -493,11 +479,6 @@ fn smooth<'py>(
 ///     Whether to include robustness weights.
 /// parallel : bool, optional
 ///     Enable parallel execution (default: True).
-///
-/// Returns
-/// -------
-/// LowessResult
-///     Result object with smoothed values.
 #[allow(clippy::too_many_arguments)]
 #[pyfunction]
 #[pyo3(signature = (
@@ -658,8 +639,6 @@ fn smooth_streaming<'py>(
 
 /// Online LOWESS with sliding window.
 ///
-/// Maintains a sliding window for incremental updates.
-///
 /// Parameters
 /// ----------
 /// x : array_like
@@ -690,11 +669,6 @@ fn smooth_streaming<'py>(
 ///     Whether to include robustness weights.
 /// parallel : bool, optional
 ///     Enable parallel execution (default: False for online).
-///
-/// Returns
-/// -------
-/// LowessResult
-///     Result object with smoothed values.
 #[allow(clippy::too_many_arguments)]
 #[pyfunction]
 #[pyo3(signature = (
@@ -804,9 +778,8 @@ fn smooth_online<'py>(
 // Module Registration
 // ============================================================================
 
-/// fastlowess: High-performance LOWESS smoothing for Python.
 #[pymodule]
-fn fastlowess(m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyLowessResult>()?;
     m.add_class::<PyDiagnostics>()?;
     m.add_function(wrap_pyfunction!(smooth, m)?)?;

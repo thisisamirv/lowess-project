@@ -4,8 +4,8 @@ build-backend = "maturin"
 
 [project]
 name = "fastlowess"
-version = "0.4.0"
-description = "High-level, fast LOWESS smoothing built on top of the fastLowess Rust crate."
+dynamic = ["version"]
+description = "High-performance LOWESS smoothing for Rust, Python, and R."
 authors = [{ name = "Amir Valizadeh", email = "thisisamirv@gmail.com" }]
 license = { text = "MIT OR Apache-2.0" }
 readme = "README.md"
@@ -32,18 +32,12 @@ classifiers = [
 keywords = ["lowess", "smoothing", "statistics", "regression", "numpy"]
 dependencies = ["numpy>=1.20.0"]
 
-[tool.maturin]
-module-name = "fastlowess.fastlowess"
-include = [
-    "fastlowess/**",
-    "src/**",
-    "Cargo.toml",
-    "pyproject.toml",
-    "README.md",
-    "LICENSE-APACHE",
-    "LICENSE-MIT",
-    "CHANGELOG.md",
-]
+[project.urls]
+Documentation = "https://lowess.readthedocs.io/"
+Repository = "https://github.com/thisisamirv/lowess-project"
+Changelog = "https://github.com/thisisamirv/lowess-project/CHANGELOG.md"
 
-[tool.pytest.ini_options]
-testpaths = ["tests"]
+[tool.maturin]
+python-source = "python"
+module-name = "fastlowess._core"
+exclude = ["docs/**", "examples/**", "tests/**", "target/**", ".github/**"]

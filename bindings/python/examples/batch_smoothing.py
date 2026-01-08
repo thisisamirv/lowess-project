@@ -18,6 +18,10 @@ import fastlowess
 from fastlowess import smooth
 import os
 
+# Get script directory for relative paths
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PLOTS_DIR = os.path.join(SCRIPT_DIR, "plots")
+
 def generate_sample_data(n_points=1000):
     """
     Generate complex sample data with a trend, seasonality, and outliers.
@@ -77,7 +81,7 @@ def main():
     print(f"Optimal fraction found: {res_cv.fraction_used}")
 
     # Plotting Results
-    os.makedirs("examples/plots", exist_ok=True)
+    os.makedirs(PLOTS_DIR, exist_ok=True)
     
     fig1 = plt.figure(figsize=(12, 8))
     
@@ -142,10 +146,10 @@ def main():
     plt.legend()
     plt.grid(True, alpha=0.2)
     
-    print("\nSaving plots to examples/plots/...")
-    fig1.savefig("examples/plots/batch_main.png")
-    fig2.savefig("examples/plots/batch_weights.png")
-    fig3.savefig("examples/plots/batch_boundary.png")
+    print(f"\nSaving plots to {PLOTS_DIR}/...")
+    fig1.savefig(os.path.join(PLOTS_DIR, "batch_main.png"))
+    fig2.savefig(os.path.join(PLOTS_DIR, "batch_weights.png"))
+    fig3.savefig(os.path.join(PLOTS_DIR, "batch_boundary.png"))
     print("Done!")
 
 if __name__ == "__main__":

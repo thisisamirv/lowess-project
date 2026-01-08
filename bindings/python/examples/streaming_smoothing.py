@@ -15,6 +15,10 @@ from fastlowess import smooth_streaming, smooth
 import time
 import os
 
+# Get script directory for relative paths
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PLOTS_DIR = os.path.join(SCRIPT_DIR, "plots")
+
 def main():
     print("=== fastlowess Streaming Mode Example ===")
     
@@ -74,9 +78,9 @@ def main():
     plt.ylim(-2.5, 2.5)
     
     plt.tight_layout()
-    os.makedirs("examples/plots", exist_ok=True)
-    plt.savefig("examples/plots/streaming_smoothing.png")
-    print("\nPlot saved to examples/plots/streaming_smoothing.png")
+    os.makedirs(PLOTS_DIR, exist_ok=True)
+    plt.savefig(os.path.join(PLOTS_DIR, "streaming_smoothing.png"))
+    print(f"\nPlot saved to {PLOTS_DIR}/streaming_smoothing.png")
 
 if __name__ == "__main__":
     main()

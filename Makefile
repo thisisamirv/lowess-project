@@ -166,12 +166,12 @@ python:
 	@echo "1. Formatting..."
 	@echo "=============================================================================="
 	@cargo fmt -p $(PY_PKG) -- --check
-	@ruff format --check $(PY_DIR)/fastlowess/ $(PY_TEST_DIR)/ || true
+	@ruff format --check $(PY_DIR)/python/ $(PY_TEST_DIR)/ || true
 	@echo "=============================================================================="
 	@echo "2. Linting..."
 	@echo "=============================================================================="
 	@cargo clippy -q -p $(PY_PKG) --all-targets -- -D warnings
-	@ruff check $(PY_DIR)/fastlowess/ $(PY_TEST_DIR)/
+	@ruff check $(PY_DIR)/python/ $(PY_TEST_DIR)/
 	@echo "=============================================================================="
 	@echo "3. Environment Setup..."
 	@echo "=============================================================================="
@@ -187,9 +187,12 @@ python:
 	@cargo test -q -p $(PY_PKG)
 	@. $(PY_VENV)/bin/activate && python -m pytest $(PY_TEST_DIR) -q
 	@echo "=============================================================================="
-	@echo "6. Documentation..."
+	@echo "6. Examples..."
 	@echo "=============================================================================="
-	@RUSTDOCFLAGS="-D warnings" cargo doc -q -p $(PY_PKG) --no-deps
+	@. $(PY_VENV)/bin/activate && pip install -q matplotlib
+	@. $(PY_VENV)/bin/activate && python $(PY_DIR)/examples/batch_smoothing.py
+	@. $(PY_VENV)/bin/activate && python $(PY_DIR)/examples/streaming_smoothing.py
+	@. $(PY_VENV)/bin/activate && python $(PY_DIR)/examples/online_smoothing.py
 	@echo "=============================================================================="
 	@echo "$(PY_PKG) checks completed successfully!"
 
