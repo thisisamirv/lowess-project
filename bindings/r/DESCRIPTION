@@ -1,5 +1,5 @@
 Package: rfastlowess
-Title: 'Rust'-Based High-Performance Parallel LOWESS Smoothing
+Title: High-performance LOWESS smoothing for `Rust`, `Python`, and `R`
 Version: 0.99.3
 Authors@R: person("Amir", "Valizadeh", email = "thisisamirv@gmail.com", role = c("aut", "cre"), comment = c(ORCID = "0000-0001-5983-8527"))
 Description: Provides high-performance LOWESS smoothing (Locally Weighted Scatterplot Smoothing) 
@@ -14,5 +14,5 @@ biocViews: Preprocessing, StatisticalMethod, Regression, FunctionalPrediction, Q
 Suggests: BiocStyle, knitr, rmarkdown, testthat (>= 3.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr
-BugReports: https://github.com/thisisamirv/rfastlowess/issues
-URL: https://github.com/thisisamirv/rfastlowess, https://thisisamirv.github.io/rfastlowess/
+BugReports: https://github.com/thisisamirv/lowess-project/issues
+URL: https://github.com/thisisamirv/lowess-project, https://thisisamirv.github.io/lowess-project/

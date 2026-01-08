@@ -20,7 +20,7 @@ keywords:
   - python
   - r
 date-released: "2026-01-01"
-version: "0.99.0"
+version: "0.99.3"
 references:
   - type: article
     authors:

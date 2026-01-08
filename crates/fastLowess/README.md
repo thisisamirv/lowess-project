@@ -205,28 +205,29 @@ println!("{}", result);
 
 ## API Reference
 
-**Rust:**
+**R:**
 
-```rust
-Lowess::new()
-    .fraction(0.5)              // Smoothing span (0, 1]
-    .iterations(3)              // Robustness iterations
-    .delta(0.01)                // Interpolation threshold
-    .weight_function(Tricube)   // Kernel selection
-    .robustness_method(Bisquare)
-    .zero_weight_fallback(UseLocalMean)
-    .boundary_policy(Extend)
-    .confidence_intervals(0.95)
-    .prediction_intervals(0.95)
-    .return_diagnostics()
-    .return_residuals()
-    .return_robustness_weights()
-    .cross_validate(KFold(5, &[0.3, 0.5, 0.7]).seed(123))
-    .auto_converge(1e-4)
-    .adapter(Batch)             // or Streaming, Online
-    .parallel(true)             // fastLowess only
-    .backend(CPU)               // fastLowess only: CPU or GPU
-    .build()?;
+```r
+fastlowess(
+    x, y,
+    fraction = 0.5,
+    iterations = 3L,
+    delta = 0.01,
+    weight_function = "tricube",
+    robustness_method = "bisquare",
+    zero_weight_fallback = "use_local_mean",
+    boundary_policy = "extend",
+    confidence_intervals = 0.95,
+    prediction_intervals = 0.95,
+    return_diagnostics = TRUE,
+    return_residuals = TRUE,
+    return_robustness_weights = TRUE,
+    cv_fractions = c(0.3, 0.5, 0.7),
+    cv_method = "kfold",
+    cv_k = 5L,
+    auto_converge = 1e-4,
+    parallel = TRUE
+)
 ```
 
 **Python:**
@@ -254,34 +255,55 @@ fastlowess.smooth(
 )
 ```
 
-**R:**
+**Rust:**
 
-```r
-fastlowess(
-    x, y,
-    fraction = 0.5,
-    iterations = 3L,
-    delta = 0.01,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    zero_weight_fallback = "use_local_mean",
-    boundary_policy = "extend",
-    confidence_intervals = 0.95,
-    prediction_intervals = 0.95,
-    return_diagnostics = TRUE,
-    return_residuals = TRUE,
-    return_robustness_weights = TRUE,
-    cv_fractions = c(0.3, 0.5, 0.7),
-    cv_method = "kfold",
-    cv_k = 5L,
-    auto_converge = 1e-4,
-    parallel = TRUE
-)
+```rust
+Lowess::new()
+    .fraction(0.5)              // Smoothing span (0, 1]
+    .iterations(3)              // Robustness iterations
+    .delta(0.01)                // Interpolation threshold
+    .weight_function(Tricube)   // Kernel selection
+    .robustness_method(Bisquare)
+    .zero_weight_fallback(UseLocalMean)
+    .boundary_policy(Extend)
+    .confidence_intervals(0.95)
+    .prediction_intervals(0.95)
+    .return_diagnostics()
+    .return_residuals()
+    .return_robustness_weights()
+    .cross_validate(KFold(5, &[0.3, 0.5, 0.7]).seed(123))
+    .auto_converge(1e-4)
+    .adapter(Batch)             // or Streaming, Online
+    .parallel(true)             // fastLowess only
+    .backend(CPU)               // fastLowess only: CPU or GPU
+    .build()?;
 ```
 
 ---
 
 ## Result Structure
+
+**R:**
+
+```r
+result$x, result$y, result$standard_errors
+result$confidence_lower, result$confidence_upper
+result$prediction_lower, result$prediction_upper
+result$residuals, result$robustness_weights
+result$diagnostics, result$iterations_used
+result$fraction_used, result$cv_scores
+```
+
+**Python:**
+
+```python
+result.x, result.y, result.standard_errors
+result.confidence_lower, result.confidence_upper
+result.prediction_lower, result.prediction_upper
+result.residuals, result.robustness_weights
+result.diagnostics, result.iterations_used
+result.fraction_used, result.cv_scores
+```
 
 **Rust:**
 
@@ -301,28 +323,6 @@ pub struct LowessResult<T> {
     pub fraction_used: T,
     pub cv_scores: Option<Vec<T>>,
 }
-```
-
-**Python:**
-
-```python
-result.x, result.y, result.standard_errors
-result.confidence_lower, result.confidence_upper
-result.prediction_lower, result.prediction_upper
-result.residuals, result.robustness_weights
-result.diagnostics, result.iterations_used
-result.fraction_used, result.cv_scores
-```
-
-**R:**
-
-```r
-result$x, result$y, result$standard_errors
-result$confidence_lower, result$confidence_upper
-result$prediction_lower, result$prediction_upper
-result$residuals, result$robustness_weights
-result$diagnostics, result$iterations_used
-result$fraction_used, result$cv_scores
 ```
 
 ---

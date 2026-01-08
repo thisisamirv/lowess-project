@@ -163,6 +163,10 @@ fastLowess-clean:
 python:
 	@echo "Running $(PY_PKG) checks..."
 	@echo "=============================================================================="
+	@echo "0. Version Sync..."
+	@echo "=============================================================================="
+	@dev/sync_version.py Cargo.toml $(R_DIR)/inst/CITATION -p $(PY_DIR)/python/fastlowess/__version__.py -c CITATION.cff -q
+	@echo "=============================================================================="
 	@echo "1. Formatting..."
 	@echo "=============================================================================="
 	@cargo fmt -p $(PY_PKG) -- --check
@@ -247,10 +251,9 @@ r:
 	sed -i '/^\[workspace\]/d' $(R_DIR)/src/Cargo.toml; \
 	sed -i '/^\[patch\.crates-io\]/d' $(R_DIR)/src/Cargo.toml; \
 	sed -i '/^lowess = { path = "vendor\/lowess" }/d' $(R_DIR)/src/Cargo.toml; \
-	sed -i "s/^Version: .*/Version: $$WS_VERSION/" $(R_DIR)/DESCRIPTION; \
 	rm -rf $(R_DIR)/*.Rcheck $(R_DIR)/*.BiocCheck $(R_DIR)/src/target $(R_DIR)/target $(R_DIR)/src/vendor; \
 	echo "" >> $(R_DIR)/src/Cargo.toml
-	@dev/update_citation.py Cargo.toml $(R_DIR)/inst/CITATION -q
+	@dev/sync_version.py Cargo.toml $(R_DIR)/inst/CITATION -d $(R_DIR)/DESCRIPTION -c CITATION.cff -q
 	@mkdir -p $(R_DIR)/src/.cargo && cp $(R_DIR)/src/cargo-config.toml $(R_DIR)/src/.cargo/config.toml
 	@echo "Patched $(R_DIR)/src/Cargo.toml"
 	@echo "=============================================================================="

@@ -22,12 +22,10 @@ categories = { workspace = true }
 # Build
 include = [
     "src/**/*",
-    "docs/**/*.svg",
     "Cargo.toml",
     "README.md",
     "LICENSE-MIT",
     "LICENSE-APACHE",
-    "CHANGELOG.md",
 ]
 
 [dependencies]
