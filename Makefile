@@ -249,7 +249,6 @@ r:
 	sed -i '/^lowess = { path = "vendor\/lowess" }/d' $(R_DIR)/src/Cargo.toml; \
 	sed -i "s/^Version: .*/Version: $$WS_VERSION/" $(R_DIR)/DESCRIPTION; \
 	rm -rf $(R_DIR)/*.Rcheck $(R_DIR)/*.BiocCheck $(R_DIR)/src/target $(R_DIR)/target $(R_DIR)/src/vendor; \
-	(cd $(R_DIR) && Rscript -e "if (requireNamespace('codemetar', quietly=TRUE)) codemetar::write_codemeta()") || true; \
 	echo "" >> $(R_DIR)/src/Cargo.toml
 	@dev/update_citation.py Cargo.toml $(R_DIR)/inst/CITATION -q
 	@mkdir -p $(R_DIR)/src/.cargo && cp $(R_DIR)/src/cargo-config.toml $(R_DIR)/src/.cargo/config.toml
@@ -257,7 +256,7 @@ r:
 	@echo "=============================================================================="
 	@echo "2. Installing R development packages..."
 	@echo "=============================================================================="
-	@Rscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); suppressWarnings(install.packages(c('styler', 'prettycode', 'covr', 'codemetar', 'BiocManager', 'urlchecker', 'toml', 'V8'), quiet = TRUE))" || true
+	@Rscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); suppressWarnings(install.packages(c('styler', 'prettycode', 'covr', 'BiocManager', 'urlchecker', 'toml', 'V8'), quiet = TRUE))" || true
 	@Rscript -e "suppressWarnings(BiocManager::install('BiocCheck', quiet = TRUE, update = FALSE, ask = FALSE))" || true
 	@echo "R development packages installed!"
 	@echo "=============================================================================="
@@ -313,7 +312,7 @@ r:
 	@cd $(R_DIR) && Rscript $(PWD)/dev/style_pkg.R || true
 	@cd $(R_DIR)/src && cargo fmt -- --check || (echo "Run 'cargo fmt' to fix"; exit 1)
 	@cd $(R_DIR)/src && cargo clippy -q -- -D warnings
-	@cd $(R_DIR) && Rscript -e "lints <- lintr::lint_package(); print(lints); if (length(lints) > 0) quit(status = 1)"
+	@Rscript -e "my_linters <- lintr::linters_with_defaults(indentation_linter = lintr::indentation_linter(indent = 4L)); lints <- c(lintr::lint_dir('$(R_DIR)/R', linters = my_linters), lintr::lint_dir('tests/r/testthat', linters = my_linters)); print(lints); if (length(lints) > 0) quit(status = 1)"
 	@echo "=============================================================================="
 	@echo "7. Documentation..."
 	@echo "=============================================================================="
@@ -331,7 +330,7 @@ r:
 	@echo "9. Submission checks..."
 	@echo "=============================================================================="
 	@cd $(R_DIR) && R_MAKEVARS_USER=$(PWD)/dev/Makevars.check R CMD check --as-cran $(R_PKG_TARBALL) || true
-	@cd $(R_DIR) && Rscript -e "if (requireNamespace('urlchecker', quietly=TRUE)) urlchecker::url_check()" || true
+	@cd $(R_DIR) && Rscript -e "if (requireNamespace('urlchecker', quietly=TRUE)) urlchecker::url_check(skip = c('https://crates.io'))" || true
 	@cd $(R_DIR) && Rscript -e "if (requireNamespace('BiocCheck', quietly=TRUE)) BiocCheck::BiocCheck('$(R_PKG_TARBALL)')" || true
 	@echo "Package size (Limit: 5MB):"
 	@ls -lh $(R_DIR)/$(R_PKG_TARBALL) || true

@@ -31,7 +31,7 @@ fastlowess_streaming(
 
 \item{chunk_size}{Points per chunk. Default: 5000.}
 
-\item{overlap}{Points overlapping between chunks. NULL = 10% of chunk_size.}
+\item{overlap}{Points overlapping between chunks. NULL = 10 percent of chunk.}
 
 \item{iterations}{Robustness iterations. Default: 3.}
 

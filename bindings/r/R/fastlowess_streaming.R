@@ -10,7 +10,7 @@
 #' @param y Numeric vector of dependent variable values (same length as x).
 #' @param fraction Smoothing fraction. Default: 0.3.
 #' @param chunk_size Points per chunk. Default: 5000.
-#' @param overlap Points overlapping between chunks. NULL = 10% of chunk_size.
+#' @param overlap Points overlapping between chunks. NULL = 10 percent of chunk.
 #' @param iterations Robustness iterations. Default: 3.
 #' @param delta Interpolation threshold. NULL = auto.
 #' @param weight_function Kernel function. Default: "tricube".
