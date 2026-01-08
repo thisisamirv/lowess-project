@@ -339,48 +339,11 @@ result$fraction_used, result$cv_scores
 > [!TIP]
 > **Note:** For a **LOESS** implementation, use [`loess-project`](https://github.com/thisisamirv/loess-project).
 
-## Development
-
-### Workspace Structure
-
-This monorepo uses **Cargo workspace inheritance** for centralized configuration:
-
-```toml
-# Root Cargo.toml
-[workspace.package]
-version = "0.99.3"
-authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
-edition = "2024"
-license = "MIT OR Apache-2.0"
-rust-version = "1.85.0"
-readme = "README.md"
-# ... and more
-
-[workspace.dependencies]
-lowess = { version = "0.99", path = "crates/lowess" }
-fastLowess = { version = "0.99", path = "crates/fastLowess" }
-# ... shared dependencies
-```
-
-All member crates inherit from workspace:
-
-```toml
-# Individual crate Cargo.toml
-[package]
-name = "lowess"
-version = { workspace = true }
-authors = { workspace = true }
-readme = { workspace = true }
-# ...
-```
-
-**Benefits:**
-
-- Single source of truth for versions and metadata
-- Update once → all crates bump together
-- Consistent MSRV across all packages
-
 ---
+
+## Contributing
+
+Contributions are welcome! Please see the [CONTRIBUTING.md](CONTRIBUTING.md) file for more information.
 
 ## License
 
