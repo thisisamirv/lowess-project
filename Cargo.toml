@@ -4,7 +4,7 @@ members = ["crates/lowess", "crates/fastLowess", "bindings/python", "tests"]
 exclude = ["bindings/r/src/vendor"]
 
 [workspace.package]
-version = "0.99.6"
+version = "0.99.7"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
@@ -18,8 +18,8 @@ categories = ["science", "algorithms"]
 
 [workspace.dependencies]
 # Core dependencies
-lowess = { path = "crates/lowess", version = "0.99.6" }
-fastLowess = { path = "crates/fastLowess", version = "0.99.6" }
+lowess = { path = "crates/lowess", version = "0.99.7" }
+fastLowess = { path = "crates/fastLowess", version = "0.99.7" }
 
 # Shared dependencies
 num-traits = { version = "0.2.19", default-features = false }

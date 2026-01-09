@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.99.7
+
+### Changed
+
+**fastlowess (Python):**
+
+- Switch to Stable ABI for CPython
+
+### Fixed
+
+**Monorepo:**
+
+- Fix README file links
+- Fix Makefile bug with R versioning
+
 ## 0.99.6
 
 ### Fixed

@@ -5,7 +5,7 @@ bibentry(
   title   = "rfastlowess: High-Performance LOWESS Smoothing for R",
   author  = person("Amir", "Valizadeh", role = c("aut", "cre")),
   year    = "2025",
-  note    = "R package version 0.99.6",
+  note    = "R package version 0.99.7",
   url     = "https://github.com/thisisamirv/lowess-project"
 )
 

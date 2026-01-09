@@ -13,10 +13,10 @@ The fastest, most robust, and most feature-complete language-agnostic LOWESS (Lo
 >
 > The `lowess-project` contains a complete ecosystem for LOWESS smoothing:
 >
-> - **[`lowess`](https://github.com/thisisamirv/lowess-project/crates/lowess)** - Core single-threaded Rust implementation with `no_std` support
-> - **[`fastLowess`](https://github.com/thisisamirv/lowess-project/crates/fastLowess)** - Parallel CPU and GPU-accelerated Rust wrapper with ndarray integration  
-> - **[`Python bindings`](https://github.com/thisisamirv/lowess-project/bindings/python)** - PyO3-based Python package
-> - **[`R bindings`](https://github.com/thisisamirv/lowess-project/bindings/r)** - extendr-based R package
+> - **[`lowess`](https://github.com/thisisamirv/lowess-project/tree/main/crates/lowess)** - Core single-threaded Rust implementation with `no_std` support
+> - **[`fastLowess`](https://github.com/thisisamirv/lowess-project/tree/main/crates/fastLowess)** - Parallel CPU and GPU-accelerated Rust wrapper with ndarray integration  
+> - **[`Python bindings`](https://github.com/thisisamirv/lowess-project/tree/main/bindings/python)** - PyO3-based Python package
+> - **[`R bindings`](https://github.com/thisisamirv/lowess-project/tree/main/bindings/r)** - extendr-based R package
 
 ## LOESS vs. LOWESS
 

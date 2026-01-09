@@ -26,8 +26,8 @@ PY_TEST_DIR := tests/python
 
 # R bindings
 R_PKG_NAME := rfastlowess
-R_PKG_VERSION := $(shell grep "^Version:" bindings/r/DESCRIPTION | sed 's/Version: //')
-R_PKG_TARBALL := $(R_PKG_NAME)_$(R_PKG_VERSION).tar.gz
+R_PKG_VERSION = $(shell grep "^Version:" bindings/r/DESCRIPTION | sed 's/Version: //')
+R_PKG_TARBALL = $(R_PKG_NAME)_$(R_PKG_VERSION).tar.gz
 R_DIR := bindings/r
 
 # ==============================================================================
