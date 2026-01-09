@@ -204,6 +204,7 @@ jobs:
     environment: pypi
     permissions:
       id-token: write # Required for trusted publishing
+      contents: read # Required for checkout and metadata access
 
     steps:
       - name: Checkout Repository
