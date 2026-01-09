@@ -1,29 +1,8 @@
 //! Boundary padding strategies for local regression.
 //!
-//! ## Purpose
-//!
 //! This module implements boundary padding strategies to reduce smoothing bias at
 //! data edges. By providing context beyond the original boundaries, local
 //! regression can perform better near the start and end of the dataset.
-//!
-//! ## Design notes
-//!
-//! * **Strategy Pattern**: Uses `BoundaryPolicy` enum to select the padding method.
-//! * **Allocation**: Creates new vectors for padded data (necessary for extension).
-//!
-//! ## Key concepts
-//!
-//! * **Boundary Effect**: The tendency for local regression to have higher bias at edges.
-//! * **Padding strategies**: `Extend` (extrapolate x, repeat y), `Reflect` (mirror), `Zero` (pad 0).
-//!
-//! ## Invariants
-//!
-//! * Padding length is limited to half the window size or `n - 1`.
-//! * Original data is preserved in the middle of the padded range.
-//!
-//! ## Non-goals
-//!
-//! * This module does not perform in-place modification of input data.
 
 // Feature-gated imports
 #[cfg(not(feature = "std"))]
@@ -34,35 +13,24 @@ use std::vec::Vec;
 // External dependencies
 use num_traits::Float;
 
-// ============================================================================
-// Boundary Policy
-// ============================================================================
-
-/// Policy for handling boundaries at the start and end of a data stream.
+// Policy for handling boundaries at the start and end of a data stream.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum BoundaryPolicy {
-    /// Linearly extrapolate x-values and replicate y-values to provide context.
+    // Linearly extrapolate x-values and replicate y-values to provide context.
     #[default]
     Extend,
 
-    /// Mirror values across the boundary.
+    // Mirror values across the boundary.
     Reflect,
 
-    /// Use zero padding beyond data boundaries.
+    // Use zero padding beyond data boundaries.
     Zero,
 
-    /// No boundary padding (standard LOWESS behavior).
+    // No boundary padding (standard LOWESS behavior).
     NoBoundary,
 }
 
-// ============================================================================
-// Boundary Padding Function
-// ============================================================================
-
-/// Apply a boundary policy to pad the input data.
-///
-/// Returns augmented x and y vectors with boundary padding applied.
-/// For `NoBoundary`, returns clones of the original data.
+// Apply a boundary policy to pad the input data.
 pub fn apply_boundary_policy<T: Float>(
     x: &[T],
     y: &[T],

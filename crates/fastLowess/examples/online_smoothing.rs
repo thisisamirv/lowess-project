@@ -7,14 +7,6 @@
 //! - Different window sizes and their effects
 //! - Memory-bounded processing for embedded systems
 //! - Sliding window behavior demonstration
-//!
-//! The Online adapter is designed for:
-//! - Real-time data streams
-//! - Memory-constrained environments
-//! - Sensor data processing
-//! - Incremental updates without reprocessing entire dataset
-//!
-//! Each scenario includes the expected output as comments.
 
 #[cfg(feature = "cpu")]
 use fastLowess::prelude::*;

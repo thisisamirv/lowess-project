@@ -1,52 +1,23 @@
 //! Execution engine for LOWESS smoothing operations.
 //!
-//! ## Purpose
-//!
 //! This module provides the core execution engine that orchestrates LOWESS
 //! smoothing operations. It handles the iteration loop, robustness weight
 //! updates, convergence checking, cross-validation, and variance estimation.
 //! The executor is the central component that coordinates all lower-level
 //! algorithms to produce smoothed results.
-//!
-//! ## Design notes
-//!
-//! * Provides both configuration-based and parameter-based entry points.
-//! * Handles cross-validation for automatic fraction selection.
-//! * Supports auto-convergence for adaptive iteration counts.
-//! * Manages working buffers efficiently to minimize allocations.
-//! * Uses delta optimization for performance on dense data.
-//! * Separates concerns: fitting, interpolation, robustness, convergence.
-//! * Generic over `Float` types to support f32 and f64.
-//!
-//! ## Invariants
-//!
-//! * Input x-values are assumed to be monotonically increasing (sorted).
-//! * All working buffers have the same length as input data.
-//! * Robustness weights are always in [0, 1].
-//! * Window size is at least 2 and at most n.
-//! * Iteration count is non-negative.
-//!
-//! ## Non-goals
-//!
-//! * This module does not validate input data (handled by `validator`).
-//! * This module does not sort input data (caller's responsibility).
-//! * This module does not provide public-facing result formatting.
-//! * This module does not handle parallel execution directly (handled by adapters).
 
-// Feature-gated imports
+// External dependencies
 #[cfg(not(feature = "std"))]
 use alloc::vec;
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
+use core::fmt::Debug;
+use core::mem::swap;
+use num_traits::Float;
 #[cfg(feature = "std")]
 use std::vec;
 #[cfg(feature = "std")]
 use std::vec::Vec;
-
-// External dependencies
-use core::fmt::Debug;
-use core::mem::swap;
-use num_traits::Float;
 
 // Internal dependencies
 use crate::algorithms::interpolation::interpolate_gap;
@@ -61,11 +32,7 @@ use crate::primitives::backend::Backend;
 pub use crate::primitives::buffer::LowessBuffer;
 use crate::primitives::window::Window;
 
-// ============================================================================
-// Type Definitions
-// ============================================================================
-
-/// Signature for custom smooth pass function
+// Signature for custom smooth pass function
 #[doc(hidden)]
 pub type SmoothPassFn<T> = fn(
     &[T],           // x
@@ -79,7 +46,7 @@ pub type SmoothPassFn<T> = fn(
     u8,             // zero_weight_flag
 );
 
-/// Signature for custom cross-validation pass function
+// Signature for custom cross-validation pass function
 #[doc(hidden)]
 pub type CVPassFn<T> = fn(
     &[T],             // x
@@ -89,7 +56,7 @@ pub type CVPassFn<T> = fn(
     &LowessConfig<T>, // Config for internal fits
 ) -> (T, Vec<T>); // (best_fraction, scores)
 
-/// Signature for custom interval estimation pass function
+// Signature for custom interval estimation pass function
 #[doc(hidden)]
 pub type IntervalPassFn<T> = fn(
     &[T],               // x
@@ -101,7 +68,7 @@ pub type IntervalPassFn<T> = fn(
     &IntervalMethod<T>, // interval configuration
 ) -> Vec<T>; // standard errors
 
-/// Signature for custom iteration batch pass function (GPU acceleration).
+// Signature for custom iteration batch pass function (GPU acceleration).
 #[doc(hidden)]
 pub type FitPassFn<T> = fn(
     &[T],             // x
@@ -114,99 +81,95 @@ pub type FitPassFn<T> = fn(
     Vec<T>,         // robustness_weights
 );
 
-/// Output from LOWESS execution.
+// Output from LOWESS execution.
 #[derive(Debug, Clone)]
 pub struct ExecutorOutput<T> {
-    /// Smoothed y-values.
+    // Smoothed y-values.
     pub smoothed: Vec<T>,
 
-    /// Standard errors (if SE estimation or intervals were requested).
+    // Standard errors (if SE estimation or intervals were requested).
     pub std_errors: Option<Vec<T>>,
 
-    /// Number of iterations performed (if auto-convergence was active).
+    // Number of iterations performed (if auto-convergence was active).
     pub iterations: Option<usize>,
 
-    /// Smoothing fraction used (selected by CV or configured).
+    // Smoothing fraction used (selected by CV or configured).
     pub used_fraction: T,
 
-    /// RMSE scores for each tested fraction (if CV was performed).
+    // RMSE scores for each tested fraction (if CV was performed).
     pub cv_scores: Option<Vec<T>>,
 
-    /// Final robustness weights from iterative refinement.
+    // Final robustness weights from iterative refinement.
     pub robustness_weights: Vec<T>,
 }
 
-// ============================================================================
-// Configuration
-// ============================================================================
-
-/// Configuration for LOWESS execution.
+// Configuration for LOWESS execution.
 #[derive(Debug, Clone)]
 pub struct LowessConfig<T> {
-    /// Smoothing fraction (0, 1].
-    /// If `None` and `cv_fractions` are provided, bandwidth selection is performed.
+    // Smoothing fraction (0, 1].
+    // If `None` and `cv_fractions` are provided, bandwidth selection is performed.
     pub fraction: Option<T>,
 
-    /// Number of robustness iterations (0 means initial fit only).
+    // Number of robustness iterations (0 means initial fit only).
     pub iterations: usize,
 
-    /// Delta parameter for linear interpolation optimization.
+    // Delta parameter for linear interpolation optimization.
     pub delta: T,
 
-    /// Kernel weight function used for local regression.
+    // Kernel weight function used for local regression.
     pub weight_function: WeightFunction,
 
-    /// Zero-weight fallback policy (via [`ZeroWeightFallback`]).
+    // Zero-weight fallback policy (via [`ZeroWeightFallback`]).
     pub zero_weight_fallback: u8,
 
-    /// Robustness weighting method for outlier downweighting.
+    // Robustness weighting method for outlier downweighting.
     pub robustness_method: RobustnessMethod,
 
-    /// Candidate fractions to evaluate during cross-validation.
+    // Candidate fractions to evaluate during cross-validation.
     pub cv_fractions: Option<Vec<T>>,
 
-    /// Cross-validation strategy (e.g., K-Fold or LOOCV).
+    // Cross-validation strategy (e.g., K-Fold or LOOCV).
     pub cv_kind: Option<CVKind>,
 
-    /// Seed for random number generation in cross-validation.
+    // Seed for random number generation in cross-validation.
     pub cv_seed: Option<u64>,
 
-    /// Convergence tolerance for early stopping of robustness iterations.
+    // Convergence tolerance for early stopping of robustness iterations.
     pub auto_convergence: Option<T>,
 
-    /// Configuration for standard errors and intervals.
+    // Configuration for standard errors and intervals.
     pub return_variance: Option<IntervalMethod<T>>,
 
-    /// Boundary handling policy.
+    // Boundary handling policy.
     pub boundary_policy: BoundaryPolicy,
 
-    /// Scaling method for robust scale estimation.
+    // Scaling method for robust scale estimation.
     pub scaling_method: ScalingMethod,
 
     // ++++++++++++++++++++++++++++++++++++++
     // +               DEV                  +
     // ++++++++++++++++++++++++++++++++++++++
-    /// Custom smooth pass function (enables parallel execution).
+    // Custom smooth pass function (enables parallel execution).
     #[doc(hidden)]
     pub custom_smooth_pass: Option<SmoothPassFn<T>>,
 
-    /// Custom cross-validation pass function.
+    // Custom cross-validation pass function.
     #[doc(hidden)]
     pub custom_cv_pass: Option<CVPassFn<T>>,
 
-    /// Custom interval estimation pass function.
+    // Custom interval estimation pass function.
     #[doc(hidden)]
     pub custom_interval_pass: Option<IntervalPassFn<T>>,
 
-    /// Custom iteration batch pass function for GPU acceleration.
+    // Custom iteration batch pass function for GPU acceleration.
     #[doc(hidden)]
     pub custom_fit_pass: Option<FitPassFn<T>>,
 
-    /// Execution backend hint for extension crates.
+    // Execution backend hint for extension crates.
     #[doc(hidden)]
     pub backend: Option<Backend>,
 
-    /// Whether to use parallel execution
+    // Whether to use parallel execution
     #[doc(hidden)]
     pub parallel: bool,
 }
@@ -237,63 +200,63 @@ impl<T: Float> Default for LowessConfig<T> {
     }
 }
 
-/// Unified executor for LOWESS smoothing operations.
+// Unified executor for LOWESS smoothing operations.
 #[derive(Debug, Clone)]
 pub struct LowessExecutor<T: Float> {
-    /// Smoothing fraction (0, 1].
+    // Smoothing fraction (0, 1].
     pub fraction: T,
 
-    /// Number of robustness iterations.
+    // Number of robustness iterations.
     pub iterations: usize,
 
-    /// Delta for interpolation optimization.
+    // Delta for interpolation optimization.
     pub delta: T,
 
-    /// Kernel weight function.
+    // Kernel weight function.
     pub weight_function: WeightFunction,
 
-    /// Zero weight fallback flag (0=UseLocalMean, 1=ReturnOriginal, 2=ReturnNone).
+    // Zero weight fallback flag (0=UseLocalMean, 1=ReturnOriginal, 2=ReturnNone).
     pub zero_weight_fallback: u8,
 
-    /// Robustness method for iterative refinement.
+    // Robustness method for iterative refinement.
     pub robustness_method: RobustnessMethod,
 
-    /// Boundary handling policy.
+    // Boundary handling policy.
     pub boundary_policy: BoundaryPolicy,
 
-    /// Scaling method for robust scale estimation.
+    // Scaling method for robust scale estimation.
     pub scaling_method: ScalingMethod,
 
-    /// Auto-convergence tolerance.
+    // Auto-convergence tolerance.
     pub auto_convergence: Option<T>,
 
-    /// Interval estimation method.
+    // Interval estimation method.
     pub interval_method: Option<IntervalMethod<T>>,
 
     // ++++++++++++++++++++++++++++++++++++++
     // +               DEV                  +
     // ++++++++++++++++++++++++++++++++++++++
-    /// Custom smooth pass function (e.g., for parallel execution).
+    // Custom smooth pass function (e.g., for parallel execution).
     #[doc(hidden)]
     pub custom_smooth_pass: Option<SmoothPassFn<T>>,
 
-    /// Custom cross-validation pass function.
+    // Custom cross-validation pass function.
     #[doc(hidden)]
     pub custom_cv_pass: Option<CVPassFn<T>>,
 
-    /// Custom interval estimation pass function.
+    // Custom interval estimation pass function.
     #[doc(hidden)]
     pub custom_interval_pass: Option<IntervalPassFn<T>>,
 
-    /// Custom iteration batch pass function for GPU acceleration.
+    // Custom iteration batch pass function for GPU acceleration.
     #[doc(hidden)]
     pub custom_fit_pass: Option<FitPassFn<T>>,
 
-    /// Execution backend hint for extension crates.
+    // Execution backend hint for extension crates.
     #[doc(hidden)]
     pub backend: Option<Backend>,
 
-    /// Whether to use parallel execution
+    // Whether to use parallel execution
     #[doc(hidden)]
     pub parallel: bool,
 }
@@ -305,11 +268,7 @@ impl<T: Float> Default for LowessExecutor<T> {
 }
 
 impl<T: Float> LowessExecutor<T> {
-    // ========================================================================
-    // Constructor and Builder Methods
-    // ========================================================================
-
-    /// Create a new executor with default parameters.
+    // Create a new executor with default parameters.
     pub fn new() -> Self {
         Self {
             fraction: T::from(0.67).unwrap_or_else(|| T::from(0.5).unwrap()),
@@ -331,7 +290,7 @@ impl<T: Float> LowessExecutor<T> {
         }
     }
 
-    /// Create a new executor from a `LowessConfig`.
+    // Create a new executor from a `LowessConfig`.
     pub fn from_config(config: &LowessConfig<T>) -> Self {
         let default_frac = T::from(0.67).unwrap_or_else(|| T::from(0.5).unwrap());
         Self::new()
@@ -356,7 +315,7 @@ impl<T: Float> LowessExecutor<T> {
             .backend(config.backend)
     }
 
-    /// Convert executor settings back to a `LowessConfig`.
+    // Convert executor settings back to a `LowessConfig`.
     #[doc(hidden)]
     pub fn to_config(
         &self,
@@ -390,61 +349,61 @@ impl<T: Float> LowessExecutor<T> {
         }
     }
 
-    /// Set the smoothing fraction (bandwidth).
+    // Set the smoothing fraction (bandwidth).
     pub fn fraction(mut self, frac: T) -> Self {
         self.fraction = frac;
         self
     }
 
-    /// Set the number of robustness iterations.
+    // Set the number of robustness iterations.
     pub fn iterations(mut self, niter: usize) -> Self {
         self.iterations = niter;
         self
     }
 
-    /// Set the delta parameter for interpolation optimization.
+    // Set the delta parameter for interpolation optimization.
     pub fn delta(mut self, delta: T) -> Self {
         self.delta = delta;
         self
     }
 
-    /// Set the kernel weight function.
+    // Set the kernel weight function.
     pub fn weight_function(mut self, wf: WeightFunction) -> Self {
         self.weight_function = wf;
         self
     }
 
-    /// Set the zero weight fallback policy flag.
+    // Set the zero weight fallback policy flag.
     pub fn zero_weight_fallback(mut self, flag: u8) -> Self {
         self.zero_weight_fallback = flag;
         self
     }
 
-    /// Set the robustness method for iterative refinement.
+    // Set the robustness method for iterative refinement.
     pub fn robustness_method(mut self, method: RobustnessMethod) -> Self {
         self.robustness_method = method;
         self
     }
 
-    /// Set the boundary handling policy.
+    // Set the boundary handling policy.
     pub fn boundary_policy(mut self, policy: BoundaryPolicy) -> Self {
         self.boundary_policy = policy;
         self
     }
 
-    /// Set the scaling method for robust scale estimation.
+    // Set the scaling method for robust scale estimation.
     pub fn scaling_method(mut self, method: ScalingMethod) -> Self {
         self.scaling_method = method;
         self
     }
 
-    /// Set the auto-convergence tolerance.
+    // Set the auto-convergence tolerance.
     pub fn auto_convergence(mut self, tolerance: Option<T>) -> Self {
         self.auto_convergence = tolerance;
         self
     }
 
-    /// Set the interval estimation method.
+    // Set the interval estimation method.
     pub fn interval_method(mut self, method: Option<IntervalMethod<T>>) -> Self {
         self.interval_method = method;
         self
@@ -453,53 +412,49 @@ impl<T: Float> LowessExecutor<T> {
     // +               DEV                  +
     // ++++++++++++++++++++++++++++++++++++++
 
-    /// Set a custom smooth pass function (e.g., for parallelization).
+    // Set a custom smooth pass function (e.g., for parallelization).
     #[doc(hidden)]
     pub fn custom_smooth_pass(mut self, smooth_pass_fn: Option<SmoothPassFn<T>>) -> Self {
         self.custom_smooth_pass = smooth_pass_fn;
         self
     }
 
-    /// Set a custom cross-validation pass function.
+    // Set a custom cross-validation pass function.
     #[doc(hidden)]
     pub fn custom_cv_pass(mut self, cv_pass_fn: Option<CVPassFn<T>>) -> Self {
         self.custom_cv_pass = cv_pass_fn;
         self
     }
 
-    /// Set a custom interval estimation pass function.
+    // Set a custom interval estimation pass function.
     #[doc(hidden)]
     pub fn custom_interval_pass(mut self, interval_pass_fn: Option<IntervalPassFn<T>>) -> Self {
         self.custom_interval_pass = interval_pass_fn;
         self
     }
 
-    /// Set whether to use parallel execution.
+    // Set whether to use parallel execution.
     #[doc(hidden)]
     pub fn parallel(mut self, parallel: bool) -> Self {
         self.parallel = parallel;
         self
     }
 
-    /// Set the execution backend hint.
+    // Set the execution backend hint.
     #[doc(hidden)]
     pub fn backend(mut self, backend: Option<Backend>) -> Self {
         self.backend = backend;
         self
     }
 
-    /// Set a custom iteration batch pass function (e.g., for GPU acceleration).
+    // Set a custom iteration batch pass function (e.g., for GPU acceleration).
     #[doc(hidden)]
     pub fn custom_fit_pass(mut self, fit_pass_fn: Option<FitPassFn<T>>) -> Self {
         self.custom_fit_pass = fit_pass_fn;
         self
     }
 
-    // ========================================================================
-    // Main Entry Points
-    // ========================================================================
-
-    /// Smooth data using a `LowessConfig` payload.
+    // Smooth data using a `LowessConfig` payload.
     pub fn run_with_config(x: &[T], y: &[T], config: LowessConfig<T>) -> ExecutorOutput<T>
     where
         T: Float + WLSSolver + Debug + Send + Sync + 'static,
@@ -575,12 +530,7 @@ impl<T: Float> LowessExecutor<T> {
         }
     }
 
-    /// Execute smoothing with explicit overrides for specific parameters.
-    ///
-    /// # Special Cases
-    ///
-    /// * **Insufficient data** (n < 2): Returns original y-values.
-    /// * **Global regression** (fraction >= 1.0): Performs OLS on the entire dataset.
+    // Execute smoothing with explicit overrides for specific parameters.
     pub fn run(&self, x: &[T], y: &[T], buffer: Option<&mut LowessBuffer<T>>) -> ExecutorOutput<T>
     where
         T: Float + WLSSolver + Debug + Send + Sync + 'static,
@@ -668,7 +618,7 @@ impl<T: Float> LowessExecutor<T> {
         }
     }
 
-    /// Perform the full LOWESS iteration loop.
+    // Perform the full LOWESS iteration loop.
     #[allow(clippy::too_many_arguments)]
     pub fn iteration_loop_with_callback(
         &self,
@@ -791,11 +741,7 @@ impl<T: Float> LowessExecutor<T> {
         )
     }
 
-    // ========================================================================
-    // Main Algorithmic Logic
-    // ========================================================================
-
-    /// Perform a single smoothing pass over all points.
+    // Perform a single smoothing pass over all points.
     #[allow(clippy::too_many_arguments)]
     pub fn smooth_pass(
         x: &[T],
@@ -841,7 +787,7 @@ impl<T: Float> LowessExecutor<T> {
         );
     }
 
-    /// Compute standard errors for smoothed values.
+    // Compute standard errors for smoothed values.
     #[allow(clippy::too_many_arguments)]
     pub fn compute_std_errors(
         x: &[T],
@@ -882,11 +828,7 @@ impl<T: Float> LowessExecutor<T> {
         std_errors
     }
 
-    // ========================================================================
-    // Helpers
-    // ========================================================================
-
-    /// Check convergence between current and previous smoothed values.
+    // Check convergence between current and previous smoothed values.
     pub fn check_convergence(y_smooth: &[T], y_prev: &[T], tolerance: T) -> bool {
         let max_change = y_smooth
             .iter()
@@ -898,7 +840,7 @@ impl<T: Float> LowessExecutor<T> {
         max_change <= tolerance
     }
 
-    /// Update robustness weights based on residuals.
+    // Update robustness weights based on residuals.
     pub fn update_robustness_weights(
         y: &[T],
         y_smooth: &[T],
@@ -920,7 +862,7 @@ impl<T: Float> LowessExecutor<T> {
         );
     }
 
-    /// Helper to slice result buffers back to original data length when padding was used.
+    // Helper to slice result buffers back to original data length when padding was used.
     fn slice_results(
         n: usize,
         pad_len: usize,
@@ -940,11 +882,7 @@ impl<T: Float> LowessExecutor<T> {
         robustness_weights.truncate(n);
     }
 
-    // ========================================================================
-    // Specialized Fitting Functions
-    // ========================================================================
-
-    /// Fit the first point and initialize the smoothing window.
+    // Fit the first point and initialize the smoothing window.
     #[allow(clippy::too_many_arguments)]
     pub fn fit_single_point(
         x: &[T],
@@ -979,7 +917,7 @@ impl<T: Float> LowessExecutor<T> {
         (ctx.fit().unwrap_or_else(|| y[idx]), window)
     }
 
-    /// Fit the first point and initialize the smoothing window.
+    // Fit the first point and initialize the smoothing window.
     #[allow(clippy::too_many_arguments)]
     pub fn fit_first_point(
         x: &[T],
@@ -1010,11 +948,8 @@ impl<T: Float> LowessExecutor<T> {
         window
     }
 
-    /// Main fitting loop: iterate through remaining points with delta-skipping
-    /// and linear interpolation.
-    /// Uses binary search (partition_point) instead of linear scan to find
-    /// the next anchor point. This reduces the overhead from O(n) to O(log n)
-    /// per anchor, providing significant speedup when delta is large.
+    // Main fitting loop: iterate through remaining points with delta-skipping
+    // and linear interpolation.
     #[allow(clippy::too_many_arguments)]
     fn fit_and_interpolate_remaining(
         x: &[T],
@@ -1038,7 +973,6 @@ impl<T: Float> LowessExecutor<T> {
             let cutpoint = x[last_fitted] + delta;
 
             // Binary search to find the first index where x > cutpoint
-            // This is O(log n) instead of O(n) linear scan
             let next_idx =
                 x[last_fitted + 1..].partition_point(|&xi| xi <= cutpoint) + last_fitted + 1;
 

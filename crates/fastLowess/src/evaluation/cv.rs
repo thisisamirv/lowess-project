@@ -1,38 +1,13 @@
 //! Parallel cross-validation for LOWESS bandwidth selection.
 //!
-//! ## Purpose
-//!
 //! This module provides the parallel cross-validation logic for selecting the
 //! optimal smoothing fraction. It utilizes all available CPU cores to evaluate
 //! multiple candidate fractions concurrently.
-//!
-//! ## Design notes
-//!
-//! * **Parallelism**: Uses `rayon` to evaluate candidate fractions in parallel.
-//! * **Integration**: Plugs into the iteration loop via the `CVPassFn` hook.
-//! * **Generics**: Generic over `Float` types.
-//!
-//! ## Key concepts
-//!
-//! * **Parallel Evaluation**: Evaluates each fraction candidate on a separate thread.
-//! * **RMSE Optimization**: Identifies the fraction that minimizes prediction error.
-//!
-//! ## Invariants
-//!
-//! * Best fraction minimizes RMSE across all evaluated candidates.
-//! * Parallel execution maintains data isolation between threads.
-//!
-//! ## Non-goals
-//!
-//! * This module does not implement the CV partitioning logic (delegated to `lowess`).
-//! * This module does not perform the actual smoothing fits directly.
-
-// Feature-gated imports
-#[cfg(feature = "cpu")]
-use rayon::prelude::*;
 
 // External dependencies
 use num_traits::Float;
+#[cfg(feature = "cpu")]
+use rayon::prelude::*;
 use std::cmp::Ordering::Equal;
 use std::fmt::Debug;
 
@@ -42,7 +17,7 @@ use lowess::internals::engine::executor::{LowessBuffer, LowessConfig, LowessExec
 use lowess::internals::evaluation::cv::CVKind;
 use lowess::internals::primitives::buffer::CVBuffer;
 
-/// Perform cross-validation to select the best fraction in parallel.
+// Perform cross-validation to select the best fraction in parallel.
 #[cfg(feature = "cpu")]
 pub fn cv_pass_parallel<T>(
     x: &[T],

@@ -1,182 +1,119 @@
 //! Kernel (weight) functions for LOWESS smoothing.
 //!
-//! ## Purpose
-//!
 //! This module provides kernel functions that define distances-based weights for
 //! local regression. It controls the influence of neighboring points on the fit.
-//!
-//! ## Design notes
-//!
-//! * **Normalization**: Maps distances u = |x - x_i| / bandwidth to weights.
-//! * **Efficiency**: Uses precomputed properties (variance, roughness) for performance.
-//! * **Support**: Most kernels are bounded on [-1, 1] for efficiency.
-//!
-//! ## Key concepts
-//!
-//! * **Tricube**: The default kernel (Cleveland's original), smooth and efficient.
-//! * **Bias-Variance properties**: Each kernel has associated moments (mu_2) and roughness (R).
-//!
-//! ## Invariants
-//!
-//! * Kernels are non-negative (K(u) >= 0) and symmetric (K(u) = K(-u)).
-//! * Bounded kernels return exactly zero outside their support.
-//!
-//! ## Non-goals
-//!
-//! * This module does not perform weight normalization.
-//! * This module does not handle bandwidth selection logic.
 
 // External dependencies
 use core::f64::consts::{PI, SQRT_2};
 use num_traits::Float;
 
-// ============================================================================
-// Mathematical Constants
-// ============================================================================
-
-/// Square root of 2*pi, used in Gaussian kernel calculations.
+// Square root of 2*pi, used in Gaussian kernel calculations.
 const SQRT_2PI: f64 = 2.5066282746310005024157652848110452530069867406099_f64;
 
-/// Square root of pi, used in kernel property calculations.
+// Square root of pi, used in kernel property calculations.
 const SQRT_PI: f64 = 1.772453850905516027298167483341145182797_f64;
 
-/// pi/2, used in cosine kernel calculations.
+// pi/2, used in cosine kernel calculations.
 const PI_OVER_2: f64 = PI / 2.0;
 
-/// Cutoff for Gaussian kernel evaluation.
-///
-/// Beyond this normalized distance, the Gaussian kernel value is effectively
-/// zero (exp(-6^2/2) approx 6.9e-9). This prevents numerical underflow and improves
-/// performance.
+// Cutoff for Gaussian kernel evaluation.
+//
+// Beyond this normalized distance, the Gaussian kernel value is effectively
+// zero (exp(-6^2/2) approx 6.9e-9). This prevents numerical underflow and improves
+// performance.
 const GAUSSIAN_CUTOFF: f64 = 6.0;
 
-// ============================================================================
-// Kernel Properties
-// ============================================================================
-
-/// # Mathematical Properties
-///
-/// | Kernel       | Formula                     | Efficiency† | R(K)                    | mu_2(K)               |
-/// |--------------|-----------------------------|-------------|-------------------------|-----------------------|
-/// | Cosine       | cos(pi*u/2)                 | 0.9995      | pi^2 / 16               | 1 - 8/pi^2            |
-/// | Epanechnikov | 1 - u^2                     | 1.0000      | 3/5                     | 1/5                   |
-/// | Gaussian     | exp(-u^2 / 2)               | 0.9607      | 1 / (2 * sqrt(pi))      | 1                     |
-/// | Biweight     | (1 - u^2)^2                 | 0.9951      | 5/7                     | 1/7                   |
-/// | Triangular   | 1 - |u|                     | 0.9887      | 2/3                     | 1/6                   |
-/// | Tricube      | (1 - |u|^3)^3               | 0.9983      | 1225/1729               | 35/243                |
-/// | Uniform      | 1                           | 0.9432      | 1/2                     | 1/3                   |
-///
-/// † Relative AMISE efficiency (Epanechnikov = 1.0) from Wand & Jones (1995)
-///
-/// **Note**: The mu_2(K) column lists the unnormalized second moment.
-/// Use the `integrator()` method to obtain the normalized moment when needed.
-///
-/// Mathematical properties of a kernel function.
-///
-/// These properties are used for bias-variance analysis and efficiency
-/// calculations.
+// Mathematical Properties
 struct KernelProperties {
-    /// Kernel integral: c_K = integral K(u) du.
+    // Kernel integral: c_K = integral K(u) du.
     integrator: f64,
 
-    /// Unnormalized second moment: mu_2(K) = integral u^2 K(u) du.
+    // Unnormalized second moment: mu_2(K) = integral u^2 K(u) du.
     variance: f64,
 
-    /// Kernel roughness: R(K) = integral K(u)^2 du.
+    // Kernel roughness: R(K) = integral K(u)^2 du.
     roughness: f64,
 }
 
-/// Precomputed properties for the Cosine kernel.
+// Precomputed properties for the Cosine kernel.
 const COSINE_PROPERTIES: KernelProperties = KernelProperties {
     integrator: 4.0 / PI,
     variance: 4.0 / PI - 32.0 / (PI * PI * PI),
     roughness: 1.0,
 };
 
-/// Precomputed properties for the Epanechnikov kernel.
+// Precomputed properties for the Epanechnikov kernel.
 const EPANECHNIKOV_PROPERTIES: KernelProperties = KernelProperties {
     integrator: 4.0 / 3.0,
     variance: 4.0 / 15.0,
     roughness: 16.0 / 15.0,
 };
 
-/// Precomputed properties for the Gaussian kernel.
+// Precomputed properties for the Gaussian kernel.
 const GAUSSIAN_PROPERTIES: KernelProperties = KernelProperties {
     integrator: SQRT_2PI,
     variance: SQRT_2 * SQRT_PI,
     roughness: SQRT_PI,
 };
 
-/// Precomputed properties for the Biweight kernel.
+// Precomputed properties for the Biweight kernel.
 const BIWEIGHT_PROPERTIES: KernelProperties = KernelProperties {
     integrator: 16.0 / 15.0,
     variance: 16.0 / 105.0,
     roughness: 256.0 / 315.0,
 };
 
-/// Precomputed properties for the Triangular kernel.
+// Precomputed properties for the Triangular kernel.
 const TRIANGULAR_PROPERTIES: KernelProperties = KernelProperties {
     integrator: 1.0,
     variance: 1.0 / 6.0,
     roughness: 2.0 / 3.0,
 };
 
-/// Precomputed properties for the Tricube kernel.
+// Precomputed properties for the Tricube kernel.
 const TRICUBE_PROPERTIES: KernelProperties = KernelProperties {
     integrator: 81.0 / 70.0,
     variance: 1.0 / 6.0,
     roughness: 6_561.0 / 6_916.0,
 };
 
-/// Precomputed properties for the Uniform kernel.
+// Precomputed properties for the Uniform kernel.
 const UNIFORM_PROPERTIES: KernelProperties = KernelProperties {
     integrator: 2.0,
     variance: 2.0 / 3.0,
     roughness: 2.0,
 };
 
-// ============================================================================
-// Weight Function Enum
-// ============================================================================
-
-/// Weight function (kernel) for LOWESS smoothing.
-///
-/// Each kernel defines a function K: ℝ → [0, ∞) that maps normalized
-/// distances to weights. Bounded kernels have support on [-1, 1], while
-/// the Gaussian kernel has unbounded support.
+// Weight function (kernel) for LOWESS smoothing.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum WeightFunction {
-    /// Cosine kernel: K(u) = cos(pi * u / 2) for |u| < 1.
+    // Cosine kernel: K(u) = cos(pi * u / 2) for |u| < 1.
     Cosine,
 
-    /// Epanechnikov kernel: K(u) = (1 - u^2) for |u| < 1.
+    // Epanechnikov kernel: K(u) = (1 - u^2) for |u| < 1.
     Epanechnikov,
 
-    /// Gaussian kernel: K(u) = exp(-u^2 / 2).
+    // Gaussian kernel: K(u) = exp(-u^2 / 2).
     Gaussian,
 
-    /// Biweight (quartic) kernel: K(u) = (1 - u^2)^2 for |u| < 1.
+    // Biweight (quartic) kernel: K(u) = (1 - u^2)^2 for |u| < 1.
     Biweight,
 
-    /// Triangular (linear) kernel: K(u) = (1 - |u|) for |u| < 1.
+    // Triangular (linear) kernel: K(u) = (1 - |u|) for |u| < 1.
     Triangle,
 
-    /// Tricube kernel: K(u) = (1 - |u|^3)^3 for |u| < 1.
-    ///
-    /// This is the default and recommended kernel choice.
+    // Tricube kernel: K(u) = (1 - |u|^3)^3 for |u| < 1.
+    //
+    // This is the default and recommended kernel choice.
     #[default]
     Tricube,
 
-    /// Uniform (rectangular) kernel: K(u) = 1 for |u| < 1.
+    // Uniform (rectangular) kernel: K(u) = 1 for |u| < 1.
     Uniform,
 }
 
 impl WeightFunction {
-    // ========================================================================
-    // Metadata Methods
-    // ========================================================================
-
-    /// Get the name of the weight function.
+    // Get the name of the weight function.
     #[inline]
     pub const fn name(&self) -> &'static str {
         match self {
@@ -190,7 +127,7 @@ impl WeightFunction {
         }
     }
 
-    /// Get the kernel properties.
+    // Get the kernel properties.
     const fn properties(&self) -> &'static KernelProperties {
         match self {
             WeightFunction::Cosine => &COSINE_PROPERTIES,
@@ -203,42 +140,38 @@ impl WeightFunction {
         }
     }
 
-    // ========================================================================
-    // Kernel Property Accessors
-    // ========================================================================
-
-    /// Get the unnormalized variance (second moment) of the kernel.
+    // Get the unnormalized variance (second moment) of the kernel.
     #[inline]
     pub fn variance(&self) -> f64 {
         self.properties().variance
     }
 
-    /// Get the roughness of the kernel.
+    // Get the roughness of the kernel.
     #[inline]
     pub fn roughness(&self) -> f64 {
         self.properties().roughness
     }
 
-    /// Get the kernel integrator.
+    // Get the kernel integrator.
     #[inline]
     pub fn integrator(&self) -> f64 {
         self.properties().integrator
     }
 
-    /// AMISE relative efficiency (Epanechnikov = 1.0).
-    ///
-    /// This measures how efficient the kernel is for density estimation
-    /// in terms of asymptotic mean integrated squared error (AMISE).
-    /// Higher values are better.
-    ///
-    /// # Formula
-    ///
-    /// Calculated as:
-    /// ```text
-    /// (R(K_E)/R(K))^(4/5) * (mu_2(K_E)/mu_2(K))^(2/5) * (c(K)/c(K_E))^2
-    /// ```
-    ///
-    /// where K_E is the Epanechnikov kernel (the AMISE-optimal kernel).
+    // AMISE relative efficiency (Epanechnikov = 1.0).
+    //
+    // This measures how efficient the kernel is for density estimation
+    // in terms of asymptotic mean integrated squared error (AMISE).
+    // Higher values are better.
+    //
+    // # Formula
+    //
+    // Calculated as:
+    // ```text
+    // (R(K_E)/R(K))^(4/5) * (mu_2(K_E)/mu_2(K))^(2/5) * (c(K)/c(K_E))^2
+    // ```
+    //
+    // where K_E is the Epanechnikov kernel (the AMISE-optimal kernel).
     #[inline]
     pub fn efficiency(&self) -> f64 {
         let stats = self.properties();
@@ -251,11 +184,7 @@ impl WeightFunction {
         r_ratio.powf(4.0 / 5.0) * v_ratio.powf(2.0 / 5.0) * c_ratio.powf(2.0)
     }
 
-    // ========================================================================
-    // Support Methods
-    // ========================================================================
-
-    /// Returns the support interval for bounded kernels.
+    // Returns the support interval for bounded kernels.
     #[inline]
     pub fn support(&self) -> Option<(f64, f64)> {
         match self {
@@ -264,17 +193,13 @@ impl WeightFunction {
         }
     }
 
-    /// Returns `true` if the kernel has bounded support.
+    // Returns `true` if the kernel has bounded support.
     #[inline]
     fn is_bounded(&self) -> bool {
         self.support().is_some()
     }
 
-    // ========================================================================
-    // Weight Computation
-    // ========================================================================
-
-    /// Compute the unnormalized weight K(u) for a given normalized distance.
+    // Compute the unnormalized weight K(u) for a given normalized distance.
     #[inline]
     pub fn compute_weight<T: Float>(&self, u: T) -> T {
         let abs_u = u.abs();
@@ -321,7 +246,7 @@ impl WeightFunction {
         }
     }
 
-    /// Apply the kernel weighting to a window of points.
+    // Apply the kernel weighting to a window of points.
     #[allow(clippy::too_many_arguments)]
     pub fn compute_window_weights<T: Float>(
         &self,

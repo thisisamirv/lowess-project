@@ -1,119 +1,81 @@
 //! Output types and result structures for LOWESS operations.
 //!
-//! ## Purpose
-//!
 //! This module defines the `LowessResult` struct which encapsulates all
 //! outputs from a LOWESS smoothing operation, including smoothed values,
 //! diagnostics, and confidence/prediction intervals.
-//!
-//! ## Design notes
-//!
-//! * **Memory Efficiency**: All optional outputs use `Option<Vec<T>>`.
-//! * **Generics**: Results are generic over `Float` types.
-//! * **Ergonomics**: Implements `Display` for human-readable output.
-//! * **Consistency**: Sorted x-values are stored to maintain correspondence.
-//!
-//! ## Key concepts
-//!
-//! * **Optional Outputs**: Results are only populated when specific features are enabled.
-//! * **Intervals**: Confidence (mean curve) and Prediction (new observations).
-//! * **Metadata**: Tracks iterations, fraction used, and CV scores.
-//!
-//! ## Invariants
-//!
-//! * All populated vectors have the same length as the input data.
-//! * x-values are sorted in monotonically increasing order.
-//! * Lower bounds are always less than or equal to upper bounds for all intervals.
-//! * Robustness weights are always in the range [0, 1].
-//!
-//! ## Non-goals
-//!
-//! * This module does not perform calculations; it only stores results.
-//! * This module does not validate result consistency (responsibility of the engine).
-//! * This module does not provide serialization/deserialization logic.
-
-// Feature-gated imports
-#[cfg(not(feature = "std"))]
-use alloc::vec::Vec;
-#[cfg(feature = "std")]
-use std::vec::Vec;
 
 // External dependencies
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
 use core::cmp::Ordering;
 use core::fmt::{Debug, Display, Formatter, Result};
 use num_traits::Float;
+#[cfg(feature = "std")]
+use std::vec::Vec;
 
 // Internal dependencies
 use crate::evaluation::diagnostics::Diagnostics;
 
-// ============================================================================
-// Result Structure
-// ============================================================================
-
-/// Comprehensive LOWESS output containing smoothed values and diagnostics.
+// Comprehensive LOWESS output containing smoothed values and diagnostics.
 #[derive(Debug, Clone, PartialEq)]
 pub struct LowessResult<T> {
-    /// Sorted x-values (independent variable).
+    // Sorted x-values (independent variable).
     pub x: Vec<T>,
 
-    /// Smoothed y-values (dependent variable).
+    // Smoothed y-values (dependent variable).
     pub y: Vec<T>,
 
-    /// Standard errors of the fit at each point.
+    // Standard errors of the fit at each point.
     pub standard_errors: Option<Vec<T>>,
 
-    /// Lower bounds of the confidence intervals for the mean response.
+    // Lower bounds of the confidence intervals for the mean response.
     pub confidence_lower: Option<Vec<T>>,
 
-    /// Upper bounds of the confidence intervals for the mean response.
+    // Upper bounds of the confidence intervals for the mean response.
     pub confidence_upper: Option<Vec<T>>,
 
-    /// Lower bounds of the prediction intervals for new observations.
+    // Lower bounds of the prediction intervals for new observations.
     pub prediction_lower: Option<Vec<T>>,
 
-    /// Upper bounds of the prediction intervals for new observations.
+    // Upper bounds of the prediction intervals for new observations.
     pub prediction_upper: Option<Vec<T>>,
 
-    /// Residuals from the fit (y_i - y_hat_i).
+    // Residuals from the fit (y_i - y_hat_i).
     pub residuals: Option<Vec<T>>,
 
-    /// Final robustness weights from the iterative refinement process.
+    // Final robustness weights from the iterative refinement process.
     pub robustness_weights: Option<Vec<T>>,
 
-    /// Comprehensive diagnostic metrics (RMSE, R^2, AIC, etc.).
+    // Comprehensive diagnostic metrics (RMSE, R^2, AIC, etc.).
     pub diagnostics: Option<Diagnostics<T>>,
 
-    /// Number of robustness iterations actually performed.
+    // Number of robustness iterations actually performed.
     pub iterations_used: Option<usize>,
 
-    /// Smoothing fraction used for the fit (optimal if selected by CV).
+    // Smoothing fraction used for the fit (optimal if selected by CV).
     pub fraction_used: T,
 
-    /// RMSE scores for each tested fraction during cross-validation.
+    // RMSE scores for each tested fraction during cross-validation.
     pub cv_scores: Option<Vec<T>>,
 }
 
 impl<T: Float> LowessResult<T> {
-    // ========================================================================
-    // Query Methods
-    // ========================================================================
-
-    /// Check if confidence intervals were computed.
+    // Check if confidence intervals were computed.
     pub fn has_confidence_intervals(&self) -> bool {
         self.confidence_lower.is_some() && self.confidence_upper.is_some()
     }
 
-    /// Check if prediction intervals were computed.
+    // Check if prediction intervals were computed.
     pub fn has_prediction_intervals(&self) -> bool {
         self.prediction_lower.is_some() && self.prediction_upper.is_some()
     }
 
-    /// Check if cross-validation was performed.
+    // Check if cross-validation was performed.
     pub fn has_cv_scores(&self) -> bool {
         self.cv_scores.is_some()
     }
 
-    /// Get the best (minimum) CV score.
+    // Get the best (minimum) CV score.
     pub fn best_cv_score(&self) -> Option<T> {
         self.cv_scores.as_ref().and_then(|scores| {
             scores
@@ -123,10 +85,6 @@ impl<T: Float> LowessResult<T> {
         })
     }
 }
-
-// ============================================================================
-// Display Implementation
-// ============================================================================
 
 impl<T: Float + Display + Debug> Display for LowessResult<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {

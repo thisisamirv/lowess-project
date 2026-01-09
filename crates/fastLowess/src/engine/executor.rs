@@ -1,57 +1,21 @@
 //! Parallel execution engine for LOWESS smoothing operations.
 //!
-//! ## Purpose
-//!
 //! This module provides the parallel smoothing function that is injected into
 //! the `lowess` crate's execution engine. It enables multi-threaded execution
 //! of the local regression fits, significantly speeding up LOWESS smoothing
 //! for large datasets by utilizing all available CPU cores.
-//!
-//! ## Design notes
-//!
-//! * **Implementation**: Provides a drop-in replacement for the sequential smoothing pass.
-//! * **Parallelism**: Uses `rayon` for data-parallel execution across CPU cores.
-//! * **Optimization**: Reuses weight buffers per thread to minimize allocations.
-//! * **Interpolation**: Supports delta optimization for sparse fitting.
-//! * **Generics**: Generic over `Float` types.
-//!
-//! ## Key concepts
-//!
-//! * **Parallel Fitting**: Distributes points across CPU cores independently.
-//! * **Delta Optimization**: Fits only "anchor" points and interpolates between them.
-//! * **Buffer Reuse**: Thread-local scratch buffers to avoid allocation overhead.
-//! * **Integration**: Plugs into the `lowess` executor via the `SmoothPassFn` hook.
-//!
-//! ## Invariants
-//!
-//! * Input x-values are assumed to be monotonically increasing (sorted).
-//! * All buffers have the same length as the input data.
-//! * Robustness weights are expected to be in [0, 1].
-//! * Window size is at least 1 and at most n.
-//!
-//! ## Non-goals
-//!
-//! * This module does not handle the iteration loop (handled by `lowess::executor`).
-//! * This module does not validate input data (handled by `validator`).
-//! * This module does not sort input data (caller's responsibility).
-
-// Feature-gated imports
-#[cfg(feature = "cpu")]
-use rayon::prelude::*;
 
 // External dependencies
 use num_traits::Float;
+#[cfg(feature = "cpu")]
+use rayon::prelude::*;
 
 // Export dependencies from lowess crate
 use lowess::internals::algorithms::regression::{RegressionContext, WLSSolver, ZeroWeightFallback};
 use lowess::internals::math::kernel::WeightFunction;
 use lowess::internals::primitives::window::Window;
 
-// ============================================================================
-// Parallel Smoothing Function
-// ============================================================================
-
-/// Perform a single smoothing pass over all points in parallel.
+// Perform a single smoothing pass over all points in parallel.
 #[allow(clippy::too_many_arguments)]
 #[cfg(feature = "cpu")]
 pub fn smooth_pass_parallel<T>(
@@ -215,8 +179,8 @@ pub fn smooth_pass_parallel<T>(
     }
 }
 
-/// Compute anchor points for delta optimization using O(log n) binary search.
-/// For large datasets (n > 100K), uses parallel chunking with sequential merge.
+// Compute anchor points for delta optimization using O(log n) binary search.
+// For large datasets (n > 100K), uses parallel chunking with sequential merge.
 #[cfg(feature = "cpu")]
 fn compute_anchor_points<T: Float + Send + Sync>(x: &[T], delta: T) -> Vec<usize> {
     let n = x.len();
@@ -273,7 +237,7 @@ fn compute_anchor_points<T: Float + Send + Sync>(x: &[T], delta: T) -> Vec<usize
     anchors
 }
 
-/// Sequential anchor computation for small datasets or chunk ranges.
+// Sequential anchor computation for small datasets or chunk ranges.
 #[cfg(feature = "cpu")]
 fn compute_anchor_points_sequential<T: Float>(x: &[T], delta: T) -> Vec<usize> {
     let n = x.len();
@@ -322,7 +286,7 @@ fn compute_anchor_points_sequential<T: Float>(x: &[T], delta: T) -> Vec<usize> {
     anchors
 }
 
-/// Compute anchors within a specific range [start, end).
+// Compute anchors within a specific range [start, end).
 #[cfg(feature = "cpu")]
 fn compute_anchor_points_in_range<T: Float>(
     x: &[T],
@@ -375,7 +339,7 @@ fn compute_anchor_points_in_range<T: Float>(
     anchors
 }
 
-/// Linearly interpolate between two fitted anchor points.
+// Linearly interpolate between two fitted anchor points.
 #[cfg(feature = "cpu")]
 fn interpolate_gap<T: Float>(x: &[T], y_smooth: &mut [T], start: usize, end: usize) {
     if end <= start + 1 {
@@ -400,8 +364,8 @@ fn interpolate_gap<T: Float>(x: &[T], y_smooth: &mut [T], start: usize, end: usi
     }
 }
 
-/// Fit all points in parallel (no delta optimization).
-/// Uses cache-aware tile processing for large datasets.
+// Fit all points in parallel (no delta optimization).
+// Uses cache-aware tile processing for large datasets.
 #[allow(clippy::too_many_arguments)]
 #[cfg(feature = "cpu")]
 fn fit_all_points_parallel<T>(
@@ -454,7 +418,7 @@ fn fit_all_points_parallel<T>(
     }
 }
 
-/// Standard parallel fit (original implementation).
+// Standard parallel fit (original implementation).
 #[allow(clippy::too_many_arguments)]
 #[cfg(feature = "cpu")]
 fn fit_all_points_standard<T>(
@@ -503,7 +467,7 @@ fn fit_all_points_standard<T>(
         );
 }
 
-/// Tile-based parallel fit for better cache locality on large datasets.
+// Tile-based parallel fit for better cache locality on large datasets.
 #[allow(clippy::too_many_arguments)]
 #[cfg(feature = "cpu")]
 fn fit_all_points_tiled<T>(

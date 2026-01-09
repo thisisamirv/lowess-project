@@ -1,25 +1,13 @@
 //! GPU-accelerated execution engine for LOWESS smoothing.
 //!
-//! ## Purpose
-//!
 //! This module provides the GPU-accelerated smoothing function for LOWESS
 //! operations. It leverages `wgpu` to execute local regression fits in parallel
 //! on the GPU, providing maximum throughput for large-scale data processing.
-//!
-//! ## Optimizations
-//!
-//! * **Delta Interpolation**: Uses "anchors" (subset of points) for fitting,
-//!   then interpolates remaining points. This reduces complexity from O(N^2)
-//!   to O(Anchors * Width + N).
-//!
 
+// External dependencies
 use bytemuck::{Pod, Zeroable};
 use num_traits::Float;
 use std::fmt::Debug;
-
-// Export dependencies from lowess crate
-use lowess::internals::engine::executor::LowessConfig;
-
 use wgpu::{
     BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayoutDescriptor,
     BindGroupLayoutEntry, BindingType, Buffer, BufferBindingType, BufferDescriptor, BufferUsages,
@@ -28,9 +16,10 @@ use wgpu::{
     RequestAdapterOptions, ShaderModuleDescriptor, ShaderSource, ShaderStages,
 };
 
-// -----------------------------------------------------------------------------
+// Export dependencies from lowess crate
+use lowess::internals::engine::executor::LowessConfig;
+
 // Shader Source (WGSL)
-// -----------------------------------------------------------------------------
 const SHADER_SOURCE: &str = r#"
 struct Config {
     n: u32,
@@ -397,9 +386,6 @@ impl GpuExecutor {
             .request_adapter(&RequestAdapterOptions::default())
             .await;
 
-        // Handle Option or Result depending on wgpu version?
-        // Error message said: `Result<Adapter, RequestAdapterError>`
-        // So we just use `?` or map_err.
         let adapter = adapter.map_err(|_| "No GPU adapter found")?;
 
         let (device, queue): (Device, Queue) = adapter
@@ -937,7 +923,7 @@ impl GpuExecutor {
     }
 }
 
-/// Perform a GPU-accelerated LOWESS fit pass.
+// Perform a GPU-accelerated LOWESS fit pass.
 pub fn fit_pass_gpu<T>(
     x: &[T],
     y: &[T],

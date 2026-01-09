@@ -1,43 +1,26 @@
 //! Robust scale estimation using MAR or MAD.
 //!
-//! ## Purpose
-//!
 //! This module provides robust scale estimation methods, which are resistant
 //! to outliers.
-//!
-//! ## Design notes
-//!
-//! * **Algorithm**: Uses Quickselect for O(n) median finding.
-//! * **Memory**: Reuses allocated buffers to minimize memory allocations.
-//! * **Methods**:
-//!     - MAR: Median Absolute Residual: `median(|r|)`
-//!     - MAD: Median Absolute Deviation: `median(|r - median(r)|)`
-//!
-//! ## Invariants
-//!
-//! * Scale >= 0 for any input.
-//! * Handles even and odd population sizes correctly.
 
 // External dependencies
 use core::cmp::Ordering::Equal;
 use num_traits::Float;
 
-/// Method for measuring the scale of residuals.
+// Method for measuring the scale of residuals.
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub enum ScalingMethod {
-    /// Median Absolute Residual: `median(|r|)`.
+    // Median Absolute Residual: `median(|r|)`.
     MAR,
 
-    /// Median Absolute Deviation: `median(|r - median(r)|)`.
+    // Median Absolute Deviation: `median(|r - median(r)|)`.
     #[default]
     MAD,
 }
 
 impl ScalingMethod {
-    /// Compute the scale of the given values using the selected method.
-    ///
-    /// The input slice is modified in-place to avoid allocations.
+    // Compute the scale of the given values using the selected method.
     pub fn compute<T: Float>(&self, vals: &mut [T]) -> T {
         match self {
             Self::MAR => self.compute_mar(vals),
@@ -45,7 +28,7 @@ impl ScalingMethod {
         }
     }
 
-    /// Compute the Median Absolute Deviation (MAD).
+    // Compute the Median Absolute Deviation (MAD).
     #[inline]
     fn compute_mad<T: Float>(&self, vals: &mut [T]) -> T {
         if vals.is_empty() {
@@ -64,7 +47,7 @@ impl ScalingMethod {
         Self::median_inplace(vals)
     }
 
-    /// Compute the Median Absolute Residual (uncentered).
+    // Compute the Median Absolute Residual (uncentered).
     #[inline]
     fn compute_mar<T: Float>(&self, vals: &mut [T]) -> T {
         if vals.is_empty() {
@@ -80,7 +63,7 @@ impl ScalingMethod {
         Self::median_inplace(vals)
     }
 
-    /// Internal helper function to compute median in-place using Quickselect.
+    // Internal helper function to compute median in-place using Quickselect.
     #[inline]
     fn median_inplace<T: Float>(vals: &mut [T]) -> T {
         let n = vals.len();

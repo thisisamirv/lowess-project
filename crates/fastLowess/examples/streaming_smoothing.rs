@@ -8,14 +8,6 @@
 //! - Merge strategies for chunk boundaries
 //! - File-based streaming simulation
 //! - Performance comparison with different configurations
-//!
-//! The Streaming adapter is designed for:
-//! - Large datasets (>100K points) that don't fit in memory
-//! - Batch processing pipelines
-//! - File-based data processing
-//! - ETL (Extract, Transform, Load) workflows
-//!
-//! Each scenario includes the expected output as comments.
 
 #[cfg(feature = "cpu")]
 use fastLowess::prelude::*;

@@ -1,46 +1,16 @@
 //! Batch adapter for standard LOWESS smoothing.
 //!
-//! ## Purpose
-//!
 //! This module provides the batch execution adapter for LOWESS smoothing.
 //! It handles complete datasets in memory with sequential processing, making
 //! it suitable for small to medium-sized datasets.
-//!
-//! ## Design notes
-//!
-//! * **Processing**: Processes entire dataset in a single pass.
-//! * **Sorting**: Automatically sorts data by x-values and unsorts results.
-//! * **Delegation**: Delegates computation to the execution engine.
-//! * **Generics**: Generic over `Float` types.
-//!
-//! ## Key concepts
-//!
-//! * **Batch Processing**: Validates, sorts, filters, executes, and unsorts.
-//! * **Builder Pattern**: Fluent API for configuration with sensible defaults.
-//! * **Automatic Sorting**: Ensures x-values are sorted for the algorithm.
-//!
-//! ## Invariants
-//!
-//! * Input arrays x and y must have the same length.
-//! * All values must be finite.
-//! * At least 2 data points are required.
-//! * Output order matches input order.
-//!
-//! ## Non-goals
-//!
-//! * This adapter does not handle streaming data (use streaming adapter).
-//! * This adapter does not handle incremental updates (use online adapter).
-//! * This adapter does not handle missing values.
-
-// Feature-gated imports
-#[cfg(not(feature = "std"))]
-use alloc::vec::Vec;
-#[cfg(feature = "std")]
-use std::vec::Vec;
 
 // External dependencies
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
 use core::fmt::Debug;
 use num_traits::Float;
+#[cfg(feature = "std")]
+use std::vec::Vec;
 
 // Internal dependencies
 use crate::algorithms::interpolation::calculate_delta;
@@ -60,92 +30,88 @@ use crate::primitives::backend::Backend;
 use crate::primitives::errors::LowessError;
 use crate::primitives::sorting::{sort_by_x, unsort};
 
-// ============================================================================
-// Batch LOWESS Builder
-// ============================================================================
-
-/// Builder for batch LOWESS processor.
+// Builder for batch LOWESS processor.
 #[derive(Debug, Clone)]
 pub struct BatchLowessBuilder<T: Float> {
-    /// Smoothing fraction (span)
+    // Smoothing fraction (span)
     pub fraction: T,
 
-    /// Number of robustness iterations
+    // Number of robustness iterations
     pub iterations: usize,
 
-    /// Optimization delta
+    // Optimization delta
     pub delta: Option<T>,
 
-    /// Kernel weight function
+    // Kernel weight function
     pub weight_function: WeightFunction,
 
-    /// Robustness method
+    // Robustness method
     pub robustness_method: RobustnessMethod,
 
-    /// Confidence/Prediction interval configuration
+    // Confidence/Prediction interval configuration
     pub interval_type: Option<IntervalMethod<T>>,
 
-    /// Fractions for cross-validation
+    // Fractions for cross-validation
     pub cv_fractions: Option<Vec<T>>,
 
-    /// Cross-validation method kind
+    // Cross-validation method kind
     pub cv_kind: Option<CVKind>,
 
-    /// Cross-validation seed
+    // Cross-validation seed
     pub cv_seed: Option<u64>,
 
-    /// Deferred error from adapter conversion
+    // Deferred error from adapter conversion
     pub deferred_error: Option<LowessError>,
 
-    /// Tolerance for auto-convergence
+    // Tolerance for auto-convergence
     pub auto_convergence: Option<T>,
 
-    /// Whether to compute diagnostic statistics
+    // Whether to compute diagnostic statistics
     pub return_diagnostics: bool,
 
-    /// Whether to return residuals
+    // Whether to return residuals
     pub compute_residuals: bool,
 
-    /// Whether to return robustness weights
+    // Whether to return robustness weights
     pub return_robustness_weights: bool,
 
-    /// Policy for handling zero-weight neighborhoods
+    // Policy for handling zero-weight neighborhoods
     pub zero_weight_fallback: ZeroWeightFallback,
 
-    /// Policy for handling data boundaries
+    // Policy for handling data boundaries
     pub boundary_policy: BoundaryPolicy,
 
-    /// Scaling method for robust scale estimation (MAR/MAD)
+    // Scaling method for robust scale estimation (MAR/MAD)
     pub scaling_method: ScalingMethod,
 
     // ++++++++++++++++++++++++++++++++++++++
     // +               DEV                  +
     // ++++++++++++++++++++++++++++++++++++++
-    /// Custom smooth pass function.
+    // Custom smooth pass function.
     #[doc(hidden)]
     pub custom_smooth_pass: Option<SmoothPassFn<T>>,
 
-    /// Custom cross-validation pass function.
+    // Custom cross-validation pass function.
     #[doc(hidden)]
     pub custom_cv_pass: Option<CVPassFn<T>>,
 
-    /// Custom interval estimation pass function.
+    // Custom interval estimation pass function.
     #[doc(hidden)]
     pub custom_interval_pass: Option<IntervalPassFn<T>>,
 
-    /// Custom fit pass function.
+    // Custom fit pass function.
     #[doc(hidden)]
     pub custom_fit_pass: Option<FitPassFn<T>>,
 
-    /// Execution backend hint.
+    // Execution backend hint.
     #[doc(hidden)]
     pub backend: Option<Backend>,
 
-    /// Parallel execution hint.
+    // Parallel execution hint.
     #[doc(hidden)]
     pub parallel: Option<bool>,
 
-    /// Tracks if any parameter was set multiple times (for validation)
+    // Tracks if any parameter was set multiple times (for validation)
     #[doc(hidden)]
     pub(crate) duplicate_param: Option<&'static str>,
 }
@@ -157,7 +123,7 @@ impl<T: Float> Default for BatchLowessBuilder<T> {
 }
 
 impl<T: Float> BatchLowessBuilder<T> {
-    /// Create a new batch LOWESS builder with default parameters.
+    // Create a new batch LOWESS builder with default parameters.
     fn new() -> Self {
         Self {
             fraction: T::from(0.67).unwrap(),
@@ -187,99 +153,91 @@ impl<T: Float> BatchLowessBuilder<T> {
         }
     }
 
-    // ========================================================================
-    // Shared Setters
-    // ========================================================================
-
-    /// Set the smoothing fraction (span).
+    // Set the smoothing fraction (span).
     pub fn fraction(mut self, fraction: T) -> Self {
         self.fraction = fraction;
         self
     }
 
-    /// Set the number of robustness iterations.
+    // Set the number of robustness iterations.
     pub fn iterations(mut self, iterations: usize) -> Self {
         self.iterations = iterations;
         self
     }
 
-    /// Set the delta parameter for interpolation optimization.
+    // Set the delta parameter for interpolation optimization.
     pub fn delta(mut self, delta: T) -> Self {
         self.delta = Some(delta);
         self
     }
 
-    /// Set the kernel weight function.
+    // Set the kernel weight function.
     pub fn weight_function(mut self, wf: WeightFunction) -> Self {
         self.weight_function = wf;
         self
     }
 
-    /// Set the robustness method for outlier handling.
+    // Set the robustness method for outlier handling.
     pub fn robustness_method(mut self, method: RobustnessMethod) -> Self {
         self.robustness_method = method;
         self
     }
 
-    /// Set the zero-weight fallback policy.
+    // Set the zero-weight fallback policy.
     pub fn zero_weight_fallback(mut self, fallback: ZeroWeightFallback) -> Self {
         self.zero_weight_fallback = fallback;
         self
     }
 
-    /// Set the boundary handling policy.
+    // Set the boundary handling policy.
     pub fn boundary_policy(mut self, policy: BoundaryPolicy) -> Self {
         self.boundary_policy = policy;
         self
     }
 
-    /// Enable auto-convergence for robustness iterations.
+    // Enable auto-convergence for robustness iterations.
     pub fn auto_converge(mut self, tolerance: T) -> Self {
         self.auto_convergence = Some(tolerance);
         self
     }
 
-    /// Enable returning residuals in the output.
+    // Enable returning residuals in the output.
     pub fn compute_residuals(mut self, enabled: bool) -> Self {
         self.compute_residuals = enabled;
         self
     }
 
-    /// Enable returning robustness weights in the result.
+    // Enable returning robustness weights in the result.
     pub fn return_robustness_weights(mut self, enabled: bool) -> Self {
         self.return_robustness_weights = enabled;
         self
     }
 
-    // ========================================================================
-    // Batch-Specific Setters
-    // ========================================================================
-
-    /// Enable returning diagnostics in the result.
+    // Enable returning diagnostics in the result.
     pub fn return_diagnostics(mut self, enabled: bool) -> Self {
         self.return_diagnostics = enabled;
         self
     }
 
-    /// Enable confidence intervals at the specified level.
+    // Enable confidence intervals at the specified level.
     pub fn confidence_intervals(mut self, level: T) -> Self {
         self.interval_type = Some(IntervalMethod::confidence(level));
         self
     }
 
-    /// Enable prediction intervals at the specified level.
+    // Enable prediction intervals at the specified level.
     pub fn prediction_intervals(mut self, level: T) -> Self {
         self.interval_type = Some(IntervalMethod::prediction(level));
         self
     }
 
-    /// Enable cross-validation with the specified fractions.
+    // Enable cross-validation with the specified fractions.
     pub fn cross_validate(mut self, fractions: Vec<T>) -> Self {
         self.cv_fractions = Some(fractions);
         self
     }
 
-    /// Set the cross-validation method.
+    // Set the cross-validation method.
     pub fn cv_kind(mut self, kind: CVKind) -> Self {
         self.cv_kind = Some(kind);
         self
@@ -289,46 +247,42 @@ impl<T: Float> BatchLowessBuilder<T> {
     // +               DEV                  +
     // ++++++++++++++++++++++++++++++++++++++
 
-    /// Set the execution backend hint.
+    // Set the execution backend hint.
     #[doc(hidden)]
     pub fn backend(mut self, backend: Backend) -> Self {
         self.backend = Some(backend);
         self
     }
 
-    /// Set parallel execution hint.
+    // Set parallel execution hint.
     #[doc(hidden)]
     pub fn parallel(mut self, parallel: bool) -> Self {
         self.parallel = Some(parallel);
         self
     }
 
-    /// Set a custom smooth pass function.
+    // Set a custom smooth pass function.
     #[doc(hidden)]
     pub fn custom_smooth_pass(mut self, pass: SmoothPassFn<T>) -> Self {
         self.custom_smooth_pass = Some(pass);
         self
     }
 
-    /// Set a custom cross-validation pass function.
+    // Set a custom cross-validation pass function.
     #[doc(hidden)]
     pub fn custom_cv_pass(mut self, pass: CVPassFn<T>) -> Self {
         self.custom_cv_pass = Some(pass);
         self
     }
 
-    /// Set a custom interval estimation pass function.
+    // Set a custom interval estimation pass function.
     #[doc(hidden)]
     pub fn custom_interval_pass(mut self, pass: IntervalPassFn<T>) -> Self {
         self.custom_interval_pass = Some(pass);
         self
     }
 
-    // ========================================================================
-    // Build Method
-    // ========================================================================
-
-    /// Build the batch processor.
+    // Build the batch processor.
     pub fn build(self) -> Result<BatchLowess<T>, LowessError> {
         if let Some(err) = self.deferred_error {
             return Err(err);
@@ -370,17 +324,13 @@ impl<T: Float> BatchLowessBuilder<T> {
     }
 }
 
-// ============================================================================
-// Batch LOWESS Processor
-// ============================================================================
-
-/// Batch LOWESS processor.
+// Batch LOWESS processor.
 pub struct BatchLowess<T: Float> {
     config: BatchLowessBuilder<T>,
 }
 
 impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> BatchLowess<T> {
-    /// Perform LOWESS smoothing on the provided data.
+    // Perform LOWESS smoothing on the provided data.
     pub fn fit(self, x: &[T], y: &[T]) -> Result<LowessResult<T>, LowessError> {
         Validator::validate_inputs(x, y)?;
 

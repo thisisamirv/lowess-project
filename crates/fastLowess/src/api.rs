@@ -1,30 +1,10 @@
 //! High-level API for LOWESS smoothing with parallel execution support.
 //!
-//! ## Purpose
-//!
 //! This module provides the primary user-facing entry point for LOWESS with
 //! heavy-duty parallel execution capabilities. It extends the `lowess` API
 //! with adapters that utilize all available CPU cores or GPU hardware.
-//!
-//! ## Design notes
-//!
-//! * **Fluent Integration**: Re-uses the base `lowess` builder pattern.
-//! * **Parallel-First**: Defaults to parallel execution where beneficial.
-//! * **Transparent**: Marker types (Batch, Streaming, Online) select the parallel builders.
-//!
-//! ## Key concepts
-//!
-//! * **Parallel Support**: Uses `rayon` (CPU) or `wgpu` (GPU) for acceleration.
-//! * **Extended Adapters**: Wraps core adapters with parallel implementation logic.
-//! * **Feature-Gated**: Parallelism is configurable via crate features.
-//!
-//! ### Configuration Flow
-//!
-//! 1. Create a [`LowessBuilder`] via `Lowess::new()`.
-//! 2. Chain configuration methods (`.fraction()`, `.iterations()`, etc.).
-//! 3. Select an adapter via `.adapter(Batch)` to get a parallel execution builder.
 
-// Feature-gated imports
+// Internal dependencies
 use crate::adapters::batch::ParallelBatchLowessBuilder;
 use crate::adapters::online::ParallelOnlineLowessBuilder;
 use crate::adapters::streaming::ParallelStreamingLowessBuilder;
@@ -51,21 +31,13 @@ pub use lowess::internals::math::scaling::ScalingMethod;
 pub use lowess::internals::primitives::backend::Backend;
 pub use lowess::internals::primitives::errors::LowessError;
 
-// ============================================================================
-// Adapter Module
-// ============================================================================
-
-/// Adapter selection namespace.
+// Adapter selection namespace.
 #[allow(non_snake_case)]
 pub mod Adapter {
     pub use super::{Batch, Online, Streaming};
 }
 
-// ============================================================================
-// Adapter Marker Types
-// ============================================================================
-
-/// Marker for parallel in-memory batch processing.
+// Marker for parallel in-memory batch processing.
 #[derive(Debug, Clone, Copy)]
 pub struct Batch;
 
@@ -85,7 +57,7 @@ impl<T: Float> LowessAdapter<T> for Batch {
     }
 }
 
-/// Marker for parallel chunked streaming processing.
+// Marker for parallel chunked streaming processing.
 #[derive(Debug, Clone, Copy)]
 pub struct Streaming;
 
@@ -105,7 +77,7 @@ impl<T: Float> LowessAdapter<T> for Streaming {
     }
 }
 
-/// Marker for incremental online processing with parallel support.
+// Marker for incremental online processing with parallel support.
 #[derive(Debug, Clone, Copy)]
 pub struct Online;
 

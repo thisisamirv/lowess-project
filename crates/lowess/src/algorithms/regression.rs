@@ -1,7 +1,5 @@
 //! Regression Logic
 //!
-//! ## Purpose
-//!
 //! This module provides the core data types and logic for local regression fitting (LOWESS),
 //! including:
 //! - Context for managing regression state.
@@ -17,26 +15,22 @@ use wide::{f32x8, f64x2};
 use crate::math::kernel::WeightFunction;
 use crate::primitives::window::Window;
 
-// ============================================================================
-// Zero-Weight Fallback Policy
-// ============================================================================
-
-/// Policy for handling cases where all weights are zero.
+// Policy for handling cases where all weights are zero.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum ZeroWeightFallback {
-    /// Use local mean (default).
+    // Use local mean (default).
     #[default]
     UseLocalMean,
 
-    /// Return the original y-value.
+    // Return the original y-value.
     ReturnOriginal,
 
-    /// Return None (propagate failure).
+    // Return None (propagate failure).
     ReturnNone,
 }
 
 impl ZeroWeightFallback {
-    /// Create from u8 flag for backward compatibility.
+    // Create from u8 flag for backward compatibility.
     #[inline]
     pub fn from_u8(flag: u8) -> Self {
         match flag {
@@ -47,7 +41,7 @@ impl ZeroWeightFallback {
         }
     }
 
-    /// Convert to u8 flag for backward compatibility.
+    // Convert to u8 flag for backward compatibility.
     #[inline]
     pub fn to_u8(self) -> u8 {
         match self {
@@ -58,27 +52,23 @@ impl ZeroWeightFallback {
     }
 }
 
-// ============================================================================
-// Weight Parameters
-// ============================================================================
-
-/// Parameters for weight computation.
+// Parameters for weight computation.
 pub struct WeightParams<T: Float> {
-    /// Current x-value being fitted
+    // Current x-value being fitted
     pub x_current: T,
 
-    /// Window radius - defines the scale of the local fit
+    // Window radius - defines the scale of the local fit
     pub window_radius: T,
 
-    /// Near-threshold: points closer than this get weight 1.0.
+    // Near-threshold: points closer than this get weight 1.0.
     pub h1: T,
 
-    /// Far-threshold: points farther than this get weight 0.0.
+    // Far-threshold: points farther than this get weight 0.0.
     pub h9: T,
 }
 
 impl<T: Float> WeightParams<T> {
-    /// Construct WeightParams with validated window radius.
+    // Construct WeightParams with validated window radius.
     pub fn new(x_current: T, window_radius: T, _use_robustness: bool) -> Self {
         debug_assert!(
             window_radius > T::zero(),
@@ -103,11 +93,7 @@ impl<T: Float> WeightParams<T> {
     }
 }
 
-// ============================================================================
-// Generic Accumulation and Solving
-// ============================================================================
-
-/// Scalar accumulation for 1D weighted least squares (generic Float).
+// Scalar accumulation for 1D weighted least squares (generic Float).
 #[inline]
 pub fn accumulate_wls_scalar<T: Float>(x: &[T], y: &[T], weights: &[T]) -> (T, T, T, T, T) {
     let n = x.len();
@@ -138,7 +124,7 @@ pub fn accumulate_wls_scalar<T: Float>(x: &[T], y: &[T], weights: &[T]) -> (T, T
     (sum_w, sum_wx, sum_wy, sum_wxx, sum_wxy)
 }
 
-/// Generic linear system solver for 1D weighted least squares.
+// Generic linear system solver for 1D weighted least squares.
 #[inline]
 pub fn solve_wls_scalar<T: Float>(
     sum_w: T,
@@ -167,11 +153,7 @@ pub fn solve_wls_scalar<T: Float>(
     Some((slope, intercept, x_mean, y_mean))
 }
 
-// ============================================================================
-// Specialized Accumulation (SIMD)
-// ============================================================================
-
-/// SIMD-optimized accumulation for 1D weighted least squares (f64).
+// SIMD-optimized accumulation for 1D weighted least squares (f64).
 #[inline]
 pub fn accumulate_wls_simd_f64(x: &[f64], y: &[f64], weights: &[f64]) -> (f64, f64, f64, f64, f64) {
     let n = x.len();
@@ -232,7 +214,7 @@ pub fn accumulate_wls_simd_f64(x: &[f64], y: &[f64], weights: &[f64]) -> (f64, f
     (a_w, a_wx, a_wy, a_wxx, a_wxy)
 }
 
-/// SIMD-optimized accumulation for 1D weighted least squares (f32).
+// SIMD-optimized accumulation for 1D weighted least squares (f32).
 #[inline]
 pub fn accumulate_wls_simd_f32(x: &[f32], y: &[f32], weights: &[f32]) -> (f32, f32, f32, f32, f32) {
     let n = x.len();
@@ -320,19 +302,15 @@ pub fn accumulate_wls_simd_f32(x: &[f32], y: &[f32], weights: &[f32]) -> (f32, f
     (a_w, a_wx, a_wy, a_wxx, a_wxy)
 }
 
-// ============================================================================
-// Solver Trait
-// ============================================================================
-
-/// Trait for type-specific weighted least squares accumulation and solving.
+// Trait for type-specific weighted least squares accumulation and solving.
 pub trait WLSSolver: Float {
-    /// Accumulate weighted statistics.
+    // Accumulate weighted statistics.
     #[inline]
     fn accumulate_wls(x: &[Self], y: &[Self], weights: &[Self]) -> (Self, Self, Self, Self, Self) {
         accumulate_wls_scalar(x, y, weights)
     }
 
-    /// Solve for coefficients.
+    // Solve for coefficients.
     #[inline]
     fn solve_wls(
         sum_w: Self,
@@ -360,28 +338,24 @@ impl WLSSolver for f32 {
     }
 }
 
-// ============================================================================
-// LinearFit
-// ============================================================================
-
-/// Linear regression fit result (slope and intercept).
+// Linear regression fit result (slope and intercept).
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct LinearFit<T: Float> {
-    /// Slope (beta_1)
+    // Slope (beta_1)
     pub slope: T,
 
-    /// Intercept (beta_0)
+    // Intercept (beta_0)
     pub intercept: T,
 
-    /// Weighted mean of x-values
+    // Weighted mean of x-values
     pub x_mean: T,
 
-    /// Weighted mean of y-values
+    // Weighted mean of y-values
     pub y_mean: T,
 }
 
 impl<T: Float> LinearFit<T> {
-    /// Create a zero-initialized fit.
+    // Create a zero-initialized fit.
     pub fn zero() -> Self {
         Self {
             slope: T::zero(),
@@ -391,13 +365,13 @@ impl<T: Float> LinearFit<T> {
         }
     }
 
-    /// Predict y-value for a given x using the model.
+    // Predict y-value for a given x using the model.
     #[inline]
     pub fn predict(&self, x: T) -> T {
         self.intercept + self.slope * x
     }
 
-    /// Fit Ordinary Least Squares (OLS) regression.
+    // Fit Ordinary Least Squares (OLS) regression.
     pub fn fit_ols(x: &[T], y: &[T]) -> Self {
         let n = x.len();
         if n == 0 {
@@ -450,7 +424,7 @@ impl<T: Float> LinearFit<T> {
 }
 
 impl<T: Float + WLSSolver> LinearFit<T> {
-    /// Fit Weighted Least Squares (WLS) regression using SIMD-optimized accumulation.
+    // Fit Weighted Least Squares (WLS) regression using SIMD-optimized accumulation.
     pub fn fit_wls(x: &[T], y: &[T], weights: &[T], window_radius: T) -> Self {
         let n = x.len();
         if n == 0 {
@@ -478,45 +452,38 @@ impl<T: Float + WLSSolver> LinearFit<T> {
     }
 }
 
-// ============================================================================
-// Regression Context
-// ============================================================================
-
-/// Context containing all data needed to fit a single point.
+// Context containing all data needed to fit a single point.
 pub struct RegressionContext<'a, T: Float> {
-    /// Slice of x-values (independent variable)
+    // Slice of x-values (independent variable)
     pub x: &'a [T],
 
-    /// Slice of y-values (dependent variable)
+    // Slice of y-values (dependent variable)
     pub y: &'a [T],
 
-    /// Index of the point to fit
+    // Index of the point to fit
     pub idx: usize,
 
-    /// Window for the local fit (defines neighborhood)
+    // Window for the local fit (defines neighborhood)
     pub window: Window,
 
-    /// Whether to use robustness weights
+    // Whether to use robustness weights
     pub use_robustness: bool,
 
-    /// Slice of robustness weights (all 1.0 if not using robustness)
+    // Slice of robustness weights (all 1.0 if not using robustness)
     pub robustness_weights: &'a [T],
 
-    /// Mutable slice of weights to be used in fitting
+    // Mutable slice of weights to be used in fitting
     pub weights: &'a mut [T],
 
-    /// Weight function (kernel)
+    // Weight function (kernel)
     pub weight_function: WeightFunction,
 
-    /// Zero-weight fallback policy
+    // Zero-weight fallback policy
     pub zero_weight_fallback: ZeroWeightFallback,
 }
 
 impl<'a, T: Float + WLSSolver> RegressionContext<'a, T> {
-    /// Perform the local linear fit using the context configuration.
-    ///
-    /// This orchestrates the weight calculation, robustness application,
-    /// and final weighted least squares solver.
+    // Perform the local linear fit using the context configuration.
     pub fn fit(&mut self) -> Option<T> {
         let n = self.x.len();
 

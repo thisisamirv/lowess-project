@@ -1,45 +1,20 @@
 //! Parallel interval estimation for LOWESS smoothing.
 //!
-//! ## Purpose
-//!
 //! This module provides parallel logic for computing standard errors and
 //! confidence/prediction intervals. It distributes the uncertainty calculations
 //! across CPU cores for maximum performance on large datasets.
-//!
-//! ## Design notes
-//!
-//! * **Parallelism**: Uses `rayon` to parallelize SE calculations across data points.
-//! * **Integration**: Plugs into the execution engine via the `IntervalPassFn` hook.
-//! * **Generics**: Generic over `Float` types.
-//!
-//! ## Key concepts
-//!
-//! * **Parallel SE Calculation**: Each point's standard error is computed on a separate thread.
-//! * **Window Serialization**: Efficiently handles neighborhood searches in parallel.
-//!
-//! ## Invariants
-//!
-//! * Standard errors are non-negative.
-//! * Thread-local computations do not interfere with shared data.
-//!
-//! ## Non-goals
-//!
-//! * This module does not perform the actual interval slicing (delegated to `lowess`).
-//! * This module does not handle the mapping to specific probability coverages.
-
-// Feature-gated imports
-#[cfg(feature = "cpu")]
-use rayon::prelude::*;
 
 // External dependencies
 use num_traits::Float;
+#[cfg(feature = "cpu")]
+use rayon::prelude::*;
 
 // Export dependencies from lowess crate
 use lowess::internals::evaluation::intervals::IntervalMethod;
 use lowess::internals::math::kernel::WeightFunction;
 use lowess::internals::primitives::window::Window;
 
-/// Perform interval estimation in parallel.
+// Perform interval estimation in parallel.
 #[cfg(feature = "cpu")]
 pub fn interval_pass_parallel<T>(
     x: &[T],

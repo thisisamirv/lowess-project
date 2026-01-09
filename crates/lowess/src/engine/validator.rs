@@ -1,61 +1,22 @@
 //! Input validation for LOWESS configuration and data.
 //!
-//! ## Purpose
-//!
 //! This module provides comprehensive validation functions for LOWESS
 //! configuration parameters and input data. It checks requirements
 //! such as input lengths, finite values, and parameter bounds.
-//!
-//! ## Design notes
-//!
-//! * **Fail-Fast**: Validation stops at the first error encountered.
-//! * **Efficiency**: Checks are ordered from cheap to expensive.
-//! * **Generics**: Validation is generic over `Float` types.
-//!
-//! ## Key concepts
-//!
-//! * **Parameter Bounds**: Enforces constraints like fraction in (0, 1].
-//! * **Finite Checks**: Ensures all inputs are finite (no NaN/Inf).
-//! * **Regression Requirements**: Ensures at least 2 points for linear regression.
-//!
-//! ## Invariants
-//!
-//! * All validated inputs satisfy their respective mathematical constraints.
-//! * Validation logic is deterministic and side-effect free.
-//!
-//! ## Non-goals
-//!
-//! * This module does not sort, transform, or filter input data.
-//! * This module does not provide automatic correction of invalid inputs.
-//! * This module does not perform the smoothing or optimization itself.
-
-// Feature-gated imports
-#[cfg(not(feature = "std"))]
-use alloc::format;
 
 // External dependencies
+#[cfg(not(feature = "std"))]
+use alloc::format;
 use num_traits::Float;
 
 // Internal dependencies
 use crate::primitives::errors::LowessError;
 
-// ============================================================================
-// Validator
-// ============================================================================
-
-/// Validation utility for LOWESS configuration and input data.
-///
-/// Provides static methods for validating various LOWESS parameters and
-/// input data. All methods return `Result<(), LowessError>` and fail fast
-/// upon identifying the first violation.
+// Validation utility for LOWESS configuration and input data.
 pub struct Validator;
 
 impl Validator {
-    // ========================================================================
-    // Core Input Validation
-    // ========================================================================
-
-    /// Validate input arrays for LOWESS smoothing.
+    // Validate input arrays for LOWESS smoothing.
     pub fn validate_inputs<T: Float>(x: &[T], y: &[T]) -> Result<(), LowessError> {
         // Check 1: Non-empty arrays
         if x.is_empty() || y.is_empty() {
@@ -97,7 +58,7 @@ impl Validator {
         Ok(())
     }
 
-    /// Validate a single numeric value for finiteness.
+    // Validate a single numeric value for finiteness.
     pub fn validate_scalar<T: Float>(val: T, name: &str) -> Result<(), LowessError> {
         if !val.is_finite() {
             return Err(LowessError::InvalidNumericValue(format!(
@@ -109,11 +70,7 @@ impl Validator {
         Ok(())
     }
 
-    // ========================================================================
-    // Parameter Validation
-    // ========================================================================
-
-    /// Validate the smoothing fraction (bandwidth) parameter.
+    // Validate the smoothing fraction (bandwidth) parameter.
     pub fn validate_fraction<T: Float>(fraction: T) -> Result<(), LowessError> {
         if !fraction.is_finite() || fraction <= T::zero() || fraction > T::one() {
             return Err(LowessError::InvalidFraction(
@@ -123,12 +80,7 @@ impl Validator {
         Ok(())
     }
 
-    /// Validate the number of robustness iterations.
-    ///
-    /// # Notes
-    ///
-    /// * 0 iterations means initial fit only (no robustness).
-    /// * Maximum of 1000 iterations to prevent excessive computation.
+    // Validate the number of robustness iterations.
     pub fn validate_iterations(iterations: usize) -> Result<(), LowessError> {
         const MAX_ITERATIONS: usize = 1000;
         if iterations > MAX_ITERATIONS {
@@ -137,7 +89,7 @@ impl Validator {
         Ok(())
     }
 
-    /// Validate the confidence/prediction interval level.
+    // Validate the confidence/prediction interval level.
     pub fn validate_interval_level<T: Float>(level: T) -> Result<(), LowessError> {
         if !level.is_finite() || level <= T::zero() || level >= T::one() {
             return Err(LowessError::InvalidIntervals(
@@ -147,7 +99,7 @@ impl Validator {
         Ok(())
     }
 
-    /// Validate a collection of candidate fractions for cross-validation.
+    // Validate a collection of candidate fractions for cross-validation.
     pub fn validate_cv_fractions<T: Float>(fracs: &[T]) -> Result<(), LowessError> {
         if fracs.is_empty() {
             return Err(LowessError::InvalidFraction(0.0));
@@ -160,7 +112,7 @@ impl Validator {
         Ok(())
     }
 
-    /// Validate the number of folds for k-fold cross-validation.
+    // Validate the number of folds for k-fold cross-validation.
     pub fn validate_kfold(k: usize) -> Result<(), LowessError> {
         if k < 2 {
             return Err(LowessError::InvalidNumericValue(format!(
@@ -171,7 +123,7 @@ impl Validator {
         Ok(())
     }
 
-    /// Validate the auto-convergence tolerance.
+    // Validate the auto-convergence tolerance.
     pub fn validate_tolerance<T: Float>(tol: T) -> Result<(), LowessError> {
         if !tol.is_finite() || tol <= T::zero() {
             return Err(LowessError::InvalidTolerance(
@@ -181,7 +133,7 @@ impl Validator {
         Ok(())
     }
 
-    /// Validate delta optimization parameter (equivalent to cell size in some contexts).
+    // Validate delta optimization parameter (equivalent to cell size in some contexts).
     pub fn validate_delta<T: Float>(delta: T) -> Result<(), LowessError> {
         if !delta.is_finite() || delta < T::zero() {
             return Err(LowessError::InvalidDelta(
@@ -191,11 +143,7 @@ impl Validator {
         Ok(())
     }
 
-    // ========================================================================
-    // Adapter-Specific Validation
-    // ========================================================================
-
-    /// Validate the chunk size for shared processing in streaming mode.
+    // Validate the chunk size for shared processing in streaming mode.
     pub fn validate_chunk_size(chunk_size: usize, min: usize) -> Result<(), LowessError> {
         if chunk_size < min {
             return Err(LowessError::InvalidChunkSize {
@@ -206,7 +154,7 @@ impl Validator {
         Ok(())
     }
 
-    /// Validate the overlap between consecutive chunks in streaming mode.
+    // Validate the overlap between consecutive chunks in streaming mode.
     pub fn validate_overlap(overlap: usize, chunk_size: usize) -> Result<(), LowessError> {
         if overlap >= chunk_size {
             return Err(LowessError::InvalidOverlap {
@@ -217,7 +165,7 @@ impl Validator {
         Ok(())
     }
 
-    /// Validate the maximum capacity of the sliding window in online mode.
+    // Validate the maximum capacity of the sliding window in online mode.
     pub fn validate_window_capacity(window_capacity: usize, min: usize) -> Result<(), LowessError> {
         if window_capacity < min {
             return Err(LowessError::InvalidWindowCapacity {
@@ -228,7 +176,7 @@ impl Validator {
         Ok(())
     }
 
-    /// Validate the activation threshold for online smoothing.
+    // Validate the activation threshold for online smoothing.
     pub fn validate_min_points(
         min_points: usize,
         window_capacity: usize,
@@ -242,7 +190,7 @@ impl Validator {
         Ok(())
     }
 
-    /// Validate that no parameters were set multiple times in the builder.
+    // Validate that no parameters were set multiple times in the builder.
     pub fn validate_no_duplicates(
         duplicate_param: Option<&'static str>,
     ) -> Result<(), LowessError> {

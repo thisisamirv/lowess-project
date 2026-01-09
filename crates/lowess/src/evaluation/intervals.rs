@@ -1,66 +1,33 @@
 //! Confidence and prediction intervals for LOWESS smoothing.
 //!
-//! ## Purpose
-//!
 //! This module provides tools for quantifying uncertainty in LOWESS smoothing
 //! through standard errors, confidence intervals, and prediction intervals.
-//!
-//! ## Design notes
-//!
-//! * **Methodology**: Uses local leverage and robust weighted residuals.
-//! * **Approximation**: Z-scores estimated via Acklam's inverse normal CDF.
-//! * **Flexibility**: Configurable coverage levels and interval types.
-//!
-//! ## Key concepts
-//!
-//! * **Standard Errors (SE)**: Uncertainty in fitted values due to sampling.
-//! * **Confidence Intervals (CI)**: Uncertainty in the estimated mean curve.
-//! * **Prediction Intervals (PI)**: Uncertainty for new observations (wider than CI).
-//! * **Leverage**: Influence of an observation on its own fitted value.
-//!
-//! ## Invariants
-//!
-//! * Confidence levels must satisfy 0 < level < 1.
-//! * Prediction intervals are always wider than confidence intervals.
-//! * Standard errors are non-negative.
-//!
-//! ## Non-goals
-//!
-//! * This module does not perform the smoothing or iterative refinement.
-//! * This module does not provide bootstrap or simulation-based intervals.
-//! * This module does not handle simultaneous confidence bands.
-
-// Feature-gated imports
-#[cfg(not(feature = "std"))]
-use alloc::vec::Vec;
-#[cfg(feature = "std")]
-use std::vec::Vec;
 
 // External dependencies
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
 use num_traits::Float;
+#[cfg(feature = "std")]
+use std::vec::Vec;
 
 // Internal dependencies
 use crate::math::scaling::ScalingMethod;
 use crate::primitives::errors::LowessError;
 use crate::primitives::window::Window;
 
-// ============================================================================
-// Interval Configuration
-// ============================================================================
-
-/// Configuration for computing confidence/prediction intervals and standard errors.
+// Configuration for computing confidence/prediction intervals and standard errors.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct IntervalMethod<T> {
-    /// Desired probability coverage (e.g., 0.95 for 95% intervals).
+    // Desired probability coverage (e.g., 0.95 for 95% intervals).
     pub level: T,
 
-    /// Whether to compute confidence intervals for the mean function.
+    // Whether to compute confidence intervals for the mean function.
     pub confidence: bool,
 
-    /// Whether to compute prediction intervals for new observations.
+    // Whether to compute prediction intervals for new observations.
     pub prediction: bool,
 
-    /// Whether to return estimated standard errors for fitted values.
+    // Whether to return estimated standard errors for fitted values.
     pub se: bool,
 }
 
@@ -71,11 +38,7 @@ impl<T: Float> Default for IntervalMethod<T> {
 }
 
 impl<T: Float> IntervalMethod<T> {
-    // ========================================================================
-    // Constructors
-    // ========================================================================
-
-    /// No intervals or standard errors.
+    // No intervals or standard errors.
     fn none() -> Self {
         Self {
             level: T::from(0.95).unwrap(),
@@ -85,7 +48,7 @@ impl<T: Float> IntervalMethod<T> {
         }
     }
 
-    /// Confidence intervals only at the specified level.
+    // Confidence intervals only at the specified level.
     pub fn confidence(level: T) -> Self {
         Self {
             level,
@@ -95,7 +58,7 @@ impl<T: Float> IntervalMethod<T> {
         }
     }
 
-    /// Prediction intervals only at the specified level.
+    // Prediction intervals only at the specified level.
     pub fn prediction(level: T) -> Self {
         Self {
             level,
@@ -105,7 +68,7 @@ impl<T: Float> IntervalMethod<T> {
         }
     }
 
-    /// Standard errors only (no intervals).
+    // Standard errors only (no intervals).
     pub fn se() -> Self {
         Self {
             level: T::from(0.95).unwrap(),
@@ -117,27 +80,17 @@ impl<T: Float> IntervalMethod<T> {
 }
 
 impl<T: Float> IntervalMethod<T> {
-    // ========================================================================
-    // Constants
-    // ========================================================================
-
-    /// Constant to convert MAD to an unbiased estimate of sigma for normal data.
-    ///
-    /// For normally distributed data, MAD × 1.4826 ≈ standard deviation.
+    // Constant to convert MAD to an unbiased estimate of sigma for normal data.
     const MAD_TO_STD_FACTOR: f64 = 1.4826;
 
-    /// Minimum tuned-scale absolute epsilon to avoid division by zero.
+    // Minimum tuned-scale absolute epsilon to avoid division by zero.
     const MIN_TUNED_SCALE: f64 = 1e-12;
 
-    /// Number of parameters in local linear regression (intercept + slope).
+    // Number of parameters in local linear regression (intercept + slope).
     const LINEAR_PARAMS: f64 = 2.0;
 
-    // ========================================================================
-    // Robust Scale Estimation
-    // ========================================================================
-
-    /// Estimate the residual standard deviation using a robust method.
-    /// Default sigma_hat = 1.4826 * MAD(residuals).
+    // Estimate the residual standard deviation using a robust method.
+    // Default sigma_hat = 1.4826 * MAD(residuals).
     pub fn calculate_residual_sd(residuals: &[T]) -> T {
         let n = residuals.len();
         let scale_const = T::from(Self::MAD_TO_STD_FACTOR).unwrap();
@@ -157,14 +110,10 @@ impl<T: Float> IntervalMethod<T> {
         }
     }
 
-    // ========================================================================
-    // Standard Error Computation
-    // ========================================================================
-
-    /// Core mathematical function for computing standard error at a point.
-    /// SE = sqrt(sigma_local^2 * l_ii), where
-    /// sigma_local^2 = (sum w_k r_k^2) / ((sum w_k) - 2) and
-    /// l_ii = w_i / sum w_k.
+    // Core mathematical function for computing standard error at a point.
+    // SE = sqrt(sigma_local^2 * l_ii), where
+    // sigma_local^2 = (sum w_k r_k^2) / ((sum w_k) - 2) and
+    // l_ii = w_i / sum w_k.
     pub fn compute_se(sum_w: T, sum_w_r2: T, w_idx: T) -> T {
         // Effective degrees of freedom for weighted regression
         if sum_w <= T::zero() {
@@ -184,7 +133,7 @@ impl<T: Float> IntervalMethod<T> {
         (variance * leverage).sqrt()
     }
 
-    /// Compute standard errors for all points in a smoothed series.
+    // Compute standard errors for all points in a smoothed series.
     #[allow(clippy::too_many_arguments)]
     pub fn compute_window_se<F>(
         &self,
@@ -252,11 +201,7 @@ impl<T: Float> IntervalMethod<T> {
         }
     }
 
-    // ========================================================================
-    // Interval Computation
-    // ========================================================================
-
-    /// Compute requested intervals (confidence and/or prediction).
+    // Compute requested intervals (confidence and/or prediction).
     #[allow(clippy::type_complexity)]
     pub fn compute_intervals(
         &self,
@@ -376,12 +321,8 @@ impl<T: Float> IntervalMethod<T> {
         Ok((lower, upper))
     }
 
-    // ========================================================================
-    // Z-Score Approximation
-    // ========================================================================
-
-    /// Approximate the critical value (Z-score) for a given confidence level.
-    /// z = Phi^-1((1 + p) / 2) where Phi^-1 is the inverse standard normal CDF.
+    // Approximate the critical value (Z-score) for a given confidence level.
+    // z = Phi^-1((1 + p) / 2) where Phi^-1 is the inverse standard normal CDF.
     pub fn approximate_z_score(confidence_level: T) -> Result<T, &'static str> {
         let cl_f = confidence_level.to_f64().unwrap_or(0.95);
 
@@ -403,7 +344,7 @@ impl<T: Float> IntervalMethod<T> {
         Ok(T::from(z).unwrap_or_else(|| T::one()))
     }
 
-    /// Rational approximation of the inverse standard normal CDF.
+    // Rational approximation of the inverse standard normal CDF.
     fn acklam_inverse_cdf(p: f64) -> f64 {
         if p <= 0.0 || p >= 1.0 {
             return 0.0;

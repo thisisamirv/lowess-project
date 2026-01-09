@@ -1,54 +1,23 @@
 //! Cross-validation for LOWESS bandwidth selection.
 //!
-//! ## Purpose
-//!
 //! This module provides cross-validation tools for selecting the optimal
 //! smoothing fraction (bandwidth) in LOWESS regression. It implements
 //! generic k-fold and leave-one-out cross-validation strategies.
-//!
-//! ## Design notes
-//!
-//! * **Generic Strategy**: Supports both k-fold and leave-one-out (LOOCV).
-//! * **Interpolation**: Uses linear interpolation for minimizing prediction error.
-//! * **Optimization**: Selects the fraction that minimizes RMSE.
-//!
-//! ## Key concepts
-//!
-//! * **K-Fold**: Partitions data into k subsamples (train on k-1, test on 1).
-//! * **LOOCV**: Extreme case where k equals sample size (n iterations).
-//! * **Interpolation**: Linear interpolation handles test points outside training set.
-//!
-//! ## Invariants
-//!
-//! * Training and test sets are disjoint in each fold.
-//! * The best fraction minimizes RMSE across all folds.
-//!
-//! ## Non-goals
-//!
-//! * This module does not perform the actual smoothing (done via callback).
-//! * This module does not provide confidence intervals for CV scores.
-
-// Feature-gated dependencies
-#[cfg(not(feature = "std"))]
-use alloc::vec::Vec;
-#[cfg(feature = "std")]
-use std::vec::Vec;
 
 // External dependencies
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
 use core::cmp::Ordering::Equal;
 use core::fmt::Debug;
 use num_traits::Float;
+#[cfg(feature = "std")]
+use std::vec::Vec;
 
 // Internal dependencies
 use crate::primitives::buffer::CVBuffer;
 
-// ============================================================================
-// Internal PRNG
-// ============================================================================
-
-/// Minimal PRNG for no-std shuffling.
-///
-/// Uses an LCG (Linear Congruential Generator) with constants from PCG/MQL.
+// Minimal PRNG for no-std shuffling.
+// Uses an LCG (Linear Congruential Generator) with constants from PCG/MQL.
 #[derive(Debug, Clone)]
 struct SimpleRng {
     state: u64,
@@ -66,66 +35,51 @@ impl SimpleRng {
     }
 }
 
-// ============================================================================
-// Internal CV Kind (for storage)
-// ============================================================================
-
-/// Internal representation of CV method for storage (no lifetime needed).
+// Internal representation of CV method for storage (no lifetime needed).
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum CVKind {
-    /// K-fold cross-validation with k folds.
+    // K-fold cross-validation with k folds.
     KFold(usize),
-    /// Leave-one-out cross-validation.
+    // Leave-one-out cross-validation.
     #[allow(clippy::upper_case_acronyms)]
     LOOCV,
 }
 
-// ============================================================================
-// Cross-Validation Configuration
-// ============================================================================
-
-/// Cross-validation configuration combining strategy, fractions, and seed.
+// Cross-validation configuration combining strategy, fractions, and seed.
 #[derive(Debug, Clone)]
 pub struct CVConfig<'a, T> {
-    /// The CV strategy kind.
+    // The CV strategy kind.
     pub(crate) kind: CVKind,
-    /// Candidate smoothing fractions to evaluate.
+    // Candidate smoothing fractions to evaluate.
     pub(crate) fractions: &'a [T],
-    /// Random seed for reproducible fold shuffling (K-Fold only).
+    // Random seed for reproducible fold shuffling (K-Fold only).
     pub(crate) seed: Option<u64>,
 }
 
 impl<'a, T> CVConfig<'a, T> {
-    /// Set the random seed for reproducible K-Fold cross-validation.
-    ///
-    /// The seed controls shuffling of data indices before fold assignment.
-    /// Using the same seed produces identical fold assignments across runs.
-    ///
-    /// # Note
-    ///
-    /// This only affects K-Fold CV. LOOCV is deterministic and ignores the seed.
+    // Set the random seed for reproducible K-Fold cross-validation.
     pub fn seed(mut self, seed: u64) -> Self {
         self.seed = Some(seed);
         self
     }
 
-    /// Get the fractions slice.
+    // Get the fractions slice.
     pub fn fractions(&self) -> &[T] {
         self.fractions
     }
 
-    /// Get the CV kind for internal use.
+    // Get the CV kind for internal use.
     pub(crate) fn kind(&self) -> CVKind {
         self.kind
     }
 
-    /// Get the seed for internal use.
+    // Get the seed for internal use.
     pub(crate) fn get_seed(&self) -> Option<u64> {
         self.seed
     }
 }
 
-/// Create a K-fold cross-validation configuration.
+// Create a K-fold cross-validation configuration.
 #[allow(non_snake_case)]
 pub fn KFold<T>(k: usize, fractions: &[T]) -> CVConfig<'_, T> {
     CVConfig {
@@ -135,7 +89,7 @@ pub fn KFold<T>(k: usize, fractions: &[T]) -> CVConfig<'_, T> {
     }
 }
 
-/// Create a leave-one-out cross-validation configuration.
+// Create a leave-one-out cross-validation configuration.
 #[allow(non_snake_case)]
 pub fn LOOCV<T>(fractions: &[T]) -> CVConfig<'_, T> {
     CVConfig {
@@ -145,12 +99,8 @@ pub fn LOOCV<T>(fractions: &[T]) -> CVConfig<'_, T> {
     }
 }
 
-// ============================================================================
-// Cross-Validation Execution
-// ============================================================================
-
 impl CVKind {
-    /// Run cross-validation to select the best fraction.
+    // Run cross-validation to select the best fraction.
     #[allow(clippy::too_many_arguments)]
     pub fn run<T, F, P>(
         self,
@@ -192,11 +142,7 @@ impl CVKind {
         }
     }
 
-    // ========================================================================
-    // Utility Methods
-    // ========================================================================
-
-    /// Build a data subset from a list of indices into provided scratch buffers.
+    // Build a data subset from a list of indices into provided scratch buffers.
     pub fn build_subset_inplace<T: Float>(
         x: &[T],
         y: &[T],
@@ -214,7 +160,7 @@ impl CVKind {
         }
     }
 
-    /// Build a data subset from a list of indices.
+    // Build a data subset from a list of indices.
     pub fn build_subset_from_indices<T: Float>(
         x: &[T],
         y: &[T],
@@ -227,17 +173,7 @@ impl CVKind {
         (tx, ty)
     }
 
-    // ========================================================================
-    // Utility Methods
-    // ========================================================================
-
-    /// Interpolate prediction at a new x value given fitted training values.
-    ///
-    /// # Implementation notes
-    ///
-    /// * Uses binary search for O(log n) bracketing
-    /// * Handles bracketing points with identical x-values by averaging their y-values
-    /// * Constant extrapolation prevents unbounded predictions
+    // Interpolate prediction at a new x value given fitted training values.
     pub fn interpolate_prediction<T: Float>(x_train: &[T], y_train: &[T], x_new: T) -> T {
         let n = x_train.len();
 
@@ -288,11 +224,7 @@ impl CVKind {
         y0 + alpha * (y1 - y0)
     }
 
-    /// Predict values at multiple new x points using linear interpolation.
-    ///
-    /// # Implementation notes
-    ///
-    /// * Leverages sorted order of `x_new` for O(n_train + n_new) linear scan.
+    // Predict values at multiple new x points using linear interpolation.
     pub fn interpolate_prediction_batch<T: Float>(
         x_train: &[T],
         y_train: &[T],
@@ -351,11 +283,7 @@ impl CVKind {
         }
     }
 
-    // ========================================================================
-    // Internal Cross-Validation Implementations
-    // ========================================================================
-
-    /// Select the best fraction based on cross-validation scores.
+    // Select the best fraction based on cross-validation scores.
     fn select_best_fraction<T: Float>(fractions: &[T], scores: &[T]) -> (T, Vec<T>) {
         if fractions.is_empty() {
             return (T::zero(), Vec::new());
@@ -371,7 +299,7 @@ impl CVKind {
         (fractions[best_idx], scores.to_vec())
     }
 
-    /// Perform k-fold cross-validation.
+    // Perform k-fold cross-validation.
     #[allow(clippy::too_many_arguments)]
     fn kfold_cross_validation<T, F, P>(
         x: &[T],
@@ -516,7 +444,7 @@ impl CVKind {
         Self::select_best_fraction(fractions, &cv_scores)
     }
 
-    /// Perform leave-one-out cross-validation (LOOCV).
+    // Perform leave-one-out cross-validation (LOOCV).
     fn leave_one_out_cross_validation<T, F, P>(
         x: &[T],
         y: &[T],
