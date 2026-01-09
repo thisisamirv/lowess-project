@@ -343,7 +343,7 @@ pub struct LowessResult<T> {
 
 ## Contributing
 
-Contributions are welcome! Please see the [CONTRIBUTING.md](CONTRIBUTING.md) file for more information.
+Contributions are welcome! Please see the [CONTRIBUTING.md](https://github.com/thisisamirv/lowess-project/tree/main/CONTRIBUTING.md) file for more information.
 
 ## License
 
@@ -361,7 +361,7 @@ at your option.
 
 ## Citation
 
-If you use this software in your research, please cite it using the [CITATION.cff](CITATION.cff) file or the BibTeX entry below:
+If you use this software in your research, please cite it using the [CITATION.cff](https://github.com/thisisamirv/lowess-project/tree/main/CITATION.cff) file or the BibTeX entry below:
 
 ```bibtex
 @software{lowess_project,

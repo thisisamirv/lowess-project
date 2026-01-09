@@ -1,2 +1,11 @@
+# Global Line Ending Normalization
+* text=auto eol=lf
+
 # Force LF line endings for vendored dependencies to ensure checksum consistency
 bindings/r/src/vendor/** text eol=lf
+
+# Export Ignore
+.github/ export-ignore
+.gitignore export-ignore
+.gitattributes export-ignore
+.editorconfig export-ignore
