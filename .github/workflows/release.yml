@@ -70,7 +70,7 @@ jobs:
   # ============================================================================
   macos-x86_64:
     name: Build macOS x86_64 (py${{ matrix.python }})
-    runs-on: macos-13 # Intel runner (macos-15 is ARM only)
+    runs-on: macos-15-intel
     strategy:
       matrix:
         python: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
@@ -206,18 +206,21 @@ jobs:
       id-token: write # Required for trusted publishing
 
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          path: dist
+          path: bindings/python/dist
           merge-multiple: true
 
       - name: List artifacts
-        run: ls -la dist/
+        run: ls -la bindings/python/dist/
 
       - name: Publish to PyPI
         uses: PyO3/maturin-action@v1
         with:
           working-directory: bindings/python
           command: upload
-          args: --non-interactive ../../dist/*
+          args: --non-interactive dist/*

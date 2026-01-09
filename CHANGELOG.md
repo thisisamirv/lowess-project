@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Monorepo:**
 
+- Reduced package size significantly by removing unnecessary dev files and docs from the final package.
 - Implemented comprehensive Cargo workspace inheritance pattern
 - Unified MSRV to 1.85.0
 - Centralized all metadata (version, authors, edition, license, etc.) in root `Cargo.toml`
