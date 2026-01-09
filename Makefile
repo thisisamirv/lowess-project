@@ -30,6 +30,11 @@ R_PKG_VERSION = $(shell grep "^Version:" bindings/r/DESCRIPTION | sed 's/Version
 R_PKG_TARBALL = $(R_PKG_NAME)_$(R_PKG_VERSION).tar.gz
 R_DIR := bindings/r
 
+# Julia bindings
+JL_PKG := fastLowess-jl
+JL_DIR := bindings/julia
+JL_TEST_DIR := tests/julia
+
 # ==============================================================================
 # lowess crate
 # ==============================================================================
@@ -368,6 +373,56 @@ r-clean:
 	@rm -rf $(R_DIR)/benchmarks $(R_DIR)/validation $(R_DIR)/docs
 	@echo "$(R_PKG_NAME) clean complete!"
 
+# ==============================================================================
+# Julia bindings
+# ==============================================================================
+julia:
+	@echo "Running $(JL_PKG) checks..."
+	@echo "=============================================================================="
+	@echo "1. Formatting..."
+	@echo "=============================================================================="
+	@cargo fmt -p $(JL_PKG) -- --check
+	@echo "Formatting complete!"
+	@echo "=============================================================================="
+	@echo "2. Linting..."
+	@echo "=============================================================================="
+	@cargo clippy -q -p $(JL_PKG) --all-targets -- -D warnings
+	@echo "=============================================================================="
+	@echo "3. Building..."
+	@echo "=============================================================================="
+	@cargo build -q -p $(JL_PKG) --release
+	@RUSTDOCFLAGS="-D warnings" cargo doc -q -p $(JL_PKG) --no-deps
+	@echo "=============================================================================="
+	@echo "4. Testing Rust library..."
+	@echo "=============================================================================="
+	@cargo test -q -p $(JL_PKG)
+	@echo "=============================================================================="
+	@echo "5. Verifying library exports..."
+	@echo "=============================================================================="
+	@nm -D target/release/libfastlowess_jl.so 2>/dev/null | grep -q jl_lowess_smooth || \
+		(echo "Error: jl_lowess_smooth not exported"; exit 1)
+	@nm -D target/release/libfastlowess_jl.so 2>/dev/null | grep -q jl_lowess_streaming || \
+		(echo "Error: jl_lowess_streaming not exported"; exit 1)
+	@nm -D target/release/libfastlowess_jl.so 2>/dev/null | grep -q jl_lowess_online || \
+		(echo "Error: jl_lowess_online not exported"; exit 1)
+	@nm -D target/release/libfastlowess_jl.so 2>/dev/null | grep -q jl_lowess_free_result || \
+		(echo "Error: jl_lowess_free_result not exported"; exit 1)
+	@echo "All exports verified!"
+	@echo "=============================================================================="
+	@echo "$(JL_PKG) checks completed successfully!"
+	@echo ""
+	@echo "To use in Julia:"
+	@echo "  julia> using Pkg"
+	@echo "  julia> Pkg.develop(path=\"$(JL_DIR)/julia\")"
+	@echo "  julia> using fastLowess"
+
+julia-clean:
+	@echo "Cleaning $(JL_PKG)..."
+	@cargo clean -p $(JL_PKG)
+	@rm -rf $(JL_DIR)/target
+	@echo "$(JL_PKG) clean complete!"
+
+
 
 # ==============================================================================
 # Development checks
@@ -399,16 +454,16 @@ docs-clean:
 # ==============================================================================
 # All targets
 # ==============================================================================
-all: lowess fastLowess python r check-msrv
+all: lowess fastLowess python r julia check-msrv
 	@echo "All checks completed successfully!"
 
 all-coverage: lowess-coverage fastLowess-coverage python-coverage r-coverage
 	@echo "All coverage completed!"
 
-all-clean: r-clean lowess-clean fastLowess-clean python-clean
+all-clean: r-clean lowess-clean fastLowess-clean python-clean julia-clean
 	@echo "Cleaning project root..."
 	@cargo clean
 	@rm -rf target Cargo.lock .venv .ruff_cache .pytest_cache site docs-venv
 	@echo "All clean completed!"
 
-.PHONY: lowess lowess-coverage lowess-clean fastLowess fastLowess-coverage fastLowess-clean python python-coverage python-clean r r-coverage r-clean check-msrv docs docs-serve docs-clean all all-coverage all-clean
+.PHONY: lowess lowess-coverage lowess-clean fastLowess fastLowess-coverage fastLowess-clean python python-coverage python-clean r r-coverage r-clean julia julia-clean check-msrv docs docs-serve docs-clean all all-coverage all-clean

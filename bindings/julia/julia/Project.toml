@@ -1,0 +1,6 @@
+name = "fastLowess"
+uuid = "a1b2c3d4-5678-90ab-cdef-1234567890ab"
+authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
+version = "0.99.7"
+
+[deps]
