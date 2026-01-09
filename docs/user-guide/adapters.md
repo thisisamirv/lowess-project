@@ -91,6 +91,32 @@ Standard mode for complete datasets. **Supports all features.**
     )
     ```
 
+=== "Node.js"
+    ```javascript
+    const fastlowess = require('fastlowess');
+
+    const result = fastlowess.smooth(x, y, {
+        fraction: 0.5,
+        iterations: 3,
+        confidenceIntervals: 0.95,
+        predictionIntervals: 0.95,
+        returnDiagnostics: true
+    });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    import { smooth } from 'fastlowess-wasm';
+
+    const result = smooth(x, y, {
+        fraction: 0.5,
+        iterations: 3,
+        confidenceIntervals: 0.95,
+        predictionIntervals: 0.95,
+        returnDiagnostics: true
+    });
+    ```
+
 ---
 
 ## Streaming Adapter
@@ -182,6 +208,42 @@ Process large datasets in chunks with configurable overlap.
         overlap=500,
         merge_strategy="average"
     )
+    ```
+
+=== "Node.js"
+    ```javascript
+    const { StreamingLowess } = require('fastlowess');
+
+    const processor = new StreamingLowess(
+        { fraction: 0.3, iterations: 2 },
+        { chunkSize: 5000, overlap: 500 }
+    );
+
+    // Process chunks
+    for (const {x, y} of dataChunks) {
+        const result = processor.processChunk(x, y);
+        // ...
+    }
+
+    const finalResult = processor.finalize();
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    import { StreamingLowess } from 'fastlowess-wasm';
+
+    const processor = new StreamingLowess(
+        { fraction: 0.3, iterations: 2 },
+        { chunkSize: 5000, overlap: 500 }
+    );
+
+    // Process chunks
+    for (const {x, y} of dataChunks) {
+        const result = processor.processChunk(x, y);
+        // ...
+    }
+
+    const finalResult = processor.finalize();
     ```
 
 ---
@@ -276,6 +338,42 @@ Incremental updates with a sliding window for real-time data.
         min_points=5,
         update_mode="incremental"
     )
+    ```
+
+=== "Node.js"
+    ```javascript
+    const { OnlineLowess } = require('fastlowess');
+
+    const processor = new OnlineLowess(
+        { fraction: 0.2, iterations: 1 },
+        { windowCapacity: 100, minPoints: 5, updateMode: "incremental" }
+    );
+
+    // Add points
+    for (const [x, y] of sensorStream) {
+        const smoothed = processor.update(x, y);
+        if (smoothed !== null) {
+            console.log(`Smoothed: ${smoothed.toFixed(2)}`);
+        }
+    }
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    import { OnlineLowess } from 'fastlowess-wasm';
+
+    const processor = new OnlineLowess(
+        { fraction: 0.2, iterations: 1 },
+        { windowCapacity: 100, minPoints: 5, updateMode: "incremental" }
+    );
+
+    // Add points
+    for (const [x, y] of sensorStream) {
+        const smoothed = processor.update(x, y);
+        if (smoothed !== null) {
+            console.log(`Smoothed: ${smoothed.toFixed(2)}`);
+        }
+    }
     ```
 
 ---

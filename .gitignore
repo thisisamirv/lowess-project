@@ -67,3 +67,20 @@ cobertura.xml
 tarpaulin-report.html
 coverage_html/
 coverage_detail.txt
+
+# Node.js
+node_modules/
+npm-debug.log
+*.node
+build/
+
+# WebAssembly
+pkg/
+bindings/wasm/pkg/
+
+# Julia
+*.cov
+*.mem
+docs/build/
+docs/site/
+Manifest.toml

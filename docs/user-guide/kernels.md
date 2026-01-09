@@ -57,6 +57,16 @@ $$w(u) = (1 - |u|^3)^3$$
     result = smooth(x, y, weight_function="tricube")
     ```
 
+=== "Node.js"
+    ```javascript
+    const result = smooth(x, y, { weightFunction: "tricube" });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { weightFunction: "tricube" });
+    ```
+
 ---
 
 ## Epanechnikov
@@ -88,6 +98,16 @@ $$w(u) = \frac{3}{4}(1 - u^2)$$
 === "Julia"
     ```julia
     result = smooth(x, y, weight_function="epanechnikov")
+    ```
+
+=== "Node.js"
+    ```javascript
+    const result = smooth(x, y, { weightFunction: "epanechnikov" });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { weightFunction: "epanechnikov" });
     ```
 
 ---
@@ -123,6 +143,16 @@ $$w(u) = \exp(-u^2/2)$$
     result = smooth(x, y, weight_function="gaussian")
     ```
 
+=== "Node.js"
+    ```javascript
+    const result = smooth(x, y, { weightFunction: "gaussian" });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { weightFunction: "gaussian" });
+    ```
+
 ---
 
 ## Biweight
@@ -154,6 +184,16 @@ $$w(u) = (1 - u^2)^2$$
 === "Julia"
     ```julia
     result = smooth(x, y, weight_function="biweight")
+    ```
+
+=== "Node.js"
+    ```javascript
+    const result = smooth(x, y, { weightFunction: "biweight" });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { weightFunction: "biweight" });
     ```
 
 ---
@@ -189,6 +229,16 @@ $$w(u) = \cos(\pi u / 2)$$
     result = smooth(x, y, weight_function="cosine")
     ```
 
+=== "Node.js"
+    ```javascript
+    const result = smooth(x, y, { weightFunction: "cosine" });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { weightFunction: "cosine" });
+    ```
+
 ---
 
 ## Triangle
@@ -222,6 +272,16 @@ $$w(u) = 1 - |u|$$
     result = smooth(x, y, weight_function="triangle")
     ```
 
+=== "Node.js"
+    ```javascript
+    const result = smooth(x, y, { weightFunction: "triangle" });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { weightFunction: "triangle" });
+    ```
+
 ---
 
 ## Uniform
@@ -253,6 +313,16 @@ $$w(u) = 1$$
 === "Julia"
     ```julia
     result = smooth(x, y, weight_function="uniform")
+    ```
+
+=== "Node.js"
+    ```javascript
+    const result = smooth(x, y, { weightFunction: "uniform" });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { weightFunction: "uniform" });
     ```
 
 ---

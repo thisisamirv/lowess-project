@@ -69,6 +69,24 @@ Estimate uncertainty in the smoothed curve itself.
     end
     ```
 
+=== "Node.js"
+    ```javascript
+    const result = smooth(x, y, { fraction: 0.5, confidenceIntervals: 0.95 });
+
+    result.y.forEach((y, i) => {
+        console.log(`x=${result.x[i]}: y=${y} [${result.confidenceLower[i]}, ${result.confidenceUpper[i]}]`);
+    });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { fraction: 0.5, confidenceIntervals: 0.95 });
+
+    result.y.forEach((y, i) => {
+        console.log(`x=${result.x[i]}: y=${y} [${result.confidenceLower[i]}, ${result.confidenceUpper[i]}]`);
+    });
+    ```
+
 ---
 
 ## Prediction Intervals
@@ -117,6 +135,17 @@ Estimate where new observations might fall.
     println("Prediction bounds: [$(result.prediction_lower[1]), $(result.prediction_upper[1])]")
     ```
 
+=== "Node.js
+    ```javascript
+    const result = smooth(x, y, { fraction: 0.5, predictionIntervals: 0.95 });
+    console.log(`Prediction bounds: [${result.predictionLower[0]}, ${result.predictionUpper[0]}]`);
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { fraction: 0.5, predictionIntervals: 0.95 });
+    console.log(`Prediction bounds: [${result.predictionLower[0]}, ${result.predictionUpper[0]}]`);
+    ```
 ---
 
 ## Both Intervals
@@ -163,6 +192,23 @@ Request both types simultaneously:
     )
     ```
 
+=== "Node.js
+    ```javascript
+    const result = smooth(x, y, {
+        fraction: 0.5,
+        confidenceIntervals: 0.95,
+        predictionIntervals: 0.95
+    });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, {
+        fraction: 0.5,
+        confidenceIntervals: 0.95,
+        predictionIntervals: 0.95
+    });
+    ```
 ---
 
 ## Confidence Levels
@@ -202,6 +248,17 @@ Common levels and their z-values:
     result = smooth(x, y, confidence_intervals=0.99)
     ```
 
+=== "Node.js
+    ```javascript
+    // 99% confidence interval
+    const result = smooth(x, y, { confidenceIntervals: 0.99 });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    // 99% confidence interval
+    const result = smooth(x, y, { confidenceIntervals: 0.99 });
+    ```
 ---
 
 ## Standard Errors
@@ -240,6 +297,23 @@ Access standard errors directly (available when intervals are computed):
     end
     ```
 
+=== "Node.js
+    ```javascript
+    const result = smooth(x, y, { confidenceIntervals: 0.95 });
+
+    result.standardErrors.forEach((se, i) => {
+        console.log(`Point ${i}: SE = ${se.toFixed(4)}`);
+    });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { confidenceIntervals: 0.95 });
+
+    result.standardErrors.forEach((se, i) => {
+        console.log(`Point ${i}: SE = ${se.toFixed(4)}`);
+    });
+    ```
 ---
 
 ## Availability

@@ -79,7 +79,7 @@ Complete reference for all LOWESS configuration options.
     | **overlap**                   | 500            | [0, chunk)    | Overlap between chunks  | Streaming        |
     | **merge_strategy**            | `Average`      | 4 options     | Merge overlaps          | Streaming        |
     | **window_capacity**           | 1000           | [3, ∞)        | Max window size         | Online           |
-    | **min_points**                | 2              | [2, window]   | Min before output       | Online           |
+    | **min_points**                | 2                  | [2, window]   | Min before output       | Online           |
     | **update_mode**               | `Incremental`  | 2 options     | Update strategy         | Online           |
 
 === "Julia"
@@ -108,6 +108,56 @@ Complete reference for all LOWESS configuration options.
     | **min_points**                | 2                 | [2, window]   | Min before output       | Online           |
     | **update_mode**               | `"incremental"`   | 2 options     | Update strategy         | Online           |
 
+=== "Node.js"
+
+    | Parameter                 | Default | Range/Options | Description             | Adapter          |
+    |---------------------------|---------|---------------|-------------------------|------------------|
+    | **fraction**              | 0.67    | (0, 1]        | Smoothing span          | All              |
+    | **iterations**            | 3       | [0, 1000]     | Robustness iterations   | All              |
+    | **delta**                 | auto    | [0, ∞)        | Interpolation threshold | All              |
+    | **weightFunction**        | `"tricube"`| 7 options  | Distance kernel         | All              |
+    | **robustnessMethod**      | `"bisquare"`| 3 options | Outlier weighting       | All              |
+    | **zeroWeightFallback**    | `"use_local_mean"`| 3 options| Zero-weight behavior| All              |
+    | **boundaryPolicy**        | `"extend"`| 4 options   | Edge handling           | All              |
+    | **scalingMethod**         | `"mad"` | 2 options     | Scale estimation        | All              |
+    | **autoConverge**          | null    | tolerance     | Early stopping          | All              |
+    | **returnResiduals**       | false   | bool          | Include residuals       | All              |
+    | **returnRobustnessWeights**| false  | bool          | Include weights         | All              |
+    | **returnDiagnostics**     | false   | bool          | Include metrics         | Batch, Streaming |
+    | **confidenceIntervals**   | null    | (0, 1)        | CI level                | Batch            |
+    | **predictionIntervals**   | null    | (0, 1)        | PI level                | Batch            |
+    | **chunkSize**             | 5000    | [10, ∞)       | Points per chunk        | Streaming        |
+    | **overlap**               | 500     | [0, chunk)    | Overlap between chunks  | Streaming        |
+    | **mergeStrategy**         | `"average"`| 4 options  | Merge overlaps          | Streaming        |
+    | **windowCapacity**        | 1000    | [3, ∞)        | Max window size         | Online           |
+    | **minPoints**             | 2       | [2, window]   | Min before output       | Online           |
+    | **updateMode**            | `"incremental"`| 2 options | Update strategy      | Online           |
+
+=== "WebAssembly"
+
+    | Parameter                 | Default | Range/Options | Description             | Adapter          |
+    |---------------------------|---------|---------------|-------------------------|------------------|
+    | **fraction**              | 0.67    | (0, 1]        | Smoothing span          | All              |
+    | **iterations**            | 3       | [0, 1000]     | Robustness iterations   | All              |
+    | **delta**                 | auto    | [0, ∞)        | Interpolation threshold | All              |
+    | **weightFunction**        | `"tricube"`| 7 options  | Distance kernel         | All              |
+    | **robustnessMethod**      | `"bisquare"`| 3 options | Outlier weighting       | All              |
+    | **zeroWeightFallback**    | `"use_local_mean"`| 3 options| Zero-weight behavior| All              |
+    | **boundaryPolicy**        | `"extend"`| 4 options   | Edge handling           | All              |
+    | **scalingMethod**         | `"mad"` | 2 options     | Scale estimation        | All              |
+    | **autoConverge**          | null    | tolerance     | Early stopping          | All              |
+    | **returnResiduals**       | false   | bool          | Include residuals       | All              |
+    | **returnRobustnessWeights**| false  | bool          | Include weights         | All              |
+    | **returnDiagnostics**     | false   | bool          | Include metrics         | Batch, Streaming |
+    | **confidenceIntervals**   | null    | (0, 1)        | CI level                | Batch            |
+    | **predictionIntervals**   | null    | (0, 1)        | PI level                | Batch            |
+    | **chunkSize**             | 5000    | [10, ∞)       | Points per chunk        | Streaming        |
+    | **overlap**               | 500     | [0, chunk)    | Overlap between chunks  | Streaming        |
+    | **mergeStrategy**         | `"average"`| 4 options  | Merge overlaps          | Streaming        |
+    | **windowCapacity**        | 1000    | [3, ∞)        | Max window size         | Online           |
+    | **minPoints**             | 2       | [2, window]   | Min before output       | Online           |
+    | **updateMode**            | `"incremental"`| 2 options | Update strategy      | Online           |
+
 ---
 
 ## Parameter Options Summary
@@ -135,6 +185,18 @@ Complete reference for all LOWESS configuration options.
     | **scaling_method**       | `MAD`, `MAR`                                                                       |
     | **merge_strategy**       | `Average`, `Left`, `Right`, `Weighted`                                             |
     | **update_mode**          | `Incremental`, `Full`                                                              |
+
+=== "Node.js / WebAssembly"
+
+    | Parameter                | Available Options                                                                            |
+    |--------------------------|----------------------------------------------------------------------------------------------|
+    | **weightFunction**       | `"tricube"`, `"epanechnikov"`, `"gaussian"`, `"biweight"`, `"cosine"`, `"triangle"`, `"uniform"` |
+    | **robustnessMethod**     | `"bisquare"`, `"huber"`, `"talwar"`                                                          |
+    | **zeroWeightFallback**   | `"use_local_mean"`, `"return_original"`, `"return_none"`                                     |
+    | **boundaryPolicy**       | `"extend"`, `"reflect"`, `"zero"`, `"no_boundary"`                                           |
+    | **scalingMethod**        | `"mad"`, `"mar"`                                                                             |
+    | **mergeStrategy**        | `"average"`, `"left"`, `"right"`, `"weighted"`                                               |
+    | **updateMode**           | `"incremental"`, `"full"`                                                                    |
 
 ---
 
@@ -174,6 +236,16 @@ The proportion of data used for each local fit. **Most important parameter.**
     result = smooth(x, y, fraction=0.3)
     ```
 
+=== "Node.js"
+    ```javascript
+    const result = smooth(x, y, { fraction: 0.3 });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { fraction: 0.3 });
+    ```
+
 ---
 
 ### iterations
@@ -210,6 +282,15 @@ Number of robustness iterations for outlier resistance.
     result = smooth(x, y, iterations=5)
     ```
 
+=== "Node.js"
+    ```javascript
+    const result = smooth(x, y, { iterations: 5 });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { iterations: 5 });
+    ```
 ---
 
 ### delta
@@ -240,6 +321,16 @@ Interpolation optimization threshold. Points within `delta` distance reuse the p
 === "Julia"
     ```julia
     result = smooth(x, y, delta=0.05)
+    ```
+
+=== "Node.js"
+    ```javascript
+    const result = smooth(x, y, { delta: 0.05 });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { delta: 0.05 });
     ```
 
 ---
@@ -297,6 +388,15 @@ See [Weight Functions](kernels.md) for detailed comparison.
     result = smooth(x, y, weight_function="epanechnikov")
     ```
 
+=== "Node.js"
+    ```javascript
+    const result = smooth(x, y, { weightFunction: "epanechnikov" });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { weightFunction: "epanechnikov" });
+    ```
 ---
 
 ### robustness_method
@@ -342,6 +442,16 @@ See [Robustness](robustness.md) for detailed comparison.
 === "Julia"
     ```julia
     result = smooth(x, y, robustness_method="talwar")
+    ```
+
+=== "Node.js"
+    ```javascript
+    const result = smooth(x, y, { robustnessMethod: "talwar" });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { robustnessMethod: "talwar" });
     ```
 
 ---
@@ -393,6 +503,15 @@ Edge handling strategy to reduce boundary bias.
     result = smooth(x, y, boundary_policy="reflect")
     ```
 
+=== "Node.js"
+    ```javascript
+    const result = smooth(x, y, { boundaryPolicy: "reflect" });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { boundaryPolicy: "reflect" });
+    ```
 ---
 
 ### scaling_method
@@ -434,6 +553,16 @@ Method for estimating residual scale during robustness iterations.
 === "Julia"
     ```julia
     result = smooth(x, y, scaling_method="mad")
+    ```
+
+=== "Node.js"
+    ```javascript
+    const result = smooth(x, y, { scalingMethod: "mad" });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { scalingMethod: "mad" });
     ```
 
 ---
@@ -481,6 +610,15 @@ Behavior when all neighborhood weights are zero.
     result = smooth(x, y, zero_weight_fallback="use_local_mean")
     ```
 
+=== "Node.js"
+    ```javascript
+    const result = smooth(x, y, { zeroWeightFallback: "use_local_mean" });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { zeroWeightFallback: "use_local_mean" });
+    ```
 ---
 
 ### auto_converge
@@ -511,6 +649,16 @@ Enable early stopping when robustness weights stabilize.
 === "Julia"
     ```julia
     result = smooth(x, y, iterations=20, auto_converge=1e-6)
+    ```
+
+=== "Node.js"
+    ```javascript
+    const result = smooth(x, y, { iterations: 20, autoConverge: 1e-6 });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { iterations: 20, autoConverge: 1e-6 });
     ```
 
 ---
@@ -550,6 +698,18 @@ Include residuals (`y - smoothed`) in the output.
     ```julia
     result = smooth(x, y, return_residuals=true)
     println(result.residuals)
+    ```
+
+=== "Node.js"
+    ```javascript
+    const result = smooth(x, y, { returnResiduals: true });
+    console.log(result.residuals);
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { returnResiduals: true });
+    console.log(result.residuals);
     ```
 
 ---
@@ -600,6 +760,18 @@ Include fit quality metrics (Batch and Streaming only).
     println("R²: ", result.diagnostics.r_squared)
     ```
 
+=== "Node.js"
+    ```javascript
+    const result = smooth(x, y, { returnDiagnostics: true });
+    console.log("R²:", result.diagnostics.rSquared);
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { returnDiagnostics: true });
+    console.log("R²:", result.diagnostics.rSquared);
+    ```
+
 ---
 
 ### return_robustness_weights
@@ -636,6 +808,18 @@ Include final robustness weights (useful for outlier detection).
     # Points with result.robustness_weights < 0.5 are likely outliers
     ```
 
+=== "Node.js"
+    ```javascript
+    const result = smooth(x, y, { iterations: 3, returnRobustnessWeights: true });
+    // result.robustnessWeights contains outlier weights
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { iterations: 3, returnRobustnessWeights: true });
+    // result.robustnessWeights contains outlier weights
+    ```
+
 ---
 
 ### confidence_intervals / prediction_intervals
@@ -668,113 +852,300 @@ See [Intervals](intervals.md) for detailed usage.
     result = smooth(x, y, confidence_intervals=0.95, prediction_intervals=0.95)
     ```
 
+=== "Node.js"
+    ```javascript
+    const result = smooth(x, y, { confidenceIntervals: 0.95, predictionIntervals: 0.95 });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { confidenceIntervals: 0.95, predictionIntervals: 0.95 });
+    ```
+
 ---
 
-### cross_validate
+## CV Methods
 
-Automated fraction selection via cross-validation (Batch only).
+### cv_method
 
-See [Cross-Validation](cross-validation.md) for detailed usage.
+Selection strategy for automated parameter tuning.
+
+| Method    | Description                   | Speed  |
+|-----------|-------------------------------|--------|
+| `"kfold"` | K-Fold Cross-Validation       | Fast   |
+| `"loocv"` | Leave-One-Out Cross-Validation| Slow   |
 
 === "R"
     ```r
-    result <- fastlowess(x, y, cv_method = "kfold", cv_k = 5, cv_fractions = c(0.2, 0.3, 0.5, 0.7))
+    result <- fastlowess(x, y, cv_method = "kfold", cv_k = 5)
     ```
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, cv_method="kfold", cv_k=5, cv_fractions=[0.2, 0.3, 0.5, 0.7])
+    result = fl.smooth(x, y, cv_method="kfold", cv_k=5)
     ```
 
 === "Rust"
     ```rust
     let model = Lowess::new()
-        .cross_validate(KFold(5, &[0.2, 0.3, 0.5, 0.7]).seed(42))
+        .cross_validate(KFold(5, &[0.1, 0.3, 0.5]))
         .adapter(Batch)
         .build()?;
     ```
 
 === "Julia"
     ```julia
-    result = smooth(
-        x, y,
-        cv_method="kfold",
-        cv_k=5,
-        cv_fractions=[0.2, 0.3, 0.5, 0.7],
-        cv_seed=42
-    )
+    result = smooth(x, y, cv_method="kfold", cv_k=5)
+    ```
+
+=== "Node.js"
+    ```javascript
+    // Coming soon
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    // Coming soon
     ```
 
 ---
 
-## Streaming Parameters
-
-Parameters specific to the Streaming adapter.
+## Adapter Parameters
 
 ### chunk_size
 
-Number of points processed per chunk.
+Points per chunk in Streaming mode.
 
-- **Default**: 5000
-- **Range**: [10, ∞)
+=== "R"
+    ```r
+    result <- fastlowess_streaming(x, y, chunk_size = 10000)
+    ```
+
+=== "Python"
+    ```python
+    result = fl.smooth_streaming(x, y, chunk_size=10000)
+    ```
+
+=== "Rust"
+    ```rust
+    let model = Lowess::new()
+        .adapter(Streaming {
+            chunk_size: 10000,
+            ..Default::default()
+        })
+        .build()?;
+    ```
+
+=== "Julia"
+    ```julia
+    result = smooth_streaming(x, y, chunk_size=10000)
+    ```
+
+=== "Node.js"
+    ```javascript
+    const processor = new StreamingLowess({}, { chunkSize: 10000 });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const processor = new StreamingLowessWasm({}, { chunkSize: 10000 });
+    ```
+
+---
 
 ### overlap
 
-Number of overlapping points between consecutive chunks.
+Overlap between chunks in Streaming mode.
 
-- **Default**: 500
-- **Range**: [0, chunk_size)
+=== "R"
+    ```r
+    result <- fastlowess_streaming(x, y, overlap = 1000)
+    ```
+
+=== "Python"
+    ```python
+    result = fl.smooth_streaming(x, y, overlap=1000)
+    ```
+
+=== "Rust"
+    ```rust
+    let model = Lowess::new()
+        .adapter(Streaming {
+            overlap: 1000,
+            ..Default::default()
+        })
+        .build()?;
+    ```
+
+=== "Julia"
+    ```julia
+    result = smooth_streaming(x, y, overlap=1000)
+    ```
+
+=== "Node.js"
+    ```javascript
+    const processor = new StreamingLowess({}, { overlap: 1000 });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const processor = new StreamingLowessWasm({}, { overlap: 1000 });
+    ```
+
+---
 
 ### merge_strategy
 
-How to combine overlapping regions.
+Method for merging overlapping chunks.
 
-| Strategy   | Behavior                   |
-|------------|----------------------------|
-| `Average`  | Average overlapping values |
-| `Left`     | Keep left chunk values     |
-| `Right`    | Keep right chunk values    |
-| `Weighted` | Distance-weighted blend    |
+=== "R"
+    ```r
+    result <- fastlowess_streaming(x, y, merge_strategy = "weighted")
+    ```
 
-See [Execution Modes](adapters.md) for usage examples.
+=== "Python"
+    ```python
+    result = fl.smooth_streaming(x, y, merge_strategy="weighted")
+    ```
+
+=== "Rust"
+    ```rust
+    let model = Lowess::new()
+        .adapter(Streaming {
+            merge_strategy: Weighted,
+            ..Default::default()
+        })
+        .build()?;
+    ```
+
+=== "Julia"
+    ```julia
+    result = smooth_streaming(x, y, merge_strategy="weighted")
+    ```
+
+=== "Node.js"
+    ```javascript
+    const processor = new StreamingLowess({}, { mergeStrategy: "weighted" });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const processor = new StreamingLowessWasm({}, { mergeStrategy: "weighted" });
+    ```
 
 ---
-
-## Online Parameters
-
-Parameters specific to the Online adapter.
 
 ### window_capacity
 
-Maximum number of points in the sliding window.
+Maximum points held in memory for Online mode.
 
-- **Default**: 1000
-- **Range**: [3, ∞)
+=== "R"
+    ```r
+    result <- fastlowess_online(x, y, window_capacity = 500)
+    ```
 
-### min_points
+=== "Python"
+    ```python
+    result = fl.smooth_online(x, y, window_capacity=500)
+    ```
 
-Minimum points before smoothing output starts.
+=== "Rust"
+    ```rust
+    let model = Lowess::new()
+        .adapter(Online)
+        .window_capacity(500)
+        .build()?;
+    ```
 
-- **Default**: 2
-- **Range**: [2, window_capacity]
+=== "Julia"
+    ```julia
+    result = smooth_online(x, y, window_capacity=500)
+    ```
 
-### update_mode
+=== "Node.js"
+    ```javascript
+    const processor = new OnlineLowess({}, { windowCapacity: 500 });
+    ```
 
-Strategy for updating the smooth when new points arrive.
-
-| Mode          | Behavior                  | Speed         |
-|---------------|---------------------------|:-------------:|
-| `Incremental` | Update only affected fits | Faster        |
-| `Full`        | Recompute entire window   | More accurate |
-
-See [Execution Modes](adapters.md) for usage examples.
+=== "WebAssembly"
+    ```javascript
+    const processor = new OnlineLowessWasm({}, { windowCapacity: 500 });
+    ```
 
 ---
 
-## Next Steps
+### min_points
 
-- [Weight Functions](kernels.md) — Kernel comparison
-- [Robustness](robustness.md) — Outlier handling
-- [Intervals](intervals.md) — Uncertainty quantification
-- [Cross-Validation](cross-validation.md) — Automated parameter selection
-- [Execution Modes](adapters.md) — Batch/Streaming/Online
+Minimum points required before Online filter starts producing outputs.
+
+=== "R"
+    ```r
+    result <- fastlowess_online(x, y, min_points = 10)
+    ```
+
+=== "Python"
+    ```python
+    result = fl.smooth_online(x, y, min_points=10)
+    ```
+
+=== "Rust"
+    ```rust
+    let model = Lowess::new()
+        .adapter(Online)
+        .min_points(10)
+        .build()?;
+    ```
+
+=== "Julia"
+    ```julia
+    result = smooth_online(x, y, min_points=10)
+    ```
+
+=== "Node.js"
+    ```javascript
+    const processor = new OnlineLowess({}, { minPoints: 10 });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const processor = new OnlineLowessWasm({}, { minPoints: 10 });
+    ```
+
+---
+
+### update_mode
+
+Optimization strategy for Online mode updates.
+
+=== "R"
+    ```r
+    result <- fastlowess_online(x, y, update_mode = "full")
+    ```
+
+=== "Python"
+    ```python
+    result = fl.smooth_online(x, y, update_mode="full")
+    ```
+
+=== "Rust"
+    ```rust
+    let model = Lowess::new()
+        .adapter(Online)
+        .update_mode(Full)
+        .build()?;
+    ```
+
+=== "Julia"
+    ```julia
+    result = smooth_online(x, y, update_mode="full")
+    ```
+
+=== "Node.js"
+    ```javascript
+    const processor = new OnlineLowess({}, { updateMode: "full" });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const processor = new OnlineLowessWasm({}, { updateMode: "full" });
+    ```

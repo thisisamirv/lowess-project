@@ -5,6 +5,8 @@ members = [
     "crates/fastLowess",
     "bindings/python",
     "bindings/julia",
+    "bindings/nodejs",
+    "bindings/wasm",
     "tests",
 ]
 exclude = ["bindings/r/src/vendor"]
@@ -46,6 +48,16 @@ numpy = "0.27"
 
 # R bindings
 extendr-api = "0.8.1"
+
+# Node.js bindings
+napi = { version = "3.8.2", features = ["napi4"] }
+napi-derive = "3.5.1"
+napi-build = "2.3.1"
+
+# WASM bindings
+wasm-bindgen = "0.2.106"
+js-sys = "0.3.83"
+wasm-bindgen-test = "0.3.56"
 
 [profile.release]
 opt-level = 3

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>fastLowess WASM Example</title>
+  </head>
+  <body>
+    <h1>fastLowess WebAssembly</h1>
+    <div id="output">Loading...</div>
+
+    <script type="module">
+      import init, { smooth } from "../pkg/fastlowess_wasm.js";
+
+      async function run() {
+        try {
+          await init();
+
+          const x = new Float64Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+          const y = new Float64Array([2, 4, 1, 8, 10, 3, 14, 16, 5, 20]);
+
+          const result = smooth(x, y, { fraction: 0.4 });
+
+          document.getElementById("output").innerHTML = `
+                    <h3>Smoothed values:</h3>
+                    <pre>${Array.from(result.y)
+                      .map((v) => v.toFixed(2))
+                      .join(", ")}</pre>
+                `;
+        } catch (e) {
+          document.getElementById("output").innerText = "Error: " + e;
+          console.error(e);
+        }
+      }
+
+      run();
+    </script>
+  </body>
+</html>

@@ -128,6 +128,36 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
     # CI bounds in result.confidence_lower/upper
     ```
 
+=== "Node.js"
+    ```javascript
+    const fl = require('fastlowess');
+
+    // positions and observed are your methylation data (Float64Array)
+    const result = fl.smooth(positions, observed, {
+        fraction: 0.1,
+        iterations: 3,
+        confidenceIntervals: 0.95
+    });
+
+    // Smoothed profile in result.y
+    // CI bounds in result.confidenceLower/Upper
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    import { smooth } from 'fastlowess-wasm';
+
+    // positions and observed are your methylation data (Float64Array)
+    const result = smooth(positions, observed, {
+        fraction: 0.1,
+        iterations: 3,
+        confidenceIntervals: 0.95
+    });
+
+    // Smoothed profile in result.y
+    // CI bounds in result.confidenceLower/Upper
+    ```
+
 ---
 
 ## ChIP-seq Signal Smoothing
@@ -233,6 +263,35 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
     peak_positions = positions[peak_indices]
     ```
 
+=== "Node.js"
+    ```javascript
+    const fl = require('fastlowess');
+
+    const result = fl.smooth(positions, observed, {
+        fraction: 0.05,
+        iterations: 5
+    });
+
+    // Identify peaks above threshold
+    const smoothed = result.y;
+    const threshold = 50.0; // Example threshold
+    const peaks = positions.filter((p, i) => smoothed[i] > threshold);
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    import { smooth } from 'fastlowess-wasm';
+
+    const result = smooth(positions, observed, {
+        fraction: 0.05,
+        iterations: 5
+    });
+
+    // Find peaks
+    const smoothed = result.y;
+    const peaks = positions.filter((p, i) => smoothed[i] > 25.0);
+    ```
+
 ---
 
 ## Large Genome Coverage (Streaming)
@@ -296,6 +355,38 @@ For whole-genome data that doesn't fit in memory:
         overlap=10000,
         merge_strategy="weighted"
     )
+    ```
+
+=== "Node.js"
+    ```javascript
+    const { StreamingLowess } = require('fastlowess');
+
+    const processor = new StreamingLowess(
+        { fraction: 0.05, iterations: 3 },
+        { chunkSize: 100000, overlap: 10000 }
+    );
+
+    // Process genomic chunks from stream or file
+    for (const chunk of genomicData) {
+        processor.processChunk(chunk.positions, chunk.coverage);
+    }
+    const result = processor.finalize();
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    import { StreamingLowessWasm } from 'fastlowess-wasm';
+
+    const processor = new StreamingLowessWasm(
+        { fraction: 0.05, iterations: 3 },
+        { chunkSize: 100000, overlap: 10000 }
+    );
+
+    // Process chunks
+    for (const chunk of stream) {
+        processor.processChunk(chunk.positions, chunk.coverage);
+    }
+    const result = processor.finalize();
     ```
 
 ---

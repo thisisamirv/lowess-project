@@ -8,7 +8,7 @@ Welcome to the LOWESS Project! This section will help you get up and running qui
 
     ---
 
-    Install the library for Rust, Python, or R
+    Install the library
 
     [:octicons-arrow-right-24: Installation](installation.md)
 

@@ -99,7 +99,7 @@ A variety of features, supporting a range of use cases:
 
 ## Installation
 
-Currently available for R, Python, Julia, and Rust:
+Currently available for R, Python, Rust, Julia, Node.js, and WebAssembly.
 
 === "R"
 
@@ -148,6 +148,22 @@ Currently available for R, Python, Julia, and Rust:
     ```julia
     using Pkg
     Pkg.add("fastLowess")
+    ```
+
+=== "Node.js"
+
+    Install from npm:
+
+    ```bash
+    npm install fastlowess
+    ```
+
+=== "WebAssembly"
+
+    Install from npm:
+
+    ```bash
+    npm install fastlowess-wasm
     ```
 
 See the [Installation Guide](getting-started/installation.md) for more options and details.
@@ -209,6 +225,30 @@ See the [Installation Guide](getting-started/installation.md) for more options a
     println(result.y)
     ```
 
+=== "Node.js"
+
+    ```javascript
+    const fl = require("fastlowess");
+
+    const x = new Float64Array([1, 2, 3, 4, 5]);
+    const y = new Float64Array([2.0, 4.1, 5.9, 8.2, 9.8]);
+
+    const result = fl.smooth(x, y, { fraction: 0.5, iterations: 3 });
+    console.log(result.y);
+    ```
+
+=== "WebAssembly"
+
+    ```javascript
+    import { smooth } from "fastlowess-wasm";
+
+    const x = new Float64Array([1, 2, 3, 4, 5]);
+    const y = new Float64Array([2.0, 4.1, 5.9, 8.2, 9.8]);
+
+    const result = smooth(x, y, { fraction: 0.5, iterations: 3 });
+    console.log(result.y);
+    ```
+
 ## Getting Started
 
 1. [Installation](getting-started/installation.md) — Set up the library for your language
@@ -248,6 +288,26 @@ See the [Installation Guide](getting-started/installation.md) for more options a
     Native Julia package with C FFI, supporting parallel execution and JLL dependencies.
 
     [:octicons-arrow-right-24: Julia API](api/julia.md)
+
+</div>
+
+<div class="grid cards" markdown>
+
+- :simple-nodejs: **Node.js**
+
+    ---
+
+    Native Node.js bindings with high-performance C++ core and support for asynchronous streaming.
+
+    [:octicons-arrow-right-24: Node.js API](api/nodejs.md)
+
+- :simple-webassembly: **WebAssembly**
+
+    ---
+
+    Optimized WebAssembly build for browsers and Node.js with zero-overhead data transfer.
+
+    [:octicons-arrow-right-24: WebAssembly API](api/webassembly.md)
 
 </div>
 

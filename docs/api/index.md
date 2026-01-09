@@ -36,4 +36,20 @@ Language-specific API documentation.
 
     [:octicons-arrow-right-24: Julia API](julia.md)
 
+- :fontawesome-brands-js: **Node.js**
+
+    ---
+
+    Node.js and WebAssembly bindings
+
+    [:octicons-arrow-right-24: Node.js API](nodejs.md)
+
+- :simple-webassembly: **WebAssembly**
+
+    ---
+
+    WebAssembly bindings
+
+    [:octicons-arrow-right-24: WebAssembly API](webassembly.md)
+
 </div>

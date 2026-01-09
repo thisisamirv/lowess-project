@@ -4,7 +4,7 @@ Install the LOWESS library for your preferred language.
 
 ## R
 
-### From R-universe (recommended)
+**From R-universe (recommended):**
 
 Pre-built binaries, no Rust toolchain required:
 
@@ -12,7 +12,7 @@ Pre-built binaries, no Rust toolchain required:
 install.packages("rfastlowess", repos = "https://thisisamirv.r-universe.dev")
 ```
 
-### From source
+**From Source:**
 
 Requires Rust toolchain:
 
@@ -21,28 +21,23 @@ Requires Rust toolchain:
 devtools::install_github("thisisamirv/lowess-project", subdir = "bindings/r")
 ```
 
-### Requirements
-
-- R 4.2+
-- Rust 1.85+ (for source installation)
-
 ---
 
 ## Python
 
-Install from PyPI:
+**From PyPI (recommended):**
 
 ```bash
 pip install fastlowess
 ```
 
-Or install from conda-forge:
+**From conda-forge:**
 
 ```bash
 conda install -c conda-forge fastlowess
 ```
 
-### Optional: Install from source
+**From Source:**
 
 ```bash
 git clone https://github.com/thisisamirv/lowess-project
@@ -53,27 +48,9 @@ maturin develop --release
 
 ---
 
-## Julia
-
-### From the Julia General Registry
-
-```julia
-using Pkg
-Pkg.add("fastLowess")
-```
-
-### From source
-
-```julia
-using Pkg
-Pkg.develop(url="https://github.com/thisisamirv/lowess-project", subdir="bindings/julia/julia")
-```
-
----
-
 ## Rust
 
-Add the crate to your `Cargo.toml`:
+**From crates.io:**
 
 === "lowess (no_std compatible)"
 
@@ -88,6 +65,68 @@ Add the crate to your `Cargo.toml`:
     [dependencies]
     fastLowess = { version = "0.99", features = ["cpu"] }
     ```
+
+---
+
+## Julia
+
+**From General Registry (recommended):**
+
+```julia
+using Pkg
+Pkg.add("fastLowess")
+```
+
+**From Source:**
+
+```julia
+using Pkg
+Pkg.develop(url="https://github.com/thisisamirv/lowess-project", subdir="bindings/julia/julia")
+```
+
+---
+
+## Node.js
+
+**From NPM (recommended):**
+
+```bash
+npm install fastlowess
+```
+
+**From Source:**
+
+```bash
+git clone https://github.com/thisisamirv/lowess-project
+cd lowess-project/bindings/nodejs
+npm install
+npm run build
+```
+
+---
+
+## WebAssembly
+
+**From NPM (recommended):**
+
+```bash
+npm install fastlowess-wasm
+```
+
+**From Source:**
+
+Requires Rust toolchain and [`wasm-pack`](https://rustwasm.github.io/wasm-pack/installer/).
+
+```bash
+git clone https://github.com/thisisamirv/lowess-project
+cd lowess-project/bindings/wasm
+# For bundlers (Webpack, Vite, etc.)
+wasm-pack build --target bundler
+# For Node.js
+wasm-pack build --target nodejs
+# For browser (no bundler)
+wasm-pack build --target web
+```
 
 ---
 
@@ -160,3 +199,34 @@ Both crates require **Rust 1.85.0** or later.
     result = smooth(x, y)
     println("Installed successfully!")
     ```
+
+=== "Node.js"
+
+    ```javascript
+    const fl = require('fastlowess');
+    
+    const x = new Float64Array([1.0, 2.0, 3.0]);
+    const y = new Float64Array([2.0, 4.0, 6.0]);
+    
+    const result = fl.smooth(x, y);
+    console.log("Installed successfully!");
+    ```
+
+    See [Node.js API](../api/nodejs.md) for full reference.
+
+=== "WebAssembly"
+
+    ```javascript
+    import init, { smooth } from 'fastlowess-wasm';
+
+    async function verify() {
+        await init();
+        const x = new Float64Array([1.0, 2.0, 3.0]);
+        const y = new Float64Array([2.0, 4.0, 6.0]);
+        const result = smooth(x, y);
+        console.log("Installed successfully!");
+    }
+    verify();
+    ```
+
+    See [WebAssembly API](../api/webassembly.md) for full reference.

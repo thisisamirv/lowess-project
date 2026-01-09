@@ -80,6 +80,36 @@ Smoothed values: [2.02, 4.00, 6.00, 8.10, 10.04, 12.03, 13.90, 15.78]
     println("Smoothed values: ", result.y)
     ```
 
+=== "Node.js"
+
+    ```javascript
+    const fastlowess = require('fastlowess');
+
+    // Sample data
+    const x = new Float64Array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
+    const y = new Float64Array([2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7]);
+
+    // Smooth the data
+    const result = fastlowess.smooth(x, y, { fraction: 0.5, iterations: 3 });
+
+    console.log("Smoothed values:", result.y);
+    ```
+
+=== "WebAssembly"
+
+    ```javascript
+    import * as fastlowess from 'fastlowess-wasm';
+
+    // Sample data
+    const x = new Float64Array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
+    const y = new Float64Array([2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7]);
+
+    // Smooth the data
+    const result = fastlowess.smooth(x, y, { fraction: 0.5, iterations: 3 });
+
+    console.log("Smoothed values:", result.y);
+    ```
+
 ---
 
 ## With Confidence Intervals
@@ -157,6 +187,38 @@ Smoothed values: [2.02, 4.00, 6.00, 8.10, 10.04, 12.03, 13.90, 15.78]
     println("CI Lower: ", result.confidence_lower)
     println("CI Upper: ", result.confidence_upper)
     println("R²: ", result.diagnostics.r_squared)
+    ```
+
+=== "Node.js"
+
+    ```javascript
+    const result = fastlowess.smooth(x, y, {
+        fraction: 0.5,
+        iterations: 3,
+        confidenceIntervals: 0.95,
+        predictionIntervals: 0.95,
+        returnDiagnostics: true
+    });
+
+    console.log("Smoothed:", result.y);
+    console.log("CI Lower:", result.confidenceLower);
+    console.log("CI Upper:", result.confidenceUpper);
+    console.log("R²:", result.diagnostics.rSquared);
+    ```
+
+=== "WebAssembly"
+
+    ```javascript
+    import * as fastlowess from 'fastlowess-wasm';
+
+    // Sample data
+    const x = new Float64Array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
+    const y = new Float64Array([2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7]);
+
+    // Smooth the data
+    const result = fastlowess.smooth(x, y, { fraction: 0.5, iterations: 3 });
+
+    console.log("Smoothed values:", result.y);
     ```
 
 ---
@@ -253,6 +315,51 @@ LOWESS can robustly handle outliers through iterative reweighting:
     end
     ```
 
+=== "Node.js"
+
+    ```javascript
+    const fl = require('fastlowess');
+
+    const yWithOutlier = new Float64Array([2.0, 4.0, 6.0, 50.0, 10.0, 12.0]);
+
+    const result = fl.smooth(x, yWithOutlier, {
+        fraction: 0.5,
+        iterations: 5,
+        robustnessMethod: "bisquare",
+        returnRobustnessWeights: true
+    });
+
+    // Outliers will have low robustness weights
+    result.robustnessWeights.forEach((w, i) => {
+        if (w < 0.5) {
+            console.log(`Point ${i} is likely an outlier (weight: ${w.toFixed(3)})`);
+        }
+    });
+    ```
+
+=== "WebAssembly"
+
+    ```javascript
+    import { smooth } from 'fastlowess-wasm';
+
+    // Data with an outlier at position 3
+    const yWithOutlier = new Float64Array([2.0, 4.0, 6.0, 50.0, 10.0, 12.0]);
+
+    const result = smooth(x, yWithOutlier, {
+        fraction: 0.5,
+        iterations: 5,
+        robustnessMethod: "bisquare",
+        returnRobustnessWeights: true
+    });
+
+    // Outliers will have low robustness weights
+    result.robustnessWeights.forEach((w, i) => {
+        if (w < 0.5) {
+            console.log(`Point ${i} is likely an outlier (weight: ${w.toFixed(3)})`);
+        }
+    });
+    ```
+
 ---
 
 ## Next Steps
@@ -260,3 +367,4 @@ LOWESS can robustly handle outliers through iterative reweighting:
 - [Concepts](concepts.md) — Understand how LOWESS works
 - [Parameters](../user-guide/parameters.md) — All configuration options
 - [Execution Modes](../user-guide/adapters.md) — Batch, Streaming, Online
+- [Node.js API](../api/nodejs.md) / [WebAssembly API](../api/webassembly.md) — Full references

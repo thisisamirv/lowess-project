@@ -1,0 +1,16 @@
+[package]
+name = "fastlowess-wasm"
+version = "0.99.7"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+fastLowess = { path = "../../crates/fastLowess", features = ["dev", "cpu"] }
+wasm-bindgen = { workspace = true }
+js-sys = { workspace = true }
+
+[dev-dependencies]
+wasm-bindgen-test = { workspace = true }

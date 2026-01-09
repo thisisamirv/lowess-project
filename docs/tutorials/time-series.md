@@ -86,6 +86,31 @@ Time series data often contains noise, seasonality, and trends. LOWESS provides 
     println("Extracted trend points: ", length(result.y))
     ```
 
+=== "Node.js"
+    ```javascript
+    const fl = require('fastlowess');
+
+    // t and y are your time series arrays (Float64Array)
+    const result = fl.smooth(t, y, { 
+        fraction: 0.1, 
+        iterations: 3 
+    });
+
+    console.log("Extracted trend:", result.y);
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    import { smooth } from 'fastlowess-wasm';
+
+    const result = smooth(t, y, { 
+        fraction: 0.1, 
+        iterations: 3 
+    });
+
+    // Trend values in result.y
+    ```
+
 ---
 
 ## Detrending
@@ -147,6 +172,33 @@ Remove trend to analyze residual patterns:
     detrended = result.residuals
 
     println("Detrended variance: ", var(detrended))
+    ```
+
+=== "Node.js"
+    ```javascript
+    const fl = require('fastlowess');
+
+    const result = fl.smooth(t, y, { 
+        fraction: 0.3, 
+        iterations: 3, 
+        returnResiduals: true 
+    });
+
+    const trend = result.y;
+    const detrended = result.residuals;
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    import { smooth } from 'fastlowess-wasm';
+
+    const result = smooth(t, y, { 
+        fraction: 0.3, 
+        iterations: 3, 
+        returnResiduals: true 
+    });
+
+    // Access result.y (trend) and result.residuals (detrended)
     ```
 
 ---
@@ -220,6 +272,32 @@ Remove trend to analyze residual patterns:
     println("First point 95% PI: [$(result.prediction_lower[1]), $(result.prediction_upper[1])]")
     ```
 
+=== "Node.js"
+    ```javascript
+    const fl = require('fastlowess');
+
+    const result = fl.smooth(t, y, {
+        fraction: 0.2,
+        iterations: 3,
+        predictionIntervals: 0.95
+    });
+
+    console.log(`95% PI: [${result.predictionLower[0]}, ${result.predictionUpper[0]}]`);
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    import { smooth } from 'fastlowess-wasm';
+
+    const result = smooth(t, y, {
+        fraction: 0.2,
+        iterations: 3,
+        predictionIntervals: 0.95
+    });
+
+    // Access result.predictionLower and result.predictionUpper
+    ```
+
 ---
 
 ## Handling Missing Data
@@ -266,6 +344,21 @@ LOWESS naturally handles irregular time sampling:
 
     # LOWESS handles this seamlessly
     result = smooth(t_irregular, y_irregular, fraction=0.2)
+    ```
+
+=== "Node.js"
+    ```javascript
+    const fl = require('fastlowess');
+
+    // No special handling needed for irregular spacing
+    const result = fl.smooth(tIrregular, yIrregular, { fraction: 0.2 });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    import { smooth } from 'fastlowess-wasm';
+
+    const result = smooth(tIrregular, yIrregular, { fraction: 0.2 });
     ```
 
 ---
@@ -323,6 +416,26 @@ Use different fractions to extract features at different scales:
 
     results = [smooth(t, y, fraction=f) for f in fractions]
     # results[i].y contains smoothed values for each fraction
+    ```
+
+=== "Node.js"
+    ```javascript
+    const fl = require('fastlowess');
+
+    const scales = [0.05, 0.2, 0.5];
+    const trends = scales.map(f => {
+        return fl.smooth(t, y, { fraction: f }).y;
+    });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    import { smooth } from 'fastlowess-wasm';
+
+    const trends = [0.05, 0.2, 0.5].map(f => {
+        const result = smooth(t, y, { fraction: f });
+        return result.y;
+    });
     ```
 
 ---
@@ -399,6 +512,8 @@ Biological application:
 
 === "Julia"
     ```julia
+    using fastLowess
+
     hours = collect(range(0, 24, step=0.5))
     expression = 100 .*(1.0 .+ 0.5 .* sin.(hours .*pi ./ 12.0)) .+ randn(length(hours)) .* 10.0
 
@@ -411,6 +526,32 @@ Biological application:
     )
 
     println("R²: ", result.diagnostics.r_squared)
+    ```
+
+=== "Node.js"
+    ```javascript
+    const fl = require('fastlowess');
+
+    const result = fl.smooth(hours, expression, {
+        fraction: 0.3,
+        iterations: 3,
+        returnDiagnostics: true
+    });
+
+    console.log(`R²: ${result.diagnostics.rSquared.toFixed(3)}`);
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    import { smooth } from 'fastlowess-wasm';
+
+    const result = smooth(hours, expression, {
+        fraction: 0.3,
+        iterations: 3,
+        returnDiagnostics: true
+    });
+
+    console.log("R²:", result.diagnostics.rSquared);
     ```
 
 ---

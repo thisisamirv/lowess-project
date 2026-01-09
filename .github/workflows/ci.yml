@@ -500,3 +500,102 @@ jobs:
         run: cargo doc --no-deps
         env:
           RUSTDOCFLAGS: -D warnings
+
+  # ============================================================================
+  # NODE.JS BINDINGS
+  # ============================================================================
+  nodejs-test:
+    name: Node.js - Test (${{ matrix.os }}, Node ${{ matrix.node-version }})
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: bindings/nodejs
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node-version: [18, 20, 22]
+        rust: [stable]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+          cache-dependency-path: bindings/nodejs/package-lock.json
+      - name: Install dependencies
+        run: npm install
+      - name: Build
+        run: npm run build
+      - name: Run tests
+        run: npm test
+
+  nodejs-lint:
+    name: Node.js - Lint & Format
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bindings/nodejs
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Rust Format
+        run: cargo fmt --all -- --check
+      - name: Rust Clippy
+        run: cargo clippy --all-targets -- -D warnings
+
+  # ============================================================================
+  # WEBASSEMBLY BINDINGS
+  # ============================================================================
+  wasm-test:
+    name: WebAssembly - Test (Ubuntu, Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bindings/wasm
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [18, 20, 22]
+        rust: [stable]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Build
+        run: wasm-pack build --target nodejs
+      - name: Run tests
+        run: wasm-pack test --node
+
+  wasm-lint:
+    name: WebAssembly - Lint & Format
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bindings/wasm
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Rust Format
+        run: cargo fmt --all -- --check
+      - name: Rust Clippy
+        run: cargo clippy --all-targets -- -D warnings

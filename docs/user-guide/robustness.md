@@ -50,6 +50,16 @@ $$w(u) = \begin{cases} (1 - u^2)^2 & |u| < 1 \\ 0 & |u| \geq 1 \end{cases}$$
     result = smooth(x, y, iterations=3, robustness_method="bisquare")
     ```
 
+=== "Node.js"
+    ```javascript
+    const result = smooth(x, y, { iterations: 3, robustnessMethod: "bisquare" });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { iterations: 3, robustnessMethod: "bisquare" });
+    ```
+
 ---
 
 ### Huber
@@ -84,6 +94,16 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}$$
     result = smooth(x, y, iterations=3, robustness_method="huber")
     ```
 
+=== "Node.js"
+    ```javascript
+    const result = smooth(x, y, { iterations: 3, robustnessMethod: "huber" });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { iterations: 3, robustnessMethod: "huber" });
+    ```
+
 ---
 
 ### Talwar
@@ -116,6 +136,16 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
 === "Julia"
     ```julia
     result = smooth(x, y, iterations=3, robustness_method="talwar")
+    ```
+
+=== "Node.js"
+    ```javascript
+    const result = smooth(x, y, { iterations: 3, robustnessMethod: "talwar" });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { iterations: 3, robustnessMethod: "talwar" });
     ```
 
 ---
@@ -182,6 +212,28 @@ Use robustness weights to identify potential outliers:
     end
     ```
 
+=== "Node.js"
+    ```javascript
+    const result = smooth(x, y, { iterations: 5, returnRobustnessWeights: true });
+
+    result.robustnessWeights.forEach((w, i) => {
+        if (w < 0.5) {
+            console.log(`Potential outlier at index ${i}: weight = ${w.toFixed(3)}`);
+        }
+    });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { iterations: 5, returnRobustnessWeights: true });
+
+    result.robustnessWeights.forEach((w, i) => {
+        if (w < 0.5) {
+            console.log(`Potential outlier at index ${i}: weight = ${w.toFixed(3)}`);
+        }
+    });
+    ```
+
 ---
 
 ## Scale Estimation
@@ -217,6 +269,16 @@ Residuals are scaled before computing robustness weights. Two methods:
     result = smooth(x, y, iterations=3, scaling_method="mad")
     ```
 
+=== "Node.js"
+    ```javascript
+    const result = smooth(x, y, { iterations: 3, scalingMethod: "mad" });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { iterations: 3, scalingMethod: "mad" });
+    ```
+
 ---
 
 ## Auto-Convergence
@@ -250,4 +312,14 @@ Stop iterations early when weights stabilize:
 === "Julia"
     ```julia
     result = smooth(x, y, iterations=10, auto_converge=1e-6)
+    ```
+
+=== "Node.js"
+    ```javascript
+    const result = smooth(x, y, { iterations: 10, autoConverge: 1e-6 });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { iterations: 10, autoConverge: 1e-6 });
     ```

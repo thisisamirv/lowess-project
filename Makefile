@@ -35,6 +35,16 @@ JL_PKG := fastLowess-jl
 JL_DIR := bindings/julia
 JL_TEST_DIR := tests/julia
 
+# Node.js bindings
+NODE_PKG := fastlowess-node
+NODE_DIR := bindings/nodejs
+NODE_TEST_DIR := tests/nodejs
+
+# WebAssembly bindings
+WASM_PKG := fastlowess-wasm
+WASM_DIR := bindings/wasm
+WASM_TEST_DIR := tests/wasm
+
 # ==============================================================================
 # lowess crate
 # ==============================================================================
@@ -441,6 +451,74 @@ julia-clean:
 	@echo "$(JL_PKG) clean complete!"
 
 # ==============================================================================
+# Node.js bindings
+# ==============================================================================
+nodejs:
+	@echo "Running $(NODE_PKG) checks..."
+	@echo "=============================================================================="
+	@echo "1. Formatting..."
+	@echo "=============================================================================="
+	@cargo fmt -p $(NODE_PKG) -- --check
+	@echo "=============================================================================="
+	@echo "2. Linting & Building..."
+	@echo "=============================================================================="
+	@cargo clippy -q -p $(NODE_PKG) --all-targets -- -D warnings
+	@cd $(NODE_DIR) && npm install && npm run build
+	@echo "=============================================================================="
+	@echo "3. Testing..."
+	@echo "=============================================================================="
+	@cd $(NODE_DIR) && npm test
+	@echo "=============================================================================="
+	@echo "4. Examples..."
+	@echo "=============================================================================="
+	@cd $(NODE_DIR) && node examples/batch_smoothing.js
+	@cd $(NODE_DIR) && node examples/online_smoothing.js
+	@cd $(NODE_DIR) && node examples/streaming_smoothing.js
+	@echo "=============================================================================="
+	@echo "$(NODE_PKG) checks completed successfully!"
+
+nodejs-clean:
+	@echo "Cleaning $(NODE_PKG)..."
+	@cargo clean -p $(NODE_PKG)
+	@rm -rf $(NODE_DIR)/index.js $(NODE_DIR)/index.d.ts $(NODE_DIR)/node_modules
+	@echo "$(NODE_PKG) clean complete!"
+
+# ==============================================================================
+# WebAssembly bindings
+# ==============================================================================
+wasm:
+	@echo "Running $(WASM_PKG) checks..."
+	@echo "=============================================================================="
+	@echo "1. Formatting..."
+	@echo "=============================================================================="
+	@cargo fmt -p $(WASM_PKG) -- --check
+	@echo "=============================================================================="
+	@echo "2. Linting & Building..."
+	@echo "=============================================================================="
+	@cargo clippy -q -p $(WASM_PKG) --all-targets -- -D warnings
+	@cd $(WASM_DIR) && wasm-pack build --target nodejs --out-dir pkg
+	@echo "=============================================================================="
+	@echo "3. Testing..."
+	@echo "=============================================================================="
+	@cd $(WASM_DIR) && wasm-pack test --node
+	@echo "Running JS tests..."
+	@node --test tests/wasm/test_fastlowess_wasm.js
+	@echo "=============================================================================="
+	@echo "4. Examples..."
+	@echo "=============================================================================="
+	@cd $(WASM_DIR) && node examples/batch_smoothing.js
+	@cd $(WASM_DIR) && node examples/online_smoothing.js
+	@cd $(WASM_DIR) && node examples/streaming_smoothing.js
+	@echo "=============================================================================="
+	@echo "$(WASM_PKG) checks completed successfully!"
+
+wasm-clean:
+	@echo "Cleaning $(WASM_PKG)..."
+	@cargo clean -p $(WASM_PKG)
+	@rm -rf $(WASM_DIR)/pkg
+	@echo "$(WASM_PKG) clean complete!"
+
+# ==============================================================================
 # Development checks
 # ==============================================================================
 check-msrv:
@@ -470,7 +548,9 @@ docs-clean:
 # ==============================================================================
 # All targets
 # ==============================================================================
-all: lowess fastLowess python r julia check-msrv
+# All targets
+# ==============================================================================
+all: lowess fastLowess python r julia nodejs wasm check-msrv
 	@echo "Syncing CITATION.cff..."
 	@dev/sync_version.py Cargo.toml -c CITATION.cff -q
 	@echo "All checks completed successfully!"
@@ -478,10 +558,10 @@ all: lowess fastLowess python r julia check-msrv
 all-coverage: lowess-coverage fastLowess-coverage python-coverage r-coverage
 	@echo "All coverage completed!"
 
-all-clean: r-clean lowess-clean fastLowess-clean python-clean julia-clean
+all-clean: r-clean lowess-clean fastLowess-clean python-clean julia-clean nodejs-clean wasm-clean
 	@echo "Cleaning project root..."
 	@cargo clean
 	@rm -rf target Cargo.lock .venv .ruff_cache .pytest_cache site docs-venv
 	@echo "All clean completed!"
 
-.PHONY: lowess lowess-coverage lowess-clean fastLowess fastLowess-coverage fastLowess-clean python python-coverage python-clean r r-coverage r-clean julia julia-clean julia-update-commit check-msrv docs docs-serve docs-clean all all-coverage all-clean
+.PHONY: lowess lowess-coverage lowess-clean fastLowess fastLowess-coverage fastLowess-clean python python-coverage python-clean r r-coverage r-clean julia julia-clean julia-update-commit nodejs nodejs-clean wasm wasm-clean check-msrv docs docs-serve docs-clean all all-coverage all-clean

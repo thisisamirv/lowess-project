@@ -75,6 +75,18 @@ Split data into K folds, train on K-1, validate on 1.
     println("CV scores: ", result.cv_results.scores)
     ```
 
+=== "Node.js"
+    ```javascript
+    // Cross-validation support coming soon to Node.js bindings.
+    // Use manual parameter selection for now.
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    // Cross-validation support coming soon to WebAssembly bindings.
+    // Use manual parameter selection for now.
+    ```
+
 ---
 
 ## Leave-One-Out (LOOCV)
@@ -114,6 +126,16 @@ Each point is held out once. Most thorough but slowest.
         cv_method="loocv",
         cv_fractions=[0.2, 0.3, 0.5, 0.7]
     )
+    ```
+
+=== "Node.js"
+    ```javascript
+    // Support coming soon.
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    // Support coming soon.
     ```
 
 ---
@@ -161,6 +183,16 @@ Set a seed for reproducible fold assignments:
         cv_fractions=[0.3, 0.5, 0.7],
         cv_seed=42
     )
+    ```
+
+=== "Node.js"
+    ```javascript
+    // Support coming soon.
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    // Support coming soon.
     ```
 
 ---
@@ -261,6 +293,9 @@ The fraction with **lowest CV score** is automatically selected.
 |-----------|:-----:|:---------:|:------:|
 | K-Fold CV | ✓     | ✗         | ✗      |
 | LOOCV     | ✓     | ✗         | ✗      |
+
+!!! note "JavaScript Support"
+    Cross-validation is currently supported in Rust, Python, R, and Julia. Node.js and WebAssembly support is under development.
 
 ---
 
