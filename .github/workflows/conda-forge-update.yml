@@ -1,0 +1,193 @@
+name: Update conda-forge feedstock
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to update to (without v prefix, e.g., 0.1.2)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-feedstock:
+    name: Update conda-forge feedstock
+    runs-on: ubuntu-latest
+    # Only run on release events or manual trigger
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Check required secrets
+        env:
+          CONDA_FORGE_TOKEN: ${{ secrets.CONDA_FORGE_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -z "$CONDA_FORGE_TOKEN" ]; then
+            echo "⚠️ Warning: CONDA_FORGE_TOKEN secret is not set."
+            echo "If this is a fork or the built-in GITHUB_TOKEN lacks permissions to fork/PR on conda-forge,"
+            echo "please add a Personal Access Token (PAT) with 'repo' permissions as a secret named CONDA_FORGE_TOKEN."
+            
+            if [ -n "$GITHUB_TOKEN" ]; then
+              echo "✅ Falling back to GITHUB_TOKEN..."
+            else
+              echo "❌ Error: Neither CONDA_FORGE_TOKEN nor GITHUB_TOKEN are available."
+              exit 1
+            fi
+          else
+            echo "✅ CONDA_FORGE_TOKEN is configured."
+          fi
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "release" ]; then
+            # Extract version from release tag (remove 'v' prefix if present)
+            VERSION="${{ github.event.release.tag_name }}"
+            VERSION="${VERSION#v}"
+          else
+            VERSION="${{ github.event.inputs.version }}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Updating to version: $VERSION"
+
+      - name: Get SHA256 from PyPI
+        id: sha256
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          echo "Fetching SHA256 for fastlowess version $VERSION..."
+
+          MAX_RETRIES=40
+          SLEEP_SECONDS=15
+          SHA256=""
+
+          for ((i=1; i<=MAX_RETRIES; i++)); do
+            echo "Attempt $i/$MAX_RETRIES: Checking PyPI..."
+            
+            RESPONSE=$(curl -sL "https://pypi.org/pypi/fastlowess/$VERSION/json")
+            
+            # extract SHA256 using jq (handles missing keys gracefully)
+            SHA256=$(echo "$RESPONSE" | jq -r '.urls[]? | select(.packagetype == "sdist") | .digests.sha256 // empty' 2>/dev/null | head -1)
+
+            if [ -n "$SHA256" ]; then
+              echo "✅ Found SHA256: $SHA256"
+              break
+            fi
+            
+            echo "⚠️ Metadata not ready yet. Waiting ${SLEEP_SECONDS}s..."
+            sleep $SLEEP_SECONDS
+          done
+
+          if [ -z "$SHA256" ]; then
+            echo "❌ Failed to get SHA256 for version $VERSION after retries."
+            echo "Response content was: $RESPONSE"
+            exit 1
+          fi
+
+          echo "sha256=$SHA256" >> $GITHUB_OUTPUT
+          echo "SHA256: $SHA256"
+
+      - name: Clone feedstock fork
+        env:
+          GH_TOKEN: ${{ secrets.CONDA_FORGE_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          # Configure git
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Clone the user's fork (assumes fork already exists at thisisamirv/fastlowess-feedstock)
+          # If you need to use a different account, update this URL
+          git clone "https://x-access-token:${GH_TOKEN}@github.com/thisisamirv/fastlowess-feedstock.git"
+
+          cd fastlowess-feedstock
+
+          # Add conda-forge as upstream and fetch latest
+          git remote add upstream https://github.com/conda-forge/fastlowess-feedstock.git
+          git fetch upstream
+          git checkout main
+          git merge upstream/main --no-edit || true
+
+      - name: Update recipe
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          SHA256: ${{ steps.sha256.outputs.sha256 }}
+        run: |
+          cd fastlowess-feedstock
+
+          # Create a new branch
+          BRANCH="update-to-v$VERSION"
+          git checkout -b "$BRANCH"
+
+          # Update version in meta.yaml
+          sed -i "s/{% set version = \".*\" %}/{% set version = \"$VERSION\" %}/" recipe/meta.yaml
+
+          # Update SHA256 in meta.yaml
+          sed -i "s/sha256: .*/sha256: $SHA256/" recipe/meta.yaml
+
+          # Reset build number to 0 for new version
+          sed -i "s/number: .*/number: 0/" recipe/meta.yaml
+
+          # Update license field
+          sed -i "s/license: .*/license: MIT AND Apache-2.0/" recipe/meta.yaml
+
+          # Update license_file to use dual license files (multi-line replacement)
+          # First, find the license_file section and replace LICENSE with LICENSE-MIT
+          sed -i "/license_file:/,/THIRDPARTY.yml/ s/- LICENSE$/- LICENSE-MIT/" recipe/meta.yaml
+
+          # Then add LICENSE-APACHE after LICENSE-MIT if it doesn't exist
+          if ! grep -q "LICENSE-APACHE" recipe/meta.yaml; then
+            sed -i "/- LICENSE-MIT/a\    - LICENSE-APACHE" recipe/meta.yaml
+          fi
+
+          # Show the changes
+          echo "=== Updated meta.yaml ==="
+          cat recipe/meta.yaml
+          echo "========================="
+
+          # Commit changes
+          git add recipe/meta.yaml
+          git commit -m "Update to version $VERSION"
+
+      - name: Push and create PR
+        env:
+          GH_TOKEN: ${{ secrets.CONDA_FORGE_TOKEN || secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          cd fastlowess-feedstock
+
+          BRANCH="update-to-v$VERSION"
+
+          # Push to fork
+          git push -u origin "$BRANCH" --force
+
+          # Create PR to conda-forge/fastlowess-feedstock
+          PR_BODY="## Update fastlowess to version $VERSION
+
+          This PR was automatically generated by the [conda-forge-update workflow](https://github.com/${{ github.repository }}/actions/workflows/conda-forge-update.yml).
+
+          ### Changes
+          - Updated version to $VERSION
+          - Updated SHA256 hash
+          - Reset build number to 0
+
+          ### Checklist
+          - [x] Version updated
+          - [x] SHA256 hash updated
+          - [x] Build number reset to 0
+
+          ---
+          @conda-forge-admin, please rerender
+          @conda-forge-admin, please ping conda-forge/help-rust"
+
+          gh pr create \
+            --repo conda-forge/fastlowess-feedstock \
+            --head "${{ github.repository_owner }}:$BRANCH" \
+            --base main \
+            --title "Update to version $VERSION" \
+            --body "$PR_BODY"
+
+          echo "✅ PR created successfully!"
