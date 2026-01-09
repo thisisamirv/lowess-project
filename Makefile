@@ -16,7 +16,7 @@ LOWESS_EXAMPLES := batch_smoothing online_smoothing streaming_smoothing
 FASTLOWESS_PKG := fastLowess
 FASTLOWESS_DIR := crates/fastLowess
 FASTLOWESS_FEATURES := cpu gpu dev
-FASTLOWESS_EXAMPLES := batch_smoothing online_smoothing streaming_smoothing
+FASTLOWESS_EXAMPLES := fast_batch_smoothing fast_online_smoothing fast_streaming_smoothing
 
 # Python bindings
 PY_PKG := fastLowess-py

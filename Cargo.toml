@@ -4,7 +4,7 @@ members = ["crates/lowess", "crates/fastLowess", "bindings/python", "tests"]
 exclude = ["bindings/r/src/vendor"]
 
 [workspace.package]
-version = "0.99.4"
+version = "0.99.5"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
