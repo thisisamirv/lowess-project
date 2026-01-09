@@ -12,7 +12,7 @@ readme = { workspace = true }
 
 # Links
 repository = { workspace = true }
-documentation = "https://docs.rs/lowess"
+documentation = "https://lowess.readthedocs.io/"
 homepage = { workspace = true }
 
 # Categories

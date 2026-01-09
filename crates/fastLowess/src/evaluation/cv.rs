@@ -5,16 +5,23 @@
 //! multiple candidate fractions concurrently.
 
 // External dependencies
+#[cfg(feature = "cpu")]
 use num_traits::Float;
 #[cfg(feature = "cpu")]
 use rayon::prelude::*;
+#[cfg(feature = "cpu")]
 use std::cmp::Ordering::Equal;
+#[cfg(feature = "cpu")]
 use std::fmt::Debug;
 
 // Export dependencies from lowess crate
+#[cfg(feature = "cpu")]
 use lowess::internals::algorithms::regression::WLSSolver;
+#[cfg(feature = "cpu")]
 use lowess::internals::engine::executor::{LowessBuffer, LowessConfig, LowessExecutor};
+#[cfg(feature = "cpu")]
 use lowess::internals::evaluation::cv::CVKind;
+#[cfg(feature = "cpu")]
 use lowess::internals::primitives::buffer::CVBuffer;
 
 // Perform cross-validation to select the best fraction in parallel.

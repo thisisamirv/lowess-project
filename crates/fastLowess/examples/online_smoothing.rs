@@ -185,7 +185,7 @@ fn example_3_outlier_handling() -> Result<(), LowessError> {
     println!("{}", "-".repeat(80));
 
     // Data with deliberate outliers
-    let data_points = vec![
+    let data_points = [
         (1.0, 2.0),
         (2.0, 4.1),
         (3.0, 5.9),

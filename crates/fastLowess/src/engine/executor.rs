@@ -6,13 +6,17 @@
 //! for large datasets by utilizing all available CPU cores.
 
 // External dependencies
+#[cfg(feature = "cpu")]
 use num_traits::Float;
 #[cfg(feature = "cpu")]
 use rayon::prelude::*;
 
 // Export dependencies from lowess crate
+#[cfg(feature = "cpu")]
 use lowess::internals::algorithms::regression::{RegressionContext, WLSSolver, ZeroWeightFallback};
+#[cfg(feature = "cpu")]
 use lowess::internals::math::kernel::WeightFunction;
+#[cfg(feature = "cpu")]
 use lowess::internals::primitives::window::Window;
 
 // Perform a single smoothing pass over all points in parallel.

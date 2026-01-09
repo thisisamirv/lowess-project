@@ -1,5 +1,9 @@
 Authors and Copyright Holders for Rust Dependencies:
 
+Package: approx (0.5.1)
+Authors: Brendan Zabarauskas <bjzaba@yahoo.com.au>
+License: Apache-2.0
+----------------------------------------
 Package: autocfg (1.5.0)
 Authors: Josh Stone <cuviper@gmail.com>
 License: Apache-2.0 OR MIT
@@ -36,7 +40,7 @@ Package: extendr-macros (0.8.1)
 Authors: andy-thomason <andy@andythomason.com>, Thomas Down, Mossa Merhi Reimert <mossa@sund.ku.dk>, Josiah Parry <josiah.parry@gmail.com>, Claus O. Wilke <wilke@austin.utexas.edu>, Hiroaki Yutani, Ilia A. Kosenkov <ilia.kosenkov@outlook.com>, Michael Milton <michael.r.milton@gmail.com>
 License: MIT
 ----------------------------------------
-Package: fastLowess (0.4.0)
+Package: fastLowess (0.99.3)
 Authors: Amir Valizadeh <thisisamirv@gmail.com>
 License: MIT OR Apache-2.0
 ----------------------------------------
@@ -44,7 +48,7 @@ Package: libm (0.2.15)
 Authors: Jorge Aparicio <jorge@japaric.io>
 License: MIT
 ----------------------------------------
-Package: lowess (0.7.0)
+Package: lowess (0.99.3)
 Authors: Amir Valizadeh <thisisamirv@gmail.com>
 License: MIT OR Apache-2.0
 ----------------------------------------
@@ -76,7 +80,7 @@ Package: paste (1.0.15)
 Authors: David Tolnay <dtolnay@gmail.com>
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: portable-atomic (1.12.0)
+Package: portable-atomic (1.13.0)
 Authors: 
 License: Apache-2.0 OR MIT
 ----------------------------------------
@@ -84,11 +88,11 @@ Package: portable-atomic-util (0.2.4)
 Authors: 
 License: Apache-2.0 OR MIT
 ----------------------------------------
-Package: proc-macro2 (1.0.103)
+Package: proc-macro2 (1.0.105)
 Authors: David Tolnay <dtolnay@gmail.com>, Alex Crichton <alex@alexcrichton.com>
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: quote (1.0.42)
+Package: quote (1.0.43)
 Authors: David Tolnay <dtolnay@gmail.com>
 License: MIT OR Apache-2.0
 ----------------------------------------
@@ -104,11 +108,15 @@ Package: rayon-core (1.13.0)
 Authors: 
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: safe_arch (1.0.0)
+Package: rfastlowess (0.99.3)
+Authors: Amir Valizadeh <thisisamirv@gmail.com>
+License: MIT OR Apache-2.0
+----------------------------------------
+Package: safe_arch (0.7.4)
 Authors: Lokathor <zefria@gmail.com>
 License: Zlib OR Apache-2.0 OR MIT
 ----------------------------------------
-Package: syn (2.0.111)
+Package: syn (2.0.113)
 Authors: David Tolnay <dtolnay@gmail.com>
 License: MIT OR Apache-2.0
 ----------------------------------------
@@ -116,7 +124,7 @@ Package: unicode-ident (1.0.22)
 Authors: David Tolnay <dtolnay@gmail.com>
 License: (MIT OR Apache-2.0) AND Unicode-3.0
 ----------------------------------------
-Package: wide (1.1.1)
+Package: wide (0.7.33)
 Authors: Lokathor <zefria@gmail.com>
 License: Zlib OR Apache-2.0 OR MIT
 ----------------------------------------

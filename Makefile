@@ -44,6 +44,10 @@ lowess:
 	@echo "2. Linting & Building..."
 	@echo "=============================================================================="
 	@if [ "$(FEATURE_SET)" = "all" ]; then \
+		echo "Checking $(LOWESS_PKG) (std)..."; \
+		cargo clippy -q -p $(LOWESS_PKG) --all-targets -- -D warnings || exit 1; \
+		cargo build -q -p $(LOWESS_PKG) || exit 1; \
+		RUSTDOCFLAGS="-D warnings" cargo doc -q -p $(LOWESS_PKG) --no-deps || exit 1; \
 		echo "Checking $(LOWESS_PKG) (no-default-features)..."; \
 		cargo clippy -q -p $(LOWESS_PKG) --all-targets --no-default-features -- -D warnings || exit 1; \
 		cargo build -q -p $(LOWESS_PKG) --no-default-features || exit 1; \
@@ -170,11 +174,11 @@ python:
 	@echo "1. Formatting..."
 	@echo "=============================================================================="
 	@cargo fmt -p $(PY_PKG) -- --check
-	@ruff format --check $(PY_DIR)/python/ $(PY_TEST_DIR)/ || true
+	@ruff format $(PY_DIR)/python/ $(PY_TEST_DIR)/
 	@echo "=============================================================================="
 	@echo "2. Linting..."
 	@echo "=============================================================================="
-	@cargo clippy -q -p $(PY_PKG) --all-targets -- -D warnings
+	@VIRTUAL_ENV= PYO3_PYTHON=python3 cargo clippy -q -p $(PY_PKG) --all-targets -- -D warnings
 	@ruff check $(PY_DIR)/python/ $(PY_TEST_DIR)/
 	@echo "=============================================================================="
 	@echo "3. Environment Setup..."
@@ -188,7 +192,7 @@ python:
 	@echo "=============================================================================="
 	@echo "5. Testing..."
 	@echo "=============================================================================="
-	@cargo test -q -p $(PY_PKG)
+	@VIRTUAL_ENV= PYO3_PYTHON=python3 cargo test -q -p $(PY_PKG)
 	@. $(PY_VENV)/bin/activate && python -m pytest $(PY_TEST_DIR) -q
 	@echo "=============================================================================="
 	@echo "6. Examples..."
@@ -288,8 +292,8 @@ r:
 	@(cd $(R_DIR)/src && cargo vendor -q --no-delete vendor)
 	@# Step 7: Regenerate checksums after vendoring
 	@dev/clean_checksums.py -q $(R_DIR)/src/vendor
-	@echo "Creating vendor.tar.xz archive..."
-	@(cd $(R_DIR)/src && tar --sort=name --mtime='1970-01-01 00:00:00Z' --owner=0 --group=0 --numeric-owner --xz --create --file=vendor.tar.xz vendor)
+	@echo "Creating vendor.tar.xz archive (including Cargo.lock)..."
+	@(cd $(R_DIR)/src && tar --sort=name --mtime='1970-01-01 00:00:00Z' --owner=0 --group=0 --numeric-owner --xz --create --file=vendor.tar.xz vendor Cargo.lock)
 	@rm -rf $(R_DIR)/src/vendor
 	@echo "Vendor update complete. Archive: $(R_DIR)/src/vendor.tar.xz"
 	@if [ -f $(R_DIR)/src/vendor.tar.xz ] && [ ! -d $(R_DIR)/src/vendor ]; then \
@@ -404,7 +408,7 @@ all-coverage: lowess-coverage fastLowess-coverage python-coverage r-coverage
 all-clean: r-clean lowess-clean fastLowess-clean python-clean
 	@echo "Cleaning project root..."
 	@cargo clean
-	@rm -rf target Cargo.lock .venv .ruff_cache .pytest_cache site
+	@rm -rf target Cargo.lock .venv .ruff_cache .pytest_cache site docs-venv
 	@echo "All clean completed!"
 
 .PHONY: lowess lowess-coverage lowess-clean fastLowess fastLowess-coverage fastLowess-clean python python-coverage python-clean r r-coverage r-clean check-msrv docs docs-serve docs-clean all all-coverage all-clean

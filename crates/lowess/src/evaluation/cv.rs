@@ -342,14 +342,14 @@ impl CVKind {
         let mut fold_errors = vec![vec![T::zero(); k]; fractions.len()];
         let mut fold_sizes = vec![0usize; k];
 
-        for fold in 0..k {
+        for (fold, fold_size_slot) in fold_sizes.iter_mut().enumerate().take(k) {
             let test_start = fold * fold_size;
             let test_end = if fold == k - 1 {
                 n
             } else {
                 (fold + 1) * fold_size
             };
-            fold_sizes[fold] = test_end - test_start;
+            *fold_size_slot = test_end - test_start;
 
             // Build training and test sets once per fold
             let (tx, ty, tex, tey) = (
@@ -427,9 +427,9 @@ impl CVKind {
         for (frac_idx, _) in fractions.iter().enumerate() {
             let mut total_rmse = T::zero();
             let mut count = 0;
-            for fold in 0..k {
-                if fold_sizes[fold] > 0 {
-                    let mse = fold_errors[frac_idx][fold] / T::from(fold_sizes[fold]).unwrap();
+            for (fold, &fold_size_val) in fold_sizes.iter().enumerate().take(k) {
+                if fold_size_val > 0 {
+                    let mse = fold_errors[frac_idx][fold] / T::from(fold_size_val).unwrap();
                     total_rmse = total_rmse + mse.sqrt();
                     count += 1;
                 }

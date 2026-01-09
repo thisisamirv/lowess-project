@@ -1,0 +1,422 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  PIP_DISABLE_PIP_VERSION_CHECK: 1
+
+jobs:
+  # ============================================================================
+  # RUST CRATES - COMBINED TEST JOB
+  # Runs lowess and fastLowess tests sequentially on the same runner
+  # ============================================================================
+  rust-test:
+    name: Rust - Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        rust: [stable]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+
+      - name: Install Rust GNU (Windows)
+        if: matrix.os == 'windows-latest'
+        run: rustup toolchain install stable-x86_64-pc-windows-gnu
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            crates/lowess
+            crates/fastLowess
+          key: rust-${{ matrix.os }}-cargo
+
+      # ---- lowess crate ----
+      - name: "[lowess] Run Tests (std)"
+        shell: bash
+        working-directory: crates/lowess
+        run: cargo test --workspace
+
+      - name: "[lowess] Run Tests (no-std)"
+        if: matrix.os == 'ubuntu-latest'
+        working-directory: crates/lowess
+        run: cargo test --no-default-features
+
+      # ---- fastLowess crate ----
+      - name: "[fastLowess] Build (cpu)"
+        working-directory: crates/fastLowess
+        run: cargo build --features cpu
+
+      - name: "[fastLowess] Build (gpu)"
+        working-directory: crates/fastLowess
+        run: cargo build --features gpu
+
+      - name: "[fastLowess] Run Tests (cpu)"
+        working-directory: crates/fastLowess
+        run: cargo test --features cpu
+
+  # ============================================================================
+  # RUST CRATES - COMBINED LINT & FORMAT JOB
+  # ============================================================================
+  rust-lint:
+    name: Rust - Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            crates/lowess
+            crates/fastLowess
+
+      # ---- lowess crate ----
+      - name: "[lowess] Check Formatting"
+        working-directory: crates/lowess
+        run: cargo fmt --all -- --check
+
+      - name: "[lowess] Run Clippy"
+        working-directory: crates/lowess
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: "[lowess] Run Clippy (no-default-features)"
+        working-directory: crates/lowess
+        run: cargo clippy --all-targets --no-default-features -- -D warnings
+
+      # ---- fastLowess crate ----
+      - name: "[fastLowess] Check Formatting"
+        working-directory: crates/fastLowess
+        run: cargo fmt --all -- --check
+
+      - name: "[fastLowess] Run Clippy (cpu)"
+        working-directory: crates/fastLowess
+        run: cargo clippy --all-targets --features cpu -- -D warnings
+
+      - name: "[fastLowess] Run Clippy (gpu)"
+        working-directory: crates/fastLowess
+        run: cargo clippy --all-targets --features gpu -- -D warnings
+
+  # ============================================================================
+  # RUST CRATES - COMBINED DOCS & EXAMPLES JOB
+  # ============================================================================
+  rust-docs:
+    name: Rust - Docs & Examples
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            crates/lowess
+            crates/fastLowess
+
+      # ---- lowess crate ----
+      - name: "[lowess] Check Documentation"
+        working-directory: crates/lowess
+        run: cargo doc --no-deps
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+      # ---- fastLowess crate ----
+      - name: "[fastLowess] Check Documentation (cpu)"
+        working-directory: crates/fastLowess
+        run: cargo doc --no-deps --features cpu
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+      - name: "[fastLowess] Check Documentation (gpu)"
+        working-directory: crates/fastLowess
+        run: cargo doc --no-deps --features gpu
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+      - name: "[fastLowess] Run Examples"
+        working-directory: crates/fastLowess
+        run: |
+          for example in examples/*.rs; do
+            name=$(basename "$example" .rs)
+            echo "Running example: $name"
+            cargo run --example "$name" --features cpu
+          done
+
+  # ============================================================================
+  # PYTHON BINDINGS
+  # ============================================================================
+  python-test:
+    name: Python - Test (${{ matrix.os }}, Python ${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: bindings/python
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.8", "3.14"]
+        rust: [stable]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: bindings/python
+          key: python-${{ matrix.os }}-cargo
+
+      - name: Install Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+
+      - name: Install Python dependencies
+        run: pip install maturin pytest numpy
+
+      - name: Build and Install Python Extension
+        run: pip install .
+
+      - name: Run Python Tests
+        run: pytest ../../tests/python/ -v
+
+  python-lint:
+    name: Python - Lint & Format
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bindings/python
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: bindings/python
+
+      - name: Rust Format
+        run: cargo fmt --all -- --check
+
+      - name: Rust Clippy (default)
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Rust Clippy (no-default-features)
+        run: cargo clippy --all-targets --no-default-features -- -D warnings
+
+      - name: Rust Documentation
+        run: cargo doc --no-deps
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+      - name: Install Python tools
+        run: pip install ruff
+
+      - name: Python Format Check (ruff)
+        run: ruff format --check python/fastlowess/ ../../tests/python/
+
+      - name: Python Lint (ruff)
+        run: ruff check python/fastlowess/ ../../tests/python/
+
+  # ============================================================================
+  # R BINDINGS
+  # ============================================================================
+  r-cmd-check:
+    name: R - CMD Check (${{ matrix.config.os }}, R ${{ matrix.config.r }})
+    runs-on: ${{ matrix.config.os }}
+    defaults:
+      run:
+        working-directory: bindings/r
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - { os: ubuntu-latest, r: "release" }
+          - { os: macos-latest, r: "release" }
+          - { os: macos-14, r: "release" }
+          - { os: windows-latest, r: "release" }
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.89.0
+          targets: ${{ matrix.config.os == 'windows-latest' && 'x86_64-pc-windows-gnu' || '' }}
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.config.r }}
+          use-public-rspm: true
+
+      - name: Fix permissions
+        shell: bash
+        run: chmod +x configure cleanup
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck
+          needs: check
+          working-directory: bindings/r
+
+      - uses: r-lib/actions/check-r-package@v2
+        with:
+          upload-snapshots: true
+          build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
+          error-on: '"error"'
+          working-directory: bindings/r
+
+  r-asan-check:
+    name: R - Clang ASAN
+    runs-on: ubuntu-latest
+    container:
+      image: rhub/clang-asan
+    defaults:
+      run:
+        working-directory: bindings/r
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install latest Rust
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Install System Dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends git curl libssl-dev libcurl4-openssl-dev libxml2-dev pandoc
+
+      - name: Install R Dependencies
+        run: |
+          Rscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); install.packages(c('remotes', 'rcmdcheck', 'testthat', 'knitr', 'rmarkdown'))"
+          Rscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); remotes::install_deps(dependencies = TRUE)"
+
+      - name: Run ASAN Check
+        run: |
+          Rscript -e "rcmdcheck::rcmdcheck(args = c('--no-manual', '--no-vignettes'), error_on = 'error', check_dir = 'check')"
+
+  # Combined R lint, CRAN readiness, and BiocCheck job
+  r-quality:
+    name: R - Quality Checks (Lint, CRAN, Bioc)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bindings/r
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.89.0
+          components: rustfmt, clippy
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: release
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck, any::lintr, any::styler, any::prettycode, any::BiocManager
+          needs: check
+          working-directory: bindings/r
+
+      # ---- Lint & Format ----
+      # Note: Rust linting for R binding is handled by rust-lint job and R CMD check
+      - name: R Linting
+        run: |
+          Rscript -e "my_linters <- lintr::linters_with_defaults(indentation_linter = lintr::indentation_linter(indent = 4L), object_usage_linter = NULL); lints <- c(lintr::lint_dir('R', linters = my_linters), lintr::lint_dir('../../tests/r/testthat', linters = my_linters)); print(lints); if (length(lints) > 0) quit(status = 1)"
+
+      # ---- CRAN Readiness ----
+      - name: Install Vignette Dependencies
+        run: |
+          install.packages(c("knitr", "rmarkdown"))
+          BiocManager::install("BiocStyle")
+        shell: Rscript {0}
+
+      - name: Verify Vendoring & Size
+        run: |
+          chmod +x ../../dev/prepare_cran.sh
+          ../../dev/prepare_cran.sh
+
+          R CMD build .
+
+          PACKAGE_NAME=$(grep '^Package:' DESCRIPTION | cut -d' ' -f2)
+          SIZE=$(du -k ${PACKAGE_NAME}_*.tar.gz | cut -f1)
+          if [ "$SIZE" -gt 5120 ]; then
+            echo "ERROR: Package size ${SIZE}KB exceeds CRAN limit of 5MB"
+            exit 1
+          else
+            echo "Package size ${SIZE}KB is within limits."
+          fi
+        working-directory: bindings/r
+
+      # ---- BiocCheck ----
+      - name: Install BiocCheck
+        run: |
+          BiocManager::install("BiocCheck")
+        shell: Rscript {0}
+
+      - name: Run BiocCheck
+        run: |
+          pkg_name <- read.dcf("DESCRIPTION", fields = "Package")[[1]]
+          tarball <- list.files(pattern = paste0("^", pkg_name, "_.*\\.tar\\.gz$"))
+          if (length(tarball) == 0) stop("Package tarball not found")
+          BiocCheck::BiocCheck(tarball[1], `new-package`=TRUE, `no-check-vignettes`=TRUE, `quit-with-status`=TRUE)
+        shell: Rscript {0}

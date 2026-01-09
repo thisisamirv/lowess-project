@@ -25,7 +25,7 @@ fi
 # 3. Generate AUTHORS file
 echo "   -> Generating inst/AUTHORS..."
 mkdir -p inst
-(cd src && cargo metadata --format-version 1 > ../cargo_metadata_temp.json)
+(cd src && cargo metadata --locked --format-version 1 > ../cargo_metadata_temp.json)
 
 python3 -c '
 import json

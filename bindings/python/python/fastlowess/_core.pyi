@@ -5,7 +5,6 @@ from typing import Sequence
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
-
 class Diagnostics:
     """Diagnostic statistics for LOWESS fit quality."""
 
@@ -43,7 +42,6 @@ class Diagnostics:
     def residual_sd(self) -> float:
         """Residual standard deviation."""
         ...
-
 
 class LowessResult:
     """Result from LOWESS smoothing."""
@@ -112,7 +110,6 @@ class LowessResult:
     def cv_scores(self) -> NDArray[np.float64] | None:
         """CV scores for tested fractions."""
         ...
-
 
 def smooth(
     x: ArrayLike,
@@ -189,7 +186,6 @@ def smooth(
     """
     ...
 
-
 def smooth_streaming(
     x: ArrayLike,
     y: ArrayLike,
@@ -254,7 +250,6 @@ def smooth_streaming(
         Result object with smoothed values.
     """
     ...
-
 
 def smooth_online(
     x: ArrayLike,

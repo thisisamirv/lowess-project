@@ -5,13 +5,17 @@
 //! across CPU cores for maximum performance on large datasets.
 
 // External dependencies
+#[cfg(feature = "cpu")]
 use num_traits::Float;
 #[cfg(feature = "cpu")]
 use rayon::prelude::*;
 
 // Export dependencies from lowess crate
+#[cfg(feature = "cpu")]
 use lowess::internals::evaluation::intervals::IntervalMethod;
+#[cfg(feature = "cpu")]
 use lowess::internals::math::kernel::WeightFunction;
+#[cfg(feature = "cpu")]
 use lowess::internals::primitives::window::Window;
 
 // Perform interval estimation in parallel.
