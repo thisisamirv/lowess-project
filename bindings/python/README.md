@@ -9,14 +9,28 @@
 
 The fastest, most robust, and most feature-complete language-agnostic LOWESS (Locally Weighted Scatterplot Smoothing) implementation for **Rust**, **Python**, and **R**.
 
-## Overview
+> [!IMPORTANT]
+>
+> The `lowess-project` contains a complete ecosystem for LOWESS smoothing:
+>
+> - **[`lowess`](https://github.com/thisisamirv/lowess-project/crates/lowess)** - Core single-threaded Rust implementation with `no_std` support
+> - **[`fastLowess`](https://github.com/thisisamirv/lowess-project/crates/fastLowess)** - Parallel CPU and GPU-accelerated Rust wrapper with ndarray integration  
+> - **[`Python bindings`](https://github.com/thisisamirv/lowess-project/bindings/python)** - PyO3-based Python package
+> - **[`R bindings`](https://github.com/thisisamirv/lowess-project/bindings/r)** - extendr-based R package
 
-This monorepo contains a complete ecosystem for LOWESS smoothing:
+## LOESS vs. LOWESS
 
-- **[`lowess`](crates/lowess)** - Core single-threaded implementation with `no_std` support
-- **[`fastLowess`](crates/fastLowess)** - Parallel CPU and GPU-accelerated wrapper with ndarray integration  
-- **[`Python bindings`](bindings/python)** - PyO3-based Python package
-- **[`R bindings`](bindings/r)** - extendr-based R package
+| Feature               | LOESS (This Crate)                | LOWESS                         |
+|-----------------------|-----------------------------------|--------------------------------|
+| **Polynomial Degree** | Linear, Quadratic, Cubic, Quartic | Linear (Degree 1)              |
+| **Dimensions**        | Multivariate (n-D support)        | Univariate (1-D only)          |
+| **Flexibility**       | High (Distance metrics)           | Standard                       |
+| **Complexity**        | Higher (Matrix inversion)         | Lower (Weighted average/slope) |
+
+> [!TIP]
+> **Note:** For a **LOESS** implementation, use [`loess-project`](https://github.com/thisisamirv/loess-project).
+
+---
 
 ## Documentation
 
@@ -324,20 +338,6 @@ pub struct LowessResult<T> {
     pub cv_scores: Option<Vec<T>>,
 }
 ```
-
----
-
-## LOESS vs. LOWESS
-
-| Feature               | LOESS (This Crate)                | LOWESS                         |
-|-----------------------|-----------------------------------|--------------------------------|
-| **Polynomial Degree** | Linear, Quadratic, Cubic, Quartic | Linear (Degree 1)              |
-| **Dimensions**        | Multivariate (n-D support)        | Univariate (1-D only)          |
-| **Flexibility**       | High (Distance metrics)           | Standard                       |
-| **Complexity**        | Higher (Matrix inversion)         | Lower (Weighted average/slope) |
-
-> [!TIP]
-> **Note:** For a **LOESS** implementation, use [`loess-project`](https://github.com/thisisamirv/loess-project).
 
 ---
 
