@@ -2,35 +2,29 @@
 
 Install the LOWESS library for your preferred language.
 
-## Rust
+## R
 
-Add the crate to your `Cargo.toml`:
+### From R-universe (recommended)
 
-=== "lowess (no_std compatible)"
+Pre-built binaries, no Rust toolchain required:
 
-    ```toml
-    [dependencies]
-    lowess = "0.99"
-    ```
+```r
+install.packages("rfastlowess", repos = "https://thisisamirv.r-universe.dev")
+```
 
-=== "fastLowess (parallel + GPU)"
+### From source
 
-    ```toml
-    [dependencies]
-    fastLowess = { version = "0.99", features = ["cpu"] }
-    ```
+Requires Rust toolchain:
 
-### Feature Flags
+```r
+# Install Rust first: https://rustup.rs/
+devtools::install_github("thisisamirv/lowess-project", subdir = "bindings/r")
+```
 
-| Crate        | Feature | Description                             |
-|--------------|---------|-----------------------------------------|
-| `lowess`     | `std`   | Enable standard library (default)       |
-| `fastLowess` | `cpu`   | Enable CPU parallelism via Rayon        |
-| `fastLowess` | `gpu`   | Enable GPU acceleration via wgpu (beta) |
+### Requirements
 
-### Minimum Supported Rust Version (MSRV)
-
-Both crates require **Rust 1.85.0** or later.
+- R 4.2+
+- Rust 1.85+ (for source installation)
 
 ---
 
@@ -59,29 +53,55 @@ maturin develop --release
 
 ---
 
-## R
+## Julia
 
-### From R-universe (recommended)
+### From the Julia General Registry
 
-Pre-built binaries, no Rust toolchain required:
-
-```r
-install.packages("rfastlowess", repos = "https://thisisamirv.r-universe.dev")
+```julia
+using Pkg
+Pkg.add("fastLowess")
 ```
 
 ### From source
 
-Requires Rust toolchain:
-
-```r
-# Install Rust first: https://rustup.rs/
-devtools::install_github("thisisamirv/lowess-project", subdir = "bindings/r")
+```julia
+using Pkg
+Pkg.develop(url="https://github.com/thisisamirv/lowess-project", subdir="bindings/julia/julia")
 ```
 
-### Requirements
+---
 
-- R 4.2+
-- Rust 1.85+ (for source installation)
+## Rust
+
+Add the crate to your `Cargo.toml`:
+
+=== "lowess (no_std compatible)"
+
+    ```toml
+    [dependencies]
+    lowess = "0.99"
+    ```
+
+=== "fastLowess (parallel + GPU)"
+
+    ```toml
+    [dependencies]
+    fastLowess = { version = "0.99", features = ["cpu"] }
+    ```
+
+---
+
+### Feature Flags
+
+| Crate        | Feature | Description                             |
+|--------------|---------|-----------------------------------------|
+| `lowess`     | `std`   | Enable standard library (default)       |
+| `fastLowess` | `cpu`   | Enable CPU parallelism via Rayon        |
+| `fastLowess` | `gpu`   | Enable GPU acceleration via wgpu (beta) |
+
+### Minimum Supported Rust Version (MSRV)
+
+Both crates require **Rust 1.85.0** or later.
 
 ---
 
@@ -127,4 +147,16 @@ devtools::install_github("thisisamirv/lowess-project", subdir = "bindings/r")
         println!("Installed successfully!");
         Ok(())
     }
+    ```
+
+=== "Julia"
+
+    ```julia
+    using fastLowess
+    
+    x = [1.0, 2.0, 3.0]
+    y = [2.0, 4.0, 6.0]
+    
+    result = smooth(x, y)
+    println("Installed successfully!")
     ```

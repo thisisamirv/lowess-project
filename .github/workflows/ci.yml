@@ -420,3 +420,83 @@ jobs:
           if (length(tarball) == 0) stop("Package tarball not found")
           BiocCheck::BiocCheck(tarball[1], `new-package`=TRUE, `no-check-vignettes`=TRUE, `quit-with-status`=TRUE)
         shell: Rscript {0}
+
+  # ============================================================================
+  # JULIA BINDINGS
+  # ============================================================================
+  julia-test:
+    name: Julia - Test (${{ matrix.os }}, Julia ${{ matrix.julia-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        julia-version: ["1.11"]
+        rust: [stable]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+
+      - name: Install Julia
+        uses: julia-actions/setup-julia@v2
+        with:
+          version: ${{ matrix.julia-version }}
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: bindings/julia
+          key: julia-${{ matrix.os }}-cargo
+
+      - name: Build Rust library
+        working-directory: bindings/julia
+        run: cargo build --release
+
+      - name: Run Julia Tests
+        run: julia -e 'using Pkg; Pkg.activate("bindings/julia/julia"); Pkg.instantiate(); include("tests/julia/test_fastlowess.jl")'
+
+      - name: Run Julia Examples
+        run: |
+          julia --project=bindings/julia/julia bindings/julia/examples/batch_smoothing.jl
+          julia --project=bindings/julia/julia bindings/julia/examples/streaming_smoothing.jl
+          julia --project=bindings/julia/julia bindings/julia/examples/online_smoothing.jl
+
+  julia-lint:
+    name: Julia - Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Install Julia
+        uses: julia-actions/setup-julia@v2
+        with:
+          version: "1.11"
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: bindings/julia
+
+      - name: Rust Format
+        working-directory: bindings/julia
+        run: cargo fmt --all -- --check
+
+      - name: Rust Clippy
+        working-directory: bindings/julia
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Rust Documentation
+        working-directory: bindings/julia
+        run: cargo doc --no-deps
+        env:
+          RUSTDOCFLAGS: -D warnings

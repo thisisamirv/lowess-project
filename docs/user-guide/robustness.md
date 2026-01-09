@@ -45,6 +45,11 @@ $$w(u) = \begin{cases} (1 - u^2)^2 & |u| < 1 \\ 0 & |u| \geq 1 \end{cases}$$
         .build()?;
     ```
 
+=== "Julia"
+    ```julia
+    result = smooth(x, y, iterations=3, robustness_method="bisquare")
+    ```
+
 ---
 
 ### Huber
@@ -74,6 +79,11 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}$$
         .build()?;
     ```
 
+=== "Julia"
+    ```julia
+    result = smooth(x, y, iterations=3, robustness_method="huber")
+    ```
+
 ---
 
 ### Talwar
@@ -101,6 +111,11 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
         .robustness_method(Talwar)
         .adapter(Batch)
         .build()?;
+    ```
+
+=== "Julia"
+    ```julia
+    result = smooth(x, y, iterations=3, robustness_method="talwar")
     ```
 
 ---
@@ -156,6 +171,17 @@ Use robustness weights to identify potential outliers:
     }
     ```
 
+=== "Julia"
+    ```julia
+    result = smooth(x, y, iterations=5, return_robustness_weights=true)
+
+    for (i, w) in enumerate(result.robustness_weights)
+        if w < 0.5
+            println("Potential outlier at index $i: weight = $w")
+        end
+    end
+    ```
+
 ---
 
 ## Scale Estimation
@@ -186,6 +212,11 @@ Residuals are scaled before computing robustness weights. Two methods:
         .build()?;
     ```
 
+=== "Julia"
+    ```julia
+    result = smooth(x, y, iterations=3, scaling_method="mad")
+    ```
+
 ---
 
 ## Auto-Convergence
@@ -214,4 +245,9 @@ Stop iterations early when weights stabilize:
         .auto_converge(1e-6)      // Stop when change < 1e-6
         .adapter(Batch)
         .build()?;
+    ```
+
+=== "Julia"
+    ```julia
+    result = smooth(x, y, iterations=10, auto_converge=1e-6)
     ```

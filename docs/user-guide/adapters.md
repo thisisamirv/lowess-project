@@ -76,6 +76,21 @@ Standard mode for complete datasets. **Supports all features.**
     let result = model.fit(&x, &y)?;
     ```
 
+=== "Julia"
+    ```julia
+    using fastLowess
+
+    result = smooth(
+        x, y,
+        fraction=0.5,
+        iterations=3,
+        confidence_intervals=0.95,
+        prediction_intervals=0.95,
+        return_diagnostics=true,
+        parallel=true
+    )
+    ```
+
 ---
 
 ## Streaming Adapter
@@ -153,6 +168,20 @@ Process large datasets in chunks with configurable overlap.
     // IMPORTANT: Get remaining buffered data
     let final_result = processor.finalize()?;
     write_output(&final_result.y);
+    ```
+
+=== "Julia"
+    ```julia
+    using fastLowess
+
+    result = smooth_streaming(
+        x, y,
+        fraction=0.3,
+        iterations=2,
+        chunk_size=5000,
+        overlap=500,
+        merge_strategy="average"
+    )
     ```
 
 ---
@@ -233,6 +262,20 @@ Incremental updates with a sliding window for real-time data.
             println!("Smoothed: {:.2}", output.smoothed);
         }
     }
+    ```
+
+=== "Julia"
+    ```julia
+    using fastLowess
+
+    result = smooth_online(
+        x, y,
+        fraction=0.2,
+        iterations=1,
+        window_capacity=100,
+        min_points=5,
+        update_mode="incremental"
+    )
     ```
 
 ---

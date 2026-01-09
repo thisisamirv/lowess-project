@@ -60,6 +60,21 @@ Split data into K folds, train on K-1, validate on 1.
     }
     ```
 
+=== "Julia"
+    ```julia
+    using fastLowess
+
+    result = smooth(
+        x, y,
+        cv_method="kfold",
+        cv_k=5,
+        cv_fractions=[0.2, 0.3, 0.5, 0.7]
+    )
+
+    println("Selected fraction: ", result.fraction_used)
+    println("CV scores: ", result.cv_results.scores)
+    ```
+
 ---
 
 ## Leave-One-Out (LOOCV)
@@ -90,6 +105,15 @@ Each point is held out once. Most thorough but slowest.
         .cross_validate(LOOCV(&[0.2, 0.3, 0.5, 0.7]))
         .adapter(Batch)
         .build()?;
+    ```
+
+=== "Julia"
+    ```julia
+    result = smooth(
+        x, y,
+        cv_method="loocv",
+        cv_fractions=[0.2, 0.3, 0.5, 0.7]
+    )
     ```
 
 ---
@@ -128,6 +152,17 @@ Set a seed for reproducible fold assignments:
         .build()?;
     ```
 
+=== "Julia"
+    ```julia
+    result = smooth(
+        x, y,
+        cv_method="kfold",
+        cv_k=5,
+        cv_fractions=[0.3, 0.5, 0.7],
+        cv_seed=42
+    )
+    ```
+
 ---
 
 ## Comparison
@@ -157,17 +192,61 @@ Lower MSE indicates better fit on held-out data.
 
 ## Interpreting Results
 
-```python
-# Example output
-result = fl.smooth(x, y, cv_method="kfold", cv_k=5, 
-                   cv_fractions=[0.1, 0.3, 0.5, 0.7])
+=== "R"
+    ```r
+    # Example output
+    result <- fastlowess(x, y, cv_method = "kfold", cv_k = 5,
+                         cv_fractions = c(0.1, 0.3, 0.5, 0.7))
 
-# Fraction  | CV Score (MSE)
-# 0.1       | 0.0542  ← Undersmoothed
-# 0.3       | 0.0231  ← Best
-# 0.5       | 0.0298
-# 0.7       | 0.0412  ← Oversmoothed
-```
+    # Fraction  | CV Score (MSE)
+    # 0.1       | 0.0542  ← Undersmoothed
+    # 0.3       | 0.0231  ← Best
+    # 0.5       | 0.0298
+    # 0.7       | 0.0412  ← Oversmoothed
+    ```
+
+=== "Python"
+    ```python
+    # Example output
+    result = fl.smooth(x, y, cv_method="kfold", cv_k=5,
+                       cv_fractions=[0.1, 0.3, 0.5, 0.7])
+
+    # Fraction  | CV Score (MSE)
+    # 0.1       | 0.0542  ← Undersmoothed
+    # 0.3       | 0.0231  ← Best
+    # 0.5       | 0.0298
+    # 0.7       | 0.0412  ← Oversmoothed
+    ```
+
+=== "Rust"
+    ```rust
+    // Example output
+    let model = Lowess::new()
+        .cross_validate(KFold(5, &[0.1, 0.3, 0.5, 0.7]))
+        .adapter(Batch)
+        .build()?;
+
+    let result = model.fit(&x, &y)?;
+
+    // Fraction  | CV Score (MSE)
+    // 0.1       | 0.0542  ← Undersmoothed
+    // 0.3       | 0.0231  ← Best
+    // 0.5       | 0.0298
+    // 0.7       | 0.0412  ← Oversmoothed
+    ```
+
+=== "Julia"
+    ```julia
+    # Example output
+    result = smooth(x, y, cv_method="kfold", cv_k=5,
+                    cv_fractions=[0.1, 0.3, 0.5, 0.7])
+
+    # Fraction  | CV Score (MSE)
+    # 0.1       | 0.0542  ← Undersmoothed
+    # 0.3       | 0.0231  ← Best
+    # 0.5       | 0.0298
+    # 0.7       | 0.0412  ← Oversmoothed
+    ```
 
 The fraction with **lowest CV score** is automatically selected.
 

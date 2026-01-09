@@ -52,6 +52,11 @@ $$w(u) = (1 - |u|^3)^3$$
         .build()?;
     ```
 
+=== "Julia"
+    ```julia
+    result = smooth(x, y, weight_function="tricube")
+    ```
+
 ---
 
 ## Epanechnikov
@@ -78,6 +83,11 @@ $$w(u) = \frac{3}{4}(1 - u^2)$$
         .weight_function(Epanechnikov)
         .adapter(Batch)
         .build()?;
+    ```
+
+=== "Julia"
+    ```julia
+    result = smooth(x, y, weight_function="epanechnikov")
     ```
 
 ---
@@ -108,6 +118,11 @@ $$w(u) = \exp(-u^2/2)$$
         .build()?;
     ```
 
+=== "Julia"
+    ```julia
+    result = smooth(x, y, weight_function="gaussian")
+    ```
+
 ---
 
 ## Biweight
@@ -134,6 +149,11 @@ $$w(u) = (1 - u^2)^2$$
         .weight_function(Biweight)
         .adapter(Batch)
         .build()?;
+    ```
+
+=== "Julia"
+    ```julia
+    result = smooth(x, y, weight_function="biweight")
     ```
 
 ---
@@ -164,6 +184,11 @@ $$w(u) = \cos(\pi u / 2)$$
         .build()?;
     ```
 
+=== "Julia"
+    ```julia
+    result = smooth(x, y, weight_function="cosine")
+    ```
+
 ---
 
 ## Triangle
@@ -192,6 +217,11 @@ $$w(u) = 1 - |u|$$
         .build()?;
     ```
 
+=== "Julia"
+    ```julia
+    result = smooth(x, y, weight_function="triangle")
+    ```
+
 ---
 
 ## Uniform
@@ -218,6 +248,11 @@ $$w(u) = 1$$
         .weight_function(Uniform)
         .adapter(Batch)
         .build()?;
+    ```
+
+=== "Julia"
+    ```julia
+    result = smooth(x, y, weight_function="uniform")
     ```
 
 ---

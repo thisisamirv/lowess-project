@@ -1,0 +1,75 @@
+#!/usr/bin/env julia
+"""
+fastLowess Streaming Smoothing Example
+
+This example demonstrates streaming LOWESS smoothing for large datasets:
+- Basic chunked processing
+- Handling datasets that don't fit in memory
+- Parallel execution for extreme speed
+"""
+
+using Random
+using Printf
+
+# Handle package loading - check if we're already in the fastLowess project
+using Pkg
+project_name = Pkg.project().name
+if project_name != "fastLowess"
+    # Not in the fastLowess project, need to develop it
+    script_dir = @__DIR__
+    julia_pkg_dir = joinpath(dirname(script_dir), "julia")
+    if !haskey(Pkg.project().dependencies, "fastLowess")
+        Pkg.develop(path=julia_pkg_dir)
+    end
+end
+
+using fastLowess
+
+function main()
+    println("=== fastLowess Streaming Mode Example ===")
+
+    # 1. Generate Very Large Dataset
+    # 100,000 points
+    n_points = 100_000
+    println("Generating large dataset: $n_points points...")
+    Random.seed!(42)
+    x = collect(range(0, 100, length=n_points))
+    y = cos.(x .* 0.1) .+ randn(n_points) .* 0.5
+
+    # 2. Regular Batch Smoothing (for comparison)
+    println("Running Batch LOWESS (Parallel)...")
+    batch_start = time()
+    res_batch = smooth(x, y, fraction=0.01)
+    batch_time = time() - batch_start
+    @printf("Batch took: %.4f seconds\n", batch_time)
+
+    # 3. Streaming Mode
+    # Divide the data into chunks of 2,000 for low memory usage
+    println("Running Streaming LOWESS (Chunked)...")
+    stream_start = time()
+    res_stream = smooth_streaming(
+        x, y,
+        fraction=0.01,
+        chunk_size=2000,
+        overlap=200,
+        parallel=true
+    )
+    stream_time = time() - stream_start
+    @printf("Streaming took: %.4f seconds\n", stream_time)
+
+    # 4. Verify Accuracy
+    mse = sum((res_batch.y .- res_stream.y) .^ 2) / length(res_batch.y)
+    @printf("Mean Squared Difference (Batch vs Stream): %.2e\n", mse)
+
+    # Show sample of results
+    println("\nSample comparison (indices 1000-1005):")
+    println("Index\tBatch\t\tStreaming\tDiff")
+    for i in 1000:1005
+        diff = abs(res_batch.y[i] - res_stream.y[i])
+        @printf("%d\t%.6f\t%.6f\t%.6f\n", i, res_batch.y[i], res_stream.y[i], diff)
+    end
+
+    println("\n=== Streaming Smoothing Example Complete ===")
+end
+
+main()

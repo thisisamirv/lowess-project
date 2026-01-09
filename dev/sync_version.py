@@ -75,7 +75,7 @@ def update_description(description_path: Path, version: str, quiet: bool = False
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Update R CITATION file version from Cargo.toml"
+        description="Update version in various project files from Cargo.toml"
     )
     parser.add_argument(
         "cargo_toml",
@@ -83,7 +83,7 @@ def main():
         help="Path to root Cargo.toml with workspace version",
     )
     parser.add_argument(
-        "citation_file",
+        "-r", "--r_citation_file",
         type=Path,
         help="Path to R CITATION file",
     )
@@ -103,6 +103,16 @@ def main():
         help="Path to CITATION.cff file",
     )
     parser.add_argument(
+        "-j", "--julia_project_file",
+        type=Path,
+        help="Path to Julia Project.toml file",
+    )
+    parser.add_argument(
+        "-b", "--build_tarballs_file",
+        type=Path,
+        help="Path to Julia build_tarballs.jl file",
+    )
+    parser.add_argument(
         "-q", "--quiet",
         action="store_true",
         help="Suppress output",
@@ -113,19 +123,20 @@ def main():
         print(f"Error: {args.cargo_toml} not found", file=sys.stderr)
         sys.exit(1)
 
-    if not args.citation_file.exists():
-        print(f"Error: {args.citation_file} not found", file=sys.stderr)
-        sys.exit(1)
-
     try:
         version = get_workspace_version(args.cargo_toml)
-        update_citation(args.citation_file, version, args.quiet)
+        if args.r_citation_file:
+            update_citation(args.r_citation_file, version, args.quiet)
         if args.description_file:
             update_description(args.description_file, version, args.quiet)
         if args.python_version_file:
             update_python_version(args.python_version_file, version, args.quiet)
         if args.cff_file:
             update_cff_version(args.cff_file, version, args.quiet)
+        if args.julia_project_file:
+            update_julia_project_version(args.julia_project_file, version, args.quiet)
+        if args.build_tarballs_file:
+            update_build_tarballs_version(args.build_tarballs_file, version, args.quiet)
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
@@ -190,6 +201,68 @@ def update_python_version(version_file_path: Path, version: str, quiet: bool = F
     else:
         if not quiet:
             print(f"Python version already at {version}")
+        return False
+
+
+def update_julia_project_version(project_path: Path, version: str, quiet: bool = False) -> bool:
+    """Update the version in Julia Project.toml file."""
+    if not project_path.exists():
+        if not quiet:
+            print(f"Warning: Julia Project.toml file not found at {project_path}")
+        return False
+        
+    content = project_path.read_text()
+    
+    # Match: version = "X.Y.Z"
+    pattern = r'(version\s*=\s*")[^"]+(")'
+    replacement = rf'\g<1>{version}\g<2>'
+    
+    new_content, count = re.subn(pattern, replacement, content)
+    
+    if count == 0:
+        if not quiet:
+            print(f"Warning: No version field found in {project_path}")
+        return False
+
+    if new_content != content:
+        project_path.write_text(new_content)
+        if not quiet:
+            print(f"Updated Julia Project.toml version to {version}")
+        return True
+    else:
+        if not quiet:
+            print(f"Julia Project.toml version already at {version}")
+        return False
+
+
+def update_build_tarballs_version(build_path: Path, version: str, quiet: bool = False) -> bool:
+    """Update the version in Julia build_tarballs.jl file."""
+    if not build_path.exists():
+        if not quiet:
+            print(f"Warning: build_tarballs.jl file not found at {build_path}")
+        return False
+        
+    content = build_path.read_text()
+    
+    # Match: version = v"X.Y.Z"
+    pattern = r'(version\s*=\s*v")[^"]+(")'
+    replacement = rf'\g<1>{version}\g<2>'
+    
+    new_content, count = re.subn(pattern, replacement, content)
+    
+    if count == 0:
+        if not quiet:
+            print(f"Warning: No version field found in {build_path}")
+        return False
+
+    if new_content != content:
+        build_path.write_text(new_content)
+        if not quiet:
+            print(f"Updated build_tarballs.jl version to {version}")
+        return True
+    else:
+        if not quiet:
+            print(f"build_tarballs.jl version already at {version}")
         return False
 
 

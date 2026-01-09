@@ -99,7 +99,7 @@ A variety of features, supporting a range of use cases:
 
 ## Installation
 
-Currently available for R, Python, and Rust:
+Currently available for R, Python, Julia, and Rust:
 
 === "R"
 
@@ -140,6 +140,15 @@ Currently available for R, Python, and Rust:
         [dependencies]
         fastLowess = { version = "0.99", features = ["cpu"] }
         ```
+
+=== "Julia"
+
+    Install from the Julia General Registry:
+
+    ```julia
+    using Pkg
+    Pkg.add("fastLowess")
+    ```
 
 See the [Installation Guide](getting-started/installation.md) for more options and details.
 
@@ -188,6 +197,18 @@ See the [Installation Guide](getting-started/installation.md) for more options a
     println!("{}", result);
     ```
 
+=== "Julia"
+
+    ```julia
+    using fastLowess
+
+    x = [1.0, 2.0, 3.0, 4.0, 5.0]
+    y = [2.0, 4.1, 5.9, 8.2, 9.8]
+
+    result = smooth(x, y, fraction=0.5, iterations=3)
+    println(result.y)
+    ```
+
 ## Getting Started
 
 1. [Installation](getting-started/installation.md) — Set up the library for your language
@@ -219,6 +240,14 @@ See the [Installation Guide](getting-started/installation.md) for more options a
     R package with Bioconductor-style documentation and seamless integration.
 
     [:octicons-arrow-right-24: R API](api/r.md)
+
+- :material-language-julia: **Julia**
+
+    ---
+
+    Native Julia package with C FFI, supporting parallel execution and JLL dependencies.
+
+    [:octicons-arrow-right-24: Julia API](api/julia.md)
 
 </div>
 

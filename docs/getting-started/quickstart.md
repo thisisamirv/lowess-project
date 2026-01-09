@@ -65,6 +65,21 @@ Smoothed values: [2.02, 4.00, 6.00, 8.10, 10.04, 12.03, 13.90, 15.78]
     }
     ```
 
+=== "Julia"
+
+    ```julia
+    using fastLowess
+
+    # Sample data
+    x = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
+    y = [2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7]
+
+    # Smooth the data
+    result = smooth(x, y, fraction=0.5, iterations=3)
+
+    println("Smoothed values: ", result.y)
+    ```
+
 ---
 
 ## With Confidence Intervals
@@ -124,6 +139,24 @@ Smoothed values: [2.02, 4.00, 6.00, 8.10, 10.04, 12.03, 13.90, 15.78]
     if let Some(ci_lower) = &result.confidence_lower {
         println!("CI Lower: {:?}", ci_lower);
     }
+    ```
+
+=== "Julia"
+
+    ```julia
+    result = smooth(
+        x, y,
+        fraction=0.5,
+        iterations=3,
+        confidence_intervals=0.95,
+        prediction_intervals=0.95,
+        return_diagnostics=true
+    )
+
+    println("Smoothed: ", result.y)
+    println("CI Lower: ", result.confidence_lower)
+    println("CI Upper: ", result.confidence_upper)
+    println("R²: ", result.diagnostics.r_squared)
     ```
 
 ---
@@ -197,6 +230,27 @@ LOWESS can robustly handle outliers through iterative reweighting:
             }
         }
     }
+    ```
+
+=== "Julia"
+
+    ```julia
+    y_with_outlier = [2.0, 4.0, 6.0, 50.0, 10.0, 12.0]
+
+    result = smooth(
+        x, y_with_outlier,
+        fraction=0.5,
+        iterations=5,
+        robustness_method="bisquare",
+        return_robustness_weights=true
+    )
+
+    # Check which points were downweighted
+    for (i, w) in enumerate(result.robustness_weights)
+        if w < 0.5
+            println("Point $i is likely an outlier (weight: $(round(w, digits=3)))")
+        end
+    end
     ```
 
 ---

@@ -7,6 +7,12 @@
 [![Conda](https://anaconda.org/conda-forge/fastlowess/badges/version.svg)](https://anaconda.org/conda-forge/fastlowess)
 [![R-universe](https://thisisamirv.r-universe.dev/badges/rfastlowess)](https://thisisamirv.r-universe.dev/rfastlowess)
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/thisisamirv/lowess-project/main/dev/logo.png" alt="One LOWESS to Rule Them All" width="400">
+  <br>
+  <em>One LOWESS to Rule Them All</em>
+</p>
+
 The fastest, most robust, and most feature-complete language-agnostic LOWESS (Locally Weighted Scatterplot Smoothing) implementation for **Rust**, **Python**, **R**, **Julia**, **JavaScript**, **C++**, and **WebAssembly**.
 
 > [!IMPORTANT]
@@ -17,6 +23,7 @@ The fastest, most robust, and most feature-complete language-agnostic LOWESS (Lo
 > - **[`fastLowess`](https://github.com/thisisamirv/lowess-project/tree/main/crates/fastLowess)** - Parallel CPU and GPU-accelerated Rust wrapper with ndarray integration  
 > - **[`Python bindings`](https://github.com/thisisamirv/lowess-project/tree/main/bindings/python)** - PyO3-based Python package
 > - **[`R bindings`](https://github.com/thisisamirv/lowess-project/tree/main/bindings/r)** - extendr-based R package
+> - **[`Julia bindings`](https://github.com/thisisamirv/lowess-project/tree/main/bindings/julia)** - Native Julia package with C FFI
 
 ## LOESS vs. LOWESS
 
@@ -136,7 +143,7 @@ All implementations are **numerical twins** of R's `lowess`:
 
 ## Installation
 
-Currently available for R, Python, and Rust:
+Currently available for R, Python, Julia, and Rust:
 
 **R** (from R-universe, recommended):
 
@@ -168,6 +175,13 @@ lowess = "0.99"
 ```toml
 [dependencies]
 fastLowess = { version = "0.99", features = ["cpu"] }
+```
+
+**Julia** (from Julia General Registry):
+
+```julia
+using Pkg
+Pkg.add("fastLowess")
 ```
 
 ## Quick Example
@@ -213,6 +227,18 @@ let model = Lowess::new()
 
 let result = model.fit(&x, &y)?;
 println!("{}", result);
+```
+
+**Julia:**
+
+```julia
+using fastLowess
+
+x = [1.0, 2.0, 3.0, 4.0, 5.0]
+y = [2.0, 4.1, 5.9, 8.2, 9.8]
+
+result = smooth(x, y, fraction=0.5, iterations=3)
+println(result.y)
 ```
 
 ---
@@ -293,7 +319,30 @@ Lowess::new()
     .build()?;
 ```
 
----
+**Julia:**
+
+```julia
+smooth(
+    x, y,
+    fraction=0.5,
+    iterations=3,
+    delta=NaN,  # NaN for auto
+    weight_function="tricube",
+    robustness_method="bisquare",
+    zero_weight_fallback="use_local_mean",
+    boundary_policy="extend",
+    confidence_intervals=0.95,
+    prediction_intervals=0.95,
+    return_diagnostics=true,
+    return_residuals=true,
+    return_robustness_weights=true,
+    cv_fractions=[0.3, 0.5, 0.7],
+    cv_method="kfold",
+    cv_k=5,
+    auto_converge=1e-4,
+    parallel=true
+)
+```
 
 ## Result Structure
 
@@ -337,6 +386,17 @@ pub struct LowessResult<T> {
     pub fraction_used: T,
     pub cv_scores: Option<Vec<T>>,
 }
+```
+
+**Julia:**
+
+```julia
+result.x, result.y, result.standard_errors
+result.confidence_lower, result.confidence_upper
+result.prediction_lower, result.prediction_upper
+result.residuals, result.robustness_weights
+result.diagnostics, result.iterations_used
+result.fraction_used
 ```
 
 ---

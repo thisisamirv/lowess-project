@@ -112,6 +112,22 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
     // result.confidence_lower/upper contain 95% CI bounds
     ```
 
+=== "Julia"
+    ```julia
+    using fastLowess
+
+    # positions and observed are your methylation data
+    result = smooth(
+        positions, observed,
+        fraction=0.1,
+        iterations=3,
+        confidence_intervals=0.95
+    )
+
+    # Smoothed profile in result.y
+    # CI bounds in result.confidence_lower/upper
+    ```
+
 ---
 
 ## ChIP-seq Signal Smoothing
@@ -200,6 +216,23 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
         .collect();
     ```
 
+=== "Julia"
+    ```julia
+    using fastLowess
+
+    # positions and observed are your ChIP-seq data
+    result = smooth(
+        positions, observed,
+        fraction=0.05,
+        iterations=5
+    )
+
+    # Find peaks above 75th percentile
+    threshold = quantile(result.y, 0.75)
+    peak_indices = findall(y -> y > threshold, result.y)
+    peak_positions = positions[peak_indices]
+    ```
+
 ---
 
 ## Large Genome Coverage (Streaming)
@@ -249,6 +282,20 @@ For whole-genome data that doesn't fit in memory:
         processor.process_chunk(&chunk.positions, &chunk.coverage)?;
     }
     let result = processor.finalize()?;
+    ```
+
+=== "Julia"
+    ```julia
+    using fastLowess
+
+    # coverage and positions are chromosome-scale vectors
+    result = smooth_streaming(
+        positions, coverage,
+        fraction=0.05,
+        chunk_size=100000,
+        overlap=10000,
+        merge_strategy="weighted"
+    )
     ```
 
 ---

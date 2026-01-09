@@ -2,5 +2,16 @@ name = "fastLowess"
 uuid = "a1b2c3d4-5678-90ab-cdef-1234567890ab"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 version = "0.99.7"
+license = "MIT OR Apache-2.0"
 
 [deps]
+# fastLowess_jll will be added once the package is registered
+
+[compat]
+julia = "1.6"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]

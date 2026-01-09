@@ -174,7 +174,7 @@ python:
 	@echo "=============================================================================="
 	@echo "0. Version Sync..."
 	@echo "=============================================================================="
-	@dev/sync_version.py Cargo.toml $(R_DIR)/inst/CITATION -p $(PY_DIR)/python/fastlowess/__version__.py -c CITATION.cff -q
+	@dev/sync_version.py Cargo.toml -p $(PY_DIR)/python/fastlowess/__version__.py -q
 	@echo "=============================================================================="
 	@echo "1. Formatting..."
 	@echo "=============================================================================="
@@ -262,7 +262,7 @@ r:
 	sed -i '/^lowess = { path = "vendor\/lowess" }/d' $(R_DIR)/src/Cargo.toml; \
 	rm -rf $(R_DIR)/*.Rcheck $(R_DIR)/*.BiocCheck $(R_DIR)/src/target $(R_DIR)/target $(R_DIR)/src/vendor; \
 	echo "" >> $(R_DIR)/src/Cargo.toml
-	@dev/sync_version.py Cargo.toml $(R_DIR)/inst/CITATION -d $(R_DIR)/DESCRIPTION -c CITATION.cff -q
+	@dev/sync_version.py Cargo.toml -r $(R_DIR)/inst/CITATION -d $(R_DIR)/DESCRIPTION -q
 	@mkdir -p $(R_DIR)/src/.cargo && cp $(R_DIR)/src/cargo-config.toml $(R_DIR)/src/.cargo/config.toml
 	@echo "Patched $(R_DIR)/src/Cargo.toml"
 	@echo "=============================================================================="
@@ -379,6 +379,14 @@ r-clean:
 julia:
 	@echo "Running $(JL_PKG) checks..."
 	@echo "=============================================================================="
+	@echo "0. Version Sync and commit hash update..."
+	@echo "=============================================================================="
+	@dev/sync_version.py Cargo.toml -j $(JL_DIR)/julia/Project.toml -b dev/build_tarballs_julia.jl -q
+	@git fetch origin main 2>/dev/null || true
+	@COMMIT=$$(git rev-parse origin/main 2>/dev/null) && \
+		sed -i "s/GitSource(\"[^\"]*\",\\s*\"[a-f0-9]\\+\")/GitSource(\"https:\\/\\/github.com\\/thisisamirv\\/lowess-project.git\", \"$$COMMIT\")/" dev/build_tarballs_julia.jl && \
+		echo "Commit: $$COMMIT"
+	@echo "=============================================================================="
 	@echo "1. Formatting..."
 	@echo "=============================================================================="
 	@cargo fmt -p $(JL_PKG) -- --check
@@ -409,6 +417,16 @@ julia:
 		(echo "Error: jl_lowess_free_result not exported"; exit 1)
 	@echo "All exports verified!"
 	@echo "=============================================================================="
+	@echo "6. Testing Julia bindings..."
+	@echo "=============================================================================="
+	@julia --project=$(JL_DIR)/julia tests/julia/test_fastlowess.jl
+	@echo "=============================================================================="
+	@echo "7. Running examples..."
+	@echo "=============================================================================="
+	@julia --project=$(JL_DIR)/julia $(JL_DIR)/examples/batch_smoothing.jl
+	@julia --project=$(JL_DIR)/julia $(JL_DIR)/examples/streaming_smoothing.jl
+	@julia --project=$(JL_DIR)/julia $(JL_DIR)/examples/online_smoothing.jl
+	@echo "=============================================================================="
 	@echo "$(JL_PKG) checks completed successfully!"
 	@echo ""
 	@echo "To use in Julia:"
@@ -421,8 +439,6 @@ julia-clean:
 	@cargo clean -p $(JL_PKG)
 	@rm -rf $(JL_DIR)/target
 	@echo "$(JL_PKG) clean complete!"
-
-
 
 # ==============================================================================
 # Development checks
@@ -455,6 +471,8 @@ docs-clean:
 # All targets
 # ==============================================================================
 all: lowess fastLowess python r julia check-msrv
+	@echo "Syncing CITATION.cff..."
+	@dev/sync_version.py Cargo.toml -c CITATION.cff -q
 	@echo "All checks completed successfully!"
 
 all-coverage: lowess-coverage fastLowess-coverage python-coverage r-coverage
@@ -466,4 +484,4 @@ all-clean: r-clean lowess-clean fastLowess-clean python-clean julia-clean
 	@rm -rf target Cargo.lock .venv .ruff_cache .pytest_cache site docs-venv
 	@echo "All clean completed!"
 
-.PHONY: lowess lowess-coverage lowess-clean fastLowess fastLowess-coverage fastLowess-clean python python-coverage python-clean r r-coverage r-clean julia julia-clean check-msrv docs docs-serve docs-clean all all-coverage all-clean
+.PHONY: lowess lowess-coverage lowess-clean fastLowess fastLowess-coverage fastLowess-clean python python-coverage python-clean r r-coverage r-clean julia julia-clean julia-update-commit check-msrv docs docs-serve docs-clean all all-coverage all-clean

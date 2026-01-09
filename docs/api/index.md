@@ -12,6 +12,14 @@ Language-specific API documentation.
 
     [:octicons-arrow-right-24: R API](r.md)
 
+- :fontawesome-brands-python: **Python**
+
+    ---
+
+    `fastlowess` Python package reference
+
+    [:octicons-arrow-right-24: Python API](python.md)
+
 - :fontawesome-brands-rust: **Rust**
 
     ---
@@ -20,12 +28,12 @@ Language-specific API documentation.
 
     [:octicons-arrow-right-24: Rust API](rust.md)
 
-- :fontawesome-brands-python: **Python**
+- :material-language-julia: **Julia**
 
     ---
 
-    `fastlowess` Python package reference
+    `fastLowess` Julia package reference
 
-    [:octicons-arrow-right-24: Python API](python.md)
+    [:octicons-arrow-right-24: Julia API](julia.md)
 
 </div>

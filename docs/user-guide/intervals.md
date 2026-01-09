@@ -58,6 +58,17 @@ Estimate uncertainty in the smoothed curve itself.
     }
     ```
 
+=== "Julia"
+    ```julia
+    using fastLowess
+
+    result = smooth(x, y, fraction=0.5, confidence_intervals=0.95)
+
+    for i in 1:length(result.y)
+        println("x=$(result.x[i]): y=$(result.y[i]) [$(result.confidence_lower[i]), $(result.confidence_upper[i])]")
+    end
+    ```
+
 ---
 
 ## Prediction Intervals
@@ -99,6 +110,13 @@ Estimate where new observations might fall.
     }
     ```
 
+=== "Julia"
+    ```julia
+    result = smooth(x, y, fraction=0.5, prediction_intervals=0.95)
+
+    println("Prediction bounds: [$(result.prediction_lower[1]), $(result.prediction_upper[1])]")
+    ```
+
 ---
 
 ## Both Intervals
@@ -135,6 +153,16 @@ Request both types simultaneously:
         .build()?;
     ```
 
+=== "Julia"
+    ```julia
+    result = smooth(
+        x, y,
+        fraction=0.5,
+        confidence_intervals=0.95,
+        prediction_intervals=0.95
+    )
+    ```
+
 ---
 
 ## Confidence Levels
@@ -168,6 +196,12 @@ Common levels and their z-values:
         .build()?;
     ```
 
+=== "Julia"
+    ```julia
+    # 99% confidence interval
+    result = smooth(x, y, confidence_intervals=0.99)
+    ```
+
 ---
 
 ## Standard Errors
@@ -195,6 +229,15 @@ Access standard errors directly (available when intervals are computed):
             println!("Point {}: SE = {:.4}", i, se);
         }
     }
+    ```
+
+=== "Julia"
+    ```julia
+    result = smooth(x, y, confidence_intervals=0.95)
+
+    for (i, se) in enumerate(result.std_err)
+        println("Point $i: SE = $se")
+    end
     ```
 
 ---

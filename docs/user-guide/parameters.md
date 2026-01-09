@@ -82,11 +82,37 @@ Complete reference for all LOWESS configuration options.
     | **min_points**                | 2              | [2, window]   | Min before output       | Online           |
     | **update_mode**               | `Incremental`  | 2 options     | Update strategy         | Online           |
 
+=== "Julia"
+
+    | Parameter                     | Default           | Range/Options | Description             | Adapter          |
+    |-------------------------------|-------------------|---------------|-------------------------|------------------|
+    | **fraction**                  | 0.67              | (0, 1]        | Smoothing span          | All              |
+    | **iterations**                | 3                 | [0, 1000]     | Robustness iterations   | All              |
+    | **delta**                     | `nothing` (auto)  | [0, ∞)        | Interpolation threshold | All              |
+    | **weight_function**           | `"tricube"`       | 7 options     | Distance kernel         | All              |
+    | **robustness_method**         | `"bisquare"`      | 3 options     | Outlier weighting       | All              |
+    | **zero_weight_fallback**      | `"use_local_mean"`| 3 options     | Zero-weight behavior    | All              |
+    | **boundary_policy**           | `"extend"`        | 4 options     | Edge handling           | All              |
+    | **scaling_method**            | `"mad"`           | 2 options     | Scale estimation        | All              |
+    | **auto_converge**             | `nothing`         | tolerance     | Early stopping          | All              |
+    | **return_residuals**          | `false`           | bool          | Include residuals       | All              |
+    | **return_robustness_weights** | `false`           | bool          | Include weights         | All              |
+    | **return_diagnostics**        | `false`           | bool          | Include metrics         | Batch, Streaming |
+    | **confidence_intervals**      | `nothing`         | (0, 1)        | CI level                | Batch            |
+    | **prediction_intervals**      | `nothing`         | (0, 1)        | PI level                | Batch            |
+    | **cv_method**                 | `nothing`         | method        | Auto-select fraction    | Batch            |
+    | **chunk_size**                | 5000              | [10, ∞)       | Points per chunk        | Streaming        |
+    | **overlap**                   | 500               | [0, chunk)    | Overlap between chunks  | Streaming        |
+    | **merge_strategy**            | `"average"`       | 4 options     | Merge overlaps          | Streaming        |
+    | **window_capacity**           | 1000              | [3, ∞)        | Max window size         | Online           |
+    | **min_points**                | 2                 | [2, window]   | Min before output       | Online           |
+    | **update_mode**               | `"incremental"`   | 2 options     | Update strategy         | Online           |
+
 ---
 
 ## Parameter Options Summary
 
-=== "R / Python"
+=== "R / Python / Julia"
 
     | Parameter                | Available Options                                                                            |
     |--------------------------|----------------------------------------------------------------------------------------------|
@@ -143,6 +169,11 @@ The proportion of data used for each local fit. **Most important parameter.**
         .build()?;
     ```
 
+=== "Julia"
+    ```julia
+    result = smooth(x, y, fraction=0.3)
+    ```
+
 ---
 
 ### iterations
@@ -174,6 +205,11 @@ Number of robustness iterations for outlier resistance.
         .build()?;
     ```
 
+=== "Julia"
+    ```julia
+    result = smooth(x, y, iterations=5)
+    ```
+
 ---
 
 ### delta
@@ -199,6 +235,11 @@ Interpolation optimization threshold. Points within `delta` distance reuse the p
         .delta(0.05)
         .adapter(Batch)
         .build()?;
+    ```
+
+=== "Julia"
+    ```julia
+    result = smooth(x, y, delta=0.05)
     ```
 
 ---
@@ -251,6 +292,11 @@ See [Weight Functions](kernels.md) for detailed comparison.
         .build()?;
     ```
 
+=== "Julia"
+    ```julia
+    result = smooth(x, y, weight_function="epanechnikov")
+    ```
+
 ---
 
 ### robustness_method
@@ -291,6 +337,11 @@ See [Robustness](robustness.md) for detailed comparison.
         .robustness_method(Talwar)
         .adapter(Batch)
         .build()?;
+    ```
+
+=== "Julia"
+    ```julia
+    result = smooth(x, y, robustness_method="talwar")
     ```
 
 ---
@@ -337,6 +388,11 @@ Edge handling strategy to reduce boundary bias.
         .build()?;
     ```
 
+=== "Julia"
+    ```julia
+    result = smooth(x, y, boundary_policy="reflect")
+    ```
+
 ---
 
 ### scaling_method
@@ -373,6 +429,11 @@ Method for estimating residual scale during robustness iterations.
         .scaling_method(MAD)
         .adapter(Batch)
         .build()?;
+    ```
+
+=== "Julia"
+    ```julia
+    result = smooth(x, y, scaling_method="mad")
     ```
 
 ---
@@ -415,6 +476,11 @@ Behavior when all neighborhood weights are zero.
         .build()?;
     ```
 
+=== "Julia"
+    ```julia
+    result = smooth(x, y, zero_weight_fallback="use_local_mean")
+    ```
+
 ---
 
 ### auto_converge
@@ -440,6 +506,11 @@ Enable early stopping when robustness weights stabilize.
         .auto_converge(1e-6)      // Stop when change < 1e-6
         .adapter(Batch)
         .build()?;
+    ```
+
+=== "Julia"
+    ```julia
+    result = smooth(x, y, iterations=20, auto_converge=1e-6)
     ```
 
 ---
@@ -473,6 +544,12 @@ Include residuals (`y - smoothed`) in the output.
     if let Some(residuals) = result.residuals {
         println!("Residuals: {:?}", residuals);
     }
+    ```
+
+=== "Julia"
+    ```julia
+    result = smooth(x, y, return_residuals=true)
+    println(result.residuals)
     ```
 
 ---
@@ -517,6 +594,12 @@ Include fit quality metrics (Batch and Streaming only).
     }
     ```
 
+=== "Julia"
+    ```julia
+    result = smooth(x, y, return_diagnostics=true)
+    println("R²: ", result.diagnostics.r_squared)
+    ```
+
 ---
 
 ### return_robustness_weights
@@ -547,6 +630,12 @@ Include final robustness weights (useful for outlier detection).
     // Points with weight < 0.5 are likely outliers
     ```
 
+=== "Julia"
+    ```julia
+    result = smooth(x, y, iterations=3, return_robustness_weights=true)
+    # Points with result.robustness_weights < 0.5 are likely outliers
+    ```
+
 ---
 
 ### confidence_intervals / prediction_intervals
@@ -574,6 +663,11 @@ See [Intervals](intervals.md) for detailed usage.
         .build()?;
     ```
 
+=== "Julia"
+    ```julia
+    result = smooth(x, y, confidence_intervals=0.95, prediction_intervals=0.95)
+    ```
+
 ---
 
 ### cross_validate
@@ -598,6 +692,17 @@ See [Cross-Validation](cross-validation.md) for detailed usage.
         .cross_validate(KFold(5, &[0.2, 0.3, 0.5, 0.7]).seed(42))
         .adapter(Batch)
         .build()?;
+    ```
+
+=== "Julia"
+    ```julia
+    result = smooth(
+        x, y,
+        cv_method="kfold",
+        cv_k=5,
+        cv_fractions=[0.2, 0.3, 0.5, 0.7],
+        cv_seed=42
+    )
     ```
 
 ---

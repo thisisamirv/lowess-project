@@ -26,24 +26,35 @@ module fastLowess
 export smooth, smooth_streaming, smooth_online
 export LowessResult, Diagnostics
 
-const LIBNAME = Sys.iswindows() ? "fastlowess_jl.dll" : 
+# Library name varies by platform
+const LIBNAME = Sys.iswindows() ? "fastlowess_jl.dll" :
                 Sys.isapple() ? "libfastlowess_jl.dylib" : "libfastlowess_jl.so"
 
-# Try to find the library in common locations
+# Try to load from JLL package first, fall back to local build
 function find_library()
-    # Check environment variable first
+    # Option 1: Use JLL package if available (for registered package)
+    try
+        @eval using fastLowess_jll
+        if @isdefined(fastLowess_jll) && hasproperty(fastLowess_jll, :libfastlowess_jl)
+            return fastLowess_jll.libfastlowess_jl
+        end
+    catch
+        # JLL not available, continue to fallback
+    end
+
+    # Option 2: Check environment variable
     if haskey(ENV, "FASTLOWESS_LIB")
         return ENV["FASTLOWESS_LIB"]
     end
-    
-    # Check relative to this module (workspace structure)
+
+    # Option 3: Check relative paths (development mode)
     # Path: julia/src/fastLowess.jl -> julia/ -> bindings/julia/ -> bindings/ -> lowess-project/
     src_dir = @__DIR__                        # julia/src/
     julia_dir = dirname(src_dir)              # julia/
     bindings_julia_dir = dirname(julia_dir)   # bindings/julia/
     bindings_dir = dirname(bindings_julia_dir)# bindings/
     workspace_root = dirname(bindings_dir)    # lowess-project/
-    
+
     candidates = [
         # Workspace root target (most common for workspace members)
         joinpath(workspace_root, "target", "release", LIBNAME),
@@ -54,13 +65,13 @@ function find_library()
         # Same directory as module
         joinpath(julia_dir, LIBNAME),
     ]
-    
+
     for path in candidates
         if isfile(path)
             return path
         end
     end
-    
+
     # Fall back to system path
     return LIBNAME
 end
@@ -113,16 +124,16 @@ Result from LOWESS smoothing.
 struct LowessResult
     x::Vector{Float64}
     y::Vector{Float64}
-    standard_errors::Union{Vector{Float64}, Nothing}
-    confidence_lower::Union{Vector{Float64}, Nothing}
-    confidence_upper::Union{Vector{Float64}, Nothing}
-    prediction_lower::Union{Vector{Float64}, Nothing}
-    prediction_upper::Union{Vector{Float64}, Nothing}
-    residuals::Union{Vector{Float64}, Nothing}
-    robustness_weights::Union{Vector{Float64}, Nothing}
+    standard_errors::Union{Vector{Float64},Nothing}
+    confidence_lower::Union{Vector{Float64},Nothing}
+    confidence_upper::Union{Vector{Float64},Nothing}
+    prediction_lower::Union{Vector{Float64},Nothing}
+    prediction_upper::Union{Vector{Float64},Nothing}
+    residuals::Union{Vector{Float64},Nothing}
+    robustness_weights::Union{Vector{Float64},Nothing}
     fraction_used::Float64
     iterations_used::Int
-    diagnostics::Union{Diagnostics, Nothing}
+    diagnostics::Union{Diagnostics,Nothing}
 end
 
 # C FFI result struct (must match Rust definition)
@@ -164,18 +175,18 @@ function convert_result(c_result::CJlLowessResult)
         @ccall libfastlowess.jl_lowess_free_result(Ref(c_result)::Ptr{CJlLowessResult})::Cvoid
         error("fastLowess error: $error_msg")
     end
-    
+
     n = Int(c_result.n)
-    
+
     # Extract arrays
     x = ptr_to_vector(c_result.x, n)
     y = ptr_to_vector(c_result.y, n)
-    
+
     if x === nothing || y === nothing
         @ccall libfastlowess.jl_lowess_free_result(Ref(c_result)::Ptr{CJlLowessResult})::Cvoid
         error("fastLowess error: result arrays are null")
     end
-    
+
     standard_errors = ptr_to_vector(c_result.standard_errors, n)
     confidence_lower = ptr_to_vector(c_result.confidence_lower, n)
     confidence_upper = ptr_to_vector(c_result.confidence_upper, n)
@@ -183,7 +194,7 @@ function convert_result(c_result::CJlLowessResult)
     prediction_upper = ptr_to_vector(c_result.prediction_upper, n)
     residuals = ptr_to_vector(c_result.residuals, n)
     robustness_weights = ptr_to_vector(c_result.robustness_weights, n)
-    
+
     # Extract diagnostics
     diagnostics = if !isnan(c_result.rmse)
         Diagnostics(
@@ -198,7 +209,7 @@ function convert_result(c_result::CJlLowessResult)
     else
         nothing
     end
-    
+
     result = LowessResult(
         x,
         y,
@@ -213,10 +224,10 @@ function convert_result(c_result::CJlLowessResult)
         Int(c_result.iterations_used),
         diagnostics
     )
-    
+
     # Free the C result
     @ccall libfastlowess.jl_lowess_free_result(Ref(c_result)::Ptr{CJlLowessResult})::Cvoid
-    
+
     return result
 end
 
@@ -270,33 +281,33 @@ println("R² = ", result.diagnostics.r_squared)
 ```
 """
 function smooth(x::Vector{Float64}, y::Vector{Float64};
-    fraction::Float64 = 0.67,
-    iterations::Int = 3,
-    delta::Float64 = NaN,
-    weight_function::String = "tricube",
-    robustness_method::String = "bisquare",
-    scaling_method::String = "mad",
-    boundary_policy::String = "extend",
-    confidence_intervals::Float64 = NaN,
-    prediction_intervals::Float64 = NaN,
-    return_diagnostics::Bool = false,
-    return_residuals::Bool = false,
-    return_robustness_weights::Bool = false,
-    zero_weight_fallback::String = "use_local_mean",
-    auto_converge::Float64 = NaN,
-    cv_fractions::Vector{Float64} = Float64[],
-    cv_method::String = "kfold",
-    cv_k::Int = 5,
-    parallel::Bool = true
+    fraction::Float64=0.67,
+    iterations::Int=3,
+    delta::Float64=NaN,
+    weight_function::String="tricube",
+    robustness_method::String="bisquare",
+    scaling_method::String="mad",
+    boundary_policy::String="extend",
+    confidence_intervals::Float64=NaN,
+    prediction_intervals::Float64=NaN,
+    return_diagnostics::Bool=false,
+    return_residuals::Bool=false,
+    return_robustness_weights::Bool=false,
+    zero_weight_fallback::String="use_local_mean",
+    auto_converge::Float64=NaN,
+    cv_fractions::Vector{Float64}=Float64[],
+    cv_method::String="kfold",
+    cv_k::Int=5,
+    parallel::Bool=true
 )
     n = length(x)
     if n != length(y)
         throw(ArgumentError("x and y must have the same length"))
     end
-    
+
     cv_ptr = isempty(cv_fractions) ? C_NULL : pointer(cv_fractions)
     cv_len = length(cv_fractions)
-    
+
     c_result = @ccall libfastlowess.jl_lowess_smooth(
         x::Ptr{Cdouble},
         y::Ptr{Cdouble},
@@ -321,7 +332,7 @@ function smooth(x::Vector{Float64}, y::Vector{Float64};
         Cint(cv_k)::Cint,
         Cint(parallel)::Cint
     )::CJlLowessResult
-    
+
     return convert_result(c_result)
 end
 
@@ -357,27 +368,27 @@ Processes data in chunks to maintain constant memory usage.
 - `LowessResult`: Smoothed values and optional diagnostics
 """
 function smooth_streaming(x::Vector{Float64}, y::Vector{Float64};
-    fraction::Float64 = 0.3,
-    chunk_size::Int = 5000,
-    overlap::Int = -1,
-    iterations::Int = 3,
-    delta::Float64 = NaN,
-    weight_function::String = "tricube",
-    robustness_method::String = "bisquare",
-    scaling_method::String = "mad",
-    boundary_policy::String = "extend",
-    auto_converge::Float64 = NaN,
-    return_diagnostics::Bool = false,
-    return_residuals::Bool = false,
-    return_robustness_weights::Bool = false,
-    zero_weight_fallback::String = "use_local_mean",
-    parallel::Bool = true
+    fraction::Float64=0.3,
+    chunk_size::Int=5000,
+    overlap::Int=-1,
+    iterations::Int=3,
+    delta::Float64=NaN,
+    weight_function::String="tricube",
+    robustness_method::String="bisquare",
+    scaling_method::String="mad",
+    boundary_policy::String="extend",
+    auto_converge::Float64=NaN,
+    return_diagnostics::Bool=false,
+    return_residuals::Bool=false,
+    return_robustness_weights::Bool=false,
+    zero_weight_fallback::String="use_local_mean",
+    parallel::Bool=true
 )
     n = length(x)
     if n != length(y)
         throw(ArgumentError("x and y must have the same length"))
     end
-    
+
     c_result = @ccall libfastlowess.jl_lowess_streaming(
         x::Ptr{Cdouble},
         y::Ptr{Cdouble},
@@ -398,7 +409,7 @@ function smooth_streaming(x::Vector{Float64}, y::Vector{Float64};
         zero_weight_fallback::Cstring,
         Cint(parallel)::Cint
     )::CJlLowessResult
-    
+
     return convert_result(c_result)
 end
 
@@ -433,26 +444,26 @@ Maintains a sliding window for incremental updates.
 - `LowessResult`: Smoothed values
 """
 function smooth_online(x::Vector{Float64}, y::Vector{Float64};
-    fraction::Float64 = 0.2,
-    window_capacity::Int = 100,
-    min_points::Int = 2,
-    iterations::Int = 3,
-    delta::Float64 = NaN,
-    weight_function::String = "tricube",
-    robustness_method::String = "bisquare",
-    scaling_method::String = "mad",
-    boundary_policy::String = "extend",
-    update_mode::String = "full",
-    auto_converge::Float64 = NaN,
-    return_robustness_weights::Bool = false,
-    zero_weight_fallback::String = "use_local_mean",
-    parallel::Bool = false
+    fraction::Float64=0.2,
+    window_capacity::Int=100,
+    min_points::Int=2,
+    iterations::Int=3,
+    delta::Float64=NaN,
+    weight_function::String="tricube",
+    robustness_method::String="bisquare",
+    scaling_method::String="mad",
+    boundary_policy::String="extend",
+    update_mode::String="full",
+    auto_converge::Float64=NaN,
+    return_robustness_weights::Bool=false,
+    zero_weight_fallback::String="use_local_mean",
+    parallel::Bool=false
 )
     n = length(x)
     if n != length(y)
         throw(ArgumentError("x and y must have the same length"))
     end
-    
+
     c_result = @ccall libfastlowess.jl_lowess_online(
         x::Ptr{Cdouble},
         y::Ptr{Cdouble},
@@ -472,7 +483,7 @@ function smooth_online(x::Vector{Float64}, y::Vector{Float64};
         zero_weight_fallback::Cstring,
         Cint(parallel)::Cint
     )::CJlLowessResult
-    
+
     return convert_result(c_result)
 end
 

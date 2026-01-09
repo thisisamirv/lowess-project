@@ -41,12 +41,12 @@ The `fraction` (also called bandwidth or span) is the most important parameter. 
   <figcaption>Small fraction (left) vs optimal (center) vs large fraction (right)</figcaption>
 </figure>
 
-| Fraction | Effect | When to Use |
-|----------|--------|-------------|
-| **0.1–0.3** | Fine detail, follows data closely | Rapidly changing signals |
-| **0.3–0.5** | Balanced smoothing | Most applications |
-| **0.5–0.7** | Heavy smoothing | Noisy data, trend extraction |
-| **0.7–1.0** | Very smooth | Strong noise, global trends |
+| Fraction    | Effect                            | When to Use                  |
+|-------------|-----------------------------------|------------------------------|
+| **0.1–0.3** | Fine detail, follows data closely | Rapidly changing signals     |
+| **0.3–0.5** | Balanced smoothing                | Most applications            |
+| **0.5–0.7** | Heavy smoothing                   | Noisy data, trend extraction |
+| **0.7–1.0** | Very smooth                       | Strong noise, global trends  |
 
 !!! tip "Rule of Thumb"
     Start with `fraction=0.67` (the default) and adjust based on visual inspection. Use cross-validation for automated selection.
@@ -62,12 +62,12 @@ Standard LOWESS is sensitive to outliers. **Robustness iterations** downweight p
   <figcaption>Standard LOWESS (left) vs Robust LOWESS (right) with outliers</figcaption>
 </figure>
 
-| Iterations | Effect | When to Use |
-|------------|--------|-------------|
-| **0** | No robustness (fastest) | Clean data, speed-critical |
-| **1–3** | Moderate robustness | Most applications |
-| **4–6** | Strong robustness | Data with outliers |
-| **7+** | Very strong | Heavy contamination |
+| Iterations | Effect                  | When to Use                |
+|------------|-------------------------|----------------------------|
+| **0**      | No robustness (fastest) | Clean data, speed-critical |
+| **1–3**    | Moderate robustness     | Most applications          |
+| **4–6**    | Strong robustness       | Data with outliers         |
+| **7+**     | Very strong             | Heavy contamination        |
 
 ---
 

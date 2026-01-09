@@ -79,6 +79,26 @@ For true real-time applications where each point must be processed immediately.
     }
     ```
 
+=== "Julia"
+    ```julia
+    using fastLowess
+
+    # Simulate sensor readings 
+    times = collect(Float64, 1:100)
+    temperatures = 20.0 .+ 5.0 .* sin.(times ./ 10.0) .+ randn(100)
+
+    # Process with online mode
+    result = smooth_online(
+        times, temperatures,
+        fraction=0.3,
+        window_capacity=25,
+        min_points=5,
+        update_mode="incremental"
+    )
+
+    println("Smoothed temperatures: ", result.y)
+    ```
+
 ---
 
 ## Streaming Mode: Chunk Processing
@@ -160,8 +180,27 @@ For large datasets that arrive in batches or files.
     // CRITICAL: Get buffered overlap data
     let final_result = processor.finalize()?;
     write_output(&final_result.y);
+    ```
 
-```
+=== "Julia"
+    ```julia
+    using fastLowess
+
+    # Large dataset
+    x = collect(range(0, 100000, step=1))
+    y = sin.(x ./ 1000) .+ randn(length(x)) .* 0.1
+
+    # Streaming mode handles everything internally
+    result = smooth_streaming(
+        x, y,
+        fraction=0.05,
+        chunk_size=10000,
+        overlap=1000,
+        merge_strategy="weighted"
+    )
+
+    println("Processed $(length(result.y)) points")
+    ```
 
 !!! warning "Always call finalize()"
     The streaming adapter buffers overlap data. Always call `finalize()` to retrieve the last chunk.
@@ -277,6 +316,40 @@ For large datasets that arrive in batches or files.
     }
     ```
 
+=== "Julia"
+    ```julia
+    using fastLowess
+
+    # Simulated real-time dashboard
+    window_capacity = 50
+    data_x = Float64[]
+    data_y = Float64[]
+
+    for i in 1:200
+        # Simulate sensor reading
+        x = Float64(i)
+        y = 25.0 + 10.0 * sin(i / 20.0) + randn() * 2.0
+        
+        push!(data_x, x)
+        push!(data_y, y)
+        
+        # Keep sliding window
+        if length(data_x) > window_capacity
+            popfirst!(data_x)
+            popfirst!(data_y)
+        end
+        
+        # Smooth current window
+        if length(data_x) >= 5
+            result = smooth(data_x, data_y, fraction=0.4)
+            current_smoothed = last(result.y)
+            @printf("Reading %d: raw=%.1f, smoothed=%.1f\n", i, y, current_smoothed)
+        end
+        
+        sleep(0.1)  # Simulate 10 Hz sampling
+    end
+    ```
+
 ---
 
 ## Choosing Parameters
@@ -344,6 +417,16 @@ For large datasets that arrive in batches or files.
             // Fall back to raw data
         }
     }
+    ```
+
+=== "Julia"
+    ```julia
+    try
+        result = smooth_online(x, y, window_capacity=10)
+    catch e
+        println("Smoothing failed: ", e)
+        # Fall back to raw data or last known good value
+    end
     ```
 
 ---
