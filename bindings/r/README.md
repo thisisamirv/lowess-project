@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD024 MD033 -->
 # LOWESS Project
 
 [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE-MIT)
@@ -19,11 +20,14 @@ The fastest, most robust, and most feature-complete language-agnostic LOWESS (Lo
 >
 > The `lowess-project` contains a complete ecosystem for LOWESS smoothing:
 >
-> - **[`lowess`](https://github.com/thisisamirv/lowess-project/tree/main/crates/lowess)** - Core single-threaded Rust implementation with `no_std` support
-> - **[`fastLowess`](https://github.com/thisisamirv/lowess-project/tree/main/crates/fastLowess)** - Parallel CPU and GPU-accelerated Rust wrapper with ndarray integration  
-> - **[`Python bindings`](https://github.com/thisisamirv/lowess-project/tree/main/bindings/python)** - PyO3-based Python package
-> - **[`R bindings`](https://github.com/thisisamirv/lowess-project/tree/main/bindings/r)** - extendr-based R package
-> - **[`Julia bindings`](https://github.com/thisisamirv/lowess-project/tree/main/bindings/julia)** - Native Julia package with C FFI
+> - **[`lowess`](https://github.com/thisisamirv/lowess-project/blob/main/crates/lowess)** - Core single-threaded Rust implementation with `no_std` support
+> - **[`fastLowess`](https://github.com/thisisamirv/lowess-project/blob/main/crates/fastLowess)** - Parallel CPU and GPU-accelerated Rust wrapper with ndarray integration  
+> - **[`R bindings`](https://github.com/thisisamirv/lowess-project/blob/main/bindings/r)** - extendr-based R package
+> - **[`Python bindings`](https://github.com/thisisamirv/lowess-project/blob/main/bindings/python)** - PyO3-based Python package
+> - **[`Julia bindings`](https://github.com/thisisamirv/lowess-project/blob/main/bindings/julia)** - Native Julia package with C FFI
+> - **[`JavaScript bindings`](https://github.com/thisisamirv/lowess-project/blob/main/bindings/nodejs)** - Node.js package
+> - **[`WebAssembly bindings`](https://github.com/thisisamirv/lowess-project/blob/main/bindings/wasm)** - WASM package
+> - **[`C++ bindings`](https://github.com/thisisamirv/lowess-project/blob/main/bindings/cpp)** - Native C++ package with CMake integration
 
 ## LOESS vs. LOWESS
 
@@ -184,6 +188,34 @@ using Pkg
 Pkg.add("fastLowess")
 ```
 
+**Node.js** (from npm):
+
+```bash
+npm install fastlowess-node
+```
+
+**WebAssembly** (from npm):
+
+```bash
+npm install fastlowess-wasm
+```
+
+Or via CDN:
+
+```html
+<script type="module">
+  import init, { smooth } from 'https://unpkg.com/fastlowess-wasm@latest';
+  await init();
+</script>
+```
+
+**C++** (build from source):
+
+```bash
+make cpp
+# Links against libfastlowess_cpp.so
+```
+
 ## Quick Example
 
 **R:**
@@ -239,6 +271,48 @@ y = [2.0, 4.1, 5.9, 8.2, 9.8]
 
 result = smooth(x, y, fraction=0.5, iterations=3)
 println(result.y)
+```
+
+**Node.js:**
+
+```javascript
+const { smooth } = require('fastlowess-node');
+
+const x = [1.0, 2.0, 3.0, 4.0, 5.0];
+const y = [2.0, 4.1, 5.9, 8.2, 9.8];
+
+const result = smooth(x, y, { fraction: 0.5, iterations: 3 });
+console.log(result.y);
+```
+
+**WebAssembly:**
+
+```javascript
+import init, { smooth } from 'fastlowess-wasm';
+
+await init();
+
+const x = new Float64Array([1.0, 2.0, 3.0, 4.0, 5.0]);
+const y = new Float64Array([2.0, 4.1, 5.9, 8.2, 9.8]);
+
+const result = smooth(x, y, { fraction: 0.5, iterations: 3 });
+console.log(result.y);
+```
+
+**C++:**
+
+```cpp
+#include <fastlowess.hpp>
+
+std::vector<double> x = {1.0, 2.0, 3.0, 4.0, 5.0};
+std::vector<double> y = {2.0, 4.1, 5.9, 8.2, 9.8};
+
+fastlowess::LowessOptions options;
+options.fraction = 0.5;
+options.iterations = 3;
+
+auto result = fastlowess::smooth(x, y, options);
+for (double val : result.y_vector()) std::cout << val << " ";
 ```
 
 ---
@@ -344,6 +418,78 @@ smooth(
 )
 ```
 
+**Node.js:**
+
+```javascript
+smooth(x, y, {
+    fraction: 0.5,
+    iterations: 3,
+    delta: 0.01,
+    weightFunction: "tricube",
+    robustnessMethod: "bisquare",
+    zeroWeightFallback: "use_local_mean",
+    boundaryPolicy: "extend",
+    confidenceIntervals: 0.95,
+    predictionIntervals: 0.95,
+    returnDiagnostics: true,
+    returnResiduals: true,
+    returnRobustnessWeights: true,
+    cvFractions: [0.3, 0.5, 0.7],
+    cvMethod: "kfold",
+    cvK: 5,
+    autoConverge: 1e-4,
+    parallel: true
+})
+```
+
+**WebAssembly:**
+
+```javascript
+smooth(x, y, {
+    fraction: 0.5,
+    iterations: 3,
+    delta: 0.01,
+    weightFunction: "tricube",
+    robustnessMethod: "bisquare",
+    zeroWeightFallback: "use_local_mean",
+    boundaryPolicy: "extend",
+    confidenceIntervals: 0.95,
+    predictionIntervals: 0.95,
+    returnDiagnostics: true,
+    returnResiduals: true,
+    returnRobustnessWeights: true,
+    cvFractions: [0.3, 0.5, 0.7],
+    cvMethod: "kfold",
+    cvK: 5,
+    autoConverge: 1e-4
+})
+```
+
+**C++:**
+
+```cpp
+fastlowess::LowessOptions options;
+options.fraction = 0.5;
+options.iterations = 3;
+options.delta = 0.01;
+options.weight_function = "tricube";
+options.robustness_method = "bisquare";
+options.zero_weight_fallback = "use_local_mean";
+options.boundary_policy = "extend";
+options.confidence_intervals = 0.95;
+options.prediction_intervals = 0.95;
+options.return_diagnostics = true;
+options.return_residuals = true;
+options.return_robustness_weights = true;
+options.cv_fractions = {0.3, 0.5, 0.7};
+options.cv_method = "kfold";
+options.cv_k = 5;
+options.auto_converge = 1e-4;
+options.parallel = true;
+
+auto result = fastlowess::smooth(x, y, options);
+```
+
 ## Result Structure
 
 **R:**
@@ -399,11 +545,48 @@ result.diagnostics, result.iterations_used
 result.fraction_used
 ```
 
+**Node.js:**
+
+```javascript
+result.x, result.y, result.standardErrors
+result.confidenceLower, result.confidenceUpper
+result.predictionLower, result.predictionUpper
+result.residuals, result.robustnessWeights
+result.diagnostics, result.iterationsUsed
+result.fractionUsed, result.cvScores
+```
+
+**WebAssembly:**
+
+```javascript
+result.x, result.y, result.standardErrors
+result.confidenceLower, result.confidenceUpper
+result.predictionLower, result.predictionUpper
+result.residuals, result.robustnessWeights
+result.diagnostics, result.iterationsUsed
+result.fractionUsed, result.cvScores
+```
+
+**C++:**
+
+```cpp
+result.y_vector()              // std::vector<double>
+result.confidence_lower()      // std::vector<double>
+result.confidence_upper()      // std::vector<double>
+result.prediction_lower()      // std::vector<double>
+result.prediction_upper()      // std::vector<double>
+result.residuals()             // std::vector<double>
+result.robustness_weights()    // std::vector<double>
+result.diagnostics()           // Diagnostics struct
+result.iterations_used()       // size_t
+result.fraction_used()         // double
+```
+
 ---
 
 ## Contributing
 
-Contributions are welcome! Please see the [CONTRIBUTING.md](https://github.com/thisisamirv/lowess-project/tree/main/CONTRIBUTING.md) file for more information.
+Contributions are welcome! Please see the [CONTRIBUTING.md](https://github.com/thisisamirv/lowess-project/blob/main/CONTRIBUTING.md) file for more information.
 
 ## License
 
@@ -421,7 +604,7 @@ at your option.
 
 ## Citation
 
-If you use this software in your research, please cite it using the [CITATION.cff](https://github.com/thisisamirv/lowess-project/tree/main/CITATION.cff) file or the BibTeX entry below:
+If you use this software in your research, please cite it using the [CITATION.cff](https://github.com/thisisamirv/lowess-project/blob/main/CITATION.cff) file or the BibTeX entry below:
 
 ```bibtex
 @software{lowess_project,

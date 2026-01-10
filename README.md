@@ -22,9 +22,12 @@ The fastest, most robust, and most feature-complete language-agnostic LOWESS (Lo
 >
 > - **[`lowess`](https://github.com/thisisamirv/lowess-project/blob/main/crates/lowess)** - Core single-threaded Rust implementation with `no_std` support
 > - **[`fastLowess`](https://github.com/thisisamirv/lowess-project/blob/main/crates/fastLowess)** - Parallel CPU and GPU-accelerated Rust wrapper with ndarray integration  
-> - **[`Python bindings`](https://github.com/thisisamirv/lowess-project/blob/main/bindings/python)** - PyO3-based Python package
 > - **[`R bindings`](https://github.com/thisisamirv/lowess-project/blob/main/bindings/r)** - extendr-based R package
+> - **[`Python bindings`](https://github.com/thisisamirv/lowess-project/blob/main/bindings/python)** - PyO3-based Python package
 > - **[`Julia bindings`](https://github.com/thisisamirv/lowess-project/blob/main/bindings/julia)** - Native Julia package with C FFI
+> - **[`JavaScript bindings`](https://github.com/thisisamirv/lowess-project/blob/main/bindings/nodejs)** - Node.js package
+> - **[`WebAssembly bindings`](https://github.com/thisisamirv/lowess-project/blob/main/bindings/wasm)** - WASM package
+> - **[`C++ bindings`](https://github.com/thisisamirv/lowess-project/blob/main/bindings/cpp)** - Native C++ package with CMake integration
 
 ## LOESS vs. LOWESS
 
