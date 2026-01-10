@@ -73,7 +73,6 @@ coverage_detail.txt
 node_modules/
 npm-debug.log
 *.node
-index.d.ts
 build/
 
 # WebAssembly

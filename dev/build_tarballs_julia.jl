@@ -4,7 +4,7 @@
 #   julia --project=@. build_tarballs.jl --verbose
 #
 # To submit to Yggdrasil:
-#   1. Fork https://github.com/JuliaBinaryWrappers/Yggdrasil
+#   1. Fork https://github.com/JuliaPackaging/Yggdrasil
 #   2. Create F/fastlowess/build_tarballs.jl with this content
 #   3. Open a PR
 

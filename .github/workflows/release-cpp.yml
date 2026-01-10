@@ -1,0 +1,62 @@
+name: Release C++
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  build-and-upload:
+    name: Build ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: libfastlowess.so
+            asset_name: libfastlowess-linux-x64.so
+            target_dir: target/release
+          - os: windows-latest
+            artifact_name: fastlowess.dll
+            asset_name: fastlowess-win32-x64.dll
+            target_dir: target/release
+          - os: macos-latest
+            artifact_name: libfastlowess.dylib
+            asset_name: libfastlowess-macos-x64.dylib
+            target_dir: target/release
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Build C++ Library
+        working-directory: bindings/cpp
+        run: cargo build --release --lib
+
+      - name: Prepare Assets (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          # Rust/Cargo naming: libfastlowess_cpp.so or .dylib
+          mv bindings/cpp/target/release/libfastlowess_cpp.so ${{ matrix.asset_name }} 2>/dev/null || mv bindings/cpp/target/release/libfastlowess_cpp.dylib ${{ matrix.asset_name }}
+
+      - name: Prepare Assets (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          # Windows: fastlowess_cpp.dll
+          mv bindings/cpp/target/release/fastlowess_cpp.dll ${{ matrix.asset_name }}
+
+      - name: Upload Binaries to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ matrix.asset_name }}
+
+      - name: Upload Header to Release
+        if: matrix.os == 'ubuntu-latest'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: bindings/cpp/include/fastlowess.hpp

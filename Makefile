@@ -502,7 +502,7 @@ nodejs:
 nodejs-clean:
 	@echo "Cleaning $(NODE_PKG)..."
 	@cargo clean -p $(NODE_PKG)
-	@rm -rf $(NODE_DIR)/index.js $(NODE_DIR)/index.d.ts $(NODE_DIR)/node_modules $(NODE_DIR)/fastlowess.node
+	@rm -rf $(NODE_DIR)/node_modules $(NODE_DIR)/fastlowess.node
 	@echo "$(NODE_PKG) clean complete!"
 
 # ==============================================================================

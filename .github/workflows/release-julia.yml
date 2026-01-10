@@ -1,0 +1,149 @@
+name: Update Yggdrasil (Julia)
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to update to (without v prefix, e.g., 0.1.2)"
+        required: true
+        type: string
+      commit:
+        description: "Commit hash for this version"
+        required: true
+        type: string
+
+jobs:
+  update-yggdrasil:
+    name: Update Yggdrasil
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Check required secrets
+        env:
+          YGGDRASIL_TOKEN: ${{ secrets.YGGDRASIL_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -z "$YGGDRASIL_TOKEN" ]; then
+            echo "⚠️ Warning: YGGDRASIL_TOKEN secret is not set."
+            echo "Please add a PAT with 'repo' permissions as a secret named YGGDRASIL_TOKEN."
+            
+            if [ -n "$GITHUB_TOKEN" ]; then
+              echo "✅ Falling back to GITHUB_TOKEN (might fail if no fork permissions)..."
+            else
+              echo "❌ Error: No tokens available."
+              exit 1
+            fi
+          fi
+
+      - name: Checkout Source (Lowess Project)
+        uses: actions/checkout@v4
+        with:
+          path: lowess-project
+
+      - name: Determine Version and Commit
+        id: meta
+        run: |
+          cd lowess-project
+          if [ "${{ github.event_name }}" == "release" ]; then
+            VERSION="${{ github.event.release.tag_name }}"
+            VERSION="${VERSION#v}"
+            COMMIT="${{ github.sha }}"
+            echo "Triggered by release: $VERSION ($COMMIT)"
+          else
+            VERSION="${{ github.event.inputs.version }}"
+            COMMIT="${{ github.event.inputs.commit }}"
+            echo "Triggered manually: $VERSION ($COMMIT)"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "commit=$COMMIT" >> $GITHUB_OUTPUT
+
+      - name: Prepare Build Script
+        id: script
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+          COMMIT: ${{ steps.meta.outputs.commit }}
+        run: |
+          # Read the template from the source repo
+          CONTENT=$(cat lowess-project/dev/build_tarballs_julia.jl)
+
+          # Replace Version
+          # "version = v"0.99.7"" -> "version = v"$VERSION""
+          CONTENT=$(echo "$CONTENT" | sed "s/version = v\"[^\"]*\"/version = v\"$VERSION\"/")
+
+          # Replace Commit Hash
+          # GitSource("...", "...") -> ...
+          # We use a regex to find the GitSource line and update the hash
+          # Finding: "b702b7..." (40 chars)
+          CONTENT=$(echo "$CONTENT" | sed "s/\"[0-9a-f]\{40\}\"/\"$COMMIT\"/")
+
+          # Verify it works
+          echo "=== Updated Script ==="
+          echo "$CONTENT" | head -n 25
+          echo "..."
+
+          # Save to a temporary file
+          echo "$CONTENT" > build_tarballs.jl
+
+      - name: Clone Yggdrasil Fork
+        env:
+          GH_TOKEN: ${{ secrets.YGGDRASIL_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Clone user's fork (assumes thisisamirv/Yggdrasil or uses current user)
+          # We'll default to the same owner as the current repo
+          OWNER="${{ github.repository_owner }}"
+
+          echo "Cloning https://github.com/$OWNER/Yggdrasil.git..."
+          git clone "https://x-access-token:${GH_TOKEN}@github.com/$OWNER/Yggdrasil.git" yggdrasil-fork
+
+          cd yggdrasil-fork
+          # Add upstream
+          git remote add upstream https://github.com/JuliaPackaging/Yggdrasil.git
+          git fetch upstream
+          git checkout master
+          git merge upstream/master --no-edit || true
+
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.YGGDRASIL_TOKEN || secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.meta.outputs.version }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          cd yggdrasil-fork
+
+          BRANCH="fastlowess-v$VERSION"
+          git checkout -b "$BRANCH"
+
+          # Create directory structure F/fastlowess
+          mkdir -p F/fastlowess
+
+          # Copy the prepared script
+          cp ../build_tarballs.jl F/fastlowess/build_tarballs.jl
+
+          # Commit
+          git add F/fastlowess/build_tarballs.jl
+          git commit -m "[fastlowess] v$VERSION"
+
+          # Push to fork
+          git push -u origin "$BRANCH" --force
+
+          # Create PR
+          PR_BODY="## fastlowess v$VERSION
+
+          Automated update via GitHub Actions.
+
+          - Version: $VERSION
+          - Source Commit: ${{ steps.meta.outputs.commit }}
+          "
+
+          gh pr create \
+            --repo JuliaPackaging/Yggdrasil \
+            --head "$OWNER:$BRANCH" \
+            --base master \
+            --title "[fastlowess] v$VERSION" \
+            --body "$PR_BODY"

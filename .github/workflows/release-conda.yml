@@ -55,36 +55,25 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Updating to version: $VERSION"
 
-      - name: Get SHA256 from PyPI
+      - name: Calculate SHA256 from GitHub Release
         id: sha256
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          echo "Fetching SHA256 for fastlowess version $VERSION..."
+          URL="https://github.com/thisisamirv/lowess-project/archive/v${VERSION}.tar.gz"
+          echo "Fetching SHA256 from $URL..."
 
-          MAX_RETRIES=40
-          SLEEP_SECONDS=15
-          SHA256=""
-
-          for ((i=1; i<=MAX_RETRIES; i++)); do
-            echo "Attempt $i/$MAX_RETRIES: Checking PyPI..."
-            
-            RESPONSE=$(curl -sL "https://pypi.org/pypi/fastlowess/$VERSION/json")
-            
-            # extract SHA256 using jq (handles missing keys gracefully)
-            SHA256=$(echo "$RESPONSE" | jq -r '.urls[]? | select(.packagetype == "sdist") | .digests.sha256 // empty' 2>/dev/null | head -1)
-
-            if [ -n "$SHA256" ]; then
-              echo "✅ Found SHA256: $SHA256"
-              break
-            fi
-            
-            echo "⚠️ Metadata not ready yet. Waiting ${SLEEP_SECONDS}s..."
-            sleep $SLEEP_SECONDS
-          done
+          # We can trust that if the release triggered this, the tarball exists.
+          # But let's confirm it's not a 404
+          HTTP_CODE=$(curl -o /dev/null -s -w "%{http_code}\n" "$URL")
+          if [ "$HTTP_CODE" != "200" ]; then
+             echo "❌ Error: GitHub Release tarball not found (HTTP $HTTP_CODE)."
+             exit 1
+          fi
+          
+          SHA256=$(curl -sL "$URL" | sha256sum | awk '{print $1}')
 
           if [ -z "$SHA256" ]; then
-            echo "❌ Failed to get SHA256 for version $VERSION after retries."
-            echo "Response content was: $RESPONSE"
+            echo "❌ Failed to calculate SHA256."
             exit 1
           fi
 
@@ -130,18 +119,6 @@ jobs:
 
           # Reset build number to 0 for new version
           sed -i "s/number: .*/number: 0/" recipe/meta.yaml
-
-          # Update license field
-          sed -i "s/license: .*/license: MIT AND Apache-2.0/" recipe/meta.yaml
-
-          # Update license_file to use dual license files (multi-line replacement)
-          # First, find the license_file section and replace LICENSE with LICENSE-MIT
-          sed -i "/license_file:/,/THIRDPARTY.yml/ s/- LICENSE$/- LICENSE-MIT/" recipe/meta.yaml
-
-          # Then add LICENSE-APACHE after LICENSE-MIT if it doesn't exist
-          if ! grep -q "LICENSE-APACHE" recipe/meta.yaml; then
-            sed -i "/- LICENSE-MIT/a\    - LICENSE-APACHE" recipe/meta.yaml
-          fi
 
           # Show the changes
           echo "=== Updated meta.yaml ==="
