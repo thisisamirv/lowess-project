@@ -1,4 +1,4 @@
-const fastlowess = require('..');
+const fastlowess = require('../../bindings/nodejs');
 
 /**
  * fastLowess Streaming Smoothing Example

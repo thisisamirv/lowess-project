@@ -135,9 +135,13 @@ nav:
       - Cross-Validation: user-guide/cross-validation.md
   - API Reference:
       - api/index.md
-      - Rust: api/rust.md
-      - Python: api/python.md
       - R: api/r.md
+      - Python: api/python.md
+      - Rust: api/rust.md
+      - Julia: api/julia.md
+      - Node.js: api/nodejs.md
+      - WebAssembly: api/wasm.md
+      - C++: api/cpp.md
   - Tutorials:
       - tutorials/index.md
       - Genomics: tutorials/genomics.md
@@ -145,8 +149,12 @@ nav:
       - Real-Time Processing: tutorials/real-time.md
   - Examples:
       - examples/index.md
-      - Rust Examples: examples/rust.md
-      - Python Examples: examples/python.md
       - R Examples: examples/r.md
+      - Python Examples: examples/python.md
+      - Rust Examples: examples/rust.md
+      - Julia Examples: examples/julia.md
+      - Node.js Examples: examples/nodejs.md
+      - WebAssembly Examples: examples/wasm.md
+      - C++ Examples: examples/cpp.md
   - Changelog: changelog.md
   - Contributing: contributing.md

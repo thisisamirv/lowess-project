@@ -1,0 +1,43 @@
+[package]
+name = "examples"
+version = { workspace = true }
+edition = { workspace = true }
+publish = false
+
+[dependencies]
+lowess = { workspace = true, features = ["std", "dev"] }
+fastLowess = { workspace = true, features = ["cpu", "dev"] }
+ndarray = { workspace = true }
+
+[features]
+default = ["std", "cpu", "dev"]
+std = []
+cpu = []
+gpu = []
+dev = []
+
+# lowess examples
+[[example]]
+name = "batch_smoothing"
+path = "lowess/batch_smoothing.rs"
+
+[[example]]
+name = "online_smoothing"
+path = "lowess/online_smoothing.rs"
+
+[[example]]
+name = "streaming_smoothing"
+path = "lowess/streaming_smoothing.rs"
+
+# fastLowess examples
+[[example]]
+name = "fast_batch_smoothing"
+path = "fastLowess/fast_batch_smoothing.rs"
+
+[[example]]
+name = "fast_online_smoothing"
+path = "fastLowess/fast_online_smoothing.rs"
+
+[[example]]
+name = "fast_streaming_smoothing"
+path = "fastLowess/fast_streaming_smoothing.rs"

@@ -49,6 +49,9 @@ WASM_TEST_DIR := tests/wasm
 CPP_PKG := fastlowess-cpp
 CPP_DIR := bindings/cpp
 
+# Examples directory
+EXAMPLES_DIR := examples
+
 # Documentation
 DOCS_VENV := docs-venv
 
@@ -99,7 +102,7 @@ lowess:
 	@echo "=============================================================================="
 	@for example in $(LOWESS_EXAMPLES); do \
 		echo "Running example: $$example"; \
-		cargo run -q -p $(LOWESS_PKG) --example $$example --features dev || exit 1; \
+		cargo run -q -p examples --example $$example --features dev || exit 1; \
 	done
 	@echo "=============================================================================="
 	@echo "All $(LOWESS_PKG) crate checks completed successfully!"
@@ -162,9 +165,9 @@ fastLowess:
 		echo "Running examples with feature: $$feature"; \
 		for example in $(FASTLOWESS_EXAMPLES); do \
 			if [ "$$feature" = "dev" ]; then \
-				cargo run -q -p $(FASTLOWESS_PKG) --example $$example --features $$feature || exit 1; \
+				cargo run -q -p examples --example $$example --features $$feature || exit 1; \
 			else \
-				cargo run -q -p $(FASTLOWESS_PKG) --example $$example --features $$feature > /dev/null || exit 1; \
+				cargo run -q -p examples --example $$example --features $$feature > /dev/null || exit 1; \
 			fi; \
 		done; \
 	done
@@ -220,9 +223,9 @@ python:
 	@echo "6. Examples..."
 	@echo "=============================================================================="
 	@. $(PY_VENV)/bin/activate && pip install -q matplotlib
-	@. $(PY_VENV)/bin/activate && python $(PY_DIR)/examples/batch_smoothing.py
-	@. $(PY_VENV)/bin/activate && python $(PY_DIR)/examples/streaming_smoothing.py
-	@. $(PY_VENV)/bin/activate && python $(PY_DIR)/examples/online_smoothing.py
+	@. $(PY_VENV)/bin/activate && python $(EXAMPLES_DIR)/python/batch_smoothing.py
+	@. $(PY_VENV)/bin/activate && python $(EXAMPLES_DIR)/python/streaming_smoothing.py
+	@. $(PY_VENV)/bin/activate && python $(EXAMPLES_DIR)/python/online_smoothing.py
 	@echo "=============================================================================="
 	@echo "$(PY_PKG) checks completed successfully!"
 
@@ -365,6 +368,12 @@ r:
 	@ls -lh $(R_DIR)/$(R_PKG_TARBALL) || true
 	@if [ -f $(R_DIR)/src/Cargo.toml.orig ]; then mv $(R_DIR)/src/Cargo.toml.orig $(R_DIR)/src/Cargo.toml; fi
 	@echo "=============================================================================="
+	@echo "10. Examples..."
+	@echo "=============================================================================="
+	@Rscript $(EXAMPLES_DIR)/r/batch_smoothing.R
+	@Rscript $(EXAMPLES_DIR)/r/streaming_smoothing.R
+	@Rscript $(EXAMPLES_DIR)/r/online_smoothing.R
+	@echo "=============================================================================="
 	@echo "All $(R_PKG_NAME) checks completed successfully!"
 
 r-coverage:
@@ -440,9 +449,9 @@ julia:
 	@echo "=============================================================================="
 	@echo "7. Running examples..."
 	@echo "=============================================================================="
-	@julia --project=$(JL_DIR)/julia $(JL_DIR)/examples/batch_smoothing.jl
-	@julia --project=$(JL_DIR)/julia $(JL_DIR)/examples/streaming_smoothing.jl
-	@julia --project=$(JL_DIR)/julia $(JL_DIR)/examples/online_smoothing.jl
+	@julia --project=$(JL_DIR)/julia $(EXAMPLES_DIR)/julia/batch_smoothing.jl
+	@julia --project=$(JL_DIR)/julia $(EXAMPLES_DIR)/julia/streaming_smoothing.jl
+	@julia --project=$(JL_DIR)/julia $(EXAMPLES_DIR)/julia/online_smoothing.jl
 	@echo "=============================================================================="
 	@echo "$(JL_PKG) checks completed successfully!"
 	@echo ""
@@ -482,9 +491,9 @@ nodejs:
 	@echo "=============================================================================="
 	@echo "4. Examples..."
 	@echo "=============================================================================="
-	@cd $(NODE_DIR) && node examples/batch_smoothing.js
-	@cd $(NODE_DIR) && node examples/online_smoothing.js
-	@cd $(NODE_DIR) && node examples/streaming_smoothing.js
+	@cd $(NODE_DIR) && node ../../$(EXAMPLES_DIR)/nodejs/batch_smoothing.js
+	@cd $(NODE_DIR) && node ../../$(EXAMPLES_DIR)/nodejs/online_smoothing.js
+	@cd $(NODE_DIR) && node ../../$(EXAMPLES_DIR)/nodejs/streaming_smoothing.js
 	@echo "=============================================================================="
 	@echo "$(NODE_PKG) checks completed successfully!"
 

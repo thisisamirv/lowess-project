@@ -112,7 +112,7 @@ readme = { workspace = true }
 
 ## Project Structure
 
-```
+```text
 lowess-project/
 ├── crates/
 │   ├── lowess/           # Core LOWESS algorithms (no_std compatible)
@@ -141,7 +141,7 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/):
 
 Examples:
 
-```
+```text
 feat(python): add streaming adapter support
 fix(lowess): correct boundary padding calculation
 docs: update installation instructions
