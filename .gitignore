@@ -57,7 +57,8 @@ doc/
 Meta/
 docs-venv/
 site/
-bindings/python/examples/plots/
+examples/python/plots/
+bindings/cpp/include/fastlowess.h
 
 # Benchmarks
 /target/criterion/
@@ -72,6 +73,7 @@ coverage_detail.txt
 node_modules/
 npm-debug.log
 *.node
+index.d.ts
 build/
 
 # WebAssembly

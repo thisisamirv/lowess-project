@@ -158,13 +158,12 @@ jobs:
         env:
           RUSTDOCFLAGS: -D warnings
 
-      - name: "[fastLowess] Run Examples"
-        working-directory: crates/fastLowess
+      - name: "Run Rust Examples"
         run: |
-          for example in examples/*.rs; do
+          for example in examples/lowess/*.rs examples/fastLowess/*.rs; do
             name=$(basename "$example" .rs)
             echo "Running example: $name"
-            cargo run --example "$name" --features cpu
+            cargo run -p examples --example "$name" --features cpu
           done
 
   # ============================================================================
@@ -213,6 +212,11 @@ jobs:
 
       - name: Run Python Tests
         run: pytest ../../tests/python/ -v
+      - name: Run Python Examples
+        run: |
+          python ../../examples/python/batch_smoothing.py
+          python ../../examples/python/streaming_smoothing.py
+          python ../../examples/python/online_smoothing.py
 
   python-lint:
     name: Python - Lint & Format
@@ -309,12 +313,18 @@ jobs:
           needs: check
           working-directory: bindings/r
 
-      - uses: r-lib/actions/check-r-package@v2
+      - name: Run tests
+        uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
           build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
           error-on: '"error"'
           working-directory: bindings/r
+      - name: Run R Examples
+        run: |
+          Rscript ../../examples/r/batch_smoothing.R
+          Rscript ../../examples/r/streaming_smoothing.R
+          Rscript ../../examples/r/online_smoothing.R
 
   r-asan-check:
     name: R - Clang ASAN
@@ -462,9 +472,9 @@ jobs:
 
       - name: Run Julia Examples
         run: |
-          julia --project=bindings/julia/julia bindings/julia/examples/batch_smoothing.jl
-          julia --project=bindings/julia/julia bindings/julia/examples/streaming_smoothing.jl
-          julia --project=bindings/julia/julia bindings/julia/examples/online_smoothing.jl
+          julia --project=bindings/julia/julia examples/julia/batch_smoothing.jl
+          julia --project=bindings/julia/julia examples/julia/streaming_smoothing.jl
+          julia --project=bindings/julia/julia examples/julia/online_smoothing.jl
 
   julia-lint:
     name: Julia - Lint & Format
@@ -532,6 +542,11 @@ jobs:
         run: npm run build
       - name: Run tests
         run: npm test
+      - name: Run Node.js Examples
+        run: |
+          node ../../examples/nodejs/batch_smoothing.js
+          node ../../examples/nodejs/streaming_smoothing.js
+          node ../../examples/nodejs/online_smoothing.js
 
   nodejs-lint:
     name: Node.js - Lint & Format
@@ -580,8 +595,10 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - name: Build
         run: wasm-pack build --target nodejs
-      - name: Run tests
+      - name: Run WebAssembly Tests (Rust)
         run: wasm-pack test --node
+      - name: Run WebAssembly Tests (Node.js)
+        run: node ../../tests/wasm/test_fastlowess_wasm.js
 
   wasm-lint:
     name: WebAssembly - Lint & Format
@@ -625,6 +642,16 @@ jobs:
           key: cpp-${{ matrix.os }}-cargo
       - name: Build Library
         run: cargo build --release
+      - name: Build and Run C++ Examples (Ubuntu only)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          mkdir -p bin
+          g++ -O3 ../../examples/cpp/batch_smoothing.cpp -o bin/batch_smoothing -Ltarget/release -lfastlowess_cpp -lpthread -ldl -lm
+          g++ -O3 ../../examples/cpp/streaming_smoothing.cpp -o bin/streaming_smoothing -Ltarget/release -lfastlowess_cpp -lpthread -ldl -lm
+          g++ -O3 ../../examples/cpp/online_smoothing.cpp -o bin/online_smoothing -Ltarget/release -lfastlowess_cpp -lpthread -ldl -lm
+          LD_LIBRARY_PATH=target/release ./bin/batch_smoothing
+          LD_LIBRARY_PATH=target/release ./bin/streaming_smoothing
+          LD_LIBRARY_PATH=target/release ./bin/online_smoothing
 
   cpp-lint:
     name: C++ - Lint & Format

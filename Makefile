@@ -243,6 +243,7 @@ python-clean:
 	@rm -rf $(PY_DIR)/target/wheels
 	@rm -rf $(PY_DIR)/.pytest_cache
 	@rm -rf $(PY_DIR)/__pycache__
+	@rm -rf examples/python/plots/
 	@rm -rf $(PY_DIR)/fastlowess/__pycache__
 	@rm -rf $(PY_TEST_DIR)/__pycache__
 	@rm -rf $(PY_DIR)/*.egg-info
@@ -500,7 +501,7 @@ nodejs:
 nodejs-clean:
 	@echo "Cleaning $(NODE_PKG)..."
 	@cargo clean -p $(NODE_PKG)
-	@rm -rf $(NODE_DIR)/index.js $(NODE_DIR)/index.d.ts $(NODE_DIR)/node_modules
+	@rm -rf $(NODE_DIR)/index.js $(NODE_DIR)/index.d.ts $(NODE_DIR)/node_modules $(NODE_DIR)/fastlowess.node
 	@echo "$(NODE_PKG) clean complete!"
 
 # ==============================================================================
@@ -531,7 +532,7 @@ wasm:
 wasm-clean:
 	@echo "Cleaning $(WASM_PKG)..."
 	@cargo clean -p $(WASM_PKG)
-	@rm -rf $(WASM_DIR)/pkg
+	@rm -rf $(WASM_DIR)/pkg $(WASM_DIR)/pkg-web
 	@echo "$(WASM_PKG) clean complete!"
 
 # ==============================================================================
