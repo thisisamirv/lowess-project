@@ -60,6 +60,14 @@ $$w(u) = \begin{cases} (1 - u^2)^2 & |u| < 1 \\ 0 & |u| \geq 1 \end{cases}$$
     const result = smooth(x, y, { iterations: 3, robustnessMethod: "bisquare" });
     ```
 
+=== "C++"
+    ```cpp
+    auto result = fastlowess::smooth(x, y, {
+        .iterations = 3,
+        .robustness_method = "bisquare"
+    });
+    ```
+
 ---
 
 ### Huber
@@ -104,6 +112,14 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}$$
     const result = smooth(x, y, { iterations: 3, robustnessMethod: "huber" });
     ```
 
+=== "C++"
+    ```cpp
+    auto result = fastlowess::smooth(x, y, {
+        .iterations = 3,
+        .robustness_method = "huber"
+    });
+    ```
+
 ---
 
 ### Talwar
@@ -146,6 +162,14 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
 === "WebAssembly"
     ```javascript
     const result = smooth(x, y, { iterations: 3, robustnessMethod: "talwar" });
+    ```
+
+=== "C++"
+    ```cpp
+    auto result = fastlowess::smooth(x, y, {
+        .iterations = 3,
+        .robustness_method = "talwar"
+    });
     ```
 
 ---
@@ -234,6 +258,21 @@ Use robustness weights to identify potential outliers:
     });
     ```
 
+=== "C++"
+    ```cpp
+    auto result = fastlowess::smooth(x, y, {
+        .iterations = 5,
+        .return_robustness_weights = true
+    });
+
+    auto weights = result.robustness_weights();
+    for (size_t i = 0; i < weights.size(); ++i) {
+        if (weights[i] < 0.5) {
+            std::cout << "Potential outlier at " << i << std::endl;
+        }
+    }
+    ```
+
 ---
 
 ## Scale Estimation
@@ -279,6 +318,14 @@ Residuals are scaled before computing robustness weights. Two methods:
     const result = smooth(x, y, { iterations: 3, scalingMethod: "mad" });
     ```
 
+=== "C++"
+    ```cpp
+    auto result = fastlowess::smooth(x, y, {
+        .iterations = 3,
+        .scaling_method = "mad"
+    });
+    ```
+
 ---
 
 ## Auto-Convergence
@@ -322,4 +369,12 @@ Stop iterations early when weights stabilize:
 === "WebAssembly"
     ```javascript
     const result = smooth(x, y, { iterations: 10, autoConverge: 1e-6 });
+    ```
+
+=== "C++"
+    ```cpp
+    auto result = fastlowess::smooth(x, y, {
+        .iterations = 10,
+        .auto_converge = 1e-6
+    });
     ```

@@ -138,6 +138,26 @@ For true real-time applications where each point must be processed immediately.
     }
     ```
 
+=== "C++"
+    ```cpp
+    #include "fastlowess.hpp"
+
+    // Online mode processes points incrementally
+    fastlowess::OnlineOptions opts;
+    opts.fraction = 0.3;
+    opts.iterations = 1;
+    opts.window_capacity = 25;
+    opts.min_points = 5;
+    opts.update_mode = "incremental";
+
+    auto result = fastlowess::online(times, temperatures, opts);
+
+    // Result contains smoothed values
+    for (size_t i = 0; i < result.size(); ++i) {
+        std::cout << "Time " << result.x(i) << ": " << result.y(i) << std::endl;
+    }
+    ```
+
 ---
 
 ## Streaming Mode: Chunk Processing
@@ -255,6 +275,21 @@ For large datasets that arrive in batches or files.
     const finalResult = processor.finalize();
     ```
 
+=== "C++"
+    ```cpp
+    #include "fastlowess.hpp"
+
+    fastlowess::StreamingOptions opts;
+    opts.fraction = 0.1;
+    opts.iterations = 2;
+    opts.chunk_size = 5000;
+    opts.overlap = 500;
+
+    auto result = fastlowess::streaming(x, y, opts);
+
+    std::cout << "Processed " << result.size() << " points" << std::endl;
+    ```
+
 !!! warning "Always call finalize()"
     The streaming adapter buffers overlap data. Always call `finalize()` to retrieve the last chunk.
 
@@ -359,6 +394,25 @@ For large datasets that arrive in batches or files.
     }
     ```
 
+=== "C++"
+    ```cpp
+    #include "fastlowess.hpp"
+
+    // Sliding window logic
+    for (const auto& point : stream) {
+        windowX.push_back(point.x);
+        windowY.push_back(point.y);
+        
+        if (windowX.size() > 50) {
+            windowX.erase(windowX.begin());
+            windowY.erase(windowY.begin());
+        }
+
+        auto result = fastlowess::smooth(windowX, windowY, { .fraction = 0.4 });
+        const auto smoothed = result.y.back();
+    }
+    ```
+
 ---
 
 ## Choosing Parameters
@@ -388,29 +442,6 @@ For large datasets that arrive in batches or files.
 | **Online**    | Fixed (window) | ~1ms/point   | Sensors, dashboards |
 | **Streaming** | ~chunk_size    | ~100ms/chunk | Large files, ETL    |
 | **Batch**     | Full dataset   | N/A          | Analysis, reports   |
-
----
-
-## Error Handling
-
-=== "Node.js"
-    ```javascript
-    try {
-        const result = fl.smooth(x, y, { fraction: 0.1 });
-    } catch (err) {
-        console.error("Smoothing failed:", err.message);
-        // Fall back to raw data
-    }
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    try {
-        const result = smooth(xVal, yVal, { fraction: 0.1 });
-    } catch (err) {
-        console.error("WASM LOWESS Error:", err);
-    }
-    ```
 
 ---
 

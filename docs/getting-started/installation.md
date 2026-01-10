@@ -131,6 +131,25 @@ wasm-pack build --target web
 
 ---
 
+## C++
+
+**From Source:**
+
+Requires Rust toolchain.
+
+```bash
+git clone https://github.com/thisisamirv/lowess-project
+cd lowess-project/bindings/cpp
+
+# Build the library
+cargo build --release
+
+# Headers are at: include/fastlowess.h (C) and include/fastlowess.hpp (C++)
+# Library is at: target/release/libfastlowess_cpp.so (Linux)
+```
+
+---
+
 ### Feature Flags
 
 | Crate        | Feature | Description                             |

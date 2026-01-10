@@ -19,11 +19,11 @@ The fastest, most robust, and most feature-complete language-agnostic LOWESS (Lo
 >
 > The `lowess-project` contains a complete ecosystem for LOWESS smoothing:
 >
-> - **[`lowess`](https://github.com/thisisamirv/lowess-project/tree/main/crates/lowess)** - Core single-threaded Rust implementation with `no_std` support
-> - **[`fastLowess`](https://github.com/thisisamirv/lowess-project/tree/main/crates/fastLowess)** - Parallel CPU and GPU-accelerated Rust wrapper with ndarray integration  
-> - **[`Python bindings`](https://github.com/thisisamirv/lowess-project/tree/main/bindings/python)** - PyO3-based Python package
-> - **[`R bindings`](https://github.com/thisisamirv/lowess-project/tree/main/bindings/r)** - extendr-based R package
-> - **[`Julia bindings`](https://github.com/thisisamirv/lowess-project/tree/main/bindings/julia)** - Native Julia package with C FFI
+> - **[`lowess`](https://github.com/thisisamirv/lowess-project/blob/main/crates/lowess)** - Core single-threaded Rust implementation with `no_std` support
+> - **[`fastLowess`](https://github.com/thisisamirv/lowess-project/blob/main/crates/fastLowess)** - Parallel CPU and GPU-accelerated Rust wrapper with ndarray integration  
+> - **[`Python bindings`](https://github.com/thisisamirv/lowess-project/blob/main/bindings/python)** - PyO3-based Python package
+> - **[`R bindings`](https://github.com/thisisamirv/lowess-project/blob/main/bindings/r)** - extendr-based R package
+> - **[`Julia bindings`](https://github.com/thisisamirv/lowess-project/blob/main/bindings/julia)** - Native Julia package with C FFI
 
 ## LOESS vs. LOWESS
 
@@ -403,7 +403,7 @@ result.fraction_used
 
 ## Contributing
 
-Contributions are welcome! Please see the [CONTRIBUTING.md](https://github.com/thisisamirv/lowess-project/tree/main/CONTRIBUTING.md) file for more information.
+Contributions are welcome! Please see the [CONTRIBUTING.md](https://github.com/thisisamirv/lowess-project/blob/main/CONTRIBUTING.md) file for more information.
 
 ## License
 
@@ -421,7 +421,7 @@ at your option.
 
 ## Citation
 
-If you use this software in your research, please cite it using the [CITATION.cff](https://github.com/thisisamirv/lowess-project/tree/main/CITATION.cff) file or the BibTeX entry below:
+If you use this software in your research, please cite it using the [CITATION.cff](https://github.com/thisisamirv/lowess-project/blob/main/CITATION.cff) file or the BibTeX entry below:
 
 ```bibtex
 @software{lowess_project,

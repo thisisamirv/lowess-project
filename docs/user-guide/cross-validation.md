@@ -100,6 +100,20 @@ Split data into K folds, train on K-1, validate on 1.
     console.log("CV scores:", result.cvScores);
     ```
 
+=== "C++"
+    ```cpp
+    #include "fastlowess.hpp"
+
+    fastlowess::LowessOptions opts;
+    opts.cv_fractions = {0.2, 0.3, 0.5, 0.7};
+    opts.cv_method = "kfold";
+    opts.cv_k = 5;
+
+    auto result = fastlowess::smooth(x, y, opts);
+
+    std::cout << "Selected fraction: " << result.fraction_used() << std::endl;
+    ```
+
 ---
 
 ## Leave-One-Out (LOOCV)
@@ -154,6 +168,16 @@ Each point is held out once. Most thorough but slowest.
     const result = smooth(x, y, {
         cvMethod: "loocv",
         cvFractions: [0.2, 0.3, 0.5, 0.7]
+    });
+    ```
+
+=== "C++"
+    ```cpp
+    #include "fastlowess.hpp"
+
+    auto result = fastlowess::smooth(x, y, {
+        .cv_method = "loocv",
+        .cv_fractions = {0.2, 0.3, 0.5, 0.7}
     });
     ```
 
@@ -212,6 +236,16 @@ Set a seed for reproducible fold assignments:
 === "WebAssembly"
     ```javascript
     // Support coming soon.
+    ```
+
+=== "C++"
+    ```cpp
+    #include "fastlowess.hpp"
+
+    auto model = fastlowess::Lowess::new()
+        .cross_validate(fastlowess::KFold(5, {0.3, 0.5, 0.7}).seed(42))
+        .adapter(fastlowess::Batch)
+        .build()?;
     ```
 
 ---
@@ -297,6 +331,55 @@ Lower MSE indicates better fit on held-out data.
     # 0.3       | 0.0231  ← Best
     # 0.5       | 0.0298
     # 0.7       | 0.0412  ← Oversmoothed
+    ```
+
+=== "Node.js"
+    ```javascript
+    // Example output
+    const result = smooth(x, y, {
+        cvMethod: "kfold",
+        cvK: 5,
+        cvFractions: [0.1, 0.3, 0.5, 0.7]
+    });
+
+    // Fraction  | CV Score (MSE)
+    // 0.1       | 0.0542  ← Undersmoothed
+    // 0.3       | 0.0231  ← Best
+    // 0.5       | 0.0298
+    // 0.7       | 0.0412  ← Oversmoothed
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    // Example output
+    const result = smooth(x, y, {
+        cvMethod: "kfold",
+        cvK: 5,
+        cvFractions: [0.1, 0.3, 0.5, 0.7]
+    });
+
+    // Fraction  | CV Score (MSE)
+    // 0.1       | 0.0542  ← Undersmoothed
+    // 0.3       | 0.0231  ← Best
+    // 0.5       | 0.0298
+    // 0.7       | 0.0412  ← Oversmoothed
+    ```
+
+=== "C++"
+    ```cpp
+    // Example output
+    auto model = fastlowess::Lowess::new()
+        .cross_validate(fastlowess::KFold(5, {0.1, 0.3, 0.5, 0.7}))
+        .adapter(fastlowess::Batch)
+        .build()?;
+
+    auto result = model.fit(&x, &y)?;
+
+    // Fraction  | CV Score (MSE)
+    // 0.1       | 0.0542  ← Undersmoothed
+    // 0.3       | 0.0231  ← Best
+    // 0.5       | 0.0298
+    // 0.7       | 0.0412  ← Oversmoothed
     ```
 
 The fraction with **lowest CV score** is automatically selected.

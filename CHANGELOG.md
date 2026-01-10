@@ -13,6 +13,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial implementation
 
+**fastLowess (Node.js):**
+
+- Initial implementation
+
+**fastLowess (WASM):**
+
+- Initial implementation
+
+**fastLowess (C++):**
+
+- Initial implementation
+
 ## 0.99.7
 
 ### Changed

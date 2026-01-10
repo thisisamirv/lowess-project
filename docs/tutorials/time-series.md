@@ -112,6 +112,21 @@ Time series data often contains noise, seasonality, and trends. LOWESS provides 
     // Trend values in result.y
     ```
 
+=== "C++"
+    ```cpp
+    #include "fastlowess.hpp"
+
+    std::vector<double> t = /* time points */;
+    std::vector<double> y = /* values */;
+
+    auto result = fastlowess::smooth(t, y, {
+        .fraction = 0.1,
+        .iterations = 3
+    });
+
+    // Trend in result.y_vector()
+    ```
+
 ---
 
 ## Detrending
@@ -200,6 +215,20 @@ Remove trend to analyze residual patterns:
     });
 
     // Access result.y (trend) and result.residuals (detrended)
+    ```
+
+=== "C++"
+    ```cpp
+    #include "fastlowess.hpp"
+
+    auto result = fastlowess::smooth(t, y, {
+        .fraction = 0.3,
+        .iterations = 3,
+        .return_residuals = true
+    });
+
+    auto trend = result.y_vector();
+    auto detrended = result.residuals();
     ```
 
 ---
@@ -299,6 +328,20 @@ Remove trend to analyze residual patterns:
     // Access result.predictionLower and result.predictionUpper
     ```
 
+=== "C++"
+    ```cpp
+    #include "fastlowess.hpp"
+
+    auto result = fastlowess::smooth(t, y, {
+        .fraction = 0.2,
+        .iterations = 3,
+        .confidence_intervals = 0.95,
+        .prediction_intervals = 0.95
+    });
+
+    // Access result.predictionLower and result.predictionUpper
+    ```
+
 ---
 
 ## Handling Missing Data
@@ -360,6 +403,15 @@ LOWESS naturally handles irregular time sampling:
     import { smooth } from 'fastlowess-wasm';
 
     const result = smooth(tIrregular, yIrregular, { fraction: 0.2 });
+    ```
+
+=== "C++"
+    ```cpp
+    #include "fastlowess.hpp"
+
+    auto result = fastlowess::smooth(tIrregular, yIrregular, {
+        .fraction = 0.2,
+    });
     ```
 
 ---
@@ -437,6 +489,18 @@ Use different fractions to extract features at different scales:
         const result = smooth(t, y, { fraction: f });
         return result.y;
     });
+    ```
+
+=== "C++"
+    ```cpp
+    #include "fastlowess.hpp"
+
+    std::vector<double> scales = {0.05, 0.2, 0.5};
+    std::vector<std::vector<double>> trends;
+    for (auto f : scales) {
+        auto result = fastlowess::smooth(t, y, { .fraction = f });
+        trends.push_back(result.y_vector());
+    }
     ```
 
 ---
@@ -553,6 +617,19 @@ Biological application:
     });
 
     console.log("R²:", result.diagnostics.rSquared);
+    ```
+
+=== "C++"
+    ```cpp
+    #include "fastlowess.hpp"
+
+    auto result = fastlowess::smooth(hours, expression, {
+        .fraction = 0.3,
+        .iterations = 3,
+        .return_diagnostics = true
+    });
+
+    std::cout << "R²: " << result.diagnostics.r_squared << std::endl;
     ```
 
 ---

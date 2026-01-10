@@ -88,6 +88,19 @@ Estimate uncertainty in the smoothed curve itself.
     });
     ```
 
+=== "C++"
+    ```cpp
+    #include "fastlowess.hpp"
+
+    auto result = fastlowess::smooth(x, y, {
+        .fraction = 0.5,
+        .confidence_intervals = 0.95
+    });
+
+    auto ci_lower = result.confidence_lower();
+    auto ci_upper = result.confidence_upper();
+    ```
+
 ---
 
 ## Prediction Intervals
@@ -146,6 +159,11 @@ Estimate where new observations might fall.
     ```javascript
     const result = smooth(x, y, { fraction: 0.5, predictionIntervals: 0.95 });
     console.log(`Prediction bounds: [${result.predictionLower[0]}, ${result.predictionUpper[0]}]`);
+    ```
+
+=== "C++"
+    ```cpp
+    auto result = fastlowess::smooth(x, y, { .fraction = 0.5, .prediction_intervals = 0.95 });
     ```
 
 ---
@@ -212,6 +230,11 @@ Request both types simultaneously:
     });
     ```
 
+=== "C++"
+    ```cpp
+    auto result = fastlowess::smooth(x, y, { .fraction = 0.5, .confidence_intervals = 0.95, .prediction_intervals = 0.95 });
+    ```
+
 ---
 
 ## Confidence Levels
@@ -261,6 +284,11 @@ Common levels and their z-values:
     ```javascript
     // 99% confidence interval
     const result = smooth(x, y, { confidenceIntervals: 0.99 });
+    ```
+
+=== "C++"
+    ```cpp
+    auto result = fastlowess::smooth(x, y, { .confidence_intervals = 0.99 });
     ```
 
 ---
@@ -317,6 +345,11 @@ Access standard errors directly (available when intervals are computed):
     result.standardErrors.forEach((se, i) => {
         console.log(`Point ${i}: SE = ${se.toFixed(4)}`);
     });
+    ```
+
+=== "C++"
+    ```cpp
+    auto result = fastlowess::smooth(x, y, { .confidence_intervals = 0.95 });
     ```
 
 ---

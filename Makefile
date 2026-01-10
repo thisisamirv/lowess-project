@@ -45,6 +45,13 @@ WASM_PKG := fastlowess-wasm
 WASM_DIR := bindings/wasm
 WASM_TEST_DIR := tests/wasm
 
+# C++ bindings
+CPP_PKG := fastlowess-cpp
+CPP_DIR := bindings/cpp
+
+# Documentation
+DOCS_VENV := docs-venv
+
 # ==============================================================================
 # lowess crate
 # ==============================================================================
@@ -519,6 +526,30 @@ wasm-clean:
 	@echo "$(WASM_PKG) clean complete!"
 
 # ==============================================================================
+# C++ bindings
+# ==============================================================================
+cpp:
+	@echo "Running $(CPP_PKG) checks..."
+	@echo "=============================================================================="
+	@echo "1. Formatting..."
+	@echo "=============================================================================="
+	@cargo fmt -p $(CPP_PKG) -- --check
+	@echo "=============================================================================="
+	@echo "2. Linting & Building..."
+	@echo "=============================================================================="
+	@cargo clippy -q -p $(CPP_PKG) --all-targets -- -D warnings
+	@cargo build -q -p $(CPP_PKG) --release
+	@echo "C header generated at $(CPP_DIR)/include/fastlowess.h"
+	@echo "=============================================================================="
+	@echo "$(CPP_PKG) checks completed successfully!"
+
+cpp-clean:
+	@echo "Cleaning $(CPP_PKG)..."
+	@cargo clean -p $(CPP_PKG)
+	@rm -rf $(CPP_DIR)/include/fastlowess.h
+	@echo "$(CPP_PKG) clean complete!"
+
+# ==============================================================================
 # Development checks
 # ==============================================================================
 check-msrv:
@@ -528,8 +559,6 @@ check-msrv:
 # ==============================================================================
 # Documentation
 # ==============================================================================
-DOCS_VENV := docs-venv
-
 docs:
 	@echo "Building documentation..."
 	@if [ ! -d "$(DOCS_VENV)" ]; then python3 -m venv $(DOCS_VENV); fi
@@ -550,7 +579,7 @@ docs-clean:
 # ==============================================================================
 # All targets
 # ==============================================================================
-all: lowess fastLowess python r julia nodejs wasm check-msrv
+all: lowess fastLowess python r julia nodejs wasm cpp check-msrv
 	@echo "Syncing CITATION.cff..."
 	@dev/sync_version.py Cargo.toml -c CITATION.cff -q
 	@echo "All checks completed successfully!"
@@ -558,10 +587,10 @@ all: lowess fastLowess python r julia nodejs wasm check-msrv
 all-coverage: lowess-coverage fastLowess-coverage python-coverage r-coverage
 	@echo "All coverage completed!"
 
-all-clean: r-clean lowess-clean fastLowess-clean python-clean julia-clean nodejs-clean wasm-clean
+all-clean: r-clean lowess-clean fastLowess-clean python-clean julia-clean nodejs-clean wasm-clean cpp-clean
 	@echo "Cleaning project root..."
 	@cargo clean
 	@rm -rf target Cargo.lock .venv .ruff_cache .pytest_cache site docs-venv
 	@echo "All clean completed!"
 
-.PHONY: lowess lowess-coverage lowess-clean fastLowess fastLowess-coverage fastLowess-clean python python-coverage python-clean r r-coverage r-clean julia julia-clean julia-update-commit nodejs nodejs-clean wasm wasm-clean check-msrv docs docs-serve docs-clean all all-coverage all-clean
+.PHONY: lowess lowess-coverage lowess-clean fastLowess fastLowess-coverage fastLowess-clean python python-coverage python-clean r r-coverage r-clean julia julia-clean julia-update-commit nodejs nodejs-clean wasm wasm-clean cpp cpp-clean check-msrv docs docs-serve docs-clean all all-coverage all-clean

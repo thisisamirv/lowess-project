@@ -514,7 +514,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        node-version: [18, 20, 22]
+        node-version: [20, 22]
         rust: [stable]
     steps:
       - uses: actions/checkout@v4
@@ -566,7 +566,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [18, 20, 22]
+        node-version: [20, 22]
         rust: [stable]
     steps:
       - uses: actions/checkout@v4
@@ -589,6 +589,49 @@ jobs:
     defaults:
       run:
         working-directory: bindings/wasm
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Rust Format
+        run: cargo fmt --all -- --check
+      - name: Rust Clippy
+        run: cargo clippy --all-targets -- -D warnings
+
+  # ============================================================================
+  # C++ BINDINGS
+  # ============================================================================
+  cpp-build:
+    name: C++ - Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: bindings/cpp
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        rust: [stable]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: bindings/cpp
+          key: cpp-${{ matrix.os }}-cargo
+      - name: Build Library
+        run: cargo build --release
+
+  cpp-lint:
+    name: C++ - Lint & Format
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bindings/cpp
     steps:
       - uses: actions/checkout@v4
       - name: Install Rust Toolchain

@@ -16,7 +16,7 @@
     "@napi-rs/cli": "^3.5.1"
   },
   "engines": {
-    "node": ">= 18"
+    "node": ">= 20"
   },
   "license": "MIT OR Apache-2.0"
 }

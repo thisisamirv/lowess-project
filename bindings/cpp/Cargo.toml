@@ -1,0 +1,19 @@
+[package]
+name = "fastlowess-cpp"
+version = { workspace = true }
+edition = { workspace = true }
+authors = { workspace = true }
+license = { workspace = true }
+readme = "README.md"
+publish = false
+
+[lib]
+name = "fastlowess_cpp"
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+fastLowess = { path = "../../crates/fastLowess", features = ["cpu", "dev"] }
+libc = { workspace = true }
+
+[build-dependencies]
+cbindgen = { workspace = true }

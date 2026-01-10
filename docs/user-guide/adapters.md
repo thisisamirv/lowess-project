@@ -118,6 +118,20 @@ Standard mode for complete datasets. **Supports all features.**
     });
     ```
 
+=== "C++"
+    ```cpp
+    #include "fastlowess.hpp"
+
+    auto result = fastlowess::smooth(x, y, {
+        .fraction = 0.5,
+        .iterations = 3,
+        .confidence_intervals = 0.95,
+        .prediction_intervals = 0.95,
+        .return_diagnostics = true,
+        .parallel = true
+    });
+    ```
+
 ---
 
 ## Streaming Adapter
@@ -245,6 +259,19 @@ Process large datasets in chunks with configurable overlap.
     }
 
     const finalResult = processor.finalize();
+    ```
+
+=== "C++"
+    ```cpp
+    #include "fastlowess.hpp"
+
+    fastlowess::StreamingOptions opts;
+    opts.fraction = 0.3;
+    opts.iterations = 2;
+    opts.chunk_size = 5000;
+    opts.overlap = 500;
+
+    auto result = fastlowess::streaming(x, y, opts);
     ```
 
 ---
@@ -375,6 +402,20 @@ Incremental updates with a sliding window for real-time data.
             console.log(`Smoothed: ${smoothed.toFixed(2)}`);
         }
     }
+    ```
+
+=== "C++"
+    ```cpp
+    #include "fastlowess.hpp"
+
+    fastlowess::OnlineOptions opts;
+    opts.fraction = 0.2;
+    opts.iterations = 1;
+    opts.window_capacity = 100;
+    opts.min_points = 5;
+    opts.update_mode = "incremental";
+
+    auto result = fastlowess::online(x, y, opts);
     ```
 
 ---

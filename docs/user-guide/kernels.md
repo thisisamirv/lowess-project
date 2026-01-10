@@ -68,6 +68,11 @@ $$w(u) = (1 - |u|^3)^3$$
     const result = smooth(x, y, { weightFunction: "tricube" });
     ```
 
+=== "C++"
+    ```cpp
+    auto result = fastlowess::smooth(x, y, { .weight_function = "tricube" });
+    ```
+
 ---
 
 ## Epanechnikov
@@ -109,6 +114,11 @@ $$w(u) = \frac{3}{4}(1 - u^2)$$
 === "WebAssembly"
     ```javascript
     const result = smooth(x, y, { weightFunction: "epanechnikov" });
+    ```
+
+=== "C++"
+    ```cpp
+    auto result = fastlowess::smooth(x, y, { .weight_function = "epanechnikov" });
     ```
 
 ---
@@ -154,6 +164,11 @@ $$w(u) = \exp(-u^2/2)$$
     const result = smooth(x, y, { weightFunction: "gaussian" });
     ```
 
+=== "C++"
+    ```cpp
+    auto result = fastlowess::smooth(x, y, { .weight_function = "gaussian" });
+    ```
+
 ---
 
 ## Biweight
@@ -195,6 +210,11 @@ $$w(u) = (1 - u^2)^2$$
 === "WebAssembly"
     ```javascript
     const result = smooth(x, y, { weightFunction: "biweight" });
+    ```
+
+=== "C++"
+    ```cpp
+    auto result = fastlowess::smooth(x, y, { .weight_function = "biweight" });
     ```
 
 ---
@@ -240,6 +260,11 @@ $$w(u) = \cos(\pi u / 2)$$
     const result = smooth(x, y, { weightFunction: "cosine" });
     ```
 
+=== "C++"
+    ```cpp
+    auto result = fastlowess::smooth(x, y, { .weight_function = "cosine" });
+    ```
+
 ---
 
 ## Triangle
@@ -283,6 +308,11 @@ $$w(u) = 1 - |u|$$
     const result = smooth(x, y, { weightFunction: "triangle" });
     ```
 
+=== "C++"
+    ```cpp
+    auto result = fastlowess::smooth(x, y, { .weight_function = "triangle" });
+    ```
+
 ---
 
 ## Uniform
@@ -324,6 +354,11 @@ $$w(u) = 1$$
 === "WebAssembly"
     ```javascript
     const result = smooth(x, y, { weightFunction: "uniform" });
+    ```
+
+=== "C++"
+    ```cpp
+    auto result = fastlowess::smooth(x, y, { .weight_function = "uniform" });
     ```
 
 ---

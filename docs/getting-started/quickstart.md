@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD024 MD046 -->
 # Quick Start
 
 Get up and running with LOWESS in minutes.
@@ -108,6 +109,25 @@ Smoothed values: [2.02, 4.00, 6.00, 8.10, 10.04, 12.03, 13.90, 15.78]
     const result = fastlowess.smooth(x, y, { fraction: 0.5, iterations: 3 });
 
     console.log("Smoothed values:", result.y);
+    ```
+
+=== "C++"
+
+    ```cpp
+    #include "fastlowess.hpp"
+    #include <iostream>
+
+    int main() {
+        std::vector<double> x = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0};
+        std::vector<double> y = {2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7};
+
+        auto result = fastlowess::smooth(x, y, {.fraction = 0.5, .iterations = 3});
+
+        for (size_t i = 0; i < result.size(); ++i) {
+            std::cout << result.y(i) << " ";
+        }
+        return 0;
+    }
     ```
 
 ---
@@ -367,4 +387,4 @@ LOWESS can robustly handle outliers through iterative reweighting:
 - [Concepts](concepts.md) — Understand how LOWESS works
 - [Parameters](../user-guide/parameters.md) — All configuration options
 - [Execution Modes](../user-guide/adapters.md) — Batch, Streaming, Online
-- [Node.js API](../api/nodejs.md) / [WebAssembly API](../api/webassembly.md) — Full references
+- [C++ API](../api/cpp.md) / [Node.js API](../api/nodejs.md) / [WebAssembly API](../api/webassembly.md) — Full references

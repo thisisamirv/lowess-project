@@ -159,6 +159,21 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
     // CI bounds in result.confidenceLower/Upper
     ```
 
+=== "C++"
+    ```cpp
+    #include "fastlowess.hpp"
+
+    // positions and observed are std::vector<double>
+    auto result = fastlowess::smooth(positions, observed, {
+        .fraction = 0.1,
+        .iterations = 3,
+        .confidence_intervals = 0.95
+    });
+
+    // Smoothed profile in result.y_vector()
+    // CI bounds in result.confidence_lower()/result.confidence_upper()
+    ```
+
 ---
 
 ## ChIP-seq Signal Smoothing
@@ -293,6 +308,24 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
     const peaks = positions.filter((p, i) => smoothed[i] > 25.0);
     ```
 
+=== "C++"
+    ```cpp
+    #include "fastlowess.hpp"
+
+    auto result = fastlowess::smooth(positions, observed, {
+        .fraction = 0.05,
+        .iterations = 5
+    });
+
+    // Find peaks above threshold
+    std::vector<double> peaks;
+    for (size_t i = 0; i < result.size(); ++i) {
+        if (result.y(i) > 25.0) {
+            peaks.push_back(result.x(i));
+        }
+    }
+    ```
+
 ---
 
 ## Large Genome Coverage (Streaming)
@@ -388,6 +421,18 @@ For whole-genome data that doesn't fit in memory:
         processor.processChunk(chunk.positions, chunk.coverage);
     }
     const result = processor.finalize();
+    ```
+
+=== "C++"
+    ```cpp
+    #include "fastlowess.hpp"
+
+    // coverage and positions are chromosome-scale vectors
+    auto result = fastlowess::smooth_streaming(
+        positions, coverage,
+        { .fraction = 0.05, .iterations = 3 },
+        { .chunk_size = 100000, .overlap = 10000 }
+    );
     ```
 
 ---

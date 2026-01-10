@@ -159,6 +159,30 @@ Complete reference for all LOWESS configuration options.
     | **minPoints**             | 2       | [2, window]   | Min before output       | Online           |
     | **updateMode**            | `"incremental"`| 2 options | Update strategy      | Online           |
 
+=== "C++"
+
+    | Parameter                   | Default            | Range/Options | Description             | Adapter          |
+    |-----------------------------|--------------------|---------------|-------------------------|------------------|
+    | **fraction**                | 0.67               | (0, 1]        | Smoothing span          | All              |
+    | **iterations**              | 3                  | [0, 1000]     | Robustness iterations   | All              |
+    | **delta**                   | NAN (auto)         | [0, ∞)        | Interpolation threshold | All              |
+    | **weight_function**         | `"tricube"`        | 7 options     | Distance kernel         | All              |
+    | **robustness_method**       | `"bisquare"`       | 3 options     | Outlier weighting       | All              |
+    | **zero_weight_fallback**    | `"use_local_mean"` | 3 options     | Zero-weight behavior    | All              |
+    | **boundary_policy**         | `"extend"`         | 4 options     | Edge handling           | All              |
+    | **scaling_method**          | `"mad"`            | 2 options     | Scale estimation        | All              |
+    | **auto_converge**           | NAN                | tolerance     | Early stopping          | All              |
+    | **return_residuals**        | false              | bool          | Include residuals       | All              |
+    | **return_robustness_weights**| false             | bool          | Include weights         | All              |
+    | **return_diagnostics**      | false              | bool          | Include metrics         | Batch, Streaming |
+    | **confidence_intervals**    | NAN                | (0, 1)        | CI level                | Batch            |
+    | **prediction_intervals**    | NAN                | (0, 1)        | PI level                | Batch            |
+    | **chunk_size**              | 5000               | [10, ∞)       | Points per chunk        | Streaming        |
+    | **overlap**                 | -1 (auto)          | [0, chunk)    | Overlap between chunks  | Streaming        |
+    | **window_capacity**         | 1000               | [3, ∞)        | Max window size         | Online           |
+    | **min_points**              | 2                  | [2, window]   | Min before output       | Online           |
+    | **update_mode**             | `"full"`           | 2 options     | Update strategy         | Online           |
+
 ---
 
 ## Parameter Options Summary
@@ -198,6 +222,18 @@ Complete reference for all LOWESS configuration options.
     | **scalingMethod**        | `"mad"`, `"mar"`                                                                             |
     | **mergeStrategy**        | `"average"`, `"left"`, `"right"`, `"weighted"`                                               |
     | **updateMode**           | `"incremental"`, `"full"`                                                                    |
+
+=== "C++"
+
+    | Parameter                  | Available Options                                                                            |
+    |----------------------------|----------------------------------------------------------------------------------------------|
+    | **weight_function**        | `"tricube"`, `"epanechnikov"`, `"gaussian"`, `"biweight"`, `"cosine"`, `"triangle"`, `"uniform"` |
+    | **robustness_method**      | `"bisquare"`, `"huber"`, `"talwar"`                                                          |
+    | **zero_weight_fallback**   | `"use_local_mean"`, `"return_original"`, `"return_none"`                                     |
+    | **boundary_policy**        | `"extend"`, `"reflect"`, `"zero"`, `"no_boundary"`                                           |
+    | **scaling_method**         | `"mad"`, `"mar"`                                                                             |
+    | **merge_strategy**         | `"average"`, `"left"`, `"right"`, `"weighted"`                                               |
+    | **update_mode**            | `"incremental"`, `"full"`                                                                    |
 
 ---
 
@@ -247,6 +283,11 @@ The proportion of data used for each local fit. **Most important parameter.**
     const result = smooth(x, y, { fraction: 0.3 });
     ```
 
+=== "C++"
+    ```cpp
+    auto result = fastlowess::smooth(x, y, { .fraction = 0.3 });
+    ```
+
 ---
 
 ### iterations
@@ -293,6 +334,11 @@ Number of robustness iterations for outlier resistance.
     const result = smooth(x, y, { iterations: 5 });
     ```
 
+=== "C++"
+    ```cpp
+    auto result = fastlowess::smooth(x, y, { .iterations = 5 });
+    ```
+
 ---
 
 ### delta
@@ -335,13 +381,18 @@ Interpolation optimization threshold. Points within `delta` distance reuse the p
     const result = smooth(x, y, { delta: 0.05 });
     ```
 
+=== "C++"
+    ```cpp
+    auto result = fastlowess::smooth(x, y, { .delta = 0.05 });
+    ```
+
 ---
 
 ### weight_function
 
 Distance weighting kernel for local fits.
 
-=== "R / Python"
+=== "R / Python / Julia / Node.js / WebAssembly / C++"
 
     | Kernel           | Efficiency | Smoothness  |
     |------------------|:----------:|:-----------:|
@@ -400,13 +451,18 @@ See [Weight Functions](kernels.md) for detailed comparison.
     const result = smooth(x, y, { weightFunction: "epanechnikov" });
     ```
 
+=== "C++"
+    ```cpp
+    auto result = fastlowess::smooth(x, y, { .weight_function = "epanechnikov" });
+    ```
+
 ---
 
 ### robustness_method
 
 Method for downweighting outliers during iterative refinement.
 
-=== "R / Python"
+=== "R / Python / Julia / Node.js / WebAssembly / C++"
 
     | Method       | Behavior                | Use Case              |
     |--------------|-------------------------|-----------------------|
@@ -457,6 +513,11 @@ See [Robustness](robustness.md) for detailed comparison.
     const result = smooth(x, y, { robustnessMethod: "talwar" });
     ```
 
+=== "C++"
+    ```cpp
+    auto result = fastlowess::smooth(x, y, { .robustness_method = "talwar" });
+    ```
+
 ---
 
 ### boundary_policy
@@ -465,7 +526,7 @@ Edge handling strategy to reduce boundary bias.
 
 ![Boundary Policy](../assets/diagrams/boundary_handling.svg)
 
-=== "R / Python"
+=== "R / Python / Julia / Node.js / WebAssembly / C++"
 
     | Policy          | Behavior                   | Use Case                    |
     |-----------------|----------------------------|-----------------------------|
@@ -482,6 +543,8 @@ Edge handling strategy to reduce boundary bias.
     | `Reflect`    | Mirror data at boundaries  | Periodic/symmetric data     |
     | `Zero`       | Pad with zeros             | Data approaches zero        |
     | `NoBoundary` | No padding                 | Original Cleveland behavior |
+
+For example:
 
 === "R"
     ```r
@@ -516,13 +579,18 @@ Edge handling strategy to reduce boundary bias.
     const result = smooth(x, y, { boundaryPolicy: "reflect" });
     ```
 
+=== "C++"
+    ```cpp
+    auto result = fastlowess::smooth(x, y, { .boundary_policy = "reflect" });
+    ```
+
 ---
 
 ### scaling_method
 
 Method for estimating residual scale during robustness iterations.
 
-=== "R / Python"
+=== "R / Python / Julia / Node.js / WebAssembly / C++"
 
     | Method  | Description               | Robustness          |
     |---------|---------------------------|---------------------|
@@ -535,6 +603,8 @@ Method for estimating residual scale during robustness iterations.
     |--------|---------------------------|---------------------|
     | `MAD`  | Median Absolute Deviation | Very robust         |
     | `MAR`  | Mean Absolute Residual    | Less robust, faster |
+
+For example:
 
 === "R"
     ```r
@@ -569,13 +639,18 @@ Method for estimating residual scale during robustness iterations.
     const result = smooth(x, y, { scalingMethod: "mad" });
     ```
 
+=== "C++"
+    ```cpp
+    auto result = fastlowess::smooth(x, y, { .scaling_method = "mad" });
+    ```
+
 ---
 
 ### zero_weight_fallback
 
 Behavior when all neighborhood weights are zero.
 
-=== "R / Python"
+=== "R / Python / Julia / Node.js / WebAssembly / C++"
 
     | Option              | Behavior                           |
     |---------------------|------------------------------------|
@@ -590,6 +665,8 @@ Behavior when all neighborhood weights are zero.
     | `UseLocalMean`   | Use mean of neighborhood (default) |
     | `ReturnOriginal` | Return original y value            |
     | `ReturnNone`     | Return NaN                         |
+
+For example:
 
 === "R"
     ```r
@@ -622,6 +699,11 @@ Behavior when all neighborhood weights are zero.
 === "WebAssembly"
     ```javascript
     const result = smooth(x, y, { zeroWeightFallback: "use_local_mean" });
+    ```
+
+=== "C++"
+    ```cpp
+    auto result = fastlowess::smooth(x, y, { .zero_weight_fallback = "use_local_mean" });
     ```
 
 ---
@@ -664,6 +746,11 @@ Enable early stopping when robustness weights stabilize.
 === "WebAssembly"
     ```javascript
     const result = smooth(x, y, { iterations: 20, autoConverge: 1e-6 });
+    ```
+
+=== "C++"
+    ```cpp
+    auto result = fastlowess::smooth(x, y, { .iterations = 20, .auto_converge = 1e-6 });
     ```
 
 ---
@@ -715,6 +802,12 @@ Include residuals (`y - smoothed`) in the output.
     ```javascript
     const result = smooth(x, y, { returnResiduals: true });
     console.log(result.residuals);
+    ```
+
+=== "C++"
+    ```cpp
+    auto result = fastlowess::smooth(x, y, { .return_residuals = true });
+    auto residuals = result.residuals();
     ```
 
 ---
@@ -777,6 +870,13 @@ Include fit quality metrics (Batch and Streaming only).
     console.log("R²:", result.diagnostics.rSquared);
     ```
 
+=== "C++"
+    ```cpp
+    auto result = fastlowess::smooth(x, y, { .return_diagnostics = true });
+    auto diag = result.diagnostics();
+    std::cout << "R²: " << diag.r_squared << std::endl;
+    ```
+
 ---
 
 ### return_robustness_weights
@@ -825,6 +925,15 @@ Include final robustness weights (useful for outlier detection).
     // result.robustnessWeights contains outlier weights
     ```
 
+=== "C++"
+    ```cpp
+    auto result = fastlowess::smooth(x, y, {
+        .iterations = 3,
+        .return_robustness_weights = true
+    });
+    auto weights = result.robustness_weights();
+    ```
+
 ---
 
 ### confidence_intervals / prediction_intervals
@@ -865,6 +974,14 @@ See [Intervals](intervals.md) for detailed usage.
 === "WebAssembly"
     ```javascript
     const result = smooth(x, y, { confidenceIntervals: 0.95, predictionIntervals: 0.95 });
+    ```
+
+=== "C++"
+    ```cpp
+    auto result = fastlowess::smooth(x, y, {
+        .confidence_intervals = 0.95,
+        .prediction_intervals = 0.95
+    });
     ```
 
 ---
@@ -913,6 +1030,14 @@ Selection strategy for automated parameter tuning.
     // Coming soon
     ```
 
+=== "C++"
+    ```cpp
+    auto model = fastlowess::Lowess::new()
+        .cross_validate(fastlowess::KFold(5, {0.1, 0.3, 0.5}))
+        .adapter(fastlowess::Batch)
+        .build();
+    ```
+
 ---
 
 ## Adapter Parameters
@@ -956,6 +1081,13 @@ Points per chunk in Streaming mode.
     const processor = new StreamingLowessWasm({}, { chunkSize: 10000 });
     ```
 
+=== "C++"
+    ```cpp
+    fastlowess::StreamingOptions opts;
+    opts.chunk_size = 10000;
+    auto result = fastlowess::streaming(x, y, opts);
+    ```
+
 ---
 
 ### overlap
@@ -997,11 +1129,38 @@ Overlap between chunks in Streaming mode.
     const processor = new StreamingLowessWasm({}, { overlap: 1000 });
     ```
 
+=== "C++"
+    ```cpp
+    fastlowess::StreamingOptions opts;
+    opts.overlap = 1000;
+    auto result = fastlowess::streaming(x, y, opts);
+    ```
+
 ---
 
 ### merge_strategy
 
 Method for merging overlapping chunks.
+
+=== "R / Python / Julia / Node.js / WebAssembly / C++"
+
+    | Strategy  | Description               | Robustness          |
+    |-----------|---------------------------|---------------------|
+    | `"average"` | Average of overlapping chunks | Fastest, least robust |
+    | `"left"`    | Left chunk                  | Fastest, least robust |
+    | `"right"`   | Right chunk                 | Fastest, least robust |
+    | `"weighted"` | Weighted average of overlapping chunks | Most robust |
+
+=== "Rust"
+
+    | Strategy       | Description               | Robustness          |
+    |----------------|---------------------------|---------------------|
+    | `Average`      | Average of overlapping chunks | Fastest, least robust |
+    | `Left`         | Left chunk                  | Fastest, least robust |
+    | `Right`        | Right chunk                 | Fastest, least robust |
+    | `Weighted`     | Weighted average of overlapping chunks | Most robust |
+
+For example:
 
 === "R"
     ```r
@@ -1036,6 +1195,12 @@ Method for merging overlapping chunks.
 === "WebAssembly"
     ```javascript
     const processor = new StreamingLowessWasm({}, { mergeStrategy: "weighted" });
+    ```
+
+=== "C++"
+    ```cpp
+    // merge_strategy is handled internally in C++
+    auto result = fastlowess::streaming(x, y);
     ```
 
 ---
@@ -1077,6 +1242,13 @@ Maximum points held in memory for Online mode.
     const processor = new OnlineLowessWasm({}, { windowCapacity: 500 });
     ```
 
+=== "C++"
+    ```cpp
+    fastlowess::OnlineOptions opts;
+    opts.window_capacity = 500;
+    auto result = fastlowess::online(x, y, opts);
+    ```
+
 ---
 
 ### min_points
@@ -1116,11 +1288,34 @@ Minimum points required before Online filter starts producing outputs.
     const processor = new OnlineLowessWasm({}, { minPoints: 10 });
     ```
 
+=== "C++"
+    ```cpp
+    fastlowess::OnlineOptions opts;
+    opts.min_points = 10;
+    auto result = fastlowess::online(x, y, opts);
+    ```
+
 ---
 
 ### update_mode
 
 Optimization strategy for Online mode updates.
+
+=== "R / Python / Julia / Node.js / WebAssembly / C++"
+
+    | Mode      | Description                     | Speed  |
+    |-----------|---------------------------------|--------|
+    | `full`    | Full update                     | Slow   |
+    | `partial` | Partial update                  | Fast   |
+
+=== "Rust"
+
+    | Mode      | Description                     | Speed  |
+    |-----------|---------------------------------|--------|
+    | `Full`    | Full update                     | Slow   |
+    | `Partial` | Partial update                  | Fast   |
+
+For example:
 
 === "R"
     ```r
@@ -1153,4 +1348,11 @@ Optimization strategy for Online mode updates.
 === "WebAssembly"
     ```javascript
     const processor = new OnlineLowessWasm({}, { updateMode: "full" });
+    ```
+
+=== "C++"
+    ```cpp
+    fastlowess::OnlineOptions opts;
+    opts.update_mode = "full";
+    auto result = fastlowess::online(x, y, opts);
     ```
