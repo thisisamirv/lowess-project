@@ -83,7 +83,7 @@ Each language includes three complete examples:
 === "Node.js"
     ```bash
     cd bindings/nodejs && npm install
-    node ../../examples/nodejs/batch_smoothing.js
+    node examples/nodejs/batch_smoothing.js
     ```
 
 === "C++"

@@ -387,4 +387,4 @@ LOWESS can robustly handle outliers through iterative reweighting:
 - [Concepts](concepts.md) — Understand how LOWESS works
 - [Parameters](../user-guide/parameters.md) — All configuration options
 - [Execution Modes](../user-guide/adapters.md) — Batch, Streaming, Online
-- [C++ API](../api/cpp.md) / [Node.js API](../api/nodejs.md) / [WebAssembly API](../api/webassembly.md) — Full references
+- [C++ API](../api/cpp.md) / [Node.js API](../api/nodejs.md) / [WebAssembly API](../api/wasm.md) — Full references

@@ -310,7 +310,7 @@ See the [Installation Guide](getting-started/installation.md) for more options a
 
     Optimized WebAssembly build for browsers and Node.js with zero-overhead data transfer.
 
-    [:octicons-arrow-right-24: WebAssembly API](api/webassembly.md)
+    [:octicons-arrow-right-24: WebAssembly API](api/wasm.md)
 
 </div>
 

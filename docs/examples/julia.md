@@ -7,7 +7,7 @@ Complete Julia examples demonstrating fastlowess.jl with native Julia integratio
 Process complete datasets with confidence intervals and diagnostics.
 
 ```julia
---8<-- "../../examples/julia/batch_smoothing.jl"
+--8<-- "examples/julia/batch_smoothing.jl"
 ```
 
 [:material-download: Download batch_smoothing.jl](https://github.com/thisisamirv/lowess-project/blob/main/examples/julia/batch_smoothing.jl)
@@ -19,7 +19,7 @@ Process complete datasets with confidence intervals and diagnostics.
 Process large datasets in memory-efficient chunks.
 
 ```julia
---8<-- "../../examples/julia/streaming_smoothing.jl"
+--8<-- "examples/julia/streaming_smoothing.jl"
 ```
 
 [:material-download: Download streaming_smoothing.jl](https://github.com/thisisamirv/lowess-project/blob/main/examples/julia/streaming_smoothing.jl)
@@ -31,7 +31,7 @@ Process large datasets in memory-efficient chunks.
 Real-time smoothing with sliding window for streaming data.
 
 ```julia
---8<-- "../../examples/julia/online_smoothing.jl"
+--8<-- "examples/julia/online_smoothing.jl"
 ```
 
 [:material-download: Download online_smoothing.jl](https://github.com/thisisamirv/lowess-project/blob/main/examples/julia/online_smoothing.jl)
@@ -48,9 +48,9 @@ Pkg.develop(path="bindings/julia/julia")
 ## Running the Examples
 
 ```bash
-julia --project=bindings/julia/julia ../../examples/julia/batch_smoothing.jl
-julia --project=bindings/julia/julia ../../examples/julia/streaming_smoothing.jl
-julia --project=bindings/julia/julia ../../examples/julia/online_smoothing.jl
+julia --project=bindings/julia/julia examples/julia/batch_smoothing.jl
+julia --project=bindings/julia/julia examples/julia/streaming_smoothing.jl
+julia --project=bindings/julia/julia examples/julia/online_smoothing.jl
 ```
 
 ## Quick Start

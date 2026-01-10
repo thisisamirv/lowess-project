@@ -51,7 +51,7 @@ Language-specific API documentation.
 
     WebAssembly bindings
 
-    [:octicons-arrow-right-24: WebAssembly API](webassembly.md)
+    [:octicons-arrow-right-24: WebAssembly API](wasm.md)
 
 - :material-language-cpp: **C++**
 

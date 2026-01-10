@@ -249,4 +249,4 @@ Both crates require **Rust 1.85.0** or later.
     verify();
     ```
 
-    See [WebAssembly API](../api/webassembly.md) for full reference.
+    See [WebAssembly API](../api/wasm.md) for full reference.
