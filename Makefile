@@ -36,7 +36,7 @@ JL_DIR := bindings/julia
 JL_TEST_DIR := tests/julia
 
 # Node.js bindings
-NODE_PKG := fastlowess-node
+NODE_PKG := fastlowess
 NODE_DIR := bindings/nodejs
 NODE_TEST_DIR := tests/nodejs
 

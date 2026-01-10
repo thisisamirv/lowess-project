@@ -191,7 +191,7 @@ Pkg.add("fastLowess")
 **Node.js** (from npm):
 
 ```bash
-npm install fastlowess-node
+npm install fastlowess
 ```
 
 **WebAssembly** (from npm):
@@ -276,7 +276,7 @@ println(result.y)
 **Node.js:**
 
 ```javascript
-const { smooth } = require('fastlowess-node');
+const { smooth } = require('fastlowess');
 
 const x = [1.0, 2.0, 3.0, 4.0, 5.0];
 const y = [2.0, 4.1, 5.9, 8.2, 9.8];

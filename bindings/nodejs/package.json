@@ -1,5 +1,5 @@
 {
-  "name": "fastlowess-node",
+  "name": "fastlowess",
   "version": "0.99.7",
   "description": "Node.js native bindings for fastLowess",
   "main": "fastlowess.node",

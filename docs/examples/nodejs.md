@@ -1,6 +1,6 @@
 # Node.js Examples
 
-Complete Node.js examples demonstrating fastlowess-node with native N-API bindings.
+Complete Node.js examples demonstrating fastlowess with native N-API bindings.
 
 ## Batch Smoothing
 
@@ -55,7 +55,7 @@ node ../../examples/nodejs/online_smoothing.js
 ## Quick Start
 
 ```javascript
-const { smooth } = require('fastlowess-node');
+const { smooth } = require('fastlowess');
 
 // Generate sample data
 const x = Array.from({ length: 100 }, (_, i) => i * 0.1);
@@ -81,7 +81,7 @@ console.log('R²:', resultWithOptions.diagnostics.rSquared);
 The package includes TypeScript definitions:
 
 ```typescript
-import { smooth, SmoothOptions, LowessResult } from 'fastlowess-node';
+import { smooth, SmoothOptions, LowessResult } from 'fastlowess';
 
 const options: SmoothOptions = {
     fraction: 0.3,
