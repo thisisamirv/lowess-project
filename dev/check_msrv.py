@@ -100,11 +100,6 @@ def main():
                     if msrv_ver and project_rust_ver:
                         # Pad versions for comparison (e.g., 1.70 vs 1.70.0)
                         # Normally Rust versions are semver, but MSRV can be partial
-                        
-                        # Just comparing tuples works if length matches, otherwise need normalization
-                        # but often 1.70 < 1.85.0 works fine in python tuples logic directly? 
-                        # Actually (1, 70) < (1, 85, 0) is True.
-                        
                         if msrv_ver > project_rust_ver:
                             status = "FAIL (Too New)"
                             violations.append((name, msrv_str))

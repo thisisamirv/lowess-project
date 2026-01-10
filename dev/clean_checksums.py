@@ -84,4 +84,3 @@ if __name__ == "__main__":
     parser.add_argument("-q", "--quiet", action="store_true", help="Suppress output")
     args = parser.parse_args()
     clean_checksums(args.vendor_dir, args.quiet)
-
