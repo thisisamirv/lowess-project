@@ -1,6 +1,6 @@
 #!/usr/bin/env julia
 """
-fastLowess Batch Smoothing Example
+fastlowess Batch Smoothing Example
 
 This example demonstrates batch LOWESS smoothing features:
 - Basic smoothing with different parameters
@@ -15,19 +15,19 @@ processing complete datasets that fit in memory.
 using Random
 using Printf
 
-# Handle package loading - check if we're already in the fastLowess project
+# Handle package loading - check if we're already in the fastlowess project
 using Pkg
 project_name = Pkg.project().name
-if project_name != "fastLowess"
-    # Not in the fastLowess project, need to develop it
+if project_name != "fastlowess"
+    # Not in the fastlowess project, need to develop it
     script_dir = @__DIR__
     julia_pkg_dir = joinpath(dirname(script_dir), "julia")
-    if !haskey(Pkg.project().dependencies, "fastLowess")
+    if !haskey(Pkg.project().dependencies, "fastlowess")
         Pkg.develop(path=julia_pkg_dir)
     end
 end
 
-using fastLowess
+using fastlowess
 
 function generate_sample_data(n_points=1000)
     """
@@ -53,7 +53,7 @@ function generate_sample_data(n_points=1000)
 end
 
 function main()
-    println("=== fastLowess Batch Smoothing Example ===")
+    println("=== fastlowess Batch Smoothing Example ===")
 
     # 1. Generate Data
     x, y, y_true = generate_sample_data(1000)

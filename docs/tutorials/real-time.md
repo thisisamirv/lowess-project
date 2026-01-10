@@ -81,7 +81,7 @@ For true real-time applications where each point must be processed immediately.
 
 === "Julia"
     ```julia
-    using fastLowess
+    using fastlowess
 
     # Simulate sensor readings 
     times = collect(Float64, 1:100)
@@ -227,7 +227,7 @@ For large datasets that arrive in batches or files.
 
 === "Julia"
     ```julia
-    using fastLowess
+    using fastlowess
 
     # Large dataset
     x = collect(range(0, 100000, step=1))

@@ -118,6 +118,11 @@ def main():
         help="Path to Node.js package.json file",
     )
     parser.add_argument(
+        "-N", "--nodejs_npm_dir",
+        type=Path,
+        help="Path to Node.js npm subpackages directory",
+    )
+    parser.add_argument(
         "-q", "--quiet",
         action="store_true",
         help="Suppress output",
@@ -144,6 +149,8 @@ def main():
             update_build_tarballs_version(args.build_tarballs_file, version, args.quiet)
         if args.nodejs_package_file:
             update_package_json(args.nodejs_package_file, version, args.quiet)
+        if args.nodejs_npm_dir:
+            update_npm_subpackages(args.nodejs_npm_dir, version, args.quiet)
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
@@ -287,12 +294,18 @@ def update_package_json(package_path: Path, version: str, quiet: bool = False) -
     replacement = rf'\g<1>{version}\g<2>'
     
     new_content, count = re.subn(pattern, replacement, content)
+
+    # Match: "fastlowess-.*": "^X.Y.Z" (in optionalDependencies)
+    # matching specifically fastlowess- prefixed packages to avoid touching others
+    dep_pattern = r'("fastlowess-[a-z0-9-]+"\s*:\s*"\^)[^"]+(")'
+    dep_replacement = rf'\g<1>{version}\g<2>'
+    
+    new_content, dep_count = re.subn(dep_pattern, dep_replacement, new_content)
     
     if count == 0:
         if not quiet:
             print(f"Warning: No version field found in {package_path}")
         return False
-
     if new_content != content:
         package_path.write_text(new_content)
         if not quiet:
@@ -302,6 +315,20 @@ def update_package_json(package_path: Path, version: str, quiet: bool = False) -
         if not quiet:
             print(f"package.json version already at {version}")
         return False
+
+
+def update_npm_subpackages(npm_dir: Path, version: str, quiet: bool = False) -> None:
+    """Update version in all package.json files within subdirectories."""
+    if not npm_dir.exists():
+        if not quiet:
+            print(f"Warning: npm directory not found at {npm_dir}")
+        return
+
+    for pkg_dir in npm_dir.iterdir():
+        if pkg_dir.is_dir():
+            pkg_json = pkg_dir / "package.json"
+            if pkg_json.exists():
+                update_package_json(pkg_json, version, quiet)
 
 
 if __name__ == "__main__":

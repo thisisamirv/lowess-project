@@ -1,5 +1,5 @@
 [package]
-name = "fastLowess-jl"
+name = "fastlowess-jl"
 version = { workspace = true }
 authors = { workspace = true }
 edition = { workspace = true }

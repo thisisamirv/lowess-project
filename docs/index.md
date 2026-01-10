@@ -148,7 +148,7 @@ Currently available for R, Python, Rust, Julia, Node.js, and WebAssembly.
 
     ```julia
     using Pkg
-    Pkg.add("fastLowess")
+    Pkg.add("fastlowess")
     ```
 
 === "Node.js"
@@ -217,7 +217,7 @@ See the [Installation Guide](getting-started/installation.md) for more options a
 === "Julia"
 
     ```julia
-    using fastLowess
+    using fastlowess
 
     x = [1.0, 2.0, 3.0, 4.0, 5.0]
     y = [2.0, 4.1, 5.9, 8.2, 9.8]

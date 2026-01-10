@@ -31,12 +31,12 @@ R_PKG_TARBALL = $(R_PKG_NAME)_$(R_PKG_VERSION).tar.gz
 R_DIR := bindings/r
 
 # Julia bindings
-JL_PKG := fastLowess-jl
+JL_PKG := fastlowess-jl
 JL_DIR := bindings/julia
 JL_TEST_DIR := tests/julia
 
 # Node.js bindings
-NODE_PKG := fastlowess
+NODE_PKG := fastlowess-node
 NODE_DIR := bindings/nodejs
 NODE_TEST_DIR := tests/nodejs
 
@@ -446,6 +446,7 @@ julia:
 	@echo "=============================================================================="
 	@echo "6. Testing Julia bindings..."
 	@echo "=============================================================================="
+	@julia --project=$(JL_DIR)/julia -e 'using Pkg; Pkg.instantiate()'
 	@julia --project=$(JL_DIR)/julia tests/julia/test_fastlowess.jl
 	@echo "=============================================================================="
 	@echo "7. Running examples..."
@@ -459,7 +460,7 @@ julia:
 	@echo "To use in Julia:"
 	@echo "  julia> using Pkg"
 	@echo "  julia> Pkg.develop(path=\"$(JL_DIR)/julia\")"
-	@echo "  julia> using fastLowess"
+	@echo "  julia> using fastlowess"
 
 julia-clean:
 	@echo "Cleaning $(JL_PKG)..."
@@ -475,7 +476,7 @@ nodejs:
 	@echo "=============================================================================="
 	@echo "0. Version Sync..."
 	@echo "=============================================================================="
-	@dev/sync_version.py Cargo.toml -n $(NODE_DIR)/package.json -q
+	@dev/sync_version.py Cargo.toml -n $(NODE_DIR)/package.json -N $(NODE_DIR)/npm -q
 	@echo "=============================================================================="
 	@echo "1. Formatting..."
 	@echo "=============================================================================="
@@ -594,8 +595,6 @@ docs-clean:
 	@rm -rf site/ $(DOCS_VENV)/
 	@echo "Documentation clean complete!"
 
-# ==============================================================================
-# All targets
 # ==============================================================================
 # All targets
 # ==============================================================================

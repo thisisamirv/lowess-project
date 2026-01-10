@@ -1,6 +1,6 @@
 # Julia API
 
-API reference for the `fastLowess` Julia package.
+API reference for the `fastlowess` Julia package.
 
 ## Installation
 
@@ -8,7 +8,7 @@ Install from the Julia General Registry:
 
 ```julia
 using Pkg
-Pkg.add("fastLowess")
+Pkg.add("fastlowess")
 ```
 
 ---
@@ -74,7 +74,7 @@ smooth(
 **Example:**
 
 ```julia
-using fastLowess
+using fastlowess
 
 x = collect(range(0, 10, length=100))
 y = sin.(x) .+ randn(100) .* 0.2

@@ -75,7 +75,7 @@ maturin develop --release
 
 ```julia
 using Pkg
-Pkg.add("fastLowess")
+Pkg.add("fastlowess")
 ```
 
 **From Source:**
@@ -211,7 +211,7 @@ Both crates require **Rust 1.85.0** or later.
 === "Julia"
 
     ```julia
-    using fastLowess
+    using fastlowess
     
     x = [1.0, 2.0, 3.0]
     y = [2.0, 4.0, 6.0]

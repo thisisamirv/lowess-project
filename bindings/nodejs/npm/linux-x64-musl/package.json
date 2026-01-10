@@ -1,0 +1,21 @@
+{
+  "name": "fastlowess-linux-x64-musl",
+  "version": "0.99.7",
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "main": "fastlowess.node",
+  "files": [
+    "fastlowess.node"
+  ],
+  "license": "MIT OR Apache-2.0",
+  "engines": {
+    "node": ">= 20"
+  },
+  "libc": [
+    "musl"
+  ]
+}

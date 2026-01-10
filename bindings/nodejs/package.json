@@ -1,16 +1,35 @@
 {
   "name": "fastlowess",
   "version": "0.99.7",
-  "description": "Node.js native bindings for fastLowess",
-  "main": "fastlowess.node",
+  "description": "High-performance LOWESS smoothing for Node.js",
+  "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
     "build": "napi build --release",
     "build:debug": "napi build",
-    "test": "node --test ../../tests/nodejs/test_fastlowess.js"
+    "test": "node --test ../../tests/nodejs/test_fastlowess.js",
+    "universal": "napi universal"
   },
   "napi": {
-    "binaryName": "fastlowess"
+    "binaryName": "fastlowess",
+    "targets": [
+      "x86_64-unknown-linux-gnu",
+      "aarch64-unknown-linux-gnu",
+      "x86_64-unknown-linux-musl",
+      "x86_64-pc-windows-msvc",
+      "aarch64-pc-windows-msvc",
+      "x86_64-apple-darwin",
+      "aarch64-apple-darwin"
+    ]
+  },
+  "optionalDependencies": {
+    "fastlowess-linux-x64-gnu": "^0.99.7",
+    "fastlowess-linux-arm64-gnu": "^0.99.7",
+    "fastlowess-linux-x64-musl": "^0.99.7",
+    "fastlowess-win32-x64-msvc": "^0.99.7",
+    "fastlowess-win32-arm64-msvc": "^0.99.7",
+    "fastlowess-darwin-x64": "^0.99.7",
+    "fastlowess-darwin-arm64": "^0.99.7"
   },
   "devDependencies": {
     "@napi-rs/cli": "^3.5.1"

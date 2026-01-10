@@ -33,7 +33,7 @@ Language-specific API documentation.
 
     ---
 
-    `fastLowess` Julia package reference
+    `fastlowess` Julia package reference
 
     [:octicons-arrow-right-24: Julia API](julia.md)
 

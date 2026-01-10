@@ -1,7 +1,7 @@
 <!-- markdownlint-disable MD033 -->
 # Examples
 
-Complete working examples demonstrating fastLowess capabilities across all supported languages.
+Complete working examples demonstrating fastlowess capabilities across all supported languages.
 
 ## Language-Specific Examples
 

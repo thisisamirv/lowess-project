@@ -61,7 +61,7 @@ Estimate uncertainty in the smoothed curve itself.
 
 === "Julia"
     ```julia
-    using fastLowess
+    using fastlowess
 
     result = smooth(x, y, fraction=0.5, confidence_intervals=0.95)
 

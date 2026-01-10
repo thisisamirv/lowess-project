@@ -79,7 +79,7 @@ Standard mode for complete datasets. **Supports all features.**
 
 === "Julia"
     ```julia
-    using fastLowess
+    using fastlowess
 
     result = smooth(
         x, y,
@@ -213,7 +213,7 @@ Process large datasets in chunks with configurable overlap.
 
 === "Julia"
     ```julia
-    using fastLowess
+    using fastlowess
 
     result = smooth_streaming(
         x, y,
@@ -356,7 +356,7 @@ Incremental updates with a sliding window for real-time data.
 
 === "Julia"
     ```julia
-    using fastLowess
+    using fastlowess
 
     result = smooth_online(
         x, y,

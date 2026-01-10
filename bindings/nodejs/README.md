@@ -20,14 +20,14 @@ The fastest, most robust, and most feature-complete language-agnostic LOWESS (Lo
 >
 > The `lowess-project` contains a complete ecosystem for LOWESS smoothing:
 >
-> - **[`lowess`](https://github.com/thisisamirv/lowess-project/blob/main/crates/lowess)** - Core single-threaded Rust implementation with `no_std` support
-> - **[`fastLowess`](https://github.com/thisisamirv/lowess-project/blob/main/crates/fastLowess)** - Parallel CPU and GPU-accelerated Rust wrapper with ndarray integration  
-> - **[`R bindings`](https://github.com/thisisamirv/lowess-project/blob/main/bindings/r)** - extendr-based R package
-> - **[`Python bindings`](https://github.com/thisisamirv/lowess-project/blob/main/bindings/python)** - PyO3-based Python package
-> - **[`Julia bindings`](https://github.com/thisisamirv/lowess-project/blob/main/bindings/julia)** - Native Julia package with C FFI
-> - **[`JavaScript bindings`](https://github.com/thisisamirv/lowess-project/blob/main/bindings/nodejs)** - Node.js package
-> - **[`WebAssembly bindings`](https://github.com/thisisamirv/lowess-project/blob/main/bindings/wasm)** - WASM package
-> - **[`C++ bindings`](https://github.com/thisisamirv/lowess-project/blob/main/bindings/cpp)** - Native C++ package with CMake integration
+> - **[`lowess`](https://github.com/thisisamirv/lowess-project/tree/main/crates/lowess)** - Core single-threaded Rust implementation with `no_std` support
+> - **[`fastLowess`](https://github.com/thisisamirv/lowess-project/tree/main/crates/fastLowess)** - Parallel CPU and GPU-accelerated Rust wrapper with ndarray integration  
+> - **[`R bindings`](https://github.com/thisisamirv/lowess-project/tree/main/bindings/r)** - extendr-based R package
+> - **[`Python bindings`](https://github.com/thisisamirv/lowess-project/tree/main/bindings/python)** - PyO3-based Python package
+> - **[`Julia bindings`](https://github.com/thisisamirv/lowess-project/tree/main/bindings/julia)** - Native Julia package with C FFI
+> - **[`JavaScript bindings`](https://github.com/thisisamirv/lowess-project/tree/main/bindings/nodejs)** - Node.js package
+> - **[`WebAssembly bindings`](https://github.com/thisisamirv/lowess-project/tree/main/bindings/wasm)** - WASM package
+> - **[`C++ bindings`](https://github.com/thisisamirv/lowess-project/tree/main/bindings/cpp)** - Native C++ package with CMake integration
 
 ## LOESS vs. LOWESS
 
@@ -264,7 +264,7 @@ println!("{}", result);
 **Julia:**
 
 ```julia
-using fastLowess
+using fastlowess
 
 x = [1.0, 2.0, 3.0, 4.0, 5.0]
 y = [2.0, 4.1, 5.9, 8.2, 9.8]

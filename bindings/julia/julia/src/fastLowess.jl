@@ -1,9 +1,9 @@
 """
-    fastLowess
+    fastlowess
 
 High-performance LOWESS (Locally Weighted Scatterplot Smoothing) for Julia.
 
-Provides bindings to the fastLowess Rust library for fast, robust LOWESS smoothing.
+Provides bindings to the fastlowess Rust library for fast, robust LOWESS smoothing.
 
 # Main Functions
 - `smooth(x, y; kwargs...)`: Batch LOWESS smoothing
@@ -12,7 +12,7 @@ Provides bindings to the fastLowess Rust library for fast, robust LOWESS smoothi
 
 # Example
 ```julia
-using fastLowess
+using fastlowess
 
 x = collect(1.0:0.1:10.0)
 y = sin.(x) .+ 0.1 .* randn(length(x))
@@ -21,7 +21,7 @@ result = smooth(x, y, fraction=0.3)
 println("Smoothed values: ", result.y)
 ```
 """
-module fastLowess
+module fastlowess
 
 export smooth, smooth_streaming, smooth_online
 export LowessResult, Diagnostics
@@ -34,9 +34,9 @@ const LIBNAME = Sys.iswindows() ? "fastlowess_jl.dll" :
 function find_library()
     # Option 1: Use JLL package if available (for registered package)
     try
-        @eval using fastLowess_jll
-        if @isdefined(fastLowess_jll) && hasproperty(fastLowess_jll, :libfastlowess_jl)
-            return fastLowess_jll.libfastlowess_jl
+        @eval using fastlowess_jll
+        if @isdefined(fastlowess_jll) && hasproperty(fastlowess_jll, :libfastlowess_jl)
+            return fastlowess_jll.libfastlowess_jl
         end
     catch
         # JLL not available, continue to fallback
@@ -48,7 +48,7 @@ function find_library()
     end
 
     # Option 3: Check relative paths (development mode)
-    # Path: julia/src/fastLowess.jl -> julia/ -> bindings/julia/ -> bindings/ -> lowess-project/
+    # Path: julia/src/fastlowess.jl -> julia/ -> bindings/julia/ -> bindings/ -> lowess-project/
     src_dir = @__DIR__                        # julia/src/
     julia_dir = dirname(src_dir)              # julia/
     bindings_julia_dir = dirname(julia_dir)   # bindings/julia/
@@ -173,7 +173,7 @@ function convert_result(c_result::CJlLowessResult)
         error_msg = unsafe_string(c_result.error)
         # Free the result before throwing
         @ccall libfastlowess.jl_lowess_free_result(Ref(c_result)::Ptr{CJlLowessResult})::Cvoid
-        error("fastLowess error: $error_msg")
+        error("fastlowess error: $error_msg")
     end
 
     n = Int(c_result.n)
@@ -184,7 +184,7 @@ function convert_result(c_result::CJlLowessResult)
 
     if x === nothing || y === nothing
         @ccall libfastlowess.jl_lowess_free_result(Ref(c_result)::Ptr{CJlLowessResult})::Cvoid
-        error("fastLowess error: result arrays are null")
+        error("fastlowess error: result arrays are null")
     end
 
     standard_errors = ptr_to_vector(c_result.standard_errors, n)

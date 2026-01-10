@@ -5,12 +5,12 @@
 #
 # To submit to Yggdrasil:
 #   1. Fork https://github.com/JuliaBinaryWrappers/Yggdrasil
-#   2. Create F/fastLowess/build_tarballs.jl with this content
+#   2. Create F/fastlowess/build_tarballs.jl with this content
 #   3. Open a PR
 
 using BinaryBuilder, Pkg
 
-name = "fastLowess"
+name = "fastlowess"
 version = v"0.99.7"
 
 # Source: the lowess-project repository

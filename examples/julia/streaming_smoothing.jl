@@ -1,6 +1,6 @@
 #!/usr/bin/env julia
 """
-fastLowess Streaming Smoothing Example
+fastlowess Streaming Smoothing Example
 
 This example demonstrates streaming LOWESS smoothing for large datasets:
 - Basic chunked processing
@@ -11,22 +11,22 @@ This example demonstrates streaming LOWESS smoothing for large datasets:
 using Random
 using Printf
 
-# Handle package loading - check if we're already in the fastLowess project
+# Handle package loading - check if we're already in the fastlowess project
 using Pkg
 project_name = Pkg.project().name
-if project_name != "fastLowess"
-    # Not in the fastLowess project, need to develop it
+if project_name != "fastlowess"
+    # Not in the fastlowess project, need to develop it
     script_dir = @__DIR__
     julia_pkg_dir = joinpath(dirname(script_dir), "julia")
-    if !haskey(Pkg.project().dependencies, "fastLowess")
+    if !haskey(Pkg.project().dependencies, "fastlowess")
         Pkg.develop(path=julia_pkg_dir)
     end
 end
 
-using fastLowess
+using fastlowess
 
 function main()
-    println("=== fastLowess Streaming Mode Example ===")
+    println("=== fastlowess Streaming Mode Example ===")
 
     # 1. Generate Very Large Dataset
     # 100,000 points

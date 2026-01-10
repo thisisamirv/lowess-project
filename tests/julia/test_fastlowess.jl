@@ -1,6 +1,6 @@
 #!/usr/bin/env julia
 """
-Tests for fastLowess Julia bindings.
+Tests for fastlowess Julia bindings.
 
 Comprehensive test suite covering:
 - Basic smoothing functionality
@@ -16,22 +16,22 @@ Run with: julia --project=bindings/julia/julia tests/julia/test_fastlowess.jl
 using Test
 using Random
 
-# Handle package loading - check if we're already in the fastLowess project
+# Handle package loading - check if we're already in the fastlowess project
 using Pkg
 project_name = Pkg.project().name
-if project_name != "fastLowess"
-    # Not in the fastLowess project, need to develop it
+if project_name != "fastlowess"
+    # Not in the fastlowess project, need to develop it
     script_dir = @__DIR__
     project_root = dirname(dirname(script_dir))
     julia_pkg_dir = joinpath(project_root, "bindings", "julia", "julia")
-    if !haskey(Pkg.project().dependencies, "fastLowess")
+    if !haskey(Pkg.project().dependencies, "fastlowess")
         Pkg.develop(path=julia_pkg_dir)
     end
 end
 
-using fastLowess
+using fastlowess
 
-@testset "fastLowess Julia Bindings" begin
+@testset "fastlowess Julia Bindings" begin
 
     @testset "Basic Smooth" begin
         @testset "default parameters" begin

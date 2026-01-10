@@ -69,7 +69,7 @@ Smoothed values: [2.02, 4.00, 6.00, 8.10, 10.04, 12.03, 13.90, 15.78]
 === "Julia"
 
     ```julia
-    using fastLowess
+    using fastlowess
 
     # Sample data
     x = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]

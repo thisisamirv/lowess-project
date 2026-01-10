@@ -75,7 +75,7 @@ Time series data often contains noise, seasonality, and trends. LOWESS provides 
 
 === "Julia"
     ```julia
-    using fastLowess
+    using fastlowess
 
     t = collect(range(0, 100, length=500))
     trend_true = 10.0 .+ 0.5 .* t .+ 3.0 .* sin.(t ./ 10.0)
@@ -577,7 +577,7 @@ Biological application:
 
 === "Julia"
     ```julia
-    using fastLowess
+    using fastlowess
 
     hours = collect(range(0, 24, step=0.5))
     expression = 100 .*(1.0 .+ 0.5 .* sin.(hours .*pi ./ 12.0)) .+ randn(length(hours)) .* 10.0

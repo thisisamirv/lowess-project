@@ -1,11 +1,11 @@
-name = "fastLowess"
+name = "fastlowess"
 uuid = "a1b2c3d4-5678-90ab-cdef-1234567890ab"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 version = "0.99.7"
 license = "MIT OR Apache-2.0"
 
 [deps]
-# fastLowess_jll will be added once the package is registered
+# fastlowess_jll will be added once the package is registered
 
 [compat]
 julia = "1.6"
