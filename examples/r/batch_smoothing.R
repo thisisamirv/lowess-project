@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 # =============================================================================
-# fastLowess Batch Smoothing Examples
+# rfastlowess Batch Smoothing Example
 #
 # This example demonstrates batch LOWESS smoothing features:
 # - Basic smoothing with different parameters
@@ -14,180 +14,118 @@
 
 library(rfastlowess)
 
+generate_sample_data <- function(n_points = 1000) {
+    # Generate complex sample data with a trend, seasonality, and outliers.
+    set.seed(42)
+    x <- seq(0, 50, length.out = n_points)
+
+    # Trend + Seasonality
+    y_true <- 0.5 * x + 5 * sin(x * 0.5)
+
+    # Gaussian noise
+    y <- y_true + rnorm(n_points, mean = 0, sd = 1.5)
+
+    # Add significant outliers (10% of data)
+    n_outliers <- round(n_points * 0.1)
+    outlier_indices <- sample(seq_len(n_points), n_outliers)
+    # Random magnitude 10-20, random sign
+    dataset_outliers <- runif(n_outliers, 10, 20) *
+        sample(c(-1, 1), n_outliers, replace = TRUE)
+    y[outlier_indices] <- y[outlier_indices] + dataset_outliers
+
+    list(x = x, y = y, y_true = y_true)
+}
+
 main <- function() {
     cat(strrep("=", 80), "\n")
-    cat("fastLowess Batch Smoothing Examples\n")
+    cat("rfastlowess Batch Smoothing Example\n")
     cat(strrep("=", 80), "\n\n")
 
-    example_1_basic_smoothing()
-    example_2_with_intervals()
-    example_3_robust_smoothing()
-    example_4_cross_validation()
-}
+    # 1. Generate Data
+    data <- generate_sample_data(1000)
+    x <- data$x
+    y <- data$y
+    cat(sprintf("Generated %d data points with outliers.\n", length(x)))
 
-# =============================================================================
-# Example 1: Basic Smoothing
-# Demonstrates the fundamental smoothing workflow
-# =============================================================================
-example_1_basic_smoothing <- function() {
-    cat("Example 1: Basic Smoothing\n")
-    cat(strrep("-", 80), "\n")
+    # 2. Basic Smoothing (Default parameters)
+    cat("Running basic smoothing...\n")
+    # Use a smaller fraction (0.05) to capture the sine wave seasonality
+    res_basic <- fastlowess(x, y, iterations = 0L, fraction = 0.05)
 
-    # Generate synthetic dataset
-    n <- 10000
-    x <- as.numeric(0:(n - 1))
-    y <- sin(x * 0.1) + cos(x * 0.01)
-
-    start_time <- Sys.time()
-    result <- fastlowess(
+    # 3. Robust Smoothing (IRLS)
+    cat("Running robust smoothing (3 iterations)...\n")
+    res_robust <- fastlowess(
         x, y,
-        fraction = 0.5, # Use 50% of data for each local fit
-        iterations = 3L, # 3 robustness iterations
-        parallel = TRUE # Enable parallel processing
+        fraction = 0.05,
+        iterations = 3L,
+        robustness_method = "bisquare",
+        return_robustness_weights = TRUE
     )
-    duration <- as.numeric(Sys.time() - start_time, units = "secs")
 
-    cat(sprintf("Processed %d points in %.4fs\n", n, duration))
-    cat(
-        "First 5 smoothed values:",
-        paste(round(result$y[1:5], 6), collapse = ", "), "\n\n"
-    )
-}
-
-# =============================================================================
-# Example 2: Confidence and Prediction Intervals
-# Demonstrates computing uncertainty intervals
-# =============================================================================
-example_2_with_intervals <- function() {
-    cat("Example 2: Confidence and Prediction Intervals\n")
-    cat(strrep("-", 80), "\n")
-
-    x <- c(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0)
-    y <- c(2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7)
-
-    result <- fastlowess(
+    # 4. Uncertainty Quantification
+    cat("Computing confidence and prediction intervals...\n")
+    res_intervals <- fastlowess(
         x, y,
-        fraction = 0.5,
-        confidence_intervals = 0.95, # 95% confidence intervals
-        prediction_intervals = 0.95, # 95% prediction intervals
-        parallel = TRUE
+        fraction = 0.05,
+        confidence_intervals = 0.95,
+        prediction_intervals = 0.95,
+        return_diagnostics = TRUE
     )
 
+    # 5. Cross-Validation for optimal fraction
+    cat("Running cross-validation to find optimal fraction...\n")
+    cv_fractions <- c(0.05, 0.1, 0.2, 0.4)
+    res_cv <- fastlowess(
+        x, y,
+        cv_fractions = cv_fractions,
+        cv_method = "kfold",
+        cv_k = 5L
+    )
+
+    if (!is.null(res_cv$fraction_used)) {
+        cat(sprintf("Optimal fraction found: %.2f\n", res_cv$fraction_used))
+    }
+
+    # Diagnostics Printout
+    if (!is.null(res_intervals$diagnostics)) {
+        diag <- res_intervals$diagnostics
+        cat("\nFit Statistics (Intervals Model):\n")
+        # Handle potential list or S3 object return structure
+        r2 <- if (!is.null(diag$r_squared)) diag$r_squared else NA
+        rmse <- if (!is.null(diag$rmse)) diag$rmse else NA
+        mae <- if (!is.null(diag$mae)) diag$mae else NA
+        
+        cat(sprintf(" - R^2:   %.4f\n", r2))
+        cat(sprintf(" - RMSE: %.4f\n", rmse))
+        cat(sprintf(" - MAE:  %.4f\n", mae))
+    }
+
+    # 6. Boundary Policy Comparison
+    cat("\nDemonstrating boundary policy effects on linear data...\n")
+    xl <- seq(0, 10, length.out = 50)
+    yl <- 2 * xl + 1
+
+    # Compare policies
+    # Note: 'extend' is usually default.
+    r_ext <- fastlowess(xl, yl, fraction = 0.6, boundary_policy = "extend")
+    r_ref <- fastlowess(xl, yl, fraction = 0.6, boundary_policy = "reflect")
+    r_zr <- fastlowess(xl, yl, fraction = 0.6, boundary_policy = "zero")
+
+    cat("Boundary policy comparison:\n")
     cat(sprintf(
-        "%8s %12s %12s %12s\n", "X", "Y_smooth", "CI_Lower", "CI_Upper"
+        " - Extend (Default): first=%.2f, last=%.2f\n",
+        r_ext$y[1], r_ext$y[length(r_ext$y)]
     ))
-    cat(strrep("-", 50), "\n")
-    for (i in seq_along(x)) {
-        ci_lower <- if (!is.null(result$confidence_lower)) {
-            result$confidence_lower[i]
-        } else {
-            0
-        }
-        ci_upper <- if (!is.null(result$confidence_upper)) {
-            result$confidence_upper[i]
-        } else {
-            0
-        }
-        cat(sprintf(
-            "%8.2f %12.4f %12.4f %12.4f\n",
-            x[i], result$y[i], ci_lower, ci_upper
-        ))
-    }
-    cat("\n")
-}
+    cat(sprintf(
+        " - Reflect:          first=%.2f, last=%.2f\n",
+        r_ref$y[1], r_ref$y[length(r_ref$y)]
+    ))
+    cat(sprintf(
+        " - Zero:             first=%.2f, last=%.2f\n",
+        r_zr$y[1], r_zr$y[length(r_zr$y)]
+    ))
 
-# =============================================================================
-# Example 3: Robust Smoothing with Outliers
-# Demonstrates outlier handling with robustness iterations
-# =============================================================================
-example_3_robust_smoothing <- function() {
-    cat("Example 3: Robust Smoothing with Outliers\n")
-    cat(strrep("-", 80), "\n")
-
-    # Data with outliers
-    n <- 1000
-    x <- as.numeric(0:(n - 1)) * 0.1
-    y <- sin(x)
-    # Add periodic outliers (every 100th point)
-    outlier_indices <- seq(1, n, by = 100)
-    y[outlier_indices] <- x[outlier_indices] + 10.0
-
-    methods <- c("bisquare", "huber", "talwar")
-
-    for (method in methods) {
-        result <- fastlowess(
-            x, y,
-            fraction = 0.1,
-            iterations = 3L,
-            robustness_method = method,
-            return_robustness_weights = TRUE,
-            parallel = TRUE
-        )
-
-        if (!is.null(result$robustness_weights)) {
-            outliers <- sum(result$robustness_weights < 0.1)
-            cat(sprintf(
-                "%s: Identified %d potential outliers (weight < 0.1)\n",
-                tools::toTitleCase(method), outliers
-            ))
-        } else {
-            cat(sprintf(
-                "%s: Completed (weights not available)\n",
-                tools::toTitleCase(method)
-            ))
-        }
-        cat("\n")
-    } # nolint: indentation_linter. # nolint
-}
-
-# =============================================================================
-# Example 4: Cross-Validation for Fraction Selection
-# Demonstrates automatic parameter selection
-# =============================================================================
-example_4_cross_validation <- function() {
-    cat(
-        "Example 4: Cross-Validation for Fraction Selection\n"
-    ) # nolint: indentation_linter.
-    cat(strrep("-", 80), "\n")
-
-    # Generate test data
-    set.seed(42)
-    x <- as.numeric(0:99)
-    y <- 2 * x + 1 + rnorm(100) * 5
-
-    fractions <- c(0.2, 0.3, 0.5, 0.7)
-
-    # Run smooth with CV for each fraction and find the best
-    cv_scores <- numeric(length(fractions))
-
-    for (i in seq_along(fractions)) {
-        result <- fastlowess(
-            x, y,
-            fraction = fractions[i],
-            cv_fractions = fractions,
-            cv_method = "kfold",
-            cv_k = 5L,
-            return_diagnostics = TRUE,
-            parallel = TRUE
-        )
-
-        # Use the result from the first iteration to get CV scores
-        if (!is.null(result$cv_scores)) {
-            cv_scores <- result$cv_scores
-            break
-        }
-    }
-
-    # Find optimal fraction (lowest CV score)
-    if (any(cv_scores != 0)) {
-        best_idx <- which.min(cv_scores)
-        optimal_fraction <- fractions[best_idx]
-        cat(sprintf("Selected fraction: %.2f\n", optimal_fraction))
-        cat("CV scores:", paste(round(cv_scores, 4), collapse = ", "), "\n")
-    } else {
-        cat("CV scores not available\n")
-    }
-    cat("\n")
+    cat("\n=== Batch Smoothing Example Complete ===\n")
 }
 
 # Run if called directly

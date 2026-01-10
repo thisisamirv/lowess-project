@@ -1,7 +1,7 @@
 const fastlowess = require('../../bindings/nodejs');
 
 /**
- * fastLowess Online Smoothing Example
+ * fastlowess Online Smoothing Example
  * 
  * This example demonstrates online LOWESS smoothing for real-time data:
  * - Basic incremental processing with streaming data
@@ -11,7 +11,7 @@ const fastlowess = require('../../bindings/nodejs');
  */
 
 function main() {
-    console.log("=== fastLowess Online Smoothing Example ===");
+    console.log("=== fastlowess Online Smoothing Example ===");
 
     // 1. Simulate a real-time signal
     // A sine wave with changing frequency and random noise

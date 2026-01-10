@@ -1,82 +1,165 @@
+<!--
+  fastlowess Batch Smoothing Example
+
+  This example demonstrates batch LOWESS smoothing features:
+  - Basic smoothing with different parameters
+  - Robustness iterations for outlier handling
+  - Confidence and prediction intervals
+  - Diagnostics and cross-validation
+
+  The batch adapter (smooth function) is the primary interface for
+  processing complete datasets that fit in memory.
+-->
 <!DOCTYPE html>
 <html>
 <head>
-    <title>fastLowess WASM - Batch Smoothing</title>
+    <title>fastlowess WASM - Batch Smoothing Example</title>
     <style>
-        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-        .controls { margin: 20px 0; padding: 10px; background: #f0f0f0; border-radius: 4px; }
-        #output { white-space: pre-wrap; background: #fafafa; border: 1px solid #ddd; padding: 10px; }
-        button { cursor: pointer; padding: 5px 10px; }
+        body { font-family: monospace; max-width: 900px; margin: 0 auto; padding: 20px; background: #1e1e1e; color: #d4d4d4; }
+        h1 { color: #569cd6; }
+        #output { white-space: pre-wrap; font-family: 'Consolas', 'Monaco', monospace; }
+        .log-section { margin-bottom: 20px; border-left: 2px solid #569cd6; padding-left: 10px; }
+        button { cursor: pointer; padding: 8px 16px; font-size: 14px; background: #0e639c; color: white; border: none; border-radius: 4px; }
+        button:hover { background: #1177bb; }
     </style>
 </head>
 <body>
-    <h1>Batch Smoothing Example</h1>
-    <p>This example runs the <code>smooth</code> function in the browser via WebAssembly.</p>
-    
-    <div class="controls">
-        <label>Fraction: <input type="number" id="fraction" value="0.2" step="0.05" min="0.01" max="1.0"></label>
-        <label>Iterations: <input type="number" id="iterations" value="0" min="0" max="10"></label>
-        <button id="runBtn">Run Smoothing</button>
-    </div>
-
-    <div id="plot"></div>
-    <h3>Output Logs:</h3>
-    <div id="output">Ready.</div>
+    <h1>fastlowess Batch Smoothing Example</h1>
+    <p>Running WASM implementation...</p>
+    <div id="output">Initializing...</div>
 
     <script type="module">
         import init, { smooth } from "../pkg-web/fastlowess_wasm.js";
         
-        async function run() {
-            try {
-                log("Initializing WASM...");
-                await init();
-                log("WASM Initialized.");
-
-                document.getElementById('runBtn').addEventListener('click', executeSmoothing);
-                
-                // Run once on load
-                executeSmoothing();
-            } catch (e) {
-                log("Error: " + e);
-            }
-        }
-
-        function executeSmoothing() {
-            try {
-                const fraction = parseFloat(document.getElementById('fraction').value);
-                const iterations = parseInt(document.getElementById('iterations').value);
-
-                log(`\nRunning smooth(fraction=${fraction}, iterations=${iterations})...`);
-
-                // Generate synthetic data (Sine wave + noise)
-                const n = 100;
-                const x = new Float64Array(n);
-                const y = new Float64Array(n);
-                for(let i=0; i<n; i++) {
-                    x[i] = i;
-                    y[i] = Math.sin(i * 0.1) + (Math.random() - 0.5) * 0.5;
-                }
-
-                const start = performance.now();
-                const result = smooth(x, y, { fraction, iterations });
-                const end = performance.now();
-
-                log(`Smoothing took ${(end - start).toFixed(2)}ms`);
-                log(`Result size: ${result.y.length}`);
-                log(`Sample Y: [${result.y.subarray(0, 5).join(', ')}...]`);
-            } catch (e) {
-                log("Error during smoothing: " + e);
-                console.error(e);
-            }
-        }
-
+        // Helper to log to screen
         function log(msg) {
             const out = document.getElementById('output');
             out.innerText += msg + "\n";
             console.log(msg);
         }
 
-        run();
+        function clearLog() {
+            document.getElementById('output').innerText = "";
+        }
+
+        // 1. Generate Data
+        function generateSampleData(nPoints = 1000) {
+            const x = new Float64Array(nPoints);
+            const y = new Float64Array(nPoints);
+            
+            for (let i = 0; i < nPoints; i++) {
+                x[i] = (i / (nPoints - 1)) * 50; // range 0 to 50
+                // Trend + Seasonality
+                const yTrue = 0.5 * x[i] + 5 * Math.sin(x[i] * 0.5);
+                // Gaussian noise (approx)
+                let u1 = Math.random();
+                let u2 = Math.random();
+                let z = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+                y[i] = yTrue + z * 1.5;
+            }
+
+            // Add significant outliers (10% of data)
+            const nOutliers = Math.round(nPoints * 0.1);
+            for (let k = 0; k < nOutliers; k++) {
+                const idx = Math.floor(Math.random() * nPoints);
+                const sign = Math.random() < 0.5 ? -1 : 1;
+                y[idx] += (10 + Math.random() * 10) * sign;
+            }
+            return { x, y };
+        }
+
+        async function runDemo() {
+            try {
+                clearLog();
+                log("=== fastlowess Batch Smoothing Example ===\n");
+
+                await init();
+                
+                // 1. Generate Data
+                const { x, y } = generateSampleData(1000);
+                log(`1. Generated ${x.length} data points with outliers.`);
+
+                // 2. Basic Smoothing (Default parameters)
+                log("\n2. Running basic smoothing...");
+                const startBasic = performance.now();
+                const resBasic = smooth(x, y, { iterations: 0, fraction: 0.05 });
+                log(`   - Completed in ${(performance.now() - startBasic).toFixed(2)}ms`);
+
+                // 3. Robust Smoothing (IRLS)
+                log("\n3. Running robust smoothing (3 iterations)...");
+                const resRobust = smooth(x, y, {
+                    fraction: 0.05,
+                    iterations: 3,
+                    robustnessMethod: "bisquare",
+                    returnRobustnessWeights: true
+                });
+                const weights = resRobust.robustnessWeights;
+                let outlierCount = 0;
+                if(weights) {
+                    for(let i=0; i<weights.length; i++) {
+                        if(weights[i] < 0.1) outlierCount++;
+                    }
+                }
+                log(`   - Identified ~${outlierCount} outliers (weight < 0.1)`);
+
+                // 4. Uncertainty Quantification
+                log("\n4. Computing confidence and prediction intervals...");
+                const resIntervals = smooth(x, y, {
+                    fraction: 0.05,
+                    confidenceIntervals: 0.95,
+                    predictionIntervals: 0.95,
+                    returnDiagnostics: true
+                });
+
+                if (resIntervals.diagnostics) {
+                    const d = resIntervals.diagnostics;
+                    log(`   - Fit Statistics:`);
+                    log(`     R²:   ${d.rSquared.toFixed(4)}`);
+                    log(`     RMSE: ${d.rmse.toFixed(4)}`);
+                    log(`     MAE:  ${d.mae.toFixed(4)}`);
+                }
+
+                // 5. Cross-Validation for optimal fraction
+                log("\n5. Running cross-validation to find optimal fraction...");
+                const cvFractions = [0.05, 0.1, 0.2, 0.4];
+                const resCV = smooth(x, y, { 
+                    cvFractions, 
+                    cvMethod: "kfold", 
+                    cvK: 5
+                });
+                
+                log(`   - Optimal fraction selected: ${resCV.fractionUsed}`);
+                if(resCV.cvScores) {
+                    log(`   - CV Scores: [${Array.from(resCV.cvScores).map(n => n.toFixed(4)).join(', ')}]`);
+                }
+
+                // 6. Boundary Policy Comparison
+                log("\n6. Demonstrating boundary policy effects on linear data...");
+                const xl = new Float64Array(50);
+                const yl = new Float64Array(50);
+                for(let i=0; i<50; i++) {
+                    xl[i] = (i / 49) * 10;
+                    yl[i] = 2 * xl[i] + 1;
+                }
+
+                const rExt = smooth(xl, yl, { fraction: 0.6, boundaryPolicy: "extend" });
+                const rRef = smooth(xl, yl, { fraction: 0.6, boundaryPolicy: "reflect" });
+                const rZr  = smooth(xl, yl, { fraction: 0.6, boundaryPolicy: "zero" });
+
+                log(`   - Extend (Default): first=${rExt.y[0].toFixed(2)}, last=${rExt.y[49].toFixed(2)}`);
+                log(`   - Reflect:          first=${rRef.y[0].toFixed(2)}, last=${rRef.y[49].toFixed(2)}`);
+                log(`   - Zero:             first=${rZr.y[0].toFixed(2)}, last=${rZr.y[49].toFixed(2)}`);
+
+                log("\n=== Batch Smoothing Example Complete ===");
+
+            } catch (e) {
+                log(`\nError: ${e}`);
+                console.error(e);
+            }
+        }
+
+        // Start execution
+        runDemo();
     </script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 # =============================================================================
-# fastLowess Streaming Smoothing Examples
+# rfastlowess Streaming Smoothing Examples
 #
 # This example demonstrates streaming LOWESS smoothing for large datasets:
 # - Basic chunked processing
@@ -19,7 +19,7 @@ library(rfastlowess)
 
 main <- function() {
     cat(strrep("=", 80), "\n")
-    cat("fastLowess Streaming Smoothing Examples\n")
+    cat("rfastlowess Streaming Smoothing Examples\n")
     cat(strrep("=", 80), "\n\n")
 
     example_1_basic_streaming()

@@ -80,6 +80,11 @@ Each language includes three complete examples:
     cargo run --example fast_batch_smoothing -p examples
     ```
 
+=== "Julia"
+    ```bash
+    julia --project=bindings/julia/julia examples/julia/batch_smoothing.jl
+    ```
+
 === "Node.js"
     ```bash
     cd bindings/nodejs && npm install
@@ -90,9 +95,4 @@ Each language includes three complete examples:
     ```bash
     make cpp
     ./examples/cpp/batch_smoothing
-    ```
-
-=== "Julia"
-    ```bash
-    julia --project=bindings/julia/julia examples/julia/batch_smoothing.jl
     ```

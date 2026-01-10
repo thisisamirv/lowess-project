@@ -1,13 +1,16 @@
 const fastlowess = require('../../bindings/nodejs');
 
 /**
- * fastLowess Batch Smoothing Example
+ * fastlowess Batch Smoothing Example
  * 
  * This example demonstrates batch LOWESS smoothing features:
  * - Basic smoothing with different parameters
  * - Robustness iterations for outlier handling
  * - Confidence and prediction intervals
- * - Diagnostics and cross-validation (manual implementation)
+ * - Diagnostics and cross-validation
+ *
+ * The batch adapter (smooth function) is the primary interface for
+ * processing complete datasets that fit in memory.
  */
 
 function generateSampleData(nPoints = 1000) {
@@ -39,7 +42,7 @@ function generateSampleData(nPoints = 1000) {
 }
 
 function main() {
-    console.log("=== fastLowess Batch Smoothing Example ===");
+    console.log("=== fastlowess Batch Smoothing Example ===");
 
     // 1. Generate Data
     const { x, y } = generateSampleData(1000);

@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 # =============================================================================
-# fastLowess Online Smoothing Examples
+# rfastlowess Online Smoothing Examples
 #
 # This example demonstrates online LOWESS smoothing for real-time data:
 # - Basic incremental processing with streaming data
@@ -19,7 +19,7 @@ library(rfastlowess)
 
 main <- function() {
     cat(strrep("=", 80), "\n")
-    cat("fastLowess Online Smoothing Examples\n")
+    cat("rfastlowess Online Smoothing Examples\n")
     cat(strrep("=", 80), "\n\n")
 
     example_1_basic_online()

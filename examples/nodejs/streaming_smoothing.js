@@ -1,7 +1,7 @@
 const fastlowess = require('../../bindings/nodejs');
 
 /**
- * fastLowess Streaming Smoothing Example
+ * fastlowess Streaming Smoothing Example
  * 
  * This example demonstrates streaming LOWESS smoothing for large datasets:
  * - Basic chunked processing
@@ -10,7 +10,7 @@ const fastlowess = require('../../bindings/nodejs');
  */
 
 function main() {
-    console.log("=== fastLowess Streaming Mode Example ===");
+    console.log("=== fastlowess Streaming Mode Example ===");
 
     // 1. Generate Very Large Dataset
     // 100,000 points
