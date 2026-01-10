@@ -68,89 +68,32 @@ function main() {
         returnDiagnostics: true
     });
 
-    // 5. Cross-Validation for optimal fraction (Manual Implementation)
-    // Note: Node.js bindings do not yet expose the internal CV methods, 
-    // so we implement a simple K-Fold CV here.
+    // 5. Cross-Validation for optimal fraction
     console.log("Running cross-validation to find optimal fraction...");
     const cvFractions = [0.05, 0.1, 0.2, 0.4];
-    let bestFraction = cvFractions[0];
-    let bestScore = Infinity;
-
-    // K-Fold variables
-    const K = 5;
-    const n = x.length;
     
-    // Shuffle indices
-    const indices = Array.from({ length: n }, (_, i) => i);
-    for (let i = n - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [indices[i], indices[j]] = [indices[j], indices[i]];
-    }
+    // We pass the fractions and CV method to the smooth function.
+    // The main result returned will be the fit using the BEST fraction.
+    // We can also retrieve the score for each fraction.
+    const resCV = fastlowess.smooth(x, y, { 
+        cvFractions, 
+        cvMethod: "kfold", 
+        cvK: 5,
+        // We can request robustness weights or diagnostics for the final best model too
+        returnDiagnostics: true 
+    });
 
-    const foldSize = Math.floor(n / K);
-
-    for (const fraction of cvFractions) {
-        let totalMse = 0;
-
-        for (let k = 0; k < K; k++) {
-            const start = k * foldSize;
-            const end = start + foldSize;
-            
-            // Create training and validation sets
-            // Note: This is inefficient in JS without zero-copy slices/views for arbitrary indices,
-            // but demonstrates the logic.
-            const trainIdx = [];
-            const valIdx = [];
-            for (let i = 0; i < n; i++) {
-                if (i >= start && i < end) valIdx.push(indices[i]);
-                else trainIdx.push(indices[i]);
-            }
-
-            // Sort training indices for x (required by lowess usually)
-            trainIdx.sort((a, b) => x[a] - x[b]);
-            valIdx.sort((a, b) => x[a] - x[b]);
-
-            const xTrain = new Float64Array(trainIdx.length);
-            const yTrain = new Float64Array(trainIdx.length);
-            for(let i=0; i<trainIdx.length; i++) { xTrain[i] = x[trainIdx[i]]; yTrain[i] = y[trainIdx[i]]; }
-            
-            const xVal = new Float64Array(valIdx.length);
-            const yVal = new Float64Array(valIdx.length);
-            for(let i=0; i<valIdx.length; i++) { xVal[i] = x[valIdx[i]]; yVal[i] = y[valIdx[i]]; }
-
-            // Fit on train
-            // Note: smooth returns y values at input x coordinates
-            // To evaluate on validation set, we strictly speaking need 'predict' or 'interpolate'
-            // capability for new points. `fastlowess.smooth` smooths the input x/y.
-            // WORKAROUND for this example: We will just smooth the validation set separately
-            // using the parameters. This is NOT strict CV (which builds a model on train and evaluates on test),
-            // but standard LOWESS usually is just a smoother. 
-            // A proper implementation would require an interpolation function.
-            // Since `smooth` outputs values for `x` inputs, we can't easily "predict" for `valX` 
-            // without merging them into one call or using an interpolation library.
-            // 
-            // Simplification: We will skip true CV logic here to avoid external deps and 
-            // complexity, and just pick the fraction that minimizes residual variance on the full fit,
-            // or just placeholder log it.
-        }
-        
-        // Revised "Manual CV" placeholder logic
-        // We'll just run smooth on the full dataset and check residuals loosely
-        // This is just to mock the example output structure.
-        const res = fastlowess.smooth(x, y, { fraction, returnDiagnostics: true });
-        // Use generalized cross-validation (GCV) proxy or just RMSE
-        const score = res.diagnostics.rmse; 
-        
-        if (score < bestScore) {
-            bestScore = score;
-            bestFraction = fraction;
+    console.log(`Optimal fraction selected: ${resCV.fractionUsed}`);
+    
+    // Check scores if available
+    const scores = resCV.cvScores;
+    // Note: cvScores array corresponds to the input fractions order.
+    if (scores) {
+        console.log("CV Scores (RMSE):");
+        for(let i=0; i<cvFractions.length; i++) {
+            console.log(` - Fraction ${cvFractions[i]}: ${scores[i].toFixed(4)}`);
         }
     }
-    
-    // In a real scenario, use proper CV. Here we select based on RMSE (which biases towards overfitting, 
-    // so this is just for demonstration of API usage).
-    console.log(`Optimal fraction found: ${bestFraction} (using RMSE proxy)`);
-
     // Diagnostics Printout
     if (resIntervals.diagnostics) {
         const diag = resIntervals.diagnostics;

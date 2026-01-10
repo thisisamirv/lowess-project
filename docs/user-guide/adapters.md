@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD024 MD046 -->
 # Execution Modes
 
 Choose the right adapter for your use case.

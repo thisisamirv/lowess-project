@@ -85,9 +85,10 @@ function main() {
     // but usually they should match if configured right.
     // Let's assume matches for this example or truncate to min.
     const cmpLen = Math.min(resBatch.y.length, streamY.length);
+    const batchY = resBatch.y;
     
     for (let i = 0; i < cmpLen; i++) {
-        mse += Math.pow(resBatch.y[i] - streamY[i], 2);
+        mse += Math.pow(batchY[i] - streamY[i], 2);
     }
     mse /= cmpLen;
     
@@ -98,8 +99,8 @@ function main() {
     console.log("Index\tBatch\t\tStreaming\tDiff");
     for (let i = 1000; i <= 1005; i++) {
         if (i < cmpLen) {
-            const diff = Math.abs(resBatch.y[i] - streamY[i]);
-            console.log(`${i}\t${resBatch.y[i].toFixed(6)}\t${streamY[i].toFixed(6)}\t${diff.toFixed(6)}`);
+            const diff = Math.abs(batchY[i] - streamY[i]);
+            console.log(`${i}\t${batchY[i].toFixed(6)}\t${streamY[i].toFixed(6)}\t${diff.toFixed(6)}`);
         }
     }
 

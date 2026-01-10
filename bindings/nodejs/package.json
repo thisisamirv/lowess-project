@@ -2,7 +2,7 @@
   "name": "fastlowess-node",
   "version": "0.99.7",
   "description": "Node.js native bindings for fastLowess",
-  "main": "index.node",
+  "main": "fastlowess.node",
   "types": "index.d.ts",
   "scripts": {
     "build": "napi build --release",

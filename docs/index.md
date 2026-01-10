@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD033 -->
 # LOWESS Project
 
 The fastest, most robust, and most feature-complete language-agnostic LOWESS (Locally Weighted Scatterplot Smoothing) implementation for **Rust**, **Python**, **R**, **Julia**, **JavaScript**, **C++**, and **WebAssembly**.
@@ -255,6 +256,7 @@ See the [Installation Guide](getting-started/installation.md) for more options a
 2. [Quick Start](getting-started/quickstart.md) — Basic usage examples
 3. [Concepts](getting-started/concepts.md) — Understand how LOWESS works
 
+<!-- markdownlint-disable MD033 -->
 <div class="grid cards" markdown>
 
 - :fontawesome-brands-rust: **Rust**
@@ -291,6 +293,7 @@ See the [Installation Guide](getting-started/installation.md) for more options a
 
 </div>
 
+<!-- markdownlint-disable MD033 -->
 <div class="grid cards" markdown>
 
 - :simple-nodejs: **Node.js**

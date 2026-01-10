@@ -1,8 +1,8 @@
 [package]
 name = "fastlowess-wasm"
-version = "0.99.7"
-edition = "2024"
-license = "MIT OR Apache-2.0"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
 
 [lib]
 crate-type = ["cdylib", "rlib"]

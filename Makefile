@@ -456,6 +456,10 @@ julia-clean:
 nodejs:
 	@echo "Running $(NODE_PKG) checks..."
 	@echo "=============================================================================="
+	@echo "0. Version Sync..."
+	@echo "=============================================================================="
+	@dev/sync_version.py Cargo.toml -n $(NODE_DIR)/package.json -q
+	@echo "=============================================================================="
 	@echo "1. Formatting..."
 	@echo "=============================================================================="
 	@cargo fmt -p $(NODE_PKG) -- --check
@@ -497,18 +501,14 @@ wasm:
 	@echo "=============================================================================="
 	@cargo clippy -q -p $(WASM_PKG) --all-targets -- -D warnings
 	@cd $(WASM_DIR) && wasm-pack build --target nodejs --out-dir pkg
+	@echo "Building for Web (Examples)..."
+	@cd $(WASM_DIR) && wasm-pack build --target web --out-dir pkg-web
 	@echo "=============================================================================="
 	@echo "3. Testing..."
 	@echo "=============================================================================="
 	@cd $(WASM_DIR) && wasm-pack test --node
 	@echo "Running JS tests..."
 	@node --test tests/wasm/test_fastlowess_wasm.js
-	@echo "=============================================================================="
-	@echo "4. Examples..."
-	@echo "=============================================================================="
-	@cd $(WASM_DIR) && node examples/batch_smoothing.js
-	@cd $(WASM_DIR) && node examples/online_smoothing.js
-	@cd $(WASM_DIR) && node examples/streaming_smoothing.js
 	@echo "=============================================================================="
 	@echo "$(WASM_PKG) checks completed successfully!"
 

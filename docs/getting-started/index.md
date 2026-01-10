@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD033 -->
 # Getting Started
 
 Welcome to the LOWESS Project! This section will help you get up and running quickly.

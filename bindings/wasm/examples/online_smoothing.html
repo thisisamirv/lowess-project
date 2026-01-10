@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>fastLowess WASM - Online Smoothing</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .controls { margin: 20px 0; padding: 10px; background: #f0f0f0; border-radius: 4px; }
+        #output { white-space: pre-wrap; background: #fafafa; border: 1px solid #ddd; padding: 10px; height: 300px; overflow-y: scroll;}
+        button { cursor: pointer; padding: 5px 10px; }
+        .metric { font-weight: bold; color: #0066cc; }
+    </style>
+</head>
+<body>
+    <h1>Online Smoothing Example</h1>
+    <p>Using <code>OnlineLowessWasm</code> for real-time data smoothing.</p>
+    
+    <div class="controls">
+        <button id="startBtn">Start Simulation</button>
+        <button id="stopBtn" disabled>Stop</button>
+        <span id="status">Idle</span>
+    </div>
+
+    <h3>Live Logs:</h3>
+    <div id="output">Waiting to start...</div>
+
+    <script type="module">
+        import init, { OnlineLowessWasm } from "../pkg-web/fastlowess_wasm.js";
+
+        let running = false;
+        let onlineModel = null;
+        let t = 0;
+
+        async function run() {
+            try {
+                await init();
+                log("WASM Initialized.");
+                
+                document.getElementById('startBtn').addEventListener('click', startSim);
+                document.getElementById('stopBtn').addEventListener('click', stopSim);
+            } catch (e) {
+                log("Error: " + e);
+            }
+        }
+
+        function startSim() {
+            running = true;
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+            document.getElementById('status').innerText = "Running...";
+            
+            // Initialize new model
+            onlineModel = new OnlineLowessWasm(
+                { fraction: 0.2 },
+                { windowCapacity: 50, updateMode: "incremental" }
+            );
+            t = 0;
+            
+            log("\n=== Starting Real-time Simulation ===");
+            requestAnimationFrame(step);
+        }
+
+        function stopSim() {
+            running = false;
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            document.getElementById('status').innerText = "Stopped";
+            log("=== Simulation Stopped ===");
+        }
+
+        function step() {
+            if (!running) return;
+
+            // Generate one point
+            const noise = (Math.random() - 0.5) * 2.0;
+            const signal = 10 * Math.sin(t * 0.1);
+            const y = signal + noise;
+            
+            // Update model
+            const smoothed = onlineModel.update(t, y);
+            
+            // Log output
+            if (smoothed !== undefined && smoothed !== null) {
+                log(`t=${t}, raw=${y.toFixed(2)}, smoothed=${smoothed.toFixed(2)}`);
+            } else {
+                log(`t=${t}, raw=${y.toFixed(2)}, smoothed=(insufficient data)`);
+            }
+
+            t++;
+            
+            // Slow down loop for visibility
+            setTimeout(() => {
+                // Auto-stop after 200 points
+                if (t >= 200) {
+                    stopSim();
+                    log("=== Auto-stop limit reached (200 points) ===");
+                } else if(running) {
+                    requestAnimationFrame(step);
+                }
+            }, 100);
+        }
+
+        function log(msg) {
+            const out = document.getElementById('output');
+            out.innerText = msg + "\n" + out.innerText;
+            if (out.innerText.length > 5000) out.innerText = out.innerText.substring(0, 5000); // Limit buffer
+        }
+
+        run();
+    </script>
+</body>
+</html>

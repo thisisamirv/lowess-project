@@ -11,12 +11,8 @@ use ::fastLowess::internals::api::{
     BoundaryPolicy, RobustnessMethod, ScalingMethod, UpdateMode, WeightFunction, ZeroWeightFallback,
 };
 use ::fastLowess::prelude::{
-    Batch, Lowess as LowessBuilder, LowessResult, MAD, MAR, Online, Streaming,
+    Batch, KFold, LOOCV, Lowess as LowessBuilder, LowessResult, MAD, MAR, Online, Streaming,
 };
-
-// ============================================================================
-// Helper Functions
-// ============================================================================
 
 /// Parse weight function from string
 fn parse_weight_function(name: &str) -> Result<WeightFunction> {
@@ -98,10 +94,6 @@ fn parse_update_mode(name: &str) -> Result<UpdateMode> {
         )),
     }
 }
-
-// ============================================================================
-// Node.js Objects
-// ============================================================================
 
 #[napi(object)]
 pub struct Diagnostics {
@@ -199,11 +191,25 @@ impl LowessResultObj {
             residualSd: d.residual_sd,
         })
     }
-}
 
-// ============================================================================
-// Main API
-// ============================================================================
+    #[napi(getter)]
+    pub fn get_cv_scores(&self) -> Option<Float64Array> {
+        self.inner
+            .cv_scores
+            .as_ref()
+            .map(|v| Float64Array::from(v.as_slice()))
+    }
+
+    #[napi(getter)]
+    pub fn get_fraction_used(&self) -> f64 {
+        self.inner.fraction_used
+    }
+
+    #[napi(getter)]
+    pub fn get_iterations_used(&self) -> Option<u32> {
+        self.inner.iterations_used.map(|i| i as u32)
+    }
+}
 
 #[napi(object)]
 pub struct SmoothOptions {
@@ -221,6 +227,10 @@ pub struct SmoothOptions {
     pub returnDiagnostics: Option<bool>,
     pub confidenceIntervals: Option<f64>,
     pub predictionIntervals: Option<f64>,
+    pub cvFractions: Option<Vec<f64>>,
+    pub cvMethod: Option<String>,
+    pub cvK: Option<u32>,
+    pub parallel: Option<bool>,
 }
 
 #[napi]
@@ -273,6 +283,30 @@ pub fn smooth(
         }
         if let Some(pi) = opts.predictionIntervals {
             builder = builder.prediction_intervals(pi);
+        }
+        if let Some(par) = opts.parallel {
+            builder = builder.parallel(par);
+        }
+
+        // Cross-validation
+        if let Some(fractions) = opts.cvFractions {
+            let method = opts.cvMethod.unwrap_or_else(|| "kfold".to_string());
+            let k = opts.cvK.unwrap_or(5) as usize;
+
+            match method.to_lowercase().as_str() {
+                "simple" | "loo" | "loocv" | "leave_one_out" => {
+                    builder = builder.cross_validate(LOOCV(&fractions));
+                }
+                "kfold" | "k_fold" | "k-fold" => {
+                    builder = builder.cross_validate(KFold(k, &fractions));
+                }
+                _ => {
+                    return Err(Error::new(
+                        Status::InvalidArg,
+                        format!("Unknown CV method: {}. Valid options: loocv, kfold", method),
+                    ));
+                }
+            };
         }
     }
 
@@ -349,6 +383,9 @@ impl StreamingLowess {
             if opts.returnDiagnostics.unwrap_or(false) {
                 builder = builder.return_diagnostics();
             }
+            if let Some(par) = opts.parallel {
+                builder = builder.parallel(par);
+            }
         }
 
         let mut chunk_size = 5000;
@@ -420,6 +457,9 @@ impl OnlineLowess {
             }
             if let Some(iter) = opts.iterations {
                 builder = builder.iterations(iter as usize);
+            }
+            if let Some(par) = opts.parallel {
+                builder = builder.parallel(par);
             }
         }
 

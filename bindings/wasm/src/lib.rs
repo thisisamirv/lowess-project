@@ -9,12 +9,8 @@ use ::fastLowess::internals::api::{
     BoundaryPolicy, RobustnessMethod, ScalingMethod, UpdateMode, WeightFunction, ZeroWeightFallback,
 };
 use ::fastLowess::prelude::{
-    Batch, Lowess as LowessBuilder, LowessResult, MAD, MAR, Online, Streaming,
+    Batch, KFold, LOOCV, Lowess as LowessBuilder, LowessResult, MAD, MAR, Online, Streaming,
 };
-
-// ============================================================================
-// Helper Functions
-// ============================================================================
 
 fn parse_weight_function(name: &str) -> Result<WeightFunction, JsValue> {
     match name.to_lowercase().as_str() {
@@ -87,10 +83,6 @@ fn parse_update_mode(name: &str) -> Result<UpdateMode, JsValue> {
         _ => Err(JsValue::from_str(&format!("Unknown update mode: {}", name))),
     }
 }
-
-// ============================================================================
-// WASM Objects
-// ============================================================================
 
 #[wasm_bindgen]
 pub struct Diagnostics {
@@ -191,11 +183,25 @@ impl LowessResultWasm {
             residual_sd: d.residual_sd,
         })
     }
-}
 
-// ============================================================================
-// Main API
-// ============================================================================
+    #[wasm_bindgen(getter, js_name = cvScores)]
+    pub fn cv_scores(&self) -> Option<Float64Array> {
+        self.inner
+            .cv_scores
+            .as_ref()
+            .map(|v| unsafe { Float64Array::view(v) })
+    }
+
+    #[wasm_bindgen(getter, js_name = fractionUsed)]
+    pub fn fraction_used(&self) -> f64 {
+        self.inner.fraction_used
+    }
+
+    #[wasm_bindgen(getter, js_name = iterationsUsed)]
+    pub fn iterations_used(&self) -> Option<u32> {
+        self.inner.iterations_used.map(|i| i as u32)
+    }
+}
 
 #[wasm_bindgen]
 pub fn smooth(
@@ -278,6 +284,54 @@ pub fn smooth(
         {
             builder = builder.prediction_intervals(val);
         }
+        if let Ok(par) = Reflect::get(&options, &JsValue::from_str("parallel"))
+            && let Some(val) = par.as_bool()
+        {
+            builder = builder.parallel(val);
+        }
+
+        // Cross-validation
+        if let Ok(cv_fractions) = Reflect::get(&options, &JsValue::from_str("cvFractions"))
+            && !cv_fractions.is_undefined()
+            && !cv_fractions.is_null()
+        {
+            // Convert JS number array to Vec<f64>
+            let fractions: Vec<f64> = js_sys::Array::from(&cv_fractions)
+                .iter()
+                .map(|val| val.as_f64().unwrap_or(0.0))
+                .collect();
+
+            let cv_method = if let Ok(m) = Reflect::get(&options, &JsValue::from_str("cvMethod"))
+                && let Some(val) = m.as_string()
+            {
+                val
+            } else {
+                "kfold".to_string()
+            };
+
+            let cv_k = if let Ok(k) = Reflect::get(&options, &JsValue::from_str("cvK"))
+                && let Some(val) = k.as_f64()
+            {
+                val as usize
+            } else {
+                5
+            };
+
+            match cv_method.to_lowercase().as_str() {
+                "simple" | "loo" | "loocv" | "leave_one_out" => {
+                    builder = builder.cross_validate(LOOCV(&fractions));
+                }
+                "kfold" | "k_fold" | "k-fold" => {
+                    builder = builder.cross_validate(KFold(cv_k, &fractions));
+                }
+                _ => {
+                    return Err(JsValue::from_str(&format!(
+                        "Unknown CV method: {}. Valid options: loocv, kfold",
+                        cv_method
+                    )));
+                }
+            };
+        }
     }
 
     let x_vec = x.to_vec();
@@ -356,6 +410,11 @@ impl StreamingLowessWasm {
             {
                 builder = builder.auto_converge(val);
             }
+            if let Ok(par) = Reflect::get(&options, &JsValue::from_str("parallel"))
+                && let Some(val) = par.as_bool()
+            {
+                builder = builder.parallel(val);
+            }
         }
 
         let mut chunk_size = 5000;
@@ -431,6 +490,11 @@ impl OnlineLowessWasm {
                 && let Some(val) = iter.as_f64()
             {
                 builder = builder.iterations(val as usize);
+            }
+            if let Ok(par) = Reflect::get(&options, &JsValue::from_str("parallel"))
+                && let Some(val) = par.as_bool()
+            {
+                builder = builder.parallel(val);
             }
         }
 

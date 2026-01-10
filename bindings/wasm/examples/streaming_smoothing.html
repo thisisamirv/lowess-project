@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>fastLowess WASM - Streaming Smoothing</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .controls { margin: 20px 0; padding: 10px; background: #f0f0f0; border-radius: 4px; }
+        #output { white-space: pre-wrap; background: #fafafa; border: 1px solid #ddd; padding: 10px; }
+        button { cursor: pointer; padding: 5px 10px; }
+    </style>
+</head>
+<body>
+    <h1>Streaming Smoothing Example</h1>
+    <p>Using <code>StreamingLowessWasm</code> to process large data in chunks in the browser.</p>
+    
+    <div class="controls">
+        <button id="runBtn">Start Streaming Process</button>
+    </div>
+
+    <h3>Output Logs:</h3>
+    <div id="output">Ready.</div>
+
+    <script type="module">
+        import init, { StreamingLowessWasm } from "../pkg-web/fastlowess_wasm.js";
+
+        async function run() {
+            try {
+                await init();
+                log("WASM Initialized.");
+                document.getElementById('runBtn').addEventListener('click', startStreaming);
+            } catch (e) {
+                log("Error: " + e);
+            }
+        }
+
+        async function startStreaming() {
+            try {
+                log("\nStarting streaming process...");
+                
+                // Initialize Streamer
+                const streamer = new StreamingLowessWasm(
+                    { fraction: 0.1 }, 
+                    { chunkSize: 1000, overlap: 100 }
+                );
+
+                // Simulate processing 10 chunks
+                const chunkSize = 1000;
+                let totalPoints = 0;
+                
+                log("Processing chunks...");
+                
+                const start = performance.now();
+                
+                for(let i=0; i<10; i++) {
+                    // Generate random chunk
+                    const x = new Float64Array(chunkSize);
+                    const y = new Float64Array(chunkSize);
+                    for(let j=0; j<chunkSize; j++) {
+                        const globalIdx = i * chunkSize + j;
+                        x[j] = globalIdx;
+                        y[j] = Math.log(globalIdx + 1) + Math.random();
+                    }
+
+                    // Process
+                    const res = streamer.processChunk(x, y);
+                    if (res && res.y) {
+                        totalPoints += res.y.length;
+                    }
+                    
+                    // Small delay to let UI update (simulate async stream)
+                    if(i % 2 === 0) await new Promise(r => setTimeout(r, 10));
+                }
+
+                const finalRes = streamer.finalize();
+                if (finalRes && finalRes.y) totalPoints += finalRes.y.length;
+
+                const end = performance.now();
+                
+                log(`Streaming complete.`);
+                log(`Total output points: ${totalPoints}`);
+                log(`Time taken: ${(end - start).toFixed(2)}ms`);
+
+            } catch (e) {
+                log("Error: " + e);
+                console.error(e);
+            }
+        }
+
+        function log(msg) {
+            const out = document.getElementById('output');
+            out.innerText += msg + "\n";
+            console.log(msg);
+        }
+
+        run();
+    </script>
+</body>
+</html>

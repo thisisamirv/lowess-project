@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD024 -->
 # Parameters
 
 Complete reference for all LOWESS configuration options.
@@ -291,6 +292,7 @@ Number of robustness iterations for outlier resistance.
     ```javascript
     const result = smooth(x, y, { iterations: 5 });
     ```
+
 ---
 
 ### delta
@@ -397,6 +399,7 @@ See [Weight Functions](kernels.md) for detailed comparison.
     ```javascript
     const result = smooth(x, y, { weightFunction: "epanechnikov" });
     ```
+
 ---
 
 ### robustness_method
@@ -512,6 +515,7 @@ Edge handling strategy to reduce boundary bias.
     ```javascript
     const result = smooth(x, y, { boundaryPolicy: "reflect" });
     ```
+
 ---
 
 ### scaling_method
@@ -619,6 +623,7 @@ Behavior when all neighborhood weights are zero.
     ```javascript
     const result = smooth(x, y, { zeroWeightFallback: "use_local_mean" });
     ```
+
 ---
 
 ### auto_converge

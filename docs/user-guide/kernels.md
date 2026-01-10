@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD024 -->
 # Weight Functions
 
 Kernel functions for distance weighting.
@@ -22,7 +23,7 @@ Weight functions (kernels) determine how neighboring points contribute to each l
 | **Triangle**     | 0.989      | Moderate    | Compact   |
 | **Uniform**      | 0.943      | None        | Compact   |
 
-*Efficiency = AMISE relative to Epanechnikov (1.0 = optimal)*
+**Efficiency** = AMISE relative to Epanechnikov (1.0 = optimal)
 
 ---
 

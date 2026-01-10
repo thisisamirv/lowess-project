@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD033 -->
 # User Guide
 
 Comprehensive documentation for all LOWESS parameters and features.

@@ -113,6 +113,11 @@ def main():
         help="Path to Julia build_tarballs.jl file",
     )
     parser.add_argument(
+        "-n", "--nodejs_package_file",
+        type=Path,
+        help="Path to Node.js package.json file",
+    )
+    parser.add_argument(
         "-q", "--quiet",
         action="store_true",
         help="Suppress output",
@@ -137,6 +142,8 @@ def main():
             update_julia_project_version(args.julia_project_file, version, args.quiet)
         if args.build_tarballs_file:
             update_build_tarballs_version(args.build_tarballs_file, version, args.quiet)
+        if args.nodejs_package_file:
+            update_package_json(args.nodejs_package_file, version, args.quiet)
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
@@ -263,6 +270,37 @@ def update_build_tarballs_version(build_path: Path, version: str, quiet: bool = 
     else:
         if not quiet:
             print(f"build_tarballs.jl version already at {version}")
+        return False
+
+
+def update_package_json(package_path: Path, version: str, quiet: bool = False) -> bool:
+    """Update the version in Node.js package.json file."""
+    if not package_path.exists():
+        if not quiet:
+            print(f"Warning: package.json file not found at {package_path}")
+        return False
+        
+    content = package_path.read_text()
+    
+    # Match: "version": "X.Y.Z"
+    pattern = r'("version"\s*:\s*")[^"]+(")'
+    replacement = rf'\g<1>{version}\g<2>'
+    
+    new_content, count = re.subn(pattern, replacement, content)
+    
+    if count == 0:
+        if not quiet:
+            print(f"Warning: No version field found in {package_path}")
+        return False
+
+    if new_content != content:
+        package_path.write_text(new_content)
+        if not quiet:
+            print(f"Updated package.json version to {version}")
+        return True
+    else:
+        if not quiet:
+            print(f"package.json version already at {version}")
         return False
 
 

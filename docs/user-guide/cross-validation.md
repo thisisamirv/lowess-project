@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD024 MD046 -->
 # Cross-Validation
 
 Automated parameter selection via cross-validation.
@@ -77,14 +78,26 @@ Split data into K folds, train on K-1, validate on 1.
 
 === "Node.js"
     ```javascript
-    // Cross-validation support coming soon to Node.js bindings.
-    // Use manual parameter selection for now.
+    const result = smooth(x, y, {
+        cvMethod: "kfold",
+        cvK: 5,
+        cvFractions: [0.2, 0.3, 0.5, 0.7]
+    });
+
+    console.log("Selected fraction:", result.fractionUsed);
+    console.log("CV scores:", result.cvScores);
     ```
 
 === "WebAssembly"
     ```javascript
-    // Cross-validation support coming soon to WebAssembly bindings.
-    // Use manual parameter selection for now.
+    const result = smooth(x, y, {
+        cvMethod: "kfold",
+        cvK: 5,
+        cvFractions: [0.2, 0.3, 0.5, 0.7]
+    });
+
+    console.log("Selected fraction:", result.fractionUsed);
+    console.log("CV scores:", result.cvScores);
     ```
 
 ---
@@ -130,12 +143,18 @@ Each point is held out once. Most thorough but slowest.
 
 === "Node.js"
     ```javascript
-    // Support coming soon.
+    const result = smooth(x, y, {
+        cvMethod: "loocv",
+        cvFractions: [0.2, 0.3, 0.5, 0.7]
+    });
     ```
 
 === "WebAssembly"
     ```javascript
-    // Support coming soon.
+    const result = smooth(x, y, {
+        cvMethod: "loocv",
+        cvFractions: [0.2, 0.3, 0.5, 0.7]
+    });
     ```
 
 ---
@@ -214,7 +233,7 @@ Set a seed for reproducible fold assignments:
 
 Cross-validation uses MSE (Mean Squared Error) by default:
 
-```
+```text
 MSE = mean((y_true - y_pred)²)
 ```
 
@@ -293,9 +312,6 @@ The fraction with **lowest CV score** is automatically selected.
 |-----------|:-----:|:---------:|:------:|
 | K-Fold CV | ✓     | ✗         | ✗      |
 | LOOCV     | ✓     | ✗         | ✗      |
-
-!!! note "JavaScript Support"
-    Cross-validation is currently supported in Rust, Python, R, and Julia. Node.js and WebAssembly support is under development.
 
 ---
 

@@ -11,6 +11,9 @@ export declare class LowessResultObj {
   get predictionUpper(): Float64Array | null
   get robustnessWeights(): Float64Array | null
   get diagnostics(): Diagnostics | null
+  get cvScores(): Float64Array | null
+  get fractionUsed(): number
+  get iterationsUsed(): number | null
 }
 
 export declare class OnlineLowess {
@@ -57,6 +60,10 @@ export interface SmoothOptions {
   returnDiagnostics?: boolean
   confidenceIntervals?: number
   predictionIntervals?: number
+  cvFractions?: Array<number>
+  cvMethod?: string
+  cvK?: number
+  parallel?: boolean
 }
 
 export interface StreamingOptions {

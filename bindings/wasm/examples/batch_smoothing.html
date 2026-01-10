@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>fastLowess WASM - Batch Smoothing</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .controls { margin: 20px 0; padding: 10px; background: #f0f0f0; border-radius: 4px; }
+        #output { white-space: pre-wrap; background: #fafafa; border: 1px solid #ddd; padding: 10px; }
+        button { cursor: pointer; padding: 5px 10px; }
+    </style>
+</head>
+<body>
+    <h1>Batch Smoothing Example</h1>
+    <p>This example runs the <code>smooth</code> function in the browser via WebAssembly.</p>
+    
+    <div class="controls">
+        <label>Fraction: <input type="number" id="fraction" value="0.2" step="0.05" min="0.01" max="1.0"></label>
+        <label>Iterations: <input type="number" id="iterations" value="0" min="0" max="10"></label>
+        <button id="runBtn">Run Smoothing</button>
+    </div>
+
+    <div id="plot"></div>
+    <h3>Output Logs:</h3>
+    <div id="output">Ready.</div>
+
+    <script type="module">
+        import init, { smooth } from "../pkg-web/fastlowess_wasm.js";
+        
+        async function run() {
+            try {
+                log("Initializing WASM...");
+                await init();
+                log("WASM Initialized.");
+
+                document.getElementById('runBtn').addEventListener('click', executeSmoothing);
+                
+                // Run once on load
+                executeSmoothing();
+            } catch (e) {
+                log("Error: " + e);
+            }
+        }
+
+        function executeSmoothing() {
+            try {
+                const fraction = parseFloat(document.getElementById('fraction').value);
+                const iterations = parseInt(document.getElementById('iterations').value);
+
+                log(`\nRunning smooth(fraction=${fraction}, iterations=${iterations})...`);
+
+                // Generate synthetic data (Sine wave + noise)
+                const n = 100;
+                const x = new Float64Array(n);
+                const y = new Float64Array(n);
+                for(let i=0; i<n; i++) {
+                    x[i] = i;
+                    y[i] = Math.sin(i * 0.1) + (Math.random() - 0.5) * 0.5;
+                }
+
+                const start = performance.now();
+                const result = smooth(x, y, { fraction, iterations });
+                const end = performance.now();
+
+                log(`Smoothing took ${(end - start).toFixed(2)}ms`);
+                log(`Result size: ${result.y.length}`);
+                log(`Sample Y: [${result.y.subarray(0, 5).join(', ')}...]`);
+            } catch (e) {
+                log("Error during smoothing: " + e);
+                console.error(e);
+            }
+        }
+
+        function log(msg) {
+            const out = document.getElementById('output');
+            out.innerText += msg + "\n";
+            console.log(msg);
+        }
+
+        run();
+    </script>
+</body>
+</html>

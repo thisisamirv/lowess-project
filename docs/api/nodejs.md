@@ -34,6 +34,10 @@ The `fastlowess` package uses a common configuration object for its smoothing fu
 | `returnRobustnessWeights` | boolean | false          | Include final weights            |
 | `confidenceIntervals`     | number  | null           | 1-alpha for confidence intervals |
 | `predictionIntervals`     | number  | null           | 1-alpha for prediction intervals |
+| `cvFractions`             | number[]| null           | List of fractions for CV         |
+| `cvMethod`                | string  | "kfold"        | CV method (kfold, loocv)         |
+| `cvK`                     | number  | 5              | Number of folds for K-Fold CV    |
+| `parallel`                | boolean | false          | Enable parallel execution        |
 
 ---
 
@@ -139,4 +143,10 @@ const smoothedValue = online.update(x, y); // Returns number or null
 ### updateMode
 
 - `"incremental"` (default)
+- `"incremental"` (default)
 - `"full"`
+
+### cvMethod
+
+- `"kfold"` (default)
+- `"loocv"`

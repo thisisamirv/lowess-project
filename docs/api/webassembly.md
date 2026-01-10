@@ -74,6 +74,10 @@ WebAssembly smoothing functions use the following configuration object.
 | `returnRobustnessWeights` | boolean | false          | Include final weights            |
 | `confidenceIntervals`     | number  | null           | 1-alpha for confidence intervals |
 | `predictionIntervals`     | number  | null           | 1-alpha for prediction intervals |
+| `cvFractions`             | number[]| null           | List of fractions for CV         |
+| `cvMethod`                | string  | "kfold"        | CV method (kfold, loocv)         |
+| `cvK`                     | number  | 5              | Number of folds for K-Fold CV    |
+| `parallel`                | boolean | false          | Enable parallel execution        |
 
 ---
 
@@ -165,3 +169,7 @@ const value = online.update(x, y);
 ### updateMode
 
 - `"incremental"`, `"full"`
+
+### cvMethod
+
+- `"kfold"`, `"loocv"`

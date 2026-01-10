@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD024 -->
 # Intervals
 
 Confidence and prediction intervals for uncertainty quantification.
@@ -135,7 +136,7 @@ Estimate where new observations might fall.
     println("Prediction bounds: [$(result.prediction_lower[1]), $(result.prediction_upper[1])]")
     ```
 
-=== "Node.js
+=== "Node.js"
     ```javascript
     const result = smooth(x, y, { fraction: 0.5, predictionIntervals: 0.95 });
     console.log(`Prediction bounds: [${result.predictionLower[0]}, ${result.predictionUpper[0]}]`);
@@ -146,6 +147,7 @@ Estimate where new observations might fall.
     const result = smooth(x, y, { fraction: 0.5, predictionIntervals: 0.95 });
     console.log(`Prediction bounds: [${result.predictionLower[0]}, ${result.predictionUpper[0]}]`);
     ```
+
 ---
 
 ## Both Intervals
@@ -192,7 +194,7 @@ Request both types simultaneously:
     )
     ```
 
-=== "Node.js
+=== "Node.js"
     ```javascript
     const result = smooth(x, y, {
         fraction: 0.5,
@@ -209,6 +211,7 @@ Request both types simultaneously:
         predictionIntervals: 0.95
     });
     ```
+
 ---
 
 ## Confidence Levels
@@ -248,7 +251,7 @@ Common levels and their z-values:
     result = smooth(x, y, confidence_intervals=0.99)
     ```
 
-=== "Node.js
+=== "Node.js"
     ```javascript
     // 99% confidence interval
     const result = smooth(x, y, { confidenceIntervals: 0.99 });
@@ -259,6 +262,7 @@ Common levels and their z-values:
     // 99% confidence interval
     const result = smooth(x, y, { confidenceIntervals: 0.99 });
     ```
+
 ---
 
 ## Standard Errors
@@ -297,7 +301,7 @@ Access standard errors directly (available when intervals are computed):
     end
     ```
 
-=== "Node.js
+=== "Node.js"
     ```javascript
     const result = smooth(x, y, { confidenceIntervals: 0.95 });
 
@@ -314,6 +318,7 @@ Access standard errors directly (available when intervals are computed):
         console.log(`Point ${i}: SE = ${se.toFixed(4)}`);
     });
     ```
+
 ---
 
 ## Availability

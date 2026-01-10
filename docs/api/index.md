@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD033 -->
 # API Reference
 
 Language-specific API documentation.
