@@ -551,12 +551,22 @@ cpp:
 	@cargo build -q -p $(CPP_PKG) --release
 	@echo "C header generated at $(CPP_DIR)/include/fastlowess.h"
 	@echo "=============================================================================="
+	@echo "3. Examples..."
+	@echo "=============================================================================="
+	@mkdir -p $(CPP_DIR)/bin
+	@g++ -O3 $(EXAMPLES_DIR)/cpp/batch_smoothing.cpp -o $(CPP_DIR)/bin/batch_smoothing -I$(CPP_DIR)/include -Ltarget/release -lfastlowess_cpp -lpthread -ldl -lm
+	@g++ -O3 $(EXAMPLES_DIR)/cpp/streaming_smoothing.cpp -o $(CPP_DIR)/bin/streaming_smoothing -I$(CPP_DIR)/include -Ltarget/release -lfastlowess_cpp -lpthread -ldl -lm
+	@g++ -O3 $(EXAMPLES_DIR)/cpp/online_smoothing.cpp -o $(CPP_DIR)/bin/online_smoothing -I$(CPP_DIR)/include -Ltarget/release -lfastlowess_cpp -lpthread -ldl -lm
+	@LD_LIBRARY_PATH=target/release $(CPP_DIR)/bin/batch_smoothing
+	@LD_LIBRARY_PATH=target/release $(CPP_DIR)/bin/streaming_smoothing
+	@LD_LIBRARY_PATH=target/release $(CPP_DIR)/bin/online_smoothing
+	@echo "=============================================================================="
 	@echo "$(CPP_PKG) checks completed successfully!"
 
 cpp-clean:
 	@echo "Cleaning $(CPP_PKG)..."
 	@cargo clean -p $(CPP_PKG)
-	@rm -rf $(CPP_DIR)/include/fastlowess.h
+	@rm -rf $(CPP_DIR)/include/fastlowess.h $(CPP_DIR)/bin
 	@echo "$(CPP_PKG) clean complete!"
 
 # ==============================================================================

@@ -5,7 +5,7 @@ build-backend = "maturin"
 [project]
 name = "fastlowess"
 dynamic = ["version"]
-description = "High-performance LOWESS smoothing for Rust, Python, and R."
+description = "High-performance LOWESS smoothing for Python."
 authors = [{ name = "Amir Valizadeh", email = "thisisamirv@gmail.com" }]
 license = "MIT OR Apache-2.0"
 license-files = ["LICENSE-MIT", "LICENSE-APACHE"]

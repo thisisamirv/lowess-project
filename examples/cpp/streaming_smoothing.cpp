@@ -10,7 +10,7 @@
 #include <random>
 #include <vector>
 
-#include "../include/fastlowess.hpp"
+#include "fastlowess.hpp"
 
 int main() {
   std::cout << "=== Streaming LOWESS Smoothing Example ===" << std::endl;
