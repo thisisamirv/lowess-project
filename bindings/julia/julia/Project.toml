@@ -5,7 +5,7 @@ version = "0.99.8"
 license = "MIT OR Apache-2.0"
 
 [deps]
-# fastlowess_jll will be added once the package is registered
+# TODO: fastlowess_jll will be added once the package is registered
 
 [compat]
 julia = "1.6"

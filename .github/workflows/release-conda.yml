@@ -1,4 +1,4 @@
-name: Update conda-forge feedstock
+name: Release Conda
 
 on:
   release:
@@ -64,12 +64,12 @@ jobs:
 
           # We can trust that if the release triggered this, the tarball exists.
           # But let's confirm it's not a 404
-          HTTP_CODE=$(curl -o /dev/null -s -w "%{http_code}\n" "$URL")
+          HTTP_CODE=$(curl -o /dev/null -sL -w "%{http_code}\n" "$URL")
           if [ "$HTTP_CODE" != "200" ]; then
              echo "❌ Error: GitHub Release tarball not found (HTTP $HTTP_CODE)."
              exit 1
           fi
-          
+
           SHA256=$(curl -sL "$URL" | sha256sum | awk '{print $1}')
 
           if [ -z "$SHA256" ]; then
@@ -104,30 +104,102 @@ jobs:
         env:
           VERSION: ${{ steps.version.outputs.version }}
           SHA256: ${{ steps.sha256.outputs.sha256 }}
+          # Use a multi-line string for the build script
+          BUILD_R_SCRIPT: |
+            #!/bin/bash
+            set -ex
+
+            echo "=== System Info ==="
+            uname -a
+            python3 --version || python --version || true
+
+            # Determine R executable
+            R_EXE=${R:-R}
+            $R_EXE --version
+
+            # Use python provided by conda build
+            PYTHON_EXE=$(which python3 || which python || echo "python")
+            echo "Using Python: $PYTHON_EXE"
+
+            # 1. Extract existing vendor dependencies if present
+            # This contains external crates (extendr-api, etc.)
+            if [ -f bindings/r/src/vendor.tar.xz ]; then
+              echo "Extracting vendor.tar.xz..."
+              (cd bindings/r/src && tar -xf vendor.tar.xz)
+            fi
+
+            # 2. Update local crates in vendor directory
+            # This ensures we build with the latest local changes
+            mkdir -p bindings/r/src/vendor
+            cp -rvL crates/fastLowess bindings/r/src/vendor/
+            cp -rvL crates/lowess bindings/r/src/vendor/
+
+            # Clean up target/locks from vendored sources
+            rm -rf bindings/r/src/vendor/*/target
+            rm -f bindings/r/src/vendor/*/Cargo.lock
+
+            # 3. Patch and Isolate (remove workspace inheritance)
+            echo "Running preparation scripts..."
+            $PYTHON_EXE dev/prepare_cargo.py clean bindings/r/src/Cargo.toml
+            $PYTHON_EXE dev/patch_vendor_crates.py Cargo.toml bindings/r/src/vendor/
+            $PYTHON_EXE dev/prepare_cargo.py isolate bindings/r/src/Cargo.toml
+
+            # Remove main lock file to prevent path conflicts
+            rm -f bindings/r/src/Cargo.lock
+
+            # 4. Final R build
+            echo "Starting R package installation..."
+            cd bindings/r
+            $R_EXE CMD INSTALL --build .
         run: |
+          set -x
           cd fastlowess-feedstock
 
           # Create a new branch
           BRANCH="update-to-v$VERSION"
           git checkout -b "$BRANCH"
 
-          # Update version in meta.yaml
+          # Update version and SHA256 in meta.yaml
           sed -i "s/{% set version = \".*\" %}/{% set version = \"$VERSION\" %}/" recipe/meta.yaml
-
-          # Update SHA256 in meta.yaml
           sed -i "s/sha256: .*/sha256: $SHA256/" recipe/meta.yaml
-
-          # Reset build number to 0 for new version
           sed -i "s/number: .*/number: 0/" recipe/meta.yaml
 
-          # Show the changes
-          echo "=== Updated meta.yaml ==="
-          cat recipe/meta.yaml
-          echo "========================="
+          # Fix R package name in tests
+          sed -i "s/library('fastlowess')/library('rfastlowess')/g" recipe/meta.yaml
+
+          # Add python dependencies to build requirements for R package
+          # Use a single, reliable one-liner for substitution
+          sed -i '/name: r-fastlowess/,/test:/ s/- make  # \[unix\]/- make  # [unix]\n        - python\n        - tomli\n        - tomli-w/' recipe/meta.yaml
+
+          # Save the build script from the env var
+          echo "$BUILD_R_SCRIPT" > recipe/build_r.sh
+          chmod +x recipe/build_r.sh
+
+          # Show the changes for debugging
+          echo "=== Updated meta.yaml (r-fastlowess section) ==="
+          sed -n '/name: r-fastlowess/,/test:/p' recipe/meta.yaml
+          echo "=== Updated build_r.sh ==="
+          cat recipe/build_r.sh
+          echo "=========================="
 
           # Commit changes
-          git add recipe/meta.yaml
+          git add recipe/
           git commit -m "Update to version $VERSION"
+
+      - name: Setup Micromamba
+        uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-name: smithy
+          create-args: >-
+            conda-smithy
+          cache-environment: true
+
+      - name: Rerender feedstock
+        shell: bash -l {0}
+        run: |
+          cd fastlowess-feedstock
+          conda smithy rerender --commit
+          echo "✅ Rerendered successfully!"
 
       - name: Push and create PR
         env:
@@ -150,15 +222,13 @@ jobs:
           - Updated version to $VERSION
           - Updated SHA256 hash
           - Reset build number to 0
+          - Automatically rerendered with conda-smithy
 
           ### Checklist
           - [x] Version updated
           - [x] SHA256 hash updated
           - [x] Build number reset to 0
-
-          ---
-          @conda-forge-admin, please rerender
-          @conda-forge-admin, please ping conda-forge/help-rust"
+          - [x] Feedstock rerendered"
 
           gh pr create \
             --repo conda-forge/fastlowess-feedstock \

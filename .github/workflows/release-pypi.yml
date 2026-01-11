@@ -1,4 +1,4 @@
-name: Release
+name: Release PyPI
 
 on:
   release:
@@ -189,7 +189,7 @@ jobs:
   # ============================================================================
   # PUBLISH TO PYPI
   # ============================================================================
-  publish:
+  release-pypi:
     name: Publish to PyPI
     needs:
       - linux-x86_64
@@ -199,8 +199,8 @@ jobs:
       - windows-x86_64
       - sdist
     runs-on: ubuntu-latest
-    # Only publish on release events (not manual workflow_dispatch)
-    if: github.event_name == 'release'
+    # Only publish on release events or manual workflow_dispatch
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
     environment: pypi
     permissions:
       id-token: write # Required for trusted publishing

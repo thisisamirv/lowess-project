@@ -4,6 +4,14 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to upload assets to (e.g., v0.99.8)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
 
 jobs:
   build-and-upload:
@@ -41,22 +49,24 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           # Rust/Cargo naming: libfastlowess_cpp.so or .dylib
-          mv bindings/cpp/target/release/libfastlowess_cpp.so ${{ matrix.asset_name }} 2>/dev/null || mv bindings/cpp/target/release/libfastlowess_cpp.dylib ${{ matrix.asset_name }}
+          mv target/release/libfastlowess_cpp.so ${{ matrix.asset_name }} 2>/dev/null || mv target/release/libfastlowess_cpp.dylib ${{ matrix.asset_name }}
 
       - name: Prepare Assets (Windows)
         if: runner.os == 'Windows'
         shell: bash
         run: |
           # Windows: fastlowess_cpp.dll
-          mv bindings/cpp/target/release/fastlowess_cpp.dll ${{ matrix.asset_name }}
+          mv target/release/fastlowess_cpp.dll ${{ matrix.asset_name }}
 
       - name: Upload Binaries to Release
         uses: softprops/action-gh-release@v1
         with:
+          tag_name: ${{ github.event.release.tag_name || github.event.inputs.tag }}
           files: ${{ matrix.asset_name }}
 
       - name: Upload Header to Release
         if: matrix.os == 'ubuntu-latest'
         uses: softprops/action-gh-release@v1
         with:
+          tag_name: ${{ github.event.release.tag_name || github.event.inputs.tag }}
           files: bindings/cpp/include/fastlowess.hpp

@@ -274,9 +274,9 @@ def update_julia_project_version(project_path: Path, version: str, quiet: bool =
         
     content = project_path.read_text()
     
-    # Match: version = "X.Y.Z"
-    pattern = r'(version\s*=\s*")[^"]+(")'
-    replacement = rf'\g<1>{version}\g<2>'
+    # Match: version = "X.Y.Z" (start of line)
+    pattern = r'(?m)^version\s*=\s*"([^"]+)"'
+    replacement = rf'version = "{version}"'
     
     new_content, count = re.subn(pattern, replacement, content)
     
@@ -305,9 +305,9 @@ def update_build_tarballs_version(build_path: Path, version: str, quiet: bool = 
         
     content = build_path.read_text()
     
-    # Match: version = v"X.Y.Z"
-    pattern = r'(version\s*=\s*v")[^"]+(")'
-    replacement = rf'\g<1>{version}\g<2>'
+    # Match: version = v"X.Y.Z" (ensuring it's the start of the line to avoid matching preferred_gcc_version)
+    pattern = r'(?m)^version\s*=\s*v"([^"]+)"'
+    replacement = rf'version = v"{version}"'
     
     new_content, count = re.subn(pattern, replacement, content)
     

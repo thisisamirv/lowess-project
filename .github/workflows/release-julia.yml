@@ -1,4 +1,4 @@
-name: Update Yggdrasil (Julia)
+name: Release Julia
 
 on:
   release:
@@ -13,6 +13,10 @@ on:
         description: "Commit hash for this version"
         required: true
         type: string
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   update-yggdrasil:
