@@ -1,6 +1,6 @@
 {
   "name": "fastlowess",
-  "version": "0.99.7",
+  "version": "0.99.8",
   "description": "High-performance LOWESS smoothing for Node.js",
   "main": "index.js",
   "types": "index.d.ts",
@@ -23,13 +23,13 @@
     ]
   },
   "optionalDependencies": {
-    "fastlowess-linux-x64-gnu": "^0.99.7",
-    "fastlowess-linux-arm64-gnu": "^0.99.7",
-    "fastlowess-linux-x64-musl": "^0.99.7",
-    "fastlowess-win32-x64-msvc": "^0.99.7",
-    "fastlowess-win32-arm64-msvc": "^0.99.7",
-    "fastlowess-darwin-x64": "^0.99.7",
-    "fastlowess-darwin-arm64": "^0.99.7"
+    "fastlowess-linux-x64-gnu": "^0.99.8",
+    "fastlowess-linux-arm64-gnu": "^0.99.8",
+    "fastlowess-linux-x64-musl": "^0.99.8",
+    "fastlowess-win32-x64-msvc": "^0.99.8",
+    "fastlowess-win32-arm64-msvc": "^0.99.8",
+    "fastlowess-darwin-x64": "^0.99.8",
+    "fastlowess-darwin-arm64": "^0.99.8"
   },
   "devDependencies": {
     "@napi-rs/cli": "^3.5.1"

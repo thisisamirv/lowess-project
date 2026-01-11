@@ -1,6 +1,6 @@
 {
   "name": "fastlowess-win32-arm64-msvc",
-  "version": "0.99.7",
+  "version": "0.99.8",
   "os": [
     "win32"
   ],

@@ -70,7 +70,7 @@ jobs:
           CONTENT=$(cat lowess-project/dev/build_tarballs_julia.jl)
 
           # Replace Version
-          # "version = v"0.99.7"" -> "version = v"$VERSION""
+          # "version = v"x.y.z"" -> "version = v"$VERSION""
           CONTENT=$(echo "$CONTENT" | sed "s/version = v\"[^\"]*\"/version = v\"$VERSION\"/")
 
           # Replace Commit Hash

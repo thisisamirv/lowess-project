@@ -1,7 +1,7 @@
 name = "fastlowess"
 uuid = "a1b2c3d4-5678-90ab-cdef-1234567890ab"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
-version = "0.99.7"
+version = "0.99.8"
 license = "MIT OR Apache-2.0"
 
 [deps]

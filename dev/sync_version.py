@@ -123,6 +123,11 @@ def main():
         help="Path to Node.js npm subpackages directory",
     )
     parser.add_argument(
+        "-w", "--workflow_file",
+        type=Path,
+        help="Path to GitHub workflow file (e.g. release-julia.yml)",
+    )
+    parser.add_argument(
         "-q", "--quiet",
         action="store_true",
         help="Suppress output",
@@ -151,9 +156,51 @@ def main():
             update_package_json(args.nodejs_package_file, version, args.quiet)
         if args.nodejs_npm_dir:
             update_npm_subpackages(args.nodejs_npm_dir, version, args.quiet)
+        if args.workflow_file:
+            update_workflow_file(args.workflow_file, version, args.quiet)
+            
+        # Always update the dependencies in Cargo.toml itself
+        update_cargo_toml_dependencies(args.cargo_toml, version, args.quiet)
+
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
+
+
+def update_cargo_toml_dependencies(cargo_toml_path: Path, version: str, quiet: bool = False) -> bool:
+    """Update internal dependency versions in Cargo.toml."""
+    content = cargo_toml_path.read_text()
+    
+    # Update lowess/fastLowess dependencies
+    # Match: crate = { ... version = "old_version" }
+    patterns = [
+        r'(lowess\s*=\s*{[^}]*version\s*=\s*")[^"]+(")',
+        r'(fastLowess\s*=\s*{[^}]*version\s*=\s*")[^"]+(")',
+    ]
+    
+    replacement = rf'\g<1>{version}\g<2>'
+    
+    new_content = content
+    count_total = 0
+    
+    for pattern in patterns:
+        new_content, count = re.subn(pattern, replacement, new_content)
+        count_total += count
+    
+    if count_total == 0:
+        if not quiet:
+             print(f"Warning: No lowess/fastLowess dependency patterns found in {cargo_toml_path}")
+        return False
+
+    if new_content != content:
+        cargo_toml_path.write_text(new_content)
+        if not quiet:
+            print(f"Updated Cargo.toml internal dependencies to version {version}")
+        return True
+    else:
+        if not quiet:
+             print(f"Cargo.toml internal dependencies already at version {version}")
+        return False
 
 
 def update_cff_version(cff_path: Path, version: str, quiet: bool = False) -> bool:

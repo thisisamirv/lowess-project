@@ -11,7 +11,7 @@
 using BinaryBuilder, Pkg
 
 name = "fastlowess"
-version = v"0.99.7"
+version = v"0.99.8"
 
 # Source: the lowess-project repository
 # Update the commit hash when releasing a new version
@@ -56,5 +56,5 @@ dependencies = Dependency[]
 build_tarballs(ARGS, name, version, sources, script, platforms, products, dependencies;
     julia_compat="1.6",
     compilers=[:rust, :c],
-    preferred_gcc_version=v"0.99.7",
+    preferred_gcc_version=v"0.99.8",
     lock_microarchitecture=false)

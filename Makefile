@@ -599,7 +599,7 @@ docs-clean:
 # All targets
 # ==============================================================================
 all: lowess fastLowess python r julia nodejs wasm cpp check-msrv
-	@echo "Syncing CITATION.cff..."
+	@echo "Syncing CITATION.cff and Cargo.toml versions..."
 	@dev/sync_version.py Cargo.toml -c CITATION.cff -q
 	@echo "All checks completed successfully!"
 

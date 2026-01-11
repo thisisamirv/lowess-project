@@ -1,0 +1,36 @@
+name: Publish to Crates.io
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  publish-crates:
+    name: Publish Crates
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Publish 'lowess' crate
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          echo "Publishing lowess crate..."
+          cargo publish -p lowess --token $CARGO_REGISTRY_TOKEN
+
+      # Adding a delay to ensure crates.io index propagates the new 'lowess' version
+      # before 'fastLowess' tries to depend on it.
+      - name: Wait for Index Propagation
+        run: sleep 60
+
+      - name: Publish 'fastLowess' crate
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          echo "Publishing fastLowess crate..."
+          cargo publish -p fastLowess --token $CARGO_REGISTRY_TOKEN
