@@ -312,3 +312,66 @@ def smooth_online(
         Result object with smoothed values.
     """
     ...
+
+class StreamingLowess:
+    """Streaming LOWESS processor for incremental chunk-based smoothing."""
+
+    def __init__(
+        self,
+        fraction: float = 0.3,
+        chunk_size: int = 5000,
+        overlap: int | None = None,
+        iterations: int = 3,
+        delta: float | None = None,
+        weight_function: str = "tricube",
+        robustness_method: str = "bisquare",
+        scaling_method: str = "mad",
+        boundary_policy: str = "extend",
+        auto_converge: float | None = None,
+        return_diagnostics: bool = False,
+        return_residuals: bool = False,
+        return_robustness_weights: bool = False,
+        zero_weight_fallback: str = "use_local_mean",
+        parallel: bool = True,
+    ) -> None:
+        """Initialize the streaming processor."""
+        ...
+
+    def process_chunk(self, x: ArrayLike, y: ArrayLike) -> LowessResult:
+        """Process a chunk of data and return smoothed values."""
+        ...
+
+    def finalize(self) -> LowessResult:
+        """Finalize smoothing and return remaining buffered data."""
+        ...
+
+class OnlineLowess:
+    """Online LOWESS processor for real-time data streams."""
+
+    def __init__(
+        self,
+        fraction: float = 0.2,
+        window_capacity: int = 100,
+        min_points: int = 2,
+        iterations: int = 3,
+        delta: float | None = None,
+        weight_function: str = "tricube",
+        robustness_method: str = "bisquare",
+        scaling_method: str = "mad",
+        boundary_policy: str = "extend",
+        update_mode: str = "full",
+        auto_converge: float | None = None,
+        return_robustness_weights: bool = False,
+        zero_weight_fallback: str = "use_local_mean",
+        parallel: bool = False,
+    ) -> None:
+        """Initialize the online processor."""
+        ...
+
+    def update(self, x: float, y: float) -> float | None:
+        """Add a single point and return smoothed value if available."""
+        ...
+
+    def add_points(self, x: ArrayLike, y: ArrayLike) -> LowessResult:
+        """Add multiple points and return smoothed results."""
+        ...

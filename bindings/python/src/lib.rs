@@ -7,6 +7,8 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use std::fmt::Display;
 
+use ::fastLowess::internals::adapters::online::ParallelOnlineLowess;
+use ::fastLowess::internals::adapters::streaming::ParallelStreamingLowess;
 use ::fastLowess::internals::api::{
     BoundaryPolicy, RobustnessMethod, ScalingMethod, UpdateMode, WeightFunction, ZeroWeightFallback,
 };
@@ -774,6 +776,250 @@ fn smooth_online<'py>(
     Ok(PyLowessResult { inner: result })
 }
 
+/// Streaming LOWESS processor for incremental chunk-based smoothing.
+#[pyclass(name = "StreamingLowess")]
+pub struct PyStreamingLowess {
+    inner: ParallelStreamingLowess<f64>,
+}
+
+#[pymethods]
+impl PyStreamingLowess {
+    #[new]
+    #[pyo3(signature = (
+        fraction=0.3,
+        chunk_size=5000,
+        overlap=None,
+        iterations=3,
+        delta=None,
+        weight_function="tricube",
+        robustness_method="bisquare",
+        scaling_method="mad",
+        boundary_policy="extend",
+        auto_converge=None,
+        return_diagnostics=false,
+        return_residuals=false,
+        return_robustness_weights=false,
+        zero_weight_fallback="use_local_mean",
+        parallel=true
+    ))]
+    #[allow(clippy::too_many_arguments)]
+    fn new(
+        fraction: f64,
+        chunk_size: usize,
+        overlap: Option<usize>,
+        iterations: usize,
+        delta: Option<f64>,
+        weight_function: &str,
+        robustness_method: &str,
+        scaling_method: &str,
+        boundary_policy: &str,
+        auto_converge: Option<f64>,
+        return_diagnostics: bool,
+        return_residuals: bool,
+        return_robustness_weights: bool,
+        zero_weight_fallback: &str,
+        parallel: bool,
+    ) -> PyResult<Self> {
+        let wf = parse_weight_function(weight_function)?;
+        let rm = parse_robustness_method(robustness_method)?;
+        let sm = parse_scaling_method(scaling_method)?;
+        let zwf = parse_zero_weight_fallback(zero_weight_fallback)?;
+        let bp = parse_boundary_policy(boundary_policy)?;
+
+        let mut builder = LowessBuilder::<f64>::new();
+        builder = builder.fraction(fraction);
+        builder = builder.iterations(iterations);
+        builder = builder.weight_function(wf);
+        builder = builder.robustness_method(rm);
+        builder = builder.scaling_method(sm);
+        builder = builder.zero_weight_fallback(zwf);
+        builder = builder.boundary_policy(bp);
+
+        if return_diagnostics {
+            builder = builder.return_diagnostics();
+        }
+        if return_residuals {
+            builder = builder.return_residuals();
+        }
+        if return_robustness_weights {
+            builder = builder.return_robustness_weights();
+        }
+
+        let overlap_size = overlap.unwrap_or_else(|| {
+            let default = chunk_size / 10;
+            default.min(chunk_size.saturating_sub(10)).max(1)
+        });
+
+        let mut streaming_builder = builder.adapter(Streaming);
+        streaming_builder = streaming_builder.chunk_size(chunk_size);
+        streaming_builder = streaming_builder.overlap(overlap_size);
+        streaming_builder = streaming_builder.parallel(parallel);
+
+        if let Some(d) = delta {
+            streaming_builder = streaming_builder.delta(d);
+        }
+        if let Some(tol) = auto_converge {
+            streaming_builder = streaming_builder.auto_converge(tol);
+        }
+
+        let processor = streaming_builder.build().map_err(to_py_error)?;
+        Ok(PyStreamingLowess { inner: processor })
+    }
+
+    /// Process a chunk of data.
+    fn process_chunk<'py>(
+        &mut self,
+        x: PyReadonlyArray1<'py, f64>,
+        y: PyReadonlyArray1<'py, f64>,
+    ) -> PyResult<PyLowessResult> {
+        let x_slice = x.as_slice().map_err(to_py_error)?;
+        let y_slice = y.as_slice().map_err(to_py_error)?;
+
+        let result = self
+            .inner
+            .process_chunk(x_slice, y_slice)
+            .map_err(to_py_error)?;
+        Ok(PyLowessResult { inner: result })
+    }
+
+    /// Finalize smoothing and return remaining buffered data.
+    fn finalize(&mut self) -> PyResult<PyLowessResult> {
+        let result = self.inner.finalize().map_err(to_py_error)?;
+        Ok(PyLowessResult { inner: result })
+    }
+}
+
+/// Online LOWESS processor for real-time data streams.
+#[pyclass(name = "OnlineLowess")]
+pub struct PyOnlineLowess {
+    inner: ParallelOnlineLowess<f64>,
+    fraction: f64,
+    iterations: usize,
+}
+
+#[pymethods]
+impl PyOnlineLowess {
+    #[new]
+    #[pyo3(signature = (
+        fraction=0.2,
+        window_capacity=100,
+        min_points=2,
+        iterations=3,
+        delta=None,
+        weight_function="tricube",
+        robustness_method="bisquare",
+        scaling_method="mad",
+        boundary_policy="extend",
+        update_mode="full",
+        auto_converge=None,
+        return_robustness_weights=false,
+        zero_weight_fallback="use_local_mean",
+        parallel=false
+    ))]
+    #[allow(clippy::too_many_arguments)]
+    fn new(
+        fraction: f64,
+        window_capacity: usize,
+        min_points: usize,
+        iterations: usize,
+        delta: Option<f64>,
+        weight_function: &str,
+        robustness_method: &str,
+        scaling_method: &str,
+        boundary_policy: &str,
+        update_mode: &str,
+        auto_converge: Option<f64>,
+        return_robustness_weights: bool,
+        zero_weight_fallback: &str,
+        parallel: bool,
+    ) -> PyResult<Self> {
+        let wf = parse_weight_function(weight_function)?;
+        let rm = parse_robustness_method(robustness_method)?;
+        let sm = parse_scaling_method(scaling_method)?;
+        let bp = parse_boundary_policy(boundary_policy)?;
+        let zwf = parse_zero_weight_fallback(zero_weight_fallback)?;
+        let um = parse_update_mode(update_mode)?;
+
+        let mut builder = LowessBuilder::<f64>::new();
+        builder = builder.fraction(fraction);
+        builder = builder.iterations(iterations);
+        builder = builder.weight_function(wf);
+        builder = builder.robustness_method(rm);
+        builder = builder.scaling_method(sm);
+        builder = builder.zero_weight_fallback(zwf);
+        builder = builder.boundary_policy(bp);
+
+        let mut online_builder = builder.adapter(Online);
+        online_builder = online_builder.window_capacity(window_capacity);
+        online_builder = online_builder.min_points(min_points);
+        online_builder = online_builder.update_mode(um);
+        online_builder = online_builder.parallel(parallel);
+
+        if let Some(d) = delta {
+            online_builder = online_builder.delta(d);
+        }
+        if let Some(tol) = auto_converge {
+            online_builder = online_builder.auto_converge(tol);
+        }
+        if return_robustness_weights {
+            online_builder = online_builder.return_robustness_weights(true);
+        }
+
+        let processor = online_builder.build().map_err(to_py_error)?;
+        Ok(PyOnlineLowess {
+            inner: processor,
+            fraction,
+            iterations,
+        })
+    }
+
+    /// Add a single point and return smoothed value if enough points are available.
+    fn update(&mut self, x: f64, y: f64) -> PyResult<Option<f64>> {
+        let result = self.inner.add_point(x, y).map_err(to_py_error)?;
+        Ok(result.map(|o| o.smoothed))
+    }
+
+    /// Add multiple points.
+    fn add_points<'py>(
+        &mut self,
+        x: PyReadonlyArray1<'py, f64>,
+        y: PyReadonlyArray1<'py, f64>,
+    ) -> PyResult<PyLowessResult> {
+        let x_slice = x.as_slice().map_err(to_py_error)?;
+        let y_slice = y.as_slice().map_err(to_py_error)?;
+
+        let outputs = self
+            .inner
+            .add_points(x_slice, y_slice)
+            .map_err(to_py_error)?;
+
+        // Extract smoothed values
+        let smoothed: Vec<f64> = outputs
+            .into_iter()
+            .zip(y_slice.iter())
+            .map(|(opt, &original_y)| opt.map_or(original_y, |o| o.smoothed))
+            .collect();
+
+        Ok(PyLowessResult {
+            inner: LowessResult {
+                x: x_slice.to_vec(),
+                y: smoothed,
+                standard_errors: None,
+                confidence_lower: None,
+                confidence_upper: None,
+                prediction_lower: None,
+                prediction_upper: None,
+                residuals: None,
+                robustness_weights: None,
+                diagnostics: None,
+                iterations_used: Some(self.iterations),
+                fraction_used: self.fraction,
+                cv_scores: None,
+            },
+        })
+    }
+}
+
 // ============================================================================
 // Module Registration
 // ============================================================================
@@ -782,6 +1028,8 @@ fn smooth_online<'py>(
 fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyLowessResult>()?;
     m.add_class::<PyDiagnostics>()?;
+    m.add_class::<PyStreamingLowess>()?;
+    m.add_class::<PyOnlineLowess>()?;
     m.add_function(wrap_pyfunction!(smooth, m)?)?;
     m.add_function(wrap_pyfunction!(smooth_streaming, m)?)?;
     m.add_function(wrap_pyfunction!(smooth_online, m)?)?;

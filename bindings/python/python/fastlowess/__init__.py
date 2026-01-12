@@ -14,6 +14,8 @@ from ._core import (
     smooth_online,
     LowessResult,
     Diagnostics,
+    OnlineLowess,
+    StreamingLowess,
 )
 
 __all__ = [
@@ -22,5 +24,7 @@ __all__ = [
     "smooth_online",
     "LowessResult",
     "Diagnostics",
+    "OnlineLowess",
+    "StreamingLowess",
     "__version__",
 ]
