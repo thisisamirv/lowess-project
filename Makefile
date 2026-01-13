@@ -98,13 +98,6 @@ lowess:
 		cargo test -q -p lowess-project-tests --test $(LOWESS_PKG) --features $$feature || exit 1; \
 	done
 	@echo "=============================================================================="
-	@echo "4. Examples..."
-	@echo "=============================================================================="
-	@for example in $(LOWESS_EXAMPLES); do \
-		echo "Running example: $$example"; \
-		cargo run -q -p examples --example $$example --features dev || exit 1; \
-	done
-	@echo "=============================================================================="
 	@echo "All $(LOWESS_PKG) crate checks completed successfully!"
 
 lowess-coverage:
@@ -159,19 +152,6 @@ fastLowess:
 		fi; \
 	done
 	@echo "=============================================================================="
-	@echo "4. Examples..."
-	@echo "=============================================================================="
-	@for feature in $(FASTLOWESS_FEATURES); do \
-		echo "Running examples with feature: $$feature"; \
-		for example in $(FASTLOWESS_EXAMPLES); do \
-			if [ "$$feature" = "dev" ]; then \
-				cargo run -q -p examples --example $$example --features $$feature || exit 1; \
-			else \
-				cargo run -q -p examples --example $$example --features $$feature > /dev/null || exit 1; \
-			fi; \
-		done; \
-	done
-	@echo "=============================================================================="
 	@echo "All $(FASTLOWESS_PKG) crate checks completed successfully!"
 
 fastLowess-coverage:
@@ -191,10 +171,6 @@ fastLowess-clean:
 # ==============================================================================
 python:
 	@echo "Running $(PY_PKG) checks..."
-	@echo "=============================================================================="
-	@echo "0. Version Sync..."
-	@echo "=============================================================================="
-	@dev/sync_version.py Cargo.toml -p $(PY_DIR)/python/fastlowess/__version__.py -q
 	@echo "=============================================================================="
 	@echo "1. Formatting..."
 	@echo "=============================================================================="
@@ -219,14 +195,6 @@ python:
 	@echo "=============================================================================="
 	@VIRTUAL_ENV= PYO3_PYTHON=python3 cargo test -q -p $(PY_PKG)
 	@. $(PY_VENV)/bin/activate && python -m pytest $(PY_TEST_DIR) -q
-	@echo "=============================================================================="
-	@echo "6. Examples..."
-	@echo "=============================================================================="
-	@. $(PY_VENV)/bin/activate && pip install -q matplotlib
-	@. $(PY_VENV)/bin/activate && python $(EXAMPLES_DIR)/python/batch_smoothing.py
-	@. $(PY_VENV)/bin/activate && python $(EXAMPLES_DIR)/python/streaming_smoothing.py
-	@. $(PY_VENV)/bin/activate && python $(EXAMPLES_DIR)/python/online_smoothing.py
-	@echo "=============================================================================="
 	@echo "$(PY_PKG) checks completed successfully!"
 
 python-coverage:
@@ -266,24 +234,13 @@ r:
 	@echo "=============================================================================="
 	@cp $(R_DIR)/src/Cargo.toml $(R_DIR)/src/Cargo.toml.orig
 	@# Extract values from root Cargo.toml [workspace.package] section and update R binding's Cargo.toml
-	@WS_EDITION=$$(grep 'edition = ' Cargo.toml | head -1 | sed 's/.*edition = "\([^"]*\)".*/\1/'); \
-	WS_VERSION=$$(grep 'version = ' Cargo.toml | head -1 | sed 's/.*version = "\([^"]*\)".*/\1/'); \
-	WS_AUTHORS=$$(grep 'authors = ' Cargo.toml | head -1 | sed 's/.*authors = \[\(.*\)\]/\1/'); \
-	WS_LICENSE=$$(grep 'license = ' Cargo.toml | head -1 | sed 's/.*license = "\([^"]*\)".*/\1/'); \
-	WS_RUST_VERSION=$$(grep 'rust-version = ' Cargo.toml | head -1 | sed 's/.*rust-version = "\([^"]*\)".*/\1/'); \
-	WS_EXTENDR=$$(grep 'extendr-api = ' Cargo.toml | head -1 | sed 's/.*extendr-api = "\([^"]*\)".*/\1/'); \
-	sed -i "s/^version = \".*\"/version = \"$$WS_VERSION\"/" $(R_DIR)/src/Cargo.toml; \
-	sed -i "s/^edition = \".*\"/edition = \"$$WS_EDITION\"/" $(R_DIR)/src/Cargo.toml; \
-	sed -i "s/^authors = \\[.*\\]/authors = [$$WS_AUTHORS]/" $(R_DIR)/src/Cargo.toml; \
-	sed -i "s/^license = \".*\"/license = \"$$WS_LICENSE\"/" $(R_DIR)/src/Cargo.toml; \
-	sed -i "s/^rust-version = \".*\"/rust-version = \"$$WS_RUST_VERSION\"/" $(R_DIR)/src/Cargo.toml; \
-	sed -i "s/^extendr-api = \".*\"/extendr-api = \"$$WS_EXTENDR\"/" $(R_DIR)/src/Cargo.toml; \
-	sed -i '/^\[workspace\]/d' $(R_DIR)/src/Cargo.toml; \
+	@# Metadata sync disabled by user request
+	@# (Only cleaning up workspace/patch/vendor directives below)
+	@sed -i '/^\[workspace\]/d' $(R_DIR)/src/Cargo.toml; \
 	sed -i '/^\[patch\.crates-io\]/d' $(R_DIR)/src/Cargo.toml; \
 	sed -i '/^lowess = { path = "vendor\/lowess" }/d' $(R_DIR)/src/Cargo.toml; \
 	rm -rf $(R_DIR)/*.Rcheck $(R_DIR)/*.BiocCheck $(R_DIR)/src/target $(R_DIR)/target $(R_DIR)/src/vendor; \
 	echo "" >> $(R_DIR)/src/Cargo.toml
-	@dev/sync_version.py Cargo.toml -r $(R_DIR)/inst/CITATION -d $(R_DIR)/DESCRIPTION -q
 	@mkdir -p $(R_DIR)/src/.cargo && cp $(R_DIR)/src/cargo-config.toml $(R_DIR)/src/.cargo/config.toml
 	@echo "Patched $(R_DIR)/src/Cargo.toml"
 	@echo "=============================================================================="
@@ -368,13 +325,7 @@ r:
 	@echo "Package size (Limit: 5MB):"
 	@ls -lh $(R_DIR)/$(R_PKG_TARBALL) || true
 	@if [ -f $(R_DIR)/src/Cargo.toml.orig ]; then mv $(R_DIR)/src/Cargo.toml.orig $(R_DIR)/src/Cargo.toml; fi
-	@echo "=============================================================================="
-	@echo "10. Examples..."
-	@echo "=============================================================================="
-	@Rscript $(EXAMPLES_DIR)/r/batch_smoothing.R
-	@Rscript $(EXAMPLES_DIR)/r/streaming_smoothing.R
-	@Rscript $(EXAMPLES_DIR)/r/online_smoothing.R
-	@echo "=============================================================================="
+
 	@echo "All $(R_PKG_NAME) checks completed successfully!"
 
 r-coverage:
@@ -406,9 +357,8 @@ r-clean:
 julia:
 	@echo "Running $(JL_PKG) checks..."
 	@echo "=============================================================================="
-	@echo "0. Version Sync and commit hash update..."
+	@echo "0. Commit hash update..."
 	@echo "=============================================================================="
-	@dev/sync_version.py Cargo.toml -j $(JL_DIR)/julia/Project.toml -b dev/build_tarballs_julia.jl -q
 	@git fetch origin main 2>/dev/null || true
 	@COMMIT=$$(git rev-parse origin/main 2>/dev/null) && \
 		sed -i "s/GitSource(\"[^\"]*\",\\s*\"[a-f0-9]\\+\")/GitSource(\"https:\\/\\/github.com\\/thisisamirv\\/lowess-project.git\", \"$$COMMIT\")/" dev/build_tarballs_julia.jl && \
@@ -448,13 +398,6 @@ julia:
 	@echo "=============================================================================="
 	@julia --project=$(JL_DIR)/julia -e 'using Pkg; Pkg.instantiate()'
 	@julia --project=$(JL_DIR)/julia tests/julia/test_fastlowess.jl
-	@echo "=============================================================================="
-	@echo "7. Running examples..."
-	@echo "=============================================================================="
-	@julia --project=$(JL_DIR)/julia $(EXAMPLES_DIR)/julia/batch_smoothing.jl
-	@julia --project=$(JL_DIR)/julia $(EXAMPLES_DIR)/julia/streaming_smoothing.jl
-	@julia --project=$(JL_DIR)/julia $(EXAMPLES_DIR)/julia/online_smoothing.jl
-	@echo "=============================================================================="
 	@echo "$(JL_PKG) checks completed successfully!"
 	@echo ""
 	@echo "To use in Julia:"
@@ -474,10 +417,6 @@ julia-clean:
 nodejs:
 	@echo "Running $(NODE_PKG) checks..."
 	@echo "=============================================================================="
-	@echo "0. Version Sync..."
-	@echo "=============================================================================="
-	@dev/sync_version.py Cargo.toml -n $(NODE_DIR)/package.json -N $(NODE_DIR)/npm -q
-	@echo "=============================================================================="
 	@echo "1. Formatting..."
 	@echo "=============================================================================="
 	@cargo fmt -p $(NODE_PKG) -- --check
@@ -490,13 +429,6 @@ nodejs:
 	@echo "3. Testing..."
 	@echo "=============================================================================="
 	@cd $(NODE_DIR) && npm test
-	@echo "=============================================================================="
-	@echo "4. Examples..."
-	@echo "=============================================================================="
-	@cd $(NODE_DIR) && node ../../$(EXAMPLES_DIR)/nodejs/batch_smoothing.js
-	@cd $(NODE_DIR) && node ../../$(EXAMPLES_DIR)/nodejs/online_smoothing.js
-	@cd $(NODE_DIR) && node ../../$(EXAMPLES_DIR)/nodejs/streaming_smoothing.js
-	@echo "=============================================================================="
 	@echo "$(NODE_PKG) checks completed successfully!"
 
 nodejs-clean:
@@ -551,8 +483,89 @@ cpp:
 	@cargo clippy -q -p $(CPP_PKG) --all-targets -- -D warnings
 	@cargo build -q -p $(CPP_PKG) --release
 	@echo "C header generated at $(CPP_DIR)/include/fastlowess.h"
+	@echo "$(CPP_PKG) checks completed successfully!"
+
+cpp-clean:
+	@echo "Cleaning $(CPP_PKG)..."
+	@cargo clean -p $(CPP_PKG)
+	@rm -rf $(CPP_DIR)/include/fastlowess.h $(CPP_DIR)/bin
+	@echo "$(CPP_PKG) clean complete!"
+
+# ==============================================================================
+# Examples
+# ==============================================================================
+examples: examples-lowess examples-fastLowess examples-python examples-r examples-julia examples-nodejs examples-cpp
+	@echo "All examples completed successfully!"
+
+examples-lowess:
+	@echo "Running $(LOWESS_PKG) examples..."
 	@echo "=============================================================================="
-	@echo "3. Examples..."
+	@echo "Running examples (no-default-features)..."
+	@for example in $(LOWESS_EXAMPLES); do \
+		cargo run -q -p examples --example $$example --no-default-features || exit 1; \
+	done
+	@for feature in $(LOWESS_FEATURES); do \
+		echo "Running examples ($$feature)..."; \
+		for example in $(LOWESS_EXAMPLES); do \
+			cargo run -q -p examples --example $$example --features $$feature || exit 1; \
+		done; \
+	done
+	@echo "=============================================================================="
+
+examples-fastLowess:
+	@echo "Running $(FASTLOWESS_PKG) examples..."
+	@echo "=============================================================================="
+	@echo "Running examples (no-default-features)..."
+	@for example in $(FASTLOWESS_EXAMPLES); do \
+		cargo run -q -p examples --example $$example --no-default-features > /dev/null || exit 1; \
+	done
+	@for feature in $(FASTLOWESS_FEATURES); do \
+		echo "Running examples with feature: $$feature"; \
+		for example in $(FASTLOWESS_EXAMPLES); do \
+			if [ "$$feature" = "dev" ]; then \
+				cargo run -q -p examples --example $$example --features $$feature || exit 1; \
+			else \
+				cargo run -q -p examples --example $$example --features $$feature > /dev/null || exit 1; \
+			fi; \
+		done; \
+	done
+	@echo "=============================================================================="
+
+examples-python:
+	@echo "Running $(PY_PKG) examples..."
+	@echo "=============================================================================="
+	@. $(PY_VENV)/bin/activate && pip install -q matplotlib
+	@. $(PY_VENV)/bin/activate && python $(EXAMPLES_DIR)/python/batch_smoothing.py
+	@. $(PY_VENV)/bin/activate && python $(EXAMPLES_DIR)/python/streaming_smoothing.py
+	@. $(PY_VENV)/bin/activate && python $(EXAMPLES_DIR)/python/online_smoothing.py
+	@echo "=============================================================================="
+
+examples-r:
+	@echo "Running $(R_PKG_NAME) examples..."
+	@echo "=============================================================================="
+	@Rscript $(EXAMPLES_DIR)/r/batch_smoothing.R
+	@Rscript $(EXAMPLES_DIR)/r/streaming_smoothing.R
+	@Rscript $(EXAMPLES_DIR)/r/online_smoothing.R
+	@echo "=============================================================================="
+
+examples-julia:
+	@echo "Running $(JL_PKG) examples..."
+	@echo "=============================================================================="
+	@julia --project=$(JL_DIR)/julia $(EXAMPLES_DIR)/julia/batch_smoothing.jl
+	@julia --project=$(JL_DIR)/julia $(EXAMPLES_DIR)/julia/streaming_smoothing.jl
+	@julia --project=$(JL_DIR)/julia $(EXAMPLES_DIR)/julia/online_smoothing.jl
+	@echo "=============================================================================="
+
+examples-nodejs:
+	@echo "Running $(NODE_PKG) examples..."
+	@echo "=============================================================================="
+	@cd $(NODE_DIR) && node ../../$(EXAMPLES_DIR)/nodejs/batch_smoothing.js
+	@cd $(NODE_DIR) && node ../../$(EXAMPLES_DIR)/nodejs/online_smoothing.js
+	@cd $(NODE_DIR) && node ../../$(EXAMPLES_DIR)/nodejs/streaming_smoothing.js
+	@echo "=============================================================================="
+
+examples-cpp:
+	@echo "Running $(CPP_PKG) examples..."
 	@echo "=============================================================================="
 	@mkdir -p $(CPP_DIR)/bin
 	@g++ -O3 $(EXAMPLES_DIR)/cpp/batch_smoothing.cpp -o $(CPP_DIR)/bin/batch_smoothing -I$(CPP_DIR)/include -Ltarget/release -lfastlowess_cpp -lpthread -ldl -lm
@@ -562,13 +575,6 @@ cpp:
 	@LD_LIBRARY_PATH=target/release $(CPP_DIR)/bin/streaming_smoothing
 	@LD_LIBRARY_PATH=target/release $(CPP_DIR)/bin/online_smoothing
 	@echo "=============================================================================="
-	@echo "$(CPP_PKG) checks completed successfully!"
-
-cpp-clean:
-	@echo "Cleaning $(CPP_PKG)..."
-	@cargo clean -p $(CPP_PKG)
-	@rm -rf $(CPP_DIR)/include/fastlowess.h $(CPP_DIR)/bin
-	@echo "$(CPP_PKG) clean complete!"
 
 # ==============================================================================
 # Development checks
@@ -599,8 +605,6 @@ docs-clean:
 # All targets
 # ==============================================================================
 all: lowess fastLowess python r julia nodejs wasm cpp check-msrv
-	@echo "Syncing CITATION.cff and Cargo.toml versions..."
-	@dev/sync_version.py Cargo.toml -c CITATION.cff -q
 	@echo "All checks completed successfully!"
 
 all-coverage: lowess-coverage fastLowess-coverage python-coverage r-coverage
@@ -609,7 +613,7 @@ all-coverage: lowess-coverage fastLowess-coverage python-coverage r-coverage
 all-clean: r-clean lowess-clean fastLowess-clean python-clean julia-clean nodejs-clean wasm-clean cpp-clean
 	@echo "Cleaning project root..."
 	@cargo clean
-	@rm -rf target Cargo.lock .venv .ruff_cache .pytest_cache site docs-venv build
+	@rm -rf target Cargo.lock .venv .ruff_cache .pytest_cache site docs-venv build bindings/python/.venv bindings/python/target crates/fastLowess/target crates/lowess/target .vscode
 	@echo "All clean completed!"
 
-.PHONY: lowess lowess-coverage lowess-clean fastLowess fastLowess-coverage fastLowess-clean python python-coverage python-clean r r-coverage r-clean julia julia-clean julia-update-commit nodejs nodejs-clean wasm wasm-clean cpp cpp-clean check-msrv docs docs-serve docs-clean all all-coverage all-clean
+.PHONY: lowess lowess-coverage lowess-clean fastLowess fastLowess-coverage fastLowess-clean python python-coverage python-clean r r-coverage r-clean julia julia-clean julia-update-commit nodejs nodejs-clean wasm wasm-clean cpp cpp-clean check-msrv docs docs-serve docs-clean all all-coverage all-clean examples examples-lowess examples-fastLowess examples-python examples-r examples-julia examples-nodejs examples-cpp

@@ -1,8 +1,16 @@
 name = "fastlowess"
 uuid = "a1b2c3d4-5678-90ab-cdef-1234567890ab"
+version = "0.99.9"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
-version = "0.99.8"
+edition = "2024"
 license = "MIT OR Apache-2.0"
+repository = "https://github.com/thisisamirv/lowess-project"
+homepage = "https://github.com/thisisamirv/lowess-project"
+rust-version = "1.85.0"
+readme = "README.md"
+description = "High-performance LOWESS (Locally Weighted Scatterplot Smoothing)"
+keywords = ["lowess", "smoothing", "statistics", "regression", "bioinformatics"]
+categories = ["science", "algorithms"]
 
 [deps]
 # TODO: fastlowess_jll will be added once the package is registered

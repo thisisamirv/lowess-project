@@ -1,15 +1,19 @@
 [package]
 name = "fastlowess-jl"
-version = { workspace = true }
-authors = { workspace = true }
-edition = { workspace = true }
-license = { workspace = true }
-rust-version = { workspace = true }
+version = "0.99.9"
+authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
+edition = "2024"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/thisisamirv/lowess-project"
+homepage = "https://github.com/thisisamirv/lowess-project"
+rust-version = "1.88"
 readme = "README.md"
-publish = false
+description = "High-performance LOWESS (Locally Weighted Scatterplot Smoothing)"
+keywords = ["lowess", "smoothing", "statistics", "regression", "bioinformatics"]
+categories = ["science", "algorithms"]
 
 [dependencies]
-fastLowess = { workspace = true, features = ["dev", "cpu"] }
+fastLowess = { version = "0.99.8", features = ["dev", "cpu"] }
 
 [lib]
 name = "fastlowess_jl"

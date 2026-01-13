@@ -301,18 +301,22 @@ pub fn smooth(
                 .map(|val| val.as_f64().unwrap_or(0.0))
                 .collect();
 
-            let cv_method = if let Ok(m) = Reflect::get(&options, &JsValue::from_str("cvMethod"))
-                && let Some(val) = m.as_string()
-            {
-                val
+            let cv_method = if let Ok(m) = Reflect::get(&options, &JsValue::from_str("cvMethod")) {
+                if let Some(val) = m.as_string() {
+                    val
+                } else {
+                    "kfold".to_string()
+                }
             } else {
                 "kfold".to_string()
             };
 
-            let cv_k = if let Ok(k) = Reflect::get(&options, &JsValue::from_str("cvK"))
-                && let Some(val) = k.as_f64()
-            {
-                val as usize
+            let cv_k = if let Ok(k) = Reflect::get(&options, &JsValue::from_str("cvK")) {
+                if let Some(val) = k.as_f64() {
+                    val as usize
+                } else {
+                    5
+                }
             } else {
                 5
             };

@@ -1,16 +1,24 @@
 [package]
 name = "lowess-project-tests"
 version = "0.0.0"
+authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
-publish = false
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/thisisamirv/lowess-project"
+homepage = "https://github.com/thisisamirv/lowess-project"
+rust-version = "1.88"
+readme = "README.md"
+description = "High-performance LOWESS (Locally Weighted Scatterplot Smoothing)"
+keywords = ["lowess", "smoothing", "statistics", "regression", "bioinformatics"]
+categories = ["science", "algorithms"]
 
 [dependencies]
 lowess = { path = "../crates/lowess", features = ["dev"] }
 fastLowess = { path = "../crates/fastLowess", features = ["dev"] }
-approx = { workspace = true }
-ndarray = { workspace = true }
-num-traits = { workspace = true }
-rayon = { workspace = true }
+approx = "0.5.1"
+ndarray = { version = "0.17.1", default-features = false }
+num-traits = { version = "0.2.19", default-features = false }
+rayon = { version = "1.11.0" }
 
 [features]
 default = ["dev"]

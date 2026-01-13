@@ -1,8 +1,12 @@
 TARGET_DIR = ../target
-LIBDIR = $(TARGET_DIR)/x86_64-pc-windows-gnu/release
+
+# Windows R always uses MinGW-GCC (both Rtools and Conda R)
+# So we always target x86_64-pc-windows-gnu
+RUST_TARGET = x86_64-pc-windows-gnu
+LIBDIR = $(TARGET_DIR)/$(RUST_TARGET)/release
 STATLIB = $(LIBDIR)/librfastlowess.a
 
-# Windows linking with Rust std lib dependencies
+# GNU-style linking for MinGW
 PKG_LIBS = -L$(LIBDIR) -Wl,--whole-archive -lrfastlowess -Wl,--no-whole-archive -lws2_32 -luserenv -ladvapi32 -lbcrypt -lncrypt -lntdll -Wl,--export-all-symbols
 
 all: clean $(SHLIB)
@@ -14,13 +18,13 @@ $(STATLIB):
 	rustc --version
 	# Extract vendored dependencies if archive exists and vendor dir doesn't
 	if [ -f vendor.tar.xz ] && [ ! -d vendor ]; then \
-		tar --extract --xz -f vendor.tar.xz; \
+		tar --extract --xz -f vendor.tar.xz || tar -xf vendor.tar.xz; \
 	fi
 	# Create .cargo/config.toml from non-hidden source (avoids R CMD check NOTE)
 	@mkdir -p .cargo
 	@cp cargo-config.toml .cargo/config.toml
 	@mkdir -p $(TARGET_DIR)
-	cargo build --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR) --target x86_64-pc-windows-gnu
+	cargo build --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR) --target $(RUST_TARGET)
 
 clean:
 	rm -Rf $(SHLIB) $(STATLIB) $(OBJECTS)

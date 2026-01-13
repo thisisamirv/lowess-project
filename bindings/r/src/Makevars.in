@@ -1,6 +1,6 @@
 # Silencing is handled by @ prefix on commands
 TARGET_DIR = @TARGET_DIR@
-LIBDIR = $(TARGET_DIR)/release
+LIBDIR = @LIBDIR@
 STATLIB = $(LIBDIR)/librfastlowess.a
 
 # Linking flags (substituted by configure)

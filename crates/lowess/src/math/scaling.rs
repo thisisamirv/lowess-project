@@ -73,7 +73,7 @@ impl ScalingMethod {
 
         let mid = n / 2;
 
-        if n % 2 == 0 {
+        if n.is_multiple_of(2) {
             // Even length: average of two middle values
             vals.select_nth_unstable_by(mid, |a, b| a.partial_cmp(b).unwrap_or(Equal));
             let upper = vals[mid];

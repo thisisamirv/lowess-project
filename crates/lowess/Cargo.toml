@@ -1,23 +1,17 @@
 [package]
 name = "lowess"
-version = { workspace = true }
-authors = { workspace = true }
-edition = { workspace = true }
-license = { workspace = true }
-rust-version = { workspace = true }
-
-# Metadata
-description = { workspace = true }
+version = "0.99.8"
+authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
+edition = "2024"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/thisisamirv/lowess-project"
+homepage = "https://github.com/thisisamirv/lowess-project"
+rust-version = "1.88"
 readme = "README.md"
-
-# Links
-repository = { workspace = true }
+description = "High-performance LOWESS (Locally Weighted Scatterplot Smoothing)"
+keywords = ["lowess", "smoothing", "statistics", "regression", "bioinformatics"]
+categories = ["science", "algorithms"]
 documentation = "https://lowess.readthedocs.io/"
-homepage = { workspace = true }
-
-# Categories
-keywords = { workspace = true }
-categories = { workspace = true }
 
 # Build
 include = [
@@ -29,11 +23,11 @@ include = [
 ]
 
 [dependencies]
-num-traits = { workspace = true, features = ["libm"] }
-wide = { workspace = true }
+num-traits = { version = "0.2.19", features = ["libm"] }
+wide = { version = "0.7.33", default-features = false }
 
 [dev-dependencies]
-approx = { workspace = true }
+approx = "0.5.1"
 
 [features]
 default = ["std"]

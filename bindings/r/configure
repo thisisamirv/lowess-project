@@ -62,14 +62,26 @@ if [ "$IS_WASM" = "1" ]; then
     UNDEFINED_FLAGS="-s SIDE_MODULE=2 -L${WASM_LIBDIR} -lrfastlowess -s EXPORT_ALL=0 -s ERROR_ON_UNDEFINED_SYMBOLS=0 -s EXPORTED_FUNCTIONS=['_R_init_rfastlowess_extendr'] -s ASSERTIONS=0"
 elif [ "$UNAME" = "Darwin" ]; then
     echo "Configuring for macOS..."
+    # Detect if CARGO_BUILD_TARGET is set (Conda sets this)
+    if [ -n "$CARGO_BUILD_TARGET" ]; then
+        LIBDIR="${TARGET_DIR}/${CARGO_BUILD_TARGET}/release"
+    else
+        LIBDIR="${TARGET_DIR}/release"
+    fi
     # On macOS, use -force_load with explicit path to include only needed symbols
     GC_SECTIONS=""
-    UNDEFINED_FLAGS="-Wl,-force_load,${TARGET_DIR}/release/librfastlowess.a"
+    UNDEFINED_FLAGS="-Wl,-force_load,${LIBDIR}/librfastlowess.a"
 else
     echo "Configuring for Linux/Unix..."
+    # Detect if CARGO_BUILD_TARGET is set (Conda sets this)
+    if [ -n "$CARGO_BUILD_TARGET" ]; then
+        LIBDIR="${TARGET_DIR}/${CARGO_BUILD_TARGET}/release"
+    else
+        LIBDIR="${TARGET_DIR}/release"
+    fi
     # Default to Linux flags - use whole-archive to include all symbols
     GC_SECTIONS=""
-    UNDEFINED_FLAGS="-Wl,--whole-archive,${TARGET_DIR}/release/librfastlowess.a -Wl,--no-whole-archive"
+    UNDEFINED_FLAGS="-Wl,--whole-archive,${LIBDIR}/librfastlowess.a -Wl,--no-whole-archive"
 fi
 
 # Check if template exists
@@ -82,6 +94,7 @@ fi
 sed -e "s|@GC_SECTIONS@|${GC_SECTIONS}|g" \
     -e "s|@UNDEFINED_FLAGS@|${UNDEFINED_FLAGS}|g" \
     -e "s|@TARGET_DIR@|${TARGET_DIR}|g" \
+    -e "s|@LIBDIR@|${LIBDIR}|g" \
     -e "s|@IS_WASM@|${IS_WASM}|g" \
     src/Makevars.in > src/Makevars
 

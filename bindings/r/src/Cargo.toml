@@ -1,11 +1,16 @@
 [package]
 name = "rfastlowess"
-version = "0.99.8"
+version = "0.99.9"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
-rust-version = "1.85.0"
-publish = false
+repository = "https://github.com/thisisamirv/lowess-project"
+homepage = "https://github.com/thisisamirv/lowess-project"
+rust-version = "1.88"
+readme = "README.md"
+description = "High-performance LOWESS (Locally Weighted Scatterplot Smoothing)"
+keywords = ["lowess", "smoothing", "statistics", "regression", "bioinformatics"]
+categories = ["science", "algorithms"]
 
 # Build
 [dependencies]

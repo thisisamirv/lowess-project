@@ -66,8 +66,9 @@ jobs:
         uses: r-lib/actions/setup-pandoc@v2
 
       - name: Install wasm-pack
-        if: matrix.os == 'ubuntu-latest'
-        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+        uses: jetli/wasm-pack-action@v0.4.0
+        with:
+          version: "latest"
 
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
@@ -78,13 +79,11 @@ jobs:
       # RUST
       # ========================================================================
       - name: "Rust: Format Check"
-        if: matrix.os == 'ubuntu-latest'
         run: |
           cargo fmt -p lowess --all -- --check
           cargo fmt -p fastLowess --all -- --check
 
       - name: "Rust: Clippy"
-        if: matrix.os == 'ubuntu-latest'
         run: |
           cargo clippy -p lowess --all-targets -- -D warnings
           cargo clippy -p fastLowess --all-targets --features cpu -- -D warnings
@@ -113,7 +112,6 @@ jobs:
         shell: bash
 
       - name: "Rust: Documentation"
-        if: matrix.os == 'ubuntu-latest'
         run: |
           cargo doc -p lowess --no-deps
           cargo doc -p fastLowess --no-deps --features cpu
@@ -136,13 +134,11 @@ jobs:
       - name: "Python: Setup & Build"
         working-directory: bindings/python
         run: |
-          ../../dev/sync_version.py ../../Cargo.toml -p python/fastlowess/__version__.py -q
           python -m pip install --upgrade pip
           pip install maturin pytest numpy ruff matplotlib
           pip install .
 
       - name: "Python: Lint (Ruff)"
-        if: matrix.os == 'ubuntu-latest'
         working-directory: bindings/python
         run: |
           ruff format --check python/fastlowess/ ../../tests/python/
@@ -165,7 +161,6 @@ jobs:
       - name: "R: Setup Dependencies"
         working-directory: bindings/r
         run: |
-          ../../dev/sync_version.py ../../Cargo.toml -r inst/CITATION -d DESCRIPTION -q
           chmod +x configure cleanup
           Rscript -e "install.packages(c('remotes', 'rcmdcheck', 'testthat', 'knitr', 'rmarkdown', 'lintr', 'styler', 'prettycode', 'BiocManager', 'devtools'))"
           Rscript -e "remotes::install_deps(dependencies = TRUE)"
@@ -190,14 +185,14 @@ jobs:
           Rscript ../../examples/r/online_smoothing.R
 
       - name: "R: Quality (BiocCheck/Lint)"
-        if: matrix.os == 'ubuntu-latest'
         working-directory: bindings/r
+        shell: bash
         run: |
           Rscript -e "my_linters <- lintr::linters_with_defaults(indentation_linter = lintr::indentation_linter(indent = 4L), object_usage_linter = NULL); lintr::lint_dir('R', linters = my_linters)"
           chmod +x ../../dev/prepare_cran.sh
           ../../dev/prepare_cran.sh
           R CMD build .
-          Rscript -e "BiocManager::install('BiocCheck'); BiocCheck::BiocCheck(list.files(pattern='\\\\.tar\\\\.gz$')[1], \`new-package\`=TRUE, \`no-check-vignettes\`=TRUE, \`quit-with-status\`=TRUE)"
+          Rscript -e "BiocManager::install('BiocCheck'); BiocCheck::BiocCheck(list.files(pattern='[.]tar[.]gz$')[1], \`new-package\`=TRUE, \`no-check-vignettes\`=TRUE, \`quit-with-status\`=TRUE)"
 
       # ========================================================================
       # JULIA
@@ -205,7 +200,6 @@ jobs:
       - name: "Julia: Build"
         working-directory: bindings/julia
         run: |
-          ../../dev/sync_version.py ../../Cargo.toml -j julia/Project.toml -b ../../dev/build_tarballs_julia.jl -q
           cargo build --release
       - name: "Julia: Verify Exports"
         if: matrix.os == 'ubuntu-latest'
@@ -225,7 +219,6 @@ jobs:
           julia --project=bindings/julia/julia examples/julia/online_smoothing.jl
 
       - name: "Julia: Lint"
-        if: matrix.os == 'ubuntu-latest'
         working-directory: bindings/julia
         run: |
           cargo fmt --all -- --check
@@ -237,7 +230,6 @@ jobs:
       - name: "Node.js: Build"
         working-directory: bindings/nodejs
         run: |
-          ../../dev/sync_version.py ../../Cargo.toml -n package.json -q
           npm install
           npm run build
 
@@ -253,7 +245,6 @@ jobs:
           node ../../examples/nodejs/online_smoothing.js
 
       - name: "Node.js: Lint"
-        if: matrix.os == 'ubuntu-latest'
         working-directory: bindings/nodejs
         run: |
           cargo fmt --all -- --check
@@ -263,7 +254,6 @@ jobs:
       # WEBASSEMBLY (Ubuntu only for build simplicity)
       # ========================================================================
       - name: "WebAssembly: Build & Test"
-        if: matrix.os == 'ubuntu-latest'
         working-directory: bindings/wasm
         run: |
           wasm-pack build --target nodejs --out-dir pkg
@@ -272,7 +262,6 @@ jobs:
           node ../../tests/wasm/test_fastlowess_wasm.js
 
       - name: "WebAssembly: Lint"
-        if: matrix.os == 'ubuntu-latest'
         working-directory: bindings/wasm
         run: |
           cargo fmt --all -- --check
@@ -298,7 +287,6 @@ jobs:
           LD_LIBRARY_PATH=../../target/release ./bin/online_smoothing
 
       - name: "C++: Lint"
-        if: matrix.os == 'ubuntu-latest'
         working-directory: bindings/cpp
         run: |
           cargo fmt --all -- --check
@@ -333,7 +321,3 @@ jobs:
       - name: Run ASAN Check
         run: |
           Rscript -e "rcmdcheck::rcmdcheck(args = c('--no-manual', '--no-vignettes'), error_on = 'error', check_dir = 'check')"
-      - name: Finalize
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          dev/sync_version.py Cargo.toml -c CITATION.cff -q

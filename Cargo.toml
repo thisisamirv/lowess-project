@@ -14,56 +14,17 @@ members = [
 exclude = ["bindings/r/src/vendor"]
 
 [workspace.package]
-version = "0.99.8"
+version = "0.99.9"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/thisisamirv/lowess-project"
 homepage = "https://github.com/thisisamirv/lowess-project"
-rust-version = "1.85.0"
+rust-version = "1.88"
 readme = "README.md"
 description = "High-performance LOWESS (Locally Weighted Scatterplot Smoothing)"
 keywords = ["lowess", "smoothing", "statistics", "regression", "bioinformatics"]
 categories = ["science", "algorithms"]
-
-[workspace.dependencies]
-# Core dependencies
-lowess = { path = "crates/lowess", version = "0.99.8" }
-fastLowess = { path = "crates/fastLowess", version = "0.99.8" }
-
-# Shared dependencies
-num-traits = { version = "0.2.19", default-features = false }
-ndarray = { version = "0.17.1", default-features = false }
-rayon = { version = "1.11.0" }
-wide = { version = "0.7.33", default-features = false }
-approx = "0.5.1"
-
-# GPU dependencies
-wgpu = { version = "26.0.1" }
-bytemuck = { version = "1.24.0", features = ["derive"] }
-pollster = { version = "0.4.0" }
-futures-intrusive = { version = "0.5.0" }
-
-# Python bindings
-pyo3 = { version = "0.27", features = ["extension-module"] }
-numpy = "0.27"
-
-# R bindings
-extendr-api = "0.8.1"
-
-# Node.js bindings
-napi = { version = "3.4.0", features = ["napi4"] }
-napi-derive = "3.3.0"
-napi-build = "2.2.4"
-
-# WASM bindings
-wasm-bindgen = "0.2.106"
-js-sys = "0.3.83"
-wasm-bindgen-test = "0.3.56"
-
-# C++ bindings
-cbindgen = "0.29.2"
-libc = "0.2"
 
 [profile.release]
 opt-level = 3

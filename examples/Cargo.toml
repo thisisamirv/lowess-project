@@ -1,20 +1,28 @@
 [package]
 name = "examples"
-version = { workspace = true }
-edition = { workspace = true }
-publish = false
+version = "0.99.9"
+authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
+edition = "2024"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/thisisamirv/lowess-project"
+homepage = "https://github.com/thisisamirv/lowess-project"
+rust-version = "1.88"
+readme = "README.md"
+description = "High-performance LOWESS (Locally Weighted Scatterplot Smoothing)"
+keywords = ["lowess", "smoothing", "statistics", "regression", "bioinformatics"]
+categories = ["science", "algorithms"]
 
 [dependencies]
-lowess = { workspace = true, features = ["std", "dev"] }
-fastLowess = { workspace = true, features = ["cpu", "dev"] }
-ndarray = { workspace = true }
+lowess = { path = "../crates/lowess", default-features = false }
+fastLowess = { path = "../crates/fastLowess", default-features = false }
+ndarray = "0.17.1"
 
 [features]
 default = ["std", "cpu", "dev"]
-std = []
-cpu = []
-gpu = []
-dev = []
+std = ["lowess/std"]
+cpu = ["fastLowess/cpu"]
+gpu = ["fastLowess/gpu"]
+dev = ["lowess/dev", "fastLowess/dev"]
 
 # lowess examples
 [[example]]
