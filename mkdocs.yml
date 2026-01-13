@@ -1,5 +1,5 @@
 site_name: LOWESS Project
-site_description: High-performance LOWESS smoothing for Rust, Python, and R
+site_description: High-performance LOWESS smoothing for Rust, Python, R, Julia, JavaScript, C++, and WebAssembly.
 site_author: Amir Valizadeh
 site_url: https://lowess.readthedocs.io/
 

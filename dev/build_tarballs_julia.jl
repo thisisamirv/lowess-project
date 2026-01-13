@@ -23,6 +23,9 @@ fi
 cargo build --release --target ${rust_target} --target-dir target
 # Install the shared library
 install -Dvm755 target/${rust_target}/release/*fastlowess_jl.${dlext} -t "${libdir}"
+# Install licenses
+install_license LICENSE-MIT
+install_license LICENSE-APACHE
 """
 
 # Target platforms
