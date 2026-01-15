@@ -88,6 +88,7 @@ lowess:
 		cargo build -q -p $(LOWESS_PKG) --features $(FEATURE_SET) || exit 1; \
 		RUSTDOCFLAGS="-D warnings" cargo doc -q -p $(LOWESS_PKG) --no-deps --features $(FEATURE_SET) || exit 1; \
 	fi
+	@cargo clippy -p examples --examples --all-features -- -D warnings || exit 1
 	@echo "=============================================================================="
 	@echo "3. Testing..."
 	@echo "=============================================================================="
@@ -175,12 +176,12 @@ python:
 	@echo "1. Formatting..."
 	@echo "=============================================================================="
 	@cargo fmt -p $(PY_PKG) -- --check
-	@ruff format $(PY_DIR)/python/ $(PY_TEST_DIR)/
+	@ruff format $(PY_DIR)/python/ $(PY_TEST_DIR)/ examples/python/
 	@echo "=============================================================================="
 	@echo "2. Linting..."
 	@echo "=============================================================================="
 	@VIRTUAL_ENV= PYO3_PYTHON=python3 cargo clippy -q -p $(PY_PKG) --all-targets -- -D warnings
-	@ruff check $(PY_DIR)/python/ $(PY_TEST_DIR)/
+	@ruff check $(PY_DIR)/python/ $(PY_TEST_DIR)/ examples/python/
 	@echo "=============================================================================="
 	@echo "3. Environment Setup..."
 	@echo "=============================================================================="
@@ -289,28 +290,31 @@ r:
 	@echo "=============================================================================="
 	@(cd $(R_DIR)/src && cargo build -q --release || (mv Cargo.toml.orig Cargo.toml && exit 1))
 	@rm -rf $(R_DIR)/src/.cargo
-	@cd $(R_DIR) && R CMD build .
 	@echo "=============================================================================="
-	@echo "5. Installing..."
-	@echo "=============================================================================="
-	@cd $(R_DIR) && R CMD INSTALL $(R_PKG_TARBALL) || true
-	@cd $(R_DIR) && Rscript -e "devtools::install(quiet = TRUE)"
-	@echo "=============================================================================="
-	@echo "6. Formatting..."
+	@echo "4a. Formatting..."
 	@echo "=============================================================================="
 	@cd $(R_DIR)/src && cargo fmt -q
 	@cd $(R_DIR) && Rscript $(PWD)/dev/style_pkg.R || true
 	@cd $(R_DIR)/src && cargo fmt -- --check || (echo "Run 'cargo fmt' to fix"; exit 1)
 	@cd $(R_DIR)/src && cargo clippy -q -- -D warnings
-	@Rscript -e "my_linters <- lintr::linters_with_defaults(indentation_linter = lintr::indentation_linter(indent = 4L)); lints <- c(lintr::lint_dir('$(R_DIR)/R', linters = my_linters), lintr::lint_dir('tests/r/testthat', linters = my_linters)); print(lints); if (length(lints) > 0) quit(status = 1)"
+	@Rscript -e "my_linters <- lintr::linters_with_defaults(indentation_linter = lintr::indentation_linter(indent = 4L), object_name_linter = NULL, commented_code_linter = NULL, object_usage_linter = NULL); lints <- c(lintr::lint_dir('$(R_DIR)/R', linters = my_linters), lintr::lint_dir('tests/r/testthat', linters = my_linters), lintr::lint_dir('examples/r', linters = my_linters)); print(lints); if (length(lints) > 0L) quit(status = 1)"
 	@echo "=============================================================================="
-	@echo "7. Documentation..."
+	@echo "4b. Documentation..."
 	@echo "=============================================================================="
 	@rm -rf $(R_DIR)/*.Rcheck
 	@cd $(R_DIR)/src && RUSTDOCFLAGS="-D warnings" cargo doc -q --no-deps
 	@cd $(R_DIR) && Rscript -e "devtools::document(quiet = TRUE)"
 	@cd $(R_DIR) && Rscript -e "devtools::build_vignettes(quiet = TRUE)" || true
 	@rm -f $(R_DIR)/.gitignore
+	@echo "=============================================================================="
+	@echo "4c. Building..."
+	@echo "=============================================================================="
+	@cd $(R_DIR) && R CMD build .
+	@echo "=============================================================================="
+	@echo "5. Installing..."
+	@echo "=============================================================================="
+	@cd $(R_DIR) && R CMD INSTALL $(R_PKG_TARBALL) || true
+	@cd $(R_DIR) && Rscript -e "devtools::install(quiet = TRUE)"
 	@echo "=============================================================================="
 	@echo "8. Testing..."
 	@echo "=============================================================================="
@@ -372,6 +376,8 @@ julia:
 	@echo "2. Linting..."
 	@echo "=============================================================================="
 	@cargo clippy -q -p $(JL_PKG) --all-targets -- -D warnings
+	@echo "Linting Julia files..."
+	@julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.add("JuliaFormatter"); using JuliaFormatter; format(["bindings/julia/julia", "tests/julia", "examples/julia"], verbose=true, overwrite=false) ? exit(0) : exit(1)'
 	@echo "=============================================================================="
 	@echo "3. Building..."
 	@echo "=============================================================================="
@@ -384,20 +390,21 @@ julia:
 	@echo "=============================================================================="
 	@echo "5. Verifying library exports..."
 	@echo "=============================================================================="
-	@nm -D target/release/libfastlowess_jl.so 2>/dev/null | grep -q jl_lowess_smooth || \
-		(echo "Error: jl_lowess_smooth not exported"; exit 1)
-	@nm -D target/release/libfastlowess_jl.so 2>/dev/null | grep -q jl_lowess_streaming || \
-		(echo "Error: jl_lowess_streaming not exported"; exit 1)
-	@nm -D target/release/libfastlowess_jl.so 2>/dev/null | grep -q jl_lowess_online || \
-		(echo "Error: jl_lowess_online not exported"; exit 1)
+	@nm -D target/release/libfastlowess_jl.so 2>/dev/null | grep -q jl_lowess_new || \
+		(echo "Error: jl_lowess_new not exported"; exit 1)
+	@nm -D target/release/libfastlowess_jl.so 2>/dev/null | grep -q jl_streaming_lowess_new || \
+		(echo "Error: jl_streaming_lowess_new not exported"; exit 1)
+	@nm -D target/release/libfastlowess_jl.so 2>/dev/null | grep -q jl_online_lowess_new || \
+		(echo "Error: jl_online_lowess_new not exported"; exit 1)
 	@nm -D target/release/libfastlowess_jl.so 2>/dev/null | grep -q jl_lowess_free_result || \
 		(echo "Error: jl_lowess_free_result not exported"; exit 1)
 	@echo "All exports verified!"
 	@echo "=============================================================================="
 	@echo "6. Testing Julia bindings..."
 	@echo "=============================================================================="
-	@julia --project=$(JL_DIR)/julia -e 'using Pkg; Pkg.instantiate()'
-	@julia --project=$(JL_DIR)/julia tests/julia/test_fastlowess.jl
+	@export FASTLOWESS_LIB=$(PWD)/target/release/libfastlowess_jl.so && \
+	julia --project=$(JL_DIR)/julia -e 'using Pkg; Pkg.instantiate(); Pkg.precompile()' && \
+	julia --project=$(JL_DIR)/julia tests/julia/test_fastlowess.jl
 	@echo "$(JL_PKG) checks completed successfully!"
 	@echo ""
 	@echo "To use in Julia:"
@@ -424,6 +431,8 @@ nodejs:
 	@echo "2. Linting & Building..."
 	@echo "=============================================================================="
 	@cargo clippy -q -p $(NODE_PKG) --all-targets -- -D warnings
+	@echo "Linting Node.js files..."
+	@$(NODE_DIR)/node_modules/.bin/eslint --config $(NODE_DIR)/eslint.config.js $(NODE_DIR)/index.js tests/nodejs/test_fastlowess.js examples/nodejs/*.js
 	@cd $(NODE_DIR) && npm install && npm run build
 	@echo "=============================================================================="
 	@echo "3. Testing..."
@@ -450,6 +459,9 @@ wasm:
 	@echo "2. Linting & Building..."
 	@echo "=============================================================================="
 	@cargo clippy -q -p $(WASM_PKG) --all-targets -- -D warnings
+	@echo "Linting WASM JS files..."
+	@cd $(WASM_DIR) && npm install -q
+	@$(WASM_DIR)/node_modules/.bin/eslint --config $(WASM_DIR)/eslint.config.js tests/wasm/*.js examples/wasm/*.html
 	@cd $(WASM_DIR) && wasm-pack build --target nodejs --out-dir pkg
 	@echo "Building for Web (Examples)..."
 	@cd $(WASM_DIR) && wasm-pack build --target web --out-dir pkg-web
@@ -481,8 +493,15 @@ cpp:
 	@echo "2. Linting & Building..."
 	@echo "=============================================================================="
 	@cargo clippy -q -p $(CPP_PKG) --all-targets -- -D warnings
+	@echo "Linting C++ files..."
+	@clang-tidy bindings/cpp/include/fastlowess.hpp tests/cpp/test_fastlowess.cpp examples/cpp/*.cpp -- -I bindings/cpp/include -std=c++17 || (echo "C++ linting failed"; exit 1)
 	@cargo build -q -p $(CPP_PKG) --release
 	@echo "C header generated at $(CPP_DIR)/include/fastlowess.h"
+	@echo "=============================================================================="
+	@echo "3. Testing..."
+	@echo "=============================================================================="
+	@mkdir -p tests/cpp/build
+	@cd tests/cpp/build && cmake .. && make && ./test_fastlowess_suite
 	@echo "$(CPP_PKG) checks completed successfully!"
 
 cpp-clean:

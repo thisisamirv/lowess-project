@@ -227,7 +227,8 @@ library(rfastlowess)
 x <- c(1, 2, 3, 4, 5)
 y <- c(2.0, 4.1, 5.9, 8.2, 9.8)
 
-result <- fastlowess(x, y, fraction = 0.5, iterations = 3)
+model <- Lowess(fraction = 0.5, iterations = 3)
+result <- model$fit(x, y)
 print(result$y)
 ```
 
@@ -270,19 +271,20 @@ using fastlowess
 x = [1.0, 2.0, 3.0, 4.0, 5.0]
 y = [2.0, 4.1, 5.9, 8.2, 9.8]
 
-result = smooth(x, y, fraction=0.5, iterations=3)
+result = fit(Lowess(fraction=0.5, iterations=3), x, y)
 println(result.y)
 ```
 
 **Node.js:**
 
 ```javascript
-const { smooth } = require('fastlowess');
+const { Lowess } = require('fastlowess');
 
 const x = [1.0, 2.0, 3.0, 4.0, 5.0];
 const y = [2.0, 4.1, 5.9, 8.2, 9.8];
 
-const result = smooth(x, y, { fraction: 0.5, iterations: 3 });
+const model = new Lowess({ fraction: 0.5, iterations: 3 });
+const result = model.fit(x, y);
 console.log(result.y);
 ```
 
@@ -312,7 +314,9 @@ fastlowess::LowessOptions options;
 options.fraction = 0.5;
 options.iterations = 3;
 
-auto result = fastlowess::smooth(x, y, options);
+fastlowess::Lowess model(options);
+auto result = model.fit(x, y);
+
 for (double val : result.y_vector()) std::cout << val << " ";
 ```
 
@@ -323,8 +327,7 @@ for (double val : result.y_vector()) std::cout << val << " ";
 **R:**
 
 ```r
-fastlowess(
-    x, y,
+Lowess(
     fraction = 0.5,
     iterations = 3L,
     delta = 0.01,
@@ -342,7 +345,7 @@ fastlowess(
     cv_k = 5L,
     auto_converge = 1e-4,
     parallel = TRUE
-)
+)$fit(x, y)
 ```
 
 **Python:**
@@ -397,8 +400,7 @@ Lowess::new()
 **Julia:**
 
 ```julia
-smooth(
-    x, y,
+Lowess(;
     fraction=0.5,
     iterations=3,
     delta=NaN,  # NaN for auto
@@ -406,15 +408,15 @@ smooth(
     robustness_method="bisquare",
     zero_weight_fallback="use_local_mean",
     boundary_policy="extend",
-    confidence_intervals=0.95,
-    prediction_intervals=0.95,
+    confidence_intervals=NaN,
+    prediction_intervals=NaN,
     return_diagnostics=true,
     return_residuals=true,
     return_robustness_weights=true,
-    cv_fractions=[0.3, 0.5, 0.7],
+    cv_fractions=Float64[], # e.g. [0.3, 0.5]
     cv_method="kfold",
     cv_k=5,
-    auto_converge=1e-4,
+    auto_converge=NaN,
     parallel=true
 )
 ```
@@ -422,7 +424,7 @@ smooth(
 **Node.js:**
 
 ```javascript
-smooth(x, y, {
+new Lowess({
     fraction: 0.5,
     iterations: 3,
     delta: 0.01,
@@ -440,7 +442,7 @@ smooth(x, y, {
     cvK: 5,
     autoConverge: 1e-4,
     parallel: true
-})
+}).fit(x, y)
 ```
 
 **WebAssembly:**
@@ -488,7 +490,8 @@ options.cv_k = 5;
 options.auto_converge = 1e-4;
 options.parallel = true;
 
-auto result = fastlowess::smooth(x, y, options);
+fastlowess::Lowess model(options);
+auto result = model.fit(x, y);
 ```
 
 ## Result Structure

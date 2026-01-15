@@ -133,6 +133,44 @@ wasm-pack build --target web
 
 ## C++
 
+**Pre-built Binaries (recommended):**
+
+Download pre-built libraries from [GitHub Releases](https://github.com/thisisamirv/lowess-project/releases):
+
+*Linux (x64):*
+
+```bash
+wget https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-linux-x64.so
+wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp
+```
+
+*macOS (x64):*
+
+```bash
+curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-macos-x64.dylib
+curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp
+```
+
+*Windows (x64):*
+
+```powershell
+# Download from: https://github.com/thisisamirv/lowess-project/releases/latest
+# Files: fastlowess-win32-x64.dll, fastlowess.hpp
+```
+
+Then link against the library in your build system:
+
+```bash
+# Linux
+g++ -o myapp myapp.cpp -L. -lfastlowess-linux-x64
+
+# macOS
+clang++ -o myapp myapp.cpp -L. -lfastlowess-macos-x64
+
+# Windows (MSVC)
+cl myapp.cpp /link fastlowess-win32-x64.lib
+```
+
 **From Source:**
 
 Requires Rust toolchain.
@@ -144,8 +182,10 @@ cd lowess-project/bindings/cpp
 # Build the library
 cargo build --release
 
-# Headers are at: include/fastlowess.h (C) and include/fastlowess.hpp (C++)
+# Headers are at: include/fastlowess.hpp (C++)
 # Library is at: target/release/libfastlowess_cpp.so (Linux)
+#                target/release/libfastlowess_cpp.dylib (macOS)
+#                target/release/fastlowess_cpp.dll (Windows)
 ```
 
 ---

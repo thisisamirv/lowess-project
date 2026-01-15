@@ -188,6 +188,9 @@ jobs:
         working-directory: bindings/r
         shell: bash
         run: |
+          mkdir -p ~/.R
+          echo "CXXFLAGS += -w" >> ~/.R/Makevars
+          echo "CFLAGS += -w" >> ~/.R/Makevars
           Rscript -e "my_linters <- lintr::linters_with_defaults(indentation_linter = lintr::indentation_linter(indent = 4L), object_usage_linter = NULL); lintr::lint_dir('R', linters = my_linters)"
           chmod +x ../../dev/prepare_cran.sh
           ../../dev/prepare_cran.sh
@@ -204,16 +207,33 @@ jobs:
       - name: "Julia: Verify Exports"
         if: matrix.os == 'ubuntu-latest'
         run: |
-          nm -D target/release/libfastlowess_jl.so | grep -q jl_lowess_smooth || exit 1
-          nm -D target/release/libfastlowess_jl.so | grep -q jl_lowess_streaming || exit 1
-          nm -D target/release/libfastlowess_jl.so | grep -q jl_lowess_online || exit 1
+          nm -D target/release/libfastlowess_jl.so | grep -q jl_lowess_fit || exit 1
+          nm -D target/release/libfastlowess_jl.so | grep -q jl_streaming_lowess_new || exit 1
+          nm -D target/release/libfastlowess_jl.so | grep -q jl_online_lowess_new || exit 1
           nm -D target/release/libfastlowess_jl.so | grep -q jl_lowess_free_result || exit 1
 
       - name: "Julia: Tests"
-        run: julia -e 'using Pkg; Pkg.activate("bindings/julia/julia"); Pkg.instantiate(); include("tests/julia/test_fastlowess.jl")'
+        shell: bash
+        run: |
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            export FASTLOWESS_LIB="target/release/fastlowess_jl.dll"
+          elif [ "${{ matrix.os }}" = "macos-latest" ]; then
+            export FASTLOWESS_LIB="target/release/libfastlowess_jl.dylib"
+          else
+            export FASTLOWESS_LIB="target/release/libfastlowess_jl.so"
+          fi
+          julia -e 'using Pkg; Pkg.activate("bindings/julia/julia"); Pkg.instantiate(); include("tests/julia/test_fastlowess.jl")'
 
       - name: "Julia: Examples"
+        shell: bash
         run: |
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            export FASTLOWESS_LIB="target/release/fastlowess_jl.dll"
+          elif [ "${{ matrix.os }}" = "macos-latest" ]; then
+            export FASTLOWESS_LIB="target/release/libfastlowess_jl.dylib"
+          else
+            export FASTLOWESS_LIB="target/release/libfastlowess_jl.so"
+          fi
           julia --project=bindings/julia/julia examples/julia/batch_smoothing.jl
           julia --project=bindings/julia/julia examples/julia/streaming_smoothing.jl
           julia --project=bindings/julia/julia examples/julia/online_smoothing.jl

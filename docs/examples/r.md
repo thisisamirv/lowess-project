@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD033 -->
 # R Examples
 
 Complete R examples demonstrating rfastlowess capabilities with base R and visualization.
@@ -65,13 +66,16 @@ x <- seq(0, 10, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.3)
 
 # Basic smoothing
-result <- fastlowess(x, y, fraction = 0.3)
+model <- Lowess(fraction = 0.3)
+result <- model$fit(x, y)
 
 # With confidence intervals
-result <- fastlowess(x, y, 
-                     fraction = 0.3, 
-                     confidence_intervals = 0.95,
-                     return_diagnostics = TRUE)
+model <- Lowess(
+    fraction = 0.3,
+    confidence_intervals = 0.95,
+    return_diagnostics = TRUE
+)
+result <- model$fit(x, y)
 
 # Access results
 plot(x, y, pch = 19, col = "gray")

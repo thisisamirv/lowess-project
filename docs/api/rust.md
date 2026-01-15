@@ -2,18 +2,13 @@
 
 API reference for the `lowess` and `fastLowess` Rust crates.
 
-## Crate Overview
-
-| Crate                                      | Features                          | Use Case         |
-|--------------------------------------------|-----------------------------------|------------------|
-| [`lowess`](https://docs.rs/lowess)         | `no_std` compatible, minimal deps | Embedded, WASM   |
-| [`fastLowess`](https://docs.rs/fastLowess) | Parallel, GPU, ndarray            | High performance |
-
 ---
 
-## Builder Pattern
+## Functions
 
-Both crates use a fluent builder pattern:
+### Batch Smoothing
+
+Main function for batch smoothing using the builder pattern.
 
 ```rust
 use fastLowess::prelude::*;
@@ -21,178 +16,143 @@ use fastLowess::prelude::*;
 let model = Lowess::new()
     .fraction(0.5)
     .iterations(3)
+    .delta(0.01)
+    .parallel(true)
+    .weight_function(WeightFunction::Tricube)
+    .robustness_method(RobustnessMethod::Bisquare)
+    .scaling_method(ScalingMethod::MAD)
+    .zero_weight_fallback(ZeroWeightFallback::UseLocalMean)
+    .boundary_policy(BoundaryPolicy::Extend)
+    .auto_converge(1e-4)
+    .return_residuals()
+    .return_diagnostics()
+    .return_robustness_weights()
+    .confidence_intervals(0.95)
+    .prediction_intervals(0.95)
+    .cross_validate(KFold::new(5, &[0.3, 0.5, 0.7]).seed(123))
     .adapter(Batch)
+    .backend(CPU)  // fastLowess only
     .build()?;
 
 let result = model.fit(&x, &y)?;
 ```
 
----
+**Builder Methods:**
 
-## Core Types
+| Method                       | Type                  | Default            | Description                       |
+|------------------------------|-----------------------|--------------------|-----------------------------------|
+| `fraction(f64)`              | `f64`                 | `0.67`             | Smoothing span (0, 1]             |
+| `iterations(usize)`          | `usize`               | `3`                | Robustness iterations             |
+| `delta(f64)`                 | `f64`                 | `0.0`              | Interpolation threshold (0=auto)  |
+| `parallel(bool)`             | `bool`                | `false`            | Enable parallelism                |
+| `weight_function()`          | `WeightFunction`      | `Tricube`          | Kernel function                   |
+| `robustness_method()`        | `RobustnessMethod`    | `Bisquare`         | Outlier handling method           |
+| `scaling_method()`           | `ScalingMethod`       | `MAD`              | Scale estimation method           |
+| `zero_weight_fallback()`     | `ZeroWeightFallback`  | `UseLocalMean`     | Zero weight handling              |
+| `boundary_policy()`          | `BoundaryPolicy`      | `Extend`           | Boundary handling                 |
+| `auto_converge(f64)`         | `f64`                 | disabled           | Auto-convergence tolerance        |
+| `return_residuals()`         | -                     | `false`            | Return residuals                  |
+| `return_diagnostics()`       | -                     | `false`            | Return fit diagnostics            |
+| `return_robustness_weights()`| -                     | `false`            | Return robustness weights         |
+| `confidence_intervals(f64)`  | `f64`                 | disabled           | Confidence level (e.g., 0.95)     |
+| `prediction_intervals(f64)`  | `f64`                 | disabled           | Prediction interval level         |
+| `cross_validate(CV)`         | `impl CrossValidation`| disabled           | Cross-validation strategy         |
 
-### Lowess
+**Returns:** `LowessResult<T>` with fields:
 
-The main builder struct.
+| Field                  | Type                     | Description                         |
+|------------------------|--------------------------|-------------------------------------|
+| `x`                    | `Array1<T>`              | Input x values                      |
+| `y`                    | `Array1<T>`              | Smoothed y values                   |
+| `fraction_used`        | `T`                      | Actual fraction used                |
+| `residuals`            | `Option<Array1<T>>`      | If `return_residuals()` called      |
+| `confidence_lower`     | `Option<Array1<T>>`      | If `confidence_intervals()` set     |
+| `confidence_upper`     | `Option<Array1<T>>`      | If `confidence_intervals()` set     |
+| `prediction_lower`     | `Option<Array1<T>>`      | If `prediction_intervals()` set     |
+| `prediction_upper`     | `Option<Array1<T>>`      | If `prediction_intervals()` set     |
+| `robustness_weights`   | `Option<Array1<T>>`      | If `return_robustness_weights()`    |
+| `diagnostics`          | `Option<Diagnostics<T>>` | If `return_diagnostics()`           |
+| `cv_results`           | `Option<CVResults<T>>`   | If cross-validation used            |
 
-```rust
-impl Lowess {
-    pub fn new() -> Self;
-    
-    // Core parameters
-    pub fn fraction(self, f: f64) -> Self;
-    pub fn iterations(self, n: usize) -> Self;
-    pub fn delta(self, d: f64) -> Self;
-    pub fn parallel(self, enabled: bool) -> Self;
-    
-    // Weight and robustness
-    pub fn weight_function(self, wf: WeightFunction) -> Self;
-    pub fn robustness_method(self, rm: RobustnessMethod) -> Self;
-    pub fn scaling_method(self, sm: ScalingMethod) -> Self;
-    pub fn zero_weight_fallback(self, zf: ZeroWeightFallback) -> Self;
-    pub fn boundary_policy(self, bp: BoundaryPolicy) -> Self;
-    pub fn auto_converge(self, tol: f64) -> Self;
-    
-    // Output options
-    pub fn return_residuals(self) -> Self;
-    pub fn return_diagnostics(self) -> Self;
-    pub fn return_robustness_weights(self) -> Self;
-    pub fn confidence_intervals(self, level: f64) -> Self;
-    pub fn prediction_intervals(self, level: f64) -> Self;
-    
-    // Cross-validation
-    pub fn cross_validate<CV: CrossValidation>(self, cv: CV) -> Self;
-    
-    // Adapter selection
-    pub fn adapter<A: Adapter>(self, adapter: A) -> LowessBuilder<A>;
-}
-```
-
-### LowessResult
-
-The result of fitting a model.
+**Example:**
 
 ```rust
-pub struct LowessResult<T> {
-    pub x: Array1<T>,
-    pub y: Array1<T>,
-    pub fraction_used: T,
-    
-    // Optional outputs
-    pub residuals: Option<Array1<T>>,
-    pub std_err: Option<Array1<T>>,
-    pub confidence_lower: Option<Array1<T>>,
-    pub confidence_upper: Option<Array1<T>>,
-    pub prediction_lower: Option<Array1<T>>,
-    pub prediction_upper: Option<Array1<T>>,
-    pub robustness_weights: Option<Array1<T>>,
-    pub diagnostics: Option<Diagnostics<T>>,
-    pub cv_results: Option<CVResults<T>>,
-}
-```
+use fastLowess::prelude::*;
+use ndarray::array;
 
-### LowessError
+let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
+let y = array![2.1, 3.9, 6.2, 8.0, 10.1];
 
-Error type for LOWESS operations.
+let model = Lowess::new()
+    .fraction(0.3)
+    .iterations(3)
+    .adapter(Batch)
+    .build()?;
 
-```rust
-pub enum LowessError {
-    InvalidFraction(f64),
-    InvalidIterations(usize),
-    InsufficientData { required: usize, provided: usize },
-    MismatchedLengths { x_len: usize, y_len: usize },
-    EmptyInput,
-    // ... more variants
-}
+let result = model.fit(&x.view(), &y.view())?;
+println!("Smoothed: {:?}", result.y);
 ```
 
 ---
 
-## Enums
+### Streaming Mode
 
-### WeightFunction
-
-```rust
-pub enum WeightFunction {
-    Tricube,      // Default
-    Epanechnikov,
-    Gaussian,
-    Biweight,
-    Cosine,
-    Triangle,
-    Uniform,
-}
-```
-
-### RobustnessMethod
-
-```rust
-pub enum RobustnessMethod {
-    Bisquare,  // Default
-    Huber,
-    Talwar,
-}
-```
-
-### BoundaryPolicy
-
-```rust
-pub enum BoundaryPolicy {
-    Extend,      // Default
-    Reflect,
-    Zero,
-    NoBoundary,
-}
-```
-
-### Backend (fastLowess only)
-
-```rust
-pub enum Backend {
-    CPU,  // Default
-    GPU,  // Beta
-}
-```
-
----
-
-## Adapters
-
-### Batch
+Streaming mode for large datasets with constant memory usage.
 
 ```rust
 use fastLowess::prelude::*;
 
-let model = Lowess::new()
-    .adapter(Batch)
-    .backend(CPU)  // or GPU
-    .build()?;
-
-let result = model.fit(&x, &y)?;
-```
-
-### Streaming
-
-```rust
 let mut processor = Lowess::new()
+    .fraction(0.1)
     .adapter(Streaming)
     .chunk_size(5000)
     .overlap(500)
-    .merge_strategy(Average)
+    .merge_strategy(MergeStrategy::Average)
     .build()?;
 
 let result = processor.process_chunk(&x, &y)?;
 let final_result = processor.finalize()?;
 ```
 
-### Online
+**Additional Methods:**
+
+| Method                  | Type            | Default     | Description                        |
+|-------------------------|-----------------|-------------|------------------------------------|
+| `chunk_size(usize)`     | `usize`         | `5000`      | Points per chunk                   |
+| `overlap(usize)`        | `usize`         | `500`       | Overlap between chunks             |
+| `merge_strategy()`      | `MergeStrategy` | `Average`   | How to merge overlaps              |
+
+**Example:**
 
 ```rust
+// Process 1 million points
+let x = Array1::linspace(0.0, 1000.0, 1_000_000);
+let y = x.mapv(|v| (v / 100.0).sin()) + Array1::random(1_000_000, Normal::new(0.0, 0.1)?);
+
 let mut processor = Lowess::new()
+    .fraction(0.05)
+    .adapter(Streaming)
+    .chunk_size(10000)
+    .build()?;
+
+let result = processor.process_chunk(&x.view(), &y.view())?;
+```
+
+---
+
+### Online Mode
+
+Online mode for real-time data with sliding window.
+
+```rust
+use fastLowess::prelude::*;
+
+let mut processor = Lowess::new()
+    .fraction(0.2)
     .adapter(Online)
     .window_capacity(100)
     .min_points(5)
-    .update_mode(Incremental)
+    .update_mode(UpdateMode::Incremental)
     .build()?;
 
 if let Some(output) = processor.add_point(x, y)? {
@@ -200,25 +160,89 @@ if let Some(output) = processor.add_point(x, y)? {
 }
 ```
 
----
+**Additional Methods:**
 
-## Prelude
+| Method                  | Type         | Default       | Description          |
+|-------------------------|--------------|---------------|----------------------|
+| `window_capacity(usize)`| `usize`      | `100`         | Max points in window |
+| `min_points(usize)`     | `usize`      | `2`           | Points before output |
+| `update_mode()`         | `UpdateMode` | `Incremental` | Update strategy      |
 
-Import common types with:
+**Example:**
 
 ```rust
-use lowess::prelude::*;
-// or
-use fastLowess::prelude::*;
+// Sensor data simulation
+let mut processor = Lowess::new()
+    .fraction(0.3)
+    .adapter(Online)
+    .window_capacity(25)
+    .build()?;
+
+for (time, value) in sensor_data {
+    if let Some(output) = processor.add_point(time, value)? {
+        println!("Time: {}, Smoothed: {}", time, output.smoothed);
+    }
+}
 ```
 
-This imports:
+---
 
-- `Lowess` — Builder
-- `LowessResult` — Result type
-- `LowessError` — Error type
-- `Batch`, `Streaming`, `Online` — Adapters
-- All enums (`WeightFunction`, `RobustnessMethod`, etc.)
-- `KFold`, `LOOCV` — Cross-validation types
+## Enum Options
+
+### WeightFunction
+
+- `Tricube` (default)
+- `Epanechnikov`
+- `Gaussian`
+- `Biweight`
+- `Cosine`
+- `Triangle`
+- `Uniform`
+
+### RobustnessMethod
+
+- `Bisquare` (default)
+- `Huber`
+- `Talwar`
+
+### BoundaryPolicy
+
+- `Extend` (default)
+- `Reflect`
+- `Zero`
+- `NoBoundary`
+
+### MergeStrategy
+
+- `Average` (default)
+- `Left`
+- `Right`
+- `Weighted`
+
+### UpdateMode
+
+- `Incremental` (default)
+- `Full`
+
+---
+
+## Diagnostics
+
+When `return_diagnostics()` is called, the result includes:
+
+```rust
+pub struct Diagnostics<T> {
+    pub rmse: T,        // Root Mean Square Error
+    pub mae: T,         // Mean Absolute Error
+    pub r_squared: T,   // R² coefficient
+    pub residual_sd: T, // Residual standard deviation
+    pub effective_df: T // Effective degrees of freedom
+}
+
+// Access via:
+if let Some(diag) = result.diagnostics {
+    println!("R² = {}", diag.r_squared);
+}
+```
 
 ---

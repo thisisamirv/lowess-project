@@ -16,3 +16,4 @@ Config/testthat/edition: 3
 VignetteBuilder: knitr
 BugReports: https://github.com/thisisamirv/lowess-project/issues
 URL: https://github.com/thisisamirv/lowess-project
+Config/rextendr/version: 0.4.2

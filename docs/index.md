@@ -179,7 +179,8 @@ See the [Installation Guide](getting-started/installation.md) for more options a
     x <- c(1, 2, 3, 4, 5)
     y <- c(2.0, 4.1, 5.9, 8.2, 9.8)
 
-    result <- fastlowess(x, y, fraction = 0.5, iterations = 3)
+    model <- Lowess(fraction = 0.5, iterations = 3)
+    result <- model$fit(x, y)
     print(result$y)
     ```
 

@@ -4,12 +4,12 @@
 #' A high-performance LOWESS (Locally Weighted Scatterplot Smoothing)
 #' implementation built on the Rust `fastLowess` crate.
 #'
-#' @section Main Functions:
+#' @section Main Classes:
 #' \itemize{
-#'   \item \code{\link{fastlowess}}: Primary interface for batch processing
-#'   \item \code{\link{fastlowess_streaming}}: Chunked processing for large
+#'   \item \code{\link{Lowess}}: Primary interface for batch processing
+#'   \item \code{\link{StreamingLowess}}: Chunked processing for large
 #'     datasets
-#'   \item \code{\link{fastlowess_online}}: Sliding window for real-time data
+#'   \item \code{\link{OnlineLowess}}: Sliding window for real-time data
 #' }
 #'
 #' @section Documentation:
@@ -20,7 +20,8 @@
 #' # Basic smoothing
 #' x <- seq(1, 10, length.out = 100)
 #' y <- sin(x) + rnorm(100, sd = 0.2)
-#' result <- fastlowess(x, y, fraction = 0.3)
+#' model <- Lowess(fraction = 0.3)
+#' result <- model$fit(x, y)
 #' plot(x, y)
 #' lines(result$x, result$y, col = "red", lwd = 2)
 #'

@@ -15,7 +15,8 @@ Get up and running with LOWESS in minutes.
     y <- c(2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7)
 
     # Smooth the data
-    result <- fastlowess(x, y, fraction = 0.5, iterations = 3)
+    model <- Lowess(fraction = 0.5, iterations = 3)
+    result <- model$fit(x, y)
 
     print(result$y)
     ```
@@ -137,14 +138,14 @@ Smoothed values: [2.02, 4.00, 6.00, 8.10, 10.04, 12.03, 13.90, 15.78]
 === "R"
 
     ```r
-    result <- fastlowess(
-        x, y,
+    model <- Lowess(
         fraction = 0.5,
         iterations = 3,
         confidence_intervals = 0.95,
         prediction_intervals = 0.95,
         return_diagnostics = TRUE
     )
+    result <- model$fit(x, y)
 
     print(result$confidence_lower)
     print(result$confidence_upper)
@@ -252,13 +253,13 @@ LOWESS can robustly handle outliers through iterative reweighting:
     ```r
     y_with_outlier <- c(2, 4, 6, 50, 10, 12)
 
-    result <- fastlowess(
-        x, y_with_outlier,
+    model <- Lowess(
         fraction = 0.5,
         iterations = 5,
         robustness_method = "bisquare",
         return_robustness_weights = TRUE
     )
+    result <- model$fit(x, y_with_outlier)
 
     # Check downweighted points
     weights <- result$robustness_weights

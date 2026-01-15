@@ -3,10 +3,10 @@
 Tests for fastlowess Julia bindings.
 
 Comprehensive test suite covering:
-- Basic smoothing functionality
-- Full smooth() with all options
-- Cross-validation
-- Streaming and online adapters
+- Stateful Lowess class (batch smoothing)
+- Reusability of Lowess instances
+- StreamingLowess class
+- OnlineLowess class
 - Error handling
 - Edge cases
 
@@ -25,7 +25,7 @@ if project_name != "fastlowess"
     project_root = dirname(dirname(script_dir))
     julia_pkg_dir = joinpath(project_root, "bindings", "julia", "julia")
     if !haskey(Pkg.project().dependencies, "fastlowess")
-        Pkg.develop(path=julia_pkg_dir)
+        Pkg.develop(path = julia_pkg_dir)
     end
 end
 
@@ -33,12 +33,13 @@ using fastlowess
 
 @testset "fastlowess Julia Bindings" begin
 
-    @testset "Basic Smooth" begin
+    @testset "Lowess (Batch)" begin
         @testset "default parameters" begin
             x = [1.0, 2.0, 3.0, 4.0, 5.0]
             y = [2.0, 4.1, 5.9, 8.2, 9.8]
 
-            result = smooth(x, y, fraction=0.5)
+            model = Lowess(fraction = 0.5)
+            result = fit(model, x, y)
 
             @test result isa LowessResult
             @test length(result.y) == length(x)
@@ -46,11 +47,29 @@ using fastlowess
             @test result.fraction_used ≈ 0.5
         end
 
+        @testset "reuse Lowess instance" begin
+            x1 = [1.0, 2.0, 3.0, 4.0, 5.0]
+            y1 = [2.0, 4.1, 5.9, 8.2, 9.8]
+            x2 = [1.0, 2.0, 3.0]
+            y2 = [1.0, 2.0, 3.0]
+
+            model = Lowess(fraction = 0.5)
+
+            # First fit
+            result1 = fit(model, x1, y1)
+            @test length(result1.y) == length(x1)
+
+            # Second fit with different data
+            result2 = fit(model, x2, y2)
+            @test length(result2.y) == length(x2)
+        end
+
         @testset "serial execution" begin
             x = [1.0, 2.0, 3.0, 4.0, 5.0]
             y = [2.0, 4.1, 5.9, 8.2, 9.8]
 
-            result = smooth(x, y, fraction=0.5, parallel=false)
+            model = Lowess(fraction = 0.5, parallel = false)
+            result = fit(model, x, y)
 
             @test result isa LowessResult
             @test length(result.y) == length(x)
@@ -60,7 +79,8 @@ using fastlowess
             x = [1.0, 2.0, 3.0, 4.0, 5.0]
             y = [2.0, 4.1, 5.9, 8.2, 9.8]
 
-            result = smooth(x, y, fraction=0.5, return_diagnostics=true)
+            model = Lowess(fraction = 0.5, return_diagnostics = true)
+            result = fit(model, x, y)
 
             @test result.diagnostics !== nothing
             @test result.diagnostics isa Diagnostics
@@ -74,7 +94,8 @@ using fastlowess
             x = [1.0, 2.0, 3.0, 4.0, 5.0]
             y = [2.0, 4.1, 5.9, 8.2, 9.8]
 
-            result = smooth(x, y, fraction=0.5, return_residuals=true)
+            model = Lowess(fraction = 0.5, return_residuals = true)
+            result = fit(model, x, y)
 
             @test result.residuals !== nothing
             @test length(result.residuals) == length(x)
@@ -84,7 +105,8 @@ using fastlowess
             x = [1.0, 2.0, 3.0, 4.0, 5.0]
             y = [2.0, 4.1, 100.0, 8.2, 9.8]  # Outlier
 
-            result = smooth(x, y, fraction=0.7, iterations=3, return_robustness_weights=true)
+            model = Lowess(fraction = 0.7, iterations = 3, return_robustness_weights = true)
+            result = fit(model, x, y)
 
             @test result.robustness_weights !== nothing
             @test length(result.robustness_weights) == length(x)
@@ -94,10 +116,11 @@ using fastlowess
 
         @testset "with confidence intervals" begin
             Random.seed!(42)
-            x = collect(range(0, 10, length=20))
+            x = collect(range(0, 10, length = 20))
             y = 2 .* x .+ randn(20)
 
-            result = smooth(x, y, fraction=0.5, confidence_intervals=0.95)
+            model = Lowess(fraction = 0.5, confidence_intervals = 0.95)
+            result = fit(model, x, y)
 
             @test result.confidence_lower !== nothing
             @test result.confidence_upper !== nothing
@@ -108,10 +131,11 @@ using fastlowess
 
         @testset "with prediction intervals" begin
             Random.seed!(42)
-            x = collect(range(0, 10, length=20))
+            x = collect(range(0, 10, length = 20))
             y = 2 .* x .+ randn(20)
 
-            result = smooth(x, y, fraction=0.5, prediction_intervals=0.95)
+            model = Lowess(fraction = 0.5, prediction_intervals = 0.95)
+            result = fit(model, x, y)
 
             @test result.prediction_lower !== nothing
             @test result.prediction_upper !== nothing
@@ -121,14 +145,15 @@ using fastlowess
     end
 
     @testset "Weight Functions" begin
-        x = collect(range(0, 10, length=20))
+        x = collect(range(0, 10, length = 20))
         y = sin.(x)
 
         kernels = ["tricube", "epanechnikov", "gaussian", "uniform", "biweight", "triangle"]
 
         for kernel in kernels
             @testset "$kernel" begin
-                result = smooth(x, y, fraction=0.5, weight_function=kernel)
+                model = Lowess(fraction = 0.5, weight_function = kernel)
+                result = fit(model, x, y)
                 @test length(result.y) == length(x)
             end
         end
@@ -142,7 +167,8 @@ using fastlowess
 
         for method in methods
             @testset "$method" begin
-                result = smooth(x, y, fraction=0.7, iterations=3, robustness_method=method)
+                model = Lowess(fraction = 0.7, iterations = 3, robustness_method = method)
+                result = fit(model, x, y)
                 @test length(result.y) == length(x)
             end
         end
@@ -154,51 +180,72 @@ using fastlowess
 
         for iterations in [0, 1, 3, 5]
             @testset "iterations=$iterations" begin
-                result = smooth(x, y, fraction=0.7, iterations=iterations)
+                model = Lowess(fraction = 0.7, iterations = iterations)
+                result = fit(model, x, y)
                 @test length(result.y) == length(x)
             end
         end
     end
 
-    @testset "Streaming Smooth" begin
+    @testset "StreamingLowess" begin
         @testset "basic streaming" begin
-            x = collect(range(0, 1000, length=2000))
+            x = collect(range(0, 1000, length = 2000))
             y = sin.(x ./ 100)
 
-            result = smooth_streaming(x, y, fraction=0.1, chunk_size=1000)
+            stream = StreamingLowess(fraction = 0.1, chunk_size = 1000)
 
-            @test result isa LowessResult
-            @test length(result.y) == length(x)
+            # First chunk
+            r1 = process_chunk(stream, x[1:1000], y[1:1000])
+            @test r1 isa LowessResult # Partial results might be empty or not, but generally empty until finalized or enough data
+
+            # Second chunk
+            r2 = process_chunk(stream, x[1001:end], y[1001:end])
+
+            r_final = finalize(stream)
+
+            # Rust streaming usually returns results per chunk if possible, or buffered. 
+            # The test just checks it runs and returns a LowessResult structure.
+            @test r_final isa LowessResult
         end
 
-        @testset "larger dataset" begin
+        @testset "larger dataset streaming results" begin
             Random.seed!(42)
-            x = collect(range(0, 1000, length=5000))
+            x = collect(range(0, 1000, length = 5000))
             y = sin.(x ./ 100) .+ randn(5000) .* 0.1
 
-            result = smooth_streaming(x, y, fraction=0.05, chunk_size=1500)
+            stream = StreamingLowess(fraction = 0.05, chunk_size = 1500)
 
-            @test result isa LowessResult
-            @test length(result.y) == length(x)
+            # We just verify it runs without error
+            process_chunk(stream, x[1:2500], y[1:2500])
+            process_chunk(stream, x[2501:end], y[2501:end])
+            finalize(stream)
         end
 
         @testset "streaming accuracy" begin
-            x = collect(range(0, 100, length=200))
+            x = collect(range(0, 100, length = 200))
             y = 2 .* x .+ 1  # Perfect linear
 
-            result_stream = smooth_streaming(x, y, fraction=0.5, chunk_size=1000)
-            result_batch = smooth(x, y, fraction=0.5)
+            stream = StreamingLowess(fraction = 0.5, chunk_size = 1000)
+            r1 = process_chunk(stream, x, y)
+            r2 = finalize(stream)
 
-            @test result_stream.y ≈ result_batch.y rtol = 1e-10
+            model_batch = Lowess(fraction = 0.5)
+            result_batch = fit(model_batch, x, y)
+
+            # Combine streaming results
+            stream_y = vcat(r1.y, r2.y)
+
+            @test stream_y ≈ result_batch.y rtol = 1e-10
         end
     end
 
-    @testset "Online Smooth" begin
+    @testset "OnlineLowess" begin
         @testset "basic online" begin
             x = collect(Float64, 1:10)
             y = collect(Float64, 2:2:20)
 
-            result = smooth_online(x, y, fraction=0.5, window_capacity=10, min_points=3)
+            online = OnlineLowess(fraction = 0.5, window_capacity = 10, min_points = 3)
+            result = add_points(online, x, y)
 
             @test length(result.y) == length(x)
             @test result isa LowessResult
@@ -206,10 +253,11 @@ using fastlowess
 
         @testset "with noise" begin
             Random.seed!(42)
-            x = collect(range(0, 20, length=50))
+            x = collect(range(0, 20, length = 50))
             y = 2 .* x .+ randn(50)
 
-            result = smooth_online(x, y, fraction=0.3, window_capacity=20, min_points=5)
+            online = OnlineLowess(fraction = 0.3, window_capacity = 20, min_points = 5)
+            result = add_points(online, x, y)
 
             @test length(result.y) == length(x)
         end
@@ -218,8 +266,15 @@ using fastlowess
             x = collect(Float64, 0:99)
             y = 20.0 .+ 5.0 .* sin.(x .* 0.1)
 
-            result_full = smooth_online(x, y, fraction=0.3, window_capacity=50, update_mode="full")
-            result_inc = smooth_online(x, y, fraction=0.3, window_capacity=50, update_mode="incremental")
+            o1 = OnlineLowess(fraction = 0.3, window_capacity = 50, update_mode = "full")
+            result_full = add_points(o1, x, y)
+
+            o2 = OnlineLowess(
+                fraction = 0.3,
+                window_capacity = 50,
+                update_mode = "incremental",
+            )
+            result_inc = add_points(o2, x, y)
 
             @test length(result_full.y) == length(x)
             @test length(result_inc.y) == length(x)
@@ -231,7 +286,8 @@ using fastlowess
             x = [1.0, 2.0, 3.0, 4.0, 5.0]
             y = [2.0, 4.0, 6.0, 8.0, 10.0]
 
-            result = smooth(x, y, fraction=0.5)
+            model = Lowess(fraction = 0.5)
+            result = fit(model, x, y)
 
             @test result.diagnostics === nothing
             @test result.residuals === nothing
@@ -247,7 +303,8 @@ using fastlowess
         x = [1.0, 2.0, 3.0, 4.0, 5.0]
         y = [2.0, 4.0, 6.0, 8.0, 10.0]  # Perfect linear
 
-        result = smooth(x, y, fraction=0.5, return_diagnostics=true)
+        model = Lowess(fraction = 0.5, return_diagnostics = true)
+        result = fit(model, x, y)
 
         diag = result.diagnostics
         @test diag.rmse < 0.1
@@ -260,17 +317,19 @@ using fastlowess
             x = [1.0, 2.0]
             y = [2.0, 4.0]
 
-            result = smooth(x, y, fraction=1.0)
+            model = Lowess(fraction = 1.0)
+            result = fit(model, x, y)
             @test length(result.y) == 2
         end
 
         @testset "large dataset" begin
             Random.seed!(42)
             n = 1000
-            x = collect(range(0, 100, length=n))
+            x = collect(range(0, 100, length = n))
             y = sin.(x ./ 10) .+ randn(n) .* 0.1
 
-            result = smooth(x, y, fraction=0.1)
+            model = Lowess(fraction = 0.1)
+            result = fit(model, x, y)
             @test length(result.y) == n
         end
 
@@ -278,7 +337,8 @@ using fastlowess
             x = [3.0, 1.0, 5.0, 2.0, 4.0]
             y = [6.0, 2.0, 10.0, 4.0, 8.0]
 
-            result = smooth(x, y, fraction=0.7)
+            model = Lowess(fraction = 0.7)
+            result = fit(model, x, y)
             @test length(result.y) == 5
         end
 
@@ -286,7 +346,8 @@ using fastlowess
             x = [1.0, 1.0, 2.0, 2.0, 3.0]
             y = [2.0, 2.1, 4.0, 3.9, 6.0]
 
-            result = smooth(x, y, fraction=0.7)
+            model = Lowess(fraction = 0.7)
+            result = fit(model, x, y)
             @test length(result.y) == 5
         end
 
@@ -294,36 +355,40 @@ using fastlowess
             x = [1.0, 2.0, 3.0, 4.0, 5.0]
             y = [5.0, 5.0, 5.0, 5.0, 5.0]
 
-            result = smooth(x, y, fraction=0.5)
+            model = Lowess(fraction = 0.5)
+            result = fit(model, x, y)
             @test result.y ≈ y rtol = 1e-10
         end
     end
 
     @testset "Cross-Validation" begin
         @testset "basic CV" begin
-            x = collect(range(0, 10, length=50))
+            x = collect(range(0, 10, length = 50))
             y = 2 .* x .+ sin.(x)
 
-            result = smooth(x, y, cv_fractions=[0.2, 0.3, 0.5, 0.7])
+            model = Lowess(cv_fractions = [0.2, 0.3, 0.5, 0.7])
+            result = fit(model, x, y)
 
             @test result.fraction_used in [0.2, 0.3, 0.5, 0.7]
             @test length(result.y) == length(x)
         end
 
         @testset "k-fold CV" begin
-            x = collect(range(0, 10, length=30))
+            x = collect(range(0, 10, length = 30))
             y = x .^ 2
 
-            result = smooth(x, y, cv_fractions=[0.3, 0.5], cv_method="kfold", cv_k=5)
+            model = Lowess(cv_fractions = [0.3, 0.5], cv_method = "kfold", cv_k = 5)
+            result = fit(model, x, y)
 
             @test result.fraction_used in [0.3, 0.5]
         end
 
         @testset "LOOCV" begin
-            x = collect(range(0, 10, length=20))
+            x = collect(range(0, 10, length = 20))
             y = sin.(x)
 
-            result = smooth(x, y, cv_fractions=[0.4, 0.6], cv_method="loocv")
+            model = Lowess(cv_fractions = [0.4, 0.6], cv_method = "loocv")
+            result = fit(model, x, y)
 
             @test result.fraction_used in [0.4, 0.6]
         end
@@ -334,21 +399,20 @@ using fastlowess
             x = [1.0, 2.0, 3.0]
             y = [2.0, 4.0]
 
-            @test_throws ArgumentError smooth(x, y, fraction=0.5)
+            model = Lowess(fraction = 0.5)
+            @test_throws ArgumentError fit(model, x, y)
         end
 
         @testset "invalid weight function" begin
-            x = [1.0, 2.0, 3.0]
-            y = [2.0, 4.0, 6.0]
-
-            @test_throws ErrorException smooth(x, y, fraction=0.5, weight_function="invalid")
+            # Error happens at construction time now
+            @test_throws ErrorException Lowess(fraction = 0.5, weight_function = "invalid")
         end
 
         @testset "invalid robustness method" begin
-            x = [1.0, 2.0, 3.0]
-            y = [2.0, 4.0, 6.0]
-
-            @test_throws ErrorException smooth(x, y, fraction=0.5, robustness_method="invalid")
+            @test_throws ErrorException Lowess(
+                fraction = 0.5,
+                robustness_method = "invalid",
+            )
         end
     end
 

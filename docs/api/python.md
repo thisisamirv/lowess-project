@@ -2,32 +2,16 @@
 
 API reference for the `fastlowess` Python package.
 
-## Installation
-
-Install from PyPI:
-
-```bash
-pip install fastlowess
-```
-
-Or install from conda-forge:
-
-```bash
-conda install -c conda-forge fastlowess
-```
-
 ---
 
-## Functions
+## Classes
 
-### smooth
+### Lowess
 
-Main function for batch smoothing.
+Stateful class for batch smoothing.
 
 ```python
-fastlowess.smooth(
-    x: ArrayLike,
-    y: ArrayLike,
+class fastlowess.Lowess(
     fraction: float = 0.67,
     iterations: int = 3,
     delta: float | None = None,
@@ -47,35 +31,29 @@ fastlowess.smooth(
     cv_k: int = 5,
     cv_fractions: list[float] | None = None,
     cv_seed: int | None = None,
-) -> dict
+)
+```
+
+**Methods:**
+
+#### `fit`
+
+Fits the model to the data and returns the result.
+
+```python
+def fit(x: ArrayLike, y: ArrayLike) -> LowessResult
 ```
 
 **Parameters:**
 
 | Parameter    | Type  | Default  | Description             |
 |--------------|-------|----------|-------------------------|
-| `x`          | array | required | Independent variable    |
-| `y`          | array | required | Dependent variable      |
 | `fraction`   | float | 0.67     | Smoothing span (0, 1]   |
 | `iterations` | int   | 3        | Robustness iterations   |
 | `delta`      | float | auto     | Interpolation threshold |
 | `parallel`   | bool  | True     | Enable parallelism      |
 
-**Returns:** `dict` with keys:
-
-| Key                  | Type    | Description                         |
-|----------------------|---------|-------------------------------------|
-| `x`                  | ndarray | Input x values                      |
-| `y`                  | ndarray | Smoothed y values                   |
-| `fraction_used`      | float   | Actual fraction used                |
-| `residuals`          | ndarray | If `return_residuals=True`          |
-| `confidence_lower`   | ndarray | If `confidence_intervals` set       |
-| `confidence_upper`   | ndarray | If `confidence_intervals` set       |
-| `prediction_lower`   | ndarray | If `prediction_intervals` set       |
-| `prediction_upper`   | ndarray | If `prediction_intervals` set       |
-| `robustness_weights` | ndarray | If `return_robustness_weights=True` |
-| `diagnostics`        | dict    | If `return_diagnostics=True`        |
-| `cv_scores`          | list    | If cross-validation used            |
+**Returns:** `LowessResult` object.
 
 **Example:**
 
@@ -86,28 +64,45 @@ import numpy as np
 x = np.linspace(0, 10, 100)
 y = np.sin(x) + np.random.normal(0, 0.2, 100)
 
-result = fl.smooth(x, y, fraction=0.3, iterations=3)
-print(result["y"])
+lowess = fl.Lowess(fraction=0.3, iterations=3)
+result = lowess.fit(x, y)
+print(result.y)
 ```
 
 ---
 
-### smooth_streaming
+### StreamingLowess
 
-Streaming mode for large datasets.
+Stateful streaming mode for large datasets.
 
 ```python
-fastlowess.smooth_streaming(
-    x: ArrayLike,
-    y: ArrayLike,
+class fastlowess.StreamingLowess(
     fraction: float = 0.67,
     iterations: int = 3,
     chunk_size: int = 5000,
     overlap: int = 500,
     merge_strategy: str = "average",
     parallel: bool = True,
-    **kwargs  # Same as smooth()
-) -> dict
+    **kwargs  # Same as Lowess
+)
+```
+
+**Methods:**
+
+#### `process_chunk`
+
+Processes a chunk of data.
+
+```python
+def process_chunk(x: ArrayLike, y: ArrayLike) -> LowessResult
+```
+
+#### `finalize`
+
+Finalizes the smoothing process and returns any remaining buffered data.
+
+```python
+def finalize() -> LowessResult
 ```
 
 **Additional Parameters:**
@@ -122,29 +117,36 @@ fastlowess.smooth_streaming(
 
 ```python
 # Process 1 million points
-x = np.linspace(0, 1000, 1_000_000)
-y = np.sin(x / 100) + np.random.normal(0, 0.1, 1_000_000)
-
-result = fl.smooth_streaming(x, y, chunk_size=10000, overlap=1000)
+streaming = fl.StreamingLowess(chunk_size=10000, overlap=1000)
+chunk_result = streaming.process_chunk(x_chunk, y_chunk)
+final_result = streaming.finalize()
 ```
 
 ---
 
-### smooth_online
+### OnlineLowess
 
-Online mode for real-time data.
+Stateful online mode for real-time data.
 
 ```python
-fastlowess.smooth_online(
-    x: ArrayLike,
-    y: ArrayLike,
+class fastlowess.OnlineLowess(
     fraction: float = 0.2,
     window_capacity: int = 100,
     min_points: int = 2,
     iterations: int = 3,
     update_mode: str = "incremental",
-    **kwargs  # Same as smooth()
-) -> dict
+    **kwargs  # Same as Lowess
+)
+```
+
+**Methods:**
+
+#### `add_points`
+
+Adds new points to the window and returns smoothed values.
+
+```python
+def add_points(x: ArrayLike, y: ArrayLike) -> LowessResult
 ```
 
 **Additional Parameters:**
@@ -158,12 +160,32 @@ fastlowess.smooth_online(
 **Example:**
 
 ```python
-# Sensor data simulation
-sensor_times = np.arange(100)
-sensor_values = 20 + 5 * np.sin(sensor_times / 10) + np.random.normal(0, 1, 100)
-
-result = fl.smooth_online(sensor_times, sensor_values, window_capacity=25)
+online = fl.OnlineLowess(window_capacity=25)
+result = online.add_points(new_x, new_y)
+print(result.y)
 ```
+
+---
+
+## Return Object
+
+### LowessResult
+
+The result object returned by `fit()` and other methods.
+
+| Attribute            | Type    | Description                         |
+|----------------------|---------|-------------------------------------|
+| `x`                  | ndarray | Input x values                      |
+| `y`                  | ndarray | Smoothed y values                   |
+| `fraction_used`      | float   | Actual fraction used                |
+| `residuals`          | ndarray | If `return_residuals=True`          |
+| `confidence_lower`   | ndarray | If `confidence_intervals` set       |
+| `confidence_upper`   | ndarray | If `confidence_intervals` set       |
+| `prediction_lower`   | ndarray | If `prediction_intervals` set       |
+| `prediction_upper`   | ndarray | If `prediction_intervals` set       |
+| `robustness_weights` | ndarray | If `return_robustness_weights=True` |
+| `diagnostics`        | object  | If `return_diagnostics=True`        |
+| `cv_scores`          | list    | If cross-validation used            |
 
 ---
 
@@ -208,31 +230,13 @@ result = fl.smooth_online(sensor_times, sensor_values, window_capacity=25)
 
 ## Diagnostics
 
-When `return_diagnostics=True`, the result includes:
+When `return_diagnostics=True`, the `result.diagnostics` attribute contains:
 
 ```python
-result["diagnostics"] = {
-    "rmse": float,        # Root Mean Square Error
-    "mae": float,         # Mean Absolute Error
-    "r_squared": float,   # R² coefficient
-    "residual_sd": float, # Residual standard deviation
-    "effective_df": float # Effective degrees of freedom
-}
+class Diagnostics:
+    rmse: float        # Root Mean Square Error
+    mae: float         # Mean Absolute Error
+    r_squared: float   # R² coefficient
+    residual_sd: float # Residual standard deviation
+    effective_df: float # Effective degrees of freedom
 ```
-
----
-
-## Exceptions
-
-```python
-class LowessError(Exception):
-    """Base exception for LOWESS errors."""
-    pass
-```
-
-Common error conditions:
-
-- Mismatched array lengths
-- Invalid fraction (not in (0, 1])
-- Insufficient data points
-- Empty input arrays

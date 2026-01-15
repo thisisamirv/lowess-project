@@ -1,72 +1,65 @@
-test_that("fastlowess() rejects invalid inputs", {
-    x <- 1:10
-    y <- 1:10
-
-    # Mismatched lengths
-    expect_error(
-        fastlowess(1:10, 1:5),
-        "x and y must have the same length"
-    )
-
+test_that("Lowess rejects invalid inputs", {
     # Invalid fraction
     expect_error(
-        fastlowess(x, y, fraction = -0.1),
+        Lowess(fraction = -0.1),
         "fraction must be between 0 and 1"
     )
     expect_error(
-        fastlowess(x, y, fraction = 1.5),
+        Lowess(fraction = 1.5),
         "fraction must be between 0 and 1"
     )
 
     # Invalid iterations
     expect_error(
-        fastlowess(x, y, iterations = -1),
+        Lowess(iterations = -1),
         "iterations must be a non-negative integer"
+    )
+
+    # Mismatched lengths at fit time
+    expect_error(
+        Lowess(fraction = 0.5)$fit(as.double(1:10), as.double(1:5)),
+        "x and y must have the same length"
     )
 })
 
-test_that("fastlowess_online() rejects invalid inputs", {
-    x <- 1:10
-    y <- 1:10
-
-    # Mismatched lengths
-    expect_error(
-        fastlowess_online(1:10, 1:5),
-        "x and y must have the same length"
-    )
-
+test_that("OnlineLowess rejects invalid inputs", {
     # Invalid parameters
     expect_error(
-        fastlowess_online(x, y, fraction = -0.1),
+        OnlineLowess(fraction = -0.1),
         "fraction must be between 0 and 1"
     )
     expect_error(
-        fastlowess_online(x, y, window_capacity = 0),
+        OnlineLowess(window_capacity = 0),
         "window_capacity must be a positive integer"
     )
     expect_error(
-        fastlowess_online(x, y, min_points = -1),
+        OnlineLowess(min_points = -1),
         "min_points must be a non-negative integer"
+    )
+
+    # Mismatched lengths at add_points time
+    ol <- OnlineLowess(fraction = 0.5)
+    expect_error(
+        ol$add_points(as.double(1:10), as.double(1:5)),
+        "x and y must have the same length"
     )
 })
 
-test_that("fastlowess_streaming() rejects invalid inputs", {
-    x <- 1:10
-    y <- 1:10
-
-    # Mismatched lengths
-    expect_error(
-        fastlowess_streaming(1:10, 1:5),
-        "x and y must have the same length"
-    )
-
+test_that("StreamingLowess rejects invalid inputs", {
     # Invalid parameters
     expect_error(
-        fastlowess_streaming(x, y, fraction = -0.1),
+        StreamingLowess(fraction = -0.1),
         "fraction must be between 0 and 1"
     )
     expect_error(
-        fastlowess_streaming(x, y, chunk_size = 0),
+        StreamingLowess(chunk_size = 0),
         "chunk_size must be a positive integer"
+    )
+
+    # Mismatched lengths at process_chunk time
+    sl <- StreamingLowess(fraction = 0.5)
+    expect_error(
+        sl$process_chunk(as.double(1:10), as.double(1:5)),
+        "x and y must have the same length"
     )
 })

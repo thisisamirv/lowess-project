@@ -22,13 +22,13 @@ For true real-time applications where each point must be processed immediately.
     times <- 1:100
     temperatures <- 20 + 5 * sin(times / 10) + rnorm(100)
 
-    result <- fastlowess_online(
-        times, temperatures,
+    model <- OnlineLowess(
         fraction = 0.3,
         window_capacity = 25,
         min_points = 5,
         update_mode = "incremental"
     )
+    result <- model$add_points(times, temperatures)
     ```
 
 === "Python"
@@ -171,13 +171,14 @@ For large datasets that arrive in batches or files.
     x <- seq(0, 100000, by = 1)
     y <- sin(x / 1000) + rnorm(length(x), sd = 0.1)
 
-    result <- fastlowess_streaming(
-        x, y,
+    model <- StreamingLowess(
         fraction = 0.05,
         chunk_size = 10000,
         overlap = 1000,
         merge_strategy = "weighted"
     )
+    result <- model$process_chunk(x, y)
+    final <- model$finalize()
     ```
 
 === "Python"
@@ -319,7 +320,7 @@ For large datasets that arrive in batches or files.
         }
         
         if (length(data_x) >= 5) {
-            result <- fastlowess(data_x, data_y, fraction = 0.4)
+            result <- Lowess(fraction = 0.4)$fit(data_x, data_y)
             current_smoothed <- tail(result$y, 1)
         }
     }

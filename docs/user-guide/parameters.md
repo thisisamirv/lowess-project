@@ -252,7 +252,7 @@ The proportion of data used for each local fit. **Most important parameter.**
 
 === "R"
     ```r
-    result <- fastlowess(x, y, fraction = 0.3)
+    result <- Lowess(fraction = 0.3)$fit(x, y)
     ```
 
 === "Python"
@@ -303,7 +303,7 @@ Number of robustness iterations for outlier resistance.
 
 === "R"
     ```r
-    result <- fastlowess(x, y, iterations = 5)
+    result <- Lowess(iterations = 5)$fit(x, y)
     ```
 
 === "Python"
@@ -350,7 +350,7 @@ Interpolation optimization threshold. Points within `delta` distance reuse the p
 
 === "R"
     ```r
-    result <- fastlowess(x, y, delta = 0.05)
+    result <- Lowess(delta = 0.05)$fit(x, y)
     ```
 
 === "Python"
@@ -420,7 +420,7 @@ See [Weight Functions](kernels.md) for detailed comparison.
 
 === "R"
     ```r
-    result <- fastlowess(x, y, weight_function = "epanechnikov")
+    result <- Lowess(weight_function = "epanechnikov")$fit(x, y)
     ```
 
 === "Python"
@@ -482,7 +482,7 @@ See [Robustness](robustness.md) for detailed comparison.
 
 === "R"
     ```r
-    result <- fastlowess(x, y, robustness_method = "talwar")
+    result <- Lowess(robustness_method = "talwar")$fit(x, y)
     ```
 
 === "Python"
@@ -548,7 +548,7 @@ For example:
 
 === "R"
     ```r
-    result <- fastlowess(x, y, boundary_policy = "reflect")
+    result <- Lowess(boundary_policy = "reflect")$fit(x, y)
     ```
 
 === "Python"
@@ -608,7 +608,7 @@ For example:
 
 === "R"
     ```r
-    result <- fastlowess(x, y, scaling_method = "mad")
+    result <- Lowess(scaling_method = "mad")$fit(x, y)
     ```
 
 === "Python"
@@ -670,7 +670,7 @@ For example:
 
 === "R"
     ```r
-    result <- fastlowess(x, y, zero_weight_fallback = "use_local_mean")
+    result <- Lowess(zero_weight_fallback = "use_local_mean")$fit(x, y)
     ```
 
 === "Python"
@@ -716,7 +716,7 @@ Enable early stopping when robustness weights stabilize.
 
 === "R"
     ```r
-    result <- fastlowess(x, y, iterations = 20, auto_converge = 1e-6)
+    result <- Lowess(iterations = 20, auto_converge = 1e-6)$fit(x, y)
     ```
 
 === "Python"
@@ -763,7 +763,7 @@ Include residuals (`y - smoothed`) in the output.
 
 === "R"
     ```r
-    result <- fastlowess(x, y, return_residuals = TRUE)
+    result <- Lowess(return_residuals = TRUE)$fit(x, y)
     print(result$residuals)
     ```
 
@@ -828,7 +828,7 @@ Include fit quality metrics (Batch and Streaming only).
 
 === "R"
     ```r
-    result <- fastlowess(x, y, return_diagnostics = TRUE)
+    result <- Lowess(return_diagnostics = TRUE)$fit(x, y)
     cat(sprintf("R²: %.4f\n", result$diagnostics$r_squared))
     ```
 
@@ -885,7 +885,7 @@ Include final robustness weights (useful for outlier detection).
 
 === "R"
     ```r
-    result <- fastlowess(x, y, iterations = 3, return_robustness_weights = TRUE)
+    result <- Lowess(iterations = 3, return_robustness_weights = TRUE)$fit(x, y)
     outliers <- which(result$robustness_weights < 0.5)
     ```
 
@@ -944,7 +944,7 @@ See [Intervals](intervals.md) for detailed usage.
 
 === "R"
     ```r
-    result <- fastlowess(x, y, confidence_intervals = 0.95, prediction_intervals = 0.95)
+    result <- Lowess(confidence_intervals = 0.95, prediction_intervals = 0.95)$fit(x, y)
     ```
 
 === "Python"
@@ -999,7 +999,7 @@ Selection strategy for automated parameter tuning.
 
 === "R"
     ```r
-    result <- fastlowess(x, y, cv_method = "kfold", cv_k = 5)
+    result <- Lowess(cv_method = "kfold", cv_k = 5)$fit(x, y)
     ```
 
 === "Python"
@@ -1048,7 +1048,7 @@ Points per chunk in Streaming mode.
 
 === "R"
     ```r
-    result <- fastlowess_streaming(x, y, chunk_size = 10000)
+    result <- StreamingLowess(chunk_size = 10000)$process_chunk(x, y)
     ```
 
 === "Python"
@@ -1096,7 +1096,7 @@ Overlap between chunks in Streaming mode.
 
 === "R"
     ```r
-    result <- fastlowess_streaming(x, y, overlap = 1000)
+    result <- StreamingLowess(overlap = 1000)$process_chunk(x, y)
     ```
 
 === "Python"
@@ -1164,7 +1164,7 @@ For example:
 
 === "R"
     ```r
-    result <- fastlowess_streaming(x, y, merge_strategy = "weighted")
+    result <- StreamingLowess(merge_strategy = "weighted")$process_chunk(x, y)
     ```
 
 === "Python"
@@ -1211,7 +1211,7 @@ Maximum points held in memory for Online mode.
 
 === "R"
     ```r
-    result <- fastlowess_online(x, y, window_capacity = 500)
+    result <- OnlineLowess(window_capacity = 500)$add_points(x, y)
     ```
 
 === "Python"
@@ -1257,7 +1257,7 @@ Minimum points required before Online filter starts producing outputs.
 
 === "R"
     ```r
-    result <- fastlowess_online(x, y, min_points = 10)
+    result <- OnlineLowess(min_points = 10)$add_points(x, y)
     ```
 
 === "Python"
@@ -1319,7 +1319,7 @@ For example:
 
 === "R"
     ```r
-    result <- fastlowess_online(x, y, update_mode = "full")
+    result <- OnlineLowess(update_mode = "full")$add_points(x, y)
     ```
 
 === "Python"

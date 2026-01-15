@@ -275,9 +275,9 @@ if (!nativeBinding) {
     }
 }
 
-const { smooth, StreamingLowess, OnlineLowess, LowessResultObj } = nativeBinding
+const { Lowess, StreamingLowess, OnlineLowess, LowessResultObj } = nativeBinding
 
-module.exports.smooth = smooth
+module.exports.Lowess = Lowess
 module.exports.StreamingLowess = StreamingLowess
 module.exports.OnlineLowess = OnlineLowess
 module.exports.LowessResultObj = LowessResultObj

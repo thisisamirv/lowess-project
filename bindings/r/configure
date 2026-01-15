@@ -59,7 +59,7 @@ if [ "$IS_WASM" = "1" ]; then
     # 2. Set EXPORT_ALL=0 to only export specified functions
     # 3. List our entry points - extendr generates R_init_<package>_extendr, not R_init_<package>
     # 4. Set ERROR_ON_UNDEFINED_SYMBOLS=0 - undefined Rust std symbols will be resolved at runtime
-    UNDEFINED_FLAGS="-s SIDE_MODULE=2 -L${WASM_LIBDIR} -lrfastlowess -s EXPORT_ALL=0 -s ERROR_ON_UNDEFINED_SYMBOLS=0 -s EXPORTED_FUNCTIONS=['_R_init_rfastlowess_extendr'] -s ASSERTIONS=0"
+    UNDEFINED_FLAGS="-s SIDE_MODULE=2 -L${WASM_LIBDIR} -lrfastlowess -s EXPORT_ALL=0 -s ERROR_ON_UNDEFINED_SYMBOLS=0 -s EXPORTED_FUNCTIONS=['_R_init_rfastlowess','_R_init_rfastlowess_extendr'] -s ASSERTIONS=0"
 elif [ "$UNAME" = "Darwin" ]; then
     echo "Configuring for macOS..."
     # Detect if CARGO_BUILD_TARGET is set (Conda sets this)

@@ -6,23 +6,53 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.99.9
+
+### Changed
+
+**Monorepo:**
+
+- Bump rust version to 1.88 for better stability
+- Change function-based builder pattern in the bindings to class-based builder pattern, allowing true streaming and online processing
+- Improve API docs
+
+**Julia:**
+
+- Package is now registered on JuliaRegistries
+
+**C++:**
+
+- Library is now available on conda-forge (libfastlowess)
+
+**R:**
+
+- Package is now available on conda-forge (r-rfastlowess)
+
+**Node.js:**
+
+- Package is now available on npm (fastlowess)
+
+**WASM:**
+
+- Package is now available on npm (fastlowess-wasm)
+
 ## 0.99.8
 
 ### Added
 
-**fastLowess (Julia):**
+**Julia:**
 
 - Initial implementation
 
-**fastLowess (Node.js):**
+**Node.js:**
 
 - Initial implementation
 
-**fastLowess (WASM):**
+**WASM:**
 
 - Initial implementation
 
-**fastLowess (C++):**
+**C++:**
 
 - Initial implementation
 
@@ -30,7 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-**fastlowess (Python):**
+**Python:**
 
 - Switch to Stable ABI for CPython
 
@@ -79,7 +109,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-**rfastlowess (R):**
+**R:**
 
 - Prepared package for rOpenSci Software Peer Review
 - Renamed main functions to avoid conflicts with base R:
@@ -90,7 +120,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-**rfastlowess (R):**
+**R:**
 
 - Documentation website using `pkgdown` with automated deployment
 - Comprehensive function documentation with examples and cross-references
@@ -101,7 +131,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-**rfastlowess (R):**
+**R:**
 
 - Documentation URLs
 - Package startup messages
@@ -111,7 +141,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-**rfastlowess (R):**
+**R:**
 
 - Modified package for Bioconductor submission
 
@@ -119,13 +149,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-**rfastlowess (R):**
+**R:**
 
 - Support for new features in `fastLowess` v0.4.0, including `NoBoundary` boundary policy and `MAD`/`MAR` scaling methods
 
 ### Changed
 
-**rfastlowess (R):**
+**R:**
 
 - Changed license from AGPL-3.0-or-later to dual MIT OR Apache-2.0
 - Updated documentation
@@ -219,11 +249,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Parallel anchor precomputation for large datasets
 - Cache-oblivious tile-based processing
 
-**fastlowess (Python):**
+**Python:**
 
 - Support for new features in `fastLowess` v0.4.0
 
-**rfastlowess (R):**
+**R:**
 
 - Support for new features in `fastLowess` v0.4.0
 
@@ -245,12 +275,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added intelligent buffer capacity management for GPU
 - Refactored GPU compute kernel with shared memory tiling
 
-**fastlowess (Python):**
+**Python:**
 
 - Changed license from AGPL-3.0-or-later to dual MIT OR Apache-2.0
 - Updated documentation
 
-**rfastlowess (R):**
+**R:**
 
 - Changed license from AGPL-3.0-or-later to dual MIT OR Apache-2.0
 - Updated documentation
@@ -275,7 +305,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `backend()` setter method to all builders
 - Tests for GPU engine and parallel execution consistency
 
-**rfastlowess (R):**
+**R:**
 
 - Option to install from R-universe without Rust
 
@@ -294,13 +324,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated `lowess` dependency to v0.6.0
 - Made `ndarray` and `rayon` optional dependencies
 
-**fastlowess (Python):**
+**Python:**
 
 - Updated `fastLowess` dependency to v0.3.0
 - Refactored internal API usage
 - Updated cross-validation parameter handling
 
-**rfastlowess (R):**
+**R:**
 
 - Updated to `fastLowess` v0.3.0 and `lowess` v0.6.0
 - Updated cross-validation API
@@ -311,12 +341,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - no-std build now compiles successfully
 
-**fastlowess (Python):**
+**Python:**
 
 - Documentation build errors
 - Bug where `parallel` argument was not exposed
 
-**rfastlowess (R):**
+**R:**
 
 - Automated vendor checksum fixing for CI builds
 
@@ -332,11 +362,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-**fastlowess (Python):**
+**Python:**
 
 - Support for new features in `fastLowess` v0.2.0
 
-**rfastlowess (R):**
+**R:**
 
 - Support for new features in `fastLowess` v0.2.0
 
@@ -356,12 +386,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Eliminated per-iteration division in `interpolate_gap`
 - Aligned with `lowess` crate v0.5.3 optimizations
 
-**fastlowess (Python):**
+**Python:**
 
 - Updated documentation
 - Changed module name from `fastLowess` to `fastlowess`
 
-**rfastlowess (R):**
+**R:**
 
 - Improved documentation
 
@@ -388,11 +418,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release with parallel execution support
 
-**fastlowess (Python):**
+**Python:**
 
 - Python binding for `fastLowess`
 - Support for Python 3.14
 
-**rfastlowess (R):**
+**R:**
 
 - R binding for `fastLowess`

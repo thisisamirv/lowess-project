@@ -37,5 +37,5 @@ $(STATLIB):
 clean:
 	@rm -Rf $(SHLIB) $(STATLIB) $(OBJECTS)
 
-dummy.o: dummy.c
-	@$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -c dummy.c -o dummy.o
+entrypoint.o: entrypoint.c
+	@$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -c entrypoint.c -o entrypoint.o

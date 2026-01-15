@@ -8,6 +8,7 @@
     "build": "napi build --release",
     "build:debug": "napi build",
     "test": "node --test ../../tests/nodejs/test_fastlowess.js",
+    "lint": "eslint index.js ../../tests/nodejs/test_fastlowess.js",
     "universal": "napi universal"
   },
   "napi": {
@@ -23,16 +24,19 @@
     ]
   },
   "optionalDependencies": {
-    "fastlowess-linux-x64-gnu": "^0.99.9",
-    "fastlowess-linux-arm64-gnu": "^0.99.9",
-    "fastlowess-linux-x64-musl": "^0.99.9",
-    "fastlowess-win32-x64-msvc": "^0.99.9",
-    "fastlowess-win32-arm64-msvc": "^0.99.9",
+    "fastlowess-darwin-arm64": "^0.99.9",
     "fastlowess-darwin-x64": "^0.99.9",
-    "fastlowess-darwin-arm64": "^0.99.9"
+    "fastlowess-linux-arm64-gnu": "^0.99.9",
+    "fastlowess-linux-x64-gnu": "^0.99.9",
+    "fastlowess-linux-x64-musl": "^0.99.9",
+    "fastlowess-win32-arm64-msvc": "^0.99.9",
+    "fastlowess-win32-x64-msvc": "^0.99.9"
   },
   "devDependencies": {
-    "@napi-rs/cli": "^3.5.1"
+    "@eslint/js": "^9.39.2",
+    "@napi-rs/cli": "^3.5.1",
+    "eslint": "^9.39.2",
+    "globals": "^17.0.0"
   },
   "engines": {
     "node": ">= 20"

@@ -46,8 +46,10 @@ function main() {
     );
     const resFull = new Float64Array(nPoints);
     for (let i = 0; i < nPoints; i++) {
-        const val = onlineFull.update(x[i], y[i]);
-        resFull[i] = val !== null ? val : NaN;
+        const chunkX = new Float64Array([x[i]]);
+        const chunkY = new Float64Array([y[i]]);
+        const res = onlineFull.addPoints(chunkX, chunkY);
+        resFull[i] = res.y[0];
     }
 
     // Incremental Update Mode (faster for large windows)
@@ -58,8 +60,10 @@ function main() {
     );
     const resInc = new Float64Array(nPoints);
     for (let i = 0; i < nPoints; i++) {
-        const val = onlineInc.update(x[i], y[i]);
-        resInc[i] = val !== null ? val : NaN;
+        const chunkX = new Float64Array([x[i]]);
+        const chunkY = new Float64Array([y[i]]);
+        const res = onlineInc.addPoints(chunkX, chunkY);
+        resInc[i] = res.y[0];
     }
 
     // Compare results

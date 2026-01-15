@@ -45,7 +45,7 @@ x <- seq(0, 10, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.3)
 
 # Basic smoothing
-result <- fastlowess(x, y, fraction = 0.3)
+result <- Lowess(fraction = 0.3)$fit(x, y)
 
 # Plot
 plot(x, y, pch = 16, col = "gray", main = "Basic LOWESS Smoothing")
@@ -60,11 +60,11 @@ y_outliers <- y
 y_outliers[sample(1:100, 10)] <- y_outliers[sample(1:100, 10)] + 5
 
 # Robust smoothing with confidence intervals
-result_robust <- fastlowess(x, y_outliers,
+result_robust <- Lowess(
     fraction = 0.3,
     iterations = 5,
     confidence_intervals = 0.95
-)
+)$fit(x, y_outliers)
 
 # Plot
 plot(x, y_outliers, pch = 16, col = "gray", main = "Robust LOWESS")
@@ -73,13 +73,13 @@ lines(result_robust$x, result_robust$confidence_lower, col = "blue", lty = 2)
 lines(result_robust$x, result_robust$confidence_upper, col = "blue", lty = 2)
 ```
 
-## Main Functions
+## Main Classes
 
-| Function                 | Use Case                             |
-|--------------------------|--------------------------------------|
-| `fastlowess()`           | Primary interface - batch processing |
-| `fastlowess_streaming()` | Large datasets (>100K points)        |
-| `fastlowess_online()`    | Real-time data streams               |
+| Class              | Use Case                             |
+|--------------------|--------------------------------------|
+| `Lowess`           | Primary interface - batch processing |
+| `StreamingLowess`  | Large datasets (>100K points)        |
+| `OnlineLowess`     | Real-time data streams               |
 
 ## Learn More
 

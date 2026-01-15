@@ -17,9 +17,7 @@
 #include <vector>
 
 // Include the C header
-extern "C" {
 #include "fastlowess.h"
-}
 
 namespace fastlowess {
 
@@ -241,109 +239,201 @@ private:
 };
 
 /**
- * @brief Perform batch LOWESS smoothing.
- *
- * @param x Independent variable values
- * @param y Dependent variable values
- * @param options Smoothing options
- * @return LowessResult containing smoothed values
- * @throws LowessError if smoothing fails
+ * @brief Batch LOWESS model.
  */
-inline LowessResult smooth(const std::vector<double> &x,
-                           const std::vector<double> &y,
-                           const LowessOptions &options = {}) {
-  if (x.size() != y.size()) {
-    throw LowessError("x and y must have the same length");
-  }
-  if (x.empty()) {
-    throw LowessError("Input arrays must not be empty");
-  }
-
-  fastlowess_CppLowessResult result = cpp_lowess_smooth(
-      x.data(), y.data(), x.size(), options.fraction, options.iterations,
-      options.delta, options.weight_function.c_str(),
-      options.robustness_method.c_str(), options.scaling_method.c_str(),
-      options.boundary_policy.c_str(), options.confidence_intervals,
-      options.prediction_intervals, options.return_diagnostics ? 1 : 0,
-      options.return_residuals ? 1 : 0,
-      options.return_robustness_weights ? 1 : 0,
-      options.zero_weight_fallback.c_str(), options.auto_converge,
-      options.cv_fractions.empty() ? nullptr : options.cv_fractions.data(),
-      options.cv_fractions.size(), options.cv_method.c_str(), options.cv_k,
-      options.parallel ? 1 : 0);
-
-  if (result.error != nullptr) {
-    std::string error_msg(result.error);
-    cpp_lowess_free_result(&result);
-    throw LowessError(error_msg);
+class Lowess {
+public:
+  explicit Lowess(const LowessOptions &options = {}) {
+    ptr_ = cpp_lowess_new(
+        options.fraction, options.iterations, options.delta,
+        options.weight_function.c_str(), options.robustness_method.c_str(),
+        options.scaling_method.c_str(), options.boundary_policy.c_str(),
+        options.confidence_intervals, options.prediction_intervals,
+        options.return_diagnostics ? 1 : 0, options.return_residuals ? 1 : 0,
+        options.return_robustness_weights ? 1 : 0,
+        options.zero_weight_fallback.c_str(), options.auto_converge,
+        options.cv_fractions.empty() ? nullptr : options.cv_fractions.data(),
+        options.cv_fractions.size(), options.cv_method.c_str(), options.cv_k,
+        options.parallel ? 1 : 0);
   }
 
-  return LowessResult(std::move(result));
-}
+  ~Lowess() {
+    if (ptr_) {
+      cpp_lowess_free(ptr_);
+    }
+  }
+
+  // Non-copyable
+  Lowess(const Lowess &) = delete;
+  Lowess &operator=(const Lowess &) = delete;
+
+  // Move-able
+  Lowess(Lowess &&other) noexcept : ptr_(other.ptr_) { other.ptr_ = nullptr; }
+
+  Lowess &operator=(Lowess &&other) noexcept {
+    if (this != &other) {
+      if (ptr_)
+        cpp_lowess_free(ptr_);
+      ptr_ = other.ptr_;
+      other.ptr_ = nullptr;
+    }
+    return *this;
+  }
+
+  LowessResult fit(const std::vector<double> &x, const std::vector<double> &y) {
+    if (x.size() != y.size()) {
+      throw LowessError("x and y must have the same length");
+    }
+    if (x.empty()) {
+      throw LowessError("Input arrays must not be empty");
+    }
+
+    auto result = cpp_lowess_fit(ptr_, x.data(), y.data(), x.size());
+
+    if (result.error != nullptr) {
+      std::string error_msg(result.error);
+      cpp_lowess_free_result(&result);
+      throw LowessError(error_msg);
+    }
+
+    return LowessResult(std::move(result));
+  }
+
+private:
+  fastlowess_CppLowess *ptr_ = nullptr;
+};
 
 /**
- * @brief Perform streaming LOWESS for large datasets.
+ * @brief Streaming LOWESS model.
  */
-inline LowessResult streaming(const std::vector<double> &x,
-                              const std::vector<double> &y,
-                              const StreamingOptions &options = {}) {
-  if (x.size() != y.size()) {
-    throw LowessError("x and y must have the same length");
-  }
-  if (x.empty()) {
-    throw LowessError("Input arrays must not be empty");
-  }
-
-  fastlowess_CppLowessResult result = cpp_lowess_streaming(
-      x.data(), y.data(), x.size(), options.fraction, options.chunk_size,
-      options.overlap, options.iterations, options.delta,
-      options.weight_function.c_str(), options.robustness_method.c_str(),
-      options.scaling_method.c_str(), options.boundary_policy.c_str(),
-      options.auto_converge, options.return_diagnostics ? 1 : 0,
-      options.return_residuals ? 1 : 0,
-      options.return_robustness_weights ? 1 : 0,
-      options.zero_weight_fallback.c_str(), options.merge_strategy.c_str(),
-      options.parallel ? 1 : 0);
-
-  if (result.error != nullptr) {
-    std::string error_msg(result.error);
-    cpp_lowess_free_result(&result);
-    throw LowessError(error_msg);
+class StreamingLowess {
+public:
+  explicit StreamingLowess(const StreamingOptions &options = {}) {
+    ptr_ = cpp_streaming_new(
+        options.fraction, options.iterations, options.delta,
+        options.weight_function.c_str(), options.robustness_method.c_str(),
+        options.scaling_method.c_str(), options.boundary_policy.c_str(),
+        options.return_diagnostics ? 1 : 0, options.return_residuals ? 1 : 0,
+        options.return_robustness_weights ? 1 : 0,
+        options.zero_weight_fallback.c_str(), options.auto_converge,
+        options.parallel ? 1 : 0, options.chunk_size, options.overlap,
+        options.merge_strategy.c_str());
   }
 
-  return LowessResult(std::move(result));
-}
+  ~StreamingLowess() {
+    if (ptr_) {
+      cpp_streaming_free(ptr_);
+    }
+  }
+
+  StreamingLowess(const StreamingLowess &) = delete;
+  StreamingLowess &operator=(const StreamingLowess &) = delete;
+  StreamingLowess(StreamingLowess &&other) noexcept : ptr_(other.ptr_) {
+    other.ptr_ = nullptr;
+  }
+  StreamingLowess &operator=(StreamingLowess &&other) noexcept {
+    if (this != &other) {
+      if (ptr_)
+        cpp_streaming_free(ptr_);
+      ptr_ = other.ptr_;
+      other.ptr_ = nullptr;
+    }
+    return *this;
+  }
+
+  LowessResult process_chunk(const std::vector<double> &x,
+                             const std::vector<double> &y) {
+    if (expect_finalized_)
+      throw LowessError("Model already finalized");
+    if (x.size() != y.size())
+      throw LowessError("x and y length mismatch");
+
+    auto result =
+        cpp_streaming_process(ptr_, x.data(), y.data(), x.size());
+
+    if (result.error != nullptr) {
+      std::string error_msg(result.error);
+      cpp_lowess_free_result(&result);
+      throw LowessError(error_msg);
+    }
+    return LowessResult(std::move(result));
+  }
+
+  LowessResult finalize() {
+    if (expect_finalized_)
+      throw LowessError("Model already finalized");
+    expect_finalized_ = true;
+
+    auto result = cpp_streaming_finalize(ptr_);
+    if (result.error != nullptr) {
+      std::string error_msg(result.error);
+      cpp_lowess_free_result(&result);
+      throw LowessError(error_msg);
+    }
+    return LowessResult(std::move(result));
+  }
+
+private:
+  fastlowess_CppStreamingLowess *ptr_ = nullptr;
+  bool expect_finalized_ = false;
+};
 
 /**
- * @brief Perform online LOWESS with sliding window.
+ * @brief Online LOWESS model.
  */
-inline LowessResult online(const std::vector<double> &x,
-                           const std::vector<double> &y,
-                           const OnlineOptions &options = {}) {
-  if (x.size() != y.size()) {
-    throw LowessError("x and y must have the same length");
-  }
-  if (x.empty()) {
-    throw LowessError("Input arrays must not be empty");
-  }
-
-  fastlowess_CppLowessResult result = cpp_lowess_online(
-      x.data(), y.data(), x.size(), options.fraction, options.window_capacity,
-      options.min_points, options.iterations, options.delta,
-      options.weight_function.c_str(), options.robustness_method.c_str(),
-      options.scaling_method.c_str(), options.boundary_policy.c_str(),
-      options.update_mode.c_str(), options.auto_converge,
-      options.return_robustness_weights ? 1 : 0,
-      options.zero_weight_fallback.c_str(), options.parallel ? 1 : 0);
-
-  if (result.error != nullptr) {
-    std::string error_msg(result.error);
-    cpp_lowess_free_result(&result);
-    throw LowessError(error_msg);
+class OnlineLowess {
+public:
+  explicit OnlineLowess(const OnlineOptions &options = {}) {
+    ptr_ = cpp_online_new(
+        options.fraction, options.iterations, options.delta,
+        options.weight_function.c_str(), options.robustness_method.c_str(),
+        options.scaling_method.c_str(), options.boundary_policy.c_str(),
+        options.return_robustness_weights ? 1 : 0,
+        options.zero_weight_fallback.c_str(), options.auto_converge,
+        options.parallel ? 1 : 0, options.window_capacity, options.min_points,
+        options.update_mode.c_str());
   }
 
-  return LowessResult(std::move(result));
-}
+  ~OnlineLowess() {
+    if (ptr_) {
+      cpp_online_free(ptr_);
+    }
+  }
+
+  OnlineLowess(const OnlineLowess &) = delete;
+  OnlineLowess &operator=(const OnlineLowess &) = delete;
+  OnlineLowess(OnlineLowess &&other) noexcept : ptr_(other.ptr_) {
+    other.ptr_ = nullptr;
+  }
+  OnlineLowess &operator=(OnlineLowess &&other) noexcept {
+    if (this != &other) {
+      if (ptr_)
+        cpp_online_free(ptr_);
+      ptr_ = other.ptr_;
+      other.ptr_ = nullptr;
+    }
+    return *this;
+  }
+
+  LowessResult add_points(const std::vector<double> &x,
+                          const std::vector<double> &y) {
+    if (x.size() != y.size())
+      throw LowessError("x and y length mismatch");
+
+    auto result =
+        cpp_online_add_points(ptr_, x.data(), y.data(), x.size());
+
+    if (result.error != nullptr) {
+      std::string error_msg(result.error);
+      cpp_lowess_free_result(&result);
+      throw LowessError(error_msg);
+    }
+    return LowessResult(std::move(result));
+  }
+
+private:
+  fastlowess_CppOnlineLowess *ptr_ = nullptr;
+};
 
 } // namespace fastlowess
 

@@ -28,7 +28,7 @@ $$w(u) = \begin{cases} (1 - u^2)^2 & |u| < 1 \\ 0 & |u| \geq 1 \end{cases}$$
 
 === "R"
     ```r
-    result <- fastlowess(x, y, iterations = 3, robustness_method = "bisquare")
+    result <- Lowess(iterations = 3, robustness_method = "bisquare")$fit(x, y)
     ```
 
 === "Python"
@@ -80,7 +80,7 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}$$
 
 === "R"
     ```r
-    result <- fastlowess(x, y, iterations = 3, robustness_method = "huber")
+    result <- Lowess(iterations = 3, robustness_method = "huber")$fit(x, y)
     ```
 
 === "Python"
@@ -132,7 +132,7 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
 
 === "R"
     ```r
-    result <- fastlowess(x, y, iterations = 3, robustness_method = "talwar")
+    result <- Lowess(iterations = 3, robustness_method = "talwar")$fit(x, y)
     ```
 
 === "Python"
@@ -190,7 +190,7 @@ Use robustness weights to identify potential outliers:
 
 === "R"
     ```r
-    result <- fastlowess(x, y, iterations = 5, return_robustness_weights = TRUE)
+    result <- Lowess(iterations = 5, return_robustness_weights = TRUE)$fit(x, y)
 
     weights <- result$robustness_weights
     outliers <- which(weights < 0.5)
@@ -286,7 +286,7 @@ Residuals are scaled before computing robustness weights. Two methods:
 
 === "R"
     ```r
-    result <- fastlowess(x, y, iterations = 3, scaling_method = "mad")
+    result <- Lowess(iterations = 3, scaling_method = "mad")$fit(x, y)
     ```
 
 === "Python"
@@ -339,7 +339,7 @@ Stop iterations early when weights stabilize:
 
 === "R"
     ```r
-    result <- fastlowess(x, y, iterations = 10, auto_converge = 1e-6)
+    result <- Lowess(iterations = 10, auto_converge = 1e-6)$fit(x, y)
     ```
 
 === "Python"

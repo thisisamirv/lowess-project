@@ -2,28 +2,20 @@
 
 API reference for the `rfastlowess` R package.
 
-## Installation
-
-```r
-# From R-universe (recommended)
-install.packages("rfastlowess", repos = "https://thisisamirv.r-universe.dev")
-
-# From source (requires Rust)
-devtools::install_github("thisisamirv/lowess-project", subdir = "bindings/r")
-```
-
 ---
 
-## Functions
+## Classes
 
-### fastlowess
+The `rfastlowess` package provides three stateful classes for different smoothing scenarios. Each class is initialized with configuration parameters and provides methods for processing data.
 
-Main function for batch smoothing.
+### Lowess
+
+Main class for batch smoothing of complete datasets.
+
+#### Lowess Constructor
 
 ```r
-fastlowess(
-  x,
-  y,
+Lowess(
   fraction = 0.67,
   iterations = 3,
   delta = NULL,
@@ -48,20 +40,27 @@ fastlowess(
 
 **Arguments:**
 
-| Argument     | Type    | Default  | Description                            |
-|--------------|---------|----------|----------------------------------------|
-| `x`          | numeric | required | Independent variable                   |
-| `y`          | numeric | required | Dependent variable                     |
-| `fraction`   | numeric | 0.67     | Smoothing span (0, 1]                  |
-| `iterations` | integer | 3        | Robustness iterations                  |
-| `delta`      | numeric | NULL     | Interpolation threshold (auto if NULL) |
-| `parallel`   | logical | TRUE     | Enable parallel execution              |
+| Argument     | Type      | Default       | Description                            |
+| :----------- | :-------- | :------------ | :------------------------------------- |
+| `fraction`   | numeric   | 0.67          | Smoothing span (0, 1]                  |
+| `iterations` | integer   | 3             | Robustness iterations                  |
+| `delta`      | numeric   | NULL          | Interpolation threshold (auto if NULL) |
+| `parallel`   | logical   | TRUE          | Enable parallel execution              |
+
+#### Lowess Methods
+
+**`fit(x, y)`**
+
+Fits the LOWESS model to the provided data.
+
+- **`x`**: Independent variable (numeric vector)
+- **`y`**: Dependent variable (numeric vector)
 
 **Value:** A list with components:
 
 | Component            | Type    | Description                           |
-|----------------------|---------|---------------------------------------|
-| `x`                  | numeric | Input x values                        |
+| :------------------- | :------ | :------------------------------------ |
+| `x`                  | numeric | Input x values (sorted)               |
 | `y`                  | numeric | Smoothed y values                     |
 | `fraction_used`      | numeric | Actual fraction used                  |
 | `residuals`          | numeric | If `return_residuals = TRUE`          |
@@ -81,25 +80,27 @@ library(rfastlowess)
 x <- seq(0, 10, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.2)
 
-result <- fastlowess(x, y, fraction = 0.3, iterations = 3)
+model <- Lowess(fraction = 0.3, iterations = 3)
+result <- model$fit(x, y)
+
 plot(x, y, pch = 16, col = "gray")
 lines(result$x, result$y, col = "red", lwd = 2)
 ```
 
 ---
 
-### fastlowess_streaming
+### StreamingLowess
 
-Streaming mode for large datasets.
+Streaming mode for memory-efficient processing of large datasets in chunks.
+
+#### StreamingLowess Constructor
 
 ```r
-fastlowess_streaming(
-  x,
-  y,
+StreamingLowess(
   fraction = 0.67,
   iterations = 3,
-  chunk_size = 5000,
-  overlap = 500,
+  chunk_size = 5000L,
+  overlap = 500L,
   merge_strategy = "average",
   parallel = TRUE,
   ...
@@ -109,34 +110,48 @@ fastlowess_streaming(
 **Additional Arguments:**
 
 | Argument         | Type      | Default   | Description            |
-|------------------|-----------|-----------|------------------------|
+| :--------------- | :-------- | :-------- | :--------------------- |
 | `chunk_size`     | integer   | 5000      | Points per chunk       |
 | `overlap`        | integer   | 500       | Overlap between chunks |
 | `merge_strategy` | character | "average" | Merge method           |
 
+#### StreamingLowess Methods
+
+**`process_chunk(x, y)`**
+
+Processes a chunk of data. May return a partial result if enough data has been accumulated to finalize a section.
+
+**`finalize()`**
+
+Finalizes processing and returns any remaining smoothed points.
+
 **Example:**
 
 ```r
-# Large dataset
+# Large dataset simulation
 x <- seq(0, 100, length.out = 100000)
 y <- sin(x / 10) + rnorm(100000, sd = 0.1)
 
-result <- fastlowess_streaming(x, y, chunk_size = 10000)
+model <- StreamingLowess(fraction = 0.3, chunk_size = 10000L)
+result <- model$process_chunk(x, y)
+remaining <- model$finalize()
+
+smoothed_y <- c(result$y, remaining$y)
 ```
 
 ---
 
-### fastlowess_online
+### OnlineLowess
 
-Online mode for real-time data.
+Online mode for real-time smoothing of streaming data with a sliding window.
+
+#### OnlineLowess Constructor
 
 ```r
-fastlowess_online(
-  x,
-  y,
+OnlineLowess(
   fraction = 0.2,
-  window_capacity = 100,
-  min_points = 2,
+  window_capacity = 100L,
+  min_points = 2L,
   iterations = 3,
   update_mode = "incremental",
   ...
@@ -146,19 +161,32 @@ fastlowess_online(
 **Additional Arguments:**
 
 | Argument          | Type      | Default       | Description          |
-|-------------------|-----------|---------------|----------------------|
+| :---------------- | :-------- | :------------ | :------------------- |
 | `window_capacity` | integer   | 100           | Max points in window |
 | `min_points`      | integer   | 2             | Points before output |
 | `update_mode`     | character | "incremental" | Update strategy      |
+
+#### OnlineLowess Methods
+
+**`add_points(x, y)`**
+
+Adds new points to the online buffer and returns smoothed values for any points that have fallen out of the active update window.
 
 **Example:**
 
 ```r
 # Sensor simulation
-sensor_times <- 1:100
-sensor_values <- 20 + 5 * sin(sensor_times / 10) + rnorm(100)
+model <- OnlineLowess(window_capacity = 25L, fraction = 0.5)
 
-result <- fastlowess_online(sensor_times, sensor_values, window_capacity = 25)
+for (i in 1:100) {
+    x_new <- i
+    y_new <- 20 + 5 * sin(i / 10) + rnorm(1)
+   
+    result <- model$add_points(x_new, y_new)
+    if (length(result$y) > 0) {
+        cat(sprintf("Time %d: Smoothed = %.2f\n", result$x[1], result$y[1]))
+    }
+}
 ```
 
 ---
@@ -200,38 +228,23 @@ result <- fastlowess_online(sensor_times, sensor_values, window_capacity = 25)
 - `"kfold"` — K-fold cross-validation
 - `"loocv"` — Leave-one-out cross-validation
 
+### update_mode
+
+- `"incremental"` (default)
+- `"full"`
+
 ---
 
 ## Diagnostics
 
-When `return_diagnostics = TRUE`:
+When `return_diagnostics = TRUE`, the result includes:
 
 ```r
-result$diagnostics
-# $rmse        - Root Mean Square Error
-# $mae         - Mean Absolute Error
-# $r_squared   - R² coefficient
-# $residual_sd - Residual standard deviation
+result$diagnostics = list(
+    rmse = numeric,        # Root Mean Square Error
+    mae = numeric,         # Mean Absolute Error
+    r_squared = numeric,   # R² coefficient
+    residual_sd = numeric, # Residual standard deviation
+    effective_df = numeric # Effective degrees of freedom
+)
 ```
-
----
-
-## Comparison with stats::lowess
-
-| Feature              | rfastlowess | stats::lowess |
-|----------------------|:-----------:|:-------------:|
-| Parallel execution   | ✓           | ✗             |
-| Confidence intervals | ✓           | ✗             |
-| Prediction intervals | ✓           | ✗             |
-| Cross-validation     | ✓           | ✗             |
-| Streaming mode       | ✓           | ✗             |
-| Online mode          | ✓           | ✗             |
-| Kernel options       | 7           | 1             |
-| Robustness methods   | 3           | 1             |
-
----
-
-## See Also
-
-- `stats::lowess` — Base R implementation
-- `stats::loess` — Local polynomial regression

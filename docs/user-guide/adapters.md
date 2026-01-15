@@ -36,8 +36,7 @@ Standard mode for complete datasets. **Supports all features.**
 
 === "R"
     ```r
-    result <- fastlowess(
-        x, y,
+    model <- Lowess(
         fraction = 0.5,
         iterations = 3,
         confidence_intervals = 0.95,
@@ -45,6 +44,7 @@ Standard mode for complete datasets. **Supports all features.**
         return_diagnostics = TRUE,
         parallel = TRUE
     )
+    result <- model$fit(x, y)
     ```
 
 === "Python"
@@ -165,14 +165,15 @@ Process large datasets in chunks with configurable overlap.
 
 === "R"
     ```r
-    result <- fastlowess_streaming(
-        x, y,
+    model <- StreamingLowess(
         fraction = 0.3,
         iterations = 2,
         chunk_size = 5000,
         overlap = 500,
         merge_strategy = "average"
     )
+    result <- model$process_chunk(x, y)
+    final <- model$finalize()
     ```
 
 === "Python"
@@ -308,14 +309,14 @@ Incremental updates with a sliding window for real-time data.
 
 === "R"
     ```r
-    result <- fastlowess_online(
-        x, y,
+    model <- OnlineLowess(
         fraction = 0.2,
         iterations = 1,
         window_capacity = 100,
         min_points = 5,
         update_mode = "incremental"
     )
+    result <- model$add_points(x, y)
     ```
 
 === "Python"

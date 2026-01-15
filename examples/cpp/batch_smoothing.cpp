@@ -8,7 +8,7 @@
  * - Confidence and prediction intervals
  * - Diagnostics and cross-validation
  *
- * The batch adapter (smooth function) is the primary interface for
+ * The Lowess class is the primary interface for
  * processing complete datasets that fit in memory.
  */
 
@@ -77,7 +77,8 @@ int main() {
     fastlowess::LowessOptions basic_opts;
     basic_opts.fraction = 0.05;
     basic_opts.iterations = 0;
-    auto res_basic = fastlowess::smooth(data.x, data.y, basic_opts);
+    fastlowess::Lowess model_basic(basic_opts);
+    auto res_basic = model_basic.fit(data.x, data.y);
 
     // 3. Robust Smoothing (IRLS)
     std::cout << "Running robust smoothing (3 iterations)..." << std::endl;
@@ -87,7 +88,8 @@ int main() {
     robust_opts.robustness_method = "bisquare";
     robust_opts.return_robustness_weights = true;
     
-    auto res_robust = fastlowess::smooth(data.x, data.y, robust_opts);
+    fastlowess::Lowess model_robust(robust_opts);
+    auto res_robust = model_robust.fit(data.x, data.y);
     
     // 4. Uncertainty Quantification
     std::cout << "Computing confidence and prediction intervals..." << std::endl;
@@ -97,7 +99,8 @@ int main() {
     interval_opts.prediction_intervals = 0.95;
     interval_opts.return_diagnostics = true;
     
-    auto res_intervals = fastlowess::smooth(data.x, data.y, interval_opts);
+    fastlowess::Lowess model_intervals(interval_opts);
+    auto res_intervals = model_intervals.fit(data.x, data.y);
 
     // 5. Cross-Validation for optimal fraction
     std::cout << "Running cross-validation to find optimal fraction..." << std::endl;
@@ -111,7 +114,8 @@ int main() {
         fastlowess::LowessOptions cv_opts;
         cv_opts.fraction = f;
         cv_opts.return_diagnostics = true;
-        auto res = fastlowess::smooth(data.x, data.y, cv_opts);
+        fastlowess::Lowess model(cv_opts);
+        auto res = model.fit(data.x, data.y);
         if(res.diagnostics().has_value()) {
              double rmse = res.diagnostics().rmse;
              if(rmse < min_rmse) {
@@ -142,17 +146,17 @@ int main() {
     fastlowess::LowessOptions opt_ext;
     opt_ext.fraction = 0.6;
     opt_ext.boundary_policy = "extend";
-    auto r_ext = fastlowess::smooth(xl, yl, opt_ext);
+    auto r_ext = fastlowess::Lowess(opt_ext).fit(xl, yl);
     
     fastlowess::LowessOptions opt_ref;
     opt_ref.fraction = 0.6;
     opt_ref.boundary_policy = "reflect";
-    auto r_ref = fastlowess::smooth(xl, yl, opt_ref);
+    auto r_ref = fastlowess::Lowess(opt_ref).fit(xl, yl);
     
     fastlowess::LowessOptions opt_zero;
     opt_zero.fraction = 0.6;
     opt_zero.boundary_policy = "zero";
-    auto r_zr = fastlowess::smooth(xl, yl, opt_zero);
+    auto r_zr = fastlowess::Lowess(opt_zero).fit(xl, yl);
 
     std::cout << "Boundary policy comparison:" << std::endl;
     std::cout << std::fixed << std::setprecision(2);

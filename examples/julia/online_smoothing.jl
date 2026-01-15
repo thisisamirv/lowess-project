@@ -8,7 +8,7 @@ This example demonstrates online LOWESS smoothing for real-time data:
 - Different update modes (Full vs Incremental)
 - Memory-bounded processing with sliding window
 
-The online adapter (smooth_online function) is designed for:
+The OnlineLowess class is designed for:
 - Real-time data streams
 - Sensors and monitoring
 - Low-latency applications
@@ -25,7 +25,7 @@ if project_name != "fastlowess"
     script_dir = @__DIR__
     julia_pkg_dir = joinpath(dirname(script_dir), "julia")
     if !haskey(Pkg.project().dependencies, "fastlowess")
-        Pkg.develop(path=julia_pkg_dir)
+        Pkg.develop(path = julia_pkg_dir)
     end
 end
 
@@ -38,7 +38,7 @@ function main()
     # A sine wave with changing frequency and random noise
     n_points = 1000
     Random.seed!(42)
-    x = collect(Float64, 0:n_points-1)
+    x = collect(Float64, 0:(n_points-1))
     y_true = 20.0 .+ 5.0 .* sin.(x .* 0.1) .+ 2.0 .* sin.(x .* 0.02)
     y = y_true .+ randn(n_points) .* 1.2
 
@@ -51,23 +51,23 @@ function main()
     # 2. Sequential Online Processing
     # Full Update Mode (higher accuracy)
     println("Processing with 'full' update mode...")
-    res_full = smooth_online(
-        x, y,
-        fraction=0.3,
-        window_capacity=50,
-        iterations=3,
-        update_mode="full"
+    model_full = OnlineLowess(
+        fraction = 0.3,
+        window_capacity = 50,
+        iterations = 3,
+        update_mode = "full",
     )
+    res_full = add_points(model_full, x, y)
 
     # Incremental Update Mode (faster for large windows)
     println("Processing with 'incremental' update mode...")
-    res_inc = smooth_online(
-        x, y,
-        fraction=0.3,
-        window_capacity=50,
-        iterations=3,
-        update_mode="incremental"
+    model_inc = OnlineLowess(
+        fraction = 0.3,
+        window_capacity = 50,
+        iterations = 3,
+        update_mode = "incremental",
     )
+    res_inc = add_points(model_inc, x, y)
 
     # Compare results
     println("\nResults Comparison:")
@@ -75,9 +75,15 @@ function main()
     # Show sample around spike area
     println("\nSample around spike (indices 198-208):")
     println("Index\tRaw\t\tTrue\t\tFull\t\tIncremental")
-    for i in 198:208
-        @printf("%d\t%.2f\t\t%.2f\t\t%.2f\t\t%.2f\n",
-            i, y[i], y_true[i], res_full.y[i], res_inc.y[i])
+    for i = 198:208
+        @printf(
+            "%d\t%.2f\t\t%.2f\t\t%.2f\t\t%.2f\n",
+            i,
+            y[i],
+            y_true[i],
+            res_full.y[i],
+            res_inc.y[i]
+        )
     end
 
     # Calculate overall statistics

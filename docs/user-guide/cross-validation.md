@@ -17,12 +17,12 @@ Split data into K folds, train on K-1, validate on 1.
 
 === "R"
     ```r
-    result <- fastlowess(
-        x, y,
+    model <- Lowess(
         cv_method = "kfold",
         cv_k = 5,
         cv_fractions = c(0.2, 0.3, 0.5, 0.7)
     )
+    result <- model$fit(x, y)
 
     cat("Selected fraction:", result$fraction_used, "\n")
     cat("CV scores:", result$cv_scores, "\n")
@@ -122,11 +122,11 @@ Each point is held out once. Most thorough but slowest.
 
 === "R"
     ```r
-    result <- fastlowess(
-        x, y,
+    model <- Lowess(
         cv_method = "loocv",
         cv_fractions = c(0.2, 0.3, 0.5, 0.7)
     )
+    result <- model$fit(x, y)
     ```
 
 === "Python"
@@ -189,13 +189,13 @@ Set a seed for reproducible fold assignments:
 
 === "R"
     ```r
-    result <- fastlowess(
-        x, y,
+    model <- Lowess(
         cv_method = "kfold",
         cv_k = 5,
         cv_fractions = c(0.3, 0.5, 0.7),
         cv_seed = 42
     )
+    result <- model$fit(x, y)
     ```
 
 === "Python"
@@ -280,8 +280,9 @@ Lower MSE indicates better fit on held-out data.
 === "R"
     ```r
     # Example output
-    result <- fastlowess(x, y, cv_method = "kfold", cv_k = 5,
-                         cv_fractions = c(0.1, 0.3, 0.5, 0.7))
+    model <- Lowess(cv_method = "kfold", cv_k = 5,
+                    cv_fractions = c(0.1, 0.3, 0.5, 0.7))
+    result <- model$fit(x, y)
 
     # Fraction  | CV Score (MSE)
     # 0.1       | 0.0542  ← Undersmoothed

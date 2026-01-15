@@ -234,95 +234,104 @@ pub struct SmoothOptions {
 }
 
 #[napi]
-pub fn smooth(
-    x: Float64Array,
-    y: Float64Array,
+pub struct Lowess {
     options: Option<SmoothOptions>,
-) -> Result<LowessResultObj> {
-    let mut builder = LowessBuilder::new();
+}
 
-    if let Some(opts) = options {
-        if let Some(f) = opts.fraction {
-            builder = builder.fraction(f);
-        }
-        if let Some(iter) = opts.iterations {
-            builder = builder.iterations(iter as usize);
-        }
-        if let Some(d) = opts.delta {
-            builder = builder.delta(d);
-        }
-        if let Some(wf) = opts.weightFunction {
-            builder = builder.weight_function(parse_weight_function(&wf)?);
-        }
-        if let Some(rm) = opts.robustnessMethod {
-            builder = builder.robustness_method(parse_robustness_method(&rm)?);
-        }
-        if let Some(zw) = opts.zeroWeightFallback {
-            builder = builder.zero_weight_fallback(parse_zero_weight_fallback(&zw)?);
-        }
-        if let Some(bp) = opts.boundaryPolicy {
-            builder = builder.boundary_policy(parse_boundary_policy(&bp)?);
-        }
-        if let Some(sm) = opts.scalingMethod {
-            builder = builder.scaling_method(parse_scaling_method(&sm)?);
-        }
-        if let Some(ac) = opts.autoConverge {
-            builder = builder.auto_converge(ac);
-        }
-        if opts.returnResiduals.unwrap_or(false) {
-            builder = builder.return_residuals();
-        }
-        if opts.returnRobustnessWeights.unwrap_or(false) {
-            builder = builder.return_robustness_weights();
-        }
-        if opts.returnDiagnostics.unwrap_or(false) {
-            builder = builder.return_diagnostics();
-        }
-        if let Some(ci) = opts.confidenceIntervals {
-            builder = builder.confidence_intervals(ci);
-        }
-        if let Some(pi) = opts.predictionIntervals {
-            builder = builder.prediction_intervals(pi);
-        }
-        if let Some(par) = opts.parallel {
-            builder = builder.parallel(par);
-        }
-
-        // Cross-validation
-        if let Some(fractions) = opts.cvFractions {
-            let method = opts.cvMethod.unwrap_or_else(|| "kfold".to_string());
-            let k = opts.cvK.unwrap_or(5) as usize;
-
-            match method.to_lowercase().as_str() {
-                "simple" | "loo" | "loocv" | "leave_one_out" => {
-                    builder = builder.cross_validate(LOOCV(&fractions));
-                }
-                "kfold" | "k_fold" | "k-fold" => {
-                    builder = builder.cross_validate(KFold(k, &fractions));
-                }
-                _ => {
-                    return Err(Error::new(
-                        Status::InvalidArg,
-                        format!("Unknown CV method: {}. Valid options: loocv, kfold", method),
-                    ));
-                }
-            };
-        }
+#[napi]
+impl Lowess {
+    #[napi(constructor)]
+    pub fn new(options: Option<SmoothOptions>) -> Self {
+        Self { options }
     }
 
-    let model = builder
-        .adapter(Batch)
-        .build()
-        .map_err(|e| Error::new(Status::GenericFailure, e.to_string()))?;
+    #[napi]
+    pub fn fit(&self, x: Float64Array, y: Float64Array) -> Result<LowessResultObj> {
+        let mut builder = LowessBuilder::new();
+        let options = &self.options;
 
-    let result =
-        model
-            .fit(x.as_ref(), y.as_ref())
-            .map_err(|e: ::fastLowess::prelude::LowessError| {
+        if let Some(opts) = options {
+            if let Some(f) = opts.fraction {
+                builder = builder.fraction(f);
+            }
+            if let Some(iter) = opts.iterations {
+                builder = builder.iterations(iter as usize);
+            }
+            if let Some(d) = opts.delta {
+                builder = builder.delta(d);
+            }
+            if let Some(wf) = &opts.weightFunction {
+                builder = builder.weight_function(parse_weight_function(wf)?);
+            }
+            if let Some(rm) = &opts.robustnessMethod {
+                builder = builder.robustness_method(parse_robustness_method(rm)?);
+            }
+            if let Some(zw) = &opts.zeroWeightFallback {
+                builder = builder.zero_weight_fallback(parse_zero_weight_fallback(zw)?);
+            }
+            if let Some(bp) = &opts.boundaryPolicy {
+                builder = builder.boundary_policy(parse_boundary_policy(bp)?);
+            }
+            if let Some(sm) = &opts.scalingMethod {
+                builder = builder.scaling_method(parse_scaling_method(sm)?);
+            }
+            if let Some(ac) = opts.autoConverge {
+                builder = builder.auto_converge(ac);
+            }
+            if opts.returnResiduals.unwrap_or(false) {
+                builder = builder.return_residuals();
+            }
+            if opts.returnRobustnessWeights.unwrap_or(false) {
+                builder = builder.return_robustness_weights();
+            }
+            if opts.returnDiagnostics.unwrap_or(false) {
+                builder = builder.return_diagnostics();
+            }
+            if let Some(ci) = opts.confidenceIntervals {
+                builder = builder.confidence_intervals(ci);
+            }
+            if let Some(pi) = opts.predictionIntervals {
+                builder = builder.prediction_intervals(pi);
+            }
+            if let Some(par) = opts.parallel {
+                builder = builder.parallel(par);
+            }
+
+            // Cross-validation
+            if let Some(fractions) = &opts.cvFractions {
+                let method = opts.cvMethod.as_deref().unwrap_or("kfold");
+                let k = opts.cvK.unwrap_or(5) as usize;
+
+                match method.to_lowercase().as_str() {
+                    "simple" | "loo" | "loocv" | "leave_one_out" => {
+                        builder = builder.cross_validate(LOOCV(fractions));
+                    }
+                    "kfold" | "k_fold" | "k-fold" => {
+                        builder = builder.cross_validate(KFold(k, fractions));
+                    }
+                    _ => {
+                        return Err(Error::new(
+                            Status::InvalidArg,
+                            format!("Unknown CV method: {}. Valid options: loocv, kfold", method),
+                        ));
+                    }
+                };
+            }
+        }
+
+        let model = builder
+            .adapter(Batch)
+            .build()
+            .map_err(|e| Error::new(Status::GenericFailure, e.to_string()))?;
+
+        let result = model.fit(x.as_ref(), y.as_ref()).map_err(
+            |e: ::fastLowess::prelude::LowessError| {
                 Error::new(Status::GenericFailure, e.to_string())
-            })?;
+            },
+        )?;
 
-    Ok(LowessResultObj { inner: result })
+        Ok(LowessResultObj { inner: result })
+    }
 }
 
 #[napi(object)]
@@ -491,13 +500,48 @@ impl OnlineLowess {
     }
 
     #[napi]
-    pub fn update(&mut self, x: f64, y: f64) -> Result<Option<f64>> {
-        let result =
-            self.inner
-                .add_point(x, y)
-                .map_err(|e: ::fastLowess::prelude::LowessError| {
-                    Error::new(Status::GenericFailure, e.to_string())
-                })?;
-        Ok(result.map(|o| o.smoothed))
+    pub fn add_points(&mut self, x: Float64Array, y: Float64Array) -> Result<LowessResultObj> {
+        let result = self.inner.add_points(x.as_ref(), y.as_ref()).map_err(
+            |e: ::fastLowess::prelude::LowessError| {
+                Error::new(Status::GenericFailure, e.to_string())
+            },
+        )?;
+
+        // Extract smoothed values from results
+        // add_points returns Vec<Option<PointOutput>>.
+        // We need to return LowessResultObj.
+        // But what should the result contain?
+        // The Python implementation reconstructs a LowessResult with just y values (and x).
+        // Let's do the same.
+
+        let x_vec = x.as_ref().to_vec(); // We assume input arrays are the x's for the outputs?
+        // Wait, online.add_points matches input points to output points.
+        // Yes, it processes them.
+
+        let smoothed: Vec<f64> = result
+            .iter()
+            .zip(y.as_ref().iter())
+            .map(|(opt, &original_y)| opt.as_ref().map_or(original_y, |o| o.smoothed))
+            .collect();
+
+        let inner_result = LowessResult {
+            x: x_vec,
+            y: smoothed,
+            standard_errors: None,
+            confidence_lower: None,
+            confidence_upper: None,
+            prediction_lower: None,
+            prediction_upper: None,
+            residuals: None,
+            robustness_weights: None,
+            diagnostics: None,
+            iterations_used: None, // Could capture?
+            fraction_used: 0.0,    // Should capture?
+            cv_scores: None,
+        };
+
+        Ok(LowessResultObj {
+            inner: inner_result,
+        })
     }
 }

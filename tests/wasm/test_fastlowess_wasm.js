@@ -1,10 +1,10 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const path = require('node:path');
+
 // Import WASM bindings using require (works in Node with generated pkg)
 const fastlowess = require('../../bindings/wasm/pkg/fastlowess_wasm.js');
 
-test('WASM batch smoothing', (t) => {
+test('WASM batch smoothing', () => {
   const x = new Float64Array([1, 2, 3, 4, 5]);
   const y = new Float64Array([2, 4, 6, 8, 10]);
   
@@ -19,7 +19,7 @@ test('WASM batch smoothing', (t) => {
   assert.ok(result.diagnostics.rmse < 0.1);
 });
 
-test('WASM streaming smoothing', (t) => {
+test('WASM streaming smoothing', () => {
   const streamer = new fastlowess.StreamingLowessWasm({
     fraction: 0.3
   }, {
@@ -42,7 +42,7 @@ test('WASM streaming smoothing', (t) => {
   }
 });
 
-test('WASM online smoothing', (t) => {
+test('WASM online smoothing', () => {
   const online = new fastlowess.OnlineLowessWasm({
     fraction: 0.5
   }, {
@@ -60,7 +60,7 @@ test('WASM online smoothing', (t) => {
   assert.ok(Math.abs(lastVal - 18) < 1.0);
 });
 
-test('WASM options parsing', (t) => {
+test('WASM options parsing', () => {
   const x = new Float64Array([1, 2, 3, 4, 5]);
   const y = new Float64Array([2, 4, 6, 8, 10]);
   

@@ -9,21 +9,17 @@ fastLowess Rust crate.
 from .__version__ import __version__
 
 from ._core import (
-    smooth,
-    smooth_streaming,
-    smooth_online,
     LowessResult,
     Diagnostics,
+    Lowess,
     OnlineLowess,
     StreamingLowess,
 )
 
 __all__ = [
-    "smooth",
-    "smooth_streaming",
-    "smooth_online",
     "LowessResult",
     "Diagnostics",
+    "Lowess",
     "OnlineLowess",
     "StreamingLowess",
     "__version__",

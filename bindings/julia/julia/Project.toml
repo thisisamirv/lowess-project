@@ -13,13 +13,15 @@ keywords = ["lowess", "smoothing", "statistics", "regression", "bioinformatics"]
 categories = ["science", "algorithms"]
 
 [deps]
-# TODO: fastlowess_jll will be added once the package is registered
+fastlowess_jll = "7381d214-3001-5784-8d9a-8eb8e8688076"
 
 [compat]
 julia = "1.6"
+fastlowess_jll = "0.99.8"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [targets]
-test = ["Test"]
+test = ["Test", "Random"]

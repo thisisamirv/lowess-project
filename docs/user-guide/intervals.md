@@ -20,7 +20,7 @@ Estimate uncertainty in the smoothed curve itself.
 
 === "R"
     ```r
-    result <- fastlowess(x, y, fraction = 0.5, confidence_intervals = 0.95)
+    result <- Lowess(fraction = 0.5, confidence_intervals = 0.95)$fit(x, y)
 
     # Plot with bands
     plot(x, y, pch = 16, col = "gray")
@@ -109,7 +109,7 @@ Estimate where new observations might fall.
 
 === "R"
     ```r
-    result <- fastlowess(x, y, fraction = 0.5, prediction_intervals = 0.95)
+    result <- Lowess(fraction = 0.5, prediction_intervals = 0.95)$fit(x, y)
 
     # Wider than confidence intervals
     polygon(
@@ -174,12 +174,11 @@ Request both types simultaneously:
 
 === "R"
     ```r
-    result <- fastlowess(
-        x, y,
+    result <- Lowess(
         fraction = 0.5,
         confidence_intervals = 0.95,
         prediction_intervals = 0.95
-    )
+    )$fit(x, y)
     ```
 
 === "Python"
@@ -250,7 +249,7 @@ Common levels and their z-values:
 === "R"
     ```r
     # 99% confidence interval (wider)
-    result <- fastlowess(x, y, confidence_intervals = 0.99)
+    result <- Lowess(confidence_intervals = 0.99)$fit(x, y)
     ```
 
 === "Python"
@@ -299,7 +298,7 @@ Access standard errors directly (available when intervals are computed):
 
 === "R"
     ```r
-    result <- fastlowess(x, y, confidence_intervals = 0.95)
+    result <- Lowess(confidence_intervals = 0.95)$fit(x, y)
     print(result$std_err)
     ```
 

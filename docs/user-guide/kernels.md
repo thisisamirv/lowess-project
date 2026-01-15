@@ -37,7 +37,7 @@ $$w(u) = (1 - |u|^3)^3$$
 
 === "R"
     ```r
-    result <- fastlowess(x, y, weight_function = "tricube")
+    result <- Lowess(weight_function = "tricube")$fit(x, y)
     ```
 
 === "Python"
@@ -85,7 +85,7 @@ $$w(u) = \frac{3}{4}(1 - u^2)$$
 
 === "R"
     ```r
-    result <- fastlowess(x, y, weight_function = "epanechnikov")
+    result <- Lowess(weight_function = "epanechnikov")$fit(x, y)
     ```
 
 === "Python"
@@ -133,7 +133,7 @@ $$w(u) = \exp(-u^2/2)$$
 
 === "R"
     ```r
-    result <- fastlowess(x, y, weight_function = "gaussian")
+    result <- Lowess(weight_function = "gaussian")$fit(x, y)
     ```
 
 === "Python"
@@ -181,7 +181,7 @@ $$w(u) = (1 - u^2)^2$$
 
 === "R"
     ```r
-    result <- fastlowess(x, y, weight_function = "biweight")
+    result <- Lowess(weight_function = "biweight")$fit(x, y)
     ```
 
 === "Python"
@@ -229,7 +229,7 @@ $$w(u) = \cos(\pi u / 2)$$
 
 === "R"
     ```r
-    result <- fastlowess(x, y, weight_function = "cosine")
+    result <- Lowess(weight_function = "cosine")$fit(x, y)
     ```
 
 === "Python"
@@ -277,7 +277,7 @@ $$w(u) = 1 - |u|$$
 
 === "R"
     ```r
-    result <- fastlowess(x, y, weight_function = "triangle")
+    result <- Lowess(weight_function = "triangle")$fit(x, y)
     ```
 
 === "Python"
@@ -325,7 +325,7 @@ $$w(u) = 1$$
 
 === "R"
     ```r
-    result <- fastlowess(x, y, weight_function = "uniform")
+    result <- Lowess(weight_function = "uniform")$fit(x, y)
     ```
 
 === "Python"

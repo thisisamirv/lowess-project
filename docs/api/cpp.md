@@ -1,160 +1,191 @@
-<!-- markdownlint-disable MD024 -->
-# C++ API Reference
+# fastLowess C++ API Reference
 
-C and C++ bindings for fastLowess.
+The C++ bindings provide a modern, object-oriented wrapper around the core Rust library, mirroring the Rust API structure.
 
-## Installation
+## Classes
 
-### From Source
+### `fastlowess::Lowess`
 
-```bash
-git clone https://github.com/thisisamirv/lowess-project
-cd lowess-project/bindings/cpp
+The `Lowess` class allows configuring the LOWESS parameters once and fitting multiple datasets using those parameters.
 
-# Build the library
-cargo build --release
-
-# Headers are at: include/fastlowess.h (C) and include/fastlowess.hpp (C++)
-# Library is at: target/release/libfastlowess_cpp.so (Linux)
-#                target/release/libfastlowess_cpp.dylib (macOS)
-#                target/release/fastlowess_cpp.dll (Windows)
-```
-
----
-
-## Quick Start
+**Constructor:**
 
 ```cpp
-#include <vector>
-#include <iostream>
-#include "fastlowess.hpp"
-
-int main() {
-    std::vector<double> x = {1.0, 2.0, 3.0, 4.0, 5.0};
-    std::vector<double> y = {2.1, 3.9, 6.2, 8.0, 10.1};
-
-    // Smooth with default options
-    auto result = fastlowess::smooth(x, y);
-
-    for (size_t i = 0; i < result.size(); ++i) {
-        std::cout << result.x(i) << " -> " << result.y(i) << std::endl;
-    }
-    return 0;
-}
+explicit Lowess(const LowessOptions &options = {})
 ```
 
----
+* `options`: A `LowessOptions` struct containing configuration parameters.
 
-## API
-
-### `fastlowess::smooth()`
-
-Batch LOWESS smoothing.
+**Methods:**
 
 ```cpp
-LowessResult smooth(
-    const std::vector<double>& x,
-    const std::vector<double>& y,
-    const LowessOptions& options = {}
-);
+LowessResult fit(const std::vector<double> &x, const std::vector<double> &y)
 ```
 
-### `fastlowess::streaming()`
+* Fits the model to the provided `x` and `y` data vectors.
+* Returns a `LowessResult` object containing the smoothed values and optional diagnostics.
 
-Streaming LOWESS for large datasets.
+### `fastlowess::StreamingLowess`
+
+The `StreamingLowess` class processes data in chunks, suitable for very large datasets or streaming applications.
+
+**Constructor:**
 
 ```cpp
-LowessResult streaming(
-    const std::vector<double>& x,
-    const std::vector<double>& y,
-    const StreamingOptions& options = {}
-);
+explicit StreamingLowess(const StreamingOptions &options = {})
 ```
 
-### `fastlowess::online()`
+* `options`: A `StreamingOptions` struct (inherits from `LowessOptions`) with additional `chunk_size` and `overlap` parameters.
 
-Online LOWESS with sliding window.
+**Methods:**
 
 ```cpp
-LowessResult online(
-    const std::vector<double>& x,
-    const std::vector<double>& y,
-    const OnlineOptions& options = {}
-);
+LowessResult process_chunk(const std::vector<double> &x, const std::vector<double> &y)
 ```
 
----
+* Processes a chunk of data. Returns partial results.
 
-## Options
+```cpp
+LowessResult finalize()
+```
+
+* Finalizes the smoothing process and returns any remaining buffered results.
+
+### `fastlowess::OnlineLowess`
+
+The `OnlineLowess` class updates the model incrementally with new data points.
+
+**Constructor:**
+
+```cpp
+explicit OnlineLowess(const OnlineOptions &options = {})
+```
+
+* `options`: An `OnlineOptions` struct (inherits from `LowessOptions`) with `window_capacity`, `min_points`, and `update_mode`.
+
+**Methods:**
+
+```cpp
+LowessResult add_points(const std::vector<double> &x, const std::vector<double> &y)
+```
+
+* Adds new points to the model and returns the smoothed values (retrospective or prospective depending on mode).
+
+## Options Structures
 
 ### `LowessOptions`
 
-| Field                  | Type          | Default      | Description                       |
-|------------------------|---------------|--------------|-----------------------------------|
-| `fraction`             | `double`      | `0.67`       | Smoothing fraction                |
-| `iterations`           | `int`         | `3`          | Robustness iterations             |
-| `weight_function`      | `std::string` | `"tricube"`  | Weight function                   |
-| `robustness_method`    | `std::string` | `"bisquare"` | Robustness method                 |
-| `confidence_intervals` | `double`      | `NAN`        | Confidence level (NaN = disabled) |
-| `return_diagnostics`   | `bool`        | `false`      | Return fit diagnostics            |
-| `parallel`             | `bool`        | `false`      | Enable parallel processing        |
+| Field | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `fraction` | `double` | 0.67 | Smoothing fraction (bandwidth) |
+| `iterations` | `int` | 3 | Number of robustifying iterations |
+| `delta` | `double` | NaN | Interpolation distance (NaN for auto) |
+| `weight_function` | `std::string` | "tricube" | Weight function name |
+| `robustness_method` | `std::string` | "bisquare" | Robustness method name |
+| `scaling_method` | `std::string` | "mad" | Residual scaling method |
+| `boundary_policy` | `std::string` | "extend" | Boundary handling policy |
+| `auto_converge` | `double` | NaN | Auto-convergence tolerance |
+| `confidence_intervals` | `double` | NaN | Confidence level (e.g., 0.95) |
+| `prediction_intervals` | `double` | NaN | Prediction level (e.g., 0.95) |
+| `return_diagnostics` | `bool` | false | Include diagnostics in result |
+| `return_residuals` | `bool` | false | Include residuals in result |
+| `return_robustness_weights` | `bool` | false | Include weights in result |
+| `parallel` | `bool` | false | Enable parallel execution |
 
-### `StreamingOptions`
+### `StreamingOptions` (inherits `LowessOptions`)
 
-Extends `LowessOptions` with:
+| Field | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `chunk_size` | `int` | 5000 | Data chunk size |
+| `overlap` | `int` | -1 | Overlap size (-1 for auto) |
+| `merge_strategy` | `std::string` | "weighted" | Merge strategy for overlap |
 
-| Field        | Type  | Default | Description                        |
-|--------------|-------|---------|------------------------------------|
-| `chunk_size` | `int` | `5000`  | Points per chunk                   |
-| `overlap`    | `int` | `-1`    | Overlap between chunks (-1 = auto) |
+### `OnlineOptions` (inherits `LowessOptions`)
 
-### `OnlineOptions`
+| Field | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `window_capacity` | `int` | 1000 | Max window size |
+| `min_points` | `int` | 2 | Min points before smoothing |
+| `update_mode` | `std::string` | "full" | Update mode ("full" or "incremental") |
 
-Extends `LowessOptions` with:
+## Result Structure
 
-| Field             | Type          | Default  | Description                          |
-|-------------------|---------------|----------|--------------------------------------|
-| `window_capacity` | `int`         | `1000`   | Sliding window size                  |
-| `min_points`      | `int`         | `2`      | Minimum points for smoothing         |
-| `update_mode`     | `std::string` | `"full"` | Update mode: "full" or "incremental" |
+### `fastlowess::LowessResult`
 
----
+A RAII wrapper around the C result struct `fastlowess_CppLowessResult`.
 
-## LowessResult
+| Method | Return Type | Description |
+| :--- | :--- | :--- |
+| `x_vector()` | `std::vector<double>` | Smoothed X coordinates |
+| `y_vector()` | `std::vector<double>` | Smoothed Y coordinates |
+| `valid()` | `bool` | True if result is valid |
+| `error()` | `std::string` | Error message if failed |
+| `diagnostics()` | `Diagnostics` | Diagnostic metrics struct |
+| `residuals()` | `std::vector<double>` | Residuals (if requested) |
+| `confidence_lower()` | `std::vector<double>` | Lower CI bounds |
+| `confidence_upper()` | `std::vector<double>` | Upper CI bounds |
 
-RAII wrapper with automatic memory management.
+### `fastlowess::Diagnostics`
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `rmse` | `double` | Root Mean Squared Error |
+| `mae` | `double` | Mean Absolute Error |
+| `r_squared` | `double` | R-squared |
+
+## String Options
+
+### Weight Functions
+
+* `"tricube"` (default)
+* `"epanechnikov"`
+* `"gaussian"`
+* `"uniform"`
+* `"biweight"`
+* `"triangle"`
+* `"cosine"`
+
+### Robustness Methods
+
+* `"bisquare"` (default)
+* `"huber"`
+* `"talwar"`
+
+### Boundary Policies
+
+* `"extend"` (default - linear extrapolation)
+* `"reflect"`
+* `"zero"`
+* `"noboundary"`
+
+### Update Modes (Online)
+
+* `"full"` (default - re-smooth entire window)
+* `"incremental"` (O(1) update using existing fit)
+
+## Example
 
 ```cpp
-class LowessResult {
-public:
-    size_t size() const;              // Number of points
-    bool valid() const;               // Check if result is valid
+#include "fastlowess.hpp"
+#include <iostream>
+
+int main() {
+    std::vector<double> x = {1, 2, 3, 4, 5};
+    std::vector<double> y = {2.1, 4.0, 6.2, 8.0, 10.1};
+
+    fastlowess::LowessOptions opts;
+    opts.fraction = 0.5;
     
-    double x(size_t i) const;         // Access x value
-    double y(size_t i) const;         // Access smoothed y value
-    
-    std::vector<double> x_vector() const;
-    std::vector<double> y_vector() const;
-    std::vector<double> residuals() const;
-    std::vector<double> confidence_lower() const;
-    std::vector<double> confidence_upper() const;
-    
-    double fraction_used() const;
-    int iterations_used() const;
-    Diagnostics diagnostics() const;
-};
-```
+    fastlowess::Lowess model(opts);
+    auto result = model.fit(x, y);
 
----
-
-## Error Handling
-
-Errors throw `fastlowess::LowessError`:
-
-```cpp
-try {
-    auto result = fastlowess::smooth(x, y);
-} catch (const fastlowess::LowessError& e) {
-    std::cerr << "Error: " << e.what() << std::endl;
+    if (result.valid()) {
+        auto y_hat = result.y_vector();
+        for (double val : y_hat) {
+            std::cout << val << " ";
+        }
+        std::cout << std::endl;
+    }
+    return 0;
 }
 ```

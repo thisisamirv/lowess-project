@@ -1,23 +1,25 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const path = require('node:path');
+
 const fastlowess = require('../../bindings/nodejs');
 
-test('batch smoothing', (t) => {
+test('batch smoothing', () => {
   const x = new Float64Array([1, 2, 3, 4, 5]);
   const y = new Float64Array([2, 4, 6, 8, 10]);
   
-  const result = fastlowess.smooth(x, y, {
+  const model = new fastlowess.Lowess({
     fraction: 0.3,
     returnDiagnostics: true
   });
+
+  const result = model.fit(x, y);
   
   assert.strictEqual(result.x.length, 5);
   assert.strictEqual(result.y.length, 5);
   assert.ok(result.diagnostics.rmse < 0.1);
 });
 
-test('streaming smoothing', (t) => {
+test('streaming smoothing', () => {
   const streamer = new fastlowess.StreamingLowess({
     fraction: 0.3
   }, {
@@ -35,7 +37,7 @@ test('streaming smoothing', (t) => {
   assert.ok(finalResult.y.length > 0);
 });
 
-test('online smoothing', (t) => {
+test('online smoothing', () => {
   const online = new fastlowess.OnlineLowess({
     fraction: 0.5
   }, {
@@ -43,25 +45,33 @@ test('online smoothing', (t) => {
     minPoints: 2
   });
   
-  let lastVal;
+  let lastVal = null;
   for (let i = 0; i < 10; i++) {
-    lastVal = online.update(i, i * 2);
+    const xArr = new Float64Array([i]);
+    const yArr = new Float64Array([i * 2]);
+    const res = online.addPoints(xArr, yArr);
+    
+    if (res.y.length > 0) {
+        lastVal = res.y[0];
+    }
   }
   
   assert.ok(lastVal !== null);
   assert.ok(Math.abs(lastVal - 18) < 1.0);
 });
 
-test('options parsing', (t) => {
+test('options parsing', () => {
   const x = new Float64Array([1, 2, 3, 4, 5]);
   const y = new Float64Array([2, 4, 6, 8, 10]);
   
-  const result = fastlowess.smooth(x, y, {
+  const model = new fastlowess.Lowess({
     weightFunction: 'tricube',
     robustnessMethod: 'bisquare',
     boundaryPolicy: 'extend',
     scalingMethod: 'mad'
   });
+  
+  const result = model.fit(x, y);
   
   assert.strictEqual(result.y.length, 5);
 });

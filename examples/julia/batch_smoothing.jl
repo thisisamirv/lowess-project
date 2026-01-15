@@ -8,7 +8,7 @@ This example demonstrates batch LOWESS smoothing features:
 - Confidence and prediction intervals
 - Diagnostics and cross-validation
 
-The batch adapter (smooth function) is the primary interface for
+The Lowess class is the primary interface for
 processing complete datasets that fit in memory.
 """
 
@@ -23,18 +23,18 @@ if project_name != "fastlowess"
     script_dir = @__DIR__
     julia_pkg_dir = joinpath(dirname(script_dir), "julia")
     if !haskey(Pkg.project().dependencies, "fastlowess")
-        Pkg.develop(path=julia_pkg_dir)
+        Pkg.develop(path = julia_pkg_dir)
     end
 end
 
 using fastlowess
 
-function generate_sample_data(n_points=1000)
+function generate_sample_data(n_points = 1000)
     """
     Generate complex sample data with a trend, seasonality, and outliers.
     """
     Random.seed!(42)
-    x = collect(range(0, 50, length=n_points))
+    x = collect(range(0, 50, length = n_points))
 
     # Trend + Seasonality
     y_true = 0.5 .* x .+ 5 .* sin.(x .* 0.5)
@@ -61,33 +61,37 @@ function main()
 
     # 2. Basic Smoothing (Default parameters)
     println("Running basic smoothing...")
+    # 2. Basic Smoothing (Default parameters)
+    println("Running basic smoothing...")
     # Use a smaller fraction (0.05) to capture the sine wave seasonality
-    res_basic = smooth(x, y, iterations=0, fraction=0.05)
+    l_basic = Lowess(iterations = 0, fraction = 0.05)
+    res_basic = fit(l_basic, x, y)
 
     # 3. Robust Smoothing (IRLS)
     println("Running robust smoothing (3 iterations)...")
-    res_robust = smooth(
-        x, y,
-        fraction=0.05,
-        iterations=3,
-        robustness_method="bisquare",
-        return_robustness_weights=true
+    l_robust = Lowess(
+        fraction = 0.05,
+        iterations = 3,
+        robustness_method = "bisquare",
+        return_robustness_weights = true,
     )
+    res_robust = fit(l_robust, x, y)
 
     # 4. Uncertainty Quantification
     println("Computing confidence and prediction intervals...")
-    res_intervals = smooth(
-        x, y,
-        fraction=0.05,
-        confidence_intervals=0.95,
-        prediction_intervals=0.95,
-        return_diagnostics=true
+    l_intervals = Lowess(
+        fraction = 0.05,
+        confidence_intervals = 0.95,
+        prediction_intervals = 0.95,
+        return_diagnostics = true,
     )
+    res_intervals = fit(l_intervals, x, y)
 
     # 5. Cross-Validation for optimal fraction
     println("Running cross-validation to find optimal fraction...")
     cv_fractions = [0.05, 0.1, 0.2, 0.4]
-    res_cv = smooth(x, y, cv_fractions=cv_fractions, cv_method="kfold", cv_k=5)
+    l_cv = Lowess(cv_fractions = cv_fractions, cv_method = "kfold", cv_k = 5)
+    res_cv = fit(l_cv, x, y)
     println("Optimal fraction found: $(res_cv.fraction_used)")
 
     # Diagnostics Printout
@@ -101,18 +105,24 @@ function main()
 
     # 6. Boundary Policy Comparison
     println("\nDemonstrating boundary policy effects on linear data...")
-    xl = collect(range(0, 10, length=50))
+    xl = collect(range(0, 10, length = 50))
     yl = 2 .* xl .+ 1
 
     # Compare policies
-    r_ext = smooth(xl, yl, fraction=0.6, boundary_policy="extend")
-    r_ref = smooth(xl, yl, fraction=0.6, boundary_policy="reflect")
-    r_zr = smooth(xl, yl, fraction=0.6, boundary_policy="zero")
+    r_ext = fit(Lowess(fraction = 0.6, boundary_policy = "extend"), xl, yl)
+    r_ref = fit(Lowess(fraction = 0.6, boundary_policy = "reflect"), xl, yl)
+    r_zr = fit(Lowess(fraction = 0.6, boundary_policy = "zero"), xl, yl)
 
     println("Boundary policy comparison:")
-    println(" - Extend (Default): first=$(round(r_ext.y[1], digits=2)), last=$(round(r_ext.y[end], digits=2))")
-    println(" - Reflect:          first=$(round(r_ref.y[1], digits=2)), last=$(round(r_ref.y[end], digits=2))")
-    println(" - Zero:             first=$(round(r_zr.y[1], digits=2)), last=$(round(r_zr.y[end], digits=2))")
+    println(
+        " - Extend (Default): first=$(round(r_ext.y[1], digits=2)), last=$(round(r_ext.y[end], digits=2))",
+    )
+    println(
+        " - Reflect:          first=$(round(r_ref.y[1], digits=2)), last=$(round(r_ref.y[end], digits=2))",
+    )
+    println(
+        " - Zero:             first=$(round(r_zr.y[1], digits=2)), last=$(round(r_zr.y[end], digits=2))",
+    )
 
     println("\n=== Batch Smoothing Example Complete ===")
 end

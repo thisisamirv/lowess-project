@@ -34,12 +34,11 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
     observed <- pmax(0, pmin(1, observed))
 
     # Smooth
-    result <- fastlowess(
-        positions, observed,
+    result <- Lowess(
         fraction = 0.1,
         iterations = 3,
         confidence_intervals = 0.95
-    )
+    )$fit(positions, observed)
 
     # Plot
     plot(positions, observed, pch = ".", col = "gray",
@@ -197,11 +196,10 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
     true_signal <- background + peak1 + peak2 + peak3
     observed <- rpois(n, true_signal)
 
-    result <- fastlowess(
-        positions, observed,
+    result <- Lowess(
         fraction = 0.05,
         iterations = 5
-    )
+    )$fit(positions, observed)
 
     # Find peaks
     threshold <- quantile(result$y, 0.75)
@@ -334,13 +332,14 @@ For whole-genome data that doesn't fit in memory:
 
 === "R"
     ```r
-    result <- fastlowess_streaming(
-        positions, coverage,
+    model <- StreamingLowess(
         fraction = 0.05,
         chunk_size = 100000,
         overlap = 10000,
         merge_strategy = "weighted"
     )
+    result <- model$process_chunk(positions, coverage)
+    final <- model$finalize()
     ```
 
 === "Python"

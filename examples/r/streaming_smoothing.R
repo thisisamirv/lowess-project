@@ -42,8 +42,7 @@ example_1_basic_streaming <- function() {
     y <- 2.0 * x + 1.0 + sin(x * 0.3) * 2.0
 
     # Process with streaming adapter
-    result <- fastlowess_streaming(
-        x, y,
+    model <- StreamingLowess(
         fraction = 0.5,
         chunk_size = 30L,
         overlap = 10L,
@@ -51,6 +50,10 @@ example_1_basic_streaming <- function() {
         weight_function = "tricube",
         robustness_method = "bisquare"
     )
+    result <- model$process_chunk(x, y)
+    final <- model$finalize()
+    result$x <- c(result$x, final$x)
+    result$y <- c(result$y, final$y)
 
     cat(sprintf("Dataset: %d points\n", n))
     cat("Chunk size: 30, Overlap: 10\n")
@@ -83,13 +86,15 @@ example_2_chunk_comparison <- function() {
 
     for (config in chunk_configs) {
         start_time <- Sys.time()
-        result <- fastlowess_streaming(
-            x, y,
+        model <- StreamingLowess(
             fraction = 0.5,
             chunk_size = config$chunk_size,
             overlap = config$overlap,
             iterations = 2L
         )
+        result <- model$process_chunk(x, y)
+        final <- model$finalize()
+        result$y <- c(result$y, final$y)
         duration <- as.numeric(Sys.time() - start_time, units = "secs")
 
         cat(sprintf(
@@ -117,14 +122,16 @@ example_3_large_dataset <- function() {
     y <- 2.0 * x + 1.0 + sin(x * 0.01) * 10.0
 
     start_time <- Sys.time()
-    result <- fastlowess_streaming(
-        x, y,
+    model <- StreamingLowess(
         fraction = 0.3,
         chunk_size = 5000L,
         overlap = 500L,
         iterations = 2L,
         parallel = TRUE # Enable parallel execution
     )
+    result <- model$process_chunk(x, y)
+    final <- model$finalize()
+    result$y <- c(result$y, final$y)
     duration <- as.numeric(Sys.time() - start_time, units = "secs")
 
     cat(sprintf("Processed %d points in %.4fs\n", length(result$y), duration))
@@ -145,26 +152,30 @@ example_4_parallel_comparison <- function() {
 
     # Parallel execution
     start_time <- Sys.time()
-    result_parallel <- fastlowess_streaming(
-        x, y,
+    model_parallel <- StreamingLowess(
         fraction = 0.5,
         chunk_size = 1000L,
         overlap = 100L,
         iterations = 3L,
         parallel = TRUE
     )
+    result_parallel <- model_parallel$process_chunk(x, y)
+    final_p <- model_parallel$finalize()
+    result_parallel$y <- c(result_parallel$y, final_p$y)
     parallel_time <- as.numeric(Sys.time() - start_time, units = "secs")
 
     # Sequential execution
     start_time <- Sys.time()
-    result_sequential <- fastlowess_streaming(
-        x, y,
+    model_sequential <- StreamingLowess(
         fraction = 0.5,
         chunk_size = 1000L,
         overlap = 100L,
         iterations = 3L,
         parallel = FALSE
     )
+    result_sequential <- model_sequential$process_chunk(x, y)
+    final_s <- model_sequential$finalize()
+    result_sequential$y <- c(result_sequential$y, final_s$y)
     sequential_time <- as.numeric(Sys.time() - start_time, units = "secs")
 
     cat(sprintf(

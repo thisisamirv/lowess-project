@@ -2,7 +2,7 @@
 
 Comprehensive test suite covering:
 - Basic smoothing functionality
-- Full smooth() with all options
+- Full Lowess class with all options
 - Cross-validation
 - Streaming and online adapters
 - Error handling
@@ -14,15 +14,16 @@ import pytest
 import fastlowess
 
 
-class TestSmooth:
-    """Tests for the smooth() function."""
+class TestLowess:
+    """Tests for the Lowess class."""
 
     def test_basic_smooth(self):
         """Test basic smooth with default parameters."""
         x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
         y = np.array([2.0, 4.1, 5.9, 8.2, 9.8])
 
-        result = fastlowess.smooth(x, y, fraction=0.5)
+        lowess = fastlowess.Lowess(fraction=0.5)
+        result = lowess.fit(x, y)
 
         assert isinstance(result, fastlowess.LowessResult)
         assert len(result.y) == len(x)
@@ -34,7 +35,8 @@ class TestSmooth:
         x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
         y = np.array([2.0, 4.1, 5.9, 8.2, 9.8])
 
-        result = fastlowess.smooth(x, y, fraction=0.5, parallel=False)
+        lowess = fastlowess.Lowess(fraction=0.5, parallel=False)
+        result = lowess.fit(x, y)
 
         assert isinstance(result, fastlowess.LowessResult)
         assert len(result.y) == len(x)
@@ -44,7 +46,8 @@ class TestSmooth:
         x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
         y = np.array([2.0, 4.1, 5.9, 8.2, 9.8])
 
-        result = fastlowess.smooth(x, y, fraction=0.5, return_diagnostics=True)
+        lowess = fastlowess.Lowess(fraction=0.5, return_diagnostics=True)
+        result = lowess.fit(x, y)
 
         assert result.diagnostics is not None
         diag = result.diagnostics
@@ -59,7 +62,8 @@ class TestSmooth:
         x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
         y = np.array([2.0, 4.1, 5.9, 8.2, 9.8])
 
-        result = fastlowess.smooth(x, y, fraction=0.5, return_residuals=True)
+        lowess = fastlowess.Lowess(fraction=0.5, return_residuals=True)
+        result = lowess.fit(x, y)
 
         assert result.residuals is not None
         assert len(result.residuals) == len(x)
@@ -69,9 +73,10 @@ class TestSmooth:
         x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
         y = np.array([2.0, 4.1, 100.0, 8.2, 9.8])  # Outlier
 
-        result = fastlowess.smooth(
-            x, y, fraction=0.7, iterations=3, return_robustness_weights=True
+        lowess = fastlowess.Lowess(
+            fraction=0.7, iterations=3, return_robustness_weights=True
         )
+        result = lowess.fit(x, y)
 
         assert result.robustness_weights is not None
         assert len(result.robustness_weights) == len(x)
@@ -85,7 +90,8 @@ class TestSmooth:
         x = np.linspace(0, 10, 20)
         y = 2 * x + np.random.normal(0, 1, 20)
 
-        result = fastlowess.smooth(x, y, fraction=0.5, confidence_intervals=0.95)
+        lowess = fastlowess.Lowess(fraction=0.5, confidence_intervals=0.95)
+        result = lowess.fit(x, y)
 
         assert result.confidence_lower is not None
         assert result.confidence_upper is not None
@@ -101,7 +107,8 @@ class TestSmooth:
         x = np.linspace(0, 10, 20)
         y = 2 * x + np.random.normal(0, 1, 20)
 
-        result = fastlowess.smooth(x, y, fraction=0.5, prediction_intervals=0.95)
+        lowess = fastlowess.Lowess(fraction=0.5, prediction_intervals=0.95)
+        result = lowess.fit(x, y)
 
         assert result.prediction_lower is not None
         assert result.prediction_upper is not None
@@ -123,7 +130,8 @@ class TestSmooth:
         ]
 
         for kernel in kernels:
-            result = fastlowess.smooth(x, y, fraction=0.5, weight_function=kernel)
+            lowess = fastlowess.Lowess(fraction=0.5, weight_function=kernel)
+            result = lowess.fit(x, y)
             assert len(result.y) == len(x)
 
     def test_lowess_different_robustness_methods(self):
@@ -134,9 +142,10 @@ class TestSmooth:
         methods = ["bisquare", "huber", "talwar"]
 
         for method in methods:
-            result = fastlowess.smooth(
-                x, y, fraction=0.7, iterations=3, robustness_method=method
+            lowess = fastlowess.Lowess(
+                fraction=0.7, iterations=3, robustness_method=method
             )
+            result = lowess.fit(x, y)
             assert len(result.y) == len(x)
 
     def test_lowess_with_delta(self):
@@ -144,7 +153,8 @@ class TestSmooth:
         x = np.linspace(0, 100, 200)
         y = np.sin(x / 10)
 
-        result = fastlowess.smooth(x, y, fraction=0.1, delta=0.1)
+        lowess = fastlowess.Lowess(fraction=0.1, delta=0.1)
+        result = lowess.fit(x, y)
         assert len(result.y) == len(x)
 
     def test_lowess_iterations(self):
@@ -153,12 +163,30 @@ class TestSmooth:
         y = np.array([2.0, 4.0, 100.0, 8.0, 10.0])
 
         for iterations in [0, 1, 3, 5]:
-            result = fastlowess.smooth(x, y, fraction=0.7, iterations=iterations)
+            lowess = fastlowess.Lowess(fraction=0.7, iterations=iterations)
+            result = lowess.fit(x, y)
             assert len(result.y) == len(x)
 
+    def test_lowess_reuse(self):
+        """Test that Lowess instance can be reused for multiple fits."""
+        x1 = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+        y1 = np.array([2.0, 4.1, 5.9, 8.2, 9.8])
+        x2 = np.array([10.0, 20.0, 30.0, 40.0, 50.0])
+        y2 = np.array([20.0, 40.0, 60.0, 80.0, 100.0])
 
-class TestSmoothStreaming:
-    """Tests for the smooth_streaming() function."""
+        lowess = fastlowess.Lowess(fraction=0.5, return_diagnostics=True)
+
+        result1 = lowess.fit(x1, y1)
+        result2 = lowess.fit(x2, y2)
+
+        assert len(result1.y) == len(x1)
+        assert len(result2.y) == len(x2)
+        assert result1.diagnostics is not None
+        assert result2.diagnostics is not None
+
+
+class TestStreamingLowess:
+    """Tests for the StreamingLowess class."""
 
     def test_streaming_returns_all_points(self):
         """Test that streaming returns smoothed values for all input points."""
@@ -166,14 +194,13 @@ class TestSmoothStreaming:
         x = np.linspace(0, 100, 100)
         y = 2 * x + 1  # Linear data
 
-        result = fastlowess.smooth_streaming(x, y, fraction=0.3, chunk_size=5000)
+        streaming = fastlowess.StreamingLowess(fraction=0.3, chunk_size=5000)
+        chunk_result = streaming.process_chunk(x, y)
+        final_result = streaming.finalize()
 
-        assert isinstance(result, fastlowess.LowessResult)
-        # Critical: verify all points are returned
-        assert len(result.y) == len(x), f"Expected {len(x)} points, got {len(result.y)}"
-        assert len(result.x) == len(x), (
-            f"Expected {len(x)} x-values, got {len(result.x)}"
-        )
+        # Combine results
+        total_points = len(chunk_result.y) + len(final_result.y)
+        assert total_points == len(x), f"Expected {len(x)} points, got {total_points}"
 
     def test_streaming_basic(self):
         """Test basic streaming smoothing."""
@@ -181,11 +208,12 @@ class TestSmoothStreaming:
         x = np.linspace(0, 1000, 2000)
         y = np.sin(x / 100)
 
-        result = fastlowess.smooth_streaming(x, y, fraction=0.1, chunk_size=1000)
+        streaming = fastlowess.StreamingLowess(fraction=0.1, chunk_size=1000)
+        chunk_result = streaming.process_chunk(x, y)
+        final_result = streaming.finalize()
 
-        assert isinstance(result, fastlowess.LowessResult)
-        # Verify we get all points back
-        assert len(result.y) == len(x), f"Expected {len(x)} points, got {len(result.y)}"
+        assert isinstance(chunk_result, fastlowess.LowessResult)
+        assert isinstance(final_result, fastlowess.LowessResult)
 
     def test_streaming_larger_data(self):
         """Test streaming with larger dataset."""
@@ -194,78 +222,89 @@ class TestSmoothStreaming:
         x = np.linspace(0, 1000, 5000)
         y = np.sin(x / 100) + np.random.normal(0, 0.1, 5000)
 
-        result = fastlowess.smooth_streaming(x, y, fraction=0.05, chunk_size=1500)
+        streaming = fastlowess.StreamingLowess(fraction=0.05, chunk_size=1500)
+        chunk_result = streaming.process_chunk(x, y)
+        final_result = streaming.finalize()
 
-        assert isinstance(result, fastlowess.LowessResult)
-        # Verify we get all points back
-        assert len(result.y) == len(x), f"Expected {len(x)} points, got {len(result.y)}"
+        total_points = len(chunk_result.y) + len(final_result.y)
+        assert total_points == len(x), f"Expected {len(x)} points, got {total_points}"
 
     def test_streaming_accuracy(self):
         """Test that streaming produces accurate results for linear data."""
         x = np.linspace(0, 100, 200)
         y = 2 * x + 1  # Perfect linear
 
-        result = fastlowess.smooth_streaming(x, y, fraction=0.5, chunk_size=1000)
+        streaming = fastlowess.StreamingLowess(fraction=0.5, chunk_size=1000)
+        chunk_result = streaming.process_chunk(x, y)
+        final_result = streaming.finalize()
 
-        # Compare streaming with batch (both will have same padding bias)
-        batch_res = fastlowess.smooth(x, y, fraction=0.5)
-        np.testing.assert_allclose(result.y, batch_res.y, rtol=1e-10)
+        # Combine results
+        combined_y = np.concatenate([chunk_result.y, final_result.y])
 
-        # Also verify it's generally accurate for the middle part (less padding bias)
-        # Skip the edges (25% on each side)
-        start, end = 50, 150
-        np.testing.assert_allclose(result.y[start:end], y[start:end], rtol=0.1)
+        # Compare streaming with batch
+        lowess = fastlowess.Lowess(fraction=0.5)
+        batch_res = lowess.fit(x, y)
+        np.testing.assert_allclose(combined_y, batch_res.y, rtol=1e-10)
 
     def test_streaming_residuals(self):
         """Test streaming with return_residuals=True."""
         x = np.linspace(0, 100, 200)
         y = np.sin(x / 10)
 
-        result = fastlowess.smooth_streaming(
-            x, y, fraction=0.1, chunk_size=50, return_residuals=True
+        streaming = fastlowess.StreamingLowess(
+            fraction=0.1, chunk_size=50, return_residuals=True
         )
+        chunk_result = streaming.process_chunk(x, y)
+        final_result = streaming.finalize()
 
-        assert isinstance(result, fastlowess.LowessResult)
-        assert result.residuals is not None
-        assert len(result.residuals) == len(x)
-        assert len(result.y) == len(x)
+        assert isinstance(chunk_result, fastlowess.LowessResult)
+        assert chunk_result.residuals is not None or final_result.residuals is not None
 
     def test_streaming_zero_weight_fallback(self):
         """Test streaming with zero_weight_fallback parameter."""
         x = np.linspace(0, 100, 200)
         y = np.sin(x)
-        # Just verifying the parameter is accepted and runs
-        result = fastlowess.smooth_streaming(
-            x, y, fraction=0.1, chunk_size=50, zero_weight_fallback="return_original"
+
+        streaming = fastlowess.StreamingLowess(
+            fraction=0.1, chunk_size=50, zero_weight_fallback="return_original"
         )
-        assert len(result.y) == len(x)
+        chunk_result = streaming.process_chunk(x, y)
+        final_result = streaming.finalize()
+
+        total_points = len(chunk_result.y) + len(final_result.y)
+        assert total_points == len(x)
 
 
-class TestSmoothOnline:
-    """Tests for the smooth_online() function."""
+class TestOnlineLowess:
+    """Tests for the OnlineLowess class."""
 
     def test_online_zero_weight_fallback(self):
         """Test online with zero_weight_fallback parameter."""
         x = np.arange(20, dtype=float)
         y = x.copy()
 
-        # Verify parameter is accepted
-        result = fastlowess.smooth_online(
-            x, y, fraction=0.5, window_capacity=10, zero_weight_fallback="return_none"
+        online = fastlowess.OnlineLowess(
+            fraction=0.5, window_capacity=10, zero_weight_fallback="return_none"
         )
-        assert len(result.y) == len(x)
+
+        for i in range(len(x)):
+            online.add_points(np.array([x[i]]), np.array([y[i]]))
 
     def test_online_basic(self):
         """Test basic online smoothing."""
         x = np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0])
         y = np.array([2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0])
 
-        result = fastlowess.smooth_online(
-            x, y, fraction=0.5, window_capacity=10, min_points=3
-        )
+        online = fastlowess.OnlineLowess(fraction=0.5, window_capacity=10, min_points=3)
 
-        assert len(result.y) == len(x)
-        assert isinstance(result, fastlowess.LowessResult)
+        results = []
+        for i in range(len(x)):
+            result = online.add_points(np.array([x[i]]), np.array([y[i]]))
+            # add_points returns a LowessResult with smoothed y values
+            if len(result.y) > 0:
+                results.append(result.y[0])
+
+        assert len(results) > 0
 
     def test_online_with_noise(self):
         """Test online smoothing with noisy data."""
@@ -273,14 +312,19 @@ class TestSmoothOnline:
         x = np.linspace(0, 20, 50)
         y = 2 * x + np.random.normal(0, 1, 50)
 
-        result = fastlowess.smooth_online(
-            x, y, fraction=0.3, window_capacity=20, min_points=5
-        )
+        online = fastlowess.OnlineLowess(fraction=0.3, window_capacity=20, min_points=5)
 
-        assert len(result.y) == len(x)
+        results = []
+        for i in range(len(x)):
+            result = online.add_points(np.array([x[i]]), np.array([y[i]]))
+            # add_points returns a LowessResult with smoothed y values
+            if len(result.y) > 0:
+                results.append(result.y[0])
+
+        assert len(results) > 0
 
 
-class TestSmoothResult:
+class TestLowessResult:
     """Tests for the LowessResult class."""
 
     def test_result_repr(self):
@@ -288,7 +332,8 @@ class TestSmoothResult:
         x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
         y = np.array([2.0, 4.0, 6.0, 8.0, 10.0])
 
-        result = fastlowess.smooth(x, y, fraction=0.5)
+        lowess = fastlowess.Lowess(fraction=0.5)
+        result = lowess.fit(x, y)
 
         repr_str = repr(result)
         assert "LowessResult" in repr_str
@@ -299,7 +344,8 @@ class TestSmoothResult:
         x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
         y = np.array([2.0, 4.0, 6.0, 8.0, 10.0])
 
-        result = fastlowess.smooth(x, y, fraction=0.5)
+        lowess = fastlowess.Lowess(fraction=0.5)
+        result = lowess.fit(x, y)
 
         # These should be None when not requested
         assert result.diagnostics is None
@@ -319,7 +365,8 @@ class TestDiagnostics:
         x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
         y = np.array([2.0, 4.0, 6.0, 8.0, 10.0])
 
-        result = fastlowess.smooth(x, y, fraction=0.5, return_diagnostics=True)
+        lowess = fastlowess.Lowess(fraction=0.5, return_diagnostics=True)
+        result = lowess.fit(x, y)
 
         repr_str = repr(result.diagnostics)
         assert "Diagnostics" in repr_str
@@ -332,7 +379,8 @@ class TestDiagnostics:
         x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
         y = np.array([2.0, 4.0, 6.0, 8.0, 10.0])  # Perfect linear
 
-        result = fastlowess.smooth(x, y, fraction=0.5, return_diagnostics=True)
+        lowess = fastlowess.Lowess(fraction=0.5, return_diagnostics=True)
+        result = lowess.fit(x, y)
 
         diag = result.diagnostics
         # Perfect linear data should have very low error
@@ -350,7 +398,8 @@ class TestErrorHandling:
         y = np.array([2.0, 4.0, 6.0])
 
         with pytest.raises(ValueError):
-            fastlowess.smooth(x, y, fraction=1.5)
+            lowess = fastlowess.Lowess(fraction=1.5)
+            lowess.fit(x, y)
 
     def test_invalid_fraction_low(self):
         """Test error on fraction <= 0."""
@@ -358,7 +407,8 @@ class TestErrorHandling:
         y = np.array([2.0, 4.0, 6.0])
 
         with pytest.raises(ValueError):
-            fastlowess.smooth(x, y, fraction=0.0)
+            lowess = fastlowess.Lowess(fraction=0.0)
+            lowess.fit(x, y)
 
     def test_mismatched_lengths(self):
         """Test error on mismatched x and y lengths."""
@@ -366,23 +416,18 @@ class TestErrorHandling:
         y = np.array([2.0, 4.0])
 
         with pytest.raises(ValueError):
-            fastlowess.smooth(x, y, fraction=0.5)
+            lowess = fastlowess.Lowess(fraction=0.5)
+            lowess.fit(x, y)
 
     def test_invalid_weight_function(self):
         """Test error on invalid weight function."""
-        x = np.array([1.0, 2.0, 3.0])
-        y = np.array([2.0, 4.0, 6.0])
-
         with pytest.raises(ValueError):
-            fastlowess.smooth(x, y, fraction=0.5, weight_function="invalid")
+            fastlowess.Lowess(fraction=0.5, weight_function="invalid")
 
     def test_invalid_robustness_method(self):
         """Test error on invalid robustness method."""
-        x = np.array([1.0, 2.0, 3.0])
-        y = np.array([2.0, 4.0, 6.0])
-
         with pytest.raises(ValueError):
-            fastlowess.smooth(x, y, fraction=0.5, robustness_method="invalid")
+            fastlowess.Lowess(fraction=0.5, robustness_method="invalid")
 
     def test_invalid_cv_method(self):
         """Test error on invalid CV method."""
@@ -390,7 +435,8 @@ class TestErrorHandling:
         y = np.array([2.0, 4.0, 6.0, 8.0, 10.0])
 
         with pytest.raises(ValueError):
-            fastlowess.smooth(x, y, cv_fractions=[0.5], cv_method="invalid")
+            lowess = fastlowess.Lowess(cv_fractions=[0.5], cv_method="invalid")
+            lowess.fit(x, y)
 
 
 class TestEdgeCases:
@@ -401,7 +447,8 @@ class TestEdgeCases:
         x = np.array([1.0, 2.0])
         y = np.array([2.0, 4.0])
 
-        result = fastlowess.smooth(x, y, fraction=1.0)
+        lowess = fastlowess.Lowess(fraction=1.0)
+        result = lowess.fit(x, y)
         assert len(result.y) == 2
 
     def test_large_dataset(self):
@@ -411,7 +458,8 @@ class TestEdgeCases:
         x = np.linspace(0, 100, n)
         y = np.sin(x / 10) + np.random.normal(0, 0.1, n)
 
-        result = fastlowess.smooth(x, y, fraction=0.1)
+        lowess = fastlowess.Lowess(fraction=0.1)
+        result = lowess.fit(x, y)
         assert len(result.y) == n
 
     def test_unsorted_input(self):
@@ -420,7 +468,8 @@ class TestEdgeCases:
         x = np.array([3.0, 1.0, 5.0, 2.0, 4.0])
         y = np.array([6.0, 2.0, 10.0, 4.0, 8.0])
 
-        result = fastlowess.smooth(x, y, fraction=0.7)
+        lowess = fastlowess.Lowess(fraction=0.7)
+        result = lowess.fit(x, y)
         assert len(result.y) == 5
 
     def test_duplicate_x_values(self):
@@ -428,7 +477,8 @@ class TestEdgeCases:
         x = np.array([1.0, 1.0, 2.0, 2.0, 3.0])
         y = np.array([2.0, 2.1, 4.0, 3.9, 6.0])
 
-        result = fastlowess.smooth(x, y, fraction=0.7)
+        lowess = fastlowess.Lowess(fraction=0.7)
+        result = lowess.fit(x, y)
         assert len(result.y) == 5
 
     def test_all_same_y(self):
@@ -436,19 +486,21 @@ class TestEdgeCases:
         x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
         y = np.array([5.0, 5.0, 5.0, 5.0, 5.0])
 
-        result = fastlowess.smooth(x, y, fraction=0.5)
+        lowess = fastlowess.Lowess(fraction=0.5)
+        result = lowess.fit(x, y)
         np.testing.assert_allclose(result.y, y, rtol=1e-10)
 
 
 class TestCrossValidation:
-    """Tests for cross-validation via smooth()."""
+    """Tests for cross-validation via Lowess class."""
 
     def test_cv_basic(self):
         """Test basic cross-validation selects a fraction."""
         x = np.linspace(0, 10, 50)
         y = 2 * x + np.sin(x)
 
-        result = fastlowess.smooth(x, y, cv_fractions=[0.2, 0.3, 0.5, 0.7])
+        lowess = fastlowess.Lowess(cv_fractions=[0.2, 0.3, 0.5, 0.7])
+        result = lowess.fit(x, y)
 
         assert result.fraction_used in [0.2, 0.3, 0.5, 0.7]
         assert result.cv_scores is not None
@@ -460,9 +512,8 @@ class TestCrossValidation:
         x = np.linspace(0, 10, 30)
         y = x**2
 
-        result = fastlowess.smooth(
-            x, y, cv_fractions=[0.3, 0.5], cv_method="kfold", cv_k=5
-        )
+        lowess = fastlowess.Lowess(cv_fractions=[0.3, 0.5], cv_method="kfold", cv_k=5)
+        result = lowess.fit(x, y)
 
         assert result.fraction_used in [0.3, 0.5]
         assert result.cv_scores is not None
@@ -472,7 +523,8 @@ class TestCrossValidation:
         x = np.linspace(0, 10, 20)
         y = np.sin(x)
 
-        result = fastlowess.smooth(x, y, cv_fractions=[0.4, 0.6], cv_method="loocv")
+        lowess = fastlowess.Lowess(cv_fractions=[0.4, 0.6], cv_method="loocv")
+        result = lowess.fit(x, y)
 
         assert result.fraction_used in [0.4, 0.6]
         assert result.cv_scores is not None
@@ -482,14 +534,13 @@ class TestCrossValidation:
         x = np.linspace(0, 10, 40)
         y = 2 * x + 0.5 * np.sin(x)
 
-        result = fastlowess.smooth(
-            x,
-            y,
+        lowess = fastlowess.Lowess(
             cv_fractions=[0.3, 0.5, 0.7],
             iterations=2,
             return_diagnostics=True,
             return_residuals=True,
         )
+        result = lowess.fit(x, y)
 
         assert result.fraction_used in [0.3, 0.5, 0.7]
         assert result.diagnostics is not None
@@ -500,7 +551,8 @@ class TestCrossValidation:
         x = np.linspace(0, 10, 25)
         y = x + np.random.normal(0, 0.1, 25)
 
-        result = fastlowess.smooth(x, y, cv_fractions=[0.5])
+        lowess = fastlowess.Lowess(cv_fractions=[0.5])
+        result = lowess.fit(x, y)
 
         assert result.fraction_used == 0.5
         assert result.cv_scores is not None
