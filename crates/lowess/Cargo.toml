@@ -1,6 +1,6 @@
 [package]
 name = "lowess"
-version = "0.99.8"
+version = "0.99.9"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"

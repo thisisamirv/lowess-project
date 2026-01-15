@@ -109,6 +109,7 @@ lowess-clean:
 	@echo "Cleaning $(LOWESS_PKG) crate..."
 	@cargo clean -p $(LOWESS_PKG)
 	@rm -rf $(LOWESS_DIR)/coverage_html
+	@rm -rf $(LOWESS_DIR)/Cargo.lock
 	@rm -rf $(LOWESS_DIR)/benchmarks
 	@rm -rf $(LOWESS_DIR)/validation
 	@echo "$(LOWESS_PKG) clean complete!"
@@ -213,11 +214,13 @@ python-clean:
 	@rm -rf $(PY_DIR)/.pytest_cache
 	@rm -rf $(PY_DIR)/__pycache__
 	@rm -rf examples/python/plots/
-	@rm -rf $(PY_DIR)/fastlowess/__pycache__
+	@rm -rf $(PY_DIR)/python/fastlowess/__pycache__
+	@rm -rf $(PY_DIR)/python/fastlowess/*so
 	@rm -rf $(PY_TEST_DIR)/__pycache__
 	@rm -rf $(PY_DIR)/*.egg-info
 	@rm -rf $(PY_DIR)/.ruff_cache
 	@rm -rf $(PY_DIR)/*.so
+	@rm -rf $(PY_DIR)/Cargo.lock
 	@echo "$(PY_PKG) clean complete!"
 
 # ==============================================================================
@@ -347,7 +350,7 @@ r-clean:
 	@rm -rf $(R_DIR)/src/vendor $(R_DIR)/target
 	@rm -rf $(R_DIR)/$(R_PKG_NAME).Rcheck $(R_DIR)/$(R_PKG_NAME).BiocCheck
 	@rm -f $(R_DIR)/$(R_PKG_NAME)_*.tar.gz
-	@rm -rf $(R_DIR)/src/*.o $(R_DIR)/src/*.so $(R_DIR)/src/*.dll $(R_DIR)/src/Cargo.toml.orig
+	@rm -rf $(R_DIR)/src/*.o $(R_DIR)/src/*.so $(R_DIR)/src/*.dll $(R_DIR)/src/Cargo.toml.orig $(R_DIR)/src/Cargo.lock
 	@rm -rf $(R_DIR)/doc $(R_DIR)/Meta $(R_DIR)/vignettes/*.html $(R_DIR)/README.html
 	@find $(R_DIR) -name "*.Rout" -delete
 	@Rscript -e "try(remove.packages('$(R_PKG_NAME)'), silent = TRUE)" || true
@@ -416,6 +419,7 @@ julia-clean:
 	@echo "Cleaning $(JL_PKG)..."
 	@cargo clean -p $(JL_PKG)
 	@rm -rf $(JL_DIR)/target
+	@rm -rf $(JL_DIR)/julia/src/Manifest.toml
 	@echo "$(JL_PKG) clean complete!"
 
 # ==============================================================================
@@ -477,7 +481,7 @@ wasm:
 wasm-clean:
 	@echo "Cleaning $(WASM_PKG)..."
 	@cargo clean -p $(WASM_PKG)
-	@rm -rf $(WASM_DIR)/pkg $(WASM_DIR)/pkg-web
+	@rm -rf $(WASM_DIR)/pkg $(WASM_DIR)/pkg-web $(WASM_DIR)/node_modules
 	@echo "$(WASM_PKG) clean complete!"
 
 # ==============================================================================
@@ -507,7 +511,7 @@ cpp:
 cpp-clean:
 	@echo "Cleaning $(CPP_PKG)..."
 	@cargo clean -p $(CPP_PKG)
-	@rm -rf $(CPP_DIR)/include/fastlowess.h $(CPP_DIR)/bin
+	@rm -rf $(CPP_DIR)/include/fastlowess.h $(CPP_DIR)/bin $(CPP_DIR)/build
 	@echo "$(CPP_PKG) clean complete!"
 
 # ==============================================================================
