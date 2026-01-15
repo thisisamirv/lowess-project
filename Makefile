@@ -6,6 +6,9 @@ FEATURE_SET ?= all
 # Make shell commands fail on error
 .SHELLFLAGS := -ec
 
+# Python interpreter
+PYTHON ?= python3
+
 # lowess crate
 LOWESS_PKG := lowess
 LOWESS_DIR := crates/lowess
@@ -58,7 +61,17 @@ DOCS_VENV := docs-venv
 # ==============================================================================
 # lowess crate
 # ==============================================================================
+ISOLATE ?= true
+all: ISOLATE := false
+
 lowess:
+	@if [ "$(ISOLATE)" = "true" ]; then \
+		$(PYTHON) dev/isolate_cargo.py crates/lowess -- $(MAKE) _lowess_impl; \
+	else \
+		$(MAKE) _lowess_impl; \
+	fi
+
+_lowess_impl:
 	@echo "Running $(LOWESS_PKG) crate checks..."
 	@echo "=============================================================================="
 	@echo "1. Formatting..."
@@ -118,6 +131,13 @@ lowess-clean:
 # fastLowess crate
 # ==============================================================================
 fastLowess:
+	@if [ "$(ISOLATE)" = "true" ]; then \
+		$(PYTHON) dev/isolate_cargo.py crates/fastLowess -- $(MAKE) _fastLowess_impl; \
+	else \
+		$(MAKE) _fastLowess_impl; \
+	fi
+
+_fastLowess_impl:
 	@echo "Running $(FASTLOWESS_PKG) crate checks..."
 	@echo "=============================================================================="
 	@echo "1. Formatting..."
@@ -172,6 +192,13 @@ fastLowess-clean:
 # Python bindings
 # ==============================================================================
 python:
+	@if [ "$(ISOLATE)" = "true" ]; then \
+		$(PYTHON) dev/isolate_cargo.py bindings/python -- $(MAKE) _python_impl; \
+	else \
+		$(MAKE) _python_impl; \
+	fi
+
+_python_impl:
 	@echo "Running $(PY_PKG) checks..."
 	@echo "=============================================================================="
 	@echo "1. Formatting..."
@@ -362,6 +389,13 @@ r-clean:
 # Julia bindings
 # ==============================================================================
 julia:
+	@if [ "$(ISOLATE)" = "true" ]; then \
+		$(PYTHON) dev/isolate_cargo.py bindings/julia -- $(MAKE) _julia_impl; \
+	else \
+		$(MAKE) _julia_impl; \
+	fi
+
+_julia_impl:
 	@echo "Running $(JL_PKG) checks..."
 	@echo "=============================================================================="
 	@echo "0. Commit hash update..."
@@ -426,6 +460,13 @@ julia-clean:
 # Node.js bindings
 # ==============================================================================
 nodejs:
+	@if [ "$(ISOLATE)" = "true" ]; then \
+		$(PYTHON) dev/isolate_cargo.py bindings/nodejs -- $(MAKE) _nodejs_impl; \
+	else \
+		$(MAKE) _nodejs_impl; \
+	fi
+
+_nodejs_impl:
 	@echo "Running $(NODE_PKG) checks..."
 	@echo "=============================================================================="
 	@echo "1. Formatting..."
@@ -454,6 +495,13 @@ nodejs-clean:
 # WebAssembly bindings
 # ==============================================================================
 wasm:
+	@if [ "$(ISOLATE)" = "true" ]; then \
+		$(PYTHON) dev/isolate_cargo.py bindings/wasm -- $(MAKE) _wasm_impl; \
+	else \
+		$(MAKE) _wasm_impl; \
+	fi
+
+_wasm_impl:
 	@echo "Running $(WASM_PKG) checks..."
 	@echo "=============================================================================="
 	@echo "1. Formatting..."
@@ -488,6 +536,13 @@ wasm-clean:
 # C++ bindings
 # ==============================================================================
 cpp:
+	@if [ "$(ISOLATE)" = "true" ]; then \
+		$(PYTHON) dev/isolate_cargo.py bindings/cpp -- $(MAKE) _cpp_impl; \
+	else \
+		$(MAKE) _cpp_impl; \
+	fi
+
+_cpp_impl:
 	@echo "Running $(CPP_PKG) checks..."
 	@echo "=============================================================================="
 	@echo "1. Formatting..."

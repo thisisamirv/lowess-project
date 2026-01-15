@@ -13,7 +13,7 @@ keywords = ["lowess", "smoothing", "statistics", "regression", "bioinformatics"]
 categories = ["science", "algorithms"]
 
 [dependencies]
-fastLowess = { version = "0.99.8", features = ["dev", "cpu"] }
+fastLowess = { version = "0.99.9", features = ["dev", "cpu"] }
 pyo3 = { version = "0.27.2", features = ["abi3-py38"] }
 numpy = "0.27.1"
 
