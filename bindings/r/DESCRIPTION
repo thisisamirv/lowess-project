@@ -10,7 +10,7 @@ License: MIT + file LICENSE | Apache License (== 2.0)
 SystemRequirements: 'Rust' programming language (via 'rustup' or system tools)
 Encoding: UTF-8
 RoxygenNote: 7.3.3
-biocViews: Preprocessing, StatisticalMethod, Regression, FunctionalPrediction, QualityControl
+biocViews: Preprocessing, StatisticalMethod, Regression, FunctionalPrediction, QualityControl, KEGG
 Suggests: BiocStyle, knitr, rmarkdown, testthat (>= 3.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr

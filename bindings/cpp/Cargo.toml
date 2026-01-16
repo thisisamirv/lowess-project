@@ -6,6 +6,7 @@ edition = "2024"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/thisisamirv/lowess-project"
 homepage = "https://github.com/thisisamirv/lowess-project"
+documentation = "https://lowess.readthedocs.io/"
 rust-version = "1.88"
 readme = "README.md"
 description = "High-performance LOWESS (Locally Weighted Scatterplot Smoothing)"
@@ -17,7 +18,7 @@ name = "fastlowess_cpp"
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
-fastLowess = { version = "0.99.8", features = ["cpu", "dev"] }
+fastLowess = { version = "0.99.9", features = ["cpu", "dev"] }
 libc = "0.2.180"
 
 [build-dependencies]

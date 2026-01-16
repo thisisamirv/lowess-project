@@ -254,6 +254,13 @@ python-clean:
 # R bindings
 # ==============================================================================
 r:
+	@if [ "$(ISOLATE)" = "true" ]; then \
+		$(PYTHON) dev/isolate_cargo.py bindings/r -- $(MAKE) _r_impl; \
+	else \
+		$(MAKE) _r_impl; \
+	fi
+
+_r_impl:
 	@echo "Running $(R_PKG_NAME) checks..."
 	@if [ -f $(R_DIR)/src/Cargo.toml.orig ]; then \
 		mv $(R_DIR)/src/Cargo.toml.orig $(R_DIR)/src/Cargo.toml; \
@@ -440,7 +447,7 @@ _julia_impl:
 	@echo "6. Testing Julia bindings..."
 	@echo "=============================================================================="
 	@export FASTLOWESS_LIB=$(PWD)/target/release/libfastlowess_jl.so && \
-	julia --project=$(JL_DIR)/julia -e 'using Pkg; Pkg.instantiate(); Pkg.precompile()' && \
+	julia --project=$(JL_DIR)/julia -e 'using Pkg; Pkg.resolve(); Pkg.instantiate(); Pkg.precompile()' && \
 	julia --project=$(JL_DIR)/julia tests/julia/test_fastlowess.jl
 	@echo "$(JL_PKG) checks completed successfully!"
 	@echo ""
@@ -477,8 +484,9 @@ _nodejs_impl:
 	@echo "=============================================================================="
 	@cargo clippy -q -p $(NODE_PKG) --all-targets -- -D warnings
 	@echo "Linting Node.js files..."
+	@cd $(NODE_DIR) && npm install
 	@$(NODE_DIR)/node_modules/.bin/eslint --config $(NODE_DIR)/eslint.config.js $(NODE_DIR)/index.js tests/nodejs/test_fastlowess.js examples/nodejs/*.js
-	@cd $(NODE_DIR) && npm install && npm run build
+	@cd $(NODE_DIR) && npm run build
 	@echo "=============================================================================="
 	@echo "3. Testing..."
 	@echo "=============================================================================="
@@ -559,6 +567,7 @@ _cpp_impl:
 	@echo "=============================================================================="
 	@echo "3. Testing..."
 	@echo "=============================================================================="
+	@rm -rf tests/cpp/build
 	@mkdir -p tests/cpp/build
 	@cd tests/cpp/build && cmake .. && make && ./test_fastlowess_suite
 	@echo "$(CPP_PKG) checks completed successfully!"
@@ -567,6 +576,7 @@ cpp-clean:
 	@echo "Cleaning $(CPP_PKG)..."
 	@cargo clean -p $(CPP_PKG)
 	@rm -rf $(CPP_DIR)/include/fastlowess.h $(CPP_DIR)/bin $(CPP_DIR)/build
+	@rm -rf tests/cpp/build
 	@echo "$(CPP_PKG) clean complete!"
 
 # ==============================================================================
@@ -691,7 +701,7 @@ all-coverage: lowess-coverage fastLowess-coverage python-coverage r-coverage
 all-clean: r-clean lowess-clean fastLowess-clean python-clean julia-clean nodejs-clean wasm-clean cpp-clean
 	@echo "Cleaning project root..."
 	@cargo clean
-	@rm -rf target Cargo.lock .venv .ruff_cache .pytest_cache site docs-venv build bindings/python/.venv bindings/python/target crates/fastLowess/target crates/lowess/target .vscode
+	@rm -rf target Cargo.lock .venv .ruff_cache .pytest_cache site docs-venv build bindings/python/.venv bindings/python/target crates/fastLowess/target crates/lowess/target .vscode tests/.pytest_cache
 	@echo "All clean completed!"
 
 .PHONY: lowess lowess-coverage lowess-clean fastLowess fastLowess-coverage fastLowess-clean python python-coverage python-clean r r-coverage r-clean julia julia-clean julia-update-commit nodejs nodejs-clean wasm wasm-clean cpp cpp-clean check-msrv docs docs-serve docs-clean all all-coverage all-clean examples examples-lowess examples-fastLowess examples-python examples-r examples-julia examples-nodejs examples-cpp
