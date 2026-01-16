@@ -40,6 +40,8 @@ jobs:
               echo "❌ Error: No tokens available."
               exit 1
             fi
+          else
+            echo "✅ YGGDRASIL_TOKEN is configured."
           fi
 
       - name: Checkout Source (Lowess Project)
@@ -61,6 +63,19 @@ jobs:
             COMMIT="${{ github.event.inputs.commit }}"
             echo "Triggered manually: $VERSION ($COMMIT)"
           fi
+
+          # Validate version format
+          if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "❌ Invalid version format: $VERSION (expected x.y.z)"
+            exit 1
+          fi
+
+          # Validate commit hash
+          if ! echo "$COMMIT" | grep -qE '^[0-9a-f]{40}$'; then
+            echo "❌ Invalid commit hash: $COMMIT (expected 40 hex chars)"
+            exit 1
+          fi
+
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "commit=$COMMIT" >> $GITHUB_OUTPUT
 
@@ -74,22 +89,53 @@ jobs:
           CONTENT=$(cat lowess-project/dev/build_tarballs_julia.jl)
 
           # Replace Version
-          # "version = v"x.y.z"" -> "version = v"$VERSION""
           CONTENT=$(echo "$CONTENT" | sed "s/version = v\"[^\"]*\"/version = v\"$VERSION\"/")
 
-          # Replace Commit Hash
-          # GitSource("...", "...") -> ...
-          # We use a regex to find the GitSource line and update the hash
-          # Finding: "b702b7..." (40 chars)
+          # Replace Commit Hash (40 hex characters)
           CONTENT=$(echo "$CONTENT" | sed "s/\"[0-9a-f]\{40\}\"/\"$COMMIT\"/")
 
-          # Verify it works
-          echo "=== Updated Script ==="
-          echo "$CONTENT" | head -n 25
+          # Verify replacements
+          echo "=== Updated Script (first 30 lines) ==="
+          echo "$CONTENT" | head -n 30
           echo "..."
+
+          # Verify version was replaced
+          if ! echo "$CONTENT" | grep -q "version = v\"$VERSION\""; then
+            echo "❌ Failed to update version in script"
+            exit 1
+          fi
+
+          # Verify commit was replaced
+          if ! echo "$CONTENT" | grep -q "\"$COMMIT\""; then
+            echo "❌ Failed to update commit hash in script"
+            exit 1
+          fi
 
           # Save to a temporary file
           echo "$CONTENT" > build_tarballs.jl
+          echo "✅ Build script prepared successfully"
+
+      - name: Check Yggdrasil Fork Exists
+        id: fork
+        env:
+          GH_TOKEN: ${{ secrets.YGGDRASIL_TOKEN || secrets.GITHUB_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          echo "Checking if $OWNER/Yggdrasil fork exists..."
+          if gh repo view "$OWNER/Yggdrasil" > /dev/null 2>&1; then
+            echo "✅ Fork exists: $OWNER/Yggdrasil"
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "⚠️ Fork does not exist. Attempting to fork..."
+            gh repo fork JuliaPackaging/Yggdrasil --clone=false || {
+              echo "❌ Failed to fork Yggdrasil. Please fork manually."
+              exit 1
+            }
+            echo "✅ Fork created successfully"
+            echo "exists=true" >> $GITHUB_OUTPUT
+            # Wait for fork to propagate
+            sleep 10
+          fi
 
       - name: Clone Yggdrasil Fork
         env:
@@ -98,29 +144,58 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Clone user's fork (assumes thisisamirv/Yggdrasil or uses current user)
-          # We'll default to the same owner as the current repo
           OWNER="${{ github.repository_owner }}"
 
           echo "Cloning https://github.com/$OWNER/Yggdrasil.git..."
           git clone "https://x-access-token:${GH_TOKEN}@github.com/$OWNER/Yggdrasil.git" yggdrasil-fork
 
           cd yggdrasil-fork
-          # Add upstream
+          # Add upstream and sync
           git remote add upstream https://github.com/JuliaPackaging/Yggdrasil.git
           git fetch upstream
           git checkout master
-          git merge upstream/master --no-edit || true
+          git merge upstream/master --no-edit || git reset --hard upstream/master
+          git push origin master --force || true
+          echo "✅ Fork synced with upstream"
 
-      - name: Create Pull Request
+      - name: Check for Existing PR
+        id: check-pr
         env:
           GH_TOKEN: ${{ secrets.YGGDRASIL_TOKEN || secrets.GITHUB_TOKEN }}
           VERSION: ${{ steps.meta.outputs.version }}
           OWNER: ${{ github.repository_owner }}
         run: |
+          # Check if a PR already exists for this version
+          EXISTING_PR=$(gh pr list \
+            --repo JuliaPackaging/Yggdrasil \
+            --head "$OWNER:fastlowess-v$VERSION" \
+            --json number \
+            --jq '.[0].number' 2>/dev/null || echo "")
+
+          if [ -n "$EXISTING_PR" ]; then
+            echo "⚠️ PR #$EXISTING_PR already exists for v$VERSION"
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "pr_number=$EXISTING_PR" >> $GITHUB_OUTPUT
+          else
+            echo "✅ No existing PR found for v$VERSION"
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Pull Request
+        if: steps.check-pr.outputs.exists != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.YGGDRASIL_TOKEN || secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.meta.outputs.version }}
+          COMMIT: ${{ steps.meta.outputs.commit }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
           cd yggdrasil-fork
 
           BRANCH="fastlowess-v$VERSION"
+
+          # Delete branch if it exists (for re-runs)
+          git push origin --delete "$BRANCH" 2>/dev/null || true
+
           git checkout -b "$BRANCH"
 
           # Create directory structure F/fastlowess
@@ -134,20 +209,63 @@ jobs:
           git commit -m "[fastlowess] v$VERSION"
 
           # Push to fork
-          git push -u origin "$BRANCH" --force
+          git push -u origin "$BRANCH"
 
           # Create PR
           PR_BODY="## fastlowess v$VERSION
 
-          Automated update via GitHub Actions.
+          Automated update via GitHub Actions from [${{ github.repository }}](https://github.com/${{ github.repository }}).
 
-          - Version: $VERSION
-          - Source Commit: ${{ steps.meta.outputs.commit }}
+          - **Version**: $VERSION
+          - **Source Commit**: [\`${COMMIT:0:7}\`](https://github.com/${{ github.repository }}/commit/$COMMIT)
+          - **Workflow Run**: [${{ github.run_id }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
           "
 
-          gh pr create \
+          PR_URL=$(gh pr create \
             --repo JuliaPackaging/Yggdrasil \
             --head "$OWNER:$BRANCH" \
             --base master \
             --title "[fastlowess] v$VERSION" \
-            --body "$PR_BODY"
+            --body "$PR_BODY")
+
+          echo "✅ Pull Request created: $PR_URL"
+
+      - name: Update Existing PR
+        if: steps.check-pr.outputs.exists == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.YGGDRASIL_TOKEN || secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.meta.outputs.version }}
+          COMMIT: ${{ steps.meta.outputs.commit }}
+          OWNER: ${{ github.repository_owner }}
+          PR_NUMBER: ${{ steps.check-pr.outputs.pr_number }}
+        run: |
+          cd yggdrasil-fork
+
+          BRANCH="fastlowess-v$VERSION"
+
+          # Checkout existing branch
+          git fetch origin "$BRANCH" 2>/dev/null || git checkout -b "$BRANCH"
+          git checkout "$BRANCH" || git checkout -b "$BRANCH"
+
+          # Update the script
+          mkdir -p F/fastlowess
+          cp ../build_tarballs.jl F/fastlowess/build_tarballs.jl
+
+          # Commit and push
+          git add F/fastlowess/build_tarballs.jl
+          git commit -m "[fastlowess] v$VERSION - update" --allow-empty
+          git push origin "$BRANCH" --force
+
+          echo "✅ Updated existing PR #$PR_NUMBER"
+
+      - name: Summary
+        run: |
+          echo "## Julia JLL Release Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ steps.meta.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: \`${{ steps.meta.outputs.commit }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "A PR has been created/updated on Yggdrasil. Once merged:" >> $GITHUB_STEP_SUMMARY
+          echo "1. The JLL will be built for all platforms" >> $GITHUB_STEP_SUMMARY
+          echo "2. A registration PR will be auto-created on General" >> $GITHUB_STEP_SUMMARY
+          echo "3. After ~20 minutes, the package will be available" >> $GITHUB_STEP_SUMMARY

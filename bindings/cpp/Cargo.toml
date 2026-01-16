@@ -1,6 +1,6 @@
 [package]
 name = "fastlowess-cpp"
-version = "0.99.9"
+version = "0.99.10"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"

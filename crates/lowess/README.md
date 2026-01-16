@@ -8,6 +8,7 @@
 [![Conda](https://anaconda.org/conda-forge/fastlowess/badges/version.svg)](https://anaconda.org/conda-forge/fastlowess)
 [![R-universe](https://thisisamirv.r-universe.dev/badges/rfastlowess)](https://thisisamirv.r-universe.dev/rfastlowess)
 [![npm](https://img.shields.io/npm/v/fastlowess.svg)](https://www.npmjs.com/package/fastlowess)
+[![Julia](https://juliahub.com/docs/General/fastlowess_jll/stable/version.svg)](https://juliahub.com/ui/Packages/General/fastlowess_jll)
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/thisisamirv/lowess-project/main/dev/logo.png" alt="One LOWESS to Rule Them All" width="400">
@@ -227,21 +228,23 @@ library(rfastlowess)
 x <- c(1, 2, 3, 4, 5)
 y <- c(2.0, 4.1, 5.9, 8.2, 9.8)
 
-result <- fastlowess(x, y, fraction = 0.5, iterations = 3)
+model <- Lowess(fraction = 0.5, iterations = 3)
+result <- model$fit(x, y)
 print(result$y)
 ```
 
 **Python:**
 
 ```python
-import fastlowess as fl
+from fastlowess import Lowess
 import numpy as np
 
 x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
 y = np.array([2.0, 4.1, 5.9, 8.2, 9.8])
 
-result = fl.smooth(x, y, fraction=0.5, iterations=3)
-print(result["y"])
+model = Lowess(fraction=0.5, iterations=3)
+result = model.fit(x, y)
+print(result.y)
 ```
 
 **Rust:**
@@ -326,8 +329,7 @@ for (double val : result.y_vector()) std::cout << val << " ";
 **R:**
 
 ```r
-fastlowess(
-    x, y,
+Lowess(
     fraction = 0.5,
     iterations = 3L,
     delta = 0.01,
@@ -345,14 +347,15 @@ fastlowess(
     cv_k = 5L,
     auto_converge = 1e-4,
     parallel = TRUE
-)
+)$fit(x, y)
 ```
 
 **Python:**
 
 ```python
-fastlowess.smooth(
-    x, y,
+from fastlowess import Lowess
+
+model = Lowess(
     fraction=0.5,
     iterations=3,
     delta=0.01,
@@ -371,6 +374,7 @@ fastlowess.smooth(
     auto_converge=1e-4,
     parallel=True
 )
+result = model.fit(x, y)
 ```
 
 **Rust:**
