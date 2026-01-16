@@ -1,14 +1,15 @@
 <!-- markdownlint-disable MD024 MD033 -->
 # LOWESS Project
 
-[![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE-MIT)
-[![Docs](https://img.shields.io/badge/docs-readthedocs-blue.svg)](https://lowess.readthedocs.io/)
-[![Crates.io](https://img.shields.io/crates/v/lowess.svg)](https://crates.io/crates/lowess)
-[![PyPI](https://img.shields.io/pypi/v/fastlowess.svg)](https://pypi.org/project/fastlowess/)
-[![Conda](https://anaconda.org/conda-forge/fastlowess/badges/version.svg)](https://anaconda.org/conda-forge/fastlowess)
-[![R-universe](https://thisisamirv.r-universe.dev/badges/rfastlowess)](https://thisisamirv.r-universe.dev/rfastlowess)
-[![npm](https://img.shields.io/npm/v/fastlowess.svg)](https://www.npmjs.com/package/fastlowess)
-[![Julia](https://juliahub.com/docs/General/fastlowess_jll/stable/version.svg)](https://juliahub.com/ui/Packages/General/fastlowess_jll)
+[![fastLowess](https://img.shields.io/badge/fastLowess-000000?logo=rust&logoColor=white)](https://crates.io/crates/fastLowess)
+[![lowess](https://img.shields.io/badge/lowess-000000?logo=rust&logoColor=white)](https://crates.io/crates/lowess)
+[![PyPI](https://img.shields.io/badge/PyPI-3775A9?logo=pypi&logoColor=white)](https://pypi.org/project/fastlowess/)
+[![fastlowess (Python)](https://img.shields.io/badge/fastlowess_(Python)-44A833?logo=anaconda&logoColor=white)](https://anaconda.org/conda-forge/fastlowess)
+[![R-universe](https://img.shields.io/badge/R--universe-276DC3?logo=r&logoColor=white)](https://thisisamirv.r-universe.dev/rfastlowess)
+[![npm](https://img.shields.io/badge/npm-CB3837?logo=npm&logoColor=white)](https://www.npmjs.com/package/fastlowess)
+[![Julia](https://img.shields.io/badge/Julia-9558B2?logo=julia&logoColor=white)](https://juliahub.com/ui/Packages/General/fastlowess_jll)
+[![WASM](https://img.shields.io/badge/WASM-654FF0?logo=webassembly&logoColor=white)](https://www.npmjs.com/package/fastlowess-wasm)
+[![C++](https://img.shields.io/badge/C++-00599C?logo=cplusplus&logoColor=white)](https://github.com/thisisamirv/lowess-project/releases/latest)
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/thisisamirv/lowess-project/main/dev/logo.png" alt="One LOWESS to Rule Them All" width="400">
@@ -22,14 +23,14 @@ The fastest, most robust, and most feature-complete language-agnostic LOWESS (Lo
 >
 > The `lowess-project` contains a complete ecosystem for LOWESS smoothing:
 >
-> - **[`lowess`](https://github.com/thisisamirv/lowess-project/tree/main/crates/lowess)** - Core single-threaded Rust implementation with `no_std` support
-> - **[`fastLowess`](https://github.com/thisisamirv/lowess-project/tree/main/crates/fastLowess)** - Parallel CPU and GPU-accelerated Rust wrapper with ndarray integration  
-> - **[`R bindings`](https://github.com/thisisamirv/lowess-project/tree/main/bindings/r)** - extendr-based R package
-> - **[`Python bindings`](https://github.com/thisisamirv/lowess-project/tree/main/bindings/python)** - PyO3-based Python package
-> - **[`Julia bindings`](https://github.com/thisisamirv/lowess-project/tree/main/bindings/julia)** - Native Julia package with C FFI
-> - **[`JavaScript bindings`](https://github.com/thisisamirv/lowess-project/tree/main/bindings/nodejs)** - Node.js package
-> - **[`WebAssembly bindings`](https://github.com/thisisamirv/lowess-project/tree/main/bindings/wasm)** - WASM package
-> - **[`C++ bindings`](https://github.com/thisisamirv/lowess-project/tree/main/bindings/cpp)** - Native C++ package with CMake integration
+> - **[`lowess`](https://crates.io/crates/lowess)** - Core single-threaded Rust implementation with `no_std` support
+> - **[`fastLowess`](https://crates.io/crates/fastLowess)** - Parallel CPU and GPU-accelerated Rust wrapper with ndarray integration  
+> - **[`R bindings`](https://thisisamirv.r-universe.dev/rfastlowess)** - extendr-based R package
+> - **[`Python bindings`](https://pypi.org/project/fastlowess/)** - PyO3-based Python package
+> - **[`Julia bindings`](https://juliahub.com/ui/Packages/General/fastlowess_jll)** - Native Julia package with C FFI
+> - **[`JavaScript bindings`](https://www.npmjs.com/package/fastlowess)** - Node.js package
+> - **[`WebAssembly bindings`](https://www.npmjs.com/package/fastlowess-wasm)** - WASM package
+> - **[`C++ bindings`](https://github.com/thisisamirv/lowess-project/releases/latest)** - Native C++ package with CMake integration
 
 ## LOESS vs. LOWESS
 
