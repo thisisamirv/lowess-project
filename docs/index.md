@@ -110,6 +110,12 @@ Currently available for R, Python, Rust, Julia, Node.js, and WebAssembly.
     install.packages("rfastlowess", repos = "https://thisisamirv.r-universe.dev")
     ```
 
+    Or from conda-forge:
+
+    ```r
+    conda install -c conda-forge r-rfastlowess
+    ```
+
 === "Python"
 
     Install from PyPI:
@@ -118,7 +124,7 @@ Currently available for R, Python, Rust, Julia, Node.js, and WebAssembly.
     pip install fastlowess
     ```
 
-    Or install from conda-forge:
+    Or from conda-forge:
 
     ```bash
     conda install -c conda-forge fastlowess
@@ -165,6 +171,26 @@ Currently available for R, Python, Rust, Julia, Node.js, and WebAssembly.
 
     ```bash
     npm install fastlowess-wasm
+    ```
+
+    Or via CDN:
+
+    ```html
+    <script type="module">
+      import { smooth } from "https://cdn.jsdelivr.net/npm/fastlowess-wasm@0.99/index.js";
+    </script>
+    ```
+
+=== "C++"
+
+    ```bash
+    make cpp
+    ```
+
+    Or from conda-forge:
+
+    ```bash
+    conda install -c conda-forge libfastlowess
     ```
 
 See the [Installation Guide](getting-started/installation.md) for more options and details.
@@ -251,6 +277,32 @@ See the [Installation Guide](getting-started/installation.md) for more options a
     console.log(result.y);
     ```
 
+=== "C++"
+
+    ```cpp
+    #include <fastlowess.hpp>
+    #include <iostream>
+    #include <vector>
+
+    int main() {
+        std::vector<double> x = {1.0, 2.0, 3.0, 4.0, 5.0};
+        std::vector<double> y = {2.0, 4.1, 5.9, 8.2, 9.8};
+
+        fastlowess::LowessOptions options;
+        options.fraction = 0.5;
+        options.iterations = 3;
+
+        fastlowess::Lowess model(options);
+        auto result = model.fit(x, y);
+
+        for (const auto& val : result.y_vector()) {
+            std::cout << val << " ";
+        }
+        std::cout << std::endl;
+        return 0;
+    }
+    ```
+
 ## Getting Started
 
 1. [Installation](getting-started/installation.md) — Set up the library for your language
@@ -312,6 +364,19 @@ See the [Installation Guide](getting-started/installation.md) for more options a
     Optimized WebAssembly build for browsers and Node.js with zero-overhead data transfer.
 
     [:octicons-arrow-right-24: WebAssembly API](api/wasm.md)
+
+</div>
+
+<!-- markdownlint-disable MD033 -->
+<div class="grid cards" markdown>
+
+- :simple-cpp: **C++**
+
+    ---
+
+    Native C++ bindings with RAII memory management and STL container support.
+
+    [:octicons-arrow-right-24: C++ API](api/cpp.md)
 
 </div>
 

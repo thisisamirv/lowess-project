@@ -13,6 +13,12 @@ Pre-built binaries, no Rust toolchain required:
 install.packages("rfastlowess", repos = "https://thisisamirv.r-universe.dev")
 ```
 
+**From conda-forge:**
+
+```r
+conda install -c conda-forge r-rfastlowess
+```
+
 **From Source:**
 
 Requires Rust toolchain:
@@ -114,6 +120,14 @@ npm run build
 npm install fastlowess-wasm
 ```
 
+**From CDN:**
+
+```html
+<script type="module">
+  import { smooth } from "https://cdn.jsdelivr.net/npm/fastlowess-wasm@0.99/index.js";
+</script>
+```
+
 **From Source:**
 
 Requires Rust toolchain and [`wasm-pack`](https://rustwasm.github.io/wasm-pack/installer/).
@@ -186,6 +200,12 @@ cargo build --release
 # Library is at: target/release/libfastlowess_cpp.so (Linux)
 #                target/release/libfastlowess_cpp.dylib (macOS)
 #                target/release/fastlowess_cpp.dll (Windows)
+```
+
+**From conda-forge:**
+
+```bash
+conda install -c conda-forge libfastlowess
 ```
 
 ---
@@ -290,3 +310,24 @@ Both crates require **Rust 1.85.0** or later.
     ```
 
     See [WebAssembly API](../api/wasm.md) for full reference.
+
+=== "C++"
+
+    ```cpp
+    #include <fastlowess.hpp>
+    #include <iostream>
+    #include <vector>
+
+    int main() {
+        std::vector<double> x = {1.0, 2.0, 3.0, 4.0, 5.0};
+        std::vector<double> y = {2.0, 4.1, 5.9, 8.2, 9.8};
+
+        fastlowess::Lowess model;
+        auto result = model.fit(x, y);
+
+        std::cout << "Installed successfully!" << std::endl;
+        return 0;
+    }
+    ```
+
+    See [C++ API](../api/cpp.md) for full reference.

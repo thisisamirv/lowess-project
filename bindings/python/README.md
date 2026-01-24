@@ -61,7 +61,7 @@ The fastest, most robust, and most feature-complete language-agnostic LOWESS (Lo
 
 ### Speed
 
-The `lowess` project crushes the competition in terms of speed, wether in single-threaded or multi-threaded parallel execution.
+The `lowess` project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution.
 
 Speedup relative to Python's `statsmodels.lowess` (higher is better):
 
@@ -157,58 +157,78 @@ All implementations are **numerical twins** of R's `lowess`:
 
 Currently available for R, Python, Julia, and Rust:
 
-**R** (from R-universe, recommended):
+### R
+
+**From R-universe:**
 
 ```r
 install.packages("rfastlowess", repos = "https://thisisamirv.r-universe.dev")
 ```
 
-**Python** (from PyPI):
+**Or from conda-forge:**
+
+```r
+conda install -c conda-forge r-rfastlowess
+```
+
+### Python
+
+**From PyPI:**
 
 ```bash
 pip install fastlowess
 ```
 
-Or from conda-forge:
+**Or from conda-forge:**
 
 ```bash
 conda install -c conda-forge fastlowess
 ```
 
-**Rust** (lowess, no_std compatible):
+### Rust (lowess, no_std compatible)
+
+**From crates.io:**
 
 ```toml
 [dependencies]
 lowess = "0.99"
 ```
 
-**Rust** (fastLowess, parallel + GPU):
+### Rust (fastLowess, parallel + GPU)
+
+**From crates.io:**
 
 ```toml
 [dependencies]
 fastLowess = { version = "0.99", features = ["cpu"] }
 ```
 
-**Julia** (from Julia General Registry):
+### Julia
+
+**From General Registry:**
 
 ```julia
 using Pkg
 Pkg.add("fastLowess")
 ```
 
-**Node.js** (from npm):
+### Node.js
+
+**From npm:**
 
 ```bash
 npm install fastlowess
 ```
 
-**WebAssembly** (from npm):
+### WebAssembly
+
+**From npm:**
 
 ```bash
 npm install fastlowess-wasm
 ```
 
-Or via CDN:
+**Or via CDN:**
 
 ```html
 <script type="module">
@@ -217,11 +237,19 @@ Or via CDN:
 </script>
 ```
 
-**C++** (build from source):
+### C++
+
+**From source:**
 
 ```bash
 make cpp
 # Links against libfastlowess_cpp.so
+```
+
+**Or from conda-forge:**
+
+```bash
+conda install -c conda-forge libfastlowess
 ```
 
 ## Quick Example
