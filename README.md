@@ -1,15 +1,20 @@
 <!-- markdownlint-disable MD024 MD033 -->
 # LOWESS Project
 
-[![fastLowess](https://img.shields.io/badge/fastLowess-000000?logo=rust&logoColor=white)](https://crates.io/crates/fastLowess)
-[![lowess](https://img.shields.io/badge/lowess-000000?logo=rust&logoColor=white)](https://crates.io/crates/lowess)
-[![PyPI](https://img.shields.io/badge/PyPI-3775A9?logo=pypi&logoColor=white)](https://pypi.org/project/fastlowess/)
-[![fastlowess (Python)](https://img.shields.io/badge/fastlowess_(Python)-44A833?logo=anaconda&logoColor=white)](https://anaconda.org/conda-forge/fastlowess)
-[![R-universe](https://img.shields.io/badge/R--universe-276DC3?logo=r&logoColor=white)](https://thisisamirv.r-universe.dev/rfastlowess)
-[![npm](https://img.shields.io/badge/npm-CB3837?logo=npm&logoColor=white)](https://www.npmjs.com/package/fastlowess)
-[![Julia](https://img.shields.io/badge/Julia-9558B2?logo=julia&logoColor=white)](https://juliahub.com/ui/Packages/General/fastlowess_jll)
-[![WASM](https://img.shields.io/badge/WASM-654FF0?logo=webassembly&logoColor=white)](https://www.npmjs.com/package/fastlowess-wasm)
-[![C++](https://img.shields.io/badge/C++-00599C?logo=cplusplus&logoColor=white)](https://github.com/thisisamirv/lowess-project/releases/latest)
+<p align="center">
+  <a href="https://crates.io/crates/lowess"><img src="https://img.shields.io/badge/lowess-000000?logo=rust&logoColor=white" alt="lowess"></a>
+  <a href="https://crates.io/crates/fastLowess"><img src="https://img.shields.io/badge/fastLowess-000000?logo=rust&logoColor=white" alt="fastLowess"></a>
+  <a href="https://pypi.org/project/fastlowess/"><img src="https://img.shields.io/badge/PyPI-3775A9?logo=pypi&logoColor=white" alt="PyPI"></a>
+  <a href="https://thisisamirv.r-universe.dev/rfastlowess"><img src="https://img.shields.io/badge/R--universe-276DC3?logo=r&logoColor=white" alt="R-universe"></a>
+  <a href="https://www.npmjs.com/package/fastlowess"><img src="https://img.shields.io/badge/npm-CB3837?logo=npm&logoColor=white" alt="npm"></a>
+  <a href="https://juliahub.com/ui/Packages/General/fastlowess_jll"><img src="https://img.shields.io/badge/Julia-9558B2?logo=julia&logoColor=white" alt="Julia"></a>
+  <a href="https://www.npmjs.com/package/fastlowess-wasm"><img src="https://img.shields.io/badge/WASM-654FF0?logo=webassembly&logoColor=white" alt="WASM"></a>
+  <a href="https://github.com/thisisamirv/lowess-project/releases/latest"><img src="https://img.shields.io/badge/C++-00599C?logo=cplusplus&logoColor=white" alt="C++"></a>
+  <br>
+  <a href="https://anaconda.org/conda-forge/fastlowess"><img src="https://img.shields.io/badge/fastlowess_(Python)-44A833?logo=anaconda&logoColor=white" alt="fastlowess (Python)"></a>
+  <a href="https://anaconda.org/conda-forge/libfastlowess"><img src="https://img.shields.io/badge/libfastlowess_(C++)-44A833?logo=anaconda&logoColor=white" alt="libfastlowess (C++)"></a>
+  <a href="https://anaconda.org/conda-forge/r-rfastlowess"><img src="https://img.shields.io/badge/rfastlowess_(R)-44A833?logo=anaconda&logoColor=white" alt="rfastlowess (R)"></a>
+</p>
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/thisisamirv/lowess-project/main/dev/logo.png" alt="One LOWESS to Rule Them All" width="400">
