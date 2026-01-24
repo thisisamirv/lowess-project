@@ -183,7 +183,11 @@ Currently available for R, Python, Rust, Julia, Node.js, and WebAssembly.
 
 === "C++"
 
+    Install from source:
+
     ```bash
+    git clone https://github.com/thisisamirv/lowess-project.git
+    cd lowess-project
     make cpp
     ```
 
@@ -336,7 +340,7 @@ See the [Installation Guide](getting-started/installation.md) for more options a
 
     [:octicons-arrow-right-24: R API](api/r.md)
 
-- :material-language-julia: **Julia**
+- :simple-julia: **Julia**
 
     ---
 
@@ -349,7 +353,7 @@ See the [Installation Guide](getting-started/installation.md) for more options a
 <!-- markdownlint-disable MD033 -->
 <div class="grid cards" markdown>
 
-- :simple-nodejs: **Node.js**
+- :simple-nodedotjs: **Node.js**
 
     ---
 
@@ -370,7 +374,7 @@ See the [Installation Guide](getting-started/installation.md) for more options a
 <!-- markdownlint-disable MD033 -->
 <div class="grid cards" markdown>
 
-- :simple-cpp: **C++**
+- :material-language-cpp: **C++**
 
     ---
 

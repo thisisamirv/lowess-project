@@ -29,7 +29,7 @@ Language-specific API documentation.
 
     [:octicons-arrow-right-24: Rust API](rust.md)
 
-- :material-language-julia: **Julia**
+- :simple-julia: **Julia**
 
     ---
 

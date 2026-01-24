@@ -21,12 +21,6 @@ Get up and running with LOWESS in minutes.
     print(result$y)
     ```
 
-**Output:**
-
-```text
-Smoothed values: [2.02, 4.00, 6.00, 8.10, 10.04, 12.03, 13.90, 15.78]
-```
-
 === "Python"
 
     ```python

@@ -640,9 +640,9 @@ impl<T: Float> LowessExecutor<T> {
     where
         T: Float + WLSSolver + Debug + Send + Sync + 'static,
     {
-        if self.custom_fit_pass.is_some() {
+        if let Some(fit_pass) = self.custom_fit_pass {
             let config = self.to_config(Some(eff_fraction), convergence_tolerance, interval_method);
-            return (self.custom_fit_pass.unwrap())(x, y, &config);
+            return fit_pass(x, y, &config);
         }
 
         let n = x.len();

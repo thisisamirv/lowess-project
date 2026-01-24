@@ -3,224 +3,184 @@
 
 Install the LOWESS library for your preferred language.
 
-## R
+=== "R"
 
-**From R-universe (recommended):**
+    === "From R-universe (recommended)"
 
-Pre-built binaries, no Rust toolchain required:
-
-```r
-install.packages("rfastlowess", repos = "https://thisisamirv.r-universe.dev")
-```
-
-**From conda-forge:**
-
-```r
-conda install -c conda-forge r-rfastlowess
-```
-
-**From Source:**
-
-Requires Rust toolchain:
-
-```r
-# Install Rust first: https://rustup.rs/
-devtools::install_github("thisisamirv/lowess-project", subdir = "bindings/r")
-```
-
----
-
-## Python
-
-**From PyPI (recommended):**
-
-```bash
-pip install fastlowess
-```
-
-**From conda-forge:**
-
-```bash
-conda install -c conda-forge fastlowess
-```
-
-**From Source:**
-
-```bash
-git clone https://github.com/thisisamirv/lowess-project
-cd lowess-project/bindings/python
-pip install maturin
-maturin develop --release
-```
-
----
-
-## Rust
-
-**From crates.io:**
-
-=== "lowess (no_std compatible)"
-
-    ```toml
-    [dependencies]
-    lowess = "0.99"
+    ```r
+    install.packages("rfastlowess", repos = "https://thisisamirv.r-universe.dev")
     ```
 
-=== "fastLowess (parallel + GPU)"
+    === "From conda-forge"
+
+    ```r
+    conda install -c conda-forge r-rfastlowess
+    ```
+
+    === "From Source"
+
+    ```r
+    # Install Rust first: https://rustup.rs/
+    devtools::install_github("thisisamirv/lowess-project", subdir = "bindings/r")
+    ```
+
+=== "Python"
+
+    === "From PyPI (recommended)"
+
+    ```bash
+    pip install fastlowess
+    ```
+
+    === "From conda-forge"
+
+    ```bash
+    conda install -c conda-forge fastlowess
+    ```
+
+    === "From Source"
+
+    ```bash
+    # Install Rust first: https://rustup.rs/
+    git clone https://github.com/thisisamirv/lowess-project
+    cd lowess-project/bindings/python
+    pip install maturin
+    maturin develop --release
+    ```
+
+=== "Rust"
+
+    === "From crates.io"
 
     ```toml
+    # lowess (no_std compatible)
+    [dependencies]
+    lowess = "0.99"
+
+    # fastLowess (parallel + GPU)
     [dependencies]
     fastLowess = { version = "0.99", features = ["cpu"] }
     ```
 
----
+    === "Feature Flags"
 
-## Julia
+    | Crate        | Feature | Description                             |
+    |--------------|---------|-----------------------------------------|
+    | `lowess`     | `std`   | Enable standard library (default)       |
+    | `fastLowess` | `cpu`   | Enable CPU parallelism via Rayon        |
+    | `fastLowess` | `gpu`   | Enable GPU acceleration via wgpu (beta) |
 
-**From General Registry (recommended):**
+=== "Julia"
 
-```julia
-using Pkg
-Pkg.add("fastlowess")
-```
+    === "From General Registry (recommended)"
 
-**From Source:**
+    ```julia
+    using Pkg
+    Pkg.add("fastlowess")
+    ```
 
-```julia
-using Pkg
-Pkg.develop(url="https://github.com/thisisamirv/lowess-project", subdir="bindings/julia/julia")
-```
+    === "From Source"
 
----
+    ```julia
+    using Pkg
+    Pkg.develop(url="https://github.com/thisisamirv/lowess-project", subdir="bindings/julia/julia")
+    ```
 
-## Node.js
+=== "Node.js"
 
-**From NPM (recommended):**
+    === "From NPM (recommended)"
 
-```bash
-npm install fastlowess
-```
+    ```bash
+    npm install fastlowess
+    ```
 
-**From Source:**
+    === "From Source"
 
-```bash
-git clone https://github.com/thisisamirv/lowess-project
-cd lowess-project/bindings/nodejs
-npm install
-npm run build
-```
+    ```bash
+    git clone https://github.com/thisisamirv/lowess-project
+    cd lowess-project/bindings/nodejs
+    npm install
+    npm run build
+    ```
 
----
+=== "WebAssembly"
 
-## WebAssembly
+    === "From NPM (recommended)"
 
-**From NPM (recommended):**
+    ```bash
+    npm install fastlowess-wasm
+    ```
 
-```bash
-npm install fastlowess-wasm
-```
+    === "From CDN"
 
-**From CDN:**
+    ```html
+    <script type="module">
+      import { smooth } from "https://cdn.jsdelivr.net/npm/fastlowess-wasm@0.99/index.js";
+    </script>
+    ```
 
-```html
-<script type="module">
-  import { smooth } from "https://cdn.jsdelivr.net/npm/fastlowess-wasm@0.99/index.js";
-</script>
-```
+    === "From Source"
 
-**From Source:**
+    ```bash
+    # Install Rust first: https://rustup.rs/
+    # Install wasm-pack: https://rustwasm.github.io/wasm-pack/installer/
+    git clone https://github.com/thisisamirv/lowess-project
+    cd lowess-project/bindings/wasm
+    # For bundlers (Webpack, Vite, etc.)
+    wasm-pack build --target bundler
+    # For Node.js
+    wasm-pack build --target nodejs
+    # For browser (no bundler)
+    wasm-pack build --target web
+    ```
 
-Requires Rust toolchain and [`wasm-pack`](https://rustwasm.github.io/wasm-pack/installer/).
+=== "C++"
 
-```bash
-git clone https://github.com/thisisamirv/lowess-project
-cd lowess-project/bindings/wasm
-# For bundlers (Webpack, Vite, etc.)
-wasm-pack build --target bundler
-# For Node.js
-wasm-pack build --target nodejs
-# For browser (no bundler)
-wasm-pack build --target web
-```
+    === "Pre-built Binaries (Linux (x64))"
 
----
+    ```bash
+    wget https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-linux-x64.so
+    wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp
+    g++ -o myapp myapp.cpp -L. -lfastlowess-linux-x64
+    ```
 
-## C++
+    === "Pre-built Binaries (macOS (x64))"
 
-**Pre-built Binaries (recommended):**
+    ```bash
+    curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-macos-x64.dylib
+    curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp
+    clang++ -o myapp myapp.cpp -L. -lfastlowess-macos-x64
+    ```
 
-Download pre-built libraries from [GitHub Releases](https://github.com/thisisamirv/lowess-project/releases):
+    === "Pre-built Binaries (Windows (x64))"
 
-*Linux (x64):*
+    ```powershell
+    wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess-win32-x64.dll
+    wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp
+    cl myapp.cpp /link fastlowess-win32-x64.lib
+    ```
 
-```bash
-wget https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-linux-x64.so
-wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp
-```
+    === "From Source"
 
-*macOS (x64):*
+    ```bash
+    # Install Rust first: https://rustup.rs/
+    git clone https://github.com/thisisamirv/lowess-project
+    cd lowess-project/bindings/cpp
 
-```bash
-curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-macos-x64.dylib
-curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp
-```
+    # Build the library
+    cargo build --release
 
-*Windows (x64):*
+    # Headers are at: include/fastlowess.hpp (C++)
+    # Library is at: target/release/libfastlowess_cpp.so (Linux)
+    #                target/release/libfastlowess_cpp.dylib (macOS)
+    #                target/release/fastlowess_cpp.dll (Windows)
+    ```
 
-```powershell
-# Download from: https://github.com/thisisamirv/lowess-project/releases/latest
-# Files: fastlowess-win32-x64.dll, fastlowess.hpp
-```
+    === "From conda-forge"
 
-Then link against the library in your build system:
-
-```bash
-# Linux
-g++ -o myapp myapp.cpp -L. -lfastlowess-linux-x64
-
-# macOS
-clang++ -o myapp myapp.cpp -L. -lfastlowess-macos-x64
-
-# Windows (MSVC)
-cl myapp.cpp /link fastlowess-win32-x64.lib
-```
-
-**From Source:**
-
-Requires Rust toolchain.
-
-```bash
-git clone https://github.com/thisisamirv/lowess-project
-cd lowess-project/bindings/cpp
-
-# Build the library
-cargo build --release
-
-# Headers are at: include/fastlowess.hpp (C++)
-# Library is at: target/release/libfastlowess_cpp.so (Linux)
-#                target/release/libfastlowess_cpp.dylib (macOS)
-#                target/release/fastlowess_cpp.dll (Windows)
-```
-
-**From conda-forge:**
-
-```bash
-conda install -c conda-forge libfastlowess
-```
-
----
-
-### Feature Flags
-
-| Crate        | Feature | Description                             |
-|--------------|---------|-----------------------------------------|
-| `lowess`     | `std`   | Enable standard library (default)       |
-| `fastLowess` | `cpu`   | Enable CPU parallelism via Rayon        |
-| `fastLowess` | `gpu`   | Enable GPU acceleration via wgpu (beta) |
-
-### Minimum Supported Rust Version (MSRV)
-
-Both crates require **Rust 1.85.0** or later.
+    ```bash
+    conda install -c conda-forge libfastlowess
+    ```
 
 ---
 
@@ -292,8 +252,6 @@ Both crates require **Rust 1.85.0** or later.
     console.log("Installed successfully!");
     ```
 
-    See [Node.js API](../api/nodejs.md) for full reference.
-
 === "WebAssembly"
 
     ```javascript
@@ -308,8 +266,6 @@ Both crates require **Rust 1.85.0** or later.
     }
     verify();
     ```
-
-    See [WebAssembly API](../api/wasm.md) for full reference.
 
 === "C++"
 
@@ -329,5 +285,3 @@ Both crates require **Rust 1.85.0** or later.
         return 0;
     }
     ```
-
-    See [C++ API](../api/cpp.md) for full reference.
