@@ -1,4 +1,20 @@
-<!-- markdownlint-disable MD025 -->
+<!-- markdownlint-disable MD025 MD041 -->
+
+> [!NOTE]
+>
+> Installation instructions are available for:
+>
+> - [R](#r)
+> - [Python](#python)
+> - [Rust (lowess)](#rust-lowess-no_std-compatible)
+> - [Rust (fastLowess)](#rust-fastlowess-parallel--gpu)
+> - [Julia](#julia)
+> - [Node.js](#nodejs)
+> - [WebAssembly](#webassembly)
+> - [C++](#c)
+
+---
+
 # R
 
 **From R-universe:**

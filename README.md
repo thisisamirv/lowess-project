@@ -37,6 +37,22 @@ The fastest, most robust, and most feature-complete language-agnostic LOWESS (Lo
 > - **[`WebAssembly bindings`](https://www.npmjs.com/package/fastlowess-wasm)** - WASM binding
 > - **[`C++ bindings`](https://github.com/thisisamirv/lowess-project/releases/latest)** - Native C++ binding with CMake integration
 
+---
+
+## Installation
+
+> [!NOTE]
+>
+> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See [INSTALLATION.md](https://github.com/thisisamirv/lowess-project/blob/main/INSTALLATION.md) for detailed installation instructions.
+
+## Documentation
+
+> [!NOTE]
+>
+> ### 📚 [View the full documentation](https://lowess.readthedocs.io/)
+
+---
+
 ## LOESS vs. LOWESS
 
 | Feature               | LOESS (This Crate)                | LOWESS                         |
@@ -50,12 +66,6 @@ The fastest, most robust, and most feature-complete language-agnostic LOWESS (Lo
 > **Note:** For a **LOESS** implementation, use [`loess-project`](https://github.com/thisisamirv/loess-project).
 
 ---
-
-## Documentation
-
-> [!NOTE]
->
-> ### 📚 [View the full documentation](https://lowess.readthedocs.io/)
 
 ## Why this package?
 
@@ -133,10 +143,6 @@ All implementations are **numerical twins** of R's `lowess`:
 | **Accuracy**    | ✅ EXACT MATCH | Max diff < 1e-12 across all scenarios         |
 | **Consistency** | ✅ PERFECT     | Multiple scenarios pass with strict tolerance |
 | **Robustness**  | ✅ VERIFIED    | Robust smoothing matches R exactly            |
-
-## Installation
-
-Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See [INSTALLATION.md](https://github.com/thisisamirv/lowess-project/blob/main/INSTALLATION.md) for detailed installation instructions.
 
 ## API Reference
 
@@ -430,17 +436,7 @@ Contributions are welcome! Please see the [CONTRIBUTING.md](https://github.com/t
 
 ## License
 
-Licensed under either of:
-
-- Apache License, Version 2.0 ([LICENSE-APACHE](https://github.com/thisisamirv/lowess-project/blob/main/LICENSE-APACHE) or <https://www.apache.org/licenses/LICENSE-2.0>)
-- MIT license ([LICENSE-MIT](https://github.com/thisisamirv/lowess-project/blob/main/LICENSE-MIT) or <https://opensource.org/licenses/MIT>)
-
-at your option.
-
-## References
-
-- Cleveland, W.S. (1979). "Robust Locally Weighted Regression and Smoothing Scatterplots". *JASA*.
-- Cleveland, W.S. (1981). "LOWESS: A Program for Smoothing Scatterplots". *The American Statistician*.
+Licensed under [MIT](https://github.com/thisisamirv/lowess-project/blob/main/LICENSE-MIT) or [Apache-2.0](https://github.com/thisisamirv/lowess-project/blob/main/LICENSE-APACHE).
 
 ## Citation
 
