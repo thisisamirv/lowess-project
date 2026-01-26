@@ -88,7 +88,7 @@ impl ScalingMethod {
                 i += 1;
             }
 
-            (lower + upper) / T::from(2.0).unwrap()
+            (lower + upper) / T::from(2.0).unwrap_or(T::one() + T::one())
         } else {
             // Odd length: middle value
             vals.select_nth_unstable_by(mid, |a, b| a.partial_cmp(b).unwrap_or(Equal));

@@ -16,7 +16,7 @@
 //!
 //! > 📚 **Full Documentation**: [lowess.readthedocs.io](https://lowess.readthedocs.io/)
 //! >
-//! > Comprehensive guides, API references, and tutorials for Rust, Python, and R.
+//! > Comprehensive guides, API references, and tutorials.
 //!
 //! ## Quick Start
 //!

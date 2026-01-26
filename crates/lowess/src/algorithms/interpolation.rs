@@ -22,7 +22,7 @@ pub fn calculate_delta<T: Float>(delta: Option<T>, x_sorted: &[T]) -> Result<T, 
                 Ok(T::zero())
             } else {
                 let range = x_sorted[x_sorted.len() - 1] - x_sorted[0];
-                Ok(T::from(0.01).unwrap() * range)
+                Ok(T::from(0.01).unwrap_or(T::zero()) * range)
             }
         }
     }
@@ -44,7 +44,7 @@ pub fn interpolate_gap<T: Float>(x: &[T], y_smooth: &mut [T], last_fitted: usize
 
     if denom <= T::zero() {
         // Duplicate or decreasing x-values: use simple average
-        let avg = (y0 + y1) / T::from(2.0).unwrap();
+        let avg = (y0 + y1) / T::from(2.0).unwrap_or(T::one() + T::one());
         y_smooth[(last_fitted + 1)..current].fill(avg);
         return;
     }

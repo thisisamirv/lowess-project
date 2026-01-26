@@ -30,12 +30,12 @@ The fastest, most robust, and most feature-complete language-agnostic LOWESS (Lo
 >
 > - **[`lowess`](https://crates.io/crates/lowess)** - Core single-threaded Rust implementation with `no_std` support
 > - **[`fastLowess`](https://crates.io/crates/fastLowess)** - Parallel CPU and GPU-accelerated Rust wrapper with ndarray integration  
-> - **[`R bindings`](https://thisisamirv.r-universe.dev/rfastlowess)** - extendr-based R package
-> - **[`Python bindings`](https://pypi.org/project/fastlowess/)** - PyO3-based Python package
-> - **[`Julia bindings`](https://juliahub.com/ui/Packages/General/fastlowess_jll)** - Native Julia package with C FFI
-> - **[`JavaScript bindings`](https://www.npmjs.com/package/fastlowess)** - Node.js package
-> - **[`WebAssembly bindings`](https://www.npmjs.com/package/fastlowess-wasm)** - WASM package
-> - **[`C++ bindings`](https://github.com/thisisamirv/lowess-project/releases/latest)** - Native C++ package with CMake integration
+> - **[`R bindings`](https://thisisamirv.r-universe.dev/rfastlowess)** - extendr-based R binding
+> - **[`Python bindings`](https://pypi.org/project/fastlowess/)** - PyO3-based Python binding
+> - **[`Julia bindings`](https://juliahub.com/ui/Packages/General/fastlowess_jll)** - Native Julia binding with C FFI
+> - **[`JavaScript bindings`](https://www.npmjs.com/package/fastlowess)** - Node.js binding
+> - **[`WebAssembly bindings`](https://www.npmjs.com/package/fastlowess-wasm)** - WASM binding
+> - **[`C++ bindings`](https://github.com/thisisamirv/lowess-project/releases/latest)** - Native C++ binding with CMake integration
 
 ## LOESS vs. LOWESS
 
@@ -61,28 +61,9 @@ The fastest, most robust, and most feature-complete language-agnostic LOWESS (Lo
 
 ### Speed
 
-The `lowess` project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution.
+The `lowess` project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution. It is on average **200-327x faster** than Python's `statsmodels.lowess` and **2-3x faster** than R's `lowess`.
 
-Speedup relative to Python's `statsmodels.lowess` (higher is better):
-
-| Category                        | statsmodels | R (stats) | Serial | Parallel | GPU     |
-|---------------------------------|-------------|-----------|--------|----------|---------|
-| **Clustered**                   | 163ms       | 83×       | 203×   | **433×** | 32×     |
-| **Constant Y**                  | 134ms       | 92×       | 212×   | **410×** | 18×     |
-| **Delta** (large–none)          | 105ms       | 2×        | 4×     | 6×       | **16×** |
-| **Extreme Outliers**            | 489ms       | 106×      | 201×   | **388×** | 29×     |
-| **Financial** (500–10K)         | 106ms       | 105×      | 252×   | **293×** | 12×     |
-| **Fraction** (0.05–0.67)        | 221ms       | 104×      | 228×   | **391×** | 22×     |
-| **Genomic** (1K–50K)            | 1833ms      | 7×        | 9×     | 20×      | **95×** |
-| **High Noise**                  | 435ms       | 133×      | 134×   | **375×** | 32×     |
-| **Iterations** (0–10)           | 204ms       | 115×      | 224×   | **386×** | 18×     |
-| **Scale** (1K–50K)              | 1841ms      | 264×      | 487×   | **581×** | 98×     |
-| **Scientific** (500–10K)        | 167ms       | 109×      | 205×   | **314×** | 15×     |
-| **Scale Large**\* (100K–2M)     | —           | —         | 1×     | **1.4×** | 0.3×    |
-
-\*Scale Large benchmarks are relative to Serial (statsmodels cannot handle these sizes)
-
-*The numbers are the average across a range of scenarios for each category (e.g., Delta from none, to small, medium, and large).*
+For more details on the performance comparison, see the [BENCHMARKS](https://github.com/thisisamirv/lowess-project/blob/main/BENCHMARKS.md) file.
 
 ### Robustness
 
@@ -155,208 +136,7 @@ All implementations are **numerical twins** of R's `lowess`:
 
 ## Installation
 
-Currently available for R, Python, Julia, and Rust:
-
-### R
-
-**From R-universe:**
-
-```r
-install.packages("rfastlowess", repos = "https://thisisamirv.r-universe.dev")
-```
-
-**Or from conda-forge:**
-
-```r
-conda install -c conda-forge r-rfastlowess
-```
-
-### Python
-
-**From PyPI:**
-
-```bash
-pip install fastlowess
-```
-
-**Or from conda-forge:**
-
-```bash
-conda install -c conda-forge fastlowess
-```
-
-### Rust (lowess, no_std compatible)
-
-**From crates.io:**
-
-```toml
-[dependencies]
-lowess = "0.99"
-```
-
-### Rust (fastLowess, parallel + GPU)
-
-**From crates.io:**
-
-```toml
-[dependencies]
-fastLowess = { version = "0.99", features = ["cpu"] }
-```
-
-### Julia
-
-**From General Registry:**
-
-```julia
-using Pkg
-Pkg.add("fastLowess")
-```
-
-### Node.js
-
-**From npm:**
-
-```bash
-npm install fastlowess
-```
-
-### WebAssembly
-
-**From npm:**
-
-```bash
-npm install fastlowess-wasm
-```
-
-**Or via CDN:**
-
-```html
-<script type="module">
-  import init, { smooth } from 'https://unpkg.com/fastlowess-wasm@latest';
-  await init();
-</script>
-```
-
-### C++
-
-**From source:**
-
-```bash
-make cpp
-# Links against libfastlowess_cpp.so
-```
-
-**Or from conda-forge:**
-
-```bash
-conda install -c conda-forge libfastlowess
-```
-
-## Quick Example
-
-**R:**
-
-```r
-library(rfastlowess)
-
-x <- c(1, 2, 3, 4, 5)
-y <- c(2.0, 4.1, 5.9, 8.2, 9.8)
-
-model <- Lowess(fraction = 0.5, iterations = 3)
-result <- model$fit(x, y)
-print(result$y)
-```
-
-**Python:**
-
-```python
-from fastlowess import Lowess
-import numpy as np
-
-x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
-y = np.array([2.0, 4.1, 5.9, 8.2, 9.8])
-
-model = Lowess(fraction=0.5, iterations=3)
-result = model.fit(x, y)
-print(result.y)
-```
-
-**Rust:**
-
-```rust
-use lowess::prelude::*;
-
-let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-let y = vec![2.0, 4.1, 5.9, 8.2, 9.8];
-
-let model = Lowess::new()
-    .fraction(0.5)
-    .iterations(3)
-    .adapter(Batch)
-    .build()?;
-
-let result = model.fit(&x, &y)?;
-println!("{}", result);
-```
-
-**Julia:**
-
-```julia
-using fastlowess
-
-x = [1.0, 2.0, 3.0, 4.0, 5.0]
-y = [2.0, 4.1, 5.9, 8.2, 9.8]
-
-result = fit(Lowess(fraction=0.5, iterations=3), x, y)
-println(result.y)
-```
-
-**Node.js:**
-
-```javascript
-const { Lowess } = require('fastlowess');
-
-const x = [1.0, 2.0, 3.0, 4.0, 5.0];
-const y = [2.0, 4.1, 5.9, 8.2, 9.8];
-
-const model = new Lowess({ fraction: 0.5, iterations: 3 });
-const result = model.fit(x, y);
-console.log(result.y);
-```
-
-**WebAssembly:**
-
-```javascript
-import init, { smooth } from 'fastlowess-wasm';
-
-await init();
-
-const x = new Float64Array([1.0, 2.0, 3.0, 4.0, 5.0]);
-const y = new Float64Array([2.0, 4.1, 5.9, 8.2, 9.8]);
-
-const result = smooth(x, y, { fraction: 0.5, iterations: 3 });
-console.log(result.y);
-```
-
-**C++:**
-
-```cpp
-#include <fastlowess.hpp>
-
-std::vector<double> x = {1.0, 2.0, 3.0, 4.0, 5.0};
-std::vector<double> y = {2.0, 4.1, 5.9, 8.2, 9.8};
-
-fastlowess::LowessOptions options;
-options.fraction = 0.5;
-options.iterations = 3;
-
-fastlowess::Lowess model(options);
-auto result = model.fit(x, y);
-
-for (double val : result.y_vector()) std::cout << val << " ";
-```
-
----
+Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See [INSTALLATION.md](https://github.com/thisisamirv/lowess-project/blob/main/INSTALLATION.md) for detailed installation instructions.
 
 ## API Reference
 
@@ -382,6 +162,21 @@ Lowess(
     auto_converge = 1e-4,
     parallel = TRUE
 )$fit(x, y)
+
+# Result structure:
+result$x,
+result$y,
+result$standard_errors,
+result$confidence_lower,
+result$confidence_upper,
+result$prediction_lower,
+result$prediction_upper,
+result$residuals,
+result$robustness_weights,
+result$diagnostics,
+result$iterations_used,
+result$fraction_used,
+result$cv_scores
 ```
 
 **Python:**
@@ -409,16 +204,31 @@ model = Lowess(
     parallel=True
 )
 result = model.fit(x, y)
+
+# Result structure:
+result.x,
+result.y,
+result.standard_errors,
+result.confidence_lower,
+result.confidence_upper,
+result.prediction_lower,
+result.prediction_upper,
+result.residuals,
+result.robustness_weights,
+result.diagnostics,
+result.iterations_used,
+result.fraction_used,
+result.cv_scores
 ```
 
 **Rust:**
 
 ```rust
 Lowess::new()
-    .fraction(0.5)              // Smoothing span (0, 1]
-    .iterations(3)              // Robustness iterations
-    .delta(0.01)                // Interpolation threshold
-    .weight_function(Tricube)   // Kernel selection
+    .fraction(0.5)
+    .iterations(3)
+    .delta(0.01)
+    .weight_function(Tricube)
     .robustness_method(Bisquare)
     .zero_weight_fallback(UseLocalMean)
     .boundary_policy(Extend)
@@ -429,10 +239,29 @@ Lowess::new()
     .return_robustness_weights()
     .cross_validate(KFold(5, &[0.3, 0.5, 0.7]).seed(123))
     .auto_converge(1e-4)
-    .adapter(Batch)             // or Streaming, Online
+    .adapter(Batch)
     .parallel(true)             // fastLowess only
     .backend(CPU)               // fastLowess only: CPU or GPU
     .build()?;
+
+let result = model.fit(x, y);
+
+// Result structure:
+pub struct LowessResult<T> {
+    pub x: Vec<T>,                           // Sorted x values
+    pub y: Vec<T>,                           // Smoothed y values
+    pub standard_errors: Option<Vec<T>>,
+    pub confidence_lower: Option<Vec<T>>,
+    pub confidence_upper: Option<Vec<T>>,
+    pub prediction_lower: Option<Vec<T>>,
+    pub prediction_upper: Option<Vec<T>>,
+    pub residuals: Option<Vec<T>>,
+    pub robustness_weights: Option<Vec<T>>,
+    pub diagnostics: Option<Diagnostics<T>>,
+    pub iterations_used: Option<usize>,
+    pub fraction_used: T,
+    pub cv_scores: Option<Vec<T>>,
+}
 ```
 
 **Julia:**
@@ -457,6 +286,21 @@ Lowess(;
     auto_converge=NaN,
     parallel=true
 )
+
+# Result structure:
+result.x,
+result.y,
+result.standard_errors,
+result.confidence_lower,
+result.confidence_upper,
+result.prediction_lower,
+result.prediction_upper,
+result.residuals,
+result.robustness_weights,
+result.diagnostics,
+result.iterations_used,
+result.fraction_used,
+result.cv_scores
 ```
 
 **Node.js:**
@@ -481,6 +325,21 @@ new Lowess({
     autoConverge: 1e-4,
     parallel: true
 }).fit(x, y)
+
+// Result structure:
+result.x,
+result.y,
+result.standardErrors,
+result.confidenceLower,
+result.confidenceUpper,
+result.predictionLower,
+result.predictionUpper,
+result.residuals,
+result.robustnessWeights,
+result.diagnostics,
+result.iterationsUsed,
+result.fractionUsed,
+result.cvScores
 ```
 
 **WebAssembly:**
@@ -502,8 +361,24 @@ smooth(x, y, {
     cvFractions: [0.3, 0.5, 0.7],
     cvMethod: "kfold",
     cvK: 5,
-    autoConverge: 1e-4
+    autoConverge: 1e-4,
+    parallel: true
 })
+
+// Result structure:
+result.x,
+result.y,
+result.standardErrors,
+result.confidenceLower,
+result.confidenceUpper,
+result.predictionLower,
+result.predictionUpper,
+result.residuals,
+result.robustnessWeights,
+result.diagnostics,
+result.iterationsUsed,
+result.fractionUsed,
+result.cvScores
 ```
 
 **C++:**
@@ -530,98 +405,21 @@ options.parallel = true;
 
 fastlowess::Lowess model(options);
 auto result = model.fit(x, y);
-```
 
-## Result Structure
-
-**R:**
-
-```r
-result$x, result$y, result$standard_errors
-result$confidence_lower, result$confidence_upper
-result$prediction_lower, result$prediction_upper
-result$residuals, result$robustness_weights
-result$diagnostics, result$iterations_used
-result$fraction_used, result$cv_scores
-```
-
-**Python:**
-
-```python
-result.x, result.y, result.standard_errors
-result.confidence_lower, result.confidence_upper
-result.prediction_lower, result.prediction_upper
-result.residuals, result.robustness_weights
-result.diagnostics, result.iterations_used
-result.fraction_used, result.cv_scores
-```
-
-**Rust:**
-
-```rust
-pub struct LowessResult<T> {
-    pub x: Vec<T>,                           // Sorted x values
-    pub y: Vec<T>,                           // Smoothed y values
-    pub standard_errors: Option<Vec<T>>,
-    pub confidence_lower: Option<Vec<T>>,
-    pub confidence_upper: Option<Vec<T>>,
-    pub prediction_lower: Option<Vec<T>>,
-    pub prediction_upper: Option<Vec<T>>,
-    pub residuals: Option<Vec<T>>,
-    pub robustness_weights: Option<Vec<T>>,
-    pub diagnostics: Option<Diagnostics<T>>,
-    pub iterations_used: Option<usize>,
-    pub fraction_used: T,
-    pub cv_scores: Option<Vec<T>>,
-}
-```
-
-**Julia:**
-
-```julia
-result.x, result.y, result.standard_errors
-result.confidence_lower, result.confidence_upper
-result.prediction_lower, result.prediction_upper
-result.residuals, result.robustness_weights
-result.diagnostics, result.iterations_used
-result.fraction_used
-```
-
-**Node.js:**
-
-```javascript
-result.x, result.y, result.standardErrors
-result.confidenceLower, result.confidenceUpper
-result.predictionLower, result.predictionUpper
-result.residuals, result.robustnessWeights
-result.diagnostics, result.iterationsUsed
-result.fractionUsed, result.cvScores
-```
-
-**WebAssembly:**
-
-```javascript
-result.x, result.y, result.standardErrors
-result.confidenceLower, result.confidenceUpper
-result.predictionLower, result.predictionUpper
-result.residuals, result.robustnessWeights
-result.diagnostics, result.iterationsUsed
-result.fractionUsed, result.cvScores
-```
-
-**C++:**
-
-```cpp
-result.y_vector()              // std::vector<double>
-result.confidence_lower()      // std::vector<double>
-result.confidence_upper()      // std::vector<double>
-result.prediction_lower()      // std::vector<double>
-result.prediction_upper()      // std::vector<double>
-result.residuals()             // std::vector<double>
-result.robustness_weights()    // std::vector<double>
-result.diagnostics()           // Diagnostics struct
-result.iterations_used()       // size_t
-result.fraction_used()         // double
+// Result structure:
+result.x_vector(),
+result.y_vector(),
+result.standard_errors(),
+result.confidence_lower(),
+result.confidence_upper(),
+result.prediction_lower(),
+result.prediction_upper(),
+result.residuals(),
+result.robustness_weights(),
+result.diagnostics(),
+result.iterations_used(),
+result.fraction_used(),
+result.cv_scores()
 ```
 
 ---
@@ -634,8 +432,8 @@ Contributions are welcome! Please see the [CONTRIBUTING.md](https://github.com/t
 
 Licensed under either of:
 
-- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or <https://www.apache.org/licenses/LICENSE-2.0>)
-- MIT license ([LICENSE-MIT](LICENSE-MIT) or <https://opensource.org/licenses/MIT>)
+- Apache License, Version 2.0 ([LICENSE-APACHE](https://github.com/thisisamirv/lowess-project/blob/main/LICENSE-APACHE) or <https://www.apache.org/licenses/LICENSE-2.0>)
+- MIT license ([LICENSE-MIT](https://github.com/thisisamirv/lowess-project/blob/main/LICENSE-MIT) or <https://opensource.org/licenses/MIT>)
 
 at your option.
 

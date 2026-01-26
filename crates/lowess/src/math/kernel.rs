@@ -213,7 +213,7 @@ impl WeightFunction {
 
         match self {
             WeightFunction::Cosine => {
-                let pi_over_2 = T::from(PI_OVER_2).unwrap();
+                let pi_over_2 = T::from(PI_OVER_2).unwrap_or(T::zero());
                 (pi_over_2 * abs_u).cos()
             }
 

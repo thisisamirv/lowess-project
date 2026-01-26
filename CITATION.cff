@@ -19,8 +19,12 @@ keywords:
   - rust
   - python
   - r
+  - julia
+  - nodejs
+  - wasm
+  - cpp
 date-released: "2026-01-01"
-version: "0.99.9"
+version: "1.0.0"
 references:
   - type: article
     authors:

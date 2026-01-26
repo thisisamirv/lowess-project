@@ -78,11 +78,11 @@ impl<T: Float> WeightParams<T> {
         let radius = if window_radius > T::zero() {
             window_radius
         } else {
-            T::from(1e-12).unwrap()
+            T::from(1e-12).unwrap_or_else(T::epsilon)
         };
 
-        let h1 = T::from(0.001).unwrap() * radius;
-        let h9 = T::from(0.999).unwrap() * radius;
+        let h1 = T::from(0.001).unwrap_or_else(T::epsilon) * radius;
+        let h9 = T::from(0.999).unwrap_or_else(|| T::one() - T::epsilon()) * radius;
 
         Self {
             x_current,
@@ -401,7 +401,7 @@ impl<T: Float> LinearFit<T> {
             covariance = covariance + dx * dy;
         }
 
-        let tol = T::from(1e-12).unwrap();
+        let tol = T::from(1e-12).unwrap_or_else(T::epsilon);
         if variance <= tol {
             return Self {
                 slope: T::zero(),
@@ -435,7 +435,7 @@ impl<T: Float + WLSSolver> LinearFit<T> {
         let (sum_w, sum_wx, sum_wy, sum_wxx, sum_wxy) = T::accumulate_wls(x, y, weights);
 
         // Numerical stability tolerance
-        let abs_tol = T::from(1e-7).unwrap();
+        let abs_tol = T::from(1e-7).unwrap_or_else(T::epsilon);
         let rel_tol = T::epsilon() * window_radius * window_radius;
         let tol = abs_tol.max(rel_tol);
 

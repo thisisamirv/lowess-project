@@ -1,17 +1,20 @@
 [package]
+# Metadata
 name = "fastLowess"
 version = "0.99.9"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
+rust-version = "1.88"
 license = "MIT OR Apache-2.0"
+
+# Documentation and Discovery
+description = "High-performance LOWESS (Locally Weighted Scatterplot Smoothing)"
+readme = "README.md"
 repository = "https://github.com/thisisamirv/lowess-project"
 homepage = "https://github.com/thisisamirv/lowess-project"
-rust-version = "1.88"
-readme = "README.md"
-description = "High-performance LOWESS (Locally Weighted Scatterplot Smoothing)"
+documentation = "https://lowess.readthedocs.io/"
 keywords = ["lowess", "smoothing", "statistics", "regression", "bioinformatics"]
 categories = ["science", "algorithms"]
-documentation = "https://lowess.readthedocs.io/"
 
 # Build
 include = [
@@ -31,9 +34,6 @@ wgpu = { version = "26.0.1", optional = true }
 bytemuck = { version = "1.24.0", optional = true }
 pollster = { version = "0.4.0", optional = true }
 futures-intrusive = { version = "0.5.0", optional = true }
-
-[dev-dependencies]
-approx = "0.5.1"
 
 [features]
 default = ["cpu"]

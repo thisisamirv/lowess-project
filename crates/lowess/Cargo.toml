@@ -1,17 +1,20 @@
 [package]
+# Metadata
 name = "lowess"
-version = "0.99.9"
+version = "1.0.0"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
+rust-version = "1.88"
 license = "MIT OR Apache-2.0"
+
+# Documentation and Discovery
+description = "LOWESS (Locally Weighted Scatterplot Smoothing)"
+readme = "README.md"
 repository = "https://github.com/thisisamirv/lowess-project"
 homepage = "https://github.com/thisisamirv/lowess-project"
-rust-version = "1.88"
-readme = "README.md"
-description = "High-performance LOWESS (Locally Weighted Scatterplot Smoothing)"
+documentation = "https://lowess.readthedocs.io/"
 keywords = ["lowess", "smoothing", "statistics", "regression", "bioinformatics"]
 categories = ["science", "algorithms"]
-documentation = "https://lowess.readthedocs.io/"
 
 # Build
 include = [
@@ -26,15 +29,10 @@ include = [
 num-traits = { version = "0.2.19", features = ["libm"] }
 wide = { version = "0.7.33", default-features = false }
 
-[dev-dependencies]
-approx = "0.5.1"
-
 [features]
 default = ["std"]
 std = ["num-traits/std", "wide/std"]
 dev = []
 
-# Document all features
 [package.metadata.docs.rs]
-all-features = true
 rustdoc-args = ["--cfg", "docsrs"]

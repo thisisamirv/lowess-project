@@ -90,8 +90,9 @@ impl Window {
     // Calculate window size q from fraction alpha and data length n.
     #[inline]
     pub fn calculate_span<T: Float>(n: usize, frac: T) -> usize {
-        let epsilon = T::from(1e-5).unwrap();
-        let frac_n = frac * T::from(n).unwrap() + epsilon;
+        let epsilon = T::from(1e-5).unwrap_or_else(T::epsilon);
+        let n_t = T::from(n).unwrap_or_else(|| T::from(n as u16).unwrap_or(T::one()));
+        let frac_n = frac * n_t + epsilon;
         let frac_n_int = frac_n.to_usize().unwrap_or(0);
         usize::max(2, usize::min(n, frac_n_int))
     }

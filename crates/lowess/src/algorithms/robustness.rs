@@ -60,7 +60,7 @@ impl RobustnessMethod {
             Self::Talwar => (2, Self::DEFAULT_TALWAR_C),
         };
 
-        let c_t = T::from(tuning_constant).unwrap();
+        let c_t = T::from(tuning_constant).unwrap_or(T::one());
 
         for (i, &r) in residuals.iter().enumerate() {
             weights[i] = match method_type {
@@ -88,10 +88,10 @@ impl RobustnessMethod {
         for &r in residuals {
             sum_abs = sum_abs + r.abs();
         }
-        let mean_abs = sum_abs / T::from(n).unwrap();
-
-        let relative_threshold = T::from(Self::SCALE_THRESHOLD).unwrap() * mean_abs;
-        let absolute_threshold = T::from(Self::MIN_TUNED_SCALE).unwrap();
+        let mean_abs = sum_abs / T::from(n).unwrap_or(T::one());
+        let relative_threshold =
+            T::from(Self::SCALE_THRESHOLD).unwrap_or_else(T::epsilon) * mean_abs;
+        let absolute_threshold = T::from(Self::MIN_TUNED_SCALE).unwrap_or_else(T::epsilon);
         let scale_threshold = relative_threshold.max(absolute_threshold);
 
         if scale <= scale_threshold {
@@ -119,15 +119,15 @@ impl RobustnessMethod {
             return T::one();
         }
 
-        let min_eps = T::from(Self::MIN_TUNED_SCALE).unwrap();
+        let min_eps = T::from(Self::MIN_TUNED_SCALE).unwrap_or_else(T::epsilon);
         // Ensure c is at least min_eps so tuned_scale isn't zero
         let c_clamped = c.max(min_eps);
         // cmad = c * scale (e.g., 6.0 * MAR)
         let cmad = (scale * c_clamped).max(min_eps);
 
         // Boundary thresholds
-        let c1 = T::from(0.001).unwrap() * cmad;
-        let c9 = T::from(0.999).unwrap() * cmad;
+        let c1 = T::from(0.001).unwrap_or_else(T::epsilon) * cmad;
+        let c9 = T::from(0.999).unwrap_or_else(|| T::one() - T::epsilon()) * cmad;
 
         let r = residual.abs();
 
