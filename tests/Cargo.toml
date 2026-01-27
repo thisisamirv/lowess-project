@@ -19,6 +19,8 @@ approx = "0.5.1"
 ndarray = { version = "0.17.1", default-features = false }
 num-traits = { version = "0.2.19", default-features = false }
 rayon = { version = "1.11.0" }
+bytemuck = "1.24.0"
+pollster = "0.4.0"
 
 [features]
 default = ["dev"]

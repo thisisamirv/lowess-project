@@ -1,6 +1,7 @@
 #![cfg(feature = "dev")]
 #![cfg(feature = "gpu")]
 use approx::assert_abs_diff_eq;
+use fastLowess::internals::engine::gpu::{GLOBAL_EXECUTOR, GpuConfig, GpuExecutor};
 use fastLowess::prelude::*;
 use lowess::internals::math::boundary::BoundaryPolicy;
 
@@ -300,10 +301,7 @@ fn test_cpu_gpu_scaling_equivalence() {
                     max_diff = diff;
                 }
 
-                // We allow a slightly larger epsilon because GPU uses an approximation for MAD/MAR
-                // Median is approximated as 0.8453 * MeanAD.
-                // This won't match CPU exact median perfectly, but should be close for normal-ish residuals.
-                let epsilon = 0.2;
+                let epsilon = 1e-4;
 
                 assert!(
                     diff < epsilon,
@@ -539,7 +537,7 @@ fn test_cpu_gpu_interval_equivalence() {
             // Since we use the same CPU logic for intervals, it should be very close.
             // Small differences might arise from differences in y_smooth or weights.
             assert!(
-                diff < 1e-3,
+                diff < 5e-3,
                 "Standard Error mismatch at {}: CPU={}, GPU={}, Diff={}",
                 i,
                 cpu_se[i],
@@ -551,4 +549,88 @@ fn test_cpu_gpu_interval_equivalence() {
     } else {
         println!("Skipping GPU intervals test (GPU not available)");
     }
+}
+
+#[test]
+fn test_gpu_median_diagnostic() {
+    pollster::block_on(async {
+        let mut guard = GLOBAL_EXECUTOR.lock().unwrap();
+        if guard.is_none() {
+            *guard = Some(GpuExecutor::new().await.unwrap());
+        }
+        let exec = guard.as_mut().unwrap();
+
+        // Known data: [1.0, 5.0, 3.0, 2.0, 4.0] -> Median = 3.0
+        let data = vec![1.0f32, 5.0f32, 3.0f32, 2.0f32, 4.0f32];
+        let n = data.len() as u32;
+
+        // Reset buffers for this data
+        exec.reset_buffers(
+            &vec![0.0f32; n as usize],
+            &vec![0.0f32; n as usize],
+            GpuConfig {
+                n,
+                window_size: 1,
+                weight_function: 0,
+                zero_weight_fallback: 0,
+                fraction: 1.0,
+                delta: 0.0,
+                median_threshold: 0.0,
+                median_center: 0.0,
+                is_absolute: 0,
+                boundary_policy: 0,
+                pad_len: 0,
+                orig_n: n,
+            },
+            0,
+            0,
+        );
+
+        // Copy data to reduction buffer manually for testing
+        exec.queue.write_buffer(
+            exec.reduction_buffer.as_ref().unwrap(),
+            0,
+            bytemuck::cast_slice(&data),
+        );
+
+        // Compute median
+        let median = exec.compute_median_gpu().await.unwrap();
+        println!("GPU Median Diagnostic: Got {}, Expected 3.0", median);
+        assert!((median - 3.0).abs() < 1e-5);
+
+        // Test even case: [1.0, 2.0, 3.0, 4.0] -> Median = 2.5
+        let data_even = vec![1.0f32, 2.0f32, 3.0f32, 4.0f32];
+        let n_even = data_even.len() as u32;
+        exec.reset_buffers(
+            &vec![0.0f32; n_even as usize],
+            &vec![0.0f32; n_even as usize],
+            GpuConfig {
+                n: n_even,
+                window_size: 1,
+                weight_function: 0,
+                zero_weight_fallback: 0,
+                fraction: 1.0,
+                delta: 0.0,
+                median_threshold: 0.0,
+                median_center: 0.0,
+                is_absolute: 0,
+                boundary_policy: 0,
+                pad_len: 0,
+                orig_n: n_even,
+            },
+            0,
+            0,
+        );
+        exec.queue.write_buffer(
+            exec.reduction_buffer.as_ref().unwrap(),
+            0,
+            bytemuck::cast_slice(&data_even),
+        );
+        let median_even = exec.compute_median_gpu().await.unwrap();
+        println!(
+            "GPU Median Diagnostic (Even): Got {}, Expected 2.5",
+            median_even
+        );
+        assert!((median_even - 2.5).abs() < 1e-5);
+    });
 }
