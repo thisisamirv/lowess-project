@@ -263,6 +263,7 @@ pub mod prelude {
         RobustnessMethod::Talwar,
         ScalingMethod::MAD,
         ScalingMethod::MAR,
+        ScalingMethod::Mean,
         UpdateMode::Full,
         UpdateMode::Incremental,
         WeightFunction::Biweight,

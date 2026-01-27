@@ -437,7 +437,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
                     backend: self.config.backend,
                 };
 
-                let result = LowessExecutor::run_with_config(x_vec, y_vec, config.clone());
+                let result = LowessExecutor::run_with_config(x_vec, y_vec, config.clone())?;
                 let smoothed_vec = result.smoothed;
                 let se_vec = result.std_errors;
 

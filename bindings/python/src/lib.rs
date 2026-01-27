@@ -13,7 +13,7 @@ use ::fastLowess::internals::api::{
     BoundaryPolicy, RobustnessMethod, ScalingMethod, UpdateMode, WeightFunction, ZeroWeightFallback,
 };
 use ::fastLowess::prelude::{
-    Batch, KFold, LOOCV, Lowess as LowessBuilder, LowessResult, MAD, MAR, Online, Streaming,
+    Batch, KFold, LOOCV, Lowess as LowessBuilder, LowessResult, MAD, MAR, Mean, Online, Streaming,
 };
 
 // ============================================================================
@@ -87,8 +87,9 @@ fn parse_scaling_method(name: &str) -> PyResult<ScalingMethod> {
     match name.to_lowercase().as_str() {
         "mad" => Ok(MAD),
         "mar" => Ok(MAR),
+        "mean" => Ok(Mean),
         _ => Err(PyValueError::new_err(format!(
-            "Unknown scaling method: {}. Valid options: mad, mar",
+            "Unknown scaling method: {}. Valid options: mad, mar, mean",
             name
         ))),
     }

@@ -61,7 +61,7 @@ where
                         fold_config.cv_fractions = None;
 
                         let executor = LowessExecutor::from_config(&fold_config);
-                        executor.run(tx, ty, Some(lowess_buffer)).smoothed
+                        executor.run(tx, ty, Some(lowess_buffer)).unwrap().smoothed
                     },
                     Option::<&mut fn(&[T], &[T], &[T], T) -> Vec<T>>::None,
                     cv_buffer,

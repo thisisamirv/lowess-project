@@ -367,7 +367,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> BatchLowess<T> {
         };
 
         // Execute unified LOWESS
-        let result = LowessExecutor::run_with_config(&sorted.x, &sorted.y, config);
+        let result = LowessExecutor::run_with_config(&sorted.x, &sorted.y, config)?;
 
         let y_smooth = result.smoothed;
         let std_errors = result.std_errors;

@@ -17,6 +17,9 @@ pub enum ScalingMethod {
     // Median Absolute Deviation: `median(|r - median(r)|)`.
     #[default]
     MAD,
+
+    // Mean Absolute Residual: `mean(|r|)`.
+    Mean,
 }
 
 impl ScalingMethod {
@@ -25,7 +28,22 @@ impl ScalingMethod {
         match self {
             Self::MAR => self.compute_mar(vals),
             Self::MAD => self.compute_mad(vals),
+            Self::Mean => self.compute_mean(vals),
         }
+    }
+
+    // Compute the Mean Absolute Residual.
+    #[inline]
+    fn compute_mean<T: Float>(&self, vals: &mut [T]) -> T {
+        if vals.is_empty() {
+            return T::zero();
+        }
+        let n = T::from(vals.len()).unwrap_or(T::one());
+        let mut sum = T::zero();
+        for val in vals.iter() {
+            sum = sum + val.abs();
+        }
+        sum / n
     }
 
     // Compute the Median Absolute Deviation (MAD).

@@ -58,7 +58,7 @@ pub struct LowessBuilder<T> {
     // Outlier downweighting method.
     pub robustness_method: Option<RobustnessMethod>,
 
-    // Scaling method for robust scale estimation (MAR/MAD).
+    // Scaling method for robust scale estimation (MAR/MAD/Mean).
     pub scaling_method: Option<ScalingMethod>,
 
     // interval estimation configuration.

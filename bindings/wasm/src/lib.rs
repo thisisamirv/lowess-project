@@ -9,7 +9,7 @@ use ::fastLowess::internals::api::{
     BoundaryPolicy, RobustnessMethod, ScalingMethod, UpdateMode, WeightFunction, ZeroWeightFallback,
 };
 use ::fastLowess::prelude::{
-    Batch, KFold, LOOCV, Lowess as LowessBuilder, LowessResult, MAD, MAR, Online, Streaming,
+    Batch, KFold, LOOCV, Lowess as LowessBuilder, LowessResult, MAD, MAR, Mean, Online, Streaming,
 };
 
 fn parse_weight_function(name: &str) -> Result<WeightFunction, JsValue> {
@@ -69,8 +69,9 @@ fn parse_scaling_method(name: &str) -> Result<ScalingMethod, JsValue> {
     match name.to_lowercase().as_str() {
         "mad" => Ok(MAD),
         "mar" => Ok(MAR),
+        "mean" => Ok(Mean),
         _ => Err(JsValue::from_str(&format!(
-            "Unknown scaling method: {}",
+            "Unknown scaling method: {}. Valid options: mad, mar, mean",
             name
         ))),
     }

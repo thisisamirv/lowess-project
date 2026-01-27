@@ -153,7 +153,7 @@ def smooth(
     robustness_method : str, optional
         Robustness method: "bisquare", "huber", "talwar".
     scaling_method : str, optional
-        Scaling method: "mad", "mar" (default: "mad").
+        Scaling method: "mad", "mar", "mean" (default: "mad").
     boundary_policy : str, optional
         Boundary policy: "extend", "reflect", "zero", "noboundary".
     confidence_intervals : float, optional

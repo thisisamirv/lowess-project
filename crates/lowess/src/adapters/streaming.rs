@@ -392,7 +392,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
             &combined_x,
             &combined_y,
             Some(&mut self.buffer.work_buffer),
-        );
+        )?;
         let smoothed = result.smoothed;
         let robustness_weights = result.robustness_weights;
         let iterations = result.iterations.unwrap_or(0);

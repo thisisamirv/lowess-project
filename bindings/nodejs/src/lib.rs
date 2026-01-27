@@ -76,9 +76,13 @@ fn parse_scaling_method(name: &str) -> Result<ScalingMethod> {
     match name.to_lowercase().as_str() {
         "mad" => Ok(MAD),
         "mar" => Ok(MAR),
+        "mean" => Ok(Mean),
         _ => Err(Error::new(
             Status::InvalidArg,
-            format!("Unknown scaling method: {}", name),
+            format!(
+                "Unknown scaling method: {}. Valid options: mad, mar, mean",
+                name
+            ),
         )),
     }
 }

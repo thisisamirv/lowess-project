@@ -398,7 +398,7 @@ fn test_executor_convergence_zero_tolerance() {
         cv_seed: None,
     };
 
-    let output = LowessExecutor::run_with_config(&x, &y, config);
+    let output = LowessExecutor::run_with_config(&x, &y, config).unwrap();
 
     // Should run all iterations since tolerance=0 is impossible to meet
     // (or very few if it happens to converge exactly)
@@ -435,7 +435,7 @@ fn test_executor_delta_equals_range() {
         cv_seed: None,
     };
 
-    let output = LowessExecutor::run_with_config(&x, &y, config);
+    let output = LowessExecutor::run_with_config(&x, &y, config).unwrap();
 
     // Should still produce valid output
     assert_eq!(output.smoothed.len(), 5);

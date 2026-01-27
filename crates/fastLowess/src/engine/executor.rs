@@ -492,16 +492,12 @@ fn fit_all_points_tiled<T>(
     // Split y_smooth into chunks for parallel mutable access
     let y_chunks: Vec<&mut [T]> = y_smooth.chunks_mut(TILE_SIZE).collect();
 
-    y_chunks
-        .into_par_iter()
-        .enumerate()
-        .for_each(|(tile_idx, y_chunk)| {
+    y_chunks.into_par_iter().enumerate().for_each_init(
+        || vec![T::zero(); n],
+        |weights, (tile_idx, y_chunk)| {
             let tile_start = tile_idx * TILE_SIZE;
             let tile_end = (tile_start + TILE_SIZE).min(n);
             let chunk_len = tile_end - tile_start;
-
-            // Thread-local weight buffer
-            let mut weights = vec![T::zero(); n];
 
             for (local_i, smoothed_val) in y_chunk.iter_mut().enumerate().take(chunk_len) {
                 let i = tile_start + local_i;
@@ -521,12 +517,13 @@ fn fit_all_points_tiled<T>(
                     } else {
                         &[]
                     },
-                    weights: &mut weights,
+                    weights,
                     weight_function,
                     zero_weight_fallback,
                 };
 
                 *smoothed_val = ctx.fit().unwrap_or(y[i]);
             }
-        });
+        },
+    );
 }

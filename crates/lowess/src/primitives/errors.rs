@@ -100,6 +100,8 @@ pub enum LowessError {
         // Name of the parameter that was set multiple times.
         parameter: &'static str,
     },
+    // Runtime execution error (e.g. GPU failure).
+    RuntimeError(String),
 }
 
 // Display Implementation
@@ -161,6 +163,7 @@ impl Display for LowessError {
                     "Parameter '{parameter}' was set multiple times. Each parameter can only be configured once."
                 )
             }
+            Self::RuntimeError(msg) => write!(f, "Runtime error: {}", msg),
         }
     }
 }

@@ -1,274 +1,211 @@
-# Node.js API
+# fastLowess Node.js API Reference
 
-API reference for the `fastlowess` native Node.js package.
-
----
+The Node.js bindings provide a high-performance interface to the core Rust library, mirroring the Rust API structure.
 
 ## Classes
 
-### Lowess (Batch)
+### `Lowess`
 
-Stateful class for batch smoothing.
+The `Lowess` class allows configuring the LOWESS parameters once and fitting multiple datasets using those parameters.
+
+**Constructor:**
 
 ```javascript
-const { Lowess } = require('fastlowess');
-
-const model = new Lowess({
-    fraction: 0.5,
-    iterations: 3,
-    delta: 0.01,
-    weightFunction: "tricube",
-    robustnessMethod: "bisquare",
-    scalingMethod: "mad",
-    zeroWeightFallback: "useLocalMean",
-    boundaryPolicy: "extend",
-    autoConverge: 1e-4,
-    returnResiduals: false,
-    returnDiagnostics: false,
-    returnRobustnessWeights: false,
-    confidenceIntervals: 0.95,
-    predictionIntervals: 0.95,
-    cvFractions: [0.3, 0.5, 0.7],
-    cvMethod: "kfold",
-    cvK: 5,
-    parallel: true
-});
+const model = new Lowess(options);
 ```
 
+* `options`: An object containing `LowessOptions` fields.
+
 **Methods:**
-
-#### fit
-
-Fit the model to data.
 
 ```javascript
 const result = model.fit(x, y);
 ```
 
-**Parameters:**
+* Fits the model to the provided `x` and `y` typed arrays.
+* Returns a `LowessResult` object containing the smoothed values and optional diagnostics.
 
-| Parameter | Type           | Description          |
-|-----------|----------------|----------------------|
-| `x`       | `Float64Array` | Independent variable |
-| `y`       | `Float64Array` | Dependent variable   |
+### `StreamingLowess`
 
-**Returns:** Object with fields (see Result Structure below).
+The `StreamingLowess` class processes data in chunks, suitable for very large datasets or streaming applications.
 
-**Example:**
+**Constructor:**
 
 ```javascript
-const fl = require('fastlowess');
-
-const x = new Float64Array([1, 2, 3, 4, 5]);
-const y = new Float64Array([2.1, 3.9, 6.2, 8.0, 10.1]);
-
-const model = new fl.Lowess({ fraction: 0.3, iterations: 3 });
-const result = model.fit(x, y);
-console.log(result.y);
+const stream = new StreamingLowess(options, streamingOptions);
 ```
 
----
-
-### StreamingLowess
-
-Streaming mode for large datasets.
-
-```javascript
-const { StreamingLowess } = require('fastlowess');
-
-const stream = new StreamingLowess({
-    fraction: 0.67,
-    // ...other Lowess options
-}, {
-    chunkSize: 5000,
-    overlap: 500,
-    mergeStrategy: "average"
-});
-```
+* `options`: An object containing `LowessOptions` fields.
+* `streamingOptions`: An object containing `StreamingOptions` fields.
 
 **Methods:**
 
-#### processChunk
-
-Process a chunk of data.
-
 ```javascript
-const result = stream.processChunk(xChunk, yChunk);
+const partialResult = stream.processChunk(x, y);
 ```
 
-#### finalize
-
-Finalize the stream and process remaining buffered data.
+* Processes a chunk of data. Returns partial results.
 
 ```javascript
 const finalResult = stream.finalize();
 ```
 
-**Example:**
+* Finalizes the smoothing process and returns any remaining buffered results.
+
+### `OnlineLowess`
+
+The `OnlineLowess` class updates the model incrementally with new data points.
+
+**Constructor:**
 
 ```javascript
-const stream = new StreamingLowess({ fraction: 0.05 }, { chunkSize: 10000 });
-// ... process chunks ...
-const r1 = stream.processChunk(x1, y1);
-const r2 = stream.processChunk(x2, y2);
-const rFinal = stream.finalize();
+const online = new OnlineLowess(options, onlineOptions);
 ```
 
----
-
-### OnlineLowess
-
-Online mode for real-time data.
-
-```javascript
-const { OnlineLowess } = require('fastlowess');
-
-const online = new OnlineLowess({
-    fraction: 0.2,
-    // ...other Lowess options
-}, {
-    windowCapacity: 100,
-    minPoints: 2,
-    updateMode: "incremental"
-});
-```
+* `options`: An object containing `LowessOptions` fields.
+* `onlineOptions`: An object containing `OnlineOptions` fields.
 
 **Methods:**
-
-#### addPoints
-
-Add new points to the online processor.
 
 ```javascript
 const result = online.addPoints(x, y);
 ```
 
-**Example:**
+* Adds new points to the model and returns the smoothed values (retrospective or prospective depending on mode).
 
-```javascript
-const online = new OnlineLowess({ fraction: 0.3 }, { windowCapacity: 25 });
+## Options Structures
 
-for (const point of stream) {
-    const x = new Float64Array([point.time]);
-    const y = new Float64Array([point.value]);
-    const res = online.addPoints(x, y);
-    if (res.y.length > 0) {
-        console.log("Smoothed:", res.y[0]);
-    }
-}
-```
+### `LowessOptions`
 
----
+| Field                     | Type       | Default            | Description                           |
+| ------------------------- | ---------- | ------------------ | ------------------------------------- |
+| `fraction`                | `number`   | `0.67`             | Smoothing fraction (bandwidth)        |
+| `iterations`              | `number`   | `3`                | Number of robustifying iterations     |
+| `delta`                   | `number`   | `NaN`              | Interpolation distance (NaN for auto) |
+| `weightFunction`          | `string`   | `"tricube"`        | Weight function name                  |
+| `robustnessMethod`        | `string`   | `"bisquare"`       | Robustness method name                |
+| `scalingMethod`           | `string`   | `"mad"`            | Residual scaling method               |
+| `boundaryPolicy`          | `string`   | `"extend"`         | Boundary handling policy              |
+| `zeroWeightFallback`      | `string`   | `"useLocalMean"`   | Zero-weight handling strategy         |
+| `autoConverge`            | `number`   | `null`             | Auto-convergence tolerance            |
+| `confidenceIntervals`     | `number`   | `null`             | Confidence level (e.g., 0.95)         |
+| `predictionIntervals`     | `number`   | `null`             | Prediction level (e.g., 0.95)         |
+| `returnDiagnostics`       | `boolean`  | `false`            | Include diagnostics in result         |
+| `returnResiduals`         | `boolean`  | `false`            | Include residuals in result           |
+| `returnRobustnessWeights` | `boolean`  | `false`            | Include weights in result             |
+| `parallel`                | `boolean`  | `true`             | Enable parallel execution             |
+| `cvMethod`                | `string`   | `"kfold"`          | Cross-validation method ("kfold")     |
+| `cvK`                     | `number`   | `5`                | Number of CV folds                    |
+| `cvFractions`             | `number[]` | `null`             | Manual fractions for CV grid          |
+
+### `StreamingOptions`
+
+| Field           | Type     | Default     | Description                |
+| --------------- | -------- | ----------- | -------------------------- |
+| `chunkSize`     | `number` | `5000`      | Data chunk size            |
+| `overlap`       | `number` | `500`       | Overlap size (-1 for auto) |
+| `mergeStrategy` | `string` | `"average"` | Merge strategy for overlap |
+
+### `OnlineOptions`
+
+| Field            | Type     | Default         | Description                           |
+| ---------------- | -------- | --------------- | ------------------------------------- |
+| `windowCapacity` | `number` | `100`           | Max window size                       |
+| `minPoints`      | `number` | `2`             | Min points before smoothing           |
+| `updateMode`     | `string` | `"incremental"` | Update mode ("full" or "incremental") |
 
 ## Result Structure
 
-Returns an object with properties:
+### `LowessResult`
 
-| Property             | Type           | Description                         |
-|----------------------|----------------|-------------------------------------|
-| `x`                  | `Float64Array` | Input x values                      |
-| `y`                  | `Float64Array` | Smoothed y values                   |
-| `fractionUsed`       | `number`       | Actual fraction used                |
-| `residuals`          | `Float64Array` | If `returnResiduals=true`           |
-| `confidenceLower`    | `Float64Array` | If `confidenceIntervals` set        |
-| `confidenceUpper`    | `Float64Array` | If `confidenceIntervals` set        |
-| `predictionLower`    | `Float64Array` | If `predictionIntervals` set        |
-| `predictionUpper`    | `Float64Array` | If `predictionIntervals` set        |
-| `robustnessWeights`  | `Float64Array` | If `returnRobustnessWeights=true`   |
-| `diagnostics`        | `object`       | If `returnDiagnostics=true`         |
-| `cvScores`           | `number[]`     | If cross-validation used            |
+| Field               | Type           | Description               |
+| ------------------- | -------------- | ------------------------- |
+| `x`                 | `Float64Array` | Smoothed X coordinates    |
+| `y`                 | `Float64Array` | Smoothed Y coordinates    |
+| `valid`             | `boolean`      | True if result is valid   |
+| `error`             | `string`       | Error message if failed   |
+| `diagnostics`       | `Diagnostics`  | Diagnostic metrics object |
+| `residuals`         | `Float64Array` | Residuals (if requested)  |
+| `confidenceLower`   | `Float64Array` | Lower CI bounds           |
+| `confidenceUpper`   | `Float64Array` | Upper CI bounds           |
+| `predictionLower`   | `Float64Array` | Lower PI bounds           |
+| `predictionUpper`   | `Float64Array` | Upper PI bounds           |
+| `robustnessWeights` | `Float64Array` | Robustness weights        |
 
----
+### `Diagnostics`
 
-## Options Reference
-
-### SmoothOptions (Lowess/Streaming/Online)
-
-| Field                      | Type      | Default            | Description                       |
-|----------------------------|-----------|--------------------|-----------------------------------|
-| `fraction`                 | `number`  | `0.67`             | Smoothing span (0, 1]             |
-| `iterations`               | `number`  | `3`                | Robustness iterations             |
-| `delta`                    | `number`  | `0.0`              | Interpolation threshold (0=auto)  |
-| `weightFunction`           | `string`  | `"tricube"`        | Kernel function                   |
-| `robustnessMethod`         | `string`  | `"bisquare"`       | Outlier handling method           |
-| `scalingMethod`            | `string`  | `"mad"`            | Scale estimation method           |
-| `zeroWeightFallback`       | `string`  | `"useLocalMean"`   | Zero weight handling              |
-| `boundaryPolicy`           | `string`  | `"extend"`         | Boundary handling                 |
-| `autoConverge`             | `number`  | `null`             | Auto-convergence tolerance        |
-| `returnResiduals`          | `boolean` | `false`            | Return residuals                  |
-| `returnDiagnostics`        | `boolean` | `false`            | Return fit diagnostics            |
-| `returnRobustnessWeights`  | `boolean` | `false`            | Return robustness weights         |
-| `confidenceIntervals`      | `number`  | `null`             | Confidence level (e.g., 0.95)     |
-| `predictionIntervals`      | `number`  | `null`             | Prediction interval level         |
-| `cvMethod`                 | `string`  | `"kfold"`          | Cross-validation method           |
-| `cvK`                      | `number`  | `5`                | Number of CV folds                |
-| `cvFractions`              | `number[]`| `null`             | Fractions for CV                  |
-| `parallel`                 | `boolean` | `false`            | Enable parallelism                |
-
-### StreamingOptions
-
-| Field            | Type     | Default     | Description                        |
-|------------------|----------|-------------|------------------------------------|
-| `chunkSize`      | `number` | `5000`      | Points per chunk                   |
-| `overlap`        | `number` | `500`       | Overlap between chunks             |
-| `mergeStrategy`  | `string` | `"average"` | How to merge overlaps              |
-
-### OnlineOptions
-
-| Field             | Type     | Default         | Description          |
-|-------------------|----------|-----------------|----------------------|
-| `windowCapacity`  | `number` | `100`           | Max points in window |
-| `minPoints`       | `number` | `2`             | Points before output |
-| `updateMode`      | `string` | `"incremental"` | Update strategy      |
-
----
+| Field         | Type     | Description                 |
+| ------------- | -------- | --------------------------- |
+| `rmse`        | `number` | Root Mean Squared Error     |
+| `mae`         | `number` | Mean Absolute Error         |
+| `rSquared`    | `number` | R-squared                   |
+| `residualSd`  | `number` | Residual standard deviation |
+| `effectiveDf` | `number` | Effective degrees of freedom|
+| `aic`         | `number` | AIC                         |
+| `aicc`        | `number` | AICc                        |
 
 ## String Options
 
-### weightFunction
+### Weight Functions
 
-- `"tricube"` (default)
-- `"epanechnikov"`
-- `"gaussian"`
-- `"biweight"`
-- `"cosine"`
-- `"triangle"`
-- `"uniform"`
+* `"tricube"` (default)
+* `"epanechnikov"`
+* `"gaussian"`
+* `"uniform"`
+* `"biweight"`
+* `"triangle"`
+* `"cosine"`
 
-### robustnessMethod
+### Robustness Methods
 
-- `"bisquare"` (default)
-- `"huber"`
-- `"talwar"`
+* `"bisquare"` (default)
+* `"huber"`
+* `"talwar"`
 
-### boundaryPolicy
+### Boundary Policies
 
-- `"extend"` (default)
-- `"reflect"`
-- `"zero"`
-- `"noBoundary"`
+* `"extend"` (default - linear extrapolation)
+* `"reflect"`
+* `"zero"`
+* `"noBoundary"`
 
-### updateMode
+### Scaling Methods
 
-- `"incremental"` (default)
-- `"full"`
+* `"mad"` (default - Median Absolute Deviation)
+* `"mar"` (Median Absolute Residual)
+* `"mean"` (Mean Absolute Residual)
 
----
+### Zero Weight Fallback
 
-## Diagnostics
+* `"useLocalMean"` (default)
+* `"returnOriginal"`
+* `"returnNone"`
 
-When `returnDiagnostics=true`, the result includes:
+### Merge Strategies (Streaming)
+
+* `"weighted"` (default - weighted average of overlapping chunks)
+* `"average"`
+* `"left"`
+* `"right"`
+
+### Update Modes (Online)
+
+* `"full"` (default - re-smooth entire window)
+* `"incremental"` (O(1) update using existing fit)
+
+## Example
 
 ```javascript
-result.diagnostics = {
-    rmse: number,        // Root Mean Square Error
-    mae: number,         // Mean Absolute Error
-    rSquared: number,    // R² coefficient
-    residualSd: number,  // Residual standard deviation
-    effectiveDf: number  // Effective degrees of freedom
-    aic: number,         // AIC (optional)
-    aicc: number         // AICc (optional)
-}
-```
+const { Lowess } = require('fastlowess');
 
----
+const x = new Float64Array([1, 2, 3, 4, 5]);
+const y = new Float64Array([2.1, 4.0, 6.2, 8.0, 10.1]);
+
+// Configure model
+const model = new Lowess({ fraction: 0.5 });
+
+// Fit data
+const result = model.fit(x, y);
+
+console.log("Smoothed Y:", result.y);
+```

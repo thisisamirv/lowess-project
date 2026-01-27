@@ -1,242 +1,210 @@
-# Python API
+# fastLowess Python API Reference
 
-API reference for the `fastlowess` Python package.
-
----
+The Python bindings provide a high-performance interface to the core Rust library, mirroring the Rust API structure.
 
 ## Classes
 
-### Lowess
+### `Lowess`
 
-Stateful class for batch smoothing.
+The `Lowess` class allows configuring the LOWESS parameters once and fitting multiple datasets using those parameters.
+
+**Constructor:**
 
 ```python
-class fastlowess.Lowess(
-    fraction: float = 0.67,
-    iterations: int = 3,
-    delta: float | None = None,
-    parallel: bool = True,
-    weight_function: str = "tricube",
-    robustness_method: str = "bisquare",
-    scaling_method: str = "mad",
-    zero_weight_fallback: str = "use_local_mean",
-    boundary_policy: str = "extend",
-    auto_converge: float | None = None,
-    return_residuals: bool = False,
-    return_diagnostics: bool = False,
-    return_robustness_weights: bool = False,
-    confidence_intervals: float | None = None,
-    prediction_intervals: float | None = None,
-    cv_method: str | None = None,
-    cv_k: int = 5,
-    cv_fractions: list[float] | None = None,
-    cv_seed: int | None = None,
-)
+model = fastlowess.Lowess(**kwargs)
 ```
+
+* `kwargs`: Keyword arguments corresponding to `LowessOptions` fields.
 
 **Methods:**
 
-#### `fit`
-
-Fits the model to the data and returns the result.
-
 ```python
-def fit(x: ArrayLike, y: ArrayLike) -> LowessResult
+result = model.fit(x, y)
 ```
 
-**Parameters:**
+* Fits the model to the provided `x` and `y` array-like objects.
+* Returns a `LowessResult` object containing the smoothed values and optional diagnostics.
 
-| Parameter    | Type  | Default  | Description             |
-|--------------|-------|----------|-------------------------|
-| `fraction`   | float | 0.67     | Smoothing span (0, 1]   |
-| `iterations` | int   | 3        | Robustness iterations   |
-| `delta`      | float | auto     | Interpolation threshold |
-| `parallel`   | bool  | True     | Enable parallelism      |
+### `StreamingLowess`
 
-**Returns:** `LowessResult` object.
+The `StreamingLowess` class processes data in chunks, suitable for very large datasets or streaming applications.
 
-**Example:**
+**Constructor:**
 
 ```python
-import fastlowess as fl
+stream = fastlowess.StreamingLowess(**kwargs)
+```
+
+* `kwargs`: Keyword arguments corresponding to `LowessOptions` and `StreamingOptions` fields.
+
+**Methods:**
+
+```python
+partial_result = stream.process_chunk(x, y)
+```
+
+* Processes a chunk of data. Returns partial results.
+
+```python
+final_result = stream.finalize()
+```
+
+* Finalizes the smoothing process and returns any remaining buffered results.
+
+### `OnlineLowess`
+
+The `OnlineLowess` class updates the model incrementally with new data points.
+
+**Constructor:**
+
+```python
+online = fastlowess.OnlineLowess(**kwargs)
+```
+
+* `kwargs`: Keyword arguments corresponding to `LowessOptions` and `OnlineOptions` fields.
+
+**Methods:**
+
+```python
+result = online.add_points(x, y)
+```
+
+* Adds new points to the model and returns the smoothed values (retrospective or prospective depending on mode).
+
+## Options Structures
+
+### `LowessOptions`
+
+| Field                       | Type          | Default            | Description                           |
+| --------------------------- | ------------- | ------------------ | ------------------------------------- |
+| `fraction`                  | `float`       | `0.67`             | Smoothing fraction (bandwidth)        |
+| `iterations`                | `int`         | `3`                | Number of robustifying iterations     |
+| `delta`                     | `float`       | `None`             | Interpolation distance (None for auto)|
+| `weight_function`           | `str`         | `"tricube"`        | Weight function name                  |
+| `robustness_method`         | `str`         | `"bisquare"`       | Robustness method name                |
+| `scaling_method`            | `str`         | `"mad"`            | Residual scaling method               |
+| `boundary_policy`           | `str`         | `"extend"`         | Boundary handling policy              |
+| `zero_weight_fallback`      | `str`         | `"use_local_mean"` | Zero-weight handling strategy         |
+| `auto_converge`             | `float`       | `None`             | Auto-convergence tolerance            |
+| `confidence_intervals`      | `float`       | `None`             | Confidence level (e.g., 0.95)         |
+| `prediction_intervals`      | `float`       | `None`             | Prediction level (e.g., 0.95)         |
+| `return_diagnostics`        | `bool`        | `False`            | Include diagnostics in result         |
+| `return_residuals`          | `bool`        | `False`            | Include residuals in result           |
+| `return_robustness_weights` | `bool`        | `False`            | Include weights in result             |
+| `parallel`                  | `bool`        | `True`             | Enable parallel execution             |
+| `cv_method`                 | `str`         | `"kfold"`          | Cross-validation method ("kfold")     |
+| `cv_k`                      | `int`         | `5`                | Number of CV folds                    |
+| `cv_fractions`              | `list[float]` | `None`             | Manual fractions for CV grid          |
+
+### `StreamingOptions` (inherits `LowessOptions`)
+
+| Field            | Type   | Default      | Description                |
+| ---------------- | ------ | ------------ | -------------------------- |
+| `chunk_size`     | `int`  | `5000`       | Data chunk size            |
+| `overlap`        | `int`  | `500`        | Overlap size (-1 for auto) |
+| `merge_strategy` | `str`  | `"weighted"` | Merge strategy for overlap |
+
+### `OnlineOptions` (inherits `LowessOptions`)
+
+| Field             | Type   | Default         | Description                           |
+| ----------------- | ------ | --------------- | ------------------------------------- |
+| `window_capacity` | `int`  | `1000`          | Max window size                       |
+| `min_points`      | `int`  | `2`             | Min points before smoothing           |
+| `update_mode`     | `str`  | `"incremental"` | Update mode ("full" or "incremental") |
+
+## Result Structure
+
+### `LowessResult`
+
+| Field                | Type      | Description               |
+| -------------------- | --------- | ------------------------- |
+| `x`                  | `ndarray` | Smoothed X coordinates    |
+| `y`                  | `ndarray` | Smoothed Y coordinates    |
+| `valid`              | `bool`    | True if result is valid   |
+| `error`              | `str`     | Error message if failed   |
+| `diagnostics`        | `object`  | Diagnostic metrics object |
+| `residuals`          | `ndarray` | Residuals (if requested)  |
+| `confidence_lower`   | `ndarray` | Lower CI bounds           |
+| `confidence_upper`   | `ndarray` | Upper CI bounds           |
+| `prediction_lower`   | `ndarray` | Lower PI bounds           |
+| `prediction_upper`   | `ndarray` | Upper PI bounds           |
+| `robustness_weights` | `ndarray` | Robustness weights        |
+
+### `Diagnostics`
+
+| Field          | Type    | Description                 |
+| -------------- | ------- | --------------------------- |
+| `rmse`         | `float` | Root Mean Squared Error     |
+| `mae`          | `float` | Mean Absolute Error         |
+| `r_squared`    | `float` | R-squared                   |
+| `residual_sd`  | `float` | Residual standard deviation |
+| `effective_df` | `float` | Effective degrees of freedom|
+| `aic`          | `float` | AIC                         |
+| `aicc`         | `float` | AICc                        |
+
+## String Options
+
+### Weight Functions
+
+* `"tricube"` (default)
+* `"epanechnikov"`
+* `"gaussian"`
+* `"uniform"`
+* `"biweight"`
+* `"triangle"`
+* `"cosine"`
+
+### Robustness Methods
+
+* `"bisquare"` (default)
+* `"huber"`
+* `"talwar"`
+
+### Boundary Policies
+
+* `"extend"` (default - linear extrapolation)
+* `"reflect"`
+* `"zero"`
+* `"noboundary"`
+
+### Scaling Methods
+
+* `"mad"` (default - Median Absolute Deviation)
+* `"mar"` (Median Absolute Residual)
+* `"mean"` (Mean Absolute Residual)
+
+### Zero Weight Fallback
+
+* `"use_local_mean"` (default)
+* `"return_original"`
+* `"return_none"`
+
+### Merge Strategies (Streaming)
+
+* `"weighted"` (default - weighted average of overlapping chunks)
+* `"average"`
+* `"left"`
+* `"right"`
+
+### Update Modes (Online)
+
+* `"full"` (default - re-smooth entire window)
+* `"incremental"` (O(1) update using existing fit)
+
+## Example
+
+```python
+import fastlowess import Lowess
 import numpy as np
 
 x = np.linspace(0, 10, 100)
 y = np.sin(x) + np.random.normal(0, 0.2, 100)
 
-lowess = fl.Lowess(fraction=0.3, iterations=3)
-result = lowess.fit(x, y)
-print(result.y)
-```
+# Configure model
+model = Lowess(fraction=0.5)
 
----
+# Fit data
+result = model.fit(x, y)
 
-### StreamingLowess
-
-Stateful streaming mode for large datasets.
-
-```python
-class fastlowess.StreamingLowess(
-    fraction: float = 0.67,
-    iterations: int = 3,
-    chunk_size: int = 5000,
-    overlap: int = 500,
-    merge_strategy: str = "average",
-    parallel: bool = True,
-    **kwargs  # Same as Lowess
-)
-```
-
-**Methods:**
-
-#### `process_chunk`
-
-Processes a chunk of data.
-
-```python
-def process_chunk(x: ArrayLike, y: ArrayLike) -> LowessResult
-```
-
-#### `finalize`
-
-Finalizes the smoothing process and returns any remaining buffered data.
-
-```python
-def finalize() -> LowessResult
-```
-
-**Additional Parameters:**
-
-| Parameter        | Type | Default   | Description            |
-|------------------|------|-----------|------------------------|
-| `chunk_size`     | int  | 5000      | Points per chunk       |
-| `overlap`        | int  | 500       | Overlap between chunks |
-| `merge_strategy` | str  | "average" | How to merge overlaps  |
-
-**Example:**
-
-```python
-# Process 1 million points
-streaming = fl.StreamingLowess(chunk_size=10000, overlap=1000)
-chunk_result = streaming.process_chunk(x_chunk, y_chunk)
-final_result = streaming.finalize()
-```
-
----
-
-### OnlineLowess
-
-Stateful online mode for real-time data.
-
-```python
-class fastlowess.OnlineLowess(
-    fraction: float = 0.2,
-    window_capacity: int = 100,
-    min_points: int = 2,
-    iterations: int = 3,
-    update_mode: str = "incremental",
-    **kwargs  # Same as Lowess
-)
-```
-
-**Methods:**
-
-#### `add_points`
-
-Adds new points to the window and returns smoothed values.
-
-```python
-def add_points(x: ArrayLike, y: ArrayLike) -> LowessResult
-```
-
-**Additional Parameters:**
-
-| Parameter         | Type | Default       | Description          |
-|-------------------|------|---------------|----------------------|
-| `window_capacity` | int  | 100           | Max points in window |
-| `min_points`      | int  | 2             | Points before output |
-| `update_mode`     | str  | "incremental" | Update strategy      |
-
-**Example:**
-
-```python
-online = fl.OnlineLowess(window_capacity=25)
-result = online.add_points(new_x, new_y)
-print(result.y)
-```
-
----
-
-## Return Object
-
-### LowessResult
-
-The result object returned by `fit()` and other methods.
-
-| Attribute            | Type    | Description                         |
-|----------------------|---------|-------------------------------------|
-| `x`                  | ndarray | Input x values                      |
-| `y`                  | ndarray | Smoothed y values                   |
-| `fraction_used`      | float   | Actual fraction used                |
-| `residuals`          | ndarray | If `return_residuals=True`          |
-| `confidence_lower`   | ndarray | If `confidence_intervals` set       |
-| `confidence_upper`   | ndarray | If `confidence_intervals` set       |
-| `prediction_lower`   | ndarray | If `prediction_intervals` set       |
-| `prediction_upper`   | ndarray | If `prediction_intervals` set       |
-| `robustness_weights` | ndarray | If `return_robustness_weights=True` |
-| `diagnostics`        | object  | If `return_diagnostics=True`        |
-| `cv_scores`          | list    | If cross-validation used            |
-
----
-
-## String Options
-
-### weight_function
-
-- `"tricube"` (default)
-- `"epanechnikov"`
-- `"gaussian"`
-- `"biweight"`
-- `"cosine"`
-- `"triangle"`
-- `"uniform"`
-
-### robustness_method
-
-- `"bisquare"` (default)
-- `"huber"`
-- `"talwar"`
-
-### boundary_policy
-
-- `"extend"` (default)
-- `"reflect"`
-- `"zero"`
-- `"no_boundary"`
-
-### merge_strategy
-
-- `"average"` (default)
-- `"left"`
-- `"right"`
-- `"weighted"`
-
-### update_mode
-
-- `"incremental"` (default)
-- `"full"`
-
----
-
-## Diagnostics
-
-When `return_diagnostics=True`, the `result.diagnostics` attribute contains:
-
-```python
-class Diagnostics:
-    rmse: float        # Root Mean Square Error
-    mae: float         # Mean Absolute Error
-    r_squared: float   # R² coefficient
-    residual_sd: float # Residual standard deviation
-    effective_df: float # Effective degrees of freedom
+print("Smoothed Y:", result.y)
 ```

@@ -6,6 +6,58 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Added
+
+**lowess:**
+
+- Added `Mean` scaling method (Mean Absolute Deviation)
+
+**fastLowess:**
+
+- Added `Mean` scaling method (Mean Absolute Deviation)
+- Added support for different kernels to the GPU backend
+- Added support for different robustness methods to the GPU backend
+- Added support for different scaling methods to the GPU backend
+- Added support for different zero weight fallbacks to the GPU backend
+- Added support for different boundary policies to the GPU backend
+
+**Julia:**
+
+- Added `mean` scaling method (Mean Absolute Deviation)
+
+**C++:**
+
+- Added `mean` scaling method (Mean Absolute Deviation)
+
+**R:**
+
+- Added `mean` scaling method (Mean Absolute Deviation)
+
+**Node.js:**
+
+- Added `mean` scaling method (Mean Absolute Deviation)
+
+**WASM:**
+
+- Added `mean` scaling method (Mean Absolute Deviation)
+
+### Fixed
+
+**lowess:**
+
+- `FitPassFn` now returns `Result` to allow error propagation from custom fitting backends (e.g. GPU).
+- Adapters (Batch, Streaming, Online) now propagate errors from the executor instead of assuming success.
+- Fixed a bug where the `Extend` boundary policy was never applied.
+
+**fastLowess:**
+
+- Fixed potential integer overflow in GPU engine when dataset size exceeds `u32::MAX`.
+- Fixed panic in GPU initialization by propagating errors to the caller.
+- Fixed inefficient memory allocation in `fit_all_points_tiled` by reusing scratch buffers across tiles.
+- Fixed resource exhaustion in GPU backend by using a global `Mutex` for the executor instead of thread-local storage.
+
 ## 1.0.0
 
 ### Changed

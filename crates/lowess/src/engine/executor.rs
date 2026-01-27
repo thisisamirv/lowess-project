@@ -30,6 +30,7 @@ use crate::math::kernel::WeightFunction;
 use crate::math::scaling::ScalingMethod;
 use crate::primitives::backend::Backend;
 pub use crate::primitives::buffer::LowessBuffer;
+use crate::primitives::errors::LowessError;
 use crate::primitives::window::Window;
 
 // Signature for custom smooth pass function
@@ -68,18 +69,21 @@ pub type IntervalPassFn<T> = fn(
     &IntervalMethod<T>, // interval configuration
 ) -> Vec<T>; // standard errors
 
+// Result tuple from an iteration loop or fit pass.
+pub type IterationResult<T> = (
+    Vec<T>,         // smoothed
+    Option<Vec<T>>, // std_errors
+    usize,          // iterations
+    Vec<T>,         // robustness_weights
+);
+
 // Signature for custom iteration batch pass function (GPU acceleration).
 #[doc(hidden)]
 pub type FitPassFn<T> = fn(
     &[T],             // x
     &[T],             // y
     &LowessConfig<T>, // full configuration
-) -> (
-    Vec<T>,         // smoothed
-    Option<Vec<T>>, // std_errors
-    usize,          // iterations
-    Vec<T>,         // robustness_weights
-);
+) -> Result<IterationResult<T>, LowessError>;
 
 // Output from LOWESS execution.
 #[derive(Debug, Clone)]
@@ -455,7 +459,11 @@ impl<T: Float> LowessExecutor<T> {
     }
 
     // Smooth data using a `LowessConfig` payload.
-    pub fn run_with_config(x: &[T], y: &[T], config: LowessConfig<T>) -> ExecutorOutput<T>
+    pub fn run_with_config(
+        x: &[T],
+        y: &[T],
+        config: LowessConfig<T>,
+    ) -> Result<ExecutorOutput<T>, LowessError>
     where
         T: Float + WLSSolver + Debug + Send + Sync + 'static,
     {
@@ -495,6 +503,7 @@ impl<T: Float> LowessExecutor<T> {
                             .parallel(config.parallel)
                             .backend(config.backend)
                             .run(tx, ty, None)
+                            .unwrap() // CV must succeed
                             .smoothed
                     },
                     None::<fn(&[T], &[T], &[T], T) -> Vec<T>>,
@@ -520,10 +529,10 @@ impl<T: Float> LowessExecutor<T> {
                 .custom_fit_pass(config.custom_fit_pass)
                 .parallel(config.parallel)
                 .backend(config.backend)
-                .run(x, y, None);
+                .run(x, y, None)?;
             output.cv_scores = Some(scores);
             output.used_fraction = best_frac;
-            output
+            Ok(output)
         } else {
             // Direct run (no CV)
             executor.run(x, y, None)
@@ -531,7 +540,12 @@ impl<T: Float> LowessExecutor<T> {
     }
 
     // Execute smoothing with explicit overrides for specific parameters.
-    pub fn run(&self, x: &[T], y: &[T], buffer: Option<&mut LowessBuffer<T>>) -> ExecutorOutput<T>
+    pub fn run(
+        &self,
+        x: &[T],
+        y: &[T],
+        buffer: Option<&mut LowessBuffer<T>>,
+    ) -> Result<ExecutorOutput<T>, LowessError>
     where
         T: Float + WLSSolver + Debug + Send + Sync + 'static,
     {
@@ -545,7 +559,7 @@ impl<T: Float> LowessExecutor<T> {
         if eff_fraction >= T::one() {
             let model = LinearFit::fit_ols(x, y);
             let smoothed = x.iter().map(|&xi| model.predict(xi)).collect();
-            return ExecutorOutput {
+            return Ok(ExecutorOutput {
                 smoothed,
                 std_errors: if confidence_method.is_some() {
                     Some(vec![T::zero(); n])
@@ -556,14 +570,14 @@ impl<T: Float> LowessExecutor<T> {
                 used_fraction: eff_fraction,
                 cv_scores: None,
                 robustness_weights: vec![T::one(); n],
-            };
+            });
         }
 
         // Calculate window size
         let window_size = Window::calculate_span(n, eff_fraction);
 
         // Handle boundary padding
-        let (x_in, y_in, pad_len) = if self.boundary_policy != BoundaryPolicy::Extend {
+        let (x_in, y_in, pad_len) = if self.boundary_policy != BoundaryPolicy::NoBoundary {
             let (px, py) = apply_boundary_policy(x, y, window_size, self.boundary_policy);
             let pad = (px.len() - x.len()) / 2;
             (px, py, pad)
@@ -591,7 +605,7 @@ impl<T: Float> LowessExecutor<T> {
                 self.custom_smooth_pass,
                 self.custom_interval_pass,
                 buffer,
-            );
+            )?;
 
         // Slice back to original range if padded
         if pad_len > 0 {
@@ -604,7 +618,7 @@ impl<T: Float> LowessExecutor<T> {
             );
         }
 
-        ExecutorOutput {
+        Ok(ExecutorOutput {
             smoothed,
             std_errors,
             iterations: if tolerance.is_some() {
@@ -615,7 +629,7 @@ impl<T: Float> LowessExecutor<T> {
             used_fraction: eff_fraction,
             cv_scores: None,
             robustness_weights,
-        }
+        })
     }
 
     // Perform the full LOWESS iteration loop.
@@ -636,7 +650,7 @@ impl<T: Float> LowessExecutor<T> {
         smooth_pass_fn: Option<SmoothPassFn<T>>,
         interval_pass_fn: Option<IntervalPassFn<T>>,
         buffer: Option<&mut LowessBuffer<T>>,
-    ) -> (Vec<T>, Option<Vec<T>>, usize, Vec<T>)
+    ) -> Result<IterationResult<T>, LowessError>
     where
         T: Float + WLSSolver + Debug + Send + Sync + 'static,
     {
@@ -733,12 +747,12 @@ impl<T: Float> LowessExecutor<T> {
             )
         });
 
-        (
+        Ok((
             buffers.y_smooth.as_vec().clone(),
             std_errors,
             iterations_performed,
             buffers.robustness_weights.as_vec().clone(),
-        )
+        ))
     }
 
     // Perform a single smoothing pass over all points.

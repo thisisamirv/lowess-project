@@ -5,40 +5,84 @@
 //! on the GPU, providing maximum throughput for large-scale data processing.
 
 // External dependencies
-use bytemuck::{Pod, Zeroable};
+use bytemuck::{Pod, Zeroable, bytes_of, cast_slice};
+use futures_intrusive::channel::shared::oneshot_channel;
 use num_traits::Float;
+use pollster::block_on;
 use std::fmt::Debug;
+use std::mem::{size_of, swap};
+use std::sync::Mutex;
 use wgpu::{
     BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayoutDescriptor,
     BindGroupLayoutEntry, BindingType, Buffer, BufferBindingType, BufferDescriptor, BufferUsages,
-    CommandEncoderDescriptor, ComputePassDescriptor, ComputePipeline, ComputePipelineDescriptor,
-    Device, Instance, InstanceDescriptor, MapMode, PipelineLayoutDescriptor, PollType, Queue,
-    RequestAdapterOptions, ShaderModuleDescriptor, ShaderSource, ShaderStages,
+    CommandEncoder, CommandEncoderDescriptor, ComputePassDescriptor, ComputePipeline,
+    ComputePipelineDescriptor, Device, Instance, InstanceDescriptor, MapMode,
+    PipelineLayoutDescriptor, PollType, Queue, RequestAdapterOptions, ShaderModuleDescriptor,
+    ShaderSource, ShaderStages,
 };
 
 // Export dependencies from lowess crate
-use lowess::internals::engine::executor::LowessConfig;
+use lowess::internals::algorithms::robustness::RobustnessMethod;
+use lowess::internals::api::LowessError;
+use lowess::internals::engine::executor::{IterationResult, LowessConfig};
+use lowess::internals::math::boundary::BoundaryPolicy;
+use lowess::internals::math::kernel::WeightFunction;
+use lowess::internals::math::scaling::ScalingMethod;
 
 // Shader Source (WGSL)
 const SHADER_SOURCE: &str = r#"
 struct Config {
     n: u32,
     window_size: u32,
-    weight_function: u32, // Unused in this simplified shader (always Tricube)
+    weight_function: u32,
     zero_weight_fallback: u32, // Unused
     fraction: f32,
     delta: f32,
+    median_threshold: f32,
+    median_center: f32,
+    is_absolute: u32,
+    boundary_policy: u32,
+    pad_len: u32,
+    orig_n: u32,
 }
+
+const BOUNDARY_EXTEND: u32 = 0u;
+const BOUNDARY_REFLECT: u32 = 1u;
+const BOUNDARY_ZERO: u32 = 2u;
+const BOUNDARY_NONE: u32 = 3u;
+
+const KERNEL_COSINE: u32 = 0u;
+const KERNEL_EPANECHNIKOV: u32 = 1u;
+const KERNEL_GAUSSIAN: u32 = 2u;
+const KERNEL_BIWEIGHT: u32 = 3u;
+const KERNEL_TRIANGLE: u32 = 4u;
+const KERNEL_TRICUBE: u32 = 5u;
+const KERNEL_UNIFORM: u32 = 6u;
+
+const FALLBACK_USE_LOCAL_MEAN: u32 = 0u;
+const FALLBACK_RETURN_ORIGINAL: u32 = 1u;
+const FALLBACK_RETURN_NONE: u32 = 2u;
+const FALLBACK_USE_LOCAL_MEDIAN: u32 = 2u;
+
+const ROBUSTNESS_BISQUARE: u32 = 0u;
+const ROBUSTNESS_HUBER: u32 = 1u;
+const ROBUSTNESS_TALWAR: u32 = 2u;
+
+const SCALING_MAD: u32 = 0u;
+const SCALING_MAR: u32 = 1u;
+const SCALING_MEAN: u32 = 2u;
 
 struct WeightConfig {
     n: u32,
     scale: f32,
+    robustness_method: u32,
+    scaling_method: u32,
 }
 
 // Group 0: Constants & Input Data
 @group(0) @binding(0) var<uniform> config: Config;
-@group(0) @binding(1) var<storage, read> x: array<f32>;
-@group(0) @binding(2) var<storage, read> y: array<f32>;
+@group(0) @binding(1) var<storage, read_write> x: array<f32>;
+@group(0) @binding(2) var<storage, read_write> y: array<f32>;
 @group(0) @binding(3) var<storage, read> anchor_indices: array<u32>;
 @group(0) @binding(4) var<storage, read_write> anchor_output: array<f32>;
 
@@ -49,10 +93,12 @@ struct WeightConfig {
 @group(2) @binding(0) var<storage, read_write> robustness_weights: array<f32>;
 @group(2) @binding(1) var<storage, read_write> y_smooth: array<f32>;
 @group(2) @binding(2) var<storage, read_write> residuals: array<f32>;
+@group(2) @binding(3) var<storage, read_write> y_prev: array<f32>;
 
 // Group 3: Aux (Reduction & Weight Config)
 @group(3) @binding(0) var<storage, read_write> w_config: WeightConfig;
 @group(3) @binding(1) var<storage, read_write> reduction: array<f32>;
+@group(3) @binding(2) var<storage, read_write> std_errors: array<f32>;
 
 // -----------------------------------------------------------------------------
 // Kernel 1: Fit at Anchors
@@ -67,8 +113,7 @@ var<workgroup> wg_max_right: u32;
 @compute @workgroup_size(64)
 fn fit_anchors(
     @builtin(global_invocation_id) global_id: vec3<u32>,
-    @builtin(local_invocation_id) local_id: vec3<u32>,
-    @builtin(workgroup_id) workgroup_id: vec3<u32>
+    @builtin(local_invocation_id) local_id: vec3<u32>
 ) {
     let anchor_id = global_id.x;
     let lid = local_id.x;
@@ -76,14 +121,14 @@ fn fit_anchors(
     let window_size = config.window_size;
     let num_anchors = arrayLength(&anchor_indices);
 
-    // Initial window bounds for this thread
     var left = 0u;
     var right = 0u;
     var x_i = 0.0;
-    var valid_thread = false;
+    var i = 0u;
+    var valid_anchor = false;
 
     if (anchor_id < num_anchors) {
-        let i = anchor_indices[anchor_id];
+        i = anchor_indices[anchor_id];
         x_i = x[i];
         
         if (i > window_size / 2u) {
@@ -97,105 +142,125 @@ fn fit_anchors(
             }
         }
         right = left + window_size - 1u;
-        valid_thread = true;
+        
+        // Recenter window based on coordinates (nearest neighbors)
+        for (var idx_r = 0u; idx_r < 100u; idx_r++) {
+            if (right >= n - 1u) { break; }
+            let d_left = abs(x_i - x[left]);
+            let d_right = abs(x[right + 1u] - x_i);
+            if (d_left <= d_right) { break; }
+            left = left + 1u;
+            right = right + 1u;
+        }
+        for (var idx_l = 0u; idx_l < 100u; idx_l++) {
+            if (left == 0u) { break; }
+            let d_left = abs(x_i - x[left - 1u]);
+            let d_right = abs(x[right] - x_i);
+            if (d_right <= d_left) { break; }
+            left = left - 1u;
+            right = right - 1u;
+        }
+        valid_anchor = true;
     }
 
-    // Determine workgroup bounds for tiling
-    // We use thread 0 and thread 63 (or last valid thread)
-    if (lid == 0u) {
-        wg_min_left = left;
-    }
-    if (lid == 63u || anchor_id == num_anchors - 1u) {
-        wg_max_right = right;
-    }
-    workgroupBarrier();
-
-    // If whole workgroup is invalid, just exit
-    if (anchor_id - lid >= num_anchors) {
-        return;
-    }
-
-    // Calculate bandwidth from global memory before tiling (simplified)
-    // We need bandwidth = max(abs(x_i - x[left]), abs(x_i - x[right]))
-    var bandwidth = 0.0;
-    if (valid_thread) {
-        bandwidth = max(abs(x_i - x[left]), abs(x_i - x[right]));
-        if (bandwidth <= 0.0) {
-            anchor_output[anchor_id] = y[anchor_indices[anchor_id]];
-            valid_thread = false; // Stop further regression calculation
+    var d_max = 0.0;
+    if (valid_anchor) {
+        d_max = max(abs(x_i - x[left]), abs(x_i - x[right]));
+        if (d_max <= 0.0) {
+            anchor_output[anchor_id] = y[i];
+            valid_anchor = false;
         }
     }
 
-    // Weighted linear regression variables
-    var sum_w = 0.0;
-    var sum_wx = 0.0;
-    var sum_wxx = 0.0;
-    var sum_wy = 0.0;
-    var sum_wxy = 0.0;
+    if (valid_anchor) {
+        var sum_w = 0.0;
+        var sum_wx = 0.0;
+        var sum_wxx = 0.0;
+        var sum_wy = 0.0;
+        var sum_wxy = 0.0;
+        var sum_y_window = 0.0;
 
-    // Tiled processing from wg_min_left to wg_max_right
-    let tile_start = (wg_min_left / 256u) * 256u;
-    for (var t = tile_start; t <= wg_max_right; t += 256u) {
-        // Load tile into shared memory
-        for (var l = lid; l < 256u; l += 64u) {
-            let idx = t + l;
-            if (idx < n) {
-                s_x[l] = x[idx];
-                s_y[l] = y[idx];
-                s_w[l] = robustness_weights[idx];
-            } else {
-                s_x[l] = 0.0;
-                s_y[l] = 0.0;
-                s_w[l] = 0.0;
-            }
-        }
-        workgroupBarrier();
-
-        // Process tile if thread is within its own window
-        if (valid_thread) {
-            let start_in_tile = max(t, left);
-            let end_in_tile = min(t + 255u, right);
+        let d_max_val = max(d_max, 1e-9);
+        for (var k = left; k <= right; k++) {
+            let xj = x[k];
+            let yj = y[k];
+            let rw = robustness_weights[k];
             
-            for (var idx = start_in_tile; idx <= end_in_tile; idx++) {
-                let l_idx = idx - t;
-                let xj = s_x[l_idx];
-                let yj = s_y[l_idx];
-                let rw = s_w[l_idx];
-                
-                let dist = abs(xj - x_i);
-                let u = dist / bandwidth;
-                
-                var w = 0.0;
-                if (u < 1.0) {
-                    let tmp = 1.0 - u * u * u;
-                    w = tmp * tmp * tmp;
+            let dist = abs(xj - x_i);
+            let u = dist / d_max_val;
+            
+            sum_y_window += yj;
+            
+            if (u < 1.0) {
+                var kernel_w = 1.0;
+                let u2 = u * u;
+                switch (config.weight_function) {
+                    case KERNEL_COSINE: { kernel_w = cos(u * 1.57079632679); break; }
+                    case KERNEL_EPANECHNIKOV: { kernel_w = (1.0 - u2); break; }
+                    case KERNEL_GAUSSIAN: { kernel_w = exp(-0.5 * u2); break; }
+                    case KERNEL_BIWEIGHT: { let v = 1.0 - u2; kernel_w = v * v; break; }
+                    case KERNEL_TRIANGLE: { kernel_w = (1.0 - u); break; }
+                    case KERNEL_TRICUBE: { 
+                        let v = 1.0 - u * u2; 
+                        kernel_w = v * v * v; 
+                        break; 
+                    }
+                    case KERNEL_UNIFORM: { kernel_w = 1.0; break; }
+                    default: { 
+                        let v = 1.0 - u * u2; 
+                        kernel_w = v * v * v; 
+                        break; 
+                    }
                 }
                 
-                let combined_w = w * rw;
-                
+                let combined_w = rw * kernel_w;
+                let rel_x = xj - x_i;
                 sum_w += combined_w;
-                sum_wx += combined_w * xj;
-                sum_wxx += combined_w * xj * xj;
+                sum_wx += combined_w * rel_x;
+                sum_wxx += combined_w * rel_x * rel_x;
                 sum_wy += combined_w * yj;
-                sum_wxy += combined_w * xj * yj;
+                sum_wxy += combined_w * rel_x * yj;
             }
         }
-        workgroupBarrier();
-    }
 
-    // Finalize regression
-    if (valid_thread) {
-        if (sum_w <= 0.0) {
-            anchor_output[anchor_id] = y[anchor_indices[anchor_id]];
-        } else {
-            let det = sum_w * sum_wxx - sum_wx * sum_wx;
-            if (abs(det) < 1e-10) {
-                anchor_output[anchor_id] = sum_wy / sum_w;
-            } else {
-                let a = (sum_wy * sum_wxx - sum_wxy * sum_wx) / det;
-                let b = (sum_w * sum_wxy - sum_wx * sum_wy) / det;
-                anchor_output[anchor_id] = a + b * x_i;
+        let TOL: f32 = 1e-12;
+        if (sum_w < TOL) {
+            switch (config.zero_weight_fallback) {
+                case FALLBACK_RETURN_ORIGINAL: { anchor_output[anchor_id] = y[i]; break; }
+                default: { 
+                    let w_size = f32(right - left + 1u);
+                    anchor_output[anchor_id] = sum_y_window / max(1.0, w_size); 
+                    break;
+                }
             }
+        } else {
+            let mean_x = sum_wx / sum_w;
+            let mean_y = sum_wy / sum_w;
+            let variance = (sum_wxx / sum_w) - (mean_x * mean_x);
+            
+            let ABS_TOL: f32 = 1e-7;
+            let REL_TOL: f32 = 1e-7 * d_max_val * d_max_val;
+            let tol = max(ABS_TOL, REL_TOL);
+
+            if (variance <= tol) {
+                anchor_output[anchor_id] = mean_y;
+            } else {
+                let covariance = (sum_wxy / sum_w) - (mean_x * mean_y);
+                let slope = covariance / variance;
+                let intercept = mean_y - slope * mean_x;
+                
+                if (intercept == intercept && abs(intercept) < 1e15) {
+                    anchor_output[anchor_id] = intercept;
+                } else {
+                    anchor_output[anchor_id] = mean_y;
+                }
+            }
+        }
+        
+        // Final sanity check
+        let final_val = anchor_output[anchor_id];
+        if (final_val != final_val) {
+             anchor_output[anchor_id] = y[i];
         }
     }
 }
@@ -244,15 +309,72 @@ fn interpolate(@builtin(global_invocation_id) global_id: vec3<u32>) {
 }
 
 // -----------------------------------------------------------------------------
-// Kernel 3: MAR Reduction
+// Kernel 3: Update Weights
+// Dispatched with N threads
 // -----------------------------------------------------------------------------
-var<workgroup> scratch: array<f32, 256>;
+@compute @workgroup_size(64)
+fn update_weights(@builtin(global_invocation_id) global_id: vec3<u32>) {
+    let i = global_id.x;
+    if (i >= config.n) { return; }
+
+    let r = residuals[i];
+    let abs_r = abs(r);
+    var w = 1.0;
+    
+    let s = w_config.scale;
+    if (s <= 1e-12) {
+        w = 1.0;
+    } else {
+        switch (w_config.robustness_method) {
+            case ROBUSTNESS_BISQUARE: {
+                let cmad = 6.0 * s;
+                if (abs_r <= 0.001 * cmad) {
+                    w = 1.0;
+                } else if (abs_r <= 0.999 * cmad) {
+                    let u = abs_r / cmad;
+                    let v = 1.0 - u * u;
+                    w = v * v;
+                } else {
+                    w = 0.0;
+                }
+            }
+            case ROBUSTNESS_HUBER: {
+                let c = 1.345;
+                let u = abs_r / s;
+                if (u <= c) {
+                    w = 1.0;
+                } else {
+                    w = c / u;
+                }
+            }
+            case ROBUSTNESS_TALWAR: {
+                let c = 2.5;
+                let u = abs_r / s;
+                if (u <= c) {
+                    w = 1.0;
+                } else {
+                    w = 0.0;
+                }
+            }
+            default: {
+                w = 1.0;
+            }
+        }
+    }
+
+    robustness_weights[i] = w;
+}
+
+// -----------------------------------------------------------------------------
+// Kernel 4: Reductions
+// -----------------------------------------------------------------------------
+var<workgroup> scratch: array<f32, 512>;
 
 @compute @workgroup_size(256)
 fn reduce_sum_abs(
     @builtin(global_invocation_id) global_id: vec3<u32>,
-    @builtin(local_invocation_id) local_id: vec3<u32>,
-    @builtin(workgroup_id) workgroup_id: vec3<u32>
+    @builtin(local_invocation_id) lid: vec3<u32>,
+    @builtin(workgroup_id) wid: vec3<u32>
 ) {
     let i = global_id.x;
     var val = 0.0;
@@ -260,24 +382,125 @@ fn reduce_sum_abs(
         val = abs(residuals[i]);
     }
     
-    scratch[local_id.x] = val;
+    scratch[lid.x] = val;
     workgroupBarrier();
     
     for (var s = 128u; s > 0u; s >>= 1u) {
-        if (local_id.x < s) {
-            scratch[local_id.x] += scratch[local_id.x + s];
+        if (lid.x < s) {
+            scratch[lid.x] += scratch[lid.x + s];
         }
         workgroupBarrier();
     }
     
-    if (local_id.x == 0u) {
-        reduction[workgroup_id.x] = scratch[0];
+    if (lid.x == 0u) {
+        reduction[wid.x] = scratch[0];
     }
 }
 
-// -----------------------------------------------------------------------------
-// Kernel 4: Finalize Scale
-// -----------------------------------------------------------------------------
+@compute @workgroup_size(256)
+fn reduce_max_diff(
+    @builtin(global_invocation_id) global_id: vec3<u32>,
+    @builtin(local_invocation_id) lid: vec3<u32>,
+    @builtin(workgroup_id) wid: vec3<u32>
+) {
+    let i = global_id.x;
+    var val = 0.0;
+    if (i < config.n) {
+        val = abs(y_smooth[i] - y_prev[i]);
+    }
+    
+    scratch[lid.x] = val;
+    workgroupBarrier();
+    
+    for (var s = 128u; s > 0u; s >>= 1u) {
+        if (lid.x < s) {
+            scratch[lid.x] = max(scratch[lid.x], scratch[lid.x + s]);
+        }
+        workgroupBarrier();
+    }
+    
+    if (lid.x == 0u) {
+        reduction[wid.x] = scratch[0];
+    }
+}
+
+@compute @workgroup_size(256)
+fn reduce_min_max(
+    @builtin(global_invocation_id) global_id: vec3<u32>,
+    @builtin(local_invocation_id) lid: vec3<u32>,
+    @builtin(workgroup_id) wid: vec3<u32>
+) {
+    let i = global_id.x;
+    var val = 0.0;
+    if (i < config.n) {
+        let r = residuals[i];
+        if (config.is_absolute != 0u) {
+            val = abs(r - config.median_center);
+        } else {
+            val = abs(r);
+        }
+    } else {
+        // Use sentinel values for out-of-bounds to not affect reduction
+        val = 0.0; // For max
+    }
+    
+    scratch[lid.x] = val; // Store max in first half of scratch
+    // Use second half for min
+    scratch[lid.x + 256u] = val;
+    if (i >= config.n) {
+        scratch[lid.x + 256u] = 1e30; // Sentinel for min
+    }
+    workgroupBarrier();
+    
+    for (var s = 128u; s > 0u; s >>= 1u) {
+        if (lid.x < s) {
+            scratch[lid.x] = max(scratch[lid.x], scratch[lid.x + s]);
+            scratch[lid.x + 256u] = min(scratch[lid.x + 256u], scratch[lid.x + 256u + s]);
+        }
+        workgroupBarrier();
+    }
+    
+    if (lid.x == 0u) {
+        reduction[wid.x * 2u] = scratch[0];
+        reduction[wid.x * 2u + 1u] = scratch[256];
+    }
+}
+
+@compute @workgroup_size(256)
+fn reduce_count_below(
+    @builtin(global_invocation_id) global_id: vec3<u32>,
+    @builtin(local_invocation_id) lid: vec3<u32>,
+    @builtin(workgroup_id) wid: vec3<u32>
+) {
+    let i = global_id.x;
+    var count = 0.0;
+    if (i < config.n) {
+        let r = residuals[i];
+        var val = r;
+        if (config.is_absolute != 0u) {
+            val = abs(r - config.median_center);
+        }
+        
+        if (val <= config.median_threshold) {
+            count = 1.0;
+        }
+    }
+    
+    scratch[lid.x] = count;
+    workgroupBarrier();
+    
+    for (var s = 128u; s > 0u; s >>= 1u) {
+        if (lid.x < s) {
+            scratch[lid.x] += scratch[lid.x + s];
+        }
+        workgroupBarrier();
+    }
+    
+    if (lid.x == 0u) {
+        reduction[wid.x] = scratch[0];
+    }
+}
+
 @compute @workgroup_size(1)
 fn finalize_scale() {
     var total_sum = 0.0;
@@ -285,38 +508,198 @@ fn finalize_scale() {
     for (var i = 0u; i < num_workgroups; i = i + 1u) {
         total_sum += reduction[i];
     }
-    let mar = total_sum / f32(config.n);
-    w_config.scale = max(mar, 1e-10);
+    var scale_est = total_sum / f32(config.n);
+
+    if (w_config.scaling_method != SCALING_MEAN) {
+        scale_est = scale_est * 0.845347;
+    }
+
+    w_config.scale = max(scale_est, 1e-10);
+}
+
+@compute @workgroup_size(1)
+fn finalize_sum() {
+    var total_sum = 0.0;
+    let num_workgroups = (config.n + 255u) / 256u;
+    for (var i = 0u; i < num_workgroups; i = i + 1u) {
+        total_sum += reduction[i];
+    }
+    reduction[0] = total_sum;
 }
 
 // -----------------------------------------------------------------------------
-// Kernel 5: Update Weights
+// Kernel 5: Standard Errors
+// Dispatched with N threads
 // -----------------------------------------------------------------------------
 @compute @workgroup_size(64)
-fn update_weights(@builtin(global_invocation_id) global_id: vec3<u32>) {
+fn compute_se(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let i = global_id.x;
-    if (i >= w_config.n) { return; }
+    let n = config.n;
+    let window_size = config.window_size;
+    if (i >= n) { return; }
 
-    let r = abs(residuals[i]);
-    let tuned_scale = w_config.scale * 6.0;
-
-    if (tuned_scale <= 1e-12) {
-        robustness_weights[i] = 1.0;
-    } else {
-        let u = r / tuned_scale;
-        if (u < 1.0) {
-            let tmp = 1.0 - u * u;
-            robustness_weights[i] = tmp * tmp;
+    let x_i = x[i];
+    
+    var left = 0u;
+    if (i > window_size / 2u) {
+        left = i - window_size / 2u;
+    }
+    if (left + window_size > n) {
+        if (n > window_size) {
+            left = n - window_size;
         } else {
-            robustness_weights[i] = 0.0;
+            left = 0u;
+        }
+    }
+    var right = left + window_size - 1u;
+
+    // Recenter window based on coordinates
+    for (var idx_r = 0u; idx_r < 100u; idx_r++) {
+        if (right >= n - 1u) { break; }
+        let d_left = abs(x_i - x[left]);
+        let d_right = abs(x[right + 1u] - x_i);
+        if (d_left <= d_right) { break; }
+        left = left + 1u;
+        right = right + 1u;
+    }
+    for (var idx_l = 0u; idx_l < 100u; idx_l++) {
+        if (left == 0u) { break; }
+        let d_left = abs(x_i - x[left - 1u]);
+        let d_right = abs(x[right] - x_i);
+        if (d_right <= d_left) { break; }
+        left = left - 1u;
+        right = right - 1u;
+    }
+
+    let d_max = max(abs(x_i - x[left]), abs(x_i - x[right]));
+    if (d_max <= 1e-12) {
+        std_errors[i] = 0.0;
+        return;
+    }
+
+    var sum_w = 0.0;
+    var sum_wr2 = 0.0;
+    let d_max_val = max(d_max, 1e-9);
+    for (var k = left; k <= right; k++) {
+        let xj = x[k];
+        let smoothed_j = y_smooth[k];
+        let yj = y[k];
+        let rw = robustness_weights[k];
+        
+        let r = yj - smoothed_j;
+        let dist = abs(xj - x_i);
+        let u = dist / d_max_val;
+        
+        if (u < 1.0) {
+            var kernel_w = 1.0;
+            let u2 = u * u;
+            switch (config.weight_function) {
+                case KERNEL_COSINE: { kernel_w = cos(u * 1.57079632679); break; }
+                case KERNEL_EPANECHNIKOV: { kernel_w = (1.0 - u2); break; }
+                case KERNEL_GAUSSIAN: { kernel_w = exp(-0.5 * u2); break; }
+                case KERNEL_BIWEIGHT: { let v = 1.0 - u2; kernel_w = v * v; break; }
+                case KERNEL_TRIANGLE: { kernel_w = (1.0 - u); break; }
+                case KERNEL_TRICUBE: { let v = 1.0 - u * u2; kernel_w = v * v * v; break; }
+                case KERNEL_UNIFORM: { break; }
+                default: { let v = 1.0 - u * u2; kernel_w = v * v * v; break; }
+            }
+            
+            let combined_w = rw * kernel_w;
+            sum_w += combined_w;
+            sum_wr2 += combined_w * r * r;
+        }
+    }
+
+    let LINEAR_PARAMS = 2.0;
+    if (sum_w > LINEAR_PARAMS + 1e-6) {
+        let df = sum_w - LINEAR_PARAMS;
+        let variance = sum_wr2 / df;
+        
+        // Find kernel weight for current point (distance = 0)
+        var w_idx = 1.0;
+        switch (config.weight_function) {
+            case KERNEL_COSINE: { w_idx = 1.0; break; }
+            case KERNEL_EPANECHNIKOV: { w_idx = 1.0; break; }
+            case KERNEL_GAUSSIAN: { w_idx = 1.0; break; }
+            case KERNEL_BIWEIGHT: { w_idx = 1.0; break; }
+            case KERNEL_TRIANGLE: { w_idx = 1.0; break; }
+            case KERNEL_TRICUBE: { w_idx = 1.0; break; }
+            case KERNEL_UNIFORM: { w_idx = 1.0; break; }
+            default: { w_idx = 1.0; break; }
+        }
+        w_idx = w_idx * robustness_weights[i];
+        
+        let leverage = w_idx / sum_w;
+        std_errors[i] = sqrt(variance * leverage);
+    } else {
+        std_errors[i] = 0.0;
+    }
+}
+
+@compute @workgroup_size(256)
+fn pad_data(@builtin(global_invocation_id) global_id: vec3<u32>) {
+    let i = global_id.x;
+    let pad_len = config.pad_len;
+    let orig_n = config.orig_n;
+    
+    if (i >= pad_len) { return; } 
+    
+    // Prefix padding
+    let x0 = x[pad_len];
+    let y0 = y[pad_len];
+    let dx_pre = x[pad_len+1] - x[pad_len];
+    
+    switch (config.boundary_policy) {
+        case BOUNDARY_EXTEND: {
+            x[pad_len - 1u - i] = x0 - f32(i + 1u) * dx_pre;
+            y[pad_len - 1u - i] = y0;
+        }
+        case BOUNDARY_REFLECT: {
+            x[pad_len - 1u - i] = x0 - (x[pad_len + 1u + i] - x0);
+            y[pad_len - 1u - i] = y[pad_len + 1u + i];
+        }
+        case BOUNDARY_ZERO: {
+            x[pad_len - 1u - i] = x0 - f32(i + 1u) * dx_pre;
+            y[pad_len - 1u - i] = 0.0;
+        }
+        default: {}
+    }
+    
+    // Suffix padding
+    let xn = x[pad_len + orig_n - 1u];
+    let yn = y[pad_len + orig_n - 1u];
+    let dx_suf = x[pad_len + orig_n - 1u] - x[pad_len + orig_n - 2u];
+    
+    let target_idx = pad_len + orig_n + i;
+    if (target_idx < config.n) {
+        switch (config.boundary_policy) {
+            case BOUNDARY_EXTEND: {
+                x[target_idx] = xn + f32(i + 1u) * dx_suf;
+                y[target_idx] = yn;
+            }
+            case BOUNDARY_REFLECT: {
+                x[target_idx] = xn + (xn - x[pad_len + orig_n - 2u - i]);
+                y[target_idx] = y[pad_len + orig_n - 2u - i];
+            }
+            case BOUNDARY_ZERO: {
+                x[target_idx] = xn + f32(i + 1u) * dx_suf;
+                y[target_idx] = 0.0;
+            }
+            default: {}
         }
     }
 }
 "#;
 
-thread_local! {
-    static THREAD_EXECUTOR: std::cell::RefCell<Option<GpuExecutor>> = const { std::cell::RefCell::new(None) };
-}
+const ROBUSTNESS_BISQUARE: u32 = 0;
+const ROBUSTNESS_HUBER: u32 = 1;
+const ROBUSTNESS_TALWAR: u32 = 2;
+
+const SCALING_MAD: u32 = 0;
+const SCALING_MAR: u32 = 1;
+const SCALING_MEAN: u32 = 2;
+
+static GLOBAL_EXECUTOR: Mutex<Option<GpuExecutor>> = Mutex::new(None);
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Pod, Zeroable)]
@@ -327,7 +710,12 @@ struct GpuConfig {
     zero_weight_fallback: u32,
     fraction: f32,
     delta: f32,
-    padding: [u32; 2],
+    median_threshold: f32,
+    median_center: f32,
+    is_absolute: u32,
+    boundary_policy: u32,
+    pad_len: u32,
+    orig_n: u32,
 }
 
 #[repr(C)]
@@ -335,6 +723,8 @@ struct GpuConfig {
 struct WeightConfig {
     n: u32,
     scale: f32,
+    robustness_method: u32,
+    scaling_method: u32,
 }
 
 struct GpuExecutor {
@@ -345,8 +735,11 @@ struct GpuExecutor {
     fit_pipeline: ComputePipeline,
     interpolate_pipeline: ComputePipeline,
     weight_pipeline: ComputePipeline,
-    mar_pipeline: ComputePipeline,
-    finalize_pipeline: ComputePipeline,
+    reduce_max_diff_pipeline: ComputePipeline,
+    reduce_sum_abs_pipeline: ComputePipeline,
+    finalize_scale_pipeline: ComputePipeline,
+    se_pipeline: ComputePipeline,
+    pad_pipeline: ComputePipeline,
 
     // Buffers - Group 0
     config_buffer: Option<Buffer>,
@@ -361,11 +754,13 @@ struct GpuExecutor {
     // Buffers - Group 2
     weights_buffer: Option<Buffer>,
     y_smooth_buffer: Option<Buffer>,
+    y_prev_buffer: Option<Buffer>, // For auto-convergence checking
     residuals_buffer: Option<Buffer>,
 
     // Buffers - Group 3
     w_config_buffer: Option<Buffer>,
     reduction_buffer: Option<Buffer>,
+    std_errors_buffer: Option<Buffer>,
 
     // Staging
     staging_buffer: Option<Buffer>,
@@ -416,7 +811,7 @@ impl GpuExecutor {
                     binding: 1,
                     visibility: ShaderStages::COMPUTE,
                     ty: BindingType::Buffer {
-                        ty: BufferBindingType::Storage { read_only: true },
+                        ty: BufferBindingType::Storage { read_only: false },
                         has_dynamic_offset: false,
                         min_binding_size: None,
                     },
@@ -426,7 +821,7 @@ impl GpuExecutor {
                     binding: 2,
                     visibility: ShaderStages::COMPUTE,
                     ty: BindingType::Buffer {
-                        ty: BufferBindingType::Storage { read_only: true },
+                        ty: BufferBindingType::Storage { read_only: false },
                         has_dynamic_offset: false,
                         min_binding_size: None,
                     },
@@ -502,6 +897,16 @@ impl GpuExecutor {
                     },
                     count: None,
                 },
+                BindGroupLayoutEntry {
+                    binding: 3,
+                    visibility: ShaderStages::COMPUTE,
+                    ty: BindingType::Buffer {
+                        ty: BufferBindingType::Storage { read_only: false },
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                },
             ],
         });
 
@@ -520,6 +925,16 @@ impl GpuExecutor {
                 },
                 BindGroupLayoutEntry {
                     binding: 1,
+                    visibility: ShaderStages::COMPUTE,
+                    ty: BindingType::Buffer {
+                        ty: BufferBindingType::Storage { read_only: false },
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                },
+                BindGroupLayoutEntry {
+                    binding: 2,
                     visibility: ShaderStages::COMPUTE,
                     ty: BindingType::Buffer {
                         ty: BufferBindingType::Storage { read_only: false },
@@ -555,9 +970,12 @@ impl GpuExecutor {
         Ok(Self {
             fit_pipeline: create_pipeline("fit_anchors"),
             interpolate_pipeline: create_pipeline("interpolate"),
-            mar_pipeline: create_pipeline("reduce_sum_abs"),
-            finalize_pipeline: create_pipeline("finalize_scale"),
             weight_pipeline: create_pipeline("update_weights"),
+            reduce_max_diff_pipeline: create_pipeline("reduce_max_diff"),
+            reduce_sum_abs_pipeline: create_pipeline("reduce_sum_abs"),
+            finalize_scale_pipeline: create_pipeline("finalize_scale"),
+            se_pipeline: create_pipeline("compute_se"),
+            pad_pipeline: create_pipeline("pad_data"),
             device,
             queue,
             config_buffer: None,
@@ -568,9 +986,11 @@ impl GpuExecutor {
             interval_map_buffer: None,
             weights_buffer: None,
             y_smooth_buffer: None,
+            y_prev_buffer: None,
             residuals_buffer: None,
             w_config_buffer: None,
             reduction_buffer: None,
+            std_errors_buffer: None,
             staging_buffer: None,
             bg0_data: None,
             bg1_topo: None,
@@ -607,6 +1027,7 @@ impl GpuExecutor {
         created_new
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn reset_buffers(
         &mut self,
         x: &[f32],
@@ -615,10 +1036,12 @@ impl GpuExecutor {
         intervals: &[u32],
         rob_w: &[f32],
         config: GpuConfig,
+        robustness_method: u32,
+        scaling_method: u32,
     ) {
-        let n = x.len() as u32;
+        let n_padded = config.n;
         let num_anchors = anchors.len() as u32;
-        let n_bytes = (n as usize * 4) as u64;
+        let n_bytes_padded = (n_padded as usize * 4) as u64;
         let anchor_bytes = (num_anchors as usize * 4) as u64;
 
         let mut bg_needs_update = false;
@@ -628,7 +1051,7 @@ impl GpuExecutor {
             &self.device,
             "Config",
             &mut self.config_buffer,
-            std::mem::size_of::<GpuConfig>() as u64,
+            size_of::<GpuConfig>() as u64,
             BufferUsages::UNIFORM | BufferUsages::COPY_DST,
         ) {
             bg_needs_update = true;
@@ -636,7 +1059,7 @@ impl GpuExecutor {
         self.queue.write_buffer(
             self.config_buffer.as_ref().unwrap(),
             0,
-            bytemuck::cast_slice(&[config]),
+            cast_slice(&[config]),
         );
 
         // Group 0: X, Y, Anchors, AnchorOutput
@@ -644,39 +1067,45 @@ impl GpuExecutor {
             &self.device,
             "X",
             &mut self.x_buffer,
-            n_bytes,
-            BufferUsages::STORAGE | BufferUsages::COPY_DST,
+            n_bytes_padded,
+            BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST,
         ) {
             bg_needs_update = true;
         }
-        self.queue
-            .write_buffer(self.x_buffer.as_ref().unwrap(), 0, bytemuck::cast_slice(x));
+        self.queue.write_buffer(
+            self.x_buffer.as_ref().unwrap(),
+            (config.pad_len as usize * 4) as u64,
+            cast_slice(x),
+        );
 
         if Self::ensure_buffer_capacity(
             &self.device,
             "Y",
             &mut self.y_buffer,
-            n_bytes,
-            BufferUsages::STORAGE | BufferUsages::COPY_DST,
+            n_bytes_padded,
+            BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST,
         ) {
             bg_needs_update = true;
         }
-        self.queue
-            .write_buffer(self.y_buffer.as_ref().unwrap(), 0, bytemuck::cast_slice(y));
+        self.queue.write_buffer(
+            self.y_buffer.as_ref().unwrap(),
+            (config.pad_len as usize * 4) as u64,
+            cast_slice(y),
+        );
 
         if Self::ensure_buffer_capacity(
             &self.device,
             "AnchorIndices",
             &mut self.anchor_indices_buffer,
             anchor_bytes,
-            BufferUsages::STORAGE | BufferUsages::COPY_DST,
+            BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST,
         ) {
             bg_needs_update = true;
         }
         self.queue.write_buffer(
             self.anchor_indices_buffer.as_ref().unwrap(),
             0,
-            bytemuck::cast_slice(anchors),
+            cast_slice(anchors),
         );
 
         if Self::ensure_buffer_capacity(
@@ -730,19 +1159,20 @@ impl GpuExecutor {
 
         // Group 1: Interval Map
         bg_needs_update = false;
+        let interval_bytes = (n_padded as usize * 8) as u64;
         if Self::ensure_buffer_capacity(
             &self.device,
             "IntervalMap",
             &mut self.interval_map_buffer,
-            n_bytes,
-            BufferUsages::STORAGE | BufferUsages::COPY_DST,
+            interval_bytes,
+            BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST,
         ) {
             bg_needs_update = true;
         }
         self.queue.write_buffer(
             self.interval_map_buffer.as_ref().unwrap(),
             0,
-            bytemuck::cast_slice(intervals),
+            cast_slice(intervals),
         );
 
         if bg_needs_update || self.bg1_topo.is_none() {
@@ -768,22 +1198,19 @@ impl GpuExecutor {
             &self.device,
             "RobustnessWeights",
             &mut self.weights_buffer,
-            n_bytes,
+            n_bytes_padded,
             BufferUsages::STORAGE | BufferUsages::COPY_DST | BufferUsages::COPY_SRC,
         ) {
             bg_needs_update = true;
         }
-        self.queue.write_buffer(
-            self.weights_buffer.as_ref().unwrap(),
-            0,
-            bytemuck::cast_slice(rob_w),
-        );
+        self.queue
+            .write_buffer(self.weights_buffer.as_ref().unwrap(), 0, cast_slice(rob_w));
 
         if Self::ensure_buffer_capacity(
             &self.device,
             "YSmooth",
             &mut self.y_smooth_buffer,
-            n_bytes,
+            n_bytes_padded,
             BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST,
         ) {
             bg_needs_update = true;
@@ -793,7 +1220,17 @@ impl GpuExecutor {
             &self.device,
             "Residuals",
             &mut self.residuals_buffer,
-            n_bytes,
+            n_bytes_padded,
+            BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST,
+        ) {
+            bg_needs_update = true;
+        }
+
+        if Self::ensure_buffer_capacity(
+            &self.device,
+            "YPrev",
+            &mut self.y_prev_buffer,
+            n_bytes_padded,
             BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST,
         ) {
             bg_needs_update = true;
@@ -816,6 +1253,10 @@ impl GpuExecutor {
                         binding: 2,
                         resource: self.residuals_buffer.as_ref().unwrap().as_entire_binding(),
                     },
+                    BindGroupEntry {
+                        binding: 3,
+                        resource: self.y_prev_buffer.as_ref().unwrap().as_entire_binding(),
+                    },
                 ],
             }));
         }
@@ -826,19 +1267,29 @@ impl GpuExecutor {
             &self.device,
             "WConfig",
             &mut self.w_config_buffer,
-            std::mem::size_of::<WeightConfig>() as u64,
-            BufferUsages::STORAGE | BufferUsages::COPY_DST,
+            size_of::<WeightConfig>() as u64,
+            BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST,
         ) {
             bg_needs_update = true;
         }
 
-        let reduction_size = (n.div_ceil(256) as usize * 4) as u64;
+        let reduction_size = 16.max((n_padded.div_ceil(256) as usize * 8) as u64);
         if Self::ensure_buffer_capacity(
             &self.device,
             "Reduction",
             &mut self.reduction_buffer,
             reduction_size,
-            BufferUsages::STORAGE | BufferUsages::COPY_SRC,
+            BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST,
+        ) {
+            bg_needs_update = true;
+        }
+
+        if Self::ensure_buffer_capacity(
+            &self.device,
+            "StdErrors",
+            &mut self.std_errors_buffer,
+            n_bytes_padded,
+            BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST,
         ) {
             bg_needs_update = true;
         }
@@ -856,26 +1307,89 @@ impl GpuExecutor {
                         binding: 1,
                         resource: self.reduction_buffer.as_ref().unwrap().as_entire_binding(),
                     },
+                    BindGroupEntry {
+                        binding: 2,
+                        resource: self.std_errors_buffer.as_ref().unwrap().as_entire_binding(),
+                    },
                 ],
             }));
         }
+
+        // Initialize WeightConfig
+        self.queue.write_buffer(
+            self.w_config_buffer.as_ref().unwrap(),
+            0,
+            bytes_of(&WeightConfig {
+                n: n_padded,
+                scale: 0.0,
+                robustness_method,
+                scaling_method,
+            }),
+        );
 
         // Staging
         Self::ensure_buffer_capacity(
             &self.device,
             "Staging",
             &mut self.staging_buffer,
-            n_bytes,
+            n_bytes_padded,
             BufferUsages::MAP_READ | BufferUsages::COPY_DST,
         );
 
-        self.n = n;
+        self.n = n_padded;
         self.num_anchors = num_anchors;
+
+        // Run padding kernel if pad_len > 0
+        if config.pad_len > 0 {
+            let mut encoder = self
+                .device
+                .create_command_encoder(&CommandEncoderDescriptor {
+                    label: Some("Boundary Padding"),
+                });
+            {
+                let mut pass = encoder.begin_compute_pass(&ComputePassDescriptor::default());
+                pass.set_pipeline(&self.pad_pipeline);
+                pass.set_bind_group(0, self.bg0_data.as_ref().unwrap(), &[]);
+                pass.set_bind_group(1, self.bg1_topo.as_ref().unwrap(), &[]);
+                pass.set_bind_group(2, self.bg2_state.as_ref().unwrap(), &[]);
+                pass.set_bind_group(3, self.bg3_aux.as_ref().unwrap(), &[]);
+                pass.dispatch_workgroups(config.pad_len.div_ceil(256), 1, 1);
+            }
+            self.queue.submit(Some(encoder.finish()));
+            let _ = self.device.poll(PollType::Wait);
+        }
+    }
+
+    fn swap_y_buffers(&mut self) {
+        swap(&mut self.y_smooth_buffer, &mut self.y_prev_buffer);
+        // Re-create BG2 to reflect the swap
+        self.bg2_state = Some(self.device.create_bind_group(&BindGroupDescriptor {
+            label: Some("BG2 Swapped"),
+            layout: &self.fit_pipeline.get_bind_group_layout(2),
+            entries: &[
+                BindGroupEntry {
+                    binding: 0,
+                    resource: self.weights_buffer.as_ref().unwrap().as_entire_binding(),
+                },
+                BindGroupEntry {
+                    binding: 1,
+                    resource: self.y_smooth_buffer.as_ref().unwrap().as_entire_binding(),
+                },
+                BindGroupEntry {
+                    binding: 2,
+                    resource: self.residuals_buffer.as_ref().unwrap().as_entire_binding(),
+                },
+                BindGroupEntry {
+                    binding: 3,
+                    resource: self.y_prev_buffer.as_ref().unwrap().as_entire_binding(),
+                },
+            ],
+        }));
     }
 
     fn record_pipeline(
         &self,
-        encoder: &mut wgpu::CommandEncoder,
+        encoder: &mut CommandEncoder,
         pipeline: &ComputePipeline,
         dispatch_size: u32,
     ) {
@@ -888,32 +1402,48 @@ impl GpuExecutor {
         pass.dispatch_workgroups(dispatch_size, 1, 1);
     }
 
-    fn record_iteration(&self, encoder: &mut wgpu::CommandEncoder) {
-        // 1. Fit at Anchors
+    fn record_fit_pass(&self, encoder: &mut CommandEncoder) {
+        // 1. Fit Anchors
         self.record_pipeline(encoder, &self.fit_pipeline, self.num_anchors.div_ceil(64));
         // 2. Interpolate
         self.record_pipeline(encoder, &self.interpolate_pipeline, self.n.div_ceil(64));
-        // 3. Compute Scale (MAR)
-        self.record_pipeline(encoder, &self.mar_pipeline, self.n.div_ceil(256));
-        self.record_pipeline(encoder, &self.finalize_pipeline, 1);
-        // 4. Update Weights
+    }
+
+    fn record_scale_estimation(&self, encoder: &mut CommandEncoder) {
+        // 1. Sum absolute residuals
+        self.record_pipeline(encoder, &self.reduce_sum_abs_pipeline, self.n.div_ceil(256));
+        // 2. Finalize scale (single thread)
+        self.record_pipeline(encoder, &self.finalize_scale_pipeline, 1);
+    }
+
+    fn record_update_weights(&self, encoder: &mut CommandEncoder) {
+        // 3. Update Weights
         self.record_pipeline(encoder, &self.weight_pipeline, self.n.div_ceil(64));
     }
 
-    async fn download_buffer(&self, buf: &Buffer) -> Option<Vec<f32>> {
-        let size = (self.n as usize * 4) as u64;
+    fn record_convergence_check(&self, encoder: &mut CommandEncoder) {
+        // Reduce max differences
+        self.record_pipeline(
+            encoder,
+            &self.reduce_max_diff_pipeline,
+            self.n.div_ceil(256),
+        );
+    }
+
+    async fn download_buffer(&self, buf: &Buffer, size_override: Option<u64>) -> Option<Vec<f32>> {
+        let size = size_override.unwrap_or((self.n as usize * 4) as u64);
         let mut encoder = self.device.create_command_encoder(&Default::default());
         encoder.copy_buffer_to_buffer(buf, 0, self.staging_buffer.as_ref().unwrap(), 0, size);
         self.queue.submit(Some(encoder.finish()));
 
-        let slice = self.staging_buffer.as_ref().unwrap().slice(..);
-        let (tx, rx) = futures_intrusive::channel::shared::oneshot_channel();
+        let slice = self.staging_buffer.as_ref().unwrap().slice(..size);
+        let (tx, rx) = oneshot_channel();
         slice.map_async(MapMode::Read, move |v| tx.send(v).unwrap());
         let _ = self.device.poll(PollType::Wait);
 
         if let Some(Ok(())) = rx.receive().await {
             let data = slice.get_mapped_range();
-            let ret = bytemuck::cast_slice(&data).to_vec();
+            let ret = cast_slice(&data).to_vec();
             drop(data);
             self.staging_buffer.as_ref().unwrap().unmap();
             Some(ret)
@@ -921,6 +1451,83 @@ impl GpuExecutor {
             None
         }
     }
+
+    async fn compute_robust_scale(
+        &mut self,
+        scaling_method: ScalingMethod,
+    ) -> Result<Option<f32>, String> {
+        // GPU-side scale estimation for Mean method (fast path)
+        if scaling_method == ScalingMethod::Mean {
+            let mut encoder = self.device.create_command_encoder(&Default::default());
+            self.record_scale_estimation(&mut encoder);
+            self.queue.submit(Some(encoder.finish()));
+            return Ok(None);
+        }
+
+        // For MAD/MAR, use host-based computation for accuracy and stability
+        let residuals = self
+            .download_buffer(self.residuals_buffer.as_ref().unwrap(), None)
+            .await
+            .ok_or_else(|| "Failed to download residuals".to_string())?;
+
+        let mut residuals_mut: Vec<f32> = residuals;
+        let scale = scaling_method.compute(&mut residuals_mut);
+        Ok(Some(scale))
+    }
+}
+
+// Check if convergence has been reached by comparing current and previous smoothed values
+async fn check_convergence_gpu_internal(
+    exec: &mut GpuExecutor,
+    tolerance: f32,
+) -> Result<bool, &'static str> {
+    let num_workgroups = exec.n.div_ceil(256);
+    let reduction_bytes = (num_workgroups as usize * 4) as u64;
+    let reduction_vals = exec
+        .download_buffer(
+            exec.reduction_buffer.as_ref().unwrap(),
+            Some(reduction_bytes),
+        )
+        .await
+        .ok_or("Failed to download reduction results")?;
+
+    // Final reduction on host
+    let max_diff = reduction_vals.iter().fold(0.0f32, |m, &v| m.max(v));
+
+    Ok(max_diff < tolerance)
+}
+
+// Compute standard errors for GPU results using GPU SE kernel
+fn compute_intervals_gpu<T>(exec: &mut GpuExecutor, config: &LowessConfig<T>) -> Option<Vec<T>>
+where
+    T: Float + Debug + Send + Sync + 'static,
+{
+    // Check if intervals requested
+    let _ = config.return_variance.as_ref()?;
+
+    let mut encoder = exec
+        .device
+        .create_command_encoder(&CommandEncoderDescriptor {
+            label: Some("Standard Error Calculation"),
+        });
+
+    {
+        let mut pass = encoder.begin_compute_pass(&ComputePassDescriptor::default());
+        pass.set_pipeline(&exec.se_pipeline);
+        pass.set_bind_group(0, exec.bg0_data.as_ref().unwrap(), &[]);
+        pass.set_bind_group(1, exec.bg1_topo.as_ref().unwrap(), &[]);
+        pass.set_bind_group(2, exec.bg2_state.as_ref().unwrap(), &[]);
+        pass.set_bind_group(3, exec.bg3_aux.as_ref().unwrap(), &[]);
+        pass.dispatch_workgroups(exec.n.div_ceil(64), 1, 1);
+    }
+
+    exec.queue.submit(Some(encoder.finish()));
+    let _ = exec.device.poll(PollType::Wait);
+
+    // Download standard errors
+    let se_vals = block_on(exec.download_buffer(exec.std_errors_buffer.as_ref().unwrap(), None))?;
+
+    Some(se_vals.into_iter().map(|v| T::from(v).unwrap()).collect())
 }
 
 // Perform a GPU-accelerated LOWESS fit pass.
@@ -928,106 +1535,239 @@ pub fn fit_pass_gpu<T>(
     x: &[T],
     y: &[T],
     config: &LowessConfig<T>,
-) -> (Vec<T>, Option<Vec<T>>, usize, Vec<T>)
+) -> Result<IterationResult<T>, LowessError>
 where
     T: Float + Debug + Send + Sync + 'static,
 {
+    #[cfg(feature = "gpu")]
     {
         use pollster::block_on;
 
-        // Persistent Thread-Local Executor
-        THREAD_EXECUTOR.with(|cell| {
-            let mut opt = cell.borrow_mut();
-            if opt.is_none() {
-                *opt = block_on(GpuExecutor::new()).ok();
+        // Global Executor Lock
+        let mut guard = GLOBAL_EXECUTOR
+            .lock()
+            .map_err(|e| LowessError::RuntimeError(format!("GPU mutex poisoned: {}", e)))?;
+
+        if guard.is_none() {
+            match block_on(GpuExecutor::new()) {
+                Ok(exec) => *guard = Some(exec),
+                Err(e) => return Err(LowessError::RuntimeError(format!("GPU init failed: {}", e))),
             }
+        }
+        let exec = guard.as_mut().unwrap();
 
-            let exec = opt.as_mut().expect("Failed to initialize GPU executor");
+        let orig_n = x.len();
+        if orig_n > u32::MAX as usize {
+            return Err(LowessError::InvalidInput(format!(
+                "Dataset too large for GPU backend: {} points (max {})",
+                orig_n,
+                u32::MAX
+            )));
+        }
 
-            let x_f32: Vec<f32> = x.iter().map(|v| v.to_f32().unwrap()).collect();
-            let y_f32: Vec<f32> = y.iter().map(|v| v.to_f32().unwrap()).collect();
-            let n = x.len();
-            let delta = config.delta.to_f32().unwrap();
+        let delta = config.delta.to_f32().unwrap();
+        let window_size =
+            (config.fraction.unwrap().to_f32().unwrap() * orig_n as f32).max(1.0) as usize;
+        let pad_len = if config.boundary_policy == BoundaryPolicy::NoBoundary {
+            0
+        } else {
+            (window_size / 2).min(orig_n - 1)
+        };
+        let total_n = orig_n + 2 * pad_len;
 
-            // Compute Anchors & Intervals
-            let mut anchors = Vec::with_capacity(n / 10);
-            let mut intervals = vec![0u32; n];
+        // Compute Anchors & Intervals on original coordinates, but indices shifted by pad_len
+        let mut anchors = Vec::with_capacity(orig_n / 10 + 2);
+        let mut intervals = vec![0u32; total_n];
 
-            let mut last_idx = 0;
-            anchors.push(0);
-            let mut current_anchor_idx = 0;
+        let mut last_idx = 0;
+        anchors.push(pad_len as u32);
+        let mut current_anchor_idx = 0;
 
-            for i in 0..n {
-                if i > 0 && x_f32[i] - x_f32[last_idx] > delta {
-                    last_idx = i;
-                    anchors.push(i as u32);
-                    current_anchor_idx += 1;
-                }
-                if current_anchor_idx >= 1 {
-                    intervals[i] = current_anchor_idx - 1;
-                } else {
-                    intervals[i] = 0;
-                }
+        for i in 0..orig_n {
+            if i > 0 && (x[i] - x[last_idx]).to_f32().unwrap() > delta {
+                last_idx = i;
+                anchors.push((i + pad_len) as u32);
+                current_anchor_idx += 1;
             }
-            // Ensure last point is anchor if not already
-            if *anchors.last().unwrap() != (n - 1) as u32 {
-                anchors.push((n - 1) as u32);
-                // Fix intervals for tail? Logic above is simple "closest left anchor".
-                // Correct interval logic for interpolation between A[k] and A[k+1]:
-                // Point i must have intervals[i] = k where A[k] <= i <= A[k+1].
-                // Re-run interval mapping strictly.
-            }
+            intervals[i + pad_len] = current_anchor_idx;
+        }
 
-            // Strict Interval Mapping
-            let mut anchor_ptr = 0;
-            for (i, interval) in intervals.iter_mut().enumerate() {
-                while anchor_ptr + 1 < anchors.len() && (i as u32) >= anchors[anchor_ptr + 1] {
-                    anchor_ptr += 1;
-                }
-                // For i between A[ptr] and A[ptr+1], interval is ptr.
-                *interval = anchor_ptr as u32;
-            }
+        // Pad intervals
+        intervals[0..pad_len].fill(0);
+        intervals[pad_len + orig_n..total_n].fill(current_anchor_idx);
 
-            let gpu_config = GpuConfig {
-                n: n as u32,
-                window_size: (config.fraction.unwrap().to_f32().unwrap() * n as f32) as u32,
-                weight_function: 0,
-                zero_weight_fallback: 0,
-                fraction: config.fraction.unwrap().to_f32().unwrap(),
-                delta,
-                padding: [0, 0],
-            };
+        // Ensure last original point is an anchor
+        if *anchors.last().unwrap() != (pad_len + orig_n - 1) as u32 {
+            anchors.push((pad_len + orig_n - 1) as u32);
+        }
 
-            exec.reset_buffers(
-                &x_f32,
-                &y_f32,
-                &anchors,
-                &intervals,
-                &vec![1.0; n],
-                gpu_config,
-            );
+        let weight_fn_id = match config.weight_function {
+            WeightFunction::Cosine => 0,
+            WeightFunction::Epanechnikov => 1,
+            WeightFunction::Gaussian => 2,
+            WeightFunction::Biweight => 3,
+            WeightFunction::Triangle => 4,
+            WeightFunction::Tricube => 5,
+            WeightFunction::Uniform => 6,
+        };
+
+        let fallback_id = config.zero_weight_fallback as u32;
+
+        let boundary_id = match config.boundary_policy {
+            BoundaryPolicy::Extend => 0,
+            BoundaryPolicy::Reflect => 1,
+            BoundaryPolicy::Zero => 2,
+            BoundaryPolicy::NoBoundary => 3,
+        };
+
+        let gpu_config = GpuConfig {
+            n: total_n as u32,
+            window_size: window_size as u32,
+            weight_function: weight_fn_id,
+            zero_weight_fallback: fallback_id,
+            fraction: config.fraction.unwrap().to_f32().unwrap(),
+            delta,
+            median_threshold: 0.0,
+            median_center: 0.0,
+            is_absolute: 0,
+            boundary_policy: boundary_id,
+            pad_len: pad_len as u32,
+            orig_n: orig_n as u32,
+        };
+
+        let robustness_id = match config.robustness_method {
+            RobustnessMethod::Bisquare => ROBUSTNESS_BISQUARE,
+            RobustnessMethod::Huber => ROBUSTNESS_HUBER,
+            RobustnessMethod::Talwar => ROBUSTNESS_TALWAR,
+        };
+
+        let scaling_id = match config.scaling_method {
+            ScalingMethod::MAD => SCALING_MAD,
+            ScalingMethod::MAR => SCALING_MAR,
+            ScalingMethod::Mean => SCALING_MEAN,
+        };
+
+        // Prepare raw data
+        let x_f32: Vec<f32> = x.iter().map(|v| v.to_f32().unwrap()).collect();
+        let y_f32: Vec<f32> = y.iter().map(|v| v.to_f32().unwrap()).collect();
+
+        exec.reset_buffers(
+            &x_f32,
+            &y_f32,
+            &anchors,
+            &intervals,
+            &vec![1.0; total_n],
+            gpu_config,
+            robustness_id,
+            scaling_id,
+        );
+
+        let mut iterations_performed = 0;
+        let tolerance = config.auto_convergence.map(|t| t.to_f32().unwrap());
+
+        for i in 0..=config.iterations {
+            iterations_performed = i;
 
             let mut encoder = exec
                 .device
                 .create_command_encoder(&CommandEncoderDescriptor {
-                    label: Some("LOWESS Main"),
+                    label: Some(format!("LOWESS Pass {}", i).as_str()),
                 });
 
-            for _ in 0..=config.iterations {
-                exec.record_iteration(&mut encoder);
+            // 1. Record Fit
+            if tolerance.is_some() && i > 0 {
+                exec.swap_y_buffers();
             }
+            exec.record_fit_pass(&mut encoder);
+
+            // 2. Record Convergence Reduction (if needed)
+            if let Some(_) = tolerance
+                && i > 0
+            {
+                exec.record_convergence_check(&mut encoder);
+            }
+
+            // 3. Record Scale & Weight Update (if more iterations remain)
+            let mut needs_host_scale = false;
+            if i < config.iterations {
+                if config.scaling_method == ScalingMethod::Mean {
+                    exec.record_scale_estimation(&mut encoder);
+                    exec.record_update_weights(&mut encoder);
+                } else {
+                    needs_host_scale = true;
+                }
+            }
+
             exec.queue.submit(Some(encoder.finish()));
 
-            let y_res =
-                block_on(exec.download_buffer(exec.y_smooth_buffer.as_ref().unwrap())).unwrap();
-            let w_res =
-                block_on(exec.download_buffer(exec.weights_buffer.as_ref().unwrap())).unwrap();
+            // Handle host-side scale estimation if needed (breaks batching)
+            if needs_host_scale {
+                let scale_opt = block_on(exec.compute_robust_scale(config.scaling_method))
+                    .map_err(LowessError::RuntimeError)?;
 
-            let y_out: Vec<T> = y_res.into_iter().map(|v| T::from(v).unwrap()).collect();
-            let w_out: Vec<T> = w_res.into_iter().map(|v| T::from(v).unwrap()).collect();
+                if let Some(scale) = scale_opt {
+                    let w_config_host = WeightConfig {
+                        n: total_n as u32,
+                        scale,
+                        robustness_method: robustness_id,
+                        scaling_method: scaling_id,
+                    };
+                    exec.queue.write_buffer(
+                        exec.w_config_buffer.as_ref().unwrap(),
+                        0,
+                        bytes_of(&w_config_host),
+                    );
 
-            (y_out, None, config.iterations, w_out)
-        })
+                    // Finalize weights for this iteration
+                    let mut encoder_w = exec.device.create_command_encoder(&Default::default());
+                    exec.record_update_weights(&mut encoder_w);
+                    exec.queue.submit(Some(encoder_w.finish()));
+                }
+            }
+
+            // Check convergence
+            if let Some(tol) = tolerance
+                && i > 0
+                && block_on(check_convergence_gpu_internal(exec, tol)).unwrap_or(false)
+            {
+                break;
+            }
+        }
+
+        let y_res =
+            block_on(exec.download_buffer(exec.y_smooth_buffer.as_ref().unwrap(), None)).unwrap();
+        let w_res =
+            block_on(exec.download_buffer(exec.weights_buffer.as_ref().unwrap(), None)).unwrap();
+
+        // Trim results to original size (remove padding)
+        let y_trimmed = if pad_len > 0 {
+            y_res[pad_len..pad_len + orig_n].to_vec()
+        } else {
+            y_res
+        };
+        let w_trimmed = if pad_len > 0 {
+            w_res[pad_len..pad_len + orig_n].to_vec()
+        } else {
+            w_res
+        };
+
+        let y_out: Vec<T> = y_trimmed.into_iter().map(|v| T::from(v).unwrap()).collect();
+        let w_out: Vec<T> = w_trimmed.into_iter().map(|v| T::from(v).unwrap()).collect();
+
+        // Compute standard errors/intervals if requested
+        let std_errors = if config.return_variance.is_some() {
+            compute_intervals_gpu(exec, config).map(|v| {
+                if pad_len > 0 {
+                    v[pad_len..pad_len + orig_n].to_vec()
+                } else {
+                    v
+                }
+            })
+        } else {
+            None
+        };
+
+        Ok((y_out, std_errors, iterations_performed, w_out))
     }
     #[cfg(not(feature = "gpu"))]
     {
