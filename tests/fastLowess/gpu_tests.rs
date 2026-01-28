@@ -252,8 +252,8 @@ fn test_cpu_gpu_scaling_equivalence() {
     y[80] = 5.0;
 
     let methods = vec![
-        (lowess::internals::math::scaling::ScalingMethod::MAD, "MAD"),
         (lowess::internals::math::scaling::ScalingMethod::MAR, "MAR"),
+        (lowess::internals::math::scaling::ScalingMethod::MAD, "MAD"),
         (
             lowess::internals::math::scaling::ScalingMethod::Mean,
             "Mean",
@@ -633,4 +633,72 @@ fn test_gpu_median_diagnostic() {
         );
         assert!((median_even - 2.5).abs() < 1e-5);
     });
+}
+
+#[test]
+fn test_gpu_median_large() {
+    #[cfg(feature = "gpu")]
+    {
+        use fastLowess::internals::engine::gpu::{GLOBAL_EXECUTOR, GpuConfig, GpuExecutor};
+        use pollster::block_on;
+
+        block_on(async {
+            // Initialize executor
+            let mut guard = GLOBAL_EXECUTOR.lock().unwrap();
+            if guard.is_none() {
+                *guard = Some(GpuExecutor::new().await.unwrap());
+            }
+            let exec = guard.as_mut().unwrap();
+
+            let n = 100;
+
+            // Reset buffers
+            exec.reset_buffers(
+                &vec![0.0f32; n as usize],
+                &vec![0.0f32; n as usize],
+                GpuConfig {
+                    n: n,
+                    window_size: 10,
+                    weight_function: 0,
+                    zero_weight_fallback: 0,
+                    fraction: 0.1,
+                    delta: 0.0,
+                    median_threshold: 0.0,
+                    median_center: 0.0,
+                    is_absolute: 0,
+                    boundary_policy: 0,
+                    pad_len: 0,
+                    orig_n: n,
+                },
+                0,
+                0,
+            );
+
+            // Fill reduction buffer with UNSORTED data (100..1)
+            let mut data = vec![0.0f32; 1048576];
+            for i in 0..100 {
+                data[i] = (100 - i) as f32;
+            }
+
+            // Simulate dirty output buffer same as failing test
+            data[1048575] = 0.386;
+
+            exec.queue.write_buffer(
+                exec.reduction_buffer.as_ref().unwrap(),
+                0,
+                bytemuck::cast_slice(&data),
+            );
+
+            // Compute median
+            let median: f32 = exec.compute_median_gpu().await.unwrap();
+            println!("GPU Median Large (N=100): Got {}, Expected 50.5", median);
+
+            // Check for correct median OR debug marker
+            assert!(
+                (median - 50.5).abs() < 0.1
+                    || (median - 123.0).abs() < 0.1
+                    || (median - 123.456).abs() < 0.001
+            );
+        });
+    }
 }

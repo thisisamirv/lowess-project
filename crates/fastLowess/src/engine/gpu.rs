@@ -72,11 +72,17 @@ const SCALING_MAD: u32 = 0u;
 const SCALING_MAR: u32 = 1u;
 const SCALING_MEAN: u32 = 2u;
 
+const MODE_UPDATE_SCALE: u32 = 0u;
+const MODE_UPDATE_CENTER: u32 = 1u;
+
 struct WeightConfig {
     n: u32,
     scale: f32,
     robustness_method: u32,
     scaling_method: u32,
+    median_center: f32,
+    anchor_count: u32,
+    radix_pass: u32,
 }
 
 // Group 0: Constants & Input Data
@@ -85,6 +91,7 @@ struct WeightConfig {
 @group(0) @binding(2) var<storage, read_write> y: array<f32>;
 @group(0) @binding(3) var<storage, read_write> anchor_indices: array<u32>;
 @group(0) @binding(4) var<storage, read_write> anchor_output: array<f32>;
+@group(0) @binding(5) var<storage, read_write> indirect_args: array<u32>; // [x, y, z] dispatch args
 
 // Group 1: Topology
 @group(1) @binding(0) var<storage, read_write> interval_map: array<u32>;
@@ -100,6 +107,39 @@ struct WeightConfig {
 @group(3) @binding(1) var<storage, read_write> reduction: array<f32>;
 @group(3) @binding(2) var<storage, read_write> std_errors: array<f32>;
 @group(3) @binding(3) var<storage, read_write> global_histogram: array<atomic<u32>, 256>;
+
+// -----------------------------------------------------------------------------
+// Kernel: Prepare Dispatch Args
+// Calculates dispatch args from reduction[0] (anchor count)
+// -----------------------------------------------------------------------------
+@compute @workgroup_size(1)
+fn prepare_dispatch_args() {
+    let count = w_config.anchor_count;
+    let workgroups = (count + 63u) / 64u;
+    indirect_args[0] = workgroups;
+    indirect_args[1] = 1u;
+    indirect_args[2] = 1u;
+}
+
+// -----------------------------------------------------------------------------
+// Kernel: Update Scale Config
+// Copies median result from reduction buffer to w_config
+// Mode 0: Update Scale
+// Mode 1: Update Median Center
+// -----------------------------------------------------------------------------
+@compute @workgroup_size(1)
+fn update_scale_config() {
+    // Median is at end of reduction buffer (1M elements)
+    let val = reduction[1048575u];
+    
+    // We use is_absolute field in config as a mode switch for this utility kernel
+    // treating it as mode: 0=scale, 1=center
+    if (config.is_absolute == MODE_UPDATE_SCALE) {
+        w_config.scale = val;
+    } else {
+        w_config.median_center = val;
+    }
+}
 
 // -----------------------------------------------------------------------------
 // Kernel 1: Fit at Anchors
@@ -120,6 +160,7 @@ fn fit_anchors(
     let lid = local_id.x;
     let n = config.n;
     let window_size = config.window_size;
+    let num_anchors_explicit = w_config.anchor_count;
     let num_anchors = arrayLength(&anchor_indices);
 
     var left = 0u;
@@ -128,7 +169,9 @@ fn fit_anchors(
     var i = 0u;
     var valid_anchor = false;
 
-    if (anchor_id < num_anchors) {
+    // Use explicit count from reduction buffer for bounds check
+    // since indirect dispatch rounds up workgroups
+    if (anchor_id < num_anchors_explicit) {
         i = anchor_indices[anchor_id];
         x_i = x[i];
         
@@ -772,7 +815,9 @@ fn select_anchors_greedy() {
         anchor_count = anchor_count + 1u;
     }
     
-    // Store anchor count in reduction buffer
+    // Store anchor count in w_config (persistent) instead of reduction (volatile)
+    w_config.anchor_count = anchor_count;
+    // Also store in reduction[0] for legacy/compatibility if needed, but we switched consumers
     reduction[0] = f32(anchor_count);
 }
 
@@ -787,7 +832,7 @@ fn compute_intervals(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let n = config.n;
     let pad_len = config.pad_len;
     let orig_n = config.orig_n;
-    let anchor_count = u32(reduction[0]);
+    let anchor_count = w_config.anchor_count;
     
     if (i >= n) {
         return;
@@ -854,14 +899,24 @@ fn prepare_mar_residuals(@builtin(global_invocation_id) global_id: vec3<u32>) {
     }
 }
 
-// Prepare residuals for MAD: reduction[i] = residuals[i]
+// Prepare residuals for MAD Step 1: reduction[i] = residuals[i] (signed)
+@compute @workgroup_size(256)
+fn prepare_residuals_signed(@builtin(global_invocation_id) global_id: vec3<u32>) {
+    let i = global_id.x;
+    let n = config.orig_n;
+    if (i < n) {
+        reduction[i] = residuals[i + config.pad_len];
+    }
+}
+
+// Prepare residuals for MAD Step 2: reduction[i] = abs(residuals[i] - w_config.median_center)
 @compute @workgroup_size(256)
 fn prepare_mad_residuals(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let i = global_id.x;
     let n = config.orig_n;
     if (i < n) {
         // Skip pad_len at start
-        reduction[i] = residuals[i + config.pad_len];
+        reduction[i] = abs(residuals[i + config.pad_len] - w_config.median_center);
     }
 }
 
@@ -871,7 +926,7 @@ fn prepare_mad_residuals(@builtin(global_invocation_id) global_id: vec3<u32>) {
 fn radix_histogram(@builtin(global_invocation_id) global_id: vec3<u32>,
                    @builtin(local_invocation_id) local_id: vec3<u32>) {
     let n = config.orig_n;
-    let radix_pass = w_config.robustness_method; // 0, 1, 2, or 3
+    let radix_pass = w_config.radix_pass; // 0, 1, 2, or 3
     let shift = radix_pass * 8u;
     
     // Initialize local histogram
@@ -916,7 +971,7 @@ fn radix_scatter(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let n = config.orig_n;
     if (n > 524288u) { return; } // Safety check for buffer paging
     
-    let radix_pass = w_config.robustness_method;
+    let radix_pass = w_config.radix_pass;
     let shift = radix_pass * 8u;
     
     // Sequential loop over all elements to preserve stability
@@ -957,16 +1012,6 @@ fn select_median() {
     }
     reduction[1048575u] = res;
 }
-
-// Center residuals for MAD: reduction[i] = abs(reduction[i] - w_config.scale)
-// Note: uses reduction buffer in-place
-@compute @workgroup_size(256)
-fn center_residuals(@builtin(global_invocation_id) global_id: vec3<u32>) {
-    let i = global_id.x;
-    if (i < config.orig_n) {
-        reduction[i] = abs(reduction[i] - w_config.scale);
-    }
-}
 "#;
 
 const ROBUSTNESS_BISQUARE: u32 = 0;
@@ -976,6 +1021,9 @@ const ROBUSTNESS_TALWAR: u32 = 2;
 const SCALING_MAD: u32 = 0;
 const SCALING_MAR: u32 = 1;
 const SCALING_MEAN: u32 = 2;
+
+const MODE_UPDATE_SCALE: u32 = 0;
+const MODE_UPDATE_CENTER: u32 = 1;
 
 pub static GLOBAL_EXECUTOR: Mutex<Option<GpuExecutor>> = Mutex::new(None);
 
@@ -1003,6 +1051,9 @@ pub struct WeightConfig {
     pub scale: f32,
     pub robustness_method: u32,
     pub scaling_method: u32,
+    pub median_center: f32,
+    pub anchor_count: u32,
+    pub radix_pass: u32,
 }
 
 pub struct GpuExecutor {
@@ -1019,6 +1070,7 @@ pub struct GpuExecutor {
     init_weights_pipeline: ComputePipeline,
     select_anchors_pipeline: ComputePipeline,
     compute_intervals_pipeline: ComputePipeline,
+    prepare_residuals_signed_pipeline: ComputePipeline,
     prepare_mar_residuals_pipeline: ComputePipeline,
     prepare_mad_residuals_pipeline: ComputePipeline,
     radix_histogram_pipeline: ComputePipeline,
@@ -1026,9 +1078,10 @@ pub struct GpuExecutor {
     radix_scatter_pipeline: ComputePipeline,
     radix_copy_back_pipeline: ComputePipeline,
     select_median_pipeline: ComputePipeline,
-    center_residuals_pipeline: ComputePipeline,
     se_pipeline: ComputePipeline,
     pad_pipeline: ComputePipeline,
+    prepare_dispatch_args_pipeline: ComputePipeline,
+    update_scale_config_pipeline: ComputePipeline,
 
     // Buffers - Group 0
     config_buffer: Option<Buffer>,
@@ -1036,6 +1089,7 @@ pub struct GpuExecutor {
     y_buffer: Option<Buffer>,
     anchor_indices_buffer: Option<Buffer>,
     anchor_output_buffer: Option<Buffer>,
+    indirect_buffer: Option<Buffer>,
 
     // Buffers - Group 1
     interval_map_buffer: Option<Buffer>,
@@ -1051,6 +1105,7 @@ pub struct GpuExecutor {
     w_config_buffer: Option<Buffer>,
     pub reduction_buffer: Option<Buffer>,
     std_errors_buffer: Option<Buffer>,
+    median_buffer: Option<Buffer>,
 
     // Staging
     staging_buffer: Option<Buffer>,
@@ -1060,6 +1115,7 @@ pub struct GpuExecutor {
     bg1_topo: Option<BindGroup>,
     bg2_state: Option<BindGroup>,
     bg3_aux: Option<BindGroup>,
+    bg3_median: Option<BindGroup>, // Alternate BG3 with median_buffer as target
 
     n: u32,
     orig_n: u32,
@@ -1130,6 +1186,16 @@ impl GpuExecutor {
                 },
                 BindGroupLayoutEntry {
                     binding: 4,
+                    visibility: ShaderStages::COMPUTE,
+                    ty: BindingType::Buffer {
+                        ty: BufferBindingType::Storage { read_only: false },
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                },
+                BindGroupLayoutEntry {
+                    binding: 5,
                     visibility: ShaderStages::COMPUTE,
                     ty: BindingType::Buffer {
                         ty: BufferBindingType::Storage { read_only: false },
@@ -1280,14 +1346,16 @@ impl GpuExecutor {
             compute_intervals_pipeline: create_pipeline("compute_intervals"),
             prepare_mar_residuals_pipeline: create_pipeline("prepare_mar_residuals"),
             prepare_mad_residuals_pipeline: create_pipeline("prepare_mad_residuals"),
+            prepare_residuals_signed_pipeline: create_pipeline("prepare_residuals_signed"),
             radix_histogram_pipeline: create_pipeline("radix_histogram"),
             radix_prefix_sum_pipeline: create_pipeline("radix_prefix_sum"),
             radix_scatter_pipeline: create_pipeline("radix_scatter"),
             radix_copy_back_pipeline: create_pipeline("radix_copy_back"),
             select_median_pipeline: create_pipeline("select_median"),
-            center_residuals_pipeline: create_pipeline("center_residuals"),
             se_pipeline: create_pipeline("compute_se"),
             pad_pipeline: create_pipeline("pad_data"),
+            prepare_dispatch_args_pipeline: create_pipeline("prepare_dispatch_args"),
+            update_scale_config_pipeline: create_pipeline("update_scale_config"),
             device,
             queue,
             config_buffer: None,
@@ -1295,6 +1363,7 @@ impl GpuExecutor {
             y_buffer: None,
             anchor_indices_buffer: None,
             anchor_output_buffer: None,
+            indirect_buffer: None,
             interval_map_buffer: None,
             weights_buffer: None,
             y_smooth_buffer: None,
@@ -1304,11 +1373,13 @@ impl GpuExecutor {
             w_config_buffer: None,
             reduction_buffer: None,
             std_errors_buffer: None,
+            median_buffer: None,
             staging_buffer: None,
             bg0_data: None,
             bg1_topo: None,
             bg2_state: None,
             bg3_aux: None,
+            bg3_median: None,
             n: 0,
             orig_n: 0,
             num_anchors: 0,
@@ -1400,6 +1471,19 @@ impl GpuExecutor {
         ) {
             bg_needs_update = true;
         }
+
+        if Self::ensure_buffer_capacity(
+            &self.device,
+            "IndirectArgs",
+            &mut self.indirect_buffer,
+            12, // 3 * u32
+            BufferUsages::STORAGE
+                | BufferUsages::INDIRECT
+                | BufferUsages::COPY_DST
+                | BufferUsages::COPY_SRC,
+        ) {
+            bg_needs_update = true;
+        }
         self.queue.write_buffer(
             self.y_buffer.as_ref().unwrap(),
             (config.pad_len as usize * 4) as u64,
@@ -1459,6 +1543,10 @@ impl GpuExecutor {
                                 .as_ref()
                                 .unwrap()
                                 .as_entire_binding(),
+                        },
+                        BindGroupEntry {
+                            binding: 5,
+                            resource: self.indirect_buffer.as_ref().unwrap().as_entire_binding(),
                         },
                     ],
                 }),
@@ -1631,6 +1719,41 @@ impl GpuExecutor {
             }));
         }
 
+        if Self::ensure_buffer_capacity(
+            &self.device,
+            "Median",
+            &mut self.median_buffer,
+            reduction_size,
+            BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST,
+        ) {
+            bg_needs_update = true;
+        }
+
+        if bg_needs_update || self.bg3_median.is_none() {
+            self.bg3_median = Some(self.device.create_bind_group(&BindGroupDescriptor {
+                label: Some("BG3_Median"),
+                layout: &self.fit_pipeline.get_bind_group_layout(3),
+                entries: &[
+                    BindGroupEntry {
+                        binding: 0,
+                        resource: self.w_config_buffer.as_ref().unwrap().as_entire_binding(),
+                    },
+                    BindGroupEntry {
+                        binding: 1,
+                        resource: self.median_buffer.as_ref().unwrap().as_entire_binding(),
+                    },
+                    BindGroupEntry {
+                        binding: 2,
+                        resource: self.std_errors_buffer.as_ref().unwrap().as_entire_binding(),
+                    },
+                    BindGroupEntry {
+                        binding: 3,
+                        resource: self.histogram_buffer.as_ref().unwrap().as_entire_binding(),
+                    },
+                ],
+            }));
+        }
+
         // Initialize WeightConfig
         self.queue.write_buffer(
             self.w_config_buffer.as_ref().unwrap(),
@@ -1640,6 +1763,9 @@ impl GpuExecutor {
                 scale: 0.0,
                 robustness_method,
                 scaling_method,
+                median_center: 0.0,
+                anchor_count: 0,
+                radix_pass: 0,
             }),
         );
 
@@ -1720,9 +1846,33 @@ impl GpuExecutor {
         pass.dispatch_workgroups(dispatch_size, 1, 1);
     }
 
+    pub fn record_pipeline_with_bg3(
+        &self,
+        encoder: &mut CommandEncoder,
+        pipeline: &ComputePipeline,
+        dispatch_size: u32,
+        bg3: &BindGroup,
+    ) {
+        let mut pass = encoder.begin_compute_pass(&ComputePassDescriptor::default());
+        pass.set_pipeline(pipeline);
+        pass.set_bind_group(0, self.bg0_data.as_ref().unwrap(), &[]);
+        pass.set_bind_group(1, self.bg1_topo.as_ref().unwrap(), &[]);
+        pass.set_bind_group(2, self.bg2_state.as_ref().unwrap(), &[]);
+        pass.set_bind_group(3, bg3, &[]);
+        pass.dispatch_workgroups(dispatch_size, 1, 1);
+    }
+
     fn record_fit_pass(&self, encoder: &mut CommandEncoder) {
-        // 1. Fit Anchors
-        self.record_pipeline(encoder, &self.fit_pipeline, self.num_anchors.div_ceil(64));
+        // 1. Fit Anchors (Indirect Dispatch)
+        {
+            let mut pass = encoder.begin_compute_pass(&ComputePassDescriptor::default());
+            pass.set_pipeline(&self.fit_pipeline);
+            pass.set_bind_group(0, self.bg0_data.as_ref().unwrap(), &[]);
+            pass.set_bind_group(1, self.bg1_topo.as_ref().unwrap(), &[]);
+            pass.set_bind_group(2, self.bg2_state.as_ref().unwrap(), &[]);
+            pass.set_bind_group(3, self.bg3_aux.as_ref().unwrap(), &[]);
+            pass.dispatch_workgroups_indirect(self.indirect_buffer.as_ref().unwrap(), 0);
+        }
         // 2. Interpolate
         self.record_pipeline(encoder, &self.interpolate_pipeline, self.n.div_ceil(64));
     }
@@ -1748,12 +1898,12 @@ impl GpuExecutor {
         );
     }
 
-    pub async fn download_buffer(
+    pub async fn download_buffer_raw(
         &self,
         buf: &Buffer,
         size_override: Option<u64>,
         offset_override: Option<u64>,
-    ) -> Option<Vec<f32>> {
+    ) -> Option<Vec<u8>> {
         let size = size_override.unwrap_or((self.n as usize * 4) as u64);
         let offset = offset_override.unwrap_or(0);
         let mut encoder = self.device.create_command_encoder(&Default::default());
@@ -1767,7 +1917,7 @@ impl GpuExecutor {
 
         if let Some(Ok(())) = rx.receive().await {
             let data = slice.get_mapped_range();
-            let ret = cast_slice(&data).to_vec();
+            let ret = data.to_vec();
             drop(data);
             self.staging_buffer.as_ref().unwrap().unmap();
             Some(ret)
@@ -1775,59 +1925,96 @@ impl GpuExecutor {
             None
         }
     }
-    pub async fn compute_median_gpu(&mut self) -> Result<f32, String> {
+
+    pub async fn download_buffer(
+        &self,
+        buf: &Buffer,
+        size_override: Option<u64>,
+        offset_override: Option<u64>,
+    ) -> Option<Vec<f32>> {
+        self.download_buffer_raw(buf, size_override, offset_override)
+            .await
+            .map(|raw| cast_slice::<u8, f32>(&raw).to_vec())
+    }
+    fn run_radix_sort_passes(&self, bg3_override: Option<&BindGroup>) {
         // Radix sort for exact median (8-bit digits, 4 passes)
+        for pass in 0..4 {
+            // 1. Clear Histogram
+            self.queue
+                .write_buffer(self.histogram_buffer.as_ref().unwrap(), 0, &[0u8; 1024]);
 
-        // 1. Clear histogram
-        self.queue
-            .write_buffer(self.histogram_buffer.as_ref().unwrap(), 0, &[0u8; 1024]);
-
-        for radix_pass in 0..4u32 {
-            if radix_pass > 0 {
-                // Clear histogram for next pass
-                self.queue
-                    .write_buffer(self.histogram_buffer.as_ref().unwrap(), 0, &[0u8; 1024]);
-            }
-
-            // 2. Update pass index in w_config
+            // Update w_config for pass (dedicated radix_pass field)
             self.queue.write_buffer(
                 self.w_config_buffer.as_ref().unwrap(),
-                8, // offset of robustness_method
-                cast_slice(&[radix_pass]),
+                24, // offset for radix_pass (u32)
+                bytes_of(&pass),
             );
 
-            // 3. Histogram
+            // 2. Histogram
             let mut encoder = self.device.create_command_encoder(&Default::default());
-            self.record_pipeline(
-                &mut encoder,
-                &self.radix_histogram_pipeline,
-                self.orig_n.div_ceil(256),
-            );
+            if let Some(bg3) = bg3_override {
+                self.record_pipeline_with_bg3(
+                    &mut encoder,
+                    &self.radix_histogram_pipeline,
+                    self.orig_n.div_ceil(256),
+                    bg3,
+                );
+            } else {
+                self.record_pipeline(
+                    &mut encoder,
+                    &self.radix_histogram_pipeline,
+                    self.orig_n.div_ceil(256),
+                );
+            }
             self.queue.submit(Some(encoder.finish()));
 
-            // 4. Prefix Sum
+            // 3. Prefix Sum
             let mut encoder = self.device.create_command_encoder(&Default::default());
-            self.record_pipeline(&mut encoder, &self.radix_prefix_sum_pipeline, 1);
+            if let Some(bg3) = bg3_override {
+                self.record_pipeline_with_bg3(
+                    &mut encoder,
+                    &self.radix_prefix_sum_pipeline,
+                    1,
+                    bg3,
+                );
+            } else {
+                self.record_pipeline(&mut encoder, &self.radix_prefix_sum_pipeline, 1);
+            }
             self.queue.submit(Some(encoder.finish()));
 
-            // 5. Scatter (residuals -> y_smooth)
+            // 4. Scatter
             let mut encoder = self.device.create_command_encoder(&Default::default());
-            self.record_pipeline(
-                &mut encoder,
-                &self.radix_scatter_pipeline,
-                1, // Single thread for stable sort
-            );
+            if let Some(bg3) = bg3_override {
+                self.record_pipeline_with_bg3(&mut encoder, &self.radix_scatter_pipeline, 1, bg3);
+            } else {
+                self.record_pipeline(&mut encoder, &self.radix_scatter_pipeline, 1);
+            }
             self.queue.submit(Some(encoder.finish()));
 
-            // 6. Copy Back (y_smooth -> residuals)
+            // 5. Copy Back
             let mut encoder = self.device.create_command_encoder(&Default::default());
-            self.record_pipeline(
-                &mut encoder,
-                &self.radix_copy_back_pipeline,
-                self.orig_n.div_ceil(256),
-            );
+            if let Some(bg3) = bg3_override {
+                self.record_pipeline_with_bg3(
+                    &mut encoder,
+                    &self.radix_copy_back_pipeline,
+                    self.orig_n.div_ceil(256),
+                    bg3,
+                );
+            } else {
+                self.record_pipeline(
+                    &mut encoder,
+                    &self.radix_copy_back_pipeline,
+                    self.orig_n.div_ceil(256),
+                );
+            }
             self.queue.submit(Some(encoder.finish()));
         }
+    }
+
+    #[cfg(feature = "dev")]
+    pub async fn compute_median_gpu(&mut self) -> Result<f32, String> {
+        // Run the 4-pass radix sort
+        self.run_radix_sort_passes(None);
 
         // Final step: Select Median
         let mut encoder = self.device.create_command_encoder(&Default::default());
@@ -1862,69 +2049,178 @@ impl GpuExecutor {
         // Exact median-based scaling (MAR/MAD) using GPU Radix Sort
         match scaling_method {
             ScalingMethod::MAR => {
-                // 1. Prepare absolute residuals in reduction buffer
+                let bg3_med = self.bg3_median.as_ref().unwrap();
+
+                // 1. Prepare absolute residuals in median buffer
                 let mut encoder = self.device.create_command_encoder(&Default::default());
-                self.record_pipeline(
+                self.record_pipeline_with_bg3(
                     &mut encoder,
                     &self.prepare_mar_residuals_pipeline,
                     self.orig_n.div_ceil(256),
+                    bg3_med,
                 );
                 self.queue.submit(Some(encoder.finish()));
 
-                // 2. Find median(|r|)
-                let scale = self.compute_median_gpu().await?;
+                let bg3_med = self.bg3_median.as_ref().unwrap();
 
-                // 3. Upload scale to GPU
+                self.run_radix_sort_passes(Some(bg3_med));
+
+                // 2. Select Median and Update Scale
                 self.queue.write_buffer(
-                    self.w_config_buffer.as_ref().unwrap(),
-                    4, // offset of scale
-                    cast_slice(&[scale]),
+                    self.config_buffer.as_ref().unwrap(),
+                    32,
+                    cast_slice(&[MODE_UPDATE_SCALE]),
                 );
 
-                Ok(Some(scale))
+                let mut encoder = self.device.create_command_encoder(&Default::default());
+                self.record_pipeline_with_bg3(
+                    &mut encoder,
+                    &self.select_median_pipeline,
+                    1,
+                    bg3_med,
+                );
+                self.queue.submit(Some(encoder.finish()));
+
+                let mut encoder = self.device.create_command_encoder(&Default::default());
+                self.record_pipeline_with_bg3(
+                    &mut encoder,
+                    &self.update_scale_config_pipeline,
+                    1,
+                    bg3_med,
+                );
+                self.queue.submit(Some(encoder.finish()));
+
+                // Download result from median_buffer[1048575]
+                let res_median = self
+                    .download_buffer_raw(
+                        self.median_buffer.as_ref().unwrap(),
+                        Some(4),
+                        Some(1048575 * 4),
+                    )
+                    .await
+                    .unwrap();
+
+                // Download WeightConfig to sync anchor_count
+                let res_config = self
+                    .download_buffer_raw(self.w_config_buffer.as_ref().unwrap(), Some(28), Some(0))
+                    .await
+                    .unwrap();
+                let w_cfg_gpu: WeightConfig =
+                    bytemuck::cast_slice::<u8, WeightConfig>(res_config.as_slice())[0];
+                self.num_anchors = w_cfg_gpu.anchor_count;
+
+                Ok(Some(
+                    bytemuck::cast_slice::<u8, f32>(res_median.as_slice())[0],
+                ))
             }
             ScalingMethod::MAD => {
-                // 1. Prepare residuals in reduction buffer
+                let bg3_med = self.bg3_median.as_ref().unwrap();
+
+                // 1. MAD Step 1 (Center)
+                // Prepare signed residuals to find the median of the distribution
                 let mut encoder = self.device.create_command_encoder(&Default::default());
-                self.record_pipeline(
+                self.record_pipeline_with_bg3(
+                    &mut encoder,
+                    &self.prepare_residuals_signed_pipeline,
+                    self.orig_n.div_ceil(256),
+                    bg3_med,
+                );
+                self.queue.submit(Some(encoder.finish()));
+
+                self.run_radix_sort_passes(Some(bg3_med));
+
+                // Select median of absolute residuals to get MAR (first step of MAD)
+                self.queue.write_buffer(
+                    self.config_buffer.as_ref().unwrap(),
+                    32,
+                    cast_slice(&[MODE_UPDATE_SCALE]),
+                );
+                let mut encoder = self.device.create_command_encoder(&Default::default());
+                self.record_pipeline_with_bg3(
+                    &mut encoder,
+                    &self.select_median_pipeline,
+                    1,
+                    bg3_med,
+                );
+                self.queue.submit(Some(encoder.finish()));
+
+                // Now use that median to center
+                self.queue.write_buffer(
+                    self.config_buffer.as_ref().unwrap(),
+                    32,
+                    cast_slice(&[MODE_UPDATE_CENTER]),
+                );
+                let mut encoder = self.device.create_command_encoder(&Default::default());
+                self.record_pipeline_with_bg3(
+                    &mut encoder,
+                    &self.update_scale_config_pipeline,
+                    1,
+                    bg3_med,
+                );
+                self.queue.submit(Some(encoder.finish()));
+
+                // 2. MAD Step 2 (MAD)
+                // Prepare residuals: abs(abs(y_smooth - y) - median_center)
+                let mut encoder = self.device.create_command_encoder(&Default::default());
+                self.record_pipeline_with_bg3(
                     &mut encoder,
                     &self.prepare_mad_residuals_pipeline,
                     self.orig_n.div_ceil(256),
+                    bg3_med,
                 );
                 self.queue.submit(Some(encoder.finish()));
 
-                // 2. Find m = median(r)
-                let m = self.compute_median_gpu().await?;
+                self.run_radix_sort_passes(Some(bg3_med));
 
-                // 3. Upload m to GPU scale field for centering
+                // Select median of these MAD residuals
                 self.queue.write_buffer(
-                    self.w_config_buffer.as_ref().unwrap(),
-                    4, // offset of scale
-                    cast_slice(&[m]),
+                    self.config_buffer.as_ref().unwrap(),
+                    32,
+                    cast_slice(&[MODE_UPDATE_SCALE]),
                 );
-
-                // 4. Compute |r - m| in-place in reduction buffer
                 let mut encoder = self.device.create_command_encoder(&Default::default());
-                self.record_pipeline(
+                self.record_pipeline_with_bg3(
                     &mut encoder,
-                    &self.center_residuals_pipeline,
-                    self.orig_n.div_ceil(256),
+                    &self.select_median_pipeline,
+                    1,
+                    bg3_med,
                 );
                 self.queue.submit(Some(encoder.finish()));
 
-                // 5. Find median(|r - m|)
-                let scale = self.compute_median_gpu().await?;
-
-                // 6. Upload final scale
-                self.queue.write_buffer(
-                    self.w_config_buffer.as_ref().unwrap(),
-                    4, // offset of scale
-                    cast_slice(&[scale]),
+                // Update final scale
+                let mut encoder = self.device.create_command_encoder(&Default::default());
+                self.record_pipeline_with_bg3(
+                    &mut encoder,
+                    &self.update_scale_config_pipeline,
+                    1,
+                    bg3_med,
                 );
+                self.queue.submit(Some(encoder.finish()));
 
-                Ok(Some(scale))
+                // Download result from median_buffer[1048575]
+                let res_median = self
+                    .download_buffer_raw(
+                        self.median_buffer.as_ref().unwrap(),
+                        Some(4),
+                        Some(1048575 * 4),
+                    )
+                    .await
+                    .unwrap();
+
+                // Download WeightConfig to sync anchor_count
+                let res_config = self
+                    .download_buffer_raw(self.w_config_buffer.as_ref().unwrap(), Some(28), Some(0))
+                    .await
+                    .unwrap();
+                let w_cfg_gpu: WeightConfig =
+                    bytemuck::cast_slice::<u8, WeightConfig>(res_config.as_slice())[0];
+                self.num_anchors = w_cfg_gpu.anchor_count;
+
+                Ok(Some(
+                    bytemuck::cast_slice::<u8, f32>(res_median.as_slice())[0],
+                ))
             }
-            ScalingMethod::Mean => unreachable!(),
+            _ => Ok(None),
         }
     }
 }
@@ -2097,15 +2393,14 @@ where
                 &exec.compute_intervals_pipeline,
                 exec.n.div_ceil(256),
             );
+
+            // 3. Prepare Indirect Dispatch Args (for Fit Anchors)
+            exec.record_pipeline(&mut encoder, &exec.prepare_dispatch_args_pipeline, 1);
             exec.queue.submit(Some(encoder.finish()));
         }
 
-        // Download anchor count from reduction buffer
-        let anchor_count_result =
-            block_on(exec.download_buffer(exec.reduction_buffer.as_ref().unwrap(), Some(4), None));
-        if let Some(counts) = anchor_count_result {
-            exec.num_anchors = counts[0] as u32;
-        }
+        // (Removed anchor count download)
+        // exec.num_anchors is no longer updated on host, as fit_pass uses indirect dispatch
 
         // Initialize weights to 1.0 on GPU
         {
@@ -2158,27 +2453,13 @@ where
 
             // Handle host-side scale estimation if needed (breaks batching)
             if needs_host_scale {
-                let scale_opt = block_on(exec.compute_robust_scale(config.scaling_method))
+                block_on(exec.compute_robust_scale(config.scaling_method))
                     .map_err(LowessError::RuntimeError)?;
 
-                if let Some(scale) = scale_opt {
-                    let w_config_host = WeightConfig {
-                        n: total_n as u32,
-                        scale,
-                        robustness_method: robustness_id,
-                        scaling_method: scaling_id,
-                    };
-                    exec.queue.write_buffer(
-                        exec.w_config_buffer.as_ref().unwrap(),
-                        0,
-                        bytes_of(&w_config_host),
-                    );
-
-                    // Finalize weights for this iteration
-                    let mut encoder_w = exec.device.create_command_encoder(&Default::default());
-                    exec.record_update_weights(&mut encoder_w);
-                    exec.queue.submit(Some(encoder_w.finish()));
-                }
+                // Finalize weights for this iteration
+                let mut encoder_w = exec.device.create_command_encoder(&Default::default());
+                exec.record_update_weights(&mut encoder_w);
+                exec.queue.submit(Some(encoder_w.finish()));
             }
 
             // Check convergence
