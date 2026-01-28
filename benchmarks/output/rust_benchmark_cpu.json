@@ -160,31 +160,31 @@
       "name": "scale_1000",
       "size": 1000,
       "iterations": 10,
-      "mean_time_ms": 0.15424941032233144,
-      "std_time_ms": 0.0061431053950074845,
-      "median_time_ms": 0.1533201187937063,
-      "min_time_ms": 3.969234,
-      "max_time_ms": 200.1147
+      "mean_time_ms": 0.23693774953334212,
+      "std_time_ms": 0.044642548601717985,
+      "median_time_ms": 0.22779413244047622,
+      "min_time_ms": 4.064587,
+      "max_time_ms": 236.1396
     },
     {
       "name": "scale_10000",
       "size": 10000,
       "iterations": 10,
-      "mean_time_ms": 0.7561649634847195,
-      "std_time_ms": 0.054141119662170716,
-      "median_time_ms": 0.7451272157575758,
-      "min_time_ms": 3.689643,
-      "max_time_ms": 183.902698
+      "mean_time_ms": 1.0008141659615226,
+      "std_time_ms": 0.13223511135004015,
+      "median_time_ms": 0.9796947302188552,
+      "min_time_ms": 4.463913,
+      "max_time_ms": 202.770644
     },
     {
       "name": "scale_5000",
       "size": 5000,
       "iterations": 10,
-      "mean_time_ms": 0.3521713644120028,
-      "std_time_ms": 0.01980412465683711,
-      "median_time_ms": 0.3480205541666667,
-      "min_time_ms": 3.974536,
-      "max_time_ms": 246.370196
+      "mean_time_ms": 0.5543914234633113,
+      "std_time_ms": 0.0680039955094438,
+      "median_time_ms": 0.5377571160714286,
+      "min_time_ms": 4.589601,
+      "max_time_ms": 188.693729
     }
   ],
   "financial": [

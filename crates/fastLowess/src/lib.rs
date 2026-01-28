@@ -209,7 +209,7 @@
 /// GPU-accelerated execution engine.
 #[cfg(feature = "gpu")]
 pub mod gpu {
-    pub use crate::engine::gpu::fit_pass_gpu;
+    pub use crate::engine::gpu::{cross_validate_gpu, fit_pass_gpu};
 }
 
 // Layer 4: Evaluation - post-processing and diagnostics.

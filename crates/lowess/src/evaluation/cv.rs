@@ -68,13 +68,13 @@ impl<'a, T> CVConfig<'a, T> {
         self.fractions
     }
 
-    // Get the CV kind for internal use.
-    pub(crate) fn kind(&self) -> CVKind {
+    // Get the CV kind.
+    pub fn kind(&self) -> CVKind {
         self.kind
     }
 
-    // Get the seed for internal use.
-    pub(crate) fn get_seed(&self) -> Option<u64> {
+    // Get the seed.
+    pub fn get_seed(&self) -> Option<u64> {
         self.seed
     }
 }

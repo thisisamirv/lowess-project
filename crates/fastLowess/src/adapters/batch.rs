@@ -8,7 +8,7 @@
 #[cfg(feature = "cpu")]
 use crate::engine::executor::smooth_pass_parallel;
 #[cfg(feature = "gpu")]
-use crate::engine::gpu::fit_pass_gpu;
+use crate::engine::gpu::{cross_validate_gpu, fit_pass_gpu};
 #[cfg(feature = "cpu")]
 use crate::evaluation::cv::cv_pass_parallel;
 #[cfg(feature = "cpu")]
@@ -26,7 +26,7 @@ use lowess::internals::algorithms::regression::WLSSolver;
 use lowess::internals::algorithms::regression::ZeroWeightFallback;
 use lowess::internals::algorithms::robustness::RobustnessMethod;
 use lowess::internals::engine::output::LowessResult;
-use lowess::internals::evaluation::cv::CVKind;
+use lowess::internals::evaluation::cv::{CVConfig, CVKind};
 use lowess::internals::math::boundary::BoundaryPolicy;
 use lowess::internals::math::kernel::WeightFunction;
 use lowess::internals::primitives::backend::Backend;
@@ -154,6 +154,14 @@ impl<T: Float> ParallelBatchLowessBuilder<T> {
         self
     }
 
+    // Set the cross-validation configuration using helper struct (e.g. from KFold).
+    pub fn cv_config<'a>(mut self, config: CVConfig<'a, T>) -> Self {
+        self.base = self.base.cv_kind(config.kind());
+        self.base.cv_fractions = Some(config.fractions().to_vec());
+        self.base.cv_seed = config.get_seed();
+        self
+    }
+
     // Build the batch processor.
     pub fn build(self) -> Result<ParallelBatchLowess<T>, LowessError> {
         // Check for deferred errors from adapter conversion
@@ -216,6 +224,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> ParallelBatchLowess<T
                 #[cfg(feature = "gpu")]
                 {
                     builder.custom_fit_pass = Some(fit_pass_gpu);
+                    builder.custom_cv_pass = Some(cross_validate_gpu);
                 }
                 #[cfg(not(feature = "gpu"))]
                 {

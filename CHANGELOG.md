@@ -22,6 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added support for different scaling methods to the GPU backend
 - Added support for different zero weight fallbacks to the GPU backend
 - Added support for different boundary policies to the GPU backend
+- Added support for auto convergence to the GPU backend
+- Added support for predictiona and confidence interval calculation to the GPU backend
+- Added support for cross-validation to the GPU backend
 
 **Julia:**
 
