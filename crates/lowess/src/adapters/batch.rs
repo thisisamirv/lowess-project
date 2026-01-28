@@ -375,13 +375,17 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> BatchLowess<T> {
         let fraction_used = result.used_fraction;
         let cv_scores = result.cv_scores;
 
-        // Calculate residuals
-        let residuals: Vec<T> = sorted
-            .y
-            .iter()
-            .zip(y_smooth.iter())
-            .map(|(&orig, &smoothed_val)| orig - smoothed_val)
-            .collect();
+        // Get residuals from backend or calculate them
+        let residuals: Vec<T> = if let Some(r) = result.residuals {
+            r
+        } else {
+            sorted
+                .y
+                .iter()
+                .zip(y_smooth.iter())
+                .map(|(&orig, &smoothed_val)| orig - smoothed_val)
+                .collect()
+        };
 
         // Get robustness weights from executor result (final iteration weights)
         let rob_weights = if self.config.return_robustness_weights {
@@ -406,8 +410,19 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> BatchLowess<T> {
         let (conf_lower, conf_upper, pred_lower, pred_upper) =
             match (&self.config.interval_type, &std_errors) {
                 (Some(method), Some(se)) => {
-                    let (cl, cu, pl, pu) = method.compute_intervals(&y_smooth, se, &residuals)?;
-                    (cl, cu, pl, pu)
+                    // Check if result already has computed intervals (e.g. from GPU)
+                    if result.confidence_lower.is_some() || result.prediction_lower.is_some() {
+                        (
+                            result.confidence_lower,
+                            result.confidence_upper,
+                            result.prediction_lower,
+                            result.prediction_upper,
+                        )
+                    } else {
+                        let (cl, cu, pl, pu) =
+                            method.compute_intervals(&y_smooth, se, &residuals)?;
+                        (cl, cu, pl, pu)
+                    }
                 }
                 _ => (None, None, None, None),
             };

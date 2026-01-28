@@ -8,11 +8,11 @@ use extendr_api::prelude::*;
 
 use fastLowess::internals::api::{
     BoundaryPolicy, RobustnessMethod,
-    ScalingMethod::{self, MAD, MAR},
+    ScalingMethod::{self, MAD, MAR, Mean},
     UpdateMode, WeightFunction, ZeroWeightFallback,
 };
 use fastLowess::prelude::{
-    Batch, KFold, Lowess as LowessBuilder, LowessResult, Online, Streaming, LOOCV,
+    Batch, KFold, LOOCV, Lowess as LowessBuilder, LowessResult, Online, Streaming,
 };
 
 // ============================================================================

@@ -174,6 +174,11 @@ fn test_executor_output_basic() {
         used_fraction: 0.5,
         cv_scores: None,
         robustness_weights: vec![1.0, 1.0, 1.0],
+        residuals: None,
+        confidence_lower: None,
+        confidence_upper: None,
+        prediction_lower: None,
+        prediction_upper: None,
     };
 
     assert_eq!(output.smoothed, vec![1.0, 2.0, 3.0]);
@@ -195,6 +200,11 @@ fn test_executor_output_complete() {
         used_fraction: 0.5,
         cv_scores: Some(vec![0.1, 0.2, 0.3]),
         robustness_weights: vec![1.0, 1.0, 1.0],
+        residuals: None,
+        confidence_lower: None,
+        confidence_upper: None,
+        prediction_lower: None,
+        prediction_upper: None,
     };
 
     assert_eq!(output.smoothed.len(), 3);
@@ -216,6 +226,11 @@ fn test_executor_output_empty() {
         used_fraction: 0.5,
         cv_scores: None,
         robustness_weights: vec![],
+        residuals: None,
+        confidence_lower: None,
+        confidence_upper: None,
+        prediction_lower: None,
+        prediction_upper: None,
     };
 
     assert!(output.smoothed.is_empty());
@@ -359,6 +374,11 @@ fn test_output_f32() {
         used_fraction: 0.5f32,
         cv_scores: None,
         robustness_weights: vec![1.0f32, 1.0f32, 1.0f32],
+        residuals: None,
+        confidence_lower: None,
+        confidence_upper: None,
+        prediction_lower: None,
+        prediction_upper: None,
     };
 
     assert_eq!(output.smoothed.len(), 3);
@@ -537,6 +557,11 @@ fn test_output_clone() {
         used_fraction: 0.5,
         cv_scores: Some(vec![0.1, 0.2]),
         robustness_weights: vec![1.0, 1.0, 1.0],
+        residuals: None,
+        confidence_lower: None,
+        confidence_upper: None,
+        prediction_lower: None,
+        prediction_upper: None,
     };
 
     let output2 = output1.clone();

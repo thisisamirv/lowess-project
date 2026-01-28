@@ -17,7 +17,7 @@ use fastLowess::internals::api::{
     ZeroWeightFallback,
 };
 use fastLowess::prelude::{
-    Batch, KFold, LOOCV, Lowess as LowessBuilder, LowessResult, MAD, MAR, Online, Streaming,
+    Batch, KFold, LOOCV, Lowess as LowessBuilder, LowessResult, MAD, MAR, Mean, Online, Streaming,
 };
 
 /// Result struct that can be passed across FFI boundary.

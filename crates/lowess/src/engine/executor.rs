@@ -70,11 +70,17 @@ pub type IntervalPassFn<T> = fn(
 ) -> Vec<T>; // standard errors
 
 // Result tuple from an iteration loop or fit pass.
+#[allow(clippy::type_complexity)]
 pub type IterationResult<T> = (
     Vec<T>,         // smoothed
     Option<Vec<T>>, // std_errors
     usize,          // iterations
     Vec<T>,         // robustness_weights
+    Option<Vec<T>>, // residuals
+    Option<Vec<T>>, // confidence_lower
+    Option<Vec<T>>, // confidence_upper
+    Option<Vec<T>>, // prediction_lower
+    Option<Vec<T>>, // prediction_upper
 );
 
 // Signature for custom iteration batch pass function (GPU acceleration).
@@ -105,6 +111,21 @@ pub struct ExecutorOutput<T> {
 
     // Final robustness weights from iterative refinement.
     pub robustness_weights: Vec<T>,
+
+    // Residuals (y - y_smooth), if available from backend.
+    pub residuals: Option<Vec<T>>,
+
+    // Confidence interval lower bounds (if intervals were computed).
+    pub confidence_lower: Option<Vec<T>>,
+
+    // Confidence interval upper bounds (if intervals were computed).
+    pub confidence_upper: Option<Vec<T>>,
+
+    // Prediction interval lower bounds (if intervals were computed).
+    pub prediction_lower: Option<Vec<T>>,
+
+    // Prediction interval upper bounds (if intervals were computed).
+    pub prediction_upper: Option<Vec<T>>,
 }
 
 // Configuration for LOWESS execution.
@@ -570,6 +591,11 @@ impl<T: Float> LowessExecutor<T> {
                 used_fraction: eff_fraction,
                 cv_scores: None,
                 robustness_weights: vec![T::one(); n],
+                residuals: None,
+                confidence_lower: None,
+                confidence_upper: None,
+                prediction_lower: None,
+                prediction_upper: None,
             });
         }
 
@@ -589,23 +615,32 @@ impl<T: Float> LowessExecutor<T> {
         let y_ref = &y_in;
 
         // Run the iteration loop
-        let (mut smoothed, mut std_errors, iterations, mut robustness_weights) = self
-            .iteration_loop_with_callback(
-                x_ref,
-                y_ref,
-                eff_fraction,
-                window_size,
-                target_iterations,
-                self.delta,
-                self.weight_function,
-                self.zero_weight_fallback,
-                &self.robustness_method,
-                confidence_method,
-                tolerance,
-                self.custom_smooth_pass,
-                self.custom_interval_pass,
-                buffer,
-            )?;
+        let (
+            mut smoothed,
+            mut std_errors,
+            iterations,
+            mut robustness_weights,
+            mut residuals,
+            confidence_lower,
+            confidence_upper,
+            prediction_lower,
+            prediction_upper,
+        ) = self.iteration_loop_with_callback(
+            x_ref,
+            y_ref,
+            eff_fraction,
+            window_size,
+            target_iterations,
+            self.delta,
+            self.weight_function,
+            self.zero_weight_fallback,
+            &self.robustness_method,
+            confidence_method,
+            tolerance,
+            self.custom_smooth_pass,
+            self.custom_interval_pass,
+            buffer,
+        )?;
 
         // Slice back to original range if padded
         if pad_len > 0 {
@@ -616,6 +651,12 @@ impl<T: Float> LowessExecutor<T> {
                 &mut std_errors,
                 &mut robustness_weights,
             );
+            // Slice residuals if present
+            if let Some(ref mut resid) = residuals {
+                let mut sliced = Vec::with_capacity(n);
+                sliced.extend_from_slice(&resid[pad_len..n + pad_len]);
+                *resid = sliced;
+            }
         }
 
         Ok(ExecutorOutput {
@@ -629,6 +670,11 @@ impl<T: Float> LowessExecutor<T> {
             used_fraction: eff_fraction,
             cv_scores: None,
             robustness_weights,
+            residuals,
+            confidence_lower,
+            confidence_upper,
+            prediction_lower,
+            prediction_upper,
         })
     }
 
@@ -752,6 +798,11 @@ impl<T: Float> LowessExecutor<T> {
             std_errors,
             iterations_performed,
             buffers.robustness_weights.as_vec().clone(),
+            None, // Residuals are not returned by the CPU executor
+            None, // Confidence intervals are not returned by the CPU executor
+            None, // Prediction intervals are not returned by the CPU executor
+            None, // Confidence intervals are not returned by the CPU executor
+            None, // Prediction intervals are not returned by the CPU executor
         ))
     }
 

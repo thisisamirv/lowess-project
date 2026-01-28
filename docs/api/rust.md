@@ -116,6 +116,69 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `min_points(usize)`     | `usize`       | `2`           | Min points before smoothing           |
 | `update_mode(...)`      | `UpdateMode`  | `Incremental` | Update mode enum                      |
 
+## GPU Acceleration
+
+The `fastLowess` crate provides a GPU-accelerated backend using `wgpu`. This backend is designed for high-throughput processing of large datasets (10k+ points) where parallel regression fitting on the GPU significantly outperforms CPU execution.
+
+### Enabling GPU Support
+
+GPU support is optional and must be enabled via the `gpu` feature in `fastLowess`:
+
+```toml
+[dependencies]
+fastLowess = { version = "*", features = ["gpu"] }
+```
+
+### Usage
+
+To use the GPU backend, configure the builder with `Backend::GPU`:
+
+```rust
+let model = Lowess::new()
+    .backend(Backend::GPU)
+    .confidence_intervals(0.95)
+    .build()?;
+```
+
+### Supported Features
+
+The GPU backend implements almost the entire LOWESS pipeline in WGSL compute shaders, providing native support for the following features:
+
+* **Weight Functions**: All standard kernels are supported (`Tricube`, `Epanechnikov`, `Gaussian`, `Uniform`, `Biweight`, `Triangle`, `Cosine`).
+* **Robustness Methods**: Support for `Bisquare`, `Huber`, and `Talwar` robustness weighting.
+* **Scaling Methods**: Residual scaling using `MAD` (Median Absolute Deviation), `MAR` (Median Absolute Residual), and `Mean` (Mean Absolute Residual).
+* **Interval Bounds**: GPU-native computation of `Standard Errors`, `Confidence Intervals`, and `Prediction Intervals`.
+* **Optimization**:
+  * **Parallel Fitting**: Local regression for all anchor points is computed in parallel.
+  * **Robustness Loops**: Iterative weight updates and convergence checks occur entirely on the GPU.
+  * **Distance-based Skipping**: Support for the `delta` parameter to accelerate smoothing on dense grids.
+* **Validation**: GPU-accelerated `K-Fold` and `LOOCV` (Leave-One-Out Cross-Validation).
+
+#### Feature Comparison
+
+| Feature                | CPU          | GPU (fastLowess) | Notes                                     |
+| ---------------------- | ------------ | ---------------- | ----------------------------------------- |
+| Batch Smoothing        | ✅           | ✅               | GPU recommended for N > 10,000            |
+| Streaming/Online       | ✅           | ❌               | GPU optimized for static batch data       |
+| All Weight Functions   | ✅           | ✅               | Identical numerical implementation        |
+| Robustness (Bisquare+) | ✅           | ✅               | Full support for all methods              |
+| Scaling (MAD/MAR/Mean) | ✅           | ✅               | Full support for all methods              |
+| Boundary Policies      | ✅           | ✅               | Extend, Reflect, Zero, NoBoundary         |
+| Auto-Convergence       | ✅           | ✅               | Tolerance checking occurs on GPU          |
+| Intervals & SE         | ✅           | ✅               | Native GPU interval calculation           |
+| Cross-Validation       | ✅           | ✅               | Parallel CV folders on GPU                |
+| Interpolation (Delta)  | ✅           | ✅               | Anchor-based skipping supported           |
+
+### Hardware Requirements
+
+The GPU backend leverages `wgpu` and supports:
+
+* **Vulkan** (Linux/Windows)
+* **Metal** (macOS/iOS)
+* **DirectX 12** (Windows)
+
+It requires a device supporting compute shaders. If no compatible GPU is found at runtime, the initialization will return a `LowessError::RuntimeError`.
+
 ## Result Structure
 
 ### `LowessResult<T>`

@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **lowess:**
 
 - Added `Mean` scaling method (Mean Absolute Deviation)
+- Added hooks for custom fitting backends
 
 **fastLowess:**
 
