@@ -146,6 +146,7 @@ fn test_config_custom() {
         parallel: false,
         backend: None,
         cv_seed: None,
+        delegate_boundary_handling: false,
     };
 
     assert_eq!(config.fraction, Some(0.5));
@@ -357,6 +358,7 @@ fn test_config_f32() {
         parallel: false,
         backend: None,
         cv_seed: None,
+        delegate_boundary_handling: false,
     };
 
     assert_eq!(config.fraction, Some(0.5f32));
@@ -416,6 +418,7 @@ fn test_executor_convergence_zero_tolerance() {
         parallel: false,
         backend: None,
         cv_seed: None,
+        delegate_boundary_handling: false,
     };
 
     let output = LowessExecutor::run_with_config(&x, &y, config).unwrap();
@@ -453,6 +456,7 @@ fn test_executor_delta_equals_range() {
         parallel: false,
         backend: None,
         cv_seed: None,
+        delegate_boundary_handling: false,
     };
 
     let output = LowessExecutor::run_with_config(&x, &y, config).unwrap();

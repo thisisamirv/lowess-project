@@ -28,7 +28,7 @@ use crate::math::kernel::WeightFunction;
 use crate::math::scaling::ScalingMethod;
 use crate::primitives::backend::Backend;
 use crate::primitives::errors::LowessError;
-use crate::primitives::sorting::{sort_by_x, unsort};
+use crate::primitives::sorting::{SortedData, sort_by_x, unsort};
 
 // Builder for batch LOWESS processor.
 #[derive(Debug, Clone)]
@@ -111,6 +111,10 @@ pub struct BatchLowessBuilder<T: Float> {
     #[doc(hidden)]
     pub parallel: Option<bool>,
 
+    // Whether to delegate boundary handling (padding)
+    #[doc(hidden)]
+    pub delegate_boundary_handling: bool,
+
     // Tracks if any parameter was set multiple times (for validation)
     #[doc(hidden)]
     pub(crate) duplicate_param: Option<&'static str>,
@@ -148,6 +152,7 @@ impl<T: Float> BatchLowessBuilder<T> {
             custom_interval_pass: None,
             custom_fit_pass: None,
             backend: None,
+            delegate_boundary_handling: false,
             parallel: None,
             duplicate_param: None,
         }
@@ -334,8 +339,17 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> BatchLowess<T> {
     pub fn fit(self, x: &[T], y: &[T]) -> Result<LowessResult<T>, LowessError> {
         Validator::validate_inputs(x, y)?;
 
-        // Sort data by x using sorting module
-        let sorted = sort_by_x(x, y);
+        // Sort data by x using sorting module, unless GPU is used
+        let sorted = if self.config.backend == Some(Backend::GPU) {
+            SortedData {
+                x: x.to_vec(),
+                y: y.to_vec(),
+                indices: (0..x.len()).collect(),
+            }
+        } else {
+            sort_by_x(x, y)
+        };
+
         let delta = calculate_delta(self.config.delta, &sorted.x)?;
 
         let zw_flag: u8 = self.config.zero_weight_fallback.to_u8();
@@ -364,6 +378,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> BatchLowess<T> {
             custom_fit_pass: self.config.custom_fit_pass,
             parallel: self.config.parallel.unwrap_or(false),
             backend: self.config.backend,
+            delegate_boundary_handling: self.config.delegate_boundary_handling,
         };
 
         // Execute unified LOWESS

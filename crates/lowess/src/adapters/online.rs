@@ -435,6 +435,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
                     custom_fit_pass: self.config.custom_fit_pass,
                     parallel: self.config.parallel.unwrap_or(false),
                     backend: self.config.backend,
+                    delegate_boundary_handling: false,
                 };
 
                 let result = LowessExecutor::run_with_config(x_vec, y_vec, config.clone())?;

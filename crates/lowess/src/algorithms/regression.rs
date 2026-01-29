@@ -95,7 +95,12 @@ impl<T: Float> WeightParams<T> {
 
 // Scalar accumulation for 1D weighted least squares (generic Float).
 #[inline]
-pub fn accumulate_wls_scalar<T: Float>(x: &[T], y: &[T], weights: &[T]) -> (T, T, T, T, T) {
+pub fn accumulate_wls_scalar<T: Float>(
+    x: &[T],
+    y: &[T],
+    weights: &[T],
+    x_center: T,
+) -> (T, T, T, T, T) {
     let n = x.len();
     if n == 0 {
         return (T::zero(), T::zero(), T::zero(), T::zero(), T::zero());
@@ -109,7 +114,7 @@ pub fn accumulate_wls_scalar<T: Float>(x: &[T], y: &[T], weights: &[T]) -> (T, T
 
     for i in 0..n {
         let w = weights[i];
-        let x_val = x[i];
+        let x_val = x[i] - x_center;
         let y_val = y[i];
 
         let wx = w * x_val;
@@ -155,7 +160,12 @@ pub fn solve_wls_scalar<T: Float>(
 
 // SIMD-optimized accumulation for 1D weighted least squares (f64).
 #[inline]
-pub fn accumulate_wls_simd_f64(x: &[f64], y: &[f64], weights: &[f64]) -> (f64, f64, f64, f64, f64) {
+pub fn accumulate_wls_simd_f64(
+    x: &[f64],
+    y: &[f64],
+    weights: &[f64],
+    x_center: f64,
+) -> (f64, f64, f64, f64, f64) {
     let n = x.len();
     if n == 0 {
         return (0.0, 0.0, 0.0, 0.0, 0.0);
@@ -168,12 +178,15 @@ pub fn accumulate_wls_simd_f64(x: &[f64], y: &[f64], weights: &[f64]) -> (f64, f
     let mut s_wxx = f64x2::splat(0.0);
     let mut s_wxy = f64x2::splat(0.0);
 
+    let x_c = f64x2::splat(x_center);
+
     unsafe {
         while i + 2 <= n {
             let w = f64x2::new([*weights.get_unchecked(i), *weights.get_unchecked(i + 1)]);
-            let x_val = f64x2::new([*x.get_unchecked(i), *x.get_unchecked(i + 1)]);
+            let x_raw = f64x2::new([*x.get_unchecked(i), *x.get_unchecked(i + 1)]);
             let y_val = f64x2::new([*y.get_unchecked(i), *y.get_unchecked(i + 1)]);
 
+            let x_val = x_raw - x_c;
             let wx = w * x_val;
             let wy = w * y_val;
 
@@ -196,7 +209,7 @@ pub fn accumulate_wls_simd_f64(x: &[f64], y: &[f64], weights: &[f64]) -> (f64, f
     unsafe {
         while i < n {
             let w = *weights.get_unchecked(i);
-            let x_val = *x.get_unchecked(i);
+            let x_val = *x.get_unchecked(i) - x_center;
             let y_val = *y.get_unchecked(i);
 
             let wx = w * x_val;
@@ -216,7 +229,12 @@ pub fn accumulate_wls_simd_f64(x: &[f64], y: &[f64], weights: &[f64]) -> (f64, f
 
 // SIMD-optimized accumulation for 1D weighted least squares (f32).
 #[inline]
-pub fn accumulate_wls_simd_f32(x: &[f32], y: &[f32], weights: &[f32]) -> (f32, f32, f32, f32, f32) {
+pub fn accumulate_wls_simd_f32(
+    x: &[f32],
+    y: &[f32],
+    weights: &[f32],
+    x_center: f32,
+) -> (f32, f32, f32, f32, f32) {
     let n = x.len();
     if n == 0 {
         return (0.0, 0.0, 0.0, 0.0, 0.0);
@@ -228,6 +246,8 @@ pub fn accumulate_wls_simd_f32(x: &[f32], y: &[f32], weights: &[f32]) -> (f32, f
     let mut s_wy = f32x8::splat(0.0);
     let mut s_wxx = f32x8::splat(0.0);
     let mut s_wxy = f32x8::splat(0.0);
+
+    let x_c = f32x8::splat(x_center);
 
     unsafe {
         while i + 8 <= n {
@@ -241,7 +261,7 @@ pub fn accumulate_wls_simd_f32(x: &[f32], y: &[f32], weights: &[f32]) -> (f32, f
                 *weights.get_unchecked(i + 6),
                 *weights.get_unchecked(i + 7),
             ]);
-            let x_val = f32x8::new([
+            let x_raw = f32x8::new([
                 *x.get_unchecked(i),
                 *x.get_unchecked(i + 1),
                 *x.get_unchecked(i + 2),
@@ -262,6 +282,7 @@ pub fn accumulate_wls_simd_f32(x: &[f32], y: &[f32], weights: &[f32]) -> (f32, f
                 *y.get_unchecked(i + 7),
             ]);
 
+            let x_val = x_raw - x_c;
             let wx = w * x_val;
             let wy = w * y_val;
 
@@ -284,7 +305,7 @@ pub fn accumulate_wls_simd_f32(x: &[f32], y: &[f32], weights: &[f32]) -> (f32, f
     unsafe {
         while i < n {
             let w = *weights.get_unchecked(i);
-            let x_val = *x.get_unchecked(i);
+            let x_val = *x.get_unchecked(i) - x_center;
             let y_val = *y.get_unchecked(i);
 
             let wx = w * x_val;
@@ -306,8 +327,13 @@ pub fn accumulate_wls_simd_f32(x: &[f32], y: &[f32], weights: &[f32]) -> (f32, f
 pub trait WLSSolver: Float {
     // Accumulate weighted statistics.
     #[inline]
-    fn accumulate_wls(x: &[Self], y: &[Self], weights: &[Self]) -> (Self, Self, Self, Self, Self) {
-        accumulate_wls_scalar(x, y, weights)
+    fn accumulate_wls(
+        x: &[Self],
+        y: &[Self],
+        weights: &[Self],
+        x_center: Self,
+    ) -> (Self, Self, Self, Self, Self) {
+        accumulate_wls_scalar(x, y, weights, x_center)
     }
 
     // Solve for coefficients.
@@ -326,15 +352,25 @@ pub trait WLSSolver: Float {
 
 impl WLSSolver for f64 {
     #[inline]
-    fn accumulate_wls(x: &[f64], y: &[f64], weights: &[f64]) -> (f64, f64, f64, f64, f64) {
-        accumulate_wls_simd_f64(x, y, weights)
+    fn accumulate_wls(
+        x: &[f64],
+        y: &[f64],
+        weights: &[f64],
+        x_center: f64,
+    ) -> (f64, f64, f64, f64, f64) {
+        accumulate_wls_simd_f64(x, y, weights, x_center)
     }
 }
 
 impl WLSSolver for f32 {
     #[inline]
-    fn accumulate_wls(x: &[f32], y: &[f32], weights: &[f32]) -> (f32, f32, f32, f32, f32) {
-        accumulate_wls_simd_f32(x, y, weights)
+    fn accumulate_wls(
+        x: &[f32],
+        y: &[f32],
+        weights: &[f32],
+        x_center: f32,
+    ) -> (f32, f32, f32, f32, f32) {
+        accumulate_wls_simd_f32(x, y, weights, x_center)
     }
 }
 
@@ -425,28 +461,35 @@ impl<T: Float> LinearFit<T> {
 
 impl<T: Float + WLSSolver> LinearFit<T> {
     // Fit Weighted Least Squares (WLS) regression using SIMD-optimized accumulation.
-    pub fn fit_wls(x: &[T], y: &[T], weights: &[T], window_radius: T) -> Self {
+    pub fn fit_wls(x: &[T], y: &[T], weights: &[T], x_current: T, window_radius: T) -> Self {
         let n = x.len();
         if n == 0 {
             return Self::zero();
         }
 
-        // SIMD-optimized single-pass accumulation
-        let (sum_w, sum_wx, sum_wy, sum_wxx, sum_wxy) = T::accumulate_wls(x, y, weights);
+        // SIMD-optimized single-pass accumulation with centering
+        let (sum_w, sum_wx, sum_wy, sum_wxx, sum_wxy) = T::accumulate_wls(x, y, weights, x_current);
 
         // Numerical stability tolerance
         let abs_tol = T::from(1e-7).unwrap_or_else(T::epsilon);
         let rel_tol = T::epsilon() * window_radius * window_radius;
         let tol = abs_tol.max(rel_tol);
 
-        // Solve for slope and intercept
+        // Solve for slope and centered intercept
         match T::solve_wls(sum_w, sum_wx, sum_wy, sum_wxx, sum_wxy, tol) {
-            Some((slope, intercept, x_mean, y_mean)) => Self {
-                slope,
-                intercept,
-                x_mean,
-                y_mean,
-            },
+            Some((slope, intercept_at_center, x_mean, y_mean)) => {
+                // Convert centered intercept to original intercept at x=0
+                // y = int_c + slope * (x - x_curr)
+                // y = (int_c - slope * x_curr) + slope * x
+                let intercept_at_zero = intercept_at_center - slope * x_current;
+
+                Self {
+                    slope,
+                    intercept: intercept_at_zero,
+                    x_mean: x_mean + x_current, // Adjust mean back to original coordinates if needed
+                    y_mean,
+                }
+            }
             None => Self::zero(),
         }
     }
@@ -577,7 +620,8 @@ impl<'a, T: Float + WLSSolver> RegressionContext<'a, T> {
         let window_y = &self.y[self.window.left..=rightmost_idx];
         let window_weights = &self.weights[self.window.left..=rightmost_idx];
 
-        let model = LinearFit::fit_wls(window_x, window_y, window_weights, window_radius);
+        let model =
+            LinearFit::fit_wls(window_x, window_y, window_weights, x_current, window_radius);
         Some(model.predict(x_current))
     }
 }

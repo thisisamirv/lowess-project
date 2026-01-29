@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added `Mean` scaling method (Mean Absolute Deviation)
 - Added hooks for custom fitting backends
+- Added hooks for delegating boundary handling to the executor
 
 **fastLowess:**
 
@@ -54,6 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `FitPassFn` now returns `Result` to allow error propagation from custom fitting backends (e.g. GPU).
 - Adapters (Batch, Streaming, Online) now propagate errors from the executor instead of assuming success.
 - Fixed a bug where the `Extend` boundary policy was never applied.
+- Implemented Coordinate Centering to preserve precision during accumulation.
 
 **fastLowess:**
 

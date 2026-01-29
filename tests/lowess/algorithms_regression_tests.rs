@@ -50,7 +50,7 @@ fn local_wls_helper<T: Float + WLSSolver>(
     let window_y = &y[left..=right];
     let window_weights = &weights[left..=right];
 
-    let model = LinearFit::fit_wls(window_x, window_y, window_weights, window_radius);
+    let model = LinearFit::fit_wls(window_x, window_y, window_weights, x_current, window_radius);
     model.predict(x_current)
 }
 

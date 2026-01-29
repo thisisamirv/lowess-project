@@ -385,6 +385,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
             custom_fit_pass: self.config.custom_fit_pass,
             parallel: self.config.parallel.unwrap_or(false),
             backend: self.config.backend,
+            delegate_boundary_handling: false,
         };
         // Execute LOWESS on combined data
         // Use pre-allocated work_buffer to minimize allocations

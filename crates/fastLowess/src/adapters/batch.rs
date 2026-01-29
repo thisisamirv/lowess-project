@@ -225,6 +225,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> ParallelBatchLowess<T
                 {
                     builder.custom_fit_pass = Some(fit_pass_gpu);
                     builder.custom_cv_pass = Some(cross_validate_gpu);
+                    builder.delegate_boundary_handling = true;
                 }
                 #[cfg(not(feature = "gpu"))]
                 {

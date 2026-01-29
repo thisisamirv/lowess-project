@@ -3,7 +3,10 @@
 use approx::assert_abs_diff_eq;
 use fastLowess::internals::engine::gpu::{GLOBAL_EXECUTOR, GpuConfig, GpuExecutor};
 use fastLowess::prelude::*;
+use lowess::internals::evaluation::cv::KFold;
 use lowess::internals::math::boundary::BoundaryPolicy;
+use lowess::internals::primitives::window::Window;
+use lowess::prelude::Lowess;
 
 #[test]
 fn test_gpu_batch_fit() {
@@ -71,7 +74,137 @@ fn test_gpu_robustness() {
         println!("GPU robustness test skipped or failed (likely no hardware)");
     }
 }
+#[test]
+fn test_gpu_cv_reduction() {
+    let n = 200;
+    // Generate sine wave logic
+    let x: Vec<f32> = (0..n).map(|i| i as f32 * 0.1).collect();
+    let y: Vec<f32> = x
+        .iter()
+        .map(|&xi| xi.sin() + 0.1 * (xi * 3.0).cos())
+        .collect();
 
+    // GPU Build
+    let model = Lowess::new()
+        .adapter(Batch)
+        .backend(GPU)
+        .cv_config(KFold(5, &[0.1, 0.2, 0.5]))
+        .delta(0.0) // Force exact fit
+        .build()
+        .unwrap();
+
+    let res = model.fit(&x, &y).unwrap();
+
+    if !res.y.is_empty() {
+        println!("GPU CV best fraction: {}", res.fraction_used);
+
+        // CPU Build to compare
+        let cpu_model = Lowess::new()
+            .adapter(Batch)
+            .backend(CPU)
+            .cv_config(KFold(5, &[0.1, 0.2, 0.5]))
+            .build()
+            .unwrap();
+        let cpu_res = cpu_model.fit(&x, &y).unwrap();
+
+        println!("CPU CV best fraction: {}", cpu_res.fraction_used);
+
+        assert_eq!(
+            res.fraction_used, cpu_res.fraction_used,
+            "GPU CV fraction selection mismatch"
+        );
+        // Verify a point match roughly to ensure model fits similarly
+        assert_abs_diff_eq!(res.y[100], cpu_res.y[100], epsilon = 0.05);
+    } else {
+        println!("GPU CV test skipped (no hardware)");
+    }
+}
+
+#[test]
+fn test_gpu_padding_values() {
+    let n = 10;
+    let x: Vec<f32> = (0..n).map(|i| i as f32).collect();
+    let y: Vec<f32> = (0..n).map(|i| i as f32 * 2.0).collect();
+    let window_size = 6;
+    let pad_len = 3;
+
+    // Use GPU Executor directly to check buffers
+    pollster::block_on(async {
+        let mut guard = GLOBAL_EXECUTOR.lock().unwrap();
+        if guard.is_none() {
+            *guard = Some(GpuExecutor::new().await.unwrap());
+        }
+        let exec = guard.as_mut().unwrap();
+
+        let gpu_config = GpuConfig {
+            n_test: 0,
+            n: (n + 2 * pad_len) as u32,
+            window_size: window_size as u32,
+            weight_function: 0,
+            zero_weight_fallback: 0,
+            fraction: 0.5,
+            delta: 0.1,
+            median_threshold: 0.0,
+            median_center: 0.0,
+            is_absolute: 0,
+            boundary_policy: 0, // Extend
+            pad_len: pad_len as u32,
+            orig_n: n as u32,
+            max_iterations: 0,
+            tolerance: 0.0,
+            z_score: 0.0,
+            has_conf: 0,
+            has_pred: 0,
+            residual_sd: 0.0,
+            _pad: 0,
+        };
+
+        exec.reset_buffers(&x, &y, gpu_config, 0, 0);
+
+        // Sort (should be no-op here)
+        {
+            let mut encoder = exec.device.create_command_encoder(&Default::default());
+            exec.record_sort_input(&mut encoder);
+            exec.queue.submit(Some(encoder.finish()));
+        }
+
+        // Pad
+        {
+            let mut encoder = exec.device.create_command_encoder(&Default::default());
+            exec.record_pad_data(&mut encoder);
+            exec.queue.submit(Some(encoder.finish()));
+        }
+
+        let x_padded = exec
+            .download_buffer(exec.x_buffer.as_ref().unwrap(), None, None)
+            .await
+            .unwrap();
+        let y_padded = exec
+            .download_buffer(exec.y_buffer.as_ref().unwrap(), None, None)
+            .await
+            .unwrap();
+
+        println!("GPU X Padded: {:?}", x_padded);
+        println!("GPU Y Padded: {:?}", y_padded);
+
+        // Expected X (Extend): [-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]
+        // Wait, n=10. pad=3. total=16.
+        // x_orig = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] (len 10)
+        // Prefix: x0=0, dx=1. Pushes -3, -2, -1.
+        // Suffix: x9=9, dx=1. Pushes 10, 11, 12.
+        assert_abs_diff_eq!(x_padded[0], -3.0);
+        assert_abs_diff_eq!(x_padded[2], -1.0);
+        assert_abs_diff_eq!(x_padded[3], 0.0);
+        assert_abs_diff_eq!(x_padded[12], 9.0);
+        assert_abs_diff_eq!(x_padded[15], 12.0);
+
+        // Expected Y (Extend): [0, 0, 0, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 18, 18, 18]
+        // Wait, y_orig = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18]
+        // y0=0. y9=18.
+        assert_abs_diff_eq!(y_padded[0], 0.0);
+        assert_abs_diff_eq!(y_padded[15], 18.0);
+    });
+}
 #[test]
 fn test_cpu_gpu_kernel_equivalence() {
     let n = 100;
@@ -139,6 +272,197 @@ fn test_cpu_gpu_kernel_equivalence() {
             println!("Kernel {} passed CPU/GPU equivalence", name);
         } else {
             println!("Skipping Kernel {} (GPU not available)", name);
+        }
+    }
+}
+
+#[test]
+fn test_cpu_gpu_padding_equivalence() {
+    use lowess::internals::math::boundary::apply_boundary_policy;
+    use pollster::block_on;
+
+    let n = 20;
+    let window_size = 6;
+    let x: Vec<f32> = (0..n).map(|i| i as f32 * 0.1).collect();
+    let y: Vec<f32> = x.iter().map(|&xi| xi.sin()).collect();
+
+    let policies = vec![
+        (BoundaryPolicy::Extend, "Extend"),
+        (BoundaryPolicy::Reflect, "Reflect"),
+        (BoundaryPolicy::Zero, "Zero"),
+    ];
+
+    for (policy, name) in policies {
+        println!("Testing Padding Policy: {}", name);
+
+        // CPU Padding
+        let (cpu_px, cpu_py) = apply_boundary_policy(&x, &y, window_size, policy);
+
+        // GPU Padding
+        let mut exec_lock = GLOBAL_EXECUTOR.lock().unwrap();
+        if exec_lock.is_none() {
+            *exec_lock = Some(block_on(GpuExecutor::new()).unwrap());
+        }
+        let exec = exec_lock.as_mut().unwrap();
+
+        let pad_len = window_size / 2;
+        let total_n_padded = n + 2 * pad_len;
+
+        let gpu_config = GpuConfig {
+            n: total_n_padded as u32,
+            window_size: window_size as u32,
+            weight_function: 0,
+            zero_weight_fallback: 0,
+            fraction: 0.0,
+            delta: 0.0,
+            median_threshold: 0.0,
+            median_center: 0.0,
+            is_absolute: 0,
+            boundary_policy: match policy {
+                BoundaryPolicy::Extend => 0,
+                BoundaryPolicy::Reflect => 1,
+                BoundaryPolicy::Zero => 2,
+                BoundaryPolicy::NoBoundary => 3,
+            },
+            pad_len: pad_len as u32,
+            orig_n: n as u32,
+            max_iterations: 0,
+            tolerance: 0.0,
+            z_score: 0.0,
+            has_conf: 0,
+            has_pred: 0,
+            residual_sd: 0.0,
+            n_test: 0,
+            _pad: 0,
+        };
+
+        exec.reset_buffers(&x, &y, gpu_config, 0, 0);
+
+        // Run padding kernel
+        let mut encoder = exec.device.create_command_encoder(&Default::default());
+        exec.record_pad_data(&mut encoder);
+        exec.queue.submit(Some(encoder.finish()));
+
+        // Download results
+        let gpu_px =
+            block_on(exec.download_buffer(exec.x_buffer.as_ref().unwrap(), None, None)).unwrap();
+        let gpu_py =
+            block_on(exec.download_buffer(exec.y_buffer.as_ref().unwrap(), None, None)).unwrap();
+
+        assert_eq!(
+            cpu_px.len(),
+            gpu_px.len(),
+            "Policy {}: Length mismatch in X",
+            name
+        );
+        assert_eq!(
+            cpu_py.len(),
+            gpu_py.len(),
+            "Policy {}: Length mismatch in Y",
+            name
+        );
+
+        for i in 0..cpu_px.len() {
+            assert_abs_diff_eq!(cpu_px[i], gpu_px[i], epsilon = 1e-6);
+            assert_abs_diff_eq!(cpu_py[i], gpu_py[i], epsilon = 1e-6);
+        }
+
+        println!("Policy {} padding passed CPU/GPU equivalence", name);
+    }
+}
+
+#[test]
+fn test_cpu_gpu_boundary_equivalence() {
+    let n = 200;
+    let x: Vec<f32> = (0..n).map(|i| i as f32 * 0.1).collect();
+    let y: Vec<f32> = x.iter().map(|&xi| xi.sin()).collect();
+
+    let kernels = vec![
+        (Tricube, "Tricube"),
+        (Epanechnikov, "Epanechnikov"),
+        (Gaussian, "Gaussian"),
+    ];
+
+    let policies = vec![
+        (BoundaryPolicy::Extend, "Extend"),
+        (BoundaryPolicy::Reflect, "Reflect"),
+        (BoundaryPolicy::Zero, "Zero"),
+    ];
+
+    for (kernel, k_name) in kernels {
+        for (policy, p_name) in policies.clone() {
+            println!("Testing Kernel: {}, Policy: {}", k_name, p_name);
+
+            // CPU Fit
+            let cpu_res = Lowess::new()
+                .fraction(0.1)
+                .iterations(0)
+                .delta(0.0)
+                .weight_function(kernel)
+                .adapter(Batch)
+                .backend(CPU)
+                .boundary_policy(policy)
+                .build()
+                .unwrap()
+                .fit(&x, &y)
+                .unwrap();
+
+            let ws = Window::calculate_span(n, 0.1f32);
+            let pl = (ws / 2).min(n - 1);
+            println!("  window_size: {}, pad_len: {}", ws, pl);
+
+            // GPU Fit
+            let gpu_res = Lowess::new()
+                .fraction(0.1)
+                .iterations(0)
+                .delta(0.0)
+                .weight_function(kernel)
+                .adapter(Batch)
+                .backend(GPU)
+                .boundary_policy(policy)
+                .build()
+                .unwrap()
+                .fit(&x, &y)
+                .unwrap();
+
+            if !gpu_res.y.is_empty() {
+                assert_eq!(cpu_res.y.len(), gpu_res.y.len());
+
+                let mut max_diff = 0.0f32;
+                let mut diff_idx = 0;
+                for i in 0..n {
+                    let diff = (cpu_res.y[i] - gpu_res.y[i]).abs();
+                    if diff > max_diff {
+                        max_diff = diff;
+                        diff_idx = i;
+                    }
+                }
+
+                println!(
+                    "  Kernel {}, Policy {}: Max Diff = {} at index {}",
+                    k_name, p_name, max_diff, diff_idx
+                );
+
+                // Detailed debug for the failing index
+                let target_idx = diff_idx;
+                println!("    Detailed debug for index {}:", target_idx);
+                println!(
+                    "    CPU[{}] = {}, GPU[{}] = {}",
+                    target_idx, cpu_res.y[target_idx], target_idx, gpu_res.y[target_idx]
+                );
+
+                let epsilon = 0.05;
+                assert!(
+                    max_diff < epsilon,
+                    "Kernel {}, Policy {}: Max diff {} exceeds epsilon {}",
+                    k_name,
+                    p_name,
+                    max_diff,
+                    epsilon
+                );
+            } else {
+                println!("  Skipping GPU fit (not available)");
+            }
         }
     }
 }
@@ -604,6 +928,8 @@ fn test_gpu_median_diagnostic() {
                 has_conf: 0,
                 has_pred: 0,
                 residual_sd: 0.0,
+                n_test: 0,
+                _pad: 0,
             },
             0,
             0,
@@ -646,6 +972,8 @@ fn test_gpu_median_diagnostic() {
                 has_conf: 0,
                 has_pred: 0,
                 residual_sd: 0.0,
+                n_test: 0,
+                _pad: 0,
             },
             0,
             0,
@@ -704,6 +1032,8 @@ fn test_gpu_median_large() {
                     has_conf: 0,
                     has_pred: 0,
                     residual_sd: 0.0,
+                    n_test: 0,
+                    _pad: 0,
                 },
                 0,
                 0,

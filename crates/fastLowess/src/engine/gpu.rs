@@ -9,6 +9,7 @@ use bytemuck::{Pod, Zeroable, bytes_of, cast_slice};
 use futures_intrusive::channel::shared::oneshot_channel;
 use num_traits::Float;
 use pollster::block_on;
+use std::cmp::Ordering::Equal;
 use std::fmt::Debug;
 use std::mem::size_of;
 use std::sync::Mutex;
@@ -30,7 +31,7 @@ use lowess::internals::evaluation::intervals::IntervalMethod;
 use lowess::internals::math::boundary::BoundaryPolicy;
 use lowess::internals::math::kernel::WeightFunction;
 use lowess::internals::math::scaling::ScalingMethod;
-use std::cmp::Ordering::Equal;
+use lowess::internals::primitives::sorting::sort_by_x;
 
 // Shader Source (WGSL)
 const SHADER_SOURCE: &str = r#"
@@ -53,6 +54,8 @@ struct Config {
     has_conf: u32,
     has_pred: u32,
     residual_sd: f32,
+    n_test: u32,
+    _pad: u32,
 }
 
 const BOUNDARY_EXTEND: u32 = 0u;
@@ -243,20 +246,21 @@ fn score_cv_points(@builtin(global_invocation_id) global_id: vec3<u32>) {
     
     // x and y_smooth are the TRAINING data (sorted)
     let n_train = config.n;
-    
     var pred = 0.0;
+    let start_idx = config.pad_len;
+    let end_idx = config.pad_len + config.orig_n;
     
-    // Bounds check / Extrapolation
-    if (n_train == 0u) {
+    // Bounds check / Extrapolation (using original unpadded range)
+    if (config.orig_n == 0u) {
         pred = 0.0;
-    } else if (xt <= x[0]) {
-        pred = y_smooth[0];
-    } else if (xt >= x[n_train - 1u]) {
-        pred = y_smooth[n_train - 1u];
+    } else if (n_train > 0u && xt <= x[start_idx]) {
+        pred = y_smooth[start_idx];
+    } else if (n_train > 0u && xt >= x[end_idx - 1u]) {
+        pred = y_smooth[end_idx - 1u];
     } else {
-        // Binary search for bracket [L, R]
-        var left = 0u;
-        var right = n_train - 1u;
+        // Binary search for bracket [L, R] within original range
+        var left = start_idx;
+        var right = end_idx - 1u;
         
         // Loop limit for safety
         for (var k = 0u; k < 64u; k++) {
@@ -285,6 +289,40 @@ fn score_cv_points(@builtin(global_invocation_id) global_id: vec3<u32>) {
     
     let err = yt - pred;
     test_errors[j] = err * err;
+}
+
+// -----------------------------------------------------------------------------
+// Kernel: Sum SSE Reduction
+// Reduces test_errors to partial sums in reduction buffer
+// -----------------------------------------------------------------------------
+var<workgroup> s_reduce: array<f32, 256>;
+
+@compute @workgroup_size(256)
+fn sum_sse_reduction(@builtin(global_invocation_id) global_id: vec3<u32>, @builtin(local_invocation_id) local_id: vec3<u32>, @builtin(workgroup_id) group_id: vec3<u32>) {
+    let tid = local_id.x;
+    let idx = global_id.x;
+    let n_test = config.n_test;
+
+    // load
+    if (idx < n_test) {
+        s_reduce[tid] = test_errors[idx];
+    } else {
+        s_reduce[tid] = 0.0;
+    }
+    workgroupBarrier();
+
+    // reduce
+    for (var s = 128u; s > 0u; s >>= 1u) {
+        if (tid < s) {
+            s_reduce[tid] += s_reduce[tid + s];
+        }
+        workgroupBarrier();
+    }
+
+    // store partial sum
+    if (tid == 0u) {
+        reduction[group_id.x] = s_reduce[0];
+    }
 }
 
 // -----------------------------------------------------------------------------
@@ -413,7 +451,8 @@ fn fit_anchors(
             let yj = y[k];
             let rw = robustness_weights[k];
             
-            let dist = abs(xj - x_i);
+            let rel_x = xj - x_i;
+            let dist = abs(rel_x);
             sum_y_window += yj;
             
             if (dist <= h9) {
@@ -432,17 +471,11 @@ fn fit_anchors(
                             kernel_w = v * v * v; 
                             break; 
                         }
-                        case KERNEL_UNIFORM: { kernel_w = 1.0; break; }
-                        default: { 
-                            let v = 1.0 - u * u2; 
-                            kernel_w = v * v * v; 
-                            break; 
-                        }
+                        default: { kernel_w = 1.0; break; }
                     }
                 }
                 
                 let combined_w = rw * kernel_w;
-                let rel_x = xj - x_i;
                 sum_w += combined_w;
                 sum_wx += combined_w * rel_x;
                 sum_wxx += combined_w * rel_x * rel_x;
@@ -462,24 +495,29 @@ fn fit_anchors(
                 }
             }
         } else {
-            // Corrected sum of squares formula for better stability (matches CPU)
+            let x_mean = sum_wx / sum_w;
+            let y_mean = sum_wy / sum_w;
             let variance = sum_wxx - (sum_wx * sum_wx) / sum_w;
             
-            let abs_tol = 1e-5;
-            let rel_tol = 1e-5 * d_max_val * d_max_val;
+            let abs_tol: f32 = 1e-7;
+            let rel_tol: f32 = 1.1920929e-7 * d_max_val * d_max_val;
             let tol = max(abs_tol, rel_tol);
 
             if (variance <= tol) {
-                anchor_output[anchor_id] = sum_wy / sum_w; // mean_y
+                anchor_output[anchor_id] = y_mean;
             } else {
                 let covariance = sum_wxy - (sum_wx * sum_wy) / sum_w;
                 let slope = covariance / variance;
-                let intercept = (sum_wy - slope * sum_wx) / sum_w; // mean_y - slope * mean_x
+                let intercept = y_mean - slope * x_mean;
+                // Since we are working in centered coordinates (x - x_i),
+                // the value at x_i corresponds to coordinate 0.
+                // Thus fitted value is just the intercept.
+                let fitted = intercept;
                 
-                if (intercept == intercept && abs(intercept) < 1e15) {
-                    anchor_output[anchor_id] = intercept;
+                if (fitted == fitted && abs(fitted) < 1e15) {
+                    anchor_output[anchor_id] = fitted;
                 } else {
-                    anchor_output[anchor_id] = sum_wy / sum_w;
+                    anchor_output[anchor_id] = y_mean;
                 }
             }
         }
@@ -1281,7 +1319,9 @@ fn radix_prefix_sum() {
 // Scatter elements to sorted positions
 // Reads from reduction[0..n], writes to reduction[524288..]
 // We assume n <= 524288 (half of the 1M element reduction buffer)
-// NOTE: Single-threaded to allow stable sort (sequential scatter)
+// -----------------------------------------------------------------------------
+// Kernel: Radix Scatter
+// -----------------------------------------------------------------------------
 @compute @workgroup_size(1)
 fn radix_scatter(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let n = config.n;
@@ -1429,6 +1469,8 @@ pub struct GpuConfig {
     pub has_conf: u32,
     pub has_pred: u32,
     pub residual_sd: f32,
+    pub n_test: u32,
+    pub _pad: u32,
 }
 
 #[repr(C)]
@@ -1448,7 +1490,7 @@ pub struct WeightConfig {
 }
 
 pub struct GpuExecutor {
-    device: Device,
+    pub device: Device,
     pub queue: Queue,
 
     // Pipelines
@@ -1489,12 +1531,13 @@ pub struct GpuExecutor {
     mark_anchor_candidates_pipeline: ComputePipeline,
     finalize_sum_pipeline: ComputePipeline,
     score_cv_points_pipeline: ComputePipeline,
+    sum_sse_reduction_pipeline: ComputePipeline,
     interval_bounds_pipeline: ComputePipeline,
 
     // Buffers - Group 0
-    config_buffer: Option<Buffer>,
-    x_buffer: Option<Buffer>,
-    y_buffer: Option<Buffer>,
+    pub config_buffer: Option<Buffer>,
+    pub x_buffer: Option<Buffer>,
+    pub y_buffer: Option<Buffer>,
     anchor_indices_buffer: Option<Buffer>,
     anchor_output_buffer: Option<Buffer>,
     indirect_buffer: Option<Buffer>,
@@ -1866,6 +1909,7 @@ impl GpuExecutor {
             finalize_scale_pipeline: create_pipeline("finalize_scale"),
             finalize_sum_pipeline: create_pipeline("finalize_sum"),
             score_cv_points_pipeline: create_pipeline("score_cv_points"),
+            sum_sse_reduction_pipeline: create_pipeline("sum_sse_reduction"),
             interval_bounds_pipeline: create_pipeline("compute_interval_bounds"),
             init_weights_pipeline: create_pipeline("init_weights"),
             compute_intervals_pipeline: create_pipeline("compute_intervals"),
@@ -1996,6 +2040,10 @@ impl GpuExecutor {
             cast_slice(&[config]),
         );
 
+        // Check for padding offset
+        let pad_len = config.pad_len as u64;
+        let offset = pad_len * 4;
+
         // Group 0: X, Y, Anchors, AnchorOutput
         if Self::ensure_buffer_capacity(
             &self.device,
@@ -2006,11 +2054,8 @@ impl GpuExecutor {
         ) {
             bg_needs_update = true;
         }
-        self.queue.write_buffer(
-            self.x_buffer.as_ref().unwrap(),
-            (config.pad_len as usize * 4) as u64,
-            cast_slice(x),
-        );
+        self.queue
+            .write_buffer(self.x_buffer.as_ref().unwrap(), offset, cast_slice(x));
 
         if Self::ensure_buffer_capacity(
             &self.device,
@@ -2034,11 +2079,8 @@ impl GpuExecutor {
         ) {
             bg_needs_update = true;
         }
-        self.queue.write_buffer(
-            self.y_buffer.as_ref().unwrap(),
-            (config.pad_len as usize * 4) as u64,
-            cast_slice(y),
-        );
+        self.queue
+            .write_buffer(self.y_buffer.as_ref().unwrap(), offset, cast_slice(y));
 
         if Self::ensure_buffer_capacity(
             &self.device,
@@ -2529,6 +2571,7 @@ impl GpuExecutor {
                 pass.set_bind_group(0, self.bg0_data.as_ref().unwrap(), &[]);
                 pass.set_bind_group(1, self.bg1_topo.as_ref().unwrap(), &[]);
                 pass.set_bind_group(2, self.bg2_state.as_ref().unwrap(), &[]);
+                pass.set_bind_group(2, self.bg2_state.as_ref().unwrap(), &[]);
                 pass.set_bind_group(3, self.bg3_aux.as_ref().unwrap(), &[]);
                 pass.dispatch_workgroups(config.pad_len.div_ceil(64), 1, 1);
             }
@@ -2630,6 +2673,20 @@ impl GpuExecutor {
         pass.dispatch_workgroups(n_test.div_ceil(64), 1, 1);
     }
 
+    pub fn record_sum_sse_reduction(&self, encoder: &mut CommandEncoder, n_test: u32) {
+        let mut pass = encoder.begin_compute_pass(&ComputePassDescriptor {
+            label: Some("Sum SSE Reduction"),
+            timestamp_writes: None,
+        });
+        pass.set_pipeline(&self.sum_sse_reduction_pipeline);
+        pass.set_bind_group(0, self.bg0_data.as_ref().unwrap(), &[]);
+        pass.set_bind_group(1, self.bg1_topo.as_ref().unwrap(), &[]);
+        pass.set_bind_group(2, self.bg2_state.as_ref().unwrap(), &[]);
+        pass.set_bind_group(3, self.bg3_aux.as_ref().unwrap(), &[]);
+
+        pass.dispatch_workgroups(n_test.div_ceil(256), 1, 1);
+    }
+
     pub fn record_pipeline(
         &self,
         encoder: &mut CommandEncoder,
@@ -2640,6 +2697,7 @@ impl GpuExecutor {
         pass.set_pipeline(pipeline);
         pass.set_bind_group(0, self.bg0_data.as_ref().unwrap(), &[]);
         pass.set_bind_group(1, self.bg1_topo.as_ref().unwrap(), &[]);
+        pass.set_bind_group(2, self.bg2_state.as_ref().unwrap(), &[]);
         pass.set_bind_group(2, self.bg2_state.as_ref().unwrap(), &[]);
         pass.set_bind_group(3, self.bg3_aux.as_ref().unwrap(), &[]);
         match dispatch {
@@ -2661,6 +2719,7 @@ impl GpuExecutor {
         pass.set_pipeline(pipeline);
         pass.set_bind_group(0, self.bg0_data.as_ref().unwrap(), &[]);
         pass.set_bind_group(1, self.bg1_topo.as_ref().unwrap(), &[]);
+        pass.set_bind_group(2, self.bg2_state.as_ref().unwrap(), &[]);
         pass.set_bind_group(2, self.bg2_state.as_ref().unwrap(), &[]);
         pass.set_bind_group(3, bg3, &[]);
         match dispatch {
@@ -2701,6 +2760,14 @@ impl GpuExecutor {
             encoder,
             &self.finalize_scale_pipeline,
             DispatchMode::Direct(1),
+        );
+    }
+
+    pub fn record_pad_data(&self, encoder: &mut CommandEncoder) {
+        self.record_pipeline(
+            encoder,
+            &self.pad_pipeline,
+            DispatchMode::Direct(self.n.div_ceil(256)),
         );
     }
 
@@ -2912,7 +2979,7 @@ impl GpuExecutor {
 
     /// Record commands to sort the input (x, y) based on x values.
     /// This uses a 4-pass radix sort and utilizes y_smooth/residuals as temporary buffers.
-    fn record_sort_input(&self, encoder: &mut CommandEncoder) {
+    pub fn record_sort_input(&self, encoder: &mut CommandEncoder) {
         // Reset radix pass to 0
         self.record_pipeline(
             encoder,
@@ -3263,15 +3330,26 @@ where
             )));
         }
 
-        let delta = config.delta.to_f32().unwrap();
+        let total_n = orig_n; // Initial total_n before padding
         let window_size =
             (config.fraction.unwrap().to_f32().unwrap() * orig_n as f32).max(1.0) as usize;
+        // Ensure window_size is at least 2 for meaningful calculations, and not larger than total_n
+        let window_size = window_size.max(2usize).min(total_n);
+
+        // Calculate padding (GPU-side padding)
         let pad_len = if config.boundary_policy == BoundaryPolicy::NoBoundary {
             0
         } else {
             (window_size / 2).min(orig_n - 1)
         };
-        let total_n = orig_n + 2 * pad_len;
+        let total_n_padded = total_n + 2 * pad_len;
+
+        // Convert original data to f32 (padding happens on GPU)
+        let x_f32: Vec<f32> = x.iter().map(|v| v.to_f32().unwrap()).collect();
+        let y_f32: Vec<f32> = y.iter().map(|v| v.to_f32().unwrap()).collect();
+
+        // Calculate anchors based on PADDED range
+        let delta = config.delta.to_f32().unwrap();
 
         let weight_fn_id = match config.weight_function {
             WeightFunction::Cosine => 0,
@@ -3282,9 +3360,7 @@ where
             WeightFunction::Tricube => 5,
             WeightFunction::Uniform => 6,
         };
-
         let fallback_id = config.zero_weight_fallback as u32;
-
         let boundary_id = match config.boundary_policy {
             BoundaryPolicy::Extend => 0,
             BoundaryPolicy::Reflect => 1,
@@ -3293,7 +3369,8 @@ where
         };
 
         let mut gpu_config = GpuConfig {
-            n: total_n as u32,
+            n_test: 0,
+            n: total_n_padded as u32,
             window_size: window_size as u32,
             weight_function: weight_fn_id,
             zero_weight_fallback: fallback_id,
@@ -3314,6 +3391,7 @@ where
             has_conf: 0,
             has_pred: 0,
             residual_sd: 0.0,
+            _pad: 0,
         };
 
         let robustness_id = match config.robustness_method {
@@ -3321,23 +3399,19 @@ where
             RobustnessMethod::Huber => ROBUSTNESS_HUBER,
             RobustnessMethod::Talwar => ROBUSTNESS_TALWAR,
         };
-
         let scaling_id = match config.scaling_method {
             ScalingMethod::MAD => SCALING_MAD,
             ScalingMethod::MAR => SCALING_MAR,
             ScalingMethod::Mean => SCALING_MEAN,
         };
 
-        // Prepare raw data
-        let x_f32: Vec<f32> = x.iter().map(|v| v.to_f32().unwrap()).collect();
-        let y_f32: Vec<f32> = y.iter().map(|v| v.to_f32().unwrap()).collect();
-
         exec.reset_buffers(&x_f32, &y_f32, gpu_config, robustness_id, scaling_id);
 
-        // Sort input data (x, y) on GPU
+        // 1. Run sorting and padding
         {
             let mut encoder = exec.device.create_command_encoder(&Default::default());
             exec.record_sort_input(&mut encoder);
+            exec.record_pad_data(&mut encoder);
             exec.queue.submit(Some(encoder.finish()));
         }
 
@@ -3455,19 +3529,6 @@ where
 
         exec.queue.submit(Some(encoder.finish()));
 
-        let w_config_res = block_on(exec.download_buffer(
-            exec.w_config_buffer.as_ref().unwrap(),
-            Some(size_of::<WeightConfig>() as u64),
-            None,
-        ))
-        .unwrap();
-        // WeightConfig fields (f32/u32 mixed)
-        // 0: n, 1: scale, 2: robustness_method, 3: scaling_method, 4: median_center, 5: mean_abs
-        println!(
-            "Debug: GPU WeightConfig results: n={}, scale={}, mean_abs={}, center={}",
-            w_config_res[0], w_config_res[1], w_config_res[5], w_config_res[4]
-        );
-
         let trim_offset = (pad_len as u64) * 4;
         let trim_size = (orig_n as u64) * 4;
 
@@ -3571,20 +3632,20 @@ where
         let window_size = (fraction_f32 * total_n as f32).ceil() as usize;
         let window_size = window_size.max(2usize).min(total_n);
 
-        // Boundary policy handling (Simplified: Skipped for V1 optimization to avoid private dependency)
-        // If exact equivalence with Extend policy is needed, we must reimplement apply_boundary_policy locally.
-        // For now, we assume standard usage (NoBoundary or caller handled).
-        // use lowess::math::boundary::apply_boundary_policy;
-        let (x_in, y_in, pad_len) = (x_train.to_vec(), y_train.to_vec(), 0usize);
-        let total_n_padded = x_in.len();
-
-        // Calculate anchors
-        let delta = if config.delta > T::zero() {
-            config.delta.to_f32().unwrap()
+        // Calculate padding (GPU-side padding)
+        let pad_len = if config.boundary_policy == BoundaryPolicy::NoBoundary {
+            0
         } else {
-            let range = x_in[x_in.len() - 1] - x_in[0];
-            range.to_f32().unwrap() * 0.01
+            (window_size / 2).min(orig_n - 1)
         };
+        let total_n_padded = total_n + 2 * pad_len;
+
+        // Convert original data to f32 (padding happens on GPU)
+        let x_f32: Vec<f32> = x_train.iter().map(|v| v.to_f32().unwrap()).collect();
+        let y_f32: Vec<f32> = y_train.iter().map(|v| v.to_f32().unwrap()).collect();
+
+        // Calculate anchors based on ORIGINAL range (to match CPU)
+        let delta = config.delta.to_f32().unwrap();
 
         let weight_fn_id = match config.weight_function {
             WeightFunction::Cosine => 0,
@@ -3604,6 +3665,7 @@ where
         };
 
         let gpu_config = GpuConfig {
+            n_test: x_test.len() as u32,
             n: total_n_padded as u32,
             window_size: window_size as u32,
             weight_function: weight_fn_id,
@@ -3625,6 +3687,7 @@ where
             has_conf: 0,
             has_pred: 0,
             residual_sd: 0.0,
+            _pad: 0,
         };
 
         let robustness_id = match config.robustness_method {
@@ -3638,15 +3701,12 @@ where
             ScalingMethod::Mean => SCALING_MEAN,
         };
 
-        let x_f32: Vec<f32> = x_in.iter().map(|v| v.to_f32().unwrap()).collect();
-        let y_f32: Vec<f32> = y_in.iter().map(|v| v.to_f32().unwrap()).collect();
-
         exec.reset_buffers(&x_f32, &y_f32, gpu_config, robustness_id, scaling_id);
 
-        // Sort input data (x, y) on GPU
+        // 1. Run padding kernel
         {
             let mut encoder = exec.device.create_command_encoder(&Default::default());
-            exec.record_sort_input(&mut encoder);
+            exec.record_pad_data(&mut encoder);
             exec.queue.submit(Some(encoder.finish()));
         }
 
@@ -3752,18 +3812,24 @@ where
         {
             let mut encoder = exec.device.create_command_encoder(&Default::default());
             exec.record_score_cv(&mut encoder, xt_f32.len() as u32);
+            exec.record_sum_sse_reduction(&mut encoder, xt_f32.len() as u32);
             exec.queue.submit(Some(encoder.finish()));
         }
 
-        let err_res = block_on(exec.download_buffer(
-            exec.test_errors_buffer.as_ref().unwrap(),
-            Some((xt_f32.len() * 4) as u64),
+        // Download partial sums from reduction buffer
+        // number of workgroups = ceil(n_test / 256)
+        let num_workgroups = (xt_f32.len() as u32).div_ceil(256);
+        let partial_sums_bytes = (num_workgroups * 4) as u64;
+
+        let reduction_res = block_on(exec.download_buffer(
+            exec.reduction_buffer.as_ref().unwrap(),
+            Some(partial_sums_bytes),
             None,
         ))
         .unwrap();
 
         // Sum errors (Test errors are squared errors from GPU)
-        let total_sq_error: f32 = err_res.iter().sum();
+        let total_sq_error: f32 = reduction_res.iter().sum();
 
         total_sq_error
     }
@@ -3836,8 +3902,6 @@ where
                         let mut x_test = Vec::with_capacity(current_fold_size);
                         let mut y_test = Vec::with_capacity(current_fold_size);
 
-                        // We need to pick indices.
-                        // This is inefficient on CPU but cleaner than implementing GPU shuffling for now.
                         for (idx_pos, &idx) in indices.iter().enumerate() {
                             if idx_pos >= test_start && idx_pos < test_end {
                                 x_test.push(x[idx]);
@@ -3847,9 +3911,14 @@ where
                                 y_train.push(y[idx]);
                             }
                         }
-
-                        let sse =
-                            fit_and_score_gpu(&x_train, &y_train, &x_test, &y_test, &run_config);
+                        let sorted_train = sort_by_x(&x_train, &y_train);
+                        let sse = fit_and_score_gpu(
+                            &sorted_train.x,
+                            &sorted_train.y,
+                            &x_test,
+                            &y_test,
+                            &run_config,
+                        );
 
                         // MSE = SSE / N_test
                         if current_fold_size > 0 {
@@ -3866,23 +3935,7 @@ where
                     }
                 }
                 CVKind::LOOCV => {
-                    // LOOCV - N folds
-                    // For performance, LOOCV on GPU without PRESS kernel is inefficient (N fits).
-                    // But Plan says "robust driver approach".
-                    // However, we used "Robust Driver" meaning we loop.
-                    // fit_and_score_gpu is faster than full fit but still...
-                    // fit_and_score_gpu uploads data N times.
-                    // This is slow for LOOCV.
-                    // But it's what was requested ("Move processing to GPU via predictive scoring").
-                    // Actually, for LOOCV, we might want to just run the existing impl if it's faster?
-                    // But CPU LOOCV matches N fits.
-                    // So GPU LOOCV is N * GPU_Fits.
-                    // This is acceptable as "GPU Moved".
-
                     let mut sse_sum = 0.0f32;
-                    // We can't reuse shuffled indices here comfortably?
-                    // LOOCV is deterministic.
-
                     for i in 0..n {
                         let mut x_train = Vec::with_capacity(n - 1);
                         let mut y_train = Vec::with_capacity(n - 1);
@@ -3897,9 +3950,15 @@ where
                         let x_test = vec![x[i]];
                         let y_test = vec![y[i]];
 
-                        let sse =
-                            fit_and_score_gpu(&x_train, &y_train, &x_test, &y_test, &run_config);
-                        sse_sum += sse; // SSE for 1 point is just SE.
+                        let sorted_train = sort_by_x(&x_train, &y_train);
+                        let sse = fit_and_score_gpu(
+                            &sorted_train.x,
+                            &sorted_train.y,
+                            &x_test,
+                            &y_test,
+                            &run_config,
+                        );
+                        sse_sum += sse;
                     }
                     let mse = sse_sum / (n as f32);
                     scores.push(T::from(mse.sqrt()).unwrap());

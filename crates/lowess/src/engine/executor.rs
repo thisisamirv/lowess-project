@@ -197,6 +197,10 @@ pub struct LowessConfig<T> {
     // Whether to use parallel execution
     #[doc(hidden)]
     pub parallel: bool,
+
+    // Whether to delegate boundary handling (padding) to the custom_fit_pass
+    #[doc(hidden)]
+    pub delegate_boundary_handling: bool,
 }
 
 impl<T: Float> Default for LowessConfig<T> {
@@ -221,6 +225,7 @@ impl<T: Float> Default for LowessConfig<T> {
             custom_fit_pass: None,
             parallel: false,
             backend: None,
+            delegate_boundary_handling: false,
         }
     }
 }
@@ -284,6 +289,9 @@ pub struct LowessExecutor<T: Float> {
     // Whether to use parallel execution
     #[doc(hidden)]
     pub parallel: bool,
+
+    #[doc(hidden)]
+    pub delegate_boundary_handling: bool,
 }
 
 impl<T: Float> Default for LowessExecutor<T> {
@@ -312,6 +320,7 @@ impl<T: Float> LowessExecutor<T> {
             custom_fit_pass: None,
             parallel: false,
             backend: None,
+            delegate_boundary_handling: false,
         }
     }
 
@@ -338,6 +347,7 @@ impl<T: Float> LowessExecutor<T> {
             .custom_fit_pass(config.custom_fit_pass)
             .parallel(config.parallel)
             .backend(config.backend)
+            .delegate_boundary_handling(config.delegate_boundary_handling)
     }
 
     // Convert executor settings back to a `LowessConfig`.
@@ -371,6 +381,7 @@ impl<T: Float> LowessExecutor<T> {
             custom_fit_pass: self.custom_fit_pass,
             parallel: self.parallel,
             backend: self.backend,
+            delegate_boundary_handling: self.delegate_boundary_handling,
         }
     }
 
@@ -472,6 +483,12 @@ impl<T: Float> LowessExecutor<T> {
         self
     }
 
+    #[doc(hidden)]
+    pub fn delegate_boundary_handling(mut self, delegate: bool) -> Self {
+        self.delegate_boundary_handling = delegate;
+        self
+    }
+
     // Set a custom iteration batch pass function (e.g., for GPU acceleration).
     #[doc(hidden)]
     pub fn custom_fit_pass(mut self, fit_pass_fn: Option<FitPassFn<T>>) -> Self {
@@ -523,6 +540,7 @@ impl<T: Float> LowessExecutor<T> {
                             .custom_fit_pass(config.custom_fit_pass)
                             .parallel(config.parallel)
                             .backend(config.backend)
+                            .delegate_boundary_handling(config.delegate_boundary_handling)
                             .run(tx, ty, None)
                             .unwrap() // CV must succeed
                             .smoothed
@@ -550,6 +568,7 @@ impl<T: Float> LowessExecutor<T> {
                 .custom_fit_pass(config.custom_fit_pass)
                 .parallel(config.parallel)
                 .backend(config.backend)
+                .delegate_boundary_handling(config.delegate_boundary_handling)
                 .run(x, y, None)?;
             output.cv_scores = Some(scores);
             output.used_fraction = best_frac;
@@ -602,8 +621,10 @@ impl<T: Float> LowessExecutor<T> {
         // Calculate window size
         let window_size = Window::calculate_span(n, eff_fraction);
 
-        // Handle boundary padding
-        let (x_in, y_in, pad_len) = if self.boundary_policy != BoundaryPolicy::NoBoundary {
+        // Handle boundary padding (unless delegated)
+        let (x_in, y_in, pad_len) = if !self.delegate_boundary_handling
+            && self.boundary_policy != BoundaryPolicy::NoBoundary
+        {
             let (px, py) = apply_boundary_policy(x, y, window_size, self.boundary_policy);
             let pad = (px.len() - x.len()) / 2;
             (px, py, pad)
