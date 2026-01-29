@@ -9,6 +9,8 @@ use bytemuck::{Pod, Zeroable, bytes_of, cast_slice};
 use futures_intrusive::channel::shared::oneshot_channel;
 use num_traits::Float;
 use pollster::block_on;
+use std::any::{Any, TypeId};
+use std::borrow::Cow;
 use std::cmp::Ordering::Equal;
 use std::fmt::Debug;
 use std::mem::size_of;
@@ -31,7 +33,6 @@ use lowess::internals::evaluation::intervals::IntervalMethod;
 use lowess::internals::math::boundary::BoundaryPolicy;
 use lowess::internals::math::kernel::WeightFunction;
 use lowess::internals::math::scaling::ScalingMethod;
-use lowess::internals::primitives::sorting::sort_by_x;
 
 // Shader Source (WGSL)
 const SHADER_SOURCE: &str = r#"
@@ -131,6 +132,12 @@ struct WeightConfig {
 @group(3) @binding(5) var<storage, read_write> scan_block_sums: array<u32>;
 @group(3) @binding(6) var<storage, read_write> scan_indices: array<u32>;
 
+// Bindings 4-7 in Group 1: CV Global Data
+@group(1) @binding(4) var<storage, read_write> x_global: array<f32>;
+@group(1) @binding(5) var<storage, read_write> y_global: array<f32>;
+@group(1) @binding(6) var<storage, read_write> shuffled_indices: array<u32>;
+@group(1) @binding(7) var<storage, read_write> cv_test_mask: array<u32>; // 1 for test, 0 for training
+
 // Workgroup shared memory for scan
 var<workgroup> s_scan: array<u32, 256>;
 
@@ -226,8 +233,8 @@ fn prepare_next_pass() {
 }
 
 // Bindings 1-3 in Group 1: Test Data (for CV Scoring)
-@group(1) @binding(1) var<storage, read> x_test: array<f32>;
-@group(1) @binding(2) var<storage, read> y_test: array<f32>;
+@group(1) @binding(1) var<storage, read_write> x_test: array<f32>;
+@group(1) @binding(2) var<storage, read_write> y_test: array<f32>;
 @group(1) @binding(3) var<storage, read_write> test_errors: array<f32>;
 
 // -----------------------------------------------------------------------------
@@ -312,6 +319,40 @@ fn sum_sse_reduction(@builtin(global_invocation_id) global_id: vec3<u32>, @built
     workgroupBarrier();
 
     // reduce
+    for (var s = 128u; s > 0u; s >>= 1u) {
+        if (tid < s) {
+            s_reduce[tid] += s_reduce[tid + s];
+        }
+        workgroupBarrier();
+    }
+
+    // store partial sum
+    if (tid == 0u) {
+        reduction[group_id.x] = s_reduce[0];
+    }
+}
+
+// -----------------------------------------------------------------------------
+// Kernel: Sum Residuals Squared Reduction
+// Reduces residuals to partial sums of squares in reduction buffer
+// -----------------------------------------------------------------------------
+@compute @workgroup_size(256)
+fn sum_residuals_squared_reduction(@builtin(global_invocation_id) global_id: vec3<u32>, @builtin(local_invocation_id) local_id: vec3<u32>, @builtin(workgroup_id) group_id: vec3<u32>) {
+    let tid = local_id.x;
+    let idx = global_id.x;
+    let n = config.orig_n;
+    let pad_len = config.pad_len;
+
+    // load and square
+    if (idx < n) {
+        let r = residuals[idx + pad_len];
+        s_reduce[tid] = r * r;
+    } else {
+        s_reduce[tid] = 0.0;
+    }
+    workgroupBarrier();
+
+    // reduce in shared memory
     for (var s = 128u; s > 0u; s >>= 1u) {
         if (tid < s) {
             s_reduce[tid] += s_reduce[tid + s];
@@ -1436,6 +1477,67 @@ fn sort_x_copy_back(@builtin(global_invocation_id) global_id: vec3<u32>) {
     }
 }
 
+// -----------------------------------------------------------------------------
+// CV Partitioning Kernels
+// -----------------------------------------------------------------------------
+
+@compute @workgroup_size(256)
+fn cv_prepare_mask(@builtin(global_invocation_id) global_id: vec3<u32>) {
+    let i = global_id.x;
+    if (i >= config.orig_n + config.n_test) { return; }
+    cv_test_mask[i] = 0u;
+}
+
+@compute @workgroup_size(256)
+fn cv_mark_test_indices(@builtin(global_invocation_id) global_id: vec3<u32>) {
+    let j = global_id.x;
+    if (j >= config.n_test) { return; }
+    
+    // config.z_score reused as test_start for CV
+    let test_start = bitcast<u32>(config.z_score);
+    let idx = shuffled_indices[test_start + j];
+    cv_test_mask[idx] = 1u;
+}
+
+// Reuses scan_indices as flags for compaction
+@compute @workgroup_size(256)
+fn cv_prepare_compact_flags_train(@builtin(global_invocation_id) global_id: vec3<u32>) {
+    let i = global_id.x;
+    if (i >= config.orig_n + config.n_test) { return; }
+    scan_indices[i] = select(1u, 0u, cv_test_mask[i] == 1u);
+}
+
+@compute @workgroup_size(256)
+fn cv_prepare_compact_flags_test(@builtin(global_invocation_id) global_id: vec3<u32>) {
+    let i = global_id.x;
+    if (i >= config.orig_n + config.n_test) { return; }
+    scan_indices[i] = cv_test_mask[i];
+}
+
+@compute @workgroup_size(256)
+fn cv_compact_training(@builtin(global_invocation_id) global_id: vec3<u32>) {
+    let i = global_id.x;
+    if (i >= config.orig_n + config.n_test) { return; }
+    
+    if (cv_test_mask[i] == 0u) {
+        let write_idx = scan_indices[i] - 1u;
+        x[write_idx + config.pad_len] = x_global[i];
+        y[write_idx + config.pad_len] = y_global[i];
+    }
+}
+
+@compute @workgroup_size(256)
+fn cv_compact_test(@builtin(global_invocation_id) global_id: vec3<u32>) {
+    let i = global_id.x;
+    if (i >= config.orig_n + config.n_test) { return; }
+    
+    if (cv_test_mask[i] == 1u) {
+        let write_idx = scan_indices[i] - 1u;
+        x_test[write_idx] = x_global[i];
+        y_test[write_idx] = y_global[i];
+    }
+}
+
 "#;
 
 const ROBUSTNESS_BISQUARE: u32 = 0;
@@ -1533,6 +1635,15 @@ pub struct GpuExecutor {
     score_cv_points_pipeline: ComputePipeline,
     sum_sse_reduction_pipeline: ComputePipeline,
     interval_bounds_pipeline: ComputePipeline,
+    sum_residuals_squared_pipeline: ComputePipeline,
+
+    // CV Pipelines
+    cv_prepare_mask_pipeline: ComputePipeline,
+    cv_mark_test_indices_pipeline: ComputePipeline,
+    cv_prepare_compact_flags_train_pipeline: ComputePipeline,
+    cv_prepare_compact_flags_test_pipeline: ComputePipeline,
+    cv_compact_training_pipeline: ComputePipeline,
+    cv_compact_test_pipeline: ComputePipeline,
 
     // Buffers - Group 0
     pub config_buffer: Option<Buffer>,
@@ -1569,6 +1680,12 @@ pub struct GpuExecutor {
     x_test_buffer: Option<Buffer>,
     y_test_buffer: Option<Buffer>,
     test_errors_buffer: Option<Buffer>,
+
+    // Buffers - Group 5 (CV Global)
+    x_global_buffer: Option<Buffer>,
+    y_global_buffer: Option<Buffer>,
+    shuffled_indices_buffer: Option<Buffer>,
+    cv_test_mask_buffer: Option<Buffer>,
 
     // Staging
     staging_buffer: Option<Buffer>,
@@ -1687,7 +1804,7 @@ impl GpuExecutor {
                     binding: 1,
                     visibility: ShaderStages::COMPUTE,
                     ty: BindingType::Buffer {
-                        ty: BufferBindingType::Storage { read_only: true },
+                        ty: BufferBindingType::Storage { read_only: false },
                         has_dynamic_offset: false,
                         min_binding_size: None,
                     },
@@ -1697,7 +1814,7 @@ impl GpuExecutor {
                     binding: 2,
                     visibility: ShaderStages::COMPUTE,
                     ty: BindingType::Buffer {
-                        ty: BufferBindingType::Storage { read_only: true },
+                        ty: BufferBindingType::Storage { read_only: false },
                         has_dynamic_offset: false,
                         min_binding_size: None,
                     },
@@ -1705,6 +1822,46 @@ impl GpuExecutor {
                 },
                 BindGroupLayoutEntry {
                     binding: 3,
+                    visibility: ShaderStages::COMPUTE,
+                    ty: BindingType::Buffer {
+                        ty: BufferBindingType::Storage { read_only: false },
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                },
+                BindGroupLayoutEntry {
+                    binding: 4,
+                    visibility: ShaderStages::COMPUTE,
+                    ty: BindingType::Buffer {
+                        ty: BufferBindingType::Storage { read_only: false },
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                },
+                BindGroupLayoutEntry {
+                    binding: 5,
+                    visibility: ShaderStages::COMPUTE,
+                    ty: BindingType::Buffer {
+                        ty: BufferBindingType::Storage { read_only: false },
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                },
+                BindGroupLayoutEntry {
+                    binding: 6,
+                    visibility: ShaderStages::COMPUTE,
+                    ty: BindingType::Buffer {
+                        ty: BufferBindingType::Storage { read_only: false },
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                },
+                BindGroupLayoutEntry {
+                    binding: 7,
                     visibility: ShaderStages::COMPUTE,
                     ty: BindingType::Buffer {
                         ty: BufferBindingType::Storage { read_only: false },
@@ -1910,6 +2067,17 @@ impl GpuExecutor {
             finalize_sum_pipeline: create_pipeline("finalize_sum"),
             score_cv_points_pipeline: create_pipeline("score_cv_points"),
             sum_sse_reduction_pipeline: create_pipeline("sum_sse_reduction"),
+            sum_residuals_squared_pipeline: create_pipeline("sum_residuals_squared_reduction"),
+            cv_prepare_mask_pipeline: create_pipeline("cv_prepare_mask"),
+            cv_mark_test_indices_pipeline: create_pipeline("cv_mark_test_indices"),
+            cv_prepare_compact_flags_train_pipeline: create_pipeline(
+                "cv_prepare_compact_flags_train",
+            ),
+            cv_prepare_compact_flags_test_pipeline: create_pipeline(
+                "cv_prepare_compact_flags_test",
+            ),
+            cv_compact_training_pipeline: create_pipeline("cv_compact_training"),
+            cv_compact_test_pipeline: create_pipeline("cv_compact_test"),
             interval_bounds_pipeline: create_pipeline("compute_interval_bounds"),
             init_weights_pipeline: create_pipeline("init_weights"),
             compute_intervals_pipeline: create_pipeline("compute_intervals"),
@@ -1974,6 +2142,10 @@ impl GpuExecutor {
             x_test_buffer: None,
             y_test_buffer: None,
             test_errors_buffer: None,
+            x_global_buffer: None,
+            y_global_buffer: None,
+            shuffled_indices_buffer: None,
+            cv_test_mask_buffer: None,
             n: 0,
             orig_n: 0,
             num_anchors: 0,
@@ -2185,6 +2357,40 @@ impl GpuExecutor {
                 }));
             }
 
+            // Ensure global buffers are initialized (even if empty) to satisfy layout
+            if self.x_global_buffer.is_none() {
+                self.x_global_buffer = Some(self.device.create_buffer(&BufferDescriptor {
+                    label: Some("X_Global_Dummy"),
+                    size: 16,
+                    usage: BufferUsages::STORAGE | BufferUsages::COPY_DST,
+                    mapped_at_creation: false,
+                }));
+            }
+            if self.y_global_buffer.is_none() {
+                self.y_global_buffer = Some(self.device.create_buffer(&BufferDescriptor {
+                    label: Some("Y_Global_Dummy"),
+                    size: 16,
+                    usage: BufferUsages::STORAGE | BufferUsages::COPY_DST,
+                    mapped_at_creation: false,
+                }));
+            }
+            if self.shuffled_indices_buffer.is_none() {
+                self.shuffled_indices_buffer = Some(self.device.create_buffer(&BufferDescriptor {
+                    label: Some("Shuffled_Indices_Dummy"),
+                    size: 16,
+                    usage: BufferUsages::STORAGE | BufferUsages::COPY_DST,
+                    mapped_at_creation: false,
+                }));
+            }
+            if self.cv_test_mask_buffer.is_none() {
+                self.cv_test_mask_buffer = Some(self.device.create_buffer(&BufferDescriptor {
+                    label: Some("CV_Test_Mask_Dummy"),
+                    size: 16,
+                    usage: BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST,
+                    mapped_at_creation: false,
+                }));
+            }
+
             self.bg1_topo = Some(
                 self.device.create_bind_group(&BindGroupDescriptor {
                     label: Some("BG1"),
@@ -2210,6 +2416,30 @@ impl GpuExecutor {
                             binding: 3,
                             resource: self
                                 .test_errors_buffer
+                                .as_ref()
+                                .unwrap()
+                                .as_entire_binding(),
+                        },
+                        BindGroupEntry {
+                            binding: 4,
+                            resource: self.x_global_buffer.as_ref().unwrap().as_entire_binding(),
+                        },
+                        BindGroupEntry {
+                            binding: 5,
+                            resource: self.y_global_buffer.as_ref().unwrap().as_entire_binding(),
+                        },
+                        BindGroupEntry {
+                            binding: 6,
+                            resource: self
+                                .shuffled_indices_buffer
+                                .as_ref()
+                                .unwrap()
+                                .as_entire_binding(),
+                        },
+                        BindGroupEntry {
+                            binding: 7,
+                            resource: self
+                                .cv_test_mask_buffer
                                 .as_ref()
                                 .unwrap()
                                 .as_entire_binding(),
@@ -2571,7 +2801,6 @@ impl GpuExecutor {
                 pass.set_bind_group(0, self.bg0_data.as_ref().unwrap(), &[]);
                 pass.set_bind_group(1, self.bg1_topo.as_ref().unwrap(), &[]);
                 pass.set_bind_group(2, self.bg2_state.as_ref().unwrap(), &[]);
-                pass.set_bind_group(2, self.bg2_state.as_ref().unwrap(), &[]);
                 pass.set_bind_group(3, self.bg3_aux.as_ref().unwrap(), &[]);
                 pass.dispatch_workgroups(config.pad_len.div_ceil(64), 1, 1);
             }
@@ -2580,111 +2809,141 @@ impl GpuExecutor {
         }
     }
 
-    pub fn reset_test_buffers(&mut self, x_test: &[f32], y_test: &[f32]) {
-        let n_test = x_test.len() as u64;
-        let n_bytes = (n_test * 4).max(16); // Ensure non-zero size
-        let mut bg_needs_update = false;
+    pub fn record_full_scan(&self, encoder: &mut CommandEncoder, count: u32, bg3: &BindGroup) {
+        self.record_pipeline_with_bg3(
+            encoder,
+            &self.scan_block_pipeline,
+            DispatchMode::Direct(count.div_ceil(256)),
+            bg3,
+        );
+        self.record_pipeline_with_bg3(
+            encoder,
+            &self.scan_aux_pipeline,
+            DispatchMode::Direct(1),
+            bg3,
+        );
+        self.record_pipeline_with_bg3(
+            encoder,
+            &self.scan_add_base_pipeline,
+            DispatchMode::Direct(count.div_ceil(256)),
+            bg3,
+        );
+    }
 
-        // Ensure buffers
-        if Self::ensure_buffer_capacity(
-            &self.device,
-            "X_Test",
-            &mut self.x_test_buffer,
-            n_bytes,
-            BufferUsages::STORAGE | BufferUsages::COPY_DST,
-        ) {
-            bg_needs_update = true;
-        }
+    pub fn record_cv_partition(&self, encoder: &mut CommandEncoder, n_train: u32, n_test: u32) {
+        let n_full = n_train + n_test;
 
-        if Self::ensure_buffer_capacity(
-            &self.device,
-            "Y_Test",
-            &mut self.y_test_buffer,
-            n_bytes,
-            BufferUsages::STORAGE | BufferUsages::COPY_DST,
-        ) {
-            bg_needs_update = true;
-        }
+        // 1. Prepare mask
+        self.record_pipeline(
+            encoder,
+            &self.cv_prepare_mask_pipeline,
+            DispatchMode::Direct(n_full.div_ceil(256)),
+        );
 
-        if Self::ensure_buffer_capacity(
-            &self.device,
-            "TestErrors",
-            &mut self.test_errors_buffer,
-            n_bytes,
-            BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST,
-        ) {
-            bg_needs_update = true;
-        }
+        // 2. Mark test indices
+        self.record_pipeline(
+            encoder,
+            &self.cv_mark_test_indices_pipeline,
+            DispatchMode::Direct(n_test.div_ceil(256)),
+        );
 
-        // Write buffers
-        self.queue
-            .write_buffer(self.x_test_buffer.as_ref().unwrap(), 0, cast_slice(x_test));
-        self.queue
-            .write_buffer(self.y_test_buffer.as_ref().unwrap(), 0, cast_slice(y_test));
+        // 3. Compact Training Set
+        self.record_pipeline(
+            encoder,
+            &self.cv_prepare_compact_flags_train_pipeline,
+            DispatchMode::Direct(n_full.div_ceil(256)),
+        );
 
-        // Update BG1 if needed (since test buffers are now in BG1)
-        if bg_needs_update || self.bg1_topo.is_none() {
-            self.bg1_topo = Some(
-                self.device.create_bind_group(&BindGroupDescriptor {
-                    label: Some("BG1 Topo (with Test)"),
-                    layout: &self.score_cv_points_pipeline.get_bind_group_layout(1),
-                    entries: &[
-                        BindGroupEntry {
-                            binding: 0,
-                            resource: self
-                                .interval_map_buffer
-                                .as_ref()
-                                .unwrap()
-                                .as_entire_binding(),
-                        },
-                        BindGroupEntry {
-                            binding: 1,
-                            resource: self.x_test_buffer.as_ref().unwrap().as_entire_binding(),
-                        },
-                        BindGroupEntry {
-                            binding: 2,
-                            resource: self.y_test_buffer.as_ref().unwrap().as_entire_binding(),
-                        },
-                        BindGroupEntry {
-                            binding: 3,
-                            resource: self
-                                .test_errors_buffer
-                                .as_ref()
-                                .unwrap()
-                                .as_entire_binding(),
-                        },
-                    ],
-                }),
-            );
-        }
+        self.record_full_scan(encoder, n_full, self.bg3_aux.as_ref().unwrap());
+
+        self.record_pipeline(
+            encoder,
+            &self.cv_compact_training_pipeline,
+            DispatchMode::Direct(n_full.div_ceil(256)),
+        );
+
+        // 4. Compact Test Set
+        self.record_pipeline(
+            encoder,
+            &self.cv_prepare_compact_flags_test_pipeline,
+            DispatchMode::Direct(n_full.div_ceil(256)),
+        );
+
+        self.record_full_scan(encoder, n_full, self.bg3_aux.as_ref().unwrap());
+
+        self.record_pipeline(
+            encoder,
+            &self.cv_compact_test_pipeline,
+            DispatchMode::Direct(n_full.div_ceil(256)),
+        );
+    }
+
+    pub fn record_cv_global_sort(&self, encoder: &mut CommandEncoder) {
+        // Redraw data from global to buffers, sort it, then copy back to global
+
+        // Mark all as training (copy global -> x/y)
+        self.record_pipeline(
+            encoder,
+            &self.cv_prepare_mask_pipeline,
+            DispatchMode::Direct(self.orig_n.div_ceil(256)),
+        );
+        self.record_pipeline(
+            encoder,
+            &self.cv_prepare_compact_flags_train_pipeline,
+            DispatchMode::Direct(self.orig_n.div_ceil(256)),
+        );
+
+        self.record_full_scan(encoder, self.orig_n, self.bg3_aux.as_ref().unwrap());
+
+        self.record_pipeline(
+            encoder,
+            &self.cv_compact_training_pipeline,
+            DispatchMode::Direct(self.orig_n.div_ceil(256)),
+        );
+
+        // Standard radix sort on x/y
+        self.record_sort_input(encoder);
+
+        // Copy back sorted x/y to global
+        let pad_offset = (self.n - self.orig_n) as u64 / 2 * 4;
+        encoder.copy_buffer_to_buffer(
+            self.x_buffer.as_ref().unwrap(),
+            pad_offset,
+            self.x_global_buffer.as_ref().unwrap(),
+            0,
+            self.orig_n as u64 * 4,
+        );
+        encoder.copy_buffer_to_buffer(
+            self.y_buffer.as_ref().unwrap(),
+            pad_offset,
+            self.y_global_buffer.as_ref().unwrap(),
+            0,
+            self.orig_n as u64 * 4,
+        );
     }
 
     pub fn record_score_cv(&self, encoder: &mut CommandEncoder, n_test: u32) {
-        let mut pass = encoder.begin_compute_pass(&ComputePassDescriptor {
-            label: Some("Score CV"),
-            timestamp_writes: None,
-        });
-        pass.set_pipeline(&self.score_cv_points_pipeline);
-        pass.set_bind_group(0, self.bg0_data.as_ref().unwrap(), &[]);
-        pass.set_bind_group(1, self.bg1_topo.as_ref().unwrap(), &[]);
-        pass.set_bind_group(2, self.bg2_state.as_ref().unwrap(), &[]);
-        pass.set_bind_group(3, self.bg3_aux.as_ref().unwrap(), &[]);
-
-        pass.dispatch_workgroups(n_test.div_ceil(64), 1, 1);
+        self.record_pipeline(
+            encoder,
+            &self.score_cv_points_pipeline,
+            DispatchMode::Direct(n_test.div_ceil(64)),
+        );
     }
 
     pub fn record_sum_sse_reduction(&self, encoder: &mut CommandEncoder, n_test: u32) {
-        let mut pass = encoder.begin_compute_pass(&ComputePassDescriptor {
-            label: Some("Sum SSE Reduction"),
-            timestamp_writes: None,
-        });
-        pass.set_pipeline(&self.sum_sse_reduction_pipeline);
-        pass.set_bind_group(0, self.bg0_data.as_ref().unwrap(), &[]);
-        pass.set_bind_group(1, self.bg1_topo.as_ref().unwrap(), &[]);
-        pass.set_bind_group(2, self.bg2_state.as_ref().unwrap(), &[]);
-        pass.set_bind_group(3, self.bg3_aux.as_ref().unwrap(), &[]);
+        self.record_pipeline(
+            encoder,
+            &self.sum_sse_reduction_pipeline,
+            DispatchMode::Direct(n_test.div_ceil(256)),
+        );
+    }
 
-        pass.dispatch_workgroups(n_test.div_ceil(256), 1, 1);
+    pub fn record_sum_residuals_squared_reduction(&self, encoder: &mut CommandEncoder, n: u32) {
+        self.record_pipeline(
+            encoder,
+            &self.sum_residuals_squared_pipeline,
+            DispatchMode::Direct(n.div_ceil(256)),
+        );
     }
 
     pub fn record_pipeline(
@@ -2697,7 +2956,6 @@ impl GpuExecutor {
         pass.set_pipeline(pipeline);
         pass.set_bind_group(0, self.bg0_data.as_ref().unwrap(), &[]);
         pass.set_bind_group(1, self.bg1_topo.as_ref().unwrap(), &[]);
-        pass.set_bind_group(2, self.bg2_state.as_ref().unwrap(), &[]);
         pass.set_bind_group(2, self.bg2_state.as_ref().unwrap(), &[]);
         pass.set_bind_group(3, self.bg3_aux.as_ref().unwrap(), &[]);
         match dispatch {
@@ -2719,7 +2977,6 @@ impl GpuExecutor {
         pass.set_pipeline(pipeline);
         pass.set_bind_group(0, self.bg0_data.as_ref().unwrap(), &[]);
         pass.set_bind_group(1, self.bg1_topo.as_ref().unwrap(), &[]);
-        pass.set_bind_group(2, self.bg2_state.as_ref().unwrap(), &[]);
         pass.set_bind_group(2, self.bg2_state.as_ref().unwrap(), &[]);
         pass.set_bind_group(3, bg3, &[]);
         match dispatch {
@@ -2761,6 +3018,285 @@ impl GpuExecutor {
             &self.finalize_scale_pipeline,
             DispatchMode::Direct(1),
         );
+    }
+
+    pub fn record_prepare_fit(&self, encoder: &mut CommandEncoder) {
+        // 1. Select Anchors (Parallel)
+        // 1a. Mark Candidates
+        self.record_pipeline(
+            encoder,
+            &self.mark_anchor_candidates_pipeline,
+            DispatchMode::Direct(self.n.div_ceil(256)),
+        );
+        // 1b-d. Scan
+        self.record_full_scan(encoder, self.n, self.bg3_aux.as_ref().unwrap());
+
+        // 1e. Compact
+        self.record_pipeline_with_bg3(
+            encoder,
+            &self.compact_anchors_pipeline,
+            DispatchMode::Direct(self.n.div_ceil(256)),
+            self.bg3_aux.as_ref().unwrap(),
+        );
+
+        // 2. Compute intervals (parallel) - Slot 3
+        self.record_pipeline(
+            encoder,
+            &self.compute_intervals_pipeline,
+            DispatchMode::Direct(self.n.div_ceil(256)),
+        );
+
+        // 3. Initialize Loop State
+        self.record_pipeline(
+            encoder,
+            &self.init_loop_state_pipeline,
+            DispatchMode::Direct(1),
+        );
+
+        // 4. Prepare First Next Pass (Slot 0 for Fit, Slot 3 for Interp/Weights, Slot 6 for Reduction)
+        self.record_pipeline(
+            encoder,
+            &self.prepare_next_pass_pipeline,
+            DispatchMode::Direct(1),
+        );
+
+        // 5. Initialize weights to 1.0
+        self.record_pipeline(
+            encoder,
+            &self.init_weights_pipeline,
+            DispatchMode::Direct(self.n.div_ceil(256)),
+        );
+    }
+
+    pub fn record_fitting_loop(
+        &self,
+        encoder: &mut CommandEncoder,
+        iterations: u32,
+        scaling_method: ScalingMethod,
+    ) {
+        for i in 0..=iterations {
+            if i > 0 {
+                // Copy previous smoothed values to y_prev so convergence check
+                // can compare y_smooth (current) vs y_prev (previous).
+                let dst_buf = self.y_prev_buffer.as_ref().unwrap();
+                let src_buf = self.y_smooth_buffer.as_ref().unwrap();
+                encoder.copy_buffer_to_buffer(src_buf, 0, dst_buf, 0, src_buf.size());
+            }
+
+            self.record_fit_pass(encoder);
+
+            // 2. Record Convergence Check & Loop Control (Iteration > 0)
+            if i > 0 {
+                self.record_convergence_check(encoder); // Reducers use Slot 6
+                self.record_pipeline(
+                    encoder,
+                    &self.finalize_convergence_pipeline,
+                    DispatchMode::Direct(1),
+                );
+            }
+
+            // 3. Record Scale estimation if iterations remain
+            if i < iterations {
+                self.record_robust_scale(encoder, scaling_method);
+                self.record_update_weights(encoder); // Slot 3
+            }
+
+            // 4. Prepare for next iteration
+            self.record_pipeline(
+                encoder,
+                &self.prepare_next_pass_pipeline,
+                DispatchMode::Direct(1),
+            );
+        }
+    }
+
+    pub fn update_config(
+        &mut self,
+        gpu_config: &GpuConfig,
+        robustness_method: u32,
+        scaling_method: u32,
+    ) {
+        self.n = gpu_config.n;
+        self.orig_n = gpu_config.orig_n;
+
+        // Update main config
+        self.queue.write_buffer(
+            self.config_buffer.as_ref().unwrap(),
+            0,
+            bytemuck::cast_slice(&[*gpu_config]),
+        );
+
+        // Update WeightConfig status (state slot 0)
+        let weight_config = WeightConfig {
+            n: gpu_config.n,
+            scale: 0.0,
+            robustness_method,
+            scaling_method,
+            median_center: 0.0,
+            mean_abs: 0.0,
+            anchor_count: 0,
+            radix_pass: 0,
+            converged: 0,
+            iteration: 0,
+            update_mode: 0,
+        };
+        self.queue.write_buffer(
+            self.w_config_buffer.as_ref().unwrap(),
+            0,
+            bytemuck::cast_slice(&[weight_config]),
+        );
+    }
+
+    pub fn reset_cv_global_buffers(&mut self, x: &[f32], y: &[f32], shuffled_indices: &[u32]) {
+        let n = x.len() as u64;
+        let mut bg_needs_update = false;
+
+        if Self::ensure_buffer_capacity(
+            &self.device,
+            "X Global",
+            &mut self.x_global_buffer,
+            n * 4,
+            BufferUsages::STORAGE | BufferUsages::COPY_DST,
+        ) {
+            bg_needs_update = true;
+        }
+        if Self::ensure_buffer_capacity(
+            &self.device,
+            "Y Global",
+            &mut self.y_global_buffer,
+            n * 4,
+            BufferUsages::STORAGE | BufferUsages::COPY_DST,
+        ) {
+            bg_needs_update = true;
+        }
+        if Self::ensure_buffer_capacity(
+            &self.device,
+            "Shuffled Indices",
+            &mut self.shuffled_indices_buffer,
+            n * 4,
+            BufferUsages::STORAGE | BufferUsages::COPY_DST,
+        ) {
+            bg_needs_update = true;
+        }
+        if Self::ensure_buffer_capacity(
+            &self.device,
+            "CV Test Mask",
+            &mut self.cv_test_mask_buffer,
+            n * 4,
+            BufferUsages::STORAGE | BufferUsages::COPY_DST | BufferUsages::COPY_SRC,
+        ) {
+            bg_needs_update = true;
+        }
+
+        self.queue.write_buffer(
+            self.x_global_buffer.as_ref().unwrap(),
+            0,
+            bytemuck::cast_slice(x),
+        );
+        self.queue.write_buffer(
+            self.y_global_buffer.as_ref().unwrap(),
+            0,
+            bytemuck::cast_slice(y),
+        );
+        self.queue.write_buffer(
+            self.shuffled_indices_buffer.as_ref().unwrap(),
+            0,
+            bytemuck::cast_slice(shuffled_indices),
+        );
+
+        if bg_needs_update || self.bg1_topo.is_none() {
+            // Ensure ALL buffers for BG1 are initialized (even if empty) to satisfy layout
+            if self.interval_map_buffer.is_none() {
+                self.interval_map_buffer = Some(self.device.create_buffer(&BufferDescriptor {
+                    label: Some("IntervalMap_Dummy"),
+                    size: 16,
+                    usage: BufferUsages::STORAGE | BufferUsages::COPY_DST,
+                    mapped_at_creation: false,
+                }));
+            }
+            if self.x_test_buffer.is_none() {
+                self.x_test_buffer = Some(self.device.create_buffer(&BufferDescriptor {
+                    label: Some("X_Test_Dummy"),
+                    size: 16,
+                    usage: BufferUsages::STORAGE | BufferUsages::COPY_DST,
+                    mapped_at_creation: false,
+                }));
+            }
+            if self.y_test_buffer.is_none() {
+                self.y_test_buffer = Some(self.device.create_buffer(&BufferDescriptor {
+                    label: Some("Y_Test_Dummy"),
+                    size: 16,
+                    usage: BufferUsages::STORAGE | BufferUsages::COPY_DST,
+                    mapped_at_creation: false,
+                }));
+            }
+            if self.test_errors_buffer.is_none() {
+                self.test_errors_buffer = Some(self.device.create_buffer(&BufferDescriptor {
+                    label: Some("TestErrors_Dummy"),
+                    size: 16,
+                    usage: BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST,
+                    mapped_at_creation: false,
+                }));
+            }
+
+            // Recreate BG1 which now contains CV global data at bindings 4-7
+            self.bg1_topo = Some(
+                self.device.create_bind_group(&BindGroupDescriptor {
+                    label: Some("BG1"),
+                    layout: &self.fit_pipeline.get_bind_group_layout(1),
+                    entries: &[
+                        BindGroupEntry {
+                            binding: 0,
+                            resource: self
+                                .interval_map_buffer
+                                .as_ref()
+                                .unwrap()
+                                .as_entire_binding(),
+                        },
+                        BindGroupEntry {
+                            binding: 1,
+                            resource: self.x_test_buffer.as_ref().unwrap().as_entire_binding(),
+                        },
+                        BindGroupEntry {
+                            binding: 2,
+                            resource: self.y_test_buffer.as_ref().unwrap().as_entire_binding(),
+                        },
+                        BindGroupEntry {
+                            binding: 3,
+                            resource: self
+                                .test_errors_buffer
+                                .as_ref()
+                                .unwrap()
+                                .as_entire_binding(),
+                        },
+                        BindGroupEntry {
+                            binding: 4,
+                            resource: self.x_global_buffer.as_ref().unwrap().as_entire_binding(),
+                        },
+                        BindGroupEntry {
+                            binding: 5,
+                            resource: self.y_global_buffer.as_ref().unwrap().as_entire_binding(),
+                        },
+                        BindGroupEntry {
+                            binding: 6,
+                            resource: self
+                                .shuffled_indices_buffer
+                                .as_ref()
+                                .unwrap()
+                                .as_entire_binding(),
+                        },
+                        BindGroupEntry {
+                            binding: 7,
+                            resource: self
+                                .cv_test_mask_buffer
+                                .as_ref()
+                                .unwrap()
+                                .as_entire_binding(),
+                        },
+                    ],
+                }),
+            );
+        }
     }
 
     pub fn record_pad_data(&self, encoder: &mut CommandEncoder) {
@@ -3164,7 +3700,6 @@ fn compute_intervals_gpu<T>(
     exec: &mut GpuExecutor,
     config: &LowessConfig<T>,
     gpu_config: &mut GpuConfig,
-    residuals: &[T],
 ) -> (
     Option<Vec<T>>,
     Option<Vec<T>>,
@@ -3175,8 +3710,6 @@ fn compute_intervals_gpu<T>(
 where
     T: Float + Debug + Send + Sync + 'static,
 {
-    use pollster::block_on;
-
     // Check if intervals requested
     let im = if let Some(im) = config.return_variance.as_ref() {
         im
@@ -3186,11 +3719,33 @@ where
 
     // Calculate parameters for intervals
     let z_score = IntervalMethod::approximate_z_score(im.level).unwrap_or(T::from(1.96).unwrap());
-    let residual_sd = IntervalMethod::calculate_residual_sd(residuals);
+
+    // GPU-side Residual SSE Reduction
+    let mut sse_encoder = exec.device.create_command_encoder(&Default::default());
+    exec.record_sum_residuals_squared_reduction(&mut sse_encoder, exec.orig_n);
+    exec.queue.submit(Some(sse_encoder.finish()));
+
+    // Download partial sums from reduction buffer
+    let num_wgs = exec.orig_n.div_ceil(256);
+    let partial_sums = block_on(exec.download_buffer(
+        exec.reduction_buffer.as_ref().unwrap(),
+        Some(num_wgs as u64 * 4),
+        None,
+    ))
+    .unwrap();
+
+    let sse: f32 = partial_sums.iter().sum();
+    let n = exec.orig_n as f32;
+    // SD estimation (unbiased for linear regression df = n - 2)
+    let residual_sd = if n > 2.0 {
+        (sse / (n - 2.0)).sqrt()
+    } else {
+        0.0
+    };
 
     // Update GPU config for interval pass
     gpu_config.z_score = z_score.to_f32().unwrap_or(1.96);
-    gpu_config.residual_sd = residual_sd.to_f32().unwrap_or(0.0);
+    gpu_config.residual_sd = residual_sd;
     gpu_config.has_conf = if im.confidence { 1 } else { 0 };
     gpu_config.has_pred = if im.prediction { 1 } else { 0 };
 
@@ -3239,7 +3794,7 @@ where
             Some(trim_offset),
         ))
         .unwrap();
-        Some(se_vals.into_iter().map(|v| T::from(v).unwrap()).collect())
+        Some(cast_output_vec(se_vals))
     } else {
         None
     };
@@ -3251,7 +3806,7 @@ where
             Some(trim_offset),
         ))
         .unwrap();
-        Some(vals.into_iter().map(|v| T::from(v).unwrap()).collect())
+        Some(cast_output_vec(vals))
     } else {
         None
     };
@@ -3263,7 +3818,7 @@ where
             Some(trim_offset),
         ))
         .unwrap();
-        Some(vals.into_iter().map(|v| T::from(v).unwrap()).collect())
+        Some(cast_output_vec(vals))
     } else {
         None
     };
@@ -3275,7 +3830,7 @@ where
             Some(trim_offset),
         ))
         .unwrap();
-        Some(vals.into_iter().map(|v| T::from(v).unwrap()).collect())
+        Some(cast_output_vec(vals))
     } else {
         None
     };
@@ -3287,7 +3842,7 @@ where
             Some(trim_offset),
         ))
         .unwrap();
-        Some(vals.into_iter().map(|v| T::from(v).unwrap()).collect())
+        Some(cast_output_vec(vals))
     } else {
         None
     };
@@ -3306,8 +3861,6 @@ where
 {
     #[cfg(feature = "gpu")]
     {
-        use pollster::block_on;
-
         // Global Executor Lock
         let mut guard = GLOBAL_EXECUTOR
             .lock()
@@ -3345,8 +3898,9 @@ where
         let total_n_padded = total_n + 2 * pad_len;
 
         // Convert original data to f32 (padding happens on GPU)
-        let x_f32: Vec<f32> = x.iter().map(|v| v.to_f32().unwrap()).collect();
-        let y_f32: Vec<f32> = y.iter().map(|v| v.to_f32().unwrap()).collect();
+        // Optimization: Zero-copy if T is f32
+        let x_f32 = cast_input_slice(x);
+        let y_f32 = cast_input_slice(y);
 
         // Calculate anchors based on PADDED range
         let delta = config.delta.to_f32().unwrap();
@@ -3415,119 +3969,23 @@ where
             exec.queue.submit(Some(encoder.finish()));
         }
 
-        // Compute anchors and intervals on GPU
+        // 2. Prepare for fitting (Anchors, Intervals, Init)
         {
             let mut encoder = exec.device.create_command_encoder(&Default::default());
-            // 1. Select Anchors (Parallel)
-            // 1a. Mark Candidates
-            exec.record_pipeline(
-                &mut encoder,
-                &exec.mark_anchor_candidates_pipeline,
-                DispatchMode::Direct(exec.n.div_ceil(256)),
-            );
-            // 1b. Scan Block
-            exec.record_pipeline_with_bg3(
-                &mut encoder,
-                &exec.scan_block_pipeline,
-                DispatchMode::Direct(exec.n.div_ceil(256)),
-                exec.bg3_aux.as_ref().unwrap(),
-            );
-            // 1c. Scan Aux (Sequential)
-            exec.record_pipeline_with_bg3(
-                &mut encoder,
-                &exec.scan_aux_pipeline,
-                DispatchMode::Direct(1),
-                exec.bg3_aux.as_ref().unwrap(),
-            );
-            // 1d. Scan Add Base
-            exec.record_pipeline_with_bg3(
-                &mut encoder,
-                &exec.scan_add_base_pipeline,
-                DispatchMode::Direct(exec.n.div_ceil(256)),
-                exec.bg3_aux.as_ref().unwrap(),
-            );
-
-            // 1e. Compact
-            exec.record_pipeline_with_bg3(
-                &mut encoder,
-                &exec.compact_anchors_pipeline,
-                DispatchMode::Direct(exec.n.div_ceil(256)),
-                exec.bg3_aux.as_ref().unwrap(),
-            );
-            // 2. Compute intervals (parallel) - Slot 3
-            exec.record_pipeline(
-                &mut encoder,
-                &exec.compute_intervals_pipeline,
-                DispatchMode::Direct(exec.n.div_ceil(256)),
-            );
-
-            // 3. Initialize Loop State
-            exec.record_pipeline(
-                &mut encoder,
-                &exec.init_loop_state_pipeline,
-                DispatchMode::Direct(1),
-            );
-
-            // 4. Prepare First Next Pass (Slot 0 for Fit, Slot 3 for Interp/Weights, Slot 6 for Reduction)
-            exec.record_pipeline(
-                &mut encoder,
-                &exec.prepare_next_pass_pipeline,
-                DispatchMode::Direct(1),
-            );
-
+            exec.record_prepare_fit(&mut encoder);
             exec.queue.submit(Some(encoder.finish()));
         }
 
-        // Initialize weights to 1.0 on GPU
+        // 3. Main Fitting Loop
         {
             let mut encoder = exec.device.create_command_encoder(&Default::default());
-            exec.record_pipeline(
+            exec.record_fitting_loop(
                 &mut encoder,
-                &exec.init_weights_pipeline,
-                DispatchMode::Direct(exec.n.div_ceil(256)),
+                config.iterations as u32,
+                config.scaling_method,
             );
             exec.queue.submit(Some(encoder.finish()));
         }
-
-        let mut encoder = exec.device.create_command_encoder(&Default::default());
-
-        for i in 0..=config.iterations {
-            // 1. Record Fit (Slot 0 + Slot 3)
-            if i > 0 {
-                // Copy previous smoothed values to y_prev so convergence check
-                // can compare y_smooth (current) vs y_prev (previous).
-                let dst_buf = exec.y_prev_buffer.as_ref().unwrap();
-                let src_buf = exec.y_smooth_buffer.as_ref().unwrap();
-                encoder.copy_buffer_to_buffer(src_buf, 0, dst_buf, 0, src_buf.size());
-            }
-
-            exec.record_fit_pass(&mut encoder);
-
-            // 2. Record Convergence Check & Loop Control (Iteration > 0)
-            if i > 0 {
-                exec.record_convergence_check(&mut encoder); // Reducers use Slot 6
-                exec.record_pipeline(
-                    &mut encoder,
-                    &exec.finalize_convergence_pipeline,
-                    DispatchMode::Direct(1),
-                );
-            }
-
-            // 3. Record Scale estimation if iterations remain
-            if i < config.iterations {
-                exec.record_robust_scale(&mut encoder, config.scaling_method);
-                exec.record_update_weights(&mut encoder); // Slot 3
-            }
-
-            // 4. Prepare for next iteration
-            exec.record_pipeline(
-                &mut encoder,
-                &exec.prepare_next_pass_pipeline,
-                DispatchMode::Direct(1),
-            );
-        }
-
-        exec.queue.submit(Some(encoder.finish()));
 
         let trim_offset = (pad_len as u64) * 4;
         let trim_size = (orig_n as u64) * 4;
@@ -3554,14 +4012,14 @@ where
         .unwrap();
 
         // Results are already trimmed by download_buffer
-        let y_out: Vec<T> = y_res.into_iter().map(|v| T::from(v).unwrap()).collect();
-        let w_out: Vec<T> = w_res.into_iter().map(|v| T::from(v).unwrap()).collect();
-        let r_out: Vec<T> = r_res.into_iter().map(|v| T::from(v).unwrap()).collect();
+        let y_out: Vec<T> = cast_output_vec(y_res);
+        let w_out: Vec<T> = cast_output_vec(w_res);
+        let r_out: Vec<T> = cast_output_vec(r_res);
 
         // Compute standard errors/intervals if requested
         let (std_errors, conf_lower, conf_upper, pred_lower, pred_upper) =
             if config.return_variance.is_some() {
-                compute_intervals_gpu(exec, config, &mut gpu_config, &r_out)
+                compute_intervals_gpu(exec, config, &mut gpu_config)
             } else {
                 (None, None, None, None, None)
             };
@@ -3606,239 +4064,6 @@ impl SimpleRng {
     }
 }
 
-pub fn fit_and_score_gpu<T>(
-    x_train: &[T],
-    y_train: &[T],
-    x_test: &[T],
-    y_test: &[T],
-    config: &LowessConfig<T>,
-) -> f32
-where
-    T: Float + Debug + Send + Sync + 'static,
-{
-    #[cfg(feature = "gpu")]
-    {
-        let mut exec_lock = GLOBAL_EXECUTOR.lock().unwrap();
-        if exec_lock.is_none() {
-            *exec_lock = Some(block_on(GpuExecutor::new()).unwrap());
-        }
-        let exec = exec_lock.as_mut().unwrap();
-
-        // 1. Setup Config (Copied from fit_pass_gpu)
-        let total_n = x_train.len();
-        let orig_n = total_n;
-
-        let fraction_f32 = config.fraction.unwrap().to_f32().unwrap();
-        let window_size = (fraction_f32 * total_n as f32).ceil() as usize;
-        let window_size = window_size.max(2usize).min(total_n);
-
-        // Calculate padding (GPU-side padding)
-        let pad_len = if config.boundary_policy == BoundaryPolicy::NoBoundary {
-            0
-        } else {
-            (window_size / 2).min(orig_n - 1)
-        };
-        let total_n_padded = total_n + 2 * pad_len;
-
-        // Convert original data to f32 (padding happens on GPU)
-        let x_f32: Vec<f32> = x_train.iter().map(|v| v.to_f32().unwrap()).collect();
-        let y_f32: Vec<f32> = y_train.iter().map(|v| v.to_f32().unwrap()).collect();
-
-        // Calculate anchors based on ORIGINAL range (to match CPU)
-        let delta = config.delta.to_f32().unwrap();
-
-        let weight_fn_id = match config.weight_function {
-            WeightFunction::Cosine => 0,
-            WeightFunction::Epanechnikov => 1,
-            WeightFunction::Gaussian => 2,
-            WeightFunction::Biweight => 3,
-            WeightFunction::Triangle => 4,
-            WeightFunction::Tricube => 5,
-            WeightFunction::Uniform => 6,
-        };
-        let fallback_id = config.zero_weight_fallback as u32;
-        let boundary_id = match config.boundary_policy {
-            BoundaryPolicy::Extend => 0,
-            BoundaryPolicy::Reflect => 1,
-            BoundaryPolicy::Zero => 2,
-            BoundaryPolicy::NoBoundary => 3,
-        };
-
-        let gpu_config = GpuConfig {
-            n_test: x_test.len() as u32,
-            n: total_n_padded as u32,
-            window_size: window_size as u32,
-            weight_function: weight_fn_id,
-            zero_weight_fallback: fallback_id,
-            fraction: config.fraction.unwrap().to_f32().unwrap(),
-            delta,
-            median_threshold: 0.0,
-            median_center: 0.0,
-            is_absolute: 0,
-            boundary_policy: boundary_id,
-            pad_len: pad_len as u32,
-            orig_n: orig_n as u32,
-            max_iterations: config.iterations as u32,
-            tolerance: config
-                .auto_convergence
-                .map(|t| t.to_f32().unwrap())
-                .unwrap_or(0.0),
-            z_score: 0.0,
-            has_conf: 0,
-            has_pred: 0,
-            residual_sd: 0.0,
-            _pad: 0,
-        };
-
-        let robustness_id = match config.robustness_method {
-            RobustnessMethod::Bisquare => ROBUSTNESS_BISQUARE,
-            RobustnessMethod::Huber => ROBUSTNESS_HUBER,
-            RobustnessMethod::Talwar => ROBUSTNESS_TALWAR,
-        };
-        let scaling_id = match config.scaling_method {
-            ScalingMethod::MAD => SCALING_MAD,
-            ScalingMethod::MAR => SCALING_MAR,
-            ScalingMethod::Mean => SCALING_MEAN,
-        };
-
-        exec.reset_buffers(&x_f32, &y_f32, gpu_config, robustness_id, scaling_id);
-
-        // 1. Run padding kernel
-        {
-            let mut encoder = exec.device.create_command_encoder(&Default::default());
-            exec.record_pad_data(&mut encoder);
-            exec.queue.submit(Some(encoder.finish()));
-        }
-
-        // Compute anchors and intervals on GPU
-        {
-            let mut encoder = exec.device.create_command_encoder(&Default::default());
-            exec.record_pipeline(
-                &mut encoder,
-                &exec.mark_anchor_candidates_pipeline,
-                DispatchMode::Direct(exec.n.div_ceil(256)),
-            );
-            exec.record_pipeline_with_bg3(
-                &mut encoder,
-                &exec.scan_block_pipeline,
-                DispatchMode::Direct(exec.n.div_ceil(256)),
-                exec.bg3_aux.as_ref().unwrap(),
-            );
-            exec.record_pipeline_with_bg3(
-                &mut encoder,
-                &exec.scan_aux_pipeline,
-                DispatchMode::Direct(1),
-                exec.bg3_aux.as_ref().unwrap(),
-            );
-            exec.record_pipeline_with_bg3(
-                &mut encoder,
-                &exec.scan_add_base_pipeline,
-                DispatchMode::Direct(exec.n.div_ceil(256)),
-                exec.bg3_aux.as_ref().unwrap(),
-            );
-            exec.record_pipeline_with_bg3(
-                &mut encoder,
-                &exec.compact_anchors_pipeline,
-                DispatchMode::Direct(exec.n.div_ceil(256)),
-                exec.bg3_aux.as_ref().unwrap(),
-            );
-            exec.record_pipeline(
-                &mut encoder,
-                &exec.compute_intervals_pipeline,
-                DispatchMode::Direct(exec.n.div_ceil(256)),
-            );
-            exec.record_pipeline(
-                &mut encoder,
-                &exec.init_loop_state_pipeline,
-                DispatchMode::Direct(1),
-            );
-            exec.record_pipeline(
-                &mut encoder,
-                &exec.prepare_next_pass_pipeline,
-                DispatchMode::Direct(1),
-            );
-            exec.queue.submit(Some(encoder.finish()));
-        }
-
-        // Initialize weights
-        {
-            let mut encoder = exec.device.create_command_encoder(&Default::default());
-            exec.record_pipeline(
-                &mut encoder,
-                &exec.init_weights_pipeline,
-                DispatchMode::Direct(exec.n.div_ceil(256)),
-            );
-            exec.queue.submit(Some(encoder.finish()));
-        }
-
-        let mut encoder = exec.device.create_command_encoder(&Default::default());
-
-        for i in 0..=config.iterations {
-            if i > 0 {
-                let dst_buf = exec.y_prev_buffer.as_ref().unwrap();
-                let src_buf = exec.y_smooth_buffer.as_ref().unwrap();
-                encoder.copy_buffer_to_buffer(src_buf, 0, dst_buf, 0, src_buf.size());
-            }
-
-            exec.record_fit_pass(&mut encoder);
-
-            if i > 0 {
-                exec.record_convergence_check(&mut encoder);
-                exec.record_pipeline(
-                    &mut encoder,
-                    &exec.finalize_convergence_pipeline,
-                    DispatchMode::Direct(1),
-                );
-            }
-
-            if i < config.iterations {
-                exec.record_robust_scale(&mut encoder, config.scaling_method);
-                exec.record_update_weights(&mut encoder);
-            }
-
-            exec.record_pipeline(
-                &mut encoder,
-                &exec.prepare_next_pass_pipeline,
-                DispatchMode::Direct(1),
-            );
-        }
-        exec.queue.submit(Some(encoder.finish()));
-
-        // --- SCORING PHASE ---
-        let xt_f32: Vec<f32> = x_test.iter().map(|v| v.to_f32().unwrap()).collect();
-        let yt_f32: Vec<f32> = y_test.iter().map(|v| v.to_f32().unwrap()).collect();
-        exec.reset_test_buffers(&xt_f32, &yt_f32);
-
-        {
-            let mut encoder = exec.device.create_command_encoder(&Default::default());
-            exec.record_score_cv(&mut encoder, xt_f32.len() as u32);
-            exec.record_sum_sse_reduction(&mut encoder, xt_f32.len() as u32);
-            exec.queue.submit(Some(encoder.finish()));
-        }
-
-        // Download partial sums from reduction buffer
-        // number of workgroups = ceil(n_test / 256)
-        let num_workgroups = (xt_f32.len() as u32).div_ceil(256);
-        let partial_sums_bytes = (num_workgroups * 4) as u64;
-
-        let reduction_res = block_on(exec.download_buffer(
-            exec.reduction_buffer.as_ref().unwrap(),
-            Some(partial_sums_bytes),
-            None,
-        ))
-        .unwrap();
-
-        // Sum errors (Test errors are squared errors from GPU)
-        let total_sq_error: f32 = reduction_res.iter().sum();
-
-        total_sq_error
-    }
-    #[cfg(not(feature = "gpu"))]
-    {
-        unimplemented!()
-    }
-}
-
 // Perform cross-validation to select the best fraction on GPU.
 pub fn cross_validate_gpu<T>(
     x: &[T],
@@ -3856,113 +4081,231 @@ where
             return (T::zero(), Vec::new());
         }
 
+        let mut guard = GLOBAL_EXECUTOR
+            .lock()
+            .map_err(|e| LowessError::RuntimeError(format!("GPU mutex poisoned: {}", e)))
+            .unwrap();
+
+        if guard.is_none() {
+            match block_on(GpuExecutor::new()) {
+                Ok(exec) => *guard = Some(exec),
+                Err(_) => return (T::zero(), vec![T::zero(); fractions.len()]),
+            }
+        }
+        let exec = guard.as_mut().unwrap();
+
         let n = x.len();
+        let x_f32 = cast_input_slice(x);
+        let y_f32 = cast_input_slice(y);
+
+        // 1. Generate shuffled indices (Fisher-Yates)
+        let mut shuffled_indices: Vec<u32> = (0..n as u32).collect();
+        if let Some(s) = config.cv_seed {
+            let mut rng = SimpleRng::new(s);
+            for i in (1..n).rev() {
+                let j = (rng.next_u32() as usize) % (i + 1);
+                shuffled_indices.swap(i, j);
+            }
+        }
+
+        // 2. Initial Buffer Setup (Ensures all bind groups are initialized)
+        // Pre-allocate for worst-case padding (approximately n + window_size)
+        let max_frac = fractions
+            .iter()
+            .cloned()
+            .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+            .unwrap_or(T::zero())
+            .to_f32()
+            .unwrap_or(0.0);
+        let max_window = (max_frac * n as f32).max(2.0) as u32;
+        let max_pad = (max_window / 2).min(n as u32 - 1);
+        let max_n_padded = n as u32 + 2 * max_pad;
+
+        let gpu_config = GpuConfig {
+            n: max_n_padded,
+            window_size: (n as f32 * 0.1) as u32, // Dummy
+            weight_function: 0,
+            zero_weight_fallback: 0,
+            fraction: 0.1,
+            delta: 0.0,
+            median_threshold: 0.0,
+            median_center: 0.0,
+            is_absolute: 1,
+            boundary_policy: 1,
+            pad_len: 0,
+            orig_n: n as u32,
+            max_iterations: 1,
+            tolerance: 1e-3,
+            z_score: 1.96,
+            has_conf: 0,
+            has_pred: 0,
+            residual_sd: 1.0,
+            n_test: 0,
+            _pad: 0,
+        };
+        exec.reset_buffers(&x_f32, &y_f32, gpu_config, 0, 0);
+
+        // Update to correct 'n' for global sort (while maintaining capacity)
+        let mut sort_config = gpu_config;
+        sort_config.n = n as u32;
+        exec.update_config(&sort_config, 0, 0);
+
+        // 3. Upload Global Data
+        exec.reset_cv_global_buffers(&x_f32, &y_f32, &shuffled_indices);
+
+        // 4. Sort Global Data once on GPU
+        exec.orig_n = n as u32;
+        exec.n = n as u32;
+        {
+            let mut encoder = exec.device.create_command_encoder(&Default::default());
+            exec.record_cv_global_sort(&mut encoder);
+            exec.queue.submit(Some(encoder.finish()));
+        }
+
+        // Common config parameters
+        let delta = config.delta.to_f32().unwrap();
+        let weight_fn_id = match config.weight_function {
+            WeightFunction::Cosine => 0,
+            WeightFunction::Epanechnikov => 1,
+            WeightFunction::Gaussian => 2,
+            WeightFunction::Biweight => 3,
+            WeightFunction::Triangle => 4,
+            WeightFunction::Tricube => 5,
+            WeightFunction::Uniform => 6,
+        };
+        let fallback_id = config.zero_weight_fallback as u32;
+        let boundary_id = match config.boundary_policy {
+            BoundaryPolicy::Extend => 0,
+            BoundaryPolicy::Reflect => 1,
+            BoundaryPolicy::Zero => 2,
+            BoundaryPolicy::NoBoundary => 3,
+        };
+        let robustness_id = match config.robustness_method {
+            RobustnessMethod::Bisquare => ROBUSTNESS_BISQUARE,
+            RobustnessMethod::Huber => ROBUSTNESS_HUBER,
+            RobustnessMethod::Talwar => ROBUSTNESS_TALWAR,
+        };
+        let scaling_id = match config.scaling_method {
+            ScalingMethod::MAD => SCALING_MAD,
+            ScalingMethod::MAR => SCALING_MAR,
+            ScalingMethod::Mean => SCALING_MEAN,
+        };
+
         let mut scores = Vec::with_capacity(fractions.len());
 
         for &frac in fractions {
-            // Configure specific fraction
-            let mut run_config = config.clone();
-            run_config.fraction = Some(frac);
-            run_config.cv_fractions = None; // Avoid recursion
-
             let mut total_rmse = 0.0f32;
             let mut count = 0;
 
-            match method {
-                CVKind::KFold(k) => {
-                    if n < k || k < 2 {
-                        // Fallback or error?
-                        scores.push(T::infinity());
-                        continue;
-                    }
-                    let fold_size = n / k;
+            let k = match method {
+                CVKind::KFold(k) => k,
+                CVKind::LOOCV => n,
+            };
 
-                    // Indices generation
-                    let mut indices: Vec<usize> = (0..n).collect();
-                    if let Some(s) = config.cv_seed {
-                        let mut rng = SimpleRng::new(s);
-                        for i in (1..n).rev() {
-                            let j = (rng.next_u32() as usize) % (i + 1);
-                            indices.swap(i, j);
-                        }
-                    }
+            if n < k || k < 2 {
+                scores.push(T::infinity());
+                continue;
+            }
 
-                    for fold in 0..k {
-                        let test_start = fold * fold_size;
-                        let test_end = if fold == k - 1 {
-                            n
-                        } else {
-                            (fold + 1) * fold_size
-                        };
-                        let current_fold_size = test_end - test_start;
+            let fold_size = n / k;
 
-                        // Partition data
-                        let mut x_train = Vec::with_capacity(n - current_fold_size);
-                        let mut y_train = Vec::with_capacity(n - current_fold_size);
-                        let mut x_test = Vec::with_capacity(current_fold_size);
-                        let mut y_test = Vec::with_capacity(current_fold_size);
+            for fold in 0..k {
+                let test_start = (fold * fold_size) as u32;
+                let test_end = (if fold == k - 1 {
+                    n
+                } else {
+                    (fold + 1) * fold_size
+                }) as u32;
+                let n_test = test_end - test_start;
+                let n_train = (n as u32) - n_test;
 
-                        for (idx_pos, &idx) in indices.iter().enumerate() {
-                            if idx_pos >= test_start && idx_pos < test_end {
-                                x_test.push(x[idx]);
-                                y_test.push(y[idx]);
-                            } else {
-                                x_train.push(x[idx]);
-                                y_train.push(y[idx]);
-                            }
-                        }
-                        let sorted_train = sort_by_x(&x_train, &y_train);
-                        let sse = fit_and_score_gpu(
-                            &sorted_train.x,
-                            &sorted_train.y,
-                            &x_test,
-                            &y_test,
-                            &run_config,
-                        );
-
-                        // MSE = SSE / N_test
-                        if current_fold_size > 0 {
-                            let mse = sse / (current_fold_size as f32);
-                            total_rmse += mse.sqrt();
-                            count += 1;
-                        }
-                    }
-
-                    if count > 0 {
-                        scores.push(T::from(total_rmse / (count as f32)).unwrap());
-                    } else {
-                        scores.push(T::infinity());
-                    }
+                if n_train < 2 {
+                    continue;
                 }
-                CVKind::LOOCV => {
-                    let mut sse_sum = 0.0f32;
-                    for i in 0..n {
-                        let mut x_train = Vec::with_capacity(n - 1);
-                        let mut y_train = Vec::with_capacity(n - 1);
-                        // Construct train set
-                        for j in 0..n {
-                            if i == j {
-                                continue;
-                            }
-                            x_train.push(x[j]);
-                            y_train.push(y[j]);
-                        }
-                        let x_test = vec![x[i]];
-                        let y_test = vec![y[i]];
 
-                        let sorted_train = sort_by_x(&x_train, &y_train);
-                        let sse = fit_and_score_gpu(
-                            &sorted_train.x,
-                            &sorted_train.y,
-                            &x_test,
-                            &y_test,
-                            &run_config,
-                        );
-                        sse_sum += sse;
-                    }
-                    let mse = sse_sum / (n as f32);
-                    scores.push(T::from(mse.sqrt()).unwrap());
+                // Configure for this fold
+                let window_size = (frac.to_f32().unwrap() * n_train as f32).max(1.0) as u32;
+                let window_size = window_size.max(2).min(n_train);
+                let pad_len = if config.boundary_policy == BoundaryPolicy::NoBoundary {
+                    0
+                } else {
+                    (window_size / 2).min(n_train - 1)
+                };
+                let total_n_padded = n_train + 2 * pad_len;
+
+                let gpu_config = GpuConfig {
+                    n: total_n_padded,
+                    window_size,
+                    weight_function: weight_fn_id,
+                    zero_weight_fallback: fallback_id,
+                    fraction: frac.to_f32().unwrap(),
+                    delta,
+                    median_threshold: 0.0,
+                    median_center: 0.0,
+                    is_absolute: 0,
+                    boundary_policy: boundary_id,
+                    pad_len,
+                    orig_n: n_train,
+                    max_iterations: config.iterations as u32,
+                    tolerance: config
+                        .auto_convergence
+                        .map(|t| t.to_f32().unwrap())
+                        .unwrap_or(0.0),
+                    z_score: test_start as f32,
+                    n_test,
+                    has_conf: 0,
+                    has_pred: 0,
+                    residual_sd: 0.0,
+                    _pad: 0,
+                };
+
+                exec.update_config(&gpu_config, robustness_id, scaling_id);
+
+                // 4. Partition & Pad
+                {
+                    let mut encoder = exec.device.create_command_encoder(&Default::default());
+                    exec.record_cv_partition(&mut encoder, n_train, n_test);
+                    exec.record_pad_data(&mut encoder);
+                    exec.queue.submit(Some(encoder.finish()));
                 }
+
+                // 5. Fit
+                {
+                    let mut encoder = exec.device.create_command_encoder(&Default::default());
+                    exec.record_prepare_fit(&mut encoder);
+                    exec.record_fitting_loop(
+                        &mut encoder,
+                        config.iterations as u32,
+                        config.scaling_method,
+                    );
+                    exec.queue.submit(Some(encoder.finish()));
+                }
+
+                // 6. Score
+                {
+                    let mut encoder = exec.device.create_command_encoder(&Default::default());
+                    exec.record_score_cv(&mut encoder, n_test);
+                    exec.record_sum_sse_reduction(&mut encoder, n_test);
+                    exec.queue.submit(Some(encoder.finish()));
+                }
+
+                // 7. Download SSE
+                let num_wgs = n_test.div_ceil(256);
+                let partial_sums = block_on(exec.download_buffer(
+                    exec.reduction_buffer.as_ref().unwrap(),
+                    Some(num_wgs as u64 * 4),
+                    None,
+                ))
+                .unwrap();
+                let sse: f32 = partial_sums.iter().sum();
+                total_rmse += (sse / n_test as f32).sqrt();
+                count += 1;
+            }
+
+            if count > 0 {
+                scores.push(T::from(total_rmse / count as f32).unwrap());
+            } else {
+                scores.push(T::infinity());
             }
         }
 
@@ -3978,5 +4321,32 @@ where
     #[cfg(not(feature = "gpu"))]
     {
         unimplemented!("GPU feature disabled")
+    }
+}
+
+/// Helper to convert a generic float slice to f32, using zero-copy if possible.
+fn cast_input_slice<'a, T>(slice: &'a [T]) -> Cow<'a, [f32]>
+where
+    T: Float + 'static,
+{
+    if TypeId::of::<T>() == TypeId::of::<f32>() {
+        let ptr = slice.as_ptr() as *const f32;
+        let s = unsafe { std::slice::from_raw_parts(ptr, slice.len()) };
+        Cow::Borrowed(s)
+    } else {
+        Cow::Owned(slice.iter().map(|v| v.to_f32().unwrap()).collect())
+    }
+}
+
+/// Helper to convert a f32 vector to a generic float vector, using zero-copy if possible.
+fn cast_output_vec<T>(vec: Vec<f32>) -> Vec<T>
+where
+    T: Float + 'static,
+{
+    if TypeId::of::<T>() == TypeId::of::<f32>() {
+        let v_any = Box::new(vec) as Box<dyn Any>;
+        *v_any.downcast::<Vec<T>>().expect("TypeId mismatch")
+    } else {
+        vec.into_iter().map(|v| T::from(v).unwrap()).collect()
     }
 }
