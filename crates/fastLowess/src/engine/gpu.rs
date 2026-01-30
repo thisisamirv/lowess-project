@@ -63,6 +63,15 @@ override PREPARE_MODE: u32 = 0u;
 override SORT_MODE: u32 = 0u;
 override REDUCE_OP: u32 = 0u;
 override REDUCE_SRC: u32 = 0u;
+override CONTROL_OP: u32 = 0u;
+
+const CONTROL_RESET_RADIX: u32 = 0u;
+const CONTROL_INC_RADIX: u32 = 1u;
+const CONTROL_SET_SCALE_MODE: u32 = 2u;
+const CONTROL_SET_CENTER_MODE: u32 = 3u;
+const CONTROL_FINALIZE_CONV: u32 = 4u;
+const CONTROL_PREPARE_NEXT: u32 = 5u;
+const CONTROL_INIT_STATE: u32 = 6u;
 override FINALIZE_MODE: u32 = 0u;
 
 override CV_TARGET: u32 = 0u;
@@ -168,6 +177,17 @@ fn get_kernel_weight(u: f32, u2: f32) -> f32 {
     return kw;
 }
 
+// Helper: Linear Interpolation
+fn get_interpolated_value(x_i: f32, x0: f32, x1: f32, y0: f32, y1: f32) -> f32 {
+    let denom = x1 - x0;
+    if (abs(denom) < 1e-12) {
+        return (y0 + y1) * 0.5;
+    } else {
+        let t = (x_i - x0) / denom;
+        return y0 + t * (y1 - y0);
+    }
+}
+
 // Helper: Adaptive Window Selection
 fn get_adaptive_window(center_idx: u32, x_center: f32) -> vec2<u32> {
     let n = config.n;
@@ -206,12 +226,62 @@ fn get_adaptive_window(center_idx: u32, x_center: f32) -> vec2<u32> {
     return vec2(left, right);
 }
 
-
 @compute @workgroup_size(1)
-fn init_loop_state() {
-    w_config.converged = 0u;
-    w_config.iteration = 0u;
-    w_config.radix_pass = 0u;
+fn control_pass_generic() {
+    switch (CONTROL_OP) {
+        case CONTROL_INIT_STATE: {
+            w_config.converged = 0u;
+            w_config.iteration = 0u;
+            w_config.radix_pass = 0u;
+        }
+        case CONTROL_RESET_RADIX: {
+            w_config.radix_pass = 0u;
+        }
+        case CONTROL_INC_RADIX: {
+            w_config.radix_pass = w_config.radix_pass + 1u;
+        }
+        case CONTROL_SET_SCALE_MODE: {
+            w_config.update_mode = MODE_UPDATE_SCALE;
+        }
+        case CONTROL_SET_CENTER_MODE: {
+            w_config.update_mode = MODE_UPDATE_CENTER;
+        }
+        case CONTROL_FINALIZE_CONV: {
+            if (w_config.iteration > 0u) {
+                let max_diff_bits = atomicLoad(&global_max_diff);
+                let max_diff = bitcast<f32>(max_diff_bits);
+                if (max_diff < config.tolerance) {
+                    w_config.converged = 1u;
+                }
+            }
+        }
+        case CONTROL_PREPARE_NEXT: {
+            w_config.iteration = w_config.iteration + 1u;
+            atomicStore(&global_max_diff, 0u);
+            
+            let is_converged = w_config.converged == 1u;
+            let anchor_count = w_config.anchor_count;
+            
+            // Slot 0: fit_anchors (anchor_count threads)
+            if (is_converged) { indirect_args[0] = 0u; } 
+            else { indirect_args[0] = (anchor_count + 63u) / 64u; }
+            indirect_args[1] = 1u;
+            indirect_args[2] = 1u;
+            
+            // Slot 3: Standard N-thread Kernels (interpolate, etc)
+            if (is_converged) { indirect_args[3] = 0u; } 
+            else { indirect_args[3] = (config.n + 63u) / 64u; }
+            indirect_args[4] = 1u;
+            indirect_args[5] = 1u;
+
+            // Slot 6: Reduction Kernels (256 threads)
+            if (is_converged) { indirect_args[6] = 0u; } 
+            else { indirect_args[6] = (config.n + 255u) / 256u; }
+            indirect_args[7] = 1u;
+            indirect_args[8] = 1u;
+        }
+        default: {}
+    }
 }
 
 @compute @workgroup_size(256)
@@ -219,79 +289,6 @@ fn clear_histogram(@builtin(global_invocation_id) global_id: vec3<u32>) {
     if (global_id.x < 256u) {
         atomicStore(&global_histogram[global_id.x], 0u);
     }
-}
-
-@compute @workgroup_size(1)
-fn reset_radix_pass() {
-    w_config.radix_pass = 0u;
-}
-
-@compute @workgroup_size(1)
-fn inc_radix_pass() {
-    w_config.radix_pass = w_config.radix_pass + 1u;
-}
-
-
-@compute @workgroup_size(1)
-fn set_mode_scale() {
-    w_config.update_mode = MODE_UPDATE_SCALE;
-}
-
-@compute @workgroup_size(1)
-fn set_mode_center() {
-    w_config.update_mode = MODE_UPDATE_CENTER;
-}
-
-@compute @workgroup_size(1)
-fn finalize_convergence() {
-    // Only check if iteration > 0
-    if (w_config.iteration > 0u) {
-        // Read global max difference (atomic)
-        // Since differences are always positive, bitcast preserves ordering for max check
-        let max_diff_bits = atomicLoad(&global_max_diff);
-        let max_diff = bitcast<f32>(max_diff_bits);
-        
-        if (max_diff < config.tolerance) {
-            w_config.converged = 1u;
-        }
-    }
-}
-
-@compute @workgroup_size(1)
-fn prepare_next_pass() {
-    w_config.iteration = w_config.iteration + 1u;
-    // Reset global max diff for next pass
-    atomicStore(&global_max_diff, 0u);
-    
-    let is_converged = w_config.converged == 1u;
-    
-    // Slot 0: fit_anchors (anchor_count threads)
-    let anchor_count = w_config.anchor_count;
-    if (is_converged) {
-        indirect_args[0] = 0u;
-    } else {
-        indirect_args[0] = (anchor_count + 63u) / 64u;
-    }
-    indirect_args[1] = 1u;
-    indirect_args[2] = 1u;
-    
-    // Slot 3: Standard N-thread Kernels (interpolate, etc)
-    if (is_converged) {
-        indirect_args[3] = 0u;
-    } else {
-        indirect_args[3] = (config.n + 63u) / 64u;
-    }
-    indirect_args[4] = 1u;
-    indirect_args[5] = 1u;
-
-    // Slot 6: Reduction Kernels (256 threads)
-    if (is_converged) {
-        indirect_args[6] = 0u;
-    } else {
-        indirect_args[6] = (config.n + 255u) / 256u;
-    }
-    indirect_args[7] = 1u;
-    indirect_args[8] = 1u;
 }
 
 // Bindings 1-3 in Group 1: Test Data (for CV Scoring)
@@ -342,18 +339,7 @@ fn score_cv_points(@builtin(global_invocation_id) global_id: vec3<u32>) {
             }
         }
         
-        let x0 = x[left];
-        let x1 = x[right];
-        let y0 = y_smooth[left];
-        let y1 = y_smooth[right];
-        
-        let denom = x1 - x0;
-        if (abs(denom) < 1e-12) {
-            pred = (y0 + y1) * 0.5;
-        } else {
-            let t = (xt - x0) / denom;
-            pred = y0 + t * (y1 - y0);
-        }
+        pred = get_interpolated_value(xt, x[left], x[right], y_smooth[left], y_smooth[right]);
     }
     
     let err = yt - pred;
@@ -568,9 +554,7 @@ fn interpolate(@builtin(global_invocation_id) global_id: vec3<u32>) {
     if (idx_l == idx_r) {
         fitted = y_l;
     } else {
-        // Linear interpolation
-        let t = (x_i - x_l) / (x_r - x_l);
-        fitted = y_l + (y_r - y_l) * t;
+        fitted = get_interpolated_value(x_i, x_l, x_r, y_l, y_r);
     }
 
     y_smooth[i] = fitted;
@@ -676,83 +660,6 @@ fn reduce_generic(
             } else {
                 scratch[lid.x] = max(scratch[lid.x], scratch[lid.x + s]);
             }
-        }
-        workgroupBarrier();
-    }
-    
-    if (lid.x == 0u) {
-        reduction[wid.x] = scratch[0];
-    }
-}
-
-@compute @workgroup_size(256)
-fn reduce_min_max(
-    @builtin(global_invocation_id) global_id: vec3<u32>,
-    @builtin(local_invocation_id) lid: vec3<u32>,
-    @builtin(workgroup_id) wid: vec3<u32>
-) {
-    let i = global_id.x;
-    var val = 0.0;
-    if (i < config.n) {
-        let r = residuals[i];
-        if (config.is_absolute != 0u) {
-            val = abs(r - config.median_center);
-        } else {
-            val = abs(r);
-        }
-    } else {
-        // Use sentinel values for out-of-bounds to not affect reduction
-        val = 0.0; // For max
-    }
-    
-    scratch[lid.x] = val; // Store max in first half of scratch
-    // Use second half for min
-    scratch[lid.x + 256u] = val;
-    if (i >= config.n) {
-        scratch[lid.x + 256u] = 1e30; // Sentinel for min
-    }
-    workgroupBarrier();
-    
-    for (var s = 128u; s > 0u; s >>= 1u) {
-        if (lid.x < s) {
-            scratch[lid.x] = max(scratch[lid.x], scratch[lid.x + s]);
-            scratch[lid.x + 256u] = min(scratch[lid.x + 256u], scratch[lid.x + 256u + s]);
-        }
-        workgroupBarrier();
-    }
-    
-    if (lid.x == 0u) {
-        reduction[wid.x * 2u] = scratch[0];
-        reduction[wid.x * 2u + 1u] = scratch[256];
-    }
-}
-
-@compute @workgroup_size(256)
-fn reduce_count_below(
-    @builtin(global_invocation_id) global_id: vec3<u32>,
-    @builtin(local_invocation_id) lid: vec3<u32>,
-    @builtin(workgroup_id) wid: vec3<u32>
-) {
-    let i = global_id.x;
-    var count = 0.0;
-    if (i < config.n) {
-        let r = residuals[i];
-        var val = r;
-        if (config.is_absolute != 0u) {
-            val = abs(r - config.median_center);
-        }
-        
-        if (val <= config.median_threshold) {
-            count = 1.0;
-        }
-    }
-    
-    scratch[lid.x] = count;
-    workgroupBarrier();
-    
-    for (var s = 128u; s > 0u; s >>= 1u) {
-        if (lid.x < s) {
-            scratch[lid.x] += scratch[lid.x + s];
         }
         workgroupBarrier();
     }
@@ -1430,103 +1337,152 @@ pub struct WeightConfig {
     pub update_mode: u32,
 }
 
+#[derive(Debug, Clone, Copy)]
+#[repr(u32)]
+pub enum ControlOp {
+    ResetRadix = 0,
+    IncRadix = 1,
+    SetScaleMode = 2,
+    SetCenterMode = 3,
+    FinalizeConv = 4,
+    PrepareNext = 5,
+    InitState = 6,
+}
+
+#[derive(Debug, Clone, Copy)]
+#[repr(u32)]
+pub enum PrepareOp {
+    #[allow(clippy::upper_case_acronyms)]
+    MAR = 0,
+    Signed = 1,
+    #[allow(clippy::upper_case_acronyms)]
+    MAD = 2,
+}
+
+pub struct GpuPipelines {
+    pub fit_pipeline: ComputePipeline,
+    pub interpolate_pipeline: ComputePipeline,
+    pub weight_pipeline: ComputePipeline,
+    pub reduce_max_diff_pipeline: ComputePipeline,
+    pub reduce_sum_abs_pipeline: ComputePipeline,
+    pub finalize_scale_pipeline: ComputePipeline,
+    pub init_weights_pipeline: ComputePipeline,
+    pub compute_intervals_pipeline: ComputePipeline,
+    pub prepare_pipelines: [ComputePipeline; 3],
+    pub radix_histogram_pipeline: ComputePipeline,
+    pub radix_prefix_sum_pipeline: ComputePipeline,
+    pub radix_scatter_pipeline: ComputePipeline,
+    pub radix_copy_back_pipeline: ComputePipeline,
+    pub select_median_pipeline: ComputePipeline,
+    pub sort_x_histogram_pipeline: ComputePipeline,
+    pub sort_x_scatter_pipeline: ComputePipeline,
+    pub sort_x_copy_back_pipeline: ComputePipeline,
+    pub se_pipeline: ComputePipeline,
+    pub pad_pipeline: ComputePipeline,
+    pub update_scale_config_pipeline: ComputePipeline,
+    pub clear_histogram_pipeline: ComputePipeline,
+    pub control_pipelines: [ComputePipeline; 7],
+    pub scan_block_pipeline: ComputePipeline,
+    pub scan_add_base_pipeline: ComputePipeline,
+    pub scan_aux_pipeline: ComputePipeline,
+    pub compact_anchors_pipeline: ComputePipeline,
+    pub mark_anchor_candidates_pipeline: ComputePipeline,
+    pub finalize_sum_pipeline: ComputePipeline,
+    pub score_cv_points_pipeline: ComputePipeline,
+    pub sum_sse_reduction_pipeline: ComputePipeline,
+    pub interval_bounds_pipeline: ComputePipeline,
+    pub sum_residuals_squared_pipeline: ComputePipeline,
+    pub cv_prepare_mask_pipeline: ComputePipeline,
+    pub cv_mark_test_indices_pipeline: ComputePipeline,
+    pub cv_prepare_compact_flags_train_pipeline: ComputePipeline,
+    pub cv_prepare_compact_flags_test_pipeline: ComputePipeline,
+    pub cv_compact_training_pipeline: ComputePipeline,
+    pub cv_compact_test_pipeline: ComputePipeline,
+}
+
+pub struct GpuBuffers {
+    // Group 0
+    pub config_buffer: Option<Buffer>,
+    pub x_buffer: Option<Buffer>,
+    pub y_buffer: Option<Buffer>,
+    pub anchor_indices_buffer: Option<Buffer>,
+    pub anchor_output_buffer: Option<Buffer>,
+    pub indirect_buffer: Option<Buffer>,
+
+    // Group 1
+    pub interval_map_buffer: Option<Buffer>,
+
+    // Group 2
+    pub weights_buffer: Option<Buffer>,
+    pub y_smooth_buffer: Option<Buffer>,
+    pub y_prev_buffer: Option<Buffer>,
+    pub residuals_buffer: Option<Buffer>,
+    pub histogram_buffer: Option<Buffer>,
+    pub conf_lower_buffer: Option<Buffer>,
+    pub conf_upper_buffer: Option<Buffer>,
+    pub pred_lower_buffer: Option<Buffer>,
+    pub pred_upper_buffer: Option<Buffer>,
+
+    // Group 3
+    pub w_config_buffer: Option<Buffer>,
+    pub reduction_buffer: Option<Buffer>,
+    pub std_errors_buffer: Option<Buffer>,
+    pub global_max_diff_buffer: Option<Buffer>,
+    pub median_buffer: Option<Buffer>,
+    pub scan_block_sums_buffer: Option<Buffer>,
+    pub scan_indices_buffer: Option<Buffer>,
+
+    // Group 4
+    pub x_test_buffer: Option<Buffer>,
+    pub y_test_buffer: Option<Buffer>,
+    pub test_errors_buffer: Option<Buffer>,
+
+    // Group 5
+    pub x_global_buffer: Option<Buffer>,
+    pub y_global_buffer: Option<Buffer>,
+    pub shuffled_indices_buffer: Option<Buffer>,
+    pub cv_test_mask_buffer: Option<Buffer>,
+
+    // Staging
+    pub staging_buffer: Option<Buffer>,
+}
+
+impl GpuBuffers {
+    pub fn ensure_capacity(
+        device: &Device,
+        label: &str,
+        buffer_opt: &mut Option<Buffer>,
+        size_required: u64,
+        usage: BufferUsages,
+    ) -> bool {
+        let mut created_new = false;
+        if buffer_opt
+            .as_ref()
+            .is_some_and(|buf| buf.size() < size_required)
+        {
+            *buffer_opt = None;
+        }
+
+        if buffer_opt.is_none() {
+            *buffer_opt = Some(device.create_buffer(&BufferDescriptor {
+                label: Some(label),
+                size: size_required,
+                usage,
+                mapped_at_creation: false,
+            }));
+            created_new = true;
+        }
+        created_new
+    }
+}
+
 pub struct GpuExecutor {
     pub device: Device,
     pub queue: Queue,
 
     // Pipelines
-    fit_pipeline: ComputePipeline,
-    interpolate_pipeline: ComputePipeline,
-    weight_pipeline: ComputePipeline,
-    reduce_max_diff_pipeline: ComputePipeline,
-    reduce_sum_abs_pipeline: ComputePipeline,
-    finalize_scale_pipeline: ComputePipeline,
-    init_weights_pipeline: ComputePipeline,
-    compute_intervals_pipeline: ComputePipeline,
-    prepare_mar_residuals_pipeline: ComputePipeline,
-    prepare_residuals_signed_pipeline: ComputePipeline,
-    prepare_mad_residuals_pipeline: ComputePipeline,
-    radix_histogram_pipeline: ComputePipeline,
-    radix_prefix_sum_pipeline: ComputePipeline,
-    radix_scatter_pipeline: ComputePipeline,
-    radix_copy_back_pipeline: ComputePipeline,
-    select_median_pipeline: ComputePipeline,
-    sort_x_histogram_pipeline: ComputePipeline,
-    sort_x_scatter_pipeline: ComputePipeline,
-    sort_x_copy_back_pipeline: ComputePipeline,
-    se_pipeline: ComputePipeline,
-    pad_pipeline: ComputePipeline,
-    update_scale_config_pipeline: ComputePipeline,
-    init_loop_state_pipeline: ComputePipeline,
-    finalize_convergence_pipeline: ComputePipeline,
-    prepare_next_pass_pipeline: ComputePipeline,
-    clear_histogram_pipeline: ComputePipeline,
-    inc_radix_pass_pipeline: ComputePipeline,
-    set_mode_scale_pipeline: ComputePipeline,
-    set_mode_center_pipeline: ComputePipeline,
-    scan_block_pipeline: ComputePipeline,
-    scan_add_base_pipeline: ComputePipeline,
-    scan_aux_pipeline: ComputePipeline,
-    compact_anchors_pipeline: ComputePipeline,
-    mark_anchor_candidates_pipeline: ComputePipeline,
-    finalize_sum_pipeline: ComputePipeline,
-    score_cv_points_pipeline: ComputePipeline,
-    sum_sse_reduction_pipeline: ComputePipeline,
-    interval_bounds_pipeline: ComputePipeline,
-    sum_residuals_squared_pipeline: ComputePipeline,
-
-    // CV Pipelines
-    cv_prepare_mask_pipeline: ComputePipeline,
-    cv_mark_test_indices_pipeline: ComputePipeline,
-    cv_prepare_compact_flags_train_pipeline: ComputePipeline,
-    cv_prepare_compact_flags_test_pipeline: ComputePipeline,
-    cv_compact_training_pipeline: ComputePipeline,
-    cv_compact_test_pipeline: ComputePipeline,
-
-    // Buffers - Group 0
-    pub config_buffer: Option<Buffer>,
-    pub x_buffer: Option<Buffer>,
-    pub y_buffer: Option<Buffer>,
-    anchor_indices_buffer: Option<Buffer>,
-    anchor_output_buffer: Option<Buffer>,
-    indirect_buffer: Option<Buffer>,
-
-    // Buffers - Group 1
-    interval_map_buffer: Option<Buffer>,
-
-    // Buffers - Group 2
-    weights_buffer: Option<Buffer>,
-    y_smooth_buffer: Option<Buffer>,
-    y_prev_buffer: Option<Buffer>,
-    residuals_buffer: Option<Buffer>,
-    histogram_buffer: Option<Buffer>,
-    conf_lower_buffer: Option<Buffer>,
-    conf_upper_buffer: Option<Buffer>,
-    pred_lower_buffer: Option<Buffer>,
-    pred_upper_buffer: Option<Buffer>,
-
-    // Buffers - Group 3
-    w_config_buffer: Option<Buffer>,
-    pub reduction_buffer: Option<Buffer>,
-    std_errors_buffer: Option<Buffer>,
-    global_max_diff_buffer: Option<Buffer>,
-    median_buffer: Option<Buffer>,
-    scan_block_sums_buffer: Option<Buffer>,
-    scan_indices_buffer: Option<Buffer>,
-
-    // Buffers - Group 4
-    x_test_buffer: Option<Buffer>,
-    y_test_buffer: Option<Buffer>,
-    test_errors_buffer: Option<Buffer>,
-
-    // Buffers - Group 5 (CV Global)
-    x_global_buffer: Option<Buffer>,
-    y_global_buffer: Option<Buffer>,
-    shuffled_indices_buffer: Option<Buffer>,
-    cv_test_mask_buffer: Option<Buffer>,
-
-    // Staging
-    staging_buffer: Option<Buffer>,
+    pub pipelines: GpuPipelines,
+    pub buffers: GpuBuffers,
 
     // Bind Groups
     bg0_data: Option<BindGroup>,
@@ -1663,394 +1619,300 @@ impl GpuExecutor {
         let cps = |entry: &str| cp(entry, entry, &[]);
 
         Ok(Self {
-            fit_pipeline: cps("fit_anchors"),
-            interpolate_pipeline: cps("interpolate"),
-            weight_pipeline: cps("update_weights"),
-            reduce_max_diff_pipeline: cp(
-                "reduce_max_diff",
-                "reduce_generic",
-                &[("REDUCE_OP", 1.0), ("REDUCE_SRC", 3.0)],
-            ),
-            reduce_sum_abs_pipeline: cp(
-                "reduce_sum_abs",
-                "reduce_generic",
-                &[("REDUCE_OP", 0.0), ("REDUCE_SRC", 0.0)],
-            ),
-            finalize_scale_pipeline: cp(
-                "finalize_scale",
-                "finalize_reduction_generic",
-                &[("FINALIZE_MODE", 0.0)],
-            ),
-            finalize_sum_pipeline: cp(
-                "finalize_sum",
-                "finalize_reduction_generic",
-                &[("FINALIZE_MODE", 1.0)],
-            ),
-            score_cv_points_pipeline: cps("score_cv_points"),
-            sum_sse_reduction_pipeline: cp(
-                "sum_sse_reduction",
-                "reduce_generic",
-                &[("REDUCE_OP", 0.0), ("REDUCE_SRC", 2.0)],
-            ),
-            sum_residuals_squared_pipeline: cp(
-                "sum_residuals_squared",
-                "reduce_generic",
-                &[("REDUCE_OP", 0.0), ("REDUCE_SRC", 1.0)],
-            ),
-            cv_prepare_mask_pipeline: cps("cv_prepare_mask"),
-            cv_mark_test_indices_pipeline: cps("cv_mark_test_indices"),
-            cv_prepare_compact_flags_train_pipeline: cp(
-                "cv_prepare_compact_flags_train",
-                "cv_prepare_compact_flags",
-                &[("CV_TARGET", 0.0)],
-            ),
-            cv_prepare_compact_flags_test_pipeline: cp(
-                "cv_prepare_compact_flags_test",
-                "cv_prepare_compact_flags",
-                &[("CV_TARGET", 1.0)],
-            ),
-            cv_compact_training_pipeline: cp(
-                "cv_compact_training",
-                "cv_compact_data",
-                &[("CV_TARGET", 0.0)],
-            ),
-            cv_compact_test_pipeline: cp(
-                "cv_compact_test",
-                "cv_compact_data",
-                &[("CV_TARGET", 1.0)],
-            ),
-            interval_bounds_pipeline: cps("compute_interval_bounds"),
-            init_weights_pipeline: cps("init_weights"),
-            compute_intervals_pipeline: cps("compute_intervals"),
-            prepare_mar_residuals_pipeline: cp(
-                "prepare_mar_residuals",
-                "prepare_reduction_generic",
-                &[("PREPARE_MODE", 0.0)],
-            ),
-            prepare_residuals_signed_pipeline: cp(
-                "prepare_residuals_signed",
-                "prepare_reduction_generic",
-                &[("PREPARE_MODE", 1.0)],
-            ),
-            prepare_mad_residuals_pipeline: cp(
-                "prepare_mad_residuals",
-                "prepare_reduction_generic",
-                &[("PREPARE_MODE", 2.0)],
-            ),
-            radix_histogram_pipeline: cp(
-                "radix_histogram",
-                "sort_histogram_generic",
-                &[("SORT_MODE", 0.0)],
-            ),
-            radix_prefix_sum_pipeline: cps("radix_prefix_sum"),
-            radix_scatter_pipeline: cp(
-                "radix_scatter",
-                "sort_scatter_generic",
-                &[("SORT_MODE", 0.0)],
-            ),
-            radix_copy_back_pipeline: cp(
-                "radix_copy_back",
-                "sort_copy_back_generic",
-                &[("SORT_MODE", 0.0)],
-            ),
-            select_median_pipeline: cps("select_median"),
-            sort_x_histogram_pipeline: cp(
-                "sort_x_histogram",
-                "sort_histogram_generic",
-                &[("SORT_MODE", 1.0)],
-            ),
-            sort_x_scatter_pipeline: cp(
-                "sort_x_scatter",
-                "sort_scatter_generic",
-                &[("SORT_MODE", 1.0)],
-            ),
-            sort_x_copy_back_pipeline: cp(
-                "sort_x_copy_back",
-                "sort_copy_back_generic",
-                &[("SORT_MODE", 1.0)],
-            ),
-            se_pipeline: cps("compute_se"),
-            pad_pipeline: cps("pad_data"),
-            update_scale_config_pipeline: cps("update_scale_config"),
-            init_loop_state_pipeline: cps("init_loop_state"),
-            finalize_convergence_pipeline: cps("finalize_convergence"),
-            prepare_next_pass_pipeline: cps("prepare_next_pass"),
-            clear_histogram_pipeline: cps("clear_histogram"),
-            inc_radix_pass_pipeline: cps("inc_radix_pass"),
-            set_mode_scale_pipeline: cps("set_mode_scale"),
-            set_mode_center_pipeline: cps("set_mode_center"),
-            scan_block_pipeline: cps("scan_block"),
-            scan_aux_pipeline: cps("scan_aux_serial"),
-            scan_add_base_pipeline: cps("scan_add_base"),
-            compact_anchors_pipeline: cps("compact_anchors"),
-            mark_anchor_candidates_pipeline: cps("mark_anchor_candidates"),
+            pipelines: GpuPipelines {
+                fit_pipeline: cps("fit_anchors"),
+                interpolate_pipeline: cps("interpolate"),
+                weight_pipeline: cps("update_weights"),
+                reduce_max_diff_pipeline: cp(
+                    "reduce_max_diff",
+                    "reduce_generic",
+                    &[("REDUCE_OP", 1.0), ("REDUCE_SRC", 3.0)],
+                ),
+                reduce_sum_abs_pipeline: cp(
+                    "reduce_sum_abs",
+                    "reduce_generic",
+                    &[("REDUCE_OP", 0.0), ("REDUCE_SRC", 0.0)],
+                ),
+                finalize_scale_pipeline: cp(
+                    "finalize_scale",
+                    "finalize_reduction_generic",
+                    &[("FINALIZE_MODE", 0.0)],
+                ),
+                finalize_sum_pipeline: cp(
+                    "finalize_sum",
+                    "finalize_reduction_generic",
+                    &[("FINALIZE_MODE", 1.0)],
+                ),
+                score_cv_points_pipeline: cps("score_cv_points"),
+                sum_sse_reduction_pipeline: cp(
+                    "sum_sse_reduction",
+                    "reduce_generic",
+                    &[("REDUCE_OP", 0.0), ("REDUCE_SRC", 2.0)],
+                ),
+                sum_residuals_squared_pipeline: cp(
+                    "sum_residuals_squared",
+                    "reduce_generic",
+                    &[("REDUCE_OP", 0.0), ("REDUCE_SRC", 1.0)],
+                ),
+                cv_prepare_mask_pipeline: cps("cv_prepare_mask"),
+                cv_mark_test_indices_pipeline: cps("cv_mark_test_indices"),
+                cv_prepare_compact_flags_train_pipeline: cp(
+                    "cv_prepare_compact_flags_train",
+                    "cv_prepare_compact_flags",
+                    &[("CV_TARGET", 0.0)],
+                ),
+                cv_prepare_compact_flags_test_pipeline: cp(
+                    "cv_prepare_compact_flags_test",
+                    "cv_prepare_compact_flags",
+                    &[("CV_TARGET", 1.0)],
+                ),
+                cv_compact_training_pipeline: cp(
+                    "cv_compact_training",
+                    "cv_compact_data",
+                    &[("CV_TARGET", 0.0)],
+                ),
+                cv_compact_test_pipeline: cp(
+                    "cv_compact_test",
+                    "cv_compact_data",
+                    &[("CV_TARGET", 1.0)],
+                ),
+                interval_bounds_pipeline: cps("compute_interval_bounds"),
+                init_weights_pipeline: cps("init_weights"),
+                compute_intervals_pipeline: cps("compute_intervals"),
+                prepare_pipelines: [
+                    cp(
+                        "prepare_mar_residuals",
+                        "prepare_reduction_generic",
+                        &[("PREPARE_MODE", 0.0)],
+                    ),
+                    cp(
+                        "prepare_residuals_signed",
+                        "prepare_reduction_generic",
+                        &[("PREPARE_MODE", 1.0)],
+                    ),
+                    cp(
+                        "prepare_mad_residuals",
+                        "prepare_reduction_generic",
+                        &[("PREPARE_MODE", 2.0)],
+                    ),
+                ],
+                radix_histogram_pipeline: cp(
+                    "radix_histogram",
+                    "sort_histogram_generic",
+                    &[("SORT_MODE", 0.0)],
+                ),
+                radix_prefix_sum_pipeline: cps("radix_prefix_sum"),
+                radix_scatter_pipeline: cp(
+                    "radix_scatter",
+                    "sort_scatter_generic",
+                    &[("SORT_MODE", 0.0)],
+                ),
+                radix_copy_back_pipeline: cp(
+                    "radix_copy_back",
+                    "sort_copy_back_generic",
+                    &[("SORT_MODE", 0.0)],
+                ),
+                select_median_pipeline: cps("select_median"),
+                sort_x_histogram_pipeline: cp(
+                    "sort_x_histogram",
+                    "sort_histogram_generic",
+                    &[("SORT_MODE", 1.0)],
+                ),
+                sort_x_scatter_pipeline: cp(
+                    "sort_x_scatter",
+                    "sort_scatter_generic",
+                    &[("SORT_MODE", 1.0)],
+                ),
+                sort_x_copy_back_pipeline: cp(
+                    "sort_x_copy_back",
+                    "sort_copy_back_generic",
+                    &[("SORT_MODE", 1.0)],
+                ),
+                se_pipeline: cps("compute_se"),
+                pad_pipeline: cps("pad_data"),
+                update_scale_config_pipeline: cps("update_scale_config"),
+                clear_histogram_pipeline: cps("clear_histogram"),
+                control_pipelines: [
+                    cp(
+                        "control_reset_radix",
+                        "control_pass_generic",
+                        &[("CONTROL_OP", 0.0)],
+                    ),
+                    cp(
+                        "control_inc_radix",
+                        "control_pass_generic",
+                        &[("CONTROL_OP", 1.0)],
+                    ),
+                    cp(
+                        "control_set_scale_mode",
+                        "control_pass_generic",
+                        &[("CONTROL_OP", 2.0)],
+                    ),
+                    cp(
+                        "control_set_center_mode",
+                        "control_pass_generic",
+                        &[("CONTROL_OP", 3.0)],
+                    ),
+                    cp(
+                        "control_finalize_conv",
+                        "control_pass_generic",
+                        &[("CONTROL_OP", 4.0)],
+                    ),
+                    cp(
+                        "control_prepare_next",
+                        "control_pass_generic",
+                        &[("CONTROL_OP", 5.0)],
+                    ),
+                    cp(
+                        "control_init",
+                        "control_pass_generic",
+                        &[("CONTROL_OP", 6.0)],
+                    ),
+                ],
+                scan_block_pipeline: cps("scan_block"),
+                scan_aux_pipeline: cps("scan_aux_serial"),
+                scan_add_base_pipeline: cps("scan_add_base"),
+                compact_anchors_pipeline: cps("compact_anchors"),
+                mark_anchor_candidates_pipeline: cps("mark_anchor_candidates"),
+            },
             device,
             queue,
-            config_buffer: None,
-            x_buffer: None,
-            y_buffer: None,
-            anchor_indices_buffer: None,
-            anchor_output_buffer: None,
-            indirect_buffer: None,
-            interval_map_buffer: None,
-            weights_buffer: None,
-            y_smooth_buffer: None,
-            y_prev_buffer: None,
-            residuals_buffer: None,
-            histogram_buffer: None,
-            conf_lower_buffer: None,
-            conf_upper_buffer: None,
-            pred_lower_buffer: None,
-            pred_upper_buffer: None,
-            w_config_buffer: None,
-            reduction_buffer: None,
-            std_errors_buffer: None,
-            global_max_diff_buffer: None,
-            median_buffer: None,
-            scan_block_sums_buffer: None,
-            scan_indices_buffer: None,
-            staging_buffer: None,
+            buffers: GpuBuffers {
+                config_buffer: None,
+                x_buffer: None,
+                y_buffer: None,
+                anchor_indices_buffer: None,
+                anchor_output_buffer: None,
+                indirect_buffer: None,
+                interval_map_buffer: None,
+                weights_buffer: None,
+                y_smooth_buffer: None,
+                y_prev_buffer: None,
+                residuals_buffer: None,
+                histogram_buffer: None,
+                conf_lower_buffer: None,
+                conf_upper_buffer: None,
+                pred_lower_buffer: None,
+                pred_upper_buffer: None,
+                w_config_buffer: None,
+                reduction_buffer: None,
+                std_errors_buffer: None,
+                global_max_diff_buffer: None,
+                median_buffer: None,
+                scan_block_sums_buffer: None,
+                scan_indices_buffer: None,
+                x_test_buffer: None,
+                y_test_buffer: None,
+                test_errors_buffer: None,
+                x_global_buffer: None,
+                y_global_buffer: None,
+                shuffled_indices_buffer: None,
+                cv_test_mask_buffer: None,
+                staging_buffer: None,
+            },
             bg0_data: None,
             bg1_topo: None,
             bg2_state: None,
             bg3_aux: None,
             bg3_median: None,
             bg0_test: None,
-            x_test_buffer: None,
-            y_test_buffer: None,
-            test_errors_buffer: None,
-            x_global_buffer: None,
-            y_global_buffer: None,
-            shuffled_indices_buffer: None,
-            cv_test_mask_buffer: None,
             n: 0,
             orig_n: 0,
             num_anchors: 0,
         })
     }
 
-    fn create_bg0(&self, x: &Buffer, y: &Buffer) -> BindGroup {
+    fn build_bg(&self, label: &str, layout_idx: u32, buffers: &[&Buffer]) -> BindGroup {
+        let entries: Vec<BindGroupEntry> = buffers
+            .iter()
+            .enumerate()
+            .map(|(i, buf)| BindGroupEntry {
+                binding: i as u32,
+                resource: buf.as_entire_binding(),
+            })
+            .collect();
+
         self.device.create_bind_group(&BindGroupDescriptor {
-            label: Some("BG0"),
-            layout: &self.fit_pipeline.get_bind_group_layout(0),
-            entries: &[
-                BindGroupEntry {
-                    binding: 0,
-                    resource: self.config_buffer.as_ref().unwrap().as_entire_binding(),
-                },
-                BindGroupEntry {
-                    binding: 1,
-                    resource: x.as_entire_binding(),
-                },
-                BindGroupEntry {
-                    binding: 2,
-                    resource: y.as_entire_binding(),
-                },
-                BindGroupEntry {
-                    binding: 3,
-                    resource: self
-                        .anchor_indices_buffer
-                        .as_ref()
-                        .unwrap()
-                        .as_entire_binding(),
-                },
-                BindGroupEntry {
-                    binding: 4,
-                    resource: self
-                        .anchor_output_buffer
-                        .as_ref()
-                        .unwrap()
-                        .as_entire_binding(),
-                },
-                BindGroupEntry {
-                    binding: 5,
-                    resource: self.indirect_buffer.as_ref().unwrap().as_entire_binding(),
-                },
-            ],
+            label: Some(label),
+            layout: &self
+                .pipelines
+                .fit_pipeline
+                .get_bind_group_layout(layout_idx),
+            entries: &entries,
         })
+    }
+
+    fn create_bg0(&self, x: &Buffer, y: &Buffer) -> BindGroup {
+        self.build_bg(
+            "BG0",
+            0,
+            &[
+                self.buffers.config_buffer.as_ref().unwrap(),
+                x,
+                y,
+                self.buffers.anchor_indices_buffer.as_ref().unwrap(),
+                self.buffers.anchor_output_buffer.as_ref().unwrap(),
+                self.buffers.indirect_buffer.as_ref().unwrap(),
+            ],
+        )
     }
 
     fn create_bg1(&self) -> BindGroup {
-        self.device.create_bind_group(&BindGroupDescriptor {
-            label: Some("BG1"),
-            layout: &self.fit_pipeline.get_bind_group_layout(1),
-            entries: &[
-                BindGroupEntry {
-                    binding: 0,
-                    resource: self
-                        .interval_map_buffer
-                        .as_ref()
-                        .unwrap()
-                        .as_entire_binding(),
-                },
-                BindGroupEntry {
-                    binding: 1,
-                    resource: self.x_test_buffer.as_ref().unwrap().as_entire_binding(),
-                },
-                BindGroupEntry {
-                    binding: 2,
-                    resource: self.y_test_buffer.as_ref().unwrap().as_entire_binding(),
-                },
-                BindGroupEntry {
-                    binding: 3,
-                    resource: self
-                        .test_errors_buffer
-                        .as_ref()
-                        .unwrap()
-                        .as_entire_binding(),
-                },
-                BindGroupEntry {
-                    binding: 4,
-                    resource: self.x_global_buffer.as_ref().unwrap().as_entire_binding(),
-                },
-                BindGroupEntry {
-                    binding: 5,
-                    resource: self.y_global_buffer.as_ref().unwrap().as_entire_binding(),
-                },
-                BindGroupEntry {
-                    binding: 6,
-                    resource: self
-                        .shuffled_indices_buffer
-                        .as_ref()
-                        .unwrap()
-                        .as_entire_binding(),
-                },
-                BindGroupEntry {
-                    binding: 7,
-                    resource: self
-                        .cv_test_mask_buffer
-                        .as_ref()
-                        .unwrap()
-                        .as_entire_binding(),
-                },
+        self.build_bg(
+            "BG1",
+            1,
+            &[
+                self.buffers.interval_map_buffer.as_ref().unwrap(),
+                self.buffers.x_test_buffer.as_ref().unwrap(),
+                self.buffers.y_test_buffer.as_ref().unwrap(),
+                self.buffers.test_errors_buffer.as_ref().unwrap(),
+                self.buffers.x_global_buffer.as_ref().unwrap(),
+                self.buffers.y_global_buffer.as_ref().unwrap(),
+                self.buffers.shuffled_indices_buffer.as_ref().unwrap(),
+                self.buffers.cv_test_mask_buffer.as_ref().unwrap(),
             ],
-        })
+        )
     }
 
     fn create_bg2(&self) -> BindGroup {
-        self.device.create_bind_group(&BindGroupDescriptor {
-            label: Some("BG2"),
-            layout: &self.fit_pipeline.get_bind_group_layout(2),
-            entries: &[
-                BindGroupEntry {
-                    binding: 0,
-                    resource: self.weights_buffer.as_ref().unwrap().as_entire_binding(),
-                },
-                BindGroupEntry {
-                    binding: 1,
-                    resource: self.y_smooth_buffer.as_ref().unwrap().as_entire_binding(),
-                },
-                BindGroupEntry {
-                    binding: 2,
-                    resource: self.residuals_buffer.as_ref().unwrap().as_entire_binding(),
-                },
-                BindGroupEntry {
-                    binding: 3,
-                    resource: self.y_prev_buffer.as_ref().unwrap().as_entire_binding(),
-                },
-                BindGroupEntry {
-                    binding: 4,
-                    resource: self.conf_lower_buffer.as_ref().unwrap().as_entire_binding(),
-                },
-                BindGroupEntry {
-                    binding: 5,
-                    resource: self.conf_upper_buffer.as_ref().unwrap().as_entire_binding(),
-                },
-                BindGroupEntry {
-                    binding: 6,
-                    resource: self.pred_lower_buffer.as_ref().unwrap().as_entire_binding(),
-                },
-                BindGroupEntry {
-                    binding: 7,
-                    resource: self.pred_upper_buffer.as_ref().unwrap().as_entire_binding(),
-                },
+        self.build_bg(
+            "BG2",
+            2,
+            &[
+                self.buffers.weights_buffer.as_ref().unwrap(),
+                self.buffers.y_smooth_buffer.as_ref().unwrap(),
+                self.buffers.residuals_buffer.as_ref().unwrap(),
+                self.buffers.y_prev_buffer.as_ref().unwrap(),
+                self.buffers.conf_lower_buffer.as_ref().unwrap(),
+                self.buffers.conf_upper_buffer.as_ref().unwrap(),
+                self.buffers.pred_lower_buffer.as_ref().unwrap(),
+                self.buffers.pred_upper_buffer.as_ref().unwrap(),
             ],
-        })
+        )
     }
 
     fn create_bg3(&self, median_buffer_override: Option<&Buffer>) -> BindGroup {
-        let binding1 = if let Some(buf) = median_buffer_override {
-            buf
+        let label = if median_buffer_override.is_some() {
+            "BG3_Median"
         } else {
-            self.reduction_buffer.as_ref().unwrap()
+            "BG3"
         };
+        let binding1 = median_buffer_override
+            .unwrap_or_else(|| self.buffers.reduction_buffer.as_ref().unwrap());
 
-        self.device.create_bind_group(&BindGroupDescriptor {
-            label: Some(if median_buffer_override.is_some() {
-                "BG3_Median"
-            } else {
-                "BG3"
-            }),
-            layout: &self.fit_pipeline.get_bind_group_layout(3),
-            entries: &[
-                BindGroupEntry {
-                    binding: 0,
-                    resource: self.w_config_buffer.as_ref().unwrap().as_entire_binding(),
-                },
-                BindGroupEntry {
-                    binding: 1,
-                    resource: binding1.as_entire_binding(),
-                },
-                BindGroupEntry {
-                    binding: 2,
-                    resource: self.std_errors_buffer.as_ref().unwrap().as_entire_binding(),
-                },
-                BindGroupEntry {
-                    binding: 3,
-                    resource: self.histogram_buffer.as_ref().unwrap().as_entire_binding(),
-                },
-                BindGroupEntry {
-                    binding: 4,
-                    resource: self
-                        .global_max_diff_buffer
-                        .as_ref()
-                        .unwrap()
-                        .as_entire_binding(),
-                },
-                BindGroupEntry {
-                    binding: 5,
-                    resource: self
-                        .scan_block_sums_buffer
-                        .as_ref()
-                        .unwrap()
-                        .as_entire_binding(),
-                },
-                BindGroupEntry {
-                    binding: 6,
-                    resource: self
-                        .scan_indices_buffer
-                        .as_ref()
-                        .unwrap()
-                        .as_entire_binding(),
-                },
+        self.build_bg(
+            label,
+            3,
+            &[
+                self.buffers.w_config_buffer.as_ref().unwrap(),
+                binding1,
+                self.buffers.std_errors_buffer.as_ref().unwrap(),
+                self.buffers.histogram_buffer.as_ref().unwrap(),
+                self.buffers.global_max_diff_buffer.as_ref().unwrap(),
+                self.buffers.scan_block_sums_buffer.as_ref().unwrap(),
+                self.buffers.scan_indices_buffer.as_ref().unwrap(),
             ],
-        })
-    }
-
-    fn ensure_buffer_capacity(
-        device: &Device,
-        label: &str,
-        buffer_opt: &mut Option<Buffer>,
-        size_required: u64,
-        usage: BufferUsages,
-    ) -> bool {
-        let mut created_new = false;
-        if let Some(buffer) = buffer_opt.as_ref()
-            && buffer.size() < size_required
-        {
-            *buffer_opt = None;
-        }
-
-        if buffer_opt.is_none() {
-            *buffer_opt = Some(device.create_buffer(&BufferDescriptor {
-                label: Some(label),
-                size: size_required,
-                usage,
-                mapped_at_creation: false,
-            }));
-            created_new = true;
-        }
-        created_new
+        )
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -2074,19 +1936,19 @@ impl GpuExecutor {
         macro_rules! ensure {
             ($label:expr, $buf:expr, $size:expr, $usage:expr) => {
                 bg_needs_update |=
-                    Self::ensure_buffer_capacity(&self.device, $label, $buf, $size, $usage);
+                    GpuBuffers::ensure_capacity(&self.device, $label, $buf, $size, $usage);
             };
         }
 
         // Group 0: Config (Uniform)
         ensure!(
             "Config",
-            &mut self.config_buffer,
+            &mut self.buffers.config_buffer,
             size_of::<GpuConfig>() as u64,
             BufferUsages::UNIFORM | BufferUsages::COPY_DST
         );
         self.queue.write_buffer(
-            self.config_buffer.as_ref().unwrap(),
+            self.buffers.config_buffer.as_ref().unwrap(),
             0,
             cast_slice(&[config]),
         );
@@ -2098,49 +1960,55 @@ impl GpuExecutor {
         // Group 0: X, Y, Anchors, AnchorOutput
         ensure!(
             "X",
-            &mut self.x_buffer,
+            &mut self.buffers.x_buffer,
             n_bytes_padded,
             BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST
         );
-        self.queue
-            .write_buffer(self.x_buffer.as_ref().unwrap(), offset, cast_slice(x));
+        self.queue.write_buffer(
+            self.buffers.x_buffer.as_ref().unwrap(),
+            offset,
+            cast_slice(x),
+        );
 
         ensure!(
             "Y",
-            &mut self.y_buffer,
+            &mut self.buffers.y_buffer,
             n_bytes_padded,
             BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST
         );
 
         ensure!(
             "IndirectArgs",
-            &mut self.indirect_buffer,
+            &mut self.buffers.indirect_buffer,
             128,
             BufferUsages::STORAGE
                 | BufferUsages::INDIRECT
                 | BufferUsages::COPY_DST
                 | BufferUsages::COPY_SRC
         );
-        self.queue
-            .write_buffer(self.y_buffer.as_ref().unwrap(), offset, cast_slice(y));
+        self.queue.write_buffer(
+            self.buffers.y_buffer.as_ref().unwrap(),
+            offset,
+            cast_slice(y),
+        );
 
         ensure!(
             "AnchorIndices",
-            &mut self.anchor_indices_buffer,
+            &mut self.buffers.anchor_indices_buffer,
             anchor_bytes,
             BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST
         );
         ensure!(
             "AnchorOutput",
-            &mut self.anchor_output_buffer,
+            &mut self.buffers.anchor_output_buffer,
             anchor_bytes,
             BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST
         );
 
         if bg_needs_update || self.bg0_data.is_none() {
             self.bg0_data = Some(self.create_bg0(
-                self.x_buffer.as_ref().unwrap(),
-                self.y_buffer.as_ref().unwrap(),
+                self.buffers.x_buffer.as_ref().unwrap(),
+                self.buffers.y_buffer.as_ref().unwrap(),
             ));
         }
 
@@ -2149,7 +2017,7 @@ impl GpuExecutor {
         let interval_bytes = (n_padded as usize * 8) as u64;
         ensure!(
             "IntervalMap",
-            &mut self.interval_map_buffer,
+            &mut self.buffers.interval_map_buffer,
             interval_bytes,
             BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST
         );
@@ -2165,49 +2033,49 @@ impl GpuExecutor {
         bg_needs_update = false;
         ensure!(
             "RobustnessWeights",
-            &mut self.weights_buffer,
+            &mut self.buffers.weights_buffer,
             n_bytes_padded,
             BufferUsages::STORAGE | BufferUsages::COPY_DST | BufferUsages::COPY_SRC
         );
         ensure!(
             "YSmooth",
-            &mut self.y_smooth_buffer,
+            &mut self.buffers.y_smooth_buffer,
             n_bytes_padded,
             BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST
         );
         ensure!(
             "Residuals",
-            &mut self.residuals_buffer,
+            &mut self.buffers.residuals_buffer,
             n_bytes_padded,
             BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST
         );
         ensure!(
             "YPrev",
-            &mut self.y_prev_buffer,
+            &mut self.buffers.y_prev_buffer,
             n_bytes_padded,
             BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST
         );
         ensure!(
             "ConfLower",
-            &mut self.conf_lower_buffer,
+            &mut self.buffers.conf_lower_buffer,
             n_bytes_padded,
             BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST
         );
         ensure!(
             "ConfUpper",
-            &mut self.conf_upper_buffer,
+            &mut self.buffers.conf_upper_buffer,
             n_bytes_padded,
             BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST
         );
         ensure!(
             "PredLower",
-            &mut self.pred_lower_buffer,
+            &mut self.buffers.pred_lower_buffer,
             n_bytes_padded,
             BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST
         );
         ensure!(
             "PredUpper",
-            &mut self.pred_upper_buffer,
+            &mut self.buffers.pred_upper_buffer,
             n_bytes_padded,
             BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST
         );
@@ -2220,7 +2088,7 @@ impl GpuExecutor {
         bg_needs_update = false;
         ensure!(
             "WConfig",
-            &mut self.w_config_buffer,
+            &mut self.buffers.w_config_buffer,
             size_of::<WeightConfig>() as u64,
             BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST
         );
@@ -2229,19 +2097,19 @@ impl GpuExecutor {
         let reduction_size = ((1024 * 1024) as usize * 4) as u64;
         ensure!(
             "Reduction",
-            &mut self.reduction_buffer,
+            &mut self.buffers.reduction_buffer,
             reduction_size,
             BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST
         );
         ensure!(
             "StdErrors",
-            &mut self.std_errors_buffer,
+            &mut self.buffers.std_errors_buffer,
             n_bytes_padded,
             BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST
         );
         ensure!(
             "Histogram",
-            &mut self.histogram_buffer,
+            &mut self.buffers.histogram_buffer,
             1024,
             BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST
         );
@@ -2249,19 +2117,19 @@ impl GpuExecutor {
         // Global Max Diff Buffer (Atomic u32)
         ensure!(
             "Global Max Diff",
-            &mut self.global_max_diff_buffer,
+            &mut self.buffers.global_max_diff_buffer,
             4,
             BufferUsages::STORAGE | BufferUsages::COPY_DST
         );
         ensure!(
             "ScanBlockSums",
-            &mut self.scan_block_sums_buffer,
+            &mut self.buffers.scan_block_sums_buffer,
             (n_padded / 256 * 4 + 4) as u64,
             BufferUsages::STORAGE | BufferUsages::COPY_DST
         );
         ensure!(
             "ScanIndices",
-            &mut self.scan_indices_buffer,
+            &mut self.buffers.scan_indices_buffer,
             n_bytes_padded,
             BufferUsages::STORAGE | BufferUsages::COPY_DST
         );
@@ -2270,21 +2138,22 @@ impl GpuExecutor {
             self.bg3_aux = Some(self.create_bg3(None));
         }
 
-        bg_needs_update |= Self::ensure_buffer_capacity(
+        bg_needs_update |= GpuBuffers::ensure_capacity(
             &self.device,
             "Median",
-            &mut self.median_buffer,
+            &mut self.buffers.median_buffer,
             reduction_size,
             BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST,
         );
 
         if bg_needs_update || self.bg3_median.is_none() {
-            self.bg3_median = Some(self.create_bg3(Some(self.median_buffer.as_ref().unwrap())));
+            self.bg3_median =
+                Some(self.create_bg3(Some(self.buffers.median_buffer.as_ref().unwrap())));
         }
 
         // Initialize WeightConfig
         self.queue.write_buffer(
-            self.w_config_buffer.as_ref().unwrap(),
+            self.buffers.w_config_buffer.as_ref().unwrap(),
             0,
             bytes_of(&WeightConfig {
                 n: n_padded,
@@ -2303,10 +2172,10 @@ impl GpuExecutor {
 
         // Staging
         let staging_size = n_bytes_padded.max(1024); // Ensure enough space for small downloads or median
-        Self::ensure_buffer_capacity(
+        GpuBuffers::ensure_capacity(
             &self.device,
             "Staging",
-            &mut self.staging_buffer,
+            &mut self.buffers.staging_buffer,
             staging_size,
             BufferUsages::MAP_READ | BufferUsages::COPY_DST,
         );
@@ -2325,7 +2194,7 @@ impl GpuExecutor {
                     });
                 self.record_pipeline(
                     &mut encoder,
-                    &self.pad_pipeline,
+                    &self.pipelines.pad_pipeline,
                     DispatchMode::Direct(config.pad_len.div_ceil(64)),
                 );
                 self.queue.submit(Some(encoder.finish()));
@@ -2337,19 +2206,19 @@ impl GpuExecutor {
     pub fn record_full_scan(&self, encoder: &mut CommandEncoder, count: u32, bg3: &BindGroup) {
         self.record_pipeline_with_bg3(
             encoder,
-            &self.scan_block_pipeline,
+            &self.pipelines.scan_block_pipeline,
             DispatchMode::Direct(count.div_ceil(256)),
             bg3,
         );
         self.record_pipeline_with_bg3(
             encoder,
-            &self.scan_aux_pipeline,
+            &self.pipelines.scan_aux_pipeline,
             DispatchMode::Direct(1),
             bg3,
         );
         self.record_pipeline_with_bg3(
             encoder,
-            &self.scan_add_base_pipeline,
+            &self.pipelines.scan_add_base_pipeline,
             DispatchMode::Direct(count.div_ceil(256)),
             bg3,
         );
@@ -2393,14 +2262,14 @@ impl GpuExecutor {
         // 1. Prepare mask
         self.record_pipeline(
             encoder,
-            &self.cv_prepare_mask_pipeline,
+            &self.pipelines.cv_prepare_mask_pipeline,
             DispatchMode::Direct(n_full.div_ceil(256)),
         );
 
         // 2. Mark test indices
         self.record_pipeline(
             encoder,
-            &self.cv_mark_test_indices_pipeline,
+            &self.pipelines.cv_mark_test_indices_pipeline,
             DispatchMode::Direct(n_test.div_ceil(256)),
         );
 
@@ -2408,8 +2277,8 @@ impl GpuExecutor {
         self.record_compact(
             encoder,
             n_full,
-            &self.cv_prepare_compact_flags_train_pipeline,
-            &self.cv_compact_training_pipeline,
+            &self.pipelines.cv_prepare_compact_flags_train_pipeline,
+            &self.pipelines.cv_compact_training_pipeline,
             None, // Uses bg0_data
         );
 
@@ -2417,8 +2286,8 @@ impl GpuExecutor {
         self.record_compact(
             encoder,
             n_full,
-            &self.cv_prepare_compact_flags_test_pipeline,
-            &self.cv_compact_test_pipeline,
+            &self.pipelines.cv_prepare_compact_flags_test_pipeline,
+            &self.pipelines.cv_compact_test_pipeline,
             self.bg0_test.as_ref(),
         );
     }
@@ -2429,15 +2298,15 @@ impl GpuExecutor {
         // Mark all as training (copy global -> x/y)
         self.record_pipeline(
             encoder,
-            &self.cv_prepare_mask_pipeline,
+            &self.pipelines.cv_prepare_mask_pipeline,
             DispatchMode::Direct(self.n.div_ceil(256)),
         );
 
         self.record_compact(
             encoder,
             self.n,
-            &self.cv_prepare_compact_flags_train_pipeline,
-            &self.cv_compact_training_pipeline,
+            &self.pipelines.cv_prepare_compact_flags_train_pipeline,
+            &self.pipelines.cv_compact_training_pipeline,
             None,
         );
 
@@ -2447,16 +2316,16 @@ impl GpuExecutor {
         // Copy back sorted x/y to global
         let pad_offset = (self.n - self.orig_n) as u64 / 2 * 4;
         encoder.copy_buffer_to_buffer(
-            self.x_buffer.as_ref().unwrap(),
+            self.buffers.x_buffer.as_ref().unwrap(),
             pad_offset,
-            self.x_global_buffer.as_ref().unwrap(),
+            self.buffers.x_global_buffer.as_ref().unwrap(),
             0,
             self.orig_n as u64 * 4,
         );
         encoder.copy_buffer_to_buffer(
-            self.y_buffer.as_ref().unwrap(),
+            self.buffers.y_buffer.as_ref().unwrap(),
             pad_offset,
-            self.y_global_buffer.as_ref().unwrap(),
+            self.buffers.y_global_buffer.as_ref().unwrap(),
             0,
             self.orig_n as u64 * 4,
         );
@@ -2465,24 +2334,26 @@ impl GpuExecutor {
     pub fn record_score_cv(&self, encoder: &mut CommandEncoder, n_test: u32) {
         self.record_pipeline(
             encoder,
-            &self.score_cv_points_pipeline,
+            &self.pipelines.score_cv_points_pipeline,
             DispatchMode::Direct(n_test.div_ceil(64)),
         );
     }
 
     pub fn record_sum_sse_reduction(&self, encoder: &mut CommandEncoder, n_test: u32) {
-        self.record_pipeline(
+        self.record_reduction(
             encoder,
-            &self.sum_sse_reduction_pipeline,
-            DispatchMode::Direct(n_test.div_ceil(256)),
+            &self.pipelines.sum_sse_reduction_pipeline,
+            &self.pipelines.finalize_sum_pipeline,
+            n_test,
         );
     }
 
     pub fn record_sum_residuals_squared_reduction(&self, encoder: &mut CommandEncoder, n: u32) {
-        self.record_pipeline(
+        self.record_reduction(
             encoder,
-            &self.sum_residuals_squared_pipeline,
-            DispatchMode::Direct(n.div_ceil(256)),
+            &self.pipelines.sum_residuals_squared_pipeline,
+            &self.pipelines.finalize_sum_pipeline,
+            n,
         );
     }
 
@@ -2527,10 +2398,36 @@ impl GpuExecutor {
         pass.set_bind_group(3, bg3, &[]);
         match dispatch {
             DispatchMode::Direct(n) => pass.dispatch_workgroups(n, 1, 1),
-            DispatchMode::Indirect(offset) => {
-                pass.dispatch_workgroups_indirect(self.indirect_buffer.as_ref().unwrap(), offset)
-            }
+            DispatchMode::Indirect(offset) => pass.dispatch_workgroups_indirect(
+                self.buffers.indirect_buffer.as_ref().unwrap(),
+                offset,
+            ),
         }
+    }
+
+    /// Record a control op (single-thread config update)
+    fn record_control(&self, encoder: &mut CommandEncoder, op: ControlOp) {
+        self.record_pipeline(
+            encoder,
+            &self.pipelines.control_pipelines[op as usize],
+            DispatchMode::Direct(1),
+        );
+    }
+
+    /// Record a reduction + finalization sequence
+    fn record_reduction(
+        &self,
+        encoder: &mut CommandEncoder,
+        reduce_pipeline: &ComputePipeline,
+        finalize_pipeline: &ComputePipeline,
+        n: u32,
+    ) {
+        self.record_pipeline(
+            encoder,
+            reduce_pipeline,
+            DispatchMode::Direct(n.div_ceil(256)),
+        );
+        self.record_pipeline(encoder, finalize_pipeline, DispatchMode::Direct(1));
     }
 
     /// Helper to create encoder, record commands, and submit
@@ -2544,15 +2441,15 @@ impl GpuExecutor {
     fn record_median_pass(
         &self,
         encoder: &mut CommandEncoder,
-        prepare_pipeline: &ComputePipeline,
-        mode_pipeline: &ComputePipeline,
+        prepare_op: PrepareOp,
+        control_op: ControlOp,
     ) {
         let bg3_med = self.bg3_median.as_ref().unwrap();
 
         // 1. Prepare
         self.record_pipeline_with_bg3(
             encoder,
-            prepare_pipeline,
+            &self.pipelines.prepare_pipelines[prepare_op as usize],
             DispatchMode::Direct(self.n.div_ceil(256)),
             bg3_med,
         );
@@ -2563,18 +2460,18 @@ impl GpuExecutor {
         // 3. Select Median
         self.record_pipeline_with_bg3(
             encoder,
-            &self.select_median_pipeline,
+            &self.pipelines.select_median_pipeline,
             DispatchMode::Direct(1),
             bg3_med,
         );
 
         // 4. Set Mode (Center or Scale)
-        self.record_pipeline(encoder, mode_pipeline, DispatchMode::Direct(1));
+        self.record_control(encoder, control_op);
 
         // 5. Update Config
         self.record_pipeline_with_bg3(
             encoder,
-            &self.update_scale_config_pipeline,
+            &self.pipelines.update_scale_config_pipeline,
             DispatchMode::Direct(1),
             bg3_med,
         );
@@ -2582,15 +2479,11 @@ impl GpuExecutor {
 
     /// Helper for Mean fallback calculation used in MAR/MAD
     fn record_mean_fallback(&self, encoder: &mut CommandEncoder) {
-        self.record_pipeline(
+        self.record_reduction(
             encoder,
-            &self.reduce_sum_abs_pipeline,
-            DispatchMode::Direct(self.n.div_ceil(256)),
-        );
-        self.record_pipeline(
-            encoder,
-            &self.finalize_sum_pipeline,
-            DispatchMode::Direct(1),
+            &self.pipelines.reduce_sum_abs_pipeline,
+            &self.pipelines.finalize_sum_pipeline,
+            self.n,
         );
     }
 }
@@ -2616,11 +2509,15 @@ pub struct RadixSortConfig<'a> {
 impl GpuExecutor {
     fn record_fit_pass(&self, encoder: &mut CommandEncoder) {
         // 1. Fit Anchors (Indirect Dispatch)
-        self.record_pipeline(encoder, &self.fit_pipeline, DispatchMode::Indirect(0));
+        self.record_pipeline(
+            encoder,
+            &self.pipelines.fit_pipeline,
+            DispatchMode::Indirect(0),
+        );
         // 2. Interpolate
         self.record_pipeline(
             encoder,
-            &self.interpolate_pipeline,
+            &self.pipelines.interpolate_pipeline,
             DispatchMode::Direct(self.n.div_ceil(64)),
         );
     }
@@ -2629,13 +2526,13 @@ impl GpuExecutor {
         // 1. Sum absolute residuals
         self.record_pipeline(
             encoder,
-            &self.reduce_sum_abs_pipeline,
+            &self.pipelines.reduce_sum_abs_pipeline,
             DispatchMode::Direct(self.n.div_ceil(256)),
         );
         // 2. Finalize scale (single thread)
         self.record_pipeline(
             encoder,
-            &self.finalize_scale_pipeline,
+            &self.pipelines.finalize_scale_pipeline,
             DispatchMode::Direct(1),
         );
     }
@@ -2646,36 +2543,28 @@ impl GpuExecutor {
         self.record_compact(
             encoder,
             self.n,
-            &self.mark_anchor_candidates_pipeline,
-            &self.compact_anchors_pipeline,
+            &self.pipelines.mark_anchor_candidates_pipeline,
+            &self.pipelines.compact_anchors_pipeline,
             None,
         );
 
         // 2. Compute intervals (parallel) - Slot 3
         self.record_pipeline(
             encoder,
-            &self.compute_intervals_pipeline,
+            &self.pipelines.compute_intervals_pipeline,
             DispatchMode::Direct(self.n.div_ceil(256)),
         );
 
         // 3. Initialize Loop State
-        self.record_pipeline(
-            encoder,
-            &self.init_loop_state_pipeline,
-            DispatchMode::Direct(1),
-        );
+        self.record_control(encoder, ControlOp::InitState);
 
         // 4. Prepare First Next Pass (Slot 0 for Fit, Slot 3 for Interp/Weights, Slot 6 for Reduction)
-        self.record_pipeline(
-            encoder,
-            &self.prepare_next_pass_pipeline,
-            DispatchMode::Direct(1),
-        );
+        self.record_control(encoder, ControlOp::PrepareNext);
 
         // 5. Initialize weights to 1.0
         self.record_pipeline(
             encoder,
-            &self.init_weights_pipeline,
+            &self.pipelines.init_weights_pipeline,
             DispatchMode::Direct(self.n.div_ceil(256)),
         );
     }
@@ -2690,8 +2579,8 @@ impl GpuExecutor {
             if i > 0 {
                 // Copy previous smoothed values to y_prev so convergence check
                 // can compare y_smooth (current) vs y_prev (previous).
-                let dst_buf = self.y_prev_buffer.as_ref().unwrap();
-                let src_buf = self.y_smooth_buffer.as_ref().unwrap();
+                let dst_buf = self.buffers.y_prev_buffer.as_ref().unwrap();
+                let src_buf = self.buffers.y_smooth_buffer.as_ref().unwrap();
                 encoder.copy_buffer_to_buffer(src_buf, 0, dst_buf, 0, src_buf.size());
             }
 
@@ -2700,11 +2589,7 @@ impl GpuExecutor {
             // 2. Record Convergence Check & Loop Control (Iteration > 0)
             if i > 0 {
                 self.record_convergence_check(encoder); // Reducers use Slot 6
-                self.record_pipeline(
-                    encoder,
-                    &self.finalize_convergence_pipeline,
-                    DispatchMode::Direct(1),
-                );
+                self.record_control(encoder, ControlOp::FinalizeConv);
             }
 
             // 3. Record Scale estimation if iterations remain
@@ -2714,11 +2599,7 @@ impl GpuExecutor {
             }
 
             // 4. Prepare for next iteration
-            self.record_pipeline(
-                encoder,
-                &self.prepare_next_pass_pipeline,
-                DispatchMode::Direct(1),
-            );
+            self.record_control(encoder, ControlOp::PrepareNext);
         }
     }
 
@@ -2733,7 +2614,7 @@ impl GpuExecutor {
 
         // Update main config
         self.queue.write_buffer(
-            self.config_buffer.as_ref().unwrap(),
+            self.buffers.config_buffer.as_ref().unwrap(),
             0,
             bytemuck::cast_slice(&[*gpu_config]),
         );
@@ -2753,7 +2634,7 @@ impl GpuExecutor {
             update_mode: 0,
         };
         self.queue.write_buffer(
-            self.w_config_buffer.as_ref().unwrap(),
+            self.buffers.w_config_buffer.as_ref().unwrap(),
             0,
             bytemuck::cast_slice(&[weight_config]),
         );
@@ -2769,29 +2650,29 @@ impl GpuExecutor {
             })
         };
 
-        if self.interval_map_buffer.is_none() {
-            self.interval_map_buffer = Some(create_dummy("IntervalMap_Dummy"));
+        if self.buffers.interval_map_buffer.is_none() {
+            self.buffers.interval_map_buffer = Some(create_dummy("IntervalMap_Dummy"));
         }
-        if self.x_test_buffer.is_none() {
-            self.x_test_buffer = Some(create_dummy("X_Test_Dummy"));
+        if self.buffers.x_test_buffer.is_none() {
+            self.buffers.x_test_buffer = Some(create_dummy("X_Test_Dummy"));
         }
-        if self.y_test_buffer.is_none() {
-            self.y_test_buffer = Some(create_dummy("Y_Test_Dummy"));
+        if self.buffers.y_test_buffer.is_none() {
+            self.buffers.y_test_buffer = Some(create_dummy("Y_Test_Dummy"));
         }
-        if self.test_errors_buffer.is_none() {
-            self.test_errors_buffer = Some(create_dummy("TestErrors_Dummy"));
+        if self.buffers.test_errors_buffer.is_none() {
+            self.buffers.test_errors_buffer = Some(create_dummy("TestErrors_Dummy"));
         }
-        if self.x_global_buffer.is_none() {
-            self.x_global_buffer = Some(create_dummy("X_Global_Dummy"));
+        if self.buffers.x_global_buffer.is_none() {
+            self.buffers.x_global_buffer = Some(create_dummy("X_Global_Dummy"));
         }
-        if self.y_global_buffer.is_none() {
-            self.y_global_buffer = Some(create_dummy("Y_Global_Dummy"));
+        if self.buffers.y_global_buffer.is_none() {
+            self.buffers.y_global_buffer = Some(create_dummy("Y_Global_Dummy"));
         }
-        if self.shuffled_indices_buffer.is_none() {
-            self.shuffled_indices_buffer = Some(create_dummy("Shuffled_Indices_Dummy"));
+        if self.buffers.shuffled_indices_buffer.is_none() {
+            self.buffers.shuffled_indices_buffer = Some(create_dummy("Shuffled_Indices_Dummy"));
         }
-        if self.cv_test_mask_buffer.is_none() {
-            self.cv_test_mask_buffer = Some(create_dummy("CV_Test_Mask_Dummy"));
+        if self.buffers.cv_test_mask_buffer.is_none() {
+            self.buffers.cv_test_mask_buffer = Some(create_dummy("CV_Test_Mask_Dummy"));
         }
     }
 
@@ -2799,47 +2680,47 @@ impl GpuExecutor {
         let n = x.len() as u64;
         let mut bg_needs_update = false;
 
-        bg_needs_update |= Self::ensure_buffer_capacity(
+        bg_needs_update |= GpuBuffers::ensure_capacity(
             &self.device,
             "X Global",
-            &mut self.x_global_buffer,
+            &mut self.buffers.x_global_buffer,
             n * 4,
             BufferUsages::STORAGE | BufferUsages::COPY_DST,
         );
-        bg_needs_update |= Self::ensure_buffer_capacity(
+        bg_needs_update |= GpuBuffers::ensure_capacity(
             &self.device,
             "Y Global",
-            &mut self.y_global_buffer,
+            &mut self.buffers.y_global_buffer,
             n * 4,
             BufferUsages::STORAGE | BufferUsages::COPY_DST,
         );
-        bg_needs_update |= Self::ensure_buffer_capacity(
+        bg_needs_update |= GpuBuffers::ensure_capacity(
             &self.device,
             "Shuffled Indices",
-            &mut self.shuffled_indices_buffer,
+            &mut self.buffers.shuffled_indices_buffer,
             n * 4,
             BufferUsages::STORAGE | BufferUsages::COPY_DST,
         );
-        bg_needs_update |= Self::ensure_buffer_capacity(
+        bg_needs_update |= GpuBuffers::ensure_capacity(
             &self.device,
             "CV Test Mask",
-            &mut self.cv_test_mask_buffer,
+            &mut self.buffers.cv_test_mask_buffer,
             n * 4,
             BufferUsages::STORAGE | BufferUsages::COPY_DST | BufferUsages::COPY_SRC,
         );
 
         self.queue.write_buffer(
-            self.x_global_buffer.as_ref().unwrap(),
+            self.buffers.x_global_buffer.as_ref().unwrap(),
             0,
             bytemuck::cast_slice(x),
         );
         self.queue.write_buffer(
-            self.y_global_buffer.as_ref().unwrap(),
+            self.buffers.y_global_buffer.as_ref().unwrap(),
             0,
             bytemuck::cast_slice(y),
         );
         self.queue.write_buffer(
-            self.shuffled_indices_buffer.as_ref().unwrap(),
+            self.buffers.shuffled_indices_buffer.as_ref().unwrap(),
             0,
             bytemuck::cast_slice(shuffled_indices),
         );
@@ -2854,8 +2735,8 @@ impl GpuExecutor {
         if bg_needs_update || self.bg0_test.is_none() {
             // Create BG0 variant that points to X_Test / Y_Test instead of main X/Y
             self.bg0_test = Some(self.create_bg0(
-                self.x_test_buffer.as_ref().unwrap(),
-                self.y_test_buffer.as_ref().unwrap(),
+                self.buffers.x_test_buffer.as_ref().unwrap(),
+                self.buffers.y_test_buffer.as_ref().unwrap(),
             ));
         }
     }
@@ -2867,18 +2748,14 @@ impl GpuExecutor {
         config: RadixSortConfig,
     ) {
         // Reset Radix Pass
-        self.queue.write_buffer(
-            self.w_config_buffer.as_ref().unwrap(),
-            28, // Offset of radix_pass
-            &[0, 0, 0, 0],
-        );
+        self.record_control(encoder, ControlOp::ResetRadix);
 
         let bg = bg3.unwrap_or(self.bg3_aux.as_ref().unwrap());
         for _ in 0..4 {
             // 1. Clear Histogram
             self.record_pipeline_with_bg3(
                 encoder,
-                &self.clear_histogram_pipeline,
+                &self.pipelines.clear_histogram_pipeline,
                 DispatchMode::Direct(512),
                 bg,
             );
@@ -2911,24 +2788,19 @@ impl GpuExecutor {
             );
 
             // 6. Increment Radix Pass
-            self.record_pipeline_with_bg3(
-                encoder,
-                &self.inc_radix_pass_pipeline,
-                DispatchMode::Direct(1),
-                bg,
-            );
+            self.record_control(encoder, ControlOp::IncRadix);
         }
     }
 
     pub fn record_radix_sort_passes(&self, encoder: &mut CommandEncoder, bg3: Option<&BindGroup>) {
         let config = RadixSortConfig {
-            hist_pipeline: &self.radix_histogram_pipeline,
+            hist_pipeline: &self.pipelines.radix_histogram_pipeline,
             hist_dispatch: DispatchMode::Indirect(24),
-            prefix_sum_pipeline: &self.radix_prefix_sum_pipeline,
+            prefix_sum_pipeline: &self.pipelines.radix_prefix_sum_pipeline,
             prefix_dispatch: DispatchMode::Direct(1),
-            scatter_pipeline: &self.radix_scatter_pipeline,
+            scatter_pipeline: &self.pipelines.radix_scatter_pipeline,
             scatter_dispatch: DispatchMode::Direct(1),
-            copy_back_pipeline: &self.radix_copy_back_pipeline,
+            copy_back_pipeline: &self.pipelines.radix_copy_back_pipeline,
             copy_dispatch: DispatchMode::Indirect(24),
         };
         self.record_generic_radix_sort(encoder, bg3, config);
@@ -2937,7 +2809,7 @@ impl GpuExecutor {
     pub fn record_pad_data(&self, encoder: &mut CommandEncoder) {
         self.record_pipeline(
             encoder,
-            &self.pad_pipeline,
+            &self.pipelines.pad_pipeline,
             DispatchMode::Direct(self.n.div_ceil(256)),
         );
     }
@@ -2946,7 +2818,7 @@ impl GpuExecutor {
         // 3. Update Weights
         self.record_pipeline(
             encoder,
-            &self.weight_pipeline,
+            &self.pipelines.weight_pipeline,
             DispatchMode::Direct(self.n.div_ceil(64)),
         );
     }
@@ -2955,7 +2827,7 @@ impl GpuExecutor {
         // Reduce max differences
         self.record_pipeline(
             encoder,
-            &self.reduce_max_diff_pipeline,
+            &self.pipelines.reduce_max_diff_pipeline,
             DispatchMode::Direct(self.n.div_ceil(256)),
         );
     }
@@ -2969,10 +2841,16 @@ impl GpuExecutor {
         let size = size_override.unwrap_or((self.n as usize * 4) as u64);
         let offset = offset_override.unwrap_or(0);
         let mut encoder = self.device.create_command_encoder(&Default::default());
-        encoder.copy_buffer_to_buffer(buf, offset, self.staging_buffer.as_ref().unwrap(), 0, size);
+        encoder.copy_buffer_to_buffer(
+            buf,
+            offset,
+            self.buffers.staging_buffer.as_ref().unwrap(),
+            0,
+            size,
+        );
         self.queue.submit(Some(encoder.finish()));
 
-        let slice = self.staging_buffer.as_ref().unwrap().slice(..size);
+        let slice = self.buffers.staging_buffer.as_ref().unwrap().slice(..size);
         let (tx, rx) = oneshot_channel();
         slice.map_async(MapMode::Read, move |v| tx.send(v).unwrap());
         let _ = self.device.poll(PollType::Wait);
@@ -2981,7 +2859,7 @@ impl GpuExecutor {
             let data = slice.get_mapped_range();
             let ret = data.to_vec();
             drop(data);
-            self.staging_buffer.as_ref().unwrap().unmap();
+            self.buffers.staging_buffer.as_ref().unwrap().unmap();
             Some(ret)
         } else {
             None
@@ -3010,7 +2888,7 @@ impl GpuExecutor {
         let mut encoder = self.device.create_command_encoder(&Default::default());
         self.record_pipeline(
             &mut encoder,
-            &self.select_median_pipeline,
+            &self.pipelines.select_median_pipeline,
             DispatchMode::Direct(1),
         );
         self.queue.submit(Some(encoder.finish()));
@@ -3018,7 +2896,7 @@ impl GpuExecutor {
         // Download result from reduction_buffer[1048575]
         let result = self
             .download_buffer(
-                self.reduction_buffer.as_ref().unwrap(),
+                self.buffers.reduction_buffer.as_ref().unwrap(),
                 Some(4),
                 Some(1048575 * 4),
             )
@@ -3034,13 +2912,13 @@ impl GpuExecutor {
         let n_padded = self.n;
 
         let config = RadixSortConfig {
-            hist_pipeline: &self.sort_x_histogram_pipeline,
+            hist_pipeline: &self.pipelines.sort_x_histogram_pipeline,
             hist_dispatch: DispatchMode::Direct(n_padded.div_ceil(256)),
-            prefix_sum_pipeline: &self.radix_prefix_sum_pipeline,
+            prefix_sum_pipeline: &self.pipelines.radix_prefix_sum_pipeline,
             prefix_dispatch: DispatchMode::Direct(1),
-            scatter_pipeline: &self.sort_x_scatter_pipeline,
+            scatter_pipeline: &self.pipelines.sort_x_scatter_pipeline,
             scatter_dispatch: DispatchMode::Direct(1),
-            copy_back_pipeline: &self.sort_x_copy_back_pipeline,
+            copy_back_pipeline: &self.pipelines.sort_x_copy_back_pipeline,
             copy_dispatch: DispatchMode::Direct(n_padded.div_ceil(256)),
         };
 
@@ -3055,26 +2933,14 @@ impl GpuExecutor {
             }
             ScalingMethod::MAR => {
                 self.record_mean_fallback(encoder);
-                self.record_median_pass(
-                    encoder,
-                    &self.prepare_mar_residuals_pipeline,
-                    &self.set_mode_scale_pipeline,
-                );
+                self.record_median_pass(encoder, PrepareOp::MAR, ControlOp::SetScaleMode);
             }
             ScalingMethod::MAD => {
                 self.record_mean_fallback(encoder);
                 // Step 1: Center
-                self.record_median_pass(
-                    encoder,
-                    &self.prepare_residuals_signed_pipeline,
-                    &self.set_mode_center_pipeline,
-                );
+                self.record_median_pass(encoder, PrepareOp::Signed, ControlOp::SetCenterMode);
                 // Step 2: Scale
-                self.record_median_pass(
-                    encoder,
-                    &self.prepare_mad_residuals_pipeline,
-                    &self.set_mode_scale_pipeline,
-                );
+                self.record_median_pass(encoder, PrepareOp::MAD, ControlOp::SetScaleMode);
             }
         }
     }
@@ -3111,16 +2977,14 @@ where
     exec.record_sum_residuals_squared_reduction(&mut sse_encoder, exec.orig_n);
     exec.queue.submit(Some(sse_encoder.finish()));
 
-    // Download partial sums from reduction buffer
-    let num_wgs = exec.orig_n.div_ceil(256);
-    let partial_sums = block_on(exec.download_buffer(
-        exec.reduction_buffer.as_ref().unwrap(),
-        Some(num_wgs as u64 * 4),
+    // Download final sum from reduction buffer [0]
+    let sse_vec = block_on(exec.download_buffer(
+        exec.buffers.reduction_buffer.as_ref().unwrap(),
+        Some(4),
         None,
     ))
     .unwrap();
-
-    let sse: f32 = partial_sums.iter().sum();
+    let sse = sse_vec[0];
     let n = exec.orig_n as f32;
     // SD estimation (unbiased for linear regression df = n - 2)
     let residual_sd = if n > 2.0 {
@@ -3136,7 +3000,7 @@ where
     gpu_config.has_pred = if im.prediction { 1 } else { 0 };
 
     exec.queue.write_buffer(
-        exec.config_buffer.as_ref().unwrap(),
+        exec.buffers.config_buffer.as_ref().unwrap(),
         0,
         cast_slice(&[*gpu_config]),
     );
@@ -3151,17 +3015,17 @@ where
         let mut pass = encoder.begin_compute_pass(&ComputePassDescriptor::default());
 
         // 1. Standard Error Pass
-        pass.set_pipeline(&exec.se_pipeline);
+        pass.set_pipeline(&exec.pipelines.se_pipeline);
         pass.set_bind_group(0, exec.bg0_data.as_ref().unwrap(), &[]);
         pass.set_bind_group(1, exec.bg1_topo.as_ref().unwrap(), &[]);
         pass.set_bind_group(2, exec.bg2_state.as_ref().unwrap(), &[]);
         pass.set_bind_group(3, exec.bg3_aux.as_ref().unwrap(), &[]);
-        pass.dispatch_workgroups_indirect(exec.indirect_buffer.as_ref().unwrap(), 12); // Slot 3 (Standard N-length)
+        pass.dispatch_workgroups_indirect(exec.buffers.indirect_buffer.as_ref().unwrap(), 12); // Slot 3 (Standard N-length)
 
         // 2. Interval Bounds Pass (if requested)
         if im.confidence || im.prediction {
-            pass.set_pipeline(&exec.interval_bounds_pipeline);
-            pass.dispatch_workgroups_indirect(exec.indirect_buffer.as_ref().unwrap(), 12);
+            pass.set_pipeline(&exec.pipelines.interval_bounds_pipeline);
+            pass.dispatch_workgroups_indirect(exec.buffers.indirect_buffer.as_ref().unwrap(), 12);
         }
     }
 
@@ -3175,7 +3039,7 @@ where
 
     let se_out = if im.se || im.confidence || im.prediction {
         let se_vals = block_on(exec.download_buffer(
-            exec.std_errors_buffer.as_ref().unwrap(),
+            exec.buffers.std_errors_buffer.as_ref().unwrap(),
             Some(trim_size),
             Some(trim_offset),
         ))
@@ -3187,7 +3051,7 @@ where
 
     let conf_lower = if im.confidence {
         let vals = block_on(exec.download_buffer(
-            exec.conf_lower_buffer.as_ref().unwrap(),
+            exec.buffers.conf_lower_buffer.as_ref().unwrap(),
             Some(trim_size),
             Some(trim_offset),
         ))
@@ -3199,7 +3063,7 @@ where
 
     let conf_upper = if im.confidence {
         let vals = block_on(exec.download_buffer(
-            exec.conf_upper_buffer.as_ref().unwrap(),
+            exec.buffers.conf_upper_buffer.as_ref().unwrap(),
             Some(trim_size),
             Some(trim_offset),
         ))
@@ -3211,7 +3075,7 @@ where
 
     let pred_lower = if im.prediction {
         let vals = block_on(exec.download_buffer(
-            exec.pred_lower_buffer.as_ref().unwrap(),
+            exec.buffers.pred_lower_buffer.as_ref().unwrap(),
             Some(trim_size),
             Some(trim_offset),
         ))
@@ -3223,7 +3087,7 @@ where
 
     let pred_upper = if im.prediction {
         let vals = block_on(exec.download_buffer(
-            exec.pred_upper_buffer.as_ref().unwrap(),
+            exec.buffers.pred_upper_buffer.as_ref().unwrap(),
             Some(trim_size),
             Some(trim_offset),
         ))
@@ -3284,7 +3148,6 @@ where
         let total_n_padded = total_n + 2 * pad_len;
 
         // Convert original data to f32 (padding happens on GPU)
-        // Optimization: Zero-copy if T is f32
         let x_f32 = cast_input_slice(x);
         let y_f32 = cast_input_slice(y);
 
@@ -3377,21 +3240,21 @@ where
         let trim_size = (orig_n as u64) * 4;
 
         let y_res = block_on(exec.download_buffer(
-            exec.y_smooth_buffer.as_ref().unwrap(),
+            exec.buffers.y_smooth_buffer.as_ref().unwrap(),
             Some(trim_size),
             Some(trim_offset),
         ))
         .unwrap();
 
         let w_res = block_on(exec.download_buffer(
-            exec.weights_buffer.as_ref().unwrap(),
+            exec.buffers.weights_buffer.as_ref().unwrap(),
             Some(trim_size),
             Some(trim_offset),
         ))
         .unwrap();
 
         let r_res = block_on(exec.download_buffer(
-            exec.residuals_buffer.as_ref().unwrap(),
+            exec.buffers.residuals_buffer.as_ref().unwrap(),
             Some(trim_size),
             Some(trim_offset),
         ))
@@ -3411,10 +3274,10 @@ where
             };
 
         let iterations_performed = block_on(exec.download_buffer_raw(
-            exec.w_config_buffer.as_ref().unwrap(),
+            exec.buffers.w_config_buffer.as_ref().unwrap(),
             Some(4),
             Some(32),
-        )) // offset 32 is 'iteration' in WeightConfig if I updated it correctly
+        ))
         .map(|raw| cast_slice::<u8, u32>(raw.as_slice())[0])
         .unwrap_or(0) as usize;
 
@@ -3667,15 +3530,14 @@ where
                     exec.record_sum_sse_reduction(encoder, n_test);
                 });
 
-                // 7. Download SSE
-                let num_wgs = n_test.div_ceil(256);
-                let partial_sums = block_on(exec.download_buffer(
-                    exec.reduction_buffer.as_ref().unwrap(),
-                    Some(num_wgs as u64 * 4),
+                // 7. Download SSE (Total sum is at reduction[0] after finalization)
+                let sse_vec = block_on(exec.download_buffer(
+                    exec.buffers.reduction_buffer.as_ref().unwrap(),
+                    Some(4),
                     None,
                 ))
                 .unwrap();
-                let sse: f32 = partial_sums.iter().sum();
+                let sse = sse_vec[0];
                 total_rmse += (sse / n_test as f32).sqrt();
                 count += 1;
             }

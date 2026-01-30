@@ -176,11 +176,11 @@ fn test_gpu_padding_values() {
         }
 
         let x_padded = exec
-            .download_buffer(exec.x_buffer.as_ref().unwrap(), None, None)
+            .download_buffer(exec.buffers.x_buffer.as_ref().unwrap(), None, None)
             .await
             .unwrap();
         let y_padded = exec
-            .download_buffer(exec.y_buffer.as_ref().unwrap(), None, None)
+            .download_buffer(exec.buffers.y_buffer.as_ref().unwrap(), None, None)
             .await
             .unwrap();
 
@@ -345,9 +345,9 @@ fn test_cpu_gpu_padding_equivalence() {
 
         // Download results
         let gpu_px =
-            block_on(exec.download_buffer(exec.x_buffer.as_ref().unwrap(), None, None)).unwrap();
+            block_on(exec.download_buffer(exec.buffers.x_buffer.as_ref().unwrap(), None, None)).unwrap();
         let gpu_py =
-            block_on(exec.download_buffer(exec.y_buffer.as_ref().unwrap(), None, None)).unwrap();
+            block_on(exec.download_buffer(exec.buffers.y_buffer.as_ref().unwrap(), None, None)).unwrap();
 
         assert_eq!(
             cpu_px.len(),
@@ -937,7 +937,7 @@ fn test_gpu_median_diagnostic() {
 
         // Copy data to reduction buffer manually for testing
         exec.queue.write_buffer(
-            exec.reduction_buffer.as_ref().unwrap(),
+            exec.buffers.reduction_buffer.as_ref().unwrap(),
             0,
             bytemuck::cast_slice(&data),
         );
@@ -979,7 +979,7 @@ fn test_gpu_median_diagnostic() {
             0,
         );
         exec.queue.write_buffer(
-            exec.reduction_buffer.as_ref().unwrap(),
+            exec.buffers.reduction_buffer.as_ref().unwrap(),
             0,
             bytemuck::cast_slice(&data_even),
         );
@@ -1049,7 +1049,7 @@ fn test_gpu_median_large() {
             data[1048575] = 0.386;
 
             exec.queue.write_buffer(
-                exec.reduction_buffer.as_ref().unwrap(),
+                exec.buffers.reduction_buffer.as_ref().unwrap(),
                 0,
                 bytemuck::cast_slice(&data),
             );
