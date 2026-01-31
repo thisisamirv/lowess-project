@@ -96,6 +96,7 @@ const CONTROL_INIT_STATE: u32 = 6u;
 override FINALIZE_MODE: u32 = 0u;
 
 override CV_TARGET: u32 = 0u;
+override WEIGHT_FN: u32 = 99u;
 
 const BOUNDARY_EXTEND: u32 = 0u;
 const BOUNDARY_REFLECT: u32 = 1u;
@@ -186,7 +187,11 @@ var<workgroup> s_scan: array<u32, 256>;
 // Helper: Calculate kernel weight
 fn get_kernel_weight(u: f32, u2: f32) -> f32 {
     var kw = 1.0;
-    switch (config.weight_function) {
+    var fn_id = config.weight_function;
+    if (WEIGHT_FN != 99u) {
+        fn_id = WEIGHT_FN;
+    }
+    switch (fn_id) {
         case KERNEL_COSINE: { kw = cos(u * 1.57079632679); }
         case KERNEL_EPANECHNIKOV: { kw = (1.0 - u2); }
         case KERNEL_GAUSSIAN: { kw = exp(-0.5 * u2); }
@@ -209,42 +214,45 @@ fn get_interpolated_value(x_i: f32, x0: f32, x1: f32, y0: f32, y1: f32) -> f32 {
     }
 }
 
-// Helper: Adaptive Window Selection
+// Helper: Binary Search Window Selection (Tree-Based Neighbor Search)
 fn get_adaptive_window(center_idx: u32, x_center: f32) -> vec2<u32> {
     let n = config.n;
     let w_size = config.window_size;
-    
-    var left = 0u;
-    if (center_idx > w_size / 2u) {
-        left = center_idx - w_size / 2u;
+
+    // Handle degenerate cases
+    if (n <= w_size) {
+        return vec2(0u, max(0u, n - 1u));
     }
-    if (left + w_size > n) {
-        if (n > w_size) {
-            left = n - w_size;
+    
+    var low = 0u;
+    if (center_idx + 1u > w_size) {
+        low = center_idx + 1u - w_size;
+    }
+    
+    var high = center_idx;
+    let max_left = n - w_size;
+    if (high > max_left) {
+        high = max_left;
+    }
+
+    // Binary search for optimal window start
+    while (low < high) {
+        let mid = (low + high) / 2u;
+        
+        let d_left = abs(x_center - x[mid]);
+        // Check the point that would be added if we shifted right (x[mid + w_size])
+        // Valid because mid < high <= n - w_size, so mid + w_size < n
+        let d_right_next = abs(x[mid + w_size] - x_center); 
+        
+        if (d_left > d_right_next) {
+            // Left neighbor is further than the potential right neighbor -> Shift Right
+            low = mid + 1u;
         } else {
-            left = 0u;
+            high = mid;
         }
     }
-    var right = left + w_size - 1u;
-    
-    // Recenter
-    for (var k = 0u; k < 100u; k++) {
-        if (right >= n - 1u) { break; }
-        let d_left = abs(x_center - x[left]);
-        let d_right = abs(x[right + 1u] - x_center);
-        if (d_left <= d_right) { break; }
-        left = left + 1u;
-        right = right + 1u;
-    }
-    for (var k = 0u; k < 100u; k++) {
-        if (left == 0u) { break; }
-        let d_left = abs(x_center - x[left - 1u]);
-        let d_right = abs(x[right] - x_center);
-        if (d_right <= d_left) { break; }
-        left = left - 1u;
-        right = right - 1u;
-    }
-    return vec2(left, right);
+
+    return vec2(low, low + w_size - 1u);
 }
 
 @compute @workgroup_size(1)
@@ -339,7 +347,7 @@ fn accumulate_score() {
 // Kernel: Score CV Points
 // Performs binary search and interpolation for test points against fitted training data
 // -----------------------------------------------------------------------------
-@compute @workgroup_size(64)
+@compute @workgroup_size(256)
 fn score_cv_points(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let j = global_id.x; // Index into test set
     // test_errors length is number of test points
@@ -430,19 +438,12 @@ fn update_scale_config() {
 // Kernel 1: Fit at Anchors
 // Dispatched with num_anchors threads
 // -----------------------------------------------------------------------------
-var<workgroup> s_x: array<f32, 256>;
-var<workgroup> s_y: array<f32, 256>;
-var<workgroup> s_w: array<f32, 256>;
-var<workgroup> wg_min_left: u32;
-var<workgroup> wg_max_right: u32;
 
-@compute @workgroup_size(64)
+@compute @workgroup_size(256)
 fn fit_anchors(
-    @builtin(global_invocation_id) global_id: vec3<u32>,
-    @builtin(local_invocation_id) local_id: vec3<u32>
+    @builtin(global_invocation_id) global_id: vec3<u32>
 ) {
     let anchor_id = global_id.x;
-    let lid = local_id.x;
     let n = config.n;
     let window_size = config.window_size;
     let num_anchors_explicit = w_config.anchor_count;
@@ -460,6 +461,7 @@ fn fit_anchors(
         i = anchor_indices[anchor_id];
         x_i = x[i];
         
+        // Adaptive window centered at x_i
         let win = get_adaptive_window(i, x_i);
         left = win.x;
         right = win.y;
@@ -484,32 +486,125 @@ fn fit_anchors(
         var sum_y_window = 0.0;
 
         let d_max_val = max(d_max, 1e-12);
+        let inv_d_max = 1.0 / d_max_val;
         let h1 = 0.001 * d_max_val;
         let h9 = 0.999 * d_max_val;
 
-        for (var k = left; k <= right; k++) {
-            let xj = x[k];
-            let yj = y[k];
-            let rw = robustness_weights[k];
-            
-            let rel_x = xj - x_i;
-            let dist = abs(rel_x);
-            sum_y_window += yj;
-            
-            if (dist <= h9) {
-                var kernel_w = 1.0;
-                if (dist > h1) {
-                    let u = dist / d_max_val;
-                    let u2 = u * u;
-                    kernel_w = get_kernel_weight(u, u2);
+        if (w_config.iteration == 0u) {
+            // First Iteration: Skip loading robustness_weights (assume 1.0)
+            var k = left;
+            while (k + 3u <= right) {
+                for (var offset = 0u; offset < 4u; offset++) {
+                    let idx = k + offset;
+                    let xj = x[idx];
+                    let yj = y[idx];
+                    // rw = 1.0 implicit
+                    
+                    let rel_x = xj - x_i;
+                    let dist = abs(rel_x);
+                    sum_y_window += yj;
+                    
+                    if (dist <= h9) {
+                        var kernel_w = 1.0;
+                        if (dist > h1) {
+                            let u = dist * inv_d_max;
+                            let u2 = u * u;
+                            kernel_w = get_kernel_weight(u, u2);
+                        }
+                        
+                        let combined_w = kernel_w; // rw is 1.0
+                        sum_w += combined_w;
+                        sum_wx += combined_w * rel_x;
+                        sum_wxx += combined_w * rel_x * rel_x;
+                        sum_wy += combined_w * yj;
+                        sum_wxy += combined_w * rel_x * yj;
+                    }
                 }
+                k += 4u;
+            }
+            while (k <= right) {
+                let xj = x[k];
+                let yj = y[k];
+                // rw = 1.0 implicit
                 
-                let combined_w = rw * kernel_w;
-                sum_w += combined_w;
-                sum_wx += combined_w * rel_x;
-                sum_wxx += combined_w * rel_x * rel_x;
-                sum_wy += combined_w * yj;
-                sum_wxy += combined_w * rel_x * yj;
+                let rel_x = xj - x_i;
+                let dist = abs(rel_x);
+                sum_y_window += yj;
+                
+                if (dist <= h9) {
+                    var kernel_w = 1.0;
+                    if (dist > h1) {
+                        let u = dist * inv_d_max;
+                        let u2 = u * u;
+                        kernel_w = get_kernel_weight(u, u2);
+                    }
+                    
+                    let combined_w = kernel_w; // rw is 1.0
+                    sum_w += combined_w;
+                    sum_wx += combined_w * rel_x;
+                    sum_wxx += combined_w * rel_x * rel_x;
+                    sum_wy += combined_w * yj;
+                    sum_wxy += combined_w * rel_x * yj;
+                }
+                k += 1u;
+            }
+        } else {
+            // Subsequent Iterations: Load robustness_weights
+            var k = left;
+            while (k + 3u <= right) {
+                for (var offset = 0u; offset < 4u; offset++) {
+                    let idx = k + offset;
+                    let xj = x[idx];
+                    let yj = y[idx];
+                    let rw = robustness_weights[idx];
+                    
+                    let rel_x = xj - x_i;
+                    let dist = abs(rel_x);
+                    sum_y_window += yj;
+                    
+                    if (dist <= h9) {
+                        var kernel_w = 1.0;
+                        if (dist > h1) {
+                            let u = dist * inv_d_max;
+                            let u2 = u * u;
+                            kernel_w = get_kernel_weight(u, u2);
+                        }
+                        
+                        let combined_w = rw * kernel_w;
+                        sum_w += combined_w;
+                        sum_wx += combined_w * rel_x;
+                        sum_wxx += combined_w * rel_x * rel_x;
+                        sum_wy += combined_w * yj;
+                        sum_wxy += combined_w * rel_x * yj;
+                    }
+                }
+                k += 4u;
+            }
+            while (k <= right) {
+                let xj = x[k];
+                let yj = y[k];
+                let rw = robustness_weights[k];
+                
+                let rel_x = xj - x_i;
+                let dist = abs(rel_x);
+                sum_y_window += yj;
+                
+                if (dist <= h9) {
+                    var kernel_w = 1.0;
+                    if (dist > h1) {
+                        let u = dist * inv_d_max;
+                        let u2 = u * u;
+                        kernel_w = get_kernel_weight(u, u2);
+                    }
+                    
+                    let combined_w = rw * kernel_w;
+                    sum_w += combined_w;
+                    sum_wx += combined_w * rel_x;
+                    sum_wxx += combined_w * rel_x * rel_x;
+                    sum_wy += combined_w * yj;
+                    sum_wxy += combined_w * rel_x * yj;
+                }
+                k += 1u;
             }
         }
 
@@ -563,7 +658,7 @@ fn fit_anchors(
 // Kernel 2: Interpolate
 // Dispatched with N threads
 // -----------------------------------------------------------------------------
-@compute @workgroup_size(64)
+@compute @workgroup_size(256)
 fn interpolate(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let i = global_id.x;
     if (i >= config.n) { return; }
@@ -604,7 +699,7 @@ fn interpolate(@builtin(global_invocation_id) global_id: vec3<u32>) {
 // Kernel 3: Update Weights
 // Dispatched with N threads
 // -----------------------------------------------------------------------------
-@compute @workgroup_size(64)
+@compute @workgroup_size(256)
 fn update_weights(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let i = global_id.x;
     if (i >= config.n) { return; }
@@ -1043,47 +1138,6 @@ fn compact_anchors(@builtin(global_invocation_id) global_id: vec3<u32>) {
 }
 
 // -----------------------------------------------------------------------------
-// Kernel 10: Select Anchors (Greedy)
-// Single workgroup kernel that performs greedy anchor selection.
-// Reads candidate flags from anchor_output, writes final anchors to anchor_indices.
-// Writes anchor count to reduction[0].
-// -----------------------------------------------------------------------------
-@compute @workgroup_size(1)
-fn select_anchors_greedy() {
-    let n = config.n;
-    
-    var anchor_count: u32 = 0u;
-    var last_anchor_x: f32 = x[0];
-    
-    // First point is always an anchor
-    anchor_indices[anchor_count] = 0u;
-    anchor_count = 1u;
-    
-    // Greedy selection: select anchor if distance from last anchor > delta
-    for (var i: u32 = 1u; i < n; i = i + 1u) {
-        let curr_x = x[i];
-        
-        if (curr_x - last_anchor_x > config.delta) {
-            anchor_indices[anchor_count] = i;
-            anchor_count = anchor_count + 1u;
-            last_anchor_x = curr_x;
-        }
-    }
-    
-    // Ensure last point is an anchor
-    let last_idx = n - 1u;
-    if (anchor_indices[anchor_count - 1u] != last_idx) {
-        anchor_indices[anchor_count] = last_idx;
-        anchor_count = anchor_count + 1u;
-    }
-    
-    // Store anchor count in w_config (persistent) instead of reduction (volatile)
-    w_config.anchor_count = anchor_count;
-    // Also store in reduction[0] for legacy/compatibility if needed, but we switched consumers
-    reduction[0] = f32(anchor_count);
-}
-
-// -----------------------------------------------------------------------------
 // Kernel 11: Compute Intervals
 // Assigns each point to its anchor interval based on selected anchors.
 // Reads anchor count from reduction[0].
@@ -1135,8 +1189,8 @@ fn update_dispatch() {
     var d_anchors = 0u;
 
     if (converged == 0u) {
-        d_n = (n + 63u) / 64u;
-        d_anchors = (w_config.anchor_count + 63u) / 64u;
+        d_n = (n + 255u) / 256u;
+        d_anchors = (w_config.anchor_count + 255u) / 256u;
     }
     
     // Slot 0: Fit Anchors
@@ -1440,7 +1494,7 @@ pub enum PrepareOp {
 }
 
 pub struct GpuPipelines {
-    pub fit_pipeline: ComputePipeline,
+    pub fit_pipelines: [ComputePipeline; 7],
     pub interpolate_pipeline: ComputePipeline,
     pub weight_pipeline: ComputePipeline,
     pub reduce_max_diff_pipeline: ComputePipeline,
@@ -1716,7 +1770,8 @@ impl GpuExecutor {
 
         Ok(Self {
             pipelines: GpuPipelines {
-                fit_pipeline: cps("fit_anchors"),
+                fit_pipelines: [0, 1, 2, 3, 4, 5, 6]
+                    .map(|i| cp("fit_anchors", "fit_anchors", &[("WEIGHT_FN", i as f64)])),
                 interpolate_pipeline: cps("interpolate"),
                 weight_pipeline: cps("update_weights"),
                 reduce_max_diff_pipeline: cp(
@@ -1935,10 +1990,7 @@ impl GpuExecutor {
 
         self.device.create_bind_group(&BindGroupDescriptor {
             label: Some(label),
-            layout: &self
-                .pipelines
-                .fit_pipeline
-                .get_bind_group_layout(layout_idx),
+            layout: &self.pipelines.fit_pipelines[0].get_bind_group_layout(layout_idx),
             entries: &entries,
         })
     }
@@ -2297,7 +2349,7 @@ impl GpuExecutor {
                 self.record_pipeline(
                     &mut encoder,
                     &self.pipelines.pad_pipeline,
-                    DispatchMode::Direct(config.pad_len.div_ceil(64)),
+                    DispatchMode::Direct(config.pad_len.div_ceil(256)),
                 );
                 self.queue.submit(Some(encoder.finish()));
             }
@@ -2460,7 +2512,7 @@ impl GpuExecutor {
         self.record_pipeline(
             encoder,
             &self.pipelines.score_cv_points_pipeline,
-            DispatchMode::Direct(n_test.div_ceil(64)),
+            DispatchMode::Direct(n_test.div_ceil(256)),
         );
     }
 
@@ -2632,13 +2684,10 @@ pub struct RadixSortConfig<'a> {
 }
 
 impl GpuExecutor {
-    fn record_fit_pass(&self, encoder: &mut CommandEncoder, mode: DispatchMode) {
+    fn record_fit_pass(&self, encoder: &mut CommandEncoder, mode: DispatchMode, weight_fn: u32) {
         // 1. Fit Anchors (Indirect Dispatch - Slot 0)
-        self.record_pipeline(
-            encoder,
-            &self.pipelines.fit_pipeline,
-            DispatchMode::Indirect(0),
-        );
+        let pipeline = &self.pipelines.fit_pipelines[weight_fn as usize];
+        self.record_pipeline(encoder, pipeline, DispatchMode::Indirect(0));
         // 2. Interpolate
         self.record_pipeline(encoder, &self.pipelines.interpolate_pipeline, mode);
     }
@@ -2695,6 +2744,7 @@ impl GpuExecutor {
         encoder: &mut CommandEncoder,
         iterations: u32,
         scaling_method: ScalingMethod,
+        weight_fn: u32,
     ) {
         for i in 0..=iterations {
             // Update Dispatch Args (Indirect Control)
@@ -2714,7 +2764,7 @@ impl GpuExecutor {
             }
 
             // Use Indirect Slot 2 (24 bytes) for interpolate
-            self.record_fit_pass(encoder, DispatchMode::Indirect(24));
+            self.record_fit_pass(encoder, DispatchMode::Indirect(24), weight_fn);
 
             // 2. Record Convergence Check & Loop Control (Iteration > 0)
             if i > 0 {
@@ -3381,6 +3431,7 @@ where
                 &mut encoder,
                 config.iterations as u32,
                 config.scaling_method,
+                weight_fn_id,
             );
             exec.queue.submit(Some(encoder.finish()));
         }
@@ -3678,6 +3729,7 @@ where
                         encoder,
                         config.iterations as u32,
                         config.scaling_method,
+                        weight_fn_id,
                     );
 
                     // 3. Score
