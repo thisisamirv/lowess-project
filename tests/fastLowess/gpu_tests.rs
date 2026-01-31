@@ -156,7 +156,7 @@ fn test_gpu_padding_values() {
             has_conf: 0,
             has_pred: 0,
             residual_sd: 0.0,
-            _pad: 0,
+            seed: 0,
         };
 
         exec.reset_buffers(&x, &y, gpu_config, 0, 0);
@@ -333,7 +333,7 @@ fn test_cpu_gpu_padding_equivalence() {
             has_pred: 0,
             residual_sd: 0.0,
             n_test: 0,
-            _pad: 0,
+            seed: 0,
         };
 
         exec.reset_buffers(&x, &y, gpu_config, 0, 0);
@@ -345,9 +345,11 @@ fn test_cpu_gpu_padding_equivalence() {
 
         // Download results
         let gpu_px =
-            block_on(exec.download_buffer(exec.buffers.x_buffer.as_ref().unwrap(), None, None)).unwrap();
+            block_on(exec.download_buffer(exec.buffers.x_buffer.as_ref().unwrap(), None, None))
+                .unwrap();
         let gpu_py =
-            block_on(exec.download_buffer(exec.buffers.y_buffer.as_ref().unwrap(), None, None)).unwrap();
+            block_on(exec.download_buffer(exec.buffers.y_buffer.as_ref().unwrap(), None, None))
+                .unwrap();
 
         assert_eq!(
             cpu_px.len(),
@@ -929,7 +931,7 @@ fn test_gpu_median_diagnostic() {
                 has_pred: 0,
                 residual_sd: 0.0,
                 n_test: 0,
-                _pad: 0,
+                seed: 0,
             },
             0,
             0,
@@ -973,7 +975,7 @@ fn test_gpu_median_diagnostic() {
                 has_pred: 0,
                 residual_sd: 0.0,
                 n_test: 0,
-                _pad: 0,
+                seed: 0,
             },
             0,
             0,
@@ -1033,7 +1035,7 @@ fn test_gpu_median_large() {
                     has_pred: 0,
                     residual_sd: 0.0,
                     n_test: 0,
-                    _pad: 0,
+                    seed: 0,
                 },
                 0,
                 0,
