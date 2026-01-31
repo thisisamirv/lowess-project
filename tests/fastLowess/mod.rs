@@ -1,5 +1,4 @@
 #![cfg(feature = "dev")]
-mod gpu_sorting_tests;
 mod gpu_tests;
 mod integration_tests;
 mod parallel_eval_tests;

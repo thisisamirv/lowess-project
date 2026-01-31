@@ -3409,30 +3409,26 @@ where
 
         exec.reset_buffers(&x_f32, &y_f32, gpu_config, robustness_id, scaling_id);
 
-        // 1. Run sorting and padding
+        // Execute all GPU operations in a single command encoder (no synchronization)
         {
             let mut encoder = exec.device.create_command_encoder(&Default::default());
+
+            // 1. Sort and pad input data
             exec.record_sort_input(&mut encoder);
             exec.record_pad_data(&mut encoder);
-            exec.queue.submit(Some(encoder.finish()));
-        }
 
-        // 2. Prepare for fitting (Anchors, Intervals, Init)
-        {
-            let mut encoder = exec.device.create_command_encoder(&Default::default());
+            // 2. Prepare for fitting (anchors, intervals, init)
             exec.record_prepare_fit(&mut encoder);
-            exec.queue.submit(Some(encoder.finish()));
-        }
 
-        // 3. Main Fitting Loop
-        {
-            let mut encoder = exec.device.create_command_encoder(&Default::default());
+            // 3. Main fitting loop (all iterations)
             exec.record_fitting_loop(
                 &mut encoder,
                 config.iterations as u32,
                 config.scaling_method,
                 weight_fn_id,
             );
+
+            // Submit everything at once - GPU executes without CPU intervention
             exec.queue.submit(Some(encoder.finish()));
         }
 

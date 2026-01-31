@@ -4,31 +4,31 @@
       "name": "genomic_1000",
       "size": 1000,
       "iterations": 10,
-      "mean_time_ms": 0.19710351157131725,
-      "std_time_ms": 0.017817031085671224,
-      "median_time_ms": 0.19340709982174686,
-      "min_time_ms": 3.729615,
-      "max_time_ms": 233.794677
+      "mean_time_ms": 0.30394777576439724,
+      "std_time_ms": 0.07633941481714557,
+      "median_time_ms": 0.2956086515444015,
+      "min_time_ms": 4.077593,
+      "max_time_ms": 278.443964
     },
     {
       "name": "genomic_100000",
       "size": 100000,
       "iterations": 10,
-      "mean_time_ms": 8.823935283636363,
-      "std_time_ms": 0.3207076056958656,
-      "median_time_ms": 8.762566363636363,
-      "min_time_ms": 91.468101,
-      "max_time_ms": 104.703025
+      "mean_time_ms": 15.82913443142857,
+      "std_time_ms": 2.934090375441279,
+      "median_time_ms": 15.10114357142857,
+      "min_time_ms": 90.327152,
+      "max_time_ms": 197.619952
     },
     {
       "name": "genomic_5000",
       "size": 5000,
       "iterations": 10,
-      "mean_time_ms": 0.4220567005867701,
-      "std_time_ms": 0.026484877648060495,
-      "median_time_ms": 0.41587569131944446,
-      "min_time_ms": 5.053523,
-      "max_time_ms": 207.277022
+      "mean_time_ms": 0.8374811959876369,
+      "std_time_ms": 0.19561034122421833,
+      "median_time_ms": 0.8043315933214072,
+      "min_time_ms": 5.145738,
+      "max_time_ms": 298.222979
     }
   ],
   "fraction": [
