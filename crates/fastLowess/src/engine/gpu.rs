@@ -3246,6 +3246,73 @@ impl GpuExecutor {
             .map(|raw| cast_slice::<u8, f32>(&raw).to_vec())
     }
 
+    /// Batch download multiple buffers in a single map/poll cycle
+    pub async fn download_buffers_batch(
+        &mut self,
+        requests: &[(Buffer, u64, u64)], // (Buffer, size, offset)
+    ) -> Option<Vec<Vec<u8>>> {
+        // 1. Calculate total size required
+        let mut total_size = 0u64;
+        let mut offsets = Vec::with_capacity(requests.len());
+
+        for (_, size, _) in requests {
+            offsets.push(total_size);
+            total_size += size;
+            // Pad to 4 bytes if needed
+            total_size = (total_size + 3) & !3;
+        }
+
+        // 2. Ensure staging buffer capacity
+        let current_capacity = self
+            .buffers
+            .staging_buffer
+            .as_ref()
+            .map(|b| b.size())
+            .unwrap_or(0);
+
+        if current_capacity < total_size {
+            self.buffers.staging_buffer = Some(self.device.create_buffer(&BufferDescriptor {
+                label: Some("Staging Buffer (Batch)"),
+                size: total_size.max(1024), // Min 1KB
+                usage: BufferUsages::MAP_READ | BufferUsages::COPY_DST,
+                mapped_at_creation: false,
+            }));
+        }
+
+        let staging_buf = self.buffers.staging_buffer.as_ref().unwrap();
+
+        // 3. Record Copies
+        let mut encoder = self.device.create_command_encoder(&Default::default());
+        for (i, (buf, size, src_offset)) in requests.iter().enumerate() {
+            let dst_offset = offsets[i];
+            encoder.copy_buffer_to_buffer(buf, *src_offset, staging_buf, dst_offset, *size);
+        }
+        self.queue.submit(Some(encoder.finish()));
+
+        // 4. Map and Download
+        let slice = staging_buf.slice(..total_size);
+        let (tx, rx) = oneshot_channel();
+        slice.map_async(MapMode::Read, move |v| tx.send(v).unwrap());
+        let _ = self.device.poll(PollType::Wait);
+
+        if let Some(Ok(())) = rx.receive().await {
+            let data = slice.get_mapped_range();
+            let mut results = Vec::with_capacity(requests.len());
+
+            for (i, (_, size, _)) in requests.iter().enumerate() {
+                let start = offsets[i] as usize;
+                let end = start + (*size as usize);
+                results.push(data[start..end].to_vec());
+            }
+
+            drop(data);
+            staging_buf.unmap();
+            Some(results)
+        } else {
+            None
+        }
+    }
+
     #[cfg(feature = "dev")]
     pub async fn compute_median_gpu(&mut self) -> Result<f32, String> {
         // Run the 4-pass radix sort
@@ -3316,25 +3383,19 @@ impl GpuExecutor {
 
 // Compute standard errors for GPU results using GPU SE kernel
 #[allow(clippy::type_complexity)]
-fn compute_intervals_gpu<T>(
+// Record interval calculation commands (without downloading)
+fn record_intervals_pass<T>(
     exec: &mut GpuExecutor,
     config: &LowessConfig<T>,
     gpu_config: &mut GpuConfig,
-) -> (
-    Option<Vec<T>>,
-    Option<Vec<T>>,
-    Option<Vec<T>>,
-    Option<Vec<T>>,
-    Option<Vec<T>>,
-)
-where
+) where
     T: Float + Debug + Send + Sync + 'static,
 {
     // Check if intervals requested
     let im = if let Some(im) = config.return_variance.as_ref() {
         im
     } else {
-        return (None, None, None, None, None);
+        return;
     };
 
     // Calculate parameters for intervals
@@ -3403,74 +3464,6 @@ where
     }
 
     exec.queue.submit(Some(encoder.finish()));
-    let _ = exec.device.poll(PollType::Wait);
-
-    // Download results with trimming
-    let pad_len = (exec.n - exec.orig_n) / 2;
-    let trim_offset = (pad_len as u64) * 4;
-    let trim_size = (exec.orig_n as u64) * 4;
-
-    let se_out = if im.se || im.confidence || im.prediction {
-        let se_vals = block_on(exec.download_buffer(
-            exec.buffers.std_errors_buffer.as_ref().unwrap(),
-            Some(trim_size),
-            Some(trim_offset),
-        ))
-        .unwrap();
-        Some(cast_output_vec(se_vals))
-    } else {
-        None
-    };
-
-    let conf_lower = if im.confidence {
-        let vals = block_on(exec.download_buffer(
-            exec.buffers.conf_lower_buffer.as_ref().unwrap(),
-            Some(trim_size),
-            Some(trim_offset),
-        ))
-        .unwrap();
-        Some(cast_output_vec(vals))
-    } else {
-        None
-    };
-
-    let conf_upper = if im.confidence {
-        let vals = block_on(exec.download_buffer(
-            exec.buffers.conf_upper_buffer.as_ref().unwrap(),
-            Some(trim_size),
-            Some(trim_offset),
-        ))
-        .unwrap();
-        Some(cast_output_vec(vals))
-    } else {
-        None
-    };
-
-    let pred_lower = if im.prediction {
-        let vals = block_on(exec.download_buffer(
-            exec.buffers.pred_lower_buffer.as_ref().unwrap(),
-            Some(trim_size),
-            Some(trim_offset),
-        ))
-        .unwrap();
-        Some(cast_output_vec(vals))
-    } else {
-        None
-    };
-
-    let pred_upper = if im.prediction {
-        let vals = block_on(exec.download_buffer(
-            exec.buffers.pred_upper_buffer.as_ref().unwrap(),
-            Some(trim_size),
-            Some(trim_offset),
-        ))
-        .unwrap();
-        Some(cast_output_vec(vals))
-    } else {
-        None
-    };
-
-    (se_out, conf_lower, conf_upper, pred_lower, pred_upper)
 }
 
 // Perform a GPU-accelerated LOWESS fit pass.
@@ -3635,50 +3628,128 @@ where
             exec.queue.submit(Some(encoder.finish()));
         }
 
+        // Compute standard errors/intervals if requested (records commands, no wait)
+        if config.return_variance.is_some() {
+            record_intervals_pass(exec, config, &mut gpu_config);
+        }
+
         let trim_offset = (pad_len as u64) * 4;
         let trim_size = (orig_n as u64) * 4;
 
-        let y_res = block_on(exec.download_buffer(
-            exec.buffers.y_smooth_buffer.as_ref().unwrap(),
-            Some(trim_size),
-            Some(trim_offset),
-        ))
-        .unwrap();
+        // Prepare Batch Download
+        let mut requests = Vec::with_capacity(9);
 
-        let w_res = block_on(exec.download_buffer(
-            exec.buffers.weights_buffer.as_ref().unwrap(),
-            Some(trim_size),
-            Some(trim_offset),
-        ))
-        .unwrap();
+        // 0: Y Smooth
+        requests.push((
+            exec.buffers.y_smooth_buffer.as_ref().unwrap().clone(),
+            trim_size,
+            trim_offset,
+        ));
+        // 1: Weights
+        requests.push((
+            exec.buffers.weights_buffer.as_ref().unwrap().clone(),
+            trim_size,
+            trim_offset,
+        ));
+        // 2: Residuals
+        requests.push((
+            exec.buffers.residuals_buffer.as_ref().unwrap().clone(),
+            trim_size,
+            trim_offset,
+        ));
+        // 3: Iterations (offset 32, size 4)
+        requests.push((
+            exec.buffers.w_config_buffer.as_ref().unwrap().clone(),
+            4,
+            32,
+        ));
 
-        let r_res = block_on(exec.download_buffer(
-            exec.buffers.residuals_buffer.as_ref().unwrap(),
-            Some(trim_size),
-            Some(trim_offset),
-        ))
-        .unwrap();
+        // Add interval buffers if needed
+        let im = config.return_variance.as_ref();
+        let has_se =
+            im.is_some() && (im.unwrap().se || im.unwrap().confidence || im.unwrap().prediction);
+        let has_conf = im.is_some() && im.unwrap().confidence;
+        let has_pred = im.is_some() && im.unwrap().prediction;
 
-        // Results are already trimmed by download_buffer
-        let y_out: Vec<T> = cast_output_vec(y_res);
-        let w_out: Vec<T> = cast_output_vec(w_res);
-        let r_out: Vec<T> = cast_output_vec(r_res);
+        if has_se {
+            requests.push((
+                exec.buffers.std_errors_buffer.as_ref().unwrap().clone(),
+                trim_size,
+                trim_offset,
+            ));
+        }
+        if has_conf {
+            requests.push((
+                exec.buffers.conf_lower_buffer.as_ref().unwrap().clone(),
+                trim_size,
+                trim_offset,
+            ));
+            requests.push((
+                exec.buffers.conf_upper_buffer.as_ref().unwrap().clone(),
+                trim_size,
+                trim_offset,
+            ));
+        }
+        if has_pred {
+            requests.push((
+                exec.buffers.pred_lower_buffer.as_ref().unwrap().clone(),
+                trim_size,
+                trim_offset,
+            ));
+            requests.push((
+                exec.buffers.pred_upper_buffer.as_ref().unwrap().clone(),
+                trim_size,
+                trim_offset,
+            ));
+        }
 
-        // Compute standard errors/intervals if requested
-        let (std_errors, conf_lower, conf_upper, pred_lower, pred_upper) =
-            if config.return_variance.is_some() {
-                compute_intervals_gpu(exec, config, &mut gpu_config)
-            } else {
-                (None, None, None, None, None)
-            };
+        // EXECUTE BATCH
+        let raw_results = block_on(exec.download_buffers_batch(&requests)).unwrap();
 
-        let iterations_performed = block_on(exec.download_buffer_raw(
-            exec.buffers.w_config_buffer.as_ref().unwrap(),
-            Some(4),
-            Some(32),
-        ))
-        .map(|raw| cast_slice::<u8, u32>(raw.as_slice())[0])
-        .unwrap_or(0) as usize;
+        // UNPACK
+        let mut r_iter = raw_results.into_iter();
+
+        let y_out: Vec<T> = cast_output_vec(cast_slice(&r_iter.next().unwrap()).to_vec());
+        let w_out: Vec<T> = cast_output_vec(cast_slice(&r_iter.next().unwrap()).to_vec());
+        let r_out: Vec<T> = cast_output_vec(cast_slice(&r_iter.next().unwrap()).to_vec());
+        let iter_bytes = r_iter.next().unwrap();
+        let iterations_performed = cast_slice::<u8, u32>(&iter_bytes)[0] as usize;
+
+        let std_errors = if has_se {
+            Some(cast_output_vec(
+                cast_slice(&r_iter.next().unwrap()).to_vec(),
+            ))
+        } else {
+            None
+        };
+        let conf_lower = if has_conf {
+            Some(cast_output_vec(
+                cast_slice(&r_iter.next().unwrap()).to_vec(),
+            ))
+        } else {
+            None
+        };
+        let conf_upper = if has_conf {
+            Some(cast_output_vec(
+                cast_slice(&r_iter.next().unwrap()).to_vec(),
+            ))
+        } else {
+            None
+        };
+        let pred_lower = if has_pred {
+            Some(cast_output_vec(
+                cast_slice(&r_iter.next().unwrap()).to_vec(),
+            ))
+        } else {
+            None
+        };
+        let pred_upper = if has_pred {
+            Some(cast_output_vec(
+                cast_slice(&r_iter.next().unwrap()).to_vec(),
+            ))
+        } else {
+            None
+        };
 
         Ok((
             y_out,
