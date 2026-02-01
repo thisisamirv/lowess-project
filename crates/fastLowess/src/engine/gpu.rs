@@ -1068,17 +1068,46 @@ fn scan_block(@builtin(global_invocation_id) global_id: vec3<u32>,
 // Kernel: Scan Aux Serial
 // Scans the block sums (up to 65k blocks supported by single thread, though inefficient)
 // -----------------------------------------------------------------------------
-@compute @workgroup_size(1)
-fn scan_aux_serial() {
+// -----------------------------------------------------------------------------
+// Kernel: Scan Aux Parallel
+// Scans the block sums in parallel using Hillis-Steele in chunks.
+// -----------------------------------------------------------------------------
+var<workgroup> s_aux: array<u32, 256>;
+
+@compute @workgroup_size(256)
+fn scan_aux_parallel(@builtin(local_invocation_id) local_id: vec3<u32>) {
+    let lid = local_id.x;
     let num_blocks = (config.n + 255u) / 256u;
     
-    // In-place exclusive scan of block sums
-    // We need exclusive scan so that block i gets sum of 0..i-1
-    var sum = 0u;
-    for (var i = 0u; i < num_blocks; i = i + 1u) {
-        let val = scan_block_sums[i];
-        scan_block_sums[i] = sum;
-        sum = sum + val;
+    var running_total = 0u;
+    for (var b_base = 0u; b_base < num_blocks; b_base += 256u) {
+        let b = b_base + lid;
+        var val = 0u;
+        if (b < num_blocks) {
+            val = scan_block_sums[b];
+        }
+        
+        s_aux[lid] = val;
+        for (var step = 1u; step < 256u; step <<= 1u) {
+            workgroupBarrier();
+            var tmp = 0u;
+            if (lid >= step) {
+                tmp = s_aux[lid - step];
+            }
+            workgroupBarrier();
+            if (lid >= step) {
+                s_aux[lid] += tmp;
+            }
+        }
+        workgroupBarrier();
+        
+        if (b < num_blocks) {
+            // Exclusive scan
+            scan_block_sums[b] = running_total + s_aux[lid] - val;
+        }
+        
+        running_total += s_aux[255];
+        workgroupBarrier();
     }
 }
 
@@ -1299,34 +1328,82 @@ fn sort_histogram_block(@builtin(global_invocation_id) global_id: vec3<u32>,
     }
 }
 
-// Prefix sum on workgroup histograms (single workgroup or multi-pass)
-// For simplicity and since num_workgroups is ~400 for 100k, 
-// we scan the "columns" of workgroup_histograms.
+// Parallel Prefix Sum: 256 workgroups, each handling one digit.
+// Each workgroup scans the 'column' of workgroup_histograms for that digit.
+var<workgroup> s_prefix: array<u32, 256>;
+var<workgroup> s_global_prefix: array<u32, 256>;
+
 @compute @workgroup_size(256)
-fn radix_prefix_sum(@builtin(local_invocation_id) local_id: vec3<u32>) {
-    let digit = local_id.x; // One thread per digit
-    let num_workgroups = (select(config.n, config.orig_n, SORT_MODE == 1u) + 255u) / 256u;
+fn radix_prefix_sum(@builtin(workgroup_id) workgroup_id: vec3<u32>, @builtin(local_invocation_id) local_id: vec3<u32>) {
+    let digit = workgroup_id.x; // Digit handled by this workgroup
+    let lid = local_id.x;
+    let n_points = select(config.n, config.orig_n, SORT_MODE == 1u);
+    let num_rows = (n_points + 255u) / 256u;
+
+    // 1. Parallel calculation of global base offset
+    // Each thread reads one digit count and we perform a parallel scan.
+    s_global_prefix[lid] = atomicLoad(&global_histogram[lid]);
     
-    // Global base offset for this digit (sum of all counts for digits < digit)
+    // Hillis-Steele scan for global_base
+    for (var step = 1u; step < 256u; step <<= 1u) {
+        workgroupBarrier();
+        var tmp = 0u;
+        if (lid >= step) {
+            tmp = s_global_prefix[lid - step];
+        }
+        workgroupBarrier();
+        if (lid >= step) {
+            s_global_prefix[lid] += tmp;
+        }
+    }
+    workgroupBarrier();
+    
+    // global_base for 'digit' is sum(global_histogram[0..digit-1])
     var global_base = 0u;
-    for (var d = 0u; d < digit; d = d + 1u) {
-        global_base += atomicLoad(&global_histogram[d]);
+    if (digit > 0u) {
+        global_base = s_global_prefix[digit - 1u];
     }
     
-    // Inclusive scan over workgroup counts for this digit
-    var running_sum = global_base;
-    for (var w = 0u; w < num_workgroups; w = w + 1u) {
-        let idx = w * 256u + digit;
-        let count = workgroup_histograms[idx];
-        workgroup_histograms[idx] = running_sum; // Store exclusive prefix sum
-        running_sum += count;
+    var running_total = global_base;
+
+    // 2. Scan chunks of 256 rows
+    for (var row_base = 0u; row_base < num_rows; row_base += 256u) {
+        let r = row_base + lid;
+        var val = 0u;
+        if (r < num_rows) {
+            val = workgroup_histograms[r * 256u + digit];
+        }
+
+        // Intra-workgroup parallel scan (Hillis-Steele)
+        s_prefix[lid] = val;
+        for (var step = 1u; step < 256u; step <<= 1u) {
+            workgroupBarrier();
+            var tmp = 0u;
+            if (lid >= step) {
+                tmp = s_prefix[lid - step];
+            }
+            workgroupBarrier();
+            if (lid >= step) {
+                s_prefix[lid] += tmp;
+            }
+        }
+        workgroupBarrier();
+
+        // Write back: element at 'r' gets exclusive prefix sum
+        if (r < num_rows) {
+            // s_prefix[lid] is inclusive sum within this chunk.
+            // Exclusive sum = running_total + (inclusive - val)
+            workgroup_histograms[r * 256u + digit] = running_total + s_prefix[lid] - val;
+        }
+
+        // Update running_total for next chunk
+        running_total += s_prefix[255];
+        workgroupBarrier();
     }
 }
 
-// Shared memory for digits and local offsets (one per thread)
-var<workgroup> s_digits: array<u32, 256>;
-var<workgroup> s_offsets: array<u32, 256>;
-var<workgroup> s_hist_local: array<u32, 256>;
+// Shared memory for digits and local bitmasks (256 bins * 8 words = 2048 words = 8KB)
+var<workgroup> s_bitsets: array<atomic<u32>, 2048>;
 
 // Parallel Scatter using pre-calculated offsets
 @compute @workgroup_size(256)
@@ -1340,6 +1417,13 @@ fn sort_scatter_parallel(@builtin(global_invocation_id) global_id: vec3<u32>,
     let shift = radix_pass * 8u;
     let wid = workgroup_id.x;
     let lid = local_id.x;
+
+    // 1. Initialize bitsets (8 words per bin)
+    // 256 bins * 8 = 2048 words. 256 threads -> each clears 8 words.
+    for (var j = 0u; j < 8u; j++) {
+        atomicStore(&s_bitsets[lid * 8u + j], 0u);
+    }
+    workgroupBarrier();
 
     let i = global_id.x;
     var has_val = false;
@@ -1356,32 +1440,31 @@ fn sort_scatter_parallel(@builtin(global_invocation_id) global_id: vec3<u32>,
         has_val = true;
     }
 
-    // Store digits for sequential pass
-    s_digits[lid] = select(256u, my_digit, has_val);
-    workgroupBarrier();
-
-    // Thread 0: Sequential stable scan within workgroup
-    if (lid == 0u) {
-        // Clear local counts
-        for (var d = 0u; d < 256u; d++) {
-            s_hist_local[d] = 0u;
-        }
-        // Scan elements
-        for (var j = 0u; j < 256u; j++) {
-            let digit = s_digits[j];
-            if (digit < 256u) {
-                s_offsets[j] = s_hist_local[digit];
-                s_hist_local[digit]++;
-            }
-        }
+    // 2. Set bits to track digit occurrences in this workgroup
+    if (has_val) {
+        let set_word = lid / 32u;
+        let set_bit = 1u << (lid % 32u);
+        atomicOr(&s_bitsets[my_digit * 8u + set_word], set_bit);
     }
     workgroupBarrier();
 
+    // 3. Parallel Stable Rank Calculation
     if (has_val) {
+        let my_word_idx = lid / 32u;
+        let my_bit_mask = (1u << (lid % 32u)) - 1u;
+        
+        var rank = 0u;
+        // Count sets bits in words before mine
+        for (var w = 0u; w < my_word_idx; w++) {
+            rank += countOneBits(atomicLoad(&s_bitsets[my_digit * 8u + w]));
+        }
+        // Count set bits in my word up to my position
+        rank += countOneBits(atomicLoad(&s_bitsets[my_digit * 8u + my_word_idx]) & my_bit_mask);
+
+        // 4. Final Scatter
         // Global position = global_workgroup_base[wid][digit] + local_offset[digit]
-        let local_offset = s_offsets[lid];
         let global_workgroup_base = workgroup_histograms[wid * 256u + my_digit];
-        let pos = global_workgroup_base + local_offset;
+        let pos = global_workgroup_base + rank;
 
         if (is_x) {
             let val_x = x[i + pad];
@@ -1394,6 +1477,7 @@ fn sort_scatter_parallel(@builtin(global_invocation_id) global_id: vec3<u32>,
         }
     }
 }
+
 
 // Copy back from upper half to lower half
 @compute @workgroup_size(256)
@@ -2002,8 +2086,8 @@ impl GpuExecutor {
                     ),
                 ],
                 scan_block_pipeline: cps("scan_block"),
-                scan_aux_pipeline: cps("scan_aux_serial"),
                 scan_add_base_pipeline: cps("scan_add_base"),
+                scan_aux_pipeline: cps("scan_aux_parallel"),
                 compact_anchors_pipeline: cps("compact_anchors"),
                 mark_anchor_candidates_pipeline: cps("mark_anchor_candidates"),
             },
@@ -2690,6 +2774,12 @@ impl GpuExecutor {
             reduce_pipeline,
             DispatchMode::Direct(n.div_ceil(256)),
         );
+        // 2. Scan Aux Parallel
+        self.record_pipeline(
+            encoder,
+            &self.pipelines.scan_aux_pipeline,
+            DispatchMode::Direct(1),
+        );
         self.record_pipeline(encoder, finalize_pipeline, DispatchMode::Direct(1));
     }
 
@@ -3041,7 +3131,7 @@ impl GpuExecutor {
             self.record_pipeline_with_bg3(
                 encoder,
                 &self.pipelines.clear_histogram_pipeline,
-                DispatchMode::Direct(512),
+                DispatchMode::Direct(1), // All 256 bins cleared in one workgroup
                 bg,
             );
 
@@ -3052,7 +3142,7 @@ impl GpuExecutor {
             self.record_pipeline_with_bg3(
                 encoder,
                 config.scan_histograms_pipeline,
-                config.prefix_dispatch,
+                DispatchMode::Direct(256), // One workgroup per digit
                 bg,
             );
 
@@ -3196,7 +3286,7 @@ impl GpuExecutor {
             hist_pipeline: &self.pipelines.sort_x_histogram_pipeline,
             hist_dispatch: DispatchMode::Direct(n_padded.div_ceil(256)),
             scan_histograms_pipeline: &self.pipelines.sort_x_scan_histograms_pipeline,
-            prefix_dispatch: DispatchMode::Direct(1),
+            prefix_dispatch: DispatchMode::Direct(256),
             scatter_pipeline: &self.pipelines.sort_x_scatter_pipeline,
             scatter_dispatch: DispatchMode::Direct(n_padded.div_ceil(256)),
             copy_back_pipeline: &self.pipelines.sort_x_copy_back_pipeline,
