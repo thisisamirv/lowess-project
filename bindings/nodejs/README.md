@@ -37,6 +37,8 @@ The fastest, most robust, and most feature-complete language-agnostic LOWESS (Lo
 > - **[`WebAssembly bindings`](https://www.npmjs.com/package/fastlowess-wasm)** - WASM binding
 > - **[`C++ bindings`](https://github.com/thisisamirv/lowess-project/releases/latest)** - Native C++ binding with CMake integration
 
+---
+
 ## Installation
 
 > [!NOTE]
@@ -48,6 +50,8 @@ The fastest, most robust, and most feature-complete language-agnostic LOWESS (Lo
 > [!NOTE]
 >
 > ### 📚 [View the full documentation](https://lowess.readthedocs.io/)
+
+---
 
 ## LOESS vs. LOWESS
 
