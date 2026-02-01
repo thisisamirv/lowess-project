@@ -1,0 +1,9 @@
+[vendor_sources]
+lowess = "../../crates/lowess"
+fastLowess = "../../crates/fastLowess"
+
+[metadata]
+archive = "vendor.tar.xz"
+format = "ropensci-rust-v1"
+author = "Amir Valizadeh"
+description = "Mapping of vendored Rust sources to original crate locations for rOpenSci automated parsing."

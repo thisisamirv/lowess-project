@@ -14,17 +14,19 @@ all: clean $(SHLIB)
 $(SHLIB): $(STATLIB)
 
 $(STATLIB):
-	cargo --version
-	rustc --version
-	# Extract vendored dependencies if archive exists and vendor dir doesn't
-	if [ -f vendor.tar.xz ] && [ ! -d vendor ]; then \
-		tar --extract --xz -f vendor.tar.xz || tar -xf vendor.tar.xz; \
+	@cargo --version
+	@rustc --version
+	@# Extract vendored dependencies if archive exists and vendor dir doesn't
+	@if [ -f vendor.tar.xz ] && [ ! -d vendor ]; then \
+		echo "Extending vendor.tar.xz..."; \
+		$(TAR) -xf vendor.tar.xz; \
 	fi
-	# Create .cargo/config.toml from non-hidden source (avoids R CMD check NOTE)
+	@# Create .cargo/config.toml from non-hidden source (avoids R CMD check NOTE)
 	@mkdir -p .cargo
 	@cp cargo-config.toml .cargo/config.toml
 	@mkdir -p $(TARGET_DIR)
-	cargo build --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR) --target $(RUST_TARGET)
+	@cargo build -q -j 2 --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR) --target $(RUST_TARGET)
+	@rm -rf .cargo
 
 clean:
 	rm -Rf $(SHLIB) $(STATLIB) $(OBJECTS)

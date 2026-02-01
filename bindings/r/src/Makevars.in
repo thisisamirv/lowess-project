@@ -15,9 +15,8 @@ $(STATLIB):
 	@cargo --version > /dev/null 2>&1
 	@rustc --version > /dev/null 2>&1
 	@if [ -f vendor.tar.xz ] && [ ! -d vendor ]; then \
-		tar --extract --xz -f vendor.tar.xz && \
-		find vendor -name "CITATION.cff" -delete && \
-		find vendor -name "CITATION" -delete; \
+		echo "Extending vendor.tar.xz..."; \
+		$(TAR) -xf vendor.tar.xz; \
 	fi
 	@mkdir -p .cargo
 	@cp cargo-config.toml .cargo/config.toml
@@ -27,9 +26,9 @@ $(STATLIB):
 	@if [ "@IS_WASM@" = "1" ]; then \
 		rm -f .cargo/config.toml && \
 		export RUSTFLAGS="-C symbol-mangling-version=v0 -C panic=abort" && \
-		cargo build -q -Z build-std=std,panic_abort --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR) --target wasm32-unknown-emscripten || (mv Cargo.toml.orig Cargo.toml && exit 1); \
+		cargo build -q -j 2 -Z build-std=std,panic_abort --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR) --target wasm32-unknown-emscripten || (mv Cargo.toml.orig Cargo.toml && exit 1); \
 	else \
-		cargo build -q --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR) || (mv Cargo.toml.orig Cargo.toml && exit 1); \
+		cargo build -q -j 2 --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR) || (mv Cargo.toml.orig Cargo.toml && exit 1); \
 	fi
 	@mv Cargo.toml.orig Cargo.toml
 	@rm -rf .cargo

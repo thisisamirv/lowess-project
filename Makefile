@@ -318,7 +318,8 @@ _r_impl:
 	@rm -rf $(R_DIR)/src/vendor
 	@echo "Vendor update complete. Archive: $(R_DIR)/src/vendor.tar.xz"
 	@if [ -f $(R_DIR)/src/vendor.tar.xz ] && [ ! -d $(R_DIR)/src/vendor ]; then \
-		(cd $(R_DIR)/src && tar --extract --xz -f vendor.tar.xz) && \
+		echo "Extending vendor.tar.xz..."; \
+		(cd $(R_DIR)/src && tar -xf vendor.tar.xz) && \
 		find $(R_DIR)/src/vendor -name "CITATION.cff" -delete && \
 		find $(R_DIR)/src/vendor -name "CITATION" -delete; \
 	fi

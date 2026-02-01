@@ -6,7 +6,7 @@ echo "📦 Preparing package for CRAN submission..."
 # 1. Extract vendor archive if needed
 echo "   -> Extracting vendored dependencies..."
 if [ -f src/vendor.tar.xz ] && [ ! -d src/vendor ]; then
-    (cd src && tar --extract --xz -f vendor.tar.xz)
+    (cd src && tar -xf vendor.tar.xz)
 fi
 
 # 2. Ensure cargo config exists
