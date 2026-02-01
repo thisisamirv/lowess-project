@@ -49,7 +49,7 @@ conda install -c conda-forge fastlowess
 
 ```toml
 [dependencies]
-lowess = "0.99"
+lowess = "1.1"
 ```
 
 # Rust (fastLowess, parallel + GPU)
@@ -58,7 +58,7 @@ lowess = "0.99"
 
 ```toml
 [dependencies]
-fastLowess = { version = "0.99", features = ["cpu"] }
+fastLowess = { version = "1.1", features = ["cpu"] }
 ```
 
 # Julia

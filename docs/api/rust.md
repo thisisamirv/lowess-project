@@ -179,6 +179,10 @@ The GPU backend leverages `wgpu` and supports:
 
 It requires a device supporting compute shaders. If no compatible GPU is found at runtime, the initialization will return a `LowessError::RuntimeError`.
 
+### Performance Considerations
+
+The GPU backend is optimized for large datasets (N > 100,000) and provides parallelization through compute shaders. For smaller datasets, the CPU backend is faster.
+
 ## Result Structure
 
 ### `LowessResult<T>`

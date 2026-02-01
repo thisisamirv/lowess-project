@@ -55,11 +55,11 @@ Install the LOWESS library for your preferred language.
     ```toml
     # lowess (no_std compatible)
     [dependencies]
-    lowess = "0.99"
+    lowess = "1.1"
 
     # fastLowess (parallel + GPU)
     [dependencies]
-    fastLowess = { version = "0.99", features = ["cpu"] }
+    fastLowess = { version = "1.1", features = ["cpu"] }
     ```
 
     === "Feature Flags"
