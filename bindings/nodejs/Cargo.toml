@@ -17,7 +17,7 @@ categories = ["science", "algorithms"]
 crate-type = ["cdylib"]
 
 [dependencies]
-fastLowess = { version = "0.99.9", features = ["dev", "cpu"] }
+fastLowess = { version = "1.1", features = ["dev", "cpu"] }
 napi = { version = "3.8.2", features = ["napi4"] }
 napi-derive = "3.5.1"
 

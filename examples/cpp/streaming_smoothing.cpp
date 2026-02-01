@@ -10,7 +10,7 @@
 #include <random>
 #include <vector>
 
-#include "fastlowess.hpp"
+#include "../../bindings/cpp/include/fastlowess.hpp"
 
 int main() {
   std::cout << "=== Streaming LOWESS Smoothing Example ===" << std::endl;
@@ -42,26 +42,28 @@ int main() {
               << ", overlap=" << opts.overlap << std::endl;
 
     fastlowess::StreamingLowess model(opts);
-    
+
     std::cout << "\nProcessing data in chunks..." << std::endl;
-    
+
     size_t chunk_size = opts.chunk_size;
     size_t total_processed = 0;
-    
+
     for (size_t i = 0; i < n; i += chunk_size) {
-        size_t current_chunk_len = std::min(chunk_size, n - i);
-        std::vector<double> x_chunk(x.begin() + i, x.begin() + i + current_chunk_len);
-        std::vector<double> y_chunk(y.begin() + i, y.begin() + i + current_chunk_len);
-        
-        auto res = model.process_chunk(x_chunk, y_chunk);
-        total_processed += res.size();
-        
-        if (i % 2000 == 0) {
-            std::cout << "  Processed " << i << " points..." << std::endl;
-        }
+      size_t current_chunk_len = std::min(chunk_size, n - i);
+      std::vector<double> x_chunk(x.begin() + i,
+                                  x.begin() + i + current_chunk_len);
+      std::vector<double> y_chunk(y.begin() + i,
+                                  y.begin() + i + current_chunk_len);
+
+      auto res = model.process_chunk(x_chunk, y_chunk).value();
+      total_processed += res.size();
+
+      if (i % 2000 == 0) {
+        std::cout << "  Processed " << i << " points..." << std::endl;
+      }
     }
-    
-    auto final_res = model.finalize();
+
+    auto final_res = model.finalize().value();
     total_processed += final_res.size();
 
     std::cout << "\nStreaming completed:" << std::endl;
@@ -69,8 +71,9 @@ int main() {
 
     // Show sample of final results
     if (final_res.size() > 0) {
-        std::cout << "\nSample from final chunk:" << std::endl;
-        std::cout << "  x=" << final_res.x(0) << " y=" << final_res.y(0) << std::endl;
+      std::cout << "\nSample from final chunk:" << std::endl;
+      std::cout << "  x=" << final_res.x(0) << " y=" << final_res.y(0)
+                << std::endl;
     }
 
   } catch (const fastlowess::LowessError &e) {

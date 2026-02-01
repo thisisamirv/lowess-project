@@ -60,6 +60,9 @@ docs-venv/
 site/
 examples/python/plots/
 bindings/cpp/include/fastlowess.h
+bindings/cpp/bin/
+bindings/cpp/build/
+tests/cpp/build/
 
 # Benchmarks
 /target/criterion/

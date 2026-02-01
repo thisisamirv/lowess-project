@@ -17,7 +17,7 @@ categories = ["science", "algorithms"]
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-fastLowess = { version = "0.99.9", features = ["dev", "cpu"] }
+fastLowess = { version = "1.1", features = ["dev", "cpu"] }
 wasm-bindgen = "0.2.106"
 js-sys = "0.3.83"
 

@@ -220,54 +220,55 @@ fn parse_merge_strategy(name: &str) -> Result<MergeStrategy, String> {
     }
 }
 
-/// Convert LowessResult to CppLowessResult.
-fn lowess_result_to_cpp(result: LowessResult<f64>) -> CppLowessResult {
-    let n = result.y.len();
+impl From<LowessResult<f64>> for CppLowessResult {
+    fn from(result: LowessResult<f64>) -> Self {
+        let n = result.y.len();
 
-    let (rmse, mae, r_squared, aic, aicc, effective_df, residual_sd) =
-        if let Some(ref d) = result.diagnostics {
-            (
-                d.rmse,
-                d.mae,
-                d.r_squared,
-                d.aic.unwrap_or(f64::NAN),
-                d.aicc.unwrap_or(f64::NAN),
-                d.effective_df.unwrap_or(f64::NAN),
-                d.residual_sd,
-            )
-        } else {
-            (
-                f64::NAN,
-                f64::NAN,
-                f64::NAN,
-                f64::NAN,
-                f64::NAN,
-                f64::NAN,
-                f64::NAN,
-            )
-        };
+        let (rmse, mae, r_squared, aic, aicc, effective_df, residual_sd) =
+            if let Some(ref d) = result.diagnostics {
+                (
+                    d.rmse,
+                    d.mae,
+                    d.r_squared,
+                    d.aic.unwrap_or(f64::NAN),
+                    d.aicc.unwrap_or(f64::NAN),
+                    d.effective_df.unwrap_or(f64::NAN),
+                    d.residual_sd,
+                )
+            } else {
+                (
+                    f64::NAN,
+                    f64::NAN,
+                    f64::NAN,
+                    f64::NAN,
+                    f64::NAN,
+                    f64::NAN,
+                    f64::NAN,
+                )
+            };
 
-    CppLowessResult {
-        x: vec_to_ptr(result.x),
-        y: vec_to_ptr(result.y),
-        n: n as c_ulong,
-        standard_errors: opt_vec_to_ptr(result.standard_errors),
-        confidence_lower: opt_vec_to_ptr(result.confidence_lower),
-        confidence_upper: opt_vec_to_ptr(result.confidence_upper),
-        prediction_lower: opt_vec_to_ptr(result.prediction_lower),
-        prediction_upper: opt_vec_to_ptr(result.prediction_upper),
-        residuals: opt_vec_to_ptr(result.residuals),
-        robustness_weights: opt_vec_to_ptr(result.robustness_weights),
-        fraction_used: result.fraction_used,
-        iterations_used: result.iterations_used.map(|i| i as c_int).unwrap_or(-1),
-        rmse,
-        mae,
-        r_squared,
-        aic,
-        aicc,
-        effective_df,
-        residual_sd,
-        error: ptr::null_mut(),
+        CppLowessResult {
+            x: vec_to_ptr(result.x),
+            y: vec_to_ptr(result.y),
+            n: n as c_ulong,
+            standard_errors: opt_vec_to_ptr(result.standard_errors),
+            confidence_lower: opt_vec_to_ptr(result.confidence_lower),
+            confidence_upper: opt_vec_to_ptr(result.confidence_upper),
+            prediction_lower: opt_vec_to_ptr(result.prediction_lower),
+            prediction_upper: opt_vec_to_ptr(result.prediction_upper),
+            residuals: opt_vec_to_ptr(result.residuals),
+            robustness_weights: opt_vec_to_ptr(result.robustness_weights),
+            fraction_used: result.fraction_used,
+            iterations_used: result.iterations_used.map(|i| i as c_int).unwrap_or(-1),
+            rmse,
+            mae,
+            r_squared,
+            aic,
+            aicc,
+            effective_df,
+            residual_sd,
+            error: ptr::null_mut(),
+        }
     }
 }
 
@@ -437,7 +438,7 @@ pub unsafe extern "C" fn cpp_lowess_fit(
 
         match builder.adapter(Batch).build() {
             Ok(m) => match m.fit(x_slice, y_slice) {
-                Ok(r) => lowess_result_to_cpp(r),
+                Ok(r) => r.into(),
                 Err(e) => error_result(&e.to_string()),
             },
             Err(e) => error_result(&e.to_string()),
@@ -595,7 +596,7 @@ pub unsafe extern "C" fn cpp_streaming_process(
 
     if let Some(model) = &mut lowess.model {
         match model.process_chunk(x_slice, y_slice) {
-            Ok(r) => lowess_result_to_cpp(r),
+            Ok(r) => r.into(),
             Err(e) => error_result(&e.to_string()),
         }
     } else {
@@ -615,7 +616,7 @@ pub unsafe extern "C" fn cpp_streaming_finalize(ptr: *mut CppStreamingLowess) ->
     let lowess = &mut *ptr;
     if let Some(model) = &mut lowess.model {
         match model.finalize() {
-            Ok(r) => lowess_result_to_cpp(r),
+            Ok(r) => r.into(),
             Err(e) => error_result(&e.to_string()),
         }
     } else {
@@ -782,7 +783,7 @@ pub unsafe extern "C" fn cpp_online_add_points(
             fraction_used: 0.0,
             cv_scores: None,
         };
-        lowess_result_to_cpp(result)
+        result.into()
     } else {
         error_result("Online model initialization failed")
     }

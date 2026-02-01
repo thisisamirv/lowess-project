@@ -11,9 +11,9 @@
 
 #include <cmath>
 #include <cstring>
-#include <memory>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 // Include the C header
@@ -28,6 +28,58 @@ class LowessError : public std::runtime_error {
 public:
   explicit LowessError(const std::string &message)
       : std::runtime_error(message) {}
+};
+
+/**
+ * @brief A result type that holds either a value or an error.
+ * Mimics std::expected (C++23) behavior.
+ */
+template <typename T> class Expected {
+public:
+  // Success constructor
+  Expected(T val) : val_(std::move(val)), has_val_(true) {}
+
+  // Error constructor
+  struct ErrorTag {};
+  static Expected make_error(std::string msg) {
+    return Expected(std::move(msg), ErrorTag{});
+  }
+
+  bool has_value() const { return has_val_; }
+  explicit operator bool() const { return has_val_; }
+
+  T &value() & {
+    if (!has_val_)
+      throw LowessError(err_);
+    return val_;
+  }
+
+  const T &value() const & {
+    if (!has_val_)
+      throw LowessError(err_);
+    return val_;
+  }
+
+  T &&value() && {
+    if (!has_val_)
+      throw LowessError(err_);
+    return std::move(val_);
+  }
+
+  const std::string &error() const {
+    if (has_val_)
+      throw LowessError("Bad expected access: has value");
+    return err_;
+  }
+
+private:
+  Expected(std::string err, ErrorTag) : err_(std::move(err)), has_val_(false) {}
+
+  // We store both to avoid manual union management, relying on T's cheap
+  // default ctor. LowessResult's default ctor is cheap (zero-init).
+  T val_;
+  std::string err_;
+  bool has_val_;
 };
 
 /**
@@ -64,7 +116,7 @@ struct LowessOptions {
  */
 struct StreamingOptions : public LowessOptions {
   int chunk_size = 5000;
-  int overlap = -1; ///< -1 for auto
+  int overlap = -1;                        ///< -1 for auto
   std::string merge_strategy = "weighted"; ///< average, weighted, first, last
 };
 
@@ -280,12 +332,15 @@ public:
     return *this;
   }
 
-  LowessResult fit(const std::vector<double> &x, const std::vector<double> &y) {
+  Expected<LowessResult> fit(const std::vector<double> &x,
+                             const std::vector<double> &y) {
     if (x.size() != y.size()) {
-      throw LowessError("x and y must have the same length");
+      return Expected<LowessResult>::make_error(
+          "x and y must have the same length");
     }
     if (x.empty()) {
-      throw LowessError("Input arrays must not be empty");
+      return Expected<LowessResult>::make_error(
+          "Input arrays must not be empty");
     }
 
     auto result = cpp_lowess_fit(ptr_, x.data(), y.data(), x.size());
@@ -293,10 +348,10 @@ public:
     if (result.error != nullptr) {
       std::string error_msg(result.error);
       cpp_lowess_free_result(&result);
-      throw LowessError(error_msg);
+      return Expected<LowessResult>::make_error(error_msg);
     }
 
-    return LowessResult(std::move(result));
+    return Expected<LowessResult>(LowessResult(std::move(result)));
   }
 
 private:
@@ -341,36 +396,35 @@ public:
     return *this;
   }
 
-  LowessResult process_chunk(const std::vector<double> &x,
-                             const std::vector<double> &y) {
+  Expected<LowessResult> process_chunk(const std::vector<double> &x,
+                                       const std::vector<double> &y) {
     if (expect_finalized_)
-      throw LowessError("Model already finalized");
+      return Expected<LowessResult>::make_error("Model already finalized");
     if (x.size() != y.size())
-      throw LowessError("x and y length mismatch");
+      return Expected<LowessResult>::make_error("x and y length mismatch");
 
-    auto result =
-        cpp_streaming_process(ptr_, x.data(), y.data(), x.size());
+    auto result = cpp_streaming_process(ptr_, x.data(), y.data(), x.size());
 
     if (result.error != nullptr) {
       std::string error_msg(result.error);
       cpp_lowess_free_result(&result);
-      throw LowessError(error_msg);
+      return Expected<LowessResult>::make_error(error_msg);
     }
-    return LowessResult(std::move(result));
+    return Expected<LowessResult>(LowessResult(std::move(result)));
   }
 
-  LowessResult finalize() {
+  Expected<LowessResult> finalize() {
     if (expect_finalized_)
-      throw LowessError("Model already finalized");
+      return Expected<LowessResult>::make_error("Model already finalized");
     expect_finalized_ = true;
 
     auto result = cpp_streaming_finalize(ptr_);
     if (result.error != nullptr) {
       std::string error_msg(result.error);
       cpp_lowess_free_result(&result);
-      throw LowessError(error_msg);
+      return Expected<LowessResult>::make_error(error_msg);
     }
-    return LowessResult(std::move(result));
+    return Expected<LowessResult>(LowessResult(std::move(result)));
   }
 
 private:
@@ -415,20 +469,19 @@ public:
     return *this;
   }
 
-  LowessResult add_points(const std::vector<double> &x,
-                          const std::vector<double> &y) {
+  Expected<LowessResult> add_points(const std::vector<double> &x,
+                                    const std::vector<double> &y) {
     if (x.size() != y.size())
-      throw LowessError("x and y length mismatch");
+      return Expected<LowessResult>::make_error("x and y length mismatch");
 
-    auto result =
-        cpp_online_add_points(ptr_, x.data(), y.data(), x.size());
+    auto result = cpp_online_add_points(ptr_, x.data(), y.data(), x.size());
 
     if (result.error != nullptr) {
       std::string error_msg(result.error);
       cpp_lowess_free_result(&result);
-      throw LowessError(error_msg);
+      return Expected<LowessResult>::make_error(error_msg);
     }
-    return LowessResult(std::move(result));
+    return Expected<LowessResult>(LowessResult(std::move(result)));
   }
 
 private:

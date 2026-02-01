@@ -10,7 +10,7 @@
 #include <random>
 #include <vector>
 
-#include "fastlowess.hpp"
+#include "../../bindings/cpp/include/fastlowess.hpp"
 
 int main() {
   std::cout << "=== Online LOWESS Smoothing Example ===" << std::endl;
@@ -43,21 +43,21 @@ int main() {
               << ", min_points=" << opts.min_points << std::endl;
 
     fastlowess::OnlineLowess model(opts);
-    
+
     std::cout << "\nProcessing data point-by-point..." << std::endl;
-    
+
     size_t total_emitted = 0;
     for (size_t i = 0; i < n; ++i) {
-        std::vector<double> xi = {x[i]};
-        std::vector<double> yi = {y[i]};
-        
-        auto res = model.add_points(xi, yi);
-        total_emitted += res.size();
-        
-        if (i > 0 && i % 40 == 0 && res.size() > 0) {
-            std::cout << "  t=" << i << " original=" << y[i]
-                      << " smoothed=" << res.y(res.size()-1) << std::endl;
-        }
+      std::vector<double> xi = {x[i]};
+      std::vector<double> yi = {y[i]};
+
+      auto res = model.add_points(xi, yi).value();
+      total_emitted += res.size();
+
+      if (i > 0 && i % 40 == 0 && res.size() > 0) {
+        std::cout << "  t=" << i << " original=" << y[i]
+                  << " smoothed=" << res.y(res.size() - 1) << std::endl;
+      }
     }
 
     std::cout << "\nOnline processing completed:" << std::endl;

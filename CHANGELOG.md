@@ -30,6 +30,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added `mean` scaling method (Mean Absolute Deviation)
 
+### Changed
+
+**C++:**
+
+- Replaced exception-based error handling with a type-safe `Expected<T>` result type for all core methods (`fit`, `process_chunk`, `finalize`, `add_points`).
+- Refactored the internal FFI layer to use the idiomatic Rust `From` trait for converting result types.
+- Updated all C++ examples and tests to use the new `Expected` pattern, aligning the library with modern C++ practices.
+
 ## 1.1.0
 
 ### Added
