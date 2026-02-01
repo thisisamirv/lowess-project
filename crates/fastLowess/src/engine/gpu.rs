@@ -60,6 +60,8 @@ struct Config {
     seed: u32,
     has_se: u32,
     reduce_output_offset: u32,
+    _pad2: u32,
+    _pad3: u32,
 }
 
 fn pcg_hash(input: u32) -> u32 {
