@@ -57,6 +57,7 @@ struct Config {
     residual_sd: f32,
     n_test: u32,
     seed: u32,
+    has_se: u32,
 }
 
 fn pcg_hash(input: u32) -> u32 {
@@ -139,6 +140,7 @@ struct WeightConfig {
     converged: u32,
     iteration: u32,
     update_mode: u32,
+    _pad: u32,
 }
 
 // Group 0: Constants & Input Data
@@ -170,6 +172,7 @@ struct WeightConfig {
 @group(3) @binding(4) var<storage, read_write> global_max_diff: atomic<u32>;
 @group(3) @binding(5) var<storage, read_write> scan_block_sums: array<u32>;
 @group(3) @binding(6) var<storage, read_write> scan_indices: array<u32>;
+@group(3) @binding(7) var<storage, read_write> workgroup_histograms: array<u32>; // [num_workgroups][256]
 
 // Bindings 4-7 in Group 1: CV Global Data
 @group(1) @binding(4) var<storage, read_write> x_global: array<f32>;
@@ -291,15 +294,38 @@ fn control_pass_generic() {
             let is_converged = w_config.converged == 1u;
             let anchor_count = w_config.anchor_count;
             
-            // Slot 0: fit_anchors (anchor_count threads)
-            if (is_converged) { indirect_args[0] = 0u; } 
-            else { indirect_args[0] = (anchor_count + 63u) / 64u; }
-            indirect_args[1] = 1u;
+            // Slot 0: fit_anchors (One Workgroup per Anchor)
+            if (is_converged) { 
+                indirect_args[0] = 0u; 
+                indirect_args[1] = 1u;
+            } 
+            else { 
+                if (anchor_count <= 65535u) {
+                    indirect_args[0] = anchor_count;
+                    indirect_args[1] = 1u;
+                } else {
+                    indirect_args[0] = 65535u;
+                    indirect_args[1] = (anchor_count + 65534u) / 65535u;
+                }
+            }
             indirect_args[2] = 1u;
             
-            // Slot 3: Standard N-thread Kernels (interpolate, etc)
-            if (is_converged) { indirect_args[3] = 0u; } 
-            else { indirect_args[3] = (config.n + 63u) / 64u; }
+            indirect_args[2] = 1u;
+            
+            // Slot 1 (Indices 3,4,5): Compute SE (Workgroup per Point)
+            if (is_converged || config.has_se == 0u) { 
+                indirect_args[3] = 0u; 
+                indirect_args[4] = 1u;
+            } 
+            else { 
+                if (config.n <= 65535u) {
+                    indirect_args[3] = config.n;
+                    indirect_args[4] = 1u;
+                } else {
+                    indirect_args[3] = 65535u;
+                    indirect_args[4] = (config.n + 65534u) / 65535u;
+                }
+            }
             indirect_args[4] = 1u;
             indirect_args[5] = 1u;
 
@@ -439,214 +465,160 @@ fn update_scale_config() {
 // Dispatched with num_anchors threads
 // -----------------------------------------------------------------------------
 
+struct FitSums {
+    w: f32,
+    wx: f32,
+    wxx: f32,
+    wy: f32,
+    wxy: f32,
+    y_window: f32,
+}
+var<workgroup> s_fit: array<FitSums, 256>;
+
 @compute @workgroup_size(256)
 fn fit_anchors(
-    @builtin(global_invocation_id) global_id: vec3<u32>
+    @builtin(workgroup_id) workgroup_id: vec3<u32>,
+    @builtin(local_invocation_id) local_id: vec3<u32>
 ) {
-    let anchor_id = global_id.x;
-    let n = config.n;
-    let window_size = config.window_size;
+    // 2D dispatch support: (N % 65535, N / 65535, 1) to support >65535 anchors
+    let anchor_id = workgroup_id.x + workgroup_id.y * 65535u;
+    let tid = local_id.x;
+    
     let num_anchors_explicit = w_config.anchor_count;
-    let num_anchors = arrayLength(&anchor_indices);
 
-    var left = 0u;
-    var right = 0u;
-    var x_i = 0.0;
-    var i = 0u;
-    var valid_anchor = false;
-
-    // Use explicit count from reduction buffer for bounds check
-    // since indirect dispatch rounds up workgroups
-    if (anchor_id < num_anchors_explicit) {
-        i = anchor_indices[anchor_id];
-        x_i = x[i];
-        
-        // Adaptive window centered at x_i
-        let win = get_adaptive_window(i, x_i);
-        left = win.x;
-        right = win.y;
-        valid_anchor = true;
+    if (anchor_id >= num_anchors_explicit) {
+        return;
     }
 
-    var d_max = 0.0;
-    if (valid_anchor) {
-        d_max = max(abs(x_i - x[left]), abs(x_i - x[right]));
-        if (d_max <= 0.0) {
+    let i = anchor_indices[anchor_id];
+    let x_i = x[i];
+    
+    let win = get_adaptive_window(i, x_i);
+    let left = win.x;
+    let right = win.y;
+
+    // Check degenerate window
+    let d_max = max(abs(x_i - x[left]), abs(x_i - x[right]));
+    if (d_max <= 1e-12) {
+        if (tid == 0u) {
             anchor_output[anchor_id] = y[i];
-            valid_anchor = false;
+        }
+        return;
+    }
+
+    // Initialize local sums
+    var my_w = 0.0;
+    var my_wx = 0.0;
+    var my_wxx = 0.0;
+    var my_wy = 0.0;
+    var my_wxy = 0.0;
+    var my_y_window = 0.0;
+
+    let d_max_val = max(d_max, 1e-12);
+    let inv_d_max = 1.0 / d_max_val;
+    let h1 = 0.001 * d_max_val;
+    let h9 = 0.999 * d_max_val;
+    
+    let iter = w_config.iteration;
+
+    // Parallel accumulation loop
+    // Stride is 256 (workgroup size)
+    for (var k = left + tid; k <= right; k += 256u) {
+        let xj = x[k];
+        let yj = y[k];
+        let rel_x = xj - x_i;
+        let dist = abs(rel_x);
+        
+        my_y_window += yj;
+        
+        if (dist <= h9) {
+            var kernel_w = 1.0;
+            if (dist > h1) {
+                let u = dist * inv_d_max;
+                let u2 = u * u;
+                kernel_w = get_kernel_weight(u, u2);
+            }
+            
+            var rw = 1.0;
+            if (iter > 0u) {
+                rw = robustness_weights[k];
+            }
+            
+            let combined_w = rw * kernel_w;
+            my_w += combined_w;
+            my_wx += combined_w * rel_x;
+            my_wxx += combined_w * rel_x * rel_x;
+            my_wy += combined_w * yj;
+            my_wxy += combined_w * rel_x * yj;
         }
     }
 
-    if (valid_anchor) {
-        var sum_w = 0.0;
-        var sum_wx = 0.0;
-        var sum_wxx = 0.0;
-        var sum_wy = 0.0;
-        var sum_wxy = 0.0;
-        var sum_y_window = 0.0;
+    // Load to shared memory
+    s_fit[tid].w = my_w;
+    s_fit[tid].wx = my_wx;
+    s_fit[tid].wxx = my_wxx;
+    s_fit[tid].wy = my_wy;
+    s_fit[tid].wxy = my_wxy;
+    s_fit[tid].y_window = my_y_window;
+    
+    workgroupBarrier();
 
-        let d_max_val = max(d_max, 1e-12);
-        let inv_d_max = 1.0 / d_max_val;
-        let h1 = 0.001 * d_max_val;
-        let h9 = 0.999 * d_max_val;
-
-        if (w_config.iteration == 0u) {
-            // First Iteration: Skip loading robustness_weights (assume 1.0)
-            var k = left;
-            while (k + 3u <= right) {
-                for (var offset = 0u; offset < 4u; offset++) {
-                    let idx = k + offset;
-                    let xj = x[idx];
-                    let yj = y[idx];
-                    // rw = 1.0 implicit
-                    
-                    let rel_x = xj - x_i;
-                    let dist = abs(rel_x);
-                    sum_y_window += yj;
-                    
-                    if (dist <= h9) {
-                        var kernel_w = 1.0;
-                        if (dist > h1) {
-                            let u = dist * inv_d_max;
-                            let u2 = u * u;
-                            kernel_w = get_kernel_weight(u, u2);
-                        }
-                        
-                        let combined_w = kernel_w; // rw is 1.0
-                        sum_w += combined_w;
-                        sum_wx += combined_w * rel_x;
-                        sum_wxx += combined_w * rel_x * rel_x;
-                        sum_wy += combined_w * yj;
-                        sum_wxy += combined_w * rel_x * yj;
-                    }
-                }
-                k += 4u;
-            }
-            while (k <= right) {
-                let xj = x[k];
-                let yj = y[k];
-                // rw = 1.0 implicit
-                
-                let rel_x = xj - x_i;
-                let dist = abs(rel_x);
-                sum_y_window += yj;
-                
-                if (dist <= h9) {
-                    var kernel_w = 1.0;
-                    if (dist > h1) {
-                        let u = dist * inv_d_max;
-                        let u2 = u * u;
-                        kernel_w = get_kernel_weight(u, u2);
-                    }
-                    
-                    let combined_w = kernel_w; // rw is 1.0
-                    sum_w += combined_w;
-                    sum_wx += combined_w * rel_x;
-                    sum_wxx += combined_w * rel_x * rel_x;
-                    sum_wy += combined_w * yj;
-                    sum_wxy += combined_w * rel_x * yj;
-                }
-                k += 1u;
-            }
-        } else {
-            // Subsequent Iterations: Load robustness_weights
-            var k = left;
-            while (k + 3u <= right) {
-                for (var offset = 0u; offset < 4u; offset++) {
-                    let idx = k + offset;
-                    let xj = x[idx];
-                    let yj = y[idx];
-                    let rw = robustness_weights[idx];
-                    
-                    let rel_x = xj - x_i;
-                    let dist = abs(rel_x);
-                    sum_y_window += yj;
-                    
-                    if (dist <= h9) {
-                        var kernel_w = 1.0;
-                        if (dist > h1) {
-                            let u = dist * inv_d_max;
-                            let u2 = u * u;
-                            kernel_w = get_kernel_weight(u, u2);
-                        }
-                        
-                        let combined_w = rw * kernel_w;
-                        sum_w += combined_w;
-                        sum_wx += combined_w * rel_x;
-                        sum_wxx += combined_w * rel_x * rel_x;
-                        sum_wy += combined_w * yj;
-                        sum_wxy += combined_w * rel_x * yj;
-                    }
-                }
-                k += 4u;
-            }
-            while (k <= right) {
-                let xj = x[k];
-                let yj = y[k];
-                let rw = robustness_weights[k];
-                
-                let rel_x = xj - x_i;
-                let dist = abs(rel_x);
-                sum_y_window += yj;
-                
-                if (dist <= h9) {
-                    var kernel_w = 1.0;
-                    if (dist > h1) {
-                        let u = dist * inv_d_max;
-                        let u2 = u * u;
-                        kernel_w = get_kernel_weight(u, u2);
-                    }
-                    
-                    let combined_w = rw * kernel_w;
-                    sum_w += combined_w;
-                    sum_wx += combined_w * rel_x;
-                    sum_wxx += combined_w * rel_x * rel_x;
-                    sum_wy += combined_w * yj;
-                    sum_wxy += combined_w * rel_x * yj;
-                }
-                k += 1u;
-            }
+    // Parallel Reduction
+    for (var s = 128u; s > 0u; s >>= 1u) {
+        if (tid < s) {
+            s_fit[tid].w += s_fit[tid + s].w;
+            s_fit[tid].wx += s_fit[tid + s].wx;
+            s_fit[tid].wxx += s_fit[tid + s].wxx;
+            s_fit[tid].wy += s_fit[tid + s].wy;
+            s_fit[tid].wxy += s_fit[tid + s].wxy;
+            s_fit[tid].y_window += s_fit[tid + s].y_window;
         }
+        workgroupBarrier();
+    }
 
+    // Final Solve (Thread 0)
+    if (tid == 0u) {
+        let sum_w = s_fit[0].w;
+        let sum_wx = s_fit[0].wx;
+        let sum_wxx = s_fit[0].wxx;
+        let sum_wy = s_fit[0].wy;
+        let sum_wxy = s_fit[0].wxy;
+        let sum_y_window = s_fit[0].y_window;
+        
         let TOL: f32 = 1e-12;
         if (sum_w < TOL) {
-            switch (config.zero_weight_fallback) {
-                case FALLBACK_RETURN_ORIGINAL: { anchor_output[anchor_id] = y[i]; break; }
+             switch (config.zero_weight_fallback) {
+                case FALLBACK_RETURN_ORIGINAL: { anchor_output[anchor_id] = y[i]; }
                 default: { 
                     let w_size = f32(right - left + 1u);
                     anchor_output[anchor_id] = sum_y_window / max(1.0, w_size); 
-                    break;
                 }
             }
         } else {
-            let x_mean = sum_wx / sum_w;
-            let y_mean = sum_wy / sum_w;
-            let variance = sum_wxx - (sum_wx * sum_wx) / sum_w;
-            
-            let abs_tol: f32 = 1e-7;
-            let rel_tol: f32 = 1.1920929e-7 * d_max_val * d_max_val;
-            let tol = max(abs_tol, rel_tol);
+             let x_mean = sum_wx / sum_w;
+             let y_mean = sum_wy / sum_w;
+             let variance = sum_wxx - (sum_wx * sum_wx) / sum_w;
+             
+             let abs_tol: f32 = 1e-7;
+             let rel_tol: f32 = 1.1920929e-7 * d_max_val * d_max_val;
+             let tol = max(abs_tol, rel_tol);
 
-            if (variance <= tol) {
-                anchor_output[anchor_id] = y_mean;
-            } else {
-                let covariance = sum_wxy - (sum_wx * sum_wy) / sum_w;
-                let slope = covariance / variance;
-                let intercept = y_mean - slope * x_mean;
-                // Since we are working in centered coordinates (x - x_i),
-                // the value at x_i corresponds to coordinate 0.
-                // Thus fitted value is just the intercept.
-                let fitted = intercept;
-                
-                if (fitted == fitted && abs(fitted) < 1e15) {
+             if (variance <= tol) {
+                 anchor_output[anchor_id] = y_mean;
+             } else {
+                 let covariance = sum_wxy - (sum_wx * sum_wy) / sum_w;
+                 let slope = covariance / variance;
+                 let intercept = y_mean - slope * x_mean;
+                 let fitted = intercept;
+                 
+                  if (fitted == fitted && abs(fitted) < 1e15) {
                     anchor_output[anchor_id] = fitted;
                 } else {
                     anchor_output[anchor_id] = y_mean;
                 }
-            }
+             }
         }
         
-        // Final sanity check
         let final_val = anchor_output[anchor_id];
         if (final_val != final_val) {
              anchor_output[anchor_id] = y[i];
@@ -827,29 +799,44 @@ fn finalize_reduction_generic() {
 // Kernel 5: Standard Errors
 // Dispatched with N threads
 // -----------------------------------------------------------------------------
-@compute @workgroup_size(64)
-fn compute_se(@builtin(global_invocation_id) global_id: vec3<u32>) {
-    let i = global_id.x;
+struct SeSums {
+    w: f32,
+    wr2: f32,
+}
+var<workgroup> s_se: array<SeSums, 256>;
+
+@compute @workgroup_size(256)
+fn compute_se(
+    @builtin(workgroup_id) workgroup_id: vec3<u32>,
+    @builtin(local_invocation_id) local_id: vec3<u32>
+) {
+    // 2D Dispatch: Workgroup per Point
+    let i = workgroup_id.x + workgroup_id.y * 65535u;
+    let tid = local_id.x;
     let n = config.n;
-    let window_size = config.window_size;
+    
     if (i >= n) { return; }
 
     let x_i = x[i];
     
     let win = get_adaptive_window(i, x_i);
-    var left = win.x;
-    var right = win.y;
+    let left = win.x;
+    let right = win.y;
 
     let d_max = max(abs(x_i - x[left]), abs(x_i - x[right]));
     if (d_max <= 1e-12) {
-        std_errors[i] = 0.0;
+        if (tid == 0u) {
+            std_errors[i] = 0.0;
+        }
         return;
     }
 
-    var sum_w = 0.0;
-    var sum_wr2 = 0.0;
+    var my_w = 0.0;
+    var my_wr2 = 0.0;
     let d_max_val = max(d_max, 1e-9);
-    for (var k = left; k <= right; k++) {
+    let inv_d_max = 1.0 / d_max_val;
+    
+    for (var k = left + tid; k <= right; k += 256u) {
         let xj = x[k];
         let smoothed_j = y_smooth[k];
         let yj = y[k];
@@ -857,33 +844,49 @@ fn compute_se(@builtin(global_invocation_id) global_id: vec3<u32>) {
         
         let r = yj - smoothed_j;
         let dist = abs(xj - x_i);
-        let u = dist / d_max_val;
+        let u = dist * inv_d_max;
         
         if (u < 1.0) {
-            var kernel_w = 1.0;
             let u2 = u * u;
-            kernel_w = get_kernel_weight(u, u2);
+            let kernel_w = get_kernel_weight(u, u2);
             
             let combined_w = rw * kernel_w;
-            sum_w += combined_w;
-            sum_wr2 += combined_w * r * r;
+            my_w += combined_w;
+            my_wr2 += combined_w * r * r;
         }
     }
 
-    let LINEAR_PARAMS = 2.0;
-    if (sum_w > LINEAR_PARAMS + 1e-6) {
-        let df = sum_w - LINEAR_PARAMS;
-        let variance = sum_wr2 / df;
+    s_se[tid].w = my_w;
+    s_se[tid].wr2 = my_wr2;
+    workgroupBarrier();
+    
+    for (var s = 128u; s > 0u; s >>= 1u) {
+        if (tid < s) {
+            s_se[tid].w += s_se[tid + s].w;
+            s_se[tid].wr2 += s_se[tid + s].wr2;
+        }
+        workgroupBarrier();
+    }
+
+    if (tid == 0u) {
+        let sum_w = s_se[0].w;
+        let sum_wr2 = s_se[0].wr2;
         
-        // Find kernel weight for current point (distance = 0)
-        var w_idx = 1.0;
-        w_idx = get_kernel_weight(0.0, 0.0);
-        w_idx = w_idx * robustness_weights[i];
-        
-        let leverage = w_idx / sum_w;
-        std_errors[i] = sqrt(variance * leverage);
-    } else {
-        std_errors[i] = 0.0;
+        let LINEAR_PARAMS = 2.0;
+        if (sum_w > LINEAR_PARAMS + 1e-6) {
+            let df = sum_w - LINEAR_PARAMS;
+            let variance = sum_wr2 / df;
+            
+            // Find kernel weight for current point (distance = 0)
+            // u=0 -> kernel_weight=1.0 usually but let's call function
+            let w_idx_kern = get_kernel_weight(0.0, 0.0);
+            let w_idx = w_idx_kern * robustness_weights[i];
+            
+            let leverage = w_idx / sum_w;
+            std_errors[i] = sqrt(variance * leverage);
+        } else {
+            std_errors[i] = 0.0;
+        }
     }
 }
 
@@ -1190,12 +1193,18 @@ fn update_dispatch() {
 
     if (converged == 0u) {
         d_n = (n + 255u) / 256u;
-        d_anchors = (w_config.anchor_count + 255u) / 256u;
+        // d_anchors logic moved to below for 2D dispatch
     }
     
-    // Slot 0: Fit Anchors
-    indirect_args[0] = d_anchors;
-    indirect_args[1] = 1u;
+    // Slot 0: Fit Anchors (Workgroup per Anchor)
+    let limit = 65535u;
+    if (w_config.anchor_count <= limit) {
+        indirect_args[0] = w_config.anchor_count;
+        indirect_args[1] = 1u;
+    } else {
+        indirect_args[0] = limit;
+        indirect_args[1] = (w_config.anchor_count + limit - 1u) / limit;
+    }
     indirect_args[2] = 1u;
 
     // Slot 2: Interpolate
@@ -1246,22 +1255,24 @@ fn prepare_reduction_generic(@builtin(global_invocation_id) global_id: vec3<u32>
     reduction[i] = val;
 }
 
-// Radix histogram: count occurrences of each 8-bit digit
-// Uses reduction[0..n] as source
+// Radix histogram: count occurrences of each 8-bit digit per workgroup
 @compute @workgroup_size(256)
-fn sort_histogram_generic(@builtin(global_invocation_id) global_id: vec3<u32>,
-                        @builtin(local_invocation_id) local_id: vec3<u32>) {
+fn sort_histogram_block(@builtin(global_invocation_id) global_id: vec3<u32>,
+                        @builtin(local_invocation_id) local_id: vec3<u32>,
+                        @builtin(workgroup_id) workgroup_id: vec3<u32>) {
     let is_x = SORT_MODE == 1u;
     let n = select(config.n, config.orig_n, is_x);
     let pad = select(0u, config.pad_len, is_x);
     let radix_pass = w_config.radix_pass;
     let shift = radix_pass * 8u;
-    
+    let wid = workgroup_id.x;
+    let lid = local_id.x;
+
     // Initialize local histogram
-    atomicStore(&local_histogram[local_id.x], 0u);
+    atomicStore(&local_histogram[lid], 0u);
     workgroupBarrier();
     
-    // Count digits
+    // Count digits in our tile
     let i = global_id.x;
     if (i < n) {
         var val: u32;
@@ -1275,59 +1286,110 @@ fn sort_histogram_generic(@builtin(global_invocation_id) global_id: vec3<u32>,
     }
     workgroupBarrier();
     
-    // Add to global histogram atomics
-    if (local_id.x < 256u) {
-        let count = atomicLoad(&local_histogram[local_id.x]);
+    // Write workgroup histogram to global memory
+    // Each thread writes one bin
+    if (lid < 256u) {
+        let count = atomicLoad(&local_histogram[lid]);
+        workgroup_histograms[wid * 256u + lid] = count;
+        
+        // Also accumulate into global histogram (for the absolute offsets)
         if (count > 0u) {
-            atomicAdd(&global_histogram[local_id.x], count);
+            atomicAdd(&global_histogram[lid], count);
         }
     }
 }
 
-// Prefix sum on histogram (single workgroup, 256 elements)
-@compute @workgroup_size(1)
-fn radix_prefix_sum() {
-    var sum: u32 = 0u;
-    for (var i: u32 = 0u; i < 256u; i = i + 1u) {
-        let count = atomicLoad(&global_histogram[i]);
-        atomicStore(&global_histogram[i], sum);
-        sum = sum + count;
+// Prefix sum on workgroup histograms (single workgroup or multi-pass)
+// For simplicity and since num_workgroups is ~400 for 100k, 
+// we scan the "columns" of workgroup_histograms.
+@compute @workgroup_size(256)
+fn radix_prefix_sum(@builtin(local_invocation_id) local_id: vec3<u32>) {
+    let digit = local_id.x; // One thread per digit
+    let num_workgroups = (select(config.n, config.orig_n, SORT_MODE == 1u) + 255u) / 256u;
+    
+    // Global base offset for this digit (sum of all counts for digits < digit)
+    var global_base = 0u;
+    for (var d = 0u; d < digit; d = d + 1u) {
+        global_base += atomicLoad(&global_histogram[d]);
+    }
+    
+    // Inclusive scan over workgroup counts for this digit
+    var running_sum = global_base;
+    for (var w = 0u; w < num_workgroups; w = w + 1u) {
+        let idx = w * 256u + digit;
+        let count = workgroup_histograms[idx];
+        workgroup_histograms[idx] = running_sum; // Store exclusive prefix sum
+        running_sum += count;
     }
 }
 
-// Scatter elements to sorted positions
-// Reads from reduction[0..n], writes to reduction[524288..]
-// We assume n <= 524288 (half of the 1M element reduction buffer)
-// -----------------------------------------------------------------------------
-// Kernel: Radix Scatter
-// -----------------------------------------------------------------------------
-@compute @workgroup_size(1)
-fn sort_scatter_generic(@builtin(global_invocation_id) global_id: vec3<u32>) {
+// Shared memory for digits and local offsets (one per thread)
+var<workgroup> s_digits: array<u32, 256>;
+var<workgroup> s_offsets: array<u32, 256>;
+var<workgroup> s_hist_local: array<u32, 256>;
+
+// Parallel Scatter using pre-calculated offsets
+@compute @workgroup_size(256)
+fn sort_scatter_parallel(@builtin(global_invocation_id) global_id: vec3<u32>,
+                         @builtin(local_invocation_id) local_id: vec3<u32>,
+                         @builtin(workgroup_id) workgroup_id: vec3<u32>) {
     let is_x = SORT_MODE == 1u;
     let n = select(config.n, config.orig_n, is_x);
     let pad = select(0u, config.pad_len, is_x);
-    
-    if (!is_x && n > 524288u) { return; } // Safety check for buffer paging
-    
     let radix_pass = w_config.radix_pass;
     let shift = radix_pass * 8u;
-    
-    // Sequential loop over all elements to preserve stability
-    for (var i: u32 = 0u; i < n; i = i + 1u) {
+    let wid = workgroup_id.x;
+    let lid = local_id.x;
+
+    let i = global_id.x;
+    var has_val = false;
+    var my_digit = 0u;
+    var my_val: u32 = 0u;
+
+    if (i < n) {
         if (is_x) {
-            let idx = i + pad;
-            let val_x = x[idx];
-            let val_y = y[idx];
-            let sortable_val = f32_to_sortable_u32(val_x);
-            let digit = (sortable_val >> shift) & 0xffu;
-            let pos = atomicAdd(&global_histogram[digit], 1u);
+            my_val = f32_to_sortable_u32(x[i + pad]);
+        } else {
+            my_val = f32_to_sortable_u32(reduction[i]);
+        }
+        my_digit = (my_val >> shift) & 0xFFu;
+        has_val = true;
+    }
+
+    // Store digits for sequential pass
+    s_digits[lid] = select(256u, my_digit, has_val);
+    workgroupBarrier();
+
+    // Thread 0: Sequential stable scan within workgroup
+    if (lid == 0u) {
+        // Clear local counts
+        for (var d = 0u; d < 256u; d++) {
+            s_hist_local[d] = 0u;
+        }
+        // Scan elements
+        for (var j = 0u; j < 256u; j++) {
+            let digit = s_digits[j];
+            if (digit < 256u) {
+                s_offsets[j] = s_hist_local[digit];
+                s_hist_local[digit]++;
+            }
+        }
+    }
+    workgroupBarrier();
+
+    if (has_val) {
+        // Global position = global_workgroup_base[wid][digit] + local_offset[digit]
+        let local_offset = s_offsets[lid];
+        let global_workgroup_base = workgroup_histograms[wid * 256u + my_digit];
+        let pos = global_workgroup_base + local_offset;
+
+        if (is_x) {
+            let val_x = x[i + pad];
+            let val_y = y[i + pad];
             y_smooth[pos + pad] = val_x;
             residuals[pos + pad] = val_y;
         } else {
             let element = reduction[i];
-            let sortable_val = f32_to_sortable_u32(element);
-            let digit = (sortable_val >> shift) & 0xffu;
-            let pos = atomicAdd(&global_histogram[digit], 1u);
             reduction[524288u + pos] = element;
         }
     }
@@ -1453,6 +1515,12 @@ pub struct GpuConfig {
     pub residual_sd: f32,
     pub n_test: u32,
     pub seed: u32,
+    pub has_se: u32,
+    // Start Padding (Ensure 16-byte alignment for Uniform Buffer)
+    // Current size: 84 bytes. Need 96 bytes. (12 bytes padding)
+    pub _pad1: u32,
+    pub _pad2: u32,
+    pub _pad3: u32,
 }
 
 #[repr(C)]
@@ -1469,6 +1537,7 @@ pub struct WeightConfig {
     pub converged: u32,
     pub iteration: u32,
     pub update_mode: u32,
+    pub _pad: u32,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -1504,11 +1573,12 @@ pub struct GpuPipelines {
     pub compute_intervals_pipeline: ComputePipeline,
     pub prepare_pipelines: [ComputePipeline; 3],
     pub radix_histogram_pipeline: ComputePipeline,
-    pub radix_prefix_sum_pipeline: ComputePipeline,
+    pub radix_scan_histograms_pipeline: ComputePipeline,
     pub radix_scatter_pipeline: ComputePipeline,
     pub radix_copy_back_pipeline: ComputePipeline,
     pub select_median_pipeline: ComputePipeline,
     pub sort_x_histogram_pipeline: ComputePipeline,
+    pub sort_x_scan_histograms_pipeline: ComputePipeline,
     pub sort_x_scatter_pipeline: ComputePipeline,
     pub sort_x_copy_back_pipeline: ComputePipeline,
     pub se_pipeline: ComputePipeline,
@@ -1569,6 +1639,7 @@ pub struct GpuBuffers {
     pub median_buffer: Option<Buffer>,
     pub scan_block_sums_buffer: Option<Buffer>,
     pub scan_indices_buffer: Option<Buffer>,
+    pub workgroup_histograms_buffer: Option<Buffer>,
 
     // Group 4
     pub x_test_buffer: Option<Buffer>,
@@ -1645,7 +1716,7 @@ impl GpuExecutor {
         let adapter = adapter.map_err(|_| "No GPU adapter found")?;
 
         let limits = Limits {
-            max_storage_buffers_per_shader_stage: 12,
+            max_storage_buffers_per_shader_stage: 64,
             ..Default::default()
         };
 
@@ -1739,6 +1810,7 @@ impl GpuExecutor {
                 layout_entry(4, false),
                 layout_entry(5, false),
                 layout_entry(6, false),
+                layout_entry(7, false),
             ],
         });
 
@@ -1853,13 +1925,13 @@ impl GpuExecutor {
                 ],
                 radix_histogram_pipeline: cp(
                     "radix_histogram",
-                    "sort_histogram_generic",
+                    "sort_histogram_block",
                     &[("SORT_MODE", 0.0)],
                 ),
-                radix_prefix_sum_pipeline: cps("radix_prefix_sum"),
+                radix_scan_histograms_pipeline: cps("radix_prefix_sum"),
                 radix_scatter_pipeline: cp(
                     "radix_scatter",
-                    "sort_scatter_generic",
+                    "sort_scatter_parallel",
                     &[("SORT_MODE", 0.0)],
                 ),
                 radix_copy_back_pipeline: cp(
@@ -1870,12 +1942,17 @@ impl GpuExecutor {
                 select_median_pipeline: cps("select_median"),
                 sort_x_histogram_pipeline: cp(
                     "sort_x_histogram",
-                    "sort_histogram_generic",
+                    "sort_histogram_block",
+                    &[("SORT_MODE", 1.0)],
+                ),
+                sort_x_scan_histograms_pipeline: cp(
+                    "sort_x_scan_histograms",
+                    "radix_prefix_sum",
                     &[("SORT_MODE", 1.0)],
                 ),
                 sort_x_scatter_pipeline: cp(
                     "sort_x_scatter",
-                    "sort_scatter_generic",
+                    "sort_scatter_parallel",
                     &[("SORT_MODE", 1.0)],
                 ),
                 sort_x_copy_back_pipeline: cp(
@@ -1956,6 +2033,7 @@ impl GpuExecutor {
                 median_buffer: None,
                 scan_block_sums_buffer: None,
                 scan_indices_buffer: None,
+                workgroup_histograms_buffer: None,
                 x_test_buffer: None,
                 y_test_buffer: None,
                 test_errors_buffer: None,
@@ -2065,6 +2143,7 @@ impl GpuExecutor {
                 self.buffers.global_max_diff_buffer.as_ref().unwrap(),
                 self.buffers.scan_block_sums_buffer.as_ref().unwrap(),
                 self.buffers.scan_indices_buffer.as_ref().unwrap(),
+                self.buffers.workgroup_histograms_buffer.as_ref().unwrap(),
             ],
         )
     }
@@ -2287,6 +2366,12 @@ impl GpuExecutor {
             n_bytes_padded,
             BufferUsages::STORAGE | BufferUsages::COPY_DST
         );
+        ensure!(
+            "WorkgroupHistograms",
+            &mut self.buffers.workgroup_histograms_buffer,
+            (n_padded.div_ceil(256) as u64 * 256 * 4).max(1024),
+            BufferUsages::STORAGE | BufferUsages::COPY_DST
+        );
 
         if bg_needs_update || self.bg3_aux.is_none() {
             self.bg3_aux = Some(self.create_bg3(None));
@@ -2321,6 +2406,7 @@ impl GpuExecutor {
                 converged: 0,
                 iteration: 0,
                 update_mode: 0,
+                _pad: 0,
             }),
         );
 
@@ -2675,7 +2761,7 @@ pub enum DispatchMode {
 pub struct RadixSortConfig<'a> {
     pub hist_pipeline: &'a ComputePipeline,
     pub hist_dispatch: DispatchMode,
-    pub prefix_sum_pipeline: &'a ComputePipeline,
+    pub scan_histograms_pipeline: &'a ComputePipeline,
     pub prefix_dispatch: DispatchMode,
     pub scatter_pipeline: &'a ComputePipeline,
     pub scatter_dispatch: DispatchMode,
@@ -2814,6 +2900,7 @@ impl GpuExecutor {
             converged: 0,
             iteration: 0,
             update_mode: 0,
+            _pad: 0,
         };
         self.queue.write_buffer(
             self.buffers.w_config_buffer.as_ref().unwrap(),
@@ -2961,10 +3048,10 @@ impl GpuExecutor {
             // 2. Histogram
             self.record_pipeline_with_bg3(encoder, config.hist_pipeline, config.hist_dispatch, bg);
 
-            // 3. Prefix Sum
+            // 3. Prefix Sum (Global and Workgroup)
             self.record_pipeline_with_bg3(
                 encoder,
-                config.prefix_sum_pipeline,
+                config.scan_histograms_pipeline,
                 config.prefix_dispatch,
                 bg,
             );
@@ -2994,10 +3081,10 @@ impl GpuExecutor {
         let config = RadixSortConfig {
             hist_pipeline: &self.pipelines.radix_histogram_pipeline,
             hist_dispatch: DispatchMode::Indirect(24),
-            prefix_sum_pipeline: &self.pipelines.radix_prefix_sum_pipeline,
+            scan_histograms_pipeline: &self.pipelines.radix_scan_histograms_pipeline,
             prefix_dispatch: DispatchMode::Direct(1),
             scatter_pipeline: &self.pipelines.radix_scatter_pipeline,
-            scatter_dispatch: DispatchMode::Direct(1),
+            scatter_dispatch: DispatchMode::Indirect(24),
             copy_back_pipeline: &self.pipelines.radix_copy_back_pipeline,
             copy_dispatch: DispatchMode::Indirect(24),
         };
@@ -3108,10 +3195,10 @@ impl GpuExecutor {
         let config = RadixSortConfig {
             hist_pipeline: &self.pipelines.sort_x_histogram_pipeline,
             hist_dispatch: DispatchMode::Direct(n_padded.div_ceil(256)),
-            prefix_sum_pipeline: &self.pipelines.radix_prefix_sum_pipeline,
+            scan_histograms_pipeline: &self.pipelines.sort_x_scan_histograms_pipeline,
             prefix_dispatch: DispatchMode::Direct(1),
             scatter_pipeline: &self.pipelines.sort_x_scatter_pipeline,
-            scatter_dispatch: DispatchMode::Direct(1),
+            scatter_dispatch: DispatchMode::Direct(n_padded.div_ceil(256)),
             copy_back_pipeline: &self.pipelines.sort_x_copy_back_pipeline,
             copy_dispatch: DispatchMode::Direct(n_padded.div_ceil(256)),
         };
@@ -3351,7 +3438,23 @@ where
         let y_f32 = cast_input_slice(y);
 
         // Calculate anchors based on PADDED range
-        let delta = config.delta.to_f32().unwrap();
+        let mut delta = config.delta.to_f32().unwrap();
+
+        // Auto-Delta Heuristic:
+        // If delta is 0, default to 1% of the data range.
+        if delta.abs() < 1e-12 && orig_n > 0 {
+            // Find min/max robustly (input might be unsorted)
+            let (min, max) = x_f32
+                .iter()
+                .fold((f32::INFINITY, f32::NEG_INFINITY), |(min, max), &val| {
+                    (min.min(val), max.max(val))
+                });
+
+            let range = max - min;
+            if range > 0.0 {
+                delta = range * 0.01;
+            }
+        }
 
         let weight_fn_id = match config.weight_function {
             WeightFunction::Cosine => 0,
@@ -3394,6 +3497,14 @@ where
             residual_sd: 0.0,
             n_test: 0,
             seed: 0,
+            has_se: if config.return_variance.is_some() {
+                1
+            } else {
+                0
+            },
+            _pad1: 0,
+            _pad2: 0,
+            _pad3: 0,
         };
 
         let robustness_id = match config.robustness_method {
@@ -3420,6 +3531,11 @@ where
             // 2. Prepare for fitting (anchors, intervals, init)
             exec.record_prepare_fit(&mut encoder);
 
+            exec.queue.submit(Some(encoder.finish()));
+        }
+
+        {
+            let mut encoder = exec.device.create_command_encoder(&Default::default());
             // 3. Main fitting loop (all iterations)
             exec.record_fitting_loop(
                 &mut encoder,
@@ -3563,6 +3679,10 @@ where
             residual_sd: 1.0,
             n_test: 0,
             seed: config.cv_seed.unwrap_or(12345) as u32,
+            has_se: 0,
+            _pad1: 0,
+            _pad2: 0,
+            _pad3: 0,
         };
         exec.reset_buffers(&x_f32, &y_f32, gpu_config, 0, 0);
 
@@ -3655,12 +3775,16 @@ where
                     .auto_convergence
                     .map(|t| t.to_f32().unwrap())
                     .unwrap_or(0.0),
-                z_score: 0.0, // Updated per fold (test_start)
+                z_score: 0.0, // Overloaded for test_start offset
                 has_conf: 0,
                 has_pred: 0,
                 residual_sd: 0.0,
                 n_test: 0,
                 seed: 0,
+                has_se: 0,
+                _pad1: 0,
+                _pad2: 0,
+                _pad3: 0,
             };
             for fold in 0..k {
                 let test_start = (fold * fold_size) as u32;
@@ -3707,6 +3831,7 @@ where
                     converged: 0,
                     iteration: 0,
                     update_mode: 0,
+                    _pad: 0,
                 };
                 exec.queue.write_buffer(
                     exec.buffers.w_config_buffer.as_ref().unwrap(),

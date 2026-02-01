@@ -157,6 +157,10 @@ fn test_gpu_padding_values() {
             has_pred: 0,
             residual_sd: 0.0,
             seed: 0,
+            has_se: 0,
+            _pad1: 0,
+            _pad2: 0,
+            _pad3: 0,
         };
 
         exec.reset_buffers(&x, &y, gpu_config, 0, 0);
@@ -334,6 +338,10 @@ fn test_cpu_gpu_padding_equivalence() {
             residual_sd: 0.0,
             n_test: 0,
             seed: 0,
+            has_se: 0,
+            _pad1: 0,
+            _pad2: 0,
+            _pad3: 0,
         };
 
         exec.reset_buffers(&x, &y, gpu_config, 0, 0);
@@ -932,6 +940,10 @@ fn test_gpu_median_diagnostic() {
                 residual_sd: 0.0,
                 n_test: 0,
                 seed: 0,
+                has_se: 0,
+                _pad1: 0,
+                _pad2: 0,
+                _pad3: 0,
             },
             0,
             0,
@@ -976,6 +988,10 @@ fn test_gpu_median_diagnostic() {
                 residual_sd: 0.0,
                 n_test: 0,
                 seed: 0,
+                has_se: 0,
+                _pad1: 0,
+                _pad2: 0,
+                _pad3: 0,
             },
             0,
             0,
@@ -1036,6 +1052,10 @@ fn test_gpu_median_large() {
                     residual_sd: 0.0,
                     n_test: 0,
                     seed: 0,
+                    has_se: 0,
+                    _pad1: 0,
+                    _pad2: 0,
+                    _pad3: 0,
                 },
                 0,
                 0,
