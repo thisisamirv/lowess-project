@@ -3684,9 +3684,10 @@ where
     #[cfg(feature = "gpu")]
     {
         // Global Executor Lock
-        let mut guard = GLOBAL_EXECUTOR
-            .lock()
-            .map_err(|e| LowessError::RuntimeError(format!("GPU mutex poisoned: {}", e)))?;
+        let mut guard = match GLOBAL_EXECUTOR.lock() {
+            Ok(g) => g,
+            Err(p) => p.into_inner(),
+        };
 
         if guard.is_none() {
             match block_on(GpuExecutor::new()) {
@@ -4010,10 +4011,10 @@ where
             return (T::zero(), Vec::new());
         }
 
-        let mut guard = GLOBAL_EXECUTOR
-            .lock()
-            .map_err(|e| LowessError::RuntimeError(format!("GPU mutex poisoned: {}", e)))
-            .unwrap();
+        let mut guard = match GLOBAL_EXECUTOR.lock() {
+            Ok(g) => g,
+            Err(p) => p.into_inner(),
+        };
 
         if guard.is_none() {
             match block_on(GpuExecutor::new()) {

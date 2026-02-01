@@ -105,6 +105,8 @@ jobs:
       - name: "Rust: fastLowess Tests"
         run: |
           if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
+             sudo apt-get update && sudo apt-get install -y libvulkan1 mesa-vulkan-drivers
+             export GALLIUM_DRIVER=lavapipe
              cargo test -q -p lowess-project-tests --test fastLowess --features gpu
           else
              cargo test -q -p lowess-project-tests --test fastLowess --features cpu

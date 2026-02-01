@@ -38,6 +38,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Refactored the internal FFI layer to use the idiomatic Rust `From` trait for converting result types.
 - Updated all C++ examples and tests to use the new `Expected` pattern, aligning the library with modern C++ practices.
 
+### Fixed
+
+**fastLowess:**
+
+- Fixed memory layout mismatch in the `GpuConfig` struct
+- Refactored the `GpuExecutor` initialization in both the engine (`gpu.rs`) and tests (`gpu_tests.rs`) to handle missing hardware/drivers gracefully.
+- Improved the global executor lock handling to automatically recover from "poisoned" states. This prevents a single test crash from disabling the entire GPU backend for the remainder of the session.
+
 ## 1.1.0
 
 ### Added
