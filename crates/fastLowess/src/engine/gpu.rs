@@ -2852,7 +2852,6 @@ pub struct RadixSortConfig<'a> {
     pub hist_pipeline: &'a ComputePipeline,
     pub hist_dispatch: DispatchMode,
     pub scan_histograms_pipeline: &'a ComputePipeline,
-    pub prefix_dispatch: DispatchMode,
     pub scatter_pipeline: &'a ComputePipeline,
     pub scatter_dispatch: DispatchMode,
     pub copy_back_pipeline: &'a ComputePipeline,
@@ -3172,7 +3171,6 @@ impl GpuExecutor {
             hist_pipeline: &self.pipelines.radix_histogram_pipeline,
             hist_dispatch: DispatchMode::Indirect(24),
             scan_histograms_pipeline: &self.pipelines.radix_scan_histograms_pipeline,
-            prefix_dispatch: DispatchMode::Direct(1),
             scatter_pipeline: &self.pipelines.radix_scatter_pipeline,
             scatter_dispatch: DispatchMode::Indirect(24),
             copy_back_pipeline: &self.pipelines.radix_copy_back_pipeline,
@@ -3286,7 +3284,6 @@ impl GpuExecutor {
             hist_pipeline: &self.pipelines.sort_x_histogram_pipeline,
             hist_dispatch: DispatchMode::Direct(n_padded.div_ceil(256)),
             scan_histograms_pipeline: &self.pipelines.sort_x_scan_histograms_pipeline,
-            prefix_dispatch: DispatchMode::Direct(256),
             scatter_pipeline: &self.pipelines.sort_x_scatter_pipeline,
             scatter_dispatch: DispatchMode::Direct(n_padded.div_ceil(256)),
             copy_back_pipeline: &self.pipelines.sort_x_copy_back_pipeline,
@@ -3833,65 +3830,45 @@ where
             encoder.clear_buffer(exec.buffers.cv_results_buffer.as_ref().unwrap(), 0, None);
         });
 
+        // 5. Batch all runs (Fractions x Folds) into a single submission
+        let k = match method {
+            CVKind::KFold(k) => k,
+            CVKind::LOOCV => n,
+        };
+        let n_fractions = fractions.len();
+        let n_runs = n_fractions * k;
+
+        struct RunDesc {
+            n_train: u32,
+            n_test: u32,
+            total_n_padded: u32,
+            window_size: u32,
+            pad_len: u32,
+            test_start: u32,
+            fraction: f32,
+            frac_idx: u32,
+        }
+        let mut runs: Vec<RunDesc> = Vec::with_capacity(n_runs);
+
         for (frac_idx, &frac) in fractions.iter().enumerate() {
-            let k = match method {
-                CVKind::KFold(k) => k,
-                CVKind::LOOCV => n,
-            };
-
-            if n < k || k < 2 {
-                continue;
-            }
-
+            let frac_f32 = frac.to_f32().unwrap();
             let fold_size = n / k;
 
-            // We use 'radix_pass' in WeightConfig to pass the frac_index to the accumulate shader
-            // reusing the existing config struct.
-            let mut gpu_config = GpuConfig {
-                n: 0,           // Updated per fold
-                window_size: 0, // Updated per fold
-                weight_function: weight_fn_id,
-                zero_weight_fallback: fallback_id,
-                fraction: frac.to_f32().unwrap(),
-                delta,
-                median_threshold: 0.0,
-                median_center: 0.0,
-                is_absolute: 0,
-                boundary_policy: boundary_id,
-                pad_len: 0, // Updated per fold
-                orig_n: 0,  // Updated per fold
-                max_iterations: config.iterations as u32,
-                tolerance: config
-                    .auto_convergence
-                    .map(|t| t.to_f32().unwrap())
-                    .unwrap_or(0.0),
-                z_score: 0.0, // Overloaded for test_start offset
-                has_conf: 0,
-                has_pred: 0,
-                residual_sd: 0.0,
-                n_test: 0,
-                seed: 0,
-                has_se: 0,
-                _pad1: 0,
-                _pad2: 0,
-                _pad3: 0,
-            };
             for fold in 0..k {
-                let test_start = (fold * fold_size) as u32;
-                let test_end = (if fold == k - 1 {
+                let test_start = fold * fold_size;
+                let test_end = if fold == k - 1 {
                     n
                 } else {
                     (fold + 1) * fold_size
-                }) as u32;
-                let n_test = test_end - test_start;
-                let n_train = (n as u32) - n_test;
+                };
+                let n_test = (test_end - test_start) as u32;
+                let n_train = (n - n_test as usize) as u32;
 
                 if n_train < 2 {
                     continue;
                 }
 
-                // Configure for this fold
-                let window_size = (frac.to_f32().unwrap() * n_train as f32).max(1.0) as u32;
+                let window_size = (frac_f32 * n_train as f32).max(1.0) as u32;
                 let window_size = window_size.max(2).min(n_train);
                 let pad_len = if config.boundary_policy == BoundaryPolicy::NoBoundary {
                     0
@@ -3900,24 +3877,65 @@ where
                 };
                 let total_n_padded = n_train + 2 * pad_len;
 
-                gpu_config.n = total_n_padded;
-                gpu_config.window_size = window_size;
-                gpu_config.pad_len = pad_len;
-                gpu_config.orig_n = n_train;
-                gpu_config.z_score = test_start as f32; // Overloaded for test_start offset
-                gpu_config.n_test = n_test;
+                runs.push(RunDesc {
+                    n_train,
+                    n_test,
+                    total_n_padded,
+                    window_size,
+                    pad_len,
+                    test_start: test_start as u32,
+                    fraction: frac_f32,
+                    frac_idx: frac_idx as u32,
+                });
+            }
+        }
 
-                exec.update_config(&gpu_config, robustness_id, scaling_id);
+        // 6. Record and Submit runs in groups (to avoid massive command buffers)
+        for batch in runs.chunks(1) {
+            for run in batch {
+                let frac_f32 = run.fraction;
 
-                let wc = WeightConfig {
-                    n: total_n_padded,
+                let gpu_cfg = GpuConfig {
+                    n: run.total_n_padded,
+                    window_size: run.window_size,
+                    weight_function: weight_fn_id,
+                    zero_weight_fallback: fallback_id,
+                    fraction: frac_f32,
+                    delta,
+                    median_threshold: 0.0,
+                    median_center: 0.0,
+                    is_absolute: 0,
+                    boundary_policy: boundary_id,
+                    pad_len: run.pad_len,
+                    orig_n: run.n_train,
+                    max_iterations: config.iterations as u32,
+                    tolerance: config
+                        .auto_convergence
+                        .map(|t| t.to_f32().unwrap())
+                        .unwrap_or(0.0),
+                    z_score: run.test_start as f32,
+                    has_conf: 0,
+                    has_pred: 0,
+                    residual_sd: 0.0,
+                    n_test: run.n_test,
+                    seed: 0,
+                    has_se: 0,
+                    _pad1: 0,
+                    _pad2: 0,
+                    _pad3: 0,
+                };
+
+                exec.update_config(&gpu_cfg, robustness_id, scaling_id);
+
+                let w_cfg = WeightConfig {
+                    n: run.total_n_padded,
                     scale: 0.0,
                     robustness_method: robustness_id,
                     scaling_method: scaling_id,
                     median_center: 0.0,
                     mean_abs: 0.0,
                     anchor_count: 0,
-                    radix_pass: frac_idx as u32,
+                    radix_pass: run.frac_idx,
                     converged: 0,
                     iteration: 0,
                     update_mode: 0,
@@ -3926,15 +3944,13 @@ where
                 exec.queue.write_buffer(
                     exec.buffers.w_config_buffer.as_ref().unwrap(),
                     0,
-                    bytes_of(&wc),
+                    bytes_of(&w_cfg),
                 );
 
                 exec.execute_commands(|encoder| {
-                    // 1. Partition & Pad
-                    exec.record_cv_partition(encoder, n_train, n_test);
+                    // Execute Fold
+                    exec.record_cv_partition(encoder, run.n_train, run.n_test);
                     exec.record_pad_data(encoder);
-
-                    // 2. Fit
                     exec.record_prepare_fit(encoder);
                     exec.record_fitting_loop(
                         encoder,
@@ -3942,10 +3958,8 @@ where
                         config.scaling_method,
                         weight_fn_id,
                     );
-
-                    // 3. Score
-                    exec.record_score_cv(encoder, n_test);
-                    exec.record_sum_sse_reduction(encoder, n_test);
+                    exec.record_score_cv(encoder, run.n_test);
+                    exec.record_sum_sse_reduction(encoder, run.n_test);
 
                     // 4. Accumulate result
                     exec.record_pipeline(
