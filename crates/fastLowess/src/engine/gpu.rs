@@ -15,6 +15,7 @@ use std::cmp::Ordering::Equal;
 use std::fmt::Debug;
 use std::mem::size_of;
 use std::sync::Mutex;
+use wgpu::util::DeviceExt;
 use wgpu::{
     BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayoutDescriptor,
     BindGroupLayoutEntry, BindingType, Buffer, BufferBindingType, BufferDescriptor, BufferUsages,
@@ -58,6 +59,7 @@ struct Config {
     n_test: u32,
     seed: u32,
     has_se: u32,
+    reduce_output_offset: u32,
 }
 
 fn pcg_hash(input: u32) -> u32 {
@@ -752,6 +754,7 @@ fn reduce_generic(
             }
             case 2u: { val = test_errors[i]; }
             case 3u: { val = abs(y_smooth[i] - y_prev[i]); }
+            case 4u: { val = reduction[i]; }
             default: { }
         }
     }
@@ -771,7 +774,7 @@ fn reduce_generic(
     }
     
     if (lid.x == 0u) {
-        reduction[wid.x] = scratch[0];
+        reduction[wid.x + config.reduce_output_offset] = scratch[0];
     }
 }
 
@@ -779,9 +782,18 @@ fn reduce_generic(
 fn finalize_reduction_generic() {
     let n = config.n;
     var sum = 0.0;
-    let num_workgroups = (n + 255u) / 256u;
-    for (var i: u32 = 0u; i < num_workgroups; i = i + 1u) {
-        sum = sum + reduction[i];
+    
+    var start_idx = 0u;
+    let num_blocks_l1 = (n + 255u) / 256u;
+    var count = num_blocks_l1;
+
+    if (config.reduce_output_offset > 0u) {
+        start_idx = config.reduce_output_offset;
+        count = (num_blocks_l1 + 255u) / 256u;
+    }
+
+    for (var i: u32 = 0u; i < count; i = i + 1u) {
+        sum = sum + reduction[start_idx + i];
     }
     let val = sum / f32(max(1u, n));
     
@@ -1600,9 +1612,7 @@ pub struct GpuConfig {
     pub n_test: u32,
     pub seed: u32,
     pub has_se: u32,
-    // Start Padding (Ensure 16-byte alignment for Uniform Buffer)
-    // Current size: 84 bytes. Need 96 bytes. (12 bytes padding)
-    pub _pad1: u32,
+    pub reduce_output_offset: u32,
     pub _pad2: u32,
     pub _pad3: u32,
 }
@@ -1652,6 +1662,7 @@ pub struct GpuPipelines {
     pub weight_pipeline: ComputePipeline,
     pub reduce_max_diff_pipeline: ComputePipeline,
     pub reduce_sum_abs_pipeline: ComputePipeline,
+    pub reduce_block_sums_pipeline: ComputePipeline,
     pub finalize_scale_pipeline: ComputePipeline,
     pub init_weights_pipeline: ComputePipeline,
     pub compute_intervals_pipeline: ComputePipeline,
@@ -1789,6 +1800,11 @@ pub struct GpuExecutor {
     n: u32,
     orig_n: u32,
     num_anchors: u32,
+
+    // Dynamic Binding Offsets (for batching)
+    config_offset: u32,
+    pub w_config_offset: u32,
+    pub current_config: Option<GpuConfig>,
 }
 impl GpuExecutor {
     pub async fn new() -> Result<Self, String> {
@@ -1831,12 +1847,23 @@ impl GpuExecutor {
             count: None,
         };
 
-        let uniform_entry = |binding: u32| BindGroupLayoutEntry {
+        let layout_entry_dynamic = |binding: u32, read_only: bool| BindGroupLayoutEntry {
+            binding,
+            visibility: ShaderStages::COMPUTE,
+            ty: BindingType::Buffer {
+                ty: BufferBindingType::Storage { read_only },
+                has_dynamic_offset: true,
+                min_binding_size: None,
+            },
+            count: None,
+        };
+
+        let uniform_entry = |binding: u32, dynamic: bool| BindGroupLayoutEntry {
             binding,
             visibility: ShaderStages::COMPUTE,
             ty: BindingType::Buffer {
                 ty: BufferBindingType::Uniform,
-                has_dynamic_offset: false,
+                has_dynamic_offset: dynamic,
                 min_binding_size: None,
             },
             count: None,
@@ -1846,7 +1873,7 @@ impl GpuExecutor {
         let bind_group_layout_0 = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
             label: Some("BG0 Data"),
             entries: &[
-                uniform_entry(0),
+                uniform_entry(0, true), // Dynamic Config
                 layout_entry(1, false),
                 layout_entry(2, false),
                 layout_entry(3, false),
@@ -1887,7 +1914,7 @@ impl GpuExecutor {
         let bind_group_layout_3 = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
             label: Some("BG3 Aux"),
             entries: &[
-                layout_entry(0, false),
+                layout_entry_dynamic(0, false), // Dynamic WeightConfig
                 layout_entry(1, false),
                 layout_entry(2, false),
                 layout_entry(3, false),
@@ -1939,6 +1966,11 @@ impl GpuExecutor {
                     "reduce_sum_abs",
                     "reduce_generic",
                     &[("REDUCE_OP", 0.0), ("REDUCE_SRC", 0.0)],
+                ),
+                reduce_block_sums_pipeline: cp(
+                    "reduce_block_sums",
+                    "reduce_generic",
+                    &[("REDUCE_OP", 0.0), ("REDUCE_SRC", 4.0)],
                 ),
                 finalize_scale_pipeline: cp(
                     "finalize_scale",
@@ -2137,6 +2169,9 @@ impl GpuExecutor {
             n: 0,
             orig_n: 0,
             num_anchors: 0,
+            config_offset: 0,
+            w_config_offset: 0,
+            current_config: None,
         })
     }
 
@@ -2158,18 +2193,59 @@ impl GpuExecutor {
     }
 
     fn create_bg0(&self, x: &Buffer, y: &Buffer) -> BindGroup {
-        self.build_bg(
-            "BG0",
-            0,
-            &[
-                self.buffers.config_buffer.as_ref().unwrap(),
-                x,
-                y,
-                self.buffers.anchor_indices_buffer.as_ref().unwrap(),
-                self.buffers.anchor_output_buffer.as_ref().unwrap(),
-                self.buffers.indirect_buffer.as_ref().unwrap(),
-            ],
-        )
+        let config_buf = self.buffers.config_buffer.as_ref().unwrap();
+
+        let entries = [
+            BindGroupEntry {
+                binding: 0, // Config (Dynamic)
+                resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
+                    buffer: config_buf,
+                    offset: 0,
+                    size: std::num::NonZeroU64::new(256), // Limit window to stride
+                }),
+            },
+            BindGroupEntry {
+                binding: 1,
+                resource: x.as_entire_binding(),
+            },
+            BindGroupEntry {
+                binding: 2,
+                resource: y.as_entire_binding(),
+            },
+            BindGroupEntry {
+                binding: 3,
+                resource: self
+                    .buffers
+                    .anchor_indices_buffer
+                    .as_ref()
+                    .unwrap()
+                    .as_entire_binding(),
+            },
+            BindGroupEntry {
+                binding: 4,
+                resource: self
+                    .buffers
+                    .anchor_output_buffer
+                    .as_ref()
+                    .unwrap()
+                    .as_entire_binding(),
+            },
+            BindGroupEntry {
+                binding: 5,
+                resource: self
+                    .buffers
+                    .indirect_buffer
+                    .as_ref()
+                    .unwrap()
+                    .as_entire_binding(),
+            },
+        ];
+
+        self.device.create_bind_group(&BindGroupDescriptor {
+            label: Some("BG0"),
+            layout: &self.pipelines.fit_pipelines[0].get_bind_group_layout(0),
+            entries: &entries,
+        })
     }
 
     fn create_bg1(&self) -> BindGroup {
@@ -2216,20 +2292,82 @@ impl GpuExecutor {
         let binding1 = median_buffer_override
             .unwrap_or_else(|| self.buffers.reduction_buffer.as_ref().unwrap());
 
-        self.build_bg(
-            label,
-            3,
-            &[
-                self.buffers.w_config_buffer.as_ref().unwrap(),
-                binding1,
-                self.buffers.std_errors_buffer.as_ref().unwrap(),
-                self.buffers.histogram_buffer.as_ref().unwrap(),
-                self.buffers.global_max_diff_buffer.as_ref().unwrap(),
-                self.buffers.scan_block_sums_buffer.as_ref().unwrap(),
-                self.buffers.scan_indices_buffer.as_ref().unwrap(),
-                self.buffers.workgroup_histograms_buffer.as_ref().unwrap(),
-            ],
-        )
+        let w_config_buf = self.buffers.w_config_buffer.as_ref().unwrap();
+
+        let entries = [
+            BindGroupEntry {
+                binding: 0, // Weight Config (Dynamic)
+                resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
+                    buffer: w_config_buf,
+                    offset: 0,
+                    size: std::num::NonZeroU64::new(256), // Limit window to stride
+                }),
+            },
+            BindGroupEntry {
+                binding: 1,
+                resource: binding1.as_entire_binding(),
+            },
+            BindGroupEntry {
+                binding: 2,
+                resource: self
+                    .buffers
+                    .std_errors_buffer
+                    .as_ref()
+                    .unwrap()
+                    .as_entire_binding(),
+            },
+            BindGroupEntry {
+                binding: 3,
+                resource: self
+                    .buffers
+                    .histogram_buffer
+                    .as_ref()
+                    .unwrap()
+                    .as_entire_binding(),
+            },
+            BindGroupEntry {
+                binding: 4,
+                resource: self
+                    .buffers
+                    .global_max_diff_buffer
+                    .as_ref()
+                    .unwrap()
+                    .as_entire_binding(),
+            },
+            BindGroupEntry {
+                binding: 5,
+                resource: self
+                    .buffers
+                    .scan_block_sums_buffer
+                    .as_ref()
+                    .unwrap()
+                    .as_entire_binding(),
+            },
+            BindGroupEntry {
+                binding: 6,
+                resource: self
+                    .buffers
+                    .scan_indices_buffer
+                    .as_ref()
+                    .unwrap()
+                    .as_entire_binding(),
+            },
+            BindGroupEntry {
+                binding: 7,
+                resource: self
+                    .buffers
+                    .workgroup_histograms_buffer
+                    .as_ref()
+                    .unwrap()
+                    .as_entire_binding(),
+            },
+        ];
+
+        self.device.create_bind_group(&BindGroupDescriptor {
+            label: Some(label),
+            layout: &self.pipelines.fit_pipelines[0].get_bind_group_layout(3),
+            entries: &entries,
+        })
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -2248,6 +2386,11 @@ impl GpuExecutor {
         let n_bytes_padded = (n_padded as usize * 4) as u64;
         let anchor_bytes = ((max_anchors as usize).max(256) * 4) as u64;
 
+        // Reset dynamic offsets as we are starting fresh
+        self.config_offset = 0;
+        self.w_config_offset = 0;
+        self.current_config = Some(config);
+
         let mut bg_needs_update = false;
 
         macro_rules! ensure {
@@ -2261,7 +2404,7 @@ impl GpuExecutor {
         ensure!(
             "Config",
             &mut self.buffers.config_buffer,
-            size_of::<GpuConfig>() as u64,
+            (size_of::<GpuConfig>() as u64 * 2).max(512),
             BufferUsages::UNIFORM | BufferUsages::COPY_DST
         );
         self.queue.write_buffer(
@@ -2406,17 +2549,18 @@ impl GpuExecutor {
         ensure!(
             "WConfig",
             &mut self.buffers.w_config_buffer,
-            size_of::<WeightConfig>() as u64,
+            (size_of::<WeightConfig>() as u64).max(256),
             BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST
         );
 
         // Reduction buffer sized for 1M elements (4MB) to support radix sort paging
         let reduction_size = ((1024 * 1024) as usize * 4) as u64;
+        let max_size = n_padded.max(max_anchors);
         ensure!(
             "Reduction",
             &mut self.buffers.reduction_buffer,
-            reduction_size,
-            BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST
+            (max_size.next_power_of_two() as u64 * 4).max(1024 * 1024 * 4), // Min 4MB for median index
+            BufferUsages::STORAGE | BufferUsages::COPY_DST | BufferUsages::COPY_SRC
         );
         ensure!(
             "StdErrors",
@@ -2527,23 +2671,33 @@ impl GpuExecutor {
         }
     }
 
-    pub fn record_full_scan(&self, encoder: &mut CommandEncoder, count: u32, bg3: &BindGroup) {
-        self.record_pipeline_with_bg3(
+    pub fn record_full_scan(
+        &self,
+        encoder: &mut CommandEncoder,
+        count: u32,
+        bg0: Option<&BindGroup>,
+        bg3: &BindGroup,
+    ) {
+        let actual_bg0 = bg0.unwrap_or(self.bg0_data.as_ref().unwrap());
+        self.record_pipeline_with_custom_bgs(
             encoder,
             &self.pipelines.scan_block_pipeline,
             DispatchMode::Direct(count.div_ceil(256)),
+            actual_bg0,
             bg3,
         );
-        self.record_pipeline_with_bg3(
+        self.record_pipeline_with_custom_bgs(
             encoder,
             &self.pipelines.scan_aux_pipeline,
             DispatchMode::Direct(1),
+            actual_bg0,
             bg3,
         );
-        self.record_pipeline_with_bg3(
+        self.record_pipeline_with_custom_bgs(
             encoder,
             &self.pipelines.scan_add_base_pipeline,
             DispatchMode::Direct(count.div_ceil(256)),
+            actual_bg0,
             bg3,
         );
     }
@@ -2568,7 +2722,12 @@ impl GpuExecutor {
         );
 
         // 2. Scan
-        self.record_full_scan(encoder, count, self.bg3_aux.as_ref().unwrap());
+        self.record_full_scan(
+            encoder,
+            count,
+            Some(actual_bg0),
+            self.bg3_aux.as_ref().unwrap(),
+        );
 
         // 3. Compact
         self.record_pipeline_with_custom_bgs(
@@ -2679,10 +2838,12 @@ impl GpuExecutor {
     }
 
     pub fn record_score_cv(&self, encoder: &mut CommandEncoder, n_test: u32) {
-        self.record_pipeline(
+        self.record_pipeline_with_custom_bgs(
             encoder,
             &self.pipelines.score_cv_points_pipeline,
             DispatchMode::Direct(n_test.div_ceil(256)),
+            self.bg0_test.as_ref().unwrap(),
+            self.bg3_aux.as_ref().unwrap(),
         );
     }
 
@@ -2692,6 +2853,7 @@ impl GpuExecutor {
             &self.pipelines.sum_sse_reduction_pipeline,
             &self.pipelines.finalize_sum_pipeline,
             n_test,
+            None,
         );
     }
 
@@ -2701,6 +2863,7 @@ impl GpuExecutor {
             &self.pipelines.sum_residuals_squared_pipeline,
             &self.pipelines.finalize_sum_pipeline,
             n,
+            None,
         );
     }
 
@@ -2739,10 +2902,10 @@ impl GpuExecutor {
     ) {
         let mut pass = encoder.begin_compute_pass(&ComputePassDescriptor::default());
         pass.set_pipeline(pipeline);
-        pass.set_bind_group(0, bg0, &[]);
+        pass.set_bind_group(0, bg0, &[self.config_offset]);
         pass.set_bind_group(1, self.bg1_topo.as_ref().unwrap(), &[]);
         pass.set_bind_group(2, self.bg2_state.as_ref().unwrap(), &[]);
-        pass.set_bind_group(3, bg3, &[]);
+        pass.set_bind_group(3, bg3, &[self.w_config_offset]);
         match dispatch {
             DispatchMode::Direct(n) => pass.dispatch_workgroups(n, 1, 1),
             DispatchMode::Indirect(offset) => pass.dispatch_workgroups_indirect(
@@ -2768,19 +2931,53 @@ impl GpuExecutor {
         reduce_pipeline: &ComputePipeline,
         finalize_pipeline: &ComputePipeline,
         n: u32,
+        hierarchical_offset: Option<u32>,
     ) {
+        // 1. Level 1 Reduction
         self.record_pipeline(
             encoder,
             reduce_pipeline,
             DispatchMode::Direct(n.div_ceil(256)),
         );
+
         // 2. Scan Aux Parallel
         self.record_pipeline(
             encoder,
             &self.pipelines.scan_aux_pipeline,
             DispatchMode::Direct(1),
         );
-        self.record_pipeline(encoder, finalize_pipeline, DispatchMode::Direct(1));
+
+        let mut final_offset_to_use = self.config_offset;
+
+        // 3. Level 2 (Optional Hierarchical)
+        if let Some(offset) = hierarchical_offset {
+            let num_blocks = n.div_ceil(256);
+            if num_blocks > 64 {
+                // Re-bind to secondary config (Hierarchical)
+                {
+                    let mut pass = encoder.begin_compute_pass(&ComputePassDescriptor::default());
+                    pass.set_pipeline(&self.pipelines.reduce_block_sums_pipeline);
+                    pass.set_bind_group(0, self.bg0_data.as_ref().unwrap(), &[offset]);
+                    pass.set_bind_group(1, self.bg1_topo.as_ref().unwrap(), &[]);
+                    pass.set_bind_group(2, self.bg2_state.as_ref().unwrap(), &[]);
+                    pass.set_bind_group(3, self.bg3_aux.as_ref().unwrap(), &[self.w_config_offset]);
+                    pass.dispatch_workgroups(num_blocks.div_ceil(256), 1, 1);
+                }
+                final_offset_to_use = offset;
+            }
+        }
+
+        // 4. Finalize
+        {
+            let mut pass = encoder.begin_compute_pass(&ComputePassDescriptor::default());
+            pass.set_pipeline(finalize_pipeline);
+            // Use the offset (Main or Hierarchical)
+            pass.set_bind_group(0, self.bg0_data.as_ref().unwrap(), &[final_offset_to_use]);
+            pass.set_bind_group(1, self.bg1_topo.as_ref().unwrap(), &[]);
+            pass.set_bind_group(2, self.bg2_state.as_ref().unwrap(), &[]);
+            pass.set_bind_group(3, self.bg3_aux.as_ref().unwrap(), &[self.w_config_offset]);
+            pass.dispatch_workgroups(1, 1, 1);
+        }
     }
 
     /// Helper to create encoder, record commands, and submit
@@ -2837,6 +3034,7 @@ impl GpuExecutor {
             &self.pipelines.reduce_sum_abs_pipeline,
             &self.pipelines.finalize_sum_pipeline,
             self.n,
+            None,
         );
     }
 }
@@ -2867,18 +3065,17 @@ impl GpuExecutor {
         self.record_pipeline(encoder, &self.pipelines.interpolate_pipeline, mode);
     }
 
-    fn record_scale_estimation(&self, encoder: &mut CommandEncoder) {
-        // 1. Sum absolute residuals
-        self.record_pipeline(
+    fn record_scale_estimation(
+        &self,
+        encoder: &mut CommandEncoder,
+        hierarchical_offset: Option<u32>,
+    ) {
+        self.record_reduction(
             encoder,
             &self.pipelines.reduce_sum_abs_pipeline,
-            DispatchMode::Direct(self.n.div_ceil(256)),
-        );
-        // 2. Finalize scale (single thread)
-        self.record_pipeline(
-            encoder,
             &self.pipelines.finalize_scale_pipeline,
-            DispatchMode::Direct(1),
+            self.n,
+            hierarchical_offset,
         );
     }
 
@@ -2918,8 +3115,9 @@ impl GpuExecutor {
         &self,
         encoder: &mut CommandEncoder,
         iterations: u32,
-        scaling_method: ScalingMethod,
+        scaling_method: u32,
         weight_fn: u32,
+        hierarchical_offset: Option<u32>,
     ) {
         for i in 0..=iterations {
             // Update Dispatch Args (Indirect Control)
@@ -2949,7 +3147,7 @@ impl GpuExecutor {
 
             // 3. Record Scale estimation if iterations remain
             if i < iterations {
-                self.record_robust_scale(encoder, scaling_method);
+                self.record_robust_scale(encoder, scaling_method, hierarchical_offset);
 
                 // Use Indirect Slot 5 (60 bytes) for weight update
                 self.record_update_weights(encoder, DispatchMode::Indirect(60));
@@ -3361,22 +3559,28 @@ impl GpuExecutor {
         self.record_generic_radix_sort(encoder, None, config);
     }
 
-    fn record_robust_scale(&self, encoder: &mut CommandEncoder, scaling_method: ScalingMethod) {
+    fn record_robust_scale(
+        &self,
+        encoder: &mut CommandEncoder,
+        scaling_method: u32,
+        hierarchical_offset: Option<u32>,
+    ) {
         match scaling_method {
-            ScalingMethod::Mean => {
-                self.record_scale_estimation(encoder);
+            SCALING_MEAN => {
+                self.record_scale_estimation(encoder, hierarchical_offset);
             }
-            ScalingMethod::MAR => {
+            SCALING_MAR => {
                 self.record_mean_fallback(encoder);
                 self.record_median_pass(encoder, PrepareOp::MAR, ControlOp::SetScaleMode);
             }
-            ScalingMethod::MAD => {
+            SCALING_MAD => {
                 self.record_mean_fallback(encoder);
                 // Step 1: Center
                 self.record_median_pass(encoder, PrepareOp::Signed, ControlOp::SetCenterMode);
                 // Step 2: Scale
                 self.record_median_pass(encoder, PrepareOp::MAD, ControlOp::SetScaleMode);
             }
+            _ => {}
         }
     }
 }
@@ -3409,7 +3613,7 @@ fn record_intervals_pass<T>(
 
     exec.queue.write_buffer(
         exec.buffers.config_buffer.as_ref().unwrap(),
-        0,
+        exec.config_offset as u64,
         cast_slice(&[*gpu_config]),
     );
 
@@ -3426,10 +3630,10 @@ fn record_intervals_pass<T>(
     {
         let mut pass = encoder.begin_compute_pass(&ComputePassDescriptor::default());
         pass.set_pipeline(&exec.pipelines.compute_residual_sd_pipeline);
-        pass.set_bind_group(0, exec.bg0_data.as_ref().unwrap(), &[]);
+        pass.set_bind_group(0, exec.bg0_data.as_ref().unwrap(), &[exec.config_offset]);
         pass.set_bind_group(1, exec.bg1_topo.as_ref().unwrap(), &[]);
         pass.set_bind_group(2, exec.bg2_state.as_ref().unwrap(), &[]);
-        pass.set_bind_group(3, exec.bg3_aux.as_ref().unwrap(), &[]);
+        pass.set_bind_group(3, exec.bg3_aux.as_ref().unwrap(), &[exec.w_config_offset]);
         pass.dispatch_workgroups(1, 1, 1);
     }
 
@@ -3440,7 +3644,7 @@ fn record_intervals_pass<T>(
         exec.buffers.reduction_buffer.as_ref().unwrap(),
         4,
         exec.buffers.config_buffer.as_ref().unwrap(),
-        68,
+        (exec.config_offset as u64) + 68,
         4,
     );
 
@@ -3450,10 +3654,10 @@ fn record_intervals_pass<T>(
 
         // Standard Error Pass
         pass.set_pipeline(&exec.pipelines.se_pipeline);
-        pass.set_bind_group(0, exec.bg0_data.as_ref().unwrap(), &[]);
+        pass.set_bind_group(0, exec.bg0_data.as_ref().unwrap(), &[exec.config_offset]);
         pass.set_bind_group(1, exec.bg1_topo.as_ref().unwrap(), &[]);
         pass.set_bind_group(2, exec.bg2_state.as_ref().unwrap(), &[]);
-        pass.set_bind_group(3, exec.bg3_aux.as_ref().unwrap(), &[]);
+        pass.set_bind_group(3, exec.bg3_aux.as_ref().unwrap(), &[exec.w_config_offset]);
         pass.dispatch_workgroups_indirect(exec.buffers.indirect_buffer.as_ref().unwrap(), 12);
 
         // Interval Bounds Pass (if requested)
@@ -3582,7 +3786,7 @@ where
             } else {
                 0
             },
-            _pad1: 0,
+            reduce_output_offset: 0,
             _pad2: 0,
             _pad3: 0,
         };
@@ -3617,11 +3821,29 @@ where
         {
             let mut encoder = exec.device.create_command_encoder(&Default::default());
             // 3. Main fitting loop (all iterations)
+            let mut hierarchical_offset = None;
+            if total_n_padded > 16384 {
+                // Threshold for hierarchical reduction
+                let num_blocks = (total_n_padded as u32).div_ceil(256);
+                let mut h_config = gpu_config;
+                h_config.reduce_output_offset = num_blocks;
+
+                // Write to slot 1 (offset 256)
+                exec.queue.write_buffer(
+                    exec.buffers.config_buffer.as_ref().unwrap(),
+                    256,
+                    bytemuck::cast_slice(&[h_config]),
+                );
+                hierarchical_offset = Some(256);
+            }
+
+            // 3. Main fitting loop (all iterations)
             exec.record_fitting_loop(
                 &mut encoder,
                 config.iterations as u32,
-                config.scaling_method,
+                scaling_id,
                 weight_fn_id,
+                hierarchical_offset,
             );
 
             // Submit everything at once - GPU executes without CPU intervention
@@ -3838,7 +4060,7 @@ where
             n_test: 0,
             seed: config.cv_seed.unwrap_or(12345) as u32,
             has_se: 0,
-            _pad1: 0,
+            reduce_output_offset: 0,
             _pad2: 0,
             _pad3: 0,
         };
@@ -3961,85 +4183,158 @@ where
             }
         }
 
-        // 6. Record and Submit runs in groups (to avoid massive command buffers)
-        for batch in runs.chunks(1) {
-            for run in batch {
-                let frac_f32 = run.fraction;
+        // 6. Prepare and Upload Batched Configs
+        let align = 256;
+        let total_bytes = (runs.len() * align) as u64;
 
-                let gpu_cfg = GpuConfig {
-                    n: run.total_n_padded,
-                    window_size: run.window_size,
-                    weight_function: weight_fn_id,
-                    zero_weight_fallback: fallback_id,
-                    fraction: frac_f32,
-                    delta,
-                    median_threshold: 0.0,
-                    median_center: 0.0,
-                    is_absolute: 0,
-                    boundary_policy: boundary_id,
-                    pad_len: run.pad_len,
-                    orig_n: run.n_train,
-                    max_iterations: config.iterations as u32,
-                    tolerance: config
-                        .auto_convergence
-                        .map(|t| t.to_f32().unwrap())
-                        .unwrap_or(0.0),
-                    z_score: run.test_start as f32,
-                    has_conf: 0,
-                    has_pred: 0,
-                    residual_sd: 0.0,
-                    n_test: run.n_test,
-                    seed: 0,
-                    has_se: 0,
-                    _pad1: 0,
-                    _pad2: 0,
-                    _pad3: 0,
-                };
+        // Resize buffers if needed
+        let config_data = vec![0u8; total_bytes as usize];
+        exec.buffers.config_buffer = Some(exec.device.create_buffer_init(
+            &wgpu::util::BufferInitDescriptor {
+                label: Some("Batched Config Buffer"),
+                contents: &config_data,
+                usage: BufferUsages::UNIFORM | BufferUsages::COPY_DST,
+            },
+        ));
+        let w_config_data = vec![0u8; total_bytes as usize];
+        exec.buffers.w_config_buffer = Some(exec.device.create_buffer_init(
+            &wgpu::util::BufferInitDescriptor {
+                label: Some("Batched WeightConfig Buffer"),
+                contents: &w_config_data,
+                usage: BufferUsages::STORAGE | BufferUsages::COPY_DST | BufferUsages::COPY_SRC,
+            },
+        ));
 
-                exec.update_config(&gpu_cfg, robustness_id, scaling_id);
+        // Update Bind Groups to point to new buffers
+        exec.bg0_data = Some(exec.create_bg0(
+            exec.buffers.x_buffer.as_ref().unwrap(),
+            exec.buffers.y_buffer.as_ref().unwrap(),
+        ));
 
-                let w_cfg = WeightConfig {
-                    n: run.total_n_padded,
-                    scale: 0.0,
-                    robustness_method: robustness_id,
-                    scaling_method: scaling_id,
-                    median_center: 0.0,
-                    mean_abs: 0.0,
-                    anchor_count: 0,
-                    radix_pass: run.frac_idx,
-                    converged: 0,
-                    iteration: 0,
-                    update_mode: 0,
-                    _pad: 0,
-                };
-                exec.queue.write_buffer(
-                    exec.buffers.w_config_buffer.as_ref().unwrap(),
-                    0,
-                    bytes_of(&w_cfg),
-                );
+        // Also recreate bg0_test which depends on config buffer
+        exec.bg0_test = Some(exec.create_bg0(
+            exec.buffers.x_test_buffer.as_ref().unwrap(),
+            exec.buffers.y_test_buffer.as_ref().unwrap(),
+        ));
 
-                exec.execute_commands(|encoder| {
-                    // Execute Fold
-                    exec.record_cv_partition(encoder, run.n_train, run.n_test);
-                    exec.record_pad_data(encoder);
-                    exec.record_prepare_fit(encoder);
-                    exec.record_fitting_loop(
-                        encoder,
-                        config.iterations as u32,
-                        config.scaling_method,
-                        weight_fn_id,
-                    );
-                    exec.record_score_cv(encoder, run.n_test);
-                    exec.record_sum_sse_reduction(encoder, run.n_test);
+        exec.bg3_aux = Some(exec.create_bg3(None));
 
-                    // 4. Accumulate result
-                    exec.record_pipeline(
-                        encoder,
-                        &exec.pipelines.accumulate_score_pipeline,
-                        DispatchMode::Direct(1),
-                    );
+        if exec.buffers.median_buffer.is_some() {
+            let bg = exec.create_bg3(exec.buffers.median_buffer.as_ref());
+            exec.bg3_median = Some(bg);
+        }
+
+        // Build aggregated config data
+        let mut all_configs = Vec::with_capacity(total_bytes as usize);
+        let mut all_w_configs = Vec::with_capacity(total_bytes as usize);
+
+        for run in &runs {
+            let frac_f32 = run.fraction;
+            let gpu_cfg = GpuConfig {
+                n: run.total_n_padded,
+                window_size: run.window_size,
+                weight_function: weight_fn_id,
+                zero_weight_fallback: fallback_id,
+                fraction: frac_f32,
+                delta,
+                median_threshold: 0.0,
+                median_center: 0.0,
+                is_absolute: 0,
+                boundary_policy: boundary_id,
+                pad_len: run.pad_len,
+                orig_n: run.n_train,
+                max_iterations: config.iterations as u32,
+                tolerance: config
+                    .auto_convergence
+                    .map(|t| t.to_f32().unwrap())
+                    .unwrap_or(0.0),
+                z_score: run.test_start as f32,
+                has_conf: 0,
+                has_pred: 0,
+                residual_sd: 0.0,
+                n_test: run.n_test,
+                seed: 0,
+                has_se: 0,
+                reduce_output_offset: 0,
+                _pad2: 0,
+                _pad3: 0,
+            };
+            all_configs.extend_from_slice(cast_slice(&[gpu_cfg]));
+            all_configs.resize(all_configs.len().div_ceil(256) * 256, 0);
+
+            let w_cfg = WeightConfig {
+                n: run.total_n_padded,
+                scale: 0.0,
+                robustness_method: robustness_id,
+                scaling_method: scaling_id,
+                median_center: 0.0,
+                mean_abs: 0.0,
+                anchor_count: 0,
+                radix_pass: run.frac_idx,
+                converged: 0,
+                iteration: 0,
+                update_mode: 0,
+                _pad: 0,
+            };
+            all_w_configs.extend_from_slice(bytes_of(&w_cfg));
+            all_w_configs.resize(all_w_configs.len().div_ceil(256) * 256, 0);
+        }
+
+        exec.queue.write_buffer(
+            exec.buffers.config_buffer.as_ref().unwrap(),
+            0,
+            &all_configs,
+        );
+        exec.queue.write_buffer(
+            exec.buffers.w_config_buffer.as_ref().unwrap(),
+            0,
+            &all_w_configs,
+        );
+
+        // 7. Record All Runs (Batched Submission with Inlining)
+        let scaling_id = match config.scaling_method {
+            ScalingMethod::MAD => SCALING_MAD,
+            ScalingMethod::MAR => SCALING_MAR,
+            ScalingMethod::Mean => SCALING_MEAN,
+        };
+
+        for (chunk_idx, batch) in runs.chunks(20).enumerate() {
+            let mut encoder = exec
+                .device
+                .create_command_encoder(&CommandEncoderDescriptor {
+                    label: Some("Batched CV Encoder"),
                 });
+
+            for (i, run) in batch.iter().enumerate() {
+                let global_idx = chunk_idx * 20 + i;
+                let offset = (global_idx * align) as u32;
+
+                // Set Dynamic Offsets
+                exec.config_offset = offset;
+                exec.w_config_offset = offset;
+
+                // Execute Fold
+                exec.record_cv_partition(&mut encoder, run.n_train, run.n_test);
+                exec.record_pad_data(&mut encoder);
+                exec.record_prepare_fit(&mut encoder);
+                exec.record_fitting_loop(
+                    &mut encoder,
+                    config.iterations as u32,
+                    scaling_id,
+                    weight_fn_id,
+                    None, // Batched CV does not use hierarchical yet
+                );
+                exec.record_score_cv(&mut encoder, run.n_test);
+                exec.record_sum_sse_reduction(&mut encoder, run.n_test);
+
+                // Accumulate result
+                exec.record_pipeline(
+                    &mut encoder,
+                    &exec.pipelines.accumulate_score_pipeline,
+                    DispatchMode::Direct(1),
+                );
             }
+            exec.queue.submit(Some(encoder.finish()));
         }
 
         let _ = exec.device.poll(PollType::Wait);
