@@ -7,6 +7,7 @@
 # - Robustness iterations for outlier handling
 # - Confidence and prediction intervals
 # - Diagnostics and cross-validation
+# - S3 methods for print and plot
 #
 # The Lowess class is the primary interface for
 # processing complete datasets that fit in memory.
@@ -50,16 +51,22 @@ main <- function() {
     # 2. Basic Smoothing (Default parameters)
     cat("Running basic smoothing...\n")
     # Use a smaller fraction (0.05) to capture the sine wave seasonality
-    Lowess(iterations = 0L, fraction = 0.05)$fit(x, y)
+    basic_model <- Lowess(iterations = 0L, fraction = 0.05)
+    print(basic_model)
+    basic_res <- basic_model$fit(x, y)
+    print(basic_res)
 
     # 3. Robust Smoothing (IRLS)
     cat("Running robust smoothing (3 iterations)...\n")
-    Lowess(
+    robust_model <- Lowess(
         fraction = 0.05,
         iterations = 3L,
         robustness_method = "bisquare",
         return_robustness_weights = TRUE
-    )$fit(x, y)
+    )
+    print(robust_model)
+    robust_res <- robust_model$fit(x, y)
+    print(robust_res)
 
     # 4. Uncertainty Quantification
     cat("Computing confidence and prediction intervals...\n")

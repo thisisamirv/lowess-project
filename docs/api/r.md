@@ -23,7 +23,9 @@ result <- model$fit(x, y)
 ```
 
 * Fits the model to the provided `x` and `y` numeric vectors.
-* Returns a `LowessResult` list containing the smoothed values and optional diagnostics.
+* Fits the model to the provided `x` and `y` numeric vectors.
+* Returns a `LowessResult` S3 object containing the smoothed values and optional diagnostics.
+* `print(model)`: Displays the model configuration.
 
 ### `StreamingLowess`
 
@@ -116,6 +118,13 @@ result <- online$add_points(x, y)
 
 ### `LowessResult`
 
+An S3 object containing the smoothing results.
+
+**Supported Methods:**
+
+* `print(result)`: Summary of fit statistics.
+* `plot(result)`: Plots the smoothed curve (and confidence intervals if available).
+
 | Field                | Type       | Description               |
 | -------------------- | ---------- | ------------------------- |
 | `x`                  | `numeric`  | Smoothed X coordinates    |
@@ -205,5 +214,9 @@ model <- Lowess(fraction = 0.5)
 # Fit data
 result <- model$fit(x, y)
 
-print(result$y)
+# Print summary
+print(result)
+
+# Plot result
+plot(result)
 ```

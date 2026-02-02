@@ -149,7 +149,7 @@ All implementations are **numerical twins** of R's `lowess`:
 **R:**
 
 ```r
-Lowess(
+model <- Lowess(
     fraction = 0.5,
     iterations = 3L,
     delta = 0.01,
@@ -167,7 +167,8 @@ Lowess(
     cv_k = 5L,
     auto_converge = 1e-4,
     parallel = TRUE
-)$fit(x, y)
+)
+result <- model$fit(x, y)
 
 # Result structure:
 result$x,

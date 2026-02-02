@@ -70,16 +70,25 @@ StreamingLowess <- function(
         as.logical(parallel)
     )
 
-    list(
-        handle = handle,
-        process_chunk = function(x, y) {
-            if (length(x) != length(y)) {
-                stop("x and y must have the same length")
-            }
-            handle$process_chunk(as.double(x), as.double(y))
-        },
-        finalize = function() {
-            handle$finalize()
-        }
+    structure(
+        list(
+            handle = handle,
+            process_chunk = function(x, y) {
+                if (length(x) != length(y)) {
+                    stop("x and y must have the same length")
+                }
+                handle$process_chunk(as.double(x), as.double(y))
+            },
+            finalize = function() {
+                handle$finalize()
+            },
+            params = list(
+                fraction = fraction,
+                chunk_size = chunk_size,
+                iterations = iterations,
+                parallel = parallel
+            )
+        ),
+        class = "StreamingLowess"
     )
 }

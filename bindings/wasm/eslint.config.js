@@ -5,6 +5,9 @@ const html = require("eslint-plugin-html");
 module.exports = [
     js.configs.recommended,
     {
+        ignores: ["../../examples/wasm/*.html"],
+    },
+    {
         files: ["**/*.js", "../../tests/wasm/**/*.js"],
         languageOptions: {
             ecmaVersion: 2022,

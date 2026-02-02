@@ -90,13 +90,24 @@ Lowess <- function(
     )
 
     # Return a wrapper that coerces inputs for methods
-    list(
-        handle = handle,
-        fit = function(x, y) {
-            if (length(x) != length(y)) {
-                stop("x and y must have the same length")
-            }
-            handle$fit(as.double(x), as.double(y))
-        }
+    structure(
+        list(
+            handle = handle,
+            fit = function(x, y) {
+                if (length(x) != length(y)) {
+                    stop("x and y must have the same length")
+                }
+                handle$fit(as.double(x), as.double(y))
+            },
+            params = list(
+                fraction = fraction,
+                iterations = iterations,
+                weight_function = weight_function,
+                robustness_method = robustness_method,
+                scaling_method = scaling_method,
+                parallel = parallel
+            )
+        ),
+        class = "Lowess"
     )
 }

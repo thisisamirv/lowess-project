@@ -49,6 +49,7 @@ example_1_basic_online <- function() {
         weight_function = "tricube",
         robustness_method = "bisquare"
     )
+    print(model)
     result <- model$add_points(x, y)
 
     cat("Processing data points with sliding window...\n")
@@ -80,6 +81,7 @@ example_2_sensor_simulation <- function() {
         min_points = 3L,
         iterations = 2L
     )
+    print(model)
     result <- model$add_points(x, y)
 
     cat(sprintf("%6s %12s %12s\n", "Hour", "Raw Temp", "Smoothed"))

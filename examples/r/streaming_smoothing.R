@@ -50,6 +50,7 @@ example_1_basic_streaming <- function() {
         weight_function = "tricube",
         robustness_method = "bisquare"
     )
+    print(model)
     result <- model$process_chunk(x, y)
     final <- model$finalize()
     result$x <- c(result$x, final$x)
@@ -129,6 +130,7 @@ example_3_large_dataset <- function() {
         iterations = 2L,
         parallel = TRUE # Enable parallel execution
     )
+    print(model)
     result <- model$process_chunk(x, y)
     final <- model$finalize()
     result$y <- c(result$y, final$y)

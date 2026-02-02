@@ -72,13 +72,23 @@ OnlineLowess <- function(
         as.logical(parallel)
     )
 
-    list(
-        handle = handle,
-        add_points = function(x, y) {
-            if (length(x) != length(y)) {
-                stop("x and y must have the same length")
-            }
-            handle$add_points(as.double(x), as.double(y))
-        }
+    structure(
+        list(
+            handle = handle,
+            add_points = function(x, y) {
+                if (length(x) != length(y)) {
+                    stop("x and y must have the same length")
+                }
+                handle$add_points(as.double(x), as.double(y))
+            },
+            params = list(
+                fraction = fraction,
+                window_capacity = window_capacity,
+                min_points = min_points,
+                iterations = iterations,
+                parallel = parallel
+            )
+        ),
+        class = "OnlineLowess"
     )
 }

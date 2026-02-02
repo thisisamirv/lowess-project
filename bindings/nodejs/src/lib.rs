@@ -11,7 +11,8 @@ use ::fastLowess::internals::api::{
     BoundaryPolicy, RobustnessMethod, ScalingMethod, UpdateMode, WeightFunction, ZeroWeightFallback,
 };
 use ::fastLowess::prelude::{
-    Batch, KFold, LOOCV, Lowess as LowessBuilder, LowessResult, MAD, MAR, Mean, Online, Streaming,
+    Batch, KFold, LOOCV, Lowess as LowessBuilder, LowessError, LowessResult, MAD, MAR, Mean,
+    Online, Streaming,
 };
 
 /// Parse weight function from string
@@ -99,17 +100,26 @@ fn parse_update_mode(name: &str) -> Result<UpdateMode> {
     }
 }
 
+/// Diagnostic statistics for the LOWESS fit.
 #[napi(object)]
 pub struct Diagnostics {
+    /// Root Mean Squared Error.
     pub rmse: f64,
+    /// Mean Absolute Error.
     pub mae: f64,
+    /// R-squared (coefficient of determination).
     pub rSquared: f64,
+    /// Akaike Information Criterion (if computed).
     pub aic: Option<f64>,
+    /// Corrected AIC (if computed).
     pub aicc: Option<f64>,
+    /// Effective degrees of freedom (if computed).
     pub effectiveDf: Option<f64>,
+    /// Residual standard deviation.
     pub residualSd: f64,
 }
 
+/// Result of a LOWESS fit.
 #[napi]
 pub struct LowessResultObj {
     inner: LowessResult<f64>,
@@ -117,16 +127,19 @@ pub struct LowessResultObj {
 
 #[napi]
 impl LowessResultObj {
+    /// Get the sorted x values.
     #[napi(getter)]
     pub fn get_x(&self) -> Float64Array {
         Float64Array::from(self.inner.x.as_slice())
     }
 
+    /// Get the smoothed y values.
     #[napi(getter)]
     pub fn get_y(&self) -> Float64Array {
         Float64Array::from(self.inner.y.as_slice())
     }
 
+    /// Get residuals (if requested).
     #[napi(getter)]
     pub fn get_residuals(&self) -> Option<Float64Array> {
         self.inner
@@ -135,6 +148,7 @@ impl LowessResultObj {
             .map(|v| Float64Array::from(v.as_slice()))
     }
 
+    /// Get standard errors (if requested/computed).
     #[napi(getter)]
     pub fn get_standard_errors(&self) -> Option<Float64Array> {
         self.inner
@@ -143,6 +157,7 @@ impl LowessResultObj {
             .map(|v| Float64Array::from(v.as_slice()))
     }
 
+    /// Get lower confidence bounds (if requested).
     #[napi(getter)]
     pub fn get_confidence_lower(&self) -> Option<Float64Array> {
         self.inner
@@ -151,6 +166,7 @@ impl LowessResultObj {
             .map(|v| Float64Array::from(v.as_slice()))
     }
 
+    /// Get upper confidence bounds (if requested).
     #[napi(getter)]
     pub fn get_confidence_upper(&self) -> Option<Float64Array> {
         self.inner
@@ -159,6 +175,7 @@ impl LowessResultObj {
             .map(|v| Float64Array::from(v.as_slice()))
     }
 
+    /// Get lower prediction bounds (if requested).
     #[napi(getter)]
     pub fn get_prediction_lower(&self) -> Option<Float64Array> {
         self.inner
@@ -167,6 +184,7 @@ impl LowessResultObj {
             .map(|v| Float64Array::from(v.as_slice()))
     }
 
+    /// Get upper prediction bounds (if requested).
     #[napi(getter)]
     pub fn get_prediction_upper(&self) -> Option<Float64Array> {
         self.inner
@@ -175,6 +193,7 @@ impl LowessResultObj {
             .map(|v| Float64Array::from(v.as_slice()))
     }
 
+    /// Get robustness weights (if requested).
     #[napi(getter)]
     pub fn get_robustness_weights(&self) -> Option<Float64Array> {
         self.inner
@@ -183,6 +202,7 @@ impl LowessResultObj {
             .map(|v| Float64Array::from(v.as_slice()))
     }
 
+    /// Get diagnostics (if requested).
     #[napi(getter)]
     pub fn get_diagnostics(&self) -> Option<Diagnostics> {
         self.inner.diagnostics.as_ref().map(|d| Diagnostics {
@@ -196,6 +216,7 @@ impl LowessResultObj {
         })
     }
 
+    /// Get cross-validation scores (if CV was performed).
     #[napi(getter)]
     pub fn get_cv_scores(&self) -> Option<Float64Array> {
         self.inner
@@ -204,39 +225,62 @@ impl LowessResultObj {
             .map(|v| Float64Array::from(v.as_slice()))
     }
 
+    /// Get the fraction used for smoothing.
     #[napi(getter)]
     pub fn get_fraction_used(&self) -> f64 {
         self.inner.fraction_used
     }
 
+    /// Get the number of iterations performed.
     #[napi(getter)]
     pub fn get_iterations_used(&self) -> Option<u32> {
         self.inner.iterations_used.map(|i| i as u32)
     }
 }
 
+/// Configuration options for LOWESS smoothing.
 #[napi(object)]
 pub struct SmoothOptions {
+    /// Smoothing fraction (0 < fraction <= 1). Default: 0.67.
     pub fraction: Option<f64>,
+    /// Number of robustness iterations. Default: 3.
     pub iterations: Option<u32>,
+    /// Delta for interpolation speedup. Default: NaN (auto).
+    /// Set to 0.0 to disable interpolation.
     pub delta: Option<f64>,
+    /// Weight function ("tricube", "gaussian", etc.). Default: "tricube".
     pub weightFunction: Option<String>,
+    /// Robustness method ("bisquare", "huber"). Default: "bisquare".
     pub robustnessMethod: Option<String>,
+    /// Fallback strategy when weights are zero ("use_local_mean").
     pub zeroWeightFallback: Option<String>,
+    /// Boundary handling ("extend", "reflect"). Default: "extend".
     pub boundaryPolicy: Option<String>,
+    /// Scaling method ("mad", "mar"). Default: "mad".
     pub scalingMethod: Option<String>,
+    /// Auto-convergence tolerance. Default: None.
     pub autoConverge: Option<f64>,
+    /// Return residuals in result. Default: false.
     pub returnResiduals: Option<bool>,
+    /// Return robustness weights in result. Default: false.
     pub returnRobustnessWeights: Option<bool>,
+    /// Return diagnostics (RMSE, etc.). Default: false.
     pub returnDiagnostics: Option<bool>,
+    /// Calculate confidence intervals (e.g., 0.95). Default: None.
     pub confidenceIntervals: Option<f64>,
+    /// Calculate prediction intervals. Default: None.
     pub predictionIntervals: Option<f64>,
+    /// Fractions to use for cross-validation.
     pub cvFractions: Option<Vec<f64>>,
+    /// CV method ("loocv", "kfold"). Default: "kfold".
     pub cvMethod: Option<String>,
+    /// Number of folds for K-Fold CV. Default: 5.
     pub cvK: Option<u32>,
+    /// Enable parallel execution. Default: true.
     pub parallel: Option<bool>,
 }
 
+/// Batch LOWESS smoothing.
 #[napi]
 pub struct Lowess {
     options: Option<SmoothOptions>,
@@ -244,13 +288,43 @@ pub struct Lowess {
 
 #[napi]
 impl Lowess {
+    /// Create a new batch LOWESS smoother.
     #[napi(constructor)]
     pub fn new(options: Option<SmoothOptions>) -> Self {
         Self { options }
     }
 
+    /// Fit the model.
     #[napi]
     pub fn fit(&self, x: Float64Array, y: Float64Array) -> Result<LowessResultObj> {
+        let builder = self.create_builder()?;
+        let model = builder
+            .adapter(Batch)
+            .build()
+            .map_err(|e| Error::new(Status::GenericFailure, e.to_string()))?;
+
+        let result = model
+            .fit(x.as_ref(), y.as_ref())
+            .map_err(|e: LowessError| Error::new(Status::GenericFailure, e.to_string()))?;
+
+        Ok(LowessResultObj { inner: result })
+    }
+
+    /// Fit the model asynchronously.
+    #[napi]
+    pub fn fit_async(&self, x: Float64Array, y: Float64Array) -> Result<AsyncTask<LowessTask>> {
+        let builder = self.create_builder()?;
+        let x_vec = x.as_ref().to_vec();
+        let y_vec = y.as_ref().to_vec();
+
+        Ok(AsyncTask::new(LowessTask {
+            builder,
+            x: x_vec,
+            y: y_vec,
+        }))
+    }
+
+    fn create_builder(&self) -> Result<LowessBuilder<f64>> {
         let mut builder = LowessBuilder::new();
         let options = &self.options;
 
@@ -322,29 +396,50 @@ impl Lowess {
                 };
             }
         }
+        Ok(builder)
+    }
+}
 
-        let model = builder
+pub struct LowessTask {
+    builder: LowessBuilder<f64>,
+    x: Vec<f64>,
+    y: Vec<f64>,
+}
+
+impl Task for LowessTask {
+    type Output = LowessResult<f64>;
+    type JsValue = LowessResultObj;
+
+    fn compute(&mut self) -> Result<Self::Output> {
+        let model = self
+            .builder
+            .clone()
             .adapter(Batch)
             .build()
             .map_err(|e| Error::new(Status::GenericFailure, e.to_string()))?;
 
-        let result = model.fit(x.as_ref(), y.as_ref()).map_err(
-            |e: ::fastLowess::prelude::LowessError| {
-                Error::new(Status::GenericFailure, e.to_string())
-            },
-        )?;
+        model
+            .fit(&self.x, &self.y)
+            .map_err(|e: LowessError| Error::new(Status::GenericFailure, e.to_string()))
+    }
 
-        Ok(LowessResultObj { inner: result })
+    fn resolve(&mut self, _env: Env, output: Self::Output) -> Result<Self::JsValue> {
+        Ok(LowessResultObj { inner: output })
     }
 }
 
+/// Configuration options for streaming processing.
 #[napi(object)]
 pub struct StreamingOptions {
+    /// Size of each data chunk. Default: 5000.
     pub chunkSize: Option<u32>,
+    /// Header/footer overlap size. Default: 500.
     pub overlap: Option<u32>,
+    /// Strategy for merging chunks (not exposed yet).
     pub mergeStrategy: Option<String>,
 }
 
+/// Streaming LOWESS smoother for large datasets.
 #[napi]
 pub struct StreamingLowess {
     inner: ParallelStreamingLowess<f64>,
@@ -352,6 +447,7 @@ pub struct StreamingLowess {
 
 #[napi]
 impl StreamingLowess {
+    /// Create a new streaming LOWESS smoother.
     #[napi(constructor)]
     pub fn new(
         options: Option<SmoothOptions>,
@@ -423,36 +519,39 @@ impl StreamingLowess {
         Ok(StreamingLowess { inner: model })
     }
 
+    /// Process a chunk of data.
     #[napi]
     pub fn process_chunk(&mut self, x: Float64Array, y: Float64Array) -> Result<LowessResultObj> {
-        let result: ::fastLowess::prelude::LowessResult<f64> = self
+        let result: LowessResult<f64> = self
             .inner
             .process_chunk(x.as_ref(), y.as_ref())
-            .map_err(|e: ::fastLowess::prelude::LowessError| {
-                Error::new(Status::GenericFailure, e.to_string())
-            })?;
+            .map_err(|e: LowessError| Error::new(Status::GenericFailure, e.to_string()))?;
         Ok(LowessResultObj { inner: result })
     }
 
+    /// Finalize the stream and return remaining data.
     #[napi]
     pub fn finalize(&mut self) -> Result<LowessResultObj> {
-        let result: ::fastLowess::prelude::LowessResult<f64> =
-            self.inner
-                .finalize()
-                .map_err(|e: ::fastLowess::prelude::LowessError| {
-                    Error::new(Status::GenericFailure, e.to_string())
-                })?;
+        let result: LowessResult<f64> = self
+            .inner
+            .finalize()
+            .map_err(|e: LowessError| Error::new(Status::GenericFailure, e.to_string()))?;
         Ok(LowessResultObj { inner: result })
     }
 }
 
+/// Configuration options for online processing.
 #[napi(object)]
 pub struct OnlineOptions {
+    /// Maximum number of points to keep in the window. Default: 100.
     pub windowCapacity: Option<u32>,
+    /// Minimum points required before smoothing starts. Default: 2.
     pub minPoints: Option<u32>,
+    /// Update mode ("full", "incremental"). Default: "full".
     pub updateMode: Option<String>,
 }
 
+/// Online LOWESS smoother for real-time data.
 #[napi]
 pub struct OnlineLowess {
     inner: ParallelOnlineLowess<f64>,
@@ -460,6 +559,7 @@ pub struct OnlineLowess {
 
 #[napi]
 impl OnlineLowess {
+    /// Create a new online LOWESS smoother.
     #[napi(constructor)]
     pub fn new(options: Option<SmoothOptions>, online_opts: Option<OnlineOptions>) -> Result<Self> {
         let mut builder = LowessBuilder::new();
@@ -503,24 +603,16 @@ impl OnlineLowess {
         Ok(OnlineLowess { inner: model })
     }
 
+    /// Add new points to the window and get smoothed values.
     #[napi]
     pub fn add_points(&mut self, x: Float64Array, y: Float64Array) -> Result<LowessResultObj> {
-        let result = self.inner.add_points(x.as_ref(), y.as_ref()).map_err(
-            |e: ::fastLowess::prelude::LowessError| {
-                Error::new(Status::GenericFailure, e.to_string())
-            },
-        )?;
+        let result = self
+            .inner
+            .add_points(x.as_ref(), y.as_ref())
+            .map_err(|e: LowessError| Error::new(Status::GenericFailure, e.to_string()))?;
 
         // Extract smoothed values from results
-        // add_points returns Vec<Option<PointOutput>>.
-        // We need to return LowessResultObj.
-        // But what should the result contain?
-        // The Python implementation reconstructs a LowessResult with just y values (and x).
-        // Let's do the same.
-
-        let x_vec = x.as_ref().to_vec(); // We assume input arrays are the x's for the outputs?
-        // Wait, online.add_points matches input points to output points.
-        // Yes, it processes them.
+        let x_vec = x.as_ref().to_vec();
 
         let smoothed: Vec<f64> = result
             .iter()
@@ -539,8 +631,8 @@ impl OnlineLowess {
             residuals: None,
             robustness_weights: None,
             diagnostics: None,
-            iterations_used: None, // Could capture?
-            fraction_used: 0.0,    // Should capture?
+            iterations_used: None,
+            fraction_used: 0.0,
             cv_scores: None,
         };
 

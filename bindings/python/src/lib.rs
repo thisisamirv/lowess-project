@@ -1,11 +1,11 @@
 //! Python bindings for fastLowess.
 
 #![allow(non_snake_case)]
-
 use numpy::{PyArray1, PyReadonlyArray1};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use std::fmt::Display;
+use std::sync::Mutex;
 
 use ::fastLowess::internals::adapters::online::ParallelOnlineLowess;
 use ::fastLowess::internals::adapters::streaming::ParallelStreamingLowess;
@@ -288,7 +288,7 @@ impl PyLowessResult {
 /// Streaming LOWESS processor for incremental chunk-based smoothing.
 #[pyclass(name = "StreamingLowess")]
 pub struct PyStreamingLowess {
-    inner: ParallelStreamingLowess<f64>,
+    inner: Mutex<ParallelStreamingLowess<f64>>,
 }
 
 #[pymethods]
@@ -372,28 +372,42 @@ impl PyStreamingLowess {
         }
 
         let processor = streaming_builder.build().map_err(to_py_error)?;
-        Ok(PyStreamingLowess { inner: processor })
+        Ok(PyStreamingLowess {
+            inner: Mutex::new(processor),
+        })
     }
 
     /// Process a chunk of data.
     fn process_chunk<'py>(
-        &mut self,
+        &self,
+        py: Python<'py>,
         x: PyReadonlyArray1<'py, f64>,
         y: PyReadonlyArray1<'py, f64>,
     ) -> PyResult<PyLowessResult> {
-        let x_slice = x.as_slice().map_err(to_py_error)?;
-        let y_slice = y.as_slice().map_err(to_py_error)?;
+        let x_vec = x.as_slice().map_err(to_py_error)?.to_vec();
+        let y_vec = y.as_slice().map_err(to_py_error)?.to_vec();
 
-        let result = self
-            .inner
-            .process_chunk(x_slice, y_slice)
-            .map_err(to_py_error)?;
+        let result = py.detach(move || {
+            self.inner
+                .lock()
+                .map_err(|e| to_py_error(format!("Mutex poisoned: {}", e)))?
+                .process_chunk(&x_vec, &y_vec)
+                .map_err(to_py_error)
+        })?;
+
         Ok(PyLowessResult { inner: result })
     }
 
     /// Finalize smoothing and return remaining buffered data.
-    fn finalize(&mut self) -> PyResult<PyLowessResult> {
-        let result = self.inner.finalize().map_err(to_py_error)?;
+    fn finalize(&self, py: Python<'_>) -> PyResult<PyLowessResult> {
+        let result = py.detach(move || {
+            self.inner
+                .lock()
+                .map_err(|e| to_py_error(format!("Mutex poisoned: {}", e)))?
+                .finalize()
+                .map_err(to_py_error)
+        })?;
+
         Ok(PyLowessResult { inner: result })
     }
 }
@@ -401,7 +415,7 @@ impl PyStreamingLowess {
 /// Online LOWESS processor for real-time data streams.
 #[pyclass(name = "OnlineLowess")]
 pub struct PyOnlineLowess {
-    inner: ParallelOnlineLowess<f64>,
+    inner: Mutex<ParallelOnlineLowess<f64>>,
     fraction: f64,
     iterations: usize,
 }
@@ -476,42 +490,53 @@ impl PyOnlineLowess {
 
         let processor = online_builder.build().map_err(to_py_error)?;
         Ok(PyOnlineLowess {
-            inner: processor,
+            inner: Mutex::new(processor),
             fraction,
             iterations,
         })
     }
 
     /// Add a single point and return smoothed value if enough points are available.
-    fn update(&mut self, x: f64, y: f64) -> PyResult<Option<f64>> {
-        let result = self.inner.add_point(x, y).map_err(to_py_error)?;
+    fn update(&self, x: f64, y: f64) -> PyResult<Option<f64>> {
+        let mut inner = self
+            .inner
+            .lock()
+            .map_err(|e| to_py_error(format!("Mutex poisoned: {}", e)))?;
+        let result = inner.add_point(x, y).map_err(to_py_error)?;
         Ok(result.map(|o| o.smoothed))
     }
 
     /// Add multiple points.
     fn add_points<'py>(
-        &mut self,
+        &self,
+        py: Python<'py>,
         x: PyReadonlyArray1<'py, f64>,
         y: PyReadonlyArray1<'py, f64>,
     ) -> PyResult<PyLowessResult> {
-        let x_slice = x.as_slice().map_err(to_py_error)?;
-        let y_slice = y.as_slice().map_err(to_py_error)?;
+        let x_vec = x.as_slice().map_err(to_py_error)?.to_vec();
+        let y_vec = y.as_slice().map_err(to_py_error)?.to_vec();
 
-        let outputs = self
-            .inner
-            .add_points(x_slice, y_slice)
-            .map_err(to_py_error)?;
+        let x_vec_out = x_vec.clone();
+        let y_vec_out = y_vec.clone();
 
-        // Extract smoothed values
+        let outputs = py.detach(move || {
+            self.inner
+                .lock()
+                .map_err(|e| to_py_error(format!("Mutex poisoned: {}", e)))?
+                .add_points(&x_vec, &y_vec)
+                .map_err(to_py_error)
+        })?;
+
+        // Extract smoothed values using the outer copy of y_vec
         let smoothed: Vec<f64> = outputs
             .into_iter()
-            .zip(y_slice.iter())
+            .zip(y_vec_out.iter())
             .map(|(opt, &original_y)| opt.map_or(original_y, |o| o.smoothed))
             .collect();
 
         Ok(PyLowessResult {
             inner: LowessResult {
-                x: x_slice.to_vec(),
+                x: x_vec_out,
                 y: smoothed,
                 standard_errors: None,
                 confidence_lower: None,
@@ -534,6 +559,7 @@ impl PyOnlineLowess {
 /// This class allows you to configure LOWESS parameters once and then
 /// call `fit()` multiple times with different datasets.
 #[pyclass(name = "Lowess")]
+#[derive(Clone)]
 pub struct PyLowess {
     fraction: f64,
     iterations: usize,
@@ -642,76 +668,88 @@ impl PyLowess {
     ///     Smoothed values and optional diagnostics.
     fn fit<'py>(
         &self,
+        py: Python<'py>,
         x: PyReadonlyArray1<'py, f64>,
         y: PyReadonlyArray1<'py, f64>,
     ) -> PyResult<PyLowessResult> {
-        let x_slice = x.as_slice().map_err(to_py_error)?;
-        let y_slice = y.as_slice().map_err(to_py_error)?;
+        // 1. Copy data (Must be done with GIL)
+        let x_vec = x.as_slice().map_err(to_py_error)?.to_vec();
+        let y_vec = y.as_slice().map_err(to_py_error)?.to_vec();
 
-        let mut builder = LowessBuilder::<f64>::new();
-        builder = builder.fraction(self.fraction);
-        builder = builder.iterations(self.iterations);
-        builder = builder.weight_function(self.weight_function);
-        builder = builder.robustness_method(self.robustness_method);
-        builder = builder.scaling_method(self.scaling_method);
-        builder = builder.zero_weight_fallback(self.zero_weight_fallback);
-        builder = builder.boundary_policy(self.boundary_policy);
-        builder = builder.parallel(self.parallel);
+        // Used for builder configuration
+        let params = self.clone();
 
-        if let Some(d) = self.delta {
-            builder = builder.delta(d);
+        // 2. Release GIL
+        let result = py.detach(move || {
+            let mut builder = LowessBuilder::<f64>::new();
+            builder = builder.fraction(params.fraction);
+            builder = builder.iterations(params.iterations);
+            builder = builder.weight_function(params.weight_function);
+            builder = builder.robustness_method(params.robustness_method);
+            builder = builder.scaling_method(params.scaling_method);
+            builder = builder.zero_weight_fallback(params.zero_weight_fallback);
+            builder = builder.boundary_policy(params.boundary_policy);
+            builder = builder.parallel(params.parallel);
+
+            if let Some(d) = params.delta {
+                builder = builder.delta(d);
+            }
+
+            if let Some(cl) = params.confidence_intervals {
+                builder = builder.confidence_intervals(cl);
+            }
+
+            if let Some(pl) = params.prediction_intervals {
+                builder = builder.prediction_intervals(pl);
+            }
+
+            if params.return_diagnostics {
+                builder = builder.return_diagnostics();
+            }
+
+            if params.return_residuals {
+                builder = builder.return_residuals();
+            }
+
+            if params.return_robustness_weights {
+                builder = builder.return_robustness_weights();
+            }
+
+            if let Some(tol) = params.auto_converge {
+                builder = builder.auto_converge(tol);
+            }
+
+            // Cross-validation if fractions are provided
+            if let Some(ref fractions) = params.cv_fractions {
+                match params.cv_method.to_lowercase().as_str() {
+                    "simple" | "loo" | "loocv" | "leave_one_out" => {
+                        builder = builder.cross_validate(LOOCV(fractions));
+                    }
+                    "kfold" | "k_fold" | "k-fold" => {
+                        builder = builder.cross_validate(KFold(params.cv_k, fractions));
+                    }
+                    _ => {
+                        return Err(format!(
+                            "Unknown CV method: {}. Valid options: loocv, kfold",
+                            params.cv_method
+                        ));
+                    }
+                };
+            }
+
+            builder
+                .adapter(Batch)
+                .build()
+                .map_err(|e| e.to_string())?
+                .fit(&x_vec, &y_vec)
+                .map_err(|e| e.to_string())
+        });
+
+        // 3. Handle result (Back with GIL)
+        match result {
+            Ok(inner) => Ok(PyLowessResult { inner }),
+            Err(e) => Err(PyValueError::new_err(e)),
         }
-
-        if let Some(cl) = self.confidence_intervals {
-            builder = builder.confidence_intervals(cl);
-        }
-
-        if let Some(pl) = self.prediction_intervals {
-            builder = builder.prediction_intervals(pl);
-        }
-
-        if self.return_diagnostics {
-            builder = builder.return_diagnostics();
-        }
-
-        if self.return_residuals {
-            builder = builder.return_residuals();
-        }
-
-        if self.return_robustness_weights {
-            builder = builder.return_robustness_weights();
-        }
-
-        if let Some(tol) = self.auto_converge {
-            builder = builder.auto_converge(tol);
-        }
-
-        // Cross-validation if fractions are provided
-        if let Some(ref fractions) = self.cv_fractions {
-            match self.cv_method.to_lowercase().as_str() {
-                "simple" | "loo" | "loocv" | "leave_one_out" => {
-                    builder = builder.cross_validate(LOOCV(fractions));
-                }
-                "kfold" | "k_fold" | "k-fold" => {
-                    builder = builder.cross_validate(KFold(self.cv_k, fractions));
-                }
-                _ => {
-                    return Err(PyValueError::new_err(format!(
-                        "Unknown CV method: {}. Valid options: loocv, kfold",
-                        self.cv_method
-                    )));
-                }
-            };
-        }
-
-        let result = builder
-            .adapter(Batch)
-            .build()
-            .map_err(to_py_error)?
-            .fit(x_slice, y_slice)
-            .map_err(to_py_error)?;
-
-        Ok(PyLowessResult { inner: result })
     }
 
     fn __repr__(&self) -> String {

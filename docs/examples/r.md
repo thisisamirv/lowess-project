@@ -67,7 +67,9 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 # Basic smoothing
 model <- Lowess(fraction = 0.3)
+print(model)
 result <- model$fit(x, y)
+print(result)
 
 # With confidence intervals
 model <- Lowess(
@@ -77,7 +79,6 @@ model <- Lowess(
 )
 result <- model$fit(x, y)
 
-# Access results
-plot(x, y, pch = 19, col = "gray")
-lines(result$x, result$y, col = "blue", lwd = 2)
+# Visualization
+plot(result, main = "Quick Start Example")
 ```

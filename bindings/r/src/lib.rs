@@ -462,7 +462,9 @@ fn lowess_result_to_list(result: LowessResult<f64>) -> Result<List> {
     // Build the list manually
     let names: Vec<&str> = list_items.iter().map(|(k, _)| *k).collect();
     let values: Vec<Robj> = list_items.into_iter().map(|(_, v)| v).collect();
-    List::from_names_and_values(names, values)
+    let mut list = List::from_names_and_values(names, values)?;
+    list.set_class(&["LowessResult"])?;
+    Ok(list)
 }
 
 // ============================================================================

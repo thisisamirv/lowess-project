@@ -75,3 +75,18 @@ test('options parsing', () => {
   
   assert.strictEqual(result.y.length, 5);
 });
+
+test('async batch smoothing', async () => {
+  const x = new Float64Array([1, 2, 3, 4, 5]);
+  const y = new Float64Array([2, 4, 6, 8, 10]);
+  
+  const model = new fastlowess.Lowess({
+    fraction: 0.3
+  });
+
+  const result = await model.fitAsync(x, y);
+  
+  assert.strictEqual(result.x.length, 5);
+  assert.strictEqual(result.y.length, 5);
+  assert.ok(result.y[0] > 0);
+});

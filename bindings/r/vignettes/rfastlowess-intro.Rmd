@@ -36,6 +36,8 @@ install.packages("rfastlowess", repos = "https://thisisamirv.r-universe.dev")
 
 ### Basic Smoothing
 
+The package uses S3 classes to provide a user-friendly interface. Models and results can be inspected using `print()` and visualized using `plot()`.
+
 ```{r basic_example}
 library(rfastlowess)
 
@@ -44,11 +46,19 @@ set.seed(42)
 x <- seq(0, 10, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.3)
 
-# Basic smoothing
-result <- Lowess(fraction = 0.3)$fit(x, y)
+# Initialize model
+model <- Lowess(fraction = 0.3)
+print(model)
 
-# Plot
-plot(x, y, pch = 16, col = "gray", main = "Basic LOWESS Smoothing")
+# Fit model
+result <- model$fit(x, y)
+print(result)
+
+# Quick visualization using the S3 plot method
+plot(result, main = "Auto-plot of LowessResult")
+
+# For custom plotting, access components directly
+plot(x, y, pch = 16, col = "gray", main = "Manual Overlay")
 lines(result$x, result$y, col = "red", lwd = 2)
 ```
 

@@ -522,7 +522,7 @@ _wasm_impl:
 	@cargo clippy -q -p $(WASM_PKG) --all-targets -- -D warnings
 	@echo "Linting WASM JS files..."
 	@cd $(WASM_DIR) && npm install -q
-	@$(WASM_DIR)/node_modules/.bin/eslint --config $(WASM_DIR)/eslint.config.js tests/wasm/*.js examples/wasm/*.html
+	@$(WASM_DIR)/node_modules/.bin/eslint --config $(WASM_DIR)/eslint.config.js tests/wasm/*.js
 	@cd $(WASM_DIR) && wasm-pack build --target nodejs --out-dir pkg
 	@echo "Building for Web (Examples)..."
 	@cd $(WASM_DIR) && wasm-pack build --target web --out-dir pkg-web
