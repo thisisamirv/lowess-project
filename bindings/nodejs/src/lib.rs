@@ -311,7 +311,7 @@ impl Lowess {
     }
 
     /// Fit the model asynchronously.
-    #[napi]
+    #[napi(js_name = "fitAsync")]
     pub fn fit_async(&self, x: Float64Array, y: Float64Array) -> Result<AsyncTask<LowessTask>> {
         let builder = self.create_builder()?;
         let x_vec = x.as_ref().to_vec();

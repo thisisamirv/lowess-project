@@ -84,6 +84,10 @@ test('async batch smoothing', async () => {
     fraction: 0.3
   });
 
+  if (typeof model.fitAsync !== 'function') {
+    console.error('Available properties on model:', Object.getOwnPropertyNames(Object.getPrototypeOf(model)));
+    throw new Error('model.fitAsync is not a function');
+  }
   const result = await model.fitAsync(x, y);
   
   assert.strictEqual(result.x.length, 5);
