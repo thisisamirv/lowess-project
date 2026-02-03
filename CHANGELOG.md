@@ -64,6 +64,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Return results as `LowessResult` S3 objects instead of raw vectors
 
+## 1.1.1
+
 ### Fixed
 
 **fastLowess:**
