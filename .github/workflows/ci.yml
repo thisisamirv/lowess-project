@@ -161,11 +161,18 @@ jobs:
       # R
       # ========================================================================
       - name: "R: Setup Dependencies"
-        working-directory: bindings/r
-        run: |
-          chmod +x configure cleanup
-          Rscript -e "install.packages(c('remotes', 'rcmdcheck', 'testthat', 'knitr', 'rmarkdown', 'lintr', 'styler', 'prettycode', 'BiocManager', 'devtools'))"
-          Rscript -e "remotes::install_deps(dependencies = TRUE)"
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          working-directory: bindings/r
+          extra-packages: |
+            any::rcmdcheck
+            any::BiocCheck
+            any::XML
+            any::devtools
+            any::lintr
+            any::styler
+            any::BiocManager
+          needs: check
 
       - name: "R: CMD Check"
         uses: r-lib/actions/check-r-package@v2
@@ -197,7 +204,7 @@ jobs:
           chmod +x ../../dev/prepare_cran.sh
           ../../dev/prepare_cran.sh
           R CMD build .
-          Rscript -e "BiocManager::install('BiocCheck'); BiocCheck::BiocCheck(list.files(pattern='[.]tar[.]gz$')[1], \`new-package\`=TRUE, \`no-check-vignettes\`=TRUE, \`quit-with-status\`=TRUE)"
+          Rscript -e "BiocCheck::BiocCheck(list.files(pattern='[.]tar[.]gz$')[1], \`new-package\`=TRUE, \`no-check-vignettes\`=TRUE, \`quit-with-status\`=TRUE)"
 
       # ========================================================================
       # JULIA
