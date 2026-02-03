@@ -28,7 +28,11 @@ function isMusl() {
   }
 }
 
-switch (platform) {
+// Check for local build first (prioritize dev/CI environment)
+if (existsSync(join(__dirname, 'fastlowess.node'))) {
+  nativeBinding = require('./fastlowess.node')
+} else {
+  switch (platform) {
   case 'android':
     switch (arch) {
       case 'arm64':
@@ -262,6 +266,7 @@ switch (platform) {
     break
   default:
     throw new Error(`Unsupported OS: ${platform}, architecture: ${arch}`)
+  }
 }
 
 if (!nativeBinding) {
