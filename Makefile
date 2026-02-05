@@ -341,7 +341,7 @@ _r_impl:
 	@echo "=============================================================================="
 	@rm -rf $(R_DIR)/*.Rcheck
 	@cd $(R_DIR)/src && RUSTDOCFLAGS="-D warnings" cargo doc -q --no-deps
-	@cd $(R_DIR) && Rscript -e "devtools::document(quiet = TRUE, roclets = c('namespace', 'rd'))"
+	@cd $(R_DIR) && Rscript -e "devtools::document(quiet = TRUE)"
 	@cd $(R_DIR) && Rscript -e "devtools::build_vignettes(quiet = TRUE)" || true
 	@rm -f $(R_DIR)/.gitignore
 	@echo "=============================================================================="

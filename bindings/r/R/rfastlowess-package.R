@@ -4,8 +4,8 @@
 #' A high-performance LOWESS (Locally Weighted Scatterplot Smoothing)
 #' implementation built on the Rust `fastLowess` crate.
 #'
-#' @srrstats G1.0 Package-level documentation for statistical software review.
-#' @srrstats G1.1 thin R wrapper interface for core Rust algorithms.
+#' @srrstats {G1.0} Package-level documentation for statistical software review.
+#' @srrstats {G1.1} Thin R wrapper interface for core Rust algorithms.
 #'
 #' @section Main Classes:
 #' \itemize{

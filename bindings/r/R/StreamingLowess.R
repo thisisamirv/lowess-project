@@ -45,33 +45,8 @@ StreamingLowess <- function(
     return_robustness_weights = FALSE,
     parallel = TRUE
 ) {
-    # Validation
-    if (fraction < 0 || fraction > 1) {
-        stop("fraction must be between 0 and 1")
-    }
-    if (chunk_size <= 0) {
-        stop("chunk_size must be a positive integer")
-    }
-
-    if (is.null(overlap)) overlap <- Nullable(NULL)
-    if (is.null(delta)) delta <- Nullable(NULL)
-    if (is.null(auto_converge)) auto_converge <- Nullable(NULL)
-
-    handle <- RStreamingLowess$new(
-        as.double(fraction),
-        as.integer(chunk_size),
-        overlap,
-        as.integer(iterations),
-        delta,
-        as.character(weight_function),
-        as.character(robustness_method),
-        as.character(scaling_method),
-        as.character(boundary_policy),
-        auto_converge,
-        as.logical(return_diagnostics),
-        as.logical(return_robustness_weights),
-        as.logical(parallel)
-    )
+    validate_params(fraction = fraction, chunk_size = chunk_size)
+    handle <- do.call(RStreamingLowess$new, env_args(streaming_params))
 
     structure(
         list(

@@ -57,41 +57,8 @@ Lowess <- function(
     cv_k = 5L,
     parallel = TRUE
 ) {
-    # Validation
-    if (fraction < 0 || fraction > 1) {
-        stop("fraction must be between 0 and 1")
-    }
-    if (iterations < 0) {
-        stop("iterations must be a non-negative integer")
-    }
-
-    # Coerce arguments
-    if (is.null(delta)) delta <- Nullable(NULL)
-    if (is.null(confidence_intervals)) confidence_intervals <- Nullable(NULL)
-    if (is.null(prediction_intervals)) prediction_intervals <- Nullable(NULL)
-    if (is.null(auto_converge)) auto_converge <- Nullable(NULL)
-    if (is.null(cv_fractions)) cv_fractions <- Nullable(NULL)
-
-    handle <- RLowess$new(
-        as.double(fraction),
-        as.integer(iterations),
-        delta,
-        as.character(weight_function),
-        as.character(robustness_method),
-        as.character(scaling_method),
-        as.character(boundary_policy),
-        confidence_intervals,
-        prediction_intervals,
-        as.logical(return_diagnostics),
-        as.logical(return_residuals),
-        as.logical(return_robustness_weights),
-        as.character(zero_weight_fallback),
-        auto_converge,
-        cv_fractions,
-        as.character(cv_method),
-        as.integer(cv_k),
-        as.logical(parallel)
-    )
+    validate_params(fraction = fraction, iterations = iterations)
+    handle <- do.call(RLowess$new, env_args(lowess_params))
 
     # Return a wrapper that coerces inputs for methods
     structure(

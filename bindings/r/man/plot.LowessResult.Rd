@@ -13,6 +13,9 @@
 
 \item{...}{Additional arguments passed to plot() and lines().}
 }
+\value{
+NULL, invisibly. Called for side effects (plotting).
+}
 \description{
 Plot Lowess Result
 }

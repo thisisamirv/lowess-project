@@ -4,6 +4,7 @@
 #'
 #' @param x A Lowess object.
 #' @param ... Additional arguments (ignored).
+#' @return The input object `x`, invisibly.
 #' @export
 print.Lowess <- function(x, ...) {
     cat("<Lowess Model>\n")
@@ -18,6 +19,7 @@ print.Lowess <- function(x, ...) {
 #'
 #' @param x A LowessResult object.
 #' @param ... Additional arguments (ignored).
+#' @return The input object `x`, invisibly.
 #' @export
 print.LowessResult <- function(x, ...) {
     cat("<LowessResult>\n")
@@ -44,6 +46,8 @@ print.LowessResult <- function(x, ...) {
 #' model <- Lowess(fraction = 0.2)
 #' res <- model$fit(x, y)
 #' plot(res)
+#' @return NULL, invisibly. Called for side effects (plotting).
+#' @importFrom graphics lines
 #' @export
 plot.LowessResult <- function(x, main = "LOWESS Fit", ...) {
     # Plot the smoothed curve
@@ -65,6 +69,7 @@ plot.LowessResult <- function(x, main = "LOWESS Fit", ...) {
 #'
 #' @param x A StreamingLowess object.
 #' @param ... Additional arguments.
+#' @return The input object `x`, invisibly.
 #' @export
 print.StreamingLowess <- function(x, ...) {
     cat("<StreamingLowess Model>\n")
@@ -76,8 +81,9 @@ print.StreamingLowess <- function(x, ...) {
 
 #' Print OnlineLowess Model
 #'
-#' @param x A OnlineLowess object.
+#' @param x An OnlineLowess object.
 #' @param ... Additional arguments.
+#' @return The input object `x`, invisibly.
 #' @export
 print.OnlineLowess <- function(x, ...) {
     cat("<OnlineLowess Model>\n")

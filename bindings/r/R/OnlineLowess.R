@@ -45,35 +45,11 @@ OnlineLowess <- function(
     return_robustness_weights = FALSE,
     parallel = FALSE
 ) {
-    # Validation
-    if (fraction < 0 || fraction > 1) {
-        stop("fraction must be between 0 and 1")
-    }
-    if (window_capacity <= 0) {
-        stop("window_capacity must be a positive integer")
-    }
-    if (min_points < 0) {
-        stop("min_points must be a non-negative integer")
-    }
-
-    if (is.null(delta)) delta <- Nullable(NULL)
-    if (is.null(auto_converge)) auto_converge <- Nullable(NULL)
-
-    handle <- ROnlineLowess$new(
-        as.double(fraction),
-        as.integer(window_capacity),
-        as.integer(min_points),
-        as.integer(iterations),
-        delta,
-        as.character(weight_function),
-        as.character(robustness_method),
-        as.character(scaling_method),
-        as.character(boundary_policy),
-        as.character(update_mode),
-        auto_converge,
-        as.logical(return_robustness_weights),
-        as.logical(parallel)
+    validate_params(
+        fraction = fraction, window_capacity = window_capacity,
+        min_points = min_points
     )
+    handle <- do.call(ROnlineLowess$new, env_args(online_params))
 
     structure(
         list(

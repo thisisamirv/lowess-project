@@ -11,6 +11,9 @@
 
 \item{...}{Additional arguments.}
 }
+\value{
+The input object \code{x}, invisibly.
+}
 \description{
 Print StreamingLowess Model
 }

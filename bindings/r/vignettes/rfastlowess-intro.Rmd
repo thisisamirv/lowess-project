@@ -18,6 +18,15 @@ knitr::opts_chunk$set(
 )
 ```
 
+```{r srr-tags, eval = FALSE, echo = FALSE}
+#' @srrstats {G1.0} Package introduction with academic context.
+#' @srrstats {G1.4} Examples use roxygen2-documented functions.
+#' @srrstats {RE1.2} Documents expected numeric vector input format.
+#' @srrstats {RE1.4} Documents LOWESS assumptions and use cases.
+#' @srrstats {RE4.17} Demonstrates print() method for model objects.
+#' @srrstats {RE6.0, RE6.2} Demonstrates plot() method with CI visualization.
+```
+
 ## Overview
 
 `rfastlowess` is a high-performance R package for LOWESS (Locally Weighted
@@ -36,7 +45,9 @@ install.packages("rfastlowess", repos = "https://thisisamirv.r-universe.dev")
 
 ### Basic Smoothing
 
-The package uses S3 classes to provide a user-friendly interface. Models and results can be inspected using `print()` and visualized using `plot()`.
+The package uses S3 classes to provide a user-friendly interface.
+Models and results can be inspected using `print()`.
+Results can also be visualized using `plot()`.
 
 ```{r basic_example}
 library(rfastlowess)

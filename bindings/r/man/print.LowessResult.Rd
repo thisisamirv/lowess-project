@@ -11,6 +11,9 @@
 
 \item{...}{Additional arguments (ignored).}
 }
+\value{
+The input object \code{x}, invisibly.
+}
 \description{
 Print Lowess Result
 }

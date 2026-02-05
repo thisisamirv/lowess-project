@@ -1,3 +1,5 @@
+#' @srrstats {G5.2, G5.2a, G5.2b} Error and tests for all input validation.
+#' @srrstats {G5.8, G5.8a, G5.8b} Edge condition tests for invalid inputs.
 test_that("Lowess rejects invalid inputs", {
     # Invalid fraction
     expect_error(

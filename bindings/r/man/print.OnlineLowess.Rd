@@ -7,9 +7,12 @@
 \method{print}{OnlineLowess}(x, ...)
 }
 \arguments{
-\item{x}{A OnlineLowess object.}
+\item{x}{An OnlineLowess object.}
 
 \item{...}{Additional arguments.}
+}
+\value{
+The input object \code{x}, invisibly.
 }
 \description{
 Print OnlineLowess Model

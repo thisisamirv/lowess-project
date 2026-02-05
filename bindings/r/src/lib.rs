@@ -2,8 +2,8 @@
 //!
 //! Provides R access to the fastLowess Rust library via extendr.
 //!
-//! @srrstats G1.0 Documentation of core R-to-Rust interface.
-//! @srrstats G1.1 Implementation of thin R wrapper for statistical algorithms.
+//! @srrstats {G1.0} Documentation of core R-to-Rust interface.
+//! @srrstats {G1.1} Implementation of thin R wrapper for statistical algorithms.
 
 #![allow(non_snake_case)]
 

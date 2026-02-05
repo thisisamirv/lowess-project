@@ -1,3 +1,16 @@
+#' @srrstats {G5.0} Tests use standard data patterns (sin, linear, constant).
+#' @srrstats {G5.1} Test datasets are reproducible via set.seed().
+#' @srrstats {G5.3} Tests verify no NA/NaN in outputs.
+#' @srrstats {G5.4, G5.4a} Correctness tests against expected behavior.
+#' @srrstats {G5.5} Fixed random seeds in all tests.
+#' @srrstats {G5.6, G5.6a} Parameter recovery within tolerance.
+#' @srrstats {G5.7} Performance tests (parallel vs serial).
+#' @srrstats {G5.8c, G5.8d} Edge cases: minimum points, constant values.
+#' @srrstats {G5.9a} Noise susceptibility via rnorm() variations.
+#' @srrstats {RE4.10} Residuals tested in Lowess residuals test.
+#' @srrstats {RE4.11} Goodness-of-fit tested in diagnostics test.
+#' @srrstats {RE5.0, RE5.1} Confidence/prediction intervals tested.
+#' @srrstats {RE6.0, RE6.1} Cross-validation tested.
 test_that("Lowess basic functionality works", {
     x <- c(1, 2, 3, 4, 5)
     y <- c(2, 4, 6, 8, 10)
