@@ -4,6 +4,11 @@
 //! delta-based point skipping and linear interpolation. When data points are
 //! densely sampled, fitting every point is computationally expensive and
 //! often unnecessary.
+//!
+//! ## srrstats Compliance
+//!
+//! @srrstats {G1.6} Delta-based interpolation reduces O(n²) to O(n×k) for dense data.
+//! @srrstats {RE2.2} Linear interpolation between anchor points for non-fitted values.
 
 // External dependencies
 use core::result::Result;

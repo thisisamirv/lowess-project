@@ -3,6 +3,11 @@
 //! This module provides the batch execution adapter for LOWESS smoothing.
 //! It handles complete datasets in memory with optional parallel processing,
 //! making it suitable for small to medium-sized datasets.
+//!
+//! ## srrstats Compliance
+//!
+//! @srrstats {G3.0} Rayon-based parallel execution for CPU-bound workloads.
+//! @srrstats {G1.5} GPU backend support via feature flag for accelerated fits.
 
 // Internal dependencies
 #[cfg(feature = "cpu")]

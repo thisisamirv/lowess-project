@@ -4,6 +4,11 @@
 //! on datasets too large to fit in memory. It divides the data into overlapping
 //! chunks, processes each chunk independently, and merges the results while
 //! handling boundary effects.
+//!
+//! ## srrstats Compliance
+//!
+//! @srrstats {G1.6} Memory-efficient streaming for large datasets via chunking.
+//! @srrstats {G3.2} Configurable merge strategies (Average, WeightedAverage, TakeFirst, TakeLast).
 
 // External dependencies
 #[cfg(not(feature = "std"))]

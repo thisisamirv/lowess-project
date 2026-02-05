@@ -4,6 +4,11 @@
 //! on datasets too large to fit in memory. It divides the data into overlapping
 //! chunks, processes each chunk independently, and merges the results while
 //! handling boundary effects.
+//!
+//! ## srrstats Compliance
+//!
+//! @srrstats {G1.6} Chunk-based streaming with parallel execution per chunk.
+//! @srrstats {G3.0} Rayon parallelization injected for chunk processing.
 
 // Internal dependencies
 #[cfg(feature = "cpu")]

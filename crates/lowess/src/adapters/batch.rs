@@ -3,6 +3,11 @@
 //! This module provides the batch execution adapter for LOWESS smoothing.
 //! It handles complete datasets in memory with sequential processing, making
 //! it suitable for small to medium-sized datasets.
+//!
+//! ## srrstats Compliance
+//!
+//! @srrstats {G1.3} Builder pattern for fluent, validated configuration.
+//! @srrstats {G2.0} Comprehensive input validation via Validator before processing.
 
 // External dependencies
 #[cfg(not(feature = "std"))]

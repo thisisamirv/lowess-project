@@ -215,6 +215,15 @@
 //! - Cleveland, W. S. (1979). "Robust Locally Weighted Regression and Smoothing Scatterplots"
 //! - Cleveland, W. S. (1981). "LOWESS: A Program for Smoothing Scatterplots by Robust Locally Weighted Regression"
 //!
+//! ## srrstats Compliance for rOpenSci Statistical Software Review
+//!
+//! @srrstats {G1.0} Statistical literature references documented above (Cleveland 1979, 1981).
+//! @srrstats {G1.1} This package provides LOWESS smoothing, a nonparametric regression method
+//!   for fitting smooth curves to scatterplot data using locally weighted linear regression.
+//! @srrstats {G1.4} All exported functions and types are documented with rustdoc comments.
+//! @srrstats {G1.6} Performance characteristics documented: SIMD-optimized solvers, O(n*k)
+//!   complexity where k is the window size, supports streaming and online modes.
+//!
 //! ## License
 //!
 //! See the repository for license information and contribution guidelines.

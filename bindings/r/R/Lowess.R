@@ -3,6 +3,10 @@
 #' @description
 #' Create a stateful LOWESS model for batch smoothing.
 #'
+#' @srrstats {G2.0} Input validation for fraction and iterations.
+#' @srrstats {G2.1} Parameter bounds checking (fraction 0-1, iterations >= 0).
+#' @srrstats {RE2.0} Kernel, robustness, boundary, and scaling configurable.
+#'
 #' @param fraction Smoothing fraction (0 to 1). Default: 0.67.
 #' @param iterations Robustness iterations. Default: 3.
 #' @param delta Interpolation threshold. NULL = auto.

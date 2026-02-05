@@ -2,6 +2,13 @@
 //!
 //! This module provides kernel functions that define distances-based weights for
 //! local regression. It controls the influence of neighboring points on the fit.
+//!
+//! ## srrstats Compliance
+//!
+//! @srrstats {RE2.3} Multiple kernel functions: Tricube (default), Gaussian, Epanechnikov,
+//!   Biweight, Triangle, Cosine, Uniform. Each implements distance-based weighting.
+//! @srrstats {G1.2} Mathematical properties documented for each kernel: integrator (c_K),
+//!   variance (mu_2), roughness (R), and AMISE efficiency relative to Epanechnikov.
 
 // External dependencies
 use core::f64::consts::{PI, SQRT_2};

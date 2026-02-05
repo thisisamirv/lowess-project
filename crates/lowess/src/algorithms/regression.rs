@@ -5,6 +5,16 @@
 //! - Context for managing regression state.
 //! - Generic and SIMD-optimized solvers for weighted least squares (WLS).
 //! - Data structures for calibration and fitting results.
+//!
+//! ## srrstats Compliance
+//!
+//! @srrstats {RE1.0} Input validation: x/y slices must have matching lengths; empty inputs return defaults.
+//! @srrstats {RE1.3} Implements weighted least squares (WLS) via `fit_wls` for local regression.
+//! @srrstats {RE2.0} Core LOWESS algorithm: local linear fits with distance-based kernel weighting.
+//! @srrstats {RE2.1} Predictions at fitted x-values via `LinearFit::predict`.
+//! @srrstats {G2.0} Slice lengths validated; mismatched lengths would panic at runtime.
+//! @srrstats {G2.1} Edge cases documented: zero-length input returns zero-initialized result.
+//! @srrstats {G2.4} Numeric tolerance (1e-12) used for near-zero variance detection.
 
 // External dependencies
 use core::fmt::Debug;

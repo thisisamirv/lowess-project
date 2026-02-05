@@ -3,6 +3,11 @@
 //! This module provides the parallel cross-validation logic for selecting the
 //! optimal smoothing fraction. It utilizes all available CPU cores to evaluate
 //! multiple candidate fractions concurrently.
+//!
+//! ## srrstats Compliance
+//!
+//! @srrstats {RE6.0} Parallel CV: fraction candidates evaluated concurrently.
+//! @srrstats {G3.0} Rayon-based parallelization for bandwidth grid search.
 
 // External dependencies
 #[cfg(feature = "cpu")]

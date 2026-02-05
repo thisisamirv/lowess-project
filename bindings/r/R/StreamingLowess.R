@@ -3,6 +3,9 @@
 #' @description
 #' Create a stateful LOWESS model for streaming data.
 #'
+#' @srrstats {G2.0} Input validation for fraction, chunk_size.
+#' @srrstats {G1.6} Memory-efficient streaming for large datasets.
+#'
 #' @param fraction Smoothing fraction.
 #' @param chunk_size Points per chunk.
 #' @param overlap Overlap between chunks.

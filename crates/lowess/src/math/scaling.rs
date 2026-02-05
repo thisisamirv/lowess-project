@@ -2,6 +2,11 @@
 //!
 //! This module provides robust scale estimation methods, which are resistant
 //! to outliers.
+//!
+//! ## srrstats Compliance
+//!
+//! @srrstats {G2.5} Robust scale estimation: MAD (default), MAR, and Mean methods.
+//! @srrstats {G2.7} Quickselect-based median for O(n) performance.
 
 // External dependencies
 use core::cmp::Ordering::Equal;

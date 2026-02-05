@@ -3,6 +3,12 @@
 //! This module provides comprehensive diagnostic tools for evaluating the
 //! quality of LOWESS smoothing results. It computes goodness-of-fit metrics,
 //! model selection criteria, and coverage statistics.
+//!
+//! ## srrstats Compliance
+//!
+//! @srrstats {RE3.0} Goodness-of-fit metrics: RMSE, MAE, R² (coefficient of determination).
+//! @srrstats {RE3.2} Model selection criteria: AIC, AICc with finite-sample correction.
+//! @srrstats {G2.6} Standard error estimation from residuals via MAD-based sigma.
 
 // External dependencies
 use core::fmt::{Display, Formatter, Result};

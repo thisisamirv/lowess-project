@@ -10,6 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+**lowess:**
+
+- Added srr tags
+
+**fastLowess:**
+
+- Added srr tags
+
 **Julia:**
 
 - Added `mean` scaling method (Mean Absolute Deviation)
@@ -22,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added `mean` scaling method (Mean Absolute Deviation)
 - Implemented `print` and `plot` methods for `LowessResult` objects
+- Added srr tags
 
 **Python:**
 

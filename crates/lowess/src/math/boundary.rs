@@ -3,6 +3,11 @@
 //! This module implements boundary padding strategies to reduce smoothing bias at
 //! data edges. By providing context beyond the original boundaries, local
 //! regression can perform better near the start and end of the dataset.
+//!
+//! ## srrstats Compliance
+//!
+//! @srrstats {RE2.0} Boundary padding strategies (Extend, Reflect, Zero) reduce edge effects.
+//! @srrstats {G2.1} Edge case handling: boundary policies configurable per-fit.
 
 // Feature-gated imports
 #[cfg(not(feature = "std"))]

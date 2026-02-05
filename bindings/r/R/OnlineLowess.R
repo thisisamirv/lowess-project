@@ -3,6 +3,9 @@
 #' @description
 #' Create a stateful LOWESS model for real-time online data.
 #'
+#' @srrstats {G2.0} Input validation for fraction, window_capacity, min_points.
+#' @srrstats {G1.6} Sliding window for incremental updates.
+#'
 #' @param fraction Smoothing fraction.
 #' @param window_capacity Max points in sliding window.
 #' @param min_points Minimum points before smoothing.

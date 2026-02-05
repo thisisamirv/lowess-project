@@ -3,6 +3,11 @@
 //! This module provides parallel logic for computing standard errors and
 //! confidence/prediction intervals. It distributes the uncertainty calculations
 //! across CPU cores for maximum performance on large datasets.
+//!
+//! ## srrstats Compliance
+//!
+//! @srrstats {RE5.0} Parallel SE computation for confidence/prediction intervals.
+//! @srrstats {G3.0} Rayon par_iter for pointwise interval estimation.
 
 // External dependencies
 #[cfg(feature = "cpu")]

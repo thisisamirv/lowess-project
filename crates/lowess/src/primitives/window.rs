@@ -2,6 +2,11 @@
 //!
 //! This module provides low-level data structures for managing sliding windows
 //! over sorted datasets, ensuring each local regression uses the nearest neighbors.
+//!
+//! ## srrstats Compliance
+//!
+//! @srrstats {RE2.1} Nearest-neighbor windowing for local regression bandwidth.
+//! @srrstats {G2.1} Window span calculation from fraction with epsilon handling.
 
 // External dependencies
 use num_traits::Float;

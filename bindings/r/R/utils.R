@@ -4,6 +4,9 @@
 #' Internal helper to validate x, y, fraction, and iterations inputs and
 #' force them to the correct types for Rust FFI.
 #'
+#' @srrstats {G2.0} Validates matching lengths, minimum points, numeric types.
+#' @srrstats {G2.3} Informative error messages for invalid inputs.
+#'
 #' @param x Numeric vector
 #' @param y Numeric vector
 #' @param fraction Numeric

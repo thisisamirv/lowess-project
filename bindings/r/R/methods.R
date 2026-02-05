@@ -1,5 +1,7 @@
 #' Print Lowess Model
 #'
+#' @srrstats {G1.3} S3 print methods for model objects.
+#'
 #' @param x A Lowess object.
 #' @param ... Additional arguments (ignored).
 #' @export

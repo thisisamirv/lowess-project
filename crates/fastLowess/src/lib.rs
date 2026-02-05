@@ -200,6 +200,12 @@
 //! - Cleveland, W. S. (1979). "Robust Locally Weighted Regression and Smoothing Scatterplots"
 //! - Cleveland, W. S. (1981). "LOWESS: A Program for Smoothing Scatterplots by Robust Locally Weighted Regression"
 //!
+//! ## srrstats Compliance for rOpenSci Statistical Software Review
+//!
+//! @srrstats {G1.0} Statistical literature references documented above (Cleveland 1979, 1981).
+//! @srrstats {G1.5} Parallel execution via Rayon for multi-threaded performance.
+//! @srrstats {G3.0} ndarray integration for zero-copy data passing and numerical operations.
+//!
 //! ## License
 //!
 //! See the repository for license information and contribution guidelines.

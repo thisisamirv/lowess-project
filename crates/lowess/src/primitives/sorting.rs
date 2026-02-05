@@ -2,6 +2,11 @@
 //!
 //! This module provides utilities for sorting input data by x-coordinates and
 //! mapping results back to the original order.
+//!
+//! ## srrstats Compliance
+//!
+//! @srrstats {G2.0} Data preprocessing: stable sort by x-coordinates for determinism.
+//! @srrstats {RE1.0} Index mapping for unsort restores original input order.
 
 // External dependencies
 #[cfg(not(feature = "std"))]

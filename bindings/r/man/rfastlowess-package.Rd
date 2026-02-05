@@ -7,15 +7,15 @@
 \title{rfastlowess: High-performance LOWESS Smoothing for R}
 \description{
 A high-performance LOWESS (Locally Weighted Scatterplot Smoothing)
-implementation built on the Rust `fastLowess` crate.
+implementation built on the Rust \code{fastLowess} crate.
 }
 \section{Main Classes}{
 
 \itemize{
-  \item \code{\link{Lowess}}: Primary interface for batch processing
-  \item \code{\link{StreamingLowess}}: Chunked processing for large
-    datasets
-  \item \code{\link{OnlineLowess}}: Sliding window for real-time data
+\item \code{\link{Lowess}}: Primary interface for batch processing
+\item \code{\link{StreamingLowess}}: Chunked processing for large
+datasets
+\item \code{\link{OnlineLowess}}: Sliding window for real-time data
 }
 }
 

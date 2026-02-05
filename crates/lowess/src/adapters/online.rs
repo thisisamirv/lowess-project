@@ -3,6 +3,11 @@
 //! This module provides the online (incremental) execution adapter for LOWESS
 //! smoothing. It maintains a sliding window of recent observations and produces
 //! smoothed values for new points as they arrive.
+//!
+//! ## srrstats Compliance
+//!
+//! @srrstats {G1.6} Sliding window for real-time incremental updates.
+//! @srrstats {G2.1} Configurable minimum points before smoothing activates.
 
 // External dependencies
 #[cfg(not(feature = "std"))]
