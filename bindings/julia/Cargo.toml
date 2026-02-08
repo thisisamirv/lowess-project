@@ -1,6 +1,6 @@
 [package]
 name = "fastlowess-jl"
-version = "0.99.9"
+version = "1.0.0"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
@@ -19,7 +19,3 @@ fastLowess = { version = "1.1", features = ["dev", "cpu"] }
 [lib]
 name = "fastlowess_jl"
 crate-type = ["cdylib"]
-
-[features]
-default = []
-dev = []

@@ -1,6 +1,6 @@
 [package]
 name = "rfastlowess"
-version = "0.99.10"
+version = "1.0.0"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
@@ -16,7 +16,7 @@ categories = ["science", "algorithms"]
 # Build
 [dependencies]
 fastLowess = { path = "vendor/fastLowess", features = ["dev", "cpu"] }
-extendr-api = "0.8.1"
+extendr-api = "0.8"
 
 [lib]
 name = "rfastlowess"

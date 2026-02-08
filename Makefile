@@ -262,6 +262,10 @@ r:
 
 _r_impl:
 	@echo "Running $(R_PKG_NAME) checks..."
+	@# Sync version from Cargo.toml to DESCRIPTION
+	@VERSION=$$(grep "^version =" $(R_DIR)/src/Cargo.toml | head -n1 | sed 's/version = "\(.*\)"/\1/'); \
+	sed -i "s/^Version: .*/Version: $$VERSION/" $(R_DIR)/DESCRIPTION; \
+	echo "Synced DESCRIPTION version to $$VERSION"
 	@if [ -f $(R_DIR)/src/Cargo.toml.orig ]; then \
 		mv $(R_DIR)/src/Cargo.toml.orig $(R_DIR)/src/Cargo.toml; \
 	elif [ ! -f $(R_DIR)/src/Cargo.toml ] && [ -f $(R_DIR)/src/Cargo.toml.test ]; then \
@@ -415,39 +419,39 @@ _julia_impl:
 	@echo "=============================================================================="
 	@echo "1. Formatting..."
 	@echo "=============================================================================="
-	@cargo fmt -p $(JL_PKG) -- --check
+	@cd $(JL_DIR) && cargo fmt -- --check
 	@echo "Formatting complete!"
 	@echo "=============================================================================="
 	@echo "2. Linting..."
 	@echo "=============================================================================="
-	@cargo clippy -q -p $(JL_PKG) --all-targets -- -D warnings
+	@cd $(JL_DIR) && cargo clippy -q --all-targets -- -D warnings
 	@echo "Linting Julia files..."
 	@julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.add("JuliaFormatter"); using JuliaFormatter; format(["bindings/julia/julia", "tests/julia", "examples/julia"], verbose=true, overwrite=false) ? exit(0) : exit(1)'
 	@echo "=============================================================================="
 	@echo "3. Building..."
 	@echo "=============================================================================="
-	@cargo build -q -p $(JL_PKG) --release
-	@RUSTDOCFLAGS="-D warnings" cargo doc -q -p $(JL_PKG) --no-deps
+	@cd $(JL_DIR) && cargo build -q --release
+	@cd $(JL_DIR) && RUSTDOCFLAGS="-D warnings" cargo doc -q --no-deps
 	@echo "=============================================================================="
 	@echo "4. Testing Rust library..."
 	@echo "=============================================================================="
-	@cargo test -q -p $(JL_PKG)
+	@cd $(JL_DIR) && cargo test -q
 	@echo "=============================================================================="
 	@echo "5. Verifying library exports..."
 	@echo "=============================================================================="
-	@nm -D target/release/libfastlowess_jl.so 2>/dev/null | grep -q jl_lowess_new || \
+	@nm -D $(JL_DIR)/target/release/libfastlowess_jl.so 2>/dev/null | grep -q jl_lowess_new || \
 		(echo "Error: jl_lowess_new not exported"; exit 1)
-	@nm -D target/release/libfastlowess_jl.so 2>/dev/null | grep -q jl_streaming_lowess_new || \
+	@nm -D $(JL_DIR)/target/release/libfastlowess_jl.so 2>/dev/null | grep -q jl_streaming_lowess_new || \
 		(echo "Error: jl_streaming_lowess_new not exported"; exit 1)
-	@nm -D target/release/libfastlowess_jl.so 2>/dev/null | grep -q jl_online_lowess_new || \
+	@nm -D $(JL_DIR)/target/release/libfastlowess_jl.so 2>/dev/null | grep -q jl_online_lowess_new || \
 		(echo "Error: jl_online_lowess_new not exported"; exit 1)
-	@nm -D target/release/libfastlowess_jl.so 2>/dev/null | grep -q jl_lowess_free_result || \
+	@nm -D $(JL_DIR)/target/release/libfastlowess_jl.so 2>/dev/null | grep -q jl_lowess_free_result || \
 		(echo "Error: jl_lowess_free_result not exported"; exit 1)
 	@echo "All exports verified!"
 	@echo "=============================================================================="
 	@echo "6. Testing Julia bindings..."
 	@echo "=============================================================================="
-	@export FASTLOWESS_LIB=$(PWD)/target/release/libfastlowess_jl.so && \
+	@export FASTLOWESS_LIB=$(PWD)/$(JL_DIR)/target/release/libfastlowess_jl.so && \
 	julia --project=$(JL_DIR)/julia -e 'using Pkg; Pkg.resolve(); Pkg.instantiate(); Pkg.precompile()' && \
 	julia --project=$(JL_DIR)/julia tests/julia/test_fastlowess.jl
 	@echo "$(JL_PKG) checks completed successfully!"

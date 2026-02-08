@@ -6,74 +6,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 1.1.2
+
+### Added
+
+**fastLowess:**
+
+- Added srr tags
+
+## 1.1.1
 
 ### Added
 
 **lowess:**
 
 - Added srr tags
-
-**fastLowess:**
-
-- Added srr tags
-
-**Julia:**
-
-- Added `mean` scaling method (Mean Absolute Deviation)
-
-**C++:**
-
-- Added `mean` scaling method (Mean Absolute Deviation)
-
-**R:**
-
-- Added `mean` scaling method (Mean Absolute Deviation)
-- Implemented `print` and `plot` methods for `LowessResult` objects
-- Added srr tags
-
-**Python:**
-
-- Added `mean` scaling method (Mean Absolute Deviation)
-
-**Node.js:**
-
-- Added `mean` scaling method (Mean Absolute Deviation)
-- Added JSDoc documentation to `lib.rs` for napi-rs generation
-- Added asynchronous support for batch processing
-
-**WASM:**
-
-- Added `mean` scaling method (Mean Absolute Deviation)
-- Added an `init_panic_hook` function in `src/lib.rs` to be called by JS users during startup.
-- Added JSDoc documentation to `lib.rs`
-- Refactored the verbose `Reflect::get` boilerplate using `serde` and `serde-wasm-bindgen`. This allows us to define a Rust struct `SmoothOptions` and have `wasm-bindgen` automatically unpack the JS object into it.
-
-### Changed
-
-**C++:**
-
-- Replaced exception-based error handling with a type-safe `Expected<T>` result type for all core methods (`fit`, `process_chunk`, `finalize`, `add_points`).
-- Refactored the internal FFI layer to use the idiomatic Rust `From` trait for converting result types.
-- Updated all C++ examples and tests to use the new `Expected` pattern, aligning the library with modern C++ practices.
-
-**Julia:**
-
-- Wrapped all FFI functions in std::panic::catch_unwind. This ensures that if the Rust library panics (e.g., due to an internal assertion), it will be caught and reported as an error to Julia.
-
-**WASM:**
-
-- Updated `globals` and `eslint-plugin-html` packages to their latest versions.
-
-**Python:**
-
-- Wrapped the heavy computation logic in `py.allow_threads` to allow Python to release the GIL during computation.
-
-**R:**
-
-- Return results as `LowessResult` S3 objects instead of raw vectors
-
-## 1.1.1
 
 ### Fixed
 
@@ -123,12 +70,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 1.0.0
 
+### Added
+
+**Julia:**
+
+- Added `mean` scaling method (Mean Absolute Deviation)
+
+**C++:**
+
+- Added `mean` scaling method (Mean Absolute Deviation)
+
+**R:**
+
+- Added `mean` scaling method (Mean Absolute Deviation)
+- Implemented `print` and `plot` methods for `LowessResult` objects
+- Added srr tags
+
+**Python:**
+
+- Added `mean` scaling method (Mean Absolute Deviation)
+
+**Node.js:**
+
+- Added `mean` scaling method (Mean Absolute Deviation)
+- Added JSDoc documentation to `lib.rs` for napi-rs generation
+- Added asynchronous support for batch processing
+
+**WASM:**
+
+- Added `mean` scaling method (Mean Absolute Deviation)
+- Added an `init_panic_hook` function in `src/lib.rs` to be called by JS users during startup.
+- Added JSDoc documentation to `lib.rs`
+- Refactored the verbose `Reflect::get` boilerplate using `serde` and `serde-wasm-bindgen`. This allows us to define a Rust struct `SmoothOptions` and have `wasm-bindgen` automatically unpack the JS object into it.
+
 ### Changed
 
 **lowess:**
 
 - Refactored the constants to make the library robust safely against custom numeric types.
 - Minor improvements to the documentation.
+
+**C++:**
+
+- Replaced exception-based error handling with a type-safe `Expected<T>` result type for all core methods (`fit`, `process_chunk`, `finalize`, `add_points`).
+- Refactored the internal FFI layer to use the idiomatic Rust `From` trait for converting result types.
+- Updated all C++ examples and tests to use the new `Expected` pattern, aligning the library with modern C++ practices.
+
+**Julia:**
+
+- Wrapped all FFI functions in std::panic::catch_unwind. This ensures that if the Rust library panics (e.g., due to an internal assertion), it will be caught and reported as an error to Julia.
+
+**WASM:**
+
+- Updated `eslint/js`, `eslint`, `globals`, and `eslint-plugin-html` packages to their latest versions.
+
+**Node.js:**
+
+- Updated `eslint/js`, `eslint`, and `globals` packages to their latest versions.
+
+**Python:**
+
+- Wrapped the heavy computation logic in `py.allow_threads` to allow Python to release the GIL during computation.
+
+**R:**
+
+- Return results as `LowessResult` S3 objects instead of raw vectors
 
 ## 0.99.9
 
