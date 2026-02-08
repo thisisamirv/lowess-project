@@ -19,17 +19,17 @@ using Random
 # Handle package loading - check if we're already in the fastlowess project
 using Pkg
 project_name = Pkg.project().name
-if project_name != "fastlowess"
+if project_name != "FastLOWESS"
     # Not in the fastlowess project, need to develop it
     script_dir = @__DIR__
     project_root = dirname(dirname(script_dir))
     julia_pkg_dir = joinpath(project_root, "bindings", "julia", "julia")
-    if !haskey(Pkg.project().dependencies, "fastlowess")
+    if !haskey(Pkg.project().dependencies, "FastLOWESS")
         Pkg.develop(path = julia_pkg_dir)
     end
 end
 
-using fastlowess
+using FastLOWESS
 
 @testset "fastlowess Julia Bindings" begin
 

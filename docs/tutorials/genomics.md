@@ -114,7 +114,7 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
 
 === "Julia"
     ```julia
-    using fastlowess
+    using FastLOWESS
 
     # positions and observed are your methylation data
     result = smooth(
@@ -262,7 +262,7 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
 
 === "Julia"
     ```julia
-    using fastlowess
+    using FastLOWESS
 
     # positions and observed are your ChIP-seq data
     result = smooth(

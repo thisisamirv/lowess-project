@@ -75,8 +75,7 @@ Install the LOWESS library for your preferred language.
     === "From General Registry (recommended)"
 
     ```julia
-    using Pkg
-    Pkg.add("fastlowess")
+    Pkg.add("FastLOWESS")
     ```
 
     === "From Source"
@@ -231,7 +230,7 @@ Install the LOWESS library for your preferred language.
 === "Julia"
 
     ```julia
-    using fastlowess
+    using FastLOWESS
     
     x = [1.0, 2.0, 3.0]
     y = [2.0, 4.0, 6.0]

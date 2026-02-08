@@ -34,7 +34,7 @@ R_PKG_TARBALL = $(R_PKG_NAME)_$(R_PKG_VERSION).tar.gz
 R_DIR := bindings/r
 
 # Julia bindings
-JL_PKG := fastlowess-jl
+JL_PKG := FastLOWESS
 JL_DIR := bindings/julia
 JL_TEST_DIR := tests/julia
 
@@ -453,13 +453,13 @@ _julia_impl:
 	@echo "=============================================================================="
 	@export FASTLOWESS_LIB=$(PWD)/$(JL_DIR)/target/release/libfastlowess_jl.so && \
 	julia --project=$(JL_DIR)/julia -e 'using Pkg; Pkg.resolve(); Pkg.instantiate(); Pkg.precompile()' && \
-	julia --project=$(JL_DIR)/julia tests/julia/test_fastlowess.jl
+	julia --project=$(JL_DIR)/julia tests/julia/test_FastLOWESS.jl
 	@echo "$(JL_PKG) checks completed successfully!"
 	@echo ""
 	@echo "To use in Julia:"
 	@echo "  julia> using Pkg"
 	@echo "  julia> Pkg.develop(path=\"$(JL_DIR)/julia\")"
-	@echo "  julia> using fastlowess"
+	@echo "  julia> using FastLOWESS"
 
 julia-clean:
 	@echo "Cleaning $(JL_PKG)..."

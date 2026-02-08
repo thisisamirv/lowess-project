@@ -56,7 +56,7 @@ julia --project=bindings/julia/julia examples/julia/online_smoothing.jl
 ## Quick Start
 
 ```julia
-using fastlowess
+using FastLOWESS
 
 # Generate sample data
 x = collect(0.0:0.1:10.0)

@@ -194,7 +194,7 @@ result = add_points(online, x::Vector{Float64}, y::Vector{Float64}) :: LowessRes
 ## Example
 
 ```julia
-using fastlowess
+using FastLOWESS
 
 x = collect(range(0, 10, length=100))
 y = sin.(x) .+ randn(100) .* 0.2

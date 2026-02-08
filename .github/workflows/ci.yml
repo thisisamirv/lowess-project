@@ -272,7 +272,7 @@ jobs:
           else
             export FASTLOWESS_LIB="target/release/libfastlowess_jl.so"
           fi
-          julia -e 'using Pkg; Pkg.activate("bindings/julia/julia"); Pkg.instantiate(); include("tests/julia/test_fastlowess.jl")'
+          julia -e 'using Pkg; Pkg.activate("bindings/julia/julia"); Pkg.instantiate(); include("tests/julia/test_FastLOWESS.jl")'
 
       - name: "Julia: Examples"
         shell: bash

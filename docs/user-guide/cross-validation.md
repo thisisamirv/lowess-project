@@ -63,7 +63,7 @@ Split data into K folds, train on K-1, validate on 1.
 
 === "Julia"
     ```julia
-    using fastlowess
+    using FastLOWESS
 
     result = smooth(
         x, y,

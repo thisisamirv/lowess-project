@@ -23,7 +23,7 @@ if project_name != "fastlowess"
     end
 end
 
-using fastlowess
+using FastLOWESS
 
 function main()
     println("=== fastlowess Streaming Mode Example ===")

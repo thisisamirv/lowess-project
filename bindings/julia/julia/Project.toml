@@ -1,4 +1,4 @@
-name = "fastlowess"
+name = "FastLOWESS"
 uuid = "a1b2c3d4-5678-90ab-cdef-1234567890ab"
 version = "1.0.0"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]

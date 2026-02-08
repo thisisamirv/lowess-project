@@ -1,5 +1,5 @@
 """
-    fastlowess
+    FastLOWESS
 
 High-performance LOWESS (Locally Weighted Scatterplot Smoothing) for Julia.
 
@@ -12,7 +12,7 @@ Provides bindings to the fastlowess Rust library for fast, robust LOWESS smoothi
 
 # Example
 ```julia
-using fastlowess
+using FastLOWESS
 
 x = collect(1.0:0.1:10.0)
 y = sin.(x) .+ 0.1 .* randn(length(x))
@@ -21,7 +21,7 @@ result = smooth(x, y, fraction=0.3)
 println("Smoothed values: ", result.y)
 ```
 """
-module fastlowess
+module FastLOWESS
 
 export Lowess, StreamingLowess, OnlineLowess
 export fit, process_chunk, finalize, add_points
@@ -604,4 +604,4 @@ function add_points(o::OnlineLowess, x::Vector{Float64}, y::Vector{Float64})
     return convert_result(c_result)
 end
 
-end # module
+end # module FastLOWESS

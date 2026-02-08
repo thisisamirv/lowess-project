@@ -81,7 +81,7 @@ For true real-time applications where each point must be processed immediately.
 
 === "Julia"
     ```julia
-    using fastlowess
+    using FastLOWESS
 
     # Simulate sensor readings 
     times = collect(Float64, 1:100)

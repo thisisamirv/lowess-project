@@ -27,7 +27,7 @@ if project_name != "fastlowess"
     end
 end
 
-using fastlowess
+using FastLOWESS
 
 function generate_sample_data(n_points = 1000)
     """
