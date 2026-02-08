@@ -221,6 +221,13 @@ jobs:
           nm -D target/release/libfastlowess_jl.so | grep -q jl_online_lowess_new || exit 1
           nm -D target/release/libfastlowess_jl.so | grep -q jl_lowess_free_result || exit 1
 
+      - name: "Julia: Relax JLL dependency for CI"
+        shell: bash
+        run: |
+          # Allow CI to run with older JLL metadata since 1.0.0 isn't registered yet
+          # The local binary will be injected via FASTLOWESS_LIB
+          sed -i 's/fastlowess_jll = "1.0.0"/fastlowess_jll = ">= 0.99"/' bindings/julia/julia/Project.toml
+
       - name: "Julia: Tests"
         shell: bash
         run: |
