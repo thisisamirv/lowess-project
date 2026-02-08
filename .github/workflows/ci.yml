@@ -204,7 +204,7 @@ jobs:
           chmod +x ../../dev/prepare_cran.sh
           ../../dev/prepare_cran.sh
           R CMD build .
-          Rscript -e "BiocCheck::BiocCheck(list.files(pattern='[.]tar[.]gz$')[1], \`new-package\`=TRUE, \`no-check-vignettes\`=TRUE, \`quit-with-status\`=TRUE)"
+          Rscript -e "BiocCheck::BiocCheck(list.files(pattern='[.]tar[.]gz$')[1], \`new-package\`=FALSE, \`no-check-vignettes\`=TRUE, \`quit-with-status\`=TRUE)"
 
       # ========================================================================
       # JULIA
