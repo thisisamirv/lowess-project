@@ -1,6 +1,6 @@
 #!/usr/bin/env julia
 """
-fastlowess Streaming Smoothing Example
+FastLOWESS Streaming Smoothing Example
 
 This example demonstrates streaming LOWESS smoothing for large datasets:
 - Basic chunked processing
@@ -11,35 +11,35 @@ This example demonstrates streaming LOWESS smoothing for large datasets:
 using Random
 using Printf
 
-# Handle package loading - check if we're already in the fastlowess project
+# Handle package loading - check if we're already in the FastLOWESS project
 using Pkg
 project_name = Pkg.project().name
-if project_name != "fastlowess"
-    # Not in the fastlowess project, need to develop it
+if project_name != "FastLOWESS"
+    # Not in the FastLOWESS project, need to develop it
     script_dir = @__DIR__
     julia_pkg_dir = joinpath(dirname(script_dir), "julia")
-    if !haskey(Pkg.project().dependencies, "fastlowess")
-        Pkg.develop(path = julia_pkg_dir)
+    if !haskey(Pkg.project().dependencies, "FastLOWESS")
+        Pkg.develop(path=julia_pkg_dir)
     end
 end
 
 using FastLOWESS
 
 function main()
-    println("=== fastlowess Streaming Mode Example ===")
+    println("=== FastLOWESS Streaming Mode Example ===")
 
     # 1. Generate Very Large Dataset
     # 100,000 points
     n_points = 100_000
     println("Generating large dataset: $n_points points...")
     Random.seed!(42)
-    x = collect(range(0, 100, length = n_points))
+    x = collect(range(0, 100, length=n_points))
     y = cos.(x .* 0.1) .+ randn(n_points) .* 0.5
 
     # 2. Regular Batch Smoothing (for comparison)
     println("Running Batch LOWESS (Parallel)...")
     batch_start = time()
-    res_batch = fit(Lowess(fraction = 0.01), x, y)
+    res_batch = fit(Lowess(fraction=0.01), x, y)
     batch_time = time() - batch_start
     @printf("Batch took: %.4f seconds\n", batch_time)
 
@@ -48,7 +48,7 @@ function main()
     println("Running Streaming LOWESS (Chunked)...")
     stream_start = time()
     model =
-        StreamingLowess(fraction = 0.01, chunk_size = 2000, overlap = 200, parallel = true)
+        StreamingLowess(fraction=0.01, chunk_size=2000, overlap=200, parallel=true)
     res_stream = process_chunk(model, x, y)
     append!(res_stream, finalize(model))
     stream_time = time() - stream_start

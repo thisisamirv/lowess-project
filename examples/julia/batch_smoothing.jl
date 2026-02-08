@@ -1,6 +1,6 @@
 #!/usr/bin/env julia
 """
-fastlowess Batch Smoothing Example
+FastLOWESS Batch Smoothing Example
 
 This example demonstrates batch LOWESS smoothing features:
 - Basic smoothing with different parameters
@@ -15,26 +15,26 @@ processing complete datasets that fit in memory.
 using Random
 using Printf
 
-# Handle package loading - check if we're already in the fastlowess project
+# Handle package loading - check if we're already in the FastLOWESS project
 using Pkg
 project_name = Pkg.project().name
-if project_name != "fastlowess"
-    # Not in the fastlowess project, need to develop it
+if project_name != "FastLOWESS"
+    # Not in the FastLOWESS project, need to develop it
     script_dir = @__DIR__
     julia_pkg_dir = joinpath(dirname(script_dir), "julia")
-    if !haskey(Pkg.project().dependencies, "fastlowess")
-        Pkg.develop(path = julia_pkg_dir)
+    if !haskey(Pkg.project().dependencies, "FastLOWESS")
+        Pkg.develop(path=julia_pkg_dir)
     end
 end
 
 using FastLOWESS
 
-function generate_sample_data(n_points = 1000)
+function generate_sample_data(n_points=1000)
     """
     Generate complex sample data with a trend, seasonality, and outliers.
     """
     Random.seed!(42)
-    x = collect(range(0, 50, length = n_points))
+    x = collect(range(0, 50, length=n_points))
 
     # Trend + Seasonality
     y_true = 0.5 .* x .+ 5 .* sin.(x .* 0.5)
@@ -53,7 +53,7 @@ function generate_sample_data(n_points = 1000)
 end
 
 function main()
-    println("=== fastlowess Batch Smoothing Example ===")
+    println("=== FastLOWESS Batch Smoothing Example ===")
 
     # 1. Generate Data
     x, y, y_true = generate_sample_data(1000)
@@ -64,33 +64,33 @@ function main()
     # 2. Basic Smoothing (Default parameters)
     println("Running basic smoothing...")
     # Use a smaller fraction (0.05) to capture the sine wave seasonality
-    l_basic = Lowess(iterations = 0, fraction = 0.05)
+    l_basic = Lowess(iterations=0, fraction=0.05)
     res_basic = fit(l_basic, x, y)
 
     # 3. Robust Smoothing (IRLS)
     println("Running robust smoothing (3 iterations)...")
     l_robust = Lowess(
-        fraction = 0.05,
-        iterations = 3,
-        robustness_method = "bisquare",
-        return_robustness_weights = true,
+        fraction=0.05,
+        iterations=3,
+        robustness_method="bisquare",
+        return_robustness_weights=true,
     )
     res_robust = fit(l_robust, x, y)
 
     # 4. Uncertainty Quantification
     println("Computing confidence and prediction intervals...")
     l_intervals = Lowess(
-        fraction = 0.05,
-        confidence_intervals = 0.95,
-        prediction_intervals = 0.95,
-        return_diagnostics = true,
+        fraction=0.05,
+        confidence_intervals=0.95,
+        prediction_intervals=0.95,
+        return_diagnostics=true,
     )
     res_intervals = fit(l_intervals, x, y)
 
     # 5. Cross-Validation for optimal fraction
     println("Running cross-validation to find optimal fraction...")
     cv_fractions = [0.05, 0.1, 0.2, 0.4]
-    l_cv = Lowess(cv_fractions = cv_fractions, cv_method = "kfold", cv_k = 5)
+    l_cv = Lowess(cv_fractions=cv_fractions, cv_method="kfold", cv_k=5)
     res_cv = fit(l_cv, x, y)
     println("Optimal fraction found: $(res_cv.fraction_used)")
 
@@ -105,13 +105,13 @@ function main()
 
     # 6. Boundary Policy Comparison
     println("\nDemonstrating boundary policy effects on linear data...")
-    xl = collect(range(0, 10, length = 50))
+    xl = collect(range(0, 10, length=50))
     yl = 2 .* xl .+ 1
 
     # Compare policies
-    r_ext = fit(Lowess(fraction = 0.6, boundary_policy = "extend"), xl, yl)
-    r_ref = fit(Lowess(fraction = 0.6, boundary_policy = "reflect"), xl, yl)
-    r_zr = fit(Lowess(fraction = 0.6, boundary_policy = "zero"), xl, yl)
+    r_ext = fit(Lowess(fraction=0.6, boundary_policy="extend"), xl, yl)
+    r_ref = fit(Lowess(fraction=0.6, boundary_policy="reflect"), xl, yl)
+    r_zr = fit(Lowess(fraction=0.6, boundary_policy="zero"), xl, yl)
 
     println("Boundary policy comparison:")
     println(

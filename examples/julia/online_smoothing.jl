@@ -1,6 +1,6 @@
 #!/usr/bin/env julia
 """
-fastlowess Online Smoothing Example
+FastLOWESS Online Smoothing Example
 
 This example demonstrates online LOWESS smoothing for real-time data:
 - Basic incremental processing with streaming data
@@ -17,22 +17,22 @@ The OnlineLowess class is designed for:
 using Random
 using Printf
 
-# Handle package loading - check if we're already in the fastlowess project
+# Handle package loading - check if we're already in the FastLOWESS project
 using Pkg
 project_name = Pkg.project().name
-if project_name != "fastlowess"
-    # Not in the fastlowess project, need to develop it
+if project_name != "FastLOWESS"
+    # Not in the FastLOWESS project, need to develop it
     script_dir = @__DIR__
     julia_pkg_dir = joinpath(dirname(script_dir), "julia")
-    if !haskey(Pkg.project().dependencies, "fastlowess")
-        Pkg.develop(path = julia_pkg_dir)
+    if !haskey(Pkg.project().dependencies, "FastLOWESS")
+        Pkg.develop(path=julia_pkg_dir)
     end
 end
 
 using FastLOWESS
 
 function main()
-    println("=== fastlowess Online Smoothing Example ===")
+    println("=== FastLOWESS Online Smoothing Example ===")
 
     # 1. Simulate a real-time signal
     # A sine wave with changing frequency and random noise
@@ -52,20 +52,20 @@ function main()
     # Full Update Mode (higher accuracy)
     println("Processing with 'full' update mode...")
     model_full = OnlineLowess(
-        fraction = 0.3,
-        window_capacity = 50,
-        iterations = 3,
-        update_mode = "full",
+        fraction=0.3,
+        window_capacity=50,
+        iterations=3,
+        update_mode="full",
     )
     res_full = add_points(model_full, x, y)
 
     # Incremental Update Mode (faster for large windows)
     println("Processing with 'incremental' update mode...")
     model_inc = OnlineLowess(
-        fraction = 0.3,
-        window_capacity = 50,
-        iterations = 3,
-        update_mode = "incremental",
+        fraction=0.3,
+        window_capacity=50,
+        iterations=3,
+        update_mode="incremental",
     )
     res_inc = add_points(model_inc, x, y)
 

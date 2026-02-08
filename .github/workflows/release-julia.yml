@@ -9,10 +9,6 @@ on:
         description: "Version to update to (without v prefix, e.g., 0.1.2)"
         required: true
         type: string
-      commit:
-        description: "Commit hash for this version"
-        required: true
-        type: string
 
 permissions:
   contents: write
@@ -61,7 +57,7 @@ jobs:
             echo "Triggered by release: $VERSION ($COMMIT)"
           else
             VERSION="${{ github.event.inputs.version }}"
-            COMMIT="${{ github.event.inputs.commit }}"
+            COMMIT=$(git rev-parse HEAD)
             echo "Triggered manually: $VERSION ($COMMIT)"
           fi
 
@@ -169,7 +165,7 @@ jobs:
           # Check if a PR already exists for this version
           EXISTING_PR=$(gh pr list \
             --repo JuliaPackaging/Yggdrasil \
-            --head "$OWNER:fastlowess-v$VERSION" \
+            --head "$OWNER:FastLOWESS-v$VERSION" \
             --json number \
             --jq '.[0].number' 2>/dev/null || echo "")
 
@@ -192,7 +188,7 @@ jobs:
         run: |
           cd yggdrasil-fork
 
-          BRANCH="fastlowess-v$VERSION"
+          BRANCH="FastLOWESS-v$VERSION"
 
           # Delete branch if it exists (for re-runs)
           git push origin --delete "$BRANCH" 2>/dev/null || true
@@ -207,13 +203,13 @@ jobs:
 
           # Commit
           git add F/fastlowess/build_tarballs.jl
-          git commit -m "[fastlowess] v$VERSION"
+          git commit -m "[FastLOWESS] v$VERSION"
 
           # Push to fork
           git push -u origin "$BRANCH"
 
           # Create PR
-          PR_BODY="## fastlowess v$VERSION
+          PR_BODY="## FastLOWESS v$VERSION
 
           Automated update via GitHub Actions from [${{ github.repository }}](https://github.com/${{ github.repository }}).
 
@@ -226,7 +222,7 @@ jobs:
             --repo JuliaPackaging/Yggdrasil \
             --head "$OWNER:$BRANCH" \
             --base master \
-            --title "[fastlowess] v$VERSION" \
+            --title "[FastLOWESS] v$VERSION" \
             --body "$PR_BODY")
 
           echo "✅ Pull Request created: $PR_URL"
@@ -242,7 +238,7 @@ jobs:
         run: |
           cd yggdrasil-fork
 
-          BRANCH="fastlowess-v$VERSION"
+          BRANCH="FastLOWESS-v$VERSION"
 
           # Checkout existing branch
           git fetch origin "$BRANCH" 2>/dev/null || git checkout -b "$BRANCH"
@@ -254,7 +250,7 @@ jobs:
 
           # Commit and push
           git add F/fastlowess/build_tarballs.jl
-          git commit -m "[fastlowess] v$VERSION - update" --allow-empty
+          git commit -m "[FastLOWESS] v$VERSION - update" --allow-empty
           git push origin "$BRANCH" --force
 
           echo "✅ Updated existing PR #$PR_NUMBER"
