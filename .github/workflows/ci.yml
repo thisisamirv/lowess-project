@@ -224,9 +224,42 @@ jobs:
       - name: "Julia: Relax JLL dependency for CI"
         shell: bash
         run: |
-          # Allow CI to run with older JLL metadata since 1.0.0 isn't registered yet
-          # The local binary will be injected via FASTLOWESS_LIB
-          sed -i 's/fastlowess_jll = "1.0.0"/fastlowess_jll = ">= 0.99"/' bindings/julia/julia/Project.toml
+          # Extract current version and compat requirement
+          VERSION=$(grep "^version =" bindings/julia/julia/Project.toml | cut -d '"' -f 2)
+          COMPAT=$(grep "fastlowess_jll =" bindings/julia/julia/Project.toml | cut -d '"' -f 2)
+          echo "Current Project Version: $VERSION"
+          echo "Current JLL Compat: $COMPAT"
+
+          # Query latest available JLL version from Registry
+          AVAILABLE=$(julia -e '
+            using Pkg
+            uuid = Base.UUID("7381d214-3001-5784-8d9a-8eb8e8688076")
+            try
+              # Use a lightweight check if possible, or update registry
+              # Registry.update() can be slow, but necessary for accuracy
+              Pkg.Registry.update()
+              regs = Pkg.Registry.reachable_registries()
+              latest = "0.99.9"
+              for reg in regs
+                if haskey(reg.pkgs, uuid)
+                  info = reg.pkgs[uuid]
+                  vers = keys(Pkg.Registry.all_versions(info))
+                  latest = string(maximum(vers))
+                  break
+                end
+              end
+              print(latest)
+            catch
+              print("0.99.9")
+            end')
+          echo "Latest Registered JLL Version: $AVAILABLE"
+
+          # Only relax if the required version exceeds what is currently registered
+          # (i.e., we are in the middle of a release for a new version)
+          if [ "$COMPAT" = "$VERSION" ]; then
+            echo "Relaxing JLL dependency: $COMPAT -> >= $AVAILABLE"
+            sed -i "s/fastlowess_jll = \"$COMPAT\"/fastlowess_jll = \">= $AVAILABLE\"/" bindings/julia/julia/Project.toml
+          fi
 
       - name: "Julia: Tests"
         shell: bash
