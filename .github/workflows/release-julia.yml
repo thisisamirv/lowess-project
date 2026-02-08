@@ -17,6 +17,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  issues: write
 
 jobs:
   update-yggdrasil:
@@ -269,3 +270,23 @@ jobs:
           echo "1. The JLL will be built for all platforms" >> $GITHUB_STEP_SUMMARY
           echo "2. A registration PR will be auto-created on General" >> $GITHUB_STEP_SUMMARY
           echo "3. After ~20 minutes, the package will be available" >> $GITHUB_STEP_SUMMARY
+
+  trigger-registration:
+    name: Trigger Registration
+    needs: update-yggdrasil
+    runs-on: ubuntu-latest
+    if: success()
+    steps:
+      - name: Trigger JuliaRegistrator
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.YGGDRASIL_TOKEN || secrets.GITHUB_TOKEN }}
+          script: |
+            const commit_sha = context.sha;
+            console.log(`Triggering registration for commit: ${commit_sha}`);
+            await github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: commit_sha,
+              body: '@JuliaRegistrator register subdir=bindings/julia/julia'
+            });
