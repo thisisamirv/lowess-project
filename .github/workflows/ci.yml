@@ -225,8 +225,9 @@ jobs:
         shell: bash
         run: |
           # Extract current version and compat requirement
-          VERSION=$(grep "^version =" bindings/julia/julia/Project.toml | cut -d '"' -f 2)
-          COMPAT=$(grep "fastlowess_jll =" bindings/julia/julia/Project.toml | cut -d '"' -f 2)
+          VERSION=$(grep "^version =" bindings/julia/julia/Project.toml | head -n 1 | cut -d '"' -f 2)
+          # Get fastlowess_jll from [compat] specifically to avoid UUID in [deps]
+          COMPAT=$(sed -n '/\[compat\]/,/\[/p' bindings/julia/julia/Project.toml | grep "fastlowess_jll" | cut -d '"' -f 2)
           echo "Current Project Version: $VERSION"
           echo "Current JLL Compat: $COMPAT"
 
@@ -258,7 +259,7 @@ jobs:
           # (i.e., we are in the middle of a release for a new version)
           if [ "$COMPAT" = "$VERSION" ]; then
             echo "Relaxing JLL dependency: $COMPAT -> >= $AVAILABLE"
-            sed -i "s/fastlowess_jll = \"$COMPAT\"/fastlowess_jll = \">= $AVAILABLE\"/" bindings/julia/julia/Project.toml
+            julia -e "path = \"bindings/julia/julia/Project.toml\"; write(path, replace(read(path, String), \"fastlowess_jll = \\\"$COMPAT\\\"\" => \"fastlowess_jll = \\\">= $AVAILABLE\\\"\"))"
           fi
 
       - name: "Julia: Tests"
