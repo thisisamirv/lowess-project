@@ -1,6 +1,6 @@
 [vendor_sources]
-lowess = "../../crates/lowess"
-fastLowess = "../../crates/fastLowess"
+lowess = "../../../crates/lowess"
+fastLowess = "../../../crates/fastLowess"
 
 [metadata]
 archive = "vendor.tar.xz"
