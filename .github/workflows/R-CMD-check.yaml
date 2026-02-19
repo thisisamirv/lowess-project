@@ -3,16 +3,8 @@ name: R-CMD-check
 on:
   push:
     branches: [main, master]
-    paths:
-      - "bindings/r/**"
-      - "tests/r/**"
-      - ".github/workflows/R-CMD-check.yaml"
   pull_request:
     branches: [main, master]
-    paths:
-      - "bindings/r/**"
-      - "tests/r/**"
-      - ".github/workflows/R-CMD-check.yaml"
 
 jobs:
   R-CMD-check:
