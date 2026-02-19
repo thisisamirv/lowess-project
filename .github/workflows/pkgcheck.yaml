@@ -31,12 +31,12 @@ jobs:
 
       - name: Install pkgcheck
         run: |
-          install.packages("remotes")
-          remotes::install_github("ropensci-review-tools/pkgcheck")
-          remotes::install_github("ropensci-review-tools/pkgstats")
+          install.packages(c("pkgcheck", "pkgstats"), repos = c("https://ropensci.r-universe.dev", "https://cloud.r-project.org"))
         shell: Rscript {0}
 
       - name: Run pkgcheck
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           library(pkgcheck)
           library(pkgstats)
