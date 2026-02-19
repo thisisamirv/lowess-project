@@ -15,7 +15,7 @@
   <a href="https://anaconda.org/conda-forge/libfastlowess"><img src="https://img.shields.io/badge/libfastlowess_(C++)-44A833?logo=anaconda&logoColor=white" alt="libfastlowess (C++)"></a>
   <a href="https://anaconda.org/conda-forge/r-rfastlowess"><img src="https://img.shields.io/badge/rfastlowess_(R)-44A833?logo=anaconda&logoColor=white" alt="rfastlowess (R)"></a>
   <br>
-  <a href="https://github.com/thisisamirv/lowess-project/actions/workflows/ci.yaml"><img src="https://github.com/thisisamirv/lowess-project/actions/workflows/ci.yaml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/thisisamirv/lowess-project/actions/workflows/ci.yml"><img src="https://github.com/thisisamirv/lowess-project/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
 </p>
 
 <p align="center">
