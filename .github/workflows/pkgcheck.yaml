@@ -29,6 +29,9 @@ jobs:
 
       - uses: r-lib/actions/setup-pandoc@v2
 
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev
+
       - name: Install pkgcheck
         run: |
           install.packages(c("pkgcheck", "pkgstats"), repos = c("https://ropensci.r-universe.dev", "https://cloud.r-project.org"))
