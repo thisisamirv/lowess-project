@@ -18,12 +18,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added test coverage evaluation.
 - Added missing srr tags.
 
+**Node.js:**
+
+- Added advanced License Compliance check.
+- Added advanced dependency check.
+- Added advanced outdated dependency check.
+- Added advanced lock file check.
+- Added advanced TypeScript check.
+
+**WASM:**
+
+- Added advanced License Compliance check.
+- Added advanced dependency check.
+- Added advanced outdated dependency check.
+- Added advanced lock file check.
+- Added WASM size check.
+
 ### Changed
 
 **R:**
 
 - Removed the `coerce_params` dead code.
 - Spread srr tags to different files and removed extra tags from `srr-stats-standards.R`.
+
+**Node.js:**
+
+- Switched from `eslint` to `oxlint` to remove vulnerabilities.
+
+**WASM:**
+
+- Switched from `eslint` to `oxlint` to remove vulnerabilities.
 
 ### Fixed
 
@@ -34,6 +58,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Node.js:**
 
 - Fixed vulnerabilities.
+
+**WASM:**
+
+- Fixed vulnerabilities.
+- Fixed license.
 
 ## 1.1.2
 

@@ -496,7 +496,13 @@ _nodejs_impl:
 	@cargo clippy -q -p $(NODE_PKG) --all-targets -- -D warnings
 	@echo "Linting Node.js files..."
 	@cd $(NODE_DIR) && npm install
-	@$(NODE_DIR)/node_modules/.bin/eslint --config $(NODE_DIR)/eslint.config.js $(NODE_DIR)/index.js tests/nodejs/test_fastlowess.js examples/nodejs/*.js
+	@cd $(NODE_DIR) && npm audit
+	@cd $(NODE_DIR) && npx -y license-checker --summary --failOn GPL
+	@cd $(NODE_DIR) && npx -y depcheck --ignores="fastlowess-*,oxlint"
+	@cd $(NODE_DIR) && (npm outdated | grep -v "fastlowess-" || true)
+	@cd $(NODE_DIR) && npm ci --dry-run
+	@cd $(NODE_DIR) && npx -y -p typescript tsc index.d.ts --noEmit --allowJs
+	@npx oxlint $(NODE_DIR)/index.js tests/nodejs/test_fastlowess.js examples/nodejs/*.js
 	@cd $(NODE_DIR) && npm run build
 	@echo "=============================================================================="
 	@echo "3. Testing..."
@@ -532,8 +538,15 @@ _wasm_impl:
 	@cargo clippy -q -p $(WASM_PKG) --all-targets -- -D warnings
 	@echo "Linting WASM JS files..."
 	@cd $(WASM_DIR) && npm install -q
-	@$(WASM_DIR)/node_modules/.bin/eslint --config $(WASM_DIR)/eslint.config.js tests/wasm/*.js
+	@cd $(WASM_DIR) && npm audit
+	@cd $(WASM_DIR) && npx -y license-checker --summary --failOn GPL
+	@cd $(WASM_DIR) && npx -y depcheck --ignores="oxlint"
+	@cd $(WASM_DIR) && (npm outdated | grep -v "fastlowess-" || true)
+	@cd $(WASM_DIR) && npm ci --dry-run
+	@npx oxlint $(WASM_DIR)/src/*.js tests/wasm/*.js
 	@cd $(WASM_DIR) && wasm-pack build --target nodejs --out-dir pkg
+	@echo "Checking WASM size (Limit: 2MB)..."
+	@[ $$(stat -c%s $(WASM_DIR)/pkg/fastlowess_wasm_bg.wasm) -le 2097152 ] || (echo "Error: WASM size exceeded 2MB"; exit 1)
 	@echo "Building for Web (Examples)..."
 	@cd $(WASM_DIR) && wasm-pack build --target web --out-dir pkg-web
 	@echo "=============================================================================="

@@ -33,10 +33,8 @@
     "fastlowess-win32-x64-msvc": "^1.0.0"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0",
     "@napi-rs/cli": "^3.5",
-    "eslint": "^10.0.0",
-    "globals": "^17.3"
+    "oxlint": "^1.48"
   },
   "engines": {
     "node": ">= 20"

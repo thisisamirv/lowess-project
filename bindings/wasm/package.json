@@ -2,14 +2,11 @@
   "name": "fastlowess-wasm",
   "version": "1.0.0",
   "description": "WASM bindings for fastlowess",
-  "private": true,
   "scripts": {
     "lint": "eslint src/*.js ../../tests/wasm/*.js"
   },
   "devDependencies": {
-    "eslint": "^10.0",
-    "@eslint/js": "^10.0",
-    "globals": "^17.3",
-    "eslint-plugin-html": "^8.1"
-  }
+    "oxlint": "^1.48"
+  },
+  "license": "MIT OR Apache-2.0"
 }
