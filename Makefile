@@ -290,7 +290,7 @@ _r_impl:
 	@echo "=============================================================================="
 	@Rscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); suppressWarnings(install.packages(c('styler', 'prettycode', 'covr', 'BiocManager', 'urlchecker', 'toml', 'V8', 'visNetwork'), quiet = TRUE))" || true
 	@Rscript -e "suppressWarnings(BiocManager::install('BiocCheck', quiet = TRUE, update = FALSE, ask = FALSE))" || true
-	@Rscript -e "remotes::install_github ('ropensci-review-tools/pkgcheck'); pak::pkg_install ('ropensci-review-tools/pkgcheck')"
+	@Rscript -e "remotes::install_github ('ropensci-review-tools/pkgcheck')"
 	@echo "R development packages installed!"
 	@echo "=============================================================================="
 	@echo "3. Vendoring..."
@@ -371,7 +371,7 @@ _r_impl:
 	@cd $(R_DIR) && Rscript -e "if (requireNamespace('BiocCheck', quietly=TRUE)) BiocCheck::BiocCheck('$(R_PKG_TARBALL)', new_package=FALSE)" || true
 	@echo "Package size (Limit: 5MB):"
 	@ls -lh $(R_DIR)/$(R_PKG_TARBALL) || true
-	@Rscript -e "library(c(pkgstats, pkgcheck)); pkgcheck(use_cache = FALSE)"
+	@Rscript -e "library(pkgstats); library(pkgcheck); pkgcheck(use_cache = FALSE)"
 	@if [ -f $(R_DIR)/src/Cargo.toml.orig ]; then mv $(R_DIR)/src/Cargo.toml.orig $(R_DIR)/src/Cargo.toml; fi
 
 	@echo "All $(R_PKG_NAME) checks completed successfully!"

@@ -25,6 +25,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed the `coerce_params` dead code.
 - Spread srr tags to different files and removed extra tags from `srr-stats-standards.R`.
 
+### Fixed
+
+**Monorepo:**
+
+- Fixed project logo.
+
+**Node.js:**
+
+- Fixed vulnerabilities.
+
 ## 1.1.2
 
 ### Added

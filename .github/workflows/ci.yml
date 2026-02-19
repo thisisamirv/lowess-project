@@ -1,4 +1,4 @@
-name: CI
+name: CI / R-CMD-check
 
 on:
   push:
@@ -17,8 +17,8 @@ jobs:
   # CONSOLIDATED CI JOB
   # Runs tests and examples for all languages sequentially on each OS
   # ============================================================================
-  ci:
-    name: CI (${{ matrix.os }})
+  r-cmd-check:
+    name: R-CMD-check (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

@@ -35,7 +35,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0",
     "@napi-rs/cli": "^3.5",
-    "eslint": "^10.0",
+    "eslint": "^10.0.0",
     "globals": "^17.3"
   },
   "engines": {
