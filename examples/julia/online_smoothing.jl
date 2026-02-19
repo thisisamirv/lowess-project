@@ -25,7 +25,7 @@ if project_name != "FastLOWESS"
     script_dir = @__DIR__
     julia_pkg_dir = joinpath(dirname(script_dir), "julia")
     if !haskey(Pkg.project().dependencies, "FastLOWESS")
-        Pkg.develop(path=julia_pkg_dir)
+        Pkg.develop(path = julia_pkg_dir)
     end
 end
 
@@ -52,20 +52,20 @@ function main()
     # Full Update Mode (higher accuracy)
     println("Processing with 'full' update mode...")
     model_full = OnlineLowess(
-        fraction=0.3,
-        window_capacity=50,
-        iterations=3,
-        update_mode="full",
+        fraction = 0.3,
+        window_capacity = 50,
+        iterations = 3,
+        update_mode = "full",
     )
     res_full = add_points(model_full, x, y)
 
     # Incremental Update Mode (faster for large windows)
     println("Processing with 'incremental' update mode...")
     model_inc = OnlineLowess(
-        fraction=0.3,
-        window_capacity=50,
-        iterations=3,
-        update_mode="incremental",
+        fraction = 0.3,
+        window_capacity = 50,
+        iterations = 3,
+        update_mode = "incremental",
     )
     res_inc = add_points(model_inc, x, y)
 

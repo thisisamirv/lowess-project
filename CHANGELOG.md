@@ -55,6 +55,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed project logo.
 
+**Julia:**
+
+- Linted examples.
+
 **Node.js:**
 
 - Fixed vulnerabilities.
@@ -63,6 +67,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed vulnerabilities.
 - Fixed license.
+
+**C++:**
+
+- Fixed memory leak in `OnlineLowess`.
 
 ## 1.1.2
 

@@ -25,3 +25,4 @@ jobs:
           post-to-issue: true
           summary-only: true
           append-to-issue: true
+          path: bindings/r

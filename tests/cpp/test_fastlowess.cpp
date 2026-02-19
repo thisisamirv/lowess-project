@@ -277,7 +277,7 @@ void test_online_basic() {
     std::vector<double> xi = {x[i]};
     std::vector<double> yi = {y[i]};
     // Result is rvalue from temporary Expected, needs move or const ref
-    const auto &res = online.add_points(xi, yi).value();
+    auto res = online.add_points(xi, yi).value();
     if (!res.y_vector().empty()) {
       points_out++;
     }

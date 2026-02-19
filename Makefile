@@ -34,7 +34,7 @@ R_PKG_TARBALL = $(R_PKG_NAME)_$(R_PKG_VERSION).tar.gz
 R_DIR := bindings/r
 
 # Julia bindings
-JL_PKG := FastLOWESS
+JL_PKG := fastlowess-jl
 JL_DIR := bindings/julia
 JL_TEST_DIR := tests/julia
 
@@ -393,9 +393,9 @@ r-clean:
 	fi
 	@(cd $(R_DIR)/src && cargo clean 2>/dev/null || true)
 	@rm -rf $(R_DIR)/src/vendor $(R_DIR)/target
-	@rm -rf $(R_DIR)/$(R_PKG_NAME).Rcheck $(R_DIR)/$(R_PKG_NAME).BiocCheck
+	@rm -rf $(R_DIR)/$(R_PKG_NAME).Rcheck $(R_DIR)/..Rcheck $(R_DIR)/$(R_PKG_NAME).BiocCheck
 	@rm -f $(R_DIR)/$(R_PKG_NAME)_*.tar.gz
-	@rm -rf $(R_DIR)/src/*.o $(R_DIR)/src/*.so $(R_DIR)/src/*.dll $(R_DIR)/src/Cargo.toml.orig $(R_DIR)/src/Cargo.lock
+	@rm -rf $(R_DIR)/src/*.o $(R_DIR)/src/*.so $(R_DIR)/src/*.dll $(R_DIR)/src/Cargo.toml.orig $(R_DIR)/src/Cargo.lock $(R_DIR)/Cargo.lock
 	@rm -rf $(R_DIR)/doc $(R_DIR)/Meta $(R_DIR)/vignettes/*.html $(R_DIR)/README.html
 	@find $(R_DIR) -name "*.Rout" -delete
 	@Rscript -e "try(remove.packages('$(R_PKG_NAME)'), silent = TRUE)" || true
@@ -445,21 +445,42 @@ _julia_impl:
 	@echo "=============================================================================="
 	@echo "5. Verifying library exports..."
 	@echo "=============================================================================="
-	@nm -D $(JL_DIR)/target/release/libfastlowess_jl.so 2>/dev/null | grep -q jl_lowess_new || \
+	@nm -D target/release/libfastlowess_jl.so 2>/dev/null | grep -q jl_lowess_new || \
 		(echo "Error: jl_lowess_new not exported"; exit 1)
-	@nm -D $(JL_DIR)/target/release/libfastlowess_jl.so 2>/dev/null | grep -q jl_streaming_lowess_new || \
+	@nm -D target/release/libfastlowess_jl.so 2>/dev/null | grep -q jl_streaming_lowess_new || \
 		(echo "Error: jl_streaming_lowess_new not exported"; exit 1)
-	@nm -D $(JL_DIR)/target/release/libfastlowess_jl.so 2>/dev/null | grep -q jl_online_lowess_new || \
+	@nm -D target/release/libfastlowess_jl.so 2>/dev/null | grep -q jl_online_lowess_new || \
 		(echo "Error: jl_online_lowess_new not exported"; exit 1)
-	@nm -D $(JL_DIR)/target/release/libfastlowess_jl.so 2>/dev/null | grep -q jl_lowess_free_result || \
+	@nm -D target/release/libfastlowess_jl.so 2>/dev/null | grep -q jl_lowess_free_result || \
 		(echo "Error: jl_lowess_free_result not exported"; exit 1)
 	@echo "All exports verified!"
 	@echo "=============================================================================="
+	@echo "5b. ABI size check (limit: 5 MB)..."
+	@echo "=============================================================================="
+	@[ $$(stat -c%s target/release/libfastlowess_jl.so) -le 5242880 ] || \
+		(echo "Error: libfastlowess_jl.so exceeds 5 MB ABI size limit"; exit 1)
+	@echo "ABI size OK."
+	@echo "=============================================================================="
 	@echo "6. Testing Julia bindings..."
 	@echo "=============================================================================="
-	@export FASTLOWESS_LIB=$(PWD)/$(JL_DIR)/target/release/libfastlowess_jl.so && \
+	@export FASTLOWESS_LIB=$(PWD)/target/release/libfastlowess_jl.so && \
 	julia --project=$(JL_DIR)/julia -e 'using Pkg; Pkg.resolve(); Pkg.instantiate(); Pkg.precompile()' && \
 	julia --project=$(JL_DIR)/julia tests/julia/test_FastLOWESS.jl
+	@echo "=============================================================================="
+	@echo "7. Aqua.jl package quality..."
+	@echo "=============================================================================="
+	@export FASTLOWESS_LIB=$(PWD)/target/release/libfastlowess_jl.so && \
+	julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.develop(path="$(JL_DIR)/julia"); \
+		Pkg.add("Aqua"); using Aqua, FastLOWESS; \
+		Aqua.test_all(FastLOWESS; ambiguities=false, stale_deps=(ignore=[:Aqua],))'
+	@echo "=============================================================================="
+	@echo "8. JET.jl type-inference check..."
+	@echo "=============================================================================="
+	@export FASTLOWESS_LIB=$(PWD)/target/release/libfastlowess_jl.so && \
+	julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.develop(path="$(JL_DIR)/julia"); \
+		Pkg.add("JET"); using JET, FastLOWESS; \
+		report = JET.report_package(FastLOWESS); \
+		if length(JET.get_reports(report)) > 0; @error "JET found type errors"; exit(1); end'
 	@echo "$(JL_PKG) checks completed successfully!"
 	@echo ""
 	@echo "To use in Julia:"
@@ -471,7 +492,8 @@ julia-clean:
 	@echo "Cleaning $(JL_PKG)..."
 	@cargo clean -p $(JL_PKG)
 	@rm -rf $(JL_DIR)/target
-	@rm -rf $(JL_DIR)/julia/src/Manifest.toml
+	@rm -rf $(JL_DIR)/julia/Manifest.toml
+	@rm -rf $(JL_DIR)/Cargo.lock
 	@echo "$(JL_PKG) clean complete!"
 
 # ==============================================================================
@@ -513,7 +535,7 @@ _nodejs_impl:
 nodejs-clean:
 	@echo "Cleaning $(NODE_PKG)..."
 	@cargo clean -p $(NODE_PKG)
-	@rm -rf $(NODE_DIR)/node_modules $(NODE_DIR)/fastlowess.node
+	@rm -rf $(NODE_DIR)/node_modules $(NODE_DIR)/fastlowess.*.node
 	@echo "$(NODE_PKG) clean complete!"
 
 # ==============================================================================
@@ -586,14 +608,43 @@ _cpp_impl:
 	@cargo clippy -q -p $(CPP_PKG) --all-targets -- -D warnings
 	@echo "Linting C++ files..."
 	@clang-tidy bindings/cpp/include/fastlowess.hpp tests/cpp/test_fastlowess.cpp examples/cpp/*.cpp -- -I bindings/cpp/include -std=c++17 || (echo "C++ linting failed"; exit 1)
+	@echo "Running cppcheck..."
+	@cppcheck --error-exitcode=1 --enable=warning,performance,portability \
+		--suppress=missingInclude --suppress=missingIncludeSystem \
+		-I $(CPP_DIR)/include \
+		$(CPP_DIR)/include/fastlowess.hpp tests/cpp/test_fastlowess.cpp examples/cpp/
 	@cargo build -q -p $(CPP_PKG) --release
 	@echo "C header generated at $(CPP_DIR)/include/fastlowess.h"
+	@echo "=============================================================================="
+	@echo "2b. cbindgen idempotency check..."
+	@echo "=============================================================================="
+	@cbindgen --config $(CPP_DIR)/cbindgen.toml --crate $(CPP_PKG) --output /tmp/fastlowess_new.h 2>/dev/null && \
+		diff -q $(CPP_DIR)/include/fastlowess.h /tmp/fastlowess_new.h > /dev/null || \
+		(echo "Error: fastlowess.h is stale — run 'cargo build -p $(CPP_PKG) --release' to regenerate"; exit 1)
+	@echo "cbindgen header is up-to-date."
+	@echo "=============================================================================="
+	@echo "2c. Symbol export verification..."
+	@echo "=============================================================================="
+	@nm -D target/release/libfastlowess_cpp.so 2>/dev/null | grep -q cpp_lowess_new || \
+		(echo "Error: cpp_lowess_new not exported"; exit 1)
+	@nm -D target/release/libfastlowess_cpp.so 2>/dev/null | grep -q cpp_streaming_new || \
+		(echo "Error: cpp_streaming_new not exported"; exit 1)
+	@nm -D target/release/libfastlowess_cpp.so 2>/dev/null | grep -q cpp_online_new || \
+		(echo "Error: cpp_online_new not exported"; exit 1)
+	@echo "All C++ exports verified."
 	@echo "=============================================================================="
 	@echo "3. Testing..."
 	@echo "=============================================================================="
 	@rm -rf tests/cpp/build
 	@mkdir -p tests/cpp/build
 	@cd tests/cpp/build && cmake .. && make && ./test_fastlowess_suite
+	@echo "=============================================================================="
+	@echo "3b. Valgrind memory check..."
+	@echo "=============================================================================="
+	@valgrind --leak-check=full --error-exitcode=1 --quiet \
+		tests/cpp/build/test_fastlowess_suite 2>&1 || \
+		(echo "Error: Valgrind detected memory errors"; exit 1)
+	@echo "Valgrind: no leaks."
 	@echo "$(CPP_PKG) checks completed successfully!"
 
 cpp-clean:
@@ -725,7 +776,7 @@ all-coverage: lowess-coverage fastLowess-coverage python-coverage r-coverage
 all-clean: r-clean lowess-clean fastLowess-clean python-clean julia-clean nodejs-clean wasm-clean cpp-clean
 	@echo "Cleaning project root..."
 	@cargo clean
-	@rm -rf target Cargo.lock .venv .ruff_cache .pytest_cache site docs-venv build bindings/python/.venv bindings/python/target crates/fastLowess/target crates/lowess/target .vscode tests/.pytest_cache
+	@rm -rf target Cargo.lock .venv .ruff_cache .pytest_cache site docs-venv build bindings/python/.venv bindings/python/target crates/fastLowess/target crates/lowess/target .vscode tests/.pytest_cache local_*.tar.gz
 	@echo "All clean completed!"
 
 .PHONY: lowess lowess-coverage lowess-clean fastLowess fastLowess-coverage fastLowess-clean python python-coverage python-clean r r-coverage r-clean julia julia-clean julia-update-commit nodejs nodejs-clean wasm wasm-clean cpp cpp-clean check-msrv docs docs-serve docs-clean all all-coverage all-clean examples examples-lowess examples-fastLowess examples-python examples-r examples-julia examples-nodejs examples-cpp
