@@ -1,4 +1,4 @@
-name: CI / R-CMD-check
+name: R-CMD-check
 
 on:
   push:
