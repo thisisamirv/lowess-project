@@ -1,4 +1,4 @@
-name: R-CMD-check
+name: CI
 
 on:
   push:
@@ -10,15 +10,13 @@ env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
   PIP_DISABLE_PIP_VERSION_CHECK: 1
-  GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   # ============================================================================
-  # CONSOLIDATED CI JOB
-  # Runs tests and examples for all languages sequentially on each OS
+  # CI JOB: Rust, Python, Julia, Node.js, WASM, C++
   # ============================================================================
-  r-cmd-check:
-    name: R-CMD-check (${{ matrix.os }})
+  ci:
+    name: CI (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -55,15 +53,6 @@ jobs:
         uses: julia-actions/setup-julia@v2
         with:
           version: "1.11"
-
-      - name: Setup R
-        uses: r-lib/actions/setup-r@v2
-        with:
-          r-version: release
-          use-public-rspm: true
-
-      - name: Setup Pandoc
-        uses: r-lib/actions/setup-pandoc@v2
 
       - name: Install wasm-pack
         uses: jetli/wasm-pack-action@v0.4.0
@@ -158,55 +147,6 @@ jobs:
           python ../../examples/python/online_smoothing.py
 
       # ========================================================================
-      # R
-      # ========================================================================
-      - name: "R: Setup Dependencies"
-        uses: r-lib/actions/setup-r-dependencies@v2
-        with:
-          working-directory: bindings/r
-          extra-packages: |
-            any::rcmdcheck
-            any::BiocCheck
-            any::XML
-            any::devtools
-            any::lintr
-            any::styler
-            any::BiocManager
-          needs: check
-
-      - name: "R: CMD Check"
-        uses: r-lib/actions/check-r-package@v2
-        with:
-          upload-snapshots: true
-          build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
-          error-on: '"error"'
-          working-directory: bindings/r
-
-      - name: "R: Install Package"
-        working-directory: bindings/r
-        run: Rscript -e "devtools::install(quiet = TRUE)"
-
-      - name: "R: Examples"
-        working-directory: bindings/r
-        run: |
-          Rscript ../../examples/r/batch_smoothing.R
-          Rscript ../../examples/r/streaming_smoothing.R
-          Rscript ../../examples/r/online_smoothing.R
-
-      - name: "R: Quality (BiocCheck/Lint)"
-        working-directory: bindings/r
-        shell: bash
-        run: |
-          mkdir -p ~/.R
-          echo "CXXFLAGS += -w" >> ~/.R/Makevars
-          echo "CFLAGS += -w" >> ~/.R/Makevars
-          Rscript -e "my_linters <- lintr::linters_with_defaults(indentation_linter = lintr::indentation_linter(indent = 4L), object_usage_linter = NULL); lintr::lint_dir('R', linters = my_linters)"
-          chmod +x ../../dev/prepare_cran.sh
-          ../../dev/prepare_cran.sh
-          R CMD build .
-          Rscript -e "BiocCheck::BiocCheck(list.files(pattern='[.]tar[.]gz$')[1], new_package=FALSE, no_check_vignettes=TRUE, quit_with_status=TRUE)"
-
-      # ========================================================================
       # JULIA
       # ========================================================================
       - name: "Julia: Build"
@@ -236,8 +176,6 @@ jobs:
             using Pkg
             uuid = Base.UUID("7381d214-3001-5784-8d9a-8eb8e8688076")
             try
-              # Use a lightweight check if possible, or update registry
-              # Registry.update() can be slow, but necessary for accuracy
               Pkg.Registry.update()
               regs = Pkg.Registry.reachable_registries()
               latest = "0.99.9"
@@ -256,7 +194,6 @@ jobs:
           echo "Latest Registered JLL Version: $AVAILABLE"
 
           # Only relax if the required version exceeds what is currently registered
-          # (i.e., we are in the middle of a release for a new version)
           if [ "$COMPAT" = "$VERSION" ]; then
             echo "Relaxing JLL dependency: $COMPAT -> >= $AVAILABLE"
             julia -e "path = \"bindings/julia/julia/Project.toml\"; write(path, replace(read(path, String), \"fastlowess_jll = \\\"$COMPAT\\\"\" => \"fastlowess_jll = \\\">= $AVAILABLE\\\"\"))"
@@ -361,33 +298,3 @@ jobs:
         run: |
           cargo fmt --all -- --check
           cargo clippy --all-targets -- -D warnings
-
-  # ============================================================================
-  # R - CLANG ASAN
-  # Kept as separate job due to container requirement
-  # ============================================================================
-  r-asan-check:
-    name: R - Clang ASAN
-    runs-on: ubuntu-latest
-    container:
-      image: rhub/clang-asan
-    defaults:
-      run:
-        working-directory: bindings/r
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install latest Rust
-        run: |
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-      - name: Install System Dependencies
-        run: |
-          apt-get update
-          apt-get install -y --no-install-recommends git curl libssl-dev libcurl4-openssl-dev libxml2-dev pandoc
-      - name: Install R Dependencies
-        run: |
-          Rscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); install.packages(c('remotes', 'rcmdcheck', 'testthat', 'knitr', 'rmarkdown'))"
-          Rscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); remotes::install_deps(dependencies = TRUE)"
-      - name: Run ASAN Check
-        run: |
-          Rscript -e "rcmdcheck::rcmdcheck(args = c('--no-manual', '--no-vignettes'), error_on = 'error', check_dir = 'check')"
