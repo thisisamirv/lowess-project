@@ -6,10 +6,11 @@ concurrency:
   cancel-in-progress: true
 
 on:
-  # Allows manual triggering from the Actions tab
   workflow_dispatch:
-  # Run on every push to main
-  push:
+  workflow_run:
+    workflows: ["R-CMD-check"]
+    types:
+      - completed
     branches:
       - main
 
@@ -18,11 +19,29 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       issues: write
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
-      - uses: ropensci-review-tools/pkgcheck-action@main
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
         with:
-          ref: ${{ github.ref }}
-          post-to-issue: true
-          summary-only: true
-          append-to-issue: true
-          path: bindings/r
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - name: Install pkgcheck
+        run: |
+          install.packages("remotes")
+          remotes::install_github("ropensci-review-tools/pkgcheck")
+          remotes::install_github("ropensci-review-tools/pkgstats")
+        shell: Rscript {0}
+
+      - name: Run pkgcheck
+        run: |
+          library(pkgcheck)
+          library(pkgstats)
+          check <- pkgcheck::pkgcheck("bindings/r")
+          print(check)
+          # Fail if checks don't pass
+          if (any(check$checks$error)) stop("pkgcheck failed with errors")
+        shell: Rscript {0}
