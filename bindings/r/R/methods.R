@@ -1,10 +1,15 @@
 #' Print Lowess Model
 #'
 #' @srrstats {G1.3} S3 print methods for model objects.
+#' @srrstats {RE4.17, RE4.18} Print and summary S3 methods implemented.
+#' @srrstats {RE1.4} LOWESS assumptions documented in vignette and README.
 #'
 #' @param x A Lowess object.
 #' @param ... Additional arguments (ignored).
 #' @return The input object `x`, invisibly.
+#' @examples
+#' model <- Lowess(fraction = 0.3)
+#' print(model)
 #' @export
 print.Lowess <- function(x, ...) {
     cat("<Lowess Model>\n")
@@ -20,6 +25,12 @@ print.Lowess <- function(x, ...) {
 #' @param x A LowessResult object.
 #' @param ... Additional arguments (ignored).
 #' @return The input object `x`, invisibly.
+#' @examples
+#' x <- seq(0, 10, length.out = 50)
+#' y <- sin(x) + rnorm(50, 0, 0.1)
+#' model <- Lowess(fraction = 0.3)
+#' result <- model$fit(x, y)
+#' print(result)
 #' @export
 print.LowessResult <- function(x, ...) {
     cat("<LowessResult>\n")
@@ -39,7 +50,8 @@ print.LowessResult <- function(x, ...) {
 #' @param x A LowessResult object.
 #' @param main Plot title.
 #' @param ... Additional arguments passed to plot() and lines().
-#'
+#' @srrstats {RE6.0} Default S3 plot method implemented.
+#' @srrstats {RE6.2} Plot shows fitted values with confidence intervals.
 #' @examples
 #' x <- seq(0, 10, length.out = 100)
 #' y <- sin(x) + rnorm(100, 0, 0.1)
@@ -70,6 +82,9 @@ plot.LowessResult <- function(x, main = "LOWESS Fit", ...) {
 #' @param x A StreamingLowess object.
 #' @param ... Additional arguments.
 #' @return The input object `x`, invisibly.
+#' @examples
+#' model <- StreamingLowess(fraction = 0.3, chunk_size = 50L)
+#' print(model)
 #' @export
 print.StreamingLowess <- function(x, ...) {
     cat("<StreamingLowess Model>\n")
@@ -84,6 +99,9 @@ print.StreamingLowess <- function(x, ...) {
 #' @param x An OnlineLowess object.
 #' @param ... Additional arguments.
 #' @return The input object `x`, invisibly.
+#' @examples
+#' model <- OnlineLowess(fraction = 0.2, window_capacity = 20L)
+#' print(model)
 #' @export
 print.OnlineLowess <- function(x, ...) {
     cat("<OnlineLowess Model>\n")

@@ -17,3 +17,7 @@ The input object \code{x}, invisibly.
 \description{
 Print Lowess Model
 }
+\examples{
+model <- Lowess(fraction = 0.3)
+print(model)
+}

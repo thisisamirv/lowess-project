@@ -17,3 +17,7 @@ The input object \code{x}, invisibly.
 \description{
 Print StreamingLowess Model
 }
+\examples{
+model <- StreamingLowess(fraction = 0.3, chunk_size = 50L)
+print(model)
+}

@@ -288,8 +288,9 @@ _r_impl:
 	@echo "=============================================================================="
 	@echo "2. Installing R development packages..."
 	@echo "=============================================================================="
-	@Rscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); suppressWarnings(install.packages(c('styler', 'prettycode', 'covr', 'BiocManager', 'urlchecker', 'toml', 'V8'), quiet = TRUE))" || true
+	@Rscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); suppressWarnings(install.packages(c('styler', 'prettycode', 'covr', 'BiocManager', 'urlchecker', 'toml', 'V8', 'visNetwork'), quiet = TRUE))" || true
 	@Rscript -e "suppressWarnings(BiocManager::install('BiocCheck', quiet = TRUE, update = FALSE, ask = FALSE))" || true
+	@Rscript -e "remotes::install_github ('ropensci-review-tools/pkgcheck'); pak::pkg_install ('ropensci-review-tools/pkgcheck')"
 	@echo "R development packages installed!"
 	@echo "=============================================================================="
 	@echo "3. Vendoring..."
@@ -370,13 +371,18 @@ _r_impl:
 	@cd $(R_DIR) && Rscript -e "if (requireNamespace('BiocCheck', quietly=TRUE)) BiocCheck::BiocCheck('$(R_PKG_TARBALL)', new_package=FALSE)" || true
 	@echo "Package size (Limit: 5MB):"
 	@ls -lh $(R_DIR)/$(R_PKG_TARBALL) || true
+	@Rscript -e "library(c(pkgstats, pkgcheck)); pkgcheck(use_cache = FALSE)"
 	@if [ -f $(R_DIR)/src/Cargo.toml.orig ]; then mv $(R_DIR)/src/Cargo.toml.orig $(R_DIR)/src/Cargo.toml; fi
 
 	@echo "All $(R_PKG_NAME) checks completed successfully!"
 
 r-coverage:
 	@echo "Calculating $(R_PKG_NAME) coverage..."
-	@cd $(R_DIR) && Rscript -e "if (!requireNamespace('covr', quietly = TRUE)) { message('covr missing'); quit(status=0) } else { Sys.setenv(NOT_CRAN='true'); covr::package_coverage() }"
+	@cd $(R_DIR) && NOT_CRAN=true Rscript -e "\
+	  if (!requireNamespace('covr', quietly = TRUE)) { message('covr missing'); quit(status=0) }; \
+	  cov <- covr::package_coverage(); \
+	  covr::zero_coverage(cov); \
+	  print(cov)"
 
 r-clean:
 	@echo "Cleaning $(R_PKG_NAME)..."

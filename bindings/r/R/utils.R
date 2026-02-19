@@ -14,6 +14,15 @@
 #'
 #' @return A list containing the coerced x, y, fraction, and iterations.
 #' @noRd
+#' @srrstats {G2.0} Validates matching lengths, minimum points, numeric types.
+#' @srrstats {G2.2} Univariate only; multivariate inputs rejected.
+#' @srrstats {G2.3} Informative error messages for invalid inputs.
+#' @srrstats {G2.6} Numeric pre-processing via as.double/as.integer.
+#' @srrstats {G2.13} Explicit NA handling before Rust FFI call.
+#' @srrstats {G2.14, G2.14a, G2.14b, G2.14c} NaN/Inf reported via errors.
+#' @srrstats {G2.15} NA checks on inputs before passing to algorithms.
+#' @srrstats {G2.16} Inf/NaN validation in input vectors.
+#' @srrstats {G3.0} Tolerance-based comparisons used in robustness weights.
 validate_common_args <- function(x, y, fraction, iterations) {
     if (length(x) != length(y)) {
         stop("x and y must have the same length")
@@ -73,6 +82,7 @@ validate_params <- function(
 
 #' Coerce optional values to Nullable
 #' @noRd
+#' @srrstats {RE1.2} Numeric vector inputs documented and validated.
 coerce_nullable <- function(...) {
     args <- list(...)
     lapply(args, function(x) if (is.null(x)) Nullable(NULL) else x)
@@ -110,37 +120,6 @@ param_types <- list(
     auto_converge = "nullable",
     cv_fractions = "nullable"
 )
-
-#' Coerce named parameters for Rust FFI
-#'
-#' Uses non-standard evaluation to capture variable names.
-#' Pass variables directly: coerce_params(fraction, iterations, delta)
-#' @param ... Variables to coerce (names are captured automatically).
-#' @return A list of coerced values in the order passed.
-#' @noRd
-coerce_params <- function(...) {
-    # Capture the unevaluated call to get variable names
-    exprs <- as.list(substitute(list(...)))[-1]
-    names <- vapply(exprs, deparse, character(1))
-    # Evaluate to get values
-    args <- list(...)
-    lapply(seq_along(args), function(i) {
-        name <- names[i]
-        val <- args[[i]]
-        type <- param_types[[name]]
-        if (is.null(type)) {
-            return(val)
-        } # Unknown param, pass through
-        switch(type,
-            double = as.double(val),
-            integer = as.integer(val),
-            character = as.character(val),
-            logical = as.logical(val),
-            nullable = if (is.null(val)) Nullable(NULL) else val,
-            val
-        )
-    })
-}
 
 #' Build args from parent environment
 #'

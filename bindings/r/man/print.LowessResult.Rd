@@ -17,3 +17,10 @@ The input object \code{x}, invisibly.
 \description{
 Print Lowess Result
 }
+\examples{
+x <- seq(0, 10, length.out = 50)
+y <- sin(x) + rnorm(50, 0, 0.1)
+model <- Lowess(fraction = 0.3)
+result <- model$fit(x, y)
+print(result)
+}

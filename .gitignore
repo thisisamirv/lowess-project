@@ -27,6 +27,7 @@ bindings/r/Meta/
 bindings/r/README.html
 bindings/r/src/Makevars
 .Rprofile
+tests/r/testthat/Rplots.pdf
 
 # Python
 __pycache__/

@@ -6,7 +6,10 @@
 #'
 #' @srrstats {G1.0} Package-level documentation for statistical software review.
 #' @srrstats {G1.1} Thin R wrapper interface for core Rust algorithms.
-#'
+#' @srrstats {G1.2} Package lifecycle documented in README and NEWS.md.
+#' @srrstats {G1.4, G1.4a} All exported functions documented with roxygen2.
+#' @srrstats {G1.5} Benchmarks against stats::lowess in examples/r.
+
 #' @section Main Classes:
 #' \itemize{
 #'   \item \code{\link{Lowess}}: Primary interface for batch processing

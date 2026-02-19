@@ -17,3 +17,7 @@ The input object \code{x}, invisibly.
 \description{
 Print OnlineLowess Model
 }
+\examples{
+model <- OnlineLowess(fraction = 0.2, window_capacity = 20L)
+print(model)
+}

@@ -6,6 +6,13 @@
 #' @srrstats {G2.0} Input validation for fraction and iterations.
 #' @srrstats {G2.1} Parameter bounds checking (fraction 0-1, iterations >= 0).
 #' @srrstats {RE2.0} Kernel, robustness, boundary, and scaling configurable.
+#' @srrstats {RE2.1, RE2.2} NA handling options available via Rust backend.
+#' @srrstats {RE3.0, RE3.1} Convergence warnings; thresholds settable.
+#' @srrstats {RE4.0, RE4.1} Model object returned; fitting deferred to $fit().
+#' @srrstats {RE4.7} Convergence stats returned in result.
+#' @srrstats {RE4.8, RE4.9, RE4.10} Response, fitted, residuals returned.
+#' @srrstats {RE4.11} Goodness-of-fit metrics via return_diagnostics.
+#' @srrstats {RE5.0} O(n) scaling documented in README.
 #'
 #' @param fraction Smoothing fraction (0 to 1). Default: 0.67.
 #' @param iterations Robustness iterations. Default: 3.

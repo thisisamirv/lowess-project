@@ -6,6 +6,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Added
+
+**R:**
+
+- Added new tests.
+- Added a reference to the `CONTRIBUTING.md` file.
+- Added new examples for the `print` and `plot` methods.
+- Added test coverage evaluation.
+- Added missing srr tags.
+
+### Changed
+
+**R:**
+
+- Removed the `coerce_params` dead code.
+- Spread srr tags to different files and removed extra tags from `srr-stats-standards.R`.
+
 ## 1.1.2
 
 ### Added

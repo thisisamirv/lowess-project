@@ -14,6 +14,8 @@
   <a href="https://anaconda.org/conda-forge/fastlowess"><img src="https://img.shields.io/badge/fastlowess_(Python)-44A833?logo=anaconda&logoColor=white" alt="fastlowess (Python)"></a>
   <a href="https://anaconda.org/conda-forge/libfastlowess"><img src="https://img.shields.io/badge/libfastlowess_(C++)-44A833?logo=anaconda&logoColor=white" alt="libfastlowess (C++)"></a>
   <a href="https://anaconda.org/conda-forge/r-rfastlowess"><img src="https://img.shields.io/badge/rfastlowess_(R)-44A833?logo=anaconda&logoColor=white" alt="rfastlowess (R)"></a>
+  <br>
+  <a href="https://github.com/thisisamirv/lowess-project/actions/workflows/ci.yml"><img src="https://github.com/thisisamirv/lowess-project/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
 </p>
 
 <p align="center">
@@ -149,7 +151,7 @@ All implementations are **numerical twins** of R's `lowess`:
 **R:**
 
 ```r
-model <- Lowess(
+Lowess(
     fraction = 0.5,
     iterations = 3L,
     delta = 0.01,
@@ -167,8 +169,7 @@ model <- Lowess(
     cv_k = 5L,
     auto_converge = 1e-4,
     parallel = TRUE
-)
-result <- model$fit(x, y)
+)$fit(x, y)
 
 # Result structure:
 result$x,
