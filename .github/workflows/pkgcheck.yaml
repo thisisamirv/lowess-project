@@ -34,7 +34,7 @@ jobs:
 
       - name: Install pkgcheck
         run: |
-          install.packages(c("pkgcheck", "pkgstats"), repos = c("https://ropensci.r-universe.dev", "https://cloud.r-project.org"))
+          install.packages(c("pkgcheck", "pkgstats", "toml"), repos = c("https://ropensci.r-universe.dev", "https://cloud.r-project.org"))
         shell: Rscript {0}
 
       - name: Run pkgcheck
