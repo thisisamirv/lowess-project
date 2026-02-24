@@ -84,23 +84,23 @@ test_that("env_args passes through unknown parameter names unchanged", {
 test_that("env_args handles unknown types in param_types registry", {
     ns <- asNamespace("rfastlowess")
     orig_types <- ns$param_types
-    
+
     # Temporarily inject a dummy type
     new_types <- orig_types
     new_types[["dummy_type_param"]] <- "unhandled_switch_type"
-    
+
     # assignInNamespace handles unlocking/relocking internally for namespaces
     utils::assignInNamespace("param_types", new_types, "rfastlowess")
     on.exit(
         utils::assignInNamespace("param_types", orig_types, "rfastlowess"),
         add = TRUE
     )
-    
+
     result <- local({
         dummy_type_param <- "test_value"
         rfastlowess:::env_args("dummy_type_param")
     })
-    
+
     expect_equal(result[[1]], "test_value")
 })
 

@@ -1,4 +1,4 @@
-name: pkgcheck
+name: SRR-check
 
 # Cancel any running job if a new push is made
 concurrency:
@@ -15,7 +15,7 @@ on:
       - main
 
 jobs:
-  pkgcheck:
+  SRR-check:
     runs-on: ubuntu-latest
     permissions:
       issues: write

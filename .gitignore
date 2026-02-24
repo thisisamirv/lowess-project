@@ -91,3 +91,6 @@ bindings/wasm/pkg-web/
 docs/build/
 docs/site/
 Manifest.toml
+
+# C++
+compile_flags.txt

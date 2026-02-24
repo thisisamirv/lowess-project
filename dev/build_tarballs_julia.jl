@@ -3,7 +3,7 @@
 using BinaryBuilder, Pkg
 
 name = "fastlowess"
-version = v"0.99.9"
+version = v"1.0.0"
 
 # Update the commit hash when releasing a new version
 sources = [
