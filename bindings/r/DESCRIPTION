@@ -1,7 +1,7 @@
 Package: rfastlowess
 Title: High-Performance LOWESS Smoothing for R
 Version: 1.0.0
-Authors@R: person("Amir", "Valizadeh", email = "thisisamirv@gmail.com", role = c("aut", "cre"), comment = c(ORCID = "0000-0001-5983-8527"))
+Authors@R: person("Amir", "Valizadeh", email = "thisisamirv@gmail.com", role = c("aut", "cre", "fnd"), comment = c(ORCID = "0000-0001-5983-8527"))
 Description: Provides high-performance LOWESS smoothing (Locally Weighted Scatterplot Smoothing) 
     using a 'Rust' backend. Supports various weight functions, robustness iterations, 
     streaming/online processing, cross-validation, and uncertainty quantification.
@@ -12,6 +12,7 @@ Encoding: UTF-8
 RoxygenNote: 7.3.3
 Roxygen: list(markdown = TRUE, roclets = c("namespace", "rd", "srr::srr_stats_roclet"))
 biocViews: Preprocessing, StatisticalMethod, Regression, FunctionalPrediction, QualityControl, KEGG
+Imports: BiocGenerics
 Suggests: BiocStyle, knitr, rmarkdown, testthat (>= 3.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr

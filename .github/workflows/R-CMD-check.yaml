@@ -92,7 +92,7 @@ jobs:
           mkdir -p ~/.R
           echo "CXXFLAGS += -w" >> ~/.R/Makevars
           echo "CFLAGS += -w" >> ~/.R/Makevars
-          Rscript -e "my_linters <- lintr::linters_with_defaults(indentation_linter = lintr::indentation_linter(indent = 4L), object_usage_linter = NULL); lintr::lint_dir('R', linters = my_linters)"
+          Rscript -e "my_linters <- lintr::linters_with_defaults(indentation_linter = lintr::indentation_linter(indent = 4L), object_usage_linter = NULL, object_name_linter = lintr::object_name_linter(styles = c('snake_case', 'symbols', 'CamelCase'))); lintr::lint_dir('R', linters = my_linters)"
           chmod +x ../../dev/prepare_cran.sh
           ../../dev/prepare_cran.sh
           R CMD build .

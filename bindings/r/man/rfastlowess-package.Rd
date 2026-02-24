@@ -44,6 +44,6 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Amir Valizadeh \email{thisisamirv@gmail.com} (\href{https://orcid.org/0000-0001-5983-8527}{ORCID})
+\strong{Maintainer}: Amir Valizadeh \email{thisisamirv@gmail.com} (\href{https://orcid.org/0000-0001-5983-8527}{ORCID}) [funder]
 
 }
