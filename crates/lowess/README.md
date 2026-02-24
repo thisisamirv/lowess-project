@@ -34,7 +34,7 @@ The fastest, most robust, and most feature-complete language-agnostic LOWESS (Lo
 > - **[`fastLowess`](https://crates.io/crates/fastLowess)** - Parallel CPU and GPU-accelerated Rust wrapper with ndarray integration  
 > - **[`R bindings`](https://thisisamirv.r-universe.dev/rfastlowess)** - extendr-based R binding
 > - **[`Python bindings`](https://pypi.org/project/fastlowess/)** - PyO3-based Python binding
-> - **[`Julia bindings`](https://juliahub.com/ui/Packages/General/fastlowess_jll)** - Native Julia binding with C FFI
+> - **[`Julia bindings`](https://juliahub.com/ui/Packages/General/FastLOWESS)** - Native Julia binding with C FFI
 > - **[`JavaScript bindings`](https://www.npmjs.com/package/fastlowess)** - Node.js binding
 > - **[`WebAssembly bindings`](https://www.npmjs.com/package/fastlowess-wasm)** - WASM binding
 > - **[`C++ bindings`](https://github.com/thisisamirv/lowess-project/releases/latest)** - Native C++ binding with CMake integration
