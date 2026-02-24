@@ -228,7 +228,7 @@ For large datasets that arrive in batches or files.
 
 === "Julia"
     ```julia
-    using fastlowess
+    using FastLOWESS
 
     # Large dataset
     x = collect(range(0, 100000, step=1))

@@ -1,6 +1,6 @@
 # Julia Examples
 
-Complete Julia examples demonstrating fastlowess.jl with native Julia integration.
+Complete Julia examples demonstrating FastLOWESS with native Julia integration.
 
 ## Batch Smoothing
 

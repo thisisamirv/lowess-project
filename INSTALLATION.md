@@ -67,7 +67,7 @@ fastLowess = { version = "1.1", features = ["cpu"] }
 
 ```julia
 using Pkg
-Pkg.add("fastLowess")
+Pkg.add("FastLOWESS")
 ```
 
 # Node.js

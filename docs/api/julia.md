@@ -1,4 +1,4 @@
-# fastLowess Julia API Reference
+# FastLOWESS Julia API Reference
 
 The Julia bindings provide a modern interface to the core Rust library, mirroring the Rust API structure.
 

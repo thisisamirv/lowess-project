@@ -575,7 +575,7 @@ Biological application:
 
 === "Julia"
     ```julia
-    using fastlowess
+    using FastLOWESS
 
     hours = collect(range(0, 24, step=0.5))
     expression = 100 .*(1.0 .+ 0.5 .* sin.(hours .*pi ./ 12.0)) .+ randn(length(hours)) .* 10.0

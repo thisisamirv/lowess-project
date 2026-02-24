@@ -357,7 +357,7 @@ Incremental updates with a sliding window for real-time data.
 
 === "Julia"
     ```julia
-    using fastlowess
+    using FastLOWESS
 
     result = smooth_online(
         x, y,

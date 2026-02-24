@@ -378,7 +378,7 @@ For whole-genome data that doesn't fit in memory:
 
 === "Julia"
     ```julia
-    using fastlowess
+    using FastLOWESS
 
     # coverage and positions are chromosome-scale vectors
     result = smooth_streaming(
