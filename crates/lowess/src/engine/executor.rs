@@ -10,7 +10,7 @@
 //!
 //! @srrstats {RE2.0} Core LOWESS execution: boundary handling, iteration loop, convergence.
 //! @srrstats {G2.2} Auto-convergence tolerance for early stopping of iterations.
-//! @srrstats {RE4.2} Configurable robustness iterations with convergence monitoring.
+//! Configurable robustness iterations with convergence monitoring.
 
 // External dependencies
 #[cfg(not(feature = "std"))]

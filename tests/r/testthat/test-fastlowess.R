@@ -9,8 +9,8 @@
 #' @srrstats {G5.9a} Noise susceptibility via rnorm() variations.
 #' @srrstats {RE4.10} Residuals tested in Lowess residuals test.
 #' @srrstats {RE4.11} Goodness-of-fit tested in diagnostics test.
-#' @srrstats {RE5.0, RE5.1} Confidence/prediction intervals tested.
-#' @srrstats {RE6.0, RE6.1} Cross-validation tested.
+#' @srrstats {RE5.0} Confidence/prediction intervals tested.
+#' @srrstats {RE6.0} Cross-validation tested.
 test_that("Lowess basic functionality works", {
     x <- c(1, 2, 3, 4, 5)
     y <- c(2, 4, 6, 8, 10)

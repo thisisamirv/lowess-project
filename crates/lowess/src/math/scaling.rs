@@ -5,8 +5,8 @@
 //!
 //! ## srrstats Compliance
 //!
-//! @srrstats {G2.5} Robust scale estimation: MAD (default), MAR, and Mean methods.
-//! @srrstats {G2.7} Quickselect-based median for O(n) performance.
+//! Robust scale estimation: MAD (default), MAR, and Mean methods.
+//! Quickselect-based median for O(n) performance.
 
 // External dependencies
 use core::cmp::Ordering::Equal;

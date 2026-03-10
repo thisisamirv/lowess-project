@@ -5,7 +5,7 @@
 //!
 //! ## srrstats Compliance
 //!
-//! @srrstats {RE2.3} Multiple kernel functions: Tricube (default), Gaussian, Epanechnikov,
+//! Multiple kernel functions: Tricube (default), Gaussian, Epanechnikov,
 //!   Biweight, Triangle, Cosine, Uniform. Each implements distance-based weighting.
 //! @srrstats {G1.2} Mathematical properties documented for each kernel: integrator (c_K),
 //!   variance (mu_2), roughness (R), and AMISE efficiency relative to Epanechnikov.

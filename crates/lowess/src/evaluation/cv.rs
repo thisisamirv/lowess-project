@@ -7,8 +7,8 @@
 //! ## srrstats Compliance
 //!
 //! @srrstats {RE6.0} Leave-one-out cross-validation (LOOCV) for bandwidth selection.
-//! @srrstats {RE6.1} K-fold cross-validation with reproducible shuffling (optional seed).
-//! @srrstats {G3.1} RMSE-based score aggregation for model selection.
+//! K-fold cross-validation with reproducible shuffling (optional seed).
+//! RMSE-based score aggregation for model selection.
 
 // External dependencies
 #[cfg(not(feature = "std"))]

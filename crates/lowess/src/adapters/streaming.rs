@@ -8,7 +8,7 @@
 //! ## srrstats Compliance
 //!
 //! @srrstats {G1.6} Memory-efficient streaming for large datasets via chunking.
-//! @srrstats {G3.2} Configurable merge strategies (Average, WeightedAverage, TakeFirst, TakeLast).
+//! Configurable merge strategies (Average, WeightedAverage, TakeFirst, TakeLast).
 
 // External dependencies
 #[cfg(not(feature = "std"))]

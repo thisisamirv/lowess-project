@@ -9,7 +9,7 @@
 //! @srrstats {RE4.0} Iterative reweighted least squares (IRLS) for robust regression.
 //! @srrstats {RE4.1} Multiple robustness methods: Bisquare (Tukey), Huber, Talwar.
 //! @srrstats {G2.4} Tuning constants documented (Bisquare=6.0, Huber=1.345, Talwar=2.5).
-//! @srrstats {G2.5} Robust scale estimation via MAD with fallback to MAR.
+//! Robust scale estimation via MAD with fallback to MAR.
 
 // External dependencies
 use num_traits::Float;
