@@ -169,8 +169,8 @@ jobs:
           CURRENT=$(grep "^version =" "$PROJECT_TOML" | cut -d"\"" -f2)
           echo "Latest Registered JLL: $LATEST"
           echo "Current Local Version: $CURRENT"
-          sed -i "/\[compat\]/,/\[.*\]/ s/fastlowess_jll = \".*\"/fastlowess_jll = \"$LATEST, $CURRENT\"/" "$PROJECT_TOML"
-          echo "Modified $PROJECT_TOML (fastlowess_jll = \"$LATEST, $CURRENT\") to allow CI tests to pass."
+          julia -e "using TOML; path = \"$PROJECT_TOML\"; p = TOML.parsefile(path); p[\"compat\"][\"fastlowess_jll\"] = \"$LATEST, $CURRENT\"; open(path, \"w\") do io; TOML.print(io, p); end"
+          echo "Modified $PROJECT_TOML (fastlowess_jll = \"$LATEST, $CURRENT\") using TOML parser."
 
       - name: "Julia: Tests"
         shell: bash

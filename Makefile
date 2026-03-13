@@ -424,8 +424,8 @@ _julia_impl:
 	echo "=============================================================================="; \
 	LATEST=$$(julia -e 'using Pkg; Pkg.activate(temp=true); try Pkg.add("fastlowess_jll"); print(Pkg.dependencies()[Base.UUID("7381d214-3001-5784-8d9a-8eb8e8688076")].version) catch; print("1.0.0") end' | cut -d'+' -f1); \
 	CURRENT=$$(grep "^version =" "$$PROJECT_TOML" | cut -d"\"" -f2); \
-	sed -i "/\[compat\]/,/\[.*\]/ s/fastlowess_jll = \".*\"/fastlowess_jll = \"$$LATEST, $$CURRENT\"/" "$$PROJECT_TOML"; \
-	echo "Modified $$PROJECT_TOML (fastlowess_jll = \"$$LATEST, $$CURRENT\") to allow local testing."; \
+	julia -e "using TOML; path = \"$$PROJECT_TOML\"; p = TOML.parsefile(path); p[\"compat\"][\"fastlowess_jll\"] = \"$$LATEST, $$CURRENT\"; open(path, \"w\") do io; TOML.print(io, p); end"; \
+	echo "Modified $$PROJECT_TOML (fastlowess_jll = \"$$LATEST, $$CURRENT\") using TOML parser."; \
 	$(MAKE) _julia_checks_internal
 
 _julia_checks_internal:
