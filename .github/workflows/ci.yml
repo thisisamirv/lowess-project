@@ -10,6 +10,7 @@ env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
   PIP_DISABLE_PIP_VERSION_CHECK: 1
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   # ============================================================================
@@ -57,7 +58,7 @@ jobs:
       - name: Install wasm-pack
         uses: jetli/wasm-pack-action@v0.4.0
         with:
-          version: "latest"
+          version: "0.14.0"
 
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
