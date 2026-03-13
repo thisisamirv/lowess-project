@@ -414,6 +414,21 @@ julia:
 
 _julia_impl:
 	@echo "Running $(JL_PKG) checks..."
+	@# Backup and adjust Project.toml for local testing
+	@PROJECT_TOML="$(JL_DIR)/julia/Project.toml"; \
+	BACKUP="$$PROJECT_TOML.bak"; \
+	cp "$$PROJECT_TOML" "$$BACKUP"; \
+	trap 'if [ -f "$$BACKUP" ]; then mv "$$BACKUP" "$$PROJECT_TOML"; echo "=============================================================================="; echo "Restored $$PROJECT_TOML"; fi' EXIT; \
+	echo "=============================================================================="; \
+	echo "0. Local environment setup (relaxing JLL constraint)..."; \
+	echo "=============================================================================="; \
+	LATEST=$$(julia -e 'using Pkg; Pkg.activate(temp=true); try Pkg.add("fastlowess_jll"); print(Pkg.dependencies()[Base.UUID("7381d214-3001-5784-8d9a-8eb8e8688076")].version) catch; print("1.0.0") end' | cut -d'+' -f1); \
+	CURRENT=$$(grep "^version =" "$$PROJECT_TOML" | cut -d"\"" -f2); \
+	sed -i "/\[compat\]/,/\[.*\]/ s/fastlowess_jll = \".*\"/fastlowess_jll = \"$$LATEST, $$CURRENT\"/" "$$PROJECT_TOML"; \
+	echo "Modified $$PROJECT_TOML (fastlowess_jll = \"$$LATEST, $$CURRENT\") to allow local testing."; \
+	$(MAKE) _julia_checks_internal
+
+_julia_checks_internal:
 	@echo "=============================================================================="
 	@echo "0. Commit hash update..."
 	@echo "=============================================================================="

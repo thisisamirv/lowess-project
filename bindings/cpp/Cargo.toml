@@ -1,6 +1,6 @@
 [package]
 name = "fastlowess-cpp"
-version = "1.0.0"
+version = "1.2.0"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
@@ -18,7 +18,7 @@ name = "fastlowess_cpp"
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
-fastLowess = { version = "1.1", features = ["cpu", "dev"] }
+fastLowess = { version = "1.2", features = ["cpu", "dev"] }
 libc = "0.2"
 
 [build-dependencies]

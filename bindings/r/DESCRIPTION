@@ -1,6 +1,6 @@
 Package: rfastlowess
 Title: High-Performance LOWESS Smoothing for R
-Version: 1.0.0
+Version: 1.2.0
 Authors@R: person("Amir", "Valizadeh", email = "thisisamirv@gmail.com", role = c("aut", "cre", "fnd"), comment = c(ORCID = "0000-0001-5983-8527"))
 Description: Provides high-performance LOWESS smoothing (Locally Weighted Scatterplot Smoothing) 
     using a 'Rust' backend. Supports various weight functions, robustness iterations, 
