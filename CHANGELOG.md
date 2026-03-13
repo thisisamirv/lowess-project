@@ -36,6 +36,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+**fastLowess:**
+
+- Updated `wgpu` to v27.0 from v26.0.
+
+**Python:**
+
+- Updated `pyo3` to v0.28 from v0.27.
+- Updated `numpy` to v0.28 from v0.27.
+
 **R:**
 
 - Removed the `coerce_params` dead code.
@@ -54,6 +63,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Monorepo:**
 
 - Fixed project logo.
+
+**lowess:**
+
+- Fixed documentation.
+- Fixed SRR tags.
 
 **Julia:**
 

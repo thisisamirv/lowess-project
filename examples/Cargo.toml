@@ -1,6 +1,6 @@
 [package]
 name = "examples"
-version = "0.99.9"
+version = "1.0.0"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
@@ -15,7 +15,7 @@ categories = ["science", "algorithms"]
 [dependencies]
 lowess = { path = "../crates/lowess", default-features = false }
 fastLowess = { path = "../crates/fastLowess", default-features = false }
-ndarray = "0.17.1"
+ndarray = "0.17"
 
 [features]
 default = ["std", "cpu", "dev"]

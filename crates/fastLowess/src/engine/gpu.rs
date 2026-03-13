@@ -2669,7 +2669,10 @@ impl GpuExecutor {
                 );
                 self.queue.submit(Some(encoder.finish()));
             }
-            let _ = self.device.poll(PollType::Wait);
+            let _ = self.device.poll(PollType::Wait {
+                submission_index: None,
+                timeout: None,
+            });
         }
     }
 
@@ -3422,7 +3425,10 @@ impl GpuExecutor {
         let slice = self.buffers.staging_buffer.as_ref().unwrap().slice(..size);
         let (tx, rx) = oneshot_channel();
         slice.map_async(MapMode::Read, move |v| tx.send(v).unwrap());
-        let _ = self.device.poll(PollType::Wait);
+        let _ = self.device.poll(PollType::Wait {
+            submission_index: None,
+            timeout: None,
+        });
 
         if let Some(Ok(())) = rx.receive().await {
             let data = slice.get_mapped_range();
@@ -3493,7 +3499,10 @@ impl GpuExecutor {
         let slice = staging_buf.slice(..total_size);
         let (tx, rx) = oneshot_channel();
         slice.map_async(MapMode::Read, move |v| tx.send(v).unwrap());
-        let _ = self.device.poll(PollType::Wait);
+        let _ = self.device.poll(PollType::Wait {
+            submission_index: None,
+            timeout: None,
+        });
 
         if let Some(Ok(())) = rx.receive().await {
             let data = slice.get_mapped_range();
@@ -4340,7 +4349,10 @@ where
             exec.queue.submit(Some(encoder.finish()));
         }
 
-        let _ = exec.device.poll(PollType::Wait);
+        let _ = exec.device.poll(PollType::Wait {
+            submission_index: None,
+            timeout: None,
+        });
 
         // Download all results at once
         let raw_results = block_on(exec.download_buffer(

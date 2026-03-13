@@ -1,8 +1,7 @@
 //! # LOWESS — Locally Weighted Scatterplot Smoothing for Rust
 //!
 //! The fastest, most robust, and most feature-complete language-agnostic
-//! LOWESS (Locally Weighted Scatterplot Smoothing) implementation for **Rust**,
-//! **Python**, and **R**.
+//! LOWESS (Locally Weighted Scatterplot Smoothing) implementation for **Rust**.
 //!
 //! ## What is LOWESS?
 //!
