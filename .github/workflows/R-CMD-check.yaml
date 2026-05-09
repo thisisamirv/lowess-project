@@ -106,7 +106,7 @@ jobs:
     name: R - Clang ASAN
     runs-on: ubuntu-latest
     container:
-      image: rhub/clang-asan
+      image: rocker/r-devel-san:latest
     defaults:
       run:
         working-directory: bindings/r
@@ -122,8 +122,8 @@ jobs:
           apt-get install -y --no-install-recommends git curl libssl-dev libcurl4-openssl-dev libxml2-dev pandoc
       - name: Install R Dependencies
         run: |
-          Rscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); install.packages(c('remotes', 'rcmdcheck', 'testthat', 'knitr', 'rmarkdown'))"
-          Rscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); remotes::install_deps(dependencies = TRUE)"
+          RDscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); install.packages(c('remotes', 'rcmdcheck', 'testthat', 'knitr', 'rmarkdown'))"
+          RDscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); remotes::install_deps(dependencies = TRUE)"
       - name: Run ASAN Check
         run: |
-          Rscript -e "rcmdcheck::rcmdcheck(args = c('--no-manual', '--no-vignettes'), build_args = c('--no-build-vignettes'), error_on = 'error', check_dir = 'check')"
+          RDscript -e "rcmdcheck::rcmdcheck(args = c('--no-manual', '--no-vignettes'), build_args = c('--no-build-vignettes'), error_on = 'error', check_dir = 'check')"

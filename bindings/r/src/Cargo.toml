@@ -16,7 +16,7 @@ categories = ["science", "algorithms"]
 # Build
 [dependencies]
 fastLowess = { path = "vendor/fastLowess", features = ["dev", "cpu"] }
-extendr-api = "0.8"
+extendr-api = "0.9.0"
 
 [lib]
 name = "rfastlowess"
