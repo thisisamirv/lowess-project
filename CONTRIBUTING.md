@@ -15,11 +15,50 @@ The project uses a `Makefile` to standardize development tasks.
 
 ### Prerequisites
 
-- **Rust**: 1.85.0+ (stable)
-- **Python**: 3.8+ with `pip`
-- **R**: 4.2+ (for R bindings)
-- **maturin**: `pip install maturin` (for Python bindings)
-- **ruff**: `pip install ruff` (for Python linting)
+To develop across all platforms, you will need the following tools installed. You only need to install the prerequisites for the specific bindings you are working on.
+
+**Core (Rust)**:
+
+- **Rust**: 1.88.0+ (stable)
+- **Cargo Tools**: `cargo fmt`, `cargo clippy`, `cargo llvm-cov` (for coverage)
+
+**Python**:
+
+- **Python**: 3.8+
+- **Packages**: `pip install maturin ruff pytest numpy matplotlib` (or allow the Makefile to create a virtual environment)
+
+**R**:
+
+- **R**: 4.2+ (with `Rscript` in PATH). Note: On Windows, you must ensure the R `bin\x64` directory (e.g., `C:\Program Files\R\R-4.x.x\bin\x64`) is added to your system `Path` via `sysdm.cpl` so that test binaries can locate `R.dll`.
+- **Rtools**: Required on Windows for C/C++ compilation. You must manually add it to your PATH to use `make` (e.g., in PowerShell: `$env:PATH = "C:\rtools45\usr\bin;C:\rtools45\x86_64-w64-mingw32.static.posix\bin;" + $env:PATH`)
+- **Windows Rust Target**: `rustup target add x86_64-pc-windows-gnu` (R on Windows requires the GNU MinGW toolchain)
+- **MiKTeX** (Windows only): Required to build the PDF reference manual during `R CMD check --as-cran`. Install from [miktex.org](https://miktex.org/download), then run `initexmf --set-config-value [MPM]AutoInstall=1` once in an elevated terminal to enable automatic package installation.
+- **System Dependencies**: `libcurl4-openssl-dev`, `libssl-dev`, `libxml2-dev`, `pandoc` (all platforms)
+- *Note: The Makefile automatically installs R-level development dependencies (devtools, rcmdcheck, styler, etc.)*
+
+**Julia**:
+
+- **Julia**: 1.11+ (with `julia` in PATH)
+- *Note: The Makefile automatically handles Julia package dependencies like JuliaFormatter, Aqua, and JET.*
+
+**Node.js**:
+
+- **Node.js & npm**: v22+ recommended (with `npx` in PATH)
+
+**WebAssembly**:
+
+- **wasm-pack**: Install via `cargo install wasm-pack` or the official installer
+- **Node.js & npm**: Required for testing WASM output
+
+**C++**:
+
+- **Compiler**: `g++` or `clang++` with C++17 support
+- **Tools**: `cmake`, `make`, `clang-tidy`, `cppcheck`, `valgrind`
+- **cbindgen**: Install via `cargo install cbindgen` (for header generation)
+
+**Documentation**:
+
+- **Python**: `python3` (the Makefile automatically creates a virtual environment and installs `mkdocs`)
 
 ### Clone and Branch
 
