@@ -126,4 +126,4 @@ jobs:
           Rscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); remotes::install_deps(dependencies = TRUE)"
       - name: Run ASAN Check
         run: |
-          Rscript -e "rcmdcheck::rcmdcheck(args = c('--no-manual', '--no-vignettes'), error_on = 'error', check_dir = 'check')"
+          Rscript -e "rcmdcheck::rcmdcheck(args = c('--no-manual', '--no-vignettes'), build_args = c('--no-build-vignettes'), error_on = 'error', check_dir = 'check')"
