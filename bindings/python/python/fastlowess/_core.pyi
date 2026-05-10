@@ -1,5 +1,7 @@
 """Type stubs for fastlowess._core native extension module."""
 
+# pylint: disable=unnecessary-ellipsis,unused-argument
+
 from typing import Sequence
 
 import numpy as np

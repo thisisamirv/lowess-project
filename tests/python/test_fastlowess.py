@@ -30,6 +30,18 @@ class TestLowess:
         assert len(result.x) == len(x)
         assert result.fraction_used == pytest.approx(0.5)
 
+    def test_basic_smooth_with_lists(self):
+        """Test array-like inputs are coerced to NumPy arrays."""
+        x = [1.0, 2.0, 3.0, 4.0, 5.0]
+        y = [2.0, 4.1, 5.9, 8.2, 9.8]
+
+        lowess = fastlowess.Lowess(fraction=0.5)
+        result = lowess.fit(x, y)
+
+        assert isinstance(result, fastlowess.LowessResult)
+        assert len(result.y) == len(x)
+        assert len(result.x) == len(x)
+
     def test_basic_smooth_serial(self):
         """Test basic smooth with parallel=False."""
         x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
@@ -215,6 +227,16 @@ class TestStreamingLowess:
         assert isinstance(chunk_result, fastlowess.LowessResult)
         assert isinstance(final_result, fastlowess.LowessResult)
 
+    def test_streaming_process_chunk_with_lists(self):
+        """Test streaming processor accepts array-like chunk inputs."""
+        x = list(np.linspace(0, 1000, 2000))
+        y = list(np.sin(np.linspace(0, 1000, 2000) / 100))
+
+        streaming = fastlowess.StreamingLowess(fraction=0.1, chunk_size=1000)
+        chunk_result = streaming.process_chunk(x, y)
+
+        assert isinstance(chunk_result, fastlowess.LowessResult)
+
     def test_streaming_larger_data(self):
         """Test streaming with larger dataset."""
         np.random.seed(42)
@@ -287,8 +309,8 @@ class TestOnlineLowess:
             fraction=0.5, window_capacity=10, zero_weight_fallback="return_none"
         )
 
-        for i in range(len(x)):
-            online.add_points(np.array([x[i]]), np.array([y[i]]))
+        for x_value, y_value in zip(x, y):
+            online.add_points(np.array([x_value]), np.array([y_value]))
 
     def test_online_basic(self):
         """Test basic online smoothing."""
@@ -298,8 +320,8 @@ class TestOnlineLowess:
         online = fastlowess.OnlineLowess(fraction=0.5, window_capacity=10, min_points=3)
 
         results = []
-        for i in range(len(x)):
-            result = online.add_points(np.array([x[i]]), np.array([y[i]]))
+        for x_value, y_value in zip(x, y):
+            result = online.add_points(np.array([x_value]), np.array([y_value]))
             # add_points returns a LowessResult with smoothed y values
             if len(result.y) > 0:
                 results.append(result.y[0])
@@ -315,13 +337,23 @@ class TestOnlineLowess:
         online = fastlowess.OnlineLowess(fraction=0.3, window_capacity=20, min_points=5)
 
         results = []
-        for i in range(len(x)):
-            result = online.add_points(np.array([x[i]]), np.array([y[i]]))
+        for x_value, y_value in zip(x, y):
+            result = online.add_points(np.array([x_value]), np.array([y_value]))
             # add_points returns a LowessResult with smoothed y values
             if len(result.y) > 0:
                 results.append(result.y[0])
 
         assert len(results) > 0
+
+    def test_online_add_points_with_lists(self):
+        """Test online processor accepts array-like batch inputs."""
+        x = [1.0, 2.0, 3.0, 4.0, 5.0]
+        y = [2.0, 4.0, 6.0, 8.0, 10.0]
+
+        online = fastlowess.OnlineLowess(fraction=0.5, window_capacity=10, min_points=3)
+        result = online.add_points(x, y)
+
+        assert isinstance(result, fastlowess.LowessResult)
 
 
 class TestLowessResult:
@@ -367,6 +399,7 @@ class TestDiagnostics:
 
         lowess = fastlowess.Lowess(fraction=0.5, return_diagnostics=True)
         result = lowess.fit(x, y)
+        assert result.diagnostics is not None
 
         repr_str = repr(result.diagnostics)
         assert "Diagnostics" in repr_str
@@ -383,6 +416,7 @@ class TestDiagnostics:
         result = lowess.fit(x, y)
 
         diag = result.diagnostics
+        assert diag is not None
         # Perfect linear data should have very low error
         assert diag.rmse < 0.1
         assert diag.mae < 0.1
