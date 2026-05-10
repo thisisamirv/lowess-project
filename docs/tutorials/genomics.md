@@ -169,8 +169,8 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
         .confidence_intervals = 0.95
     });
 
-    // Smoothed profile in result.y_vector()
-    // CI bounds in result.confidence_lower()/result.confidence_upper()
+    // Smoothed profile in result.yVector()
+    // CI bounds in result.confidenceLower()/result.confidenceUpper()
     ```
 
 ---

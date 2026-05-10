@@ -124,7 +124,7 @@ Time series data often contains noise, seasonality, and trends. LOWESS provides 
         .iterations = 3
     });
 
-    // Trend in result.y_vector()
+    // Trend in result.yVector()
     ```
 
 ---
@@ -227,7 +227,7 @@ Remove trend to analyze residual patterns:
         .return_residuals = true
     });
 
-    auto trend = result.y_vector();
+    auto trend = result.yVector();
     auto detrended = result.residuals();
     ```
 
@@ -498,7 +498,7 @@ Use different fractions to extract features at different scales:
     std::vector<std::vector<double>> trends;
     for (auto f : scales) {
         auto result = fastlowess::smooth(t, y, { .fraction = f });
-        trends.push_back(result.y_vector());
+        trends.push_back(result.yVector());
     }
     ```
 

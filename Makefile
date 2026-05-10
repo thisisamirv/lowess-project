@@ -222,26 +222,26 @@ python:
 _python_impl:
 	@echo "Running $(PY_PKG) checks..."
 	@echo "=============================================================================="
+	@echo "0. Environment Setup..."
+	@echo "=============================================================================="
+	@if [ ! -d "$(PY_VENV)" ]; then python3 -m venv $(PY_VENV); fi
+	@. $(PY_VENV)/bin/activate && python -m pip install -q pytest numpy maturin ruff
+	@echo "=============================================================================="
 	@echo "1. Formatting..."
 	@echo "=============================================================================="
 	@cargo fmt -p $(PY_PKG) -- --check
-	@ruff format $(PY_DIR)/python/ $(PY_TEST_DIR)/ examples/python/
+	@. $(PY_VENV)/bin/activate && ruff format $(PY_DIR)/python/ $(PY_TEST_DIR)/ examples/python/
 	@echo "=============================================================================="
 	@echo "2. Linting..."
 	@echo "=============================================================================="
 	@VIRTUAL_ENV= PYO3_PYTHON=python3 cargo clippy -q -p $(PY_PKG) --all-targets -- -D warnings
-	@ruff check $(PY_DIR)/python/ $(PY_TEST_DIR)/ examples/python/
+	@. $(PY_VENV)/bin/activate && ruff check $(PY_DIR)/python/ $(PY_TEST_DIR)/ examples/python/
 	@echo "=============================================================================="
-	@echo "3. Environment Setup..."
-	@echo "=============================================================================="
-	@if [ ! -d "$(PY_VENV)" ]; then python3 -m venv $(PY_VENV); fi
-	@. $(PY_VENV)/bin/activate && pip install pytest numpy maturin
-	@echo "=============================================================================="
-	@echo "4. Building..."
+	@echo "3. Building..."
 	@echo "=============================================================================="
 	@. $(PY_VENV)/bin/activate && cd $(PY_DIR) && maturin develop -q
 	@echo "=============================================================================="
-	@echo "5. Testing..."
+	@echo "4. Testing..."
 	@echo "=============================================================================="
 	@VIRTUAL_ENV= PYO3_PYTHON=python3 cargo test -q -p $(PY_PKG)
 	@. $(PY_VENV)/bin/activate && python -m pytest $(PY_TEST_DIR) -q

@@ -415,18 +415,18 @@ fastlowess::Lowess model(options);
 auto result = model.fit(x, y);
 
 // Result structure:
-result.x_vector(),
-result.y_vector(),
-result.standard_errors(),
-result.confidence_lower(),
-result.confidence_upper(),
-result.prediction_lower(),
-result.prediction_upper(),
+result.xVector(),
+result.yVector(),
+result.standardErrors(),
+result.confidenceLower(),
+result.confidenceUpper(),
+result.predictionLower(),
+result.predictionUpper(),
 result.residuals(),
-result.robustness_weights(),
+result.robustnessWeights(),
 result.diagnostics(),
-result.iterations_used(),
-result.fraction_used(),
+result.iterationsUsed(),
+result.fractionUsed(),
 result.cv_scores()
 ```
 

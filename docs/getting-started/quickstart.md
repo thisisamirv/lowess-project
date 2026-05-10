@@ -127,7 +127,7 @@ Get up and running with LOWESS in minutes.
         auto result = model.fit(x, y);
 
         // Print smoothed values
-        const auto& y_smooth = result.y_vector();
+        const auto& y_smooth = result.yVector();
         std::cout << "Smoothed values: [";
         for (double val : y_smooth) std::cout << val << ", ";
         std::cout << "]" << std::endl;
@@ -261,9 +261,9 @@ Get up and running with LOWESS in minutes.
     auto result = model.fit(x, y);
 
     // Access standard C++ vectors
-    auto lower = result.confidence_lower();
-    auto upper = result.confidence_upper();
-    double r2 = result.diagnostics().r_squared;
+    auto lower = result.confidenceLower();
+    auto upper = result.confidenceUpper();
+    double r2 = result.diagnostics().rSquared();
     ```
 
 ---
@@ -421,7 +421,7 @@ LOWESS can robustly handle outliers through iterative reweighting:
     auto result = model.fit(x, y_outlier);
 
     // Check weights
-    auto weights = result.robustness_weights();
+    auto weights = result.robustnessWeights();
     for (size_t i = 0; i < weights.size(); ++i) {
         if (weights[i] < 0.5) {
             std::cout << "Point " << i << " is outlier (weight: " << weights[i] << ")\n";

@@ -299,7 +299,7 @@ See the [Installation Guide](getting-started/installation.md) for more options a
         fastlowess::Lowess model(options);
         auto result = model.fit(x, y);
 
-        for (const auto& val : result.y_vector()) {
+        for (const auto& val : result.yVector()) {
             std::cout << val << " ";
         }
         std::cout << std::endl;

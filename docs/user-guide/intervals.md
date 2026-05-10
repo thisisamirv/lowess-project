@@ -97,8 +97,8 @@ Estimate uncertainty in the smoothed curve itself.
         .confidence_intervals = 0.95
     });
 
-    auto ci_lower = result.confidence_lower();
-    auto ci_upper = result.confidence_upper();
+    auto ci_lower = result.confidenceLower();
+    auto ci_upper = result.confidenceUpper();
     ```
 
 ---

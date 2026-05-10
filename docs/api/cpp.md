@@ -120,17 +120,20 @@ A RAII wrapper around the C result struct `fastlowess_CppLowessResult`.
 
 | Method                 | Return Type           | Description               |
 | ---------------------- | --------------------- | ------------------------- |
-| `x_vector()`           | `std::vector<double>` | Smoothed X coordinates    |
-| `y_vector()`           | `std::vector<double>` | Smoothed Y coordinates    |
+| `xVector()`            | `std::vector<double>` | Smoothed X coordinates    |
+| `yVector()`            | `std::vector<double>` | Smoothed Y coordinates    |
 | `valid()`              | `bool`                | True if result is valid   |
 | `error()`              | `std::string`         | Error message if failed   |
 | `diagnostics()`        | `Diagnostics`         | Diagnostic metrics struct |
 | `residuals()`          | `std::vector<double>` | Residuals (if requested)  |
-| `confidence_lower()`   | `std::vector<double>` | Lower CI bounds           |
-| `confidence_upper()`   | `std::vector<double>` | Upper CI bounds           |
-| `prediction_lower()`   | `std::vector<double>` | Lower PI bounds           |
-| `prediction_upper()`   | `std::vector<double>` | Upper PI bounds           |
-| `robustness_weights()` | `std::vector<double>` | Robustness weights        |
+| `standardErrors()`     | `std::vector<double>` | Standard errors           |
+| `confidenceLower()`    | `std::vector<double>` | Lower CI bounds           |
+| `confidenceUpper()`    | `std::vector<double>` | Upper CI bounds           |
+| `predictionLower()`    | `std::vector<double>` | Lower PI bounds           |
+| `predictionUpper()`    | `std::vector<double>` | Upper PI bounds           |
+| `robustnessWeights()`  | `std::vector<double>` | Robustness weights        |
+| `iterationsUsed()`     | `int`                 | Iterations actually used  |
+| `fractionUsed()`       | `double`              | Fraction actually used    |
 
 ### `fastlowess::Diagnostics`
 
@@ -210,7 +213,7 @@ int main() {
     auto result = model.fit(x, y);
 
     if (result.valid()) {
-        auto y_hat = result.y_vector();
+        auto y_hat = result.yVector();
         for (double val : y_hat) {
             std::cout << val << " ";
         }

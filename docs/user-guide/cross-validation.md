@@ -111,7 +111,7 @@ Split data into K folds, train on K-1, validate on 1.
 
     auto result = fastlowess::smooth(x, y, opts);
 
-    std::cout << "Selected fraction: " << result.fraction_used() << std::endl;
+    std::cout << "Selected fraction: " << result.fractionUsed() << std::endl;
     ```
 
 ---

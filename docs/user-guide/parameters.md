@@ -916,7 +916,7 @@ Include final robustness weights (useful for outlier detection).
         .iterations = 3,
         .return_robustness_weights = true
     });
-    auto weights = result.robustness_weights();
+    auto weights = result.robustnessWeights();
     ```
 
 ---
