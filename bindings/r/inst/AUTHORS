@@ -116,7 +116,7 @@ Package: rfastlowess (1.2.0)
 Authors: Amir Valizadeh <thisisamirv@gmail.com>
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: safe_arch (0.7.4)
+Package: safe_arch (1.0.0)
 Authors: Lokathor <zefria@gmail.com>
 License: Zlib OR Apache-2.0 OR MIT
 ----------------------------------------
@@ -128,7 +128,7 @@ Package: unicode-ident (1.0.24)
 Authors: David Tolnay <dtolnay@gmail.com>
 License: (MIT OR Apache-2.0) AND Unicode-3.0
 ----------------------------------------
-Package: wide (0.7.33)
+Package: wide (1.4.0)
 Authors: Lokathor <zefria@gmail.com>
 License: Zlib OR Apache-2.0 OR MIT
 ----------------------------------------

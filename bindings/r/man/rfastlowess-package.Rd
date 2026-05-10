@@ -38,7 +38,6 @@ lines(result$x, result$y, col = "red", lwd = 2)
 \seealso{
 Useful links:
 \itemize{
-    \item \url{https://thisisamirv.github.io/lowess-project/}
     \item \url{https://github.com/thisisamirv/lowess-project}
     \item \url{https://lowess.readthedocs.io/}
 \item Report bugs at \url{https://github.com/thisisamirv/lowess-project/issues}

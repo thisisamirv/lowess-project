@@ -298,7 +298,188 @@ jobs:
                   cargo fmt --all -- --check
                   cargo clippy --all-targets -- -D warnings
 
-            - name: "Repository: make all"
+    # ============================================================================
+    # MAKE ALL JOBS: Full build on each platform
+    # ============================================================================
+    make-all-ubuntu:
+        name: make all (Ubuntu)
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@v4
+
+            - name: Install Rust Toolchain
+              uses: dtolnay/rust-toolchain@stable
+              with:
+                  components: rustfmt, clippy
+
+            - name: Install Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: "3.12"
+
+            - name: Install R
+              uses: r-lib/actions/setup-r@v2
+              with:
+                  use-public-rspm: true
+
+            - name: Install Pandoc
+              uses: r-lib/actions/setup-pandoc@v2
+
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+
+            - name: Install Julia
+              uses: julia-actions/setup-julia@v2
+              with:
+                  version: "1.11"
+
+            - name: Install wasm-pack
+              uses: jetli/wasm-pack-action@v0.4.0
+              with:
+                  version: "v0.14.0"
+
+            - name: Cache dependencies
+              uses: Swatinem/rust-cache@v2
+              with:
+                  key: make-all-ubuntu-cargo
+
+            - name: Setup GPU and R system dependencies
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y libvulkan1 mesa-vulkan-drivers vulkan-tools
+                  sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev libfontconfig1-dev libharfbuzz-dev libfribidi-dev libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev libprotobuf-dev protobuf-compiler libuv1-dev libgit2-dev libssh2-1-dev libmagick++-dev
+
+            - name: "make all"
+              shell: bash
+              env:
+                  PYTHON: python
+                  GALLIUM_DRIVER: lavapipe
+                  WGPU_BACKEND: vulkan
+              run: |
+                  export XDG_RUNTIME_DIR="${RUNNER_TEMP}/xdg-runtime"
+                  mkdir -p "$XDG_RUNTIME_DIR"
+                  chmod 700 "$XDG_RUNTIME_DIR"
+                  if [ -f /usr/share/vulkan/icd.d/lvp_icd.x86_64.json ]; then
+                    export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.x86_64.json
+                  else
+                    export VK_ICD_FILENAMES=$(find /usr/share/vulkan/icd.d -name 'lvp_icd*.json' | head -n 1)
+                  fi
+                  test -n "$VK_ICD_FILENAMES"
+                  vulkaninfo --summary
+                  make all
+
+    make-all-macos:
+        name: make all (macOS)
+        runs-on: macos-latest
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@v4
+
+            - name: Install Rust Toolchain
+              uses: dtolnay/rust-toolchain@stable
+              with:
+                  components: rustfmt, clippy
+
+            - name: Install Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: "3.12"
+
+            - name: Install R
+              uses: r-lib/actions/setup-r@v2
+              with:
+                  use-public-rspm: true
+
+            - name: Install Pandoc
+              uses: r-lib/actions/setup-pandoc@v2
+
+            - name: Install TinyTeX
+              uses: r-lib/actions/setup-tinytex@v2
+
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+
+            - name: Install Julia
+              uses: julia-actions/setup-julia@v2
+              with:
+                  version: "1.11"
+
+            - name: Install wasm-pack
+              uses: jetli/wasm-pack-action@v0.4.0
+              with:
+                  version: "v0.14.0"
+
+            - name: Cache dependencies
+              uses: Swatinem/rust-cache@v2
+              with:
+                  key: make-all-macos-cargo
+
+            - name: "make all"
+              shell: bash
+              env:
+                  PYTHON: python
+              run: make all
+
+    make-all-windows:
+        name: make all (Windows)
+        runs-on: windows-latest
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@v4
+
+            - name: Install Rust Toolchain
+              uses: dtolnay/rust-toolchain@stable
+              with:
+                  components: rustfmt, clippy
+
+            - name: Install Rust GNU
+              run: rustup toolchain install stable-x86_64-pc-windows-gnu
+
+            - name: Install Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: "3.12"
+
+            - name: Install R
+              uses: r-lib/actions/setup-r@v2
+              with:
+                  use-public-rspm: true
+
+            - name: Install Pandoc
+              uses: r-lib/actions/setup-pandoc@v2
+
+            - name: Install TinyTeX
+              uses: r-lib/actions/setup-tinytex@v2
+
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+
+            - name: Install GNU Make
+              run: choco install make -y
+
+            - name: Install Julia
+              uses: julia-actions/setup-julia@v2
+              with:
+                  version: "1.11"
+
+            - name: Install wasm-pack
+              uses: jetli/wasm-pack-action@v0.4.0
+              with:
+                  version: "v0.14.0"
+
+            - name: Cache dependencies
+              uses: Swatinem/rust-cache@v2
+              with:
+                  key: make-all-windows-cargo
+
+            - name: "make all"
               shell: bash
               env:
                   PYTHON: python

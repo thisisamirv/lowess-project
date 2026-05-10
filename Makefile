@@ -36,6 +36,7 @@ endif
 # Python interpreter
 PYTHON ?= python
 PYO3_PYTHON ?= $(PYTHON)
+NODE ?= node
 
 # lowess crate
 LOWESS_PKG := lowess
@@ -83,6 +84,14 @@ NODE_PKG := fastlowess-node
 NODE_DIR := bindings/nodejs
 NODE_TEST_DIR := tests/nodejs
 
+ifeq ($(HOST_PLATFORM),windows)
+	NPM := npm.cmd
+	NPX := npx.cmd
+else
+	NPM := npm
+	NPX := npx
+endif
+
 # WebAssembly bindings
 WASM_PKG := fastlowess-wasm
 WASM_DIR := bindings/wasm
@@ -103,6 +112,8 @@ else
 	JL_SHARED_LIB := target/release/libfastlowess_jl.so
 	JL_EXPORT_SCAN := nm -D $(JL_SHARED_LIB)
 endif
+
+JL_SHARED_LIB_ABS := $(abspath $(JL_SHARED_LIB))
 
 ifeq ($(HOST_PLATFORM),windows)
 	CPP_SHARED_LIB := target/release/fastlowess_cpp.dll
@@ -381,9 +392,10 @@ _r_impl:
 	@echo "2. Installing development packages (R & Python)..."
 	@echo "=============================================================================="
 	@$(PYTHON) -m pip install -q tomli tomli_w || true
-	@Rscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); suppressWarnings(install.packages(c('devtools', 'remotes', 'styler', 'prettycode', 'covr', 'BiocManager', 'toml', 'V8', 'visNetwork', 'pkgdown', 'testthat'), quiet = TRUE))" || true
-	@Rscript -e "suppressWarnings(BiocManager::install(c('BiocCheck', 'BiocStyle'), quiet = TRUE, update = FALSE, ask = FALSE))" || true
-	@Rscript -e "install.packages(c('pkgcheck', 'pkgstats'), repos = c('https://ropensci.r-universe.dev', 'https://cloud.r-project.org'), quiet = TRUE)"
+	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); dir.create(lib, recursive = TRUE, showWarnings = FALSE); .libPaths(c(lib, .libPaths())); options(repos = c(CRAN = 'https://cloud.r-project.org'), warn = 1); required_pkgs <- c('BiocManager', 'styler', 'testthat', 'rmarkdown', 'knitr', 'lintr', 'roxygen2', 'pkgdown', 'remotes'); missing <- required_pkgs[!vapply(required_pkgs, requireNamespace, logical(1), quietly = TRUE, lib.loc = lib)]; if (length(missing) > 0L) { message('Installing required packages: ', paste(missing, collapse = ', ')); tryCatch({ install.packages(missing, lib = lib, type = ifelse(Sys.info()[['sysname']] == 'Darwin', 'both', 'source'), INSTALL_opts = '--no-test-load', dependencies = TRUE, Ncpus = parallel::detectCores()); still_missing <- missing[!vapply(missing, requireNamespace, logical(1), quietly = TRUE, lib.loc = lib)]; if (length(still_missing) > 0L) stop('Required R packages not available: ', paste(still_missing, collapse = ', '), call. = FALSE) }, error = function(err) stop('Failed to install required packages: ', conditionMessage(err), call. = FALSE)) } else { message('All required packages already available') }; message('Verifying all dependencies are installed...'); tryCatch({ install.packages(required_pkgs, lib = lib, type = ifelse(Sys.info()[['sysname']] == 'Darwin', 'both', 'source'), INSTALL_opts = '--no-test-load', dependencies = TRUE, Ncpus = parallel::detectCores()) }, error = function(err) message('Note: Some dependencies may have failed: ', conditionMessage(err))); optional_pkgs <- c('covr', 'prettycode', 'toml', 'V8', 'visNetwork'); missing_opt <- optional_pkgs[!vapply(optional_pkgs, requireNamespace, logical(1), quietly = TRUE, lib.loc = lib)]; if (length(missing_opt) > 0L) { message('Installing optional packages: ', paste(missing_opt, collapse = ', ')); tryCatch(install.packages(missing_opt, lib = lib, quiet = TRUE, dependencies = TRUE, Ncpus = parallel::detectCores()), error = function(err) message('Some optional packages failed to install')) }"
+	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); if (!requireNamespace('srr', quietly = TRUE, lib.loc = lib)) { message('Installing srr from r-universe...'); options(repos = c(ropenscireviewtools = 'https://ropensci-review-tools.r-universe.dev', CRAN = 'https://cloud.r-project.org')); tryCatch({ suppressWarnings(install.packages('srr', lib = lib, quiet = TRUE)); if (requireNamespace('srr', quietly = TRUE, lib.loc = lib)) message('  Successfully installed: srr') else message('  Optional package srr not available') }, error = function(err) message('  Optional package srr not available (', conditionMessage(err), ')')) } else { message('  Already available: srr') }"
+	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); if (!requireNamespace('BiocManager', quietly = TRUE, lib.loc = lib)) stop('Required R package not available: BiocManager', call. = FALSE); bioc_pkgs <- c('BiocStyle'); missing_bioc <- bioc_pkgs[!vapply(bioc_pkgs, requireNamespace, logical(1), quietly = TRUE, lib.loc = lib)]; if (length(missing_bioc) > 0L) { message('Installing Bioconductor packages: ', paste(missing_bioc, collapse = ', ')); tryCatch({ BiocManager::install(missing_bioc, lib = lib, update = FALSE, ask = FALSE); still_missing <- missing_bioc[!vapply(missing_bioc, requireNamespace, logical(1), quietly = TRUE, lib.loc = lib)]; if (length(still_missing) > 0L) stop('Required Bioconductor packages not available: ', paste(still_missing, collapse = ', '), call. = FALSE) }, error = function(err) stop('Failed to install Bioconductor packages: ', conditionMessage(err), call. = FALSE)) } else { message('Bioconductor packages already available') }; optional_bioc <- c('BiocCheck'); missing_opt_bioc <- optional_bioc[!vapply(optional_bioc, requireNamespace, logical(1), quietly = TRUE, lib.loc = lib)]; if (length(missing_opt_bioc) > 0L) { message('Installing optional Bioconductor packages: ', paste(missing_opt_bioc, collapse = ', ')); tryCatch(suppressWarnings(BiocManager::install(missing_opt_bioc, lib = lib, update = FALSE, ask = FALSE, quiet = TRUE)), error = function(err) message('Some optional Bioconductor packages failed to install')) }"
+	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c('https://ropensci.r-universe.dev', 'https://cloud.r-project.org')); install_optional <- function(pkg) { if (requireNamespace(pkg, quietly = TRUE, lib.loc = lib)) return(invisible(TRUE)); tryCatch(suppressWarnings(install.packages(pkg, lib = lib, quiet = TRUE)), error = function(err) message('Failed to install ', pkg, ': ', conditionMessage(err))); if (!requireNamespace(pkg, quietly = TRUE, lib.loc = lib)) message('Optional R package not available: ', pkg); invisible(TRUE) }; invisible(vapply(c('pkgcheck', 'pkgstats'), install_optional, logical(1)))"
 	@echo "R development packages installed!"
 	@echo "=============================================================================="
 	@echo "3. Vendoring..."
@@ -430,45 +442,45 @@ _r_impl:
 	@echo "4a. Formatting..."
 	@echo "=============================================================================="
 	@cd $(R_DIR)/src && cargo fmt -q
-	@cd $(R_DIR) && Rscript $(PWD)/dev/style_pkg.R || true
+	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript dev/style_pkg.R $(R_DIR) || true
 	@cd $(R_DIR)/src && cargo fmt -- --check || (echo "Run 'cargo fmt' to fix"; exit 1)
 	@cd $(R_DIR)/src && cargo clippy -q $(R_CARGO_TARGET) -- -D warnings
-	@Rscript -e "my_linters <- lintr::linters_with_defaults(indentation_linter = lintr::indentation_linter(indent = 4L), object_name_linter = NULL, commented_code_linter = NULL, object_usage_linter = NULL); lints <- c(lintr::lint_dir('$(R_DIR)/R', linters = my_linters), lintr::lint_dir('tests/r/testthat', linters = my_linters), lintr::lint_dir('examples/r', linters = my_linters)); print(lints); if (length(lints) > 0L) quit(status = 1)"
+	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); if (!requireNamespace('lintr', quietly = TRUE, lib.loc = lib)) stop('Required R package not available: lintr', call. = FALSE); my_linters <- lintr::linters_with_defaults(indentation_linter = lintr::indentation_linter(indent = 4L), object_name_linter = NULL, commented_code_linter = NULL, object_usage_linter = NULL); lints <- c(lintr::lint_dir('$(R_DIR)/R', linters = my_linters), lintr::lint_dir('$(R_DIR)/tests/testthat', linters = my_linters), lintr::lint_dir('examples/r', linters = my_linters)); print(lints); if (length(lints) > 0L) quit(status = 1)"
 	@echo "=============================================================================="
 	@echo "4b. Documentation..."
 	@echo "=============================================================================="
 	@rm -rf $(R_DIR)/*.Rcheck
 	@cd $(R_DIR)/src && RUSTDOCFLAGS="-D warnings" cargo doc -q --no-deps $(R_CARGO_TARGET)
-	@cd $(R_DIR) && Rscript -e "devtools::document(quiet = TRUE)"
-	@Rscript dev/fix_rd_style.R
-	@Rscript -e "if (!requireNamespace('rmarkdown', quietly = TRUE) || !rmarkdown::pandoc_available()) { message('\nERROR: Pandoc is required to build R Markdown vignettes but is not available.\nPlease install Pandoc (https://pandoc.org/installing.html) and ensure it is in your PATH.\n'); quit(status = 1) }"
-	@cd $(R_DIR) && Rscript -e "pkgdown::build_site(quiet = TRUE, install = TRUE)"
+	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); for (pkg in c('roxygen2', 'srr')) { if (!requireNamespace(pkg, quietly = TRUE, lib.loc = lib)) suppressWarnings(try(install.packages(pkg, lib = lib, quiet = TRUE), silent = TRUE)) }; if (!requireNamespace('roxygen2', quietly = TRUE, lib.loc = lib)) stop('Required R package not available for roxygen regeneration: roxygen2', call. = FALSE); has_srr <- requireNamespace('srr', quietly = TRUE, lib.loc = lib); roclets <- if (has_srr) c('namespace', 'rd', 'srr::srr_stats_roclet') else c('namespace', 'rd'); roxygen2::roxygenise(package.dir = '.', roclets = roclets, load_code = roxygen2::load_pkgload)"
+	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript dev/fix_rd_style.R
+	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "if (!requireNamespace('rmarkdown', quietly = TRUE, lib.loc = Sys.getenv('R_LIBS_USER')) || !rmarkdown::pandoc_available()) { message('\nERROR: Pandoc is required to build R Markdown vignettes but is not available.\nPlease install Pandoc (https://pandoc.org/installing.html) and ensure it is in your PATH.\n'); quit(status = 1) }"
+	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); for (pkg in c('pkgdown', 'rmarkdown', 'knitr')) { if (!requireNamespace(pkg, quietly = TRUE, lib.loc = lib)) install.packages(pkg, lib = lib, quiet = TRUE) }; if (!requireNamespace('pkgdown', quietly = TRUE, lib.loc = lib) || !requireNamespace('rmarkdown', quietly = TRUE, lib.loc = lib) || !requireNamespace('knitr', quietly = TRUE, lib.loc = lib)) stop('Required R packages not available for pkgdown site build', call. = FALSE); pkgdown::build_site(quiet = TRUE, install = TRUE)"
 	@rm -f $(R_DIR)/.gitignore
 	@echo "=============================================================================="
 	@echo "4c. Building..."
 	@echo "=============================================================================="
 	@cd $(R_DIR) && ../../dev/prepare_cran.sh
-	@cd $(R_DIR) && R CMD build .
+	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) R CMD build .
 	@echo "=============================================================================="
 	@echo "5. Installing..."
 	@echo "=============================================================================="
-	@rm -rf $(R_LIB_DIR) $(R_DIR)/00LOCK-$(R_PKG_NAME)
+	@rm -rf $(R_DIR)/00LOCK-$(R_PKG_NAME)
 	@mkdir -p $(R_LIB_DIR)
-	@R_LIBS_USER=$(PWD)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); if (!requireNamespace('BiocManager', quietly = TRUE)) install.packages('BiocManager', quiet = TRUE); if (!requireNamespace('BiocGenerics', quietly = TRUE, lib.loc = lib)) BiocManager::install('BiocGenerics', lib = lib, ask = FALSE, update = FALSE, quiet = TRUE); if (!requireNamespace('testthat', quietly = TRUE, lib.loc = lib)) install.packages('testthat', lib = lib, quiet = TRUE)"
-	@cd $(R_DIR) && R CMD INSTALL -l .r-lib $(R_PKG_TARBALL)
+	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); if (!requireNamespace('BiocManager', quietly = TRUE, lib.loc = lib)) install.packages('BiocManager', lib = lib, quiet = TRUE); if (!requireNamespace('BiocGenerics', quietly = TRUE, lib.loc = lib)) BiocManager::install('BiocGenerics', lib = lib, ask = FALSE, update = FALSE, quiet = TRUE); if (!requireNamespace('testthat', quietly = TRUE, lib.loc = lib)) install.packages('testthat', lib = lib, quiet = TRUE)"
+	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) R CMD INSTALL -l .r-lib $(R_PKG_TARBALL)
 	@echo "=============================================================================="
 	@echo "8. Testing..."
 	@echo "=============================================================================="
 	@cd $(R_DIR)/src && cargo test -q $(R_CARGO_TARGET)
-	@R_LIBS_USER=$(PWD)/$(R_LIB_DIR) Rscript -e "Sys.setenv(NOT_CRAN='true'); testthat::test_dir('tests/r/testthat', package = 'rfastlowess')"
+	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "Sys.setenv(NOT_CRAN='true'); testthat::test_dir('$(R_DIR)/tests/testthat', package = 'rfastlowess')"
 	@echo "=============================================================================="
 	@echo "9. Submission checks..."
 	@echo "=============================================================================="
-	@cd $(R_DIR) && R_MAKEVARS_USER=$(PWD)/dev/Makevars.check R CMD check --as-cran $(R_PKG_TARBALL) || true
-	@cd $(R_DIR) && Rscript -e "if (requireNamespace('BiocCheck', quietly=TRUE)) BiocCheck::BiocCheck('$(R_PKG_TARBALL)', new_package=FALSE)" || true
+	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) R_MAKEVARS_USER=$(CURDIR)/dev/Makevars.check R CMD check --as-cran $(R_PKG_TARBALL) || true
+	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "if (requireNamespace('BiocCheck', quietly=TRUE, lib.loc = Sys.getenv('R_LIBS_USER'))) BiocCheck::BiocCheck('$(R_PKG_TARBALL)', new_package=FALSE)" || true
 	@echo "Package size (Limit: 5MB):"
 	@ls -lh $(R_DIR)/$(R_PKG_TARBALL) || true
-	@Rscript -e "library(pkgstats); library(pkgcheck); token <- Sys.getenv('GITHUB_TOKEN', ''); if (nzchar(token) && !nzchar(Sys.getenv('GITHUB_PAT', ''))) Sys.setenv(GITHUB_PAT = token); tryCatch(pkgcheck(use_cache = FALSE), error = function(err) { msg <- conditionMessage(err); if (grepl('GitHub API error', msg, ignore.case = TRUE) || grepl('rate limit exceeded', msg, ignore.case = TRUE) || grepl('timeout', msg, ignore.case = TRUE) || grepl('could not resolve host', msg, ignore.case = TRUE)) { message('Skipping pkgcheck due to external GitHub/network failure: ', msg); return(invisible(NULL)); }; stop(err) })"
+	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); if (!requireNamespace('pkgstats', quietly = TRUE, lib.loc = lib) || !requireNamespace('pkgcheck', quietly = TRUE, lib.loc = lib)) { message('Skipping pkgcheck because pkgstats/pkgcheck are not available in R_LIBS_USER'); quit(status = 0) }; library(pkgstats, lib.loc = lib); library(pkgcheck, lib.loc = lib); token <- Sys.getenv('GITHUB_TOKEN', ''); if (nzchar(token) && !nzchar(Sys.getenv('GITHUB_PAT', ''))) Sys.setenv(GITHUB_PAT = token); tryCatch(pkgcheck(use_cache = FALSE), error = function(err) { msg <- conditionMessage(err); if (grepl('GitHub API error', msg, ignore.case = TRUE) || grepl('rate limit exceeded', msg, ignore.case = TRUE) || grepl('timeout', msg, ignore.case = TRUE) || grepl('could not resolve host', msg, ignore.case = TRUE)) { message('Skipping pkgcheck due to external GitHub/network failure: ', msg); return(invisible(NULL)); }; stop(err) })"
 	@if [ -f $(R_DIR)/src/Cargo.toml.orig ]; then mv $(R_DIR)/src/Cargo.toml.orig $(R_DIR)/src/Cargo.toml; fi
 
 	@echo "All $(R_PKG_NAME) checks completed successfully!"
@@ -575,20 +587,20 @@ _julia_checks_internal:
 	@echo "=============================================================================="
 	@echo "6. Testing Julia bindings..."
 	@echo "=============================================================================="
-	@export FASTLOWESS_LIB=$(PWD)/$(JL_SHARED_LIB) && \
+	@export FASTLOWESS_LIB=$(JL_SHARED_LIB_ABS) && \
 	julia --project=$(JL_DIR)/julia -e 'using Pkg; Pkg.resolve(); Pkg.instantiate(); Pkg.precompile()' && \
 	julia --project=$(JL_DIR)/julia tests/julia/test_FastLOWESS.jl
 	@echo "=============================================================================="
 	@echo "7. Aqua.jl package quality..."
 	@echo "=============================================================================="
-	@export FASTLOWESS_LIB=$(PWD)/$(JL_SHARED_LIB) && \
+	@export FASTLOWESS_LIB=$(JL_SHARED_LIB_ABS) && \
 	julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.develop(path="$(JL_DIR)/julia"); \
 		Pkg.add("Aqua"); using Aqua, FastLOWESS; \
 		Aqua.test_all(FastLOWESS; ambiguities=false, stale_deps=(ignore=[:Aqua],))'
 	@echo "=============================================================================="
 	@echo "8. JET.jl type-inference check..."
 	@echo "=============================================================================="
-	@export FASTLOWESS_LIB=$(PWD)/$(JL_SHARED_LIB) && \
+	@export FASTLOWESS_LIB=$(JL_SHARED_LIB_ABS) && \
 	julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.develop(path="$(JL_DIR)/julia"); \
 		Pkg.add("JET"); using JET, FastLOWESS; \
 		report = JET.report_package(FastLOWESS); \
@@ -629,19 +641,19 @@ _nodejs_impl:
 	@echo "=============================================================================="
 	@cargo clippy -q -p $(NODE_PKG) --all-targets -- -D warnings
 	@echo "Linting Node.js files..."
-	@cd $(NODE_DIR) && npm install
-	@cd $(NODE_DIR) && npm audit || true
-	@cd $(NODE_DIR) && npx -y license-checker --summary --failOn GPL
-	@cd $(NODE_DIR) && npx -y depcheck --ignores="fastlowess-*,oxlint"
-	@cd $(NODE_DIR) && (npm outdated | grep -v "fastlowess-" || true)
-	@cd $(NODE_DIR) && npm ci --dry-run
-	@cd $(NODE_DIR) && npx -y -p typescript tsc index.d.ts --noEmit --allowJs
-	@npx oxlint $(NODE_DIR)/index.js tests/nodejs/test_fastlowess.js examples/nodejs/*.js
-	@cd $(NODE_DIR) && npm run build
+	@cd $(NODE_DIR) && $(NPM) install
+	@cd $(NODE_DIR) && $(NPM) audit || true
+	@$(NODE) dev/check_js_licenses.mjs $(NODE_DIR) --fail-on-gpl
+	@cd $(NODE_DIR) && $(NPX) -y depcheck --ignores="fastlowess-*,oxlint"
+	@cd $(NODE_DIR) && ($(NPM) outdated | grep -v "fastlowess-" || true)
+	@cd $(NODE_DIR) && $(NPM) ci --dry-run
+	@cd $(NODE_DIR) && $(NPX) -y -p typescript tsc index.d.ts --noEmit --allowJs
+	@$(NPX) -y oxlint $(NODE_DIR)/index.js tests/nodejs/test_fastlowess.js examples/nodejs/*.js
+	@cd $(NODE_DIR) && $(NPM) run build
 	@echo "=============================================================================="
 	@echo "3. Testing..."
 	@echo "=============================================================================="
-	@cd $(NODE_DIR) && npm test
+	@cd $(NODE_DIR) && $(NPM) test
 	@echo "$(NODE_PKG) checks completed successfully!"
 
 nodejs-clean:
@@ -671,13 +683,17 @@ _wasm_impl:
 	@echo "=============================================================================="
 	@cargo clippy -q -p $(WASM_PKG) --all-targets -- -D warnings
 	@echo "Linting WASM JS files..."
-	@cd $(WASM_DIR) && npm install -q
-	@cd $(WASM_DIR) && npm audit || true
-	@cd $(WASM_DIR) && npx -y license-checker --summary --failOn GPL
-	@cd $(WASM_DIR) && npx -y depcheck --ignores="oxlint"
-	@cd $(WASM_DIR) && (npm outdated | grep -v "fastlowess-" || true)
-	@cd $(WASM_DIR) && npm ci --dry-run
-	@npx oxlint $(WASM_DIR)/src/*.js tests/wasm/*.js
+	@cd $(WASM_DIR) && $(NPM) install -q
+	@cd $(WASM_DIR) && $(NPM) audit || true
+	@$(NODE) dev/check_js_licenses.mjs $(WASM_DIR) --fail-on-gpl
+	@cd $(WASM_DIR) && $(NPX) -y depcheck --ignores="oxlint"
+	@cd $(WASM_DIR) && ($(NPM) outdated | grep -v "fastlowess-" || true)
+	@cd $(WASM_DIR) && $(NPM) ci --dry-run
+	@$(NPX) -y oxlint $(WASM_DIR)/src/*.js tests/wasm/*.js
+	@if ! command -v wasm-pack >/dev/null 2>&1; then \
+		echo "wasm-pack not found. Installing..."; \
+		cargo install wasm-pack; \
+	fi
 	@cd $(WASM_DIR) && wasm-pack build --target nodejs --out-dir pkg
 	@echo "Checking WASM size (Limit: 2MB)..."
 	@[ $$($(STAT_SIZE_CMD) $(WASM_DIR)/pkg/fastlowess_wasm_bg.wasm) -le 2097152 ] || (echo "Error: WASM size exceeded 2MB"; exit 1)
@@ -734,10 +750,23 @@ _cpp_impl:
 	fi
 	@echo "Running cppcheck..."
 	@if command -v cppcheck >/dev/null 2>&1; then \
-		cppcheck --error-exitcode=1 --enable=warning,performance,portability \
+		cppcheck_log="$(TEMP)/cppcheck-cpp.log"; \
+		if cppcheck --error-exitcode=1 --enable=warning,performance,portability \
 			--suppress=missingInclude --suppress=missingIncludeSystem \
 			-I $(CPP_DIR)/include \
-			$(CPP_DIR)/include/fastlowess.hpp tests/cpp/test_fastlowess.cpp examples/cpp/; \
+			$(CPP_DIR)/include/fastlowess.hpp tests/cpp/test_fastlowess.cpp examples/cpp/ > "$$cppcheck_log" 2>&1; then \
+			cat "$$cppcheck_log"; \
+		else \
+			cppcheck_status=$$?; \
+			cat "$$cppcheck_log"; \
+			if grep -q "Failed to load library configuration file 'std.cfg'" "$$cppcheck_log"; then \
+				echo "cppcheck installation is broken. Skipping static analysis pass."; \
+			else \
+				rm -f "$$cppcheck_log"; \
+				exit $$cppcheck_status; \
+			fi; \
+		fi; \
+		rm -f "$$cppcheck_log"; \
 	else \
 		echo "cppcheck not found. Skipping static analysis pass."; \
 	fi

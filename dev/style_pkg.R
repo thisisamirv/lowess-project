@@ -19,11 +19,18 @@ style_4spaces <- function(...) {
 }
 
 # Apply to the package
+pkg_path <- commandArgs(trailingOnly = TRUE)
+if (length(pkg_path) > 0L && nzchar(pkg_path[[1L]])) {
+    setwd(pkg_path[[1L]])
+}
+
 if (requireNamespace("styler", quietly = TRUE)) {
     message("Styling package with 4-space indentation...")
     styler::style_pkg(
         style = style_4spaces,
-        filetype = c("R", "Rprofile", "Rmd", "Rmarkdown", "Rnw")
+        filetype = c("R", "Rprofile", "Rmd", "Rmarkdown", "Rnw"),
+        exclude_dirs = c(".r-lib", "check-root", "rfastlowess.Rcheck", "rfastlowess.BiocCheck"),
+        exclude_files = "tests/testthat\\.R$"
     )
 } else {
     stop("Package 'styler' is required.")
