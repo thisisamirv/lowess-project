@@ -138,9 +138,16 @@ jobs:
       - name: Prepare Package Sources
         shell: bash
         run: |
+          if [ -f "$HOME/.cargo/env" ]; then
+            . "$HOME/.cargo/env"
+          fi
           chmod +x configure cleanup ../../dev/prepare_cran.sh
           ../../dev/prepare_cran.sh
           test -f tests/testthat.R
       - name: Run ASAN Check
+        shell: bash
         run: |
+          if [ -f "$HOME/.cargo/env" ]; then
+            . "$HOME/.cargo/env"
+          fi
           RDscript -e "rcmdcheck::rcmdcheck(args = c('--no-manual', '--no-vignettes'), build_args = c('--no-build-vignettes'), error_on = 'error', check_dir = 'check')"

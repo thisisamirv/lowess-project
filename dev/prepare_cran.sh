@@ -1,6 +1,16 @@
 #!/bin/bash
 set -e
 
+if ! command -v cargo >/dev/null 2>&1 && [ -f "$HOME/.cargo/env" ]; then
+	# Rust installed via rustup exposes cargo through this env file.
+	. "$HOME/.cargo/env"
+fi
+
+if ! command -v cargo >/dev/null 2>&1; then
+	echo "Error: cargo not found on PATH. Install Rust or source ~/.cargo/env before running prepare_cran.sh." >&2
+	exit 127
+fi
+
 echo "📦 Preparing package for CRAN submission..."
 
 # 1. Extract vendor archive if needed
