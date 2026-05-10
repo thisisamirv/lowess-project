@@ -1,13 +1,23 @@
 #!/bin/bash
 set -e
 
-if ! command -v cargo >/dev/null 2>&1 && [ -f "$HOME/.cargo/env" ]; then
-	# Rust installed via rustup exposes cargo through this env file.
-	. "$HOME/.cargo/env"
+if ! command -v cargo >/dev/null 2>&1; then
+	for rust_env in \
+		"${CARGO_HOME:-}/env" \
+		"$HOME/.cargo/env" \
+		"/github/home/.cargo/env" \
+		"/root/.cargo/env" \
+		"/usr/local/cargo/env"; do
+		if [ -n "$rust_env" ] && [ -f "$rust_env" ]; then
+			# Rust installed via rustup exposes cargo through this env file.
+			. "$rust_env"
+			break
+		fi
+	done
 fi
 
 if ! command -v cargo >/dev/null 2>&1; then
-	echo "Error: cargo not found on PATH. Install Rust or source ~/.cargo/env before running prepare_cran.sh." >&2
+	echo "Error: cargo not found on PATH. Install Rust or source a rustup env file before running prepare_cran.sh." >&2
 	exit 127
 fi
 
