@@ -1,0 +1,2 @@
+#!/bin/sh
+python dev/check_root_cargo.py --hook pre-push

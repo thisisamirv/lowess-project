@@ -1,3 +1,5 @@
+"""Regression test that verifies heavy LOWESS fitting releases the Python GIL."""
+
 import threading
 import time
 import numpy as np
@@ -5,6 +7,7 @@ from fastlowess import Lowess
 
 
 def heavy_computation():
+    """Run a deliberately heavy LOWESS fit in a worker thread."""
     # Create large random dataset to ensure computation takes time
     n_points = 50_000  # Enough to take a few hundred ms
     x = np.linspace(0, 100, n_points)
@@ -20,6 +23,7 @@ def heavy_computation():
 
 
 def heartbeat():
+    """Emit periodic ticks while the worker thread is fitting."""
     start = time.time()
     ticks = 0
     while time.time() - start < 2.0:  # Run for 2 seconds
@@ -30,6 +34,7 @@ def heartbeat():
 
 
 def test_gil_release():
+    """Check that the main thread stays responsive during model fitting."""
     print("Verifying GIL release...")
 
     # Thread for heavy computation
