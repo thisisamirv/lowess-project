@@ -14,10 +14,12 @@ The OnlineLowess class is designed for:
 - Low-latency applications
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
-from fastlowess import OnlineLowess
 import os
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+from fastlowess import OnlineLowess
 
 # Get script directory for relative paths
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -25,6 +27,7 @@ PLOTS_DIR = os.path.join(SCRIPT_DIR, "plots")
 
 
 def main():
+    """Run the online smoothing example and save the generated plots."""
     print("=== fastlowess Online Smoothing Example ===")
 
     # 1. Simulate a real-time signal

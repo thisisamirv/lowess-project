@@ -12,10 +12,12 @@ The Lowess class is the primary interface for
 processing complete datasets that fit in memory.
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
-from fastlowess import Lowess
 import os
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+from fastlowess import Lowess
 
 # Get script directory for relative paths
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -45,19 +47,11 @@ def generate_sample_data(n_points=1000):
     return x, y, y_true
 
 
-def main():
-    print("=== fastlowess Batch Smoothing Example ===")
-
-    # 1. Generate Data
-    x, y, y_true = generate_sample_data(1000)
-    print(f"Generated {len(x)} data points with outliers.")
-
-    # 2. Basic Smoothing (Default parameters)
+def run_batch_models(x, y):
+    """Fit the batch example models and return their smoothing results."""
     print("Running basic smoothing...")
-    # Use a smaller fraction (0.05) to capture the sine wave seasonality
     res_basic = Lowess(iterations=0, fraction=0.05).fit(x, y)
 
-    # 3. Robust Smoothing (IRLS)
     print("Running robust smoothing (3 iterations)...")
     res_robust = Lowess(
         fraction=0.05,
@@ -66,7 +60,6 @@ def main():
         return_robustness_weights=True,
     ).fit(x, y)
 
-    # 4. Uncertainty Quantification
     print("Computing confidence and prediction intervals...")
     res_intervals = Lowess(
         fraction=0.05,
@@ -75,28 +68,21 @@ def main():
         return_diagnostics=True,
     ).fit(x, y)
 
-    # 5. Cross-Validation for optimal fraction
     print("Running cross-validation to find optimal fraction...")
     cv_fractions = [0.05, 0.1, 0.2, 0.4]
     res_cv = Lowess(cv_fractions=cv_fractions, cv_method="kfold", cv_k=5).fit(x, y)
-    print(f"Optimal fraction found: {res_cv.fraction_used}")
+    return res_basic, res_robust, res_intervals, res_cv
 
-    # Plotting Results
-    os.makedirs(PLOTS_DIR, exist_ok=True)
 
+def plot_batch_results(x, y, y_true, smoothing_results):
+    """Create the main batch example plots and return their figure objects."""
+    res_basic, res_robust, res_intervals = smoothing_results
     fig1 = plt.figure(figsize=(12, 8))
 
-    # Original Data
     plt.scatter(x, y, alpha=0.3, color="gray", s=10, label="Noisy Data (w/ Outliers)")
     plt.plot(x, y_true, "k--", alpha=0.8, label="True Signal")
-
-    # Basic Smoothing
     plt.plot(x, res_basic.y, "r-", linewidth=2, label="Basic LOWESS (Non-robust)")
-
-    # Robust Smoothing
     plt.plot(x, res_robust.y, "g-", linewidth=2.5, label="Robust LOWESS (3 iters)")
-
-    # Confidence Intervals
     plt.fill_between(
         x,
         res_intervals.confidence_lower,
@@ -106,20 +92,12 @@ def main():
         label="95% Confidence Interval",
     )
 
-    # Diagnostics Printout
-    diag = res_intervals.diagnostics
-    print("\nFit Statistics (Intervals Model):")
-    print(f" - R²:   {diag.r_squared:.4f}")
-    print(f" - RMSE: {diag.rmse:.4f}")
-    print(f" - MAE:  {diag.mae:.4f}")
-
     plt.title("fastlowess: Robust Batch Smoothing with Intervals")
     plt.xlabel("X Axis")
     plt.ylabel("Y Axis")
     plt.legend()
     plt.grid(True, alpha=0.3)
 
-    # Subplot for robustness weights
     fig2 = plt.figure(figsize=(12, 3))
     plt.scatter(
         x,
@@ -132,13 +110,15 @@ def main():
     plt.colorbar(label="Weight")
     plt.grid(True, alpha=0.3)
     plt.ylim(-0.1, 1.1)
+    return fig1, fig2
 
-    # 6. Boundary Policy Comparison
+
+def plot_boundary_policy_demo():
+    """Create a boundary policy comparison plot for linear data."""
     print("\nDemonstrating boundary policy effects on linear data...")
     xl = np.linspace(0, 10, 50)
     yl = 2 * xl + 1
 
-    # Compare policies
     r_ext = Lowess(fraction=0.6, boundary_policy="extend").fit(xl, yl)
     r_ref = Lowess(fraction=0.6, boundary_policy="reflect").fit(xl, yl)
     r_zr = Lowess(fraction=0.6, boundary_policy="zero").fit(xl, yl)
@@ -148,16 +128,48 @@ def main():
     plt.plot(xl, r_ext.y, "r-", label="Extend (Default) - constant padding")
     plt.plot(xl, r_ref.y, "g-", label="Reflect - mirrored padding")
     plt.plot(xl, r_zr.y, "b-", label="Zero - zero padding")
-
     plt.title("Effect of Boundary Policies on Linear Data (q=0.6)")
     plt.legend()
     plt.grid(True, alpha=0.2)
+    return fig3
 
+
+def save_example_plots(fig1, fig2, fig3):
+    """Save the generated batch example figures to disk."""
+    os.makedirs(PLOTS_DIR, exist_ok=True)
     print(f"\nSaving plots to {PLOTS_DIR}/...")
     fig1.savefig(os.path.join(PLOTS_DIR, "batch_main.png"))
     fig2.savefig(os.path.join(PLOTS_DIR, "batch_weights.png"))
     fig3.savefig(os.path.join(PLOTS_DIR, "batch_boundary.png"))
     print("Done!")
+
+
+def main():
+    """Run the batch smoothing example and save the generated plots."""
+    print("=== fastlowess Batch Smoothing Example ===")
+    x, y, y_true = generate_sample_data(1000)
+    print(f"Generated {len(x)} data points with outliers.")
+
+    res_basic, res_robust, res_intervals, res_cv = run_batch_models(x, y)
+    print(f"Optimal fraction found: {res_cv.fraction_used}")
+
+    diag = res_intervals.diagnostics
+    print("\nFit Statistics (Intervals Model):")
+    if diag is None:
+        print(" - Diagnostics unavailable")
+    else:
+        print(f" - R²:   {diag.r_squared:.4f}")
+        print(f" - RMSE: {diag.rmse:.4f}")
+        print(f" - MAE:  {diag.mae:.4f}")
+
+    fig1, fig2 = plot_batch_results(
+        x,
+        y,
+        y_true,
+        (res_basic, res_robust, res_intervals),
+    )
+    fig3 = plot_boundary_policy_demo()
+    save_example_plots(fig1, fig2, fig3)
 
 
 if __name__ == "__main__":
