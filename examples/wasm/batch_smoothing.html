@@ -12,17 +12,50 @@
 -->
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>fastlowess WASM - Batch Smoothing Example</title>
     <style>
-        body { font-family: monospace; max-width: 900px; margin: 0 auto; padding: 20px; background: #1e1e1e; color: #d4d4d4; }
-        h1 { color: #569cd6; }
-        #output { white-space: pre-wrap; font-family: 'Consolas', 'Monaco', monospace; }
-        .log-section { margin-bottom: 20px; border-left: 2px solid #569cd6; padding-left: 10px; }
-        button { cursor: pointer; padding: 8px 16px; font-size: 14px; background: #0e639c; color: white; border: none; border-radius: 4px; }
-        button:hover { background: #1177bb; }
+        body {
+            font-family: monospace;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+
+        h1 {
+            color: #569cd6;
+        }
+
+        #output {
+            white-space: pre-wrap;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        .log-section {
+            margin-bottom: 20px;
+            border-left: 2px solid #569cd6;
+            padding-left: 10px;
+        }
+
+        button {
+            cursor: pointer;
+            padding: 8px 16px;
+            font-size: 14px;
+            background: #0e639c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+
+        button:hover {
+            background: #1177bb;
+        }
     </style>
 </head>
+
 <body>
     <h1>fastlowess Batch Smoothing Example</h1>
     <p>Running WASM implementation...</p>
@@ -30,7 +63,7 @@
 
     <script type="module">
         import init, { smooth } from "../../bindings/wasm/pkg-web/fastlowess_wasm.js";
-        
+
         // Helper to log to screen
         function log(msg) {
             const out = document.getElementById('output');
@@ -46,7 +79,7 @@
         function generateSampleData(nPoints = 1000) {
             const x = new Float64Array(nPoints);
             const y = new Float64Array(nPoints);
-            
+
             for (let i = 0; i < nPoints; i++) {
                 x[i] = (i / (nPoints - 1)) * 50; // range 0 to 50
                 // Trend + Seasonality
@@ -74,7 +107,7 @@
                 log("=== fastlowess Batch Smoothing Example ===\n");
 
                 await init();
-                
+
                 // 1. Generate Data
                 const { x, y } = generateSampleData(1000);
                 log(`1. Generated ${x.length} data points with outliers.`);
@@ -95,9 +128,9 @@
                 });
                 const weights = resRobust.robustnessWeights;
                 let outlierCount = 0;
-                if(weights) {
-                    for(let i=0; i<weights.length; i++) {
-                        if(weights[i] < 0.1) outlierCount++;
+                if (weights) {
+                    for (let i = 0; i < weights.length; i++) {
+                        if (weights[i] < 0.1) outlierCount++;
                     }
                 }
                 log(`   - Identified ~${outlierCount} outliers (weight < 0.1)`);
@@ -122,14 +155,14 @@
                 // 5. Cross-Validation for optimal fraction
                 log("\n5. Running cross-validation to find optimal fraction...");
                 const cvFractions = [0.05, 0.1, 0.2, 0.4];
-                const resCV = smooth(x, y, { 
-                    cvFractions, 
-                    cvMethod: "kfold", 
+                const resCV = smooth(x, y, {
+                    cvFractions,
+                    cvMethod: "kfold",
                     cvK: 5
                 });
-                
+
                 log(`   - Optimal fraction selected: ${resCV.fractionUsed}`);
-                if(resCV.cvScores) {
+                if (resCV.cvScores) {
                     log(`   - CV Scores: [${Array.from(resCV.cvScores).map(n => n.toFixed(4)).join(', ')}]`);
                 }
 
@@ -137,14 +170,14 @@
                 log("\n6. Demonstrating boundary policy effects on linear data...");
                 const xl = new Float64Array(50);
                 const yl = new Float64Array(50);
-                for(let i=0; i<50; i++) {
+                for (let i = 0; i < 50; i++) {
                     xl[i] = (i / 49) * 10;
                     yl[i] = 2 * xl[i] + 1;
                 }
 
                 const rExt = smooth(xl, yl, { fraction: 0.6, boundaryPolicy: "extend" });
                 const rRef = smooth(xl, yl, { fraction: 0.6, boundaryPolicy: "reflect" });
-                const rZr  = smooth(xl, yl, { fraction: 0.6, boundaryPolicy: "zero" });
+                const rZr = smooth(xl, yl, { fraction: 0.6, boundaryPolicy: "zero" });
 
                 log(`   - Extend (Default): first=${rExt.y[0].toFixed(2)}, last=${rExt.y[49].toFixed(2)}`);
                 log(`   - Reflect:          first=${rRef.y[0].toFixed(2)}, last=${rRef.y[49].toFixed(2)}`);
@@ -162,4 +195,5 @@
         runDemo();
     </script>
 </body>
+
 </html>
