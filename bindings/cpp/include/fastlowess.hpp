@@ -21,6 +21,13 @@
 
 namespace fastlowess {
 
+namespace detail {
+constexpr double k_default_fraction = 0.67;
+constexpr int k_default_cv_k = 5;
+constexpr int k_default_chunk_size = 5000;
+constexpr int k_default_window_capacity = 1000;
+} // namespace detail
+
 /**
  * @brief Exception thrown when LOWESS operation fails.
  */
@@ -41,39 +48,47 @@ public:
 
   // Error constructor
   struct ErrorTag {};
-  static Expected make_error(std::string msg) {
+  static Expected makeError(std::string msg) {
     return Expected(std::move(msg), ErrorTag{});
   }
 
-  bool has_value() const { return has_val_; }
+  bool hasValue() const { return has_val_; }
+
   explicit operator bool() const { return has_val_; }
 
   T &value() & {
-    if (!has_val_)
+    if (!has_val_) {
       throw LowessError(err_);
+    }
     return val_;
   }
 
   const T &value() const & {
-    if (!has_val_)
+    if (!has_val_) {
       throw LowessError(err_);
+    }
     return val_;
   }
 
   T &&value() && {
-    if (!has_val_)
+    if (!has_val_) {
       throw LowessError(err_);
+    }
     return std::move(val_);
   }
 
   const std::string &error() const {
-    if (has_val_)
+    if (has_val_) {
       throw LowessError("Bad expected access: has value");
+    }
     return err_;
   }
 
 private:
-  Expected(std::string err, ErrorTag) : err_(std::move(err)), has_val_(false) {}
+  Expected(std::string err, ErrorTag error_tag)
+      : err_(std::move(err)), has_val_(false) {
+    static_cast<void>(error_tag);
+  }
 
   // We store both to avoid manual union management, relying on T's cheap
   // default ctor. LowessResult's default ctor is cheap (zero-init).
@@ -86,9 +101,9 @@ private:
  * @brief Options for configuring LOWESS smoothing.
  */
 struct LowessOptions {
-  double fraction = 0.67; ///< Smoothing fraction (0, 1]
-  int iterations = 3;     ///< Robustness iterations
-  double delta = NAN;     ///< Interpolation threshold (NaN = auto)
+  double fraction = detail::k_default_fraction; ///< Smoothing fraction (0, 1]
+  int iterations = 3;                           ///< Robustness iterations
+  double delta = NAN; ///< Interpolation threshold (NaN = auto)
 
   std::string weight_function = "tricube";
   std::string robustness_method = "bisquare";
@@ -108,14 +123,14 @@ struct LowessOptions {
   // Cross-validation options
   std::vector<double> cv_fractions;
   std::string cv_method = "kfold";
-  int cv_k = 5;
+  int cv_k = detail::k_default_cv_k;
 };
 
 /**
  * @brief Options for streaming LOWESS.
  */
 struct StreamingOptions : public LowessOptions {
-  int chunk_size = 5000;
+  int chunk_size = detail::k_default_chunk_size;
   int overlap = -1;                        ///< -1 for auto
   std::string merge_strategy = "weighted"; ///< average, weighted, first, last
 };
@@ -124,7 +139,7 @@ struct StreamingOptions : public LowessOptions {
  * @brief Options for online LOWESS.
  */
 struct OnlineOptions : public LowessOptions {
-  int window_capacity = 1000;
+  int window_capacity = detail::k_default_window_capacity;
   int min_points = 2;
   std::string update_mode = "full";
 };
@@ -132,16 +147,33 @@ struct OnlineOptions : public LowessOptions {
 /**
  * @brief Diagnostics from LOWESS fitting.
  */
-struct Diagnostics {
-  double rmse = NAN;
-  double mae = NAN;
-  double r_squared = NAN;
-  double aic = NAN;
-  double aicc = NAN;
-  double effective_df = NAN;
-  double residual_sd = NAN;
+class Diagnostics {
+public:
+  Diagnostics() = default;
 
-  bool has_value() const { return !std::isnan(rmse); }
+  explicit Diagnostics(const fastlowess_CppLowessResult &result)
+      : rmse_(result.rmse), mae_(result.mae), r_squared_(result.r_squared),
+        aic_(result.aic), aicc_(result.aicc),
+        effective_df_(result.effective_df), residual_sd_(result.residual_sd) {}
+
+  bool hasValue() const { return !std::isnan(rmse_); }
+
+  double rmse() const { return rmse_; }
+  double mae() const { return mae_; }
+  double rSquared() const { return r_squared_; }
+  double aic() const { return aic_; }
+  double aicc() const { return aicc_; }
+  double effectiveDf() const { return effective_df_; }
+  double residualSd() const { return residual_sd_; }
+
+private:
+  double rmse_ = NAN;
+  double mae_ = NAN;
+  double r_squared_ = NAN;
+  double aic_ = NAN;
+  double aicc_ = NAN;
+  double effective_df_ = NAN;
+  double residual_sd_ = NAN;
 };
 
 /**
@@ -153,10 +185,8 @@ class LowessResult {
 public:
   LowessResult() = default;
 
-  explicit LowessResult(fastlowess_CppLowessResult &&c_result)
-      : result_(std::move(c_result)) {
-    c_result = fastlowess_CppLowessResult{}; // Clear moved-from result
-  }
+  explicit LowessResult(const fastlowess_CppLowessResult &c_result)
+      : result_(c_result) {}
 
   ~LowessResult() {
     if (result_.n > 0) {
@@ -191,28 +221,28 @@ public:
 
   /// Get error message (empty if no error)
   std::string error() const {
-    return result_.error ? std::string(result_.error) : "";
+    return result_.error != nullptr ? std::string(result_.error) : "";
   }
 
   /// Access x value at index
-  double x(size_t i) const { return result_.x[i]; }
+  double xValue(size_t index) const { return result_.x[index]; }
 
   /// Access smoothed y value at index
-  double y(size_t i) const { return result_.y[i]; }
+  double yValue(size_t index) const { return result_.y[index]; }
 
   /// Get x values as vector
-  std::vector<double> x_vector() const {
+  std::vector<double> xVector() const {
     return std::vector<double>(result_.x, result_.x + result_.n);
   }
 
   /// Get smoothed y values as vector
-  std::vector<double> y_vector() const {
+  std::vector<double> yVector() const {
     return std::vector<double>(result_.y, result_.y + result_.n);
   }
 
   /// Get residuals (empty if not computed)
   std::vector<double> residuals() const {
-    if (result_.residuals) {
+    if (result_.residuals != nullptr) {
       return std::vector<double>(result_.residuals,
                                  result_.residuals + result_.n);
     }
@@ -220,8 +250,8 @@ public:
   }
 
   /// Get standard errors (empty if not computed)
-  std::vector<double> standard_errors() const {
-    if (result_.standard_errors) {
+  std::vector<double> standardErrors() const {
+    if (result_.standard_errors != nullptr) {
       return std::vector<double>(result_.standard_errors,
                                  result_.standard_errors + result_.n);
     }
@@ -229,8 +259,8 @@ public:
   }
 
   /// Get confidence interval lower bounds
-  std::vector<double> confidence_lower() const {
-    if (result_.confidence_lower) {
+  std::vector<double> confidenceLower() const {
+    if (result_.confidence_lower != nullptr) {
       return std::vector<double>(result_.confidence_lower,
                                  result_.confidence_lower + result_.n);
     }
@@ -238,8 +268,8 @@ public:
   }
 
   /// Get confidence interval upper bounds
-  std::vector<double> confidence_upper() const {
-    if (result_.confidence_upper) {
+  std::vector<double> confidenceUpper() const {
+    if (result_.confidence_upper != nullptr) {
       return std::vector<double>(result_.confidence_upper,
                                  result_.confidence_upper + result_.n);
     }
@@ -247,8 +277,8 @@ public:
   }
 
   /// Get prediction interval lower bounds
-  std::vector<double> prediction_lower() const {
-    if (result_.prediction_lower) {
+  std::vector<double> predictionLower() const {
+    if (result_.prediction_lower != nullptr) {
       return std::vector<double>(result_.prediction_lower,
                                  result_.prediction_lower + result_.n);
     }
@@ -256,8 +286,8 @@ public:
   }
 
   /// Get prediction interval upper bounds
-  std::vector<double> prediction_upper() const {
-    if (result_.prediction_upper) {
+  std::vector<double> predictionUpper() const {
+    if (result_.prediction_upper != nullptr) {
       return std::vector<double>(result_.prediction_upper,
                                  result_.prediction_upper + result_.n);
     }
@@ -265,8 +295,8 @@ public:
   }
 
   /// Get robustness weights (empty if not computed)
-  std::vector<double> robustness_weights() const {
-    if (result_.robustness_weights) {
+  std::vector<double> robustnessWeights() const {
+    if (result_.robustness_weights != nullptr) {
       return std::vector<double>(result_.robustness_weights,
                                  result_.robustness_weights + result_.n);
     }
@@ -274,17 +304,13 @@ public:
   }
 
   /// Fraction used for smoothing
-  double fraction_used() const { return result_.fraction_used; }
+  double fractionUsed() const { return result_.fraction_used; }
 
   /// Number of iterations performed (-1 if not available)
-  int iterations_used() const { return result_.iterations_used; }
+  int iterationsUsed() const { return result_.iterations_used; }
 
   /// Get diagnostics
-  Diagnostics diagnostics() const {
-    return Diagnostics{result_.rmse,       result_.mae,  result_.r_squared,
-                       result_.aic,        result_.aicc, result_.effective_df,
-                       result_.residual_sd};
-  }
+  Diagnostics diagnostics() const { return Diagnostics(result_); }
 
 private:
   fastlowess_CppLowessResult result_ = {};
@@ -305,12 +331,12 @@ public:
         options.return_robustness_weights ? 1 : 0,
         options.zero_weight_fallback.c_str(), options.auto_converge,
         options.cv_fractions.empty() ? nullptr : options.cv_fractions.data(),
-        options.cv_fractions.size(), options.cv_method.c_str(), options.cv_k,
-        options.parallel ? 1 : 0);
+        static_cast<unsigned long>(options.cv_fractions.size()),
+        options.cv_method.c_str(), options.cv_k, options.parallel ? 1 : 0);
   }
 
   ~Lowess() {
-    if (ptr_) {
+    if (ptr_ != nullptr) {
       cpp_lowess_free(ptr_);
     }
   }
@@ -324,34 +350,36 @@ public:
 
   Lowess &operator=(Lowess &&other) noexcept {
     if (this != &other) {
-      if (ptr_)
+      if (ptr_ != nullptr) {
         cpp_lowess_free(ptr_);
+      }
       ptr_ = other.ptr_;
       other.ptr_ = nullptr;
     }
     return *this;
   }
 
-  Expected<LowessResult> fit(const std::vector<double> &x,
-                             const std::vector<double> &y) {
-    if (x.size() != y.size()) {
-      return Expected<LowessResult>::make_error(
+  Expected<LowessResult> fit(const std::vector<double> &x_values,
+                             const std::vector<double> &y_values) {
+    if (x_values.size() != y_values.size()) {
+      return Expected<LowessResult>::makeError(
           "x and y must have the same length");
     }
-    if (x.empty()) {
-      return Expected<LowessResult>::make_error(
+    if (x_values.empty()) {
+      return Expected<LowessResult>::makeError(
           "Input arrays must not be empty");
     }
 
-    auto result = cpp_lowess_fit(ptr_, x.data(), y.data(), x.size());
+    auto result = cpp_lowess_fit(ptr_, x_values.data(), y_values.data(),
+                                 static_cast<unsigned long>(x_values.size()));
 
     if (result.error != nullptr) {
-      std::string error_msg(result.error);
+      const std::string error_msg(result.error);
       cpp_lowess_free_result(&result);
-      return Expected<LowessResult>::make_error(error_msg);
+      return Expected<LowessResult>::makeError(error_msg);
     }
 
-    return Expected<LowessResult>(LowessResult(std::move(result)));
+    return Expected<LowessResult>(LowessResult(result));
   }
 
 private:
@@ -376,7 +404,7 @@ public:
   }
 
   ~StreamingLowess() {
-    if (ptr_) {
+    if (ptr_ != nullptr) {
       cpp_streaming_free(ptr_);
     }
   }
@@ -388,43 +416,49 @@ public:
   }
   StreamingLowess &operator=(StreamingLowess &&other) noexcept {
     if (this != &other) {
-      if (ptr_)
+      if (ptr_ != nullptr) {
         cpp_streaming_free(ptr_);
+      }
       ptr_ = other.ptr_;
       other.ptr_ = nullptr;
     }
     return *this;
   }
 
-  Expected<LowessResult> process_chunk(const std::vector<double> &x,
-                                       const std::vector<double> &y) {
-    if (expect_finalized_)
-      return Expected<LowessResult>::make_error("Model already finalized");
-    if (x.size() != y.size())
-      return Expected<LowessResult>::make_error("x and y length mismatch");
+  Expected<LowessResult> processChunk(const std::vector<double> &x_values,
+                                      const std::vector<double> &y_values) {
+    if (expect_finalized_) {
+      return Expected<LowessResult>::makeError("Model already finalized");
+    }
+    if (x_values.size() != y_values.size()) {
+      return Expected<LowessResult>::makeError("x and y length mismatch");
+    }
 
-    auto result = cpp_streaming_process(ptr_, x.data(), y.data(), x.size());
+    auto result =
+        cpp_streaming_process(ptr_, x_values.data(), y_values.data(),
+                              static_cast<unsigned long>(x_values.size()));
 
     if (result.error != nullptr) {
-      std::string error_msg(result.error);
+      const std::string error_msg(result.error);
       cpp_lowess_free_result(&result);
-      return Expected<LowessResult>::make_error(error_msg);
+      return Expected<LowessResult>::makeError(error_msg);
     }
-    return Expected<LowessResult>(LowessResult(std::move(result)));
+    return Expected<LowessResult>(LowessResult(result));
   }
 
   Expected<LowessResult> finalize() {
-    if (expect_finalized_)
-      return Expected<LowessResult>::make_error("Model already finalized");
+    if (expect_finalized_) {
+      return Expected<LowessResult>::makeError("Model already finalized");
+    }
     expect_finalized_ = true;
 
     auto result = cpp_streaming_finalize(ptr_);
     if (result.error != nullptr) {
-      std::string error_msg(result.error);
+      const std::string error_msg(result.error);
       cpp_lowess_free_result(&result);
-      return Expected<LowessResult>::make_error(error_msg);
+      return Expected<LowessResult>::makeError(error_msg);
     }
-    return Expected<LowessResult>(LowessResult(std::move(result)));
+    return Expected<LowessResult>(LowessResult(result));
   }
 
 private:
@@ -449,7 +483,7 @@ public:
   }
 
   ~OnlineLowess() {
-    if (ptr_) {
+    if (ptr_ != nullptr) {
       cpp_online_free(ptr_);
     }
   }
@@ -461,27 +495,31 @@ public:
   }
   OnlineLowess &operator=(OnlineLowess &&other) noexcept {
     if (this != &other) {
-      if (ptr_)
+      if (ptr_ != nullptr) {
         cpp_online_free(ptr_);
+      }
       ptr_ = other.ptr_;
       other.ptr_ = nullptr;
     }
     return *this;
   }
 
-  Expected<LowessResult> add_points(const std::vector<double> &x,
-                                    const std::vector<double> &y) {
-    if (x.size() != y.size())
-      return Expected<LowessResult>::make_error("x and y length mismatch");
+  Expected<LowessResult> addPoints(const std::vector<double> &x_values,
+                                   const std::vector<double> &y_values) {
+    if (x_values.size() != y_values.size()) {
+      return Expected<LowessResult>::makeError("x and y length mismatch");
+    }
 
-    auto result = cpp_online_add_points(ptr_, x.data(), y.data(), x.size());
+    auto result =
+        cpp_online_add_points(ptr_, x_values.data(), y_values.data(),
+                              static_cast<unsigned long>(x_values.size()));
 
     if (result.error != nullptr) {
-      std::string error_msg(result.error);
+      const std::string error_msg(result.error);
       cpp_lowess_free_result(&result);
-      return Expected<LowessResult>::make_error(error_msg);
+      return Expected<LowessResult>::makeError(error_msg);
     }
-    return Expected<LowessResult>(LowessResult(std::move(result)));
+    return Expected<LowessResult>(LowessResult(result));
   }
 
 private:

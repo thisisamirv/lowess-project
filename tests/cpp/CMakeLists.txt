@@ -11,12 +11,16 @@ include_directories("${BINDINGS_DIR}/include")
 # We assume the library is in bindings/cpp/build
 find_library(FASTLOWESS_LIB NAMES fastlowess_cpp PATHS "${BINDINGS_DIR}/build" "${CMAKE_SOURCE_DIR}/../../target/release" NO_DEFAULT_PATH)
 
-if (NOT FASTLOWESS_LIB)
+if(NOT FASTLOWESS_LIB)
     message(FATAL_ERROR "Could not find libfastlowess_cpp. Please build bindings/cpp first.")
 endif()
 
 add_executable(test_fastlowess_suite test_fastlowess.cpp)
-target_link_libraries(test_fastlowess_suite ${FASTLOWESS_LIB} pthread dl)
+if(WIN32)
+    target_link_libraries(test_fastlowess_suite ${FASTLOWESS_LIB})
+else()
+    target_link_libraries(test_fastlowess_suite ${FASTLOWESS_LIB} pthread dl)
+endif()
 
 # Add test
 enable_testing()

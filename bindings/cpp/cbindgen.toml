@@ -1,3 +1,5 @@
+no_includes = true
+
 [parse]
 parse_deps = false
 

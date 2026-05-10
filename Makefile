@@ -55,6 +55,17 @@ WASM_TEST_DIR := tests/wasm
 # C++ bindings
 CPP_PKG := fastlowess-cpp
 CPP_DIR := bindings/cpp
+ifeq ($(OS),Windows_NT)
+	CPP_SHARED_LIB := target/release/fastlowess_cpp.dll
+	CPP_EXPORT_SCAN := objdump -p $(CPP_SHARED_LIB)
+	CPP_TEST_BUILD := cmake --build . --config Debug
+	CPP_TEST_RUN := PATH="../../../target/release:$$PATH" ./Debug/test_fastlowess_suite.exe
+else
+	CPP_SHARED_LIB := target/release/libfastlowess_cpp.so
+	CPP_EXPORT_SCAN := nm -D $(CPP_SHARED_LIB)
+	CPP_TEST_BUILD := make
+	CPP_TEST_RUN := ./test_fastlowess_suite
+endif
 
 # Examples directory
 EXAMPLES_DIR := examples
@@ -635,7 +646,15 @@ _cpp_impl:
 	@echo "=============================================================================="
 	@cargo clippy -q -p $(CPP_PKG) --all-targets -- -D warnings
 	@echo "Linting C++ files..."
-	@clang-tidy bindings/cpp/include/fastlowess.hpp tests/cpp/test_fastlowess.cpp examples/cpp/*.cpp -- -I bindings/cpp/include -std=c++17 || (echo "C++ linting failed"; exit 1)
+	@clang_tidy_log="$(TEMP)/clang-tidy-cpp.log"; \
+		clang-tidy bindings/cpp/include/fastlowess.hpp tests/cpp/test_fastlowess.cpp examples/cpp/*.cpp -- -I bindings/cpp/include -std=c++17 > "$$clang_tidy_log" 2>&1; \
+		clang_tidy_status=$$?; \
+		grep -Ev '^(\[[0-9]+/[0-9]+\] Processing file |[0-9]+ warnings generated\.|Suppressed [0-9]+ warnings \([0-9]+ in non-user code\)\.|Use -header-filter=\.\* or leave it as default to display errors from all non-system headers\.|Use -system-headers to display errors from system headers as well\.)' "$$clang_tidy_log" || true; \
+		rm -f "$$clang_tidy_log"; \
+		if [ $$clang_tidy_status -ne 0 ]; then \
+			echo "C++ linting failed"; \
+			exit $$clang_tidy_status; \
+		fi
 	@echo "Running cppcheck..."
 	@cppcheck --error-exitcode=1 --enable=warning,performance,portability \
 		--suppress=missingInclude --suppress=missingIncludeSystem \
@@ -657,11 +676,11 @@ _cpp_impl:
 	@echo "=============================================================================="
 	@echo "2c. Symbol export verification..."
 	@echo "=============================================================================="
-	@nm -D target/release/libfastlowess_cpp.so 2>/dev/null | grep -q cpp_lowess_new || \
+	@$(CPP_EXPORT_SCAN) 2>/dev/null | grep -q cpp_lowess_new || \
 		(echo "Error: cpp_lowess_new not exported"; exit 1)
-	@nm -D target/release/libfastlowess_cpp.so 2>/dev/null | grep -q cpp_streaming_new || \
+	@$(CPP_EXPORT_SCAN) 2>/dev/null | grep -q cpp_streaming_new || \
 		(echo "Error: cpp_streaming_new not exported"; exit 1)
-	@nm -D target/release/libfastlowess_cpp.so 2>/dev/null | grep -q cpp_online_new || \
+	@$(CPP_EXPORT_SCAN) 2>/dev/null | grep -q cpp_online_new || \
 		(echo "Error: cpp_online_new not exported"; exit 1)
 	@echo "All C++ exports verified."
 	@echo "=============================================================================="
@@ -669,14 +688,18 @@ _cpp_impl:
 	@echo "=============================================================================="
 	@rm -rf tests/cpp/build
 	@mkdir -p tests/cpp/build
-	@cd tests/cpp/build && cmake .. && make && ./test_fastlowess_suite
+	@cd tests/cpp/build && cmake .. && $(CPP_TEST_BUILD) && $(CPP_TEST_RUN)
 	@echo "=============================================================================="
 	@echo "3b. Valgrind memory check..."
 	@echo "=============================================================================="
-	@valgrind --leak-check=full --error-exitcode=1 --quiet \
+	@if [ "$(OS)" = "Windows_NT" ]; then \
+		echo "Valgrind: skipped on Windows."; \
+	else \
+		valgrind --leak-check=full --error-exitcode=1 --quiet \
 		tests/cpp/build/test_fastlowess_suite 2>&1 || \
-		(echo "Error: Valgrind detected memory errors"; exit 1)
-	@echo "Valgrind: no leaks."
+		(echo "Error: Valgrind detected memory errors"; exit 1); \
+		echo "Valgrind: no leaks."; \
+	fi
 	@echo "$(CPP_PKG) checks completed successfully!"
 
 cpp-clean:
