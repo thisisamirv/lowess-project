@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
+"""Temporarily isolate Cargo workspace members while a target-specific command runs."""
+
 import argparse
-import signal
-import sys
-import shutil
-import subprocess
 import os
 import re
+import shutil
+import signal
+import subprocess
+import sys
 
 CARGO_TOML = "Cargo.toml"
 BACKUP_TOML = "Cargo.toml.bak"
@@ -20,10 +22,11 @@ TARGET_MAPPING = {
     "bindings/wasm": ["bindings/wasm"],
     "bindings/cpp": ["bindings/cpp"],
     # For R, it's not a member, so we essentially just keep core crates
-    "bindings/r": [], 
+    "bindings/r": [],
 }
 
 ALWAYS_KEEP = {"examples", "tests"}
+
 
 def restore_cargo_toml():
     """Restores Cargo.toml from backup if it exists."""
@@ -32,11 +35,13 @@ def restore_cargo_toml():
         shutil.move(BACKUP_TOML, CARGO_TOML)
         # print("Restored Cargo.toml")
 
-def signal_handler(sig, frame):
+
+def signal_handler(_sig, _frame):
     """Handle interruption signals."""
     print("\nInterrupted! Restoring Cargo.toml...")
     restore_cargo_toml()
-    sys.exit(130) # standard exit code for SIGINT
+    sys.exit(130)  # standard exit code for SIGINT
+
 
 def isolate_members(keep_member_key):
     """
@@ -50,40 +55,40 @@ def isolate_members(keep_member_key):
     # Determine which members to keep
     keep_list = set(ALWAYS_KEEP)
     if keep_member_key:
-         # direct path or key
-         if keep_member_key in TARGET_MAPPING:
-             keep_list.update(TARGET_MAPPING[keep_member_key])
-         else:
-             # Fallback: assume the key is the path itself
-             keep_list.add(keep_member_key)
-             # Also assume dependencies might be needed? 
-             # For now, we trust the user/makefile to pass the correct target path.
+        # direct path or key
+        if keep_member_key in TARGET_MAPPING:
+            keep_list.update(TARGET_MAPPING[keep_member_key])
+        else:
+            # Fallback: assume the key is the path itself
+            keep_list.add(keep_member_key)
+            # Also assume dependencies might be needed?
+            # For now, we trust the user/makefile to pass the correct target path.
 
     # print(f"Isolating workspace members. Keeping: {keep_list}")
 
     shutil.copy2(CARGO_TOML, BACKUP_TOML)
 
-    with open(BACKUP_TOML, 'r') as f:
-        lines = f.readlines()
+    with open(BACKUP_TOML, "r", encoding="utf-8") as file_handle:
+        lines = file_handle.readlines()
 
     new_lines = []
     in_members = False
-    
+
     for line in lines:
         stripped = line.strip()
-        
+
         # Detect start of [workspace] members
         if stripped.startswith("members = ["):
             in_members = True
             new_lines.append(line)
             continue
-        
+
         if in_members:
             if stripped == "]":
                 in_members = False
                 new_lines.append(line)
                 continue
-            
+
             # This is a member line (e.g. "crates/lowess",)
             # We extracting the string inside quotes
             match = re.search(r'"([^"]+)"', stripped)
@@ -93,12 +98,12 @@ def isolate_members(keep_member_key):
                     # Comment it out if not already commented
                     if not stripped.startswith("#"):
                         # Preserve indentation
-                        indent = line[:line.find('"')] if '"' in line else ""
-                        new_lines.append(f"{indent}# \"{member_path}\",\n")
+                        indent = line[: line.find('"')] if '"' in line else ""
+                        new_lines.append(f'{indent}# "{member_path}",\n')
                     else:
                         new_lines.append(line)
                 else:
-                    # Ensure it's uncommented if it was commented (though we start from clean source ideally)
+                    # Ensure it's uncommented if it was commented
                     # But here we just keep it as is if it matches
                     new_lines.append(line)
             else:
@@ -107,14 +112,20 @@ def isolate_members(keep_member_key):
         else:
             new_lines.append(line)
 
-    with open(CARGO_TOML, 'w') as f:
-        f.writelines(new_lines)
+    with open(CARGO_TOML, "w", encoding="utf-8") as file_handle:
+        file_handle.writelines(new_lines)
 
 
 def main():
+    """Isolate the requested workspace member, run the command, then restore."""
     parser = argparse.ArgumentParser(description="Isolate Cargo workspace members.")
-    parser.add_argument("target_path", help="The workspace member path to keep active (e.g. bindings/python)")
-    parser.add_argument("command", nargs=argparse.REMAINDER, help="Command to run after isolation")
+    parser.add_argument(
+        "target_path",
+        help="The workspace member path to keep active (e.g. bindings/python)",
+    )
+    parser.add_argument(
+        "command", nargs=argparse.REMAINDER, help="Command to run after isolation"
+    )
 
     args = parser.parse_args()
 
@@ -124,25 +135,24 @@ def main():
 
     try:
         isolate_members(args.target_path)
-        
+
         # Run the command
         if args.command:
             # args.command[0] might be '--' separator
-            cmd = args.command[1:] if args.command[0] == '--' else args.command
-            
+            cmd = args.command[1:] if args.command[0] == "--" else args.command
+
             if not cmd:
                 print("No command specified.")
-                return
+                return 1
 
             # print(f"Running command: {' '.join(cmd)}")
-            result = subprocess.run(cmd)
-            sys.exit(result.returncode)
-            
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        sys.exit(1)
+            result = subprocess.run(cmd, check=False)
+            return result.returncode
+
+        return 0
     finally:
         restore_cargo_toml()
 
+
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

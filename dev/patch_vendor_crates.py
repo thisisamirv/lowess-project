@@ -7,28 +7,31 @@ GPU dependencies that are not needed for the R binding.
 """
 
 import argparse
-import re
+import importlib
 import sys
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 try:
     import tomllib
 except ImportError:
     import tomli as tomllib  # type: ignore
 
-import tomli_w
+
+def load_tomli_w():
+    """Import `tomli_w` lazily so editor-only envs do not fail static import resolution."""
+    return importlib.import_module("tomli_w")
 
 
 def load_workspace_values(workspace_toml: Path) -> Dict[str, Any]:
     """Load workspace package values from root Cargo.toml."""
-    with open(workspace_toml, "rb") as f:
-        data = tomllib.load(f)
-    
+    with open(workspace_toml, "rb") as file_handle:
+        data = tomllib.load(file_handle)
+
     workspace = data.get("workspace", {})
     package = workspace.get("package", {})
     deps = workspace.get("dependencies", {})
-    
+
     return {
         "package": package,
         "dependencies": deps,
@@ -63,12 +66,12 @@ def resolve_workspace_dep(dep_name: str, value: Any, workspace: Dict[str, Any]) 
             result = dict(ws_dep)
         else:
             result = {}
-        
+
         # Merge with local overrides (features, optional, etc.)
         for k, v in value.items():
             if k != "workspace":
                 result[k] = v
-        
+
         return result
     return value
 
@@ -80,9 +83,9 @@ def patch_crate_toml(
     lowess_as_path: bool = False,
 ) -> None:
     """Patch a crate's Cargo.toml to remove workspace inheritance."""
-    with open(crate_toml, "rb") as f:
-        data = tomllib.load(f)
-    
+    with open(crate_toml, "rb") as file_handle:
+        data = tomllib.load(file_handle)
+
     # Patch [package] section
     package = data.get("package", {})
     keys_to_remove = []
@@ -92,21 +95,26 @@ def patch_crate_toml(
             keys_to_remove.append(key)
         else:
             package[key] = resolved
-    
+
     for key in keys_to_remove:
         del package[key]
-    
+
     # Patch [dependencies] section
     if "dependencies" in data:
         deps = data["dependencies"]
         deps_to_remove = []
-        
+
         for dep_name, value in deps.items():
             # Remove GPU deps if requested
-            if remove_gpu and dep_name in ("wgpu", "bytemuck", "pollster", "futures-intrusive"):
+            if remove_gpu and dep_name in (
+                "wgpu",
+                "bytemuck",
+                "pollster",
+                "futures-intrusive",
+            ):
                 deps_to_remove.append(dep_name)
                 continue
-            
+
             # Handle lowess -> path dependency
             if lowess_as_path and dep_name == "lowess":
                 resolved = resolve_workspace_dep(dep_name, value, workspace)
@@ -115,30 +123,32 @@ def patch_crate_toml(
                     resolved["path"] = "../lowess"
                 deps[dep_name] = resolved
                 continue
-            
+
             deps[dep_name] = resolve_workspace_dep(dep_name, value, workspace)
-        
+
         for dep_name in deps_to_remove:
             del deps[dep_name]
-    
+
     # Patch [dev-dependencies] section
     if "dev-dependencies" in data:
         dev_deps = data["dev-dependencies"]
         for dep_name, value in dev_deps.items():
             dev_deps[dep_name] = resolve_workspace_dep(dep_name, value, workspace)
-    
+
     # Patch [features] section - empty GPU feature if needed
     if remove_gpu and "features" in data:
         features = data["features"]
         if "gpu" in features:
             features["gpu"] = []
-    
+
     # Write back
-    with open(crate_toml, "wb") as f:
-        tomli_w.dump(data, f)
+    tomli_w = load_tomli_w()
+    with open(crate_toml, "wb") as file_handle:
+        tomli_w.dump(data, file_handle)
 
 
 def main() -> int:
+    """Patch vendored crates so the R package can build without workspace inheritance."""
     parser = argparse.ArgumentParser(
         description="Patch vendored Cargo.toml files for R package build"
     )
@@ -153,24 +163,28 @@ def main() -> int:
         help="Path to vendor directory containing crates to patch",
     )
     parser.add_argument(
-        "-q", "--quiet",
+        "-q",
+        "--quiet",
         action="store_true",
         help="Suppress output",
     )
-    
+
     args = parser.parse_args()
-    
+
     if not args.workspace_toml.exists():
-        print(f"Error: Workspace Cargo.toml not found: {args.workspace_toml}", file=sys.stderr)
+        print(
+            f"Error: Workspace Cargo.toml not found: {args.workspace_toml}",
+            file=sys.stderr,
+        )
         return 1
-    
+
     if not args.vendor_dir.exists():
         print(f"Error: Vendor directory not found: {args.vendor_dir}", file=sys.stderr)
         return 1
-    
+
     # Load workspace values
     workspace = load_workspace_values(args.workspace_toml)
-    
+
     # Patch fastLowess
     fast_lowess_toml = args.vendor_dir / "fastLowess" / "Cargo.toml"
     if fast_lowess_toml.exists():
@@ -182,7 +196,7 @@ def main() -> int:
             remove_gpu=True,
             lowess_as_path=True,
         )
-    
+
     # Patch lowess
     lowess_toml = args.vendor_dir / "lowess" / "Cargo.toml"
     if lowess_toml.exists():
@@ -194,10 +208,10 @@ def main() -> int:
             remove_gpu=False,
             lowess_as_path=False,
         )
-    
+
     if not args.quiet:
         print("Patching complete")
-    
+
     return 0
 
 

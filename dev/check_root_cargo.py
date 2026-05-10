@@ -26,6 +26,7 @@ REQUIRED_MEMBERS = [
 
 
 def run_git(repo_root: Path, *args: str) -> str:
+    """Run a git command in the repository root and return stdout."""
     result = subprocess.run(
         ["git", *args],
         cwd=repo_root,
@@ -37,10 +38,12 @@ def run_git(repo_root: Path, *args: str) -> str:
 
 
 def repo_root_from_script() -> Path:
+    """Return the repository root derived from this script location."""
     return Path(__file__).resolve().parents[1]
 
 
 def restore_backup_if_present(repo_root: Path) -> bool:
+    """Restore the root manifest from `Cargo.toml.bak` if it exists."""
     backup = repo_root / "Cargo.toml.bak"
     cargo_toml = repo_root / "Cargo.toml"
     if not backup.exists():
@@ -51,15 +54,18 @@ def restore_backup_if_present(repo_root: Path) -> bool:
 
 
 def read_working_tree(repo_root: Path) -> str:
+    """Read the working-tree root `Cargo.toml` contents."""
     return (repo_root / "Cargo.toml").read_text(encoding="utf-8")
 
 
 def read_git_version(repo_root: Path, spec: str) -> str:
+    """Read `Cargo.toml` from a git object spec such as `:` or `HEAD`."""
     object_spec = ":Cargo.toml" if spec == ":" else f"{spec}:Cargo.toml"
     return run_git(repo_root, "show", object_spec)
 
 
 def validate_manifest(content: str, label: str) -> list[str]:
+    """Validate that all required workspace members are active in the manifest."""
     errors: list[str] = []
     members_match = re.search(r"members\s*=\s*\[(?P<body>.*?)\]", content, re.DOTALL)
     if not members_match:
@@ -83,6 +89,7 @@ def validate_manifest(content: str, label: str) -> list[str]:
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse CLI arguments for the hook guard."""
     parser = argparse.ArgumentParser(
         description="Validate that the root Cargo workspace manifest is not left isolated."
     )
@@ -96,6 +103,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
+    """Run the requested manifest validation for the invoking git hook."""
     args = parse_args()
     repo_root = repo_root_from_script()
 
