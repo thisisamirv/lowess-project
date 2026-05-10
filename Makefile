@@ -62,6 +62,12 @@ EXAMPLES_DIR := examples
 # Documentation
 DOCS_VENV := docs-venv
 
+# Temporary directory for build checks
+TEMP ?= /tmp
+ifeq ($(OS),Windows_NT)
+    TEMP := $(TEMP)
+endif
+
 # ==============================================================================
 # lowess crate
 # ==============================================================================
@@ -359,9 +365,7 @@ _r_impl:
 	@echo "=============================================================================="
 	@echo "4c. Building..."
 	@echo "=============================================================================="
-	@# Copy shared test files into the R package so they are included in the tarball
-	@# Copy shared test files into the R package so they are included in the tarball
-	@Rscript -e "to <- '$(R_DIR)/tests/testthat'; unlink(to, recursive = TRUE, force = TRUE); dir.create(to, recursive = TRUE, showWarnings = FALSE); from <- list.files('tests/r/testthat', pattern = '[.]R$$', full.names = TRUE); if (length(from) > 0) { stopifnot(dir.exists(to)); file.copy(from, to, overwrite = TRUE) }"
+	@cd $(R_DIR) && ../../dev/prepare_cran.sh
 	@cd $(R_DIR) && R CMD build .
 	@echo "=============================================================================="
 	@echo "5. Installing..."
@@ -642,8 +646,12 @@ _cpp_impl:
 	@echo "=============================================================================="
 	@echo "2b. cbindgen idempotency check..."
 	@echo "=============================================================================="
-	@cbindgen --config $(CPP_DIR)/cbindgen.toml --crate $(CPP_PKG) --output /tmp/fastlowess_new.h 2>/dev/null && \
-		diff -q $(CPP_DIR)/include/fastlowess.h /tmp/fastlowess_new.h > /dev/null || \
+	@if ! command -v cbindgen >/dev/null 2>&1; then \
+		echo "cbindgen not found. Installing..."; \
+		cargo install cbindgen; \
+	fi
+	@cbindgen --config $(CPP_DIR)/cbindgen.toml --crate $(CPP_PKG) --output $(TEMP)/fastlowess_new.h 2>/dev/null && \
+		diff -q $(CPP_DIR)/include/fastlowess.h $(TEMP)/fastlowess_new.h > /dev/null || \
 		(echo "Error: fastlowess.h is stale — run 'cargo build -p $(CPP_PKG) --release' to regenerate"; exit 1)
 	@echo "cbindgen header is up-to-date."
 	@echo "=============================================================================="

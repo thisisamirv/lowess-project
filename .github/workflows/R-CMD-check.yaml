@@ -119,7 +119,7 @@ jobs:
       - name: Install System Dependencies
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends git curl libssl-dev libcurl4-openssl-dev libxml2-dev pandoc
+          apt-get install -y --no-install-recommends libssl-dev libcurl4-openssl-dev libxml2-dev
       - name: Install R Dependencies
         run: |
           RDscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); install.packages(c('remotes', 'rcmdcheck', 'testthat', 'knitr', 'rmarkdown'))"
