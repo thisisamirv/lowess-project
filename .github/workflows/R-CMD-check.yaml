@@ -146,10 +146,11 @@ jobs:
       - name: Install System Dependencies
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends libssl-dev libcurl4-openssl-dev libxml2-dev
+          apt-get install -y --no-install-recommends libssl-dev libcurl4-openssl-dev libxml2-dev libuv1-dev
       - name: Install R Dependencies
         run: |
-          RDscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); install.packages(c('remotes', 'rcmdcheck', 'testthat', 'knitr', 'rmarkdown'))"
+          RDscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); install.packages(c('remotes', 'rcmdcheck', 'testthat', 'knitr', 'rmarkdown', 'BiocManager'))"
+          RDscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); BiocManager::install('BiocStyle', ask = FALSE, update = FALSE)"
           RDscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); remotes::install_deps(dependencies = TRUE)"
       - name: Prepare Package Sources
         shell: bash
