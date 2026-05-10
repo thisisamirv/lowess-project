@@ -5,19 +5,19 @@
 \title{LOWESS Online Smoothing}
 \usage{
 OnlineLowess(
-  fraction = 0.2,
-  window_capacity = 100L,
-  min_points = 2L,
-  iterations = 3L,
-  delta = NULL,
-  weight_function = "tricube",
-  robustness_method = "bisquare",
-  scaling_method = "mad",
-  boundary_policy = "extend",
-  update_mode = "incremental",
-  auto_converge = NULL,
-  return_robustness_weights = FALSE,
-  parallel = FALSE
+    fraction = 0.2,
+    window_capacity = 100L,
+    min_points = 2L,
+    iterations = 3L,
+    delta = NULL,
+    weight_function = "tricube",
+    robustness_method = "bisquare",
+    scaling_method = "mad",
+    boundary_policy = "extend",
+    update_mode = "incremental",
+    auto_converge = NULL,
+    return_robustness_weights = FALSE,
+    parallel = FALSE
 )
 }
 \arguments{

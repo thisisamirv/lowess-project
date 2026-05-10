@@ -95,7 +95,8 @@ validate_params <- function(
 
     validate_optional_count(iterations, "iterations")
     validate_optional_count(
-        window_capacity, "window_capacity", allow_zero = FALSE
+        window_capacity, "window_capacity",
+        allow_zero = FALSE
     )
     validate_optional_count(min_points, "min_points")
     validate_optional_count(chunk_size, "chunk_size", allow_zero = FALSE)

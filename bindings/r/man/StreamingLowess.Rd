@@ -5,19 +5,19 @@
 \title{LOWESS Streaming Smoothing}
 \usage{
 StreamingLowess(
-  fraction = 0.3,
-  chunk_size = 5000L,
-  overlap = NULL,
-  iterations = 3L,
-  delta = NULL,
-  weight_function = "tricube",
-  robustness_method = "bisquare",
-  scaling_method = "mad",
-  boundary_policy = "extend",
-  auto_converge = NULL,
-  return_diagnostics = FALSE,
-  return_robustness_weights = FALSE,
-  parallel = TRUE
+    fraction = 0.3,
+    chunk_size = 5000L,
+    overlap = NULL,
+    iterations = 3L,
+    delta = NULL,
+    weight_function = "tricube",
+    robustness_method = "bisquare",
+    scaling_method = "mad",
+    boundary_policy = "extend",
+    auto_converge = NULL,
+    return_diagnostics = FALSE,
+    return_robustness_weights = FALSE,
+    parallel = TRUE
 )
 }
 \arguments{

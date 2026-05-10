@@ -379,7 +379,7 @@ _r_impl:
 	@cd $(R_DIR) && Rscript -e "devtools::document(quiet = TRUE)"
 	@Rscript dev/fix_rd_style.R
 	@Rscript -e "if (!requireNamespace('rmarkdown', quietly = TRUE) || !rmarkdown::pandoc_available()) { message('\nERROR: Pandoc is required to build R Markdown vignettes but is not available.\nPlease install Pandoc (https://pandoc.org/installing.html) and ensure it is in your PATH.\n'); quit(status = 1) }"
-	@cd $(R_DIR) && Rscript -e "pkgdown::build_site(quiet = TRUE, install = FALSE)"
+	@cd $(R_DIR) && Rscript -e "pkgdown::build_site(quiet = TRUE, install = TRUE)"
 	@rm -f $(R_DIR)/.gitignore
 	@echo "=============================================================================="
 	@echo "4c. Building..."
@@ -429,7 +429,7 @@ r-clean:
 	@rm -f $(R_DIR)/$(R_PKG_NAME)_*.tar.gz
 	@rm -rf $(R_DIR)/src/*.o $(R_DIR)/src/*.so $(R_DIR)/src/*.dll $(R_DIR)/src/Cargo.toml.orig $(R_DIR)/src/Cargo.lock $(R_DIR)/Cargo.lock
 	@rm -rf $(R_DIR)/doc $(R_DIR)/Meta $(R_DIR)/vignettes/*.html $(R_DIR)/README.html
-	@find $(R_DIR) -name "*.Rout" -delete
+	@$(PYTHON) -c "from pathlib import Path; [path.unlink() for path in Path(r'$(R_DIR)').rglob('*.Rout')]"
 	@Rscript -e "try(remove.packages('$(R_PKG_NAME)'), silent = TRUE)" || true
 	@rm -rf $(R_DIR)/src/Makevars $(R_DIR)/rfastlowess*.tgz
 	@rm -rf $(R_DIR)/benchmarks $(R_DIR)/validation $(R_DIR)/docs
