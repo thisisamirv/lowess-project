@@ -22,7 +22,18 @@ directory = "vendor"
 EOF
 fi
 
-# 3. Generate AUTHORS file
+# 3. Copy shared R tests
+echo "   -> Copying shared R tests..."
+rm -rf tests/testthat
+mkdir -p tests/testthat
+if [ -d "../../tests/r/testthat" ]; then
+    cp ../../tests/r/testthat/*.R tests/testthat/
+    cp ../../tests/r/testthat.R tests/testthat.R
+elif [ -d "tests/testthat" ]; then
+    echo "      (Tests already present or root tests missing)"
+fi
+
+# 4. Generate AUTHORS file
 echo "   -> Generating inst/AUTHORS..."
 mkdir -p inst
 (cd src && cargo metadata --locked --format-version 1 > ../cargo_metadata_temp.json)
