@@ -6,20 +6,10 @@
 #' @srrstats {G2.0} Input validation for fraction, chunk_size.
 #' @srrstats {G1.6} Memory-efficient streaming for large datasets.
 #'
-#' @param fraction Smoothing fraction.
+#' @inheritParams Lowess
 #' @param chunk_size Points per chunk.
 #' @param overlap Overlap between chunks.
-#' @param iterations Robustness iterations.
-#' @param delta Interpolation threshold. NULL = auto.
-#' @param weight_function Kernel name. Default: "tricube".
-#' @param robustness_method Method: "bisquare", "huber", "talwar".
-#' @param scaling_method Scale estimation: "mad", "mar".
-#' @param boundary_policy Edge handling: "extend", "reflect", "zero",
-#'   "noboundary".
-#' @param auto_converge Convergence tolerance. NULL disables.
 #' @param return_diagnostics Return fit metrics. Default: FALSE.
-#' @param return_robustness_weights Return weights. Default: FALSE.
-#' @param parallel Enable parallel processing. Default: TRUE.
 #'
 #' @return A StreamingLowess object.
 #' @examples

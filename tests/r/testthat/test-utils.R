@@ -56,6 +56,17 @@ test_that("validate_common_args returns coerced list on valid input", {
     expect_type(result$iterations, "integer")
 })
 
+test_that("validate_params rejects NA scalar inputs", {
+    expect_error(
+        rfastlowess:::validate_params(NA_real_),
+        "fraction must be a single numeric value"
+    )
+    expect_error(
+        rfastlowess:::validate_params(0.5, iterations = NA_real_),
+        "iterations must be a single numeric value"
+    )
+})
+
 # ── coerce_nullable ─────────────────────────────────────────────────────────
 
 test_that("coerce_nullable wraps NULL values", {

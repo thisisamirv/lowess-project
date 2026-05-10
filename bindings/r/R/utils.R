@@ -11,6 +11,7 @@
 #' @param y Numeric vector
 #' @param fraction Numeric
 #' @param iterations Integer
+#' @param min_points Minimum number of observations required.
 #'
 #' @return A list containing the coerced x, y, fraction, and iterations.
 #' @noRd
@@ -23,12 +24,12 @@
 #' @srrstats {G2.15} NA checks on inputs before passing to algorithms.
 #' @srrstats {G2.16} Inf/NaN validation in input vectors.
 #' @srrstats {G3.0} Tolerance-based comparisons used in robustness weights.
-validate_common_args <- function(x, y, fraction, iterations) {
+validate_common_args <- function(x, y, fraction, iterations, min_points = 3L) {
     if (length(x) != length(y)) {
         stop("x and y must have the same length")
     }
-    if (length(x) < 3) {
-        stop("At least 3 data points are required")
+    if (length(x) < min_points) {
+        stop(sprintf("At least %d data points are required", min_points))
     }
     if (!is.numeric(fraction) || length(fraction) != 1) {
         stop("fraction must be a single numeric value")
@@ -48,6 +49,30 @@ validate_common_args <- function(x, y, fraction, iterations) {
     )
 }
 
+
+validate_scalar_numeric <- function(value, name) {
+    if (!is.numeric(value) || length(value) != 1L || is.na(value)) {
+        stop(sprintf("%s must be a single numeric value", name))
+    }
+}
+
+
+validate_optional_count <- function(value, name, allow_zero = TRUE) {
+    if (is.null(value)) {
+        return(invisible(NULL))
+    }
+
+    validate_scalar_numeric(value, name)
+    if (allow_zero && value < 0) {
+        stop(sprintf("%s must be a non-negative integer", name))
+    }
+    if (!allow_zero && value <= 0) {
+        stop(sprintf("%s must be a positive integer", name))
+    }
+
+    invisible(NULL)
+}
+
 #' Validate constructor parameters
 #'
 #' @param fraction Smoothing fraction
@@ -63,21 +88,17 @@ validate_params <- function(
     min_points = NULL,
     chunk_size = NULL
 ) {
+    validate_scalar_numeric(fraction, "fraction")
     if (fraction < 0 || fraction > 1) {
         stop("fraction must be between 0 and 1")
     }
-    if (!is.null(iterations) && iterations < 0) {
-        stop("iterations must be a non-negative integer")
-    }
-    if (!is.null(window_capacity) && window_capacity <= 0) {
-        stop("window_capacity must be a positive integer")
-    }
-    if (!is.null(min_points) && min_points < 0) {
-        stop("min_points must be a non-negative integer")
-    }
-    if (!is.null(chunk_size) && chunk_size <= 0) {
-        stop("chunk_size must be a positive integer")
-    }
+
+    validate_optional_count(iterations, "iterations")
+    validate_optional_count(
+        window_capacity, "window_capacity", allow_zero = FALSE
+    )
+    validate_optional_count(min_points, "min_points")
+    validate_optional_count(chunk_size, "chunk_size", allow_zero = FALSE)
 }
 
 #' Coerce optional values to Nullable
@@ -140,7 +161,7 @@ env_args <- function(param_names) {
             integer = as.integer(val),
             character = as.character(val),
             logical = as.logical(val),
-            nullable = if (is.null(val)) Nullable(NULL) else val,
+            nullable = coerce_nullable(val)[[1]],
             val
         )
     })

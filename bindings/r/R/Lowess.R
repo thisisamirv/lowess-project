@@ -72,10 +72,10 @@ Lowess <- function(
         list(
             handle = handle,
             fit = function(x, y) {
-                if (length(x) != length(y)) {
-                    stop("x and y must have the same length")
-                }
-                handle$fit(as.double(x), as.double(y))
+                validated_args <- validate_common_args(
+                    x, y, fraction, iterations
+                )
+                handle$fit(validated_args$x, validated_args$y)
             },
             params = list(
                 fraction = fraction,

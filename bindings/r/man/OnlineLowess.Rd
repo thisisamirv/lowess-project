@@ -5,29 +5,29 @@
 \title{LOWESS Online Smoothing}
 \usage{
 OnlineLowess(
-    fraction = 0.2,
-    window_capacity = 100L,
-    min_points = 2L,
-    iterations = 3L,
-    delta = NULL,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    scaling_method = "mad",
-    boundary_policy = "extend",
-    update_mode = "incremental",
-    auto_converge = NULL,
-    return_robustness_weights = FALSE,
-    parallel = FALSE
+  fraction = 0.2,
+  window_capacity = 100L,
+  min_points = 2L,
+  iterations = 3L,
+  delta = NULL,
+  weight_function = "tricube",
+  robustness_method = "bisquare",
+  scaling_method = "mad",
+  boundary_policy = "extend",
+  update_mode = "incremental",
+  auto_converge = NULL,
+  return_robustness_weights = FALSE,
+  parallel = FALSE
 )
 }
 \arguments{
-\item{fraction}{Smoothing fraction.}
+\item{fraction}{Smoothing fraction (0 to 1). Default: 0.67.}
 
 \item{window_capacity}{Max points in sliding window.}
 
 \item{min_points}{Minimum points before smoothing.}
 
-\item{iterations}{Robustness iterations.}
+\item{iterations}{Robustness iterations. Default: 3.}
 
 \item{delta}{Interpolation threshold. NULL = auto.}
 

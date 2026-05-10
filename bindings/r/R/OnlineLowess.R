@@ -6,20 +6,10 @@
 #' @srrstats {G2.0} Input validation for fraction, window_capacity, min_points.
 #' @srrstats {G1.6} Sliding window for incremental updates.
 #'
-#' @param fraction Smoothing fraction.
+#' @inheritParams Lowess
 #' @param window_capacity Max points in sliding window.
 #' @param min_points Minimum points before smoothing.
-#' @param iterations Robustness iterations.
-#' @param delta Interpolation threshold. NULL = auto.
-#' @param weight_function Kernel name. Default: "tricube".
-#' @param robustness_method Method: "bisquare", "huber", "talwar".
-#' @param scaling_method Scale estimation: "mad", "mar".
-#' @param boundary_policy Edge handling: "extend", "reflect", "zero",
-#'   "noboundary".
 #' @param update_mode Update strategy: "incremental".
-#' @param auto_converge Convergence tolerance. NULL disables.
-#' @param return_robustness_weights Return weights. Default: FALSE.
-#' @param parallel Enable parallel processing. Default: TRUE.
 #'
 #' @return An OnlineLowess object.
 #' @examples
