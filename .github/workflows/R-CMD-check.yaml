@@ -67,12 +67,23 @@ jobs:
             any::BiocManager
           needs: check
 
+      - name: "R: Prepare Package Sources"
+        working-directory: bindings/r
+        shell: bash
+        run: |
+          chmod +x configure cleanup ../../dev/prepare_cran.sh
+          ../../dev/prepare_cran.sh
+          test -f tests/testthat.R
+
       - name: "R: CMD Check"
         uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
           build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
+          args: 'c("--no-manual", "--as-cran")'
+          check-dir: '"check"'
           error-on: '"error"'
+          upload-results: false
           working-directory: bindings/r
 
       - name: "R: Install Package"
@@ -124,6 +135,12 @@ jobs:
         run: |
           RDscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); install.packages(c('remotes', 'rcmdcheck', 'testthat', 'knitr', 'rmarkdown'))"
           RDscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); remotes::install_deps(dependencies = TRUE)"
+      - name: Prepare Package Sources
+        shell: bash
+        run: |
+          chmod +x configure cleanup ../../dev/prepare_cran.sh
+          ../../dev/prepare_cran.sh
+          test -f tests/testthat.R
       - name: Run ASAN Check
         run: |
           RDscript -e "rcmdcheck::rcmdcheck(args = c('--no-manual', '--no-vignettes'), build_args = c('--no-build-vignettes'), error_on = 'error', check_dir = 'check')"
