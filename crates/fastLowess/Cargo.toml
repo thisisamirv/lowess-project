@@ -4,7 +4,7 @@ name = "fastLowess"
 version = "1.2.0"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
-rust-version = "1.88"
+rust-version = "1.89"
 license = "MIT OR Apache-2.0"
 
 # Documentation and Discovery
@@ -29,8 +29,8 @@ include = [
 lowess = { path = "../lowess", version = "1.2", features = ["dev"] }
 num-traits = { version = "0.2", features = ["libm"] }
 ndarray = { version = "0.17", optional = true }
-rayon = { version = "1.11", optional = true }
-wgpu = { version = "27.0", optional = true }
+rayon = { version = "1.12", optional = true }
+wgpu = { version = "29.0", optional = true }
 bytemuck = { version = "1.25", optional = true }
 pollster = { version = "0.4", optional = true }
 futures-intrusive = { version = "0.5", optional = true }

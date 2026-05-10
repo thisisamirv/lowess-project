@@ -7,6 +7,19 @@ import subprocess
 import sys
 
 
+def decode_subprocess_output(output):
+    """Decode subprocess output predictably across platforms."""
+    if output is None:
+        return ""
+    if isinstance(output, str):
+        return output
+
+    try:
+        return output.decode("utf-8")
+    except UnicodeDecodeError:
+        return output.decode("utf-8", errors="replace")
+
+
 def parse_version(v_str):
     """Parse a version string such as `1.70.0` into a tuple of integers."""
     if not v_str:
@@ -25,10 +38,9 @@ def main():
         result = subprocess.run(
             ["cargo", "metadata", "--format-version=1", "--all-features"],
             capture_output=True,
-            text=True,
             check=True,
         )
-        metadata = json.loads(result.stdout)
+        metadata = json.loads(decode_subprocess_output(result.stdout))
 
         # Find all Cargo.toml files in crates/ and bindings/
         target_dirs = ["crates", "bindings"]
@@ -161,7 +173,10 @@ def main():
             print("\nSuccess: All direct dependencies satisfy the project MSRV.")
 
     except subprocess.CalledProcessError as e:
+        stderr_output = decode_subprocess_output(e.stderr).strip()
         print(f"Error running cargo metadata: {e}", file=sys.stderr)
+        if stderr_output:
+            print(stderr_output, file=sys.stderr)
         sys.exit(1)
     except (json.JSONDecodeError, KeyError, OSError, TypeError, ValueError) as error:
         print(f"Error parsing metadata: {error}", file=sys.stderr)

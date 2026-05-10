@@ -16,6 +16,6 @@ Suggests: BiocStyle, knitr, rmarkdown, testthat (>= 3.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 BugReports: https://github.com/thisisamirv/lowess-project/issues
-URL: https://thisisamirv.github.io/lowess-project/, https://github.com/thisisamirv/lowess-project, https://lowess.readthedocs.io/
+URL: https://github.com/thisisamirv/lowess-project, https://lowess.readthedocs.io/
 Config/rextendr/version: 0.5.0
 Config/roxygen2/version: 8.0.0

@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 1.3.0
 
 ### Added
 
@@ -15,6 +15,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added prerequisites for different bindings and platforms to `CONTRIBUTING.md`
 - Updated `docs/assets/diagrams/lowess_smoothing_concept.svg` to correctly illustrate LOWESS concepts (robustness iterations, bisquare re-weighting, outlier downweighting) instead of the generic LOESS algorithm it previously depicted.
 - Modified `docs/requirements.txt` to update the versions of the documentation dependencies.
+- Improved CI tests and coverage.
+- Modified Makefile to be truely cross-platform.
+- Added sanitizer check for all bindings and crates.
+
+**lowess:**
+
+- Upgraded `wide` to version 1.4.
+
+**fastLowess:**
+
+- Upgraded `rayon` to version 1.12.
+- Upgraded `wgpu` to version 29.0.
 
 **C++:**
 
@@ -39,13 +51,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+**lowess:**
+
+- Updated MSRV to 1.89 to access the significant improvements made in `wide` since version 0.7.
+
+**fastLowess:**
+
+- Updated MSRV to 1.89 to access the significant improvements made in `wide` since version 0.7.
+
 **R:**
 
 - Refactored the R binding validation helpers to reuse `validate_common_args()` and `coerce_nullable()` in production code, split `validate_params()` into smaller helper validators, and consolidated duplicated constructor parameter documentation with `@inheritParams` before regenerating the Rd files.
+- Updated MSRV to 1.89 to access the significant improvements made in `wide` since version 0.7.
+- Abides by new rOpenSci standards.
+
+**Python:**
+
+- Updated MSRV to 1.89 to access the significant improvements made in `wide` since version 0.7.
+
+**Node.js:**
+
+- Updated MSRV to 1.89 to access the significant improvements made in `wide` since version 0.7.
+
+**Julia:**
+
+- Updated MSRV to 1.89 to access the significant improvements made in `wide` since version 0.7.
+
+**WASM:**
+
+- Updated MSRV to 1.89 to access the significant improvements made in `wide` since version 0.7.
 
 **C++:**
 
-- Removed the legacy snake_case compatibility layer; the public C++ method API now uses camelBack, while variables and constants follow lower_case
+- Removed the legacy snake_case compatibility layer; the public C++ method API now uses camelBack, while variables and constants follow lower_case.
+- Updated MSRV to 1.89 to access the significant improvements made in `wide` since version 0.7.
 
 ### Fixed
 
@@ -55,6 +94,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Upgraded ASAN test environment to use modern `rocker/r-devel-san:latest` image and `RDscript` to resolve outdated `readelf` warnings.
 - Fixed `Makefile` idempotency checks on Linux by providing a default `/tmp` fallback for the `TEMP` directory variable.
 - Fixed accidental root `Cargo.toml` workspace isolation leaks by adding checked-in `pre-commit` and `pre-push` git hook guards that restore `Cargo.toml.bak` when present and fail loudly if required workspace members are still commented out.
+- Added a repo-local `.cargo/config.toml` that sets `CC=clang-cl` for `x86_64-pc-windows-msvc`, fixing Criterion 0.8 benchmark builds on Windows when `cc-rs` would otherwise pick `clang.exe` and fail to link `alloca`.
 
 **R:**
 
@@ -91,6 +131,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed `make cpp` on Windows by making C++ symbol-export verification, CMake test execution, DLL runtime resolution, and Unix-specific test steps platform-aware.
 - Fixed MSVC `size_t` to `unsigned long` narrowing warnings in the C++ wrapper at the FFI boundary with explicit conversions.
 - Fixed C++ CMake package integration by generating and installing `fastlowessConfig.cmake` and related package export files for downstream `find_package` use.
+
+**fastLowess:**
+
+- Fixed GPU execution under `wgpu` 29 by updating instance and pipeline layout setup, separating shader-written indirect dispatch data from the actual indirect dispatch buffer, stabilizing GPU buffer downloads, and correcting batched cross-validation dispatch offsets so the GPU integration test suite passes again.
 
 **Julia:**
 

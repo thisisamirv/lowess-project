@@ -22,7 +22,7 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/thisisamirv/lowess-project"
 homepage = "https://github.com/thisisamirv/lowess-project"
 documentation = "https://lowess.readthedocs.io/"
-rust-version = "1.88"
+rust-version = "1.89"
 readme = "README.md"
 
 [profile.release]

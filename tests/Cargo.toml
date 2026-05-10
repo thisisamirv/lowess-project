@@ -6,7 +6,7 @@ edition = "2024"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/thisisamirv/lowess-project"
 homepage = "https://github.com/thisisamirv/lowess-project"
-rust-version = "1.88"
+rust-version = "1.89"
 readme = "README.md"
 description = "High-performance LOWESS (Locally Weighted Scatterplot Smoothing)"
 keywords = ["lowess", "smoothing", "statistics", "regression", "bioinformatics"]
@@ -16,11 +16,11 @@ categories = ["science", "algorithms"]
 lowess = { path = "../crates/lowess", features = ["dev"] }
 fastLowess = { path = "../crates/fastLowess", features = ["dev"] }
 approx = "0.5.1"
-ndarray = { version = "0.17.1", default-features = false }
-num-traits = { version = "0.2.19", default-features = false }
-rayon = { version = "1.11.0" }
-bytemuck = "1.24.0"
-pollster = "0.4.0"
+ndarray = { version = "0.17", default-features = false }
+num-traits = { version = "0.2", default-features = false }
+rayon = { version = "1.12" }
+bytemuck = "1.25"
+pollster = "0.4"
 
 [features]
 default = ["dev"]

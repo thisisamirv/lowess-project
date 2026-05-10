@@ -1,41 +1,41 @@
 name: Release WASM
 
 on:
-  release:
-    types: [created]
-  workflow_dispatch:
+    release:
+        types: [created]
+    workflow_dispatch:
 
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  publish-wasm:
-    name: Publish WASM
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    publish-wasm:
+        name: Publish WASM
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
 
-      - name: Install Rust Toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: stable
-          targets: wasm32-unknown-unknown
+            - name: Install Rust Toolchain
+              uses: dtolnay/rust-toolchain@stable
+              with:
+                  toolchain: stable
+                  targets: wasm32-unknown-unknown
 
-      - name: Install wasm-pack
-        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+            - name: Install wasm-pack
+              run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          registry-url: "https://registry.npmjs.org"
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+                  registry-url: "https://registry.npmjs.org"
 
-      - name: Build WASM
-        working-directory: bindings/wasm
-        run: wasm-pack build --target web --release
+            - name: Build WASM
+              working-directory: bindings/wasm
+              run: wasm-pack build --target web --release
 
-      - name: Publish to npm
-        working-directory: bindings/wasm/pkg
-        run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+            - name: Publish to npm
+              working-directory: bindings/wasm/pkg
+              run: npm publish
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

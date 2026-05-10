@@ -188,14 +188,10 @@ fn test_gpu_padding_values() {
             exec.queue.submit(Some(encoder.finish()));
         }
 
-        let x_padded = exec
-            .download_buffer(exec.buffers.x_buffer.as_ref().unwrap(), None, None)
-            .await
-            .unwrap();
-        let y_padded = exec
-            .download_buffer(exec.buffers.y_buffer.as_ref().unwrap(), None, None)
-            .await
-            .unwrap();
+        let x_buffer = exec.buffers.x_buffer.as_ref().unwrap().clone();
+        let x_padded = exec.download_buffer(&x_buffer, None, None).await.unwrap();
+        let y_buffer = exec.buffers.y_buffer.as_ref().unwrap().clone();
+        let y_padded = exec.download_buffer(&y_buffer, None, None).await.unwrap();
 
         println!("GPU X Padded: {:?}", x_padded);
         println!("GPU Y Padded: {:?}", y_padded);
@@ -370,12 +366,10 @@ fn test_cpu_gpu_padding_equivalence() {
         exec.queue.submit(Some(encoder.finish()));
 
         // Download results
-        let gpu_px =
-            block_on(exec.download_buffer(exec.buffers.x_buffer.as_ref().unwrap(), None, None))
-                .unwrap();
-        let gpu_py =
-            block_on(exec.download_buffer(exec.buffers.y_buffer.as_ref().unwrap(), None, None))
-                .unwrap();
+        let x_buffer = exec.buffers.x_buffer.as_ref().unwrap().clone();
+        let gpu_px = block_on(exec.download_buffer(&x_buffer, None, None)).unwrap();
+        let y_buffer = exec.buffers.y_buffer.as_ref().unwrap().clone();
+        let gpu_py = block_on(exec.download_buffer(&y_buffer, None, None)).unwrap();
 
         assert_eq!(
             cpu_px.len(),

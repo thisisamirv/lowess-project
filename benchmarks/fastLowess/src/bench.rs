@@ -6,9 +6,17 @@
 //! - Real-world scenarios (financial, scientific, genomic)
 //! - Pathological cases (outliers, clustered data, high noise)
 //!
+//! For CPU backend and serial execution in bash, use
 //! For CPU backend and serial execution, use `FASTLOWESS_BACKEND=serial cargo bench`.
 //! For CPU backend and parallel execution, use `FASTLOWESS_BACKEND=parallel cargo bench`.
 //! For GPU backend, use `FASTLOWESS_BACKEND=gpu cargo bench`.
+//!
+//! For CPU backend and serial execution in PowerShell, use
+//! `$env:FASTLOWESS_BACKEND='serial'; cargo bench`.
+//! For CPU backend and parallel execution in PowerShell, use
+//! `$env:FASTLOWESS_BACKEND='parallel'; cargo bench`.
+//! For GPU backend in PowerShell, use
+//! `$env:FASTLOWESS_BACKEND='gpu'; cargo bench --features gpu`.
 
 use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
 use fastLowess::prelude::*;

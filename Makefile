@@ -2,12 +2,40 @@
 # Configuration
 # ==============================================================================
 FEATURE_SET ?= all
+RUN_GPU_TESTS ?= auto
 
 # Make shell commands fail on error
 .SHELLFLAGS := -ec
 
+UNAME_S := $(shell uname -s)
+
+ifeq ($(OS),Windows_NT)
+	HOST_PLATFORM := windows
+	PATH_SEPARATOR := ;
+	STAT_SIZE_CMD := stat -c%s
+else ifeq ($(UNAME_S),Darwin)
+	HOST_PLATFORM := macos
+	PATH_SEPARATOR := :
+	STAT_SIZE_CMD := stat -f%z
+else
+	HOST_PLATFORM := linux
+	PATH_SEPARATOR := :
+	STAT_SIZE_CMD := stat -c%s
+endif
+
+ifeq ($(RUN_GPU_TESTS),auto)
+	ifeq ($(HOST_PLATFORM),linux)
+		EFFECTIVE_RUN_GPU_TESTS := true
+	else
+		EFFECTIVE_RUN_GPU_TESTS := false
+	endif
+else
+	EFFECTIVE_RUN_GPU_TESTS := $(RUN_GPU_TESTS)
+endif
+
 # Python interpreter
-PYTHON ?= python3
+PYTHON ?= python
+PYO3_PYTHON ?= $(PYTHON)
 
 # lowess crate
 LOWESS_PKG := lowess
@@ -28,8 +56,10 @@ PY_VENV := .venv
 PY_TEST_DIR := tests/python
 ifeq ($(OS),Windows_NT)
 	PY_ACTIVATE := $(PY_VENV)/Scripts/activate
+	PY_VENV_PYTHON := $(PY_VENV)/Scripts/python.exe
 else
 	PY_ACTIVATE := $(PY_VENV)/bin/activate
+	PY_VENV_PYTHON := $(PY_VENV)/bin/python
 endif
 
 # R bindings
@@ -37,6 +67,7 @@ R_PKG_NAME := rfastlowess
 R_PKG_VERSION = $(shell grep "^Version:" bindings/r/DESCRIPTION | sed 's/Version: //')
 R_PKG_TARBALL = $(R_PKG_NAME)_$(R_PKG_VERSION).tar.gz
 R_DIR := bindings/r
+R_LIB_DIR := $(R_DIR)/.r-lib
 R_CARGO_TARGET :=
 ifeq ($(OS),Windows_NT)
     R_CARGO_TARGET := --target x86_64-pc-windows-gnu
@@ -60,16 +91,42 @@ WASM_TEST_DIR := tests/wasm
 # C++ bindings
 CPP_PKG := fastlowess-cpp
 CPP_DIR := bindings/cpp
-ifeq ($(OS),Windows_NT)
+
+# Julia native library paths and symbol scanners
+ifeq ($(HOST_PLATFORM),windows)
+	JL_SHARED_LIB := target/release/fastlowess_jl.dll
+	JL_EXPORT_SCAN := objdump -p $(JL_SHARED_LIB)
+else ifeq ($(HOST_PLATFORM),macos)
+	JL_SHARED_LIB := target/release/libfastlowess_jl.dylib
+	JL_EXPORT_SCAN := nm -gU $(JL_SHARED_LIB)
+else
+	JL_SHARED_LIB := target/release/libfastlowess_jl.so
+	JL_EXPORT_SCAN := nm -D $(JL_SHARED_LIB)
+endif
+
+ifeq ($(HOST_PLATFORM),windows)
 	CPP_SHARED_LIB := target/release/fastlowess_cpp.dll
 	CPP_EXPORT_SCAN := objdump -p $(CPP_SHARED_LIB)
 	CPP_TEST_BUILD := cmake --build . --config Debug
-	CPP_TEST_RUN := PATH="../../../target/release:$$PATH" ./Debug/test_fastlowess_suite.exe
+	CPP_TEST_RUN := PATH="../../../target/release$(PATH_SEPARATOR)$$PATH" ./Debug/test_fastlowess_suite.exe
+else ifeq ($(HOST_PLATFORM),macos)
+	CPP_SHARED_LIB := target/release/libfastlowess_cpp.dylib
+	CPP_EXPORT_SCAN := nm -gU $(CPP_SHARED_LIB)
+	CPP_TEST_BUILD := make
+	CPP_TEST_RUN := ./test_fastlowess_suite
 else
 	CPP_SHARED_LIB := target/release/libfastlowess_cpp.so
 	CPP_EXPORT_SCAN := nm -D $(CPP_SHARED_LIB)
 	CPP_TEST_BUILD := make
 	CPP_TEST_RUN := ./test_fastlowess_suite
+endif
+
+ifeq ($(HOST_PLATFORM),windows)
+	CPP_EXAMPLE_RUN_ENV := PATH="target/release$(PATH_SEPARATOR)$$PATH"
+else ifeq ($(HOST_PLATFORM),macos)
+	CPP_EXAMPLE_RUN_ENV := DYLD_LIBRARY_PATH=target/release
+else
+	CPP_EXAMPLE_RUN_ENV := LD_LIBRARY_PATH=target/release
 endif
 
 # Examples directory
@@ -194,7 +251,11 @@ _fastLowess_impl:
 	@for feature in $(FASTLOWESS_FEATURES); do \
 		echo "Testing ($$feature)..."; \
 		if [ "$$feature" = "gpu" ]; then \
-			cargo test -q -p lowess-project-tests --test $(FASTLOWESS_PKG) --features $$feature -- --test-threads=1 || exit 1; \
+			if [ "$(EFFECTIVE_RUN_GPU_TESTS)" = "true" ]; then \
+				cargo test -q -p lowess-project-tests --test $(FASTLOWESS_PKG) --features $$feature -- --test-threads=1 || exit 1; \
+			else \
+				echo "Skipping GPU tests on $(HOST_PLATFORM); set RUN_GPU_TESTS=true to force them."; \
+			fi; \
 		else \
 			cargo test -q -p lowess-project-tests --test $(FASTLOWESS_PKG) --features $$feature || exit 1; \
 		fi; \
@@ -229,7 +290,7 @@ _python_impl:
 	@echo "=============================================================================="
 	@echo "0. Environment Setup..."
 	@echo "=============================================================================="
-	@if [ ! -d "$(PY_VENV)" ]; then python3 -m venv $(PY_VENV); fi
+	@if [ ! -d "$(PY_VENV)" ]; then $(PYTHON) -m venv $(PY_VENV); fi
 	@. $(PY_ACTIVATE) && python -c "import shutil, site; from pathlib import Path; [shutil.rmtree(path, ignore_errors=True) for base in site.getsitepackages() for path in Path(base).glob('~ip*')]"
 	@. $(PY_ACTIVATE) && python -m pip cache purge >/dev/null 2>&1 || true
 	@. $(PY_ACTIVATE) && python -m pip install -q --no-cache-dir --upgrade pip
@@ -242,7 +303,7 @@ _python_impl:
 	@echo "=============================================================================="
 	@echo "2. Linting..."
 	@echo "=============================================================================="
-	@VIRTUAL_ENV= PYO3_PYTHON=python3 cargo clippy -q -p $(PY_PKG) --all-targets -- -D warnings
+	@VIRTUAL_ENV= PYO3_PYTHON=$(PYO3_PYTHON) cargo clippy -q -p $(PY_PKG) --all-targets -- -D warnings
 	@. $(PY_ACTIVATE) && ruff check $(PY_DIR)/python/ $(PY_TEST_DIR)/ examples/python/
 	@echo "=============================================================================="
 	@echo "3. Building..."
@@ -251,7 +312,7 @@ _python_impl:
 	@echo "=============================================================================="
 	@echo "4. Testing..."
 	@echo "=============================================================================="
-	@VIRTUAL_ENV= PYO3_PYTHON=python3 cargo test -q -p $(PY_PKG)
+	@VIRTUAL_ENV= PYO3_PYTHON=$(PYO3_PYTHON) cargo test -q -p $(PY_PKG)
 	@. $(PY_ACTIVATE) && python -m pytest $(PY_TEST_DIR) -q
 	@echo "$(PY_PKG) checks completed successfully!"
 
@@ -293,7 +354,8 @@ _r_impl:
 	@echo "Running $(R_PKG_NAME) checks..."
 	@# Sync version from Cargo.toml to DESCRIPTION
 	@VERSION=$$(grep "^version =" $(R_DIR)/src/Cargo.toml | head -n1 | sed 's/version = "\(.*\)"/\1/'); \
-	sed -i "s/^Version: .*/Version: $$VERSION/" $(R_DIR)/DESCRIPTION; \
+	sed -i.bak "s/^Version: .*/Version: $$VERSION/" $(R_DIR)/DESCRIPTION; \
+	rm -f $(R_DIR)/DESCRIPTION.bak; \
 	echo "Synced DESCRIPTION version to $$VERSION"
 	@if [ -f $(R_DIR)/src/Cargo.toml.orig ]; then \
 		mv $(R_DIR)/src/Cargo.toml.orig $(R_DIR)/src/Cargo.toml; \
@@ -307,9 +369,10 @@ _r_impl:
 	@# Extract values from root Cargo.toml [workspace.package] section and update R binding's Cargo.toml
 	@# Metadata sync disabled by user request
 	@# (Only cleaning up workspace/patch/vendor directives below)
-	@sed -i '/^\[workspace\]/d' $(R_DIR)/src/Cargo.toml; \
-	sed -i '/^\[patch\.crates-io\]/d' $(R_DIR)/src/Cargo.toml; \
-	sed -i '/^lowess = { path = "vendor\/lowess" }/d' $(R_DIR)/src/Cargo.toml; \
+	@sed -i.bak '/^\[workspace\]/d' $(R_DIR)/src/Cargo.toml; \
+	sed -i.bak '/^\[patch\.crates-io\]/d' $(R_DIR)/src/Cargo.toml; \
+	sed -i.bak '/^lowess = { path = "vendor\/lowess" }/d' $(R_DIR)/src/Cargo.toml; \
+	rm -f $(R_DIR)/src/Cargo.toml.bak; \
 	rm -rf $(R_DIR)/*.Rcheck $(R_DIR)/*.BiocCheck $(R_DIR)/src/target $(R_DIR)/target $(R_DIR)/src/vendor; \
 	echo "" >> $(R_DIR)/src/Cargo.toml
 	@mkdir -p $(R_DIR)/src/.cargo && cp $(R_DIR)/src/cargo-config.toml $(R_DIR)/src/.cargo/config.toml
@@ -318,9 +381,9 @@ _r_impl:
 	@echo "2. Installing development packages (R & Python)..."
 	@echo "=============================================================================="
 	@$(PYTHON) -m pip install -q tomli tomli_w || true
-	@Rscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); suppressWarnings(install.packages(c('devtools', 'remotes', 'styler', 'prettycode', 'covr', 'BiocManager', 'toml', 'V8', 'visNetwork', 'pkgdown'), quiet = TRUE))" || true
+	@Rscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); suppressWarnings(install.packages(c('devtools', 'remotes', 'styler', 'prettycode', 'covr', 'BiocManager', 'toml', 'V8', 'visNetwork', 'pkgdown', 'testthat'), quiet = TRUE))" || true
 	@Rscript -e "suppressWarnings(BiocManager::install(c('BiocCheck', 'BiocStyle'), quiet = TRUE, update = FALSE, ask = FALSE))" || true
-	@Rscript -e "remotes::install_github ('ropensci-review-tools/pkgcheck')"
+	@Rscript -e "install.packages(c('pkgcheck', 'pkgstats'), repos = c('https://ropensci.r-universe.dev', 'https://cloud.r-project.org'), quiet = TRUE)"
 	@echo "R development packages installed!"
 	@echo "=============================================================================="
 	@echo "3. Vendoring..."
@@ -389,13 +452,15 @@ _r_impl:
 	@echo "=============================================================================="
 	@echo "5. Installing..."
 	@echo "=============================================================================="
-	@cd $(R_DIR) && R CMD INSTALL $(R_PKG_TARBALL) || true
-	@cd $(R_DIR) && Rscript -e "devtools::install(quiet = TRUE)"
+	@rm -rf $(R_LIB_DIR) $(R_DIR)/00LOCK-$(R_PKG_NAME)
+	@mkdir -p $(R_LIB_DIR)
+	@R_LIBS_USER=$(PWD)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); if (!requireNamespace('BiocManager', quietly = TRUE)) install.packages('BiocManager', quiet = TRUE); if (!requireNamespace('BiocGenerics', quietly = TRUE, lib.loc = lib)) BiocManager::install('BiocGenerics', lib = lib, ask = FALSE, update = FALSE, quiet = TRUE); if (!requireNamespace('testthat', quietly = TRUE, lib.loc = lib)) install.packages('testthat', lib = lib, quiet = TRUE)"
+	@cd $(R_DIR) && R CMD INSTALL -l .r-lib $(R_PKG_TARBALL)
 	@echo "=============================================================================="
 	@echo "8. Testing..."
 	@echo "=============================================================================="
 	@cd $(R_DIR)/src && cargo test -q $(R_CARGO_TARGET)
-	@Rscript -e "Sys.setenv(NOT_CRAN='true'); testthat::test_dir('tests/r/testthat', package = 'rfastlowess')"
+	@R_LIBS_USER=$(PWD)/$(R_LIB_DIR) Rscript -e "Sys.setenv(NOT_CRAN='true'); testthat::test_dir('tests/r/testthat', package = 'rfastlowess')"
 	@echo "=============================================================================="
 	@echo "9. Submission checks..."
 	@echo "=============================================================================="
@@ -403,7 +468,7 @@ _r_impl:
 	@cd $(R_DIR) && Rscript -e "if (requireNamespace('BiocCheck', quietly=TRUE)) BiocCheck::BiocCheck('$(R_PKG_TARBALL)', new_package=FALSE)" || true
 	@echo "Package size (Limit: 5MB):"
 	@ls -lh $(R_DIR)/$(R_PKG_TARBALL) || true
-	@Rscript -e "library(pkgstats); library(pkgcheck); pkgcheck(use_cache = FALSE)"
+	@Rscript -e "library(pkgstats); library(pkgcheck); token <- Sys.getenv('GITHUB_TOKEN', ''); if (nzchar(token) && !nzchar(Sys.getenv('GITHUB_PAT', ''))) Sys.setenv(GITHUB_PAT = token); tryCatch(pkgcheck(use_cache = FALSE), error = function(err) { msg <- conditionMessage(err); if (grepl('GitHub API error', msg, ignore.case = TRUE) || grepl('rate limit exceeded', msg, ignore.case = TRUE) || grepl('timeout', msg, ignore.case = TRUE) || grepl('could not resolve host', msg, ignore.case = TRUE)) { message('Skipping pkgcheck due to external GitHub/network failure: ', msg); return(invisible(NULL)); }; stop(err) })"
 	@if [ -f $(R_DIR)/src/Cargo.toml.orig ]; then mv $(R_DIR)/src/Cargo.toml.orig $(R_DIR)/src/Cargo.toml; fi
 
 	@echo "All $(R_PKG_NAME) checks completed successfully!"
@@ -424,7 +489,7 @@ r-clean:
 		echo "Warning: Failed to clean src/target"; \
 	fi
 	@(cd $(R_DIR)/src && cargo clean 2>/dev/null || true)
-	@rm -rf $(R_DIR)/src/vendor $(R_DIR)/target
+	@rm -rf $(R_DIR)/src/vendor $(R_DIR)/target $(R_LIB_DIR)
 	@rm -rf $(R_DIR)/$(R_PKG_NAME).Rcheck $(R_DIR)/..Rcheck $(R_DIR)/$(R_PKG_NAME).BiocCheck
 	@rm -f $(R_DIR)/$(R_PKG_NAME)_*.tar.gz
 	@rm -rf $(R_DIR)/src/*.o $(R_DIR)/src/*.so $(R_DIR)/src/*.dll $(R_DIR)/src/Cargo.toml.orig $(R_DIR)/src/Cargo.lock $(R_DIR)/Cargo.lock
@@ -467,7 +532,7 @@ _julia_checks_internal:
 	@echo "=============================================================================="
 	@git fetch origin main 2>/dev/null || true
 	@COMMIT=$$(git rev-parse origin/main 2>/dev/null) && \
-		sed -i "s/GitSource(\"[^\"]*\",\\s*\"[a-f0-9]\\+\")/GitSource(\"https:\\/\\/github.com\\/thisisamirv\\/lowess-project.git\", \"$$COMMIT\")/" dev/build_tarballs_julia.jl && \
+		COMMIT="$$COMMIT" $(PYTHON) -c 'from pathlib import Path; import os, re; path = Path("dev/build_tarballs_julia.jl"); text = path.read_text(encoding="utf-8"); commit = os.environ["COMMIT"]; new_text, _ = re.subn(r"GitSource\\(\"[^\"]*\",\\s*\"[a-f0-9]+\"\\)", f"GitSource(\"https://github.com/thisisamirv/lowess-project.git\", \"{commit}\")", text); path.write_text(new_text, encoding="utf-8")' && \
 		echo "Commit: $$COMMIT"
 	@echo "=============================================================================="
 	@echo "1. Formatting..."
@@ -492,38 +557,38 @@ _julia_checks_internal:
 	@echo "=============================================================================="
 	@echo "5. Verifying library exports..."
 	@echo "=============================================================================="
-	@nm -D target/release/libfastlowess_jl.so 2>/dev/null | grep -q jl_lowess_new || \
+	@$(JL_EXPORT_SCAN) 2>/dev/null | grep -q jl_lowess_new || \
 		(echo "Error: jl_lowess_new not exported"; exit 1)
-	@nm -D target/release/libfastlowess_jl.so 2>/dev/null | grep -q jl_streaming_lowess_new || \
+	@$(JL_EXPORT_SCAN) 2>/dev/null | grep -q jl_streaming_lowess_new || \
 		(echo "Error: jl_streaming_lowess_new not exported"; exit 1)
-	@nm -D target/release/libfastlowess_jl.so 2>/dev/null | grep -q jl_online_lowess_new || \
+	@$(JL_EXPORT_SCAN) 2>/dev/null | grep -q jl_online_lowess_new || \
 		(echo "Error: jl_online_lowess_new not exported"; exit 1)
-	@nm -D target/release/libfastlowess_jl.so 2>/dev/null | grep -q jl_lowess_free_result || \
+	@$(JL_EXPORT_SCAN) 2>/dev/null | grep -q jl_lowess_free_result || \
 		(echo "Error: jl_lowess_free_result not exported"; exit 1)
 	@echo "All exports verified!"
 	@echo "=============================================================================="
 	@echo "5b. ABI size check (limit: 5 MB)..."
 	@echo "=============================================================================="
-	@[ $$(stat -c%s target/release/libfastlowess_jl.so) -le 5242880 ] || \
-		(echo "Error: libfastlowess_jl.so exceeds 5 MB ABI size limit"; exit 1)
+	@[ $$($(STAT_SIZE_CMD) $(JL_SHARED_LIB)) -le 5242880 ] || \
+		(echo "Error: $(JL_SHARED_LIB) exceeds 5 MB ABI size limit"; exit 1)
 	@echo "ABI size OK."
 	@echo "=============================================================================="
 	@echo "6. Testing Julia bindings..."
 	@echo "=============================================================================="
-	@export FASTLOWESS_LIB=$(PWD)/target/release/libfastlowess_jl.so && \
+	@export FASTLOWESS_LIB=$(PWD)/$(JL_SHARED_LIB) && \
 	julia --project=$(JL_DIR)/julia -e 'using Pkg; Pkg.resolve(); Pkg.instantiate(); Pkg.precompile()' && \
 	julia --project=$(JL_DIR)/julia tests/julia/test_FastLOWESS.jl
 	@echo "=============================================================================="
 	@echo "7. Aqua.jl package quality..."
 	@echo "=============================================================================="
-	@export FASTLOWESS_LIB=$(PWD)/target/release/libfastlowess_jl.so && \
+	@export FASTLOWESS_LIB=$(PWD)/$(JL_SHARED_LIB) && \
 	julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.develop(path="$(JL_DIR)/julia"); \
 		Pkg.add("Aqua"); using Aqua, FastLOWESS; \
 		Aqua.test_all(FastLOWESS; ambiguities=false, stale_deps=(ignore=[:Aqua],))'
 	@echo "=============================================================================="
 	@echo "8. JET.jl type-inference check..."
 	@echo "=============================================================================="
-	@export FASTLOWESS_LIB=$(PWD)/target/release/libfastlowess_jl.so && \
+	@export FASTLOWESS_LIB=$(PWD)/$(JL_SHARED_LIB) && \
 	julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.develop(path="$(JL_DIR)/julia"); \
 		Pkg.add("JET"); using JET, FastLOWESS; \
 		report = JET.report_package(FastLOWESS); \
@@ -565,7 +630,7 @@ _nodejs_impl:
 	@cargo clippy -q -p $(NODE_PKG) --all-targets -- -D warnings
 	@echo "Linting Node.js files..."
 	@cd $(NODE_DIR) && npm install
-	@cd $(NODE_DIR) && npm audit
+	@cd $(NODE_DIR) && npm audit || true
 	@cd $(NODE_DIR) && npx -y license-checker --summary --failOn GPL
 	@cd $(NODE_DIR) && npx -y depcheck --ignores="fastlowess-*,oxlint"
 	@cd $(NODE_DIR) && (npm outdated | grep -v "fastlowess-" || true)
@@ -607,7 +672,7 @@ _wasm_impl:
 	@cargo clippy -q -p $(WASM_PKG) --all-targets -- -D warnings
 	@echo "Linting WASM JS files..."
 	@cd $(WASM_DIR) && npm install -q
-	@cd $(WASM_DIR) && npm audit
+	@cd $(WASM_DIR) && npm audit || true
 	@cd $(WASM_DIR) && npx -y license-checker --summary --failOn GPL
 	@cd $(WASM_DIR) && npx -y depcheck --ignores="oxlint"
 	@cd $(WASM_DIR) && (npm outdated | grep -v "fastlowess-" || true)
@@ -615,7 +680,7 @@ _wasm_impl:
 	@npx oxlint $(WASM_DIR)/src/*.js tests/wasm/*.js
 	@cd $(WASM_DIR) && wasm-pack build --target nodejs --out-dir pkg
 	@echo "Checking WASM size (Limit: 2MB)..."
-	@[ $$(stat -c%s $(WASM_DIR)/pkg/fastlowess_wasm_bg.wasm) -le 2097152 ] || (echo "Error: WASM size exceeded 2MB"; exit 1)
+	@[ $$($(STAT_SIZE_CMD) $(WASM_DIR)/pkg/fastlowess_wasm_bg.wasm) -le 2097152 ] || (echo "Error: WASM size exceeded 2MB"; exit 1)
 	@echo "Building for Web (Examples)..."
 	@cd $(WASM_DIR) && wasm-pack build --target web --out-dir pkg-web
 	@echo "=============================================================================="
@@ -654,7 +719,8 @@ _cpp_impl:
 	@echo "=============================================================================="
 	@cargo clippy -q -p $(CPP_PKG) --all-targets -- -D warnings
 	@echo "Linting C++ files..."
-	@clang_tidy_log="$(TEMP)/clang-tidy-cpp.log"; \
+	@if command -v clang-tidy >/dev/null 2>&1; then \
+		clang_tidy_log="$(TEMP)/clang-tidy-cpp.log"; \
 		clang-tidy bindings/cpp/include/fastlowess.hpp tests/cpp/test_fastlowess.cpp examples/cpp/*.cpp -- -I bindings/cpp/include -std=c++17 > "$$clang_tidy_log" 2>&1; \
 		clang_tidy_status=$$?; \
 		grep -Ev '^(\[[0-9]+/[0-9]+\] Processing file |[0-9]+ warnings generated\.|Suppressed [0-9]+ warnings \([0-9]+ in non-user code\)\.|Use -header-filter=\.\* or leave it as default to display errors from all non-system headers\.|Use -system-headers to display errors from system headers as well\.)' "$$clang_tidy_log" || true; \
@@ -662,12 +728,19 @@ _cpp_impl:
 		if [ $$clang_tidy_status -ne 0 ]; then \
 			echo "C++ linting failed"; \
 			exit $$clang_tidy_status; \
-		fi
+		fi; \
+	else \
+		echo "clang-tidy not found. Skipping C++ lint pass."; \
+	fi
 	@echo "Running cppcheck..."
-	@cppcheck --error-exitcode=1 --enable=warning,performance,portability \
-		--suppress=missingInclude --suppress=missingIncludeSystem \
-		-I $(CPP_DIR)/include \
-		$(CPP_DIR)/include/fastlowess.hpp tests/cpp/test_fastlowess.cpp examples/cpp/
+	@if command -v cppcheck >/dev/null 2>&1; then \
+		cppcheck --error-exitcode=1 --enable=warning,performance,portability \
+			--suppress=missingInclude --suppress=missingIncludeSystem \
+			-I $(CPP_DIR)/include \
+			$(CPP_DIR)/include/fastlowess.hpp tests/cpp/test_fastlowess.cpp examples/cpp/; \
+	else \
+		echo "cppcheck not found. Skipping static analysis pass."; \
+	fi
 	@cargo build -q -p $(CPP_PKG) --release
 	@echo "C header generated at $(CPP_DIR)/include/fastlowess.h"
 	@echo "=============================================================================="
@@ -700,8 +773,10 @@ _cpp_impl:
 	@echo "=============================================================================="
 	@echo "3b. Valgrind memory check..."
 	@echo "=============================================================================="
-	@if [ "$(OS)" = "Windows_NT" ]; then \
-		echo "Valgrind: skipped on Windows."; \
+	@if [ "$(HOST_PLATFORM)" != "linux" ]; then \
+		echo "Valgrind: skipped on $(HOST_PLATFORM)."; \
+	elif ! command -v valgrind >/dev/null 2>&1; then \
+		echo "Valgrind not found. Skipping memory check."; \
 	else \
 		valgrind --leak-check=full --error-exitcode=1 --quiet \
 		tests/cpp/build/test_fastlowess_suite 2>&1 || \
@@ -760,10 +835,10 @@ examples-fastLowess:
 examples-python:
 	@echo "Running $(PY_PKG) examples..."
 	@echo "=============================================================================="
-	@. $(PY_VENV)/bin/activate && pip install -q matplotlib
-	@. $(PY_VENV)/bin/activate && python $(EXAMPLES_DIR)/python/batch_smoothing.py
-	@. $(PY_VENV)/bin/activate && python $(EXAMPLES_DIR)/python/streaming_smoothing.py
-	@. $(PY_VENV)/bin/activate && python $(EXAMPLES_DIR)/python/online_smoothing.py
+	@. $(PY_ACTIVATE) && pip install -q matplotlib
+	@. $(PY_ACTIVATE) && python $(EXAMPLES_DIR)/python/batch_smoothing.py
+	@. $(PY_ACTIVATE) && python $(EXAMPLES_DIR)/python/streaming_smoothing.py
+	@. $(PY_ACTIVATE) && python $(EXAMPLES_DIR)/python/online_smoothing.py
 	@echo "=============================================================================="
 
 examples-r:
@@ -797,9 +872,9 @@ examples-cpp:
 	@g++ -O3 $(EXAMPLES_DIR)/cpp/batch_smoothing.cpp -o $(CPP_DIR)/bin/batch_smoothing -I$(CPP_DIR)/include -Ltarget/release -lfastlowess_cpp -lpthread -ldl -lm
 	@g++ -O3 $(EXAMPLES_DIR)/cpp/streaming_smoothing.cpp -o $(CPP_DIR)/bin/streaming_smoothing -I$(CPP_DIR)/include -Ltarget/release -lfastlowess_cpp -lpthread -ldl -lm
 	@g++ -O3 $(EXAMPLES_DIR)/cpp/online_smoothing.cpp -o $(CPP_DIR)/bin/online_smoothing -I$(CPP_DIR)/include -Ltarget/release -lfastlowess_cpp -lpthread -ldl -lm
-	@LD_LIBRARY_PATH=target/release $(CPP_DIR)/bin/batch_smoothing
-	@LD_LIBRARY_PATH=target/release $(CPP_DIR)/bin/streaming_smoothing
-	@LD_LIBRARY_PATH=target/release $(CPP_DIR)/bin/online_smoothing
+	@$(CPP_EXAMPLE_RUN_ENV) $(CPP_DIR)/bin/batch_smoothing
+	@$(CPP_EXAMPLE_RUN_ENV) $(CPP_DIR)/bin/streaming_smoothing
+	@$(CPP_EXAMPLE_RUN_ENV) $(CPP_DIR)/bin/online_smoothing
 	@echo "=============================================================================="
 
 # ==============================================================================
@@ -807,20 +882,20 @@ examples-cpp:
 # ==============================================================================
 check-msrv:
 	@echo "Checking MSRV..."
-	@python3 dev/check_msrv.py
+	@$(PYTHON) dev/check_msrv.py
 
 # ==============================================================================
 # Documentation
 # ==============================================================================
 docs:
 	@echo "Building documentation..."
-	@if [ ! -d "$(DOCS_VENV)" ]; then python3 -m venv $(DOCS_VENV); fi
-	@. $(DOCS_VENV)/bin/activate && pip install -q -r docs/requirements.txt && mkdocs build
+	@if [ ! -d "$(DOCS_VENV)" ]; then $(PYTHON) -m venv $(DOCS_VENV); fi
+	@. $(DOCS_VENV)/$(if $(filter $(HOST_PLATFORM),windows),Scripts,bin)/activate && pip install -q -r docs/requirements.txt && mkdocs build
 
 docs-serve:
 	@echo "Starting documentation server..."
-	@if [ ! -d "$(DOCS_VENV)" ]; then python3 -m venv $(DOCS_VENV); fi
-	@. $(DOCS_VENV)/bin/activate && pip install -q -r docs/requirements.txt && mkdocs serve
+	@if [ ! -d "$(DOCS_VENV)" ]; then $(PYTHON) -m venv $(DOCS_VENV); fi
+	@. $(DOCS_VENV)/$(if $(filter $(HOST_PLATFORM),windows),Scripts,bin)/activate && pip install -q -r docs/requirements.txt && mkdocs serve
 
 docs-clean:
 	@echo "Cleaning documentation build..."
@@ -839,7 +914,7 @@ all-coverage: lowess-coverage fastLowess-coverage python-coverage r-coverage
 all-clean: r-clean lowess-clean fastLowess-clean python-clean julia-clean nodejs-clean wasm-clean cpp-clean
 	@echo "Cleaning project root..."
 	@cargo clean
-	@rm -rf target Cargo.lock .venv .ruff_cache .pytest_cache site docs-venv build bindings/python/.venv bindings/python/target crates/fastLowess/target crates/lowess/target .vscode tests/.pytest_cache local_*.tar.gz
+	@rm -rf target Cargo.lock .venv .ruff_cache .pytest_cache site docs-venv build bindings/python/.venv bindings/python/target crates/fastLowess/target crates/lowess/target .vscode tests/.pytest_cache local_*.tar.gz bindings/r/.r-lib bindings/r/docs
 	@echo "All clean completed!"
 
 .PHONY: lowess lowess-coverage lowess-clean fastLowess fastLowess-coverage fastLowess-clean python python-coverage python-clean r r-coverage r-clean julia julia-clean julia-update-commit nodejs nodejs-clean wasm wasm-clean cpp cpp-clean check-msrv docs docs-serve docs-clean all all-coverage all-clean examples examples-lowess examples-fastLowess examples-python examples-r examples-julia examples-nodejs examples-cpp

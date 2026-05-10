@@ -9,7 +9,6 @@
 #' @inheritParams Lowess
 #' @param chunk_size Points per chunk.
 #' @param overlap Overlap between chunks.
-#' @param return_diagnostics Return fit metrics. Default: FALSE.
 #'
 #' @return A StreamingLowess object.
 #' @examples

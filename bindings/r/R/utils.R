@@ -113,15 +113,12 @@ coerce_nullable <- function(...) {
 #' Parameter type registry for Rust FFI coercion
 #' @noRd
 param_types <- list(
-    # Numeric parameters
     fraction = "double",
-    # Integer parameters
     iterations = "integer",
     window_capacity = "integer",
     min_points = "integer",
     chunk_size = "integer",
     cv_k = "integer",
-    # Character parameters
     weight_function = "character",
     robustness_method = "character",
     scaling_method = "character",
@@ -129,12 +126,10 @@ param_types <- list(
     update_mode = "character",
     zero_weight_fallback = "character",
     cv_method = "character",
-    # Logical parameters
     return_diagnostics = "logical",
     return_residuals = "logical",
     return_robustness_weights = "logical",
     parallel = "logical",
-    # Nullable parameters (optional, NULL -> Nullable(NULL))
     delta = "nullable",
     overlap = "nullable",
     confidence_intervals = "nullable",

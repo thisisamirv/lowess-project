@@ -1713,6 +1713,7 @@ pub struct GpuBuffers {
     pub anchor_indices_buffer: Option<Buffer>,
     pub anchor_output_buffer: Option<Buffer>,
     pub indirect_buffer: Option<Buffer>,
+    pub indirect_dispatch_buffer: Option<Buffer>,
 
     // Group 1
     pub interval_map_buffer: Option<Buffer>,
@@ -1810,15 +1811,28 @@ pub struct GpuExecutor {
 }
 impl GpuExecutor {
     pub async fn new() -> Result<Self, String> {
-        let instance = Instance::new(&InstanceDescriptor::default());
+        let instance = Instance::new(InstanceDescriptor::new_without_display_handle());
         let adapter = instance
             .request_adapter(&RequestAdapterOptions::default())
             .await;
 
         let adapter = adapter.map_err(|_| "No GPU adapter found")?;
 
+        // The current pipeline layout binds 30 storage buffers across all bind groups.
+        const REQUIRED_STORAGE_BUFFERS_PER_SHADER_STAGE: u32 = 30;
+        let adapter_limits = adapter.limits();
+        if adapter_limits.max_storage_buffers_per_shader_stage
+            < REQUIRED_STORAGE_BUFFERS_PER_SHADER_STAGE
+        {
+            return Err(format!(
+                "GPU adapter only supports {} storage buffers per shader stage, but {} are required",
+                adapter_limits.max_storage_buffers_per_shader_stage,
+                REQUIRED_STORAGE_BUFFERS_PER_SHADER_STAGE
+            ));
+        }
+
         let limits = Limits {
-            max_storage_buffers_per_shader_stage: 64,
+            max_storage_buffers_per_shader_stage: REQUIRED_STORAGE_BUFFERS_PER_SHADER_STAGE,
             ..Default::default()
         };
 
@@ -1930,10 +1944,10 @@ impl GpuExecutor {
         let pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
             label: Some("Pipeline Layout"),
             bind_group_layouts: &[
-                &bind_group_layout_0,
-                &bind_group_layout_1,
-                &bind_group_layout_2,
-                &bind_group_layout_3,
+                Some(&bind_group_layout_0),
+                Some(&bind_group_layout_1),
+                Some(&bind_group_layout_2),
+                Some(&bind_group_layout_3),
             ],
             ..Default::default()
         });
@@ -2134,6 +2148,7 @@ impl GpuExecutor {
                 anchor_indices_buffer: None,
                 anchor_output_buffer: None,
                 indirect_buffer: None,
+                indirect_dispatch_buffer: None,
                 interval_map_buffer: None,
                 weights_buffer: None,
                 y_smooth_buffer: None,
@@ -2443,10 +2458,13 @@ impl GpuExecutor {
             "IndirectArgs",
             &mut self.buffers.indirect_buffer,
             256,
-            BufferUsages::STORAGE
-                | BufferUsages::INDIRECT
-                | BufferUsages::COPY_DST
-                | BufferUsages::COPY_SRC
+            BufferUsages::STORAGE | BufferUsages::COPY_DST | BufferUsages::COPY_SRC
+        );
+        ensure!(
+            "IndirectDispatchArgs",
+            &mut self.buffers.indirect_dispatch_buffer,
+            256,
+            BufferUsages::INDIRECT | BufferUsages::COPY_DST | BufferUsages::COPY_SRC
         );
         self.queue.write_buffer(
             self.buffers.y_buffer.as_ref().unwrap(),
@@ -2913,11 +2931,31 @@ impl GpuExecutor {
         pass.set_bind_group(3, bg3, &[self.w_config_offset]);
         match dispatch {
             DispatchMode::Direct(n) => pass.dispatch_workgroups(n, 1, 1),
-            DispatchMode::Indirect(offset) => pass.dispatch_workgroups_indirect(
-                self.buffers.indirect_buffer.as_ref().unwrap(),
-                offset,
-            ),
+            DispatchMode::Indirect(offset) => {
+                drop(pass);
+                self.copy_indirect_dispatch_args(encoder, offset);
+                let mut pass = encoder.begin_compute_pass(&ComputePassDescriptor::default());
+                pass.set_pipeline(pipeline);
+                pass.set_bind_group(0, bg0, &[self.config_offset]);
+                pass.set_bind_group(1, self.bg1_topo.as_ref().unwrap(), &[]);
+                pass.set_bind_group(2, self.bg2_state.as_ref().unwrap(), &[]);
+                pass.set_bind_group(3, bg3, &[self.w_config_offset]);
+                pass.dispatch_workgroups_indirect(
+                    self.buffers.indirect_dispatch_buffer.as_ref().unwrap(),
+                    offset,
+                );
+            }
         }
+    }
+
+    fn copy_indirect_dispatch_args(&self, encoder: &mut CommandEncoder, offset: u64) {
+        encoder.copy_buffer_to_buffer(
+            self.buffers.indirect_buffer.as_ref().unwrap(),
+            offset,
+            self.buffers.indirect_dispatch_buffer.as_ref().unwrap(),
+            offset,
+            12,
+        );
     }
 
     /// Record a control op (single-thread config update)
@@ -3405,24 +3443,25 @@ impl GpuExecutor {
     }
 
     pub async fn download_buffer_raw(
-        &self,
+        &mut self,
         buf: &Buffer,
         size_override: Option<u64>,
         offset_override: Option<u64>,
     ) -> Option<Vec<u8>> {
         let size = size_override.unwrap_or((self.n as usize * 4) as u64);
         let offset = offset_override.unwrap_or(0);
+        self.buffers.staging_buffer = Some(self.device.create_buffer(&BufferDescriptor {
+            label: Some("Staging Buffer (Single)"),
+            size: size.max(1024),
+            usage: BufferUsages::MAP_READ | BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        }));
+        let staging_buf = self.buffers.staging_buffer.as_ref().unwrap();
         let mut encoder = self.device.create_command_encoder(&Default::default());
-        encoder.copy_buffer_to_buffer(
-            buf,
-            offset,
-            self.buffers.staging_buffer.as_ref().unwrap(),
-            0,
-            size,
-        );
+        encoder.copy_buffer_to_buffer(buf, offset, staging_buf, 0, size);
         self.queue.submit(Some(encoder.finish()));
 
-        let slice = self.buffers.staging_buffer.as_ref().unwrap().slice(..size);
+        let slice = staging_buf.slice(..size);
         let (tx, rx) = oneshot_channel();
         slice.map_async(MapMode::Read, move |v| tx.send(v).unwrap());
         let _ = self.device.poll(PollType::Wait {
@@ -3434,7 +3473,7 @@ impl GpuExecutor {
             let data = slice.get_mapped_range();
             let ret = data.to_vec();
             drop(data);
-            self.buffers.staging_buffer.as_ref().unwrap().unmap();
+            staging_buf.unmap();
             Some(ret)
         } else {
             None
@@ -3442,7 +3481,7 @@ impl GpuExecutor {
     }
 
     pub async fn download_buffer(
-        &self,
+        &mut self,
         buf: &Buffer,
         size_override: Option<u64>,
         offset_override: Option<u64>,
@@ -3468,23 +3507,13 @@ impl GpuExecutor {
             total_size = (total_size + 3) & !3;
         }
 
-        // 2. Ensure staging buffer capacity
-        let current_capacity = self
-            .buffers
-            .staging_buffer
-            .as_ref()
-            .map(|b| b.size())
-            .unwrap_or(0);
-
-        if current_capacity < total_size {
-            self.buffers.staging_buffer = Some(self.device.create_buffer(&BufferDescriptor {
-                label: Some("Staging Buffer (Batch)"),
-                size: total_size.max(1024), // Min 1KB
-                usage: BufferUsages::MAP_READ | BufferUsages::COPY_DST,
-                mapped_at_creation: false,
-            }));
-        }
-
+        // 2. Create per-call staging buffer
+        self.buffers.staging_buffer = Some(self.device.create_buffer(&BufferDescriptor {
+            label: Some("Staging Buffer (Batch)"),
+            size: total_size.max(1024),
+            usage: BufferUsages::MAP_READ | BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        }));
         let staging_buf = self.buffers.staging_buffer.as_ref().unwrap();
 
         // 3. Record Copies
@@ -3539,12 +3568,9 @@ impl GpuExecutor {
         self.queue.submit(Some(encoder.finish()));
 
         // Download result from reduction_buffer[1048575]
+        let reduction_buffer = self.buffers.reduction_buffer.as_ref().unwrap().clone();
         let result = self
-            .download_buffer(
-                self.buffers.reduction_buffer.as_ref().unwrap(),
-                Some(4),
-                Some(1048575 * 4),
-            )
+            .download_buffer(&reduction_buffer, Some(4), Some(1048575 * 4))
             .await
             .ok_or_else(|| "Failed to download median result".to_string())?;
 
@@ -3639,6 +3665,7 @@ fn record_intervals_pass<T>(
 
     // 2. Compute Residual SD (GPU)
     {
+        exec.copy_indirect_dispatch_args(&mut encoder, 12);
         let mut pass = encoder.begin_compute_pass(&ComputePassDescriptor::default());
         pass.set_pipeline(&exec.pipelines.compute_residual_sd_pipeline);
         pass.set_bind_group(0, exec.bg0_data.as_ref().unwrap(), &[exec.config_offset]);
@@ -3669,12 +3696,18 @@ fn record_intervals_pass<T>(
         pass.set_bind_group(1, exec.bg1_topo.as_ref().unwrap(), &[]);
         pass.set_bind_group(2, exec.bg2_state.as_ref().unwrap(), &[]);
         pass.set_bind_group(3, exec.bg3_aux.as_ref().unwrap(), &[exec.w_config_offset]);
-        pass.dispatch_workgroups_indirect(exec.buffers.indirect_buffer.as_ref().unwrap(), 12);
+        pass.dispatch_workgroups_indirect(
+            exec.buffers.indirect_dispatch_buffer.as_ref().unwrap(),
+            12,
+        );
 
         // Interval Bounds Pass (if requested)
         if im.confidence || im.prediction {
             pass.set_pipeline(&exec.pipelines.interval_bounds_pipeline);
-            pass.dispatch_workgroups_indirect(exec.buffers.indirect_buffer.as_ref().unwrap(), 12);
+            pass.dispatch_workgroups_indirect(
+                exec.buffers.indirect_dispatch_buffer.as_ref().unwrap(),
+                12,
+            );
         }
     }
 
@@ -4310,7 +4343,8 @@ where
             ScalingMethod::Mean => SCALING_MEAN,
         };
 
-        for (chunk_idx, batch) in runs.chunks(20).enumerate() {
+        let cv_batch_size = 4;
+        for (chunk_idx, batch) in runs.chunks(cv_batch_size).enumerate() {
             let mut encoder = exec
                 .device
                 .create_command_encoder(&CommandEncoderDescriptor {
@@ -4318,7 +4352,7 @@ where
                 });
 
             for (i, run) in batch.iter().enumerate() {
-                let global_idx = chunk_idx * 20 + i;
+                let global_idx = chunk_idx * cv_batch_size + i;
                 let offset = (global_idx * align) as u32;
 
                 // Set Dynamic Offsets
@@ -4347,6 +4381,10 @@ where
                 );
             }
             exec.queue.submit(Some(encoder.finish()));
+            let _ = exec.device.poll(PollType::Wait {
+                submission_index: None,
+                timeout: None,
+            });
         }
 
         let _ = exec.device.poll(PollType::Wait {
@@ -4355,8 +4393,9 @@ where
         });
 
         // Download all results at once
+        let cv_results_buffer = exec.buffers.cv_results_buffer.as_ref().unwrap().clone();
         let raw_results = block_on(exec.download_buffer(
-            exec.buffers.cv_results_buffer.as_ref().unwrap(),
+            &cv_results_buffer,
             Some((fractions.len() * 4) as u64),
             None,
         ))

@@ -121,7 +121,7 @@ version = "0.99.3"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
-rust-version = "1.85.0"
+rust-version = "1.89"
 readme = "README.md"
 # ... and more
 

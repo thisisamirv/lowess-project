@@ -1,0 +1,297 @@
+name: Sanitizers
+
+on:
+    push:
+        branches: [main, master, develop]
+    pull_request:
+        branches: [main, master, develop]
+    workflow_dispatch:
+
+env:
+    CARGO_TERM_COLOR: always
+    RUST_BACKTRACE: 1
+    ASAN_OPTIONS: detect_leaks=0:strict_init_order=1
+
+jobs:
+    # ============================================================================
+    # REPO-LEVEL SANITIZER COVERAGE
+    #
+    # This workflow is the single home for sanitizer-based CI coverage.
+    # It includes native Rust/binding ASAN coverage plus the dedicated R ASAN/TSAN
+    # jobs that need R-specific setup.
+    #
+    # WASM is intentionally excluded here: sanitizer instrumentation is not
+    # meaningful for the wasm32 target in this CI setup.
+    # ============================================================================
+    asan-native:
+        name: Native ASAN (Rust + bindings)
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@v4
+
+            - name: Install Rust Nightly
+              uses: dtolnay/rust-toolchain@nightly
+              with:
+                  toolchain: nightly
+                  components: rust-src
+
+            - name: Install Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: "3.12"
+
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+
+            - name: Install Julia
+              uses: julia-actions/setup-julia@v2
+              with:
+                  version: "1.11"
+
+            - name: Cache dependencies
+              uses: Swatinem/rust-cache@v2
+              with:
+                  key: sanitizers-asan-native-cargo
+
+            - name: Install System Dependencies
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y --no-install-recommends clang lld cmake g++
+
+            - name: Rust Core Tests (ASAN)
+              env:
+                  RUSTFLAGS: -Zsanitizer=address
+              shell: bash
+              run: |
+                  cargo test \
+                    -Zbuild-std \
+                    --target x86_64-unknown-linux-gnu \
+                    -p lowess-project-tests \
+                    --test lowess
+
+                  cargo test \
+                    -Zbuild-std \
+                    --target x86_64-unknown-linux-gnu \
+                    -p lowess-project-tests \
+                    --test fastLowess \
+                    --features cpu
+
+            - name: Build Native Bindings (ASAN)
+              env:
+                  RUSTFLAGS: -Zsanitizer=address
+              shell: bash
+              run: |
+                  cargo build \
+                    -Zbuild-std \
+                    --target x86_64-unknown-linux-gnu \
+                    -p fastLowess-py \
+                    --release
+
+                  cargo build \
+                    -Zbuild-std \
+                    --target x86_64-unknown-linux-gnu \
+                    -p fastlowess-node \
+                    --release
+
+                  cargo build \
+                    -Zbuild-std \
+                    --target x86_64-unknown-linux-gnu \
+                    -p fastlowess-jl \
+                    --release
+
+                  cargo build \
+                    -Zbuild-std \
+                    --target x86_64-unknown-linux-gnu \
+                    -p fastlowess-cpp \
+                    --release
+
+            - name: Prepare Sanitized C++ Library Path
+              shell: bash
+              run: |
+                  mkdir -p target/release
+                  cp target/x86_64-unknown-linux-gnu/release/libfastlowess_cpp.so target/release/libfastlowess_cpp.so
+
+            - name: C++ Binding Tests (ASAN)
+              shell: bash
+              run: |
+                  cmake -S tests/cpp -B tests/cpp/build-asan \
+                    -DCMAKE_BUILD_TYPE=Debug \
+                    -DCMAKE_C_COMPILER=clang \
+                    -DCMAKE_CXX_COMPILER=clang++ \
+                    -DCMAKE_CXX_FLAGS='-fsanitize=address -fno-omit-frame-pointer' \
+                    -DCMAKE_EXE_LINKER_FLAGS='-fsanitize=address'
+                  cmake --build tests/cpp/build-asan --config Debug
+                  LD_LIBRARY_PATH=target/release ctest --test-dir tests/cpp/build-asan --output-on-failure
+
+            - name: Sanitizer Scope Note
+              run: |
+                  echo "WASM is intentionally excluded from this workflow because ASAN is not meaningful for wasm32 in this CI setup."
+
+    # ============================================================================
+    # R - CLANG ASAN
+    # ============================================================================
+    r-asan-check:
+        name: R - Clang ASAN
+        runs-on: ubuntu-latest
+        container:
+            image: rocker/r-devel-san:latest
+        env:
+            CARGO_HOME: /usr/local/cargo
+            RUSTUP_HOME: /usr/local/rustup
+        defaults:
+            run:
+                working-directory: bindings/r
+        steps:
+            - uses: actions/checkout@v4
+            - name: Install latest Rust
+              shell: bash
+              run: |
+                  export CARGO_HOME=/usr/local/cargo
+                  export RUSTUP_HOME=/usr/local/rustup
+                  if command -v curl >/dev/null 2>&1; then
+                    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+                  elif command -v wget >/dev/null 2>&1; then
+                    wget -qO- https://sh.rustup.rs | sh -s -- -y
+                  else
+                    apt-get update
+                    apt-get install -y --no-install-recommends wget ca-certificates
+                    wget -qO- https://sh.rustup.rs | sh -s -- -y
+                  fi
+                  echo "$CARGO_HOME/bin" >> $GITHUB_PATH
+                  echo "CARGO_HOME=$CARGO_HOME" >> $GITHUB_ENV
+                  echo "RUSTUP_HOME=$RUSTUP_HOME" >> $GITHUB_ENV
+            - name: Install System Dependencies
+              run: |
+                  apt-get update
+                  apt-get install -y --no-install-recommends libssl-dev libcurl4-openssl-dev libxml2-dev libuv1-dev
+            - name: Install R Dependencies
+              run: |
+                  export R_LIBS_USER="$RUNNER_TEMP/Library"
+                  mkdir -p "$R_LIBS_USER"
+                  echo "R_LIBS_USER=$R_LIBS_USER" >> "$GITHUB_ENV"
+                  RDscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); install.packages(c('remotes', 'rcmdcheck', 'testthat', 'knitr', 'rmarkdown', 'BiocManager'), lib = lib)"
+                  RDscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); BiocManager::install('BiocStyle', lib = lib, ask = FALSE, update = FALSE)"
+                  RDscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); remotes::install_deps(dependencies = TRUE, lib = lib)"
+            - name: Prepare Package Sources
+              shell: bash
+              run: |
+                  if [ -f "$CARGO_HOME/env" ]; then
+                    . "$CARGO_HOME/env"
+                  elif [ -f "$HOME/.cargo/env" ]; then
+                    . "$HOME/.cargo/env"
+                  fi
+                  chmod +x configure cleanup ../../dev/prepare_cran.sh
+                  ../../dev/prepare_cran.sh
+                  test -f tests/testthat.R
+            - name: Run ASAN Check
+              shell: bash
+              run: |
+                  if [ -f "$CARGO_HOME/env" ]; then
+                    . "$CARGO_HOME/env"
+                  elif [ -f "$HOME/.cargo/env" ]; then
+                    . "$HOME/.cargo/env"
+                  fi
+                  RDscript -e "rcmdcheck::rcmdcheck(args = c('--no-manual', '--ignore-vignettes'), build_args = c('--no-build-vignettes'), error_on = 'error', check_dir = 'check')"
+
+    # ============================================================================
+    # R - CLANG TSAN
+    # ============================================================================
+    r-tsan-check:
+        name: R - Clang TSAN
+        runs-on: ubuntu-latest
+        env:
+            R_DONT_USE_TK: true
+            TSAN_OPTIONS: halt_on_error=1 second_deadlock_stack=1 history_size=7
+        defaults:
+            run:
+                working-directory: bindings/r
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Install Rust Toolchain
+              uses: dtolnay/rust-toolchain@stable
+
+            - name: Setup R-devel
+              uses: r-lib/actions/setup-r@v2
+              with:
+                  r-version: devel
+                  use-public-rspm: true
+
+            - name: Setup Pandoc
+              uses: r-lib/actions/setup-pandoc@v2
+
+            - name: Install System Dependencies
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y --no-install-recommends build-essential cmake pkg-config libssl-dev libcurl4-openssl-dev libxml2-dev libuv1-dev
+
+            - name: Install R Dependencies
+              run: |
+                  export R_LIBS_USER="$RUNNER_TEMP/Library"
+                  mkdir -p "$R_LIBS_USER"
+                  echo "R_LIBS_USER=$R_LIBS_USER" >> "$GITHUB_ENV"
+                  Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); install.packages(c('remotes', 'rcmdcheck', 'testthat', 'knitr', 'rmarkdown', 'BiocManager'), lib = lib)"
+                  Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); BiocManager::install('BiocStyle', lib = lib, ask = FALSE, update = FALSE)"
+                  Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); remotes::install_deps(dependencies = TRUE, lib = lib)"
+
+            - name: Configure TSAN Makevars
+              shell: bash
+              run: |
+                  cat > "$RUNNER_TEMP/Makevars.tsan" <<'EOF'
+                  CC=gcc
+                  CXX=g++
+                  CXX11=g++
+                  CXX14=g++
+                  CXX17=g++
+                  CFLAGS=-g -O1 -Wall -pedantic -fsanitize=thread -fno-omit-frame-pointer
+                  CXXFLAGS=-g -O1 -Wall -pedantic -fsanitize=thread -fno-omit-frame-pointer -frtti
+                  CXX11FLAGS=$(CXXFLAGS)
+                  CXX14FLAGS=$(CXXFLAGS)
+                  CXX17FLAGS=$(CXXFLAGS)
+                  LDFLAGS=-fsanitize=thread
+                  EOF
+                  echo "R_MAKEVARS_USER=$RUNNER_TEMP/Makevars.tsan" >> "$GITHUB_ENV"
+
+            - name: Verify TSAN Compile Toolchain
+              shell: bash
+              run: |
+                  cat > "$RUNNER_TEMP/foo.c" <<'EOF'
+                  void foo(int *bar) { *bar = 1; }
+                  EOF
+                  R CMD SHLIB "$RUNNER_TEMP/foo.c"
+                  test -f "$RUNNER_TEMP/foo.so"
+
+            - name: Discover GCC TSAN Runtime
+              id: gcc-tsan-runtime
+              shell: bash
+              run: |
+                  TSAN_CANDIDATE="$(gcc -print-file-name=libtsan.so.2)"
+                  if [ -z "$TSAN_CANDIDATE" ] || [ "$TSAN_CANDIDATE" = "libtsan.so.2" ] || [ ! -e "$TSAN_CANDIDATE" ]; then
+                    TSAN_CANDIDATE="$(gcc -print-file-name=libtsan.so)"
+                  fi
+                  TSAN_LIB="$(readlink -f "$TSAN_CANDIDATE")"
+                  if [ -z "$TSAN_LIB" ] || [ ! -f "$TSAN_LIB" ]; then
+                    echo "Unable to locate GCC TSAN runtime via gcc -print-file-name=libtsan.so.2/libtsan.so" >&2
+                    exit 1
+                  fi
+                  echo "tsan_lib=$TSAN_LIB" >> "$GITHUB_OUTPUT"
+                  echo "tsan_lib_dir=$(dirname "$TSAN_LIB")" >> "$GITHUB_OUTPUT"
+
+            - name: Prepare Package Sources
+              shell: bash
+              run: |
+                  chmod +x configure cleanup ../../dev/prepare_cran.sh
+                  ../../dev/prepare_cran.sh
+                  test -f tests/testthat.R
+
+            - name: Run TSAN Check
+              shell: bash
+              env:
+                  LD_PRELOAD: ${{ steps.gcc-tsan-runtime.outputs.tsan_lib }}
+                  LD_LIBRARY_PATH: ${{ steps.gcc-tsan-runtime.outputs.tsan_lib_dir }}
+              run: |
+                  Rscript -e "options(pkgbuild.has_compiler = TRUE); rcmdcheck::rcmdcheck(args = c('--no-manual', '--ignore-vignettes'), build_args = c('--no-build-vignettes'), error_on = 'error', check_dir = 'check')"

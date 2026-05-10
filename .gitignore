@@ -23,6 +23,7 @@ src/*.so
 src/*.dll
 src/*.a
 rfastlowess.BiocCheck/
+bindings/r/.r-lib/
 bindings/r/src/vendor/
 bindings/r/src/.cargo/
 bindings/r/docs/
@@ -30,7 +31,6 @@ bindings/r/doc/
 bindings/r/Meta/
 bindings/r/README.html
 bindings/r/src/Makevars
-bindings/r/tests/testthat/
 .Rprofile
 tests/r/testthat/Rplots.pdf
 
