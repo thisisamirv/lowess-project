@@ -26,6 +26,11 @@ PY_PKG := fastLowess-py
 PY_DIR := bindings/python
 PY_VENV := .venv
 PY_TEST_DIR := tests/python
+ifeq ($(OS),Windows_NT)
+	PY_ACTIVATE := $(PY_VENV)/Scripts/activate
+else
+	PY_ACTIVATE := $(PY_VENV)/bin/activate
+endif
 
 # R bindings
 R_PKG_NAME := rfastlowess
@@ -225,26 +230,29 @@ _python_impl:
 	@echo "0. Environment Setup..."
 	@echo "=============================================================================="
 	@if [ ! -d "$(PY_VENV)" ]; then python3 -m venv $(PY_VENV); fi
-	@. $(PY_VENV)/bin/activate && python -m pip install -q pytest numpy maturin ruff
+	@. $(PY_ACTIVATE) && python -c "import shutil, site; from pathlib import Path; [shutil.rmtree(path, ignore_errors=True) for base in site.getsitepackages() for path in Path(base).glob('~ip*')]"
+	@. $(PY_ACTIVATE) && python -m pip cache purge >/dev/null 2>&1 || true
+	@. $(PY_ACTIVATE) && python -m pip install -q --no-cache-dir --upgrade pip
+	@. $(PY_ACTIVATE) && python -m pip install -q --no-cache-dir pytest numpy maturin ruff
 	@echo "=============================================================================="
 	@echo "1. Formatting..."
 	@echo "=============================================================================="
 	@cargo fmt -p $(PY_PKG) -- --check
-	@. $(PY_VENV)/bin/activate && ruff format $(PY_DIR)/python/ $(PY_TEST_DIR)/ examples/python/
+	@. $(PY_ACTIVATE) && ruff format $(PY_DIR)/python/ $(PY_TEST_DIR)/ examples/python/
 	@echo "=============================================================================="
 	@echo "2. Linting..."
 	@echo "=============================================================================="
 	@VIRTUAL_ENV= PYO3_PYTHON=python3 cargo clippy -q -p $(PY_PKG) --all-targets -- -D warnings
-	@. $(PY_VENV)/bin/activate && ruff check $(PY_DIR)/python/ $(PY_TEST_DIR)/ examples/python/
+	@. $(PY_ACTIVATE) && ruff check $(PY_DIR)/python/ $(PY_TEST_DIR)/ examples/python/
 	@echo "=============================================================================="
 	@echo "3. Building..."
 	@echo "=============================================================================="
-	@. $(PY_VENV)/bin/activate && cd $(PY_DIR) && maturin develop -q
+	@. $(PY_ACTIVATE) && cd $(PY_DIR) && maturin develop -q
 	@echo "=============================================================================="
 	@echo "4. Testing..."
 	@echo "=============================================================================="
 	@VIRTUAL_ENV= PYO3_PYTHON=python3 cargo test -q -p $(PY_PKG)
-	@. $(PY_VENV)/bin/activate && python -m pytest $(PY_TEST_DIR) -q
+	@. $(PY_ACTIVATE) && python -m pytest $(PY_TEST_DIR) -q
 	@echo "$(PY_PKG) checks completed successfully!"
 
 python-coverage:
