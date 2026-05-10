@@ -1,22 +1,20 @@
 #!/usr/bin/env Rscript
-
+# nolint start: indentation_linter, line_length_linter.
 # Custom style guide for 4-space indentation everywhere
 style_4spaces <- function(...) {
     # Create base style with 4 spaces
     style <- styler::tidyverse_style(indent_by = 4, ...)
-    
+
     # Patch unindent_function_declaration to use indent_by = 4
     # The default uses indent_by = 2L which overrides our preference
     if (!is.null(style$indention$unindent_function_declaration)) {
         old_fun <- style$indention$unindent_function_declaration
-        style$indention$unindent_function_declaration <- function(
-            pd,
-            indent_by = 4
-        ) {
+        style$indention$unindent_function_declaration <- function(pd,
+                                                                  indent_by = 4L) {
             old_fun(pd, indent_by = indent_by)
         }
     }
-    
+
     style
 }
 
@@ -30,3 +28,4 @@ if (requireNamespace("styler", quietly = TRUE)) {
 } else {
     stop("Package 'styler' is required.")
 }
+# nolint end

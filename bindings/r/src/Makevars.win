@@ -7,7 +7,7 @@ LIBDIR = $(TARGET_DIR)/$(RUST_TARGET)/release
 STATLIB = $(LIBDIR)/librfastlowess.a
 
 # GNU-style linking for MinGW
-PKG_LIBS = -L$(LIBDIR) -Wl,--whole-archive -lrfastlowess -Wl,--no-whole-archive -lws2_32 -luserenv -ladvapi32 -lbcrypt -lncrypt -lntdll -Wl,--export-all-symbols
+PKG_LIBS = -L$(LIBDIR) -Wl,--whole-archive -lrfastlowess -Wl,--no-whole-archive -lws2_32 -luserenv -ladvapi32 -lbcrypt -lncrypt -lntdll -Wl,--export-all-symbols -Wl,--strip-all
 
 all: clean $(SHLIB)
 

@@ -15,9 +15,13 @@ Cargo.lock
 *.tgz
 *.o
 *.so
+*.dll
+*.a
 src/Makevars
 src/*.o
 src/*.so
+src/*.dll
+src/*.a
 rfastlowess.BiocCheck/
 bindings/r/src/vendor/
 bindings/r/src/.cargo/
@@ -26,6 +30,7 @@ bindings/r/doc/
 bindings/r/Meta/
 bindings/r/README.html
 bindings/r/src/Makevars
+bindings/r/tests/testthat/
 .Rprofile
 tests/r/testthat/Rplots.pdf
 
@@ -46,6 +51,9 @@ venv/
 # IDEs & Editors
 .idea/
 .vscode/
+.clangd
+.cache/
+compile_commands.json
 *.swp
 *.swo
 *~

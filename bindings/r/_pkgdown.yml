@@ -1,0 +1,41 @@
+url: https://thisisamirv.github.io/lowess-project/
+template:
+  bootstrap: 5
+  bootswatch: flatly
+
+development:
+  mode: auto
+
+reference:
+  - title: Core LOWESS Interface
+    desc: Main R6 classes for LOWESS smoothing.
+    contents:
+      - rfastlowess-package
+      - Lowess
+      - StreamingLowess
+      - OnlineLowess
+  - title: Results and Utilities
+    desc: Objects returned by fit methods and helper functions.
+    contents:
+      - plot.LowessResult
+      - print.Lowess
+      - print.LowessResult
+      - print.OnlineLowess
+      - print.StreamingLowess
+  - title: Types
+    desc: Helper types for documentation.
+    contents:
+      - Nullable
+
+navbar:
+  structure:
+    left:  [intro, reference, articles, news]
+    right: [search, github]
+  components:
+    github:
+      icon: fab fa-github
+      href: https://github.com/thisisamirv/lowess-project
+      aria-label: GitHub
+    intro:
+      text: Get Started
+      href: articles/rfastlowess.html

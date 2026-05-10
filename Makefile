@@ -32,6 +32,10 @@ R_PKG_NAME := rfastlowess
 R_PKG_VERSION = $(shell grep "^Version:" bindings/r/DESCRIPTION | sed 's/Version: //')
 R_PKG_TARBALL = $(R_PKG_NAME)_$(R_PKG_VERSION).tar.gz
 R_DIR := bindings/r
+R_CARGO_TARGET :=
+ifeq ($(OS),Windows_NT)
+    R_CARGO_TARGET := --target x86_64-pc-windows-gnu
+endif
 
 # Julia bindings
 JL_PKG := fastlowess-jl
@@ -286,10 +290,11 @@ _r_impl:
 	@mkdir -p $(R_DIR)/src/.cargo && cp $(R_DIR)/src/cargo-config.toml $(R_DIR)/src/.cargo/config.toml
 	@echo "Patched $(R_DIR)/src/Cargo.toml"
 	@echo "=============================================================================="
-	@echo "2. Installing R development packages..."
+	@echo "2. Installing development packages (R & Python)..."
 	@echo "=============================================================================="
-	@Rscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); suppressWarnings(install.packages(c('styler', 'prettycode', 'covr', 'BiocManager', 'toml', 'V8', 'visNetwork'), quiet = TRUE))" || true
-	@Rscript -e "suppressWarnings(BiocManager::install('BiocCheck', quiet = TRUE, update = FALSE, ask = FALSE))" || true
+	@$(PYTHON) -m pip install -q tomli tomli_w || true
+	@Rscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); suppressWarnings(install.packages(c('devtools', 'remotes', 'styler', 'prettycode', 'covr', 'BiocManager', 'toml', 'V8', 'visNetwork', 'pkgdown'), quiet = TRUE))" || true
+	@Rscript -e "suppressWarnings(BiocManager::install(c('BiocCheck', 'BiocStyle'), quiet = TRUE, update = FALSE, ask = FALSE))" || true
 	@Rscript -e "remotes::install_github ('ropensci-review-tools/pkgcheck')"
 	@echo "R development packages installed!"
 	@echo "=============================================================================="
@@ -319,19 +324,19 @@ _r_impl:
 	@# Step 7: Regenerate checksums after vendoring
 	@dev/clean_checksums.py -q $(R_DIR)/src/vendor
 	@echo "Creating vendor.tar.xz archive (including Cargo.lock)..."
-	@(cd $(R_DIR)/src && tar --sort=name --mtime='1970-01-01 00:00:00Z' --owner=0 --group=0 --numeric-owner --xz --create --file=vendor.tar.xz vendor Cargo.lock)
+	@(cd $(R_DIR)/src && (tar --sort=name --mtime='1970-01-01 00:00:00Z' --owner=0 --group=0 --numeric-owner --xz --create --file=vendor.tar.xz vendor Cargo.lock 2>/dev/null || tar --xz --create --file=vendor.tar.xz vendor Cargo.lock))
 	@rm -rf $(R_DIR)/src/vendor
 	@echo "Vendor update complete. Archive: $(R_DIR)/src/vendor.tar.xz"
 	@if [ -f $(R_DIR)/src/vendor.tar.xz ] && [ ! -d $(R_DIR)/src/vendor ]; then \
 		echo "Extending vendor.tar.xz..."; \
 		(cd $(R_DIR)/src && tar -xf vendor.tar.xz) && \
-		find $(R_DIR)/src/vendor -name "CITATION.cff" -delete && \
-		find $(R_DIR)/src/vendor -name "CITATION" -delete; \
+		rm -f $(R_DIR)/src/vendor/*/CITATION.cff && \
+		rm -f $(R_DIR)/src/vendor/*/CITATION; \
 	fi
 	@echo "=============================================================================="
 	@echo "4. Building..."
 	@echo "=============================================================================="
-	@(cd $(R_DIR)/src && cargo build -q --release || (mv Cargo.toml.orig Cargo.toml && exit 1))
+	@(cd $(R_DIR)/src && cargo build -q --release $(R_CARGO_TARGET) || (mv Cargo.toml.orig Cargo.toml && exit 1))
 	@rm -rf $(R_DIR)/src/.cargo
 	@echo "=============================================================================="
 	@echo "4a. Formatting..."
@@ -339,19 +344,24 @@ _r_impl:
 	@cd $(R_DIR)/src && cargo fmt -q
 	@cd $(R_DIR) && Rscript $(PWD)/dev/style_pkg.R || true
 	@cd $(R_DIR)/src && cargo fmt -- --check || (echo "Run 'cargo fmt' to fix"; exit 1)
-	@cd $(R_DIR)/src && cargo clippy -q -- -D warnings
+	@cd $(R_DIR)/src && cargo clippy -q $(R_CARGO_TARGET) -- -D warnings
 	@Rscript -e "my_linters <- lintr::linters_with_defaults(indentation_linter = lintr::indentation_linter(indent = 4L), object_name_linter = NULL, commented_code_linter = NULL, object_usage_linter = NULL); lints <- c(lintr::lint_dir('$(R_DIR)/R', linters = my_linters), lintr::lint_dir('tests/r/testthat', linters = my_linters), lintr::lint_dir('examples/r', linters = my_linters)); print(lints); if (length(lints) > 0L) quit(status = 1)"
 	@echo "=============================================================================="
 	@echo "4b. Documentation..."
 	@echo "=============================================================================="
 	@rm -rf $(R_DIR)/*.Rcheck
-	@cd $(R_DIR)/src && RUSTDOCFLAGS="-D warnings" cargo doc -q --no-deps
+	@cd $(R_DIR)/src && RUSTDOCFLAGS="-D warnings" cargo doc -q --no-deps $(R_CARGO_TARGET)
 	@cd $(R_DIR) && Rscript -e "devtools::document(quiet = TRUE)"
-	@cd $(R_DIR) && Rscript -e "devtools::build_vignettes(quiet = TRUE)" || true
+	@Rscript dev/fix_rd_style.R
+	@Rscript -e "if (!requireNamespace('rmarkdown', quietly = TRUE) || !rmarkdown::pandoc_available()) { message('\nERROR: Pandoc is required to build R Markdown vignettes but is not available.\nPlease install Pandoc (https://pandoc.org/installing.html) and ensure it is in your PATH.\n'); quit(status = 1) }"
+	@cd $(R_DIR) && Rscript -e "pkgdown::build_site(quiet = TRUE, install = FALSE)"
 	@rm -f $(R_DIR)/.gitignore
 	@echo "=============================================================================="
 	@echo "4c. Building..."
 	@echo "=============================================================================="
+	@# Copy shared test files into the R package so they are included in the tarball
+	@# Copy shared test files into the R package so they are included in the tarball
+	@Rscript -e "to <- '$(R_DIR)/tests/testthat'; unlink(to, recursive = TRUE, force = TRUE); dir.create(to, recursive = TRUE, showWarnings = FALSE); from <- list.files('tests/r/testthat', pattern = '[.]R$$', full.names = TRUE); if (length(from) > 0) { stopifnot(dir.exists(to)); file.copy(from, to, overwrite = TRUE) }"
 	@cd $(R_DIR) && R CMD build .
 	@echo "=============================================================================="
 	@echo "5. Installing..."
@@ -361,7 +371,7 @@ _r_impl:
 	@echo "=============================================================================="
 	@echo "8. Testing..."
 	@echo "=============================================================================="
-	@cd $(R_DIR)/src && cargo test -q
+	@cd $(R_DIR)/src && cargo test -q $(R_CARGO_TARGET)
 	@Rscript -e "Sys.setenv(NOT_CRAN='true'); testthat::test_dir('tests/r/testthat', package = 'rfastlowess')"
 	@echo "=============================================================================="
 	@echo "9. Submission checks..."

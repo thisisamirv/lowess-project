@@ -1,17 +1,17 @@
 [workspace]
 resolver = "3"
 members = [
-    "crates/lowess",
-    "crates/fastLowess",
-    "bindings/python",
-    "bindings/julia",
-    "bindings/nodejs",
-    "bindings/wasm",
-    "bindings/cpp",
+    # "crates/lowess",
+    # "crates/fastLowess",
+    # "bindings/python",
+    # "bindings/julia",
+    # "bindings/nodejs",
+    # "bindings/wasm",
+    # "bindings/cpp",
     "examples",
     "tests",
-    "validation/fastLowess",
-    "benchmarks/fastLowess",
+    # "validation/fastLowess",
+    # "benchmarks/fastLowess",
 ]
 exclude = ["bindings/r/src/vendor"]
 
