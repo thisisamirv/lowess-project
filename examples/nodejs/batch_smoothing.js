@@ -74,26 +74,26 @@ function main() {
     // 5. Cross-Validation for optimal fraction
     console.log("Running cross-validation to find optimal fraction...");
     const cvFractions = [0.05, 0.1, 0.2, 0.4];
-    
+
     // We pass the fractions and CV method to the smooth function.
     // The main result returned will be the fit using the BEST fraction.
     // We can also retrieve the score for each fraction.
-    const resCV = new fastlowess.Lowess({ 
-        cvFractions, 
-        cvMethod: "kfold", 
+    const resCV = new fastlowess.Lowess({
+        cvFractions,
+        cvMethod: "kfold",
         cvK: 5,
         // We can request robustness weights or diagnostics for the final best model too
-        returnDiagnostics: true 
+        returnDiagnostics: true
     }).fit(x, y);
 
     console.log(`Optimal fraction selected: ${resCV.fractionUsed}`);
-    
+
     // Check scores if available
     const scores = resCV.cvScores;
     // Note: cvScores array corresponds to the input fractions order.
     if (scores) {
         console.log("CV Scores (RMSE):");
-        for(let i=0; i<cvFractions.length; i++) {
+        for (let i = 0; i < cvFractions.length; i++) {
             console.log(` - Fraction ${cvFractions[i]}: ${scores[i].toFixed(4)}`);
         }
     }
@@ -110,14 +110,14 @@ function main() {
     console.log("\nDemonstrating boundary policy effects on linear data...");
     const xl = new Float64Array(50);
     const yl = new Float64Array(50);
-    for(let i=0; i<50; i++) {
+    for (let i = 0; i < 50; i++) {
         xl[i] = (i / 49) * 10;
         yl[i] = 2 * xl[i] + 1;
     }
 
     const rExt = new fastlowess.Lowess({ fraction: 0.6, boundaryPolicy: "extend" }).fit(xl, yl);
     const rRef = new fastlowess.Lowess({ fraction: 0.6, boundaryPolicy: "reflect" }).fit(xl, yl);
-    const rZr  = new fastlowess.Lowess({ fraction: 0.6, boundaryPolicy: "zero" }).fit(xl, yl);
+    const rZr = new fastlowess.Lowess({ fraction: 0.6, boundaryPolicy: "zero" }).fit(xl, yl);
 
     console.log("Boundary policy comparison:");
     console.log(` - Extend (Default): first=${rExt.y[0].toFixed(2)}, last=${rExt.y[49].toFixed(2)}`);

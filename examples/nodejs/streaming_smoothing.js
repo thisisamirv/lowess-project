@@ -16,11 +16,11 @@ function main() {
     // 100,000 points
     const nPoints = 100000;
     console.log(`Generating large dataset: ${nPoints} points...`);
-    
+
     // Pre-allocate arrays
     const x = new Float64Array(nPoints);
     const y = new Float64Array(nPoints);
-    
+
     for (let i = 0; i < nPoints; i++) {
         x[i] = (i / (nPoints - 1)) * 100; // range 0 to 100
         // Gaussian noise
@@ -42,7 +42,7 @@ function main() {
     // Divide the data into chunks of 2,000 for low memory usage
     console.log("Running Streaming LOWESS (Chunked)...");
     const streamStart = process.hrtime.bigint();
-    
+
     const streamer = new fastlowess.StreamingLowess(
         { fraction: 0.01 },
         { chunkSize: 2000, overlap: 200 }
@@ -52,20 +52,20 @@ function main() {
     // In a real app we wouldn't load all x/y into memory first
     const chunkSize = 2000;
     const resChunks = [];
-    
+
     for (let i = 0; i < nPoints; i += chunkSize) {
         // Slice creates a view or copy depending on usage;
         // Float64Array.subarray creates a view (zero copy), but the binding expects TypedArray.
         // If the binding makes a copy anyway, subarray is fine.
         const chunkX = x.subarray(i, Math.min(i + chunkSize, nPoints));
         const chunkY = y.subarray(i, Math.min(i + chunkSize, nPoints));
-        
+
         const chunkRes = streamer.processChunk(chunkX, chunkY);
         if (chunkRes) resChunks.push(chunkRes.y);
     }
     const finalChunk = streamer.finalize();
     if (finalChunk) resChunks.push(finalChunk.y);
-    
+
     // Combine chunks into one array for comparison
     const totalLen = resChunks.reduce((acc, c) => acc + c.length, 0);
     const streamY = new Float64Array(totalLen);
@@ -86,12 +86,12 @@ function main() {
     // Let's assume matches for this example or truncate to min.
     const cmpLen = Math.min(resBatch.y.length, streamY.length);
     const batchY = resBatch.y;
-    
+
     for (let i = 0; i < cmpLen; i++) {
         mse += Math.pow(batchY[i] - streamY[i], 2);
     }
     mse /= cmpLen;
-    
+
     console.log(`Mean Squared Difference (Batch vs Stream): ${mse.toExponential(2)}`);
 
     // Show sample of results

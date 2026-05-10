@@ -37,7 +37,7 @@ function main() {
     console.log(`Simulating ${nPoints} real-time data points...`);
 
     // 2. Sequential Online Processing
-    
+
     // Full Update Mode (higher accuracy)
     console.log("Processing with 'full' update mode...");
     const onlineFull = new fastlowess.OnlineLowess(

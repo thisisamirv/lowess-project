@@ -1,43 +1,43 @@
 {
-  "name": "fastlowess",
-  "version": "1.2.0",
-  "description": "High-performance LOWESS smoothing for Node.js",
-  "main": "index.js",
-  "types": "index.d.ts",
-  "scripts": {
-    "build": "napi build --release",
-    "build:debug": "napi build",
-    "test": "node --test ../../tests/nodejs/test_fastlowess.js",
-    "lint": "eslint index.js ../../tests/nodejs/test_fastlowess.js",
-    "universal": "napi universal"
-  },
-  "napi": {
-    "binaryName": "fastlowess",
-    "targets": [
-      "x86_64-unknown-linux-gnu",
-      "aarch64-unknown-linux-gnu",
-      "x86_64-unknown-linux-musl",
-      "x86_64-pc-windows-msvc",
-      "aarch64-pc-windows-msvc",
-      "x86_64-apple-darwin",
-      "aarch64-apple-darwin"
-    ]
-  },
-  "optionalDependencies": {
-    "fastlowess-darwin-arm64": "^1.2.0",
-    "fastlowess-darwin-x64": "^1.2.0",
-    "fastlowess-linux-arm64-gnu": "^1.2.0",
-    "fastlowess-linux-x64-gnu": "^1.2.0",
-    "fastlowess-linux-x64-musl": "^1.2.0",
-    "fastlowess-win32-arm64-msvc": "^1.2.0",
-    "fastlowess-win32-x64-msvc": "^1.2.0"
-  },
-  "devDependencies": {
-    "@napi-rs/cli": "^3.5",
-    "oxlint": "^1.55"
-  },
-  "engines": {
-    "node": ">= 20"
-  },
-  "license": "MIT OR Apache-2.0"
+    "name": "fastlowess",
+    "version": "1.2.0",
+    "description": "High-performance LOWESS smoothing for Node.js",
+    "main": "index.js",
+    "types": "index.d.ts",
+    "scripts": {
+        "build": "napi build --release",
+        "build:debug": "napi build",
+        "test": "node --test ../../tests/nodejs/test_fastlowess.js",
+        "lint": "eslint index.js ../../tests/nodejs/test_fastlowess.js",
+        "universal": "napi universal"
+    },
+    "napi": {
+        "binaryName": "fastlowess",
+        "targets": [
+            "x86_64-unknown-linux-gnu",
+            "aarch64-unknown-linux-gnu",
+            "x86_64-unknown-linux-musl",
+            "x86_64-pc-windows-msvc",
+            "aarch64-pc-windows-msvc",
+            "x86_64-apple-darwin",
+            "aarch64-apple-darwin"
+        ]
+    },
+    "optionalDependencies": {
+        "fastlowess-darwin-arm64": "^1.2.0",
+        "fastlowess-darwin-x64": "^1.2.0",
+        "fastlowess-linux-arm64-gnu": "^1.2.0",
+        "fastlowess-linux-x64-gnu": "^1.2.0",
+        "fastlowess-linux-x64-musl": "^1.2.0",
+        "fastlowess-win32-arm64-msvc": "^1.2.0",
+        "fastlowess-win32-x64-msvc": "^1.2.0"
+    },
+    "devDependencies": {
+        "@napi-rs/cli": "^3.6",
+        "oxlint": "^1.63"
+    },
+    "engines": {
+        "node": ">= 20"
+    },
+    "license": "MIT OR Apache-2.0"
 }
