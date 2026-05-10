@@ -171,4 +171,4 @@ jobs:
           elif [ -f "$HOME/.cargo/env" ]; then
             . "$HOME/.cargo/env"
           fi
-          RDscript -e "rcmdcheck::rcmdcheck(args = c('--no-manual', '--no-vignettes'), build_args = c('--no-build-vignettes'), error_on = 'error', check_dir = 'check')"
+          RDscript -e "rcmdcheck::rcmdcheck(args = c('--no-manual', '--ignore-vignettes'), build_args = c('--no-build-vignettes'), error_on = 'error', check_dir = 'check')"
