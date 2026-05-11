@@ -776,8 +776,8 @@ _cpp_impl:
 	@echo "2b. cbindgen idempotency check..."
 	@echo "=============================================================================="
 	@if ! command -v cbindgen >/dev/null 2>&1; then \
-		echo "cbindgen not found. Installing..."; \
-		cargo install cbindgen; \
+		echo "cbindgen not found. Installing latest version..."; \
+		cargo install cbindgen --force; \
 	fi
 	@cbindgen --config $(CPP_DIR)/cbindgen.toml --crate $(CPP_PKG) --output $(TEMP)/fastlowess_new.h 2>/dev/null && \
 		diff -q $(CPP_DIR)/include/fastlowess.h $(TEMP)/fastlowess_new.h > /dev/null || \

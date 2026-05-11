@@ -17,7 +17,7 @@ endif()
 
 add_executable(test_fastlowess_suite test_fastlowess.cpp)
 if(WIN32)
-    target_link_libraries(test_fastlowess_suite ${FASTLOWESS_LIB})
+    target_link_libraries(test_fastlowess_suite ${FASTLOWESS_LIB} gcc ntdll ws2_32 userenv bcrypt stdc++)
 else()
     target_link_libraries(test_fastlowess_suite ${FASTLOWESS_LIB} pthread dl)
 endif()
