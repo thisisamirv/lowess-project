@@ -100,6 +100,13 @@ WASM_TEST_DIR := tests/wasm
 # C++ bindings
 CPP_PKG := fastlowess-cpp
 CPP_DIR := bindings/cpp
+CPP_CARGO_TARGET :=
+CPP_LIBRARY_DIR := target/release
+
+ifeq ($(OS),Windows_NT)
+	CPP_CARGO_TARGET := --target x86_64-pc-windows-gnu
+	CPP_LIBRARY_DIR := target/x86_64-pc-windows-gnu/release
+endif
 
 # Julia native library paths and symbol scanners
 ifeq ($(HOST_PLATFORM),windows)
@@ -116,21 +123,27 @@ endif
 JL_SHARED_LIB_ABS := $(abspath $(JL_SHARED_LIB))
 
 ifeq ($(HOST_PLATFORM),windows)
-	CPP_SHARED_LIB := target/release/fastlowess_cpp.dll
+	CPP_SHARED_LIB := $(CPP_LIBRARY_DIR)/fastlowess_cpp.dll
+	CPP_TEST_LIB := $(CPP_LIBRARY_DIR)/libfastlowess_cpp.a
 	CPP_EXPORT_SCAN := objdump -p $(CPP_SHARED_LIB)
-	CPP_TEST_BUILD := cmake --build . --config Debug
-	CPP_TEST_RUN := PATH="../../../target/release$(PATH_SEPARATOR)$$PATH" ./Debug/test_fastlowess_suite.exe
+	CPP_TEST_BUILD := cmake --build .
+	CPP_TEST_RUN := PATH="../../../$(CPP_LIBRARY_DIR)$(PATH_SEPARATOR)$$PATH" ./test_fastlowess_suite.exe
 else ifeq ($(HOST_PLATFORM),macos)
-	CPP_SHARED_LIB := target/release/libfastlowess_cpp.dylib
+	CPP_SHARED_LIB := $(CPP_LIBRARY_DIR)/libfastlowess_cpp.dylib
+	CPP_TEST_LIB := $(CPP_SHARED_LIB)
 	CPP_EXPORT_SCAN := nm -gU $(CPP_SHARED_LIB)
 	CPP_TEST_BUILD := make
 	CPP_TEST_RUN := ./test_fastlowess_suite
 else
-	CPP_SHARED_LIB := target/release/libfastlowess_cpp.so
+	CPP_SHARED_LIB := $(CPP_LIBRARY_DIR)/libfastlowess_cpp.so
+	CPP_TEST_LIB := $(CPP_SHARED_LIB)
 	CPP_EXPORT_SCAN := nm -D $(CPP_SHARED_LIB)
 	CPP_TEST_BUILD := make
 	CPP_TEST_RUN := ./test_fastlowess_suite
 endif
+
+CPP_LIBRARY_DIR_ABS := $(abspath $(CPP_LIBRARY_DIR))
+CPP_TEST_LIB_ABS := $(abspath $(CPP_TEST_LIB))
 
 ifeq ($(HOST_PLATFORM),windows)
 	CPP_EXAMPLE_RUN_ENV := PATH="target/release$(PATH_SEPARATOR)$$PATH"
@@ -392,9 +405,9 @@ _r_impl:
 	@echo "2. Installing development packages (R & Python)..."
 	@echo "=============================================================================="
 	@$(PYTHON) -m pip install -q tomli tomli_w || true
-	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); dir.create(lib, recursive = TRUE, showWarnings = FALSE); .libPaths(c(lib, .libPaths())); options(repos = c(CRAN = 'https://cloud.r-project.org'), warn = 1); required_pkgs <- c('BiocManager', 'styler', 'testthat', 'rmarkdown', 'knitr', 'lintr', 'roxygen2', 'pkgdown', 'remotes'); missing <- required_pkgs[!vapply(required_pkgs, requireNamespace, logical(1), quietly = TRUE, lib.loc = lib)]; if (length(missing) > 0L) { message('Installing required packages: ', paste(missing, collapse = ', ')); tryCatch({ install.packages(missing, lib = lib, type = ifelse(Sys.info()[['sysname']] == 'Darwin', 'both', 'source'), INSTALL_opts = '--no-test-load', dependencies = TRUE, Ncpus = parallel::detectCores()); still_missing <- missing[!vapply(missing, requireNamespace, logical(1), quietly = TRUE, lib.loc = lib)]; if (length(still_missing) > 0L) stop('Required R packages not available: ', paste(still_missing, collapse = ', '), call. = FALSE) }, error = function(err) stop('Failed to install required packages: ', conditionMessage(err), call. = FALSE)) } else { message('All required packages already available') }; message('Verifying all dependencies are installed...'); tryCatch({ install.packages(required_pkgs, lib = lib, type = ifelse(Sys.info()[['sysname']] == 'Darwin', 'both', 'source'), INSTALL_opts = '--no-test-load', dependencies = TRUE, Ncpus = parallel::detectCores()) }, error = function(err) message('Note: Some dependencies may have failed: ', conditionMessage(err))); optional_pkgs <- c('covr', 'prettycode', 'toml', 'V8', 'visNetwork'); missing_opt <- optional_pkgs[!vapply(optional_pkgs, requireNamespace, logical(1), quietly = TRUE, lib.loc = lib)]; if (length(missing_opt) > 0L) { message('Installing optional packages: ', paste(missing_opt, collapse = ', ')); tryCatch(install.packages(missing_opt, lib = lib, quiet = TRUE, dependencies = TRUE, Ncpus = parallel::detectCores()), error = function(err) message('Some optional packages failed to install')) }"
+	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); dir.create(lib, recursive = TRUE, showWarnings = FALSE); .libPaths(c(lib, .libPaths())); options(repos = c(CRAN = 'https://cloud.r-project.org'), warn = 1); required_pkgs <- c('BiocManager', 'styler', 'testthat', 'rmarkdown', 'knitr', 'lintr', 'roxygen2', 'pkgdown', 'remotes'); missing <- required_pkgs[!vapply(required_pkgs, requireNamespace, logical(1), quietly = TRUE, lib.loc = lib)]; if (length(missing) > 0L) { message('Installing required packages: ', paste(missing, collapse = ', ')); tryCatch({ install.packages(missing, lib = lib, type = ifelse(Sys.info()[['sysname']] == 'Darwin', 'both', 'source'), INSTALL_opts = '--no-test-load', dependencies = TRUE, Ncpus = parallel::detectCores()); still_missing <- missing[!vapply(missing, requireNamespace, logical(1), quietly = TRUE, lib.loc = lib)]; if (length(still_missing) > 0L) stop('Required R packages not available: ', paste(still_missing, collapse = ', '), call. = FALSE) }, error = function(err) stop('Failed to install required packages: ', conditionMessage(err), call. = FALSE)) } else { message('All required packages already available') }; optional_pkgs <- c('covr', 'prettycode', 'toml', 'V8', 'visNetwork'); missing_opt <- optional_pkgs[!vapply(optional_pkgs, requireNamespace, logical(1), quietly = TRUE, lib.loc = lib)]; if (length(missing_opt) > 0L) { message('Installing optional packages: ', paste(missing_opt, collapse = ', ')); tryCatch(install.packages(missing_opt, lib = lib, quiet = TRUE, dependencies = TRUE, Ncpus = parallel::detectCores()), error = function(err) message('Some optional packages failed to install')) }"
 	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); if (!requireNamespace('srr', quietly = TRUE, lib.loc = lib)) { message('Installing srr from r-universe...'); options(repos = c(ropenscireviewtools = 'https://ropensci-review-tools.r-universe.dev', CRAN = 'https://cloud.r-project.org')); tryCatch({ suppressWarnings(install.packages('srr', lib = lib, quiet = TRUE)); if (requireNamespace('srr', quietly = TRUE, lib.loc = lib)) message('  Successfully installed: srr') else message('  Optional package srr not available') }, error = function(err) message('  Optional package srr not available (', conditionMessage(err), ')')) } else { message('  Already available: srr') }"
-	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); if (!requireNamespace('BiocManager', quietly = TRUE, lib.loc = lib)) stop('Required R package not available: BiocManager', call. = FALSE); bioc_pkgs <- c('BiocStyle'); missing_bioc <- bioc_pkgs[!vapply(bioc_pkgs, requireNamespace, logical(1), quietly = TRUE, lib.loc = lib)]; if (length(missing_bioc) > 0L) { message('Installing Bioconductor packages: ', paste(missing_bioc, collapse = ', ')); tryCatch({ BiocManager::install(missing_bioc, lib = lib, update = FALSE, ask = FALSE); still_missing <- missing_bioc[!vapply(missing_bioc, requireNamespace, logical(1), quietly = TRUE, lib.loc = lib)]; if (length(still_missing) > 0L) stop('Required Bioconductor packages not available: ', paste(still_missing, collapse = ', '), call. = FALSE) }, error = function(err) stop('Failed to install Bioconductor packages: ', conditionMessage(err), call. = FALSE)) } else { message('Bioconductor packages already available') }; optional_bioc <- c('BiocCheck'); missing_opt_bioc <- optional_bioc[!vapply(optional_bioc, requireNamespace, logical(1), quietly = TRUE, lib.loc = lib)]; if (length(missing_opt_bioc) > 0L) { message('Installing optional Bioconductor packages: ', paste(missing_opt_bioc, collapse = ', ')); tryCatch(suppressWarnings(BiocManager::install(missing_opt_bioc, lib = lib, update = FALSE, ask = FALSE, quiet = TRUE)), error = function(err) message('Some optional Bioconductor packages failed to install')) }"
+	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); if (!requireNamespace('BiocManager', quietly = TRUE, lib.loc = lib)) stop('Required R package not available: BiocManager', call. = FALSE); bioc_pkgs <- c('BiocStyle'); missing_bioc <- bioc_pkgs[!vapply(bioc_pkgs, requireNamespace, logical(1), quietly = TRUE, lib.loc = lib)]; if (length(missing_bioc) > 0L) { message('Installing Bioconductor packages: ', paste(missing_bioc, collapse = ', ')); tryCatch({ BiocManager::install(missing_bioc, lib = lib, update = FALSE, ask = FALSE, force = TRUE); still_missing <- missing_bioc[!vapply(missing_bioc, requireNamespace, logical(1), quietly = TRUE, lib.loc = lib)]; if (length(still_missing) > 0L) stop('Required Bioconductor packages not available: ', paste(still_missing, collapse = ', '), call. = FALSE) }, error = function(err) stop('Failed to install Bioconductor packages: ', conditionMessage(err), call. = FALSE)) } else { message('Bioconductor packages already available') }; optional_bioc <- c('BiocCheck'); missing_opt_bioc <- optional_bioc[!vapply(optional_bioc, requireNamespace, logical(1), quietly = TRUE, lib.loc = lib)]; if (length(missing_opt_bioc) > 0L) { message('Installing optional Bioconductor packages: ', paste(missing_opt_bioc, collapse = ', ')); tryCatch(suppressWarnings(BiocManager::install(missing_opt_bioc, lib = lib, update = FALSE, ask = FALSE, force = TRUE, quiet = TRUE)), error = function(err) message('Some optional Bioconductor packages failed to install')) }"
 	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c('https://ropensci.r-universe.dev', 'https://cloud.r-project.org')); install_optional <- function(pkg) { if (requireNamespace(pkg, quietly = TRUE, lib.loc = lib)) return(invisible(TRUE)); tryCatch(suppressWarnings(install.packages(pkg, lib = lib, quiet = TRUE)), error = function(err) message('Failed to install ', pkg, ': ', conditionMessage(err))); if (!requireNamespace(pkg, quietly = TRUE, lib.loc = lib)) message('Optional R package not available: ', pkg); invisible(TRUE) }; invisible(vapply(c('pkgcheck', 'pkgstats'), install_optional, logical(1)))"
 	@echo "R development packages installed!"
 	@echo "=============================================================================="
@@ -476,7 +489,7 @@ _r_impl:
 	@echo "=============================================================================="
 	@echo "9. Submission checks..."
 	@echo "=============================================================================="
-	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) R_MAKEVARS_USER=$(CURDIR)/dev/Makevars.check R CMD check --as-cran $(R_PKG_TARBALL) || true
+	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) R_MAKEVARS_USER=$(CURDIR)/dev/Makevars.check R CMD check --as-cran --no-manual $(R_PKG_TARBALL) || true
 	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "if (requireNamespace('BiocCheck', quietly=TRUE, lib.loc = Sys.getenv('R_LIBS_USER'))) BiocCheck::BiocCheck('$(R_PKG_TARBALL)', new_package=FALSE)" || true
 	@echo "Package size (Limit: 5MB):"
 	@ls -lh $(R_DIR)/$(R_PKG_TARBALL) || true
@@ -733,7 +746,7 @@ _cpp_impl:
 	@echo "=============================================================================="
 	@echo "2. Linting & Building..."
 	@echo "=============================================================================="
-	@cargo clippy -q -p $(CPP_PKG) --all-targets -- -D warnings
+	@cargo clippy -q -p $(CPP_PKG) --all-targets $(CPP_CARGO_TARGET) -- -D warnings
 	@echo "Linting C++ files..."
 	@if command -v clang-tidy >/dev/null 2>&1; then \
 		clang_tidy_log="$(TEMP)/clang-tidy-cpp.log"; \
@@ -770,7 +783,7 @@ _cpp_impl:
 	else \
 		echo "cppcheck not found. Skipping static analysis pass."; \
 	fi
-	@cargo build -q -p $(CPP_PKG) --release
+	@cargo build -q -p $(CPP_PKG) --release $(CPP_CARGO_TARGET)
 	@echo "C header generated at $(CPP_DIR)/include/fastlowess.h"
 	@echo "=============================================================================="
 	@echo "2b. cbindgen idempotency check..."
@@ -781,7 +794,7 @@ _cpp_impl:
 	fi
 	@cbindgen --config $(CPP_DIR)/cbindgen.toml --crate $(CPP_PKG) --output $(TEMP)/fastlowess_new.h 2>/dev/null && \
 		diff -q $(CPP_DIR)/include/fastlowess.h $(TEMP)/fastlowess_new.h > /dev/null || \
-		(echo "Error: fastlowess.h is stale — run 'cargo build -p $(CPP_PKG) --release' to regenerate"; exit 1)
+		(echo "Error: fastlowess.h is stale — run 'cargo build -p $(CPP_PKG) --release $(CPP_CARGO_TARGET)' to regenerate"; exit 1)
 	@echo "cbindgen header is up-to-date."
 	@echo "=============================================================================="
 	@echo "2c. Symbol export verification..."
@@ -798,7 +811,7 @@ _cpp_impl:
 	@echo "=============================================================================="
 	@rm -rf tests/cpp/build
 	@mkdir -p tests/cpp/build
-	@cd tests/cpp/build && cmake .. && $(CPP_TEST_BUILD) && $(CPP_TEST_RUN)
+	@cd tests/cpp/build && cmake -DFASTLOWESS_LIB="$(CPP_TEST_LIB_ABS)" -DFASTLOWESS_LIB_DIR="$(CPP_LIBRARY_DIR_ABS)" .. && $(CPP_TEST_BUILD) && $(CPP_TEST_RUN)
 	@echo "=============================================================================="
 	@echo "3b. Valgrind memory check..."
 	@echo "=============================================================================="
