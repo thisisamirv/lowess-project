@@ -88,11 +88,11 @@ jobs:
                   # Read the template from the source repo
                   CONTENT=$(cat lowess-project/dev/build_tarballs_julia.jl)
 
-                  # Replace Version
-                  CONTENT=$(echo "$CONTENT" | sed "s/version = v\"[^\"]*\"/version = v\"$VERSION\"/")
+                  # Replace the top-level package version only.
+                  CONTENT=$(echo "$CONTENT" | sed -E "s/^version = v\"[^\"]*\"$/version = v\"$VERSION\"/")
 
-                  # Replace Commit Hash (40 hex characters)
-                  CONTENT=$(echo "$CONTENT" | sed "s/\"[0-9a-f]\{40\}\"/\"$COMMIT\"/")
+                  # Replace only the GitSource commit hash line.
+                  CONTENT=$(echo "$CONTENT" | sed -E "s/^([[:space:]]*)\"[0-9a-f]{40}\"\),$/\1\"$COMMIT\"),/")
 
                   # Verify replacements
                   echo "=== Updated Script (first 30 lines) ==="
@@ -100,13 +100,13 @@ jobs:
                   echo "..."
 
                   # Verify version was replaced
-                  if ! echo "$CONTENT" | grep -q "version = v\"$VERSION\""; then
+                  if ! echo "$CONTENT" | grep -qE "^version = v\"$VERSION\"$"; then
                     echo "❌ Failed to update version in script"
                     exit 1
                   fi
 
                   # Verify commit was replaced
-                  if ! echo "$CONTENT" | grep -q "\"$COMMIT\""; then
+                  if ! echo "$CONTENT" | grep -qE "^[[:space:]]*\"$COMMIT\"\),$"; then
                     echo "❌ Failed to update commit hash in script"
                     exit 1
                   fi
