@@ -24,7 +24,7 @@ jobs:
             matrix:
                 python: ["3.8"]
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
 
             - name: Build wheels
               uses: PyO3/maturin-action@v1
@@ -35,7 +35,7 @@ jobs:
                   manylinux: auto
 
             - name: Upload wheels
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v7
               with:
                   name: wheels-linux-x86_64-py${{ matrix.python }}
                   path: bindings/python/dist
@@ -50,7 +50,7 @@ jobs:
             matrix:
                 python: ["3.8"]
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
 
             - name: Build wheels
               uses: PyO3/maturin-action@v1
@@ -61,7 +61,7 @@ jobs:
                   manylinux: auto
 
             - name: Upload wheels
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v7
               with:
                   name: wheels-linux-aarch64-py${{ matrix.python }}
                   path: bindings/python/dist
@@ -76,10 +76,10 @@ jobs:
             matrix:
                 python: ["3.8"]
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
 
             - name: Set up Python
-              uses: actions/setup-python@v5
+              uses: actions/setup-python@v6
               with:
                   python-version: ${{ matrix.python }}
 
@@ -94,7 +94,7 @@ jobs:
                   args: --release --out dist
 
             - name: Upload wheels
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v7
               with:
                   name: wheels-macos-x86_64-py${{ matrix.python }}
                   path: bindings/python/dist
@@ -109,10 +109,10 @@ jobs:
             matrix:
                 python: ["3.8"]
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
 
             - name: Set up Python
-              uses: actions/setup-python@v5
+              uses: actions/setup-python@v6
               with:
                   python-version: ${{ matrix.python }}
 
@@ -127,7 +127,7 @@ jobs:
                   args: --release --out dist
 
             - name: Upload wheels
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v7
               with:
                   name: wheels-macos-aarch64-py${{ matrix.python }}
                   path: bindings/python/dist
@@ -142,10 +142,10 @@ jobs:
             matrix:
                 python: ["3.8"]
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
 
             - name: Set up Python
-              uses: actions/setup-python@v5
+              uses: actions/setup-python@v6
               with:
                   python-version: ${{ matrix.python }}
 
@@ -160,7 +160,7 @@ jobs:
                   args: --release --out dist
 
             - name: Upload wheels
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v7
               with:
                   name: wheels-windows-x86_64-py${{ matrix.python }}
                   path: bindings/python/dist
@@ -172,7 +172,7 @@ jobs:
         name: Build source distribution
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
 
             - name: Build sdist
               uses: PyO3/maturin-action@v1
@@ -182,7 +182,7 @@ jobs:
                   args: --out dist
 
             - name: Upload sdist
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v7
               with:
                   name: sdist
                   path: bindings/python/dist
@@ -209,10 +209,10 @@ jobs:
 
         steps:
             - name: Checkout Repository
-              uses: actions/checkout@v4
+              uses: actions/checkout@v6
 
             - name: Download all artifacts
-              uses: actions/download-artifact@v4
+              uses: actions/download-artifact@v8
               with:
                   path: bindings/python/dist
                   merge-multiple: true

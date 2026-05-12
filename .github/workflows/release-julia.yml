@@ -45,7 +45,7 @@ jobs:
                   fi
 
             - name: Checkout Source (Lowess Project)
-              uses: actions/checkout@v4
+              uses: actions/checkout@v6
               with:
                   path: lowess-project
 
@@ -277,7 +277,7 @@ jobs:
         if: success()
         steps:
             - name: Trigger JuliaRegistrator
-              uses: actions/github-script@v7
+              uses: actions/github-script@v9
               with:
                   github-token: ${{ secrets.YGGDRASIL_TOKEN || secrets.GITHUB_TOKEN }}
                   script: |

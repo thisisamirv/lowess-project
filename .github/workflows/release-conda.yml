@@ -180,7 +180,7 @@ jobs:
                   git commit -m "Update to version $VERSION"
 
             - name: Setup Micromamba
-              uses: mamba-org/setup-micromamba@v2
+              uses: mamba-org/setup-micromamba@v3
               with:
                   environment-name: smithy
                   create-args: >-

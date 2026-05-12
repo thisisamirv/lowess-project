@@ -27,7 +27,7 @@ jobs:
 
         steps:
             - name: Checkout Repository
-              uses: actions/checkout@v4
+              uses: actions/checkout@v6
 
             # ---- Toolchain Setup ----
             - name: Install Rust Toolchain
@@ -41,7 +41,7 @@ jobs:
               run: rustup toolchain install stable-x86_64-pc-windows-gnu
 
             - name: Install Python
-              uses: actions/setup-python@v5
+              uses: actions/setup-python@v6
               with:
                   python-version: "3.12"
 
@@ -54,7 +54,7 @@ jobs:
               uses: r-lib/actions/setup-pandoc@v2
 
             - name: Setup Node
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@v6
               with:
                   node-version: 22
 
@@ -63,7 +63,7 @@ jobs:
               run: choco install make -y
 
             - name: Install Julia
-              uses: julia-actions/setup-julia@v2
+              uses: julia-actions/setup-julia@v3
               with:
                   version: "1.11"
 
@@ -306,7 +306,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout Repository
-              uses: actions/checkout@v4
+              uses: actions/checkout@v6
 
             - name: Install Rust Toolchain
               uses: dtolnay/rust-toolchain@stable
@@ -314,7 +314,7 @@ jobs:
                   components: rustfmt, clippy
 
             - name: Install Python
-              uses: actions/setup-python@v5
+              uses: actions/setup-python@v6
               with:
                   python-version: "3.12"
 
@@ -327,12 +327,12 @@ jobs:
               uses: r-lib/actions/setup-pandoc@v2
 
             - name: Setup Node
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@v6
               with:
                   node-version: 22
 
             - name: Install Julia
-              uses: julia-actions/setup-julia@v2
+              uses: julia-actions/setup-julia@v3
               with:
                   version: "1.11"
 
@@ -376,7 +376,7 @@ jobs:
         runs-on: macos-latest
         steps:
             - name: Checkout Repository
-              uses: actions/checkout@v4
+              uses: actions/checkout@v6
 
             - name: Install Rust Toolchain
               uses: dtolnay/rust-toolchain@stable
@@ -384,7 +384,7 @@ jobs:
                   components: rustfmt, clippy
 
             - name: Install Python
-              uses: actions/setup-python@v5
+              uses: actions/setup-python@v6
               with:
                   python-version: "3.12"
 
@@ -400,12 +400,12 @@ jobs:
               uses: r-lib/actions/setup-tinytex@v2
 
             - name: Setup Node
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@v6
               with:
                   node-version: 22
 
             - name: Install Julia
-              uses: julia-actions/setup-julia@v2
+              uses: julia-actions/setup-julia@v3
               with:
                   version: "1.11"
 
@@ -430,7 +430,7 @@ jobs:
         runs-on: windows-latest
         steps:
             - name: Checkout Repository
-              uses: actions/checkout@v4
+              uses: actions/checkout@v6
 
             - name: Install Rust Toolchain
               uses: dtolnay/rust-toolchain@stable
@@ -441,7 +441,7 @@ jobs:
               run: rustup toolchain install stable-x86_64-pc-windows-gnu
 
             - name: Install Python
-              uses: actions/setup-python@v5
+              uses: actions/setup-python@v6
               with:
                   python-version: "3.12"
 
@@ -457,7 +457,7 @@ jobs:
               uses: r-lib/actions/setup-tinytex@v2
 
             - name: Setup Node
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@v6
               with:
                   node-version: 22
 
@@ -465,7 +465,7 @@ jobs:
               run: choco install make -y
 
             - name: Install Julia
-              uses: julia-actions/setup-julia@v2
+              uses: julia-actions/setup-julia@v3
               with:
                   version: "1.11"
 

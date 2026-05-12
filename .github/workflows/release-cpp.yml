@@ -37,7 +37,7 @@ jobs:
                       target_dir: target/release
 
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
 
             - name: Install Rust Toolchain
               uses: dtolnay/rust-toolchain@stable
@@ -62,14 +62,14 @@ jobs:
                   mv target/release/fastlowess_cpp.dll ${{ matrix.asset_name }}
 
             - name: Upload Binaries to Release
-              uses: softprops/action-gh-release@v1
+              uses: softprops/action-gh-release@v3
               with:
                   tag_name: ${{ github.event.release.tag_name || github.event.inputs.tag }}
                   files: ${{ matrix.asset_name }}
 
             - name: Upload Header to Release
               if: matrix.os == 'ubuntu-latest'
-              uses: softprops/action-gh-release@v1
+              uses: softprops/action-gh-release@v3
               with:
                   tag_name: ${{ github.event.release.tag_name || github.event.inputs.tag }}
                   files: bindings/cpp/include/fastlowess.hpp
