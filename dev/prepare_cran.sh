@@ -44,14 +44,18 @@ fi
 
 # 3. Copy shared R tests
 echo "   -> Copying shared R tests..."
-rm -rf tests/testthat
-rm -f tests/testthat.R
-mkdir -p tests/testthat
-if [ -d "../../tests/r/testthat" ]; then
+if [ -d "../../tests/r/testthat" ] && [ -f "../../tests/r/testthat.R" ]; then
+	rm -rf tests/testthat
+	rm -f tests/testthat.R
+	mkdir -p tests/testthat
 	cp ../../tests/r/testthat/*.R tests/testthat/
 	cp ../../tests/r/testthat.R tests/testthat.R
-elif [ -d "tests/testthat" ]; then
-	echo "      (Tests already present or root tests missing)"
+	echo "      (Copied shared tests from repository root)"
+elif [ -d "tests/testthat" ] && [ -f "tests/testthat.R" ]; then
+	echo "      (Using tests already present in package)"
+else
+	echo "Error: no R tests available in either ../../tests/r or tests/." >&2
+	exit 1
 fi
 
 # 4. Generate AUTHORS file
