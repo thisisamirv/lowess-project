@@ -12,7 +12,7 @@ use std::panic::catch_unwind;
 use std::ptr;
 use std::slice::from_raw_parts;
 
-use fastLowess::binding_support;
+use fastLowess::internals::binding_support;
 use fastLowess::internals::api::{
     BoundaryPolicy, RobustnessMethod, ScalingMethod, WeightFunction, ZeroWeightFallback,
 };

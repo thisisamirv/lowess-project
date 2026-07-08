@@ -10,7 +10,7 @@ use std::ffi::CStr;
 use std::os::raw::{c_char, c_double, c_int, c_ulong};
 use std::ptr;
 
-use fastLowess::binding_support;
+use fastLowess::internals::binding_support;
 use fastLowess::internals::adapters::online::ParallelOnlineLowess;
 use fastLowess::internals::adapters::streaming::ParallelStreamingLowess;
 use fastLowess::internals::api::{MergeStrategy, UpdateMode};

@@ -12,7 +12,7 @@ use extendr_api::prelude::*;
 // Provide the Result alias that was removed from extendr_api::prelude in 0.9.0
 type Result<T> = std::result::Result<T, extendr_api::Error>;
 
-use fastLowess::binding_support;
+use fastLowess::internals::binding_support;
 use fastLowess::internals::api::{
     BoundaryPolicy, RobustnessMethod, ScalingMethod, UpdateMode, WeightFunction, ZeroWeightFallback,
 };

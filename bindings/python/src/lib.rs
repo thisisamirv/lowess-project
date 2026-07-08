@@ -7,7 +7,7 @@ use pyo3::prelude::*;
 use std::fmt::Display;
 use std::sync::Mutex;
 
-use ::fastLowess::binding_support;
+use ::fastLowess::internals::binding_support;
 use ::fastLowess::internals::adapters::online::ParallelOnlineLowess;
 use ::fastLowess::internals::adapters::streaming::ParallelStreamingLowess;
 use ::fastLowess::internals::api::{

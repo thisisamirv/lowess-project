@@ -102,7 +102,7 @@ export class OnlineLowessWasm {
 }
 "#;
 
-use ::fastLowess::binding_support;
+use ::fastLowess::internals::binding_support;
 use ::fastLowess::internals::adapters::online::ParallelOnlineLowess;
 use ::fastLowess::internals::adapters::streaming::ParallelStreamingLowess;
 use ::fastLowess::prelude::{Batch, Lowess as LowessBuilder, LowessResult, Online, Streaming};

@@ -237,7 +237,7 @@ mod input;
 mod parse;
 
 // Shared helpers for language bindings.
-pub mod binding_support;
+mod binding_support;
 
 // Standard fastLowess prelude.
 pub mod prelude {
@@ -265,5 +265,8 @@ pub mod internals {
     }
     pub mod api {
         pub use crate::api::*;
+    }
+    pub mod binding_support {
+        pub use crate::binding_support::*;
     }
 }
