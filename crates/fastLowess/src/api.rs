@@ -18,7 +18,10 @@ use lowess::internals::api::Online as BaseOnline;
 use lowess::internals::api::Streaming as BaseStreaming;
 
 // Publicly re-exported types
-pub use lowess::internals::api::{LowessAdapter, LowessBuilder};
+pub use lowess::internals::api::{
+    BatchMode, Lowess, LowessAdapter, LowessBuilder, OnlineLowess, OnlineMode, StreamingLowess,
+    StreamingMode,
+};
 pub use lowess::internals::engine::output::LowessResult;
 pub use lowess::internals::primitives::backend::Backend;
 pub use lowess::internals::primitives::errors::LowessError;
@@ -36,13 +39,13 @@ pub struct Batch;
 impl<T: Float> LowessAdapter<T> for Batch {
     type Output = ParallelBatchLowessBuilder<T>;
 
-    fn convert(builder: LowessBuilder<T>) -> Self::Output {
+    fn convert<Mode>(builder: LowessBuilder<T, Mode>) -> Self::Output {
         // Determine parallel mode: user choice OR default to true for fastLowess Batch
         let parallel = builder.parallel.unwrap_or(true);
 
         // Delegate to base implementation to create base builder
         let mut base = <BaseBatch as LowessAdapter<T>>::convert(builder);
-        base = base.parallel(parallel);
+        base.parallel = Some(parallel);
 
         // Wrap with extension fields
         ParallelBatchLowessBuilder {
@@ -60,13 +63,13 @@ pub struct Streaming;
 impl<T: Float> LowessAdapter<T> for Streaming {
     type Output = ParallelStreamingLowessBuilder<T>;
 
-    fn convert(builder: LowessBuilder<T>) -> Self::Output {
+    fn convert<Mode>(builder: LowessBuilder<T, Mode>) -> Self::Output {
         // Determine parallel mode: user choice OR default to true for fastLowess Streaming
         let parallel = builder.parallel.unwrap_or(true);
 
         // Delegate to base implementation to create base builder
         let mut base = <BaseStreaming as LowessAdapter<T>>::convert(builder);
-        base = base.parallel(parallel);
+        base.parallel = Some(parallel);
 
         // Wrap with extension fields
         ParallelStreamingLowessBuilder { base }
@@ -80,13 +83,13 @@ pub struct Online;
 impl<T: Float> LowessAdapter<T> for Online {
     type Output = ParallelOnlineLowessBuilder<T>;
 
-    fn convert(builder: LowessBuilder<T>) -> Self::Output {
+    fn convert<Mode>(builder: LowessBuilder<T, Mode>) -> Self::Output {
         // Determine parallel mode: user choice OR default to false for fastLowess Online
         let parallel = builder.parallel.unwrap_or(false);
 
         // Delegate to base implementation to create base builder
         let mut base = <BaseOnline as LowessAdapter<T>>::convert(builder);
-        base = base.parallel(parallel);
+        base.parallel = Some(parallel);
 
         // Wrap with extension fields
         ParallelOnlineLowessBuilder { base }

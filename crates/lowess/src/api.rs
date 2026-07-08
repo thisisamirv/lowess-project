@@ -15,6 +15,7 @@ use std::string::String;
 use std::vec::Vec;
 
 // External dependencies
+use core::marker::PhantomData;
 use num_traits::Float;
 
 // Internal dependencies
@@ -38,6 +39,21 @@ pub use crate::math::kernel::WeightFunction;
 pub use crate::math::scaling::ScalingMethod;
 pub use crate::primitives::errors::LowessError;
 
+// Mode markers for the type-alias-based builder API.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct BatchMode;
+
+#[derive(Debug, Clone, Copy, Default)]
+pub struct StreamingMode;
+
+#[derive(Debug, Clone, Copy, Default)]
+pub struct OnlineMode;
+
+// Ergonomic entry-point type aliases.
+pub type Lowess<T = f64> = LowessBuilder<T, BatchMode>;
+pub type StreamingLowess<T = f64> = LowessBuilder<T, StreamingMode>;
+pub type OnlineLowess<T = f64> = LowessBuilder<T, OnlineMode>;
+
 // Marker types for selecting execution adapters.
 #[allow(non_snake_case)]
 pub mod Adapter {
@@ -46,7 +62,7 @@ pub mod Adapter {
 
 // Fluent builder for configuring LOWESS parameters and execution modes.
 #[derive(Debug, Clone)]
-pub struct LowessBuilder<T> {
+pub struct LowessBuilder<T, Mode = BatchMode> {
     // Smoothing fraction (0..1].
     pub fraction: Option<T>,
 
@@ -149,15 +165,19 @@ pub struct LowessBuilder<T> {
     // Accumulated parse errors from string-accepting builder methods.
     #[doc(hidden)]
     pub parse_errors: Vec<LowessError>,
+
+    // Phantom mode marker (zero-sized; determines which build() variant to use).
+    #[doc(hidden)]
+    pub _mode: PhantomData<Mode>,
 }
 
-impl<T: Float> Default for LowessBuilder<T> {
+impl<T: Float, Mode> Default for LowessBuilder<T, Mode> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T: Float> LowessBuilder<T> {
+impl<T: Float, Mode> LowessBuilder<T, Mode> {
     // Select an execution adapter to transition to an execution builder.
     pub fn adapter<A>(self, _adapter: A) -> A::Output
     where
@@ -200,6 +220,7 @@ impl<T: Float> LowessBuilder<T> {
             parallel: None,
             duplicate_param: None,
             parse_errors: Vec::new(),
+            _mode: PhantomData,
         }
     }
 
@@ -497,7 +518,7 @@ pub trait LowessAdapter<T: Float> {
     type Output;
 
     // Convert a generic [`LowessBuilder`] into a specialized execution builder.
-    fn convert(builder: LowessBuilder<T>) -> Self::Output;
+    fn convert<Mode>(builder: LowessBuilder<T, Mode>) -> Self::Output;
 }
 
 // Marker for in-memory batch processing.
@@ -507,7 +528,7 @@ pub struct Batch;
 impl<T: Float> LowessAdapter<T> for Batch {
     type Output = BatchLowessBuilder<T>;
 
-    fn convert(builder: LowessBuilder<T>) -> Self::Output {
+    fn convert<Mode>(builder: LowessBuilder<T, Mode>) -> Self::Output {
         let mut result = BatchLowessBuilder::default();
 
         if let Some(fraction) = builder.fraction {
@@ -614,7 +635,7 @@ pub struct Streaming;
 impl<T: Float> LowessAdapter<T> for Streaming {
     type Output = StreamingLowessBuilder<T>;
 
-    fn convert(builder: LowessBuilder<T>) -> Self::Output {
+    fn convert<Mode>(builder: LowessBuilder<T, Mode>) -> Self::Output {
         let mut result = StreamingLowessBuilder::default();
 
         // Override with user-provided values
@@ -697,10 +718,29 @@ impl<T: Float> LowessAdapter<T> for Streaming {
 #[derive(Debug, Clone, Copy)]
 pub struct Online;
 
+// Mode-specific build() methods — each delegates to the corresponding adapter.
+impl<T: Float> LowessBuilder<T, BatchMode> {
+    pub fn build(self) -> Result<crate::adapters::batch::BatchLowess<T>, LowessError> {
+        Batch::convert(self).build()
+    }
+}
+
+impl<T: Float> LowessBuilder<T, StreamingMode> {
+    pub fn build(self) -> Result<crate::adapters::streaming::StreamingLowess<T>, LowessError> {
+        Streaming::convert(self).build()
+    }
+}
+
+impl<T: Float> LowessBuilder<T, OnlineMode> {
+    pub fn build(self) -> Result<crate::adapters::online::OnlineLowess<T>, LowessError> {
+        Online::convert(self).build()
+    }
+}
+
 impl<T: Float> LowessAdapter<T> for Online {
     type Output = OnlineLowessBuilder<T>;
 
-    fn convert(builder: LowessBuilder<T>) -> Self::Output {
+    fn convert<Mode>(builder: LowessBuilder<T, Mode>) -> Self::Output {
         let mut result = OnlineLowessBuilder::default();
 
         // Override with user-provided values

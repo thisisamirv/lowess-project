@@ -1,6 +1,6 @@
 #![cfg(feature = "dev")]
 
-use lowess::internals::api::{Adapter, BoundaryPolicy, LowessBuilder as Lowess};
+use lowess::internals::api::{Adapter, BoundaryPolicy, Lowess};
 use lowess::internals::math::boundary::apply_boundary_policy;
 
 #[test]

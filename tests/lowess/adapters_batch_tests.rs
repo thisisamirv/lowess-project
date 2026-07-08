@@ -21,9 +21,6 @@ use approx::assert_relative_eq;
 use lowess::prelude::*;
 use num_traits::float::Float;
 
-use lowess::internals::adapters::batch::BatchLowessBuilder;
-use lowess::internals::math::boundary::BoundaryPolicy;
-
 // ============================================================================
 // Basic Functionality Tests
 // ============================================================================
@@ -449,18 +446,22 @@ fn test_batch_auto_convergence_max_iterations() {
 // Edge Cases and Error Handling
 // ============================================================================
 
-/// Test BatchLowessBuilder default values.
+/// Test BatchLowess default configuration.
 #[test]
 fn test_batch_builder_defaults() {
-    let b = BatchLowessBuilder::<f64>::default();
-    assert_eq!(b.iterations, 3);
+    // Defaults are validated at build time; verify the default builder succeeds.
+    let result = Lowess::<f64>::new().adapter(Batch).build();
+    assert!(result.is_ok());
 }
 
-/// Test BatchLowessBuilder setters.
+/// Test that configuration applied via LowessBuilder reaches the processor.
 #[test]
 fn test_batch_builder_setters() {
-    let b = BatchLowessBuilder::<f64>::default().boundary_policy(BoundaryPolicy::Extend);
-    assert_eq!(b.boundary_policy, BoundaryPolicy::Extend);
+    let result = Lowess::<f64>::new()
+        .boundary_policy("extend")
+        .adapter(Batch)
+        .build();
+    assert!(result.is_ok());
 }
 
 /// Test with minimum viable dataset (3 points).

@@ -25,7 +25,7 @@ use approx::assert_relative_eq;
 use std::fmt::Write;
 
 use lowess::internals::algorithms::robustness::RobustnessMethod;
-use lowess::internals::api::{Batch, LowessBuilder as Lowess, Online, Streaming};
+use lowess::internals::api::{Batch, Lowess, Online, Streaming};
 use lowess::internals::engine::output::LowessResult;
 use lowess::internals::engine::validator::Validator;
 use lowess::internals::evaluation::diagnostics::Diagnostics;
@@ -694,7 +694,7 @@ fn test_cross_validate_loocv() {
 fn test_zero_weight_fallback_propagates_streaming() {
     let base = Lowess::<f64>::new().zero_weight_fallback("returnoriginal");
 
-    let sb = base.adapter(Streaming).chunk_size(10).overlap(2);
+    let sb = base.chunk_size(10).overlap(2).adapter(Streaming);
     let mut runner = sb.build().expect("streaming builder build ok");
 
     let x = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
@@ -730,7 +730,7 @@ fn test_online_builds_with_defaults() {
 fn test_streaming_propagates_options() {
     let base = Lowess::<f64>::new().fraction(1.0).iterations(0);
 
-    let sb = base.adapter(Streaming).overlap(2).chunk_size(10);
+    let sb = base.overlap(2).chunk_size(10).adapter(Streaming);
     let mut runner = sb.build().expect("streaming builder build ok");
 
     let x = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
@@ -747,7 +747,7 @@ fn test_streaming_propagates_options() {
 #[test]
 fn test_online_propagates_options() {
     let base = Lowess::<f64>::new().fraction(1.0).iterations(0);
-    let ob = base.adapter(Online).window_capacity(5);
+    let ob = base.window_capacity(5).adapter(Online);
     let mut online = ob.build().expect("online builder build ok");
 
     assert_eq!(online.add_point(0.0, 1.0).expect("ok"), None);
@@ -1065,9 +1065,9 @@ fn test_adapter_online_ignores_batch_params() {
     let mut processor = Lowess::new()
         .fraction(0.5)
         .delta(0.1) // Less relevant for online
-        .adapter(Online)
         .window_capacity(10)
         .min_points(3)
+        .adapter(Online)
         .build()
         .unwrap();
 
@@ -1089,9 +1089,9 @@ fn test_adapter_streaming_ignores_online_params() {
         .fraction(0.5)
         .window_capacity(100)
         .min_points(5)
-        .adapter(Streaming)
         .chunk_size(10)
         .overlap(2)
+        .adapter(Streaming)
         .build()
         .unwrap();
 
@@ -1133,17 +1133,17 @@ fn test_adapter_type_inference() {
 
     let _online_processor = Lowess::new()
         .fraction(0.5)
-        .adapter(Online)
         .window_capacity(10)
         .min_points(3)
+        .adapter(Online)
         .build()
         .unwrap();
 
     let _streaming_processor = Lowess::new()
         .fraction(0.5)
-        .adapter(Streaming)
         .chunk_size(10)
         .overlap(2)
+        .adapter(Streaming)
         .build()
         .unwrap();
 

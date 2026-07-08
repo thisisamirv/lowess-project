@@ -32,6 +32,7 @@ use lowess::internals::algorithms::regression::ZeroWeightFallback;
 use lowess::internals::algorithms::robustness::RobustnessMethod;
 use lowess::internals::engine::output::LowessResult;
 use lowess::internals::evaluation::cv::CVKind;
+use lowess::internals::evaluation::intervals::IntervalMethod;
 use lowess::internals::math::boundary::BoundaryPolicy;
 use lowess::internals::math::kernel::WeightFunction;
 use lowess::internals::primitives::backend::Backend;
@@ -57,7 +58,8 @@ impl<T: Float> Default for ParallelBatchLowessBuilder<T> {
 impl<T: Float> ParallelBatchLowessBuilder<T> {
     // Create a new batch LOWESS builder with default parameters.
     fn new() -> Self {
-        let base = BatchLowessBuilder::default().parallel(true); // Default to parallel in fastLowess
+        let mut base = BatchLowessBuilder::default();
+        base.parallel = Some(true); // Default to parallel in fastLowess
         Self {
             base,
             cv_method_str: None,
@@ -67,38 +69,38 @@ impl<T: Float> ParallelBatchLowessBuilder<T> {
 
     // Set parallel execution mode.
     pub fn parallel(mut self, parallel: bool) -> Self {
-        self.base = self.base.parallel(parallel);
+        self.base.parallel = Some(parallel);
         self
     }
 
     // Set the execution backend.
     pub fn backend(mut self, backend: Backend) -> Self {
-        self.base = self.base.backend(backend);
+        self.base.backend = Some(backend);
         self
     }
 
     // Set the smoothing fraction (span).
     pub fn fraction(mut self, fraction: T) -> Self {
-        self.base = self.base.fraction(fraction);
+        self.base.fraction = fraction;
         self
     }
 
     // Set the number of robustness iterations.
     pub fn iterations(mut self, iterations: usize) -> Self {
-        self.base = self.base.iterations(iterations);
+        self.base.iterations = iterations;
         self
     }
 
     // Set the delta parameter for interpolation optimization.
     pub fn delta(mut self, delta: T) -> Self {
-        self.base = self.base.delta(delta);
+        self.base.delta = Some(delta);
         self
     }
 
     // Set the kernel weight function.
     pub fn weight_function(mut self, wf: impl AsRef<str>) -> Self {
         match wf.as_ref().parse::<WeightFunction>() {
-            Ok(w) => self.base = self.base.weight_function(w),
+            Ok(w) => self.base.weight_function = w,
             Err(e) => {
                 if self.base.deferred_error.is_none() {
                     self.base.deferred_error = Some(e);
@@ -111,7 +113,7 @@ impl<T: Float> ParallelBatchLowessBuilder<T> {
     // Set the robustness method for outlier handling.
     pub fn robustness_method(mut self, method: impl AsRef<str>) -> Self {
         match method.as_ref().parse::<RobustnessMethod>() {
-            Ok(m) => self.base = self.base.robustness_method(m),
+            Ok(m) => self.base.robustness_method = m,
             Err(e) => {
                 if self.base.deferred_error.is_none() {
                     self.base.deferred_error = Some(e);
@@ -124,7 +126,7 @@ impl<T: Float> ParallelBatchLowessBuilder<T> {
     // Set the zero-weight fallback policy.
     pub fn zero_weight_fallback(mut self, fallback: impl AsRef<str>) -> Self {
         match fallback.as_ref().parse::<ZeroWeightFallback>() {
-            Ok(f) => self.base = self.base.zero_weight_fallback(f),
+            Ok(f) => self.base.zero_weight_fallback = f,
             Err(e) => {
                 if self.base.deferred_error.is_none() {
                     self.base.deferred_error = Some(e);
@@ -137,7 +139,7 @@ impl<T: Float> ParallelBatchLowessBuilder<T> {
     // Set the boundary handling policy.
     pub fn boundary_policy(mut self, policy: impl AsRef<str>) -> Self {
         match policy.as_ref().parse::<BoundaryPolicy>() {
-            Ok(p) => self.base = self.base.boundary_policy(p),
+            Ok(p) => self.base.boundary_policy = p,
             Err(e) => {
                 if self.base.deferred_error.is_none() {
                     self.base.deferred_error = Some(e);
@@ -149,43 +151,43 @@ impl<T: Float> ParallelBatchLowessBuilder<T> {
 
     // Enable auto-convergence for robustness iterations.
     pub fn auto_converge(mut self, tolerance: T) -> Self {
-        self.base = self.base.auto_converge(tolerance);
+        self.base.auto_convergence = Some(tolerance);
         self
     }
 
     // Enable returning residuals in the output.
     pub fn compute_residuals(mut self, enabled: bool) -> Self {
-        self.base = self.base.compute_residuals(enabled);
+        self.base.compute_residuals = enabled;
         self
     }
 
     // Enable returning robustness weights in the result.
     pub fn return_robustness_weights(mut self, enabled: bool) -> Self {
-        self.base = self.base.return_robustness_weights(enabled);
+        self.base.return_robustness_weights = enabled;
         self
     }
 
     // Enable returning diagnostics in the result.
     pub fn return_diagnostics(mut self, enabled: bool) -> Self {
-        self.base = self.base.return_diagnostics(enabled);
+        self.base.return_diagnostics = enabled;
         self
     }
 
     // Enable confidence intervals at the specified level.
     pub fn confidence_intervals(mut self, level: T) -> Self {
-        self.base = self.base.confidence_intervals(level);
+        self.base.interval_type = Some(IntervalMethod::confidence(level));
         self
     }
 
     // Enable prediction intervals at the specified level.
     pub fn prediction_intervals(mut self, level: T) -> Self {
-        self.base = self.base.prediction_intervals(level);
+        self.base.interval_type = Some(IntervalMethod::prediction(level));
         self
     }
 
     // Enable cross-validation with the specified candidate fractions.
     pub fn cv_fractions(mut self, fractions: Vec<T>) -> Self {
-        self.base = self.base.cross_validate(fractions);
+        self.base.cv_fractions = Some(fractions);
         self
     }
 
@@ -217,10 +219,10 @@ impl<T: Float> ParallelBatchLowessBuilder<T> {
                 let lower = method_str.to_lowercase();
                 match lower.as_str() {
                     "kfold" | "k_fold" | "k-fold" => {
-                        self.base = self.base.cv_kind(CVKind::KFold(self.cv_k_val));
+                        self.base.cv_kind = Some(CVKind::KFold(self.cv_k_val));
                     }
                     "loocv" | "loo_cv" | "loo-cv" => {
-                        self.base = self.base.cv_kind(CVKind::LOOCV);
+                        self.base.cv_kind = Some(CVKind::LOOCV);
                     }
                     _ => {
                         if self.base.deferred_error.is_none() {
@@ -271,10 +273,9 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> ParallelBatchLowess<T
                 #[cfg(feature = "cpu")]
                 {
                     if builder.parallel.unwrap_or(true) {
-                        builder = builder
-                            .custom_smooth_pass(smooth_pass_parallel)
-                            .custom_cv_pass(cv_pass_parallel)
-                            .custom_interval_pass(interval_pass_parallel);
+                        builder.custom_smooth_pass = Some(smooth_pass_parallel);
+                        builder.custom_cv_pass = Some(cv_pass_parallel);
+                        builder.custom_interval_pass = Some(interval_pass_parallel);
                     } else {
                         // Resets - though they are None by default
                         // but explicitly clearing just in case

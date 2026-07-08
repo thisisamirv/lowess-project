@@ -62,11 +62,10 @@ fn example_1_basic_streaming() -> Result<(), LowessError> {
         (10.0, 21.0),
     ];
 
-    let mut processor = Lowess::<f64>::new()
+    let mut processor = OnlineLowess::<f64>::new()
         .fraction(0.5)
         .iterations(2)
         .return_residuals()
-        .adapter(Online)
         .window_capacity(5) // Small window for demonstration
         .build()?;
 
@@ -133,12 +132,11 @@ fn example_2_sensor_data_simulation() -> Result<(), LowessError> {
         })
         .collect();
 
-    let mut processor = Lowess::<f64>::new()
+    let mut processor = OnlineLowess::<f64>::new()
         .fraction(0.4)
         .iterations(3) // More iterations for noisy sensor data
         .robustness_method("bisquare")
         .return_residuals()
-        .adapter(Online)
         .window_capacity(12) // Half-day window
         .build()?;
 
@@ -207,13 +205,12 @@ fn example_3_outlier_handling() -> Result<(), LowessError> {
 
     // Test with Bisquare (default)
     println!("Using Bisquare robustness method:");
-    let mut processor = Lowess::<f64>::new()
+    let mut processor = OnlineLowess::<f64>::new()
         .fraction(1.0)
         .iterations(5)
         .robustness_method("bisquare")
         .update_mode("full")
         .return_residuals()
-        .adapter(Online)
         .window_capacity(6)
         .build()?;
 
@@ -232,13 +229,12 @@ fn example_3_outlier_handling() -> Result<(), LowessError> {
 
     // Test with Talwar (hard threshold)
     println!("\nUsing Talwar robustness method:");
-    let mut processor = Lowess::<f64>::new()
+    let mut processor = OnlineLowess::<f64>::new()
         .fraction(1.0)
         .iterations(5)
         .robustness_method("talwar")
         .update_mode("full")
         .return_residuals()
-        .adapter(Online)
         .window_capacity(6)
         .build()?;
 
@@ -290,10 +286,9 @@ fn example_4_window_size_comparison() -> Result<(), LowessError> {
     for window_size in window_sizes {
         println!("Window capacity: {}", window_size);
 
-        let mut processor = Lowess::<f64>::new()
+        let mut processor = OnlineLowess::<f64>::new()
             .fraction(0.5)
             .iterations(2)
-            .adapter(Online)
             .window_capacity(window_size)
             .build()?;
 
@@ -341,10 +336,9 @@ fn example_5_memory_bounded_processing() -> Result<(), LowessError> {
         total_points
     );
 
-    let mut processor = Lowess::<f64>::new()
+    let mut processor = OnlineLowess::<f64>::new()
         .fraction(0.3)
         .iterations(1) // Fewer iterations for speed
-        .adapter(Online)
         .window_capacity(20) // Small window = low memory usage
         .build()?;
 
@@ -410,11 +404,10 @@ fn example_6_sliding_window_behavior() -> Result<(), LowessError> {
         (8.0, 16.0),
     ];
 
-    let mut processor = Lowess::<f64>::new()
+    let mut processor = OnlineLowess::<f64>::new()
         .fraction(0.6)
         .iterations(0) // No robustness for clarity
         .return_residuals()
-        .adapter(Online)
         .window_capacity(4) // Small window to show sliding behavior
         .min_points(4) // Wait for window to be full
         .build()?;
@@ -485,10 +478,9 @@ fn example_7_benchmark() -> Result<(), LowessError> {
 
     let start = std::time::Instant::now();
 
-    let mut processor = Lowess::<f64>::new()
+    let mut processor = OnlineLowess::<f64>::new()
         .fraction(0.5)
         .iterations(3)
-        .adapter(Online)
         .window_capacity(100) // 100-point sliding window
         .build()?;
 

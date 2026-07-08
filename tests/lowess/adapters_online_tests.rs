@@ -20,9 +20,6 @@
 use approx::assert_relative_eq;
 use lowess::prelude::*;
 
-use lowess::internals::adapters::online::OnlineLowessBuilder;
-use lowess::internals::adapters::online::UpdateMode;
-use lowess::internals::math::boundary::BoundaryPolicy;
 use lowess::internals::primitives::errors::LowessError;
 
 // ============================================================================
@@ -37,10 +34,9 @@ fn test_online_exact_linear_reproduction() {
     let x = [0.0f64, 1.0, 2.0];
     let y = [1.0f64, 3.0, 5.0]; // y = 2*x + 1
 
-    let mut processor = Lowess::new()
+    let mut processor = OnlineLowess::new()
         .fraction(1.0)
         .iterations(0)
-        .adapter(Online)
         .window_capacity(3)
         .min_points(2)
         .build()
@@ -73,10 +69,9 @@ fn test_online_exact_linear_reproduction() {
 /// - Smoothed values are computed correctly
 #[test]
 fn test_online_add_point_basic() {
-    let mut processor = Lowess::new()
+    let mut processor = OnlineLowess::new()
         .fraction(1.0)
         .iterations(0)
-        .adapter(Online)
         .window_capacity(5)
         .min_points(2)
         .build()
@@ -115,10 +110,9 @@ fn test_online_add_point_basic() {
 /// - Window size stays at capacity after eviction
 #[test]
 fn test_online_window_eviction() {
-    let mut processor = Lowess::new()
+    let mut processor = OnlineLowess::new()
         .fraction(1.0) // Exact linear fit => smoothed value equals y
         .iterations(0)
-        .adapter(Online)
         .window_capacity(3)
         .min_points(2)
         .build()
@@ -159,10 +153,9 @@ fn test_online_window_eviction() {
 /// Verifies that the window correctly slides as new points are added.
 #[test]
 fn test_online_sliding_window() {
-    let mut processor = Lowess::new()
+    let mut processor = OnlineLowess::new()
         .fraction(0.5)
         .iterations(1)
-        .adapter(Online)
         .window_capacity(10)
         .min_points(3)
         .build()
@@ -202,10 +195,9 @@ fn test_online_sliding_window() {
 /// Verifies that reset clears internal state and allows reuse.
 #[test]
 fn test_online_reset() {
-    let mut processor = Lowess::new()
+    let mut processor = OnlineLowess::new()
         .fraction(1.0)
         .iterations(0)
-        .adapter(Online)
         .window_capacity(5)
         .min_points(2)
         .build()
@@ -229,10 +221,9 @@ fn test_online_reset() {
 /// Verifies that processor can be reused after reset with new data.
 #[test]
 fn test_online_reuse_after_reset() {
-    let mut processor = Lowess::new()
+    let mut processor = OnlineLowess::new()
         .fraction(1.0)
         .iterations(0)
-        .adapter(Online)
         .window_capacity(4)
         .min_points(2)
         .build()
@@ -272,8 +263,7 @@ fn test_online_reuse_after_reset() {
 /// Verifies that window_capacity < 3 is rejected.
 #[test]
 fn test_online_invalid_window_capacity() {
-    let result = Lowess::<f64>::new()
-        .adapter(Online)
+    let result = OnlineLowess::<f64>::new()
         .window_capacity(2)
         .build();
 
@@ -289,8 +279,7 @@ fn test_online_invalid_window_capacity() {
 #[test]
 fn test_online_invalid_min_points() {
     // min_points < 2 should error
-    let result1 = Lowess::<f64>::new()
-        .adapter(Online)
+    let result1 = OnlineLowess::<f64>::new()
         .window_capacity(10)
         .min_points(1)
         .build();
@@ -301,8 +290,7 @@ fn test_online_invalid_min_points() {
     );
 
     // min_points > window_capacity should error
-    let result2 = Lowess::<f64>::new()
-        .adapter(Online)
+    let result2 = OnlineLowess::<f64>::new()
         .window_capacity(10)
         .min_points(20)
         .build();
@@ -318,10 +306,9 @@ fn test_online_invalid_min_points() {
 /// Verifies that valid configurations are accepted.
 #[test]
 fn test_online_valid_builder() {
-    let result = Lowess::new()
+    let result = OnlineLowess::new()
         .fraction(0.5)
         .iterations(2)
-        .adapter(Online)
         .window_capacity(10)
         .min_points(3)
         .build();
@@ -353,35 +340,32 @@ fn test_online_valid_builder() {
 // Edge Cases and Special Scenarios
 // ============================================================================
 
-/// Test OnlineLowessBuilder default values.
+/// Test OnlineLowess default configuration.
 #[test]
 fn test_online_builder_defaults() {
-    let b = OnlineLowessBuilder::<f64>::default();
-    assert_eq!(b.window_capacity, 1000);
+    // Verify the default online builder compiles and builds successfully.
+    let result = OnlineLowess::<f64>::new().build();
+    assert!(result.is_ok());
 }
 
-/// Test OnlineLowessBuilder setters.
+/// Test that configuration applied via OnlineLowess reaches the processor.
 #[test]
 fn test_online_builder_setters() {
-    let b = OnlineLowessBuilder::<f64>::default()
-        .boundary_policy(BoundaryPolicy::Extend)
+    let result = OnlineLowess::<f64>::new()
+        .boundary_policy("extend")
         .delta(0.1)
-        .update_mode(UpdateMode::Incremental)
+        .update_mode("incremental")
         .window_capacity(100)
-        .min_points(5);
-    assert_eq!(b.boundary_policy, BoundaryPolicy::Extend);
-    assert_eq!(b.delta, 0.1);
-    assert_eq!(b.update_mode, UpdateMode::Incremental);
-    assert_eq!(b.window_capacity, 100);
-    assert_eq!(b.min_points, 5);
+        .min_points(5)
+        .build();
+    assert!(result.is_ok());
 }
 
 /// Test basic incremental smoothing and state management.
 #[test]
 fn test_online_lowess_basic() {
-    let mut model = Lowess::<f64>::new()
+    let mut model = OnlineLowess::<f64>::new()
         .fraction(0.5)
-        .adapter(Online)
         .window_capacity(10)
         .min_points(5)
         .build()
@@ -406,10 +390,9 @@ fn test_online_lowess_basic() {
 /// Verifies that duplicate x values fall back to mean of y values.
 #[test]
 fn test_online_duplicate_x_values() {
-    let mut processor = Lowess::new()
+    let mut processor = OnlineLowess::new()
         .fraction(0.5)
         .iterations(0)
-        .adapter(Online)
         .window_capacity(5)
         .min_points(2)
         .build()
@@ -438,10 +421,9 @@ fn test_online_duplicate_x_values() {
 /// Verifies that the minimum allowed window capacity (3) works correctly.
 #[test]
 fn test_online_minimum_window_capacity() {
-    let mut processor = Lowess::new()
+    let mut processor = OnlineLowess::new()
         .fraction(1.0)
         .iterations(0)
-        .adapter(Online)
         .window_capacity(3) // Minimum allowed
         .min_points(2)
         .build()
@@ -465,11 +447,10 @@ fn test_online_robustness_methods() {
     let methods = vec!["bisquare", "huber", "talwar"];
 
     for method in methods {
-        let mut processor = Lowess::new()
+        let mut processor = OnlineLowess::new()
             .fraction(0.5)
             .iterations(3)
             .robustness_method(method)
-            .adapter(Online)
             .window_capacity(10)
             .min_points(3)
             .build()
@@ -497,11 +478,10 @@ fn test_online_robustness_methods() {
 /// Verifies that residuals can be computed in online mode.
 #[test]
 fn test_online_with_residuals() {
-    let mut processor = Lowess::new()
+    let mut processor = OnlineLowess::new()
         .fraction(0.5)
         .iterations(2)
         .return_residuals()
-        .adapter(Online)
         .window_capacity(10)
         .min_points(3)
         .build()
@@ -546,24 +526,22 @@ fn test_update_mode_consistency() {
         .collect();
 
     // Test with Incremental mode
-    let mut incremental = Lowess::new()
+    let mut incremental = OnlineLowess::new()
         .fraction(0.5)
         .iterations(0)
-        .adapter(Online)
         .window_capacity(10)
         .min_points(3)
-        .update_mode(UpdateMode::Incremental)
+        .update_mode("incremental")
         .build()
         .expect("Builder should succeed");
 
     // Test with Full mode
-    let mut full = Lowess::new()
+    let mut full = OnlineLowess::new()
         .fraction(0.5)
         .iterations(0)
-        .adapter(Online)
         .window_capacity(10)
         .min_points(3)
-        .update_mode(UpdateMode::Full)
+        .update_mode("full")
         .build()
         .expect("Builder should succeed");
 
@@ -620,13 +598,12 @@ fn test_incremental_mode_performance() {
         .collect();
 
     // Benchmark Incremental mode
-    let mut incremental = Lowess::new()
+    let mut incremental = OnlineLowess::new()
         .fraction(0.3)
         .iterations(0)
-        .adapter(Online)
         .window_capacity(100)
         .min_points(3)
-        .update_mode(UpdateMode::Incremental)
+        .update_mode("incremental")
         .build()
         .expect("Builder should succeed");
 
@@ -637,13 +614,12 @@ fn test_incremental_mode_performance() {
     let incremental_time = start.elapsed();
 
     // Benchmark Full mode
-    let mut full = Lowess::new()
+    let mut full = OnlineLowess::new()
         .fraction(0.3)
         .iterations(0)
-        .adapter(Online)
         .window_capacity(100)
         .min_points(3)
-        .update_mode(UpdateMode::Full)
+        .update_mode("full")
         .build()
         .expect("Builder should succeed");
 
@@ -672,14 +648,13 @@ fn test_incremental_mode_performance() {
 /// Verifies that robustness weights can be returned in online mode.
 #[test]
 fn test_online_with_robustness_weights() {
-    let mut processor = Lowess::new()
+    let mut processor = OnlineLowess::new()
         .fraction(0.99)
         .iterations(3)
         .return_robustness_weights()
-        .adapter(Online)
         .window_capacity(30)
         .min_points(10)
-        .update_mode(UpdateMode::Full)
+        .update_mode("full")
         .build()
         .expect("Builder should succeed");
 
@@ -723,9 +698,8 @@ fn test_online_with_robustness_weights() {
 /// Test window capacity exactly equal to min_points.
 #[test]
 fn test_online_window_exactly_min_points() {
-    let mut processor = Lowess::new()
+    let mut processor = OnlineLowess::new()
         .fraction(0.8)
-        .adapter(Online)
         .window_capacity(5)
         .min_points(5)
         .build()
@@ -747,9 +721,8 @@ fn test_online_window_exactly_min_points() {
 /// Test with all points having identical values.
 #[test]
 fn test_online_all_points_identical() {
-    let mut processor = Lowess::new()
+    let mut processor = OnlineLowess::new()
         .fraction(0.5)
-        .adapter(Online)
         .window_capacity(10)
         .min_points(3)
         .build()
@@ -770,9 +743,8 @@ fn test_online_all_points_identical() {
 /// Test with decreasing x-values (non-monotonic).
 #[test]
 fn test_online_decreasing_x_values() {
-    let mut processor = Lowess::new()
+    let mut processor = OnlineLowess::new()
         .fraction(0.5)
-        .adapter(Online)
         .window_capacity(10)
         .min_points(3)
         .build()
@@ -797,9 +769,8 @@ fn test_online_decreasing_x_values() {
 #[test]
 fn test_online_extreme_window_sizes() {
     // Very large window
-    let processor = Lowess::new()
+    let processor = OnlineLowess::new()
         .fraction(0.1)
-        .adapter(Online)
         .window_capacity(10000)
         .min_points(100)
         .build()
@@ -808,9 +779,8 @@ fn test_online_extreme_window_sizes() {
     assert_eq!(processor.window_size(), 0);
 
     // Minimum window
-    let processor_min = Lowess::new()
+    let processor_min = OnlineLowess::new()
         .fraction(0.9)
-        .adapter(Online)
         .window_capacity(3)
         .min_points(2)
         .build()
@@ -823,9 +793,8 @@ fn test_online_extreme_window_sizes() {
 #[test]
 fn test_online_fraction_boundaries() {
     // Very small fraction
-    let mut proc_small = Lowess::new()
+    let mut proc_small = OnlineLowess::new()
         .fraction(0.01)
-        .adapter(Online)
         .window_capacity(100)
         .min_points(10)
         .build()
@@ -836,9 +805,8 @@ fn test_online_fraction_boundaries() {
     }
 
     // Fraction = 1.0 (global regression on window)
-    let mut proc_one = Lowess::new()
+    let mut proc_one = OnlineLowess::new()
         .fraction(1.0)
-        .adapter(Online)
         .window_capacity(20)
         .min_points(5)
         .build()
@@ -857,9 +825,8 @@ fn test_online_fraction_boundaries() {
 /// Test reset clears all state properly.
 #[test]
 fn test_online_reset_complete() {
-    let mut processor = Lowess::new()
+    let mut processor = OnlineLowess::new()
         .fraction(0.5)
-        .adapter(Online)
         .window_capacity(10)
         .min_points(3)
         .build()

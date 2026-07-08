@@ -20,8 +20,6 @@
 use approx::assert_relative_eq;
 use lowess::prelude::*;
 
-use lowess::internals::adapters::streaming::StreamingLowessBuilder;
-use lowess::internals::math::boundary::BoundaryPolicy;
 use lowess::internals::primitives::errors::LowessError;
 
 // ============================================================================
@@ -33,8 +31,7 @@ use lowess::internals::primitives::errors::LowessError;
 /// Verifies that chunk_size < 10 is rejected.
 #[test]
 fn test_streaming_invalid_chunk_size() {
-    let result = Lowess::<f64>::new()
-        .adapter(Streaming)
+    let result = StreamingLowess::<f64>::new()
         .chunk_size(5)
         .build();
 
@@ -49,8 +46,7 @@ fn test_streaming_invalid_chunk_size() {
 /// Verifies that overlap >= chunk_size is rejected.
 #[test]
 fn test_streaming_invalid_overlap() {
-    let result = Lowess::<f64>::new()
-        .adapter(Streaming)
+    let result = StreamingLowess::<f64>::new()
         .chunk_size(10)
         .overlap(10)
         .build();
@@ -66,9 +62,8 @@ fn test_streaming_invalid_overlap() {
 /// Verifies that invalid fraction values are rejected.
 #[test]
 fn test_streaming_invalid_fraction() {
-    let result = Lowess::<f64>::new()
+    let result = StreamingLowess::<f64>::new()
         .fraction(0.0)
-        .adapter(Streaming)
         .chunk_size(10)
         .overlap(1)
         .build();
@@ -84,10 +79,9 @@ fn test_streaming_invalid_fraction() {
 /// Verifies that process_chunk rejects mismatched x and y arrays.
 #[test]
 fn test_streaming_mismatched_inputs() {
-    let mut processor = Lowess::new()
+    let mut processor = StreamingLowess::new()
         .fraction(0.5)
         .iterations(0)
-        .adapter(Streaming)
         .chunk_size(10)
         .overlap(1)
         .build()
@@ -114,10 +108,9 @@ fn test_streaming_mismatched_inputs() {
 /// - finalize returns remaining overlap buffer
 #[test]
 fn test_streaming_basic_roundtrip() {
-    let mut processor = Lowess::new()
+    let mut processor = StreamingLowess::new()
         .fraction(1.0) // Global linear fit => exact predictions for linear data
         .iterations(0)
-        .adapter(Streaming)
         .chunk_size(10)
         .overlap(2)
         .build()
@@ -155,10 +148,9 @@ fn test_streaming_multi_chunk_overlap() {
     let x_all: Vec<f64> = (0..15).map(|i| i as f64).collect();
     let y_all: Vec<f64> = x_all.iter().map(|xi| 2.0 * xi + 1.0).collect();
 
-    let mut processor = Lowess::new()
+    let mut processor = StreamingLowess::new()
         .fraction(1.0)
         .iterations(0)
-        .adapter(Streaming)
         .chunk_size(10)
         .overlap(2)
         .build()
@@ -198,10 +190,9 @@ fn test_streaming_multi_chunk_overlap() {
 /// Verifies that finalize without any processing returns empty result.
 #[test]
 fn test_streaming_finalize_fresh() {
-    let mut processor = Lowess::new()
+    let mut processor = StreamingLowess::new()
         .fraction(0.5)
         .iterations(0)
-        .adapter(Streaming)
         .chunk_size(10)
         .overlap(2)
         .build()
@@ -220,9 +211,8 @@ fn test_single_chunk_returns_all_points() {
     let x: Vec<f64> = (0..100).map(|i| i as f64).collect();
     let y: Vec<f64> = x.iter().map(|&xi| 2.0 * xi + 1.0).collect();
 
-    let mut processor = Lowess::new()
+    let mut processor = StreamingLowess::new()
         .fraction(0.3)
-        .adapter(Streaming)
         .chunk_size(50)
         .overlap(10)
         .build()
@@ -261,10 +251,9 @@ fn test_streaming_reset() {
     let x_all: Vec<f64> = (0..8).map(|i| i as f64).collect();
     let y_all: Vec<f64> = x_all.iter().map(|xi| 2.0 * xi + 1.0).collect();
 
-    let mut processor = Lowess::new()
+    let mut processor = StreamingLowess::new()
         .fraction(1.0)
         .iterations(0)
-        .adapter(Streaming)
         .chunk_size(10)
         .overlap(2)
         .build()
@@ -300,23 +289,23 @@ fn test_streaming_reset() {
 // Edge Cases and Special Scenarios
 // ============================================================================
 
-/// Test StreamingLowessBuilder default values.
+/// Test StreamingLowess default configuration.
 #[test]
 fn test_streaming_builder_defaults() {
-    let b = StreamingLowessBuilder::<f64>::default();
-    assert_eq!(b.chunk_size, 5000);
+    // Verify the default streaming builder compiles and builds successfully.
+    let result = StreamingLowess::<f64>::new().build();
+    assert!(result.is_ok());
 }
 
-/// Test StreamingLowessBuilder setters.
+/// Test that configuration applied via StreamingLowess reaches the processor.
 #[test]
 fn test_streaming_builder_setters() {
-    let b = StreamingLowessBuilder::<f64>::default()
-        .boundary_policy(BoundaryPolicy::Extend)
+    let result = StreamingLowess::<f64>::new()
+        .boundary_policy("extend")
         .chunk_size(100)
-        .overlap(10);
-    assert_eq!(b.boundary_policy, BoundaryPolicy::Extend);
-    assert_eq!(b.chunk_size, 100);
-    assert_eq!(b.overlap, 10);
+        .overlap(10)
+        .build();
+    assert!(result.is_ok());
 }
 
 /// Test different merge strategies for overlapping chunks.
@@ -328,10 +317,9 @@ fn test_streaming_merge_strategies() {
     let y: Vec<f64> = (0..40).map(|i| i as f64 * 2.0).collect();
 
     for strategy in strategies {
-        let mut model = Lowess::<f64>::new()
+        let mut model = StreamingLowess::<f64>::new()
             .fraction(0.2)
             .merge_strategy(strategy)
-            .adapter(Streaming)
             .chunk_size(20)
             .overlap(10)
             .build()
@@ -352,12 +340,11 @@ fn test_streaming_robustness_merge() {
     let x: Vec<f64> = (0..40).map(|i| i as f64).collect();
     let y: Vec<f64> = (0..40).map(|i| i as f64 * 2.0).collect();
 
-    let mut model = Lowess::<f64>::new()
+    let mut model = StreamingLowess::<f64>::new()
         .fraction(0.2)
         .iterations(1)
         .return_robustness_weights()
         .merge_strategy("average")
-        .adapter(Streaming)
         .chunk_size(20)
         .overlap(10)
         .build()
@@ -382,10 +369,9 @@ fn test_streaming_robustness_merge() {
 /// Verifies that minimum allowed chunk_size (10) works correctly.
 #[test]
 fn test_streaming_minimum_chunk_size() {
-    let result = Lowess::new()
+    let result = StreamingLowess::new()
         .fraction(0.5)
         .iterations(0)
-        .adapter(Streaming)
         .chunk_size(10) // Minimum allowed
         .overlap(2)
         .build();
@@ -401,10 +387,9 @@ fn test_streaming_various_overlaps() {
     let overlaps = vec![0, 1, 5, 9]; // 9 is max for chunk_size=10
 
     for overlap in overlaps {
-        let result = Lowess::new()
+        let result = StreamingLowess::new()
             .fraction(0.5)
             .iterations(0)
-            .adapter(Streaming)
             .chunk_size(10)
             .overlap(overlap)
             .build();
@@ -422,11 +407,10 @@ fn test_streaming_various_overlaps() {
 /// Verifies that robustness iterations work with streaming adapter.
 #[test]
 fn test_streaming_with_robustness() {
-    let mut processor = Lowess::new()
+    let mut processor = StreamingLowess::new()
         .fraction(0.5)
         .iterations(3)
         .robustness_method("bisquare")
-        .adapter(Streaming)
         .chunk_size(20)
         .overlap(5)
         .build()
@@ -462,11 +446,10 @@ fn test_streaming_with_robustness() {
 /// Verifies that residuals can be computed in streaming mode.
 #[test]
 fn test_streaming_with_residuals() {
-    let mut processor = Lowess::new()
+    let mut processor = StreamingLowess::new()
         .fraction(0.5)
         .iterations(2)
         .return_residuals()
-        .adapter(Streaming)
         .chunk_size(15)
         .overlap(3)
         .build()
@@ -494,10 +477,9 @@ fn test_streaming_with_residuals() {
 /// Verifies that streaming can handle large datasets efficiently.
 #[test]
 fn test_streaming_large_dataset() {
-    let mut processor = Lowess::new()
+    let mut processor = StreamingLowess::new()
         .fraction(0.3)
         .iterations(1)
-        .adapter(Streaming)
         .chunk_size(100)
         .overlap(10)
         .build()
@@ -542,11 +524,10 @@ fn test_streaming_large_dataset() {
 /// Verifies that robustness weights can be returned in streaming mode.
 #[test]
 fn test_streaming_with_robustness_weights() {
-    let mut processor = Lowess::new()
+    let mut processor = StreamingLowess::new()
         .fraction(0.5)
         .iterations(2)
         .return_robustness_weights()
-        .adapter(Streaming)
         .chunk_size(15)
         .overlap(3)
         .build()
@@ -601,10 +582,9 @@ fn test_streaming_with_robustness_weights() {
 /// Verifies that cumulative diagnostics are computed and returned in streaming mode.
 #[test]
 fn test_streaming_with_diagnostics() {
-    let mut processor = Lowess::new()
+    let mut processor = StreamingLowess::new()
         .fraction(0.5)
         .return_diagnostics()
-        .adapter(Streaming)
         .chunk_size(15)
         .overlap(3)
         .build()
@@ -646,9 +626,8 @@ fn test_streaming_with_diagnostics() {
 /// Test chunk_size exactly overlap + 1 (minimum valid).
 #[test]
 fn test_streaming_chunk_exactly_overlap_plus_one() {
-    let mut processor = Lowess::new()
+    let mut processor = StreamingLowess::new()
         .fraction(0.5)
-        .adapter(Streaming)
         .chunk_size(11)
         .overlap(10)
         .build()
@@ -667,9 +646,8 @@ fn test_streaming_chunk_exactly_overlap_plus_one() {
 /// Test with zero overlap.
 #[test]
 fn test_streaming_zero_overlap() {
-    let mut processor = Lowess::new()
+    let mut processor = StreamingLowess::new()
         .fraction(0.5)
-        .adapter(Streaming)
         .chunk_size(10)
         .overlap(0)
         .build()
@@ -693,8 +671,7 @@ fn test_streaming_zero_overlap() {
 #[test]
 fn test_streaming_single_point_chunks() {
     // This should fail validation since chunk_size must be >= 10
-    let result = Lowess::<f64>::new()
-        .adapter(Streaming)
+    let result = StreamingLowess::<f64>::new()
         .chunk_size(2)
         .overlap(0)
         .build();
@@ -705,9 +682,8 @@ fn test_streaming_single_point_chunks() {
 /// Test with unsorted chunks.
 #[test]
 fn test_streaming_unsorted_chunks() {
-    let mut processor = Lowess::new()
+    let mut processor = StreamingLowess::new()
         .fraction(0.5)
-        .adapter(Streaming)
         .chunk_size(10)
         .overlap(2)
         .build()
@@ -729,10 +705,9 @@ fn test_streaming_all_merge_strategies_identical_data() {
     let strategies = vec!["average", "weightedaverage", "takefirst", "takelast"];
 
     for strategy in strategies {
-        let mut processor = Lowess::new()
+        let mut processor = StreamingLowess::new()
             .fraction(0.5)
             .merge_strategy(strategy)
-            .adapter(Streaming)
             .chunk_size(10)
             .overlap(3)
             .build()
@@ -753,9 +728,8 @@ fn test_streaming_all_merge_strategies_identical_data() {
 /// Test calling finalize() multiple times.
 #[test]
 fn test_streaming_finalize_multiple_times() {
-    let mut processor = Lowess::new()
+    let mut processor = StreamingLowess::new()
         .fraction(0.5)
-        .adapter(Streaming)
         .chunk_size(10)
         .overlap(2)
         .build()

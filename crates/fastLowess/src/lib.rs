@@ -238,7 +238,7 @@ pub mod prelude {
     pub use crate::api::{
         Adapter::{Batch, Online, Streaming},
         Backend::{CPU, GPU},
-        LowessBuilder as Lowess, LowessError, LowessResult,
+        Lowess, LowessBuilder, LowessError, LowessResult, OnlineLowess, StreamingLowess,
     };
 }
 

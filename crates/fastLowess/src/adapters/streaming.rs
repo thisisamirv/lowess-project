@@ -49,44 +49,45 @@ impl<T: Float> Default for ParallelStreamingLowessBuilder<T> {
 impl<T: Float> ParallelStreamingLowessBuilder<T> {
     // Create a new streaming LOWESS builder with default parameters.
     fn new() -> Self {
-        let base = StreamingLowessBuilder::default().parallel(true); // Default to parallel in fastLowess for Streaming
+        let mut base = StreamingLowessBuilder::default();
+        base.parallel = Some(true); // Default to parallel in fastLowess for Streaming
         Self { base }
     }
 
     // Set parallel execution mode.
     pub fn parallel(mut self, parallel: bool) -> Self {
-        self.base = self.base.parallel(parallel);
+        self.base.parallel = Some(parallel);
         self
     }
 
     // Set the execution backend.
     pub fn backend(mut self, backend: Backend) -> Self {
-        self.base = self.base.backend(backend);
+        self.base.backend = Some(backend);
         self
     }
 
     // Set the smoothing fraction (span).
     pub fn fraction(mut self, fraction: T) -> Self {
-        self.base = self.base.fraction(fraction);
+        self.base.fraction = fraction;
         self
     }
 
     // Set the number of robustness iterations.
     pub fn iterations(mut self, iterations: usize) -> Self {
-        self.base = self.base.iterations(iterations);
+        self.base.iterations = iterations;
         self
     }
 
     // Set the delta parameter for interpolation optimization.
     pub fn delta(mut self, delta: T) -> Self {
-        self.base = self.base.delta(delta);
+        self.base.delta = delta;
         self
     }
 
     // Set the kernel weight function.
     pub fn weight_function(mut self, wf: impl AsRef<str>) -> Self {
         match wf.as_ref().parse::<WeightFunction>() {
-            Ok(w) => self.base = self.base.weight_function(w),
+            Ok(w) => self.base.weight_function = w,
             Err(e) => {
                 if self.base.deferred_error.is_none() {
                     self.base.deferred_error = Some(e);
@@ -99,7 +100,7 @@ impl<T: Float> ParallelStreamingLowessBuilder<T> {
     // Set the robustness method for outlier handling.
     pub fn robustness_method(mut self, method: impl AsRef<str>) -> Self {
         match method.as_ref().parse::<RobustnessMethod>() {
-            Ok(m) => self.base = self.base.robustness_method(m),
+            Ok(m) => self.base.robustness_method = m,
             Err(e) => {
                 if self.base.deferred_error.is_none() {
                     self.base.deferred_error = Some(e);
@@ -112,7 +113,7 @@ impl<T: Float> ParallelStreamingLowessBuilder<T> {
     // Set the zero-weight fallback policy.
     pub fn zero_weight_fallback(mut self, fallback: impl AsRef<str>) -> Self {
         match fallback.as_ref().parse::<ZeroWeightFallback>() {
-            Ok(f) => self.base = self.base.zero_weight_fallback(f),
+            Ok(f) => self.base.zero_weight_fallback = f,
             Err(e) => {
                 if self.base.deferred_error.is_none() {
                     self.base.deferred_error = Some(e);
@@ -125,7 +126,7 @@ impl<T: Float> ParallelStreamingLowessBuilder<T> {
     // Set the boundary handling policy.
     pub fn boundary_policy(mut self, policy: impl AsRef<str>) -> Self {
         match policy.as_ref().parse::<BoundaryPolicy>() {
-            Ok(p) => self.base = self.base.boundary_policy(p),
+            Ok(p) => self.base.boundary_policy = p,
             Err(e) => {
                 if self.base.deferred_error.is_none() {
                     self.base.deferred_error = Some(e);
@@ -137,38 +138,38 @@ impl<T: Float> ParallelStreamingLowessBuilder<T> {
 
     // Enable auto-convergence for robustness iterations.
     pub fn auto_converge(mut self, tolerance: T) -> Self {
-        self.base = self.base.auto_converge(tolerance);
+        self.base.auto_convergence = Some(tolerance);
         self
     }
 
     // Enable returning residuals in the output.
     pub fn compute_residuals(mut self, enabled: bool) -> Self {
-        self.base = self.base.compute_residuals(enabled);
+        self.base.compute_residuals = enabled;
         self
     }
 
     // Enable returning robustness weights in the result.
     pub fn return_robustness_weights(mut self, enabled: bool) -> Self {
-        self.base = self.base.return_robustness_weights(enabled);
+        self.base.return_robustness_weights = enabled;
         self
     }
 
     // Set the chunk size for processing.
     pub fn chunk_size(mut self, size: usize) -> Self {
-        self.base = self.base.chunk_size(size);
+        self.base.chunk_size = size;
         self
     }
 
     // Set the overlap between consecutive chunks.
     pub fn overlap(mut self, size: usize) -> Self {
-        self.base = self.base.overlap(size);
+        self.base.overlap = size;
         self
     }
 
     // Set the merge strategy for overlapping values.
     pub fn merge_strategy(mut self, strategy: impl AsRef<str>) -> Self {
         match strategy.as_ref().parse::<MergeStrategy>() {
-            Ok(s) => self.base = self.base.merge_strategy(s),
+            Ok(s) => self.base.merge_strategy = s,
             Err(e) => {
                 if self.base.deferred_error.is_none() {
                     self.base.deferred_error = Some(e);
@@ -180,7 +181,7 @@ impl<T: Float> ParallelStreamingLowessBuilder<T> {
 
     // Enable returning diagnostics in the result.
     pub fn return_diagnostics(mut self, enabled: bool) -> Self {
-        self.base = self.base.return_diagnostics(enabled);
+        self.base.return_diagnostics = enabled;
         self
     }
 }
@@ -218,7 +219,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> ParallelStreamingLowe
                 #[cfg(feature = "cpu")]
                 {
                     if builder.parallel.unwrap_or(true) {
-                        builder = builder.custom_smooth_pass(smooth_pass_parallel);
+                        builder.custom_smooth_pass = Some(smooth_pass_parallel);
                     } else {
                         builder.custom_smooth_pass = None;
                     }
