@@ -233,6 +233,9 @@ mod api;
 // Input data handling.
 mod input;
 
+// String input compatibility for builder methods.
+mod parse;
+
 // Standard fastLowess prelude.
 pub mod prelude {
     pub use crate::api::{

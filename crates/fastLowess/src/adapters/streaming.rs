@@ -22,6 +22,7 @@ use std::fmt::Debug;
 use std::result::Result;
 
 // Export dependencies from lowess crate
+use crate::parse::IntoEnum;
 use lowess::internals::adapters::streaming::MergeStrategy;
 use lowess::internals::adapters::streaming::{StreamingLowess, StreamingLowessBuilder};
 use lowess::internals::algorithms::regression::WLSSolver;
@@ -85,8 +86,8 @@ impl<T: Float> ParallelStreamingLowessBuilder<T> {
     }
 
     // Set the kernel weight function.
-    pub fn weight_function(mut self, wf: impl AsRef<str>) -> Self {
-        match wf.as_ref().parse::<WeightFunction>() {
+    pub fn weight_function(mut self, wf: impl IntoEnum<WeightFunction>) -> Self {
+        match wf.into_enum() {
             Ok(w) => self.base.weight_function = w,
             Err(e) => {
                 if self.base.deferred_error.is_none() {
@@ -98,8 +99,8 @@ impl<T: Float> ParallelStreamingLowessBuilder<T> {
     }
 
     // Set the robustness method for outlier handling.
-    pub fn robustness_method(mut self, method: impl AsRef<str>) -> Self {
-        match method.as_ref().parse::<RobustnessMethod>() {
+    pub fn robustness_method(mut self, method: impl IntoEnum<RobustnessMethod>) -> Self {
+        match method.into_enum() {
             Ok(m) => self.base.robustness_method = m,
             Err(e) => {
                 if self.base.deferred_error.is_none() {
@@ -111,8 +112,8 @@ impl<T: Float> ParallelStreamingLowessBuilder<T> {
     }
 
     // Set the zero-weight fallback policy.
-    pub fn zero_weight_fallback(mut self, fallback: impl AsRef<str>) -> Self {
-        match fallback.as_ref().parse::<ZeroWeightFallback>() {
+    pub fn zero_weight_fallback(mut self, fallback: impl IntoEnum<ZeroWeightFallback>) -> Self {
+        match fallback.into_enum() {
             Ok(f) => self.base.zero_weight_fallback = f,
             Err(e) => {
                 if self.base.deferred_error.is_none() {
@@ -124,8 +125,8 @@ impl<T: Float> ParallelStreamingLowessBuilder<T> {
     }
 
     // Set the boundary handling policy.
-    pub fn boundary_policy(mut self, policy: impl AsRef<str>) -> Self {
-        match policy.as_ref().parse::<BoundaryPolicy>() {
+    pub fn boundary_policy(mut self, policy: impl IntoEnum<BoundaryPolicy>) -> Self {
+        match policy.into_enum() {
             Ok(p) => self.base.boundary_policy = p,
             Err(e) => {
                 if self.base.deferred_error.is_none() {
@@ -167,8 +168,8 @@ impl<T: Float> ParallelStreamingLowessBuilder<T> {
     }
 
     // Set the merge strategy for overlapping values.
-    pub fn merge_strategy(mut self, strategy: impl AsRef<str>) -> Self {
-        match strategy.as_ref().parse::<MergeStrategy>() {
+    pub fn merge_strategy(mut self, strategy: impl IntoEnum<MergeStrategy>) -> Self {
+        match strategy.into_enum() {
             Ok(s) => self.base.merge_strategy = s,
             Err(e) => {
                 if self.base.deferred_error.is_none() {

@@ -257,6 +257,9 @@ mod adapters;
 // High-level fluent API for LOWESS smoothing.
 mod api;
 
+// String input compatibility for builder methods.
+mod parse;
+
 // Standard LOWESS prelude.
 pub mod prelude {
     pub use crate::api::{

@@ -25,6 +25,7 @@ use crate::adapters::streaming::StreamingLowessBuilder;
 use crate::engine::executor::{CVPassFn, IntervalPassFn, SmoothPassFn};
 use crate::evaluation::cv::CVKind;
 use crate::evaluation::intervals::IntervalMethod;
+use crate::parse::IntoEnum;
 use crate::primitives::backend::Backend;
 
 // Publicly re-exported types
@@ -225,11 +226,11 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
     }
 
     // Set behavior for handling zero-weight neighborhoods.
-    pub fn zero_weight_fallback(mut self, policy: impl AsRef<str>) -> Self {
+    pub fn zero_weight_fallback(mut self, policy: impl IntoEnum<ZeroWeightFallback>) -> Self {
         if self.zero_weight_fallback.is_some() {
             self.duplicate_param = Some("zero_weight_fallback");
         }
-        match policy.as_ref().parse() {
+        match policy.into_enum() {
             Ok(p) => self.zero_weight_fallback = Some(p),
             Err(e) => self.parse_errors.push(e),
         }
@@ -237,11 +238,11 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
     }
 
     // Set the boundary handling policy.
-    pub fn boundary_policy(mut self, policy: impl AsRef<str>) -> Self {
+    pub fn boundary_policy(mut self, policy: impl IntoEnum<BoundaryPolicy>) -> Self {
         if self.boundary_policy.is_some() {
             self.duplicate_param = Some("boundary_policy");
         }
-        match policy.as_ref().parse() {
+        match policy.into_enum() {
             Ok(p) => self.boundary_policy = Some(p),
             Err(e) => self.parse_errors.push(e),
         }
@@ -249,11 +250,11 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
     }
 
     // Set the merging strategy for overlapping chunks (Streaming only).
-    pub fn merge_strategy(mut self, strategy: impl AsRef<str>) -> Self {
+    pub fn merge_strategy(mut self, strategy: impl IntoEnum<MergeStrategy>) -> Self {
         if self.merge_strategy.is_some() {
             self.duplicate_param = Some("merge_strategy");
         }
-        match strategy.as_ref().parse() {
+        match strategy.into_enum() {
             Ok(s) => self.merge_strategy = Some(s),
             Err(e) => self.parse_errors.push(e),
         }
@@ -261,11 +262,11 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
     }
 
     // Set the incremental update mode (Online only).
-    pub fn update_mode(mut self, mode: impl AsRef<str>) -> Self {
+    pub fn update_mode(mut self, mode: impl IntoEnum<UpdateMode>) -> Self {
         if self.update_mode.is_some() {
             self.duplicate_param = Some("update_mode");
         }
-        match mode.as_ref().parse() {
+        match mode.into_enum() {
             Ok(m) => self.update_mode = Some(m),
             Err(e) => self.parse_errors.push(e),
         }
@@ -336,11 +337,11 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
     }
 
     // Set the kernel weight function.
-    pub fn weight_function(mut self, wf: impl AsRef<str>) -> Self {
+    pub fn weight_function(mut self, wf: impl IntoEnum<WeightFunction>) -> Self {
         if self.weight_function.is_some() {
             self.duplicate_param = Some("weight_function");
         }
-        match wf.as_ref().parse() {
+        match wf.into_enum() {
             Ok(w) => self.weight_function = Some(w),
             Err(e) => self.parse_errors.push(e),
         }
@@ -348,11 +349,11 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
     }
 
     // Set the robustness weighting method.
-    pub fn robustness_method(mut self, rm: impl AsRef<str>) -> Self {
+    pub fn robustness_method(mut self, rm: impl IntoEnum<RobustnessMethod>) -> Self {
         if self.robustness_method.is_some() {
             self.duplicate_param = Some("robustness_method");
         }
-        match rm.as_ref().parse() {
+        match rm.into_enum() {
             Ok(r) => self.robustness_method = Some(r),
             Err(e) => self.parse_errors.push(e),
         }
@@ -360,11 +361,11 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
     }
 
     // Set the scaling method for robust scale estimation.
-    pub fn scaling_method(mut self, sm: impl AsRef<str>) -> Self {
+    pub fn scaling_method(mut self, sm: impl IntoEnum<ScalingMethod>) -> Self {
         if self.scaling_method.is_some() {
             self.duplicate_param = Some("scaling_method");
         }
-        match sm.as_ref().parse() {
+        match sm.into_enum() {
             Ok(s) => self.scaling_method = Some(s),
             Err(e) => self.parse_errors.push(e),
         }
