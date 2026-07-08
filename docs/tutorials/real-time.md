@@ -28,7 +28,7 @@ For true real-time applications where each point must be processed immediately.
         min_points = 5,
         update_mode = "incremental"
     )
-    result <- model$add_points(times, temperatures)
+    result <- model$add_point(times[[length(times)]], temperatures[[length(temperatures)]])
     ```
 
 === "Python"

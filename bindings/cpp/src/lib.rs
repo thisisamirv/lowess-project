@@ -632,26 +632,19 @@ pub unsafe extern "C" fn cpp_online_new(
 }
 
 #[unsafe(no_mangle)]
-/// Add points to online model.
+/// Add a single point to the online model. Returns NaN if not enough points yet.
 ///
 /// # Safety
-/// `ptr` must be valid. `x_values` and `y_values` must be valid arrays of
-/// length `n`.
-pub unsafe extern "C" fn cpp_online_add_points(
+/// `ptr` must be valid.
+pub unsafe extern "C" fn cpp_online_add_point(
     ptr: *mut CppOnlineLowess,
-    x_values: *const c_double,
-    y_values: *const c_double,
-    n: c_ulong,
-) -> CppLowessResult {
+    x: c_double,
+    y: c_double,
+) -> c_double {
     if ptr.is_null() {
-        return error_result("Model pointer is null");
+        return f64::NAN;
     }
     let lowess = &mut *ptr;
-    if x_values.is_null() || y_values.is_null() || n == 0 {
-        return error_result("Invalid data inputs");
-    }
-    let x_slice = std::slice::from_raw_parts(x_values, n as usize);
-    let y_slice = std::slice::from_raw_parts(y_values, n as usize);
 
     if lowess.model.is_none()
         && let Some((wc, mp, um)) = lowess.online_opts
@@ -666,42 +659,18 @@ pub unsafe extern "C" fn cpp_online_add_points(
             .build()
         {
             Ok(m) => lowess.model = Some(m),
-            Err(e) => return error_result(&e.to_string()),
+            Err(_) => return f64::NAN,
         }
     }
 
     if let Some(model) = &mut lowess.model {
-        let outputs = match model.add_points(x_slice, y_slice) {
-            Ok(o) => o,
-            Err(e) => return error_result(&e.to_string()),
-        };
-
-        // Convert PointOutput to LowessResult
-        // Matches Node.js/Python logic
-        let smoothed: Vec<f64> = outputs
-            .iter()
-            .zip(y_slice.iter())
-            .map(|(opt, &orig_y)| opt.as_ref().map_or(orig_y, |o| o.smoothed))
-            .collect();
-
-        let result = LowessResult {
-            x: x_slice.to_vec(),
-            y: smoothed,
-            standard_errors: None,
-            confidence_lower: None,
-            confidence_upper: None,
-            prediction_lower: None,
-            prediction_upper: None,
-            residuals: None,
-            robustness_weights: None,
-            diagnostics: None,
-            iterations_used: None,
-            fraction_used: 0.0,
-            cv_scores: None,
-        };
-        result.into()
+        match model.add_point(x, y) {
+            Ok(Some(o)) => o.smoothed,
+            Ok(None) => f64::NAN,
+            Err(_) => f64::NAN,
+        }
     } else {
-        error_result("Online model initialization failed")
+        f64::NAN
     }
 }
 

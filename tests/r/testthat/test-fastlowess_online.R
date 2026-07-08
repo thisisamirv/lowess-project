@@ -4,99 +4,94 @@
 #' @srrstats {RE4.0} Robustness iterations tested.
 test_that("OnlineLowess basic functionality works", {
     set.seed(42)
-    x <- 1:100
+    x <- as.double(1:100)
     y <- sin(x / 10) + rnorm(100, sd = 0.1)
 
     ol <- OnlineLowess(
         fraction = 0.3, window_capacity = 25, min_points = 10
     )
-    result <- ol$add_points(as.double(x), as.double(y))
+    results <- sapply(seq_along(x), function(i) ol$add_point(x[[i]], y[[i]]))
 
-    expect_type(result, "list")
-    expect_length(result$x, length(x))
-    expect_length(result$y, length(y))
-    expect_type(result$x, "double")
-    expect_type(result$y, "double")
+    expect_true(any(!sapply(results, is.null)))
 })
 
 test_that("OnlineLowess window capacity works", {
     set.seed(42)
-    x <- 1:100
+    x <- as.double(1:100)
     y <- sin(x / 10) + rnorm(100, sd = 0.1)
 
     ol_small <- OnlineLowess(
         fraction = 0.3, window_capacity = 15
     )
-    result_small <- ol_small$add_points(as.double(x), as.double(y))
+    results_small <- sapply(seq_along(x), function(i) ol_small$add_point(x[[i]], y[[i]]))
 
     ol_large <- OnlineLowess(
         fraction = 0.3, window_capacity = 50
     )
-    result_large <- ol_large$add_points(as.double(x), as.double(y))
+    results_large <- sapply(seq_along(x), function(i) ol_large$add_point(x[[i]], y[[i]]))
 
-    expect_length(result_small$y, length(y))
-    expect_length(result_large$y, length(y))
+    expect_true(any(!sapply(results_small, is.null)))
+    expect_true(any(!sapply(results_large, is.null)))
 })
 
 test_that("OnlineLowess min_points parameter works", {
     set.seed(42)
-    x <- 1:50
+    x <- as.double(1:50)
     y <- sin(x / 10) + rnorm(50, sd = 0.1)
 
     ol <- OnlineLowess(
         fraction = 0.3, window_capacity = 25, min_points = 5
     )
-    result <- ol$add_points(as.double(x), as.double(y))
+    results <- sapply(seq_along(x), function(i) ol$add_point(x[[i]], y[[i]]))
 
-    expect_length(result$y, 50)
-
-    # First few poins (before min_points) should be original values
-    # (or close to them if smoothing starts immediately)
-    expect_type(result$y, "double")
+    # Results before min_points should be NULL
+    expect_null(results[[1]])
+    # At least some results should be numeric
+    expect_true(any(!sapply(results, is.null)))
 })
 
 test_that("OnlineLowess update modes work", {
     set.seed(42)
-    x <- 1:100
+    x <- as.double(1:100)
     y <- sin(x / 10) + rnorm(100, sd = 0.1)
 
     ol_full <- OnlineLowess(
         fraction = 0.3, window_capacity = 25,
         update_mode = "full"
     )
-    result_full <- ol_full$add_points(as.double(x), as.double(y))
+    results_full <- sapply(seq_along(x), function(i) ol_full$add_point(x[[i]], y[[i]]))
 
     ol_incr <- OnlineLowess(
         fraction = 0.3, window_capacity = 25,
         update_mode = "incremental"
     )
-    result_incr <- ol_incr$add_points(as.double(x), as.double(y))
+    results_incr <- sapply(seq_along(x), function(i) ol_incr$add_point(x[[i]], y[[i]]))
 
-    expect_length(result_full$y, length(y))
-    expect_length(result_incr$y, length(y))
+    expect_true(any(!sapply(results_full, is.null)))
+    expect_true(any(!sapply(results_incr, is.null)))
 })
 
 test_that("OnlineLowess handles edge cases", {
     # Minimum data points
-    x <- 1:10
-    y <- 1:10
+    x <- as.double(1:10)
+    y <- as.double(1:10)
     ol <- OnlineLowess(
         fraction = 0.5, window_capacity = 5, min_points = 3
     )
-    result <- ol$add_points(as.double(x), as.double(y))
-    expect_length(result$y, 10)
+    results <- sapply(seq_along(x), function(i) ol$add_point(x[[i]], y[[i]]))
+    expect_true(any(!sapply(results, is.null)))
 
     # Window larger than data
     ol2 <- OnlineLowess(
         fraction = 0.5, window_capacity = 20, min_points = 3
     )
-    result2 <- ol2$add_points(as.double(x), as.double(y))
-    expect_length(result2$y, 10)
+    results2 <- sapply(seq_along(x), function(i) ol2$add_point(x[[i]], y[[i]]))
+    expect_true(any(!sapply(results2, is.null)))
 })
 
 test_that("OnlineLowess robustness works", {
     set.seed(42)
-    x <- 1:100
+    x <- as.double(1:100)
     y <- sin(x / 10) + rnorm(100, sd = 0.1)
     y[50] <- y[50] + 5 # Add outlier
 
@@ -104,14 +99,14 @@ test_that("OnlineLowess robustness works", {
         fraction = 0.3, window_capacity = 25,
         iterations = 0
     )
-    result_no_robust <- ol_no_robust$add_points(as.double(x), as.double(y))
+    results_no_robust <- sapply(seq_along(x), function(i) ol_no_robust$add_point(x[[i]], y[[i]]))
 
     ol_robust <- OnlineLowess(
         fraction = 0.3, window_capacity = 25,
         iterations = 3
     )
-    result_robust <- ol_robust$add_points(as.double(x), as.double(y))
+    results_robust <- sapply(seq_along(x), function(i) ol_robust$add_point(x[[i]], y[[i]]))
 
-    expect_length(result_no_robust$y, length(y))
-    expect_length(result_robust$y, length(y))
+    expect_true(any(!sapply(results_no_robust, is.null)))
+    expect_true(any(!sapply(results_robust, is.null)))
 })

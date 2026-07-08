@@ -68,10 +68,10 @@ const online = new OnlineLowess(options, onlineOptions);
 **Methods:**
 
 ```javascript
-const result = online.add_points(x, y);
+const smoothed = online.add_point(x, y);
 ```
 
-* Adds new points to the model and returns the smoothed values (retrospective or prospective depending on mode).
+* Adds a single point to the model. Returns the smoothed value as a `number`, or `null` if not enough points have been accumulated yet.
 
 ## Options Structures
 

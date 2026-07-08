@@ -329,8 +329,6 @@ impl PyStreamingLowess {
 #[pyclass(name = "OnlineLowess")]
 pub struct PyOnlineLowess {
     inner: Mutex<ParallelOnlineLowess<f64>>,
-    fraction: f64,
-    iterations: usize,
 }
 
 #[pymethods]
@@ -405,66 +403,17 @@ impl PyOnlineLowess {
         let processor = builder.adapter(Online).build().map_err(to_py_error)?;
         Ok(PyOnlineLowess {
             inner: Mutex::new(processor),
-            fraction,
-            iterations,
         })
     }
 
     /// Add a single point and return smoothed value if enough points are available.
-    fn update(&self, x: f64, y: f64) -> PyResult<Option<f64>> {
+    fn add_point(&self, x: f64, y: f64) -> PyResult<Option<f64>> {
         let mut inner = self
             .inner
             .lock()
             .map_err(|e| to_py_error(format!("Mutex poisoned: {}", e)))?;
         let result = inner.add_point(x, y).map_err(to_py_error)?;
         Ok(result.map(|o| o.smoothed))
-    }
-
-    /// Add multiple points.
-    fn add_points<'py>(
-        &self,
-        py: Python<'py>,
-        x: PyReadonlyArray1<'py, f64>,
-        y: PyReadonlyArray1<'py, f64>,
-    ) -> PyResult<PyLowessResult> {
-        let x_vec = x.as_slice().map_err(to_py_error)?.to_vec();
-        let y_vec = y.as_slice().map_err(to_py_error)?.to_vec();
-
-        let x_vec_out = x_vec.clone();
-        let y_vec_out = y_vec.clone();
-
-        let outputs = py.detach(move || {
-            self.inner
-                .lock()
-                .map_err(|e| to_py_error(format!("Mutex poisoned: {}", e)))?
-                .add_points(&x_vec, &y_vec)
-                .map_err(to_py_error)
-        })?;
-
-        // Extract smoothed values using the outer copy of y_vec
-        let smoothed: Vec<f64> = outputs
-            .into_iter()
-            .zip(y_vec_out.iter())
-            .map(|(opt, &original_y)| opt.map_or(original_y, |o| o.smoothed))
-            .collect();
-
-        Ok(PyLowessResult {
-            inner: LowessResult {
-                x: x_vec_out,
-                y: smoothed,
-                standard_errors: None,
-                confidence_lower: None,
-                confidence_upper: None,
-                prediction_lower: None,
-                prediction_upper: None,
-                residuals: None,
-                robustness_weights: None,
-                diagnostics: None,
-                iterations_used: Some(self.iterations),
-                fraction_used: self.fraction,
-                cv_scores: None,
-            },
-        })
     }
 }
 

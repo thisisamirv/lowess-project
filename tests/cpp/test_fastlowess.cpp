@@ -393,13 +393,11 @@ void testOnlineBasic() {
   int point_count_with_output = 0;
   for (std::size_t point_index = 0; point_index < k_online_x_values.size();
        ++point_index) {
-    const std::vector<double> current_x_values = {
-        k_online_x_values[point_index]};
-    const std::vector<double> current_y_values = {
-        k_online_y_values[point_index]};
-    auto result =
-        online_lowess.add_points(current_x_values, current_y_values).value();
-    if (!result.y_vector().empty()) {
+    auto result = online_lowess
+                      .add_point(k_online_x_values[point_index],
+                                 k_online_y_values[point_index])
+                      .value();
+    if (!std::isnan(result)) {
       ++point_count_with_output;
     }
   }

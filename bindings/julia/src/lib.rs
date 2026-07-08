@@ -220,8 +220,6 @@ pub struct JlStreamingLowess {
 
 pub struct JlOnlineLowess {
     inner: ParallelOnlineLowess<f64>,
-    fraction: f64,
-    iterations: usize,
 }
 
 // ============================================================================
@@ -691,11 +689,7 @@ pub unsafe extern "C" fn jl_online_lowess_new(
             Err(_) => return null_mut(),
         };
 
-        Box::into_raw(Box::new(JlOnlineLowess {
-            inner: processor,
-            fraction,
-            iterations: iterations as usize,
-        }))
+        Box::into_raw(Box::new(JlOnlineLowess { inner: processor }))
     });
 
     match result {
@@ -704,66 +698,34 @@ pub unsafe extern "C" fn jl_online_lowess_new(
     }
 }
 
-/// Add points to the online processor.
+/// Add a single point to the online processor and return the smoothed value.
+///
+/// Returns NaN if not enough points are available or an error occurs.
 ///
 /// # Safety
-/// `ptr` must be a valid pointer. `x` and `y` must be valid arrays of length `n`.
+/// `ptr` must be a valid pointer.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn jl_online_lowess_add_points(
+pub unsafe extern "C" fn jl_online_lowess_add_point(
     ptr: *mut JlOnlineLowess,
-    x: *const c_double,
-    y: *const c_double,
-    n: c_ulong,
-) -> JlLowessResult {
+    x: c_double,
+    y: c_double,
+) -> c_double {
     let result = catch_unwind(|| {
         if ptr.is_null() {
-            return error_result("Processor pointer is null");
+            return f64::NAN;
         }
         let processor = unsafe { &mut *ptr };
 
-        if x.is_null() || y.is_null() {
-            return error_result("x and y arrays must not be null");
-        }
-        if n == 0 {
-            return error_result("Array length must be greater than 0");
-        }
-
-        let x_slice = unsafe { from_raw_parts(x, n as usize) };
-        let y_slice = unsafe { from_raw_parts(y, n as usize) };
-
-        match processor.inner.add_points(x_slice, y_slice) {
-            Ok(outputs) => {
-                // Extract smoothed values
-                let smoothed: Vec<f64> = outputs
-                    .into_iter()
-                    .zip(y_slice.iter())
-                    .map(|(opt, &original_y)| opt.map_or(original_y, |o| o.smoothed))
-                    .collect();
-
-                let result = LowessResult {
-                    x: x_slice.to_vec(),
-                    y: smoothed,
-                    standard_errors: None,
-                    confidence_lower: None,
-                    confidence_upper: None,
-                    prediction_lower: None,
-                    prediction_upper: None,
-                    residuals: None,
-                    robustness_weights: None,
-                    diagnostics: None,
-                    iterations_used: Some(processor.iterations),
-                    fraction_used: processor.fraction,
-                    cv_scores: None,
-                };
-                lowess_result_to_jl(result)
-            }
-            Err(e) => error_result(&e.to_string()),
+        match processor.inner.add_point(x, y) {
+            Ok(Some(o)) => o.smoothed,
+            Ok(None) => f64::NAN,
+            Err(_) => f64::NAN,
         }
     });
 
     match result {
-        Ok(res) => res,
-        Err(_) => error_result("Panic in Rust library"),
+        Ok(v) => v,
+        Err(_) => f64::NAN,
     }
 }
 

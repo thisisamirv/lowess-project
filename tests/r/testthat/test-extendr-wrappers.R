@@ -37,7 +37,7 @@ test_that("RStreamingLowess generated accessors dispatch chunked methods", {
 })
 
 
-test_that("ROnlineLowess generated accessors dispatch add_points", {
+test_that("ROnlineLowess generated accessors dispatch add_point", {
     null_value <- Nullable(NULL)
     handle_dollar <- ROnlineLowess$new(
         0.3, 20L, 3L, 1L, null_value, "tricube", "bisquare", "mad",
@@ -48,11 +48,19 @@ test_that("ROnlineLowess generated accessors dispatch add_points", {
         "extend", "incremental", null_value, FALSE, FALSE
     )
 
-    x <- as.double(1:10)
-    y <- as.double(cos(x))
-    result_dollar <- handle_dollar$add_points(x, y)
-    result_bracket <- handle_bracket[["add_points"]](x, y)
+    # Prime both handles with enough points to get a result
+    for (i in 1:10) {
+        handle_dollar$add_point(as.double(i), cos(as.double(i)))
+        handle_bracket[["add_point"]](as.double(i), cos(as.double(i)))
+    }
 
-    expect_length(result_dollar$y, length(y))
-    expect_identical(result_dollar$y, result_bracket$y)
+    result_dollar <- handle_dollar$add_point(11.0, cos(11.0))
+    result_bracket <- handle_bracket[["add_point"]](11.0, cos(11.0))
+
+    # Both should return the same type (numeric or NULL)
+    expect_identical(is.null(result_dollar), is.null(result_bracket))
+    if (!is.null(result_dollar)) {
+        expect_type(result_dollar, "double")
+        expect_type(result_bracket, "double")
+    }
 })

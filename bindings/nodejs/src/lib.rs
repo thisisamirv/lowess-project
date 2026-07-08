@@ -467,41 +467,13 @@ impl OnlineLowess {
         Ok(OnlineLowess { inner: model })
     }
 
-    /// Add new points to the window and get smoothed values.
-    #[napi(js_name = "add_points")]
-    pub fn add_points(&mut self, x: Float64Array, y: Float64Array) -> Result<LowessResultObj> {
+    /// Add a single point and get the smoothed value if enough points are available.
+    #[napi(js_name = "add_point")]
+    pub fn add_point(&mut self, x: f64, y: f64) -> Result<Option<f64>> {
         let result = self
             .inner
-            .add_points(x.as_ref(), y.as_ref())
+            .add_point(x, y)
             .map_err(|e: LowessError| Error::new(Status::GenericFailure, e.to_string()))?;
-
-        // Extract smoothed values from results
-        let x_vec = x.as_ref().to_vec();
-
-        let smoothed: Vec<f64> = result
-            .iter()
-            .zip(y.as_ref().iter())
-            .map(|(opt, &original_y)| opt.as_ref().map_or(original_y, |o| o.smoothed))
-            .collect();
-
-        let inner_result = LowessResult {
-            x: x_vec,
-            y: smoothed,
-            standard_errors: None,
-            confidence_lower: None,
-            confidence_upper: None,
-            prediction_lower: None,
-            prediction_upper: None,
-            residuals: None,
-            robustness_weights: None,
-            diagnostics: None,
-            iterations_used: None,
-            fraction_used: 0.0,
-            cv_scores: None,
-        };
-
-        Ok(LowessResultObj {
-            inner: inner_result,
-        })
+        Ok(result.map(|o| o.smoothed))
     }
 }

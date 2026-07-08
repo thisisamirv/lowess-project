@@ -49,13 +49,21 @@ example_1_basic_online <- function() {
         weight_function = "tricube",
         robustness_method = "bisquare"
     )
+    # Helper: process all points one at a time
+    online_smooth <- function(model, x, y) {
+        sapply(seq_along(x), function(i) {
+            r <- model$add_point(x[[i]], y[[i]])
+            if (is.null(r)) y[[i]] else r
+        })
+    }
+
     print(model)
-    result <- model$add_points(x, y)
+    smoothed <- online_smooth(model, x, y)
 
     cat("Processing data points with sliding window...\n")
     cat("Window capacity: 5\n")
-    cat(sprintf("Output points: %d\n", length(result$y)))
-    cat("Smoothed values:", paste(round(result$y, 4), collapse = ", "), "\n\n")
+    cat(sprintf("Output points: %d\n", length(smoothed)))
+    cat("Smoothed values:", paste(round(smoothed, 4), collapse = ", "), "\n\n")
 }
 
 # =============================================================================
@@ -82,18 +90,21 @@ example_2_sensor_simulation <- function() {
         iterations = 2L
     )
     print(model)
-    result <- model$add_points(x, y)
+    smoothed <- sapply(seq_along(x), function(i) {
+        r <- model$add_point(x[[i]], y[[i]])
+        if (is.null(r)) y[[i]] else r
+    })
 
     cat(sprintf("%6s %12s %12s\n", "Hour", "Raw Temp", "Smoothed"))
     cat(strrep("-", 35), "\n")
 
     # Show first 10 values
-    for (i in seq_len(min(10, length(result$y)))) {
-        cat(sprintf("%6.0f %10.2f degC %10.2f degC\n", x[i], y[i], result$y[i]))
+    for (i in seq_len(min(10, length(smoothed)))) {
+        cat(sprintf("%6.0f %10.2f degC %10.2f degC\n", x[i], y[i], smoothed[i]))
     }
 
-    if (length(result$y) > 10) {
-        cat(sprintf("  ... (%d more rows)\n", length(result$y) - 10))
+    if (length(smoothed) > 10) {
+        cat(sprintf("  ... (%d more rows)\n", length(smoothed) - 10))
     }
     cat("\n")
 }
@@ -119,22 +130,11 @@ example_3_window_comparison <- function() {
             min_points = 3L,
             iterations = 2L
         )
-        result <- model$add_points(x, y)
+        result <- model$add_point(x[[length(x)]], y[[length(x)]])
+        final_val <- if (is.null(result)) tail(y, 1) else result
 
         cat(sprintf("Window capacity: %d\n", window_size))
-        cat(sprintf("  Output points: %d\n", length(result$y)))
-        if (length(result$y) >= 5) {
-            last_5 <- tail(result$y, 5)
-            cat(
-                "  Last 5 smoothed:",
-                paste(round(last_5, 4), collapse = ", "), "\n"
-            )
-        } else {
-            cat(
-                "  Smoothed values:",
-                paste(round(result$y, 4), collapse = ", "), "\n"
-            )
-        }
+        cat(sprintf("  Final smoothed value: %.4f\n", final_val))
     }
     cat("\n")
 }
@@ -166,12 +166,16 @@ example_4_memory_bounded <- function() {
         iterations = 1L,
         parallel = FALSE # Sequential for low latency
     )
-    result <- model$add_points(x, y)
+    last_smoothed <- NA_real_
+    for (i in seq_along(x)) {
+        r <- model$add_point(x[[i]], y[[i]])
+        if (!is.null(r)) last_smoothed <- r
+    }
     duration <- as.numeric(Sys.time() - start_time, units = "secs")
 
-    cat(sprintf("\nProcessed %d points in %.4fs\n", length(result$y), duration))
-    if (length(result$y) > 0) {
-        cat(sprintf("Final smoothed value: %.2f\n", tail(result$y, 1)))
+    cat(sprintf("\nProcessed %d points in %.4fs\n", total_points, duration))
+    if (!is.na(last_smoothed)) {
+        cat(sprintf("Final smoothed value: %.2f\n", last_smoothed))
     }
     cat("Memory usage: Constant (window size = 20 points)\n\n")
 }

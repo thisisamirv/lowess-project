@@ -316,7 +316,7 @@ Incremental updates with a sliding window for real-time data.
         min_points = 5,
         update_mode = "incremental"
     )
-    result <- model$add_points(x, y)
+    smoothed <- sapply(seq_along(x), function(i) model$add_point(x[[i]], y[[i]]))
     ```
 
 === "Python"

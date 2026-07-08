@@ -299,37 +299,12 @@ impl ROnlineLowess {
         })
     }
 
-    fn add_points(&mut self, x: &[f64], y: &[f64]) -> Result<List> {
-        let outputs = self
+    fn add_point(&mut self, x: f64, y: f64) -> Result<Option<f64>> {
+        let result = self
             .inner
-            .add_points(x, y)
+            .add_point(x, y)
             .map_err(|e| Error::Other(e.to_string()))?;
-
-        // Extract smoothed values (use original y for points that haven't accumulated enough data)
-        let smoothed: Vec<f64> = outputs
-            .into_iter()
-            .zip(y.iter())
-            .map(|(opt, &original_y)| opt.map_or(original_y, |o| o.smoothed))
-            .collect();
-
-        // Create result
-        let result = LowessResult {
-            x: x.to_vec(),
-            y: smoothed,
-            standard_errors: None,
-            confidence_lower: None,
-            confidence_upper: None,
-            prediction_lower: None,
-            prediction_upper: None,
-            residuals: None,
-            robustness_weights: None,
-            diagnostics: None,
-            iterations_used: Some(self.iterations),
-            fraction_used: self.fraction,
-            cv_scores: None,
-        };
-
-        lowess_result_to_list(result)
+        Ok(result.map(|o| o.smoothed))
     }
 }
 

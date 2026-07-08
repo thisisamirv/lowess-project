@@ -39,12 +39,10 @@ test_that("OnlineLowess rejects invalid inputs", {
         "min_points must be a non-negative integer"
     )
 
-    # Mismatched lengths at add_points time
+    # add_point accepts scalar values
     ol <- OnlineLowess(fraction = 0.5)
-    expect_error(
-        ol$add_points(as.double(1:10), as.double(1:5)),
-        "x and y must have the same length"
-    )
+    result <- ol$add_point(1.0, 2.0)
+    expect_true(is.null(result) || is.numeric(result))
 })
 
 test_that("StreamingLowess rejects invalid inputs", {

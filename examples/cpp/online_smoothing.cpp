@@ -73,22 +73,24 @@ int main() {
 
     size_t total_emitted = 0;
     for (size_t point_index = 0; point_index < point_count; ++point_index) {
-      const std::vector<double> x_sample = {x_values[point_index]};
-      const std::vector<double> y_sample = {y_values[point_index]};
+      auto smoothed =
+          model.add_point(x_values[point_index], y_values[point_index]).value();
 
-      auto res = model.add_points(x_sample, y_sample).value();
-      total_emitted += res.size();
+      if (!std::isnan(smoothed)) {
+        ++total_emitted;
+      }
 
       if (point_index > 0 && point_index % k_progress_interval == 0 &&
-          res.size() > 0) {
+          !std::isnan(smoothed)) {
         std::cout << "  t=" << point_index
                   << " original=" << y_values[point_index]
-                  << " smoothed=" << res.y_value(res.size() - 1) << '\n';
+                  << " smoothed=" << smoothed << '\n';
       }
     }
 
     std::cout << "\nOnline processing completed:\n";
-    std::cout << "  Total points emitted: " << total_emitted << '\n';
+    std::cout << "  Total points with smoothed output: " << total_emitted
+              << '\n';
 
     std::cout << "\n=== Example completed successfully ===\n";
 

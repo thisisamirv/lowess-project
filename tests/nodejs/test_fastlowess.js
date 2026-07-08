@@ -47,12 +47,10 @@ test('online smoothing', () => {
 
     let lastVal = null;
     for (let i = 0; i < 10; i++) {
-        const xArr = new Float64Array([i]);
-        const yArr = new Float64Array([i * 2]);
-        const res = online.add_points(xArr, yArr);
+        const res = online.add_point(i, i * 2);
 
-        if (res.y.length > 0) {
-            lastVal = res.y[0];
+        if (res !== null) {
+            lastVal = res;
         }
     }
 

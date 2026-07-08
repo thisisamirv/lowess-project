@@ -513,22 +513,13 @@ public:
     return *this;
   }
 
-  Expected<LowessResult> add_points(const std::vector<double> &x_values,
-                                    const std::vector<double> &y_values) {
-    if (x_values.size() != y_values.size()) {
-      return Expected<LowessResult>::make_error("x and y length mismatch");
-    }
-
-    auto result =
-        cpp_online_add_points(ptr_, x_values.data(), y_values.data(),
-                              static_cast<unsigned long>(x_values.size()));
-
-    if (result.error != nullptr) {
-      const std::string error_msg(result.error);
-      cpp_lowess_free_result(&result);
-      return Expected<LowessResult>::make_error(error_msg);
-    }
-    return Expected<LowessResult>(LowessResult(result));
+  /**
+   * @brief Add a single point and return the smoothed value.
+   *
+   * Returns NaN if not enough points have been accumulated yet.
+   */
+  Expected<double> add_point(double x, double y) {
+    return Expected<double>(cpp_online_add_point(ptr_, x, y));
   }
 
 private:

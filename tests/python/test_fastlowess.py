@@ -9,9 +9,9 @@ Comprehensive test suite covering:
 - Edge cases
 """
 
+import fastlowess
 import numpy as np
 import pytest
-import fastlowess
 
 
 class TestLowess:
@@ -310,7 +310,7 @@ class TestOnlineLowess:
         )
 
         for x_value, y_value in zip(x, y):
-            online.add_points(np.array([x_value]), np.array([y_value]))
+            online.add_point(float(x_value), float(y_value))
 
     def test_online_basic(self):
         """Test basic online smoothing."""
@@ -321,10 +321,9 @@ class TestOnlineLowess:
 
         results = []
         for x_value, y_value in zip(x, y):
-            result = online.add_points(np.array([x_value]), np.array([y_value]))
-            # add_points returns a LowessResult with smoothed y values
-            if len(result.y) > 0:
-                results.append(result.y[0])
+            result = online.add_point(float(x_value), float(y_value))
+            if result is not None:
+                results.append(result)
 
         assert len(results) > 0
 
@@ -338,22 +337,21 @@ class TestOnlineLowess:
 
         results = []
         for x_value, y_value in zip(x, y):
-            result = online.add_points(np.array([x_value]), np.array([y_value]))
-            # add_points returns a LowessResult with smoothed y values
-            if len(result.y) > 0:
-                results.append(result.y[0])
+            result = online.add_point(float(x_value), float(y_value))
+            if result is not None:
+                results.append(result)
 
         assert len(results) > 0
 
-    def test_online_add_points_with_lists(self):
-        """Test online processor accepts array-like batch inputs."""
+    def test_online_add_point_one_at_a_time(self):
+        """Test online processor accepts scalar inputs."""
         x = [1.0, 2.0, 3.0, 4.0, 5.0]
         y = [2.0, 4.0, 6.0, 8.0, 10.0]
 
         online = fastlowess.OnlineLowess(fraction=0.5, window_capacity=10, min_points=3)
-        result = online.add_points(x, y)
+        results = [online.add_point(xi, yi) for xi, yi in zip(x, y)]
 
-        assert isinstance(result, fastlowess.LowessResult)
+        assert any(r is not None for r in results)
 
 
 class TestLowessResult:

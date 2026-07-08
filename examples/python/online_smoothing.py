@@ -18,7 +18,6 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
-
 from fastlowess import OnlineLowess
 
 # Get script directory for relative paths
@@ -44,19 +43,28 @@ def main():
     print(f"Simulating {n_points} real-time data points...")
 
     # 2. Sequential Online Processing
+    def online_smooth(model, x_arr, y_arr):
+        """Process all points one at a time, falling back to original y when
+        not enough points have been accumulated yet."""
+        result = np.empty_like(y_arr)
+        for i, (xi, yi) in enumerate(zip(x_arr, y_arr)):
+            r = model.add_point(float(xi), float(yi))
+            result[i] = r if r is not None else yi
+        return result
+
     # Full Update Mode (higher accuracy)
     print("Processing with 'full' update mode...")
     model_full = OnlineLowess(
         fraction=0.3, window_capacity=50, iterations=3, update_mode="full"
     )
-    res_full = model_full.add_points(x, y)
+    res_full = online_smooth(model_full, x, y)
 
     # Incremental Update Mode (faster for large windows)
     print("Processing with 'incremental' update mode...")
     model_inc = OnlineLowess(
         fraction=0.3, window_capacity=50, iterations=3, update_mode="incremental"
     )
-    res_inc = model_inc.add_points(x, y)
+    res_inc = online_smooth(model_inc, x, y)
 
     # Plotting
     os.makedirs(PLOTS_DIR, exist_ok=True)
@@ -68,10 +76,10 @@ def main():
     plt.plot(x, y_true, "k--", alpha=0.6, label="True Signal")
 
     # Online Results
-    plt.plot(x, res_full.y, "r-", linewidth=2, label="Online LOWESS (Full)")
+    plt.plot(x, res_full, "r-", linewidth=2, label="Online LOWESS (Full)")
     plt.plot(
         x,
-        res_inc.y,
+        res_inc,
         "b-",
         linewidth=1.5,
         alpha=0.7,
@@ -92,8 +100,8 @@ def main():
     mask = (x >= 400) & (x <= 500)
     plt.scatter(x[mask], y[mask], s=20, alpha=0.4, color="gray")
     plt.plot(x[mask], y_true[mask], "k--")
-    plt.plot(x[mask], res_full.y[mask], "r-", linewidth=3, label="Full Update")
-    plt.plot(x[mask], res_inc.y[mask], "b-", linewidth=2, label="Incremental")
+    plt.plot(x[mask], res_full[mask], "r-", linewidth=3, label="Full Update")
+    plt.plot(x[mask], res_inc[mask], "b-", linewidth=2, label="Incremental")
     plt.title("Detailed View (Time 400-500)")
     plt.legend()
     plt.grid(True, alpha=0.2)

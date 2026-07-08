@@ -66,10 +66,10 @@ online = OnlineLowess(; kwargs...)
 **Methods:**
 
 ```julia
-result = add_points(online, x::Vector{Float64}, y::Vector{Float64}) :: LowessResult
+result = add_point(online, x::Float64, y::Float64) :: Union{Float64, Nothing}
 ```
 
-* Adds new points to the model and returns the smoothed values (retrospective or prospective depending on mode).
+* Adds a single point to the model. Returns the smoothed value as a `Float64`, or `nothing` if not enough points have been accumulated yet.
 
 ## Options Structures
 

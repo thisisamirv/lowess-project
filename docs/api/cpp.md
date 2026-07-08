@@ -66,10 +66,10 @@ explicit OnlineLowess(const OnlineOptions &options = {})
 **Methods:**
 
 ```cpp
-LowessResult add_points(const std::vector<double> &x, const std::vector<double> &y)
+Expected<std::optional<double>> add_point(double x, double y)
 ```
 
-* Adds new points to the model and returns the smoothed values (retrospective or prospective depending on mode).
+* Adds a single point to the model and returns the smoothed value (or `std::nullopt` if not enough points have been accumulated yet).
 
 ## Options Structures
 

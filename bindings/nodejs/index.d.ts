@@ -44,8 +44,8 @@ export declare class LowessResultObj {
 export declare class OnlineLowess {
     /** Create a new online LOWESS smoother. */
     constructor(options?: SmoothOptions | undefined | null, onlineOpts?: OnlineOptions | undefined | null)
-    /** Add new points to the window and get smoothed values. */
-    add_points(x: Float64Array, y: Float64Array): LowessResultObj
+    /** Add a single point and get the smoothed value (or null if not enough points yet). */
+    add_point(x: number, y: number): number | null
 }
 
 /** Streaming LOWESS smoother for large datasets. */

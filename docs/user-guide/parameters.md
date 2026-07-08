@@ -1196,7 +1196,7 @@ Maximum points held in memory for Online mode.
 
 === "R"
     ```r
-    result <- OnlineLowess(window_capacity = 500)$add_points(x, y)
+    result <- OnlineLowess(window_capacity = 500)$add_point(x[[1]], y[[1]])
     ```
 
 === "Python"
@@ -1242,7 +1242,7 @@ Minimum points required before Online filter starts producing outputs.
 
 === "R"
     ```r
-    result <- OnlineLowess(min_points = 10)$add_points(x, y)
+    result <- OnlineLowess(min_points = 10)$add_point(x[[1]], y[[1]])
     ```
 
 === "Python"
@@ -1304,7 +1304,7 @@ For example:
 
 === "R"
     ```r
-    result <- OnlineLowess(update_mode = "full")$add_points(x, y)
+    result <- OnlineLowess(update_mode = "full")$add_point(x[[1]], y[[1]])
     ```
 
 === "Python"

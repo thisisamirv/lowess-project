@@ -96,7 +96,7 @@ export class OnlineLowessWasm {
     free(): void;
     constructor(options?: SmoothOptions, online_opts?: OnlineOptions);
     /** Add a single point and get the smoothed value (or undefined if not enough points yet). */
-    update(x: number, y: number): number | undefined;
+    add_point(x: number, y: number): number | undefined;
 }
 "#;
 
@@ -328,7 +328,7 @@ pub fn smooth(
 }
 
 /// Streaming LOWESS smoother.
-#[wasm_bindgen]
+#[wasm_bindgen(skip_typescript)]
 pub struct StreamingLowessWasm {
     inner: ParallelStreamingLowess<f64>,
 }
@@ -418,7 +418,7 @@ impl StreamingLowessWasm {
 }
 
 /// Online LOWESS smoother.
-#[wasm_bindgen]
+#[wasm_bindgen(skip_typescript)]
 pub struct OnlineLowessWasm {
     inner: ParallelOnlineLowess<f64>,
 }
@@ -482,7 +482,7 @@ impl OnlineLowessWasm {
     }
 
     #[wasm_bindgen(skip_typescript)]
-    pub fn update(&mut self, x: f64, y: f64) -> Result<Option<f64>, JsValue> {
+    pub fn add_point(&mut self, x: f64, y: f64) -> Result<Option<f64>, JsValue> {
         let result = self
             .inner
             .add_point(x, y)
