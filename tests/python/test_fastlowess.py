@@ -591,5 +591,94 @@ class TestCrossValidation:
         assert len(result.cv_scores) == 1
 
 
+class TestCustomWeights:
+    """Tests for the custom_weights parameter."""
+
+    def test_uniform_weights_match_no_weights(self):
+        """Uniform weights of 1 should produce identical results to no weights."""
+        x = np.linspace(0, 5, 20)
+        y = np.sin(x)
+        weights = np.ones(20)
+
+        result_no_w = fastlowess.Lowess(fraction=0.4, iterations=2).fit(x, y)
+        result_unit_w = fastlowess.Lowess(
+            fraction=0.4, iterations=2, custom_weights=weights.tolist()
+        ).fit(x, y)
+
+        np.testing.assert_allclose(result_no_w.y, result_unit_w.y, atol=1e-10)
+
+    def test_zero_weight_reduces_outlier_influence(self):
+        """A zero weight on an outlier should bring the fit closer to the true line."""
+        x = np.arange(10, dtype=float)
+        y = x * 2.0
+        y[5] = 100.0  # outlier
+
+        result_no_w = fastlowess.Lowess(fraction=0.5, iterations=0).fit(x, y)
+
+        weights = np.ones(10)
+        weights[5] = 0.0
+        result_zero_w = fastlowess.Lowess(
+            fraction=0.5, iterations=0, custom_weights=weights.tolist()
+        ).fit(x, y)
+
+        true_val = 5.0 * 2.0
+        err_no_w = abs(result_no_w.y[5] - true_val)
+        err_zero_w = abs(result_zero_w.y[5] - true_val)
+        assert err_zero_w < err_no_w, (
+            f"zero-weighting outlier should reduce error "
+            f"(no_weights={err_no_w:.3f}, zero_weight={err_zero_w:.3f})"
+        )
+
+    def test_high_weight_pulls_fit(self):
+        """A very high weight on a spike should pull the fit toward it."""
+        x = np.arange(15, dtype=float)
+        y = np.zeros(15)
+        y[7] = 10.0  # spike
+
+        weights_high = np.ones(15)
+        weights_high[7] = 100.0
+
+        result_high = fastlowess.Lowess(
+            fraction=0.6, iterations=0, custom_weights=weights_high.tolist()
+        ).fit(x, y)
+        result_equal = fastlowess.Lowess(fraction=0.6, iterations=0).fit(x, y)
+
+        assert result_high.y[7] > result_equal.y[7], (
+            f"high weight at spike should pull fit up "
+            f"(high={result_high.y[7]:.3f}, equal={result_equal.y[7]:.3f})"
+        )
+
+    def test_custom_weights_with_robustness(self):
+        """custom_weights should compose correctly with robustness iterations."""
+        x = np.arange(30, dtype=float)
+        y = x * 0.5 + np.sin(x * 0.3)
+        weights = (1.0 + 0.1 * x).tolist()
+
+        result = fastlowess.Lowess(
+            fraction=0.4, iterations=3, custom_weights=weights
+        ).fit(x, y)
+
+        assert len(result.y) == 30
+        assert np.all(np.isfinite(result.y))
+
+    def test_wrong_length_weights_raise_error(self):
+        """custom_weights with wrong length should raise ValueError."""
+        x = np.arange(10, dtype=float)
+        y = x * 2.0
+        weights = [1.0] * 7  # wrong length
+
+        with pytest.raises(ValueError):
+            fastlowess.Lowess(fraction=0.5, custom_weights=weights).fit(x, y)
+
+    def test_negative_weight_raises_error(self):
+        """Negative custom_weights should raise ValueError."""
+        x = np.arange(5, dtype=float)
+        y = x.copy()
+        weights = [1.0, -1.0, 1.0, 1.0, 1.0]
+
+        with pytest.raises(ValueError):
+            fastlowess.Lowess(fraction=0.5, custom_weights=weights).fit(x, y)
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

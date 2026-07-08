@@ -178,6 +178,7 @@ fn test_fit_point_degenerate_bandwidth() {
         robustness_weights: &robustness,
         weight_function: WeightFunction::Tricube,
         zero_weight_fallback: ZeroWeightFallback::UseLocalMean,
+        custom_weights: None,
     };
 
     let result = ctx.fit().expect("Should return weighted average");
@@ -213,6 +214,7 @@ fn test_zero_weight_fallback_local_mean() {
         robustness_weights: &robustness,
         weight_function: WeightFunction::Tricube,
         zero_weight_fallback: ZeroWeightFallback::UseLocalMean,
+        custom_weights: None,
     };
 
     let result = ctx.fit().expect("Should return local mean");
@@ -242,6 +244,7 @@ fn test_zero_weight_fallback_return_original() {
         robustness_weights: &robustness,
         weight_function: WeightFunction::Tricube,
         zero_weight_fallback: ZeroWeightFallback::ReturnOriginal,
+        custom_weights: None,
     };
 
     let result = ctx.fit().expect("Should return original y");
@@ -270,6 +273,7 @@ fn test_zero_weight_fallback_return_none() {
         robustness_weights: &robustness,
         weight_function: WeightFunction::Tricube,
         zero_weight_fallback: ZeroWeightFallback::ReturnNone,
+        custom_weights: None,
     };
 
     let result = ctx.fit();
@@ -299,6 +303,7 @@ fn test_degenerate_bandwidth_zero_weights() {
         robustness_weights: &robustness,
         weight_function: WeightFunction::Tricube,
         zero_weight_fallback: ZeroWeightFallback::ReturnOriginal,
+        custom_weights: None,
     };
 
     let result = ctx
@@ -334,6 +339,7 @@ fn test_fit_point_invalid_index() {
         robustness_weights: &robustness,
         weight_function: WeightFunction::Tricube,
         zero_weight_fallback: ZeroWeightFallback::ReturnNone,
+        custom_weights: None,
     };
 
     let result = ctx.fit();
@@ -363,6 +369,7 @@ fn test_fit_point_invalid_window() {
         robustness_weights: &robustness,
         weight_function: WeightFunction::Tricube,
         zero_weight_fallback: ZeroWeightFallback::ReturnNone,
+        custom_weights: None,
     };
 
     assert!(
@@ -382,6 +389,7 @@ fn test_fit_point_invalid_window() {
         robustness_weights: &robustness,
         weight_function: WeightFunction::Tricube,
         zero_weight_fallback: ZeroWeightFallback::ReturnNone,
+        custom_weights: None,
     };
 
     assert!(
@@ -419,6 +427,7 @@ fn test_fit_point_various_kernels() {
             robustness_weights: &robustness,
             weight_function: kernel,
             zero_weight_fallback: ZeroWeightFallback::UseLocalMean,
+        custom_weights: None,
         };
 
         let result = ctx.fit();
@@ -456,6 +465,7 @@ fn test_fit_point_with_robustness() {
         robustness_weights: &robustness,
         weight_function: WeightFunction::Tricube,
         zero_weight_fallback: ZeroWeightFallback::UseLocalMean,
+        custom_weights: None,
     };
 
     let result = ctx.fit();

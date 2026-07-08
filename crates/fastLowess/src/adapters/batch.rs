@@ -213,6 +213,13 @@ impl<T: Float> ParallelBatchLowessBuilder<T> {
         self
     }
 
+    // Set per-observation case weights applied as `w_ij = custom_weights[j] * K(d_ij / h)`.
+    // Must have the same length as the input data and all values must be finite and non-negative.
+    pub fn custom_weights(mut self, weights: Vec<T>) -> Self {
+        self.base.custom_weights = Some(weights);
+        self
+    }
+
     // Build the batch processor.
     pub fn build(mut self) -> Result<ParallelBatchLowess<T>, LowessError> {
         // Resolve string-based CV method

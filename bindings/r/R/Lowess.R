@@ -34,6 +34,9 @@
 #' @param cv_method CV method: "kfold", "loocv".
 #' @param cv_k Folds for k-fold CV. Default: 5.
 #' @param parallel Enable parallel processing. Default: TRUE.
+#' @param custom_weights Per-observation case weights. A numeric vector of the
+#'   same length as x and y. All values must be finite and non-negative.
+#'   NULL disables weighting.
 #'
 #' @return A Lowess object.
 #' @examples
@@ -71,11 +74,11 @@ Lowess <- function(
     structure(
         list(
             handle = handle,
-            fit = function(x, y) {
+            fit = function(x, y, custom_weights = NULL) {
                 validated_args <- validate_common_args(
                     x, y, fraction, iterations
                 )
-                handle$fit(validated_args$x, validated_args$y)
+                handle$fit(validated_args$x, validated_args$y, custom_weights)
             },
             params = list(
                 fraction = fraction,

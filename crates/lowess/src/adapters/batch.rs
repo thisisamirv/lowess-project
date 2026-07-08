@@ -123,6 +123,10 @@ pub struct BatchLowessBuilder<T: Float> {
     // Tracks if any parameter was set multiple times (for validation)
     #[doc(hidden)]
     pub(crate) duplicate_param: Option<&'static str>,
+
+    // Per-observation case weights. When provided, multiplies each local kernel weight:
+    // `w_ij = custom_weights[j] * K(d_ij / h) * robustness_j`.
+    pub custom_weights: Option<Vec<T>>,
 }
 
 impl<T: Float> Default for BatchLowessBuilder<T> {
@@ -160,6 +164,7 @@ impl<T: Float> BatchLowessBuilder<T> {
             delegate_boundary_handling: false,
             parallel: None,
             duplicate_param: None,
+            custom_weights: None,
         }
     }
 
@@ -201,6 +206,9 @@ impl<T: Float> BatchLowessBuilder<T> {
             Validator::validate_tolerance(tol)?;
         }
 
+        // Validate custom weights if provided (length validated against data in fit())
+        // (structural validation only; length is unknown until data is provided)
+
         Ok(BatchLowess { config: self })
     }
 }
@@ -214,6 +222,11 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> BatchLowess<T> {
     // Perform LOWESS smoothing on the provided data.
     pub fn fit(self, x: &[T], y: &[T]) -> Result<LowessResult<T>, LowessError> {
         Validator::validate_inputs(x, y)?;
+
+        // Validate custom weights length against data
+        if let Some(ref cw) = self.config.custom_weights {
+            Validator::validate_custom_weights(cw, y.len())?;
+        }
 
         // Sort data by x using sorting module, unless GPU is used
         let sorted = if self.config.backend == Some(Backend::GPU) {
@@ -255,6 +268,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> BatchLowess<T> {
             parallel: self.config.parallel.unwrap_or(false),
             backend: self.config.backend,
             delegate_boundary_handling: self.config.delegate_boundary_handling,
+            custom_weights: self.config.custom_weights,
         };
 
         // Execute unified LOWESS

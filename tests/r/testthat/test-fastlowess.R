@@ -189,3 +189,66 @@ test_that("Lowess parallel execution works", {
     # Results should be nearly identical
     expect_equal(result_serial$y, result_parallel$y, tolerance = 1e-10)
 })
+
+# ── custom_weights ────────────────────────────────────────────────────────────
+
+test_that("custom_weights: uniform weights produce same result as no weights", {
+    x <- as.double(seq(0, 5, length.out = 20))
+    y <- sin(x)
+    weights <- rep(1.0, 20)
+
+    result_no_w   <- Lowess(fraction = 0.4, iterations = 2)$fit(x, y)
+    result_unit_w <- Lowess(fraction = 0.4, iterations = 2)$fit(x, y, custom_weights = weights)
+
+    expect_equal(result_no_w$y, result_unit_w$y, tolerance = 1e-10)
+})
+
+test_that("custom_weights: zero weight on outlier reduces its influence", {
+    x <- as.double(0:9)
+    y <- x * 2.0
+    y[6] <- 100.0  # outlier at index 6 (1-based)
+
+    result_no_w <- Lowess(fraction = 0.5, iterations = 0)$fit(x, y)
+
+    weights <- rep(1.0, 10)
+    weights[6] <- 0.0
+    result_zero_w <- Lowess(fraction = 0.5, iterations = 0)$fit(x, y, custom_weights = weights)
+
+    true_val <- 5.0 * 2.0  # true value at x=5 (index 6 in 1-based)
+    err_no_w  <- abs(result_no_w$y[6]  - true_val)
+    err_zero_w <- abs(result_zero_w$y[6] - true_val)
+
+    expect_lt(err_zero_w, err_no_w)
+})
+
+test_that("custom_weights: high weight pulls fit toward spike", {
+    x <- as.double(0:14)
+    y <- rep(0.0, 15)
+    y[8] <- 10.0  # spike at index 8 (1-based)
+
+    weights_high <- rep(1.0, 15)
+    weights_high[8] <- 100.0
+
+    result_high  <- Lowess(fraction = 0.6, iterations = 0)$fit(x, y, custom_weights = weights_high)
+    result_equal <- Lowess(fraction = 0.6, iterations = 0)$fit(x, y)
+
+    expect_gt(result_high$y[8], result_equal$y[8])
+})
+
+test_that("custom_weights: wrong length raises error", {
+    x <- as.double(1:10)
+    y <- as.double(1:10)
+
+    expect_error(
+        Lowess(fraction = 0.5)$fit(x, y, custom_weights = rep(1.0, 7))
+    )
+})
+
+test_that("custom_weights: negative value raises error", {
+    x <- as.double(1:5)
+    y <- as.double(1:5)
+
+    expect_error(
+        Lowess(fraction = 0.5)$fit(x, y, custom_weights = c(1.0, -1.0, 1.0, 1.0, 1.0))
+    )
+})

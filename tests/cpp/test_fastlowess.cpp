@@ -36,6 +36,18 @@ constexpr std::size_t k_streaming_accuracy_chunk_size = 1000U;
 constexpr std::size_t k_online_window_capacity = 10U;
 constexpr std::size_t k_online_min_points = 3U;
 constexpr int k_robust_iterations = 3;
+constexpr std::size_t k_cw_uniform_point_count = 20U;
+constexpr std::size_t k_cw_outlier_point_count = 10U;
+constexpr std::size_t k_cw_spike_point_count = 15U;
+constexpr std::size_t k_cw_outlier_idx = 5U;
+constexpr std::size_t k_cw_spike_idx = 7U;
+constexpr double k_cw_uniform_fraction = 0.4;
+constexpr double k_cw_outlier_fraction = 0.5;
+constexpr double k_cw_spike_fraction = 0.6;
+constexpr double k_cw_high_weight = 100.0;
+constexpr double k_cw_spike_value = 10.0;
+constexpr double k_cw_outlier_value = 100.0;
+constexpr double k_cw_slope = 2.0;
 
 constexpr std::array<double, k_small_sample_size> k_sample_x_values = {
     1.0, 2.0, 3.0, 4.0, 5.0};
@@ -431,6 +443,95 @@ void testMismatchedLengths() {
   assertTrue(!result.error().empty(), "Expected non-empty error message");
 }
 
+void testCustomWeightsUniformMatchesNoWeights() {
+  std::cout << "Running testCustomWeightsUniformMatchesNoWeights...\n";
+
+  const std::size_t point_count = k_cw_uniform_point_count;
+  std::vector<double> x_values(point_count);
+  std::vector<double> y_values(point_count);
+  for (std::size_t i = 0; i < point_count; ++i) {
+    x_values[i] = static_cast<double>(i) * k_cw_outlier_fraction;
+    y_values[i] = std::sin(x_values[i]);
+  }
+  const std::vector<double> weights(point_count, 1.0);
+
+  fastlowess::LowessOptions opts;
+  opts.fraction = k_cw_uniform_fraction;
+  opts.iterations = 2;
+
+  fastlowess::Lowess model(opts);
+  auto result_no_w = model.fit(x_values, y_values).value();
+  auto result_unit_w = model.fit(x_values, y_values, weights).value();
+
+  const auto y_no_w = result_no_w.y_vector();
+  const auto y_unit_w = result_unit_w.y_vector();
+
+  for (std::size_t i = 0; i < point_count; ++i) {
+    assertApprox(y_no_w[i], y_unit_w[i], k_default_epsilon);
+  }
+}
+
+void testCustomWeightsZeroWeightReducesOutlierInfluence() {
+  std::cout
+      << "Running testCustomWeightsZeroWeightReducesOutlierInfluence...\n";
+
+  const std::size_t point_count = k_cw_outlier_point_count;
+  std::vector<double> x_values(point_count);
+  std::vector<double> y_values(point_count);
+  for (std::size_t i = 0; i < point_count; ++i) {
+    x_values[i] = static_cast<double>(i);
+    y_values[i] = x_values[i] * k_cw_slope;
+  }
+  y_values[k_cw_outlier_idx] = k_cw_outlier_value; // outlier
+
+  fastlowess::LowessOptions opts;
+  opts.fraction = k_cw_outlier_fraction;
+  opts.iterations = 0;
+
+  fastlowess::Lowess model(opts);
+  auto result_no_w = model.fit(x_values, y_values).value();
+
+  std::vector<double> weights(point_count, 1.0);
+  weights[k_cw_outlier_idx] = 0.0;
+  auto result_zero_w = model.fit(x_values, y_values, weights).value();
+
+  const double true_val = static_cast<double>(k_cw_outlier_idx) * k_cw_slope;
+  const double err_no_w =
+      std::abs(result_no_w.y_value(k_cw_outlier_idx) - true_val);
+  const double err_zero_w =
+      std::abs(result_zero_w.y_value(k_cw_outlier_idx) - true_val);
+
+  assertTrue(err_zero_w < err_no_w,
+             "zero weight at outlier should reduce fitting error");
+}
+
+void testCustomWeightsHighWeightPullsFit() {
+  std::cout << "Running testCustomWeightsHighWeightPullsFit...\n";
+
+  const std::size_t point_count = k_cw_spike_point_count;
+  std::vector<double> x_values(point_count);
+  std::vector<double> y_values(point_count, 0.0);
+  for (std::size_t i = 0; i < point_count; ++i) {
+    x_values[i] = static_cast<double>(i);
+  }
+  y_values[k_cw_spike_idx] = k_cw_spike_value; // spike
+
+  fastlowess::LowessOptions opts;
+  opts.fraction = k_cw_spike_fraction;
+  opts.iterations = 0;
+
+  std::vector<double> weights_high(point_count, 1.0);
+  weights_high[k_cw_spike_idx] = k_cw_high_weight;
+
+  fastlowess::Lowess model(opts);
+  auto result_high = model.fit(x_values, y_values, weights_high).value();
+  auto result_equal = model.fit(x_values, y_values).value();
+
+  assertTrue(result_high.y_value(k_cw_spike_idx) >
+                 result_equal.y_value(k_cw_spike_idx),
+             "high weight at spike should pull fit up");
+}
+
 } // namespace
 
 int main() {
@@ -448,6 +549,9 @@ int main() {
     testStreamingAccuracy();
     testOnlineBasic();
     testMismatchedLengths();
+    testCustomWeightsUniformMatchesNoWeights();
+    testCustomWeightsZeroWeightReducesOutlierInfluence();
+    testCustomWeightsHighWeightPullsFit();
 
     std::cout << "All C++ tests passed!\n";
   } catch (const std::exception &exception) {

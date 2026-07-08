@@ -16,7 +16,6 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
-
 from fastlowess import Lowess
 
 # Get script directory for relative paths
@@ -170,6 +169,32 @@ def main():
     )
     fig3 = plot_boundary_policy_demo()
     save_example_plots(fig1, fig2, fig3)
+
+    # Custom Weights
+    print("\nCustom Weights Examples:")
+    x_cw = np.arange(10, dtype=float)
+    y_cw = x_cw * 2.0
+    y_cw[5] = 100.0  # outlier
+    weights = np.ones(len(x_cw))
+    weights[5] = 0.0
+    no_w = Lowess(fraction=0.5, iterations=0).fit(x_cw, y_cw)
+    zero_w = Lowess(fraction=0.5, iterations=0, custom_weights=weights.tolist()).fit(
+        x_cw, y_cw
+    )
+    err_no_w = abs(no_w.y[5] - 10.0)
+    err_zero_w = abs(zero_w.y[5] - 10.0)
+    print(f" - Zero weight at outlier: error {err_no_w:.2f} -> {err_zero_w:.2f}")
+
+    x_sp = np.arange(15, dtype=float)
+    y_sp = np.zeros(15)
+    y_sp[7] = 10.0
+    w_sp = np.ones(15)
+    w_sp[7] = 100.0
+    eq = Lowess(fraction=0.6, iterations=0).fit(x_sp, y_sp)
+    hi = Lowess(fraction=0.6, iterations=0, custom_weights=w_sp.tolist()).fit(
+        x_sp, y_sp
+    )
+    print(f" - High weight at spike: fit {eq.y[7]:.4f} -> {hi.y[7]:.4f}")
 
 
 if __name__ == "__main__":

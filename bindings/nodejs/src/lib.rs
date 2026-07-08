@@ -188,6 +188,8 @@ pub struct SmoothOptions {
     pub cv_k: Option<u32>,
     /// Enable parallel execution. Default: true.
     pub parallel: Option<bool>,
+    /// Per-observation case weights. Must have the same length as input data.
+    pub custom_weights: Option<Vec<f64>>,
 }
 
 /// Batch LOWESS smoothing.
@@ -236,7 +238,7 @@ impl Lowess {
 
     fn create_builder(&self) -> Result<LowessBuilder<f64>> {
         let o = self.options.as_ref();
-        binding_support::apply_builder_options(
+        let mut builder = binding_support::apply_builder_options(
             LowessBuilder::<f64>::new(),
             binding_support::BuilderOptionSet {
                 fraction: o.and_then(|x| x.fraction),
@@ -268,7 +270,13 @@ impl Lowess {
                 cv_seed: None,
             },
         )
-        .map_err(|e| Error::new(Status::InvalidArg, e))
+        .map_err(|e| Error::new(Status::InvalidArg, e))?;
+
+        if let Some(cw) = o.and_then(|x| x.custom_weights.clone()) {
+            builder = builder.custom_weights(cw);
+        }
+
+        Ok(builder)
     }
 }
 

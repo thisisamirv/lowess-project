@@ -416,6 +416,76 @@ using FastLOWESS
 		end
 	end
 
-end  # main testset
+	@testset "Custom Weights" begin
 
-println("\n✓ All tests passed!")
+		@testset "uniform weights match no weights" begin
+			n = 20
+			x = collect(range(0.0, 5.0, length = n))
+			y = sin.(x)
+			weights = ones(Float64, n)
+
+			model         = Lowess(fraction = 0.4, iterations = 2)
+			result_no_w   = fit(model, x, y)
+			result_unit_w = fit(model, x, y; custom_weights = weights)
+
+			for i ∈ 1:n
+				@test isapprox(result_no_w.y[i], result_unit_w.y[i], atol = 1e-10)
+			end
+		end
+
+		@testset "zero weight reduces outlier influence" begin
+			n = 10
+			x = collect(0.0:9.0)
+			y = x .* 2.0
+			y[6] = 100.0  # outlier at index 6 (1-based)
+
+			model = Lowess(fraction = 0.5, iterations = 0)
+			result_no_w = fit(model, x, y)
+
+			weights = ones(Float64, n)
+			weights[6] = 0.0
+			result_zero_w = fit(model, x, y; custom_weights = weights)
+
+			true_val = 5.0 * 2.0  # x=5 (index 6)
+			err_no_w = abs(result_no_w.y[6] - true_val)
+			err_zero_w = abs(result_zero_w.y[6] - true_val)
+			@test err_zero_w < err_no_w
+		end
+
+		@testset "high weight pulls fit toward spike" begin
+			n = 15
+			x = collect(0.0:((n-1)*1.0))
+			y = zeros(Float64, n)
+			y[8] = 10.0  # spike at index 8 (1-based)
+
+			weights_high = ones(Float64, n)
+			weights_high[8] = 100.0
+
+			model        = Lowess(fraction = 0.6, iterations = 0)
+			result_high  = fit(model, x, y; custom_weights = weights_high)
+			result_equal = fit(model, x, y)
+
+			@test result_high.y[8] > result_equal.y[8]
+		end
+
+		@testset "wrong length raises error" begin
+			x = collect(1.0:10.0)
+			y = collect(1.0:10.0)
+			weights = ones(Float64, 7)  # wrong length
+
+			model = Lowess(fraction = 0.5)
+			@test_throws Exception fit(model, x, y; custom_weights = weights)
+		end
+
+		@testset "negative weight raises error" begin
+			x = collect(1.0:5.0)
+			y = collect(1.0:5.0)
+			weights = [1.0, -1.0, 1.0, 1.0, 1.0]
+
+			model = Lowess(fraction = 0.5)
+			@test_throws Exception fit(model, x, y; custom_weights = weights)
+		end
+
+	end  # Custom Weights testset
+
+end  # fastlowess Julia Bindings testset

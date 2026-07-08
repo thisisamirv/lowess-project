@@ -442,6 +442,7 @@ pub struct PyLowess {
     cv_method: String,
     cv_k: usize,
     parallel: bool,
+    custom_weights: Option<Vec<f64>>,
 }
 
 #[pymethods]
@@ -465,7 +466,8 @@ impl PyLowess {
         cv_fractions=None,
         cv_method="kfold",
         cv_k=5,
-        parallel=true
+        parallel=true,
+        custom_weights=None
     ))]
     #[allow(clippy::too_many_arguments)]
     fn new(
@@ -487,6 +489,7 @@ impl PyLowess {
         cv_method: &str,
         cv_k: usize,
         parallel: bool,
+        custom_weights: Option<Vec<f64>>,
     ) -> PyResult<Self> {
         let wf = binding_support::parse_weight_function(weight_function)
             .map_err(|e| PyValueError::new_err(e))?;
@@ -518,6 +521,7 @@ impl PyLowess {
             cv_method: cv_method.to_string(),
             cv_k,
             parallel,
+            custom_weights,
         })
     }
 
@@ -578,6 +582,7 @@ impl PyLowess {
                     cv_method: Some(params.cv_method),
                     cv_k: Some(params.cv_k),
                     cv_seed: None,
+                    custom_weights: params.custom_weights,
                 },
             )?;
 

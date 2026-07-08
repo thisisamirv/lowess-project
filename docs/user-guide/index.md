@@ -53,4 +53,12 @@ Comprehensive documentation for all LOWESS parameters and features.
 
     [:octicons-arrow-right-24: Cross-Validation](cross-validation.md)
 
+- :material-weight: **Custom Weights**
+
+    ---
+
+    Per-observation data quality control
+
+    [:octicons-arrow-right-24: Custom Weights](custom-weights.md)
+
 </div>

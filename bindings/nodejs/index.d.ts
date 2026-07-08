@@ -127,6 +127,8 @@ export interface SmoothOptions {
     cv_k?: number
     /** Enable parallel execution. Default: true. */
     parallel?: boolean
+    /** Per-observation case weights. Must have the same length as the input data. */
+    custom_weights?: Array<number>
 }
 
 /** Configuration options for streaming processing. */

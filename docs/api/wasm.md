@@ -90,6 +90,7 @@ const result = online.update(x, y);
 | `cv_method` | `string` | `"kfold"` | Cross-validation method ("kfold") |
 | `cv_k` | `number` | `5` | Number of CV folds |
 | `cv_fractions` | `number[]` | `null` | Manual fractions for CV grid |
+| `custom_weights` | `Float64Array` | `null` | Per-observation weights (Batch only) |
 
 ### `StreamingOptions`
 

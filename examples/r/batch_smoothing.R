@@ -128,6 +128,26 @@ main <- function() {
         r_zr$y[1], r_zr$y[length(r_zr$y)]
     ))
 
+    # Custom Weights
+    cat("\nCustom Weights Examples:\n")
+
+    cw_x <- 0:9
+    cw_y <- cw_x * 2.0
+    cw_y[6] <- 100.0  # outlier at index 6 (1-indexed)
+    cw_no_w   <- Lowess(fraction = 0.5, iterations = 0L)$fit(cw_x, cw_y)
+    cw_wts    <- rep(1.0, 10); cw_wts[6] <- 0.0
+    cw_zero_w <- Lowess(fraction = 0.5, iterations = 0L)$fit(cw_x, cw_y, custom_weights = cw_wts)
+    err_no_w   <- abs(cw_no_w$smoothed[6] - cw_x[6] * 2.0)
+    err_zero_w <- abs(cw_zero_w$smoothed[6] - cw_x[6] * 2.0)
+    cat(sprintf(" - Zero weight at outlier: error %.2f -> %.2f\n", err_no_w, err_zero_w))
+
+    sp_x <- 0:14
+    sp_y <- rep(0.0, 15); sp_y[8] <- 10.0
+    sp_eq <- Lowess(fraction = 0.6, iterations = 0L)$fit(sp_x, sp_y)
+    sp_wts <- rep(1.0, 15); sp_wts[8] <- 100.0
+    sp_hi <- Lowess(fraction = 0.6, iterations = 0L)$fit(sp_x, sp_y, custom_weights = sp_wts)
+    cat(sprintf(" - High weight at spike: fit %.4f -> %.4f\n", sp_eq$smoothed[8], sp_hi$smoothed[8]))
+
     cat("\n=== Batch Smoothing Example Complete ===\n")
 }
 

@@ -20,9 +20,12 @@ explicit Lowess(const LowessOptions &options = {})
 
 ```cpp
 LowessResult fit(const std::vector<double> &x, const std::vector<double> &y)
+LowessResult fit(const std::vector<double> &x, const std::vector<double> &y,
+                 const std::vector<double> &custom_weights)
 ```
 
 * Fits the model to the provided `x` and `y` data vectors.
+* The second overload applies `custom_weights` — non-negative per-observation weights of length `n`. Batch only.
 * Returns a `LowessResult` object containing the smoothed values and optional diagnostics.
 
 ### `fastlowess::StreamingLowess`
@@ -95,6 +98,7 @@ Expected<std::optional<double>> add_point(double x, double y)
 | `cv_method` | `std::string` | "kfold" | Cross-validation method |
 | `cv_k` | `int` | 5 | Number of CV folds |
 | `cv_fractions` | `std::vector<double>` | `{}` | Manual fractions for CV grid |
+| `custom_weights` | `std::vector<double>` | `{}` | Per-observation weights (Batch only) |
 
 ### `StreamingOptions` (inherits `LowessOptions`)
 

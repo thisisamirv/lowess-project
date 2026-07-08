@@ -169,6 +169,10 @@ pub struct TypedBuilderOptionSet {
     pub cv_method: Option<String>,
     pub cv_k: Option<usize>,
     pub cv_seed: Option<u64>,
+
+    // Per-observation case weights. When provided, multiplies each local kernel weight:
+    // `w_ij = custom_weights[j] * K(d_ij / h) * robustness_j`.
+    pub custom_weights: Option<Vec<f64>>,
 }
 
 // ============================================================================
@@ -429,6 +433,8 @@ pub fn apply_builder_options(
         cv_method: options.cv_method.map(str::to_string),
         cv_k: options.cv_k,
         cv_seed: options.cv_seed,
+        // custom_weights cannot be provided via string-based BuilderOptionSet
+        custom_weights: None,
     };
 
     apply_typed_builder_options(builder, typed)
@@ -479,6 +485,9 @@ pub fn apply_typed_builder_options(
     }
     if options.return_se {
         builder = builder.return_se();
+    }
+    if let Some(cw) = options.custom_weights {
+        builder = builder.custom_weights(cw);
     }
     if let Some(ci) = options.confidence_intervals {
         builder = builder.confidence_intervals(ci);

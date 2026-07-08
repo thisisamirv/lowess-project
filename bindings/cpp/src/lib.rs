@@ -314,13 +314,15 @@ pub unsafe extern "C" fn cpp_lowess_new(
 ///
 /// # Safety
 /// `ptr` must be a valid CppLowess pointer. `x_values` and `y_values` must be
-/// valid arrays of length `n`.
+/// valid arrays of length `n`. `custom_weights` is optional: pass null and 0 to omit.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_lowess_fit(
     ptr: *mut CppLowess,
     x_values: *const c_double,
     y_values: *const c_double,
     n: c_ulong,
+    custom_weights: *const c_double,
+    custom_weights_len: c_ulong,
 ) -> CppLowessResult {
     if ptr.is_null() {
         return error_result("Model pointer is null");
@@ -348,6 +350,13 @@ pub unsafe extern "C" fn cpp_lowess_fit(
                 Ok(b) => b,
                 Err(e) => return error_result(&e),
             };
+        }
+
+        // Apply per-observation case weights if provided
+        if !custom_weights.is_null() && custom_weights_len > 0 {
+            let cw =
+                std::slice::from_raw_parts(custom_weights, custom_weights_len as usize).to_vec();
+            builder = builder.custom_weights(cw);
         }
 
         match builder.adapter(Batch).build() {

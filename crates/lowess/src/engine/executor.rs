@@ -51,6 +51,7 @@ pub type SmoothPassFn<T> = fn(
     &mut [T],       // output (y_smooth)
     WeightFunction, // weight_function
     u8,             // zero_weight_flag
+    Option<&[T]>,   // custom_weights (per-observation user weights)
 );
 
 // Signature for custom cross-validation pass function
@@ -207,6 +208,10 @@ pub struct LowessConfig<T> {
     // Whether to delegate boundary handling (padding) to the custom_fit_pass
     #[doc(hidden)]
     pub delegate_boundary_handling: bool,
+
+    // Per-observation case weights. When provided, multiplies each local kernel weight:
+    // `w_ij = custom_weights[j] * K(d_ij / h) * robustness_j`.
+    pub custom_weights: Option<Vec<T>>,
 }
 
 impl<T: Float> Default for LowessConfig<T> {
@@ -228,6 +233,7 @@ impl<T: Float> Default for LowessConfig<T> {
             custom_smooth_pass: None,
             custom_cv_pass: None,
             custom_interval_pass: None,
+            custom_weights: None,
             custom_fit_pass: None,
             parallel: false,
             backend: None,
@@ -298,6 +304,9 @@ pub struct LowessExecutor<T: Float> {
 
     #[doc(hidden)]
     pub delegate_boundary_handling: bool,
+
+    // Per-observation case weights applied as `w_ij = custom_weights[j] * K(d_ij / h) * robustness_j`.
+    pub custom_weights: Option<Vec<T>>,
 }
 
 impl<T: Float> Default for LowessExecutor<T> {
@@ -327,6 +336,7 @@ impl<T: Float> LowessExecutor<T> {
             parallel: false,
             backend: None,
             delegate_boundary_handling: false,
+            custom_weights: None,
         }
     }
 
@@ -388,6 +398,7 @@ impl<T: Float> LowessExecutor<T> {
             parallel: self.parallel,
             backend: self.backend,
             delegate_boundary_handling: self.delegate_boundary_handling,
+            custom_weights: self.custom_weights.clone(),
         }
     }
 
@@ -502,6 +513,18 @@ impl<T: Float> LowessExecutor<T> {
         self
     }
 
+    // Set per-observation case weights.
+    pub fn custom_weights(mut self, weights: Vec<T>) -> Self {
+        self.custom_weights = Some(weights);
+        self
+    }
+
+    // Set per-observation case weights from an Option (None clears them).
+    pub fn custom_weights_opt(mut self, weights: Option<Vec<T>>) -> Self {
+        self.custom_weights = weights;
+        self
+    }
+
     // Smooth data using a `LowessConfig` payload.
     pub fn run_with_config(
         x: &[T],
@@ -511,6 +534,9 @@ impl<T: Float> LowessExecutor<T> {
     where
         T: Float + WLSSolver + Debug + Send + Sync + 'static,
     {
+        // Extract custom_weights before building executor (CV inner runs should not use them,
+        // since CV sub-indexes data and weights would have mismatched length).
+        let custom_weights = config.custom_weights.clone();
         let executor = LowessExecutor::from_config(&config);
 
         // Handle cross-validation if configured
@@ -575,13 +601,14 @@ impl<T: Float> LowessExecutor<T> {
                 .parallel(config.parallel)
                 .backend(config.backend)
                 .delegate_boundary_handling(config.delegate_boundary_handling)
+                .custom_weights_opt(custom_weights)
                 .run(x, y, None)?;
             output.cv_scores = Some(scores);
             output.used_fraction = best_frac;
             Ok(output)
         } else {
             // Direct run (no CV)
-            executor.run(x, y, None)
+            executor.custom_weights_opt(custom_weights).run(x, y, None)
         }
     }
 
@@ -641,6 +668,27 @@ impl<T: Float> LowessExecutor<T> {
         let x_ref = &x_in;
         let y_ref = &y_in;
 
+        // When boundary padding is applied the padded arrays are larger than the original data.
+        // custom_weights must be padded to the same length (using 1.0 for synthetic boundary
+        // points so they participate in the local fit without extra up- or down-weighting).
+        let padded_cw: Option<Vec<T>> = (pad_len > 0)
+            .then(|| {
+                self.custom_weights.as_ref().map(|cw| {
+                    let padded_len = x_in.len();
+                    let mut pv: Vec<T> = Vec::with_capacity(padded_len);
+                    pv.extend(core::iter::repeat(T::one()).take(pad_len));
+                    pv.extend_from_slice(cw);
+                    pv.extend(core::iter::repeat(T::one()).take(padded_len - pad_len - cw.len()));
+                    pv
+                })
+            })
+            .flatten();
+        let effective_custom_weights: Option<&[T]> = if pad_len > 0 {
+            padded_cw.as_deref()
+        } else {
+            self.custom_weights.as_deref()
+        };
+
         // Run the iteration loop
         let (
             mut smoothed,
@@ -666,6 +714,7 @@ impl<T: Float> LowessExecutor<T> {
             tolerance,
             self.custom_smooth_pass,
             self.custom_interval_pass,
+            effective_custom_weights,
             buffer,
         )?;
 
@@ -722,6 +771,7 @@ impl<T: Float> LowessExecutor<T> {
         convergence_tolerance: Option<T>,
         smooth_pass_fn: Option<SmoothPassFn<T>>,
         interval_pass_fn: Option<IntervalPassFn<T>>,
+        custom_weights: Option<&[T]>,
         buffer: Option<&mut LowessBuffer<T>>,
     ) -> Result<IterationResult<T>, LowessError>
     where
@@ -768,6 +818,7 @@ impl<T: Float> LowessExecutor<T> {
                     &mut buffers.y_smooth,
                     weight_function,
                     zero_weight_flag,
+                    custom_weights,
                 );
             } else {
                 Self::smooth_pass(
@@ -781,6 +832,7 @@ impl<T: Float> LowessExecutor<T> {
                     weight_function,
                     &mut buffers.weights,
                     zero_weight_flag,
+                    custom_weights,
                 );
             }
 
@@ -846,6 +898,7 @@ impl<T: Float> LowessExecutor<T> {
         weight_function: WeightFunction,
         weights: &mut [T],
         zero_weight_flag: u8,
+        custom_weights: Option<&[T]>,
     ) where
         T: WLSSolver,
     {
@@ -862,6 +915,7 @@ impl<T: Float> LowessExecutor<T> {
             weight_function,
             zero_weight_fallback,
             y_smooth,
+            custom_weights,
         );
 
         // Fit remaining points with interpolation
@@ -876,6 +930,7 @@ impl<T: Float> LowessExecutor<T> {
             zero_weight_fallback,
             y_smooth,
             window,
+            custom_weights,
         );
     }
 
@@ -986,6 +1041,7 @@ impl<T: Float> LowessExecutor<T> {
         weights: &mut [T],
         weight_function: WeightFunction,
         zero_weight_fallback: ZeroWeightFallback,
+        custom_weights: Option<&[T]>,
     ) -> (T, Window)
     where
         T: WLSSolver,
@@ -1004,6 +1060,7 @@ impl<T: Float> LowessExecutor<T> {
             weights,
             weight_function,
             zero_weight_fallback,
+            custom_weights,
         };
 
         (ctx.fit().unwrap_or_else(|| y[idx]), window)
@@ -1021,6 +1078,7 @@ impl<T: Float> LowessExecutor<T> {
         weight_function: WeightFunction,
         zero_weight_fallback: ZeroWeightFallback,
         y_smooth: &mut [T],
+        custom_weights: Option<&[T]>,
     ) -> Window
     where
         T: WLSSolver,
@@ -1035,6 +1093,7 @@ impl<T: Float> LowessExecutor<T> {
             weights,
             weight_function,
             zero_weight_fallback,
+            custom_weights,
         );
         y_smooth[0] = val;
         window
@@ -1054,6 +1113,7 @@ impl<T: Float> LowessExecutor<T> {
         zero_weight_fallback: ZeroWeightFallback,
         y_smooth: &mut [T],
         mut window: Window,
+        custom_weights: Option<&[T]>,
     ) where
         T: WLSSolver,
     {
@@ -1107,6 +1167,7 @@ impl<T: Float> LowessExecutor<T> {
                 weights,
                 weight_function,
                 zero_weight_fallback,
+                custom_weights,
             };
 
             y_smooth[current] = ctx.fit().unwrap_or_else(|| y[current]);
@@ -1132,6 +1193,7 @@ impl<T: Float> LowessExecutor<T> {
                 weights,
                 weight_function,
                 zero_weight_fallback,
+                custom_weights,
             };
 
             y_smooth[final_idx] = ctx.fit().unwrap_or_else(|| y[final_idx]);

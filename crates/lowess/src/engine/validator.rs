@@ -205,4 +205,27 @@ impl Validator {
         }
         Ok(())
     }
+
+    // Validate per-observation custom weights:
+    // - `weights` has the same length as the number of observations `n`
+    // - All weight values are finite and non-negative
+    pub fn validate_custom_weights<T: Float>(weights: &[T], n: usize) -> Result<(), LowessError> {
+        if weights.len() != n {
+            return Err(LowessError::InvalidInput(format!(
+                "custom_weights length ({}) must match the number of observations ({})",
+                weights.len(),
+                n
+            )));
+        }
+        for (i, &w) in weights.iter().enumerate() {
+            if !w.is_finite() || w < T::zero() {
+                return Err(LowessError::InvalidInput(format!(
+                    "custom_weights[{}] = {} is invalid: weights must be finite and non-negative",
+                    i,
+                    w.to_f64().unwrap_or(f64::NAN)
+                )));
+            }
+        }
+        Ok(())
+    }
 }

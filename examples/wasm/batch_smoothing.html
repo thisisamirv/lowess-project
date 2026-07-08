@@ -183,6 +183,26 @@
                 log(`   - Reflect:          first=${rRef.y[0].toFixed(2)}, last=${rRef.y[49].toFixed(2)}`);
                 log(`   - Zero:             first=${rZr.y[0].toFixed(2)}, last=${rZr.y[49].toFixed(2)}`);
 
+                // Custom Weights
+                log("\nCustom Weights Examples:");
+
+                const cwX = new Float64Array(10).map((_, i) => i);
+                const cwY = new Float64Array(10).map((_, i) => i * 2);
+                cwY[5] = 100.0;
+                const cwNoW = smooth(cwX, cwY, { fraction: 0.5, iterations: 0 });
+                const cwWeights = new Float64Array(10).fill(1.0); cwWeights[5] = 0.0;
+                const cwZeroW = smooth(cwX, cwY, { fraction: 0.5, iterations: 0, custom_weights: cwWeights });
+                const errNoW = Math.abs(cwNoW.smoothed[5] - 10.0);
+                const errZeroW = Math.abs(cwZeroW.smoothed[5] - 10.0);
+                log(` - Zero weight at outlier: error ${errNoW.toFixed(2)} -> ${errZeroW.toFixed(2)}`);
+
+                const spX = new Float64Array(15).map((_, i) => i);
+                const spY = new Float64Array(15).fill(0.0); spY[7] = 10.0;
+                const spEq = smooth(spX, spY, { fraction: 0.6, iterations: 0 });
+                const spW = new Float64Array(15).fill(1.0); spW[7] = 100.0;
+                const spHi = smooth(spX, spY, { fraction: 0.6, iterations: 0, custom_weights: spW });
+                log(` - High weight at spike: fit ${spEq.smoothed[7].toFixed(4)} -> ${spHi.smoothed[7].toFixed(4)}`);
+
                 log("\n=== Batch Smoothing Example Complete ===");
 
             } catch (e) {

@@ -93,6 +93,7 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `auto_converge(T)` | `T: Float` | `NaN` | Auto-convergence tolerance |
 | `confidence_intervals(T)` | `T: Float` | `NaN` | Confidence level (e.g., 0.95) |
 | `prediction_intervals(T)` | `T: Float` | `NaN` | Prediction level (e.g., 0.95) |
+| `custom_weights(Vec<T>)` | `Vec<T: Float>` | `None` | Per-observation weights (Batch only) |
 | --- | --- | --- | --- |
 | --- | --- | --- | --- |
 | --- | --- | --- | --- |

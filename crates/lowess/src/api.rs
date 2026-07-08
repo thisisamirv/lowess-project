@@ -167,6 +167,10 @@ pub struct LowessBuilder<T, Mode = BatchMode> {
     #[doc(hidden)]
     pub parse_errors: Vec<LowessError>,
 
+    // Per-observation case weights. When provided, multiplies each local kernel weight:
+    // `w_ij = custom_weights[j] * K(d_ij / h) * robustness_j`.
+    pub custom_weights: Option<Vec<T>>,
+
     // Phantom mode marker (zero-sized; determines which build() variant to use).
     #[doc(hidden)]
     pub _mode: PhantomData<Mode>,
@@ -222,6 +226,7 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
             parallel: None,
             duplicate_param: None,
             parse_errors: Vec::new(),
+            custom_weights: None,
             _mode: PhantomData,
         }
     }
@@ -456,6 +461,17 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
         self
     }
 
+    // Set per-observation case weights applied as `w_ij = custom_weights[j] * K(d_ij / h)`.
+    // Higher values increase the influence of the corresponding observation.
+    // Must have the same length as the input data and all values must be finite and non-negative.
+    pub fn custom_weights(mut self, weights: Vec<T>) -> Self {
+        if self.custom_weights.is_some() {
+            self.duplicate_param = Some("custom_weights");
+        }
+        self.custom_weights = Some(weights);
+        self
+    }
+
     // Include statistical diagnostics (Metric, R², etc.) in output.
     pub fn return_diagnostics(mut self) -> Self {
         self.return_diagnostics = Some(true);
@@ -624,6 +640,10 @@ impl<T: Float> LowessAdapter<T> for Batch {
         result.duplicate_param = builder.duplicate_param;
         if result.deferred_error.is_none() && !builder.parse_errors.is_empty() {
             result.deferred_error = Some(LowessError::ParseErrors(builder.parse_errors));
+        }
+
+        if let Some(cw) = builder.custom_weights {
+            result.custom_weights = Some(cw);
         }
 
         result

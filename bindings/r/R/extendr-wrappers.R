@@ -23,7 +23,7 @@ RLowess$new <- function(
     )
 }
 
-RLowess$fit <- function(x, y) .Call(wrap__RLowess__fit, self, x, y)
+RLowess$fit <- function(x, y, custom_weights = NULL) .Call(wrap__RLowess__fit, self, x, y, custom_weights)
 
 #' @export
 `$.RLowess` <- function(self, name) {

@@ -136,6 +136,7 @@ class Lowess:
         cv_method: str = "kfold",
         cv_k: int = 5,
         parallel: bool = True,
+        custom_weights: Sequence[float] | None = None,
     ) -> None: ...
     def fit(self, x: ArrayLike, y: ArrayLike) -> LowessResult: ...
 

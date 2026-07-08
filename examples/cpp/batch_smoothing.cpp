@@ -43,6 +43,15 @@ constexpr size_t k_linear_point_count = 50;
 constexpr double k_linear_slope = 2.0;
 constexpr double k_linear_intercept = 1.0;
 constexpr double k_boundary_fraction = 0.6;
+constexpr std::size_t k_cw_outlier_n = 10U;
+constexpr std::size_t k_cw_outlier_idx = 5U;
+constexpr std::size_t k_cw_spike_n = 15U;
+constexpr std::size_t k_cw_spike_idx = 7U;
+constexpr double k_cw_outlier_value = 100.0;
+constexpr double k_cw_outlier_fraction = 0.5;
+constexpr double k_cw_spike_value = 10.0;
+constexpr double k_cw_spike_fraction = 0.6;
+constexpr double k_cw_high_weight = 100.0;
 
 struct Data {
   std::vector<double> x;
@@ -209,6 +218,61 @@ int main() {
               << ", last=" << r_ref.y_value(k_linear_point_count - 1) << '\n';
     std::cout << " - Zero:             first=" << r_zr.y_value(0)
               << ", last=" << r_zr.y_value(k_linear_point_count - 1) << '\n';
+
+    // Custom Weights
+    std::cout << "\nCustom Weights Examples:\n";
+    {
+      // Zero weight suppresses outlier
+      std::vector<double> cw_x(k_cw_outlier_n);
+      std::vector<double> cw_y(k_cw_outlier_n);
+      for (std::size_t i = 0; i < k_cw_outlier_n; ++i) {
+        cw_x[i] = static_cast<double>(i);
+        cw_y[i] = cw_x[i] * k_linear_slope;
+      }
+      cw_y[k_cw_outlier_idx] = k_cw_outlier_value;
+
+      fastlowess::LowessOptions cw_opts;
+      cw_opts.fraction = k_cw_outlier_fraction;
+      cw_opts.iterations = 0;
+      fastlowess::Lowess cw_model(cw_opts);
+
+      auto r_no_w = cw_model.fit(cw_x, cw_y).value();
+      std::vector<double> cw_weights(k_cw_outlier_n, 1.0);
+      cw_weights[k_cw_outlier_idx] = 0.0;
+      auto r_zero_w = cw_model.fit(cw_x, cw_y, cw_weights).value();
+
+      const double true_val = cw_x[k_cw_outlier_idx] * k_linear_slope;
+      const double err_no_w =
+          std::abs(r_no_w.y_value(k_cw_outlier_idx) - true_val);
+      const double err_zero_w =
+          std::abs(r_zero_w.y_value(k_cw_outlier_idx) - true_val);
+      std::cout << " - Zero weight at outlier: error " << std::fixed
+                << std::setprecision(2) << err_no_w << " -> " << err_zero_w
+                << "\n";
+    }
+    {
+      // High weight emphasizes spike
+      std::vector<double> sp_x(k_cw_spike_n);
+      std::vector<double> sp_y(k_cw_spike_n, 0.0);
+      for (std::size_t i = 0; i < k_cw_spike_n; ++i) {
+        sp_x[i] = static_cast<double>(i);
+      }
+      sp_y[k_cw_spike_idx] = k_cw_spike_value;
+
+      fastlowess::LowessOptions sp_opts;
+      sp_opts.fraction = k_cw_spike_fraction;
+      sp_opts.iterations = 0;
+      fastlowess::Lowess sp_model(sp_opts);
+
+      auto r_eq = sp_model.fit(sp_x, sp_y).value();
+      std::vector<double> sp_w(k_cw_spike_n, 1.0);
+      sp_w[k_cw_spike_idx] = k_cw_high_weight;
+      auto r_hi = sp_model.fit(sp_x, sp_y, sp_w).value();
+
+      std::cout << " - High weight at spike: fit " << std::setprecision(4)
+                << r_eq.y_value(k_cw_spike_idx) << " -> "
+                << r_hi.y_value(k_cw_spike_idx) << "\n";
+    }
 
     std::cout << "\n=== Batch Smoothing Example Complete ===\n";
 

@@ -53,6 +53,8 @@ export interface SmoothOptions {
     cv_method?: string;
     /** Number of folds for k-fold CV. Default: 5. */
     cv_k?: number;
+    /** Per-observation case weights. Must have the same length as input data. */
+    custom_weights?: number[];
 }
 
 /** Configuration options for streaming LOWESS. */
@@ -126,6 +128,7 @@ pub struct SmoothOptions {
     pub cv_fractions: Option<Vec<f64>>,
     pub cv_method: Option<String>,
     pub cv_k: Option<u32>,
+    pub custom_weights: Option<Vec<f64>>,
 }
 
 #[derive(Deserialize)]
@@ -278,7 +281,7 @@ pub fn smooth(
         None
     };
     let o = opts.as_ref();
-    let builder = binding_support::apply_builder_options(
+    let mut builder = binding_support::apply_builder_options(
         LowessBuilder::new(),
         binding_support::BuilderOptionSet {
             fraction: o.and_then(|x| x.fraction),
@@ -311,6 +314,10 @@ pub fn smooth(
         },
     )
     .map_err(|e| JsValue::from_str(&e))?;
+
+    if let Some(cw) = o.and_then(|x| x.custom_weights.clone()) {
+        builder = builder.custom_weights(cw);
+    }
 
     let x_vec = x.to_vec();
     let y_vec = y.to_vec();

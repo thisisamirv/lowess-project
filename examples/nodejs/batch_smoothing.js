@@ -124,6 +124,26 @@ function main() {
     console.log(` - Reflect:          first=${rRef.y[0].toFixed(2)}, last=${rRef.y[49].toFixed(2)}`);
     console.log(` - Zero:             first=${rZr.y[0].toFixed(2)}, last=${rZr.y[49].toFixed(2)}`);
 
+    // Custom Weights
+    console.log("\nCustom Weights Examples:");
+
+    const cwX = new Float64Array(10).map((_, i) => i);
+    const cwY = new Float64Array(10).map((_, i) => i * 2);
+    cwY[5] = 100.0;
+    const cwNoW = new fastlowess.Lowess({ fraction: 0.5, iterations: 0 }).fit(cwX, cwY);
+    const cwWeights = new Float64Array(10).fill(1.0); cwWeights[5] = 0.0;
+    const cwZeroW = new fastlowess.Lowess({ fraction: 0.5, iterations: 0, custom_weights: cwWeights }).fit(cwX, cwY);
+    const errNoW = Math.abs(cwNoW.smoothed[5] - 10.0);
+    const errZeroW = Math.abs(cwZeroW.smoothed[5] - 10.0);
+    console.log(` - Zero weight at outlier: error ${errNoW.toFixed(2)} -> ${errZeroW.toFixed(2)}`);
+
+    const spX = new Float64Array(15).map((_, i) => i);
+    const spY = new Float64Array(15).fill(0.0); spY[7] = 10.0;
+    const spEq = new fastlowess.Lowess({ fraction: 0.6, iterations: 0 }).fit(spX, spY);
+    const spW = new Float64Array(15).fill(1.0); spW[7] = 100.0;
+    const spHi = new fastlowess.Lowess({ fraction: 0.6, iterations: 0, custom_weights: spW }).fit(spX, spY);
+    console.log(` - High weight at spike: fit ${spEq.smoothed[7].toFixed(4)} -> ${spHi.smoothed[7].toFixed(4)}`);
+
     console.log("\n=== Batch Smoothing Example Complete ===");
 }
 

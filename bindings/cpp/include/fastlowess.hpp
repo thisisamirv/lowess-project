@@ -124,6 +124,10 @@ struct LowessOptions {
   std::vector<double> cv_fractions;
   std::string cv_method = "kfold";
   int cv_k = detail::k_default_cv_k;
+
+  /// Per-observation case weights. When non-empty, must have the same length
+  /// as the data passed to fit(). All values must be finite and non-negative.
+  std::vector<double> custom_weights;
 };
 
 /**
@@ -369,7 +373,8 @@ public:
   }
 
   Expected<LowessResult> fit(const std::vector<double> &x_values,
-                             const std::vector<double> &y_values) {
+                             const std::vector<double> &y_values,
+                             const std::vector<double> &custom_weights = {}) {
     if (x_values.size() != y_values.size()) {
       return Expected<LowessResult>::make_error(
           "x and y must have the same length");
@@ -380,7 +385,9 @@ public:
     }
 
     auto result = cpp_lowess_fit(ptr_, x_values.data(), y_values.data(),
-                                 static_cast<unsigned long>(x_values.size()));
+                                 static_cast<unsigned long>(x_values.size()),
+                                 custom_weights.empty() ? nullptr : custom_weights.data(),
+                                 static_cast<unsigned long>(custom_weights.size()));
 
     if (result.error != nullptr) {
       const std::string error_msg(result.error);

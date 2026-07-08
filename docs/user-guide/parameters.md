@@ -1,4 +1,4 @@
-﻿<!-- markdownlint-disable MD024 -->
+﻿<!-- markdownlint-disable MD024 MD033 -->
 # Parameters
 
 Complete reference for all LOWESS configuration options.
@@ -24,6 +24,7 @@ Complete reference for all LOWESS configuration options.
 | **confidence_intervals** | NULL | (0, 1) | CI level | Batch |
 | **prediction_intervals** | NULL | (0, 1) | PI level | Batch |
 | **cv_method** | NULL | method | Auto-select fraction | Batch |
+| **custom_weights** | NULL | positive | Per-observation weights | Batch |
 | **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
 | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
 | **merge_strategy** | `"average"` | 4 options | Merge overlaps | Streaming |
@@ -50,6 +51,7 @@ Complete reference for all LOWESS configuration options.
 | **confidence_intervals** | None | (0, 1) | CI level | Batch |
 | **prediction_intervals** | None | (0, 1) | PI level | Batch |
 | **cv_method** | None | method | Auto-select fraction | Batch |
+| **custom_weights** | None | positive | Per-observation weights | Batch |
 | **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
 | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
 | **merge_strategy** | `"average"` | 4 options | Merge overlaps | Streaming |
@@ -76,6 +78,7 @@ Complete reference for all LOWESS configuration options.
 | **confidence_intervals** | None | (0, 1) | CI level | Batch |
 | **prediction_intervals** | None | (0, 1) | PI level | Batch |
 | **cross_validate** | None | method | Auto-select fraction | Batch |
+| **custom_weights** | None | positive | Per-observation weights | Batch |
 | **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
 | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
 | **merge_strategy** | `Average` | 4 options | Merge overlaps | Streaming |
@@ -102,6 +105,7 @@ Complete reference for all LOWESS configuration options.
 | **confidence_intervals** | `nothing` | (0, 1) | CI level | Batch |
 | **prediction_intervals** | `nothing` | (0, 1) | PI level | Batch |
 | **cv_method** | `nothing` | method | Auto-select fraction | Batch |
+| **custom_weights** | `nothing` | positive | Per-observation weights | Batch |
 | **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
 | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
 | **merge_strategy** | `"average"` | 4 options | Merge overlaps | Streaming |
@@ -127,6 +131,7 @@ Complete reference for all LOWESS configuration options.
 | **return_diagnostics** | false | bool | Include metrics | Batch, Streaming |
 | **confidence_intervals** | null | (0, 1) | CI level | Batch |
 | **prediction_intervals** | null | (0, 1) | PI level | Batch |
+| **custom_weights** | null | positive | Per-observation weights | Batch |
 | **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
 | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
 | **merge_strategy** | `"average"` | 4 options | Merge overlaps | Streaming |
@@ -152,6 +157,7 @@ Complete reference for all LOWESS configuration options.
 | **return_diagnostics** | false | bool | Include metrics | Batch, Streaming |
 | **confidence_intervals** | null | (0, 1) | CI level | Batch |
 | **prediction_intervals** | null | (0, 1) | PI level | Batch |
+| **custom_weights** | null | positive | Per-observation weights | Batch |
 | **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
 | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
 | **merge_strategy** | `"average"` | 4 options | Merge overlaps | Streaming |
@@ -736,6 +742,82 @@ Enable early stopping when robustness weights stabilize.
 === "C++"
     ```cpp
     auto result = fastlowess::smooth(x, y, { .iterations = 20, .auto_converge = 1e-6 });
+    ```
+
+---
+
+### custom_weights
+
+Per-observation weights applied before distance and robustness weighting. Only
+available in the **Batch** adapter.
+
+!!! note "Batch only"
+    `custom_weights` is silently ignored in Streaming and Online adapters.
+
+See [Custom Weights](custom-weights.md) for a full discussion.
+
+=== "R"
+    ```r
+    weights <- rep(1.0, length(x))
+    weights[6] <- 0.0          # exclude index 6
+
+    result <- Lowess(fraction = 0.5)$fit(x, y, custom_weights = weights)
+    ```
+
+=== "Python"
+    ```python
+    import numpy as np
+
+    weights = np.ones(len(x))
+    weights[5] = 0.0           # exclude index 5
+
+    result = Lowess(fraction=0.5, custom_weights=weights.tolist()).fit(x, y)
+    ```
+
+=== "Rust"
+    ```rust
+    let mut weights = vec![1.0_f64; x.len()];
+    weights[5] = 0.0; // exclude index 5
+
+    let model = Lowess::new()
+        .fraction(0.5)
+        .custom_weights(weights)
+        .adapter(Batch)
+        .build()?;
+    ```
+
+=== "Julia"
+    ```julia
+    weights = ones(length(x))
+    weights[6] = 0.0           # exclude index 6 (1-indexed)
+
+    result = fit(Lowess(fraction = 0.5), x, y; custom_weights = weights)
+    ```
+
+=== "Node.js"
+    ```javascript
+    const weights = new Float64Array(x.length).fill(1.0);
+    weights[5] = 0.0; // exclude index 5
+
+    const result = new fastlowess.Lowess({
+        fraction: 0.5, custom_weights: weights
+    }).fit(x, y);
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const weights = new Float64Array(x.length).fill(1.0);
+    weights[5] = 0.0; // exclude index 5
+
+    const result = smooth(x, y, { fraction: 0.5, custom_weights: weights });
+    ```
+
+=== "C++"
+    ```cpp
+    std::vector<double> weights(x.size(), 1.0);
+    weights[5] = 0.0; // exclude index 5
+
+    auto result = fastlowess::Lowess(opts).fit(x, y, weights).value();
     ```
 
 ---

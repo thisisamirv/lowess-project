@@ -213,3 +213,80 @@ fn test_error_handling() {
         _ => panic!("Expected MismatchedInputs error"),
     }
 }
+
+// ============================================================================
+// Custom Weights Tests
+// ============================================================================
+
+/// Sequential and parallel runs with identical custom_weights produce the same result.
+#[test]
+fn test_custom_weights_parallel_matches_sequential() {
+    let x: Vec<f64> = (0..30).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|v| v * 0.5 + (v * 0.3).sin()).collect();
+    let weights: Vec<f64> = (0..30).map(|i| 1.0 + (i % 3) as f64).collect();
+
+    let result_seq = Lowess::new()
+        .fraction(0.4)
+        .iterations(2)
+        .custom_weights(weights.clone())
+        .parallel(false)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .expect("sequential fit with custom_weights should succeed");
+
+    let result_par = Lowess::new()
+        .fraction(0.4)
+        .iterations(2)
+        .custom_weights(weights)
+        .parallel(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .expect("parallel fit with custom_weights should succeed");
+
+    assert_eq!(result_seq.y.len(), result_par.y.len());
+    for (s, p) in result_seq.y.iter().zip(result_par.y.iter()) {
+        assert_abs_diff_eq!(s, p, epsilon = 1e-10);
+    }
+}
+
+/// Zeroing an outlier's weight reduces its influence under parallel execution.
+#[test]
+fn test_custom_weights_zero_weight_parallel() {
+    let x: Vec<f64> = (0..20).map(|i| i as f64).collect();
+    let mut y: Vec<f64> = x.iter().map(|v| v * 2.0).collect();
+    y[10] = 200.0; // outlier
+
+    let mut weights = vec![1.0_f64; 20];
+    weights[10] = 0.0;
+
+    let result_no_w = Lowess::new()
+        .fraction(0.5)
+        .iterations(0)
+        .parallel(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    let result_zero_w = Lowess::new()
+        .fraction(0.5)
+        .iterations(0)
+        .custom_weights(weights)
+        .parallel(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    let true_val = 10.0 * 2.0;
+    let err_no_w = (result_no_w.y[10] - true_val).abs();
+    let err_zero_w = (result_zero_w.y[10] - true_val).abs();
+
+    assert!(
+        err_zero_w < err_no_w,
+        "zeroing outlier weight (parallel) should reduce error at that point \
+         (err_no_weights={err_no_w:.2}, err_zero_weight={err_zero_w:.2})"
+    );
+}

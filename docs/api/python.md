@@ -95,6 +95,7 @@ smoothed = online.add_point(x, y)
 | `cv_method` | `str` | `"kfold"` | Cross-validation method ("kfold") |
 | `cv_k` | `int` | `5` | Number of CV folds |
 | `cv_fractions` | `list[float]` | `None` | Manual fractions for CV grid |
+| `custom_weights` | `list[float]` | `None` | Per-observation weights (Batch only) |
 
 ### `StreamingOptions` (inherits `LowessOptions`)
 

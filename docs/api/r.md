@@ -19,12 +19,12 @@ model <- Lowess(...)
 **Methods:**
 
 ```r
-result <- model$fit(x, y)
+result <- model$fit(x, y, custom_weights = NULL)
 ```
 
 * Fits the model to the provided `x` and `y` numeric vectors.
-* Fits the model to the provided `x` and `y` numeric vectors.
 * Returns a `LowessResult` S3 object containing the smoothed values and optional diagnostics.
+* `custom_weights`: Optional numeric vector of per-observation weights. All values must be ≥ 0 and length must match `x`. Batch only.
 * `print(model)`: Displays the model configuration.
 
 ### `StreamingLowess`
@@ -97,6 +97,7 @@ smoothed <- online$add_point(x, y)
 | `cv_method` | `character` | `"kfold"` | Cross-validation method ("kfold") |
 | `cv_k` | `integer` | `5` | Number of CV folds |
 | `cv_fractions` | `numeric` | `NULL` | Manual fractions for CV grid |
+| `custom_weights` | `numeric` | `NULL` | Per-observation weights (Batch only) |
 
 ### `StreamingOptions` (inherits `LowessOptions`)
 

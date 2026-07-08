@@ -31,6 +31,7 @@ fn main() -> Result<(), LowessError> {
     example_6_different_kernels()?;
     example_7_robustness_methods()?;
     example_8_benchmark()?;
+    example_9_custom_weights()?;
 
     Ok(())
 }
@@ -435,6 +436,75 @@ fn example_8_benchmark() -> Result<(), LowessError> {
     println!("Processed {} points in {:?}", n, duration);
     println!("Execution mode: Sequential Batch");
     println!("Result summary:\n{}", result);
+
+    println!();
+    Ok(())
+}
+
+#[cfg(feature = "std")]
+/// Example 9: Custom Weights
+///
+/// Per-point weights let you encode data-quality knowledge directly into
+/// the fit — e.g., down-weighting unreliable sensors or masking bad values.
+fn example_9_custom_weights() -> Result<(), LowessError> {
+    println!("Example 9: Custom Weights");
+    println!("{}", "-".repeat(80));
+
+    // --- 9a: Zero weight suppresses a known outlier ---
+    let x: Vec<f64> = (0..10).map(|i| i as f64).collect();
+    let mut y: Vec<f64> = x.iter().map(|v| v * 2.0).collect();
+    y[5] = 100.0; // large outlier at index 5
+
+    let result_no_w = Lowess::new()
+        .fraction(0.5)
+        .iterations(0)
+        .adapter(Batch)
+        .build()?
+        .fit(&x, &y)?;
+
+    let mut weights = vec![1.0_f64; x.len()];
+    weights[5] = 0.0;
+
+    let result_zero_w = Lowess::new()
+        .fraction(0.5)
+        .iterations(0)
+        .custom_weights(weights)
+        .adapter(Batch)
+        .build()?
+        .fit(&x, &y)?;
+
+    let true_val = 5.0 * 2.0;
+    let err_no_w = (result_no_w.y[5] - true_val).abs();
+    let err_zero_w = (result_zero_w.y[5] - true_val).abs();
+    println!("  Zero weight at outlier (x=5): error {err_no_w:.2} -> {err_zero_w:.2}");
+
+    // --- 9b: High weight emphasizes an important point ---
+    let mut y2 = vec![0.0_f64; 15];
+    y2[7] = 10.0;
+    let x2: Vec<f64> = (0..15).map(|i| i as f64).collect();
+
+    let fit_equal = Lowess::new()
+        .fraction(0.6)
+        .iterations(0)
+        .adapter(Batch)
+        .build()?
+        .fit(&x2, &y2)?;
+
+    let mut weights2 = vec![1.0_f64; x2.len()];
+    weights2[7] = 100.0;
+
+    let fit_high = Lowess::new()
+        .fraction(0.6)
+        .iterations(0)
+        .custom_weights(weights2)
+        .adapter(Batch)
+        .build()?
+        .fit(&x2, &y2)?;
+
+    println!(
+        "  High weight at spike (x=7): fit {:.4} -> {:.4}",
+        fit_equal.y[7], fit_high.y[7]
+    );
 
     println!();
     Ok(())

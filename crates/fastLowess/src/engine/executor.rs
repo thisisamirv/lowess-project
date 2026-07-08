@@ -38,6 +38,7 @@ pub fn smooth_pass_parallel<T>(
     y_smooth: &mut [T],
     weight_function: WeightFunction,
     zero_weight_flag: u8,
+    custom_weights: Option<&[T]>,
 ) where
     T: Float + Send + Sync + WLSSolver,
 {
@@ -64,6 +65,7 @@ pub fn smooth_pass_parallel<T>(
                 y_smooth,
                 weight_function,
                 zero_weight_fallback,
+                custom_weights,
             );
             return;
         }
@@ -93,6 +95,7 @@ pub fn smooth_pass_parallel<T>(
                         weights,
                         weight_function,
                         zero_weight_fallback,
+                        custom_weights,
                     };
 
                     (i, ctx.fit().unwrap_or(y[i]))
@@ -159,6 +162,7 @@ pub fn smooth_pass_parallel<T>(
                     weights: &mut weights,
                     weight_function,
                     zero_weight_fallback,
+                    custom_weights,
                 };
 
                 y_smooth[n - 1] = ctx.fit().unwrap_or(y[n - 1]);
@@ -185,6 +189,7 @@ pub fn smooth_pass_parallel<T>(
             y_smooth,
             weight_function,
             zero_weight_fallback,
+            custom_weights,
         );
     }
 }
@@ -387,6 +392,7 @@ fn fit_all_points_parallel<T>(
     y_smooth: &mut [T],
     weight_function: WeightFunction,
     zero_weight_fallback: ZeroWeightFallback,
+    custom_weights: Option<&[T]>,
 ) where
     T: Float + Send + Sync + WLSSolver,
 {
@@ -412,6 +418,7 @@ fn fit_all_points_parallel<T>(
             y_smooth,
             weight_function,
             zero_weight_fallback,
+            custom_weights,
         );
     } else {
         // Standard parallel processing for smaller datasets
@@ -424,6 +431,7 @@ fn fit_all_points_parallel<T>(
             y_smooth,
             weight_function,
             zero_weight_fallback,
+            custom_weights,
         );
     }
 }
@@ -440,6 +448,7 @@ fn fit_all_points_standard<T>(
     y_smooth: &mut [T],
     weight_function: WeightFunction,
     zero_weight_fallback: ZeroWeightFallback,
+    custom_weights: Option<&[T]>,
 ) where
     T: Float + Send + Sync + WLSSolver,
 {
@@ -470,6 +479,7 @@ fn fit_all_points_standard<T>(
                     weights,
                     weight_function,
                     zero_weight_fallback,
+                    custom_weights,
                 };
 
                 *smoothed_val = ctx.fit().unwrap_or(y[i]);
@@ -489,6 +499,7 @@ fn fit_all_points_tiled<T>(
     y_smooth: &mut [T],
     weight_function: WeightFunction,
     zero_weight_fallback: ZeroWeightFallback,
+    custom_weights: Option<&[T]>,
 ) where
     T: Float + Send + Sync + WLSSolver,
 {
@@ -526,6 +537,7 @@ fn fit_all_points_tiled<T>(
                     weights,
                     weight_function,
                     zero_weight_fallback,
+                    custom_weights,
                 };
 
                 *smoothed_val = ctx.fit().unwrap_or(y[i]);

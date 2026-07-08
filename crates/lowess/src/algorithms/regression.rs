@@ -552,6 +552,10 @@ pub struct RegressionContext<'a, T: Float> {
 
     // Zero-weight fallback policy
     pub zero_weight_fallback: ZeroWeightFallback,
+
+    // Optional per-observation custom weights applied as `w_ij = custom_weights[j] * K(d_ij / h)`.
+    // When provided, multiplies each kernel weight by the corresponding observation weight.
+    pub custom_weights: Option<&'a [T]>,
 }
 
 impl<'a, T: Float + WLSSolver> RegressionContext<'a, T> {
@@ -571,10 +575,15 @@ impl<'a, T: Float + WLSSolver> RegressionContext<'a, T> {
             let mut sum_wy = T::zero();
             let mut j = self.window.left;
             while j <= self.window.right {
-                let w = if self.use_robustness {
+                let w_base = if self.use_robustness {
                     self.robustness_weights[j]
                 } else {
                     T::one()
+                };
+                let w = if let Some(cw) = self.custom_weights {
+                    w_base * cw[j]
+                } else {
+                    w_base
                 };
                 sum_w = sum_w + w;
                 sum_wy = sum_wy + w * self.y[j];
@@ -613,14 +622,23 @@ impl<'a, T: Float + WLSSolver> RegressionContext<'a, T> {
             self.weights,
         );
 
-        if self.use_robustness {
+        if self.use_robustness || self.custom_weights.is_some() {
             weight_sum = T::zero();
             let mut j = self.window.left;
             while j <= rightmost_idx {
                 let w_k = self.weights[j];
                 if w_k > T::zero() {
-                    let w_robust = self.robustness_weights[j];
-                    let w_final = w_k * w_robust;
+                    let w_robust = if self.use_robustness {
+                        self.robustness_weights[j]
+                    } else {
+                        T::one()
+                    };
+                    let w_custom = if let Some(cw) = self.custom_weights {
+                        cw[j]
+                    } else {
+                        T::one()
+                    };
+                    let w_final = w_k * w_robust * w_custom;
                     self.weights[j] = w_final;
                     weight_sum = weight_sum + w_final;
                 }

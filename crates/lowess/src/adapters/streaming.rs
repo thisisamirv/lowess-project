@@ -287,6 +287,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
             parallel: self.config.parallel.unwrap_or(false),
             backend: self.config.backend,
             delegate_boundary_handling: false,
+            custom_weights: None,
         };
         // Execute LOWESS on combined data
         // Use pre-allocated work_buffer to minimize allocations

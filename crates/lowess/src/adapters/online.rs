@@ -317,6 +317,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
                     &mut self.buffer.weights,
                     self.config.weight_function,
                     self.config.zero_weight_fallback,
+                    None, // custom_weights not used in online incremental mode
                 );
 
                 (smoothed_val, None, Some(T::one()), None)
@@ -347,6 +348,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
                     parallel: self.config.parallel.unwrap_or(false),
                     backend: self.config.backend,
                     delegate_boundary_handling: false,
+                    custom_weights: None,
                 };
 
                 let result = LowessExecutor::run_with_config(x_vec, y_vec, config.clone())?;

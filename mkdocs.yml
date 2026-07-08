@@ -135,6 +135,7 @@ nav:
       - Robustness: user-guide/robustness.md
       - Intervals: user-guide/intervals.md
       - Cross-Validation: user-guide/cross-validation.md
+      - Custom Weights: user-guide/custom-weights.md
   - API Reference:
       - api/index.md
       - R: api/r.md

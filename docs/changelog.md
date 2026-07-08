@@ -14,8 +14,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added `iterations_used: Option<usize>` field to `OnlineOutput<T>`, reporting the number of robustness iterations performed when `UpdateMode::Full` is active. Returns `Some(0)` for the degenerate two-point linear fit and `None` when `UpdateMode::Incremental` is used.
 - Added `ParseErrors(Vec<LowessError>)` variant to `LowessError`, which collects all string-parse failures that accumulate in the builder and reports them together when `build()` is called.
-- Added `"take_first"` and `"take_last"` as accepted string aliases for `MergeStrategy::TakeFirst` and `MergeStrategy::TakeLast` (alongside the existing `"takefirst"` and `"takelast"`), aligning string-parse behaviour with the `loess-rs` crate.
+- Added `"take_first"` and `"take_last"` as accepted string aliases for `MergeStrategy::TakeFirst` and `MergeStrategy::TakeLast`.
 - Added `"resmooth"` as an accepted string alias for `UpdateMode::Full` and `"single"` as an alias for `UpdateMode::Incremental`, aligning string-parse behaviour with the `loess-rs` crate.
+- Added `custom_weights(Vec<T>)` builder method on `LowessBuilder` (Batch adapter only). Accepts a vector of non-negative per-observation weights that are multiplied into the distance and robustness weights before each local regression, allowing known-bad points to be suppressed (`0.0`) or high-quality measurements to be emphasised.
+
+**Python:**
+
+- Added `custom_weights` parameter to the `Lowess` constructor. Accepts a `list[float]` of non-negative per-observation weights. Batch only.
+
+**R:**
+
+- Added `custom_weights` parameter to `Lowess$fit()`. Accepts a numeric vector of non-negative per-observation weights. Batch only.
+
+**Julia:**
+
+- Added `custom_weights` keyword argument to `fit(model, x, y; custom_weights)`. Accepts a `Vector{Float64}` of non-negative per-observation weights. Batch only.
+
+**Node.js:**
+
+- Added `custom_weights` field to `LowessOptions`. Accepts a `Float64Array` of non-negative per-observation weights. Batch only.
+
+**WebAssembly:**
+
+- Added `custom_weights` field to `LowessOptions` (passed in the options object to `smooth()`). Accepts a `Float64Array` of non-negative per-observation weights. Batch only.
+
+**C++:**
+
+- Added `custom_weights` field to `LowessOptions` and a second overload of `Lowess::fit()` that accepts a `const std::vector<double>& custom_weights` argument. Values must be non-negative and length must match the input data. Batch only.
 
 ### Changed
 

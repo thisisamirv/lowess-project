@@ -437,24 +437,35 @@ mutable struct Lowess
 end
 
 """
-	fit(l::Lowess, x, y) -> LowessResult
+	fit(l::Lowess, x, y; custom_weights=nothing) -> LowessResult
 
 Fit the LOWESS model to data.
+
+# Arguments
+- `custom_weights::Union{Vector{Float64}, Nothing} = nothing`: Per-observation
+  case weights. Must have the same length as `x` and `y`. All values must be
+  finite and non-negative. Pass `nothing` (default) to disable.
 """
-function fit(l::Lowess, x::Vector{Float64}, y::Vector{Float64})
+function fit(l::Lowess, x::Vector{Float64}, y::Vector{Float64};
+		custom_weights::Union{Vector{Float64}, Nothing} = nothing)
 	n = length(x)
 	if n != length(y)
 		throw(ArgumentError("x and y must have the same length"))
 	end
 
+	cw_ptr = isnothing(custom_weights) ? C_NULL : pointer(custom_weights)
+	cw_len = isnothing(custom_weights) ? Culong(0) : Culong(length(custom_weights))
+
 	c_result = ccall(
 		(:jl_lowess_fit, current_library()),
 		CJlLowessResult,
-		(Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Culong),
+		(Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Culong, Ptr{Cdouble}, Culong),
 		l.handle,
 		x,
 		y,
 		Culong(n),
+		cw_ptr,
+		cw_len,
 	)
 
 	return convert_result(c_result)

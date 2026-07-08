@@ -320,12 +320,15 @@ pub unsafe extern "C" fn jl_lowess_new(
 /// # Safety
 /// config_ptr must be a valid pointer returned by jl_lowess_new.
 /// x and y must be valid arrays of length n.
+/// custom_weights is optional: pass null and 0 to omit.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn jl_lowess_fit(
     config_ptr: *const JlLowessConfig,
     x: *const c_double,
     y: *const c_double,
     n: c_ulong,
+    custom_weights: *const c_double,
+    custom_weights_len: c_ulong,
 ) -> JlLowessResult {
     let result = catch_unwind(|| {
         if config_ptr.is_null() {
@@ -387,6 +390,13 @@ pub unsafe extern "C" fn jl_lowess_fit(
                 Ok(b) => b,
                 Err(e) => return error_result(&e),
             };
+        }
+
+        // Apply per-observation case weights if provided
+        if !custom_weights.is_null() && custom_weights_len > 0 {
+            let cw =
+                unsafe { from_raw_parts(custom_weights, custom_weights_len as usize) }.to_vec();
+            builder = builder.custom_weights(cw);
         }
 
         let result = match builder.adapter(Batch).build() {

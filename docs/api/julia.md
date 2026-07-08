@@ -19,10 +19,12 @@ model = Lowess(; kwargs...)
 **Methods:**
 
 ```julia
-result = fit(model, x::Vector{Float64}, y::Vector{Float64}) :: LowessResult
+result = fit(model, x::Vector{Float64}, y::Vector{Float64};
+             custom_weights::Union{Vector{Float64}, Nothing} = nothing) :: LowessResult
 ```
 
 * Fits the model to the provided `x` and `y` data vectors.
+* `custom_weights`: Optional per-observation weights. All values must be ≥ 0 and length must match `x`. Batch only.
 * Returns a `LowessResult` struct containing the smoothed values and optional diagnostics.
 
 ### `StreamingLowess`
@@ -95,6 +97,7 @@ result = add_point(online, x::Float64, y::Float64) :: Union{Float64, Nothing}
 | `cv_method` | `String` | `""` | Cross-validation method ("kfold") |
 | `cv_k` | `Int` | `5` | Number of CV folds |
 | `cv_fractions` | `Vector{Float64}` | `[]` | Manual fractions for CV grid |
+| `custom_weights` | `Vector{Float64}` | `nothing` | Per-observation weights (Batch only) |
 
 ### `StreamingOptions` (inherits `LowessOptions`)
 

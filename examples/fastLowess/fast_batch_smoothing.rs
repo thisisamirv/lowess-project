@@ -29,6 +29,7 @@ fn main() -> Result<(), LowessError> {
         example_3_ndarray_integration()?;
         example_4_robust_parallel()?;
         example_5_cross_validation()?;
+        example_6_custom_weights()?;
     }
     Ok(())
 }
@@ -222,6 +223,82 @@ fn example_5_cross_validation() -> Result<(), LowessError> {
         3.00     7.14112
         ... (17 more rows)
     */
+
+    println!();
+    Ok(())
+}
+
+#[cfg(feature = "cpu")]
+/// Example 6: Custom Weights (Parallel)
+///
+/// Custom weights work correctly under rayon parallelism: each worker reads
+/// its portion of the weight slice independently.
+fn example_6_custom_weights() -> Result<(), LowessError> {
+    println!("Example 6: Custom Weights (Parallel)");
+    println!("{}", "-".repeat(80));
+
+    // --- 6a: Zero weight suppresses outlier in parallel mode ---
+    let x: Vec<f64> = (0..30).map(|i| i as f64).collect();
+    let mut y: Vec<f64> = x.iter().map(|v| v * 3.0).collect();
+    y[15] = 200.0;
+
+    let result_no_w = Lowess::new()
+        .fraction(0.4)
+        .iterations(0)
+        .adapter(Batch)
+        .parallel(true)
+        .build()?
+        .fit(&x, &y)?;
+
+    let mut weights = vec![1.0_f64; x.len()];
+    weights[15] = 0.0;
+
+    let result_zero_w = Lowess::new()
+        .fraction(0.4)
+        .iterations(0)
+        .custom_weights(weights)
+        .adapter(Batch)
+        .parallel(true)
+        .build()?
+        .fit(&x, &y)?;
+
+    let true_val = 15.0 * 3.0;
+    let err_no_w = (result_no_w.y[15] - true_val).abs();
+    let err_zero_w = (result_zero_w.y[15] - true_val).abs();
+    println!("  Zero weight at outlier (x=15): error {err_no_w:.2} -> {err_zero_w:.2}");
+
+    // --- 6b: Sequential and parallel with custom weights agree ---
+    let weights2: Vec<f64> = (0..100)
+        .map(|i| if i % 5 == 0 { 0.2 } else { 1.0 })
+        .collect();
+    let x2: Vec<f64> = (0..100).map(|i| i as f64 / 10.0).collect();
+    let y2: Vec<f64> = x2.iter().map(|&v| v.sin()).collect();
+
+    let seq = Lowess::new()
+        .fraction(0.2)
+        .iterations(0)
+        .custom_weights(weights2.clone())
+        .adapter(Batch)
+        .parallel(false)
+        .build()?
+        .fit(&x2, &y2)?;
+
+    let par = Lowess::new()
+        .fraction(0.2)
+        .iterations(0)
+        .custom_weights(weights2)
+        .adapter(Batch)
+        .parallel(true)
+        .build()?
+        .fit(&x2, &y2)?;
+
+    let max_diff = seq
+        .y
+        .iter()
+        .zip(&par.y)
+        .map(|(a, b)| (a - b).abs())
+        .fold(0.0_f64, f64::max);
+    println!("  Sequential vs parallel max diff: {max_diff:.2e}");
 
     println!();
     Ok(())

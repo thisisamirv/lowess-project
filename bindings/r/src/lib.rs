@@ -114,10 +114,12 @@ impl RLowess {
     }
 
     /// Fit the model to data
-    fn fit(&self, x: &[f64], y: &[f64]) -> Result<List> {
-        let result = self
-            .builder
-            .clone()
+    fn fit(&self, x: &[f64], y: &[f64], custom_weights: Nullable<Vec<f64>>) -> Result<List> {
+        let mut builder = self.builder.clone();
+        if let NotNull(cw) = custom_weights {
+            builder = builder.custom_weights(cw);
+        }
+        let result = builder
             .adapter(Batch)
             .parallel(self.parallel)
             .build()
