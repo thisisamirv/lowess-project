@@ -1,4 +1,4 @@
-﻿<!-- markdownlint-disable MD024 MD033 -->
+<!-- markdownlint-disable MD024 MD033 -->
 # LOWESS Project
 
 <p align="center">
@@ -57,12 +57,12 @@ The fastest, most robust, and most feature-complete language-agnostic LOWESS (Lo
 
 ## LOESS vs. LOWESS
 
-| Feature               | LOESS (This Crate)                | LOWESS                         |
-|-----------------------|-----------------------------------|--------------------------------|
-| **Polynomial Degree** | Linear, Quadratic, Cubic, Quartic | Linear (Degree 1)              |
-| **Dimensions**        | Multivariate (n-D support)        | Univariate (1-D only)          |
-| **Flexibility**       | High (Distance metrics)           | Standard                       |
-| **Complexity**        | Higher (Matrix inversion)         | Lower (Weighted average/slope) |
+| Feature | LOESS (This Crate) | LOWESS |
+| --- | --- | --- |
+| **Polynomial Degree** | Linear, Quadratic, Cubic, Quartic | Linear (Degree 1) |
+| **Dimensions** | Multivariate (n-D support) | Univariate (1-D only) |
+| **Flexibility** | High (Distance metrics) | Standard |
+| **Complexity** | Higher (Matrix inversion) | Lower (Weighted average/slope) |
 
 > [!TIP]
 > **Note:** For a **LOESS** implementation, use [`loess-project`](https://github.com/thisisamirv/loess-project).
@@ -75,7 +75,7 @@ The fastest, most robust, and most feature-complete language-agnostic LOWESS (Lo
 
 The `lowess` project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution. It is on average **200-327x faster** than Python's `statsmodels.lowess` and **2-3x faster** than R's `lowess`.
 
-For more details on the performance comparison, see the [BENCHMARKS](https://github.com/thisisamirv/lowess-project/blob/main/BENCHMARKS.md) file.
+For more details on the performance comparison, see the [Benchmarks](https://lowess.readthedocs.io/benchmarks/) page.
 
 ### Robustness
 
@@ -117,22 +117,22 @@ This crate applies a range of different *boundary policies* at dataset edges:
 
 A variety of features, supporting a range of use cases:
 
-| Feature              | This package  | statsmodels  | R (stats)    |
-|----------------------|:-------------:|:------------:|:------------:|
-| Kernel               | 7 options     | only Tricube | only Tricube |
-| Robustness Weighting | 3 options     | only Huber   | only Huber   |
-| Scale Estimation     | 2 options     | only MAR     | only MAR     |
-| Boundary Padding     | 4 options     | no padding   | no padding   |
-| Zero Weight Fallback | 3 options     | no           | no           |
-| Auto Convergence     | yes           | no           | no           |
-| Online Mode          | yes           | no           | no           |
-| Streaming Mode       | yes           | no           | no           |
-| Confidence Intervals | yes           | no           | no           |
-| Prediction Intervals | yes           | no           | no           |
-| Cross-Validation     | 2 options     | no           | no           |
-| Parallel Execution   | yes           | no           | no           |
-| GPU Acceleration     | yes*          | no           | no           |
-| `no-std` Support     | yes           | no           | no           |
+| Feature | This package | statsmodels | R (stats) |
+| --- | :---: | :---: | :---: |
+| Kernel | 7 options | only Tricube | only Tricube |
+| Robustness Weighting | 3 options | only Huber | only Huber |
+| Scale Estimation | 2 options | only MAR | only MAR |
+| Boundary Padding | 4 options | no padding | no padding |
+| Zero Weight Fallback | 3 options | no | no |
+| Auto Convergence | yes | no | no |
+| Online Mode | yes | no | no |
+| Streaming Mode | yes | no | no |
+| Confidence Intervals | yes | no | no |
+| Prediction Intervals | yes | no | no |
+| Cross-Validation | 2 options | no | no |
+| Parallel Execution | yes | no | no |
+| GPU Acceleration | yes* | no | no |
+| `no-std` Support | yes | no | no |
 
 \* GPU acceleration is currently in beta and may not be available on all platforms.
 
@@ -140,11 +140,11 @@ A variety of features, supporting a range of use cases:
 
 All implementations are **numerical twins** of R's `lowess`:
 
-| Aspect          | Status         | Details                                       |
-|-----------------|----------------|-----------------------------------------------|
-| **Accuracy**    | ✅ EXACT MATCH | Max diff < 1e-12 across all scenarios         |
-| **Consistency** | ✅ PERFECT     | Multiple scenarios pass with strict tolerance |
-| **Robustness**  | ✅ VERIFIED    | Robust smoothing matches R exactly            |
+| Aspect | Status | Details |
+| --- | --- | --- |
+| **Accuracy** | ✅ EXACT MATCH | Max diff < 1e-12 across all scenarios |
+| **Consistency** | ✅ PERFECT | Multiple scenarios pass with strict tolerance |
+| **Robustness** | ✅ VERIFIED | Robust smoothing matches R exactly |
 
 ## API Reference
 
