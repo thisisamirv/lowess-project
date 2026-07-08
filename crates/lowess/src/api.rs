@@ -6,7 +6,11 @@
 
 // Feature-gated imports
 #[cfg(not(feature = "std"))]
+use alloc::string::String;
+#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
+#[cfg(feature = "std")]
+use std::string::String;
 #[cfg(feature = "std")]
 use std::vec::Vec;
 
@@ -18,7 +22,7 @@ use crate::adapters::batch::BatchLowessBuilder;
 use crate::adapters::online::OnlineLowessBuilder;
 use crate::adapters::streaming::StreamingLowessBuilder;
 use crate::engine::executor::{CVPassFn, IntervalPassFn, SmoothPassFn};
-use crate::evaluation::cv::{CVConfig, CVKind};
+use crate::evaluation::cv::CVKind;
 use crate::evaluation::intervals::IntervalMethod;
 use crate::primitives::backend::Backend;
 
@@ -28,7 +32,7 @@ pub use crate::adapters::streaming::MergeStrategy;
 pub use crate::algorithms::regression::ZeroWeightFallback;
 pub use crate::algorithms::robustness::RobustnessMethod;
 pub use crate::engine::output::LowessResult;
-pub use crate::evaluation::cv::{KFold, LOOCV};
+
 pub use crate::math::boundary::BoundaryPolicy;
 pub use crate::math::kernel::WeightFunction;
 pub use crate::math::scaling::ScalingMethod;
@@ -69,6 +73,12 @@ pub struct LowessBuilder<T> {
 
     // CV strategy (K-Fold/LOOCV).
     pub(crate) cv_kind: Option<CVKind>,
+
+    // CV method string for string-based cross-validation API ("kfold" or "loocv").
+    pub cv_method_str: Option<String>,
+
+    // K value for K-fold CV (default: 5).
+    pub cv_k_val: usize,
 
     // CV seed for reproducibility.
     pub(crate) cv_seed: Option<u64>,
@@ -135,6 +145,10 @@ pub struct LowessBuilder<T> {
     // Tracks if any parameter was set multiple times (for validation).
     #[doc(hidden)]
     pub duplicate_param: Option<&'static str>,
+
+    // Accumulated parse errors from string-accepting builder methods.
+    #[doc(hidden)]
+    pub parse_errors: Vec<LowessError>,
 }
 
 impl<T: Float> Default for LowessBuilder<T> {
@@ -164,6 +178,8 @@ impl<T: Float> LowessBuilder<T> {
             interval_type: None,
             cv_fractions: None,
             cv_kind: None,
+            cv_method_str: None,
+            cv_k_val: 5,
             cv_seed: None,
             auto_convergence: None,
             return_diagnostics: None,
@@ -183,42 +199,55 @@ impl<T: Float> LowessBuilder<T> {
             backend: None,
             parallel: None,
             duplicate_param: None,
+            parse_errors: Vec::new(),
         }
     }
 
     // Set behavior for handling zero-weight neighborhoods.
-    pub fn zero_weight_fallback(mut self, policy: ZeroWeightFallback) -> Self {
+    pub fn zero_weight_fallback(mut self, policy: impl AsRef<str>) -> Self {
         if self.zero_weight_fallback.is_some() {
             self.duplicate_param = Some("zero_weight_fallback");
         }
-        self.zero_weight_fallback = Some(policy);
+        match policy.as_ref().parse() {
+            Ok(p) => self.zero_weight_fallback = Some(p),
+            Err(e) => self.parse_errors.push(e),
+        }
         self
     }
 
     // Set the boundary handling policy.
-    pub fn boundary_policy(mut self, policy: BoundaryPolicy) -> Self {
+    pub fn boundary_policy(mut self, policy: impl AsRef<str>) -> Self {
         if self.boundary_policy.is_some() {
             self.duplicate_param = Some("boundary_policy");
         }
-        self.boundary_policy = Some(policy);
+        match policy.as_ref().parse() {
+            Ok(p) => self.boundary_policy = Some(p),
+            Err(e) => self.parse_errors.push(e),
+        }
         self
     }
 
     // Set the merging strategy for overlapping chunks (Streaming only).
-    pub fn merge_strategy(mut self, strategy: MergeStrategy) -> Self {
+    pub fn merge_strategy(mut self, strategy: impl AsRef<str>) -> Self {
         if self.merge_strategy.is_some() {
             self.duplicate_param = Some("merge_strategy");
         }
-        self.merge_strategy = Some(strategy);
+        match strategy.as_ref().parse() {
+            Ok(s) => self.merge_strategy = Some(s),
+            Err(e) => self.parse_errors.push(e),
+        }
         self
     }
 
     // Set the incremental update mode (Online only).
-    pub fn update_mode(mut self, mode: UpdateMode) -> Self {
+    pub fn update_mode(mut self, mode: impl AsRef<str>) -> Self {
         if self.update_mode.is_some() {
             self.duplicate_param = Some("update_mode");
         }
-        self.update_mode = Some(mode);
+        match mode.as_ref().parse() {
+            Ok(m) => self.update_mode = Some(m),
+            Err(e) => self.parse_errors.push(e),
+        }
         self
     }
 
@@ -286,29 +315,38 @@ impl<T: Float> LowessBuilder<T> {
     }
 
     // Set the kernel weight function.
-    pub fn weight_function(mut self, wf: WeightFunction) -> Self {
+    pub fn weight_function(mut self, wf: impl AsRef<str>) -> Self {
         if self.weight_function.is_some() {
             self.duplicate_param = Some("weight_function");
         }
-        self.weight_function = Some(wf);
+        match wf.as_ref().parse() {
+            Ok(w) => self.weight_function = Some(w),
+            Err(e) => self.parse_errors.push(e),
+        }
         self
     }
 
     // Set the robustness weighting method.
-    pub fn robustness_method(mut self, rm: RobustnessMethod) -> Self {
+    pub fn robustness_method(mut self, rm: impl AsRef<str>) -> Self {
         if self.robustness_method.is_some() {
             self.duplicate_param = Some("robustness_method");
         }
-        self.robustness_method = Some(rm);
+        match rm.as_ref().parse() {
+            Ok(r) => self.robustness_method = Some(r),
+            Err(e) => self.parse_errors.push(e),
+        }
         self
     }
 
     // Set the scaling method for robust scale estimation.
-    pub fn scaling_method(mut self, sm: ScalingMethod) -> Self {
+    pub fn scaling_method(mut self, sm: impl AsRef<str>) -> Self {
         if self.scaling_method.is_some() {
             self.duplicate_param = Some("scaling_method");
         }
-        self.scaling_method = Some(sm);
+        match sm.as_ref().parse() {
+            Ok(s) => self.scaling_method = Some(s),
+            Err(e) => self.parse_errors.push(e),
+        }
         self
     }
 
@@ -354,14 +392,35 @@ impl<T: Float> LowessBuilder<T> {
         self
     }
 
-    // Enable automatic bandwidth selection via cross-validation.
-    pub fn cross_validate(mut self, config: CVConfig<'_, T>) -> Self {
-        if self.cv_fractions.is_some() {
-            self.duplicate_param = Some("cross_validate");
+    // Set the cross-validation method.
+    //
+    // Accepts case-insensitive strings: "kfold" (or "k_fold", "k-fold"), "loocv" (or "loo_cv", "loo-cv").
+    pub fn cv_method(mut self, method: &str) -> Self {
+        if self.cv_method_str.is_some() {
+            self.duplicate_param = Some("cv_method");
         }
-        self.cv_fractions = Some(config.fractions().to_vec());
-        self.cv_kind = Some(config.kind());
-        self.cv_seed = config.get_seed();
+        self.cv_method_str = Some(method.to_string());
+        self
+    }
+
+    // Set the number of folds for K-fold cross-validation (default: 5).
+    pub fn cv_k(mut self, k: usize) -> Self {
+        self.cv_k_val = k;
+        self
+    }
+
+    // Set the candidate bandwidth fractions to evaluate during cross-validation.
+    pub fn cv_fractions(mut self, fractions: Vec<T>) -> Self {
+        if self.cv_fractions.is_some() {
+            self.duplicate_param = Some("cv_fractions");
+        }
+        self.cv_fractions = Some(fractions);
+        self
+    }
+
+    // Set the random seed for reproducible K-fold fold splitting.
+    pub fn cv_seed(mut self, seed: u64) -> Self {
+        self.cv_seed = Some(seed);
         self
     }
 
@@ -476,6 +535,27 @@ impl<T: Float> LowessAdapter<T> for Batch {
             result.cv_kind = Some(cvk);
         }
         result.cv_seed = builder.cv_seed;
+        // Convert string-based CV method (from cv_method()/cv_k() builder methods)
+        if result.cv_kind.is_none()
+            && let Some(method_str) = builder.cv_method_str
+        {
+            let lower = method_str.to_lowercase();
+            match lower.as_str() {
+                "kfold" | "k_fold" | "k-fold" => {
+                    result.cv_kind = Some(CVKind::KFold(builder.cv_k_val));
+                }
+                "loocv" | "loo_cv" | "loo-cv" => {
+                    result.cv_kind = Some(CVKind::LOOCV);
+                }
+                _ => {
+                    result.deferred_error = Some(LowessError::InvalidOption {
+                        option: "cv_method",
+                        value: method_str,
+                        valid: "kfold, loocv",
+                    });
+                }
+            }
+        }
         if let Some(ac) = builder.auto_convergence {
             result.auto_convergence = Some(ac);
         }
@@ -519,6 +599,9 @@ impl<T: Float> LowessAdapter<T> for Batch {
         }
 
         result.duplicate_param = builder.duplicate_param;
+        if result.deferred_error.is_none() {
+            result.deferred_error = builder.parse_errors.into_iter().next();
+        }
 
         result
     }
@@ -602,6 +685,9 @@ impl<T: Float> LowessAdapter<T> for Streaming {
             result.parallel = Some(p);
         }
         result.duplicate_param = builder.duplicate_param;
+        if result.deferred_error.is_none() {
+            result.deferred_error = builder.parse_errors.into_iter().next();
+        }
 
         result
     }
@@ -682,6 +768,9 @@ impl<T: Float> LowessAdapter<T> for Online {
             result.parallel = Some(p);
         }
         result.duplicate_param = builder.duplicate_param;
+        if result.deferred_error.is_none() {
+            result.deferred_error = builder.parse_errors.into_iter().next();
+        }
 
         result
     }

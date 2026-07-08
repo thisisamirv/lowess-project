@@ -51,60 +51,6 @@ pub enum CVKind {
     LOOCV,
 }
 
-// Cross-validation configuration combining strategy, fractions, and seed.
-#[derive(Debug, Clone)]
-pub struct CVConfig<'a, T> {
-    // The CV strategy kind.
-    pub(crate) kind: CVKind,
-    // Candidate smoothing fractions to evaluate.
-    pub(crate) fractions: &'a [T],
-    // Random seed for reproducible fold shuffling (K-Fold only).
-    pub(crate) seed: Option<u64>,
-}
-
-impl<'a, T> CVConfig<'a, T> {
-    // Set the random seed for reproducible K-Fold cross-validation.
-    pub fn seed(mut self, seed: u64) -> Self {
-        self.seed = Some(seed);
-        self
-    }
-
-    // Get the fractions slice.
-    pub fn fractions(&self) -> &[T] {
-        self.fractions
-    }
-
-    // Get the CV kind.
-    pub fn kind(&self) -> CVKind {
-        self.kind
-    }
-
-    // Get the seed.
-    pub fn get_seed(&self) -> Option<u64> {
-        self.seed
-    }
-}
-
-// Create a K-fold cross-validation configuration.
-#[allow(non_snake_case)]
-pub fn KFold<T>(k: usize, fractions: &[T]) -> CVConfig<'_, T> {
-    CVConfig {
-        kind: CVKind::KFold(k),
-        fractions,
-        seed: None,
-    }
-}
-
-// Create a leave-one-out cross-validation configuration.
-#[allow(non_snake_case)]
-pub fn LOOCV<T>(fractions: &[T]) -> CVConfig<'_, T> {
-    CVConfig {
-        kind: CVKind::LOOCV,
-        fractions,
-        seed: None,
-    }
-}
-
 impl CVKind {
     // Run cross-validation to select the best fraction.
     #[allow(clippy::too_many_arguments)]

@@ -30,6 +30,9 @@ use crate::primitives::backend::Backend;
 use crate::primitives::buffer::{OnlineBuffer, VecExt};
 use crate::primitives::errors::LowessError;
 
+// For string parsing of UpdateMode.
+use core::str::FromStr;
+
 // Update mode for online LOWESS processing.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum UpdateMode {
@@ -39,6 +42,22 @@ pub enum UpdateMode {
     // Optimized incremental update.
     #[default]
     Incremental,
+}
+
+impl FromStr for UpdateMode {
+    type Err = LowessError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "full" => Ok(Self::Full),
+            "incremental" | "inc" => Ok(Self::Incremental),
+            _ => Err(LowessError::InvalidOption {
+                option: "update_mode",
+                value: s.to_string(),
+                valid: "full, incremental",
+            }),
+        }
+    }
 }
 
 // Builder for online LOWESS processor.

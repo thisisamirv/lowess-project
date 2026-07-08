@@ -12,7 +12,11 @@
 
 // External dependencies
 use core::f64::consts::{PI, SQRT_2};
+use core::str::FromStr;
 use num_traits::Float;
+
+// Internal dependencies
+use crate::primitives::errors::LowessError;
 
 // Square root of 2*pi, used in Gaussian kernel calculations.
 #[allow(clippy::excessive_precision)]
@@ -340,5 +344,26 @@ impl WeightFunction {
         }
 
         (sum, rightmost)
+    }
+}
+
+impl FromStr for WeightFunction {
+    type Err = LowessError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "cosine" => Ok(Self::Cosine),
+            "epanechnikov" => Ok(Self::Epanechnikov),
+            "gaussian" | "normal" => Ok(Self::Gaussian),
+            "biweight" | "quartic" => Ok(Self::Biweight),
+            "triangle" | "triangular" => Ok(Self::Triangle),
+            "tricube" => Ok(Self::Tricube),
+            "uniform" | "rectangular" => Ok(Self::Uniform),
+            _ => Err(LowessError::InvalidOption {
+                option: "weight_function",
+                value: s.to_string(),
+                valid: "cosine, epanechnikov, gaussian, biweight, triangle, tricube, uniform",
+            }),
+        }
     }
 }

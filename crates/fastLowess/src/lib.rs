@@ -239,7 +239,7 @@ pub mod prelude {
         Adapter::{Batch, Online, Streaming},
         Backend::{CPU, GPU},
         BoundaryPolicy::{Extend, NoBoundary, Reflect, Zero},
-        KFold, LOOCV, LowessBuilder as Lowess, LowessError, LowessResult,
+        LowessBuilder as Lowess, LowessError, LowessResult,
         MergeStrategy::{Average, TakeFirst, WeightedAverage},
         RobustnessMethod::{Bisquare, Huber, Talwar},
         ScalingMethod::{MAD, MAR, Mean},

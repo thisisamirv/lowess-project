@@ -31,7 +31,7 @@ use lowess::internals::algorithms::regression::WLSSolver;
 use lowess::internals::algorithms::regression::ZeroWeightFallback;
 use lowess::internals::algorithms::robustness::RobustnessMethod;
 use lowess::internals::engine::output::LowessResult;
-use lowess::internals::evaluation::cv::{CVConfig, CVKind};
+use lowess::internals::evaluation::cv::CVKind;
 use lowess::internals::math::boundary::BoundaryPolicy;
 use lowess::internals::math::kernel::WeightFunction;
 use lowess::internals::primitives::backend::Backend;
@@ -156,14 +156,6 @@ impl<T: Float> ParallelBatchLowessBuilder<T> {
     // Set the cross-validation method.
     pub fn cv_kind(mut self, method: CVKind) -> Self {
         self.base = self.base.cv_kind(method);
-        self
-    }
-
-    // Set the cross-validation configuration using helper struct (e.g. from KFold).
-    pub fn cv_config<'a>(mut self, config: CVConfig<'a, T>) -> Self {
-        self.base = self.base.cv_kind(config.kind());
-        self.base.cv_fractions = Some(config.fractions().to_vec());
-        self.base.cv_seed = config.get_seed();
         self
     }
 

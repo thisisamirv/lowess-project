@@ -24,7 +24,6 @@ pub use lowess::internals::algorithms::regression::ZeroWeightFallback;
 pub use lowess::internals::algorithms::robustness::RobustnessMethod;
 pub use lowess::internals::api::{LowessAdapter, LowessBuilder};
 pub use lowess::internals::engine::output::LowessResult;
-pub use lowess::internals::evaluation::cv::{KFold, LOOCV};
 pub use lowess::internals::math::boundary::BoundaryPolicy;
 pub use lowess::internals::math::kernel::WeightFunction;
 pub use lowess::internals::math::scaling::ScalingMethod;

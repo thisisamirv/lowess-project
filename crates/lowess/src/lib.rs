@@ -68,19 +68,22 @@
 //! let model = Lowess::new()
 //!     .fraction(0.5)                                   // Use 50% of data for each local fit
 //!     .iterations(3)                                   // 3 robustness iterations
-//!     .weight_function(Tricube)                        // Kernel function
-//!     .robustness_method(Bisquare)                     // Outlier handling
+//!     .weight_function("tricube")                      // Kernel function
+//!     .robustness_method("bisquare")                   // Outlier handling
 //!     .delta(0.01)                                     // Interpolation optimization
-//!     .zero_weight_fallback(UseLocalMean)              // Fallback policy
-//!     .boundary_policy(Extend)                         // Boundary handling policy
-//!     .scaling_method(MAD)                             // Robust scale estimation
+//!     .zero_weight_fallback("uselocalmean")            // Fallback policy
+//!     .boundary_policy("extend")                       // Boundary handling policy
+//!     .scaling_method("mad")                           // Robust scale estimation
 //!     .auto_converge(1e-6)                             // Auto-convergence threshold
 //!     .confidence_intervals(0.95)                      // 95% confidence intervals
 //!     .prediction_intervals(0.95)                      // 95% prediction intervals
 //!     .return_diagnostics()                            // Fit quality metrics
 //!     .return_residuals()                              // Include residuals
 //!     .return_robustness_weights()                     // Include robustness weights
-//!     .cross_validate(KFold(5, &[0.3, 0.7]).seed(123)) // K-fold CV with 5 folds and 2 fraction options
+//!     .cv_method("kfold")                              // Cross-validation method: "kfold" or "loocv"
+//!     .cv_k(5)                                         // Number of folds for k-fold CV
+//!     .cv_fractions(vec![0.3, 0.7])                   // Candidate bandwidth fractions to evaluate
+//!     .cv_seed(123)                                    // Reproducible fold splitting seed
 //!     .adapter(Batch)                                  // Batch adapter
 //!     .build()?;
 //!
@@ -258,32 +261,7 @@ mod api;
 pub mod prelude {
     pub use crate::api::{
         Adapter::{Batch, Online, Streaming},
-        BoundaryPolicy::Extend,
-        BoundaryPolicy::NoBoundary,
-        BoundaryPolicy::Reflect,
-        BoundaryPolicy::Zero,
-        KFold, LOOCV, LowessBuilder as Lowess, LowessError, LowessResult,
-        MergeStrategy::Average,
-        MergeStrategy::TakeFirst,
-        MergeStrategy::WeightedAverage,
-        RobustnessMethod::Bisquare,
-        RobustnessMethod::Huber,
-        RobustnessMethod::Talwar,
-        ScalingMethod::MAD,
-        ScalingMethod::MAR,
-        ScalingMethod::Mean,
-        UpdateMode::Full,
-        UpdateMode::Incremental,
-        WeightFunction::Biweight,
-        WeightFunction::Cosine,
-        WeightFunction::Epanechnikov,
-        WeightFunction::Gaussian,
-        WeightFunction::Triangle,
-        WeightFunction::Tricube,
-        WeightFunction::Uniform,
-        ZeroWeightFallback::ReturnNone,
-        ZeroWeightFallback::ReturnOriginal,
-        ZeroWeightFallback::UseLocalMean,
+        LowessBuilder as Lowess, LowessError, LowessResult,
     };
 }
 

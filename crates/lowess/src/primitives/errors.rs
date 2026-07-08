@@ -100,6 +100,17 @@ pub enum LowessError {
         // Name of the parameter that was set multiple times.
         parameter: &'static str,
     },
+
+    // String option value was not recognized.
+    InvalidOption {
+        // Name of the option (e.g., "weight_function").
+        option: &'static str,
+        // The unrecognized value provided.
+        value: String,
+        // Comma-separated list of valid values.
+        valid: &'static str,
+    },
+
     // Runtime execution error (e.g. GPU failure).
     RuntimeError(String),
 }
@@ -161,6 +172,12 @@ impl Display for LowessError {
                 write!(
                     f,
                     "Parameter '{parameter}' was set multiple times. Each parameter can only be configured once."
+                )
+            }
+            Self::InvalidOption { option, value, valid } => {
+                write!(
+                    f,
+                    "Invalid value for `{option}`: `{value}`. Valid values: {valid}"
                 )
             }
             Self::RuntimeError(msg) => write!(f, "Runtime error: {}", msg),
