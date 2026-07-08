@@ -61,8 +61,8 @@ impl FromStr for MergeStrategy {
         match s.to_lowercase().as_str() {
             "average" | "mean" => Ok(Self::Average),
             "weightedaverage" | "weighted_average" | "weighted" => Ok(Self::WeightedAverage),
-            "takefirst" | "first" => Ok(Self::TakeFirst),
-            "takelast" | "last" => Ok(Self::TakeLast),
+            "takefirst" | "take_first" | "first" => Ok(Self::TakeFirst),
+            "takelast" | "take_last" | "last" => Ok(Self::TakeLast),
             _ => Err(LowessError::InvalidOption {
                 option: "merge_strategy",
                 value: s.to_string(),
@@ -88,7 +88,7 @@ pub struct StreamingLowessBuilder<T: Float> {
     pub iterations: usize,
 
     // Convergence tolerance for early stopping (None = disabled)
-    pub auto_convergence: Option<T>,
+    pub auto_converge: Option<T>,
 
     // Delta parameter for interpolation
     pub delta: T,
@@ -179,7 +179,7 @@ impl<T: Float> StreamingLowessBuilder<T> {
             scaling_method: ScalingMethod::default(),
             return_diagnostics: false,
             return_robustness_weights: false,
-            auto_convergence: None,
+            auto_converge: None,
             deferred_error: None,
             custom_smooth_pass: None,
             custom_cv_pass: None,
@@ -274,7 +274,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
             scaling_method: self.config.scaling_method,
             cv_fractions: None,
             cv_kind: None,
-            auto_convergence: self.config.auto_convergence,
+            auto_converge: self.config.auto_converge,
             return_variance: None,
             cv_seed: None,
             // ++++++++++++++++++++++++++++++++++++++

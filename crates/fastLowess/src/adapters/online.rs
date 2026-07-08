@@ -47,6 +47,7 @@ impl<T: Float> Default for ParallelOnlineLowessBuilder<T> {
     }
 }
 
+#[allow(private_bounds)]
 impl<T: Float> ParallelOnlineLowessBuilder<T> {
     // Create a new online LOWESS builder with default parameters.
     fn new() -> Self {
@@ -139,7 +140,7 @@ impl<T: Float> ParallelOnlineLowessBuilder<T> {
 
     // Enable auto-convergence for robustness iterations.
     pub fn auto_converge(mut self, tolerance: T) -> Self {
-        self.base.auto_convergence = Some(tolerance);
+        self.base.auto_converge = Some(tolerance);
         self
     }
 
@@ -222,6 +223,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> ParallelOnlineLowess<
     }
 }
 
+#[allow(private_bounds)]
 impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> ParallelOnlineLowessBuilder<T> {
     // Build the online processor.
     pub fn build(self) -> Result<ParallelOnlineLowess<T>, LowessError> {

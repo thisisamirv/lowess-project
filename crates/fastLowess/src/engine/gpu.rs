@@ -3817,7 +3817,7 @@ where
             orig_n: orig_n as u32,
             max_iterations: config.iterations as u32,
             tolerance: config
-                .auto_convergence
+                .auto_converge
                 .map(|t| t.to_f32().unwrap())
                 .unwrap_or(0.0),
             z_score: 0.0,
@@ -4290,7 +4290,7 @@ where
                 orig_n: run.n_train,
                 max_iterations: config.iterations as u32,
                 tolerance: config
-                    .auto_convergence
+                    .auto_converge
                     .map(|t| t.to_f32().unwrap())
                     .unwrap_or(0.0),
                 z_score: run.test_start as f32,

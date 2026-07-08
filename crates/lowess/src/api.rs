@@ -101,7 +101,7 @@ pub struct LowessBuilder<T, Mode = BatchMode> {
     pub(crate) cv_seed: Option<u64>,
 
     // Relative convergence tolerance.
-    pub auto_convergence: Option<T>,
+    pub auto_converge: Option<T>,
 
     // Enable performance/statistical diagnostics.
     pub return_diagnostics: Option<bool>,
@@ -178,6 +178,7 @@ impl<T: Float, Mode> Default for LowessBuilder<T, Mode> {
     }
 }
 
+#[allow(private_bounds)]
 impl<T: Float, Mode> LowessBuilder<T, Mode> {
     // Select an execution adapter to transition to an execution builder.
     pub fn adapter<A>(self, _adapter: A) -> A::Output
@@ -202,7 +203,7 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
             cv_method_str: None,
             cv_k_val: 5,
             cv_seed: None,
-            auto_convergence: None,
+            auto_converge: None,
             return_diagnostics: None,
             compute_residuals: None,
             return_robustness_weights: None,
@@ -448,10 +449,10 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
 
     // Enable automatic convergence detection based on relative change.
     pub fn auto_converge(mut self, tolerance: T) -> Self {
-        if self.auto_convergence.is_some() {
+        if self.auto_converge.is_some() {
             self.duplicate_param = Some("auto_converge");
         }
-        self.auto_convergence = Some(tolerance);
+        self.auto_converge = Some(tolerance);
         self
     }
 
@@ -578,8 +579,8 @@ impl<T: Float> LowessAdapter<T> for Batch {
                 }
             }
         }
-        if let Some(ac) = builder.auto_convergence {
-            result.auto_convergence = Some(ac);
+        if let Some(ac) = builder.auto_converge {
+            result.auto_converge = Some(ac);
         }
         if let Some(zwf) = builder.zero_weight_fallback {
             result.zero_weight_fallback = zwf;
@@ -621,8 +622,8 @@ impl<T: Float> LowessAdapter<T> for Batch {
         }
 
         result.duplicate_param = builder.duplicate_param;
-        if result.deferred_error.is_none() {
-            result.deferred_error = builder.parse_errors.into_iter().next();
+        if result.deferred_error.is_none() && !builder.parse_errors.is_empty() {
+            result.deferred_error = Some(LowessError::ParseErrors(builder.parse_errors));
         }
 
         result
@@ -683,8 +684,8 @@ impl<T: Float> LowessAdapter<T> for Streaming {
         if let Some(cr) = builder.compute_residuals {
             result.compute_residuals = cr;
         }
-        if let Some(ac) = builder.auto_convergence {
-            result.auto_convergence = Some(ac);
+        if let Some(ac) = builder.auto_converge {
+            result.auto_converge = Some(ac);
         }
 
         // ++++++++++++++++++++++++++++++++++++++
@@ -707,8 +708,8 @@ impl<T: Float> LowessAdapter<T> for Streaming {
             result.parallel = Some(p);
         }
         result.duplicate_param = builder.duplicate_param;
-        if result.deferred_error.is_none() {
-            result.deferred_error = builder.parse_errors.into_iter().next();
+        if result.deferred_error.is_none() && !builder.parse_errors.is_empty() {
+            result.deferred_error = Some(LowessError::ParseErrors(builder.parse_errors));
         }
 
         result
@@ -785,8 +786,8 @@ impl<T: Float> LowessAdapter<T> for Online {
         if let Some(rw) = builder.return_robustness_weights {
             result.return_robustness_weights = rw;
         }
-        if let Some(ac) = builder.auto_convergence {
-            result.auto_convergence = Some(ac);
+        if let Some(ac) = builder.auto_converge {
+            result.auto_converge = Some(ac);
         }
 
         // ++++++++++++++++++++++++++++++++++++++
@@ -809,8 +810,8 @@ impl<T: Float> LowessAdapter<T> for Online {
             result.parallel = Some(p);
         }
         result.duplicate_param = builder.duplicate_param;
-        if result.deferred_error.is_none() {
-            result.deferred_error = builder.parse_errors.into_iter().next();
+        if result.deferred_error.is_none() && !builder.parse_errors.is_empty() {
+            result.deferred_error = Some(LowessError::ParseErrors(builder.parse_errors));
         }
 
         result

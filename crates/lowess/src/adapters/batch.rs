@@ -69,7 +69,7 @@ pub struct BatchLowessBuilder<T: Float> {
     pub deferred_error: Option<LowessError>,
 
     // Tolerance for auto-convergence
-    pub auto_convergence: Option<T>,
+    pub auto_converge: Option<T>,
 
     // Whether to compute diagnostic statistics
     pub return_diagnostics: bool,
@@ -145,7 +145,7 @@ impl<T: Float> BatchLowessBuilder<T> {
             cv_kind: None,
             cv_seed: None,
             deferred_error: None,
-            auto_convergence: None,
+            auto_converge: None,
             return_diagnostics: false,
             compute_residuals: false,
             return_robustness_weights: false,
@@ -197,7 +197,7 @@ impl<T: Float> BatchLowessBuilder<T> {
         }
 
         // Validate auto convergence tolerance
-        if let Some(tol) = self.auto_convergence {
+        if let Some(tol) = self.auto_converge {
             Validator::validate_tolerance(tol)?;
         }
 
@@ -240,7 +240,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> BatchLowess<T> {
             robustness_method: self.config.robustness_method,
             cv_fractions: self.config.cv_fractions,
             cv_kind: self.config.cv_kind,
-            auto_convergence: self.config.auto_convergence,
+            auto_converge: self.config.auto_converge,
             return_variance: self.config.interval_type,
             boundary_policy: self.config.boundary_policy,
             scaling_method: self.config.scaling_method,

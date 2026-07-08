@@ -166,7 +166,7 @@ pub struct LowessConfig<T> {
     pub cv_seed: Option<u64>,
 
     // Convergence tolerance for early stopping of robustness iterations.
-    pub auto_convergence: Option<T>,
+    pub auto_converge: Option<T>,
 
     // Configuration for standard errors and intervals.
     pub return_variance: Option<IntervalMethod<T>>,
@@ -221,7 +221,7 @@ impl<T: Float> Default for LowessConfig<T> {
             cv_fractions: None,
             cv_kind: None,
             cv_seed: None,
-            auto_convergence: None,
+            auto_converge: None,
             return_variance: None,
             boundary_policy: BoundaryPolicy::default(),
             scaling_method: ScalingMethod::default(),
@@ -264,7 +264,7 @@ pub struct LowessExecutor<T: Float> {
     pub scaling_method: ScalingMethod,
 
     // Auto-convergence tolerance.
-    pub auto_convergence: Option<T>,
+    pub auto_converge: Option<T>,
 
     // Interval estimation method.
     pub interval_method: Option<IntervalMethod<T>>,
@@ -318,7 +318,7 @@ impl<T: Float> LowessExecutor<T> {
             robustness_method: RobustnessMethod::Bisquare,
             boundary_policy: BoundaryPolicy::default(),
             scaling_method: ScalingMethod::default(),
-            auto_convergence: None,
+            auto_converge: None,
             interval_method: None,
             custom_smooth_pass: None,
             custom_cv_pass: None,
@@ -342,7 +342,7 @@ impl<T: Float> LowessExecutor<T> {
             .robustness_method(config.robustness_method)
             .boundary_policy(config.boundary_policy)
             .scaling_method(config.scaling_method)
-            .auto_convergence(config.auto_convergence)
+            .auto_converge(config.auto_converge)
             .interval_method(config.return_variance)
             // ++++++++++++++++++++++++++++++++++++++
             // +               DEV                  +
@@ -374,7 +374,7 @@ impl<T: Float> LowessExecutor<T> {
             cv_fractions: None,
             cv_kind: None,
             cv_seed: None,
-            auto_convergence: tolerance,
+            auto_converge: tolerance,
             return_variance: interval_method.cloned(),
             boundary_policy: self.boundary_policy,
             scaling_method: self.scaling_method,
@@ -440,8 +440,8 @@ impl<T: Float> LowessExecutor<T> {
     }
 
     // Set the auto-convergence tolerance.
-    pub fn auto_convergence(mut self, tolerance: Option<T>) -> Self {
-        self.auto_convergence = tolerance;
+    pub fn auto_converge(mut self, tolerance: Option<T>) -> Self {
+        self.auto_converge = tolerance;
         self
     }
 
@@ -566,7 +566,7 @@ impl<T: Float> LowessExecutor<T> {
                 .robustness_method(config.robustness_method)
                 .boundary_policy(config.boundary_policy)
                 .scaling_method(config.scaling_method)
-                .auto_convergence(config.auto_convergence)
+                .auto_converge(config.auto_converge)
                 .interval_method(config.return_variance)
                 .custom_smooth_pass(config.custom_smooth_pass)
                 .custom_cv_pass(config.custom_cv_pass)
@@ -598,7 +598,7 @@ impl<T: Float> LowessExecutor<T> {
         let n = x.len();
         let eff_fraction = self.fraction;
         let target_iterations = self.iterations;
-        let tolerance = self.auto_convergence;
+        let tolerance = self.auto_converge;
         let confidence_method = self.interval_method.as_ref();
 
         // Handle global regression (fraction >= 1.0)

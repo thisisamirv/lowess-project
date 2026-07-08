@@ -56,6 +56,7 @@ impl<T: Float> Default for ParallelBatchLowessBuilder<T> {
     }
 }
 
+#[allow(private_bounds)]
 impl<T: Float> ParallelBatchLowessBuilder<T> {
     // Create a new batch LOWESS builder with default parameters.
     fn new() -> Self {
@@ -152,7 +153,7 @@ impl<T: Float> ParallelBatchLowessBuilder<T> {
 
     // Enable auto-convergence for robustness iterations.
     pub fn auto_converge(mut self, tolerance: T) -> Self {
-        self.base.auto_convergence = Some(tolerance);
+        self.base.auto_converge = Some(tolerance);
         self
     }
 
@@ -255,7 +256,7 @@ impl<T: Float> ParallelBatchLowessBuilder<T> {
 pub struct ParallelBatchLowess<T: Float> {
     config: ParallelBatchLowessBuilder<T>,
 }
-
+#[allow(private_bounds)]
 impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> ParallelBatchLowess<T> {
     // Perform LOWESS smoothing on the provided data.
     pub fn fit<I1, I2>(self, x: &I1, y: &I2) -> Result<LowessResult<T>, LowessError>

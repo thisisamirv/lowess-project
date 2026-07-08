@@ -25,7 +25,7 @@ use crate::primitives::errors::LowessError;
 
 // Converts a value into a typed enum, either infallibly (enum variant) or
 // via case-insensitive string parsing (string literal / `String`).
-pub trait IntoEnum<E> {
+pub(crate) trait IntoEnum<E> {
     fn into_enum(self) -> Result<E, LowessError>;
 }
 

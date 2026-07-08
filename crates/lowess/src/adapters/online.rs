@@ -49,8 +49,8 @@ impl FromStr for UpdateMode {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "full" => Ok(Self::Full),
-            "incremental" | "inc" => Ok(Self::Incremental),
+            "full" | "resmooth" => Ok(Self::Full),
+            "incremental" | "single" | "inc" => Ok(Self::Incremental),
             _ => Err(LowessError::InvalidOption {
                 option: "update_mode",
                 value: s.to_string(),
@@ -79,7 +79,7 @@ pub struct OnlineLowessBuilder<T: Float> {
     pub iterations: usize,
 
     // Convergence tolerance for early stopping (None = disabled)
-    pub auto_convergence: Option<T>,
+    pub auto_converge: Option<T>,
 
     // Kernel weight function
     pub weight_function: WeightFunction,
@@ -163,7 +163,7 @@ impl<T: Float> OnlineLowessBuilder<T> {
             scaling_method: ScalingMethod::default(),
             compute_residuals: false,
             return_robustness_weights: false,
-            auto_convergence: None,
+            auto_converge: None,
             deferred_error: None,
             custom_smooth_pass: None,
             custom_cv_pass: None,
@@ -218,6 +218,9 @@ pub struct OnlineOutput<T> {
 
     // Robustness weight for the latest point (if computed)
     pub robustness_weight: Option<T>,
+
+    // Number of robustness iterations actually performed (if tracked).
+    pub iterations_used: Option<usize>,
 }
 
 // Online LOWESS processor for streaming data.
@@ -281,6 +284,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
                 std_error: None,
                 residual: Some(residual),
                 robustness_weight: Some(T::one()),
+                iterations_used: Some(0),
             }));
         }
 
@@ -288,7 +292,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
         let zero_flag = self.config.zero_weight_fallback.to_u8();
 
         // Choose update strategy based on configuration
-        let (smoothed, std_err, rob_weight) = match self.config.update_mode {
+        let (smoothed, std_err, rob_weight, iterations_used) = match self.config.update_mode {
             UpdateMode::Incremental => {
                 // Incremental mode: fit only the latest point
                 let n = x_vec.len();
@@ -315,7 +319,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
                     self.config.zero_weight_fallback,
                 );
 
-                (smoothed_val, None, Some(T::one()))
+                (smoothed_val, None, Some(T::one()), None)
             }
             UpdateMode::Full => {
                 // Full mode: re-smooth entire window
@@ -328,7 +332,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
                     zero_weight_fallback: zero_flag,
                     boundary_policy: self.config.boundary_policy,
                     scaling_method: self.config.scaling_method,
-                    auto_convergence: self.config.auto_convergence,
+                    auto_converge: self.config.auto_converge,
                     cv_fractions: None,
                     cv_kind: None,
                     return_variance: None,
@@ -346,6 +350,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
                 };
 
                 let result = LowessExecutor::run_with_config(x_vec, y_vec, config.clone())?;
+                let iterations_used_val = result.iterations;
                 let smoothed_vec = result.smoothed;
                 let se_vec = result.std_errors;
 
@@ -359,7 +364,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
                     None
                 };
 
-                (smoothed_val, std_err, rob_weight)
+                (smoothed_val, std_err, rob_weight, iterations_used_val)
             }
         };
 
@@ -370,6 +375,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
             std_error: std_err,
             residual: Some(residual),
             robustness_weight: rob_weight,
+            iterations_used,
         }))
     }
 

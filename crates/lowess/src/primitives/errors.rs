@@ -6,11 +6,15 @@
 // External dependencies
 #[cfg(not(feature = "std"))]
 use alloc::string::String;
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
 use core::fmt::{Display, Formatter, Result};
 #[cfg(feature = "std")]
 use std::error::Error;
 #[cfg(feature = "std")]
 use std::string::String;
+#[cfg(feature = "std")]
+use std::vec::Vec;
 
 // Error type for LOWESS operations.
 #[derive(Debug, Clone, PartialEq)]
@@ -113,6 +117,11 @@ pub enum LowessError {
 
     // Runtime execution error (e.g. GPU failure).
     RuntimeError(String),
+
+    // Multiple invalid string option values were passed to the builder.
+    //
+    // Collects all parse errors from string builder methods and reports them together at `build()`.
+    ParseErrors(Vec<LowessError>),
 }
 
 // Display Implementation
@@ -174,13 +183,24 @@ impl Display for LowessError {
                     "Parameter '{parameter}' was set multiple times. Each parameter can only be configured once."
                 )
             }
-            Self::InvalidOption { option, value, valid } => {
+            Self::InvalidOption {
+                option,
+                value,
+                valid,
+            } => {
                 write!(
                     f,
                     "Invalid value for `{option}`: `{value}`. Valid values: {valid}"
                 )
             }
             Self::RuntimeError(msg) => write!(f, "Runtime error: {}", msg),
+            Self::ParseErrors(errors) => {
+                write!(f, "Multiple configuration errors ({} total):", errors.len())?;
+                for (i, e) in errors.iter().enumerate() {
+                    write!(f, " [{i}] {e}")?;
+                }
+                Ok(())
+            }
         }
     }
 }

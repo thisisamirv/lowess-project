@@ -47,6 +47,7 @@ impl<T: Float> Default for ParallelStreamingLowessBuilder<T> {
     }
 }
 
+#[allow(private_bounds)]
 impl<T: Float> ParallelStreamingLowessBuilder<T> {
     // Create a new streaming LOWESS builder with default parameters.
     fn new() -> Self {
@@ -139,7 +140,7 @@ impl<T: Float> ParallelStreamingLowessBuilder<T> {
 
     // Enable auto-convergence for robustness iterations.
     pub fn auto_converge(mut self, tolerance: T) -> Self {
-        self.base.auto_convergence = Some(tolerance);
+        self.base.auto_converge = Some(tolerance);
         self
     }
 
@@ -204,6 +205,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> ParallelStreamingLowe
     }
 }
 
+#[allow(private_bounds)]
 impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> ParallelStreamingLowessBuilder<T> {
     // Build the streaming processor.
     pub fn build(self) -> Result<ParallelStreamingLowess<T>, LowessError> {

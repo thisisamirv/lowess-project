@@ -382,7 +382,7 @@ fn test_batch_cv_loocv() {
 ///
 /// Verifies that iterations stop early when convergence is detected.
 #[test]
-fn test_batch_auto_convergence() {
+fn test_batch_auto_converge() {
     let x = vec![0.0, 1.0, 2.0];
     let y = vec![1.0, 2.0, 3.0]; // Perfect line - should converge quickly
 
@@ -416,7 +416,7 @@ fn test_batch_auto_convergence() {
 ///
 /// Verifies that iterations don't exceed the specified maximum.
 #[test]
-fn test_batch_auto_convergence_max_iterations() {
+fn test_batch_auto_converge_max_iterations() {
     let x: Vec<f64> = (0..20).map(|i| i as f64).collect();
     let y: Vec<f64> = x.iter().map(|&v| v + (v * 0.5).sin() * 5.0).collect();
 
