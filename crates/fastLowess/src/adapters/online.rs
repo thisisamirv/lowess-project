@@ -1,4 +1,4 @@
-//! Online adapter for incremental LOWESS smoothing.
+﻿//! Online adapter for incremental LOWESS smoothing.
 //!
 //! This module provides the online (incremental) execution adapter for LOWESS
 //! smoothing. It maintains a sliding window of recent observations and produces
@@ -39,6 +39,8 @@ use lowess::internals::primitives::errors::LowessError;
 pub struct ParallelOnlineLowessBuilder<T: Float> {
     // Base builder from the lowess crate
     pub base: OnlineLowessBuilder<T>,
+    // Parse errors from string-accepting builder methods; reported together by `build()`.
+    pub(crate) parse_errors: Vec<LowessError>,
 }
 
 impl<T: Float> Default for ParallelOnlineLowessBuilder<T> {
@@ -53,7 +55,10 @@ impl<T: Float> ParallelOnlineLowessBuilder<T> {
     fn new() -> Self {
         let mut base = OnlineLowessBuilder::default();
         base.parallel = Some(false); // Default to non-parallel in fastLowess for Online
-        Self { base }
+        Self {
+            base,
+            parse_errors: Vec::new(),
+        }
     }
 
     // Set parallel execution mode.
@@ -91,9 +96,7 @@ impl<T: Float> ParallelOnlineLowessBuilder<T> {
         match wf.into_enum() {
             Ok(w) => self.base.weight_function = w,
             Err(e) => {
-                if self.base.deferred_error.is_none() {
-                    self.base.deferred_error = Some(e);
-                }
+                self.parse_errors.push(e);
             }
         }
         self
@@ -104,9 +107,7 @@ impl<T: Float> ParallelOnlineLowessBuilder<T> {
         match method.into_enum() {
             Ok(m) => self.base.robustness_method = m,
             Err(e) => {
-                if self.base.deferred_error.is_none() {
-                    self.base.deferred_error = Some(e);
-                }
+                self.parse_errors.push(e);
             }
         }
         self
@@ -117,9 +118,7 @@ impl<T: Float> ParallelOnlineLowessBuilder<T> {
         match fallback.into_enum() {
             Ok(f) => self.base.zero_weight_fallback = f,
             Err(e) => {
-                if self.base.deferred_error.is_none() {
-                    self.base.deferred_error = Some(e);
-                }
+                self.parse_errors.push(e);
             }
         }
         self
@@ -130,9 +129,7 @@ impl<T: Float> ParallelOnlineLowessBuilder<T> {
         match policy.into_enum() {
             Ok(p) => self.base.boundary_policy = p,
             Err(e) => {
-                if self.base.deferred_error.is_none() {
-                    self.base.deferred_error = Some(e);
-                }
+                self.parse_errors.push(e);
             }
         }
         self
@@ -173,9 +170,7 @@ impl<T: Float> ParallelOnlineLowessBuilder<T> {
         match mode.into_enum() {
             Ok(m) => self.base.update_mode = m,
             Err(e) => {
-                if self.base.deferred_error.is_none() {
-                    self.base.deferred_error = Some(e);
-                }
+                self.parse_errors.push(e);
             }
         }
         self
@@ -227,9 +222,9 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> ParallelOnlineLowess<
 impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> ParallelOnlineLowessBuilder<T> {
     // Build the online processor.
     pub fn build(self) -> Result<ParallelOnlineLowess<T>, LowessError> {
-        // Check for deferred errors from adapter conversion
-        if let Some(ref err) = self.base.deferred_error {
-            return Err(err.clone());
+        // Check for deferred parse errors
+        if !self.parse_errors.is_empty() {
+            return Err(LowessError::ParseErrors(self.parse_errors));
         }
 
         // Configure the base builder with parallel callback if enabled

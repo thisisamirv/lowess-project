@@ -1,4 +1,4 @@
-//! Batch adapter for standard LOWESS smoothing.
+﻿//! Batch adapter for standard LOWESS smoothing.
 //!
 //! This module provides the batch execution adapter for LOWESS smoothing.
 //! It handles complete datasets in memory with optional parallel processing,
@@ -44,6 +44,8 @@ use lowess::internals::primitives::errors::LowessError;
 pub struct ParallelBatchLowessBuilder<T: Float> {
     // Base builder from the lowess crate
     pub base: BatchLowessBuilder<T>,
+    // Parse errors from string-accepting builder methods; reported together by `build()`.
+    pub(crate) parse_errors: Vec<LowessError>,
     // CV method string for string-based cross-validation API ("kfold" or "loocv").
     pub cv_method_str: Option<String>,
     // K value for K-fold CV (default: 5).
@@ -64,6 +66,7 @@ impl<T: Float> ParallelBatchLowessBuilder<T> {
         base.parallel = Some(true); // Default to parallel in fastLowess
         Self {
             base,
+            parse_errors: Vec::new(),
             cv_method_str: None,
             cv_k_val: 5,
         }
@@ -104,9 +107,7 @@ impl<T: Float> ParallelBatchLowessBuilder<T> {
         match wf.into_enum() {
             Ok(w) => self.base.weight_function = w,
             Err(e) => {
-                if self.base.deferred_error.is_none() {
-                    self.base.deferred_error = Some(e);
-                }
+                self.parse_errors.push(e);
             }
         }
         self
@@ -117,9 +118,7 @@ impl<T: Float> ParallelBatchLowessBuilder<T> {
         match method.into_enum() {
             Ok(m) => self.base.robustness_method = m,
             Err(e) => {
-                if self.base.deferred_error.is_none() {
-                    self.base.deferred_error = Some(e);
-                }
+                self.parse_errors.push(e);
             }
         }
         self
@@ -130,9 +129,7 @@ impl<T: Float> ParallelBatchLowessBuilder<T> {
         match fallback.into_enum() {
             Ok(f) => self.base.zero_weight_fallback = f,
             Err(e) => {
-                if self.base.deferred_error.is_none() {
-                    self.base.deferred_error = Some(e);
-                }
+                self.parse_errors.push(e);
             }
         }
         self
@@ -143,9 +140,7 @@ impl<T: Float> ParallelBatchLowessBuilder<T> {
         match policy.into_enum() {
             Ok(p) => self.base.boundary_policy = p,
             Err(e) => {
-                if self.base.deferred_error.is_none() {
-                    self.base.deferred_error = Some(e);
-                }
+                self.parse_errors.push(e);
             }
         }
         self
@@ -234,21 +229,19 @@ impl<T: Float> ParallelBatchLowessBuilder<T> {
                         self.base.cv_kind = Some(CVKind::LOOCV);
                     }
                     _ => {
-                        if self.base.deferred_error.is_none() {
-                            self.base.deferred_error = Some(LowessError::InvalidOption {
-                                option: "cv_method",
-                                value: method_str,
-                                valid: "kfold, loocv",
-                            });
-                        }
+                        self.parse_errors.push(LowessError::InvalidOption {
+                            option: "cv_method",
+                            value: method_str,
+                            valid: "kfold, loocv",
+                        });
                     }
                 }
             }
         }
 
-        // Check for deferred errors
-        if let Some(ref err) = self.base.deferred_error {
-            return Err(err.clone());
+        // Check for deferred parse errors
+        if !self.parse_errors.is_empty() {
+            return Err(LowessError::ParseErrors(self.parse_errors));
         }
 
         // Validate by attempting to build the base processor

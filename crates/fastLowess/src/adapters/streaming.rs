@@ -1,4 +1,4 @@
-//! Streaming adapter for large-scale LOWESS smoothing.
+﻿//! Streaming adapter for large-scale LOWESS smoothing.
 //!
 //! This module provides the streaming execution adapter for LOWESS smoothing
 //! on datasets too large to fit in memory. It divides the data into overlapping
@@ -39,6 +39,8 @@ use lowess::internals::primitives::errors::LowessError;
 pub struct ParallelStreamingLowessBuilder<T: Float> {
     // Base builder from the lowess crate
     pub base: StreamingLowessBuilder<T>,
+    // Parse errors from string-accepting builder methods; reported together by `build()`.
+    pub(crate) parse_errors: Vec<LowessError>,
 }
 
 impl<T: Float> Default for ParallelStreamingLowessBuilder<T> {
@@ -53,7 +55,10 @@ impl<T: Float> ParallelStreamingLowessBuilder<T> {
     fn new() -> Self {
         let mut base = StreamingLowessBuilder::default();
         base.parallel = Some(true); // Default to parallel in fastLowess for Streaming
-        Self { base }
+        Self {
+            base,
+            parse_errors: Vec::new(),
+        }
     }
 
     // Set parallel execution mode.
@@ -91,9 +96,7 @@ impl<T: Float> ParallelStreamingLowessBuilder<T> {
         match wf.into_enum() {
             Ok(w) => self.base.weight_function = w,
             Err(e) => {
-                if self.base.deferred_error.is_none() {
-                    self.base.deferred_error = Some(e);
-                }
+                self.parse_errors.push(e);
             }
         }
         self
@@ -104,9 +107,7 @@ impl<T: Float> ParallelStreamingLowessBuilder<T> {
         match method.into_enum() {
             Ok(m) => self.base.robustness_method = m,
             Err(e) => {
-                if self.base.deferred_error.is_none() {
-                    self.base.deferred_error = Some(e);
-                }
+                self.parse_errors.push(e);
             }
         }
         self
@@ -117,9 +118,7 @@ impl<T: Float> ParallelStreamingLowessBuilder<T> {
         match fallback.into_enum() {
             Ok(f) => self.base.zero_weight_fallback = f,
             Err(e) => {
-                if self.base.deferred_error.is_none() {
-                    self.base.deferred_error = Some(e);
-                }
+                self.parse_errors.push(e);
             }
         }
         self
@@ -130,9 +129,7 @@ impl<T: Float> ParallelStreamingLowessBuilder<T> {
         match policy.into_enum() {
             Ok(p) => self.base.boundary_policy = p,
             Err(e) => {
-                if self.base.deferred_error.is_none() {
-                    self.base.deferred_error = Some(e);
-                }
+                self.parse_errors.push(e);
             }
         }
         self
@@ -173,9 +170,7 @@ impl<T: Float> ParallelStreamingLowessBuilder<T> {
         match strategy.into_enum() {
             Ok(s) => self.base.merge_strategy = s,
             Err(e) => {
-                if self.base.deferred_error.is_none() {
-                    self.base.deferred_error = Some(e);
-                }
+                self.parse_errors.push(e);
             }
         }
         self
@@ -209,9 +204,9 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> ParallelStreamingLowe
 impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> ParallelStreamingLowessBuilder<T> {
     // Build the streaming processor.
     pub fn build(self) -> Result<ParallelStreamingLowess<T>, LowessError> {
-        // Check for deferred errors from adapter conversion
-        if let Some(ref err) = self.base.deferred_error {
-            return Err(err.clone());
+        // Check for deferred parse errors
+        if !self.parse_errors.is_empty() {
+            return Err(LowessError::ParseErrors(self.parse_errors));
         }
 
         // Configure the base builder with parallel callback if enabled

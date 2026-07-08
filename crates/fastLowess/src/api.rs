@@ -55,6 +55,7 @@ impl<T: Float> LowessAdapter<T> for Batch {
         // Wrap with extension fields
         ParallelBatchLowessBuilder {
             base,
+            parse_errors: Vec::new(),
             cv_method_str: None,
             cv_k_val: 5,
         }
@@ -77,7 +78,7 @@ impl<T: Float> LowessAdapter<T> for Streaming {
         base.parallel = Some(parallel);
 
         // Wrap with extension fields
-        ParallelStreamingLowessBuilder { base }
+        ParallelStreamingLowessBuilder { base, parse_errors: Vec::new() }
     }
 }
 
@@ -97,6 +98,6 @@ impl<T: Float> LowessAdapter<T> for Online {
         base.parallel = Some(parallel);
 
         // Wrap with extension fields
-        ParallelOnlineLowessBuilder { base }
+        ParallelOnlineLowessBuilder { base, parse_errors: Vec::new() }
     }
 }
