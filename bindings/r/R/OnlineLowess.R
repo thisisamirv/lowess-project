@@ -9,7 +9,7 @@
 #' @inheritParams Lowess
 #' @param window_capacity Max points in sliding window.
 #' @param min_points Minimum points before smoothing.
-#' @param update_mode Update strategy: "incremental".
+#' @param update_mode Update strategy: "full" or "incremental".
 #'
 #' @return An OnlineLowess object.
 #' @examples
@@ -30,7 +30,7 @@ OnlineLowess <- function(
     robustness_method = "bisquare",
     scaling_method = "mad",
     boundary_policy = "extend",
-    update_mode = "incremental",
+    update_mode = "full",
     auto_converge = NULL,
     return_robustness_weights = FALSE,
     parallel = FALSE

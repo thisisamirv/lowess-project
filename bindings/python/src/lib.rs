@@ -7,14 +7,13 @@ use pyo3::prelude::*;
 use std::fmt::Display;
 use std::sync::Mutex;
 
+use ::fastLowess::binding_support;
 use ::fastLowess::internals::adapters::online::ParallelOnlineLowess;
 use ::fastLowess::internals::adapters::streaming::ParallelStreamingLowess;
 use ::fastLowess::internals::api::{
-    BoundaryPolicy, RobustnessMethod, ScalingMethod, UpdateMode, WeightFunction, ZeroWeightFallback,
+    BoundaryPolicy, RobustnessMethod, ScalingMethod, WeightFunction, ZeroWeightFallback,
 };
-use ::fastLowess::prelude::{
-    Batch, KFold, LOOCV, Lowess as LowessBuilder, LowessResult, MAD, MAR, Mean, Online, Streaming,
-};
+use ::fastLowess::prelude::{Batch, Lowess, LowessResult, Online, Streaming};
 
 // ============================================================================
 // Helper Functions
@@ -23,88 +22,6 @@ use ::fastLowess::prelude::{
 /// Convert a LowessError to a PyErr
 fn to_py_error(e: impl Display) -> PyErr {
     PyValueError::new_err(e.to_string())
-}
-
-/// Parse weight function from string
-fn parse_weight_function(name: &str) -> PyResult<WeightFunction> {
-    match name.to_lowercase().as_str() {
-        "tricube" => Ok(WeightFunction::Tricube),
-        "epanechnikov" => Ok(WeightFunction::Epanechnikov),
-        "gaussian" => Ok(WeightFunction::Gaussian),
-        "uniform" | "boxcar" => Ok(WeightFunction::Uniform),
-        "biweight" | "bisquare" => Ok(WeightFunction::Biweight),
-        "triangle" | "triangular" => Ok(WeightFunction::Triangle),
-        "cosine" => Ok(WeightFunction::Cosine),
-        _ => Err(PyValueError::new_err(format!(
-            "Unknown weight function: {}. Valid options: tricube, epanechnikov, gaussian, uniform, biweight, triangle, cosine",
-            name
-        ))),
-    }
-}
-
-/// Parse robustness method from string
-fn parse_robustness_method(name: &str) -> PyResult<RobustnessMethod> {
-    match name.to_lowercase().as_str() {
-        "bisquare" | "biweight" => Ok(RobustnessMethod::Bisquare),
-        "huber" => Ok(RobustnessMethod::Huber),
-        "talwar" => Ok(RobustnessMethod::Talwar),
-        _ => Err(PyValueError::new_err(format!(
-            "Unknown robustness method: {}. Valid options: bisquare, huber, talwar",
-            name
-        ))),
-    }
-}
-
-/// Parse zero weight fallback from string
-fn parse_zero_weight_fallback(name: &str) -> PyResult<ZeroWeightFallback> {
-    match name.to_lowercase().as_str() {
-        "use_local_mean" | "local_mean" | "mean" => Ok(ZeroWeightFallback::UseLocalMean),
-        "return_original" | "original" => Ok(ZeroWeightFallback::ReturnOriginal),
-        "return_none" | "none" | "nan" => Ok(ZeroWeightFallback::ReturnNone),
-        _ => Err(PyValueError::new_err(format!(
-            "Unknown zero weight fallback: {}. Valid options: use_local_mean, return_original, return_none",
-            name
-        ))),
-    }
-}
-
-/// Parse boundary policy from string
-fn parse_boundary_policy(name: &str) -> PyResult<BoundaryPolicy> {
-    match name.to_lowercase().as_str() {
-        "extend" | "pad" => Ok(BoundaryPolicy::Extend),
-        "reflect" | "mirror" => Ok(BoundaryPolicy::Reflect),
-        "zero" | "none" => Ok(BoundaryPolicy::Zero),
-        "noboundary" => Ok(BoundaryPolicy::NoBoundary),
-        _ => Err(PyValueError::new_err(format!(
-            "Unknown boundary policy: {}. Valid options: extend, reflect, zero, noboundary",
-            name
-        ))),
-    }
-}
-
-/// Parse scaling method from string
-fn parse_scaling_method(name: &str) -> PyResult<ScalingMethod> {
-    match name.to_lowercase().as_str() {
-        "mad" => Ok(MAD),
-        "mar" => Ok(MAR),
-        "mean" => Ok(Mean),
-        _ => Err(PyValueError::new_err(format!(
-            "Unknown scaling method: {}. Valid options: mad, mar, mean",
-            name
-        ))),
-    }
-}
-
-/// Parse update mode from string
-fn parse_update_mode(name: &str) -> PyResult<UpdateMode> {
-    match name.to_lowercase().as_str() {
-        "full" | "resmooth" => Ok(UpdateMode::Full),
-        "incremental" | "single" => Ok(UpdateMode::Incremental),
-        _ => Err(PyValueError::new_err(format!(
-            "Unknown update mode: {}. Valid options: full, incremental",
-            name
-        ))),
-    }
 }
 
 // ============================================================================
@@ -329,49 +246,45 @@ impl PyStreamingLowess {
         zero_weight_fallback: &str,
         parallel: bool,
     ) -> PyResult<Self> {
-        let wf = parse_weight_function(weight_function)?;
-        let rm = parse_robustness_method(robustness_method)?;
-        let sm = parse_scaling_method(scaling_method)?;
-        let zwf = parse_zero_weight_fallback(zero_weight_fallback)?;
-        let bp = parse_boundary_policy(boundary_policy)?;
-
-        let mut builder = LowessBuilder::<f64>::new();
-        builder = builder.fraction(fraction);
-        builder = builder.iterations(iterations);
-        builder = builder.weight_function(wf);
-        builder = builder.robustness_method(rm);
-        builder = builder.scaling_method(sm);
-        builder = builder.zero_weight_fallback(zwf);
-        builder = builder.boundary_policy(bp);
-
-        if return_diagnostics {
-            builder = builder.return_diagnostics();
-        }
-        if return_residuals {
-            builder = builder.return_residuals();
-        }
-        if return_robustness_weights {
-            builder = builder.return_robustness_weights();
-        }
-
         let overlap_size = overlap.unwrap_or_else(|| {
             let default = chunk_size / 10;
             default.min(chunk_size.saturating_sub(10)).max(1)
         });
 
-        let mut streaming_builder = builder.adapter(Streaming);
-        streaming_builder = streaming_builder.chunk_size(chunk_size);
-        streaming_builder = streaming_builder.overlap(overlap_size);
-        streaming_builder = streaming_builder.parallel(parallel);
+        let builder = binding_support::apply_builder_options(
+            Lowess::<f64>::new(),
+            binding_support::BuilderOptionSet {
+                fraction: Some(fraction),
+                iterations: Some(iterations),
+                delta,
+                weight_function: Some(weight_function),
+                robustness_method: Some(robustness_method),
+                scaling_method: Some(scaling_method),
+                boundary_policy: Some(boundary_policy),
+                zero_weight_fallback: Some(zero_weight_fallback),
+                auto_converge,
+                return_residuals,
+                return_robustness_weights,
+                return_diagnostics,
+                return_se: false,
+                confidence_intervals: None,
+                prediction_intervals: None,
+                parallel: Some(parallel),
+                chunk_size: Some(chunk_size),
+                overlap: Some(overlap_size),
+                merge_strategy: None,
+                window_capacity: None,
+                min_points: None,
+                update_mode: None,
+                cv_fractions: None,
+                cv_method: None,
+                cv_k: None,
+                cv_seed: None,
+            },
+        )
+        .map_err(|e| PyValueError::new_err(e))?;
 
-        if let Some(d) = delta {
-            streaming_builder = streaming_builder.delta(d);
-        }
-        if let Some(tol) = auto_converge {
-            streaming_builder = streaming_builder.auto_converge(tol);
-        }
-
-        let processor = streaming_builder.build().map_err(to_py_error)?;
+        let processor = builder.adapter(Streaming).build().map_err(to_py_error)?;
         Ok(PyStreamingLowess {
             inner: Mutex::new(processor),
         })
@@ -456,39 +369,40 @@ impl PyOnlineLowess {
         zero_weight_fallback: &str,
         parallel: bool,
     ) -> PyResult<Self> {
-        let wf = parse_weight_function(weight_function)?;
-        let rm = parse_robustness_method(robustness_method)?;
-        let sm = parse_scaling_method(scaling_method)?;
-        let bp = parse_boundary_policy(boundary_policy)?;
-        let zwf = parse_zero_weight_fallback(zero_weight_fallback)?;
-        let um = parse_update_mode(update_mode)?;
+        let builder = binding_support::apply_builder_options(
+            Lowess::<f64>::new(),
+            binding_support::BuilderOptionSet {
+                fraction: Some(fraction),
+                iterations: Some(iterations),
+                delta,
+                weight_function: Some(weight_function),
+                robustness_method: Some(robustness_method),
+                scaling_method: Some(scaling_method),
+                boundary_policy: Some(boundary_policy),
+                zero_weight_fallback: Some(zero_weight_fallback),
+                auto_converge,
+                return_residuals: false,
+                return_robustness_weights,
+                return_diagnostics: false,
+                return_se: false,
+                confidence_intervals: None,
+                prediction_intervals: None,
+                parallel: Some(parallel),
+                chunk_size: None,
+                overlap: None,
+                merge_strategy: None,
+                window_capacity: Some(window_capacity),
+                min_points: Some(min_points),
+                update_mode: Some(update_mode),
+                cv_fractions: None,
+                cv_method: None,
+                cv_k: None,
+                cv_seed: None,
+            },
+        )
+        .map_err(|e| PyValueError::new_err(e))?;
 
-        let mut builder = LowessBuilder::<f64>::new();
-        builder = builder.fraction(fraction);
-        builder = builder.iterations(iterations);
-        builder = builder.weight_function(wf);
-        builder = builder.robustness_method(rm);
-        builder = builder.scaling_method(sm);
-        builder = builder.zero_weight_fallback(zwf);
-        builder = builder.boundary_policy(bp);
-
-        let mut online_builder = builder.adapter(Online);
-        online_builder = online_builder.window_capacity(window_capacity);
-        online_builder = online_builder.min_points(min_points);
-        online_builder = online_builder.update_mode(um);
-        online_builder = online_builder.parallel(parallel);
-
-        if let Some(d) = delta {
-            online_builder = online_builder.delta(d);
-        }
-        if let Some(tol) = auto_converge {
-            online_builder = online_builder.auto_converge(tol);
-        }
-        if return_robustness_weights {
-            online_builder = online_builder.return_robustness_weights(true);
-        }
-
-        let processor = online_builder.build().map_err(to_py_error)?;
+        let processor = builder.adapter(Online).build().map_err(to_py_error)?;
         Ok(PyOnlineLowess {
             inner: Mutex::new(processor),
             fraction,
@@ -625,11 +539,16 @@ impl PyLowess {
         cv_k: usize,
         parallel: bool,
     ) -> PyResult<Self> {
-        let wf = parse_weight_function(weight_function)?;
-        let rm = parse_robustness_method(robustness_method)?;
-        let sm = parse_scaling_method(scaling_method)?;
-        let zwf = parse_zero_weight_fallback(zero_weight_fallback)?;
-        let bp = parse_boundary_policy(boundary_policy)?;
+        let wf = binding_support::parse_weight_function(weight_function)
+            .map_err(|e| PyValueError::new_err(e))?;
+        let rm = binding_support::parse_robustness_method(robustness_method)
+            .map_err(|e| PyValueError::new_err(e))?;
+        let sm = binding_support::parse_scaling_method(scaling_method)
+            .map_err(|e| PyValueError::new_err(e))?;
+        let zwf = binding_support::parse_zero_weight_fallback(zero_weight_fallback)
+            .map_err(|e| PyValueError::new_err(e))?;
+        let bp = binding_support::parse_boundary_policy(boundary_policy)
+            .map_err(|e| PyValueError::new_err(e))?;
 
         Ok(PyLowess {
             fraction,
@@ -681,61 +600,37 @@ impl PyLowess {
 
         // 2. Release GIL
         let result = py.detach(move || {
-            let mut builder = LowessBuilder::<f64>::new();
-            builder = builder.fraction(params.fraction);
-            builder = builder.iterations(params.iterations);
-            builder = builder.weight_function(params.weight_function);
-            builder = builder.robustness_method(params.robustness_method);
-            builder = builder.scaling_method(params.scaling_method);
-            builder = builder.zero_weight_fallback(params.zero_weight_fallback);
-            builder = builder.boundary_policy(params.boundary_policy);
-            builder = builder.parallel(params.parallel);
-
-            if let Some(d) = params.delta {
-                builder = builder.delta(d);
-            }
-
-            if let Some(cl) = params.confidence_intervals {
-                builder = builder.confidence_intervals(cl);
-            }
-
-            if let Some(pl) = params.prediction_intervals {
-                builder = builder.prediction_intervals(pl);
-            }
-
-            if params.return_diagnostics {
-                builder = builder.return_diagnostics();
-            }
-
-            if params.return_residuals {
-                builder = builder.return_residuals();
-            }
-
-            if params.return_robustness_weights {
-                builder = builder.return_robustness_weights();
-            }
-
-            if let Some(tol) = params.auto_converge {
-                builder = builder.auto_converge(tol);
-            }
-
-            // Cross-validation if fractions are provided
-            if let Some(ref fractions) = params.cv_fractions {
-                match params.cv_method.to_lowercase().as_str() {
-                    "simple" | "loo" | "loocv" | "leave_one_out" => {
-                        builder = builder.cross_validate(LOOCV(fractions));
-                    }
-                    "kfold" | "k_fold" | "k-fold" => {
-                        builder = builder.cross_validate(KFold(params.cv_k, fractions));
-                    }
-                    _ => {
-                        return Err(format!(
-                            "Unknown CV method: {}. Valid options: loocv, kfold",
-                            params.cv_method
-                        ));
-                    }
-                };
-            }
+            let builder = binding_support::apply_typed_builder_options(
+                Lowess::<f64>::new(),
+                binding_support::TypedBuilderOptionSet {
+                    fraction: Some(params.fraction),
+                    iterations: Some(params.iterations),
+                    delta: params.delta,
+                    weight_function: Some(params.weight_function),
+                    robustness_method: Some(params.robustness_method),
+                    scaling_method: Some(params.scaling_method),
+                    zero_weight_fallback: Some(params.zero_weight_fallback),
+                    boundary_policy: Some(params.boundary_policy),
+                    auto_converge: params.auto_converge,
+                    return_residuals: params.return_residuals,
+                    return_robustness_weights: params.return_robustness_weights,
+                    return_diagnostics: params.return_diagnostics,
+                    return_se: false,
+                    confidence_intervals: params.confidence_intervals,
+                    prediction_intervals: params.prediction_intervals,
+                    parallel: Some(params.parallel),
+                    chunk_size: None,
+                    overlap: None,
+                    merge_strategy: None,
+                    window_capacity: None,
+                    min_points: None,
+                    update_mode: None,
+                    cv_fractions: params.cv_fractions,
+                    cv_method: Some(params.cv_method),
+                    cv_k: Some(params.cv_k),
+                    cv_seed: None,
+                },
+            )?;
 
             builder
                 .adapter(Batch)

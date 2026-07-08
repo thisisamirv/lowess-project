@@ -12,12 +12,11 @@ use std::panic::catch_unwind;
 use std::ptr;
 use std::slice::from_raw_parts;
 
+use fastLowess::binding_support;
 use fastLowess::internals::api::{
-    BoundaryPolicy, RobustnessMethod, ScalingMethod, UpdateMode, WeightFunction, ZeroWeightFallback,
+    BoundaryPolicy, RobustnessMethod, ScalingMethod, WeightFunction, ZeroWeightFallback,
 };
-use fastLowess::prelude::{
-    Batch, KFold, LOOCV, Lowess as LowessBuilder, LowessResult, MAD, MAR, Mean, Online, Streaming,
-};
+use fastLowess::prelude::{Batch, Lowess as LowessBuilder, LowessResult, Online, Streaming};
 
 /// Result struct that can be passed across FFI boundary.
 /// All arrays are allocated by Rust and must be freed by Rust.
@@ -44,6 +43,11 @@ pub struct JlLowessResult {
     pub residuals: *mut c_double,
     /// Robustness weights (NULL if not computed)
     pub robustness_weights: *mut c_double,
+
+    /// Cross-validation scores (NULL if not computed, length = cv_scores_len)
+    pub cv_scores: *mut c_double,
+    /// Number of cross-validation scores
+    pub cv_scores_len: c_ulong,
 
     /// Fraction used for smoothing
     pub fraction_used: c_double,
@@ -76,6 +80,8 @@ impl Default for JlLowessResult {
             prediction_upper: null_mut(),
             residuals: null_mut(),
             robustness_weights: null_mut(),
+            cv_scores: null_mut(),
+            cv_scores_len: 0,
             fraction_used: 0.0,
             iterations_used: -1,
             rmse: f64::NAN,
@@ -123,88 +129,6 @@ unsafe fn parse_c_str(s: *const c_char, default: &str) -> &str {
     }
 }
 
-/// Parse weight function from string.
-fn parse_weight_function(name: &str) -> Result<WeightFunction, String> {
-    match name.to_lowercase().as_str() {
-        "tricube" => Ok(WeightFunction::Tricube),
-        "epanechnikov" => Ok(WeightFunction::Epanechnikov),
-        "gaussian" => Ok(WeightFunction::Gaussian),
-        "uniform" | "boxcar" => Ok(WeightFunction::Uniform),
-        "biweight" | "bisquare" => Ok(WeightFunction::Biweight),
-        "triangle" | "triangular" => Ok(WeightFunction::Triangle),
-        "cosine" => Ok(WeightFunction::Cosine),
-        _ => Err(format!(
-            "Unknown weight function: {}. Valid: tricube, epanechnikov, gaussian, uniform, biweight, triangle, cosine",
-            name
-        )),
-    }
-}
-
-/// Parse robustness method from string.
-fn parse_robustness_method(name: &str) -> Result<RobustnessMethod, String> {
-    match name.to_lowercase().as_str() {
-        "bisquare" | "biweight" => Ok(RobustnessMethod::Bisquare),
-        "huber" => Ok(RobustnessMethod::Huber),
-        "talwar" => Ok(RobustnessMethod::Talwar),
-        _ => Err(format!(
-            "Unknown robustness method: {}. Valid: bisquare, huber, talwar",
-            name
-        )),
-    }
-}
-
-/// Parse zero weight fallback from string.
-fn parse_zero_weight_fallback(name: &str) -> Result<ZeroWeightFallback, String> {
-    match name.to_lowercase().as_str() {
-        "use_local_mean" | "local_mean" | "mean" => Ok(ZeroWeightFallback::UseLocalMean),
-        "return_original" | "original" => Ok(ZeroWeightFallback::ReturnOriginal),
-        "return_none" | "none" | "nan" => Ok(ZeroWeightFallback::ReturnNone),
-        _ => Err(format!(
-            "Unknown zero weight fallback: {}. Valid: use_local_mean, return_original, return_none",
-            name
-        )),
-    }
-}
-
-/// Parse boundary policy from string.
-fn parse_boundary_policy(name: &str) -> Result<BoundaryPolicy, String> {
-    match name.to_lowercase().as_str() {
-        "extend" | "pad" => Ok(BoundaryPolicy::Extend),
-        "reflect" | "mirror" => Ok(BoundaryPolicy::Reflect),
-        "zero" | "none" => Ok(BoundaryPolicy::Zero),
-        "noboundary" => Ok(BoundaryPolicy::NoBoundary),
-        _ => Err(format!(
-            "Unknown boundary policy: {}. Valid: extend, reflect, zero, noboundary",
-            name
-        )),
-    }
-}
-
-/// Parse scaling method from string.
-fn parse_scaling_method(name: &str) -> Result<ScalingMethod, String> {
-    match name.to_lowercase().as_str() {
-        "mad" => Ok(MAD),
-        "mar" => Ok(MAR),
-        "mean" => Ok(Mean),
-        _ => Err(format!(
-            "Unknown scaling method: {}. Valid: mad, mar, mean",
-            name
-        )),
-    }
-}
-
-/// Parse update mode from string.
-fn parse_update_mode(name: &str) -> Result<UpdateMode, String> {
-    match name.to_lowercase().as_str() {
-        "full" | "resmooth" => Ok(UpdateMode::Full),
-        "incremental" | "single" => Ok(UpdateMode::Incremental),
-        _ => Err(format!(
-            "Unknown update mode: {}. Valid: full, incremental",
-            name
-        )),
-    }
-}
-
 /// Convert LowessResult to JlLowessResult.
 fn lowess_result_to_jl(result: LowessResult<f64>) -> JlLowessResult {
     let n = result.y.len();
@@ -243,6 +167,12 @@ fn lowess_result_to_jl(result: LowessResult<f64>) -> JlLowessResult {
         prediction_upper: opt_vec_to_ptr(result.prediction_upper),
         residuals: opt_vec_to_ptr(result.residuals),
         robustness_weights: opt_vec_to_ptr(result.robustness_weights),
+        cv_scores: opt_vec_to_ptr(result.cv_scores.clone()),
+        cv_scores_len: result
+            .cv_scores
+            .as_ref()
+            .map(|v| v.len() as c_ulong)
+            .unwrap_or(0),
         fraction_used: result.fraction_used,
         iterations_used: result.iterations_used.map(|i| i as c_int).unwrap_or(-1),
         rmse,
@@ -332,11 +262,11 @@ pub unsafe extern "C" fn jl_lowess_new(
         let zwf_str = unsafe { parse_c_str(zero_weight_fallback, "use_local_mean") };
         let cv_method_str = unsafe { parse_c_str(cv_method, "kfold") };
 
-        let wf = unwrap_or_return_null!(parse_weight_function(wf_str));
-        let rm = unwrap_or_return_null!(parse_robustness_method(rm_str));
-        let sm = unwrap_or_return_null!(parse_scaling_method(sm_str));
-        let bp = unwrap_or_return_null!(parse_boundary_policy(bp_str));
-        let zwf = unwrap_or_return_null!(parse_zero_weight_fallback(zwf_str));
+        let wf = unwrap_or_return_null!(binding_support::parse_weight_function(wf_str));
+        let rm = unwrap_or_return_null!(binding_support::parse_robustness_method(rm_str));
+        let sm = unwrap_or_return_null!(binding_support::parse_scaling_method(sm_str));
+        let bp = unwrap_or_return_null!(binding_support::parse_boundary_policy(bp_str));
+        let zwf = unwrap_or_return_null!(binding_support::parse_zero_weight_fallback(zwf_str));
 
         let cv_fractions_vec = if !cv_fractions.is_null() && cv_fractions_len > 0 {
             let slice = unsafe { from_raw_parts(cv_fractions, cv_fractions_len as usize) };
@@ -449,20 +379,16 @@ pub unsafe extern "C" fn jl_lowess_fit(
 
         // Cross-validation
         if let Some(ref fractions) = config.cv_fractions {
-            match config.cv_method.to_lowercase().as_str() {
-                "simple" | "loo" | "loocv" | "leave_one_out" => {
-                    builder = builder.cross_validate(LOOCV(fractions));
-                }
-                "kfold" | "k_fold" | "k-fold" => {
-                    builder = builder.cross_validate(KFold(config.cv_k, fractions));
-                }
-                _ => {
-                    return error_result(&format!(
-                        "Unknown CV method: {}. Valid: loocv, kfold",
-                        config.cv_method
-                    ));
-                }
-            }
+            builder = match binding_support::apply_cross_validation(
+                builder,
+                Some(fractions),
+                Some(&config.cv_method),
+                Some(config.cv_k),
+                None,
+            ) {
+                Ok(b) => b,
+                Err(e) => return error_result(&e),
+            };
         }
 
         let result = match builder.adapter(Batch).build() {
@@ -509,6 +435,7 @@ pub unsafe extern "C" fn jl_lowess_free_result(result: *mut JlLowessResult) {
     free_vec(res.prediction_upper, n);
     free_vec(res.residuals, n);
     free_vec(res.robustness_weights, n);
+    free_vec(res.cv_scores, res.cv_scores_len as usize);
 
     if !res.error.is_null() {
         let _ = std::ffi::CString::from_raw(res.error);
@@ -559,11 +486,11 @@ pub unsafe extern "C" fn jl_streaming_lowess_new(
         let bp_str = unsafe { parse_c_str(boundary_policy, "extend") };
         let zwf_str = unsafe { parse_c_str(zero_weight_fallback, "use_local_mean") };
 
-        let wf = unwrap_or_return_null!(parse_weight_function(wf_str));
-        let rm = unwrap_or_return_null!(parse_robustness_method(rm_str));
-        let sm = unwrap_or_return_null!(parse_scaling_method(sm_str));
-        let bp = unwrap_or_return_null!(parse_boundary_policy(bp_str));
-        let zwf = unwrap_or_return_null!(parse_zero_weight_fallback(zwf_str));
+        let wf = unwrap_or_return_null!(binding_support::parse_weight_function(wf_str));
+        let rm = unwrap_or_return_null!(binding_support::parse_robustness_method(rm_str));
+        let sm = unwrap_or_return_null!(binding_support::parse_scaling_method(sm_str));
+        let bp = unwrap_or_return_null!(binding_support::parse_boundary_policy(bp_str));
+        let zwf = unwrap_or_return_null!(binding_support::parse_zero_weight_fallback(zwf_str));
 
         let mut builder = LowessBuilder::<f64>::new();
         builder = builder.fraction(fraction);
@@ -727,12 +654,12 @@ pub unsafe extern "C" fn jl_online_lowess_new(
         let zwf_str = unsafe { parse_c_str(zero_weight_fallback, "use_local_mean") };
         let um_str = unsafe { parse_c_str(update_mode, "full") };
 
-        let wf = unwrap_or_return_null!(parse_weight_function(wf_str));
-        let rm = unwrap_or_return_null!(parse_robustness_method(rm_str));
-        let sm = unwrap_or_return_null!(parse_scaling_method(sm_str));
-        let bp = unwrap_or_return_null!(parse_boundary_policy(bp_str));
-        let zwf = unwrap_or_return_null!(parse_zero_weight_fallback(zwf_str));
-        let um = unwrap_or_return_null!(parse_update_mode(um_str));
+        let wf = unwrap_or_return_null!(binding_support::parse_weight_function(wf_str));
+        let rm = unwrap_or_return_null!(binding_support::parse_robustness_method(rm_str));
+        let sm = unwrap_or_return_null!(binding_support::parse_scaling_method(sm_str));
+        let bp = unwrap_or_return_null!(binding_support::parse_boundary_policy(bp_str));
+        let zwf = unwrap_or_return_null!(binding_support::parse_zero_weight_fallback(zwf_str));
+        let um = unwrap_or_return_null!(binding_support::parse_update_mode(um_str));
 
         let mut builder = LowessBuilder::<f64>::new();
         builder = builder.fraction(fraction);

@@ -3,100 +3,12 @@
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 
+use ::fastLowess::binding_support;
 use ::fastLowess::internals::adapters::online::ParallelOnlineLowess;
 use ::fastLowess::internals::adapters::streaming::ParallelStreamingLowess;
-use ::fastLowess::internals::api::{
-    BoundaryPolicy, RobustnessMethod, ScalingMethod, UpdateMode, WeightFunction, ZeroWeightFallback,
-};
 use ::fastLowess::prelude::{
-    Batch, KFold, LOOCV, Lowess as LowessBuilder, LowessError, LowessResult, MAD, MAR, Mean,
-    Online, Streaming,
+    Batch, Lowess as LowessBuilder, LowessError, LowessResult, Online, Streaming,
 };
-
-/// Parse weight function from string
-fn parse_weight_function(name: &str) -> Result<WeightFunction> {
-    match name.to_lowercase().as_str() {
-        "tricube" => Ok(WeightFunction::Tricube),
-        "epanechnikov" => Ok(WeightFunction::Epanechnikov),
-        "gaussian" => Ok(WeightFunction::Gaussian),
-        "uniform" | "boxcar" => Ok(WeightFunction::Uniform),
-        "biweight" | "bisquare" => Ok(WeightFunction::Biweight),
-        "triangle" | "triangular" => Ok(WeightFunction::Triangle),
-        "cosine" => Ok(WeightFunction::Cosine),
-        _ => Err(Error::new(
-            Status::InvalidArg,
-            format!("Unknown weight function: {}", name),
-        )),
-    }
-}
-
-/// Parse robustness method from string
-fn parse_robustness_method(name: &str) -> Result<RobustnessMethod> {
-    match name.to_lowercase().as_str() {
-        "bisquare" | "biweight" => Ok(RobustnessMethod::Bisquare),
-        "huber" => Ok(RobustnessMethod::Huber),
-        "talwar" => Ok(RobustnessMethod::Talwar),
-        _ => Err(Error::new(
-            Status::InvalidArg,
-            format!("Unknown robustness method: {}", name),
-        )),
-    }
-}
-
-/// Parse zero weight fallback from string
-fn parse_zero_weight_fallback(name: &str) -> Result<ZeroWeightFallback> {
-    match name.to_lowercase().as_str() {
-        "use_local_mean" | "local_mean" | "mean" => Ok(ZeroWeightFallback::UseLocalMean),
-        "return_original" | "original" => Ok(ZeroWeightFallback::ReturnOriginal),
-        "return_none" | "none" | "nan" => Ok(ZeroWeightFallback::ReturnNone),
-        _ => Err(Error::new(
-            Status::InvalidArg,
-            format!("Unknown zero weight fallback: {}", name),
-        )),
-    }
-}
-
-/// Parse boundary policy from string
-fn parse_boundary_policy(name: &str) -> Result<BoundaryPolicy> {
-    match name.to_lowercase().as_str() {
-        "extend" | "pad" => Ok(BoundaryPolicy::Extend),
-        "reflect" | "mirror" => Ok(BoundaryPolicy::Reflect),
-        "zero" | "none" => Ok(BoundaryPolicy::Zero),
-        "noboundary" => Ok(BoundaryPolicy::NoBoundary),
-        _ => Err(Error::new(
-            Status::InvalidArg,
-            format!("Unknown boundary policy: {}", name),
-        )),
-    }
-}
-
-/// Parse scaling method from string
-fn parse_scaling_method(name: &str) -> Result<ScalingMethod> {
-    match name.to_lowercase().as_str() {
-        "mad" => Ok(MAD),
-        "mar" => Ok(MAR),
-        "mean" => Ok(Mean),
-        _ => Err(Error::new(
-            Status::InvalidArg,
-            format!(
-                "Unknown scaling method: {}. Valid options: mad, mar, mean",
-                name
-            ),
-        )),
-    }
-}
-
-/// Parse update mode from string
-fn parse_update_mode(name: &str) -> Result<UpdateMode> {
-    match name.to_lowercase().as_str() {
-        "full" | "resmooth" => Ok(UpdateMode::Full),
-        "incremental" | "single" => Ok(UpdateMode::Incremental),
-        _ => Err(Error::new(
-            Status::InvalidArg,
-            format!("Unknown update mode: {}", name),
-        )),
-    }
-}
 
 /// Diagnostic statistics for the LOWESS fit.
 #[napi(object)]
@@ -246,15 +158,15 @@ pub struct SmoothOptions {
     /// Delta for interpolation speedup. Default: NaN (auto).
     /// Set to 0.0 to disable interpolation.
     pub delta: Option<f64>,
-    /// Weight function ("tricube", "gaussian", etc.). Default: "tricube".
+    /// Weight function ("tricube", "epanechnikov", "gaussian", "uniform", "biweight", "triangle", "cosine"). Default: "tricube".
     pub weight_function: Option<String>,
-    /// Robustness method ("bisquare", "huber"). Default: "bisquare".
+    /// Robustness method ("bisquare", "huber", "talwar"). Default: "bisquare".
     pub robustness_method: Option<String>,
-    /// Fallback strategy when weights are zero ("use_local_mean").
+    /// Fallback strategy when weights are zero ("use_local_mean", "return_original", "return_none"). Default: "use_local_mean".
     pub zero_weight_fallback: Option<String>,
-    /// Boundary handling ("extend", "reflect"). Default: "extend".
+    /// Boundary handling ("extend", "reflect", "zero", "noboundary"). Default: "extend".
     pub boundary_policy: Option<String>,
-    /// Scaling method ("mad", "mar"). Default: "mad".
+    /// Scaling method ("mad", "mar", "mean"). Default: "mad".
     pub scaling_method: Option<String>,
     /// Auto-convergence tolerance. Default: None.
     pub auto_converge: Option<f64>,
@@ -323,78 +235,40 @@ impl Lowess {
     }
 
     fn create_builder(&self) -> Result<LowessBuilder<f64>> {
-        let mut builder = LowessBuilder::new();
-        let options = &self.options;
-
-        if let Some(opts) = options {
-            if let Some(f) = opts.fraction {
-                builder = builder.fraction(f);
-            }
-            if let Some(iter) = opts.iterations {
-                builder = builder.iterations(iter as usize);
-            }
-            if let Some(d) = opts.delta {
-                builder = builder.delta(d);
-            }
-            if let Some(wf) = &opts.weight_function {
-                builder = builder.weight_function(parse_weight_function(wf)?);
-            }
-            if let Some(rm) = &opts.robustness_method {
-                builder = builder.robustness_method(parse_robustness_method(rm)?);
-            }
-            if let Some(zw) = &opts.zero_weight_fallback {
-                builder = builder.zero_weight_fallback(parse_zero_weight_fallback(zw)?);
-            }
-            if let Some(bp) = &opts.boundary_policy {
-                builder = builder.boundary_policy(parse_boundary_policy(bp)?);
-            }
-            if let Some(sm) = &opts.scaling_method {
-                builder = builder.scaling_method(parse_scaling_method(sm)?);
-            }
-            if let Some(ac) = opts.auto_converge {
-                builder = builder.auto_converge(ac);
-            }
-            if opts.return_residuals.unwrap_or(false) {
-                builder = builder.return_residuals();
-            }
-            if opts.return_robustness_weights.unwrap_or(false) {
-                builder = builder.return_robustness_weights();
-            }
-            if opts.return_diagnostics.unwrap_or(false) {
-                builder = builder.return_diagnostics();
-            }
-            if let Some(ci) = opts.confidence_intervals {
-                builder = builder.confidence_intervals(ci);
-            }
-            if let Some(pi) = opts.prediction_intervals {
-                builder = builder.prediction_intervals(pi);
-            }
-            if let Some(par) = opts.parallel {
-                builder = builder.parallel(par);
-            }
-
-            // Cross-validation
-            if let Some(fractions) = &opts.cv_fractions {
-                let method = opts.cv_method.as_deref().unwrap_or("kfold");
-                let k = opts.cv_k.unwrap_or(5) as usize;
-
-                match method.to_lowercase().as_str() {
-                    "simple" | "loo" | "loocv" | "leave_one_out" => {
-                        builder = builder.cross_validate(LOOCV(fractions));
-                    }
-                    "kfold" | "k_fold" | "k-fold" => {
-                        builder = builder.cross_validate(KFold(k, fractions));
-                    }
-                    _ => {
-                        return Err(Error::new(
-                            Status::InvalidArg,
-                            format!("Unknown CV method: {}. Valid options: loocv, kfold", method),
-                        ));
-                    }
-                };
-            }
-        }
-        Ok(builder)
+        let o = self.options.as_ref();
+        binding_support::apply_builder_options(
+            LowessBuilder::<f64>::new(),
+            binding_support::BuilderOptionSet {
+                fraction: o.and_then(|x| x.fraction),
+                iterations: o.and_then(|x| x.iterations).map(|n| n as usize),
+                delta: o.and_then(|x| x.delta),
+                weight_function: o.and_then(|x| x.weight_function.as_deref()),
+                robustness_method: o.and_then(|x| x.robustness_method.as_deref()),
+                zero_weight_fallback: o.and_then(|x| x.zero_weight_fallback.as_deref()),
+                boundary_policy: o.and_then(|x| x.boundary_policy.as_deref()),
+                scaling_method: o.and_then(|x| x.scaling_method.as_deref()),
+                auto_converge: o.and_then(|x| x.auto_converge),
+                return_residuals: o.map_or(false, |x| x.return_residuals.unwrap_or(false)),
+                return_robustness_weights: o
+                    .map_or(false, |x| x.return_robustness_weights.unwrap_or(false)),
+                return_diagnostics: o.map_or(false, |x| x.return_diagnostics.unwrap_or(false)),
+                return_se: false,
+                confidence_intervals: o.and_then(|x| x.confidence_intervals),
+                prediction_intervals: o.and_then(|x| x.prediction_intervals),
+                parallel: o.and_then(|x| x.parallel),
+                chunk_size: None,
+                overlap: None,
+                merge_strategy: None,
+                window_capacity: None,
+                min_points: None,
+                update_mode: None,
+                cv_fractions: o.and_then(|x| x.cv_fractions.as_deref()),
+                cv_method: o.and_then(|x| x.cv_method.as_deref()),
+                cv_k: o.and_then(|x| x.cv_k).map(|k| k as usize),
+                cv_seed: None,
+            },
+        )
+        .map_err(|e| Error::new(Status::InvalidArg, e))
     }
 }
 
@@ -451,68 +325,52 @@ impl StreamingLowess {
         options: Option<SmoothOptions>,
         streaming_opts: Option<StreamingOptions>,
     ) -> Result<Self> {
-        let mut builder = LowessBuilder::new();
-
-        if let Some(opts) = options {
-            if let Some(f) = opts.fraction {
-                builder = builder.fraction(f);
-            }
-            if let Some(iter) = opts.iterations {
-                builder = builder.iterations(iter as usize);
-            }
-            if let Some(d) = opts.delta {
-                builder = builder.delta(d);
-            }
-            if let Some(wf) = opts.weight_function {
-                builder = builder.weight_function(parse_weight_function(&wf)?);
-            }
-            if let Some(rm) = opts.robustness_method {
-                builder = builder.robustness_method(parse_robustness_method(&rm)?);
-            }
-            if let Some(zw) = opts.zero_weight_fallback {
-                builder = builder.zero_weight_fallback(parse_zero_weight_fallback(&zw)?);
-            }
-            if let Some(bp) = opts.boundary_policy {
-                builder = builder.boundary_policy(parse_boundary_policy(&bp)?);
-            }
-            if let Some(sm) = opts.scaling_method {
-                builder = builder.scaling_method(parse_scaling_method(&sm)?);
-            }
-            if let Some(ac) = opts.auto_converge {
-                builder = builder.auto_converge(ac);
-            }
-            if opts.return_residuals.unwrap_or(false) {
-                builder = builder.return_residuals();
-            }
-            if opts.return_robustness_weights.unwrap_or(false) {
-                builder = builder.return_robustness_weights();
-            }
-            if opts.return_diagnostics.unwrap_or(false) {
-                builder = builder.return_diagnostics();
-            }
-            if let Some(par) = opts.parallel {
-                builder = builder.parallel(par);
-            }
-        }
-
-        let mut chunk_size = 5000;
-        let mut overlap = 500;
-
-        if let Some(sopts) = streaming_opts {
-            if let Some(cs) = sopts.chunk_size {
-                chunk_size = cs as usize;
-            }
-            if let Some(ov) = sopts.overlap {
-                overlap = ov as usize;
-            }
-        }
-
-        let model = builder
-            .adapter(Streaming)
-            .chunk_size(chunk_size)
-            .overlap(overlap)
-            .build()
-            .map_err(|e| Error::new(Status::GenericFailure, e.to_string()))?;
+        let o = options.as_ref();
+        let so = streaming_opts.as_ref();
+        let model = binding_support::apply_builder_options(
+            LowessBuilder::<f64>::new(),
+            binding_support::BuilderOptionSet {
+                fraction: o.and_then(|x| x.fraction),
+                iterations: o.and_then(|x| x.iterations).map(|n| n as usize),
+                delta: o.and_then(|x| x.delta),
+                weight_function: o.and_then(|x| x.weight_function.as_deref()),
+                robustness_method: o.and_then(|x| x.robustness_method.as_deref()),
+                zero_weight_fallback: o.and_then(|x| x.zero_weight_fallback.as_deref()),
+                boundary_policy: o.and_then(|x| x.boundary_policy.as_deref()),
+                scaling_method: o.and_then(|x| x.scaling_method.as_deref()),
+                auto_converge: o.and_then(|x| x.auto_converge),
+                return_residuals: o.map_or(false, |x| x.return_residuals.unwrap_or(false)),
+                return_robustness_weights: o
+                    .map_or(false, |x| x.return_robustness_weights.unwrap_or(false)),
+                return_diagnostics: o.map_or(false, |x| x.return_diagnostics.unwrap_or(false)),
+                return_se: false,
+                confidence_intervals: None,
+                prediction_intervals: None,
+                parallel: o.and_then(|x| x.parallel),
+                chunk_size: Some(
+                    so.and_then(|x| x.chunk_size)
+                        .map(|n| n as usize)
+                        .unwrap_or(5000),
+                ),
+                overlap: Some(
+                    so.and_then(|x| x.overlap)
+                        .map(|n| n as usize)
+                        .unwrap_or(500),
+                ),
+                merge_strategy: so.and_then(|x| x.merge_strategy.as_deref()),
+                window_capacity: None,
+                min_points: None,
+                update_mode: None,
+                cv_fractions: None,
+                cv_method: None,
+                cv_k: None,
+                cv_seed: None,
+            },
+        )
+        .map_err(|e| Error::new(Status::InvalidArg, e))?
+        .adapter(Streaming)
+        .build()
+        .map_err(|e| Error::new(Status::GenericFailure, e.to_string()))?;
 
         Ok(StreamingLowess { inner: model })
     }
@@ -560,43 +418,51 @@ impl OnlineLowess {
     /// Create a new online LOWESS smoother.
     #[napi(constructor)]
     pub fn new(options: Option<SmoothOptions>, online_opts: Option<OnlineOptions>) -> Result<Self> {
-        let mut builder = LowessBuilder::new();
-
-        if let Some(opts) = options {
-            if let Some(f) = opts.fraction {
-                builder = builder.fraction(f);
-            }
-            if let Some(iter) = opts.iterations {
-                builder = builder.iterations(iter as usize);
-            }
-            if let Some(par) = opts.parallel {
-                builder = builder.parallel(par);
-            }
-        }
-
-        let mut window_capacity = 100;
-        let mut min_points = 2;
-        let mut update_mode = UpdateMode::Full;
-
-        if let Some(oopts) = online_opts {
-            if let Some(wc) = oopts.window_capacity {
-                window_capacity = wc as usize;
-            }
-            if let Some(mp) = oopts.min_points {
-                min_points = mp as usize;
-            }
-            if let Some(um) = oopts.update_mode {
-                update_mode = parse_update_mode(&um)?;
-            }
-        }
-
-        let model = builder
-            .adapter(Online)
-            .window_capacity(window_capacity)
-            .min_points(min_points)
-            .update_mode(update_mode)
-            .build()
-            .map_err(|e| Error::new(Status::GenericFailure, e.to_string()))?;
+        let o = options.as_ref();
+        let oo = online_opts.as_ref();
+        let model = binding_support::apply_builder_options(
+            LowessBuilder::<f64>::new(),
+            binding_support::BuilderOptionSet {
+                fraction: o.and_then(|x| x.fraction),
+                iterations: o.and_then(|x| x.iterations).map(|n| n as usize),
+                delta: None,
+                weight_function: None,
+                robustness_method: None,
+                zero_weight_fallback: None,
+                boundary_policy: None,
+                scaling_method: None,
+                auto_converge: None,
+                return_residuals: false,
+                return_robustness_weights: false,
+                return_diagnostics: false,
+                return_se: false,
+                confidence_intervals: None,
+                prediction_intervals: None,
+                parallel: o.and_then(|x| x.parallel),
+                chunk_size: None,
+                overlap: None,
+                merge_strategy: None,
+                window_capacity: Some(
+                    oo.and_then(|x| x.window_capacity)
+                        .map(|n| n as usize)
+                        .unwrap_or(100),
+                ),
+                min_points: Some(
+                    oo.and_then(|x| x.min_points)
+                        .map(|n| n as usize)
+                        .unwrap_or(2),
+                ),
+                update_mode: oo.and_then(|x| x.update_mode.as_deref()),
+                cv_fractions: None,
+                cv_method: None,
+                cv_k: None,
+                cv_seed: None,
+            },
+        )
+        .map_err(|e| Error::new(Status::InvalidArg, e))?
+        .adapter(Online)
+        .build()
+        .map_err(|e| Error::new(Status::GenericFailure, e.to_string()))?;
 
         Ok(OnlineLowess { inner: model })
     }

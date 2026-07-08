@@ -42,3 +42,6 @@ Changelog = "https://github.com/thisisamirv/lowess-project/CHANGELOG.md"
 python-source = "python"
 module-name = "fastlowess._core"
 exclude = ["docs/**", "examples/**", "tests/**", "target/**", ".github/**"]
+
+[tool.pyright]
+reportMissingModuleSource = "none"

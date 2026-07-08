@@ -146,6 +146,7 @@ Result from LOWESS smoothing.
 - `prediction_upper::Union{Vector{Float64}, Nothing}`: Upper prediction bounds
 - `residuals::Union{Vector{Float64}, Nothing}`: Residuals
 - `robustness_weights::Union{Vector{Float64}, Nothing}`: Robustness weights
+- `cv_scores::Union{Vector{Float64}, Nothing}`: Cross-validation scores for tested fractions
 - `fraction_used::Float64`: Fraction used for smoothing
 - `iterations_used::Int`: Number of iterations performed (-1 if not available)
 - `diagnostics::Union{Diagnostics, Nothing}`: Diagnostic metrics
@@ -160,6 +161,7 @@ struct LowessResult
     prediction_upper::Union{Vector{Float64},Nothing}
     residuals::Union{Vector{Float64},Nothing}
     robustness_weights::Union{Vector{Float64},Nothing}
+    cv_scores::Union{Vector{Float64},Nothing}
     fraction_used::Float64
     iterations_used::Int
     diagnostics::Union{Diagnostics,Nothing}
@@ -177,6 +179,8 @@ struct CJlLowessResult
     prediction_upper::Ptr{Cdouble}
     residuals::Ptr{Cdouble}
     robustness_weights::Ptr{Cdouble}
+    cv_scores::Ptr{Cdouble}
+    cv_scores_len::Culong
     fraction_used::Cdouble
     iterations_used::Cint
     rmse::Cdouble
@@ -233,6 +237,7 @@ function convert_result(c_result::CJlLowessResult)
     prediction_upper = ptr_to_vector(c_result.prediction_upper, n)
     residuals = ptr_to_vector(c_result.residuals, n)
     robustness_weights = ptr_to_vector(c_result.robustness_weights, n)
+    cv_scores = ptr_to_vector(c_result.cv_scores, Int(c_result.cv_scores_len))
 
     # Extract diagnostics
     diagnostics = if !isnan(c_result.rmse)
@@ -259,6 +264,7 @@ function convert_result(c_result::CJlLowessResult)
         prediction_upper,
         residuals,
         robustness_weights,
+        cv_scores,
         c_result.fraction_used,
         Int(c_result.iterations_used),
         diagnostics,

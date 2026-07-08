@@ -236,6 +236,9 @@ mod input;
 // String input compatibility for builder methods.
 mod parse;
 
+// Shared helpers for language bindings.
+pub mod binding_support;
+
 // Standard fastLowess prelude.
 pub mod prelude {
     pub use crate::api::{

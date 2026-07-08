@@ -12,100 +12,15 @@ use extendr_api::prelude::*;
 // Provide the Result alias that was removed from extendr_api::prelude in 0.9.0
 type Result<T> = std::result::Result<T, extendr_api::Error>;
 
+use fastLowess::binding_support;
 use fastLowess::internals::api::{
-    BoundaryPolicy, RobustnessMethod,
-    ScalingMethod::{self, MAD, MAR, Mean},
-    UpdateMode, WeightFunction, ZeroWeightFallback,
+    BoundaryPolicy, RobustnessMethod, ScalingMethod, UpdateMode, WeightFunction, ZeroWeightFallback,
 };
-use fastLowess::prelude::{
-    Batch, KFold, LOOCV, Lowess as LowessBuilder, LowessResult, Online, Streaming,
-};
+use fastLowess::prelude::{Batch, Lowess as LowessBuilder, LowessResult, Online, Streaming};
 
 // ============================================================================
 // Helper Functions
 // ============================================================================
-
-/// Parse weight function from string
-fn parse_weight_function(name: &str) -> Result<WeightFunction> {
-    match name.to_lowercase().as_str() {
-        "tricube" => Ok(WeightFunction::Tricube),
-        "epanechnikov" => Ok(WeightFunction::Epanechnikov),
-        "gaussian" => Ok(WeightFunction::Gaussian),
-        "uniform" | "boxcar" => Ok(WeightFunction::Uniform),
-        "biweight" | "bisquare" => Ok(WeightFunction::Biweight),
-        "triangle" | "triangular" => Ok(WeightFunction::Triangle),
-        "cosine" => Ok(WeightFunction::Cosine),
-        _ => Err(Error::Other(format!(
-            "Unknown weight function: {}. Valid options: tricube, epanechnikov, gaussian, uniform, biweight, triangle, cosine",
-            name
-        ))),
-    }
-}
-
-/// Parse robustness method from string
-fn parse_robustness_method(name: &str) -> Result<RobustnessMethod> {
-    match name.to_lowercase().as_str() {
-        "bisquare" | "biweight" => Ok(RobustnessMethod::Bisquare),
-        "huber" => Ok(RobustnessMethod::Huber),
-        "talwar" => Ok(RobustnessMethod::Talwar),
-        _ => Err(Error::Other(format!(
-            "Unknown robustness method: {}. Valid options: bisquare, huber, talwar",
-            name
-        ))),
-    }
-}
-
-/// Parse zero weight fallback from string
-fn parse_zero_weight_fallback(name: &str) -> Result<ZeroWeightFallback> {
-    match name.to_lowercase().as_str() {
-        "use_local_mean" | "local_mean" | "mean" => Ok(ZeroWeightFallback::UseLocalMean),
-        "return_original" | "original" => Ok(ZeroWeightFallback::ReturnOriginal),
-        "return_none" | "none" | "nan" => Ok(ZeroWeightFallback::ReturnNone),
-        _ => Err(Error::Other(format!(
-            "Unknown zero weight fallback: {}. Valid options: use_local_mean, return_original, return_none",
-            name
-        ))),
-    }
-}
-
-/// Parse boundary policy from string
-fn parse_boundary_policy(name: &str) -> Result<BoundaryPolicy> {
-    match name.to_lowercase().as_str() {
-        "extend" | "pad" => Ok(BoundaryPolicy::Extend),
-        "reflect" | "mirror" => Ok(BoundaryPolicy::Reflect),
-        "zero" | "none" => Ok(BoundaryPolicy::Zero),
-        "noboundary" => Ok(BoundaryPolicy::NoBoundary),
-        _ => Err(Error::Other(format!(
-            "Unknown boundary policy: {}. Valid options: extend, reflect, zero, noboundary",
-            name
-        ))),
-    }
-}
-
-/// Parse scaling method from string
-fn parse_scaling_method(name: &str) -> Result<ScalingMethod> {
-    match name.to_lowercase().as_str() {
-        "mad" => Ok(MAD),
-        "mar" => Ok(MAR),
-        "mean" => Ok(Mean),
-        _ => Err(Error::Other(format!(
-            "Unknown scaling method: {}. Valid options: mad, mar, mean",
-            name
-        ))),
-    }
-}
-
-/// Parse update mode from string
-fn parse_update_mode(name: &str) -> Result<UpdateMode> {
-    match name.to_lowercase().as_str() {
-        "full" | "resmooth" => Ok(UpdateMode::Full),
-        "incremental" | "single" => Ok(UpdateMode::Incremental),
-        _ => Err(Error::Other(format!(
-            "Unknown update mode: {}. Valid options: full, incremental",
-            name
-        ))),
-    }
-}
 
 // ============================================================================
 // Stateful API: Lowess
@@ -141,11 +56,16 @@ impl RLowess {
         cv_k: i32,
         parallel: bool,
     ) -> Result<Self> {
-        let wf = parse_weight_function(weight_function)?;
-        let rm = parse_robustness_method(robustness_method)?;
-        let sm = parse_scaling_method(scaling_method)?;
-        let zwf = parse_zero_weight_fallback(zero_weight_fallback)?;
-        let bp = parse_boundary_policy(boundary_policy)?;
+        let wf =
+            binding_support::parse_weight_function(weight_function).map_err(|e| Error::Other(e))?;
+        let rm = binding_support::parse_robustness_method(robustness_method)
+            .map_err(|e| Error::Other(e))?;
+        let sm =
+            binding_support::parse_scaling_method(scaling_method).map_err(|e| Error::Other(e))?;
+        let zwf = binding_support::parse_zero_weight_fallback(zero_weight_fallback)
+            .map_err(|e| Error::Other(e))?;
+        let bp =
+            binding_support::parse_boundary_policy(boundary_policy).map_err(|e| Error::Other(e))?;
 
         let mut builder = LowessBuilder::<f64>::new();
         builder = builder.fraction(fraction);
@@ -180,20 +100,14 @@ impl RLowess {
 
         // Cross-validation if fractions are provided
         if let NotNull(fractions) = cv_fractions {
-            match cv_method.to_lowercase().as_str() {
-                "simple" | "loo" | "loocv" | "leave_one_out" => {
-                    builder = builder.cross_validate(LOOCV(&fractions));
-                }
-                "kfold" | "k_fold" | "k-fold" => {
-                    builder = builder.cross_validate(KFold(cv_k as usize, &fractions));
-                }
-                _ => {
-                    return Err(Error::Other(format!(
-                        "Unknown CV method: {}. Valid options: loocv, kfold",
-                        cv_method
-                    )));
-                }
-            }
+            builder = binding_support::apply_cross_validation(
+                builder,
+                Some(&fractions),
+                Some(cv_method),
+                Some(cv_k as usize),
+                None,
+            )
+            .map_err(|e| Error::Other(e))?;
         }
 
         Ok(Self { builder, parallel })
@@ -250,10 +164,14 @@ impl RStreamingLowess {
             Null => (chunk_size / 10).min(chunk_size.saturating_sub(10)).max(1),
         };
 
-        let wf = parse_weight_function(weight_function)?;
-        let rm = parse_robustness_method(robustness_method)?;
-        let sm = parse_scaling_method(scaling_method)?;
-        let bp = parse_boundary_policy(boundary_policy)?;
+        let wf =
+            binding_support::parse_weight_function(weight_function).map_err(|e| Error::Other(e))?;
+        let rm = binding_support::parse_robustness_method(robustness_method)
+            .map_err(|e| Error::Other(e))?;
+        let sm =
+            binding_support::parse_scaling_method(scaling_method).map_err(|e| Error::Other(e))?;
+        let bp =
+            binding_support::parse_boundary_policy(boundary_policy).map_err(|e| Error::Other(e))?;
 
         let mut builder = LowessBuilder::<f64>::new();
         builder = builder.fraction(fraction);
@@ -339,11 +257,15 @@ impl ROnlineLowess {
         return_robustness_weights: bool,
         parallel: bool,
     ) -> Result<Self> {
-        let wf = parse_weight_function(weight_function)?;
-        let rm = parse_robustness_method(robustness_method)?;
-        let sm = parse_scaling_method(scaling_method)?;
-        let bp = parse_boundary_policy(boundary_policy)?;
-        let um = parse_update_mode(update_mode)?;
+        let wf =
+            binding_support::parse_weight_function(weight_function).map_err(|e| Error::Other(e))?;
+        let rm = binding_support::parse_robustness_method(robustness_method)
+            .map_err(|e| Error::Other(e))?;
+        let sm =
+            binding_support::parse_scaling_method(scaling_method).map_err(|e| Error::Other(e))?;
+        let bp =
+            binding_support::parse_boundary_policy(boundary_policy).map_err(|e| Error::Other(e))?;
+        let um = binding_support::parse_update_mode(update_mode).map_err(|e| Error::Other(e))?;
 
         let mut builder = LowessBuilder::<f64>::new();
         builder = builder.fraction(fraction);

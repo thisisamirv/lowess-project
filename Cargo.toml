@@ -29,3 +29,11 @@ readme = "README.md"
 opt-level = 3
 lto = true
 codegen-units = 1
+
+# Override registry versions with local workspace crates during development.
+# Bindings declare versioned dependencies (e.g. fastLowess = { version = "1.3" })
+# so that published packages resolve correctly; the patch below ensures the local
+# workspace code is used when building within this repo.
+[patch.crates-io]
+lowess = { path = "crates/lowess" }
+fastLowess = { path = "crates/fastLowess" }

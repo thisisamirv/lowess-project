@@ -303,6 +303,15 @@ public:
     return {};
   }
 
+  /// Get cross-validation scores (empty if not computed)
+  std::vector<double> cv_scores() const {
+    if (result_.cv_scores != nullptr) {
+      return std::vector<double>(result_.cv_scores,
+                                 result_.cv_scores + result_.cv_scores_len);
+    }
+    return {};
+  }
+
   /// Fraction used for smoothing
   double fraction_used() const { return result_.fraction_used; }
 

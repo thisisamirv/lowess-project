@@ -1,3 +1,3 @@
 # Contributing to rfastlowess
 
-For contribution guidelines, please refer to the [CONTRIBUTING.md](https://github.com/thisisamirv/lowess-project/blob/main/CONTRIBUTING.md) file in the root directory.
+For contribution guidelines, please see the [Contributing Guide](https://lowess.readthedocs.io/contributing/) in the docs.

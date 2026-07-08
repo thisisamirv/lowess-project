@@ -7,7 +7,7 @@ export declare class Lowess {
     /** Fit the model. */
     fit(x: Float64Array, y: Float64Array): LowessResultObj
     /** Fit the model asynchronously. */
-    fit_async(x: Float64Array, y: Float64Array): Promise<unknown>
+    fit_async(x: Float64Array, y: Float64Array): Promise<LowessResultObj>
 }
 
 /** Result of a LOWESS fit. */
@@ -97,15 +97,15 @@ export interface SmoothOptions {
      * Set to 0.0 to disable interpolation.
      */
     delta?: number
-    /** Weight function ("tricube", "gaussian", etc.). Default: "tricube". */
+    /** Weight function ("tricube", "epanechnikov", "gaussian", "uniform", "biweight", "triangle", "cosine"). Default: "tricube". */
     weight_function?: string
-    /** Robustness method ("bisquare", "huber"). Default: "bisquare". */
+    /** Robustness method ("bisquare", "huber", "talwar"). Default: "bisquare". */
     robustness_method?: string
-    /** Fallback strategy when weights are zero ("use_local_mean"). */
+    /** Fallback strategy when weights are zero ("use_local_mean", "return_original", "return_none"). Default: "use_local_mean". */
     zero_weight_fallback?: string
-    /** Boundary handling ("extend", "reflect"). Default: "extend". */
+    /** Boundary handling ("extend", "reflect", "zero", "noboundary"). Default: "extend". */
     boundary_policy?: string
-    /** Scaling method ("mad", "mar"). Default: "mad". */
+    /** Scaling method ("mad", "mar", "mean"). Default: "mad". */
     scaling_method?: string
     /** Auto-convergence tolerance. Default: None. */
     auto_converge?: number
