@@ -69,11 +69,11 @@ console.log('Smoothed values:', result.y);
 const resultWithOptions = smooth(x, y, {
     fraction: 0.3,
     iterations: 3,
-    confidenceIntervals: 0.95,
-    returnDiagnostics: true
+    confidence_intervals: 0.95,
+    return_diagnostics: true
 });
 
-console.log('R²:', resultWithOptions.diagnostics.rSquared);
+console.log('R²:', resultWithOptions.diagnostics.r_squared);
 ```
 
 ## TypeScript Support
@@ -86,7 +86,7 @@ import { smooth, SmoothOptions, LowessResult } from 'fastlowess';
 const options: SmoothOptions = {
     fraction: 0.3,
     iterations: 3,
-    confidenceIntervals: 0.95
+    confidence_intervals: 0.95
 };
 
 const result: LowessResult = smooth(x, y, options);

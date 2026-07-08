@@ -58,17 +58,17 @@ function main() {
     const _resRobust = new fastlowess.Lowess({
         fraction: 0.05,
         iterations: 3,
-        robustnessMethod: "bisquare",
-        returnRobustnessWeights: true
+        robustness_method: "bisquare",
+        return_robustness_weights: true
     }).fit(x, y);
 
     // 4. Uncertainty Quantification
     console.log("Computing confidence and prediction intervals...");
     const resIntervals = new fastlowess.Lowess({
         fraction: 0.05,
-        confidenceIntervals: 0.95,
-        predictionIntervals: 0.95,
-        returnDiagnostics: true
+        confidence_intervals: 0.95,
+        prediction_intervals: 0.95,
+        return_diagnostics: true
     }).fit(x, y);
 
     // 5. Cross-Validation for optimal fraction
@@ -79,17 +79,17 @@ function main() {
     // The main result returned will be the fit using the BEST fraction.
     // We can also retrieve the score for each fraction.
     const resCV = new fastlowess.Lowess({
-        cvFractions,
-        cvMethod: "kfold",
-        cvK: 5,
+        cv_fractions: cvFractions,
+        cv_method: "kfold",
+        cv_k: 5,
         // We can request robustness weights or diagnostics for the final best model too
-        returnDiagnostics: true
+        return_diagnostics: true
     }).fit(x, y);
 
-    console.log(`Optimal fraction selected: ${resCV.fractionUsed}`);
+    console.log(`Optimal fraction selected: ${resCV.fraction_used}`);
 
     // Check scores if available
-    const scores = resCV.cvScores;
+    const scores = resCV.cv_scores;
     // Note: cvScores array corresponds to the input fractions order.
     if (scores) {
         console.log("CV Scores (RMSE):");
@@ -101,7 +101,7 @@ function main() {
     if (resIntervals.diagnostics) {
         const diag = resIntervals.diagnostics;
         console.log("\nFit Statistics (Intervals Model):");
-        console.log(` - R²:   ${diag.rSquared.toFixed(4)}`);
+        console.log(` - R²:   ${diag.r_squared.toFixed(4)}`);
         console.log(` - RMSE: ${diag.rmse.toFixed(4)}`);
         console.log(` - MAE:  ${diag.mae.toFixed(4)}`);
     }
@@ -115,9 +115,9 @@ function main() {
         yl[i] = 2 * xl[i] + 1;
     }
 
-    const rExt = new fastlowess.Lowess({ fraction: 0.6, boundaryPolicy: "extend" }).fit(xl, yl);
-    const rRef = new fastlowess.Lowess({ fraction: 0.6, boundaryPolicy: "reflect" }).fit(xl, yl);
-    const rZr = new fastlowess.Lowess({ fraction: 0.6, boundaryPolicy: "zero" }).fit(xl, yl);
+    const rExt = new fastlowess.Lowess({ fraction: 0.6, boundary_policy: "extend" }).fit(xl, yl);
+    const rRef = new fastlowess.Lowess({ fraction: 0.6, boundary_policy: "reflect" }).fit(xl, yl);
+    const rZr = new fastlowess.Lowess({ fraction: 0.6, boundary_policy: "zero" }).fit(xl, yl);
 
     console.log("Boundary policy comparison:");
     console.log(` - Extend (Default): first=${rExt.y[0].toFixed(2)}, last=${rExt.y[49].toFixed(2)}`);

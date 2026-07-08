@@ -45,7 +45,7 @@ function main() {
 
     const streamer = new fastlowess.StreamingLowess(
         { fraction: 0.01 },
-        { chunkSize: 2000, overlap: 200 }
+        { chunk_size: 2000, overlap: 200 }
     );
 
     // Simulate reading chunks from a stream/file
@@ -60,7 +60,7 @@ function main() {
         const chunkX = x.subarray(i, Math.min(i + chunkSize, nPoints));
         const chunkY = y.subarray(i, Math.min(i + chunkSize, nPoints));
 
-        const chunkRes = streamer.processChunk(chunkX, chunkY);
+        const chunkRes = streamer.process_chunk(chunkX, chunkY);
         if (chunkRes) resChunks.push(chunkRes.y);
     }
     const finalChunk = streamer.finalize();

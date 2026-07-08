@@ -1,4 +1,4 @@
-# Real-Time Processing
+﻿# Real-Time Processing
 
 Streaming and online LOWESS for live data.
 
@@ -105,7 +105,7 @@ For true real-time applications where each point must be processed immediately.
 
     const processor = new OnlineLowess(
         { fraction: 0.3, iterations: 1 },
-        { windowCapacity: 25, minPoints: 5, updateMode: "incremental" }
+        { window_capacity: 25, min_points: 5, update_mode: "incremental" }
     );
 
     // Simulate real-time data arrival
@@ -126,7 +126,7 @@ For true real-time applications where each point must be processed immediately.
 
     const processor = new OnlineLowessWasm(
         { fraction: 0.3, iterations: 1 },
-        { windowCapacity: 25, minPoints: 5, updateMode: "incremental" }
+        { window_capacity: 25, min_points: 5, update_mode: "incremental" }
     );
 
     // Simulate real-time data arrival
@@ -250,12 +250,12 @@ For large datasets that arrive in batches or files.
 
     const processor = new StreamingLowess(
         { fraction: 0.1, iterations: 2 },
-        { chunkSize: 5000, overlap: 500 }
+        { chunk_size: 5000, overlap: 500 }
     );
 
     // Process chunks
-    const r1 = processor.processChunk(chunk1_x, chunk1_y);
-    const r2 = processor.processChunk(chunk2_x, chunk2_y);
+    const r1 = processor.process_chunk(chunk1_x, chunk1_y);
+    const r2 = processor.process_chunk(chunk2_x, chunk2_y);
 
     // Always get buffered data
     const finalResult = processor.finalize();
@@ -267,12 +267,12 @@ For large datasets that arrive in batches or files.
 
     const processor = new StreamingLowessWasm(
         { fraction: 0.1, iterations: 2 },
-        { chunkSize: 5000, overlap: 500 }
+        { chunk_size: 5000, overlap: 500 }
     );
 
     // Process chunks as they arrive
-    const result1 = processor.processChunk(x1, y1);
-    const result2 = processor.processChunk(x2, y2);
+    const result1 = processor.process_chunk(x1, y1);
+    const result2 = processor.process_chunk(x2, y2);
     const finalResult = processor.finalize();
     ```
 
@@ -353,14 +353,14 @@ For large datasets that arrive in batches or files.
     ```javascript
     const fl = require('fastlowess');
 
-    const windowCapacity = 50;
+    const window_capacity = 50;
     let dataX = [], dataY = [];
 
     for (let i = 0; i < 200; i++) {
         dataX.push(i);
         dataY.push(25.0 + 10 * Math.sin(i / 20) + Math.random() * 4 - 2);
 
-        if (dataX.length > windowCapacity) {
+        if (dataX.length > window_capacity) {
             dataX.shift();
             dataY.shift();
         }
@@ -420,29 +420,29 @@ For large datasets that arrive in batches or files.
 
 ### Online Mode
 
-| Parameter         | Guidance                                         |
-|-------------------|--------------------------------------------------|
-| `window_capacity` | Enough history for `fraction` to work            |
-| `min_points`      | 2–5 typically; higher for stability              |
-| `update_mode`     | `"incremental"` for speed, `"full"` for accuracy |
+| Parameter | Guidance |
+| --- | --- |
+| `window_capacity` | Enough history for `fraction` to work |
+| `min_points` | 2–5 typically; higher for stability |
+| `update_mode` | `"incremental"` for speed, `"full"` for accuracy |
 
 ### Streaming Mode
 
-| Parameter        | Guidance                                                  |
-|------------------|-----------------------------------------------------------|
-| `chunk_size`     | Balance memory vs. processing overhead                    |
-| `overlap`        | 10–20% of chunk_size for smooth transitions               |
+| Parameter | Guidance |
+| --- | --- |
+| `chunk_size` | Balance memory vs. processing overhead |
+| `overlap` | 10–20% of chunk_size for smooth transitions |
 | `merge_strategy` | `"weighted"` for best quality, `"average"` for simplicity |
 
 ---
 
 ## Performance Considerations
 
-| Mode          | Memory         | Latency      | Use Case            |
-|---------------|----------------|--------------|---------------------|
-| **Online**    | Fixed (window) | ~1ms/point   | Sensors, dashboards |
-| **Streaming** | ~chunk_size    | ~100ms/chunk | Large files, ETL    |
-| **Batch**     | Full dataset   | N/A          | Analysis, reports   |
+| Mode | Memory | Latency | Use Case |
+| --- | --- | --- | --- |
+| **Online** | Fixed (window) | ~1ms/point | Sensors, dashboards |
+| **Streaming** | ~chunk_size | ~100ms/chunk | Large files, ETL |
+| **Batch** | Full dataset | N/A | Analysis, reports |
 
 ---
 

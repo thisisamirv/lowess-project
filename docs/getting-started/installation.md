@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD024 MD046 -->
+﻿<!-- markdownlint-disable MD024 MD046 -->
 # Installation
 
 Install the LOWESS library for your preferred language.
@@ -64,11 +64,11 @@ Install the LOWESS library for your preferred language.
 
     === "Feature Flags"
 
-    | Crate        | Feature | Description                             |
-    |--------------|---------|-----------------------------------------|
-    | `lowess`     | `std`   | Enable standard library (default)       |
-    | `fastLowess` | `cpu`   | Enable CPU parallelism via Rayon        |
-    | `fastLowess` | `gpu`   | Enable GPU acceleration via wgpu (beta) |
+| Crate | Feature | Description |
+| --- | --- | --- |
+| `lowess` | `std` | Enable standard library (default) |
+| `fastLowess` | `cpu` | Enable CPU parallelism via Rayon |
+| `fastLowess` | `gpu` | Enable GPU acceleration via wgpu (beta) |
 
 === "Julia"
 

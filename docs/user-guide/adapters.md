@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD024 MD046 -->
+﻿<!-- markdownlint-disable MD024 MD046 -->
 # Execution Modes
 
 Choose the right adapter for your use case.
@@ -14,11 +14,11 @@ graph LR
     C -->|Yes| F[Online]
 ```
 
-| Mode          | Use Case                | Memory       | Features              |
-|---------------|-------------------------|--------------|-----------------------|
-| **Batch**     | Complete datasets       | Full         | All features          |
-| **Streaming** | Large files (>100K)     | Chunked      | Residuals, robustness |
-| **Online**    | Real-time sensors       | Fixed window | Incremental updates   |
+| Mode | Use Case | Memory | Features |
+| --- | --- | --- | --- |
+| **Batch** | Complete datasets | Full | All features |
+| **Streaming** | Large files (>100K) | Chunked | Residuals, robustness |
+| **Online** | Real-time sensors | Fixed window | Incremental updates |
 
 ---
 
@@ -99,9 +99,9 @@ Standard mode for complete datasets. **Supports all features.**
     const result = fastlowess.smooth(x, y, {
         fraction: 0.5,
         iterations: 3,
-        confidenceIntervals: 0.95,
-        predictionIntervals: 0.95,
-        returnDiagnostics: true
+        confidence_intervals: 0.95,
+        prediction_intervals: 0.95,
+        return_diagnostics: true
     });
     ```
 
@@ -112,9 +112,9 @@ Standard mode for complete datasets. **Supports all features.**
     const result = smooth(x, y, {
         fraction: 0.5,
         iterations: 3,
-        confidenceIntervals: 0.95,
-        predictionIntervals: 0.95,
-        returnDiagnostics: true
+        confidence_intervals: 0.95,
+        prediction_intervals: 0.95,
+        return_diagnostics: true
     });
     ```
 
@@ -146,20 +146,20 @@ Process large datasets in chunks with configurable overlap.
 
 ### Parameters
 
-| Parameter        | Default | Description            |
-|------------------|---------|------------------------|
-| `chunk_size`     | 5000    | Points per chunk       |
-| `overlap`        | 500     | Overlap between chunks |
-| `merge_strategy` | Average | How to merge overlaps  |
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `chunk_size` | 5000 | Points per chunk |
+| `overlap` | 500 | Overlap between chunks |
+| `merge_strategy` | Average | How to merge overlaps |
 
 ### Merge Strategies
 
-| Strategy   | Behavior                   |
-|------------|----------------------------|
-| `Average`  | Average overlapping values |
-| `Left`     | Keep left chunk values     |
-| `Right`    | Keep right chunk values    |
-| `Weighted` | Distance-weighted blend    |
+| Strategy | Behavior |
+| --- | --- |
+| `Average` | Average overlapping values |
+| `Left` | Keep left chunk values |
+| `Right` | Keep right chunk values |
+| `Weighted` | Distance-weighted blend |
 
 ### Example
 
@@ -232,12 +232,12 @@ Process large datasets in chunks with configurable overlap.
 
     const processor = new StreamingLowess(
         { fraction: 0.3, iterations: 2 },
-        { chunkSize: 5000, overlap: 500 }
+        { chunk_size: 5000, overlap: 500 }
     );
 
     // Process chunks
     for (const {x, y} of dataChunks) {
-        const result = processor.processChunk(x, y);
+        const result = processor.process_chunk(x, y);
         // ...
     }
 
@@ -250,12 +250,12 @@ Process large datasets in chunks with configurable overlap.
 
     const processor = new StreamingLowess(
         { fraction: 0.3, iterations: 2 },
-        { chunkSize: 5000, overlap: 500 }
+        { chunk_size: 5000, overlap: 500 }
     );
 
     // Process chunks
     for (const {x, y} of dataChunks) {
-        const result = processor.processChunk(x, y);
+        const result = processor.process_chunk(x, y);
         // ...
     }
 
@@ -292,18 +292,18 @@ Incremental updates with a sliding window for real-time data.
 
 ### Parameters
 
-| Parameter         | Default     | Description                 |
-|-------------------|-------------|-----------------------------|
-| `window_capacity` | 1000        | Max points in window        |
-| `min_points`      | 2           | Points before output starts |
-| `update_mode`     | Incremental | Update strategy             |
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `window_capacity` | 1000 | Max points in window |
+| `min_points` | 2 | Points before output starts |
+| `update_mode` | Incremental | Update strategy |
 
 ### Update Modes
 
-| Mode          | Behavior                  | Speed         |
-|---------------|---------------------------|---------------|
-| `Incremental` | Update only affected fits | Faster        |
-| `Full`        | Recompute entire window   | More accurate |
+| Mode | Behavior | Speed |
+| --- | --- | --- |
+| `Incremental` | Update only affected fits | Faster |
+| `Full` | Recompute entire window | More accurate |
 
 ### Example
 
@@ -375,7 +375,7 @@ Incremental updates with a sliding window for real-time data.
 
     const processor = new OnlineLowess(
         { fraction: 0.2, iterations: 1 },
-        { windowCapacity: 100, minPoints: 5, updateMode: "incremental" }
+        { window_capacity: 100, min_points: 5, update_mode: "incremental" }
     );
 
     // Add points
@@ -393,7 +393,7 @@ Incremental updates with a sliding window for real-time data.
 
     const processor = new OnlineLowess(
         { fraction: 0.2, iterations: 1 },
-        { windowCapacity: 100, minPoints: 5, updateMode: "incremental" }
+        { window_capacity: 100, min_points: 5, update_mode: "incremental" }
     );
 
     // Add points
@@ -423,16 +423,16 @@ Incremental updates with a sliding window for real-time data.
 
 ## Feature Comparison
 
-| Feature              | Batch | Streaming | Online |
-|----------------------|:-----:|:---------:|:------:|
-| Confidence intervals | ✓     | ✗         | ✗      |
-| Prediction intervals | ✓     | ✗         | ✗      |
-| Cross-validation     | ✓     | ✗         | ✗      |
-| Diagnostics          | ✓     | ✓         | ✗      |
-| Residuals            | ✓     | ✓         | ✓      |
-| Robustness weights   | ✓     | ✓         | ✓      |
-| Parallel execution   | ✓     | ✓         | ✗      |
-| GPU acceleration     | ✓     | ✗         | ✗      |
+| Feature | Batch | Streaming | Online |
+| --- | --- | --- | --- |
+| Confidence intervals | ✓ | ✗ | ✗ |
+| Prediction intervals | ✓ | ✗ | ✗ |
+| Cross-validation | ✓ | ✗ | ✗ |
+| Diagnostics | ✓ | ✓ | ✗ |
+| Residuals | ✓ | ✓ | ✓ |
+| Robustness weights | ✓ | ✓ | ✓ |
+| Parallel execution | ✓ | ✓ | ✗ |
+| GPU acceleration | ✓ | ✗ | ✗ |
 
 ---
 

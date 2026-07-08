@@ -10,7 +10,7 @@ test('WASM batch smoothing', () => {
 
     const result = fastlowess.smooth(x, y, {
         fraction: 0.3,
-        returnDiagnostics: true
+        return_diagnostics: true
     });
 
     assert.strictEqual(result.x.length, 5);
@@ -23,14 +23,14 @@ test('WASM streaming smoothing', () => {
     const streamer = new fastlowess.StreamingLowessWasm({
         fraction: 0.3
     }, {
-        chunkSize: 10,
+        chunk_size: 10,
         overlap: 2
     });
 
     const x = new Float64Array(Array.from({ length: 20 }, (_, i) => i));
     const y = new Float64Array(Array.from({ length: 20 }, (_, i) => i * 2));
 
-    const result = streamer.processChunk(x, y);
+    const result = streamer.process_chunk(x, y);
     // WASM processChunk returns a struct, safe to check .y existence/length if populated
     if (result) {
         assert.ok(result.y.length >= 0);
@@ -46,8 +46,8 @@ test('WASM online smoothing', () => {
     const online = new fastlowess.OnlineLowessWasm({
         fraction: 0.5
     }, {
-        windowCapacity: 10,
-        minPoints: 2
+        window_capacity: 10,
+        min_points: 2
     });
 
     let lastVal;
@@ -65,10 +65,10 @@ test('WASM options parsing', () => {
     const y = new Float64Array([2, 4, 6, 8, 10]);
 
     const result = fastlowess.smooth(x, y, {
-        weightFunction: 'tricube',
-        robustnessMethod: 'bisquare',
-        boundaryPolicy: 'extend',
-        scalingMethod: 'mad'
+        weight_function: 'tricube',
+        robustness_method: 'bisquare',
+        boundary_policy: 'extend',
+        scaling_method: 'mad'
     });
 
     assert.strictEqual(result.y.length, 5);

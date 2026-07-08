@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD024 MD033 -->
+﻿<!-- markdownlint-disable MD024 MD033 -->
 # LOWESS Project
 
 <p align="center">
@@ -318,36 +318,36 @@ new Lowess({
     fraction: 0.5,
     iterations: 3,
     delta: 0.01,
-    weightFunction: "tricube",
-    robustnessMethod: "bisquare",
-    zeroWeightFallback: "use_local_mean",
-    boundaryPolicy: "extend",
-    confidenceIntervals: 0.95,
-    predictionIntervals: 0.95,
-    returnDiagnostics: true,
-    returnResiduals: true,
-    returnRobustnessWeights: true,
-    cvFractions: [0.3, 0.5, 0.7],
-    cvMethod: "kfold",
-    cvK: 5,
-    autoConverge: 1e-4,
+    weight_function: "tricube",
+    robustness_method: "bisquare",
+    zero_weight_fallback: "use_local_mean",
+    boundary_policy: "extend",
+    confidence_intervals: 0.95,
+    prediction_intervals: 0.95,
+    return_diagnostics: true,
+    return_residuals: true,
+    return_robustness_weights: true,
+    cv_fractions: [0.3, 0.5, 0.7],
+    cv_method: "kfold",
+    cv_k: 5,
+    auto_converge: 1e-4,
     parallel: true
 }).fit(x, y)
 
 // Result structure:
 result.x,
 result.y,
-result.standardErrors,
-result.confidenceLower,
-result.confidenceUpper,
-result.predictionLower,
-result.predictionUpper,
+result.standard_errors,
+result.confidence_lower,
+result.confidence_upper,
+result.prediction_lower,
+result.prediction_upper,
 result.residuals,
-result.robustnessWeights,
+result.robustness_weights,
 result.diagnostics,
-result.iterationsUsed,
-result.fractionUsed,
-result.cvScores
+result.iterations_used,
+result.fraction_used,
+result.cv_scores
 ```
 
 **WebAssembly:**
@@ -357,36 +357,36 @@ smooth(x, y, {
     fraction: 0.5,
     iterations: 3,
     delta: 0.01,
-    weightFunction: "tricube",
-    robustnessMethod: "bisquare",
-    zeroWeightFallback: "use_local_mean",
-    boundaryPolicy: "extend",
-    confidenceIntervals: 0.95,
-    predictionIntervals: 0.95,
-    returnDiagnostics: true,
-    returnResiduals: true,
-    returnRobustnessWeights: true,
-    cvFractions: [0.3, 0.5, 0.7],
-    cvMethod: "kfold",
-    cvK: 5,
-    autoConverge: 1e-4,
+    weight_function: "tricube",
+    robustness_method: "bisquare",
+    zero_weight_fallback: "use_local_mean",
+    boundary_policy: "extend",
+    confidence_intervals: 0.95,
+    prediction_intervals: 0.95,
+    return_diagnostics: true,
+    return_residuals: true,
+    return_robustness_weights: true,
+    cv_fractions: [0.3, 0.5, 0.7],
+    cv_method: "kfold",
+    cv_k: 5,
+    auto_converge: 1e-4,
     parallel: true
 })
 
 // Result structure:
 result.x,
 result.y,
-result.standardErrors,
-result.confidenceLower,
-result.confidenceUpper,
-result.predictionLower,
-result.predictionUpper,
+result.standard_errors,
+result.confidence_lower,
+result.confidence_upper,
+result.prediction_lower,
+result.prediction_upper,
 result.residuals,
-result.robustnessWeights,
+result.robustness_weights,
 result.diagnostics,
-result.iterationsUsed,
-result.fractionUsed,
-result.cvScores
+result.iterations_used,
+result.fraction_used,
+result.cv_scores
 ```
 
 **C++:**
@@ -415,18 +415,18 @@ fastlowess::Lowess model(options);
 auto result = model.fit(x, y);
 
 // Result structure:
-result.xVector(),
-result.yVector(),
-result.standardErrors(),
-result.confidenceLower(),
-result.confidenceUpper(),
-result.predictionLower(),
-result.predictionUpper(),
+result.x_vector(),
+result.y_vector(),
+result.standard_errors(),
+result.confidence_lower(),
+result.confidence_upper(),
+result.prediction_lower(),
+result.prediction_upper(),
 result.residuals(),
-result.robustnessWeights(),
+result.robustness_weights(),
 result.diagnostics(),
-result.iterationsUsed(),
-result.fractionUsed(),
+result.iterations_used(),
+result.fraction_used(),
 result.cv_scores()
 ```
 

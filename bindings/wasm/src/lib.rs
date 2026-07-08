@@ -23,53 +23,34 @@ pub struct SmoothOptions {
     pub fraction: Option<f64>,
     pub iterations: Option<usize>,
     pub delta: Option<f64>,
-    #[serde(rename = "weightFunction")]
     pub weight_function: Option<String>,
-    #[serde(rename = "robustnessMethod")]
     pub robustness_method: Option<String>,
-    #[serde(rename = "zeroWeightFallback")]
     pub zero_weight_fallback: Option<String>,
-    #[serde(rename = "boundaryPolicy")]
     pub boundary_policy: Option<String>,
-    #[serde(rename = "scalingMethod")]
     pub scaling_method: Option<String>,
-    #[serde(rename = "autoConverge")]
     pub auto_converge: Option<f64>,
-    #[serde(rename = "returnResiduals")]
     pub return_residuals: Option<bool>,
-    #[serde(rename = "returnRobustnessWeights")]
     pub return_robustness_weights: Option<bool>,
-    #[serde(rename = "returnDiagnostics")]
     pub return_diagnostics: Option<bool>,
-    #[serde(rename = "confidenceIntervals")]
     pub confidence_intervals: Option<f64>,
-    #[serde(rename = "predictionIntervals")]
     pub prediction_intervals: Option<f64>,
     #[serde(rename = "parallel")]
     pub parallel: Option<bool>,
-    #[serde(rename = "cvFractions")]
     pub cv_fractions: Option<Vec<f64>>,
-    #[serde(rename = "cvMethod")]
     pub cv_method: Option<String>,
-    #[serde(rename = "cvK")]
     pub cv_k: Option<u32>,
 }
 
 #[derive(Deserialize)]
 pub struct StreamingOptions {
-    #[serde(rename = "chunkSize")]
     pub chunk_size: Option<usize>,
-    #[serde(rename = "overlap")]
     pub overlap: Option<usize>,
 }
 
 #[derive(Deserialize)]
 pub struct OnlineOptions {
-    #[serde(rename = "windowCapacity")]
     pub window_capacity: Option<usize>,
-    #[serde(rename = "minPoints")]
     pub min_points: Option<usize>,
-    #[serde(rename = "updateMode")]
     pub update_mode: Option<String>,
 }
 
@@ -150,13 +131,13 @@ fn parse_update_mode(name: &str) -> Result<UpdateMode, JsValue> {
 pub struct Diagnostics {
     pub rmse: f64,
     pub mae: f64,
-    #[wasm_bindgen(js_name = rSquared)]
+    #[wasm_bindgen(js_name = r_squared)]
     pub r_squared: f64,
     pub aic: Option<f64>,
     pub aicc: Option<f64>,
-    #[wasm_bindgen(js_name = effectiveDf)]
+    #[wasm_bindgen(js_name = effective_df)]
     pub effective_df: Option<f64>,
-    #[wasm_bindgen(js_name = residualSd)]
+    #[wasm_bindgen(js_name = residual_sd)]
     pub residual_sd: f64,
 }
 
@@ -185,7 +166,7 @@ impl LowessResultWasm {
             .map(|v| unsafe { Float64Array::view(v) })
     }
 
-    #[wasm_bindgen(getter, js_name = standardErrors)]
+    #[wasm_bindgen(getter, js_name = standard_errors)]
     pub fn standard_errors(&self) -> Option<Float64Array> {
         self.inner
             .standard_errors
@@ -193,7 +174,7 @@ impl LowessResultWasm {
             .map(|v| unsafe { Float64Array::view(v) })
     }
 
-    #[wasm_bindgen(getter, js_name = confidenceLower)]
+    #[wasm_bindgen(getter, js_name = confidence_lower)]
     pub fn confidence_lower(&self) -> Option<Float64Array> {
         self.inner
             .confidence_lower
@@ -201,7 +182,7 @@ impl LowessResultWasm {
             .map(|v| unsafe { Float64Array::view(v) })
     }
 
-    #[wasm_bindgen(getter, js_name = confidenceUpper)]
+    #[wasm_bindgen(getter, js_name = confidence_upper)]
     pub fn confidence_upper(&self) -> Option<Float64Array> {
         self.inner
             .confidence_upper
@@ -209,7 +190,7 @@ impl LowessResultWasm {
             .map(|v| unsafe { Float64Array::view(v) })
     }
 
-    #[wasm_bindgen(getter, js_name = predictionLower)]
+    #[wasm_bindgen(getter, js_name = prediction_lower)]
     pub fn prediction_lower(&self) -> Option<Float64Array> {
         self.inner
             .prediction_lower
@@ -217,7 +198,7 @@ impl LowessResultWasm {
             .map(|v| unsafe { Float64Array::view(v) })
     }
 
-    #[wasm_bindgen(getter, js_name = predictionUpper)]
+    #[wasm_bindgen(getter, js_name = prediction_upper)]
     pub fn prediction_upper(&self) -> Option<Float64Array> {
         self.inner
             .prediction_upper
@@ -225,7 +206,7 @@ impl LowessResultWasm {
             .map(|v| unsafe { Float64Array::view(v) })
     }
 
-    #[wasm_bindgen(getter, js_name = robustnessWeights)]
+    #[wasm_bindgen(getter, js_name = robustness_weights)]
     pub fn robustness_weights(&self) -> Option<Float64Array> {
         self.inner
             .robustness_weights
@@ -246,7 +227,7 @@ impl LowessResultWasm {
         })
     }
 
-    #[wasm_bindgen(getter, js_name = cvScores)]
+    #[wasm_bindgen(getter, js_name = cv_scores)]
     pub fn cv_scores(&self) -> Option<Float64Array> {
         self.inner
             .cv_scores
@@ -254,12 +235,12 @@ impl LowessResultWasm {
             .map(|v| unsafe { Float64Array::view(v) })
     }
 
-    #[wasm_bindgen(getter, js_name = fractionUsed)]
+    #[wasm_bindgen(getter, js_name = fraction_used)]
     pub fn fraction_used(&self) -> f64 {
         self.inner.fraction_used
     }
 
-    #[wasm_bindgen(getter, js_name = iterationsUsed)]
+    #[wasm_bindgen(getter, js_name = iterations_used)]
     pub fn iterations_used(&self) -> Option<u32> {
         self.inner.iterations_used.map(|i| i as u32)
     }
@@ -436,7 +417,7 @@ impl StreamingLowessWasm {
         Ok(StreamingLowessWasm { inner: model })
     }
 
-    #[wasm_bindgen(js_name = processChunk)]
+    #[wasm_bindgen(js_name = process_chunk)]
     pub fn process_chunk(
         &mut self,
         x: &Float64Array,

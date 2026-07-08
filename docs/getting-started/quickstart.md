@@ -127,7 +127,7 @@ Get up and running with LOWESS in minutes.
         auto result = model.fit(x, y);
 
         // Print smoothed values
-        const auto& y_smooth = result.yVector();
+        const auto& y_smooth = result.y_vector();
         std::cout << "Smoothed values: [";
         for (double val : y_smooth) std::cout << val << ", ";
         std::cout << "]" << std::endl;
@@ -221,15 +221,15 @@ Get up and running with LOWESS in minutes.
     const result = fastlowess.smooth(x, y, {
         fraction: 0.5,
         iterations: 3,
-        confidenceIntervals: 0.95,
-        predictionIntervals: 0.95,
-        returnDiagnostics: true
+        confidence_intervals: 0.95,
+        prediction_intervals: 0.95,
+        return_diagnostics: true
     });
 
     console.log("Smoothed:", result.y);
-    console.log("CI Lower:", result.confidenceLower);
-    console.log("CI Upper:", result.confidenceUpper);
-    console.log("R²:", result.diagnostics.rSquared);
+    console.log("CI Lower:", result.confidence_lower);
+    console.log("CI Upper:", result.confidence_upper);
+    console.log("R²:", result.diagnostics.r_squared);
     ```
 
 === "WebAssembly"
@@ -261,9 +261,9 @@ Get up and running with LOWESS in minutes.
     auto result = model.fit(x, y);
 
     // Access standard C++ vectors
-    auto lower = result.confidenceLower();
-    auto upper = result.confidenceUpper();
-    double r2 = result.diagnostics().rSquared();
+    auto lower = result.confidence_lower();
+    auto upper = result.confidence_upper();
+    double r2 = result.diagnostics().r_squared();
     ```
 
 ---
@@ -370,12 +370,12 @@ LOWESS can robustly handle outliers through iterative reweighting:
     const result = fl.smooth(x, yWithOutlier, {
         fraction: 0.5,
         iterations: 5,
-        robustnessMethod: "bisquare",
-        returnRobustnessWeights: true
+        robustness_method: "bisquare",
+        return_robustness_weights: true
     });
 
     // Outliers will have low robustness weights
-    result.robustnessWeights.forEach((w, i) => {
+    result.robustness_weights.forEach((w, i) => {
         if (w < 0.5) {
             console.log(`Point ${i} is likely an outlier (weight: ${w.toFixed(3)})`);
         }
@@ -393,12 +393,12 @@ LOWESS can robustly handle outliers through iterative reweighting:
     const result = smooth(x, yWithOutlier, {
         fraction: 0.5,
         iterations: 5,
-        robustnessMethod: "bisquare",
-        returnRobustnessWeights: true
+        robustness_method: "bisquare",
+        return_robustness_weights: true
     });
 
     // Outliers will have low robustness weights
-    result.robustnessWeights.forEach((w, i) => {
+    result.robustness_weights.forEach((w, i) => {
         if (w < 0.5) {
             console.log(`Point ${i} is likely an outlier (weight: ${w.toFixed(3)})`);
         }
@@ -421,7 +421,7 @@ LOWESS can robustly handle outliers through iterative reweighting:
     auto result = model.fit(x, y_outlier);
 
     // Check weights
-    auto weights = result.robustnessWeights();
+    auto weights = result.robustness_weights();
     for (size_t i = 0; i < weights.size(); ++i) {
         if (weights[i] < 0.5) {
             std::cout << "Point " << i << " is outlier (weight: " << weights[i] << ")\n";

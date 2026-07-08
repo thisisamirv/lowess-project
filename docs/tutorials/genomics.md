@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD033 -->
+﻿<!-- markdownlint-disable MD033 -->
 # Genomic Data Smoothing
 
 LOWESS for methylation profiles, ChIP-seq signals, and other genomic data.
@@ -136,11 +136,11 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
     const result = fl.smooth(positions, observed, {
         fraction: 0.1,
         iterations: 3,
-        confidenceIntervals: 0.95
+        confidence_intervals: 0.95
     });
 
     // Smoothed profile in result.y
-    // CI bounds in result.confidenceLower/Upper
+    // CI bounds in result.confidence_lower/Upper
     ```
 
 === "WebAssembly"
@@ -151,11 +151,11 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
     const result = smooth(positions, observed, {
         fraction: 0.1,
         iterations: 3,
-        confidenceIntervals: 0.95
+        confidence_intervals: 0.95
     });
 
     // Smoothed profile in result.y
-    // CI bounds in result.confidenceLower/Upper
+    // CI bounds in result.confidence_lower/Upper
     ```
 
 === "C++"
@@ -169,8 +169,8 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
         .confidence_intervals = 0.95
     });
 
-    // Smoothed profile in result.yVector()
-    // CI bounds in result.confidenceLower()/result.confidenceUpper()
+    // Smoothed profile in result.y_vector()
+    // CI bounds in result.confidence_lower()/result.confidence_upper()
     ```
 
 ---
@@ -396,12 +396,12 @@ For whole-genome data that doesn't fit in memory:
 
     const processor = new StreamingLowess(
         { fraction: 0.05, iterations: 3 },
-        { chunkSize: 100000, overlap: 10000 }
+        { chunk_size: 100000, overlap: 10000 }
     );
 
     // Process genomic chunks from stream or file
     for (const chunk of genomicData) {
-        processor.processChunk(chunk.positions, chunk.coverage);
+        processor.process_chunk(chunk.positions, chunk.coverage);
     }
     const result = processor.finalize();
     ```
@@ -412,12 +412,12 @@ For whole-genome data that doesn't fit in memory:
 
     const processor = new StreamingLowessWasm(
         { fraction: 0.05, iterations: 3 },
-        { chunkSize: 100000, overlap: 10000 }
+        { chunk_size: 100000, overlap: 10000 }
     );
 
     // Process chunks
     for (const chunk of stream) {
-        processor.processChunk(chunk.positions, chunk.coverage);
+        processor.process_chunk(chunk.positions, chunk.coverage);
     }
     const result = processor.finalize();
     ```
@@ -438,12 +438,12 @@ For whole-genome data that doesn't fit in memory:
 
 ## Best Practices for Genomic Data
 
-| Consideration            | Recommendation                      |
-|--------------------------|-------------------------------------|
-| **Fraction**             | 0.05–0.15 (preserve local features) |
-| **Iterations**           | 3–5 (handle sequencing outliers)    |
-| **Large data**           | Use streaming mode                  |
-| **Sparse regions**       | Use `boundary_policy="extend"`      |
+| Consideration | Recommendation |
+| --- | --- |
+| **Fraction** | 0.05–0.15 (preserve local features) |
+| **Iterations** | 3–5 (handle sequencing outliers) |
+| **Large data** | Use streaming mode |
+| **Sparse regions** | Use `boundary_policy="extend"` |
 | **Multiple chromosomes** | Process separately or ensure sorted |
 
 ---

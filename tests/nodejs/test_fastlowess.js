@@ -9,7 +9,7 @@ test('batch smoothing', () => {
 
     const model = new fastlowess.Lowess({
         fraction: 0.3,
-        returnDiagnostics: true
+        return_diagnostics: true
     });
 
     const result = model.fit(x, y);
@@ -23,14 +23,14 @@ test('streaming smoothing', () => {
     const streamer = new fastlowess.StreamingLowess({
         fraction: 0.3
     }, {
-        chunkSize: 10,
+        chunk_size: 10,
         overlap: 2
     });
 
     const x = new Float64Array(Array.from({ length: 20 }, (_, i) => i));
     const y = new Float64Array(Array.from({ length: 20 }, (_, i) => i * 2));
 
-    const result = streamer.processChunk(x, y);
+    const result = streamer.process_chunk(x, y);
     assert.ok(result.y.length >= 0);
 
     const finalResult = streamer.finalize();
@@ -41,15 +41,15 @@ test('online smoothing', () => {
     const online = new fastlowess.OnlineLowess({
         fraction: 0.5
     }, {
-        windowCapacity: 10,
-        minPoints: 2
+        window_capacity: 10,
+        min_points: 2
     });
 
     let lastVal = null;
     for (let i = 0; i < 10; i++) {
         const xArr = new Float64Array([i]);
         const yArr = new Float64Array([i * 2]);
-        const res = online.addPoints(xArr, yArr);
+        const res = online.add_points(xArr, yArr);
 
         if (res.y.length > 0) {
             lastVal = res.y[0];
@@ -65,10 +65,10 @@ test('options parsing', () => {
     const y = new Float64Array([2, 4, 6, 8, 10]);
 
     const model = new fastlowess.Lowess({
-        weightFunction: 'tricube',
-        robustnessMethod: 'bisquare',
-        boundaryPolicy: 'extend',
-        scalingMethod: 'mad'
+        weight_function: 'tricube',
+        robustness_method: 'bisquare',
+        boundary_policy: 'extend',
+        scaling_method: 'mad'
     });
 
     const result = model.fit(x, y);
@@ -84,11 +84,11 @@ test('async batch smoothing', async () => {
         fraction: 0.3
     });
 
-    if (typeof model.fitAsync !== 'function') {
+    if (typeof model.fit_async !== 'function') {
         console.error('Available properties on model:', Object.getOwnPropertyNames(Object.getPrototypeOf(model)));
-        throw new Error('model.fitAsync is not a function');
+        throw new Error('model.fit_async is not a function');
     }
-    const result = await model.fitAsync(x, y);
+    const result = await model.fit_async(x, y);
 
     assert.strictEqual(result.x.length, 5);
     assert.strictEqual(result.y.length, 5);

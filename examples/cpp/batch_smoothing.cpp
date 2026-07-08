@@ -149,9 +149,9 @@ int main() {
       auto res_exp = model.fit(data.x, data.y);
 
       // Use non-throwing interface
-      if (res_exp.hasValue()) {
+      if (res_exp.has_value()) {
         auto &res = res_exp.value();
-        if (res.diagnostics().hasValue()) {
+        if (res.diagnostics().has_value()) {
           const double rmse = res.diagnostics().rmse();
           if (rmse < min_rmse) {
             min_rmse = rmse;
@@ -164,10 +164,10 @@ int main() {
               << '\n';
 
     // Diagnostics Printout
-    if (res_intervals.diagnostics().hasValue()) {
+    if (res_intervals.diagnostics().has_value()) {
       const auto diag = res_intervals.diagnostics();
       std::cout << "\nFit Statistics (Intervals Model):\n";
-      std::cout << " - R^2:   " << diag.rSquared() << '\n';
+      std::cout << " - R^2:   " << diag.r_squared() << '\n';
       std::cout << " - RMSE: " << diag.rmse() << '\n';
       std::cout << " - MAE:  " << diag.mae() << '\n';
     }
@@ -203,12 +203,12 @@ int main() {
 
     std::cout << "Boundary policy comparison:\n";
     std::cout << std::fixed << std::setprecision(2);
-    std::cout << " - Extend (Default): first=" << r_ext.yValue(0)
-              << ", last=" << r_ext.yValue(k_linear_point_count - 1) << '\n';
-    std::cout << " - Reflect:          first=" << r_ref.yValue(0)
-              << ", last=" << r_ref.yValue(k_linear_point_count - 1) << '\n';
-    std::cout << " - Zero:             first=" << r_zr.yValue(0)
-              << ", last=" << r_zr.yValue(k_linear_point_count - 1) << '\n';
+    std::cout << " - Extend (Default): first=" << r_ext.y_value(0)
+              << ", last=" << r_ext.y_value(k_linear_point_count - 1) << '\n';
+    std::cout << " - Reflect:          first=" << r_ref.y_value(0)
+              << ", last=" << r_ref.y_value(k_linear_point_count - 1) << '\n';
+    std::cout << " - Zero:             first=" << r_zr.y_value(0)
+              << ", last=" << r_zr.y_value(k_linear_point_count - 1) << '\n';
 
     std::cout << "\n=== Batch Smoothing Example Complete ===\n";
 

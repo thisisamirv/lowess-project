@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD024 -->
+﻿<!-- markdownlint-disable MD024 -->
 # Weight Functions
 
 Kernel functions for distance weighting.
@@ -13,15 +13,15 @@ Weight functions (kernels) determine how neighboring points contribute to each l
 
 ## Available Kernels
 
-| Kernel           | Efficiency | Smoothness  | Support   |
-|------------------|:----------:|:-----------:|:---------:|
-| **Tricube**      | 0.998      | Very smooth | Compact   |
-| **Epanechnikov** | 1.000      | Smooth      | Compact   |
-| **Gaussian**     | 0.961      | Infinite    | Unbounded |
-| **Biweight**     | 0.995      | Very smooth | Compact   |
-| **Cosine**       | 0.999      | Smooth      | Compact   |
-| **Triangle**     | 0.989      | Moderate    | Compact   |
-| **Uniform**      | 0.943      | None        | Compact   |
+| Kernel | Efficiency | Smoothness | Support |
+| --- | --- | --- | --- |
+| **Tricube** | 0.998 | Very smooth | Compact |
+| **Epanechnikov** | 1.000 | Smooth | Compact |
+| **Gaussian** | 0.961 | Infinite | Unbounded |
+| **Biweight** | 0.995 | Very smooth | Compact |
+| **Cosine** | 0.999 | Smooth | Compact |
+| **Triangle** | 0.989 | Moderate | Compact |
+| **Uniform** | 0.943 | None | Compact |
 
 **Efficiency** = AMISE relative to Epanechnikov (1.0 = optimal)
 
@@ -60,12 +60,12 @@ $$w(u) = (1 - |u|^3)^3$$
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { weightFunction: "tricube" });
+    const result = smooth(x, y, { weight_function: "tricube" });
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { weightFunction: "tricube" });
+    const result = smooth(x, y, { weight_function: "tricube" });
     ```
 
 === "C++"
@@ -108,12 +108,12 @@ $$w(u) = \frac{3}{4}(1 - u^2)$$
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { weightFunction: "epanechnikov" });
+    const result = smooth(x, y, { weight_function: "epanechnikov" });
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { weightFunction: "epanechnikov" });
+    const result = smooth(x, y, { weight_function: "epanechnikov" });
     ```
 
 === "C++"
@@ -156,12 +156,12 @@ $$w(u) = \exp(-u^2/2)$$
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { weightFunction: "gaussian" });
+    const result = smooth(x, y, { weight_function: "gaussian" });
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { weightFunction: "gaussian" });
+    const result = smooth(x, y, { weight_function: "gaussian" });
     ```
 
 === "C++"
@@ -204,12 +204,12 @@ $$w(u) = (1 - u^2)^2$$
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { weightFunction: "biweight" });
+    const result = smooth(x, y, { weight_function: "biweight" });
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { weightFunction: "biweight" });
+    const result = smooth(x, y, { weight_function: "biweight" });
     ```
 
 === "C++"
@@ -252,12 +252,12 @@ $$w(u) = \cos(\pi u / 2)$$
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { weightFunction: "cosine" });
+    const result = smooth(x, y, { weight_function: "cosine" });
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { weightFunction: "cosine" });
+    const result = smooth(x, y, { weight_function: "cosine" });
     ```
 
 === "C++"
@@ -300,12 +300,12 @@ $$w(u) = 1 - |u|$$
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { weightFunction: "triangle" });
+    const result = smooth(x, y, { weight_function: "triangle" });
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { weightFunction: "triangle" });
+    const result = smooth(x, y, { weight_function: "triangle" });
     ```
 
 === "C++"
@@ -348,12 +348,12 @@ $$w(u) = 1$$
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { weightFunction: "uniform" });
+    const result = smooth(x, y, { weight_function: "uniform" });
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { weightFunction: "uniform" });
+    const result = smooth(x, y, { weight_function: "uniform" });
     ```
 
 === "C++"

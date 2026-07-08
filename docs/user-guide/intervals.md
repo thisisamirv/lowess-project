@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD024 -->
+﻿<!-- markdownlint-disable MD024 -->
 # Intervals
 
 Confidence and prediction intervals for uncertainty quantification.
@@ -7,10 +7,10 @@ Confidence and prediction intervals for uncertainty quantification.
 
 ![Intervals](../assets/diagrams/confidence_vs_prediction_intervals.svg)
 
-| Type           | Represents                 | Width  | Use                       |
-|----------------|----------------------------|--------|---------------------------|
-| **Confidence** | Uncertainty in mean curve  | Narrow | Where is the true trend?  |
-| **Prediction** | Uncertainty for new points | Wide   | Where will new data fall? |
+| Type | Represents | Width | Use |
+| --- | --- | --- | --- |
+| **Confidence** | Uncertainty in mean curve | Narrow | Where is the true trend? |
+| **Prediction** | Uncertainty for new points | Wide | Where will new data fall? |
 
 ---
 
@@ -72,19 +72,19 @@ Estimate uncertainty in the smoothed curve itself.
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { fraction: 0.5, confidenceIntervals: 0.95 });
+    const result = smooth(x, y, { fraction: 0.5, confidence_intervals: 0.95 });
 
     result.y.forEach((y, i) => {
-        console.log(`x=${result.x[i]}: y=${y} [${result.confidenceLower[i]}, ${result.confidenceUpper[i]}]`);
+        console.log(`x=${result.x[i]}: y=${y} [${result.confidence_lower[i]}, ${result.confidence_upper[i]}]`);
     });
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { fraction: 0.5, confidenceIntervals: 0.95 });
+    const result = smooth(x, y, { fraction: 0.5, confidence_intervals: 0.95 });
 
     result.y.forEach((y, i) => {
-        console.log(`x=${result.x[i]}: y=${y} [${result.confidenceLower[i]}, ${result.confidenceUpper[i]}]`);
+        console.log(`x=${result.x[i]}: y=${y} [${result.confidence_lower[i]}, ${result.confidence_upper[i]}]`);
     });
     ```
 
@@ -97,8 +97,8 @@ Estimate uncertainty in the smoothed curve itself.
         .confidence_intervals = 0.95
     });
 
-    auto ci_lower = result.confidenceLower();
-    auto ci_upper = result.confidenceUpper();
+    auto ci_lower = result.confidence_lower();
+    auto ci_upper = result.confidence_upper();
     ```
 
 ---
@@ -151,14 +151,14 @@ Estimate where new observations might fall.
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { fraction: 0.5, predictionIntervals: 0.95 });
-    console.log(`Prediction bounds: [${result.predictionLower[0]}, ${result.predictionUpper[0]}]`);
+    const result = smooth(x, y, { fraction: 0.5, prediction_intervals: 0.95 });
+    console.log(`Prediction bounds: [${result.prediction_lower[0]}, ${result.prediction_upper[0]}]`);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { fraction: 0.5, predictionIntervals: 0.95 });
-    console.log(`Prediction bounds: [${result.predictionLower[0]}, ${result.predictionUpper[0]}]`);
+    const result = smooth(x, y, { fraction: 0.5, prediction_intervals: 0.95 });
+    console.log(`Prediction bounds: [${result.prediction_lower[0]}, ${result.prediction_upper[0]}]`);
     ```
 
 === "C++"
@@ -215,8 +215,8 @@ Request both types simultaneously:
     ```javascript
     const result = smooth(x, y, {
         fraction: 0.5,
-        confidenceIntervals: 0.95,
-        predictionIntervals: 0.95
+        confidence_intervals: 0.95,
+        prediction_intervals: 0.95
     });
     ```
 
@@ -224,8 +224,8 @@ Request both types simultaneously:
     ```javascript
     const result = smooth(x, y, {
         fraction: 0.5,
-        confidenceIntervals: 0.95,
-        predictionIntervals: 0.95
+        confidence_intervals: 0.95,
+        prediction_intervals: 0.95
     });
     ```
 
@@ -240,11 +240,11 @@ Request both types simultaneously:
 
 Common levels and their z-values:
 
-| Level | z-value | Interpretation                      |
-|-------|---------|-------------------------------------|
-| 0.90  | 1.645   | 90% of intervals contain true value |
-| 0.95  | 1.960   | 95% of intervals contain true value |
-| 0.99  | 2.576   | 99% of intervals contain true value |
+| Level | z-value | Interpretation |
+| --- | --- | --- |
+| 0.90 | 1.645 | 90% of intervals contain true value |
+| 0.95 | 1.960 | 95% of intervals contain true value |
+| 0.99 | 2.576 | 99% of intervals contain true value |
 
 === "R"
     ```r
@@ -276,13 +276,13 @@ Common levels and their z-values:
 === "Node.js"
     ```javascript
     // 99% confidence interval
-    const result = smooth(x, y, { confidenceIntervals: 0.99 });
+    const result = smooth(x, y, { confidence_intervals: 0.99 });
     ```
 
 === "WebAssembly"
     ```javascript
     // 99% confidence interval
-    const result = smooth(x, y, { confidenceIntervals: 0.99 });
+    const result = smooth(x, y, { confidence_intervals: 0.99 });
     ```
 
 === "C++"
@@ -330,18 +330,18 @@ Access standard errors directly (available when intervals are computed):
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { confidenceIntervals: 0.95 });
+    const result = smooth(x, y, { confidence_intervals: 0.95 });
 
-    result.standardErrors.forEach((se, i) => {
+    result.standard_errors.forEach((se, i) => {
         console.log(`Point ${i}: SE = ${se.toFixed(4)}`);
     });
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { confidenceIntervals: 0.95 });
+    const result = smooth(x, y, { confidence_intervals: 0.95 });
 
-    result.standardErrors.forEach((se, i) => {
+    result.standard_errors.forEach((se, i) => {
         console.log(`Point ${i}: SE = ${se.toFixed(4)}`);
     });
     ```
@@ -358,8 +358,8 @@ Access standard errors directly (available when intervals are computed):
 !!! warning "Batch Mode Only"
     Confidence and prediction intervals are only available in **Batch** mode. Streaming and Online modes do not support intervals.
 
-| Feature              | Batch | Streaming | Online |
-|----------------------|-------|-----------|--------|
-| Confidence intervals | ✓     | ✗         | ✗      |
-| Prediction intervals | ✓     | ✗         | ✗      |
-| Standard errors      | ✓     | ✗         | ✗      |
+| Feature | Batch | Streaming | Online |
+| --- | --- | --- | --- |
+| Confidence intervals | ✓ | ✗ | ✗ |
+| Prediction intervals | ✓ | ✗ | ✗ |
+| Standard errors | ✓ | ✗ | ✗ |

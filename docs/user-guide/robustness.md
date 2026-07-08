@@ -1,4 +1,4 @@
-# Robustness
+﻿# Robustness
 
 Outlier handling through iterative reweighting.
 
@@ -52,12 +52,12 @@ $$w(u) = \begin{cases} (1 - u^2)^2 & |u| < 1 \\ 0 & |u| \geq 1 \end{cases}$$
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { iterations: 3, robustnessMethod: "bisquare" });
+    const result = smooth(x, y, { iterations: 3, robustness_method: "bisquare" });
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { iterations: 3, robustnessMethod: "bisquare" });
+    const result = smooth(x, y, { iterations: 3, robustness_method: "bisquare" });
     ```
 
 === "C++"
@@ -104,12 +104,12 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}$$
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { iterations: 3, robustnessMethod: "huber" });
+    const result = smooth(x, y, { iterations: 3, robustness_method: "huber" });
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { iterations: 3, robustnessMethod: "huber" });
+    const result = smooth(x, y, { iterations: 3, robustness_method: "huber" });
     ```
 
 === "C++"
@@ -156,12 +156,12 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { iterations: 3, robustnessMethod: "talwar" });
+    const result = smooth(x, y, { iterations: 3, robustness_method: "talwar" });
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { iterations: 3, robustnessMethod: "talwar" });
+    const result = smooth(x, y, { iterations: 3, robustness_method: "talwar" });
     ```
 
 === "C++"
@@ -176,11 +176,11 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
 
 ## Comparison
 
-| Method       | Transition | Aggressiveness | Use Case              |
-|--------------|------------|----------------|-----------------------|
-| **Bisquare** | Smooth     | Moderate       | General purpose       |
-| **Huber**    | Gradual    | Mild           | Preserve influence    |
-| **Talwar**   | Hard       | Strong         | Extreme contamination |
+| Method | Transition | Aggressiveness | Use Case |
+| --- | --- | --- | --- |
+| **Bisquare** | Smooth | Moderate | General purpose |
+| **Huber** | Gradual | Mild | Preserve influence |
+| **Talwar** | Hard | Strong | Extreme contamination |
 
 ---
 
@@ -238,9 +238,9 @@ Use robustness weights to identify potential outliers:
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { iterations: 5, returnRobustnessWeights: true });
+    const result = smooth(x, y, { iterations: 5, return_robustness_weights: true });
 
-    result.robustnessWeights.forEach((w, i) => {
+    result.robustness_weights.forEach((w, i) => {
         if (w < 0.5) {
             console.log(`Potential outlier at index ${i}: weight = ${w.toFixed(3)}`);
         }
@@ -249,9 +249,9 @@ Use robustness weights to identify potential outliers:
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { iterations: 5, returnRobustnessWeights: true });
+    const result = smooth(x, y, { iterations: 5, return_robustness_weights: true });
 
-    result.robustnessWeights.forEach((w, i) => {
+    result.robustness_weights.forEach((w, i) => {
         if (w < 0.5) {
             console.log(`Potential outlier at index ${i}: weight = ${w.toFixed(3)}`);
         }
@@ -265,7 +265,7 @@ Use robustness weights to identify potential outliers:
         .return_robustness_weights = true
     });
 
-    auto weights = result.robustnessWeights();
+    auto weights = result.robustness_weights();
     for (size_t i = 0; i < weights.size(); ++i) {
         if (weights[i] < 0.5) {
             std::cout << "Potential outlier at " << i << std::endl;
@@ -279,10 +279,10 @@ Use robustness weights to identify potential outliers:
 
 Residuals are scaled before computing robustness weights. Two methods:
 
-| Method  | Description               | Robustness          |
-|---------|---------------------------|---------------------|
-| **MAD** | Median Absolute Deviation | Very robust         |
-| **MAR** | Mean Absolute Residual    | Less robust, faster |
+| Method | Description | Robustness |
+| --- | --- | --- |
+| **MAD** | Median Absolute Deviation | Very robust |
+| **MAR** | Mean Absolute Residual | Less robust, faster |
 
 === "R"
     ```r
@@ -310,12 +310,12 @@ Residuals are scaled before computing robustness weights. Two methods:
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { iterations: 3, scalingMethod: "mad" });
+    const result = smooth(x, y, { iterations: 3, scaling_method: "mad" });
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { iterations: 3, scalingMethod: "mad" });
+    const result = smooth(x, y, { iterations: 3, scaling_method: "mad" });
     ```
 
 === "C++"
@@ -363,12 +363,12 @@ Stop iterations early when weights stabilize:
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { iterations: 10, autoConverge: 1e-6 });
+    const result = smooth(x, y, { iterations: 10, auto_converge: 1e-6 });
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { iterations: 10, autoConverge: 1e-6 });
+    const result = smooth(x, y, { iterations: 10, auto_converge: 1e-6 });
     ```
 
 === "C++"

@@ -123,10 +123,10 @@
                 const resRobust = smooth(x, y, {
                     fraction: 0.05,
                     iterations: 3,
-                    robustnessMethod: "bisquare",
-                    returnRobustnessWeights: true
+                    robustness_method: "bisquare",
+                    return_robustness_weights: true
                 });
-                const weights = resRobust.robustnessWeights;
+                const weights = resRobust.robustness_weights;
                 let outlierCount = 0;
                 if (weights) {
                     for (let i = 0; i < weights.length; i++) {
@@ -139,15 +139,15 @@
                 log("\n4. Computing confidence and prediction intervals...");
                 const resIntervals = smooth(x, y, {
                     fraction: 0.05,
-                    confidenceIntervals: 0.95,
-                    predictionIntervals: 0.95,
-                    returnDiagnostics: true
+                    confidence_intervals: 0.95,
+                    prediction_intervals: 0.95,
+                    return_diagnostics: true
                 });
 
                 if (resIntervals.diagnostics) {
                     const d = resIntervals.diagnostics;
                     log(`   - Fit Statistics:`);
-                    log(`     R²:   ${d.rSquared.toFixed(4)}`);
+                    log(`     R²:   ${d.r_squared.toFixed(4)}`);
                     log(`     RMSE: ${d.rmse.toFixed(4)}`);
                     log(`     MAE:  ${d.mae.toFixed(4)}`);
                 }
@@ -156,14 +156,14 @@
                 log("\n5. Running cross-validation to find optimal fraction...");
                 const cvFractions = [0.05, 0.1, 0.2, 0.4];
                 const resCV = smooth(x, y, {
-                    cvFractions,
-                    cvMethod: "kfold",
-                    cvK: 5
+                    cv_fractions: cvFractions,
+                    cv_method: "kfold",
+                    cv_k: 5
                 });
 
-                log(`   - Optimal fraction selected: ${resCV.fractionUsed}`);
-                if (resCV.cvScores) {
-                    log(`   - CV Scores: [${Array.from(resCV.cvScores).map(n => n.toFixed(4)).join(', ')}]`);
+                log(`   - Optimal fraction selected: ${resCV.fraction_used}`);
+                if (resCV.cv_scores) {
+                    log(`   - CV Scores: [${Array.from(resCV.cv_scores).map(n => n.toFixed(4)).join(', ')}]`);
                 }
 
                 // 6. Boundary Policy Comparison
@@ -175,9 +175,9 @@
                     yl[i] = 2 * xl[i] + 1;
                 }
 
-                const rExt = smooth(xl, yl, { fraction: 0.6, boundaryPolicy: "extend" });
-                const rRef = smooth(xl, yl, { fraction: 0.6, boundaryPolicy: "reflect" });
-                const rZr = smooth(xl, yl, { fraction: 0.6, boundaryPolicy: "zero" });
+                const rExt = smooth(xl, yl, { fraction: 0.6, boundary_policy: "extend" });
+                const rRef = smooth(xl, yl, { fraction: 0.6, boundary_policy: "reflect" });
+                const rZr = smooth(xl, yl, { fraction: 0.6, boundary_policy: "zero" });
 
                 log(`   - Extend (Default): first=${rExt.y[0].toFixed(2)}, last=${rExt.y[49].toFixed(2)}`);
                 log(`   - Reflect:          first=${rRef.y[0].toFixed(2)}, last=${rRef.y[49].toFixed(2)}`);

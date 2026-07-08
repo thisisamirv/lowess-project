@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD033 -->
+﻿<!-- markdownlint-disable MD033 -->
 # LOWESS Project
 
 The fastest, most robust, and most feature-complete language-agnostic LOWESS (Locally Weighted Scatterplot Smoothing) implementation for **Rust**, **Python**, **R**, **Julia**, **JavaScript**, **C++**, and **WebAssembly**.
@@ -24,20 +24,20 @@ The `lowess` project crushes the competition in terms of speed, wether in single
 
 Speedup relative to Python's `statsmodels.lowess` (higher is better):
 
-| Category                            | statsmodels | R (stats) | Serial | Parallel | GPU     |
-|-------------------------------------|-------------|-----------|--------|----------|---------|
-| **Clustered**                       | 163ms       | 83×       | 203×   | **433×** | 32×     |
-| **Constant Y**                      | 134ms       | 92×       | 212×   | **410×** | 18×     |
-| **Delta**<br/>(large–none)          | 105ms       | 2×        | 4×     | 6×       | **16×** |
-| **Extreme Outliers**                | 489ms       | 106×      | 201×   | **388×** | 29×     |
-| **Financial**<br/>(500–10K)         | 106ms       | 105×      | 252×   | **293×** | 12×     |
-| **Fraction**<br/>(0.05–0.67)        | 221ms       | 104×      | 228×   | **391×** | 22×     |
-| **Genomic**<br/>(1K–50K)            | 1833ms      | 7×        | 9×     | 20×      | **95×** |
-| **High Noise**                      | 435ms       | 133×      | 134×   | **375×** | 32×     |
-| **Iterations**<br/>(0–10)           | 204ms       | 115×      | 224×   | **386×** | 18×     |
-| **Scale**<br/>(1K–50K)              | 1841ms      | 264×      | 487×   | **581×** | 98×     |
-| **Scientific**<br/>(500–10K)        | 167ms       | 109×      | 205×   | **314×** | 15×     |
-| **Scale Large**\*<br/>(100K–2M)     | —           | —         | 1×     | **1.4×** | 0.3×    |
+| Category | statsmodels | R (stats) | Serial | Parallel | GPU |
+| --- | --- | --- | --- | --- | --- |
+| **Clustered** | 163ms | 83× | 203× | **433×** | 32× |
+| **Constant Y** | 134ms | 92× | 212× | **410×** | 18× |
+| **Delta**<br/>(large–none) | 105ms | 2× | 4× | 6× | **16×** |
+| **Extreme Outliers** | 489ms | 106× | 201× | **388×** | 29× |
+| **Financial**<br/>(500–10K) | 106ms | 105× | 252× | **293×** | 12× |
+| **Fraction**<br/>(0.05–0.67) | 221ms | 104× | 228× | **391×** | 22× |
+| **Genomic**<br/>(1K–50K) | 1833ms | 7× | 9× | 20× | **95×** |
+| **High Noise** | 435ms | 133× | 134× | **375×** | 32× |
+| **Iterations**<br/>(0–10) | 204ms | 115× | 224× | **386×** | 18× |
+| **Scale**<br/>(1K–50K) | 1841ms | 264× | 487× | **581×** | 98× |
+| **Scientific**<br/>(500–10K) | 167ms | 109× | 205× | **314×** | 15× |
+| **Scale Large**\*<br/>(100K–2M) | — | — | 1× | **1.4×** | 0.3× |
 
 \*Scale Large benchmarks are relative to Serial (statsmodels cannot handle these sizes)
 
@@ -79,22 +79,22 @@ This crate applies a range of different *boundary policies* at dataset edges:
 
 A variety of features, supporting a range of use cases:
 
-| Feature              | This package  | statsmodels  | R (stats)    |
-|----------------------|:-------------:|:------------:|:------------:|
-| Kernel               | 7 options     | only Tricube | only Tricube |
-| Robustness Weighting | 3 options     | only Huber   | only Huber   |
-| Scale Estimation     | 2 options     | only MAR     | only MAR     |
-| Boundary Padding     | 4 options     | no padding   | no padding   |
-| Zero Weight Fallback | 3 options     | no           | no           |
-| Auto Convergence     | yes           | no           | no           |
-| Online Mode          | yes           | no           | no           |
-| Streaming Mode       | yes           | no           | no           |
-| Confidence Intervals | yes           | no           | no           |
-| Prediction Intervals | yes           | no           | no           |
-| Cross-Validation     | 2 options     | no           | no           |
-| Parallel Execution   | yes           | no           | no           |
-| GPU Acceleration     | yes*          | no           | no           |
-| `no-std` Support     | yes           | no           | no           |
+| Feature | This package | statsmodels | R (stats) |
+| --- | --- | --- | --- |
+| Kernel | 7 options | only Tricube | only Tricube |
+| Robustness Weighting | 3 options | only Huber | only Huber |
+| Scale Estimation | 2 options | only MAR | only MAR |
+| Boundary Padding | 4 options | no padding | no padding |
+| Zero Weight Fallback | 3 options | no | no |
+| Auto Convergence | yes | no | no |
+| Online Mode | yes | no | no |
+| Streaming Mode | yes | no | no |
+| Confidence Intervals | yes | no | no |
+| Prediction Intervals | yes | no | no |
+| Cross-Validation | 2 options | no | no |
+| Parallel Execution | yes | no | no |
+| GPU Acceleration | yes* | no | no |
+| `no-std` Support | yes | no | no |
 
 \* GPU acceleration is currently in beta and may not be available on all platforms.
 
@@ -299,7 +299,7 @@ See the [Installation Guide](getting-started/installation.md) for more options a
         fastlowess::Lowess model(options);
         auto result = model.fit(x, y);
 
-        for (const auto& val : result.yVector()) {
+        for (const auto& val : result.y_vector()) {
             std::cout << val << " ";
         }
         std::cout << std::endl;

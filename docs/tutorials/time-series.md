@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD024 MD046 MD033 -->
+﻿<!-- markdownlint-disable MD024 MD046 MD033 -->
 # Time Series Analysis
 
 LOWESS for trend extraction and temporal smoothing.
@@ -124,7 +124,7 @@ Time series data often contains noise, seasonality, and trends. LOWESS provides 
         .iterations = 3
     });
 
-    // Trend in result.yVector()
+    // Trend in result.y_vector()
     ```
 
 ---
@@ -197,7 +197,7 @@ Remove trend to analyze residual patterns:
     const result = fl.smooth(t, y, { 
         fraction: 0.3, 
         iterations: 3, 
-        returnResiduals: true 
+        return_residuals: true 
     });
 
     const trend = result.y;
@@ -211,7 +211,7 @@ Remove trend to analyze residual patterns:
     const result = smooth(t, y, { 
         fraction: 0.3, 
         iterations: 3, 
-        returnResiduals: true 
+        return_residuals: true 
     });
 
     // Access result.y (trend) and result.residuals (detrended)
@@ -227,7 +227,7 @@ Remove trend to analyze residual patterns:
         .return_residuals = true
     });
 
-    auto trend = result.yVector();
+    auto trend = result.y_vector();
     auto detrended = result.residuals();
     ```
 
@@ -308,10 +308,10 @@ Remove trend to analyze residual patterns:
     const result = fl.smooth(t, y, {
         fraction: 0.2,
         iterations: 3,
-        predictionIntervals: 0.95
+        prediction_intervals: 0.95
     });
 
-    console.log(`95% PI: [${result.predictionLower[0]}, ${result.predictionUpper[0]}]`);
+    console.log(`95% PI: [${result.prediction_lower[0]}, ${result.prediction_upper[0]}]`);
     ```
 
 === "WebAssembly"
@@ -321,10 +321,10 @@ Remove trend to analyze residual patterns:
     const result = smooth(t, y, {
         fraction: 0.2,
         iterations: 3,
-        predictionIntervals: 0.95
+        prediction_intervals: 0.95
     });
 
-    // Access result.predictionLower and result.predictionUpper
+    // Access result.prediction_lower and result.prediction_upper
     ```
 
 === "C++"
@@ -338,7 +338,7 @@ Remove trend to analyze residual patterns:
         .prediction_intervals = 0.95
     });
 
-    // Access result.predictionLower and result.predictionUpper
+    // Access result.prediction_lower and result.prediction_upper
     ```
 
 ---
@@ -498,7 +498,7 @@ Use different fractions to extract features at different scales:
     std::vector<std::vector<double>> trends;
     for (auto f : scales) {
         auto result = fastlowess::smooth(t, y, { .fraction = f });
-        trends.push_back(result.yVector());
+        trends.push_back(result.y_vector());
     }
     ```
 
@@ -598,10 +598,10 @@ Biological application:
     const result = fl.smooth(hours, expression, {
         fraction: 0.3,
         iterations: 3,
-        returnDiagnostics: true
+        return_diagnostics: true
     });
 
-    console.log(`R²: ${result.diagnostics.rSquared.toFixed(3)}`);
+    console.log(`R²: ${result.diagnostics.r_squared.toFixed(3)}`);
     ```
 
 === "WebAssembly"
@@ -611,10 +611,10 @@ Biological application:
     const result = smooth(hours, expression, {
         fraction: 0.3,
         iterations: 3,
-        returnDiagnostics: true
+        return_diagnostics: true
     });
 
-    console.log("R²:", result.diagnostics.rSquared);
+    console.log("R²:", result.diagnostics.r_squared);
     ```
 
 === "C++"
@@ -634,13 +634,13 @@ Biological application:
 
 ## Choosing Fraction for Time Series
 
-| Data Type             | Recommended Fraction | Rationale                    |
-|-----------------------|----------------------|------------------------------|
-| Daily data (years)    | 0.3–0.5              | Capture annual trends        |
-| Hourly data (days)    | 0.1–0.2              | Capture daily patterns       |
-| Sensor data (minutes) | 0.05–0.1             | Preserve short-term features |
-| Noisy data            | Higher               | Reduce noise impact          |
-| Clean data            | Lower                | Preserve detail              |
+| Data Type | Recommended Fraction | Rationale |
+| --- | --- | --- |
+| Daily data (years) | 0.3–0.5 | Capture annual trends |
+| Hourly data (days) | 0.1–0.2 | Capture daily patterns |
+| Sensor data (minutes) | 0.05–0.1 | Preserve short-term features |
+| Noisy data | Higher | Reduce noise impact |
+| Clean data | Lower | Preserve detail |
 
 ---
 

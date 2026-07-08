@@ -42,13 +42,13 @@ function main() {
     console.log("Processing with 'full' update mode...");
     const onlineFull = new fastlowess.OnlineLowess(
         { fraction: 0.3, iterations: 3 },
-        { windowCapacity: 50, updateMode: "full" }
+        { window_capacity: 50, update_mode: "full" }
     );
     const resFull = new Float64Array(nPoints);
     for (let i = 0; i < nPoints; i++) {
         const chunkX = new Float64Array([x[i]]);
         const chunkY = new Float64Array([y[i]]);
-        const res = onlineFull.addPoints(chunkX, chunkY);
+        const res = onlineFull.add_points(chunkX, chunkY);
         resFull[i] = res.y[0];
     }
 
@@ -56,13 +56,13 @@ function main() {
     console.log("Processing with 'incremental' update mode...");
     const onlineInc = new fastlowess.OnlineLowess(
         { fraction: 0.3, iterations: 3 },
-        { windowCapacity: 50, updateMode: "incremental" }
+        { window_capacity: 50, update_mode: "incremental" }
     );
     const resInc = new Float64Array(nPoints);
     for (let i = 0; i < nPoints; i++) {
         const chunkX = new Float64Array([x[i]]);
         const chunkY = new Float64Array([y[i]]);
-        const res = onlineInc.addPoints(chunkX, chunkY);
+        const res = onlineInc.add_points(chunkX, chunkY);
         resInc[i] = res.y[0];
     }
 

@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD024 MD046 -->
+﻿<!-- markdownlint-disable MD024 MD046 -->
 # Cross-Validation
 
 Automated parameter selection via cross-validation.
@@ -79,25 +79,25 @@ Split data into K folds, train on K-1, validate on 1.
 === "Node.js"
     ```javascript
     const result = smooth(x, y, {
-        cvMethod: "kfold",
-        cvK: 5,
-        cvFractions: [0.2, 0.3, 0.5, 0.7]
+        cv_method: "kfold",
+        cv_k: 5,
+        cv_fractions: [0.2, 0.3, 0.5, 0.7]
     });
 
-    console.log("Selected fraction:", result.fractionUsed);
-    console.log("CV scores:", result.cvScores);
+    console.log("Selected fraction:", result.fraction_used);
+    console.log("CV scores:", result.cv_scores);
     ```
 
 === "WebAssembly"
     ```javascript
     const result = smooth(x, y, {
-        cvMethod: "kfold",
-        cvK: 5,
-        cvFractions: [0.2, 0.3, 0.5, 0.7]
+        cv_method: "kfold",
+        cv_k: 5,
+        cv_fractions: [0.2, 0.3, 0.5, 0.7]
     });
 
-    console.log("Selected fraction:", result.fractionUsed);
-    console.log("CV scores:", result.cvScores);
+    console.log("Selected fraction:", result.fraction_used);
+    console.log("CV scores:", result.cv_scores);
     ```
 
 === "C++"
@@ -111,7 +111,7 @@ Split data into K folds, train on K-1, validate on 1.
 
     auto result = fastlowess::smooth(x, y, opts);
 
-    std::cout << "Selected fraction: " << result.fractionUsed() << std::endl;
+    std::cout << "Selected fraction: " << result.fraction_used() << std::endl;
     ```
 
 ---
@@ -158,16 +158,16 @@ Each point is held out once. Most thorough but slowest.
 === "Node.js"
     ```javascript
     const result = smooth(x, y, {
-        cvMethod: "loocv",
-        cvFractions: [0.2, 0.3, 0.5, 0.7]
+        cv_method: "loocv",
+        cv_fractions: [0.2, 0.3, 0.5, 0.7]
     });
     ```
 
 === "WebAssembly"
     ```javascript
     const result = smooth(x, y, {
-        cvMethod: "loocv",
-        cvFractions: [0.2, 0.3, 0.5, 0.7]
+        cv_method: "loocv",
+        cv_fractions: [0.2, 0.3, 0.5, 0.7]
     });
     ```
 
@@ -252,11 +252,11 @@ Set a seed for reproducible fold assignments:
 
 ## Comparison
 
-| Method        | Folds | Speed  | Variance | Bias   |
-|---------------|:-----:|:------:|:--------:|:------:|
-| **KFold(5)**  | 5     | Fast   | Moderate | Low    |
-| **KFold(10)** | 10    | Medium | Lower    | Lower  |
-| **LOOCV**     | N     | Slow   | Lowest   | Lowest |
+| Method | Folds | Speed | Variance | Bias |
+| --- | --- | --- | --- | --- |
+| **KFold(5)** | 5 | Fast | Moderate | Low |
+| **KFold(10)** | 10 | Medium | Lower | Lower |
+| **LOOCV** | N | Slow | Lowest | Lowest |
 
 !!! tip "Recommendation"
     Use **5-fold** or **10-fold** CV for most applications. LOOCV is only worth it for small datasets (N < 100).
@@ -338,9 +338,9 @@ Lower MSE indicates better fit on held-out data.
     ```javascript
     // Example output
     const result = smooth(x, y, {
-        cvMethod: "kfold",
-        cvK: 5,
-        cvFractions: [0.1, 0.3, 0.5, 0.7]
+        cv_method: "kfold",
+        cv_k: 5,
+        cv_fractions: [0.1, 0.3, 0.5, 0.7]
     });
 
     // Fraction  | CV Score (MSE)
@@ -354,9 +354,9 @@ Lower MSE indicates better fit on held-out data.
     ```javascript
     // Example output
     const result = smooth(x, y, {
-        cvMethod: "kfold",
-        cvK: 5,
-        cvFractions: [0.1, 0.3, 0.5, 0.7]
+        cv_method: "kfold",
+        cv_k: 5,
+        cv_fractions: [0.1, 0.3, 0.5, 0.7]
     });
 
     // Fraction  | CV Score (MSE)
@@ -392,10 +392,10 @@ The fraction with **lowest CV score** is automatically selected.
 !!! warning "Batch Mode Only"
     Cross-validation is only available in **Batch** mode.
 
-| Feature   | Batch | Streaming | Online |
-|-----------|:-----:|:---------:|:------:|
-| K-Fold CV | ✓     | ✗         | ✗      |
-| LOOCV     | ✓     | ✗         | ✗      |
+| Feature | Batch | Streaming | Online |
+| --- | --- | --- | --- |
+| K-Fold CV | ✓ | ✗ | ✗ |
+| LOOCV | ✓ | ✗ | ✗ |
 
 ---
 

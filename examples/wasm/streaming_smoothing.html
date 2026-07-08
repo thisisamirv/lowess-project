@@ -63,7 +63,7 @@
                 // Initialize Streamer
                 const streamer = new StreamingLowessWasm(
                     { fraction: 0.1 },
-                    { chunkSize: 1000, overlap: 100 }
+                    { chunk_size: 1000, overlap: 100 }
                 );
 
                 // Simulate processing 10 chunks
@@ -85,7 +85,7 @@
                     }
 
                     // Process
-                    const res = streamer.processChunk(x, y);
+                    const res = streamer.process_chunk(x, y);
                     if (res && res.y) {
                         totalPoints += res.y.length;
                     }

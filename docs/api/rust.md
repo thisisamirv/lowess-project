@@ -1,4 +1,4 @@
-# fastLowess & lowess Rust API Reference
+﻿# fastLowess & lowess Rust API Reference
 
 The Rust bindings provide the core implementation and high-performance extensions. The API uses a Builder pattern consistent across both the `lowess` (pure Rust) and `fastLowess` (accelerated) crates.
 
@@ -80,41 +80,41 @@ These chained methods configure the builder. They correspond to the "Options Str
 
 ### Lowess Options
 
-| Method                        | Argument Type          | Default            | Description                           |
-| ----------------------------- | ---------------------- | ------------------ | ------------------------------------- |
-| `fraction(T)`                 | `T: Float`             | `0.67`             | Smoothing fraction (bandwidth)        |
-| `iterations(usize)`           | `usize`                | `3`                | Number of robustifying iterations     |
-| `delta(T)`                    | `T: Float`             | `NaN`              | Interpolation distance (NaN for auto) |
-| `weight_function(...)`        | `WeightFunction`       | `Tricube`          | Weight function enum                  |
-| `robustness_method(...)`      | `RobustnessMethod`     | `Bisquare`         | Robustness method enum                |
-| `scaling_method(...)`         | `ScalingMethod`        | `MAD`              | Residual scaling method enum          |
-| `boundary_policy(...)`        | `BoundaryPolicy`       | `Extend`           | Boundary handling policy enum         |
-| `zero_weight_fallback(...)`   | `ZeroWeightFallback`   | `UseLocalMean`     | Zero-weight handling enum             |
-| `auto_converge(T)`            | `T: Float`             | `NaN`              | Auto-convergence tolerance            |
-| `confidence_intervals(T)`     | `T: Float`             | `NaN`              | Confidence level (e.g., 0.95)         |
-| `prediction_intervals(T)`     | `T: Float`             | `NaN`              | Prediction level (e.g., 0.95)         |
-| `return_diagnostics()`        | -                      | `false`            | Include diagnostics in result         |
-| `return_residuals()`          | -                      | `false`            | Include residuals in result           |
-| `return_robustness_weights()` | -                      | `false`            | Include weights in result             |
-| `parallel(bool)`              | `bool`                 | `true`             | Enable parallel execution             |
-| `cross_validate(...)`         | `impl CrossValidation` | `None`             | CV strategy (`KFold`, `LOOCV`)        |
-| `backend(...)`                | `Backend`              | `CPU`              | `fastLowess` only: `CPU` or `GPU`     |
+| Method | Argument Type | Default | Description |
+| --- | --- | --- | --- |
+| `fraction(T)` | `T: Float` | `0.67` | Smoothing fraction (bandwidth) |
+| `iterations(usize)` | `usize` | `3` | Number of robustifying iterations |
+| `delta(T)` | `T: Float` | `NaN` | Interpolation distance (NaN for auto) |
+| `weight_function(...)` | `weight_function` | `Tricube` | Weight function enum |
+| `robustness_method(...)` | `robustness_method` | `Bisquare` | Robustness method enum |
+| `scaling_method(...)` | `scaling_method` | `MAD` | Residual scaling method enum |
+| `boundary_policy(...)` | `boundary_policy` | `Extend` | Boundary handling policy enum |
+| `zero_weight_fallback(...)` | `zero_weight_fallback` | `UseLocalMean` | Zero-weight handling enum |
+| `auto_converge(T)` | `T: Float` | `NaN` | Auto-convergence tolerance |
+| `confidence_intervals(T)` | `T: Float` | `NaN` | Confidence level (e.g., 0.95) |
+| `prediction_intervals(T)` | `T: Float` | `NaN` | Prediction level (e.g., 0.95) |
+| --- | --- | --- | --- |
+| --- | --- | --- | --- |
+| --- | --- | --- | --- |
+| `parallel(bool)` | `bool` | `true` | Enable parallel execution |
+| `cross_validate(...)` | `impl CrossValidation` | `None` | CV strategy (`KFold`, `LOOCV`) |
+| `backend(...)` | `Backend` | `CPU` | `fastLowess` only: `CPU` or `GPU` |
 
 ### Streaming Options
 
-| Method               | Argument Type   | Default             | Description                |
-| -------------------- | --------------- | ------------------- | -------------------------- |
-| `chunk_size(usize)`  | `usize`         | `5000`              | Data chunk size            |
-| `overlap(usize)`     | `usize`         | `500`               | Overlap size               |
-| `merge_strategy(...)`| `MergeStrategy` | `WeightedAverage`   | Merge strategy enum        |
+| Method | Argument Type | Default | Description |
+| --- | --- | --- | --- |
+| `chunk_size(usize)` | `usize` | `5000` | Data chunk size |
+| `overlap(usize)` | `usize` | `500` | Overlap size |
+| `merge_strategy(...)` | `merge_strategy` | `WeightedAverage` | Merge strategy enum |
 
 ### Online Options
 
-| Method                  | Argument Type | Default       | Description                           |
-| ----------------------- | ------------- | ------------- | ------------------------------------- |
-| `window_capacity(usize)`| `usize`       | `1000`        | Max window size                       |
-| `min_points(usize)`     | `usize`       | `2`           | Min points before smoothing           |
-| `update_mode(...)`      | `UpdateMode`  | `Incremental` | Update mode enum                      |
+| Method | Argument Type | Default | Description |
+| --- | --- | --- | --- |
+| `window_capacity(usize)` | `usize` | `1000` | Max window size |
+| `min_points(usize)` | `usize` | `2` | Min points before smoothing |
+| `update_mode(...)` | `update_mode` | `Incremental` | Update mode enum |
 
 ## GPU Acceleration
 
@@ -156,18 +156,18 @@ The GPU backend implements almost the entire LOWESS pipeline in WGSL compute sha
 
 #### Feature Comparison
 
-| Feature                | CPU          | GPU (fastLowess) | Notes                                     |
-| ---------------------- | ------------ | ---------------- | ----------------------------------------- |
-| Batch Smoothing        | ✅           | ✅               | GPU recommended for N > 10,000            |
-| Streaming/Online       | ✅           | ❌               | GPU optimized for static batch data       |
-| All Weight Functions   | ✅           | ✅               | Identical numerical implementation        |
-| Robustness (Bisquare+) | ✅           | ✅               | Full support for all methods              |
-| Scaling (MAD/MAR/Mean) | ✅           | ✅               | Full support for all methods              |
-| Boundary Policies      | ✅           | ✅               | Extend, Reflect, Zero, NoBoundary         |
-| Auto-Convergence       | ✅           | ✅               | Tolerance checking occurs on GPU          |
-| Intervals & SE         | ✅           | ✅               | Native GPU interval calculation           |
-| Cross-Validation       | ✅           | ✅               | Parallel CV folders on GPU                |
-| Interpolation (Delta)  | ✅           | ✅               | Anchor-based skipping supported           |
+| Feature | CPU | GPU (fastLowess) | Notes |
+| --- | --- | --- | --- |
+| Batch Smoothing | ✅ | ✅ | GPU recommended for N > 10,000 |
+| Streaming/Online | ✅ | ❌ | GPU optimized for static batch data |
+| All Weight Functions | ✅ | ✅ | Identical numerical implementation |
+| Robustness (Bisquare+) | ✅ | ✅ | Full support for all methods |
+| Scaling (MAD/MAR/Mean) | ✅ | ✅ | Full support for all methods |
+| Boundary Policies | ✅ | ✅ | Extend, Reflect, Zero, NoBoundary |
+| Auto-Convergence | ✅ | ✅ | Tolerance checking occurs on GPU |
+| Intervals & SE | ✅ | ✅ | Native GPU interval calculation |
+| Cross-Validation | ✅ | ✅ | Parallel CV folders on GPU |
+| Interpolation (Delta) | ✅ | ✅ | Anchor-based skipping supported |
 
 ### Hardware Requirements
 
@@ -187,35 +187,35 @@ The GPU backend is optimized for large datasets (N > 100,000) and provides paral
 
 ### `LowessResult<T>`
 
-| Field                | Type                     | Description               |
-| -------------------- | ------------------------ | ------------------------- |
-| `x`                  | `Array1<T>`              | Smoothed X coordinates    |
-| `y`                  | `Array1<T>`              | Smoothed Y coordinates    |
-| `fraction_used`      | `T`                      | Actual fraction used      |
-| `residuals`          | `Option<Array1<T>>`      | Residuals (if requested)  |
-| `confidence_lower`   | `Option<Array1<T>>`      | Lower CI bounds           |
-| `confidence_upper`   | `Option<Array1<T>>`      | Upper CI bounds           |
-| `prediction_lower`   | `Option<Array1<T>>`      | Lower PI bounds           |
-| `prediction_upper`   | `Option<Array1<T>>`      | Upper PI bounds           |
-| `robustness_weights` | `Option<Array1<T>>`      | Robustness weights        |
-| `diagnostics`        | `Option<Diagnostics<T>>` | Diagnostic metrics struct |
-| `cv_results`         | `Option<CVResults<T>>`   | Cross-validation results  |
+| Field | Type | Description |
+| --- | --- | --- |
+| `x` | `Array1<T>` | Smoothed X coordinates |
+| `y` | `Array1<T>` | Smoothed Y coordinates |
+| `fraction_used` | `T` | Actual fraction used |
+| `residuals` | `Option<Array1<T>>` | Residuals (if requested) |
+| `confidence_lower` | `Option<Array1<T>>` | Lower CI bounds |
+| `confidence_upper` | `Option<Array1<T>>` | Upper CI bounds |
+| `prediction_lower` | `Option<Array1<T>>` | Lower PI bounds |
+| `prediction_upper` | `Option<Array1<T>>` | Upper PI bounds |
+| `robustness_weights` | `Option<Array1<T>>` | Robustness weights |
+| `diagnostics` | `Option<Diagnostics<T>>` | Diagnostic metrics struct |
+| `cv_results` | `Option<CVResults<T>>` | Cross-validation results |
 
 ### `Diagnostics<T>`
 
-| Field          | Type | Description                 |
-| -------------- | ---- | --------------------------- |
-| `rmse`         | `T`  | Root Mean Squared Error     |
-| `mae`          | `T`  | Mean Absolute Error         |
-| `r_squared`    | `T`  | R-squared                   |
-| `residual_sd`  | `T`  | Residual standard deviation |
-| `effective_df` | `T`  | Effective degrees of freedom|
-| `aic`          | `T`  | AIC                         |
-| `aicc`         | `T`  | AICc                        |
+| Field | Type | Description |
+| --- | --- | --- |
+| `rmse` | `T` | Root Mean Squared Error |
+| `mae` | `T` | Mean Absolute Error |
+| `r_squared` | `T` | R-squared |
+| `residual_sd` | `T` | Residual standard deviation |
+| `effective_df` | `T` | Effective degrees of freedom |
+| `aic` | `T` | AIC |
+| `aicc` | `T` | AICc |
 
 ## Enum Options
 
-### WeightFunction
+### weight_function
 
 * `Tricube` (default)
 * `Epanechnikov`
@@ -225,39 +225,39 @@ The GPU backend is optimized for large datasets (N > 100,000) and provides paral
 * `Triangle`
 * `Cosine`
 
-### RobustnessMethod
+### robustness_method
 
 * `Bisquare` (default)
 * `Huber`
 * `Talwar`
 
-### BoundaryPolicy
+### boundary_policy
 
 * `Extend` (default - linear extrapolation)
 * `Reflect`
 * `Zero`
 * `NoBoundary`
 
-### ScalingMethod
+### scaling_method
 
 * `MAD` (default - Median Absolute Deviation)
 * `MAR` (Median Absolute Residual)
 * `Mean` (Mean Absolute Residual)
 
-### ZeroWeightFallback
+### zero_weight_fallback
 
 * `UseLocalMean` (default)
 * `ReturnOriginal`
 * `ReturnNone`
 
-### MergeStrategy (Streaming)
+### merge_strategy (Streaming)
 
 * `WeightedAverage` (default)
 * `Average`
 * `TakeFirst` (Left)
 * `TakeLast` (Right)
 
-### UpdateMode (Online)
+### update_mode (Online)
 
 * `Incremental` (default)
 * `Full`

@@ -1,4 +1,4 @@
-# fastLowess C++ API Reference
+﻿# fastLowess C++ API Reference
 
 The C++ bindings provide a modern, object-oriented wrapper around the core Rust library, mirroring the Rust API structure.
 
@@ -75,42 +75,42 @@ LowessResult add_points(const std::vector<double> &x, const std::vector<double> 
 
 ### `LowessOptions`
 
-| Field                       | Type                  | Default            | Description                           |
-| --------------------------- | --------------------- | ------------------ | ------------------------------------- |
-| `fraction`                  | `double`              | 0.67               | Smoothing fraction (bandwidth)        |
-| `iterations`                | `int`                 | 3                  | Number of robustifying iterations     |
-| `delta`                     | `double`              | NaN                | Interpolation distance (NaN for auto) |
-| `weight_function`           | `std::string`         | "tricube"          | Weight function name                  |
-| `robustness_method`         | `std::string`         | "bisquare"         | Robustness method name                |
-| `scaling_method`            | `std::string`         | "mad"              | Residual scaling method               |
-| `boundary_policy`           | `std::string`         | "extend"           | Boundary handling policy              |
-| `zero_weight_fallback`      | `std::string`         | "use_local_mean"   | Zero-weight handling strategy         |
-| `auto_converge`             | `double`              | NaN                | Auto-convergence tolerance            |
-| `confidence_intervals`      | `double`              | NaN                | Confidence level (e.g., 0.95)         |
-| `prediction_intervals`      | `double`              | NaN                | Prediction level (e.g., 0.95)         |
-| `return_diagnostics`        | `bool`                | false              | Include diagnostics in result         |
-| `return_residuals`          | `bool`                | false              | Include residuals in result           |
-| `return_robustness_weights` | `bool`                | false              | Include weights in result             |
-| `parallel`                  | `bool`                | false              | Enable parallel execution             |
-| `cv_method`                 | `std::string`         | "kfold"            | Cross-validation method               |
-| `cv_k`                      | `int`                 | 5                  | Number of CV folds                    |
-| `cv_fractions`              | `std::vector<double>` | `{}`               | Manual fractions for CV grid          |
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `fraction` | `double` | 0.67 | Smoothing fraction (bandwidth) |
+| `iterations` | `int` | 3 | Number of robustifying iterations |
+| `delta` | `double` | NaN | Interpolation distance (NaN for auto) |
+| `weight_function` | `std::string` | "tricube" | Weight function name |
+| `robustness_method` | `std::string` | "bisquare" | Robustness method name |
+| `scaling_method` | `std::string` | "mad" | Residual scaling method |
+| `boundary_policy` | `std::string` | "extend" | Boundary handling policy |
+| `zero_weight_fallback` | `std::string` | "use_local_mean" | Zero-weight handling strategy |
+| `auto_converge` | `double` | NaN | Auto-convergence tolerance |
+| `confidence_intervals` | `double` | NaN | Confidence level (e.g., 0.95) |
+| `prediction_intervals` | `double` | NaN | Prediction level (e.g., 0.95) |
+| `return_diagnostics` | `bool` | false | Include diagnostics in result |
+| `return_residuals` | `bool` | false | Include residuals in result |
+| `return_robustness_weights` | `bool` | false | Include weights in result |
+| `parallel` | `bool` | false | Enable parallel execution |
+| `cv_method` | `std::string` | "kfold" | Cross-validation method |
+| `cv_k` | `int` | 5 | Number of CV folds |
+| `cv_fractions` | `std::vector<double>` | `{}` | Manual fractions for CV grid |
 
 ### `StreamingOptions` (inherits `LowessOptions`)
 
-| Field            | Type          | Default    | Description                |
-| ---------------- | ------------- | ---------- | -------------------------- |
-| `chunk_size`     | `int`         | 5000       | Data chunk size            |
-| `overlap`        | `int`         | -1         | Overlap size (-1 for auto) |
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `chunk_size` | `int` | 5000 | Data chunk size |
+| `overlap` | `int` | -1 | Overlap size (-1 for auto) |
 | `merge_strategy` | `std::string` | "weighted" | Merge strategy for overlap |
 
 ### `OnlineOptions` (inherits `LowessOptions`)
 
-| Field             | Type          | Default | Description                           |
-| ----------------- | ------------- | ------- | ------------------------------------- |
-| `window_capacity` | `int`         | 1000    | Max window size                       |
-| `min_points`      | `int`         | 2       | Min points before smoothing           |
-| `update_mode`     | `std::string` | "full"  | Update mode ("full" or "incremental") |
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `window_capacity` | `int` | 1000 | Max window size |
+| `min_points` | `int` | 2 | Min points before smoothing |
+| `update_mode` | `std::string` | "full" | Update mode ("full" or "incremental") |
 
 ## Result Structure
 
@@ -118,34 +118,34 @@ LowessResult add_points(const std::vector<double> &x, const std::vector<double> 
 
 A RAII wrapper around the C result struct `fastlowess_CppLowessResult`.
 
-| Method                 | Return Type           | Description               |
-| ---------------------- | --------------------- | ------------------------- |
-| `xVector()`            | `std::vector<double>` | Smoothed X coordinates    |
-| `yVector()`            | `std::vector<double>` | Smoothed Y coordinates    |
-| `valid()`              | `bool`                | True if result is valid   |
-| `error()`              | `std::string`         | Error message if failed   |
-| `diagnostics()`        | `Diagnostics`         | Diagnostic metrics struct |
-| `residuals()`          | `std::vector<double>` | Residuals (if requested)  |
-| `standardErrors()`     | `std::vector<double>` | Standard errors           |
-| `confidenceLower()`    | `std::vector<double>` | Lower CI bounds           |
-| `confidenceUpper()`    | `std::vector<double>` | Upper CI bounds           |
-| `predictionLower()`    | `std::vector<double>` | Lower PI bounds           |
-| `predictionUpper()`    | `std::vector<double>` | Upper PI bounds           |
-| `robustnessWeights()`  | `std::vector<double>` | Robustness weights        |
-| `iterationsUsed()`     | `int`                 | Iterations actually used  |
-| `fractionUsed()`       | `double`              | Fraction actually used    |
+| Method | Return Type | Description |
+| --- | --- | --- |
+| `x_vector()` | `std::vector<double>` | Smoothed X coordinates |
+| `y_vector()` | `std::vector<double>` | Smoothed Y coordinates |
+| `valid()` | `bool` | True if result is valid |
+| `error()` | `std::string` | Error message if failed |
+| `diagnostics()` | `Diagnostics` | Diagnostic metrics struct |
+| `residuals()` | `std::vector<double>` | Residuals (if requested) |
+| `standard_errors()` | `std::vector<double>` | Standard errors |
+| `confidence_lower()` | `std::vector<double>` | Lower CI bounds |
+| `confidence_upper()` | `std::vector<double>` | Upper CI bounds |
+| `prediction_lower()` | `std::vector<double>` | Lower PI bounds |
+| `prediction_upper()` | `std::vector<double>` | Upper PI bounds |
+| `robustness_weights()` | `std::vector<double>` | Robustness weights |
+| `iterations_used()` | `int` | Iterations actually used |
+| `fraction_used()` | `double` | Fraction actually used |
 
 ### `fastlowess::Diagnostics`
 
-| Field          | Type     | Description                 |
-| -------------- | -------- | --------------------------- |
-| `rmse`         | `double` | Root Mean Squared Error     |
-| `mae`          | `double` | Mean Absolute Error         |
-| `r_squared`    | `double` | R-squared                   |
-| `residual_sd`  | `double` | Residual standard deviation |
-| `effective_df` | `double` | Effective degrees of freedom|
-| `aic`          | `double` | AIC                         |
-| `aicc`         | `double` | AICc                        |
+| Field | Type | Description |
+| --- | --- | --- |
+| `rmse` | `double` | Root Mean Squared Error |
+| `mae` | `double` | Mean Absolute Error |
+| `r_squared` | `double` | R-squared |
+| `residual_sd` | `double` | Residual standard deviation |
+| `effective_df` | `double` | Effective degrees of freedom |
+| `aic` | `double` | AIC |
+| `aicc` | `double` | AICc |
 
 ## String Options
 
@@ -213,7 +213,7 @@ int main() {
     auto result = model.fit(x, y);
 
     if (result.valid()) {
-        auto y_hat = result.yVector();
+        auto y_hat = result.y_vector();
         for (double val : y_hat) {
             std::cout << val << " ";
         }

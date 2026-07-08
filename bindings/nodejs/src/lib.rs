@@ -1,7 +1,5 @@
 //! Node.js bindings for fastLowess using N-API.
 
-#![allow(non_snake_case)]
-
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 
@@ -108,15 +106,15 @@ pub struct Diagnostics {
     /// Mean Absolute Error.
     pub mae: f64,
     /// R-squared (coefficient of determination).
-    pub rSquared: f64,
+    pub r_squared: f64,
     /// Akaike Information Criterion (if computed).
     pub aic: Option<f64>,
     /// Corrected AIC (if computed).
     pub aicc: Option<f64>,
     /// Effective degrees of freedom (if computed).
-    pub effectiveDf: Option<f64>,
+    pub effective_df: Option<f64>,
     /// Residual standard deviation.
-    pub residualSd: f64,
+    pub residual_sd: f64,
 }
 
 /// Result of a LOWESS fit.
@@ -149,7 +147,7 @@ impl LowessResultObj {
     }
 
     /// Get standard errors (if requested/computed).
-    #[napi(getter)]
+    #[napi(getter, js_name = "standard_errors")]
     pub fn get_standard_errors(&self) -> Option<Float64Array> {
         self.inner
             .standard_errors
@@ -158,7 +156,7 @@ impl LowessResultObj {
     }
 
     /// Get lower confidence bounds (if requested).
-    #[napi(getter)]
+    #[napi(getter, js_name = "confidence_lower")]
     pub fn get_confidence_lower(&self) -> Option<Float64Array> {
         self.inner
             .confidence_lower
@@ -167,7 +165,7 @@ impl LowessResultObj {
     }
 
     /// Get upper confidence bounds (if requested).
-    #[napi(getter)]
+    #[napi(getter, js_name = "confidence_upper")]
     pub fn get_confidence_upper(&self) -> Option<Float64Array> {
         self.inner
             .confidence_upper
@@ -176,7 +174,7 @@ impl LowessResultObj {
     }
 
     /// Get lower prediction bounds (if requested).
-    #[napi(getter)]
+    #[napi(getter, js_name = "prediction_lower")]
     pub fn get_prediction_lower(&self) -> Option<Float64Array> {
         self.inner
             .prediction_lower
@@ -185,7 +183,7 @@ impl LowessResultObj {
     }
 
     /// Get upper prediction bounds (if requested).
-    #[napi(getter)]
+    #[napi(getter, js_name = "prediction_upper")]
     pub fn get_prediction_upper(&self) -> Option<Float64Array> {
         self.inner
             .prediction_upper
@@ -194,7 +192,7 @@ impl LowessResultObj {
     }
 
     /// Get robustness weights (if requested).
-    #[napi(getter)]
+    #[napi(getter, js_name = "robustness_weights")]
     pub fn get_robustness_weights(&self) -> Option<Float64Array> {
         self.inner
             .robustness_weights
@@ -208,16 +206,16 @@ impl LowessResultObj {
         self.inner.diagnostics.as_ref().map(|d| Diagnostics {
             rmse: d.rmse,
             mae: d.mae,
-            rSquared: d.r_squared,
+            r_squared: d.r_squared,
             aic: d.aic,
             aicc: d.aicc,
-            effectiveDf: d.effective_df,
-            residualSd: d.residual_sd,
+            effective_df: d.effective_df,
+            residual_sd: d.residual_sd,
         })
     }
 
     /// Get cross-validation scores (if CV was performed).
-    #[napi(getter)]
+    #[napi(getter, js_name = "cv_scores")]
     pub fn get_cv_scores(&self) -> Option<Float64Array> {
         self.inner
             .cv_scores
@@ -226,13 +224,13 @@ impl LowessResultObj {
     }
 
     /// Get the fraction used for smoothing.
-    #[napi(getter)]
+    #[napi(getter, js_name = "fraction_used")]
     pub fn get_fraction_used(&self) -> f64 {
         self.inner.fraction_used
     }
 
     /// Get the number of iterations performed.
-    #[napi(getter)]
+    #[napi(getter, js_name = "iterations_used")]
     pub fn get_iterations_used(&self) -> Option<u32> {
         self.inner.iterations_used.map(|i| i as u32)
     }
@@ -249,33 +247,33 @@ pub struct SmoothOptions {
     /// Set to 0.0 to disable interpolation.
     pub delta: Option<f64>,
     /// Weight function ("tricube", "gaussian", etc.). Default: "tricube".
-    pub weightFunction: Option<String>,
+    pub weight_function: Option<String>,
     /// Robustness method ("bisquare", "huber"). Default: "bisquare".
-    pub robustnessMethod: Option<String>,
+    pub robustness_method: Option<String>,
     /// Fallback strategy when weights are zero ("use_local_mean").
-    pub zeroWeightFallback: Option<String>,
+    pub zero_weight_fallback: Option<String>,
     /// Boundary handling ("extend", "reflect"). Default: "extend".
-    pub boundaryPolicy: Option<String>,
+    pub boundary_policy: Option<String>,
     /// Scaling method ("mad", "mar"). Default: "mad".
-    pub scalingMethod: Option<String>,
+    pub scaling_method: Option<String>,
     /// Auto-convergence tolerance. Default: None.
-    pub autoConverge: Option<f64>,
+    pub auto_converge: Option<f64>,
     /// Return residuals in result. Default: false.
-    pub returnResiduals: Option<bool>,
+    pub return_residuals: Option<bool>,
     /// Return robustness weights in result. Default: false.
-    pub returnRobustnessWeights: Option<bool>,
+    pub return_robustness_weights: Option<bool>,
     /// Return diagnostics (RMSE, etc.). Default: false.
-    pub returnDiagnostics: Option<bool>,
+    pub return_diagnostics: Option<bool>,
     /// Calculate confidence intervals (e.g., 0.95). Default: None.
-    pub confidenceIntervals: Option<f64>,
+    pub confidence_intervals: Option<f64>,
     /// Calculate prediction intervals. Default: None.
-    pub predictionIntervals: Option<f64>,
+    pub prediction_intervals: Option<f64>,
     /// Fractions to use for cross-validation.
-    pub cvFractions: Option<Vec<f64>>,
+    pub cv_fractions: Option<Vec<f64>>,
     /// CV method ("loocv", "kfold"). Default: "kfold".
-    pub cvMethod: Option<String>,
+    pub cv_method: Option<String>,
     /// Number of folds for K-Fold CV. Default: 5.
-    pub cvK: Option<u32>,
+    pub cv_k: Option<u32>,
     /// Enable parallel execution. Default: true.
     pub parallel: Option<bool>,
 }
@@ -311,7 +309,7 @@ impl Lowess {
     }
 
     /// Fit the model asynchronously.
-    #[napi(js_name = "fitAsync")]
+    #[napi(js_name = "fit_async")]
     pub fn fit_async(&self, x: Float64Array, y: Float64Array) -> Result<AsyncTask<LowessTask>> {
         let builder = self.create_builder()?;
         let x_vec = x.as_ref().to_vec();
@@ -338,37 +336,37 @@ impl Lowess {
             if let Some(d) = opts.delta {
                 builder = builder.delta(d);
             }
-            if let Some(wf) = &opts.weightFunction {
+            if let Some(wf) = &opts.weight_function {
                 builder = builder.weight_function(parse_weight_function(wf)?);
             }
-            if let Some(rm) = &opts.robustnessMethod {
+            if let Some(rm) = &opts.robustness_method {
                 builder = builder.robustness_method(parse_robustness_method(rm)?);
             }
-            if let Some(zw) = &opts.zeroWeightFallback {
+            if let Some(zw) = &opts.zero_weight_fallback {
                 builder = builder.zero_weight_fallback(parse_zero_weight_fallback(zw)?);
             }
-            if let Some(bp) = &opts.boundaryPolicy {
+            if let Some(bp) = &opts.boundary_policy {
                 builder = builder.boundary_policy(parse_boundary_policy(bp)?);
             }
-            if let Some(sm) = &opts.scalingMethod {
+            if let Some(sm) = &opts.scaling_method {
                 builder = builder.scaling_method(parse_scaling_method(sm)?);
             }
-            if let Some(ac) = opts.autoConverge {
+            if let Some(ac) = opts.auto_converge {
                 builder = builder.auto_converge(ac);
             }
-            if opts.returnResiduals.unwrap_or(false) {
+            if opts.return_residuals.unwrap_or(false) {
                 builder = builder.return_residuals();
             }
-            if opts.returnRobustnessWeights.unwrap_or(false) {
+            if opts.return_robustness_weights.unwrap_or(false) {
                 builder = builder.return_robustness_weights();
             }
-            if opts.returnDiagnostics.unwrap_or(false) {
+            if opts.return_diagnostics.unwrap_or(false) {
                 builder = builder.return_diagnostics();
             }
-            if let Some(ci) = opts.confidenceIntervals {
+            if let Some(ci) = opts.confidence_intervals {
                 builder = builder.confidence_intervals(ci);
             }
-            if let Some(pi) = opts.predictionIntervals {
+            if let Some(pi) = opts.prediction_intervals {
                 builder = builder.prediction_intervals(pi);
             }
             if let Some(par) = opts.parallel {
@@ -376,9 +374,9 @@ impl Lowess {
             }
 
             // Cross-validation
-            if let Some(fractions) = &opts.cvFractions {
-                let method = opts.cvMethod.as_deref().unwrap_or("kfold");
-                let k = opts.cvK.unwrap_or(5) as usize;
+            if let Some(fractions) = &opts.cv_fractions {
+                let method = opts.cv_method.as_deref().unwrap_or("kfold");
+                let k = opts.cv_k.unwrap_or(5) as usize;
 
                 match method.to_lowercase().as_str() {
                     "simple" | "loo" | "loocv" | "leave_one_out" => {
@@ -432,11 +430,11 @@ impl Task for LowessTask {
 #[napi(object)]
 pub struct StreamingOptions {
     /// Size of each data chunk. Default: 5000.
-    pub chunkSize: Option<u32>,
+    pub chunk_size: Option<u32>,
     /// Header/footer overlap size. Default: 500.
     pub overlap: Option<u32>,
     /// Strategy for merging chunks (not exposed yet).
-    pub mergeStrategy: Option<String>,
+    pub merge_strategy: Option<String>,
 }
 
 /// Streaming LOWESS smoother for large datasets.
@@ -465,31 +463,31 @@ impl StreamingLowess {
             if let Some(d) = opts.delta {
                 builder = builder.delta(d);
             }
-            if let Some(wf) = opts.weightFunction {
+            if let Some(wf) = opts.weight_function {
                 builder = builder.weight_function(parse_weight_function(&wf)?);
             }
-            if let Some(rm) = opts.robustnessMethod {
+            if let Some(rm) = opts.robustness_method {
                 builder = builder.robustness_method(parse_robustness_method(&rm)?);
             }
-            if let Some(zw) = opts.zeroWeightFallback {
+            if let Some(zw) = opts.zero_weight_fallback {
                 builder = builder.zero_weight_fallback(parse_zero_weight_fallback(&zw)?);
             }
-            if let Some(bp) = opts.boundaryPolicy {
+            if let Some(bp) = opts.boundary_policy {
                 builder = builder.boundary_policy(parse_boundary_policy(&bp)?);
             }
-            if let Some(sm) = opts.scalingMethod {
+            if let Some(sm) = opts.scaling_method {
                 builder = builder.scaling_method(parse_scaling_method(&sm)?);
             }
-            if let Some(ac) = opts.autoConverge {
+            if let Some(ac) = opts.auto_converge {
                 builder = builder.auto_converge(ac);
             }
-            if opts.returnResiduals.unwrap_or(false) {
+            if opts.return_residuals.unwrap_or(false) {
                 builder = builder.return_residuals();
             }
-            if opts.returnRobustnessWeights.unwrap_or(false) {
+            if opts.return_robustness_weights.unwrap_or(false) {
                 builder = builder.return_robustness_weights();
             }
-            if opts.returnDiagnostics.unwrap_or(false) {
+            if opts.return_diagnostics.unwrap_or(false) {
                 builder = builder.return_diagnostics();
             }
             if let Some(par) = opts.parallel {
@@ -501,7 +499,7 @@ impl StreamingLowess {
         let mut overlap = 500;
 
         if let Some(sopts) = streaming_opts {
-            if let Some(cs) = sopts.chunkSize {
+            if let Some(cs) = sopts.chunk_size {
                 chunk_size = cs as usize;
             }
             if let Some(ov) = sopts.overlap {
@@ -520,7 +518,7 @@ impl StreamingLowess {
     }
 
     /// Process a chunk of data.
-    #[napi]
+    #[napi(js_name = "process_chunk")]
     pub fn process_chunk(&mut self, x: Float64Array, y: Float64Array) -> Result<LowessResultObj> {
         let result: LowessResult<f64> = self
             .inner
@@ -544,11 +542,11 @@ impl StreamingLowess {
 #[napi(object)]
 pub struct OnlineOptions {
     /// Maximum number of points to keep in the window. Default: 100.
-    pub windowCapacity: Option<u32>,
+    pub window_capacity: Option<u32>,
     /// Minimum points required before smoothing starts. Default: 2.
-    pub minPoints: Option<u32>,
+    pub min_points: Option<u32>,
     /// Update mode ("full", "incremental"). Default: "full".
-    pub updateMode: Option<String>,
+    pub update_mode: Option<String>,
 }
 
 /// Online LOWESS smoother for real-time data.
@@ -581,13 +579,13 @@ impl OnlineLowess {
         let mut update_mode = UpdateMode::Full;
 
         if let Some(oopts) = online_opts {
-            if let Some(wc) = oopts.windowCapacity {
+            if let Some(wc) = oopts.window_capacity {
                 window_capacity = wc as usize;
             }
-            if let Some(mp) = oopts.minPoints {
+            if let Some(mp) = oopts.min_points {
                 min_points = mp as usize;
             }
-            if let Some(um) = oopts.updateMode {
+            if let Some(um) = oopts.update_mode {
                 update_mode = parse_update_mode(&um)?;
             }
         }
@@ -604,7 +602,7 @@ impl OnlineLowess {
     }
 
     /// Add new points to the window and get smoothed values.
-    #[napi]
+    #[napi(js_name = "add_points")]
     pub fn add_points(&mut self, x: Float64Array, y: Float64Array) -> Result<LowessResultObj> {
         let result = self
             .inner

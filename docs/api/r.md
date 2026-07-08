@@ -1,4 +1,4 @@
-# fastLowess R API Reference
+﻿# fastLowess R API Reference
 
 The R bindings provide a high-performance interface to the core Rust library, mirroring the Rust API structure.
 
@@ -77,42 +77,42 @@ result <- online$add_points(x, y)
 
 ### `LowessOptions`
 
-| Field                       | Type       | Default            | Description                           |
-| --------------------------- | ---------- | ------------------ | ------------------------------------- |
-| `fraction`                  | `numeric`  | `0.67`             | Smoothing fraction (bandwidth)        |
-| `iterations`                | `integer`  | `3`                | Number of robustifying iterations     |
-| `delta`                     | `numeric`  | `NULL`             | Interpolation distance (NULL for auto)|
-| `weight_function`           | `character`| `"tricube"`        | Weight function name                  |
-| `robustness_method`         | `character`| `"bisquare"`       | Robustness method name                |
-| `scaling_method`            | `character`| `"mad"`            | Residual scaling method               |
-| `boundary_policy`           | `character`| `"extend"`         | Boundary handling policy              |
-| `zero_weight_fallback`      | `character`| `"use_local_mean"` | Zero-weight handling strategy         |
-| `auto_converge`             | `numeric`  | `NULL`             | Auto-convergence tolerance            |
-| `confidence_intervals`      | `numeric`  | `NULL`             | Confidence level (e.g., 0.95)         |
-| `prediction_intervals`      | `numeric`  | `NULL`             | Prediction level (e.g., 0.95)         |
-| `return_diagnostics`        | `logical`  | `FALSE`            | Include diagnostics in result         |
-| `return_residuals`          | `logical`  | `FALSE`            | Include residuals in result           |
-| `return_robustness_weights` | `logical`  | `FALSE`            | Include weights in result             |
-| `parallel`                  | `logical`  | `TRUE`             | Enable parallel execution             |
-| `cv_method`                 | `character`| `"kfold"`          | Cross-validation method ("kfold")     |
-| `cv_k`                      | `integer`  | `5`                | Number of CV folds                    |
-| `cv_fractions`              | `numeric`  | `NULL`             | Manual fractions for CV grid          |
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `fraction` | `numeric` | `0.67` | Smoothing fraction (bandwidth) |
+| `iterations` | `integer` | `3` | Number of robustifying iterations |
+| `delta` | `numeric` | `NULL` | Interpolation distance (NULL for auto) |
+| `weight_function` | `character` | `"tricube"` | Weight function name |
+| `robustness_method` | `character` | `"bisquare"` | Robustness method name |
+| `scaling_method` | `character` | `"mad"` | Residual scaling method |
+| `boundary_policy` | `character` | `"extend"` | Boundary handling policy |
+| `zero_weight_fallback` | `character` | `"use_local_mean"` | Zero-weight handling strategy |
+| `auto_converge` | `numeric` | `NULL` | Auto-convergence tolerance |
+| `confidence_intervals` | `numeric` | `NULL` | Confidence level (e.g., 0.95) |
+| `prediction_intervals` | `numeric` | `NULL` | Prediction level (e.g., 0.95) |
+| `return_diagnostics` | `logical` | `FALSE` | Include diagnostics in result |
+| `return_residuals` | `logical` | `FALSE` | Include residuals in result |
+| `return_robustness_weights` | `logical` | `FALSE` | Include weights in result |
+| `parallel` | `logical` | `TRUE` | Enable parallel execution |
+| `cv_method` | `character` | `"kfold"` | Cross-validation method ("kfold") |
+| `cv_k` | `integer` | `5` | Number of CV folds |
+| `cv_fractions` | `numeric` | `NULL` | Manual fractions for CV grid |
 
 ### `StreamingOptions` (inherits `LowessOptions`)
 
-| Field            | Type       | Default      | Description                |
-| ---------------- | ---------- | ------------ | -------------------------- |
-| `chunk_size`     | `integer`  | `5000`       | Data chunk size            |
-| `overlap`        | `integer`  | `500`        | Overlap size (-1 for auto) |
-| `merge_strategy` | `character`| `"weighted"` | Merge strategy for overlap |
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `chunk_size` | `integer` | `5000` | Data chunk size |
+| `overlap` | `integer` | `500` | Overlap size (-1 for auto) |
+| `merge_strategy` | `character` | `"weighted"` | Merge strategy for overlap |
 
 ### `OnlineOptions` (inherits `LowessOptions`)
 
-| Field             | Type       | Default         | Description                           |
-| ----------------- | ---------- | --------------- | ------------------------------------- |
-| `window_capacity` | `integer`  | `1000`          | Max window size                       |
-| `min_points`      | `integer`  | `2`             | Min points before smoothing           |
-| `update_mode`     | `character`| `"incremental"` | Update mode ("full" or "incremental") |
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `window_capacity` | `integer` | `1000` | Max window size |
+| `min_points` | `integer` | `2` | Min points before smoothing |
+| `update_mode` | `character` | `"incremental"` | Update mode ("full" or "incremental") |
 
 ## Result Structure
 
@@ -125,31 +125,31 @@ An S3 object containing the smoothing results.
 * `print(result)`: Summary of fit statistics.
 * `plot(result)`: Plots the smoothed curve (and confidence intervals if available).
 
-| Field                | Type       | Description               |
-| -------------------- | ---------- | ------------------------- |
-| `x`                  | `numeric`  | Smoothed X coordinates    |
-| `y`                  | `numeric`  | Smoothed Y coordinates    |
-| `valid`              | `logical`  | True if result is valid   |
-| `error`              | `character`| Error message if failed   |
-| `diagnostics`        | `list`     | Diagnostic metrics list   |
-| `residuals`          | `numeric`  | Residuals (if requested)  |
-| `confidence_lower`   | `numeric`  | Lower CI bounds           |
-| `confidence_upper`   | `numeric`  | Upper CI bounds           |
-| `prediction_lower`   | `numeric`  | Lower PI bounds           |
-| `prediction_upper`   | `numeric`  | Upper PI bounds           |
-| `robustness_weights` | `numeric`  | Robustness weights        |
+| Field | Type | Description |
+| --- | --- | --- |
+| `x` | `numeric` | Smoothed X coordinates |
+| `y` | `numeric` | Smoothed Y coordinates |
+| `valid` | `logical` | True if result is valid |
+| `error` | `character` | Error message if failed |
+| `diagnostics` | `list` | Diagnostic metrics list |
+| `residuals` | `numeric` | Residuals (if requested) |
+| `confidence_lower` | `numeric` | Lower CI bounds |
+| `confidence_upper` | `numeric` | Upper CI bounds |
+| `prediction_lower` | `numeric` | Lower PI bounds |
+| `prediction_upper` | `numeric` | Upper PI bounds |
+| `robustness_weights` | `numeric` | Robustness weights |
 
 ### `Diagnostics`
 
-| Field          | Type      | Description                 |
-| -------------- | --------- | --------------------------- |
-| `rmse`         | `numeric` | Root Mean Squared Error     |
-| `mae`          | `numeric` | Mean Absolute Error         |
-| `r_squared`    | `numeric` | R-squared                   |
-| `residual_sd`  | `numeric` | Residual standard deviation |
-| `effective_df` | `numeric` | Effective degrees of freedom|
-| `aic`          | `numeric` | AIC                         |
-| `aicc`         | `numeric` | AICc                        |
+| Field | Type | Description |
+| --- | --- | --- |
+| `rmse` | `numeric` | Root Mean Squared Error |
+| `mae` | `numeric` | Mean Absolute Error |
+| `r_squared` | `numeric` | R-squared |
+| `residual_sd` | `numeric` | Residual standard deviation |
+| `effective_df` | `numeric` | Effective degrees of freedom |
+| `aic` | `numeric` | AIC |
+| `aicc` | `numeric` | AICc |
 
 ## String Options
 

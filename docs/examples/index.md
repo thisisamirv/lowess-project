@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD033 -->
+﻿<!-- markdownlint-disable MD033 -->
 # Examples
 
 Complete working examples demonstrating fastlowess capabilities across all supported languages.
@@ -55,11 +55,11 @@ Complete working examples demonstrating fastlowess capabilities across all suppo
 
 Each language includes three complete examples:
 
-| Example                 | Description                      | Key Features                     |
-| ----------------------- | -------------------------------- | -------------------------------- |
-| **Batch Smoothing**     | Complete dataset processing      | All features                     |
+| Example | Description | Key Features |
+| --- | --- | --- |
+| **Batch Smoothing** | Complete dataset processing | All features |
 | **Streaming Smoothing** | Large dataset chunked processing | Memory efficiency, chunk merging |
-| **Online Smoothing**    | Real-time point-by-point updates | Incremental updates              |
+| **Online Smoothing** | Real-time point-by-point updates | Incremental updates |
 
 ## Running Examples
 

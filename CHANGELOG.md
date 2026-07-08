@@ -6,6 +6,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.0
+
+### Changed
+
+**Monorepo:**
+
+- Renamed all public API method and option names from camelCase to snake_case across every binding and all documentation. This is a **breaking change** for all consumers of the C++, Node.js, and WASM APIs.
+- Converted all documentation tables to compact single-space format.
+- Updated `.clang-tidy` to configure `lower_case` as the required naming convention for functions and member functions, matching the new snake_case public API.
+
+**C++:**
+
+- Renamed all public member functions to snake_case: `make_error()`, `has_value()`, `r_squared()`, `effective_df()`, `residual_sd()`, `x_value()`, `y_value()`, `x_vector()`, `y_vector()`, `standard_errors()`, `confidence_lower()`, `confidence_upper()`, `prediction_lower()`, `prediction_upper()`, `robustness_weights()`, `fraction_used()`, `iterations_used()`, `process_chunk()`, `add_points()`.
+
+**Node.js:**
+
+- Renamed all `Diagnostics`, `SmoothOptions`, `StreamingOptions`, and `OnlineOptions` interface fields to snake_case (`r_squared`, `effective_df`, `residual_sd`, `chunk_size`, `merge_strategy`, `window_capacity`, `min_points`, `update_mode`, and all smoothing option fields).
+- Renamed binding methods to snake_case: `fit_async`, `process_chunk`, `add_points`.
+- Renamed `LowessResultObj` getters to snake_case: `standard_errors`, `confidence_lower`, `confidence_upper`, `prediction_lower`, `prediction_upper`, `robustness_weights`, `cv_scores`, `fraction_used`, `iterations_used`.
+- Updated `index.d.ts` to reflect all renamed fields and methods.
+
+**WASM:**
+
+- Renamed all JS-facing option keys to snake_case by removing `#[serde(rename = "camelCase")]` attributes from `SmoothOptions`, `StreamingOptions`, and `OnlineOptions`. JSON passed from JavaScript must now use snake_case keys.
+- Updated `Diagnostics` getter names to snake_case: `r_squared`, `effective_df`, `residual_sd`.
+
+### Fixed
+
+**C++:**
+
+- Fixed remaining `yVector()` call in `testBasicSmoothSerial` that was missed during the snake_case rename (now `y_vector()`).
+
 ## 1.3.0
 
 ### Added

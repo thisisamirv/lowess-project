@@ -1,4 +1,4 @@
-# fastLowess Node.js API Reference
+﻿# fastLowess Node.js API Reference
 
 The Node.js bindings provide a high-performance interface to the core Rust library, mirroring the Rust API structure.
 
@@ -41,7 +41,7 @@ const stream = new StreamingLowess(options, streamingOptions);
 **Methods:**
 
 ```javascript
-const partialResult = stream.processChunk(x, y);
+const partialResult = stream.process_chunk(x, y);
 ```
 
 * Processes a chunk of data. Returns partial results.
@@ -68,7 +68,7 @@ const online = new OnlineLowess(options, onlineOptions);
 **Methods:**
 
 ```javascript
-const result = online.addPoints(x, y);
+const result = online.add_points(x, y);
 ```
 
 * Adds new points to the model and returns the smoothed values (retrospective or prospective depending on mode).
@@ -77,72 +77,72 @@ const result = online.addPoints(x, y);
 
 ### `LowessOptions`
 
-| Field                     | Type       | Default            | Description                           |
-| ------------------------- | ---------- | ------------------ | ------------------------------------- |
-| `fraction`                | `number`   | `0.67`             | Smoothing fraction (bandwidth)        |
-| `iterations`              | `number`   | `3`                | Number of robustifying iterations     |
-| `delta`                   | `number`   | `NaN`              | Interpolation distance (NaN for auto) |
-| `weightFunction`          | `string`   | `"tricube"`        | Weight function name                  |
-| `robustnessMethod`        | `string`   | `"bisquare"`       | Robustness method name                |
-| `scalingMethod`           | `string`   | `"mad"`            | Residual scaling method               |
-| `boundaryPolicy`          | `string`   | `"extend"`         | Boundary handling policy              |
-| `zeroWeightFallback`      | `string`   | `"useLocalMean"`   | Zero-weight handling strategy         |
-| `autoConverge`            | `number`   | `null`             | Auto-convergence tolerance            |
-| `confidenceIntervals`     | `number`   | `null`             | Confidence level (e.g., 0.95)         |
-| `predictionIntervals`     | `number`   | `null`             | Prediction level (e.g., 0.95)         |
-| `returnDiagnostics`       | `boolean`  | `false`            | Include diagnostics in result         |
-| `returnResiduals`         | `boolean`  | `false`            | Include residuals in result           |
-| `returnRobustnessWeights` | `boolean`  | `false`            | Include weights in result             |
-| `parallel`                | `boolean`  | `true`             | Enable parallel execution             |
-| `cvMethod`                | `string`   | `"kfold"`          | Cross-validation method ("kfold")     |
-| `cvK`                     | `number`   | `5`                | Number of CV folds                    |
-| `cvFractions`             | `number[]` | `null`             | Manual fractions for CV grid          |
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `fraction` | `number` | `0.67` | Smoothing fraction (bandwidth) |
+| `iterations` | `number` | `3` | Number of robustifying iterations |
+| `delta` | `number` | `NaN` | Interpolation distance (NaN for auto) |
+| `weight_function` | `string` | `"tricube"` | Weight function name |
+| `robustness_method` | `string` | `"bisquare"` | Robustness method name |
+| `scaling_method` | `string` | `"mad"` | Residual scaling method |
+| `boundary_policy` | `string` | `"extend"` | Boundary handling policy |
+| `zero_weight_fallback` | `string` | `"useLocalMean"` | Zero-weight handling strategy |
+| `auto_converge` | `number` | `null` | Auto-convergence tolerance |
+| `confidence_intervals` | `number` | `null` | Confidence level (e.g., 0.95) |
+| `prediction_intervals` | `number` | `null` | Prediction level (e.g., 0.95) |
+| `return_diagnostics` | `boolean` | `false` | Include diagnostics in result |
+| `return_residuals` | `boolean` | `false` | Include residuals in result |
+| `return_robustness_weights` | `boolean` | `false` | Include weights in result |
+| `parallel` | `boolean` | `true` | Enable parallel execution |
+| `cv_method` | `string` | `"kfold"` | Cross-validation method ("kfold") |
+| `cv_k` | `number` | `5` | Number of CV folds |
+| `cv_fractions` | `number[]` | `null` | Manual fractions for CV grid |
 
 ### `StreamingOptions`
 
-| Field           | Type     | Default     | Description                |
-| --------------- | -------- | ----------- | -------------------------- |
-| `chunkSize`     | `number` | `5000`      | Data chunk size            |
-| `overlap`       | `number` | `500`       | Overlap size (-1 for auto) |
-| `mergeStrategy` | `string` | `"average"` | Merge strategy for overlap |
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `chunk_size` | `number` | `5000` | Data chunk size |
+| `overlap` | `number` | `500` | Overlap size (-1 for auto) |
+| `merge_strategy` | `string` | `"average"` | Merge strategy for overlap |
 
 ### `OnlineOptions`
 
-| Field            | Type     | Default         | Description                           |
-| ---------------- | -------- | --------------- | ------------------------------------- |
-| `windowCapacity` | `number` | `100`           | Max window size                       |
-| `minPoints`      | `number` | `2`             | Min points before smoothing           |
-| `updateMode`     | `string` | `"incremental"` | Update mode ("full" or "incremental") |
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `window_capacity` | `number` | `100` | Max window size |
+| `min_points` | `number` | `2` | Min points before smoothing |
+| `update_mode` | `string` | `"incremental"` | Update mode ("full" or "incremental") |
 
 ## Result Structure
 
 ### `LowessResult`
 
-| Field               | Type           | Description               |
-| ------------------- | -------------- | ------------------------- |
-| `x`                 | `Float64Array` | Smoothed X coordinates    |
-| `y`                 | `Float64Array` | Smoothed Y coordinates    |
-| `valid`             | `boolean`      | True if result is valid   |
-| `error`             | `string`       | Error message if failed   |
-| `diagnostics`       | `Diagnostics`  | Diagnostic metrics object |
-| `residuals`         | `Float64Array` | Residuals (if requested)  |
-| `confidenceLower`   | `Float64Array` | Lower CI bounds           |
-| `confidenceUpper`   | `Float64Array` | Upper CI bounds           |
-| `predictionLower`   | `Float64Array` | Lower PI bounds           |
-| `predictionUpper`   | `Float64Array` | Upper PI bounds           |
-| `robustnessWeights` | `Float64Array` | Robustness weights        |
+| Field | Type | Description |
+| --- | --- | --- |
+| `x` | `Float64Array` | Smoothed X coordinates |
+| `y` | `Float64Array` | Smoothed Y coordinates |
+| `valid` | `boolean` | True if result is valid |
+| `error` | `string` | Error message if failed |
+| `diagnostics` | `Diagnostics` | Diagnostic metrics object |
+| `residuals` | `Float64Array` | Residuals (if requested) |
+| `confidence_lower` | `Float64Array` | Lower CI bounds |
+| `confidence_upper` | `Float64Array` | Upper CI bounds |
+| `prediction_lower` | `Float64Array` | Lower PI bounds |
+| `prediction_upper` | `Float64Array` | Upper PI bounds |
+| `robustness_weights` | `Float64Array` | Robustness weights |
 
 ### `Diagnostics`
 
-| Field         | Type     | Description                 |
-| ------------- | -------- | --------------------------- |
-| `rmse`        | `number` | Root Mean Squared Error     |
-| `mae`         | `number` | Mean Absolute Error         |
-| `rSquared`    | `number` | R-squared                   |
-| `residualSd`  | `number` | Residual standard deviation |
-| `effectiveDf` | `number` | Effective degrees of freedom|
-| `aic`         | `number` | AIC                         |
-| `aicc`        | `number` | AICc                        |
+| Field | Type | Description |
+| --- | --- | --- |
+| `rmse` | `number` | Root Mean Squared Error |
+| `mae` | `number` | Mean Absolute Error |
+| `r_squared` | `number` | R-squared |
+| `residual_sd` | `number` | Residual standard deviation |
+| `effective_df` | `number` | Effective degrees of freedom |
+| `aic` | `number` | AIC |
+| `aicc` | `number` | AICc |
 
 ## String Options
 

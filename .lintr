@@ -1,6 +1,6 @@
 linters: linters_with_defaults(
     indentation_linter(indent = 4L, hanging_indent_style = "never"),
-    line_length_linter(length = 100L),
+    line_length_linter(length = 80L),
     object_name_linter(styles = c("snake_case", "SNAKE_CASE", "symbols"))
   )
 exclusions: list(".git", "target", "vendor")

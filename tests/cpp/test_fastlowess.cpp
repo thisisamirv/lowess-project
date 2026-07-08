@@ -153,11 +153,11 @@ void testBasicSmooth() {
   auto result = lowess.fit(sample_x_values, sample_y_values).value();
 
   assertTrue(result.valid(), "Result should be valid");
-  assertTrue(result.yVector().size() == k_small_sample_size,
+  assertTrue(result.y_vector().size() == k_small_sample_size,
              "Output length mismatch");
-  assertTrue(result.xVector().size() == k_small_sample_size,
+  assertTrue(result.x_vector().size() == k_small_sample_size,
              "X length mismatch");
-  assertApprox(result.fractionUsed(), k_basic_fraction);
+  assertApprox(result.fraction_used(), k_basic_fraction);
 }
 
 void testBasicSmoothSerial() {
@@ -172,7 +172,7 @@ void testBasicSmoothSerial() {
   auto result = lowess.fit(sample_x_values, sample_y_values).value();
 
   assertTrue(result.valid(), "Serial result should be valid");
-  assertTrue(result.yVector().size() == k_small_sample_size,
+  assertTrue(result.y_vector().size() == k_small_sample_size,
              "Serial output length mismatch");
 }
 
@@ -190,7 +190,7 @@ void testLowessWithDiagnostics() {
   auto diagnostics = result.diagnostics();
   assertTrue(diagnostics.rmse() >= 0.0, "RMSE negative");
   assertTrue(diagnostics.mae() >= 0.0, "MAE negative");
-  assertTrue(diagnostics.rSquared() >= 0.0 && diagnostics.rSquared() <= 1.0,
+  assertTrue(diagnostics.r_squared() >= 0.0 && diagnostics.r_squared() <= 1.0,
              "R2 out of range");
 }
 
@@ -221,7 +221,7 @@ void testLowessWithRobustnessWeights() {
   fastlowess::Lowess lowess(options);
   auto result = lowess.fit(sample_x_values, outlier_y_values).value();
 
-  auto robustness_weights = result.robustnessWeights();
+  auto robustness_weights = result.robustness_weights();
   assertTrue(robustness_weights.size() == k_small_sample_size,
              "Robustness weight count mismatch");
   for (const double weight_value : robustness_weights) {
@@ -243,8 +243,8 @@ void testLowessWithConfidenceIntervals() {
   fastlowess::Lowess lowess(options);
   auto result = lowess.fit(linear_data.x_values, linear_data.y_values).value();
 
-  auto confidence_lower = result.confidenceLower();
-  auto confidence_upper = result.confidenceUpper();
+  auto confidence_lower = result.confidence_lower();
+  auto confidence_upper = result.confidence_upper();
   assertTrue(confidence_lower.size() == k_interval_point_count,
              "Confidence lower size mismatch");
   assertTrue(confidence_upper.size() == k_interval_point_count,
@@ -269,9 +269,9 @@ void testLowessWithPredictionIntervals() {
   fastlowess::Lowess lowess(options);
   auto result = lowess.fit(linear_data.x_values, linear_data.y_values).value();
 
-  assertTrue(result.predictionLower().size() == k_interval_point_count,
+  assertTrue(result.prediction_lower().size() == k_interval_point_count,
              "Prediction lower size mismatch");
-  assertTrue(result.predictionUpper().size() == k_interval_point_count,
+  assertTrue(result.prediction_upper().size() == k_interval_point_count,
              "Prediction upper size mismatch");
 }
 
@@ -290,9 +290,9 @@ void testLowessReuse() {
   auto first_result = lowess.fit(sample_x_values, sample_y_values).value();
   auto second_result = lowess.fit(reuse_x_values, reuse_y_values).value();
 
-  assertTrue(first_result.yVector().size() == k_small_sample_size,
+  assertTrue(first_result.y_vector().size() == k_small_sample_size,
              "First reuse result size mismatch");
-  assertTrue(second_result.yVector().size() == k_small_sample_size,
+  assertTrue(second_result.y_vector().size() == k_small_sample_size,
              "Second reuse result size mismatch");
 }
 
@@ -309,12 +309,12 @@ void testStreamingReturnsAllPoints() {
   fastlowess::StreamingLowess streaming_lowess(options);
 
   auto first_chunk_result =
-      streaming_lowess.processChunk(linear_data.x_values, linear_data.y_values)
+      streaming_lowess.process_chunk(linear_data.x_values, linear_data.y_values)
           .value();
   auto final_result = streaming_lowess.finalize().value();
 
   const std::size_t total_point_count =
-      first_chunk_result.yVector().size() + final_result.yVector().size();
+      first_chunk_result.y_vector().size() + final_result.y_vector().size();
   assertTrue(total_point_count == k_streaming_return_all_point_count,
              "Total points mismatch");
 }
@@ -332,12 +332,12 @@ void testStreamingBasic() {
   fastlowess::StreamingLowess streaming_lowess(options);
 
   auto first_chunk_result =
-      streaming_lowess.processChunk(sine_data.x_values, sine_data.y_values)
+      streaming_lowess.process_chunk(sine_data.x_values, sine_data.y_values)
           .value();
   auto final_result = streaming_lowess.finalize().value();
 
-  assertTrue(!first_chunk_result.yVector().empty() ||
-                 !final_result.yVector().empty(),
+  assertTrue(!first_chunk_result.y_vector().empty() ||
+                 !final_result.y_vector().empty(),
              "Streaming basic produced no points");
 }
 
@@ -353,15 +353,15 @@ void testStreamingAccuracy() {
   streaming_options.chunk_size = k_streaming_accuracy_chunk_size;
   fastlowess::StreamingLowess streaming_lowess(streaming_options);
   auto first_chunk_result =
-      streaming_lowess.processChunk(linear_data.x_values, linear_data.y_values)
+      streaming_lowess.process_chunk(linear_data.x_values, linear_data.y_values)
           .value();
   auto final_result = streaming_lowess.finalize().value();
 
   std::vector<double> streaming_y_values;
-  auto first_y_values = first_chunk_result.yVector();
+  auto first_y_values = first_chunk_result.y_vector();
   streaming_y_values.insert(streaming_y_values.end(), first_y_values.begin(),
                             first_y_values.end());
-  auto final_y_values = final_result.yVector();
+  auto final_y_values = final_result.y_vector();
   streaming_y_values.insert(streaming_y_values.end(), final_y_values.begin(),
                             final_y_values.end());
 
@@ -370,7 +370,7 @@ void testStreamingAccuracy() {
   fastlowess::Lowess batch_lowess(batch_options);
   auto batch_result =
       batch_lowess.fit(linear_data.x_values, linear_data.y_values).value();
-  auto batch_y_values = batch_result.yVector();
+  auto batch_y_values = batch_result.y_vector();
 
   assertTrue(streaming_y_values.size() == batch_y_values.size(),
              "Streaming and batch sizes differ");
@@ -398,8 +398,8 @@ void testOnlineBasic() {
     const std::vector<double> current_y_values = {
         k_online_y_values[point_index]};
     auto result =
-        online_lowess.addPoints(current_x_values, current_y_values).value();
-    if (!result.yVector().empty()) {
+        online_lowess.add_points(current_x_values, current_y_values).value();
+    if (!result.y_vector().empty()) {
       ++point_count_with_output;
     }
   }
@@ -428,7 +428,7 @@ void testMismatchedLengths() {
   assertTrue(!exception_message.empty(), "Exception message should be present");
 
   auto result = lowess.fit(mismatched_x_values, mismatched_y_values);
-  assertTrue(!result.hasValue(),
+  assertTrue(!result.has_value(),
              "Expected error result for mismatched lengths");
   assertTrue(!result.error().empty(), "Expected non-empty error message");
 }

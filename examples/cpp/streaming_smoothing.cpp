@@ -87,7 +87,7 @@ int main() {
                   static_cast<std::ptrdiff_t>(current_chunk_len),
                   y_chunk.begin());
 
-      auto res = model.processChunk(x_chunk, y_chunk).value();
+      auto res = model.process_chunk(x_chunk, y_chunk).value();
       total_processed += res.size();
 
       if (chunk_start % k_progress_interval == 0) {
@@ -104,8 +104,8 @@ int main() {
     // Show sample of final results
     if (final_res.size() > 0) {
       std::cout << "\nSample from final chunk:\n";
-      std::cout << "  x=" << final_res.xValue(0) << " y=" << final_res.yValue(0)
-                << '\n';
+      std::cout << "  x=" << final_res.x_value(0)
+                << " y=" << final_res.y_value(0) << '\n';
     }
 
     std::cout << "\n=== Example completed successfully ===\n";

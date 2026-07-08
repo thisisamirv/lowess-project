@@ -1,4 +1,4 @@
-# FastLOWESS Julia API Reference
+﻿# FastLOWESS Julia API Reference
 
 The Julia bindings provide a modern interface to the core Rust library, mirroring the Rust API structure.
 
@@ -75,72 +75,72 @@ result = add_points(online, x::Vector{Float64}, y::Vector{Float64}) :: LowessRes
 
 ### `LowessOptions`
 
-| Field                       | Type              | Default            | Description                           |
-| --------------------------- | ----------------- | ------------------ | ------------------------------------- |
-| `fraction`                  | `Float64`         | `0.67`             | Smoothing fraction (bandwidth)        |
-| `iterations`                | `Int`             | `3`                | Number of robustifying iterations     |
-| `delta`                     | `Float64`         | `NaN`              | Interpolation distance (NaN for auto) |
-| `weight_function`           | `String`          | `"tricube"`        | Weight function name                  |
-| `robustness_method`         | `String`          | `"bisquare"`       | Robustness method name                |
-| `scaling_method`            | `String`          | `"mad"`            | Residual scaling method               |
-| `boundary_policy`           | `String`          | `"extend"`         | Boundary handling policy              |
-| `zero_weight_fallback`      | `String`          | `"use_local_mean"` | Zero-weight handling strategy         |
-| `auto_converge`             | `Float64`         | `NaN`              | Auto-convergence tolerance            |
-| `confidence_intervals`      | `Float64`         | `NaN`              | Confidence level (e.g., 0.95)         |
-| `prediction_intervals`      | `Float64`         | `NaN`              | Prediction level (e.g., 0.95)         |
-| `return_diagnostics`        | `Bool`            | `false`            | Include diagnostics in result         |
-| `return_residuals`          | `Bool`            | `false`            | Include residuals in result           |
-| `return_robustness_weights` | `Bool`            | `false`            | Include weights in result             |
-| `parallel`                  | `Bool`            | `true`             | Enable parallel execution             |
-| `cv_method`                 | `String`          | `""`               | Cross-validation method ("kfold")     |
-| `cv_k`                      | `Int`             | `5`                | Number of CV folds                    |
-| `cv_fractions`              | `Vector{Float64}` | `[]`               | Manual fractions for CV grid          |
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `fraction` | `Float64` | `0.67` | Smoothing fraction (bandwidth) |
+| `iterations` | `Int` | `3` | Number of robustifying iterations |
+| `delta` | `Float64` | `NaN` | Interpolation distance (NaN for auto) |
+| `weight_function` | `String` | `"tricube"` | Weight function name |
+| `robustness_method` | `String` | `"bisquare"` | Robustness method name |
+| `scaling_method` | `String` | `"mad"` | Residual scaling method |
+| `boundary_policy` | `String` | `"extend"` | Boundary handling policy |
+| `zero_weight_fallback` | `String` | `"use_local_mean"` | Zero-weight handling strategy |
+| `auto_converge` | `Float64` | `NaN` | Auto-convergence tolerance |
+| `confidence_intervals` | `Float64` | `NaN` | Confidence level (e.g., 0.95) |
+| `prediction_intervals` | `Float64` | `NaN` | Prediction level (e.g., 0.95) |
+| `return_diagnostics` | `Bool` | `false` | Include diagnostics in result |
+| `return_residuals` | `Bool` | `false` | Include residuals in result |
+| `return_robustness_weights` | `Bool` | `false` | Include weights in result |
+| `parallel` | `Bool` | `true` | Enable parallel execution |
+| `cv_method` | `String` | `""` | Cross-validation method ("kfold") |
+| `cv_k` | `Int` | `5` | Number of CV folds |
+| `cv_fractions` | `Vector{Float64}` | `[]` | Manual fractions for CV grid |
 
 ### `StreamingOptions` (inherits `LowessOptions`)
 
-| Field            | Type     | Default      | Description                |
-| ---------------- | -------- | ------------ | -------------------------- |
-| `chunk_size`     | `Int`    | `5000`       | Data chunk size            |
-| `overlap`        | `Int`    | `500`        | Overlap size (-1 for auto) |
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `chunk_size` | `Int` | `5000` | Data chunk size |
+| `overlap` | `Int` | `500` | Overlap size (-1 for auto) |
 | `merge_strategy` | `String` | `"weighted"` | Merge strategy for overlap |
 
 ### `OnlineOptions` (inherits `LowessOptions`)
 
-| Field             | Type     | Default         | Description                           |
-| ----------------- | -------- | --------------- | ------------------------------------- |
-| `window_capacity` | `Int`    | `1000`          | Max window size                       |
-| `min_points`      | `Int`    | `2`             | Min points before smoothing           |
-| `update_mode`     | `String` | `"incremental"` | Update mode ("full" or "incremental") |
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `window_capacity` | `Int` | `1000` | Max window size |
+| `min_points` | `Int` | `2` | Min points before smoothing |
+| `update_mode` | `String` | `"incremental"` | Update mode ("full" or "incremental") |
 
 ## Result Structure
 
 ### `LowessResult`
 
-| Field                | Type              | Description               |
-| -------------------- | ----------------- | ------------------------- |
-| `x`                  | `Vector{Float64}` | Smoothed X coordinates    |
-| `y`                  | `Vector{Float64}` | Smoothed Y coordinates    |
-| `valid`              | `Bool`            | True if result is valid   |
-| `error`              | `String`          | Error message if failed   |
-| `diagnostics`        | `Diagnostics`     | Diagnostic metrics struct |
-| `residuals`          | `Vector{Float64}` | Residuals (if requested)  |
-| `confidence_lower`   | `Vector{Float64}` | Lower CI bounds           |
-| `confidence_upper`   | `Vector{Float64}` | Upper CI bounds           |
-| `prediction_lower`   | `Vector{Float64}` | Lower PI bounds           |
-| `prediction_upper`   | `Vector{Float64}` | Upper PI bounds           |
-| `robustness_weights` | `Vector{Float64}` | Robustness weights        |
+| Field | Type | Description |
+| --- | --- | --- |
+| `x` | `Vector{Float64}` | Smoothed X coordinates |
+| `y` | `Vector{Float64}` | Smoothed Y coordinates |
+| `valid` | `Bool` | True if result is valid |
+| `error` | `String` | Error message if failed |
+| `diagnostics` | `Diagnostics` | Diagnostic metrics struct |
+| `residuals` | `Vector{Float64}` | Residuals (if requested) |
+| `confidence_lower` | `Vector{Float64}` | Lower CI bounds |
+| `confidence_upper` | `Vector{Float64}` | Upper CI bounds |
+| `prediction_lower` | `Vector{Float64}` | Lower PI bounds |
+| `prediction_upper` | `Vector{Float64}` | Upper PI bounds |
+| `robustness_weights` | `Vector{Float64}` | Robustness weights |
 
 ### `Diagnostics`
 
-| Field          | Type      | Description                 |
-| -------------- | --------- | --------------------------- |
-| `rmse`         | `Float64` | Root Mean Squared Error     |
-| `mae`          | `Float64` | Mean Absolute Error         |
-| `r_squared`    | `Float64` | R-squared                   |
-| `residual_sd`  | `Float64` | Residual standard deviation |
-| `effective_df` | `Float64` | Effective degrees of freedom|
-| `aic`          | `Float64` | AIC                         |
-| `aicc`         | `Float64` | AICc                        |
+| Field | Type | Description |
+| --- | --- | --- |
+| `rmse` | `Float64` | Root Mean Squared Error |
+| `mae` | `Float64` | Mean Absolute Error |
+| `r_squared` | `Float64` | R-squared |
+| `residual_sd` | `Float64` | Residual standard deviation |
+| `effective_df` | `Float64` | Effective degrees of freedom |
+| `aic` | `Float64` | AIC |
+| `aicc` | `Float64` | AICc |
 
 ## String Options
 

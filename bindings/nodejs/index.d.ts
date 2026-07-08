@@ -2,139 +2,139 @@
 /* eslint-disable */
 /** Batch LOWESS smoothing. */
 export declare class Lowess {
-  /** Create a new batch LOWESS smoother. */
-  constructor(options?: SmoothOptions | undefined | null)
-  /** Fit the model. */
-  fit(x: Float64Array, y: Float64Array): LowessResultObj
-  /** Fit the model asynchronously. */
-  fitAsync(x: Float64Array, y: Float64Array): Promise<unknown>
+    /** Create a new batch LOWESS smoother. */
+    constructor(options?: SmoothOptions | undefined | null)
+    /** Fit the model. */
+    fit(x: Float64Array, y: Float64Array): LowessResultObj
+    /** Fit the model asynchronously. */
+    fit_async(x: Float64Array, y: Float64Array): Promise<unknown>
 }
 
 /** Result of a LOWESS fit. */
 export declare class LowessResultObj {
-  /** Get the sorted x values. */
-  get x(): Float64Array
-  /** Get the smoothed y values. */
-  get y(): Float64Array
-  /** Get residuals (if requested). */
-  get residuals(): Float64Array | null
-  /** Get standard errors (if requested/computed). */
-  get standardErrors(): Float64Array | null
-  /** Get lower confidence bounds (if requested). */
-  get confidenceLower(): Float64Array | null
-  /** Get upper confidence bounds (if requested). */
-  get confidenceUpper(): Float64Array | null
-  /** Get lower prediction bounds (if requested). */
-  get predictionLower(): Float64Array | null
-  /** Get upper prediction bounds (if requested). */
-  get predictionUpper(): Float64Array | null
-  /** Get robustness weights (if requested). */
-  get robustnessWeights(): Float64Array | null
-  /** Get diagnostics (if requested). */
-  get diagnostics(): Diagnostics | null
-  /** Get cross-validation scores (if CV was performed). */
-  get cvScores(): Float64Array | null
-  /** Get the fraction used for smoothing. */
-  get fractionUsed(): number
-  /** Get the number of iterations performed. */
-  get iterationsUsed(): number | null
+    /** Get the sorted x values. */
+    get x(): Float64Array
+    /** Get the smoothed y values. */
+    get y(): Float64Array
+    /** Get residuals (if requested). */
+    get residuals(): Float64Array | null
+    /** Get standard errors (if requested/computed). */
+    get standard_errors(): Float64Array | null
+    /** Get lower confidence bounds (if requested). */
+    get confidence_lower(): Float64Array | null
+    /** Get upper confidence bounds (if requested). */
+    get confidence_upper(): Float64Array | null
+    /** Get lower prediction bounds (if requested). */
+    get prediction_lower(): Float64Array | null
+    /** Get upper prediction bounds (if requested). */
+    get prediction_upper(): Float64Array | null
+    /** Get robustness weights (if requested). */
+    get robustness_weights(): Float64Array | null
+    /** Get diagnostics (if requested). */
+    get diagnostics(): Diagnostics | null
+    /** Get cross-validation scores (if CV was performed). */
+    get cv_scores(): Float64Array | null
+    /** Get the fraction used for smoothing. */
+    get fraction_used(): number
+    /** Get the number of iterations performed. */
+    get iterations_used(): number | null
 }
 
 /** Online LOWESS smoother for real-time data. */
 export declare class OnlineLowess {
-  /** Create a new online LOWESS smoother. */
-  constructor(options?: SmoothOptions | undefined | null, onlineOpts?: OnlineOptions | undefined | null)
-  /** Add new points to the window and get smoothed values. */
-  addPoints(x: Float64Array, y: Float64Array): LowessResultObj
+    /** Create a new online LOWESS smoother. */
+    constructor(options?: SmoothOptions | undefined | null, onlineOpts?: OnlineOptions | undefined | null)
+    /** Add new points to the window and get smoothed values. */
+    add_points(x: Float64Array, y: Float64Array): LowessResultObj
 }
 
 /** Streaming LOWESS smoother for large datasets. */
 export declare class StreamingLowess {
-  /** Create a new streaming LOWESS smoother. */
-  constructor(options?: SmoothOptions | undefined | null, streamingOpts?: StreamingOptions | undefined | null)
-  /** Process a chunk of data. */
-  processChunk(x: Float64Array, y: Float64Array): LowessResultObj
-  /** Finalize the stream and return remaining data. */
-  finalize(): LowessResultObj
+    /** Create a new streaming LOWESS smoother. */
+    constructor(options?: SmoothOptions | undefined | null, streamingOpts?: StreamingOptions | undefined | null)
+    /** Process a chunk of data. */
+    process_chunk(x: Float64Array, y: Float64Array): LowessResultObj
+    /** Finalize the stream and return remaining data. */
+    finalize(): LowessResultObj
 }
 
 /** Diagnostic statistics for the LOWESS fit. */
 export interface Diagnostics {
-  /** Root Mean Squared Error. */
-  rmse: number
-  /** Mean Absolute Error. */
-  mae: number
-  /** R-squared (coefficient of determination). */
-  rSquared: number
-  /** Akaike Information Criterion (if computed). */
-  aic?: number
-  /** Corrected AIC (if computed). */
-  aicc?: number
-  /** Effective degrees of freedom (if computed). */
-  effectiveDf?: number
-  /** Residual standard deviation. */
-  residualSd: number
+    /** Root Mean Squared Error. */
+    rmse: number
+    /** Mean Absolute Error. */
+    mae: number
+    /** R-squared (coefficient of determination). */
+    r_squared: number
+    /** Akaike Information Criterion (if computed). */
+    aic?: number
+    /** Corrected AIC (if computed). */
+    aicc?: number
+    /** Effective degrees of freedom (if computed). */
+    effective_df?: number
+    /** Residual standard deviation. */
+    residual_sd: number
 }
 
 /** Configuration options for online processing. */
 export interface OnlineOptions {
-  /** Maximum number of points to keep in the window. Default: 100. */
-  windowCapacity?: number
-  /** Minimum points required before smoothing starts. Default: 2. */
-  minPoints?: number
-  /** Update mode ("full", "incremental"). Default: "full". */
-  updateMode?: string
+    /** Maximum number of points to keep in the window. Default: 100. */
+    window_capacity?: number
+    /** Minimum points required before smoothing starts. Default: 2. */
+    min_points?: number
+    /** Update mode ("full", "incremental"). Default: "full". */
+    update_mode?: string
 }
 
 /** Configuration options for LOWESS smoothing. */
 export interface SmoothOptions {
-  /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
-  fraction?: number
-  /** Number of robustness iterations. Default: 3. */
-  iterations?: number
-  /**
-   * Delta for interpolation speedup. Default: NaN (auto).
-   * Set to 0.0 to disable interpolation.
-   */
-  delta?: number
-  /** Weight function ("tricube", "gaussian", etc.). Default: "tricube". */
-  weightFunction?: string
-  /** Robustness method ("bisquare", "huber"). Default: "bisquare". */
-  robustnessMethod?: string
-  /** Fallback strategy when weights are zero ("use_local_mean"). */
-  zeroWeightFallback?: string
-  /** Boundary handling ("extend", "reflect"). Default: "extend". */
-  boundaryPolicy?: string
-  /** Scaling method ("mad", "mar"). Default: "mad". */
-  scalingMethod?: string
-  /** Auto-convergence tolerance. Default: None. */
-  autoConverge?: number
-  /** Return residuals in result. Default: false. */
-  returnResiduals?: boolean
-  /** Return robustness weights in result. Default: false. */
-  returnRobustnessWeights?: boolean
-  /** Return diagnostics (RMSE, etc.). Default: false. */
-  returnDiagnostics?: boolean
-  /** Calculate confidence intervals (e.g., 0.95). Default: None. */
-  confidenceIntervals?: number
-  /** Calculate prediction intervals. Default: None. */
-  predictionIntervals?: number
-  /** Fractions to use for cross-validation. */
-  cvFractions?: Array<number>
-  /** CV method ("loocv", "kfold"). Default: "kfold". */
-  cvMethod?: string
-  /** Number of folds for K-Fold CV. Default: 5. */
-  cvK?: number
-  /** Enable parallel execution. Default: true. */
-  parallel?: boolean
+    /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
+    fraction?: number
+    /** Number of robustness iterations. Default: 3. */
+    iterations?: number
+    /**
+     * Delta for interpolation speedup. Default: NaN (auto).
+     * Set to 0.0 to disable interpolation.
+     */
+    delta?: number
+    /** Weight function ("tricube", "gaussian", etc.). Default: "tricube". */
+    weight_function?: string
+    /** Robustness method ("bisquare", "huber"). Default: "bisquare". */
+    robustness_method?: string
+    /** Fallback strategy when weights are zero ("use_local_mean"). */
+    zero_weight_fallback?: string
+    /** Boundary handling ("extend", "reflect"). Default: "extend". */
+    boundary_policy?: string
+    /** Scaling method ("mad", "mar"). Default: "mad". */
+    scaling_method?: string
+    /** Auto-convergence tolerance. Default: None. */
+    auto_converge?: number
+    /** Return residuals in result. Default: false. */
+    return_residuals?: boolean
+    /** Return robustness weights in result. Default: false. */
+    return_robustness_weights?: boolean
+    /** Return diagnostics (RMSE, etc.). Default: false. */
+    return_diagnostics?: boolean
+    /** Calculate confidence intervals (e.g., 0.95). Default: None. */
+    confidence_intervals?: number
+    /** Calculate prediction intervals. Default: None. */
+    prediction_intervals?: number
+    /** Fractions to use for cross-validation. */
+    cv_fractions?: Array<number>
+    /** CV method ("loocv", "kfold"). Default: "kfold". */
+    cv_method?: string
+    /** Number of folds for K-Fold CV. Default: 5. */
+    cv_k?: number
+    /** Enable parallel execution. Default: true. */
+    parallel?: boolean
 }
 
 /** Configuration options for streaming processing. */
 export interface StreamingOptions {
-  /** Size of each data chunk. Default: 5000. */
-  chunkSize?: number
-  /** Header/footer overlap size. Default: 500. */
-  overlap?: number
-  /** Strategy for merging chunks (not exposed yet). */
-  mergeStrategy?: string
+    /** Size of each data chunk. Default: 5000. */
+    chunk_size?: number
+    /** Header/footer overlap size. Default: 500. */
+    overlap?: number
+    /** Strategy for merging chunks (not exposed yet). */
+    merge_strategy?: string
 }

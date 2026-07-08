@@ -76,14 +76,14 @@ int main() {
       const std::vector<double> x_sample = {x_values[point_index]};
       const std::vector<double> y_sample = {y_values[point_index]};
 
-      auto res = model.addPoints(x_sample, y_sample).value();
+      auto res = model.add_points(x_sample, y_sample).value();
       total_emitted += res.size();
 
       if (point_index > 0 && point_index % k_progress_interval == 0 &&
           res.size() > 0) {
         std::cout << "  t=" << point_index
                   << " original=" << y_values[point_index]
-                  << " smoothed=" << res.yValue(res.size() - 1) << '\n';
+                  << " smoothed=" << res.y_value(res.size() - 1) << '\n';
       }
     }
 
