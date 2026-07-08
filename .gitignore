@@ -8,6 +8,7 @@ Cargo.lock
 **/mutants.out*/
 *.toml.test
 *.toml.orig
+Cargo.toml.bak
 
 # R Package
 *.Rcheck/

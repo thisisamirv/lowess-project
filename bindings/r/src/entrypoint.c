@@ -20,9 +20,9 @@ typedef enum { FALSE = 0, TRUE } Rboolean;
 #include <Rinternals.h>
 
 extern void R_init_rfastlowess_extendr(DllInfo *dll);
-void register_extendr_panic_hook(void);
+void register_extendr_panic_hook(void); // NOLINT(readability-identifier-naming)
 
-void R_init_rfastlowess(DllInfo *dll) {
+void R_init_rfastlowess(DllInfo *dll) { // NOLINT(misc-use-internal-linkage)
   register_extendr_panic_hook();
   R_init_rfastlowess_extendr(dll);
 }

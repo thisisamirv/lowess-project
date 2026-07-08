@@ -19,7 +19,7 @@ To develop across all platforms, you will need the following tools installed. Yo
 
 **Core (Rust)**:
 
-- **Rust**: 1.88.0+ (stable)
+- **Rust**: 1.89.0+ (stable)
 - **Cargo Tools**: `cargo fmt`, `cargo clippy`, `cargo llvm-cov` (for coverage)
 
 **Python**:
