@@ -60,13 +60,13 @@ impl FromStr for MergeStrategy {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "average" | "mean" => Ok(Self::Average),
-            "weightedaverage" | "weighted_average" | "weighted" => Ok(Self::WeightedAverage),
-            "takefirst" | "take_first" | "first" => Ok(Self::TakeFirst),
-            "takelast" | "take_last" | "last" => Ok(Self::TakeLast),
+            "weighted_average" | "weighted" => Ok(Self::WeightedAverage),
+            "take_first" | "first" => Ok(Self::TakeFirst),
+            "take_last" | "last" => Ok(Self::TakeLast),
             _ => Err(LowessError::InvalidOption {
                 option: "merge_strategy",
                 value: s.to_string(),
-                valid: "average, weightedaverage, takefirst, takelast",
+                valid: "average, weighted_average, take_first, take_last",
             }),
         }
     }

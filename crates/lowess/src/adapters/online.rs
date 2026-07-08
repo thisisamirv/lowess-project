@@ -50,7 +50,7 @@ impl FromStr for UpdateMode {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "full" | "resmooth" => Ok(Self::Full),
-            "incremental" | "single" | "inc" => Ok(Self::Incremental),
+            "incremental" | "single" => Ok(Self::Incremental),
             _ => Err(LowessError::InvalidOption {
                 option: "update_mode",
                 value: s.to_string(),

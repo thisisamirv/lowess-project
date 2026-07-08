@@ -190,7 +190,7 @@ impl Display for LowessError {
             } => {
                 write!(
                     f,
-                    "Invalid value for `{option}`: `{value}`. Valid values: {valid}"
+                    "Invalid value '{value}' for '{option}'. Valid options: {valid}"
                 )
             }
             Self::RuntimeError(msg) => write!(f, "Runtime error: {}", msg),

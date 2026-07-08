@@ -915,7 +915,7 @@ fn run_streaming_comparison() -> Result<(), Box<dyn std::error::Error>> {
         .adapter(Streaming)
         .chunk_size(chunk_size)
         .overlap(overlap)
-        .merge_strategy("weightedaverage")
+        .merge_strategy("weighted_average")
         .fraction(0.2)
         .build()?;
 
@@ -931,7 +931,7 @@ fn run_streaming_comparison() -> Result<(), Box<dyn std::error::Error>> {
         .adapter(Streaming)
         .chunk_size(chunk_size)
         .overlap(overlap)
-        .merge_strategy("takefirst")
+        .merge_strategy("take_first")
         .fraction(0.2)
         .build()?;
 

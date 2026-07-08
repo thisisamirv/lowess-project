@@ -243,9 +243,9 @@ pub fn parse_scaling_method(name: &str) -> Result<ScalingMethod, String> {
 pub fn parse_merge_strategy(name: &str) -> Result<MergeStrategy, String> {
     match name.to_lowercase().as_str() {
         "average" | "mean" => Ok(MergeStrategy::Average),
-        "weighted" | "weighted_average" | "weightedaverage" => Ok(MergeStrategy::WeightedAverage),
-        "first" | "take_first" | "takefirst" | "left" => Ok(MergeStrategy::TakeFirst),
-        "last" | "take_last" | "takelast" | "right" => Ok(MergeStrategy::TakeLast),
+        "weighted" | "weighted_average" => Ok(MergeStrategy::WeightedAverage),
+        "first" | "take_first" | "left" => Ok(MergeStrategy::TakeFirst),
+        "last" | "take_last" | "right" => Ok(MergeStrategy::TakeLast),
         _ => Err(format!(
             "Unknown merge strategy: {}. Valid options: average, weighted_average, take_first, take_last",
             name

@@ -31,9 +31,7 @@ use lowess::internals::primitives::errors::LowessError;
 /// Verifies that chunk_size < 10 is rejected.
 #[test]
 fn test_streaming_invalid_chunk_size() {
-    let result = StreamingLowess::<f64>::new()
-        .chunk_size(5)
-        .build();
+    let result = StreamingLowess::<f64>::new().chunk_size(5).build();
 
     assert!(
         matches!(result, Err(LowessError::InvalidChunkSize { .. })),
@@ -311,7 +309,7 @@ fn test_streaming_builder_setters() {
 /// Test different merge strategies for overlapping chunks.
 #[test]
 fn test_streaming_merge_strategies() {
-    let strategies = ["average", "takefirst", "takelast", "weightedaverage"];
+    let strategies = ["average", "take_first", "take_last", "weighted_average"];
 
     let x: Vec<f64> = (0..40).map(|i| i as f64).collect();
     let y: Vec<f64> = (0..40).map(|i| i as f64 * 2.0).collect();
@@ -702,7 +700,7 @@ fn test_streaming_unsorted_chunks() {
 /// Test all merge strategies with identical overlap data.
 #[test]
 fn test_streaming_all_merge_strategies_identical_data() {
-    let strategies = vec!["average", "weightedaverage", "takefirst", "takelast"];
+    let strategies = vec!["average", "weighted_average", "take_first", "take_last"];
 
     for strategy in strategies {
         let mut processor = StreamingLowess::new()
