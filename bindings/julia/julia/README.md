@@ -45,7 +45,7 @@ The fastest, most robust, and most feature-complete language-agnostic LOWESS (Lo
 
 > [!NOTE]
 >
-> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See [INSTALLATION.md](https://github.com/thisisamirv/lowess-project/blob/main/INSTALLATION.md) for detailed installation instructions.
+> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the [Installation Guide](https://lowess.readthedocs.io/getting-started/installation/) for detailed installation instructions.
 
 ## Documentation
 
@@ -318,36 +318,36 @@ new Lowess({
     fraction: 0.5,
     iterations: 3,
     delta: 0.01,
-    weight_function: "tricube",
-    robustness_method: "bisquare",
-    zero_weight_fallback: "use_local_mean",
-    boundary_policy: "extend",
-    confidence_intervals: 0.95,
-    prediction_intervals: 0.95,
-    return_diagnostics: true,
-    return_residuals: true,
-    return_robustness_weights: true,
-    cv_fractions: [0.3, 0.5, 0.7],
-    cv_method: "kfold",
-    cv_k: 5,
-    auto_converge: 1e-4,
+    weightFunction: "tricube",
+    robustnessMethod: "bisquare",
+    zeroWeightFallback: "use_local_mean",
+    boundaryPolicy: "extend",
+    confidenceIntervals: 0.95,
+    predictionIntervals: 0.95,
+    returnDiagnostics: true,
+    returnResiduals: true,
+    returnRobustnessWeights: true,
+    cvFractions: [0.3, 0.5, 0.7],
+    cvMethod: "kfold",
+    cvK: 5,
+    autoConverge: 1e-4,
     parallel: true
 }).fit(x, y)
 
 // Result structure:
 result.x,
 result.y,
-result.standard_errors,
-result.confidence_lower,
-result.confidence_upper,
-result.prediction_lower,
-result.prediction_upper,
+result.standardErrors,
+result.confidenceLower,
+result.confidenceUpper,
+result.predictionLower,
+result.predictionUpper,
 result.residuals,
-result.robustness_weights,
+result.robustnessWeights,
 result.diagnostics,
-result.iterations_used,
-result.fraction_used,
-result.cv_scores
+result.iterationsUsed,
+result.fractionUsed,
+result.cvScores
 ```
 
 **WebAssembly:**
@@ -357,36 +357,36 @@ smooth(x, y, {
     fraction: 0.5,
     iterations: 3,
     delta: 0.01,
-    weight_function: "tricube",
-    robustness_method: "bisquare",
-    zero_weight_fallback: "use_local_mean",
-    boundary_policy: "extend",
-    confidence_intervals: 0.95,
-    prediction_intervals: 0.95,
-    return_diagnostics: true,
-    return_residuals: true,
-    return_robustness_weights: true,
-    cv_fractions: [0.3, 0.5, 0.7],
-    cv_method: "kfold",
-    cv_k: 5,
-    auto_converge: 1e-4,
+    weightFunction: "tricube",
+    robustnessMethod: "bisquare",
+    zeroWeightFallback: "use_local_mean",
+    boundaryPolicy: "extend",
+    confidenceIntervals: 0.95,
+    predictionIntervals: 0.95,
+    returnDiagnostics: true,
+    returnResiduals: true,
+    returnRobustnessWeights: true,
+    cvFractions: [0.3, 0.5, 0.7],
+    cvMethod: "kfold",
+    cvK: 5,
+    autoConverge: 1e-4,
     parallel: true
 })
 
 // Result structure:
 result.x,
 result.y,
-result.standard_errors,
-result.confidence_lower,
-result.confidence_upper,
-result.prediction_lower,
-result.prediction_upper,
+result.standardErrors,
+result.confidenceLower,
+result.confidenceUpper,
+result.predictionLower,
+result.predictionUpper,
 result.residuals,
-result.robustness_weights,
+result.robustnessWeights,
 result.diagnostics,
-result.iterations_used,
-result.fraction_used,
-result.cv_scores
+result.iterationsUsed,
+result.fractionUsed,
+result.cvScores
 ```
 
 **C++:**
@@ -415,18 +415,18 @@ fastlowess::Lowess model(options);
 auto result = model.fit(x, y);
 
 // Result structure:
-result.x_vector(),
-result.y_vector(),
-result.standard_errors(),
-result.confidence_lower(),
-result.confidence_upper(),
-result.prediction_lower(),
-result.prediction_upper(),
+result.xVector(),
+result.yVector(),
+result.standardErrors(),
+result.confidenceLower(),
+result.confidenceUpper(),
+result.predictionLower(),
+result.predictionUpper(),
 result.residuals(),
-result.robustness_weights(),
+result.robustnessWeights(),
 result.diagnostics(),
-result.iterations_used(),
-result.fraction_used(),
+result.iterationsUsed(),
+result.fractionUsed(),
 result.cv_scores()
 ```
 
@@ -434,7 +434,11 @@ result.cv_scores()
 
 ## Contributing
 
-Contributions are welcome! Please see the [CONTRIBUTING.md](https://github.com/thisisamirv/lowess-project/blob/main/CONTRIBUTING.md) file for more information.
+Contributions are welcome! Please see the [Contributing Guide](https://lowess.readthedocs.io/contributing/) for more information.
+
+## Changelog
+
+See the [Changelog](https://lowess.readthedocs.io/changelog/) for a history of changes.
 
 ## License
 

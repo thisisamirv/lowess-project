@@ -158,5 +158,6 @@ nav:
       - Node.js Examples: examples/nodejs.md
       - WebAssembly Examples: examples/wasm.md
       - C++ Examples: examples/cpp.md
+  - Benchmarks: benchmarks.md
   - Changelog: changelog.md
   - Contributing: contributing.md

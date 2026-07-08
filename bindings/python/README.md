@@ -45,7 +45,7 @@ The fastest, most robust, and most feature-complete language-agnostic LOWESS (Lo
 
 > [!NOTE]
 >
-> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See [INSTALLATION.md](https://github.com/thisisamirv/lowess-project/blob/main/INSTALLATION.md) for detailed installation instructions.
+> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the [Installation Guide](https://lowess.readthedocs.io/getting-started/installation/) for detailed installation instructions.
 
 ## Documentation
 
@@ -434,7 +434,11 @@ result.cv_scores()
 
 ## Contributing
 
-Contributions are welcome! Please see the [CONTRIBUTING.md](https://github.com/thisisamirv/lowess-project/blob/main/CONTRIBUTING.md) file for more information.
+Contributions are welcome! Please see the [Contributing Guide](https://lowess.readthedocs.io/contributing/) for more information.
+
+## Changelog
+
+See the [Changelog](https://lowess.readthedocs.io/changelog/) for a history of changes.
 
 ## License
 
