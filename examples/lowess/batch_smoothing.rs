@@ -91,7 +91,7 @@ fn example_2_robust_with_outliers() -> Result<(), LowessError> {
     let model = Lowess::new()
         .fraction(0.5)
         .iterations(5) // More iterations for stronger robustness
-        .robustness_method(Bisquare)
+        .robustness_method("bisquare")
         .return_residuals()
         .return_robustness_weights()
         .adapter(Batch)
@@ -197,7 +197,9 @@ fn example_4_cross_validation() -> Result<(), LowessError> {
 
     // Test multiple fractions and select the best one
     let model = Lowess::new()
-        .cross_validate(KFold(5, &[0.2, 0.3, 0.5, 0.7]))
+        .cv_method("kfold")
+        .cv_k(5)
+        .cv_fractions(vec![0.2, 0.3, 0.5, 0.7])
         .iterations(2)
         .adapter(Batch)
         .build()?;
@@ -298,10 +300,10 @@ fn example_6_different_kernels() -> Result<(), LowessError> {
     let y = vec![2.0, 4.1, 5.9, 8.2, 9.8];
 
     let kernels = vec![
-        ("Tricube", Tricube),
-        ("Epanechnikov", Epanechnikov),
-        ("Gaussian", Gaussian),
-        ("Biweight", Biweight),
+        ("Tricube", "tricube"),
+        ("Epanechnikov", "epanechnikov"),
+        ("Gaussian", "gaussian"),
+        ("Biweight", "biweight"),
     ];
 
     for (name, kernel) in kernels {
@@ -352,7 +354,11 @@ fn example_7_robustness_methods() -> Result<(), LowessError> {
     let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
     let y = vec![2.0, 4.1, 20.0, 8.2, 9.8]; // 20.0 is an outlier
 
-    let methods = vec![("Bisquare", Bisquare), ("Huber", Huber), ("Talwar", Talwar)];
+    let methods = vec![
+        ("Bisquare", "bisquare"),
+        ("Huber", "huber"),
+        ("Talwar", "talwar"),
+    ];
 
     for (name, method) in methods {
         println!("Using {} robustness method:", name);

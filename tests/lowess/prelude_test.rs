@@ -36,9 +36,9 @@ fn test_prelude_imports() {
 /// Verifies that RobustnessMethod enum is exported.
 #[test]
 fn test_prelude_robustness_method() {
-    let _ = Lowess::<f64>::new().robustness_method(Bisquare);
-    let _ = Lowess::<f64>::new().robustness_method(Huber);
-    let _ = Lowess::<f64>::new().robustness_method(Talwar);
+    let _ = Lowess::<f64>::new().robustness_method("bisquare");
+    let _ = Lowess::<f64>::new().robustness_method("huber");
+    let _ = Lowess::<f64>::new().robustness_method("talwar");
 }
 
 /// Test WeightFunction is available.
@@ -46,10 +46,10 @@ fn test_prelude_robustness_method() {
 /// Verifies that WeightFunction enum is exported.
 #[test]
 fn test_prelude_weight_function() {
-    let _ = Lowess::<f64>::new().weight_function(Tricube);
-    let _ = Lowess::<f64>::new().weight_function(Epanechnikov);
-    let _ = Lowess::<f64>::new().weight_function(Gaussian);
-    let _ = Lowess::<f64>::new().weight_function(Biweight);
+    let _ = Lowess::<f64>::new().weight_function("tricube");
+    let _ = Lowess::<f64>::new().weight_function("epanechnikov");
+    let _ = Lowess::<f64>::new().weight_function("gaussian");
+    let _ = Lowess::<f64>::new().weight_function("biweight");
 }
 
 /// Test CrossValidationStrategy is available.
@@ -57,8 +57,13 @@ fn test_prelude_weight_function() {
 /// Verifies that CrossValidationStrategy enum is exported.
 #[test]
 fn test_prelude_cross_validation() {
-    let _ = Lowess::<f64>::new().cross_validate(KFold(5, &[0.5]));
-    let _ = Lowess::<f64>::new().cross_validate(LOOCV(&[0.5]));
+    let _ = Lowess::<f64>::new()
+        .cv_method("kfold")
+        .cv_k(5)
+        .cv_fractions(vec![0.5f64]);
+    let _ = Lowess::<f64>::new()
+        .cv_method("loocv")
+        .cv_fractions(vec![0.5f64]);
 }
 
 /// Test ZeroWeightFallback is available.
@@ -66,9 +71,9 @@ fn test_prelude_cross_validation() {
 /// Verifies that ZeroWeightFallback enum is exported.
 #[test]
 fn test_prelude_zero_weight_fallback() {
-    let _ = Lowess::<f64>::new().zero_weight_fallback(UseLocalMean);
-    let _ = Lowess::<f64>::new().zero_weight_fallback(ReturnOriginal);
-    let _ = Lowess::<f64>::new().zero_weight_fallback(ReturnNone);
+    let _ = Lowess::<f64>::new().zero_weight_fallback("uselocalmean");
+    let _ = Lowess::<f64>::new().zero_weight_fallback("returnoriginal");
+    let _ = Lowess::<f64>::new().zero_weight_fallback("returnnone");
 }
 
 /// Test adapter types are available.
@@ -104,8 +109,8 @@ fn test_prelude_complete_workflow() {
     let result = Lowess::<f64>::new()
         .fraction(0.5)
         .iterations(3)
-        .robustness_method(Bisquare)
-        .weight_function(Tricube)
+        .robustness_method("bisquare")
+        .weight_function("tricube")
         .confidence_intervals(0.95)
         .return_diagnostics()
         .return_residuals()

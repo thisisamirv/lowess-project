@@ -112,7 +112,7 @@ fn run_fraction_comparison() -> Result<(), Box<dyn std::error::Error>> {
             .fraction(frac)
             .iterations(2)
             .delta(0.0) // Direct equivalent
-            .boundary_policy(Reflect)
+            .boundary_policy("reflect")
             .adapter(Batch)
             .build()
             .unwrap()
@@ -172,7 +172,7 @@ fn run_intervals_comparison() -> Result<(), Box<dyn std::error::Error>> {
         .iterations(2)
         .confidence_intervals(0.95)
         .delta(0.0)
-        .boundary_policy(Reflect)
+        .boundary_policy("reflect")
         .adapter(Batch)
         .build()
         .unwrap()
@@ -185,7 +185,7 @@ fn run_intervals_comparison() -> Result<(), Box<dyn std::error::Error>> {
         .iterations(2)
         .prediction_intervals(0.95)
         .delta(0.0)
-        .boundary_policy(Reflect)
+        .boundary_policy("reflect")
         .adapter(Batch)
         .build()
         .unwrap()
@@ -447,13 +447,13 @@ fn run_kernel_comparison() -> Result<(), Box<dyn std::error::Error>> {
     println!("--------------------");
 
     let kernels = [
-        Tricube,
-        Gaussian,
-        Uniform,
-        Cosine,
-        Epanechnikov,
-        Biweight,
-        Triangle,
+        "tricube",
+        "gaussian",
+        "uniform",
+        "cosine",
+        "epanechnikov",
+        "biweight",
+        "triangle",
     ];
     let mut results = Vec::new();
 
@@ -467,14 +467,14 @@ fn run_kernel_comparison() -> Result<(), Box<dyn std::error::Error>> {
             .fit(&x, &y)
             .unwrap();
         results.push(result);
-        println!("  Kernel processed: {}", kernel.name());
+        println!("  Kernel processed: {}", kernel);
     }
 
     let path = "../output/visual/kernel_comparison.csv";
     let mut file = File::create(path)?;
     write!(file, "x,y_true,y_noisy")?;
-    for kernel in &kernels {
-        write!(file, ",y_{}", kernel.name().to_lowercase())?;
+    for &kernel in &kernels {
+        write!(file, ",y_{}", kernel)?;
     }
     writeln!(file)?;
 
@@ -516,7 +516,7 @@ fn run_robust_method_comparison() -> Result<(), Box<dyn std::error::Error>> {
     println!("8. Robustness Method Comparison");
     println!("-------------------------------");
 
-    let methods = [Bisquare, Huber, Talwar];
+    let methods = ["bisquare", "huber", "talwar"];
     let mut results = Vec::new();
 
     for &method in &methods {
@@ -530,7 +530,7 @@ fn run_robust_method_comparison() -> Result<(), Box<dyn std::error::Error>> {
             .fit(&x, &y)
             .unwrap();
         results.push(result);
-        println!("  Method processed: {:?}", method);
+        println!("  Method processed: {}", method);
     }
 
     let path = "../output/visual/robust_method_comparison.csv";
@@ -567,7 +567,7 @@ fn run_boundary_policy_comparison() -> Result<(), Box<dyn std::error::Error>> {
     println!("9. Boundary Policy Comparison");
     println!("-----------------------------");
 
-    let policies = [NoBoundary, Extend, Reflect];
+    let policies = ["noboundary", "extend", "reflect"];
     let mut results = Vec::new();
 
     for &policy in &policies {
@@ -580,7 +580,7 @@ fn run_boundary_policy_comparison() -> Result<(), Box<dyn std::error::Error>> {
             .fit(&x, &y)
             .unwrap();
         results.push(result);
-        println!("  Policy processed: {:?}", policy);
+        println!("  Policy processed: {}", policy);
     }
 
     let path = "../output/visual/boundary_comparison.csv";
@@ -662,7 +662,8 @@ fn run_cv_comparison() -> Result<(), Box<dyn std::error::Error>> {
 
     // 1. LOOCV
     let loocv_result = Lowess::new()
-        .cross_validate(LOOCV(&candidate_fractions))
+        .cv_method("loocv")
+        .cv_fractions(candidate_fractions.to_vec())
         .adapter(Batch)
         .build()
         .unwrap()
@@ -672,7 +673,10 @@ fn run_cv_comparison() -> Result<(), Box<dyn std::error::Error>> {
 
     // 2. K-Fold (5 folds)
     let kfold_result = Lowess::new()
-        .cross_validate(KFold(5, &candidate_fractions).seed(42))
+        .cv_method("kfold")
+        .cv_k(5)
+        .cv_fractions(candidate_fractions.to_vec())
+        .cv_seed(42)
         .adapter(Batch)
         .build()
         .unwrap()
@@ -798,7 +802,7 @@ fn run_scaling_method_comparison() -> Result<(), Box<dyn std::error::Error>> {
     println!("-----------------------------");
 
     let result_mad = Lowess::new()
-        .scaling_method(MAD)
+        .scaling_method("mad")
         .iterations(4)
         .fraction(0.3)
         .adapter(Batch)
@@ -808,7 +812,7 @@ fn run_scaling_method_comparison() -> Result<(), Box<dyn std::error::Error>> {
         .unwrap();
 
     let result_mar = Lowess::new()
-        .scaling_method(MAR)
+        .scaling_method("mar")
         .iterations(4)
         .fraction(0.3)
         .adapter(Batch)
@@ -852,7 +856,7 @@ fn run_zero_weight_fallback_comparison() -> Result<(), Box<dyn std::error::Error
     println!("-----------------------------------");
 
     let result_mean = Lowess::new()
-        .zero_weight_fallback(UseLocalMean)
+        .zero_weight_fallback("uselocalmean")
         .fraction(0.1)
         .iterations(5)
         .adapter(Batch)
@@ -862,7 +866,7 @@ fn run_zero_weight_fallback_comparison() -> Result<(), Box<dyn std::error::Error
         .unwrap();
 
     let result_orig = Lowess::new()
-        .zero_weight_fallback(ReturnOriginal)
+        .zero_weight_fallback("returnoriginal")
         .fraction(0.1)
         .iterations(5)
         .adapter(Batch)
@@ -911,7 +915,7 @@ fn run_streaming_comparison() -> Result<(), Box<dyn std::error::Error>> {
         .adapter(Streaming)
         .chunk_size(chunk_size)
         .overlap(overlap)
-        .merge_strategy(WeightedAverage)
+        .merge_strategy("weightedaverage")
         .fraction(0.2)
         .build()?;
 
@@ -919,7 +923,7 @@ fn run_streaming_comparison() -> Result<(), Box<dyn std::error::Error>> {
         .adapter(Streaming)
         .chunk_size(chunk_size)
         .overlap(overlap)
-        .merge_strategy(Average)
+        .merge_strategy("average")
         .fraction(0.2)
         .build()?;
 
@@ -927,7 +931,7 @@ fn run_streaming_comparison() -> Result<(), Box<dyn std::error::Error>> {
         .adapter(Streaming)
         .chunk_size(chunk_size)
         .overlap(overlap)
-        .merge_strategy(TakeFirst)
+        .merge_strategy("takefirst")
         .fraction(0.2)
         .build()?;
 
@@ -990,13 +994,13 @@ fn run_online_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let mut online_small = Lowess::new()
         .adapter(Online)
         .window_capacity(50)
-        .update_mode(Incremental)
+        .update_mode("incremental")
         .build()?;
 
     let mut online_large = Lowess::new()
         .adapter(Online)
         .window_capacity(200)
-        .update_mode(Full)
+        .update_mode("full")
         .iterations(2)
         .build()?;
 
@@ -1129,7 +1133,7 @@ fn run_auto_converge_comparison() -> Result<(), Box<dyn std::error::Error>> {
         .fraction(0.3)
         .iterations(iterations)
         .window_capacity(50)
-        .update_mode(Full)
+        .update_mode("full")
         .adapter(Online)
         .build()?;
     let mut online_on = Lowess::new()
@@ -1137,7 +1141,7 @@ fn run_auto_converge_comparison() -> Result<(), Box<dyn std::error::Error>> {
         .iterations(iterations)
         .auto_converge(tolerance)
         .window_capacity(50)
-        .update_mode(Full)
+        .update_mode("full")
         .adapter(Online)
         .build()?;
 

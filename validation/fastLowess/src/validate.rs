@@ -85,8 +85,8 @@ fn process_file(input_path: &Path, output_dir: &Path) -> Result<(), Box<dyn Erro
     let processor = Lowess::new()
         .fraction(data.params.fraction)
         .iterations(data.params.iterations)
-        .boundary_policy(NoBoundary) // R doesn't have boundary extension by default
-        .scaling_method(MAR) // Match R's default scaling if applicable, usually MAD/MAR
+        .boundary_policy("noboundary") // R doesn't have boundary extension by default
+        .scaling_method("mar") // Match R's default scaling if applicable, usually MAD/MAR
         .adapter(Batch)
         .parallel(true);
 

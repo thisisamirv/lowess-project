@@ -42,6 +42,10 @@ use lowess::internals::primitives::errors::LowessError;
 pub struct ParallelBatchLowessBuilder<T: Float> {
     // Base builder from the lowess crate
     pub base: BatchLowessBuilder<T>,
+    // CV method string for string-based cross-validation API ("kfold" or "loocv").
+    pub cv_method_str: Option<String>,
+    // K value for K-fold CV (default: 5).
+    pub cv_k_val: usize,
 }
 
 impl<T: Float> Default for ParallelBatchLowessBuilder<T> {
@@ -54,7 +58,11 @@ impl<T: Float> ParallelBatchLowessBuilder<T> {
     // Create a new batch LOWESS builder with default parameters.
     fn new() -> Self {
         let base = BatchLowessBuilder::default().parallel(true); // Default to parallel in fastLowess
-        Self { base }
+        Self {
+            base,
+            cv_method_str: None,
+            cv_k_val: 5,
+        }
     }
 
     // Set parallel execution mode.
@@ -88,26 +96,54 @@ impl<T: Float> ParallelBatchLowessBuilder<T> {
     }
 
     // Set the kernel weight function.
-    pub fn weight_function(mut self, wf: WeightFunction) -> Self {
-        self.base = self.base.weight_function(wf);
+    pub fn weight_function(mut self, wf: impl AsRef<str>) -> Self {
+        match wf.as_ref().parse::<WeightFunction>() {
+            Ok(w) => self.base = self.base.weight_function(w),
+            Err(e) => {
+                if self.base.deferred_error.is_none() {
+                    self.base.deferred_error = Some(e);
+                }
+            }
+        }
         self
     }
 
     // Set the robustness method for outlier handling.
-    pub fn robustness_method(mut self, method: RobustnessMethod) -> Self {
-        self.base = self.base.robustness_method(method);
+    pub fn robustness_method(mut self, method: impl AsRef<str>) -> Self {
+        match method.as_ref().parse::<RobustnessMethod>() {
+            Ok(m) => self.base = self.base.robustness_method(m),
+            Err(e) => {
+                if self.base.deferred_error.is_none() {
+                    self.base.deferred_error = Some(e);
+                }
+            }
+        }
         self
     }
 
     // Set the zero-weight fallback policy.
-    pub fn zero_weight_fallback(mut self, fallback: ZeroWeightFallback) -> Self {
-        self.base = self.base.zero_weight_fallback(fallback);
+    pub fn zero_weight_fallback(mut self, fallback: impl AsRef<str>) -> Self {
+        match fallback.as_ref().parse::<ZeroWeightFallback>() {
+            Ok(f) => self.base = self.base.zero_weight_fallback(f),
+            Err(e) => {
+                if self.base.deferred_error.is_none() {
+                    self.base.deferred_error = Some(e);
+                }
+            }
+        }
         self
     }
 
     // Set the boundary handling policy.
-    pub fn boundary_policy(mut self, policy: BoundaryPolicy) -> Self {
-        self.base = self.base.boundary_policy(policy);
+    pub fn boundary_policy(mut self, policy: impl AsRef<str>) -> Self {
+        match policy.as_ref().parse::<BoundaryPolicy>() {
+            Ok(p) => self.base = self.base.boundary_policy(p),
+            Err(e) => {
+                if self.base.deferred_error.is_none() {
+                    self.base.deferred_error = Some(e);
+                }
+            }
+        }
         self
     }
 
@@ -147,21 +183,59 @@ impl<T: Float> ParallelBatchLowessBuilder<T> {
         self
     }
 
-    // Enable cross-validation with the specified fractions.
-    pub fn cross_validate(mut self, fractions: Vec<T>) -> Self {
+    // Enable cross-validation with the specified candidate fractions.
+    pub fn cv_fractions(mut self, fractions: Vec<T>) -> Self {
         self.base = self.base.cross_validate(fractions);
         self
     }
 
     // Set the cross-validation method.
-    pub fn cv_kind(mut self, method: CVKind) -> Self {
-        self.base = self.base.cv_kind(method);
+    //
+    // Accepts case-insensitive strings: "kfold" (or "k_fold", "k-fold"), "loocv" (or "loo_cv", "loo-cv").
+    pub fn cv_method(mut self, method: &str) -> Self {
+        self.cv_method_str = Some(method.to_string());
+        self
+    }
+
+    // Set the number of folds for K-fold cross-validation (default: 5).
+    pub fn cv_k(mut self, k: usize) -> Self {
+        self.cv_k_val = k;
+        self
+    }
+
+    // Set the random seed for reproducible K-fold fold splitting.
+    pub fn cv_seed(mut self, seed: u64) -> Self {
+        self.base.cv_seed = Some(seed);
         self
     }
 
     // Build the batch processor.
-    pub fn build(self) -> Result<ParallelBatchLowess<T>, LowessError> {
-        // Check for deferred errors from adapter conversion
+    pub fn build(mut self) -> Result<ParallelBatchLowess<T>, LowessError> {
+        // Resolve string-based CV method
+        if self.base.cv_kind.is_none() {
+            if let Some(method_str) = self.cv_method_str.take() {
+                let lower = method_str.to_lowercase();
+                match lower.as_str() {
+                    "kfold" | "k_fold" | "k-fold" => {
+                        self.base = self.base.cv_kind(CVKind::KFold(self.cv_k_val));
+                    }
+                    "loocv" | "loo_cv" | "loo-cv" => {
+                        self.base = self.base.cv_kind(CVKind::LOOCV);
+                    }
+                    _ => {
+                        if self.base.deferred_error.is_none() {
+                            self.base.deferred_error = Some(LowessError::InvalidOption {
+                                option: "cv_method",
+                                value: method_str,
+                                valid: "kfold, loocv",
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        // Check for deferred errors
         if let Some(ref err) = self.base.deferred_error {
             return Err(err.clone());
         }

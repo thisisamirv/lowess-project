@@ -75,7 +75,7 @@ fn test_robustness() {
     let res = Lowess::new()
         .fraction(0.5)
         .iterations(5)
-        .robustness_method(Bisquare)
+        .robustness_method("bisquare")
         .adapter(Batch)
         .build()
         .unwrap()

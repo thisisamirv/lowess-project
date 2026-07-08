@@ -83,7 +83,7 @@ fn test_batch_with_robustness_weights() {
     let result = Lowess::new()
         .fraction(0.5)
         .iterations(5)
-        .robustness_method(Bisquare)
+        .robustness_method("bisquare")
         .return_robustness_weights()
         .adapter(Batch)
         .build()
@@ -261,7 +261,9 @@ fn test_batch_cv_kfold() {
     let fractions = vec![0.2, 0.5, 0.8];
 
     let result = Lowess::new()
-        .cross_validate(KFold(3, &fractions))
+        .cv_method("kfold")
+        .cv_k(3)
+        .cv_fractions(fractions.clone())
         .adapter(Batch)
         .build()
         .unwrap()
@@ -296,7 +298,10 @@ fn test_batch_cv_reproducibility() {
 
     // Run 1
     let result1 = Lowess::new()
-        .cross_validate(KFold(5, &fractions).seed(seed))
+        .cv_method("kfold")
+        .cv_k(5)
+        .cv_fractions(fractions.clone())
+        .cv_seed(seed)
         .adapter(Batch)
         .build()
         .unwrap()
@@ -305,7 +310,10 @@ fn test_batch_cv_reproducibility() {
 
     // Run 2 (same seed)
     let result2 = Lowess::new()
-        .cross_validate(KFold(5, &fractions).seed(seed))
+        .cv_method("kfold")
+        .cv_k(5)
+        .cv_fractions(fractions.clone())
+        .cv_seed(seed)
         .adapter(Batch)
         .build()
         .unwrap()
@@ -314,7 +322,10 @@ fn test_batch_cv_reproducibility() {
 
     // Run 3 (different seed)
     let result3 = Lowess::new()
-        .cross_validate(KFold(5, &fractions).seed(seed + 1))
+        .cv_method("kfold")
+        .cv_k(5)
+        .cv_fractions(fractions.clone())
+        .cv_seed(seed + 1)
         .adapter(Batch)
         .build()
         .unwrap()
@@ -345,7 +356,8 @@ fn test_batch_cv_loocv() {
     let fractions = vec![0.5, 0.8];
 
     let result = Lowess::new()
-        .cross_validate(LOOCV(&fractions))
+        .cv_method("loocv")
+        .cv_fractions(fractions.clone())
         .adapter(Batch)
         .build()
         .unwrap()
@@ -482,8 +494,8 @@ fn test_batch_all_features_combined() {
     let result = Lowess::new()
         .fraction(0.5)
         .iterations(3)
-        .weight_function(Tricube)
-        .robustness_method(Bisquare)
+        .weight_function("tricube")
+        .robustness_method("bisquare")
         .confidence_intervals(0.95)
         .prediction_intervals(0.95)
         .return_diagnostics()

@@ -20,7 +20,6 @@
 use approx::assert_relative_eq;
 use lowess::prelude::*;
 
-use lowess::internals::adapters::streaming::MergeStrategy;
 use lowess::internals::adapters::streaming::StreamingLowessBuilder;
 use lowess::internals::math::boundary::BoundaryPolicy;
 use lowess::internals::primitives::errors::LowessError;
@@ -323,12 +322,7 @@ fn test_streaming_builder_setters() {
 /// Test different merge strategies for overlapping chunks.
 #[test]
 fn test_streaming_merge_strategies() {
-    let strategies = [
-        MergeStrategy::Average,
-        MergeStrategy::TakeFirst,
-        MergeStrategy::TakeLast,
-        MergeStrategy::WeightedAverage,
-    ];
+    let strategies = ["average", "takefirst", "takelast", "weightedaverage"];
 
     let x: Vec<f64> = (0..40).map(|i| i as f64).collect();
     let y: Vec<f64> = (0..40).map(|i| i as f64 * 2.0).collect();
@@ -362,7 +356,7 @@ fn test_streaming_robustness_merge() {
         .fraction(0.2)
         .iterations(1)
         .return_robustness_weights()
-        .merge_strategy(MergeStrategy::Average)
+        .merge_strategy("average")
         .adapter(Streaming)
         .chunk_size(20)
         .overlap(10)
@@ -431,7 +425,7 @@ fn test_streaming_with_robustness() {
     let mut processor = Lowess::new()
         .fraction(0.5)
         .iterations(3)
-        .robustness_method(Bisquare)
+        .robustness_method("bisquare")
         .adapter(Streaming)
         .chunk_size(20)
         .overlap(5)
@@ -732,12 +726,7 @@ fn test_streaming_unsorted_chunks() {
 /// Test all merge strategies with identical overlap data.
 #[test]
 fn test_streaming_all_merge_strategies_identical_data() {
-    let strategies = vec![
-        MergeStrategy::Average,
-        MergeStrategy::WeightedAverage,
-        MergeStrategy::TakeFirst,
-        MergeStrategy::TakeLast,
-    ];
+    let strategies = vec!["average", "weightedaverage", "takefirst", "takelast"];
 
     for strategy in strategies {
         let mut processor = Lowess::new()

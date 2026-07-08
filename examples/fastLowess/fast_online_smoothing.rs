@@ -131,7 +131,7 @@ fn example_2_sensor_data_simulation() -> Result<(), LowessError> {
     let mut processor = Lowess::<f64>::new()
         .fraction(0.4)
         .iterations(3) // More iterations for noisy sensor data
-        .robustness_method(Bisquare)
+        .robustness_method("bisquare")
         .return_residuals()
         .adapter(Online)
         .window_capacity(12) // Half-day window
@@ -205,7 +205,7 @@ fn example_3_outlier_handling() -> Result<(), LowessError> {
     let mut processor = Lowess::<f64>::new()
         .fraction(0.5)
         .iterations(5)
-        .robustness_method(Bisquare)
+        .robustness_method("bisquare")
         .return_residuals()
         .adapter(Online)
         .window_capacity(6)
@@ -227,7 +227,7 @@ fn example_3_outlier_handling() -> Result<(), LowessError> {
     let mut processor = Lowess::<f64>::new()
         .fraction(0.5)
         .iterations(5)
-        .robustness_method(Talwar)
+        .robustness_method("talwar")
         .return_residuals()
         .adapter(Online)
         .window_capacity(6)

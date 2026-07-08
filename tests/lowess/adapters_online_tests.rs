@@ -462,7 +462,7 @@ fn test_online_minimum_window_capacity() {
 /// Verifies that different robustness methods work with online adapter.
 #[test]
 fn test_online_robustness_methods() {
-    let methods = vec![Bisquare, Huber, Talwar];
+    let methods = vec!["bisquare", "huber", "talwar"];
 
     for method in methods {
         let mut processor = Lowess::new()

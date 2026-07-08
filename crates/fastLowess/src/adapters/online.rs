@@ -84,26 +84,54 @@ impl<T: Float> ParallelOnlineLowessBuilder<T> {
     }
 
     // Set the kernel weight function.
-    pub fn weight_function(mut self, wf: WeightFunction) -> Self {
-        self.base = self.base.weight_function(wf);
+    pub fn weight_function(mut self, wf: impl AsRef<str>) -> Self {
+        match wf.as_ref().parse::<WeightFunction>() {
+            Ok(w) => self.base = self.base.weight_function(w),
+            Err(e) => {
+                if self.base.deferred_error.is_none() {
+                    self.base.deferred_error = Some(e);
+                }
+            }
+        }
         self
     }
 
     // Set the robustness method for outlier handling.
-    pub fn robustness_method(mut self, method: RobustnessMethod) -> Self {
-        self.base = self.base.robustness_method(method);
+    pub fn robustness_method(mut self, method: impl AsRef<str>) -> Self {
+        match method.as_ref().parse::<RobustnessMethod>() {
+            Ok(m) => self.base = self.base.robustness_method(m),
+            Err(e) => {
+                if self.base.deferred_error.is_none() {
+                    self.base.deferred_error = Some(e);
+                }
+            }
+        }
         self
     }
 
     // Set the zero-weight fallback policy.
-    pub fn zero_weight_fallback(mut self, fallback: ZeroWeightFallback) -> Self {
-        self.base = self.base.zero_weight_fallback(fallback);
+    pub fn zero_weight_fallback(mut self, fallback: impl AsRef<str>) -> Self {
+        match fallback.as_ref().parse::<ZeroWeightFallback>() {
+            Ok(f) => self.base = self.base.zero_weight_fallback(f),
+            Err(e) => {
+                if self.base.deferred_error.is_none() {
+                    self.base.deferred_error = Some(e);
+                }
+            }
+        }
         self
     }
 
     // Set the boundary handling policy.
-    pub fn boundary_policy(mut self, policy: BoundaryPolicy) -> Self {
-        self.base = self.base.boundary_policy(policy);
+    pub fn boundary_policy(mut self, policy: impl AsRef<str>) -> Self {
+        match policy.as_ref().parse::<BoundaryPolicy>() {
+            Ok(p) => self.base = self.base.boundary_policy(p),
+            Err(e) => {
+                if self.base.deferred_error.is_none() {
+                    self.base.deferred_error = Some(e);
+                }
+            }
+        }
         self
     }
 
@@ -138,8 +166,15 @@ impl<T: Float> ParallelOnlineLowessBuilder<T> {
     }
 
     // Set the update mode for incremental processing.
-    pub fn update_mode(mut self, mode: UpdateMode) -> Self {
-        self.base = self.base.update_mode(mode);
+    pub fn update_mode(mut self, mode: impl AsRef<str>) -> Self {
+        match mode.as_ref().parse::<UpdateMode>() {
+            Ok(m) => self.base = self.base.update_mode(m),
+            Err(e) => {
+                if self.base.deferred_error.is_none() {
+                    self.base.deferred_error = Some(e);
+                }
+            }
+        }
         self
     }
 }

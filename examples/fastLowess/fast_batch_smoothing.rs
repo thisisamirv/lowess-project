@@ -153,7 +153,7 @@ fn example_4_robust_parallel() -> Result<(), LowessError> {
     let model = Lowess::new()
         .fraction(0.1)
         .iterations(3)
-        .robustness_method(Bisquare)
+        .robustness_method("bisquare")
         .return_robustness_weights()
         .adapter(Batch)
         .parallel(true)
@@ -187,7 +187,9 @@ fn example_5_cross_validation() -> Result<(), LowessError> {
     // Test multiple fractions and select the best one using parallel execution
     let start = Instant::now();
     let model = Lowess::new()
-        .cross_validate(KFold(5, &[0.2, 0.3, 0.5, 0.7]))
+        .cv_method("kfold")
+        .cv_k(5)
+        .cv_fractions(vec![0.2, 0.3, 0.5, 0.7])
         .iterations(2)
         .adapter(Batch)
         .parallel(true)

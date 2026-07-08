@@ -24,13 +24,11 @@
 use approx::assert_relative_eq;
 use std::fmt::Write;
 
-use lowess::internals::algorithms::regression::ZeroWeightFallback;
 use lowess::internals::algorithms::robustness::RobustnessMethod;
-use lowess::internals::api::{Batch, KFold, LOOCV, LowessBuilder as Lowess, Online, Streaming};
+use lowess::internals::api::{Batch, LowessBuilder as Lowess, Online, Streaming};
 use lowess::internals::engine::output::LowessResult;
 use lowess::internals::engine::validator::Validator;
 use lowess::internals::evaluation::diagnostics::Diagnostics;
-use lowess::internals::math::kernel::WeightFunction;
 use lowess::internals::primitives::errors::LowessError;
 
 // ============================================================================
@@ -165,7 +163,9 @@ fn test_validate_empty_cv_fractions() {
     // K-Fold with empty fractions
     let fracs: [f64; 0] = [];
     let res = Lowess::<f64>::new()
-        .cross_validate(KFold(3, &fracs))
+        .cv_method("kfold")
+        .cv_k(3)
+        .cv_fractions(fracs.to_vec())
         .adapter(Batch)
         .build();
 
@@ -182,14 +182,18 @@ fn test_validate_empty_cv_fractions() {
 fn test_validate_invalid_fractions() {
     // Fraction <= 0
     let bad1 = Lowess::<f64>::new()
-        .cross_validate(KFold(3, &[0.0f64]))
+        .cv_method("kfold")
+        .cv_k(3)
+        .cv_fractions(vec![0.0f64])
         .adapter(Batch)
         .build();
     assert!(matches!(bad1, Err(LowessError::InvalidFraction(_))));
 
     // Fraction > 1
     let bad2 = Lowess::<f64>::new()
-        .cross_validate(KFold(3, &[1.5f64]))
+        .cv_method("kfold")
+        .cv_k(3)
+        .cv_fractions(vec![1.5f64])
         .adapter(Batch)
         .build();
     assert!(matches!(bad2, Err(LowessError::InvalidFraction(_))));
@@ -296,7 +300,7 @@ fn test_robustness_bisquare() {
         .iterations(5)
         .return_residuals()
         .return_robustness_weights()
-        .robustness_method(RobustnessMethod::Bisquare)
+        .robustness_method("bisquare")
         .adapter(Batch)
         .build()
         .unwrap()
@@ -330,7 +334,7 @@ fn test_robustness_huber() {
         .iterations(5)
         .return_residuals()
         .return_robustness_weights()
-        .robustness_method(RobustnessMethod::Huber)
+        .robustness_method("huber")
         .adapter(Batch)
         .build()
         .unwrap()
@@ -363,7 +367,7 @@ fn test_robustness_talwar() {
         .iterations(5)
         .return_residuals()
         .return_robustness_weights()
-        .robustness_method(RobustnessMethod::Talwar)
+        .robustness_method("talwar")
         .adapter(Batch)
         .build()
         .unwrap()
@@ -641,7 +645,9 @@ fn test_cross_validate_kfold() {
     let fracs = vec![0.2, 0.4];
 
     let res = Lowess::<f64>::new()
-        .cross_validate(KFold(3, &fracs))
+        .cv_method("kfold")
+        .cv_k(3)
+        .cv_fractions(fracs.clone())
         .iterations(0)
         .adapter(Batch)
         .build()
@@ -664,7 +670,8 @@ fn test_cross_validate_loocv() {
     let fractions = vec![0.3, 0.6];
 
     let res = Lowess::<f64>::new()
-        .cross_validate(LOOCV(&fractions))
+        .cv_method("loocv")
+        .cv_fractions(fractions.clone())
         .iterations(0)
         .adapter(Batch)
         .build()
@@ -685,7 +692,7 @@ fn test_cross_validate_loocv() {
 /// Verifies that options are passed to streaming adapter.
 #[test]
 fn test_zero_weight_fallback_propagates_streaming() {
-    let base = Lowess::<f64>::new().zero_weight_fallback(ZeroWeightFallback::ReturnOriginal);
+    let base = Lowess::<f64>::new().zero_weight_fallback("returnoriginal");
 
     let sb = base.adapter(Streaming).chunk_size(10).overlap(2);
     let mut runner = sb.build().expect("streaming builder build ok");
@@ -832,8 +839,8 @@ fn test_builder_all_parameters_set() {
         .fraction(0.4)
         .iterations(3)
         .delta(0.05)
-        .weight_function(WeightFunction::Tricube)
-        .robustness_method(RobustnessMethod::Bisquare)
+        .weight_function("tricube")
+        .robustness_method("bisquare")
         .return_se()
         .confidence_intervals(0.95)
         .prediction_intervals(0.95)
@@ -990,7 +997,7 @@ fn test_zero_iterations_with_robustness_method() {
     let (x, y) = linear_series(15, 2.0, 1.0);
 
     // With zero iterations, robustness method shouldn't matter
-    let methods = vec![RobustnessMethod::Huber, RobustnessMethod::Talwar];
+    let methods = vec!["huber", "talwar"];
 
     for method in methods {
         let result = Lowess::new()
@@ -1102,7 +1109,7 @@ fn test_adapter_transition_preserves_common_params() {
     let builder = Lowess::new()
         .fraction(0.6)
         .iterations(3)
-        .robustness_method(RobustnessMethod::Huber);
+        .robustness_method("huber");
 
     // Use with Batch
     let result = builder
