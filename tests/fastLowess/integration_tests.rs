@@ -10,7 +10,6 @@ fn test_standard_batch_sequential() {
 
     // Sequential fit
     let res = Lowess::new()
-        .adapter(Batch)
         .parallel(false)
         .build()
         .unwrap()
@@ -30,7 +29,6 @@ fn test_standard_batch_parallel() {
 
     // Parallel fit
     let res = Lowess::new()
-        .adapter(Batch)
         .parallel(true)
         .build()
         .unwrap()
@@ -49,7 +47,6 @@ fn test_ndarray_integration() {
 
     // Fit with ndarray
     let res = Lowess::new()
-        .adapter(Batch)
         .parallel(true)
         .build()
         .unwrap()
@@ -76,7 +73,6 @@ fn test_robustness() {
         .fraction(0.5)
         .iterations(5)
         .robustness_method("bisquare")
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -99,9 +95,8 @@ fn test_streaming_adapter() {
     let x: Vec<f64> = (0..n).map(|i| i as f64).collect();
     let y: Vec<f64> = x.iter().map(|&xi| 2.0 * xi).collect();
 
-    let mut processor = Lowess::new()
+    let mut processor = StreamingLowess::new()
         .fraction(0.2)
-        .adapter(Streaming)
         .chunk_size(20)
         .overlap(5)
         .build()
@@ -140,8 +135,7 @@ fn test_streaming_adapter() {
 
 #[test]
 fn test_online_adapter() {
-    let mut processor = Lowess::new()
-        .adapter(Online)
+    let mut processor = OnlineLowess::new()
         .min_points(3)
         .window_capacity(10)
         .build()
@@ -178,7 +172,6 @@ fn test_consistency() {
     let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + (xi / 10.0).exp()).collect();
 
     let seq_res = Lowess::new()
-        .adapter(Batch)
         .parallel(false)
         .build()
         .unwrap()
@@ -186,7 +179,6 @@ fn test_consistency() {
         .unwrap();
 
     let par_res = Lowess::new()
-        .adapter(Batch)
         .parallel(true)
         .build()
         .unwrap()
@@ -203,7 +195,7 @@ fn test_error_handling() {
     let x = vec![1.0, 2.0, 3.0];
     let y_short = vec![1.0, 2.0];
 
-    let model = Lowess::new().adapter(Batch).build().unwrap();
+    let model = Lowess::new().build().unwrap();
 
     let err = model.fit(&x, &y_short);
     assert!(err.is_err());

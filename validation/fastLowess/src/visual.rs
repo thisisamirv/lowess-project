@@ -113,7 +113,6 @@ fn run_fraction_comparison() -> Result<(), Box<dyn std::error::Error>> {
             .iterations(2)
             .delta(0.0) // Direct equivalent
             .boundary_policy("reflect")
-            .adapter(Batch)
             .build()
             .unwrap()
             .fit(&x, &y)
@@ -173,7 +172,6 @@ fn run_intervals_comparison() -> Result<(), Box<dyn std::error::Error>> {
         .confidence_intervals(0.95)
         .delta(0.0)
         .boundary_policy("reflect")
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -186,7 +184,6 @@ fn run_intervals_comparison() -> Result<(), Box<dyn std::error::Error>> {
         .prediction_intervals(0.95)
         .delta(0.0)
         .boundary_policy("reflect")
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -276,7 +273,6 @@ fn run_robustness_comparison() -> Result<(), Box<dyn std::error::Error>> {
         .fraction(0.25)
         .iterations(0)
         .delta(0.0)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -287,7 +283,6 @@ fn run_robustness_comparison() -> Result<(), Box<dyn std::error::Error>> {
         .fraction(0.25)
         .iterations(6)
         .delta(0.0)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -345,7 +340,6 @@ fn run_loess_concept() -> Result<(), Box<dyn std::error::Error>> {
         .fraction(fraction)
         .iterations(0)
         .delta(0.0)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -461,7 +455,6 @@ fn run_kernel_comparison() -> Result<(), Box<dyn std::error::Error>> {
         let result = Lowess::new()
             .weight_function(kernel)
             .fraction(0.3)
-            .adapter(Batch)
             .build()
             .unwrap()
             .fit(&x, &y)
@@ -524,7 +517,6 @@ fn run_robust_method_comparison() -> Result<(), Box<dyn std::error::Error>> {
             .robustness_method(method)
             .iterations(5)
             .fraction(0.2)
-            .adapter(Batch)
             .build()
             .unwrap()
             .fit(&x, &y)
@@ -574,7 +566,6 @@ fn run_boundary_policy_comparison() -> Result<(), Box<dyn std::error::Error>> {
         let result = Lowess::new()
             .boundary_policy(policy)
             .fraction(0.4) // Larger fraction highlights boundary bias
-            .adapter(Batch)
             .build()
             .unwrap()
             .fit(&x, &y)
@@ -620,7 +611,6 @@ fn run_gap_handling() -> Result<(), Box<dyn std::error::Error>> {
 
     let result = Lowess::new()
         .fraction(0.3)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -664,7 +654,6 @@ fn run_cv_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let loocv_result = Lowess::new()
         .cv_method("loocv")
         .cv_fractions(candidate_fractions.to_vec())
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -677,7 +666,6 @@ fn run_cv_comparison() -> Result<(), Box<dyn std::error::Error>> {
         .cv_k(5)
         .cv_fractions(candidate_fractions.to_vec())
         .cv_seed(42)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -687,7 +675,6 @@ fn run_cv_comparison() -> Result<(), Box<dyn std::error::Error>> {
     // 3. No CV (Fixed bad fraction - too small)
     let fixed_result = Lowess::new()
         .fraction(0.1) // Overfitting deliberately
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -747,7 +734,6 @@ fn run_surface_mode_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let result_direct = Lowess::new()
         .delta(0.0) // Direct evaluation
         .fraction(0.2)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -756,7 +742,6 @@ fn run_surface_mode_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let result_interp = Lowess::new()
         .delta(0.1) // Allow interpolation
         .fraction(0.2)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -805,7 +790,6 @@ fn run_scaling_method_comparison() -> Result<(), Box<dyn std::error::Error>> {
         .scaling_method("mad")
         .iterations(4)
         .fraction(0.3)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -815,7 +799,6 @@ fn run_scaling_method_comparison() -> Result<(), Box<dyn std::error::Error>> {
         .scaling_method("mar")
         .iterations(4)
         .fraction(0.3)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -859,7 +842,6 @@ fn run_zero_weight_fallback_comparison() -> Result<(), Box<dyn std::error::Error
         .zero_weight_fallback("uselocalmean")
         .fraction(0.1)
         .iterations(5)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -869,7 +851,6 @@ fn run_zero_weight_fallback_comparison() -> Result<(), Box<dyn std::error::Error
         .zero_weight_fallback("returnoriginal")
         .fraction(0.1)
         .iterations(5)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -911,24 +892,21 @@ fn run_streaming_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let chunk_size = 200;
     let overlap = 80;
 
-    let mut streaming_weighted = Lowess::new()
-        .adapter(Streaming)
+    let mut streaming_weighted = StreamingLowess::new()
         .chunk_size(chunk_size)
         .overlap(overlap)
         .merge_strategy("weighted_average")
         .fraction(0.2)
         .build()?;
 
-    let mut streaming_average = Lowess::new()
-        .adapter(Streaming)
+    let mut streaming_average = StreamingLowess::new()
         .chunk_size(chunk_size)
         .overlap(overlap)
         .merge_strategy("average")
         .fraction(0.2)
         .build()?;
 
-    let mut streaming_first = Lowess::new()
-        .adapter(Streaming)
+    let mut streaming_first = StreamingLowess::new()
         .chunk_size(chunk_size)
         .overlap(overlap)
         .merge_strategy("take_first")
@@ -991,14 +969,12 @@ fn run_online_comparison() -> Result<(), Box<dyn std::error::Error>> {
     println!("18. Online Adapter Comparison");
     println!("----------------------------");
 
-    let mut online_small = Lowess::new()
-        .adapter(Online)
+    let mut online_small = OnlineLowess::new()
         .window_capacity(50)
         .update_mode("incremental")
         .build()?;
 
-    let mut online_large = Lowess::new()
-        .adapter(Online)
+    let mut online_large = OnlineLowess::new()
         .window_capacity(200)
         .update_mode("full")
         .iterations(2)
@@ -1068,33 +1044,29 @@ fn run_auto_converge_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let batch_off = Lowess::new()
         .fraction(0.3)
         .iterations(iterations)
-        .adapter(Batch)
         .build()?;
     let batch_on = Lowess::new()
         .fraction(0.3)
         .iterations(iterations)
         .auto_converge(tolerance)
-        .adapter(Batch)
         .build()?;
 
     let res_batch_off = batch_off.fit(&x, &y)?;
     let res_batch_on = batch_on.fit(&x, &y)?;
 
     // 2. Streaming
-    let mut stream_off = Lowess::new()
+    let mut stream_off = StreamingLowess::new()
         .fraction(0.3)
         .iterations(iterations)
         .chunk_size(100)
         .overlap(20)
-        .adapter(Streaming)
         .build()?;
-    let mut stream_on = Lowess::new()
+    let mut stream_on = StreamingLowess::new()
         .fraction(0.3)
         .iterations(iterations)
         .auto_converge(tolerance)
         .chunk_size(100)
         .overlap(20)
-        .adapter(Streaming)
         .build()?;
 
     let mut y_stream_off = Vec::new();
@@ -1129,20 +1101,18 @@ fn run_auto_converge_comparison() -> Result<(), Box<dyn std::error::Error>> {
     iter_stream_on.extend(vec![fin_on.iterations_used.unwrap_or(0); n_fin_on]);
 
     // 3. Online
-    let mut online_off = Lowess::new()
+    let mut online_off = OnlineLowess::new()
         .fraction(0.3)
         .iterations(iterations)
         .window_capacity(50)
         .update_mode("full")
-        .adapter(Online)
         .build()?;
-    let mut online_on = Lowess::new()
+    let mut online_on = OnlineLowess::new()
         .fraction(0.3)
         .iterations(iterations)
         .auto_converge(tolerance)
         .window_capacity(50)
         .update_mode("full")
-        .adapter(Online)
         .build()?;
 
     let mut y_online_off = Vec::new();

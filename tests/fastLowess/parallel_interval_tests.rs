@@ -22,7 +22,6 @@ fn test_parallel_interval_estimation() {
         .iterations(2)
         .confidence_intervals(0.95)
         .prediction_intervals(0.95)
-        .adapter(Batch)
         .parallel(false)
         .build()
         .unwrap();
@@ -35,7 +34,6 @@ fn test_parallel_interval_estimation() {
         .iterations(2)
         .confidence_intervals(0.95)
         .prediction_intervals(0.95)
-        .adapter(Batch)
         .parallel(true)
         .build()
         .unwrap();

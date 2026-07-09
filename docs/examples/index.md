@@ -1,4 +1,4 @@
-﻿<!-- markdownlint-disable MD033 -->
+<!-- markdownlint-disable MD033 -->
 # Examples
 
 Complete working examples demonstrating fastlowess capabilities across all supported languages.

@@ -1,4 +1,4 @@
-﻿# fastLowess C++ API Reference
+# fastLowess C++ API Reference
 
 The C++ bindings provide a modern, object-oriented wrapper around the core Rust library, mirroring the Rust API structure.
 

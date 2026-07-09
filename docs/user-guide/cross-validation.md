@@ -1,4 +1,4 @@
-﻿<!-- markdownlint-disable MD024 MD046 -->
+<!-- markdownlint-disable MD024 MD046 -->
 # Cross-Validation
 
 Automated parameter selection via cross-validation.
@@ -47,7 +47,6 @@ Split data into K folds, train on K-1, validate on 1.
 
     let model = Lowess::new()
         .cross_validate(KFold(5, &[0.2, 0.3, 0.5, 0.7]))  // 5 folds, 4 fractions
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -142,7 +141,6 @@ Each point is held out once. Most thorough but slowest.
     ```rust
     let model = Lowess::new()
         .cross_validate(LOOCV(&[0.2, 0.3, 0.5, 0.7]))
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -213,7 +211,6 @@ Set a seed for reproducible fold assignments:
     ```rust
     let model = Lowess::new()
         .cross_validate(KFold(5, &[0.3, 0.5, 0.7]).seed(42))
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -244,7 +241,6 @@ Set a seed for reproducible fold assignments:
 
     auto model = fastlowess::Lowess::new()
         .cross_validate(fastlowess::KFold(5, {0.3, 0.5, 0.7}).seed(42))
-        .adapter(fastlowess::Batch)
         .build()?;
     ```
 
@@ -309,7 +305,6 @@ Lower MSE indicates better fit on held-out data.
     // Example output
     let model = Lowess::new()
         .cross_validate(KFold(5, &[0.1, 0.3, 0.5, 0.7]))
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -371,7 +366,6 @@ Lower MSE indicates better fit on held-out data.
     // Example output
     auto model = fastlowess::Lowess::new()
         .cross_validate(fastlowess::KFold(5, {0.1, 0.3, 0.5, 0.7}))
-        .adapter(fastlowess::Batch)
         .build()?;
 
     auto result = model.fit(&x, &y)?;

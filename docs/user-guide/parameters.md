@@ -1,4 +1,4 @@
-﻿<!-- markdownlint-disable MD024 MD033 -->
+<!-- markdownlint-disable MD024 MD033 -->
 # Parameters
 
 Complete reference for all LOWESS configuration options.
@@ -258,7 +258,6 @@ The proportion of data used for each local fit. **Most important parameter.**
     ```rust
     let model = Lowess::new()
         .fraction(0.3)
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -309,7 +308,6 @@ Number of robustness iterations for outlier resistance.
     ```rust
     let model = Lowess::new()
         .iterations(5)
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -356,7 +354,6 @@ Interpolation optimization threshold. Points within `delta` distance reuse the p
     ```rust
     let model = Lowess::new()
         .delta(0.05)
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -426,7 +423,6 @@ See [Weight Functions](kernels.md) for detailed comparison.
     ```rust
     let model = Lowess::new()
         .weight_function(Epanechnikov)
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -488,7 +484,6 @@ See [Robustness](robustness.md) for detailed comparison.
     ```rust
     let model = Lowess::new()
         .robustness_method(Talwar)
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -554,7 +549,6 @@ For example:
     ```rust
     let model = Lowess::new()
         .boundary_policy(Reflect)
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -616,7 +610,6 @@ For example:
     ```rust
     let model = Lowess::new()
         .scaling_method(MAD)
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -673,7 +666,6 @@ For example:
     ```rust
     let model = Lowess::new()
         .zero_weight_fallback(UseLocalMean)
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -720,7 +712,6 @@ Enable early stopping when robustness weights stabilize.
     let model = Lowess::new()
         .iterations(20)           // Maximum
         .auto_converge(1e-6)      // Stop when change < 1e-6
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -782,7 +773,6 @@ See [Custom Weights](custom-weights.md) for a full discussion.
     let model = Lowess::new()
         .fraction(0.5)
         .custom_weights(weights)
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -844,7 +834,6 @@ Include residuals (`y - smoothed`) in the output.
     ```rust
     let model = Lowess::new()
         .return_residuals()
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -909,7 +898,6 @@ Include fit quality metrics (Batch and Streaming only).
     ```rust
     let model = Lowess::new()
         .return_diagnostics()
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -967,7 +955,6 @@ Include final robustness weights (useful for outlier detection).
     let model = Lowess::new()
         .iterations(3)
         .return_robustness_weights()
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -1024,7 +1011,6 @@ See [Intervals](intervals.md) for detailed usage.
     let model = Lowess::new()
         .confidence_intervals(0.95)
         .prediction_intervals(0.95)
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -1078,7 +1064,6 @@ Selection strategy for automated parameter tuning.
     ```rust
     let model = Lowess::new()
         .cross_validate(KFold(5, &[0.1, 0.3, 0.5]))
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -1101,7 +1086,6 @@ Selection strategy for automated parameter tuning.
     ```cpp
     auto model = fastlowess::Lowess::new()
         .cross_validate(fastlowess::KFold(5, {0.1, 0.3, 0.5}))
-        .adapter(fastlowess::Batch)
         .build();
     ```
 
@@ -1125,11 +1109,8 @@ Points per chunk in Streaming mode.
 
 === "Rust"
     ```rust
-    let model = Lowess::new()
-        .adapter(Streaming {
-            chunk_size: 10000,
-            ..Default::default()
-        })
+    let model = StreamingLowess::new()
+        .chunk_size(10000)
         .build()?;
     ```
 
@@ -1173,11 +1154,8 @@ Overlap between chunks in Streaming mode.
 
 === "Rust"
     ```rust
-    let model = Lowess::new()
-        .adapter(Streaming {
-            overlap: 1000,
-            ..Default::default()
-        })
+    let model = StreamingLowess::new()
+        .overlap(1000)
         .build()?;
     ```
 
@@ -1241,11 +1219,8 @@ For example:
 
 === "Rust"
     ```rust
-    let model = Lowess::new()
-        .adapter(Streaming {
-            merge_strategy: Weighted,
-            ..Default::default()
-        })
+    let model = StreamingLowess::new()
+        .merge_strategy("weighted_average")
         .build()?;
     ```
 
@@ -1288,8 +1263,7 @@ Maximum points held in memory for Online mode.
 
 === "Rust"
     ```rust
-    let model = Lowess::new()
-        .adapter(Online)
+    let model = OnlineLowess::new()
         .window_capacity(500)
         .build()?;
     ```
@@ -1334,8 +1308,7 @@ Minimum points required before Online filter starts producing outputs.
 
 === "Rust"
     ```rust
-    let model = Lowess::new()
-        .adapter(Online)
+    let model = OnlineLowess::new()
         .min_points(10)
         .build()?;
     ```
@@ -1396,9 +1369,8 @@ For example:
 
 === "Rust"
     ```rust
-    let model = Lowess::new()
-        .adapter(Online)
-        .update_mode(Full)
+    let model = OnlineLowess::new()
+        .update_mode("full")
         .build()?;
     ```
 

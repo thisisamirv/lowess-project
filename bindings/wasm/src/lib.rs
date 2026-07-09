@@ -105,7 +105,8 @@ export class OnlineLowessWasm {
 use ::fastLowess::internals::binding_support;
 use ::fastLowess::internals::adapters::online::ParallelOnlineLowess;
 use ::fastLowess::internals::adapters::streaming::ParallelStreamingLowess;
-use ::fastLowess::prelude::{Batch, Lowess as LowessBuilder, LowessResult, Online, Streaming};
+use ::fastLowess::internals::api::{Batch, LowessBuilder, Online, Streaming};
+use ::fastLowess::prelude::LowessResult;
 
 #[derive(Deserialize)]
 pub struct SmoothOptions {

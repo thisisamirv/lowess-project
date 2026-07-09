@@ -1,7 +1,7 @@
-﻿<!-- markdownlint-disable MD024 MD046 -->
+<!-- markdownlint-disable MD024 MD046 -->
 # Execution Modes
 
-Choose the right adapter for your use case.
+Choose the right struct for your use case. In Rust, `Lowess`, `StreamingLowess`, and `OnlineLowess` are dedicated wrapper types — each struct's `build()` delegates to the corresponding parallel adapter automatically.
 
 ## Overview
 
@@ -22,7 +22,7 @@ graph LR
 
 ---
 
-## Batch Adapter
+## Batch Mode (`Lowess`)
 
 Standard mode for complete datasets. **Supports all features.**
 
@@ -70,7 +70,6 @@ Standard mode for complete datasets. **Supports all features.**
         .confidence_intervals(0.95)
         .prediction_intervals(0.95)
         .return_diagnostics()
-        .adapter(Batch)
         .parallel(true)
         .build()?;
 
@@ -134,7 +133,7 @@ Standard mode for complete datasets. **Supports all features.**
 
 ---
 
-## Streaming Adapter
+## Streaming Mode (`StreamingLowess`)
 
 Process large datasets in chunks with configurable overlap.
 
@@ -192,13 +191,12 @@ Process large datasets in chunks with configurable overlap.
     ```rust
     use fastLowess::prelude::*;
 
-    let mut processor = Lowess::new()
+    let mut processor = StreamingLowess::new()
         .fraction(0.3)
         .iterations(2)
-        .adapter(Streaming)
         .chunk_size(5000)
         .overlap(500)
-        .merge_strategy(Average)
+        .merge_strategy("average")
         .build()?;
 
     // Process chunks (e.g., from a file reader)
@@ -280,7 +278,7 @@ Process large datasets in chunks with configurable overlap.
 !!! warning "Always call finalize()"
     In Rust, always call `processor.finalize()` after processing all chunks to retrieve buffered overlap data.
 
-## Online Adapter
+## Online Mode (`OnlineLowess`)
 
 Incremental updates with a sliding window for real-time data.
 
@@ -338,13 +336,12 @@ Incremental updates with a sliding window for real-time data.
     ```rust
     use fastLowess::prelude::*;
 
-    let mut processor = Lowess::new()
+    let mut processor = OnlineLowess::new()
         .fraction(0.2)
         .iterations(1)
-        .adapter(Online)
         .window_capacity(100)
         .min_points(5)
-        .update_mode(Incremental)
+        .update_mode("incremental")
         .build()?;
 
     // Process points as they arrive

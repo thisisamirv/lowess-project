@@ -15,7 +15,6 @@ fn test_gpu_batch_fit() {
 
     // GPU fit
     let res = Lowess::new()
-        .adapter(Batch)
         .backend(GPU)
         .boundary_policy(BoundaryPolicy::NoBoundary)
         .build()
@@ -51,7 +50,6 @@ fn test_gpu_robustness() {
         .fraction(0.5)
         .iterations(5)
         .robustness_method(Bisquare)
-        .adapter(Batch)
         .backend(GPU)
         .build()
         .unwrap()
@@ -86,7 +84,6 @@ fn test_gpu_cv_reduction() {
 
     // GPU Build
     let model = Lowess::new()
-        .adapter(Batch)
         .backend(GPU)
         .cv_config(KFold(5, &[0.1, 0.2, 0.5]))
         .delta(0.0) // Force exact fit
@@ -100,7 +97,6 @@ fn test_gpu_cv_reduction() {
 
         // CPU Build to compare
         let cpu_model = Lowess::new()
-            .adapter(Batch)
             .backend(CPU)
             .cv_config(KFold(5, &[0.1, 0.2, 0.5]))
             .build()
@@ -239,7 +235,6 @@ fn test_cpu_gpu_kernel_equivalence() {
             .fraction(0.2)
             .iterations(0) // No robustness for kernel check
             .weight_function(kernel)
-            .adapter(Batch)
             .backend(CPU)
             .boundary_policy(BoundaryPolicy::NoBoundary)
             .build()
@@ -252,7 +247,6 @@ fn test_cpu_gpu_kernel_equivalence() {
             .fraction(0.2)
             .iterations(0)
             .weight_function(kernel)
-            .adapter(Batch)
             .backend(GPU)
             .boundary_policy(BoundaryPolicy::NoBoundary)
             .build()
@@ -421,7 +415,6 @@ fn test_cpu_gpu_boundary_equivalence() {
                 .iterations(0)
                 .delta(0.0)
                 .weight_function(kernel)
-                .adapter(Batch)
                 .backend(CPU)
                 .boundary_policy(policy)
                 .build()
@@ -439,7 +432,6 @@ fn test_cpu_gpu_boundary_equivalence() {
                 .iterations(0)
                 .delta(0.0)
                 .weight_function(kernel)
-                .adapter(Batch)
                 .backend(GPU)
                 .boundary_policy(policy)
                 .build()
@@ -526,7 +518,6 @@ fn test_cpu_gpu_robustness_equivalence() {
             .robustness_method(method)
             .scaling_method(Mean)
             .delta(0.0) // Force exact fit
-            .adapter(Batch)
             .backend(CPU)
             .boundary_policy(BoundaryPolicy::NoBoundary)
             .build()
@@ -541,7 +532,6 @@ fn test_cpu_gpu_robustness_equivalence() {
             .robustness_method(method)
             .scaling_method(Mean)
             .delta(0.0) // Force exact fit (every point is anchor)
-            .adapter(Batch)
             .backend(GPU)
             .boundary_policy(BoundaryPolicy::NoBoundary)
             .build()
@@ -611,7 +601,6 @@ fn test_cpu_gpu_scaling_equivalence() {
             .iterations(3) // Ensure iterations > 0 to trigger robustness
             .scaling_method(method)
             .delta(0.0) // Force exact fit
-            .adapter(Batch)
             .backend(CPU)
             .boundary_policy(BoundaryPolicy::NoBoundary)
             .build()
@@ -625,7 +614,6 @@ fn test_cpu_gpu_scaling_equivalence() {
             .iterations(3)
             .scaling_method(method)
             .delta(0.0) // Force exact fit (every point is anchor)
-            .adapter(Batch)
             .backend(GPU)
             .boundary_policy(BoundaryPolicy::NoBoundary)
             .build()
@@ -698,7 +686,6 @@ fn test_cpu_gpu_zero_weight_fallback_equivalence() {
             .iterations(0)
             .zero_weight_fallback(method)
             .delta(0.0)
-            .adapter(Batch)
             .backend(CPU)
             .build()
             .unwrap()
@@ -710,7 +697,6 @@ fn test_cpu_gpu_zero_weight_fallback_equivalence() {
                 .iterations(iter)
                 .zero_weight_fallback(method)
                 .delta(0.0)
-                .adapter(Batch)
                 .backend(CPU)
                 .return_robustness_weights(true)
                 .build()
@@ -723,7 +709,6 @@ fn test_cpu_gpu_zero_weight_fallback_equivalence() {
                 .iterations(iter)
                 .zero_weight_fallback(method)
                 .delta(0.0)
-                .adapter(Batch)
                 .backend(GPU)
                 .return_robustness_weights(true)
                 .build()
@@ -753,7 +738,6 @@ fn test_cpu_gpu_zero_weight_fallback_equivalence() {
             .iterations(3)
             .zero_weight_fallback(method)
             .delta(0.0)
-            .adapter(Batch)
             .backend(CPU)
             .build()
             .unwrap()
@@ -766,7 +750,6 @@ fn test_cpu_gpu_zero_weight_fallback_equivalence() {
             .iterations(3)
             .zero_weight_fallback(method)
             .delta(0.0)
-            .adapter(Batch)
             .backend(GPU)
             .build()
             .unwrap()
@@ -863,7 +846,6 @@ fn test_cpu_gpu_interval_equivalence() {
         .iterations(3)
         .confidence_intervals(0.95)
         .prediction_intervals(0.95)
-        .adapter(Batch)
         .backend(CPU)
         .boundary_policy(BoundaryPolicy::NoBoundary)
         .build()
@@ -877,7 +859,6 @@ fn test_cpu_gpu_interval_equivalence() {
         .iterations(3)
         .confidence_intervals(0.95)
         .prediction_intervals(0.95)
-        .adapter(Batch)
         .backend(GPU)
         .boundary_policy(BoundaryPolicy::NoBoundary)
         .build()
@@ -1120,7 +1101,6 @@ fn test_gpu_cv() {
     // We use KFold with 5 folds and 2 candidate fractions
     // Note: KFold helper returns CVConfig, we must wrap in CVKind::KFold
     let model = Lowess::new()
-        .adapter(Batch)
         .backend(GPU)
         .cv_config(KFold(5, &[0.3, 0.7]).seed(42))
         .build()

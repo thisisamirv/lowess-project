@@ -4,7 +4,7 @@
 //! Node.js, Python, R, and WASM bindings so option aliases and validation
 //! behavior stay consistent across all binding frontends.
 
-use crate::api::{Lowess, LowessError};
+use crate::api::{LowessBuilder, LowessError};
 use lowess::internals::adapters::online::UpdateMode;
 use lowess::internals::adapters::streaming::MergeStrategy;
 use lowess::internals::algorithms::regression::ZeroWeightFallback;
@@ -338,12 +338,12 @@ pub fn update_mode_str(value: UpdateMode) -> &'static str {
 // ============================================================================
 
 pub fn apply_cross_validation(
-    mut builder: Lowess<f64>,
+    mut builder: LowessBuilder<f64>,
     fractions: Option<&[f64]>,
     method: Option<&str>,
     k: Option<usize>,
     seed: Option<u64>,
-) -> Result<Lowess<f64>, String> {
+) -> Result<LowessBuilder<f64>, String> {
     let Some(fractions) = fractions else {
         return Ok(builder);
     };
@@ -385,9 +385,9 @@ pub fn apply_cross_validation(
 // Use this from binding frontends that receive all options as strings
 // (C, Julia, Node.js, Python, R, WASM).
 pub fn apply_builder_options(
-    builder: Lowess<f64>,
+    builder: LowessBuilder<f64>,
     options: BuilderOptionSet<'_>,
-) -> Result<Lowess<f64>, String> {
+) -> Result<LowessBuilder<f64>, String> {
     let typed = TypedBuilderOptionSet {
         fraction: options.fraction,
         iterations: options.iterations,
@@ -444,9 +444,9 @@ pub fn apply_builder_options(
 //
 // Use this from internal code that already holds typed enum values.
 pub fn apply_typed_builder_options(
-    mut builder: Lowess<f64>,
+    mut builder: LowessBuilder<f64>,
     options: TypedBuilderOptionSet,
-) -> Result<Lowess<f64>, String> {
+) -> Result<LowessBuilder<f64>, String> {
     if let Some(f) = options.fraction {
         builder = builder.fraction(f);
     }

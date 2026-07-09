@@ -1,4 +1,4 @@
-﻿<!-- markdownlint-disable MD024 -->
+<!-- markdownlint-disable MD024 -->
 # Weight Functions
 
 Kernel functions for distance weighting.
@@ -49,7 +49,6 @@ $$w(u) = (1 - |u|^3)^3$$
     ```rust
     let model = Lowess::new()
         .weight_function(Tricube)
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -97,7 +96,6 @@ $$w(u) = \frac{3}{4}(1 - u^2)$$
     ```rust
     let model = Lowess::new()
         .weight_function(Epanechnikov)
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -145,7 +143,6 @@ $$w(u) = \exp(-u^2/2)$$
     ```rust
     let model = Lowess::new()
         .weight_function(Gaussian)
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -193,7 +190,6 @@ $$w(u) = (1 - u^2)^2$$
     ```rust
     let model = Lowess::new()
         .weight_function(Biweight)
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -241,7 +237,6 @@ $$w(u) = \cos(\pi u / 2)$$
     ```rust
     let model = Lowess::new()
         .weight_function(Cosine)
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -289,7 +284,6 @@ $$w(u) = 1 - |u|$$
     ```rust
     let model = Lowess::new()
         .weight_function(Triangle)
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -337,7 +331,6 @@ $$w(u) = 1$$
     ```rust
     let model = Lowess::new()
         .weight_function(Uniform)
-        .adapter(Batch)
         .build()?;
     ```
 

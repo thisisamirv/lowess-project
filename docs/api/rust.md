@@ -1,19 +1,19 @@
-﻿# fastLowess & lowess Rust API Reference
+# fastLowess & lowess Rust API Reference
 
 The Rust bindings provide the core implementation and high-performance extensions. The API uses a Builder pattern consistent across both the `lowess` (pure Rust) and `fastLowess` (accelerated) crates.
 
 ## Structs & Usage
 
-Unlike other bindings which have distinct classes, Rust uses a single `Lowess` builder that produces different model types based on the configured `.adapter()`.
+The `fastLowess` crate exposes three dedicated wrapper structs — `Lowess`, `StreamingLowess`, and `OnlineLowess` — that mirror the distinct classes available in other language bindings. Each struct wraps a `LowessBuilder<f64>` and its `build()` method delegates to the corresponding parallel adapter.
 
-### `Lowess` (Batch)
+### `Lowess`
 
-Standard in-memory smoothing.
+Standard in-memory smoothing (batch, parallel by default).
 
 **Constructor:**
 
 ```rust
-let builder = Lowess::new().adapter(Batch); // Batch is default
+let builder = Lowess::new(); // Batch is default
 ```
 
 **Methods:**
@@ -25,14 +25,14 @@ let result = model.fit(&x, &y)?;
 * Fits the model to the provided `x` and `y` arrays.
 * Returns `Result<LowessResult<T>, LowessError>`.
 
-### `Lowess` (Streaming)
+### `StreamingLowess`
 
 Streaming mode for large datasets.
 
 **Constructor:**
 
 ```rust
-let mut processor = Lowess::new().adapter(Streaming);
+let mut processor = StreamingLowess::new();
 ```
 
 **Methods:**
@@ -49,14 +49,14 @@ let final_result = processor.finalize()?;
 
 * Finalizes processing and returns remaining buffered results.
 
-### `Lowess` (Online)
+### `OnlineLowess`
 
 Online mode for real-time data.
 
 **Constructor:**
 
 ```rust
-let mut processor = Lowess::new().adapter(Online);
+let mut processor = OnlineLowess::new();
 ```
 
 **Methods:**
@@ -98,7 +98,10 @@ These chained methods configure the builder. They correspond to the "Options Str
 | --- | --- | --- | --- |
 | --- | --- | --- | --- |
 | `parallel(bool)` | `bool` | `true` | Enable parallel execution |
-| `cross_validate(...)` | `impl CrossValidation` | `None` | CV strategy (`KFold`, `LOOCV`) |
+| `cv_method(str)` | `&str` | `None` | CV strategy: `"kfold"` or `"loocv"` |
+| `cv_k(usize)` | `usize` | `5` | K for k-fold CV |
+| `cv_fractions(Vec<f64>)` | `Vec<f64>` | `None` | Fraction grid for CV |
+| `cv_seed(u64)` | `u64` | `None` | RNG seed for CV |
 | `backend(...)` | `Backend` | `CPU` | `fastLowess` only: `CPU` or `GPU` |
 
 ### Streaming Options

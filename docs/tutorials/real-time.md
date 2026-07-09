@@ -1,4 +1,4 @@
-﻿# Real-Time Processing
+# Real-Time Processing
 
 Streaming and online LOWESS for live data.
 
@@ -59,13 +59,12 @@ For true real-time applications where each point must be processed immediately.
     ```rust
     use fastLowess::prelude::*;
 
-    let mut processor = Lowess::new()
+    let mut processor = OnlineLowess::new()
         .fraction(0.3)
         .iterations(1)
-        .adapter(Online)
         .window_capacity(25)
         .min_points(5)
-        .update_mode(Incremental)
+        .update_mode("incremental")
         .build()?;
 
     // Simulate real-time data arrival
@@ -209,13 +208,12 @@ For large datasets that arrive in batches or files.
     ```rust
     use fastLowess::prelude::*;
 
-    let mut processor = Lowess::new()
+    let mut processor = StreamingLowess::new()
         .fraction(0.1)
         .iterations(2)
-        .adapter(Streaming)
         .chunk_size(5000)
         .overlap(500)
-        .merge_strategy(Weighted)
+        .merge_strategy("weighted_average")
         .build()?;
 
     // Process chunks as they arrive

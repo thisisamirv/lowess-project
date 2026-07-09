@@ -1,4 +1,4 @@
-﻿# fastLowess R API Reference
+# fastLowess R API Reference
 
 The R bindings provide a high-performance interface to the core Rust library, mirroring the Rust API structure.
 

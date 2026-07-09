@@ -1,4 +1,4 @@
-﻿# fastLowess WebAssembly API Reference
+# fastLowess WebAssembly API Reference
 
 The WebAssembly bindings provide a high-performance interface to the core Rust library, mirroring the Rust API structure.
 

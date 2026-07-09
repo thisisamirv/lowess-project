@@ -51,7 +51,6 @@ Get up and running with LOWESS in minutes.
         let model = Lowess::new()
             .fraction(0.5)      // Use 50% of data for each fit
             .iterations(3)      // 3 robustness iterations
-            .adapter(Batch)
             .build()?;
 
         let result = model.fit(&x, &y)?;
@@ -186,7 +185,6 @@ Get up and running with LOWESS in minutes.
         .confidence_intervals(0.95)  // 95% CI
         .prediction_intervals(0.95)  // 95% PI
         .return_diagnostics()
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -324,7 +322,6 @@ LOWESS can robustly handle outliers through iterative reweighting:
         .iterations(5)                    // More iterations for outliers
         .robustness_method(Bisquare)      // Default, smooth downweighting
         .return_robustness_weights()      // See which points were downweighted
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&x, &y_with_outlier)?;

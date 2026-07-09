@@ -14,9 +14,10 @@ type Result<T> = std::result::Result<T, extendr_api::Error>;
 
 use fastLowess::internals::binding_support;
 use fastLowess::internals::api::{
-    BoundaryPolicy, RobustnessMethod, ScalingMethod, UpdateMode, WeightFunction, ZeroWeightFallback,
+    Batch, BoundaryPolicy, LowessBuilder, Online, RobustnessMethod, ScalingMethod, Streaming,
+    UpdateMode, WeightFunction, ZeroWeightFallback,
 };
-use fastLowess::prelude::{Batch, Lowess as LowessBuilder, LowessResult, Online, Streaming};
+use fastLowess::prelude::LowessResult;
 
 // ============================================================================
 // Helper Functions

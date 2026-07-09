@@ -1,4 +1,4 @@
-﻿<!-- markdownlint-disable MD024 MD046 MD033 -->
+<!-- markdownlint-disable MD024 MD046 MD033 -->
 # Time Series Analysis
 
 LOWESS for trend extraction and temporal smoothing.
@@ -66,7 +66,6 @@ Time series data often contains noise, seasonality, and trends. LOWESS provides 
     let model = Lowess::new()
         .fraction(0.1)
         .iterations(3)
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&t, &y)?;
@@ -171,7 +170,6 @@ Remove trend to analyze residual patterns:
         .fraction(0.3)
         .iterations(3)
         .return_residuals()
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&t, &y)?;
@@ -280,7 +278,6 @@ Remove trend to analyze residual patterns:
         .iterations(3)
         .confidence_intervals(0.95)
         .prediction_intervals(0.95)
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&t, &y)?;
@@ -373,7 +370,6 @@ LOWESS naturally handles irregular time sampling:
 
     let model = Lowess::new()
         .fraction(0.2)
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&t_irregular, &y_irregular)?;
@@ -455,7 +451,6 @@ Use different fractions to extract features at different scales:
     for f in fractions {
         let model = Lowess::new()
             .fraction(f)
-            .adapter(Batch)
             .build()?;
         let result = model.fit(&t, &y)?;
         // Store or plot result.y for each scale
@@ -564,7 +559,6 @@ Biological application:
         .iterations(3)
         .confidence_intervals(0.95)
         .return_diagnostics()
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&hours, &expression)?;

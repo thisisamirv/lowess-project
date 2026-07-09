@@ -1,4 +1,4 @@
-﻿# Robustness
+# Robustness
 
 Outlier handling through iterative reweighting.
 
@@ -41,7 +41,6 @@ $$w(u) = \begin{cases} (1 - u^2)^2 & |u| < 1 \\ 0 & |u| \geq 1 \end{cases}$$
     let model = Lowess::new()
         .iterations(3)
         .robustness_method(Bisquare)
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -93,7 +92,6 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}$$
     let model = Lowess::new()
         .iterations(3)
         .robustness_method(Huber)
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -145,7 +143,6 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
     let model = Lowess::new()
         .iterations(3)
         .robustness_method(Talwar)
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -211,7 +208,6 @@ Use robustness weights to identify potential outliers:
     let model = Lowess::new()
         .iterations(5)
         .return_robustness_weights()
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -299,7 +295,6 @@ Residuals are scaled before computing robustness weights. Two methods:
     let model = Lowess::new()
         .iterations(3)
         .scaling_method(MAD)  // Default
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -352,7 +347,6 @@ Stop iterations early when weights stabilize:
     let model = Lowess::new()
         .iterations(10)           // Maximum iterations
         .auto_converge(1e-6)      // Stop when change < 1e-6
-        .adapter(Batch)
         .build()?;
     ```
 

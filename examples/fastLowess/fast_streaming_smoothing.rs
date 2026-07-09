@@ -52,11 +52,10 @@ fn example_1_basic_chunked_processing() -> Result<(), LowessError> {
         .map(|&xi| 2.0 * xi + 1.0 + (xi * 0.3).sin() * 2.0)
         .collect();
 
-    let mut processor = Lowess::<f64>::new()
+    let mut processor = StreamingLowess::new()
         .fraction(0.5)
         .iterations(2)
         .return_residuals()
-        .adapter(Streaming)
         .chunk_size(15) // Process 15 points per chunk
         .overlap(5) // 5 points overlap between chunks
         .build()?;
@@ -144,10 +143,9 @@ fn example_2_chunk_size_comparison() -> Result<(), LowessError> {
             description, chunk_size, overlap
         );
 
-        let mut processor = Lowess::<f64>::new()
+        let mut processor = StreamingLowess::new()
             .fraction(0.5)
             .iterations(1)
-            .adapter(Streaming)
             .chunk_size(chunk_size)
             .overlap(overlap)
             .build()?;
@@ -228,10 +226,9 @@ fn example_3_overlap_strategies() -> Result<(), LowessError> {
     for (overlap, description) in overlap_configs {
         println!("{}", description);
 
-        let mut processor = Lowess::<f64>::new()
+        let mut processor = StreamingLowess::new()
             .fraction(0.5)
             .iterations(2)
-            .adapter(Streaming)
             .chunk_size(chunk_size)
             .overlap(overlap)
             .build()?;
@@ -290,11 +287,10 @@ fn example_4_large_dataset_processing() -> Result<(), LowessError> {
     println!("Processing {} data points in streaming mode...", n);
     println!("(Simulating a dataset too large for memory)\n");
 
-    let mut processor = Lowess::<f64>::new()
+    let mut processor = StreamingLowess::new()
         .fraction(0.3)
         .iterations(2)
         .return_residuals()
-        .adapter(Streaming)
         .chunk_size(500) // Process 500 points at a time
         .overlap(50) // 50 points overlap
         .build()?;
@@ -399,12 +395,11 @@ fn example_5_outlier_handling() -> Result<(), LowessError> {
     for (method, name) in methods {
         println!("Using {} robustness:", name);
 
-        let mut processor = Lowess::<f64>::new()
+        let mut processor = StreamingLowess::new()
             .fraction(0.5)
             .iterations(5) // More iterations for better outlier handling
             .robustness_method(method)
             .return_residuals()
-            .adapter(Streaming)
             .chunk_size(30)
             .overlap(10)
             .build()?;
@@ -463,11 +458,10 @@ fn example_6_file_simulation() -> Result<(), LowessError> {
     let total_lines = 200;
     println!("Input file: {} data points", total_lines);
 
-    let mut processor = Lowess::<f64>::new()
+    let mut processor = StreamingLowess::new()
         .fraction(0.5)
         .iterations(2)
         .return_residuals()
-        .adapter(Streaming)
         .chunk_size(50)
         .overlap(10)
         .build()?;
@@ -565,10 +559,9 @@ fn example_7_parallel_benchmark() -> Result<(), LowessError> {
 
     let start = std::time::Instant::now();
 
-    let mut processor = Lowess::<f64>::new()
+    let mut processor = StreamingLowess::new()
         .fraction(0.5)
         .iterations(3)
-        .adapter(Streaming)
         .chunk_size(1000) // Process 1000 points per chunk
         .overlap(100) // 100 points overlap
         .parallel(true) // Enable parallel execution
@@ -623,10 +616,9 @@ fn example_8_sequential_benchmark() -> Result<(), LowessError> {
 
     let start = std::time::Instant::now();
 
-    let mut processor = Lowess::<f64>::new()
+    let mut processor = StreamingLowess::new()
         .fraction(0.5)
         .iterations(3)
-        .adapter(Streaming)
         .chunk_size(1000) // Process 1000 points per chunk
         .overlap(100) // 100 points overlap
         .parallel(false) // Disable parallel execution

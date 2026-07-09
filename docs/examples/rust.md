@@ -91,7 +91,6 @@ fn main() -> Result<(), LowessError> {
         .iterations(3)
         .confidence_intervals(0.95)
         .return_diagnostics()
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&x, &y)?;

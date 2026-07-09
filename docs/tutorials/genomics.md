@@ -1,4 +1,4 @@
-﻿<!-- markdownlint-disable MD033 -->
+<!-- markdownlint-disable MD033 -->
 # Genomic Data Smoothing
 
 LOWESS for methylation profiles, ChIP-seq signals, and other genomic data.
@@ -104,7 +104,6 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
         .fraction(0.1)
         .iterations(3)
         .confidence_intervals(0.95)
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&positions, &observed)?;
@@ -245,7 +244,6 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
         .fraction(0.05)
         .iterations(5)
         .return_residuals()
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&positions, &observed)?;
@@ -358,14 +356,12 @@ For whole-genome data that doesn't fit in memory:
     ```rust
     use fastLowess::prelude::*;
 
-    let model = Lowess::new()
+    let model = StreamingLowess::new()
         .fraction(0.05)
         .iterations(3)
-        .adapter(Streaming {
-            chunk_size: 100_000,
-            overlap: 10_000,
-            merge_strategy: Weighted,
-        })
+        .chunk_size(100_000)
+        .overlap(10_000)
+        .merge_strategy("weighted_average")
         .build()?;
 
     // Process chunks from file or stream

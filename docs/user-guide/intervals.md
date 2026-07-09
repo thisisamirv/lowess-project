@@ -1,4 +1,4 @@
-﻿<!-- markdownlint-disable MD024 -->
+<!-- markdownlint-disable MD024 -->
 # Intervals
 
 Confidence and prediction intervals for uncertainty quantification.
@@ -45,7 +45,6 @@ Estimate uncertainty in the smoothed curve itself.
     let model = Lowess::new()
         .fraction(0.5)
         .confidence_intervals(0.95)  // 95% CI
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -132,7 +131,6 @@ Estimate where new observations might fall.
     let model = Lowess::new()
         .fraction(0.5)
         .prediction_intervals(0.95)  // 95% PI
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -197,7 +195,6 @@ Request both types simultaneously:
         .fraction(0.5)
         .confidence_intervals(0.95)
         .prediction_intervals(0.95)
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -263,7 +260,6 @@ Common levels and their z-values:
     // 99% confidence interval
     let model = Lowess::new()
         .confidence_intervals(0.99)
-        .adapter(Batch)
         .build()?;
     ```
 

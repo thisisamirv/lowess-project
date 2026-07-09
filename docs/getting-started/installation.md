@@ -1,4 +1,4 @@
-﻿<!-- markdownlint-disable MD024 MD046 -->
+<!-- markdownlint-disable MD024 MD046 -->
 # Installation
 
 Install the LOWESS library for your preferred language.
@@ -219,7 +219,7 @@ Install the LOWESS library for your preferred language.
         let x = vec![1.0, 2.0, 3.0];
         let y = vec![2.0, 4.0, 6.0];
         
-        let model = Lowess::new().adapter(Batch).build()?;
+        let model = Lowess::new().build()?;
         let result = model.fit(&x, &y)?;
         
         println!("Installed successfully!");

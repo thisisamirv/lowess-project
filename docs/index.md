@@ -1,4 +1,4 @@
-﻿<!-- markdownlint-disable MD033 -->
+<!-- markdownlint-disable MD033 -->
 # LOWESS Project
 
 The fastest, most robust, and most feature-complete language-agnostic LOWESS (Locally Weighted Scatterplot Smoothing) implementation for **Rust**, **Python**, **R**, **Julia**, **JavaScript**, **C++**, and **WebAssembly**.
@@ -238,7 +238,6 @@ See the [Installation Guide](getting-started/installation.md) for more options a
     let model = Lowess::new()
         .fraction(0.5)
         .iterations(3)
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&x, &y)?;

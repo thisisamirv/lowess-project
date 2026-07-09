@@ -11,9 +11,10 @@ use ::fastLowess::internals::binding_support;
 use ::fastLowess::internals::adapters::online::ParallelOnlineLowess;
 use ::fastLowess::internals::adapters::streaming::ParallelStreamingLowess;
 use ::fastLowess::internals::api::{
-    BoundaryPolicy, RobustnessMethod, ScalingMethod, WeightFunction, ZeroWeightFallback,
+    Batch, BoundaryPolicy, LowessBuilder, Online, RobustnessMethod, ScalingMethod, Streaming,
+    WeightFunction, ZeroWeightFallback,
 };
-use ::fastLowess::prelude::{Batch, Lowess, LowessResult, Online, Streaming};
+use ::fastLowess::prelude::LowessResult;
 
 // ============================================================================
 // Helper Functions
@@ -252,7 +253,7 @@ impl PyStreamingLowess {
         });
 
         let builder = binding_support::apply_builder_options(
-            Lowess::<f64>::new(),
+            LowessBuilder::<f64>::new(),
             binding_support::BuilderOptionSet {
                 fraction: Some(fraction),
                 iterations: Some(iterations),
@@ -368,7 +369,7 @@ impl PyOnlineLowess {
         parallel: bool,
     ) -> PyResult<Self> {
         let builder = binding_support::apply_builder_options(
-            Lowess::<f64>::new(),
+            LowessBuilder::<f64>::new(),
             binding_support::BuilderOptionSet {
                 fraction: Some(fraction),
                 iterations: Some(iterations),
@@ -554,7 +555,7 @@ impl PyLowess {
         // 2. Release GIL
         let result = py.detach(move || {
             let builder = binding_support::apply_typed_builder_options(
-                Lowess::<f64>::new(),
+                LowessBuilder::<f64>::new(),
                 binding_support::TypedBuilderOptionSet {
                     fraction: Some(params.fraction),
                     iterations: Some(params.iterations),

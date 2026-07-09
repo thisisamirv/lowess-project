@@ -87,7 +87,6 @@ fn process_file(input_path: &Path, output_dir: &Path) -> Result<(), Box<dyn Erro
         .iterations(data.params.iterations)
         .boundary_policy("noboundary") // R doesn't have boundary extension by default
         .scaling_method("mar") // Match R's default scaling if applicable, usually MAD/MAR
-        .adapter(Batch)
         .parallel(true);
 
     let processor = if let Some(d) = delta {

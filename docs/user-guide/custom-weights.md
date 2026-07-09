@@ -97,7 +97,6 @@ that would otherwise include it.
         .fraction(0.5)
         .iterations(0)
         .custom_weights(weights)
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -200,7 +199,6 @@ reference instruments, or low-noise observations.
     let model = Lowess::new()
         .fraction(0.5)
         .custom_weights(weights)
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -267,7 +265,6 @@ weighting.
     let model = Lowess::new()
         .fraction(0.5)
         .custom_weights(weights)
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -349,7 +346,6 @@ for *known* bad points and robustness for *unknown* contamination.
         .fraction(0.4)
         .iterations(3)
         .custom_weights(weights)
-        .adapter(Batch)
         .build()?;
     ```
 

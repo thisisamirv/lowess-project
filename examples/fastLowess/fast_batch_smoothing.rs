@@ -56,7 +56,6 @@ fn example_1_parallel_execution() -> Result<(), LowessError> {
     let model = Lowess::new()
         .fraction(0.5) // Use 50% of data for each local fit
         .iterations(3) // 3 robustness iterations
-        .adapter(Batch) // Use Batch adapter from fastLowess (renamed from Standard)
         .parallel(true) // Enable parallel execution (default)
         .build()?;
 
@@ -87,7 +86,6 @@ fn example_2_sequential_fallback() -> Result<(), LowessError> {
 
     let start = Instant::now();
     let model = Lowess::new()
-        .adapter(Batch)
         .parallel(false) // Disable parallel execution
         .build()?;
 
@@ -118,7 +116,6 @@ fn example_3_ndarray_integration() -> Result<(), LowessError> {
 
     // Fit directly with ndarray inputs
     let res = Lowess::new()
-        .adapter(Batch)
         .parallel(true)
         .build()?
         .fit(&x, &y)?;
@@ -156,7 +153,6 @@ fn example_4_robust_parallel() -> Result<(), LowessError> {
         .iterations(3)
         .robustness_method("bisquare")
         .return_robustness_weights()
-        .adapter(Batch)
         .parallel(true)
         .build()?;
 
@@ -192,7 +188,6 @@ fn example_5_cross_validation() -> Result<(), LowessError> {
         .cv_k(5)
         .cv_fractions(vec![0.2, 0.3, 0.5, 0.7])
         .iterations(2)
-        .adapter(Batch)
         .parallel(true)
         .build()?;
 
@@ -245,7 +240,6 @@ fn example_6_custom_weights() -> Result<(), LowessError> {
     let result_no_w = Lowess::new()
         .fraction(0.4)
         .iterations(0)
-        .adapter(Batch)
         .parallel(true)
         .build()?
         .fit(&x, &y)?;
@@ -257,7 +251,6 @@ fn example_6_custom_weights() -> Result<(), LowessError> {
         .fraction(0.4)
         .iterations(0)
         .custom_weights(weights)
-        .adapter(Batch)
         .parallel(true)
         .build()?
         .fit(&x, &y)?;
@@ -278,7 +271,6 @@ fn example_6_custom_weights() -> Result<(), LowessError> {
         .fraction(0.2)
         .iterations(0)
         .custom_weights(weights2.clone())
-        .adapter(Batch)
         .parallel(false)
         .build()?
         .fit(&x2, &y2)?;
@@ -287,7 +279,6 @@ fn example_6_custom_weights() -> Result<(), LowessError> {
         .fraction(0.2)
         .iterations(0)
         .custom_weights(weights2)
-        .adapter(Batch)
         .parallel(true)
         .build()?
         .fit(&x2, &y2)?;

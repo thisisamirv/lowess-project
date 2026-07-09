@@ -1,4 +1,4 @@
-﻿# fastLowess Node.js API Reference
+# fastLowess Node.js API Reference
 
 The Node.js bindings provide a high-performance interface to the core Rust library, mirroring the Rust API structure.
 

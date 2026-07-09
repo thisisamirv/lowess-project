@@ -33,7 +33,6 @@
 //! let model = Lowess::new()
 //!     .fraction(0.5)      // Use 50% of data for each local fit
 //!     .iterations(3)      // 3 robustness iterations
-//!     .adapter(Batch)     // Parallel by default
 //!     .build()?;
 //!
 //! // Fit the model to the data
@@ -71,22 +70,19 @@
 //! let model = Lowess::new()
 //!     .fraction(0.5)                                   // Use 50% of data for each local fit
 //!     .iterations(3)                                   // 3 robustness iterations
-//!     .weight_function(Tricube)                        // Kernel function
-//!     .robustness_method(Bisquare)                     // Outlier handling
+//!     .weight_function("tricube")                     // Kernel function
+//!     .robustness_method("bisquare")                   // Outlier handling
 //!     .delta(0.01)                                     // Interpolation optimization
-//!     .zero_weight_fallback(UseLocalMean)              // Fallback policy
-//!     .boundary_policy(Extend)                         // Boundary handling policy
-//!     .scaling_method(MAD)                             // Robust scale estimation
+//!     .zero_weight_fallback("use_local_mean")          // Fallback policy
+//!     .boundary_policy("extend")                       // Boundary handling policy
+//!     .scaling_method("mad")                           // Robust scale estimation
 //!     .auto_converge(1e-6)                             // Auto-convergence threshold
 //!     .confidence_intervals(0.95)                      // 95% confidence intervals
 //!     .prediction_intervals(0.95)                      // 95% prediction intervals
 //!     .return_diagnostics()                            // Fit quality metrics
 //!     .return_residuals()                              // Include residuals
 //!     .return_robustness_weights()                     // Include robustness weights
-//!     .cross_validate(KFold(5, &[0.3, 0.7]).seed(123)) // K-fold CV with 5 folds and 2 fraction options
-//!     .adapter(Batch)                                  // Batch adapter
-//!     .parallel(true)                                  // Enable parallel execution
-//!     .backend(CPU)                                    // Default to CPU backend, please read the docs for more information
+//!     .cv_method("kfold").cv_k(5).cv_fractions(vec![0.3, 0.7]).cv_seed(123)
 //!     .build()?;
 //!
 //! let result = model.fit(&x, &y)?;
@@ -136,7 +132,7 @@
 //! # let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
 //! # let y = vec![2.0, 4.1, 5.9, 8.2, 9.8];
 //!
-//! let model = Lowess::new().adapter(Batch).build()?;
+//! let model = Lowess::new().build()?;
 //!
 //! let result = model.fit(&x, &y)?;
 //! // or to be more explicit:
@@ -151,7 +147,7 @@
 //! # let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
 //! # let y = vec![2.0, 4.1, 5.9, 8.2, 9.8];
 //!
-//! let model = Lowess::new().adapter(Batch).build()?;
+//! let model = Lowess::new().build()?;
 //!
 //! match model.fit(&x, &y) {
 //!     Ok(result) => {
@@ -179,7 +175,7 @@
 //! let x = Array1::from_vec((0..100).map(|i| i as f64 * 0.1).collect());
 //! let y = Array1::from_elem(100, 1.0); // Replace with real data
 //!
-//! let model = Lowess::new().adapter(Batch).build()?;
+//! let model = Lowess::new().build()?;
 //!
 //! // fit() accepts &Array1<f64>, &[f64], or Vec<f64>
 //! let result = model.fit(&x, &y)?;
@@ -241,11 +237,7 @@ mod binding_support;
 
 // Standard fastLowess prelude.
 pub mod prelude {
-    pub use crate::api::{
-        Adapter::{Batch, Online, Streaming},
-        Backend::{CPU, GPU},
-        Lowess, LowessBuilder, LowessError, LowessResult, OnlineLowess, StreamingLowess,
-    };
+    pub use crate::api::{Lowess, LowessError, LowessResult, OnlineLowess, StreamingLowess};
 }
 
 // Internal modules for development and testing.

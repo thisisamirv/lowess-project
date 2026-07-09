@@ -14,9 +14,10 @@ use std::slice::from_raw_parts;
 
 use fastLowess::internals::binding_support;
 use fastLowess::internals::api::{
-    BoundaryPolicy, RobustnessMethod, ScalingMethod, WeightFunction, ZeroWeightFallback,
+    Batch, BoundaryPolicy, LowessBuilder, Online, RobustnessMethod, ScalingMethod, Streaming,
+    WeightFunction, ZeroWeightFallback,
 };
-use fastLowess::prelude::{Batch, Lowess as LowessBuilder, LowessResult, Online, Streaming};
+use fastLowess::prelude::LowessResult;
 
 /// Result struct that can be passed across FFI boundary.
 /// All arrays are allocated by Rust and must be freed by Rust.

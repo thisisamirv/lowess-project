@@ -6,9 +6,8 @@ use napi_derive::napi;
 use ::fastLowess::internals::binding_support;
 use ::fastLowess::internals::adapters::online::ParallelOnlineLowess;
 use ::fastLowess::internals::adapters::streaming::ParallelStreamingLowess;
-use ::fastLowess::prelude::{
-    Batch, Lowess as LowessBuilder, LowessError, LowessResult, Online, Streaming,
-};
+use ::fastLowess::internals::api::{Batch, LowessBuilder, Online, Streaming};
+use ::fastLowess::prelude::{LowessError, LowessResult};
 
 /// Diagnostic statistics for the LOWESS fit.
 #[napi(object)]

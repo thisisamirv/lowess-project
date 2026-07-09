@@ -13,8 +13,8 @@ use std::ptr;
 use fastLowess::internals::binding_support;
 use fastLowess::internals::adapters::online::ParallelOnlineLowess;
 use fastLowess::internals::adapters::streaming::ParallelStreamingLowess;
-use fastLowess::internals::api::{MergeStrategy, UpdateMode};
-use fastLowess::prelude::{Batch, Lowess as LowessBuilder, LowessResult, Online, Streaming};
+use fastLowess::internals::api::{Batch, LowessBuilder, MergeStrategy, Online, Streaming, UpdateMode};
+use fastLowess::prelude::LowessResult;
 
 /// Result struct that can be passed across FFI boundary.
 /// All arrays are allocated by Rust and must be freed by Rust.
