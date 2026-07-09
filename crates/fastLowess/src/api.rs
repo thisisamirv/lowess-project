@@ -18,21 +18,10 @@ use lowess::internals::api::Online as BaseOnline;
 use lowess::internals::api::Streaming as BaseStreaming;
 
 // Publicly re-exported types
-pub use lowess::internals::algorithms::regression::ZeroWeightFallback;
-pub use lowess::internals::algorithms::robustness::RobustnessMethod;
-pub use lowess::internals::api::{LowessAdapter, LowessBuilder, MergeStrategy, UpdateMode};
+pub use lowess::internals::api::{LowessAdapter, LowessBuilder};
 pub use lowess::internals::engine::output::LowessResult;
-pub use lowess::internals::math::boundary::BoundaryPolicy;
-pub use lowess::internals::math::kernel::WeightFunction;
-pub use lowess::internals::math::scaling::ScalingMethod;
 pub use lowess::internals::primitives::backend::Backend;
 pub use lowess::internals::primitives::errors::LowessError;
-
-// Adapter selection namespace.
-#[allow(non_snake_case)]
-pub mod Adapter {
-    pub use super::{Batch, Online, Streaming};
-}
 
 // Marker for parallel in-memory batch processing.
 #[derive(Debug, Clone, Copy)]

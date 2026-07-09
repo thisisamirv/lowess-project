@@ -9,11 +9,10 @@ use std::sync::Mutex;
 
 use ::fastLowess::internals::adapters::online::ParallelOnlineLowess;
 use ::fastLowess::internals::adapters::streaming::ParallelStreamingLowess;
-use ::fastLowess::internals::api::{
-    Batch, BoundaryPolicy, LowessBuilder, Online, RobustnessMethod, ScalingMethod, Streaming,
-    WeightFunction, ZeroWeightFallback,
+use ::fastLowess::internals::api::{Batch, LowessBuilder, Online, Streaming};
+use ::fastLowess::internals::binding_support::{
+    self, BoundaryPolicy, RobustnessMethod, ScalingMethod, WeightFunction, ZeroWeightFallback,
 };
-use ::fastLowess::internals::binding_support;
 use ::fastLowess::prelude::LowessResult;
 
 // ============================================================================

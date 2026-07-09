@@ -12,10 +12,10 @@ use extendr_api::prelude::*;
 // Provide the Result alias that was removed from extendr_api::prelude in 0.9.0
 type Result<T> = std::result::Result<T, extendr_api::Error>;
 
-use fastLowess::internals::binding_support;
-use fastLowess::internals::api::{
-    Batch, BoundaryPolicy, LowessBuilder, Online, RobustnessMethod, ScalingMethod, Streaming,
-    UpdateMode, WeightFunction, ZeroWeightFallback,
+use fastLowess::internals::api::{Batch, LowessBuilder, Online, Streaming};
+use fastLowess::internals::binding_support::{
+    self, BoundaryPolicy, RobustnessMethod, ScalingMethod, UpdateMode, WeightFunction,
+    ZeroWeightFallback,
 };
 use fastLowess::prelude::LowessResult;
 

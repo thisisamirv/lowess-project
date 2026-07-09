@@ -12,10 +12,9 @@ use std::panic::catch_unwind;
 use std::ptr;
 use std::slice::from_raw_parts;
 
-use fastLowess::internals::binding_support;
-use fastLowess::internals::api::{
-    Batch, BoundaryPolicy, LowessBuilder, Online, RobustnessMethod, ScalingMethod, Streaming,
-    WeightFunction, ZeroWeightFallback,
+use fastLowess::internals::api::{Batch, LowessBuilder, Online, Streaming};
+use fastLowess::internals::binding_support::{
+    self, BoundaryPolicy, RobustnessMethod, ScalingMethod, WeightFunction, ZeroWeightFallback,
 };
 use fastLowess::prelude::LowessResult;
 

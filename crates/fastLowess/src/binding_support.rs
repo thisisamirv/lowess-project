@@ -4,14 +4,22 @@
 //! Node.js, Python, R, and WASM bindings so option aliases and validation
 //! behavior stay consistent across all binding frontends.
 
+use crate::adapters::batch::ParallelBatchLowessBuilder;
+use crate::adapters::online::ParallelOnlineLowessBuilder;
+use crate::adapters::streaming::ParallelStreamingLowessBuilder;
 use crate::api::{LowessBuilder, LowessError};
-use lowess::internals::adapters::online::UpdateMode;
-use lowess::internals::adapters::streaming::MergeStrategy;
-use lowess::internals::algorithms::regression::ZeroWeightFallback;
-use lowess::internals::algorithms::robustness::RobustnessMethod;
-use lowess::internals::math::boundary::BoundaryPolicy;
-use lowess::internals::math::kernel::WeightFunction;
-use lowess::internals::math::scaling::ScalingMethod;
+use crate::parse::IntoEnum;
+use lowess::internals::evaluation::intervals::IntervalMethod;
+pub use lowess::internals::primitives::backend::Backend;
+use num_traits::Float;
+
+pub use lowess::internals::adapters::online::UpdateMode;
+pub use lowess::internals::adapters::streaming::MergeStrategy;
+pub use lowess::internals::algorithms::regression::ZeroWeightFallback;
+pub use lowess::internals::algorithms::robustness::RobustnessMethod;
+pub use lowess::internals::math::boundary::BoundaryPolicy;
+pub use lowess::internals::math::kernel::WeightFunction;
+pub use lowess::internals::math::scaling::ScalingMethod;
 use std::ffi::CString;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -534,4 +542,344 @@ pub fn apply_typed_builder_options(
 
 pub fn lowess_error_message(err: &LowessError) -> String {
     err.to_string()
+}
+
+// ─── Builder setter methods ───────────────────────────────────────────────────
+//
+// These impl blocks are in binding_support.rs (compiled only with the `dev`
+// feature) so the adapter files (batch.rs, online.rs, streaming.rs) stay free
+// of any `#[cfg]` attributes.
+
+#[allow(private_bounds)]
+impl<T: Float> ParallelBatchLowessBuilder<T> {
+    pub fn parallel(mut self, parallel: bool) -> Self {
+        self.base.parallel = Some(parallel);
+        self
+    }
+
+    pub fn backend(mut self, backend: Backend) -> Self {
+        self.base.backend = Some(backend);
+        self
+    }
+
+    pub fn fraction(mut self, fraction: T) -> Self {
+        self.base.fraction = fraction;
+        self
+    }
+
+    pub fn iterations(mut self, iterations: usize) -> Self {
+        self.base.iterations = iterations;
+        self
+    }
+
+    pub fn delta(mut self, delta: T) -> Self {
+        self.base.delta = Some(delta);
+        self
+    }
+
+    pub fn weight_function(mut self, wf: impl IntoEnum<WeightFunction>) -> Self {
+        match wf.into_enum() {
+            Ok(w) => self.base.weight_function = w,
+            Err(e) => {
+                self.parse_errors.push(e);
+            }
+        }
+        self
+    }
+
+    pub fn robustness_method(mut self, method: impl IntoEnum<RobustnessMethod>) -> Self {
+        match method.into_enum() {
+            Ok(m) => self.base.robustness_method = m,
+            Err(e) => {
+                self.parse_errors.push(e);
+            }
+        }
+        self
+    }
+
+    pub fn zero_weight_fallback(mut self, fallback: impl IntoEnum<ZeroWeightFallback>) -> Self {
+        match fallback.into_enum() {
+            Ok(f) => self.base.zero_weight_fallback = f,
+            Err(e) => {
+                self.parse_errors.push(e);
+            }
+        }
+        self
+    }
+
+    pub fn boundary_policy(mut self, policy: impl IntoEnum<BoundaryPolicy>) -> Self {
+        match policy.into_enum() {
+            Ok(p) => self.base.boundary_policy = p,
+            Err(e) => {
+                self.parse_errors.push(e);
+            }
+        }
+        self
+    }
+
+    pub fn auto_converge(mut self, tolerance: T) -> Self {
+        self.base.auto_converge = Some(tolerance);
+        self
+    }
+
+    pub fn compute_residuals(mut self, enabled: bool) -> Self {
+        self.base.compute_residuals = enabled;
+        self
+    }
+
+    pub fn return_robustness_weights(mut self, enabled: bool) -> Self {
+        self.base.return_robustness_weights = enabled;
+        self
+    }
+
+    pub fn return_diagnostics(mut self, enabled: bool) -> Self {
+        self.base.return_diagnostics = enabled;
+        self
+    }
+
+    pub fn confidence_intervals(mut self, level: T) -> Self {
+        self.base.interval_type = Some(IntervalMethod::confidence(level));
+        self
+    }
+
+    pub fn prediction_intervals(mut self, level: T) -> Self {
+        self.base.interval_type = Some(IntervalMethod::prediction(level));
+        self
+    }
+
+    pub fn cv_fractions(mut self, fractions: Vec<T>) -> Self {
+        self.base.cv_fractions = Some(fractions);
+        self
+    }
+
+    pub fn cv_method(mut self, method: &str) -> Self {
+        self.cv_method_str = Some(method.to_string());
+        self
+    }
+
+    pub fn cv_k(mut self, k: usize) -> Self {
+        self.cv_k_val = k;
+        self
+    }
+
+    pub fn cv_seed(mut self, seed: u64) -> Self {
+        self.base.cv_seed = Some(seed);
+        self
+    }
+
+    pub fn custom_weights(mut self, weights: Vec<T>) -> Self {
+        self.base.custom_weights = Some(weights);
+        self
+    }
+}
+
+#[allow(private_bounds)]
+impl<T: Float> ParallelOnlineLowessBuilder<T> {
+    pub fn parallel(mut self, parallel: bool) -> Self {
+        self.base.parallel = Some(parallel);
+        self
+    }
+
+    pub fn backend(mut self, backend: Backend) -> Self {
+        self.base.backend = Some(backend);
+        self
+    }
+
+    pub fn fraction(mut self, fraction: T) -> Self {
+        self.base.fraction = fraction;
+        self
+    }
+
+    pub fn iterations(mut self, iterations: usize) -> Self {
+        self.base.iterations = iterations;
+        self
+    }
+
+    pub fn delta(mut self, delta: T) -> Self {
+        self.base.delta = delta;
+        self
+    }
+
+    pub fn weight_function(mut self, wf: impl IntoEnum<WeightFunction>) -> Self {
+        match wf.into_enum() {
+            Ok(w) => self.base.weight_function = w,
+            Err(e) => {
+                self.parse_errors.push(e);
+            }
+        }
+        self
+    }
+
+    pub fn robustness_method(mut self, method: impl IntoEnum<RobustnessMethod>) -> Self {
+        match method.into_enum() {
+            Ok(m) => self.base.robustness_method = m,
+            Err(e) => {
+                self.parse_errors.push(e);
+            }
+        }
+        self
+    }
+
+    pub fn zero_weight_fallback(mut self, fallback: impl IntoEnum<ZeroWeightFallback>) -> Self {
+        match fallback.into_enum() {
+            Ok(f) => self.base.zero_weight_fallback = f,
+            Err(e) => {
+                self.parse_errors.push(e);
+            }
+        }
+        self
+    }
+
+    pub fn boundary_policy(mut self, policy: impl IntoEnum<BoundaryPolicy>) -> Self {
+        match policy.into_enum() {
+            Ok(p) => self.base.boundary_policy = p,
+            Err(e) => {
+                self.parse_errors.push(e);
+            }
+        }
+        self
+    }
+
+    pub fn auto_converge(mut self, tolerance: T) -> Self {
+        self.base.auto_converge = Some(tolerance);
+        self
+    }
+
+    pub fn compute_residuals(mut self, enabled: bool) -> Self {
+        self.base.compute_residuals = enabled;
+        self
+    }
+
+    pub fn return_robustness_weights(mut self, enabled: bool) -> Self {
+        self.base.return_robustness_weights = enabled;
+        self
+    }
+
+    pub fn window_capacity(mut self, capacity: usize) -> Self {
+        self.base.window_capacity = capacity;
+        self
+    }
+
+    pub fn min_points(mut self, min_points: usize) -> Self {
+        self.base.min_points = min_points;
+        self
+    }
+
+    pub fn update_mode(mut self, mode: impl IntoEnum<UpdateMode>) -> Self {
+        match mode.into_enum() {
+            Ok(m) => self.base.update_mode = m,
+            Err(e) => {
+                self.parse_errors.push(e);
+            }
+        }
+        self
+    }
+}
+
+#[allow(private_bounds)]
+impl<T: Float> ParallelStreamingLowessBuilder<T> {
+    pub fn parallel(mut self, parallel: bool) -> Self {
+        self.base.parallel = Some(parallel);
+        self
+    }
+
+    pub fn backend(mut self, backend: Backend) -> Self {
+        self.base.backend = Some(backend);
+        self
+    }
+
+    pub fn fraction(mut self, fraction: T) -> Self {
+        self.base.fraction = fraction;
+        self
+    }
+
+    pub fn iterations(mut self, iterations: usize) -> Self {
+        self.base.iterations = iterations;
+        self
+    }
+
+    pub fn delta(mut self, delta: T) -> Self {
+        self.base.delta = delta;
+        self
+    }
+
+    pub fn weight_function(mut self, wf: impl IntoEnum<WeightFunction>) -> Self {
+        match wf.into_enum() {
+            Ok(w) => self.base.weight_function = w,
+            Err(e) => {
+                self.parse_errors.push(e);
+            }
+        }
+        self
+    }
+
+    pub fn robustness_method(mut self, method: impl IntoEnum<RobustnessMethod>) -> Self {
+        match method.into_enum() {
+            Ok(m) => self.base.robustness_method = m,
+            Err(e) => {
+                self.parse_errors.push(e);
+            }
+        }
+        self
+    }
+
+    pub fn zero_weight_fallback(mut self, fallback: impl IntoEnum<ZeroWeightFallback>) -> Self {
+        match fallback.into_enum() {
+            Ok(f) => self.base.zero_weight_fallback = f,
+            Err(e) => {
+                self.parse_errors.push(e);
+            }
+        }
+        self
+    }
+
+    pub fn boundary_policy(mut self, policy: impl IntoEnum<BoundaryPolicy>) -> Self {
+        match policy.into_enum() {
+            Ok(p) => self.base.boundary_policy = p,
+            Err(e) => {
+                self.parse_errors.push(e);
+            }
+        }
+        self
+    }
+
+    pub fn auto_converge(mut self, tolerance: T) -> Self {
+        self.base.auto_converge = Some(tolerance);
+        self
+    }
+
+    pub fn compute_residuals(mut self, enabled: bool) -> Self {
+        self.base.compute_residuals = enabled;
+        self
+    }
+
+    pub fn return_robustness_weights(mut self, enabled: bool) -> Self {
+        self.base.return_robustness_weights = enabled;
+        self
+    }
+
+    pub fn chunk_size(mut self, size: usize) -> Self {
+        self.base.chunk_size = size;
+        self
+    }
+
+    pub fn overlap(mut self, size: usize) -> Self {
+        self.base.overlap = size;
+        self
+    }
+
+    pub fn merge_strategy(mut self, strategy: impl IntoEnum<MergeStrategy>) -> Self {
+        match strategy.into_enum() {
+            Ok(s) => self.base.merge_strategy = s,
+            Err(e) => {
+                self.parse_errors.push(e);
+            }
+        }
+        self
+    }
+
+    pub fn return_diagnostics(mut self, enabled: bool) -> Self {
+        self.base.return_diagnostics = enabled;
+        self
+    }
 }

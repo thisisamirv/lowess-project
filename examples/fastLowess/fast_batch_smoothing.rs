@@ -115,10 +115,7 @@ fn example_3_ndarray_integration() -> Result<(), LowessError> {
     let y = Array1::from(y_vec);
 
     // Fit directly with ndarray inputs
-    let res = Lowess::new()
-        .parallel(true)
-        .build()?
-        .fit(&x, &y)?;
+    let res = Lowess::new().parallel(true).build()?.fit(&x, &y)?;
 
     println!("Successfully fitted to ndarray inputs.");
     println!("First 5 smoothed values:");

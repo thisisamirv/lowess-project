@@ -390,7 +390,11 @@ fn example_5_outlier_handling() -> Result<(), LowessError> {
     println!("Dataset: {} points with 3 outliers", n);
     println!("Testing robustness methods:\n");
 
-    let methods = vec![("bisquare", "Bisquare"), ("huber", "Huber"), ("talwar", "Talwar")];
+    let methods = vec![
+        ("bisquare", "Bisquare"),
+        ("huber", "Huber"),
+        ("talwar", "Talwar"),
+    ];
 
     for (method, name) in methods {
         println!("Using {} robustness:", name);

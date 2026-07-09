@@ -26,15 +26,10 @@ use std::fmt::Debug;
 use std::result::Result;
 
 // Export dependencies from lowess crate
-use crate::parse::IntoEnum;
 use lowess::internals::adapters::batch::BatchLowessBuilder;
-use lowess::internals::algorithms::regression::{WLSSolver, ZeroWeightFallback};
-use lowess::internals::algorithms::robustness::RobustnessMethod;
+use lowess::internals::algorithms::regression::WLSSolver;
 use lowess::internals::engine::output::LowessResult;
 use lowess::internals::evaluation::cv::CVKind;
-use lowess::internals::evaluation::intervals::IntervalMethod;
-use lowess::internals::math::boundary::BoundaryPolicy;
-use lowess::internals::math::kernel::WeightFunction;
 use lowess::internals::primitives::backend::Backend;
 use lowess::internals::primitives::errors::LowessError;
 
@@ -59,7 +54,6 @@ impl<T: Float> Default for ParallelBatchLowessBuilder<T> {
 
 #[allow(private_bounds)]
 impl<T: Float> ParallelBatchLowessBuilder<T> {
-    // Create a new batch LOWESS builder with default parameters.
     fn new() -> Self {
         let mut base = BatchLowessBuilder::default();
         base.parallel = Some(true); // Default to parallel in fastLowess
@@ -71,150 +65,6 @@ impl<T: Float> ParallelBatchLowessBuilder<T> {
         }
     }
 
-    // Set parallel execution mode.
-    pub fn parallel(mut self, parallel: bool) -> Self {
-        self.base.parallel = Some(parallel);
-        self
-    }
-
-    // Set the execution backend.
-    pub fn backend(mut self, backend: Backend) -> Self {
-        self.base.backend = Some(backend);
-        self
-    }
-
-    // Set the smoothing fraction (span).
-    pub fn fraction(mut self, fraction: T) -> Self {
-        self.base.fraction = fraction;
-        self
-    }
-
-    // Set the number of robustness iterations.
-    pub fn iterations(mut self, iterations: usize) -> Self {
-        self.base.iterations = iterations;
-        self
-    }
-
-    // Set the delta parameter for interpolation optimization.
-    pub fn delta(mut self, delta: T) -> Self {
-        self.base.delta = Some(delta);
-        self
-    }
-
-    // Set the kernel weight function.
-    pub fn weight_function(mut self, wf: impl IntoEnum<WeightFunction>) -> Self {
-        match wf.into_enum() {
-            Ok(w) => self.base.weight_function = w,
-            Err(e) => {
-                self.parse_errors.push(e);
-            }
-        }
-        self
-    }
-
-    // Set the robustness method for outlier handling.
-    pub fn robustness_method(mut self, method: impl IntoEnum<RobustnessMethod>) -> Self {
-        match method.into_enum() {
-            Ok(m) => self.base.robustness_method = m,
-            Err(e) => {
-                self.parse_errors.push(e);
-            }
-        }
-        self
-    }
-
-    // Set the zero-weight fallback policy.
-    pub fn zero_weight_fallback(mut self, fallback: impl IntoEnum<ZeroWeightFallback>) -> Self {
-        match fallback.into_enum() {
-            Ok(f) => self.base.zero_weight_fallback = f,
-            Err(e) => {
-                self.parse_errors.push(e);
-            }
-        }
-        self
-    }
-
-    // Set the boundary handling policy.
-    pub fn boundary_policy(mut self, policy: impl IntoEnum<BoundaryPolicy>) -> Self {
-        match policy.into_enum() {
-            Ok(p) => self.base.boundary_policy = p,
-            Err(e) => {
-                self.parse_errors.push(e);
-            }
-        }
-        self
-    }
-
-    // Enable auto-convergence for robustness iterations.
-    pub fn auto_converge(mut self, tolerance: T) -> Self {
-        self.base.auto_converge = Some(tolerance);
-        self
-    }
-
-    // Enable returning residuals in the output.
-    pub fn compute_residuals(mut self, enabled: bool) -> Self {
-        self.base.compute_residuals = enabled;
-        self
-    }
-
-    // Enable returning robustness weights in the result.
-    pub fn return_robustness_weights(mut self, enabled: bool) -> Self {
-        self.base.return_robustness_weights = enabled;
-        self
-    }
-
-    // Enable returning diagnostics in the result.
-    pub fn return_diagnostics(mut self, enabled: bool) -> Self {
-        self.base.return_diagnostics = enabled;
-        self
-    }
-
-    // Enable confidence intervals at the specified level.
-    pub fn confidence_intervals(mut self, level: T) -> Self {
-        self.base.interval_type = Some(IntervalMethod::confidence(level));
-        self
-    }
-
-    // Enable prediction intervals at the specified level.
-    pub fn prediction_intervals(mut self, level: T) -> Self {
-        self.base.interval_type = Some(IntervalMethod::prediction(level));
-        self
-    }
-
-    // Enable cross-validation with the specified candidate fractions.
-    pub fn cv_fractions(mut self, fractions: Vec<T>) -> Self {
-        self.base.cv_fractions = Some(fractions);
-        self
-    }
-
-    // Set the cross-validation method.
-    //
-    // Accepts case-insensitive strings: "kfold" (or "k_fold", "k-fold"), "loocv" (or "loo_cv", "loo-cv").
-    pub fn cv_method(mut self, method: &str) -> Self {
-        self.cv_method_str = Some(method.to_string());
-        self
-    }
-
-    // Set the number of folds for K-fold cross-validation (default: 5).
-    pub fn cv_k(mut self, k: usize) -> Self {
-        self.cv_k_val = k;
-        self
-    }
-
-    // Set the random seed for reproducible K-fold fold splitting.
-    pub fn cv_seed(mut self, seed: u64) -> Self {
-        self.base.cv_seed = Some(seed);
-        self
-    }
-
-    // Set per-observation case weights applied as `w_ij = custom_weights[j] * K(d_ij / h)`.
-    // Must have the same length as the input data and all values must be finite and non-negative.
-    pub fn custom_weights(mut self, weights: Vec<T>) -> Self {
-        self.base.custom_weights = Some(weights);
-        self
-    }
-
-    // Build the batch processor.
     pub fn build(mut self) -> Result<ParallelBatchLowess<T>, LowessError> {
         // Resolve string-based CV method
         if self.base.cv_kind.is_none() {

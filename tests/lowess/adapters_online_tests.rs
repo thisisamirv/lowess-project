@@ -263,9 +263,7 @@ fn test_online_reuse_after_reset() {
 /// Verifies that window_capacity < 3 is rejected.
 #[test]
 fn test_online_invalid_window_capacity() {
-    let result = OnlineLowess::<f64>::new()
-        .window_capacity(2)
-        .build();
+    let result = OnlineLowess::<f64>::new().window_capacity(2).build();
 
     assert!(
         matches!(result, Err(LowessError::InvalidWindowCapacity { .. })),

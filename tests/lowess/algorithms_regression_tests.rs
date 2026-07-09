@@ -427,7 +427,7 @@ fn test_fit_point_various_kernels() {
             robustness_weights: &robustness,
             weight_function: kernel,
             zero_weight_fallback: ZeroWeightFallback::UseLocalMean,
-        custom_weights: None,
+            custom_weights: None,
         };
 
         let result = ctx.fit();

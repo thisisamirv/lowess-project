@@ -10,10 +10,10 @@ use std::ffi::CStr;
 use std::os::raw::{c_char, c_double, c_int, c_ulong};
 use std::ptr;
 
-use fastLowess::internals::binding_support;
 use fastLowess::internals::adapters::online::ParallelOnlineLowess;
 use fastLowess::internals::adapters::streaming::ParallelStreamingLowess;
-use fastLowess::internals::api::{Batch, LowessBuilder, MergeStrategy, Online, Streaming, UpdateMode};
+use fastLowess::internals::api::{Batch, LowessBuilder, Online, Streaming};
+use fastLowess::internals::binding_support::{self, MergeStrategy, UpdateMode};
 use fastLowess::prelude::LowessResult;
 
 /// Result struct that can be passed across FFI boundary.

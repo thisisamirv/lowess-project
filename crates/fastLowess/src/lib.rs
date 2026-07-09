@@ -230,9 +230,11 @@ mod api;
 mod input;
 
 // String input compatibility for builder methods (only needed for dev/binding builds).
+#[cfg(feature = "dev")]
 mod parse;
 
 // Shared helpers for language bindings (only needed for dev/binding builds).
+#[cfg(feature = "dev")]
 mod binding_support;
 
 // Standard fastLowess prelude.

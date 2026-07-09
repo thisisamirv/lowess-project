@@ -1,4 +1,4 @@
-﻿//! Online adapter for incremental LOWESS smoothing.
+//! Online adapter for incremental LOWESS smoothing.
 //!
 //! This module provides the online (incremental) execution adapter for LOWESS
 //! smoothing. It maintains a sliding window of recent observations and produces
@@ -22,14 +22,8 @@ use std::fmt::Debug;
 use std::result::Result;
 
 // Export dependencies from lowess crate
-use crate::parse::IntoEnum;
-use lowess::internals::adapters::online::{
-    OnlineLowess, OnlineLowessBuilder, OnlineOutput, UpdateMode,
-};
-use lowess::internals::algorithms::regression::{WLSSolver, ZeroWeightFallback};
-use lowess::internals::algorithms::robustness::RobustnessMethod;
-use lowess::internals::math::boundary::BoundaryPolicy;
-use lowess::internals::math::kernel::WeightFunction;
+use lowess::internals::adapters::online::{OnlineLowess, OnlineLowessBuilder, OnlineOutput};
+use lowess::internals::algorithms::regression::WLSSolver;
 use lowess::internals::primitives::backend::Backend;
 use lowess::internals::primitives::errors::LowessError;
 
@@ -50,7 +44,6 @@ impl<T: Float> Default for ParallelOnlineLowessBuilder<T> {
 
 #[allow(private_bounds)]
 impl<T: Float> ParallelOnlineLowessBuilder<T> {
-    // Create a new online LOWESS builder with default parameters.
     fn new() -> Self {
         let mut base = OnlineLowessBuilder::default();
         base.parallel = Some(false); // Default to non-parallel in fastLowess for Online
@@ -58,121 +51,6 @@ impl<T: Float> ParallelOnlineLowessBuilder<T> {
             base,
             parse_errors: Vec::new(),
         }
-    }
-
-    // Set parallel execution mode.
-    pub fn parallel(mut self, parallel: bool) -> Self {
-        self.base.parallel = Some(parallel);
-        self
-    }
-
-    // Set the execution backend.
-    pub fn backend(mut self, backend: Backend) -> Self {
-        self.base.backend = Some(backend);
-        self
-    }
-
-    // Set the smoothing fraction (span).
-    pub fn fraction(mut self, fraction: T) -> Self {
-        self.base.fraction = fraction;
-        self
-    }
-
-    // Set the number of robustness iterations.
-    pub fn iterations(mut self, iterations: usize) -> Self {
-        self.base.iterations = iterations;
-        self
-    }
-
-    // Set the delta parameter for interpolation optimization.
-    pub fn delta(mut self, delta: T) -> Self {
-        self.base.delta = delta;
-        self
-    }
-
-    // Set the kernel weight function.
-    pub fn weight_function(mut self, wf: impl IntoEnum<WeightFunction>) -> Self {
-        match wf.into_enum() {
-            Ok(w) => self.base.weight_function = w,
-            Err(e) => {
-                self.parse_errors.push(e);
-            }
-        }
-        self
-    }
-
-    // Set the robustness method for outlier handling.
-    pub fn robustness_method(mut self, method: impl IntoEnum<RobustnessMethod>) -> Self {
-        match method.into_enum() {
-            Ok(m) => self.base.robustness_method = m,
-            Err(e) => {
-                self.parse_errors.push(e);
-            }
-        }
-        self
-    }
-
-    // Set the zero-weight fallback policy.
-    pub fn zero_weight_fallback(mut self, fallback: impl IntoEnum<ZeroWeightFallback>) -> Self {
-        match fallback.into_enum() {
-            Ok(f) => self.base.zero_weight_fallback = f,
-            Err(e) => {
-                self.parse_errors.push(e);
-            }
-        }
-        self
-    }
-
-    // Set the boundary handling policy.
-    pub fn boundary_policy(mut self, policy: impl IntoEnum<BoundaryPolicy>) -> Self {
-        match policy.into_enum() {
-            Ok(p) => self.base.boundary_policy = p,
-            Err(e) => {
-                self.parse_errors.push(e);
-            }
-        }
-        self
-    }
-
-    // Enable auto-convergence for robustness iterations.
-    pub fn auto_converge(mut self, tolerance: T) -> Self {
-        self.base.auto_converge = Some(tolerance);
-        self
-    }
-
-    // Enable returning residuals in the output.
-    pub fn compute_residuals(mut self, enabled: bool) -> Self {
-        self.base.compute_residuals = enabled;
-        self
-    }
-
-    // Enable returning robustness weights in the result.
-    pub fn return_robustness_weights(mut self, enabled: bool) -> Self {
-        self.base.return_robustness_weights = enabled;
-        self
-    }
-
-    // Set the maximum window capacity.
-    pub fn window_capacity(mut self, capacity: usize) -> Self {
-        self.base.window_capacity = capacity;
-        self
-    }
-
-    // Set the minimum points required before smoothing starts.
-    pub fn min_points(mut self, min_points: usize) -> Self {
-        self.base.min_points = min_points;
-        self
-    }
-
-    // Set the update mode for incremental processing.
-    pub fn update_mode(mut self, mode: impl IntoEnum<UpdateMode>) -> Self {
-        match mode.into_enum() {
-            Ok(m) => self.base.update_mode = m,
-            Err(e) => {
-                self.parse_errors.push(e);
-            }
-        }
-        self
     }
 }
 
