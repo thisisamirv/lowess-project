@@ -34,7 +34,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Node.js:**
 
-- Added `custom_weights` field to `LowessOptions`. Accepts a `Float64Array` of non-negative per-observation weights. Batch only.
+- Added `OnlineOutput` object to the Node.js binding. `OnlineLowess.add_point()` now returns `OnlineOutput | null` instead of `number | null`, exposing `smoothed`, `std_error`, `residual`, `robustness_weight`, and `iterations_used`.
+- Added `return_se` and `cv_seed` fields to `SmoothOptions`.
+- Added `customWeights` as an optional per-call argument to `fit(x, y, customWeights?)` and `fit_async(x, y, customWeights?)`. Accepts `Array<number>` or `Float64Array` of non-negative per-observation weights. Includes pre-flight length-mismatch and non-negative validation. Batch only.
+- Added JavaScript-layer option key validation: unknown keys in `SmoothOptions`, `StreamingOptions`, or `OnlineOptions` now throw a `TypeError` listing all valid keys, via wrapper classes around the native NAPI exports.
+- Updated `napi-rs/cli` dependency to v3.7 and `oxlint` to v1.73.
 
 **WebAssembly:**
 
@@ -84,7 +88,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed binding methods to snake_case: `fit_async`, `process_chunk`, `add_points`.
 - Renamed `LowessResultObj` getters to snake_case: `standard_errors`, `confidence_lower`, `confidence_upper`, `prediction_lower`, `prediction_upper`, `robustness_weights`, `cv_scores`, `fraction_used`, `iterations_used`.
 - Updated `index.d.ts` to reflect all renamed fields and methods.
-- Replaced `add_points(x: Float64Array, y: Float64Array): LowessResultObj` on `OnlineLowess` with `add_point(x: number, y: number): number | null`. The method now processes a single point and returns only that point's smoothed value, or `null` if not enough points have been accumulated yet. This is a **breaking change**.
+- Replaced `add_points(x: Float64Array, y: Float64Array): LowessResultObj` on `OnlineLowess` with `add_point(x: number, y: number): OnlineOutput | null`. The method now processes a single point and returns an `OnlineOutput` object, or `null` if not enough points have been accumulated yet. This is a **breaking change**.
+- Changed default `OnlineOptions.window_capacity` from 100 to 1000 and `OnlineOptions.min_points` from 2 to 3, matching the defaults used by the loess binding.
+- `OnlineLowess` now forwards all `SmoothOptions` fields to the underlying builder (previously only `fraction`, `iterations`, and `parallel` were forwarded; all other fields were hardcoded to `None`/`false`).
 
 **WASM:**
 
@@ -255,6 +261,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed `make nodejs` on Windows when `/bin/bash` could not launch `npm` from `C:/Program Files/nodejs` by using `npm.cmd`/`npx.cmd` in the `Makefile`.
 - Fixed deprecated JavaScript license-audit warnings by replacing the transient `npx license-checker` usage in the `Makefile` with a repo-local Node.js license summary script that still fails on GPL-family licenses.
+- Fixed `.build()` errors incorrectly using `Status::GenericFailure`; they now return `Status::InvalidArg` since build failures originate from invalid configuration (accumulated parse errors), not from runtime execution.
 - Linted the source code.
 
 ## 1.2.0

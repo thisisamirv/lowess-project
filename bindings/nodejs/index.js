@@ -280,7 +280,83 @@ if (!nativeBinding) {
     }
 }
 
-const { Lowess, StreamingLowess, OnlineLowess, LowessResultObj } = nativeBinding
+const {
+    Lowess: _NativeLowess,
+    StreamingLowess: _NativeStreamingLowess,
+    OnlineLowess: _NativeOnlineLowess,
+    LowessResultObj,
+} = nativeBinding
+
+// ---------------------------------------------------------------------------
+// Option key validation
+// ---------------------------------------------------------------------------
+
+const _SMOOTH_OPTION_KEYS = new Set([
+    'fraction', 'iterations', 'delta', 'weight_function', 'robustness_method',
+    'zero_weight_fallback', 'boundary_policy', 'scaling_method', 'auto_converge',
+    'return_residuals', 'return_robustness_weights', 'return_diagnostics',
+    'confidence_intervals', 'prediction_intervals', 'cv_fractions', 'cv_method',
+    'cv_k', 'cv_seed', 'return_se', 'parallel',
+])
+
+const _STREAMING_OPTION_KEYS = new Set(['chunk_size', 'overlap', 'merge_strategy'])
+
+const _ONLINE_OPTION_KEYS = new Set(['window_capacity', 'min_points', 'update_mode'])
+
+function _validateOptions(opts, validKeys, typeName) {
+    if (opts == null) return
+    for (const key of Object.keys(opts)) {
+        if (!validKeys.has(key)) {
+            throw new TypeError(
+                `Unknown ${typeName} key: "${key}". ` +
+                `Valid keys: ${[...validKeys].sort().join(', ')}`
+            )
+        }
+    }
+}
+
+// Normalize customWeights: accept Float64Array in addition to Array<number>.
+function _normalizeCustomWeights(cw) {
+    if (cw instanceof Float64Array) {
+        return Array.from(cw)
+    }
+    return cw
+}
+
+// ---------------------------------------------------------------------------
+// Wrapper classes: validate options, then delegate to native implementation
+// ---------------------------------------------------------------------------
+
+class Lowess extends _NativeLowess {
+    constructor(opts) {
+        _validateOptions(opts, _SMOOTH_OPTION_KEYS, 'SmoothOptions')
+        super(opts)
+    }
+
+    fit(x, y, customWeights) {
+        return super.fit(x, y, _normalizeCustomWeights(customWeights))
+    }
+
+    fit_async(x, y, customWeights) {
+        return super.fit_async(x, y, _normalizeCustomWeights(customWeights))
+    }
+}
+
+class StreamingLowess extends _NativeStreamingLowess {
+    constructor(opts, streamingOpts) {
+        _validateOptions(opts, _SMOOTH_OPTION_KEYS, 'SmoothOptions')
+        _validateOptions(streamingOpts, _STREAMING_OPTION_KEYS, 'StreamingOptions')
+        super(opts, streamingOpts)
+    }
+}
+
+class OnlineLowess extends _NativeOnlineLowess {
+    constructor(opts, onlineOpts) {
+        _validateOptions(opts, _SMOOTH_OPTION_KEYS, 'SmoothOptions')
+        _validateOptions(onlineOpts, _ONLINE_OPTION_KEYS, 'OnlineOptions')
+        super(opts, onlineOpts)
+    }
+}
 
 module.exports.Lowess = Lowess
 module.exports.StreamingLowess = StreamingLowess

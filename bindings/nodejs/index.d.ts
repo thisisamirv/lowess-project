@@ -5,9 +5,9 @@ export declare class Lowess {
     /** Create a new batch LOWESS smoother. */
     constructor(options?: SmoothOptions | undefined | null)
     /** Fit the model. */
-    fit(x: Float64Array, y: Float64Array): LowessResultObj
+    fit(x: Float64Array, y: Float64Array, customWeights?: Array<number> | null): LowessResultObj
     /** Fit the model asynchronously. */
-    fit_async(x: Float64Array, y: Float64Array): Promise<LowessResultObj>
+    fit_async(x: Float64Array, y: Float64Array, customWeights?: Array<number> | null): Promise<LowessResultObj>
 }
 
 /** Result of a LOWESS fit. */
@@ -40,12 +40,26 @@ export declare class LowessResultObj {
     get iterations_used(): number | null
 }
 
+/** Result of a single online update step. */
+export interface OnlineOutput {
+    /** Smoothed value for the latest point. */
+    smoothed: number
+    /** Standard error (if computed). */
+    std_error?: number
+    /** Residual y − smoothed (if computed). */
+    residual?: number
+    /** Robustness weight for the latest point (if computed). */
+    robustness_weight?: number
+    /** Number of robustness iterations performed (if applicable). */
+    iterations_used?: number
+}
+
 /** Online LOWESS smoother for real-time data. */
 export declare class OnlineLowess {
     /** Create a new online LOWESS smoother. */
     constructor(options?: SmoothOptions | undefined | null, onlineOpts?: OnlineOptions | undefined | null)
     /** Add a single point and get the smoothed value (or null if not enough points yet). */
-    add_point(x: number, y: number): number | null
+    add_point(x: number, y: number): OnlineOutput | null
 }
 
 /** Streaming LOWESS smoother for large datasets. */
@@ -78,9 +92,9 @@ export interface Diagnostics {
 
 /** Configuration options for online processing. */
 export interface OnlineOptions {
-    /** Maximum number of points to keep in the window. Default: 100. */
+    /** Maximum number of points to keep in the window. Default: 1000. */
     window_capacity?: number
-    /** Minimum points required before smoothing starts. Default: 2. */
+    /** Minimum points required before smoothing starts. Default: 3. */
     min_points?: number
     /** Update mode ("full", "incremental"). Default: "full". */
     update_mode?: string
@@ -125,10 +139,12 @@ export interface SmoothOptions {
     cv_method?: string
     /** Number of folds for K-Fold CV. Default: 5. */
     cv_k?: number
+    /** Random seed for reproducible K-Fold cross-validation. Default: None. */
+    cv_seed?: number
+    /** Compute standard errors. Default: false. */
+    return_se?: boolean
     /** Enable parallel execution. Default: true. */
     parallel?: boolean
-    /** Per-observation case weights. Must have the same length as the input data. */
-    custom_weights?: Array<number>
 }
 
 /** Configuration options for streaming processing. */
