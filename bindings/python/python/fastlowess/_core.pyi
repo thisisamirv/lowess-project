@@ -45,6 +45,34 @@ class Diagnostics:
         """Residual standard deviation."""
         ...
 
+class OnlineOutput:
+    """Result from a single add_point() call."""
+
+    @property
+    def smoothed(self) -> float:
+        """Smoothed value for the latest point."""
+        ...
+
+    @property
+    def std_error(self) -> float | None:
+        """Standard error (None if not computed)."""
+        ...
+
+    @property
+    def residual(self) -> float | None:
+        """Residual y − smoothed (None if not computed)."""
+        ...
+
+    @property
+    def robustness_weight(self) -> float | None:
+        """Robustness weight (None if not computed)."""
+        ...
+
+    @property
+    def iterations_used(self) -> int | None:
+        """Number of robustness iterations performed."""
+        ...
+
 class LowessResult:
     """Result from LOWESS smoothing."""
 
@@ -136,9 +164,9 @@ class Lowess:
         cv_method: str = "kfold",
         cv_k: int = 5,
         parallel: bool = True,
-        custom_weights: Sequence[float] | None = None,
+        cv_seed: int | None = None,
     ) -> None: ...
-    def fit(self, x: ArrayLike, y: ArrayLike) -> LowessResult: ...
+    def fit(self, x: ArrayLike, y: ArrayLike, custom_weights: ArrayLike | None = None) -> LowessResult: ...
 
 class StreamingLowess:
     """Streaming LOWESS processor for incremental chunk-based smoothing."""
@@ -160,6 +188,7 @@ class StreamingLowess:
         return_robustness_weights: bool = False,
         zero_weight_fallback: str = "use_local_mean",
         parallel: bool = True,
+        merge_strategy: str = "weighted_average",
     ) -> None: ...
     def process_chunk(self, x: ArrayLike, y: ArrayLike) -> LowessResult: ...
     def finalize(self) -> LowessResult: ...
@@ -184,4 +213,4 @@ class OnlineLowess:
         zero_weight_fallback: str = "use_local_mean",
         parallel: bool = False,
     ) -> None: ...
-    def add_point(self, x: float, y: float) -> float | None: ...
+    def add_point(self, x: float, y: float) -> OnlineOutput | None: ...

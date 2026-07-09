@@ -20,7 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Python:**
 
-- Added `custom_weights` parameter to the `Lowess` constructor. Accepts a `list[float]` of non-negative per-observation weights. Batch only.
+- Added `OnlineOutput` class to the Python binding. `OnlineLowess.add_point()` now returns `OnlineOutput | None` instead of `float | None`, exposing `smoothed`, `std_error`, `residual`, `robustness_weight`, and `iterations_used`.
+- Added `custom_weights` parameter to the `Lowess.fit(x, y, custom_weights=None)` constructor. Accepts a `list[float]` of non-negative per-observation weights. Batch only.
+- Removed `smooth()`, `smooth_streaming()`, and `smooth_online()` convenience function stubs from `_core.pyi`.
 
 **R:**
 
@@ -93,6 +95,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Python:**
 
 - Renamed the `update(x, y)` method on `OnlineLowess` to `add_point(x, y)` and removed the separate array-based `add_points(x, y)` method. `add_point` processes a single point and returns the smoothed value as `float | None`. This is a **breaking change**.
+- Updated `pyo3` and `numpy` dependencies to v0.29.
 
 **R:**
 

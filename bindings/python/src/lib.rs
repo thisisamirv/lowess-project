@@ -7,13 +7,13 @@ use pyo3::prelude::*;
 use std::fmt::Display;
 use std::sync::Mutex;
 
-use ::fastLowess::internals::binding_support;
 use ::fastLowess::internals::adapters::online::ParallelOnlineLowess;
 use ::fastLowess::internals::adapters::streaming::ParallelStreamingLowess;
 use ::fastLowess::internals::api::{
     Batch, BoundaryPolicy, LowessBuilder, Online, RobustnessMethod, ScalingMethod, Streaming,
     WeightFunction, ZeroWeightFallback,
 };
+use ::fastLowess::internals::binding_support;
 use ::fastLowess::prelude::LowessResult;
 
 // ============================================================================
@@ -227,7 +227,8 @@ impl PyStreamingLowess {
         return_residuals=false,
         return_robustness_weights=false,
         zero_weight_fallback="use_local_mean",
-        parallel=true
+        parallel=true,
+        merge_strategy="weighted_average"
     ))]
     #[allow(clippy::too_many_arguments)]
     fn new(
@@ -246,6 +247,7 @@ impl PyStreamingLowess {
         return_robustness_weights: bool,
         zero_weight_fallback: &str,
         parallel: bool,
+        merge_strategy: &str,
     ) -> PyResult<Self> {
         let overlap_size = overlap.unwrap_or_else(|| {
             let default = chunk_size / 10;
@@ -273,7 +275,7 @@ impl PyStreamingLowess {
                 parallel: Some(parallel),
                 chunk_size: Some(chunk_size),
                 overlap: Some(overlap_size),
-                merge_strategy: None,
+                merge_strategy: Some(merge_strategy),
                 window_capacity: None,
                 min_points: None,
                 update_mode: None,
@@ -323,6 +325,34 @@ impl PyStreamingLowess {
         })?;
 
         Ok(PyLowessResult { inner: result })
+    }
+}
+
+/// Result from a single online update step.
+#[pyclass(name = "OnlineOutput", from_py_object)]
+#[derive(Clone)]
+pub struct PyOnlineOutput {
+    /// Smoothed value for the latest point
+    #[pyo3(get)]
+    pub smoothed: f64,
+    /// Standard error (if computed)
+    #[pyo3(get)]
+    pub std_error: Option<f64>,
+    /// Residual y − smoothed (if computed)
+    #[pyo3(get)]
+    pub residual: Option<f64>,
+    /// Robustness weight for the latest point (if computed)
+    #[pyo3(get)]
+    pub robustness_weight: Option<f64>,
+    /// Number of robustness iterations performed (if tracked)
+    #[pyo3(get)]
+    pub iterations_used: Option<usize>,
+}
+
+#[pymethods]
+impl PyOnlineOutput {
+    fn __repr__(&self) -> String {
+        format!("OnlineOutput(smoothed={:.4})", self.smoothed)
     }
 }
 
@@ -407,14 +437,21 @@ impl PyOnlineLowess {
         })
     }
 
-    /// Add a single point and return smoothed value if enough points are available.
-    fn add_point(&self, x: f64, y: f64) -> PyResult<Option<f64>> {
+    /// Add a single point and return its smoothed value, or None if the window
+    /// is still filling up.
+    fn add_point(&self, x: f64, y: f64) -> PyResult<Option<PyOnlineOutput>> {
         let mut inner = self
             .inner
             .lock()
             .map_err(|e| to_py_error(format!("Mutex poisoned: {}", e)))?;
         let result = inner.add_point(x, y).map_err(to_py_error)?;
-        Ok(result.map(|o| o.smoothed))
+        Ok(result.map(|o| PyOnlineOutput {
+            smoothed: o.smoothed,
+            std_error: o.std_error,
+            residual: o.residual,
+            robustness_weight: o.robustness_weight,
+            iterations_used: o.iterations_used,
+        }))
     }
 }
 
@@ -443,7 +480,7 @@ pub struct PyLowess {
     cv_method: String,
     cv_k: usize,
     parallel: bool,
-    custom_weights: Option<Vec<f64>>,
+    cv_seed: Option<u64>,
 }
 
 #[pymethods]
@@ -468,7 +505,7 @@ impl PyLowess {
         cv_method="kfold",
         cv_k=5,
         parallel=true,
-        custom_weights=None
+        cv_seed=None
     ))]
     #[allow(clippy::too_many_arguments)]
     fn new(
@@ -490,7 +527,7 @@ impl PyLowess {
         cv_method: &str,
         cv_k: usize,
         parallel: bool,
-        custom_weights: Option<Vec<f64>>,
+        cv_seed: Option<u64>,
     ) -> PyResult<Self> {
         let wf = binding_support::parse_weight_function(weight_function)
             .map_err(|e| PyValueError::new_err(e))?;
@@ -522,7 +559,7 @@ impl PyLowess {
             cv_method: cv_method.to_string(),
             cv_k,
             parallel,
-            custom_weights,
+            cv_seed,
         })
     }
 
@@ -534,16 +571,21 @@ impl PyLowess {
     ///     Independent variable values.
     /// y : array_like
     ///     Dependent variable values.
+    /// custom_weights : list of float, optional
+    ///     Per-observation weights multiplied into the kernel weight before
+    ///     each local regression. Use 0.0 to suppress known-bad points.
     ///
     /// Returns
     /// -------
     /// LowessResult
     ///     Smoothed values and optional diagnostics.
+    #[pyo3(signature = (x, y, custom_weights=None))]
     fn fit<'py>(
         &self,
         py: Python<'py>,
         x: PyReadonlyArray1<'py, f64>,
         y: PyReadonlyArray1<'py, f64>,
+        custom_weights: Option<Vec<f64>>,
     ) -> PyResult<PyLowessResult> {
         // 1. Copy data (Must be done with GIL)
         let x_vec = x.as_slice().map_err(to_py_error)?.to_vec();
@@ -582,8 +624,8 @@ impl PyLowess {
                     cv_fractions: params.cv_fractions,
                     cv_method: Some(params.cv_method),
                     cv_k: Some(params.cv_k),
-                    cv_seed: None,
-                    custom_weights: params.custom_weights,
+                    cv_seed: params.cv_seed,
+                    custom_weights,
                 },
             )?;
 
@@ -618,6 +660,7 @@ impl PyLowess {
 fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyLowessResult>()?;
     m.add_class::<PyDiagnostics>()?;
+    m.add_class::<PyOnlineOutput>()?;
     m.add_class::<PyLowess>()?;
     m.add_class::<PyStreamingLowess>()?;
     m.add_class::<PyOnlineLowess>()?;

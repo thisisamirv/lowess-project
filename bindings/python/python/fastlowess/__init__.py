@@ -12,6 +12,7 @@ from ._core import (
     Lowess,
     LowessResult,
     OnlineLowess,
+    OnlineOutput,
     StreamingLowess,
 )
 
@@ -20,6 +21,7 @@ __all__ = [
     "Diagnostics",
     "Lowess",
     "OnlineLowess",
+    "OnlineOutput",
     "StreamingLowess",
     "__version__",
 ]
