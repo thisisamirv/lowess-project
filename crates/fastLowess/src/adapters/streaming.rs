@@ -23,10 +23,10 @@ use std::result::Result;
 
 // Export dependencies from lowess crate
 use crate::parse::IntoEnum;
-use lowess::internals::adapters::streaming::MergeStrategy;
-use lowess::internals::adapters::streaming::{StreamingLowess, StreamingLowessBuilder};
-use lowess::internals::algorithms::regression::WLSSolver;
-use lowess::internals::algorithms::regression::ZeroWeightFallback;
+use lowess::internals::adapters::streaming::{
+    MergeStrategy, StreamingLowess, StreamingLowessBuilder,
+};
+use lowess::internals::algorithms::regression::{WLSSolver, ZeroWeightFallback};
 use lowess::internals::algorithms::robustness::RobustnessMethod;
 use lowess::internals::engine::output::LowessResult;
 use lowess::internals::math::boundary::BoundaryPolicy;

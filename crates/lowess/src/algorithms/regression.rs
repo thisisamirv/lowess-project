@@ -69,13 +69,13 @@ impl FromStr for ZeroWeightFallback {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "uselocalmean" | "local_mean" | "mean" => Ok(Self::UseLocalMean),
-            "returnoriginal" | "original" => Ok(Self::ReturnOriginal),
-            "returnnone" | "none" => Ok(Self::ReturnNone),
+            "use_local_mean" | "uselocalmean" | "local_mean" | "mean" => Ok(Self::UseLocalMean),
+            "return_original" | "returnoriginal" | "original" => Ok(Self::ReturnOriginal),
+            "return_none" | "returnnone" | "none" => Ok(Self::ReturnNone),
             _ => Err(LowessError::InvalidOption {
                 option: "zero_weight_fallback",
                 value: s.to_string(),
-                valid: "uselocalmean, returnoriginal, returnnone",
+                valid: "use_local_mean, return_original, return_none",
             }),
         }
     }

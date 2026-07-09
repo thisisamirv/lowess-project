@@ -28,8 +28,7 @@ use std::result::Result;
 // Export dependencies from lowess crate
 use crate::parse::IntoEnum;
 use lowess::internals::adapters::batch::BatchLowessBuilder;
-use lowess::internals::algorithms::regression::WLSSolver;
-use lowess::internals::algorithms::regression::ZeroWeightFallback;
+use lowess::internals::algorithms::regression::{WLSSolver, ZeroWeightFallback};
 use lowess::internals::algorithms::robustness::RobustnessMethod;
 use lowess::internals::engine::output::LowessResult;
 use lowess::internals::evaluation::cv::CVKind;

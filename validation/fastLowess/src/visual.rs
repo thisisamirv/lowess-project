@@ -38,7 +38,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     run_intervals_comparison()?;
     println!();
 
-    run_robustness_comparison()?;
+    run_robust_iter_comparison()?;
     println!();
 
     run_loess_concept()?;
@@ -68,13 +68,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     run_zero_weight_fallback_comparison()?;
     println!();
 
-    run_streaming_comparison()?;
+    run_merge_comparison()?;
     println!();
 
     run_online_comparison()?;
     println!();
 
-    run_auto_converge_comparison()?;
+    run_adapter_comparison()?;
     println!();
 
     println!("All examples completed successfully.");
@@ -107,26 +107,28 @@ fn run_fraction_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let fractions = [0.2, 0.5, 0.9];
     let mut results = Vec::new();
 
-    for &frac in &fractions {
+    for (i, &frac) in fractions.iter().enumerate() {
         let result = Lowess::new()
             .fraction(frac)
             .iterations(2)
-            .delta(0.0) // Direct equivalent
             .boundary_policy("reflect")
             .build()
             .unwrap()
             .fit(&x, &y)
             .unwrap();
 
-        let mut mse = 0.0;
-        for i in 0..n {
-            let error = result.y[i] - y_true[i];
-            mse += error * error;
-        }
-        let rmse = (mse / n as f64).sqrt();
+        let rmse = (result
+            .y
+            .iter()
+            .zip(y_true.iter())
+            .map(|(f, t)| (f - t).powi(2))
+            .sum::<f64>()
+            / n as f64)
+            .sqrt();
 
         println!("Fraction {:.1}: RMSE = {:.6}", frac, rmse);
         results.push(result);
+        let _ = i;
     }
 
     let path = "../output/visual/fraction_comparison.csv";
@@ -170,7 +172,6 @@ fn run_intervals_comparison() -> Result<(), Box<dyn std::error::Error>> {
         .fraction(0.3)
         .iterations(2)
         .confidence_intervals(0.95)
-        .delta(0.0)
         .boundary_policy("reflect")
         .build()
         .unwrap()
@@ -182,7 +183,6 @@ fn run_intervals_comparison() -> Result<(), Box<dyn std::error::Error>> {
         .fraction(0.3)
         .iterations(2)
         .prediction_intervals(0.95)
-        .delta(0.0)
         .boundary_policy("reflect")
         .build()
         .unwrap()
@@ -241,7 +241,7 @@ fn run_intervals_comparison() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// 4. Robustness Comparison
-fn run_robustness_comparison() -> Result<(), Box<dyn std::error::Error>> {
+fn run_robust_iter_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let n = 150;
     let mut x = Vec::with_capacity(n);
     let mut y = Vec::with_capacity(n);
@@ -272,7 +272,6 @@ fn run_robustness_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let result_non_robust = Lowess::new()
         .fraction(0.25)
         .iterations(0)
-        .delta(0.0)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -282,28 +281,33 @@ fn run_robustness_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let result_robust = Lowess::new()
         .fraction(0.25)
         .iterations(6)
-        .delta(0.0)
         .build()
         .unwrap()
         .fit(&x, &y)
         .unwrap();
 
-    let mut mse_nr = 0.0;
-    let mut mse_r = 0.0;
-    for i in 0..n {
-        let err_nr = result_non_robust.y[i] - y_true[i];
-        let err_r = result_robust.y[i] - y_true[i];
-        mse_nr += err_nr * err_nr;
-        mse_r += err_r * err_r;
-    }
-    let rmse_nr = (mse_nr / n as f64).sqrt();
-    let rmse_r = (mse_r / n as f64).sqrt();
+    let rmse_nr = (result_non_robust
+        .y
+        .iter()
+        .zip(y_true.iter())
+        .map(|(f, t)| (f - t).powi(2))
+        .sum::<f64>()
+        / n as f64)
+        .sqrt();
+    let rmse_r = (result_robust
+        .y
+        .iter()
+        .zip(y_true.iter())
+        .map(|(f, t)| (f - t).powi(2))
+        .sum::<f64>()
+        / n as f64)
+        .sqrt();
 
     println!("RMSE (Non-Robust): {:.4}", rmse_nr);
     println!("RMSE (Robust):     {:.4}", rmse_r);
     println!("Improvement:       {:.2}x", rmse_nr / rmse_r);
 
-    let path = "../output/visual/robustness_comparison.csv";
+    let path = "../output/visual/robust_iter_comparison.csv";
     let mut file = File::create(path)?;
     writeln!(file, "x,y_true,y_noisy,y_non_robust,y_robust")?;
 
@@ -339,7 +343,6 @@ fn run_loess_concept() -> Result<(), Box<dyn std::error::Error>> {
     let result = Lowess::new()
         .fraction(fraction)
         .iterations(0)
-        .delta(0.0)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -484,30 +487,67 @@ fn run_kernel_comparison() -> Result<(), Box<dyn std::error::Error>> {
 
 /// 8. Robustness Method Comparison
 fn run_robust_method_comparison() -> Result<(), Box<dyn std::error::Error>> {
-    let n = 200;
+    // 200 clean points across [0, 10] + 80 one-sided outliers concentrated in
+    // [3, 7].  All outliers are pushed +5.5 above the true signal.
+    //
+    // Why this matters for the three methods (all using "mean" scaling):
+    //   The "mean" scale estimate gets inflated by the +5.5 outliers, so the
+    //   scaled residual u = |r|/scale falls in the range where the three weight
+    //   functions disagree:
+    //     Talwar  (c=2.5): hard cutoff — rejects outliers cleanly → best fit
+    //     Bisquare(c=6.0): smooth taper — accepts outliers with partial weight
+    //                      → biased upward in [3, 7]
+    //     Huber   (c=1.345): downweights beyond 1.345×scale, never zero →
+    //                        less biased than Bisquare but more than Talwar
+    //
+    // The contaminated zone [3, 7] makes the three diverging curves clearly
+    // visible against the clean flanks of the signal.
+    let n_clean = 200usize;
+    let n_out = 80usize;
+    let n = n_clean + n_out;
+
+    let mut seed: u64 = 0xdead_beef_cafe_f00d;
+    let mut rng = || -> f64 {
+        seed ^= seed << 13;
+        seed ^= seed >> 7;
+        seed ^= seed << 17;
+        (seed as f64) / (u64::MAX as f64)
+    };
+
     let mut x = Vec::with_capacity(n);
     let mut y = Vec::with_capacity(n);
     let mut y_true = Vec::with_capacity(n);
 
-    for i in 0..n {
-        let t = (i as f64 / (n - 1) as f64) * 10.0;
-        let signal = (t * 0.5).sin() * 5.0;
-        let mut value = signal + 0.3 * (i as f64 * 5.0).cos();
-
-        // Add extreme outliers
-        if i % 20 == 0 {
-            value += 15.0;
-        } else if i % 20 == 10 {
-            value -= 15.0;
-        }
-
+    // Clean points uniform on [0, 10] with small noise
+    for i in 0..n_clean {
+        let t = (i as f64 / (n_clean - 1) as f64) * 10.0;
+        let signal = (t * 0.5).sin() * 4.0;
+        let noise = 0.3 * (2.0 * rng() - 1.0);
         x.push(t);
         y_true.push(signal);
-        y.push(value);
+        y.push(signal + noise);
     }
 
-    println!("8. Robustness Method Comparison");
-    println!("-------------------------------");
+    // One-sided outliers concentrated in [3, 7], all displaced +5.5 above signal.
+    // Keeping all outliers in the same direction prevents cancellation within
+    // local windows, so the three weight functions produce visibly different fits.
+    for _ in 0..n_out {
+        let t = 3.0 + rng() * 4.0;
+        let signal = (t * 0.5).sin() * 4.0;
+        x.push(t);
+        y_true.push(signal);
+        y.push(signal + 5.5);
+    }
+
+    // Sort all by x
+    let mut indices: Vec<usize> = (0..n).collect();
+    indices.sort_by(|&a, &b| x[a].partial_cmp(&x[b]).unwrap());
+    let x: Vec<f64> = indices.iter().map(|&i| x[i]).collect();
+    let y: Vec<f64> = indices.iter().map(|&i| y[i]).collect();
+    let y_true: Vec<f64> = indices.iter().map(|&i| y_true[i]).collect();
+
+    println!("Robustness Method Comparison");
+    println!("----------------------------");
 
     let methods = ["bisquare", "huber", "talwar"];
     let mut results = Vec::new();
@@ -515,15 +555,39 @@ fn run_robust_method_comparison() -> Result<(), Box<dyn std::error::Error>> {
     for &method in &methods {
         let result = Lowess::new()
             .robustness_method(method)
+            .scaling_method("mean")
             .iterations(5)
-            .fraction(0.2)
+            .fraction(0.3)
             .build()
             .unwrap()
             .fit(&x, &y)
             .unwrap();
+        let rmse = (result
+            .y
+            .iter()
+            .zip(y_true.iter())
+            .map(|(f, t)| (f - t).powi(2))
+            .sum::<f64>()
+            / n as f64)
+            .sqrt();
+        println!("  {:10}: RMSE = {:.4}", method, rmse);
         results.push(result);
-        println!("  Method processed: {}", method);
     }
+
+    let max_bs_hub = results[0]
+        .y
+        .iter()
+        .zip(results[1].y.iter())
+        .map(|(a, b)| (a - b).abs())
+        .fold(0.0f64, f64::max);
+    let max_bs_tal = results[0]
+        .y
+        .iter()
+        .zip(results[2].y.iter())
+        .map(|(a, b)| (a - b).abs())
+        .fold(0.0f64, f64::max);
+    println!("  max |Bisquare − Huber|  = {:.4}", max_bs_hub);
+    println!("  max |Bisquare − Talwar| = {:.4}", max_bs_tal);
 
     let path = "../output/visual/robust_method_comparison.csv";
     let mut file = File::create(path)?;
@@ -559,7 +623,7 @@ fn run_boundary_policy_comparison() -> Result<(), Box<dyn std::error::Error>> {
     println!("9. Boundary Policy Comparison");
     println!("-----------------------------");
 
-    let policies = ["noboundary", "extend", "reflect"];
+    let policies = ["extend", "reflect", "zero", "noboundary"];
     let mut results = Vec::new();
 
     for &policy in &policies {
@@ -576,12 +640,21 @@ fn run_boundary_policy_comparison() -> Result<(), Box<dyn std::error::Error>> {
 
     let path = "../output/visual/boundary_comparison.csv";
     let mut file = File::create(path)?;
-    writeln!(file, "x,y_true,y_noisy,y_none,y_extend,y_reflect")?;
+    writeln!(
+        file,
+        "x,y_true,y_noisy,y_extend,y_reflect,y_zero,y_noboundary"
+    )?;
     for i in 0..n {
         writeln!(
             file,
-            "{},{},{},{},{},{}",
-            x[i], y_true[i], y[i], results[0].y[i], results[1].y[i], results[2].y[i]
+            "{},{},{},{},{},{},{}",
+            x[i],
+            y_true[i],
+            y[i],
+            results[0].y[i],
+            results[1].y[i],
+            results[2].y[i],
+            results[3].y[i]
         )?;
     }
     println!("Results exported to {}", path);
@@ -629,15 +702,24 @@ fn run_gap_handling() -> Result<(), Box<dyn std::error::Error>> {
 /// 12. Cross-Validation Comparison
 fn run_cv_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let n = 150;
+    let pi = std::f64::consts::PI;
     let mut x = Vec::with_capacity(n);
     let mut y = Vec::with_capacity(n);
     let mut y_true = Vec::with_capacity(n);
 
-    // Highly noisy signal on a small scale to make bandwidth selection critical
+    // t ∈ [0, 2π], y = sin(t) + xorshift64 noise (amplitude 1.0)
+    let mut seed: u64 = 0xabad_cafe_dead_beef;
+    let mut rng = || -> f64 {
+        seed ^= seed << 13;
+        seed ^= seed >> 7;
+        seed ^= seed << 17;
+        (seed as f64) / (u64::MAX as f64) * 2.0 - 1.0
+    };
+
     for i in 0..n {
-        let t = (i as f64 / (n - 1) as f64) * 5.0;
-        let signal = (t * 2.5).sin();
-        let noise = 0.6 * ((i as f64 * 17.0).sin() * (i as f64 * 13.0).cos());
+        let t = (i as f64 / (n - 1) as f64) * 2.0 * pi;
+        let signal = t.sin();
+        let noise = 1.0 * rng();
         x.push(t);
         y_true.push(signal);
         y.push(signal + noise);
@@ -672,14 +754,14 @@ fn run_cv_comparison() -> Result<(), Box<dyn std::error::Error>> {
         .unwrap();
     println!("  5-Fold Best Fraction: {}", kfold_result.fraction_used);
 
-    // 3. No CV (Fixed bad fraction - too small)
+    // 3. No CV (Fixed fraction 0.8 — over-smoothing as the counter-example)
     let fixed_result = Lowess::new()
-        .fraction(0.1) // Overfitting deliberately
+        .fraction(0.8) // Over-smoothing deliberately
         .build()
         .unwrap()
         .fit(&x, &y)
         .unwrap();
-    println!("  No CV Fraction (Fixed): 0.1");
+    println!("  No CV Fraction (Fixed): 0.8");
 
     // Export scores comparison
     let scores_path = "../output/visual/cv_scores.csv";
@@ -719,33 +801,52 @@ fn run_surface_mode_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let mut y = Vec::with_capacity(n);
     let mut y_true = Vec::with_capacity(n);
 
+    // Multi-frequency signal over [0, 4π].  The fast components (sin 3t, sin 5t)
+    // have wavelengths ~2.1 and ~1.3 — short enough that a delta-skip spanning
+    // ~24 adjacent points (delta=1.5, spacing≈0.063) causes the interpolated
+    // curve to miss peaks and troughs, while direct evaluation (delta=0) tracks
+    // them faithfully.
+    let range = 4.0 * std::f64::consts::PI;
     for i in 0..n {
-        let t = (i as f64 / (n - 1) as f64) * 10.0;
-        let signal = (t * 1.5).sin() + 0.5 * (t * 4.0).cos();
-        let noise = 0.2 * ((i as f64 * 11.0).sin());
+        let t = (i as f64 / (n - 1) as f64) * range;
+        let signal = t.sin() + 0.5 * (3.0 * t).sin() + 0.25 * (5.0 * t).sin();
+        let noise = 0.2 * ((i as f64 * 17.3).sin() + (i as f64 * 5.7).cos()) * 0.5;
         x.push(t);
         y_true.push(signal);
         y.push(signal + noise);
     }
 
-    println!("13. Surface Mode Comparison (Direct vs Delta)");
-    println!("-------------------------------------------");
+    println!("Surface Mode Comparison (Direct vs Interpolation)");
+    println!("--------------------------------------------------");
 
+    // Direct: fits a local polynomial at every one of the 200 points (delta = 0).
     let result_direct = Lowess::new()
-        .delta(0.0) // Direct evaluation
+        .delta(0.0)
         .fraction(0.2)
         .build()
         .unwrap()
         .fit(&x, &y)
         .unwrap();
 
+    // Interpolation: with delta = 1.5 and spacing ≈ 0.063, each anchor jump
+    // skips ~24 points, which are filled by linear interpolation between anchor
+    // fits.  This produces visible flat-ramp artifacts at the high-frequency
+    // peaks that are absent in the direct curve.
     let result_interp = Lowess::new()
-        .delta(0.1) // Allow interpolation
+        .delta(1.5)
         .fraction(0.2)
         .build()
         .unwrap()
         .fit(&x, &y)
         .unwrap();
+
+    let max_diff = result_direct
+        .y
+        .iter()
+        .zip(result_interp.y.iter())
+        .map(|(a, b)| (a - b).abs())
+        .fold(0.0f64, f64::max);
+    println!("  max |Direct − Interp| = {:.4}", max_diff);
 
     let path = "../output/visual/surface_mode_comparison.csv";
     let mut file = File::create(path)?;
@@ -763,21 +864,40 @@ fn run_surface_mode_comparison() -> Result<(), Box<dyn std::error::Error>> {
 
 /// 14. Scaling Method Comparison
 fn run_scaling_method_comparison() -> Result<(), Box<dyn std::error::Error>> {
-    let n = 150;
+    // Two-tier contamination (40 % total, well under the 50 % breakdown point):
+    //   • i%5 == 0 → moderate outlier  +1.5  (20 %)
+    //   • i%5 == 1 → extreme  outlier  +6.0  (20 %)
+    //   • others   → clean, σ ≈ 0.25          (60 %)
+    //
+    // Scale estimates after the first LOWESS pass (fit ≈ signal):
+    //   MAR  = median(|r|) ≈ 0.17  (dominated by the 60 % clean half-normal)
+    //          → threshold ≈ 0.26 → rejects BOTH outlier tiers
+    //   Mean = mean(|r|)   ≈ 1.64  (inflated by extreme outliers)
+    //          → threshold ≈ 2.46 → rejects extreme, keeps moderate (~51 % weight)
+    //   None → both tiers kept → fit biased ≈ signal + 1.5
+    let n = 200;
+    let pi = std::f64::consts::PI;
     let mut x = Vec::with_capacity(n);
     let mut y = Vec::with_capacity(n);
     let mut y_true = Vec::with_capacity(n);
 
+    let mut seed: u64 = 0xfeed_face_cafe_b0b0_u64;
+    let mut rng = || -> f64 {
+        seed ^= seed << 13;
+        seed ^= seed >> 7;
+        seed ^= seed << 17;
+        (seed as f64) / (u64::MAX as f64) * 2.0 - 1.0
+    };
+
     for i in 0..n {
-        let t = (i as f64 / (n - 1) as f64) * 5.0;
-        let signal = (t * 0.8).sin() * 2.0;
-        let mut value = signal + 0.2 * (i as f64 * 5.0).cos();
-
-        // Add asymmetric outliers
-        if i % 15 == 0 {
-            value += 8.0; // Large positive outliers
+        let t = (i as f64 / (n - 1) as f64) * 2.0 * pi;
+        let signal = t.sin();
+        let mut value = signal + 0.25 * rng();
+        if i % 5 == 0 {
+            value += 1.5; // moderate outlier
+        } else if i % 5 == 1 {
+            value += 6.0; // extreme outlier
         }
-
         x.push(t);
         y_true.push(signal);
         y.push(value);
@@ -786,32 +906,102 @@ fn run_scaling_method_comparison() -> Result<(), Box<dyn std::error::Error>> {
     println!("14. Scaling Method Comparison");
     println!("-----------------------------");
 
-    let result_mad = Lowess::new()
-        .scaling_method("mad")
-        .iterations(4)
+    // No robustness — baseline.
+    let result_none = Lowess::new()
+        .iterations(0)
         .fraction(0.3)
         .build()
         .unwrap()
         .fit(&x, &y)
         .unwrap();
 
+    // MAR: tight threshold (≈ clean noise level) → rejects both outlier tiers.
     let result_mar = Lowess::new()
         .scaling_method("mar")
-        .iterations(4)
+        .iterations(5)
         .fraction(0.3)
         .build()
         .unwrap()
         .fit(&x, &y)
         .unwrap();
+
+    // MAD (default): centers on median residual first → same tight threshold as
+    // MAR for this data (median(r) ≈ 0 since 60 % clean dominates).
+    let result_mad = Lowess::new()
+        .scaling_method("mad")
+        .iterations(5)
+        .fraction(0.3)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    // Mean (MAE): extreme outliers inflate the scale → looser threshold →
+    // moderate outliers partially retained → fit between MAR and None.
+    let result_mean = Lowess::new()
+        .scaling_method("mean")
+        .iterations(5)
+        .fraction(0.3)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    println!(
+        "  None MAE from true: {:.3}",
+        result_none
+            .y
+            .iter()
+            .zip(y_true.iter())
+            .map(|(a, b)| (a - b).abs())
+            .sum::<f64>()
+            / n as f64
+    );
+    println!(
+        "  MAD  MAE from true: {:.3}",
+        result_mad
+            .y
+            .iter()
+            .zip(y_true.iter())
+            .map(|(a, b)| (a - b).abs())
+            .sum::<f64>()
+            / n as f64
+    );
+    println!(
+        "  MAR  MAE from true: {:.3}",
+        result_mar
+            .y
+            .iter()
+            .zip(y_true.iter())
+            .map(|(a, b)| (a - b).abs())
+            .sum::<f64>()
+            / n as f64
+    );
+    println!(
+        "  Mean MAE from true: {:.3}",
+        result_mean
+            .y
+            .iter()
+            .zip(y_true.iter())
+            .map(|(a, b)| (a - b).abs())
+            .sum::<f64>()
+            / n as f64
+    );
 
     let path = "../output/visual/scaling_comparison.csv";
     let mut file = File::create(path)?;
-    writeln!(file, "x,y_true,y_noisy,y_mad,y_mar")?;
+    writeln!(file, "x,y_true,y_noisy,y_none,y_mad,y_mar,y_mean")?;
     for i in 0..n {
         writeln!(
             file,
-            "{},{},{},{},{}",
-            x[i], y_true[i], y[i], result_mad.y[i], result_mar.y[i]
+            "{},{},{},{},{},{},{}",
+            x[i],
+            y_true[i],
+            y[i],
+            result_none.y[i],
+            result_mad.y[i],
+            result_mar.y[i],
+            result_mean.y[i]
         )?;
     }
     println!("Results exported to {}", path);
@@ -820,50 +1010,94 @@ fn run_scaling_method_comparison() -> Result<(), Box<dyn std::error::Error>> {
 
 /// 15. Zero Weight Fallback Comparison
 fn run_zero_weight_fallback_comparison() -> Result<(), Box<dyn std::error::Error>> {
-    let n = 100;
-    let mut x = Vec::new();
-    let mut y = Vec::new();
+    // Signal: sin(π·x/5) on [0,10], n=200
+    // Anomalous zone x∈[4,6]: even indices → +6 spike, odd → clean
+    // Talwar robustness, fraction=0.10, 2 iterations
+    // After the first OLS pass, the 20-neighbour window for x∈[4.5,5.5]
+    // sits entirely in the zone → all robustness weights ≈ 0 → fallback fires:
+    //   UseLocalMean   → neighbourhood mean (smooth intermediate)
+    //   ReturnOriginal → original y at query point (jagged: spike or clean)
+    //   ReturnNone     → executor substitutes y_original[i] (same as ReturnOriginal)
+    let n = 200usize;
+    let pi = std::f64::consts::PI;
+
+    let mut seed: u64 = 0xdead_beef_cafe_1234;
+    let mut rng = || -> f64 {
+        seed ^= seed << 13;
+        seed ^= seed >> 7;
+        seed ^= seed << 17;
+        (seed as f64) / (u64::MAX as f64)
+    };
+
+    let mut x = Vec::with_capacity(n);
+    let mut y = Vec::with_capacity(n);
+    let mut y_true = Vec::with_capacity(n);
 
     for i in 0..n {
         let t = (i as f64 / (n - 1) as f64) * 10.0;
+        let signal = (pi * t / 5.0).sin();
+        let noise = 0.05 * (2.0 * rng() - 1.0);
+        let in_zone = (4.0..=6.0_f64).contains(&t);
+        let spike = if in_zone && i % 2 == 0 { 6.0 } else { 0.0 };
         x.push(t);
-        // Create an extreme outlier that will be zero-weighted by robustness
-        if i == 50 {
-            y.push(100.0);
-        } else {
-            y.push((t * 0.5).cos());
-        }
+        y_true.push(signal);
+        y.push(signal + noise + spike);
     }
 
     println!("15. Zero Weight Fallback Comparison");
-    println!("-----------------------------------");
+    println!("------------------------------------");
 
-    let result_mean = Lowess::new()
-        .zero_weight_fallback("uselocalmean")
-        .fraction(0.1)
-        .iterations(5)
-        .build()
-        .unwrap()
-        .fit(&x, &y)
-        .unwrap();
+    let make_fit = |fallback: &str| {
+        Lowess::new()
+            .iterations(2) // 1 OLS + 1 WLS — fallback fires before IRLS can propagate
+            .fraction(0.10)
+            .delta(0.0) // Direct evaluation — required so the weight_sum = 0 check fires
+            .robustness_method("talwar")
+            .zero_weight_fallback(fallback)
+            .boundary_policy("noboundary")
+            .return_robustness_weights()
+            .build()
+            .unwrap()
+            .fit(&x, &y)
+            .unwrap()
+    };
 
-    let result_orig = Lowess::new()
-        .zero_weight_fallback("returnoriginal")
-        .fraction(0.1)
-        .iterations(5)
-        .build()
-        .unwrap()
-        .fit(&x, &y)
-        .unwrap();
+    let fit_lm = make_fit("use_local_mean");
+    let fit_ro = make_fit("return_original");
+    let fit_rn = make_fit("return_none");
+
+    if let Some(ref rw) = fit_lm.robustness_weights {
+        let n_zero = rw.iter().filter(|&&w| w < 1e-10).count();
+        println!("  Points with zero robustness weight: {}/{}", n_zero, n);
+    }
+
+    for (name, fit) in [
+        ("UseLocalMean  ", &fit_lm),
+        ("ReturnOriginal", &fit_ro),
+        ("ReturnNone    ", &fit_rn),
+    ] {
+        let rmse = (fit
+            .y
+            .iter()
+            .zip(y_true.iter())
+            .map(|(f, t)| (f - t).powi(2))
+            .sum::<f64>()
+            / n as f64)
+            .sqrt();
+        println!("  RMSE {}: {:.4}", name, rmse);
+    }
 
     let path = "../output/visual/zero_weight_comparison.csv";
     let mut file = File::create(path)?;
-    writeln!(file, "x,y_noisy,y_mean,y_original")?;
-    for i in 0..x.len() {
+    writeln!(
+        file,
+        "x,y_true,y_noisy,y_local_mean,y_return_original,y_return_none"
+    )?;
+    for i in 0..n {
         writeln!(
             file,
-            "{},{},{},{}",
-            x[i], y[i], result_mean.y[i], result_orig.y[i]
+            "{},{},{},{},{},{}",
+            x[i], y_true[i], y[i], fit_lm.y[i], fit_ro.y[i], fit_rn.y[i]
         )?;
     }
     println!("Results exported to {}", path);
@@ -871,46 +1105,63 @@ fn run_zero_weight_fallback_comparison() -> Result<(), Box<dyn std::error::Error
 }
 
 /// 17. Streaming Adapter Comparison
-fn run_streaming_comparison() -> Result<(), Box<dyn std::error::Error>> {
-    let n = 1000;
+fn run_merge_comparison() -> Result<(), Box<dyn std::error::Error>> {
+    let n = 600;
+    let chunk_size = 150;
+    let overlap = 90; // 60 % overlap — large overlap zone = more points where strategies differ
+
+    // Piecewise signal with hard jumps AT each chunk boundary (i=150, 300, 450).
+    // Adjacent chunks therefore fit very different levels in the overlap zone:
+    //   • Chunk 1 [0..150]  fits base ≈ 0,   so its overlap prediction ≈ 0
+    //   • Chunk 2 [150..300] fits base ≈ 2.5, so its overlap prediction ≈ 2.5
+    //   → TakeFirst:        hard step at boundary (takes chunk 1, then chunk 2)
+    //   → Average:          midpoint ramp in the 90-pt overlap zone
+    //   → WeightedAverage:  smooth distance-weighted ramp
+    let mut seed: u64 = 0xcafe_babe_1234_5678;
+    let mut rng = || -> f64 {
+        seed ^= seed << 13;
+        seed ^= seed >> 7;
+        seed ^= seed << 17;
+        (seed as f64) / (u64::MAX as f64) * 2.0 - 1.0
+    };
+
+    let bases = [0.0_f64, 2.5, 0.5, 3.5];
     let mut x = Vec::with_capacity(n);
     let mut y = Vec::with_capacity(n);
     let mut y_true = Vec::with_capacity(n);
 
     for i in 0..n {
-        let t = i as f64 / 100.0;
-        let signal = (t).sin() + 0.5 * (t * 2.5).cos();
-        let noise = 0.1 * ((i as f64 * 7.0).sin());
+        let t = i as f64;
+        let base = bases[i / chunk_size];
+        let signal = base + 0.4 * (t * 0.025).sin();
+        let noise = 0.35 * rng();
         x.push(t);
         y_true.push(signal);
         y.push(signal + noise);
     }
 
-    println!("17. Streaming Adapter Comparison");
-    println!("-------------------------------");
-
-    let chunk_size = 200;
-    let overlap = 80;
+    println!("16. Streaming Comparison (Strategies)");
+    println!("-----------------------------------");
 
     let mut streaming_weighted = StreamingLowess::new()
         .chunk_size(chunk_size)
         .overlap(overlap)
         .merge_strategy("weighted_average")
-        .fraction(0.2)
+        .fraction(0.8)
         .build()?;
 
     let mut streaming_average = StreamingLowess::new()
         .chunk_size(chunk_size)
         .overlap(overlap)
         .merge_strategy("average")
-        .fraction(0.2)
+        .fraction(0.8)
         .build()?;
 
     let mut streaming_first = StreamingLowess::new()
         .chunk_size(chunk_size)
         .overlap(overlap)
         .merge_strategy("take_first")
-        .fraction(0.2)
+        .fraction(0.8)
         .build()?;
 
     let mut y_weighted = Vec::new();
@@ -935,7 +1186,7 @@ fn run_streaming_comparison() -> Result<(), Box<dyn std::error::Error>> {
     y_average.extend(streaming_average.finalize()?.y);
     y_first.extend(streaming_first.finalize()?.y);
 
-    let path = "../output/visual/streaming_comparison.csv";
+    let path = "../output/visual/merge_comparison.csv";
     let mut file = File::create(path)?;
     writeln!(file, "x,y_true,y_noisy,y_weighted,y_average,y_first")?;
     for i in 0..n {
@@ -951,53 +1202,65 @@ fn run_streaming_comparison() -> Result<(), Box<dyn std::error::Error>> {
 
 /// 18. Online Adapter Comparison
 fn run_online_comparison() -> Result<(), Box<dyn std::error::Error>> {
-    let n = 500;
+    let n = 600;
     let mut x = Vec::with_capacity(n);
     let mut y = Vec::with_capacity(n);
     let mut y_true = Vec::with_capacity(n);
 
+    // Two sudden regime shifts: +2.5 at t=200, -2.0 at t=400.
+    // xorshift64 noise so neither window can "track" it — forcing the lag
+    // difference to be purely about window size, not noise structure.
+    let mut seed: u64 = 0xc0de_babe_dead_beef;
+    let mut rng = || -> f64 {
+        seed ^= seed << 13;
+        seed ^= seed >> 7;
+        seed ^= seed << 17;
+        (seed as f64) / (u64::MAX as f64) * 2.0 - 1.0
+    };
+
     for i in 0..n {
         let t = i as f64;
-        // A signal that shifts its mean over time
-        let signal = (t * 0.05).sin() + if t > 250.0 { 2.0 } else { 0.0 };
-        let noise = 0.2 * ((i as f64 * 3.0).cos());
+        let mut signal = (t * 0.04).sin();
+        if t >= 200.0 {
+            signal += 2.5;
+        }
+        if t >= 400.0 {
+            signal -= 2.0;
+        }
+        let noise = 0.5 * rng();
         x.push(t);
         y_true.push(signal);
         y.push(signal + noise);
     }
 
-    println!("18. Online Adapter Comparison");
-    println!("----------------------------");
+    println!("17. Online Comparison (Windows)");
+    println!("------------------------------");
 
-    let mut online_small = OnlineLowess::new()
-        .window_capacity(50)
+    // 1. Small window — fast/responsive but noisier
+    let mut adapter_small = OnlineLowess::new()
+        .window_capacity(30)
+        .min_points(10)
         .update_mode("incremental")
+        .fraction(0.9)
         .build()?;
 
-    let mut online_large = OnlineLowess::new()
-        .window_capacity(200)
+    // 2. Large window — smooth but slow to adapt (lags behind at shifts)
+    let mut adapter_large = OnlineLowess::new()
+        .window_capacity(300)
+        .min_points(10)
         .update_mode("full")
-        .iterations(2)
+        .fraction(0.3)
+        .iterations(3)
         .build()?;
 
-    let mut y_small = Vec::new();
-    let mut y_large = Vec::new();
+    let mut y_small = Vec::<f64>::with_capacity(n);
+    let mut y_large = Vec::<f64>::with_capacity(n);
 
     for i in 0..n {
-        let yi = y[i];
-
-        y_small.push(
-            online_small
-                .add_point(x[i], yi)?
-                .map(|o| o.smoothed)
-                .unwrap_or(y[0]),
-        );
-        y_large.push(
-            online_large
-                .add_point(x[i], yi)?
-                .map(|o| o.smoothed)
-                .unwrap_or(y[0]),
-        );
+        let r_small = adapter_small.add_point(x[i], y[i])?;
+        let r_large = adapter_large.add_point(x[i], y[i])?;
+        y_small.push(r_small.as_ref().map(|o| o.smoothed).unwrap_or(y[i]));
+        y_large.push(r_large.as_ref().map(|o| o.smoothed).unwrap_or(y[i]));
     }
 
     let path = "../output/visual/online_comparison.csv";
@@ -1015,129 +1278,137 @@ fn run_online_comparison() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// 19. Auto-Convergence Comparison
-fn run_auto_converge_comparison() -> Result<(), Box<dyn std::error::Error>> {
+fn run_adapter_comparison() -> Result<(), Box<dyn std::error::Error>> {
+    // x ∈ [0, 4π]: two full sine periods over 200 evenly-spaced points.
+    // fraction = 0.15 → window ≈ 30 pts ≈ 1.88 x-units ≈ 0.30 periods, so
+    // a local-linear fit captures the sinusoidal shape well.
+    // Every 10th point has a +2.5 outlier (10 % contamination) to give
+    // Bisquare robustness something to work with across iterations.
     let n = 200;
+    let chunk_size = 50;
+    let overlap = 10;
+    let pi = std::f64::consts::PI;
     let mut x = Vec::with_capacity(n);
     let mut y = Vec::with_capacity(n);
     let mut y_true = Vec::with_capacity(n);
 
     for i in 0..n {
-        let t = i as f64 / 10.0;
-        let signal = (t).sin();
-        let noise = if i % 20 == 0 {
-            2.0
+        let t = (i as f64 / (n - 1) as f64) * 4.0 * pi;
+        let signal = t.sin();
+        let noise = if i % 10 == 0 {
+            2.5
         } else {
-            0.1 * (i as f64).cos()
+            0.1 * (i as f64 * 3.7).cos()
         };
         x.push(t);
         y_true.push(signal);
         y.push(signal + noise);
     }
 
-    println!("19. Auto-Convergence Comparison (All Adapters)");
+    println!("18. Auto-Convergence Comparison (All Adapters)");
     println!("--------------------------------------------");
 
-    let iterations = 4;
-    let tolerance = 0.001;
+    let iterations = 12;
+    let tolerance = 0.01;
+    let frac = 0.15;
 
     // 1. Batch
-    let batch_off = Lowess::new()
-        .fraction(0.3)
+    let res_b_off = Lowess::new()
+        .fraction(frac)
+        .robustness_method("bisquare")
         .iterations(iterations)
-        .build()?;
-    let batch_on = Lowess::new()
-        .fraction(0.3)
+        .build()?
+        .fit(&x, &y)?;
+    let res_b_on = Lowess::new()
+        .fraction(frac)
+        .robustness_method("bisquare")
         .iterations(iterations)
         .auto_converge(tolerance)
-        .build()?;
-
-    let res_batch_off = batch_off.fit(&x, &y)?;
-    let res_batch_on = batch_on.fit(&x, &y)?;
+        .build()?
+        .fit(&x, &y)?;
 
     // 2. Streaming
     let mut stream_off = StreamingLowess::new()
-        .fraction(0.3)
+        .fraction(frac)
+        .robustness_method("bisquare")
         .iterations(iterations)
-        .chunk_size(100)
-        .overlap(20)
+        .chunk_size(chunk_size)
+        .overlap(overlap)
         .build()?;
     let mut stream_on = StreamingLowess::new()
-        .fraction(0.3)
+        .fraction(frac)
+        .robustness_method("bisquare")
         .iterations(iterations)
         .auto_converge(tolerance)
-        .chunk_size(100)
-        .overlap(20)
+        .chunk_size(chunk_size)
+        .overlap(overlap)
         .build()?;
 
-    let mut y_stream_off = Vec::new();
-    let mut y_stream_on = Vec::new();
-    let mut iter_stream_off = Vec::new();
-    let mut iter_stream_on = Vec::new();
+    let mut y_s_off: Vec<f64> = Vec::new();
+    let mut y_s_on: Vec<f64> = Vec::new();
+    let mut iter_s_off: Vec<usize> = Vec::new();
+    let mut iter_s_on: Vec<usize> = Vec::new();
 
-    for i in (0..n).step_by(100) {
-        let end = (i + 100).min(n);
+    for i in (0..n).step_by(chunk_size) {
+        let end = (i + chunk_size).min(n);
         let out_off = stream_off.process_chunk(&x[i..end], &y[i..end])?;
         let out_on = stream_on.process_chunk(&x[i..end], &y[i..end])?;
 
         let n_off = out_off.y.len();
         let n_on = out_on.y.len();
+        let iters_off = out_off.iterations_used.unwrap_or(0);
+        let iters_on = out_on.iterations_used.unwrap_or(0);
 
-        y_stream_off.extend(out_off.y);
-        y_stream_on.extend(out_on.y);
+        y_s_off.extend(&out_off.y);
+        y_s_on.extend(&out_on.y);
+        iter_s_off.extend(vec![iters_off; n_off]);
+        iter_s_on.extend(vec![iters_on; n_on]);
 
-        iter_stream_off.extend(vec![out_off.iterations_used.unwrap_or(0); n_off]);
-        iter_stream_on.extend(vec![out_on.iterations_used.unwrap_or(0); n_on]);
+        if end == n {
+            break;
+        }
     }
     let fin_off = stream_off.finalize()?;
     let fin_on = stream_on.finalize()?;
-
-    let n_fin_off = fin_off.y.len();
-    let n_fin_on = fin_on.y.len();
-
-    y_stream_off.extend(fin_off.y);
-    y_stream_on.extend(fin_on.y);
-
-    iter_stream_off.extend(vec![fin_off.iterations_used.unwrap_or(0); n_fin_off]);
-    iter_stream_on.extend(vec![fin_on.iterations_used.unwrap_or(0); n_fin_on]);
+    let n_fin = fin_off.y.len();
+    let iters_fin_off = fin_off.iterations_used.unwrap_or(0);
+    let iters_fin_on = fin_on.iterations_used.unwrap_or(0);
+    y_s_off.extend(&fin_off.y);
+    y_s_on.extend(&fin_on.y);
+    iter_s_off.extend(vec![iters_fin_off; n_fin]);
+    iter_s_on.extend(vec![iters_fin_on; n_fin]);
 
     // 3. Online
     let mut online_off = OnlineLowess::new()
-        .fraction(0.3)
+        .fraction(frac)
+        .robustness_method("bisquare")
         .iterations(iterations)
         .window_capacity(50)
         .update_mode("full")
         .build()?;
     let mut online_on = OnlineLowess::new()
-        .fraction(0.3)
+        .fraction(frac)
+        .robustness_method("bisquare")
         .iterations(iterations)
         .auto_converge(tolerance)
         .window_capacity(50)
         .update_mode("full")
         .build()?;
 
-    let mut y_online_off = Vec::new();
-    let mut y_online_on = Vec::new();
-    let iter_online_off = vec![0; n];
-    let iter_online_on = vec![0; n];
+    let mut y_o_off = Vec::new();
+    let mut y_o_on = Vec::new();
+    // Per-point iteration counts not exposed by online adapter; use constant
+    let iter_o_off = vec![0usize; n];
+    let iter_o_on = vec![0usize; n];
 
     for i in 0..n {
-        let out_off = online_off.add_point(x[i], y[i])?;
-        let out_on = online_on.add_point(x[i], y[i])?;
-
-        match (out_off, out_on) {
-            (Some(off), Some(on)) => {
-                y_online_off.push(off.smoothed);
-                y_online_on.push(on.smoothed);
-            }
-            _ => {
-                // Not enough points yet
-                y_online_off.push(y_true[i]);
-                y_online_on.push(y_true[i]);
-            }
-        }
+        let r_off = online_off.add_point(x[i], y[i])?;
+        let r_on = online_on.add_point(x[i], y[i])?;
+        y_o_off.push(r_off.as_ref().map(|o| o.smoothed).unwrap_or(y_true[i]));
+        y_o_on.push(r_on.as_ref().map(|o| o.smoothed).unwrap_or(y_true[i]));
     }
 
-    let path = "../output/visual/auto_converge_comparison.csv";
+    let path = "../output/visual/adapter_comparison.csv";
     let mut file = File::create(path)?;
     writeln!(
         file,
@@ -1151,18 +1422,18 @@ fn run_auto_converge_comparison() -> Result<(), Box<dyn std::error::Error>> {
             x[i],
             y_true[i],
             y[i],
-            res_batch_off.y[i],
-            res_batch_on.y[i],
-            y_stream_off[i],
-            y_stream_on[i],
-            y_online_off[i],
-            y_online_on[i],
-            res_batch_off.iterations_used.unwrap_or(0),
-            res_batch_on.iterations_used.unwrap_or(0),
-            iter_stream_off[i],
-            iter_stream_on[i],
-            iter_online_off[i],
-            iter_online_on[i]
+            res_b_off.y[i],
+            res_b_on.y[i],
+            y_s_off[i],
+            y_s_on[i],
+            y_o_off[i],
+            y_o_on[i],
+            res_b_off.iterations_used.unwrap_or(0),
+            res_b_on.iterations_used.unwrap_or(0),
+            iter_s_off[i],
+            iter_s_on[i],
+            iter_o_off[i],
+            iter_o_on[i]
         )?;
     }
     println!("Results exported to {}", path);
