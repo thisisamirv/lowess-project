@@ -39,7 +39,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `return_se` and `cv_seed` fields to `SmoothOptions`.
 - Added `customWeights` as an optional per-call argument to `fit(x, y, customWeights?)` and `fit_async(x, y, customWeights?)`. Accepts `Array<number>` or `Float64Array` of non-negative per-observation weights. Includes pre-flight length-mismatch and non-negative validation. Batch only.
 - Added JavaScript-layer option key validation: unknown keys in `SmoothOptions`, `StreamingOptions`, or `OnlineOptions` now throw a `TypeError` listing all valid keys, via wrapper classes around the native NAPI exports.
-- Updated `napi-rs/cli` dependency to v3.7 and `oxlint` to v1.73.
 
 **WebAssembly:**
 
@@ -72,6 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed the internal `auto_convergence` struct field to `auto_converge` on `BatchLowessBuilder`, `OnlineLowessBuilder`, `StreamingLowessBuilder`, and the executor config types, making the field name consistent with the existing `auto_converge()` setter method. This is a **breaking change** for any code that accessed these fields directly.
 - Changed `build()` to wrap all accumulated string-parse errors in a `LowessError::ParseErrors(Vec<LowessError>)` value instead of surfacing only the first error. This is a **breaking change** for code that matched on `LowessError::InvalidOption` as the error returned from `build()`.
 - Made the `IntoEnum<E>` trait `pub(crate)` in both `lowess` and `fastLowess`, restricting it to crate-internal use. Callers do not need to name this trait; builder methods continue to accept both enum variants and string literals unchanged.
+- Updated `wide` dependency to v1.5, `wgpu` to v30.0, and `pollster` to v1.0.
 
 **fastLowess:**
 
@@ -92,12 +92,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replaced `add_points(x: Float64Array, y: Float64Array): LowessResultObj` on `OnlineLowess` with `add_point(x: number, y: number): OnlineOutput | null`. The method now processes a single point and returns an `OnlineOutput` object, or `null` if not enough points have been accumulated yet. This is a **breaking change**.
 - Changed default `OnlineOptions.window_capacity` from 100 to 1000 and `OnlineOptions.min_points` from 2 to 3, matching the defaults used by the loess binding.
 - `OnlineLowess` now forwards all `SmoothOptions` fields to the underlying builder (previously only `fraction`, `iterations`, and `parallel` were forwarded; all other fields were hardcoded to `None`/`false`).
+- Updated `napi-rs/cli` dependency to v3.7 and `oxlint` to v1.73.
 
 **WASM:**
 
 - Renamed all JS-facing option keys to snake_case by removing `#[serde(rename = "camelCase")]` attributes from `SmoothOptions`, `StreamingOptions`, and `OnlineOptions`. JSON passed from JavaScript must now use snake_case keys.
 - Updated `Diagnostics` getter names to snake_case: `r_squared`, `effective_df`, `residual_sd`.
 - Renamed the `update(x: number, y: number)` method on `OnlineLowessWasm` to `add_point(x: number, y: number)`. This is a **breaking change**.
+- Updated `oxlint` dependency to v1.73.
 
 **Python:**
 
