@@ -29,6 +29,9 @@ use crate::math::scaling::ScalingMethod;
 use crate::primitives::backend::Backend;
 use crate::primitives::buffer::{OnlineBuffer, VecExt};
 use crate::primitives::errors::LowessError;
+use crate::adapters::defaults::*;
+use crate::algorithms::defaults::*;
+use crate::math::defaults::*;
 
 // Update mode for online LOWESS processing.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -131,20 +134,20 @@ impl<T: Float> OnlineLowessBuilder<T> {
     // Create a new online LOWESS builder with default parameters.
     fn new() -> Self {
         Self {
-            window_capacity: crate::defaults::DEFAULT_ONLINE_WINDOW_CAPACITY,
-            min_points: crate::defaults::DEFAULT_ONLINE_MIN_POINTS,
-            fraction: T::from(crate::defaults::DEFAULT_FRACTION).unwrap(),
-            delta: T::from(crate::defaults::DEFAULT_DELTA).unwrap(),
-            iterations: crate::defaults::DEFAULT_ITERATIONS,
-            weight_function: crate::defaults::DEFAULT_WEIGHT_FUNCTION_ENUM,
-            update_mode: crate::defaults::DEFAULT_ONLINE_UPDATE_MODE_ENUM,
-            robustness_method: crate::defaults::DEFAULT_ROBUSTNESS_METHOD_ENUM,
-            zero_weight_fallback: crate::defaults::DEFAULT_ZERO_WEIGHT_FALLBACK_ENUM,
-            boundary_policy: crate::defaults::DEFAULT_BOUNDARY_POLICY_ENUM,
-            scaling_method: crate::defaults::DEFAULT_SCALING_METHOD_ENUM,
-            compute_residuals: crate::defaults::DEFAULT_RETURN_RESIDUALS,
-            return_robustness_weights: crate::defaults::DEFAULT_RETURN_ROBUSTNESS_WEIGHTS,
-            auto_converge: crate::defaults::default_auto_converge(),
+            window_capacity: DEFAULT_ONLINE_WINDOW_CAPACITY,
+            min_points: DEFAULT_ONLINE_MIN_POINTS,
+            fraction: T::from(DEFAULT_FRACTION).unwrap(),
+            delta: T::from(DEFAULT_DELTA).unwrap(),
+            iterations: DEFAULT_ITERATIONS,
+            weight_function: DEFAULT_WEIGHT_FUNCTION_ENUM,
+            update_mode: DEFAULT_ONLINE_UPDATE_MODE_ENUM,
+            robustness_method: DEFAULT_ROBUSTNESS_METHOD_ENUM,
+            zero_weight_fallback: DEFAULT_ZERO_WEIGHT_FALLBACK_ENUM,
+            boundary_policy: DEFAULT_BOUNDARY_POLICY_ENUM,
+            scaling_method: DEFAULT_SCALING_METHOD_ENUM,
+            compute_residuals: DEFAULT_RETURN_RESIDUALS,
+            return_robustness_weights: DEFAULT_RETURN_ROBUSTNESS_WEIGHTS,
+            auto_converge: default_auto_converge(),
             deferred_error: None,
             custom_smooth_pass: None,
             custom_cv_pass: None,

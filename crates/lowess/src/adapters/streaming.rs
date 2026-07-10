@@ -20,6 +20,8 @@ use num_traits::Float;
 use std::vec::Vec;
 
 // Internal dependencies
+use crate::adapters::defaults::*;
+use crate::algorithms::defaults::*;
 use crate::algorithms::regression::{WLSSolver, ZeroWeightFallback};
 use crate::algorithms::robustness::RobustnessMethod;
 use crate::engine::executor::{CVPassFn, FitPassFn, IntervalPassFn, SmoothPassFn};
@@ -28,6 +30,7 @@ use crate::engine::output::LowessResult;
 use crate::engine::validator::Validator;
 use crate::evaluation::diagnostics::DiagnosticsState;
 use crate::math::boundary::BoundaryPolicy;
+use crate::math::defaults::*;
 use crate::math::kernel::WeightFunction;
 use crate::math::scaling::ScalingMethod;
 use crate::primitives::backend::Backend;
@@ -146,21 +149,21 @@ impl<T: Float> StreamingLowessBuilder<T> {
     // Create a new streaming LOWESS builder with default parameters.
     fn new() -> Self {
         Self {
-            chunk_size: crate::defaults::DEFAULT_STREAMING_CHUNK_SIZE,
-            overlap: crate::defaults::DEFAULT_STREAMING_OVERLAP,
-            fraction: T::from(crate::defaults::DEFAULT_FRACTION).unwrap(),
-            iterations: crate::defaults::DEFAULT_ITERATIONS,
-            delta: T::from(crate::defaults::DEFAULT_DELTA).unwrap(),
-            weight_function: crate::defaults::DEFAULT_WEIGHT_FUNCTION_ENUM,
-            boundary_policy: crate::defaults::DEFAULT_BOUNDARY_POLICY_ENUM,
-            robustness_method: crate::defaults::DEFAULT_ROBUSTNESS_METHOD_ENUM,
-            zero_weight_fallback: crate::defaults::DEFAULT_ZERO_WEIGHT_FALLBACK_ENUM,
-            merge_strategy: crate::defaults::DEFAULT_STREAMING_MERGE_STRATEGY_ENUM,
-            compute_residuals: crate::defaults::DEFAULT_RETURN_RESIDUALS,
-            scaling_method: crate::defaults::DEFAULT_SCALING_METHOD_ENUM,
-            return_diagnostics: crate::defaults::DEFAULT_RETURN_DIAGNOSTICS,
-            return_robustness_weights: crate::defaults::DEFAULT_RETURN_ROBUSTNESS_WEIGHTS,
-            auto_converge: crate::defaults::default_auto_converge(),
+            chunk_size: DEFAULT_STREAMING_CHUNK_SIZE,
+            overlap: DEFAULT_STREAMING_OVERLAP,
+            fraction: T::from(DEFAULT_FRACTION).unwrap(),
+            iterations: DEFAULT_ITERATIONS,
+            delta: T::from(DEFAULT_DELTA).unwrap(),
+            weight_function: DEFAULT_WEIGHT_FUNCTION_ENUM,
+            boundary_policy: DEFAULT_BOUNDARY_POLICY_ENUM,
+            robustness_method: DEFAULT_ROBUSTNESS_METHOD_ENUM,
+            zero_weight_fallback: DEFAULT_ZERO_WEIGHT_FALLBACK_ENUM,
+            merge_strategy: DEFAULT_STREAMING_MERGE_STRATEGY_ENUM,
+            compute_residuals: DEFAULT_RETURN_RESIDUALS,
+            scaling_method: DEFAULT_SCALING_METHOD_ENUM,
+            return_diagnostics: DEFAULT_RETURN_DIAGNOSTICS,
+            return_robustness_weights: DEFAULT_RETURN_ROBUSTNESS_WEIGHTS,
+            auto_converge: default_auto_converge(),
             deferred_error: None,
             custom_smooth_pass: None,
             custom_cv_pass: None,

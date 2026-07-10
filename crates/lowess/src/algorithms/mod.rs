@@ -7,6 +7,9 @@
 // Local weighted regression implementations.
 pub mod regression;
 
+// Default values for algorithms module types.
+pub mod defaults;
+
 // Robustness weight updates for outlier downweighting.
 pub mod robustness;
 

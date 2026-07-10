@@ -8,7 +8,44 @@ use crate::adapters::batch::{ParallelBatchLowess, ParallelBatchLowessBuilder};
 use crate::adapters::online::{ParallelOnlineLowess, ParallelOnlineLowessBuilder};
 use crate::adapters::streaming::{ParallelStreamingLowess, ParallelStreamingLowessBuilder};
 use crate::api::{Batch, LowessBuilder, LowessError, LowessResult, Online, Streaming};
-use crate::parse::IntoEnum;
+// Converts a value into a typed enum, either infallibly (enum variant) or
+// via case-insensitive string parsing (string literal / `String`).
+pub(crate) trait IntoEnum<E> {
+    fn into_enum(self) -> Result<E, LowessError>;
+}
+
+// Generate IntoEnum impls for a concrete (non-generic) enum type.
+macro_rules! impl_into_enum_for {
+    ($ty:ty) => {
+        impl IntoEnum<$ty> for $ty {
+            #[inline]
+            fn into_enum(self) -> Result<$ty, LowessError> {
+                Ok(self)
+            }
+        }
+
+        impl IntoEnum<$ty> for &str {
+            #[inline]
+            fn into_enum(self) -> Result<$ty, LowessError> {
+                self.parse()
+            }
+        }
+
+        impl IntoEnum<$ty> for String {
+            #[inline]
+            fn into_enum(self) -> Result<$ty, LowessError> {
+                self.as_str().parse()
+            }
+        }
+    };
+}
+
+impl_into_enum_for!(BoundaryPolicy);
+impl_into_enum_for!(MergeStrategy);
+impl_into_enum_for!(RobustnessMethod);
+impl_into_enum_for!(UpdateMode);
+impl_into_enum_for!(WeightFunction);
+impl_into_enum_for!(ZeroWeightFallback);
 use lowess::internals::adapters::online::OnlineOutput;
 use lowess::internals::evaluation::intervals::IntervalMethod;
 pub use lowess::internals::primitives::backend::Backend;
@@ -89,13 +126,13 @@ pub const CUSTOM_WEIGHTS_MUST_BE_NON_NEGATIVE: &str = "custom_weights must be no
 
 // Default string values for all parser-facing options. Re-exported from
 // `lowess::defaults` so that all bindings share a single source of truth.
-pub use lowess::internals::defaults::DEFAULT_BOUNDARY_POLICY;
-pub use lowess::internals::defaults::DEFAULT_ONLINE_UPDATE_MODE;
-pub use lowess::internals::defaults::DEFAULT_ROBUSTNESS_METHOD;
-pub use lowess::internals::defaults::DEFAULT_SCALING_METHOD;
-pub use lowess::internals::defaults::DEFAULT_STREAMING_MERGE_STRATEGY;
-pub use lowess::internals::defaults::DEFAULT_WEIGHT_FUNCTION;
-pub use lowess::internals::defaults::DEFAULT_ZERO_WEIGHT_FALLBACK;
+pub use lowess::internals::adapters::defaults::DEFAULT_ONLINE_UPDATE_MODE;
+pub use lowess::internals::adapters::defaults::DEFAULT_STREAMING_MERGE_STRATEGY;
+pub use lowess::internals::algorithms::defaults::DEFAULT_ROBUSTNESS_METHOD;
+pub use lowess::internals::algorithms::defaults::DEFAULT_ZERO_WEIGHT_FALLBACK;
+pub use lowess::internals::math::defaults::DEFAULT_BOUNDARY_POLICY;
+pub use lowess::internals::math::defaults::DEFAULT_SCALING_METHOD;
+pub use lowess::internals::math::defaults::DEFAULT_WEIGHT_FUNCTION;
 
 pub fn sanitize_error_message(msg: &str) -> String {
     msg.replace('\0', " ")

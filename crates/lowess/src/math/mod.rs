@@ -7,6 +7,9 @@
 // Kernel (weight) functions for distance-based weighting.
 pub mod kernel;
 
+// Default values for math module types.
+pub mod defaults;
+
 // Robust scale estimation (MAR/MAD).
 pub mod scaling;
 

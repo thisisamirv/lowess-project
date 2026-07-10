@@ -18,6 +18,8 @@ use num_traits::Float;
 use std::vec::Vec;
 
 // Internal dependencies
+use crate::adapters::defaults::*;
+use crate::algorithms::defaults::*;
 use crate::algorithms::interpolation::calculate_delta;
 use crate::algorithms::regression::{WLSSolver, ZeroWeightFallback};
 use crate::algorithms::robustness::RobustnessMethod;
@@ -29,6 +31,7 @@ use crate::evaluation::cv::CVKind;
 use crate::evaluation::diagnostics::Diagnostics;
 use crate::evaluation::intervals::IntervalMethod;
 use crate::math::boundary::BoundaryPolicy;
+use crate::math::defaults::*;
 use crate::math::kernel::WeightFunction;
 use crate::math::scaling::ScalingMethod;
 use crate::primitives::backend::Backend;
@@ -139,23 +142,23 @@ impl<T: Float> BatchLowessBuilder<T> {
     // Create a new batch LOWESS builder with default parameters.
     fn new() -> Self {
         Self {
-            fraction: T::from(crate::defaults::DEFAULT_FRACTION).unwrap(),
-            iterations: crate::defaults::DEFAULT_ITERATIONS,
-            delta: crate::defaults::default_batch_delta(),
-            weight_function: crate::defaults::DEFAULT_WEIGHT_FUNCTION_ENUM,
-            robustness_method: crate::defaults::DEFAULT_ROBUSTNESS_METHOD_ENUM,
+            fraction: T::from(DEFAULT_FRACTION).unwrap(),
+            iterations: DEFAULT_ITERATIONS,
+            delta: default_batch_delta(),
+            weight_function: DEFAULT_WEIGHT_FUNCTION_ENUM,
+            robustness_method: DEFAULT_ROBUSTNESS_METHOD_ENUM,
             interval_type: None,
             cv_fractions: None,
             cv_kind: None,
-            cv_seed: crate::defaults::DEFAULT_CV_SEED,
+            cv_seed: DEFAULT_CV_SEED,
             deferred_error: None,
-            auto_converge: crate::defaults::default_auto_converge(),
-            return_diagnostics: crate::defaults::DEFAULT_RETURN_DIAGNOSTICS,
-            compute_residuals: crate::defaults::DEFAULT_RETURN_RESIDUALS,
-            return_robustness_weights: crate::defaults::DEFAULT_RETURN_ROBUSTNESS_WEIGHTS,
-            zero_weight_fallback: crate::defaults::DEFAULT_ZERO_WEIGHT_FALLBACK_ENUM,
-            boundary_policy: crate::defaults::DEFAULT_BOUNDARY_POLICY_ENUM,
-            scaling_method: crate::defaults::DEFAULT_SCALING_METHOD_ENUM,
+            auto_converge: default_auto_converge(),
+            return_diagnostics: DEFAULT_RETURN_DIAGNOSTICS,
+            compute_residuals: DEFAULT_RETURN_RESIDUALS,
+            return_robustness_weights: DEFAULT_RETURN_ROBUSTNESS_WEIGHTS,
+            zero_weight_fallback: DEFAULT_ZERO_WEIGHT_FALLBACK_ENUM,
+            boundary_policy: DEFAULT_BOUNDARY_POLICY_ENUM,
+            scaling_method: DEFAULT_SCALING_METHOD_ENUM,
             custom_smooth_pass: None,
             custom_cv_pass: None,
             custom_interval_pass: None,

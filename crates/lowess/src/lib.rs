@@ -257,15 +257,6 @@ mod adapters;
 // High-level fluent API for LOWESS smoothing.
 mod api;
 
-// String input compatibility for builder methods.
-mod parse;
-
-// Centralised string-alias maps for all option enums.
-mod alias;
-
-// Canonical default values for all LOWESS parameters.
-pub(crate) mod defaults;
-
 // Standard LOWESS prelude.
 pub mod prelude {
     pub use crate::api::{
@@ -302,9 +293,11 @@ pub mod internals {
         pub use crate::api::*;
     }
     pub mod alias {
-        pub use crate::alias::helpers::*;
+        pub use crate::api::helpers::*;
     }
     pub mod defaults {
-        pub use crate::defaults::*;
+        pub use crate::adapters::defaults::*;
+        pub use crate::algorithms::defaults::*;
+        pub use crate::math::defaults::*;
     }
 }

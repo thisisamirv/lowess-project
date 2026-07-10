@@ -26,12 +26,15 @@ use std::vec;
 use std::vec::Vec;
 
 // Internal dependencies
+use crate::adapters::defaults::*;
+use crate::algorithms::defaults::*;
 use crate::algorithms::interpolation::interpolate_gap;
 use crate::algorithms::regression::{LinearFit, RegressionContext, WLSSolver, ZeroWeightFallback};
 use crate::algorithms::robustness::RobustnessMethod;
 use crate::evaluation::cv::CVKind;
 use crate::evaluation::intervals::IntervalMethod;
 use crate::math::boundary::{BoundaryPolicy, apply_boundary_policy};
+use crate::math::defaults::*;
 use crate::math::kernel::WeightFunction;
 use crate::math::scaling::ScalingMethod;
 use crate::primitives::backend::Backend;
@@ -218,18 +221,18 @@ impl<T: Float> Default for LowessConfig<T> {
     fn default() -> Self {
         Self {
             fraction: None,
-            iterations: crate::defaults::DEFAULT_ITERATIONS,
-            delta: T::from(crate::defaults::DEFAULT_DELTA).unwrap(),
-            weight_function: crate::defaults::DEFAULT_WEIGHT_FUNCTION_ENUM,
+            iterations: DEFAULT_ITERATIONS,
+            delta: T::from(DEFAULT_DELTA).unwrap(),
+            weight_function: DEFAULT_WEIGHT_FUNCTION_ENUM,
             zero_weight_fallback: 0,
-            robustness_method: crate::defaults::DEFAULT_ROBUSTNESS_METHOD_ENUM,
+            robustness_method: DEFAULT_ROBUSTNESS_METHOD_ENUM,
             cv_fractions: None,
             cv_kind: None,
-            cv_seed: crate::defaults::DEFAULT_CV_SEED,
-            auto_converge: crate::defaults::default_auto_converge(),
+            cv_seed: DEFAULT_CV_SEED,
+            auto_converge: default_auto_converge(),
             return_variance: None,
-            boundary_policy: crate::defaults::DEFAULT_BOUNDARY_POLICY_ENUM,
-            scaling_method: crate::defaults::DEFAULT_SCALING_METHOD_ENUM,
+            boundary_policy: DEFAULT_BOUNDARY_POLICY_ENUM,
+            scaling_method: DEFAULT_SCALING_METHOD_ENUM,
             custom_smooth_pass: None,
             custom_cv_pass: None,
             custom_interval_pass: None,
@@ -319,16 +322,15 @@ impl<T: Float> LowessExecutor<T> {
     // Create a new executor with default parameters.
     pub fn new() -> Self {
         Self {
-            fraction: T::from(crate::defaults::DEFAULT_FRACTION)
-                .unwrap_or_else(|| T::from(0.5).unwrap()),
-            iterations: crate::defaults::DEFAULT_ITERATIONS,
-            delta: T::from(crate::defaults::DEFAULT_DELTA).unwrap_or_else(|| T::from(0.5).unwrap()),
-            weight_function: crate::defaults::DEFAULT_WEIGHT_FUNCTION_ENUM,
+            fraction: T::from(DEFAULT_FRACTION).unwrap_or_else(|| T::from(0.5).unwrap()),
+            iterations: DEFAULT_ITERATIONS,
+            delta: T::from(DEFAULT_DELTA).unwrap_or_else(|| T::from(0.5).unwrap()),
+            weight_function: DEFAULT_WEIGHT_FUNCTION_ENUM,
             zero_weight_fallback: 0,
-            robustness_method: crate::defaults::DEFAULT_ROBUSTNESS_METHOD_ENUM,
-            boundary_policy: crate::defaults::DEFAULT_BOUNDARY_POLICY_ENUM,
-            scaling_method: crate::defaults::DEFAULT_SCALING_METHOD_ENUM,
-            auto_converge: crate::defaults::default_auto_converge(),
+            robustness_method: DEFAULT_ROBUSTNESS_METHOD_ENUM,
+            boundary_policy: DEFAULT_BOUNDARY_POLICY_ENUM,
+            scaling_method: DEFAULT_SCALING_METHOD_ENUM,
+            auto_converge: default_auto_converge(),
             interval_method: None,
             custom_smooth_pass: None,
             custom_cv_pass: None,
@@ -343,8 +345,7 @@ impl<T: Float> LowessExecutor<T> {
 
     // Create a new executor from a `LowessConfig`.
     pub fn from_config(config: &LowessConfig<T>) -> Self {
-        let default_frac =
-            T::from(crate::defaults::DEFAULT_FRACTION).unwrap_or_else(|| T::from(0.5).unwrap());
+        let default_frac = T::from(DEFAULT_FRACTION).unwrap_or_else(|| T::from(0.5).unwrap());
         Self::new()
             .fraction(config.fraction.unwrap_or(default_frac))
             .iterations(config.iterations)
