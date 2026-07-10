@@ -173,9 +173,9 @@ all: ISOLATE := false
 
 lowess:
 	@if [ "$(ISOLATE)" = "true" ]; then \
-		$(PYTHON) dev/isolate_cargo.py crates/lowess -- $(MAKE) _lowess_impl; \
+		$(PYTHON) dev/isolate_cargo.py crates/lowess -- "$(MAKE)" _lowess_impl; \
 	else \
-		$(MAKE) _lowess_impl; \
+		"$(MAKE)" _lowess_impl; \
 	fi
 
 _lowess_impl:
@@ -239,9 +239,9 @@ lowess-clean:
 # ==============================================================================
 fastLowess:
 	@if [ "$(ISOLATE)" = "true" ]; then \
-		$(PYTHON) dev/isolate_cargo.py crates/fastLowess -- $(MAKE) _fastLowess_impl; \
+		$(PYTHON) dev/isolate_cargo.py crates/fastLowess -- "$(MAKE)" _fastLowess_impl; \
 	else \
-		$(MAKE) _fastLowess_impl; \
+		"$(MAKE)" _fastLowess_impl; \
 	fi
 
 _fastLowess_impl:
@@ -304,9 +304,9 @@ fastLowess-clean:
 # ==============================================================================
 python:
 	@if [ "$(ISOLATE)" = "true" ]; then \
-		$(PYTHON) dev/isolate_cargo.py bindings/python -- $(MAKE) _python_impl; \
+		$(PYTHON) dev/isolate_cargo.py bindings/python -- "$(MAKE)" _python_impl; \
 	else \
-		$(MAKE) _python_impl; \
+		"$(MAKE)" _python_impl; \
 	fi
 
 _python_impl:
@@ -369,9 +369,9 @@ python-clean:
 # ==============================================================================
 r:
 	@if [ "$(ISOLATE)" = "true" ]; then \
-		$(PYTHON) dev/isolate_cargo.py bindings/r -- $(MAKE) _r_impl; \
+		$(PYTHON) dev/isolate_cargo.py bindings/r -- "$(MAKE)" _r_impl; \
 	else \
-		$(MAKE) _r_impl; \
+		"$(MAKE)" _r_impl; \
 	fi
 
 _r_impl:
@@ -530,9 +530,9 @@ r-clean:
 # ==============================================================================
 julia:
 	@if [ "$(ISOLATE)" = "true" ]; then \
-		$(PYTHON) dev/isolate_cargo.py bindings/julia -- $(MAKE) _julia_impl; \
+		$(PYTHON) dev/isolate_cargo.py bindings/julia -- "$(MAKE)" _julia_impl; \
 	else \
-		$(MAKE) _julia_impl; \
+		"$(MAKE)" _julia_impl; \
 	fi
 
 _julia_impl:
@@ -549,7 +549,7 @@ _julia_impl:
 	CURRENT=$$(grep "^version =" "$$PROJECT_TOML" | cut -d"\"" -f2); \
 	julia -e "using TOML; path = \"$$PROJECT_TOML\"; p = TOML.parsefile(path); p[\"compat\"][\"fastlowess_jll\"] = \"$$LATEST, $$CURRENT\"; open(path, \"w\") do io; TOML.print(io, p); end"; \
 	echo "Modified $$PROJECT_TOML (fastlowess_jll = \"$$LATEST, $$CURRENT\") using TOML parser."; \
-	$(MAKE) _julia_checks_internal
+	"$(MAKE)" _julia_checks_internal
 
 _julia_checks_internal:
 	@echo "=============================================================================="
@@ -638,9 +638,9 @@ julia-clean:
 # ==============================================================================
 nodejs:
 	@if [ "$(ISOLATE)" = "true" ]; then \
-		$(PYTHON) dev/isolate_cargo.py bindings/nodejs -- $(MAKE) _nodejs_impl; \
+		$(PYTHON) dev/isolate_cargo.py bindings/nodejs -- "$(MAKE)" _nodejs_impl; \
 	else \
-		$(MAKE) _nodejs_impl; \
+		"$(MAKE)" _nodejs_impl; \
 	fi
 
 _nodejs_impl:
@@ -680,9 +680,9 @@ nodejs-clean:
 # ==============================================================================
 wasm:
 	@if [ "$(ISOLATE)" = "true" ]; then \
-		$(PYTHON) dev/isolate_cargo.py bindings/wasm -- $(MAKE) _wasm_impl; \
+		$(PYTHON) dev/isolate_cargo.py bindings/wasm -- "$(MAKE)" _wasm_impl; \
 	else \
-		$(MAKE) _wasm_impl; \
+		"$(MAKE)" _wasm_impl; \
 	fi
 
 _wasm_impl:
@@ -732,9 +732,9 @@ wasm-clean:
 # ==============================================================================
 cpp:
 	@if [ "$(ISOLATE)" = "true" ]; then \
-		$(PYTHON) dev/isolate_cargo.py bindings/cpp -- $(MAKE) _cpp_impl; \
+		$(PYTHON) dev/isolate_cargo.py bindings/cpp -- "$(MAKE)" _cpp_impl; \
 	else \
-		$(MAKE) _cpp_impl; \
+		"$(MAKE)" _cpp_impl; \
 	fi
 
 _cpp_impl:
