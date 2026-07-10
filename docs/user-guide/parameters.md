@@ -541,7 +541,7 @@ See [Custom Weights](custom-weights.md) for a full discussion.
     weights = np.ones(len(x))
     weights[5] = 0.0           # exclude index 5
 
-    result = Lowess(fraction=0.5, custom_weights=weights.tolist()).fit(x, y)
+    result = Lowess(fraction=0.5).fit(x, y, custom_weights=weights.tolist())
     ```
 
 === "Rust"
@@ -568,9 +568,7 @@ See [Custom Weights](custom-weights.md) for a full discussion.
     const weights = new Float64Array(x.length).fill(1.0);
     weights[5] = 0.0; // exclude index 5
 
-    const result = new fastlowess.Lowess({
-        fraction: 0.5, custom_weights: weights
-    }).fit(x, y);
+    const result = new fastlowess.Lowess({fraction: 0.5}).fit(x, y, weights);
     ```
 
 === "WebAssembly"
@@ -578,7 +576,7 @@ See [Custom Weights](custom-weights.md) for a full discussion.
     const weights = new Float64Array(x.length).fill(1.0);
     weights[5] = 0.0; // exclude index 5
 
-    const result = new Lowess({fraction: 0.5, custom_weights: weights}).fit(x, y);
+    const result = new Lowess({fraction: 0.5}).fit(x, y, weights);
     ```
 
 === "C++"

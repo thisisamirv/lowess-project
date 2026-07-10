@@ -81,7 +81,7 @@ that would otherwise include it.
     weights = np.ones(10)
     weights[5] = 0.0           # exclude the spike
 
-    result = Lowess(fraction=0.5, iterations=0, custom_weights=weights.tolist()).fit(x, y)
+    result = Lowess(fraction=0.5, iterations=0).fit(x, y, custom_weights=weights.tolist())
     ```
 
 === "Rust"
@@ -126,14 +126,12 @@ that would otherwise include it.
     const weights = new Float64Array(10).fill(1.0);
     weights[5] = 0.0; // exclude the spike
 
-    const result = new fastlowess.Lowess({
-        fraction: 0.5, iterations: 0, custom_weights: weights
-    }).fit(x, y);
+    const result = new fastlowess.Lowess({fraction: 0.5, iterations: 0}).fit(x, y, weights);
     ```
 
 === "WebAssembly"
     ```javascript
-    import init, { smooth } from 'fastlowess_wasm.js';
+    import init, { Lowess } from 'fastlowess_wasm.js';
     await init();
 
     const x = Float64Array.from({length: 10}, (_, i) => i);
@@ -143,7 +141,7 @@ that would otherwise include it.
     const weights = new Float64Array(10).fill(1.0);
     weights[5] = 0.0; // exclude the spike
 
-    const result = smooth(x, y, { fraction: 0.5, iterations: 0, custom_weights: weights });
+    const result = new Lowess({fraction: 0.5, iterations: 0}).fit(x, y, weights);
     ```
 
 === "C++"
@@ -186,7 +184,7 @@ reference instruments, or low-noise observations.
     for i in calibration_indices:
         weights[i] = 10.0      # trust calibration 10× more
 
-    result = Lowess(fraction=0.5, custom_weights=weights).fit(x, y)
+    result = Lowess(fraction=0.5).fit(x, y, custom_weights=weights)
     ```
 
 === "Rust"
@@ -215,9 +213,7 @@ reference instruments, or low-noise observations.
     const weights = new Float64Array(x.length).fill(1.0);
     for (const i of calibrationIndices) weights[i] = 10.0;
 
-    const result = new fastlowess.Lowess({
-        fraction: 0.5, custom_weights: weights
-    }).fit(x, y);
+    const result = new fastlowess.Lowess({fraction: 0.5}).fit(x, y, weights);
     ```
 
 === "WebAssembly"
@@ -225,7 +221,7 @@ reference instruments, or low-noise observations.
     const weights = new Float64Array(x.length).fill(1.0);
     for (const i of calibrationIndices) weights[i] = 10.0;
 
-    const result = smooth(x, y, { fraction: 0.5, custom_weights: weights });
+    const result = new Lowess({fraction: 0.5}).fit(x, y, weights);
     ```
 
 === "C++"
@@ -255,7 +251,7 @@ weighting.
 === "Python"
     ```python
     weights = (1.0 / sigma**2).tolist()
-    result = Lowess(fraction=0.5, custom_weights=weights).fit(x, y)
+    result = Lowess(fraction=0.5).fit(x, y, custom_weights=weights)
     ```
 
 === "Rust"
@@ -277,15 +273,13 @@ weighting.
 === "Node.js"
     ```javascript
     const weights = Float64Array.from(sigma, s => 1.0 / (s * s));
-    const result = new fastlowess.Lowess({
-        fraction: 0.5, custom_weights: weights
-    }).fit(x, y);
+    const result = new fastlowess.Lowess({fraction: 0.5}).fit(x, y, weights);
     ```
 
 === "WebAssembly"
     ```javascript
     const weights = Float64Array.from(sigma, s => 1.0 / (s * s));
-    const result = smooth(x, y, { fraction: 0.5, custom_weights: weights });
+    const result = new Lowess({fraction: 0.5}).fit(x, y, weights);
     ```
 
 === "C++"
@@ -329,7 +323,7 @@ for *known* bad points and robustness for *unknown* contamination.
     weights = [1.0] * 20
     weights[3] = 0.0
 
-    result = Lowess(fraction=0.4, iterations=3, custom_weights=weights).fit(x, y)
+    result = Lowess(fraction=0.4, iterations=3).fit(x, y, custom_weights=weights)
     ```
 
 === "Rust"
@@ -371,9 +365,7 @@ for *known* bad points and robustness for *unknown* contamination.
     const weights = new Float64Array(20).fill(1.0);
     weights[3] = 0.0;
 
-    const result = new fastlowess.Lowess({
-        fraction: 0.4, iterations: 3, custom_weights: weights
-    }).fit(x, y);
+    const result = new fastlowess.Lowess({fraction: 0.4, iterations: 3}).fit(x, y, weights);
     ```
 
 === "WebAssembly"
@@ -381,9 +373,7 @@ for *known* bad points and robustness for *unknown* contamination.
     const weights = new Float64Array(20).fill(1.0);
     weights[3] = 0.0;
 
-    const result = smooth(x, y, {
-        fraction: 0.4, iterations: 3, custom_weights: weights
-    });
+    const result = new Lowess({fraction: 0.4, iterations: 3}).fit(x, y, weights);
     ```
 
 === "C++"

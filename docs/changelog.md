@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Python:**
 
 - Added `OnlineOutput` class to the Python binding. `OnlineLowess.add_point()` now returns `OnlineOutput | None` instead of `float | None`, exposing `smoothed`, `std_error`, `residual`, `robustness_weight`, and `iterations_used`.
-- Added `custom_weights` parameter to the `Lowess.fit(x, y, custom_weights=None)` constructor. Accepts a `list[float]` of non-negative per-observation weights. Batch only.
+- Added `custom_weights` parameter to the `Lowess.fit(x, y, custom_weights=None)` method. Accepts a `list[float]` of non-negative per-observation weights. Batch only.
 - Removed `smooth()`, `smooth_streaming()`, and `smooth_online()` convenience function stubs from `_core.pyi`.
 
 **R:**
