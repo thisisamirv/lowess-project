@@ -30,7 +30,7 @@ Complete reference for all LOWESS configuration options.
 | **cv_method** | Null value | method | Auto-select fraction | Batch |
 | **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
 | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
-| **merge_strategy** | `"average"` | 4 options | Merge overlaps | Streaming |
+| **merge_strategy** | `"weighted_average"` | 4 options | Merge overlaps | Streaming |
 | **window_capacity** | 1000 | [3, ∞) | Max window size | Online |
 | **min_points** | 2 | [2, window] | Min before output | Online |
 | **update_mode** | `"incremental"` | 2 options | Update strategy | Online |
@@ -49,7 +49,7 @@ Complete reference for all LOWESS configuration options.
 | **zero_weight_fallback** | `"use_local_mean"`, `"return_original"`, `"return_none"` |
 | **boundary_policy** | `"extend"`, `"reflect"`, `"zero"`, `"noboundary"` |
 | **scaling_method** | `"mad"`, `"mar"`, `"mean"` |
-| **merge_strategy** | `"average"`, `"left"`, `"right"`, `"weighted"` |
+| **merge_strategy** | `"average"`, `"weighted_average"`, `"take_first"`, `"take_last"` |
 | **update_mode** | `"incremental"`, `"full"` |
 
 ---
@@ -1066,21 +1066,21 @@ Method for merging overlapping chunks. See [Merge Strategies](merge.md) for a de
 
 | Strategy | Description | Robustness |
 | --- | --- | --- |
-| `"average"` | Average of overlapping chunks | Fastest, least robust |
-| `"left"` | Left chunk | Fastest, least robust |
-| `"right"` | Right chunk | Fastest, least robust |
-| `"weighted"` | Weighted average of overlapping chunks | Most robust |
+| `"average"` | Average of overlapping chunks | Faster, less accurate |
+| `"take_first"` | Use value from first chunk | Fastest, least accurate |
+| `"take_last"` | Use value from last chunk | Fastest, least accurate |
+| `"weighted_average"` | Weighted average of overlapping chunks | Most accurate |
 
 For example:
 
 === "R"
     ```r
-    result <- StreamingLowess(merge_strategy = "weighted")$process_chunk(x, y)
+    result <- StreamingLowess(merge_strategy = "weighted_average")$process_chunk(x, y)
     ```
 
 === "Python"
     ```python
-    model = fl.StreamingLowess(merge_strategy="weighted")
+    model = fl.StreamingLowess(merge_strategy="weighted_average")
     model.process_chunk(x, y)
     result = model.finalize()
     ```
@@ -1088,25 +1088,25 @@ For example:
 === "Rust"
     ```rust
     let model = StreamingLowess::new()
-        .merge_strategy("weighted")
+        .merge_strategy("weighted_average")
         .build()?;
     ```
 
 === "Julia"
     ```julia
-    model = StreamingLowess(; merge_strategy="weighted")
+    model = StreamingLowess(; merge_strategy="weighted_average")
     process_chunk(model, x, y)
     result = finalize(model)
     ```
 
 === "Node.js"
     ```javascript
-    const processor = new StreamingLowess({}, { merge_strategy: "weighted" });
+    const processor = new StreamingLowess({}, { merge_strategy: "weighted_average" });
     ```
 
 === "WebAssembly"
     ```javascript
-    const processor = new StreamingLowessWasm({}, { merge_strategy: "weighted" });
+    const processor = new StreamingLowessWasm({}, { merge_strategy: "weighted_average" });
     ```
 
 === "C++"

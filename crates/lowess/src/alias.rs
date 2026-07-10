@@ -28,7 +28,7 @@ use crate::math::kernel::WeightFunction;
 use crate::math::scaling::ScalingMethod;
 use crate::primitives::errors::LowessError;
 
-// ── WeightFunction ────────────────────────────────────────────────────────────
+// WeightFunction
 
 impl FromStr for WeightFunction {
     type Err = LowessError;
@@ -51,7 +51,7 @@ impl FromStr for WeightFunction {
     }
 }
 
-// ── BoundaryPolicy ────────────────────────────────────────────────────────────
+// BoundaryPolicy
 
 impl FromStr for BoundaryPolicy {
     type Err = LowessError;
@@ -71,7 +71,7 @@ impl FromStr for BoundaryPolicy {
     }
 }
 
-// ── ScalingMethod ─────────────────────────────────────────────────────────────
+// ScalingMethod
 
 impl FromStr for ScalingMethod {
     type Err = LowessError;
@@ -90,7 +90,7 @@ impl FromStr for ScalingMethod {
     }
 }
 
-// ── RobustnessMethod ──────────────────────────────────────────────────────────
+// RobustnessMethod
 
 impl FromStr for RobustnessMethod {
     type Err = LowessError;
@@ -109,7 +109,7 @@ impl FromStr for RobustnessMethod {
     }
 }
 
-// ── ZeroWeightFallback ────────────────────────────────────────────────────────
+// ZeroWeightFallback
 
 impl FromStr for ZeroWeightFallback {
     type Err = LowessError;
@@ -128,7 +128,7 @@ impl FromStr for ZeroWeightFallback {
     }
 }
 
-// ── MergeStrategy ─────────────────────────────────────────────────────────────
+// MergeStrategy
 
 impl FromStr for MergeStrategy {
     type Err = LowessError;
@@ -150,7 +150,7 @@ impl FromStr for MergeStrategy {
     }
 }
 
-// ── UpdateMode ────────────────────────────────────────────────────────────────
+// UpdateMode
 
 impl FromStr for UpdateMode {
     type Err = LowessError;
@@ -168,7 +168,7 @@ impl FromStr for UpdateMode {
     }
 }
 
-// ─── Binding helpers (only with the `dev` feature) ───────────────────────────
+// Binding helpers (only with the `dev` feature)
 //
 // Parse and canonical-name wrappers used by the binding layer.  Only compiled
 // when the `dev` feature is active; re-exported through
@@ -181,7 +181,7 @@ pub mod helpers {
         WeightFunction, ZeroWeightFallback,
     };
 
-    // ─── Parse helpers ────────────────────────────────────────────────────────
+    // Parse helpers
 
     pub fn parse_weight_function(s: &str) -> Result<WeightFunction, LowessError> {
         s.parse()
@@ -211,7 +211,7 @@ pub mod helpers {
         s.parse()
     }
 
-    // ─── Canonical-name helpers ───────────────────────────────────────────────
+    // Canonical-name helpers
     //
     // Round-trip guarantee: `X_str(v).parse::<X>().unwrap() == v` for all `v`.
 

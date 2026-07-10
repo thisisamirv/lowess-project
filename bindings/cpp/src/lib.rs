@@ -325,9 +325,7 @@ pub unsafe extern "C" fn cpp_lowess_new(
 
         let cv_fractions_vec =
             shared_parse::option_vec_from_ptr(cv_fractions, cv_fractions_len as usize);
-        let cv_method_str =
-            shared_parse::parse_c_str_or_default(cv_method, shared_parse::DEFAULT_CV_METHOD)
-                .to_string();
+        let cv_method_str = shared_parse::parse_c_str_or_default(cv_method, "kfold").to_string();
         let cv_k_usize = cv_k.max(2) as usize;
 
         let builder = match shared_parse::apply_builder_options(

@@ -295,9 +295,7 @@ pub unsafe extern "C" fn jl_lowess_new(
                 shared_parse::DEFAULT_ZERO_WEIGHT_FALLBACK,
             )
         };
-        let cv_method_str = unsafe {
-            shared_parse::parse_c_str_or_default(cv_method, shared_parse::DEFAULT_CV_METHOD)
-        };
+        let cv_method_str = unsafe { shared_parse::parse_c_str_or_default(cv_method, "kfold") };
 
         let cv_fractions_slice =
             unsafe { shared_parse::option_slice_from_ptr(cv_fractions, cv_fractions_len as usize) };

@@ -90,7 +90,6 @@ pub const CUSTOM_WEIGHTS_MUST_BE_NON_NEGATIVE: &str = "custom_weights must be no
 // Default string values for all parser-facing options. Re-exported from
 // `lowess::defaults` so that all bindings share a single source of truth.
 pub use lowess::internals::defaults::DEFAULT_BOUNDARY_POLICY;
-pub use lowess::internals::defaults::DEFAULT_CV_METHOD;
 pub use lowess::internals::defaults::DEFAULT_ONLINE_UPDATE_MODE;
 pub use lowess::internals::defaults::DEFAULT_ROBUSTNESS_METHOD;
 pub use lowess::internals::defaults::DEFAULT_SCALING_METHOD;
@@ -519,8 +518,8 @@ pub fn apply_cross_validation(
         return Ok(builder);
     };
 
-    let method = method.unwrap_or(lowess::internals::defaults::DEFAULT_CV_METHOD);
-    let k = k.unwrap_or(lowess::internals::defaults::DEFAULT_CV_K);
+    let method = method.unwrap_or("kfold");
+    let k = k.unwrap_or(5);
 
     match method.to_lowercase().as_str() {
         "simple" | "loo" | "loocv" | "leave_one_out" => {
@@ -699,15 +698,13 @@ pub fn apply_typed_builder_options(
     Ok(builder)
 }
 
-// ============================================================================
 // LowessError helpers
-// ============================================================================
 
 pub fn lowess_error_message(err: &LowessError) -> String {
     err.to_string()
 }
 
-// ─── Adapter build helpers ────────────────────────────────────────────────────
+// Adapter build helpers
 //
 // These functions centralize the "extract defaults → parse string enum →
 // chain adapter setters → build" pattern that every binding repeats for its
@@ -747,9 +744,7 @@ pub fn build_streaming(
     let ov = overlap.unwrap_or_else(|| default_overlap(cs));
     let ms = match merge_strategy {
         Some(s) => map_invalid_arg(parse_merge_strategy(s))?,
-        None => map_invalid_arg(parse_merge_strategy(
-            lowess::internals::defaults::DEFAULT_STREAMING_MERGE_STRATEGY,
-        ))?,
+        None => lowess::internals::defaults::DEFAULT_STREAMING_MERGE_STRATEGY_ENUM,
     };
     map_lowess_result(
         builder
@@ -773,9 +768,7 @@ pub fn build_online(
     let mp = min_points.unwrap_or(lowess::internals::defaults::DEFAULT_ONLINE_MIN_POINTS);
     let um = match update_mode {
         Some(s) => map_invalid_arg(parse_update_mode(s))?,
-        None => map_invalid_arg(parse_update_mode(
-            lowess::internals::defaults::DEFAULT_ONLINE_UPDATE_MODE,
-        ))?,
+        None => lowess::internals::defaults::DEFAULT_ONLINE_UPDATE_MODE_ENUM,
     };
     map_lowess_result(
         builder
@@ -787,7 +780,7 @@ pub fn build_online(
     )
 }
 
-// ─── Builder setter methods ───────────────────────────────────────────────────
+// Builder setter methods
 //
 // These impl blocks are in binding_support.rs (compiled only with the `dev`
 // feature) so the adapter files (batch.rs, online.rs, streaming.rs) stay free
