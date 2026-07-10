@@ -67,23 +67,23 @@ impl<T: Float> ParallelBatchLowessBuilder<T> {
 
     pub fn build(mut self) -> Result<ParallelBatchLowess<T>, LowessError> {
         // Resolve string-based CV method
-        if self.base.cv_kind.is_none() {
-            if let Some(method_str) = self.cv_method_str.take() {
-                let lower = method_str.to_lowercase();
-                match lower.as_str() {
-                    "kfold" | "k_fold" | "k-fold" => {
-                        self.base.cv_kind = Some(CVKind::KFold(self.cv_k_val));
-                    }
-                    "loocv" | "loo_cv" | "loo-cv" => {
-                        self.base.cv_kind = Some(CVKind::LOOCV);
-                    }
-                    _ => {
-                        self.parse_errors.push(LowessError::InvalidOption {
-                            option: "cv_method",
-                            value: method_str,
-                            valid: "kfold, loocv",
-                        });
-                    }
+        if self.base.cv_kind.is_none()
+            && let Some(method_str) = self.cv_method_str.take()
+        {
+            let lower = method_str.to_lowercase();
+            match lower.as_str() {
+                "kfold" | "k_fold" | "k-fold" => {
+                    self.base.cv_kind = Some(CVKind::KFold(self.cv_k_val));
+                }
+                "loocv" | "loo_cv" | "loo-cv" => {
+                    self.base.cv_kind = Some(CVKind::LOOCV);
+                }
+                _ => {
+                    self.parse_errors.push(LowessError::InvalidOption {
+                        option: "cv_method",
+                        value: method_str,
+                        valid: "kfold, loocv",
+                    });
                 }
             }
         }

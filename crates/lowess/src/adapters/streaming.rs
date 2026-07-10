@@ -15,7 +15,6 @@
 use alloc::vec::Vec;
 use core::fmt::Debug;
 use core::mem::take;
-use core::str::FromStr;
 use num_traits::Float;
 #[cfg(feature = "std")]
 use std::vec::Vec;
@@ -52,24 +51,6 @@ pub enum MergeStrategy {
 
     // Use the value from the last chunk in processing order.
     TakeLast,
-}
-
-impl FromStr for MergeStrategy {
-    type Err = LowessError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_lowercase().as_str() {
-            "average" | "mean" => Ok(Self::Average),
-            "weighted_average" | "weighted" => Ok(Self::WeightedAverage),
-            "take_first" | "first" => Ok(Self::TakeFirst),
-            "take_last" | "last" => Ok(Self::TakeLast),
-            _ => Err(LowessError::InvalidOption {
-                option: "merge_strategy",
-                value: s.to_string(),
-                valid: "average, weighted_average, take_first, take_last",
-            }),
-        }
-    }
 }
 
 // Builder for streaming LOWESS processor.

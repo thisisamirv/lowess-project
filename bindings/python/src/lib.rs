@@ -248,10 +248,7 @@ impl PyStreamingLowess {
         parallel: bool,
         merge_strategy: &str,
     ) -> PyResult<Self> {
-        let overlap_size = overlap.unwrap_or_else(|| {
-            let default = chunk_size / 10;
-            default.min(chunk_size.saturating_sub(10)).max(1)
-        });
+        let overlap_size = overlap.unwrap_or_else(|| binding_support::default_overlap(chunk_size));
 
         let builder = binding_support::apply_builder_options(
             LowessBuilder::<f64>::new(),
@@ -284,7 +281,7 @@ impl PyStreamingLowess {
                 cv_seed: None,
             },
         )
-        .map_err(|e| PyValueError::new_err(e))?;
+        .map_err(PyValueError::new_err)?;
 
         let processor = builder.adapter(Streaming).build().map_err(to_py_error)?;
         Ok(PyStreamingLowess {
@@ -428,7 +425,7 @@ impl PyOnlineLowess {
                 cv_seed: None,
             },
         )
-        .map_err(|e| PyValueError::new_err(e))?;
+        .map_err(PyValueError::new_err)?;
 
         let processor = builder.adapter(Online).build().map_err(to_py_error)?;
         Ok(PyOnlineLowess {
@@ -529,15 +526,15 @@ impl PyLowess {
         cv_seed: Option<u64>,
     ) -> PyResult<Self> {
         let wf = binding_support::parse_weight_function(weight_function)
-            .map_err(|e| PyValueError::new_err(e))?;
+            .map_err(PyValueError::new_err)?;
         let rm = binding_support::parse_robustness_method(robustness_method)
-            .map_err(|e| PyValueError::new_err(e))?;
-        let sm = binding_support::parse_scaling_method(scaling_method)
-            .map_err(|e| PyValueError::new_err(e))?;
+            .map_err(PyValueError::new_err)?;
+        let sm =
+            binding_support::parse_scaling_method(scaling_method).map_err(PyValueError::new_err)?;
         let zwf = binding_support::parse_zero_weight_fallback(zero_weight_fallback)
-            .map_err(|e| PyValueError::new_err(e))?;
+            .map_err(PyValueError::new_err)?;
         let bp = binding_support::parse_boundary_policy(boundary_policy)
-            .map_err(|e| PyValueError::new_err(e))?;
+            .map_err(PyValueError::new_err)?;
 
         Ok(PyLowess {
             fraction,

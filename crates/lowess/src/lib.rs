@@ -260,6 +260,9 @@ mod api;
 // String input compatibility for builder methods.
 mod parse;
 
+// Centralised string-alias maps for all option enums.
+mod alias;
+
 // Standard LOWESS prelude.
 pub mod prelude {
     pub use crate::api::{
@@ -294,5 +297,8 @@ pub mod internals {
     }
     pub mod api {
         pub use crate::api::*;
+    }
+    pub mod alias {
+        pub use crate::alias::helpers::*;
     }
 }

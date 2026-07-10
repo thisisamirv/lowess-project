@@ -164,7 +164,7 @@ impl RStreamingLowess {
         let chunk_size = chunk_size as usize;
         let overlap_size = match overlap {
             NotNull(o) => o as usize,
-            Null => (chunk_size / 10).min(chunk_size.saturating_sub(10)).max(1),
+            Null => binding_support::default_overlap(chunk_size),
         };
 
         let wf =

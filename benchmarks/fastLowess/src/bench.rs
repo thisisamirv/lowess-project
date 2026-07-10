@@ -35,7 +35,8 @@ fn get_config() -> (bool, Backend, &'static str) {
     match env::var("FASTLOWESS_BACKEND").ok().as_deref() {
         Some("cpu_serial") | Some("serial") => (false, Backend::CPU, "serial"),
         Some("gpu") => (true, Backend::GPU, "gpu"),
-        Some("cpu") | Some("parallel") | _ => (true, Backend::CPU, "parallel"),
+        Some("cpu") | Some("parallel") => (true, Backend::CPU, "parallel"),
+        _ => (true, Backend::CPU, "parallel"),
     }
 }
 

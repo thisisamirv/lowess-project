@@ -6,7 +6,6 @@
 #![allow(non_snake_case)]
 #![allow(unsafe_op_in_unsafe_fn)]
 
-use std::ffi::CStr;
 use std::os::raw::{c_char, c_double, c_int, c_ulong};
 use std::ptr;
 
@@ -93,36 +92,11 @@ impl Default for CppLowessResult {
     }
 }
 
-/// Convert a Vec<f64> to a raw pointer.
-fn vec_to_ptr(v: Vec<f64>) -> *mut c_double {
-    let mut boxed = v.into_boxed_slice();
-    let ptr = boxed.as_mut_ptr();
-    std::mem::forget(boxed);
-    ptr
-}
-
-/// Convert an optional Vec<f64> to a raw pointer.
-fn opt_vec_to_ptr(v: Option<Vec<f64>>) -> *mut c_double {
-    match v {
-        Some(vec) => vec_to_ptr(vec),
-        None => ptr::null_mut(),
-    }
-}
-
 /// Create an error result with the given message.
 fn error_result(msg: &str) -> CppLowessResult {
-    let mut result = CppLowessResult::default();
-    let c_string = std::ffi::CString::new(msg).unwrap_or_default();
-    result.error = c_string.into_raw();
-    result
-}
-
-/// Parse a C string safely.
-unsafe fn parse_c_str(s: *const c_char, default: &str) -> &str {
-    if s.is_null() {
-        default
-    } else {
-        CStr::from_ptr(s).to_str().unwrap_or(default)
+    CppLowessResult {
+        error: binding_support::into_raw_error_c_string(msg),
+        ..Default::default()
     }
 }
 
@@ -131,45 +105,26 @@ impl From<LowessResult<f64>> for CppLowessResult {
         let n = result.y.len();
 
         let (rmse, mae, r_squared, aic, aicc, effective_df, residual_sd) =
-            if let Some(ref d) = result.diagnostics {
-                (
-                    d.rmse,
-                    d.mae,
-                    d.r_squared,
-                    d.aic.unwrap_or(f64::NAN),
-                    d.aicc.unwrap_or(f64::NAN),
-                    d.effective_df.unwrap_or(f64::NAN),
-                    d.residual_sd,
-                )
-            } else {
-                (
-                    f64::NAN,
-                    f64::NAN,
-                    f64::NAN,
-                    f64::NAN,
-                    f64::NAN,
-                    f64::NAN,
-                    f64::NAN,
-                )
-            };
+            binding_support::extract_diagnostics(&result);
+        let cv_scores_len = result
+            .cv_scores
+            .as_ref()
+            .map(|v| v.len() as c_ulong)
+            .unwrap_or(0);
 
         CppLowessResult {
-            x: vec_to_ptr(result.x),
-            y: vec_to_ptr(result.y),
+            x: binding_support::vec_to_raw_ptr(result.x),
+            y: binding_support::vec_to_raw_ptr(result.y),
             n: n as c_ulong,
-            standard_errors: opt_vec_to_ptr(result.standard_errors),
-            confidence_lower: opt_vec_to_ptr(result.confidence_lower),
-            confidence_upper: opt_vec_to_ptr(result.confidence_upper),
-            prediction_lower: opt_vec_to_ptr(result.prediction_lower),
-            prediction_upper: opt_vec_to_ptr(result.prediction_upper),
-            residuals: opt_vec_to_ptr(result.residuals),
-            robustness_weights: opt_vec_to_ptr(result.robustness_weights),
-            cv_scores: opt_vec_to_ptr(result.cv_scores.clone()),
-            cv_scores_len: result
-                .cv_scores
-                .as_ref()
-                .map(|v| v.len() as c_ulong)
-                .unwrap_or(0),
+            standard_errors: binding_support::opt_vec_to_raw_ptr(result.standard_errors),
+            confidence_lower: binding_support::opt_vec_to_raw_ptr(result.confidence_lower),
+            confidence_upper: binding_support::opt_vec_to_raw_ptr(result.confidence_upper),
+            prediction_lower: binding_support::opt_vec_to_raw_ptr(result.prediction_lower),
+            prediction_upper: binding_support::opt_vec_to_raw_ptr(result.prediction_upper),
+            residuals: binding_support::opt_vec_to_raw_ptr(result.residuals),
+            robustness_weights: binding_support::opt_vec_to_raw_ptr(result.robustness_weights),
+            cv_scores: binding_support::opt_vec_to_raw_ptr(result.cv_scores),
+            cv_scores_len,
             fraction_used: result.fraction_used,
             iterations_used: result.iterations_used.map(|i| i as c_int).unwrap_or(-1),
             rmse,
@@ -233,11 +188,11 @@ pub unsafe extern "C" fn cpp_lowess_new(
     cv_k: c_int,
     parallel: c_int,
 ) -> *mut CppLowess {
-    let wf_str = parse_c_str(weight_function, "tricube");
-    let rm_str = parse_c_str(robustness_method, "bisquare");
-    let sm_str = parse_c_str(scaling_method, "mad");
-    let bp_str = parse_c_str(boundary_policy, "extend");
-    let zwf_str = parse_c_str(zero_weight_fallback, "use_local_mean");
+    let wf_str = binding_support::parse_c_str_or_default(weight_function, "tricube");
+    let rm_str = binding_support::parse_c_str_or_default(robustness_method, "bisquare");
+    let sm_str = binding_support::parse_c_str_or_default(scaling_method, "mad");
+    let bp_str = binding_support::parse_c_str_or_default(boundary_policy, "extend");
+    let zwf_str = binding_support::parse_c_str_or_default(zero_weight_fallback, "use_local_mean");
 
     let wf = match binding_support::parse_weight_function(wf_str) {
         Ok(v) => v,
@@ -300,7 +255,7 @@ pub unsafe extern "C" fn cpp_lowess_new(
         None
     };
 
-    let cv_method_str = parse_c_str(cv_method, "kfold").to_string();
+    let cv_method_str = binding_support::parse_c_str_or_default(cv_method, "kfold").to_string();
 
     Box::into_raw(Box::new(CppLowess {
         builder: Some(builder),
@@ -406,12 +361,12 @@ pub unsafe extern "C" fn cpp_streaming_new(
     overlap: c_int,
     merge_strategy: *const c_char,
 ) -> *mut CppStreamingLowess {
-    let wf_str = parse_c_str(weight_function, "tricube");
-    let rm_str = parse_c_str(robustness_method, "bisquare");
-    let sm_str = parse_c_str(scaling_method, "mad");
-    let bp_str = parse_c_str(boundary_policy, "extend");
-    let zwf_str = parse_c_str(zero_weight_fallback, "use_local_mean");
-    let ms_str = parse_c_str(merge_strategy, "weighted");
+    let wf_str = binding_support::parse_c_str_or_default(weight_function, "tricube");
+    let rm_str = binding_support::parse_c_str_or_default(robustness_method, "bisquare");
+    let sm_str = binding_support::parse_c_str_or_default(scaling_method, "mad");
+    let bp_str = binding_support::parse_c_str_or_default(boundary_policy, "extend");
+    let zwf_str = binding_support::parse_c_str_or_default(zero_weight_fallback, "use_local_mean");
+    let ms_str = binding_support::parse_c_str_or_default(merge_strategy, "weighted");
 
     let wf = match binding_support::parse_weight_function(wf_str) {
         Ok(v) => v,
@@ -466,8 +421,7 @@ pub unsafe extern "C" fn cpp_streaming_new(
 
     let chunk_size = chunk_size as usize;
     let overlap_size = if overlap < 0 {
-        let default = chunk_size / 10;
-        default.min(chunk_size.saturating_sub(10)).max(1)
+        binding_support::default_overlap(chunk_size)
     } else {
         overlap as usize
     };
@@ -581,12 +535,12 @@ pub unsafe extern "C" fn cpp_online_new(
     min_points: c_int,
     update_mode: *const c_char,
 ) -> *mut CppOnlineLowess {
-    let wf_str = parse_c_str(weight_function, "tricube");
-    let rm_str = parse_c_str(robustness_method, "bisquare");
-    let sm_str = parse_c_str(scaling_method, "mad");
-    let bp_str = parse_c_str(boundary_policy, "extend");
-    let zwf_str = parse_c_str(zero_weight_fallback, "use_local_mean");
-    let um_str = parse_c_str(update_mode, "full");
+    let wf_str = binding_support::parse_c_str_or_default(weight_function, "tricube");
+    let rm_str = binding_support::parse_c_str_or_default(robustness_method, "bisquare");
+    let sm_str = binding_support::parse_c_str_or_default(scaling_method, "mad");
+    let bp_str = binding_support::parse_c_str_or_default(boundary_policy, "extend");
+    let zwf_str = binding_support::parse_c_str_or_default(zero_weight_fallback, "use_local_mean");
+    let um_str = binding_support::parse_c_str_or_default(update_mode, "full");
 
     let wf = match binding_support::parse_weight_function(wf_str) {
         Ok(v) => v,

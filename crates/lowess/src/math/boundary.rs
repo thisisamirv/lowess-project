@@ -16,12 +16,9 @@ use alloc::vec::Vec;
 use std::vec::Vec;
 
 // External dependencies
-use core::str::FromStr;
 use num_traits::Float;
 
 // Internal dependencies
-use crate::primitives::errors::LowessError;
-
 // Policy for handling boundaries at the start and end of a data stream.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum BoundaryPolicy {
@@ -37,24 +34,6 @@ pub enum BoundaryPolicy {
 
     // No boundary padding (standard LOWESS behavior).
     NoBoundary,
-}
-
-impl FromStr for BoundaryPolicy {
-    type Err = LowessError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_lowercase().as_str() {
-            "extend" | "pad" => Ok(Self::Extend),
-            "reflect" | "mirror" => Ok(Self::Reflect),
-            "zero" => Ok(Self::Zero),
-            "noboundary" | "none" => Ok(Self::NoBoundary),
-            _ => Err(LowessError::InvalidOption {
-                option: "boundary_policy",
-                value: s.to_string(),
-                valid: "extend, reflect, zero, noboundary",
-            }),
-        }
-    }
 }
 
 // Apply a boundary policy to pad the input data.

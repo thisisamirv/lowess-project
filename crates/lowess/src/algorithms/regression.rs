@@ -18,13 +18,11 @@
 
 // External dependencies
 use core::fmt::Debug;
-use core::str::FromStr;
 use num_traits::Float;
 use wide::{f32x8, f64x2};
 
 // Internal dependencies
 use crate::math::kernel::WeightFunction;
-use crate::primitives::errors::LowessError;
 use crate::primitives::window::Window;
 
 // Policy for handling cases where all weights are zero.
@@ -60,23 +58,6 @@ impl ZeroWeightFallback {
             ZeroWeightFallback::UseLocalMean => 0,
             ZeroWeightFallback::ReturnOriginal => 1,
             ZeroWeightFallback::ReturnNone => 2,
-        }
-    }
-}
-
-impl FromStr for ZeroWeightFallback {
-    type Err = LowessError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_lowercase().as_str() {
-            "use_local_mean" | "uselocalmean" | "local_mean" | "mean" => Ok(Self::UseLocalMean),
-            "return_original" | "returnoriginal" | "original" => Ok(Self::ReturnOriginal),
-            "return_none" | "returnnone" | "none" => Ok(Self::ReturnNone),
-            _ => Err(LowessError::InvalidOption {
-                option: "zero_weight_fallback",
-                value: s.to_string(),
-                valid: "use_local_mean, return_original, return_none",
-            }),
         }
     }
 }

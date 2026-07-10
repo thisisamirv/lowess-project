@@ -676,9 +676,12 @@ impl<T: Float> LowessExecutor<T> {
                 self.custom_weights.as_ref().map(|cw| {
                     let padded_len = x_in.len();
                     let mut pv: Vec<T> = Vec::with_capacity(padded_len);
-                    pv.extend(core::iter::repeat(T::one()).take(pad_len));
+                    pv.extend(std::iter::repeat_n(T::one(), pad_len));
                     pv.extend_from_slice(cw);
-                    pv.extend(core::iter::repeat(T::one()).take(padded_len - pad_len - cw.len()));
+                    pv.extend(std::iter::repeat_n(
+                        T::one(),
+                        padded_len - pad_len - cw.len(),
+                    ));
                     pv
                 })
             })

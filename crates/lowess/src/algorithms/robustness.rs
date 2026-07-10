@@ -12,12 +12,10 @@
 //! Robust scale estimation via MAD with fallback to MAR.
 
 // External dependencies
-use core::str::FromStr;
 use num_traits::Float;
 
 // Internal dependencies
 use crate::math::scaling::ScalingMethod;
-use crate::primitives::errors::LowessError;
 
 // Robustness weighting method for outlier downweighting.
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
@@ -31,23 +29,6 @@ pub enum RobustnessMethod {
 
     // Talwar (hard threshold) - most aggressive.
     Talwar,
-}
-
-impl FromStr for RobustnessMethod {
-    type Err = LowessError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_lowercase().as_str() {
-            "bisquare" | "biweight" => Ok(Self::Bisquare),
-            "huber" => Ok(Self::Huber),
-            "talwar" => Ok(Self::Talwar),
-            _ => Err(LowessError::InvalidOption {
-                option: "robustness_method",
-                value: s.to_string(),
-                valid: "bisquare, huber, talwar",
-            }),
-        }
-    }
 }
 
 impl RobustnessMethod {

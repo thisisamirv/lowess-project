@@ -4,11 +4,12 @@
 //! Node.js, Python, R, and WASM bindings so option aliases and validation
 //! behavior stay consistent across all binding frontends.
 
-use crate::adapters::batch::ParallelBatchLowessBuilder;
-use crate::adapters::online::ParallelOnlineLowessBuilder;
-use crate::adapters::streaming::ParallelStreamingLowessBuilder;
-use crate::api::{LowessBuilder, LowessError};
+use crate::adapters::batch::{ParallelBatchLowess, ParallelBatchLowessBuilder};
+use crate::adapters::online::{ParallelOnlineLowess, ParallelOnlineLowessBuilder};
+use crate::adapters::streaming::{ParallelStreamingLowess, ParallelStreamingLowessBuilder};
+use crate::api::{Batch, LowessBuilder, LowessError, LowessResult, Online, Streaming};
 use crate::parse::IntoEnum;
+use lowess::internals::adapters::online::OnlineOutput;
 use lowess::internals::evaluation::intervals::IntervalMethod;
 pub use lowess::internals::primitives::backend::Backend;
 use num_traits::Float;
@@ -17,10 +18,12 @@ pub use lowess::internals::adapters::online::UpdateMode;
 pub use lowess::internals::adapters::streaming::MergeStrategy;
 pub use lowess::internals::algorithms::regression::ZeroWeightFallback;
 pub use lowess::internals::algorithms::robustness::RobustnessMethod;
+use lowess::internals::alias;
 pub use lowess::internals::math::boundary::BoundaryPolicy;
 pub use lowess::internals::math::kernel::WeightFunction;
 pub use lowess::internals::math::scaling::ScalingMethod;
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
+use std::os::raw::c_char;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BindingErrorCategory {
@@ -58,14 +61,43 @@ pub fn map_runtime<T, E: ToString>(result: Result<T, E>) -> Result<T, BindingErr
     result.map_err(|e| BindingError::runtime(e.to_string()))
 }
 
+impl std::fmt::Display for BindingError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+
+/// Categorize a [`LowessError`]: only [`LowessError::RuntimeError`] maps to
+/// [`BindingErrorCategory::Runtime`]; every other variant is an invalid-argument
+/// error that originates from bad user input.
+pub fn map_lowess_result<T>(result: Result<T, LowessError>) -> Result<T, BindingError> {
+    result.map_err(|err| match &err {
+        LowessError::RuntimeError(_) => BindingError::runtime(err.to_string()),
+        _ => BindingError::invalid_arg(err.to_string()),
+    })
+}
+
 pub const PANIC_FALLBACK_MESSAGE: &str = "Panic in Rust library";
 pub const CONFIG_POINTER_IS_NULL: &str = "Config pointer is null";
 pub const MODEL_POINTER_IS_NULL: &str = "Model pointer is null";
+pub const MODEL_NOT_INITIALIZED: &str = "Model not initialized";
 pub const PROCESSOR_POINTER_IS_NULL: &str = "Processor pointer is null";
 pub const INVALID_DATA_INPUTS: &str = "Invalid data inputs";
 pub const XY_ARRAYS_MUST_NOT_BE_NULL: &str = "x and y arrays must not be null";
 pub const ARRAY_LENGTH_MUST_BE_GREATER_THAN_ZERO: &str = "Array length must be greater than 0";
 pub const CUSTOM_WEIGHTS_MUST_BE_NON_NEGATIVE: &str = "custom_weights must be non-negative";
+
+// Default string values for all parser-facing options. These are the canonical
+// fallback strings passed to the shared parse_* functions when a caller does
+// not supply a value.
+pub const DEFAULT_WEIGHT_FUNCTION: &str = "tricube";
+pub const DEFAULT_ROBUSTNESS_METHOD: &str = "bisquare";
+pub const DEFAULT_SCALING_METHOD: &str = "mad";
+pub const DEFAULT_BOUNDARY_POLICY: &str = "extend";
+pub const DEFAULT_ZERO_WEIGHT_FALLBACK: &str = "use_local_mean";
+pub const DEFAULT_CV_METHOD: &str = "kfold";
+pub const DEFAULT_MERGE_STRATEGY: &str = "weighted_average";
+pub const DEFAULT_UPDATE_MODE: &str = "full";
 
 pub fn sanitize_error_message(msg: &str) -> String {
     msg.replace('\0', " ")
@@ -77,6 +109,67 @@ pub fn to_cstring_lossy(msg: &str) -> CString {
 
 pub fn panic_fallback_message() -> &'static str {
     PANIC_FALLBACK_MESSAGE
+}
+
+/// Parse a C string safely, returning `default` when the pointer is null or
+/// the bytes are not valid UTF-8.
+///
+/// # Safety
+/// If `s` is non-null it must point to a valid null-terminated C string that
+/// lives at least as long as the returned `&str`.
+pub unsafe fn parse_c_str_or_default(s: *const c_char, default: &str) -> &str {
+    if s.is_null() {
+        return default;
+    }
+    // SAFETY: caller guarantees `s` is a valid null-terminated C string.
+    unsafe { CStr::from_ptr(s) }.to_str().unwrap_or(default)
+}
+
+// Validate that a signed integer is > 0 and safely cast to usize.
+// Used by C/Julia FFI bindings to convert c_int parameters with bounds checking.
+pub fn require_positive_usize(name: &str, value: i32) -> Result<usize, String> {
+    if value <= 0 {
+        Err(format!("{name} must be greater than 0, got {value}"))
+    } else {
+        Ok(value as usize)
+    }
+}
+
+// Validate that a signed integer is >= 0 and safely cast to usize.
+pub fn require_non_negative_usize(name: &str, value: i32) -> Result<usize, String> {
+    if value < 0 {
+        Err(format!("{name} must be non-negative, got {value}"))
+    } else {
+        Ok(value as usize)
+    }
+}
+
+pub fn dims_mismatch_message(x_len: usize, y_len: usize, dimensions: usize) -> String {
+    format!(
+        "x length ({}) must equal y length ({}) * dimensions ({})",
+        x_len, y_len, dimensions
+    )
+}
+
+/// Returns a non-null raw pointer as a slice, or `None` if the pointer is null or `len` is 0.
+///
+/// # Safety
+/// `ptr` must point to at least `len` valid, initialized elements of type `T` that remain
+/// live for at least as long as the returned slice is used.
+pub unsafe fn option_slice_from_ptr<'a, T>(ptr: *const T, len: usize) -> Option<&'a [T]> {
+    if !ptr.is_null() && len > 0 {
+        Some(unsafe { std::slice::from_raw_parts(ptr, len) })
+    } else {
+        None
+    }
+}
+
+/// Like [`option_slice_from_ptr`] but clones the slice into a `Vec`.
+///
+/// # Safety
+/// Same preconditions as [`option_slice_from_ptr`].
+pub unsafe fn option_vec_from_ptr<T: Clone>(ptr: *const T, len: usize) -> Option<Vec<T>> {
+    unsafe { option_slice_from_ptr(ptr, len) }.map(<[T]>::to_vec)
 }
 
 pub fn xy_length_mismatch_message(x_len: usize, y_len: usize) -> String {
@@ -111,6 +204,170 @@ pub fn required_option_message(option_name: &str) -> String {
 
 pub fn mutex_poisoned_message(details: &str) -> String {
     format!("Mutex poisoned: {}", details)
+}
+
+// Message returned by setter stubs on streaming/online models (C++ binding).
+pub fn setter_unsupported_eager_message(name: &str) -> String {
+    format!(
+        "{name} is not supported: streaming/online models are eagerly initialized at construction"
+    )
+}
+
+// Message returned by setter stubs that require constructor-time configuration (Julia binding).
+pub fn setter_unsupported_constructor_only_message(name: &str) -> String {
+    format!("{name} is not supported: configure model options at construction time")
+}
+
+// Converts a Vec<f64> into a heap-allocated raw pointer.
+// The caller is responsible for freeing the memory via Box::from_raw / Vec::from_raw_parts.
+pub fn vec_to_raw_ptr(v: Vec<f64>) -> *mut f64 {
+    let mut boxed = v.into_boxed_slice();
+    let ptr = boxed.as_mut_ptr();
+    std::mem::forget(boxed);
+    ptr
+}
+
+// Same as vec_to_raw_ptr but for an Option, returning null for None.
+pub fn opt_vec_to_raw_ptr(v: Option<Vec<f64>>) -> *mut f64 {
+    match v {
+        Some(vec) => vec_to_raw_ptr(vec),
+        None => std::ptr::null_mut(),
+    }
+}
+
+// Extracts flat scalar diagnostics from a LowessResult.
+// Returns (rmse, mae, r_squared, aic, aicc, effective_df, residual_sd) with
+// f64::NAN for any field that was not computed.
+pub fn extract_diagnostics(result: &LowessResult<f64>) -> (f64, f64, f64, f64, f64, f64, f64) {
+    if let Some(ref d) = result.diagnostics {
+        (
+            d.rmse,
+            d.mae,
+            d.r_squared,
+            d.aic.unwrap_or(f64::NAN),
+            d.aicc.unwrap_or(f64::NAN),
+            d.effective_df.unwrap_or(f64::NAN),
+            d.residual_sd,
+        )
+    } else {
+        (
+            f64::NAN,
+            f64::NAN,
+            f64::NAN,
+            f64::NAN,
+            f64::NAN,
+            f64::NAN,
+            f64::NAN,
+        )
+    }
+}
+
+// Extracts the optional scalar fields from an online add_point output.
+// Returns (std_error, residual, robustness_weight, iterations_used).
+// Optional f64 fields default to f64::NAN; iterations_used defaults to -1.
+pub fn extract_online_output(o: &OnlineOutput<f64>) -> (f64, f64, f64, i32) {
+    (
+        o.std_error.unwrap_or(f64::NAN),
+        o.residual.unwrap_or(f64::NAN),
+        o.robustness_weight.unwrap_or(f64::NAN),
+        o.iterations_used.map(|i| i as i32).unwrap_or(-1),
+    )
+}
+
+// Neutral FFI lowess result parts produced by extract_ffi_lowess_result.
+// All raw-pointer fields are either Rust-allocated heap memory (freed via
+// free_raw_f64_buffer) or null. Types use Rust-native widths; the binding casts
+// to its platform ABI types (e.g. usize → c_ulong) and appends its own error
+// field before exposing the struct to C.
+pub struct FfiLowessResult {
+    pub x: *mut f64,
+    pub y: *mut f64,
+    pub n: usize,
+    pub standard_errors: *mut f64,
+    pub confidence_lower: *mut f64,
+    pub confidence_upper: *mut f64,
+    pub prediction_lower: *mut f64,
+    pub prediction_upper: *mut f64,
+    pub residuals: *mut f64,
+    pub robustness_weights: *mut f64,
+    pub fraction_used: f64,
+    pub iterations_used: i32,
+    pub rmse: f64,
+    pub mae: f64,
+    pub r_squared: f64,
+    pub aic: f64,
+    pub aicc: f64,
+    pub effective_df: f64,
+    pub residual_sd: f64,
+    pub cv_scores: *mut f64,
+    pub cv_scores_len: usize,
+}
+
+// Extract all fields from a LowessResult into an FfiLowessResult. All optional
+// vectors are moved to heap-allocated raw pointers; scalar optionals are
+// NaN/−1-defaulted. The caller owns the returned pointers.
+pub fn extract_ffi_lowess_result(result: LowessResult<f64>) -> FfiLowessResult {
+    let n = result.y.len();
+    let (rmse, mae, r_squared, aic, aicc, effective_df, residual_sd) = extract_diagnostics(&result);
+    let cv_scores_len = result.cv_scores.as_ref().map(|v| v.len()).unwrap_or(0);
+    FfiLowessResult {
+        x: vec_to_raw_ptr(result.x),
+        y: vec_to_raw_ptr(result.y),
+        n,
+        standard_errors: opt_vec_to_raw_ptr(result.standard_errors),
+        confidence_lower: opt_vec_to_raw_ptr(result.confidence_lower),
+        confidence_upper: opt_vec_to_raw_ptr(result.confidence_upper),
+        prediction_lower: opt_vec_to_raw_ptr(result.prediction_lower),
+        prediction_upper: opt_vec_to_raw_ptr(result.prediction_upper),
+        residuals: opt_vec_to_raw_ptr(result.residuals),
+        robustness_weights: opt_vec_to_raw_ptr(result.robustness_weights),
+        fraction_used: result.fraction_used,
+        iterations_used: result.iterations_used.map(|i| i as i32).unwrap_or(-1),
+        rmse,
+        mae,
+        r_squared,
+        aic,
+        aicc,
+        effective_df,
+        residual_sd,
+        cv_scores: opt_vec_to_raw_ptr(result.cv_scores),
+        cv_scores_len,
+    }
+}
+
+/// Free a heap-allocated `f64` buffer produced by `vec_to_raw_ptr` / `opt_vec_to_raw_ptr`.
+/// No-op when `ptr` is null. Both functions allocate via `into_boxed_slice`, so the
+/// correct counterpart is `Box::from_raw(slice_from_raw_parts_mut)`.
+///
+/// # Safety
+/// `ptr` must either be null or have been produced by `vec_to_raw_ptr` /
+/// `opt_vec_to_raw_ptr` with the same `len`.
+pub unsafe fn free_raw_f64_buffer(ptr: *mut f64, len: usize) {
+    if !ptr.is_null() {
+        unsafe {
+            let _ = Box::from_raw(std::ptr::slice_from_raw_parts_mut(ptr, len));
+        }
+    }
+}
+
+/// Free a heap-allocated C string produced by `CString::into_raw`.
+///
+/// # Safety
+/// `ptr` must either be null or have been produced by `CString::into_raw`.
+pub unsafe fn free_raw_c_string(ptr: *mut c_char) {
+    if !ptr.is_null() {
+        unsafe {
+            let _ = CString::from_raw(ptr);
+        }
+    }
+}
+
+// Convert an error message to a heap-allocated C string and return its raw
+// pointer. The caller must eventually free it via free_raw_c_string /
+// CString::from_raw. The message is sanitized (null bytes replaced with spaces)
+// before conversion.
+pub fn into_raw_error_c_string(msg: &str) -> *mut c_char {
+    to_cstring_lossy(msg).into_raw()
 }
 
 // All string-keyed options accepted by language binding frontends.
@@ -188,92 +445,31 @@ pub struct TypedBuilderOptionSet {
 // ============================================================================
 
 pub fn parse_weight_function(name: &str) -> Result<WeightFunction, String> {
-    match name.to_lowercase().as_str() {
-        "tricube" => Ok(WeightFunction::Tricube),
-        "epanechnikov" => Ok(WeightFunction::Epanechnikov),
-        "gaussian" => Ok(WeightFunction::Gaussian),
-        "uniform" | "boxcar" => Ok(WeightFunction::Uniform),
-        "biweight" | "bisquare" => Ok(WeightFunction::Biweight),
-        "triangle" | "triangular" => Ok(WeightFunction::Triangle),
-        "cosine" => Ok(WeightFunction::Cosine),
-        _ => Err(format!(
-            "Unknown weight function: {}. Valid options: tricube, epanechnikov, gaussian, uniform, biweight, triangle, cosine",
-            name
-        )),
-    }
+    alias::parse_weight_function(name).map_err(|e| e.to_string())
 }
 
 pub fn parse_robustness_method(name: &str) -> Result<RobustnessMethod, String> {
-    match name.to_lowercase().as_str() {
-        "bisquare" | "biweight" => Ok(RobustnessMethod::Bisquare),
-        "huber" => Ok(RobustnessMethod::Huber),
-        "talwar" => Ok(RobustnessMethod::Talwar),
-        _ => Err(format!(
-            "Unknown robustness method: {}. Valid options: bisquare, huber, talwar",
-            name
-        )),
-    }
+    alias::parse_robustness_method(name).map_err(|e| e.to_string())
 }
 
 pub fn parse_zero_weight_fallback(name: &str) -> Result<ZeroWeightFallback, String> {
-    match name.to_lowercase().as_str() {
-        "use_local_mean" | "local_mean" | "mean" => Ok(ZeroWeightFallback::UseLocalMean),
-        "return_original" | "original" => Ok(ZeroWeightFallback::ReturnOriginal),
-        "return_none" | "none" | "nan" => Ok(ZeroWeightFallback::ReturnNone),
-        _ => Err(format!(
-            "Unknown zero weight fallback: {}. Valid options: use_local_mean, return_original, return_none",
-            name
-        )),
-    }
+    alias::parse_zero_weight_fallback(name).map_err(|e| e.to_string())
 }
 
 pub fn parse_boundary_policy(name: &str) -> Result<BoundaryPolicy, String> {
-    match name.to_lowercase().as_str() {
-        "extend" | "pad" => Ok(BoundaryPolicy::Extend),
-        "reflect" | "mirror" => Ok(BoundaryPolicy::Reflect),
-        "zero" | "none" => Ok(BoundaryPolicy::Zero),
-        "noboundary" => Ok(BoundaryPolicy::NoBoundary),
-        _ => Err(format!(
-            "Unknown boundary policy: {}. Valid options: extend, reflect, zero, noboundary",
-            name
-        )),
-    }
+    alias::parse_boundary_policy(name).map_err(|e| e.to_string())
 }
 
 pub fn parse_scaling_method(name: &str) -> Result<ScalingMethod, String> {
-    match name.to_lowercase().as_str() {
-        "mad" => Ok(ScalingMethod::MAD),
-        "mar" => Ok(ScalingMethod::MAR),
-        "mean" => Ok(ScalingMethod::Mean),
-        _ => Err(format!(
-            "Unknown scaling method: {}. Valid options: mad, mar, mean",
-            name
-        )),
-    }
+    alias::parse_scaling_method(name).map_err(|e| e.to_string())
 }
 
 pub fn parse_merge_strategy(name: &str) -> Result<MergeStrategy, String> {
-    match name.to_lowercase().as_str() {
-        "average" | "mean" => Ok(MergeStrategy::Average),
-        "weighted" | "weighted_average" => Ok(MergeStrategy::WeightedAverage),
-        "first" | "take_first" | "left" => Ok(MergeStrategy::TakeFirst),
-        "last" | "take_last" | "right" => Ok(MergeStrategy::TakeLast),
-        _ => Err(format!(
-            "Unknown merge strategy: {}. Valid options: average, weighted_average, take_first, take_last",
-            name
-        )),
-    }
+    alias::parse_merge_strategy(name).map_err(|e| e.to_string())
 }
 
 pub fn parse_update_mode(name: &str) -> Result<UpdateMode, String> {
-    match name.to_lowercase().as_str() {
-        "full" | "resmooth" => Ok(UpdateMode::Full),
-        "incremental" | "single" => Ok(UpdateMode::Incremental),
-        _ => Err(format!(
-            "Unknown update mode: {}. Valid options: full, incremental",
-            name
-        )),
-    }
+    alias::parse_update_mode(name).map_err(|e| e.to_string())
 }
 
 // ============================================================================
@@ -281,64 +477,31 @@ pub fn parse_update_mode(name: &str) -> Result<UpdateMode, String> {
 // ============================================================================
 
 pub fn weight_function_str(value: WeightFunction) -> &'static str {
-    match value {
-        WeightFunction::Tricube => "tricube",
-        WeightFunction::Epanechnikov => "epanechnikov",
-        WeightFunction::Gaussian => "gaussian",
-        WeightFunction::Uniform => "uniform",
-        WeightFunction::Biweight => "biweight",
-        WeightFunction::Triangle => "triangle",
-        WeightFunction::Cosine => "cosine",
-    }
+    alias::weight_function_str(value)
 }
 
 pub fn robustness_method_str(value: RobustnessMethod) -> &'static str {
-    match value {
-        RobustnessMethod::Bisquare => "bisquare",
-        RobustnessMethod::Huber => "huber",
-        RobustnessMethod::Talwar => "talwar",
-    }
+    alias::robustness_method_str(value)
 }
 
 pub fn scaling_method_str(value: ScalingMethod) -> &'static str {
-    match value {
-        ScalingMethod::MAD => "mad",
-        ScalingMethod::MAR => "mar",
-        ScalingMethod::Mean => "mean",
-    }
+    alias::scaling_method_str(value)
 }
 
 pub fn zero_weight_fallback_str(value: ZeroWeightFallback) -> &'static str {
-    match value {
-        ZeroWeightFallback::UseLocalMean => "use_local_mean",
-        ZeroWeightFallback::ReturnOriginal => "return_original",
-        ZeroWeightFallback::ReturnNone => "return_none",
-    }
+    alias::zero_weight_fallback_str(value)
 }
 
 pub fn boundary_policy_str(value: BoundaryPolicy) -> &'static str {
-    match value {
-        BoundaryPolicy::Extend => "extend",
-        BoundaryPolicy::Reflect => "reflect",
-        BoundaryPolicy::Zero => "zero",
-        BoundaryPolicy::NoBoundary => "noboundary",
-    }
+    alias::boundary_policy_str(value)
 }
 
 pub fn merge_strategy_str(value: MergeStrategy) -> &'static str {
-    match value {
-        MergeStrategy::Average => "average",
-        MergeStrategy::WeightedAverage => "weighted_average",
-        MergeStrategy::TakeFirst => "take_first",
-        MergeStrategy::TakeLast => "take_last",
-    }
+    alias::merge_strategy_str(value)
 }
 
 pub fn update_mode_str(value: UpdateMode) -> &'static str {
-    match value {
-        UpdateMode::Full => "full",
-        UpdateMode::Incremental => "incremental",
-    }
+    alias::update_mode_str(value)
 }
 
 // ============================================================================
@@ -544,340 +707,468 @@ pub fn lowess_error_message(err: &LowessError) -> String {
     err.to_string()
 }
 
+// ─── Adapter build helpers ────────────────────────────────────────────────────
+//
+// These functions centralize the "extract defaults → parse string enum →
+// chain adapter setters → build" pattern that every binding repeats for its
+// batch, streaming, and online constructors.
+
+// Compute the default overlap size from a chunk size when the caller does not
+// specify one. cpp, julia, python, and r all use this same formula instead of
+// the flat 500-point default used by wasm/nodejs.
+pub fn default_overlap(chunk_size: usize) -> usize {
+    let default = chunk_size / 10;
+    default.min(chunk_size.saturating_sub(10)).max(1)
+}
+
+// Build a parallel batch processor. Applies optional case weights before
+// building.
+pub fn build_batch(
+    builder: LowessBuilder<f64>,
+    custom_weights: Option<Vec<f64>>,
+) -> Result<ParallelBatchLowess<f64>, BindingError> {
+    let builder = if let Some(cw) = custom_weights {
+        builder.custom_weights(cw)
+    } else {
+        builder
+    };
+    map_lowess_result(builder.adapter(Batch).build())
+}
+
+// Build a parallel streaming processor.
+// Defaults: chunk_size = 5000, overlap = default_overlap(chunk_size), merge_strategy = WeightedAverage.
+pub fn build_streaming(
+    builder: LowessBuilder<f64>,
+    chunk_size: Option<usize>,
+    overlap: Option<usize>,
+    merge_strategy: Option<&str>,
+) -> Result<ParallelStreamingLowess<f64>, BindingError> {
+    let cs = chunk_size.unwrap_or(5000);
+    let ov = overlap.unwrap_or_else(|| default_overlap(cs));
+    let ms = match merge_strategy {
+        Some(s) => map_invalid_arg(parse_merge_strategy(s))?,
+        None => MergeStrategy::WeightedAverage,
+    };
+    map_lowess_result(
+        builder
+            .adapter(Streaming)
+            .chunk_size(cs)
+            .overlap(ov)
+            .merge_strategy(ms)
+            .build(),
+    )
+}
+
+// Build a parallel online processor.
+// Defaults: window_capacity = 1000, min_points = 3, update_mode = Full.
+pub fn build_online(
+    builder: LowessBuilder<f64>,
+    window_capacity: Option<usize>,
+    min_points: Option<usize>,
+    update_mode: Option<&str>,
+) -> Result<ParallelOnlineLowess<f64>, BindingError> {
+    let wc = window_capacity.unwrap_or(1000);
+    let mp = min_points.unwrap_or(3);
+    let um = match update_mode {
+        Some(s) => map_invalid_arg(parse_update_mode(s))?,
+        None => UpdateMode::Full,
+    };
+    map_lowess_result(
+        builder
+            .adapter(Online)
+            .window_capacity(wc)
+            .min_points(mp)
+            .update_mode(um)
+            .build(),
+    )
+}
+
 // ─── Builder setter methods ───────────────────────────────────────────────────
 //
 // These impl blocks are in binding_support.rs (compiled only with the `dev`
 // feature) so the adapter files (batch.rs, online.rs, streaming.rs) stay free
 // of any `#[cfg]` attributes.
 
-#[allow(private_bounds)]
 impl<T: Float> ParallelBatchLowessBuilder<T> {
+    // Set parallel execution mode.
     pub fn parallel(mut self, parallel: bool) -> Self {
         self.base.parallel = Some(parallel);
         self
     }
 
+    // Set the execution backend.
     pub fn backend(mut self, backend: Backend) -> Self {
         self.base.backend = Some(backend);
         self
     }
 
+    // Set the smoothing fraction (span).
     pub fn fraction(mut self, fraction: T) -> Self {
         self.base.fraction = fraction;
         self
     }
 
+    // Set the number of robustness iterations.
     pub fn iterations(mut self, iterations: usize) -> Self {
         self.base.iterations = iterations;
         self
     }
 
+    // Set the interpolation threshold (skip fitting for nearby points).
     pub fn delta(mut self, delta: T) -> Self {
         self.base.delta = Some(delta);
         self
     }
 
+    // Set the kernel weight function.
+    #[allow(private_bounds)]
     pub fn weight_function(mut self, wf: impl IntoEnum<WeightFunction>) -> Self {
         match wf.into_enum() {
             Ok(w) => self.base.weight_function = w,
-            Err(e) => {
-                self.parse_errors.push(e);
-            }
+            Err(e) => self.parse_errors.push(e),
         }
         self
     }
 
+    // Set the robustness method for outlier handling.
+    #[allow(private_bounds)]
     pub fn robustness_method(mut self, method: impl IntoEnum<RobustnessMethod>) -> Self {
         match method.into_enum() {
             Ok(m) => self.base.robustness_method = m,
-            Err(e) => {
-                self.parse_errors.push(e);
-            }
+            Err(e) => self.parse_errors.push(e),
         }
         self
     }
 
+    // Set the residual scaling method (MAR/MAD).
+    #[allow(private_bounds)]
+    pub fn scaling_method(mut self, method: impl IntoEnum<ScalingMethod>) -> Self {
+        match method.into_enum() {
+            Ok(m) => self.base.scaling_method = m,
+            Err(e) => self.parse_errors.push(e),
+        }
+        self
+    }
+
+    // Set the zero-weight fallback policy.
+    #[allow(private_bounds)]
     pub fn zero_weight_fallback(mut self, fallback: impl IntoEnum<ZeroWeightFallback>) -> Self {
         match fallback.into_enum() {
             Ok(f) => self.base.zero_weight_fallback = f,
-            Err(e) => {
-                self.parse_errors.push(e);
-            }
+            Err(e) => self.parse_errors.push(e),
         }
         self
     }
 
+    // Set the boundary handling policy.
+    #[allow(private_bounds)]
     pub fn boundary_policy(mut self, policy: impl IntoEnum<BoundaryPolicy>) -> Self {
         match policy.into_enum() {
             Ok(p) => self.base.boundary_policy = p,
-            Err(e) => {
-                self.parse_errors.push(e);
-            }
+            Err(e) => self.parse_errors.push(e),
         }
         self
     }
 
+    // Enable auto-convergence for robustness iterations.
     pub fn auto_converge(mut self, tolerance: T) -> Self {
         self.base.auto_converge = Some(tolerance);
         self
     }
 
+    // Enable returning residuals in the output.
     pub fn compute_residuals(mut self, enabled: bool) -> Self {
         self.base.compute_residuals = enabled;
         self
     }
 
+    // Enable returning robustness weights in the result.
     pub fn return_robustness_weights(mut self, enabled: bool) -> Self {
         self.base.return_robustness_weights = enabled;
         self
     }
 
+    // Enable returning diagnostics in the result.
     pub fn return_diagnostics(mut self, enabled: bool) -> Self {
         self.base.return_diagnostics = enabled;
         self
     }
 
+    // Enable confidence intervals at the specified level.
     pub fn confidence_intervals(mut self, level: T) -> Self {
         self.base.interval_type = Some(IntervalMethod::confidence(level));
         self
     }
 
+    // Enable prediction intervals at the specified level.
     pub fn prediction_intervals(mut self, level: T) -> Self {
         self.base.interval_type = Some(IntervalMethod::prediction(level));
         self
     }
 
-    pub fn cv_fractions(mut self, fractions: Vec<T>) -> Self {
-        self.base.cv_fractions = Some(fractions);
+    // Enable returning standard errors in the result.
+    pub fn return_se(mut self, enabled: bool) -> Self {
+        if enabled && self.base.interval_type.is_none() {
+            self.base.interval_type = Some(IntervalMethod::se());
+        }
         self
     }
 
+    // Set the cross-validation method: `"kfold"` or `"loocv"`.
     pub fn cv_method(mut self, method: &str) -> Self {
         self.cv_method_str = Some(method.to_string());
         self
     }
 
+    // Set the number of folds for K-fold cross-validation (default: 5).
     pub fn cv_k(mut self, k: usize) -> Self {
         self.cv_k_val = k;
         self
     }
 
+    // Set the candidate fractions to evaluate during cross-validation.
+    pub fn cv_fractions(mut self, fractions: Vec<T>) -> Self {
+        self.base.cv_fractions = Some(fractions);
+        self
+    }
+
+    // Set the random seed for reproducible cross-validation fold splitting.
     pub fn cv_seed(mut self, seed: u64) -> Self {
         self.base.cv_seed = Some(seed);
         self
     }
 
+    // Set user-defined case weights (one per observation).
     pub fn custom_weights(mut self, weights: Vec<T>) -> Self {
         self.base.custom_weights = Some(weights);
         self
     }
 }
 
-#[allow(private_bounds)]
 impl<T: Float> ParallelOnlineLowessBuilder<T> {
+    // Set parallel execution mode.
     pub fn parallel(mut self, parallel: bool) -> Self {
         self.base.parallel = Some(parallel);
         self
     }
 
+    // Set the execution backend.
     pub fn backend(mut self, backend: Backend) -> Self {
         self.base.backend = Some(backend);
         self
     }
 
+    // Set the smoothing fraction (span).
     pub fn fraction(mut self, fraction: T) -> Self {
         self.base.fraction = fraction;
         self
     }
 
+    // Set the number of robustness iterations.
     pub fn iterations(mut self, iterations: usize) -> Self {
         self.base.iterations = iterations;
         self
     }
 
+    // Set the interpolation threshold.
     pub fn delta(mut self, delta: T) -> Self {
         self.base.delta = delta;
         self
     }
 
+    // Set the kernel weight function.
+    #[allow(private_bounds)]
     pub fn weight_function(mut self, wf: impl IntoEnum<WeightFunction>) -> Self {
         match wf.into_enum() {
             Ok(w) => self.base.weight_function = w,
-            Err(e) => {
-                self.parse_errors.push(e);
-            }
+            Err(e) => self.parse_errors.push(e),
         }
         self
     }
 
+    // Set the robustness method for outlier handling.
+    #[allow(private_bounds)]
     pub fn robustness_method(mut self, method: impl IntoEnum<RobustnessMethod>) -> Self {
         match method.into_enum() {
             Ok(m) => self.base.robustness_method = m,
-            Err(e) => {
-                self.parse_errors.push(e);
-            }
+            Err(e) => self.parse_errors.push(e),
         }
         self
     }
 
+    // Set the zero-weight fallback policy.
+    #[allow(private_bounds)]
     pub fn zero_weight_fallback(mut self, fallback: impl IntoEnum<ZeroWeightFallback>) -> Self {
         match fallback.into_enum() {
             Ok(f) => self.base.zero_weight_fallback = f,
-            Err(e) => {
-                self.parse_errors.push(e);
-            }
+            Err(e) => self.parse_errors.push(e),
         }
         self
     }
 
+    // Set the boundary handling policy.
+    #[allow(private_bounds)]
     pub fn boundary_policy(mut self, policy: impl IntoEnum<BoundaryPolicy>) -> Self {
         match policy.into_enum() {
             Ok(p) => self.base.boundary_policy = p,
-            Err(e) => {
-                self.parse_errors.push(e);
-            }
+            Err(e) => self.parse_errors.push(e),
         }
         self
     }
 
+    // Enable auto-convergence for robustness iterations.
     pub fn auto_converge(mut self, tolerance: T) -> Self {
         self.base.auto_converge = Some(tolerance);
         self
     }
 
+    // Set whether to compute residuals.
     pub fn compute_residuals(mut self, enabled: bool) -> Self {
         self.base.compute_residuals = enabled;
         self
     }
 
+    // Set whether to return robustness weights.
     pub fn return_robustness_weights(mut self, enabled: bool) -> Self {
         self.base.return_robustness_weights = enabled;
         self
     }
 
+    // Set the window capacity.
     pub fn window_capacity(mut self, capacity: usize) -> Self {
         self.base.window_capacity = capacity;
         self
     }
 
+    // Set the minimum points required before smoothing.
     pub fn min_points(mut self, min_points: usize) -> Self {
         self.base.min_points = min_points;
         self
     }
 
+    // Set the update mode (Incremental/Full).
+    #[allow(private_bounds)]
     pub fn update_mode(mut self, mode: impl IntoEnum<UpdateMode>) -> Self {
         match mode.into_enum() {
             Ok(m) => self.base.update_mode = m,
-            Err(e) => {
-                self.parse_errors.push(e);
-            }
+            Err(e) => self.parse_errors.push(e),
         }
         self
     }
 }
 
-#[allow(private_bounds)]
 impl<T: Float> ParallelStreamingLowessBuilder<T> {
+    // Set parallel execution mode.
     pub fn parallel(mut self, parallel: bool) -> Self {
         self.base.parallel = Some(parallel);
         self
     }
 
+    // Set the execution backend.
     pub fn backend(mut self, backend: Backend) -> Self {
         self.base.backend = Some(backend);
         self
     }
 
+    // Set the smoothing fraction (span).
     pub fn fraction(mut self, fraction: T) -> Self {
         self.base.fraction = fraction;
         self
     }
 
+    // Set the number of robustness iterations.
     pub fn iterations(mut self, iterations: usize) -> Self {
         self.base.iterations = iterations;
         self
     }
 
+    // Set the interpolation threshold.
     pub fn delta(mut self, delta: T) -> Self {
         self.base.delta = delta;
         self
     }
 
+    // Set the kernel weight function.
+    #[allow(private_bounds)]
     pub fn weight_function(mut self, wf: impl IntoEnum<WeightFunction>) -> Self {
         match wf.into_enum() {
             Ok(w) => self.base.weight_function = w,
-            Err(e) => {
-                self.parse_errors.push(e);
-            }
+            Err(e) => self.parse_errors.push(e),
         }
         self
     }
 
+    // Set the robustness method for outlier handling.
+    #[allow(private_bounds)]
     pub fn robustness_method(mut self, method: impl IntoEnum<RobustnessMethod>) -> Self {
         match method.into_enum() {
             Ok(m) => self.base.robustness_method = m,
-            Err(e) => {
-                self.parse_errors.push(e);
-            }
+            Err(e) => self.parse_errors.push(e),
         }
         self
     }
 
+    // Set the zero-weight fallback policy.
+    #[allow(private_bounds)]
     pub fn zero_weight_fallback(mut self, fallback: impl IntoEnum<ZeroWeightFallback>) -> Self {
         match fallback.into_enum() {
             Ok(f) => self.base.zero_weight_fallback = f,
-            Err(e) => {
-                self.parse_errors.push(e);
-            }
+            Err(e) => self.parse_errors.push(e),
         }
         self
     }
 
+    // Set the boundary handling policy.
+    #[allow(private_bounds)]
     pub fn boundary_policy(mut self, policy: impl IntoEnum<BoundaryPolicy>) -> Self {
         match policy.into_enum() {
             Ok(p) => self.base.boundary_policy = p,
-            Err(e) => {
-                self.parse_errors.push(e);
-            }
+            Err(e) => self.parse_errors.push(e),
         }
         self
     }
 
+    // Enable auto-convergence for robustness iterations.
     pub fn auto_converge(mut self, tolerance: T) -> Self {
         self.base.auto_converge = Some(tolerance);
         self
     }
 
+    // Enable returning residuals in the output.
     pub fn compute_residuals(mut self, enabled: bool) -> Self {
         self.base.compute_residuals = enabled;
         self
     }
 
+    // Enable returning robustness weights in the result.
     pub fn return_robustness_weights(mut self, enabled: bool) -> Self {
         self.base.return_robustness_weights = enabled;
         self
     }
 
+    // Set chunk size for processing.
     pub fn chunk_size(mut self, size: usize) -> Self {
         self.base.chunk_size = size;
         self
     }
 
+    // Set overlap between chunks.
     pub fn overlap(mut self, size: usize) -> Self {
         self.base.overlap = size;
         self
     }
 
+    // Set the merge strategy for overlapping chunks.
+    #[allow(private_bounds)]
     pub fn merge_strategy(mut self, strategy: impl IntoEnum<MergeStrategy>) -> Self {
         match strategy.into_enum() {
             Ok(s) => self.base.merge_strategy = s,
-            Err(e) => {
-                self.parse_errors.push(e);
-            }
+            Err(e) => self.parse_errors.push(e),
         }
         self
     }
 
+    // Enable returning diagnostics in the result.
     pub fn return_diagnostics(mut self, enabled: bool) -> Self {
         self.base.return_diagnostics = enabled;
         self
