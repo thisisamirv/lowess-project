@@ -218,7 +218,7 @@ impl<T: Float> Default for LowessConfig<T> {
     fn default() -> Self {
         Self {
             fraction: None,
-            iterations: 3,
+            iterations: crate::defaults::DEFAULT_ITERATIONS,
             delta: T::zero(),
             weight_function: WeightFunction::default(),
             zero_weight_fallback: 0,
@@ -319,8 +319,9 @@ impl<T: Float> LowessExecutor<T> {
     // Create a new executor with default parameters.
     pub fn new() -> Self {
         Self {
-            fraction: T::from(0.67).unwrap_or_else(|| T::from(0.5).unwrap()),
-            iterations: 3,
+            fraction: T::from(crate::defaults::DEFAULT_FRACTION)
+                .unwrap_or_else(|| T::from(0.5).unwrap()),
+            iterations: crate::defaults::DEFAULT_ITERATIONS,
             delta: T::zero(),
             weight_function: WeightFunction::Tricube,
             zero_weight_fallback: 0,
@@ -342,7 +343,8 @@ impl<T: Float> LowessExecutor<T> {
 
     // Create a new executor from a `LowessConfig`.
     pub fn from_config(config: &LowessConfig<T>) -> Self {
-        let default_frac = T::from(0.67).unwrap_or_else(|| T::from(0.5).unwrap());
+        let default_frac =
+            T::from(crate::defaults::DEFAULT_FRACTION).unwrap_or_else(|| T::from(0.5).unwrap());
         Self::new()
             .fraction(config.fraction.unwrap_or(default_frac))
             .iterations(config.iterations)

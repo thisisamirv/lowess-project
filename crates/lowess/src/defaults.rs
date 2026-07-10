@@ -1,0 +1,78 @@
+//! Canonical default values for all LOWESS parameters.
+//!
+//! This module is the single source of truth for every default parameter value
+//! used across the `lowess` crate and all downstream consumers (`fastLowess`
+//! and the language bindings for Python, R, Julia, Node.js, WASM, and C++).
+//!
+//! Adapter-specific constants are prefixed with the adapter name
+//! (`STREAMING_`, `ONLINE_`). Shared constants (used by every
+//! adapter) have no prefix.
+
+// ── Streaming adapter ─────────────────────────────────────────────────────────
+
+// Default number of data points per chunk.
+pub const DEFAULT_STREAMING_CHUNK_SIZE: usize = 5_000;
+
+// Default overlap between consecutive chunks.
+pub const DEFAULT_STREAMING_OVERLAP: usize = 500;
+
+// Default merge strategy for overlapping chunk regions.
+pub const DEFAULT_STREAMING_MERGE_STRATEGY: &str = "weighted_average";
+
+// ── Online adapter ────────────────────────────────────────────────────────────
+
+// Default sliding-window capacity.
+pub const DEFAULT_ONLINE_WINDOW_CAPACITY: usize = 1_000;
+
+// Default minimum number of points required before output is produced.
+pub const DEFAULT_ONLINE_MIN_POINTS: usize = 2;
+
+// Default update mode for the **Online** adapter.
+pub const DEFAULT_ONLINE_UPDATE_MODE: &str = "incremental";
+
+// ── Shared (all adapters) ─────────────────────────────────────────────────────
+
+// Default smoothing fraction. Approximately Cleveland's original recommendation of 2/3.
+pub const DEFAULT_FRACTION: f64 = 0.67;
+
+// Default number of robustness iterations.
+pub const DEFAULT_ITERATIONS: usize = 3;
+
+// Default interpolation-optimisation threshold.
+//
+// `0.0` means "auto-compute as 1 % of the x-range" for the **Batch**
+// adapter; **Streaming** and **Online** adapters use `0.0` as a literal
+// (optimisation disabled).
+pub const DEFAULT_DELTA: f64 = 0.0;
+
+// Default kernel weight function.
+pub const DEFAULT_WEIGHT_FUNCTION: &str = "tricube";
+
+// Default robustness weighting method.
+pub const DEFAULT_ROBUSTNESS_METHOD: &str = "bisquare";
+
+// Default robust scale estimator.
+pub const DEFAULT_SCALING_METHOD: &str = "mad";
+
+// Default boundary padding policy.
+pub const DEFAULT_BOUNDARY_POLICY: &str = "extend";
+
+// Default zero-weight neighbourhood fallback.
+pub const DEFAULT_ZERO_WEIGHT_FALLBACK: &str = "use_local_mean";
+
+// Default: do not compute or return diagnostic statistics.
+pub const DEFAULT_RETURN_DIAGNOSTICS: bool = false;
+
+// Default: do not compute or return residuals.
+pub const DEFAULT_RETURN_RESIDUALS: bool = false;
+
+// Default: do not compute or return robustness weights.
+pub const DEFAULT_RETURN_ROBUSTNESS_WEIGHTS: bool = false;
+
+// ── Cross-validation ──────────────────────────────────────────────────────────
+
+// Default cross-validation strategy.
+pub const DEFAULT_CV_METHOD: &str = "kfold";
+
+// Default number of folds for K-Fold cross-validation.
+pub const DEFAULT_CV_K: usize = 5;

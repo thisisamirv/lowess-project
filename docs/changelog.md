@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `"resmooth"` as an accepted string alias for `UpdateMode::Full` and `"single"` as an alias for `UpdateMode::Incremental`, aligning string-parse behaviour with the `loess-rs` crate.
 - Added `custom_weights(Vec<T>)` builder method on `LowessBuilder` (Batch adapter only). Accepts a vector of non-negative per-observation weights that are multiplied into the distance and robustness weights before each local regression, allowing known-bad points to be suppressed (`0.0`) or high-quality measurements to be emphasised.
 - Added an `alias` module to `lowess` with centralized `impl FromStr` for all seven option enums (`WeightFunction`, `BoundaryPolicy`, `ScalingMethod`, `RobustnessMethod`, `ZeroWeightFallback`, `MergeStrategy`, `UpdateMode`), consolidating previously scattered `FromStr` implementations into a single source of truth. The `fastLowess` `binding_support` module now delegates all string-to-enum parsing to these implementations via `internals::alias`.
+- Added a `defaults` module to centralize default arguemnt values and propagate them from one source of truth, to ensure consistency across bindings and crates.
 
 **Python:**
 

@@ -193,7 +193,7 @@ Arithmetic mean of absolute residuals. Non-robust: a single extreme outlier infl
 | Situation | Recommended Method |
 | --- | --- |
 | General purpose, possible outliers | `"mad"` (default) |
-| Robust but faster, low systematic bias | `"mar"` |
+| Speed matters; residuals have minimal systematic bias | `"mar"` |
 | Clean data, no outliers | `"mean"` |
 
 See [Robustness](robustness.md) for a broader discussion of outlier handling.

@@ -71,7 +71,7 @@
 //!     .weight_function("tricube")                      // Kernel function
 //!     .robustness_method("bisquare")                   // Outlier handling
 //!     .delta(0.01)                                     // Interpolation optimization
-//!     .zero_weight_fallback("uselocalmean")            // Fallback policy
+//!     .zero_weight_fallback("use_local_mean")          // Fallback policy
 //!     .boundary_policy("extend")                       // Boundary handling policy
 //!     .scaling_method("mad")                           // Robust scale estimation
 //!     .auto_converge(1e-6)                             // Auto-convergence threshold
@@ -263,6 +263,9 @@ mod parse;
 // Centralised string-alias maps for all option enums.
 mod alias;
 
+// Canonical default values for all LOWESS parameters.
+pub(crate) mod defaults;
+
 // Standard LOWESS prelude.
 pub mod prelude {
     pub use crate::api::{
@@ -300,5 +303,8 @@ pub mod internals {
     }
     pub mod alias {
         pub use crate::alias::helpers::*;
+    }
+    pub mod defaults {
+        pub use crate::defaults::*;
     }
 }

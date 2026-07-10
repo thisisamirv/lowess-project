@@ -87,17 +87,16 @@ pub const XY_ARRAYS_MUST_NOT_BE_NULL: &str = "x and y arrays must not be null";
 pub const ARRAY_LENGTH_MUST_BE_GREATER_THAN_ZERO: &str = "Array length must be greater than 0";
 pub const CUSTOM_WEIGHTS_MUST_BE_NON_NEGATIVE: &str = "custom_weights must be non-negative";
 
-// Default string values for all parser-facing options. These are the canonical
-// fallback strings passed to the shared parse_* functions when a caller does
-// not supply a value.
-pub const DEFAULT_WEIGHT_FUNCTION: &str = "tricube";
-pub const DEFAULT_ROBUSTNESS_METHOD: &str = "bisquare";
-pub const DEFAULT_SCALING_METHOD: &str = "mad";
-pub const DEFAULT_BOUNDARY_POLICY: &str = "extend";
-pub const DEFAULT_ZERO_WEIGHT_FALLBACK: &str = "use_local_mean";
-pub const DEFAULT_CV_METHOD: &str = "kfold";
-pub const DEFAULT_MERGE_STRATEGY: &str = "weighted_average";
-pub const DEFAULT_UPDATE_MODE: &str = "full";
+// Default string values for all parser-facing options. Re-exported from
+// `lowess::defaults` so that all bindings share a single source of truth.
+pub use lowess::internals::defaults::DEFAULT_BOUNDARY_POLICY;
+pub use lowess::internals::defaults::DEFAULT_CV_METHOD;
+pub use lowess::internals::defaults::DEFAULT_ONLINE_UPDATE_MODE;
+pub use lowess::internals::defaults::DEFAULT_ROBUSTNESS_METHOD;
+pub use lowess::internals::defaults::DEFAULT_SCALING_METHOD;
+pub use lowess::internals::defaults::DEFAULT_STREAMING_MERGE_STRATEGY;
+pub use lowess::internals::defaults::DEFAULT_WEIGHT_FUNCTION;
+pub use lowess::internals::defaults::DEFAULT_ZERO_WEIGHT_FALLBACK;
 
 pub fn sanitize_error_message(msg: &str) -> String {
     msg.replace('\0', " ")
@@ -520,8 +519,8 @@ pub fn apply_cross_validation(
         return Ok(builder);
     };
 
-    let method = method.unwrap_or("kfold");
-    let k = k.unwrap_or(5);
+    let method = method.unwrap_or(lowess::internals::defaults::DEFAULT_CV_METHOD);
+    let k = k.unwrap_or(lowess::internals::defaults::DEFAULT_CV_K);
 
     match method.to_lowercase().as_str() {
         "simple" | "loo" | "loocv" | "leave_one_out" => {
@@ -744,11 +743,13 @@ pub fn build_streaming(
     overlap: Option<usize>,
     merge_strategy: Option<&str>,
 ) -> Result<ParallelStreamingLowess<f64>, BindingError> {
-    let cs = chunk_size.unwrap_or(5000);
+    let cs = chunk_size.unwrap_or(lowess::internals::defaults::DEFAULT_STREAMING_CHUNK_SIZE);
     let ov = overlap.unwrap_or_else(|| default_overlap(cs));
     let ms = match merge_strategy {
         Some(s) => map_invalid_arg(parse_merge_strategy(s))?,
-        None => MergeStrategy::WeightedAverage,
+        None => map_invalid_arg(parse_merge_strategy(
+            lowess::internals::defaults::DEFAULT_STREAMING_MERGE_STRATEGY,
+        ))?,
     };
     map_lowess_result(
         builder
@@ -768,11 +769,13 @@ pub fn build_online(
     min_points: Option<usize>,
     update_mode: Option<&str>,
 ) -> Result<ParallelOnlineLowess<f64>, BindingError> {
-    let wc = window_capacity.unwrap_or(1000);
-    let mp = min_points.unwrap_or(3);
+    let wc = window_capacity.unwrap_or(lowess::internals::defaults::DEFAULT_ONLINE_WINDOW_CAPACITY);
+    let mp = min_points.unwrap_or(lowess::internals::defaults::DEFAULT_ONLINE_MIN_POINTS);
     let um = match update_mode {
         Some(s) => map_invalid_arg(parse_update_mode(s))?,
-        None => UpdateMode::Full,
+        None => map_invalid_arg(parse_update_mode(
+            lowess::internals::defaults::DEFAULT_ONLINE_UPDATE_MODE,
+        ))?,
     };
     map_lowess_result(
         builder

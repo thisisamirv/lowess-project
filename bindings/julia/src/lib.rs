@@ -517,7 +517,7 @@ pub unsafe extern "C" fn jl_streaming_lowess_new(
         let ms_str = unsafe {
             shared_parse::parse_c_str_or_default(
                 merge_strategy,
-                shared_parse::DEFAULT_MERGE_STRATEGY,
+                shared_parse::DEFAULT_STREAMING_MERGE_STRATEGY,
             )
         };
 
@@ -713,7 +713,10 @@ pub unsafe extern "C" fn jl_online_lowess_new(
                 )
             };
             let um_str = unsafe {
-                shared_parse::parse_c_str_or_default(update_mode, shared_parse::DEFAULT_UPDATE_MODE)
+                shared_parse::parse_c_str_or_default(
+                    update_mode,
+                    shared_parse::DEFAULT_ONLINE_UPDATE_MODE,
+                )
             };
 
             let iterations_usize = unwrap_or_return_null!(

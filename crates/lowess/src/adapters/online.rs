@@ -131,11 +131,11 @@ impl<T: Float> OnlineLowessBuilder<T> {
     // Create a new online LOWESS builder with default parameters.
     fn new() -> Self {
         Self {
-            window_capacity: 1000,
-            min_points: 2,
-            fraction: T::from(0.2).unwrap(),
+            window_capacity: crate::defaults::DEFAULT_ONLINE_WINDOW_CAPACITY,
+            min_points: crate::defaults::DEFAULT_ONLINE_MIN_POINTS,
+            fraction: T::from(crate::defaults::DEFAULT_FRACTION).unwrap(),
             delta: T::zero(),
-            iterations: 1,
+            iterations: crate::defaults::DEFAULT_ITERATIONS,
             weight_function: WeightFunction::default(),
             update_mode: UpdateMode::default(),
             robustness_method: RobustnessMethod::default(),

@@ -207,7 +207,7 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
             cv_fractions: None,
             cv_kind: None,
             cv_method_str: None,
-            cv_k_val: 5,
+            cv_k_val: crate::defaults::DEFAULT_CV_K,
             cv_seed: None,
             auto_converge: None,
             return_diagnostics: None,

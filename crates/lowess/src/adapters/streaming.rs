@@ -146,10 +146,10 @@ impl<T: Float> StreamingLowessBuilder<T> {
     // Create a new streaming LOWESS builder with default parameters.
     fn new() -> Self {
         Self {
-            chunk_size: 5000,
-            overlap: 500,
-            fraction: T::from(0.1).unwrap(),
-            iterations: 2,
+            chunk_size: crate::defaults::DEFAULT_STREAMING_CHUNK_SIZE,
+            overlap: crate::defaults::DEFAULT_STREAMING_OVERLAP,
+            fraction: T::from(crate::defaults::DEFAULT_FRACTION).unwrap(),
+            iterations: crate::defaults::DEFAULT_ITERATIONS,
             delta: T::zero(),
             weight_function: WeightFunction::default(),
             boundary_policy: BoundaryPolicy::default(),

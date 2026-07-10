@@ -139,8 +139,8 @@ impl<T: Float> BatchLowessBuilder<T> {
     // Create a new batch LOWESS builder with default parameters.
     fn new() -> Self {
         Self {
-            fraction: T::from(0.67).unwrap(),
-            iterations: 3,
+            fraction: T::from(crate::defaults::DEFAULT_FRACTION).unwrap(),
+            iterations: crate::defaults::DEFAULT_ITERATIONS,
             delta: None,
             weight_function: WeightFunction::default(),
             robustness_method: RobustnessMethod::default(),

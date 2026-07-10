@@ -499,7 +499,7 @@ pub unsafe extern "C" fn cpp_streaming_new(
         );
         let ms_str = shared_parse::parse_c_str_or_default(
             merge_strategy,
-            shared_parse::DEFAULT_MERGE_STRATEGY,
+            shared_parse::DEFAULT_STREAMING_MERGE_STRATEGY,
         );
 
         let chunk_size = match shared_parse::require_positive_usize("chunk_size", chunk_size) {
@@ -666,8 +666,10 @@ pub unsafe extern "C" fn cpp_online_new(
             zero_weight_fallback,
             shared_parse::DEFAULT_ZERO_WEIGHT_FALLBACK,
         );
-        let um_str =
-            shared_parse::parse_c_str_or_default(update_mode, shared_parse::DEFAULT_UPDATE_MODE);
+        let um_str = shared_parse::parse_c_str_or_default(
+            update_mode,
+            shared_parse::DEFAULT_ONLINE_UPDATE_MODE,
+        );
 
         let window_capacity =
             match shared_parse::require_positive_usize("window_capacity", window_capacity) {
