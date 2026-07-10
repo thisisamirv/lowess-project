@@ -330,7 +330,8 @@ For large datasets that arrive in batches or files.
         }
         
         if (length(data_x) >= 5) {
-            result <- Lowess(fraction = 0.4)$fit(data_x, data_y)
+            model <- Lowess(fraction = 0.4)
+            result <- model$fit(data_x, data_y)
             current_smoothed <- tail(result$y, 1)
         }
     }
@@ -355,7 +356,8 @@ For large datasets that arrive in batches or files.
             data_y = data_y[-window_capacity:]
         
         if len(data_x) >= 5:
-            result = fl.Lowess(fraction=0.4).fit(np.array(data_x, dtype=float), np.array(data_y, dtype=float))
+            model = fl.Lowess(fraction=0.4)
+            result = model.fit(np.array(data_x, dtype=float), np.array(data_y, dtype=float))
             current_smoothed = result.y[-1]
     ```
 
@@ -378,7 +380,8 @@ For large datasets that arrive in batches or files.
         if (dataX.length >= 5) {
             const xArr = new Float64Array(dataX);
             const yArr = new Float64Array(dataY);
-            const result = new fl.Lowess({ fraction: 0.4 }).fit(xArr, yArr);
+            const model = new fl.Lowess({ fraction: 0.4 });
+            const result = model.fit(xArr, yArr);
             const currentSmoothed = result.y[result.y.length - 1];
         }
     }

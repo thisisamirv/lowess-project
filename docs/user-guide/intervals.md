@@ -23,7 +23,8 @@ Estimate uncertainty in the smoothed curve itself.
 
 === "R"
     ```r
-    result <- Lowess(fraction = 0.5, confidence_intervals = 0.95)$fit(x, y)
+    model <- Lowess(fraction = 0.5, confidence_intervals = 0.95)
+    result <- model$fit(x, y)
 
     # Plot with bands
     plot(x, y, pch = 16, col = "gray")
@@ -34,7 +35,8 @@ Estimate uncertainty in the smoothed curve itself.
 
 === "Python"
     ```python
-    result = fl.Lowess(fraction=0.5, confidence_intervals=0.95).fit(x, y)
+    model = fl.Lowess(fraction=0.5, confidence_intervals=0.95)
+    result = model.fit(x, y)
 
     print("Smoothed:", result["y"])
     print("CI Lower:", result["confidence_lower"])
@@ -65,7 +67,8 @@ Estimate uncertainty in the smoothed curve itself.
     ```julia
     using FastLOWESS
 
-    result = fit(Lowess(; fraction=0.5, confidence_intervals=0.95), x, y)
+    model = Lowess(; fraction=0.5, confidence_intervals=0.95)
+    result = fit(model, x, y)
 
     for i in 1:length(result.y)
         println("x=$(result.x[i]): y=$(result.y[i]) [$(result.confidence_lower[i]), $(result.confidence_upper[i])]")
@@ -74,7 +77,8 @@ Estimate uncertainty in the smoothed curve itself.
 
 === "Node.js"
     ```javascript
-    const result = new fl.Lowess({fraction: 0.5, confidence_intervals: 0.95}).fit(x, y);
+    const model = new fl.Lowess({fraction: 0.5, confidence_intervals: 0.95});
+    const result = model.fit(x, y);
 
     result.y.forEach((y, i) => {
         console.log(`x=${result.x[i]}: y=${y} [${result.confidence_lower[i]}, ${result.confidence_upper[i]}]`);
@@ -83,7 +87,8 @@ Estimate uncertainty in the smoothed curve itself.
 
 === "WebAssembly"
     ```javascript
-    const result = new Lowess({fraction: 0.5, confidence_intervals: 0.95}).fit(x, y);
+    const model = new Lowess({fraction: 0.5, confidence_intervals: 0.95});
+    const result = model.fit(x, y);
 
     result.y.forEach((y, i) => {
         console.log(`x=${result.x[i]}: y=${y} [${result.confidence_lower[i]}, ${result.confidence_upper[i]}]`);
@@ -112,7 +117,8 @@ Estimate where new observations might fall.
 
 === "R"
     ```r
-    result <- Lowess(fraction = 0.5, prediction_intervals = 0.95)$fit(x, y)
+    model <- Lowess(fraction = 0.5, prediction_intervals = 0.95)
+    result <- model$fit(x, y)
 
     # Wider than confidence intervals
     polygon(
@@ -124,7 +130,8 @@ Estimate where new observations might fall.
 
 === "Python"
     ```python
-    result = fl.Lowess(fraction=0.5, prediction_intervals=0.95).fit(x, y)
+    model = fl.Lowess(fraction=0.5, prediction_intervals=0.95)
+    result = model.fit(x, y)
 
     print("PI Lower:", result["prediction_lower"])
     print("PI Upper:", result["prediction_upper"])
@@ -146,20 +153,23 @@ Estimate where new observations might fall.
 
 === "Julia"
     ```julia
-    result = fit(Lowess(; fraction=0.5, prediction_intervals=0.95), x, y)
+    model = Lowess(; fraction=0.5, prediction_intervals=0.95)
+    result = fit(model, x, y)
 
     println("Prediction bounds: [$(result.prediction_lower[1]), $(result.prediction_upper[1])]")
     ```
 
 === "Node.js"
     ```javascript
-    const result = new fl.Lowess({fraction: 0.5, prediction_intervals: 0.95}).fit(x, y);
+    const model = new fl.Lowess({fraction: 0.5, prediction_intervals: 0.95});
+    const result = model.fit(x, y);
     console.log(`Prediction bounds: [${result.prediction_lower[0]}, ${result.prediction_upper[0]}]`);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Lowess({fraction: 0.5, prediction_intervals: 0.95}).fit(x, y);
+    const model = new Lowess({fraction: 0.5, prediction_intervals: 0.95});
+    const result = model.fit(x, y);
     console.log(`Prediction bounds: [${result.prediction_lower[0]}, ${result.prediction_upper[0]}]`);
     ```
 
@@ -177,20 +187,22 @@ Request both types simultaneously:
 
 === "R"
     ```r
-    result <- Lowess(
+    model <- Lowess(
         fraction = 0.5,
         confidence_intervals = 0.95,
         prediction_intervals = 0.95
-    )$fit(x, y)
+    )
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Lowess(
+    model = fl.Lowess(
         fraction=0.5,
         confidence_intervals=0.95,
         prediction_intervals=0.95
-    ).fit(x, y)
+    )
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -200,6 +212,7 @@ Request both types simultaneously:
         .confidence_intervals(0.95)
         .prediction_intervals(0.95)
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
@@ -214,16 +227,18 @@ Request both types simultaneously:
 
 === "Node.js"
     ```javascript
-    const result = new fl.Lowess({fraction: 0.5,
+    const model = new fl.Lowess({fraction: 0.5,
         confidence_intervals: 0.95,
-        prediction_intervals: 0.95}).fit(x, y);
+        prediction_intervals: 0.95});
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Lowess({fraction: 0.5,
+    const model = new Lowess({fraction: 0.5,
         confidence_intervals: 0.95,
-        prediction_intervals: 0.95}).fit(x, y);
+        prediction_intervals: 0.95});
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -247,13 +262,15 @@ Common levels and their z-values:
 === "R"
     ```r
     # 99% confidence interval (wider)
-    result <- Lowess(confidence_intervals = 0.99)$fit(x, y)
+    model <- Lowess(confidence_intervals = 0.99)
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
     # 90% confidence interval (narrower)
-    result = fl.Lowess(confidence_intervals=0.90).fit(x, y)
+    model = fl.Lowess(confidence_intervals=0.90)
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -262,24 +279,28 @@ Common levels and their z-values:
     let model = Lowess::new()
         .confidence_intervals(0.99)
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
     # 99% confidence interval
-    result = fit(Lowess(; confidence_intervals=0.99), x, y)
+    model = Lowess(; confidence_intervals=0.99)
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
     // 99% confidence interval
-    const result = new fl.Lowess({confidence_intervals: 0.99}).fit(x, y);
+    const model = new fl.Lowess({confidence_intervals: 0.99});
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
     // 99% confidence interval
-    const result = new Lowess({confidence_intervals: 0.99}).fit(x, y);
+    const model = new Lowess({confidence_intervals: 0.99});
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -296,13 +317,15 @@ Access standard errors directly (available when intervals are computed):
 
 === "R"
     ```r
-    result <- Lowess(confidence_intervals = 0.95)$fit(x, y)
+    model <- Lowess(confidence_intervals = 0.95)
+    result <- model$fit(x, y)
     print(result$standard_errors)
     ```
 
 === "Python"
     ```python
-    result = fl.Lowess(confidence_intervals=0.95).fit(x, y)
+    model = fl.Lowess(confidence_intervals=0.95)
+    result = model.fit(x, y)
     print("Standard errors:", result["standard_errors"])
     ```
 
@@ -319,7 +342,8 @@ Access standard errors directly (available when intervals are computed):
 
 === "Julia"
     ```julia
-    result = fit(Lowess(; confidence_intervals=0.95), x, y)
+    model = Lowess(; confidence_intervals=0.95)
+    result = fit(model, x, y)
 
     for (i, se) in enumerate(result.standard_errors)
         println("Point $i: SE = $se")
@@ -328,7 +352,8 @@ Access standard errors directly (available when intervals are computed):
 
 === "Node.js"
     ```javascript
-    const result = new fl.Lowess({confidence_intervals: 0.95}).fit(x, y);
+    const model = new fl.Lowess({confidence_intervals: 0.95});
+    const result = model.fit(x, y);
 
     result.standard_errors.forEach((se, i) => {
         console.log(`Point ${i}: SE = ${se.toFixed(4)}`);
@@ -337,7 +362,8 @@ Access standard errors directly (available when intervals are computed):
 
 === "WebAssembly"
     ```javascript
-    const result = new Lowess({confidence_intervals: 0.95}).fit(x, y);
+    const model = new Lowess({confidence_intervals: 0.95});
+    const result = model.fit(x, y);
 
     result.standard_errors.forEach((se, i) => {
         console.log(`Point ${i}: SE = ${se.toFixed(4)}`);

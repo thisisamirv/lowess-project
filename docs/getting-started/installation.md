@@ -193,7 +193,8 @@ Install the LOWESS library for your preferred language.
     x <- c(1, 2, 3)
     y <- c(2, 4, 6)
     
-    result <- Lowess()$fit(x, y)
+    model <- Lowess()
+    result <- model$fit(x, y)
     print("Installed successfully!")
     ```
 
@@ -206,7 +207,8 @@ Install the LOWESS library for your preferred language.
     x = np.array([1.0, 2.0, 3.0])
     y = np.array([2.0, 4.0, 6.0])
     
-    result = fl.Lowess().fit(x, y)
+    model = fl.Lowess()
+    result = model.fit(x, y)
     print("Installed successfully!")
     ```
 
@@ -235,7 +237,8 @@ Install the LOWESS library for your preferred language.
     x = [1.0, 2.0, 3.0]
     y = [2.0, 4.0, 6.0]
     
-    result = fit(Lowess(), x, y)
+    model = Lowess()
+    result = fit(model, x, y)
     println("Installed successfully!")
     ```
 
@@ -247,7 +250,8 @@ Install the LOWESS library for your preferred language.
     const x = new Float64Array([1.0, 2.0, 3.0]);
     const y = new Float64Array([2.0, 4.0, 6.0]);
     
-    const result = new fl.Lowess({}).fit(x, y);
+    const model = new fl.Lowess({});
+    const result = model.fit(x, y);
     console.log("Installed successfully!");
     ```
 

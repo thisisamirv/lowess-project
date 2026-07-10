@@ -63,16 +63,18 @@ x = collect(0.0:0.1:10.0)
 y = sin.(x) .+ 0.3 .* randn(length(x))
 
 # Basic smoothing
-result = fit(Lowess(fraction=0.3), x, y)
+model = Lowess(fraction=0.3)
+result = fit(model, x, y)
 println("Smoothed values: ", result.y[1:5])
 
 # With options
-result2 = fit(Lowess(
+model2 = Lowess(
     fraction=0.3,
     iterations=3,
     confidence_intervals=0.95,
     return_diagnostics=true
-), x, y)
+)
+result2 = fit(model2, x, y)
 
 println("R²: ", result2.diagnostics.r_squared)
 

@@ -30,12 +30,14 @@ $$w(u) = \begin{cases} (1 - u^2)^2 & |u| < 1 \\ 0 & |u| \geq 1 \end{cases}$$
 
 === "R"
     ```r
-    result <- Lowess(iterations = 3, robustness_method = "bisquare")$fit(x, y)
+    model <- Lowess(iterations = 3, robustness_method = "bisquare")
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Lowess(iterations=3, robustness_method="bisquare").fit(x, y)
+    model = fl.Lowess(iterations=3, robustness_method="bisquare")
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -44,21 +46,25 @@ $$w(u) = \begin{cases} (1 - u^2)^2 & |u| < 1 \\ 0 & |u| \geq 1 \end{cases}$$
         .iterations(3)
         .robustness_method("bisquare")
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Lowess(; iterations=3, robustness_method="bisquare"), x, y)
+    model = Lowess(; iterations=3, robustness_method="bisquare")
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Lowess({ iterations: 3, robustness_method: "bisquare" }).fit(x, y);
+    const model = new Lowess({ iterations: 3, robustness_method: "bisquare" });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Lowess({ iterations: 3, robustness_method: "bisquare" }).fit(x, y);
+    const model = new Lowess({ iterations: 3, robustness_method: "bisquare" });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -81,12 +87,14 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}$$
 
 === "R"
     ```r
-    result <- Lowess(iterations = 3, robustness_method = "huber")$fit(x, y)
+    model <- Lowess(iterations = 3, robustness_method = "huber")
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Lowess(iterations=3, robustness_method="huber").fit(x, y)
+    model = fl.Lowess(iterations=3, robustness_method="huber")
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -95,21 +103,25 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}$$
         .iterations(3)
         .robustness_method("huber")
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Lowess(; iterations=3, robustness_method="huber"), x, y)
+    model = Lowess(; iterations=3, robustness_method="huber")
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Lowess({ iterations: 3, robustness_method: "huber" }).fit(x, y);
+    const model = new Lowess({ iterations: 3, robustness_method: "huber" });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Lowess({ iterations: 3, robustness_method: "huber" }).fit(x, y);
+    const model = new Lowess({ iterations: 3, robustness_method: "huber" });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -132,12 +144,14 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
 
 === "R"
     ```r
-    result <- Lowess(iterations = 3, robustness_method = "talwar")$fit(x, y)
+    model <- Lowess(iterations = 3, robustness_method = "talwar")
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Lowess(iterations=3, robustness_method="talwar").fit(x, y)
+    model = fl.Lowess(iterations=3, robustness_method="talwar")
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -146,21 +160,25 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
         .iterations(3)
         .robustness_method("talwar")
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Lowess(; iterations=3, robustness_method="talwar"), x, y)
+    model = Lowess(; iterations=3, robustness_method="talwar")
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Lowess({ iterations: 3, robustness_method: "talwar" }).fit(x, y);
+    const model = new Lowess({ iterations: 3, robustness_method: "talwar" });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Lowess({ iterations: 3, robustness_method: "talwar" }).fit(x, y);
+    const model = new Lowess({ iterations: 3, robustness_method: "talwar" });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -189,7 +207,8 @@ Use robustness weights to identify potential outliers:
 
 === "R"
     ```r
-    result <- Lowess(iterations = 5, return_robustness_weights = TRUE)$fit(x, y)
+    model <- Lowess(iterations = 5, return_robustness_weights = TRUE)
+    result <- model$fit(x, y)
 
     weights <- result$robustness_weights
     outliers <- which(weights < 0.5)
@@ -198,7 +217,8 @@ Use robustness weights to identify potential outliers:
 
 === "Python"
     ```python
-    result = fl.Lowess(iterations=5, return_robustness_weights=True).fit(x, y)
+    model = fl.Lowess(iterations=5, return_robustness_weights=True)
+    result = model.fit(x, y)
 
     for i, w in enumerate(result.robustness_weights):
         if w < 0.5:
@@ -225,7 +245,8 @@ Use robustness weights to identify potential outliers:
 
 === "Julia"
     ```julia
-    result = fit(Lowess(; iterations=5, return_robustness_weights=true), x, y)
+    model = Lowess(; iterations=5, return_robustness_weights=true)
+    result = fit(model, x, y)
 
     for (i, w) in enumerate(result.robustness_weights)
         if w < 0.5
@@ -236,7 +257,8 @@ Use robustness weights to identify potential outliers:
 
 === "Node.js"
     ```javascript
-    const result = new Lowess({ iterations: 5, return_robustness_weights: true }).fit(x, y);
+    const model = new Lowess({ iterations: 5, return_robustness_weights: true });
+    const result = model.fit(x, y);
 
     result.robustness_weights.forEach((w, i) => {
         if (w < 0.5) {
@@ -247,7 +269,8 @@ Use robustness weights to identify potential outliers:
 
 === "WebAssembly"
     ```javascript
-    const result = new Lowess({ iterations: 5, return_robustness_weights: true }).fit(x, y);
+    const model = new Lowess({ iterations: 5, return_robustness_weights: true });
+    const result = model.fit(x, y);
 
     result.robustness_weights.forEach((w, i) => {
         if (w < 0.5) {
@@ -287,12 +310,14 @@ Residuals are scaled before computing robustness weights. Two methods:
 
 === "R"
     ```r
-    result <- Lowess(iterations = 3, scaling_method = "mad")$fit(x, y)
+    model <- Lowess(iterations = 3, scaling_method = "mad")
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Lowess(iterations=3, scaling_method="mad").fit(x, y)
+    model = fl.Lowess(iterations=3, scaling_method="mad")
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -301,21 +326,25 @@ Residuals are scaled before computing robustness weights. Two methods:
         .iterations(3)
         .scaling_method("mad")  // Default
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Lowess(; iterations=3, scaling_method="mad"), x, y)
+    model = Lowess(; iterations=3, scaling_method="mad")
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Lowess({ iterations: 3, scaling_method: "mad" }).fit(x, y);
+    const model = new Lowess({ iterations: 3, scaling_method: "mad" });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Lowess({ iterations: 3, scaling_method: "mad" }).fit(x, y);
+    const model = new Lowess({ iterations: 3, scaling_method: "mad" });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -337,12 +366,14 @@ Stop iterations early when weights stabilize:
 
 === "R"
     ```r
-    result <- Lowess(iterations = 10, auto_converge = 1e-6)$fit(x, y)
+    model <- Lowess(iterations = 10, auto_converge = 1e-6)
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Lowess(iterations=10, auto_converge=1e-6).fit(x, y)
+    model = fl.Lowess(iterations=10, auto_converge=1e-6)
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -351,21 +382,25 @@ Stop iterations early when weights stabilize:
         .iterations(10)           // Maximum iterations
         .auto_converge(1e-6)      // Stop when change < 1e-6
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Lowess(; iterations=10, auto_converge=1e-6), x, y)
+    model = Lowess(; iterations=10, auto_converge=1e-6)
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Lowess({ iterations: 10, auto_converge: 1e-6 }).fit(x, y);
+    const model = new Lowess({ iterations: 10, auto_converge: 1e-6 });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Lowess({ iterations: 10, auto_converge: 1e-6 }).fit(x, y);
+    const model = new Lowess({ iterations: 10, auto_converge: 1e-6 });
+    const result = model.fit(x, y);
     ```
 
 === "C++"

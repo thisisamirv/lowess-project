@@ -37,12 +37,14 @@ $$w(u) = (1 - |u|^3)^3$$
 
 === "R"
     ```r
-    result <- Lowess(weight_function = "tricube")$fit(x, y)
+    model <- Lowess(weight_function = "tricube")
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Lowess(weight_function="tricube").fit(x, y)
+    model = fl.Lowess(weight_function="tricube")
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -50,21 +52,25 @@ $$w(u) = (1 - |u|^3)^3$$
     let model = Lowess::new()
         .weight_function("tricube")
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Lowess(; weight_function="tricube"), x, y)
+    model = Lowess(; weight_function="tricube")
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Lowess({ weight_function: "tricube" }).fit(x, y);
+    const model = new Lowess({ weight_function: "tricube" });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Lowess({ weight_function: "tricube" }).fit(x, y);
+    const model = new Lowess({ weight_function: "tricube" });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -85,12 +91,14 @@ $$w(u) = \frac{3}{4}(1 - u^2)$$
 
 === "R"
     ```r
-    result <- Lowess(weight_function = "epanechnikov")$fit(x, y)
+    model <- Lowess(weight_function = "epanechnikov")
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Lowess(weight_function="epanechnikov").fit(x, y)
+    model = fl.Lowess(weight_function="epanechnikov")
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -98,21 +106,25 @@ $$w(u) = \frac{3}{4}(1 - u^2)$$
     let model = Lowess::new()
         .weight_function("epanechnikov")
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Lowess(; weight_function="epanechnikov"), x, y)
+    model = Lowess(; weight_function="epanechnikov")
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Lowess({ weight_function: "epanechnikov" }).fit(x, y);
+    const model = new Lowess({ weight_function: "epanechnikov" });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Lowess({ weight_function: "epanechnikov" }).fit(x, y);
+    const model = new Lowess({ weight_function: "epanechnikov" });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -133,12 +145,14 @@ $$w(u) = \exp(-u^2/2)$$
 
 === "R"
     ```r
-    result <- Lowess(weight_function = "gaussian")$fit(x, y)
+    model <- Lowess(weight_function = "gaussian")
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Lowess(weight_function="gaussian").fit(x, y)
+    model = fl.Lowess(weight_function="gaussian")
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -146,21 +160,25 @@ $$w(u) = \exp(-u^2/2)$$
     let model = Lowess::new()
         .weight_function("gaussian")
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Lowess(; weight_function="gaussian"), x, y)
+    model = Lowess(; weight_function="gaussian")
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Lowess({ weight_function: "gaussian" }).fit(x, y);
+    const model = new Lowess({ weight_function: "gaussian" });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Lowess({ weight_function: "gaussian" }).fit(x, y);
+    const model = new Lowess({ weight_function: "gaussian" });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -181,12 +199,14 @@ $$w(u) = (1 - u^2)^2$$
 
 === "R"
     ```r
-    result <- Lowess(weight_function = "biweight")$fit(x, y)
+    model <- Lowess(weight_function = "biweight")
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Lowess(weight_function="biweight").fit(x, y)
+    model = fl.Lowess(weight_function="biweight")
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -194,21 +214,25 @@ $$w(u) = (1 - u^2)^2$$
     let model = Lowess::new()
         .weight_function("biweight")
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Lowess(; weight_function="biweight"), x, y)
+    model = Lowess(; weight_function="biweight")
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Lowess({ weight_function: "biweight" }).fit(x, y);
+    const model = new Lowess({ weight_function: "biweight" });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Lowess({ weight_function: "biweight" }).fit(x, y);
+    const model = new Lowess({ weight_function: "biweight" });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -229,12 +253,14 @@ $$w(u) = \cos(\pi u / 2)$$
 
 === "R"
     ```r
-    result <- Lowess(weight_function = "cosine")$fit(x, y)
+    model <- Lowess(weight_function = "cosine")
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Lowess(weight_function="cosine").fit(x, y)
+    model = fl.Lowess(weight_function="cosine")
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -242,21 +268,25 @@ $$w(u) = \cos(\pi u / 2)$$
     let model = Lowess::new()
         .weight_function("cosine")
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Lowess(; weight_function="cosine"), x, y)
+    model = Lowess(; weight_function="cosine")
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Lowess({ weight_function: "cosine" }).fit(x, y);
+    const model = new Lowess({ weight_function: "cosine" });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Lowess({ weight_function: "cosine" }).fit(x, y);
+    const model = new Lowess({ weight_function: "cosine" });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -277,12 +307,14 @@ $$w(u) = 1 - |u|$$
 
 === "R"
     ```r
-    result <- Lowess(weight_function = "triangle")$fit(x, y)
+    model <- Lowess(weight_function = "triangle")
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Lowess(weight_function="triangle").fit(x, y)
+    model = fl.Lowess(weight_function="triangle")
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -290,21 +322,25 @@ $$w(u) = 1 - |u|$$
     let model = Lowess::new()
         .weight_function("triangle")
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Lowess(; weight_function="triangle"), x, y)
+    model = Lowess(; weight_function="triangle")
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Lowess({ weight_function: "triangle" }).fit(x, y);
+    const model = new Lowess({ weight_function: "triangle" });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Lowess({ weight_function: "triangle" }).fit(x, y);
+    const model = new Lowess({ weight_function: "triangle" });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -325,12 +361,14 @@ $$w(u) = 1$$
 
 === "R"
     ```r
-    result <- Lowess(weight_function = "uniform")$fit(x, y)
+    model <- Lowess(weight_function = "uniform")
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Lowess(weight_function="uniform").fit(x, y)
+    model = fl.Lowess(weight_function="uniform")
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -338,21 +376,25 @@ $$w(u) = 1$$
     let model = Lowess::new()
         .weight_function("uniform")
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Lowess(; weight_function="uniform"), x, y)
+    model = Lowess(; weight_function="uniform")
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Lowess({ weight_function: "uniform" }).fit(x, y);
+    const model = new Lowess({ weight_function: "uniform" });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Lowess({ weight_function: "uniform" }).fit(x, y);
+    const model = new Lowess({ weight_function: "uniform" });
+    const result = model.fit(x, y);
     ```
 
 === "C++"

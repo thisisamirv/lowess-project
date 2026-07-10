@@ -33,12 +33,14 @@ First centers residuals at their median, then takes the median of the absolute d
 
 === "R"
     ```r
-    result <- Lowess(iterations = 3, scaling_method = "mad")$fit(x, y)
+    model <- Lowess(iterations = 3, scaling_method = "mad")
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Lowess(iterations=3, scaling_method="mad").fit(x, y)
+    model = fl.Lowess(iterations=3, scaling_method="mad")
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -47,21 +49,25 @@ First centers residuals at their median, then takes the median of the absolute d
         .iterations(3)
         .scaling_method("mad")
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Lowess(; iterations=3, scaling_method="mad"), x, y)
+    model = Lowess(; iterations=3, scaling_method="mad")
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Lowess({ iterations: 3, scaling_method: "mad" }).fit(x, y);
+    const model = new Lowess({ iterations: 3, scaling_method: "mad" });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Lowess({ iterations: 3, scaling_method: "mad" }).fit(x, y);
+    const model = new Lowess({ iterations: 3, scaling_method: "mad" });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -82,12 +88,14 @@ Uses the uncentered median — unlike MAD it does not subtract the residual medi
 
 === "R"
     ```r
-    result <- Lowess(iterations = 3, scaling_method = "mar")$fit(x, y)
+    model <- Lowess(iterations = 3, scaling_method = "mar")
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Lowess(iterations=3, scaling_method="mar").fit(x, y)
+    model = fl.Lowess(iterations=3, scaling_method="mar")
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -96,21 +104,25 @@ Uses the uncentered median — unlike MAD it does not subtract the residual medi
         .iterations(3)
         .scaling_method("mar")
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Lowess(; iterations=3, scaling_method="mar"), x, y)
+    model = Lowess(; iterations=3, scaling_method="mar")
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Lowess({ iterations: 3, scaling_method: "mar" }).fit(x, y);
+    const model = new Lowess({ iterations: 3, scaling_method: "mar" });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Lowess({ iterations: 3, scaling_method: "mar" }).fit(x, y);
+    const model = new Lowess({ iterations: 3, scaling_method: "mar" });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -131,12 +143,14 @@ Arithmetic mean of absolute residuals. Non-robust: a single extreme outlier infl
 
 === "R"
     ```r
-    result <- Lowess(iterations = 3, scaling_method = "mean")$fit(x, y)
+    model <- Lowess(iterations = 3, scaling_method = "mean")
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Lowess(iterations=3, scaling_method="mean").fit(x, y)
+    model = fl.Lowess(iterations=3, scaling_method="mean")
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -145,21 +159,25 @@ Arithmetic mean of absolute residuals. Non-robust: a single extreme outlier infl
         .iterations(3)
         .scaling_method("mean")
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Lowess(; iterations=3, scaling_method="mean"), x, y)
+    model = Lowess(; iterations=3, scaling_method="mean")
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Lowess({ iterations: 3, scaling_method: "mean" }).fit(x, y);
+    const model = new Lowess({ iterations: 3, scaling_method: "mean" });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Lowess({ iterations: 3, scaling_method: "mean" }).fit(x, y);
+    const model = new Lowess({ iterations: 3, scaling_method: "mean" });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -179,5 +197,3 @@ Arithmetic mean of absolute residuals. Non-robust: a single extreme outlier infl
 | Clean data, no outliers | `"mean"` |
 
 See [Robustness](robustness.md) for a broader discussion of outlier handling.
-
-

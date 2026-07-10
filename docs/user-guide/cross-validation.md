@@ -30,10 +30,11 @@ Split data into K folds, train on K-1, validate on 1.
 
 === "Python"
     ```python
-    result = fl.Lowess(cv_method="kfold",
+    model = fl.Lowess(cv_method="kfold",
         cv_k=5,
         cv_fractions=[0.2, 0.3, 0.5, 0.7]
-    ).fit(x, y)
+    )
+    result = model.fit(x, y)
 
     print(f"Selected fraction: {result.fraction_used}")
     print(f"CV scores: {result.cv_scores}")
@@ -63,10 +64,11 @@ Split data into K folds, train on K-1, validate on 1.
     ```julia
     using FastLOWESS
 
-    result = fit(Lowess(; cv_method="kfold",
+    model = Lowess(; cv_method="kfold",
         cv_k=5,
         cv_fractions=[0.2, 0.3, 0.5, 0.7]
-    ), x, y)
+    )
+    result = fit(model, x, y)
 
     println("Selected fraction: ", result.fraction_used)
     println("CV scores: ", result.cv_scores)
@@ -74,11 +76,12 @@ Split data into K folds, train on K-1, validate on 1.
 
 === "Node.js"
     ```javascript
-    const result = new Lowess({
+    const model = new Lowess({
         cv_method: "kfold",
         cv_k: 5,
         cv_fractions: [0.2, 0.3, 0.5, 0.7]
-    }).fit(x, y);
+    });
+    const result = model.fit(x, y);
 
     console.log("Selected fraction:", result.fraction_used);
     console.log("CV scores:", result.cv_scores);
@@ -86,11 +89,12 @@ Split data into K folds, train on K-1, validate on 1.
 
 === "WebAssembly"
     ```javascript
-    const result = new Lowess({
+    const model = new Lowess({
         cv_method: "kfold",
         cv_k: 5,
         cv_fractions: [0.2, 0.3, 0.5, 0.7]
-    }).fit(x, y);
+    });
+    const result = model.fit(x, y);
 
     console.log("Selected fraction:", result.fraction_used);
     console.log("CV scores:", result.cv_scores);
@@ -128,9 +132,10 @@ Each point is held out once. Most thorough but slowest.
 
 === "Python"
     ```python
-    result = fl.Lowess(cv_method="loocv",
+    model = fl.Lowess(cv_method="loocv",
         cv_fractions=[0.2, 0.3, 0.5, 0.7]
-    ).fit(x, y)
+    )
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -139,29 +144,33 @@ Each point is held out once. Most thorough but slowest.
         .cv_method("loocv")
         .cv_fractions(vec![0.2, 0.3, 0.5, 0.7])
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Lowess(; cv_method="loocv",
+    model = Lowess(; cv_method="loocv",
         cv_fractions=[0.2, 0.3, 0.5, 0.7]
-    ), x, y)
+    )
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Lowess({
+    const model = new Lowess({
         cv_method: "loocv",
         cv_fractions: [0.2, 0.3, 0.5, 0.7]
-    }).fit(x, y);
+    });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Lowess({
+    const model = new Lowess({
         cv_method: "loocv",
         cv_fractions: [0.2, 0.3, 0.5, 0.7]
-    }).fit(x, y);
+    });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -194,11 +203,12 @@ Set a seed for reproducible fold assignments:
 
 === "Python"
     ```python
-    result = fl.Lowess(cv_method="kfold",
+    model = fl.Lowess(cv_method="kfold",
         cv_k=5,
         cv_fractions=[0.3, 0.5, 0.7],
         cv_seed=42
-    ).fit(x, y)
+    )
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -209,35 +219,39 @@ Set a seed for reproducible fold assignments:
         .cv_fractions(vec![0.3, 0.5, 0.7])
         .cv_seed(42)
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Lowess(; cv_method="kfold",
+    model = Lowess(; cv_method="kfold",
         cv_k=5,
         cv_fractions=[0.3, 0.5, 0.7],
         cv_seed=42
-    ), x, y)
+    )
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new fl.Lowess({
+    const model = new fl.Lowess({
         cv_method: "kfold",
         cv_k: 5,
         cv_fractions: [0.3, 0.5, 0.7],
         cv_seed: 42
-    }).fit(x, y);
+    });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Lowess({
+    const model = new Lowess({
         cv_method: "kfold",
         cv_k: 5,
         cv_fractions: [0.3, 0.5, 0.7],
         cv_seed: 42
-    }).fit(x, y);
+    });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -300,8 +314,9 @@ Lower MSE indicates better fit on held-out data.
 === "Python"
     ```python
     # Example output
-    result = fl.Lowess(cv_method="kfold", cv_k=5,
-                       cv_fractions=[0.1, 0.3, 0.5, 0.7]).fit(x, y)
+    model = fl.Lowess(cv_method="kfold", cv_k=5,
+                       cv_fractions=[0.1, 0.3, 0.5, 0.7])
+    result = model.fit(x, y)
 
     # Fraction  | CV Score (MSE)
     # 0.1       | 0.0542  ← Undersmoothed
@@ -331,8 +346,9 @@ Lower MSE indicates better fit on held-out data.
 === "Julia"
     ```julia
     # Example output
-    result = fit(Lowess(; cv_method="kfold", cv_k=5,
-                    cv_fractions=[0.1, 0.3, 0.5, 0.7]), x, y)
+    model = Lowess(; cv_method="kfold", cv_k=5,
+                    cv_fractions=[0.1, 0.3, 0.5, 0.7])
+    result = fit(model, x, y)
 
     # Fraction  | CV Score (MSE)
     # 0.1       | 0.0542  ← Undersmoothed
@@ -344,11 +360,12 @@ Lower MSE indicates better fit on held-out data.
 === "Node.js"
     ```javascript
     // Example output
-    const result = new Lowess({
+    const model = new Lowess({
         cv_method: "kfold",
         cv_k: 5,
         cv_fractions: [0.1, 0.3, 0.5, 0.7]
-    }).fit(x, y);
+    });
+    const result = model.fit(x, y);
 
     // Fraction  | CV Score (MSE)
     // 0.1       | 0.0542  ← Undersmoothed
@@ -360,11 +377,12 @@ Lower MSE indicates better fit on held-out data.
 === "WebAssembly"
     ```javascript
     // Example output
-    const result = new Lowess({
+    const model = new Lowess({
         cv_method: "kfold",
         cv_k: 5,
         cv_fractions: [0.1, 0.3, 0.5, 0.7]
-    }).fit(x, y);
+    });
+    const result = model.fit(x, y);
 
     // Fraction  | CV Score (MSE)
     // 0.1       | 0.0542  ← Undersmoothed

@@ -53,14 +53,15 @@ Standard mode for complete datasets. **Supports all features.**
 
 === "Python"
     ```python
-    result = fl.Lowess(
+    model = fl.Lowess(
         fraction=0.5,
         iterations=3,
         confidence_intervals=0.95,
         prediction_intervals=0.95,
         return_diagnostics=True,
         parallel=True
-    ).fit(x, y)
+    )
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -83,27 +84,29 @@ Standard mode for complete datasets. **Supports all features.**
     ```julia
     using FastLOWESS
 
-    result = fit(Lowess(;
+    model = Lowess(;
         fraction=0.5,
         iterations=3,
         confidence_intervals=0.95,
         prediction_intervals=0.95,
         return_diagnostics=true,
         parallel=true
-    ), x, y)
+    )
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
     const fastlowess = require('fastlowess');
 
-    const result = new fastlowess.Lowess({
+    const model = new fastlowess.Lowess({
         fraction: 0.5,
         iterations: 3,
         confidence_intervals: 0.95,
         prediction_intervals: 0.95,
         return_diagnostics: true
-    }).fit(x, y);
+    });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"

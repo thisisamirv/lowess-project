@@ -26,12 +26,14 @@ Pads beyond both endpoints by replicating the first and last observed values. Pr
 
 === "R"
     ```r
-    result <- Lowess(boundary_policy = "extend")$fit(x, y)
+    model <- Lowess(boundary_policy = "extend")
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Lowess(boundary_policy="extend").fit(x, y)
+    model = fl.Lowess(boundary_policy="extend")
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -39,21 +41,25 @@ Pads beyond both endpoints by replicating the first and last observed values. Pr
     let model = Lowess::new()
         .boundary_policy("extend")
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Lowess(; boundary_policy="extend"), x, y)
+    model = Lowess(; boundary_policy="extend")
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Lowess({ boundary_policy: "extend" }).fit(x, y);
+    const model = new Lowess({ boundary_policy: "extend" });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Lowess({ boundary_policy: "extend" }).fit(x, y);
+    const model = new Lowess({ boundary_policy: "extend" });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -72,12 +78,14 @@ Mirrors the data about both endpoints before fitting, then discards the reflecte
 
 === "R"
     ```r
-    result <- Lowess(boundary_policy = "reflect")$fit(x, y)
+    model <- Lowess(boundary_policy = "reflect")
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Lowess(boundary_policy="reflect").fit(x, y)
+    model = fl.Lowess(boundary_policy="reflect")
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -85,21 +93,25 @@ Mirrors the data about both endpoints before fitting, then discards the reflecte
     let model = Lowess::new()
         .boundary_policy("reflect")
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Lowess(; boundary_policy="reflect"), x, y)
+    model = Lowess(; boundary_policy="reflect")
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Lowess({ boundary_policy: "reflect" }).fit(x, y);
+    const model = new Lowess({ boundary_policy: "reflect" });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Lowess({ boundary_policy: "reflect" }).fit(x, y);
+    const model = new Lowess({ boundary_policy: "reflect" });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -118,12 +130,14 @@ Pads with zeros beyond both endpoints. Appropriate when the underlying process i
 
 === "R"
     ```r
-    result <- Lowess(boundary_policy = "zero")$fit(x, y)
+    model <- Lowess(boundary_policy = "zero")
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Lowess(boundary_policy="zero").fit(x, y)
+    model = fl.Lowess(boundary_policy="zero")
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -131,21 +145,25 @@ Pads with zeros beyond both endpoints. Appropriate when the underlying process i
     let model = Lowess::new()
         .boundary_policy("zero")
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Lowess(; boundary_policy="zero"), x, y)
+    model = Lowess(; boundary_policy="zero")
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Lowess({ boundary_policy: "zero" }).fit(x, y);
+    const model = new Lowess({ boundary_policy: "zero" });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Lowess({ boundary_policy: "zero" }).fit(x, y);
+    const model = new Lowess({ boundary_policy: "zero" });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -167,12 +185,14 @@ Applies no padding. Each local fit uses only the points that are actually availa
 
 === "R"
     ```r
-    result <- Lowess(boundary_policy = "noboundary")$fit(x, y)
+    model <- Lowess(boundary_policy = "noboundary")
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Lowess(boundary_policy="noboundary").fit(x, y)
+    model = fl.Lowess(boundary_policy="noboundary")
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -180,21 +200,25 @@ Applies no padding. Each local fit uses only the points that are actually availa
     let model = Lowess::new()
         .boundary_policy("noboundary")
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Lowess(; boundary_policy="noboundary"), x, y)
+    model = Lowess(; boundary_policy="noboundary")
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Lowess({ boundary_policy: "noboundary" }).fit(x, y);
+    const model = new Lowess({ boundary_policy: "noboundary" });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Lowess({ boundary_policy: "noboundary" }).fit(x, y);
+    const model = new Lowess({ boundary_policy: "noboundary" });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
