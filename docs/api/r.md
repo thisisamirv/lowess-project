@@ -68,10 +68,10 @@ online <- OnlineLowess(...)
 **Methods:**
 
 ```r
-smoothed <- online$add_point(x, y)
+result <- online$add_point(x[[1L]], y[[1L]])  # returns list or NULL
 ```
 
-* Adds a single point to the model. Returns the smoothed value as a `numeric`, or `NULL` if not enough points have been accumulated yet.
+* Adds a single point to the sliding window. Returns a named list (`$smoothed`, `$residual`, …) once the window has enough points, or `NULL` while still filling.
 
 ## Options Structures
 
@@ -94,51 +94,64 @@ smoothed <- online$add_point(x, y)
 | `return_residuals` | `logical` | `FALSE` | Include residuals in result |
 | `return_robustness_weights` | `logical` | `FALSE` | Include weights in result |
 | `parallel` | `logical` | `TRUE` | Enable parallel execution |
-| `cv_method` | `character` | `"kfold"` | Cross-validation method ("kfold") |
-| `cv_k` | `integer` | `5` | Number of CV folds |
-| `cv_fractions` | `numeric` | `NULL` | Manual fractions for CV grid |
-| `custom_weights` | `numeric` | `NULL` | Per-observation weights (Batch only) |
+| `cv_method` | `character` | `"kfold"` | CV method (`"kfold"` or `"loocv"`) (Batch only) |
+| `cv_k` | `integer` | `5L` | Number of folds for k-fold CV (Batch only) |
+| `cv_fractions` | `numeric` | `NULL` | Fractions to test for cross-validation (Batch only) |
+| `cv_seed` | `integer` | `NULL` | Random seed for cross-validation shuffling (Batch only) |
+| `custom_weights` | `numeric` | `NULL` | Per-observation case weights — passed to `$fit()`, not the constructor (Batch only) |
 
 ### `StreamingOptions` (inherits `LowessOptions`)
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `chunk_size` | `integer` | `5000` | Data chunk size |
-| `overlap` | `integer` | `500` | Overlap size (-1 for auto) |
-| `merge_strategy` | `character` | `"weighted"` | Merge strategy for overlap |
+| `chunk_size` | `integer` | `5000L` | Data chunk size |
+| `overlap` | `integer` | `500L` | Overlap between chunks |
+| `merge_strategy` | `character` | `"weighted_average"` | Strategy for blending overlap regions |
 
 ### `OnlineOptions` (inherits `LowessOptions`)
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `window_capacity` | `integer` | `1000` | Max window size |
-| `min_points` | `integer` | `2` | Min points before smoothing |
-| `update_mode` | `character` | `"incremental"` | Update mode ("full" or "incremental") |
+| `window_capacity` | `integer` | `1000L` | Max points in sliding window |
+| `min_points` | `integer` | `3L` | Min points before smoothing starts |
+| `update_mode` | `character` | `"full"` | Update mode (`"full"` or `"incremental"`) |
+| `parallel` | `logical` | `FALSE` | Enable parallel execution (off by default; online LOWESS fits one point at a time) |
 
 ## Result Structure
 
-### `LowessResult`
+### `OnlineOutput` (named list)
 
-An S3 object containing the smoothing results.
-
-**Supported Methods:**
-
-* `print(result)`: Summary of fit statistics.
-* `plot(result)`: Plots the smoothed curve (and confidence intervals if available).
+Returned by `add_point()` once the window has enough points (`NULL` until then).
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `x` | `numeric` | Smoothed X coordinates |
-| `y` | `numeric` | Smoothed Y coordinates |
-| `valid` | `logical` | True if result is valid |
-| `error` | `character` | Error message if failed |
-| `diagnostics` | `list` | Diagnostic metrics list |
-| `residuals` | `numeric` | Residuals (if requested) |
-| `confidence_lower` | `numeric` | Lower CI bounds |
-| `confidence_upper` | `numeric` | Upper CI bounds |
-| `prediction_lower` | `numeric` | Lower PI bounds |
-| `prediction_upper` | `numeric` | Upper PI bounds |
-| `robustness_weights` | `numeric` | Robustness weights |
+| `smoothed` | `numeric` | Smoothed value for the latest point |
+| `std_error` | `numeric` (optional) | Standard error (if requested) |
+| `residual` | `numeric` (optional) | Residual y − smoothed (if requested) |
+| `robustness_weight` | `numeric` (optional) | Robustness weight (if requested) |
+| `iterations_used` | `integer` (optional) | Robustness iterations performed |
+
+### `LowessResult`
+
+An S3 list with class `"LowessResult"` containing:
+
+**Supported S3 Methods:** `print(result)`, `plot(result)`
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `x` | `numeric` | Sorted x values |
+| `y` | `numeric` | Smoothed y values |
+| `fraction_used` | `numeric` | Fraction used (set or selected by CV) |
+| `iterations_used` | `integer \| NULL` | Robustness iterations actually performed |
+| `standard_errors` | `numeric \| NULL` | Per-point standard errors |
+| `confidence_lower` | `numeric \| NULL` | Lower confidence bounds |
+| `confidence_upper` | `numeric \| NULL` | Upper confidence bounds |
+| `prediction_lower` | `numeric \| NULL` | Lower prediction bounds |
+| `prediction_upper` | `numeric \| NULL` | Upper prediction bounds |
+| `residuals` | `numeric \| NULL` | Residuals (if `return_residuals`) |
+| `robustness_weights` | `numeric \| NULL` | Robustness weights (if `return_robustness_weights`) |
+| `cv_scores` | `numeric \| NULL` | CV score per tested fraction |
+| `diagnostics` | `list \| NULL` | Fit metrics (if `return_diagnostics`) |
 
 ### `Diagnostics`
 
@@ -148,58 +161,58 @@ An S3 object containing the smoothing results.
 | `mae` | `numeric` | Mean Absolute Error |
 | `r_squared` | `numeric` | R-squared |
 | `residual_sd` | `numeric` | Residual standard deviation |
-| `effective_df` | `numeric` | Effective degrees of freedom |
-| `aic` | `numeric` | AIC |
-| `aicc` | `numeric` | AICc |
+| `effective_df` | `numeric` | Effective degrees of freedom (NaN if not computed) |
+| `aic` | `numeric` | AIC (NaN if not computed) |
+| `aicc` | `numeric` | AICc (NaN if not computed) |
 
-## String Options
+## Options
 
-### Weight Functions
+### weight_function
 
 * `"tricube"` (default)
 * `"epanechnikov"`
 * `"gaussian"`
-* `"uniform"`
-* `"biweight"`
-* `"triangle"`
+* `"uniform"` (alias: `"boxcar"`)
+* `"biweight"` (alias: `"bisquare"`)
+* `"triangle"` (alias: `"triangular"`)
 * `"cosine"`
 
-### Robustness Methods
+### robustness_method
 
-* `"bisquare"` (default)
+* `"bisquare"` (default; alias: `"biweight"`)
 * `"huber"`
 * `"talwar"`
 
-### Boundary Policies
+### boundary_policy
 
-* `"extend"` (default - linear extrapolation)
-* `"reflect"`
+* `"extend"` (default; alias: `"pad"`)
+* `"reflect"` (alias: `"mirror"`)
 * `"zero"`
-* `"noboundary"`
+* `"noboundary"` (alias: `"none"`)
 
-### Scaling Methods
+### scaling_method
 
-* `"mad"` (default - Median Absolute Deviation)
-* `"mar"` (Median Absolute Residual)
-* `"mean"` (Mean Absolute Residual)
+* `"mad"` (default; alias: `"median_absolute_deviation"`)
+* `"mar"` (alias: `"median_absolute_residual"`)
+* `"mean"` (alias: `"mean_absolute_residual"`)
 
-### Zero Weight Fallback
+### zero_weight_fallback
 
-* `"use_local_mean"` (default)
-* `"return_original"`
-* `"return_none"`
+* `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
+* `"return_original"` (alias: `"original"`)
+* `"return_none"` (alias: `"none"`)
 
-### Merge Strategies (Streaming)
+### merge_strategy
 
-* `"weighted"` (default - weighted average of overlapping chunks)
-* `"average"`
-* `"left"`
-* `"right"`
+* `"weighted_average"` (default; alias: `"weighted"`)
+* `"average"` (alias: `"mean"`)
+* `"take_first"` (alias: `"first"`)
+* `"take_last"` (alias: `"last"`)
 
-### Update Modes (Online)
+### update_mode
 
-* `"full"` (default - re-smooth entire window)
-* `"incremental"` (O(1) update using existing fit)
+* `"full"` (default; alias: `"resmooth"`)
+* `"incremental"` (alias: `"single"`)
 
 ## Example
 

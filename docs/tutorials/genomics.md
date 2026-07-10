@@ -68,21 +68,20 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
     observed = np.clip(observed, 0, 1)  # Methylation is 0-1
 
     # Smooth with LOWESS
-    result = fl.smooth(
-        positions, observed,
+    result = fl.Lowess(
         fraction=0.1,           # Small fraction for local detail
         iterations=3,           # Robustness for outliers
         confidence_intervals=0.95
-    )
+    ).fit(positions, observed)
 
     # Plot
     plt.figure(figsize=(12, 5))
     plt.scatter(positions, observed, s=2, alpha=0.3, label="Observed")
-    plt.plot(positions, result["y"], "b-", lwd=2, label="LOWESS smoothed")
+    plt.plot(positions, result.y, "b-", linewidth=2, label="LOWESS smoothed")
     plt.fill_between(
         positions,
-        result["confidence_lower"],
-        result["confidence_upper"],
+        result.confidence_lower,
+        result.confidence_upper,
         alpha=0.2, label="95% CI"
     )
     plt.xlabel("Genomic Position (bp)")
@@ -94,11 +93,8 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
 
 === "Rust"
     ```rust
-    use fastLowess::prelude::*;
-    use ndarray::Array1;
-
-    let positions: Array1<f64> = /* sorted genomic positions */;
-    let observed: Array1<f64> = /* methylation levels 0-1 */;
+    let positions = x.clone();
+    let observed = y.clone();
 
     let model = Lowess::new()
         .fraction(0.1)
@@ -116,12 +112,11 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
     using FastLOWESS
 
     # positions and observed are your methylation data
-    result = smooth(
-        positions, observed,
+    result = fit(Lowess(;
         fraction=0.1,
         iterations=3,
         confidence_intervals=0.95
-    )
+    ), positions, observed)
 
     # Smoothed profile in result.y
     # CI bounds in result.confidence_lower/upper
@@ -132,14 +127,14 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
     const fl = require('fastlowess');
 
     // positions and observed are your methylation data (Float64Array)
-    const result = fl.smooth(positions, observed, {
+    const result = new fl.Lowess({
         fraction: 0.1,
         iterations: 3,
         confidence_intervals: 0.95
-    });
+    }).fit(positions, observed);
 
     // Smoothed profile in result.y
-    // CI bounds in result.confidence_lower/Upper
+    // CI bounds in result.confidence_lower/upper
     ```
 
 === "WebAssembly"
@@ -154,7 +149,7 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
     });
 
     // Smoothed profile in result.y
-    // CI bounds in result.confidence_lower/Upper
+    // CI bounds in result.confidence_lower/upper
     ```
 
 === "C++"
@@ -162,11 +157,8 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
     #include "fastlowess.hpp"
 
     // positions and observed are std::vector<double>
-    auto result = fastlowess::smooth(positions, observed, {
-        .fraction = 0.1,
-        .iterations = 3,
-        .confidence_intervals = 0.95
-    });
+    fastlowess::Lowess model({ .fraction = 0.1, .iterations = 3, .confidence_intervals = 0.95 });
+    auto result = model.fit(positions, observed).value();
 
     // Smoothed profile in result.y_vector()
     // CI bounds in result.confidence_lower()/result.confidence_upper()
@@ -222,23 +214,22 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
     observed = np.random.poisson(true_signal)  # Poisson noise
 
     # Smooth with robustness for sporadic high counts
-    result = fl.smooth(
-        positions, observed.astype(float),
+    result = fl.Lowess(
         fraction=0.05,   # Very local smoothing
         iterations=5,    # Strong robustness
         return_residuals=True
-    )
+    ).fit(positions, observed.astype(float))
 
     # Identify peaks (smoothed signal significantly above background)
-    threshold = np.percentile(result["y"], 75)
-    peaks = positions[result["y"] > threshold]
+    threshold = np.percentile(result.y, 75)
+    peaks = positions[result.y > threshold]
     print(f"Peak regions: {peaks}")
     ```
 
 === "Rust"
     ```rust
-    let positions: Array1<f64> = Array1::range(0.0, 10000.0, 10.0);
-    let observed: Array1<f64> = /*ChIP-seq counts*/;
+    let positions: Vec<f64> = (0..1000).map(|i| i as f64 *10.0).collect(); // 0 to 9990 step 10
+    let observed: Vec<f64> = positions.iter().map(|&p| (p / 1000.0).sin().abs()* 100.0 + 10.0).collect();
 
     let model = Lowess::new()
         .fraction(0.05)
@@ -249,10 +240,9 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
     let result = model.fit(&positions, &observed)?;
 
     // Find peaks above threshold
-    let threshold = /* compute 75th percentile */;
-    let peak_positions: Vec<f64> = positions
-        .iter()
-        .zip(result.y.iter())
+    let threshold = result.y.iter().copied()
+        .fold(f64::NEG_INFINITY, f64::max) * 0.75;
+    let peak_positions: Vec<f64> = positions.iter().zip(result.y.iter())
         .filter(|(_, &y)| y > threshold)
         .map(|(&p, _)| p)
         .collect();
@@ -263,11 +253,7 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
     using FastLOWESS
 
     # positions and observed are your ChIP-seq data
-    result = smooth(
-        positions, observed,
-        fraction=0.05,
-        iterations=5
-    )
+    result = fit(Lowess(; fraction=0.05, iterations=5), positions, observed)
 
     # Find peaks above 75th percentile
     threshold = quantile(result.y, 0.75)
@@ -279,10 +265,10 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
     ```javascript
     const fl = require('fastlowess');
 
-    const result = fl.smooth(positions, observed, {
+    const result = new fl.Lowess({
         fraction: 0.05,
         iterations: 5
-    });
+    }).fit(positions, observed);
 
     // Identify peaks above threshold
     const smoothed = result.y;
@@ -308,16 +294,16 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
     ```cpp
     #include "fastlowess.hpp"
 
-    auto result = fastlowess::smooth(positions, observed, {
-        .fraction = 0.05,
-        .iterations = 5
-    });
+    fastlowess::Lowess model({ .fraction = 0.05, .iterations = 5 });
+    auto result = model.fit(positions, observed).value();
 
     // Find peaks above threshold
     std::vector<double> peaks;
-    for (size_t i = 0; i < result.size(); ++i) {
-        if (result.y(i) > 25.0) {
-            peaks.push_back(result.x(i));
+    const auto& y_vals = result.y_vector();
+    const auto& x_vals = result.x_vector();
+    for (size_t i = 0; i < y_vals.size(); ++i) {
+        if (y_vals[i] > 25.0) {
+            peaks.push_back(x_vals[i]);
         }
     }
     ```
@@ -334,7 +320,7 @@ For whole-genome data that doesn't fit in memory:
         fraction = 0.05,
         chunk_size = 100000,
         overlap = 10000,
-        merge_strategy = "weighted"
+        merge_strategy = "weighted_average"
     )
     result <- model$process_chunk(positions, coverage)
     final <- model$finalize()
@@ -343,32 +329,27 @@ For whole-genome data that doesn't fit in memory:
 === "Python"
     ```python
     # Process chromosome-by-chromosome or in chunks
-    result = fl.smooth_streaming(
-        positions, coverage,
+    model = fl.StreamingLowess(
         fraction=0.05,
         chunk_size=100000,    # 100kb chunks
         overlap=10000,        # 10kb overlap
-        merge_strategy="weighted"
+        merge_strategy="weighted_average"
     )
+    model.process_chunk(positions, coverage)
+    result = model.finalize()
     ```
 
 === "Rust"
     ```rust
-    use fastLowess::prelude::*;
-
-    let model = StreamingLowess::new()
+    let mut processor = StreamingLowess::new()
         .fraction(0.05)
         .iterations(3)
-        .chunk_size(100_000)
-        .overlap(10_000)
+        .chunk_size(50)
+        .overlap(10)
         .merge_strategy("weighted_average")
         .build()?;
 
-    // Process chunks from file or stream
-    let mut processor = model.processor();
-    for chunk in chromosome_chunks {
-        processor.process_chunk(&chunk.positions, &chunk.coverage)?;
-    }
+    processor.process_chunk(&x_chunk, &y_chunk)?;
     let result = processor.finalize()?;
     ```
 
@@ -377,13 +358,14 @@ For whole-genome data that doesn't fit in memory:
     using FastLOWESS
 
     # coverage and positions are chromosome-scale vectors
-    result = smooth_streaming(
-        positions, coverage,
+    model = StreamingLowess(;
         fraction=0.05,
         chunk_size=100000,
         overlap=10000,
-        merge_strategy="weighted"
+        merge_strategy="weighted_average"
     )
+    process_chunk(model, positions, coverage)
+    result = finalize(model)
     ```
 
 === "Node.js"
@@ -423,11 +405,14 @@ For whole-genome data that doesn't fit in memory:
     #include "fastlowess.hpp"
 
     // coverage and positions are chromosome-scale vectors
-    auto result = fastlowess::smooth_streaming(
-        positions, coverage,
-        { .fraction = 0.05, .iterations = 3 },
-        { .chunk_size = 100000, .overlap = 10000 }
-    );
+    fastlowess::StreamingOptions s_opts;
+    s_opts.fraction = 0.05;
+    s_opts.iterations = 3;
+    s_opts.chunk_size = 100000;
+    s_opts.overlap = 10000;
+    fastlowess::StreamingLowess stream(s_opts);
+    (void)stream.process_chunk(positions, coverage);
+    auto result = stream.finalize().value();
     ```
 
 ---
@@ -448,4 +433,7 @@ For whole-genome data that doesn't fit in memory:
 
 - [Concepts](../getting-started/concepts.md) — How LOWESS works
 - [Parameters](../user-guide/parameters.md) — All options
+- [Robustness](../user-guide/robustness.md) — Outlier downweighting in depth
+- [Merge Strategies](../user-guide/merge.md) — Streaming chunk reconciliation
+- [Boundary Handling](../user-guide/boundary.md) — Edge handling for sparse regions
 - [Real-Time Processing](real-time.md) — For sequencing runs

@@ -75,17 +75,18 @@ int main() {
     options.return_diagnostics = true;
 
     // Smooth
-    try {
-        auto result = fastlowess::smooth(x, y, options);
-        
-        std::cout << "R²: " << result.diagnostics().r_squared() << std::endl;
-        
-        // Access smoothed values
-        auto smoothed = result.y_vector();
-    } catch (const fastlowess::LowessError& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
+    fastlowess::Lowess model(options);
+    auto expected = model.fit(x, y);
+    if (!expected.has_value()) {
+        std::cerr << "Error: " << expected.error() << std::endl;
         return 1;
     }
+    auto& result = expected.value();
+
+    std::cout << "R²: " << result.diagnostics().r_squared() << std::endl;
+
+    // Access smoothed values
+    auto smoothed = result.y_vector();
 
     return 0;
 }

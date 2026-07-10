@@ -7,7 +7,7 @@ The fastest, most robust, and most feature-complete language-agnostic LOWESS (Lo
 
 LOWESS is a nonparametric regression method that fits smooth curves through scatter plots. At each point, it fits a weighted polynomial using nearby data, with weights decreasing smoothly with distance. This creates flexible, data-adaptive curves without assuming a global functional form.
 
-![LOWESS Smoothing Concept](assets/diagrams/lowess_smoothing_concept.svg)
+![LOWESS Smoothing Concept](assets/diagrams/fastLowess_concept.svg)
 
 **Key advantages:**
 
@@ -20,7 +20,7 @@ LOWESS is a nonparametric regression method that fits smooth curves through scat
 
 ### Speed
 
-The `lowess` project crushes the competition in terms of speed, wether in single-threaded or multi-threaded parallel execution.
+The `lowess` project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution.
 
 Speedup relative to Python's `statsmodels.lowess` (higher is better):
 
@@ -83,7 +83,7 @@ A variety of features, supporting a range of use cases:
 | --- | --- | --- | --- |
 | Kernel | 7 options | only Tricube | only Tricube |
 | Robustness Weighting | 3 options | only Huber | only Huber |
-| Scale Estimation | 2 options | only MAR | only MAR |
+| Scale Estimation | 3 options | only MAR | only MAR |
 | Boundary Padding | 4 options | no padding | no padding |
 | Zero Weight Fallback | 3 options | no | no |
 | Auto Convergence | yes | no | no |
@@ -141,11 +141,11 @@ Currently available for R, Python, Rust, Julia, Node.js, and WebAssembly.
         lowess = "0.99"
         ```
 
-    === "fastLowess (parallel + GPU)"
+    === "fastLowess (parallel)"
 
         ```toml
         [dependencies]
-        fastLowess = { version = "0.99", features = ["cpu"] }
+        fastLowess = "*"
         ```
 
 === "Julia"
@@ -177,7 +177,7 @@ Currently available for R, Python, Rust, Julia, Node.js, and WebAssembly.
 
     ```html
     <script type="module">
-      import { smooth } from "https://cdn.jsdelivr.net/npm/fastlowess-wasm@0.99/index.js";
+      import { Lowess } from "https://cdn.jsdelivr.net/npm/fastlowess-wasm@<version>/index.js";
     </script>
     ```
 
@@ -223,8 +223,8 @@ See the [Installation Guide](getting-started/installation.md) for more options a
     x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
     y = np.array([2.0, 4.1, 5.9, 8.2, 9.8])
 
-    result = fl.smooth(x, y, fraction=0.5, iterations=3)
-    print(result["y"])
+    result = fl.Lowess(fraction=0.5, iterations=3).fit(x, y)
+    print(result.y)
     ```
 
 === "Rust"
@@ -252,7 +252,7 @@ See the [Installation Guide](getting-started/installation.md) for more options a
     x = [1.0, 2.0, 3.0, 4.0, 5.0]
     y = [2.0, 4.1, 5.9, 8.2, 9.8]
 
-    result = smooth(x, y, fraction=0.5, iterations=3)
+    result = fit(Lowess(; fraction=0.5, iterations=3), x, y)
     println(result.y)
     ```
 
@@ -264,19 +264,19 @@ See the [Installation Guide](getting-started/installation.md) for more options a
     const x = new Float64Array([1, 2, 3, 4, 5]);
     const y = new Float64Array([2.0, 4.1, 5.9, 8.2, 9.8]);
 
-    const result = fl.smooth(x, y, { fraction: 0.5, iterations: 3 });
+    const result = new fl.Lowess({ fraction: 0.5, iterations: 3 }).fit(x, y);
     console.log(result.y);
     ```
 
 === "WebAssembly"
 
     ```javascript
-    import { smooth } from "fastlowess-wasm";
+    import { Lowess } from "fastlowess-wasm";
 
     const x = new Float64Array([1, 2, 3, 4, 5]);
     const y = new Float64Array([2.0, 4.1, 5.9, 8.2, 9.8]);
 
-    const result = smooth(x, y, { fraction: 0.5, iterations: 3 });
+    const result = new Lowess({ fraction: 0.5, iterations: 3 }).fit(x, y);
     console.log(result.y);
     ```
 
@@ -296,7 +296,7 @@ See the [Installation Guide](getting-started/installation.md) for more options a
         options.iterations = 3;
 
         fastlowess::Lowess model(options);
-        auto result = model.fit(x, y);
+        auto result = model.fit(x, y).value();
 
         for (const auto& val : result.y_vector()) {
             std::cout << val << " ";

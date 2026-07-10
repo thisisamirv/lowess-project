@@ -94,9 +94,9 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `confidence_intervals(T)` | `T: Float` | `NaN` | Confidence level (e.g., 0.95) |
 | `prediction_intervals(T)` | `T: Float` | `NaN` | Prediction level (e.g., 0.95) |
 | `custom_weights(Vec<T>)` | `Vec<T: Float>` | `None` | Per-observation weights (Batch only) |
-| --- | --- | --- | --- |
-| --- | --- | --- | --- |
-| --- | --- | --- | --- |
+| `return_diagnostics()` | `bool` | `false` | Compute RMSE, MAE, R², AIC |
+| `return_residuals()` | `bool` | `false` | Include residuals in result |
+| `return_robustness_weights()` | `bool` | `false` | Include robustness weights in result |
 | `parallel(bool)` | `bool` | `true` | Enable parallel execution |
 | `cv_method(str)` | `&str` | `None` | CV strategy: `"kfold"` or `"loocv"` |
 | `cv_k(usize)` | `usize` | `5` | K for k-fold CV |
@@ -116,9 +116,10 @@ These chained methods configure the builder. They correspond to the "Options Str
 
 | Method | Argument Type | Default | Description |
 | --- | --- | --- | --- |
-| `window_capacity(usize)` | `usize` | `1000` | Max window size |
-| `min_points(usize)` | `usize` | `2` | Min points before smoothing |
-| `update_mode(...)` | `update_mode` | `Incremental` | Update mode enum |
+| `window_capacity(usize)` | `usize` | `1000` | Max points in sliding window |
+| `min_points(usize)` | `usize` | `3` | Min points before smoothing starts |
+| `update_mode(...)` | `update_mode` | `Full` | Update mode enum |
+| `parallel(bool)` | `bool` | `false` | Enable parallel execution (off by default; online LOWESS fits one point at a time) |
 
 ## GPU Acceleration
 
@@ -189,21 +190,35 @@ The GPU backend is optimized for large datasets (N > 100,000) and provides paral
 
 ## Result Structure
 
+### `OnlineOutput<T>`
+
+Returned by `add_point()` inside `Option`. Is `None` while the window is still filling.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `smoothed` | `T` | Smoothed value for the latest point |
+| `std_error` | `Option<T>` | Standard error (if requested) |
+| `residual` | `Option<T>` | Residual y − smoothed (if requested) |
+| `robustness_weight` | `Option<T>` | Robustness weight (if requested) |
+| `iterations_used` | `Option<usize>` | Robustness iterations performed |
+
 ### `LowessResult<T>`
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `x` | `Array1<T>` | Smoothed X coordinates |
-| `y` | `Array1<T>` | Smoothed Y coordinates |
-| `fraction_used` | `T` | Actual fraction used |
-| `residuals` | `Option<Array1<T>>` | Residuals (if requested) |
-| `confidence_lower` | `Option<Array1<T>>` | Lower CI bounds |
-| `confidence_upper` | `Option<Array1<T>>` | Upper CI bounds |
-| `prediction_lower` | `Option<Array1<T>>` | Lower PI bounds |
-| `prediction_upper` | `Option<Array1<T>>` | Upper PI bounds |
-| `robustness_weights` | `Option<Array1<T>>` | Robustness weights |
-| `diagnostics` | `Option<Diagnostics<T>>` | Diagnostic metrics struct |
-| `cv_results` | `Option<CVResults<T>>` | Cross-validation results |
+| `x` | `Array1<T>` | Sorted x values |
+| `y` | `Array1<T>` | Smoothed y values |
+| `fraction_used` | `T` | Fraction used (set or selected by CV) |
+| `iterations_used` | `Option<usize>` | Robustness iterations actually performed |
+| `standard_errors` | `Option<Array1<T>>` | Per-point standard errors |
+| `confidence_lower` | `Option<Array1<T>>` | Lower confidence bounds |
+| `confidence_upper` | `Option<Array1<T>>` | Upper confidence bounds |
+| `prediction_lower` | `Option<Array1<T>>` | Lower prediction bounds |
+| `prediction_upper` | `Option<Array1<T>>` | Upper prediction bounds |
+| `residuals` | `Option<Array1<T>>` | Residuals (if `return_residuals`) |
+| `robustness_weights` | `Option<Array1<T>>` | Robustness weights (if `return_robustness_weights`) |
+| `cv_scores` | `Option<Array1<T>>` | CV score per tested fraction |
+| `diagnostics` | `Option<Diagnostics<T>>` | Fit metrics (if `return_diagnostics`) |
 
 ### `Diagnostics<T>`
 
@@ -213,58 +228,58 @@ The GPU backend is optimized for large datasets (N > 100,000) and provides paral
 | `mae` | `T` | Mean Absolute Error |
 | `r_squared` | `T` | R-squared |
 | `residual_sd` | `T` | Residual standard deviation |
-| `effective_df` | `T` | Effective degrees of freedom |
-| `aic` | `T` | AIC |
-| `aicc` | `T` | AICc |
+| `effective_df` | `Option<T>` | Effective degrees of freedom (NaN if not computed) |
+| `aic` | `Option<T>` | AIC (NaN if not computed) |
+| `aicc` | `Option<T>` | AICc (NaN if not computed) |
 
-## Enum Options
+## Options
 
 ### weight_function
 
-* `Tricube` (default)
-* `Epanechnikov`
-* `Gaussian`
-* `Uniform`
-* `Biweight`
-* `Triangle`
-* `Cosine`
+* `Tricube` (default; string alias: `"tricube"`)
+* `Epanechnikov` (alias: `"epanechnikov"`)
+* `Gaussian` (alias: `"gaussian"`)
+* `Uniform` (aliases: `"uniform"`, `"boxcar"`)
+* `Biweight` (aliases: `"biweight"`, `"bisquare"`)
+* `Triangle` (aliases: `"triangle"`, `"triangular"`)
+* `Cosine` (alias: `"cosine"`)
 
 ### robustness_method
 
-* `Bisquare` (default)
-* `Huber`
-* `Talwar`
+* `Bisquare` (default; aliases: `"bisquare"`, `"biweight"`)
+* `Huber` (alias: `"huber"`)
+* `Talwar` (alias: `"talwar"`)
 
 ### boundary_policy
 
-* `Extend` (default - linear extrapolation)
-* `Reflect`
-* `Zero`
-* `NoBoundary`
+* `Extend` (default; aliases: `"extend"`, `"pad"`)
+* `Reflect` (aliases: `"reflect"`, `"mirror"`)
+* `Zero` (alias: `"zero"`)
+* `NoBoundary` (aliases: `"noboundary"`, `"none"`)
 
 ### scaling_method
 
-* `MAD` (default - Median Absolute Deviation)
-* `MAR` (Median Absolute Residual)
-* `Mean` (Mean Absolute Residual)
+* `MAD` (default; aliases: `"mad"`, `"median_absolute_deviation"`)
+* `MAR` (aliases: `"mar"`, `"median_absolute_residual"`)
+* `Mean` (aliases: `"mean"`, `"mean_absolute_residual"`)
 
 ### zero_weight_fallback
 
-* `UseLocalMean` (default)
-* `ReturnOriginal`
-* `ReturnNone`
+* `UseLocalMean` (default; aliases: `"use_local_mean"`, `"local_mean"`, `"mean"`)
+* `ReturnOriginal` (aliases: `"return_original"`, `"original"`)
+* `ReturnNone` (aliases: `"return_none"`, `"none"`)
 
-### merge_strategy (Streaming)
+### merge_strategy
 
-* `WeightedAverage` (default)
-* `Average`
-* `TakeFirst` (Left)
-* `TakeLast` (Right)
+* `WeightedAverage` (default; aliases: `"weighted_average"`, `"weighted"`)
+* `Average` (aliases: `"average"`, `"mean"`)
+* `TakeFirst` (aliases: `"take_first"`, `"first"`)
+* `TakeLast` (aliases: `"take_last"`, `"last"`)
 
-### update_mode (Online)
+### update_mode
 
-* `Incremental` (default)
-* `Full`
+* `Full` (default; aliases: `"full"`, `"resmooth"`)
+* `Incremental` (aliases: `"incremental"`, `"single"`)
 
 ## Example
 

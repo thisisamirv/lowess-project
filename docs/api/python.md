@@ -19,10 +19,11 @@ model = fastlowess.Lowess(**kwargs)
 **Methods:**
 
 ```python
-result = model.fit(x, y)
+result = model.fit(x, y, custom_weights=None)
 ```
 
 * Fits the model to the provided `x` and `y` array-like objects.
+* `custom_weights`: Optional array of per-observation weights. All values must be ≥ 0 and length must match `x`. Batch only.
 * Returns a `LowessResult` object containing the smoothed values and optional diagnostics.
 
 ### `StreamingLowess`
@@ -66,10 +67,10 @@ online = fastlowess.OnlineLowess(**kwargs)
 **Methods:**
 
 ```python
-smoothed = online.add_point(x, y)
+result = online.add_point(x, y)  # returns OnlineOutput | None
 ```
 
-* Adds a single point to the model. Returns the smoothed value as a `float`, or `None` if not enough points have been accumulated yet.
+* Adds a single point to the sliding window. Returns an `OnlineOutput` once the window has enough points, or `None` while still filling.
 
 ## Options Structures
 
@@ -92,44 +93,60 @@ smoothed = online.add_point(x, y)
 | `return_residuals` | `bool` | `False` | Include residuals in result |
 | `return_robustness_weights` | `bool` | `False` | Include weights in result |
 | `parallel` | `bool` | `True` | Enable parallel execution |
-| `cv_method` | `str` | `"kfold"` | Cross-validation method ("kfold") |
-| `cv_k` | `int` | `5` | Number of CV folds |
-| `cv_fractions` | `list[float]` | `None` | Manual fractions for CV grid |
-| `custom_weights` | `list[float]` | `None` | Per-observation weights (Batch only) |
+| `cv_method` | `str` | `"kfold"` | CV method (`"kfold"` or `"loocv"`) (Batch only) |
+| `cv_k` | `int` | `5` | Number of folds for k-fold CV (Batch only) |
+| `cv_fractions` | `list[float]` | `None` | Fractions to test for cross-validation (Batch only) |
+| `cv_seed` | `int` | `None` | Random seed for cross-validation shuffling (Batch only) |
+| `custom_weights` | `list[float]` | `None` | Per-observation case weights — passed to `fit()`, not the constructor (Batch only) |
 
 ### `StreamingOptions` (inherits `LowessOptions`)
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `chunk_size` | `int` | `5000` | Data chunk size |
-| `overlap` | `int` | `500` | Overlap size (-1 for auto) |
-| `merge_strategy` | `str` | `"weighted"` | Merge strategy for overlap |
+| `overlap` | `int` | `500` | Overlap between chunks |
+| `merge_strategy` | `str` | `"weighted_average"` | Strategy for blending overlap regions |
 
 ### `OnlineOptions` (inherits `LowessOptions`)
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `window_capacity` | `int` | `1000` | Max window size |
-| `min_points` | `int` | `2` | Min points before smoothing |
-| `update_mode` | `str` | `"incremental"` | Update mode ("full" or "incremental") |
+| `window_capacity` | `int` | `1000` | Max points in sliding window |
+| `min_points` | `int` | `3` | Min points before smoothing starts |
+| `update_mode` | `str` | `"full"` | Update mode (`"full"` or `"incremental"`) |
+| `parallel` | `bool` | `False` | Enable parallel execution (off by default; online LOWESS fits one point at a time) |
 
 ## Result Structure
+
+### `OnlineOutput`
+
+Returned by `add_point()` once the window has enough points (`None` until then).
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `smoothed` | `float` | Smoothed value for the latest point |
+| `std_error` | `float \| None` | Standard error (if requested) |
+| `residual` | `float \| None` | Residual y − smoothed (if requested) |
+| `robustness_weight` | `float \| None` | Robustness weight (if requested) |
+| `iterations_used` | `int \| None` | Robustness iterations performed |
 
 ### `LowessResult`
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `x` | `ndarray` | Smoothed X coordinates |
-| `y` | `ndarray` | Smoothed Y coordinates |
-| `valid` | `bool` | True if result is valid |
-| `error` | `str` | Error message if failed |
-| `diagnostics` | `object` | Diagnostic metrics object |
-| `residuals` | `ndarray` | Residuals (if requested) |
-| `confidence_lower` | `ndarray` | Lower CI bounds |
-| `confidence_upper` | `ndarray` | Upper CI bounds |
-| `prediction_lower` | `ndarray` | Lower PI bounds |
-| `prediction_upper` | `ndarray` | Upper PI bounds |
-| `robustness_weights` | `ndarray` | Robustness weights |
+| `x` | `ndarray` | Sorted x values |
+| `y` | `ndarray` | Smoothed y values |
+| `fraction_used` | `float` | Fraction used (set or selected by CV) |
+| `iterations_used` | `int \| None` | Robustness iterations actually performed |
+| `standard_errors` | `ndarray \| None` | Per-point standard errors |
+| `confidence_lower` | `ndarray \| None` | Lower confidence bounds |
+| `confidence_upper` | `ndarray \| None` | Upper confidence bounds |
+| `prediction_lower` | `ndarray \| None` | Lower prediction bounds |
+| `prediction_upper` | `ndarray \| None` | Upper prediction bounds |
+| `residuals` | `ndarray \| None` | Residuals (if `return_residuals`) |
+| `robustness_weights` | `ndarray \| None` | Robustness weights (if `return_robustness_weights`) |
+| `cv_scores` | `ndarray \| None` | CV score per tested fraction |
+| `diagnostics` | `Diagnostics \| None` | Fit metrics (if `return_diagnostics`) |
 
 ### `Diagnostics`
 
@@ -139,63 +156,63 @@ smoothed = online.add_point(x, y)
 | `mae` | `float` | Mean Absolute Error |
 | `r_squared` | `float` | R-squared |
 | `residual_sd` | `float` | Residual standard deviation |
-| `effective_df` | `float` | Effective degrees of freedom |
-| `aic` | `float` | AIC |
-| `aicc` | `float` | AICc |
+| `effective_df` | `float` | Effective degrees of freedom (NaN if not computed) |
+| `aic` | `float` | AIC (NaN if not computed) |
+| `aicc` | `float` | AICc (NaN if not computed) |
 
-## String Options
+## Options
 
-### Weight Functions
+### weight_function
 
 * `"tricube"` (default)
 * `"epanechnikov"`
 * `"gaussian"`
-* `"uniform"`
-* `"biweight"`
-* `"triangle"`
+* `"uniform"` (alias: `"boxcar"`)
+* `"biweight"` (alias: `"bisquare"`)
+* `"triangle"` (alias: `"triangular"`)
 * `"cosine"`
 
-### Robustness Methods
+### robustness_method
 
-* `"bisquare"` (default)
+* `"bisquare"` (default; alias: `"biweight"`)
 * `"huber"`
 * `"talwar"`
 
-### Boundary Policies
+### boundary_policy
 
-* `"extend"` (default - linear extrapolation)
-* `"reflect"`
+* `"extend"` (default; alias: `"pad"`)
+* `"reflect"` (alias: `"mirror"`)
 * `"zero"`
-* `"noboundary"`
+* `"noboundary"` (alias: `"none"`)
 
-### Scaling Methods
+### scaling_method
 
-* `"mad"` (default - Median Absolute Deviation)
-* `"mar"` (Median Absolute Residual)
-* `"mean"` (Mean Absolute Residual)
+* `"mad"` (default; alias: `"median_absolute_deviation"`)
+* `"mar"` (alias: `"median_absolute_residual"`)
+* `"mean"` (alias: `"mean_absolute_residual"`)
 
-### Zero Weight Fallback
+### zero_weight_fallback
 
-* `"use_local_mean"` (default)
-* `"return_original"`
-* `"return_none"`
+* `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
+* `"return_original"` (alias: `"original"`)
+* `"return_none"` (alias: `"none"`)
 
-### Merge Strategies (Streaming)
+### merge_strategy
 
-* `"weighted"` (default - weighted average of overlapping chunks)
-* `"average"`
-* `"left"`
-* `"right"`
+* `"weighted_average"` (default; alias: `"weighted"`)
+* `"average"` (alias: `"mean"`)
+* `"take_first"` (alias: `"first"`)
+* `"take_last"` (alias: `"last"`)
 
-### Update Modes (Online)
+### update_mode
 
-* `"full"` (default - re-smooth entire window)
-* `"incremental"` (O(1) update using existing fit)
+* `"full"` (default; alias: `"resmooth"`)
+* `"incremental"` (alias: `"single"`)
 
 ## Example
 
 ```python
-import fastlowess import Lowess
+from fastlowess import Lowess
 import numpy as np
 
 x = np.linspace(0, 10, 100)

@@ -19,8 +19,8 @@ Unlike parametric methods (linear regression, polynomial fitting), LOWESS adapts
 ## How It Works
 
 <figure markdown="span">
-  ![LOWESS Smoothing Concept](../assets/diagrams/lowess_smoothing_concept.svg){ width="800" }
-  <figcaption>LOWESS fits local weighted regressions at each point</figcaption>
+  ![LOWESS Smoothing Concept](../assets/diagrams/fastLowess_concept.svg){ width="800" }
+  <figcaption>LOWESS fits local weighted regressions at each point, using a focused local window around each evaluation point</figcaption>
 </figure>
 
 For each point in your data, LOWESS:
@@ -38,8 +38,8 @@ For each point in your data, LOWESS:
 The `fraction` (also called bandwidth or span) is the most important parameter. It controls what proportion of data is used for each local fit.
 
 <figure markdown="span">
-  ![Fraction Effect](../assets/diagrams/fraction_effect_comparison.svg){ width="1000" }
-  <figcaption>Small fraction (left) vs optimal (center) vs large fraction (right)</figcaption>
+  ![Fraction Effect](../assets/diagrams/fraction_comparison.svg){ width="1000" }
+  <figcaption>Small fraction vs large fraction — bandwidth controls how closely the fit follows local structure</figcaption>
 </figure>
 
 | Fraction | Effect | When to Use |
@@ -59,8 +59,8 @@ The `fraction` (also called bandwidth or span) is the most important parameter. 
 Standard LOWESS is sensitive to outliers. **Robustness iterations** downweight points with large residuals:
 
 <figure markdown="span">
-  ![Robustness Effect](../assets/diagrams/robust_vs_standard_lowess.svg){ width="800" }
-  <figcaption>Standard LOWESS (left) vs Robust LOWESS (right) with outliers</figcaption>
+  ![Robustness Effect](../assets/diagrams/robust_iter_comparison.svg){ width="800" }
+  <figcaption>Non-robust LOWESS (iterations=0) vs robust LOWESS — outlier influence is suppressed through iterative reweighting</figcaption>
 </figure>
 
 | Iterations | Effect | When to Use |
@@ -75,8 +75,8 @@ Standard LOWESS is sensitive to outliers. **Robustness iterations** downweight p
 ## Confidence vs Prediction Intervals
 
 <figure markdown="span">
-  ![Intervals](../assets/diagrams/confidence_vs_prediction_intervals.svg){ width="800" }
-  <figcaption>Confidence intervals (narrow) vs Prediction intervals (wide)</figcaption>
+  ![Intervals](../assets/diagrams/intervals_comparison.svg){ width="800" }
+  <figcaption>Confidence intervals (narrow, mean curve uncertainty) vs Prediction intervals (wide, new-point uncertainty)</figcaption>
 </figure>
 
 | Interval Type | What It Represents | Width |
@@ -129,4 +129,8 @@ flowchart TD
 
 - [Quick Start](quickstart.md) — See it in action
 - [Parameters](../user-guide/parameters.md) — All configuration options
+- [Boundary Handling](../user-guide/boundary.md) — Edge bias reduction strategies
+- [Robustness](../user-guide/robustness.md) — Outlier downweighting methods
+- [Scaling Methods](../user-guide/scaling.md) — MAD, MAR, Mean scale estimation
+- [Merge Strategies](../user-guide/merge.md) — Chunk reconciliation in Streaming mode
 - [Tutorials](../tutorials/index.md) — Application-specific guides

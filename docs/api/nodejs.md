@@ -19,7 +19,7 @@ const model = new Lowess(options);
 **Methods:**
 
 ```javascript
-const result = model.fit(x, y);
+const result = model.fit(x, y, custom_weights);
 ```
 
 * Fits the model to the provided `x` and `y` typed arrays.
@@ -68,10 +68,10 @@ const online = new OnlineLowess(options, onlineOptions);
 **Methods:**
 
 ```javascript
-const smoothed = online.add_point(x, y);
+const result = online.add_point(x, y);  // returns OnlineOutput | null
 ```
 
-* Adds a single point to the model. Returns the smoothed value as a `number`, or `null` if not enough points have been accumulated yet.
+* Adds a single point to the sliding window and returns an `OnlineOutput` once enough points are available, or `null` while the window is still filling.
 
 ## Options Structures
 
@@ -86,7 +86,7 @@ const smoothed = online.add_point(x, y);
 | `robustness_method` | `string` | `"bisquare"` | Robustness method name |
 | `scaling_method` | `string` | `"mad"` | Residual scaling method |
 | `boundary_policy` | `string` | `"extend"` | Boundary handling policy |
-| `zero_weight_fallback` | `string` | `"useLocalMean"` | Zero-weight handling strategy |
+| `zero_weight_fallback` | `string` | `"use_local_mean"` | Zero-weight handling |
 | `auto_converge` | `number` | `null` | Auto-convergence tolerance |
 | `confidence_intervals` | `number` | `null` | Confidence level (e.g., 0.95) |
 | `prediction_intervals` | `number` | `null` | Prediction level (e.g., 0.95) |
@@ -94,44 +94,60 @@ const smoothed = online.add_point(x, y);
 | `return_residuals` | `boolean` | `false` | Include residuals in result |
 | `return_robustness_weights` | `boolean` | `false` | Include weights in result |
 | `parallel` | `boolean` | `true` | Enable parallel execution |
-| `cv_method` | `string` | `"kfold"` | Cross-validation method ("kfold") |
-| `cv_k` | `number` | `5` | Number of CV folds |
-| `cv_fractions` | `number[]` | `null` | Manual fractions for CV grid |
-| `custom_weights` | `Float64Array` | `null` | Per-observation weights (Batch only) |
+| `cv_method` | `string` | `"kfold"` | CV method (`"kfold"` or `"loocv"`) (Batch only) |
+| `cv_k` | `number` | `5` | Number of folds for k-fold CV (Batch only) |
+| `cv_fractions` | `number[]` | `null` | Fractions to test for cross-validation (Batch only) |
+| `cv_seed` | `number` | `null` | Random seed for cross-validation shuffling (Batch only) |
+| `custom_weights` | `number[]` | `null` | Per-observation case weights — passed to `fit()`, not the options object (Batch only) |
 
-### `StreamingOptions`
+### `StreamingOptions` (inherits `LowessOptions`)
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `chunk_size` | `number` | `5000` | Data chunk size |
-| `overlap` | `number` | `500` | Overlap size (-1 for auto) |
-| `merge_strategy` | `string` | `"average"` | Merge strategy for overlap |
+| `overlap` | `number` | `500` | Overlap between chunks |
+| `merge_strategy` | `string` | `"weighted_average"` | Strategy for blending overlap regions |
 
-### `OnlineOptions`
+### `OnlineOptions` (inherits `LowessOptions`)
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `window_capacity` | `number` | `100` | Max window size |
-| `min_points` | `number` | `2` | Min points before smoothing |
-| `update_mode` | `string` | `"incremental"` | Update mode ("full" or "incremental") |
+| `window_capacity` | `number` | `1000` | Max points in sliding window |
+| `min_points` | `number` | `3` | Min points before smoothing starts |
+| `update_mode` | `string` | `"full"` | Update mode (`"full"` or `"incremental"`) |
+| `parallel` | `boolean` | `false` | Enable parallel execution (off by default; online LOWESS fits one point at a time) |
 
 ## Result Structure
+
+### `OnlineOutput`
+
+Returned by `add_point()` once the window has enough points (`null` until then).
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `smoothed` | `number` | Smoothed value for the latest point |
+| `std_error` | `number \| null` | Standard error (if requested) |
+| `residual` | `number \| null` | Residual y − smoothed (if requested) |
+| `robustness_weight` | `number \| null` | Robustness weight (if requested) |
+| `iterations_used` | `number \| null` | Robustness iterations performed |
 
 ### `LowessResult`
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `x` | `Float64Array` | Smoothed X coordinates |
-| `y` | `Float64Array` | Smoothed Y coordinates |
-| `valid` | `boolean` | True if result is valid |
-| `error` | `string` | Error message if failed |
-| `diagnostics` | `Diagnostics` | Diagnostic metrics object |
-| `residuals` | `Float64Array` | Residuals (if requested) |
-| `confidence_lower` | `Float64Array` | Lower CI bounds |
-| `confidence_upper` | `Float64Array` | Upper CI bounds |
-| `prediction_lower` | `Float64Array` | Lower PI bounds |
-| `prediction_upper` | `Float64Array` | Upper PI bounds |
-| `robustness_weights` | `Float64Array` | Robustness weights |
+| `x` | `Float64Array` | Sorted x values |
+| `y` | `Float64Array` | Smoothed y values |
+| `fraction_used` | `number` | Fraction used (set or selected by CV) |
+| `iterations_used` | `number \| null` | Robustness iterations actually performed |
+| `standard_errors` | `Float64Array \| null` | Per-point standard errors |
+| `confidence_lower` | `Float64Array \| null` | Lower confidence bounds |
+| `confidence_upper` | `Float64Array \| null` | Upper confidence bounds |
+| `prediction_lower` | `Float64Array \| null` | Lower prediction bounds |
+| `prediction_upper` | `Float64Array \| null` | Upper prediction bounds |
+| `residuals` | `Float64Array \| null` | Residuals (if `return_residuals`) |
+| `robustness_weights` | `Float64Array \| null` | Robustness weights (if `return_robustness_weights`) |
+| `cv_scores` | `Float64Array \| null` | CV score per tested fraction |
+| `diagnostics` | `Diagnostics \| null` | Fit metrics (if `return_diagnostics`) |
 
 ### `Diagnostics`
 
@@ -141,58 +157,58 @@ const smoothed = online.add_point(x, y);
 | `mae` | `number` | Mean Absolute Error |
 | `r_squared` | `number` | R-squared |
 | `residual_sd` | `number` | Residual standard deviation |
-| `effective_df` | `number` | Effective degrees of freedom |
-| `aic` | `number` | AIC |
-| `aicc` | `number` | AICc |
+| `effective_df` | `number` \| `undefined` | Effective degrees of freedom |
+| `aic` | `number` \| `undefined` | AIC |
+| `aicc` | `number` \| `undefined` | AICc |
 
-## String Options
+## Options
 
-### Weight Functions
+### weight_function
 
 * `"tricube"` (default)
 * `"epanechnikov"`
 * `"gaussian"`
-* `"uniform"`
-* `"biweight"`
-* `"triangle"`
+* `"uniform"` (alias: `"boxcar"`)
+* `"biweight"` (alias: `"bisquare"`)
+* `"triangle"` (alias: `"triangular"`)
 * `"cosine"`
 
-### Robustness Methods
+### robustness_method
 
-* `"bisquare"` (default)
+* `"bisquare"` (default; alias: `"biweight"`)
 * `"huber"`
 * `"talwar"`
 
-### Boundary Policies
+### boundary_policy
 
-* `"extend"` (default - linear extrapolation)
-* `"reflect"`
+* `"extend"` (default; alias: `"pad"`)
+* `"reflect"` (alias: `"mirror"`)
 * `"zero"`
-* `"noBoundary"`
+* `"noboundary"` (alias: `"none"`)
 
-### Scaling Methods
+### scaling_method
 
-* `"mad"` (default - Median Absolute Deviation)
-* `"mar"` (Median Absolute Residual)
-* `"mean"` (Mean Absolute Residual)
+* `"mad"` (default; alias: `"median_absolute_deviation"`)
+* `"mar"` (alias: `"median_absolute_residual"`)
+* `"mean"` (alias: `"mean_absolute_residual"`)
 
-### Zero Weight Fallback
+### zero_weight_fallback
 
-* `"useLocalMean"` (default)
-* `"returnOriginal"`
-* `"returnNone"`
+* `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
+* `"return_original"` (alias: `"original"`)
+* `"return_none"` (alias: `"none"`)
 
-### Merge Strategies (Streaming)
+### merge_strategy
 
-* `"weighted"` (default - weighted average of overlapping chunks)
-* `"average"`
-* `"left"`
-* `"right"`
+* `"weighted_average"` (default; alias: `"weighted"`)
+* `"average"` (alias: `"mean"`)
+* `"take_first"` (alias: `"first"`)
+* `"take_last"` (alias: `"last"`)
 
-### Update Modes (Online)
+### update_mode
 
-* `"full"` (default - re-smooth entire window)
-* `"incremental"` (O(1) update using existing fit)
+* `"full"` (default; alias: `"resmooth"`)
+* `"incremental"` (alias: `"single"`)
 
 ## Example
 

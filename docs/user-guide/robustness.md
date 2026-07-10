@@ -12,7 +12,9 @@ Standard LOWESS can be biased by outliers. Robustness iterations downweight poin
 4. Refit using combined distance × robustness weights
 5. Repeat steps 2–4
 
-![Robust vs Standard](../assets/diagrams/robust_vs_standard_lowess.svg)
+![Robustness Methods](../assets/diagrams/robust_method_comparison.svg)
+
+![Robustness Iterations](../assets/diagrams/robust_iter_comparison.svg)
 
 ---
 
@@ -33,38 +35,38 @@ $$w(u) = \begin{cases} (1 - u^2)^2 & |u| < 1 \\ 0 & |u| \geq 1 \end{cases}$$
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, iterations=3, robustness_method="bisquare")
+    result = fl.Lowess(iterations=3, robustness_method="bisquare").fit(x, y)
     ```
 
 === "Rust"
     ```rust
     let model = Lowess::new()
         .iterations(3)
-        .robustness_method(Bisquare)
+        .robustness_method("bisquare")
         .build()?;
     ```
 
 === "Julia"
     ```julia
-    result = smooth(x, y, iterations=3, robustness_method="bisquare")
+    result = fit(Lowess(; iterations=3, robustness_method="bisquare"), x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { iterations: 3, robustness_method: "bisquare" });
+    const result = new Lowess({ iterations: 3, robustness_method: "bisquare" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { iterations: 3, robustness_method: "bisquare" });
+    const result = new Lowess({ iterations: 3, robustness_method: "bisquare" }).fit(x, y);
     ```
 
 === "C++"
     ```cpp
-    auto result = fastlowess::smooth(x, y, {
-        .iterations = 3,
+    fastlowess::Lowess model({ .iterations = 3,
         .robustness_method = "bisquare"
-    });
+     });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -84,38 +86,38 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}$$
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, iterations=3, robustness_method="huber")
+    result = fl.Lowess(iterations=3, robustness_method="huber").fit(x, y)
     ```
 
 === "Rust"
     ```rust
     let model = Lowess::new()
         .iterations(3)
-        .robustness_method(Huber)
+        .robustness_method("huber")
         .build()?;
     ```
 
 === "Julia"
     ```julia
-    result = smooth(x, y, iterations=3, robustness_method="huber")
+    result = fit(Lowess(; iterations=3, robustness_method="huber"), x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { iterations: 3, robustness_method: "huber" });
+    const result = new Lowess({ iterations: 3, robustness_method: "huber" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { iterations: 3, robustness_method: "huber" });
+    const result = new Lowess({ iterations: 3, robustness_method: "huber" }).fit(x, y);
     ```
 
 === "C++"
     ```cpp
-    auto result = fastlowess::smooth(x, y, {
-        .iterations = 3,
+    fastlowess::Lowess model({ .iterations = 3,
         .robustness_method = "huber"
-    });
+     });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -135,38 +137,38 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, iterations=3, robustness_method="talwar")
+    result = fl.Lowess(iterations=3, robustness_method="talwar").fit(x, y)
     ```
 
 === "Rust"
     ```rust
     let model = Lowess::new()
         .iterations(3)
-        .robustness_method(Talwar)
+        .robustness_method("talwar")
         .build()?;
     ```
 
 === "Julia"
     ```julia
-    result = smooth(x, y, iterations=3, robustness_method="talwar")
+    result = fit(Lowess(; iterations=3, robustness_method="talwar"), x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { iterations: 3, robustness_method: "talwar" });
+    const result = new Lowess({ iterations: 3, robustness_method: "talwar" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { iterations: 3, robustness_method: "talwar" });
+    const result = new Lowess({ iterations: 3, robustness_method: "talwar" }).fit(x, y);
     ```
 
 === "C++"
     ```cpp
-    auto result = fastlowess::smooth(x, y, {
-        .iterations = 3,
+    fastlowess::Lowess model({ .iterations = 3,
         .robustness_method = "talwar"
-    });
+     });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -196,9 +198,9 @@ Use robustness weights to identify potential outliers:
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, iterations=5, return_robustness_weights=True)
+    result = fl.Lowess(iterations=5, return_robustness_weights=True).fit(x, y)
 
-    for i, w in enumerate(result["robustness_weights"]):
+    for i, w in enumerate(result.robustness_weights):
         if w < 0.5:
             print(f"Potential outlier at index {i}: weight = {w:.3f}")
     ```
@@ -223,7 +225,7 @@ Use robustness weights to identify potential outliers:
 
 === "Julia"
     ```julia
-    result = smooth(x, y, iterations=5, return_robustness_weights=true)
+    result = fit(Lowess(; iterations=5, return_robustness_weights=true), x, y)
 
     for (i, w) in enumerate(result.robustness_weights)
         if w < 0.5
@@ -234,7 +236,7 @@ Use robustness weights to identify potential outliers:
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { iterations: 5, return_robustness_weights: true });
+    const result = new Lowess({ iterations: 5, return_robustness_weights: true }).fit(x, y);
 
     result.robustness_weights.forEach((w, i) => {
         if (w < 0.5) {
@@ -245,7 +247,7 @@ Use robustness weights to identify potential outliers:
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { iterations: 5, return_robustness_weights: true });
+    const result = new Lowess({ iterations: 5, return_robustness_weights: true }).fit(x, y);
 
     result.robustness_weights.forEach((w, i) => {
         if (w < 0.5) {
@@ -256,10 +258,10 @@ Use robustness weights to identify potential outliers:
 
 === "C++"
     ```cpp
-    auto result = fastlowess::smooth(x, y, {
-        .iterations = 5,
+    fastlowess::Lowess model({ .iterations = 5,
         .return_robustness_weights = true
-    });
+     });
+    auto result = model.fit(x, y).value();
 
     auto weights = result.robustness_weights();
     for (size_t i = 0; i < weights.size(); ++i) {
@@ -275,10 +277,13 @@ Use robustness weights to identify potential outliers:
 
 Residuals are scaled before computing robustness weights. Two methods:
 
-| Method | Description | Robustness |
+| Method | Formula | Robustness |
 | --- | --- | --- |
-| **MAD** | Median Absolute Deviation | Very robust |
-| **MAR** | Mean Absolute Residual | Less robust, faster |
+| **MAD** | `median(\|r − median(r)\|)` | Very robust (default) |
+| **MAR** | `median(\|r\|)` | Robust, uncentered |
+| **Mean** | `mean(\|r\|)` | Less robust, fastest |
+
+![Scaling Methods Comparison](../assets/diagrams/scaling_comparison.svg)
 
 === "R"
     ```r
@@ -287,45 +292,43 @@ Residuals are scaled before computing robustness weights. Two methods:
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, iterations=3, scaling_method="mad")
+    result = fl.Lowess(iterations=3, scaling_method="mad").fit(x, y)
     ```
 
 === "Rust"
     ```rust
     let model = Lowess::new()
         .iterations(3)
-        .scaling_method(MAD)  // Default
+        .scaling_method("mad")  // Default
         .build()?;
     ```
 
 === "Julia"
     ```julia
-    result = smooth(x, y, iterations=3, scaling_method="mad")
+    result = fit(Lowess(; iterations=3, scaling_method="mad"), x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { iterations: 3, scaling_method: "mad" });
+    const result = new Lowess({ iterations: 3, scaling_method: "mad" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { iterations: 3, scaling_method: "mad" });
+    const result = new Lowess({ iterations: 3, scaling_method: "mad" }).fit(x, y);
     ```
 
 === "C++"
     ```cpp
-    auto result = fastlowess::smooth(x, y, {
-        .iterations = 3,
+    fastlowess::Lowess model({ .iterations = 3,
         .scaling_method = "mad"
-    });
+     });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
 
 ## Auto-Convergence
-
-![Auto-Convergence](../assets/diagrams/auto_converge.svg)
 
 Stop iterations early when weights stabilize:
 
@@ -339,7 +342,7 @@ Stop iterations early when weights stabilize:
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, iterations=10, auto_converge=1e-6)
+    result = fl.Lowess(iterations=10, auto_converge=1e-6).fit(x, y)
     ```
 
 === "Rust"
@@ -352,23 +355,23 @@ Stop iterations early when weights stabilize:
 
 === "Julia"
     ```julia
-    result = smooth(x, y, iterations=10, auto_converge=1e-6)
+    result = fit(Lowess(; iterations=10, auto_converge=1e-6), x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { iterations: 10, auto_converge: 1e-6 });
+    const result = new Lowess({ iterations: 10, auto_converge: 1e-6 }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { iterations: 10, auto_converge: 1e-6 });
+    const result = new Lowess({ iterations: 10, auto_converge: 1e-6 }).fit(x, y);
     ```
 
 === "C++"
     ```cpp
-    auto result = fastlowess::smooth(x, y, {
-        .iterations = 10,
+    fastlowess::Lowess model({ .iterations = 10,
         .auto_converge = 1e-6
-    });
+     });
+    auto result = model.fit(x, y).value();
     ```

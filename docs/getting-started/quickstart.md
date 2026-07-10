@@ -5,20 +5,22 @@ Get up and running with LOWESS in minutes.
 
 ## Basic Smoothing
 
+Smooth a noisy sine wave — the kind of signal where LOWESS shines. Each example recovers the underlying trend from 100 points of Gaussian noise.
+
 === "R"
 
     ```r
     library(rfastlowess)
 
-    # Sample data
-    x <- c(1, 2, 3, 4, 5, 6, 7, 8)
-    y <- c(2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7)
+    # 100-point noisy sine wave
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
 
-    # Smooth the data
-    model <- Lowess(fraction = 0.5, iterations = 3)
-    result <- model$fit(x, y)
+    result <- Lowess(fraction = 0.3, iterations = 3)$fit(x, y)
 
-    print(result$y)
+    cat(sprintf("First smoothed value: %.4f (true: %.4f)\n",
+                result$y[1], sin(x[1])))
     ```
 
 === "Python"
@@ -27,35 +29,37 @@ Get up and running with LOWESS in minutes.
     import fastlowess as fl
     import numpy as np
 
-    # Sample data
-    x = np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
-    y = np.array([2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7])
+    # 100-point noisy sine wave
+    rng = np.random.default_rng(42)
+    x = np.linspace(0, 2 * np.pi, 100)
+    y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    # Smooth the data
-    result = fl.smooth(x, y, fraction=0.5, iterations=3)
+    result = fl.Lowess(fraction=0.3, iterations=3).fit(x, y)
 
-    print("Smoothed values:", result["y"])
+    print(f"First smoothed value: {result.y[0]:.4f}  (true: {np.sin(x[0]):.4f})")
     ```
 
 === "Rust"
 
     ```rust
-    use lowess::prelude::*;
+    use fastLowess::prelude::*;
+    use std::f64::consts::TAU;
 
     fn main() -> Result<(), LowessError> {
-        // Sample data
-        let x = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
-        let y = vec![2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7];
+        // 100-point noisy sine wave (deterministic)
+        let n = 100usize;
+        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+        let y: Vec<f64> = x.iter().enumerate()
+            .map(|(i, &xi)| xi.sin() + ((i * 7 + 3) as f64 % 1.7 - 0.85) * 0.3)
+            .collect();
 
-        // Build and fit the model
         let model = Lowess::new()
-            .fraction(0.5)      // Use 50% of data for each fit
-            .iterations(3)      // 3 robustness iterations
+            .fraction(0.3)
+            .iterations(3)
             .build()?;
 
         let result = model.fit(&x, &y)?;
-        
-        println!("{}", result);
+        println!("First smoothed: {:.4}  (true: {:.4})", result.y[0], x[0].sin());
         Ok(())
     }
     ```
@@ -63,74 +67,69 @@ Get up and running with LOWESS in minutes.
 === "Julia"
 
     ```julia
-    using FastLOWESS
+    using FastLOWESS, Random, Printf
 
-    # Sample data
-    x = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
-    y = [2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7]
+    # 100-point noisy sine wave
+    x = collect(range(0, 2π, length=100))
+    rng = MersenneTwister(42)
+    y = sin.(x) .+ randn(rng, 100) .* 0.3
 
-    # Smooth the data
-    result = smooth(x, y, fraction=0.5, iterations=3)
+    result = fit(Lowess(; fraction=0.3, iterations=3), x, y)
 
-    println("Smoothed values: ", result.y)
+    @printf "First smoothed: %.4f  (true: %.4f)\n" result.y[1] sin(x[1])
     ```
 
 === "Node.js"
 
     ```javascript
-    const fastlowess = require('fastlowess');
+    const { Lowess } = require('fastlowess');
 
-    // Sample data
-    const x = new Float64Array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
-    const y = new Float64Array([2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7]);
+    // 100-point noisy sine wave
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
-    // Smooth the data
-    const result = fastlowess.smooth(x, y, { fraction: 0.5, iterations: 3 });
+    const result = new Lowess({ fraction: 0.3, iterations: 3 }).fit(x, y);
 
-    console.log("Smoothed values:", result.y);
+    console.log(`First smoothed: ${result.y[0].toFixed(4)}  (true: ${Math.sin(x[0]).toFixed(4)})`);
     ```
 
 === "WebAssembly"
 
     ```javascript
-    import * as fastlowess from 'fastlowess-wasm';
+    import { smooth } from 'fastlowess-wasm';
 
-    // Sample data
-    const x = new Float64Array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
-    const y = new Float64Array([2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7]);
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
-    // Smooth the data
-    const result = fastlowess.smooth(x, y, { fraction: 0.5, iterations: 3 });
+    const result = smooth(x, y, { fraction: 0.3, iterations: 3 });
 
-    console.log("Smoothed values:", result.y);
+    console.log(`First smoothed: ${result.y[0].toFixed(4)}`);
     ```
 
 === "C++"
 
     ```cpp
     #include <fastlowess.hpp>
+    #include <cmath>
     #include <iostream>
     #include <vector>
 
     int main() {
-        // Sample data
-        std::vector<double> x = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0};
-        std::vector<double> y = {2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7};
+        // 100-point noisy sine wave (deterministic)
+        const int n = 100;
+        std::vector<double> x(n), y(n);
+        for (int i = 0; i < n; ++i) {
+            x[i] = i * 2 * M_PI / (n - 1);
+            y[i] = std::sin(x[i]) + ((i * 7 + 3) % 17 / 17.0 - 0.5) * 0.6;
+        }
 
-        // Smooth the data
-        fastlowess::LowessOptions options;
-        options.fraction = 0.5;
-        options.iterations = 3;
-        
-        fastlowess::Lowess model(options);
-        auto result = model.fit(x, y);
+        fastlowess::Lowess model({ .fraction = 0.3, .iterations = 3 });
+        auto result = model.fit(x, y).value();
 
-        // Print smoothed values
-        const auto& y_smooth = result.y_vector();
-        std::cout << "Smoothed values: [";
-        for (double val : y_smooth) std::cout << val << ", ";
-        std::cout << "]" << std::endl;
-        
+        std::cout << "First smoothed: " << result.y_vector()[0]
+                  << "  (true: " << std::sin(x[0]) << ")\n";
         return 0;
     }
     ```
@@ -159,25 +158,24 @@ Get up and running with LOWESS in minutes.
 === "Python"
 
     ```python
-    result = fl.smooth(
-        x, y,
+    result = fl.Lowess(
         fraction=0.5,
         iterations=3,
         confidence_intervals=0.95,
         prediction_intervals=0.95,
         return_diagnostics=True
-    )
+    ).fit(x, y)
 
-    print("Smoothed:", result["y"])
-    print("CI Lower:", result["confidence_lower"])
-    print("CI Upper:", result["confidence_upper"])
-    print("R²:", result["diagnostics"]["r_squared"])
+    print("Smoothed:", result.y)
+    print("CI Lower:", result.confidence_lower)
+    print("CI Upper:", result.confidence_upper)
+    print("R²:", result.diagnostics.r_squared)
     ```
 
 === "Rust"
 
     ```rust
-    use lowess::prelude::*;
+    use fastLowess::prelude::*;
 
     let model = Lowess::new()
         .fraction(0.5)
@@ -198,14 +196,13 @@ Get up and running with LOWESS in minutes.
 === "Julia"
 
     ```julia
-    result = smooth(
-        x, y,
+    result = fit(Lowess(;
         fraction=0.5,
         iterations=3,
         confidence_intervals=0.95,
         prediction_intervals=0.95,
         return_diagnostics=true
-    )
+    ), x, y)
 
     println("Smoothed: ", result.y)
     println("CI Lower: ", result.confidence_lower)
@@ -216,13 +213,15 @@ Get up and running with LOWESS in minutes.
 === "Node.js"
 
     ```javascript
-    const result = fastlowess.smooth(x, y, {
+    const { Lowess } = require('fastlowess');
+
+    const result = new Lowess({
         fraction: 0.5,
         iterations: 3,
         confidence_intervals: 0.95,
         prediction_intervals: 0.95,
         return_diagnostics: true
-    });
+    }).fit(x, y);
 
     console.log("Smoothed:", result.y);
     console.log("CI Lower:", result.confidence_lower);
@@ -233,14 +232,14 @@ Get up and running with LOWESS in minutes.
 === "WebAssembly"
 
     ```javascript
-    import * as fastlowess from 'fastlowess-wasm';
+    import { smooth } from 'fastlowess-wasm';
 
     // Sample data
     const x = new Float64Array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
     const y = new Float64Array([2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7]);
 
     // Smooth the data
-    const result = fastlowess.smooth(x, y, { fraction: 0.5, iterations: 3 });
+    const result = smooth(x, y, { fraction: 0.5, iterations: 3 });
 
     console.log("Smoothed values:", result.y);
     ```
@@ -256,7 +255,7 @@ Get up and running with LOWESS in minutes.
     options.return_diagnostics = true;
 
     fastlowess::Lowess model(options);
-    auto result = model.fit(x, y);
+    auto result = model.fit(x, y).value();
 
     // Access standard C++ vectors
     auto lower = result.confidence_lower();
@@ -273,15 +272,15 @@ LOWESS can robustly handle outliers through iterative reweighting:
 === "R"
 
     ```r
+    x_out <- seq(1, 6)
     y_with_outlier <- c(2, 4, 6, 50, 10, 12)
 
-    model <- Lowess(
+    result <- Lowess(
         fraction = 0.5,
         iterations = 5,
         robustness_method = "bisquare",
         return_robustness_weights = TRUE
-    )
-    result <- model$fit(x, y_with_outlier)
+    )$fit(x_out, y_with_outlier)
 
     # Check downweighted points
     weights <- result$robustness_weights
@@ -295,18 +294,18 @@ LOWESS can robustly handle outliers through iterative reweighting:
 === "Python"
 
     ```python
+    x_out = np.linspace(1, 6, 6)
     y_with_outlier = np.array([2.0, 4.0, 6.0, 50.0, 10.0, 12.0])
 
-    result = fl.smooth(
-        x, y_with_outlier,
+    result = fl.Lowess(
         fraction=0.5,
         iterations=5,
         robustness_method="bisquare",
         return_robustness_weights=True
-    )
+    ).fit(x_out, y_with_outlier)
 
     # Check which points were downweighted
-    for i, w in enumerate(result["robustness_weights"]):
+    for i, w in enumerate(result.robustness_weights):
         if w < 0.5:
             print(f"Point {i} is likely an outlier (weight: {w:.3f})")
     ```
@@ -315,12 +314,13 @@ LOWESS can robustly handle outliers through iterative reweighting:
 
     ```rust
     // Data with an outlier at position 3
+    let x = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
     let y_with_outlier = vec![2.0, 4.0, 6.0, 50.0, 10.0, 12.0];  // 50.0 is outlier
 
     let model = Lowess::new()
         .fraction(0.5)
         .iterations(5)                    // More iterations for outliers
-        .robustness_method(Bisquare)      // Default, smooth downweighting
+        .robustness_method("bisquare")    // Default, smooth downweighting
         .return_robustness_weights()      // See which points were downweighted
         .build()?;
 
@@ -339,15 +339,15 @@ LOWESS can robustly handle outliers through iterative reweighting:
 === "Julia"
 
     ```julia
+    x = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
     y_with_outlier = [2.0, 4.0, 6.0, 50.0, 10.0, 12.0]
 
-    result = smooth(
-        x, y_with_outlier,
+    result = fit(Lowess(;
         fraction=0.5,
         iterations=5,
         robustness_method="bisquare",
         return_robustness_weights=true
-    )
+    ), x, y_with_outlier)
 
     # Check which points were downweighted
     for (i, w) in enumerate(result.robustness_weights)
@@ -360,16 +360,16 @@ LOWESS can robustly handle outliers through iterative reweighting:
 === "Node.js"
 
     ```javascript
-    const fl = require('fastlowess');
+    const { Lowess } = require('fastlowess');
 
     const yWithOutlier = new Float64Array([2.0, 4.0, 6.0, 50.0, 10.0, 12.0]);
 
-    const result = fl.smooth(x, yWithOutlier, {
+    const result = new Lowess({
         fraction: 0.5,
         iterations: 5,
         robustness_method: "bisquare",
         return_robustness_weights: true
-    });
+    }).fit(x, yWithOutlier);
 
     // Outliers will have low robustness weights
     result.robustness_weights.forEach((w, i) => {
@@ -405,7 +405,8 @@ LOWESS can robustly handle outliers through iterative reweighting:
 === "C++"
 
     ```cpp
-    // Data with an outlier
+    // Data with an outlier at index 3
+    std::vector<double> x_out = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
     std::vector<double> y_outlier = {2.0, 4.0, 6.0, 50.0, 10.0, 12.0};
 
     fastlowess::LowessOptions options;
@@ -415,7 +416,7 @@ LOWESS can robustly handle outliers through iterative reweighting:
     options.return_robustness_weights = true;
 
     fastlowess::Lowess model(options);
-    auto result = model.fit(x, y_outlier);
+    auto result = model.fit(x_out, y_outlier).value();
 
     // Check weights
     auto weights = result.robustness_weights();
@@ -428,9 +429,210 @@ LOWESS can robustly handle outliers through iterative reweighting:
 
 ---
 
+## Streaming Mode
+
+For datasets too large to fit in memory, stream them in fixed-size chunks with overlap.
+
+=== "R"
+
+    ```r
+    library(rfastlowess)
+
+    set.seed(42)
+    x <- seq(0, 10 * pi, length.out = 5000)
+    y <- sin(x / pi) * exp(-x / 30) + rnorm(5000, sd = 0.15)
+
+    # Process in 1000-point chunks with 100-point overlap
+    model <- StreamingLowess(
+        fraction       = 0.2,
+        chunk_size     = 1000L,
+        overlap        = 100L,
+        merge_strategy = "weighted_average"
+    )
+
+    chunk_size <- 1000L
+    for (start in seq(1, 4001, by = chunk_size)) {
+        end <- min(start + chunk_size - 1L, length(x))
+        model$process_chunk(x[start:end], y[start:end])
+    }
+    result <- model$finalize()
+    cat(sprintf("Smoothed %d points across %d chunks\n",
+                length(result$y), ceiling(5000 / chunk_size)))
+    ```
+
+=== "Python"
+
+    ```python
+    import fastlowess as fl
+    import numpy as np
+
+    rng = np.random.default_rng(42)
+    x = np.linspace(0, 10 * np.pi, 5000)
+    y = np.sin(x / np.pi) * np.exp(-x / 30) + rng.normal(0, 0.15, 5000)
+
+    model = fl.StreamingLowess(
+        fraction=0.2,
+        chunk_size=1000,
+        overlap=100,
+        merge_strategy="weighted_average",
+    )
+
+    chunk_size = 1000
+    for start in range(0, 4001, chunk_size):
+        end = min(start + chunk_size, len(x))
+        model.process_chunk(x[start:end], y[start:end])
+    result = model.finalize()
+    print(f"Smoothed {len(result.y)} points in streaming mode")
+    ```
+
+=== "Rust"
+
+    ```rust
+    use fastLowess::prelude::*;
+    use std::f64::consts::PI;
+
+    fn main() -> Result<(), LowessError> {
+        let n = 5_000usize;
+        let x: Vec<f64> = (0..n).map(|i| i as f64 * 10.0 * PI / (n - 1) as f64).collect();
+        let y: Vec<f64> = x.iter().enumerate()
+            .map(|(i, &xi)| (xi / PI).sin() * (-xi / 30.0).exp()
+                           + ((i * 7 + 3) as f64 % 1.7 - 0.85) * 0.15)
+            .collect();
+
+        let mut model = StreamingLowess::new()
+            .fraction(0.2)
+            .chunk_size(1000)
+            .overlap(100)
+            .build()?;
+
+        for chunk in x.chunks(1000).zip(y.chunks(1000)) {
+            model.process_chunk(chunk.0, chunk.1)?;
+        }
+        let result = model.finalize()?;
+        println!("Smoothed {} points", result.y.len());
+        Ok(())
+    }
+    ```
+
+=== "Julia"
+
+    ```julia
+    using FastLOWESS, Random
+
+    x = collect(range(0, 10π, length=5000))
+    rng = MersenneTwister(42)
+    y = @. sin(x / π) * exp(-x / 30) + randn(rng) * 0.15
+
+    model = StreamingLowess(; fraction=0.2, chunk_size=1000, overlap=100,
+                              merge_strategy="weighted_average")
+
+    chunk_size = 1000
+    for start in 1:chunk_size:4001
+        stop = min(start + chunk_size - 1, length(x))
+        process_chunk(model, x[start:stop], y[start:stop])
+    end
+    result = finalize(model)
+    println("Smoothed $(length(result.y)) points in streaming mode")
+    ```
+
+=== "Node.js"
+
+    ```javascript
+    const { StreamingLowess } = require('fastlowess');
+
+    const n = 5000;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 10 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) =>
+        Math.sin(xi / Math.PI) * Math.exp(-xi / 30) +
+        (((i * 7 + 3) % 17) / 17 - 0.5) * 0.3
+    );
+
+    const model = new StreamingLowess(
+        { fraction: 0.2 },
+        { chunk_size: 1000, overlap: 100, merge_strategy: 'weighted_average' }
+    );
+
+    const chunk_size = 1000;
+    for (let start = 0; start <= 4000; start += chunk_size) {
+        const end = Math.min(start + chunk_size, n);
+        model.process_chunk(x.slice(start, end), y.slice(start, end));
+    }
+    const result = model.finalize();
+    console.log(`Smoothed ${result.y.length} points in streaming mode`);
+    ```
+
+=== "WebAssembly"
+
+    ```javascript
+    import { StreamingLowess } from 'fastlowess-wasm';
+
+    const n = 5000;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 10 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) =>
+        Math.sin(xi / Math.PI) * Math.exp(-xi / 30) +
+        (((i * 7 + 3) % 17) / 17 - 0.5) * 0.3
+    );
+
+    const model = new StreamingLowess(
+        { fraction: 0.2 },
+        { chunk_size: 1000, overlap: 100, merge_strategy: 'weighted_average' }
+    );
+
+    const chunk_size = 1000;
+    for (let start = 0; start <= 4000; start += chunk_size) {
+        const end = Math.min(start + chunk_size, n);
+        model.process_chunk(x.slice(start, end), y.slice(start, end));
+    }
+    const result = model.finalize();
+    console.log(`Smoothed ${result.y.length} points`);
+    ```
+
+=== "C++"
+
+    ```cpp
+    #include <fastlowess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
+
+    int main() {
+        const int n = 5000;
+        std::vector<double> x(n), y(n);
+        for (int i = 0; i < n; ++i) {
+            x[i] = i * 10 * M_PI / (n - 1);
+            y[i] = std::sin(x[i] / M_PI) * std::exp(-x[i] / 30.0)
+                 + ((i * 7 + 3) % 17 / 17.0 - 0.5) * 0.3;
+        }
+
+        fastlowess::StreamingOptions opts;
+        opts.fraction   = 0.2;
+        opts.chunk_size = 1000;
+        opts.overlap    = 100;
+
+        fastlowess::StreamingLowess model(opts);
+
+        for (int start = 0; start <= 4000; start += 1000) {
+            int end = std::min(start + 1000, n);
+            model.process_chunk(
+                std::vector<double>(x.begin() + start, x.begin() + end),
+                std::vector<double>(y.begin() + start, y.begin() + end)
+            );
+        }
+        auto result = model.finalize().value();
+        std::cout << "Smoothed " << result.y_vector().size() << " points\n";
+        return 0;
+    }
+    ```
+
+---
+
 ## Next Steps
 
-- [Concepts](concepts.md) — Understand how LOWESS works
-- [Parameters](../user-guide/parameters.md) — All configuration options
-- [Execution Modes](../user-guide/adapters.md) — Batch, Streaming, Online
-- [API](../api/index.md) — Full references
+| Topic | Link |
+| --- | --- |
+| How LOWESS works | [Concepts](concepts.md) |
+| All parameters explained | [Parameters](../user-guide/parameters.md) |
+| Batch vs Streaming vs Online | [Execution Modes](../user-guide/adapters.md) |
+| Edge handling | [Boundary](../user-guide/boundary.md) |
+| Outlier handling in depth | [Robustness](../user-guide/robustness.md) |
+| Full API per language | [API Reference](../api/index.md) |

@@ -1,7 +1,7 @@
 <!-- markdownlint-disable MD024 MD046 -->
 # Execution Modes
 
-Choose the right struct for your use case. In Rust, `Lowess`, `StreamingLowess`, and `OnlineLowess` are dedicated wrapper types — each struct's `build()` delegates to the corresponding parallel adapter automatically.
+Choose the right adapter for your use case.
 
 ## Overview
 
@@ -20,9 +20,11 @@ graph LR
 | **Streaming** | Large files (>100K) | Chunked | Residuals, robustness |
 | **Online** | Real-time sensors | Fixed window | Incremental updates |
 
+![Adapter Comparison](../assets/diagrams/adapter_comparison.svg)
+
 ---
 
-## Batch Mode (`Lowess`)
+## Batch Adapter
 
 Standard mode for complete datasets. **Supports all features.**
 
@@ -31,6 +33,8 @@ Standard mode for complete datasets. **Supports all features.**
 - Dataset fits in memory
 - Need intervals, cross-validation, or diagnostics
 - Processing complete files
+
+![Gap Handling](../assets/diagrams/gap_handling.svg)
 
 ### Example
 
@@ -49,15 +53,14 @@ Standard mode for complete datasets. **Supports all features.**
 
 === "Python"
     ```python
-    result = fl.smooth(
-        x, y,
+    result = fl.Lowess(
         fraction=0.5,
         iterations=3,
         confidence_intervals=0.95,
         prediction_intervals=0.95,
         return_diagnostics=True,
         parallel=True
-    )
+    ).fit(x, y)
     ```
 
 === "Rust"
@@ -80,28 +83,27 @@ Standard mode for complete datasets. **Supports all features.**
     ```julia
     using FastLOWESS
 
-    result = smooth(
-        x, y,
+    result = fit(Lowess(;
         fraction=0.5,
         iterations=3,
         confidence_intervals=0.95,
         prediction_intervals=0.95,
         return_diagnostics=true,
         parallel=true
-    )
+    ), x, y)
     ```
 
 === "Node.js"
     ```javascript
     const fastlowess = require('fastlowess');
 
-    const result = fastlowess.smooth(x, y, {
+    const result = new fastlowess.Lowess({
         fraction: 0.5,
         iterations: 3,
         confidence_intervals: 0.95,
         prediction_intervals: 0.95,
         return_diagnostics: true
-    });
+    }).fit(x, y);
     ```
 
 === "WebAssembly"
@@ -121,7 +123,7 @@ Standard mode for complete datasets. **Supports all features.**
     ```cpp
     #include "fastlowess.hpp"
 
-    auto result = fastlowess::smooth(x, y, {
+    fastlowess::Lowess model({
         .fraction = 0.5,
         .iterations = 3,
         .confidence_intervals = 0.95,
@@ -129,11 +131,12 @@ Standard mode for complete datasets. **Supports all features.**
         .return_diagnostics = true,
         .parallel = true
     });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
 
-## Streaming Mode (`StreamingLowess`)
+## Streaming Adapter
 
 Process large datasets in chunks with configurable overlap.
 
@@ -149,16 +152,18 @@ Process large datasets in chunks with configurable overlap.
 | --- | --- | --- |
 | `chunk_size` | 5000 | Points per chunk |
 | `overlap` | 500 | Overlap between chunks |
-| `merge_strategy` | Average | How to merge overlaps |
+| `merge_strategy` | `"average"` | How to merge overlaps |
 
 ### Merge Strategies
 
 | Strategy | Behavior |
 | --- | --- |
-| `Average` | Average overlapping values |
-| `Left` | Keep left chunk values |
-| `Right` | Keep right chunk values |
-| `Weighted` | Distance-weighted blend |
+| `"average"` | Average overlapping values |
+| `"weighted"` | Distance-weighted blend |
+| `"left"` | Keep left chunk values |
+| `"right"` | Keep right chunk values |
+
+![Merge Strategies](../assets/diagrams/merge_comparison.svg)
 
 ### Example
 
@@ -177,14 +182,15 @@ Process large datasets in chunks with configurable overlap.
 
 === "Python"
     ```python
-    result = fl.smooth_streaming(
-        x, y,
+    model = fl.StreamingLowess(
         fraction=0.3,
         iterations=2,
         chunk_size=5000,
         overlap=500,
         merge_strategy="average"
     )
+    model.process_chunk(x, y)
+    result = model.finalize()
     ```
 
 === "Rust"
@@ -214,14 +220,15 @@ Process large datasets in chunks with configurable overlap.
     ```julia
     using FastLOWESS
 
-    result = smooth_streaming(
-        x, y,
+    model = StreamingLowess(;
         fraction=0.3,
         iterations=2,
         chunk_size=5000,
         overlap=500,
         merge_strategy="average"
     )
+    process_chunk(model, x, y)
+    result = finalize(model)
     ```
 
 === "Node.js"
@@ -270,7 +277,9 @@ Process large datasets in chunks with configurable overlap.
     opts.chunk_size = 5000;
     opts.overlap = 500;
 
-    auto result = fastlowess::streaming(x, y, opts);
+    fastlowess::StreamingLowess stream(opts);
+    (void)stream.process_chunk(x, y);
+    auto result = stream.finalize().value();
     ```
 
 ---
@@ -278,7 +287,7 @@ Process large datasets in chunks with configurable overlap.
 !!! warning "Always call finalize()"
     In Rust, always call `processor.finalize()` after processing all chunks to retrieve buffered overlap data.
 
-## Online Mode (`OnlineLowess`)
+## Online Adapter
 
 Incremental updates with a sliding window for real-time data.
 
@@ -288,20 +297,22 @@ Incremental updates with a sliding window for real-time data.
 - Need real-time smoothed values
 - Fixed memory budget
 
+![Online Adapter](../assets/diagrams/online_comparison.svg)
+
 ### Parameters
 
 | Parameter | Default | Description |
 | --- | --- | --- |
 | `window_capacity` | 1000 | Max points in window |
 | `min_points` | 2 | Points before output starts |
-| `update_mode` | Incremental | Update strategy |
+| `update_mode` | `"incremental"` | Update strategy |
 
 ### Update Modes
 
 | Mode | Behavior | Speed |
 | --- | --- | --- |
-| `Incremental` | Update only affected fits | Faster |
-| `Full` | Recompute entire window | More accurate |
+| `"incremental"` | Update only affected fits | Faster |
+| `"full"` | Recompute entire window | More accurate |
 
 ### Example
 
@@ -319,17 +330,17 @@ Incremental updates with a sliding window for real-time data.
 
 === "Python"
     ```python
-    result = fl.smooth_online(
-        x, y,
+    model = fl.OnlineLowess(
         fraction=0.2,
         iterations=1,
         window_capacity=100,
         min_points=5,
         update_mode="incremental"
     )
-
-    # result contains smoothed values for all points
-    print(result["y"])
+    for xi, yi in zip(x, y):
+        result = model.add_point(float(xi), float(yi))
+        if result is not None:
+            print(result.smoothed)
     ```
 
 === "Rust"
@@ -356,14 +367,19 @@ Incremental updates with a sliding window for real-time data.
     ```julia
     using FastLOWESS
 
-    result = smooth_online(
-        x, y,
+    model = OnlineLowess(;
         fraction=0.2,
         iterations=1,
         window_capacity=100,
         min_points=5,
         update_mode="incremental"
     )
+    for i in eachindex(x)
+        result = add_point(model, x[i], y[i])
+        if result !== nothing
+            println(result.smoothed)
+        end
+    end
     ```
 
 === "Node.js"
@@ -413,7 +429,12 @@ Incremental updates with a sliding window for real-time data.
     opts.min_points = 5;
     opts.update_mode = "incremental";
 
-    auto result = fastlowess::online(x, y, opts);
+    fastlowess::OnlineLowess model(opts);
+    for (size_t i = 0; i < x.size(); ++i) {
+        auto out = model.add_point(x[i], y[i]).value();
+        if (out.has_value())
+            std::cout << out.smoothed() << std::endl;
+    }
     ```
 
 ---
@@ -429,7 +450,6 @@ Incremental updates with a sliding window for real-time data.
 | Residuals | ✓ | ✓ | ✓ |
 | Robustness weights | ✓ | ✓ | ✓ |
 | Parallel execution | ✓ | ✓ | ✗ |
-| GPU acceleration | ✓ | ✗ | ✗ |
 
 ---
 

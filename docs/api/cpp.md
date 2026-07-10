@@ -69,10 +69,10 @@ explicit OnlineLowess(const OnlineOptions &options = {})
 **Methods:**
 
 ```cpp
-Expected<std::optional<double>> add_point(double x, double y)
+Expected<OnlineOutput> add_point(double x, double y)
 ```
 
-* Adds a single point to the model and returns the smoothed value (or `std::nullopt` if not enough points have been accumulated yet).
+* Adds a single point to the sliding window. Returns `Expected<OnlineOutput>` — check `has_value()` to see whether the window is ready.
 
 ## Options Structures
 
@@ -91,32 +91,47 @@ Expected<std::optional<double>> add_point(double x, double y)
 | `auto_converge` | `double` | NaN | Auto-convergence tolerance |
 | `confidence_intervals` | `double` | NaN | Confidence level (e.g., 0.95) |
 | `prediction_intervals` | `double` | NaN | Prediction level (e.g., 0.95) |
-| `return_diagnostics` | `bool` | false | Include diagnostics in result |
+| `return_diagnostics` | `bool` | false | Compute RMSE, MAE, R², AIC |
 | `return_residuals` | `bool` | false | Include residuals in result |
-| `return_robustness_weights` | `bool` | false | Include weights in result |
-| `parallel` | `bool` | false | Enable parallel execution |
-| `cv_method` | `std::string` | "kfold" | Cross-validation method |
-| `cv_k` | `int` | 5 | Number of CV folds |
-| `cv_fractions` | `std::vector<double>` | `{}` | Manual fractions for CV grid |
-| `custom_weights` | `std::vector<double>` | `{}` | Per-observation weights (Batch only) |
+| `return_robustness_weights` | `bool` | false | Include robustness weights in result |
+| `parallel` | `bool` | true | Enable parallel execution |
+| `cv_method` | `std::string` | "kfold" | CV method (`"kfold"` or `"loocv"`) (Batch only) |
+| `cv_k` | `int` | 5 | Number of folds for k-fold CV (Batch only) |
+| `cv_fractions` | `std::vector<double>` | `{}` | Fractions to test for cross-validation (Batch only) |
+| `cv_seed` | `uint64_t` | `0` | Random seed for CV shuffling (Batch only; 0 = random) |
+| `custom_weights` | `std::vector<double>` | `{}` | Per-observation case weights — passed to `fit()`, not the constructor (Batch only) |
 
 ### `StreamingOptions` (inherits `LowessOptions`)
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `chunk_size` | `int` | 5000 | Data chunk size |
-| `overlap` | `int` | -1 | Overlap size (-1 for auto) |
-| `merge_strategy` | `std::string` | "weighted" | Merge strategy for overlap |
+| `overlap` | `int` | 500 | Overlap between chunks |
+| `merge_strategy` | `std::string` | "weighted_average" | Strategy for blending overlap regions |
 
 ### `OnlineOptions` (inherits `LowessOptions`)
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `window_capacity` | `int` | 1000 | Max window size |
-| `min_points` | `int` | 2 | Min points before smoothing |
-| `update_mode` | `std::string` | "full" | Update mode ("full" or "incremental") |
+| `window_capacity` | `int` | 1000 | Max points in sliding window |
+| `min_points` | `int` | 3 | Min points before smoothing starts |
+| `update_mode` | `std::string` | "full" | Update mode (`"full"` or `"incremental"`) |
+| `parallel` | `bool` | `false` | Enable parallel execution (off by default; online LOWESS fits one point at a time) |
 
 ## Result Structure
+
+### `fastlowess::OnlineOutput`
+
+Returned (inside `Expected`) by `add_point()`. Check `has_value()` before reading fields.
+
+| Method | Return Type | Description |
+| --- | --- | --- |
+| `has_value()` | `bool` | `false` while window fills; `true` when output is ready |
+| `smoothed()` | `double` | Smoothed value for the latest point |
+| `std_error()` | `double` | Standard error (NaN if not computed) |
+| `residual()` | `double` | Residual y − smoothed (NaN if not computed) |
+| `robustness_weight()` | `double` | Robustness weight (NaN if not computed) |
+| `iterations_used()` | `int` | Robustness iterations performed (−1 if N/A) |
 
 ### `fastlowess::LowessResult`
 
@@ -124,81 +139,82 @@ A RAII wrapper around the C result struct `fastlowess_CppLowessResult`.
 
 | Method | Return Type | Description |
 | --- | --- | --- |
-| `x_vector()` | `std::vector<double>` | Smoothed X coordinates |
-| `y_vector()` | `std::vector<double>` | Smoothed Y coordinates |
-| `valid()` | `bool` | True if result is valid |
-| `error()` | `std::string` | Error message if failed |
-| `diagnostics()` | `Diagnostics` | Diagnostic metrics struct |
-| `residuals()` | `std::vector<double>` | Residuals (if requested) |
-| `standard_errors()` | `std::vector<double>` | Standard errors |
-| `confidence_lower()` | `std::vector<double>` | Lower CI bounds |
-| `confidence_upper()` | `std::vector<double>` | Upper CI bounds |
-| `prediction_lower()` | `std::vector<double>` | Lower PI bounds |
-| `prediction_upper()` | `std::vector<double>` | Upper PI bounds |
-| `robustness_weights()` | `std::vector<double>` | Robustness weights |
-| `iterations_used()` | `int` | Iterations actually used |
-| `fraction_used()` | `double` | Fraction actually used |
+| `x_vector()` | `std::vector<double>` | Sorted x values |
+| `y_vector()` | `std::vector<double>` | Smoothed y values |
+| `fraction_used()` | `double` | Fraction used (set or selected by CV) |
+| `iterations_used()` | `int` | Robustness iterations actually performed (-1 = N/A) |
+| `standard_errors()` | `std::vector<double>` | Per-point standard errors (empty if not computed) |
+| `confidence_lower()` | `std::vector<double>` | Lower confidence bounds (empty if not computed) |
+| `confidence_upper()` | `std::vector<double>` | Upper confidence bounds (empty if not computed) |
+| `prediction_lower()` | `std::vector<double>` | Lower prediction bounds (empty if not computed) |
+| `prediction_upper()` | `std::vector<double>` | Upper prediction bounds (empty if not computed) |
+| `residuals()` | `std::vector<double>` | Residuals (if `return_residuals`; empty if not computed) |
+| `robustness_weights()` | `std::vector<double>` | Robustness weights (if `return_robustness_weights`; empty if not computed) |
+| `cv_scores()` | `std::vector<double>` | CV score per tested fraction (empty if CV not run) |
+| `diagnostics()` | `Diagnostics` | Fit metrics — check `diagnostics().has_value()` before use (if `return_diagnostics`) |
 
 ### `fastlowess::Diagnostics`
 
-| Field | Type | Description |
+All accessors are const methods (not public fields):
+
+| Method | Return Type | Description |
 | --- | --- | --- |
-| `rmse` | `double` | Root Mean Squared Error |
-| `mae` | `double` | Mean Absolute Error |
-| `r_squared` | `double` | R-squared |
-| `residual_sd` | `double` | Residual standard deviation |
-| `effective_df` | `double` | Effective degrees of freedom |
-| `aic` | `double` | AIC |
-| `aicc` | `double` | AICc |
+| `rmse()` | `double` | Root Mean Squared Error |
+| `mae()` | `double` | Mean Absolute Error |
+| `r_squared()` | `double` | R-squared |
+| `residual_sd()` | `double` | Residual standard deviation |
+| `effective_df()` | `double` | Effective degrees of freedom (NaN if not computed) |
+| `aic()` | `double` | AIC (NaN if not computed) |
+| `aicc()` | `double` | AICc (NaN if not computed) |
 
-## String Options
+## Options
 
-### Weight Functions
+### weight_function
 
 * `"tricube"` (default)
 * `"epanechnikov"`
 * `"gaussian"`
-* `"uniform"`
-* `"biweight"`
-* `"triangle"`
+* `"uniform"` (alias: `"boxcar"`)
+* `"biweight"` (alias: `"bisquare"`)
+* `"triangle"` (alias: `"triangular"`)
 * `"cosine"`
 
-### Robustness Methods
+### robustness_method
 
-* `"bisquare"` (default)
+* `"bisquare"` (default; alias: `"biweight"`)
 * `"huber"`
 * `"talwar"`
 
-### Boundary Policies
+### boundary_policy
 
-* `"extend"` (default - linear extrapolation)
-* `"reflect"`
+* `"extend"` (default; alias: `"pad"`)
+* `"reflect"` (alias: `"mirror"`)
 * `"zero"`
-* `"noboundary"`
+* `"noboundary"` (alias: `"none"`)
 
-### Scaling Methods
+### scaling_method
 
-* `"mad"` (default - Median Absolute Deviation)
-* `"mar"` (Median Absolute Residual)
-* `"mean"` (Mean Absolute Residual)
+* `"mad"` (default; alias: `"median_absolute_deviation"`)
+* `"mar"` (alias: `"median_absolute_residual"`)
+* `"mean"` (alias: `"mean_absolute_residual"`)
 
-### Zero Weight Fallback
+### zero_weight_fallback
 
-* `"use_local_mean"` (default)
-* `"return_original"`
-* `"return_none"`
+* `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
+* `"return_original"` (alias: `"original"`)
+* `"return_none"` (alias: `"none"`)
 
-### Merge Strategies (Streaming)
+### merge_strategy
 
-* `"weighted"` (default - weighted average of overlapping chunks)
-* `"average"`
-* `"left"`
-* `"right"`
+* `"weighted_average"` (default; alias: `"weighted"`)
+* `"average"` (alias: `"mean"`)
+* `"take_first"` (alias: `"first"`)
+* `"take_last"` (alias: `"last"`)
 
-### Update Modes (Online)
+### update_mode
 
-* `"full"` (default - re-smooth entire window)
-* `"incremental"` (O(1) update using existing fit)
+* `"full"` (default; alias: `"resmooth"`)
+* `"incremental"` (alias: `"single"`)
 
 ## Example
 
@@ -214,10 +230,10 @@ int main() {
     opts.fraction = 0.5;
     
     fastlowess::Lowess model(opts);
-    auto result = model.fit(x, y);
+    auto expected = model.fit(x, y);
 
-    if (result.valid()) {
-        auto y_hat = result.y_vector();
+    if (expected.has_value()) {
+        auto y_hat = expected.value().y_vector();
         for (double val : y_hat) {
             std::cout << val << " ";
         }

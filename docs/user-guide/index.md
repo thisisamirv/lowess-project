@@ -53,6 +53,30 @@ Comprehensive documentation for all LOWESS parameters and features.
 
     [:octicons-arrow-right-24: Cross-Validation](cross-validation.md)
 
+- :material-border-outside: **Boundary Handling**
+
+    ---
+
+    Edge strategies to reduce boundary bias
+
+    [:octicons-arrow-right-24: Boundary](boundary.md)
+
+- :material-scale-balance: **Scaling Methods**
+
+    ---
+
+    Residual scale estimation for robustness iterations
+
+    [:octicons-arrow-right-24: Scaling](scaling.md)
+
+- :material-merge: **Merge Strategies**
+
+    ---
+
+    Reconciling overlapping chunks in Streaming mode
+
+    [:octicons-arrow-right-24: Merge](merge.md)
+
 - :material-weight: **Custom Weights**
 
     ---

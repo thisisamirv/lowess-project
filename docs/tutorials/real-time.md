@@ -28,7 +28,11 @@ For true real-time applications where each point must be processed immediately.
         min_points = 5,
         update_mode = "incremental"
     )
-    result <- model$add_point(times[[length(times)]], temperatures[[length(temperatures)]])
+    for (i in seq_along(times)) {
+        result <- model$add_point(times[i], temperatures[i])
+        if (!is.null(result))
+            cat(sprintf("Time %d: %.2f\n", times[i], result$smoothed))
+    }
     ```
 
 === "Python"
@@ -43,16 +47,16 @@ For true real-time applications where each point must be processed immediately.
     temperatures = 20 + 5 * np.sin(times / 10) + np.random.normal(0, 1, n_readings)
 
     # Process with online mode
-    result = fl.smooth_online(
-        times, temperatures,
+    online = fl.OnlineLowess(
         fraction=0.3,
         window_capacity=25,    # Keep last 25 points
         min_points=5,          # Wait for 5 points before output
         update_mode="incremental"
     )
-
-    # Result contains smoothed values for each valid point
-    print("Smoothed temperatures:", result["y"])
+    for xi, yi in zip(times, temperatures):
+        result = online.add_point(float(xi), float(yi))
+        if result is not None:
+            print(f"Time {xi:.0f}: smoothed = {result.smoothed:.2f}")
     ```
 
 === "Rust"
@@ -69,11 +73,11 @@ For true real-time applications where each point must be processed immediately.
 
     // Simulate real-time data arrival
     for i in 0..100 {
-        let x = i as f64;
-        let y = 20.0 + 5.0 * (x / 10.0).sin() + rand::random::<f64>();
-        
-        if let Some(output) = processor.add_point(x, y)? {
-            println!("Time {}: smoothed = {:.2}", x, output.smoothed);
+        let xi = i as f64;
+        let yi = 20.0 + 5.0 * (xi / 10.0).sin() + (xi * 1.7).sin() * 0.5;
+
+        if let Some(output) = processor.add_point(&[xi], yi)? {
+            println!("Time {}: smoothed = {:.2}", xi, output.smoothed);
         }
     }
     ```
@@ -87,15 +91,18 @@ For true real-time applications where each point must be processed immediately.
     temperatures = 20.0 .+ 5.0 .* sin.(times ./ 10.0) .+ randn(100)
 
     # Process with online mode
-    result = smooth_online(
-        times, temperatures,
+    model = OnlineLowess(;
         fraction=0.3,
         window_capacity=25,
         min_points=5,
         update_mode="incremental"
     )
-
-    println("Smoothed temperatures: ", result.y)
+    for i in eachindex(times)
+        result = add_point(model, times[i], temperatures[i])
+        if result !== nothing
+            println("Time $(times[i]): smoothed = $(round(result.smoothed; digits=2))")
+        end
+    end
     ```
 
 === "Node.js"
@@ -112,9 +119,9 @@ For true real-time applications where each point must be processed immediately.
         const x = i;
         const y = 20 + 5 * Math.sin(x / 10) + Math.random();
         
-        const smoothed = processor.update(x, y);
-        if (smoothed !== null) {
-            console.log(`Time ${x}: smoothed = ${smoothed.toFixed(2)}`);
+        const res = processor.add_point(x, y);
+        if (res !== null) {
+            console.log(`Time ${x}: smoothed = ${res.smoothed.toFixed(2)}`);
         }
     }
     ```
@@ -130,9 +137,9 @@ For true real-time applications where each point must be processed immediately.
 
     // Simulate real-time data arrival
     for (let i = 0; i < readings.length; i++) {
-        const smoothed = processor.update(readings[i].x, readings[i].y);
-        if (smoothed !== null) {
-            // Update dashboard UI
+        const res = processor.add_point(readings[i].x, readings[i].y);
+        if (res !== undefined) {
+            // Update dashboard UI with res.smoothed
         }
     }
     ```
@@ -149,11 +156,12 @@ For true real-time applications where each point must be processed immediately.
     opts.min_points = 5;
     opts.update_mode = "incremental";
 
-    auto result = fastlowess::online(times, temperatures, opts);
-
-    // Result contains smoothed values
-    for (size_t i = 0; i < result.size(); ++i) {
-        std::cout << "Time " << result.x(i) << ": " << result.y(i) << std::endl;
+    fastlowess::OnlineLowess model(opts);
+    for (size_t i = 0; i < times.size(); ++i) {
+        auto res = model.add_point(times[i], temperatures[i]).value();
+        if (res.has_value()) {
+            std::cout << "Time " << times[i] << ": " << res.smoothed() << std::endl;
+        }
     }
     ```
 
@@ -174,7 +182,7 @@ For large datasets that arrive in batches or files.
         fraction = 0.05,
         chunk_size = 10000,
         overlap = 1000,
-        merge_strategy = "weighted"
+        merge_strategy = "weighted_average"
     )
     result <- model$process_chunk(x, y)
     final <- model$finalize()
@@ -193,15 +201,16 @@ For large datasets that arrive in batches or files.
     x = np.arange(total_points, dtype=float)
     y = np.sin(x / 1000) + np.random.normal(0, 0.1, total_points)
     
-    result = fl.smooth_streaming(
-        x, y,
+    model = fl.StreamingLowess(
         fraction=0.05,
         chunk_size=10000,
         overlap=1000,
-        merge_strategy="weighted"
+        merge_strategy="weighted_average"
     )
+    model.process_chunk(x, y)
+    result = model.finalize()
     
-    print(f"Processed {len(result['y'])} points")
+    print(f"Processed {len(result.y)} points")
     ```
 
 === "Rust"
@@ -211,17 +220,17 @@ For large datasets that arrive in batches or files.
     let mut processor = StreamingLowess::new()
         .fraction(0.1)
         .iterations(2)
-        .chunk_size(5000)
-        .overlap(500)
+        .chunk_size(50)
+        .overlap(10)
         .merge_strategy("weighted_average")
         .build()?;
 
     // Process chunks as they arrive
-    let result1 = processor.process_chunk(&chunk1_x, &chunk1_y)?;
-    let result2 = processor.process_chunk(&chunk2_x, &chunk2_y)?;
+    processor.process_chunk(&chunk1_x, &chunk1_y)?;
+    processor.process_chunk(&chunk2_x, &chunk2_y)?;
 
     // CRITICAL: Get buffered overlap data
-    let final_result = processor.finalize()?;
+    let final_result = processor.finalize()?;;
     ```
 
 === "Julia"
@@ -229,17 +238,18 @@ For large datasets that arrive in batches or files.
     using FastLOWESS
 
     # Large dataset
-    x = collect(range(0, 100000, step=1))
+    x = collect(0.0:1.0:100000.0)
     y = sin.(x ./ 1000) .+ randn(length(x)) .* 0.1
 
     # Streaming mode handles everything internally
-    result = smooth_streaming(
-        x, y,
+    model = StreamingLowess(;
         fraction=0.05,
         chunk_size=10000,
         overlap=1000,
-        merge_strategy="weighted"
+        merge_strategy="weighted_average"
     )
+    process_chunk(model, x, y)
+    result = finalize(model)
     ```
 
 === "Node.js"
@@ -284,9 +294,11 @@ For large datasets that arrive in batches or files.
     opts.chunk_size = 5000;
     opts.overlap = 500;
 
-    auto result = fastlowess::streaming(x, y, opts);
+    fastlowess::StreamingLowess stream(opts);
+    (void)stream.process_chunk(x, y);
+    auto result = stream.finalize().value();
 
-    std::cout << "Processed " << result.size() << " points" << std::endl;
+    std::cout << "Processed " << result.y_vector().size() << " points" << std::endl;
     ```
 
 !!! warning "Always call finalize()"
@@ -343,8 +355,8 @@ For large datasets that arrive in batches or files.
             data_y = data_y[-window_capacity:]
         
         if len(data_x) >= 5:
-            result = fl.smooth(np.array(data_x), np.array(data_y), fraction=0.4)
-            current_smoothed = result["y"][-1]
+            result = fl.Lowess(fraction=0.4).fit(np.array(data_x, dtype=float), np.array(data_y, dtype=float))
+            current_smoothed = result.y[-1]
     ```
 
 === "Node.js"
@@ -366,7 +378,7 @@ For large datasets that arrive in batches or files.
         if (dataX.length >= 5) {
             const xArr = new Float64Array(dataX);
             const yArr = new Float64Array(dataY);
-            const result = fl.smooth(xArr, yArr, { fraction: 0.4 });
+            const result = new fl.Lowess({ fraction: 0.4 }).fit(xArr, yArr);
             const currentSmoothed = result.y[result.y.length - 1];
         }
     }
@@ -407,8 +419,12 @@ For large datasets that arrive in batches or files.
             windowY.erase(windowY.begin());
         }
 
-        auto result = fastlowess::smooth(windowX, windowY, { .fraction = 0.4 });
-        const auto smoothed = result.y.back();
+        fastlowess::LowessOptions sw_opts;
+        sw_opts.fraction = 0.4;
+        fastlowess::Lowess model(sw_opts);
+        auto result = model.fit(windowX, windowY).value();
+        const auto smoothed = result.y_vector().back();
+        (void)smoothed;
     }
     ```
 
@@ -430,7 +446,7 @@ For large datasets that arrive in batches or files.
 | --- | --- |
 | `chunk_size` | Balance memory vs. processing overhead |
 | `overlap` | 10–20% of chunk_size for smooth transitions |
-| `merge_strategy` | `"weighted"` for best quality, `"average"` for simplicity |
+| `merge_strategy` | `"weighted_average"` for best quality, `"average"` for simplicity |
 
 ---
 
@@ -447,4 +463,6 @@ For large datasets that arrive in batches or files.
 ## See Also
 
 - [Execution Modes](../user-guide/adapters.md) — Detailed mode comparison
+- [Merge Strategies](../user-guide/merge.md) — Chunk reconciliation in depth
+- [Scaling Methods](../user-guide/scaling.md) — Robustness scale estimation
 - [Time Series](time-series.md) — General time series analysis

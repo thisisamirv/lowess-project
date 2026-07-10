@@ -132,7 +132,10 @@ nav:
       - Parameters: user-guide/parameters.md
       - Execution Modes: user-guide/adapters.md
       - Weight Functions: user-guide/kernels.md
+      - Boundary Handling: user-guide/boundary.md
       - Robustness: user-guide/robustness.md
+      - Scaling Methods: user-guide/scaling.md
+      - Merge Strategies: user-guide/merge.md
       - Intervals: user-guide/intervals.md
       - Cross-Validation: user-guide/cross-validation.md
       - Custom Weights: user-guide/custom-weights.md

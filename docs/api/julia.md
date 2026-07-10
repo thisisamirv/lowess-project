@@ -68,10 +68,10 @@ online = OnlineLowess(; kwargs...)
 **Methods:**
 
 ```julia
-result = add_point(online, x::Float64, y::Float64) :: Union{Float64, Nothing}
+result = add_point(online, x[1], y[1])  # returns OnlineOutput or nothing
 ```
 
-* Adds a single point to the model. Returns the smoothed value as a `Float64`, or `nothing` if not enough points have been accumulated yet.
+* Adds a single point to the sliding window. Returns `nothing` while the window is still filling (fewer than `min_points` seen), and an `OnlineOutput` once smoothing begins.
 
 ## Options Structures
 
@@ -94,44 +94,60 @@ result = add_point(online, x::Float64, y::Float64) :: Union{Float64, Nothing}
 | `return_residuals` | `Bool` | `false` | Include residuals in result |
 | `return_robustness_weights` | `Bool` | `false` | Include weights in result |
 | `parallel` | `Bool` | `true` | Enable parallel execution |
-| `cv_method` | `String` | `""` | Cross-validation method ("kfold") |
-| `cv_k` | `Int` | `5` | Number of CV folds |
-| `cv_fractions` | `Vector{Float64}` | `[]` | Manual fractions for CV grid |
-| `custom_weights` | `Vector{Float64}` | `nothing` | Per-observation weights (Batch only) |
+| `cv_method` | `String` | `"kfold"` | CV method (`"kfold"` or `"loocv"`) (Batch only) |
+| `cv_k` | `Int` | `5` | Number of folds for k-fold CV (Batch only) |
+| `cv_fractions` | `Vector{Float64}` | `Float64[]` | Fractions to test for cross-validation (Batch only) |
+| `cv_seed` | `Union{Int, Nothing}` | `nothing` | Random seed for cross-validation shuffling (Batch only) |
+| `custom_weights` | `Union{Vector{Float64}, Nothing}` | `nothing` | Per-observation case weights — passed to `fit()`, not the constructor (Batch only) |
 
 ### `StreamingOptions` (inherits `LowessOptions`)
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `chunk_size` | `Int` | `5000` | Data chunk size |
-| `overlap` | `Int` | `500` | Overlap size (-1 for auto) |
-| `merge_strategy` | `String` | `"weighted"` | Merge strategy for overlap |
+| `overlap` | `Int` | `500` | Overlap between chunks |
+| `merge_strategy` | `String` | `"weighted_average"` | Strategy for blending overlap regions |
 
 ### `OnlineOptions` (inherits `LowessOptions`)
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `window_capacity` | `Int` | `1000` | Max window size |
-| `min_points` | `Int` | `2` | Min points before smoothing |
-| `update_mode` | `String` | `"incremental"` | Update mode ("full" or "incremental") |
+| `window_capacity` | `Int` | `1000` | Max points in sliding window |
+| `min_points` | `Int` | `3` | Min points before smoothing starts |
+| `update_mode` | `String` | `"full"` | Update mode (`"full"` or `"incremental"`) |
+| `parallel` | `Bool` | `false` | Enable parallel execution (off by default; online LOWESS fits one point at a time) |
 
 ## Result Structure
+
+### `OnlineOutput`
+
+Returned by `add_point()` once the window has enough points (`nothing` until then).
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `smoothed` | `Float64` | Smoothed value for the latest point |
+| `std_error` | `Union{Float64, Nothing}` | Standard error (if requested) |
+| `residual` | `Union{Float64, Nothing}` | Residual y − smoothed (if requested) |
+| `robustness_weight` | `Union{Float64, Nothing}` | Robustness weight (if requested) |
+| `iterations_used` | `Union{Int, Nothing}` | Robustness iterations performed |
 
 ### `LowessResult`
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `x` | `Vector{Float64}` | Smoothed X coordinates |
-| `y` | `Vector{Float64}` | Smoothed Y coordinates |
-| `valid` | `Bool` | True if result is valid |
-| `error` | `String` | Error message if failed |
-| `diagnostics` | `Diagnostics` | Diagnostic metrics struct |
-| `residuals` | `Vector{Float64}` | Residuals (if requested) |
-| `confidence_lower` | `Vector{Float64}` | Lower CI bounds |
-| `confidence_upper` | `Vector{Float64}` | Upper CI bounds |
-| `prediction_lower` | `Vector{Float64}` | Lower PI bounds |
-| `prediction_upper` | `Vector{Float64}` | Upper PI bounds |
-| `robustness_weights` | `Vector{Float64}` | Robustness weights |
+| `x` | `Vector{Float64}` | Sorted x values |
+| `y` | `Vector{Float64}` | Smoothed y values |
+| `fraction_used` | `Float64` | Fraction used (set or selected by CV) |
+| `iterations_used` | `Union{Int, Nothing}` | Robustness iterations actually performed |
+| `standard_errors` | `Union{Vector{Float64}, Nothing}` | Per-point standard errors |
+| `confidence_lower` | `Union{Vector{Float64}, Nothing}` | Lower confidence bounds |
+| `confidence_upper` | `Union{Vector{Float64}, Nothing}` | Upper confidence bounds |
+| `prediction_lower` | `Union{Vector{Float64}, Nothing}` | Lower prediction bounds |
+| `prediction_upper` | `Union{Vector{Float64}, Nothing}` | Upper prediction bounds |
+| `residuals` | `Union{Vector{Float64}, Nothing}` | Residuals (if `return_residuals`) |
+| `robustness_weights` | `Union{Vector{Float64}, Nothing}` | Robustness weights (if `return_robustness_weights`) |
+| `cv_scores` | `Union{Vector{Float64}, Nothing}` | CV score per tested fraction |
+| `diagnostics` | `Union{Diagnostics, Nothing}` | Fit metrics (if `return_diagnostics`) |
 
 ### `Diagnostics`
 
@@ -141,58 +157,58 @@ result = add_point(online, x::Float64, y::Float64) :: Union{Float64, Nothing}
 | `mae` | `Float64` | Mean Absolute Error |
 | `r_squared` | `Float64` | R-squared |
 | `residual_sd` | `Float64` | Residual standard deviation |
-| `effective_df` | `Float64` | Effective degrees of freedom |
-| `aic` | `Float64` | AIC |
-| `aicc` | `Float64` | AICc |
+| `effective_df` | `Float64` | Effective degrees of freedom (NaN if not computed) |
+| `aic` | `Float64` | AIC (NaN if not computed) |
+| `aicc` | `Float64` | AICc (NaN if not computed) |
 
-## String Options
+## Options
 
-### Weight Functions
+### weight_function
 
 * `"tricube"` (default)
 * `"epanechnikov"`
 * `"gaussian"`
-* `"uniform"`
-* `"biweight"`
-* `"triangle"`
+* `"uniform"` (alias: `"boxcar"`)
+* `"biweight"` (alias: `"bisquare"`)
+* `"triangle"` (alias: `"triangular"`)
 * `"cosine"`
 
-### Robustness Methods
+### robustness_method
 
-* `"bisquare"` (default)
+* `"bisquare"` (default; alias: `"biweight"`)
 * `"huber"`
 * `"talwar"`
 
-### Boundary Policies
+### boundary_policy
 
-* `"extend"` (default - linear extrapolation)
-* `"reflect"`
+* `"extend"` (default; alias: `"pad"`)
+* `"reflect"` (alias: `"mirror"`)
 * `"zero"`
-* `"noboundary"`
+* `"noboundary"` (alias: `"none"`)
 
-### Scaling Methods
+### scaling_method
 
-* `"mad"` (default - Median Absolute Deviation)
-* `"mar"` (Median Absolute Residual)
-* `"mean"` (Mean Absolute Residual)
+* `"mad"` (default; alias: `"median_absolute_deviation"`)
+* `"mar"` (alias: `"median_absolute_residual"`)
+* `"mean"` (alias: `"mean_absolute_residual"`)
 
-### Zero Weight Fallback
+### zero_weight_fallback
 
-* `"use_local_mean"` (default)
-* `"return_original"`
-* `"return_none"`
+* `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
+* `"return_original"` (alias: `"original"`)
+* `"return_none"` (alias: `"none"`)
 
-### Merge Strategies (Streaming)
+### merge_strategy
 
-* `"weighted"` (default - weighted average of overlapping chunks)
-* `"average"`
-* `"left"`
-* `"right"`
+* `"weighted_average"` (default; alias: `"weighted"`)
+* `"average"` (alias: `"mean"`)
+* `"take_first"` (alias: `"first"`)
+* `"take_last"` (alias: `"last"`)
 
-### Update Modes (Online)
+### update_mode
 
-* `"full"` (default - re-smooth entire window)
-* `"incremental"` (O(1) update using existing fit)
+* `"full"` (default; alias: `"resmooth"`)
+* `"incremental"` (alias: `"single"`)
 
 ## Example
 
@@ -203,14 +219,10 @@ x = collect(range(0, 10, length=100))
 y = sin.(x) .+ randn(100) .* 0.2
 
 # Configure model
-model = Lowess(fraction=0.3, iterations=3)
+model = Lowess(fraction=0.5, iterations=3)
 
-# Fit data
+# Fit data (throws on error)
 result = fit(model, x, y)
 
-if !isempty(result.error)
-    println("Error: ", result.error)
-else
-    println("Smoothed Y: ", result.y)
-end
+println("Smoothed Y: ", result.y)
 ```

@@ -102,16 +102,46 @@ make python-clean    # Clean build artifacts
 
 ```bash
 make r          # Vendor, build, check, test
+make r-coverage # Run coverage
 make r-clean    # Clean build artifacts
+```
+
+### Julia Bindings
+
+```bash
+make julia       # Format, lint, build, test, verify exports, ABI check
+make julia-clean # Clean build artifacts
+```
+
+### Node.js Bindings
+
+```bash
+make nodejs       # Format, lint, build, test
+make nodejs-clean # Clean build artifacts
+```
+
+### WebAssembly Bindings
+
+```bash
+make wasm       # Format, lint, build, test
+make wasm-clean # Clean build artifacts
+```
+
+### C++ Bindings
+
+```bash
+make cpp       # Format, lint, build, test
+make cpp-clean # Clean build artifacts
 ```
 
 ### Full Workspace
 
 ```bash
-make all       # Run checks for all components (lowess, fastLowess, python, r)
-make all-clean # Clean all build artifacts
-make docs      # Build MkDocs documentation
-make docs-serve # Serve documentation locally
+make all          # Run checks for all components (lowess, fastLowess, python, r, julia, nodejs, wasm, cpp)
+make all-coverage # Run coverage for lowess, fastLowess, python, and r
+make all-clean    # Clean all build artifacts
+make docs         # Build MkDocs documentation
+make docs-serve   # Serve documentation locally
 ```
 
 ## Workspace Structure
@@ -121,37 +151,31 @@ This monorepo uses **Cargo workspace inheritance** for centralized configuration
 ```toml
 # Root Cargo.toml
 [workspace.package]
-version = "0.99.3"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
 rust-version = "1.89"
 readme = "README.md"
-# ... and more
-
-[workspace.dependencies]
-lowess = { version = "0.99", path = "crates/lowess" }
-fastLowess = { version = "0.99", path = "crates/fastLowess" }
-# ... shared dependencies
+# ... and more shared metadata
 ```
 
-All member crates inherit from workspace:
+Each crate defines its own version and inherits shared defaults:
 
 ```toml
 # Individual crate Cargo.toml
 [package]
 name = "lowess"
-version = { workspace = true }
-authors = { workspace = true }
-readme = { workspace = true }
+version = "0.99.0"
+authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
+edition = "2024"
 # ...
 ```
 
 **Benefits:**
 
-- Single source of truth for versions and metadata
-- Update once → all crates bump together
-- Consistent MSRV across all packages
+- Shared edition, license, and MSRV across all packages
+- Consistent author and repository metadata
+- Each crate still carries its own version for independent publishing
 
 ## Project Structure
 
@@ -162,8 +186,14 @@ lowess-project/
 │   └── fastLowess/       # High-level API with adapters (Rayon + Ndarray)
 ├── bindings/
 │   ├── python/           # PyO3 bindings (fastlowess package)
-│   └── r/                # extendr bindings (rfastlowess package)
-├── tests/                # Tests
+│   ├── r/                # extendr bindings (rfastlowess package)
+│   ├── julia/            # C-API + Julia Wrapper
+│   ├── nodejs/           # NAPI-RS bindings
+│   ├── wasm/             # wasm-bindgen bindings
+│   └── cpp/              # C++17 Header-only wrapper
+├── tests/                # Workspace-level tests
+├── validation/           # R vs lowess parity validation
+├── benchmarks/           # Performance benchmarks (Criterion)
 ├── docs/                 # MkDocs documentation
 └── Makefile              # Build automation
 ```
@@ -180,7 +210,7 @@ lowess-project/
 We follow [Conventional Commits](https://www.conventionalcommits.org/):
 
 - Use `feat`, `fix`, `docs`, `refactor`, `perf`, `test`, or `chore` types.
-- Scopes are optional but helpful (e.g., `lowess`, `python`, `r`, `docs`).
+- Scopes are optional but helpful (e.g., `lowess`, `fastLowess`, `python`, `r`, `julia`, `nodejs`, `wasm`, `cpp`, `docs`).
 
 Examples:
 
@@ -203,6 +233,16 @@ cargo test -p fastLowess
 pytest tests/python/
 
 # R tests (via make r)
+
+# Julia tests
+julia --project=bindings/julia/julia tests/julia/test_FastLOWESS.jl
+
+# Node.js tests (via make nodejs)
+
+# WASM tests
+wasm-pack test --node bindings/wasm
+
+# C++ tests (via make cpp)
 ```
 
 ## License

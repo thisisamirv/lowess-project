@@ -64,11 +64,11 @@ Install the LOWESS library for your preferred language.
 
     === "Feature Flags"
 
-| Crate | Feature | Description |
-| --- | --- | --- |
-| `lowess` | `std` | Enable standard library (default) |
-| `fastLowess` | `cpu` | Enable CPU parallelism via Rayon |
-| `fastLowess` | `gpu` | Enable GPU acceleration via wgpu (beta) |
+        | Crate | Feature | Description |
+        | --- | --- | --- |
+        | `lowess` | `std` | Enable standard library (default) |
+        | `fastLowess` | `cpu` | Enable CPU parallelism via Rayon |
+        | `fastLowess` | `gpu` | Enable GPU acceleration via wgpu (beta) |
 
 === "Julia"
 
@@ -193,7 +193,7 @@ Install the LOWESS library for your preferred language.
     x <- c(1, 2, 3)
     y <- c(2, 4, 6)
     
-    result <- fastlowess(x, y)
+    result <- Lowess()$fit(x, y)
     print("Installed successfully!")
     ```
 
@@ -206,7 +206,7 @@ Install the LOWESS library for your preferred language.
     x = np.array([1.0, 2.0, 3.0])
     y = np.array([2.0, 4.0, 6.0])
     
-    result = fl.smooth(x, y)
+    result = fl.Lowess().fit(x, y)
     print("Installed successfully!")
     ```
 
@@ -235,7 +235,7 @@ Install the LOWESS library for your preferred language.
     x = [1.0, 2.0, 3.0]
     y = [2.0, 4.0, 6.0]
     
-    result = smooth(x, y)
+    result = fit(Lowess(), x, y)
     println("Installed successfully!")
     ```
 
@@ -247,7 +247,7 @@ Install the LOWESS library for your preferred language.
     const x = new Float64Array([1.0, 2.0, 3.0]);
     const y = new Float64Array([2.0, 4.0, 6.0]);
     
-    const result = fl.smooth(x, y);
+    const result = new fl.Lowess({}).fit(x, y);
     console.log("Installed successfully!");
     ```
 
@@ -278,7 +278,7 @@ Install the LOWESS library for your preferred language.
         std::vector<double> y = {2.0, 4.1, 5.9, 8.2, 9.8};
 
         fastlowess::Lowess model;
-        auto result = model.fit(x, y);
+        model.fit(x, y).value();
 
         std::cout << "Installed successfully!" << std::endl;
         return 0;

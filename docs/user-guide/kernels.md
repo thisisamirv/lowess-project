@@ -7,7 +7,7 @@ Kernel functions for distance weighting.
 
 Weight functions (kernels) determine how neighboring points contribute to each local fit. Points closer to the target receive higher weights.
 
-![Weight Functions](../assets/diagrams/ketnels.svg)
+![Weight Functions](../assets/diagrams/kernel_comparison.svg)
 
 ---
 
@@ -42,34 +42,35 @@ $$w(u) = (1 - |u|^3)^3$$
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, weight_function="tricube")
+    result = fl.Lowess(weight_function="tricube").fit(x, y)
     ```
 
 === "Rust"
     ```rust
     let model = Lowess::new()
-        .weight_function(Tricube)
+        .weight_function("tricube")
         .build()?;
     ```
 
 === "Julia"
     ```julia
-    result = smooth(x, y, weight_function="tricube")
+    result = fit(Lowess(; weight_function="tricube"), x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { weight_function: "tricube" });
+    const result = new Lowess({ weight_function: "tricube" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { weight_function: "tricube" });
+    const result = new Lowess({ weight_function: "tricube" }).fit(x, y);
     ```
 
 === "C++"
     ```cpp
-    auto result = fastlowess::smooth(x, y, { .weight_function = "tricube" });
+    fastlowess::Lowess model({ .weight_function = "tricube" });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -89,34 +90,35 @@ $$w(u) = \frac{3}{4}(1 - u^2)$$
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, weight_function="epanechnikov")
+    result = fl.Lowess(weight_function="epanechnikov").fit(x, y)
     ```
 
 === "Rust"
     ```rust
     let model = Lowess::new()
-        .weight_function(Epanechnikov)
+        .weight_function("epanechnikov")
         .build()?;
     ```
 
 === "Julia"
     ```julia
-    result = smooth(x, y, weight_function="epanechnikov")
+    result = fit(Lowess(; weight_function="epanechnikov"), x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { weight_function: "epanechnikov" });
+    const result = new Lowess({ weight_function: "epanechnikov" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { weight_function: "epanechnikov" });
+    const result = new Lowess({ weight_function: "epanechnikov" }).fit(x, y);
     ```
 
 === "C++"
     ```cpp
-    auto result = fastlowess::smooth(x, y, { .weight_function = "epanechnikov" });
+    fastlowess::Lowess model({ .weight_function = "epanechnikov" });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -136,34 +138,35 @@ $$w(u) = \exp(-u^2/2)$$
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, weight_function="gaussian")
+    result = fl.Lowess(weight_function="gaussian").fit(x, y)
     ```
 
 === "Rust"
     ```rust
     let model = Lowess::new()
-        .weight_function(Gaussian)
+        .weight_function("gaussian")
         .build()?;
     ```
 
 === "Julia"
     ```julia
-    result = smooth(x, y, weight_function="gaussian")
+    result = fit(Lowess(; weight_function="gaussian"), x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { weight_function: "gaussian" });
+    const result = new Lowess({ weight_function: "gaussian" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { weight_function: "gaussian" });
+    const result = new Lowess({ weight_function: "gaussian" }).fit(x, y);
     ```
 
 === "C++"
     ```cpp
-    auto result = fastlowess::smooth(x, y, { .weight_function = "gaussian" });
+    fastlowess::Lowess model({ .weight_function = "gaussian" });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -183,34 +186,35 @@ $$w(u) = (1 - u^2)^2$$
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, weight_function="biweight")
+    result = fl.Lowess(weight_function="biweight").fit(x, y)
     ```
 
 === "Rust"
     ```rust
     let model = Lowess::new()
-        .weight_function(Biweight)
+        .weight_function("biweight")
         .build()?;
     ```
 
 === "Julia"
     ```julia
-    result = smooth(x, y, weight_function="biweight")
+    result = fit(Lowess(; weight_function="biweight"), x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { weight_function: "biweight" });
+    const result = new Lowess({ weight_function: "biweight" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { weight_function: "biweight" });
+    const result = new Lowess({ weight_function: "biweight" }).fit(x, y);
     ```
 
 === "C++"
     ```cpp
-    auto result = fastlowess::smooth(x, y, { .weight_function = "biweight" });
+    fastlowess::Lowess model({ .weight_function = "biweight" });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -230,34 +234,35 @@ $$w(u) = \cos(\pi u / 2)$$
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, weight_function="cosine")
+    result = fl.Lowess(weight_function="cosine").fit(x, y)
     ```
 
 === "Rust"
     ```rust
     let model = Lowess::new()
-        .weight_function(Cosine)
+        .weight_function("cosine")
         .build()?;
     ```
 
 === "Julia"
     ```julia
-    result = smooth(x, y, weight_function="cosine")
+    result = fit(Lowess(; weight_function="cosine"), x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { weight_function: "cosine" });
+    const result = new Lowess({ weight_function: "cosine" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { weight_function: "cosine" });
+    const result = new Lowess({ weight_function: "cosine" }).fit(x, y);
     ```
 
 === "C++"
     ```cpp
-    auto result = fastlowess::smooth(x, y, { .weight_function = "cosine" });
+    fastlowess::Lowess model({ .weight_function = "cosine" });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -277,34 +282,35 @@ $$w(u) = 1 - |u|$$
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, weight_function="triangle")
+    result = fl.Lowess(weight_function="triangle").fit(x, y)
     ```
 
 === "Rust"
     ```rust
     let model = Lowess::new()
-        .weight_function(Triangle)
+        .weight_function("triangle")
         .build()?;
     ```
 
 === "Julia"
     ```julia
-    result = smooth(x, y, weight_function="triangle")
+    result = fit(Lowess(; weight_function="triangle"), x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { weight_function: "triangle" });
+    const result = new Lowess({ weight_function: "triangle" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { weight_function: "triangle" });
+    const result = new Lowess({ weight_function: "triangle" }).fit(x, y);
     ```
 
 === "C++"
     ```cpp
-    auto result = fastlowess::smooth(x, y, { .weight_function = "triangle" });
+    fastlowess::Lowess model({ .weight_function = "triangle" });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -324,34 +330,35 @@ $$w(u) = 1$$
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, weight_function="uniform")
+    result = fl.Lowess(weight_function="uniform").fit(x, y)
     ```
 
 === "Rust"
     ```rust
     let model = Lowess::new()
-        .weight_function(Uniform)
+        .weight_function("uniform")
         .build()?;
     ```
 
 === "Julia"
     ```julia
-    result = smooth(x, y, weight_function="uniform")
+    result = fit(Lowess(; weight_function="uniform"), x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { weight_function: "uniform" });
+    const result = new Lowess({ weight_function: "uniform" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { weight_function: "uniform" });
+    const result = new Lowess({ weight_function: "uniform" }).fit(x, y);
     ```
 
 === "C++"
     ```cpp
-    auto result = fastlowess::smooth(x, y, { .weight_function = "uniform" });
+    fastlowess::Lowess model({ .weight_function = "uniform" });
+    auto result = model.fit(x, y).value();
     ```
 
 ---

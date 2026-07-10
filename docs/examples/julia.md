@@ -63,22 +63,22 @@ x = collect(0.0:0.1:10.0)
 y = sin.(x) .+ 0.3 .* randn(length(x))
 
 # Basic smoothing
-result = smooth(x, y; fraction=0.3)
+result = fit(Lowess(fraction=0.3), x, y)
 println("Smoothed values: ", result.y[1:5])
 
 # With options
-result = smooth(x, y;
+result2 = fit(Lowess(
     fraction=0.3,
     iterations=3,
     confidence_intervals=0.95,
     return_diagnostics=true
-)
+), x, y)
 
-println("R²: ", result.diagnostics.r_squared)
+println("R²: ", result2.diagnostics.r_squared)
 
 # Access confidence intervals
-lower = result.confidence_lower
-upper = result.confidence_upper
+lower = result2.confidence_lower
+upper = result2.confidence_upper
 ```
 
 ## Features

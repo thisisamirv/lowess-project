@@ -7,7 +7,7 @@ Automated parameter selection via cross-validation.
 
 Cross-validation helps select optimal parameters (especially `fraction`) by evaluating performance on held-out data.
 
-![Cross-Validation](../assets/diagrams/cross_validation.svg)
+![Cross-Validation](../assets/diagrams/cv_comparison.svg)
 
 ---
 
@@ -30,15 +30,13 @@ Split data into K folds, train on K-1, validate on 1.
 
 === "Python"
     ```python
-    result = fl.smooth(
-        x, y,
-        cv_method="kfold",
+    result = fl.Lowess(cv_method="kfold",
         cv_k=5,
         cv_fractions=[0.2, 0.3, 0.5, 0.7]
-    )
+    ).fit(x, y)
 
-    print(f"Selected fraction: {result['fraction_used']}")
-    print(f"CV scores: {result['cv_scores']}")
+    print(f"Selected fraction: {result.fraction_used}")
+    print(f"CV scores: {result.cv_scores}")
     ```
 
 === "Rust"
@@ -46,7 +44,9 @@ Split data into K folds, train on K-1, validate on 1.
     use fastLowess::prelude::*;
 
     let model = Lowess::new()
-        .cross_validate(KFold(5, &[0.2, 0.3, 0.5, 0.7]))  // 5 folds, 4 fractions
+        .cv_method("kfold")
+        .cv_k(5)
+        .cv_fractions(vec![0.2, 0.3, 0.5, 0.7])
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -54,9 +54,8 @@ Split data into K folds, train on K-1, validate on 1.
     // The best fraction was automatically selected
     println!("Selected fraction: {}", result.fraction_used);
     
-    if let Some(cv) = &result.cv_results {
-        println!("CV scores: {:?}", cv.scores);
-        println!("Best score: {}", cv.best_score);
+    if let Some(scores) = &result.cv_scores {
+        println!("CV scores: {:?}", scores);
     }
     ```
 
@@ -64,24 +63,22 @@ Split data into K folds, train on K-1, validate on 1.
     ```julia
     using FastLOWESS
 
-    result = smooth(
-        x, y,
-        cv_method="kfold",
+    result = fit(Lowess(; cv_method="kfold",
         cv_k=5,
         cv_fractions=[0.2, 0.3, 0.5, 0.7]
-    )
+    ), x, y)
 
     println("Selected fraction: ", result.fraction_used)
-    println("CV scores: ", result.cv_results.scores)
+    println("CV scores: ", result.cv_scores)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, {
+    const result = new Lowess({
         cv_method: "kfold",
         cv_k: 5,
         cv_fractions: [0.2, 0.3, 0.5, 0.7]
-    });
+    }).fit(x, y);
 
     console.log("Selected fraction:", result.fraction_used);
     console.log("CV scores:", result.cv_scores);
@@ -89,11 +86,11 @@ Split data into K folds, train on K-1, validate on 1.
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, {
+    const result = new Lowess({
         cv_method: "kfold",
         cv_k: 5,
         cv_fractions: [0.2, 0.3, 0.5, 0.7]
-    });
+    }).fit(x, y);
 
     console.log("Selected fraction:", result.fraction_used);
     console.log("CV scores:", result.cv_scores);
@@ -108,7 +105,8 @@ Split data into K folds, train on K-1, validate on 1.
     opts.cv_method = "kfold";
     opts.cv_k = 5;
 
-    auto result = fastlowess::smooth(x, y, opts);
+    fastlowess::Lowess model(opts);
+    auto result = model.fit(x, y).value();
 
     std::cout << "Selected fraction: " << result.fraction_used() << std::endl;
     ```
@@ -130,53 +128,51 @@ Each point is held out once. Most thorough but slowest.
 
 === "Python"
     ```python
-    result = fl.smooth(
-        x, y,
-        cv_method="loocv",
+    result = fl.Lowess(cv_method="loocv",
         cv_fractions=[0.2, 0.3, 0.5, 0.7]
-    )
+    ).fit(x, y)
     ```
 
 === "Rust"
     ```rust
     let model = Lowess::new()
-        .cross_validate(LOOCV(&[0.2, 0.3, 0.5, 0.7]))
+        .cv_method("loocv")
+        .cv_fractions(vec![0.2, 0.3, 0.5, 0.7])
         .build()?;
     ```
 
 === "Julia"
     ```julia
-    result = smooth(
-        x, y,
-        cv_method="loocv",
+    result = fit(Lowess(; cv_method="loocv",
         cv_fractions=[0.2, 0.3, 0.5, 0.7]
-    )
+    ), x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, {
+    const result = new Lowess({
         cv_method: "loocv",
         cv_fractions: [0.2, 0.3, 0.5, 0.7]
-    });
+    }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, {
+    const result = new Lowess({
         cv_method: "loocv",
         cv_fractions: [0.2, 0.3, 0.5, 0.7]
-    });
+    }).fit(x, y);
     ```
 
 === "C++"
     ```cpp
     #include "fastlowess.hpp"
 
-    auto result = fastlowess::smooth(x, y, {
+    fastlowess::Lowess model({
         .cv_method = "loocv",
         .cv_fractions = {0.2, 0.3, 0.5, 0.7}
-    });
+        });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -198,50 +194,64 @@ Set a seed for reproducible fold assignments:
 
 === "Python"
     ```python
-    result = fl.smooth(
-        x, y,
-        cv_method="kfold",
+    result = fl.Lowess(cv_method="kfold",
         cv_k=5,
         cv_fractions=[0.3, 0.5, 0.7],
         cv_seed=42
-    )
+    ).fit(x, y)
     ```
 
 === "Rust"
     ```rust
     let model = Lowess::new()
-        .cross_validate(KFold(5, &[0.3, 0.5, 0.7]).seed(42))
+        .cv_method("kfold")
+        .cv_k(5)
+        .cv_fractions(vec![0.3, 0.5, 0.7])
+        .cv_seed(42)
         .build()?;
     ```
 
 === "Julia"
     ```julia
-    result = smooth(
-        x, y,
-        cv_method="kfold",
+    result = fit(Lowess(; cv_method="kfold",
         cv_k=5,
         cv_fractions=[0.3, 0.5, 0.7],
         cv_seed=42
-    )
+    ), x, y)
     ```
 
 === "Node.js"
     ```javascript
-    // Support coming soon.
+    const result = new fl.Lowess({
+        cv_method: "kfold",
+        cv_k: 5,
+        cv_fractions: [0.3, 0.5, 0.7],
+        cv_seed: 42
+    }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    // Support coming soon.
+    const result = new Lowess({
+        cv_method: "kfold",
+        cv_k: 5,
+        cv_fractions: [0.3, 0.5, 0.7],
+        cv_seed: 42
+    }).fit(x, y);
     ```
 
 === "C++"
     ```cpp
     #include "fastlowess.hpp"
 
-    auto model = fastlowess::Lowess::new()
-        .cross_validate(fastlowess::KFold(5, {0.3, 0.5, 0.7}).seed(42))
-        .build()?;
+    fastlowess::LowessOptions opts;
+    opts.cv_fractions = {0.3, 0.5, 0.7};
+    opts.cv_method = "kfold";
+    opts.cv_k = 5;
+    opts.cv_seed = 42;
+
+    fastlowess::Lowess model(opts);
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -290,8 +300,8 @@ Lower MSE indicates better fit on held-out data.
 === "Python"
     ```python
     # Example output
-    result = fl.smooth(x, y, cv_method="kfold", cv_k=5,
-                       cv_fractions=[0.1, 0.3, 0.5, 0.7])
+    result = fl.Lowess(cv_method="kfold", cv_k=5,
+                       cv_fractions=[0.1, 0.3, 0.5, 0.7]).fit(x, y)
 
     # Fraction  | CV Score (MSE)
     # 0.1       | 0.0542  ← Undersmoothed
@@ -304,7 +314,9 @@ Lower MSE indicates better fit on held-out data.
     ```rust
     // Example output
     let model = Lowess::new()
-        .cross_validate(KFold(5, &[0.1, 0.3, 0.5, 0.7]))
+        .cv_method("kfold")
+        .cv_k(5)
+        .cv_fractions(vec![0.1, 0.3, 0.5, 0.7])
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -319,8 +331,8 @@ Lower MSE indicates better fit on held-out data.
 === "Julia"
     ```julia
     # Example output
-    result = smooth(x, y, cv_method="kfold", cv_k=5,
-                    cv_fractions=[0.1, 0.3, 0.5, 0.7])
+    result = fit(Lowess(; cv_method="kfold", cv_k=5,
+                    cv_fractions=[0.1, 0.3, 0.5, 0.7]), x, y)
 
     # Fraction  | CV Score (MSE)
     # 0.1       | 0.0542  ← Undersmoothed
@@ -332,11 +344,11 @@ Lower MSE indicates better fit on held-out data.
 === "Node.js"
     ```javascript
     // Example output
-    const result = smooth(x, y, {
+    const result = new Lowess({
         cv_method: "kfold",
         cv_k: 5,
         cv_fractions: [0.1, 0.3, 0.5, 0.7]
-    });
+    }).fit(x, y);
 
     // Fraction  | CV Score (MSE)
     // 0.1       | 0.0542  ← Undersmoothed
@@ -348,11 +360,11 @@ Lower MSE indicates better fit on held-out data.
 === "WebAssembly"
     ```javascript
     // Example output
-    const result = smooth(x, y, {
+    const result = new Lowess({
         cv_method: "kfold",
         cv_k: 5,
         cv_fractions: [0.1, 0.3, 0.5, 0.7]
-    });
+    }).fit(x, y);
 
     // Fraction  | CV Score (MSE)
     // 0.1       | 0.0542  ← Undersmoothed
@@ -364,11 +376,12 @@ Lower MSE indicates better fit on held-out data.
 === "C++"
     ```cpp
     // Example output
-    auto model = fastlowess::Lowess::new()
-        .cross_validate(fastlowess::KFold(5, {0.1, 0.3, 0.5, 0.7}))
-        .build()?;
-
-    auto result = model.fit(&x, &y)?;
+    fastlowess::LowessOptions cv_opts;
+    cv_opts.cv_fractions = {0.1, 0.3, 0.5, 0.7};
+    cv_opts.cv_method = "kfold";
+    cv_opts.cv_k = 5;
+    fastlowess::Lowess model(cv_opts);
+    auto result = model.fit(x, y).value();
 
     // Fraction  | CV Score (MSE)
     // 0.1       | 0.0542  ← Undersmoothed
