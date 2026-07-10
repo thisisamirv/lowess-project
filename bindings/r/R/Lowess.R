@@ -37,6 +37,8 @@
 #' @param custom_weights Per-observation case weights. A numeric vector of the
 #'   same length as x and y. All values must be finite and non-negative.
 #'   NULL disables weighting.
+#' @param cv_seed Integer seed for the cross-validation random number
+#'   generator. \code{NULL} (default) uses a random seed.
 #'
 #' @return A Lowess object.
 #' @examples
@@ -65,7 +67,8 @@ Lowess <- function(
     cv_fractions = NULL,
     cv_method = "kfold",
     cv_k = 5L,
-    parallel = TRUE
+    parallel = TRUE,
+    cv_seed = NULL
 ) {
     validate_params(fraction = fraction, iterations = iterations)
     handle <- do.call(RLowess$new, env_args(lowess_params))

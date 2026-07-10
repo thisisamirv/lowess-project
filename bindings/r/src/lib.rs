@@ -12,16 +12,38 @@ use extendr_api::prelude::*;
 // Provide the Result alias that was removed from extendr_api::prelude in 0.9.0
 type Result<T> = std::result::Result<T, extendr_api::Error>;
 
-use fastLowess::internals::api::{Batch, LowessBuilder, Online, Streaming};
-use fastLowess::internals::binding_support::{
-    self, BoundaryPolicy, RobustnessMethod, ScalingMethod, UpdateMode, WeightFunction,
-    ZeroWeightFallback,
-};
-use fastLowess::prelude::LowessResult;
+use fastLowess::internals::api::{LowessBuilder, LowessResult};
+use fastLowess::internals::binding_support as shared_parse;
 
 // ============================================================================
 // Helper Functions
 // ============================================================================
+
+fn to_r_error(err: shared_parse::BindingError) -> Error {
+    let prefix = match err.category {
+        shared_parse::BindingErrorCategory::InvalidArg => "[invalid-arg]",
+        shared_parse::BindingErrorCategory::Runtime => "[runtime]",
+    };
+    Error::Other(format!("{} {}", prefix, err.message))
+}
+
+fn map_invalid_arg<T, E: ToString>(result: std::result::Result<T, E>) -> Result<T> {
+    shared_parse::map_invalid_arg(result).map_err(to_r_error)
+}
+
+fn map_runtime<T, E: ToString>(result: std::result::Result<T, E>) -> Result<T> {
+    shared_parse::map_runtime(result).map_err(to_r_error)
+}
+
+fn require_positive_usize(name: &str, value: i32) -> Result<usize> {
+    shared_parse::require_positive_usize(name, value)
+        .map_err(|e| to_r_error(shared_parse::BindingError::invalid_arg(e)))
+}
+
+fn require_non_negative_usize(name: &str, value: i32) -> Result<usize> {
+    shared_parse::require_non_negative_usize(name, value)
+        .map_err(|e| to_r_error(shared_parse::BindingError::invalid_arg(e)))
+}
 
 // ============================================================================
 // Stateful API: Lowess
@@ -30,7 +52,6 @@ use fastLowess::prelude::LowessResult;
 #[extendr]
 pub struct RLowess {
     builder: LowessBuilder<f64>,
-    parallel: bool,
 }
 
 #[extendr]
@@ -56,78 +77,68 @@ impl RLowess {
         cv_method: &str,
         cv_k: i32,
         parallel: bool,
+        cv_seed: Nullable<i32>,
     ) -> Result<Self> {
-        let wf =
-            binding_support::parse_weight_function(weight_function).map_err(|e| Error::Other(e))?;
-        let rm = binding_support::parse_robustness_method(robustness_method)
-            .map_err(|e| Error::Other(e))?;
-        let sm =
-            binding_support::parse_scaling_method(scaling_method).map_err(|e| Error::Other(e))?;
-        let zwf = binding_support::parse_zero_weight_fallback(zero_weight_fallback)
-            .map_err(|e| Error::Other(e))?;
-        let bp =
-            binding_support::parse_boundary_policy(boundary_policy).map_err(|e| Error::Other(e))?;
+        let fractions = match cv_fractions {
+            NotNull(v) => Some(v),
+            Null => None,
+        };
+        let seed = match cv_seed {
+            NotNull(s) => Some(s as u64),
+            Null => None,
+        };
+        let iterations = require_non_negative_usize("iterations", iterations)?;
+        let cv_k = require_positive_usize("cv_k", cv_k)?;
 
-        let mut builder = LowessBuilder::<f64>::new();
-        builder = builder.fraction(fraction);
-        builder = builder.iterations(iterations as usize);
-        builder = builder.weight_function(wf);
-        builder = builder.robustness_method(rm);
-        builder = builder.scaling_method(sm);
-        builder = builder.zero_weight_fallback(zwf);
-        builder = builder.boundary_policy(bp);
+        let builder = map_invalid_arg(shared_parse::apply_builder_options(
+            LowessBuilder::<f64>::new(),
+            shared_parse::BuilderOptionSet {
+                fraction: Some(fraction),
+                iterations: Some(iterations),
+                delta: match delta {
+                    NotNull(d) => Some(d),
+                    Null => None,
+                },
+                weight_function: Some(weight_function),
+                robustness_method: Some(robustness_method),
+                zero_weight_fallback: Some(zero_weight_fallback),
+                boundary_policy: Some(boundary_policy),
+                scaling_method: Some(scaling_method),
+                auto_converge: match auto_converge {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
+                return_residuals,
+                return_robustness_weights,
+                return_diagnostics,
+                confidence_intervals: match confidence_intervals {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
+                prediction_intervals: match prediction_intervals {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
+                parallel: Some(parallel),
+                cv_fractions: fractions.as_deref(),
+                cv_method: Some(cv_method),
+                cv_k: Some(cv_k),
+                cv_seed: seed,
+                ..Default::default()
+            },
+        ))?;
 
-        if let NotNull(d) = delta {
-            builder = builder.delta(d);
-        }
-        if let NotNull(cl) = confidence_intervals {
-            builder = builder.confidence_intervals(cl);
-        }
-        if let NotNull(pl) = prediction_intervals {
-            builder = builder.prediction_intervals(pl);
-        }
-        if return_diagnostics {
-            builder = builder.return_diagnostics();
-        }
-        if return_residuals {
-            builder = builder.return_residuals();
-        }
-        if return_robustness_weights {
-            builder = builder.return_robustness_weights();
-        }
-        if let NotNull(tol) = auto_converge {
-            builder = builder.auto_converge(tol);
-        }
-
-        // Cross-validation if fractions are provided
-        if let NotNull(fractions) = cv_fractions {
-            builder = binding_support::apply_cross_validation(
-                builder,
-                Some(&fractions),
-                Some(cv_method),
-                Some(cv_k as usize),
-                None,
-            )
-            .map_err(|e| Error::Other(e))?;
-        }
-
-        Ok(Self { builder, parallel })
+        Ok(Self { builder })
     }
 
     /// Fit the model to data
     fn fit(&self, x: &[f64], y: &[f64], custom_weights: Nullable<Vec<f64>>) -> Result<List> {
-        let mut builder = self.builder.clone();
-        if let NotNull(cw) = custom_weights {
-            builder = builder.custom_weights(cw);
-        }
-        let result = builder
-            .adapter(Batch)
-            .parallel(self.parallel)
-            .build()
-            .map_err(|e| Error::Other(e.to_string()))?
-            .fit(x, y)
-            .map_err(|e| Error::Other(e.to_string()))?;
-
+        let cw = match custom_weights {
+            NotNull(w) => Some(w),
+            Null => None,
+        };
+        let model = map_runtime(shared_parse::build_batch(self.builder.clone(), cw))?;
+        let result = map_runtime(model.fit(x, y))?;
         lowess_result_to_list(result)
     }
 }
@@ -139,8 +150,6 @@ impl RLowess {
 #[extendr]
 pub struct RStreamingLowess {
     inner: fastLowess::internals::adapters::streaming::ParallelStreamingLowess<f64>,
-    fraction: f64,
-    iterations: usize,
 }
 
 #[extendr]
@@ -151,82 +160,78 @@ impl RStreamingLowess {
         chunk_size: i32,
         overlap: Nullable<i32>,
         iterations: i32,
-        delta: Nullable<f64>,
         weight_function: &str,
         robustness_method: &str,
         scaling_method: &str,
         boundary_policy: &str,
+        zero_weight_fallback: &str,
         auto_converge: Nullable<f64>,
         return_diagnostics: bool,
+        return_residuals: bool,
         return_robustness_weights: bool,
+        merge_strategy: &str,
         parallel: bool,
+        delta: Nullable<f64>,
+        confidence_intervals: Nullable<f64>,
+        prediction_intervals: Nullable<f64>,
     ) -> Result<Self> {
-        let chunk_size = chunk_size as usize;
+        let chunk_size = require_positive_usize("chunk_size", chunk_size)?;
         let overlap_size = match overlap {
-            NotNull(o) => o as usize,
-            Null => binding_support::default_overlap(chunk_size),
+            NotNull(o) => Some(require_non_negative_usize("overlap", o)?),
+            Null => None,
         };
+        let iterations = require_non_negative_usize("iterations", iterations)?;
 
-        let wf =
-            binding_support::parse_weight_function(weight_function).map_err(|e| Error::Other(e))?;
-        let rm = binding_support::parse_robustness_method(robustness_method)
-            .map_err(|e| Error::Other(e))?;
-        let sm =
-            binding_support::parse_scaling_method(scaling_method).map_err(|e| Error::Other(e))?;
-        let bp =
-            binding_support::parse_boundary_policy(boundary_policy).map_err(|e| Error::Other(e))?;
+        let builder = map_invalid_arg(shared_parse::apply_builder_options(
+            LowessBuilder::<f64>::new(),
+            shared_parse::BuilderOptionSet {
+                fraction: Some(fraction),
+                iterations: Some(iterations),
+                delta: match delta {
+                    NotNull(d) => Some(d),
+                    Null => None,
+                },
+                weight_function: Some(weight_function),
+                robustness_method: Some(robustness_method),
+                zero_weight_fallback: Some(zero_weight_fallback),
+                boundary_policy: Some(boundary_policy),
+                scaling_method: Some(scaling_method),
+                auto_converge: match auto_converge {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
+                return_residuals,
+                return_robustness_weights,
+                return_diagnostics,
+                confidence_intervals: match confidence_intervals {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
+                prediction_intervals: match prediction_intervals {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
+                parallel: Some(parallel),
+                ..Default::default()
+            },
+        ))?;
 
-        let mut builder = LowessBuilder::<f64>::new();
-        builder = builder.fraction(fraction);
-        builder = builder.iterations(iterations as usize);
-        builder = builder.weight_function(wf);
-        builder = builder.robustness_method(rm);
-        builder = builder.scaling_method(sm);
-        builder = builder.boundary_policy(bp);
-
-        let mut builder = builder.adapter(Streaming);
-        builder = builder.chunk_size(chunk_size);
-        builder = builder.overlap(overlap_size);
-        builder = builder.parallel(parallel);
-
-        if let NotNull(d) = delta {
-            builder = builder.delta(d);
-        }
-        if let NotNull(tol) = auto_converge {
-            builder = builder.auto_converge(tol);
-        }
-        if return_diagnostics {
-            builder = builder.return_diagnostics(true);
-        }
-        if return_robustness_weights {
-            builder = builder.return_robustness_weights(true);
-        }
-
-        let model = builder.build().map_err(|e| Error::Other(e.to_string()))?;
-        Ok(Self {
-            inner: model,
-            fraction,
-            iterations: iterations as usize,
-        })
+        let model = map_runtime(shared_parse::build_streaming(
+            builder,
+            Some(chunk_size),
+            overlap_size,
+            Some(merge_strategy),
+        ))?;
+        Ok(Self { inner: model })
     }
 
     fn process_chunk(&mut self, x: &[f64], y: &[f64]) -> Result<List> {
-        let mut result = self
-            .inner
-            .process_chunk(x, y)
-            .map_err(|e| Error::Other(e.to_string()))?;
-        result.fraction_used = self.fraction;
-        result.iterations_used = Some(self.iterations);
+        let result = map_runtime(self.inner.process_chunk(x, y))?;
         lowess_result_to_list(result)
     }
 
     fn finalize(&mut self) -> Result<List> {
-        let mut result = self
-            .inner
-            .finalize()
-            .map_err(|e| Error::Other(e.to_string()))?;
-        result.fraction_used = self.fraction;
-        result.iterations_used = Some(self.iterations);
+        let result = map_runtime(self.inner.finalize())?;
         lowess_result_to_list(result)
     }
 }
@@ -238,8 +243,6 @@ impl RStreamingLowess {
 #[extendr]
 pub struct ROnlineLowess {
     inner: fastLowess::internals::adapters::online::ParallelOnlineLowess<f64>,
-    fraction: f64,
-    iterations: usize,
 }
 
 #[extendr]
@@ -250,64 +253,90 @@ impl ROnlineLowess {
         window_capacity: i32,
         min_points: i32,
         iterations: i32,
-        delta: Nullable<f64>,
         weight_function: &str,
         robustness_method: &str,
         scaling_method: &str,
         boundary_policy: &str,
+        zero_weight_fallback: &str,
         update_mode: &str,
         auto_converge: Nullable<f64>,
         return_robustness_weights: bool,
+        return_diagnostics: bool,
+        return_residuals: bool,
         parallel: bool,
+        delta: Nullable<f64>,
+        confidence_intervals: Nullable<f64>,
+        prediction_intervals: Nullable<f64>,
     ) -> Result<Self> {
-        let wf =
-            binding_support::parse_weight_function(weight_function).map_err(|e| Error::Other(e))?;
-        let rm = binding_support::parse_robustness_method(robustness_method)
-            .map_err(|e| Error::Other(e))?;
-        let sm =
-            binding_support::parse_scaling_method(scaling_method).map_err(|e| Error::Other(e))?;
-        let bp =
-            binding_support::parse_boundary_policy(boundary_policy).map_err(|e| Error::Other(e))?;
-        let um = binding_support::parse_update_mode(update_mode).map_err(|e| Error::Other(e))?;
+        let window_capacity = require_positive_usize("window_capacity", window_capacity)?;
+        let min_points = require_positive_usize("min_points", min_points)?;
+        let iterations = require_non_negative_usize("iterations", iterations)?;
 
-        let mut builder = LowessBuilder::<f64>::new();
-        builder = builder.fraction(fraction);
-        builder = builder.iterations(iterations as usize);
-        builder = builder.weight_function(wf);
-        builder = builder.robustness_method(rm);
-        builder = builder.scaling_method(sm);
-        builder = builder.boundary_policy(bp);
+        let builder = map_invalid_arg(shared_parse::apply_builder_options(
+            LowessBuilder::<f64>::new(),
+            shared_parse::BuilderOptionSet {
+                fraction: Some(fraction),
+                iterations: Some(iterations),
+                delta: match delta {
+                    NotNull(d) => Some(d),
+                    Null => None,
+                },
+                weight_function: Some(weight_function),
+                robustness_method: Some(robustness_method),
+                zero_weight_fallback: Some(zero_weight_fallback),
+                boundary_policy: Some(boundary_policy),
+                scaling_method: Some(scaling_method),
+                auto_converge: match auto_converge {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
+                return_residuals,
+                return_robustness_weights,
+                return_diagnostics,
+                confidence_intervals: match confidence_intervals {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
+                prediction_intervals: match prediction_intervals {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
+                parallel: Some(parallel),
+                ..Default::default()
+            },
+        ))?;
 
-        let mut builder = builder.adapter(Online);
-        builder = builder.window_capacity(window_capacity as usize);
-        builder = builder.min_points(min_points as usize);
-        builder = builder.update_mode(um);
-        builder = builder.parallel(parallel);
-
-        if let NotNull(d) = delta {
-            builder = builder.delta(d);
-        }
-        if let NotNull(tol) = auto_converge {
-            builder = builder.auto_converge(tol);
-        }
-        if return_robustness_weights {
-            builder = builder.return_robustness_weights(true);
-        }
-
-        let model = builder.build().map_err(|e| Error::Other(e.to_string()))?;
-        Ok(Self {
-            inner: model,
-            fraction,
-            iterations: iterations as usize,
-        })
+        let model = map_runtime(shared_parse::build_online(
+            builder,
+            Some(window_capacity),
+            Some(min_points),
+            Some(update_mode),
+        ))?;
+        Ok(Self { inner: model })
     }
 
-    fn add_point(&mut self, x: f64, y: f64) -> Result<Option<f64>> {
-        let result = self
-            .inner
-            .add_point(x, y)
-            .map_err(|e| Error::Other(e.to_string()))?;
-        Ok(result.map(|o| o.smoothed))
+    fn add_point(&mut self, x: f64, y: f64) -> Result<Nullable<List>> {
+        let output = map_runtime(self.inner.add_point(x, y))?;
+
+        match output {
+            None => Ok(Null),
+            Some(o) => {
+                let mut items: Vec<(&str, Robj)> = vec![("smoothed", o.smoothed.into_robj())];
+                if let Some(se) = o.std_error {
+                    items.push(("std_error", se.into_robj()));
+                }
+                if let Some(res) = o.residual {
+                    items.push(("residual", res.into_robj()));
+                }
+                if let Some(rw) = o.robustness_weight {
+                    items.push(("robustness_weight", rw.into_robj()));
+                }
+                if let Some(iters) = o.iterations_used {
+                    items.push(("iterations_used", (iters as i32).into_robj()));
+                }
+                Ok(NotNull(List::from_pairs(items)))
+            }
+        }
     }
 }
 

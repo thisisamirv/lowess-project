@@ -101,17 +101,38 @@ export class StreamingLowess {
 export class OnlineLowess {
     free(): void;
     constructor(options?: SmoothOptions, onlineOpts?: OnlineOptions);
-    /** Add a single point and get the smoothed value (or undefined if not enough points yet). */
-    add_point(x: number, y: number): number | undefined;
+    /** Add a single point and get the smoothed output (or undefined if not enough points yet). */
+    add_point(x: number, y: number): OnlineOutput | undefined;
+}
+
+/** Result from a single online update step. */
+export class OnlineOutput {
+    free(): void;
+    get smoothed(): number;
+    get std_error(): number | undefined;
+    get residual(): number | undefined;
+    get robustness_weight(): number | undefined;
+    get iterations_used(): number | undefined;
 }
 "#;
 
 use ::fastLowess::internals::adapters::online::ParallelOnlineLowess;
 use ::fastLowess::internals::adapters::streaming::ParallelStreamingLowess;
-use ::fastLowess::internals::api::{Batch, LowessBuilder, Online, Streaming};
+use ::fastLowess::internals::api::LowessBuilder;
 use ::fastLowess::internals::binding_support as shared_parse;
-use ::fastLowess::internals::binding_support::{MergeStrategy, UpdateMode};
 use ::fastLowess::prelude::LowessResult as InnerLowessResult;
+
+fn to_js_error(err: shared_parse::BindingError) -> JsValue {
+    JsValue::from_str(&err.message)
+}
+
+fn map_invalid_arg<T, E: ToString>(result: Result<T, E>) -> Result<T, JsValue> {
+    shared_parse::map_invalid_arg(result).map_err(to_js_error)
+}
+
+fn map_runtime<T, E: ToString>(result: Result<T, E>) -> Result<T, JsValue> {
+    shared_parse::map_runtime(result).map_err(to_js_error)
+}
 
 #[derive(Deserialize)]
 pub struct SmoothOptions {
@@ -135,7 +156,7 @@ pub struct SmoothOptions {
     pub cv_fractions: Option<Vec<f64>>,
     pub cv_method: Option<String>,
     pub cv_k: Option<u32>,
-    pub cv_seed: Option<u32>,
+    pub cv_seed: Option<u64>,
 }
 
 #[derive(Deserialize)]
@@ -164,6 +185,44 @@ pub struct Diagnostics {
     pub effective_df: Option<f64>,
     #[wasm_bindgen(js_name = residual_sd)]
     pub residual_sd: f64,
+}
+
+// Result of a single online update step.
+#[wasm_bindgen]
+pub struct OnlineOutput {
+    smoothed: f64,
+    std_error: Option<f64>,
+    residual: Option<f64>,
+    robustness_weight: Option<f64>,
+    iterations_used: Option<usize>,
+}
+
+#[wasm_bindgen]
+impl OnlineOutput {
+    #[wasm_bindgen(getter)]
+    pub fn smoothed(&self) -> f64 {
+        self.smoothed
+    }
+
+    #[wasm_bindgen(getter, js_name = "std_error")]
+    pub fn std_error(&self) -> Option<f64> {
+        self.std_error
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn residual(&self) -> Option<f64> {
+        self.residual
+    }
+
+    #[wasm_bindgen(getter, js_name = "robustness_weight")]
+    pub fn robustness_weight(&self) -> Option<f64> {
+        self.robustness_weight
+    }
+
+    #[wasm_bindgen(getter, js_name = "iterations_used")]
+    pub fn iterations_used(&self) -> Option<u32> {
+        self.iterations_used.map(|i| i as u32)
+    }
 }
 
 #[wasm_bindgen]
@@ -303,6 +362,45 @@ impl Lowess {
     }
 }
 
+fn options_to_builder(opts: Option<SmoothOptions>) -> Result<LowessBuilder<f64>, JsValue> {
+    let mut builder = LowessBuilder::<f64>::new();
+    if let Some(opts) = opts {
+        let configured_builder = map_invalid_arg(shared_parse::apply_builder_options(
+            builder,
+            shared_parse::BuilderOptionSet {
+                fraction: opts.fraction,
+                iterations: opts.iterations,
+                delta: opts.delta,
+                weight_function: opts.weight_function.as_deref(),
+                robustness_method: opts.robustness_method.as_deref(),
+                zero_weight_fallback: opts.zero_weight_fallback.as_deref(),
+                boundary_policy: opts.boundary_policy.as_deref(),
+                scaling_method: opts.scaling_method.as_deref(),
+                auto_converge: opts.auto_converge,
+                return_residuals: opts.return_residuals.unwrap_or(false),
+                return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
+                return_diagnostics: opts.return_diagnostics.unwrap_or(false),
+                return_se: opts.return_se.unwrap_or(false),
+                confidence_intervals: opts.confidence_intervals,
+                prediction_intervals: opts.prediction_intervals,
+                parallel: opts.parallel,
+                chunk_size: None,
+                overlap: None,
+                merge_strategy: None,
+                window_capacity: None,
+                min_points: None,
+                update_mode: None,
+                cv_fractions: opts.cv_fractions.as_deref(),
+                cv_method: opts.cv_method.as_deref(),
+                cv_k: opts.cv_k.map(|v| v as usize),
+                cv_seed: opts.cv_seed,
+            },
+        ))?;
+        builder = configured_builder;
+    }
+    Ok(builder)
+}
+
 fn smooth(
     x: &Float64Array,
     y: &Float64Array,
@@ -314,56 +412,13 @@ fn smooth(
     } else {
         None
     };
-    let o = opts.as_ref();
-    let mut builder = shared_parse::apply_builder_options(
-        LowessBuilder::new(),
-        shared_parse::BuilderOptionSet {
-            fraction: o.and_then(|x| x.fraction),
-            iterations: o.and_then(|x| x.iterations),
-            delta: o.and_then(|x| x.delta),
-            weight_function: o.and_then(|x| x.weight_function.as_deref()),
-            robustness_method: o.and_then(|x| x.robustness_method.as_deref()),
-            zero_weight_fallback: o.and_then(|x| x.zero_weight_fallback.as_deref()),
-            boundary_policy: o.and_then(|x| x.boundary_policy.as_deref()),
-            scaling_method: o.and_then(|x| x.scaling_method.as_deref()),
-            auto_converge: o.and_then(|x| x.auto_converge),
-            return_residuals: o.is_some_and(|x| x.return_residuals.unwrap_or(false)),
-            return_robustness_weights: o
-                .is_some_and(|x| x.return_robustness_weights.unwrap_or(false)),
-            return_diagnostics: o.is_some_and(|x| x.return_diagnostics.unwrap_or(false)),
-            return_se: o.is_some_and(|x| x.return_se.unwrap_or(false)),
-            confidence_intervals: o.and_then(|x| x.confidence_intervals),
-            prediction_intervals: o.and_then(|x| x.prediction_intervals),
-            parallel: o.and_then(|x| x.parallel),
-            chunk_size: None,
-            overlap: None,
-            merge_strategy: None,
-            window_capacity: None,
-            min_points: None,
-            update_mode: None,
-            cv_fractions: o.and_then(|x| x.cv_fractions.as_deref()),
-            cv_method: o.and_then(|x| x.cv_method.as_deref()),
-            cv_k: o.and_then(|x| x.cv_k).map(|k| k as usize),
-            cv_seed: o.and_then(|x| x.cv_seed).map(|s| s as u64),
-        },
-    )
-    .map_err(|e| JsValue::from_str(&e))?;
-
-    if let Some(cw) = custom_weights {
-        builder = builder.custom_weights(cw);
-    }
+    let builder = options_to_builder(opts)?;
 
     let x_vec = x.to_vec();
     let y_vec = y.to_vec();
 
-    let model = builder
-        .adapter(Batch)
-        .build()
-        .map_err(|e| JsValue::from_str(&e.to_string()))?;
-
-    let result = model
-        .fit(&x_vec, &y_vec)
-        .map_err(|e| JsValue::from_str(&e.to_string()))?;
+    let model = map_runtime(shared_parse::build_batch(builder, custom_weights))?;
+    let result = map_runtime(model.fit(&x_vec, &y_vec))?;
 
     Ok(LowessResult { inner: result })
 }
@@ -385,73 +440,22 @@ impl StreamingLowess {
         } else {
             None
         };
-        let sopts = if !streamingOpts.is_undefined() && !streamingOpts.is_null() {
-            Some(serde_wasm_bindgen::from_value::<StreamingOptions>(
-                streamingOpts,
-            )?)
-        } else {
-            None
-        };
-        let o = opts.as_ref();
-        let so = sopts.as_ref();
-        let builder = shared_parse::apply_builder_options(
-            LowessBuilder::new(),
-            shared_parse::BuilderOptionSet {
-                fraction: o.and_then(|x| x.fraction),
-                iterations: o.and_then(|x| x.iterations),
-                delta: o.and_then(|x| x.delta),
-                weight_function: o.and_then(|x| x.weight_function.as_deref()),
-                robustness_method: o.and_then(|x| x.robustness_method.as_deref()),
-                zero_weight_fallback: o.and_then(|x| x.zero_weight_fallback.as_deref()),
-                boundary_policy: o.and_then(|x| x.boundary_policy.as_deref()),
-                scaling_method: o.and_then(|x| x.scaling_method.as_deref()),
-                auto_converge: o.and_then(|x| x.auto_converge),
-                return_residuals: o.is_some_and(|x| x.return_residuals.unwrap_or(false)),
-                return_robustness_weights: o
-                    .is_some_and(|x| x.return_robustness_weights.unwrap_or(false)),
-                return_diagnostics: o.is_some_and(|x| x.return_diagnostics.unwrap_or(false)),
-                return_se: false,
-                confidence_intervals: None,
-                prediction_intervals: None,
-                parallel: o.and_then(|x| x.parallel),
-                chunk_size: None,
-                overlap: None,
-                merge_strategy: None,
-                window_capacity: None,
-                min_points: None,
-                update_mode: None,
-                cv_fractions: None,
-                cv_method: None,
-                cv_k: None,
-                cv_seed: None,
-            },
-        )
-        .map_err(|e| JsValue::from_str(&e))?;
+        let builder = options_to_builder(opts)?;
 
-        let mut chunk_size = 5000_usize;
-        let mut overlap = 500_usize;
-        let mut merge_strategy = MergeStrategy::WeightedAverage;
+        let (chunk_size, overlap, merge_strategy) =
+            if !streamingOpts.is_undefined() && !streamingOpts.is_null() {
+                let sopts: StreamingOptions = serde_wasm_bindgen::from_value(streamingOpts)?;
+                (sopts.chunk_size, sopts.overlap, sopts.merge_strategy)
+            } else {
+                (None, None, None)
+            };
 
-        if let Some(s) = so {
-            if let Some(cs) = s.chunk_size {
-                chunk_size = cs;
-            }
-            if let Some(ov) = s.overlap {
-                overlap = ov;
-            }
-            if let Some(ms) = &s.merge_strategy {
-                merge_strategy =
-                    shared_parse::parse_merge_strategy(ms).map_err(|e| JsValue::from_str(&e))?;
-            }
-        }
-
-        let model = builder
-            .adapter(Streaming)
-            .chunk_size(chunk_size)
-            .overlap(overlap)
-            .merge_strategy(merge_strategy)
-            .build()
-            .map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let model = map_runtime(shared_parse::build_streaming(
+            builder,
+            chunk_size,
+            overlap,
+            merge_strategy.as_deref(),
+        ))?;
 
         Ok(StreamingLowess { inner: model })
     }
@@ -464,19 +468,13 @@ impl StreamingLowess {
     ) -> Result<LowessResult, JsValue> {
         let x_vec = x.to_vec();
         let y_vec = y.to_vec();
-        let result: ::fastLowess::prelude::LowessResult<f64> = self
-            .inner
-            .process_chunk(&x_vec, &y_vec)
-            .map_err(|e: ::fastLowess::prelude::LowessError| JsValue::from_str(&e.to_string()))?;
+        let result: InnerLowessResult<f64> = map_runtime(self.inner.process_chunk(&x_vec, &y_vec))?;
         Ok(LowessResult { inner: result })
     }
 
     #[wasm_bindgen(skip_typescript)]
     pub fn finalize(&mut self) -> Result<LowessResult, JsValue> {
-        let result: ::fastLowess::prelude::LowessResult<f64> = self
-            .inner
-            .finalize()
-            .map_err(|e: ::fastLowess::prelude::LowessError| JsValue::from_str(&e.to_string()))?;
+        let result: InnerLowessResult<f64> = map_runtime(self.inner.finalize())?;
         Ok(LowessResult { inner: result })
     }
 }
@@ -498,80 +496,35 @@ impl OnlineLowess {
         } else {
             None
         };
-        let oopts = if !onlineOpts.is_undefined() && !onlineOpts.is_null() {
-            Some(serde_wasm_bindgen::from_value::<OnlineOptions>(onlineOpts)?)
-        } else {
-            None
-        };
-        let o = opts.as_ref();
-        let oo = oopts.as_ref();
-        let builder = shared_parse::apply_builder_options(
-            LowessBuilder::new(),
-            shared_parse::BuilderOptionSet {
-                fraction: o.and_then(|x| x.fraction),
-                iterations: o.and_then(|x| x.iterations),
-                delta: None,
-                weight_function: None,
-                robustness_method: None,
-                zero_weight_fallback: None,
-                boundary_policy: None,
-                scaling_method: None,
-                auto_converge: None,
-                return_residuals: false,
-                return_robustness_weights: false,
-                return_diagnostics: false,
-                return_se: false,
-                confidence_intervals: None,
-                prediction_intervals: None,
-                parallel: o.and_then(|x| x.parallel),
-                chunk_size: None,
-                overlap: None,
-                merge_strategy: None,
-                window_capacity: None,
-                min_points: None,
-                update_mode: None,
-                cv_fractions: None,
-                cv_method: None,
-                cv_k: None,
-                cv_seed: None,
-            },
-        )
-        .map_err(|e| JsValue::from_str(&e))?;
+        let builder = options_to_builder(opts)?;
 
-        let mut window_capacity = 100_usize;
-        let mut min_points = 2_usize;
-        let mut update_mode = UpdateMode::Full;
+        let (window_capacity, min_points, update_mode) =
+            if !onlineOpts.is_undefined() && !onlineOpts.is_null() {
+                let oopts: OnlineOptions = serde_wasm_bindgen::from_value(onlineOpts)?;
+                (oopts.window_capacity, oopts.min_points, oopts.update_mode)
+            } else {
+                (None, None, None)
+            };
 
-        if let Some(online_o) = oo {
-            if let Some(wc) = online_o.window_capacity {
-                window_capacity = wc;
-            }
-            if let Some(mp) = online_o.min_points {
-                min_points = mp;
-            }
-            if let Some(um) = &online_o.update_mode {
-                update_mode =
-                    shared_parse::parse_update_mode(um).map_err(|e| JsValue::from_str(&e))?;
-            }
-        }
-
-        let model = builder
-            .adapter(Online)
-            .window_capacity(window_capacity)
-            .min_points(min_points)
-            .update_mode(update_mode)
-            .build()
-            .map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let model = map_runtime(shared_parse::build_online(
+            builder,
+            window_capacity,
+            min_points,
+            update_mode.as_deref(),
+        ))?;
 
         Ok(OnlineLowess { inner: model })
     }
 
-    #[wasm_bindgen(skip_typescript)]
-    pub fn add_point(&mut self, x: f64, y: f64) -> Result<Option<f64>, JsValue> {
-        let result = self
-            .inner
-            .add_point(x, y)
-            .map_err(|e: ::fastLowess::prelude::LowessError| JsValue::from_str(&e.to_string()))?;
-        Ok(result.map(|o| o.smoothed))
+    #[wasm_bindgen(js_name = "add_point", skip_typescript)]
+    pub fn add_point(&mut self, x: f64, y: f64) -> Result<Option<OnlineOutput>, JsValue> {
+        let output = map_invalid_arg(self.inner.add_point(x, y))?;
+        Ok(output.map(|o| OnlineOutput {
+            smoothed: o.smoothed,
+            std_error: o.std_error,
+            residual: o.residual,
+            robustness_weight: o.robustness_weight,
+            iterations_used: o.iterations_used,
+        }))
     }
 }

@@ -73,18 +73,18 @@ int main() {
 
     size_t total_emitted = 0;
     for (size_t point_index = 0; point_index < point_count; ++point_index) {
-      auto smoothed =
+      auto output =
           model.add_point(x_values[point_index], y_values[point_index]).value();
 
-      if (!std::isnan(smoothed)) {
+      if (output.has_value()) {
         ++total_emitted;
       }
 
       if (point_index > 0 && point_index % k_progress_interval == 0 &&
-          !std::isnan(smoothed)) {
+          output.has_value()) {
         std::cout << "  t=" << point_index
                   << " original=" << y_values[point_index]
-                  << " smoothed=" << smoothed << '\n';
+                  << " smoothed=" << output.smoothed() << '\n';
       }
     }
 

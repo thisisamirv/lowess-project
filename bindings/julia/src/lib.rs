@@ -6,16 +6,88 @@
 #![allow(unsafe_op_in_unsafe_fn)]
 
 use ptr::null_mut;
+use std::cell::RefCell;
+use std::ffi::CString;
 use std::os::raw::{c_char, c_double, c_int, c_ulong};
 use std::panic::catch_unwind;
 use std::ptr;
 use std::slice::from_raw_parts;
 
-use fastLowess::internals::api::{Batch, LowessBuilder, Online, Streaming};
-use fastLowess::internals::binding_support::{
-    self, BoundaryPolicy, RobustnessMethod, ScalingMethod, WeightFunction, ZeroWeightFallback,
-};
+use fastLowess::internals::api::LowessBuilder;
+use fastLowess::internals::binding_support as shared_parse;
 use fastLowess::prelude::LowessResult;
+
+thread_local! {
+    static JL_LAST_ERROR: RefCell<Option<CString>> = const { RefCell::new(None) };
+}
+
+fn set_last_error_message(msg: &str) {
+    let cmsg = shared_parse::to_cstring_lossy(msg);
+    JL_LAST_ERROR.with(|slot| {
+        *slot.borrow_mut() = Some(cmsg);
+    });
+}
+
+fn clear_last_error_message() {
+    JL_LAST_ERROR.with(|slot| {
+        *slot.borrow_mut() = None;
+    });
+}
+
+fn null_with_last_error<T>(msg: &str) -> *mut T {
+    set_last_error_message(msg);
+    null_mut()
+}
+
+fn setter_unsupported_constructor_only(name: &str) {
+    set_last_error_message(&shared_parse::setter_unsupported_constructor_only_message(
+        name,
+    ));
+}
+
+/// Export the last error message set by a failed constructor.
+///
+/// Returns a null pointer when no error has been set since the last successful
+/// constructor call.  The returned pointer is valid until the next call to any
+/// `jl_lowess_*` function on the current thread.
+#[unsafe(no_mangle)]
+pub extern "C" fn jl_last_error_message() -> *const c_char {
+    JL_LAST_ERROR.with(|slot| {
+        if let Some(msg) = slot.borrow().as_ref() {
+            msg.as_ptr()
+        } else {
+            ptr::null()
+        }
+    })
+}
+
+// Per-point result from an online update, passed across the FFI boundary.
+// has_value = 1 means the window is ready and smoothed is valid; 0 means
+// the window is still filling (all other fields are undefined in that case).
+#[repr(C)]
+pub struct JlOnlineOutput {
+    pub has_value: c_int,
+    pub smoothed: c_double,
+    pub std_error: c_double,         // f64::NAN when not computed
+    pub residual: c_double,          // f64::NAN when not computed
+    pub robustness_weight: c_double, // f64::NAN when not computed
+    pub iterations_used: c_int,      // -1 when not computed
+    pub error: *mut c_char,          // NULL if no error
+}
+
+impl Default for JlOnlineOutput {
+    fn default() -> Self {
+        JlOnlineOutput {
+            has_value: 0,
+            smoothed: f64::NAN,
+            std_error: f64::NAN,
+            residual: f64::NAN,
+            robustness_weight: f64::NAN,
+            iterations_used: -1,
+            error: ptr::null_mut(),
+        }
+    }
+}
 
 /// Result struct that can be passed across FFI boundary.
 /// All arrays are allocated by Rust and must be freed by Rust.
@@ -95,47 +167,48 @@ impl Default for JlLowessResult {
     }
 }
 
-/// Create an error result with the given message.
 fn error_result(msg: &str) -> JlLowessResult {
     JlLowessResult {
-        error: binding_support::into_raw_error_c_string(msg),
+        error: shared_parse::into_raw_error_c_string(msg),
         ..Default::default()
     }
 }
 
-/// Convert LowessResult to JlLowessResult.
-fn lowess_result_to_jl(result: LowessResult<f64>) -> JlLowessResult {
-    let n = result.y.len();
-    let (rmse, mae, r_squared, aic, aicc, effective_df, residual_sd) =
-        binding_support::extract_diagnostics(&result);
-    let cv_scores_len = result
-        .cv_scores
-        .as_ref()
-        .map(|v| v.len() as c_ulong)
-        .unwrap_or(0);
+fn error_result_from(err: shared_parse::BindingError) -> JlLowessResult {
+    error_result(&err.message)
+}
 
+fn map_runtime_result<T, E: ToString>(
+    result: std::result::Result<T, E>,
+) -> std::result::Result<T, Box<JlLowessResult>> {
+    shared_parse::map_runtime(result).map_err(|e| Box::new(error_result_from(e)))
+}
+
+// Convert LowessResult to JlLowessResult.
+fn lowess_result_to_jl(result: LowessResult<f64>) -> JlLowessResult {
+    let p = shared_parse::extract_ffi_lowess_result(result);
     JlLowessResult {
-        x: binding_support::vec_to_raw_ptr(result.x),
-        y: binding_support::vec_to_raw_ptr(result.y),
-        n: n as c_ulong,
-        standard_errors: binding_support::opt_vec_to_raw_ptr(result.standard_errors),
-        confidence_lower: binding_support::opt_vec_to_raw_ptr(result.confidence_lower),
-        confidence_upper: binding_support::opt_vec_to_raw_ptr(result.confidence_upper),
-        prediction_lower: binding_support::opt_vec_to_raw_ptr(result.prediction_lower),
-        prediction_upper: binding_support::opt_vec_to_raw_ptr(result.prediction_upper),
-        residuals: binding_support::opt_vec_to_raw_ptr(result.residuals),
-        robustness_weights: binding_support::opt_vec_to_raw_ptr(result.robustness_weights),
-        cv_scores: binding_support::opt_vec_to_raw_ptr(result.cv_scores),
-        cv_scores_len,
-        fraction_used: result.fraction_used,
-        iterations_used: result.iterations_used.map(|i| i as c_int).unwrap_or(-1),
-        rmse,
-        mae,
-        r_squared,
-        aic,
-        aicc,
-        effective_df,
-        residual_sd,
+        x: p.x,
+        y: p.y,
+        n: p.n as c_ulong,
+        standard_errors: p.standard_errors,
+        confidence_lower: p.confidence_lower,
+        confidence_upper: p.confidence_upper,
+        prediction_lower: p.prediction_lower,
+        prediction_upper: p.prediction_upper,
+        residuals: p.residuals,
+        robustness_weights: p.robustness_weights,
+        cv_scores: p.cv_scores,
+        cv_scores_len: p.cv_scores_len as c_ulong,
+        fraction_used: p.fraction_used,
+        iterations_used: p.iterations_used,
+        rmse: p.rmse,
+        mae: p.mae,
+        r_squared: p.r_squared,
+        aic: p.aic,
+        aicc: p.aicc,
+        effective_df: p.effective_df,
+        residual_sd: p.residual_sd,
         error: null_mut(),
     }
 }
@@ -148,24 +221,7 @@ use fastLowess::internals::adapters::online::ParallelOnlineLowess;
 use fastLowess::internals::adapters::streaming::ParallelStreamingLowess;
 
 pub struct JlLowessConfig {
-    fraction: f64,
-    iterations: usize,
-    delta: Option<f64>,
-    weight_function: WeightFunction,
-    robustness_method: RobustnessMethod,
-    scaling_method: ScalingMethod,
-    zero_weight_fallback: ZeroWeightFallback,
-    boundary_policy: BoundaryPolicy,
-    auto_converge: Option<f64>,
-    confidence_intervals: Option<f64>,
-    prediction_intervals: Option<f64>,
-    return_diagnostics: bool,
-    return_residuals: bool,
-    return_robustness_weights: bool,
-    cv_fractions: Option<Vec<f64>>,
-    cv_method: String,
-    cv_k: usize,
-    parallel: bool,
+    base_builder: LowessBuilder<f64>,
 }
 
 pub struct JlStreamingLowess {
@@ -205,70 +261,88 @@ pub unsafe extern "C" fn jl_lowess_new(
     cv_method: *const c_char,
     cv_k: c_int,
     parallel: c_int,
+    cv_seed: c_ulong, // 0 for none
 ) -> *mut JlLowessConfig {
+    clear_last_error_message();
     let result = catch_unwind(|| {
-        let wf_str = unsafe { binding_support::parse_c_str_or_default(weight_function, "tricube") };
-        let rm_str =
-            unsafe { binding_support::parse_c_str_or_default(robustness_method, "bisquare") };
-        let sm_str = unsafe { binding_support::parse_c_str_or_default(scaling_method, "mad") };
-        let bp_str = unsafe { binding_support::parse_c_str_or_default(boundary_policy, "extend") };
+        let wf_str = unsafe {
+            shared_parse::parse_c_str_or_default(
+                weight_function,
+                shared_parse::DEFAULT_WEIGHT_FUNCTION,
+            )
+        };
+        let rm_str = unsafe {
+            shared_parse::parse_c_str_or_default(
+                robustness_method,
+                shared_parse::DEFAULT_ROBUSTNESS_METHOD,
+            )
+        };
+        let sm_str = unsafe {
+            shared_parse::parse_c_str_or_default(
+                scaling_method,
+                shared_parse::DEFAULT_SCALING_METHOD,
+            )
+        };
+        let bp_str = unsafe {
+            shared_parse::parse_c_str_or_default(
+                boundary_policy,
+                shared_parse::DEFAULT_BOUNDARY_POLICY,
+            )
+        };
         let zwf_str = unsafe {
-            binding_support::parse_c_str_or_default(zero_weight_fallback, "use_local_mean")
+            shared_parse::parse_c_str_or_default(
+                zero_weight_fallback,
+                shared_parse::DEFAULT_ZERO_WEIGHT_FALLBACK,
+            )
         };
-        let cv_method_str = unsafe { binding_support::parse_c_str_or_default(cv_method, "kfold") };
-
-        let wf = unwrap_or_return_null!(binding_support::parse_weight_function(wf_str));
-        let rm = unwrap_or_return_null!(binding_support::parse_robustness_method(rm_str));
-        let sm = unwrap_or_return_null!(binding_support::parse_scaling_method(sm_str));
-        let bp = unwrap_or_return_null!(binding_support::parse_boundary_policy(bp_str));
-        let zwf = unwrap_or_return_null!(binding_support::parse_zero_weight_fallback(zwf_str));
-
-        let cv_fractions_vec = if !cv_fractions.is_null() && cv_fractions_len > 0 {
-            let slice = unsafe { from_raw_parts(cv_fractions, cv_fractions_len as usize) };
-            Some(slice.to_vec())
-        } else {
-            None
+        let cv_method_str = unsafe {
+            shared_parse::parse_c_str_or_default(cv_method, shared_parse::DEFAULT_CV_METHOD)
         };
 
-        let config = JlLowessConfig {
-            fraction,
-            iterations: iterations as usize,
-            delta: if delta.is_nan() { None } else { Some(delta) },
-            weight_function: wf,
-            robustness_method: rm,
-            scaling_method: sm,
-            zero_weight_fallback: zwf,
-            boundary_policy: bp,
-            auto_converge: if auto_converge.is_nan() {
-                None
-            } else {
-                Some(auto_converge)
+        let cv_fractions_slice =
+            unsafe { shared_parse::option_slice_from_ptr(cv_fractions, cv_fractions_len as usize) };
+
+        let base_builder = match shared_parse::map_invalid_arg(shared_parse::apply_builder_options(
+            LowessBuilder::<f64>::new(),
+            shared_parse::BuilderOptionSet {
+                fraction: Some(fraction),
+                iterations: Some(iterations as usize),
+                delta: (!delta.is_nan()).then_some(delta),
+                weight_function: Some(wf_str),
+                robustness_method: Some(rm_str),
+                scaling_method: Some(sm_str),
+                boundary_policy: Some(bp_str),
+                zero_weight_fallback: Some(zwf_str),
+                auto_converge: (!auto_converge.is_nan()).then_some(auto_converge),
+                return_residuals: return_residuals != 0,
+                return_robustness_weights: return_robustness_weights != 0,
+                return_diagnostics: return_diagnostics != 0,
+                return_se: false,
+                confidence_intervals: (!confidence_intervals.is_nan())
+                    .then_some(confidence_intervals),
+                prediction_intervals: (!prediction_intervals.is_nan())
+                    .then_some(prediction_intervals),
+                parallel: Some(parallel != 0),
+                cv_fractions: cv_fractions_slice,
+                cv_method: Some(cv_method_str),
+                cv_k: Some(cv_k as usize),
+                cv_seed: (cv_seed != 0).then_some(cv_seed as u64),
+                ..Default::default()
             },
-            confidence_intervals: if confidence_intervals.is_nan() {
-                None
-            } else {
-                Some(confidence_intervals)
-            },
-            prediction_intervals: if prediction_intervals.is_nan() {
-                None
-            } else {
-                Some(prediction_intervals)
-            },
-            return_diagnostics: return_diagnostics != 0,
-            return_residuals: return_residuals != 0,
-            return_robustness_weights: return_robustness_weights != 0,
-            cv_fractions: cv_fractions_vec,
-            cv_method: cv_method_str.to_string(),
-            cv_k: cv_k as usize,
-            parallel: parallel != 0,
+        )) {
+            Ok(b) => b,
+            Err(e) => return null_with_last_error(&e.message),
         };
 
-        Box::into_raw(Box::new(config))
+        Box::into_raw(Box::new(JlLowessConfig { base_builder }))
     });
 
     match result {
         Ok(ptr) => ptr,
-        Err(_) => null_mut(),
+        Err(_) => {
+            set_last_error_message(shared_parse::panic_fallback_message());
+            null_mut()
+        }
     }
 }
 
@@ -289,69 +363,33 @@ pub unsafe extern "C" fn jl_lowess_fit(
 ) -> JlLowessResult {
     let result = catch_unwind(|| {
         if config_ptr.is_null() {
-            return error_result("Config pointer is null");
+            return error_result(shared_parse::CONFIG_POINTER_IS_NULL);
         }
         let config = unsafe { &*config_ptr };
 
         if x.is_null() || y.is_null() {
-            return error_result("x and y arrays must not be null");
+            return error_result(shared_parse::XY_ARRAYS_MUST_NOT_BE_NULL);
         }
         if n == 0 {
-            return error_result("Array length must be greater than 0");
+            return error_result(shared_parse::ARRAY_LENGTH_MUST_BE_GREATER_THAN_ZERO);
         }
 
         let x_slice = unsafe { from_raw_parts(x, n as usize) };
         let y_slice = unsafe { from_raw_parts(y, n as usize) };
 
-        let mut builder = match binding_support::apply_typed_builder_options(
-            LowessBuilder::<f64>::new(),
-            binding_support::TypedBuilderOptionSet {
-                fraction: Some(config.fraction),
-                iterations: Some(config.iterations),
-                delta: config.delta,
-                weight_function: Some(config.weight_function),
-                robustness_method: Some(config.robustness_method),
-                scaling_method: Some(config.scaling_method),
-                zero_weight_fallback: Some(config.zero_weight_fallback),
-                boundary_policy: Some(config.boundary_policy),
-                auto_converge: config.auto_converge,
-                confidence_intervals: config.confidence_intervals,
-                prediction_intervals: config.prediction_intervals,
-                return_diagnostics: config.return_diagnostics,
-                return_residuals: config.return_residuals,
-                return_robustness_weights: config.return_robustness_weights,
-                return_se: false,
-                parallel: Some(config.parallel),
-                chunk_size: None,
-                overlap: None,
-                merge_strategy: None,
-                window_capacity: None,
-                min_points: None,
-                update_mode: None,
-                cv_fractions: config.cv_fractions.clone(),
-                cv_method: Some(config.cv_method.clone()),
-                cv_k: Some(config.cv_k),
-                cv_seed: None,
-                custom_weights: None,
-            },
-        ) {
-            Ok(b) => b,
-            Err(e) => return error_result(&e),
+        let cw = unsafe {
+            shared_parse::option_vec_from_ptr(custom_weights, custom_weights_len as usize)
+        };
+        let builder = config.base_builder.clone();
+
+        let model = match shared_parse::build_batch(builder, cw) {
+            Ok(m) => m,
+            Err(e) => return error_result(&e.message),
         };
 
-        // Apply per-observation case weights if provided
-        if !custom_weights.is_null() && custom_weights_len > 0 {
-            let cw =
-                unsafe { from_raw_parts(custom_weights, custom_weights_len as usize) }.to_vec();
-            builder = builder.custom_weights(cw);
-        }
-
-        let result = match builder.adapter(Batch).build() {
-            Ok(m) => match m.fit(x_slice, y_slice) {
-                Ok(r) => r,
-                Err(e) => return error_result(&e.to_string()),
-            },
-            Err(e) => return error_result(&e.to_string()),
+        let result = match map_runtime_result(model.fit(x_slice, y_slice)) {
+            Ok(r) => r,
+            Err(e) => return *e,
         };
 
         lowess_result_to_jl(result)
@@ -359,7 +397,7 @@ pub unsafe extern "C" fn jl_lowess_fit(
 
     match result {
         Ok(res) => res,
-        Err(_) => error_result("Panic in Rust library"),
+        Err(_) => error_result(shared_parse::panic_fallback_message()),
     }
 }
 
@@ -374,27 +412,19 @@ pub unsafe extern "C" fn jl_lowess_free_result(result: *mut JlLowessResult) {
     }
     let res = &mut *result;
     let n = res.n as usize;
+    let cv_n = res.cv_scores_len as usize;
 
-    unsafe fn free_vec(ptr: *mut c_double, len: usize) {
-        if !ptr.is_null() {
-            let _ = Vec::from_raw_parts(ptr, len, len);
-        }
-    }
-
-    free_vec(res.x, n);
-    free_vec(res.y, n);
-    free_vec(res.standard_errors, n);
-    free_vec(res.confidence_lower, n);
-    free_vec(res.confidence_upper, n);
-    free_vec(res.prediction_lower, n);
-    free_vec(res.prediction_upper, n);
-    free_vec(res.residuals, n);
-    free_vec(res.robustness_weights, n);
-    free_vec(res.cv_scores, res.cv_scores_len as usize);
-
-    if !res.error.is_null() {
-        let _ = std::ffi::CString::from_raw(res.error);
-    }
+    shared_parse::free_raw_f64_buffer(res.x, n);
+    shared_parse::free_raw_f64_buffer(res.y, n);
+    shared_parse::free_raw_f64_buffer(res.standard_errors, n);
+    shared_parse::free_raw_f64_buffer(res.confidence_lower, n);
+    shared_parse::free_raw_f64_buffer(res.confidence_upper, n);
+    shared_parse::free_raw_f64_buffer(res.prediction_lower, n);
+    shared_parse::free_raw_f64_buffer(res.prediction_upper, n);
+    shared_parse::free_raw_f64_buffer(res.residuals, n);
+    shared_parse::free_raw_f64_buffer(res.robustness_weights, n);
+    shared_parse::free_raw_f64_buffer(res.cv_scores, cv_n);
+    shared_parse::free_raw_c_string(res.error);
 }
 
 /// Free the Lowess configuration.
@@ -406,6 +436,23 @@ pub unsafe extern "C" fn jl_lowess_free(ptr: *mut JlLowessConfig) {
     if !ptr.is_null() {
         let _ = Box::from_raw(ptr);
     }
+}
+
+/// Legacy setter retained for ABI compatibility.
+///
+/// Configure `cv_seed` in `jl_lowess_new` instead.
+///
+/// # Safety
+/// config_ptr must be a valid mutable pointer returned by jl_lowess_new.
+#[unsafe(no_mangle)]
+#[allow(clippy::useless_conversion)] // c_ulong is u32 on Windows, u64 on Linux/macOS
+pub unsafe extern "C" fn jl_lowess_set_cv_seed(config_ptr: *mut JlLowessConfig, seed: c_ulong) {
+    let _ = seed;
+    if config_ptr.is_null() {
+        set_last_error_message(shared_parse::CONFIG_POINTER_IS_NULL);
+        return;
+    }
+    setter_unsupported_constructor_only("jl_lowess_set_cv_seed");
 }
 
 // ============================================================================
@@ -432,65 +479,89 @@ pub unsafe extern "C" fn jl_streaming_lowess_new(
     return_residuals: c_int,
     return_robustness_weights: c_int,
     zero_weight_fallback: *const c_char,
+    merge_strategy: *const c_char,
     parallel: c_int,
 ) -> *mut JlStreamingLowess {
+    clear_last_error_message();
     let result = catch_unwind(|| {
-        let wf_str = unsafe { binding_support::parse_c_str_or_default(weight_function, "tricube") };
-        let rm_str =
-            unsafe { binding_support::parse_c_str_or_default(robustness_method, "bisquare") };
-        let sm_str = unsafe { binding_support::parse_c_str_or_default(scaling_method, "mad") };
-        let bp_str = unsafe { binding_support::parse_c_str_or_default(boundary_policy, "extend") };
+        let wf_str = unsafe {
+            shared_parse::parse_c_str_or_default(
+                weight_function,
+                shared_parse::DEFAULT_WEIGHT_FUNCTION,
+            )
+        };
+        let rm_str = unsafe {
+            shared_parse::parse_c_str_or_default(
+                robustness_method,
+                shared_parse::DEFAULT_ROBUSTNESS_METHOD,
+            )
+        };
+        let sm_str = unsafe {
+            shared_parse::parse_c_str_or_default(
+                scaling_method,
+                shared_parse::DEFAULT_SCALING_METHOD,
+            )
+        };
+        let bp_str = unsafe {
+            shared_parse::parse_c_str_or_default(
+                boundary_policy,
+                shared_parse::DEFAULT_BOUNDARY_POLICY,
+            )
+        };
         let zwf_str = unsafe {
-            binding_support::parse_c_str_or_default(zero_weight_fallback, "use_local_mean")
+            shared_parse::parse_c_str_or_default(
+                zero_weight_fallback,
+                shared_parse::DEFAULT_ZERO_WEIGHT_FALLBACK,
+            )
+        };
+        let ms_str = unsafe {
+            shared_parse::parse_c_str_or_default(
+                merge_strategy,
+                shared_parse::DEFAULT_MERGE_STRATEGY,
+            )
         };
 
-        let wf = unwrap_or_return_null!(binding_support::parse_weight_function(wf_str));
-        let rm = unwrap_or_return_null!(binding_support::parse_robustness_method(rm_str));
-        let sm = unwrap_or_return_null!(binding_support::parse_scaling_method(sm_str));
-        let bp = unwrap_or_return_null!(binding_support::parse_boundary_policy(bp_str));
-        let zwf = unwrap_or_return_null!(binding_support::parse_zero_weight_fallback(zwf_str));
+        let chunk_size_usize = unwrap_or_return_null!(shared_parse::require_positive_usize(
+            "chunk_size",
+            chunk_size
+        ));
+        let iterations_usize = unwrap_or_return_null!(shared_parse::require_non_negative_usize(
+            "iterations",
+            iterations
+        ));
 
-        let mut builder = LowessBuilder::<f64>::new();
-        builder = builder.fraction(fraction);
-        builder = builder.iterations(iterations as usize);
-        builder = builder.weight_function(wf);
-        builder = builder.robustness_method(rm);
-        builder = builder.scaling_method(sm);
-        builder = builder.zero_weight_fallback(zwf);
-        builder = builder.boundary_policy(bp);
-
-        if return_diagnostics != 0 {
-            builder = builder.return_diagnostics();
-        }
-        if return_residuals != 0 {
-            builder = builder.return_residuals();
-        }
-        if return_robustness_weights != 0 {
-            builder = builder.return_robustness_weights();
-        }
-
-        let chunk_size_usize = chunk_size as usize;
-        let overlap_size = if overlap < 0 {
-            binding_support::default_overlap(chunk_size_usize)
-        } else {
-            overlap as usize
+        let builder = match shared_parse::map_invalid_arg(shared_parse::apply_builder_options(
+            LowessBuilder::<f64>::new(),
+            shared_parse::BuilderOptionSet {
+                fraction: Some(fraction),
+                iterations: Some(iterations_usize),
+                delta: (!delta.is_nan()).then_some(delta),
+                weight_function: Some(wf_str),
+                robustness_method: Some(rm_str),
+                scaling_method: Some(sm_str),
+                boundary_policy: Some(bp_str),
+                zero_weight_fallback: Some(zwf_str),
+                auto_converge: (!auto_converge.is_nan()).then_some(auto_converge),
+                return_residuals: return_residuals != 0,
+                return_robustness_weights: return_robustness_weights != 0,
+                return_diagnostics: return_diagnostics != 0,
+                return_se: false,
+                parallel: Some(parallel != 0),
+                ..Default::default()
+            },
+        )) {
+            Ok(b) => b,
+            Err(e) => return null_with_last_error(&e.message),
         };
 
-        let mut s_builder = builder.adapter(Streaming);
-        s_builder = s_builder.chunk_size(chunk_size_usize);
-        s_builder = s_builder.overlap(overlap_size);
-        s_builder = s_builder.parallel(parallel != 0);
-
-        if !delta.is_nan() {
-            s_builder = s_builder.delta(delta);
-        }
-        if !auto_converge.is_nan() {
-            s_builder = s_builder.auto_converge(auto_converge);
-        }
-
-        let processor = match s_builder.build() {
+        let processor = match shared_parse::build_streaming(
+            builder,
+            Some(chunk_size_usize),
+            (overlap >= 0).then_some(overlap as usize),
+            Some(ms_str),
+        ) {
             Ok(p) => p,
-            Err(_) => return null_mut(),
+            Err(e) => return null_with_last_error(&e.message),
         };
 
         Box::into_raw(Box::new(JlStreamingLowess { inner: processor }))
@@ -498,7 +569,10 @@ pub unsafe extern "C" fn jl_streaming_lowess_new(
 
     match result {
         Ok(ptr) => ptr,
-        Err(_) => null_mut(),
+        Err(_) => {
+            set_last_error_message(shared_parse::panic_fallback_message());
+            null_mut()
+        }
     }
 }
 
@@ -515,29 +589,29 @@ pub unsafe extern "C" fn jl_streaming_lowess_process_chunk(
 ) -> JlLowessResult {
     let result = catch_unwind(|| {
         if ptr.is_null() {
-            return error_result("Processor pointer is null");
+            return error_result(shared_parse::PROCESSOR_POINTER_IS_NULL);
         }
         let processor = unsafe { &mut *ptr };
 
         if x.is_null() || y.is_null() {
-            return error_result("x and y arrays must not be null");
+            return error_result(shared_parse::XY_ARRAYS_MUST_NOT_BE_NULL);
         }
         if n == 0 {
-            return error_result("Array length must be greater than 0");
+            return error_result(shared_parse::ARRAY_LENGTH_MUST_BE_GREATER_THAN_ZERO);
         }
 
         let x_slice = unsafe { from_raw_parts(x, n as usize) };
         let y_slice = unsafe { from_raw_parts(y, n as usize) };
 
-        match processor.inner.process_chunk(x_slice, y_slice) {
+        match map_runtime_result(processor.inner.process_chunk(x_slice, y_slice)) {
             Ok(r) => lowess_result_to_jl(r),
-            Err(e) => error_result(&e.to_string()),
+            Err(e) => *e,
         }
     });
 
     match result {
         Ok(res) => res,
-        Err(_) => error_result("Panic in Rust library"),
+        Err(_) => error_result(shared_parse::panic_fallback_message()),
     }
 }
 
@@ -551,19 +625,19 @@ pub unsafe extern "C" fn jl_streaming_lowess_finalize(
 ) -> JlLowessResult {
     let result = catch_unwind(|| {
         if ptr.is_null() {
-            return error_result("Processor pointer is null");
+            return error_result(shared_parse::PROCESSOR_POINTER_IS_NULL);
         }
         let processor = unsafe { &mut *ptr };
 
-        match processor.inner.finalize() {
+        match map_runtime_result(processor.inner.finalize()) {
             Ok(r) => lowess_result_to_jl(r),
-            Err(e) => error_result(&e.to_string()),
+            Err(e) => *e,
         }
     });
 
     match result {
         Ok(res) => res,
-        Err(_) => error_result("Panic in Rust library"),
+        Err(_) => error_result(shared_parse::panic_fallback_message()),
     }
 }
 
@@ -600,67 +674,107 @@ pub unsafe extern "C" fn jl_online_lowess_new(
     update_mode: *const c_char,
     auto_converge: c_double,
     return_robustness_weights: c_int,
+    return_diagnostics: c_int,
+    return_residuals: c_int,
     zero_weight_fallback: *const c_char,
     parallel: c_int,
 ) -> *mut JlOnlineLowess {
-    let result = catch_unwind(|| {
-        let wf_str = unsafe { binding_support::parse_c_str_or_default(weight_function, "tricube") };
-        let rm_str =
-            unsafe { binding_support::parse_c_str_or_default(robustness_method, "bisquare") };
-        let sm_str = unsafe { binding_support::parse_c_str_or_default(scaling_method, "mad") };
-        let bp_str = unsafe { binding_support::parse_c_str_or_default(boundary_policy, "extend") };
-        let zwf_str = unsafe {
-            binding_support::parse_c_str_or_default(zero_weight_fallback, "use_local_mean")
-        };
-        let um_str = unsafe { binding_support::parse_c_str_or_default(update_mode, "full") };
+    clear_last_error_message();
+    let result =
+        catch_unwind(|| {
+            let wf_str = unsafe {
+                shared_parse::parse_c_str_or_default(
+                    weight_function,
+                    shared_parse::DEFAULT_WEIGHT_FUNCTION,
+                )
+            };
+            let rm_str = unsafe {
+                shared_parse::parse_c_str_or_default(
+                    robustness_method,
+                    shared_parse::DEFAULT_ROBUSTNESS_METHOD,
+                )
+            };
+            let sm_str = unsafe {
+                shared_parse::parse_c_str_or_default(
+                    scaling_method,
+                    shared_parse::DEFAULT_SCALING_METHOD,
+                )
+            };
+            let bp_str = unsafe {
+                shared_parse::parse_c_str_or_default(
+                    boundary_policy,
+                    shared_parse::DEFAULT_BOUNDARY_POLICY,
+                )
+            };
+            let zwf_str = unsafe {
+                shared_parse::parse_c_str_or_default(
+                    zero_weight_fallback,
+                    shared_parse::DEFAULT_ZERO_WEIGHT_FALLBACK,
+                )
+            };
+            let um_str = unsafe {
+                shared_parse::parse_c_str_or_default(update_mode, shared_parse::DEFAULT_UPDATE_MODE)
+            };
 
-        let wf = unwrap_or_return_null!(binding_support::parse_weight_function(wf_str));
-        let rm = unwrap_or_return_null!(binding_support::parse_robustness_method(rm_str));
-        let sm = unwrap_or_return_null!(binding_support::parse_scaling_method(sm_str));
-        let bp = unwrap_or_return_null!(binding_support::parse_boundary_policy(bp_str));
-        let zwf = unwrap_or_return_null!(binding_support::parse_zero_weight_fallback(zwf_str));
-        let um = unwrap_or_return_null!(binding_support::parse_update_mode(um_str));
+            let iterations_usize = unwrap_or_return_null!(
+                shared_parse::require_non_negative_usize("iterations", iterations)
+            );
+            let window_capacity_usize = unwrap_or_return_null!(
+                shared_parse::require_positive_usize("window_capacity", window_capacity)
+            );
+            let min_points_usize = unwrap_or_return_null!(shared_parse::require_positive_usize(
+                "min_points",
+                min_points
+            ));
 
-        let mut builder = LowessBuilder::<f64>::new();
-        builder = builder.fraction(fraction);
-        builder = builder.iterations(iterations as usize);
-        builder = builder.weight_function(wf);
-        builder = builder.robustness_method(rm);
-        builder = builder.scaling_method(sm);
-        builder = builder.zero_weight_fallback(zwf);
-        builder = builder.boundary_policy(bp);
+            let builder = match shared_parse::map_invalid_arg(shared_parse::apply_builder_options(
+                LowessBuilder::<f64>::new(),
+                shared_parse::BuilderOptionSet {
+                    fraction: Some(fraction),
+                    iterations: Some(iterations_usize),
+                    delta: (!delta.is_nan()).then_some(delta),
+                    weight_function: Some(wf_str),
+                    robustness_method: Some(rm_str),
+                    scaling_method: Some(sm_str),
+                    boundary_policy: Some(bp_str),
+                    zero_weight_fallback: Some(zwf_str),
+                    auto_converge: (!auto_converge.is_nan()).then_some(auto_converge),
+                    return_residuals: return_residuals != 0,
+                    return_robustness_weights: return_robustness_weights != 0,
+                    return_diagnostics: return_diagnostics != 0,
+                    return_se: false,
+                    parallel: Some(parallel != 0),
+                    ..Default::default()
+                },
+            )) {
+                Ok(b) => b,
+                Err(e) => return null_with_last_error(&e.message),
+            };
 
-        let mut o_builder = builder.adapter(Online);
-        o_builder = o_builder.window_capacity(window_capacity as usize);
-        o_builder = o_builder.min_points(min_points as usize);
-        o_builder = o_builder.update_mode(um);
-        o_builder = o_builder.parallel(parallel != 0);
+            let processor = match shared_parse::build_online(
+                builder,
+                Some(window_capacity_usize),
+                Some(min_points_usize),
+                Some(um_str),
+            ) {
+                Ok(p) => p,
+                Err(e) => return null_with_last_error(&e.message),
+            };
 
-        if !delta.is_nan() {
-            o_builder = o_builder.delta(delta);
-        }
-        if !auto_converge.is_nan() {
-            o_builder = o_builder.auto_converge(auto_converge);
-        }
-        if return_robustness_weights != 0 {
-            o_builder = o_builder.return_robustness_weights(true);
-        }
-
-        let processor = match o_builder.build() {
-            Ok(p) => p,
-            Err(_) => return null_mut(),
-        };
-
-        Box::into_raw(Box::new(JlOnlineLowess { inner: processor }))
-    });
+            Box::into_raw(Box::new(JlOnlineLowess { inner: processor }))
+        });
 
     match result {
         Ok(ptr) => ptr,
-        Err(_) => null_mut(),
+        Err(_) => {
+            set_last_error_message(shared_parse::panic_fallback_message());
+            null_mut()
+        }
     }
 }
 
-/// Add a single point to the online processor and return the smoothed value.
+/// Add a single point to the online processor and return the smoothed value for that
+/// point, or a result with `has_value = 0` if the window is still filling.
 ///
 /// Returns NaN if not enough points are available or an error occurs.
 ///
@@ -671,21 +785,57 @@ pub unsafe extern "C" fn jl_online_lowess_add_point(
     ptr: *mut JlOnlineLowess,
     x: c_double,
     y: c_double,
-) -> c_double {
+) -> JlOnlineOutput {
     let result = catch_unwind(|| {
         if ptr.is_null() {
-            return f64::NAN;
+            return JlOnlineOutput {
+                error: shared_parse::into_raw_error_c_string(
+                    shared_parse::PROCESSOR_POINTER_IS_NULL,
+                ),
+                ..JlOnlineOutput::default()
+            };
         }
         let processor = unsafe { &mut *ptr };
 
         match processor.inner.add_point(x, y) {
-            Ok(Some(o)) => o.smoothed,
-            Ok(None) => f64::NAN,
-            Err(_) => f64::NAN,
+            Err(e) => JlOnlineOutput {
+                error: shared_parse::into_raw_error_c_string(&e.to_string()),
+                ..JlOnlineOutput::default()
+            },
+            Ok(None) => JlOnlineOutput::default(),
+            Ok(Some(o)) => {
+                let (std_error, residual, robustness_weight, iterations_used) =
+                    shared_parse::extract_online_output(&o);
+                JlOnlineOutput {
+                    has_value: 1,
+                    smoothed: o.smoothed,
+                    std_error,
+                    residual,
+                    robustness_weight,
+                    iterations_used,
+                    error: ptr::null_mut(),
+                }
+            }
         }
     });
 
-    result.unwrap_or(f64::NAN)
+    result.unwrap_or_else(|_| JlOnlineOutput {
+        error: shared_parse::into_raw_error_c_string(shared_parse::panic_fallback_message()),
+        ..JlOnlineOutput::default()
+    })
+}
+
+/// Free the error field of a JlOnlineOutput returned by jl_online_lowess_add_point.
+/// No-op when output is null or the error field is already null.
+///
+/// # Safety
+/// `output` must be a valid pointer to a JlOnlineOutput or null.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn jl_online_free_output(output: *mut JlOnlineOutput) {
+    if !output.is_null() {
+        shared_parse::free_raw_c_string((*output).error);
+        (*output).error = ptr::null_mut();
+    }
 }
 
 /// Free the OnlineLowess processor.
@@ -704,7 +854,10 @@ macro_rules! unwrap_or_return_null {
     ($e:expr) => {
         match $e {
             Ok(val) => val,
-            Err(_) => return null_mut(),
+            Err(err) => {
+                set_last_error_message(&err.to_string());
+                return null_mut();
+            }
         }
     };
 }

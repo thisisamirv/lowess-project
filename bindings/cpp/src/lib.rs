@@ -6,14 +6,114 @@
 #![allow(non_snake_case)]
 #![allow(unsafe_op_in_unsafe_fn)]
 
+use std::cell::RefCell;
+use std::ffi::CString;
 use std::os::raw::{c_char, c_double, c_int, c_ulong};
+use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::ptr;
 
 use fastLowess::internals::adapters::online::ParallelOnlineLowess;
 use fastLowess::internals::adapters::streaming::ParallelStreamingLowess;
-use fastLowess::internals::api::{Batch, LowessBuilder, Online, Streaming};
-use fastLowess::internals::binding_support::{self, MergeStrategy, UpdateMode};
+use fastLowess::internals::api::LowessBuilder;
+use fastLowess::internals::binding_support as shared_parse;
 use fastLowess::prelude::LowessResult;
+
+thread_local! {
+    #[allow(clippy::missing_const_for_thread_local)]
+    static CPP_LAST_ERROR: RefCell<Option<CString>> = const { RefCell::new(None) };
+}
+
+fn set_last_error(msg: &str) {
+    let cmsg = shared_parse::to_cstring_lossy(msg);
+    CPP_LAST_ERROR.with(|slot| {
+        *slot.borrow_mut() = Some(cmsg);
+    });
+}
+
+fn clear_last_error() {
+    CPP_LAST_ERROR.with(|slot| {
+        *slot.borrow_mut() = None;
+    });
+}
+
+fn null_with_error<T>(msg: &str) -> *mut T {
+    set_last_error(msg);
+    ptr::null_mut()
+}
+
+fn error_result_from(err: shared_parse::BindingError) -> CppLowessResult {
+    error_result(&err.message)
+}
+
+#[allow(clippy::result_large_err)]
+fn map_invalid_arg_result<T, E: ToString>(
+    result: std::result::Result<T, E>,
+) -> std::result::Result<T, CppLowessResult> {
+    shared_parse::map_invalid_arg(result).map_err(error_result_from)
+}
+
+#[allow(clippy::result_large_err)]
+fn map_runtime_result<T, E: ToString>(
+    result: std::result::Result<T, E>,
+) -> std::result::Result<T, CppLowessResult> {
+    shared_parse::map_runtime(result).map_err(error_result_from)
+}
+
+fn with_panic_result<F>(f: F) -> CppLowessResult
+where
+    F: FnOnce() -> CppLowessResult,
+{
+    match catch_unwind(AssertUnwindSafe(f)) {
+        Ok(v) => v,
+        Err(_) => error_result(shared_parse::panic_fallback_message()),
+    }
+}
+
+fn with_panic_ptr<T, F>(f: F) -> *mut T
+where
+    F: FnOnce() -> *mut T,
+{
+    match catch_unwind(AssertUnwindSafe(f)) {
+        Ok(v) => v,
+        Err(_) => null_with_error(shared_parse::panic_fallback_message()),
+    }
+}
+
+fn with_panic_void<F>(f: F)
+where
+    F: FnOnce(),
+{
+    if catch_unwind(AssertUnwindSafe(f)).is_err() {
+        set_last_error(shared_parse::panic_fallback_message());
+    }
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn cpp_last_error_message() -> *const c_char {
+    CPP_LAST_ERROR.with(|slot| {
+        if let Some(msg) = slot.borrow().as_ref() {
+            msg.as_ptr()
+        } else {
+            ptr::null()
+        }
+    })
+}
+
+// Per-point result from an online update, passed across the FFI boundary.
+// has_value = 1 means the window is ready and smoothed is valid; 0 means the
+// window is still filling (caller should treat it as no output yet).
+// Non-computed optional fields use f64::NAN (for floats) or -1 (for int).
+// error = NULL if no error, otherwise points to a null-terminated error string.
+#[repr(C)]
+pub struct CppOnlineOutput {
+    pub has_value: c_int,
+    pub smoothed: c_double,
+    pub std_error: c_double,
+    pub residual: c_double,
+    pub robustness_weight: c_double,
+    pub iterations_used: c_int,
+    pub error: *mut c_char, // NULL if no error
+}
 
 /// Result struct that can be passed across FFI boundary.
 /// All arrays are allocated by Rust and must be freed by Rust.
@@ -92,74 +192,81 @@ impl Default for CppLowessResult {
     }
 }
 
-/// Create an error result with the given message.
+// Create an error result with the given message.
 fn error_result(msg: &str) -> CppLowessResult {
     CppLowessResult {
-        error: binding_support::into_raw_error_c_string(msg),
+        error: shared_parse::into_raw_error_c_string(msg),
         ..Default::default()
     }
 }
 
-impl From<LowessResult<f64>> for CppLowessResult {
-    fn from(result: LowessResult<f64>) -> Self {
-        let n = result.y.len();
-
-        let (rmse, mae, r_squared, aic, aicc, effective_df, residual_sd) =
-            binding_support::extract_diagnostics(&result);
-        let cv_scores_len = result
-            .cv_scores
-            .as_ref()
-            .map(|v| v.len() as c_ulong)
-            .unwrap_or(0);
-
-        CppLowessResult {
-            x: binding_support::vec_to_raw_ptr(result.x),
-            y: binding_support::vec_to_raw_ptr(result.y),
-            n: n as c_ulong,
-            standard_errors: binding_support::opt_vec_to_raw_ptr(result.standard_errors),
-            confidence_lower: binding_support::opt_vec_to_raw_ptr(result.confidence_lower),
-            confidence_upper: binding_support::opt_vec_to_raw_ptr(result.confidence_upper),
-            prediction_lower: binding_support::opt_vec_to_raw_ptr(result.prediction_lower),
-            prediction_upper: binding_support::opt_vec_to_raw_ptr(result.prediction_upper),
-            residuals: binding_support::opt_vec_to_raw_ptr(result.residuals),
-            robustness_weights: binding_support::opt_vec_to_raw_ptr(result.robustness_weights),
-            cv_scores: binding_support::opt_vec_to_raw_ptr(result.cv_scores),
-            cv_scores_len,
-            fraction_used: result.fraction_used,
-            iterations_used: result.iterations_used.map(|i| i as c_int).unwrap_or(-1),
-            rmse,
-            mae,
-            r_squared,
-            aic,
-            aicc,
-            effective_df,
-            residual_sd,
+impl Default for CppOnlineOutput {
+    fn default() -> Self {
+        CppOnlineOutput {
+            has_value: 0,
+            smoothed: f64::NAN,
+            std_error: f64::NAN,
+            residual: f64::NAN,
+            robustness_weight: f64::NAN,
+            iterations_used: -1,
             error: ptr::null_mut(),
         }
     }
 }
 
-/// Opaque handle to a Lowess batch model.
+impl From<LowessResult<f64>> for CppLowessResult {
+    fn from(result: LowessResult<f64>) -> Self {
+        let p = shared_parse::extract_ffi_lowess_result(result);
+        CppLowessResult {
+            x: p.x,
+            y: p.y,
+            n: p.n as c_ulong,
+            standard_errors: p.standard_errors,
+            confidence_lower: p.confidence_lower,
+            confidence_upper: p.confidence_upper,
+            prediction_lower: p.prediction_lower,
+            prediction_upper: p.prediction_upper,
+            residuals: p.residuals,
+            robustness_weights: p.robustness_weights,
+            cv_scores: p.cv_scores,
+            cv_scores_len: p.cv_scores_len as c_ulong,
+            fraction_used: p.fraction_used,
+            iterations_used: p.iterations_used,
+            rmse: p.rmse,
+            mae: p.mae,
+            r_squared: p.r_squared,
+            aic: p.aic,
+            aicc: p.aicc,
+            effective_df: p.effective_df,
+            residual_sd: p.residual_sd,
+            error: ptr::null_mut(),
+        }
+    }
+}
+
+// Opaque handle to a Lowess batch model.
 pub struct CppLowess {
     builder: Option<LowessBuilder<f64>>,
     // Store CV options to apply lazily because of lifetime constraints
     cv_fractions: Option<Vec<f64>>,
     cv_method: Option<String>,
     cv_k: usize,
+    cv_seed: Option<u64>,
 }
 
-/// Opaque handle to a Lowess streaming model.
+// Opaque handle to a Lowess streaming model.
 pub struct CppStreamingLowess {
-    builder: LowessBuilder<f64>,
-    streaming_opts: Option<(usize, usize, MergeStrategy)>,
     model: Option<ParallelStreamingLowess<f64>>,
 }
 
-/// Opaque handle to a Lowess online model.
+// Opaque handle to a Lowess online model.
 pub struct CppOnlineLowess {
-    builder: LowessBuilder<f64>,
-    online_opts: Option<(usize, usize, UpdateMode)>,
     model: Option<ParallelOnlineLowess<f64>>,
+}
+
+#[allow(dead_code)]
+fn setter_unsupported_eager_lifecycle(name: &str) {
+    set_last_error(&shared_parse::setter_unsupported_eager_message(name));
 }
 
 /// C++ wrapper constructor.
@@ -188,81 +295,90 @@ pub unsafe extern "C" fn cpp_lowess_new(
     cv_k: c_int,
     parallel: c_int,
 ) -> *mut CppLowess {
-    let wf_str = binding_support::parse_c_str_or_default(weight_function, "tricube");
-    let rm_str = binding_support::parse_c_str_or_default(robustness_method, "bisquare");
-    let sm_str = binding_support::parse_c_str_or_default(scaling_method, "mad");
-    let bp_str = binding_support::parse_c_str_or_default(boundary_policy, "extend");
-    let zwf_str = binding_support::parse_c_str_or_default(zero_weight_fallback, "use_local_mean");
+    with_panic_ptr(|| {
+        clear_last_error();
+        let wf_str = shared_parse::parse_c_str_or_default(
+            weight_function,
+            shared_parse::DEFAULT_WEIGHT_FUNCTION,
+        );
+        let rm_str = shared_parse::parse_c_str_or_default(
+            robustness_method,
+            shared_parse::DEFAULT_ROBUSTNESS_METHOD,
+        );
+        let sm_str = shared_parse::parse_c_str_or_default(
+            scaling_method,
+            shared_parse::DEFAULT_SCALING_METHOD,
+        );
+        let bp_str = shared_parse::parse_c_str_or_default(
+            boundary_policy,
+            shared_parse::DEFAULT_BOUNDARY_POLICY,
+        );
+        let zwf_str = shared_parse::parse_c_str_or_default(
+            zero_weight_fallback,
+            shared_parse::DEFAULT_ZERO_WEIGHT_FALLBACK,
+        );
 
-    let wf = match binding_support::parse_weight_function(wf_str) {
-        Ok(v) => v,
-        Err(_) => return ptr::null_mut(),
-    };
-    let rm = match binding_support::parse_robustness_method(rm_str) {
-        Ok(v) => v,
-        Err(_) => return ptr::null_mut(),
-    };
-    let sm = match binding_support::parse_scaling_method(sm_str) {
-        Ok(v) => v,
-        Err(_) => return ptr::null_mut(),
-    };
-    let bp = match binding_support::parse_boundary_policy(bp_str) {
-        Ok(v) => v,
-        Err(_) => return ptr::null_mut(),
-    };
-    let zwf = match binding_support::parse_zero_weight_fallback(zwf_str) {
-        Ok(v) => v,
-        Err(_) => return ptr::null_mut(),
-    };
+        let iterations = match shared_parse::require_non_negative_usize("iterations", iterations) {
+            Ok(v) => v,
+            Err(e) => return null_with_error(&e),
+        };
 
-    let mut builder = LowessBuilder::<f64>::new();
-    builder = builder.fraction(fraction);
-    builder = builder.iterations(iterations as usize);
-    builder = builder.weight_function(wf);
-    builder = builder.robustness_method(rm);
-    builder = builder.scaling_method(sm);
-    builder = builder.zero_weight_fallback(zwf);
-    builder = builder.boundary_policy(bp);
-    builder = builder.parallel(parallel != 0);
+        let cv_fractions_vec =
+            shared_parse::option_vec_from_ptr(cv_fractions, cv_fractions_len as usize);
+        let cv_method_str =
+            shared_parse::parse_c_str_or_default(cv_method, shared_parse::DEFAULT_CV_METHOD)
+                .to_string();
+        let cv_k_usize = cv_k.max(2) as usize;
 
-    if !delta.is_nan() {
-        builder = builder.delta(delta);
-    }
-    if !confidence_intervals.is_nan() {
-        builder = builder.confidence_intervals(confidence_intervals);
-    }
-    if !prediction_intervals.is_nan() {
-        builder = builder.prediction_intervals(prediction_intervals);
-    }
-    if return_diagnostics != 0 {
-        builder = builder.return_diagnostics();
-    }
-    if return_residuals != 0 {
-        builder = builder.return_residuals();
-    }
-    if return_robustness_weights != 0 {
-        builder = builder.return_robustness_weights();
-    }
-    if !auto_converge.is_nan() {
-        builder = builder.auto_converge(auto_converge);
-    }
+        let builder = match shared_parse::apply_builder_options(
+            LowessBuilder::<f64>::new(),
+            shared_parse::BuilderOptionSet {
+                fraction: Some(fraction),
+                iterations: Some(iterations),
+                delta: (!delta.is_nan()).then_some(delta),
+                weight_function: Some(wf_str),
+                robustness_method: Some(rm_str),
+                zero_weight_fallback: Some(zwf_str),
+                boundary_policy: Some(bp_str),
+                scaling_method: Some(sm_str),
+                auto_converge: (!auto_converge.is_nan()).then_some(auto_converge),
+                return_residuals: return_residuals != 0,
+                return_robustness_weights: return_robustness_weights != 0,
+                return_diagnostics: return_diagnostics != 0,
+                confidence_intervals: (!confidence_intervals.is_nan())
+                    .then_some(confidence_intervals),
+                prediction_intervals: (!prediction_intervals.is_nan())
+                    .then_some(prediction_intervals),
+                parallel: Some(parallel != 0),
+                ..Default::default()
+            },
+        ) {
+            Ok(v) => v,
+            Err(e) => return null_with_error(&e),
+        };
 
-    // Store CV options
-    let cv_fractions_vec = if !cv_fractions.is_null() && cv_fractions_len > 0 {
-        let fractions = std::slice::from_raw_parts(cv_fractions, cv_fractions_len as usize);
-        Some(fractions.to_vec())
-    } else {
-        None
-    };
+        Box::into_raw(Box::new(CppLowess {
+            builder: Some(builder),
+            cv_fractions: cv_fractions_vec,
+            cv_method: Some(cv_method_str),
+            cv_k: cv_k_usize,
+            cv_seed: None,
+        }))
+    })
+}
 
-    let cv_method_str = binding_support::parse_c_str_or_default(cv_method, "kfold").to_string();
-
-    Box::into_raw(Box::new(CppLowess {
-        builder: Some(builder),
-        cv_fractions: cv_fractions_vec,
-        cv_method: Some(cv_method_str),
-        cv_k: cv_k as usize,
-    }))
+/// Set CV seed for reproducible K-fold splits.
+///
+/// # Safety
+/// ptr must be valid.
+#[unsafe(no_mangle)]
+#[allow(clippy::useless_conversion)] // c_ulong is u32 on Windows, u64 on Linux/macOS
+pub unsafe extern "C" fn cpp_lowess_set_cv_seed(ptr: *mut CppLowess, seed: c_ulong) {
+    with_panic_void(|| {
+        if !ptr.is_null() {
+            unsafe { (*ptr).cv_seed = Some(u64::from(seed)) };
+        }
+    });
 }
 
 /// Fit the batch model.
@@ -279,51 +395,44 @@ pub unsafe extern "C" fn cpp_lowess_fit(
     custom_weights: *const c_double,
     custom_weights_len: c_ulong,
 ) -> CppLowessResult {
-    if ptr.is_null() {
-        return error_result("Model pointer is null");
-    }
-    if x_values.is_null() || y_values.is_null() || n == 0 {
-        return error_result("Invalid data inputs");
-    }
+    with_panic_result(|| {
+        if ptr.is_null() {
+            return error_result(shared_parse::MODEL_POINTER_IS_NULL);
+        }
+        if x_values.is_null() || y_values.is_null() || n == 0 {
+            return error_result(shared_parse::INVALID_DATA_INPUTS);
+        }
 
-    let lowess = &mut *ptr;
-    let x_slice = std::slice::from_raw_parts(x_values, n as usize);
-    let y_slice = std::slice::from_raw_parts(y_values, n as usize);
+        let lowess = &mut *ptr;
+        let x_slice = std::slice::from_raw_parts(x_values, n as usize);
+        let y_slice = std::slice::from_raw_parts(y_values, n as usize);
 
-    if let Some(mut builder) = lowess.builder.clone() {
-        // Apply CV options if present
-        if let Some(fractions) = &lowess.cv_fractions
-            && let Some(method) = &lowess.cv_method
-        {
-            builder = match binding_support::apply_cross_validation(
+        let cw = shared_parse::option_vec_from_ptr(custom_weights, custom_weights_len as usize);
+
+        if let Some(mut builder) = lowess.builder.clone() {
+            builder = match map_invalid_arg_result(shared_parse::apply_cross_validation(
                 builder,
-                Some(fractions),
-                Some(method),
+                lowess.cv_fractions.as_deref(),
+                lowess.cv_method.as_deref(),
                 Some(lowess.cv_k),
-                None,
-            ) {
+                lowess.cv_seed,
+            )) {
                 Ok(b) => b,
-                Err(e) => return error_result(&e),
+                Err(e) => return e,
             };
-        }
 
-        // Apply per-observation case weights if provided
-        if !custom_weights.is_null() && custom_weights_len > 0 {
-            let cw =
-                std::slice::from_raw_parts(custom_weights, custom_weights_len as usize).to_vec();
-            builder = builder.custom_weights(cw);
-        }
-
-        match builder.adapter(Batch).build() {
-            Ok(m) => match m.fit(x_slice, y_slice) {
+            let model = match shared_parse::build_batch(builder, cw) {
+                Ok(m) => m,
+                Err(e) => return error_result(&e.message),
+            };
+            match map_runtime_result(model.fit(x_slice, y_slice)) {
                 Ok(r) => r.into(),
-                Err(e) => error_result(&e.to_string()),
-            },
-            Err(e) => error_result(&e.to_string()),
+                Err(e) => e,
+            }
+        } else {
+            error_result(shared_parse::MODEL_NOT_INITIALIZED)
         }
-    } else {
-        error_result("Model initialization failed")
-    }
+    })
 }
 
 /// Free batch model.
@@ -332,9 +441,11 @@ pub unsafe extern "C" fn cpp_lowess_fit(
 /// `ptr` must be a valid pointer returned by `cpp_lowess_new` or null.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_lowess_free(ptr: *mut CppLowess) {
-    if !ptr.is_null() {
-        let _ = Box::from_raw(ptr);
-    }
+    with_panic_void(|| {
+        if !ptr.is_null() {
+            let _ = Box::from_raw(ptr);
+        }
+    });
 }
 
 /// Create a new Streaming Lowess model.
@@ -360,157 +471,150 @@ pub unsafe extern "C" fn cpp_streaming_new(
     chunk_size: c_int,
     overlap: c_int,
     merge_strategy: *const c_char,
+    // Interval options
+    confidence_intervals: c_double,
+    prediction_intervals: c_double,
 ) -> *mut CppStreamingLowess {
-    let wf_str = binding_support::parse_c_str_or_default(weight_function, "tricube");
-    let rm_str = binding_support::parse_c_str_or_default(robustness_method, "bisquare");
-    let sm_str = binding_support::parse_c_str_or_default(scaling_method, "mad");
-    let bp_str = binding_support::parse_c_str_or_default(boundary_policy, "extend");
-    let zwf_str = binding_support::parse_c_str_or_default(zero_weight_fallback, "use_local_mean");
-    let ms_str = binding_support::parse_c_str_or_default(merge_strategy, "weighted");
+    with_panic_ptr(|| {
+        clear_last_error();
+        let wf_str = shared_parse::parse_c_str_or_default(
+            weight_function,
+            shared_parse::DEFAULT_WEIGHT_FUNCTION,
+        );
+        let rm_str = shared_parse::parse_c_str_or_default(
+            robustness_method,
+            shared_parse::DEFAULT_ROBUSTNESS_METHOD,
+        );
+        let sm_str = shared_parse::parse_c_str_or_default(
+            scaling_method,
+            shared_parse::DEFAULT_SCALING_METHOD,
+        );
+        let bp_str = shared_parse::parse_c_str_or_default(
+            boundary_policy,
+            shared_parse::DEFAULT_BOUNDARY_POLICY,
+        );
+        let zwf_str = shared_parse::parse_c_str_or_default(
+            zero_weight_fallback,
+            shared_parse::DEFAULT_ZERO_WEIGHT_FALLBACK,
+        );
+        let ms_str = shared_parse::parse_c_str_or_default(
+            merge_strategy,
+            shared_parse::DEFAULT_MERGE_STRATEGY,
+        );
 
-    let wf = match binding_support::parse_weight_function(wf_str) {
-        Ok(v) => v,
-        Err(_) => return ptr::null_mut(),
-    };
-    let rm = match binding_support::parse_robustness_method(rm_str) {
-        Ok(v) => v,
-        Err(_) => return ptr::null_mut(),
-    };
-    let sm = match binding_support::parse_scaling_method(sm_str) {
-        Ok(v) => v,
-        Err(_) => return ptr::null_mut(),
-    };
-    let bp = match binding_support::parse_boundary_policy(bp_str) {
-        Ok(v) => v,
-        Err(_) => return ptr::null_mut(),
-    };
-    let zwf = match binding_support::parse_zero_weight_fallback(zwf_str) {
-        Ok(v) => v,
-        Err(_) => return ptr::null_mut(),
-    };
-    let ms = match binding_support::parse_merge_strategy(ms_str) {
-        Ok(v) => v,
-        Err(_) => return ptr::null_mut(),
-    };
+        let chunk_size = match shared_parse::require_positive_usize("chunk_size", chunk_size) {
+            Ok(v) => v,
+            Err(e) => return null_with_error(&e),
+        };
 
-    let mut builder = LowessBuilder::<f64>::new();
-    builder = builder.fraction(fraction);
-    builder = builder.iterations(iterations as usize);
-    builder = builder.weight_function(wf);
-    builder = builder.robustness_method(rm);
-    builder = builder.scaling_method(sm);
-    builder = builder.zero_weight_fallback(zwf);
-    builder = builder.boundary_policy(bp);
-    builder = builder.parallel(parallel != 0);
+        let builder = match shared_parse::apply_builder_options(
+            LowessBuilder::<f64>::new(),
+            shared_parse::BuilderOptionSet {
+                fraction: Some(fraction),
+                iterations: Some(iterations as usize),
+                delta: (!delta.is_nan()).then_some(delta),
+                weight_function: Some(wf_str),
+                robustness_method: Some(rm_str),
+                zero_weight_fallback: Some(zwf_str),
+                boundary_policy: Some(bp_str),
+                scaling_method: Some(sm_str),
+                auto_converge: (!auto_converge.is_nan()).then_some(auto_converge),
+                return_residuals: return_residuals != 0,
+                return_robustness_weights: return_robustness_weights != 0,
+                return_diagnostics: return_diagnostics != 0,
+                confidence_intervals: (!confidence_intervals.is_nan())
+                    .then_some(confidence_intervals),
+                prediction_intervals: (!prediction_intervals.is_nan())
+                    .then_some(prediction_intervals),
+                parallel: Some(parallel != 0),
+                ..Default::default()
+            },
+        ) {
+            Ok(v) => v,
+            Err(e) => return null_with_error(&e),
+        };
 
-    if !delta.is_nan() {
-        builder = builder.delta(delta);
-    }
-    if return_diagnostics != 0 {
-        builder = builder.return_diagnostics();
-    }
-    if return_residuals != 0 {
-        builder = builder.return_residuals();
-    }
-    if return_robustness_weights != 0 {
-        builder = builder.return_robustness_weights();
-    }
-    if !auto_converge.is_nan() {
-        builder = builder.auto_converge(auto_converge);
-    }
+        let model = match shared_parse::build_streaming(
+            builder,
+            Some(chunk_size),
+            (overlap >= 0).then_some(overlap as usize),
+            Some(ms_str),
+        ) {
+            Ok(m) => m,
+            Err(e) => return null_with_error(&e.message),
+        };
 
-    let chunk_size = chunk_size as usize;
-    let overlap_size = if overlap < 0 {
-        binding_support::default_overlap(chunk_size)
-    } else {
-        overlap as usize
-    };
-
-    Box::into_raw(Box::new(CppStreamingLowess {
-        builder,
-        streaming_opts: Some((chunk_size, overlap_size, ms)),
-        model: None,
-    }))
+        Box::into_raw(Box::new(CppStreamingLowess { model: Some(model) }))
+    })
 }
 
-#[unsafe(no_mangle)]
 /// Process a chunk of data.
 ///
 /// # Safety
 /// `ptr` must be valid. `x_values` and `y_values` must be valid arrays of
 /// length `n`.
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_streaming_process(
     ptr: *mut CppStreamingLowess,
     x_values: *const c_double,
     y_values: *const c_double,
     n: c_ulong,
 ) -> CppLowessResult {
-    if ptr.is_null() {
-        return error_result("Model pointer is null");
-    }
-    let lowess = &mut *ptr;
-    if x_values.is_null() || y_values.is_null() || n == 0 {
-        return error_result("Invalid data inputs");
-    }
-    let x_slice = std::slice::from_raw_parts(x_values, n as usize);
-    let y_slice = std::slice::from_raw_parts(y_values, n as usize);
-
-    if lowess.model.is_none()
-        && let Some((cs, ov, ms)) = lowess.streaming_opts
-    {
-        match lowess
-            .builder
-            .clone()
-            .adapter(Streaming)
-            .chunk_size(cs)
-            .overlap(ov)
-            .merge_strategy(ms)
-            .build()
-        {
-            Ok(m) => lowess.model = Some(m),
-            Err(e) => return error_result(&e.to_string()),
+    with_panic_result(|| {
+        if ptr.is_null() {
+            return error_result(shared_parse::MODEL_POINTER_IS_NULL);
         }
-    }
-
-    if let Some(model) = &mut lowess.model {
-        match model.process_chunk(x_slice, y_slice) {
-            Ok(r) => r.into(),
-            Err(e) => error_result(&e.to_string()),
+        let lowess = &mut *ptr;
+        if x_values.is_null() || y_values.is_null() || n == 0 {
+            return error_result(shared_parse::INVALID_DATA_INPUTS);
         }
-    } else {
-        error_result("Streaming model initialization failed")
-    }
+        let x_slice = std::slice::from_raw_parts(x_values, n as usize);
+        let y_slice = std::slice::from_raw_parts(y_values, n as usize);
+
+        if let Some(model) = &mut lowess.model {
+            match map_runtime_result(model.process_chunk(x_slice, y_slice)) {
+                Ok(r) => r.into(),
+                Err(e) => e,
+            }
+        } else {
+            error_result(shared_parse::MODEL_NOT_INITIALIZED)
+        }
+    })
 }
 
-#[unsafe(no_mangle)]
 /// Finalize the streaming process.
 ///
 /// # Safety
 /// `ptr` must be valid.
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_streaming_finalize(ptr: *mut CppStreamingLowess) -> CppLowessResult {
-    if ptr.is_null() {
-        return error_result("Model pointer is null");
-    }
-    let lowess = &mut *ptr;
-    if let Some(model) = &mut lowess.model {
-        match model.finalize() {
-            Ok(r) => r.into(),
-            Err(e) => error_result(&e.to_string()),
+    with_panic_result(|| {
+        if ptr.is_null() {
+            return error_result(shared_parse::MODEL_POINTER_IS_NULL);
         }
-    } else {
-        error_result("Streaming model not initialized")
-    }
+        let lowess = &mut *ptr;
+        if let Some(model) = &mut lowess.model {
+            match map_runtime_result(model.finalize()) {
+                Ok(r) => r.into(),
+                Err(e) => e,
+            }
+        } else {
+            error_result(shared_parse::MODEL_NOT_INITIALIZED)
+        }
+    })
 }
 
-#[unsafe(no_mangle)]
 /// Free streaming model.
 ///
 /// # Safety
 /// `ptr` must be valid or null.
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_streaming_free(ptr: *mut CppStreamingLowess) {
-    if !ptr.is_null() {
-        let _ = Box::from_raw(ptr);
-    }
+    with_panic_void(|| {
+        if !ptr.is_null() {
+            let _ = Box::from_raw(ptr);
+        }
+    });
 }
 
 /// Create a new Online Lowess model.
@@ -527,6 +631,8 @@ pub unsafe extern "C" fn cpp_online_new(
     scaling_method: *const c_char,
     boundary_policy: *const c_char,
     return_robustness_weights: c_int,
+    return_diagnostics: c_int,
+    return_residuals: c_int,
     zero_weight_fallback: *const c_char,
     auto_converge: c_double,
     parallel: c_int,
@@ -534,118 +640,163 @@ pub unsafe extern "C" fn cpp_online_new(
     window_capacity: c_int,
     min_points: c_int,
     update_mode: *const c_char,
+    // Interval options
+    confidence_intervals: c_double,
+    prediction_intervals: c_double,
 ) -> *mut CppOnlineLowess {
-    let wf_str = binding_support::parse_c_str_or_default(weight_function, "tricube");
-    let rm_str = binding_support::parse_c_str_or_default(robustness_method, "bisquare");
-    let sm_str = binding_support::parse_c_str_or_default(scaling_method, "mad");
-    let bp_str = binding_support::parse_c_str_or_default(boundary_policy, "extend");
-    let zwf_str = binding_support::parse_c_str_or_default(zero_weight_fallback, "use_local_mean");
-    let um_str = binding_support::parse_c_str_or_default(update_mode, "full");
+    with_panic_ptr(|| {
+        clear_last_error();
+        let wf_str = shared_parse::parse_c_str_or_default(
+            weight_function,
+            shared_parse::DEFAULT_WEIGHT_FUNCTION,
+        );
+        let rm_str = shared_parse::parse_c_str_or_default(
+            robustness_method,
+            shared_parse::DEFAULT_ROBUSTNESS_METHOD,
+        );
+        let sm_str = shared_parse::parse_c_str_or_default(
+            scaling_method,
+            shared_parse::DEFAULT_SCALING_METHOD,
+        );
+        let bp_str = shared_parse::parse_c_str_or_default(
+            boundary_policy,
+            shared_parse::DEFAULT_BOUNDARY_POLICY,
+        );
+        let zwf_str = shared_parse::parse_c_str_or_default(
+            zero_weight_fallback,
+            shared_parse::DEFAULT_ZERO_WEIGHT_FALLBACK,
+        );
+        let um_str =
+            shared_parse::parse_c_str_or_default(update_mode, shared_parse::DEFAULT_UPDATE_MODE);
 
-    let wf = match binding_support::parse_weight_function(wf_str) {
-        Ok(v) => v,
-        Err(_) => return ptr::null_mut(),
-    };
-    let rm = match binding_support::parse_robustness_method(rm_str) {
-        Ok(v) => v,
-        Err(_) => return ptr::null_mut(),
-    };
-    let sm = match binding_support::parse_scaling_method(sm_str) {
-        Ok(v) => v,
-        Err(_) => return ptr::null_mut(),
-    };
-    let bp = match binding_support::parse_boundary_policy(bp_str) {
-        Ok(v) => v,
-        Err(_) => return ptr::null_mut(),
-    };
-    let zwf = match binding_support::parse_zero_weight_fallback(zwf_str) {
-        Ok(v) => v,
-        Err(_) => return ptr::null_mut(),
-    };
-    let um = match binding_support::parse_update_mode(um_str) {
-        Ok(v) => v,
-        Err(_) => return ptr::null_mut(),
-    };
+        let window_capacity =
+            match shared_parse::require_positive_usize("window_capacity", window_capacity) {
+                Ok(v) => v,
+                Err(e) => return null_with_error(&e),
+            };
+        let min_points = match shared_parse::require_positive_usize("min_points", min_points) {
+            Ok(v) => v,
+            Err(e) => return null_with_error(&e),
+        };
 
-    let mut builder = LowessBuilder::<f64>::new();
-    builder = builder.fraction(fraction);
-    builder = builder.iterations(iterations as usize);
-    builder = builder.weight_function(wf);
-    builder = builder.robustness_method(rm);
-    builder = builder.scaling_method(sm);
-    builder = builder.zero_weight_fallback(zwf);
-    builder = builder.boundary_policy(bp);
-    builder = builder.parallel(parallel != 0);
+        let builder = match shared_parse::apply_builder_options(
+            LowessBuilder::<f64>::new(),
+            shared_parse::BuilderOptionSet {
+                fraction: Some(fraction),
+                iterations: Some(iterations as usize),
+                delta: (!delta.is_nan()).then_some(delta),
+                weight_function: Some(wf_str),
+                robustness_method: Some(rm_str),
+                zero_weight_fallback: Some(zwf_str),
+                boundary_policy: Some(bp_str),
+                scaling_method: Some(sm_str),
+                auto_converge: (!auto_converge.is_nan()).then_some(auto_converge),
+                return_residuals: return_residuals != 0,
+                return_robustness_weights: return_robustness_weights != 0,
+                return_diagnostics: return_diagnostics != 0,
+                confidence_intervals: (!confidence_intervals.is_nan())
+                    .then_some(confidence_intervals),
+                prediction_intervals: (!prediction_intervals.is_nan())
+                    .then_some(prediction_intervals),
+                parallel: Some(parallel != 0),
+                ..Default::default()
+            },
+        ) {
+            Ok(v) => v,
+            Err(e) => return null_with_error(&e),
+        };
 
-    if !delta.is_nan() {
-        builder = builder.delta(delta);
-    }
-    if return_robustness_weights != 0 {
-        builder = builder.return_robustness_weights();
-    }
-    if !auto_converge.is_nan() {
-        builder = builder.auto_converge(auto_converge);
-    }
+        let model = match shared_parse::build_online(
+            builder,
+            Some(window_capacity),
+            Some(min_points),
+            Some(um_str),
+        ) {
+            Ok(m) => m,
+            Err(e) => return null_with_error(&e.message),
+        };
 
-    Box::into_raw(Box::new(CppOnlineLowess {
-        builder,
-        online_opts: Some((window_capacity as usize, min_points as usize, um)),
-        model: None,
-    }))
+        Box::into_raw(Box::new(CppOnlineLowess { model: Some(model) }))
+    })
 }
 
-#[unsafe(no_mangle)]
-/// Add a single point to the online model. Returns NaN if not enough points yet.
+/// Add a single point to the model and return its smoothed value.
+/// `has_value = 0` in the result means the window is still filling.
 ///
 /// # Safety
-/// `ptr` must be valid.
+/// `ptr` must be a valid `CppOnlineLowess` pointer.
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_online_add_point(
     ptr: *mut CppOnlineLowess,
     x: c_double,
     y: c_double,
-) -> c_double {
-    if ptr.is_null() {
-        return f64::NAN;
-    }
-    let lowess = &mut *ptr;
-
-    if lowess.model.is_none()
-        && let Some((wc, mp, um)) = lowess.online_opts
-    {
-        match lowess
-            .builder
-            .clone()
-            .adapter(Online)
-            .window_capacity(wc)
-            .min_points(mp)
-            .update_mode(um)
-            .build()
-        {
-            Ok(m) => lowess.model = Some(m),
-            Err(_) => return f64::NAN,
+) -> CppOnlineOutput {
+    let make_error = |msg: &str| -> CppOnlineOutput {
+        CppOnlineOutput {
+            error: shared_parse::to_cstring_lossy(msg).into_raw(),
+            ..CppOnlineOutput::default()
         }
-    }
+    };
 
-    if let Some(model) = &mut lowess.model {
-        match model.add_point(x, y) {
-            Ok(Some(o)) => o.smoothed,
-            Ok(None) => f64::NAN,
-            Err(_) => f64::NAN,
+    match catch_unwind(AssertUnwindSafe(|| {
+        if ptr.is_null() {
+            return make_error(shared_parse::MODEL_POINTER_IS_NULL);
         }
-    } else {
-        f64::NAN
+        let lowess = unsafe { &mut *ptr };
+
+        if let Some(model) = &mut lowess.model {
+            match model.add_point(x, y) {
+                Err(e) => make_error(&e.to_string()),
+                Ok(None) => CppOnlineOutput::default(),
+                Ok(Some(o)) => {
+                    let (std_error, residual, robustness_weight, iterations_used) =
+                        shared_parse::extract_online_output(&o);
+                    CppOnlineOutput {
+                        has_value: 1,
+                        smoothed: o.smoothed,
+                        std_error,
+                        residual,
+                        robustness_weight,
+                        iterations_used,
+                        error: ptr::null_mut(),
+                    }
+                }
+            }
+        } else {
+            make_error(shared_parse::MODEL_NOT_INITIALIZED)
+        }
+    })) {
+        Ok(v) => v,
+        Err(_) => make_error(shared_parse::panic_fallback_message()),
     }
 }
 
+/// Free the error string in a CppOnlineOutput (call only when error != NULL).
+///
+/// # Safety
+/// `output` must be a valid pointer and `output->error` must have been allocated by Rust.
 #[unsafe(no_mangle)]
+pub unsafe extern "C" fn cpp_online_free_output(output: *mut CppOnlineOutput) {
+    with_panic_void(|| {
+        if !output.is_null() {
+            let out = unsafe { &mut *output };
+            shared_parse::free_raw_c_string(out.error);
+            out.error = ptr::null_mut();
+        }
+    });
+}
+
 /// Free online model.
 ///
 /// # Safety
 /// `ptr` must be valid or null.
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_online_free(ptr: *mut CppOnlineLowess) {
-    if !ptr.is_null() {
-        let _ = Box::from_raw(ptr);
-    }
+    with_panic_void(|| {
+        if !ptr.is_null() {
+            let _ = Box::from_raw(ptr);
+        }
+    });
 }
 
 /// Free a CppLowessResult.
@@ -654,50 +805,25 @@ pub unsafe extern "C" fn cpp_online_free(ptr: *mut CppOnlineLowess) {
 /// `result` must be a valid pointer to a CppLowessResult struct.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_lowess_free_result(result: *mut CppLowessResult) {
-    if result.is_null() {
-        return;
-    }
+    with_panic_void(|| {
+        if result.is_null() {
+            return;
+        }
 
-    let r = &mut *result;
-    let n = r.n as usize;
+        let r = &mut *result;
+        let n = r.n as usize;
+        let cv_n = r.cv_scores_len as usize;
 
-    // Free arrays
-    if !r.x.is_null() {
-        let _ = Box::from_raw(std::ptr::slice_from_raw_parts_mut(r.x, n));
-    }
-    if !r.y.is_null() {
-        let _ = Box::from_raw(std::ptr::slice_from_raw_parts_mut(r.y, n));
-    }
-    if !r.standard_errors.is_null() {
-        let _ = Box::from_raw(std::ptr::slice_from_raw_parts_mut(r.standard_errors, n));
-    }
-    if !r.confidence_lower.is_null() {
-        let _ = Box::from_raw(std::ptr::slice_from_raw_parts_mut(r.confidence_lower, n));
-    }
-    if !r.confidence_upper.is_null() {
-        let _ = Box::from_raw(std::ptr::slice_from_raw_parts_mut(r.confidence_upper, n));
-    }
-    if !r.prediction_lower.is_null() {
-        let _ = Box::from_raw(std::ptr::slice_from_raw_parts_mut(r.prediction_lower, n));
-    }
-    if !r.prediction_upper.is_null() {
-        let _ = Box::from_raw(std::ptr::slice_from_raw_parts_mut(r.prediction_upper, n));
-    }
-    if !r.residuals.is_null() {
-        let _ = Box::from_raw(std::ptr::slice_from_raw_parts_mut(r.residuals, n));
-    }
-    if !r.robustness_weights.is_null() {
-        let _ = Box::from_raw(std::ptr::slice_from_raw_parts_mut(r.robustness_weights, n));
-    }
-    if !r.cv_scores.is_null() {
-        let _ = Box::from_raw(std::ptr::slice_from_raw_parts_mut(
-            r.cv_scores,
-            r.cv_scores_len as usize,
-        ));
-    }
-
-    // Free error string
-    if !r.error.is_null() {
-        let _ = std::ffi::CString::from_raw(r.error);
-    }
+        shared_parse::free_raw_f64_buffer(r.x, n);
+        shared_parse::free_raw_f64_buffer(r.y, n);
+        shared_parse::free_raw_f64_buffer(r.standard_errors, n);
+        shared_parse::free_raw_f64_buffer(r.confidence_lower, n);
+        shared_parse::free_raw_f64_buffer(r.confidence_upper, n);
+        shared_parse::free_raw_f64_buffer(r.prediction_lower, n);
+        shared_parse::free_raw_f64_buffer(r.prediction_upper, n);
+        shared_parse::free_raw_f64_buffer(r.residuals, n);
+        shared_parse::free_raw_f64_buffer(r.robustness_weights, n);
+        shared_parse::free_raw_f64_buffer(r.cv_scores, cv_n);
+        shared_parse::free_raw_c_string(r.error);
+    });
 }

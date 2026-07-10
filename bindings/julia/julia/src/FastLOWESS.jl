@@ -5,10 +5,11 @@ High-performance LOWESS (Locally Weighted Scatterplot Smoothing) for Julia.
 
 Provides bindings to the fastlowess Rust library for fast, robust LOWESS smoothing.
 
-# Main Functions
-- `smooth(x, y; kwargs...)`: Batch LOWESS smoothing
-- `smooth_streaming(x, y; kwargs...)`: Streaming mode for large datasets
-- `smooth_online(x, y; kwargs...)`: Online mode with sliding window
+# Main API
+- `Lowess(; kwargs...)`: Configure batch LOWESS
+- `fit(model, x, y)`: Fit and return results
+- `StreamingLowess(; kwargs...)` / `process_chunk` / `finalize`: Streaming mode
+- `OnlineLowess(; kwargs...)` / `add_point`: Online sliding-window mode
 
 # Example
 ```julia
@@ -17,7 +18,7 @@ using FastLOWESS
 x = collect(1.0:0.1:10.0)
 y = sin.(x) .+ 0.1 .* randn(length(x))
 
-result = smooth(x, y, fraction=0.3)
+result = fit(Lowess(fraction=0.3), x, y)
 println("Smoothed values: ", result.y)
 ```
 """
@@ -25,7 +26,7 @@ module FastLOWESS
 
 export Lowess, StreamingLowess, OnlineLowess
 export fit, process_chunk, finalize, add_point
-export LowessResult, Diagnostics
+export LowessResult, OnlineOutput, Diagnostics
 
 import Base: finalize
 
@@ -167,6 +168,37 @@ struct LowessResult
 	diagnostics::Union{Diagnostics, Nothing}
 end
 
+"""
+	OnlineOutput
+
+Result from a single `add_point` call.
+
+# Fields
+- `smoothed::Float64`: Smoothed value for the latest point
+- `std_error::Union{Float64, Nothing}`: Standard error (if computed)
+- `residual::Union{Float64, Nothing}`: Residual y − smoothed (if computed)
+- `robustness_weight::Union{Float64, Nothing}`: Robustness weight (if computed)
+- `iterations_used::Union{Int, Nothing}`: Number of robustness iterations
+"""
+struct OnlineOutput
+	smoothed::Float64
+	std_error::Union{Float64, Nothing}
+	residual::Union{Float64, Nothing}
+	robustness_weight::Union{Float64, Nothing}
+	iterations_used::Union{Int, Nothing}
+end
+
+# C FFI struct for per-point online output (must match Rust definition).
+struct CJlOnlineOutput
+	has_value::Cint
+	smoothed::Cdouble
+	std_error::Cdouble
+	residual::Cdouble
+	robustness_weight::Cdouble
+	iterations_used::Cint
+	error::Ptr{Cchar}
+end
+
 # C FFI result struct (must match Rust definition)
 struct CJlLowessResult
 	x::Ptr{Cdouble}
@@ -202,15 +234,10 @@ end
 
 function convert_result(c_result::CJlLowessResult)
 	# Check for error
-	if c_result.error != C_NULL
-		error_msg = unsafe_string(c_result.error)
+	if c_result.error != Ptr{Cchar}(C_NULL)
+		error_msg = unsafe_string(Ptr{UInt8}(c_result.error))
 		# Free the result before throwing
-		ccall(
-			(:jl_lowess_free_result, current_library()),
-			Cvoid,
-			(Ptr{CJlLowessResult},),
-			Ref(c_result),
-		)
+		@ccall current_library().jl_lowess_free_result(Ref(c_result)::Ptr{CJlLowessResult})::Cvoid
 		error("fastlowess error: $error_msg")
 	end
 
@@ -221,14 +248,12 @@ function convert_result(c_result::CJlLowessResult)
 	y = ptr_to_vector(c_result.y, n)
 
 	if x === nothing || y === nothing
-		ccall(
-			(:jl_lowess_free_result, current_library()),
-			Cvoid,
-			(Ptr{CJlLowessResult},),
-			Ref(c_result),
-		)
+		@ccall current_library().jl_lowess_free_result(Ref(c_result)::Ptr{CJlLowessResult})::Cvoid
 		error("fastlowess error: result arrays are null")
 	end
+
+	x = x::Vector{Float64}
+	y = y::Vector{Float64}
 
 	standard_errors = ptr_to_vector(c_result.standard_errors, n)
 	confidence_lower = ptr_to_vector(c_result.confidence_lower, n)
@@ -271,12 +296,7 @@ function convert_result(c_result::CJlLowessResult)
 	)
 
 	# Free the C result
-	ccall(
-		(:jl_lowess_free_result, current_library()),
-		Cvoid,
-		(Ptr{CJlLowessResult},),
-		Ref(c_result),
-	)
+	@ccall current_library().jl_lowess_free_result(Ref(c_result)::Ptr{CJlLowessResult})::Cvoid
 
 	return result
 end
@@ -373,54 +393,33 @@ mutable struct Lowess
 		cv_method::String = "kfold",
 		cv_k::Int = 5,
 		parallel::Bool = true,
+		cv_seed::Union{Int, Nothing} = nothing,
 	)
-		cv_ptr = isempty(cv_fractions) ? C_NULL : pointer(cv_fractions)
+		cv_ptr = isempty(cv_fractions) ? Ptr{Cdouble}(C_NULL) : pointer(cv_fractions)
 		cv_len = length(cv_fractions)
 
-		handle = ccall(
-			(:jl_lowess_new, current_library()),
-			Ptr{Cvoid},
-			(
-				Cdouble,
-				Cint,
-				Cdouble,
-				Cstring,
-				Cstring,
-				Cstring,
-				Cstring,
-				Cdouble,
-				Cdouble,
-				Cint,
-				Cint,
-				Cint,
-				Cstring,
-				Cdouble,
-				Ptr{Cdouble},
-				Culong,
-				Cstring,
-				Cint,
-				Cint,
-			),
-			fraction,
-			Cint(iterations),
-			delta,
-			weight_function,
-			robustness_method,
-			scaling_method,
-			boundary_policy,
-			confidence_intervals,
-			prediction_intervals,
-			Cint(return_diagnostics),
-			Cint(return_residuals),
-			Cint(return_robustness_weights),
-			zero_weight_fallback,
-			auto_converge,
-			cv_ptr,
-			Culong(cv_len),
-			cv_method,
-			Cint(cv_k),
-			Cint(parallel),
-		)
+		handle = @ccall current_library().jl_lowess_new(
+			fraction::Cdouble,
+			Cint(iterations)::Cint,
+			delta::Cdouble,
+			weight_function::Cstring,
+			robustness_method::Cstring,
+			scaling_method::Cstring,
+			boundary_policy::Cstring,
+			confidence_intervals::Cdouble,
+			prediction_intervals::Cdouble,
+			Cint(return_diagnostics)::Cint,
+			Cint(return_residuals)::Cint,
+			Cint(return_robustness_weights)::Cint,
+			zero_weight_fallback::Cstring,
+			auto_converge::Cdouble,
+			cv_ptr::Ptr{Cdouble},
+			Culong(cv_len)::Culong,
+			cv_method::Cstring,
+			Cint(cv_k)::Cint,
+			Cint(parallel)::Cint,
+			Culong(cv_seed !== nothing ? cv_seed : 0)::Culong,
+		)::Ptr{Cvoid}
 
 		if handle == C_NULL
 			error("Failed to create Lowess configuration")
@@ -428,8 +427,7 @@ mutable struct Lowess
 
 		obj = new(handle)
 		finalizer(
-			x ->
-				ccall((:jl_lowess_free, current_library()), Cvoid, (Ptr{Cvoid},), x.handle),
+			x -> @ccall(current_library().jl_lowess_free(x.handle::Ptr{Cvoid})::Cvoid),
 			obj,
 		)
 		return obj
@@ -447,26 +445,28 @@ Fit the LOWESS model to data.
   finite and non-negative. Pass `nothing` (default) to disable.
 """
 function fit(l::Lowess, x::Vector{Float64}, y::Vector{Float64};
-		custom_weights::Union{Vector{Float64}, Nothing} = nothing)
+	custom_weights::Union{Vector{Float64}, Nothing} = nothing)
 	n = length(x)
 	if n != length(y)
 		throw(ArgumentError("x and y must have the same length"))
 	end
 
-	cw_ptr = isnothing(custom_weights) ? C_NULL : pointer(custom_weights)
-	cw_len = isnothing(custom_weights) ? Culong(0) : Culong(length(custom_weights))
+	if custom_weights !== nothing
+		if length(custom_weights) != n
+			throw(ArgumentError("custom_weights must have the same length as y"))
+		end
+	end
 
-	c_result = ccall(
-		(:jl_lowess_fit, current_library()),
-		CJlLowessResult,
-		(Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Culong, Ptr{Cdouble}, Culong),
-		l.handle,
-		x,
-		y,
-		Culong(n),
-		cw_ptr,
-		cw_len,
-	)
+	c_result = @ccall current_library().jl_lowess_fit(
+		l.handle::Ptr{Cvoid},
+		x::Ptr{Cdouble},
+		y::Ptr{Cdouble},
+		Culong(n)::Culong,
+		(
+			custom_weights !== nothing ? pointer(custom_weights) : Ptr{Cdouble}(C_NULL)
+		)::Ptr{Cdouble},
+		Culong(custom_weights !== nothing ? length(custom_weights) : 0)::Culong,
+	)::CJlLowessResult
 
 	return convert_result(c_result)
 end
@@ -477,11 +477,11 @@ end
 Stateful streaming LOWESS smoother.
 
 # Keyword Arguments
-- `fraction::Float64 = 0.3`: Smoothing fraction
+- `fraction::Float64 = 0.67`: Smoothing fraction
 - `chunk_size::Int = 5000`: Size of each processing chunk
-- `overlap::Int = -1`: Overlap between chunks (-1 for auto = 10% of chunk_size)
+- `overlap::Int = 500`: Overlap between adjacent chunks
 - `iterations::Int = 3`: Number of robustness iterations
-- `delta::Float64 = NaN`: Interpolation threshold
+- `delta::Float64 = NaN`: Interpolation threshold (NaN for auto)
 - `weight_function::String = "tricube"`: Kernel function
 - `robustness_method::String = "bisquare"`: Robustness method
 - `scaling_method::String = "mad"`: Scaling method
@@ -491,15 +491,17 @@ Stateful streaming LOWESS smoother.
 - `return_residuals::Bool = false`: Include residuals
 - `return_robustness_weights::Bool = false`: Include weights
 - `zero_weight_fallback::String = "use_local_mean"`: Zero weight handling
+- `merge_strategy::String = "weighted_average"`: Strategy for merging overlapping chunk
+  regions: "average", "weighted_average", "take_first", "take_last"
 - `parallel::Bool = true`: Enable parallel execution
 """
 mutable struct StreamingLowess
 	handle::Ptr{Cvoid}
 
 	function StreamingLowess(;
-		fraction::Float64 = 0.3,
+		fraction::Float64 = 0.67,
 		chunk_size::Int = 5000,
-		overlap::Int = -1,
+		overlap::Int = 500,
 		iterations::Int = 3,
 		delta::Float64 = NaN,
 		weight_function::String = "tricube",
@@ -511,44 +513,27 @@ mutable struct StreamingLowess
 		return_residuals::Bool = false,
 		return_robustness_weights::Bool = false,
 		zero_weight_fallback::String = "use_local_mean",
+		merge_strategy::String = "weighted_average",
 		parallel::Bool = true,
 	)
-		handle = ccall(
-			(:jl_streaming_lowess_new, current_library()),
-			Ptr{Cvoid},
-			(
-				Cdouble,
-				Cint,
-				Cint,
-				Cint,
-				Cdouble,
-				Cstring,
-				Cstring,
-				Cstring,
-				Cstring,
-				Cdouble,
-				Cint,
-				Cint,
-				Cint,
-				Cstring,
-				Cint,
-			),
-			fraction,
-			Cint(chunk_size),
-			Cint(overlap),
-			Cint(iterations),
-			delta,
-			weight_function,
-			robustness_method,
-			scaling_method,
-			boundary_policy,
-			auto_converge,
-			Cint(return_diagnostics),
-			Cint(return_residuals),
-			Cint(return_robustness_weights),
-			zero_weight_fallback,
-			Cint(parallel),
-		)
+		handle = @ccall current_library().jl_streaming_lowess_new(
+			fraction::Cdouble,
+			Cint(chunk_size)::Cint,
+			Cint(overlap)::Cint,
+			Cint(iterations)::Cint,
+			delta::Cdouble,
+			weight_function::Cstring,
+			robustness_method::Cstring,
+			scaling_method::Cstring,
+			boundary_policy::Cstring,
+			auto_converge::Cdouble,
+			Cint(return_diagnostics)::Cint,
+			Cint(return_residuals)::Cint,
+			Cint(return_robustness_weights)::Cint,
+			zero_weight_fallback::Cstring,
+			merge_strategy::Cstring,
+			Cint(parallel)::Cint,
+		)::Ptr{Cvoid}
 
 		if handle == C_NULL
 			error("Failed to create StreamingLowess")
@@ -556,12 +541,7 @@ mutable struct StreamingLowess
 
 		obj = new(handle)
 		finalizer(
-			x -> ccall(
-				(:jl_streaming_lowess_free, current_library()),
-				Cvoid,
-				(Ptr{Cvoid},),
-				x.handle,
-			),
+			x -> @ccall(current_library().jl_streaming_lowess_free(x.handle::Ptr{Cvoid})::Cvoid),
 			obj,
 		)
 		return obj
@@ -579,15 +559,12 @@ function process_chunk(s::StreamingLowess, x::Vector{Float64}, y::Vector{Float64
 		throw(ArgumentError("x and y must have the same length"))
 	end
 
-	c_result = ccall(
-		(:jl_streaming_lowess_process_chunk, current_library()),
-		CJlLowessResult,
-		(Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Culong),
-		s.handle,
-		x,
-		y,
-		Culong(n),
-	)
+	c_result = @ccall current_library().jl_streaming_lowess_process_chunk(
+		s.handle::Ptr{Cvoid},
+		x::Ptr{Cdouble},
+		y::Ptr{Cdouble},
+		Culong(n)::Culong,
+	)::CJlLowessResult
 
 	return convert_result(c_result)
 end
@@ -598,12 +575,9 @@ end
 Finalize streaming and return remaining buffered data.
 """
 function finalize(s::StreamingLowess)
-	c_result = ccall(
-		(:jl_streaming_lowess_finalize, current_library()),
-		CJlLowessResult,
-		(Ptr{Cvoid},),
-		s.handle,
-	)
+	c_result = @ccall current_library().jl_streaming_lowess_finalize(
+		s.handle::Ptr{Cvoid},
+	)::CJlLowessResult
 
 	return convert_result(c_result)
 end
@@ -614,11 +588,11 @@ end
 Stateful online LOWESS smoother.
 
 # Keyword Arguments
-- `fraction::Float64 = 0.2`: Smoothing fraction
-- `window_capacity::Int = 100`: Maximum points to retain in window
-- `min_points::Int = 2`: Minimum points before smoothing starts
+- `fraction::Float64 = 0.67`: Smoothing fraction
+- `window_capacity::Int = 1000`: Maximum points to retain in window
+- `min_points::Int = 3`: Minimum points before smoothing starts
 - `iterations::Int = 3`: Number of robustness iterations
-- `delta::Float64 = NaN`: Interpolation threshold
+- `delta::Float64 = NaN`: Interpolation threshold (NaN for auto)
 - `weight_function::String = "tricube"`: Kernel function
 - `robustness_method::String = "bisquare"`: Robustness method
 - `scaling_method::String = "mad"`: Scaling method
@@ -626,16 +600,19 @@ Stateful online LOWESS smoother.
 - `update_mode::String = "full"`: Update strategy ("full" or "incremental")
 - `auto_converge::Float64 = NaN`: Auto-convergence tolerance
 - `return_robustness_weights::Bool = false`: Include weights
+- `return_diagnostics::Bool = false`: Compute diagnostics (RMSE, MAE, R², etc.)
+- `return_residuals::Bool = false`: Include residuals in the result
 - `zero_weight_fallback::String = "use_local_mean"`: Zero weight handling
-- `parallel::Bool = false`: Enable parallel execution
+- `parallel::Bool = false`: Enable parallel execution (default `false` for online mode;
+  online LOWESS processes one point at a time and rarely benefits from parallelism)
 """
 mutable struct OnlineLowess
 	handle::Ptr{Cvoid}
 
 	function OnlineLowess(;
-		fraction::Float64 = 0.2,
-		window_capacity::Int = 100,
-		min_points::Int = 2,
+		fraction::Float64 = 0.67,
+		window_capacity::Int = 1000,
+		min_points::Int = 3,
 		iterations::Int = 3,
 		delta::Float64 = NaN,
 		weight_function::String = "tricube",
@@ -645,43 +622,29 @@ mutable struct OnlineLowess
 		update_mode::String = "full",
 		auto_converge::Float64 = NaN,
 		return_robustness_weights::Bool = false,
+		return_diagnostics::Bool = false,
+		return_residuals::Bool = false,
 		zero_weight_fallback::String = "use_local_mean",
 		parallel::Bool = false,
 	)
-		handle = ccall(
-			(:jl_online_lowess_new, current_library()),
-			Ptr{Cvoid},
-			(
-				Cdouble,
-				Cint,
-				Cint,
-				Cint,
-				Cdouble,
-				Cstring,
-				Cstring,
-				Cstring,
-				Cstring,
-				Cstring,
-				Cdouble,
-				Cint,
-				Cstring,
-				Cint,
-			),
-			fraction,
-			Cint(window_capacity),
-			Cint(min_points),
-			Cint(iterations),
-			delta,
-			weight_function,
-			robustness_method,
-			scaling_method,
-			boundary_policy,
-			update_mode,
-			auto_converge,
-			Cint(return_robustness_weights),
-			zero_weight_fallback,
-			Cint(parallel),
-		)
+		handle = @ccall current_library().jl_online_lowess_new(
+			fraction::Cdouble,
+			Cint(window_capacity)::Cint,
+			Cint(min_points)::Cint,
+			Cint(iterations)::Cint,
+			delta::Cdouble,
+			weight_function::Cstring,
+			robustness_method::Cstring,
+			scaling_method::Cstring,
+			boundary_policy::Cstring,
+			update_mode::Cstring,
+			auto_converge::Cdouble,
+			Cint(return_robustness_weights)::Cint,
+			Cint(return_diagnostics)::Cint,
+			Cint(return_residuals)::Cint,
+			zero_weight_fallback::Cstring,
+			Cint(parallel)::Cint,
+		)::Ptr{Cvoid}
 
 		if handle == C_NULL
 			error("Failed to create OnlineLowess")
@@ -689,12 +652,7 @@ mutable struct OnlineLowess
 
 		obj = new(handle)
 		finalizer(
-			x -> ccall(
-				(:jl_online_lowess_free, current_library()),
-				Cvoid,
-				(Ptr{Cvoid},),
-				x.handle,
-			),
+			x -> @ccall(current_library().jl_online_lowess_free(x.handle::Ptr{Cvoid})::Cvoid),
 			obj,
 		)
 		return obj
@@ -702,21 +660,36 @@ mutable struct OnlineLowess
 end
 
 """
-	add_point(o::OnlineLowess, x, y) -> Union{Float64, Nothing}
+	add_point(o::OnlineLowess, x, y) -> Union{OnlineOutput, Nothing}
 
-Add a single point to the online processor. Returns the smoothed value,
-or `nothing` if not enough points are available yet.
+Add a single point to the online processor and return its smoothed value.
+Returns `nothing` while the window is still filling (fewer than `min_points`
+have been seen), and an `OnlineOutput` once smoothing begins.
 """
 function add_point(o::OnlineLowess, x::Float64, y::Float64)
-	result = ccall(
-		(:jl_online_lowess_add_point, current_library()),
-		Cdouble,
-		(Ptr{Cvoid}, Cdouble, Cdouble),
-		o.handle,
-		x,
-		y,
+	c_result = @ccall current_library().jl_online_lowess_add_point(
+		o.handle::Ptr{Cvoid},
+		x::Cdouble,
+		y::Cdouble,
+	)::CJlOnlineOutput
+
+	if c_result.error != Ptr{Cchar}(C_NULL)
+		error_msg = unsafe_string(Ptr{UInt8}(c_result.error))
+		@ccall current_library().jl_online_free_output(Ref(c_result)::Ptr{CJlOnlineOutput})::Cvoid
+		error("fastlowess error: $error_msg")
+	end
+
+	if c_result.has_value == 0
+		return nothing
+	end
+
+	return OnlineOutput(
+		c_result.smoothed,
+		isnan(c_result.std_error) ? nothing : c_result.std_error,
+		isnan(c_result.residual) ? nothing : c_result.residual,
+		isnan(c_result.robustness_weight) ? nothing : c_result.robustness_weight,
+		c_result.iterations_used == -1 ? nothing : Int(c_result.iterations_used),
 	)
-	isnan(result) ? nothing : result
 end
 
 end # module FastLOWESS

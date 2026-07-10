@@ -5,9 +5,25 @@ use napi_derive::napi;
 
 use ::fastLowess::internals::adapters::online::ParallelOnlineLowess;
 use ::fastLowess::internals::adapters::streaming::ParallelStreamingLowess;
-use ::fastLowess::internals::api::{Batch, LowessBuilder, Online, Streaming};
+use ::fastLowess::internals::api::LowessBuilder;
 use ::fastLowess::internals::binding_support;
-use ::fastLowess::prelude::{LowessError, LowessResult};
+use ::fastLowess::prelude::LowessResult as InnerLowessResult;
+
+fn to_napi_error(err: binding_support::BindingError) -> Error {
+    let status = match err.category {
+        binding_support::BindingErrorCategory::InvalidArg => Status::InvalidArg,
+        binding_support::BindingErrorCategory::Runtime => Status::GenericFailure,
+    };
+    Error::new(status, err.message)
+}
+
+fn map_invalid_arg<T, E: ToString>(result: std::result::Result<T, E>) -> Result<T> {
+    binding_support::map_invalid_arg(result).map_err(to_napi_error)
+}
+
+fn map_runtime<T, E: ToString>(result: std::result::Result<T, E>) -> Result<T> {
+    binding_support::map_runtime(result).map_err(to_napi_error)
+}
 
 /// Diagnostic statistics for the LOWESS fit.
 #[napi(object)]
@@ -17,21 +33,24 @@ pub struct Diagnostics {
     /// Mean Absolute Error.
     pub mae: f64,
     /// R-squared (coefficient of determination).
+    #[napi(js_name = "r_squared")]
     pub r_squared: f64,
     /// Akaike Information Criterion (if computed).
     pub aic: Option<f64>,
     /// Corrected AIC (if computed).
     pub aicc: Option<f64>,
     /// Effective degrees of freedom (if computed).
+    #[napi(js_name = "effective_df")]
     pub effective_df: Option<f64>,
     /// Residual standard deviation.
+    #[napi(js_name = "residual_sd")]
     pub residual_sd: f64,
 }
 
 /// Result of a LOWESS fit.
 #[napi]
 pub struct LowessResultObj {
-    inner: LowessResult<f64>,
+    inner: InnerLowessResult<f64>,
 }
 
 #[napi]
@@ -158,39 +177,95 @@ pub struct SmoothOptions {
     /// Set to 0.0 to disable interpolation.
     pub delta: Option<f64>,
     /// Weight function ("tricube", "epanechnikov", "gaussian", "uniform", "biweight", "triangle", "cosine"). Default: "tricube".
+    #[napi(js_name = "weight_function")]
     pub weight_function: Option<String>,
     /// Robustness method ("bisquare", "huber", "talwar"). Default: "bisquare".
+    #[napi(js_name = "robustness_method")]
     pub robustness_method: Option<String>,
     /// Fallback strategy when weights are zero ("use_local_mean", "return_original", "return_none"). Default: "use_local_mean".
+    #[napi(js_name = "zero_weight_fallback")]
     pub zero_weight_fallback: Option<String>,
     /// Boundary handling ("extend", "reflect", "zero", "noboundary"). Default: "extend".
+    #[napi(js_name = "boundary_policy")]
     pub boundary_policy: Option<String>,
     /// Scaling method ("mad", "mar", "mean"). Default: "mad".
+    #[napi(js_name = "scaling_method")]
     pub scaling_method: Option<String>,
     /// Auto-convergence tolerance. Default: None.
+    #[napi(js_name = "auto_converge")]
     pub auto_converge: Option<f64>,
     /// Return residuals in result. Default: false.
+    #[napi(js_name = "return_residuals")]
     pub return_residuals: Option<bool>,
     /// Return robustness weights in result. Default: false.
+    #[napi(js_name = "return_robustness_weights")]
     pub return_robustness_weights: Option<bool>,
     /// Return diagnostics (RMSE, etc.). Default: false.
+    #[napi(js_name = "return_diagnostics")]
     pub return_diagnostics: Option<bool>,
     /// Calculate confidence intervals (e.g., 0.95). Default: None.
+    #[napi(js_name = "confidence_intervals")]
     pub confidence_intervals: Option<f64>,
     /// Calculate prediction intervals. Default: None.
+    #[napi(js_name = "prediction_intervals")]
     pub prediction_intervals: Option<f64>,
     /// Fractions to use for cross-validation.
+    #[napi(js_name = "cv_fractions")]
     pub cv_fractions: Option<Vec<f64>>,
     /// CV method ("loocv", "kfold"). Default: "kfold".
+    #[napi(js_name = "cv_method")]
     pub cv_method: Option<String>,
     /// Number of folds for K-Fold CV. Default: 5.
+    #[napi(js_name = "cv_k")]
     pub cv_k: Option<u32>,
     /// Random seed for reproducible K-Fold cross-validation. Default: None.
+    #[napi(js_name = "cv_seed")]
     pub cv_seed: Option<i64>,
     /// Compute standard errors. Default: false.
+    #[napi(js_name = "return_se")]
     pub return_se: Option<bool>,
     /// Enable parallel execution. Default: true.
     pub parallel: Option<bool>,
+}
+
+/// Build a LowessBuilder from an optional SmoothOptions, applying all fields.
+fn options_to_builder(opts: Option<&SmoothOptions>) -> Result<LowessBuilder<f64>> {
+    let mut builder = LowessBuilder::<f64>::new();
+    if let Some(opts) = opts {
+        let configured_builder = map_invalid_arg(binding_support::apply_builder_options(
+            builder,
+            binding_support::BuilderOptionSet {
+                fraction: opts.fraction,
+                iterations: opts.iterations.map(|v| v as usize),
+                delta: opts.delta,
+                weight_function: opts.weight_function.as_deref(),
+                robustness_method: opts.robustness_method.as_deref(),
+                zero_weight_fallback: opts.zero_weight_fallback.as_deref(),
+                boundary_policy: opts.boundary_policy.as_deref(),
+                scaling_method: opts.scaling_method.as_deref(),
+                auto_converge: opts.auto_converge,
+                return_residuals: opts.return_residuals.unwrap_or(false),
+                return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
+                return_diagnostics: opts.return_diagnostics.unwrap_or(false),
+                return_se: opts.return_se.unwrap_or(false),
+                confidence_intervals: opts.confidence_intervals,
+                prediction_intervals: opts.prediction_intervals,
+                parallel: opts.parallel,
+                chunk_size: None,
+                overlap: None,
+                merge_strategy: None,
+                window_capacity: None,
+                min_points: None,
+                update_mode: None,
+                cv_fractions: opts.cv_fractions.as_deref(),
+                cv_method: opts.cv_method.as_deref(),
+                cv_k: opts.cv_k.map(|v| v as usize),
+                cv_seed: opts.cv_seed.map(|s| s as u64),
+            },
+        ))?;
+        builder = configured_builder;
+    }
+    Ok(builder)
 }
 
 /// Batch LOWESS smoothing.
@@ -215,35 +290,9 @@ impl Lowess {
         y: Float64Array,
         custom_weights: Option<Vec<f64>>,
     ) -> Result<LowessResultObj> {
-        let mut builder = self.create_builder()?;
-        if let Some(cw) = custom_weights {
-            if cw.len() != y.as_ref().len() {
-                return Err(Error::new(
-                    Status::InvalidArg,
-                    format!(
-                        "customWeights length ({}) must match y length ({})",
-                        cw.len(),
-                        y.as_ref().len()
-                    ),
-                ));
-            }
-            if cw.iter().any(|&w| w < 0.0) {
-                return Err(Error::new(
-                    Status::InvalidArg,
-                    "customWeights values must be non-negative".to_string(),
-                ));
-            }
-            builder = builder.custom_weights(cw);
-        }
-        let model = builder
-            .adapter(Batch)
-            .build()
-            .map_err(|e| Error::new(Status::InvalidArg, e.to_string()))?;
-
-        let result = model
-            .fit(x.as_ref(), y.as_ref())
-            .map_err(|e: LowessError| Error::new(Status::GenericFailure, e.to_string()))?;
-
+        let builder = self.create_builder()?;
+        let model = map_runtime(binding_support::build_batch(builder, custom_weights))?;
+        let result = map_runtime(model.fit(x.as_ref(), y.as_ref()))?;
         Ok(LowessResultObj { inner: result })
     }
 
@@ -257,22 +306,6 @@ impl Lowess {
     ) -> Result<AsyncTask<LowessTask>> {
         let mut builder = self.create_builder()?;
         if let Some(cw) = custom_weights {
-            if cw.len() != y.as_ref().len() {
-                return Err(Error::new(
-                    Status::InvalidArg,
-                    format!(
-                        "customWeights length ({}) must match y length ({})",
-                        cw.len(),
-                        y.as_ref().len()
-                    ),
-                ));
-            }
-            if cw.iter().any(|&w| w < 0.0) {
-                return Err(Error::new(
-                    Status::InvalidArg,
-                    "customWeights values must be non-negative".to_string(),
-                ));
-            }
             builder = builder.custom_weights(cw);
         }
         let x_vec = x.as_ref().to_vec();
@@ -286,42 +319,7 @@ impl Lowess {
     }
 
     fn create_builder(&self) -> Result<LowessBuilder<f64>> {
-        let o = self.options.as_ref();
-        let builder = binding_support::apply_builder_options(
-            LowessBuilder::<f64>::new(),
-            binding_support::BuilderOptionSet {
-                fraction: o.and_then(|x| x.fraction),
-                iterations: o.and_then(|x| x.iterations).map(|n| n as usize),
-                delta: o.and_then(|x| x.delta),
-                weight_function: o.and_then(|x| x.weight_function.as_deref()),
-                robustness_method: o.and_then(|x| x.robustness_method.as_deref()),
-                zero_weight_fallback: o.and_then(|x| x.zero_weight_fallback.as_deref()),
-                boundary_policy: o.and_then(|x| x.boundary_policy.as_deref()),
-                scaling_method: o.and_then(|x| x.scaling_method.as_deref()),
-                auto_converge: o.and_then(|x| x.auto_converge),
-                return_residuals: o.is_some_and(|x| x.return_residuals.unwrap_or(false)),
-                return_robustness_weights: o
-                    .is_some_and(|x| x.return_robustness_weights.unwrap_or(false)),
-                return_diagnostics: o.is_some_and(|x| x.return_diagnostics.unwrap_or(false)),
-                return_se: o.is_some_and(|x| x.return_se.unwrap_or(false)),
-                confidence_intervals: o.and_then(|x| x.confidence_intervals),
-                prediction_intervals: o.and_then(|x| x.prediction_intervals),
-                parallel: o.and_then(|x| x.parallel),
-                chunk_size: None,
-                overlap: None,
-                merge_strategy: None,
-                window_capacity: None,
-                min_points: None,
-                update_mode: None,
-                cv_fractions: o.and_then(|x| x.cv_fractions.as_deref()),
-                cv_method: o.and_then(|x| x.cv_method.as_deref()),
-                cv_k: o.and_then(|x| x.cv_k).map(|k| k as usize),
-                cv_seed: o.and_then(|x| x.cv_seed).map(|s| s as u64),
-            },
-        )
-        .map_err(|e| Error::new(Status::InvalidArg, e))?;
-
-        Ok(builder)
+        options_to_builder(self.options.as_ref())
     }
 }
 
@@ -332,20 +330,12 @@ pub struct LowessTask {
 }
 
 impl Task for LowessTask {
-    type Output = LowessResult<f64>;
+    type Output = InnerLowessResult<f64>;
     type JsValue = LowessResultObj;
 
     fn compute(&mut self) -> Result<Self::Output> {
-        let model = self
-            .builder
-            .clone()
-            .adapter(Batch)
-            .build()
-            .map_err(|e| Error::new(Status::InvalidArg, e.to_string()))?;
-
-        model
-            .fit(&self.x, &self.y)
-            .map_err(|e: LowessError| Error::new(Status::GenericFailure, e.to_string()))
+        let model = map_runtime(binding_support::build_batch(self.builder.clone(), None))?;
+        map_runtime(model.fit(&self.x, &self.y))
     }
 
     fn resolve(&mut self, _env: Env, output: Self::Output) -> Result<Self::JsValue> {
@@ -357,10 +347,12 @@ impl Task for LowessTask {
 #[napi(object)]
 pub struct StreamingOptions {
     /// Size of each data chunk. Default: 5000.
+    #[napi(js_name = "chunk_size")]
     pub chunk_size: Option<u32>,
-    /// Header/footer overlap size. Default: 500.
+    /// Header/footer overlap size. Default: chunk_size / 10, min. 1.
     pub overlap: Option<u32>,
-    /// Strategy for merging chunks (not exposed yet).
+    /// Strategy for merging chunk overlaps. Default: "weighted_average".
+    #[napi(js_name = "merge_strategy")]
     pub merge_strategy: Option<String>,
 }
 
@@ -378,52 +370,23 @@ impl StreamingLowess {
         options: Option<SmoothOptions>,
         streaming_opts: Option<StreamingOptions>,
     ) -> Result<Self> {
-        let o = options.as_ref();
-        let so = streaming_opts.as_ref();
-        let model = binding_support::apply_builder_options(
-            LowessBuilder::<f64>::new(),
-            binding_support::BuilderOptionSet {
-                fraction: o.and_then(|x| x.fraction),
-                iterations: o.and_then(|x| x.iterations).map(|n| n as usize),
-                delta: o.and_then(|x| x.delta),
-                weight_function: o.and_then(|x| x.weight_function.as_deref()),
-                robustness_method: o.and_then(|x| x.robustness_method.as_deref()),
-                zero_weight_fallback: o.and_then(|x| x.zero_weight_fallback.as_deref()),
-                boundary_policy: o.and_then(|x| x.boundary_policy.as_deref()),
-                scaling_method: o.and_then(|x| x.scaling_method.as_deref()),
-                auto_converge: o.and_then(|x| x.auto_converge),
-                return_residuals: o.is_some_and(|x| x.return_residuals.unwrap_or(false)),
-                return_robustness_weights: o
-                    .is_some_and(|x| x.return_robustness_weights.unwrap_or(false)),
-                return_diagnostics: o.is_some_and(|x| x.return_diagnostics.unwrap_or(false)),
-                return_se: false,
-                confidence_intervals: None,
-                prediction_intervals: None,
-                parallel: o.and_then(|x| x.parallel),
-                chunk_size: Some(
-                    so.and_then(|x| x.chunk_size)
-                        .map(|n| n as usize)
-                        .unwrap_or(5000),
-                ),
-                overlap: Some(
-                    so.and_then(|x| x.overlap)
-                        .map(|n| n as usize)
-                        .unwrap_or(500),
-                ),
-                merge_strategy: so.and_then(|x| x.merge_strategy.as_deref()),
-                window_capacity: None,
-                min_points: None,
-                update_mode: None,
-                cv_fractions: None,
-                cv_method: None,
-                cv_k: None,
-                cv_seed: None,
-            },
-        )
-        .map_err(|e| Error::new(Status::InvalidArg, e))?
-        .adapter(Streaming)
-        .build()
-        .map_err(|e| Error::new(Status::InvalidArg, e.to_string()))?;
+        let builder = options_to_builder(options.as_ref())?;
+
+        let (chunk_size, overlap, merge_strategy) = match streaming_opts {
+            Some(s) => (
+                s.chunk_size.map(|v| v as usize),
+                s.overlap.map(|v| v as usize),
+                s.merge_strategy,
+            ),
+            None => (None, None, None),
+        };
+
+        let model = map_runtime(binding_support::build_streaming(
+            builder,
+            chunk_size,
+            overlap,
+            merge_strategy.as_deref(),
+        ))?;
 
         Ok(StreamingLowess { inner: model })
     }
@@ -431,20 +394,15 @@ impl StreamingLowess {
     /// Process a chunk of data.
     #[napi(js_name = "process_chunk")]
     pub fn process_chunk(&mut self, x: Float64Array, y: Float64Array) -> Result<LowessResultObj> {
-        let result: LowessResult<f64> = self
-            .inner
-            .process_chunk(x.as_ref(), y.as_ref())
-            .map_err(|e: LowessError| Error::new(Status::GenericFailure, e.to_string()))?;
+        let result: InnerLowessResult<f64> =
+            map_runtime(self.inner.process_chunk(x.as_ref(), y.as_ref()))?;
         Ok(LowessResultObj { inner: result })
     }
 
     /// Finalize the stream and return remaining data.
     #[napi]
     pub fn finalize(&mut self) -> Result<LowessResultObj> {
-        let result: LowessResult<f64> = self
-            .inner
-            .finalize()
-            .map_err(|e: LowessError| Error::new(Status::GenericFailure, e.to_string()))?;
+        let result: InnerLowessResult<f64> = map_runtime(self.inner.finalize())?;
         Ok(LowessResultObj { inner: result })
     }
 }
@@ -452,11 +410,14 @@ impl StreamingLowess {
 /// Configuration options for online processing.
 #[napi(object)]
 pub struct OnlineOptions {
-    /// Maximum number of points to keep in the window. Default: 100.
+    /// Maximum number of points to keep in the window. Default: 1000.
+    #[napi(js_name = "window_capacity")]
     pub window_capacity: Option<u32>,
-    /// Minimum points required before smoothing starts. Default: 2.
+    /// Minimum points required before smoothing starts. Default: 3.
+    #[napi(js_name = "min_points")]
     pub min_points: Option<u32>,
     /// Update mode ("full", "incremental"). Default: "full".
+    #[napi(js_name = "update_mode")]
     pub update_mode: Option<String>,
 }
 
@@ -489,52 +450,23 @@ impl OnlineLowess {
     /// Create a new online LOWESS smoother.
     #[napi(constructor)]
     pub fn new(options: Option<SmoothOptions>, online_opts: Option<OnlineOptions>) -> Result<Self> {
-        let o = options.as_ref();
-        let oo = online_opts.as_ref();
-        let model = binding_support::apply_builder_options(
-            LowessBuilder::<f64>::new(),
-            binding_support::BuilderOptionSet {
-                fraction: o.and_then(|x| x.fraction),
-                iterations: o.and_then(|x| x.iterations).map(|n| n as usize),
-                delta: o.and_then(|x| x.delta),
-                weight_function: o.and_then(|x| x.weight_function.as_deref()),
-                robustness_method: o.and_then(|x| x.robustness_method.as_deref()),
-                zero_weight_fallback: o.and_then(|x| x.zero_weight_fallback.as_deref()),
-                boundary_policy: o.and_then(|x| x.boundary_policy.as_deref()),
-                scaling_method: o.and_then(|x| x.scaling_method.as_deref()),
-                auto_converge: o.and_then(|x| x.auto_converge),
-                return_residuals: o.is_some_and(|x| x.return_residuals.unwrap_or(false)),
-                return_robustness_weights: o
-                    .is_some_and(|x| x.return_robustness_weights.unwrap_or(false)),
-                return_diagnostics: o.is_some_and(|x| x.return_diagnostics.unwrap_or(false)),
-                return_se: o.is_some_and(|x| x.return_se.unwrap_or(false)),
-                confidence_intervals: o.and_then(|x| x.confidence_intervals),
-                prediction_intervals: o.and_then(|x| x.prediction_intervals),
-                parallel: o.and_then(|x| x.parallel),
-                chunk_size: None,
-                overlap: None,
-                merge_strategy: None,
-                window_capacity: Some(
-                    oo.and_then(|x| x.window_capacity)
-                        .map(|n| n as usize)
-                        .unwrap_or(1000),
-                ),
-                min_points: Some(
-                    oo.and_then(|x| x.min_points)
-                        .map(|n| n as usize)
-                        .unwrap_or(3),
-                ),
-                update_mode: oo.and_then(|x| x.update_mode.as_deref()),
-                cv_fractions: None,
-                cv_method: None,
-                cv_k: None,
-                cv_seed: None,
-            },
-        )
-        .map_err(|e| Error::new(Status::InvalidArg, e))?
-        .adapter(Online)
-        .build()
-        .map_err(|e| Error::new(Status::InvalidArg, e.to_string()))?;
+        let builder = options_to_builder(options.as_ref())?;
+
+        let (window_capacity, min_points, update_mode) = match online_opts {
+            Some(o) => (
+                o.window_capacity.map(|v| v as usize),
+                o.min_points.map(|v| v as usize),
+                o.update_mode,
+            ),
+            None => (None, None, None),
+        };
+
+        let model = map_runtime(binding_support::build_online(
+            builder,
+            window_capacity,
+            min_points,
+            update_mode.as_deref(),
+        ))?;
 
         Ok(OnlineLowess { inner: model })
     }
@@ -542,11 +474,10 @@ impl OnlineLowess {
     /// Add a single point and get the smoothed value if enough points are available.
     #[napi(js_name = "add_point")]
     pub fn add_point(&mut self, x: f64, y: f64) -> Result<Option<OnlineOutput>> {
-        let result = self
-            .inner
-            .add_point(x, y)
-            .map_err(|e: LowessError| Error::new(Status::GenericFailure, e.to_string()))?;
-        Ok(result.map(|o| OnlineOutput {
+        let output = self.inner.add_point(x, y).map_err(|e| {
+            to_napi_error(binding_support::BindingError::invalid_arg(e.to_string()))
+        })?;
+        Ok(output.map(|o| OnlineOutput {
             smoothed: o.smoothed,
             std_error: o.std_error,
             residual: o.residual,

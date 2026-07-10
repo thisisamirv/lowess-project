@@ -53,18 +53,18 @@ impl BindingError {
     }
 }
 
+impl std::fmt::Display for BindingError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+
 pub fn map_invalid_arg<T, E: ToString>(result: Result<T, E>) -> Result<T, BindingError> {
     result.map_err(|e| BindingError::invalid_arg(e.to_string()))
 }
 
 pub fn map_runtime<T, E: ToString>(result: Result<T, E>) -> Result<T, BindingError> {
     result.map_err(|e| BindingError::runtime(e.to_string()))
-}
-
-impl std::fmt::Display for BindingError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.message)
-    }
 }
 
 /// Categorize a [`LowessError`]: only [`LowessError::RuntimeError`] maps to
@@ -371,6 +371,7 @@ pub fn into_raw_error_c_string(msg: &str) -> *mut c_char {
 }
 
 // All string-keyed options accepted by language binding frontends.
+#[derive(Default)]
 pub struct BuilderOptionSet<'a> {
     pub fraction: Option<f64>,
     pub iterations: Option<usize>,

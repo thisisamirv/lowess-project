@@ -126,6 +126,7 @@ param_types <- list(
     update_mode = "character",
     zero_weight_fallback = "character",
     cv_method = "character",
+    merge_strategy = "character",
     return_diagnostics = "logical",
     return_residuals = "logical",
     return_robustness_weights = "logical",
@@ -135,7 +136,8 @@ param_types <- list(
     confidence_intervals = "nullable",
     prediction_intervals = "nullable",
     auto_converge = "nullable",
-    cv_fractions = "nullable"
+    cv_fractions = "nullable",
+    cv_seed = "nullable"
 )
 
 #' Build args from parent environment
@@ -146,7 +148,7 @@ param_types <- list(
 #' @noRd
 env_args <- function(param_names) {
     env <- parent.frame()
-    lapply(param_names, function(name) {
+    result <- lapply(param_names, function(name) {
         val <- get(name, envir = env)
         type <- param_types[[name]]
         if (is.null(type)) {
@@ -161,6 +163,7 @@ env_args <- function(param_names) {
             val
         )
     })
+    setNames(result, param_names)
 }
 
 #' Parameter names for each Lowess constructor
@@ -170,19 +173,25 @@ lowess_params <- c(
     "scaling_method", "boundary_policy", "confidence_intervals",
     "prediction_intervals", "return_diagnostics", "return_residuals",
     "return_robustness_weights", "zero_weight_fallback", "auto_converge",
-    "cv_fractions", "cv_method", "cv_k", "parallel"
+    "cv_fractions", "cv_method", "cv_k", "parallel", "cv_seed"
 )
 
 online_params <- c(
-    "fraction", "window_capacity", "min_points", "iterations", "delta",
+    "fraction", "window_capacity", "min_points", "iterations",
     "weight_function", "robustness_method", "scaling_method",
-    "boundary_policy", "update_mode", "auto_converge",
-    "return_robustness_weights", "parallel"
+    "boundary_policy", "zero_weight_fallback", "update_mode", "auto_converge",
+    "return_robustness_weights", "return_diagnostics",
+    "return_residuals", "parallel",
+    "delta",
+    "confidence_intervals", "prediction_intervals"
 )
 
 streaming_params <- c(
-    "fraction", "chunk_size", "overlap", "iterations", "delta",
+    "fraction", "chunk_size", "overlap", "iterations",
     "weight_function", "robustness_method", "scaling_method",
-    "boundary_policy", "auto_converge", "return_diagnostics",
-    "return_robustness_weights", "parallel"
+    "boundary_policy", "zero_weight_fallback", "auto_converge",
+    "return_diagnostics", "return_residuals", "return_robustness_weights",
+    "merge_strategy", "parallel",
+    "delta",
+    "confidence_intervals", "prediction_intervals"
 )

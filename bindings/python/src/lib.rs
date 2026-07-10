@@ -2,6 +2,7 @@
 
 #![allow(non_snake_case)]
 use numpy::{PyArray1, PyReadonlyArray1};
+use pyo3::exceptions::PyRuntimeError;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use std::fmt::Display;
@@ -9,19 +10,28 @@ use std::sync::Mutex;
 
 use ::fastLowess::internals::adapters::online::ParallelOnlineLowess;
 use ::fastLowess::internals::adapters::streaming::ParallelStreamingLowess;
-use ::fastLowess::internals::api::{Batch, LowessBuilder, Online, Streaming};
-use ::fastLowess::internals::binding_support::{
-    self, BoundaryPolicy, RobustnessMethod, ScalingMethod, WeightFunction, ZeroWeightFallback,
-};
+use ::fastLowess::internals::api::{LowessBuilder, Online, Streaming};
+use ::fastLowess::internals::binding_support;
+
 use ::fastLowess::prelude::LowessResult;
 
 // ============================================================================
 // Helper Functions
 // ============================================================================
 
-/// Convert a LowessError to a PyErr
-fn to_py_error(e: impl Display) -> PyErr {
-    PyValueError::new_err(e.to_string())
+fn to_py_error(err: binding_support::BindingError) -> PyErr {
+    match err.category {
+        binding_support::BindingErrorCategory::InvalidArg => PyValueError::new_err(err.message),
+        binding_support::BindingErrorCategory::Runtime => PyRuntimeError::new_err(err.message),
+    }
+}
+
+fn map_invalid_arg<T, E: Display>(result: Result<T, E>) -> PyResult<T> {
+    binding_support::map_invalid_arg(result).map_err(to_py_error)
+}
+
+fn to_py_invalid_arg_error(e: impl Display) -> PyErr {
+    to_py_error(binding_support::BindingError::invalid_arg(e.to_string()))
 }
 
 // ============================================================================
@@ -250,7 +260,7 @@ impl PyStreamingLowess {
     ) -> PyResult<Self> {
         let overlap_size = overlap.unwrap_or_else(|| binding_support::default_overlap(chunk_size));
 
-        let builder = binding_support::apply_builder_options(
+        let builder = map_invalid_arg(binding_support::apply_builder_options(
             LowessBuilder::<f64>::new(),
             binding_support::BuilderOptionSet {
                 fraction: Some(fraction),
@@ -280,10 +290,10 @@ impl PyStreamingLowess {
                 cv_k: None,
                 cv_seed: None,
             },
-        )
-        .map_err(PyValueError::new_err)?;
+        ))?;
 
-        let processor = builder.adapter(Streaming).build().map_err(to_py_error)?;
+        let processor = binding_support::map_lowess_result(builder.adapter(Streaming).build())
+            .map_err(to_py_error)?;
         Ok(PyStreamingLowess {
             inner: Mutex::new(processor),
         })
@@ -296,15 +306,19 @@ impl PyStreamingLowess {
         x: PyReadonlyArray1<'py, f64>,
         y: PyReadonlyArray1<'py, f64>,
     ) -> PyResult<PyLowessResult> {
-        let x_vec = x.as_slice().map_err(to_py_error)?.to_vec();
-        let y_vec = y.as_slice().map_err(to_py_error)?.to_vec();
+        let x_vec = x.as_slice().map_err(to_py_invalid_arg_error)?.to_vec();
+        let y_vec = y.as_slice().map_err(to_py_invalid_arg_error)?.to_vec();
 
         let result = py.detach(move || {
             self.inner
                 .lock()
-                .map_err(|e| to_py_error(format!("Mutex poisoned: {}", e)))?
+                .map_err(|e| {
+                    to_py_error(binding_support::BindingError::runtime(
+                        binding_support::mutex_poisoned_message(&e.to_string()),
+                    ))
+                })?
                 .process_chunk(&x_vec, &y_vec)
-                .map_err(to_py_error)
+                .map_err(|e| to_py_error(binding_support::BindingError::runtime(e.to_string())))
         })?;
 
         Ok(PyLowessResult { inner: result })
@@ -315,9 +329,13 @@ impl PyStreamingLowess {
         let result = py.detach(move || {
             self.inner
                 .lock()
-                .map_err(|e| to_py_error(format!("Mutex poisoned: {}", e)))?
+                .map_err(|e| {
+                    to_py_error(binding_support::BindingError::runtime(
+                        binding_support::mutex_poisoned_message(&e.to_string()),
+                    ))
+                })?
                 .finalize()
-                .map_err(to_py_error)
+                .map_err(|e| to_py_error(binding_support::BindingError::runtime(e.to_string())))
         })?;
 
         Ok(PyLowessResult { inner: result })
@@ -374,6 +392,8 @@ impl PyOnlineLowess {
         update_mode="full",
         auto_converge=None,
         return_robustness_weights=false,
+        return_diagnostics=false,
+        return_residuals=false,
         zero_weight_fallback="use_local_mean",
         parallel=false
     ))]
@@ -391,10 +411,12 @@ impl PyOnlineLowess {
         update_mode: &str,
         auto_converge: Option<f64>,
         return_robustness_weights: bool,
+        return_diagnostics: bool,
+        return_residuals: bool,
         zero_weight_fallback: &str,
         parallel: bool,
     ) -> PyResult<Self> {
-        let builder = binding_support::apply_builder_options(
+        let builder = map_invalid_arg(binding_support::apply_builder_options(
             LowessBuilder::<f64>::new(),
             binding_support::BuilderOptionSet {
                 fraction: Some(fraction),
@@ -406,9 +428,9 @@ impl PyOnlineLowess {
                 boundary_policy: Some(boundary_policy),
                 zero_weight_fallback: Some(zero_weight_fallback),
                 auto_converge,
-                return_residuals: false,
+                return_residuals,
                 return_robustness_weights,
-                return_diagnostics: false,
+                return_diagnostics,
                 return_se: false,
                 confidence_intervals: None,
                 prediction_intervals: None,
@@ -424,10 +446,10 @@ impl PyOnlineLowess {
                 cv_k: None,
                 cv_seed: None,
             },
-        )
-        .map_err(PyValueError::new_err)?;
+        ))?;
 
-        let processor = builder.adapter(Online).build().map_err(to_py_error)?;
+        let processor = binding_support::map_lowess_result(builder.adapter(Online).build())
+            .map_err(to_py_error)?;
         Ok(PyOnlineLowess {
             inner: Mutex::new(processor),
         })
@@ -436,11 +458,14 @@ impl PyOnlineLowess {
     /// Add a single point and return its smoothed value, or None if the window
     /// is still filling up.
     fn add_point(&self, x: f64, y: f64) -> PyResult<Option<PyOnlineOutput>> {
-        let mut inner = self
-            .inner
-            .lock()
-            .map_err(|e| to_py_error(format!("Mutex poisoned: {}", e)))?;
-        let result = inner.add_point(x, y).map_err(to_py_error)?;
+        let mut inner = self.inner.lock().map_err(|e| {
+            to_py_error(binding_support::BindingError::runtime(
+                binding_support::mutex_poisoned_message(&e.to_string()),
+            ))
+        })?;
+        let result = inner
+            .add_point(x, y)
+            .map_err(|e| to_py_error(binding_support::BindingError::invalid_arg(e.to_string())))?;
         Ok(result.map(|o| PyOnlineOutput {
             smoothed: o.smoothed,
             std_error: o.std_error,
@@ -458,25 +483,11 @@ impl PyOnlineLowess {
 #[pyclass(name = "Lowess", from_py_object)]
 #[derive(Clone)]
 pub struct PyLowess {
+    builder: LowessBuilder<f64>,
+    // Kept only for __repr__
     fraction: f64,
     iterations: usize,
-    delta: Option<f64>,
-    weight_function: WeightFunction,
-    robustness_method: RobustnessMethod,
-    scaling_method: ScalingMethod,
-    zero_weight_fallback: ZeroWeightFallback,
-    boundary_policy: BoundaryPolicy,
-    auto_converge: Option<f64>,
-    confidence_intervals: Option<f64>,
-    prediction_intervals: Option<f64>,
-    return_diagnostics: bool,
-    return_residuals: bool,
-    return_robustness_weights: bool,
-    cv_fractions: Option<Vec<f64>>,
-    cv_method: String,
-    cv_k: usize,
     parallel: bool,
-    cv_seed: Option<u64>,
 }
 
 #[pymethods]
@@ -525,37 +536,43 @@ impl PyLowess {
         parallel: bool,
         cv_seed: Option<u64>,
     ) -> PyResult<Self> {
-        let wf = binding_support::parse_weight_function(weight_function)
-            .map_err(PyValueError::new_err)?;
-        let rm = binding_support::parse_robustness_method(robustness_method)
-            .map_err(PyValueError::new_err)?;
-        let sm =
-            binding_support::parse_scaling_method(scaling_method).map_err(PyValueError::new_err)?;
-        let zwf = binding_support::parse_zero_weight_fallback(zero_weight_fallback)
-            .map_err(PyValueError::new_err)?;
-        let bp = binding_support::parse_boundary_policy(boundary_policy)
-            .map_err(PyValueError::new_err)?;
+        let builder = map_invalid_arg(binding_support::apply_builder_options(
+            LowessBuilder::<f64>::new(),
+            binding_support::BuilderOptionSet {
+                fraction: Some(fraction),
+                iterations: Some(iterations),
+                delta,
+                weight_function: Some(weight_function),
+                robustness_method: Some(robustness_method),
+                scaling_method: Some(scaling_method),
+                boundary_policy: Some(boundary_policy),
+                zero_weight_fallback: Some(zero_weight_fallback),
+                auto_converge,
+                return_residuals,
+                return_robustness_weights,
+                return_diagnostics,
+                return_se: false,
+                confidence_intervals,
+                prediction_intervals,
+                parallel: Some(parallel),
+                chunk_size: None,
+                overlap: None,
+                merge_strategy: None,
+                window_capacity: None,
+                min_points: None,
+                update_mode: None,
+                cv_fractions: cv_fractions.as_deref(),
+                cv_method: Some(cv_method),
+                cv_k: Some(cv_k),
+                cv_seed,
+            },
+        ))?;
 
         Ok(PyLowess {
+            builder,
             fraction,
             iterations,
-            delta,
-            weight_function: wf,
-            robustness_method: rm,
-            scaling_method: sm,
-            zero_weight_fallback: zwf,
-            boundary_policy: bp,
-            auto_converge,
-            confidence_intervals,
-            prediction_intervals,
-            return_diagnostics,
-            return_residuals,
-            return_robustness_weights,
-            cv_fractions,
-            cv_method: cv_method.to_string(),
-            cv_k,
             parallel,
-            cv_seed,
         })
     }
 
@@ -567,7 +584,7 @@ impl PyLowess {
     ///     Independent variable values.
     /// y : array_like
     ///     Dependent variable values.
-    /// custom_weights : list of float, optional
+    /// custom_weights : array_like, optional
     ///     Per-observation weights multiplied into the kernel weight before
     ///     each local regression. Use 0.0 to suppress known-bad points.
     ///
@@ -581,62 +598,32 @@ impl PyLowess {
         py: Python<'py>,
         x: PyReadonlyArray1<'py, f64>,
         y: PyReadonlyArray1<'py, f64>,
-        custom_weights: Option<Vec<f64>>,
+        custom_weights: Option<PyReadonlyArray1<'py, f64>>,
     ) -> PyResult<PyLowessResult> {
         // 1. Copy data (Must be done with GIL)
-        let x_vec = x.as_slice().map_err(to_py_error)?.to_vec();
-        let y_vec = y.as_slice().map_err(to_py_error)?.to_vec();
+        let x_vec = x.as_slice().map_err(to_py_invalid_arg_error)?.to_vec();
+        let y_vec = y.as_slice().map_err(to_py_invalid_arg_error)?.to_vec();
+        let uw_vec: Option<Vec<f64>> = custom_weights
+            .map(|uw| {
+                uw.as_slice()
+                    .map(|s| s.to_vec())
+                    .map_err(to_py_invalid_arg_error)
+            })
+            .transpose()?;
 
-        // Used for builder configuration
-        let params = self.clone();
+        // Clone the pre-built builder for this fit call
+        let builder = self.builder.clone();
 
         // 2. Release GIL
         let result = py.detach(move || {
-            let builder = binding_support::apply_typed_builder_options(
-                LowessBuilder::<f64>::new(),
-                binding_support::TypedBuilderOptionSet {
-                    fraction: Some(params.fraction),
-                    iterations: Some(params.iterations),
-                    delta: params.delta,
-                    weight_function: Some(params.weight_function),
-                    robustness_method: Some(params.robustness_method),
-                    scaling_method: Some(params.scaling_method),
-                    zero_weight_fallback: Some(params.zero_weight_fallback),
-                    boundary_policy: Some(params.boundary_policy),
-                    auto_converge: params.auto_converge,
-                    return_residuals: params.return_residuals,
-                    return_robustness_weights: params.return_robustness_weights,
-                    return_diagnostics: params.return_diagnostics,
-                    return_se: false,
-                    confidence_intervals: params.confidence_intervals,
-                    prediction_intervals: params.prediction_intervals,
-                    parallel: Some(params.parallel),
-                    chunk_size: None,
-                    overlap: None,
-                    merge_strategy: None,
-                    window_capacity: None,
-                    min_points: None,
-                    update_mode: None,
-                    cv_fractions: params.cv_fractions,
-                    cv_method: Some(params.cv_method),
-                    cv_k: Some(params.cv_k),
-                    cv_seed: params.cv_seed,
-                    custom_weights,
-                },
-            )?;
-
-            builder
-                .adapter(Batch)
-                .build()
-                .map_err(|e| e.to_string())?
-                .fit(&x_vec, &y_vec)
-                .map_err(|e| e.to_string())
+            let model = binding_support::build_batch(builder, uw_vec)?;
+            binding_support::map_lowess_result(model.fit(&x_vec, &y_vec))
         });
 
         // 3. Handle result (Back with GIL)
         match result {
             Ok(inner) => Ok(PyLowessResult { inner }),
-            Err(e) => Err(PyValueError::new_err(e)),
+            Err(e) => Err(to_py_error(e)),
         }
     }
 

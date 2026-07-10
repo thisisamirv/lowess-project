@@ -9,6 +9,9 @@
 #' @inheritParams Lowess
 #' @param chunk_size Points per chunk.
 #' @param overlap Overlap between chunks.
+#' @param merge_strategy Strategy for reconciling overlapping chunk regions:
+#'   \code{"weighted_average"} (default), \code{"average"},
+#'   \code{"take_first"}, or \code{"take_last"}.
 #'
 #' @return A StreamingLowess object.
 #' @examples
@@ -20,7 +23,7 @@
 #' final <- model$finalize()
 #' @export
 StreamingLowess <- function(
-    fraction = 0.3,
+    fraction = 0.67,
     chunk_size = 5000L,
     overlap = NULL,
     iterations = 3L,
@@ -29,10 +32,15 @@ StreamingLowess <- function(
     robustness_method = "bisquare",
     scaling_method = "mad",
     boundary_policy = "extend",
+    zero_weight_fallback = "use_local_mean",
     auto_converge = NULL,
     return_diagnostics = FALSE,
+    return_residuals = FALSE,
     return_robustness_weights = FALSE,
-    parallel = TRUE
+    merge_strategy = "weighted_average",
+    parallel = TRUE,
+    confidence_intervals = NULL,
+    prediction_intervals = NULL
 ) {
     validate_params(fraction = fraction, chunk_size = chunk_size)
     handle <- do.call(RStreamingLowess$new, env_args(streaming_params))
@@ -41,10 +49,8 @@ StreamingLowess <- function(
         list(
             handle = handle,
             process_chunk = function(x, y) {
-                if (length(x) != length(y)) {
-                    stop("x and y must have the same length")
-                }
-                handle$process_chunk(as.double(x), as.double(y))
+                args <- validate_common_args(x, y, fraction, iterations)
+                handle$process_chunk(args$x, args$y)
             },
             finalize = function() {
                 handle$finalize()
