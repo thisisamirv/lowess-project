@@ -8,12 +8,11 @@ This example demonstrates streaming LOWESS smoothing for large datasets:
 - Parallel execution for extreme speed
 """
 
-import time
 import os
+import time
 
 import matplotlib.pyplot as plt
 import numpy as np
-
 from fastlowess import Lowess, StreamingLowess
 
 # Get script directory for relative paths

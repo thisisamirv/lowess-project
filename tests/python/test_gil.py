@@ -2,6 +2,7 @@
 
 import threading
 import time
+
 import numpy as np
 from fastlowess import Lowess
 

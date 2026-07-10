@@ -692,7 +692,7 @@ fn test_cross_validate_loocv() {
 /// Verifies that options are passed to streaming adapter.
 #[test]
 fn test_zero_weight_fallback_propagates_streaming() {
-    let base = Lowess::<f64>::new().zero_weight_fallback("returnoriginal");
+    let base = Lowess::<f64>::new().zero_weight_fallback("return_original");
 
     let sb = base.chunk_size(10).overlap(2).adapter(Streaming);
     let mut runner = sb.build().expect("streaming builder build ok");

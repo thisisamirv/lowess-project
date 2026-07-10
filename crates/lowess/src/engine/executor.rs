@@ -520,9 +520,11 @@ impl<T: Float> LowessExecutor<T> {
     }
 
     // Set per-observation case weights from an Option (None clears them).
-    pub fn custom_weights_opt(mut self, weights: Option<Vec<T>>) -> Self {
-        self.custom_weights = weights;
-        self
+    pub fn custom_weights_opt(self, weights: Option<Vec<T>>) -> Self {
+        match weights {
+            Some(w) => self.custom_weights(w),
+            None => self,
+        }
     }
 
     // Smooth data using a `LowessConfig` payload.
@@ -676,9 +678,9 @@ impl<T: Float> LowessExecutor<T> {
                 self.custom_weights.as_ref().map(|cw| {
                     let padded_len = x_in.len();
                     let mut pv: Vec<T> = Vec::with_capacity(padded_len);
-                    pv.extend(std::iter::repeat_n(T::one(), pad_len));
+                    pv.extend(core::iter::repeat_n(T::one(), pad_len));
                     pv.extend_from_slice(cw);
-                    pv.extend(std::iter::repeat_n(
+                    pv.extend(core::iter::repeat_n(
                         T::one(),
                         padded_len - pad_len - cw.len(),
                     ));

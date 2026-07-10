@@ -34,9 +34,6 @@
 #' @param cv_method CV method: "kfold", "loocv".
 #' @param cv_k Folds for k-fold CV. Default: 5.
 #' @param parallel Enable parallel processing. Default: TRUE.
-#' @param custom_weights Per-observation case weights. A numeric vector of the
-#'   same length as x and y. All values must be finite and non-negative.
-#'   NULL disables weighting.
 #' @param cv_seed Integer seed for the cross-validation random number
 #'   generator. \code{NULL} (default) uses a random seed.
 #'

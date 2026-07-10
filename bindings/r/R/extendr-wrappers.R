@@ -12,18 +12,22 @@ RLowess$new <- function(
     confidence_intervals, prediction_intervals,
     return_diagnostics, return_residuals,
     return_robustness_weights, zero_weight_fallback,
-    auto_converge, cv_fractions, cv_method, cv_k, parallel
+    auto_converge, cv_fractions, cv_method, cv_k, parallel,
+    cv_seed
 ) {
     .Call(
         wrap__RLowess__new, fraction, iterations, delta, weight_function,
         robustness_method, scaling_method, boundary_policy,
         confidence_intervals, prediction_intervals, return_diagnostics,
         return_residuals, return_robustness_weights, zero_weight_fallback,
-        auto_converge, cv_fractions, cv_method, cv_k, parallel
+        auto_converge, cv_fractions, cv_method, cv_k, parallel,
+        cv_seed
     )
 }
 
-RLowess$fit <- function(x, y, custom_weights = NULL) .Call(wrap__RLowess__fit, self, x, y, custom_weights)
+RLowess$fit <- function(x, y, custom_weights = NULL) {
+    .Call(wrap__RLowess__fit, self, x, y, custom_weights)
+}
 
 #' @export
 `$.RLowess` <- function(self, name) {
@@ -39,16 +43,19 @@ RStreamingLowess <- new.env(parent = emptyenv())
 
 RStreamingLowess$new <- function(
     fraction, chunk_size, overlap, iterations,
-    delta, weight_function, robustness_method,
-    scaling_method, boundary_policy, auto_converge,
-    return_diagnostics, return_robustness_weights,
-    parallel
+    weight_function, robustness_method,
+    scaling_method, boundary_policy, zero_weight_fallback, auto_converge,
+    return_diagnostics, return_residuals, return_robustness_weights,
+    merge_strategy, parallel,
+    delta, confidence_intervals, prediction_intervals
 ) {
     .Call(
         wrap__RStreamingLowess__new, fraction, chunk_size, overlap, iterations,
-        delta, weight_function, robustness_method, scaling_method,
-        boundary_policy, auto_converge, return_diagnostics,
-        return_robustness_weights, parallel
+        weight_function, robustness_method, scaling_method,
+        boundary_policy, zero_weight_fallback, auto_converge,
+        return_diagnostics, return_residuals, return_robustness_weights,
+        merge_strategy, parallel,
+        delta, confidence_intervals, prediction_intervals
     )
 }
 
@@ -74,16 +81,18 @@ ROnlineLowess <- new.env(parent = emptyenv())
 
 ROnlineLowess$new <- function(
     fraction, window_capacity, min_points, iterations,
-    delta, weight_function, robustness_method,
-    scaling_method, boundary_policy, update_mode,
-    auto_converge, return_robustness_weights,
-    parallel
+    weight_function, robustness_method,
+    scaling_method, boundary_policy, zero_weight_fallback, update_mode,
+    auto_converge, return_robustness_weights, return_diagnostics,
+    return_residuals, parallel,
+    delta, confidence_intervals, prediction_intervals
 ) {
     .Call(
         wrap__ROnlineLowess__new, fraction, window_capacity, min_points,
-        iterations, delta, weight_function, robustness_method, scaling_method,
-        boundary_policy, update_mode, auto_converge,
-        return_robustness_weights, parallel
+        iterations, weight_function, robustness_method, scaling_method,
+        boundary_policy, zero_weight_fallback, update_mode, auto_converge,
+        return_robustness_weights, return_diagnostics, return_residuals,
+        parallel, delta, confidence_intervals, prediction_intervals
     )
 }
 

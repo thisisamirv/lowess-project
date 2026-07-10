@@ -128,7 +128,7 @@ Package: unicode-ident (1.0.24)
 Authors: David Tolnay <dtolnay@gmail.com>
 License: (MIT OR Apache-2.0) AND Unicode-3.0
 ----------------------------------------
-Package: wide (1.4.0)
+Package: wide (1.5.0)
 Authors: Lokathor <zefria@gmail.com>
 License: Zlib OR Apache-2.0 OR MIT
 ----------------------------------------

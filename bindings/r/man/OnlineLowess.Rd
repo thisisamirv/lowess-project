@@ -5,27 +5,32 @@
 \title{LOWESS Online Smoothing}
 \usage{
 OnlineLowess(
-    fraction = 0.2,
-    window_capacity = 100L,
-    min_points = 2L,
+    fraction = 0.67,
+    window_capacity = 1000L,
+    min_points = 3L,
     iterations = 3L,
     delta = NULL,
     weight_function = "tricube",
     robustness_method = "bisquare",
     scaling_method = "mad",
     boundary_policy = "extend",
-    update_mode = "incremental",
+    zero_weight_fallback = "use_local_mean",
+    update_mode = "full",
     auto_converge = NULL,
     return_robustness_weights = FALSE,
-    parallel = FALSE
+    return_diagnostics = FALSE,
+    return_residuals = FALSE,
+    parallel = FALSE,
+    confidence_intervals = NULL,
+    prediction_intervals = NULL
 )
 }
 \arguments{
 \item{fraction}{Smoothing fraction (0 to 1). Default: 0.67.}
 
-\item{window_capacity}{Max points in sliding window.}
+\item{window_capacity}{Max points in sliding window. Default: 1000.}
 
-\item{min_points}{Minimum points before smoothing.}
+\item{min_points}{Minimum points before smoothing. Default: 3.}
 
 \item{iterations}{Robustness iterations. Default: 3.}
 
@@ -35,18 +40,30 @@ OnlineLowess(
 
 \item{robustness_method}{Method: "bisquare", "huber", "talwar".}
 
-\item{scaling_method}{Scale estimation: "mad", "mar".}
+\item{scaling_method}{Scale estimation: "mad", "mar", "mean".}
 
 \item{boundary_policy}{Edge handling: "extend", "reflect", "zero",
 "noboundary".}
 
-\item{update_mode}{Update strategy: "incremental".}
+\item{zero_weight_fallback}{Fallback: "use_local_mean", "return_original",
+"return_none".}
+
+\item{update_mode}{Update strategy: \code{"full"} (default) or
+\code{"incremental"}.}
 
 \item{auto_converge}{Convergence tolerance. NULL disables.}
 
 \item{return_robustness_weights}{Return weights. Default: FALSE.}
 
+\item{return_diagnostics}{Return fit metrics. Default: FALSE.}
+
+\item{return_residuals}{Return residuals. Default: FALSE.}
+
 \item{parallel}{Enable parallel processing. Default: TRUE.}
+
+\item{confidence_intervals}{Confidence level (e.g., 0.95). NULL disables.}
+
+\item{prediction_intervals}{Prediction level (e.g., 0.95). NULL disables.}
 }
 \value{
 An OnlineLowess object.
@@ -58,7 +75,8 @@ Create a stateful LOWESS model for real-time online data.
 model <- OnlineLowess(fraction = 0.2, window_capacity = 20)
 x <- 1:50
 y <- sin(x * 0.1) + rnorm(50, 0, 0.1)
-result <- model$add_points(x, y)
-plot(x, y)
-lines(x, result$y, col = "red")
+for (i in seq_along(x)) {
+    result <- model$add_point(x[i], y[i])
+    if (!is.null(result)) cat("smoothed:", result$smoothed, "\n")
+}
 }

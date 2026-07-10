@@ -1,111 +1,111 @@
 name: R-CMD-check
 
 on:
-    push:
-        branches: [main, master, develop]
-    pull_request:
-        branches: [main, master, develop]
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
 
 env:
-    CARGO_TERM_COLOR: always
-    RUST_BACKTRACE: 1
-    GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-    FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-    # ============================================================================
-    # R CMD CHECK (multi-OS matrix)
-    # ============================================================================
-    r-cmd-check:
-        name: R-CMD-check (${{ matrix.os }})
-        runs-on: ${{ matrix.os }}
-        strategy:
-            fail-fast: false
-            matrix:
-                os: [ubuntu-latest, macos-latest, windows-latest]
-                rust: [stable]
+  # ============================================================================
+  # R CMD CHECK (multi-OS matrix)
+  # ============================================================================
+  r-cmd-check:
+    name: R-CMD-check (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        rust: [stable]
 
-        steps:
-            - name: Checkout Repository
-              uses: actions/checkout@v6
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
 
-            - name: Install Rust Toolchain
-              uses: dtolnay/rust-toolchain@stable
-              with:
-                  toolchain: ${{ matrix.rust }}
-                  components: rustfmt, clippy
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ matrix.rust }}
+          components: rustfmt, clippy
 
-            - name: Install Rust GNU (Windows)
-              if: matrix.os == 'windows-latest'
-              run: rustup toolchain install stable-x86_64-pc-windows-gnu
+      - name: Install Rust GNU (Windows)
+        if: matrix.os == 'windows-latest'
+        run: rustup toolchain install stable-x86_64-pc-windows-gnu
 
-            - name: Cache dependencies
-              uses: Swatinem/rust-cache@v2
-              with:
-                  key: r-cmd-check-${{ matrix.os }}-cargo
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: r-cmd-check-${{ matrix.os }}-cargo
 
-            - name: Setup R
-              uses: r-lib/actions/setup-r@v2
-              with:
-                  r-version: release
-                  use-public-rspm: true
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: release
+          use-public-rspm: true
 
-            - name: Setup Pandoc
-              uses: r-lib/actions/setup-pandoc@v2
+      - name: Setup Pandoc
+        uses: r-lib/actions/setup-pandoc@v2
 
-            - name: "R: Setup Dependencies"
-              uses: r-lib/actions/setup-r-dependencies@v2
-              with:
-                  working-directory: bindings/r
-                  extra-packages: |
-                      any::rcmdcheck
-                      any::BiocCheck
-                      any::XML
-                      any::devtools
-                      any::lintr
-                      any::styler
-                      any::BiocManager
-                  needs: check
+      - name: "R: Setup Dependencies"
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          working-directory: bindings/r
+          extra-packages: |
+            any::rcmdcheck
+            any::BiocCheck
+            any::XML
+            any::devtools
+            any::lintr
+            any::styler
+            any::BiocManager
+          needs: check
 
-            - name: "R: Prepare Package Sources"
-              working-directory: bindings/r
-              shell: bash
-              run: |
-                  chmod +x configure cleanup ../../dev/prepare_cran.sh
-                  ../../dev/prepare_cran.sh
-                  test -f tests/testthat.R
+      - name: "R: Prepare Package Sources"
+        working-directory: bindings/r
+        shell: bash
+        run: |
+          chmod +x configure cleanup ../../dev/prepare_cran.sh
+          ../../dev/prepare_cran.sh
+          test -f tests/testthat.R
 
-            - name: "R: CMD Check"
-              uses: r-lib/actions/check-r-package@v2
-              with:
-                  upload-snapshots: true
-                  build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
-                  args: 'c("--no-manual", "--as-cran")'
-                  check-dir: '"check"'
-                  error-on: '"error"'
-                  upload-results: false
-                  working-directory: bindings/r
+      - name: "R: CMD Check"
+        uses: r-lib/actions/check-r-package@v2
+        with:
+          upload-snapshots: true
+          build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
+          args: 'c("--no-manual", "--as-cran")'
+          check-dir: '"check"'
+          error-on: '"error"'
+          upload-results: false
+          working-directory: bindings/r
 
-            - name: "R: Install Package"
-              working-directory: bindings/r
-              run: Rscript -e "devtools::install(quiet = TRUE)"
+      - name: "R: Install Package"
+        working-directory: bindings/r
+        run: Rscript -e "devtools::install(quiet = TRUE)"
 
-            - name: "R: Examples"
-              working-directory: bindings/r
-              run: |
-                  Rscript ../../examples/r/batch_smoothing.R
-                  Rscript ../../examples/r/streaming_smoothing.R
-                  Rscript ../../examples/r/online_smoothing.R
+      - name: "R: Examples"
+        working-directory: bindings/r
+        run: |
+          Rscript ../../examples/r/batch_smoothing.R
+          Rscript ../../examples/r/streaming_smoothing.R
+          Rscript ../../examples/r/online_smoothing.R
 
-            - name: "R: Quality (BiocCheck/Lint)"
-              working-directory: bindings/r
-              shell: bash
-              run: |
-                  mkdir -p ~/.R
-                  echo "CXXFLAGS += -w" >> ~/.R/Makevars
-                  echo "CFLAGS += -w" >> ~/.R/Makevars
-                  Rscript -e "my_linters <- lintr::linters_with_defaults(indentation_linter = lintr::indentation_linter(indent = 4L), object_usage_linter = NULL, object_name_linter = lintr::object_name_linter(styles = c('snake_case', 'symbols', 'CamelCase'))); lintr::lint_dir('R', linters = my_linters)"
-                  chmod +x ../../dev/prepare_cran.sh
-                  ../../dev/prepare_cran.sh
-                  R CMD build .
-                  Rscript -e "BiocCheck::BiocCheck(list.files(pattern='[.]tar[.]gz$')[1], new_package=FALSE, no_check_vignettes=TRUE, quit_with_status=TRUE)"
+      - name: "R: Quality (BiocCheck/Lint)"
+        working-directory: bindings/r
+        shell: bash
+        run: |
+          mkdir -p ~/.R
+          echo "CXXFLAGS += -w" >> ~/.R/Makevars
+          echo "CFLAGS += -w" >> ~/.R/Makevars
+          Rscript -e "my_linters <- lintr::linters_with_defaults(indentation_linter = lintr::indentation_linter(indent = 4L), object_usage_linter = NULL, object_name_linter = lintr::object_name_linter(styles = c('snake_case', 'symbols', 'CamelCase'))); lintr::lint_dir('R', linters = my_linters)"
+          chmod +x ../../dev/prepare_cran.sh
+          ../../dev/prepare_cran.sh
+          R CMD build .
+          Rscript -e "BiocCheck::BiocCheck(list.files(pattern='[.]tar[.]gz$')[1], new_package=FALSE, no_check_vignettes=TRUE, quit_with_status=TRUE)"

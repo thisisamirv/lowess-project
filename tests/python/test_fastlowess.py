@@ -32,8 +32,8 @@ class TestLowess:
 
     def test_basic_smooth_with_lists(self):
         """Test array-like inputs are coerced to NumPy arrays."""
-        x = [1.0, 2.0, 3.0, 4.0, 5.0]
-        y = [2.0, 4.1, 5.9, 8.2, 9.8]
+        x = np.asarray([1.0, 2.0, 3.0, 4.0, 5.0])
+        y = np.asarray([2.0, 4.1, 5.9, 8.2, 9.8])
 
         lowess = fastlowess.Lowess(fraction=0.5)
         result = lowess.fit(x, y)
@@ -229,8 +229,8 @@ class TestStreamingLowess:
 
     def test_streaming_process_chunk_with_lists(self):
         """Test streaming processor accepts array-like chunk inputs."""
-        x = list(np.linspace(0, 1000, 2000))
-        y = list(np.sin(np.linspace(0, 1000, 2000) / 100))
+        x = np.asarray(np.linspace(0, 1000, 2000))
+        y = np.asarray(np.sin(np.linspace(0, 1000, 2000) / 100))
 
         streaming = fastlowess.StreamingLowess(fraction=0.1, chunk_size=1000)
         chunk_result = streaming.process_chunk(x, y)
@@ -601,9 +601,9 @@ class TestCustomWeights:
         weights = np.ones(20)
 
         result_no_w = fastlowess.Lowess(fraction=0.4, iterations=2).fit(x, y)
-        result_unit_w = fastlowess.Lowess(
-            fraction=0.4, iterations=2, custom_weights=weights.tolist()
-        ).fit(x, y)
+        result_unit_w = fastlowess.Lowess(fraction=0.4, iterations=2).fit(
+            x, y, custom_weights=np.asarray(weights)
+        )
 
         np.testing.assert_allclose(result_no_w.y, result_unit_w.y, atol=1e-10)
 
@@ -617,9 +617,9 @@ class TestCustomWeights:
 
         weights = np.ones(10)
         weights[5] = 0.0
-        result_zero_w = fastlowess.Lowess(
-            fraction=0.5, iterations=0, custom_weights=weights.tolist()
-        ).fit(x, y)
+        result_zero_w = fastlowess.Lowess(fraction=0.5, iterations=0).fit(
+            x, y, custom_weights=weights
+        )
 
         true_val = 5.0 * 2.0
         err_no_w = abs(result_no_w.y[5] - true_val)
@@ -638,9 +638,9 @@ class TestCustomWeights:
         weights_high = np.ones(15)
         weights_high[7] = 100.0
 
-        result_high = fastlowess.Lowess(
-            fraction=0.6, iterations=0, custom_weights=weights_high.tolist()
-        ).fit(x, y)
+        result_high = fastlowess.Lowess(fraction=0.6, iterations=0).fit(
+            x, y, custom_weights=weights_high
+        )
         result_equal = fastlowess.Lowess(fraction=0.6, iterations=0).fit(x, y)
 
         assert result_high.y[7] > result_equal.y[7], (
@@ -654,9 +654,9 @@ class TestCustomWeights:
         y = x * 0.5 + np.sin(x * 0.3)
         weights = (1.0 + 0.1 * x).tolist()
 
-        result = fastlowess.Lowess(
-            fraction=0.4, iterations=3, custom_weights=weights
-        ).fit(x, y)
+        result = fastlowess.Lowess(fraction=0.4, iterations=3).fit(
+            x, y, custom_weights=np.asarray(weights)
+        )
 
         assert len(result.y) == 30
         assert np.all(np.isfinite(result.y))
@@ -668,7 +668,9 @@ class TestCustomWeights:
         weights = [1.0] * 7  # wrong length
 
         with pytest.raises(ValueError):
-            fastlowess.Lowess(fraction=0.5, custom_weights=weights).fit(x, y)
+            fastlowess.Lowess(fraction=0.5).fit(
+                x, y, custom_weights=np.asarray(weights)
+            )
 
     def test_negative_weight_raises_error(self):
         """Negative custom_weights should raise ValueError."""
@@ -677,7 +679,9 @@ class TestCustomWeights:
         weights = [1.0, -1.0, 1.0, 1.0, 1.0]
 
         with pytest.raises(ValueError):
-            fastlowess.Lowess(fraction=0.5, custom_weights=weights).fit(x, y)
+            fastlowess.Lowess(fraction=0.5).fit(
+                x, y, custom_weights=np.asarray(weights)
+            )
 
 
 if __name__ == "__main__":

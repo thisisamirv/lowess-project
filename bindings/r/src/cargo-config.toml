@@ -13,3 +13,8 @@ rustflags = ["-C", "symbol-mangling-version=v0"]
 # WASM/Emscripten target configuration
 [target.wasm32-unknown-emscripten]
 rustflags = ["-C", "symbol-mangling-version=v0"]
+
+# Windows GNU target (Rtools45 uses .static.posix prefix)
+[target.x86_64-pc-windows-gnu]
+linker = "c:/rtools45/x86_64-w64-mingw32.static.posix/bin/x86_64-w64-mingw32.static.posix-gcc.exe"
+ar = "c:/rtools45/x86_64-w64-mingw32.static.posix/bin/x86_64-w64-mingw32.static.posix-ar.exe"

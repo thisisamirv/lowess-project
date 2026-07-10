@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Remove non-essential vendored files and refresh cargo checksum metadata."""
 
-import hashlib
 import argparse
+import hashlib
 import json
 import os
 import shutil

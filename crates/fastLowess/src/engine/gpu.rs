@@ -3470,7 +3470,7 @@ impl GpuExecutor {
         });
 
         if let Some(Ok(())) = rx.receive().await {
-            let data = slice.get_mapped_range();
+            let data = slice.get_mapped_range().expect("buffer map succeeded");
             let ret = data.to_vec();
             drop(data);
             staging_buf.unmap();
@@ -3534,7 +3534,7 @@ impl GpuExecutor {
         });
 
         if let Some(Ok(())) = rx.receive().await {
-            let data = slice.get_mapped_range();
+            let data = slice.get_mapped_range().expect("buffer map succeeded");
             let mut results = Vec::with_capacity(requests.len());
 
             for (i, (_, size, _)) in requests.iter().enumerate() {

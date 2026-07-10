@@ -71,9 +71,9 @@ fn test_prelude_cross_validation() {
 /// Verifies that ZeroWeightFallback enum is exported.
 #[test]
 fn test_prelude_zero_weight_fallback() {
-    let _ = Lowess::<f64>::new().zero_weight_fallback("uselocalmean");
-    let _ = Lowess::<f64>::new().zero_weight_fallback("returnoriginal");
-    let _ = Lowess::<f64>::new().zero_weight_fallback("returnnone");
+    let _ = Lowess::<f64>::new().zero_weight_fallback("use_local_mean");
+    let _ = Lowess::<f64>::new().zero_weight_fallback("return_original");
+    let _ = Lowess::<f64>::new().zero_weight_fallback("return_none");
 }
 
 /// Test adapter types are available.

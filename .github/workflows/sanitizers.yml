@@ -1,198 +1,198 @@
 name: Sanitizers
 
 on:
-    push:
-        branches: [main, master, develop]
-    pull_request:
-        branches: [main, master, develop]
-    workflow_dispatch:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+  workflow_dispatch:
 
 env:
-    CARGO_TERM_COLOR: always
-    RUST_BACKTRACE: 1
-    ASAN_OPTIONS: detect_leaks=0:strict_init_order=1
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  ASAN_OPTIONS: detect_leaks=0:strict_init_order=1
 
 jobs:
-    # ============================================================================
-    # REPO-LEVEL SANITIZER COVERAGE
-    #
-    # This workflow is the single home for sanitizer-based CI coverage.
-    # It includes native Rust/binding ASAN coverage plus the dedicated R ASAN/TSAN
-    # jobs that need R-specific setup.
-    #
-    # WASM is intentionally excluded here: sanitizer instrumentation is not
-    # meaningful for the wasm32 target in this CI setup.
-    # ============================================================================
-    asan-native:
-        name: Native ASAN (Rust + bindings)
-        runs-on: ubuntu-latest
+  # ============================================================================
+  # REPO-LEVEL SANITIZER COVERAGE
+  #
+  # This workflow is the single home for sanitizer-based CI coverage.
+  # It includes native Rust/binding ASAN coverage plus the dedicated R ASAN/TSAN
+  # jobs that need R-specific setup.
+  #
+  # WASM is intentionally excluded here: sanitizer instrumentation is not
+  # meaningful for the wasm32 target in this CI setup.
+  # ============================================================================
+  asan-native:
+    name: Native ASAN (Rust + bindings)
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout Repository
-              uses: actions/checkout@v6
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
 
-            - name: Install Rust Nightly
-              uses: dtolnay/rust-toolchain@nightly
-              with:
-                  toolchain: nightly
-                  components: rust-src
+      - name: Install Rust Nightly
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          toolchain: nightly
+          components: rust-src
 
-            - name: Install Python
-              uses: actions/setup-python@v6
-              with:
-                  python-version: "3.12"
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
 
-            - name: Setup Node
-              uses: actions/setup-node@v6
-              with:
-                  node-version: 22
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
 
-            - name: Install Julia
-              uses: julia-actions/setup-julia@v3
-              with:
-                  version: "1.11"
+      - name: Install Julia
+        uses: julia-actions/setup-julia@v3
+        with:
+          version: "1.11"
 
-            - name: Cache dependencies
-              uses: Swatinem/rust-cache@v2
-              with:
-                  key: sanitizers-asan-native-cargo
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: sanitizers-asan-native-cargo
 
-            - name: Install System Dependencies
-              run: |
-                  sudo apt-get update
-                  sudo apt-get install -y --no-install-recommends clang lld cmake g++
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends clang lld cmake g++
 
-            - name: Rust Core Tests (ASAN)
-              env:
-                  RUSTFLAGS: -Zsanitizer=address
-              shell: bash
-              run: |
-                  cargo test \
-                    -Zbuild-std \
-                    --target x86_64-unknown-linux-gnu \
-                    -p lowess-project-tests \
-                    --test lowess
-
-                  cargo test \
-                    -Zbuild-std \
-                    --target x86_64-unknown-linux-gnu \
-                    -p lowess-project-tests \
-                    --test fastLowess \
-                    --features cpu
-
-            - name: Build Native Bindings (ASAN)
-              env:
-                  RUSTFLAGS: -Zsanitizer=address
-              shell: bash
-              run: |
-                  cargo build \
-                    -Zbuild-std \
-                    --target x86_64-unknown-linux-gnu \
-                    -p fastLowess-py \
-                    --release
-
-                  cargo build \
-                    -Zbuild-std \
-                    --target x86_64-unknown-linux-gnu \
-                    -p fastlowess-node \
-                    --release
-
-                  cargo build \
-                    -Zbuild-std \
-                    --target x86_64-unknown-linux-gnu \
-                    -p fastlowess-jl \
-                    --release
-
-                  cargo build \
-                    -Zbuild-std \
-                    --target x86_64-unknown-linux-gnu \
-                    -p fastlowess-cpp \
-                    --release
-
-            - name: Prepare Sanitized C++ Library Path
-              shell: bash
-              run: |
-                  mkdir -p target/release
-                  cp target/x86_64-unknown-linux-gnu/release/libfastlowess_cpp.so target/release/libfastlowess_cpp.so
-
-            - name: C++ Binding Tests (ASAN)
-              shell: bash
-              run: |
-                  cmake -S tests/cpp -B tests/cpp/build-asan \
-                    -DCMAKE_BUILD_TYPE=Debug \
-                    -DCMAKE_C_COMPILER=clang \
-                    -DCMAKE_CXX_COMPILER=clang++ \
-                    -DCMAKE_CXX_FLAGS='-fsanitize=address -fno-omit-frame-pointer' \
-                    -DCMAKE_EXE_LINKER_FLAGS='-fsanitize=address'
-                  cmake --build tests/cpp/build-asan --config Debug
-                  LD_LIBRARY_PATH=target/release ctest --test-dir tests/cpp/build-asan --output-on-failure
-
-            - name: Sanitizer Scope Note
-              run: |
-                  echo "WASM is intentionally excluded from this workflow because ASAN is not meaningful for wasm32 in this CI setup."
-
-    # ============================================================================
-    # R - CLANG ASAN
-    # ============================================================================
-    r-asan-check:
-        name: R - Clang ASAN
-        runs-on: ubuntu-latest
-        container:
-            image: rocker/r-devel-san:latest
+      - name: Rust Core Tests (ASAN)
         env:
-            CARGO_HOME: /usr/local/cargo
-            RUSTUP_HOME: /usr/local/rustup
-        defaults:
-            run:
-                working-directory: bindings/r
-        steps:
-            - uses: actions/checkout@v6
-            - name: Install latest Rust
-              shell: bash
-              run: |
-                  export CARGO_HOME=/usr/local/cargo
-                  export RUSTUP_HOME=/usr/local/rustup
-                  if command -v curl >/dev/null 2>&1; then
-                    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-                  elif command -v wget >/dev/null 2>&1; then
-                    wget -qO- https://sh.rustup.rs | sh -s -- -y
-                  else
-                    apt-get update
-                    apt-get install -y --no-install-recommends wget ca-certificates
-                    wget -qO- https://sh.rustup.rs | sh -s -- -y
-                  fi
-                  echo "$CARGO_HOME/bin" >> $GITHUB_PATH
-                  echo "CARGO_HOME=$CARGO_HOME" >> $GITHUB_ENV
-                  echo "RUSTUP_HOME=$RUSTUP_HOME" >> $GITHUB_ENV
-            - name: Install System Dependencies
-              run: |
-                  apt-get update
-                  apt-get install -y --no-install-recommends libssl-dev libcurl4-openssl-dev libxml2-dev libuv1-dev
-            - name: Install R Dependencies
-              run: |
-                  export R_LIBS_USER="$RUNNER_TEMP/Library"
-                  mkdir -p "$R_LIBS_USER"
-                  echo "R_LIBS_USER=$R_LIBS_USER" >> "$GITHUB_ENV"
-                  RDscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); install.packages(c('remotes', 'rcmdcheck', 'testthat', 'knitr', 'rmarkdown', 'BiocManager'), lib = lib)"
-                  RDscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); BiocManager::install('BiocStyle', lib = lib, ask = FALSE, update = FALSE)"
-                  RDscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); remotes::install_deps(dependencies = TRUE, lib = lib)"
-            - name: Prepare Package Sources
-              shell: bash
-              run: |
-                  if [ -f "$CARGO_HOME/env" ]; then
-                    . "$CARGO_HOME/env"
-                  elif [ -f "$HOME/.cargo/env" ]; then
-                    . "$HOME/.cargo/env"
-                  fi
-                  chmod +x configure cleanup ../../dev/prepare_cran.sh
-                  ../../dev/prepare_cran.sh
-                  test -f tests/testthat.R
-            - name: Run ASAN Check
-              shell: bash
-              run: |
-                  if [ -f "$CARGO_HOME/env" ]; then
-                    . "$CARGO_HOME/env"
-                  elif [ -f "$HOME/.cargo/env" ]; then
-                    . "$HOME/.cargo/env"
-                  fi
-                  RDscript -e "rcmdcheck::rcmdcheck(args = c('--no-manual', '--ignore-vignettes'), build_args = c('--no-build-vignettes'), error_on = 'error', check_dir = 'check')"
+          RUSTFLAGS: -Zsanitizer=address
+        shell: bash
+        run: |
+          cargo test \
+            -Zbuild-std \
+            --target x86_64-unknown-linux-gnu \
+            -p lowess-project-tests \
+            --test lowess
+
+          cargo test \
+            -Zbuild-std \
+            --target x86_64-unknown-linux-gnu \
+            -p lowess-project-tests \
+            --test fastLowess \
+            --features cpu
+
+      - name: Build Native Bindings (ASAN)
+        env:
+          RUSTFLAGS: -Zsanitizer=address
+        shell: bash
+        run: |
+          cargo build \
+            -Zbuild-std \
+            --target x86_64-unknown-linux-gnu \
+            -p fastLowess-py \
+            --release
+
+          cargo build \
+            -Zbuild-std \
+            --target x86_64-unknown-linux-gnu \
+            -p fastlowess-node \
+            --release
+
+          cargo build \
+            -Zbuild-std \
+            --target x86_64-unknown-linux-gnu \
+            -p fastlowess-jl \
+            --release
+
+          cargo build \
+            -Zbuild-std \
+            --target x86_64-unknown-linux-gnu \
+            -p fastlowess-cpp \
+            --release
+
+      - name: Prepare Sanitized C++ Library Path
+        shell: bash
+        run: |
+          mkdir -p target/release
+          cp target/x86_64-unknown-linux-gnu/release/libfastlowess_cpp.so target/release/libfastlowess_cpp.so
+
+      - name: C++ Binding Tests (ASAN)
+        shell: bash
+        run: |
+          cmake -S tests/cpp -B tests/cpp/build-asan \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_CXX_FLAGS='-fsanitize=address -fno-omit-frame-pointer' \
+            -DCMAKE_EXE_LINKER_FLAGS='-fsanitize=address'
+          cmake --build tests/cpp/build-asan --config Debug
+          LD_LIBRARY_PATH=target/release ctest --test-dir tests/cpp/build-asan --output-on-failure
+
+      - name: Sanitizer Scope Note
+        run: |
+          echo "WASM is intentionally excluded from this workflow because ASAN is not meaningful for wasm32 in this CI setup."
+
+  # ============================================================================
+  # R - CLANG ASAN
+  # ============================================================================
+  r-asan-check:
+    name: R - Clang ASAN
+    runs-on: ubuntu-latest
+    container:
+      image: rocker/r-devel-san:latest
+    env:
+      CARGO_HOME: /usr/local/cargo
+      RUSTUP_HOME: /usr/local/rustup
+    defaults:
+      run:
+        working-directory: bindings/r
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install latest Rust
+        shell: bash
+        run: |
+          export CARGO_HOME=/usr/local/cargo
+          export RUSTUP_HOME=/usr/local/rustup
+          if command -v curl >/dev/null 2>&1; then
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          elif command -v wget >/dev/null 2>&1; then
+            wget -qO- https://sh.rustup.rs | sh -s -- -y
+          else
+            apt-get update
+            apt-get install -y --no-install-recommends wget ca-certificates
+            wget -qO- https://sh.rustup.rs | sh -s -- -y
+          fi
+          echo "$CARGO_HOME/bin" >> $GITHUB_PATH
+          echo "CARGO_HOME=$CARGO_HOME" >> $GITHUB_ENV
+          echo "RUSTUP_HOME=$RUSTUP_HOME" >> $GITHUB_ENV
+      - name: Install System Dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends libssl-dev libcurl4-openssl-dev libxml2-dev libuv1-dev
+      - name: Install R Dependencies
+        run: |
+          export R_LIBS_USER="$RUNNER_TEMP/Library"
+          mkdir -p "$R_LIBS_USER"
+          echo "R_LIBS_USER=$R_LIBS_USER" >> "$GITHUB_ENV"
+          RDscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); install.packages(c('remotes', 'rcmdcheck', 'testthat', 'knitr', 'rmarkdown', 'BiocManager'), lib = lib)"
+          RDscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); BiocManager::install('BiocStyle', lib = lib, ask = FALSE, update = FALSE)"
+          RDscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); remotes::install_deps(dependencies = TRUE, lib = lib)"
+      - name: Prepare Package Sources
+        shell: bash
+        run: |
+          if [ -f "$CARGO_HOME/env" ]; then
+            . "$CARGO_HOME/env"
+          elif [ -f "$HOME/.cargo/env" ]; then
+            . "$HOME/.cargo/env"
+          fi
+          chmod +x configure cleanup ../../dev/prepare_cran.sh
+          ../../dev/prepare_cran.sh
+          test -f tests/testthat.R
+      - name: Run ASAN Check
+        shell: bash
+        run: |
+          if [ -f "$CARGO_HOME/env" ]; then
+            . "$CARGO_HOME/env"
+          elif [ -f "$HOME/.cargo/env" ]; then
+            . "$HOME/.cargo/env"
+          fi
+          RDscript -e "rcmdcheck::rcmdcheck(args = c('--no-manual', '--ignore-vignettes'), build_args = c('--no-build-vignettes'), error_on = 'error', check_dir = 'check')"

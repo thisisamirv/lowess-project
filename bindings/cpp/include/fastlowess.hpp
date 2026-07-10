@@ -148,13 +148,31 @@ struct StreamingOptions : public LowessOptions {
 /**
  * @brief Options for online LOWESS.
  *
- * Identical fields to LowessOptions but defaults parallel to false, since
+ * Mirrors LowessOptions fields but defaults parallel to false, since
  * online LOWESS processes one point at a time and parallelism rarely helps.
  */
-struct OnlineOptions : public LowessOptions {
-  bool parallel = false; ///< Parallelism rarely helps for single-point updates
+struct OnlineOptions {
+  double fraction = detail::k_default_fraction; ///< Smoothing fraction (0, 1]
+  int iterations = 3;                           ///< Robustness iterations
+  double delta = NAN; ///< Interpolation threshold (NaN = auto)
+
+  std::string weight_function = "tricube";
+  std::string robustness_method = "bisquare";
+  std::string scaling_method = "mad";
+  std::string boundary_policy = "extend";
+  std::string zero_weight_fallback = "use_local_mean";
+
+  double confidence_intervals = NAN; ///< Confidence level (NaN = disabled)
+  double prediction_intervals = NAN; ///< Prediction level (NaN = disabled)
+  double auto_converge = NAN;        ///< Auto-convergence threshold
+
   bool return_diagnostics = false;
   bool return_residuals = false;
+  bool return_robustness_weights = false;
+  bool parallel = false; ///< Parallelism rarely helps for single-point updates
+
+  std::vector<double> custom_weights;
+
   int window_capacity = detail::k_default_window_capacity;
   int min_points = 3;
   std::string update_mode = "full";

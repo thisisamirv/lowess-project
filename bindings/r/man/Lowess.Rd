@@ -22,7 +22,8 @@ Lowess(
     cv_fractions = NULL,
     cv_method = "kfold",
     cv_k = 5L,
-    parallel = TRUE
+    parallel = TRUE,
+    cv_seed = NULL
 )
 }
 \arguments{
@@ -36,7 +37,7 @@ Lowess(
 
 \item{robustness_method}{Method: "bisquare", "huber", "talwar".}
 
-\item{scaling_method}{Scale estimation: "mad", "mar".}
+\item{scaling_method}{Scale estimation: "mad", "mar", "mean".}
 
 \item{boundary_policy}{Edge handling: "extend", "reflect", "zero",
 "noboundary".}
@@ -63,6 +64,9 @@ Lowess(
 \item{cv_k}{Folds for k-fold CV. Default: 5.}
 
 \item{parallel}{Enable parallel processing. Default: TRUE.}
+
+\item{cv_seed}{Integer seed for the cross-validation random number
+generator. \code{NULL} (default) uses a random seed.}
 }
 \value{
 A Lowess object.

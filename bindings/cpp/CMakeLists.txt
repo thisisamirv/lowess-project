@@ -6,12 +6,12 @@ include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
 
 # Import Corrosion for Rust integration
-fetchcontent_declare(
+FetchContent_Declare(
     Corrosion
     GIT_REPOSITORY https://github.com/corrosion-rs/corrosion.git
     GIT_TAG v0.5.1
 )
-fetchcontent_makeavailable(Corrosion)
+FetchContent_MakeAvailable(Corrosion)
 
 # Import the Rust crate
 corrosion_import_crate(MANIFEST_PATH Cargo.toml)
@@ -22,9 +22,11 @@ set_target_properties(fastlowess_cpp PROPERTIES EXPORT_NAME fastlowess)
 
 # Configure include directories
 # This ensures that #include "fastlowess.hpp" works for consumers
-target_include_directories(fastlowess_cpp INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
+target_include_directories(
+    fastlowess_cpp
+    INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
 )
 
 # Create an alias for idiomatic usage (fastlowess::fastlowess)
@@ -45,31 +47,33 @@ write_basic_package_version_file(
     COMPATIBILITY SameMajorVersion
 )
 
-install(TARGETS fastlowess_cpp
+install(
+    TARGETS fastlowess_cpp
     EXPORT fastlowessTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-install(DIRECTORY include/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-)
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-export(EXPORT fastlowessTargets
+export(
+    EXPORT fastlowessTargets
     FILE "${CMAKE_CURRENT_BINARY_DIR}/fastlowessTargets.cmake"
     NAMESPACE fastlowess::
 )
 
-install(EXPORT fastlowessTargets
+install(
+    EXPORT fastlowessTargets
     FILE fastlowessTargets.cmake
     NAMESPACE fastlowess::
     DESTINATION "${fastlowess_install_cmakedir}"
 )
 
-install(FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/fastlowessConfig.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/fastlowessConfigVersion.cmake"
+install(
+    FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/fastlowessConfig.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/fastlowessConfigVersion.cmake"
     DESTINATION "${fastlowess_install_cmakedir}"
 )
 
@@ -77,13 +81,18 @@ set(CMAKE_EXPORT_PACKAGE_REGISTRY ON)
 export(PACKAGE fastlowess)
 
 # Tests
-set(fastlowess_test_source "${CMAKE_CURRENT_SOURCE_DIR}/../../tests/cpp/test_fastlowess.cpp")
+set(fastlowess_test_source
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../tests/cpp/test_fastlowess.cpp"
+)
 set(fastlowess_test_include_dir "${CMAKE_CURRENT_SOURCE_DIR}/../../tests/cpp")
 
 if(EXISTS "${fastlowess_test_source}")
     enable_testing()
     add_executable(test_fastlowess "${fastlowess_test_source}")
     target_link_libraries(test_fastlowess PRIVATE fastlowess_cpp)
-    target_include_directories(test_fastlowess PRIVATE "${fastlowess_test_include_dir}")
+    target_include_directories(
+        test_fastlowess
+        PRIVATE "${fastlowess_test_include_dir}"
+    )
     add_test(NAME test_fastlowess COMMAND test_fastlowess)
 endif()

@@ -10,9 +10,9 @@ test_that("OnlineLowess basic functionality works", {
     ol <- OnlineLowess(
         fraction = 0.3, window_capacity = 25, min_points = 10
     )
-    results <- sapply(seq_along(x), function(i) ol$add_point(x[[i]], y[[i]]))
+    results <- lapply(seq_along(x), function(i) ol$add_point(x[[i]], y[[i]]))
 
-    expect_true(any(!sapply(results, is.null)))
+    expect_false(all(vapply(results, is.null, logical(1))))
 })
 
 test_that("OnlineLowess window capacity works", {
@@ -23,15 +23,19 @@ test_that("OnlineLowess window capacity works", {
     ol_small <- OnlineLowess(
         fraction = 0.3, window_capacity = 15
     )
-    results_small <- sapply(seq_along(x), function(i) ol_small$add_point(x[[i]], y[[i]]))
+    results_small <- lapply(
+        seq_along(x), function(i) ol_small$add_point(x[[i]], y[[i]])
+    )
 
     ol_large <- OnlineLowess(
         fraction = 0.3, window_capacity = 50
     )
-    results_large <- sapply(seq_along(x), function(i) ol_large$add_point(x[[i]], y[[i]]))
+    results_large <- lapply(
+        seq_along(x), function(i) ol_large$add_point(x[[i]], y[[i]])
+    )
 
-    expect_true(any(!sapply(results_small, is.null)))
-    expect_true(any(!sapply(results_large, is.null)))
+    expect_false(all(vapply(results_small, is.null, logical(1))))
+    expect_false(all(vapply(results_large, is.null, logical(1))))
 })
 
 test_that("OnlineLowess min_points parameter works", {
@@ -42,12 +46,12 @@ test_that("OnlineLowess min_points parameter works", {
     ol <- OnlineLowess(
         fraction = 0.3, window_capacity = 25, min_points = 5
     )
-    results <- sapply(seq_along(x), function(i) ol$add_point(x[[i]], y[[i]]))
+    results <- lapply(seq_along(x), function(i) ol$add_point(x[[i]], y[[i]]))
 
     # Results before min_points should be NULL
     expect_null(results[[1]])
-    # At least some results should be numeric
-    expect_true(any(!sapply(results, is.null)))
+    # At least some results should be non-NULL
+    expect_false(all(vapply(results, is.null, logical(1))))
 })
 
 test_that("OnlineLowess update modes work", {
@@ -59,16 +63,20 @@ test_that("OnlineLowess update modes work", {
         fraction = 0.3, window_capacity = 25,
         update_mode = "full"
     )
-    results_full <- sapply(seq_along(x), function(i) ol_full$add_point(x[[i]], y[[i]]))
+    results_full <- lapply(
+        seq_along(x), function(i) ol_full$add_point(x[[i]], y[[i]])
+    )
 
     ol_incr <- OnlineLowess(
         fraction = 0.3, window_capacity = 25,
         update_mode = "incremental"
     )
-    results_incr <- sapply(seq_along(x), function(i) ol_incr$add_point(x[[i]], y[[i]]))
+    results_incr <- lapply(
+        seq_along(x), function(i) ol_incr$add_point(x[[i]], y[[i]])
+    )
 
-    expect_true(any(!sapply(results_full, is.null)))
-    expect_true(any(!sapply(results_incr, is.null)))
+    expect_false(all(vapply(results_full, is.null, logical(1))))
+    expect_false(all(vapply(results_incr, is.null, logical(1))))
 })
 
 test_that("OnlineLowess handles edge cases", {
@@ -78,15 +86,17 @@ test_that("OnlineLowess handles edge cases", {
     ol <- OnlineLowess(
         fraction = 0.5, window_capacity = 5, min_points = 3
     )
-    results <- sapply(seq_along(x), function(i) ol$add_point(x[[i]], y[[i]]))
-    expect_true(any(!sapply(results, is.null)))
+    results <- lapply(seq_along(x), function(i) ol$add_point(x[[i]], y[[i]]))
+    expect_false(all(vapply(results, is.null, logical(1))))
 
     # Window larger than data
     ol2 <- OnlineLowess(
         fraction = 0.5, window_capacity = 20, min_points = 3
     )
-    results2 <- sapply(seq_along(x), function(i) ol2$add_point(x[[i]], y[[i]]))
-    expect_true(any(!sapply(results2, is.null)))
+    results2 <- lapply(
+        seq_along(x), function(i) ol2$add_point(x[[i]], y[[i]])
+    )
+    expect_false(all(vapply(results2, is.null, logical(1))))
 })
 
 test_that("OnlineLowess robustness works", {
@@ -99,14 +109,18 @@ test_that("OnlineLowess robustness works", {
         fraction = 0.3, window_capacity = 25,
         iterations = 0
     )
-    results_no_robust <- sapply(seq_along(x), function(i) ol_no_robust$add_point(x[[i]], y[[i]]))
+    results_no_robust <- lapply(
+        seq_along(x), function(i) ol_no_robust$add_point(x[[i]], y[[i]])
+    )
 
     ol_robust <- OnlineLowess(
         fraction = 0.3, window_capacity = 25,
         iterations = 3
     )
-    results_robust <- sapply(seq_along(x), function(i) ol_robust$add_point(x[[i]], y[[i]]))
+    results_robust <- lapply(
+        seq_along(x), function(i) ol_robust$add_point(x[[i]], y[[i]])
+    )
 
-    expect_true(any(!sapply(results_no_robust, is.null)))
-    expect_true(any(!sapply(results_robust, is.null)))
+    expect_false(all(vapply(results_no_robust, is.null, logical(1))))
+    expect_false(all(vapply(results_robust, is.null, logical(1))))
 })

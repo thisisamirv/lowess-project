@@ -1,486 +1,486 @@
 name: CI
 
 on:
-    push:
-        branches: [main, master, develop]
-    pull_request:
-        branches: [main, master, develop]
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
 
 env:
-    CARGO_TERM_COLOR: always
-    RUST_BACKTRACE: 1
-    PIP_DISABLE_PIP_VERSION_CHECK: 1
-    FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  PIP_DISABLE_PIP_VERSION_CHECK: 1
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-    # ============================================================================
-    # CI JOB: Rust, Python, Julia, Node.js, WASM, C++
-    # ============================================================================
-    ci:
-        name: CI (${{ matrix.os }})
-        runs-on: ${{ matrix.os }}
-        strategy:
-            fail-fast: false
-            matrix:
-                os: [ubuntu-latest, macos-latest, windows-latest]
-                rust: [stable]
-
-        steps:
-            - name: Checkout Repository
-              uses: actions/checkout@v6
-
-            # ---- Toolchain Setup ----
-            - name: Install Rust Toolchain
-              uses: dtolnay/rust-toolchain@stable
-              with:
-                  toolchain: ${{ matrix.rust }}
-                  components: rustfmt, clippy
-
-            - name: Install Rust GNU (Windows)
-              if: matrix.os == 'windows-latest'
-              run: rustup toolchain install stable-x86_64-pc-windows-gnu
-
-            - name: Install Python
-              uses: actions/setup-python@v6
-              with:
-                  python-version: "3.12"
-
-            - name: Install R
-              uses: r-lib/actions/setup-r@v2
-              with:
-                  use-public-rspm: true
-
-            - name: Install Pandoc
-              uses: r-lib/actions/setup-pandoc@v2
-
-            - name: Setup Node
-              uses: actions/setup-node@v6
-              with:
-                  node-version: 22
-
-            - name: Install GNU Make (Windows)
-              if: matrix.os == 'windows-latest'
-              run: choco install make -y
-
-            - name: Install Julia
-              uses: julia-actions/setup-julia@v3
-              with:
-                  version: "1.11"
-
-            - name: Install wasm-pack
-              uses: jetli/wasm-pack-action@v0.4.0
-              with:
-                  version: "v0.14.0"
-
-            - name: Cache dependencies
-              uses: Swatinem/rust-cache@v2
-              with:
-                  key: ci-${{ matrix.os }}-cargo
-
-            # ========================================================================
-            # RUST
-            # ========================================================================
-            - name: "Rust: Format Check"
-              run: |
-                  cargo fmt -p lowess --all -- --check
-                  cargo fmt -p fastLowess --all -- --check
-
-            - name: "Rust: Clippy"
-              run: |
-                  cargo clippy -p lowess --all-targets -- -D warnings
-                  cargo clippy -p fastLowess --all-targets --features cpu -- -D warnings
-                  cargo clippy -p fastLowess --all-targets --features gpu -- -D warnings
-
-            - name: "Rust: Lowess Tests"
-              run: |
-                  cargo test -q -p lowess-project-tests --test lowess
-                  if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
-                    cargo test -q -p lowess-project-tests --test lowess --no-default-features
-                  fi
-              shell: bash
-
-            - name: "Rust: fastLowess Build"
-              run: |
-                  cargo build -p fastLowess --features cpu
-                  cargo build -p fastLowess --features gpu
-
-            - name: "Rust: fastLowess Tests"
-              run: |
-                  if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
-                     sudo apt-get update && sudo apt-get install -y libvulkan1 mesa-vulkan-drivers vulkan-tools
-                     export GALLIUM_DRIVER=lavapipe
-                     export WGPU_BACKEND=vulkan
-                     export XDG_RUNTIME_DIR="${RUNNER_TEMP}/xdg-runtime"
-                     mkdir -p "$XDG_RUNTIME_DIR"
-                     chmod 700 "$XDG_RUNTIME_DIR"
-
-                     if [ -f /usr/share/vulkan/icd.d/lvp_icd.x86_64.json ]; then
-                       export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.x86_64.json
-                     else
-                       export VK_ICD_FILENAMES=$(find /usr/share/vulkan/icd.d -name 'lvp_icd*.json' | head -n 1)
-                     fi
-
-                     test -n "$VK_ICD_FILENAMES"
-                     vulkaninfo --summary
-                     cargo test -q -p lowess-project-tests --test fastLowess --features gpu
-                  else
-                     cargo test -q -p lowess-project-tests --test fastLowess --features cpu
-                  fi
-              shell: bash
-
-            - name: "Rust: Documentation"
-              run: |
-                  cargo doc -p lowess --no-deps
-                  cargo doc -p fastLowess --no-deps --features cpu
-                  cargo doc -p fastLowess --no-deps --features gpu
-              env:
-                  RUSTDOCFLAGS: -D warnings
-
-            - name: "Rust: Run Examples"
-              run: |
-                  for example in examples/lowess/*.rs examples/fastLowess/*.rs; do
-                    name=$(basename "$example" .rs)
-                    echo "Running example: $name"
-                    cargo run -p examples --example "$name" --features cpu
-                  done
-              shell: bash
-
-            # ========================================================================
-            # PYTHON
-            # ========================================================================
-            - name: "Python: Setup & Build"
-              working-directory: bindings/python
-              run: |
-                  python -m pip install --upgrade pip
-                  pip install maturin pytest numpy ruff matplotlib
-                  pip install .
-
-            - name: "Python: Lint (Ruff)"
-              working-directory: bindings/python
-              run: |
-                  ruff format --check python/fastlowess/ ../../tests/python/
-                  ruff check python/fastlowess/ ../../tests/python/
-
-            - name: "Python: Tests"
-              working-directory: bindings/python
-              run: pytest ../../tests/python/ -v
-
-            - name: "Python: Examples"
-              working-directory: bindings/python
-              run: |
-                  python ../../examples/python/batch_smoothing.py
-                  python ../../examples/python/streaming_smoothing.py
-                  python ../../examples/python/online_smoothing.py
-
-            # ========================================================================
-            # JULIA
-            # ========================================================================
-            - name: "Julia: Build"
-              working-directory: bindings/julia
-              run: |
-                  cargo build --release
-            - name: "Julia: Verify Exports"
-              if: matrix.os == 'ubuntu-latest'
-              run: |
-                  nm -D target/release/libfastlowess_jl.so | grep -q jl_lowess_fit || exit 1
-                  nm -D target/release/libfastlowess_jl.so | grep -q jl_streaming_lowess_new || exit 1
-                  nm -D target/release/libfastlowess_jl.so | grep -q jl_online_lowess_new || exit 1
-                  nm -D target/release/libfastlowess_jl.so | grep -q jl_lowess_free_result || exit 1
-
-            - name: "Julia: Relax JLL dependency for CI"
-              shell: bash
-              run: |
-                  PROJECT_TOML="bindings/julia/julia/Project.toml"
-                  LATEST=$(julia -e 'using Pkg; Pkg.activate(temp=true); try Pkg.add("fastlowess_jll"); print(Pkg.dependencies()[Base.UUID("7381d214-3001-5784-8d9a-8eb8e8688076")].version) catch; print("1.0.0") end' | cut -d'+' -f1)
-                  CURRENT=$(grep "^version =" "$PROJECT_TOML" | cut -d"\"" -f2)
-                  echo "Latest Registered JLL: $LATEST"
-                  echo "Current Local Version: $CURRENT"
-                  julia -e "using TOML; path = \"$PROJECT_TOML\"; p = TOML.parsefile(path); p[\"compat\"][\"fastlowess_jll\"] = \"$LATEST, $CURRENT\"; open(path, \"w\") do io; TOML.print(io, p); end"
-                  echo "Modified $PROJECT_TOML (fastlowess_jll = \"$LATEST, $CURRENT\") using TOML parser."
-
-            - name: "Julia: Tests"
-              shell: bash
-              run: |
-                  if [ "${{ matrix.os }}" = "windows-latest" ]; then
-                    export FASTLOWESS_LIB="target/release/fastlowess_jl.dll"
-                  elif [ "${{ matrix.os }}" = "macos-latest" ]; then
-                    export FASTLOWESS_LIB="target/release/libfastlowess_jl.dylib"
-                  else
-                    export FASTLOWESS_LIB="target/release/libfastlowess_jl.so"
-                  fi
-                  julia -e 'using Pkg; Pkg.activate("bindings/julia/julia"); Pkg.instantiate(); include("tests/julia/test_FastLOWESS.jl")'
-
-            - name: "Julia: Examples"
-              shell: bash
-              run: |
-                  if [ "${{ matrix.os }}" = "windows-latest" ]; then
-                    export FASTLOWESS_LIB="target/release/fastlowess_jl.dll"
-                  elif [ "${{ matrix.os }}" = "macos-latest" ]; then
-                    export FASTLOWESS_LIB="target/release/libfastlowess_jl.dylib"
-                  else
-                    export FASTLOWESS_LIB="target/release/libfastlowess_jl.so"
-                  fi
-                  julia --project=bindings/julia/julia examples/julia/batch_smoothing.jl
-                  julia --project=bindings/julia/julia examples/julia/streaming_smoothing.jl
-                  julia --project=bindings/julia/julia examples/julia/online_smoothing.jl
-
-            - name: "Julia: Lint"
-              working-directory: bindings/julia
-              run: |
-                  cargo fmt --all -- --check
-                  cargo clippy --all-targets -- -D warnings
-
-            # ========================================================================
-            # NODE.JS
-            # ========================================================================
-            - name: "Node.js: Build"
-              working-directory: bindings/nodejs
-              run: |
-                  npm install
-                  npm run build
-
-            - name: "Node.js: Tests"
-              working-directory: bindings/nodejs
-              run: npm test
-
-            - name: "Node.js: Examples"
-              working-directory: bindings/nodejs
-              run: |
-                  node ../../examples/nodejs/batch_smoothing.js
-                  node ../../examples/nodejs/streaming_smoothing.js
-                  node ../../examples/nodejs/online_smoothing.js
-
-            - name: "Node.js: Lint"
-              working-directory: bindings/nodejs
-              run: |
-                  cargo fmt --all -- --check
-                  cargo clippy --all-targets -- -D warnings
-
-            # ========================================================================
-            # WEBASSEMBLY (Ubuntu only for build simplicity)
-            # ========================================================================
-            - name: "WebAssembly: Build & Test"
-              working-directory: bindings/wasm
-              run: |
-                  wasm-pack build --target nodejs --out-dir pkg
-                  wasm-pack build --target web --out-dir pkg-web
-                  wasm-pack test --node
-                  node ../../tests/wasm/test_fastlowess_wasm.js
-
-            - name: "WebAssembly: Lint"
-              working-directory: bindings/wasm
-              run: |
-                  cargo fmt --all -- --check
-                  cargo clippy --all-targets -- -D warnings
-
-            # ========================================================================
-            # C++
-            # ========================================================================
-            - name: "C++: Build"
-              working-directory: bindings/cpp
-              run: cargo build --release
-
-            - name: "C++: Examples (Ubuntu only)"
-              if: matrix.os == 'ubuntu-latest'
-              working-directory: bindings/cpp
-              run: |
-                  mkdir -p bin
-                  g++ -O3 ../../examples/cpp/batch_smoothing.cpp -o bin/batch_smoothing -Iinclude -L../../target/release -lfastlowess_cpp -lpthread -ldl -lm
-                  g++ -O3 ../../examples/cpp/streaming_smoothing.cpp -o bin/streaming_smoothing -Iinclude -L../../target/release -lfastlowess_cpp -lpthread -ldl -lm
-                  g++ -O3 ../../examples/cpp/online_smoothing.cpp -o bin/online_smoothing -Iinclude -L../../target/release -lfastlowess_cpp -lpthread -ldl -lm
-                  LD_LIBRARY_PATH=../../target/release ./bin/batch_smoothing
-                  LD_LIBRARY_PATH=../../target/release ./bin/streaming_smoothing
-                  LD_LIBRARY_PATH=../../target/release ./bin/online_smoothing
-
-            - name: "C++: Lint"
-              working-directory: bindings/cpp
-              run: |
-                  cargo fmt --all -- --check
-                  cargo clippy --all-targets -- -D warnings
-
-    # ============================================================================
-    # MAKE ALL JOBS: Full build on each platform
-    # ============================================================================
-    make-all-ubuntu:
-        name: make all (Ubuntu)
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout Repository
-              uses: actions/checkout@v6
-
-            - name: Install Rust Toolchain
-              uses: dtolnay/rust-toolchain@stable
-              with:
-                  components: rustfmt, clippy
-
-            - name: Install Python
-              uses: actions/setup-python@v6
-              with:
-                  python-version: "3.12"
-
-            - name: Install R
-              uses: r-lib/actions/setup-r@v2
-              with:
-                  use-public-rspm: true
-
-            - name: Install Pandoc
-              uses: r-lib/actions/setup-pandoc@v2
-
-            - name: Setup Node
-              uses: actions/setup-node@v6
-              with:
-                  node-version: 22
-
-            - name: Install Julia
-              uses: julia-actions/setup-julia@v3
-              with:
-                  version: "1.11"
-
-            - name: Install wasm-pack
-              uses: jetli/wasm-pack-action@v0.4.0
-              with:
-                  version: "v0.14.0"
-
-            - name: Cache dependencies
-              uses: Swatinem/rust-cache@v2
-              with:
-                  key: make-all-ubuntu-cargo
-
-            - name: Setup GPU and R system dependencies
-              run: |
-                  sudo apt-get update
-                  sudo apt-get install -y libvulkan1 mesa-vulkan-drivers vulkan-tools
-                  sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev libfontconfig1-dev libharfbuzz-dev libfribidi-dev libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev libprotobuf-dev protobuf-compiler libuv1-dev libgit2-dev libssh2-1-dev libmagick++-dev
-
-            - name: "make all"
-              shell: bash
-              env:
-                  PYTHON: python
-                  GALLIUM_DRIVER: lavapipe
-                  WGPU_BACKEND: vulkan
-              run: |
-                  export XDG_RUNTIME_DIR="${RUNNER_TEMP}/xdg-runtime"
-                  mkdir -p "$XDG_RUNTIME_DIR"
-                  chmod 700 "$XDG_RUNTIME_DIR"
-                  if [ -f /usr/share/vulkan/icd.d/lvp_icd.x86_64.json ]; then
-                    export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.x86_64.json
-                  else
-                    export VK_ICD_FILENAMES=$(find /usr/share/vulkan/icd.d -name 'lvp_icd*.json' | head -n 1)
-                  fi
-                  test -n "$VK_ICD_FILENAMES"
-                  vulkaninfo --summary
-                  make all
-
-    make-all-macos:
-        name: make all (macOS)
-        runs-on: macos-latest
-        steps:
-            - name: Checkout Repository
-              uses: actions/checkout@v6
-
-            - name: Install Rust Toolchain
-              uses: dtolnay/rust-toolchain@stable
-              with:
-                  components: rustfmt, clippy
-
-            - name: Install Python
-              uses: actions/setup-python@v6
-              with:
-                  python-version: "3.12"
-
-            - name: Install R
-              uses: r-lib/actions/setup-r@v2
-              with:
-                  use-public-rspm: true
-
-            - name: Install Pandoc
-              uses: r-lib/actions/setup-pandoc@v2
-
-            - name: Install TinyTeX
-              uses: r-lib/actions/setup-tinytex@v2
-
-            - name: Setup Node
-              uses: actions/setup-node@v6
-              with:
-                  node-version: 22
-
-            - name: Install Julia
-              uses: julia-actions/setup-julia@v3
-              with:
-                  version: "1.11"
-
-            - name: Install wasm-pack
-              uses: jetli/wasm-pack-action@v0.4.0
-              with:
-                  version: "v0.14.0"
-
-            - name: Cache dependencies
-              uses: Swatinem/rust-cache@v2
-              with:
-                  key: make-all-macos-cargo
-
-            - name: "make all"
-              shell: bash
-              env:
-                  PYTHON: python
-              run: make all
-
-    make-all-windows:
-        name: make all (Windows)
-        runs-on: windows-latest
-        steps:
-            - name: Checkout Repository
-              uses: actions/checkout@v6
-
-            - name: Install Rust Toolchain
-              uses: dtolnay/rust-toolchain@stable
-              with:
-                  components: rustfmt, clippy
-
-            - name: Install Rust GNU
-              run: rustup toolchain install stable-x86_64-pc-windows-gnu
-
-            - name: Install Python
-              uses: actions/setup-python@v6
-              with:
-                  python-version: "3.12"
-
-            - name: Install R
-              uses: r-lib/actions/setup-r@v2
-              with:
-                  use-public-rspm: true
-
-            - name: Install Pandoc
-              uses: r-lib/actions/setup-pandoc@v2
-
-            - name: Install TinyTeX
-              uses: r-lib/actions/setup-tinytex@v2
-
-            - name: Setup Node
-              uses: actions/setup-node@v6
-              with:
-                  node-version: 22
-
-            - name: Install GNU Make
-              run: choco install make -y
-
-            - name: Install Julia
-              uses: julia-actions/setup-julia@v3
-              with:
-                  version: "1.11"
-
-            - name: Install wasm-pack
-              uses: jetli/wasm-pack-action@v0.4.0
-              with:
-                  version: "v0.14.0"
-
-            - name: Cache dependencies
-              uses: Swatinem/rust-cache@v2
-              with:
-                  key: make-all-windows-cargo
-
-            - name: "make all"
-              shell: bash
-              env:
-                  PYTHON: python
-              run: make all
+  # ============================================================================
+  # CI JOB: Rust, Python, Julia, Node.js, WASM, C++
+  # ============================================================================
+  ci:
+    name: CI (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        rust: [stable]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      # ---- Toolchain Setup ----
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ matrix.rust }}
+          components: rustfmt, clippy
+
+      - name: Install Rust GNU (Windows)
+        if: matrix.os == 'windows-latest'
+        run: rustup toolchain install stable-x86_64-pc-windows-gnu
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - name: Install Pandoc
+        uses: r-lib/actions/setup-pandoc@v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install GNU Make (Windows)
+        if: matrix.os == 'windows-latest'
+        run: choco install make -y
+
+      - name: Install Julia
+        uses: julia-actions/setup-julia@v3
+        with:
+          version: "1.11"
+
+      - name: Install wasm-pack
+        uses: jetli/wasm-pack-action@v0.4.0
+        with:
+          version: "v0.14.0"
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ci-${{ matrix.os }}-cargo
+
+      # ========================================================================
+      # RUST
+      # ========================================================================
+      - name: "Rust: Format Check"
+        run: |
+          cargo fmt -p lowess --all -- --check
+          cargo fmt -p fastLowess --all -- --check
+
+      - name: "Rust: Clippy"
+        run: |
+          cargo clippy -p lowess --all-targets -- -D warnings
+          cargo clippy -p fastLowess --all-targets --features cpu -- -D warnings
+          cargo clippy -p fastLowess --all-targets --features gpu -- -D warnings
+
+      - name: "Rust: Lowess Tests"
+        run: |
+          cargo test -q -p lowess-project-tests --test lowess
+          if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
+            cargo test -q -p lowess-project-tests --test lowess --no-default-features
+          fi
+        shell: bash
+
+      - name: "Rust: fastLowess Build"
+        run: |
+          cargo build -p fastLowess --features cpu
+          cargo build -p fastLowess --features gpu
+
+      - name: "Rust: fastLowess Tests"
+        run: |
+          if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
+             sudo apt-get update && sudo apt-get install -y libvulkan1 mesa-vulkan-drivers vulkan-tools
+             export GALLIUM_DRIVER=lavapipe
+             export WGPU_BACKEND=vulkan
+             export XDG_RUNTIME_DIR="${RUNNER_TEMP}/xdg-runtime"
+             mkdir -p "$XDG_RUNTIME_DIR"
+             chmod 700 "$XDG_RUNTIME_DIR"
+
+             if [ -f /usr/share/vulkan/icd.d/lvp_icd.x86_64.json ]; then
+               export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.x86_64.json
+             else
+               export VK_ICD_FILENAMES=$(find /usr/share/vulkan/icd.d -name 'lvp_icd*.json' | head -n 1)
+             fi
+
+             test -n "$VK_ICD_FILENAMES"
+             vulkaninfo --summary
+             cargo test -q -p lowess-project-tests --test fastLowess --features gpu
+          else
+             cargo test -q -p lowess-project-tests --test fastLowess --features cpu
+          fi
+        shell: bash
+
+      - name: "Rust: Documentation"
+        run: |
+          cargo doc -p lowess --no-deps
+          cargo doc -p fastLowess --no-deps --features cpu
+          cargo doc -p fastLowess --no-deps --features gpu
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+      - name: "Rust: Run Examples"
+        run: |
+          for example in examples/lowess/*.rs examples/fastLowess/*.rs; do
+            name=$(basename "$example" .rs)
+            echo "Running example: $name"
+            cargo run -p examples --example "$name" --features cpu
+          done
+        shell: bash
+
+      # ========================================================================
+      # PYTHON
+      # ========================================================================
+      - name: "Python: Setup & Build"
+        working-directory: bindings/python
+        run: |
+          python -m pip install --upgrade pip
+          pip install maturin pytest numpy ruff matplotlib
+          pip install .
+
+      - name: "Python: Lint (Ruff)"
+        working-directory: bindings/python
+        run: |
+          ruff format --check python/fastlowess/ ../../tests/python/
+          ruff check python/fastlowess/ ../../tests/python/
+
+      - name: "Python: Tests"
+        working-directory: bindings/python
+        run: pytest ../../tests/python/ -v
+
+      - name: "Python: Examples"
+        working-directory: bindings/python
+        run: |
+          python ../../examples/python/batch_smoothing.py
+          python ../../examples/python/streaming_smoothing.py
+          python ../../examples/python/online_smoothing.py
+
+      # ========================================================================
+      # JULIA
+      # ========================================================================
+      - name: "Julia: Build"
+        working-directory: bindings/julia
+        run: |
+          cargo build --release
+      - name: "Julia: Verify Exports"
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          nm -D target/release/libfastlowess_jl.so | grep -q jl_lowess_fit || exit 1
+          nm -D target/release/libfastlowess_jl.so | grep -q jl_streaming_lowess_new || exit 1
+          nm -D target/release/libfastlowess_jl.so | grep -q jl_online_lowess_new || exit 1
+          nm -D target/release/libfastlowess_jl.so | grep -q jl_lowess_free_result || exit 1
+
+      - name: "Julia: Relax JLL dependency for CI"
+        shell: bash
+        run: |
+          PROJECT_TOML="bindings/julia/julia/Project.toml"
+          LATEST=$(julia -e 'using Pkg; Pkg.activate(temp=true); try Pkg.add("fastlowess_jll"); print(Pkg.dependencies()[Base.UUID("7381d214-3001-5784-8d9a-8eb8e8688076")].version) catch; print("1.0.0") end' | cut -d'+' -f1)
+          CURRENT=$(grep "^version =" "$PROJECT_TOML" | cut -d"\"" -f2)
+          echo "Latest Registered JLL: $LATEST"
+          echo "Current Local Version: $CURRENT"
+          julia -e "using TOML; path = \"$PROJECT_TOML\"; p = TOML.parsefile(path); p[\"compat\"][\"fastlowess_jll\"] = \"$LATEST, $CURRENT\"; open(path, \"w\") do io; TOML.print(io, p); end"
+          echo "Modified $PROJECT_TOML (fastlowess_jll = \"$LATEST, $CURRENT\") using TOML parser."
+
+      - name: "Julia: Tests"
+        shell: bash
+        run: |
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            export FASTLOWESS_LIB="target/release/fastlowess_jl.dll"
+          elif [ "${{ matrix.os }}" = "macos-latest" ]; then
+            export FASTLOWESS_LIB="target/release/libfastlowess_jl.dylib"
+          else
+            export FASTLOWESS_LIB="target/release/libfastlowess_jl.so"
+          fi
+          julia -e 'using Pkg; Pkg.activate("bindings/julia/julia"); Pkg.instantiate(); include("tests/julia/test_FastLOWESS.jl")'
+
+      - name: "Julia: Examples"
+        shell: bash
+        run: |
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            export FASTLOWESS_LIB="target/release/fastlowess_jl.dll"
+          elif [ "${{ matrix.os }}" = "macos-latest" ]; then
+            export FASTLOWESS_LIB="target/release/libfastlowess_jl.dylib"
+          else
+            export FASTLOWESS_LIB="target/release/libfastlowess_jl.so"
+          fi
+          julia --project=bindings/julia/julia examples/julia/batch_smoothing.jl
+          julia --project=bindings/julia/julia examples/julia/streaming_smoothing.jl
+          julia --project=bindings/julia/julia examples/julia/online_smoothing.jl
+
+      - name: "Julia: Lint"
+        working-directory: bindings/julia
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --all-targets -- -D warnings
+
+      # ========================================================================
+      # NODE.JS
+      # ========================================================================
+      - name: "Node.js: Build"
+        working-directory: bindings/nodejs
+        run: |
+          npm install
+          npm run build
+
+      - name: "Node.js: Tests"
+        working-directory: bindings/nodejs
+        run: npm test
+
+      - name: "Node.js: Examples"
+        working-directory: bindings/nodejs
+        run: |
+          node ../../examples/nodejs/batch_smoothing.js
+          node ../../examples/nodejs/streaming_smoothing.js
+          node ../../examples/nodejs/online_smoothing.js
+
+      - name: "Node.js: Lint"
+        working-directory: bindings/nodejs
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --all-targets -- -D warnings
+
+      # ========================================================================
+      # WEBASSEMBLY (Ubuntu only for build simplicity)
+      # ========================================================================
+      - name: "WebAssembly: Build & Test"
+        working-directory: bindings/wasm
+        run: |
+          wasm-pack build --target nodejs --out-dir pkg
+          wasm-pack build --target web --out-dir pkg-web
+          wasm-pack test --node
+          node ../../tests/wasm/test_fastlowess_wasm.js
+
+      - name: "WebAssembly: Lint"
+        working-directory: bindings/wasm
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --all-targets -- -D warnings
+
+      # ========================================================================
+      # C++
+      # ========================================================================
+      - name: "C++: Build"
+        working-directory: bindings/cpp
+        run: cargo build --release
+
+      - name: "C++: Examples (Ubuntu only)"
+        if: matrix.os == 'ubuntu-latest'
+        working-directory: bindings/cpp
+        run: |
+          mkdir -p bin
+          g++ -O3 ../../examples/cpp/batch_smoothing.cpp -o bin/batch_smoothing -Iinclude -L../../target/release -lfastlowess_cpp -lpthread -ldl -lm
+          g++ -O3 ../../examples/cpp/streaming_smoothing.cpp -o bin/streaming_smoothing -Iinclude -L../../target/release -lfastlowess_cpp -lpthread -ldl -lm
+          g++ -O3 ../../examples/cpp/online_smoothing.cpp -o bin/online_smoothing -Iinclude -L../../target/release -lfastlowess_cpp -lpthread -ldl -lm
+          LD_LIBRARY_PATH=../../target/release ./bin/batch_smoothing
+          LD_LIBRARY_PATH=../../target/release ./bin/streaming_smoothing
+          LD_LIBRARY_PATH=../../target/release ./bin/online_smoothing
+
+      - name: "C++: Lint"
+        working-directory: bindings/cpp
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --all-targets -- -D warnings
+
+  # ============================================================================
+  # MAKE ALL JOBS: Full build on each platform
+  # ============================================================================
+  make-all-ubuntu:
+    name: make all (Ubuntu)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - name: Install Pandoc
+        uses: r-lib/actions/setup-pandoc@v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install Julia
+        uses: julia-actions/setup-julia@v3
+        with:
+          version: "1.11"
+
+      - name: Install wasm-pack
+        uses: jetli/wasm-pack-action@v0.4.0
+        with:
+          version: "v0.14.0"
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: make-all-ubuntu-cargo
+
+      - name: Setup GPU and R system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libvulkan1 mesa-vulkan-drivers vulkan-tools
+          sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev libfontconfig1-dev libharfbuzz-dev libfribidi-dev libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev libprotobuf-dev protobuf-compiler libuv1-dev libgit2-dev libssh2-1-dev libmagick++-dev
+
+      - name: "make all"
+        shell: bash
+        env:
+          PYTHON: python
+          GALLIUM_DRIVER: lavapipe
+          WGPU_BACKEND: vulkan
+        run: |
+          export XDG_RUNTIME_DIR="${RUNNER_TEMP}/xdg-runtime"
+          mkdir -p "$XDG_RUNTIME_DIR"
+          chmod 700 "$XDG_RUNTIME_DIR"
+          if [ -f /usr/share/vulkan/icd.d/lvp_icd.x86_64.json ]; then
+            export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.x86_64.json
+          else
+            export VK_ICD_FILENAMES=$(find /usr/share/vulkan/icd.d -name 'lvp_icd*.json' | head -n 1)
+          fi
+          test -n "$VK_ICD_FILENAMES"
+          vulkaninfo --summary
+          make all
+
+  make-all-macos:
+    name: make all (macOS)
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - name: Install Pandoc
+        uses: r-lib/actions/setup-pandoc@v2
+
+      - name: Install TinyTeX
+        uses: r-lib/actions/setup-tinytex@v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install Julia
+        uses: julia-actions/setup-julia@v3
+        with:
+          version: "1.11"
+
+      - name: Install wasm-pack
+        uses: jetli/wasm-pack-action@v0.4.0
+        with:
+          version: "v0.14.0"
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: make-all-macos-cargo
+
+      - name: "make all"
+        shell: bash
+        env:
+          PYTHON: python
+        run: make all
+
+  make-all-windows:
+    name: make all (Windows)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Install Rust GNU
+        run: rustup toolchain install stable-x86_64-pc-windows-gnu
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - name: Install Pandoc
+        uses: r-lib/actions/setup-pandoc@v2
+
+      - name: Install TinyTeX
+        uses: r-lib/actions/setup-tinytex@v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install GNU Make
+        run: choco install make -y
+
+      - name: Install Julia
+        uses: julia-actions/setup-julia@v3
+        with:
+          version: "1.11"
+
+      - name: Install wasm-pack
+        uses: jetli/wasm-pack-action@v0.4.0
+        with:
+          version: "v0.14.0"
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: make-all-windows-cargo
+
+      - name: "make all"
+        shell: bash
+        env:
+          PYTHON: python
+        run: make all

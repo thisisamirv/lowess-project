@@ -5,7 +5,7 @@
 \title{LOWESS Streaming Smoothing}
 \usage{
 StreamingLowess(
-    fraction = 0.3,
+    fraction = 0.67,
     chunk_size = 5000L,
     overlap = NULL,
     iterations = 3L,
@@ -14,10 +14,15 @@ StreamingLowess(
     robustness_method = "bisquare",
     scaling_method = "mad",
     boundary_policy = "extend",
+    zero_weight_fallback = "use_local_mean",
     auto_converge = NULL,
     return_diagnostics = FALSE,
+    return_residuals = FALSE,
     return_robustness_weights = FALSE,
-    parallel = TRUE
+    merge_strategy = "weighted_average",
+    parallel = TRUE,
+    confidence_intervals = NULL,
+    prediction_intervals = NULL
 )
 }
 \arguments{
@@ -35,18 +40,31 @@ StreamingLowess(
 
 \item{robustness_method}{Method: "bisquare", "huber", "talwar".}
 
-\item{scaling_method}{Scale estimation: "mad", "mar".}
+\item{scaling_method}{Scale estimation: "mad", "mar", "mean".}
 
 \item{boundary_policy}{Edge handling: "extend", "reflect", "zero",
 "noboundary".}
+
+\item{zero_weight_fallback}{Fallback: "use_local_mean", "return_original",
+"return_none".}
 
 \item{auto_converge}{Convergence tolerance. NULL disables.}
 
 \item{return_diagnostics}{Return fit metrics. Default: FALSE.}
 
+\item{return_residuals}{Return residuals. Default: FALSE.}
+
 \item{return_robustness_weights}{Return weights. Default: FALSE.}
 
+\item{merge_strategy}{Strategy for reconciling overlapping chunk regions:
+\code{"weighted_average"} (default), \code{"average"},
+\code{"take_first"}, or \code{"take_last"}.}
+
 \item{parallel}{Enable parallel processing. Default: TRUE.}
+
+\item{confidence_intervals}{Confidence level (e.g., 0.95). NULL disables.}
+
+\item{prediction_intervals}{Prediction level (e.g., 0.95). NULL disables.}
 }
 \value{
 A StreamingLowess object.

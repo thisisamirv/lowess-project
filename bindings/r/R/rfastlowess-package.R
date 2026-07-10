@@ -33,5 +33,6 @@
 #'
 #' @useDynLib rfastlowess, .registration = TRUE
 #' @importFrom stats smooth
+#' @importFrom stats setNames
 #' @importFrom BiocGenerics normalize
 "_PACKAGE"

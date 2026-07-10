@@ -5,9 +5,15 @@ ROnlineLowess <- getFromNamespace("ROnlineLowess", "rfastlowess")
 test_that("RLowess generated accessors dispatch fit methods", {
     null_value <- Nullable(NULL)
     handle <- RLowess$new(
-        0.3, 1L, null_value, "tricube", "bisquare", "mad", "extend",
-        null_value, null_value, FALSE, FALSE, FALSE, "use_local_mean",
-        null_value, null_value, "kfold", 5L, FALSE
+        fraction = 0.3, iterations = 1L, delta = null_value,
+        weight_function = "tricube", robustness_method = "bisquare",
+        scaling_method = "mad", boundary_policy = "extend",
+        confidence_intervals = null_value, prediction_intervals = null_value,
+        return_diagnostics = FALSE, return_residuals = FALSE,
+        return_robustness_weights = FALSE,
+        zero_weight_fallback = "use_local_mean", auto_converge = null_value,
+        cv_fractions = null_value, cv_method = "kfold", cv_k = 5L,
+        parallel = FALSE, cv_seed = null_value
     )
 
     x <- as.double(1:10)
@@ -23,8 +29,16 @@ test_that("RLowess generated accessors dispatch fit methods", {
 test_that("RStreamingLowess generated accessors dispatch chunked methods", {
     null_value <- Nullable(NULL)
     handle <- RStreamingLowess$new(
-        0.3, 10L, null_value, 1L, null_value, "tricube", "bisquare", "mad",
-        "extend", null_value, FALSE, FALSE, FALSE
+        fraction = 0.3, chunk_size = 10L, overlap = null_value,
+        iterations = 1L,
+        weight_function = "tricube", robustness_method = "bisquare",
+        scaling_method = "mad", boundary_policy = "extend",
+        zero_weight_fallback = "use_local_mean", auto_converge = null_value,
+        return_diagnostics = FALSE, return_residuals = FALSE,
+        return_robustness_weights = FALSE,
+        merge_strategy = "weighted_average", parallel = FALSE,
+        delta = null_value, confidence_intervals = null_value,
+        prediction_intervals = null_value
     )
 
     x <- as.double(1:10)
@@ -40,12 +54,26 @@ test_that("RStreamingLowess generated accessors dispatch chunked methods", {
 test_that("ROnlineLowess generated accessors dispatch add_point", {
     null_value <- Nullable(NULL)
     handle_dollar <- ROnlineLowess$new(
-        0.3, 20L, 3L, 1L, null_value, "tricube", "bisquare", "mad",
-        "extend", "incremental", null_value, FALSE, FALSE
+        fraction = 0.3, window_capacity = 20L, min_points = 3L,
+        iterations = 1L,
+        weight_function = "tricube", robustness_method = "bisquare",
+        scaling_method = "mad", boundary_policy = "extend",
+        zero_weight_fallback = "use_local_mean", update_mode = "incremental",
+        auto_converge = null_value, return_robustness_weights = FALSE,
+        return_diagnostics = FALSE, return_residuals = FALSE,
+        parallel = FALSE, delta = null_value,
+        confidence_intervals = null_value, prediction_intervals = null_value
     )
     handle_bracket <- ROnlineLowess$new(
-        0.3, 20L, 3L, 1L, null_value, "tricube", "bisquare", "mad",
-        "extend", "incremental", null_value, FALSE, FALSE
+        fraction = 0.3, window_capacity = 20L, min_points = 3L,
+        iterations = 1L,
+        weight_function = "tricube", robustness_method = "bisquare",
+        scaling_method = "mad", boundary_policy = "extend",
+        zero_weight_fallback = "use_local_mean", update_mode = "incremental",
+        auto_converge = null_value, return_robustness_weights = FALSE,
+        return_diagnostics = FALSE, return_residuals = FALSE,
+        parallel = FALSE, delta = null_value,
+        confidence_intervals = null_value, prediction_intervals = null_value
     )
 
     # Prime both handles with enough points to get a result
@@ -57,10 +85,12 @@ test_that("ROnlineLowess generated accessors dispatch add_point", {
     result_dollar <- handle_dollar$add_point(11.0, cos(11.0))
     result_bracket <- handle_bracket[["add_point"]](11.0, cos(11.0))
 
-    # Both should return the same type (numeric or NULL)
+    # Both should return the same type (list or NULL)
     expect_identical(is.null(result_dollar), is.null(result_bracket))
     if (!is.null(result_dollar)) {
-        expect_type(result_dollar, "double")
-        expect_type(result_bracket, "double")
+        expect_type(result_dollar, "list")
+        expect_type(result_bracket, "list")
+        expect_true("smoothed" %in% names(result_dollar))
+        expect_true("smoothed" %in% names(result_bracket))
     }
 })

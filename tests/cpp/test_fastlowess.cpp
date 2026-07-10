@@ -409,7 +409,7 @@ void testOnlineBasic() {
                       .add_point(k_online_x_values[point_index],
                                  k_online_y_values[point_index])
                       .value();
-    if (!std::isnan(result)) {
+    if (result.has_value()) {
       ++point_count_with_output;
     }
   }

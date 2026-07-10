@@ -198,7 +198,9 @@ test_that("custom_weights: uniform weights produce same result as no weights", {
     weights <- rep(1.0, 20)
 
     result_no_w   <- Lowess(fraction = 0.4, iterations = 2)$fit(x, y)
-    result_unit_w <- Lowess(fraction = 0.4, iterations = 2)$fit(x, y, custom_weights = weights)
+    result_unit_w <- Lowess(fraction = 0.4, iterations = 2)$fit(
+        x, y, custom_weights = weights
+    )
 
     expect_equal(result_no_w$y, result_unit_w$y, tolerance = 1e-10)
 })
@@ -212,7 +214,9 @@ test_that("custom_weights: zero weight on outlier reduces its influence", {
 
     weights <- rep(1.0, 10)
     weights[6] <- 0.0
-    result_zero_w <- Lowess(fraction = 0.5, iterations = 0)$fit(x, y, custom_weights = weights)
+    result_zero_w <- Lowess(fraction = 0.5, iterations = 0)$fit(
+        x, y, custom_weights = weights
+    )
 
     true_val <- 5.0 * 2.0  # true value at x=5 (index 6 in 1-based)
     err_no_w  <- abs(result_no_w$y[6]  - true_val)
@@ -229,7 +233,9 @@ test_that("custom_weights: high weight pulls fit toward spike", {
     weights_high <- rep(1.0, 15)
     weights_high[8] <- 100.0
 
-    result_high  <- Lowess(fraction = 0.6, iterations = 0)$fit(x, y, custom_weights = weights_high)
+    result_high  <- Lowess(fraction = 0.6, iterations = 0)$fit(
+        x, y, custom_weights = weights_high
+    )
     result_equal <- Lowess(fraction = 0.6, iterations = 0)$fit(x, y)
 
     expect_gt(result_high$y[8], result_equal$y[8])
@@ -249,6 +255,8 @@ test_that("custom_weights: negative value raises error", {
     y <- as.double(1:5)
 
     expect_error(
-        Lowess(fraction = 0.5)$fit(x, y, custom_weights = c(1.0, -1.0, 1.0, 1.0, 1.0))
+        Lowess(fraction = 0.5)$fit(
+            x, y, custom_weights = c(1.0, -1.0, 1.0, 1.0, 1.0)
+        )
     )
 })
