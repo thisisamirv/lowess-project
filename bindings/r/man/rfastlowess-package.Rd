@@ -38,18 +38,20 @@ lines(result$x, result$y, col = "red", lwd = 2)
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/thisisamirv/lowess-project}
-  \item \url{https://lowess.readthedocs.io/}
-  \item Report bugs at \url{https://github.com/thisisamirv/lowess-project/issues}
+    \item \url{https://github.com/thisisamirv/lowess-project}
+    \item \url{https://lowess.readthedocs.io/}
+\item Report bugs at \url{https://github.com/thisisamirv/lowess-project/issues}
 }
 
 }
 \author{
-\strong{Maintainer}: Amir Valizadeh \email{thisisamirv@gmail.com} (\href{https://orcid.org/0000-0001-5983-8527}{ORCID}) [funder]
+\strong{Maintainer}: Amir Valizadeh \email{thisisamirv@gmail.com}
+    (\href{https://orcid.org/0000-0001-5983-8527}{ORCID}) [funder]
 
 Authors:
 \itemize{
-  \item Amir Valizadeh \email{thisisamirv@gmail.com} (\href{https://orcid.org/0000-0001-5983-8527}{ORCID}) [funder]
+\item Amir Valizadeh \email{thisisamirv@gmail.com}
+    (\href{https://orcid.org/0000-0001-5983-8527}{ORCID}) [funder]
 }
 
 }

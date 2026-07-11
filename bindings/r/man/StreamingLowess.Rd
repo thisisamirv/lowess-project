@@ -5,24 +5,24 @@
 \title{LOWESS Streaming Smoothing}
 \usage{
 StreamingLowess(
-  fraction = 0.67,
-  chunk_size = 5000L,
-  overlap = NULL,
-  iterations = 3L,
-  delta = NULL,
-  weight_function = "tricube",
-  robustness_method = "bisquare",
-  scaling_method = "mad",
-  boundary_policy = "extend",
-  zero_weight_fallback = "use_local_mean",
-  auto_converge = NULL,
-  return_diagnostics = FALSE,
-  return_residuals = FALSE,
-  return_robustness_weights = FALSE,
-  merge_strategy = "weighted_average",
-  parallel = TRUE,
-  confidence_intervals = NULL,
-  prediction_intervals = NULL
+    fraction = 0.67,
+    chunk_size = 5000L,
+    overlap = NULL,
+    iterations = 3L,
+    delta = NULL,
+    weight_function = "tricube",
+    robustness_method = "bisquare",
+    scaling_method = "mad",
+    boundary_policy = "extend",
+    zero_weight_fallback = "use_local_mean",
+    auto_converge = NULL,
+    return_diagnostics = FALSE,
+    return_residuals = FALSE,
+    return_robustness_weights = FALSE,
+    merge_strategy = "weighted_average",
+    parallel = TRUE,
+    confidence_intervals = NULL,
+    prediction_intervals = NULL
 )
 }
 \arguments{

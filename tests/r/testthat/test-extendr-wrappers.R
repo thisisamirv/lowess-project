@@ -13,7 +13,7 @@ test_that("RLowess generated accessors dispatch fit methods", {
         return_robustness_weights = FALSE,
         zero_weight_fallback = "use_local_mean", auto_converge = null_value,
         cv_fractions = null_value, cv_method = "kfold", cv_k = 5L,
-        parallel = FALSE, cv_seed = null_value
+        parallel = FALSE, cv_seed = null_value, return_se = FALSE
     )
 
     x <- as.double(1:10)

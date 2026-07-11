@@ -52,6 +52,7 @@ target/
 ^docs$
 ^README\.Rmd$
 ^README\.html$
+^vignettes/.*\.html$
 ^paper\.md$
 ^misc$
 ^\.Rprofile$
