@@ -36,7 +36,7 @@ Package: extendr-macros (0.9.0)
 Authors: 
 License: MIT
 ----------------------------------------
-Package: fastLowess (1.3.0)
+Package: fastLowess (2.0.0)
 Authors: Amir Valizadeh <thisisamirv@gmail.com>
 License: MIT OR Apache-2.0
 ----------------------------------------
@@ -48,7 +48,7 @@ Package: libm (0.2.16)
 Authors: Alex Crichton <alex@alexcrichton.com>, Amanieu d'Antras <amanieu@gmail.com>, Jorge Aparicio <japaricious@gmail.com>, Trevor Gross <tg@trevorgross.com>
 License: MIT
 ----------------------------------------
-Package: lowess (1.3.0)
+Package: lowess (2.0.0)
 Authors: Amir Valizadeh <thisisamirv@gmail.com>
 License: MIT OR Apache-2.0
 ----------------------------------------
@@ -112,7 +112,7 @@ Package: readonly (0.2.13)
 Authors: David Tolnay <dtolnay@gmail.com>
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: rfastlowess (1.3.0)
+Package: rfastlowess (2.0.0)
 Authors: Amir Valizadeh <thisisamirv@gmail.com>
 License: MIT OR Apache-2.0
 ----------------------------------------
