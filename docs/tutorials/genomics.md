@@ -394,17 +394,12 @@ For whole-genome data that doesn't fit in memory:
 
 === "WebAssembly"
     ```javascript
-    import { StreamingLowessWasm } from 'fastlowess-wasm';
-
-    const processor = new StreamingLowessWasm(
+    const processor = new StreamingLowess(
         { fraction: 0.05, iterations: 3 },
-        { chunk_size: 100000, overlap: 10000 }
+        { chunk_size: 100, overlap: 10 }
     );
 
-    // Process chunks
-    for (const chunk of stream) {
-        processor.process_chunk(chunk.positions, chunk.coverage);
-    }
+    processor.process_chunk(xChunk, yChunk);
     const result = processor.finalize();
     ```
 

@@ -71,7 +71,7 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
         {},
         { merge_strategy: "average", chunk_size: 5000, overlap: 500 }
     );
-    const result = processor.processChunk(xChunk, yChunk);
+    const result = processor.process_chunk(xChunk, yChunk);
     ```
 
 === "WebAssembly"
@@ -80,7 +80,7 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
         {},
         { merge_strategy: "average", chunk_size: 5000, overlap: 500 }
     );
-    const result = processor.processChunk(xChunk, yChunk);
+    const result = processor.process_chunk(xChunk, yChunk);
     ```
 
 === "C++"

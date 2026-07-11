@@ -128,16 +128,13 @@ For true real-time applications where each point must be processed immediately.
 
 === "WebAssembly"
     ```javascript
-    import { OnlineLowessWasm } from 'fastlowess-wasm';
-
-    const processor = new OnlineLowessWasm(
+    const processor = new OnlineLowess(
         { fraction: 0.3, iterations: 1 },
         { window_capacity: 25, min_points: 5, update_mode: "incremental" }
     );
 
-    // Simulate real-time data arrival
-    for (let i = 0; i < readings.length; i++) {
-        const res = processor.add_point(readings[i].x, readings[i].y);
+    for (let i = 0; i < x.length; i++) {
+        const res = processor.add_point(x[i], y[i]);
         if (res !== undefined) {
             // Update dashboard UI with res.smoothed
         }
@@ -271,9 +268,7 @@ For large datasets that arrive in batches or files.
 
 === "WebAssembly"
     ```javascript
-    import { StreamingLowessWasm } from 'fastlowess-wasm';
-
-    const processor = new StreamingLowessWasm(
+    const processor = new StreamingLowess(
         { fraction: 0.1, iterations: 2 },
         { chunk_size: 5000, overlap: 500 }
     );
@@ -389,21 +384,20 @@ For large datasets that arrive in batches or files.
 
 === "WebAssembly"
     ```javascript
-    import { smooth } from 'fastlowess-wasm';
-
     // Sliding window logic
-    for (const point of stream) {
-        windowX.push(point.x);
-        windowY.push(point.y);
-        
+    const windowX = [], windowY = [];
+    for (let i = 0; i < x.length; i++) {
+        windowX.push(x[i]);
+        windowY.push(y[i]);
+
         if (windowX.length > 50) {
             windowX.shift();
             windowY.shift();
         }
 
-        const result = smooth(new Float64Array(windowX), new Float64Array(windowY), { 
-            fraction: 0.4 
-        });
+        if (windowX.length < 2) continue;
+        const model = new Lowess({ fraction: 0.4 });
+        const result = model.fit(new Float64Array(windowX), new Float64Array(windowY));
         const smoothed = result.y[result.y.length - 1];
     }
     ```

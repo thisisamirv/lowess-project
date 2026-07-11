@@ -100,7 +100,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Renamed all JS-facing option keys to snake_case by removing `#[serde(rename = "camelCase")]` attributes from `SmoothOptions`, `StreamingOptions`, and `OnlineOptions`. JSON passed from JavaScript must now use snake_case keys.
 - Updated `Diagnostics` getter names to snake_case: `r_squared`, `effective_df`, `residual_sd`.
-- Renamed the `update(x: number, y: number)` method on `OnlineLowessWasm` to `add_point(x: number, y: number)`. This is a **breaking change**.
+- Renamed the `update(x: number, y: number)` method on `OnlineLowess` to `add_point(x: number, y: number)`. This is a **breaking change**.
 - Updated `oxlint` dependency to v1.73.
 
 **Python:**

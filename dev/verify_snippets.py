@@ -393,6 +393,15 @@ _WASM_PREAMBLE = textwrap.dedent("""\
     for (let i = 0; i < _n; i++) {{ x3d[i*3] = x[i]; x3d[i*3+1] = x[i]*0.5; x3d[i*3+2] = x[i]*0.25; }}
     const xChunk = x.slice(0, 50);
     const yChunk = y.slice(0, 50);
+    // chunk aliases used in streaming examples
+    const x1 = x.slice(0, 50); const y1 = y.slice(0, 50);
+    const x2 = x.slice(50);    const y2 = y.slice(50);
+    // camelCase variable referenced in doc examples
+    const calibrationIndices = [2, 5, 10];
+    // sliding-window accumulators
+    let windowX = [], windowY = [];
+    // online / sensor readings
+    const readings = Array.from({{length: _n}}, (_, i) => ({{x: x[i], y: y[i]}}));
     // -------------------------------------------------------------------------
 """).format(wasm_pkg=str(_WASM_PKG_DIR).replace("\\", "/"))
 
@@ -717,8 +726,9 @@ def should_skip(snippet: Snippet, runner: str) -> Optional[str]:
             return "R API signature with ... (not runnable outside function)"
 
     if runner == "wasm":
-        # Skip ES-module import syntax (wasm runner uses CJS require)
-        if re.search(r"\bimport\s+\{", code):
+        # Skip any ES-module import syntax — wasm runner uses CJS require().
+        # Catches `import { X }`, `import init, { X }`, `import X from ...`, etc.
+        if re.search(r"^import\b", code, re.MULTILINE) or "await init(" in code:
             return "ES module import (not supported in CJS runner)"
 
     if runner == "rust":
@@ -1294,6 +1304,24 @@ def run_cpp(snippet: Snippet, timeout: int) -> RunResult:
             skipped=True,
             skip_reason="fastlowess_cpp library not built (run 'make cpp' first)",
         )
+
+    # On Windows, detect an MSVC-ABI static lib paired with a MinGW/GCC compiler.
+    # MinGW's ld cannot resolve MSVC-only symbols (__chkstk, MSVC C++ vtables).
+    if os.name == "nt" and "cl" not in Path(compiler).stem.lower():
+        _mingw_ok = any(
+            (lib_dir / _n).exists()
+            for _n in ("libfastlowess_cpp.a", "libfastlowess_cpp.dll.a", "fastlowess_cpp.dll")
+        )
+        if not _mingw_ok and (lib_dir / "fastlowess_cpp.lib").exists():
+            return RunResult(
+                snippet=snippet,
+                runner="cpp",
+                skipped=True,
+                skip_reason=(
+                    "C++ library was built for MSVC ABI but compiler is MinGW/GCC "
+                    "(rebuild with: cargo build --target x86_64-pc-windows-gnu --profile release-c)"
+                ),
+            )
 
     include_dir = str(REPO_ROOT / "bindings" / "cpp" / "include")
     lib_dir_str = str(lib_dir)

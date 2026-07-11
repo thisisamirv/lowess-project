@@ -1057,7 +1057,7 @@ Points per chunk in Streaming mode.
 
 === "WebAssembly"
     ```javascript
-    const processor = new StreamingLowessWasm({}, { chunk_size: 10000 });
+    const processor = new StreamingLowess({}, { chunk_size: 10000 });
     ```
 
 === "C++"
@@ -1108,7 +1108,7 @@ Overlap between chunks in Streaming mode.
 
 === "WebAssembly"
     ```javascript
-    const processor = new StreamingLowessWasm({}, { overlap: 1000 });
+    const processor = new StreamingLowess({}, { overlap: 1000 });
     ```
 
 === "C++"
@@ -1168,7 +1168,7 @@ For example:
 
 === "WebAssembly"
     ```javascript
-    const processor = new StreamingLowessWasm({}, { merge_strategy: "weighted_average" });
+    const processor = new StreamingLowess({}, { merge_strategy: "weighted_average" });
     ```
 
 === "C++"
@@ -1216,7 +1216,7 @@ Maximum points held in memory for Online mode.
 
 === "WebAssembly"
     ```javascript
-    const processor = new OnlineLowessWasm({}, { window_capacity: 500 });
+    const processor = new OnlineLowess({}, { window_capacity: 500 });
     ```
 
 === "C++"
@@ -1265,7 +1265,7 @@ Minimum points required before Online filter starts producing outputs.
 
 === "WebAssembly"
     ```javascript
-    const processor = new OnlineLowessWasm({}, { min_points: 10 });
+    const processor = new OnlineLowess({}, { min_points: 10 });
     ```
 
 === "C++"
@@ -1320,7 +1320,7 @@ For example:
 
 === "WebAssembly"
     ```javascript
-    const processor = new OnlineLowessWasm({}, { update_mode: "full" });
+    const processor = new OnlineLowess({}, { update_mode: "full" });
     ```
 
 === "C++"

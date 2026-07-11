@@ -4,29 +4,36 @@ The WebAssembly bindings provide a high-performance interface to the core Rust l
 
 ## Classes and Functions
 
-### `smooth`
+### `Lowess`
 
-The `smooth` function is the main entry point for batch smoothing.
-
-**Signature:**
-
-```javascript
-const result = smooth(x, y, options);
-```
-
-* `x`: `Float64Array` of input x values.
-* `y`: `Float64Array` of input y values.
-* `options`: An object containing `LowessOptions` fields.
-* Returns: A `LowessResult` object.
-
-### `StreamingLowessWasm`
-
-The `StreamingLowessWasm` class processes data in chunks, suitable for very large datasets or streaming applications.
+The `Lowess` class is the main entry point for batch smoothing.
 
 **Constructor:**
 
 ```javascript
-const stream = new StreamingLowessWasm(options, streamingOptions);
+const model = new Lowess(options);
+```
+
+* `options`: An object containing `LowessOptions` fields.
+
+**Methods:**
+
+```javascript
+const result = model.fit(x, y);
+```
+
+* `x`: `Float64Array` of input x values.
+* `y`: `Float64Array` of input y values.
+* Returns: A `LowessResult` object.
+
+### `StreamingLowess`
+
+The `StreamingLowess` class processes data in chunks, suitable for very large datasets or streaming applications.
+
+**Constructor:**
+
+```javascript
+const stream = new StreamingLowess(options, streamingOptions);
 ```
 
 * `options`: An object containing `LowessOptions` fields.
@@ -46,14 +53,14 @@ const finalResult = stream.finalize();
 
 * Finalizes the smoothing process and returns any remaining buffered results.
 
-### `OnlineLowessWasm`
+### `OnlineLowess`
 
-The `OnlineLowessWasm` class updates the model incrementally with new data points.
+The `OnlineLowess` class updates the model incrementally with new data points.
 
 **Constructor:**
 
 ```javascript
-const online = new OnlineLowessWasm(options, onlineOptions);
+const online = new OnlineLowess(options, onlineOptions);
 ```
 
 * `options`: An object containing `LowessOptions` fields.
@@ -93,7 +100,7 @@ const result = online.update(x, y);
 | `cv_k` | `number` | `5` | Number of folds for k-fold CV (Batch only) |
 | `cv_fractions` | `number[]` | `null` | Fractions to test for cross-validation (Batch only) |
 | `cv_seed` | `number` | `null` | Random seed for cross-validation shuffling (Batch only) |
-| `custom_weights` | `Float64Array` | `null` | Per-observation case weights — passed to `smooth()`/`processChunk()`, not the options object (Batch only) |
+| `custom_weights` | `Float64Array` | `null` | Per-observation case weights — passed to `fit()`/`process_chunk()`, not the options object (Batch only) |
 
 ### `StreamingOptions`
 

@@ -93,10 +93,8 @@ main();
 ### Node.js
 
 ```javascript
-const { smooth } = require('fastlowess-wasm');
-
-// Same API as browser
-const result = smooth(x, y, { fraction: 0.3 });
+const model = new Lowess({ fraction: 0.3 });
+const result = model.fit(x, y);
 ```
 
 ## Features
