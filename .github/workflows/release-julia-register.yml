@@ -1,0 +1,66 @@
+name: Release Julia Package
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit_sha:
+        description: "Release commit SHA to register (40 hex chars). Leave blank to use HEAD of selected branch."
+        required: false
+        type: string
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+permissions:
+  contents: write
+
+jobs:
+  trigger-registration:
+    name: Trigger Registration
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Resolve Commit SHA
+        id: meta
+        run: |
+          INPUT_SHA="${{ github.event.inputs.commit_sha }}"
+
+          if [ -n "$INPUT_SHA" ]; then
+            # Validate provided SHA
+            if ! echo "$INPUT_SHA" | grep -qE '^[0-9a-f]{40}$'; then
+              echo "❌ Invalid commit SHA: $INPUT_SHA (expected 40 hex chars)"
+              exit 1
+            fi
+            COMMIT="$INPUT_SHA"
+            echo "Using provided commit SHA: $COMMIT"
+          else
+            COMMIT="${{ github.sha }}"
+            echo "Using HEAD commit SHA: $COMMIT"
+          fi
+
+          echo "commit=$COMMIT" >> $GITHUB_OUTPUT
+
+      - name: Trigger JuliaRegistrator
+        uses: actions/github-script@v9
+        with:
+          github-token: ${{ secrets.YGGDRASIL_TOKEN || secrets.GITHUB_TOKEN }}
+          script: |
+            const commit_sha = '${{ steps.meta.outputs.commit }}';
+            console.log(`Triggering registration for commit: ${commit_sha}`);
+            await github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: commit_sha,
+              body: '@JuliaRegistrator register subdir=bindings/julia/julia'
+            });
+            console.log('✅ Registration comment posted.');
+
+      - name: Summary
+        run: |
+          echo "## Julia Package Registration Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: \`${{ steps.meta.outputs.commit }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "JuliaRegistrator has been triggered. After ~20 minutes:" >> $GITHUB_STEP_SUMMARY
+          echo "1. A registration PR will be auto-created on the General registry" >> $GITHUB_STEP_SUMMARY
+          echo "2. Once merged, the package will be available via \`Pkg.add\`" >> $GITHUB_STEP_SUMMARY
