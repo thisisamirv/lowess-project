@@ -1025,7 +1025,11 @@ docs-clean:
 
 docs-test:
 	@echo "Running doc snippet tests..."
-	$(PYTHON) dev/verify_snippets.py --timeout 120
+	@if [ -f "$(PY_VENV_PYTHON)" ]; then \
+		$(PY_VENV_PYTHON) dev/verify_snippets.py --timeout 120; \
+	else \
+		$(PYTHON) dev/verify_snippets.py --timeout 120; \
+	fi
 
 # ==============================================================================
 # All targets

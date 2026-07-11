@@ -206,7 +206,7 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
     ```python
     # Simulate ChIP-seq coverage with peaks
     np.random.seed(123)
-    positions = np.arange(0, 10000, 10)
+    positions = np.arange(0, 10000, 10, dtype=float)
     n = len(positions)
 
     # Background + peaks

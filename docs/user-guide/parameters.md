@@ -596,8 +596,8 @@ See [Custom Weights](custom-weights.md) for a full discussion.
     weights = np.ones(len(x))
     weights[5] = 0.0           # exclude index 5
 
-    model = Lowess(fraction=0.5)
-    result = model.fit(x, y, custom_weights=weights.tolist())
+    model = fl.Lowess(fraction=0.5)
+    result = model.fit(x, y, custom_weights=weights)
     ```
 
 === "Rust"
@@ -666,7 +666,7 @@ Include residuals (`y - smoothed`) in the output.
     ```python
     model = fl.Lowess(return_residuals=True)
     result = model.fit(x, y)
-    print(result["residuals"])
+    print(result.residuals)
     ```
 
 === "Rust"
@@ -736,7 +736,7 @@ Include fit quality metrics (Batch and Streaming only).
     ```python
     model = fl.Lowess(return_diagnostics=True)
     result = model.fit(x, y)
-    print(f"R²: {result['diagnostics']['r_squared']:.4f}")
+    print(f"R²: {result.diagnostics.r_squared:.4f}")
     ```
 
 === "Rust"
@@ -798,7 +798,7 @@ Include final robustness weights (useful for outlier detection).
     ```python
     model = fl.Lowess(iterations=3, return_robustness_weights=True)
     result = model.fit(x, y)
-    outliers = [i for i, w in enumerate(result["robustness_weights"]) if w < 0.5]
+    outliers = [i for i, w in enumerate(result.robustness_weights) if w < 0.5]
     ```
 
 === "Rust"

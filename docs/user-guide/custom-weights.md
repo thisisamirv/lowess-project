@@ -82,7 +82,7 @@ that would otherwise include it.
     weights[5] = 0.0           # exclude the spike
 
     model = Lowess(fraction=0.5, iterations=0)
-    result = model.fit(x, y, custom_weights=weights.tolist())
+    result = model.fit(x, y, custom_weights=weights)
     ```
 
 === "Rust"
@@ -184,7 +184,7 @@ reference instruments, or low-noise observations.
 
 === "Python"
     ```python
-    weights = [1.0] * len(x)
+    weights = np.ones(len(x))
     for i in calibration_indices:
         weights[i] = 10.0      # trust calibration 10× more
 
@@ -260,7 +260,7 @@ weighting.
 
 === "Python"
     ```python
-    weights = (1.0 / sigma**2).tolist()
+    weights = 1.0 / sigma**2
     model = Lowess(fraction=0.5)
     result = model.fit(x, y, custom_weights=weights)
     ```
@@ -331,12 +331,12 @@ for *known* bad points and robustness for *unknown* contamination.
 
 === "Python"
     ```python
-    x = list(range(20))
-    y = [xi * 1.5 for xi in x]
+    x = np.arange(20, dtype=float)
+    y = x * 1.5
     y[3]  = -50.0   # known bad
     y[12] = 80.0    # unknown outlier
 
-    weights = [1.0] * 20
+    weights = np.ones(20)
     weights[3] = 0.0
 
     model = Lowess(fraction=0.4, iterations=3)
