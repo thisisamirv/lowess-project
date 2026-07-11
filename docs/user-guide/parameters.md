@@ -138,7 +138,8 @@ The proportion of data used for each local fit. **Most important parameter.**
 
 === "WebAssembly"
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    import init, { Lowess } from 'fastlowess-wasm';
+    await init();
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -253,7 +254,8 @@ Number of robustness iterations for outlier resistance.
 
 === "WebAssembly"
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    import init, { Lowess } from 'fastlowess-wasm';
+    await init();
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -364,7 +366,8 @@ Interpolation optimization threshold. Points within `delta` distance reuse the p
 
 === "WebAssembly"
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    import init, { Lowess } from 'fastlowess-wasm';
+    await init();
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -484,7 +487,8 @@ See [Weight Functions](kernels.md) for detailed comparison.
 
 === "WebAssembly"
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    import init, { Lowess } from 'fastlowess-wasm';
+    await init();
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -600,7 +604,8 @@ See [Robustness](robustness.md) for detailed comparison.
 
 === "WebAssembly"
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    import init, { Lowess } from 'fastlowess-wasm';
+    await init();
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -719,7 +724,8 @@ For example:
 
 === "WebAssembly"
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    import init, { Lowess } from 'fastlowess-wasm';
+    await init();
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -823,9 +829,22 @@ For example:
     result = fit(model, x, y)
     ```
 
-=== "Node.js / WebAssembly"
+=== "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
+    const model = new Lowess({scaling_method: "mad"});
+    const result = model.fit(x, y);
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    import init, { Lowess } from 'fastlowess-wasm';
+    await init();
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -943,7 +962,8 @@ For example:
 
 === "WebAssembly"
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    import init, { Lowess } from 'fastlowess-wasm';
+    await init();
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -1052,7 +1072,8 @@ Enable early stopping when robustness weights stabilize.
 
 === "WebAssembly"
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    import init, { Lowess } from 'fastlowess-wasm';
+    await init();
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -1184,7 +1205,8 @@ See [Custom Weights](custom-weights.md) for a full discussion.
 
 === "WebAssembly"
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    import init, { Lowess } from 'fastlowess-wasm';
+    await init();
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -1309,7 +1331,8 @@ Include residuals (`y - smoothed`) in the output.
 
 === "WebAssembly"
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    import init, { Lowess } from 'fastlowess-wasm';
+    await init();
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -1438,7 +1461,8 @@ Include fit quality metrics (Batch and Streaming only).
 
 === "WebAssembly"
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    import init, { Lowess } from 'fastlowess-wasm';
+    await init();
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -1556,7 +1580,8 @@ Include final robustness weights (useful for outlier detection).
 
 === "WebAssembly"
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    import init, { Lowess } from 'fastlowess-wasm';
+    await init();
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -1677,7 +1702,8 @@ Return per-point standard errors for the smoothed fit. Standard errors measure t
 
 === "WebAssembly"
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    import init, { Lowess } from 'fastlowess-wasm';
+    await init();
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -1791,7 +1817,8 @@ See [Intervals](intervals.md) for detailed usage.
 
 === "WebAssembly"
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    import init, { Lowess } from 'fastlowess-wasm';
+    await init();
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -1902,14 +1929,21 @@ Selection strategy for automated parameter tuning.
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
     const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
-    // Coming soon
+    const model = new Lowess({ cv_method: "kfold", cv_k: 5 });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const { smooth } = require('./fastlowess_wasm.js');
+    import init, { Lowess } from 'fastlowess-wasm';
+    await init();
 
-    // Coming soon
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
+    const model = new Lowess({ cv_method: "kfold", cv_k: 5 });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -2009,7 +2043,8 @@ Points per chunk in Streaming mode.
 
 === "WebAssembly"
     ```javascript
-    const { StreamingLowess } = require('./fastlowess_wasm.js');
+    import init, { StreamingLowess } from 'fastlowess-wasm';
+    await init();
 
     const processor = new StreamingLowess({}, { chunk_size: 10000 });
     ```
@@ -2109,7 +2144,8 @@ Overlap between chunks in Streaming mode.
 
 === "WebAssembly"
     ```javascript
-    const { StreamingLowess } = require('./fastlowess_wasm.js');
+    import init, { StreamingLowess } from 'fastlowess-wasm';
+    await init();
 
     const processor = new StreamingLowess({}, { overlap: 1000 });
     ```
@@ -2218,7 +2254,8 @@ For example:
 
 === "WebAssembly"
     ```javascript
-    const { StreamingLowess } = require('./fastlowess_wasm.js');
+    import init, { StreamingLowess } from 'fastlowess-wasm';
+    await init();
 
     const processor = new StreamingLowess({}, { merge_strategy: "weighted_average" });
     ```
@@ -2315,7 +2352,8 @@ Maximum points held in memory for Online mode.
 
 === "WebAssembly"
     ```javascript
-    const { OnlineLowess } = require('./fastlowess_wasm.js');
+    import init, { OnlineLowess } from 'fastlowess-wasm';
+    await init();
 
     const processor = new OnlineLowess({}, { window_capacity: 500 });
     ```
@@ -2413,7 +2451,8 @@ Minimum points required before Online filter starts producing outputs.
 
 === "WebAssembly"
     ```javascript
-    const { OnlineLowess } = require('./fastlowess_wasm.js');
+    import init, { OnlineLowess } from 'fastlowess-wasm';
+    await init();
 
     const processor = new OnlineLowess({}, { min_points: 10 });
     ```
@@ -2517,7 +2556,8 @@ For example:
 
 === "WebAssembly"
     ```javascript
-    const { OnlineLowess } = require('./fastlowess_wasm.js');
+    import init, { OnlineLowess } from 'fastlowess-wasm';
+    await init();
 
     const processor = new OnlineLowess({}, { update_mode: "full" });
     ```

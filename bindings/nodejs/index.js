@@ -284,7 +284,7 @@ const {
     Lowess: _NativeLowess,
     StreamingLowess: _NativeStreamingLowess,
     OnlineLowess: _NativeOnlineLowess,
-    LowessResultObj,
+    LowessResult,
 } = nativeBinding
 
 // ---------------------------------------------------------------------------
@@ -315,12 +315,15 @@ function _validateOptions(opts, validKeys, typeName) {
     }
 }
 
-// Normalize customWeights: accept Float64Array in addition to Array<number>.
+// Normalize customWeights: ensure Float64Array for the native binding.
 function _normalizeCustomWeights(cw) {
-    if (cw instanceof Float64Array) {
-        return Array.from(cw)
+    if (cw == null) {
+        return cw
     }
-    return cw
+    if (cw instanceof Float64Array) {
+        return cw
+    }
+    return Float64Array.from(cw)
 }
 
 // ---------------------------------------------------------------------------
@@ -361,4 +364,4 @@ class OnlineLowess extends _NativeOnlineLowess {
 module.exports.Lowess = Lowess
 module.exports.StreamingLowess = StreamingLowess
 module.exports.OnlineLowess = OnlineLowess
-module.exports.LowessResultObj = LowessResultObj
+module.exports.LowessResult = LowessResult

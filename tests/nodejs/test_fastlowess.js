@@ -97,7 +97,7 @@ test('custom_weights: uniform weights match no weights', () => {
     const n = 20;
     const x = new Float64Array(Array.from({ length: n }, (_, i) => i * 0.5));
     const y = new Float64Array(x.map(v => Math.sin(v)));
-    const weights = Array.from({ length: n }, () => 1.0);
+    const weights = new Float64Array(n).fill(1.0);
 
     const result_no_w = new fastlowess.Lowess({ fraction: 0.4, iterations: 2 }).fit(x, y);
     const result_unit_w = new fastlowess.Lowess({ fraction: 0.4, iterations: 2 }).fit(x, y, weights);
@@ -116,8 +116,7 @@ test('custom_weights: zero weight reduces outlier influence', () => {
     const y = new Float64Array(x.map(v => v * 2.0));
     y[5] = 100.0;  // outlier
 
-    const weights = Array.from({ length: n }, () => 1.0);
-    weights[5] = 0.0;
+    const weights = new Float64Array([1, 1, 1, 1, 1, 0, 1, 1, 1, 1]);
 
     const result_no_w = new fastlowess.Lowess({ fraction: 0.5, iterations: 0 }).fit(x, y);
     const result_zero_w = new fastlowess.Lowess({ fraction: 0.5, iterations: 0 }).fit(x, y, weights);
@@ -137,6 +136,6 @@ test('custom_weights: wrong length throws error', () => {
     const y = new Float64Array([2, 4, 6, 8, 10]);
 
     assert.throws(() => {
-        new fastlowess.Lowess({ fraction: 0.5 }).fit(x, y, [1, 1, 1]);
+        new fastlowess.Lowess({ fraction: 0.5 }).fit(x, y, new Float64Array([1, 1, 1]));
     });
 });

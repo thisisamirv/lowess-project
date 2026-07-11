@@ -47,9 +47,9 @@ npm install
 npm run build
 
 # Run examples
-node examples/nodejs/batch_smoothing.js
-node examples/nodejs/streaming_smoothing.js
-node examples/nodejs/online_smoothing.js
+node ../../examples/nodejs/batch_smoothing.js
+node ../../examples/nodejs/streaming_smoothing.js
+node ../../examples/nodejs/online_smoothing.js
 ```
 
 ## Quick Start
@@ -82,7 +82,7 @@ console.log('R²:', resultWithOptions.diagnostics.r_squared);
 The package includes TypeScript definitions:
 
 ```typescript
-const { Lowess, LowessResult } = require('./fastlowess_wasm.js');
+const { Lowess, LowessResult } = require('fastlowess');
 
 const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));

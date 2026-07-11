@@ -101,7 +101,8 @@ Smooth a noisy sine wave — the kind of signal where LOWESS shines. Each exampl
 === "WebAssembly"
 
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    import init, { Lowess } from 'fastlowess-wasm';
+    await init();
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -273,17 +274,26 @@ Smooth a noisy sine wave — the kind of signal where LOWESS shines. Each exampl
 === "WebAssembly"
 
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    import init, { Lowess } from 'fastlowess-wasm';
+    await init();
 
-    // Sample data
-    const x = new Float64Array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
-    const y = new Float64Array([2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7]);
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
-    // Smooth the data
-    const model = new Lowess({ fraction: 0.5, iterations: 3 });
+    const model = new Lowess({
+        fraction: 0.5,
+        iterations: 3,
+        confidence_intervals: 0.95,
+        prediction_intervals: 0.95,
+        return_diagnostics: true
+    });
     const result = model.fit(x, y);
 
-    console.log("Smoothed values:", result.y);
+    console.log("Smoothed:", result.y);
+    console.log("CI Lower:", result.confidence_lower);
+    console.log("CI Upper:", result.confidence_upper);
+    console.log("R²:", result.diagnostics.r_squared);
     ```
 
 === "C++"
@@ -477,7 +487,8 @@ LOWESS can robustly handle outliers through iterative reweighting:
 === "WebAssembly"
 
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    import init, { Lowess } from 'fastlowess-wasm';
+    await init();
 
     // Data with an outlier at position 3
     const x = new Float64Array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
@@ -670,7 +681,8 @@ For datasets too large to fit in memory, stream them in fixed-size chunks with o
 === "WebAssembly"
 
     ```javascript
-    const { StreamingLowess } = require('./fastlowess_wasm.js');
+    import init, { StreamingLowess } from 'fastlowess-wasm';
+    await init();
 
     const n = 5000;
     const x = Float64Array.from({ length: n }, (_, i) => i * 10 * Math.PI / (n - 1));

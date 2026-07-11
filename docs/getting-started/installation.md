@@ -114,7 +114,8 @@ Install the LOWESS library for your preferred language.
 
     ```html
     <script type="module">
-      import { smooth } from "https://cdn.jsdelivr.net/npm/fastlowess-wasm@0.99/index.js";
+      import init, { Lowess } from "https://cdn.jsdelivr.net/npm/fastlowess-wasm@0.99/fastlowess_wasm.js";
+      await init();
     </script>
     ```
 
@@ -258,13 +259,13 @@ Install the LOWESS library for your preferred language.
 === "WebAssembly"
 
     ```javascript
-    import init, { smooth } from 'fastlowess-wasm';
+    import init, { Lowess } from 'fastlowess-wasm';
 
     async function verify() {
         await init();
         const x = new Float64Array([1.0, 2.0, 3.0]);
         const y = new Float64Array([2.0, 4.0, 6.0]);
-        const result = smooth(x, y);
+        const result = new Lowess({}).fit(x, y);
         console.log("Installed successfully!");
     }
     verify();

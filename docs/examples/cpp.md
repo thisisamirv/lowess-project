@@ -98,5 +98,5 @@ The C++ bindings provide:
 
 - **RAII memory management** - Resources automatically freed
 - **STL container support** - `std::vector<double>` for all arrays
-- **Exception-based errors** - `fastlowess::LowessError` for error handling
+- **Value-based error handling** - `Expected<T>` return type; access `.has_value()` / `.error()` to inspect results without exceptions. `fastlowess::LowessError` is thrown only on unchecked `.value()` access.
 - **Modern C++ idioms** - Designated initializers, move semantics

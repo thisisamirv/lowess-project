@@ -146,7 +146,7 @@ For true real-time applications where each point must be processed immediately.
 
 === "WebAssembly"
     ```javascript
-    const { OnlineLowess } = require('./fastlowess_wasm.js');
+    const { OnlineLowess } = require('fastlowess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -325,7 +325,7 @@ For large datasets that arrive in batches or files.
 
 === "WebAssembly"
     ```javascript
-    const { StreamingLowess } = require('./fastlowess_wasm.js');
+    const { StreamingLowess } = require('fastlowess-wasm');
 
     const n = 50;
     const x1 = Float64Array.from({ length: n }, (_, i) => i);
@@ -468,7 +468,7 @@ For large datasets that arrive in batches or files.
 
 === "WebAssembly"
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    const { Lowess } = require('fastlowess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));

@@ -95,7 +95,7 @@ fn main() -> Result<(), LowessError> {
 
     let result = model.fit(&x, &y)?;
     
-    println!("R²: {:.4}", result.diagnostics.unwrap().r_squared);
+    println!("R²: {:.4}", result.diagnostics.expect("return_diagnostics was set").r_squared);
     Ok(())
 }
 ```

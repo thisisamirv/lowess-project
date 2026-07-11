@@ -11,7 +11,7 @@ The `Lowess` class is the main entry point for batch smoothing.
 **Constructor:**
 
 ```javascript
-const { Lowess } = require('fastlowess');
+const { Lowess } = require('fastlowess-wasm');
 
 const model = new Lowess({ fraction: 0.5, iterations: 3 });
 ```
@@ -21,7 +21,7 @@ const model = new Lowess({ fraction: 0.5, iterations: 3 });
 **Methods:**
 
 ```javascript
-const { Lowess } = require('fastlowess');
+const { Lowess } = require('fastlowess-wasm');
 
 const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -42,7 +42,7 @@ The `StreamingLowess` class processes data in chunks, suitable for very large da
 **Constructor:**
 
 ```javascript
-const { StreamingLowess } = require('fastlowess');
+const { StreamingLowess } = require('fastlowess-wasm');
 
 const stream = new StreamingLowess({ fraction: 0.3 }, { chunk_size: 50, overlap: 10 });
 ```
@@ -53,7 +53,7 @@ const stream = new StreamingLowess({ fraction: 0.3 }, { chunk_size: 50, overlap:
 **Methods:**
 
 ```javascript
-const { StreamingLowess } = require('fastlowess');
+const { StreamingLowess } = require('fastlowess-wasm');
 
 const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -66,7 +66,7 @@ const partialResult = stream.process_chunk(x.slice(0, 50), y.slice(0, 50));
 * Processes a chunk of data. Returns partial results.
 
 ```javascript
-const { StreamingLowess } = require('fastlowess');
+const { StreamingLowess } = require('fastlowess-wasm');
 
 const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -86,7 +86,7 @@ The `OnlineLowess` class updates the model incrementally with new data points.
 **Constructor:**
 
 ```javascript
-const { OnlineLowess } = require('fastlowess');
+const { OnlineLowess } = require('fastlowess-wasm');
 
 const online = new OnlineLowess({ fraction: 0.3 }, { window_capacity: 50, min_points: 5 });
 ```
@@ -97,13 +97,13 @@ const online = new OnlineLowess({ fraction: 0.3 }, { window_capacity: 50, min_po
 **Methods:**
 
 ```javascript
-const { OnlineLowess } = require('fastlowess');
+const { OnlineLowess } = require('fastlowess-wasm');
 
 const online = new OnlineLowess({ fraction: 0.3 }, { window_capacity: 50, min_points: 5 });
-const result = online.add_point(1.0, 2.0);  // returns OnlineOutput | null
+const result = online.add_point(1.0, 2.0);  // returns OnlineOutput | undefined
 ```
 
-* Adds new points to the model and returns the smoothed values (retrospective or prospective depending on mode).
+* Adds a single point to the sliding window. Returns an `OnlineOutput` once enough points are available, or `undefined` while the window is still filling.
 
 ## Options Structures
 
@@ -131,9 +131,9 @@ const result = online.add_point(1.0, 2.0);  // returns OnlineOutput | null
 | `cv_k` | `number` | `5` | Number of folds for k-fold CV (Batch only) |
 | `cv_fractions` | `number[]` | `null` | Fractions to test for cross-validation (Batch only) |
 | `cv_seed` | `number` | `null` | Random seed for cross-validation shuffling (Batch only) |
-| `custom_weights` | `Float64Array` | `null` | Per-observation case weights — passed to `fit()`/`process_chunk()`, not the options object (Batch only) |
+| `custom_weights` | `Float64Array` | `null` | Per-observation case weights — passed to `fit()`, not the options object (Batch only) |
 
-### `StreamingOptions`
+### `StreamingOptions` (inherits `LowessOptions`)
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -141,7 +141,7 @@ const result = online.add_point(1.0, 2.0);  // returns OnlineOutput | null
 | `overlap` | `number` | `500` | Overlap between chunks |
 | `merge_strategy` | `string` | `"weighted_average"` | Strategy for blending overlap regions |
 
-### `OnlineOptions`
+### `OnlineOptions` (inherits `LowessOptions`)
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -246,7 +246,7 @@ Returned by `add_point()` once the window has enough points (`undefined` until t
 ## Example
 
 ```javascript
-const { Lowess } = require('./fastlowess_wasm.js');
+const { Lowess } = require('fastlowess-wasm');
 
 const x = new Float64Array([1, 2, 3, 4, 5]);
 const y = new Float64Array([2.1, 4.0, 6.2, 8.0, 10.1]);

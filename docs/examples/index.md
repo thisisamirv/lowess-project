@@ -88,7 +88,17 @@ Each language includes three complete examples:
 === "Node.js"
     ```bash
     cd bindings/nodejs && npm install
-    node examples/nodejs/batch_smoothing.js
+    node ../../examples/nodejs/batch_smoothing.js
+    ```
+
+=== "WebAssembly"
+    ```bash
+    # Build the WASM package first
+    make wasm
+
+    # Serve the project root and open in a browser
+    npx serve .
+    # Then open: http://localhost:3000/examples/wasm/batch_smoothing.html
     ```
 
 === "C++"

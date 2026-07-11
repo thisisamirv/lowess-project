@@ -51,7 +51,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 stream = StreamingLowess()
 ```
 
-* `kwargs`: Keyword arguments corresponding to `StreamingOptions` fields.
+* `kwargs`: Keyword arguments corresponding to `LowessOptions` and `StreamingOptions` fields.
 
 **Methods:**
 
@@ -101,7 +101,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 online = OnlineLowess()
 ```
 
-* `kwargs`: Keyword arguments corresponding to `OnlineOptions` fields.
+* `kwargs`: Keyword arguments corresponding to `LowessOptions` and `OnlineOptions` fields.
 
 **Methods:**
 

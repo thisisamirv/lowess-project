@@ -127,7 +127,7 @@ Time series data often contains noise, seasonality, and trends. LOWESS provides 
 
 === "WebAssembly"
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    const { Lowess } = require('fastlowess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -288,7 +288,7 @@ Remove trend to analyze residual patterns:
 
 === "WebAssembly"
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    const { Lowess } = require('fastlowess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -456,7 +456,7 @@ Remove trend to analyze residual patterns:
 
 === "WebAssembly"
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    const { Lowess } = require('fastlowess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -590,7 +590,7 @@ LOWESS naturally handles irregular time sampling:
 
 === "WebAssembly"
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    const { Lowess } = require('fastlowess-wasm');
 
     const n = 100;
     const tIrregular = Float64Array.from({ length: n }, (_, i) => i * 1.0 + (i * 31 % 10) * 0.1).sort((a, b) => a - b);
@@ -732,7 +732,7 @@ Use different fractions to extract features at different scales:
 
 === "WebAssembly"
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    const { Lowess } = require('fastlowess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -903,7 +903,7 @@ Biological application:
 
 === "WebAssembly"
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    const { Lowess } = require('fastlowess-wasm');
 
     const n = 24;
     const hours = Float64Array.from({ length: n }, (_, i) => i);

@@ -49,12 +49,12 @@ pub struct Diagnostics {
 
 /// Result of a LOWESS fit.
 #[napi]
-pub struct LowessResultObj {
+pub struct LowessResult {
     inner: InnerLowessResult<f64>,
 }
 
 #[napi]
-impl LowessResultObj {
+impl LowessResult {
     /// Get the sorted x values.
     #[napi(getter)]
     pub fn get_x(&self) -> Float64Array {
@@ -288,12 +288,15 @@ impl Lowess {
         &self,
         x: Float64Array,
         y: Float64Array,
-        custom_weights: Option<Vec<f64>>,
-    ) -> Result<LowessResultObj> {
+        custom_weights: Option<Float64Array>,
+    ) -> Result<LowessResult> {
         let builder = self.create_builder()?;
-        let model = map_runtime(binding_support::build_batch(builder, custom_weights))?;
+        let model = map_runtime(binding_support::build_batch(
+            builder,
+            custom_weights.map(|cw| cw.as_ref().to_vec()),
+        ))?;
         let result = map_runtime(model.fit(x.as_ref(), y.as_ref()))?;
-        Ok(LowessResultObj { inner: result })
+        Ok(LowessResult { inner: result })
     }
 
     /// Fit the model asynchronously.
@@ -302,11 +305,11 @@ impl Lowess {
         &self,
         x: Float64Array,
         y: Float64Array,
-        custom_weights: Option<Vec<f64>>,
+        custom_weights: Option<Float64Array>,
     ) -> Result<AsyncTask<LowessTask>> {
         let mut builder = self.create_builder()?;
         if let Some(cw) = custom_weights {
-            builder = builder.custom_weights(cw);
+            builder = builder.custom_weights(cw.as_ref().to_vec());
         }
         let x_vec = x.as_ref().to_vec();
         let y_vec = y.as_ref().to_vec();
@@ -331,7 +334,7 @@ pub struct LowessTask {
 
 impl Task for LowessTask {
     type Output = InnerLowessResult<f64>;
-    type JsValue = LowessResultObj;
+    type JsValue = LowessResult;
 
     fn compute(&mut self) -> Result<Self::Output> {
         let model = map_runtime(binding_support::build_batch(self.builder.clone(), None))?;
@@ -339,7 +342,7 @@ impl Task for LowessTask {
     }
 
     fn resolve(&mut self, _env: Env, output: Self::Output) -> Result<Self::JsValue> {
-        Ok(LowessResultObj { inner: output })
+        Ok(LowessResult { inner: output })
     }
 }
 
@@ -393,17 +396,17 @@ impl StreamingLowess {
 
     /// Process a chunk of data.
     #[napi(js_name = "process_chunk")]
-    pub fn process_chunk(&mut self, x: Float64Array, y: Float64Array) -> Result<LowessResultObj> {
+    pub fn process_chunk(&mut self, x: Float64Array, y: Float64Array) -> Result<LowessResult> {
         let result: InnerLowessResult<f64> =
             map_runtime(self.inner.process_chunk(x.as_ref(), y.as_ref()))?;
-        Ok(LowessResultObj { inner: result })
+        Ok(LowessResult { inner: result })
     }
 
     /// Finalize the stream and return remaining data.
     #[napi]
-    pub fn finalize(&mut self) -> Result<LowessResultObj> {
+    pub fn finalize(&mut self) -> Result<LowessResult> {
         let result: InnerLowessResult<f64> = map_runtime(self.inner.finalize())?;
-        Ok(LowessResultObj { inner: result })
+        Ok(LowessResult { inner: result })
     }
 }
 

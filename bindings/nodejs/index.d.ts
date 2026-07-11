@@ -5,13 +5,13 @@ export declare class Lowess {
   /** Create a new batch LOWESS smoother. */
   constructor(options?: SmoothOptions | undefined | null)
   /** Fit the model. */
-  fit(x: Float64Array, y: Float64Array, customWeights?: Array<number> | undefined | null): LowessResultObj
+  fit(x: Float64Array, y: Float64Array, customWeights?: Float64Array | undefined | null): LowessResult
   /** Fit the model asynchronously. */
-  fit_async(x: Float64Array, y: Float64Array, customWeights?: Array<number> | undefined | null): Promise<unknown>
+  fit_async(x: Float64Array, y: Float64Array, customWeights?: Float64Array | undefined | null): Promise<unknown>
 }
 
 /** Result of a LOWESS fit. */
-export declare class LowessResultObj {
+export declare class LowessResult {
   /** Get the sorted x values. */
   get x(): Float64Array
   /** Get the smoothed y values. */
@@ -53,9 +53,9 @@ export declare class StreamingLowess {
   /** Create a new streaming LOWESS smoother. */
   constructor(options?: SmoothOptions | undefined | null, streamingOpts?: StreamingOptions | undefined | null)
   /** Process a chunk of data. */
-  process_chunk(x: Float64Array, y: Float64Array): LowessResultObj
+  process_chunk(x: Float64Array, y: Float64Array): LowessResult
   /** Finalize the stream and return remaining data. */
-  finalize(): LowessResultObj
+  finalize(): LowessResult
 }
 
 /** Diagnostic statistics for the LOWESS fit. */

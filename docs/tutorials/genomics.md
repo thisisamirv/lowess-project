@@ -172,7 +172,7 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
 
 === "WebAssembly"
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    const { Lowess } = require('fastlowess-wasm');
 
     const n = 100;
     const positions = Float64Array.from({ length: n }, (_, i) => i * 100.0);
@@ -370,7 +370,7 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
 
 === "WebAssembly"
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    const { Lowess } = require('fastlowess-wasm');
 
     const n = 100;
     const positions = Float64Array.from({ length: n }, (_, i) => i * 100.0);
@@ -535,7 +535,7 @@ For whole-genome data that doesn't fit in memory:
 
 === "WebAssembly"
     ```javascript
-    const { StreamingLowess } = require('./fastlowess_wasm.js');
+    const { StreamingLowess } = require('fastlowess-wasm');
 
     const xChunk = Float64Array.from({ length: 1001 }, (_, i) => i * 10.0);
     const yChunk = Float64Array.from(xChunk, p => 50 + Math.sin(p / 100) * 20 + 5.0);

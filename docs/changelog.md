@@ -38,7 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added `OnlineOutput` object to the Node.js binding. `OnlineLowess.add_point()` now returns `OnlineOutput | null` instead of `number | null`, exposing `smoothed`, `std_error`, `residual`, `robustness_weight`, and `iterations_used`.
 - Added `return_se` and `cv_seed` fields to `SmoothOptions`.
-- Added `customWeights` as an optional per-call argument to `fit(x, y, customWeights?)` and `fit_async(x, y, customWeights?)`. Accepts `Array<number>` or `Float64Array` of non-negative per-observation weights. Includes pre-flight length-mismatch and non-negative validation. Batch only.
+- Added `customWeights` as an optional per-call argument to `fit(x, y, customWeights?)` and `fit_async(x, y, customWeights?)`. Accepts a `Float64Array` of non-negative per-observation weights. Includes pre-flight length-mismatch and non-negative validation. Batch only.
 - Added JavaScript-layer option key validation: unknown keys in `SmoothOptions`, `StreamingOptions`, or `OnlineOptions` now throw a `TypeError` listing all valid keys, via wrapper classes around the native NAPI exports.
 
 **WebAssembly:**

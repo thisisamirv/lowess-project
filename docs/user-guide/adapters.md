@@ -144,7 +144,8 @@ Standard mode for complete datasets. **Supports all features.**
 
 === "WebAssembly"
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    import init, { Lowess } from 'fastlowess-wasm';
+    await init();
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -208,16 +209,16 @@ Process large datasets in chunks with configurable overlap.
 | --- | --- | --- |
 | `chunk_size` | 5000 | Points per chunk |
 | `overlap` | 500 | Overlap between chunks |
-| `merge_strategy` | `"average"` | How to merge overlaps |
+| `merge_strategy` | `"weighted_average"` | How to merge overlaps |
 
 ### Merge Strategies
 
 | Strategy | Behavior |
 | --- | --- |
 | `"average"` | Average overlapping values |
-| `"weighted"` | Distance-weighted blend |
-| `"left"` | Keep left chunk values |
-| `"right"` | Keep right chunk values |
+| `"weighted_average"` | Distance-weighted blend |
+| `"take_first"` | Keep left chunk values |
+| `"take_last"` | Keep right chunk values |
 
 ![Merge Strategies](../assets/diagrams/merge_comparison.svg)
 
@@ -345,7 +346,8 @@ Process large datasets in chunks with configurable overlap.
 
 === "WebAssembly"
     ```javascript
-    const { StreamingLowess } = require('./fastlowess_wasm.js');
+    import init, { StreamingLowess } from 'fastlowess-wasm';
+    await init();
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -555,7 +557,8 @@ Incremental updates with a sliding window for real-time data.
 
 === "WebAssembly"
     ```javascript
-    const { OnlineLowess } = require('./fastlowess_wasm.js');
+    import init, { OnlineLowess } from 'fastlowess-wasm';
+    await init();
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -571,7 +574,7 @@ Incremental updates with a sliding window for real-time data.
     // Add points
     for (const [xi, yi] of sensorStream) {
         const output = processor.add_point(xi, yi);
-        if (output != null) {
+        if (output !== undefined) {
             console.log(`Smoothed: ${output.smoothed.toFixed(2)}`);
         }
     }

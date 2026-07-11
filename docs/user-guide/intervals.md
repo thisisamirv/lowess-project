@@ -8,7 +8,7 @@ Confidence and prediction intervals for uncertainty quantification.
 ![Confidence and Prediction Intervals](../assets/diagrams/intervals_comparison.svg)
 
 !!! note "Adapter support"
-    Confidence and prediction intervals are available in **all three adapters**: Batch, Streaming, and Online.
+    Confidence and prediction intervals are available in **Batch** mode only. Streaming and Online modes do not support intervals.
 
 | Type | Represents | Width | Use |
 | --- | --- | --- | --- |
@@ -122,7 +122,8 @@ Estimate uncertainty in the smoothed curve itself.
 
 === "WebAssembly"
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    import init, { Lowess } from 'fastlowess-wasm';
+    await init();
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -260,7 +261,8 @@ Estimate where new observations might fall.
 
 === "WebAssembly"
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    import init, { Lowess } from 'fastlowess-wasm';
+    await init();
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -383,7 +385,8 @@ Request both types simultaneously:
 
 === "WebAssembly"
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    import init, { Lowess } from 'fastlowess-wasm';
+    await init();
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -504,7 +507,8 @@ Common levels and their z-values:
 
 === "WebAssembly"
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    import init, { Lowess } from 'fastlowess-wasm';
+    await init();
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -627,7 +631,8 @@ Access standard errors directly (available when intervals are computed):
 
 === "WebAssembly"
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    import init, { Lowess } from 'fastlowess-wasm';
+    await init();
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));

@@ -76,7 +76,7 @@ model2 = Lowess(
 )
 result2 = fit(model2, x, y)
 
-println("R²: ", result2.diagnostics.r_squared)
+println("R²: ", result2.diagnostics.r_squared)  # requires return_diagnostics=true
 
 # Access confidence intervals
 lower = result2.confidence_lower

@@ -19,9 +19,9 @@ Overlap:            [=====]
 | Strategy | Method | Robustness | Speed |
 | --- | --- | --- | --- |
 | `"average"` | Simple mean of both estimates | Low | Fastest |
-| `"left"` | Left-chunk estimate only | Low | Fastest |
-| `"right"` | Right-chunk estimate only | Low | Fastest |
-| `"weighted"` | Distance-weighted mean | High | Moderate |
+| `"take_first"` | Left-chunk estimate only | Low | Fastest |
+| `"take_last"` | Right-chunk estimate only | Low | Fastest |
+| `"weighted_average"` | Distance-weighted mean | High | Moderate |
 
 ![Merge Strategies](../assets/diagrams/merge_comparison.svg)
 
@@ -109,7 +109,8 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
 
 === "WebAssembly"
     ```javascript
-    const { StreamingLowess } = require('./fastlowess_wasm.js');
+    import init, { StreamingLowess } from 'fastlowess-wasm';
+    await init();
 
     const n = 100;
     const xChunk = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -151,7 +152,7 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
 
 ---
 
-## Left
+## Take First
 
 Keeps only the left-chunk estimate in the overlap zone and discards the right-chunk estimate. Produces a definitive, non-revised output as soon as the right boundary of each chunk is reached.
 
@@ -164,13 +165,13 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
     x <- seq(0, 2 * pi, length.out = 100)
     y <- sin(x) + rnorm(100, sd = 0.3)
 
-    model <- StreamingLowess(merge_strategy = "left")
+    model <- StreamingLowess(merge_strategy = "take_first")
     ```
 
 === "Python"
     ```python
     from fastlowess import StreamingLowess
-    model = StreamingLowess(merge_strategy="left")
+    model = StreamingLowess(merge_strategy="take_first")
     ```
 
 === "Rust"
@@ -179,7 +180,7 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
 
     fn main() -> Result<(), LowessError> {
         let mut processor = StreamingLowess::new()
-            .merge_strategy("left")
+            .merge_strategy("take_first")
             .build()?;
 
         Ok(())
@@ -195,25 +196,25 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
     x = collect(range(0, 2π, length=100))
     y = sin.(x) .+ randn(rng, 100) .* 0.3
 
-    model = StreamingLowess(; merge_strategy="left")
+    model = StreamingLowess(; merge_strategy="take_first")
     ```
 
 === "Node.js"
     ```javascript
-    const { Lowess } = require('fastlowess');
+    const { StreamingLowess } = require('fastlowess');
 
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    { merge_strategy: "left" }
+    const processor = new StreamingLowess(
+        {},
+        { merge_strategy: "take_first" }
+    );
     ```
 
 === "WebAssembly"
     ```javascript
-    const { smooth } = require('./fastlowess_wasm.js');
+    import init, { StreamingLowess } from 'fastlowess-wasm';
+    await init();
 
-    { merge_strategy: "left" }
+    const stream = new StreamingLowess({}, { merge_strategy: 'take_first' });
     ```
 
 === "C++"
@@ -225,7 +226,7 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
 
     int main() {
         fastlowess::StreamingOptions s_opts;
-        s_opts.merge_strategy = "left";
+        s_opts.merge_strategy = "take_first";
         fastlowess::StreamingLowess model(s_opts);
 
         return 0;
@@ -234,7 +235,7 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
 
 ---
 
-## Right
+## Take Last
 
 Keeps only the right-chunk estimate in the overlap zone. The right chunk sees more of the surrounding data, so its fit can be more accurate near the left boundary of the new chunk.
 
@@ -247,13 +248,13 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
     x <- seq(0, 2 * pi, length.out = 100)
     y <- sin(x) + rnorm(100, sd = 0.3)
 
-    model <- StreamingLowess(merge_strategy = "right")
+    model <- StreamingLowess(merge_strategy = "take_last")
     ```
 
 === "Python"
     ```python
     from fastlowess import StreamingLowess
-    model = StreamingLowess(merge_strategy="right")
+    model = StreamingLowess(merge_strategy="take_last")
     ```
 
 === "Rust"
@@ -262,7 +263,7 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
 
     fn main() -> Result<(), LowessError> {
         let mut processor = StreamingLowess::new()
-            .merge_strategy("right")
+            .merge_strategy("take_last")
             .build()?;
 
         Ok(())
@@ -278,25 +279,25 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
     x = collect(range(0, 2π, length=100))
     y = sin.(x) .+ randn(rng, 100) .* 0.3
 
-    model = StreamingLowess(; merge_strategy="right")
+    model = StreamingLowess(; merge_strategy="take_last")
     ```
 
 === "Node.js"
     ```javascript
-    const { Lowess } = require('fastlowess');
+    const { StreamingLowess } = require('fastlowess');
 
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    { merge_strategy: "right" }
+    const processor = new StreamingLowess(
+        {},
+        { merge_strategy: "take_last" }
+    );
     ```
 
 === "WebAssembly"
     ```javascript
-    const { smooth } = require('./fastlowess_wasm.js');
+    import init, { StreamingLowess } from 'fastlowess-wasm';
+    await init();
 
-    { merge_strategy: "right" }
+    const stream = new StreamingLowess({}, { merge_strategy: 'take_last' });
     ```
 
 === "C++"
@@ -308,7 +309,7 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
 
     int main() {
         fastlowess::StreamingOptions s_opts;
-        s_opts.merge_strategy = "right";
+        s_opts.merge_strategy = "take_last";
         fastlowess::StreamingLowess model(s_opts);
 
         return 0;
@@ -317,7 +318,7 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
 
 ---
 
-## Weighted
+## Weighted Average
 
 Assigns each overlap point a weight proportional to its proximity to the centre of its respective chunk: points near the left-chunk centre get higher left weight; points near the right-chunk centre get higher right weight. This produces the smoothest transition across chunk boundaries.
 
@@ -335,7 +336,7 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- StreamingLowess(
-        merge_strategy = "weighted",
+        merge_strategy = "weighted_average",
         chunk_size = 5000,
         overlap = 500
     )
@@ -345,7 +346,7 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
     ```python
     from fastlowess import StreamingLowess
     model = StreamingLowess(
-        merge_strategy="weighted",
+        merge_strategy="weighted_average",
         chunk_size=5000,
         overlap=500
     )
@@ -357,7 +358,7 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
 
     fn main() -> Result<(), LowessError> {
         let model = StreamingLowess::new()
-        .merge_strategy("weighted")
+        .merge_strategy("weighted_average")
         .chunk_size(5000)
         .overlap(500)
         .build()?;
@@ -376,7 +377,7 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
     y = sin.(x) .+ randn(rng, 100) .* 0.3
 
     model = StreamingLowess(;
-        merge_strategy="weighted",
+        merge_strategy="weighted_average",
         chunk_size=5000,
         overlap=500
     )
@@ -392,17 +393,18 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
 
     const processor = new StreamingLowess(
         {},
-        { merge_strategy: "weighted", chunk_size: 5000, overlap: 500 }
+        { merge_strategy: "weighted_average", chunk_size: 5000, overlap: 500 }
     );
     ```
 
 === "WebAssembly"
     ```javascript
-    const { StreamingLowess } = require('./fastlowess_wasm.js');
+    import init, { StreamingLowess } from 'fastlowess-wasm';
+    await init();
 
     const processor = new StreamingLowess(
         {},
-        { merge_strategy: "weighted", chunk_size: 5000, overlap: 500 }
+        { merge_strategy: "weighted_average", chunk_size: 5000, overlap: 500 }
     );
     ```
 
@@ -415,7 +417,7 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
 
     int main() {
         fastlowess::StreamingOptions s_opts;
-        s_opts.merge_strategy = "weighted";
+        s_opts.merge_strategy = "weighted_average";
         fastlowess::StreamingLowess model(s_opts);
 
         return 0;
@@ -428,11 +430,11 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
 
 | Situation | Recommended Strategy |
 | --- | --- |
-| General purpose | `"weighted"` |
+| General purpose | `"weighted_average"` |
 | Maximum throughput | `"average"` |
-| Immediate finalised output | `"left"` |
-| Post-processing, right context better | `"right"` |
-| Minimising boundary artefacts | `"weighted"` |
+| Immediate finalised output | `"take_first"` |
+| Post-processing, right context better | `"take_last"` |
+| Minimising boundary artefacts | `"weighted_average"` |
 
 !!! tip "Overlap size matters"
     A larger overlap gives the merge strategy more room to blend, reducing boundary artefacts regardless of the strategy chosen. A good starting point is 10 % of `chunk_size`.

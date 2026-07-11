@@ -191,9 +191,9 @@ Returned by `add_point()` once the window has enough points (`None` until then).
 | `mae` | `float` | Mean Absolute Error |
 | `r_squared` | `float` | R-squared |
 | `residual_sd` | `float` | Residual standard deviation |
-| `effective_df` | `float` | Effective degrees of freedom (NaN if not computed) |
-| `aic` | `float` | AIC (NaN if not computed) |
-| `aicc` | `float` | AICc (NaN if not computed) |
+| `effective_df` | `float \| None` | Effective degrees of freedom (`None` if not computed) |
+| `aic` | `float \| None` | AIC (`None` if not computed) |
+| `aicc` | `float \| None` | AICc (`None` if not computed) |
 
 ## Options
 

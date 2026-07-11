@@ -141,7 +141,7 @@ fn main() -> Result<(), LowessError> {
 }
 ```
 
-* Clears the internal window buffer.
+* Clears the internal window buffer. **Rust-only** — this method is not exposed in other language bindings, where creating a new instance is the idiomatic alternative.
 
 ## Builder Configuration
 
@@ -168,11 +168,13 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `return_robustness_weights()` | `bool` | `false` | Include robustness weights in result |
 | `return_se()` | `bool` | `false` | Return standard errors |
 | `parallel(bool)` | `bool` | `true` | Enable parallel execution |
-| `cv_method(str)` | `&str` | `None` | CV strategy: `"kfold"` or `"loocv"` |
+| `cv_method(str)` | `&str` | `"kfold"` | CV strategy: `"kfold"` or `"loocv"` (defaults to `"kfold"` when `cv_fractions` is provided) |
 | `cv_k(usize)` | `usize` | `5` | K for k-fold CV |
 | `cv_fractions(Vec<f64>)` | `Vec<f64>` | `None` | Fraction grid for CV |
 | `cv_seed(u64)` | `u64` | `None` | RNG seed for CV |
 | `backend(...)` | `Backend` | `CPU` | `fastLowess` only: `CPU` or `GPU` |
+
+**Note:** In other language bindings `custom_weights` is a `fit()` argument; in Rust it is a builder step because all configuration lives on the builder and `fit()` consumes `self`.
 
 ### Streaming Options
 
@@ -304,9 +306,9 @@ Returned by `add_point()` inside `Option`. Is `None` while the window is still f
 | `mae` | `T` | Mean Absolute Error |
 | `r_squared` | `T` | R-squared |
 | `residual_sd` | `T` | Residual standard deviation |
-| `effective_df` | `Option<T>` | Effective degrees of freedom (NaN if not computed) |
-| `aic` | `Option<T>` | AIC (NaN if not computed) |
-| `aicc` | `Option<T>` | AICc (NaN if not computed) |
+| `effective_df` | `Option<T>` | Effective degrees of freedom (`None` if not computed) |
+| `aic` | `Option<T>` | AIC (`None` if not computed) |
+| `aicc` | `Option<T>` | AICc (`None` if not computed) |
 
 ## Options
 

@@ -130,7 +130,7 @@ const result = online.add_point(1.0, 2.0);  // returns OnlineOutput | null
 | `cv_k` | `number` | `5` | Number of folds for k-fold CV (Batch only) |
 | `cv_fractions` | `number[]` | `null` | Fractions to test for cross-validation (Batch only) |
 | `cv_seed` | `number` | `null` | Random seed for cross-validation shuffling (Batch only) |
-| `custom_weights` | `number[]` | `null` | Per-observation case weights — passed to `fit()`, not the options object (Batch only) |
+| `custom_weights` | `Float64Array` | `null` | Per-observation case weights — passed to `fit()`, not the options object (Batch only) |
 
 ### `StreamingOptions` (inherits `LowessOptions`)
 
@@ -189,9 +189,9 @@ Returned by `add_point()` once the window has enough points (`null` until then).
 | `mae` | `number` | Mean Absolute Error |
 | `r_squared` | `number` | R-squared |
 | `residual_sd` | `number` | Residual standard deviation |
-| `effective_df` | `number` \| `undefined` | Effective degrees of freedom |
-| `aic` | `number` \| `undefined` | AIC |
-| `aicc` | `number` \| `undefined` | AICc |
+| `effective_df` | `number` \| `null` | Effective degrees of freedom |
+| `aic` | `number` \| `null` | AIC |
+| `aicc` | `number` \| `null` | AICc |
 
 ## Options
 

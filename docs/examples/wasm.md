@@ -50,7 +50,7 @@ npm install fastlowess-wasm
 
 ```html
 <script type="module">
-  import init, { smooth } from 'https://unpkg.com/fastlowess-wasm@latest';
+  import init, { Lowess } from 'https://unpkg.com/fastlowess-wasm@latest';
   
   await init();
   // Ready to use
@@ -59,14 +59,14 @@ npm install fastlowess-wasm
 
 ## Quick Start
 
-### Browser (ES Modules)
+### Node.js
 
 ```javascript
-const { Lowess } = require('./fastlowess_wasm.js');
+const { Lowess } = require('fastlowess-wasm');
 
 async function main() {
     // Initialize WASM module
-
+    await init();
     // Generate sample data
     const x = Float64Array.from({ length: 100 }, (_, i) => i * 0.1);
     const y = Float64Array.from(x, xi => Math.sin(xi) + ((xi * 7 % 1) - 0.5) * 0.2);
@@ -91,10 +91,25 @@ async function main() {
 main();
 ```
 
-### Node.js
+### Browser (ES Modules)
 
 ```javascript
-const { Lowess } = require('fastlowess');
+import init, { Lowess } from 'fastlowess-wasm';
+
+await init();
+
+const x = Float64Array.from({ length: 100 }, (_, i) => i * 0.1);
+const y = Float64Array.from(x, xi => Math.sin(xi) + ((xi * 7 % 1) - 0.5) * 0.2);
+
+const model = new Lowess({ fraction: 0.3 });
+const result = model.fit(x, y);
+console.log('Smoothed values:', result.y);
+```
+
+### Node.js (CommonJS)
+
+```javascript
+const { Lowess } = require('fastlowess-wasm');
 
 const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));

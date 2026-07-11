@@ -140,174 +140,10 @@ _LANG_TAGS: dict[str, set[str]] = {
 }
 
 _PYTHON_PREAMBLE = ""
-_PYTHON_PREAMBLE_UNUSED = textwrap.dedent("""\
-    # --- snippet preamble: suppress display back-end -------------------------
-    import sys as _sys, os as _os
-    try:
-        import matplotlib as _mpl
-        _mpl.use("Agg")
-        import matplotlib.pyplot as plt
-        plt.show = lambda *a, **kw: None
-    except ImportError:
-        import sys as _sys2, types as _types
-        _plt_stub = _types.ModuleType('matplotlib.pyplot')
-        _plt_stub.__getattr__ = lambda _n: (lambda *a, **kw: _plt_stub)  # type: ignore
-        _sys2.modules.setdefault('matplotlib', _types.ModuleType('matplotlib'))
-        _sys2.modules.setdefault('matplotlib.pyplot', _plt_stub)
-        plt = _plt_stub  # type: ignore
-
-    # --- snippet preamble: common imports ------------------------------------
-    import numpy as np
-    import fastlowess as fl
-
-    # --- snippet preamble: sample data ---------------------------------------
-    np.random.seed(42)
-    _n = 100
-    x = np.linspace(0.0, 10.0, _n)
-    y = np.sin(x) + np.random.normal(0, 0.1, _n)
-
-    # Aliases used in various tutorials
-    t = x.copy()
-    t_irregular = x.copy()
-    y_irregular = y.copy()
-    positions = x.copy()
-    observed = y.copy()
-    times = x.copy()
-    temperatures = y.copy()
-    hours = x.copy()
-    expression = y.copy()
-    coverage = np.abs(y.copy()) * 10 + 5
-
-    # Multivariate input variables (lat/lon/x1/x2/x3 for dimensions.md examples)
-    lat = x.copy(); lon = x * 0.5
-    x1 = x.copy(); x2 = x * 0.5; x3 = x * 0.25
-    z = np.sin(x) + np.cos(x * 0.5)
-    # Python binding requires flattened 1D for multi-dim input
-    x2d = np.column_stack([x, x * 0.5]).ravel()    # (200,) flat row-major
-    x3d = np.column_stack([x, x * 0.5, x * 0.25]).ravel()  # (300,) flat
-
-    # Outlier / weight examples
-    y_with_outlier = y.copy();  y_with_outlier[50] = 100.0
-    weights = np.ones(_n)
-
-    # Streaming / chunk examples
-    chunk_size, overlap = 50, 10
-    chunk1_x, chunk1_y = x[:50].copy(), y[:50].copy()
-    chunk2_x, chunk2_y = x[50:].copy(), y[50:].copy()
-    x_chunk, y_chunk = x[:50].copy(), y[:50].copy()
-
-    # Sliding-window examples
-    data_x = list(x[:30])
-    data_y = list(y[:30])
-
-    # Calibration / uncertainty examples
-    calibration_indices = np.array([2, 5, 7, 20, 50])
-    sigma = np.random.default_rng(42).uniform(0.1, 0.5, _n)
-
-    # API doc pseudocode helpers
-    fastlowess = fl   # allow docs that use bare "fastlowess.X(...)"
-    kwargs = {'fraction': 0.3}
-    model = fl.Lowess()
-    stream = fl.StreamingLowess()
-    online = fl.OnlineLowess()
-    # Bare-name aliases so snippets that import with "from fastlowess import ..."
-    # or use the class name directly without fl. prefix work out of the box.
-    Lowess = fl.Lowess
-    StreamingLowess = fl.StreamingLowess
-    OnlineLowess = fl.OnlineLowess
-
-    # -------------------------------------------------------------------------
-""")
 
 _JULIA_PREAMBLE = ""
-_JULIA_PREAMBLE_UNUSED = textwrap.dedent("""\
-    # --- snippet preamble ----------------------------------------------------
-    using FastLOWESS
-    using Random, Printf, Statistics
-    Random.seed!(42)
-
-    _n = 100
-    x  = collect(LinRange(0.0, 10.0, _n))
-    y  = sin.(x) .+ randn(_n) .* 0.1
-
-    t           = copy(x)
-    t_irregular = copy(x)
-    y_irregular = copy(y)
-    positions   = copy(x)
-    observed    = copy(y)
-    times       = copy(x)
-    temperatures = copy(y)
-    hours       = copy(x)
-    expression  = copy(y)
-    coverage    = abs.(y) .* 10.0 .+ 5.0
-
-    x2d = hcat(x, x .* 0.5)
-    x3d = hcat(x, x .* 0.5, x .* 0.25)
-    z   = sin.(x) .+ cos.(x .* 0.5)
-    lat = copy(x); lon = x .* 0.5
-    x1  = copy(x); x2 = x .* 0.5; x3 = x .* 0.25
-
-    y_with_outlier = copy(y); y_with_outlier[50] = 100.0
-    weights = ones(Float64, _n)
-
-    chunk1_x, chunk1_y = x[1:50], y[1:50]
-    chunk2_x, chunk2_y = x[51:end], y[51:end]
-    x_chunk, y_chunk   = x[1:50], y[1:50]
-
-    data_x = copy(x[1:30])
-    data_y = copy(y[1:30])
-
-    # custom-weights examples
-    calibration_indices = [3, 7, 15]
-    sigma = fill(0.1, _n)
-
-    # API doc placeholders (method-signature examples use these as variables)
-    model  = Lowess()
-    stream = StreamingLowess()
-    online = OnlineLowess()
-    kwargs = (fraction=0.3,)
-    # -------------------------------------------------------------------------
-""")
 
 _NODEJS_PREAMBLE = ""
-_NODEJS_PREAMBLE_UNUSED = textwrap.dedent("""\
-    // --- snippet preamble ----------------------------------------------------
-    'use strict';
-    const fl = (() => { try { return require('fastlowess'); } catch (e) { return null; } })();
-    if (!fl) { console.error('fastlowess not found — skip'); process.exit(0); }
-    const { Lowess, StreamingLowess, OnlineLowess } = fl;
-    const fastlowess = fl;
-
-    const _n = 100;
-    const x = new Float64Array(_n).map((_, i) => i * 0.1);
-    const y = new Float64Array(x.map(xi => Math.sin(xi) + (Math.random() - 0.5) * 0.2));
-
-    const t            = new Float64Array(x);
-    const tIrregular   = new Float64Array(x);
-    const yIrregular   = new Float64Array(y);
-    const positions    = new Float64Array(x);
-    const observed     = new Float64Array(y);
-    const times        = new Float64Array(x);
-    const temperatures = new Float64Array(y);
-    const hours        = new Float64Array(x);
-    const expression   = new Float64Array(y);
-    const coverage     = new Float64Array(y.map(yi => Math.abs(yi) * 10 + 5));
-
-    const x2d = { x: Array.from(x), z: Array.from(x.map(xi => xi * 0.5)) };
-    const z = new Float64Array(y.map((yi, i) => yi + Math.cos(x[i] * 0.5)));
-
-    const yWithOutlier = new Float64Array(y); yWithOutlier[50] = 100.0;
-    const weights = new Float64Array(_n).fill(1.0);
-
-    const chunk1_x = x.slice(0, 50); const chunk1_y = y.slice(0, 50);
-    const chunk2_x = x.slice(50);    const chunk2_y = y.slice(50);
-    let data_x = Array.from(x.slice(0, 30));
-    let data_y = Array.from(y.slice(0, 30));
-    const xArr = new Float64Array(x); const yArr = new Float64Array(y);
-    let windowX = Array.from(x.slice(0, 20));
-    let windowY = Array.from(y.slice(0, 20));
-    // -------------------------------------------------------------------------
-""")
 
 _R_PREAMBLE = textwrap.dedent("""\
     suppressMessages({{
@@ -324,272 +160,13 @@ _R_PREAMBLE = textwrap.dedent("""\
     plot.new()
 """).format(repo_root=str(REPO_ROOT).replace("\\", "/"))
 
-_R_PREAMBLE_UNUSED = textwrap.dedent("""\
-    # --- snippet preamble ----------------------------------------------------
-    suppressMessages({{
-        ### NOTE: KEEP
-        .libPaths(c(
-            normalizePath(file.path(
-                Sys.getenv("LOWESS_REPO_ROOT", "{repo_root}"),
-                "bindings", "r", ".r-lib"
-            ), mustWork = FALSE),
-            .libPaths()
-        ))
-        library(rfastlowess)
-    }})
-    set.seed(42)
-    n  <- 100L
-    x  <- seq(0, 10, length.out = n)
-    y  <- sin(x) + rnorm(n, sd = 0.1)
-
-    t            <- x
-    t_irregular  <- x
-    y_irregular  <- y
-    positions    <- x
-    observed     <- y
-    times        <- x
-    temperatures <- y
-    hours        <- x
-    expression   <- y
-    coverage     <- abs(y) * 10 + 5
-
-    lat <- x; lon <- x * 0.5
-    x1  <- x; x2 <- x * 0.5; x3 <- x * 0.25
-    z   <- sin(x) + cos(x * 0.5)
-    x2d <- as.vector(rbind(x, x * 0.5))   # row-major flat: (2*n,)
-    x3d <- as.vector(rbind(x, x * 0.5, x * 0.25))  # row-major flat: (3*n,)
-
-    y_with_outlier        <- y
-    y_with_outlier[[50L]] <- 100
-    weights <- rep(1, n)
-
-    chunk1_x <- x[seq_len(50)]; chunk1_y <- y[seq_len(50)]
-    chunk2_x <- x[51:100];      chunk2_y <- y[51:100]
-    x_chunk  <- x[seq_len(50)]; y_chunk  <- y[seq_len(50)]
-    data_x   <- x[seq_len(30)]
-    data_y   <- y[seq_len(30)]
-
-    # Placeholder variables used in illustrative snippets
-    calibration_indices <- c(3L, 6L, 8L)   # 1-indexed
-    sigma               <- runif(n, 0.1, 0.5)
-
-    # API doc placeholder objects so single-line method-call snippets run
-    model  <- Lowess()
-    stream <- StreamingLowess()
-    online <- OnlineLowess()
-
-    # Open a null graphics device so polygon()/lines()/plot() work without display
-    ### NOTE: KEEP
-    suppressWarnings(pdf(NULL))
-    plot.new()
-    # -------------------------------------------------------------------------
-""").format(repo_root=str(REPO_ROOT).replace("\\", "/"))
 
 _WASM_PKG_DIR = REPO_ROOT / "bindings" / "wasm" / "pkg"
 
 _WASM_PREAMBLE = ""
-_WASM_PREAMBLE_UNUSED = textwrap.dedent("""\
-    // --- snippet preamble (WASM) ---------------------------------------------
-    'use strict';
-    const _wasmPkg = (() => {{
-        const candidates = [
-            '{wasm_pkg}/fastlowess_wasm.js',
-        ];
-        for (const c of candidates) {{
-            try {{ return require(c); }} catch (_) {{}}
-        }}
-        return null;
-    }})();
-    if (!_wasmPkg) {{ console.error('WASM pkg not found — skip'); process.exit(0); }}
-    const {{ Lowess, StreamingLowess, OnlineLowess }} = _wasmPkg;
-    const fastlowess = _wasmPkg;
-
-    const _n = 100;
-    const x = new Float64Array(_n).map((_, i) => i * 0.1);
-    const y = new Float64Array(x.map(xi => Math.sin(xi) + (Math.random() - 0.5) * 0.2));
-
-    const z = new Float64Array(y.map((yi, i) => yi + Math.cos(x[i] * 0.5)));
-    const weights = new Float64Array(_n).fill(1.0);
-    // row-major flat 2D: [x0,x0*0.5, x1,x1*0.5, ...]
-    const x2d = new Float64Array(_n * 2);
-    for (let i = 0; i < _n; i++) {{ x2d[i*2] = x[i]; x2d[i*2+1] = x[i]*0.5; }}
-    // row-major flat 3D: [x0,x0*0.5,x0*0.25, x1,...]
-    const x3d = new Float64Array(_n * 3);
-    for (let i = 0; i < _n; i++) {{ x3d[i*3] = x[i]; x3d[i*3+1] = x[i]*0.5; x3d[i*3+2] = x[i]*0.25; }}
-    const xChunk = x.slice(0, 50);
-    const yChunk = y.slice(0, 50);
-    // chunk aliases used in streaming examples
-    const x1 = x.slice(0, 50); const y1 = y.slice(0, 50);
-    const x2 = x.slice(50);    const y2 = y.slice(50);
-    // camelCase variable referenced in doc examples
-    const calibrationIndices = [2, 5, 10];
-    // sliding-window accumulators
-    let windowX = [], windowY = [];
-    // online / sensor readings
-    const readings = Array.from({{length: _n}}, (_, i) => ({{x: x[i], y: y[i]}}));
-    // -------------------------------------------------------------------------
-""").format(wasm_pkg=str(_WASM_PKG_DIR).replace("\\", "/"))
-
-_RUST_PREAMBLE_TOP = ""
-_RUST_PREAMBLE_TOP_UNUSED = textwrap.dedent("""\
-    #[allow(unused_imports, ambiguous_glob_reexports)]
-    use lowess::prelude::*;
-
-    // Stub used by doc examples that pipe results to an output sink
-    #[allow(dead_code)]
-    fn write_output(_data: &[f64]) {}
-
-    #[allow(dead_code, unused_variables)]
-    fn _run() -> Result<(), Box<dyn std::error::Error>> {
-        // Concrete f64 specialisations so doc examples compile without turbofish
-        #[allow(unused)]
-        type Lowess = lowess::prelude::Lowess<f64>;
-        #[allow(unused)]
-        type StreamingLowess = lowess::prelude::StreamingLowess<f64>;
-        #[allow(unused)]
-        type OnlineLowess = lowess::prelude::OnlineLowess<f64>;
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 / 10.0).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin()).collect();
-        let t = x.clone();
-        let weights: Vec<f64> = vec![1.0; n];
-        let lat = x.clone();
-        let lon: Vec<f64> = x.iter().map(|&xi| xi * 0.5).collect();
-        let x2d: Vec<f64> = x.iter().chain(lon.iter()).copied().collect();
-        let x3: Vec<f64> = x.iter().map(|&xi| xi * 0.25).collect();
-        let x3d: Vec<f64> = x.iter().chain(lon.iter()).chain(x3.iter()).copied().collect();
-        let z: Vec<f64> = x.iter().map(|&xi| xi.sin() + (xi * 0.5).cos()).collect();
-        let x_chunk: Vec<f64> = x[..50].to_vec();
-        let y_chunk: Vec<f64> = y[..50].to_vec();
-        let chunk1_x = x_chunk.clone();
-        let chunk1_y = y_chunk.clone();
-        let chunk2_x: Vec<f64> = x[50..].to_vec();
-        let chunk2_y: Vec<f64> = y[50..].to_vec();
-        let t_irregular = t.clone();
-        let y_irregular = y.clone();
-        let y_with_outlier: Vec<f64> = { let mut v = y.clone(); v[50] = 100.0; v };
-        let calibration_indices: Vec<usize> = vec![2, 5, 10];
-        let sigma: Vec<f64> = vec![0.1_f64; n];
-        let model = Lowess::new().build()?;
-        let mut processor = StreamingLowess::new().build()?;
-        let data_chunks: Vec<(Vec<f64>, Vec<f64>)> = vec![
-            (x_chunk.clone(), y_chunk.clone()),
-            (chunk2_x.clone(), chunk2_y.clone()),
-        ];
-        let sensor_stream: Vec<(f64, f64)> =
-            x.iter().copied().zip(y.iter().copied()).collect();
-        let _ = (&t, &weights, &lat, &lon, &x2d, &x3, &x3d, &z,
-                  &x_chunk, &y_chunk, &chunk1_x, &chunk1_y, &chunk2_x, &chunk2_y,
-                  &t_irregular, &y_irregular, &y_with_outlier,
-                  &calibration_indices, &sigma, &model, &processor,
-                  &data_chunks, &sensor_stream);
-
-""")
-
-_RUST_PREAMBLE_BOTTOM = ""
-_RUST_PREAMBLE_BOTTOM_UNUSED = textwrap.dedent("""\
-        Ok(())
-    }
-
-    fn main() {
-        if let Err(e) = _run() {
-            eprintln!("Error: {}", e);
-            std::process::exit(1);
-        }
-    }
-""")
 
 # Fixed temp project for Rust snippets (reuses Cargo artifacts)
 _RUST_SNIPPET_DIR = REPO_ROOT / "target" / "doc-snippet-runner"
-
-_CPP_PREAMBLE_TOP = ""
-_CPP_PREAMBLE_TOP_UNUSED = textwrap.dedent("""\
-    #define _USE_MATH_DEFINES
-    #include "fastlowess.hpp"
-    #include <cmath>
-    #include <cstdlib>
-    #include <iostream>
-    #include <vector>
-
-    using namespace fastlowess;
-
-    static void _run() {
-        const size_t n = 100;
-        std::vector<double> x(n), y(n);
-        for (size_t i = 0; i < n; ++i) {
-            x[i] = static_cast<double>(i) / 10.0;
-            y[i] = std::sin(x[i]);
-        }
-        auto x_chunk = std::vector<double>(x.begin(), x.begin() + 50);
-        auto y_chunk = std::vector<double>(y.begin(), y.begin() + 50);
-        // row-major flat 2D: [x0,x0*0.5, x1,x1*0.5, ...]
-        std::vector<double> x2d;
-        x2d.reserve(n * 2);
-        for (size_t i = 0; i < n; ++i) { x2d.push_back(x[i]); x2d.push_back(x[i] * 0.5); }
-        // row-major flat 3D: [x0,x0*0.5,x0*0.25, ...]
-        std::vector<double> x3d;
-        x3d.reserve(n * 3);
-        for (size_t i = 0; i < n; ++i) { x3d.push_back(x[i]); x3d.push_back(x[i] * 0.5); x3d.push_back(x[i] * 0.25); }
-        // z as a second response variable (same length as y)
-        std::vector<double> z(n);
-        for (size_t i = 0; i < n; ++i) { z[i] = std::cos(x[i]); }
-        // genomics data
-        std::vector<double> positions(n), observed(n), coverage(n);
-        for (size_t i = 0; i < n; ++i) {
-            positions[i] = static_cast<double>(i) * 1000.0;
-            observed[i] = 5.0 + std::sin(x[i]);
-            coverage[i] = 20.0 + std::cos(x[i]);
-        }
-        // sensor / time-series data
-        std::vector<double> times(n), temperatures(n);
-        for (size_t i = 0; i < n; ++i) {
-            times[i] = static_cast<double>(i) * 0.1;
-            temperatures[i] = 20.0 + std::sin(times[i]);
-        }
-        // irregular time series
-        std::vector<double> tIrregular(50), yIrregular(50);
-        for (size_t i = 0; i < 50; ++i) {
-            tIrregular[i] = static_cast<double>(i) * 2.0 + 0.3 * static_cast<double>(i % 3);
-            yIrregular[i] = 10.0 + tIrregular[i] * 0.3 + std::sin(tIrregular[i]);
-        }
-        // gene expression / hours data
-        std::vector<double> hours(49), expression(49);
-        for (size_t i = 0; i < 49; ++i) {
-            hours[i] = static_cast<double>(i) * 0.5;
-            expression[i] = 100.0 * (1.0 + 0.5 * std::sin(hours[i] * M_PI / 12.0));
-        }
-        // t as alias for x (time axis)
-        const auto& t = x;
-        // sliding window accumulators
-        std::vector<double> windowX, windowY;
-        // calibration indices (used in custom-weights examples)
-        std::vector<std::size_t> calibration_indices = {2, 5, 10};
-        // measurement uncertainty (used in custom-weights examples)
-        std::vector<double> sigma(n, 0.1);
-        (void)x_chunk; (void)y_chunk; (void)x2d; (void)x3d; (void)z;
-        (void)positions; (void)observed; (void)coverage;
-        (void)times; (void)temperatures;
-        (void)tIrregular; (void)yIrregular;
-        (void)hours; (void)expression;
-        (void)windowX; (void)windowY;
-        (void)t; (void)calibration_indices; (void)sigma;
-
-""")
-
-_CPP_PREAMBLE_BOTTOM = ""
-_CPP_PREAMBLE_BOTTOM_UNUSED = textwrap.dedent("""\
-    }
-
-    int main() {
-        try {
-            _run();
-        } catch (const std::exception& e) {
-            std::cerr << "Error: " << e.what() << "\\n";
-            return 1;
-        }
-        return 0;
-    }
-""")
 
 PREAMBLES: dict[str, str] = {
     "python": _PYTHON_PREAMBLE,
@@ -807,114 +384,6 @@ def should_skip(snippet: Snippet, runner: str) -> Optional[str]:
 
 
 # ---------------------------------------------------------------------------
-# Node.js: strip redeclarations that conflict with the preamble
-# ---------------------------------------------------------------------------
-
-# Variables the Node.js preamble already declares at the top level
-_NODEJS_PREAMBLE_VARS: frozenset = frozenset(
-    {
-        "fl",
-        "fastlowess",
-        "Lowess",
-        "StreamingLowess",
-        "OnlineLowess",
-        # data arrays — snippets often redeclare these with small sample data
-        "x",
-        "y",
-        "z",
-        "t",
-        "weights",
-        "yWithOutlier",
-        "positions",
-        "observed",
-        "times",
-        "temperatures",
-        "hours",
-        "expression",
-        "coverage",
-        "chunk1_x",
-        "chunk1_y",
-        "chunk2_x",
-        "chunk2_y",
-        "data_x",
-        "data_y",
-        "xArr",
-        "yArr",
-        "windowX",
-        "windowY",
-        # multi-dim / WASM shared vars
-        "x2d",
-        "x3d",
-        "xChunk",
-        "yChunk",
-    }
-)
-
-
-def _strip_nodejs_redeclarations(code: str) -> str:
-    """Remove declarations that would shadow preamble const bindings.
-
-    Handles single-line and multi-line declarations by tracking bracket depth.
-    """
-    result = []
-    skipping = False  # inside a multi-line declaration being stripped
-    depth = 0  # net ( [ { depth while skipping
-
-    for line in code.splitlines():
-        s = line.strip()
-
-        if skipping:
-            for ch in line:
-                if ch in "([{":
-                    depth += 1
-                elif ch in ")]}":
-                    depth -= 1
-            if depth <= 0:
-                skipping = False
-                depth = 0
-            continue  # drop continuation line
-
-        # Detect lines to strip
-        strip_line = False
-        # Strip require() imports from either package name
-        if re.match(
-            r"""(?:const|let|var)\s+\S.*=\s*require\(\s*['"]fastlowess(?:-wasm)?['"]\s*\)""",
-            s,
-        ):
-            strip_line = True
-        # Strip ES module imports from fastlowess packages
-        elif re.match(r"""import\s+.*\bfrom\s+['"]fastlowess(?:-wasm)?['"]""", s):
-            strip_line = True
-        # Strip `await init()` — WASM preamble initialises synchronously via require
-        elif re.match(r"""await\s+init\s*\(""", s):
-            strip_line = True
-        elif re.match(
-            r"""(?:const|let|var)\s+\{[^}]+\}\s*=\s*(?:fl|fastlowess)\s*;?\s*$""", s
-        ):
-            strip_line = True
-        else:
-            m = re.match(r"(?:const|let|var)\s+(\w+)\s*=", s)
-            if m and m.group(1) in _NODEJS_PREAMBLE_VARS:
-                strip_line = True
-
-        if strip_line:
-            for ch in line:
-                if ch in "([{":
-                    depth += 1
-                elif ch in ")]}":
-                    depth -= 1
-            if depth > 0:
-                skipping = True  # multi-line declaration
-            else:
-                depth = 0
-            continue
-
-        result.append(line)
-
-    return "\n".join(result)
-
-
-# ---------------------------------------------------------------------------
 # Runners
 # ---------------------------------------------------------------------------
 
@@ -1040,6 +509,45 @@ def run_julia(snippet: Snippet, timeout: int) -> RunResult:
         os.unlink(tmp)
 
 
+def _ensure_nodejs_selflink(nodejs_dir: Path) -> None:
+    """Create node_modules/fastlowess shim so require('fastlowess') resolves locally.
+
+    npm does not self-install the package, so we create a minimal shim that
+    re-exports the local binding.  The shim is idempotent and safe to leave in
+    node_modules alongside the real platform packages.
+    """
+    nm_fastlowess = nodejs_dir / "node_modules" / "fastlowess"
+    if nm_fastlowess.exists():
+        return
+    nm_fastlowess.mkdir(parents=True, exist_ok=True)
+    (nm_fastlowess / "index.js").write_text(
+        "module.exports = require('../../');\n", encoding="utf-8"
+    )
+    (nm_fastlowess / "package.json").write_text(
+        '{"name":"fastlowess","main":"index.js","version":"0.0.0"}\n',
+        encoding="utf-8",
+    )
+
+
+def _ensure_wasm_selflink(wasm_pkg_dir: Path) -> None:
+    """Create node_modules/fastlowess-wasm shim so require('fastlowess-wasm') resolves locally.
+
+    The wasm pkg/ directory IS the fastlowess-wasm package, but npm doesn't
+    self-install it, so we create a shim that re-exports from the pkg root.
+    """
+    nm_wasm = wasm_pkg_dir / "node_modules" / "fastlowess-wasm"
+    if nm_wasm.exists():
+        return
+    nm_wasm.mkdir(parents=True, exist_ok=True)
+    (nm_wasm / "index.js").write_text(
+        "module.exports = require('../../');\n", encoding="utf-8"
+    )
+    (nm_wasm / "package.json").write_text(
+        '{"name":"fastlowess-wasm","main":"index.js","version":"0.0.0"}\n',
+        encoding="utf-8",
+    )
+
+
 def run_nodejs(snippet: Snippet, timeout: int) -> RunResult:
     code = snippet.code
 
@@ -1056,6 +564,9 @@ def run_nodejs(snippet: Snippet, timeout: int) -> RunResult:
     # module resolution (file-relative) can find node_modules/fastlowess there.
     nodejs_dir = REPO_ROOT / "bindings" / "nodejs"
     cwd = str(nodejs_dir) if nodejs_dir.exists() else str(REPO_ROOT)
+
+    if nodejs_dir.exists():
+        _ensure_nodejs_selflink(nodejs_dir)
 
     import uuid
 
@@ -1164,6 +675,8 @@ def run_wasm(snippet: Snippet, timeout: int) -> RunResult:
         )
 
     # Write the temp file INSIDE _WASM_PKG_DIR so require('./fastlowess_wasm.js') resolves
+    _ensure_wasm_selflink(_WASM_PKG_DIR)
+
     import uuid
 
     tmp_name = f"_snippet_{uuid.uuid4().hex}.js"
@@ -1353,10 +866,7 @@ def run_cpp(snippet: Snippet, timeout: int) -> RunResult:
     include_dir = str(REPO_ROOT / "bindings" / "cpp" / "include")
     lib_dir_str = str(lib_dir)
 
-    # Strip redundant includes that are already in the preamble
-    cpp_code = snippet.code
-
-    code = cpp_code
+    code = snippet.code
 
     with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
         src = os.path.join(tmpdir, "snippet.cpp")

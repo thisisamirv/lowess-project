@@ -78,7 +78,7 @@ int main() {
 }
 ```
 
-* `options`: A `StreamingOptions` struct (inherits from `LowessOptions`) with additional `chunk_size` and `overlap` parameters.
+* `options`: A `StreamingOptions` struct (inherits from `LowessOptions`) with additional `chunk_size`, `overlap`, and `merge_strategy` parameters.
 
 **Methods:**
 
@@ -340,7 +340,7 @@ All accessors are const methods (not public fields):
 ## Example
 
 ```cpp
-#include "fastlowess.hpp"
+#include <fastlowess.hpp>
 #include <iostream>
 
 int main() {

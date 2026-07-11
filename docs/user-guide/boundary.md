@@ -1,4 +1,4 @@
-﻿<!-- markdownlint-disable MD024 -->
+<!-- markdownlint-disable MD024 MD033 -->
 # Boundary Handling
 
 Edge strategies that reduce bias near the ends of the data range.
@@ -94,7 +94,8 @@ Pads beyond both endpoints by replicating the first and last observed values. Pr
 
 === "WebAssembly"
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    import init, { Lowess } from 'fastlowess-wasm';
+    await init();
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -204,7 +205,8 @@ Mirrors the data about both endpoints before fitting, then discards the reflecte
 
 === "WebAssembly"
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    import init, { Lowess } from 'fastlowess-wasm';
+    await init();
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -314,7 +316,8 @@ Pads with zeros beyond both endpoints. Appropriate when the underlying process i
 
 === "WebAssembly"
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    import init, { Lowess } from 'fastlowess-wasm';
+    await init();
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -427,7 +430,8 @@ Applies no padding. Each local fit uses only the points that are actually availa
 
 === "WebAssembly"
     ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
+    import init, { Lowess } from 'fastlowess-wasm';
+    await init();
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));

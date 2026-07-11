@@ -62,7 +62,7 @@
     <div id="output">Initializing...</div>
 
     <script type="module">
-        import init, { smooth } from "../../bindings/wasm/pkg-web/fastlowess_wasm.js";
+        import init, { Lowess } from "../../bindings/wasm/pkg-web/fastlowess_wasm.js";
 
         // Helper to log to screen
         function log(msg) {
@@ -115,17 +115,17 @@
                 // 2. Basic Smoothing (Default parameters)
                 log("\n2. Running basic smoothing...");
                 const startBasic = performance.now();
-                const resBasic = smooth(x, y, { iterations: 0, fraction: 0.05 });
+                const resBasic = new Lowess({ iterations: 0, fraction: 0.05 }).fit(x, y);
                 log(`   - Completed in ${(performance.now() - startBasic).toFixed(2)}ms`);
 
                 // 3. Robust Smoothing (IRLS)
                 log("\n3. Running robust smoothing (3 iterations)...");
-                const resRobust = smooth(x, y, {
+                const resRobust = new Lowess({
                     fraction: 0.05,
                     iterations: 3,
                     robustness_method: "bisquare",
                     return_robustness_weights: true
-                });
+                }).fit(x, y);
                 const weights = resRobust.robustness_weights;
                 let outlierCount = 0;
                 if (weights) {
@@ -137,12 +137,12 @@
 
                 // 4. Uncertainty Quantification
                 log("\n4. Computing confidence and prediction intervals...");
-                const resIntervals = smooth(x, y, {
+                const resIntervals = new Lowess({
                     fraction: 0.05,
                     confidence_intervals: 0.95,
                     prediction_intervals: 0.95,
                     return_diagnostics: true
-                });
+                }).fit(x, y);
 
                 if (resIntervals.diagnostics) {
                     const d = resIntervals.diagnostics;
@@ -155,11 +155,11 @@
                 // 5. Cross-Validation for optimal fraction
                 log("\n5. Running cross-validation to find optimal fraction...");
                 const cvFractions = [0.05, 0.1, 0.2, 0.4];
-                const resCV = smooth(x, y, {
+                const resCV = new Lowess({
                     cv_fractions: cvFractions,
                     cv_method: "kfold",
                     cv_k: 5
-                });
+                }).fit(x, y);
 
                 log(`   - Optimal fraction selected: ${resCV.fraction_used}`);
                 if (resCV.cv_scores) {
@@ -175,9 +175,9 @@
                     yl[i] = 2 * xl[i] + 1;
                 }
 
-                const rExt = smooth(xl, yl, { fraction: 0.6, boundary_policy: "extend" });
-                const rRef = smooth(xl, yl, { fraction: 0.6, boundary_policy: "reflect" });
-                const rZr = smooth(xl, yl, { fraction: 0.6, boundary_policy: "zero" });
+                const rExt = new Lowess({ fraction: 0.6, boundary_policy: "extend" }).fit(xl, yl);
+                const rRef = new Lowess({ fraction: 0.6, boundary_policy: "reflect" }).fit(xl, yl);
+                const rZr = new Lowess({ fraction: 0.6, boundary_policy: "zero" }).fit(xl, yl);
 
                 log(`   - Extend (Default): first=${rExt.y[0].toFixed(2)}, last=${rExt.y[49].toFixed(2)}`);
                 log(`   - Reflect:          first=${rRef.y[0].toFixed(2)}, last=${rRef.y[49].toFixed(2)}`);
@@ -189,19 +189,19 @@
                 const cwX = new Float64Array(10).map((_, i) => i);
                 const cwY = new Float64Array(10).map((_, i) => i * 2);
                 cwY[5] = 100.0;
-                const cwNoW = smooth(cwX, cwY, { fraction: 0.5, iterations: 0 });
+                const cwNoW = new Lowess({ fraction: 0.5, iterations: 0 }).fit(cwX, cwY);
                 const cwWeights = new Float64Array(10).fill(1.0); cwWeights[5] = 0.0;
-                const cwZeroW = smooth(cwX, cwY, { fraction: 0.5, iterations: 0, custom_weights: cwWeights });
-                const errNoW = Math.abs(cwNoW.smoothed[5] - 10.0);
-                const errZeroW = Math.abs(cwZeroW.smoothed[5] - 10.0);
+                const cwZeroW = new Lowess({ fraction: 0.5, iterations: 0 }).fit(cwX, cwY, cwWeights);
+                const errNoW = Math.abs(cwNoW.y[5] - 10.0);
+                const errZeroW = Math.abs(cwZeroW.y[5] - 10.0);
                 log(` - Zero weight at outlier: error ${errNoW.toFixed(2)} -> ${errZeroW.toFixed(2)}`);
 
                 const spX = new Float64Array(15).map((_, i) => i);
                 const spY = new Float64Array(15).fill(0.0); spY[7] = 10.0;
-                const spEq = smooth(spX, spY, { fraction: 0.6, iterations: 0 });
+                const spEq = new Lowess({ fraction: 0.6, iterations: 0 }).fit(spX, spY);
                 const spW = new Float64Array(15).fill(1.0); spW[7] = 100.0;
-                const spHi = smooth(spX, spY, { fraction: 0.6, iterations: 0, custom_weights: spW });
-                log(` - High weight at spike: fit ${spEq.smoothed[7].toFixed(4)} -> ${spHi.smoothed[7].toFixed(4)}`);
+                const spHi = new Lowess({ fraction: 0.6, iterations: 0 }).fit(spX, spY, spW);
+                log(` - High weight at spike: fit ${spEq.y[7].toFixed(4)} -> ${spHi.y[7].toFixed(4)}`);
 
                 log("\n=== Batch Smoothing Example Complete ===");
 
