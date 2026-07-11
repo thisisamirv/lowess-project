@@ -5,26 +5,26 @@
 \title{LOWESS Batch Smoothing}
 \usage{
 Lowess(
-    fraction = 0.67,
-    iterations = 3L,
-    delta = NULL,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    scaling_method = "mad",
-    boundary_policy = "extend",
-    confidence_intervals = NULL,
-    prediction_intervals = NULL,
-    return_diagnostics = FALSE,
-    return_residuals = FALSE,
-    return_robustness_weights = FALSE,
-    zero_weight_fallback = "use_local_mean",
-    auto_converge = NULL,
-    cv_fractions = NULL,
-    cv_method = "kfold",
-    cv_k = 5L,
-    parallel = TRUE,
-    cv_seed = NULL,
-    return_se = FALSE
+  fraction = 0.67,
+  iterations = 3L,
+  delta = NULL,
+  weight_function = "tricube",
+  robustness_method = "bisquare",
+  scaling_method = "mad",
+  boundary_policy = "extend",
+  confidence_intervals = NULL,
+  prediction_intervals = NULL,
+  return_diagnostics = FALSE,
+  return_residuals = FALSE,
+  return_robustness_weights = FALSE,
+  zero_weight_fallback = "use_local_mean",
+  auto_converge = NULL,
+  cv_fractions = NULL,
+  cv_method = "kfold",
+  cv_k = 5L,
+  parallel = TRUE,
+  cv_seed = NULL,
+  return_se = FALSE
 )
 }
 \arguments{
@@ -69,7 +69,8 @@ Lowess(
 \item{cv_seed}{Integer seed for the cross-validation random number
 generator. \code{NULL} (default) uses a random seed.}
 
-\item{return_se}{Return standard errors. Default: FALSE.}}
+\item{return_se}{Return standard errors. Default: FALSE.}
+}
 \value{
 A Lowess object.
 }

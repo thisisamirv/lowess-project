@@ -13,7 +13,7 @@ RLowess$new <- function(
     return_diagnostics, return_residuals,
     return_robustness_weights, zero_weight_fallback,
     auto_converge, cv_fractions, cv_method, cv_k, parallel,
-    cv_seed
+    cv_seed, return_se
 ) {
     .Call(
         wrap__RLowess__new, fraction, iterations, delta, weight_function,
@@ -21,7 +21,7 @@ RLowess$new <- function(
         confidence_intervals, prediction_intervals, return_diagnostics,
         return_residuals, return_robustness_weights, zero_weight_fallback,
         auto_converge, cv_fractions, cv_method, cv_k, parallel,
-        cv_seed
+        cv_seed, return_se
     )
 }
 

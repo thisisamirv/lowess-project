@@ -36,6 +36,7 @@
 #' @param parallel Enable parallel processing. Default: TRUE.
 #' @param cv_seed Integer seed for the cross-validation random number
 #'   generator. \code{NULL} (default) uses a random seed.
+#' @param return_se Return standard errors. Default: FALSE.
 #'
 #' @return A Lowess object.
 #' @examples
