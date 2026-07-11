@@ -345,6 +345,19 @@ _R_PREAMBLE = textwrap.dedent("""\
     x_chunk  <- x[seq_len(50)]; y_chunk  <- y[seq_len(50)]
     data_x   <- x[seq_len(30)]
     data_y   <- y[seq_len(30)]
+
+    # Placeholder variables used in illustrative snippets
+    calibration_indices <- c(3L, 6L, 8L)   # 1-indexed
+    sigma               <- runif(n, 0.1, 0.5)
+
+    # API doc placeholder objects so single-line method-call snippets run
+    model  <- Lowess()
+    stream <- StreamingLowess()
+    online <- OnlineLowess()
+
+    # Open a null graphics device so polygon()/lines()/plot() work without display
+    suppressWarnings(pdf(NULL))
+    plot.new()
     # -------------------------------------------------------------------------
 """).format(repo_root=str(REPO_ROOT).replace("\\", "/"))
 
@@ -698,6 +711,10 @@ def should_skip(snippet: Snippet, runner: str) -> Optional[str]:
         # Multi-dim input (x2d/x3d) requires a package rebuild to work correctly
         if re.search(r"\bx2d\b|\bx3d\b|\bdimensions\s*=\s*[23]\b", code):
             return "multi-dim R (needs package rebuild)"
+        # API signature snippets that use R's '...' outside a function definition
+        # (e.g. 'model <- Lowess(...)') — not valid in a script context.
+        if re.search(r"\(\s*\.\.\.\s*\)", code):
+            return "R API signature with ... (not runnable outside function)"
 
     if runner == "wasm":
         # Skip ES-module import syntax (wasm runner uses CJS require)
