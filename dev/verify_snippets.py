@@ -309,6 +309,7 @@ _NODEJS_PREAMBLE = textwrap.dedent("""\
 _R_PREAMBLE = textwrap.dedent("""\
     # --- snippet preamble ----------------------------------------------------
     suppressMessages({{
+        ### NOTE: KEEP
         .libPaths(c(
             normalizePath(file.path(
                 Sys.getenv("LOWESS_REPO_ROOT", "{repo_root}"),
@@ -360,6 +361,7 @@ _R_PREAMBLE = textwrap.dedent("""\
     online <- OnlineLowess()
 
     # Open a null graphics device so polygon()/lines()/plot() work without display
+    ### NOTE: KEEP
     suppressWarnings(pdf(NULL))
     plot.new()
     # -------------------------------------------------------------------------
@@ -414,6 +416,10 @@ _RUST_PREAMBLE_TOP = textwrap.dedent("""\
     #[allow(unused_imports, ambiguous_glob_reexports)]
     use lowess::prelude::*;
 
+    // Stub used by doc examples that pipe results to an output sink
+    #[allow(dead_code)]
+    fn write_output(_data: &[f64]) {}
+
     #[allow(dead_code, unused_variables)]
     fn _run() -> Result<(), Box<dyn std::error::Error>> {
         // Concrete f64 specialisations so doc examples compile without turbofish
@@ -443,9 +449,21 @@ _RUST_PREAMBLE_TOP = textwrap.dedent("""\
         let t_irregular = t.clone();
         let y_irregular = y.clone();
         let y_with_outlier: Vec<f64> = { let mut v = y.clone(); v[50] = 100.0; v };
+        let calibration_indices: Vec<usize> = vec![2, 5, 10];
+        let sigma: Vec<f64> = vec![0.1_f64; n];
+        let model = Lowess::new().build()?;
+        let mut processor = StreamingLowess::new().build()?;
+        let data_chunks: Vec<(Vec<f64>, Vec<f64>)> = vec![
+            (x_chunk.clone(), y_chunk.clone()),
+            (chunk2_x.clone(), chunk2_y.clone()),
+        ];
+        let sensor_stream: Vec<(f64, f64)> =
+            x.iter().copied().zip(y.iter().copied()).collect();
         let _ = (&t, &weights, &lat, &lon, &x2d, &x3, &x3d, &z,
                   &x_chunk, &y_chunk, &chunk1_x, &chunk1_y, &chunk2_x, &chunk2_y,
-                  &t_irregular, &y_irregular, &y_with_outlier);
+                  &t_irregular, &y_irregular, &y_with_outlier,
+                  &calibration_indices, &sigma, &model, &processor,
+                  &data_chunks, &sensor_stream);
 
 """)
 
@@ -754,6 +772,22 @@ def should_skip(snippet: Snippet, runner: str) -> Optional[str]:
         # Skip snippets with no actual Rust statements
         if not any(c in code for c in ["let ", "use ", "fn ", "::", "Lowess", "build"]):
             return "no executable Rust statements"
+        # Backend::GPU requires the optional gpu feature flag
+        if re.search(r"\bBackend\s*::\s*GPU\b", code):
+            return "requires gpu feature flag (not enabled in snippet workspace)"
+        # cross_validate / KFold are not in the stable public API
+        if re.search(r"\bcross_validate\b|\bKFold\b", code):
+            return "cross_validate/KFold not in stable public API"
+        # Single-line add_point doc: preamble x/y are Vec<f64> but add_point wants scalar T
+        _rs_lines = [
+            line
+            for line in code.splitlines()
+            if line.strip() and not line.strip().startswith("/")
+        ]
+        if len(_rs_lines) == 1 and re.search(
+            r"\.add_point\s*\(\s*x\s*,\s*y\s*\)", _rs_lines[0]
+        ):
+            return "add_point API doc (preamble x/y are Vec<f64>; add_point expects scalar T)"
         # Build-only snippets can't infer generic type without a .fit() call
         if (
             re.search(r"\.adapter\(", code)

@@ -76,7 +76,7 @@ For true real-time applications where each point must be processed immediately.
         let xi = i as f64;
         let yi = 20.0 + 5.0 * (xi / 10.0).sin() + (xi * 1.7).sin() * 0.5;
 
-        if let Some(output) = processor.add_point(&[xi], yi)? {
+        if let Some(output) = processor.add_point(xi, yi)? {
             println!("Time {}: smoothed = {:.2}", xi, output.smoothed);
         }
     }

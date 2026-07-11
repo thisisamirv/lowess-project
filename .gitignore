@@ -35,6 +35,7 @@ bindings/r/src/Makevars
 .Rprofile
 tests/r/testthat/Rplots.pdf
 bindings/r/tests/
+Rplots.pdf
 
 # Python
 __pycache__/
