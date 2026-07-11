@@ -325,7 +325,7 @@ pub unsafe extern "C" fn jl_lowess_new(
                 cv_fractions: cv_fractions_slice,
                 cv_method: Some(cv_method_str),
                 cv_k: Some(cv_k as usize),
-                cv_seed: (cv_seed != 0).then_some(cv_seed as u64),
+                cv_seed: (cv_seed != 0).then_some(cv_seed.into()),
                 ..Default::default()
             },
         )) {
