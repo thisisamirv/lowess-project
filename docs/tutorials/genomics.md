@@ -20,15 +20,20 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
 === "R"
     ```r
     library(rfastlowess)
+    set.seed(42)
+    positions <- seq(0, 10000, by = 10)
+    observed <- 50 + sin(positions / 100) * 20 + rnorm(length(positions), sd = 5)
+
+    library(rfastlowess)
 
     # Simulate methylation data
     set.seed(42)
     n <- 1000
     positions <- sort(runif(n, 0, 1e6))
-    
+
     # True pattern
     true_meth <- 0.5 + 0.3 * sin(positions / 1e5)
-    
+
     # Observed with noise
     observed <- true_meth + rnorm(n, sd = 0.15)
     observed <- pmax(0, pmin(1, observed))
@@ -95,22 +100,40 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
 
 === "Rust"
     ```rust
-    let positions = x.clone();
-    let observed = y.clone();
+    use fastLowess::prelude::*;
+    use std::f64::consts::TAU;
 
-    let model = Lowess::new()
-        .fraction(0.1)
-        .iterations(3)
-        .confidence_intervals(0.95)
-        .build()?;
+    fn main() -> Result<(), LowessError> {
+        let n = 100usize;
+        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    let result = model.fit(&positions, &observed)?;
-    // result.y contains smoothed methylation profile
-    // result.confidence_lower/upper contain 95% CI bounds
+        let positions = x.clone();
+        let observed = y.clone();
+
+        let model = Lowess::new()
+            .fraction(0.1)
+            .iterations(3)
+            .confidence_intervals(0.95)
+            .build()?;
+
+        let result = model.fit(&positions, &observed)?;
+        // result.y contains smoothed methylation profile
+        // result.confidence_lower/upper contain 95% CI bounds
+
+        Ok(())
+    }
     ```
 
 === "Julia"
     ```julia
+    using FastLOWESS
+    using Random
+
+    rng = MersenneTwister(42)
+    positions = collect(0.0:10.0:10000.0)
+    observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
+
     using FastLOWESS
 
     # positions and observed are your methylation data
@@ -129,6 +152,12 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
     ```javascript
     const fl = require('fastlowess');
 
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i*7+3)%17)/17-0.5)*0.6);
+    const positions = Float64Array.from({ length: 1000 }, (_, i) => i * 10.0);
+    const observed = Float64Array.from(positions, p => 50 + Math.sin(p/100)*20 + Math.random()*5);
+
     // positions and observed are your methylation data (Float64Array)
     const model = new fl.Lowess({
         fraction: 0.1,
@@ -143,14 +172,19 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
 
 === "WebAssembly"
     ```javascript
-    import { smooth } from 'fastlowess-wasm';
+    const { Lowess } = require('./fastlowess_wasm.js');
+
+    const n = 100;
+    const positions = Float64Array.from({ length: n }, (_, i) => i * 100.0);
+    const observed = Float64Array.from(positions, p => 50 + Math.sin(p / 100) * 20 + ((p * 7 % 17) / 17 - 0.5) * 5);
 
     // positions and observed are your methylation data (Float64Array)
-    const result = smooth(positions, observed, {
+    const model = new Lowess({
         fraction: 0.1,
         iterations: 3,
         confidence_intervals: 0.95
     });
+    const result = model.fit(positions, observed);
 
     // Smoothed profile in result.y
     // CI bounds in result.confidence_lower/upper
@@ -158,14 +192,28 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
 
 === "C++"
     ```cpp
-    #include "fastlowess.hpp"
+    #include <fastlowess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
 
-    // positions and observed are std::vector<double>
-    fastlowess::Lowess model({ .fraction = 0.1, .iterations = 3, .confidence_intervals = 0.95 });
-    auto result = model.fit(positions, observed).value();
+    int main() {
+        const int n = 100;
+        std::vector<double> positions(n), observed(n);
+        for (int i = 0; i < n; ++i) {
+            positions[i] = i * 1000.0;
+            observed[i] = 50.0 + std::sin(positions[i] / 1000.0) * 20.0 + 5.0;
+        }
 
-    // Smoothed profile in result.y_vector()
-    // CI bounds in result.confidence_lower()/result.confidence_upper()
+        // positions and observed are std::vector<double>
+        fastlowess::Lowess model({ .fraction = 0.1, .iterations = 3, .confidence_intervals = 0.95 });
+        auto result = model.fit(positions, observed).value();
+
+        // Smoothed profile in result.y_vector()
+        // CI bounds in result.confidence_lower()/result.confidence_upper()
+
+        return 0;
+    }
     ```
 
 ---
@@ -178,6 +226,11 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
 
 === "R"
     ```r
+    library(rfastlowess)
+    set.seed(42)
+    positions <- seq(0, 10000, by = 10)
+    observed <- 50 + sin(positions / 100) * 20 + rnorm(length(positions), sd = 5)
+
     set.seed(123)
     positions <- seq(0, 10000, by = 10)
     n <- length(positions)
@@ -187,7 +240,7 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
     peak1 <- 50 * exp(-((positions - 2000)^2) / (2 * 200^2))
     peak2 <- 80 * exp(-((positions - 5000)^2) / (2 * 300^2))
     peak3 <- 40 * exp(-((positions - 8000)^2) / (2 * 150^2))
-    
+
     true_signal <- background + peak1 + peak2 + peak3
     observed <- rpois(n, true_signal)
 
@@ -204,6 +257,13 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
 
 === "Python"
     ```python
+    import fastlowess as fl
+    import numpy as np
+
+    np.random.seed(42)
+    positions = np.arange(0, 10000, 10, dtype=float)
+    coverage = np.random.poisson(50, len(positions)).astype(float)
+
     # Simulate ChIP-seq coverage with peaks
     np.random.seed(123)
     positions = np.arange(0, 10000, 10, dtype=float)
@@ -214,7 +274,7 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
     peak1 = 50 * np.exp(-((positions - 2000) ** 2) / (2 * 200 ** 2))
     peak2 = 80 * np.exp(-((positions - 5000) ** 2) / (2 * 300 ** 2))
     peak3 = 40 * np.exp(-((positions - 8000) ** 2) / (2 * 150 ** 2))
-    
+
     true_signal = background + peak1 + peak2 + peak3
     observed = np.random.poisson(true_signal)  # Poisson noise
 
@@ -234,28 +294,46 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
 
 === "Rust"
     ```rust
-    let positions: Vec<f64> = (0..1000).map(|i| i as f64 *10.0).collect(); // 0 to 9990 step 10
-    let observed: Vec<f64> = positions.iter().map(|&p| (p / 1000.0).sin().abs()* 100.0 + 10.0).collect();
+    use fastLowess::prelude::*;
+    use std::f64::consts::TAU;
 
-    let model = Lowess::new()
-        .fraction(0.05)
-        .iterations(5)
-        .return_residuals()
-        .build()?;
+    fn main() -> Result<(), LowessError> {
+        let n = 100usize;
+        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    let result = model.fit(&positions, &observed)?;
+        let positions: Vec<f64> = (0..1000).map(|i| i as f64 *10.0).collect(); // 0 to 9990 step 10
+        let observed: Vec<f64> = positions.iter().map(|&p| (p / 1000.0).sin().abs()* 100.0 + 10.0).collect();
 
-    // Find peaks above threshold
-    let threshold = result.y.iter().copied()
-        .fold(f64::NEG_INFINITY, f64::max) * 0.75;
-    let peak_positions: Vec<f64> = positions.iter().zip(result.y.iter())
-        .filter(|(_, &y)| y > threshold)
-        .map(|(&p, _)| p)
-        .collect();
+        let model = Lowess::new()
+            .fraction(0.05)
+            .iterations(5)
+            .return_residuals()
+            .build()?;
+
+        let result = model.fit(&positions, &observed)?;
+
+        // Find peaks above threshold
+        let threshold = result.y.iter().copied()
+            .fold(f64::NEG_INFINITY, f64::max) * 0.75;
+        let peak_positions: Vec<f64> = positions.iter().zip(result.y.iter())
+            .filter(|(_, &y)| y > threshold)
+            .map(|(&p, _)| p)
+            .collect();
+
+        Ok(())
+    }
     ```
 
 === "Julia"
     ```julia
+    using FastLOWESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    positions = collect(0.0:10.0:10000.0)
+    observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
+
     using FastLOWESS
 
     # positions and observed are your ChIP-seq data
@@ -272,6 +350,12 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
     ```javascript
     const fl = require('fastlowess');
 
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i*7+3)%17)/17-0.5)*0.6);
+    const positions = Float64Array.from({ length: 1000 }, (_, i) => i * 10.0);
+    const observed = Float64Array.from(positions, p => 50 + Math.sin(p/100)*20 + Math.random()*5);
+
     const model = new fl.Lowess({
         fraction: 0.05,
         iterations: 5
@@ -286,12 +370,17 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
 
 === "WebAssembly"
     ```javascript
-    import { smooth } from 'fastlowess-wasm';
+    const { Lowess } = require('./fastlowess_wasm.js');
 
-    const result = smooth(positions, observed, {
+    const n = 100;
+    const positions = Float64Array.from({ length: n }, (_, i) => i * 100.0);
+    const observed = Float64Array.from(positions, p => 50 + Math.sin(p / 100) * 20 + ((p * 7 % 17) / 17 - 0.5) * 5);
+
+    const model = new Lowess({
         fraction: 0.05,
         iterations: 5
     });
+    const result = model.fit(positions, observed);
 
     // Find peaks
     const smoothed = result.y;
@@ -300,19 +389,33 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
 
 === "C++"
     ```cpp
-    #include "fastlowess.hpp"
+    #include <fastlowess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
 
-    fastlowess::Lowess model({ .fraction = 0.05, .iterations = 5 });
-    auto result = model.fit(positions, observed).value();
-
-    // Find peaks above threshold
-    std::vector<double> peaks;
-    const auto& y_vals = result.y_vector();
-    const auto& x_vals = result.x_vector();
-    for (size_t i = 0; i < y_vals.size(); ++i) {
-        if (y_vals[i] > 25.0) {
-            peaks.push_back(x_vals[i]);
+    int main() {
+        const int n = 100;
+        std::vector<double> positions(n), observed(n);
+        for (int i = 0; i < n; ++i) {
+            positions[i] = i * 1000.0;
+            observed[i] = 50.0 + std::sin(positions[i] / 1000.0) * 20.0 + 5.0;
         }
+
+        fastlowess::Lowess model({ .fraction = 0.05, .iterations = 5 });
+        auto result = model.fit(positions, observed).value();
+
+        // Find peaks above threshold
+        std::vector<double> peaks;
+        const auto& y_vals = result.y_vector();
+        const auto& x_vals = result.x_vector();
+        for (size_t i = 0; i < y_vals.size(); ++i) {
+            if (y_vals[i] > 25.0) {
+                peaks.push_back(x_vals[i]);
+            }
+        }
+
+        return 0;
     }
     ```
 
@@ -324,6 +427,12 @@ For whole-genome data that doesn't fit in memory:
 
 === "R"
     ```r
+    library(rfastlowess)
+    set.seed(42)
+    positions <- seq(0, 10000, by = 10)
+    observed <- 50 + sin(positions / 100) * 20 + rnorm(length(positions), sd = 5)
+    coverage <- observed  # alias: coverage = observed counts
+
     model <- StreamingLowess(
         fraction = 0.05,
         chunk_size = 100000,
@@ -336,6 +445,13 @@ For whole-genome data that doesn't fit in memory:
 
 === "Python"
     ```python
+    import fastlowess as fl
+    import numpy as np
+
+    np.random.seed(42)
+    positions = np.arange(0, 10000, 10, dtype=float)
+    coverage = np.random.poisson(50, len(positions)).astype(float)
+
     # Process chromosome-by-chromosome or in chunks
     model = fl.StreamingLowess(
         fraction=0.05,
@@ -349,20 +465,37 @@ For whole-genome data that doesn't fit in memory:
 
 === "Rust"
     ```rust
-    let mut processor = StreamingLowess::new()
-        .fraction(0.05)
-        .iterations(3)
-        .chunk_size(50)
-        .overlap(10)
-        .merge_strategy("weighted_average")
-        .build()?;
+    use fastLowess::prelude::*;
 
-    processor.process_chunk(&x_chunk, &y_chunk)?;
-    let result = processor.finalize()?;
+    fn main() -> Result<(), LowessError> {
+        let x_chunk: Vec<f64> = (0..1001).map(|i| i as f64 * 10.0).collect();
+        let y_chunk: Vec<f64> = x_chunk.iter().map(|&p| 50.0 + (p / 100.0).sin() * 20.0 + 5.0).collect();
+
+        let mut processor = StreamingLowess::new()
+            .fraction(0.05)
+            .iterations(3)
+            .chunk_size(50)
+            .overlap(10)
+            .merge_strategy("weighted_average")
+            .build()?;
+
+        processor.process_chunk(&x_chunk, &y_chunk)?;
+        let result = processor.finalize()?;
+
+        Ok(())
+    }
     ```
 
 === "Julia"
     ```julia
+    using FastLOWESS
+    using Random
+
+    rng = MersenneTwister(42)
+    positions = collect(0.0:10.0:10000.0)
+    observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
+    coverage = observed
+
     using FastLOWESS
 
     # coverage and positions are chromosome-scale vectors
@@ -380,6 +513,14 @@ For whole-genome data that doesn't fit in memory:
     ```javascript
     const { StreamingLowess } = require('fastlowess');
 
+    const positions = Float64Array.from({ length: 1000 }, (_, i) => i * 10.0);
+    const observed = Float64Array.from(positions, p => 50 + Math.sin(p/100)*20 + Math.random()*5);
+    // Array of genomic chunks to process
+    const genomicData = [
+        { positions: positions.slice(0, 500), coverage: observed.slice(0, 500) },
+        { positions: positions.slice(500), coverage: observed.slice(500) }
+    ];
+
     const processor = new StreamingLowess(
         { fraction: 0.05, iterations: 3 },
         { chunk_size: 100000, overlap: 10000 }
@@ -394,6 +535,11 @@ For whole-genome data that doesn't fit in memory:
 
 === "WebAssembly"
     ```javascript
+    const { StreamingLowess } = require('./fastlowess_wasm.js');
+
+    const xChunk = Float64Array.from({ length: 1001 }, (_, i) => i * 10.0);
+    const yChunk = Float64Array.from(xChunk, p => 50 + Math.sin(p / 100) * 20 + 5.0);
+
     const processor = new StreamingLowess(
         { fraction: 0.05, iterations: 3 },
         { chunk_size: 100, overlap: 10 }
@@ -405,17 +551,31 @@ For whole-genome data that doesn't fit in memory:
 
 === "C++"
     ```cpp
-    #include "fastlowess.hpp"
+    #include <fastlowess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
 
-    // coverage and positions are chromosome-scale vectors
-    fastlowess::StreamingOptions s_opts;
-    s_opts.fraction = 0.05;
-    s_opts.iterations = 3;
-    s_opts.chunk_size = 100000;
-    s_opts.overlap = 10000;
-    fastlowess::StreamingLowess stream(s_opts);
-    (void)stream.process_chunk(positions, coverage);
-    auto result = stream.finalize().value();
+    int main() {
+        const int n = 100;
+        std::vector<double> positions(n), coverage(n);
+        for (int i = 0; i < n; ++i) {
+            positions[i] = i * 1000.0;
+            coverage[i] = 50.0 + std::sin(positions[i] / 1000.0) * 20.0 + 5.0;
+        }
+
+        // coverage and positions are chromosome-scale vectors
+        fastlowess::StreamingOptions s_opts;
+        s_opts.fraction = 0.05;
+        s_opts.iterations = 3;
+        s_opts.chunk_size = 100000;
+        s_opts.overlap = 10000;
+        fastlowess::StreamingLowess stream(s_opts);
+        (void)stream.process_chunk(positions, coverage);
+        auto result = stream.finalize().value();
+
+        return 0;
+    }
     ```
 
 ---

@@ -11,7 +11,9 @@ The `Lowess` class allows configuring the LOWESS parameters once and fitting mul
 **Constructor:**
 
 ```python
-model = fastlowess.Lowess(**kwargs)
+import fastlowess as fl
+
+model = fl.Lowess(fraction=0.5, iterations=3)
 ```
 
 * `kwargs`: Keyword arguments corresponding to `LowessOptions` fields.
@@ -19,6 +21,14 @@ model = fastlowess.Lowess(**kwargs)
 **Methods:**
 
 ```python
+import fastlowess as fl
+import numpy as np
+
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
+
+model = fl.Lowess(fraction=0.5)
 result = model.fit(x, y, custom_weights=None)
 ```
 
@@ -33,7 +43,9 @@ The `StreamingLowess` class processes data in chunks, suitable for very large da
 **Constructor:**
 
 ```python
-stream = fastlowess.StreamingLowess(**kwargs)
+import fastlowess as fl
+
+stream = fl.StreamingLowess(chunk_size=50, overlap=10)
 ```
 
 * `kwargs`: Keyword arguments corresponding to `LowessOptions` and `StreamingOptions` fields.
@@ -41,12 +53,29 @@ stream = fastlowess.StreamingLowess(**kwargs)
 **Methods:**
 
 ```python
-partial_result = stream.process_chunk(x, y)
+import fastlowess as fl
+import numpy as np
+
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
+
+stream = fl.StreamingLowess(chunk_size=50, overlap=10)
+partial_result = stream.process_chunk(x[:50], y[:50])
 ```
 
 * Processes a chunk of data. Returns partial results.
 
 ```python
+import fastlowess as fl
+import numpy as np
+
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
+
+stream = fl.StreamingLowess(chunk_size=50, overlap=10)
+stream.process_chunk(x, y)
 final_result = stream.finalize()
 ```
 
@@ -59,7 +88,9 @@ The `OnlineLowess` class updates the model incrementally with new data points.
 **Constructor:**
 
 ```python
-online = fastlowess.OnlineLowess(**kwargs)
+import fastlowess as fl
+
+online = fl.OnlineLowess(fraction=0.3, window_capacity=50)
 ```
 
 * `kwargs`: Keyword arguments corresponding to `LowessOptions` and `OnlineOptions` fields.
@@ -67,7 +98,10 @@ online = fastlowess.OnlineLowess(**kwargs)
 **Methods:**
 
 ```python
-result = online.add_point(x, y)  # returns OnlineOutput | None
+import fastlowess as fl
+
+online = fl.OnlineLowess(fraction=0.3, window_capacity=50)
+result = online.add_point(1.0, 2.0)  # returns OnlineOutput | None
 ```
 
 * Adds a single point to the sliding window. Returns an `OnlineOutput` once the window has enough points, or `None` while still filling.

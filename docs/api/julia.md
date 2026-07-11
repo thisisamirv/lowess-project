@@ -11,7 +11,14 @@ The `Lowess` struct allows configuring the LOWESS parameters once and fitting mu
 **Constructor:**
 
 ```julia
-model = Lowess(; kwargs...)
+using FastLOWESS
+using Random, Statistics
+
+rng = MersenneTwister(42)
+x = collect(range(0, 2π, length=100))
+y = sin.(x) .+ randn(rng, 100) .* 0.3
+
+model = Lowess()
 ```
 
 * `kwargs`: Keyword arguments corresponding to `LowessOptions` fields.
@@ -34,7 +41,14 @@ The `StreamingLowess` struct processes data in chunks, suitable for very large d
 **Constructor:**
 
 ```julia
-stream = StreamingLowess(; kwargs...)
+using FastLOWESS
+using Random, Statistics
+
+rng = MersenneTwister(42)
+x = collect(range(0, 2π, length=100))
+y = sin.(x) .+ randn(rng, 100) .* 0.3
+
+stream = StreamingLowess()
 ```
 
 * `kwargs`: Keyword arguments corresponding to `StreamingOptions` fields.
@@ -42,13 +56,30 @@ stream = StreamingLowess(; kwargs...)
 **Methods:**
 
 ```julia
-partial_result = process_chunk(stream, x::Vector{Float64}, y::Vector{Float64}) :: LowessResult
+using FastLOWESS
+using Random, Statistics
+
+rng = MersenneTwister(42)
+x = collect(range(0, 2π, length=100))
+y = sin.(x) .+ randn(rng, 100) .* 0.3
+
+stream = StreamingLowess()
+partial_result = process_chunk(stream, x, y)
 ```
 
 * Processes a chunk of data. Returns partial results.
 
 ```julia
-final_result = finalize(stream) :: LowessResult
+using FastLOWESS
+using Random, Statistics
+
+rng = MersenneTwister(42)
+x = collect(range(0, 2π, length=100))
+y = sin.(x) .+ randn(rng, 100) .* 0.3
+
+stream = StreamingLowess()
+process_chunk(stream, x, y)
+final_result = finalize(stream)
 ```
 
 * Finalizes the smoothing process and returns any remaining buffered results.
@@ -60,7 +91,14 @@ The `OnlineLowess` struct updates the model incrementally with new data points.
 **Constructor:**
 
 ```julia
-online = OnlineLowess(; kwargs...)
+using FastLOWESS
+using Random, Statistics
+
+rng = MersenneTwister(42)
+x = collect(range(0, 2π, length=100))
+y = sin.(x) .+ randn(rng, 100) .* 0.3
+
+online = OnlineLowess()
 ```
 
 * `kwargs`: Keyword arguments corresponding to `OnlineOptions` fields.
@@ -68,6 +106,14 @@ online = OnlineLowess(; kwargs...)
 **Methods:**
 
 ```julia
+using FastLOWESS
+using Random, Statistics
+
+rng = MersenneTwister(42)
+x = collect(range(0, 2π, length=100))
+y = sin.(x) .+ randn(rng, 100) .* 0.3
+
+online = OnlineLowess()
 result = add_point(online, x[1], y[1])  # returns OnlineOutput or nothing
 ```
 

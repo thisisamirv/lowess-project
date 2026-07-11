@@ -58,8 +58,8 @@ node examples/nodejs/online_smoothing.js
 const { Lowess } = require('fastlowess');
 
 // Generate sample data
-const x = Array.from({ length: 100 }, (_, i) => i * 0.1);
-const y = x.map(xi => Math.sin(xi) + Math.random() * 0.2);
+const x = Float64Array.from({ length: 100 }, (_, i) => i * 0.1);
+const y = Float64Array.from(x, xi => Math.sin(xi) + Math.random() * 0.2);
 
 // Basic smoothing
 const model = new Lowess({ fraction: 0.3 });
@@ -82,7 +82,11 @@ console.log('R²:', resultWithOptions.diagnostics.r_squared);
 The package includes TypeScript definitions:
 
 ```typescript
-import { Lowess, LowessResult } from 'fastlowess';
+const { Lowess, LowessResult } = require('./fastlowess_wasm.js');
+
+const n = 100;
+const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
 const options = {
     fraction: 0.3,

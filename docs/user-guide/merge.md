@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD024 -->
+<!-- markdownlint-disable MD024 MD033 MD046 -->
 # Merge Strategies
 
 How overlapping chunk boundaries are reconciled in Streaming mode.
@@ -35,6 +35,13 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
 
 === "R"
     ```r
+    library(rfastlowess)
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+    x_chunk <- x[seq_len(50)]
+    y_chunk <- y[seq_len(50)]
+
     model <- StreamingLowess(
         merge_strategy = "average",
         chunk_size = 5000,
@@ -46,27 +53,53 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
 === "Python"
     ```python
     from fastlowess import StreamingLowess
+    import numpy as np
+
+    rng = np.random.default_rng(42)
+    x_chunk = np.linspace(0, np.pi, 50)
+    y_chunk = np.sin(x_chunk) + rng.normal(0, 0.1, 50)
+
     model = StreamingLowess(merge_strategy="average", chunk_size=5000, overlap=500)
     result = model.process_chunk(x_chunk, y_chunk)
     ```
 
 === "Rust"
     ```rust
-    let model = StreamingLowess::new()
-        .merge_strategy("average")
-        .chunk_size(5000)
-        .overlap(500)
-        .build()?;
+    use fastLowess::prelude::*;
+
+    fn main() -> Result<(), LowessError> {
+        let model = StreamingLowess::new()
+            .merge_strategy("average")
+            .chunk_size(5000)
+            .overlap(500)
+            .build()?;
+
+        Ok(())
+    }
     ```
 
 === "Julia"
     ```julia
+    using FastLOWESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    x = collect(range(0, 2π, length=100))
+    y = sin.(x) .+ randn(rng, 100) .* 0.3
+    x_chunk = x[1:50]; y_chunk = y[1:50]
+
     model = StreamingLowess(; merge_strategy="average", chunk_size=5000, overlap=500)
     result = process_chunk(model, x_chunk, y_chunk)
     ```
 
 === "Node.js"
     ```javascript
+    const { StreamingLowess } = require('fastlowess');
+
+    const n = 50;
+    const xChunk = Float64Array.from({ length: n }, (_, i) => i * Math.PI / (n - 1));
+    const yChunk = Float64Array.from(xChunk, xi => Math.sin(xi));
+
     const processor = new StreamingLowess(
         {},
         { merge_strategy: "average", chunk_size: 5000, overlap: 500 }
@@ -76,6 +109,12 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
 
 === "WebAssembly"
     ```javascript
+    const { StreamingLowess } = require('./fastlowess_wasm.js');
+
+    const n = 100;
+    const xChunk = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const yChunk = Float64Array.from(xChunk, xi => Math.sin(xi) + 0.1);
+
     const processor = new StreamingLowess(
         {},
         { merge_strategy: "average", chunk_size: 5000, overlap: 500 }
@@ -85,13 +124,29 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
 
 === "C++"
     ```cpp
-    fastlowess::StreamingOptions opts;
-    opts.merge_strategy = "average";
-    opts.chunk_size = 5000;
-    opts.overlap = 500;
-    fastlowess::StreamingLowess stream(opts);
-    (void)stream.process_chunk(x, y);
-    auto result = stream.finalize().value();
+    #include <fastlowess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
+
+    int main() {
+        const int n = 100;
+        std::vector<double> x(n), y(n);
+        for (int i = 0; i < n; ++i) {
+            x[i] = i * 2 * M_PI / (n - 1);
+            y[i] = std::sin(x[i]) + 0.1;
+        }
+
+        fastlowess::StreamingOptions opts;
+        opts.merge_strategy = "average";
+        opts.chunk_size = 5000;
+        opts.overlap = 500;
+        fastlowess::StreamingLowess stream(opts);
+        (void)stream.process_chunk(x, y);
+        auto result = stream.finalize().value();
+
+        return 0;
+    }
     ```
 
 ---
@@ -104,6 +159,11 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
 
 === "R"
     ```r
+    library(rfastlowess)
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
     model <- StreamingLowess(merge_strategy = "left")
     ```
 
@@ -115,29 +175,61 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
 
 === "Rust"
     ```rust
-    .merge_strategy("left")
+    use fastLowess::prelude::*;
+
+    fn main() -> Result<(), LowessError> {
+        let mut processor = StreamingLowess::new()
+            .merge_strategy("left")
+            .build()?;
+
+        Ok(())
+    }
     ```
 
 === "Julia"
     ```julia
+    using FastLOWESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    x = collect(range(0, 2π, length=100))
+    y = sin.(x) .+ randn(rng, 100) .* 0.3
+
     model = StreamingLowess(; merge_strategy="left")
     ```
 
 === "Node.js"
     ```javascript
+    const { Lowess } = require('fastlowess');
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
     { merge_strategy: "left" }
     ```
 
 === "WebAssembly"
     ```javascript
+    const { smooth } = require('./fastlowess_wasm.js');
+
     { merge_strategy: "left" }
     ```
 
 === "C++"
     ```cpp
-    fastlowess::StreamingOptions s_opts;
-    s_opts.merge_strategy = "left";
-    fastlowess::StreamingLowess model(s_opts);
+    #include <fastlowess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
+
+    int main() {
+        fastlowess::StreamingOptions s_opts;
+        s_opts.merge_strategy = "left";
+        fastlowess::StreamingLowess model(s_opts);
+
+        return 0;
+    }
     ```
 
 ---
@@ -150,6 +242,11 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
 
 === "R"
     ```r
+    library(rfastlowess)
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
     model <- StreamingLowess(merge_strategy = "right")
     ```
 
@@ -161,29 +258,61 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
 
 === "Rust"
     ```rust
-    .merge_strategy("right")
+    use fastLowess::prelude::*;
+
+    fn main() -> Result<(), LowessError> {
+        let mut processor = StreamingLowess::new()
+            .merge_strategy("right")
+            .build()?;
+
+        Ok(())
+    }
     ```
 
 === "Julia"
     ```julia
+    using FastLOWESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    x = collect(range(0, 2π, length=100))
+    y = sin.(x) .+ randn(rng, 100) .* 0.3
+
     model = StreamingLowess(; merge_strategy="right")
     ```
 
 === "Node.js"
     ```javascript
+    const { Lowess } = require('fastlowess');
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
     { merge_strategy: "right" }
     ```
 
 === "WebAssembly"
     ```javascript
+    const { smooth } = require('./fastlowess_wasm.js');
+
     { merge_strategy: "right" }
     ```
 
 === "C++"
     ```cpp
-    fastlowess::StreamingOptions s_opts;
-    s_opts.merge_strategy = "right";
-    fastlowess::StreamingLowess model(s_opts);
+    #include <fastlowess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
+
+    int main() {
+        fastlowess::StreamingOptions s_opts;
+        s_opts.merge_strategy = "right";
+        fastlowess::StreamingLowess model(s_opts);
+
+        return 0;
+    }
     ```
 
 ---
@@ -200,6 +329,11 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
 
 === "R"
     ```r
+    library(rfastlowess)
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
     model <- StreamingLowess(
         merge_strategy = "weighted",
         chunk_size = 5000,
@@ -219,15 +353,28 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
 
 === "Rust"
     ```rust
-    let model = StreamingLowess::new()
-    .merge_strategy("weighted")
-    .chunk_size(5000)
-    .overlap(500)
-    .build()?;
+    use fastLowess::prelude::*;
+
+    fn main() -> Result<(), LowessError> {
+        let model = StreamingLowess::new()
+        .merge_strategy("weighted")
+        .chunk_size(5000)
+        .overlap(500)
+        .build()?;
+
+        Ok(())
+    }
     ```
 
 === "Julia"
     ```julia
+    using FastLOWESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    x = collect(range(0, 2π, length=100))
+    y = sin.(x) .+ randn(rng, 100) .* 0.3
+
     model = StreamingLowess(;
         merge_strategy="weighted",
         chunk_size=5000,
@@ -237,6 +384,12 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
 
 === "Node.js"
     ```javascript
+    const { StreamingLowess } = require('fastlowess');
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
     const processor = new StreamingLowess(
         {},
         { merge_strategy: "weighted", chunk_size: 5000, overlap: 500 }
@@ -245,6 +398,8 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
 
 === "WebAssembly"
     ```javascript
+    const { StreamingLowess } = require('./fastlowess_wasm.js');
+
     const processor = new StreamingLowess(
         {},
         { merge_strategy: "weighted", chunk_size: 5000, overlap: 500 }
@@ -253,9 +408,18 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
 
 === "C++"
     ```cpp
-    fastlowess::StreamingOptions s_opts;
-    s_opts.merge_strategy = "weighted";
-    fastlowess::StreamingLowess model(s_opts);
+    #include <fastlowess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
+
+    int main() {
+        fastlowess::StreamingOptions s_opts;
+        s_opts.merge_strategy = "weighted";
+        fastlowess::StreamingLowess model(s_opts);
+
+        return 0;
+    }
     ```
 
 ---

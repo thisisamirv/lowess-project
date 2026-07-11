@@ -13,13 +13,31 @@ Standard in-memory smoothing (batch, parallel by default).
 **Constructor:**
 
 ```rust
-let builder = Lowess::new(); // Batch is default
+use fastLowess::prelude::*;
+
+fn main() -> Result<(), LowessError> {
+    let builder = Lowess::new(); // Batch is default
+
+    Ok(())
+}
 ```
 
 **Methods:**
 
 ```rust
-let result = model.fit(&x, &y)?;
+use fastLowess::prelude::*;
+use std::f64::consts::TAU;
+
+fn main() -> Result<(), LowessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
+
+    let model = Lowess::new().build()?;
+    let result = model.fit(&x, &y)?;
+
+    Ok(())
+}
 ```
 
 * Fits the model to the provided `x` and `y` arrays.
@@ -32,19 +50,50 @@ Streaming mode for large datasets.
 **Constructor:**
 
 ```rust
-let mut processor = StreamingLowess::new();
+use fastLowess::prelude::*;
+
+fn main() -> Result<(), LowessError> {
+    let mut processor = StreamingLowess::new();
+
+    Ok(())
+}
 ```
 
 **Methods:**
 
 ```rust
-let result = processor.process_chunk(&x, &y)?;
+use fastLowess::prelude::*;
+use std::f64::consts::TAU;
+
+fn main() -> Result<(), LowessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
+
+    let mut processor = StreamingLowess::new().build()?;
+    let result = processor.process_chunk(&x, &y)?;
+
+    Ok(())
+}
 ```
 
 * Processes a chunk of data. Returns `LowessResult<T>` with partial results.
 
 ```rust
-let final_result = processor.finalize()?;
+use fastLowess::prelude::*;
+use std::f64::consts::TAU;
+
+fn main() -> Result<(), LowessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
+
+    let mut processor = StreamingLowess::new().build()?;
+    processor.process_chunk(&x, &y)?;
+    let final_result = processor.finalize()?;
+
+    Ok(())
+}
 ```
 
 * Finalizes processing and returns remaining buffered results.
@@ -56,20 +105,40 @@ Online mode for real-time data.
 **Constructor:**
 
 ```rust
-let mut processor = OnlineLowess::new();
+use fastLowess::prelude::*;
+
+fn main() -> Result<(), LowessError> {
+    let mut processor = OnlineLowess::new();
+
+    Ok(())
+}
 ```
 
 **Methods:**
 
 ```rust
-let output = processor.add_point(x, y)?;
+use fastLowess::prelude::*;
+
+fn main() -> Result<(), LowessError> {
+    let mut processor = OnlineLowess::new().build()?;
+    let output = processor.add_point(1.0f64, 2.0f64)?;
+
+    Ok(())
+}
 ```
 
 * Adds a single point `(x, y)` to the window.
 * Returns `Result<Option<OnlineOutput<T>>, LowessError>`.
 
 ```rust
-processor.reset();
+use fastLowess::prelude::*;
+
+fn main() -> Result<(), LowessError> {
+    let mut processor = OnlineLowess::new().build()?;
+    processor.reset();
+
+    Ok(())
+}
 ```
 
 * Clears the internal window buffer.
@@ -140,10 +209,16 @@ fastLowess = { version = "*", features = ["gpu"] }
 To use the GPU backend, configure the builder with `Backend::GPU`:
 
 ```rust
-let model = Lowess::new()
-    .backend(Backend::GPU)
-    .confidence_intervals(0.95)
-    .build()?;
+use fastLowess::prelude::*;
+
+fn main() -> Result<(), LowessError> {
+    let model = Lowess::new()
+        .backend(Backend::GPU)
+        .confidence_intervals(0.95)
+        .build()?;
+
+    Ok(())
+}
 ```
 
 ### Supported Features
@@ -286,11 +361,10 @@ Returned by `add_point()` inside `Option`. Is `None` while the window is still f
 
 ```rust
 use fastLowess::prelude::*;
-use ndarray::array;
 
 fn main() -> Result<(), LowessError> {
-    let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
-    let y = array![2.1, 4.0, 6.2, 8.0, 10.1];
+    let x = vec![1.0_f64, 2.0, 3.0, 4.0, 5.0];
+    let y = vec![2.1_f64, 4.0, 6.2, 8.0, 10.1];
 
     // Configure model
     let model = Lowess::new()

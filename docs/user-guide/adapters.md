@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD024 MD046 -->
+<!-- markdownlint-disable MD024 MD033 MD046 -->
 # Execution Modes
 
 Choose the right adapter for your use case.
@@ -40,6 +40,11 @@ Standard mode for complete datasets. **Supports all features.**
 
 === "R"
     ```r
+    library(rfastlowess)
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
     model <- Lowess(
         fraction = 0.5,
         iterations = 3,
@@ -53,6 +58,13 @@ Standard mode for complete datasets. **Supports all features.**
 
 === "Python"
     ```python
+    import fastlowess as fl
+    import numpy as np
+
+    rng = np.random.default_rng(42)
+    x = np.linspace(0, 2 * np.pi, 100)
+    y = np.sin(x) + rng.normal(0, 0.3, 100)
+
     model = fl.Lowess(
         fraction=0.5,
         iterations=3,
@@ -67,21 +79,38 @@ Standard mode for complete datasets. **Supports all features.**
 === "Rust"
     ```rust
     use fastLowess::prelude::*;
+    use std::f64::consts::TAU;
 
-    let model = Lowess::new()
-        .fraction(0.5)
-        .iterations(3)
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.95)
-        .return_diagnostics()
-        .parallel(true)
-        .build()?;
+    fn main() -> Result<(), LowessError> {
+        let n = 100usize;
+        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    let result = model.fit(&x, &y)?;
+
+        let model = Lowess::new()
+            .fraction(0.5)
+            .iterations(3)
+            .confidence_intervals(0.95)
+            .prediction_intervals(0.95)
+            .return_diagnostics()
+            .parallel(true)
+            .build()?;
+
+        let result = model.fit(&x, &y)?;
+
+        Ok(())
+    }
     ```
 
 === "Julia"
     ```julia
+    using FastLOWESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    x = collect(range(0, 2π, length=100))
+    y = sin.(x) .+ randn(rng, 100) .* 0.3
+
     using FastLOWESS
 
     model = Lowess(;
@@ -99,6 +128,10 @@ Standard mode for complete datasets. **Supports all features.**
     ```javascript
     const fastlowess = require('fastlowess');
 
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i*7+3)%17)/17-0.5)*0.6);
+
     const model = new fastlowess.Lowess({
         fraction: 0.5,
         iterations: 3,
@@ -111,30 +144,50 @@ Standard mode for complete datasets. **Supports all features.**
 
 === "WebAssembly"
     ```javascript
-    import { smooth } from 'fastlowess-wasm';
+    const { Lowess } = require('./fastlowess_wasm.js');
 
-    const result = smooth(x, y, {
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
+    const model = new Lowess({
         fraction: 0.5,
         iterations: 3,
         confidence_intervals: 0.95,
         prediction_intervals: 0.95,
         return_diagnostics: true
     });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
     ```cpp
-    #include "fastlowess.hpp"
+    #include <fastlowess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
 
-    fastlowess::Lowess model({
-        .fraction = 0.5,
-        .iterations = 3,
-        .confidence_intervals = 0.95,
-        .prediction_intervals = 0.95,
-        .return_diagnostics = true,
-        .parallel = true
-    });
-    auto result = model.fit(x, y).value();
+    int main() {
+        const int n = 100;
+        std::vector<double> x(n), y(n);
+        for (int i = 0; i < n; ++i) {
+            x[i] = i * 2 * M_PI / (n - 1);
+            y[i] = std::sin(x[i]) + 0.1;
+        }
+
+
+        fastlowess::Lowess model({
+            .fraction = 0.5,
+            .iterations = 3,
+            .confidence_intervals = 0.95,
+            .prediction_intervals = 0.95,
+            .return_diagnostics = true,
+            .parallel = true
+        });
+        auto result = model.fit(x, y).value();
+
+        return 0;
+    }
     ```
 
 ---
@@ -172,6 +225,11 @@ Process large datasets in chunks with configurable overlap.
 
 === "R"
     ```r
+    library(rfastlowess)
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
     model <- StreamingLowess(
         fraction = 0.3,
         iterations = 2,
@@ -185,6 +243,13 @@ Process large datasets in chunks with configurable overlap.
 
 === "Python"
     ```python
+    import fastlowess as fl
+    import numpy as np
+
+    rng = np.random.default_rng(42)
+    x = np.linspace(0, 2 * np.pi, 100)
+    y = np.sin(x) + rng.normal(0, 0.3, 100)
+
     model = fl.StreamingLowess(
         fraction=0.3,
         iterations=2,
@@ -199,28 +264,46 @@ Process large datasets in chunks with configurable overlap.
 === "Rust"
     ```rust
     use fastLowess::prelude::*;
+    use std::f64::consts::TAU;
 
-    let mut processor = StreamingLowess::new()
-        .fraction(0.3)
-        .iterations(2)
-        .chunk_size(5000)
-        .overlap(500)
-        .merge_strategy("average")
-        .build()?;
+    fn write_output(_data: &[f64]) {}
 
-    // Process chunks (e.g., from a file reader)
-    for (chunk_x, chunk_y) in data_chunks {
-        let result = processor.process_chunk(&chunk_x, &chunk_y)?;
-        write_output(&result.y);
+    fn main() -> Result<(), LowessError> {
+        let n = 100usize;
+        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
+
+        let data_chunks = vec![
+            (x[..50].to_vec(), y[..50].to_vec()),
+            (x[50..].to_vec(), y[50..].to_vec()),
+        ];
+
+        let mut processor = StreamingLowess::new()
+            .build()?;
+
+        // Process chunks (e.g., from a file reader)
+        for (chunk_x, chunk_y) in data_chunks {
+            let result = processor.process_chunk(&chunk_x, &chunk_y)?;
+            write_output(&result.y);
+        }
+
+        // IMPORTANT: Get remaining buffered data
+        let final_result = processor.finalize()?;
+        write_output(&final_result.y);
+
+        Ok(())
     }
-
-    // IMPORTANT: Get remaining buffered data
-    let final_result = processor.finalize()?;
-    write_output(&final_result.y);
     ```
 
 === "Julia"
     ```julia
+    using FastLOWESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    x = collect(range(0, 2π, length=100))
+    y = sin.(x) .+ randn(rng, 100) .* 0.3
+
     using FastLOWESS
 
     model = StreamingLowess(;
@@ -238,6 +321,14 @@ Process large datasets in chunks with configurable overlap.
     ```javascript
     const { StreamingLowess } = require('fastlowess');
 
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i*7+3)%17)/17-0.5)*0.6);
+    const dataChunks = Array.from({ length: 5 }, (_, ci) => ({
+        x: Float64Array.from({ length: 20 }, (_, i) => ci * 20 + i),
+        y: Float64Array.from({ length: 20 }, (_, i) => Math.sin((ci * 20 + i) * 0.1))
+    }));
+
     const processor = new StreamingLowess(
         { fraction: 0.3, iterations: 2 },
         { chunk_size: 5000, overlap: 500 }
@@ -254,7 +345,16 @@ Process large datasets in chunks with configurable overlap.
 
 === "WebAssembly"
     ```javascript
-    import { StreamingLowess } from 'fastlowess-wasm';
+    const { StreamingLowess } = require('./fastlowess_wasm.js');
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
+    const dataChunks = [
+        { x: x.slice(0, 50), y: y.slice(0, 50) },
+        { x: x.slice(50), y: y.slice(50) }
+    ];
 
     const processor = new StreamingLowess(
         { fraction: 0.3, iterations: 2 },
@@ -272,17 +372,32 @@ Process large datasets in chunks with configurable overlap.
 
 === "C++"
     ```cpp
-    #include "fastlowess.hpp"
+    #include <fastlowess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
 
-    fastlowess::StreamingOptions opts;
-    opts.fraction = 0.3;
-    opts.iterations = 2;
-    opts.chunk_size = 5000;
-    opts.overlap = 500;
+    int main() {
+        const int n = 100;
+        std::vector<double> x(n), y(n);
+        for (int i = 0; i < n; ++i) {
+            x[i] = i * 2 * M_PI / (n - 1);
+            y[i] = std::sin(x[i]) + 0.1;
+        }
 
-    fastlowess::StreamingLowess stream(opts);
-    (void)stream.process_chunk(x, y);
-    auto result = stream.finalize().value();
+
+        fastlowess::StreamingOptions opts;
+        opts.fraction = 0.3;
+        opts.iterations = 2;
+        opts.chunk_size = 5000;
+        opts.overlap = 500;
+
+        fastlowess::StreamingLowess stream(opts);
+        (void)stream.process_chunk(x, y);
+        auto result = stream.finalize().value();
+
+        return 0;
+    }
     ```
 
 ---
@@ -321,6 +436,11 @@ Incremental updates with a sliding window for real-time data.
 
 === "R"
     ```r
+    library(rfastlowess)
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
     model <- OnlineLowess(
         fraction = 0.2,
         iterations = 1,
@@ -333,6 +453,13 @@ Incremental updates with a sliding window for real-time data.
 
 === "Python"
     ```python
+    import fastlowess as fl
+    import numpy as np
+
+    rng = np.random.default_rng(42)
+    x = np.linspace(0, 2 * np.pi, 100)
+    y = np.sin(x) + rng.normal(0, 0.3, 100)
+
     model = fl.OnlineLowess(
         fraction=0.2,
         iterations=1,
@@ -349,25 +476,42 @@ Incremental updates with a sliding window for real-time data.
 === "Rust"
     ```rust
     use fastLowess::prelude::*;
+    use std::f64::consts::TAU;
 
-    let mut processor = OnlineLowess::new()
-        .fraction(0.2)
-        .iterations(1)
-        .window_capacity(100)
-        .min_points(5)
-        .update_mode("incremental")
-        .build()?;
+    fn main() -> Result<(), LowessError> {
+        let n = 100usize;
+        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
+        let sensor_stream: Vec<(f64, f64)> = x.iter().zip(y.iter()).map(|(&xi, &yi)| (xi, yi)).collect();
 
-    // Process points as they arrive
-    for (x, y) in sensor_stream {
-        if let Some(output) = processor.add_point(x, y)? {
-            println!("Smoothed: {:.2}", output.smoothed);
+        let mut processor = OnlineLowess::new()
+            .fraction(0.2)
+            .iterations(1)
+            .window_capacity(100)
+            .min_points(5)
+            .update_mode("incremental")
+            .build()?;
+
+        // Process points as they arrive
+        for (x, y) in sensor_stream {
+            if let Some(output) = processor.add_point(x, y)? {
+                println!("Smoothed: {:.2}", output.smoothed);
+            }
         }
+
+        Ok(())
     }
     ```
 
 === "Julia"
     ```julia
+    using FastLOWESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    x = collect(range(0, 2π, length=100))
+    y = sin.(x) .+ randn(rng, 100) .* 0.3
+
     using FastLOWESS
 
     model = OnlineLowess(;
@@ -389,23 +533,35 @@ Incremental updates with a sliding window for real-time data.
     ```javascript
     const { OnlineLowess } = require('fastlowess');
 
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i*7+3)%17)/17-0.5)*0.6);
+    // Sensor stream as array of [xi, yi] pairs
+    const sensorStream = Array.from({ length: n }, (_, i) => [x[i], y[i]]);
+
     const processor = new OnlineLowess(
         { fraction: 0.2, iterations: 1 },
         { window_capacity: 100, min_points: 5, update_mode: "incremental" }
     );
 
     // Add points
-    for (const [x, y] of sensorStream) {
-        const smoothed = processor.update(x, y);
-        if (smoothed !== null) {
-            console.log(`Smoothed: ${smoothed.toFixed(2)}`);
+    for (const [xi, yi] of sensorStream) {
+        const result = processor.add_point(xi, yi);
+        if (result !== null) {
+            console.log(`Smoothed: ${result.smoothed.toFixed(2)}`);
         }
     }
     ```
 
 === "WebAssembly"
     ```javascript
-    import { OnlineLowess } from 'fastlowess-wasm';
+    const { OnlineLowess } = require('./fastlowess_wasm.js');
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
+    const sensorStream = Array.from({ length: n }, (_, i) => [x[i], y[i]]);
 
     const processor = new OnlineLowess(
         { fraction: 0.2, iterations: 1 },
@@ -413,30 +569,45 @@ Incremental updates with a sliding window for real-time data.
     );
 
     // Add points
-    for (const [x, y] of sensorStream) {
-        const smoothed = processor.update(x, y);
-        if (smoothed !== null) {
-            console.log(`Smoothed: ${smoothed.toFixed(2)}`);
+    for (const [xi, yi] of sensorStream) {
+        const output = processor.add_point(xi, yi);
+        if (output != null) {
+            console.log(`Smoothed: ${output.smoothed.toFixed(2)}`);
         }
     }
     ```
 
 === "C++"
     ```cpp
-    #include "fastlowess.hpp"
+    #include <fastlowess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
 
-    fastlowess::OnlineOptions opts;
-    opts.fraction = 0.2;
-    opts.iterations = 1;
-    opts.window_capacity = 100;
-    opts.min_points = 5;
-    opts.update_mode = "incremental";
+    int main() {
+        const int n = 100;
+        std::vector<double> x(n), y(n);
+        for (int i = 0; i < n; ++i) {
+            x[i] = i * 2 * M_PI / (n - 1);
+            y[i] = std::sin(x[i]) + 0.1;
+        }
 
-    fastlowess::OnlineLowess model(opts);
-    for (size_t i = 0; i < x.size(); ++i) {
-        auto out = model.add_point(x[i], y[i]).value();
-        if (out.has_value())
-            std::cout << out.smoothed() << std::endl;
+
+        fastlowess::OnlineOptions opts;
+        opts.fraction = 0.2;
+        opts.iterations = 1;
+        opts.window_capacity = 100;
+        opts.min_points = 5;
+        opts.update_mode = "incremental";
+
+        fastlowess::OnlineLowess model(opts);
+        for (size_t i = 0; i < x.size(); ++i) {
+            auto out = model.add_point(x[i], y[i]).value();
+            if (out.has_value())
+                std::cout << out.smoothed() << std::endl;
+        }
+
+        return 0;
     }
     ```
 

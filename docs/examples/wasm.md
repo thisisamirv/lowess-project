@@ -62,27 +62,28 @@ npm install fastlowess-wasm
 ### Browser (ES Modules)
 
 ```javascript
-import init, { smooth, smoothStreaming, smoothOnline } from 'fastlowess-wasm';
+const { Lowess } = require('./fastlowess_wasm.js');
 
 async function main() {
     // Initialize WASM module
-    await init();
 
     // Generate sample data
     const x = Float64Array.from({ length: 100 }, (_, i) => i * 0.1);
-    const y = Float64Array.from(x, xi => Math.sin(xi) + Math.random() * 0.2);
+    const y = Float64Array.from(x, xi => Math.sin(xi) + ((xi * 7 % 1) - 0.5) * 0.2);
 
     // Basic smoothing
-    const result = smooth(x, y, { fraction: 0.3 });
+    const model = new Lowess({ fraction: 0.3 });
+    const result = model.fit(x, y);
     console.log('Smoothed values:', result.y);
 
     // With options
-    const resultWithOptions = smooth(x, y, {
+    const modelWithOptions = new Lowess({
         fraction: 0.3,
         iterations: 3,
         confidence_intervals: 0.95,
         return_diagnostics: true
     });
+    const resultWithOptions = modelWithOptions.fit(x, y);
 
     console.log('R²:', resultWithOptions.diagnostics.r_squared);
 }
@@ -93,6 +94,12 @@ main();
 ### Node.js
 
 ```javascript
+const { Lowess } = require('fastlowess');
+
+const n = 100;
+const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
 const model = new Lowess({ fraction: 0.3 });
 const result = model.fit(x, y);
 ```

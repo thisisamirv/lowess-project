@@ -11,7 +11,8 @@ The `Lowess` class allows configuring the LOWESS parameters once and fitting mul
 **Constructor:**
 
 ```r
-model <- Lowess(...)
+library(rfastlowess)
+model <- Lowess(fraction = 0.5, iterations = 3)
 ```
 
 * `...`: Arguments corresponding to `LowessOptions` fields.
@@ -19,6 +20,12 @@ model <- Lowess(...)
 **Methods:**
 
 ```r
+library(rfastlowess)
+set.seed(42)
+x <- seq(0, 2 * pi, length.out = 100)
+y <- sin(x) + rnorm(100, sd = 0.3)
+
+model <- Lowess(fraction = 0.5)
 result <- model$fit(x, y, custom_weights = NULL)
 ```
 
@@ -34,7 +41,8 @@ The `StreamingLowess` class processes data in chunks, suitable for very large da
 **Constructor:**
 
 ```r
-stream <- StreamingLowess(...)
+library(rfastlowess)
+stream <- StreamingLowess(fraction = 0.3, chunk_size = 50, overlap = 10)
 ```
 
 * `...`: Arguments corresponding to `LowessOptions` and `StreamingOptions` fields.
@@ -42,12 +50,25 @@ stream <- StreamingLowess(...)
 **Methods:**
 
 ```r
-partial_result <- stream$process_chunk(x, y)
+library(rfastlowess)
+set.seed(42)
+x <- seq(0, 2 * pi, length.out = 100)
+y <- sin(x) + rnorm(100, sd = 0.3)
+
+stream <- StreamingLowess(fraction = 0.3, chunk_size = 50, overlap = 10)
+partial_result <- stream$process_chunk(x[seq_len(50)], y[seq_len(50)])
 ```
 
 * Processes a chunk of data. Returns partial results.
 
 ```r
+library(rfastlowess)
+set.seed(42)
+x <- seq(0, 2 * pi, length.out = 100)
+y <- sin(x) + rnorm(100, sd = 0.3)
+
+stream <- StreamingLowess(fraction = 0.3, chunk_size = 50, overlap = 10)
+stream$process_chunk(x, y)
 final_result <- stream$finalize()
 ```
 
@@ -60,7 +81,8 @@ The `OnlineLowess` class updates the model incrementally with new data points.
 **Constructor:**
 
 ```r
-online <- OnlineLowess(...)
+library(rfastlowess)
+online <- OnlineLowess(fraction = 0.3, window_capacity = 50)
 ```
 
 * `...`: Arguments corresponding to `LowessOptions` and `OnlineOptions` fields.
@@ -68,6 +90,12 @@ online <- OnlineLowess(...)
 **Methods:**
 
 ```r
+library(rfastlowess)
+set.seed(42)
+x <- seq(0, 2 * pi, length.out = 100)
+y <- sin(x) + rnorm(100, sd = 0.3)
+
+online <- OnlineLowess(fraction = 0.3, window_capacity = 50)
 result <- online$add_point(x[[1L]], y[[1L]])  # returns list or NULL
 ```
 

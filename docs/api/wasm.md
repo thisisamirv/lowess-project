@@ -11,7 +11,9 @@ The `Lowess` class is the main entry point for batch smoothing.
 **Constructor:**
 
 ```javascript
-const model = new Lowess(options);
+const { Lowess } = require('fastlowess');
+
+const model = new Lowess({ fraction: 0.5, iterations: 3 });
 ```
 
 * `options`: An object containing `LowessOptions` fields.
@@ -19,6 +21,13 @@ const model = new Lowess(options);
 **Methods:**
 
 ```javascript
+const { Lowess } = require('fastlowess');
+
+const n = 100;
+const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
+const model = new Lowess({ fraction: 0.5 });
 const result = model.fit(x, y);
 ```
 
@@ -33,7 +42,9 @@ The `StreamingLowess` class processes data in chunks, suitable for very large da
 **Constructor:**
 
 ```javascript
-const stream = new StreamingLowess(options, streamingOptions);
+const { StreamingLowess } = require('fastlowess');
+
+const stream = new StreamingLowess({ fraction: 0.3 }, { chunk_size: 50, overlap: 10 });
 ```
 
 * `options`: An object containing `LowessOptions` fields.
@@ -42,12 +53,27 @@ const stream = new StreamingLowess(options, streamingOptions);
 **Methods:**
 
 ```javascript
-const partialResult = stream.process_chunk(x, y);
+const { StreamingLowess } = require('fastlowess');
+
+const n = 100;
+const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
+const stream = new StreamingLowess({ fraction: 0.3 }, { chunk_size: 50, overlap: 10 });
+const partialResult = stream.process_chunk(x.slice(0, 50), y.slice(0, 50));
 ```
 
 * Processes a chunk of data. Returns partial results.
 
 ```javascript
+const { StreamingLowess } = require('fastlowess');
+
+const n = 100;
+const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
+const stream = new StreamingLowess({ fraction: 0.3 }, { chunk_size: 50, overlap: 10 });
+stream.process_chunk(x, y);
 const finalResult = stream.finalize();
 ```
 
@@ -60,7 +86,9 @@ The `OnlineLowess` class updates the model incrementally with new data points.
 **Constructor:**
 
 ```javascript
-const online = new OnlineLowess(options, onlineOptions);
+const { OnlineLowess } = require('fastlowess');
+
+const online = new OnlineLowess({ fraction: 0.3 }, { window_capacity: 50, min_points: 5 });
 ```
 
 * `options`: An object containing `LowessOptions` fields.
@@ -69,7 +97,10 @@ const online = new OnlineLowess(options, onlineOptions);
 **Methods:**
 
 ```javascript
-const result = online.update(x, y);
+const { OnlineLowess } = require('fastlowess');
+
+const online = new OnlineLowess({ fraction: 0.3 }, { window_capacity: 50, min_points: 5 });
+const result = online.add_point(1.0, 2.0);  // returns OnlineOutput | null
 ```
 
 * Adds new points to the model and returns the smoothed values (retrospective or prospective depending on mode).
@@ -215,15 +246,14 @@ Returned by `add_point()` once the window has enough points (`undefined` until t
 ## Example
 
 ```javascript
-import init, { smooth } from 'fastlowess-wasm';
-
-await init();
+const { Lowess } = require('./fastlowess_wasm.js');
 
 const x = new Float64Array([1, 2, 3, 4, 5]);
 const y = new Float64Array([2.1, 4.0, 6.2, 8.0, 10.1]);
 
 // Fit data
-const result = smooth(x, y, { fraction: 0.5 });
+const model = new Lowess({ fraction: 0.5 });
+const result = model.fit(x, y);
 
 console.log("Smoothed Y:", result.y);
 ```

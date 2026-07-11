@@ -101,13 +101,14 @@ Smooth a noisy sine wave — the kind of signal where LOWESS shines. Each exampl
 === "WebAssembly"
 
     ```javascript
-    import { smooth } from 'fastlowess-wasm';
+    const { Lowess } = require('./fastlowess_wasm.js');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
     const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
-    const result = smooth(x, y, { fraction: 0.3, iterations: 3 });
+    const model = new Lowess({ fraction: 0.3, iterations: 3 });
+    const result = model.fit(x, y);
 
     console.log(`First smoothed: ${result.y[0].toFixed(4)}`);
     ```
@@ -145,6 +146,11 @@ Smooth a noisy sine wave — the kind of signal where LOWESS shines. Each exampl
 === "R"
 
     ```r
+    library(rfastlowess)
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
     model <- Lowess(
         fraction = 0.5,
         iterations = 3,
@@ -162,6 +168,13 @@ Smooth a noisy sine wave — the kind of signal where LOWESS shines. Each exampl
 === "Python"
 
     ```python
+    import fastlowess as fl
+    import numpy as np
+
+    rng = np.random.default_rng(42)
+    x = np.linspace(0, 2 * np.pi, 100)
+    y = np.sin(x) + rng.normal(0, 0.3, 100)
+
     model = fl.Lowess(
         fraction=0.5,
         iterations=3,
@@ -181,26 +194,43 @@ Smooth a noisy sine wave — the kind of signal where LOWESS shines. Each exampl
 
     ```rust
     use fastLowess::prelude::*;
+    use std::f64::consts::TAU;
 
-    let model = Lowess::new()
-        .fraction(0.5)
-        .iterations(3)
-        .confidence_intervals(0.95)  // 95% CI
-        .prediction_intervals(0.95)  // 95% PI
-        .return_diagnostics()
-        .build()?;
+    fn main() -> Result<(), LowessError> {
+        let n = 100usize;
+        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    let result = model.fit(&x, &y)?;
-    
-    // Access intervals
-    if let Some(ci_lower) = &result.confidence_lower {
-        println!("CI Lower: {:?}", ci_lower);
+
+        let model = Lowess::new()
+            .fraction(0.5)
+            .iterations(3)
+            .confidence_intervals(0.95)  // 95% CI
+            .prediction_intervals(0.95)  // 95% PI
+            .return_diagnostics()
+            .build()?;
+
+        let result = model.fit(&x, &y)?;
+
+        // Access intervals
+        if let Some(ci_lower) = &result.confidence_lower {
+            println!("CI Lower: {:?}", ci_lower);
+        }
+
+        Ok(())
     }
     ```
 
 === "Julia"
 
     ```julia
+    using FastLOWESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    x = collect(range(0, 2π, length=100))
+    y = sin.(x) .+ randn(rng, 100) .* 0.3
+
     model = Lowess(;
         fraction=0.5,
         iterations=3,
@@ -221,6 +251,10 @@ Smooth a noisy sine wave — the kind of signal where LOWESS shines. Each exampl
     ```javascript
     const { Lowess } = require('fastlowess');
 
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i*7+3)%17)/17-0.5)*0.6);
+
     const model = new Lowess({
         fraction: 0.5,
         iterations: 3,
@@ -239,14 +273,15 @@ Smooth a noisy sine wave — the kind of signal where LOWESS shines. Each exampl
 === "WebAssembly"
 
     ```javascript
-    import { smooth } from 'fastlowess-wasm';
+    const { Lowess } = require('./fastlowess_wasm.js');
 
     // Sample data
     const x = new Float64Array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
     const y = new Float64Array([2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7]);
 
     // Smooth the data
-    const result = smooth(x, y, { fraction: 0.5, iterations: 3 });
+    const model = new Lowess({ fraction: 0.5, iterations: 3 });
+    const result = model.fit(x, y);
 
     console.log("Smoothed values:", result.y);
     ```
@@ -254,20 +289,36 @@ Smooth a noisy sine wave — the kind of signal where LOWESS shines. Each exampl
 === "C++"
 
     ```cpp
-    fastlowess::LowessOptions options;
-    options.fraction = 0.5;
-    options.iterations = 3;
-    options.confidence_intervals = 0.95;
-    options.prediction_intervals = 0.95;
-    options.return_diagnostics = true;
+    #include <fastlowess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
 
-    fastlowess::Lowess model(options);
-    auto result = model.fit(x, y).value();
+    int main() {
+        const int n = 100;
+        std::vector<double> x(n), y(n);
+        for (int i = 0; i < n; ++i) {
+            x[i] = i * 2 * M_PI / (n - 1);
+            y[i] = std::sin(x[i]) + 0.1;
+        }
 
-    // Access standard C++ vectors
-    auto lower = result.confidence_lower();
-    auto upper = result.confidence_upper();
-    double r2 = result.diagnostics().r_squared();
+        fastlowess::LowessOptions options;
+        options.fraction = 0.5;
+        options.iterations = 3;
+        options.confidence_intervals = 0.95;
+        options.prediction_intervals = 0.95;
+        options.return_diagnostics = true;
+
+        fastlowess::Lowess model(options);
+        auto result = model.fit(x, y).value();
+
+        // Access standard C++ vectors
+        auto lower = result.confidence_lower();
+        auto upper = result.confidence_upper();
+        double r2 = result.diagnostics().r_squared();
+
+        return 0;
+    }
     ```
 
 ---
@@ -279,6 +330,11 @@ LOWESS can robustly handle outliers through iterative reweighting:
 === "R"
 
     ```r
+    library(rfastlowess)
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
     x_out <- seq(1, 6)
     y_with_outlier <- c(2, 4, 6, 50, 10, 12)
 
@@ -302,6 +358,15 @@ LOWESS can robustly handle outliers through iterative reweighting:
 === "Python"
 
     ```python
+    import fastlowess as fl
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    np.random.seed(42)
+    t = np.linspace(0, 100, 500)
+    trend_true = 10 + 0.5 * t + 3 * np.sin(t / 10)
+    y = trend_true + np.random.normal(0, 3, len(t))
+
     x_out = np.linspace(1, 6, 6)
     y_with_outlier = np.array([2.0, 4.0, 6.0, 50.0, 10.0, 12.0])
 
@@ -322,32 +387,50 @@ LOWESS can robustly handle outliers through iterative reweighting:
 === "Rust"
 
     ```rust
-    // Data with an outlier at position 3
-    let x = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
-    let y_with_outlier = vec![2.0, 4.0, 6.0, 50.0, 10.0, 12.0];  // 50.0 is outlier
+    use fastLowess::prelude::*;
+    use std::f64::consts::TAU;
 
-    let model = Lowess::new()
-        .fraction(0.5)
-        .iterations(5)                    // More iterations for outliers
-        .robustness_method("bisquare")    // Default, smooth downweighting
-        .return_robustness_weights()      // See which points were downweighted
-        .build()?;
+    fn main() -> Result<(), LowessError> {
+        let n = 100usize;
+        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    let result = model.fit(&x, &y_with_outlier)?;
-    
-    // Outliers will have low robustness weights
-    if let Some(weights) = &result.robustness_weights {
-        for (i, w) in weights.iter().enumerate() {
-            if *w < 0.5 {
-                println!("Point {} is likely an outlier (weight: {:.3})", i, w);
+        // Data with an outlier at position 3
+        let x = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
+        let y_with_outlier = vec![2.0, 4.0, 6.0, 50.0, 10.0, 12.0];  // 50.0 is outlier
+
+        let model = Lowess::new()
+            .fraction(0.5)
+            .iterations(5)                    // More iterations for outliers
+            .robustness_method("bisquare")    // Default, smooth downweighting
+            .return_robustness_weights()      // See which points were downweighted
+            .build()?;
+
+        let result = model.fit(&x, &y_with_outlier)?;
+
+        // Outliers will have low robustness weights
+        if let Some(weights) = &result.robustness_weights {
+            for (i, w) in weights.iter().enumerate() {
+                if *w < 0.5 {
+                    println!("Point {} is likely an outlier (weight: {:.3})", i, w);
+                }
             }
         }
+
+        Ok(())
     }
     ```
 
 === "Julia"
 
     ```julia
+    using FastLOWESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    x = collect(range(0, 2π, length=100))
+    y = sin.(x) .+ randn(rng, 100) .* 0.3
+
     x = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
     y_with_outlier = [2.0, 4.0, 6.0, 50.0, 10.0, 12.0]
 
@@ -372,6 +455,32 @@ LOWESS can robustly handle outliers through iterative reweighting:
     ```javascript
     const { Lowess } = require('fastlowess');
 
+    const xOut = new Float64Array([1, 2, 3, 4, 5, 6]);
+    const yWithOutlier = new Float64Array([2.0, 4.0, 6.0, 50.0, 10.0, 12.0]);
+
+    const model = new Lowess({
+        fraction: 0.5,
+        iterations: 5,
+        robustness_method: "bisquare",
+        return_robustness_weights: true
+    });
+    const result = model.fit(xOut, yWithOutlier);
+
+    // Outliers will have low robustness weights
+    result.robustness_weights.forEach((w, i) => {
+        if (w < 0.5) {
+            console.log(`Point ${i} is likely an outlier (weight: ${w.toFixed(3)})`);
+        }
+    });
+    ```
+
+=== "WebAssembly"
+
+    ```javascript
+    const { Lowess } = require('./fastlowess_wasm.js');
+
+    // Data with an outlier at position 3
+    const x = new Float64Array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
     const yWithOutlier = new Float64Array([2.0, 4.0, 6.0, 50.0, 10.0, 12.0]);
 
     const model = new Lowess({
@@ -390,51 +499,37 @@ LOWESS can robustly handle outliers through iterative reweighting:
     });
     ```
 
-=== "WebAssembly"
-
-    ```javascript
-    import { smooth } from 'fastlowess-wasm';
-
-    // Data with an outlier at position 3
-    const yWithOutlier = new Float64Array([2.0, 4.0, 6.0, 50.0, 10.0, 12.0]);
-
-    const result = smooth(x, yWithOutlier, {
-        fraction: 0.5,
-        iterations: 5,
-        robustness_method: "bisquare",
-        return_robustness_weights: true
-    });
-
-    // Outliers will have low robustness weights
-    result.robustness_weights.forEach((w, i) => {
-        if (w < 0.5) {
-            console.log(`Point ${i} is likely an outlier (weight: ${w.toFixed(3)})`);
-        }
-    });
-    ```
-
 === "C++"
 
     ```cpp
-    // Data with an outlier at index 3
-    std::vector<double> x_out = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
-    std::vector<double> y_outlier = {2.0, 4.0, 6.0, 50.0, 10.0, 12.0};
+    #include <fastlowess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
 
-    fastlowess::LowessOptions options;
-    options.fraction = 0.5;
-    options.iterations = 5;
-    options.robustness_method = "bisquare";
-    options.return_robustness_weights = true;
+    int main() {
+        // Data with an outlier at index 3
+        std::vector<double> x_out = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
+        std::vector<double> y_outlier = {2.0, 4.0, 6.0, 50.0, 10.0, 12.0};
 
-    fastlowess::Lowess model(options);
-    auto result = model.fit(x_out, y_outlier).value();
+        fastlowess::LowessOptions options;
+        options.fraction = 0.5;
+        options.iterations = 5;
+        options.robustness_method = "bisquare";
+        options.return_robustness_weights = true;
 
-    // Check weights
-    auto weights = result.robustness_weights();
-    for (size_t i = 0; i < weights.size(); ++i) {
-        if (weights[i] < 0.5) {
-            std::cout << "Point " << i << " is outlier (weight: " << weights[i] << ")\n";
+        fastlowess::Lowess model(options);
+        auto result = model.fit(x_out, y_outlier).value();
+
+        // Check weights
+        auto weights = result.robustness_weights();
+        for (size_t i = 0; i < weights.size(); ++i) {
+            if (weights[i] < 0.5) {
+                std::cout << "Point " << i << " is outlier (weight: " << weights[i] << ")\n";
+            }
         }
+
+        return 0;
     }
     ```
 
@@ -575,7 +670,7 @@ For datasets too large to fit in memory, stream them in fixed-size chunks with o
 === "WebAssembly"
 
     ```javascript
-    import { StreamingLowess } from 'fastlowess-wasm';
+    const { StreamingLowess } = require('./fastlowess_wasm.js');
 
     const n = 5000;
     const x = Float64Array.from({ length: n }, (_, i) => i * 10 * Math.PI / (n - 1));

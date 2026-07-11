@@ -132,14 +132,15 @@ _TAB_ALIASES: dict[str, set[str]] = {
 _LANG_TAGS: dict[str, set[str]] = {
     "python": {"python"},
     "julia": {"julia"},
-    "nodejs": {"javascript", "js", "typescript", "ts"},
+    "nodejs": {"javascript", "js"},
     "wasm": {"javascript", "js"},
     "r": {"r"},
     "cpp": {"cpp", "c++"},
     "rust": {"rust"},
 }
 
-_PYTHON_PREAMBLE = textwrap.dedent("""\
+_PYTHON_PREAMBLE = ""
+_PYTHON_PREAMBLE_UNUSED = textwrap.dedent("""\
     # --- snippet preamble: suppress display back-end -------------------------
     import sys as _sys, os as _os
     try:
@@ -218,7 +219,8 @@ _PYTHON_PREAMBLE = textwrap.dedent("""\
     # -------------------------------------------------------------------------
 """)
 
-_JULIA_PREAMBLE = textwrap.dedent("""\
+_JULIA_PREAMBLE = ""
+_JULIA_PREAMBLE_UNUSED = textwrap.dedent("""\
     # --- snippet preamble ----------------------------------------------------
     using FastLOWESS
     using Random, Printf, Statistics
@@ -267,7 +269,8 @@ _JULIA_PREAMBLE = textwrap.dedent("""\
     # -------------------------------------------------------------------------
 """)
 
-_NODEJS_PREAMBLE = textwrap.dedent("""\
+_NODEJS_PREAMBLE = ""
+_NODEJS_PREAMBLE_UNUSED = textwrap.dedent("""\
     // --- snippet preamble ----------------------------------------------------
     'use strict';
     const fl = (() => { try { return require('fastlowess'); } catch (e) { return null; } })();
@@ -307,6 +310,21 @@ _NODEJS_PREAMBLE = textwrap.dedent("""\
 """)
 
 _R_PREAMBLE = textwrap.dedent("""\
+    suppressMessages({{
+        .libPaths(c(
+            normalizePath(file.path(
+                Sys.getenv("LOWESS_REPO_ROOT", "{repo_root}"),
+                "bindings", "r", ".r-lib"
+            ), mustWork = FALSE),
+            .libPaths()
+        ))
+        library(rfastlowess)
+    }})
+    suppressWarnings(pdf(NULL))
+    plot.new()
+""").format(repo_root=str(REPO_ROOT).replace("\\", "/"))
+
+_R_PREAMBLE_UNUSED = textwrap.dedent("""\
     # --- snippet preamble ----------------------------------------------------
     suppressMessages({{
         ### NOTE: KEEP
@@ -369,7 +387,8 @@ _R_PREAMBLE = textwrap.dedent("""\
 
 _WASM_PKG_DIR = REPO_ROOT / "bindings" / "wasm" / "pkg"
 
-_WASM_PREAMBLE = textwrap.dedent("""\
+_WASM_PREAMBLE = ""
+_WASM_PREAMBLE_UNUSED = textwrap.dedent("""\
     // --- snippet preamble (WASM) ---------------------------------------------
     'use strict';
     const _wasmPkg = (() => {{
@@ -411,8 +430,8 @@ _WASM_PREAMBLE = textwrap.dedent("""\
     // -------------------------------------------------------------------------
 """).format(wasm_pkg=str(_WASM_PKG_DIR).replace("\\", "/"))
 
-# Rust snippets are wrapped: top + snippet + bottom
-_RUST_PREAMBLE_TOP = textwrap.dedent("""\
+_RUST_PREAMBLE_TOP = ""
+_RUST_PREAMBLE_TOP_UNUSED = textwrap.dedent("""\
     #[allow(unused_imports, ambiguous_glob_reexports)]
     use lowess::prelude::*;
 
@@ -467,7 +486,8 @@ _RUST_PREAMBLE_TOP = textwrap.dedent("""\
 
 """)
 
-_RUST_PREAMBLE_BOTTOM = textwrap.dedent("""\
+_RUST_PREAMBLE_BOTTOM = ""
+_RUST_PREAMBLE_BOTTOM_UNUSED = textwrap.dedent("""\
         Ok(())
     }
 
@@ -482,8 +502,8 @@ _RUST_PREAMBLE_BOTTOM = textwrap.dedent("""\
 # Fixed temp project for Rust snippets (reuses Cargo artifacts)
 _RUST_SNIPPET_DIR = REPO_ROOT / "target" / "doc-snippet-runner"
 
-# C++ snippets are wrapped: preamble top + snippet + bottom
-_CPP_PREAMBLE_TOP = textwrap.dedent("""\
+_CPP_PREAMBLE_TOP = ""
+_CPP_PREAMBLE_TOP_UNUSED = textwrap.dedent("""\
     #define _USE_MATH_DEFINES
     #include "fastlowess.hpp"
     #include <cmath>
@@ -556,7 +576,8 @@ _CPP_PREAMBLE_TOP = textwrap.dedent("""\
 
 """)
 
-_CPP_PREAMBLE_BOTTOM = textwrap.dedent("""\
+_CPP_PREAMBLE_BOTTOM = ""
+_CPP_PREAMBLE_BOTTOM_UNUSED = textwrap.dedent("""\
     }
 
     int main() {
@@ -605,6 +626,8 @@ class Snippet:
                     # No tab: fall back to nodejs if no WASM markers
                     if (
                         "fastlowess-wasm" not in self.code
+                        and "fastlowess_wasm"
+                        not in self.code  # catches require('./fastlowess_wasm.js')
                         and "import {" not in self.code[:80]
                     ):
                         return "nodejs"
@@ -712,20 +735,13 @@ def should_skip(snippet: Snippet, runner: str) -> Optional[str]:
         # Large synthetic datasets that exceed the per-snippet timeout
         if re.search(r"total_points\s*=\s*[1-9][0-9]{4,}", code):
             return "large synthetic dataset (too slow for CI)"
-        # Single-line API signature example: add_point(x, y) where preamble
-        # x/y are arrays but add_point expects scalar arguments.
-        stripped_lines = [
-            line
-            for line in code.splitlines()
-            if line.strip() and not line.strip().startswith("#")
-        ]
-        if len(stripped_lines) == 1 and re.search(
-            r"\.add_point\s*\(", stripped_lines[0]
+        # Snippets that use fastlowess without importing it first
+        if re.search(
+            r"\bfl\b|\bfastlowess\b|\bLowess\b|\bStreamingLowess\b|\bOnlineLowess\b",
+            code,
         ):
-            if not re.search(r"\bfloat\s*\(|\bint\s*\(|\[\s*[0-9]", stripped_lines[0]):
-                return (
-                    "add_point signature example (preamble x/y are arrays, not scalars)"
-                )
+            if not re.search(r"\bimport\b.*fastlowess|\bfrom\b.*fastlowess", code):
+                return "fastlowess not imported (snippet is not self-contained)"
 
     if runner == "julia":
         # Skip package-management / installation snippets
@@ -740,6 +756,9 @@ def should_skip(snippet: Snippet, runner: str) -> Optional[str]:
         # TypeScript-only syntax (type annotations)
         if ": SmoothOptions" in code or ": LowessResult" in code:
             return "TypeScript (not Node.js)"
+        # Snippets must load fastlowess themselves (no preamble)
+        if not re.search(r"require\s*\(", code):
+            return "no require() — snippet must load fastlowess itself"
 
     if runner == "r":
         # Skip install/devtools snippets
@@ -761,51 +780,28 @@ def should_skip(snippet: Snippet, runner: str) -> Optional[str]:
         # Catches `import { X }`, `import init, { X }`, `import X from ...`, etc.
         if re.search(r"^import\b", code, re.MULTILINE) or "await init(" in code:
             return "ES module import (not supported in CJS runner)"
+        # Snippets must load the WASM package themselves (no preamble)
+        if not re.search(r"require\s*\(", code):
+            return "no require() — snippet must load the WASM package itself"
 
     if runner == "rust":
-        # Skip snippets that are complete programs (have their own fn main)
-        if re.search(r"\bfn\s+main\s*\(", code):
-            return "defines own fn main"
+        # Without a structural wrapper, only complete programs (with fn main) compile
+        if not re.search(r"\bfn\s+main\s*\(", code):
+            return "fragment — no fn main (not a standalone Rust program)"
         # Skip snippets that look like TOML config (Cargo.toml examples)
         if code.strip().startswith("[") and "=" in code and "fn " not in code:
             return "TOML/config snippet"
-        # Skip snippets with no actual Rust statements
-        if not any(c in code for c in ["let ", "use ", "fn ", "::", "Lowess", "build"]):
-            return "no executable Rust statements"
         # Backend::GPU requires the optional gpu feature flag
         if re.search(r"\bBackend\s*::\s*GPU\b", code):
             return "requires gpu feature flag (not enabled in snippet workspace)"
         # cross_validate / KFold are not in the stable public API
         if re.search(r"\bcross_validate\b|\bKFold\b", code):
             return "cross_validate/KFold not in stable public API"
-        # Single-line add_point doc: preamble x/y are Vec<f64> but add_point wants scalar T
-        _rs_lines = [
-            line
-            for line in code.splitlines()
-            if line.strip() and not line.strip().startswith("/")
-        ]
-        if len(_rs_lines) == 1 and re.search(
-            r"\.add_point\s*\(\s*x\s*,\s*y\s*\)", _rs_lines[0]
-        ):
-            return "add_point API doc (preamble x/y are Vec<f64>; add_point expects scalar T)"
-        # Build-only snippets can't infer generic type without a .fit() call
-        if (
-            re.search(r"\.adapter\(", code)
-            and not any(
-                s in code
-                for s in [".fit(", ".add_points(", ".add_point(", ".process_chunk("]
-            )
-            and "Lowess::<" not in code
-        ):
-            return "build-only snippet (type T unresolvable without usage)"
 
     if runner == "cpp":
-        # Skip snippets that define their own main
-        if re.search(r"\bint\s+main\s*\(", code):
-            return "defines own int main"
-        # Skip pure output / comment blocks
-        if not any(c in code for c in [";", "{", "Lowess", "smooth", "auto ", "std::"]):
-            return "no executable C++ statements"
+        # Without a structural wrapper, only complete programs (with int main) compile
+        if not re.search(r"\bint\s+main\s*\(", code):
+            return "fragment — no int main (not a standalone C++ program)"
 
     return None
 
@@ -1045,16 +1041,10 @@ def run_julia(snippet: Snippet, timeout: int) -> RunResult:
 
 
 def run_nodejs(snippet: Snippet, timeout: int) -> RunResult:
-    code = PREAMBLES["nodejs"] + _strip_nodejs_redeclarations(snippet.code)
-    with tempfile.NamedTemporaryFile(
-        suffix=".js", mode="w", delete=False, encoding="utf-8"
-    ) as f:
-        f.write(code)
-        tmp = f.name
+    code = snippet.code
 
     node_bin = _find_exe("node")
     if node_bin is None:
-        os.unlink(tmp)
         return RunResult(
             snippet=snippet,
             runner="nodejs",
@@ -1062,9 +1052,17 @@ def run_nodejs(snippet: Snippet, timeout: int) -> RunResult:
             skip_reason="node not found in PATH",
         )
 
-    # Run from the nodejs binding directory so require('fastlowess') resolves
+    # Write the temp file INSIDE the nodejs binding directory so that Node.js
+    # module resolution (file-relative) can find node_modules/fastlowess there.
     nodejs_dir = REPO_ROOT / "bindings" / "nodejs"
     cwd = str(nodejs_dir) if nodejs_dir.exists() else str(REPO_ROOT)
+
+    import uuid
+
+    tmp_name = f"_snippet_{uuid.uuid4().hex}.js"
+    tmp = str(Path(cwd) / tmp_name)
+    with open(tmp, "w", encoding="utf-8") as f:
+        f.write(code)
 
     try:
         t0 = time.monotonic()
@@ -1156,22 +1154,23 @@ def run_wasm(snippet: Snippet, timeout: int) -> RunResult:
             skip_reason="bindings/wasm/pkg/ not built (run 'make wasm' first)",
         )
 
-    code = PREAMBLES["wasm"] + _strip_nodejs_redeclarations(snippet.code)
-    with tempfile.NamedTemporaryFile(
-        suffix=".js", mode="w", delete=False, encoding="utf-8"
-    ) as f:
-        f.write(code)
-        tmp = f.name
-
     node_bin = _find_exe("node")
     if node_bin is None:
-        os.unlink(tmp)
         return RunResult(
             snippet=snippet,
             runner="wasm",
             skipped=True,
             skip_reason="node not found in PATH",
         )
+
+    # Write the temp file INSIDE _WASM_PKG_DIR so require('./fastlowess_wasm.js') resolves
+    import uuid
+
+    tmp_name = f"_snippet_{uuid.uuid4().hex}.js"
+    tmp = str(_WASM_PKG_DIR / tmp_name)
+    code = snippet.code
+    with open(tmp, "w", encoding="utf-8") as f:
+        f.write(code)
 
     try:
         t0 = time.monotonic()
@@ -1251,24 +1250,8 @@ def run_rust(snippet: Snippet, timeout: int) -> RunResult:
 
     _ensure_rust_snippet_project()
 
-    # Strip leading use declarations from snippet (preamble provides them)
-    code_lines = snippet.code.splitlines()
-    filtered: list[str] = []
-    for line in code_lines:
-        # Keep use statements but they'll be duplicates — Rust ignores them
-        filtered.append(line)
-
-    code_body = "\n".join(filtered)
-    main_rs = (
-        _RUST_PREAMBLE_TOP
-        + "    "
-        + code_body.replace("\n", "\n    ")
-        + "\n"
-        + _RUST_PREAMBLE_BOTTOM
-    )
-
     main_path = _RUST_SNIPPET_DIR / "src" / "main.rs"
-    main_path.write_text(main_rs, encoding="utf-8")
+    main_path.write_text(snippet.code, encoding="utf-8")
 
     # Share the parent workspace's target dir to reuse compiled deps
     target_dir = str(REPO_ROOT / "target" / "doc-snippet-target")
@@ -1372,16 +1355,8 @@ def run_cpp(snippet: Snippet, timeout: int) -> RunResult:
 
     # Strip redundant includes that are already in the preamble
     cpp_code = snippet.code
-    for inc in ('#include "fastlowess.hpp"', "#include <fastlowess.hpp>"):
-        cpp_code = cpp_code.replace(inc + "\n", "").replace(inc, "")
 
-    code = (
-        _CPP_PREAMBLE_TOP
-        + "    "
-        + cpp_code.strip().replace("\n", "\n    ")
-        + "\n"
-        + _CPP_PREAMBLE_BOTTOM
-    )
+    code = cpp_code
 
     with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
         src = os.path.join(tmpdir, "snippet.cpp")
@@ -1392,6 +1367,7 @@ def run_cpp(snippet: Snippet, timeout: int) -> RunResult:
         compile_cmd = [
             compiler,
             "-std=c++17",
+            "-D_USE_MATH_DEFINES",
             "-O0",
             f"-I{include_dir}",
             f"-L{lib_dir_str}",

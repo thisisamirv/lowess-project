@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD024 -->
+<!-- markdownlint-disable MD024 MD033 -->
 # Scaling Methods
 
 Residual scale estimation during robustness iterations.
@@ -33,47 +33,105 @@ First centers residuals at their median, then takes the median of the absolute d
 
 === "R"
     ```r
+    library(rfastlowess)
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
     model <- Lowess(iterations = 3, scaling_method = "mad")
     result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
+    import fastlowess as fl
+    import numpy as np
+
+    rng = np.random.default_rng(42)
+    x = np.linspace(0, 2 * np.pi, 100)
+    y = np.sin(x) + rng.normal(0, 0.3, 100)
+
     model = fl.Lowess(iterations=3, scaling_method="mad")
     result = model.fit(x, y)
     ```
 
 === "Rust"
     ```rust
-    let model = Lowess::new()
-        .iterations(3)
-        .scaling_method("mad")
-        .build()?;
-    let result = model.fit(&x, &y)?;
+    use fastLowess::prelude::*;
+    use std::f64::consts::TAU;
+
+    fn main() -> Result<(), LowessError> {
+        let n = 100usize;
+        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
+
+        let model = Lowess::new()
+            .iterations(3)
+            .scaling_method("mad")
+            .build()?;
+        let result = model.fit(&x, &y)?;
+
+        Ok(())
+    }
     ```
 
 === "Julia"
     ```julia
+    using FastLOWESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    x = collect(range(0, 2π, length=100))
+    y = sin.(x) .+ randn(rng, 100) .* 0.3
+
     model = Lowess(; iterations=3, scaling_method="mad")
     result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
+    const { Lowess } = require('fastlowess');
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
     const model = new Lowess({ iterations: 3, scaling_method: "mad" });
     const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
+    const { Lowess } = require('./fastlowess_wasm.js');
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
     const model = new Lowess({ iterations: 3, scaling_method: "mad" });
     const result = model.fit(x, y);
     ```
 
 === "C++"
     ```cpp
-    fastlowess::Lowess model({ .iterations = 3, .scaling_method = "mad" });
-    auto result = model.fit(x, y).value();
+    #include <fastlowess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
+
+    int main() {
+        const int n = 100;
+        std::vector<double> x(n), y(n);
+        for (int i = 0; i < n; ++i) {
+            x[i] = i * 2 * M_PI / (n - 1);
+            y[i] = std::sin(x[i]) + 0.1;
+        }
+
+        fastlowess::Lowess model({ .iterations = 3, .scaling_method = "mad" });
+        auto result = model.fit(x, y).value();
+
+        return 0;
+    }
     ```
 
 ---
@@ -88,47 +146,105 @@ Uses the uncentered median — unlike MAD it does not subtract the residual medi
 
 === "R"
     ```r
+    library(rfastlowess)
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
     model <- Lowess(iterations = 3, scaling_method = "mar")
     result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
+    import fastlowess as fl
+    import numpy as np
+
+    rng = np.random.default_rng(42)
+    x = np.linspace(0, 2 * np.pi, 100)
+    y = np.sin(x) + rng.normal(0, 0.3, 100)
+
     model = fl.Lowess(iterations=3, scaling_method="mar")
     result = model.fit(x, y)
     ```
 
 === "Rust"
     ```rust
-    let model = Lowess::new()
-        .iterations(3)
-        .scaling_method("mar")
-        .build()?;
-    let result = model.fit(&x, &y)?;
+    use fastLowess::prelude::*;
+    use std::f64::consts::TAU;
+
+    fn main() -> Result<(), LowessError> {
+        let n = 100usize;
+        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
+
+        let model = Lowess::new()
+            .iterations(3)
+            .scaling_method("mar")
+            .build()?;
+        let result = model.fit(&x, &y)?;
+
+        Ok(())
+    }
     ```
 
 === "Julia"
     ```julia
+    using FastLOWESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    x = collect(range(0, 2π, length=100))
+    y = sin.(x) .+ randn(rng, 100) .* 0.3
+
     model = Lowess(; iterations=3, scaling_method="mar")
     result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
+    const { Lowess } = require('fastlowess');
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
     const model = new Lowess({ iterations: 3, scaling_method: "mar" });
     const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
+    const { Lowess } = require('./fastlowess_wasm.js');
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
     const model = new Lowess({ iterations: 3, scaling_method: "mar" });
     const result = model.fit(x, y);
     ```
 
 === "C++"
     ```cpp
-    fastlowess::Lowess model({ .iterations = 3, .scaling_method = "mar" });
-    auto result = model.fit(x, y).value();
+    #include <fastlowess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
+
+    int main() {
+        const int n = 100;
+        std::vector<double> x(n), y(n);
+        for (int i = 0; i < n; ++i) {
+            x[i] = i * 2 * M_PI / (n - 1);
+            y[i] = std::sin(x[i]) + 0.1;
+        }
+
+        fastlowess::Lowess model({ .iterations = 3, .scaling_method = "mar" });
+        auto result = model.fit(x, y).value();
+
+        return 0;
+    }
     ```
 
 ---
@@ -143,47 +259,105 @@ Arithmetic mean of absolute residuals. Non-robust: a single extreme outlier infl
 
 === "R"
     ```r
+    library(rfastlowess)
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
     model <- Lowess(iterations = 3, scaling_method = "mean")
     result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
+    import fastlowess as fl
+    import numpy as np
+
+    rng = np.random.default_rng(42)
+    x = np.linspace(0, 2 * np.pi, 100)
+    y = np.sin(x) + rng.normal(0, 0.3, 100)
+
     model = fl.Lowess(iterations=3, scaling_method="mean")
     result = model.fit(x, y)
     ```
 
 === "Rust"
     ```rust
-    let model = Lowess::new()
-        .iterations(3)
-        .scaling_method("mean")
-        .build()?;
-    let result = model.fit(&x, &y)?;
+    use fastLowess::prelude::*;
+    use std::f64::consts::TAU;
+
+    fn main() -> Result<(), LowessError> {
+        let n = 100usize;
+        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
+
+        let model = Lowess::new()
+            .iterations(3)
+            .scaling_method("mean")
+            .build()?;
+        let result = model.fit(&x, &y)?;
+
+        Ok(())
+    }
     ```
 
 === "Julia"
     ```julia
+    using FastLOWESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    x = collect(range(0, 2π, length=100))
+    y = sin.(x) .+ randn(rng, 100) .* 0.3
+
     model = Lowess(; iterations=3, scaling_method="mean")
     result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
+    const { Lowess } = require('fastlowess');
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
     const model = new Lowess({ iterations: 3, scaling_method: "mean" });
     const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
+    const { Lowess } = require('./fastlowess_wasm.js');
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
     const model = new Lowess({ iterations: 3, scaling_method: "mean" });
     const result = model.fit(x, y);
     ```
 
 === "C++"
     ```cpp
-    fastlowess::Lowess model({ .iterations = 3, .scaling_method = "mean" });
-    auto result = model.fit(x, y).value();
+    #include <fastlowess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
+
+    int main() {
+        const int n = 100;
+        std::vector<double> x(n), y(n);
+        for (int i = 0; i < n; ++i) {
+            x[i] = i * 2 * M_PI / (n - 1);
+            y[i] = std::sin(x[i]) + 0.1;
+        }
+
+        fastlowess::Lowess model({ .iterations = 3, .scaling_method = "mean" });
+        auto result = model.fit(x, y).value();
+
+        return 0;
+    }
     ```
 
 ---

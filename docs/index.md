@@ -232,17 +232,27 @@ See the [Installation Guide](getting-started/installation.md) for more options a
 
     ```rust
     use lowess::prelude::*;
+    use std::f64::consts::TAU;
 
-    let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-    let y = vec![2.0, 4.1, 5.9, 8.2, 9.8];
+    fn main() -> Result<(), LowessError> {
+        let n = 100usize;
+        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    let model = Lowess::new()
-        .fraction(0.5)
-        .iterations(3)
-        .build()?;
 
-    let result = model.fit(&x, &y)?;
-    println!("{}", result);
+        let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let y = vec![2.0, 4.1, 5.9, 8.2, 9.8];
+
+        let model = Lowess::new()
+            .fraction(0.5)
+            .iterations(3)
+            .build()?;
+
+        let result = model.fit(&x, &y)?;
+        println!("{}", result);
+
+        Ok(())
+    }
     ```
 
 === "Julia"
@@ -274,7 +284,7 @@ See the [Installation Guide](getting-started/installation.md) for more options a
 === "WebAssembly"
 
     ```javascript
-    import { Lowess } from "fastlowess-wasm";
+    const { Lowess } = require('./fastlowess_wasm.js');
 
     const x = new Float64Array([1, 2, 3, 4, 5]);
     const y = new Float64Array([2.0, 4.1, 5.9, 8.2, 9.8]);
