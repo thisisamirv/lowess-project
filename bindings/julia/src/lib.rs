@@ -240,6 +240,7 @@ pub struct JlOnlineLowess {
 ///
 /// # Safety
 /// The returned pointer must be freed with jl_lowess_free.
+#[allow(clippy::useless_conversion)] // c_ulong is u32 on Windows, u64 on Unix
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn jl_lowess_new(
     fraction: c_double,
