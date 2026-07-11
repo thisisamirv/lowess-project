@@ -18,20 +18,20 @@ use num_traits::Float;
 use std::collections::VecDeque;
 
 // Internal dependencies
+use crate::adapters::defaults::*;
+use crate::algorithms::defaults::*;
 use crate::algorithms::regression::{WLSSolver, ZeroWeightFallback};
 use crate::algorithms::robustness::RobustnessMethod;
 use crate::engine::executor::{CVPassFn, FitPassFn, IntervalPassFn, SmoothPassFn};
 use crate::engine::executor::{LowessConfig, LowessExecutor};
 use crate::engine::validator::Validator;
 use crate::math::boundary::BoundaryPolicy;
+use crate::math::defaults::*;
 use crate::math::kernel::WeightFunction;
 use crate::math::scaling::ScalingMethod;
 use crate::primitives::backend::Backend;
 use crate::primitives::buffer::{OnlineBuffer, VecExt};
 use crate::primitives::errors::LowessError;
-use crate::adapters::defaults::*;
-use crate::algorithms::defaults::*;
-use crate::math::defaults::*;
 
 // Update mode for online LOWESS processing.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]

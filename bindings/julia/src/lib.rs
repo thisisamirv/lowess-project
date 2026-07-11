@@ -262,6 +262,7 @@ pub unsafe extern "C" fn jl_lowess_new(
     cv_k: c_int,
     parallel: c_int,
     cv_seed: c_ulong, // 0 for none
+    return_se: c_int,
 ) -> *mut JlLowessConfig {
     clear_last_error_message();
     let result = catch_unwind(|| {
@@ -315,7 +316,7 @@ pub unsafe extern "C" fn jl_lowess_new(
                 return_residuals: return_residuals != 0,
                 return_robustness_weights: return_robustness_weights != 0,
                 return_diagnostics: return_diagnostics != 0,
-                return_se: false,
+                return_se: return_se != 0,
                 confidence_intervals: (!confidence_intervals.is_nan())
                     .then_some(confidence_intervals),
                 prediction_intervals: (!prediction_intervals.is_nan())

@@ -151,12 +151,15 @@ All implementations are **numerical twins** of R's `lowess`:
 **R:**
 
 ```r
-Lowess(
+library(rfastlowess)
+
+model <- Lowess(
     fraction = 0.5,
     iterations = 3L,
     delta = 0.01,
     weight_function = "tricube",
     robustness_method = "bisquare",
+    scaling_method = "mad",
     zero_weight_fallback = "use_local_mean",
     boundary_policy = "extend",
     confidence_intervals = 0.95,
@@ -164,12 +167,16 @@ Lowess(
     return_diagnostics = TRUE,
     return_residuals = TRUE,
     return_robustness_weights = TRUE,
+    return_se = TRUE,
     cv_fractions = c(0.3, 0.5, 0.7),
     cv_method = "kfold",
     cv_k = 5L,
+    cv_seed = 123L,
     auto_converge = 1e-4,
     parallel = TRUE
-)$fit(x, y)
+)
+custom_weights <- rep(1, length(x))
+result <- model$fit(x, y, custom_weights = custom_weights)
 
 # Result structure:
 result$x,
@@ -198,6 +205,7 @@ model = Lowess(
     delta=0.01,
     weight_function="tricube",
     robustness_method="bisquare",
+    scaling_method="mad",
     zero_weight_fallback="use_local_mean",
     boundary_policy="extend",
     confidence_intervals=0.95,
@@ -205,13 +213,16 @@ model = Lowess(
     return_diagnostics=True,
     return_residuals=True,
     return_robustness_weights=True,
+    return_se=True,
     cv_fractions=[0.3, 0.5, 0.7],
     cv_method="kfold",
     cv_k=5,
+    cv_seed=123,
     auto_converge=1e-4,
     parallel=True
 )
-result = model.fit(x, y)
+custom_weights = [1.0] * len(x)
+result = model.fit(x, y, custom_weights=custom_weights)
 
 # Result structure:
 result.x,
@@ -232,27 +243,32 @@ result.cv_scores
 **Rust:**
 
 ```rust
-Lowess::new()
+use lowess::prelude::*;
+
+let model = Lowess::new()
     .fraction(0.5)
     .iterations(3)
     .delta(0.01)
-    .weight_function(Tricube)
-    .robustness_method(Bisquare)
-    .zero_weight_fallback(UseLocalMean)
-    .boundary_policy(Extend)
+    .weight_function("tricube")
+    .robustness_method("bisquare")
+    .scaling_method("mad")
+    .zero_weight_fallback("use_local_mean")
+    .boundary_policy("extend")
+    .return_se()
     .confidence_intervals(0.95)
     .prediction_intervals(0.95)
     .return_diagnostics()
     .return_residuals()
     .return_robustness_weights()
-    .cross_validate(KFold(5, &[0.3, 0.5, 0.7]).seed(123))
+    .cv_method("kfold")
+    .cv_k(5)
+    .cv_fractions(vec![0.3, 0.5, 0.7])
+    .cv_seed(123)
     .auto_converge(1e-4)
-    .adapter(Batch)
-    .parallel(true)             // fastLowess only
-    .backend(CPU)               // fastLowess only: CPU or GPU
+    .custom_weights(vec![1.0; x.len()])
     .build()?;
 
-let result = model.fit(x, y);
+let result = model.fit(&x, &y)?;
 
 // Result structure:
 pub struct LowessResult<T> {
@@ -275,12 +291,15 @@ pub struct LowessResult<T> {
 **Julia:**
 
 ```julia
-Lowess(;
+using FastLOWESS
+
+model = Lowess(;
     fraction=0.5,
     iterations=3,
     delta=NaN,  # NaN for auto
     weight_function="tricube",
     robustness_method="bisquare",
+    scaling_method="mad",
     zero_weight_fallback="use_local_mean",
     boundary_policy="extend",
     confidence_intervals=NaN,
@@ -288,12 +307,16 @@ Lowess(;
     return_diagnostics=true,
     return_residuals=true,
     return_robustness_weights=true,
+    return_se=true,
     cv_fractions=Float64[], # e.g. [0.3, 0.5]
     cv_method="kfold",
     cv_k=5,
+    cv_seed=123,
     auto_converge=NaN,
     parallel=true
 )
+custom_weights = ones(length(x))
+result = fit(model, x, y; custom_weights=custom_weights)
 
 # Result structure:
 result.x,
@@ -314,90 +337,107 @@ result.cv_scores
 **Node.js:**
 
 ```javascript
-new Lowess({
+import { Lowess } from "fastlowess"
+
+const model = new Lowess({
     fraction: 0.5,
     iterations: 3,
     delta: 0.01,
-    weightFunction: "tricube",
-    robustnessMethod: "bisquare",
-    zeroWeightFallback: "use_local_mean",
-    boundaryPolicy: "extend",
-    confidenceIntervals: 0.95,
-    predictionIntervals: 0.95,
-    returnDiagnostics: true,
-    returnResiduals: true,
-    returnRobustnessWeights: true,
-    cvFractions: [0.3, 0.5, 0.7],
-    cvMethod: "kfold",
-    cvK: 5,
-    autoConverge: 1e-4,
+    weight_function: "tricube",
+    robustness_method: "bisquare",
+    scaling_method: "mad",
+    zero_weight_fallback: "use_local_mean",
+    boundary_policy: "extend",
+    return_se: true,
+    confidence_intervals: 0.95,
+    prediction_intervals: 0.95,
+    return_diagnostics: true,
+    return_residuals: true,
+    return_robustness_weights: true,
+    cv_fractions: [0.3, 0.5, 0.7],
+    cv_method: "kfold",
+    cv_k: 5,
+    cv_seed: 123,
+    auto_converge: 1e-4,
     parallel: true
-}).fit(x, y)
+})
+const custom_weights = Array(x.length).fill(1.0)
+const result = model.fit(x, y, custom_weights)
 
 // Result structure:
 result.x,
 result.y,
-result.standardErrors,
-result.confidenceLower,
-result.confidenceUpper,
-result.predictionLower,
-result.predictionUpper,
+result.standard_errors,
+result.confidence_lower,
+result.confidence_upper,
+result.prediction_lower,
+result.prediction_upper,
 result.residuals,
-result.robustnessWeights,
+result.robustness_weights,
 result.diagnostics,
-result.iterationsUsed,
-result.fractionUsed,
-result.cvScores
+result.iterations_used,
+result.fraction_used,
+result.cv_scores
 ```
 
 **WebAssembly:**
 
 ```javascript
-smooth(x, y, {
+import { Lowess } from "fastlowess-wasm"
+
+const model = new Lowess({
     fraction: 0.5,
     iterations: 3,
     delta: 0.01,
-    weightFunction: "tricube",
-    robustnessMethod: "bisquare",
-    zeroWeightFallback: "use_local_mean",
-    boundaryPolicy: "extend",
-    confidenceIntervals: 0.95,
-    predictionIntervals: 0.95,
-    returnDiagnostics: true,
-    returnResiduals: true,
-    returnRobustnessWeights: true,
-    cvFractions: [0.3, 0.5, 0.7],
-    cvMethod: "kfold",
-    cvK: 5,
-    autoConverge: 1e-4,
+    weight_function: "tricube",
+    robustness_method: "bisquare",
+    scaling_method: "mad",
+    zero_weight_fallback: "use_local_mean",
+    boundary_policy: "extend",
+    return_se: true,
+    confidence_intervals: 0.95,
+    prediction_intervals: 0.95,
+    return_diagnostics: true,
+    return_residuals: true,
+    return_robustness_weights: true,
+    cv_fractions: [0.3, 0.5, 0.7],
+    cv_method: "kfold",
+    cv_k: 5,
+    cv_seed: 123,
+    auto_converge: 1e-4,
     parallel: true
 })
+const custom_weights = new Float64Array(x.length).fill(1)
+const result = model.fit(x, y, custom_weights)
 
 // Result structure:
 result.x,
 result.y,
-result.standardErrors,
-result.confidenceLower,
-result.confidenceUpper,
-result.predictionLower,
-result.predictionUpper,
+result.standard_errors,
+result.confidence_lower,
+result.confidence_upper,
+result.prediction_lower,
+result.prediction_upper,
 result.residuals,
-result.robustnessWeights,
+result.robustness_weights,
 result.diagnostics,
-result.iterationsUsed,
-result.fractionUsed,
-result.cvScores
+result.iterations_used,
+result.fraction_used,
+result.cv_scores
 ```
 
 **C++:**
 
 ```cpp
+#include "fastlowess.hpp"
+
 fastlowess::LowessOptions options;
 options.fraction = 0.5;
 options.iterations = 3;
 options.delta = 0.01;
 options.weight_function = "tricube";
 options.robustness_method = "bisquare";
+options.scaling_method = "mad";
 options.zero_weight_fallback = "use_local_mean";
 options.boundary_policy = "extend";
 options.confidence_intervals = 0.95;
@@ -405,28 +445,31 @@ options.prediction_intervals = 0.95;
 options.return_diagnostics = true;
 options.return_residuals = true;
 options.return_robustness_weights = true;
+options.return_se = true;
 options.cv_fractions = {0.3, 0.5, 0.7};
 options.cv_method = "kfold";
 options.cv_k = 5;
+options.cv_seed = 123;
 options.auto_converge = 1e-4;
 options.parallel = true;
 
 fastlowess::Lowess model(options);
-auto result = model.fit(x, y);
+std::vector<double> custom_weights(x.size(), 1.0);
+const auto result = model.fit(x, y, custom_weights).value();
 
 // Result structure:
-result.xVector(),
-result.yVector(),
-result.standardErrors(),
-result.confidenceLower(),
-result.confidenceUpper(),
-result.predictionLower(),
-result.predictionUpper(),
+result.x_vector(),
+result.y_vector(),
+result.standard_errors(),
+result.confidence_lower(),
+result.confidence_upper(),
+result.prediction_lower(),
+result.prediction_upper(),
 result.residuals(),
-result.robustnessWeights(),
+result.robustness_weights(),
 result.diagnostics(),
-result.iterationsUsed(),
-result.fractionUsed(),
+result.iterations_used(),
+result.fraction_used(),
 result.cv_scores()
 ```
 

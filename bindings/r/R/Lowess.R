@@ -65,7 +65,8 @@ Lowess <- function(
     cv_method = "kfold",
     cv_k = 5L,
     parallel = TRUE,
-    cv_seed = NULL
+    cv_seed = NULL,
+    return_se = FALSE
 ) {
     validate_params(fraction = fraction, iterations = iterations)
     handle <- do.call(RLowess$new, env_args(lowess_params))

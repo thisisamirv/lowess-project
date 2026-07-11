@@ -130,6 +130,7 @@ param_types <- list(
     return_diagnostics = "logical",
     return_residuals = "logical",
     return_robustness_weights = "logical",
+    return_se = "logical",
     parallel = "logical",
     delta = "nullable",
     overlap = "nullable",
@@ -173,7 +174,7 @@ lowess_params <- c(
     "scaling_method", "boundary_policy", "confidence_intervals",
     "prediction_intervals", "return_diagnostics", "return_residuals",
     "return_robustness_weights", "zero_weight_fallback", "auto_converge",
-    "cv_fractions", "cv_method", "cv_k", "parallel", "cv_seed"
+    "cv_fractions", "cv_method", "cv_k", "parallel", "cv_seed", "return_se"
 )
 
 online_params <- c(

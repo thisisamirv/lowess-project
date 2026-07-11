@@ -23,7 +23,8 @@ Lowess(
     cv_method = "kfold",
     cv_k = 5L,
     parallel = TRUE,
-    cv_seed = NULL
+    cv_seed = NULL,
+    return_se = FALSE
 )
 }
 \arguments{
@@ -67,7 +68,8 @@ Lowess(
 
 \item{cv_seed}{Integer seed for the cross-validation random number
 generator. \code{NULL} (default) uses a random seed.}
-}
+
+\item{return_se}{Return standard errors. Default: FALSE.}}
 \value{
 A Lowess object.
 }

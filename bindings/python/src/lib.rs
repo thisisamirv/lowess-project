@@ -8,12 +8,12 @@ use pyo3::prelude::*;
 use std::fmt::Display;
 use std::sync::Mutex;
 
-use ::fastLowess::internals::adapters::online::ParallelOnlineLowess;
-use ::fastLowess::internals::adapters::streaming::ParallelStreamingLowess;
-use ::fastLowess::internals::api::{LowessBuilder, Online, Streaming};
-use ::fastLowess::internals::binding_support;
+use fastLowess::internals::adapters::online::ParallelOnlineLowess;
+use fastLowess::internals::adapters::streaming::ParallelStreamingLowess;
+use fastLowess::internals::api::{LowessBuilder, Online, Streaming};
+use fastLowess::internals::binding_support;
 
-use ::fastLowess::prelude::LowessResult;
+use fastLowess::prelude::LowessResult;
 
 // ============================================================================
 // Helper Functions
@@ -512,7 +512,8 @@ impl PyLowess {
         cv_method="kfold",
         cv_k=5,
         parallel=true,
-        cv_seed=None
+        cv_seed=None,
+        return_se=false
     ))]
     #[allow(clippy::too_many_arguments)]
     fn new(
@@ -535,6 +536,7 @@ impl PyLowess {
         cv_k: usize,
         parallel: bool,
         cv_seed: Option<u64>,
+        return_se: bool,
     ) -> PyResult<Self> {
         let builder = map_invalid_arg(binding_support::apply_builder_options(
             LowessBuilder::<f64>::new(),
@@ -551,7 +553,7 @@ impl PyLowess {
                 return_residuals,
                 return_robustness_weights,
                 return_diagnostics,
-                return_se: false,
+                return_se,
                 confidence_intervals,
                 prediction_intervals,
                 parallel: Some(parallel),

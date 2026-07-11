@@ -121,6 +121,7 @@ struct LowessOptions {
   bool return_diagnostics = false;
   bool return_residuals = false;
   bool return_robustness_weights = false;
+  bool return_se = false; ///< Return standard errors
   bool parallel = true;
 
   // Cross-validation options
@@ -421,7 +422,8 @@ public:
         options.zero_weight_fallback.c_str(), options.auto_converge,
         options.cv_fractions.empty() ? nullptr : options.cv_fractions.data(),
         static_cast<unsigned long>(options.cv_fractions.size()),
-        options.cv_method.c_str(), options.cv_k, options.parallel ? 1 : 0);
+        options.cv_method.c_str(), options.cv_k, options.parallel ? 1 : 0,
+        options.return_se ? 1 : 0);
     if (options.cv_seed > 0) {
       cpp_lowess_set_cv_seed(ptr_, static_cast<unsigned long>(options.cv_seed));
     }

@@ -165,6 +165,7 @@ class Lowess:
         cv_k: int = 5,
         parallel: bool = True,
         cv_seed: int | None = None,
+        return_se: bool = False,
     ) -> None: ...
     def fit(
         self, x: ArrayLike, y: ArrayLike, custom_weights: ArrayLike | None = None

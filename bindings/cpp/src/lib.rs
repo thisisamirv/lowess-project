@@ -294,6 +294,7 @@ pub unsafe extern "C" fn cpp_lowess_new(
     cv_method: *const c_char,
     cv_k: c_int,
     parallel: c_int,
+    return_se: c_int,
 ) -> *mut CppLowess {
     with_panic_ptr(|| {
         clear_last_error();
@@ -343,6 +344,7 @@ pub unsafe extern "C" fn cpp_lowess_new(
                 return_residuals: return_residuals != 0,
                 return_robustness_weights: return_robustness_weights != 0,
                 return_diagnostics: return_diagnostics != 0,
+                return_se: return_se != 0,
                 confidence_intervals: (!confidence_intervals.is_nan())
                     .then_some(confidence_intervals),
                 prediction_intervals: (!prediction_intervals.is_nan())
