@@ -404,18 +404,17 @@ For large datasets that arrive in batches or files.
 
 === "C++"
     ```cpp
-    #include "fastlowess.hpp"
+    // Sliding window over preamble x/y data
+    for (std::size_t i = 0; i < n; ++i) {
+        windowX.push_back(x[i]);
+        windowY.push_back(y[i]);
 
-    // Sliding window logic
-    for (const auto& point : stream) {
-        windowX.push_back(point.x);
-        windowY.push_back(point.y);
-        
         if (windowX.size() > 50) {
             windowX.erase(windowX.begin());
             windowY.erase(windowY.begin());
         }
 
+        if (windowX.size() < 2) continue;
         fastlowess::LowessOptions sw_opts;
         sw_opts.fraction = 0.4;
         fastlowess::Lowess model(sw_opts);

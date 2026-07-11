@@ -113,22 +113,14 @@ ifeq ($(OS),Windows_NT)
 	# Detect whether MinGW GCC is the active C++ toolchain (e.g. rtools45, MSYS2).
 	# gcc -dumpmachine reports a mingw triple when MinGW is first in PATH.
 	# Only use the GNU Rust target when Cargo's expected GNU linker is also
-	# available; some Windows setups expose `gcc` (for example via Rtools)
-	# without providing `x86_64-w64-mingw32-gcc`, which would make `cargo build`
-	# fail during linking.
 	# Otherwise keep the MSVC Rust target for native MSVC builds.
+	# The .cargo/config.toml supplies the full MinGW linker path so Cargo
+	# works even when x86_64-w64-mingw32-gcc is not on PATH.
 	_CPP_GCC_MACHINE := $(shell gcc -dumpmachine 2>/dev/null)
-	_CPP_GNU_RUST_LINKER := $(shell command -v x86_64-w64-mingw32-gcc 2>/dev/null)
 	ifneq ($(findstring mingw,$(_CPP_GCC_MACHINE)),)
-	ifneq ($(_CPP_GNU_RUST_LINKER),)
 		_CPP_WIN_TOOLCHAIN := mingw
 		CPP_CARGO_TARGET := --target x86_64-pc-windows-gnu
 		CPP_LIBRARY_DIR := target/x86_64-pc-windows-gnu/release-c
-	else
-		_CPP_WIN_TOOLCHAIN := msvc
-		CPP_CARGO_TARGET := --target x86_64-pc-windows-msvc
-		CPP_LIBRARY_DIR := target/x86_64-pc-windows-msvc/release-c
-	endif
 	else
 		_CPP_WIN_TOOLCHAIN := msvc
 		CPP_CARGO_TARGET := --target x86_64-pc-windows-msvc

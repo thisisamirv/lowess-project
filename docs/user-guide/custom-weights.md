@@ -149,12 +149,12 @@ that would otherwise include it.
 
 === "C++"
     ```cpp
-    std::vector<double> x(10), y(10);
+    std::vector<double> xw(10), yw(10);
     for (std::size_t i = 0; i < 10; ++i) {
-        x[i] = static_cast<double>(i);
-        y[i] = x[i] * 2.0;
+        xw[i] = static_cast<double>(i);
+        yw[i] = xw[i] * 2.0;
     }
-    y[5] = 100.0; // spike
+    yw[5] = 100.0; // spike
 
     fastlowess::LowessOptions opts;
     opts.fraction = 0.5;
@@ -163,7 +163,7 @@ that would otherwise include it.
     std::vector<double> weights(10, 1.0);
     weights[5] = 0.0; // exclude the spike
 
-    auto result = fastlowess::Lowess(opts).fit(x, y, weights).value();
+    auto result = fastlowess::Lowess(opts).fit(xw, yw, weights).value();
     ```
 
 ---
@@ -238,6 +238,8 @@ reference instruments, or low-noise observations.
     std::vector<double> weights(x.size(), 1.0);
     for (std::size_t idx : calibration_indices) weights[idx] = 10.0;
 
+    fastlowess::LowessOptions opts;
+    opts.fraction = 0.5;
     auto result = fastlowess::Lowess(opts).fit(x, y, weights).value();
     ```
 
@@ -300,9 +302,10 @@ weighting.
 === "C++"
     ```cpp
     std::vector<double> weights(sigma.size());
-    std::transform(sigma.begin(), sigma.end(), weights.begin(),
-                   [](double s) { return 1.0 / (s * s); });
+    for (std::size_t i = 0; i < sigma.size(); ++i) weights[i] = 1.0 / (sigma[i] * sigma[i]);
 
+    fastlowess::LowessOptions opts;
+    opts.fraction = 0.5;
     auto result = fastlowess::Lowess(opts).fit(x, y, weights).value();
     ```
 
@@ -399,7 +402,7 @@ for *known* bad points and robustness for *unknown* contamination.
 
 === "C++"
     ```cpp
-    std::vector<double> weights(20, 1.0);
+    std::vector<double> weights(n, 1.0);
     weights[3] = 0.0;
 
     fastlowess::LowessOptions opts;

@@ -641,6 +641,8 @@ See [Custom Weights](custom-weights.md) for a full discussion.
 
 === "C++"
     ```cpp
+    fastlowess::LowessOptions opts;
+    opts.fraction = 0.5;
     std::vector<double> weights(x.size(), 1.0);
     weights[5] = 0.0; // exclude index 5
 
@@ -778,7 +780,7 @@ Include fit quality metrics (Batch and Streaming only).
     fastlowess::Lowess model({ .return_diagnostics = true});
     auto result = model.fit(x, y).value();
     auto diag = result.diagnostics();
-    std::cout << "R²: " << diag.r_squared << std::endl;
+    std::cout << "R2: " << diag.r_squared() << std::endl;
     ```
 
 ---
@@ -1011,9 +1013,11 @@ Selection strategy for automated parameter tuning.
 
 === "C++"
     ```cpp
-    auto model = fastlowess::Lowess::new()
-        .cross_validate(fastlowess::KFold(5, {0.1, 0.3, 0.5}))
-        .build();
+    fastlowess::LowessOptions cv_opts;
+    cv_opts.cv_k = 5;
+    cv_opts.cv_fractions = {0.1, 0.3, 0.5};
+    fastlowess::Lowess model(cv_opts);
+    auto result = model.fit(x, y).value();
     ```
 
 ---

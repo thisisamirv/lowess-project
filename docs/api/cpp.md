@@ -11,7 +11,9 @@ The `Lowess` class allows configuring the LOWESS parameters once and fitting mul
 **Constructor:**
 
 ```cpp
-explicit Lowess(const LowessOptions &options = {})
+fastlowess::LowessOptions opts;
+opts.fraction = 0.5;
+fastlowess::Lowess model(opts);
 ```
 
 * `options`: A `LowessOptions` struct containing configuration parameters.
@@ -19,9 +21,11 @@ explicit Lowess(const LowessOptions &options = {})
 **Methods:**
 
 ```cpp
-LowessResult fit(const std::vector<double> &x, const std::vector<double> &y)
-LowessResult fit(const std::vector<double> &x, const std::vector<double> &y,
-                 const std::vector<double> &custom_weights)
+fastlowess::Lowess model;
+auto result = model.fit(x, y).value();
+// or with custom weights:
+std::vector<double> weights(x.size(), 1.0);
+auto resultW = model.fit(x, y, weights).value();
 ```
 
 * Fits the model to the provided `x` and `y` data vectors.
@@ -35,7 +39,9 @@ The `StreamingLowess` class processes data in chunks, suitable for very large da
 **Constructor:**
 
 ```cpp
-explicit StreamingLowess(const StreamingOptions &options = {})
+fastlowess::StreamingOptions opts;
+opts.chunk_size = 5;
+fastlowess::StreamingLowess model(opts);
 ```
 
 * `options`: A `StreamingOptions` struct (inherits from `LowessOptions`) with additional `chunk_size` and `overlap` parameters.
@@ -43,13 +49,22 @@ explicit StreamingLowess(const StreamingOptions &options = {})
 **Methods:**
 
 ```cpp
-LowessResult process_chunk(const std::vector<double> &x, const std::vector<double> &y)
+fastlowess::StreamingOptions opts;
+opts.chunk_size = 10;
+opts.overlap = 0;
+fastlowess::StreamingLowess model(opts);
+(void)model.process_chunk(x, y);
 ```
 
 * Processes a chunk of data. Returns partial results.
 
 ```cpp
-LowessResult finalize()
+fastlowess::StreamingOptions opts;
+opts.chunk_size = 10;
+opts.overlap = 0;
+fastlowess::StreamingLowess model(opts);
+model.process_chunk(x, y);
+auto result = model.finalize().value();
 ```
 
 * Finalizes the smoothing process and returns any remaining buffered results.
@@ -61,7 +76,10 @@ The `OnlineLowess` class updates the model incrementally with new data points.
 **Constructor:**
 
 ```cpp
-explicit OnlineLowess(const OnlineOptions &options = {})
+fastlowess::OnlineOptions opts;
+opts.window_capacity = 10;
+fastlowess::OnlineLowess model(opts);
+auto out = model.add_point(x[0], y[0]);
 ```
 
 * `options`: An `OnlineOptions` struct (inherits from `LowessOptions`) with `window_capacity`, `min_points`, and `update_mode`.
@@ -69,7 +87,11 @@ explicit OnlineLowess(const OnlineOptions &options = {})
 **Methods:**
 
 ```cpp
-Expected<OnlineOutput> add_point(double x, double y)
+fastlowess::OnlineOptions opts;
+opts.window_capacity = 10;
+fastlowess::OnlineLowess model(opts);
+// Returns Expected<OnlineOutput> — empty until window fills
+auto out = model.add_point(x[0], y[0]);
 ```
 
 * Adds a single point to the sliding window. Returns `Expected<OnlineOutput>` — check `has_value()` to see whether the window is ready.

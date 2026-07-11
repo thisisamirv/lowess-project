@@ -175,12 +175,10 @@ Each point is held out once. Most thorough but slowest.
 
 === "C++"
     ```cpp
-    #include "fastlowess.hpp"
-
-    fastlowess::Lowess model({
-        .cv_method = "loocv",
-        .cv_fractions = {0.2, 0.3, 0.5, 0.7}
-        });
+    fastlowess::LowessOptions cv_opts;
+    cv_opts.cv_method = "loocv";
+    cv_opts.cv_fractions = {0.2, 0.3, 0.5, 0.7};
+    fastlowess::Lowess model(cv_opts);
     auto result = model.fit(x, y).value();
     ```
 

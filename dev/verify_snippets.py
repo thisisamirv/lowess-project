@@ -520,13 +520,17 @@ _CPP_PREAMBLE_TOP = textwrap.dedent("""\
         const auto& t = x;
         // sliding window accumulators
         std::vector<double> windowX, windowY;
+        // calibration indices (used in custom-weights examples)
+        std::vector<std::size_t> calibration_indices = {2, 5, 10};
+        // measurement uncertainty (used in custom-weights examples)
+        std::vector<double> sigma(n, 0.1);
         (void)x_chunk; (void)y_chunk; (void)x2d; (void)x3d; (void)z;
         (void)positions; (void)observed; (void)coverage;
         (void)times; (void)temperatures;
         (void)tIrregular; (void)yIrregular;
         (void)hours; (void)expression;
         (void)windowX; (void)windowY;
-        (void)t;
+        (void)t; (void)calibration_indices; (void)sigma;
 
 """)
 
@@ -1305,24 +1309,6 @@ def run_cpp(snippet: Snippet, timeout: int) -> RunResult:
             skip_reason="fastlowess_cpp library not built (run 'make cpp' first)",
         )
 
-    # On Windows, detect an MSVC-ABI static lib paired with a MinGW/GCC compiler.
-    # MinGW's ld cannot resolve MSVC-only symbols (__chkstk, MSVC C++ vtables).
-    if os.name == "nt" and "cl" not in Path(compiler).stem.lower():
-        _mingw_ok = any(
-            (lib_dir / _n).exists()
-            for _n in ("libfastlowess_cpp.a", "libfastlowess_cpp.dll.a", "fastlowess_cpp.dll")
-        )
-        if not _mingw_ok and (lib_dir / "fastlowess_cpp.lib").exists():
-            return RunResult(
-                snippet=snippet,
-                runner="cpp",
-                skipped=True,
-                skip_reason=(
-                    "C++ library was built for MSVC ABI but compiler is MinGW/GCC "
-                    "(rebuild with: cargo build --target x86_64-pc-windows-gnu --profile release-c)"
-                ),
-            )
-
     include_dir = str(REPO_ROOT / "bindings" / "cpp" / "include")
     lib_dir_str = str(lib_dir)
 
@@ -1367,6 +1353,18 @@ def run_cpp(snippet: Snippet, timeout: int) -> RunResult:
             )
             if cproc.returncode != 0:
                 dur = time.monotonic() - t0
+                # Detect MSVC-ABI / MinGW linker mismatch so we skip rather than fail.
+                _abi_markers = ("__chkstk", "??_7type_info", "_Unwind_Resume")
+                if os.name == "nt" and any(m in cproc.stderr for m in _abi_markers):
+                    return RunResult(
+                        snippet=snippet,
+                        runner="cpp",
+                        skipped=True,
+                        skip_reason=(
+                            "C++ library ABI mismatch (MSVC vs MinGW) — "
+                            "rebuild with: make cpp (using the x86_64-pc-windows-gnu target)"
+                        ),
+                    )
                 return RunResult(
                     snippet=snippet,
                     runner="cpp",
