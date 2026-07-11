@@ -97,6 +97,7 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `return_diagnostics()` | `bool` | `false` | Compute RMSE, MAE, R², AIC |
 | `return_residuals()` | `bool` | `false` | Include residuals in result |
 | `return_robustness_weights()` | `bool` | `false` | Include robustness weights in result |
+| `return_se()` | `bool` | `false` | Return standard errors |
 | `parallel(bool)` | `bool` | `true` | Enable parallel execution |
 | `cv_method(str)` | `&str` | `None` | CV strategy: `"kfold"` or `"loocv"` |
 | `cv_k(usize)` | `usize` | `5` | K for k-fold CV |

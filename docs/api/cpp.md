@@ -94,6 +94,7 @@ Expected<OnlineOutput> add_point(double x, double y)
 | `return_diagnostics` | `bool` | false | Compute RMSE, MAE, R², AIC |
 | `return_residuals` | `bool` | false | Include residuals in result |
 | `return_robustness_weights` | `bool` | false | Include robustness weights in result |
+| `return_se` | `bool` | false | Return standard errors |
 | `parallel` | `bool` | true | Enable parallel execution |
 | `cv_method` | `std::string` | "kfold" | CV method (`"kfold"` or `"loocv"`) (Batch only) |
 | `cv_k` | `int` | 5 | Number of folds for k-fold CV (Batch only) |

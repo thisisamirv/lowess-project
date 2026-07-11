@@ -23,6 +23,7 @@ Complete reference for all LOWESS configuration options.
 | **auto_converge** | Null value | tolerance | Early stopping | All |
 | **return_residuals** | Logical false | logical | Include residuals | All |
 | **return_robustness_weights** | Logical false | logical | Include weights | All |
+| **return_se** | Logical false | logical | Return standard errors | All |
 | **return_diagnostics** | Logical false | logical | Include metrics | Batch, Streaming |
 | **custom_weights** | Null value | positive | Per-observation weights | Batch |
 | **confidence_intervals** | Null value | (0, 1) | CI level | Batch |
@@ -840,6 +841,67 @@ Include final robustness weights (useful for outlier detection).
         });
     auto result = model.fit(x, y).value();
     auto weights = result.robustness_weights();
+    ```
+
+---
+
+### return_se
+
+Return per-point standard errors for the smoothed fit. Standard errors measure the uncertainty of each smoothed estimate and are used as the basis for confidence and prediction intervals when those are requested alongside `return_se`.
+
+=== "R"
+    ```r
+    model <- Lowess(return_se = TRUE)
+    result <- model$fit(x, y)
+    print(result$standard_errors)
+    ```
+
+=== "Python"
+    ```python
+    model = fl.Lowess(return_se=True)
+    result = model.fit(x, y)
+    print(result.standard_errors)
+    ```
+
+=== "Rust"
+    ```rust
+    let model = Lowess::new()
+        .return_se()
+        .build()?;
+
+    let result = model.fit(&x, &y)?;
+    if let Some(se) = result.standard_errors {
+        println!("SE: {:?}", se);
+    }
+    ```
+
+=== "Julia"
+    ```julia
+    model = Lowess(; return_se=true)
+    result = fit(model, x, y)
+    println(result.standard_errors)
+    ```
+
+=== "Node.js"
+    ```javascript
+    const model = new Lowess({return_se: true});
+    const result = model.fit(x, y);
+    console.log(result.standard_errors);
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const model = new Lowess({return_se: true});
+    const result = model.fit(x, y);
+    console.log(result.standard_errors);
+    ```
+
+=== "C++"
+    ```cpp
+    fastlowess::LowessOptions opts;
+    opts.return_se = true;
+    auto result = fastlowess::Lowess(opts).fit(x, y).value();
+    auto se = result.standard_errors();
     ```
 
 ---

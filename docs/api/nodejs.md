@@ -93,6 +93,7 @@ const result = online.add_point(x, y);  // returns OnlineOutput | null
 | `return_diagnostics` | `boolean` | `false` | Include diagnostics in result |
 | `return_residuals` | `boolean` | `false` | Include residuals in result |
 | `return_robustness_weights` | `boolean` | `false` | Include weights in result |
+| `return_se` | `boolean` | `false` | Return standard errors |
 | `parallel` | `boolean` | `true` | Enable parallel execution |
 | `cv_method` | `string` | `"kfold"` | CV method (`"kfold"` or `"loocv"`) (Batch only) |
 | `cv_k` | `number` | `5` | Number of folds for k-fold CV (Batch only) |

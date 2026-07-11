@@ -93,6 +93,7 @@ result <- online$add_point(x[[1L]], y[[1L]])  # returns list or NULL
 | `return_diagnostics` | `logical` | `FALSE` | Include diagnostics in result |
 | `return_residuals` | `logical` | `FALSE` | Include residuals in result |
 | `return_robustness_weights` | `logical` | `FALSE` | Include weights in result |
+| `return_se` | `logical` | `FALSE` | Return standard errors |
 | `parallel` | `logical` | `TRUE` | Enable parallel execution |
 | `cv_method` | `character` | `"kfold"` | CV method (`"kfold"` or `"loocv"`) (Batch only) |
 | `cv_k` | `integer` | `5L` | Number of folds for k-fold CV (Batch only) |

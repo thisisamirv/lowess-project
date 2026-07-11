@@ -1818,8 +1818,13 @@ impl GpuExecutor {
 
         let adapter = adapter.map_err(|_| "No GPU adapter found")?;
 
-        // The current pipeline layout binds 30 storage buffers across all bind groups.
+        // The pipeline layout binds 30 storage buffers + 1 uniform buffer = 31 total across all
+        // bind groups. Both per-type and combined limits must be requested explicitly, since
+        // Limits::default() sets the combined cap at 28 (the WebGPU baseline).
         const REQUIRED_STORAGE_BUFFERS_PER_SHADER_STAGE: u32 = 30;
+        // 30 storage + 1 uniform = 31; round up to 32 for headroom.
+        const REQUIRED_BUFFERS_PER_SHADER_STAGE: u32 = 32;
+
         let adapter_limits = adapter.limits();
         if adapter_limits.max_storage_buffers_per_shader_stage
             < REQUIRED_STORAGE_BUFFERS_PER_SHADER_STAGE
@@ -1830,9 +1835,20 @@ impl GpuExecutor {
                 REQUIRED_STORAGE_BUFFERS_PER_SHADER_STAGE
             ));
         }
+        if adapter_limits.max_buffers_and_acceleration_structures_per_shader_stage
+            < REQUIRED_BUFFERS_PER_SHADER_STAGE
+        {
+            return Err(format!(
+                "GPU adapter only supports {} total buffer bindings per shader stage, but {} are required",
+                adapter_limits.max_buffers_and_acceleration_structures_per_shader_stage,
+                REQUIRED_BUFFERS_PER_SHADER_STAGE
+            ));
+        }
 
         let limits = Limits {
             max_storage_buffers_per_shader_stage: REQUIRED_STORAGE_BUFFERS_PER_SHADER_STAGE,
+            max_buffers_and_acceleration_structures_per_shader_stage:
+                REQUIRED_BUFFERS_PER_SHADER_STAGE,
             ..Default::default()
         };
 

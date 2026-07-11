@@ -93,6 +93,7 @@ result = add_point(online, x[1], y[1])  # returns OnlineOutput or nothing
 | `return_diagnostics` | `Bool` | `false` | Include diagnostics in result |
 | `return_residuals` | `Bool` | `false` | Include residuals in result |
 | `return_robustness_weights` | `Bool` | `false` | Include weights in result |
+| `return_se` | `Bool` | `false` | Return standard errors |
 | `parallel` | `Bool` | `true` | Enable parallel execution |
 | `cv_method` | `String` | `"kfold"` | CV method (`"kfold"` or `"loocv"`) (Batch only) |
 | `cv_k` | `Int` | `5` | Number of folds for k-fold CV (Batch only) |

@@ -92,6 +92,7 @@ result = online.add_point(x, y)  # returns OnlineOutput | None
 | `return_diagnostics` | `bool` | `False` | Include diagnostics in result |
 | `return_residuals` | `bool` | `False` | Include residuals in result |
 | `return_robustness_weights` | `bool` | `False` | Include weights in result |
+| `return_se` | `bool` | `False` | Return standard errors |
 | `parallel` | `bool` | `True` | Enable parallel execution |
 | `cv_method` | `str` | `"kfold"` | CV method (`"kfold"` or `"loocv"`) (Batch only) |
 | `cv_k` | `int` | `5` | Number of folds for k-fold CV (Batch only) |

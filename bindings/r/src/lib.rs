@@ -112,7 +112,7 @@ impl RLowess {
                 return_residuals,
                 return_robustness_weights,
                 return_diagnostics,
-                return_se: return_se,
+                return_se,
                 confidence_intervals: match confidence_intervals {
                     NotNull(v) => Some(v),
                     Null => None,
