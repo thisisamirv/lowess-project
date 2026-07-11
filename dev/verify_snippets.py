@@ -255,6 +255,10 @@ _JULIA_PREAMBLE = textwrap.dedent("""\
     data_x = copy(x[1:30])
     data_y = copy(y[1:30])
 
+    # custom-weights examples
+    calibration_indices = [3, 7, 15]
+    sigma = fill(0.1, _n)
+
     # API doc placeholders (method-signature examples use these as variables)
     model  = Lowess()
     stream = StreamingLowess()
@@ -709,6 +713,11 @@ def should_skip(snippet: Snippet, runner: str) -> Optional[str]:
         # Skip package-management / installation snippets
         if re.search(r"\bPkg\.(add|develop|clone|rm|pin)\s*\(", code):
             return "Pkg management snippet"
+        # Skip API method-signature snippets: type-annotated keyword arguments
+        # (e.g. `; custom_weights::Union{...} = nothing`) are valid only in
+        # function *definitions*, not call sites — Julia rejects them as calls.
+        if re.search(r";\s*\w+::", code, re.DOTALL):
+            return "Julia method signature (keyword arg with type annotation — not callable)"
     if runner == "nodejs":
         # TypeScript-only syntax (type annotations)
         if ": SmoothOptions" in code or ": LowessResult" in code:
@@ -954,6 +963,21 @@ def run_julia(snippet: Snippet, timeout: int) -> RunResult:
     env = {**os.environ}
     if julia_project.exists():
         env["JULIA_PROJECT"] = str(julia_project)
+
+    # Prefer the locally-built library over a potentially-stale JLL artifact
+    if "FASTLOWESS_LIB" not in env:
+        _jl_lib_name = (
+            "fastlowess_jl.dll"
+            if sys.platform == "win32"
+            else (
+                "libfastlowess_jl.dylib"
+                if sys.platform == "darwin"
+                else "libfastlowess_jl.so"
+            )
+        )
+        _local_lib = REPO_ROOT / "target" / "release" / _jl_lib_name
+        if _local_lib.exists():
+            env["FASTLOWESS_LIB"] = str(_local_lib)
 
     try:
         t0 = time.monotonic()
@@ -1452,6 +1476,12 @@ def iter_md_files(root: Path, file_filter: Optional[str]) -> Iterator[Path]:
 
 
 def main(argv: Optional[List[str]] = None) -> int:
+    # Ensure stdout/stderr use UTF-8 on Windows (avoids UnicodeEncodeError for
+    # characters like π that can't be encoded by the default cp1252 codec).
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[union-attr]
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[union-attr]
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,

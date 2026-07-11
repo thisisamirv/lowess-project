@@ -217,11 +217,9 @@ Request both types simultaneously:
 
 === "Julia"
     ```julia
-    result = smooth(
-        x, y,
-        fraction=0.5,
-        confidence_intervals=0.95,
-        prediction_intervals=0.95
+    result = fit(
+        Lowess(fraction=0.5, confidence_intervals=0.95, prediction_intervals=0.95),
+        x, y
     )
     ```
 
