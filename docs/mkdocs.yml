@@ -3,6 +3,9 @@ site_description: High-performance LOWESS smoothing for Rust, Python, R, Julia, 
 site_author: Amir Valizadeh
 site_url: https://lowess.readthedocs.io/
 
+docs_dir: .
+site_dir: ../site
+
 repo_name: thisisamirv/lowess-project
 repo_url: https://github.com/thisisamirv/lowess-project
 edit_uri: edit/main/docs/
