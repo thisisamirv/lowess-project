@@ -47,6 +47,12 @@ jobs:
           cd bindings/r
           ../../dev/prepare_cran.sh
 
+      - name: Suppress C++ compilation warnings (libsass)
+        run: |
+          mkdir -p ~/.R
+          echo "CXXFLAGS += -w" >> ~/.R/Makevars
+          echo "CFLAGS += -w" >> ~/.R/Makevars
+
       - name: Install dependencies
         run: |
           install.packages(c("remotes", "BiocManager", "covr"))

@@ -367,7 +367,7 @@ _python_impl:
 	@. $(PY_ACTIVATE) && python -m pip cache purge >/dev/null 2>&1 || true
 	@echo "Installing Python packages (pip, pytest, numpy, maturin, ruff)..."
 	@. $(PY_ACTIVATE) && python -m pip install -q --no-cache-dir --upgrade pip >/dev/null
-	@. $(PY_ACTIVATE) && python -m pip install -q --no-cache-dir pytest numpy maturin ruff >/dev/null
+	@. $(PY_ACTIVATE) && python -m pip install -q --no-cache-dir pytest numpy maturin ruff matplotlib >/dev/null
 	@echo "=============================================================================="
 	@echo "1. Formatting..."
 	@echo "=============================================================================="
