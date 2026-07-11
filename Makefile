@@ -957,17 +957,17 @@ examples-python:
 examples-r:
 	@echo "Running $(R_PKG_NAME) examples..."
 	@echo "=============================================================================="
-	@Rscript $(EXAMPLES_DIR)/r/batch_smoothing.R
-	@Rscript $(EXAMPLES_DIR)/r/streaming_smoothing.R
-	@Rscript $(EXAMPLES_DIR)/r/online_smoothing.R
+	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript $(EXAMPLES_DIR)/r/batch_smoothing.R
+	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript $(EXAMPLES_DIR)/r/streaming_smoothing.R
+	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript $(EXAMPLES_DIR)/r/online_smoothing.R
 	@echo "=============================================================================="
 
 examples-julia:
 	@echo "Running $(JL_PKG) examples..."
 	@echo "=============================================================================="
-	@julia --project=$(JL_DIR)/julia $(EXAMPLES_DIR)/julia/batch_smoothing.jl
-	@julia --project=$(JL_DIR)/julia $(EXAMPLES_DIR)/julia/streaming_smoothing.jl
-	@julia --project=$(JL_DIR)/julia $(EXAMPLES_DIR)/julia/online_smoothing.jl
+	@FASTLOWESS_LIB=$(CURDIR)/$(JL_SHARED_LIB) julia --project=$(JL_DIR)/julia $(EXAMPLES_DIR)/julia/batch_smoothing.jl
+	@FASTLOWESS_LIB=$(CURDIR)/$(JL_SHARED_LIB) julia --project=$(JL_DIR)/julia $(EXAMPLES_DIR)/julia/streaming_smoothing.jl
+	@FASTLOWESS_LIB=$(CURDIR)/$(JL_SHARED_LIB) julia --project=$(JL_DIR)/julia $(EXAMPLES_DIR)/julia/online_smoothing.jl
 	@echo "=============================================================================="
 
 examples-nodejs:

@@ -178,9 +178,7 @@ def main():
     weights = np.ones(len(x_cw))
     weights[5] = 0.0
     no_w = Lowess(fraction=0.5, iterations=0).fit(x_cw, y_cw)
-    zero_w = Lowess(fraction=0.5, iterations=0).fit(
-        x_cw, y_cw, custom_weights=weights.tolist()
-    )
+    zero_w = Lowess(fraction=0.5, iterations=0).fit(x_cw, y_cw, custom_weights=weights)
     err_no_w = abs(no_w.y[5] - 10.0)
     err_zero_w = abs(zero_w.y[5] - 10.0)
     print(f" - Zero weight at outlier: error {err_no_w:.2f} -> {err_zero_w:.2f}")
@@ -191,9 +189,7 @@ def main():
     w_sp = np.ones(15)
     w_sp[7] = 100.0
     eq = Lowess(fraction=0.6, iterations=0).fit(x_sp, y_sp)
-    hi = Lowess(fraction=0.6, iterations=0).fit(
-        x_sp, y_sp, custom_weights=w_sp.tolist()
-    )
+    hi = Lowess(fraction=0.6, iterations=0).fit(x_sp, y_sp, custom_weights=w_sp)
     print(f" - High weight at spike: fit {eq.y[7]:.4f} -> {hi.y[7]:.4f}")
 
 

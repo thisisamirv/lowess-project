@@ -47,7 +47,7 @@ function main() {
     const resFull = new Float64Array(nPoints);
     for (let i = 0; i < nPoints; i++) {
         const res = onlineFull.add_point(x[i], y[i]);
-        resFull[i] = res !== null ? res : y[i];
+        resFull[i] = res !== null ? res.smoothed : y[i];
     }
 
     // Incremental Update Mode (faster for large windows)
@@ -59,7 +59,7 @@ function main() {
     const resInc = new Float64Array(nPoints);
     for (let i = 0; i < nPoints; i++) {
         const res = onlineInc.add_point(x[i], y[i]);
-        resInc[i] = res !== null ? res : y[i];
+        resInc[i] = res !== null ? res.smoothed : y[i];
     }
 
     // Compare results

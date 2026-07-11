@@ -53,7 +53,7 @@ example_1_basic_online <- function() {
     online_smooth <- function(model, x, y) {
         sapply(seq_along(x), function(i) {
             r <- model$add_point(x[[i]], y[[i]])
-            if (is.null(r)) y[[i]] else r
+            if (is.null(r)) y[[i]] else r$smoothed
         })
     }
 
@@ -92,7 +92,7 @@ example_2_sensor_simulation <- function() {
     print(model)
     smoothed <- sapply(seq_along(x), function(i) {
         r <- model$add_point(x[[i]], y[[i]])
-        if (is.null(r)) y[[i]] else r
+        if (is.null(r)) y[[i]] else r$smoothed
     })
 
     cat(sprintf("%6s %12s %12s\n", "Hour", "Raw Temp", "Smoothed"))
@@ -131,7 +131,7 @@ example_3_window_comparison <- function() {
             iterations = 2L
         )
         result <- model$add_point(x[[length(x)]], y[[length(x)]])
-        final_val <- if (is.null(result)) tail(y, 1) else result
+        final_val <- if (is.null(result)) tail(y, 1) else result$smoothed
 
         cat(sprintf("Window capacity: %d\n", window_size))
         cat(sprintf("  Final smoothed value: %.4f\n", final_val))
@@ -169,7 +169,7 @@ example_4_memory_bounded <- function() {
     last_smoothed <- NA_real_
     for (i in seq_along(x)) {
         r <- model$add_point(x[[i]], y[[i]])
-        if (!is.null(r)) last_smoothed <- r
+        if (!is.null(r)) last_smoothed <- r$smoothed
     }
     duration <- as.numeric(Sys.time() - start_time, units = "secs")
 

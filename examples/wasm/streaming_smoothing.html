@@ -44,7 +44,7 @@
     <div id="output">Ready.</div>
 
     <script type="module">
-        import init, { StreamingLowessWasm } from "../../bindings/wasm/pkg-web/fastlowess_wasm.js";
+        import init, { StreamingLowess } from "../../bindings/wasm/pkg-web/fastlowess_wasm.js";
 
         async function run() {
             try {
@@ -61,7 +61,7 @@
                 log("\nStarting streaming process...");
 
                 // Initialize Streamer
-                const streamer = new StreamingLowessWasm(
+                const streamer = new StreamingLowess(
                     { fraction: 0.1 },
                     { chunk_size: 1000, overlap: 100 }
                 );

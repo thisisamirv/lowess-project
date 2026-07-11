@@ -49,7 +49,7 @@ def main():
         result = np.empty_like(y_arr)
         for i, (xi, yi) in enumerate(zip(x_arr, y_arr)):
             r = model.add_point(float(xi), float(yi))
-            result[i] = r if r is not None else yi
+            result[i] = r.smoothed if r is not None else yi
         return result
 
     # Full Update Mode (higher accuracy)
