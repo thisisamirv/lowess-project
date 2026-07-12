@@ -19,7 +19,7 @@ Unlike parametric methods (linear regression, polynomial fitting), LOWESS adapts
 ## How It Works
 
 <figure markdown="span">
-  ![LOWESS Smoothing Concept](../assets/diagrams/fastLowess_concept.svg){ width="800" }
+  ![LOWESS Smoothing Concept](../assets/diagrams/lowess_concept.svg){ width="800" }
   <figcaption>LOWESS fits local weighted regressions at each point, using a focused local window around each evaluation point</figcaption>
 </figure>
 

@@ -322,13 +322,13 @@ def plot_robust_iter_comparison():
     save_figure(figure, "robust_iter_comparison.svg")
 
 
-def plot_fast_lowess_concept():
-    """Visualize the local neighborhood and fit used at one focal point."""
-    if not check_file("fastLowess_concept.csv"):
+def plot_lowess_concept():
+    """Visualize the tricube-weighted local linear fit used at one focal point."""
+    if not check_file("lowess_concept.csv"):
         return
-    print("Plotting fastLowess Concept...")
+    print("Plotting Lowess Concept...")
 
-    df = pd.read_csv(get_input_path("fastLowess_concept.csv"))
+    df = pd.read_csv(get_input_path("lowess_concept.csv"))
     focus_row = df[df["is_focus"] == 1].iloc[0]
     x0 = focus_row["x"]
     y0_fit = focus_row["y_smooth"]
@@ -351,7 +351,7 @@ def plot_fast_lowess_concept():
         s=60,
         edgecolor="k",
         linewidth=0.5,
-        label="Neighborhood",
+        label="Tricube-Weighted Points",
     )
 
     ax.plot(
@@ -359,7 +359,7 @@ def plot_fast_lowess_concept():
         neighborhood["y_local_fit_x0"],
         color="#d97706",
         lw=3,
-        label="Local Polynomial",
+        label="Weighted Linear Fit",
     )
 
     ax.scatter(
@@ -373,16 +373,14 @@ def plot_fast_lowess_concept():
         label="Fitted Value",
     )
 
-    ax.set_title(
-        f"How fastLowess Works (Focus x={x0:.2f})", fontsize=14, fontweight="bold"
-    )
+    ax.set_title(f"How LOWESS Works (Focus x={x0:.2f})", fontsize=14, fontweight="bold")
     ax.legend(loc="upper right")
     ax.grid(True, alpha=0.3)
 
     colorbar = figure.colorbar(scatter, ax=ax)
     colorbar.set_label("Weight", fontsize=10)
 
-    save_figure(figure, "fastLowess_concept.svg")
+    save_figure(figure, "lowess_concept.svg")
 
 
 # ---------------------------------------------------------------------------
@@ -947,7 +945,7 @@ def build_plot_targets():
         "fraction": plot_fraction_comparison,
         "intervals": plot_intervals_comparison,
         "robustness": plot_robust_iter_comparison,
-        "concept": plot_fast_lowess_concept,
+        "concept": plot_lowess_concept,
         "kernel": plot_kernel_comparison,
         "robust_method": plot_robust_method_comparison,
         "boundary": plot_boundary_policy_comparison,

@@ -221,11 +221,12 @@ benchmark_genomic <- function(iterations = 10) {
 
     for (size in sizes) {
         data <- generate_genomic_data(size)
+        size_str <- format(size, scientific = FALSE, trim = TRUE)
         run <- function() {
             lowess(x = data$x, y = data$y, f = 0.1, iter = 3)
         }
-        results[[paste0("genomic_", size)]] <- run_benchmark(
-            paste0("genomic_", size), size, run, iterations
+        results[[paste0("genomic_", size_str)]] <- run_benchmark(
+            paste0("genomic_", size_str), size, run, iterations
         )
     }
     results

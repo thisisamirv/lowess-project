@@ -41,7 +41,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     run_robust_iter_comparison()?;
     println!();
 
-    run_loess_concept()?;
+    run_lowess_concept()?;
     println!();
 
     run_kernel_comparison()?;
@@ -323,8 +323,8 @@ fn run_robust_iter_comparison() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// 5. LOESS Concept
-fn run_loess_concept() -> Result<(), Box<dyn std::error::Error>> {
+/// 5. LOWESS Concept
+fn run_lowess_concept() -> Result<(), Box<dyn std::error::Error>> {
     let n = 80;
     let mut x = Vec::with_capacity(n);
     let mut y = Vec::with_capacity(n);
@@ -401,7 +401,7 @@ fn run_loess_concept() -> Result<(), Box<dyn std::error::Error>> {
     println!("Focus point: x = {:.2} (Index {})", x0, focus_idx);
     println!("Local Fit: a={:.3}, b={:.3}", a, b);
 
-    let path = "../output/visual/fastLowess_concept.csv";
+    let path = "../output/visual/lowess_concept.csv";
     let mut file = File::create(path)?;
     writeln!(file, "x,y_noisy,y_smooth,weight,y_local_fit_x0,is_focus")?;
 
