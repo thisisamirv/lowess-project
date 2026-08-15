@@ -94,8 +94,7 @@ Pads beyond both endpoints by replicating the first and last observed values. Pr
 
 === "WebAssembly"
     ```javascript
-    import init, { Lowess } from 'fastlowess-wasm';
-    await init();
+    const { Lowess } = require('./fastlowess_wasm.js');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -205,8 +204,7 @@ Mirrors the data about both endpoints before fitting, then discards the reflecte
 
 === "WebAssembly"
     ```javascript
-    import init, { Lowess } from 'fastlowess-wasm';
-    await init();
+    const { Lowess } = require('./fastlowess_wasm.js');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -316,8 +314,7 @@ Pads with zeros beyond both endpoints. Appropriate when the underlying process i
 
 === "WebAssembly"
     ```javascript
-    import init, { Lowess } from 'fastlowess-wasm';
-    await init();
+    const { Lowess } = require('./fastlowess_wasm.js');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -430,8 +427,7 @@ Applies no padding. Each local fit uses only the points that are actually availa
 
 === "WebAssembly"
     ```javascript
-    import init, { Lowess } from 'fastlowess-wasm';
-    await init();
+    const { Lowess } = require('./fastlowess_wasm.js');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));

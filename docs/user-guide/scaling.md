@@ -102,8 +102,7 @@ First centers residuals at their median, then takes the median of the absolute d
 
 === "WebAssembly"
     ```javascript
-    import init, { Lowess } from 'fastlowess-wasm';
-    await init();
+    const { Lowess } = require('./fastlowess_wasm.js');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -216,8 +215,7 @@ Uses the uncentered median — unlike MAD it does not subtract the residual medi
 
 === "WebAssembly"
     ```javascript
-    import init, { Lowess } from 'fastlowess-wasm';
-    await init();
+    const { Lowess } = require('./fastlowess_wasm.js');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -330,8 +328,7 @@ Arithmetic mean of absolute residuals. Non-robust: a single extreme outlier infl
 
 === "WebAssembly"
     ```javascript
-    import init, { Lowess } from 'fastlowess-wasm';
-    await init();
+    const { Lowess } = require('./fastlowess_wasm.js');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));

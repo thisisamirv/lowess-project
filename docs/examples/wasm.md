@@ -94,9 +94,7 @@ main();
 ### Browser (ES Modules)
 
 ```javascript
-import init, { Lowess } from 'fastlowess-wasm';
-
-await init();
+const { Lowess } = require('./fastlowess_wasm.js');
 
 const x = Float64Array.from({ length: 100 }, (_, i) => i * 0.1);
 const y = Float64Array.from(x, xi => Math.sin(xi) + ((xi * 7 % 1) - 0.5) * 0.2);

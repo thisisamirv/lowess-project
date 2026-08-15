@@ -105,8 +105,7 @@ $$w(u) = (1 - |u|^3)^3$$
 
 === "WebAssembly"
     ```javascript
-    import init, { Lowess } from 'fastlowess-wasm';
-    await init();
+    const { Lowess } = require('./fastlowess_wasm.js');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -218,8 +217,7 @@ $$w(u) = \frac{3}{4}(1 - u^2)$$
 
 === "WebAssembly"
     ```javascript
-    import init, { Lowess } from 'fastlowess-wasm';
-    await init();
+    const { Lowess } = require('./fastlowess_wasm.js');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -331,8 +329,7 @@ $$w(u) = \exp(-u^2/2)$$
 
 === "WebAssembly"
     ```javascript
-    import init, { Lowess } from 'fastlowess-wasm';
-    await init();
+    const { Lowess } = require('./fastlowess_wasm.js');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -444,8 +441,7 @@ $$w(u) = (1 - u^2)^2$$
 
 === "WebAssembly"
     ```javascript
-    import init, { Lowess } from 'fastlowess-wasm';
-    await init();
+    const { Lowess } = require('./fastlowess_wasm.js');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -557,8 +553,7 @@ $$w(u) = \cos(\pi u / 2)$$
 
 === "WebAssembly"
     ```javascript
-    import init, { Lowess } from 'fastlowess-wasm';
-    await init();
+    const { Lowess } = require('./fastlowess_wasm.js');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -670,8 +665,7 @@ $$w(u) = 1 - |u|$$
 
 === "WebAssembly"
     ```javascript
-    import init, { Lowess } from 'fastlowess-wasm';
-    await init();
+    const { Lowess } = require('./fastlowess_wasm.js');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -783,8 +777,7 @@ $$w(u) = 1$$
 
 === "WebAssembly"
     ```javascript
-    import init, { Lowess } from 'fastlowess-wasm';
-    await init();
+    const { Lowess } = require('./fastlowess_wasm.js');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));

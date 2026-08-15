@@ -25,6 +25,11 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
     observed <- 50 + sin(positions / 100) * 20 + rnorm(length(positions), sd = 5)
 
     library(rfastlowess)
+    set.seed(42)
+    positions <- seq(0, 10000, by = 10)
+    observed <- 50 + sin(positions / 100) * 20 + rnorm(length(positions), sd = 5)
+
+    library(rfastlowess)
 
     # Simulate methylation data
     set.seed(42)
@@ -135,6 +140,13 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
     observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
 
     using FastLOWESS
+    using Random
+
+    rng = MersenneTwister(42)
+    positions = collect(0.0:10.0:10000.0)
+    observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
+
+    using FastLOWESS
 
     # positions and observed are your methylation data
     model = Lowess(;
@@ -226,6 +238,11 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
 
 === "R"
     ```r
+    library(rfastlowess)
+    set.seed(42)
+    positions <- seq(0, 10000, by = 10)
+    observed <- 50 + sin(positions / 100) * 20 + rnorm(length(positions), sd = 5)
+
     library(rfastlowess)
     set.seed(42)
     positions <- seq(0, 10000, by = 10)
@@ -327,6 +344,13 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
 
 === "Julia"
     ```julia
+    using FastLOWESS
+    using Random
+
+    rng = MersenneTwister(42)
+    positions = collect(0.0:10.0:10000.0)
+    observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
+
     using FastLOWESS
     using Random, Statistics
 
@@ -431,6 +455,11 @@ For whole-genome data that doesn't fit in memory:
     set.seed(42)
     positions <- seq(0, 10000, by = 10)
     observed <- 50 + sin(positions / 100) * 20 + rnorm(length(positions), sd = 5)
+
+    library(rfastlowess)
+    set.seed(42)
+    positions <- seq(0, 10000, by = 10)
+    observed <- 50 + sin(positions / 100) * 20 + rnorm(length(positions), sd = 5)
     coverage <- observed  # alias: coverage = observed counts
 
     model <- StreamingLowess(
@@ -488,6 +517,13 @@ For whole-genome data that doesn't fit in memory:
 
 === "Julia"
     ```julia
+    using FastLOWESS
+    using Random
+
+    rng = MersenneTwister(42)
+    positions = collect(0.0:10.0:10000.0)
+    observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
+
     using FastLOWESS
     using Random
 

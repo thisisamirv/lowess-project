@@ -156,8 +156,7 @@ that would otherwise include it.
 
 === "WebAssembly"
     ```javascript
-    import init, { Lowess } from 'fastlowess-wasm';
-    await init();
+    const { Lowess } = require('./fastlowess_wasm.js');
 
     const x = Float64Array.from({length: 10}, (_, i) => i);
     const y = Float64Array.from(x, v => v * 2);
@@ -302,8 +301,7 @@ reference instruments, or low-noise observations.
 
 === "WebAssembly"
     ```javascript
-    import init, { Lowess } from 'fastlowess-wasm';
-    await init();
+    const { Lowess } = require('./fastlowess_wasm.js');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -439,8 +437,7 @@ weighting.
 
 === "WebAssembly"
     ```javascript
-    import init, { Lowess } from 'fastlowess-wasm';
-    await init();
+    const { Lowess } = require('./fastlowess_wasm.js');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -600,8 +597,7 @@ for *known* bad points and robustness for *unknown* contamination.
 
 === "WebAssembly"
     ```javascript
-    import init, { Lowess } from 'fastlowess-wasm';
-    await init();
+    const { Lowess } = require('./fastlowess_wasm.js');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));

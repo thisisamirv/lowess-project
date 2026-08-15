@@ -179,6 +179,11 @@ Remove trend to analyze residual patterns:
     ```r
     library(rfastlowess)
     set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
+    library(rfastlowess)
+    set.seed(42)
     t <- seq(0, 100, length.out = 500)
     trend_true <- 10 + 0.5 * t + 3 * sin(t / 10)
     y <- trend_true + rnorm(500, sd = 3)
@@ -339,6 +344,11 @@ Remove trend to analyze residual patterns:
 
 === "R"
     ```r
+    library(rfastlowess)
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
     library(rfastlowess)
     set.seed(42)
     t <- seq(0, 100, length.out = 500)
@@ -580,6 +590,10 @@ LOWESS naturally handles irregular time sampling:
     ```javascript
     const fl = require('fastlowess');
 
+    const n = 500;
+    const t = Float64Array.from({ length: n }, (_, i) => i * 100 / (n - 1));
+    const y = Float64Array.from(t, ti => 10 + 0.5 * ti + 3 * Math.sin(ti / 10) + (Math.random()-0.5)*6);
+
     const tIrregular = Float64Array.from({ length: 200 }, () => Math.random() * 100).sort((a,b)=>a-b);
     const yIrregular = Float64Array.from(tIrregular, t => 10 + 0.3 * t + Math.random() * 2);
 
@@ -629,6 +643,11 @@ Use different fractions to extract features at different scales:
 
 === "R"
     ```r
+    library(rfastlowess)
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
     library(rfastlowess)
     set.seed(42)
     t <- seq(0, 100, length.out = 500)

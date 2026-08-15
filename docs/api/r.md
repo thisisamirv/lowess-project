@@ -12,6 +12,11 @@ The `Lowess` class allows configuring the LOWESS parameters once and fitting mul
 
 ```r
 library(rfastlowess)
+set.seed(42)
+x <- seq(0, 2 * pi, length.out = 100)
+y <- sin(x) + rnorm(100, sd = 0.3)
+
+library(rfastlowess)
 model <- Lowess(fraction = 0.5, iterations = 3)
 ```
 
@@ -41,6 +46,11 @@ The `StreamingLowess` class processes data in chunks, suitable for very large da
 **Constructor:**
 
 ```r
+library(rfastlowess)
+set.seed(42)
+x <- seq(0, 2 * pi, length.out = 100)
+y <- sin(x) + rnorm(100, sd = 0.3)
+
 library(rfastlowess)
 stream <- StreamingLowess(fraction = 0.3, chunk_size = 50, overlap = 10)
 ```
@@ -81,6 +91,11 @@ The `OnlineLowess` class updates the model incrementally with new data points.
 **Constructor:**
 
 ```r
+library(rfastlowess)
+set.seed(42)
+x <- seq(0, 2 * pi, length.out = 100)
+y <- sin(x) + rnorm(100, sd = 0.3)
+
 library(rfastlowess)
 online <- OnlineLowess(fraction = 0.3, window_capacity = 50)
 ```

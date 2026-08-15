@@ -101,8 +101,7 @@ Smooth a noisy sine wave — the kind of signal where LOWESS shines. Each exampl
 === "WebAssembly"
 
     ```javascript
-    import init, { Lowess } from 'fastlowess-wasm';
-    await init();
+    const { Lowess } = require('./fastlowess_wasm.js');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -274,8 +273,7 @@ Smooth a noisy sine wave — the kind of signal where LOWESS shines. Each exampl
 === "WebAssembly"
 
     ```javascript
-    import init, { Lowess } from 'fastlowess-wasm';
-    await init();
+    const { Lowess } = require('./fastlowess_wasm.js');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -487,8 +485,7 @@ LOWESS can robustly handle outliers through iterative reweighting:
 === "WebAssembly"
 
     ```javascript
-    import init, { Lowess } from 'fastlowess-wasm';
-    await init();
+    const { Lowess } = require('./fastlowess_wasm.js');
 
     // Data with an outlier at position 3
     const x = new Float64Array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
@@ -681,8 +678,7 @@ For datasets too large to fit in memory, stream them in fixed-size chunks with o
 === "WebAssembly"
 
     ```javascript
-    import init, { StreamingLowess } from 'fastlowess-wasm';
-    await init();
+    const { StreamingLowess } = require('./fastlowess_wasm.js');
 
     const n = 5000;
     const x = Float64Array.from({ length: n }, (_, i) => i * 10 * Math.PI / (n - 1));
