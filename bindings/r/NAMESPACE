@@ -17,6 +17,8 @@ export(OnlineLowess)
 export(StreamingLowess)
 importFrom(BiocGenerics,normalize)
 importFrom(graphics,lines)
-importFrom(stats,setNames)
-importFrom(stats,smooth)
+importFrom(stats,
+  setNames,
+  smooth
+)
 useDynLib(rfastlowess, .registration = TRUE)

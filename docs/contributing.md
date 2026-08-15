@@ -38,6 +38,7 @@ To develop across all platforms, you will need the following tools installed. Yo
   - **Linux/Ubuntu**: `libcurl4-openssl-dev`, `libssl-dev`, `libxml2-dev`, `libfontconfig1-dev`, `libharfbuzz-dev`, `libfribidi-dev`, `libfreetype6-dev`, `libpng-dev`, `libtiff5-dev`, `libjpeg-dev`, `libprotobuf-dev`, `protobuf-compiler`, `libuv1-dev`, `libgit2-dev`, `libssh2-1-dev`, `libmagick++-dev`
   - **macOS**: System libraries are typically available; install Xcode Command Line Tools if needed
   - **Windows**: System libraries are typically bundled with Rtools
+- **Python build scripts**: Python is needed to build the R binding. The Makefile invokes Python scripts (`dev/prepare_cargo.py`, `dev/patch_vendor_crates.py`, `dev/clean_checksums.py`) during the vendoring step to read and rewrite TOML files. These scripts require `python3` with the `tomli` and `tomli_w` packages. The Makefile installs them automatically, falling back to `--user` mode for systems with an externally-managed Python (Ubuntu 24.04+, Debian 12+).
 - *Note: The Makefile automatically installs R-level development dependencies (BiocManager, styler, lintr, roxygen2, pkgdown, testthat, etc.)*
 
 **Julia**:

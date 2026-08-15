@@ -1,27 +1,27 @@
 Authors and Copyright Holders for Rust Dependencies:
 
-Package: autocfg (1.5.0)
+Package: autocfg (1.5.1)
 Authors: Josh Stone <cuviper@gmail.com>
 License: Apache-2.0 OR MIT
 ----------------------------------------
-Package: bytemuck (1.25.0)
+Package: bytemuck (1.25.2)
 Authors: Lokathor <zefria@gmail.com>
 License: Zlib OR Apache-2.0 OR MIT
 ----------------------------------------
-Package: crossbeam-deque (0.8.6)
+Package: crossbeam-deque (0.8.7)
 Authors: 
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: crossbeam-epoch (0.9.18)
+Package: crossbeam-epoch (0.9.20)
 Authors: 
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: crossbeam-utils (0.8.21)
+Package: crossbeam-utils (0.8.22)
 Authors: 
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: either (1.15.0)
-Authors: bluss
+Package: either (1.17.0)
+Authors: 
 License: MIT OR Apache-2.0
 ----------------------------------------
 Package: extendr-api (0.9.0)
@@ -52,7 +52,7 @@ Package: lowess (2.0.0)
 Authors: Amir Valizadeh <thisisamirv@gmail.com>
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: matrixmultiply (0.3.10)
+Package: matrixmultiply (0.3.11)
 Authors: bluss, R. Janis Goldschmidt
 License: MIT/Apache-2.0
 ----------------------------------------
@@ -64,7 +64,7 @@ Package: num-complex (0.4.6)
 Authors: The Rust Project Developers
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: num-integer (0.1.46)
+Package: num-integer (0.1.47)
 Authors: The Rust Project Developers
 License: MIT OR Apache-2.0
 ----------------------------------------
@@ -80,7 +80,7 @@ Package: paste (1.0.15)
 Authors: David Tolnay <dtolnay@gmail.com>
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: portable-atomic (1.13.1)
+Package: portable-atomic (1.15.0)
 Authors: 
 License: Apache-2.0 OR MIT
 ----------------------------------------
@@ -88,11 +88,11 @@ Package: portable-atomic-util (0.2.7)
 Authors: 
 License: Apache-2.0 OR MIT
 ----------------------------------------
-Package: proc-macro2 (1.0.106)
+Package: proc-macro2 (1.0.107)
 Authors: David Tolnay <dtolnay@gmail.com>, Alex Crichton <alex@alexcrichton.com>
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: quote (1.0.45)
+Package: quote (1.0.47)
 Authors: David Tolnay <dtolnay@gmail.com>
 License: MIT OR Apache-2.0
 ----------------------------------------
@@ -108,7 +108,7 @@ Package: rayon-core (1.13.0)
 Authors: 
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: readonly (0.2.13)
+Package: readonly (0.2.14)
 Authors: David Tolnay <dtolnay@gmail.com>
 License: MIT OR Apache-2.0
 ----------------------------------------
@@ -116,11 +116,11 @@ Package: rfastlowess (2.0.0)
 Authors: Amir Valizadeh <thisisamirv@gmail.com>
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: safe_arch (1.0.0)
+Package: safe_arch (1.2.0)
 Authors: Lokathor <zefria@gmail.com>
 License: Zlib OR Apache-2.0 OR MIT
 ----------------------------------------
-Package: syn (2.0.117)
+Package: syn (2.0.119)
 Authors: David Tolnay <dtolnay@gmail.com>
 License: MIT OR Apache-2.0
 ----------------------------------------
@@ -128,7 +128,7 @@ Package: unicode-ident (1.0.24)
 Authors: David Tolnay <dtolnay@gmail.com>
 License: (MIT OR Apache-2.0) AND Unicode-3.0
 ----------------------------------------
-Package: wide (1.5.0)
+Package: wide (1.6.1)
 Authors: Lokathor <zefria@gmail.com>
 License: Zlib OR Apache-2.0 OR MIT
 ----------------------------------------
