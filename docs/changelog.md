@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed `ModuleNotFoundError: No module named 'tomli_w'` on systems with an externally-managed Python (Ubuntu 24.04+, Debian 12+, PEP 668) by adding a `--user` fallback to the automatic `tomli`/`tomli_w` install step in the Makefile.
 - Documented in `docs/contributing.md` that `python3` with `tomli` and `tomli_w` is required to run the R binding's vendoring scripts, and why Python is needed for an R build.
 - Removed `dev/isolate_cargo.py` and the `ISOLATE` Makefile variable. All per-component targets (`lowess`, `fastLowess`, `python`, `r`, `julia`, `nodejs`, `wasm`, `cpp`) now call their `_*_impl` sub-target directly; Cargo's `-p <package>` flag already scopes each build to the relevant crate without workspace mutation.
+- Removed `dev/check_root_cargo.py`. This script guarded against `Cargo.toml` being left in an isolated state by `isolate_cargo.py`; since workspace isolation no longer happens, the guard is unnecessary.
 
 **Python:**
 
