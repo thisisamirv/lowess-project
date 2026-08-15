@@ -1,0 +1,81 @@
+.SHELLFLAGS := -ec
+
+include mk/config.mk
+
+FEATURE_SET    ?= all
+RUN_GPU_TESTS  ?= auto
+
+FASTLOWESS_PKG      := fastLowess
+FASTLOWESS_DIR      := crates/fastLowess
+FASTLOWESS_FEATURES := cpu gpu dev
+
+ifeq ($(RUN_GPU_TESTS),auto)
+	ifeq ($(HOST_PLATFORM),linux)
+		EFFECTIVE_RUN_GPU_TESTS := true
+	else
+		EFFECTIVE_RUN_GPU_TESTS := false
+	endif
+else
+	EFFECTIVE_RUN_GPU_TESTS := $(RUN_GPU_TESTS)
+endif
+
+.PHONY: default clean coverage ensure-llvm-cov
+
+default:
+	@echo "Running $(FASTLOWESS_PKG) crate checks..."
+	@echo "=============================================================================="
+	@echo "1. Formatting..."
+	@echo "=============================================================================="
+	@cargo fmt -p $(FASTLOWESS_PKG) -- --check
+	@echo "Formatting complete!"
+	@echo "=============================================================================="
+	@echo "2. Linting & Building..."
+	@echo "=============================================================================="
+	@for feature in $(FASTLOWESS_FEATURES) no-default-features; do \
+		if [ "$$feature" = "no-default-features" ]; then \
+			echo "Checking $(FASTLOWESS_PKG) (no-default-features)..."; \
+			cargo clippy -q -p $(FASTLOWESS_PKG) --all-targets --no-default-features -- -D warnings || exit 1; \
+			cargo build -q -p $(FASTLOWESS_PKG) --no-default-features || exit 1; \
+			RUSTDOCFLAGS="-D warnings" cargo doc -q -p $(FASTLOWESS_PKG) --no-deps --no-default-features || exit 1; \
+		else \
+			echo "Checking $(FASTLOWESS_PKG) ($$feature)..."; \
+			cargo clippy -q -p $(FASTLOWESS_PKG) --all-targets --features $$feature -- -D warnings || exit 1; \
+			cargo build -q -p $(FASTLOWESS_PKG) --features $$feature || exit 1; \
+			RUSTDOCFLAGS="-D warnings" cargo doc -q -p $(FASTLOWESS_PKG) --no-deps --features $$feature || exit 1; \
+		fi; \
+	done
+	@echo "=============================================================================="
+	@echo "3. Testing..."
+	@echo "=============================================================================="
+	@echo "Testing (no-default-features)..."
+	@cargo test -q -p lowess-project-tests --test $(FASTLOWESS_PKG) --no-default-features
+	@for feature in $(FASTLOWESS_FEATURES); do \
+		echo "Testing ($$feature)..."; \
+		if [ "$$feature" = "gpu" ]; then \
+			if [ "$(EFFECTIVE_RUN_GPU_TESTS)" = "true" ]; then \
+				cargo test -q -p lowess-project-tests --test $(FASTLOWESS_PKG) --features $$feature -- --test-threads=1 || exit 1; \
+			else \
+				echo "Skipping GPU tests on $(HOST_PLATFORM); set RUN_GPU_TESTS=true to force them."; \
+			fi; \
+		else \
+			cargo test -q -p lowess-project-tests --test $(FASTLOWESS_PKG) --features $$feature || exit 1; \
+		fi; \
+	done
+	@echo "=============================================================================="
+	@echo "All $(FASTLOWESS_PKG) crate checks completed successfully!"
+
+ensure-llvm-cov:
+	@cargo llvm-cov --version > /dev/null 2>&1 || (echo "Installing cargo-llvm-cov..." && cargo install cargo-llvm-cov && cargo llvm-cov install-llvm-tools)
+
+coverage: ensure-llvm-cov
+	@echo "Running $(FASTLOWESS_PKG) coverage..."
+	@LLVM_COV=llvm-cov LLVM_PROFDATA=llvm-profdata cargo llvm-cov --workspace --test $(FASTLOWESS_PKG) --all-features \
+		--ignore-filename-regex 'crates[/\\]lowess[/\\]|bindings[/\\]|benchmarks[/\\]|examples[/\\]|tests[/\\]'
+
+clean:
+	@echo "Cleaning $(FASTLOWESS_PKG) crate..."
+	@cargo clean -p $(FASTLOWESS_PKG)
+	@rm -rf $(FASTLOWESS_DIR)/coverage_html
+	@rm -rf $(FASTLOWESS_DIR)/benchmarks
+	@rm -rf $(FASTLOWESS_DIR)/validation
+	@echo "$(FASTLOWESS_PKG) clean complete!"

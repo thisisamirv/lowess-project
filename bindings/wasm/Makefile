@@ -1,0 +1,50 @@
+.SHELLFLAGS := -ec
+
+include mk/config.mk
+
+WASM_PKG      := fastlowess-wasm
+WASM_DIR      := bindings/wasm
+WASM_TEST_DIR := tests/wasm
+
+.PHONY: default clean
+
+default:
+	@echo "Running $(WASM_PKG) checks..."
+	@echo "=============================================================================="
+	@echo "1. Formatting..."
+	@echo "=============================================================================="
+	@cargo fmt -p $(WASM_PKG) -- --check
+	@echo "=============================================================================="
+	@echo "2. Linting & Building..."
+	@echo "=============================================================================="
+	@cargo clippy -q -p $(WASM_PKG) --all-targets -- -D warnings
+	@echo "Linting WASM JS files..."
+	@cd $(WASM_DIR) && $(NPM) install -q
+	@cd $(WASM_DIR) && $(NPM) audit || true
+	@cd $(WASM_DIR) && $(NPX) -y depcheck --ignores="oxlint"
+	@cd $(WASM_DIR) && ($(NPM) outdated | grep -v "fastlowess-" || true)
+	@cd $(WASM_DIR) && $(NPM) ci --dry-run
+	@$(NPX) -y oxlint $(WASM_DIR)/src/*.js tests/wasm/*.js
+	@if ! command -v wasm-pack >/dev/null 2>&1; then \
+		echo "wasm-pack not found. Installing..."; \
+		cargo install wasm-pack; \
+	fi
+	@cd $(WASM_DIR) && wasm-pack build --target nodejs --out-dir pkg
+	@echo "Checking WASM size (Limit: 2MB)..."
+	@[ $$($(STAT_SIZE_CMD) $(WASM_DIR)/pkg/fastlowess_wasm_bg.wasm) -le 2097152 ] || (echo "Error: WASM size exceeded 2MB"; exit 1)
+	@echo "Building for Web (Examples)..."
+	@cd $(WASM_DIR) && wasm-pack build --target web --out-dir pkg-web
+	@echo "=============================================================================="
+	@echo "3. Testing..."
+	@echo "=============================================================================="
+	@cd $(WASM_DIR) && wasm-pack test --node
+	@echo "Running JS tests..."
+	@node --test tests/wasm/test_fastlowess_wasm.js
+	@echo "=============================================================================="
+	@echo "$(WASM_PKG) checks completed successfully!"
+
+clean:
+	@echo "Cleaning $(WASM_PKG)..."
+	@cargo clean -p $(WASM_PKG)
+	@rm -rf $(WASM_DIR)/pkg $(WASM_DIR)/pkg-web $(WASM_DIR)/node_modules
+	@echo "$(WASM_PKG) clean complete!"

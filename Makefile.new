@@ -20,19 +20,16 @@ else
 endif
 
 # lowess crate
-LOWESS_PKG      := lowess
-LOWESS_DIR      := crates/lowess
-LOWESS_FEATURES := std dev
+LOWESS_PKG     := lowess
+LOWESS_DIR     := crates/lowess
 LOWESS_EXAMPLES := batch_smoothing online_smoothing streaming_smoothing
 
 # fastLowess crate
 FASTLOWESS_PKG      := fastLowess
 FASTLOWESS_DIR      := crates/fastLowess
-FASTLOWESS_FEATURES := cpu gpu dev
 FASTLOWESS_EXAMPLES := fast_batch_smoothing fast_online_smoothing fast_streaming_smoothing
 
 # Python bindings
-PY_PKG  := fastLowess-py
 PY_DIR      := bindings/python
 PY_VENV     := .venv
 PY_TEST_DIR := tests/python

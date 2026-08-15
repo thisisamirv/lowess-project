@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 2.0.1
+## 2.1.0
 
 ### Fixed
 
@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed `dev/patch_vendor_crates.py`. The crates it patched (`fastLowess`, `lowess`) do not use workspace inheritance, so the script's only real work was removing GPU optional-dependencies and stripping the `version` field from the `lowess` path dep in `fastLowess/Cargo.toml`. Both are now done with a single `sed -i.bak` call inline in the Makefiles. This also eliminates the `tomli`/`tomli_w` pip-install step from the R build.
 - Removed `dev/clean_checksums.py`. The two things it did — strip `tests`/`benches`/`examples`/`doc` directories from the vendor tree and reset `.cargo-checksum.json` files — are now done with two `find` commands inline in the Makefiles. Cargo accepts `{"files":{}}` checksums for vendored crates so per-file verification is disabled after stripping, removing the need to recompute hashes. The R build now requires no Python scripts at all.
 - Removed `check_js_licenses.js` as it was just needed once during development.
+- Split the monolithic root `Makefile` into per-crate and per-binding sub-Makefiles (`crates/lowess/Makefile`, `crates/fastLowess/Makefile`, `bindings/python/Makefile`, `bindings/r/Makefile`, `bindings/julia/Makefile`, `bindings/nodejs/Makefile`, `bindings/wasm/Makefile`, `bindings/cpp/Makefile`). Each sub-Makefile is self-contained and can be invoked directly via `make -f path/Makefile` from the project root (all paths remain root-relative). Shared platform detection is factored into `mk/config.mk` and included by every Makefile. The root `Makefile` now delegates exclusively via `$(MAKE) -f path/Makefile` and retains only `examples-*`, `docs`, `check-msrv`, `all`, `all-coverage`, and `all-clean` aggregation targets.
 
 **Python:**
 
