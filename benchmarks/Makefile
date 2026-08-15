@@ -60,12 +60,7 @@ build:
 	@mkdir -p $(R_DIR)/src/.cargo && cp $(R_DIR)/src/cargo-config.toml $(R_DIR)/src/.cargo/config.toml
 
 	@echo "============================================================"
-	@echo "3. Installing Python build tools..."
-	@echo "============================================================"
-	@$(PYTHON) -m pip install -q tomli tomli_w >/dev/null 2>&1 || true
-
-	@echo "============================================================"
-	@echo "4. Vendoring Cargo dependencies..."
+	@echo "3. Vendoring Cargo dependencies..."
 	@echo "============================================================"
 	@rm -rf $(R_DIR)/src/vendor $(R_DIR)/src/vendor.tar.xz
 	@mkdir -p $(R_DIR)/src/vendor
@@ -78,6 +73,16 @@ build:
 	@$(PYTHON) $(DEV_DIR)/patch_vendor_crates.py $(REPO_ROOT)/Cargo.toml $(R_DIR)/src/vendor -q
 	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/lowess/.cargo-checksum.json
 	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/fastLowess/.cargo-checksum.json
+	@# Strip GPU deps and version from the lowess path dep in fastLowess
+	@sed -i.bak \
+		-e '/^wgpu = /d' \
+		-e '/^bytemuck = /d' \
+		-e '/^pollster = /d' \
+		-e '/^futures-intrusive = /d' \
+		-e 's/^gpu = .*/gpu = []/' \
+		-e 's|lowess = { path = "\.\./lowess", version = "[^"]*", |lowess = { path = "../lowess", |' \
+		$(R_DIR)/src/vendor/fastLowess/Cargo.toml
+	@rm -f $(R_DIR)/src/vendor/fastLowess/Cargo.toml.bak
 	@printf '\n\n[workspace]\n\n[patch.crates-io]\nlowess = { path = "vendor/lowess" }\n' >> $(R_DIR)/src/Cargo.toml
 	@(cd $(R_DIR)/src && cargo vendor -q --no-delete vendor)
 	@$(PYTHON) $(DEV_DIR)/clean_checksums.py -q $(R_DIR)/src/vendor

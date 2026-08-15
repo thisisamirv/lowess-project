@@ -432,12 +432,8 @@ _r_impl:
 	@mkdir -p $(R_DIR)/src/.cargo && cp $(R_DIR)/src/cargo-config.toml $(R_DIR)/src/.cargo/config.toml
 	@echo "Patched $(R_DIR)/src/Cargo.toml"
 	@echo "=============================================================================="
-	@echo "2. Installing development packages (R & Python)..."
+	@echo "2. Installing R development packages..."
 	@echo "=============================================================================="
-	@echo "Installing Python build packages (tomli, tomli_w)..."
-	@$(PYTHON) -m pip install -q tomli tomli_w >/dev/null 2>&1 \
-		|| $(PYTHON) -m pip install -q --user tomli tomli_w >/dev/null 2>&1 \
-		|| true
 	@echo "Installing R required packages (BiocManager, styler, testthat, rmarkdown, knitr, lintr, roxygen2, pkgdown, remotes)..."
 	@echo "This may take a while depending on your internet connection and system performance."
 	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "suppressMessages({ lib <- Sys.getenv('R_LIBS_USER'); dir.create(lib, recursive = TRUE, showWarnings = FALSE); .libPaths(c(lib, .libPaths())); options(repos = c(CRAN = 'https://cloud.r-project.org'), warn = 1); required_pkgs <- c('BiocManager', 'styler', 'testthat', 'rmarkdown', 'knitr', 'lintr', 'roxygen2', 'pkgdown', 'remotes'); missing <- required_pkgs[!vapply(required_pkgs, requireNamespace, logical(1), quietly = TRUE, lib.loc = lib)]; if (length(missing) > 0L) { tryCatch({ install.packages(missing, lib = lib, type = ifelse(Sys.info()[['sysname']] == 'Darwin', 'both', 'source'), INSTALL_opts = '--no-test-load', quiet = TRUE, dependencies = NA, Ncpus = parallel::detectCores()); still_missing <- missing[!vapply(missing, requireNamespace, logical(1), quietly = TRUE, lib.loc = lib)]; if (length(still_missing) > 0L) stop('Required R packages not available: ', paste(still_missing, collapse = ', '), call. = FALSE) }, error = function(err) stop('Failed to install required packages: ', conditionMessage(err), call. = FALSE)) }; optional_pkgs <- c('covr', 'prettycode', 'toml', 'V8', 'visNetwork'); missing_opt <- optional_pkgs[!vapply(optional_pkgs, requireNamespace, logical(1), quietly = TRUE, lib.loc = lib)]; if (length(missing_opt) > 0L) { tryCatch(install.packages(missing_opt, lib = lib, quiet = TRUE, dependencies = NA, Ncpus = parallel::detectCores()), error = function(err) invisible(NULL)) } })" >/dev/null
@@ -461,8 +457,16 @@ _r_impl:
 	@rm -f $(R_DIR)/src/vendor/fastLowess/Cargo.lock $(R_DIR)/src/vendor/lowess/Cargo.lock
 	@rm -f $(R_DIR)/src/vendor/fastLowess/README.md $(R_DIR)/src/vendor/fastLowess/CHANGELOG.md
 	@rm -f $(R_DIR)/src/vendor/lowess/README.md $(R_DIR)/src/vendor/lowess/CHANGELOG.md
-	@# Step 3: Patch local crates (remove workspace inheritance, strip GPU deps)
-	@dev/patch_vendor_crates.py Cargo.toml $(R_DIR)/src/vendor -q
+	@# Step 3: Strip GPU deps and version from the lowess path dep in fastLowess
+	@sed -i.bak \
+		-e '/^wgpu = /d' \
+		-e '/^bytemuck = /d' \
+		-e '/^pollster = /d' \
+		-e '/^futures-intrusive = /d' \
+		-e 's/^gpu = .*/gpu = []/' \
+		-e 's|lowess = { path = "\.\./lowess", version = "[^"]*", |lowess = { path = "../lowess", |' \
+		$(R_DIR)/src/vendor/fastLowess/Cargo.toml
+	@rm -f $(R_DIR)/src/vendor/fastLowess/Cargo.toml.bak
 	@# Step 4: Create dummy checksum files for local crates
 	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/lowess/.cargo-checksum.json
 	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/fastLowess/.cargo-checksum.json
