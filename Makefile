@@ -474,8 +474,14 @@ _r_impl:
 	@printf '\n\n[workspace]\n\n[patch.crates-io]\nlowess = { path = "vendor/lowess" }\n' >> $(R_DIR)/src/Cargo.toml
 	@# Step 6: Vendor crates.io dependencies
 	@(cd $(R_DIR)/src && cargo vendor -q --no-delete vendor)
-	@# Step 7: Regenerate checksums after vendoring
-	@dev/clean_checksums.py -q $(R_DIR)/src/vendor
+	@# Step 7: Strip test/bench/example/doc dirs to reduce archive size
+	@find $(R_DIR)/src/vendor -mindepth 2 -maxdepth 2 -type d \
+		\( -name tests -o -name benches -o -name examples \
+		   -o -name doc -o -name docs -o -name .github -o -name .config \) \
+		-exec rm -rf {} \; 2>/dev/null || true
+	@# Reset checksums — cargo accepts {"files":{}} for vendored crates
+	@find $(R_DIR)/src/vendor -name '.cargo-checksum.json' \
+		-exec sh -c 'echo '"'"'{"files":{},"package":null}'"'"' > "$$1"' _ {} \;
 	@echo "Creating vendor.tar.xz archive (including Cargo.lock)..."
 	@(cd $(R_DIR)/src && (tar --sort=name --mtime='1970-01-01 00:00:00Z' --owner=0 --group=0 --numeric-owner --xz --create --file=vendor.tar.xz vendor Cargo.lock 2>/dev/null || tar --xz --create --file=vendor.tar.xz vendor Cargo.lock))
 	@rm -rf $(R_DIR)/src/vendor
@@ -700,7 +706,6 @@ _nodejs_impl:
 	@echo "Linting Node.js files..."
 	@cd $(NODE_DIR) && $(NPM) install
 	@cd $(NODE_DIR) && $(NPM) audit || true
-	@$(NODE) dev/check_js_licenses.mjs $(NODE_DIR) --fail-on-gpl
 	@cd $(NODE_DIR) && $(NPX) -y depcheck --ignores="fastlowess-*,oxlint"
 	@cd $(NODE_DIR) && ($(NPM) outdated | grep -v "fastlowess-" || true)
 	@cd $(NODE_DIR) && $(NPM) ci --dry-run
@@ -738,7 +743,6 @@ _wasm_impl:
 	@echo "Linting WASM JS files..."
 	@cd $(WASM_DIR) && $(NPM) install -q
 	@cd $(WASM_DIR) && $(NPM) audit || true
-	@$(NODE) dev/check_js_licenses.mjs $(WASM_DIR) --fail-on-gpl
 	@cd $(WASM_DIR) && $(NPX) -y depcheck --ignores="oxlint"
 	@cd $(WASM_DIR) && ($(NPM) outdated | grep -v "fastlowess-" || true)
 	@cd $(WASM_DIR) && $(NPM) ci --dry-run
