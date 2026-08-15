@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed `make r` (and other Python-dependent targets) failing on Ubuntu 24.04 and other modern Linux distributions where `python` is not in `PATH` by changing the default from `PYTHON ?= python` to `PYTHON ?= python3`. The interpreter can still be overridden via `make PYTHON=...`.
 - Fixed `ModuleNotFoundError: No module named 'tomli_w'` on systems with an externally-managed Python (Ubuntu 24.04+, Debian 12+, PEP 668) by adding a `--user` fallback to the automatic `tomli`/`tomli_w` install step in the Makefile.
 - Documented in `docs/contributing.md` that `python3` with `tomli` and `tomli_w` is required to run the R binding's vendoring scripts, and why Python is needed for an R build.
+- Removed `dev/isolate_cargo.py` and the `ISOLATE` Makefile variable. All per-component targets (`lowess`, `fastLowess`, `python`, `r`, `julia`, `nodejs`, `wasm`, `cpp`) now call their `_*_impl` sub-target directly; Cargo's `-p <package>` flag already scopes each build to the relevant crate without workspace mutation.
+
+**Python:**
+
+- Fixed `ruff` linting errors in the Python binding: sorted `__all__` (RUF022), replaced `from typing import Sequence` with `from collections.abc import Sequence` in `_core.pyi` (UP035), removed redundant `...` literals from all property stub bodies — a docstring alone is the correct single-statement body in a `.pyi` file (PYI048, PIE790), and replaced bare `exit(1)` with `sys.exit(1)` in `tests/python/test_gil.py` (PLR1722).
 
 ## 2.0.0
 

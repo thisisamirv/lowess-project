@@ -17,9 +17,9 @@ from ._core import (
 )
 
 __all__ = [
-    "LowessResult",
     "Diagnostics",
     "Lowess",
+    "LowessResult",
     "OnlineLowess",
     "OnlineOutput",
     "StreamingLowess",

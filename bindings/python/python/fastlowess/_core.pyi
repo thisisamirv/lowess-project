@@ -2,7 +2,7 @@
 
 # pylint: disable=unnecessary-ellipsis,unused-argument
 
-from typing import Sequence
+from collections.abc import Sequence
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -13,37 +13,30 @@ class Diagnostics:
     @property
     def rmse(self) -> float:
         """Root Mean Squared Error."""
-        ...
 
     @property
     def mae(self) -> float:
         """Mean Absolute Error."""
-        ...
 
     @property
     def r_squared(self) -> float:
         """R-squared (coefficient of determination)."""
-        ...
 
     @property
     def aic(self) -> float | None:
         """Akaike Information Criterion."""
-        ...
 
     @property
     def aicc(self) -> float | None:
         """Corrected AIC."""
-        ...
 
     @property
     def effective_df(self) -> float | None:
         """Effective degrees of freedom."""
-        ...
 
     @property
     def residual_sd(self) -> float:
         """Residual standard deviation."""
-        ...
 
 class OnlineOutput:
     """Result from a single add_point() call."""
@@ -51,27 +44,22 @@ class OnlineOutput:
     @property
     def smoothed(self) -> float:
         """Smoothed value for the latest point."""
-        ...
 
     @property
     def std_error(self) -> float | None:
         """Standard error (None if not computed)."""
-        ...
 
     @property
     def residual(self) -> float | None:
         """Residual y − smoothed (None if not computed)."""
-        ...
 
     @property
     def robustness_weight(self) -> float | None:
         """Robustness weight (None if not computed)."""
-        ...
 
     @property
     def iterations_used(self) -> int | None:
         """Number of robustness iterations performed."""
-        ...
 
 class LowessResult:
     """Result from LOWESS smoothing."""
@@ -79,67 +67,54 @@ class LowessResult:
     @property
     def x(self) -> NDArray[np.float64]:
         """Sorted x values."""
-        ...
 
     @property
     def y(self) -> NDArray[np.float64]:
         """Smoothed y values."""
-        ...
 
     @property
     def standard_errors(self) -> NDArray[np.float64] | None:
         """Standard errors (if computed)."""
-        ...
 
     @property
     def confidence_lower(self) -> NDArray[np.float64] | None:
         """Lower confidence interval bounds."""
-        ...
 
     @property
     def confidence_upper(self) -> NDArray[np.float64] | None:
         """Upper confidence interval bounds."""
-        ...
 
     @property
     def prediction_lower(self) -> NDArray[np.float64] | None:
         """Lower prediction interval bounds."""
-        ...
 
     @property
     def prediction_upper(self) -> NDArray[np.float64] | None:
         """Upper prediction interval bounds."""
-        ...
 
     @property
     def residuals(self) -> NDArray[np.float64] | None:
         """Residuals (original y - smoothed y)."""
-        ...
 
     @property
     def robustness_weights(self) -> NDArray[np.float64] | None:
         """Robustness weights from final iteration."""
-        ...
 
     @property
     def diagnostics(self) -> Diagnostics | None:
         """Diagnostic metrics."""
-        ...
 
     @property
     def iterations_used(self) -> int | None:
         """Number of iterations performed."""
-        ...
 
     @property
     def fraction_used(self) -> float:
         """Fraction used for smoothing."""
-        ...
 
     @property
     def cv_scores(self) -> NDArray[np.float64] | None:
         """CV scores for tested fractions."""
-        ...
 
 class Lowess:
     """Batch LOWESS model — configure once, fit many times."""
