@@ -67,7 +67,6 @@ build:
 	@echo "============================================================"
 	@echo "4. Vendoring Cargo dependencies..."
 	@echo "============================================================"
-	@$(PYTHON) $(DEV_DIR)/prepare_cargo.py clean $(R_DIR)/src/Cargo.toml -q
 	@rm -rf $(R_DIR)/src/vendor $(R_DIR)/src/vendor.tar.xz
 	@mkdir -p $(R_DIR)/src/vendor
 	@cp -rL $(REPO_ROOT)/crates/fastLowess $(R_DIR)/src/vendor/
@@ -79,7 +78,7 @@ build:
 	@$(PYTHON) $(DEV_DIR)/patch_vendor_crates.py $(REPO_ROOT)/Cargo.toml $(R_DIR)/src/vendor -q
 	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/lowess/.cargo-checksum.json
 	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/fastLowess/.cargo-checksum.json
-	@$(PYTHON) $(DEV_DIR)/prepare_cargo.py isolate $(R_DIR)/src/Cargo.toml -q
+	@printf '\n\n[workspace]\n\n[patch.crates-io]\nlowess = { path = "vendor/lowess" }\n' >> $(R_DIR)/src/Cargo.toml
 	@(cd $(R_DIR)/src && cargo vendor -q --no-delete vendor)
 	@$(PYTHON) $(DEV_DIR)/clean_checksums.py -q $(R_DIR)/src/vendor
 	@echo "  Creating vendor.tar.xz..."

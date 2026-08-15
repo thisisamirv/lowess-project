@@ -452,9 +452,7 @@ _r_impl:
 	@echo "3. Vendoring..."
 	@echo "=============================================================================="
 	@echo "Updating and re-vendoring crates.io dependencies..."
-	@# Step 1: Clean R package Cargo.toml for vendoring
-	@dev/prepare_cargo.py clean $(R_DIR)/src/Cargo.toml -q
-	@# Step 2: Prepare vendor directory with local crates
+	@# Step 1: Prepare vendor directory with local crates
 	@rm -rf $(R_DIR)/src/vendor $(R_DIR)/src/vendor.tar.xz
 	@mkdir -p $(R_DIR)/src/vendor
 	@cp -rL crates/fastLowess $(R_DIR)/src/vendor/
@@ -468,8 +466,8 @@ _r_impl:
 	@# Step 4: Create dummy checksum files for local crates
 	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/lowess/.cargo-checksum.json
 	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/fastLowess/.cargo-checksum.json
-	@# Step 5: Add workspace isolation to R package
-	@dev/prepare_cargo.py isolate $(R_DIR)/src/Cargo.toml -q
+	@# Step 5: Add workspace isolation so cargo vendor resolves the local patch
+	@printf '\n\n[workspace]\n\n[patch.crates-io]\nlowess = { path = "vendor/lowess" }\n' >> $(R_DIR)/src/Cargo.toml
 	@# Step 6: Vendor crates.io dependencies
 	@(cd $(R_DIR)/src && cargo vendor -q --no-delete vendor)
 	@# Step 7: Regenerate checksums after vendoring
