@@ -154,7 +154,14 @@ default:
 	@echo "=============================================================================="
 	@echo "4c. Building..."
 	@echo "=============================================================================="
-	@cd $(R_DIR) && ../../dev/prepare_cran.sh
+	@echo "Generating $(R_DIR)/inst/AUTHORS..."
+	@mkdir -p $(R_DIR)/inst
+	@{ \
+		echo "Authors and Copyright Holders for Rust Dependencies:"; \
+		echo ""; \
+		(cd $(R_DIR)/src && cargo metadata --locked --format-version 1) | \
+			jq -r '[.packages[] | select(.name != "$(R_PKG_NAME)")] | unique_by(.name)[] | "Package: \(.name) (\(.version))\nAuthors: \(.authors | join(", "))\nLicense: \(.license // "Unknown")\n" + "-" * 40'; \
+	} > $(R_DIR)/inst/AUTHORS
 	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) R CMD build .
 	@echo "=============================================================================="
 	@echo "5. Installing..."
