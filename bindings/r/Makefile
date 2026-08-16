@@ -134,7 +134,7 @@ default:
 	@echo "4a. Formatting..."
 	@echo "=============================================================================="
 	@cd $(R_DIR)/src && cargo fmt -q
-	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript dev/style_pkg.R $(R_DIR) || true
+	@air format $(R_DIR)/R/ $(R_DIR)/tests/testthat/ $(R_DIR)/demo/ $(R_DIR)/vignettes/ || true
 	@cd $(R_DIR)/src && cargo fmt -- --check || (echo "Run 'cargo fmt' to fix"; exit 1)
 	@cd $(R_DIR)/src && $(R_CROSS_ENV) cargo clippy -q $(R_CARGO_TARGET) -- -D warnings
 	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); if (!requireNamespace('lintr', quietly = TRUE, lib.loc = lib)) stop('Required R package not available: lintr', call. = FALSE); my_linters <- lintr::linters_with_defaults(indentation_linter = lintr::indentation_linter(indent = 4L), object_name_linter = NULL, commented_code_linter = NULL, object_usage_linter = NULL); lints <- c(lintr::lint_dir('$(R_DIR)/R', linters = my_linters), lintr::lint_dir('$(R_DIR)/tests/testthat', linters = my_linters), lintr::lint_dir('$(R_DIR)/demo', linters = my_linters)); print(lints); if (length(lints) > 0L) quit(status = 1)"
@@ -144,7 +144,18 @@ default:
 	@rm -rf $(R_DIR)/*.Rcheck
 	@cd $(R_DIR)/src && RUSTDOCFLAGS="-D warnings" $(R_CROSS_ENV) cargo doc -q --no-deps $(R_CARGO_TARGET)
 	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); for (pkg in c('roxygen2', 'srr')) { if (!requireNamespace(pkg, quietly = TRUE, lib.loc = lib)) suppressWarnings(try(install.packages(pkg, lib = lib, quiet = TRUE), silent = TRUE)) }; if (!requireNamespace('roxygen2', quietly = TRUE, lib.loc = lib)) stop('Required R package not available for roxygen regeneration: roxygen2', call. = FALSE); has_srr <- requireNamespace('srr', quietly = TRUE, lib.loc = lib); roclets <- if (has_srr) c('namespace', 'rd', 'srr::srr_stats_roclet') else c('namespace', 'rd'); roxygen2::roxygenise(package.dir = '.', roclets = roclets, load_code = roxygen2::load_pkgload)"
-	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript dev/fix_rd_style.R
+	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e \
+	'for(f in list.files("$(R_DIR)/man","\\.Rd$$",full.names=TRUE)){\
+	  orig<-readLines(f,warn=FALSE);ib<-FALSE;out<-character(0);\
+	  for(l in orig){\
+	    n<-nchar(l)-nchar(trimws(l,"left"));\
+	    if(n>0L&&n%%4L!=0L)l<-paste0(strrep(" ",ceiling(n/4L)*4L),trimws(l,"left"));\
+	    if(grepl("^\\\\(author|seealso)\\{",l))ib<-TRUE;\
+	    if(ib&&grepl("^\\}",l))ib<-FALSE;\
+	    out<-c(out,if(ib&&nchar(l)>80L)strwrap(l,80L,exdent=4L)else l);\
+	  };\
+	  if(!identical(orig,out)){writeLines(out,f);message("Fixed: ",basename(f))};\
+	}'
 	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "if (!requireNamespace('rmarkdown', quietly = TRUE, lib.loc = Sys.getenv('R_LIBS_USER')) || !rmarkdown::pandoc_available()) { message('\nERROR: Pandoc is required to build R Markdown vignettes but is not available.\nPlease install Pandoc (https://pandoc.org/installing.html) and ensure it is in your PATH.\n'); quit(status = 1) }"
 	@echo "Pre-installing package to R_LIBS_USER so pkgdown subprocess finds the current version..."
 	@mkdir -p $(R_LIB_DIR)

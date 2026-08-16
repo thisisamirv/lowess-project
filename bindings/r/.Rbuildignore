@@ -39,6 +39,7 @@ target/
 
 # Development files
 .lintr
+^air\.toml$
 ^Makefile$
 ^rfastlowess_.*\.tar\.gz$
 ^\.Rbuildignore$
