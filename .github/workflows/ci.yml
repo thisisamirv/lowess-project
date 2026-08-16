@@ -93,9 +93,9 @@ jobs:
 
       - name: "Rust: Lowess Tests"
         run: |
-          cargo test -q -p lowess-project-tests --test lowess
+          cargo test -q -p lowess --test lowess
           if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
-            cargo test -q -p lowess-project-tests --test lowess --no-default-features
+            cargo test -q -p lowess --test lowess --no-default-features
           fi
         shell: bash
 
@@ -122,9 +122,9 @@ jobs:
 
              test -n "$VK_ICD_FILENAMES"
              vulkaninfo --summary
-             cargo test -q -p lowess-project-tests --test fastLowess --features gpu
+             cargo test -q -p fastLowess --test fastLowess --features gpu
           else
-             cargo test -q -p lowess-project-tests --test fastLowess --features cpu
+             cargo test -q -p fastLowess --test fastLowess --features cpu
           fi
         shell: bash
 
@@ -138,10 +138,15 @@ jobs:
 
       - name: "Rust: Run Examples"
         run: |
-          for example in examples/lowess/*.rs examples/fastLowess/*.rs; do
+          for example in crates/lowess/examples/*.rs; do
             name=$(basename "$example" .rs)
             echo "Running example: $name"
-            cargo run -p examples --example "$name" --features cpu
+            cargo run -p lowess --example "$name"
+          done
+          for example in crates/fastLowess/examples/*.rs; do
+            name=$(basename "$example" .rs)
+            echo "Running example: $name"
+            cargo run -p fastLowess --example "$name" --features cpu
           done
         shell: bash
 
@@ -158,19 +163,19 @@ jobs:
       - name: "Python: Lint (Ruff)"
         working-directory: bindings/python
         run: |
-          ruff format --check python/fastlowess/ ../../tests/python/
-          ruff check python/fastlowess/ ../../tests/python/
+          ruff format --check python/fastlowess/ tests/
+          ruff check python/fastlowess/ tests/
 
       - name: "Python: Tests"
         working-directory: bindings/python
-        run: pytest ../../tests/python/ -v
+        run: pytest tests/ -v
 
       - name: "Python: Examples"
         working-directory: bindings/python
         run: |
-          python ../../examples/python/batch_smoothing.py
-          python ../../examples/python/streaming_smoothing.py
-          python ../../examples/python/online_smoothing.py
+          python examples/batch_smoothing.py
+          python examples/streaming_smoothing.py
+          python examples/online_smoothing.py
 
       # ========================================================================
       # JULIA
@@ -208,7 +213,7 @@ jobs:
           else
             export FASTLOWESS_LIB="target/release/libfastlowess_jl.so"
           fi
-          julia -e 'using Pkg; Pkg.activate("bindings/julia/julia"); Pkg.instantiate(); include("tests/julia/test_FastLOWESS.jl")'
+          julia -e 'using Pkg; Pkg.activate("bindings/julia/julia"); Pkg.instantiate(); include("bindings/julia/tests/test_FastLOWESS.jl")'
 
       - name: "Julia: Examples"
         shell: bash
@@ -220,9 +225,9 @@ jobs:
           else
             export FASTLOWESS_LIB="target/release/libfastlowess_jl.so"
           fi
-          julia --project=bindings/julia/julia examples/julia/batch_smoothing.jl
-          julia --project=bindings/julia/julia examples/julia/streaming_smoothing.jl
-          julia --project=bindings/julia/julia examples/julia/online_smoothing.jl
+          julia --project=bindings/julia/julia bindings/julia/examples/batch_smoothing.jl
+          julia --project=bindings/julia/julia bindings/julia/examples/streaming_smoothing.jl
+          julia --project=bindings/julia/julia bindings/julia/examples/online_smoothing.jl
 
       - name: "Julia: Lint"
         working-directory: bindings/julia
@@ -246,9 +251,9 @@ jobs:
       - name: "Node.js: Examples"
         working-directory: bindings/nodejs
         run: |
-          node ../../examples/nodejs/batch_smoothing.js
-          node ../../examples/nodejs/streaming_smoothing.js
-          node ../../examples/nodejs/online_smoothing.js
+          node examples/batch_smoothing.js
+          node examples/streaming_smoothing.js
+          node examples/online_smoothing.js
 
       - name: "Node.js: Lint"
         working-directory: bindings/nodejs
@@ -265,7 +270,7 @@ jobs:
           wasm-pack build --target nodejs --out-dir pkg
           wasm-pack build --target web --out-dir pkg-web
           wasm-pack test --node
-          node ../../tests/wasm/test_fastlowess_wasm.js
+          node tests/test_fastlowess_wasm.js
 
       - name: "WebAssembly: Lint"
         working-directory: bindings/wasm
@@ -285,9 +290,9 @@ jobs:
         working-directory: bindings/cpp
         run: |
           mkdir -p bin
-          g++ -O3 ../../examples/cpp/batch_smoothing.cpp -o bin/batch_smoothing -Iinclude -L../../target/release -lfastlowess_cpp -lpthread -ldl -lm
-          g++ -O3 ../../examples/cpp/streaming_smoothing.cpp -o bin/streaming_smoothing -Iinclude -L../../target/release -lfastlowess_cpp -lpthread -ldl -lm
-          g++ -O3 ../../examples/cpp/online_smoothing.cpp -o bin/online_smoothing -Iinclude -L../../target/release -lfastlowess_cpp -lpthread -ldl -lm
+          g++ -O3 examples/batch_smoothing.cpp -o bin/batch_smoothing -Iinclude -L../../target/release -lfastlowess_cpp -lpthread -ldl -lm
+          g++ -O3 examples/streaming_smoothing.cpp -o bin/streaming_smoothing -Iinclude -L../../target/release -lfastlowess_cpp -lpthread -ldl -lm
+          g++ -O3 examples/online_smoothing.cpp -o bin/online_smoothing -Iinclude -L../../target/release -lfastlowess_cpp -lpthread -ldl -lm
           LD_LIBRARY_PATH=../../target/release ./bin/batch_smoothing
           LD_LIBRARY_PATH=../../target/release ./bin/streaming_smoothing
           LD_LIBRARY_PATH=../../target/release ./bin/online_smoothing

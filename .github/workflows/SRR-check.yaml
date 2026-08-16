@@ -43,9 +43,14 @@ jobs:
 
       - name: Prepare R package tree
         run: |
-          chmod +x bindings/r/configure bindings/r/cleanup dev/prepare_cran.sh
-          cd bindings/r
-          ../../dev/prepare_cran.sh
+          chmod +x bindings/r/configure bindings/r/cleanup
+          mkdir -p bindings/r/inst
+          {
+            echo "Authors and Copyright Holders for Rust Dependencies:"
+            echo ""
+            (cd bindings/r/src && cargo metadata --locked --format-version 1) | \
+              jq -r '[.packages[] | select(.name != "rfastlowess")] | unique_by(.name)[] | "Package: \(.name) (\(.version))\nAuthors: \(.authors | join(", "))\nLicense: \(.license // "Unknown")\n" + "-" * 40'
+          } > bindings/r/inst/AUTHORS
 
       - name: Suppress C++ compilation warnings (libsass)
         run: |

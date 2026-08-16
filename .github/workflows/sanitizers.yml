@@ -70,13 +70,13 @@ jobs:
           cargo test \
             -Zbuild-std \
             --target x86_64-unknown-linux-gnu \
-            -p lowess-project-tests \
+            -p lowess \
             --test lowess
 
           cargo test \
             -Zbuild-std \
             --target x86_64-unknown-linux-gnu \
-            -p lowess-project-tests \
+            -p fastLowess \
             --test fastLowess \
             --features cpu
 
@@ -118,14 +118,14 @@ jobs:
       - name: C++ Binding Tests (ASAN)
         shell: bash
         run: |
-          cmake -S tests/cpp -B tests/cpp/build-asan \
+          cmake -S bindings/cpp/tests -B bindings/cpp/tests/build-asan \
             -DCMAKE_BUILD_TYPE=Debug \
             -DCMAKE_C_COMPILER=clang \
             -DCMAKE_CXX_COMPILER=clang++ \
             -DCMAKE_CXX_FLAGS='-fsanitize=address -fno-omit-frame-pointer' \
             -DCMAKE_EXE_LINKER_FLAGS='-fsanitize=address'
-          cmake --build tests/cpp/build-asan --config Debug
-          LD_LIBRARY_PATH=target/release ctest --test-dir tests/cpp/build-asan --output-on-failure
+          cmake --build bindings/cpp/tests/build-asan --config Debug
+          LD_LIBRARY_PATH=target/release ctest --test-dir bindings/cpp/tests/build-asan --output-on-failure
 
       - name: Sanitizer Scope Note
         run: |
@@ -184,8 +184,14 @@ jobs:
           elif [ -f "$HOME/.cargo/env" ]; then
             . "$HOME/.cargo/env"
           fi
-          chmod +x configure cleanup ../../dev/prepare_cran.sh
-          ../../dev/prepare_cran.sh
+          chmod +x configure cleanup
+          mkdir -p inst
+          {
+            echo "Authors and Copyright Holders for Rust Dependencies:"
+            echo ""
+            (cd src && cargo metadata --locked --format-version 1) | \
+              jq -r '[.packages[] | select(.name != "rfastlowess")] | unique_by(.name)[] | "Package: \(.name) (\(.version))\nAuthors: \(.authors | join(", "))\nLicense: \(.license // "Unknown")\n" + "-" * 40'
+          } > inst/AUTHORS
           test -f tests/testthat.R
       - name: Run ASAN Check
         shell: bash

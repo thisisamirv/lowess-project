@@ -75,7 +75,6 @@ jobs:
             any::XML
             any::devtools
             any::lintr
-            any::styler
             any::BiocManager
           needs: check
 
@@ -83,8 +82,14 @@ jobs:
         working-directory: bindings/r
         shell: bash
         run: |
-          chmod +x configure cleanup ../../dev/prepare_cran.sh
-          ../../dev/prepare_cran.sh
+          chmod +x configure cleanup
+          mkdir -p inst
+          {
+            echo "Authors and Copyright Holders for Rust Dependencies:"
+            echo ""
+            (cd src && cargo metadata --locked --format-version 1) | \
+              jq -r '[.packages[] | select(.name != "rfastlowess")] | unique_by(.name)[] | "Package: \(.name) (\(.version))\nAuthors: \(.authors | join(", "))\nLicense: \(.license // "Unknown")\n" + "-" * 40'
+          } > inst/AUTHORS
           test -f tests/testthat.R
 
       - name: "R: CMD Check"
@@ -105,9 +110,9 @@ jobs:
       - name: "R: Examples"
         working-directory: bindings/r
         run: |
-          Rscript ../../examples/r/batch_smoothing.R
-          Rscript ../../examples/r/streaming_smoothing.R
-          Rscript ../../examples/r/online_smoothing.R
+          Rscript demo/batch_smoothing.R
+          Rscript demo/streaming_smoothing.R
+          Rscript demo/online_smoothing.R
 
       - name: "R: Quality (BiocCheck/Lint)"
         working-directory: bindings/r
@@ -117,7 +122,5 @@ jobs:
           echo "CXXFLAGS += -w" >> ~/.R/Makevars
           echo "CFLAGS += -w" >> ~/.R/Makevars
           Rscript -e "my_linters <- lintr::linters_with_defaults(indentation_linter = lintr::indentation_linter(indent = 4L), object_usage_linter = NULL, object_name_linter = lintr::object_name_linter(styles = c('snake_case', 'symbols', 'CamelCase'))); lintr::lint_dir('R', linters = my_linters)"
-          chmod +x ../../dev/prepare_cran.sh
-          ../../dev/prepare_cran.sh
           R CMD build .
           Rscript -e "BiocCheck::BiocCheck(list.files(pattern='[.]tar[.]gz$')[1], new_package=FALSE, no_check_vignettes=TRUE, quit_with_status=TRUE)"
