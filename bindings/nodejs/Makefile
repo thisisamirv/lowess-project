@@ -1,3 +1,5 @@
+THIS_MK := $(lastword $(MAKEFILE_LIST))
+
 .SHELLFLAGS := -ec
 
 UNAME_S := $(shell uname -s)
@@ -33,9 +35,9 @@ endif
 
 NODE_PKG      := fastlowess-node
 NODE_DIR      := bindings/nodejs
-NODE_TEST_DIR := tests/nodejs
+NODE_TEST_DIR := bindings/nodejs/tests
 
-.PHONY: default clean
+.PHONY: default clean examples
 
 default:
 	@echo "Running $(NODE_PKG) checks..."
@@ -54,13 +56,22 @@ default:
 	@cd $(NODE_DIR) && ($(NPM) outdated | grep -v "fastlowess-" || true)
 	@cd $(NODE_DIR) && $(NPM) ci --dry-run
 	@cd $(NODE_DIR) && $(NPX) -y -p typescript tsc index.d.ts --noEmit --allowJs
-	@$(NPX) -y oxlint $(NODE_DIR)/index.js tests/nodejs/test_fastlowess.js examples/nodejs/*.js
+	@$(NPX) -y oxlint $(NODE_DIR)/index.js $(NODE_TEST_DIR)/test_fastlowess.js $(NODE_DIR)/examples/*.js
 	@cd $(NODE_DIR) && $(NPM) run build
 	@echo "=============================================================================="
 	@echo "3. Testing..."
 	@echo "=============================================================================="
 	@cd $(NODE_DIR) && $(NPM) test
+	@"$(MAKE)" -f $(THIS_MK) examples
 	@echo "$(NODE_PKG) checks completed successfully!"
+
+examples:
+	@echo "Running $(NODE_PKG) examples..."
+	@echo "============================================================================="
+	@cd $(NODE_DIR) && node examples/batch_smoothing.js
+	@cd $(NODE_DIR) && node examples/online_smoothing.js
+	@cd $(NODE_DIR) && node examples/streaming_smoothing.js
+	@echo "============================================================================="
 
 clean:
 	@echo "Cleaning $(NODE_PKG)..."

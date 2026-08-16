@@ -1,3 +1,5 @@
+THIS_MK := $(lastword $(MAKEFILE_LIST))
+
 .SHELLFLAGS := -ec
 
 UNAME_S := $(shell uname -s)
@@ -37,6 +39,7 @@ RUN_GPU_TESTS  ?= auto
 FASTLOWESS_PKG      := fastLowess
 FASTLOWESS_DIR      := crates/fastLowess
 FASTLOWESS_FEATURES := cpu gpu dev
+FASTLOWESS_EXAMPLES := fast_batch_smoothing fast_online_smoothing fast_streaming_smoothing
 
 ifeq ($(RUN_GPU_TESTS),auto)
 	ifeq ($(HOST_PLATFORM),linux)
@@ -48,7 +51,7 @@ else
 	EFFECTIVE_RUN_GPU_TESTS := $(RUN_GPU_TESTS)
 endif
 
-.PHONY: default clean coverage ensure-llvm-cov
+.PHONY: default clean coverage ensure-llvm-cov examples
 
 default:
 	@echo "Running $(FASTLOWESS_PKG) crate checks..."
@@ -77,28 +80,48 @@ default:
 	@echo "3. Testing..."
 	@echo "=============================================================================="
 	@echo "Testing (no-default-features)..."
-	@cargo test -q -p lowess-project-tests --test $(FASTLOWESS_PKG) --no-default-features
+	@cargo test -q -p $(FASTLOWESS_PKG) --test $(FASTLOWESS_PKG) --no-default-features
 	@for feature in $(FASTLOWESS_FEATURES); do \
 		echo "Testing ($$feature)..."; \
 		if [ "$$feature" = "gpu" ]; then \
 			if [ "$(EFFECTIVE_RUN_GPU_TESTS)" = "true" ]; then \
-				cargo test -q -p lowess-project-tests --test $(FASTLOWESS_PKG) --features $$feature -- --test-threads=1 || exit 1; \
+				cargo test -q -p $(FASTLOWESS_PKG) --test $(FASTLOWESS_PKG) --features $$feature -- --test-threads=1 || exit 1; \
 			else \
 				echo "Skipping GPU tests on $(HOST_PLATFORM); set RUN_GPU_TESTS=true to force them."; \
 			fi; \
 		else \
-			cargo test -q -p lowess-project-tests --test $(FASTLOWESS_PKG) --features $$feature || exit 1; \
+			cargo test -q -p $(FASTLOWESS_PKG) --test $(FASTLOWESS_PKG) --features $$feature || exit 1; \
 		fi; \
 	done
 	@echo "=============================================================================="
+	@"$(MAKE)" -f $(THIS_MK) examples
 	@echo "All $(FASTLOWESS_PKG) crate checks completed successfully!"
+
+examples:
+	@echo "Running $(FASTLOWESS_PKG) examples..."
+	@echo "============================================================================="
+	@echo "Running examples (no-default-features)..."
+	@for example in $(FASTLOWESS_EXAMPLES); do \
+		cargo run -q -p $(FASTLOWESS_PKG) --example $$example --no-default-features > /dev/null || exit 1; \
+	done
+	@for feature in $(FASTLOWESS_FEATURES); do \
+		echo "Running examples with feature: $$feature"; \
+		for example in $(FASTLOWESS_EXAMPLES); do \
+			if [ "$$feature" = "dev" ]; then \
+				cargo run -q -p $(FASTLOWESS_PKG) --example $$example --features $$feature || exit 1; \
+			else \
+				cargo run -q -p $(FASTLOWESS_PKG) --example $$example --features $$feature > /dev/null || exit 1; \
+			fi; \
+		done; \
+	done
+	@echo "============================================================================="
 
 ensure-llvm-cov:
 	@cargo llvm-cov --version > /dev/null 2>&1 || (echo "Installing cargo-llvm-cov..." && cargo install cargo-llvm-cov && cargo llvm-cov install-llvm-tools)
 
 coverage: ensure-llvm-cov
 	@echo "Running $(FASTLOWESS_PKG) coverage..."
-	@LLVM_COV=llvm-cov LLVM_PROFDATA=llvm-profdata cargo llvm-cov --workspace --test $(FASTLOWESS_PKG) --all-features \
+	@LLVM_COV=llvm-cov LLVM_PROFDATA=llvm-profdata cargo llvm-cov -p $(FASTLOWESS_PKG) --test $(FASTLOWESS_PKG) --all-features \
 		--ignore-filename-regex 'crates[/\\]lowess[/\\]|bindings[/\\]|benchmarks[/\\]|examples[/\\]|tests[/\\]'
 
 clean:

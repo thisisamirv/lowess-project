@@ -1,3 +1,5 @@
+THIS_MK := $(lastword $(MAKEFILE_LIST))
+
 .SHELLFLAGS := -ec
 
 UNAME_S := $(shell uname -s)
@@ -36,8 +38,9 @@ FEATURE_SET ?= all
 LOWESS_PKG      := lowess
 LOWESS_DIR      := crates/lowess
 LOWESS_FEATURES := std dev
+LOWESS_EXAMPLES := batch_smoothing online_smoothing streaming_smoothing
 
-.PHONY: default clean coverage ensure-llvm-cov
+.PHONY: default clean coverage ensure-llvm-cov examples
 
 default:
 	@echo "Running $(LOWESS_PKG) crate checks..."
@@ -69,25 +72,41 @@ default:
 		cargo build -q -p $(LOWESS_PKG) --features $(FEATURE_SET) || exit 1; \
 		RUSTDOCFLAGS="-D warnings" cargo doc -q -p $(LOWESS_PKG) --no-deps --features $(FEATURE_SET) || exit 1; \
 	fi
-	@cargo clippy -p examples --examples --all-features -- -D warnings || exit 1
+	@cargo clippy -p $(LOWESS_PKG) --examples --all-features -- -D warnings || exit 1
 	@echo "=============================================================================="
 	@echo "3. Testing..."
 	@echo "=============================================================================="
 	@echo "Testing (no-default-features)..."
-	@cargo test -q -p lowess-project-tests --test $(LOWESS_PKG) --no-default-features
+	@cargo test -q -p $(LOWESS_PKG) --test $(LOWESS_PKG) --no-default-features
 	@for feature in $(LOWESS_FEATURES); do \
 		echo "Testing ($$feature)..."; \
-		cargo test -q -p lowess-project-tests --test $(LOWESS_PKG) --features $$feature || exit 1; \
+		cargo test -q -p $(LOWESS_PKG) --test $(LOWESS_PKG) --features $$feature || exit 1; \
 	done
 	@echo "=============================================================================="
+	@"$(MAKE)" -f $(THIS_MK) examples
 	@echo "All $(LOWESS_PKG) crate checks completed successfully!"
+
+examples:
+	@echo "Running $(LOWESS_PKG) examples..."
+	@echo "============================================================================="
+	@echo "Running examples (no-default-features)..."
+	@for example in $(LOWESS_EXAMPLES); do \
+		cargo run -q -p $(LOWESS_PKG) --example $$example --no-default-features || exit 1; \
+	done
+	@for feature in $(LOWESS_FEATURES); do \
+		echo "Running examples ($$feature)..."; \
+		for example in $(LOWESS_EXAMPLES); do \
+			cargo run -q -p $(LOWESS_PKG) --example $$example --features $$feature || exit 1; \
+		done; \
+	done
+	@echo "============================================================================="
 
 ensure-llvm-cov:
 	@cargo llvm-cov --version > /dev/null 2>&1 || (echo "Installing cargo-llvm-cov..." && cargo install cargo-llvm-cov && cargo llvm-cov install-llvm-tools)
 
 coverage: ensure-llvm-cov
 	@echo "Running $(LOWESS_PKG) coverage..."
-	@LLVM_COV=llvm-cov LLVM_PROFDATA=llvm-profdata cargo llvm-cov --workspace --test $(LOWESS_PKG) --all-features \
+	@LLVM_COV=llvm-cov LLVM_PROFDATA=llvm-profdata cargo llvm-cov -p $(LOWESS_PKG) --test $(LOWESS_PKG) --all-features \
 		--ignore-filename-regex 'crates[/\\]fastLowess[/\\]|bindings[/\\]|benchmarks[/\\]|examples[/\\]|tests[/\\]'
 
 clean:

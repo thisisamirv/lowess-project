@@ -1,3 +1,5 @@
+THIS_MK := $(lastword $(MAKEFILE_LIST))
+
 .SHELLFLAGS := -ec
 
 UNAME_S := $(shell uname -s)
@@ -100,7 +102,7 @@ endif
 
 TEMP ?= /tmp
 
-.PHONY: default clean
+.PHONY: default clean examples
 
 default:
 	@echo "Running $(CPP_PKG) checks..."
@@ -115,7 +117,7 @@ default:
 	@echo "Linting C++ files..."
 	@if command -v clang-tidy >/dev/null 2>&1; then \
 		clang_tidy_log="$(TEMP)/clang-tidy-cpp.log"; \
-		clang-tidy --config-file=bindings/cpp/.clang-tidy bindings/cpp/include/fastlowess.hpp tests/cpp/test_fastlowess.cpp examples/cpp/*.cpp -- -I bindings/cpp/include -std=c++17 > "$$clang_tidy_log" 2>&1; \
+		clang-tidy --config-file=bindings/cpp/.clang-tidy bindings/cpp/include/fastlowess.hpp $(CPP_DIR)/tests/test_fastlowess.cpp $(CPP_DIR)/examples/*.cpp -- -I bindings/cpp/include -std=c++17 > "$$clang_tidy_log" 2>&1; \
 		clang_tidy_status=$$?; \
 		grep -Ev '^(\[[0-9]+/[0-9]+\] Processing file |[0-9]+ warnings generated\.|Suppressed [0-9]+ warnings \([0-9]+ in non-user code\)\.|Use -header-filter=\.\* or leave it as default to display errors from all non-system headers\.|Use -system-headers to display errors from system headers as well\.)' "$$clang_tidy_log" || true; \
 		rm -f "$$clang_tidy_log"; \
@@ -132,7 +134,7 @@ default:
 		if cppcheck --error-exitcode=1 --enable=warning,performance,portability \
 			--suppress=missingInclude --suppress=missingIncludeSystem \
 			-I $(CPP_DIR)/include \
-			$(CPP_DIR)/include/fastlowess.hpp tests/cpp/test_fastlowess.cpp examples/cpp/ > "$$cppcheck_log" 2>&1; then \
+			$(CPP_DIR)/include/fastlowess.hpp $(CPP_DIR)/tests/test_fastlowess.cpp $(CPP_DIR)/examples/ > "$$cppcheck_log" 2>&1; then \
 			cat "$$cppcheck_log"; \
 		else \
 			cppcheck_status=$$?; \
@@ -178,9 +180,9 @@ default:
 	@echo "=============================================================================="
 	@echo "3. Testing..."
 	@echo "=============================================================================="
-	@rm -rf tests/cpp/build
-	@mkdir -p tests/cpp/build
-	@cd tests/cpp/build && cmake $(CPP_CMAKE_GENERATOR) -DFASTLOWESS_LIB="$(CPP_TEST_LIB_ABS)" -DFASTLOWESS_LIB_DIR="$(CPP_LIBRARY_DIR_ABS)" .. && $(CPP_TEST_BUILD) && $(CPP_TEST_RUN)
+	@rm -rf $(CPP_DIR)/tests/build
+	@mkdir -p $(CPP_DIR)/tests/build
+	@cd $(CPP_DIR)/tests/build && cmake $(CPP_CMAKE_GENERATOR) -DFASTLOWESS_LIB="$(CPP_TEST_LIB_ABS)" -DFASTLOWESS_LIB_DIR="$(CPP_LIBRARY_DIR_ABS)" .. && $(CPP_TEST_BUILD) && $(CPP_TEST_RUN)
 	@echo "=============================================================================="
 	@echo "3b. Valgrind memory check..."
 	@echo "=============================================================================="
@@ -190,15 +192,28 @@ default:
 		echo "Valgrind not found. Skipping memory check."; \
 	else \
 		valgrind --leak-check=full --error-exitcode=1 --quiet \
-		tests/cpp/build/test_fastlowess_suite 2>&1 || \
+		$(CPP_DIR)/tests/build/test_fastlowess_suite 2>&1 || \
 		(echo "Error: Valgrind detected memory errors"; exit 1); \
 		echo "Valgrind: no leaks."; \
 	fi
 	@echo "$(CPP_PKG) checks completed successfully!"
+	@"$(MAKE)" -f $(THIS_MK) examples
+
+examples:
+	@echo "Running $(CPP_PKG) examples..."
+	@echo "============================================================================="
+	@mkdir -p $(CPP_DIR)/bin
+	@g++ -O3 $(CPP_DIR)/examples/batch_smoothing.cpp -o $(CPP_DIR)/bin/batch_smoothing -I$(CPP_DIR)/include -L$(CPP_LIBRARY_DIR) -lfastlowess_cpp -lpthread -ldl -lm
+	@g++ -O3 $(CPP_DIR)/examples/streaming_smoothing.cpp -o $(CPP_DIR)/bin/streaming_smoothing -I$(CPP_DIR)/include -L$(CPP_LIBRARY_DIR) -lfastlowess_cpp -lpthread -ldl -lm
+	@g++ -O3 $(CPP_DIR)/examples/online_smoothing.cpp -o $(CPP_DIR)/bin/online_smoothing -I$(CPP_DIR)/include -L$(CPP_LIBRARY_DIR) -lfastlowess_cpp -lpthread -ldl -lm
+	@$(CPP_EXAMPLE_RUN_ENV) $(CPP_DIR)/bin/batch_smoothing
+	@$(CPP_EXAMPLE_RUN_ENV) $(CPP_DIR)/bin/streaming_smoothing
+	@$(CPP_EXAMPLE_RUN_ENV) $(CPP_DIR)/bin/online_smoothing
+	@echo "============================================================================="
 
 clean:
 	@echo "Cleaning $(CPP_PKG)..."
 	@cargo clean -p $(CPP_PKG)
 	@rm -rf $(CPP_DIR)/include/fastlowess.h $(CPP_DIR)/bin $(CPP_DIR)/build
-	@rm -rf tests/cpp/build
+	@rm -rf $(CPP_DIR)/tests/build
 	@echo "$(CPP_PKG) clean complete!"

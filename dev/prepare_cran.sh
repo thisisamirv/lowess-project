@@ -42,23 +42,7 @@ directory = "vendor"
 EOF
 fi
 
-# 3. Copy shared R tests
-echo "   -> Copying shared R tests..."
-if [ -d "../../tests/r/testthat" ] && [ -f "../../tests/r/testthat.R" ]; then
-	rm -rf tests/testthat
-	rm -f tests/testthat.R
-	mkdir -p tests/testthat
-	cp ../../tests/r/testthat/*.R tests/testthat/
-	cp ../../tests/r/testthat.R tests/testthat.R
-	echo "      (Copied shared tests from repository root)"
-elif [ -d "tests/testthat" ] && [ -f "tests/testthat.R" ]; then
-	echo "      (Using tests already present in package)"
-else
-	echo "Error: no R tests available in either ../../tests/r or tests/." >&2
-	exit 1
-fi
-
-# 4. Generate AUTHORS file
+# 3. Generate AUTHORS file
 echo "   -> Generating inst/AUTHORS..."
 mkdir -p inst
 (cd src && cargo metadata --locked --format-version 1 >../cargo_metadata_temp.json)

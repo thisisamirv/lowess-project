@@ -35,6 +35,9 @@ bytemuck = { version = "1.25", optional = true }
 pollster = { version = "1.0", optional = true }
 futures-intrusive = { version = "0.5", optional = true }
 
+[dev-dependencies]
+approx = "0.5"
+
 [features]
 default = ["cpu"]
 cpu = ["dep:rayon", "dep:ndarray"]

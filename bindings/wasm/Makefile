@@ -33,7 +33,7 @@ endif
 
 WASM_PKG      := fastlowess-wasm
 WASM_DIR      := bindings/wasm
-WASM_TEST_DIR := tests/wasm
+WASM_TEST_DIR := bindings/wasm/tests
 
 .PHONY: default clean
 
@@ -53,7 +53,7 @@ default:
 	@cd $(WASM_DIR) && $(NPX) -y depcheck --ignores="oxlint"
 	@cd $(WASM_DIR) && ($(NPM) outdated | grep -v "fastlowess-" || true)
 	@cd $(WASM_DIR) && $(NPM) ci --dry-run
-	@$(NPX) -y oxlint $(WASM_DIR)/src/*.js tests/wasm/*.js
+	@$(NPX) -y oxlint $(WASM_DIR)/src/*.js $(WASM_TEST_DIR)/*.js
 	@if ! command -v wasm-pack >/dev/null 2>&1; then \
 		echo "wasm-pack not found. Installing..."; \
 		cargo install wasm-pack; \
@@ -68,7 +68,7 @@ default:
 	@echo "=============================================================================="
 	@cd $(WASM_DIR) && wasm-pack test --node
 	@echo "Running JS tests..."
-	@node --test tests/wasm/test_fastlowess_wasm.js
+	@node --test $(WASM_TEST_DIR)/test_fastlowess_wasm.js
 	@echo "=============================================================================="
 	@echo "$(WASM_PKG) checks completed successfully!"
 
