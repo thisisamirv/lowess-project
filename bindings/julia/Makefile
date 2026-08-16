@@ -85,7 +85,7 @@ _julia_checks_internal:
 	@echo "=============================================================================="
 	@cd $(JL_DIR) && cargo clippy -q --all-targets -- -D warnings
 	@echo "Linting Julia files..."
-	@julia dev/format_julia.jl || true
+	@julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.add("JuliaFormatter"); using JuliaFormatter; format(["bindings/julia/julia", "$(JL_TEST_DIR)", "$(JL_DIR)/examples"], verbose=true, overwrite=true)' || true
 	@julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.add("JuliaFormatter"); using JuliaFormatter; format(["bindings/julia/julia", "$(JL_TEST_DIR)", "$(JL_DIR)/examples"], verbose=true, overwrite=false) ? exit(0) : exit(1)'
 	@echo "=============================================================================="
 	@echo "3. Building..."
