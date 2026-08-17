@@ -55,6 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed `dev/clean_checksums.py`. The two things it did — strip `tests`/`benches`/`examples`/`doc` directories from the vendor tree and reset `.cargo-checksum.json` files — are now done with two `find` commands inline in the Makefiles. Cargo accepts `{"files":{}}` checksums for vendored crates so per-file verification is disabled after stripping, removing the need to recompute hashes. The R build now requires no Python scripts at all.
 - Removed `dev/prepare_cran.sh`. Its vendor-extraction and cargo-config steps were already handled by `Makevars.in` during `R CMD build`, making them dead code. The only unique step — generating `inst/AUTHORS` from `cargo metadata` — is now inlined directly into `bindings/r/Makefile`'s step 4c using a `jq` pipeline, removing the Python dependency and temp-file pattern. The stale `fastLowess-R` package-name exclusion filter has been corrected to use the current name (`rfastlowess`) via the existing `$(R_PKG_NAME)` variable.
 - Added `...` to `Lowess()`, `StreamingLowess()`, and `OnlineLowess()` to force named arguments for all optional parameters following the primary positional arguments. Passing extra arguments positionally now raises an error; every optional argument must be specified by name.
+- Added `Depends: R (>= 4.2)` to `DESCRIPTION` to declare the minimum R version required by the `extendr` backend. Added a corresponding R 4.2 matrix entry to the `R-CMD-check` CI workflow to verify compatibility.
 
 **Julia:**
 
