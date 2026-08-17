@@ -7,6 +7,7 @@
 #' @srrstats {G1.6} Memory-efficient streaming for large datasets.
 #'
 #' @inheritParams Lowess
+#' @param ... Not used; forces all subsequent arguments to be named.
 #' @param chunk_size Points per chunk.
 #' @param overlap Overlap between chunks.
 #' @param merge_strategy Strategy for reconciling overlapping chunk regions:
@@ -25,6 +26,7 @@
 StreamingLowess <- function(
     fraction = 0.67,
     chunk_size = 5000L,
+    ...,
     overlap = NULL,
     iterations = 3L,
     delta = NULL,
@@ -42,6 +44,7 @@ StreamingLowess <- function(
     confidence_intervals = NULL,
     prediction_intervals = NULL
 ) {
+    if (...length() > 0) stop("All arguments after 'chunk_size' must be named.", call. = FALSE)
     validate_params(fraction = fraction, chunk_size = chunk_size)
     handle <- do.call(RStreamingLowess$new, env_args(streaming_params))
 

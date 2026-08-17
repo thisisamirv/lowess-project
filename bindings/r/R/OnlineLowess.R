@@ -7,6 +7,7 @@
 #' @srrstats {G1.6} Sliding window for incremental updates.
 #'
 #' @inheritParams Lowess
+#' @param ... Not used; forces all subsequent arguments to be named.
 #' @param window_capacity Max points in sliding window. Default: 1000.
 #' @param min_points Minimum points before smoothing. Default: 3.
 #' @param update_mode Update strategy: \code{"full"} (default) or
@@ -26,6 +27,7 @@ OnlineLowess <- function(
     fraction = 0.67,
     window_capacity = 1000L,
     min_points = 3L,
+    ...,
     iterations = 3L,
     delta = NULL,
     weight_function = "tricube",
@@ -42,6 +44,7 @@ OnlineLowess <- function(
     confidence_intervals = NULL,
     prediction_intervals = NULL
 ) {
+    if (...length() > 0) stop("All arguments after 'min_points' must be named.", call. = FALSE)
     validate_params(
         fraction = fraction,
         window_capacity = window_capacity,

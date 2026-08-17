@@ -14,6 +14,7 @@
 #' @srrstats {RE4.11} Goodness-of-fit metrics via return_diagnostics.
 #' @srrstats {RE5.0} O(n) scaling documented in README.
 #'
+#' @param ... Not used; forces all subsequent arguments to be named.
 #' @param fraction Smoothing fraction (0 to 1). Default: 0.67.
 #' @param iterations Robustness iterations. Default: 3.
 #' @param delta Interpolation threshold. NULL = auto.
@@ -49,6 +50,7 @@
 #' @export
 Lowess <- function(
     fraction = 0.67,
+    ...,
     iterations = 3L,
     delta = NULL,
     weight_function = "tricube",
@@ -69,6 +71,7 @@ Lowess <- function(
     cv_seed = NULL,
     return_se = FALSE
 ) {
+    if (...length() > 0) stop("All arguments after 'fraction' must be named.", call. = FALSE)
     validate_params(fraction = fraction, iterations = iterations)
     handle <- do.call(RLowess$new, env_args(lowess_params))
 
