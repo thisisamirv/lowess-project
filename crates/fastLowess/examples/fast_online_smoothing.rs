@@ -471,7 +471,6 @@ fn example_7_parallel_benchmark() -> Result<(), LowessError> {
         .fraction(0.5)
         .iterations(3)
         .window_capacity(100) // 100-point sliding window
-        .parallel(true) // Enable parallel execution
         .build()?;
 
     let mut processed_count = 0;
@@ -513,7 +512,7 @@ fn example_8_sequential_benchmark() -> Result<(), LowessError> {
         .fraction(0.5)
         .iterations(3)
         .window_capacity(100) // 100-point sliding window
-        .parallel(false) // Disable parallel execution
+        .parallel(false)
         .build()?;
 
     let mut processed_count = 0;

@@ -15,7 +15,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Introduced S3 generics `fit()`, `process_chunk()`, `finalize()`, and `add_point()` in the R binding. These replace the previous list-closure API (`fit(model, )`, `process_chunk(model, )`, etc.) with idiomatic R dispatch: `fit(model, x, y)`, `process_chunk(model, x, y)`, `finalize(model)`, `add_point(model, x, y)`. All demos, vignettes, tests, and roxygen examples updated accordingly.
 - `bindings/r/Makefile` step 4a now auto-installs [Air](https://posit-dev.github.io/air/) when `air` is not on `PATH` — using `irm … | iex` (PowerShell) on Windows and `curl … | sh` on macOS/Linux — then prepends `$HOME/.local/bin` to `PATH` before running `air format`, so formatting works out-of-the-box without a pre-installed Air binary.
 
+**Docs:**
+
+- Added `*See: …*` cross-reference links after every option heading (`weight_function`, `robustness_method`, `boundary_policy`, `scaling_method`, `zero_weight_fallback`, `merge_strategy`, `update_mode`) in all `docs/api/` files, pointing to the corresponding user-guide page.
+
 ### Fixed
+
+**Docs:**
+
+- Fixed `docs/api/rust.md`: option values are now shown in their string form (e.g. `"tricube"`, `"bisquare"`, `"weighted_average"`) rather than as Rust enum variant names (`Tricube`, `Bisquare`, `WeightedAverage`), matching the string-based API that both `fastLowess` and `lowess` accept through the prelude.
 
 **Monorepo:**
 

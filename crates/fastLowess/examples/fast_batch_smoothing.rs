@@ -56,7 +56,7 @@ fn example_1_parallel_execution() -> Result<(), LowessError> {
     let model = Lowess::new()
         .fraction(0.5) // Use 50% of data for each local fit
         .iterations(3) // 3 robustness iterations
-        .parallel(true) // Enable parallel execution (default)
+        .parallel(true)
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -86,7 +86,7 @@ fn example_2_sequential_fallback() -> Result<(), LowessError> {
 
     let start = Instant::now();
     let model = Lowess::new()
-        .parallel(false) // Disable parallel execution
+        .parallel(false)
         .build()?;
 
     let _result = model.fit(&x, &y)?;
@@ -94,7 +94,6 @@ fn example_2_sequential_fallback() -> Result<(), LowessError> {
 
     println!("Processed {} points in {:?}", n, duration);
     println!("Execution mode: Sequential");
-    // Note: Sequential might be slower for large N
 
     println!();
     Ok(())

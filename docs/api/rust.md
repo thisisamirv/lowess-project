@@ -154,11 +154,11 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `fraction(T)` | `T: Float` | `0.67` | Smoothing fraction (bandwidth) |
 | `iterations(usize)` | `usize` | `3` | Number of robustifying iterations |
 | `delta(T)` | `T: Float` | `NaN` | Interpolation distance (NaN for auto) |
-| `weight_function(...)` | `weight_function` | `Tricube` | Weight function enum |
-| `robustness_method(...)` | `robustness_method` | `Bisquare` | Robustness method enum |
-| `scaling_method(...)` | `scaling_method` | `MAD` | Residual scaling method enum |
-| `boundary_policy(...)` | `boundary_policy` | `Extend` | Boundary handling policy enum |
-| `zero_weight_fallback(...)` | `zero_weight_fallback` | `UseLocalMean` | Zero-weight handling enum |
+| `weight_function(...)` | `weight_function` | `"tricube"` | Weight function |
+| `robustness_method(...)` | `robustness_method` | `"bisquare"` | Robustness method |
+| `scaling_method(...)` | `scaling_method` | `"mad"` | Residual scaling method |
+| `boundary_policy(...)` | `boundary_policy` | `"extend"` | Boundary handling policy |
+| `zero_weight_fallback(...)` | `zero_weight_fallback` | `"use_local_mean"` | Zero-weight handling |
 | `auto_converge(T)` | `T: Float` | `NaN` | Auto-convergence tolerance |
 | `confidence_intervals(T)` | `T: Float` | `NaN` | Confidence level (e.g., 0.95) |
 | `prediction_intervals(T)` | `T: Float` | `NaN` | Prediction level (e.g., 0.95) |
@@ -182,7 +182,7 @@ These chained methods configure the builder. They correspond to the "Options Str
 | --- | --- | --- | --- |
 | `chunk_size(usize)` | `usize` | `5000` | Data chunk size |
 | `overlap(usize)` | `usize` | `500` | Overlap size |
-| `merge_strategy(...)` | `merge_strategy` | `WeightedAverage` | Merge strategy enum |
+| `merge_strategy(...)` | `merge_strategy` | `"weighted_average"` | Merge strategy |
 
 ### Online Options
 
@@ -190,7 +190,7 @@ These chained methods configure the builder. They correspond to the "Options Str
 | --- | --- | --- | --- |
 | `window_capacity(usize)` | `usize` | `1000` | Max points in sliding window |
 | `min_points(usize)` | `usize` | `3` | Min points before smoothing starts |
-| `update_mode(...)` | `update_mode` | `Full` | Update mode enum |
+| `update_mode(...)` | `update_mode` | `"full"` | Update mode |
 | `parallel(bool)` | `bool` | `false` | Enable parallel execution (off by default; online LOWESS fits one point at a time) |
 
 ## GPU Acceleration
@@ -314,50 +314,64 @@ Returned by `add_point()` inside `Option`. Is `None` while the window is still f
 
 ### weight_function
 
-* `Tricube` (default; string alias: `"tricube"`)
-* `Epanechnikov` (alias: `"epanechnikov"`)
-* `Gaussian` (alias: `"gaussian"`)
-* `Uniform` (aliases: `"uniform"`, `"boxcar"`)
-* `Biweight` (aliases: `"biweight"`, `"bisquare"`)
-* `Triangle` (aliases: `"triangle"`, `"triangular"`)
-* `Cosine` (alias: `"cosine"`)
+*See: [Weight Functions](../user-guide/kernels.md)*
+
+* `"tricube"` (default)
+* `"epanechnikov"`
+* `"gaussian"`
+* `"uniform"` (alias: `"boxcar"`)
+* `"biweight"` (alias: `"bisquare"`)
+* `"triangle"` (alias: `"triangular"`)
+* `"cosine"`
 
 ### robustness_method
 
-* `Bisquare` (default; aliases: `"bisquare"`, `"biweight"`)
-* `Huber` (alias: `"huber"`)
-* `Talwar` (alias: `"talwar"`)
+*See: [Robustness](../user-guide/robustness.md)*
+
+* `"bisquare"` (default; alias: `"biweight"`)
+* `"huber"`
+* `"talwar"`
 
 ### boundary_policy
 
-* `Extend` (default; aliases: `"extend"`, `"pad"`)
-* `Reflect` (aliases: `"reflect"`, `"mirror"`)
-* `Zero` (alias: `"zero"`)
-* `NoBoundary` (aliases: `"noboundary"`, `"none"`)
+*See: [Boundary Handling](../user-guide/boundary.md)*
+
+* `"extend"` (default; alias: `"pad"`)
+* `"reflect"` (alias: `"mirror"`)
+* `"zero"`
+* `"noboundary"` (alias: `"none"`)
 
 ### scaling_method
 
-* `MAD` (default; aliases: `"mad"`, `"median_absolute_deviation"`)
-* `MAR` (aliases: `"mar"`, `"median_absolute_residual"`)
-* `Mean` (aliases: `"mean"`, `"mean_absolute_residual"`)
+*See: [Scaling Methods](../user-guide/scaling.md)*
+
+* `"mad"` (default; alias: `"median_absolute_deviation"`)
+* `"mar"` (alias: `"median_absolute_residual"`)
+* `"mean"` (alias: `"mean_absolute_residual"`)
 
 ### zero_weight_fallback
 
-* `UseLocalMean` (default; aliases: `"use_local_mean"`, `"local_mean"`, `"mean"`)
-* `ReturnOriginal` (aliases: `"return_original"`, `"original"`)
-* `ReturnNone` (aliases: `"return_none"`, `"none"`)
+*See: [Parameters](../user-guide/parameters.md)*
+
+* `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
+* `"return_original"` (alias: `"original"`)
+* `"return_none"` (alias: `"none"`)
 
 ### merge_strategy
 
-* `WeightedAverage` (default; aliases: `"weighted_average"`, `"weighted"`)
-* `Average` (aliases: `"average"`, `"mean"`)
-* `TakeFirst` (aliases: `"take_first"`, `"first"`)
-* `TakeLast` (aliases: `"take_last"`, `"last"`)
+*See: [Merge Strategies](../user-guide/merge.md)*
+
+* `"weighted_average"` (default; alias: `"weighted"`)
+* `"average"` (alias: `"mean"`)
+* `"take_first"` (alias: `"first"`)
+* `"take_last"` (alias: `"last"`)
 
 ### update_mode
 
-* `Full` (default; aliases: `"full"`, `"resmooth"`)
-* `Incremental` (aliases: `"incremental"`, `"single"`)
+*See: [Execution Modes](../user-guide/adapters.md)*
+
+* `"full"` (default; alias: `"resmooth"`)
+* `"incremental"` (alias: `"single"`)
 
 ## Example
 

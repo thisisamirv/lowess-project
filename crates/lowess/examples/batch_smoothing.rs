@@ -53,7 +53,6 @@ fn example_1_basic_smoothing() -> Result<(), LowessError> {
     let model = Lowess::new()
         .fraction(0.5) // Use 50% of data for each local fit
         .iterations(3) // 3 robustness iterations
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -95,7 +94,6 @@ fn example_2_robust_with_outliers() -> Result<(), LowessError> {
         .robustness_method("bisquare")
         .return_residuals()
         .return_robustness_weights()
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -155,7 +153,6 @@ fn example_3_uncertainty_quantification() -> Result<(), LowessError> {
         .iterations(3)
         .confidence_intervals(0.95) // 95% confidence intervals
         .prediction_intervals(0.95) // 95% prediction intervals
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -202,7 +199,6 @@ fn example_4_cross_validation() -> Result<(), LowessError> {
         .cv_k(5)
         .cv_fractions(vec![0.2, 0.3, 0.5, 0.7])
         .iterations(2)
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -252,7 +248,6 @@ fn example_5_complete_diagnostics() -> Result<(), LowessError> {
         .return_diagnostics()
         .return_residuals()
         .return_robustness_weights()
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -313,7 +308,6 @@ fn example_6_different_kernels() -> Result<(), LowessError> {
         let model = Lowess::new()
             .fraction(0.8)
             .weight_function(kernel)
-            .adapter(Batch)
             .build()?;
 
         let result = model.fit(&x, &y)?;
@@ -369,7 +363,6 @@ fn example_7_robustness_methods() -> Result<(), LowessError> {
             .iterations(5)
             .robustness_method(method)
             .return_robustness_weights()
-            .adapter(Batch)
             .build()?;
 
         let result = model.fit(&x, &y)?;
@@ -428,7 +421,7 @@ fn example_8_benchmark() -> Result<(), LowessError> {
         .collect();
 
     let start = Instant::now();
-    let model = Lowess::new().adapter(Batch).build()?;
+    let model = Lowess::new().build()?;
 
     let result = model.fit(&x, &y)?;
     let duration = start.elapsed();
@@ -458,7 +451,6 @@ fn example_9_custom_weights() -> Result<(), LowessError> {
     let result_no_w = Lowess::new()
         .fraction(0.5)
         .iterations(0)
-        .adapter(Batch)
         .build()?
         .fit(&x, &y)?;
 
@@ -469,7 +461,6 @@ fn example_9_custom_weights() -> Result<(), LowessError> {
         .fraction(0.5)
         .iterations(0)
         .custom_weights(weights)
-        .adapter(Batch)
         .build()?
         .fit(&x, &y)?;
 
@@ -486,7 +477,6 @@ fn example_9_custom_weights() -> Result<(), LowessError> {
     let fit_equal = Lowess::new()
         .fraction(0.6)
         .iterations(0)
-        .adapter(Batch)
         .build()?
         .fit(&x2, &y2)?;
 
@@ -497,7 +487,6 @@ fn example_9_custom_weights() -> Result<(), LowessError> {
         .fraction(0.6)
         .iterations(0)
         .custom_weights(weights2)
-        .adapter(Batch)
         .build()?
         .fit(&x2, &y2)?;
 

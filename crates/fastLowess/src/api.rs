@@ -172,8 +172,6 @@ macro_rules! impl_common_builder {
                 self.0 = self.0.return_robustness_weights();
                 self
             }
-            // dev options
-            #[doc(hidden)]
             pub fn parallel(mut self, p: bool) -> Self {
                 self.0 = self.0.parallel(p);
                 self

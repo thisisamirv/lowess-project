@@ -568,7 +568,6 @@ fn example_7_parallel_benchmark() -> Result<(), LowessError> {
         .iterations(3)
         .chunk_size(1000) // Process 1000 points per chunk
         .overlap(100) // 100 points overlap
-        .parallel(true) // Enable parallel execution
         .build()?;
 
     let chunk_size = 1000;
@@ -613,10 +612,7 @@ fn example_8_sequential_benchmark() -> Result<(), LowessError> {
 
     // Generate a larger synthetic dataset
     let n = 10_000;
-    println!(
-        "Processing {} data points in sequential streaming mode...",
-        n
-    );
+    println!("Processing {} data points in sequential streaming mode...", n);
 
     let start = std::time::Instant::now();
 
@@ -625,7 +621,7 @@ fn example_8_sequential_benchmark() -> Result<(), LowessError> {
         .iterations(3)
         .chunk_size(1000) // Process 1000 points per chunk
         .overlap(100) // 100 points overlap
-        .parallel(false) // Disable parallel execution
+        .parallel(false)
         .build()?;
 
     let chunk_size = 1000;

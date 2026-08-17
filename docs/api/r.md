@@ -20,8 +20,6 @@ library(rfastlowess)
 model <- Lowess(fraction = 0.5, iterations = 3)
 ```
 
-* `...`: Arguments corresponding to `LowessOptions` fields.
-
 **Methods:**
 
 ```r
@@ -54,8 +52,6 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 library(rfastlowess)
 stream <- StreamingLowess(fraction = 0.3, chunk_size = 50, overlap = 10)
 ```
-
-* `...`: Arguments corresponding to `LowessOptions` and `StreamingOptions` fields.
 
 **Methods:**
 
@@ -99,8 +95,6 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 library(rfastlowess)
 online <- OnlineLowess(fraction = 0.3, window_capacity = 50)
 ```
-
-* `...`: Arguments corresponding to `LowessOptions` and `OnlineOptions` fields.
 
 **Methods:**
 
@@ -213,6 +207,8 @@ An S3 list with class `"LowessResult"` containing:
 
 ### weight_function
 
+*See: [Weight Functions](../user-guide/kernels.md)*
+
 * `"tricube"` (default)
 * `"epanechnikov"`
 * `"gaussian"`
@@ -223,11 +219,15 @@ An S3 list with class `"LowessResult"` containing:
 
 ### robustness_method
 
+*See: [Robustness](../user-guide/robustness.md)*
+
 * `"bisquare"` (default; alias: `"biweight"`)
 * `"huber"`
 * `"talwar"`
 
 ### boundary_policy
+
+*See: [Boundary Handling](../user-guide/boundary.md)*
 
 * `"extend"` (default; alias: `"pad"`)
 * `"reflect"` (alias: `"mirror"`)
@@ -236,11 +236,15 @@ An S3 list with class `"LowessResult"` containing:
 
 ### scaling_method
 
+*See: [Scaling Methods](../user-guide/scaling.md)*
+
 * `"mad"` (default; alias: `"median_absolute_deviation"`)
 * `"mar"` (alias: `"median_absolute_residual"`)
 * `"mean"` (alias: `"mean_absolute_residual"`)
 
 ### zero_weight_fallback
+
+*See: [Parameters](../user-guide/parameters.md)*
 
 * `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
 * `"return_original"` (alias: `"original"`)
@@ -248,12 +252,16 @@ An S3 list with class `"LowessResult"` containing:
 
 ### merge_strategy
 
+*See: [Merge Strategies](../user-guide/merge.md)*
+
 * `"weighted_average"` (default; alias: `"weighted"`)
 * `"average"` (alias: `"mean"`)
 * `"take_first"` (alias: `"first"`)
 * `"take_last"` (alias: `"last"`)
 
 ### update_mode
+
+*See: [Execution Modes](../user-guide/adapters.md)*
 
 * `"full"` (default; alias: `"resmooth"`)
 * `"incremental"` (alias: `"single"`)
