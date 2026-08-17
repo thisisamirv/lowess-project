@@ -33,8 +33,7 @@ bindings/r/Meta/
 bindings/r/README.html
 bindings/r/src/Makevars
 .Rprofile
-tests/r/testthat/Rplots.pdf
-bindings/r/tests/
+bindings/r/tests/testthat/Rplots.pdf
 Rplots.pdf
 
 # Python

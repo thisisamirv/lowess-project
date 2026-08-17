@@ -170,8 +170,8 @@ default:
 	@{ \
 		echo "Authors and Copyright Holders for Rust Dependencies:"; \
 		echo ""; \
-		(cd $(R_DIR)/src && cargo metadata --locked --format-version 1) | \
-			jq -r '[.packages[] | select(.name != "$(R_PKG_NAME)")] | unique_by(.name)[] | "Package: \(.name) (\(.version))\nAuthors: \(.authors | join(", "))\nLicense: \(.license // "Unknown")\n" + "-" * 40'; \
+		(cargo metadata --format-version 1) | \
+			jq -r '. as $root | [.packages[] | select(.id as $id | ($root.workspace_members | index($id)) == null)] | unique_by(.name)[] | "Package: \(.name) (\(.version))\nAuthors: \(.authors | join(", "))\nLicense: \(.license // "Unknown")\n" + "-" * 40'; \
 	} > $(R_DIR)/inst/AUTHORS
 	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) R CMD build .
 	@echo "=============================================================================="

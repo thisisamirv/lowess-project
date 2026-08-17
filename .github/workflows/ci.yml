@@ -70,7 +70,7 @@ jobs:
       - name: Install wasm-pack
         uses: jetli/wasm-pack-action@v0.4.0
         with:
-          version: "v0.14.0"
+          version: "v0.15.0"
 
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
@@ -93,9 +93,9 @@ jobs:
 
       - name: "Rust: Lowess Tests"
         run: |
-          cargo test -q -p lowess --test lowess
+          cargo test -q -p lowess --test lowess --features dev
           if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
-            cargo test -q -p lowess --test lowess --no-default-features
+            cargo test -q -p lowess --test lowess --features dev --no-default-features
           fi
         shell: bash
 
@@ -344,7 +344,7 @@ jobs:
       - name: Install wasm-pack
         uses: jetli/wasm-pack-action@v0.4.0
         with:
-          version: "v0.14.0"
+          version: "v0.15.0"
 
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
@@ -417,7 +417,7 @@ jobs:
       - name: Install wasm-pack
         uses: jetli/wasm-pack-action@v0.4.0
         with:
-          version: "v0.14.0"
+          version: "v0.15.0"
 
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
@@ -477,7 +477,7 @@ jobs:
       - name: Install wasm-pack
         uses: jetli/wasm-pack-action@v0.4.0
         with:
-          version: "v0.14.0"
+          version: "v0.15.0"
 
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
