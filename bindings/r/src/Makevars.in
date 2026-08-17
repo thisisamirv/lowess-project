@@ -17,6 +17,7 @@ $(STATLIB):
 	@if [ -f vendor.tar.xz ] && [ ! -d vendor ]; then \
 		echo "Extending vendor.tar.xz..."; \
 		$(TAR) -xf vendor.tar.xz; \
+		find vendor -name Makefile -delete 2>/dev/null || true; \
 	fi
 	@mkdir -p .cargo
 	@cp cargo-config.toml .cargo/config.toml

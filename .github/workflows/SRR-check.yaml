@@ -48,8 +48,8 @@ jobs:
           {
             echo "Authors and Copyright Holders for Rust Dependencies:"
             echo ""
-            (cd bindings/r/src && cargo metadata --locked --format-version 1) | \
-              jq -r '[.packages[] | select(.name != "rfastlowess")] | unique_by(.name)[] | "Package: \(.name) (\(.version))\nAuthors: \(.authors | join(", "))\nLicense: \(.license // "Unknown")\n" + "-" * 40'
+            (cargo metadata --format-version 1) | \
+              jq -r '. as $root | [.packages[] | select(.id as $id | ($root.workspace_members | index($id)) == null)] | unique_by(.name)[] | "Package: \(.name) (\(.version))\nAuthors: \(.authors | join(", "))\nLicense: \(.license // "Unknown")\n" + "-" * 40'
           } > bindings/r/inst/AUTHORS
 
       - name: Suppress C++ compilation warnings (libsass)

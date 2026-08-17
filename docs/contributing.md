@@ -11,7 +11,7 @@ Before opening a new issue, please search existing ones.
 
 ## Development Setup
 
-The project uses a `Makefile` to standardize development tasks.
+The project uses a root `Makefile` that delegates to per-component `Makefile`s in each crate and binding directory.
 
 ### Prerequisites
 
@@ -38,7 +38,14 @@ To develop across all platforms, you will need the following tools installed. Yo
   - **Linux/Ubuntu**: `libcurl4-openssl-dev`, `libssl-dev`, `libxml2-dev`, `libfontconfig1-dev`, `libharfbuzz-dev`, `libfribidi-dev`, `libfreetype6-dev`, `libpng-dev`, `libtiff5-dev`, `libjpeg-dev`, `libprotobuf-dev`, `protobuf-compiler`, `libuv1-dev`, `libgit2-dev`, `libssh2-1-dev`, `libmagick++-dev`
   - **macOS**: System libraries are typically available; install Xcode Command Line Tools if needed
   - **Windows**: System libraries are typically bundled with Rtools
-- *Note: The Makefile automatically installs R-level development dependencies (BiocManager, styler, lintr, roxygen2, pkgdown, testthat, etc.)*
+- **air**: R formatter — auto-installed by `make r` if not found (via the official installer script)
+- *The Makefile automatically installs the following R packages into `bindings/r/.r-lib/`:*
+  - *CRAN (required)*: `BiocManager`, `styler`, `testthat`, `rmarkdown`, `knitr`, `lintr`, `roxygen2`, `pkgdown`, `remotes`
+  - *CRAN (optional)*: `covr`, `prettycode`, `toml`, `V8`, `visNetwork`
+  - *Bioconductor (required)*: `BiocStyle`
+  - *Bioconductor (optional)*: `BiocCheck`
+  - *ropensci (optional)*: `srr`, `pkgcheck`, `pkgstats`
+  - *Runtime*: `BiocGenerics`
 
 **Julia**:
 
@@ -146,7 +153,7 @@ make docs-serve   # Serve documentation locally
 
 ## Workspace Structure
 
-This monorepo uses **Cargo workspace inheritance** for centralized configuration:
+This monorepo is a Cargo workspace. A `[workspace.package]` block in the root `Cargo.toml` defines shared values, but each crate currently declares all fields explicitly rather than using `field.workspace = true` inheritance:
 
 ```toml
 # Root Cargo.toml
@@ -155,27 +162,28 @@ authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
 rust-version = "1.89"
-readme = "README.md"
+repository = "https://github.com/thisisamirv/lowess-project"
 # ... and more shared metadata
 ```
 
-Each crate defines its own version and inherits shared defaults:
+Each crate defines its own version and all metadata independently:
 
 ```toml
 # Individual crate Cargo.toml
 [package]
 name = "lowess"
-version = "0.99.0"
+version = "2.0.0"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
+rust-version = "1.89"
+license = "MIT OR Apache-2.0"
 # ...
 ```
 
-**Benefits:**
+**Notes:**
 
-- Shared edition, license, and MSRV across all packages
-- Consistent author and repository metadata
-- Each crate still carries its own version for independent publishing
+- Each crate carries its own version for independent publishing
+- Shared values (edition, license, MSRV, repository) are kept consistent manually across crates
 
 ## Project Structure
 
@@ -191,7 +199,6 @@ lowess-project/
 │   ├── nodejs/           # NAPI-RS bindings
 │   ├── wasm/             # wasm-bindgen bindings
 │   └── cpp/              # C++17 Header-only wrapper
-├── tests/                # Workspace-level tests
 ├── validation/           # R vs lowess parity validation
 ├── benchmarks/           # Performance benchmarks (Criterion)
 ├── docs/                 # MkDocs documentation
@@ -226,23 +233,31 @@ Tests are organized by component:
 
 ```bash
 # Rust tests
-cargo test -p lowess
-cargo test -p fastLowess
+cargo test -p lowess --features dev
+cargo test -p fastLowess --features cpu
 
 # Python tests
-pytest tests/python/
+pytest bindings/python/tests/
 
-# R tests (via make r)
+# R tests (package must be installed first via make r)
+R_LIBS_USER=bindings/r/.r-lib Rscript -e \
+  "Sys.setenv(NOT_CRAN='true'); testthat::test_dir('bindings/r/tests/testthat', package = 'rfastlowess')"
 
 # Julia tests
-julia --project=bindings/julia/julia tests/julia/test_FastLOWESS.jl
+julia --project=bindings/julia/julia bindings/julia/tests/test_FastLOWESS.jl
 
-# Node.js tests (via make nodejs)
+# Node.js tests
+cd bindings/nodejs && npm test
 
 # WASM tests
 wasm-pack test --node bindings/wasm
 
-# C++ tests (via make cpp)
+# C++ tests (Linux; requires prior: cargo build -p fastlowess-cpp --release)
+mkdir -p bindings/cpp/tests/build
+cd bindings/cpp/tests/build
+cmake -DFASTLOWESS_LIB="$(pwd)/../../../target/release/libfastlowess_cpp.so" \
+      -DFASTLOWESS_LIB_DIR="$(pwd)/../../../target/release" ..
+make && ./test_fastlowess_suite
 ```
 
 ## License
