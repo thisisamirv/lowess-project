@@ -121,7 +121,7 @@ default:
 	@for f in $(R_DIR)/src/vendor/*/.cargo-checksum.json; do \
 		[ -f "$$f" ] && jq '.files = {}' "$$f" > "$$f.tmp" && mv "$$f.tmp" "$$f"; done
 	@echo "Creating vendor.tar.xz archive (including Cargo.lock)..."
-	@(cd $(R_DIR)/src && (tar --sort=name --mtime='1970-01-01 00:00:00Z' --owner=0 --group=0 --numeric-owner --xz --create --file=vendor.tar.xz vendor Cargo.lock 2>/dev/null || tar --xz --create --file=vendor.tar.xz vendor Cargo.lock))
+	@(cd $(R_DIR)/src && (tar --sort=name --mtime='1970-01-01 00:00:00Z' --owner=0 --group=0 --numeric-owner --xz --create --file=vendor.tar.xz --exclude='*/Makefile' vendor Cargo.lock 2>/dev/null || tar --xz --create --file=vendor.tar.xz --exclude='*/Makefile' vendor Cargo.lock))
 	@rm -rf $(R_DIR)/src/vendor
 	@echo "Vendor update complete. Archive: $(R_DIR)/src/vendor.tar.xz"
 	@if [ -f $(R_DIR)/src/vendor.tar.xz ] && [ ! -d $(R_DIR)/src/vendor ]; then \
@@ -196,7 +196,7 @@ default:
 	@echo "=============================================================================="
 	@echo "9. Submission checks..."
 	@echo "=============================================================================="
-	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) R_MAKEVARS_USER=$(CURDIR)/dev/Makevars.check R CMD check --as-cran --no-manual --no-check-urls $(R_PKG_TARBALL) || true
+	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) R_MAKEVARS_USER=$(CURDIR)/dev/Makevars.check R CMD check --as-cran --no-manual $(R_PKG_TARBALL) || true
 	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "if (requireNamespace('BiocCheck', quietly=TRUE, lib.loc = Sys.getenv('R_LIBS_USER'))) BiocCheck::BiocCheck('$(R_PKG_TARBALL)', new_package=FALSE)" || true
 	@echo "Package size (Limit: 5MB):"
 	@ls -lh $(R_DIR)/$(R_PKG_TARBALL) || true

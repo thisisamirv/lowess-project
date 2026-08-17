@@ -122,9 +122,9 @@ jobs:
 
              test -n "$VK_ICD_FILENAMES"
              vulkaninfo --summary
-             cargo test -q -p fastLowess --test fastLowess --features gpu
+             cargo test -q -p fastLowess --test fastLowess --features gpu,dev
           else
-             cargo test -q -p fastLowess --test fastLowess --features cpu
+             cargo test -q -p fastLowess --test fastLowess --features cpu,dev
           fi
         shell: bash
 

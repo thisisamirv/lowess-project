@@ -54,11 +54,16 @@ jobs:
 
       - name: Suppress third-party compilation warnings
         run: |
-          echo "CFLAGS=${CFLAGS:+$CFLAGS }-w"       >> "$GITHUB_ENV"
-          echo "CXXFLAGS=${CXXFLAGS:+$CXXFLAGS }-w" >> "$GITHUB_ENV"
-          mkdir -p ~/.R
-          echo "CFLAGS   += -w" >> ~/.R/Makevars
-          echo "CXXFLAGS += -w" >> ~/.R/Makevars
+          mkdir -p /tmp/r-cc-wrap ~/.R
+          printf '#!/bin/sh\nexec gcc "$@" -w\n'  > /tmp/r-cc-wrap/gcc
+          printf '#!/bin/sh\nexec g++ "$@" -w\n'  > /tmp/r-cc-wrap/g++
+          chmod +x /tmp/r-cc-wrap/gcc /tmp/r-cc-wrap/g++
+          echo "CC    = /tmp/r-cc-wrap/gcc" >> ~/.R/Makevars
+          echo "CXX   = /tmp/r-cc-wrap/g++" >> ~/.R/Makevars
+          echo "CXX11 = /tmp/r-cc-wrap/g++" >> ~/.R/Makevars
+          echo "CXX14 = /tmp/r-cc-wrap/g++" >> ~/.R/Makevars
+          echo "CXX17 = /tmp/r-cc-wrap/g++" >> ~/.R/Makevars
+          echo "CXX20 = /tmp/r-cc-wrap/g++" >> ~/.R/Makevars
 
       - name: Install dependencies
         run: |
