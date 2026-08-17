@@ -29,7 +29,7 @@ Estimate uncertainty in the smoothed curve itself.
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Lowess(fraction = 0.5, confidence_intervals = 0.95)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
 
     # Plot with bands
     plot(x, y, pch = 16, col = "gray")
@@ -179,7 +179,7 @@ Estimate where new observations might fall.
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Lowess(fraction = 0.5, prediction_intervals = 0.95)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
 
     # Wider than confidence intervals
     polygon(
@@ -311,7 +311,7 @@ Request both types simultaneously:
         confidence_intervals = 0.95,
         prediction_intervals = 0.95
     )
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -438,7 +438,7 @@ Common levels and their z-values:
 
     # 99% confidence interval (wider)
     model <- Lowess(confidence_intervals = 0.99)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -551,7 +551,7 @@ Access standard errors directly (available when intervals are computed):
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Lowess(confidence_intervals = 0.95)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     print(result$standard_errors)
     ```
 

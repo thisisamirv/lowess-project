@@ -193,7 +193,7 @@ See the [Installation Guide](getting-started/installation.md) for more options a
     y <- c(2.0, 4.1, 5.9, 8.2, 9.8)
 
     model <- Lowess(fraction = 0.5, iterations = 3)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     print(result$y)
     ```
 

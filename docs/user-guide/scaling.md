@@ -39,7 +39,7 @@ First centers residuals at their median, then takes the median of the absolute d
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Lowess(iterations = 3, scaling_method = "mad")
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -152,7 +152,7 @@ Uses the uncentered median — unlike MAD it does not subtract the residual medi
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Lowess(iterations = 3, scaling_method = "mar")
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -265,7 +265,7 @@ Arithmetic mean of absolute residuals. Non-robust: a single extreme outlier infl
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Lowess(iterations = 3, scaling_method = "mean")
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"

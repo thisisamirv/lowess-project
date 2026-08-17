@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **R:**
 
+- Introduced S3 generics `fit()`, `process_chunk()`, `finalize()`, and `add_point()` in the R binding. These replace the previous list-closure API (`fit(model, )`, `process_chunk(model, )`, etc.) with idiomatic R dispatch: `fit(model, x, y)`, `process_chunk(model, x, y)`, `finalize(model)`, `add_point(model, x, y)`. All demos, vignettes, tests, and roxygen examples updated accordingly.
 - `bindings/r/Makefile` step 4a now auto-installs [Air](https://posit-dev.github.io/air/) when `air` is not on `PATH` — using `irm … | iex` (PowerShell) on Windows and `curl … | sh` on macOS/Linux — then prepends `$HOME/.local/bin` to `PATH` before running `air format`, so formatting works out-of-the-box without a pre-installed Air binary.
 
 ### Fixed
@@ -91,7 +92,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **R:**
 
-- Added `custom_weights` parameter to `Lowess$fit()`. Accepts a numeric vector of non-negative per-observation weights. Batch only.
+- Added `custom_weights` parameter to `fit(Lowess, )`. Accepts a numeric vector of non-negative per-observation weights. Batch only.
 
 **Julia:**
 

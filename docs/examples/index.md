@@ -65,14 +65,14 @@ Each language includes three complete examples:
 
 === "Python"
     ```bash
-    cd examples/python
+    cd bindings/python/examples
     pip install fastlowess matplotlib numpy
     python batch_smoothing.py
     ```
 
 === "R"
     ```bash
-    Rscript examples/r/batch_smoothing.R
+    Rscript bindings/r/demo/batch_smoothing.R
     ```
 
 === "Rust"
@@ -82,13 +82,13 @@ Each language includes three complete examples:
 
 === "Julia"
     ```bash
-    julia --project=bindings/julia/julia examples/julia/batch_smoothing.jl
+    julia --project=bindings/julia/julia bindings/julia/examples/batch_smoothing.jl
     ```
 
 === "Node.js"
     ```bash
     cd bindings/nodejs && npm install
-    node ../../examples/nodejs/batch_smoothing.js
+    node examples/batch_smoothing.js
     ```
 
 === "WebAssembly"
@@ -98,11 +98,11 @@ Each language includes three complete examples:
 
     # Serve the project root and open in a browser
     npx serve .
-    # Then open: http://localhost:3000/examples/wasm/batch_smoothing.html
+    # Then open: http://localhost:3000/bindings/wasm/examples/batch_smoothing.html
     ```
 
 === "C++"
     ```bash
     make cpp
-    ./examples/cpp/batch_smoothing
+    ./bindings/cpp/examples/batch_smoothing
     ```

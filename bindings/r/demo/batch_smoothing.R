@@ -53,7 +53,7 @@ main <- function() {
     # Use a smaller fraction (0.05) to capture the sine wave seasonality
     basic_model <- Lowess(iterations = 0L, fraction = 0.05)
     print(basic_model)
-    basic_res <- basic_model$fit(x, y)
+    basic_res <- fit(basic_model, x, y)
     print(basic_res)
 
     # 3. Robust Smoothing (IRLS)
@@ -65,26 +65,26 @@ main <- function() {
         return_robustness_weights = TRUE
     )
     print(robust_model)
-    robust_res <- robust_model$fit(x, y)
+    robust_res <- fit(robust_model, x, y)
     print(robust_res)
 
     # 4. Uncertainty Quantification
     cat("Computing confidence and prediction intervals...\n")
-    res_intervals <- Lowess(
+    res_intervals <- fit(Lowess(
         fraction = 0.05,
         confidence_intervals = 0.95,
         prediction_intervals = 0.95,
         return_diagnostics = TRUE
-    )$fit(x, y)
+    ), x, y)
 
     # 5. Cross-Validation for optimal fraction
     cat("Running cross-validation to find optimal fraction...\n")
     cv_fractions <- c(0.05, 0.1, 0.2, 0.4)
-    res_cv <- Lowess(
+    res_cv <- fit(Lowess(
         cv_fractions = cv_fractions,
         cv_method = "kfold",
         cv_k = 5L
-    )$fit(x, y)
+    ), x, y)
 
     if (!is.null(res_cv$fraction_used)) {
         cat(sprintf("Optimal fraction found: %.2f\n", res_cv$fraction_used))
@@ -110,9 +110,9 @@ main <- function() {
     yl <- 2 * xl + 1
 
     # Compare policies
-    r_ext <- Lowess(fraction = 0.6, boundary_policy = "extend")$fit(xl, yl)
-    r_ref <- Lowess(fraction = 0.6, boundary_policy = "reflect")$fit(xl, yl)
-    r_zr <- Lowess(fraction = 0.6, boundary_policy = "zero")$fit(xl, yl)
+    r_ext <- fit(Lowess(fraction = 0.6, boundary_policy = "extend"), xl, yl)
+    r_ref <- fit(Lowess(fraction = 0.6, boundary_policy = "reflect"), xl, yl)
+    r_zr <- fit(Lowess(fraction = 0.6, boundary_policy = "zero"), xl, yl)
 
     cat("Boundary policy comparison:\n")
     cat(sprintf(
@@ -137,10 +137,10 @@ main <- function() {
     cw_x <- 0:9
     cw_y <- cw_x * 2.0
     cw_y[6] <- 100.0 # outlier at index 6 (1-indexed)
-    cw_no_w <- Lowess(fraction = 0.5, iterations = 0L)$fit(cw_x, cw_y)
+    cw_no_w <- fit(Lowess(fraction = 0.5, iterations = 0L), cw_x, cw_y)
     cw_wts <- rep(1.0, 10)
     cw_wts[6] <- 0.0
-    cw_zero_w <- Lowess(fraction = 0.5, iterations = 0L)$fit(
+    cw_zero_w <- fit(Lowess(fraction = 0.5, iterations = 0L), 
         cw_x,
         cw_y,
         custom_weights = cw_wts
@@ -156,10 +156,10 @@ main <- function() {
     sp_x <- 0:14
     sp_y <- rep(0.0, 15)
     sp_y[8] <- 10.0
-    sp_eq <- Lowess(fraction = 0.6, iterations = 0L)$fit(sp_x, sp_y)
+    sp_eq <- fit(Lowess(fraction = 0.6, iterations = 0L), sp_x, sp_y)
     sp_wts <- rep(1.0, 15)
     sp_wts[8] <- 100.0
-    sp_hi <- Lowess(fraction = 0.6, iterations = 0L)$fit(
+    sp_hi <- fit(Lowess(fraction = 0.6, iterations = 0L), 
         sp_x,
         sp_y,
         custom_weights = sp_wts

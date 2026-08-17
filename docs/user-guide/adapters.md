@@ -53,7 +53,7 @@ Standard mode for complete datasets. **Supports all features.**
         return_diagnostics = TRUE,
         parallel = TRUE
     )
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -237,8 +237,8 @@ Process large datasets in chunks with configurable overlap.
         overlap = 500,
         merge_strategy = "average"
     )
-    result <- model$process_chunk(x, y)
-    final <- model$finalize()
+    result <- process_chunk(model, x, y)
+    final <- finalize(model)
     ```
 
 === "Python"
@@ -448,7 +448,7 @@ Incremental updates with a sliding window for real-time data.
         min_points = 5,
         update_mode = "incremental"
     )
-    smoothed <- sapply(seq_along(x), function(i) model$add_point(x[[i]], y[[i]]))
+    smoothed <- sapply(seq_along(x), function(i) add_point(model, x[[i]], y[[i]]))
     ```
 
 === "Python"

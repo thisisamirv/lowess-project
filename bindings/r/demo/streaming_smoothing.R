@@ -51,8 +51,8 @@ example_1_basic_streaming <- function() {
         robustness_method = "bisquare"
     )
     print(model)
-    result <- model$process_chunk(x, y)
-    final <- model$finalize()
+    result <- process_chunk(model, x, y)
+    final <- finalize(model)
     result$x <- c(result$x, final$x)
     result$y <- c(result$y, final$y)
 
@@ -94,8 +94,8 @@ example_2_chunk_comparison <- function() {
             overlap = config$overlap,
             iterations = 2L
         )
-        result <- model$process_chunk(x, y)
-        final <- model$finalize()
+        result <- process_chunk(model, x, y)
+        final <- finalize(model)
         result$y <- c(result$y, final$y)
         duration <- as.numeric(Sys.time() - start_time, units = "secs")
 
@@ -134,8 +134,8 @@ example_3_large_dataset <- function() {
         parallel = TRUE # Enable parallel execution
     )
     print(model)
-    result <- model$process_chunk(x, y)
-    final <- model$finalize()
+    result <- process_chunk(model, x, y)
+    final <- finalize(model)
     result$y <- c(result$y, final$y)
     duration <- as.numeric(Sys.time() - start_time, units = "secs")
 
@@ -164,8 +164,8 @@ example_4_parallel_comparison <- function() {
         iterations = 3L,
         parallel = TRUE
     )
-    result_parallel <- model_parallel$process_chunk(x, y)
-    final_p <- model_parallel$finalize()
+    result_parallel <- process_chunk(model_parallel, x, y)
+    final_p <- finalize(model_parallel)
     result_parallel$y <- c(result_parallel$y, final_p$y)
     parallel_time <- as.numeric(Sys.time() - start_time, units = "secs")
 
@@ -178,8 +178,8 @@ example_4_parallel_comparison <- function() {
         iterations = 3L,
         parallel = FALSE
     )
-    result_sequential <- model_sequential$process_chunk(x, y)
-    final_s <- model_sequential$finalize()
+    result_sequential <- process_chunk(model_sequential, x, y)
+    final_s <- finalize(model_sequential)
     result_sequential$y <- c(result_sequential$y, final_s$y)
     sequential_time <- as.numeric(Sys.time() - start_time, units = "secs")
 

@@ -12,7 +12,7 @@ test_that("OnlineLowess basic functionality works", {
         window_capacity = 25,
         min_points = 10
     )
-    results <- lapply(seq_along(x), function(i) ol$add_point(x[[i]], y[[i]]))
+    results <- lapply(seq_along(x), function(i) add_point(ol, x[[i]], y[[i]]))
 
     expect_false(all(vapply(results, is.null, logical(1))))
 })
@@ -28,7 +28,7 @@ test_that("OnlineLowess window capacity works", {
     )
     results_small <- lapply(
         seq_along(x),
-        function(i) ol_small$add_point(x[[i]], y[[i]])
+        function(i) add_point(ol_small, x[[i]], y[[i]])
     )
 
     ol_large <- OnlineLowess(
@@ -37,7 +37,7 @@ test_that("OnlineLowess window capacity works", {
     )
     results_large <- lapply(
         seq_along(x),
-        function(i) ol_large$add_point(x[[i]], y[[i]])
+        function(i) add_point(ol_large, x[[i]], y[[i]])
     )
 
     expect_false(all(vapply(results_small, is.null, logical(1))))
@@ -54,7 +54,7 @@ test_that("OnlineLowess min_points parameter works", {
         window_capacity = 25,
         min_points = 5
     )
-    results <- lapply(seq_along(x), function(i) ol$add_point(x[[i]], y[[i]]))
+    results <- lapply(seq_along(x), function(i) add_point(ol, x[[i]], y[[i]]))
 
     # Results before min_points should be NULL
     expect_null(results[[1]])
@@ -74,7 +74,7 @@ test_that("OnlineLowess update modes work", {
     )
     results_full <- lapply(
         seq_along(x),
-        function(i) ol_full$add_point(x[[i]], y[[i]])
+        function(i) add_point(ol_full, x[[i]], y[[i]])
     )
 
     ol_incr <- OnlineLowess(
@@ -84,7 +84,7 @@ test_that("OnlineLowess update modes work", {
     )
     results_incr <- lapply(
         seq_along(x),
-        function(i) ol_incr$add_point(x[[i]], y[[i]])
+        function(i) add_point(ol_incr, x[[i]], y[[i]])
     )
 
     expect_false(all(vapply(results_full, is.null, logical(1))))
@@ -100,7 +100,7 @@ test_that("OnlineLowess handles edge cases", {
         window_capacity = 5,
         min_points = 3
     )
-    results <- lapply(seq_along(x), function(i) ol$add_point(x[[i]], y[[i]]))
+    results <- lapply(seq_along(x), function(i) add_point(ol, x[[i]], y[[i]]))
     expect_false(all(vapply(results, is.null, logical(1))))
 
     # Window larger than data
@@ -111,7 +111,7 @@ test_that("OnlineLowess handles edge cases", {
     )
     results2 <- lapply(
         seq_along(x),
-        function(i) ol2$add_point(x[[i]], y[[i]])
+        function(i) add_point(ol2, x[[i]], y[[i]])
     )
     expect_false(all(vapply(results2, is.null, logical(1))))
 })
@@ -129,7 +129,7 @@ test_that("OnlineLowess robustness works", {
     )
     results_no_robust <- lapply(
         seq_along(x),
-        function(i) ol_no_robust$add_point(x[[i]], y[[i]])
+        function(i) add_point(ol_no_robust, x[[i]], y[[i]])
     )
 
     ol_robust <- OnlineLowess(
@@ -139,7 +139,7 @@ test_that("OnlineLowess robustness works", {
     )
     results_robust <- lapply(
         seq_along(x),
-        function(i) ol_robust$add_point(x[[i]], y[[i]])
+        function(i) add_point(ol_robust, x[[i]], y[[i]])
     )
 
     expect_false(all(vapply(results_no_robust, is.null, logical(1))))

@@ -47,7 +47,7 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
         chunk_size = 5000,
         overlap = 500
     )
-    result <- model$process_chunk(x_chunk, y_chunk)
+    result <- process_chunk(model, x_chunk, y_chunk)
     ```
 
 === "Python"

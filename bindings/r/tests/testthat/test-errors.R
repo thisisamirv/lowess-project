@@ -19,7 +19,7 @@ test_that("Lowess rejects invalid inputs", {
 
     # Mismatched lengths at fit time
     expect_error(
-        Lowess(fraction = 0.5)$fit(as.double(1:10), as.double(1:5)),
+        fit(Lowess(fraction = 0.5), as.double(1:10), as.double(1:5)),
         "x and y must have the same length"
     )
 })
@@ -41,7 +41,7 @@ test_that("OnlineLowess rejects invalid inputs", {
 
     # add_point accepts scalar values
     ol <- OnlineLowess(fraction = 0.5)
-    result <- ol$add_point(1.0, 2.0)
+    result <- add_point(ol, 1.0, 2.0)
     expect_true(is.null(result) || is.numeric(result))
 })
 
@@ -59,7 +59,7 @@ test_that("StreamingLowess rejects invalid inputs", {
     # Mismatched lengths at process_chunk time
     sl <- StreamingLowess(fraction = 0.5)
     expect_error(
-        sl$process_chunk(as.double(1:10), as.double(1:5)),
+        process_chunk(sl, as.double(1:10), as.double(1:5)),
         "x and y must have the same length"
     )
 })

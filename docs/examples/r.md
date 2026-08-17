@@ -8,10 +8,10 @@ Complete R examples demonstrating rfastlowess capabilities with base R and visua
 Process complete datasets with confidence intervals, diagnostics, and cross-validation.
 
 ```r
---8<-- "examples/r/batch_smoothing.R"
+--8<-- "bindings/r/demo/batch_smoothing.R"
 ```
 
-[:material-download: Download batch_smoothing.R](https://github.com/thisisamirv/lowess-project/blob/main/examples/r/batch_smoothing.R)
+[:material-download: Download batch_smoothing.R](https://github.com/thisisamirv/lowess-project/blob/main/bindings/r/demo/batch_smoothing.R)
 
 ---
 
@@ -20,10 +20,10 @@ Process complete datasets with confidence intervals, diagnostics, and cross-vali
 Process large datasets in memory-efficient chunks with overlap merging.
 
 ```r
---8<-- "examples/r/streaming_smoothing.R"
+--8<-- "bindings/r/demo/streaming_smoothing.R"
 ```
 
-[:material-download: Download streaming_smoothing.R](https://github.com/thisisamirv/lowess-project/blob/main/examples/r/streaming_smoothing.R)
+[:material-download: Download streaming_smoothing.R](https://github.com/thisisamirv/lowess-project/blob/main/bindings/r/demo/streaming_smoothing.R)
 
 ---
 
@@ -32,10 +32,10 @@ Process large datasets in memory-efficient chunks with overlap merging.
 Real-time smoothing with sliding window for streaming data applications.
 
 ```r
---8<-- "examples/r/online_smoothing.R"
+--8<-- "bindings/r/demo/online_smoothing.R"
 ```
 
-[:material-download: Download online_smoothing.R](https://github.com/thisisamirv/lowess-project/blob/main/examples/r/online_smoothing.R)
+[:material-download: Download online_smoothing.R](https://github.com/thisisamirv/lowess-project/blob/main/bindings/r/demo/online_smoothing.R)
 
 ---
 
@@ -50,9 +50,9 @@ Real-time smoothing with sliding window for streaming data applications.
 # R CMD INSTALL bindings/r
 
 # Run examples
-Rscript examples/r/batch_smoothing.R
-Rscript examples/r/streaming_smoothing.R
-Rscript examples/r/online_smoothing.R
+Rscript bindings/r/demo/batch_smoothing.R
+Rscript bindings/r/demo/streaming_smoothing.R
+Rscript bindings/r/demo/online_smoothing.R
 ```
 
 ## Quick Start
@@ -68,7 +68,7 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 # Basic smoothing
 model <- Lowess(fraction = 0.3)
 print(model)
-result <- model$fit(x, y)
+result <- fit(model, x, y)
 print(result)
 
 # With confidence intervals
@@ -77,7 +77,7 @@ model <- Lowess(
     confidence_intervals = 0.95,
     return_diagnostics = TRUE
 )
-result <- model$fit(x, y)
+result <- fit(model, x, y)
 
 # Visualization
 plot(result, main = "Quick Start Example")

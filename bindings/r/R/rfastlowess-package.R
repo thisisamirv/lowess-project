@@ -27,7 +27,7 @@
 #' x <- seq(1, 10, length.out = 100)
 #' y <- sin(x) + rnorm(100, sd = 0.2)
 #' model <- Lowess(fraction = 0.3)
-#' result <- model$fit(x, y)
+#' result <- fit(model, x, y)
 #' plot(x, y)
 #' lines(result$x, result$y, col = "red", lwd = 2)
 #'

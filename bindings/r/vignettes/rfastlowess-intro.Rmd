@@ -63,7 +63,7 @@ model <- Lowess(fraction = 0.3)
 print(model)
 
 # Fit model
-result <- model$fit(x, y)
+result <- fit(model, x, y)
 print(result)
 
 # Quick visualization using the S3 plot method
@@ -82,11 +82,11 @@ y_outliers <- y
 y_outliers[sample(1:100, 10)] <- y_outliers[sample(1:100, 10)] + 5
 
 # Robust smoothing with confidence intervals
-result_robust <- Lowess(
+result_robust <- fit(Lowess(
     fraction = 0.3,
     iterations = 5,
     confidence_intervals = 0.95
-)$fit(x, y_outliers)
+), x, y_outliers)
 
 # Plot
 plot(x, y_outliers, pch = 16, col = "gray", main = "Robust LOWESS")

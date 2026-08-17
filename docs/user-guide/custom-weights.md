@@ -71,7 +71,7 @@ that would otherwise include it.
     weights[6] <- 0.0          # exclude the spike
 
     model <- Lowess(fraction = 0.5, iterations = 0L)
-    result <- model$fit(x, y, custom_weights = weights)
+    result <- fit(model, x, y, custom_weights = weights)
     ```
 
 === "Python"
@@ -216,7 +216,7 @@ reference instruments, or low-noise observations.
     weights[calibration_indices] <- 10.0   # trust calibration 10× more
 
     model <- Lowess(fraction = 0.5)
-    result <- model$fit(x, y, custom_weights = weights)
+    result <- fit(model, x, y, custom_weights = weights)
     ```
 
 === "Python"
@@ -362,7 +362,7 @@ weighting.
     weights <- 1.0 / sigma^2
 
     model <- Lowess(fraction = 0.5)
-    result <- model$fit(x, y, custom_weights = weights)
+    result <- fit(model, x, y, custom_weights = weights)
     ```
 
 === "Python"
@@ -500,7 +500,7 @@ for *known* bad points and robustness for *unknown* contamination.
     weights[4] <- 0.0
 
     model <- Lowess(fraction = 0.4, iterations = 3L)
-    result <- model$fit(
+    result <- fit(model, 
         x, y, custom_weights = weights
     )
     ```

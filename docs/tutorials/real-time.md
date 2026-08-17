@@ -35,7 +35,7 @@ For true real-time applications where each point must be processed immediately.
         update_mode = "incremental"
     )
     for (i in seq_along(times)) {
-        result <- model$add_point(times[i], temperatures[i])
+        result <- add_point(model, times[i], temperatures[i])
         if (!is.null(result))
             cat(sprintf("Time %d: %.2f\n", times[i], result$smoothed))
     }
@@ -224,8 +224,8 @@ For large datasets that arrive in batches or files.
         overlap = 1000,
         merge_strategy = "weighted_average"
     )
-    result <- model$process_chunk(x, y)
-    final <- model$finalize()
+    result <- process_chunk(model, x, y)
+    final <- finalize(model)
     ```
 
 === "Python"
@@ -406,7 +406,7 @@ For large datasets that arrive in batches or files.
         
         if (length(data_x) >= 5) {
             model <- Lowess(fraction = 0.4)
-            result <- model$fit(data_x, data_y)
+            result <- fit(model, data_x, data_y)
             current_smoothed <- tail(result$y, 1)
         }
     }

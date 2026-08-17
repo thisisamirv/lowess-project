@@ -7,10 +7,10 @@ Complete Node.js examples demonstrating fastlowess with native N-API bindings.
 Process complete datasets with confidence intervals and diagnostics.
 
 ```javascript
---8<-- "examples/nodejs/batch_smoothing.js"
+--8<-- "bindings/nodejs/examples/batch_smoothing.js"
 ```
 
-[:material-download: Download batch_smoothing.js](https://github.com/thisisamirv/lowess-project/blob/main/examples/nodejs/batch_smoothing.js)
+[:material-download: Download batch_smoothing.js](https://github.com/thisisamirv/lowess-project/blob/main/bindings/nodejs/examples/batch_smoothing.js)
 
 ---
 
@@ -19,10 +19,10 @@ Process complete datasets with confidence intervals and diagnostics.
 Process large datasets in memory-efficient chunks.
 
 ```javascript
---8<-- "examples/nodejs/streaming_smoothing.js"
+--8<-- "bindings/nodejs/examples/streaming_smoothing.js"
 ```
 
-[:material-download: Download streaming_smoothing.js](https://github.com/thisisamirv/lowess-project/blob/main/examples/nodejs/streaming_smoothing.js)
+[:material-download: Download streaming_smoothing.js](https://github.com/thisisamirv/lowess-project/blob/main/bindings/nodejs/examples/streaming_smoothing.js)
 
 ---
 
@@ -31,10 +31,10 @@ Process large datasets in memory-efficient chunks.
 Real-time smoothing with sliding window for streaming data.
 
 ```javascript
---8<-- "examples/nodejs/online_smoothing.js"
+--8<-- "bindings/nodejs/examples/online_smoothing.js"
 ```
 
-[:material-download: Download online_smoothing.js](https://github.com/thisisamirv/lowess-project/blob/main/examples/nodejs/online_smoothing.js)
+[:material-download: Download online_smoothing.js](https://github.com/thisisamirv/lowess-project/blob/main/bindings/nodejs/examples/online_smoothing.js)
 
 ---
 
@@ -47,9 +47,9 @@ npm install
 npm run build
 
 # Run examples
-node ../../examples/nodejs/batch_smoothing.js
-node ../../examples/nodejs/streaming_smoothing.js
-node ../../examples/nodejs/online_smoothing.js
+node examples/batch_smoothing.js
+node examples/streaming_smoothing.js
+node examples/online_smoothing.js
 ```
 
 ## Quick Start

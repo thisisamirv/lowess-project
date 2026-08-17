@@ -8,7 +8,7 @@
 #' @srrstats {RE2.0} Kernel, robustness, boundary, and scaling configurable.
 #' @srrstats {RE2.1, RE2.2} NA handling options available via Rust backend.
 #' @srrstats {RE3.0, RE3.1} Convergence warnings; thresholds settable.
-#' @srrstats {RE4.0, RE4.1} Model object returned; fitting deferred to $fit().
+#' @srrstats {RE4.0, RE4.1} Model object returned; fitting via S3 generic fit().
 #' @srrstats {RE4.7} Convergence stats returned in result.
 #' @srrstats {RE4.8, RE4.9, RE4.10} Response, fitted, residuals returned.
 #' @srrstats {RE4.11} Goodness-of-fit metrics via return_diagnostics.
@@ -44,7 +44,7 @@
 #' x <- seq(0, 10, length.out = 100)
 #' y <- sin(x) + rnorm(100, 0, 0.1)
 #' model <- Lowess(fraction = 0.2)
-#' result <- model$fit(x, y)
+#' result <- fit(model, x, y)
 #' plot(x, y)
 #' lines(x, result$y, col = "red")
 #' @export
@@ -75,19 +75,9 @@ Lowess <- function(
     validate_params(fraction = fraction, iterations = iterations)
     handle <- do.call(RLowess$new, env_args(lowess_params))
 
-    # Return a wrapper that coerces inputs for methods
     structure(
         list(
             handle = handle,
-            fit = function(x, y, custom_weights = NULL) {
-                validated_args <- validate_common_args(
-                    x,
-                    y,
-                    fraction,
-                    iterations
-                )
-                handle$fit(validated_args$x, validated_args$y, custom_weights)
-            },
             params = list(
                 fraction = fraction,
                 iterations = iterations,

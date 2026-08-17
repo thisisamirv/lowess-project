@@ -31,7 +31,7 @@ x <- seq(0, 2 * pi, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Lowess(fraction = 0.5)
-result <- model$fit(x, y, custom_weights = NULL)
+result <- fit(model, x, y, custom_weights = NULL)
 ```
 
 * Fits the model to the provided `x` and `y` numeric vectors.
@@ -66,7 +66,7 @@ x <- seq(0, 2 * pi, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.3)
 
 stream <- StreamingLowess(fraction = 0.3, chunk_size = 50, overlap = 10)
-partial_result <- stream$process_chunk(x[seq_len(50)], y[seq_len(50)])
+partial_result <- process_chunk(stream, x[seq_len(50)], y[seq_len(50)])
 ```
 
 * Processes a chunk of data. Returns partial results.
@@ -78,8 +78,8 @@ x <- seq(0, 2 * pi, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.3)
 
 stream <- StreamingLowess(fraction = 0.3, chunk_size = 50, overlap = 10)
-stream$process_chunk(x, y)
-final_result <- stream$finalize()
+process_chunk(stream, x, y)
+final_result <- finalize(stream)
 ```
 
 * Finalizes the smoothing process and returns any remaining buffered results.
@@ -111,7 +111,7 @@ x <- seq(0, 2 * pi, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.3)
 
 online <- OnlineLowess(fraction = 0.3, window_capacity = 50)
-result <- online$add_point(x[[1L]], y[[1L]])  # returns list or NULL
+result <- add_point(online, x[[1L]], y[[1L]])  # returns list or NULL
 ```
 
 * Adds a single point to the sliding window. Returns a named list (`$smoothed`, `$residual`, …) once the window has enough points, or `NULL` while still filling.
@@ -142,7 +142,7 @@ result <- online$add_point(x[[1L]], y[[1L]])  # returns list or NULL
 | `cv_k` | `integer` | `5L` | Number of folds for k-fold CV (Batch only) |
 | `cv_fractions` | `numeric` | `NULL` | Fractions to test for cross-validation (Batch only) |
 | `cv_seed` | `integer` | `NULL` | Random seed for cross-validation shuffling (Batch only) |
-| `custom_weights` | `numeric` | `NULL` | Per-observation case weights — passed to `$fit()`, not the constructor (Batch only) |
+| `custom_weights` | `numeric` | `NULL` | Per-observation case weights — passed to `fit()`, not the constructor (Batch only) |
 
 ### `StreamingOptions` (inherits `LowessOptions`)
 
@@ -270,7 +270,7 @@ y <- sin(x) + rnorm(100, sd = 0.2)
 model <- Lowess(fraction = 0.5)
 
 # Fit data
-result <- model$fit(x, y)
+result <- fit(model, x, y)
 
 # Print summary
 print(result)

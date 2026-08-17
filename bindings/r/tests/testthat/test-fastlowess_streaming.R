@@ -6,8 +6,8 @@
 # Helper to simulate bulk streaming
 bulk_stream <- function(x, y, ...) {
     sl <- StreamingLowess(...)
-    res <- sl$process_chunk(as.double(x), as.double(y))
-    fin <- sl$finalize()
+    res <- process_chunk(sl, as.double(x), as.double(y))
+    fin <- finalize(sl)
     # Merge results
     list(
         x = c(res$x, fin$x),

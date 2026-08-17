@@ -19,7 +19,7 @@
 #' x <- 1:50
 #' y <- sin(x * 0.1) + rnorm(50, 0, 0.1)
 #' for (i in seq_along(x)) {
-#'     result <- model$add_point(x[i], y[i])
+#'     result <- add_point(model, x[i], y[i])
 #'     if (!is.null(result)) cat("smoothed:", result$smoothed, "\n")
 #' }
 #' @export
@@ -55,9 +55,6 @@ OnlineLowess <- function(
     structure(
         list(
             handle = handle,
-            add_point = function(x, y) {
-                handle$add_point(as.double(x), as.double(y))
-            },
             params = list(
                 fraction = fraction,
                 window_capacity = window_capacity,

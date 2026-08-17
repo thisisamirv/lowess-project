@@ -18,7 +18,7 @@ Smooth a noisy sine wave — the kind of signal where LOWESS shines. Each exampl
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Lowess(fraction = 0.3, iterations = 3)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
 
     cat(sprintf("First smoothed value: %.4f (true: %.4f)\n",
                 result$y[1], sin(x[1])))
@@ -158,7 +158,7 @@ Smooth a noisy sine wave — the kind of signal where LOWESS shines. Each exampl
         prediction_intervals = 0.95,
         return_diagnostics = TRUE
     )
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
 
     print(result$confidence_lower)
     print(result$confidence_upper)
@@ -352,7 +352,7 @@ LOWESS can robustly handle outliers through iterative reweighting:
         robustness_method = "bisquare",
         return_robustness_weights = TRUE
     )
-    result <- model$fit(x_out, y_with_outlier)
+    result <- fit(model, x_out, y_with_outlier)
 
     # Check downweighted points
     weights <- result$robustness_weights
@@ -567,9 +567,9 @@ For datasets too large to fit in memory, stream them in fixed-size chunks with o
     chunk_size <- 1000L
     for (start in seq(1, 4001, by = chunk_size)) {
         end <- min(start + chunk_size - 1L, length(x))
-        model$process_chunk(x[start:end], y[start:end])
+        process_chunk(model, x[start:end], y[start:end])
     }
-    result <- model$finalize()
+    result <- finalize(model)
     cat(sprintf("Smoothed %d points across %d chunks\n",
                 length(result$y), ceiling(5000 / chunk_size)))
     ```

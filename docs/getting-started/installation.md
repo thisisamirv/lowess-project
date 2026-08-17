@@ -195,7 +195,7 @@ Install the LOWESS library for your preferred language.
     y <- c(2, 4, 6)
     
     model <- Lowess()
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     print("Installed successfully!")
     ```
 

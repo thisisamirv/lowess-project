@@ -19,9 +19,9 @@
 #' x <- seq(0, 10, length.out = 100)
 #' y <- sin(x) + rnorm(100, 0, 0.1)
 #' model <- StreamingLowess(fraction = 0.2, chunk_size = 50)
-#' res1 <- model$process_chunk(x[1:50], y[1:50])
-#' res2 <- model$process_chunk(x[51:100], y[51:100])
-#' final <- model$finalize()
+#' res1 <- process_chunk(model, x[1:50], y[1:50])
+#' res2 <- process_chunk(model, x[51:100], y[51:100])
+#' final <- finalize(model)
 #' @export
 StreamingLowess <- function(
     fraction = 0.67,
@@ -51,13 +51,6 @@ StreamingLowess <- function(
     structure(
         list(
             handle = handle,
-            process_chunk = function(x, y) {
-                args <- validate_common_args(x, y, fraction, iterations)
-                handle$process_chunk(args$x, args$y)
-            },
-            finalize = function() {
-                handle$finalize()
-            },
             params = list(
                 fraction = fraction,
                 chunk_size = chunk_size,

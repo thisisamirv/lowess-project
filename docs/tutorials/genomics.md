@@ -49,7 +49,7 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
         iterations = 3,
         confidence_intervals = 0.95
     )
-    result <- model$fit(positions, observed)
+    result <- fit(model, positions, observed)
 
     # Plot
     plot(positions, observed, pch = ".", col = "gray",
@@ -265,7 +265,7 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
         fraction = 0.05,
         iterations = 5
     )
-    result <- model$fit(positions, observed)
+    result <- fit(model, positions, observed)
 
     # Find peaks
     threshold <- quantile(result$y, 0.75)
@@ -468,8 +468,8 @@ For whole-genome data that doesn't fit in memory:
         overlap = 10000,
         merge_strategy = "weighted_average"
     )
-    result <- model$process_chunk(positions, coverage)
-    final <- model$finalize()
+    result <- process_chunk(model, positions, coverage)
+    final <- finalize(model)
     ```
 
 === "Python"

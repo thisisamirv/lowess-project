@@ -76,7 +76,7 @@ The proportion of data used for each local fit. **Most important parameter.**
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Lowess(fraction = 0.3)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -191,7 +191,7 @@ Number of robustness iterations for outlier resistance.
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Lowess(iterations = 5)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -302,7 +302,7 @@ Interpolation optimization threshold. Points within `delta` distance reuse the p
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Lowess(delta = 0.05)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -422,7 +422,7 @@ See [Weight Functions](kernels.md) for detailed comparison.
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Lowess(weight_function = "epanechnikov")
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -538,7 +538,7 @@ See [Robustness](robustness.md) for detailed comparison.
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Lowess(robustness_method = "talwar")
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -657,7 +657,7 @@ For example:
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Lowess(boundary_policy = "reflect")
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -775,7 +775,7 @@ For example:
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Lowess(scaling_method = "mad")
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -893,7 +893,7 @@ For example:
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Lowess(zero_weight_fallback = "use_local_mean")
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -1001,7 +1001,7 @@ Enable early stopping when robustness weights stabilize.
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Lowess(iterations = 20, auto_converge = 1e-6)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -1119,7 +1119,7 @@ See [Custom Weights](custom-weights.md) for a full discussion.
     weights[6] <- 0.0          # exclude index 6
 
     model <- Lowess(fraction = 0.5)
-    result <- model$fit(x, y, custom_weights = weights)
+    result <- fit(model, x, y, custom_weights = weights)
     ```
 
 === "Python"
@@ -1251,7 +1251,7 @@ Include residuals (`y - smoothed`) in the output.
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Lowess(return_residuals = TRUE)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     print(result$residuals)
     ```
 
@@ -1379,7 +1379,7 @@ Include fit quality metrics (Batch and Streaming only).
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Lowess(return_diagnostics = TRUE)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     cat(sprintf("R²: %.4f\n", result$diagnostics$r_squared))
     ```
 
@@ -1499,7 +1499,7 @@ Include final robustness weights (useful for outlier detection).
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Lowess(iterations = 3, return_robustness_weights = TRUE)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     outliers <- which(result$robustness_weights < 0.5)
     ```
 
@@ -1619,7 +1619,7 @@ Return per-point standard errors for the smoothed fit. Standard errors measure t
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Lowess(return_se = TRUE)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     print(result$standard_errors)
     ```
 
@@ -1740,7 +1740,7 @@ See [Intervals](intervals.md) for detailed usage.
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Lowess(confidence_intervals = 0.95, prediction_intervals = 0.95)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -1859,7 +1859,7 @@ Selection strategy for automated parameter tuning.
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Lowess(cv_method = "kfold", cv_k = 5)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -1970,7 +1970,7 @@ Points per chunk in Streaming mode.
     x <- seq(0, 2 * pi, length.out = 100)
     y <- sin(x) + rnorm(100, sd = 0.3)
 
-    result <- StreamingLowess(chunk_size = 10000)$process_chunk(x, y)
+    result <- process_chunk(StreamingLowess(chunk_size = 10000), x, y)
     ```
 
 === "Python"
@@ -2070,7 +2070,7 @@ Overlap between chunks in Streaming mode.
     x <- seq(0, 2 * pi, length.out = 100)
     y <- sin(x) + rnorm(100, sd = 0.3)
 
-    result <- StreamingLowess(overlap = 1000)$process_chunk(x, y)
+    result <- process_chunk(StreamingLowess(overlap = 1000), x, y)
     ```
 
 === "Python"
@@ -2179,7 +2179,7 @@ For example:
     x <- seq(0, 2 * pi, length.out = 100)
     y <- sin(x) + rnorm(100, sd = 0.3)
 
-    result <- StreamingLowess(merge_strategy = "weighted_average")$process_chunk(x, y)
+    result <- process_chunk(StreamingLowess(merge_strategy = "weighted_average"), x, y)
     ```
 
 === "Python"
@@ -2278,7 +2278,7 @@ Maximum points held in memory for Online mode.
     x <- seq(0, 2 * pi, length.out = 100)
     y <- sin(x) + rnorm(100, sd = 0.3)
 
-    result <- OnlineLowess(window_capacity = 500)$add_point(x[[1]], y[[1]])
+    result <- add_point(OnlineLowess(window_capacity = 500), x[[1]], y[[1]])
     ```
 
 === "Python"
@@ -2376,7 +2376,7 @@ Minimum points required before Online filter starts producing outputs.
     x <- seq(0, 2 * pi, length.out = 100)
     y <- sin(x) + rnorm(100, sd = 0.3)
 
-    result <- OnlineLowess(min_points = 10)$add_point(x[[1]], y[[1]])
+    result <- add_point(OnlineLowess(min_points = 10), x[[1]], y[[1]])
     ```
 
 === "Python"
@@ -2480,7 +2480,7 @@ For example:
     x <- seq(0, 2 * pi, length.out = 100)
     y <- sin(x) + rnorm(100, sd = 0.3)
 
-    result <- OnlineLowess(update_mode = "full")$add_point(x[[1]], y[[1]])
+    result <- add_point(OnlineLowess(update_mode = "full"), x[[1]], y[[1]])
     ```
 
 === "Python"

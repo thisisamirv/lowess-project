@@ -7,10 +7,10 @@ Complete WebAssembly examples demonstrating fastlowess-wasm for browser-based sm
 Process complete datasets in the browser.
 
 ```html
---8<-- "examples/wasm/batch_smoothing.html"
+--8<-- "bindings/wasm/examples/batch_smoothing.html"
 ```
 
-[:material-download: Download batch_smoothing.html](https://github.com/thisisamirv/lowess-project/blob/main/examples/wasm/batch_smoothing.html)
+[:material-download: Download batch_smoothing.html](https://github.com/thisisamirv/lowess-project/blob/main/bindings/wasm/examples/batch_smoothing.html)
 
 ---
 
@@ -19,10 +19,10 @@ Process complete datasets in the browser.
 Process large datasets in memory-efficient chunks in the browser.
 
 ```html
---8<-- "examples/wasm/streaming_smoothing.html"
+--8<-- "bindings/wasm/examples/streaming_smoothing.html"
 ```
 
-[:material-download: Download streaming_smoothing.html](https://github.com/thisisamirv/lowess-project/blob/main/examples/wasm/streaming_smoothing.html)
+[:material-download: Download streaming_smoothing.html](https://github.com/thisisamirv/lowess-project/blob/main/bindings/wasm/examples/streaming_smoothing.html)
 
 ---
 
@@ -31,10 +31,10 @@ Process large datasets in memory-efficient chunks in the browser.
 Real-time smoothing with sliding window for browser applications.
 
 ```html
---8<-- "examples/wasm/online_smoothing.html"
+--8<-- "bindings/wasm/examples/online_smoothing.html"
 ```
 
-[:material-download: Download online_smoothing.html](https://github.com/thisisamirv/lowess-project/blob/main/examples/wasm/online_smoothing.html)
+[:material-download: Download online_smoothing.html](https://github.com/thisisamirv/lowess-project/blob/main/bindings/wasm/examples/online_smoothing.html)
 
 ---
 

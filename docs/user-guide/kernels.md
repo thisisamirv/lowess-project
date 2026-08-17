@@ -43,7 +43,7 @@ $$w(u) = (1 - |u|^3)^3$$
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Lowess(weight_function = "tricube")
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -155,7 +155,7 @@ $$w(u) = \frac{3}{4}(1 - u^2)$$
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Lowess(weight_function = "epanechnikov")
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -267,7 +267,7 @@ $$w(u) = \exp(-u^2/2)$$
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Lowess(weight_function = "gaussian")
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -379,7 +379,7 @@ $$w(u) = (1 - u^2)^2$$
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Lowess(weight_function = "biweight")
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -491,7 +491,7 @@ $$w(u) = \cos(\pi u / 2)$$
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Lowess(weight_function = "cosine")
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -603,7 +603,7 @@ $$w(u) = 1 - |u|$$
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Lowess(weight_function = "triangle")
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -715,7 +715,7 @@ $$w(u) = 1$$
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Lowess(weight_function = "uniform")
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"

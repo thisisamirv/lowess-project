@@ -27,7 +27,7 @@ Time series data often contains noise, seasonality, and trends. LOWESS provides 
     y <- trend + noise
 
     model <- Lowess(fraction = 0.1, iterations = 3)
-    result <- model$fit(t, y)
+    result <- fit(model, t, y)
 
     plot(t, y, col = "gray", pch = ".",
          xlab = "Time", ylab = "Value", main = "Trend Extraction")
@@ -189,7 +189,7 @@ Remove trend to analyze residual patterns:
     y <- trend_true + rnorm(500, sd = 3)
 
     model <- Lowess(fraction = 0.3, iterations = 3, return_residuals = TRUE)
-    result <- model$fit(t, y)
+    result <- fit(model, t, y)
 
     trend <- result$y
     detrended <- result$residuals
@@ -361,7 +361,7 @@ Remove trend to analyze residual patterns:
         confidence_intervals = 0.95,
         prediction_intervals = 0.95
     )
-    result <- model$fit(t, y)
+    result <- fit(model, t, y)
 
     plot(t, y, col = "gray", pch = 16)
     lines(result$x, result$y, col = "blue", lwd = 2)
@@ -528,7 +528,7 @@ LOWESS naturally handles irregular time sampling:
     y_irregular <- 10 + 0.3 * t_irregular + rnorm(200, sd = 2)
 
     model <- Lowess(fraction = 0.2)
-    result <- model$fit(t_irregular, y_irregular)
+    result <- fit(model, t_irregular, y_irregular)
     ```
 
 === "Python"
@@ -660,7 +660,7 @@ Use different fractions to extract features at different scales:
     colors <- c("red", "blue", "green")
     for (i in seq_along(fractions)) {
         model <- Lowess(fraction = fractions[i])
-        result <- model$fit(t, y)
+        result <- fit(model, t, y)
         lines(result$x, result$y, col = colors[i], lwd = 2)
     }
     legend("topleft", legend = paste("f =", fractions), col = colors, lwd = 2)
@@ -816,7 +816,7 @@ Biological application:
         confidence_intervals = 0.95,
         return_diagnostics = TRUE
     )
-    result <- model$fit(hours, expression)
+    result <- fit(model, hours, expression)
 
     # Plot
     plot(hours, expression, pch = 16, col = "gray",

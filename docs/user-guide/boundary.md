@@ -32,7 +32,7 @@ Pads beyond both endpoints by replicating the first and last observed values. Pr
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Lowess(boundary_policy = "extend")
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -142,7 +142,7 @@ Mirrors the data about both endpoints before fitting, then discards the reflecte
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Lowess(boundary_policy = "reflect")
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -252,7 +252,7 @@ Pads with zeros beyond both endpoints. Appropriate when the underlying process i
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Lowess(boundary_policy = "zero")
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -365,7 +365,7 @@ Applies no padding. Each local fit uses only the points that are actually availa
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Lowess(boundary_policy = "noboundary")
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
