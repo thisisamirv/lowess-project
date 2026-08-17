@@ -22,7 +22,7 @@
 #include <random>
 #include <vector>
 
-#include "../../bindings/cpp/include/fastlowess.hpp"
+#include "../include/fastlowess.hpp"
 
 namespace {
 

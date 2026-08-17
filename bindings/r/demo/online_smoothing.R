@@ -51,10 +51,10 @@ example_1_basic_online <- function() {
     )
     # Helper: process all points one at a time
     online_smooth <- function(model, x, y) {
-        sapply(seq_along(x), function(i) {
+        vapply(seq_along(x), function(i) {
             r <- model$add_point(x[[i]], y[[i]])
             if (is.null(r)) y[[i]] else r$smoothed
-        })
+        }, numeric(1L))
     }
 
     print(model)
@@ -63,7 +63,7 @@ example_1_basic_online <- function() {
     cat("Processing data points with sliding window...\n")
     cat("Window capacity: 5\n")
     cat(sprintf("Output points: %d\n", length(smoothed)))
-    cat("Smoothed values:", paste(round(smoothed, 4), collapse = ", "), "\n\n")
+    cat("Smoothed values:", paste0(round(smoothed, 4), collapse = ", "), "\n\n")
 }
 
 # =============================================================================
@@ -90,10 +90,10 @@ example_2_sensor_simulation <- function() {
         iterations = 2L
     )
     print(model)
-    smoothed <- sapply(seq_along(x), function(i) {
+    smoothed <- vapply(seq_along(x), function(i) {
         r <- model$add_point(x[[i]], y[[i]])
         if (is.null(r)) y[[i]] else r$smoothed
-    })
+    }, numeric(1L))
 
     cat(sprintf("%6s %12s %12s\n", "Hour", "Raw Temp", "Smoothed"))
     cat(strrep("-", 35), "\n")
@@ -155,7 +155,9 @@ example_4_memory_bounded <- function() {
     ))
 
     x <- as.numeric(0:(total_points - 1))
-    y <- 2.0 * x + sin(x * 0.1) * 5.0 +
+    y <- 2.0 *
+        x +
+        sin(x * 0.1) * 5.0 +
         ((0:(total_points - 1)) %% 7 - 3.0) * 0.5
 
     start_time <- Sys.time()

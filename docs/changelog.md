@@ -25,8 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Split the monolithic root `Makefile` into per-crate and per-binding sub-Makefiles (`crates/lowess/Makefile`, `crates/fastLowess/Makefile`, `bindings/python/Makefile`, `bindings/r/Makefile`, `bindings/julia/Makefile`, `bindings/nodejs/Makefile`, `bindings/wasm/Makefile`, `bindings/cpp/Makefile`). Each sub-Makefile is self-contained and can be invoked directly via `make -f path/Makefile` from the project root (all paths remain root-relative). Platform detection (`UNAME_S`, `HOST_PLATFORM`, `NPM`/`NPX`, `PYTHON`, `TEMP`) is inlined directly at the top of every Makefile; `mk/config.mk` has been removed. The root `Makefile` now delegates exclusively via `$(MAKE) -f path/Makefile` and retains only `examples-*`, `docs`, `check-msrv`, `all`, `all-coverage`, and `all-clean` aggregation targets.
 - Moved Rust integration tests into their respective crates: `tests/lowess/` → `crates/lowess/tests/lowess/` and `tests/fastLowess/` → `crates/fastLowess/tests/fastLowess/` (auto-discovered by Cargo as the test binaries `lowess` and `fastLowess`). Moved Rust examples into their respective crates: `examples/lowess/` → `crates/lowess/examples/` and `examples/fastLowess/` → `crates/fastLowess/examples/`. Moved binding tests into their binding directories: `tests/{cpp,julia,nodejs,python,wasm}/` → `bindings/{cpp,julia,nodejs,python,wasm}/tests/`. Moved binding examples: `examples/{cpp,julia,nodejs,python,wasm}/` → `bindings/{cpp,julia,nodejs,python,wasm}/examples/` and `examples/r/` → `bindings/r/demo/`. The standalone `tests/` and `examples/` workspace packages have been removed from the workspace.
 - Moved examples execution logic from root Makefile `examples-*` targets into each sub-Makefile as a standalone `examples` target. The `default` target in each sub-Makefile now runs examples as the final step, so `make -f path/Makefile` performs a full end-to-end check including examples. Root Makefile `examples-*` targets now delegate to the corresponding sub-Makefile via `$(MAKE) -f path/Makefile examples`.
-- Moved `dev/Makevars.check` to `bindings/r/Makevars.check`. The file is only used by `R CMD check` (via `R_MAKEVARS_USER`) in the R binding's Makefile, so it belongs alongside the binding rather than in the shared `dev/` directory.
 - Replaced `dev/style_pkg.R` (which used `styler`) with [Air](https://posit-dev.github.io/air/), Posit's idiomatic R formatter. A minimal `bindings/r/air.toml` config (`indent-width = 4`) now controls formatting; the `bindings/r/Makefile` step 4a calls `air format` on the R source directories instead of invoking a script. Removed `style_pkg.R` from the repository.
+- `bindings/r/Makefile` step 4a now auto-installs [Air](https://posit-dev.github.io/air/) when `air` is not on `PATH` — using `irm … | iex` (PowerShell) on Windows and `curl … | sh` on macOS/Linux — then prepends `$HOME/.local/bin` to `PATH` before running `air format`, so formatting works out-of-the-box without a pre-installed Air binary.
 - Removed `dev/fix_rd_style.R` and `bindings/r/fix_rd_style.R`. The post-processing logic (fix 2→4 space indentation in generated Rd files; wrap long lines inside `\author{}` and `\seealso{}` blocks) is now inlined directly in `bindings/r/Makefile` step 4b as a `Rscript -e` one-liner, eliminating a loose script file with no idiomatic alternative.
 - Removed `dev/format_julia.jl`. The `JuliaFormatter.format(...)` call with `overwrite=true` is now inlined directly in `bindings/julia/Makefile` alongside the existing check-only variant, using the Makefile's `$(JL_TEST_DIR)` and `$(JL_DIR)/examples` variables (the script had stale hardcoded paths).
 - Removed `dev/prepare_cran.sh`. Its vendor-extraction and cargo-config steps were already handled by `Makevars.in` during `R CMD build`, making them dead code. The only unique step — generating `inst/AUTHORS` from `cargo metadata` — is now inlined directly into `bindings/r/Makefile`'s step 4c using a `jq` pipeline, removing the Python dependency and temp-file pattern. The stale `fastLowess-R` package-name exclusion filter has been corrected to use the current name (`rfastlowess`) via the existing `$(R_PKG_NAME)` variable.
@@ -34,6 +34,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Python:**
 
 - Fixed `ruff` linting errors in the Python binding: sorted `__all__` (RUF022), replaced `from typing import Sequence` with `from collections.abc import Sequence` in `_core.pyi` (UP035), removed redundant `...` literals from all property stub bodies — a docstring alone is the correct single-statement body in a `.pyi` file (PYI048, PIE790), and replaced bare `exit(1)` with `sys.exit(1)` in `bindings/python/tests/test_gil.py` (PLR1722).
+
+### Changed
+
+**lowess:**
+
+- Updated `wide` to v1.6.
+
+**Node.js:**
+
+- Updated `@napi-rs/cli` to v3.8 and `oxlint` to v1.78.
+
+**WASM:**
+
+- Updated `oxlint` to v1.78.
 
 ## 2.0.0
 

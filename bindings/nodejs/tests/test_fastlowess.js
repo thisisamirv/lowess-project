@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert');
 
-const fastlowess = require('../../bindings/nodejs');
+const fastlowess = require('..');
 
 test('batch smoothing', () => {
     const x = new Float64Array([1, 2, 3, 4, 5]);

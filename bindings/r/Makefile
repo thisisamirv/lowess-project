@@ -28,6 +28,12 @@ PYTHON      ?= python3
 PYO3_PYTHON ?= $(PYTHON)
 NODE        ?= node
 
+ifeq ($(HOST_PLATFORM),windows)
+AIR_INSTALL_CMD := if command -v pwsh >/dev/null 2>&1; then pwsh -ExecutionPolicy Bypass -c "irm https://github.com/posit-dev/air/releases/latest/download/air-installer.ps1 | iex"; else cmd //c 'powershell -ExecutionPolicy Bypass -c "irm https://github.com/posit-dev/air/releases/latest/download/air-installer.ps1 | iex"'; fi
+else
+AIR_INSTALL_CMD := curl -LsSf https://github.com/posit-dev/air/releases/latest/download/air-installer.sh | sh
+endif
+
 TEMP ?= /tmp
 ifeq ($(OS),Windows_NT)
 	TEMP := /tmp
@@ -109,12 +115,11 @@ default:
 	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/fastLowess/.cargo-checksum.json
 	@printf '\n\n[workspace]\n\n[patch.crates-io]\nlowess = { path = "vendor/lowess" }\n' >> $(R_DIR)/src/Cargo.toml
 	@(cd $(R_DIR)/src && cargo vendor -q --no-delete vendor)
-	@find $(R_DIR)/src/vendor -mindepth 2 -maxdepth 2 -type d \
-		\( -name tests -o -name benches -o -name examples \
-		   -o -name doc -o -name docs -o -name .github -o -name .config \) \
-		-exec rm -rf {} \; 2>/dev/null || true
-	@find $(R_DIR)/src/vendor -name '.cargo-checksum.json' \
-		-exec sh -c 'echo '"'"'{"files":{},"package":null}'"'"' > "$$1"' _ {} \;
+	@for d in tests benches examples doc docs .github .config; do \
+		rm -rf $(R_DIR)/src/vendor/"$$d" $(R_DIR)/src/vendor/*/"$$d" 2>/dev/null; done || true
+	@for f in $(R_DIR)/src/vendor/*/Makefile; do [ -f "$$f" ] && rm -f "$$f"; done || true
+	@for f in $(R_DIR)/src/vendor/*/.cargo-checksum.json; do \
+		[ -f "$$f" ] && jq '.files = {}' "$$f" > "$$f.tmp" && mv "$$f.tmp" "$$f"; done
 	@echo "Creating vendor.tar.xz archive (including Cargo.lock)..."
 	@(cd $(R_DIR)/src && (tar --sort=name --mtime='1970-01-01 00:00:00Z' --owner=0 --group=0 --numeric-owner --xz --create --file=vendor.tar.xz vendor Cargo.lock 2>/dev/null || tar --xz --create --file=vendor.tar.xz vendor Cargo.lock))
 	@rm -rf $(R_DIR)/src/vendor
@@ -134,7 +139,12 @@ default:
 	@echo "4a. Formatting..."
 	@echo "=============================================================================="
 	@cd $(R_DIR)/src && cargo fmt -q
-	@air format $(R_DIR)/R/ $(R_DIR)/tests/testthat/ $(R_DIR)/demo/ $(R_DIR)/vignettes/ || true
+	@if ! command -v air >/dev/null 2>&1; then \
+	    echo "air not found — installing..."; \
+	    $(AIR_INSTALL_CMD); \
+	    export PATH="$$HOME/.local/bin:$$PATH"; \
+	fi; \
+	air format $(R_DIR)/R/ $(R_DIR)/tests/testthat/ $(R_DIR)/demo/ $(R_DIR)/vignettes/ || true
 	@cd $(R_DIR)/src && cargo fmt -- --check || (echo "Run 'cargo fmt' to fix"; exit 1)
 	@cd $(R_DIR)/src && $(R_CROSS_ENV) cargo clippy -q $(R_CARGO_TARGET) -- -D warnings
 	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); if (!requireNamespace('lintr', quietly = TRUE, lib.loc = lib)) stop('Required R package not available: lintr', call. = FALSE); my_linters <- lintr::linters_with_defaults(indentation_linter = lintr::indentation_linter(indent = 4L), object_name_linter = NULL, commented_code_linter = NULL, object_usage_linter = NULL); lints <- c(lintr::lint_dir('$(R_DIR)/R', linters = my_linters), lintr::lint_dir('$(R_DIR)/tests/testthat', linters = my_linters), lintr::lint_dir('$(R_DIR)/demo', linters = my_linters)); print(lints); if (length(lints) > 0L) quit(status = 1)"
@@ -144,18 +154,8 @@ default:
 	@rm -rf $(R_DIR)/*.Rcheck
 	@cd $(R_DIR)/src && RUSTDOCFLAGS="-D warnings" $(R_CROSS_ENV) cargo doc -q --no-deps $(R_CARGO_TARGET)
 	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); for (pkg in c('roxygen2', 'srr')) { if (!requireNamespace(pkg, quietly = TRUE, lib.loc = lib)) suppressWarnings(try(install.packages(pkg, lib = lib, quiet = TRUE), silent = TRUE)) }; if (!requireNamespace('roxygen2', quietly = TRUE, lib.loc = lib)) stop('Required R package not available for roxygen regeneration: roxygen2', call. = FALSE); has_srr <- requireNamespace('srr', quietly = TRUE, lib.loc = lib); roclets <- if (has_srr) c('namespace', 'rd', 'srr::srr_stats_roclet') else c('namespace', 'rd'); roxygen2::roxygenise(package.dir = '.', roclets = roclets, load_code = roxygen2::load_pkgload)"
-	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e \
-	'for(f in list.files("$(R_DIR)/man","\\.Rd$$",full.names=TRUE)){\
-	  orig<-readLines(f,warn=FALSE);ib<-FALSE;out<-character(0);\
-	  for(l in orig){\
-	    n<-nchar(l)-nchar(trimws(l,"left"));\
-	    if(n>0L&&n%%4L!=0L)l<-paste0(strrep(" ",ceiling(n/4L)*4L),trimws(l,"left"));\
-	    if(grepl("^\\\\(author|seealso)\\{",l))ib<-TRUE;\
-	    if(ib&&grepl("^\\}",l))ib<-FALSE;\
-	    out<-c(out,if(ib&&nchar(l)>80L)strwrap(l,80L,exdent=4L)else l);\
-	  };\
-	  if(!identical(orig,out)){writeLines(out,f);message("Fixed: ",basename(f))};\
-	}'
+	@sed -i.bak 's/^  /    /' $(R_DIR)/NAMESPACE && rm -f $(R_DIR)/NAMESPACE.bak
+	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript $(CURDIR)/dev/fix_rd_style.R $(R_DIR)/man
 	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "if (!requireNamespace('rmarkdown', quietly = TRUE, lib.loc = Sys.getenv('R_LIBS_USER')) || !rmarkdown::pandoc_available()) { message('\nERROR: Pandoc is required to build R Markdown vignettes but is not available.\nPlease install Pandoc (https://pandoc.org/installing.html) and ensure it is in your PATH.\n'); quit(status = 1) }"
 	@echo "Pre-installing package to R_LIBS_USER so pkgdown subprocess finds the current version..."
 	@mkdir -p $(R_LIB_DIR)
@@ -196,7 +196,7 @@ default:
 	@echo "=============================================================================="
 	@echo "9. Submission checks..."
 	@echo "=============================================================================="
-	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) R_MAKEVARS_USER=$(CURDIR)/$(R_DIR)/Makevars.check R CMD check --as-cran --no-manual --no-check-urls $(R_PKG_TARBALL) || true
+	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) R_MAKEVARS_USER=$(CURDIR)/dev/Makevars.check R CMD check --as-cran --no-manual --no-check-urls $(R_PKG_TARBALL) || true
 	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "if (requireNamespace('BiocCheck', quietly=TRUE, lib.loc = Sys.getenv('R_LIBS_USER'))) BiocCheck::BiocCheck('$(R_PKG_TARBALL)', new_package=FALSE)" || true
 	@echo "Package size (Limit: 5MB):"
 	@ls -lh $(R_DIR)/$(R_PKG_TARBALL) || true

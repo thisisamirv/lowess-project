@@ -95,7 +95,8 @@ validate_params <- function(
 
     validate_optional_count(iterations, "iterations")
     validate_optional_count(
-        window_capacity, "window_capacity",
+        window_capacity,
+        "window_capacity",
         allow_zero = FALSE
     )
     validate_optional_count(min_points, "min_points")
@@ -155,7 +156,8 @@ env_args <- function(param_names) {
         if (is.null(type)) {
             return(val)
         }
-        switch(type,
+        switch(
+            type,
             double = as.double(val),
             integer = as.integer(val),
             character = as.character(val),
@@ -170,29 +172,66 @@ env_args <- function(param_names) {
 #' Parameter names for each Lowess constructor
 #' @noRd
 lowess_params <- c(
-    "fraction", "iterations", "delta", "weight_function", "robustness_method",
-    "scaling_method", "boundary_policy", "confidence_intervals",
-    "prediction_intervals", "return_diagnostics", "return_residuals",
-    "return_robustness_weights", "zero_weight_fallback", "auto_converge",
-    "cv_fractions", "cv_method", "cv_k", "parallel", "cv_seed", "return_se"
+    "fraction",
+    "iterations",
+    "delta",
+    "weight_function",
+    "robustness_method",
+    "scaling_method",
+    "boundary_policy",
+    "confidence_intervals",
+    "prediction_intervals",
+    "return_diagnostics",
+    "return_residuals",
+    "return_robustness_weights",
+    "zero_weight_fallback",
+    "auto_converge",
+    "cv_fractions",
+    "cv_method",
+    "cv_k",
+    "parallel",
+    "cv_seed",
+    "return_se"
 )
 
 online_params <- c(
-    "fraction", "window_capacity", "min_points", "iterations",
-    "weight_function", "robustness_method", "scaling_method",
-    "boundary_policy", "zero_weight_fallback", "update_mode", "auto_converge",
-    "return_robustness_weights", "return_diagnostics",
-    "return_residuals", "parallel",
+    "fraction",
+    "window_capacity",
+    "min_points",
+    "iterations",
+    "weight_function",
+    "robustness_method",
+    "scaling_method",
+    "boundary_policy",
+    "zero_weight_fallback",
+    "update_mode",
+    "auto_converge",
+    "return_robustness_weights",
+    "return_diagnostics",
+    "return_residuals",
+    "parallel",
     "delta",
-    "confidence_intervals", "prediction_intervals"
+    "confidence_intervals",
+    "prediction_intervals"
 )
 
 streaming_params <- c(
-    "fraction", "chunk_size", "overlap", "iterations",
-    "weight_function", "robustness_method", "scaling_method",
-    "boundary_policy", "zero_weight_fallback", "auto_converge",
-    "return_diagnostics", "return_residuals", "return_robustness_weights",
-    "merge_strategy", "parallel",
+    "fraction",
+    "chunk_size",
+    "overlap",
+    "iterations",
+    "weight_function",
+    "robustness_method",
+    "scaling_method",
+    "boundary_policy",
+    "zero_weight_fallback",
+    "auto_converge",
+    "return_diagnostics",
+    "return_residuals",
+    "return_robustness_weights",
+    "merge_strategy",
+    "parallel",
     "delta",
-    "confidence_intervals", "prediction_intervals"
+    "confidence_intervals",
+    "prediction_intervals"
 )

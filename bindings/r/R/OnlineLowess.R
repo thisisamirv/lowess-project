@@ -43,7 +43,8 @@ OnlineLowess <- function(
     prediction_intervals = NULL
 ) {
     validate_params(
-        fraction = fraction, window_capacity = window_capacity,
+        fraction = fraction,
+        window_capacity = window_capacity,
         min_points = min_points
     )
     handle <- do.call(ROnlineLowess$new, env_args(online_params))

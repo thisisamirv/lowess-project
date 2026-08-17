@@ -78,7 +78,10 @@ Lowess <- function(
             handle = handle,
             fit = function(x, y, custom_weights = NULL) {
                 validated_args <- validate_common_args(
-                    x, y, fraction, iterations
+                    x,
+                    y,
+                    fraction,
+                    iterations
                 )
                 handle$fit(validated_args$x, validated_args$y, custom_weights)
             },

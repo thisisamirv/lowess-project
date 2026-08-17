@@ -6,7 +6,7 @@ UNAME_S := $(shell uname -s)
 
 ifeq ($(OS),Windows_NT)
 	HOST_PLATFORM  := windows
-	PATH_SEPARATOR := ;
+	PATH_SEPARATOR := :
 	STAT_SIZE_CMD  := stat -c%s
 	NPM := npm.cmd
 	NPX := npx.cmd
@@ -61,17 +61,17 @@ ifeq ($(HOST_PLATFORM),windows)
 		ifneq ($(_HAVE_MINGW32_MAKE),)
 			CPP_CMAKE_GENERATOR := -G "MinGW Makefiles"
 			CPP_TEST_BUILD      := cmake --build .
-			CPP_TEST_RUN        := PATH="../../../$(CPP_LIBRARY_DIR)$(PATH_SEPARATOR)$$PATH" ./test_fastlowess_suite.exe
+			CPP_TEST_RUN        := cp -f "$(abspath $(CPP_SHARED_LIB))" . && ./test_fastlowess_suite.exe
 		else
 			CPP_CMAKE_GENERATOR :=
 			CPP_TEST_BUILD      := cmake --build . --config Release
-			CPP_TEST_RUN        := PATH="../../../$(CPP_LIBRARY_DIR)$(PATH_SEPARATOR)$$PATH" ./Release/test_fastlowess_suite.exe
+			CPP_TEST_RUN        := cp -f "$(abspath $(CPP_SHARED_LIB))" Release/ && ./Release/test_fastlowess_suite.exe
 		endif
 	else
 		CPP_TEST_LIB        := $(CPP_LIBRARY_DIR)/fastlowess_cpp.lib
 		CPP_CMAKE_GENERATOR :=
 		CPP_TEST_BUILD      := cmake --build . --config Release
-		CPP_TEST_RUN        := PATH="../../../$(CPP_LIBRARY_DIR)$(PATH_SEPARATOR)$$PATH" ./Release/test_fastlowess_suite.exe
+		CPP_TEST_RUN        := cp -f "$(abspath $(CPP_SHARED_LIB))" Release/ && ./Release/test_fastlowess_suite.exe
 	endif
 else ifeq ($(HOST_PLATFORM),macos)
 	CPP_SHARED_LIB      := $(CPP_LIBRARY_DIR)/libfastlowess_cpp.dylib

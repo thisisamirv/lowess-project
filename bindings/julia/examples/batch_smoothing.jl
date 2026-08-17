@@ -131,7 +131,7 @@ function main()
     cw_y = cw_x .* 2.0
     cw_y[6] = 100.0  # outlier at index 6 (1-indexed)
     cw_no_w = fit(Lowess(fraction = 0.5, iterations = 0), cw_x, cw_y)
-    cw_wts = ones(10);
+    cw_wts = ones(10)
     cw_wts[6] = 0.0
     cw_zero_w =
         fit(Lowess(fraction = 0.5, iterations = 0), cw_x, cw_y; custom_weights = cw_wts)
@@ -140,10 +140,10 @@ function main()
     @printf(" - Zero weight at outlier: error %.2f -> %.2f\n", err_no_w, err_zero_w)
 
     sp_x = collect(0.0:14.0)
-    sp_y = zeros(15);
+    sp_y = zeros(15)
     sp_y[8] = 10.0  # spike at index 8 (1-indexed)
     sp_eq = fit(Lowess(fraction = 0.6, iterations = 0), sp_x, sp_y)
-    sp_wts = ones(15);
+    sp_wts = ones(15)
     sp_wts[8] = 100.0
     sp_hi = fit(Lowess(fraction = 0.6, iterations = 0), sp_x, sp_y; custom_weights = sp_wts)
     @printf(" - High weight at spike: fit %.4f -> %.4f\n", sp_eq.y[8], sp_hi.y[8])

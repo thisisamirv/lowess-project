@@ -58,7 +58,7 @@ function main()
     )
     # Fallback to original y when not enough points yet
     smoothed_full = [
-        let r = add_point(model_full, xi, yi);
+        let r = add_point(model_full, xi, yi)
             isnothing(r) ? yi : r.smoothed
         end for (xi, yi) ∈ zip(x, y)
     ]
@@ -72,7 +72,7 @@ function main()
         update_mode = "incremental",
     )
     smoothed_inc = [
-        let r = add_point(model_inc, xi, yi);
+        let r = add_point(model_inc, xi, yi)
             isnothing(r) ? yi : r.smoothed
         end for (xi, yi) ∈ zip(x, y)
     ]

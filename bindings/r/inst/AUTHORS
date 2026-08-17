@@ -1,5 +1,9 @@
 Authors and Copyright Holders for Rust Dependencies:
 
+Package: approx (0.5.1)
+Authors: Brendan Zabarauskas <bjzaba@yahoo.com.au>
+License: Apache-2.0
+----------------------------------------
 Package: autocfg (1.5.1)
 Authors: Josh Stone <cuviper@gmail.com>
 License: Apache-2.0 OR MIT
@@ -110,10 +114,6 @@ License: MIT OR Apache-2.0
 ----------------------------------------
 Package: readonly (0.2.14)
 Authors: David Tolnay <dtolnay@gmail.com>
-License: MIT OR Apache-2.0
-----------------------------------------
-Package: rfastlowess (2.0.0)
-Authors: Amir Valizadeh <thisisamirv@gmail.com>
 License: MIT OR Apache-2.0
 ----------------------------------------
 Package: safe_arch (1.2.0)

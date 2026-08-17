@@ -62,7 +62,8 @@ example_1_basic_streaming <- function() {
     cat(sprintf("All points processed: %s\n", length(result$y) == n))
     cat(
         "First 5 smoothed values:",
-        paste(round(result$y[1:5], 4), collapse = ", "), "\n\n"
+        paste0(round(result$y[1:5], 4), collapse = ", "),
+        "\n\n"
     )
 }
 
@@ -100,7 +101,9 @@ example_2_chunk_comparison <- function() {
 
         cat(sprintf(
             "%s (size: %d, overlap: %d)\n",
-            config$description, config$chunk_size, config$overlap
+            config$description,
+            config$chunk_size,
+            config$overlap
         ))
         cat(sprintf("  Output points: %d\n", length(result$y)))
         cat(sprintf("  Time: %.4fs\n", duration))
@@ -182,11 +185,13 @@ example_4_parallel_comparison <- function() {
 
     cat(sprintf(
         "Parallel:   %.4fs (%d points)\n",
-        parallel_time, length(result_parallel$y)
+        parallel_time,
+        length(result_parallel$y)
     ))
     cat(sprintf(
         "Sequential: %.4fs (%d points)\n",
-        sequential_time, length(result_sequential$y)
+        sequential_time,
+        length(result_sequential$y)
     ))
     if (sequential_time > 0) {
         cat(sprintf("Speedup: %.2fx\n", sequential_time / parallel_time))

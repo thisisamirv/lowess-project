@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert');
 
 // Import WASM bindings using require (works in Node with generated pkg)
-const fastlowess = require('../../bindings/wasm/pkg/fastlowess_wasm.js');
+const fastlowess = require('../pkg/fastlowess_wasm.js');
 
 test('WASM batch smoothing', () => {
     const x = new Float64Array([1, 2, 3, 4, 5]);
