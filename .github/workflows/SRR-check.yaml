@@ -52,11 +52,13 @@ jobs:
               jq -r '. as $root | [.packages[] | select(.id as $id | ($root.workspace_members | index($id)) == null)] | unique_by(.name)[] | "Package: \(.name) (\(.version))\nAuthors: \(.authors | join(", "))\nLicense: \(.license // "Unknown")\n" + "-" * 40'
           } > bindings/r/inst/AUTHORS
 
-      - name: Suppress C++ compilation warnings (libsass)
+      - name: Suppress third-party compilation warnings
         run: |
+          echo "CFLAGS=${CFLAGS:+$CFLAGS }-w"       >> "$GITHUB_ENV"
+          echo "CXXFLAGS=${CXXFLAGS:+$CXXFLAGS }-w" >> "$GITHUB_ENV"
           mkdir -p ~/.R
+          echo "CFLAGS   += -w" >> ~/.R/Makevars
           echo "CXXFLAGS += -w" >> ~/.R/Makevars
-          echo "CFLAGS += -w" >> ~/.R/Makevars
 
       - name: Install dependencies
         run: |
