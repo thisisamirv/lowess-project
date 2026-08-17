@@ -123,7 +123,8 @@ jobs:
             -DCMAKE_C_COMPILER=clang \
             -DCMAKE_CXX_COMPILER=clang++ \
             -DCMAKE_CXX_FLAGS='-fsanitize=address -fno-omit-frame-pointer' \
-            -DCMAKE_EXE_LINKER_FLAGS='-fsanitize=address'
+            -DCMAKE_EXE_LINKER_FLAGS='-fsanitize=address' \
+            -DFASTLOWESS_LIB_DIR="$(pwd)/target/release"
           cmake --build bindings/cpp/tests/build-asan --config Debug
           LD_LIBRARY_PATH=target/release ctest --test-dir bindings/cpp/tests/build-asan --output-on-failure
 
@@ -167,7 +168,7 @@ jobs:
       - name: Install System Dependencies
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends libssl-dev libcurl4-openssl-dev libxml2-dev libuv1-dev
+          apt-get install -y --no-install-recommends libssl-dev libcurl4-openssl-dev libxml2-dev libuv1-dev jq
       - name: Install R Dependencies
         run: |
           export R_LIBS_USER="$RUNNER_TEMP/Library"
@@ -189,8 +190,8 @@ jobs:
           {
             echo "Authors and Copyright Holders for Rust Dependencies:"
             echo ""
-            (cd src && cargo metadata --locked --format-version 1) | \
-              jq -r '[.packages[] | select(.name != "rfastlowess")] | unique_by(.name)[] | "Package: \(.name) (\(.version))\nAuthors: \(.authors | join(", "))\nLicense: \(.license // "Unknown")\n" + "-" * 40'
+            (cd ../.. && cargo metadata --locked --format-version 1) | \
+              jq -r '. as $root | [.packages[] | select(.id as $id | ($root.workspace_members | index($id)) == null)] | unique_by(.name)[] | "Package: \(.name) (\(.version))\nAuthors: \(.authors | join(", "))\nLicense: \(.license // "Unknown")\n" + "-" * 40'
           } > inst/AUTHORS
           test -f tests/testthat.R
       - name: Run ASAN Check
