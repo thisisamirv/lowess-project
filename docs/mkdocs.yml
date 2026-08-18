@@ -142,6 +142,11 @@ nav:
       - Intervals: user-guide/intervals.md
       - Cross-Validation: user-guide/cross-validation.md
       - Custom Weights: user-guide/custom-weights.md
+      - Use Cases:
+          - user-guide/use-cases/index.md
+          - Genomics: user-guide/use-cases/genomics.md
+          - Time Series: user-guide/use-cases/time-series.md
+          - Real-Time Processing: user-guide/use-cases/real-time.md
   - API Reference:
       - api/index.md
       - R: api/r.md
@@ -151,20 +156,6 @@ nav:
       - Node.js: api/nodejs.md
       - WebAssembly: api/wasm.md
       - C++: api/cpp.md
-  - Tutorials:
-      - tutorials/index.md
-      - Genomics: tutorials/genomics.md
-      - Time Series: tutorials/time-series.md
-      - Real-Time Processing: tutorials/real-time.md
-  - Examples:
-      - examples/index.md
-      - R Examples: examples/r.md
-      - Python Examples: examples/python.md
-      - Rust Examples: examples/rust.md
-      - Julia Examples: examples/julia.md
-      - Node.js Examples: examples/nodejs.md
-      - WebAssembly Examples: examples/wasm.md
-      - C++ Examples: examples/cpp.md
   - Benchmarks: benchmarks.md
   - Changelog: changelog.md
   - Contributing: contributing.md

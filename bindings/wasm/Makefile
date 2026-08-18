@@ -61,7 +61,7 @@ default:
 	@cd $(WASM_DIR) && wasm-pack build --target nodejs --out-dir pkg
 	@echo "Checking WASM size (Limit: 2MB)..."
 	@[ $$($(STAT_SIZE_CMD) $(WASM_DIR)/pkg/fastlowess_wasm_bg.wasm) -le 2097152 ] || (echo "Error: WASM size exceeded 2MB"; exit 1)
-	@echo "Building for Web (Examples)..."
+	@echo "Building for Web..."
 	@cd $(WASM_DIR) && wasm-pack build --target web --out-dir pkg-web
 	@echo "=============================================================================="
 	@echo "3. Testing..."

@@ -13,6 +13,8 @@ When data arrives continuously—from sensors, logs, or streaming pipelines—yo
 
 For true real-time applications where each point must be processed immediately.
 
+`window_capacity = 25` limits the internal buffer to the 25 most recent observations; each `add_point` call costs O(window) rather than growing with total history. `min_points = 5` suppresses output until the window holds enough points for a stable fit — calls made before that threshold return `null`/`None`/`nothing`. `update_mode = "incremental"` re-fits only the most recent point rather than the full window, halving typical latency at a modest accuracy cost.
+
 ### Sensor Data Example
 
 === "R"
@@ -206,6 +208,11 @@ For true real-time applications where each point must be processed immediately.
 
 For large datasets that arrive in batches or files.
 
+`chunk_size` controls how many data points are processed in one pass; matching it to your file-read buffer or message-batch size avoids unnecessary copying. `overlap` retains that many points from the previous chunk as context so the neighbourhood at chunk boundaries is not artificially truncated. `merge_strategy = "weighted_average"` blends the overlapping region smoothly; use `"last"` if chunk boundaries are guaranteed to be well separated and no blending is needed.
+
+!!! warning "Always call finalize()"
+    The streaming adapter buffers overlap data. Call `finalize()` after the last chunk to retrieve the buffered tail.
+
 ### Log File Processing
 
 === "R"
@@ -376,12 +383,11 @@ For large datasets that arrive in batches or files.
     }
     ```
 
-!!! warning "Always call finalize()"
-    The streaming adapter buffers overlap data. Always call `finalize()` to retrieve the last chunk.
-
 ---
 
 ## Real-Time Dashboard Example
+
+The dashboard pattern uses a plain LOWESS fit on a manually managed sliding window rather than `OnlineLowess`. This is the simplest approach when your UI framework already owns the data buffer and you only need the most recent smoothed value per frame. The trade-off is a full O(window²) refit on every tick; for high-frequency streams prefer `OnlineLowess` with `update_mode = "incremental"` to bound per-frame cost.
 
 === "R"
     ```r

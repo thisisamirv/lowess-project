@@ -92,17 +92,9 @@ endif
 CPP_LIBRARY_DIR_ABS := $(abspath $(CPP_LIBRARY_DIR))
 CPP_TEST_LIB_ABS    := $(abspath $(CPP_TEST_LIB))
 
-ifeq ($(HOST_PLATFORM),windows)
-	CPP_EXAMPLE_RUN_ENV := PATH="$(CPP_LIBRARY_DIR)$(PATH_SEPARATOR)$$PATH"
-else ifeq ($(HOST_PLATFORM),macos)
-	CPP_EXAMPLE_RUN_ENV := DYLD_LIBRARY_PATH=$(CPP_LIBRARY_DIR)
-else
-	CPP_EXAMPLE_RUN_ENV := LD_LIBRARY_PATH=$(CPP_LIBRARY_DIR)
-endif
-
 TEMP ?= /tmp
 
-.PHONY: default clean examples
+.PHONY: default clean
 
 default:
 	@echo "Running $(CPP_PKG) checks..."
@@ -117,7 +109,7 @@ default:
 	@echo "Linting C++ files..."
 	@if command -v clang-tidy >/dev/null 2>&1; then \
 		clang_tidy_log="$(TEMP)/clang-tidy-cpp.log"; \
-		clang-tidy --config-file=bindings/cpp/.clang-tidy bindings/cpp/include/fastlowess.hpp $(CPP_DIR)/tests/test_fastlowess.cpp $(CPP_DIR)/examples/*.cpp -- -I bindings/cpp/include -std=c++17 > "$$clang_tidy_log" 2>&1; \
+		clang-tidy --config-file=bindings/cpp/.clang-tidy bindings/cpp/include/fastlowess.hpp $(CPP_DIR)/tests/test_fastlowess.cpp -- -I bindings/cpp/include -std=c++17 > "$$clang_tidy_log" 2>&1; \
 		clang_tidy_status=$$?; \
 		grep -Ev '^(\[[0-9]+/[0-9]+\] Processing file |[0-9]+ warnings generated\.|Suppressed [0-9]+ warnings \([0-9]+ in non-user code\)\.|Use -header-filter=\.\* or leave it as default to display errors from all non-system headers\.|Use -system-headers to display errors from system headers as well\.)' "$$clang_tidy_log" || true; \
 		rm -f "$$clang_tidy_log"; \
@@ -134,7 +126,7 @@ default:
 		if cppcheck --error-exitcode=1 --enable=warning,performance,portability \
 			--suppress=missingInclude --suppress=missingIncludeSystem \
 			-I $(CPP_DIR)/include \
-			$(CPP_DIR)/include/fastlowess.hpp $(CPP_DIR)/tests/test_fastlowess.cpp $(CPP_DIR)/examples/ > "$$cppcheck_log" 2>&1; then \
+			$(CPP_DIR)/include/fastlowess.hpp $(CPP_DIR)/tests/test_fastlowess.cpp > "$$cppcheck_log" 2>&1; then \
 			cat "$$cppcheck_log"; \
 		else \
 			cppcheck_status=$$?; \
@@ -197,19 +189,6 @@ default:
 		echo "Valgrind: no leaks."; \
 	fi
 	@echo "$(CPP_PKG) checks completed successfully!"
-	@"$(MAKE)" -f $(THIS_MK) examples
-
-examples:
-	@echo "Running $(CPP_PKG) examples..."
-	@echo "============================================================================="
-	@mkdir -p $(CPP_DIR)/bin
-	@g++ -O3 $(CPP_DIR)/examples/batch_smoothing.cpp -o $(CPP_DIR)/bin/batch_smoothing -I$(CPP_DIR)/include -L$(CPP_LIBRARY_DIR) -lfastlowess_cpp -lpthread -ldl -lm
-	@g++ -O3 $(CPP_DIR)/examples/streaming_smoothing.cpp -o $(CPP_DIR)/bin/streaming_smoothing -I$(CPP_DIR)/include -L$(CPP_LIBRARY_DIR) -lfastlowess_cpp -lpthread -ldl -lm
-	@g++ -O3 $(CPP_DIR)/examples/online_smoothing.cpp -o $(CPP_DIR)/bin/online_smoothing -I$(CPP_DIR)/include -L$(CPP_LIBRARY_DIR) -lfastlowess_cpp -lpthread -ldl -lm
-	@$(CPP_EXAMPLE_RUN_ENV) $(CPP_DIR)/bin/batch_smoothing
-	@$(CPP_EXAMPLE_RUN_ENV) $(CPP_DIR)/bin/streaming_smoothing
-	@$(CPP_EXAMPLE_RUN_ENV) $(CPP_DIR)/bin/online_smoothing
-	@echo "============================================================================="
 
 clean:
 	@echo "Cleaning $(CPP_PKG)..."

@@ -50,7 +50,7 @@ endif
 
 JL_SHARED_LIB_ABS := $(abspath $(JL_SHARED_LIB))
 
-.PHONY: default clean _julia_checks_internal examples
+.PHONY: default clean _julia_checks_internal
 
 default:
 	@echo "Running $(JL_PKG) checks..."
@@ -85,8 +85,8 @@ _julia_checks_internal:
 	@echo "=============================================================================="
 	@cd $(JL_DIR) && cargo clippy -q --all-targets -- -D warnings
 	@echo "Linting Julia files..."
-	@julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.add("JuliaFormatter"); using JuliaFormatter; format(["bindings/julia/julia", "$(JL_TEST_DIR)", "$(JL_DIR)/examples"], verbose=true, overwrite=true)' || true
-	@julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.add("JuliaFormatter"); using JuliaFormatter; format(["bindings/julia/julia", "$(JL_TEST_DIR)", "$(JL_DIR)/examples"], verbose=true, overwrite=false) ? exit(0) : exit(1)'
+	@julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.add("JuliaFormatter"); using JuliaFormatter; format(["bindings/julia/julia", "$(JL_TEST_DIR)"], verbose=true, overwrite=true)' || true
+	@julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.add("JuliaFormatter"); using JuliaFormatter; format(["bindings/julia/julia", "$(JL_TEST_DIR)"], verbose=true, overwrite=false) ? exit(0) : exit(1)'
 	@echo "=============================================================================="
 	@echo "3. Building..."
 	@echo "=============================================================================="
@@ -137,20 +137,11 @@ _julia_checks_internal:
 		show(stderr, MIME("text/plain"), report); println(stderr); \
 		if length(JET.get_reports(report)) > 0; @error "JET found type errors"; exit(1); end'
 	@echo "$(JL_PKG) checks completed successfully!"
-	@"$(MAKE)" -f $(THIS_MK) examples
 	@echo ""
 	@echo "To use in Julia:"
 	@echo "  julia> using Pkg"
 	@echo "  julia> Pkg.develop(path=\"$(JL_DIR)/julia\")"
 	@echo "  julia> using FastLOWESS"
-
-examples:
-	@echo "Running $(JL_PKG) examples..."
-	@echo "============================================================================="
-	@FASTLOWESS_LIB=$(CURDIR)/$(JL_SHARED_LIB) julia --project=$(JL_DIR)/julia $(JL_DIR)/examples/batch_smoothing.jl
-	@FASTLOWESS_LIB=$(CURDIR)/$(JL_SHARED_LIB) julia --project=$(JL_DIR)/julia $(JL_DIR)/examples/streaming_smoothing.jl
-	@FASTLOWESS_LIB=$(CURDIR)/$(JL_SHARED_LIB) julia --project=$(JL_DIR)/julia $(JL_DIR)/examples/online_smoothing.jl
-	@echo "============================================================================="
 
 clean:
 	@echo "Cleaning $(JL_PKG)..."

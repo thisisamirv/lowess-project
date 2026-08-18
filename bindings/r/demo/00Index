@@ -1,3 +1,0 @@
-batch_smoothing     Basic batch smoothing example
-online_smoothing    Online/sliding window smoothing example
-streaming_smoothing Streaming/chunked smoothing example

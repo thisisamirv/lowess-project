@@ -78,7 +78,6 @@ R_LIB_DIR  := $(R_DIR)/.r-lib
 # Julia bindings
 JL_DIR := bindings/julia
 
-# Julia native library paths (for examples)
 ifeq ($(HOST_PLATFORM),windows)
 	JL_SHARED_LIB := target/release/fastlowess_jl.dll
 else ifeq ($(HOST_PLATFORM),macos)
@@ -105,14 +104,6 @@ ifeq ($(OS),Windows_NT)
 	else
 		CPP_LIBRARY_DIR := target/x86_64-pc-windows-msvc/release-c
 	endif
-endif
-
-ifeq ($(HOST_PLATFORM),windows)
-	CPP_EXAMPLE_RUN_ENV := PATH="$(CPP_LIBRARY_DIR)$(PATH_SEPARATOR)$$PATH"
-else ifeq ($(HOST_PLATFORM),macos)
-	CPP_EXAMPLE_RUN_ENV := DYLD_LIBRARY_PATH=$(CPP_LIBRARY_DIR)
-else
-	CPP_EXAMPLE_RUN_ENV := LD_LIBRARY_PATH=$(CPP_LIBRARY_DIR)
 endif
 
 # Documentation
@@ -209,33 +200,6 @@ cpp-clean:
 	@"$(MAKE)" -f bindings/cpp/Makefile clean
 
 # ==============================================================================
-# Examples
-# ==============================================================================
-examples: examples-lowess examples-fastLowess examples-python examples-r examples-julia examples-nodejs examples-cpp
-	@echo "All examples completed successfully!"
-
-examples-lowess:
-	@"$(MAKE)" -f crates/lowess/Makefile examples
-
-examples-fastLowess:
-	@"$(MAKE)" -f crates/fastLowess/Makefile examples
-
-examples-python:
-	@"$(MAKE)" -f bindings/python/Makefile examples
-
-examples-r:
-	@"$(MAKE)" -f bindings/r/Makefile examples
-
-examples-julia:
-	@"$(MAKE)" -f bindings/julia/Makefile examples
-
-examples-nodejs:
-	@"$(MAKE)" -f bindings/nodejs/Makefile examples
-
-examples-cpp:
-	@"$(MAKE)" -f bindings/cpp/Makefile examples
-
-# ==============================================================================
 # Development checks
 # ==============================================================================
 check-msrv:
@@ -283,9 +247,8 @@ all-clean: r-clean lowess-clean fastLowess-clean python-clean julia-clean nodejs
 	@rm -rf target Cargo.lock .venv .ruff_cache .pytest_cache site docs-venv build bindings/python/.venv bindings/python/target crates/fastLowess/target crates/lowess/target .vscode tests/.pytest_cache local_*.tar.gz bindings/r/.r-lib bindings/r/docs
 	@rm -f Rplots.pdf .gitignore~ ..gitignore.un~
 	@rm -rf r.Rcheck/
-	@rm -rf $(CPP_DIR)/examples/bin/
 	@rm -f bindings/nodejs/fastlowess.node
 	@rm -f bindings/python/python/fastlowess/*.pyd bindings/python/python/fastlowess/*.pdb
 	@echo "All clean completed!"
 
-.PHONY: lowess lowess-coverage lowess-clean fastLowess fastLowess-coverage fastLowess-clean python python-coverage python-clean r r-coverage r-clean julia julia-clean julia-update-commit nodejs nodejs-clean wasm wasm-clean cpp cpp-clean check-msrv docs docs-serve docs-test docs-clean all all-coverage all-clean examples examples-lowess examples-fastLowess examples-python examples-r examples-julia examples-nodejs examples-cpp ensure-llvm-cov
+.PHONY: lowess lowess-coverage lowess-clean fastLowess fastLowess-coverage fastLowess-clean python python-coverage python-clean r r-coverage r-clean julia julia-clean julia-update-commit nodejs nodejs-clean wasm wasm-clean cpp cpp-clean check-msrv docs docs-serve docs-test docs-clean all all-coverage all-clean ensure-llvm-cov

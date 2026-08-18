@@ -46,7 +46,7 @@ else
 	PY_VENV_PYTHON := $(PY_VENV)/bin/python
 endif
 
-.PHONY: default clean coverage ensure-llvm-cov examples
+.PHONY: default clean coverage ensure-llvm-cov
 
 default:
 	@echo "Running $(PY_PKG) checks..."
@@ -63,12 +63,12 @@ default:
 	@echo "1. Formatting..."
 	@echo "=============================================================================="
 	@cargo fmt -p $(PY_PKG) -- --check
-	@. $(PY_ACTIVATE) && ruff format $(PY_DIR)/python/ $(PY_TEST_DIR)/ $(PY_DIR)/examples/
+	@. $(PY_ACTIVATE) && ruff format $(PY_DIR)/python/ $(PY_TEST_DIR)/
 	@echo "=============================================================================="
 	@echo "2. Linting..."
 	@echo "=============================================================================="
 	@VIRTUAL_ENV= PYO3_PYTHON=$(PYO3_PYTHON) cargo clippy -q -p $(PY_PKG) --all-targets -- -D warnings
-	@. $(PY_ACTIVATE) && ruff check $(PY_DIR)/python/ $(PY_TEST_DIR)/ $(PY_DIR)/examples/
+	@. $(PY_ACTIVATE) && ruff check $(PY_DIR)/python/ $(PY_TEST_DIR)/
 	@echo "=============================================================================="
 	@echo "3. Building..."
 	@echo "=============================================================================="
@@ -78,17 +78,7 @@ default:
 	@echo "=============================================================================="
 	@VIRTUAL_ENV= PYO3_PYTHON=$(PYO3_PYTHON) cargo test -q -p $(PY_PKG)
 	@. $(PY_ACTIVATE) && python -m pytest $(PY_TEST_DIR) -q
-	@"$(MAKE)" -f $(THIS_MK) examples
 	@echo "$(PY_PKG) checks completed successfully!"
-
-examples:
-	@echo "Running $(PY_PKG) examples..."
-	@echo "============================================================================="
-	@. $(PY_ACTIVATE) && pip install -q matplotlib
-	@. $(PY_ACTIVATE) && python $(PY_DIR)/examples/batch_smoothing.py
-	@. $(PY_ACTIVATE) && python $(PY_DIR)/examples/streaming_smoothing.py
-	@. $(PY_ACTIVATE) && python $(PY_DIR)/examples/online_smoothing.py
-	@echo "============================================================================="
 
 ensure-llvm-cov:
 	@cargo llvm-cov --version > /dev/null 2>&1 || (echo "Installing cargo-llvm-cov..." && cargo install cargo-llvm-cov && cargo llvm-cov install-llvm-tools)
@@ -107,7 +97,6 @@ clean:
 	@rm -rf $(PY_DIR)/target/wheels
 	@rm -rf $(PY_DIR)/.pytest_cache
 	@rm -rf $(PY_DIR)/__pycache__
-	@rm -rf $(PY_DIR)/examples/plots/
 	@rm -rf $(PY_DIR)/python/fastlowess/__pycache__
 	@rm -rf $(PY_DIR)/python/fastlowess/*so
 	@rm -rf $(PY_TEST_DIR)/__pycache__
