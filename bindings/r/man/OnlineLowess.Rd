@@ -106,3 +106,6 @@ for (i in seq_along(x)) {
     if (!is.null(result)) cat("smoothed:", result$smoothed, "\n")
 }
 }
+\seealso{
+\url{https://lowess.readthedocs.io/} for full documentation.
+}

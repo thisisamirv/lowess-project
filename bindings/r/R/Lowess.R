@@ -64,6 +64,7 @@
 #'   (effective degrees of freedom, leverage, standard errors).
 #'   Default: \code{FALSE}.
 #'
+#' @seealso \url{https://lowess.readthedocs.io/} for full documentation.
 #' @return A Lowess object.
 #' @examples
 #' x <- seq(0, 10, length.out = 100)

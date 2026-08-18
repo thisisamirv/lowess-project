@@ -66,6 +66,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `...` to `Lowess()`, `StreamingLowess()`, and `OnlineLowess()` to force named arguments for all optional parameters following the primary positional arguments. Passing extra arguments positionally now raises an error; every optional argument must be specified by name.
 - Added `Depends: R (>= 4.2)` to `DESCRIPTION` to declare the minimum R version required by the `extendr` backend. Added a corresponding R 4.2 matrix entry to the `R-CMD-check` CI workflow to verify compatibility.
 - Expanded all `@param` roxygen2 descriptions in `Lowess()`, `StreamingLowess()`, and `OnlineLowess()` to include the full set of accepted string values and their aliases for every enum-typed parameter (`weight_function`, `robustness_method`, `scaling_method`, `boundary_policy`, `zero_weight_fallback`, `merge_strategy`, `update_mode`), matching the level of detail in the website docs. Regenerated all `man/*.Rd` files.
+- Added a `See Also` section to `Lowess()`, `StreamingLowess()`, and `OnlineLowess()` linking to <https://lowess.readthedocs.io/> for full documentation. Regenerated all `man/*.Rd` files.
 
 **Julia:**
 
