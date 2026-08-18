@@ -2,6 +2,8 @@
 
 The C++ bindings provide a modern, object-oriented wrapper around the core Rust library, mirroring the Rust API structure.
 
+> **StreamingLowess** and **OnlineLowess** are documented separately: [cpp-streaming.md](cpp-streaming.md), [cpp-online.md](cpp-online.md)
+
 ## Classes
 
 ### `fastlowess::Lowess`
@@ -57,142 +59,9 @@ int main() {
 * The second overload applies `custom_weights` — non-negative per-observation weights of length `n`. Batch only.
 * Returns a `LowessResult` object containing the smoothed values and optional diagnostics.
 
-### `fastlowess::StreamingLowess`
+See [cpp-streaming.md](cpp-streaming.md) for the `StreamingLowess` class.
 
-The `StreamingLowess` class processes data in chunks, suitable for very large datasets or streaming applications.
-
-**Constructor:**
-
-```cpp
-#include <fastlowess.hpp>
-#include <cmath>
-#include <iostream>
-#include <vector>
-
-int main() {
-    fastlowess::StreamingOptions opts;
-    opts.chunk_size = 5;
-    fastlowess::StreamingLowess model(opts);
-
-    return 0;
-}
-```
-
-* `options`: A `StreamingOptions` struct (inherits from `LowessOptions`) with additional `chunk_size`, `overlap`, and `merge_strategy` parameters.
-
-**Methods:**
-
-```cpp
-#include <fastlowess.hpp>
-#include <cmath>
-#include <iostream>
-#include <vector>
-
-int main() {
-    const int n = 100;
-    std::vector<double> x(n), y(n);
-    for (int i = 0; i < n; ++i) {
-        x[i] = i * 2 * M_PI / (n - 1);
-        y[i] = std::sin(x[i]) + 0.1;
-    }
-
-    fastlowess::StreamingOptions opts;
-    opts.chunk_size = 10;
-    opts.overlap = 0;
-    fastlowess::StreamingLowess model(opts);
-    (void)model.process_chunk(x, y);
-
-    return 0;
-}
-```
-
-* Processes a chunk of data. Returns partial results.
-
-```cpp
-#include <fastlowess.hpp>
-#include <cmath>
-#include <iostream>
-#include <vector>
-
-int main() {
-    const int n = 100;
-    std::vector<double> x(n), y(n);
-    for (int i = 0; i < n; ++i) {
-        x[i] = i * 2 * M_PI / (n - 1);
-        y[i] = std::sin(x[i]) + 0.1;
-    }
-
-    fastlowess::StreamingOptions opts;
-    opts.chunk_size = 10;
-    opts.overlap = 0;
-    fastlowess::StreamingLowess model(opts);
-    model.process_chunk(x, y);
-    auto result = model.finalize().value();
-
-    return 0;
-}
-```
-
-* Finalizes the smoothing process and returns any remaining buffered results.
-
-### `fastlowess::OnlineLowess`
-
-The `OnlineLowess` class updates the model incrementally with new data points.
-
-**Constructor:**
-
-```cpp
-#include <fastlowess.hpp>
-#include <cmath>
-#include <iostream>
-#include <vector>
-
-int main() {
-    const int n = 100;
-    std::vector<double> x(n), y(n);
-    for (int i = 0; i < n; ++i) {
-        x[i] = i * 2 * M_PI / (n - 1);
-        y[i] = std::sin(x[i]) + 0.1;
-    }
-
-    fastlowess::OnlineOptions opts;
-    opts.window_capacity = 10;
-    fastlowess::OnlineLowess model(opts);
-    auto out = model.add_point(x[0], y[0]);
-
-    return 0;
-}
-```
-
-* `options`: An `OnlineOptions` struct (inherits from `LowessOptions`) with `window_capacity`, `min_points`, and `update_mode`.
-
-**Methods:**
-
-```cpp
-#include <fastlowess.hpp>
-#include <cmath>
-#include <iostream>
-#include <vector>
-
-int main() {
-    const int n = 100;
-    std::vector<double> x(n), y(n);
-    for (int i = 0; i < n; ++i) {
-        x[i] = i * 2 * M_PI / (n - 1);
-        y[i] = std::sin(x[i]) + 0.1;
-    }
-
-    fastlowess::OnlineOptions opts;
-    opts.window_capacity = 10;
-    fastlowess::OnlineLowess model(opts);
-    // Returns Expected<OnlineOutput> — empty until window fills
-    auto out = model.add_point(x[0], y[0]);
-
-    return 0;
-}
-```
-
-* Adds a single point to the sliding window. Returns `Expected<OnlineOutput>` — check `has_value()` to see whether the window is ready.
+See [cpp-online.md](cpp-online.md) for the `OnlineLowess` class.
 
 ## Options Structures
 
@@ -222,37 +91,13 @@ int main() {
 | `cv_seed` | `uint64_t` | `0` | Random seed for CV shuffling (Batch only; 0 = random) |
 | `custom_weights` | `std::vector<double>` | `{}` | Per-observation case weights — passed to `fit()`, not the constructor (Batch only) |
 
-### `StreamingOptions` (inherits `LowessOptions`)
+See [cpp-streaming.md](cpp-streaming.md) for `StreamingOptions`.
 
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `chunk_size` | `int` | 5000 | Data chunk size |
-| `overlap` | `int` | 500 | Overlap between chunks |
-| `merge_strategy` | `std::string` | "weighted_average" | Strategy for blending overlap regions |
-
-### `OnlineOptions` (inherits `LowessOptions`)
-
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `window_capacity` | `int` | 1000 | Max points in sliding window |
-| `min_points` | `int` | 3 | Min points before smoothing starts |
-| `update_mode` | `std::string` | "full" | Update mode (`"full"` or `"incremental"`) |
-| `parallel` | `bool` | `false` | Enable parallel execution (off by default; online LOWESS fits one point at a time) |
+See [cpp-online.md](cpp-online.md) for `OnlineOptions`.
 
 ## Result Structure
 
-### `fastlowess::OnlineOutput`
-
-Returned (inside `Expected`) by `add_point()`. Check `has_value()` before reading fields.
-
-| Method | Return Type | Description |
-| --- | --- | --- |
-| `has_value()` | `bool` | `false` while window fills; `true` when output is ready |
-| `smoothed()` | `double` | Smoothed value for the latest point |
-| `std_error()` | `double` | Standard error (NaN if not computed) |
-| `residual()` | `double` | Residual y − smoothed (NaN if not computed) |
-| `robustness_weight()` | `double` | Robustness weight (NaN if not computed) |
-| `iterations_used()` | `int` | Robustness iterations performed (−1 if N/A) |
+See [cpp-online.md](cpp-online.md) for `OnlineOutput`.
 
 ### `fastlowess::LowessResult`
 
@@ -337,19 +182,11 @@ All accessors are const methods (not public fields):
 
 ### merge_strategy
 
-*See: [Merge Strategies](../user-guide/merge.md)*
-
-* `"weighted_average"` (default; alias: `"weighted"`)
-* `"average"` (alias: `"mean"`)
-* `"take_first"` (alias: `"first"`)
-* `"take_last"` (alias: `"last"`)
+See [cpp-streaming.md](cpp-streaming.md).
 
 ### update_mode
 
-*See: [Execution Modes](../user-guide/adapters.md)*
-
-* `"full"` (default; alias: `"resmooth"`)
-* `"incremental"` (alias: `"single"`)
+See [cpp-online.md](cpp-online.md).
 
 ## Example
 

@@ -2,6 +2,8 @@
 
 The WebAssembly bindings provide a high-performance interface to the core Rust library, mirroring the Rust API structure.
 
+> **StreamingLowess** and **OnlineLowess** are documented separately: [wasm-streaming.md](wasm-streaming.md), [wasm-online.md](wasm-online.md)
+
 ## Classes and Functions
 
 ### `Lowess`
@@ -35,75 +37,9 @@ const result = model.fit(x, y);
 * `y`: `Float64Array` of input y values.
 * Returns: A `LowessResult` object.
 
-### `StreamingLowess`
+See [wasm-streaming.md](wasm-streaming.md) for the `StreamingLowess` class.
 
-The `StreamingLowess` class processes data in chunks, suitable for very large datasets or streaming applications.
-
-**Constructor:**
-
-```javascript
-const { StreamingLowess } = require('fastlowess-wasm');
-
-const stream = new StreamingLowess({ fraction: 0.3 }, { chunk_size: 50, overlap: 10 });
-```
-
-* `options`: An object containing `LowessOptions` fields.
-* `streamingOptions`: An object containing `StreamingOptions` fields.
-
-**Methods:**
-
-```javascript
-const { StreamingLowess } = require('fastlowess-wasm');
-
-const n = 100;
-const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-const stream = new StreamingLowess({ fraction: 0.3 }, { chunk_size: 50, overlap: 10 });
-const partialResult = stream.process_chunk(x.slice(0, 50), y.slice(0, 50));
-```
-
-* Processes a chunk of data. Returns partial results.
-
-```javascript
-const { StreamingLowess } = require('fastlowess-wasm');
-
-const n = 100;
-const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-const stream = new StreamingLowess({ fraction: 0.3 }, { chunk_size: 50, overlap: 10 });
-stream.process_chunk(x, y);
-const finalResult = stream.finalize();
-```
-
-* Finalizes the smoothing process and returns any remaining buffered results.
-
-### `OnlineLowess`
-
-The `OnlineLowess` class updates the model incrementally with new data points.
-
-**Constructor:**
-
-```javascript
-const { OnlineLowess } = require('fastlowess-wasm');
-
-const online = new OnlineLowess({ fraction: 0.3 }, { window_capacity: 50, min_points: 5 });
-```
-
-* `options`: An object containing `LowessOptions` fields.
-* `onlineOptions`: An object containing `OnlineOptions` fields.
-
-**Methods:**
-
-```javascript
-const { OnlineLowess } = require('fastlowess-wasm');
-
-const online = new OnlineLowess({ fraction: 0.3 }, { window_capacity: 50, min_points: 5 });
-const result = online.add_point(1.0, 2.0);  // returns OnlineOutput | undefined
-```
-
-* Adds a single point to the sliding window. Returns an `OnlineOutput` once enough points are available, or `undefined` while the window is still filling.
+See [wasm-online.md](wasm-online.md) for the `OnlineLowess` class.
 
 ## Options Structures
 
@@ -133,36 +69,13 @@ const result = online.add_point(1.0, 2.0);  // returns OnlineOutput | undefined
 | `cv_seed` | `number` | `null` | Random seed for cross-validation shuffling (Batch only) |
 | `custom_weights` | `Float64Array` | `null` | Per-observation case weights — passed to `fit()`, not the options object (Batch only) |
 
-### `StreamingOptions` (inherits `LowessOptions`)
+See [wasm-streaming.md](wasm-streaming.md) for `StreamingOptions`.
 
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `chunk_size` | `number` | `5000` | Data chunk size |
-| `overlap` | `number` | `500` | Overlap between chunks |
-| `merge_strategy` | `string` | `"weighted_average"` | Strategy for blending overlap regions |
-
-### `OnlineOptions` (inherits `LowessOptions`)
-
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `window_capacity` | `number` | `1000` | Max points in sliding window |
-| `min_points` | `number` | `3` | Min points before smoothing starts |
-| `update_mode` | `string` | `"full"` | Update mode (`"full"` or `"incremental"`) |
-| `parallel` | `boolean` | `false` | Enable parallel execution (off by default; online LOWESS fits one point at a time) |
+See [wasm-online.md](wasm-online.md) for `OnlineOptions`.
 
 ## Result Structure
 
-### `OnlineOutput`
-
-Returned by `add_point()` once the window has enough points (`undefined` until then).
-
-| Field | Type | Description |
-| --- | --- | --- |
-| `smoothed` | `number` | Smoothed value for the latest point |
-| `std_error` | `number \| undefined` | Standard error (if requested) |
-| `residual` | `number \| undefined` | Residual y − smoothed (if requested) |
-| `robustness_weight` | `number \| undefined` | Robustness weight (if requested) |
-| `iterations_used` | `number \| undefined` | Robustness iterations performed |
+See [wasm-online.md](wasm-online.md) for `OnlineOutput`.
 
 ### `LowessResult`
 
@@ -243,19 +156,11 @@ Returned by `add_point()` once the window has enough points (`undefined` until t
 
 ### merge_strategy
 
-*See: [Merge Strategies](../user-guide/merge.md)*
-
-* `"weighted_average"` (default; alias: `"weighted"`)
-* `"average"` (alias: `"mean"`)
-* `"take_first"` (alias: `"first"`)
-* `"take_last"` (alias: `"last"`)
+See [wasm-streaming.md](wasm-streaming.md).
 
 ### update_mode
 
-*See: [Execution Modes](../user-guide/adapters.md)*
-
-* `"full"` (default; alias: `"resmooth"`)
-* `"incremental"` (alias: `"single"`)
+See [wasm-online.md](wasm-online.md).
 
 ## Example
 

@@ -2,6 +2,8 @@
 
 The Julia bindings provide a modern interface to the core Rust library, mirroring the Rust API structure.
 
+> **StreamingLowess** and **OnlineLowess** are documented separately: [julia-streaming.md](julia-streaming.md), [julia-online.md](julia-online.md)
+
 ## Classes
 
 ### `Lowess`
@@ -34,90 +36,9 @@ result = fit(model, x::Vector{Float64}, y::Vector{Float64};
 * `custom_weights`: Optional per-observation weights. All values must be ≥ 0 and length must match `x`. Batch only.
 * Returns a `LowessResult` struct containing the smoothed values and optional diagnostics.
 
-### `StreamingLowess`
+See [julia-streaming.md](julia-streaming.md) for the `StreamingLowess` struct.
 
-The `StreamingLowess` struct processes data in chunks, suitable for very large datasets or streaming applications.
-
-**Constructor:**
-
-```julia
-using FastLOWESS
-using Random, Statistics
-
-rng = MersenneTwister(42)
-x = collect(range(0, 2π, length=100))
-y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-stream = StreamingLowess()
-```
-
-* `kwargs`: Keyword arguments corresponding to `LowessOptions` and `StreamingOptions` fields.
-
-**Methods:**
-
-```julia
-using FastLOWESS
-using Random, Statistics
-
-rng = MersenneTwister(42)
-x = collect(range(0, 2π, length=100))
-y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-stream = StreamingLowess()
-partial_result = process_chunk(stream, x, y)
-```
-
-* Processes a chunk of data. Returns partial results.
-
-```julia
-using FastLOWESS
-using Random, Statistics
-
-rng = MersenneTwister(42)
-x = collect(range(0, 2π, length=100))
-y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-stream = StreamingLowess()
-process_chunk(stream, x, y)
-final_result = finalize(stream)
-```
-
-* Finalizes the smoothing process and returns any remaining buffered results.
-
-### `OnlineLowess`
-
-The `OnlineLowess` struct updates the model incrementally with new data points.
-
-**Constructor:**
-
-```julia
-using FastLOWESS
-using Random, Statistics
-
-rng = MersenneTwister(42)
-x = collect(range(0, 2π, length=100))
-y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-online = OnlineLowess()
-```
-
-* `kwargs`: Keyword arguments corresponding to `LowessOptions` and `OnlineOptions` fields.
-
-**Methods:**
-
-```julia
-using FastLOWESS
-using Random, Statistics
-
-rng = MersenneTwister(42)
-x = collect(range(0, 2π, length=100))
-y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-online = OnlineLowess()
-result = add_point(online, x[1], y[1])  # returns OnlineOutput or nothing
-```
-
-* Adds a single point to the sliding window. Returns `nothing` while the window is still filling (fewer than `min_points` seen), and an `OnlineOutput` once smoothing begins.
+See [julia-online.md](julia-online.md) for the `OnlineLowess` struct.
 
 ## Options Structures
 
@@ -147,36 +68,13 @@ result = add_point(online, x[1], y[1])  # returns OnlineOutput or nothing
 | `cv_seed` | `Union{Int, Nothing}` | `nothing` | Random seed for cross-validation shuffling (Batch only) |
 | `custom_weights` | `Union{Vector{Float64}, Nothing}` | `nothing` | Per-observation case weights — passed to `fit()`, not the constructor (Batch only) |
 
-### `StreamingOptions` (inherits `LowessOptions`)
+See [julia-streaming.md](julia-streaming.md) for `StreamingOptions`.
 
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `chunk_size` | `Int` | `5000` | Data chunk size |
-| `overlap` | `Int` | `500` | Overlap between chunks |
-| `merge_strategy` | `String` | `"weighted_average"` | Strategy for blending overlap regions |
-
-### `OnlineOptions` (inherits `LowessOptions`)
-
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `window_capacity` | `Int` | `1000` | Max points in sliding window |
-| `min_points` | `Int` | `3` | Min points before smoothing starts |
-| `update_mode` | `String` | `"full"` | Update mode (`"full"` or `"incremental"`) |
-| `parallel` | `Bool` | `false` | Enable parallel execution (off by default; online LOWESS fits one point at a time) |
+See [julia-online.md](julia-online.md) for `OnlineOptions`.
 
 ## Result Structure
 
-### `OnlineOutput`
-
-Returned by `add_point()` once the window has enough points (`nothing` until then).
-
-| Field | Type | Description |
-| --- | --- | --- |
-| `smoothed` | `Float64` | Smoothed value for the latest point |
-| `std_error` | `Union{Float64, Nothing}` | Standard error (if requested) |
-| `residual` | `Union{Float64, Nothing}` | Residual y − smoothed (if requested) |
-| `robustness_weight` | `Union{Float64, Nothing}` | Robustness weight (if requested) |
-| `iterations_used` | `Union{Int, Nothing}` | Robustness iterations performed |
+See [julia-online.md](julia-online.md) for `OnlineOutput`.
 
 ### `LowessResult`
 
@@ -257,19 +155,11 @@ Returned by `add_point()` once the window has enough points (`nothing` until the
 
 ### merge_strategy
 
-*See: [Merge Strategies](../user-guide/merge.md)*
-
-* `"weighted_average"` (default; alias: `"weighted"`)
-* `"average"` (alias: `"mean"`)
-* `"take_first"` (alias: `"first"`)
-* `"take_last"` (alias: `"last"`)
+See [julia-streaming.md](julia-streaming.md).
 
 ### update_mode
 
-*See: [Execution Modes](../user-guide/adapters.md)*
-
-* `"full"` (default; alias: `"resmooth"`)
-* `"incremental"` (alias: `"single"`)
+See [julia-online.md](julia-online.md).
 
 ## Example
 

@@ -78,6 +78,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated `oxlint` to v1.78.
 
+**Docs:**
+
+- Split `StreamingLowess` and `OnlineLowess` content out of each binding's main API reference page into dedicated `{lang}-streaming.md` and `{lang}-online.md` files (`cpp-streaming.md`, `cpp-online.md`, `nodejs-streaming.md`, `nodejs-online.md`, `python-streaming.md`, `python-online.md`, `julia-streaming.md`, `julia-online.md`, `wasm-streaming.md`, `wasm-online.md`, `rust-streaming.md`, `rust-online.md`). Each main reference page now links to the split-out files from a callout at the top and from short inline cross-references in place of the removed sections.
+
 ## 2.0.0
 
 ### Added
