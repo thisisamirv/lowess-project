@@ -30,7 +30,7 @@ For comprehensive documentation, tutorials, and API reference, see:
 x <- seq(1, 10, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.2)
 model <- Lowess(fraction = 0.3)
-result <- model$fit(x, y)
+result <- fit(model, x, y)
 plot(x, y)
 lines(result$x, result$y, col = "red", lwd = 2)
 
@@ -38,20 +38,19 @@ lines(result$x, result$y, col = "red", lwd = 2)
 \seealso{
 Useful links:
 \itemize{
-    \item \url{https://github.com/thisisamirv/lowess-project}
-    \item \url{https://lowess.readthedocs.io/}
-\item Report bugs at \url{https://github.com/thisisamirv/lowess-project/issues}
+  \item \url{https://github.com/thisisamirv/lowess-project}
+  \item \url{https://thisisamirv.github.io/lowess-project/}
+  \item \url{https://lowess.readthedocs.io/}
+  \item Report bugs at \url{https://github.com/thisisamirv/lowess-project/issues}
 }
 
 }
 \author{
-\strong{Maintainer}: Amir Valizadeh \email{thisisamirv@gmail.com}
-    (\href{https://orcid.org/0000-0001-5983-8527}{ORCID}) [funder]
+\strong{Maintainer}: Amir Valizadeh \email{thisisamirv@gmail.com} (\href{https://orcid.org/0000-0001-5983-8527}{ORCID}) [funder]
 
 Authors:
 \itemize{
-\item Amir Valizadeh \email{thisisamirv@gmail.com}
-    (\href{https://orcid.org/0000-0001-5983-8527}{ORCID}) [funder]
+  \item Amir Valizadeh \email{thisisamirv@gmail.com} (\href{https://orcid.org/0000-0001-5983-8527}{ORCID}) [funder]
 }
 
 }

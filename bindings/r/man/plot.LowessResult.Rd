@@ -23,6 +23,6 @@ Plot Lowess Result
 x <- seq(0, 10, length.out = 100)
 y <- sin(x) + rnorm(100, 0, 0.1)
 model <- Lowess(fraction = 0.2)
-res <- model$fit(x, y)
+res <- fit(model, x, y)
 plot(res)
 }

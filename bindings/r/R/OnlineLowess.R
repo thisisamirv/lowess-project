@@ -8,10 +8,12 @@
 #'
 #' @inheritParams Lowess
 #' @param ... Not used; forces all subsequent arguments to be named.
-#' @param window_capacity Max points in sliding window. Default: 1000.
-#' @param min_points Minimum points before smoothing. Default: 3.
-#' @param update_mode Update strategy: \code{"full"} (default) or
-#'   \code{"incremental"}.
+#' @param window_capacity Maximum number of points kept in the sliding window.
+#' @param min_points Minimum number of points required before smoothing begins.
+#' @param update_mode Window update strategy: \code{"full"} (default; alias:
+#'   \code{"resmooth"}) re-smooths all window points after each addition;
+#'   \code{"incremental"} (alias: \code{"single"}) updates only the newest
+#'   point.
 #'
 #' @return An OnlineLowess object.
 #' @examples

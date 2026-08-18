@@ -5,71 +5,99 @@
 \title{LOWESS Batch Smoothing}
 \usage{
 Lowess(
-    fraction = 0.67,
-    iterations = 3L,
-    delta = NULL,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    scaling_method = "mad",
-    boundary_policy = "extend",
-    confidence_intervals = NULL,
-    prediction_intervals = NULL,
-    return_diagnostics = FALSE,
-    return_residuals = FALSE,
-    return_robustness_weights = FALSE,
-    zero_weight_fallback = "use_local_mean",
-    auto_converge = NULL,
-    cv_fractions = NULL,
-    cv_method = "kfold",
-    cv_k = 5L,
-    parallel = TRUE,
-    cv_seed = NULL,
-    return_se = FALSE
+  fraction = 0.67,
+  ...,
+  iterations = 3L,
+  delta = NULL,
+  weight_function = "tricube",
+  robustness_method = "bisquare",
+  scaling_method = "mad",
+  boundary_policy = "extend",
+  confidence_intervals = NULL,
+  prediction_intervals = NULL,
+  return_diagnostics = FALSE,
+  return_residuals = FALSE,
+  return_robustness_weights = FALSE,
+  zero_weight_fallback = "use_local_mean",
+  auto_converge = NULL,
+  cv_fractions = NULL,
+  cv_method = "kfold",
+  cv_k = 5L,
+  parallel = TRUE,
+  cv_seed = NULL,
+  return_se = FALSE
 )
 }
 \arguments{
-\item{fraction}{Smoothing fraction (0 to 1). Default: 0.67.}
+\item{fraction}{Smoothing fraction (between 0 and 1). Default: 0.67.}
 
-\item{iterations}{Robustness iterations. Default: 3.}
+\item{...}{Not used; forces all subsequent arguments to be named.}
 
-\item{delta}{Interpolation threshold. NULL = auto.}
+\item{iterations}{Number of robustness iterations (non-negative integer).
+Default: 3.}
 
-\item{weight_function}{Kernel name. Default: "tricube".}
+\item{delta}{Interpolation distance threshold; points within \code{delta}
+of each other on x share the same local fit. \code{NULL} (default) sets
+it automatically to 1/100th of the x range.}
 
-\item{robustness_method}{Method: "bisquare", "huber", "talwar".}
+\item{weight_function}{Kernel weight function. One of \code{"tricube"}
+(default), \code{"gaussian"}, \code{"uniform"} (alias: \code{"boxcar"}),
+\code{"cosine"}, \code{"epanechnikov"},
+\code{"biweight"} (alias: \code{"bisquare"}), or
+\code{"triangle"} (alias: \code{"triangular"}).}
 
-\item{scaling_method}{Scale estimation: "mad", "mar", "mean".}
+\item{robustness_method}{Outlier downweighting method: \code{"bisquare"}
+(default; alias: \code{"biweight"}), \code{"huber"}, or \code{"talwar"}.}
 
-\item{boundary_policy}{Edge handling: "extend", "reflect", "zero",
-"noboundary".}
+\item{scaling_method}{Residual scale estimation for robustness weights:
+\code{"mad"} (default; alias: \code{"median_absolute_deviation"}),
+\code{"mar"} (alias: \code{"median_absolute_residual"}), or
+\code{"mean"} (alias: \code{"mean_absolute_residual"}).}
 
-\item{confidence_intervals}{Confidence level (e.g., 0.95). NULL disables.}
+\item{boundary_policy}{Boundary handling strategy: \code{"extend"}
+(default; alias: \code{"pad"}), \code{"reflect"} (alias:
+\code{"mirror"}), \code{"zero"}, or
+\code{"noboundary"} (alias: \code{"none"}).}
 
-\item{prediction_intervals}{Prediction level (e.g., 0.95). NULL disables.}
+\item{confidence_intervals}{Confidence level for confidence intervals
+(e.g., 0.95). \code{NULL} (default) disables confidence intervals.}
 
-\item{return_diagnostics}{Return fit metrics. Default: FALSE.}
+\item{prediction_intervals}{Confidence level for prediction intervals
+(e.g., 0.95). \code{NULL} (default) disables prediction intervals.}
 
-\item{return_residuals}{Return residuals. Default: FALSE.}
+\item{return_diagnostics}{Logical; if \code{TRUE}, return fit-quality
+metrics (RMSE, MAE, R-squared, AIC, etc.). Default: \code{FALSE}.}
 
-\item{return_robustness_weights}{Return weights. Default: FALSE.}
+\item{return_residuals}{Logical; if \code{TRUE}, return residuals in the
+result. Default: \code{FALSE}.}
 
-\item{zero_weight_fallback}{Fallback: "use_local_mean", "return_original",
-"return_none".}
+\item{return_robustness_weights}{Logical; if \code{TRUE}, return per-point
+robustness weights. Default: \code{FALSE}.}
 
-\item{auto_converge}{Convergence tolerance. NULL disables.}
+\item{zero_weight_fallback}{Fallback policy when all robustness weights drop
+to zero: \code{"use_local_mean"} (default; aliases: \code{"local_mean"},
+\code{"mean"}), \code{"return_original"} (alias: \code{"original"}), or
+\code{"return_none"} (alias: \code{"none"}).}
 
-\item{cv_fractions}{Fractions for cross-validation. NULL disables.}
+\item{auto_converge}{Convergence tolerance for early stopping of robustness
+iterations. \code{NULL} (default) disables early stopping.}
 
-\item{cv_method}{CV method: "kfold", "loocv".}
+\item{cv_fractions}{Numeric vector of candidate fractions for
+cross-validation. \code{NULL} (default) disables CV.}
 
-\item{cv_k}{Folds for k-fold CV. Default: 5.}
+\item{cv_method}{Cross-validation method: \code{"kfold"} (default) or
+\code{"loocv"}.}
 
-\item{parallel}{Enable parallel processing. Default: TRUE.}
+\item{cv_k}{Number of folds for k-fold CV. Default: 5.}
+
+\item{parallel}{Logical; enable parallel processing. Default: \code{TRUE}.}
 
 \item{cv_seed}{Integer seed for the cross-validation random number
 generator. \code{NULL} (default) uses a random seed.}
 
-\item{return_se}{Return standard errors. Default: FALSE.}
+\item{return_se}{Logical; if \code{TRUE}, compute hat-matrix statistics
+(effective degrees of freedom, leverage, standard errors).
+Default: \code{FALSE}.}
 }
 \value{
 A Lowess object.
@@ -81,7 +109,7 @@ Create a stateful LOWESS model for batch smoothing.
 x <- seq(0, 10, length.out = 100)
 y <- sin(x) + rnorm(100, 0, 0.1)
 model <- Lowess(fraction = 0.2)
-result <- model$fit(x, y)
+result <- fit(model, x, y)
 plot(x, y)
 lines(x, result$y, col = "red")
 }
