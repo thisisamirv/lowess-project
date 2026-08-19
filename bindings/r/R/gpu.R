@@ -61,11 +61,18 @@ install_gpu <- function(yes = FALSE) {
     arch <- if (is_arm) "aarch64" else "x86_64"
 
     asset <- sprintf(
-        "librfastlowess-gpu-v%s-%s-%s%s", version, platform_tag, arch, ext
+        "librfastlowess-gpu-v%s-%s-%s%s",
+        version,
+        platform_tag,
+        arch,
+        ext
     )
     repo <- "thisisamirv/lowess-project"
     url <- sprintf(
-        "https://github.com/%s/releases/download/v%s/%s", repo, version, asset
+        "https://github.com/%s/releases/download/v%s/%s",
+        repo,
+        version,
+        asset
     )
 
     if (!isTRUE(yes)) {
@@ -77,7 +84,9 @@ install_gpu <- function(yes = FALSE) {
             )
         }
         answer <- readline(sprintf(
-            "Download and install %s from github.com/%s? [y/N] ", asset, repo
+            "Download and install %s from github.com/%s? [y/N] ",
+            asset,
+            repo
         ))
         if (!tolower(trimws(answer)) %in% c("y", "yes")) {
             message("Aborted.")
@@ -103,7 +112,9 @@ install_gpu <- function(yes = FALSE) {
     )
     if (!ok || !file.exists(tmp) || file.size(tmp) == 0) {
         stop(
-            "Failed to download ", url, ".\n",
+            "Failed to download ",
+            url,
+            ".\n",
             "A matching GPU build may not exist for this platform/version yet.",
             call. = FALSE
         )

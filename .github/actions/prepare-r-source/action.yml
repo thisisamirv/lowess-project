@@ -1,0 +1,30 @@
+name: Prepare R Package Source
+description: >
+  Makes configure/cleanup executable, regenerates inst/AUTHORS from Rust
+  dependency metadata (via cargo metadata), and sanity-checks
+  tests/testthat.R exists. Shared by R-CMD-check, SRR-check, and the R Clang
+  ASAN sanitizer job.
+
+inputs:
+  r-dir:
+    description: Path to the R package directory, relative to the repo root.
+    required: false
+    default: bindings/r
+
+runs:
+  using: composite
+  steps:
+    - name: Prepare R package sources
+      shell: bash
+      working-directory: ${{ github.workspace }}
+      run: |
+        R_DIR="${{ inputs.r-dir }}"
+        chmod +x "$R_DIR/configure" "$R_DIR/cleanup"
+        mkdir -p "$R_DIR/inst"
+        {
+          echo "Authors and Copyright Holders for Rust Dependencies:"
+          echo ""
+          cargo metadata --format-version 1 | \
+            jq -r '. as $root | [.packages[] | select(.id as $id | ($root.workspace_members | index($id)) == null)] | unique_by(.name)[] | "Package: \(.name) (\(.version))\nAuthors: \(.authors | join(", "))\nLicense: \(.license // "Unknown")\n" + "-" * 40'
+        } > "$R_DIR/inst/AUTHORS"
+        test -f "$R_DIR/tests/testthat.R"

@@ -6,11 +6,17 @@ on:
   pull_request:
     branches: [main, master, develop]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
 env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
   PIP_DISABLE_PIP_VERSION_CHECK: 1
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+  ASAN_OPTIONS: detect_leaks=0:strict_init_order=1
 
 jobs:
   # ============================================================================
@@ -44,14 +50,6 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: "3.12"
-
-      - name: Install R
-        uses: r-lib/actions/setup-r@v2
-        with:
-          use-public-rspm: true
-
-      - name: Install Pandoc
-        uses: r-lib/actions/setup-pandoc@v2
 
       - name: Setup Node
         uses: actions/setup-node@v6
@@ -104,24 +102,13 @@ jobs:
           cargo build -p fastLowess --features cpu
           cargo build -p fastLowess --features gpu
 
+      - name: Setup software Vulkan (lavapipe)
+        if: matrix.os == 'ubuntu-latest'
+        uses: ./.github/actions/setup-lavapipe
+
       - name: "Rust: fastLowess Tests"
         run: |
           if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
-             sudo apt-get update && sudo apt-get install -y libvulkan1 mesa-vulkan-drivers vulkan-tools
-             export GALLIUM_DRIVER=lavapipe
-             export WGPU_BACKEND=vulkan
-             export XDG_RUNTIME_DIR="${RUNNER_TEMP}/xdg-runtime"
-             mkdir -p "$XDG_RUNTIME_DIR"
-             chmod 700 "$XDG_RUNTIME_DIR"
-
-             if [ -f /usr/share/vulkan/icd.d/lvp_icd.x86_64.json ]; then
-               export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.x86_64.json
-             else
-               export VK_ICD_FILENAMES=$(find /usr/share/vulkan/icd.d -name 'lvp_icd*.json' | head -n 1)
-             fi
-
-             test -n "$VK_ICD_FILENAMES"
-             vulkaninfo --summary
              cargo test -q -p fastLowess --test fastLowess --features gpu,dev
           else
              cargo test -q -p fastLowess --test fastLowess --features cpu,dev
@@ -172,15 +159,7 @@ jobs:
           nm -D target/release/libfastlowess_jl.so | grep -q jl_lowess_free_result || exit 1
 
       - name: "Julia: Relax JLL dependency for CI"
-        shell: bash
-        run: |
-          PROJECT_TOML="bindings/julia/julia/Project.toml"
-          LATEST=$(julia -e 'using Pkg; Pkg.activate(temp=true); try Pkg.add("fastlowess_jll"); print(Pkg.dependencies()[Base.UUID("7381d214-3001-5784-8d9a-8eb8e8688076")].version) catch; print("1.0.0") end' | cut -d'+' -f1)
-          CURRENT=$(grep "^version =" "$PROJECT_TOML" | cut -d"\"" -f2)
-          echo "Latest Registered JLL: $LATEST"
-          echo "Current Local Version: $CURRENT"
-          julia -e "using TOML; path = \"$PROJECT_TOML\"; p = TOML.parsefile(path); p[\"compat\"][\"fastlowess_jll\"] = \"$LATEST, $CURRENT\"; open(path, \"w\") do io; TOML.print(io, p); end"
-          echo "Modified $PROJECT_TOML (fastlowess_jll = \"$LATEST, $CURRENT\") using TOML parser."
+        uses: ./.github/actions/relax-julia-jll
 
       - name: "Julia: Tests"
         shell: bash
@@ -297,30 +276,19 @@ jobs:
         with:
           key: make-all-ubuntu-cargo
 
-      - name: Setup GPU and R system dependencies
+      - name: Setup software Vulkan (lavapipe)
+        uses: ./.github/actions/setup-lavapipe
+
+      - name: Setup R system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libvulkan1 mesa-vulkan-drivers vulkan-tools
           sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev libfontconfig1-dev libharfbuzz-dev libfribidi-dev libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev libprotobuf-dev protobuf-compiler libuv1-dev libgit2-dev libssh2-1-dev libmagick++-dev
 
       - name: "make all"
         shell: bash
         env:
           PYTHON: python
-          GALLIUM_DRIVER: lavapipe
-          WGPU_BACKEND: vulkan
-        run: |
-          export XDG_RUNTIME_DIR="${RUNNER_TEMP}/xdg-runtime"
-          mkdir -p "$XDG_RUNTIME_DIR"
-          chmod 700 "$XDG_RUNTIME_DIR"
-          if [ -f /usr/share/vulkan/icd.d/lvp_icd.x86_64.json ]; then
-            export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.x86_64.json
-          else
-            export VK_ICD_FILENAMES=$(find /usr/share/vulkan/icd.d -name 'lvp_icd*.json' | head -n 1)
-          fi
-          test -n "$VK_ICD_FILENAMES"
-          vulkaninfo --summary
-          make all
+        run: make all
 
   make-all-macos:
     name: make all (macOS)
@@ -435,3 +403,579 @@ jobs:
         env:
           PYTHON: python
         run: make all
+
+  # ============================================================================
+  # R CMD CHECK (multi-OS matrix) + SRR CHECK (statistical software review
+  # standards, via pkgcheck)
+  # ============================================================================
+  r-cmd-check:
+    name: R-CMD-check (${{ matrix.os }}, R ${{ matrix.r }})
+    runs-on: ${{ matrix.os }}
+    permissions:
+      issues: write
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        r: [release]
+        rust: [stable]
+        include:
+          - os: ubuntu-latest
+            r: "4.2"
+            rust: stable
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ matrix.rust }}
+          components: rustfmt, clippy
+
+      - name: Install Rust GNU (Windows)
+        if: matrix.os == 'windows-latest'
+        run: rustup toolchain install stable-x86_64-pc-windows-gnu
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: r-cmd-check-${{ matrix.os }}-r${{ matrix.r }}-cargo
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.r }}
+          use-public-rspm: true
+
+      - name: Setup Pandoc
+        uses: r-lib/actions/setup-pandoc@v2
+
+      - name: Bootstrap pak (Windows)
+        if: runner.os == 'Windows'
+        shell: Rscript {0}
+        run: |
+          install.packages(
+            "pak",
+            repos = sprintf(
+              "https://r-lib.github.io/p/pak/stable/%s/%s/%s",
+              .Platform$pkgType, R.Version()$os, R.Version()$arch
+            )
+          )
+
+      - name: "R: Setup Dependencies"
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          working-directory: bindings/r
+          extra-packages: |
+            any::rcmdcheck
+            any::BiocCheck
+            any::XML
+            any::devtools
+            any::lintr
+            any::BiocManager
+          needs: check
+
+      - name: "R: Prepare Package Sources"
+        uses: ./.github/actions/prepare-r-source
+
+      - name: "R: CMD Check"
+        uses: r-lib/actions/check-r-package@v2
+        with:
+          upload-snapshots: true
+          build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
+          args: 'c("--no-manual", "--as-cran")'
+          check-dir: '"check"'
+          error-on: '"error"'
+          upload-results: false
+          working-directory: bindings/r
+
+      - name: "R: Install Package"
+        working-directory: bindings/r
+        run: Rscript -e "devtools::install(quiet = TRUE)"
+
+      - name: "R: Quality (BiocCheck/Lint)"
+        working-directory: bindings/r
+        shell: bash
+        run: |
+          mkdir -p ~/.R
+          echo "CXXFLAGS += -w" >> ~/.R/Makevars
+          echo "CFLAGS += -w" >> ~/.R/Makevars
+          Rscript -e "my_linters <- lintr::linters_with_defaults(indentation_linter = lintr::indentation_linter(indent = 4L), object_usage_linter = NULL, object_name_linter = lintr::object_name_linter(styles = c('snake_case', 'symbols', 'CamelCase'))); lintr::lint_dir('R', linters = my_linters)"
+          R CMD build .
+          Rscript -e "BiocCheck::BiocCheck(list.files(pattern='[.]tar[.]gz$')[1], new_package=FALSE, no_check_vignettes=TRUE, quit_with_status=TRUE)"
+
+      # SRR checks run once (ubuntu-latest/release only) since they only need
+      # to reuse the toolchain/dependencies already set up above.
+      - name: Install TinyTeX (SRR checks)
+        if: matrix.os == 'ubuntu-latest' && matrix.r == 'release'
+        uses: r-lib/actions/setup-tinytex@v2
+
+      - name: "SRR: Install Dependencies"
+        if: matrix.os == 'ubuntu-latest' && matrix.r == 'release'
+        shell: Rscript {0}
+        run: |
+          install.packages(c("remotes", "covr"))
+          install.packages(c("pkgcheck", "pkgstats", "toml", "visNetwork"), repos = c("https://ropensci.r-universe.dev", "https://cloud.r-project.org"))
+          # Install package dependencies including suggests (needed for BiocStyle vignette)
+          remotes::install_deps("bindings/r", dependencies = TRUE, repos = c(BiocManager::repositories(), "https://cloud.r-project.org"))
+
+      - name: "SRR: Debug Coverage"
+        if: matrix.os == 'ubuntu-latest' && matrix.r == 'release'
+        shell: Rscript {0}
+        run: |
+          tryCatch({
+            print(covr::package_coverage("bindings/r"))
+          }, error = function(e) {
+            print(e)
+            message("Covr failed to run directly")
+          })
+
+      - name: "SRR: Run pkgcheck"
+        if: matrix.os == 'ubuntu-latest' && matrix.r == 'release'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: Rscript {0}
+        run: |
+          library(pkgcheck)
+          library(pkgstats)
+          check <- pkgcheck::pkgcheck("bindings/r")
+          print(check)
+          # Fail if checks don't pass
+          if (any(check$checks$error)) stop("pkgcheck failed with errors")
+
+  # ============================================================================
+  # SANITIZERS
+  #
+  # Native Rust/binding ASAN coverage plus the dedicated R ASAN job that needs
+  # R-specific container setup. WASM is intentionally excluded: sanitizer
+  # instrumentation is not meaningful for the wasm32 target in this CI setup.
+  # ============================================================================
+  asan-native:
+    name: Native ASAN (Rust + bindings)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Install Rust Nightly
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          toolchain: nightly
+          components: rust-src
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install Julia
+        uses: julia-actions/setup-julia@v3
+        with:
+          version: "1.11"
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: sanitizers-asan-native-cargo
+
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends clang lld cmake g++
+
+      - name: Rust Core Tests (ASAN)
+        env:
+          RUSTFLAGS: -Zsanitizer=address
+        shell: bash
+        run: |
+          cargo test \
+            -Zbuild-std \
+            --target x86_64-unknown-linux-gnu \
+            -p lowess \
+            --test lowess
+
+          cargo test \
+            -Zbuild-std \
+            --target x86_64-unknown-linux-gnu \
+            -p fastLowess \
+            --test fastLowess \
+            --features cpu
+
+      - name: Build Native Bindings (ASAN)
+        env:
+          RUSTFLAGS: -Zsanitizer=address
+        shell: bash
+        run: |
+          cargo build \
+            -Zbuild-std \
+            --target x86_64-unknown-linux-gnu \
+            -p fastLowess-py \
+            --release
+
+          cargo build \
+            -Zbuild-std \
+            --target x86_64-unknown-linux-gnu \
+            -p fastlowess-node \
+            --release
+
+          cargo build \
+            -Zbuild-std \
+            --target x86_64-unknown-linux-gnu \
+            -p fastlowess-jl \
+            --release
+
+          cargo build \
+            -Zbuild-std \
+            --target x86_64-unknown-linux-gnu \
+            -p fastlowess-cpp \
+            --release
+
+      - name: Prepare Sanitized C++ Library Path
+        shell: bash
+        run: |
+          mkdir -p target/release
+          cp target/x86_64-unknown-linux-gnu/release/libfastlowess_cpp.so target/release/libfastlowess_cpp.so
+
+      - name: C++ Binding Tests (ASAN)
+        shell: bash
+        run: |
+          cmake -S bindings/cpp/tests -B bindings/cpp/tests/build-asan \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_CXX_FLAGS='-fsanitize=address -fno-omit-frame-pointer' \
+            -DCMAKE_EXE_LINKER_FLAGS='-fsanitize=address' \
+            -DFASTLOWESS_LIB_DIR="$(pwd)/target/release"
+          cmake --build bindings/cpp/tests/build-asan --config Debug
+          LD_LIBRARY_PATH=target/release ctest --test-dir bindings/cpp/tests/build-asan --output-on-failure
+
+      - name: Sanitizer Scope Note
+        run: |
+          echo "WASM is intentionally excluded from this workflow because ASAN is not meaningful for wasm32 in this CI setup."
+
+  r-asan-check:
+    name: R - Clang ASAN
+    runs-on: ubuntu-latest
+    container:
+      image: rocker/r-devel-san:latest
+    env:
+      CARGO_HOME: /usr/local/cargo
+      RUSTUP_HOME: /usr/local/rustup
+    defaults:
+      run:
+        working-directory: bindings/r
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install latest Rust
+        shell: bash
+        run: |
+          export CARGO_HOME=/usr/local/cargo
+          export RUSTUP_HOME=/usr/local/rustup
+          if command -v curl >/dev/null 2>&1; then
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          elif command -v wget >/dev/null 2>&1; then
+            wget -qO- https://sh.rustup.rs | sh -s -- -y
+          else
+            apt-get update
+            apt-get install -y --no-install-recommends wget ca-certificates
+            wget -qO- https://sh.rustup.rs | sh -s -- -y
+          fi
+          echo "$CARGO_HOME/bin" >> $GITHUB_PATH
+          echo "CARGO_HOME=$CARGO_HOME" >> $GITHUB_ENV
+          echo "RUSTUP_HOME=$RUSTUP_HOME" >> $GITHUB_ENV
+      - name: Install System Dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends libssl-dev libcurl4-openssl-dev libxml2-dev libuv1-dev jq
+      - name: Install R Dependencies
+        run: |
+          export R_LIBS_USER="$RUNNER_TEMP/Library"
+          mkdir -p "$R_LIBS_USER"
+          echo "R_LIBS_USER=$R_LIBS_USER" >> "$GITHUB_ENV"
+          RDscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); install.packages(c('remotes', 'rcmdcheck', 'testthat', 'knitr', 'rmarkdown', 'BiocManager'), lib = lib)"
+          RDscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); BiocManager::install('BiocStyle', lib = lib, ask = FALSE, update = FALSE)"
+          RDscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); remotes::install_deps(dependencies = TRUE, lib = lib)"
+      - name: Prepare Package Sources
+        uses: ./.github/actions/prepare-r-source
+      - name: Run ASAN Check
+        shell: bash
+        run: |
+          if [ -f "$CARGO_HOME/env" ]; then
+            . "$CARGO_HOME/env"
+          elif [ -f "$HOME/.cargo/env" ]; then
+            . "$HOME/.cargo/env"
+          fi
+          RDscript -e "rcmdcheck::rcmdcheck(args = c('--no-manual', '--ignore-vignettes'), build_args = c('--no-build-vignettes'), error_on = 'error', check_dir = 'check')"
+
+  # ============================================================================
+  # GPU BACKEND
+  #
+  # Builds every binding with the `gpu` Cargo feature enabled and runs a small
+  # functional smoke test against each one to confirm `backend = "gpu"` (or
+  # the language's equivalent spelling) actually produces a valid fit. Runs on
+  # ubuntu-latest only: GitHub-hosted runners have no real GPU, so this relies
+  # on the Mesa "lavapipe" software Vulkan implementation (same setup used for
+  # the Rust `fastLowess` GPU tests in the `ci` job above).
+  # ============================================================================
+  gpu-backend:
+    name: GPU Backend Smoke Test (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [python, nodejs, julia, cpp, r]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Python
+        if: matrix.language == 'python'
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Setup Node
+        if: matrix.language == 'nodejs'
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install Julia
+        if: matrix.language == 'julia'
+        uses: julia-actions/setup-julia@v3
+        with:
+          version: "1.11"
+
+      - name: Install R
+        if: matrix.language == 'r'
+        uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: gpu-backend-${{ matrix.language }}-cargo
+
+      - name: Setup software Vulkan (lavapipe)
+        uses: ./.github/actions/setup-lavapipe
+
+      # ==========================================================================
+      # PYTHON
+      # ==========================================================================
+      - name: "Python: Build with GPU feature"
+        if: matrix.language == 'python'
+        working-directory: bindings/python
+        run: |
+          python -m pip install --upgrade pip
+          pip install maturin numpy
+          maturin build --release --features gpu -o dist
+          pip install --force-reinstall dist/*.whl
+
+      - name: "Python: GPU smoke test"
+        if: matrix.language == 'python'
+        run: |
+          cat > /tmp/gpu_smoke.py <<'PY'
+          import fastlowess as fl
+          import numpy as np
+
+          assert fl.gpu_available(), "GPU backend not detected in Python build"
+
+          x = np.linspace(0, 1, 50)
+          y = np.sin(6 * x) + 0.05
+
+          model = fl.Lowess(fraction=0.3, backend="gpu")
+          result = model.fit(x, y)
+
+          assert len(result.y) == len(x)
+          assert np.all(np.isfinite(result.y))
+          print("Python GPU backend OK")
+          PY
+          python /tmp/gpu_smoke.py
+
+      # ==========================================================================
+      # NODE.JS
+      # ==========================================================================
+      - name: "Node.js: Build with GPU feature"
+        if: matrix.language == 'nodejs'
+        working-directory: bindings/nodejs
+        run: |
+          npm install
+          npx napi build --release --features gpu
+
+      - name: "Node.js: GPU smoke test"
+        if: matrix.language == 'nodejs'
+        working-directory: bindings/nodejs
+        run: |
+          cat > /tmp/gpu_smoke.js <<'JS'
+          const fastlowess = require(process.cwd());
+
+          if (!fastlowess.gpuAvailable()) {
+              throw new Error('GPU backend not detected in Node.js build');
+          }
+
+          const n = 50;
+          const x = Float64Array.from({ length: n }, (_, i) => i / (n - 1));
+          const y = Float64Array.from(x, (xi) => Math.sin(6 * xi) + 0.05);
+
+          const model = new fastlowess.Lowess({ fraction: 0.3, backend: 'gpu' });
+          const result = model.fit(x, y);
+
+          if (result.y.length !== n) throw new Error('unexpected output length');
+          if (!Array.from(result.y).every(Number.isFinite)) {
+              throw new Error('non-finite values in output');
+          }
+          console.log('Node.js GPU backend OK');
+          JS
+          node /tmp/gpu_smoke.js
+
+      # ==========================================================================
+      # JULIA
+      # ==========================================================================
+      - name: "Julia: Build with GPU feature"
+        if: matrix.language == 'julia'
+        working-directory: bindings/julia
+        run: cargo build --release --features gpu
+
+      - name: "Julia: Relax JLL dependency for CI"
+        if: matrix.language == 'julia'
+        uses: ./.github/actions/relax-julia-jll
+
+      - name: "Julia: GPU smoke test"
+        if: matrix.language == 'julia'
+        env:
+          FASTLOWESS_LIB: target/release/libfastlowess_jl.so
+        run: |
+          cat > /tmp/gpu_smoke.jl <<'JL'
+          using Pkg
+          Pkg.activate("bindings/julia/julia")
+          Pkg.instantiate()
+          using FastLOWESS
+
+          @assert gpu_available() "GPU backend not detected in Julia build"
+
+          x = collect(range(0, 1, length = 50))
+          y = sin.(6 .* x) .+ 0.05
+
+          model = Lowess(fraction = 0.3, backend = "gpu")
+          result = fit(model, x, y)
+
+          @assert length(result.y) == length(x)
+          @assert all(isfinite, result.y)
+          println("Julia GPU backend OK")
+          JL
+          julia /tmp/gpu_smoke.jl
+
+      # ==========================================================================
+      # C++
+      # ==========================================================================
+      - name: "C++: Build with GPU feature"
+        if: matrix.language == 'cpp'
+        working-directory: bindings/cpp
+        run: cargo build --release --features gpu
+
+      - name: "C++: GPU smoke test"
+        if: matrix.language == 'cpp'
+        run: |
+          cat > /tmp/gpu_smoke.cpp <<'CPP'
+          #include "fastlowess.hpp"
+
+          #include <cmath>
+          #include <cstdio>
+          #include <vector>
+
+          int main() {
+            if (!fastlowess::gpu::available()) {
+              std::fprintf(stderr, "GPU backend not detected in C++ build\n");
+              return 1;
+            }
+
+            constexpr std::size_t n = 50;
+            std::vector<double> x(n);
+            std::vector<double> y(n);
+            for (std::size_t i = 0; i < n; ++i) {
+              x[i] = static_cast<double>(i) / (n - 1);
+              y[i] = std::sin(6.0 * x[i]) + 0.05;
+            }
+
+            fastlowess::LowessOptions opts;
+            opts.fraction = 0.3;
+            opts.backend = "gpu";
+            fastlowess::Lowess model(opts);
+            auto result = model.fit(x, y);
+
+            if (!result.has_value()) {
+              std::fprintf(stderr, "fit() failed: %s\n", result.error().c_str());
+              return 1;
+            }
+
+            auto y_fit = result.value().y_vector();
+            if (y_fit.size() != n) {
+              std::fprintf(stderr, "unexpected output length: %zu\n", y_fit.size());
+              return 1;
+            }
+            for (double v : y_fit) {
+              if (!std::isfinite(v)) {
+                std::fprintf(stderr, "non-finite value in output\n");
+                return 1;
+              }
+            }
+
+            std::printf("C++ GPU backend OK\n");
+            return 0;
+          }
+          CPP
+          g++ -O3 -std=c++17 /tmp/gpu_smoke.cpp -o /tmp/gpu_smoke \
+            -I"${GITHUB_WORKSPACE}/bindings/cpp/include" \
+            -L"${GITHUB_WORKSPACE}/target/release" \
+            -lfastlowess_cpp -lpthread -ldl -lm
+          LD_LIBRARY_PATH="${GITHUB_WORKSPACE}/target/release" /tmp/gpu_smoke
+
+      # ==========================================================================
+      # R
+      # ==========================================================================
+      - name: "R: Install runtime dependencies"
+        if: matrix.language == 'r'
+        run: |
+          Rscript -e '
+            options(repos = c(CRAN = "https://cloud.r-project.org"));
+            if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager", quiet = TRUE);
+            if (!requireNamespace("BiocGenerics", quietly = TRUE)) BiocManager::install("BiocGenerics", ask = FALSE, update = FALSE, quiet = TRUE)
+          '
+
+      - name: "R: Build and install with GPU feature"
+        if: matrix.language == 'r'
+        working-directory: benchmarks
+        run: make WITH_GPU=1 install
+
+      - name: "R: GPU smoke test"
+        if: matrix.language == 'r'
+        run: |
+          cat > /tmp/gpu_smoke.R <<'R'
+          library(rfastlowess)
+
+          stopifnot(gpu_available())
+
+          x <- seq(0, 1, length.out = 50)
+          y <- sin(6 * x) + 0.05
+
+          model <- Lowess(fraction = 0.3, backend = "gpu")
+          result <- fit(model, x, y)
+
+          stopifnot(length(result$y) == length(x))
+          stopifnot(all(is.finite(result$y)))
+          cat("R GPU backend OK\n")
+          R
+          Rscript /tmp/gpu_smoke.R

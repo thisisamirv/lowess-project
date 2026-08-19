@@ -1,0 +1,37 @@
+name: Setup Software Vulkan (lavapipe)
+description: >
+  Installs Mesa's lavapipe software Vulkan implementation and exports the env
+  vars wgpu needs to use it, so GPU-backend code can run on CI runners without
+  real GPU hardware. Linux only.
+
+runs:
+  using: composite
+  steps:
+    - name: Install lavapipe packages
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libvulkan1 mesa-vulkan-drivers vulkan-tools
+
+    - name: Export lavapipe environment
+      shell: bash
+      run: |
+        echo "GALLIUM_DRIVER=lavapipe" >> "$GITHUB_ENV"
+        echo "WGPU_BACKEND=vulkan" >> "$GITHUB_ENV"
+
+        XDG_RUNTIME_DIR="${RUNNER_TEMP}/xdg-runtime"
+        mkdir -p "$XDG_RUNTIME_DIR"
+        chmod 700 "$XDG_RUNTIME_DIR"
+        echo "XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR" >> "$GITHUB_ENV"
+
+        if [ -f /usr/share/vulkan/icd.d/lvp_icd.x86_64.json ]; then
+          ICD=/usr/share/vulkan/icd.d/lvp_icd.x86_64.json
+        else
+          ICD=$(find /usr/share/vulkan/icd.d -name 'lvp_icd*.json' | head -n 1)
+        fi
+        test -n "$ICD"
+        echo "VK_ICD_FILENAMES=$ICD" >> "$GITHUB_ENV"
+
+    - name: Verify software Vulkan is usable
+      shell: bash
+      run: vulkaninfo --summary

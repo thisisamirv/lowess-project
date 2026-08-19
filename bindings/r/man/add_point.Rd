@@ -6,6 +6,7 @@
 \title{Add a single point to an online LOWESS model}
 \usage{
 add_point(model, ...)
+
 \method{add_point}{OnlineLowess}(model, x, y, ...)
 }
 \arguments{

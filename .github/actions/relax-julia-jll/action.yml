@@ -1,0 +1,20 @@
+name: Relax Julia JLL Dependency for CI
+description: >
+  Loosens the fastlowess_jll compat bound in bindings/julia/julia/Project.toml
+  to accept both the currently-registered version and the local in-repo
+  version, so Pkg.instantiate() doesn't fail when the two don't match.
+
+runs:
+  using: composite
+  steps:
+    - name: Relax JLL dependency
+      shell: bash
+      working-directory: ${{ github.workspace }}
+      run: |
+        PROJECT_TOML="bindings/julia/julia/Project.toml"
+        LATEST=$(julia -e 'using Pkg; Pkg.activate(temp=true); try Pkg.add("fastlowess_jll"); print(Pkg.dependencies()[Base.UUID("7381d214-3001-5784-8d9a-8eb8e8688076")].version) catch; print("1.0.0") end' | cut -d'+' -f1)
+        CURRENT=$(grep "^version =" "$PROJECT_TOML" | cut -d"\"" -f2)
+        echo "Latest Registered JLL: $LATEST"
+        echo "Current Local Version: $CURRENT"
+        julia -e "using TOML; path = \"$PROJECT_TOML\"; p = TOML.parsefile(path); p[\"compat\"][\"fastlowess_jll\"] = \"$LATEST, $CURRENT\"; open(path, \"w\") do io; TOML.print(io, p); end"
+        echo "Modified $PROJECT_TOML (fastlowess_jll = \"$LATEST, $CURRENT\") using TOML parser."

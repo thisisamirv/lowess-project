@@ -20,8 +20,7 @@ Downloads a prebuilt GPU-enabled \pkg{rfastlowess} shared library for the
 current platform from the matching GitHub Release and installs it in
 place of the current (CPU-only) library. GPU support is opt-in and not
 included in CRAN/Bioconductor releases.
-}
-\details{
+
 A running R session cannot swap an already-loaded shared library, so
 \strong{restart R} after installing for the change to take effect.
 }

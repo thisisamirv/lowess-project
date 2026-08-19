@@ -6,6 +6,7 @@
 \title{Process a data chunk through a streaming LOWESS model}
 \usage{
 process_chunk(model, ...)
+
 \method{process_chunk}{StreamingLowess}(model, x, y, ...)
 }
 \arguments{

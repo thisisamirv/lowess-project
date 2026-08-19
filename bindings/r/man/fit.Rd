@@ -6,6 +6,7 @@
 \title{Fit a LOWESS model to data}
 \usage{
 fit(model, ...)
+
 \method{fit}{Lowess}(model, x, y, custom_weights = NULL, ...)
 }
 \arguments{
