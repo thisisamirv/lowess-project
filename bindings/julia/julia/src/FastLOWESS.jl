@@ -281,15 +281,15 @@ end
 Result from a single `add_point` call.
 
 # Fields
-- `smoothed::Float64`: Smoothed value for the latest point
-- `std_error::Union{Float64, Nothing}`: Standard error (if computed)
-- `residual::Union{Float64, Nothing}`: Residual y − smoothed (if computed)
+- `y::Float64`: Smoothed value for the latest point
+- `standard_error::Union{Float64, Nothing}`: Standard error (if computed)
+- `residual::Union{Float64, Nothing}`: Residual (raw input y minus this output's y) (if computed)
 - `robustness_weight::Union{Float64, Nothing}`: Robustness weight (if computed)
 - `iterations_used::Union{Int, Nothing}`: Number of robustness iterations
 """
 struct OnlineOutput
-	smoothed::Float64
-	std_error::Union{Float64, Nothing}
+	y::Float64
+	standard_error::Union{Float64, Nothing}
 	residual::Union{Float64, Nothing}
 	robustness_weight::Union{Float64, Nothing}
 	iterations_used::Union{Int, Nothing}
@@ -298,8 +298,8 @@ end
 # C FFI struct for per-point online output (must match Rust definition).
 struct CJlOnlineOutput
 	has_value::Cint
-	smoothed::Cdouble
-	std_error::Cdouble
+	y::Cdouble
+	standard_error::Cdouble
 	residual::Cdouble
 	robustness_weight::Cdouble
 	iterations_used::Cint
@@ -816,8 +816,8 @@ function add_point(o::OnlineLowess, x::Float64, y::Float64)
 	end
 
 	return OnlineOutput(
-		c_result.smoothed,
-		isnan(c_result.std_error) ? nothing : c_result.std_error,
+		c_result.y,
+		isnan(c_result.standard_error) ? nothing : c_result.standard_error,
 		isnan(c_result.residual) ? nothing : c_result.residual,
 		isnan(c_result.robustness_weight) ? nothing : c_result.robustness_weight,
 		c_result.iterations_used == -1 ? nothing : Int(c_result.iterations_used),

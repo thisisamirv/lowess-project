@@ -13,37 +13,25 @@ gpu_available <- function() {
     isTRUE(gpu_enabled())
 }
 
-#' Download and Install the GPU-Enabled Backend
-#'
-#' @description
-#' Downloads a prebuilt GPU-enabled \pkg{rfastlowess} shared library for the
-#' current platform from the matching GitHub Release and installs it in
-#' place of the current (CPU-only) library. GPU support is opt-in and not
-#' included in CRAN/Bioconductor releases.
-#'
-#' A running R session cannot swap an already-loaded shared library, so
-#' \strong{restart R} after installing for the change to take effect.
-#'
-#' @param yes Logical; skip the interactive \verb{y/N} confirmation prompt.
-#'   Must be \code{TRUE} when the session is not interactive.
-#' @return Invisibly, \code{TRUE} if a GPU-enabled library is available at
-#'   the printed path (already active, or freshly installed); \code{FALSE}
-#'   if the user aborted.
-#' @seealso \code{\link{gpu_available}} to check the current status.
-#' @examples
-#' \dontrun{
-#' install_gpu()
-#' }
-#' @export
-install_gpu <- function(yes = FALSE) {
-    if (gpu_available()) {
-        message("GPU backend is already active.")
-        return(invisible(TRUE))
+#' Stop with a Helpful Message if the Requested Backend is Unavailable
+#' @noRd
+check_gpu_backend <- function(backend) {
+    if (identical(backend, "gpu") && !gpu_available()) {
+        stop(
+            "GPU backend not installed in this build. Run `install_gpu()` ",
+            "once to download and install a GPU-enabled build, then ",
+            "restart R. See https://lowess.readthedocs.io/api/r/",
+            "#gpu-acceleration for details.",
+            call. = FALSE
+        )
     }
+    invisible(NULL)
+}
 
-    version <- as.character(utils::packageVersion("rfastlowess"))
+#' Determine the GPU Release Asset Name and Download URL
+#' @noRd
+gpu_asset_info <- function(version) {
     sys_name <- Sys.info()[["sysname"]]
-
     if (identical(sys_name, "Windows")) {
         platform_tag <- "windows"
         ext <- ".dll"
@@ -74,32 +62,33 @@ install_gpu <- function(yes = FALSE) {
         version,
         asset
     )
+    list(asset = asset, repo = repo, url = url, ext = ext)
+}
 
-    if (!isTRUE(yes)) {
-        if (!interactive()) {
-            stop(
-                "install_gpu() requires confirmation. Pass yes = TRUE to ",
-                "proceed non-interactively.",
-                call. = FALSE
-            )
-        }
-        answer <- readline(sprintf(
-            "Download and install %s from github.com/%s? [y/N] ",
-            asset,
-            repo
-        ))
-        if (!tolower(trimws(answer)) %in% c("y", "yes")) {
-            message("Aborted.")
-            return(invisible(FALSE))
-        }
+#' Ask the User to Confirm the GPU Download, Unless Skipped
+#' @noRd
+gpu_confirm_download <- function(yes, asset, repo) {
+    if (isTRUE(yes)) {
+        return(invisible(TRUE))
     }
-
-    lib_dir <- system.file("libs", package = "rfastlowess")
-    if (identical(.Platform$OS.type, "windows") && nzchar(.Platform$r_arch)) {
-        lib_dir <- file.path(lib_dir, .Platform$r_arch)
+    if (!interactive()) {
+        stop(
+            "install_gpu() requires confirmation. Pass yes = TRUE to ",
+            "proceed non-interactively.",
+            call. = FALSE
+        )
     }
-    dest <- file.path(lib_dir, paste0("rfastlowess", ext))
+    answer <- readline(sprintf(
+        "Download and install %s from github.com/%s? [y/N] ",
+        asset,
+        repo
+    ))
+    isTRUE(tolower(trimws(answer)) %in% c("y", "yes"))
+}
 
+#' Download the GPU Library to its Destination Path
+#' @noRd
+gpu_download_to <- function(url, ext, dest) {
     message("Downloading ", url, " ...")
     tmp <- tempfile(fileext = ext)
     on.exit(unlink(tmp), add = TRUE)
@@ -119,8 +108,56 @@ install_gpu <- function(yes = FALSE) {
             call. = FALSE
         )
     }
-
     file.copy(tmp, dest, overwrite = TRUE)
+}
+
+#' Download and Install the GPU-Enabled Backend
+#'
+#' @description
+#' Downloads a prebuilt GPU-enabled \pkg{rfastlowess} shared library for the
+#' current platform from the matching GitHub Release and installs it in
+#' place of the current (CPU-only) library. GPU support is opt-in and not
+#' included in CRAN/Bioconductor releases.
+#'
+#' A running R session cannot swap an already-loaded shared library, so
+#' \strong{restart R} after installing for the change to take effect.
+#'
+#' @param yes Logical; skip the interactive \verb{y/N} confirmation prompt.
+#'   Must be \code{TRUE} when the session is not interactive.
+#' @return Invisibly, \code{TRUE} if a GPU-enabled library is available at
+#'   the printed path (already active, or freshly installed); \code{FALSE}
+#'   if the user aborted.
+#' @seealso \code{\link{gpu_available}} to check the current status.
+#' @examples
+#' # Check whether the GPU backend is already active before installing it
+#' gpu_available()
+#' \donttest{
+#' if (interactive()) {
+#'     install_gpu()
+#' }
+#' }
+#' @export
+install_gpu <- function(yes = FALSE) {
+    if (gpu_available()) {
+        message("GPU backend is already active.")
+        return(invisible(TRUE))
+    }
+
+    version <- as.character(utils::packageVersion("rfastlowess"))
+    info <- gpu_asset_info(version)
+
+    if (!gpu_confirm_download(yes, info$asset, info$repo)) {
+        message("Aborted.")
+        return(invisible(FALSE))
+    }
+
+    lib_dir <- system.file("libs", package = "rfastlowess")
+    if (identical(.Platform$OS.type, "windows") && nzchar(.Platform$r_arch)) {
+        lib_dir <- file.path(lib_dir, .Platform$r_arch)
+    }
+    dest <- file.path(lib_dir, paste0("rfastlowess", info$ext))
+
+    gpu_download_to(info$url, info$ext, dest)
 
     message("GPU backend installed at ", dest, ".")
     message("Restart R for the change to take effect.")

@@ -119,8 +119,8 @@ pub extern "C" fn cpp_version() -> *const c_char {
 #[repr(C)]
 pub struct CppOnlineOutput {
     pub has_value: c_int,
-    pub smoothed: c_double,
-    pub std_error: c_double,
+    pub y: c_double,
+    pub standard_error: c_double,
     pub residual: c_double,
     pub robustness_weight: c_double,
     pub iterations_used: c_int,
@@ -216,8 +216,8 @@ impl Default for CppOnlineOutput {
     fn default() -> Self {
         CppOnlineOutput {
             has_value: 0,
-            smoothed: f64::NAN,
-            std_error: f64::NAN,
+            y: f64::NAN,
+            standard_error: f64::NAN,
             residual: f64::NAN,
             robustness_weight: f64::NAN,
             iterations_used: -1,
@@ -768,12 +768,12 @@ pub unsafe extern "C" fn cpp_online_add_point(
                 Err(e) => make_error(&e.to_string()),
                 Ok(None) => CppOnlineOutput::default(),
                 Ok(Some(o)) => {
-                    let (std_error, residual, robustness_weight, iterations_used) =
+                    let (standard_error, residual, robustness_weight, iterations_used) =
                         shared_parse::extract_online_output(&o);
                     CppOnlineOutput {
                         has_value: 1,
-                        smoothed: o.smoothed,
-                        std_error,
+                        y: o.y,
+                        standard_error,
                         residual,
                         robustness_weight,
                         iterations_used,

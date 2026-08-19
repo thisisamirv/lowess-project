@@ -192,12 +192,12 @@ impl<T: Float> OnlineLowessBuilder<T> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct OnlineOutput<T> {
     // Smoothed value for the latest point
-    pub smoothed: T,
+    pub y: T,
 
     // Standard error (if computed)
-    pub std_error: Option<T>,
+    pub standard_error: Option<T>,
 
-    // Residual (y - smoothed)
+    // Residual (raw input y minus this output's y)
     pub residual: Option<T>,
 
     // Robustness weight for the latest point (if computed)
@@ -264,8 +264,8 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
             let residual = y - smoothed;
 
             return Ok(Some(OnlineOutput {
-                smoothed,
-                std_error: None,
+                y: smoothed,
+                standard_error: None,
                 residual: Some(residual),
                 robustness_weight: Some(T::one()),
                 iterations_used: Some(0),
@@ -357,8 +357,8 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
         let residual = y - smoothed;
 
         Ok(Some(OnlineOutput {
-            smoothed,
-            std_error: std_err,
+            y: smoothed,
+            standard_error: std_err,
             residual: Some(residual),
             robustness_weight: rob_weight,
             iterations_used,

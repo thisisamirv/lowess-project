@@ -203,10 +203,10 @@ public:
   bool has_value() const { return has_value_; }
 
   /// Smoothed value for the latest point (valid only when has_value() == true).
-  double smoothed() const { return smoothed_; }
+  double y() const { return y_; }
 
   /// Standard error (NaN if not computed).
-  double std_error() const { return std_error_; }
+  double standard_error() const { return standard_error_; }
 
   /// Residual y − smoothed (NaN if not computed).
   double residual() const { return residual_; }
@@ -223,14 +223,14 @@ private:
   OnlineOutput() =
       default; ///< Constructs an empty (has_value==false) instance.
   explicit OnlineOutput(const fastlowess_CppOnlineOutput &raw)
-      : has_value_(raw.has_value != 0), smoothed_(raw.smoothed),
-        std_error_(raw.std_error), residual_(raw.residual),
+      : has_value_(raw.has_value != 0), y_(raw.y),
+        standard_error_(raw.standard_error), residual_(raw.residual),
         robustness_weight_(raw.robustness_weight),
         iterations_used_(raw.iterations_used) {}
 
   bool has_value_ = false;
-  double smoothed_ = 0.0;
-  double std_error_ = std::numeric_limits<double>::quiet_NaN();
+  double y_ = 0.0;
+  double standard_error_ = std::numeric_limits<double>::quiet_NaN();
   double residual_ = std::numeric_limits<double>::quiet_NaN();
   double robustness_weight_ = std::numeric_limits<double>::quiet_NaN();
   int iterations_used_ = -1;

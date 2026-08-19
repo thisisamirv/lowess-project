@@ -208,7 +208,7 @@ y_stream <- sin(x_stream) + rnorm(60, sd = 0.2)
 smoothed_values <- numeric(length(x_stream))
 for (i in seq_along(x_stream)) {
     out <- add_point(model_o, x_stream[i], y_stream[i])
-    smoothed_values[i] <- if (is.null(out)) NA_real_ else out$smoothed
+    smoothed_values[i] <- if (is.null(out)) NA_real_ else out$y
 }
 
 plot(x_stream, y_stream, pch = 16, col = "gray", main = "Online LOWESS")

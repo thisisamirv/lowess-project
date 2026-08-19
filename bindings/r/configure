@@ -90,12 +90,21 @@ if [ ! -f "src/Makevars.in" ]; then
 	exit 1
 fi
 
+# Enables the GPU execution backend when set to 1 (also requires the
+# vendored fastLowess crate to still have its wgpu deps, i.e. the archive
+# must have been created with WITH_GPU=1 during vendoring).
+CARGO_FEATURES=""
+if [ "$WITH_GPU" = "1" ]; then
+	CARGO_FEATURES="--features gpu"
+fi
+
 # Substitute variables in src/Makevars.in
 sed -e "s|@GC_SECTIONS@|${GC_SECTIONS}|g" \
 	-e "s|@UNDEFINED_FLAGS@|${UNDEFINED_FLAGS}|g" \
 	-e "s|@TARGET_DIR@|${TARGET_DIR}|g" \
 	-e "s|@LIBDIR@|${LIBDIR}|g" \
 	-e "s|@IS_WASM@|${IS_WASM}|g" \
+	-e "s|@CARGO_FEATURES@|${CARGO_FEATURES}|g" \
 	src/Makevars.in >src/Makevars
 
 # Ensure final newline

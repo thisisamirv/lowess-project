@@ -755,7 +755,7 @@ fn test_online_propagates_options() {
 
     let third = online.add_point(2.0, 5.0).expect("ok");
     assert!(third.is_some());
-    assert_relative_eq!(third.unwrap().smoothed, 5.0, epsilon = 1e-12);
+    assert_relative_eq!(third.unwrap().y, 5.0, epsilon = 1e-12);
     assert!(online.window_size() > 0);
 
     online.reset();

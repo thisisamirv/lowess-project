@@ -36,7 +36,7 @@ online.add_point(x[1], y[1]);  // null
 
 // Returns OnlineOutput once enough points are available
 const result = online.add_point(x[2], y[2]);
-console.log(result.smoothed);  // 0.22659245357374927
+console.log(result.y);  // 0.22659245357374927
 ```
 
 * Adds a single point to the sliding window. Returns an `OnlineOutput` once enough points are available, or `null` while the window is still filling.
@@ -60,8 +60,8 @@ Returned by `add_point()` once the window has enough points (`null` until then).
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `smoothed` | `number` | Smoothed value for the latest point |
-| `std_error` | `number \| undefined` | Standard error (if requested) |
+| `y` | `number` | Smoothed value for the latest point |
+| `standard_error` | `number \| undefined` | Standard error (if requested) |
 | `residual` | `number \| undefined` | Residual y − smoothed (if requested) |
 | `robustness_weight` | `number \| undefined` | Robustness weight (if requested) |
 | `iterations_used` | `number \| undefined` | Robustness iterations performed |

@@ -470,7 +470,7 @@ Incremental updates with a sliding window for real-time data.
     for xi, yi in zip(x, y):
         result = model.add_point(float(xi), float(yi))
         if result is not None:
-            print(result.smoothed)
+            print(result.y)
     ```
 
 === "Rust"
@@ -495,7 +495,7 @@ Incremental updates with a sliding window for real-time data.
         // Process points as they arrive
         for (x, y) in sensor_stream {
             if let Some(output) = processor.add_point(x, y)? {
-                println!("Smoothed: {:.2}", output.smoothed);
+                println!("Smoothed: {:.2}", output.y);
             }
         }
 
@@ -524,7 +524,7 @@ Incremental updates with a sliding window for real-time data.
     for i in eachindex(x)
         result = add_point(model, x[i], y[i])
         if result !== nothing
-            println(result.smoothed)
+            println(result.y)
         end
     end
     ```
@@ -548,7 +548,7 @@ Incremental updates with a sliding window for real-time data.
     for (const [xi, yi] of sensorStream) {
         const result = processor.add_point(xi, yi);
         if (result !== null) {
-            console.log(`Smoothed: ${result.smoothed.toFixed(2)}`);
+            console.log(`Smoothed: ${result.y.toFixed(2)}`);
         }
     }
     ```
@@ -571,8 +571,8 @@ Incremental updates with a sliding window for real-time data.
     // Add points
     for (const [xi, yi] of sensorStream) {
         const output = processor.add_point(xi, yi);
-        if (output !== undefined) {
-            console.log(`Smoothed: ${output.smoothed.toFixed(2)}`);
+        if (output !== undefined && output !== null) {
+            console.log(`Smoothed: ${output.y.toFixed(2)}`);
         }
     }
     ```
@@ -604,7 +604,7 @@ Incremental updates with a sliding window for real-time data.
         for (size_t i = 0; i < x.size(); ++i) {
             auto out = model.add_point(x[i], y[i]).value();
             if (out.has_value())
-                std::cout << out.smoothed() << std::endl;
+                std::cout << out.y() << std::endl;
         }
 
         return 0;

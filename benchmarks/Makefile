@@ -33,6 +33,29 @@ ifeq ($(OS),Windows_NT)
 	R_CROSS_ENV    := PATH="/c/rtools45/x86_64-w64-mingw32.static.posix/bin:$$PATH"
 endif
 
+# jq (used to patch vendored .cargo-checksum.json files). Not preinstalled
+# on plain Windows/macOS dev machines the way it is on GitHub-hosted CI
+# runners, so fall back to downloading a static binary if it's not already
+# on PATH.
+JQ_DIR := $(R_DIR)/.bin
+ifeq ($(OS),Windows_NT)
+	JQ_LOCAL := $(JQ_DIR)/jq.exe
+	JQ_ASSET := jq-windows-amd64.exe
+else ifeq ($(shell uname -s),Darwin)
+	JQ_LOCAL := $(JQ_DIR)/jq
+	JQ_ASSET := jq-macos-amd64
+else
+	JQ_LOCAL := $(JQ_DIR)/jq
+	JQ_ASSET := jq-linux-amd64
+endif
+JQ := $(shell command -v jq 2>/dev/null || echo $(JQ_LOCAL))
+JQ_ENSURE_CMD := if ! command -v jq >/dev/null 2>&1 && [ ! -x "$(JQ_LOCAL)" ]; then \
+	echo "jq not found on PATH — downloading a static binary..."; \
+	mkdir -p $(JQ_DIR); \
+	curl -fLsS -o "$(JQ_LOCAL)" "https://github.com/jqlang/jq/releases/latest/download/$(JQ_ASSET)"; \
+	chmod +x "$(JQ_LOCAL)"; \
+	fi
+
 .PHONY: all install build bench-r bench-rfastlowess-serial bench-rfastlowess-parallel bench-gpu-transfer bench-gpu-rust bench-cpu-vs-gpu compare clean
 
 all: install
@@ -42,7 +65,7 @@ all: install
 # ==============================================================================
 install: build
 	@echo "Installing $(R_PKG_NAME) to system R..."
-	@R CMD INSTALL $(R_DIR)/$(R_PKG_TARBALL)
+	@WITH_GPU=$(WITH_GPU) R CMD INSTALL $(R_DIR)/$(R_PKG_TARBALL)
 	@echo "$(R_PKG_NAME) installed!"
 
 # ==============================================================================
@@ -108,8 +131,9 @@ endif
 	@# Reset checksums — cargo accepts {"files":{}} for vendored crates.
 	@# Must preserve each crate's "package" checksum (only "files" is reset),
 	@# otherwise cargo can't verify crates.io-sourced deps against Cargo.lock.
+	@$(JQ_ENSURE_CMD)
 	@for f in $(R_DIR)/src/vendor/*/.cargo-checksum.json; do \
-		[ -f "$$f" ] && jq '.files = {}' "$$f" > "$$f.tmp" && mv "$$f.tmp" "$$f"; done
+		[ -f "$$f" ] && $(JQ) '.files = {}' "$$f" > "$$f.tmp" && mv "$$f.tmp" "$$f"; done
 	@echo "  Creating vendor.tar.xz..."
 	@(cd $(R_DIR)/src && \
 	  (tar --sort=name --mtime='1970-01-01 00:00:00Z' --owner=0 --group=0 --numeric-owner \
@@ -129,7 +153,7 @@ endif
 	@echo "============================================================"
 	@echo "6. Building R package tarball..."
 	@echo "============================================================"
-	@cd $(R_DIR) && R CMD build --no-build-vignettes --no-manual .
+	@cd $(R_DIR) && WITH_GPU=$(WITH_GPU) R CMD build --no-build-vignettes --no-manual .
 	@if [ -f $(R_DIR)/src/Cargo.toml.orig ]; then mv $(R_DIR)/src/Cargo.toml.orig $(R_DIR)/src/Cargo.toml; fi
 	@echo "  Tarball: $(R_DIR)/$(R_PKG_TARBALL)"
 

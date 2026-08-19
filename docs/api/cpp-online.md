@@ -65,7 +65,7 @@ int main() {
     // Returns OnlineOutput with has_value() == true once enough points are available
     auto r3 = model.add_point(x[2], y[2]).value();
     if (r3.has_value()) {
-        std::cout << r3.smoothed() << std::endl;  // 0.22659245357374927
+        std::cout << r3.y() << std::endl;  // 0.22659245357374927
     }
 
     return 0;
@@ -94,8 +94,8 @@ Returned (inside `Expected`) by `add_point()`. Check `has_value()` before readin
 | Method | Return Type | Description |
 | --- | --- | --- |
 | `has_value()` | `bool` | `false` while window fills; `true` when output is ready |
-| `smoothed()` | `double` | Smoothed value for the latest point |
-| `std_error()` | `double` | Standard error (NaN if not computed) |
+| `y()` | `double` | Smoothed value for the latest point |
+| `standard_error()` | `double` | Standard error (NaN if not computed) |
 | `residual()` | `double` | Residual y − smoothed (NaN if not computed) |
 | `robustness_weight()` | `double` | Robustness weight (NaN if not computed) |
 | `iterations_used()` | `int` | Robustness iterations performed (−1 if N/A) |

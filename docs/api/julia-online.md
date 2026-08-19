@@ -32,7 +32,7 @@ result = add_point(online, x[2], y[2])  # nothing
 
 # Returns OnlineOutput once enough points are available
 result = add_point(online, x[3], y[3])
-println(result.smoothed)
+println(result.y)
 # 0.22659245357374927
 ```
 
@@ -57,8 +57,8 @@ Returned by `add_point()` once the window has enough points (`nothing` until the
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `smoothed` | `Float64` | Smoothed value for the latest point |
-| `std_error` | `Union{Float64, Nothing}` | Standard error (if requested) |
+| `y` | `Float64` | Smoothed value for the latest point |
+| `standard_error` | `Union{Float64, Nothing}` | Standard error (if requested) |
 | `residual` | `Union{Float64, Nothing}` | Residual y − smoothed (if requested) |
 | `robustness_weight` | `Union{Float64, Nothing}` | Robustness weight (if requested) |
 | `iterations_used` | `Union{Int, Nothing}` | Robustness iterations performed |

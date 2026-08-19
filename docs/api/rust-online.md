@@ -40,7 +40,7 @@ fn main() -> Result<(), LowessError> {
     // Returns Some(OnlineOutput) once enough points are available
     let r3 = processor.add_point(x[2], y[2])?;
     if let Some(output) = r3 {
-        println!("{}", output.smoothed);  // 0.22659245357374927
+        println!("{}", output.y);  // 0.22659245357374927
     }
 
     Ok(())
@@ -82,8 +82,8 @@ Returned by `add_point()` inside `Option`. Is `None` while the window is still f
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `smoothed` | `T` | Smoothed value for the latest point |
-| `std_error` | `Option<T>` | Standard error (if requested) |
+| `y` | `T` | Smoothed value for the latest point |
+| `standard_error` | `Option<T>` | Standard error (if requested) |
 | `residual` | `Option<T>` | Residual y − smoothed (if requested) |
 | `robustness_weight` | `Option<T>` | Robustness weight (if requested) |
 | `iterations_used` | `Option<usize>` | Robustness iterations performed |

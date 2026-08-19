@@ -298,11 +298,11 @@ pub fn extract_diagnostics(result: &LowessResult<f64>) -> (f64, f64, f64, f64, f
 }
 
 // Extracts the optional scalar fields from an online add_point output.
-// Returns (std_error, residual, robustness_weight, iterations_used).
+// Returns (standard_error, residual, robustness_weight, iterations_used).
 // Optional f64 fields default to f64::NAN; iterations_used defaults to -1.
 pub fn extract_online_output(o: &OnlineOutput<f64>) -> (f64, f64, f64, i32) {
     (
-        o.std_error.unwrap_or(f64::NAN),
+        o.standard_error.unwrap_or(f64::NAN),
         o.residual.unwrap_or(f64::NAN),
         o.robustness_weight.unwrap_or(f64::NAN),
         o.iterations_used.map(|i| i as i32).unwrap_or(-1),

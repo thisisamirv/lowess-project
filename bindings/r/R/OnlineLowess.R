@@ -22,7 +22,7 @@
 #' y <- sin(x * 0.1) + rnorm(50, 0, 0.1)
 #' for (i in seq_along(x)) {
 #'     result <- add_point(model, x[i], y[i])
-#'     if (!is.null(result)) cat("smoothed:", result$smoothed, "\n")
+#'     if (!is.null(result)) cat("smoothed:", result$y, "\n")
 #' }
 #' @export
 OnlineLowess <- function(

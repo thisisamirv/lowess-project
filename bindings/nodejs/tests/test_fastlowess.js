@@ -50,7 +50,7 @@ test('online smoothing', () => {
         const res = online.add_point(i, i * 2);
 
         if (res !== null) {
-            lastVal = res.smoothed;
+            lastVal = res.y;
         }
     }
 

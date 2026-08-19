@@ -30,7 +30,20 @@ lowess = { path = "../lowess", version = "2.0", features = ["dev"] }
 num-traits = { version = "0.2", features = ["libm"] }
 ndarray = { version = "0.17", optional = true }
 rayon = { version = "1.12", optional = true }
-wgpu = { version = "30.0", optional = true }
+# dx12 excluded: its DXC shader compiler is loaded via eager (non-delay-load)
+# DLL imports, so any system missing dxcompiler.dll/dxil.dll can't even load
+# the built library, not just fail to find a GPU adapter at runtime.
+# gles excluded: on Windows it pulls in Win32_UI_WindowsAndMessaging, whose
+# generated bindings also declare mrmsupport.dll imports (MRT resource
+# indexer) that are eagerly resolved and not present on all systems.
+wgpu = { version = "30.0", optional = true, default-features = false, features = [
+    "std",
+    "parking_lot",
+    "metal",
+    "vulkan",
+    "wgsl",
+    "webgpu",
+] }
 bytemuck = { version = "1.25", optional = true }
 pollster = { version = "1.0", optional = true }
 futures-intrusive = { version = "0.5", optional = true }

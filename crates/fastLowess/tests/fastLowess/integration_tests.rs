@@ -153,7 +153,7 @@ fn test_online_adapter() {
     let out3 = processor.add_point(3.0, 6.0).unwrap();
     assert!(out3.is_some());
     let val = out3.unwrap();
-    assert_abs_diff_eq!(val.smoothed, 6.0, epsilon = 0.1);
+    assert_abs_diff_eq!(val.y, 6.0, epsilon = 0.1);
 
     // Bulk add
     let x_bulk = vec![4.0, 5.0];

@@ -108,8 +108,8 @@ export class OnlineLowess {
 /** Result from a single online update step. */
 export class OnlineOutput {
     free(): void;
-    get smoothed(): number;
-    get std_error(): number | undefined;
+    get y(): number;
+    get standard_error(): number | undefined;
     get residual(): number | undefined;
     get robustness_weight(): number | undefined;
     get iterations_used(): number | undefined;
@@ -190,8 +190,8 @@ pub struct Diagnostics {
 // Result of a single online update step.
 #[wasm_bindgen]
 pub struct OnlineOutput {
-    smoothed: f64,
-    std_error: Option<f64>,
+    y: f64,
+    standard_error: Option<f64>,
     residual: Option<f64>,
     robustness_weight: Option<f64>,
     iterations_used: Option<usize>,
@@ -200,13 +200,13 @@ pub struct OnlineOutput {
 #[wasm_bindgen]
 impl OnlineOutput {
     #[wasm_bindgen(getter)]
-    pub fn smoothed(&self) -> f64 {
-        self.smoothed
+    pub fn y(&self) -> f64 {
+        self.y
     }
 
-    #[wasm_bindgen(getter, js_name = "std_error")]
-    pub fn std_error(&self) -> Option<f64> {
-        self.std_error
+    #[wasm_bindgen(getter, js_name = "standard_error")]
+    pub fn standard_error(&self) -> Option<f64> {
+        self.standard_error
     }
 
     #[wasm_bindgen(getter)]
@@ -522,8 +522,8 @@ impl OnlineLowess {
         let output = map_invalid_arg(self.inner.add_point(x, y))?;
         Ok(match output {
             Some(o) => JsValue::from(OnlineOutput {
-                smoothed: o.smoothed,
-                std_error: o.std_error,
+                y: o.y,
+                standard_error: o.standard_error,
                 residual: o.residual,
                 robustness_weight: o.robustness_weight,
                 iterations_used: o.iterations_used,

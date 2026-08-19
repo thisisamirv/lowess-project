@@ -34,7 +34,7 @@ result = online.add_point(x[1], y[1])  # None
 # Returns OnlineOutput once enough points are available
 result = online.add_point(x[2], y[2])
 print(result)
-# OnlineOutput(smoothed=0.2266)
+# OnlineOutput(y=0.2266)
 ```
 
 * Adds a single point to the sliding window. Returns an `OnlineOutput` once the window has enough points, or `None` while still filling.
@@ -58,8 +58,8 @@ Returned by `add_point()` once the window has enough points (`None` until then).
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `smoothed` | `float` | Smoothed value for the latest point |
-| `std_error` | `float \| None` | Standard error (if requested) |
+| `y` | `float` | Smoothed value for the latest point |
+| `standard_error` | `float \| None` | Standard error (if requested) |
 | `residual` | `float \| None` | Residual y − smoothed (if requested) |
 | `robustness_weight` | `float \| None` | Robustness weight (if requested) |
 | `iterations_used` | `int \| None` | Robustness iterations performed |

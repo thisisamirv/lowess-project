@@ -89,10 +89,10 @@ export interface OnlineOptions {
 /** Result of a single online update step. */
 export interface OnlineOutput {
     /** Smoothed value for the latest point. */
-    smoothed: number
+    y: number
     /** Standard error (if computed). */
-    std_error?: number
-    /** Residual y − smoothed (if computed). */
+    standard_error?: number
+    /** Residual (raw input y minus this output's y) (if computed). */
     residual?: number
     /** Robustness weight for the latest point (if computed). */
     robustness_weight?: number

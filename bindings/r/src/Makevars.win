@@ -7,7 +7,20 @@ LIBDIR = $(TARGET_DIR)/$(RUST_TARGET)/release
 STATLIB = $(LIBDIR)/librfastlowess.a
 
 # GNU-style linking for MinGW
-PKG_LIBS = -L$(LIBDIR) -Wl,--whole-archive -lrfastlowess -Wl,--no-whole-archive -lws2_32 -luserenv -ladvapi32 -lbcrypt -lncrypt -lntdll -Wl,--export-all-symbols -Wl,--strip-all
+# --allow-multiple-definition works around duplicate raw-dylib Windows API
+# import stubs pulled in by --whole-archive when the GPU (wgpu) dependency
+# tree is enabled (multiple crates emit their own stub object for the same
+# kernel32/oleaut32/etc. symbol).
+PKG_LIBS = -L$(LIBDIR) -Wl,--whole-archive -lrfastlowess -Wl,--no-whole-archive -Wl,--allow-multiple-definition -lws2_32 -luserenv -ladvapi32 -lbcrypt -lncrypt -lntdll -Wl,--export-all-symbols -Wl,--strip-all
+
+# Set WITH_GPU=1 in the environment (e.g. R CMD INSTALL invocation) to build
+# with the GPU execution backend enabled (requires the vendored fastLowess
+# archive to still have its wgpu deps, i.e. it was created with WITH_GPU=1
+# during vendoring).
+CARGO_FEATURES =
+ifeq ($(WITH_GPU),1)
+CARGO_FEATURES = --features gpu
+endif
 
 all: clean $(SHLIB)
 
@@ -25,7 +38,7 @@ $(STATLIB):
 	@mkdir -p .cargo
 	@cp cargo-config.toml .cargo/config.toml
 	@mkdir -p $(TARGET_DIR)
-	@cargo build -q -j 2 --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR) --target $(RUST_TARGET)
+	@cargo build -q -j 2 --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR) --target $(RUST_TARGET) $(CARGO_FEATURES)
 	@rm -rf .cargo
 
 clean:

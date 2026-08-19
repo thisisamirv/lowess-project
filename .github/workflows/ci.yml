@@ -700,7 +700,22 @@ jobs:
           RDscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); BiocManager::install('BiocStyle', lib = lib, ask = FALSE, update = FALSE)"
           RDscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); remotes::install_deps(dependencies = TRUE, lib = lib)"
       - name: Prepare Package Sources
-        uses: ./.github/actions/prepare-r-source
+        shell: bash
+        run: |
+          if [ -f "$CARGO_HOME/env" ]; then
+            . "$CARGO_HOME/env"
+          elif [ -f "$HOME/.cargo/env" ]; then
+            . "$HOME/.cargo/env"
+          fi
+          chmod +x configure cleanup
+          mkdir -p inst
+          {
+            echo "Authors and Copyright Holders for Rust Dependencies:"
+            echo ""
+            (cd ../.. && cargo metadata --format-version 1) | \
+              jq -r '. as $root | [.packages[] | select(.id as $id | ($root.workspace_members | index($id)) == null)] | unique_by(.name)[] | "Package: \(.name) (\(.version))\nAuthors: \(.authors | join(", "))\nLicense: \(.license // "Unknown")\n" + "-" * 40'
+          } > inst/AUTHORS
+          test -f tests/testthat.R
       - name: Run ASAN Check
         shell: bash
         run: |

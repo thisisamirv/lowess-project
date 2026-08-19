@@ -43,6 +43,29 @@ else
 AIR_INSTALL_CMD := curl -LsSf https://github.com/posit-dev/air/releases/latest/download/air-installer.sh | sh
 endif
 
+# jq (used to patch vendored .cargo-checksum.json files and generate
+# inst/AUTHORS). Not preinstalled on plain Windows/macOS dev machines the
+# way it is on GitHub-hosted CI runners, so fall back to downloading a
+# static binary if it's not already on PATH.
+JQ_DIR   := $(R_DIR)/.bin
+ifeq ($(HOST_PLATFORM),windows)
+	JQ_LOCAL := $(JQ_DIR)/jq.exe
+	JQ_ASSET := jq-windows-amd64.exe
+else ifeq ($(HOST_PLATFORM),macos)
+	JQ_LOCAL := $(JQ_DIR)/jq
+	JQ_ASSET := jq-macos-amd64
+else
+	JQ_LOCAL := $(JQ_DIR)/jq
+	JQ_ASSET := jq-linux-amd64
+endif
+JQ := $(shell command -v jq 2>/dev/null || echo $(JQ_LOCAL))
+JQ_ENSURE_CMD := if ! command -v jq >/dev/null 2>&1 && [ ! -x "$(JQ_LOCAL)" ]; then \
+	echo "jq not found on PATH — downloading a static binary..."; \
+	mkdir -p $(JQ_DIR); \
+	curl -fLsS -o "$(JQ_LOCAL)" "https://github.com/jqlang/jq/releases/latest/download/$(JQ_ASSET)"; \
+	chmod +x "$(JQ_LOCAL)"; \
+	fi
+
 TEMP ?= /tmp
 ifeq ($(OS),Windows_NT)
 	TEMP := /tmp
@@ -135,8 +158,9 @@ endif
 	@for d in tests benches examples doc docs .github .config; do \
 		rm -rf $(R_DIR)/src/vendor/"$$d" $(R_DIR)/src/vendor/*/"$$d" 2>/dev/null; done || true
 	@for f in $(R_DIR)/src/vendor/*/Makefile; do [ -f "$$f" ] && rm -f "$$f"; done || true
+	@$(JQ_ENSURE_CMD)
 	@for f in $(R_DIR)/src/vendor/*/.cargo-checksum.json; do \
-		[ -f "$$f" ] && jq '.files = {}' "$$f" > "$$f.tmp" && mv "$$f.tmp" "$$f"; done
+		[ -f "$$f" ] && $(JQ) '.files = {}' "$$f" > "$$f.tmp" && mv "$$f.tmp" "$$f"; done
 	@echo "Creating vendor.tar.xz archive (including Cargo.lock)..."
 	@(cd $(R_DIR)/src && (tar --sort=name --mtime='1970-01-01 00:00:00Z' --owner=0 --group=0 --numeric-owner --xz --create --file=vendor.tar.xz --exclude='*/Makefile' vendor Cargo.lock 2>/dev/null || tar --xz --create --file=vendor.tar.xz --exclude='*/Makefile' vendor Cargo.lock))
 	@rm -rf $(R_DIR)/src/vendor
@@ -176,7 +200,7 @@ endif
 	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "if (!requireNamespace('rmarkdown', quietly = TRUE, lib.loc = Sys.getenv('R_LIBS_USER')) || !rmarkdown::pandoc_available()) { message('\nERROR: Pandoc is required to build R Markdown vignettes but is not available.\nPlease install Pandoc (https://pandoc.org/installing.html) and ensure it is in your PATH.\n'); quit(status = 1) }"
 	@echo "Pre-installing package to R_LIBS_USER so pkgdown subprocess finds the current version..."
 	@mkdir -p $(R_LIB_DIR)
-	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) R CMD INSTALL -l $(CURDIR)/$(R_LIB_DIR) . >/dev/null 2>&1
+	@cd $(R_DIR) && WITH_GPU=$(WITH_GPU) R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) R CMD INSTALL -l $(CURDIR)/$(R_LIB_DIR) . >/dev/null 2>&1
 	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); for (pkg in c('pkgdown', 'rmarkdown', 'knitr')) { if (!requireNamespace(pkg, quietly = TRUE, lib.loc = lib)) install.packages(pkg, lib = lib, quiet = TRUE) }; if (!requireNamespace('pkgdown', quietly = TRUE, lib.loc = lib) || !requireNamespace('rmarkdown', quietly = TRUE, lib.loc = lib) || !requireNamespace('knitr', quietly = TRUE, lib.loc = lib)) stop('Required R packages not available for pkgdown site build', call. = FALSE); pkgdown::build_site(quiet = TRUE, install = FALSE)"
 	@rm -f $(R_DIR)/.gitignore
 	@echo "=============================================================================="
@@ -184,13 +208,14 @@ endif
 	@echo "=============================================================================="
 	@echo "Generating $(R_DIR)/inst/AUTHORS..."
 	@mkdir -p $(R_DIR)/inst
+	@$(JQ_ENSURE_CMD)
 	@{ \
 		echo "Authors and Copyright Holders for Rust Dependencies:"; \
 		echo ""; \
 		(cargo metadata --format-version 1) | \
-			jq -r '. as $$root | [.packages[] | select(.id as $$id | ($$root.workspace_members | index($$id)) == null)] | unique_by(.name)[] | "Package: \(.name) (\(.version))\nAuthors: \(.authors | join(", "))\nLicense: \(.license // "Unknown")\n" + "-" * 40'; \
+			$(JQ) -r '. as $$root | [.packages[] | select(.id as $$id | ($$root.workspace_members | index($$id)) == null)] | unique_by(.name)[] | "Package: \(.name) (\(.version))\nAuthors: \(.authors | join(", "))\nLicense: \(.license // "Unknown")\n" + "-" * 40'; \
 	} > $(R_DIR)/inst/AUTHORS
-	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) R CMD build .
+	@cd $(R_DIR) && WITH_GPU=$(WITH_GPU) R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) R CMD build .
 	@echo "=============================================================================="
 	@echo "5. Installing..."
 	@echo "=============================================================================="
@@ -198,7 +223,7 @@ endif
 	@mkdir -p $(R_LIB_DIR)
 	@echo "Installing R runtime dependencies (BiocManager, BiocGenerics, testthat)..."
 	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "suppressMessages({ lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); if (!requireNamespace('BiocManager', quietly = TRUE, lib.loc = lib)) install.packages('BiocManager', lib = lib, quiet = TRUE); if (!requireNamespace('BiocGenerics', quietly = TRUE, lib.loc = lib)) BiocManager::install('BiocGenerics', lib = lib, ask = FALSE, update = FALSE, quiet = TRUE); if (!requireNamespace('testthat', quietly = TRUE, lib.loc = lib)) install.packages('testthat', lib = lib, quiet = TRUE) })" >/dev/null
-	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) R CMD INSTALL -l .r-lib $(R_PKG_TARBALL)
+	@cd $(R_DIR) && WITH_GPU=$(WITH_GPU) R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) R CMD INSTALL -l .r-lib $(R_PKG_TARBALL)
 	@echo "=============================================================================="
 	@echo "8. Testing..."
 	@echo "=============================================================================="

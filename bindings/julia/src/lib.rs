@@ -73,8 +73,8 @@ pub extern "C" fn jl_gpu_enabled() -> c_int {
 #[repr(C)]
 pub struct JlOnlineOutput {
     pub has_value: c_int,
-    pub smoothed: c_double,
-    pub std_error: c_double,         // f64::NAN when not computed
+    pub y: c_double,
+    pub standard_error: c_double,    // f64::NAN when not computed
     pub residual: c_double,          // f64::NAN when not computed
     pub robustness_weight: c_double, // f64::NAN when not computed
     pub iterations_used: c_int,      // -1 when not computed
@@ -85,8 +85,8 @@ impl Default for JlOnlineOutput {
     fn default() -> Self {
         JlOnlineOutput {
             has_value: 0,
-            smoothed: f64::NAN,
-            std_error: f64::NAN,
+            y: f64::NAN,
+            standard_error: f64::NAN,
             residual: f64::NAN,
             robustness_weight: f64::NAN,
             iterations_used: -1,
@@ -818,12 +818,12 @@ pub unsafe extern "C" fn jl_online_lowess_add_point(
             },
             Ok(None) => JlOnlineOutput::default(),
             Ok(Some(o)) => {
-                let (std_error, residual, robustness_weight, iterations_used) =
+                let (standard_error, residual, robustness_weight, iterations_used) =
                     shared_parse::extract_online_output(&o);
                 JlOnlineOutput {
                     has_value: 1,
-                    smoothed: o.smoothed,
-                    std_error,
+                    y: o.y,
+                    standard_error,
                     residual,
                     robustness_weight,
                     iterations_used,

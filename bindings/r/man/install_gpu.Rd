@@ -25,8 +25,12 @@ A running R session cannot swap an already-loaded shared library, so
 \strong{restart R} after installing for the change to take effect.
 }
 \examples{
-\dontrun{
-install_gpu()
+# Check whether the GPU backend is already active before installing it
+gpu_available()
+\donttest{
+if (interactive()) {
+    install_gpu()
+}
 }
 }
 \seealso{

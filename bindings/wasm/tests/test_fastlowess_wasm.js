@@ -53,8 +53,8 @@ test('WASM online smoothing', () => {
     let lastSmoothed;
     for (let i = 0; i < 10; i++) {
         const res = online.add_point(i, i * 2);
-        if (res !== undefined) {
-            lastSmoothed = res.smoothed;
+        if (res !== undefined && res !== null) {
+            lastSmoothed = res.y;
         }
     }
 

@@ -43,16 +43,16 @@ class OnlineOutput:
     """Result from a single add_point() call."""
 
     @property
-    def smoothed(self) -> float:
+    def y(self) -> float:
         """Smoothed value for the latest point."""
 
     @property
-    def std_error(self) -> float | None:
+    def standard_error(self) -> float | None:
         """Standard error (None if not computed)."""
 
     @property
     def residual(self) -> float | None:
-        """Residual y − smoothed (None if not computed)."""
+        """Residual (raw input y minus this output's y) (None if not computed)."""
 
     @property
     def robustness_weight(self) -> float | None:

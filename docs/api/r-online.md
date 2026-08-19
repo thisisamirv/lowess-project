@@ -36,11 +36,11 @@ result <- add_point(online, x[[2L]], y[[2L]])  # NULL
 
 # Returns a named list once enough points are available
 result <- add_point(online, x[[3L]], y[[3L]])
-cat(result$smoothed)
+cat(result$y)
 #> 0.2266
 ```
 
-* Adds a single point to the sliding window. Returns a named list (`$smoothed`, `$residual`, …) once the window has enough points, or `NULL` while still filling.
+* Adds a single point to the sliding window. Returns a named list (`$y`, `$residual`, …) once the window has enough points, or `NULL` while still filling.
 
 ## Options Structure
 
@@ -61,8 +61,8 @@ Returned by `add_point()` once the window has enough points (`NULL` until then).
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `smoothed` | `numeric` | Smoothed value for the latest point |
-| `std_error` | `numeric` (optional) | Standard error (if requested) |
+| `y` | `numeric` | Smoothed value for the latest point |
+| `standard_error` | `numeric` (optional) | Standard error (if requested) |
 | `residual` | `numeric` (optional) | Residual y − smoothed (if requested) |
 | `robustness_weight` | `numeric` (optional) | Robustness weight (if requested) |
 | `iterations_used` | `integer` (optional) | Robustness iterations performed |

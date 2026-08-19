@@ -128,7 +128,7 @@ test_that("ROnlineLowess generated accessors dispatch add_point", {
     if (!is.null(result_dollar)) {
         expect_type(result_dollar, "list")
         expect_type(result_bracket, "list")
-        expect_true("smoothed" %in% names(result_dollar))
-        expect_true("smoothed" %in% names(result_bracket))
+        expect_true("y" %in% names(result_dollar))
+        expect_true("y" %in% names(result_bracket))
     }
 })
