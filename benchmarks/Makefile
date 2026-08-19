@@ -25,7 +25,7 @@ ifeq ($(OS),Windows_NT)
 	R_CROSS_ENV    := PATH="/c/rtools45/x86_64-w64-mingw32.static.posix/bin:$$PATH"
 endif
 
-.PHONY: all install build bench-r bench-rfastlowess-serial bench-rfastlowess-parallel compare clean
+.PHONY: all install build bench-r bench-rfastlowess-serial bench-rfastlowess-parallel bench-gpu-transfer bench-gpu-rust compare clean
 
 all: install
 
@@ -129,6 +129,24 @@ bench-rfastlowess-parallel:
 bench-r:
 	@echo "Running stats::lowess benchmarks..."
 	@Rscript stats_lowess.R
+
+# ==============================================================================
+# GPU Rust end-to-end benchmark
+# ==============================================================================
+bench-gpu-rust:
+	@echo "Building GPU benchmark binary..."
+	@(cd $(REPO_ROOT) && cargo build -q --release --bin bench_gpu)
+	@echo "Running GPU end-to-end benchmark..."
+	@$(REPO_ROOT)/target/release/bench_gpu output/rust_benchmark_gpu.json
+
+# ==============================================================================
+# GPU transfer benchmark
+# ==============================================================================
+bench-gpu-transfer:
+	@echo "Installing required Python packages..."
+	@$(PYTHON) -m pip install -q wgpu numpy
+	@echo "Running GPU data-transfer overhead benchmark..."
+	@$(PYTHON) gpu_transfer.py
 
 # ==============================================================================
 # Compare / plot

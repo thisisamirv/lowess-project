@@ -1,6 +1,12 @@
 #' @srrstats {G5.2, G5.2a, G5.2b} Error and tests for all input validation.
 #' @srrstats {G5.8, G5.8a, G5.8b} Edge condition tests for invalid inputs.
 test_that("Lowess rejects invalid inputs", {
+    # Unnamed positional arguments are forbidden
+    expect_error(
+        Lowess(0.5, 3),
+        "All arguments after 'fraction' must be named"
+    )
+
     # Invalid fraction
     expect_error(
         Lowess(fraction = -0.1),
@@ -25,6 +31,12 @@ test_that("Lowess rejects invalid inputs", {
 })
 
 test_that("OnlineLowess rejects invalid inputs", {
+    # Unnamed positional arguments are forbidden
+    expect_error(
+        OnlineLowess(0.5, 100),
+        "All arguments after 'min_points' must be named"
+    )
+
     # Invalid parameters
     expect_error(
         OnlineLowess(fraction = -0.1),
@@ -46,6 +58,12 @@ test_that("OnlineLowess rejects invalid inputs", {
 })
 
 test_that("StreamingLowess rejects invalid inputs", {
+    # Unnamed positional arguments are forbidden
+    expect_error(
+        StreamingLowess(0.5, 100),
+        "All arguments after 'chunk_size' must be named"
+    )
+
     # Invalid parameters
     expect_error(
         StreamingLowess(fraction = -0.1),
@@ -61,5 +79,9 @@ test_that("StreamingLowess rejects invalid inputs", {
     expect_error(
         process_chunk(sl, as.double(1:10), as.double(1:5)),
         "x and y must have the same length"
+    )
+})
+uble(1:5)),
+        "must match y"
     )
 })

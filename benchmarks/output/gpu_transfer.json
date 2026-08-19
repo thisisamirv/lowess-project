@@ -1,0 +1,267 @@
+{
+  "benchmark": "gpu_transfer",
+  "description": "Host\u2194device buffer transfer overhead isolated from kernel execution. Upload models 2 f32 arrays (x, y); download models 3 f32 arrays (y_smooth, weights, residuals).",
+  "warmup_iters": 5,
+  "measure_iters": 20,
+  "methodology": {
+    "upload": "queue.write_buffer \u2192 submit([]) \u2192 sync read of 4-byte sentinel buffer",
+    "download": "queue.read_buffer (blocking; creates staging buffer + map internally)",
+    "round_trip": "upload_ms + download_ms per iteration"
+  },
+  "results": [
+    {
+      "n": 1000,
+      "upload_nbytes": 8000,
+      "download_nbytes": 12000,
+      "upload": {
+        "mean_ms": 0.5676,
+        "median_ms": 0.5269,
+        "stdev_ms": 0.1627,
+        "min_ms": 0.3727,
+        "max_ms": 0.9924,
+        "bandwidth_gbps": 0.0141
+      },
+      "download": {
+        "mean_ms": 0.5895,
+        "median_ms": 0.5678,
+        "stdev_ms": 0.1782,
+        "min_ms": 0.3715,
+        "max_ms": 0.9213,
+        "bandwidth_gbps": 0.0204
+      },
+      "round_trip": {
+        "mean_ms": 1.1571,
+        "median_ms": 1.0946,
+        "stdev_ms": 0.3285,
+        "min_ms": 0.7442,
+        "max_ms": 1.818,
+        "bandwidth_gbps": 0.0173
+      }
+    },
+    {
+      "n": 5000,
+      "upload_nbytes": 40000,
+      "download_nbytes": 60000,
+      "upload": {
+        "mean_ms": 0.6679,
+        "median_ms": 0.5667,
+        "stdev_ms": 0.3971,
+        "min_ms": 0.2774,
+        "max_ms": 1.5821,
+        "bandwidth_gbps": 0.0599
+      },
+      "download": {
+        "mean_ms": 0.6352,
+        "median_ms": 0.539,
+        "stdev_ms": 0.3782,
+        "min_ms": 0.2562,
+        "max_ms": 1.6129,
+        "bandwidth_gbps": 0.0945
+      },
+      "round_trip": {
+        "mean_ms": 1.3031,
+        "median_ms": 1.0619,
+        "stdev_ms": 0.7393,
+        "min_ms": 0.5336,
+        "max_ms": 3.051,
+        "bandwidth_gbps": 0.0767
+      }
+    },
+    {
+      "n": 10000,
+      "upload_nbytes": 80000,
+      "download_nbytes": 120000,
+      "upload": {
+        "mean_ms": 0.465,
+        "median_ms": 0.3962,
+        "stdev_ms": 0.2385,
+        "min_ms": 0.2318,
+        "max_ms": 1.0737,
+        "bandwidth_gbps": 0.172
+      },
+      "download": {
+        "mean_ms": 0.4933,
+        "median_ms": 0.4206,
+        "stdev_ms": 0.3492,
+        "min_ms": 0.2228,
+        "max_ms": 1.8034,
+        "bandwidth_gbps": 0.2433
+      },
+      "round_trip": {
+        "mean_ms": 0.9583,
+        "median_ms": 0.8161,
+        "stdev_ms": 0.5628,
+        "min_ms": 0.4625,
+        "max_ms": 2.8771,
+        "bandwidth_gbps": 0.2087
+      }
+    },
+    {
+      "n": 50000,
+      "upload_nbytes": 400000,
+      "download_nbytes": 600000,
+      "upload": {
+        "mean_ms": 0.9916,
+        "median_ms": 0.6085,
+        "stdev_ms": 0.7105,
+        "min_ms": 0.3167,
+        "max_ms": 2.3831,
+        "bandwidth_gbps": 0.4034
+      },
+      "download": {
+        "mean_ms": 0.8384,
+        "median_ms": 0.736,
+        "stdev_ms": 0.4461,
+        "min_ms": 0.3031,
+        "max_ms": 1.9033,
+        "bandwidth_gbps": 0.7156
+      },
+      "round_trip": {
+        "mean_ms": 1.8301,
+        "median_ms": 1.395,
+        "stdev_ms": 1.0557,
+        "min_ms": 0.6734,
+        "max_ms": 4.2188,
+        "bandwidth_gbps": 0.5464
+      }
+    },
+    {
+      "n": 100000,
+      "upload_nbytes": 800000,
+      "download_nbytes": 1200000,
+      "upload": {
+        "mean_ms": 0.7632,
+        "median_ms": 0.658,
+        "stdev_ms": 0.4226,
+        "min_ms": 0.4703,
+        "max_ms": 2.3076,
+        "bandwidth_gbps": 1.0482
+      },
+      "download": {
+        "mean_ms": 1.3514,
+        "median_ms": 1.1454,
+        "stdev_ms": 0.56,
+        "min_ms": 0.8658,
+        "max_ms": 3.0351,
+        "bandwidth_gbps": 0.888
+      },
+      "round_trip": {
+        "mean_ms": 2.1146,
+        "median_ms": 1.8517,
+        "stdev_ms": 0.8125,
+        "min_ms": 1.3666,
+        "max_ms": 4.1669,
+        "bandwidth_gbps": 0.9458
+      }
+    },
+    {
+      "n": 500000,
+      "upload_nbytes": 4000000,
+      "download_nbytes": 6000000,
+      "upload": {
+        "mean_ms": 3.1393,
+        "median_ms": 3.0732,
+        "stdev_ms": 0.6597,
+        "min_ms": 2.1603,
+        "max_ms": 4.6663,
+        "bandwidth_gbps": 1.2742
+      },
+      "download": {
+        "mean_ms": 4.7922,
+        "median_ms": 4.3073,
+        "stdev_ms": 1.917,
+        "min_ms": 2.845,
+        "max_ms": 11.3951,
+        "bandwidth_gbps": 1.252
+      },
+      "round_trip": {
+        "mean_ms": 7.9315,
+        "median_ms": 7.6588,
+        "stdev_ms": 2.0201,
+        "min_ms": 5.2785,
+        "max_ms": 14.208,
+        "bandwidth_gbps": 1.2608
+      }
+    },
+    {
+      "n": 1000000,
+      "upload_nbytes": 8000000,
+      "download_nbytes": 12000000,
+      "upload": {
+        "mean_ms": 5.392,
+        "median_ms": 5.0356,
+        "stdev_ms": 1.828,
+        "min_ms": 4.0548,
+        "max_ms": 12.6051,
+        "bandwidth_gbps": 1.4837
+      },
+      "download": {
+        "mean_ms": 10.3079,
+        "median_ms": 7.9645,
+        "stdev_ms": 6.0008,
+        "min_ms": 5.271,
+        "max_ms": 30.1145,
+        "bandwidth_gbps": 1.1642
+      },
+      "round_trip": {
+        "mean_ms": 15.6999,
+        "median_ms": 13.2749,
+        "stdev_ms": 6.1223,
+        "min_ms": 9.3968,
+        "max_ms": 35.3092,
+        "bandwidth_gbps": 1.2739
+      }
+    }
+  ],
+  "transfer_vs_e2e": [
+    {
+      "n": 1000,
+      "transfer_ms": 1.1571,
+      "e2e_ms": 0.4512,
+      "transfer_fraction": 2.5645,
+      "kernel_ms": -0.7059
+    },
+    {
+      "n": 5000,
+      "transfer_ms": 1.3031,
+      "e2e_ms": 0.8599,
+      "transfer_fraction": 1.5154,
+      "kernel_ms": -0.4432
+    },
+    {
+      "n": 10000,
+      "transfer_ms": 0.9583,
+      "e2e_ms": 1.308,
+      "transfer_fraction": 0.7326,
+      "kernel_ms": 0.3497
+    },
+    {
+      "n": 50000,
+      "transfer_ms": 1.8301,
+      "e2e_ms": null,
+      "transfer_fraction": null,
+      "kernel_ms": null
+    },
+    {
+      "n": 100000,
+      "transfer_ms": 2.1146,
+      "e2e_ms": null,
+      "transfer_fraction": null,
+      "kernel_ms": null
+    },
+    {
+      "n": 500000,
+      "transfer_ms": 7.9315,
+      "e2e_ms": null,
+      "transfer_fraction": null,
+      "kernel_ms": null
+    },
+    {
+      "n": 1000000,
+      "transfer_ms": 15.6999,
+      "e2e_ms": null,
+      "transfer_fraction": null,
+      "kernel_ms": null
+    }
+  ]
+}

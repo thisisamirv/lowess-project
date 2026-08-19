@@ -9,6 +9,7 @@ members = [
     "bindings/wasm",
     "bindings/cpp",
     "validation/fastLowess",
+    "benchmarks/fastLowess",
 ]
 exclude = ["bindings/r/src/vendor"]
 

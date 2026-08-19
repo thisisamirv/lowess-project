@@ -27,10 +27,6 @@ crate-type = ["staticlib", "rlib"]
 default = []
 dev = []
 
-
-
-
-
 [workspace]
 
 [patch.crates-io]

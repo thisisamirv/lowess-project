@@ -7,7 +7,6 @@
 #' @srrstats {G1.6} Sliding window for incremental updates.
 #'
 #' @inheritParams Lowess
-#' @param ... Not used; forces all subsequent arguments to be named.
 #' @param window_capacity Maximum number of points kept in the sliding window.
 #' @param min_points Minimum number of points required before smoothing begins.
 #' @param update_mode Window update strategy: \code{"full"} (default; alias:

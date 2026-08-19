@@ -1,0 +1,15 @@
+[package]
+name = "bench-gpu"
+version = "0.0.0"
+rust-version = "1.89"
+edition = "2024"
+publish = false
+
+[[bin]]
+name = "bench_gpu"
+path = "src/bench_gpu.rs"
+
+[dependencies]
+fastLowess = { path = "../../crates/fastLowess", features = ["gpu", "dev"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
