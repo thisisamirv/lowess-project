@@ -34,6 +34,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed `ruff` linting errors in the Python binding: sorted `__all__` (RUF022), replaced `from typing import Sequence` with `from collections.abc import Sequence` in `_core.pyi` (UP035), removed redundant `...` literals from all property stub bodies — a docstring alone is the correct single-statement body in a `.pyi` file (PYI048, PIE790), and replaced bare `exit(1)` with `sys.exit(1)` in `bindings/python/tests/test_gil.py` (PLR1722).
 
+**Julia:**
+
+- Fixed `LowessResult.iterations_used` returning the raw FFI sentinel `-1` instead of `nothing` when robustness iterations were not applicable. The field type is now `Union{Int,Nothing}` and `-1` is mapped to `nothing` on the Julia side, matching the existing behaviour of `OnlineOutput.iterations_used`.
+
 **R:**
 
 - Fixed incorrect URLs in R bidning docs.

@@ -59,7 +59,7 @@ Returned by `process_chunk()` and `finalize()`.
 | `x` | `Vector{Float64}` | Sorted x values |
 | `y` | `Vector{Float64}` | Smoothed y values |
 | `fraction_used` | `Float64` | Fraction used |
-| `iterations_used` | `Int` | Robustness iterations actually performed (-1 = N/A) |
+| `iterations_used` | `Union{Int, Nothing}` | Robustness iterations actually performed (`nothing` if N/A) |
 | `residuals` | `Union{Vector{Float64}, Nothing}` | Residuals (if `return_residuals`) |
 | `robustness_weights` | `Union{Vector{Float64}, Nothing}` | Robustness weights (if `return_robustness_weights`) |
 | `diagnostics` | `Union{Diagnostics, Nothing}` | Fit metrics (if `return_diagnostics`) |
