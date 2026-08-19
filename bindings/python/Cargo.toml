@@ -25,3 +25,7 @@ crate-type = ["cdylib"]
 [features]
 default = []
 dev = []
+# Enables the GPU execution backend (requires a Vulkan/Metal/DX12-capable
+# GPU driver at runtime). Not enabled in published wheels by default; build
+# locally with `maturin develop --features gpu` to opt in.
+gpu = ["fastLowess/gpu"]

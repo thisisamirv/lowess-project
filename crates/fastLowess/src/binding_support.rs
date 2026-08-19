@@ -424,6 +424,8 @@ pub struct BuilderOptionSet<'a> {
     pub confidence_intervals: Option<f64>,
     pub prediction_intervals: Option<f64>,
     pub parallel: Option<bool>,
+    // Execution backend: "cpu" (default) or "gpu" (requires the `gpu` feature).
+    pub backend: Option<&'a str>,
     // Streaming-only options
     pub chunk_size: Option<usize>,
     pub overlap: Option<usize>,
@@ -457,6 +459,8 @@ pub struct TypedBuilderOptionSet {
     pub confidence_intervals: Option<f64>,
     pub prediction_intervals: Option<f64>,
     pub parallel: Option<bool>,
+    // Execution backend hint.
+    pub backend: Option<Backend>,
     // Streaming-only options
     pub chunk_size: Option<usize>,
     pub overlap: Option<usize>,
@@ -490,6 +494,20 @@ pub fn parse_robustness_method(name: &str) -> Result<RobustnessMethod, String> {
 
 pub fn parse_zero_weight_fallback(name: &str) -> Result<ZeroWeightFallback, String> {
     alias::parse_zero_weight_fallback(name).map_err(|e| e.to_string())
+}
+
+// Execution backend: "cpu" (default) or "gpu". Case-insensitive.
+pub const DEFAULT_BACKEND: &str = "cpu";
+
+pub fn parse_backend(name: &str) -> Result<Backend, String> {
+    match name.to_ascii_lowercase().as_str() {
+        "cpu" => Ok(Backend::CPU),
+        "gpu" => Ok(Backend::GPU),
+        other => Err(format!(
+            "invalid backend '{}': expected 'cpu' or 'gpu'",
+            other
+        )),
+    }
 }
 
 pub fn parse_boundary_policy(name: &str) -> Result<BoundaryPolicy, String> {
@@ -627,6 +645,7 @@ pub fn apply_builder_options(
         confidence_intervals: options.confidence_intervals,
         prediction_intervals: options.prediction_intervals,
         parallel: options.parallel,
+        backend: options.backend.map(parse_backend).transpose()?,
         chunk_size: options.chunk_size,
         overlap: options.overlap,
         merge_strategy: options
@@ -704,6 +723,9 @@ pub fn apply_typed_builder_options(
     }
     if let Some(par) = options.parallel {
         builder = builder.parallel(par);
+    }
+    if let Some(b) = options.backend {
+        builder = builder.backend(b);
     }
     if let Some(size) = options.chunk_size {
         builder = builder.chunk_size(size);

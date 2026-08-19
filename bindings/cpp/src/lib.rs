@@ -295,6 +295,7 @@ pub unsafe extern "C" fn cpp_lowess_new(
     cv_k: c_int,
     parallel: c_int,
     return_se: c_int,
+    backend: *const c_char,
 ) -> *mut CppLowess {
     with_panic_ptr(|| {
         clear_last_error();
@@ -329,6 +330,9 @@ pub unsafe extern "C" fn cpp_lowess_new(
         let cv_method_str = shared_parse::parse_c_str_or_default(cv_method, "kfold").to_string();
         let cv_k_usize = cv_k.max(2) as usize;
 
+        let backend_str =
+            shared_parse::parse_c_str_or_default(backend, shared_parse::DEFAULT_BACKEND);
+
         let builder = match shared_parse::apply_builder_options(
             LowessBuilder::<f64>::new(),
             shared_parse::BuilderOptionSet {
@@ -350,6 +354,7 @@ pub unsafe extern "C" fn cpp_lowess_new(
                 prediction_intervals: (!prediction_intervals.is_nan())
                     .then_some(prediction_intervals),
                 parallel: Some(parallel != 0),
+                backend: Some(backend_str),
                 ..Default::default()
             },
         ) {

@@ -79,6 +79,7 @@ impl RLowess {
         parallel: bool,
         cv_seed: Nullable<i32>,
         return_se: bool,
+        backend: &str,
     ) -> Result<Self> {
         let fractions = match cv_fractions {
             NotNull(v) => Some(v),
@@ -126,6 +127,7 @@ impl RLowess {
                 cv_method: Some(cv_method),
                 cv_k: Some(cv_k),
                 cv_seed: seed,
+                backend: Some(backend),
                 ..Default::default()
             },
         ))?;

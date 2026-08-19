@@ -226,10 +226,21 @@ pub struct SmoothOptions {
     pub return_se: Option<bool>,
     /// Enable parallel execution. Default: true.
     pub parallel: Option<bool>,
+    /// Execution backend: "cpu" (default) or "gpu" (requires the package to be
+    /// built with the `gpu` Cargo feature and a Vulkan/Metal/DX12-capable GPU).
+    /// Batch (`Lowess`) only; ignored by `StreamingLowess`/`OnlineLowess`.
+    pub backend: Option<String>,
 }
 
 /// Build a LowessBuilder from an optional SmoothOptions, applying all fields.
-fn options_to_builder(opts: Option<&SmoothOptions>) -> Result<LowessBuilder<f64>> {
+///
+/// `include_backend` gates the GPU `backend` option: it is only meaningful
+/// for the Batch (`Lowess`) adapter, so `StreamingLowess`/`OnlineLowess`
+/// callers pass `false` and any `backend` value in `opts` is ignored.
+fn options_to_builder(
+    opts: Option<&SmoothOptions>,
+    include_backend: bool,
+) -> Result<LowessBuilder<f64>> {
     let mut builder = LowessBuilder::<f64>::new();
     if let Some(opts) = opts {
         let configured_builder = map_invalid_arg(binding_support::apply_builder_options(
@@ -251,6 +262,11 @@ fn options_to_builder(opts: Option<&SmoothOptions>) -> Result<LowessBuilder<f64>
                 confidence_intervals: opts.confidence_intervals,
                 prediction_intervals: opts.prediction_intervals,
                 parallel: opts.parallel,
+                backend: if include_backend {
+                    opts.backend.as_deref()
+                } else {
+                    None
+                },
                 chunk_size: None,
                 overlap: None,
                 merge_strategy: None,
@@ -322,7 +338,7 @@ impl Lowess {
     }
 
     fn create_builder(&self) -> Result<LowessBuilder<f64>> {
-        options_to_builder(self.options.as_ref())
+        options_to_builder(self.options.as_ref(), true)
     }
 }
 
@@ -373,7 +389,7 @@ impl StreamingLowess {
         options: Option<SmoothOptions>,
         streaming_opts: Option<StreamingOptions>,
     ) -> Result<Self> {
-        let builder = options_to_builder(options.as_ref())?;
+        let builder = options_to_builder(options.as_ref(), false)?;
 
         let (chunk_size, overlap, merge_strategy) = match streaming_opts {
             Some(s) => (
@@ -453,7 +469,7 @@ impl OnlineLowess {
     /// Create a new online LOWESS smoother.
     #[napi(constructor)]
     pub fn new(options: Option<SmoothOptions>, online_opts: Option<OnlineOptions>) -> Result<Self> {
-        let builder = options_to_builder(options.as_ref())?;
+        let builder = options_to_builder(options.as_ref(), false)?;
 
         let (window_capacity, min_points, update_mode) = match online_opts {
             Some(o) => (

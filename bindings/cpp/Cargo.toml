@@ -23,3 +23,11 @@ libc = "0.2"
 
 [build-dependencies]
 cbindgen = "0.29"
+
+[features]
+default = []
+# Enables the GPU execution backend (requires a Vulkan/Metal/DX12-capable
+# GPU driver at runtime, plus linking against the corresponding system
+# graphics libraries). Not enabled in prebuilt releases by default; build
+# locally with `cargo build --features gpu` to opt in.
+gpu = ["fastLowess/gpu"]

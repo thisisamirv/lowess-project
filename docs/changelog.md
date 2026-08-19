@@ -10,6 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+**Python, Node.js, Julia, C++, R:**
+
+- Exposed the GPU execution backend (previously Rust-only) via a new `backend` option (`"cpu"` default, or `"gpu"`) on the batch `Lowess` class in all five bindings. `StreamingLowess`/`OnlineLowess` remain CPU-only in the bindings, consistent with the Rust core (`docs/api/rust.md`), which documents GPU as optimized only for static batch data. GPU support is gated behind a new opt-in `gpu` Cargo feature (`fastLowess/gpu`) and is **not** enabled in published wheels/npm binaries/JLL artifacts/CRAN/Bioconductor releases by default:
+  - Python, Node.js, Julia, C++: build locally with the `gpu` Cargo feature enabled (requires a Vulkan/Metal/DX12-capable GPU driver at runtime).
+  - R: build locally with `make -f bindings/r/Makefile WITH_GPU=1`, which also skips stripping the `wgpu`/`bytemuck`/`pollster`/`futures-intrusive` dependencies from the vendored `fastLowess` crate that the default (CRAN-safe) build removes.
+  - Requesting `backend="gpu"` on a build without the feature raises a runtime error explaining how to enable it.
+
 **R:**
 
 - Introduced S3 generics `fit()`, `process_chunk()`, `finalize()`, and `add_point()` in the R binding. These replace the previous list-closure API (`fit(model, )`, `process_chunk(model, )`, etc.) with idiomatic R dispatch: `fit(model, x, y)`, `process_chunk(model, x, y)`, `finalize(model)`, `add_point(model, x, y)`. All demos, vignettes, tests, and roxygen examples updated accordingly.
@@ -37,6 +44,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Julia:**
 
 - Fixed `LowessResult.iterations_used` returning the raw FFI sentinel `-1` instead of `nothing` when robustness iterations were not applicable. The field type is now `Union{Int,Nothing}` and `-1` is mapped to `nothing` on the Julia side, matching the existing behaviour of `OnlineOutput.iterations_used`.
+
+**R:**
+
+- Fixed `R/StreamingLowess.R` containing a duplicate of `OnlineLowess()` instead of defining `StreamingLowess()` — the `StreamingLowess` constructor was completely missing from the package. Reconstructed from `man/StreamingLowess.Rd` (which retained the correct signature) and `streaming_params`/`RStreamingLowess$new`.
 
 **WASM:**
 

@@ -63,6 +63,11 @@
 #' @param return_se Logical; if \code{TRUE}, compute hat-matrix statistics
 #'   (effective degrees of freedom, leverage, standard errors).
 #'   Default: \code{FALSE}.
+#' @param backend Execution backend: \code{"cpu"} (default) or \code{"gpu"}.
+#'   GPU support requires the package to be built locally with
+#'   \code{WITH_GPU=1} (see \code{bindings/r/Makefile}) and a
+#'   Vulkan/Metal/DX12-capable GPU driver; not available in released
+#'   CRAN/Bioconductor binaries.
 #'
 #' @seealso \url{https://lowess.readthedocs.io/} for full documentation.
 #' @return A Lowess object.
@@ -95,7 +100,8 @@ Lowess <- function(
     cv_k = 5L,
     parallel = TRUE,
     cv_seed = NULL,
-    return_se = FALSE
+    return_se = FALSE,
+    backend = "cpu"
 ) {
     if (...length() > 0) {
         stop("All arguments after 'fraction' must be named.", call. = FALSE)

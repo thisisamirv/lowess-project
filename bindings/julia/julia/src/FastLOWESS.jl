@@ -372,6 +372,9 @@ Stateful batch LOWESS smoother.
 - `parallel::Bool = true`: Enable parallel execution
 - `cv_seed::Union{Int,Nothing} = nothing`: Seed for reproducible K-fold splits
 - `return_se::Bool = false`: Return standard errors
+- `backend::String = "cpu"`: Execution backend (`"cpu"` or `"gpu"`). GPU requires
+  the library to be built with the `gpu` Cargo feature and a Vulkan/Metal/DX12-
+  capable GPU driver.
 
 # Example
 ```julia
@@ -403,6 +406,7 @@ mutable struct Lowess
 		parallel::Bool = true,
 		cv_seed::Union{Int, Nothing} = nothing,
 		return_se::Bool = false,
+		backend::String = "cpu",
 	)
 		cv_ptr = isempty(cv_fractions) ? Ptr{Cdouble}(C_NULL) : pointer(cv_fractions)
 		cv_len = length(cv_fractions)
@@ -429,6 +433,7 @@ mutable struct Lowess
 			Cint(parallel)::Cint,
 			Culong(cv_seed !== nothing ? cv_seed : 0)::Culong,
 			Cint(return_se)::Cint,
+			backend::Cstring,
 		)::Ptr{Cvoid}
 
 		if handle == C_NULL

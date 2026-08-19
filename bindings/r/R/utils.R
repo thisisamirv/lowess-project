@@ -133,6 +133,7 @@ param_types <- list(
     return_robustness_weights = "logical",
     return_se = "logical",
     parallel = "logical",
+    backend = "character",
     delta = "nullable",
     overlap = "nullable",
     confidence_intervals = "nullable",
@@ -156,8 +157,7 @@ env_args <- function(param_names) {
         if (is.null(type)) {
             return(val)
         }
-        switch(
-            type,
+        switch(type,
             double = as.double(val),
             integer = as.integer(val),
             character = as.character(val),
@@ -191,7 +191,8 @@ lowess_params <- c(
     "cv_k",
     "parallel",
     "cv_seed",
-    "return_se"
+    "return_se",
+    "backend"
 )
 
 online_params <- c(

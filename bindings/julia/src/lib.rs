@@ -264,6 +264,7 @@ pub unsafe extern "C" fn jl_lowess_new(
     parallel: c_int,
     cv_seed: c_ulong, // 0 for none
     return_se: c_int,
+    backend: *const c_char,
 ) -> *mut JlLowessConfig {
     clear_last_error_message();
     let result = catch_unwind(|| {
@@ -299,6 +300,9 @@ pub unsafe extern "C" fn jl_lowess_new(
         };
         let cv_method_str = unsafe { shared_parse::parse_c_str_or_default(cv_method, "kfold") };
 
+        let backend_str =
+            unsafe { shared_parse::parse_c_str_or_default(backend, shared_parse::DEFAULT_BACKEND) };
+
         let cv_fractions_slice =
             unsafe { shared_parse::option_slice_from_ptr(cv_fractions, cv_fractions_len as usize) };
 
@@ -323,6 +327,7 @@ pub unsafe extern "C" fn jl_lowess_new(
                 prediction_intervals: (!prediction_intervals.is_nan())
                     .then_some(prediction_intervals),
                 parallel: Some(parallel != 0),
+                backend: Some(backend_str),
                 cv_fractions: cv_fractions_slice,
                 cv_method: Some(cv_method_str),
                 cv_k: Some(cv_k as usize),

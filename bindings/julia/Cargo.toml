@@ -19,3 +19,10 @@ fastLowess = { version = "2.0", features = ["dev", "cpu"] }
 [lib]
 name = "fastlowess_jl"
 crate-type = ["cdylib"]
+
+[features]
+default = []
+# Enables the GPU execution backend (requires a Vulkan/Metal/DX12-capable
+# GPU driver at runtime). Not enabled in prebuilt JLL binaries by default;
+# build locally with `cargo build --features gpu` to opt in.
+gpu = ["fastLowess/gpu"]

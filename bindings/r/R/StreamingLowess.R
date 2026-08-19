@@ -1,35 +1,35 @@
-#' LOWESS Online Smoothing
+#' LOWESS Streaming Smoothing
 #'
 #' @description
-#' Create a stateful LOWESS model for real-time online data.
+#' Create a stateful LOWESS model for streaming data.
 #'
-#' @srrstats {G2.0} Input validation for fraction, window_capacity, min_points.
-#' @srrstats {G1.6} Sliding window for incremental updates.
+#' @srrstats {G2.0} Input validation for fraction, chunk_size.
+#' @srrstats {G1.6} Memory-efficient streaming for large datasets.
 #'
 #' @inheritParams Lowess
-#' @param window_capacity Maximum number of points kept in the sliding window.
-#' @param min_points Minimum number of points required before smoothing begins.
-#' @param update_mode Window update strategy: \code{"full"} (default; alias:
-#'   \code{"resmooth"}) re-smooths all window points after each addition;
-#'   \code{"incremental"} (alias: \code{"single"}) updates only the newest
-#'   point.
+#' @param chunk_size Number of data points per processing chunk.
+#' @param overlap Number of overlapping points between consecutive chunks.
+#' @param merge_strategy Strategy for reconciling overlapping chunk regions:
+#'   \code{"weighted_average"} (default; alias: \code{"weighted"}),
+#'   \code{"average"} (alias: \code{"mean"}),
+#'   \code{"take_first"} (alias: \code{"first"}), or
+#'   \code{"take_last"} (alias: \code{"last"}).
 #'
 #' @seealso \url{https://lowess.readthedocs.io/} for full documentation.
-#' @return An OnlineLowess object.
+#' @return A StreamingLowess object.
 #' @examples
-#' model <- OnlineLowess(fraction = 0.2, window_capacity = 20)
-#' x <- 1:50
-#' y <- sin(x * 0.1) + rnorm(50, 0, 0.1)
-#' for (i in seq_along(x)) {
-#'     result <- add_point(model, x[i], y[i])
-#'     if (!is.null(result)) cat("smoothed:", result$smoothed, "\n")
-#' }
+#' x <- seq(0, 10, length.out = 100)
+#' y <- sin(x) + rnorm(100, 0, 0.1)
+#' model <- StreamingLowess(fraction = 0.2, chunk_size = 50)
+#' res1 <- process_chunk(model, x[1:50], y[1:50])
+#' res2 <- process_chunk(model, x[51:100], y[51:100])
+#' final <- finalize(model)
 #' @export
-OnlineLowess <- function(
+StreamingLowess <- function(
     fraction = 0.67,
-    window_capacity = 1000L,
-    min_points = 3L,
+    chunk_size = 5000L,
     ...,
+    overlap = NULL,
     iterations = 3L,
     delta = NULL,
     weight_function = "tricube",
@@ -37,36 +37,31 @@ OnlineLowess <- function(
     scaling_method = "mad",
     boundary_policy = "extend",
     zero_weight_fallback = "use_local_mean",
-    update_mode = "full",
     auto_converge = NULL,
-    return_robustness_weights = FALSE,
     return_diagnostics = FALSE,
     return_residuals = FALSE,
-    parallel = FALSE,
+    return_robustness_weights = FALSE,
+    merge_strategy = "weighted_average",
+    parallel = TRUE,
     confidence_intervals = NULL,
     prediction_intervals = NULL
 ) {
     if (...length() > 0) {
-        stop("All arguments after 'min_points' must be named.", call. = FALSE)
+        stop("All arguments after 'chunk_size' must be named.", call. = FALSE)
     }
-    validate_params(
-        fraction = fraction,
-        window_capacity = window_capacity,
-        min_points = min_points
-    )
-    handle <- do.call(ROnlineLowess$new, env_args(online_params))
+    validate_params(fraction = fraction, chunk_size = chunk_size)
+    handle <- do.call(RStreamingLowess$new, env_args(streaming_params))
 
     structure(
         list(
             handle = handle,
             params = list(
                 fraction = fraction,
-                window_capacity = window_capacity,
-                min_points = min_points,
+                chunk_size = chunk_size,
                 iterations = iterations,
                 parallel = parallel
             )
         ),
-        class = "OnlineLowess"
+        class = "StreamingLowess"
     )
 }

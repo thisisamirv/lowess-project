@@ -47,6 +47,10 @@ The fastest, most robust, and most feature-complete language-agnostic LOWESS (Lo
 >
 > Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the [Installation Guide](https://lowess.readthedocs.io/getting-started/installation/) for detailed installation instructions.
 
+### GPU Backend
+
+In addition to `parallel = true` (multi-core CPU), `LowessOptions` (batch) accepts `backend = "gpu"` to run on the GPU via `wgpu` (Vulkan/Metal/DX12). GPU support is opt-in and not included in prebuilt releases — build locally with `cargo build --features gpu` (from `bindings/cpp/`) to enable it. `StreamingOptions`/`OnlineOptions` remain CPU-only; the Rust core optimizes GPU for static batch data.
+
 ## Documentation
 
 > [!NOTE]
@@ -131,10 +135,8 @@ A variety of features, supporting a range of use cases:
 | Prediction Intervals | yes | no | no |
 | Cross-Validation | 2 options | no | no |
 | Parallel Execution | yes | no | no |
-| GPU Acceleration | yes* | no | no |
+| GPU Acceleration | yes | no | no |
 | `no-std` Support | yes | no | no |
-
-\* GPU acceleration is currently in beta and may not be available on all platforms.
 
 ## Validation
 

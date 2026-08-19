@@ -25,7 +25,8 @@ Lowess(
     cv_k = 5L,
     parallel = TRUE,
     cv_seed = NULL,
-    return_se = FALSE
+    return_se = FALSE,
+    backend = "cpu"
 )
 }
 \arguments{
@@ -98,6 +99,12 @@ generator. \code{NULL} (default) uses a random seed.}
 \item{return_se}{Logical; if \code{TRUE}, compute hat-matrix statistics
 (effective degrees of freedom, leverage, standard errors).
 Default: \code{FALSE}.}
+
+\item{backend}{Execution backend: \code{"cpu"} (default) or \code{"gpu"}.
+GPU support requires the package to be built locally with
+\code{WITH_GPU=1} (see \code{bindings/r/Makefile}) and a
+Vulkan/Metal/DX12-capable GPU driver; not available in released
+CRAN/Bioconductor binaries.}
 }
 \value{
 A Lowess object.

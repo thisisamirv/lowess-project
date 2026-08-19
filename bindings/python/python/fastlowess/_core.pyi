@@ -141,6 +141,7 @@ class Lowess:
         parallel: bool = True,
         cv_seed: int | None = None,
         return_se: bool = False,
+        backend: str = "cpu",
     ) -> None: ...
     def fit(
         self, x: ArrayLike, y: ArrayLike, custom_weights: ArrayLike | None = None

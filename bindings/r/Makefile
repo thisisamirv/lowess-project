@@ -28,6 +28,15 @@ PYTHON      ?= python3
 PYO3_PYTHON ?= $(PYTHON)
 NODE        ?= node
 
+# Set WITH_GPU=1 to build rfastlowess with the GPU execution backend enabled
+# (requires a Vulkan/Metal/DX12-capable GPU driver at runtime). Off by default
+# so CRAN/Bioconductor submission builds never depend on wgpu/system GPU libs.
+WITH_GPU ?= 0
+R_CARGO_FEATURES :=
+ifeq ($(WITH_GPU),1)
+	R_CARGO_FEATURES := --features gpu
+endif
+
 ifeq ($(HOST_PLATFORM),windows)
 AIR_INSTALL_CMD := if command -v pwsh >/dev/null 2>&1; then pwsh -ExecutionPolicy Bypass -c "irm https://github.com/posit-dev/air/releases/latest/download/air-installer.ps1 | iex"; else cmd //c 'powershell -ExecutionPolicy Bypass -c "irm https://github.com/posit-dev/air/releases/latest/download/air-installer.ps1 | iex"'; fi
 else
@@ -102,6 +111,7 @@ default:
 	@rm -f $(R_DIR)/src/vendor/fastLowess/Cargo.lock $(R_DIR)/src/vendor/lowess/Cargo.lock
 	@rm -f $(R_DIR)/src/vendor/fastLowess/README.md $(R_DIR)/src/vendor/fastLowess/CHANGELOG.md
 	@rm -f $(R_DIR)/src/vendor/lowess/README.md $(R_DIR)/src/vendor/lowess/CHANGELOG.md
+ifneq ($(WITH_GPU),1)
 	@sed -i.bak \
 		-e '/^wgpu = /d' \
 		-e '/^bytemuck = /d' \
@@ -111,6 +121,13 @@ default:
 		-e 's|lowess = { path = "\.\./lowess", version = "[^"]*", |lowess = { path = "../lowess", |' \
 		$(R_DIR)/src/vendor/fastLowess/Cargo.toml
 	@rm -f $(R_DIR)/src/vendor/fastLowess/Cargo.toml.bak
+else
+	@echo "WITH_GPU=1: keeping wgpu dependencies and 'gpu' feature in vendored fastLowess"
+	@sed -i.bak \
+		-e 's|lowess = { path = "\.\./lowess", version = "[^"]*", |lowess = { path = "../lowess", |' \
+		$(R_DIR)/src/vendor/fastLowess/Cargo.toml
+	@rm -f $(R_DIR)/src/vendor/fastLowess/Cargo.toml.bak
+endif
 	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/lowess/.cargo-checksum.json
 	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/fastLowess/.cargo-checksum.json
 	@printf '\n\n[workspace]\n\n[patch.crates-io]\nlowess = { path = "vendor/lowess" }\n' >> $(R_DIR)/src/Cargo.toml
@@ -133,7 +150,7 @@ default:
 	@echo "=============================================================================="
 	@echo "4. Building..."
 	@echo "=============================================================================="
-	@(cd $(R_DIR)/src && $(R_CROSS_ENV) cargo build -q --release $(R_CARGO_TARGET) || (mv Cargo.toml.orig Cargo.toml && exit 1))
+	@(cd $(R_DIR)/src && $(R_CROSS_ENV) cargo build -q --release $(R_CARGO_TARGET) $(R_CARGO_FEATURES) || (mv Cargo.toml.orig Cargo.toml && exit 1))
 	@rm -rf $(R_DIR)/src/.cargo
 	@echo "=============================================================================="
 	@echo "4a. Formatting..."

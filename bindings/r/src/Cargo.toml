@@ -26,6 +26,11 @@ crate-type = ["staticlib", "rlib"]
 [features]
 default = []
 dev = []
+# Enables the GPU execution backend. Only meaningful when built locally via
+# `make -f bindings/r/Makefile WITH_GPU=1` (or the root `make r WITH_GPU=1`),
+# which also skips stripping wgpu deps from the vendored fastLowess crate.
+# Not used for CRAN/Bioconductor submission builds.
+gpu = ["fastLowess/gpu"]
 
 [workspace]
 

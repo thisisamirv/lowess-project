@@ -289,6 +289,7 @@ impl PyStreamingLowess {
                 cv_method: None,
                 cv_k: None,
                 cv_seed: None,
+                backend: None,
             },
         ))?;
 
@@ -445,6 +446,7 @@ impl PyOnlineLowess {
                 cv_method: None,
                 cv_k: None,
                 cv_seed: None,
+                backend: None,
             },
         ))?;
 
@@ -513,7 +515,8 @@ impl PyLowess {
         cv_k=5,
         parallel=true,
         cv_seed=None,
-        return_se=false
+        return_se=false,
+        backend="cpu"
     ))]
     #[allow(clippy::too_many_arguments)]
     fn new(
@@ -537,6 +540,7 @@ impl PyLowess {
         parallel: bool,
         cv_seed: Option<u64>,
         return_se: bool,
+        backend: &str,
     ) -> PyResult<Self> {
         let builder = map_invalid_arg(binding_support::apply_builder_options(
             LowessBuilder::<f64>::new(),
@@ -557,6 +561,7 @@ impl PyLowess {
                 confidence_intervals,
                 prediction_intervals,
                 parallel: Some(parallel),
+                backend: Some(backend),
                 chunk_size: None,
                 overlap: None,
                 merge_strategy: None,
