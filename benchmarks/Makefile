@@ -105,9 +105,11 @@ endif
 		\( -name tests -o -name benches -o -name examples \
 		   -o -name doc -o -name docs -o -name .github -o -name .config \) \
 		-exec rm -rf {} \; 2>/dev/null || true
-	@# Reset checksums — cargo accepts {"files":{}} for vendored crates
-	@find $(R_DIR)/src/vendor -name '.cargo-checksum.json' \
-		-exec sh -c 'echo '"'"'{"files":{},"package":null}'"'"' > "$$1"' _ {} \;
+	@# Reset checksums — cargo accepts {"files":{}} for vendored crates.
+	@# Must preserve each crate's "package" checksum (only "files" is reset),
+	@# otherwise cargo can't verify crates.io-sourced deps against Cargo.lock.
+	@for f in $(R_DIR)/src/vendor/*/.cargo-checksum.json; do \
+		[ -f "$$f" ] && jq '.files = {}' "$$f" > "$$f.tmp" && mv "$$f.tmp" "$$f"; done
 	@echo "  Creating vendor.tar.xz..."
 	@(cd $(R_DIR)/src && \
 	  (tar --sort=name --mtime='1970-01-01 00:00:00Z' --owner=0 --group=0 --numeric-owner \
