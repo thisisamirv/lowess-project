@@ -25,7 +25,7 @@ ifeq ($(OS),Windows_NT)
 	R_CROSS_ENV    := PATH="/c/rtools45/x86_64-w64-mingw32.static.posix/bin:$$PATH"
 endif
 
-.PHONY: all install build bench-r bench-rfastlowess-serial bench-rfastlowess-parallel bench-gpu-transfer bench-gpu-rust compare clean
+.PHONY: all install build bench-r bench-rfastlowess-serial bench-rfastlowess-parallel bench-gpu-transfer bench-gpu-rust bench-cpu-vs-gpu compare clean
 
 all: install
 
@@ -129,6 +129,17 @@ bench-rfastlowess-parallel:
 bench-r:
 	@echo "Running stats::lowess benchmarks..."
 	@Rscript stats_lowess.R
+
+# ==============================================================================
+# CPU vs GPU crossover benchmark
+# ==============================================================================
+bench-cpu-vs-gpu:
+	@echo "Building CPU-vs-GPU benchmark binary..."
+	@(cd $(REPO_ROOT) && cargo build -q --release --bin bench_cpu_vs_gpu)
+	@echo "Running CPU vs GPU sweep..."
+	@$(REPO_ROOT)/target/release/bench_cpu_vs_gpu output/rust_benchmark_cpu_vs_gpu.json
+	@echo "Analysing crossover points..."
+	@$(PYTHON) compare_cpu_gpu.py output/rust_benchmark_cpu_vs_gpu.json
 
 # ==============================================================================
 # GPU Rust end-to-end benchmark

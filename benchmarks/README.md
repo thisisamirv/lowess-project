@@ -16,6 +16,30 @@ Compares `stats::lowess` (base R) against `rfastlowess` (this package) across a 
 
 ## GPU Benchmarks
 
+### CPU-parallel vs GPU crossover (`bench-cpu-vs-gpu`)
+
+Sweeps n × fraction × robustness iterations to find where the GPU backend beats CPU-parallel. Sine-wave data, 10 timed runs after 3 warm-up runs per cell.
+
+**Crossover:** first n where GPU median < CPU median
+
+| fraction | iterations=0 | iterations=3 |
+| ---: | ---: | ---: |
+| 0.1 | n ≥ 100K | n ≥ 250K |
+| 0.3 | n ≥ 100K | n ≥ 100K |
+| 0.5 | n ≥ 50K | n ≥ 50K |
+
+The crossover is driven by window size (fraction × n), not iteration count — a larger window makes each local fit heavier, favouring the GPU sooner. At n = 1M with fraction = 0.5 and 3 iterations, GPU is **6.6×** faster (1.24 s → 187 ms).
+
+Selected results:
+
+| n | fraction | iter | CPU (med) | GPU (med) | speedup |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 10 000 | 0.5 | 3 | 4.3 ms | 6.6 ms | 0.65× CPU |
+| 50 000 | 0.5 | 0 | 4.3 ms | 3.7 ms | 1.15× GPU |
+| 100 000 | 0.5 | 3 | 74.0 ms | 21.3 ms | 3.5× GPU |
+| 250 000 | 0.3 | 3 | 135 ms | 30.3 ms | 4.5× GPU |
+| 1 000 000 | 0.5 | 3 | 1 237 ms | 187 ms | 6.6× GPU |
+
 ### End-to-end GPU fit (`bench-gpu-rust`)
 
 Measures total wall-clock time for a complete GPU LOWESS fit (upload + kernel + download) using the Rust `fastLowess` GPU backend directly. Sine-wave data, fraction 0.3, 3 robustness iterations, 10 timed runs after 2 warm-up runs.
@@ -60,6 +84,7 @@ make bench-rfastlowess-serial
 make bench-rfastlowess-parallel
 
 # GPU benchmarks
+make bench-cpu-vs-gpu           # CPU vs GPU sweep → output/rust_benchmark_cpu_vs_gpu.json
 make bench-gpu-rust             # end-to-end GPU fit → output/rust_benchmark_gpu.json
 make bench-gpu-transfer         # transfer overhead only → output/gpu_transfer.json
 
