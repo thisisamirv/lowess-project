@@ -35,9 +35,9 @@ import textwrap
 import threading
 import time
 from collections import defaultdict
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterator, List, Optional, Tuple
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -45,6 +45,9 @@ from typing import Iterator, List, Optional, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DOCS_DIR = REPO_ROOT / "docs"
+VIGNETTES_DIRS: list[Path] = [
+    REPO_ROOT / "bindings" / "r" / "vignettes",
+]
 
 # ---------------------------------------------------------------------------
 # Terminal colours (disabled on non-TTY or Windows without colour support)
@@ -98,12 +101,13 @@ def _find_python_with_fastlowess() -> str:
                 r = subprocess.run(
                     [str(c), "-c", "import fastlowess"],
                     capture_output=True,
+                    check=False,
                     timeout=10,
                 )
                 if r.returncode == 0:
                     return str(c)
-            except Exception:
-                pass
+            except OSError:
+                continue
     return sys.executable
 
 
@@ -186,11 +190,11 @@ class Snippet:
     file: Path
     line: int  # 1-based line number of the opening fence
     lang_tag: str  # code-block language tag (e.g. "python")
-    tab: Optional[str]  # nearest === "Tab" label, or None
+    tab: str | None  # nearest === "Tab" label, or None
     code: str
 
     @property
-    def runner(self) -> Optional[str]:
+    def runner(self) -> str | None:
         """Return which runner handles this snippet, or None to skip."""
         for runner, tags in _LANG_TAGS.items():
             if self.lang_tag.lower() in tags:
@@ -226,13 +230,26 @@ _TAB_RE = re.compile(r'^[ \t]*===\s+"([^"]+)"', re.MULTILINE)
 _FENCE_RE = re.compile(r"^([ \t]*)```(\w+)", re.MULTILINE)
 
 
-def extract_snippets(md_file: Path) -> List[Snippet]:
-    """Extract all fenced code blocks from a markdown file."""
+def _rmd_chunk_is_runnable(opts_str: str) -> bool:
+    """Return False if an Rmd chunk header has eval=FALSE or include=FALSE."""
+    opts = opts_str.lower().replace(" ", "")
+    return "eval=false" not in opts and "include=false" not in opts
+
+
+def extract_snippets(md_file: Path) -> list[Snippet]:
+    """Extract all fenced code blocks from a markdown file (also handles .Rmd).
+
+    For .Rmd files all runnable R chunks are combined into one snippet, since
+    Rmd chunks share state (later chunks depend on variables set by earlier ones).
+    """
     text = md_file.read_text(encoding="utf-8")
     lines = text.splitlines()
-    result: List[Snippet] = []
+    result: list[Snippet] = []
+    is_rmd = md_file.suffix.lower() == ".rmd"
 
-    current_tab: Optional[str] = None
+    current_tab: str | None = None
+    # Accumulate Rmd chunks to combine at the end
+    rmd_chunks: list[tuple[int, str, str]] = []  # (start_line, chunk_name, code)
     i = 0
     while i < len(lines):
         line = lines[i]
@@ -244,13 +261,36 @@ def extract_snippets(md_file: Path) -> List[Snippet]:
             i += 1
             continue
 
+        # Rmd-style fence: ```{r} or ```{r chunk-name} or ```{r chunk-name, opts}
+        m_rmd = re.match(r"^([ \t]*)```\{r([^}]*)\}\s*$", line)
+        if m_rmd:
+            fence_indent = m_rmd.group(1)
+            raw_opts = m_rmd.group(2)  # e.g. " chunk-name, eval = FALSE"
+            parts = raw_opts.split(",", 1)
+            chunk_name = parts[0].strip() or ""
+            opts_str = parts[1] if len(parts) > 1 else ""
+            code_lines_rmd: list[str] = []
+            start_line_rmd = i + 1
+            i += 1
+            while i < len(lines):
+                if re.match(r"^" + re.escape(fence_indent) + r"```\s*$", lines[i]):
+                    i += 1
+                    break
+                code_lines_rmd.append(lines[i].removeprefix(fence_indent))
+                i += 1
+            if _rmd_chunk_is_runnable(opts_str):
+                rmd_chunks.append(
+                    (start_line_rmd, chunk_name, "\n".join(code_lines_rmd))
+                )
+            continue
+
         # Detect fence opening: optional leading whitespace then ```lang
         m = re.match(r"^([ \t]*)```(\w+)\s*$", line)
         if m:
             fence_indent = m.group(1)
             lang_tag = m.group(2)
             start_line = i + 1  # 1-based
-            code_lines: List[str] = []
+            code_lines: list[str] = []
             i += 1
             while i < len(lines):
                 close = lines[i]
@@ -259,11 +299,7 @@ def extract_snippets(md_file: Path) -> List[Snippet]:
                     i += 1
                     break
                 # Strip the common fence indent
-                stripped = (
-                    close[len(fence_indent) :]
-                    if close.startswith(fence_indent)
-                    else close
-                )
+                stripped = close.removeprefix(fence_indent)
                 code_lines.append(stripped)
                 i += 1
             code = "\n".join(code_lines)
@@ -286,10 +322,30 @@ def extract_snippets(md_file: Path) -> List[Snippet]:
 
         i += 1
 
+    # For Rmd: combine all runnable chunks into one snippet so they share state
+    if is_rmd and rmd_chunks:
+        first_line = rmd_chunks[0][0]
+        combined_code = "\n\n".join(code for _, _, code in rmd_chunks)
+        names = [n for _, n, _ in rmd_chunks if n]
+        tab_label = (
+            f"{len(rmd_chunks)} chunks: {', '.join(names)}"
+            if names
+            else f"{len(rmd_chunks)} chunks"
+        )
+        result.append(
+            Snippet(
+                file=md_file,
+                line=first_line,
+                lang_tag="r",
+                tab=tab_label,
+                code=combined_code,
+            )
+        )
+
     return result
 
 
-def should_skip(snippet: Snippet, runner: str) -> Optional[str]:
+def should_skip(snippet: Snippet, runner: str) -> str | None:
     """Return a skip reason string, or None if the snippet should be run."""
     code = snippet.code
 
@@ -316,9 +372,8 @@ def should_skip(snippet: Snippet, runner: str) -> Optional[str]:
         if re.search(
             r"\bfl\b|\bfastlowess\b|\bLowess\b|\bStreamingLowess\b|\bOnlineLowess\b",
             code,
-        ):
-            if not re.search(r"\bimport\b.*fastlowess|\bfrom\b.*fastlowess", code):
-                return "fastlowess not imported (snippet is not self-contained)"
+        ) and not re.search(r"\bimport\b.*fastlowess|\bfrom\b.*fastlowess", code):
+            return "fastlowess not imported (snippet is not self-contained)"
 
     if runner == "julia":
         # Skip package-management / installation snippets
@@ -375,10 +430,9 @@ def should_skip(snippet: Snippet, runner: str) -> Optional[str]:
         if re.search(r"\bcross_validate\b|\bKFold\b", code):
             return "cross_validate/KFold not in stable public API"
 
-    if runner == "cpp":
-        # Without a structural wrapper, only complete programs (with int main) compile
-        if not re.search(r"\bint\s+main\s*\(", code):
-            return "fragment — no int main (not a standalone C++ program)"
+    if runner == "cpp" and not re.search(r"\bint\s+main\s*\(", code):
+        # only complete programs (with int main) compile
+        return "fragment — no int main (not a standalone C++ program)"
 
     return None
 
@@ -413,6 +467,7 @@ def run_python(snippet: Snippet, timeout: int) -> RunResult:
         proc = subprocess.run(
             [_PYTHON_BIN, tmp],
             capture_output=True,
+            check=False,
             timeout=timeout,
             text=True,
             env={**os.environ, "MPLBACKEND": "Agg"},
@@ -483,6 +538,7 @@ def run_julia(snippet: Snippet, timeout: int) -> RunResult:
         proc = subprocess.run(
             [julia_bin, "--startup-file=no", tmp],
             capture_output=True,
+            check=False,
             timeout=timeout,
             text=True,
             env=env,
@@ -580,6 +636,7 @@ def run_nodejs(snippet: Snippet, timeout: int) -> RunResult:
         proc = subprocess.run(
             [node_bin, tmp],
             capture_output=True,
+            check=False,
             timeout=timeout,
             text=True,
             cwd=cwd,
@@ -629,6 +686,7 @@ def run_r(snippet: Snippet, timeout: int) -> RunResult:
         proc = subprocess.run(
             [rscript, "--vanilla", tmp],
             capture_output=True,
+            check=False,
             timeout=timeout,
             text=True,
             env={**os.environ, "LOWESS_REPO_ROOT": str(REPO_ROOT)},
@@ -690,6 +748,7 @@ def run_wasm(snippet: Snippet, timeout: int) -> RunResult:
         proc = subprocess.run(
             [node_bin, tmp],
             capture_output=True,
+            check=False,
             timeout=timeout,
             text=True,
             cwd=str(_WASM_PKG_DIR),
@@ -782,6 +841,7 @@ def run_rust(snippet: Snippet, timeout: int) -> RunResult:
                 "--quiet",
             ],
             capture_output=True,
+            check=False,
             timeout=timeout,
             text=True,
             cwd=str(REPO_ROOT),
@@ -806,7 +866,7 @@ def run_rust(snippet: Snippet, timeout: int) -> RunResult:
         )
 
 
-def _find_cpp_compiler() -> Optional[str]:
+def _find_cpp_compiler() -> str | None:
     for name in ("g++", "clang++", "c++"):
         exe = _find_exe(name)
         if exe:
@@ -814,7 +874,7 @@ def _find_cpp_compiler() -> Optional[str]:
     return None
 
 
-def _find_cpp_library() -> Optional[Path]:
+def _find_cpp_library() -> Path | None:
     """Return the path to the built fastlowess_cpp shared/static library, or None."""
     candidates = [
         # MinGW targets on Windows (Makefile uses these when GCC is available)
@@ -892,6 +952,7 @@ def run_cpp(snippet: Snippet, timeout: int) -> RunResult:
             cproc = subprocess.run(
                 compile_cmd,
                 capture_output=True,
+                check=False,
                 timeout=60,
                 text=True,
             )
@@ -935,6 +996,7 @@ def run_cpp(snippet: Snippet, timeout: int) -> RunResult:
             rproc = subprocess.run(
                 [exe],
                 capture_output=True,
+                check=False,
                 timeout=timeout,
                 text=True,
                 env=env,
@@ -970,7 +1032,7 @@ _RUNNERS = {
 }
 
 
-def _find_exe(name: str) -> Optional[str]:
+def _find_exe(name: str) -> str | None:
     import shutil
 
     return shutil.which(name)
@@ -981,7 +1043,7 @@ def _find_exe(name: str) -> Optional[str]:
 # ---------------------------------------------------------------------------
 
 
-def iter_md_files(root: Path, file_filter: Optional[str]) -> Iterator[Path]:
+def iter_md_files(root: Path, file_filter: str | None) -> Iterator[Path]:
     if file_filter:
         p = Path(file_filter)
         if not p.is_absolute():
@@ -993,9 +1055,11 @@ def iter_md_files(root: Path, file_filter: Optional[str]) -> Iterator[Path]:
         yield from sorted(REPO_ROOT.glob(file_filter))
         return
     yield from sorted(root.rglob("*.md"))
+    for vdir in VIGNETTES_DIRS:
+        yield from sorted(vdir.glob("*.Rmd"))
 
 
-def main(argv: Optional[List[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     # Ensure stdout/stderr use UTF-8 on Windows (avoids UnicodeEncodeError for
     # characters like π that can't be encoded by the default cp1252 codec).
     if hasattr(sys.stdout, "reconfigure"):
@@ -1052,14 +1116,14 @@ def main(argv: Optional[List[str]] = None) -> int:
     _PYTHON_BIN = _find_python_with_fastlowess()
 
     # ---- Collect snippets ---------------------------------------------------
-    snippets: List[Snippet] = []
+    snippets: list[Snippet] = []
     for md in iter_md_files(DOCS_DIR, args.file):
         snippets.extend(extract_snippets(md))
 
     total_found = len(snippets)
 
     # Filter to only snippets we can handle
-    runnable: List[Tuple[Snippet, str]] = []  # (snippet, runner)
+    runnable: list[tuple[Snippet, str]] = []  # (snippet, runner)
     for s in snippets:
         r = s.runner
         if r is None or r not in active_runners:
@@ -1082,19 +1146,19 @@ def main(argv: Optional[List[str]] = None) -> int:
     print()
 
     # ---- Run snippets (parallel per language) --------------------------------
-    results: List[RunResult] = []
+    results: list[RunResult] = []
     n_pass = n_fail = n_skip = 0
     _print_lock = threading.Lock()
 
     # Group runnable snippets by runner so each language executes as a unit.
     # Rust snippets share a single temp project (main.rs), so they must remain
     # sequential within their language — parallelism is across languages only.
-    _by_runner: dict[str, List[Tuple[Snippet, str]]] = defaultdict(list)
+    _by_runner: dict[str, list[tuple[Snippet, str]]] = defaultdict(list)
     for _s, _r in runnable:
         _by_runner[_r].append((_s, _r))
 
-    def _run_language(lang_items: List[Tuple[Snippet, str]]) -> List[RunResult]:
-        lang_results: List[RunResult] = []
+    def _run_language(lang_items: list[tuple[Snippet, str]]) -> list[RunResult]:
+        lang_results: list[RunResult] = []
         for s, runner in lang_items:
             label = s.label
             run_fn = _RUNNERS.get(runner)
