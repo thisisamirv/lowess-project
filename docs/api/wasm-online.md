@@ -30,16 +30,16 @@ const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
 const online = new OnlineLowess({ fraction: 0.5 }, { window_capacity: 50, min_points: 3 });
 
-// Returns undefined until min_points (3) are reached
-online.add_point(x[0], y[0]);  // undefined
-online.add_point(x[1], y[1]);  // undefined
+// Returns null until min_points (3) are reached
+online.add_point(x[0], y[0]);  // null
+online.add_point(x[1], y[1]);  // null
 
 // Returns OnlineOutput once enough points are available
 const result = online.add_point(x[2], y[2]);
 console.log(result.smoothed);  // 0.22659245357374927
 ```
 
-* Adds a single point to the sliding window. Returns an `OnlineOutput` once enough points are available, or `undefined` while the window is still filling.
+* Adds a single point to the sliding window. Returns an `OnlineOutput` once enough points are available, or `null` while the window is still filling.
 
 ## Options Structure
 
@@ -56,7 +56,7 @@ console.log(result.smoothed);  // 0.22659245357374927
 
 ### `OnlineOutput`
 
-Returned by `add_point()` once the window has enough points (`undefined` until then).
+Returned by `add_point()` once the window has enough points (`null` until then).
 
 | Field | Type | Description |
 | --- | --- | --- |

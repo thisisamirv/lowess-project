@@ -101,8 +101,8 @@ export class StreamingLowess {
 export class OnlineLowess {
     free(): void;
     constructor(options?: SmoothOptions, onlineOpts?: OnlineOptions);
-    /** Add a single point and get the smoothed output (or undefined if not enough points yet). */
-    add_point(x: number, y: number): OnlineOutput | undefined;
+    /** Add a single point and get the smoothed output (or null if not enough points yet). */
+    add_point(x: number, y: number): OnlineOutput | null;
 }
 
 /** Result from a single online update step. */
@@ -517,14 +517,17 @@ impl OnlineLowess {
     }
 
     #[wasm_bindgen(js_name = "add_point", skip_typescript)]
-    pub fn add_point(&mut self, x: f64, y: f64) -> Result<Option<OnlineOutput>, JsValue> {
+    pub fn add_point(&mut self, x: f64, y: f64) -> Result<JsValue, JsValue> {
         let output = map_invalid_arg(self.inner.add_point(x, y))?;
-        Ok(output.map(|o| OnlineOutput {
-            smoothed: o.smoothed,
-            std_error: o.std_error,
-            residual: o.residual,
-            robustness_weight: o.robustness_weight,
-            iterations_used: o.iterations_used,
-        }))
+        Ok(match output {
+            Some(o) => JsValue::from(OnlineOutput {
+                smoothed: o.smoothed,
+                std_error: o.std_error,
+                residual: o.residual,
+                robustness_weight: o.robustness_weight,
+                iterations_used: o.iterations_used,
+            }),
+            None => JsValue::null(),
+        })
     }
 }

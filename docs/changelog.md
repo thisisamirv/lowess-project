@@ -38,6 +38,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed `LowessResult.iterations_used` returning the raw FFI sentinel `-1` instead of `nothing` when robustness iterations were not applicable. The field type is now `Union{Int,Nothing}` and `-1` is mapped to `nothing` on the Julia side, matching the existing behaviour of `OnlineOutput.iterations_used`.
 
+**WASM:**
+
+- Fixed `OnlineLowess.add_point()` returning `undefined` instead of `null` when the sliding window has not yet accumulated enough points. `wasm-bindgen` maps `Option<T>` to `T | undefined` by default; the binding now explicitly returns `JsValue::null()` to match the Node.js binding, which returns `null` via napi-rs.
+
 **R:**
 
 - Fixed incorrect URLs in R bidning docs.
