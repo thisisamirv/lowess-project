@@ -106,7 +106,7 @@ build:
 ifneq ($(WITH_GPU),1)
 	@# Strip GPU deps and version from the lowess path dep in fastLowess
 	@sed -i.bak \
-		-e '/^wgpu = /d' \
+		-e '/^wgpu = /,/^\] }/d' \
 		-e '/^bytemuck = /d' \
 		-e '/^pollster = /d' \
 		-e '/^futures-intrusive = /d' \

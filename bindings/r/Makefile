@@ -136,7 +136,7 @@ default:
 	@rm -f $(R_DIR)/src/vendor/lowess/README.md $(R_DIR)/src/vendor/lowess/CHANGELOG.md
 ifneq ($(WITH_GPU),1)
 	@sed -i.bak \
-		-e '/^wgpu = /d' \
+		-e '/^wgpu = /,/^\] }/d' \
 		-e '/^bytemuck = /d' \
 		-e '/^pollster = /d' \
 		-e '/^futures-intrusive = /d' \
