@@ -16,9 +16,9 @@ The `Lowess` class allows configuring the LOWESS parameters once and fitting mul
 import fastlowess as fl
 
 model = fl.Lowess(fraction=0.5, iterations=3)
+print(model)
+# Lowess(fraction=0.5000, iterations=3, parallel=true)
 ```
-
-* `kwargs`: Keyword arguments corresponding to `LowessOptions` fields.
 
 **Methods:**
 
@@ -26,12 +26,13 @@ model = fl.Lowess(fraction=0.5, iterations=3)
 import fastlowess as fl
 import numpy as np
 
-rng = np.random.default_rng(42)
 x = np.linspace(0, 2 * np.pi, 100)
-y = np.sin(x) + rng.normal(0, 0.3, 100)
+y = np.sin(x) + 0.1
 
 model = fl.Lowess(fraction=0.5)
-result = model.fit(x, y, custom_weights=None)
+result = model.fit(x, y)
+print(result)
+# LowessResult(n=100, fraction_used=0.5000)
 ```
 
 * Fits the model to the provided `x` and `y` array-like objects.
@@ -169,8 +170,8 @@ See [python-online.md](python-online.md).
 from fastlowess import Lowess
 import numpy as np
 
-x = np.linspace(0, 10, 100)
-y = np.sin(x) + np.random.normal(0, 0.2, 100)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + 0.1
 
 # Configure model
 model = Lowess(fraction=0.5)
@@ -178,5 +179,6 @@ model = Lowess(fraction=0.5)
 # Fit data
 result = model.fit(x, y)
 
-print("Smoothed Y:", result.y)
+print(result)
+# LowessResult(n=100, fraction_used=0.5000)
 ```

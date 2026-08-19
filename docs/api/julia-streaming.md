@@ -12,44 +12,38 @@ The `StreamingLowess` struct processes data in chunks, suitable for very large d
 
 ```julia
 using FastLOWESS
-using Random, Statistics
 
-rng = MersenneTwister(42)
-x = collect(range(0, 2π, length=100))
-y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-stream = StreamingLowess()
+stream = StreamingLowess(chunk_size=50, overlap=10)
 ```
-
-* `kwargs`: Keyword arguments corresponding to `LowessOptions` and `StreamingOptions` fields.
 
 **Methods:**
 
 ```julia
 using FastLOWESS
-using Random, Statistics
 
-rng = MersenneTwister(42)
 x = collect(range(0, 2π, length=100))
-y = sin.(x) .+ randn(rng, 100) .* 0.3
+y = sin.(x) .+ 0.1
 
-stream = StreamingLowess()
-partial_result = process_chunk(stream, x, y)
+stream = StreamingLowess(fraction=0.5, chunk_size=50, overlap=10)
+partial_result = process_chunk(stream, x[1:50], y[1:50])
+println(partial_result.fraction_used)
+# 0.5
 ```
 
 * Processes a chunk of data. Returns partial results.
 
 ```julia
 using FastLOWESS
-using Random, Statistics
 
-rng = MersenneTwister(42)
 x = collect(range(0, 2π, length=100))
-y = sin.(x) .+ randn(rng, 100) .* 0.3
+y = sin.(x) .+ 0.1
 
-stream = StreamingLowess()
-process_chunk(stream, x, y)
+stream = StreamingLowess(fraction=0.3, chunk_size=50, overlap=10)
+process_chunk(stream, x[1:50], y[1:50])
+process_chunk(stream, x[51:end], y[51:end])
 final_result = finalize(stream)
+println(final_result.fraction_used)
+# 0.3
 ```
 
 * Finalizes the smoothing process and returns any remaining buffered results.

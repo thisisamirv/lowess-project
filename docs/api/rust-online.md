@@ -24,10 +24,24 @@ fn main() -> Result<(), LowessError> {
 
 ```rust
 use fastLowess::prelude::*;
+use std::f64::consts::TAU;
 
 fn main() -> Result<(), LowessError> {
-    let mut processor = OnlineLowess::new().build()?;
-    let output = processor.add_point(1.0f64, 2.0f64)?;
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
+
+    let mut processor = OnlineLowess::new().fraction(0.3f64).window_capacity(50usize).min_points(3usize).build()?;
+
+    // Returns None until min_points (3) are reached
+    let r1 = processor.add_point(x[0], y[0])?;  // None
+    let r2 = processor.add_point(x[1], y[1])?;  // None
+
+    // Returns Some(OnlineOutput) once enough points are available
+    let r3 = processor.add_point(x[2], y[2])?;
+    if let Some(output) = r3 {
+        println!("{}", output.smoothed);  // 0.22659245357374927
+    }
 
     Ok(())
 }

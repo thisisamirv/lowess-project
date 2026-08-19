@@ -16,20 +16,19 @@ import fastlowess as fl
 stream = fl.StreamingLowess(chunk_size=50, overlap=10)
 ```
 
-* `kwargs`: Keyword arguments corresponding to `LowessOptions` and `StreamingOptions` fields.
-
 **Methods:**
 
 ```python
 import fastlowess as fl
 import numpy as np
 
-rng = np.random.default_rng(42)
 x = np.linspace(0, 2 * np.pi, 100)
-y = np.sin(x) + rng.normal(0, 0.3, 100)
+y = np.sin(x) + 0.1
 
-stream = fl.StreamingLowess(chunk_size=50, overlap=10)
+stream = fl.StreamingLowess(fraction=0.5, chunk_size=50, overlap=10)
 partial_result = stream.process_chunk(x[:50], y[:50])
+print(partial_result)
+# LowessResult(n=40, fraction_used=0.5000)
 ```
 
 * Processes a chunk of data. Returns partial results.
@@ -38,13 +37,15 @@ partial_result = stream.process_chunk(x[:50], y[:50])
 import fastlowess as fl
 import numpy as np
 
-rng = np.random.default_rng(42)
 x = np.linspace(0, 2 * np.pi, 100)
-y = np.sin(x) + rng.normal(0, 0.3, 100)
+y = np.sin(x) + 0.1
 
-stream = fl.StreamingLowess(chunk_size=50, overlap=10)
-stream.process_chunk(x, y)
+stream = fl.StreamingLowess(fraction=0.3, chunk_size=50, overlap=10)
+stream.process_chunk(x[:50], y[:50])
+stream.process_chunk(x[50:], y[50:])
 final_result = stream.finalize()
+print(final_result)
+# LowessResult(n=10, fraction_used=0.3000)
 ```
 
 * Finalizes the smoothing process and returns any remaining buffered results.

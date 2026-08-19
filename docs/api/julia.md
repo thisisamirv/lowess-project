@@ -14,22 +14,22 @@ The `Lowess` struct allows configuring the LOWESS parameters once and fitting mu
 
 ```julia
 using FastLOWESS
-using Random, Statistics
 
-rng = MersenneTwister(42)
-x = collect(range(0, 2π, length=100))
-y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-model = Lowess()
+model = Lowess(fraction=0.5)
 ```
-
-* `kwargs`: Keyword arguments corresponding to `LowessOptions` fields.
 
 **Methods:**
 
 ```julia
-result = fit(model, x::Vector{Float64}, y::Vector{Float64};
-             custom_weights::Union{Vector{Float64}, Nothing} = nothing) :: LowessResult
+using FastLOWESS
+
+x = collect(range(0, 2π, length=100))
+y = sin.(x) .+ 0.1
+
+model = Lowess(fraction=0.5)
+result = fit(model, x, y)
+println(result.fraction_used)
+# 0.5
 ```
 
 * Fits the model to the provided `x` and `y` data vectors.

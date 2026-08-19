@@ -25,9 +25,10 @@ int main() {
     }
 
     fastlowess::OnlineOptions opts;
-    opts.window_capacity = 10;
+    opts.fraction = 0.3;
+    opts.window_capacity = 50;
+    opts.min_points = 3;
     fastlowess::OnlineLowess model(opts);
-    auto out = model.add_point(x[0], y[0]);
 
     return 0;
 }
@@ -52,10 +53,20 @@ int main() {
     }
 
     fastlowess::OnlineOptions opts;
-    opts.window_capacity = 10;
+    opts.fraction = 0.3;
+    opts.window_capacity = 50;
+    opts.min_points = 3;
     fastlowess::OnlineLowess model(opts);
-    // Returns Expected<OnlineOutput> — empty until window fills
-    auto out = model.add_point(x[0], y[0]);
+
+    // Returns OnlineOutput with has_value() == false until min_points (3) are reached
+    auto r1 = model.add_point(x[0], y[0]).value();  // r1.has_value() == false
+    auto r2 = model.add_point(x[1], y[1]).value();  // r2.has_value() == false
+
+    // Returns OnlineOutput with has_value() == true once enough points are available
+    auto r3 = model.add_point(x[2], y[2]).value();
+    if (r3.has_value()) {
+        std::cout << r3.smoothed() << std::endl;  // 0.22659245357374927
+    }
 
     return 0;
 }

@@ -13,7 +13,7 @@ The `OnlineLowess` class updates the model incrementally with new data points.
 ```javascript
 const { OnlineLowess } = require('fastlowess');
 
-const online = new OnlineLowess({ fraction: 0.3 }, { window_capacity: 50, min_points: 5 });
+const online = new OnlineLowess({ fraction: 0.3 }, { window_capacity: 50, min_points: 3 });
 ```
 
 * `options`: An object containing `LowessOptions` fields.
@@ -24,8 +24,19 @@ const online = new OnlineLowess({ fraction: 0.3 }, { window_capacity: 50, min_po
 ```javascript
 const { OnlineLowess } = require('fastlowess');
 
-const online = new OnlineLowess({ fraction: 0.3 }, { window_capacity: 50, min_points: 5 });
-const result = online.add_point(1.0, 2.0);  // returns OnlineOutput | null
+const n = 100;
+const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
+
+const online = new OnlineLowess({ fraction: 0.3 }, { window_capacity: 50, min_points: 3 });
+
+// Returns null until min_points (3) are reached
+online.add_point(x[0], y[0]);  // null
+online.add_point(x[1], y[1]);  // null
+
+// Returns OnlineOutput once enough points are available
+const result = online.add_point(x[2], y[2]);
+console.log(result.smoothed);  // 0.22659245357374927
 ```
 
 * Adds a single point to the sliding window and returns an `OnlineOutput` once enough points are available, or `null` while the window is still filling.

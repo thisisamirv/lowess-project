@@ -44,10 +44,13 @@ int main() {
     }
 
     fastlowess::StreamingOptions opts;
-    opts.chunk_size = 10;
-    opts.overlap = 0;
+    opts.fraction = 0.5;
+    opts.chunk_size = 50;
+    opts.overlap = 10;
     fastlowess::StreamingLowess model(opts);
-    (void)model.process_chunk(x, y);
+    std::vector<double> x1(x.begin(), x.begin() + 50), y1(y.begin(), y.begin() + 50);
+    auto partial = model.process_chunk(x1, y1).value();
+    std::cout << partial.fraction_used() << std::endl;  // 0.5
 
     return 0;
 }
@@ -70,11 +73,16 @@ int main() {
     }
 
     fastlowess::StreamingOptions opts;
-    opts.chunk_size = 10;
-    opts.overlap = 0;
+    opts.fraction = 0.3;
+    opts.chunk_size = 50;
+    opts.overlap = 10;
     fastlowess::StreamingLowess model(opts);
-    model.process_chunk(x, y);
+    std::vector<double> x1(x.begin(), x.begin() + 50), y1(y.begin(), y.begin() + 50);
+    std::vector<double> x2(x.begin() + 50, x.end()), y2(y.begin() + 50, y.end());
+    model.process_chunk(x1, y1);
+    model.process_chunk(x2, y2);
     auto result = model.finalize().value();
+    std::cout << result.fraction_used() << std::endl;  // 0.3
 
     return 0;
 }

@@ -85,6 +85,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Split `StreamingLowess` and `OnlineLowess` content out of each binding's main API reference page into dedicated `{lang}-streaming.md` and `{lang}-online.md` files (`cpp-streaming.md`, `cpp-online.md`, `nodejs-streaming.md`, `nodejs-online.md`, `python-streaming.md`, `python-online.md`, `julia-streaming.md`, `julia-online.md`, `wasm-streaming.md`, `wasm-online.md`, `rust-streaming.md`, `rust-online.md`). Each main reference page now links to the split-out files from a callout at the top and from short inline cross-references in place of the removed sections.
 - Moved the `tutorials/` pages (Genomics, Time Series, Real-Time Processing) into a new `user-guide/use-cases/` section. The top-level Tutorials and Examples navigation tabs have been removed; domain-focused use-case guides now live under User Guide → Use Cases in the site navigation. Explanatory prose has been added to each use-case page describing the rationale behind key parameter choices.
+- Standardized all `docs/api/` code examples across every language binding. Added expected output comments to every method code block.
 
 ## 2.0.0
 

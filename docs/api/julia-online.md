@@ -12,29 +12,28 @@ The `OnlineLowess` struct updates the model incrementally with new data points.
 
 ```julia
 using FastLOWESS
-using Random, Statistics
 
-rng = MersenneTwister(42)
-x = collect(range(0, 2π, length=100))
-y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-online = OnlineLowess()
+online = OnlineLowess(fraction=0.3, window_capacity=50)
 ```
-
-* `kwargs`: Keyword arguments corresponding to `LowessOptions` and `OnlineOptions` fields.
 
 **Methods:**
 
 ```julia
 using FastLOWESS
-using Random, Statistics
 
-rng = MersenneTwister(42)
 x = collect(range(0, 2π, length=100))
-y = sin.(x) .+ randn(rng, 100) .* 0.3
+y = sin.(x) .+ 0.1
 
-online = OnlineLowess()
-result = add_point(online, x[1], y[1])  # returns OnlineOutput or nothing
+online = OnlineLowess(fraction=0.3, window_capacity=50)
+
+# Returns nothing until min_points (3) are reached
+result = add_point(online, x[1], y[1])  # nothing
+result = add_point(online, x[2], y[2])  # nothing
+
+# Returns OnlineOutput once enough points are available
+result = add_point(online, x[3], y[3])
+println(result.smoothed)
+# 0.22659245357374927
 ```
 
 * Adds a single point to the sliding window. Returns `nothing` while the window is still filling (fewer than `min_points` seen), and an `OnlineOutput` once smoothing begins.

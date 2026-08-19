@@ -35,8 +35,10 @@ fn main() -> Result<(), LowessError> {
     let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
     let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    let model = Lowess::new().build()?;
+    let model = Lowess::new().fraction(0.5f64).build()?;
     let result = model.fit(&x, &y)?;
+    println!("{}", result.fraction_used);  // 0.5
+    println!("{:?}", result.iterations_used);  // None
 
     Ok(())
 }
