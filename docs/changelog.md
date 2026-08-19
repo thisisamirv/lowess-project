@@ -76,11 +76,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Node.js:**
 
-- Updated `@napi-rs/cli` to v3.8 and `oxlint` to v1.78.
+- Updated `@napi-rs/cli` to v3.8 and `oxlint` to v1.79.
 
 **WASM:**
 
-- Updated `oxlint` to v1.78.
+- Updated `oxlint` to v1.79.
 
 **Docs:**
 
