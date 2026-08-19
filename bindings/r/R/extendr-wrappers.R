@@ -107,6 +107,8 @@ ROnlineLowess$add_point <- function(x, y) {
     func
 }
 
+gpu_enabled <- function() .Call(wrap__gpu_enabled)
+
 #' @export
 `[[.ROnlineLowess` <- `$.ROnlineLowess`
 

@@ -1,0 +1,304 @@
+name: GPU Backend
+
+# Builds every binding with the `gpu` Cargo feature enabled and runs a small
+# functional smoke test against each one to confirm `backend = "gpu"` (or the
+# language's equivalent spelling) actually produces a valid fit. Runs on
+# ubuntu-latest only: GitHub-hosted runners have no real GPU, so this relies
+# on the Mesa "lavapipe" software Vulkan implementation (same setup used for
+# the Rust `fastLowess` GPU tests in ci.yml).
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - "crates/fastLowess/**"
+      - "crates/lowess/**"
+      - "bindings/**"
+      - ".github/workflows/gpu-backend.yml"
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - "crates/fastLowess/**"
+      - "crates/lowess/**"
+      - "bindings/**"
+      - ".github/workflows/gpu-backend.yml"
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  PIP_DISABLE_PIP_VERSION_CHECK: 1
+
+jobs:
+  gpu-backend:
+    name: GPU Backend Smoke Test (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [python, nodejs, julia, cpp, r]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Python
+        if: matrix.language == 'python'
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Setup Node
+        if: matrix.language == 'nodejs'
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install Julia
+        if: matrix.language == 'julia'
+        uses: julia-actions/setup-julia@v3
+        with:
+          version: "1.11"
+
+      - name: Install R
+        if: matrix.language == 'r'
+        uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: gpu-backend-${{ matrix.language }}-cargo
+
+      # ==========================================================================
+      # Software Vulkan (lavapipe) - stands in for a real GPU on CI runners
+      # ==========================================================================
+      - name: Setup software Vulkan (lavapipe)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libvulkan1 mesa-vulkan-drivers vulkan-tools
+
+          echo "GALLIUM_DRIVER=lavapipe" >> "$GITHUB_ENV"
+          echo "WGPU_BACKEND=vulkan" >> "$GITHUB_ENV"
+
+          XDG_RUNTIME_DIR="${RUNNER_TEMP}/xdg-runtime"
+          mkdir -p "$XDG_RUNTIME_DIR"
+          chmod 700 "$XDG_RUNTIME_DIR"
+          echo "XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR" >> "$GITHUB_ENV"
+
+          if [ -f /usr/share/vulkan/icd.d/lvp_icd.x86_64.json ]; then
+            ICD=/usr/share/vulkan/icd.d/lvp_icd.x86_64.json
+          else
+            ICD=$(find /usr/share/vulkan/icd.d -name 'lvp_icd*.json' | head -n 1)
+          fi
+          test -n "$ICD"
+          echo "VK_ICD_FILENAMES=$ICD" >> "$GITHUB_ENV"
+
+      - name: Verify software Vulkan is usable
+        run: vulkaninfo --summary
+
+      # ==========================================================================
+      # PYTHON
+      # ==========================================================================
+      - name: "Python: Build with GPU feature"
+        if: matrix.language == 'python'
+        working-directory: bindings/python
+        run: |
+          python -m pip install --upgrade pip
+          pip install maturin numpy
+          maturin develop --release --features gpu
+
+      - name: "Python: GPU smoke test"
+        if: matrix.language == 'python'
+        run: |
+          cat > /tmp/gpu_smoke.py <<'PY'
+          import fastlowess as fl
+          import numpy as np
+
+          assert fl.gpu_available(), "GPU backend not detected in Python build"
+
+          x = np.linspace(0, 1, 50)
+          y = np.sin(6 * x) + 0.05
+
+          model = fl.Lowess(fraction=0.3, backend="gpu")
+          result = model.fit(x, y)
+
+          assert len(result.y) == len(x)
+          assert np.all(np.isfinite(result.y))
+          print("Python GPU backend OK")
+          PY
+          python /tmp/gpu_smoke.py
+
+      # ==========================================================================
+      # NODE.JS
+      # ==========================================================================
+      - name: "Node.js: Build with GPU feature"
+        if: matrix.language == 'nodejs'
+        working-directory: bindings/nodejs
+        run: |
+          npm install
+          npx napi build --release --features gpu
+
+      - name: "Node.js: GPU smoke test"
+        if: matrix.language == 'nodejs'
+        working-directory: bindings/nodejs
+        run: |
+          cat > /tmp/gpu_smoke.js <<'JS'
+          const fastlowess = require('.');
+
+          if (!fastlowess.gpuAvailable()) {
+              throw new Error('GPU backend not detected in Node.js build');
+          }
+
+          const n = 50;
+          const x = Float64Array.from({ length: n }, (_, i) => i / (n - 1));
+          const y = Float64Array.from(x, (xi) => Math.sin(6 * xi) + 0.05);
+
+          const model = new fastlowess.Lowess({ fraction: 0.3, backend: 'gpu' });
+          const result = model.fit(x, y);
+
+          if (result.y.length !== n) throw new Error('unexpected output length');
+          if (!Array.from(result.y).every(Number.isFinite)) {
+              throw new Error('non-finite values in output');
+          }
+          console.log('Node.js GPU backend OK');
+          JS
+          node /tmp/gpu_smoke.js
+
+      # ==========================================================================
+      # JULIA
+      # ==========================================================================
+      - name: "Julia: Build with GPU feature"
+        if: matrix.language == 'julia'
+        working-directory: bindings/julia
+        run: cargo build --release --features gpu
+
+      - name: "Julia: GPU smoke test"
+        if: matrix.language == 'julia'
+        env:
+          FASTLOWESS_LIB: target/release/libfastlowess_jl.so
+        run: |
+          cat > /tmp/gpu_smoke.jl <<'JL'
+          using Pkg
+          Pkg.activate("bindings/julia/julia")
+          Pkg.instantiate()
+          using FastLOWESS
+
+          @assert gpu_available() "GPU backend not detected in Julia build"
+
+          x = collect(range(0, 1, length = 50))
+          y = sin.(6 .* x) .+ 0.05
+
+          model = Lowess(fraction = 0.3, backend = "gpu")
+          result = fit(model, x, y)
+
+          @assert length(result.y) == length(x)
+          @assert all(isfinite, result.y)
+          println("Julia GPU backend OK")
+          JL
+          julia /tmp/gpu_smoke.jl
+
+      # ==========================================================================
+      # C++
+      # ==========================================================================
+      - name: "C++: Build with GPU feature"
+        if: matrix.language == 'cpp'
+        working-directory: bindings/cpp
+        run: cargo build --release --features gpu
+
+      - name: "C++: GPU smoke test"
+        if: matrix.language == 'cpp'
+        run: |
+          cat > /tmp/gpu_smoke.cpp <<'CPP'
+          #include "fastlowess.hpp"
+
+          #include <cmath>
+          #include <cstdio>
+          #include <vector>
+
+          int main() {
+            if (!fastlowess::gpu::available()) {
+              std::fprintf(stderr, "GPU backend not detected in C++ build\n");
+              return 1;
+            }
+
+            constexpr std::size_t n = 50;
+            std::vector<double> x(n);
+            std::vector<double> y(n);
+            for (std::size_t i = 0; i < n; ++i) {
+              x[i] = static_cast<double>(i) / (n - 1);
+              y[i] = std::sin(6.0 * x[i]) + 0.05;
+            }
+
+            fastlowess::LowessOptions opts;
+            opts.fraction = 0.3;
+            opts.backend = "gpu";
+            fastlowess::Lowess model(opts);
+            auto result = model.fit(x, y);
+
+            if (!result.has_value()) {
+              std::fprintf(stderr, "fit() failed: %s\n", result.error().c_str());
+              return 1;
+            }
+
+            auto y_fit = result.value().y_vector();
+            if (y_fit.size() != n) {
+              std::fprintf(stderr, "unexpected output length: %zu\n", y_fit.size());
+              return 1;
+            }
+            for (double v : y_fit) {
+              if (!std::isfinite(v)) {
+                std::fprintf(stderr, "non-finite value in output\n");
+                return 1;
+              }
+            }
+
+            std::printf("C++ GPU backend OK\n");
+            return 0;
+          }
+          CPP
+          g++ -O3 -std=c++17 /tmp/gpu_smoke.cpp -o /tmp/gpu_smoke \
+            -I"${GITHUB_WORKSPACE}/bindings/cpp/include" \
+            -L"${GITHUB_WORKSPACE}/target/release" \
+            -lfastlowess_cpp -lpthread -ldl -lm
+          LD_LIBRARY_PATH="${GITHUB_WORKSPACE}/target/release" /tmp/gpu_smoke
+
+      # ==========================================================================
+      # R
+      # ==========================================================================
+      - name: "R: Install runtime dependencies"
+        if: matrix.language == 'r'
+        run: |
+          Rscript -e '
+            options(repos = c(CRAN = "https://cloud.r-project.org"));
+            if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager", quiet = TRUE);
+            if (!requireNamespace("BiocGenerics", quietly = TRUE)) BiocManager::install("BiocGenerics", ask = FALSE, update = FALSE, quiet = TRUE)
+          '
+
+      - name: "R: Build and install with GPU feature"
+        if: matrix.language == 'r'
+        working-directory: benchmarks
+        run: make WITH_GPU=1 install
+
+      - name: "R: GPU smoke test"
+        if: matrix.language == 'r'
+        run: |
+          cat > /tmp/gpu_smoke.R <<'R'
+          library(rfastlowess)
+
+          stopifnot(gpu_available())
+
+          x <- seq(0, 1, length.out = 50)
+          y <- sin(6 * x) + 0.05
+
+          model <- Lowess(fraction = 0.3, backend = "gpu")
+          result <- fit(model, x, y)
+
+          stopifnot(length(result$y) == length(x))
+          stopifnot(all(is.finite(result$y)))
+          cat("R GPU backend OK\n")
+          R
+          Rscript /tmp/gpu_smoke.R

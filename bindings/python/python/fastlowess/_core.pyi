@@ -6,6 +6,7 @@ from collections.abc import Sequence
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
+from typing_extensions import Self
 
 class Diagnostics:
     """Diagnostic statistics for LOWESS fit quality."""
@@ -119,6 +120,30 @@ class LowessResult:
 class Lowess:
     """Batch LOWESS model — configure once, fit many times."""
 
+    def __new__(
+        cls,
+        fraction: float = 0.67,
+        iterations: int = 3,
+        delta: float | None = None,
+        weight_function: str = "tricube",
+        robustness_method: str = "bisquare",
+        scaling_method: str = "mad",
+        boundary_policy: str = "extend",
+        confidence_intervals: float | None = None,
+        prediction_intervals: float | None = None,
+        return_diagnostics: bool = False,
+        return_residuals: bool = False,
+        return_robustness_weights: bool = False,
+        zero_weight_fallback: str = "use_local_mean",
+        auto_converge: float | None = None,
+        cv_fractions: Sequence[float] | None = None,
+        cv_method: str = "kfold",
+        cv_k: int = 5,
+        parallel: bool = True,
+        cv_seed: int | None = None,
+        return_se: bool = False,
+        backend: str = "cpu",
+    ) -> Self: ...
     def __init__(
         self,
         fraction: float = 0.67,
@@ -195,3 +220,6 @@ class OnlineLowess:
         parallel: bool = False,
     ) -> None: ...
     def add_point(self, x: float, y: float) -> OnlineOutput | None: ...
+
+def gpu_enabled() -> bool:
+    """True if this extension was built with the `gpu` Cargo feature enabled."""

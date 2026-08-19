@@ -11,12 +11,20 @@
 
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
 #include <cstring>
+#include <iostream>
 #include <limits>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
+
+#if defined(_WIN32)
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
 
 // Include the C header
 #include "fastlowess.h"
@@ -628,6 +636,141 @@ public:
 private:
   fastlowess_CppOnlineLowess *ptr_ = nullptr;
 };
+
+namespace gpu {
+
+namespace detail {
+inline std::string platformTag() {
+#if defined(_WIN32)
+  return "windows";
+#elif defined(__APPLE__)
+  return "macos";
+#else
+  return "linux";
+#endif
+}
+
+inline std::string archTag() {
+#if defined(__aarch64__) || defined(_M_ARM64)
+  return "aarch64";
+#else
+  return "x86_64";
+#endif
+}
+
+inline std::string libraryExt() {
+#if defined(_WIN32)
+  return "dll";
+#elif defined(__APPLE__)
+  return "dylib";
+#else
+  return "so";
+#endif
+}
+
+inline bool stdinIsInteractive() {
+#if defined(_WIN32)
+  return _isatty(_fileno(stdin)) != 0;
+#else
+  return isatty(fileno(stdin)) != 0;
+#endif
+}
+
+inline std::string cacheDir() {
+#if defined(_WIN32)
+  const char *home = std::getenv("USERPROFILE");
+#else
+  const char *home = std::getenv("HOME");
+#endif
+  std::string base = (home != nullptr) ? home : ".";
+  return base + "/.fastlowess/gpu";
+}
+
+inline void makeDir(const std::string &dir) {
+#if defined(_WIN32)
+  std::string cmd = "if not exist \"" + dir + "\" mkdir \"" + dir + "\"";
+#else
+  std::string cmd = "mkdir -p \"" + dir + "\"";
+#endif
+  std::system(cmd.c_str()); // NOLINT
+}
+
+} // namespace detail
+
+/// True if the currently loaded fastlowess_cpp library was built with the
+/// GPU backend enabled.
+inline bool available() { return cpp_gpu_enabled() != 0; }
+
+/**
+ * @brief Download the GPU-enabled fastlowess_cpp library for this platform.
+ *
+ * Fetches a prebuilt shared library (built with the `gpu` Cargo feature)
+ * from the matching GitHub Release via `curl` (must be on PATH; ships with
+ * Linux, macOS, and Windows 10+). Unlike the Python/Julia bindings, a
+ * running C++ process cannot swap the backend of a library it has already
+ * linked against — after downloading, relink/rebuild your application
+ * against the downloaded library (or `dlopen`/`LoadLibrary` it manually)
+ * and restart.
+ *
+ * @param yes Skip the interactive y/N confirmation prompt. Must be true
+ *            when stdin is not an interactive terminal.
+ * @return true if a GPU-enabled library is available at the printed path
+ *         (either already active, or freshly downloaded); false if the
+ *         user aborted or the download failed.
+ */
+inline bool install(bool yes = false) {
+  if (available()) {
+    std::cout << "GPU backend is already active.\n";
+    return true;
+  }
+
+  const std::string version = cpp_version();
+  const std::string asset = "libfastlowess_cpp-gpu-v" + version + "-" +
+                            detail::platformTag() + "-" + detail::archTag() +
+                            "." + detail::libraryExt();
+  const std::string url =
+      "https://github.com/thisisamirv/lowess-project/releases/download/v" +
+      version + "/" + asset;
+
+  if (!yes) {
+    if (!detail::stdinIsInteractive()) {
+      std::cerr << "install_gpu() requires confirmation; pass yes=true to "
+                   "proceed non-interactively."
+                << "\n";
+      return false;
+    }
+    std::cout << "Download and install " << asset
+              << " from github.com/thisisamirv/lowess-project? [y/N] ";
+    std::string answer;
+    std::getline(std::cin, answer);
+    if (answer != "y" && answer != "Y" && answer != "yes") {
+      std::cout << "Aborted.\n";
+      return false;
+    }
+  }
+
+  const std::string dir = detail::cacheDir();
+  detail::makeDir(dir);
+  const std::string dest = dir + "/" + asset;
+
+  std::cout << "Downloading " << url << " ...\n";
+  const std::string curl_cmd =
+      "curl -fL --progress-bar -o \"" + dest + "\" \"" + url + "\"";
+  if (std::system(curl_cmd.c_str()) != 0) { // NOLINT
+    std::cerr << "Download failed. A matching GPU build may not exist for "
+                 "this platform/version yet, or `curl` is not installed."
+              << "\n";
+    return false;
+  }
+
+  std::cout << "Downloaded to " << dest << "\n";
+  std::cout << "Relink your application against this library (or "
+               "dlopen/LoadLibrary it) and restart to use the GPU backend."
+            << "\n";
+  return true;
+}
+
+} // namespace gpu
 
 } // namespace fastlowess
 

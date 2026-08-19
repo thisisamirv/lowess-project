@@ -81,7 +81,23 @@ The batch `Lowess` constructor can run on a GPU-accelerated backend powered by `
 
 ### Enabling GPU Support
 
-GPU support is opt-in and **not included in prebuilt JLL binaries**. Build the shared library locally with the `gpu` Cargo feature enabled:
+GPU support is opt-in and **not included in prebuilt JLL binaries**. Instead of building from source, run the one-time installer, which downloads a prebuilt GPU-enabled library from the matching [GitHub Release](https://github.com/thisisamirv/lowess-project/releases) and switches the current session to use it — no restart required:
+
+```julia
+using FastLOWESS
+
+install_gpu()  # prompts for confirmation, then downloads and activates the GPU library
+```
+
+Or non-interactively:
+
+```julia
+install_gpu(yes=true)
+```
+
+The downloaded library is cached under `~/.fastlowess/gpu/` and reused (without re-downloading or re-prompting) on subsequent calls. To use it automatically in future sessions, set the printed path as `ENV["FASTLOWESS_LIB"]` in your Julia startup config. Check whether the GPU backend is currently active with `gpu_available()`.
+
+Alternatively, build from source locally with the `gpu` Cargo feature enabled:
 
 ```sh
 cd bindings/julia
@@ -105,7 +121,7 @@ model = Lowess(fraction=0.5, backend="gpu", confidence_intervals=0.95)
 result = fit(model, x, y)
 ```
 
-If the library was not built with the `gpu` feature, requesting `backend="gpu"` raises an error explaining how to enable it.
+If the library was not built with the `gpu` feature, requesting `backend="gpu"` raises an error pointing to `install_gpu()`.
 
 ### Supported Features
 

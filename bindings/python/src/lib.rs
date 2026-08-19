@@ -482,7 +482,7 @@ impl PyOnlineLowess {
 ///
 /// This class allows you to configure LOWESS parameters once and then
 /// call `fit()` multiple times with different datasets.
-#[pyclass(name = "Lowess", from_py_object)]
+#[pyclass(name = "Lowess", from_py_object, subclass)]
 #[derive(Clone)]
 pub struct PyLowess {
     builder: LowessBuilder<f64>,
@@ -646,6 +646,12 @@ impl PyLowess {
 // Module Registration
 // ============================================================================
 
+/// True if this extension was built with the `gpu` Cargo feature enabled.
+#[pyfunction]
+fn gpu_enabled() -> bool {
+    cfg!(feature = "gpu")
+}
+
 #[pymodule]
 fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyLowessResult>()?;
@@ -654,5 +660,6 @@ fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyLowess>()?;
     m.add_class::<PyStreamingLowess>()?;
     m.add_class::<PyOnlineLowess>()?;
+    m.add_function(wrap_pyfunction!(gpu_enabled, m)?)?;
     Ok(())
 }

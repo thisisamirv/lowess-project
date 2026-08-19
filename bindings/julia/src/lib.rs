@@ -61,6 +61,12 @@ pub extern "C" fn jl_last_error_message() -> *const c_char {
     })
 }
 
+/// Returns 1 if this library was built with the `gpu` Cargo feature enabled, 0 otherwise.
+#[unsafe(no_mangle)]
+pub extern "C" fn jl_gpu_enabled() -> c_int {
+    cfg!(feature = "gpu") as c_int
+}
+
 // Per-point result from an online update, passed across the FFI boundary.
 // has_value = 1 means the window is ready and smoothed is valid; 0 means
 // the window is still filling (all other fields are undefined in that case).

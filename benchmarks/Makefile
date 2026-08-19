@@ -14,6 +14,14 @@ REPO_ROOT := $(abspath ..)
 R_DIR     := $(REPO_ROOT)/bindings/r
 DEV_DIR   := $(REPO_ROOT)/dev
 
+# Set WITH_GPU=1 to build rfastlowess with the GPU execution backend enabled
+# (requires a Vulkan/Metal/DX12-capable GPU driver at runtime).
+WITH_GPU ?= 0
+R_CARGO_FEATURES :=
+ifeq ($(WITH_GPU),1)
+	R_CARGO_FEATURES := --features gpu
+endif
+
 R_PKG_NAME    := rfastlowess
 R_PKG_VERSION  = $(shell grep "^Version:" $(R_DIR)/DESCRIPTION | sed 's/Version: //')
 R_PKG_TARBALL  = $(R_PKG_NAME)_$(R_PKG_VERSION).tar.gz
@@ -72,6 +80,7 @@ build:
 	@rm -f  $(R_DIR)/src/vendor/lowess/README.md   $(R_DIR)/src/vendor/lowess/CHANGELOG.md
 	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/lowess/.cargo-checksum.json
 	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/fastLowess/.cargo-checksum.json
+ifneq ($(WITH_GPU),1)
 	@# Strip GPU deps and version from the lowess path dep in fastLowess
 	@sed -i.bak \
 		-e '/^wgpu = /d' \
@@ -82,6 +91,13 @@ build:
 		-e 's|lowess = { path = "\.\./lowess", version = "[^"]*", |lowess = { path = "../lowess", |' \
 		$(R_DIR)/src/vendor/fastLowess/Cargo.toml
 	@rm -f $(R_DIR)/src/vendor/fastLowess/Cargo.toml.bak
+else
+	@echo "WITH_GPU=1: keeping wgpu dependencies and 'gpu' feature in vendored fastLowess"
+	@sed -i.bak \
+		-e 's|lowess = { path = "\.\./lowess", version = "[^"]*", |lowess = { path = "../lowess", |' \
+		$(R_DIR)/src/vendor/fastLowess/Cargo.toml
+	@rm -f $(R_DIR)/src/vendor/fastLowess/Cargo.toml.bak
+endif
 	@printf '\n\n[workspace]\n\n[patch.crates-io]\nlowess = { path = "vendor/lowess" }\n' >> $(R_DIR)/src/Cargo.toml
 	@(cd $(R_DIR)/src && cargo vendor -q --no-delete vendor)
 	@# Strip test/bench/example/doc dirs to reduce archive size
@@ -104,7 +120,7 @@ build:
 	@echo "============================================================"
 	@echo "5. Building Rust library..."
 	@echo "============================================================"
-	@(cd $(R_DIR)/src && $(R_CROSS_ENV) cargo build -q --release $(R_CARGO_TARGET) \
+	@(cd $(R_DIR)/src && $(R_CROSS_ENV) cargo build -q --release $(R_CARGO_TARGET) $(R_CARGO_FEATURES) \
 	  || (mv Cargo.toml.orig Cargo.toml && exit 1))
 	@rm -rf $(R_DIR)/src/.cargo
 

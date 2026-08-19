@@ -108,7 +108,19 @@ The batch `fastlowess::Lowess` class can run on a GPU-accelerated backend powere
 
 ### Enabling GPU Support
 
-GPU support is opt-in and **not included in prebuilt releases**. Build the native library locally with the `gpu` Cargo feature enabled, then link against it and the platform GPU libraries (Vulkan/Metal/DX12):
+GPU support is opt-in and **not included in prebuilt releases**. Instead of building from source, call the one-time installer, which downloads a prebuilt GPU-enabled shared library from the matching [GitHub Release](https://github.com/thisisamirv/lowess-project/releases):
+
+```cpp
+#include <fastlowess.hpp>
+
+fastlowess::gpu::install(); // prompts for confirmation via curl, then downloads
+```
+
+Or non-interactively: `fastlowess::gpu::install(/*yes=*/true)`. Requires `curl` on `PATH` (ships with Linux, macOS, and Windows 10+).
+
+Unlike Python/Julia, a running C++ process cannot swap the backend of a library it already linked against — after downloading, relink/rebuild your application against the downloaded library (or `dlopen`/`LoadLibrary` it manually) and restart. Check with `fastlowess::gpu::available()`.
+
+Alternatively, build from source locally with the `gpu` Cargo feature enabled, then link against it and the platform GPU libraries (Vulkan/Metal/DX12):
 
 ```sh
 cd bindings/cpp
@@ -130,7 +142,7 @@ fastlowess::Lowess model(opts);
 auto result = model.fit(x, y);
 ```
 
-If the library was not built with the `gpu` feature, requesting `backend = "gpu"` raises a runtime error explaining how to enable it.
+If the library was not built with the `gpu` feature, requesting `backend = "gpu"` raises a runtime error pointing to `fastlowess::gpu::install()`.
 
 ### Supported Features
 

@@ -407,9 +407,16 @@ fn lowess_result_to_list(result: LowessResult<f64>) -> Result<List> {
 // Module Registration
 // ============================================================================
 
+/// True if this shared library was built with the `gpu` Cargo feature enabled.
+#[extendr]
+fn gpu_enabled() -> bool {
+    cfg!(feature = "gpu")
+}
+
 extendr_module! {
     mod rfastlowess;
     impl RLowess;
     impl RStreamingLowess;
     impl ROnlineLowess;
+    fn gpu_enabled;
 }

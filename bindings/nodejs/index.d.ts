@@ -161,3 +161,17 @@ export interface StreamingOptions {
     /** Strategy for merging chunk overlaps. Default: "weighted_average". */
     merge_strategy?: string
 }
+
+/** True if this addon was built with the `gpu` Cargo feature enabled. */
+export declare function gpu_enabled(): boolean
+
+/** True if the currently loaded fastlowess addon has the GPU backend active. */
+export declare function gpuAvailable(): boolean
+
+/**
+ * Download and install the GPU-enabled fastlowess native binding for this
+ * platform, then restart Node.js to use it. See
+ * https://lowess.readthedocs.io/api/nodejs/#gpu-acceleration for details.
+ */
+export declare function installGpu(options?: { yes?: boolean }): Promise<void>
+

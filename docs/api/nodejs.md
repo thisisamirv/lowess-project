@@ -82,7 +82,25 @@ The batch `Lowess` class can run on a GPU-accelerated backend powered by `wgpu`.
 
 ### Enabling GPU Support
 
-GPU support is opt-in and **not included in prebuilt npm binaries**. Build the native addon locally with the `gpu` Cargo feature enabled:
+GPU support is opt-in and **not included in prebuilt npm binaries**. Instead of building from source, run the one-time installer, which downloads a prebuilt GPU-enabled native addon from the matching [GitHub Release](https://github.com/thisisamirv/lowess-project/releases) and saves it as `fastlowess.node` next to `index.js` — the same local-override path the loader already checks first, so nothing else needs configuring:
+
+```javascript
+const fastlowess = require('fastlowess');
+
+await fastlowess.installGpu(); // prompts for confirmation, then downloads
+```
+
+Or non-interactively:
+
+```sh
+node -e "require('fastlowess').installGpu({ yes: true })"
+# or, via the console script installed alongside the package:
+npx fastlowess-install-gpu
+```
+
+A running Node.js process cannot swap an already-loaded native addon, so **restart Node.js** after installing for the change to take effect. Check whether the GPU backend is currently active with `fastlowess.gpuAvailable()`.
+
+Alternatively, build from source locally with the `gpu` Cargo feature enabled:
 
 ```sh
 cd bindings/nodejs
@@ -100,7 +118,7 @@ const model = new Lowess({ fraction: 0.5, backend: "gpu", confidence_intervals: 
 const result = model.fit(x, y);
 ```
 
-If the addon was not built with the `gpu` feature, requesting `backend: "gpu"` raises a runtime error explaining how to enable it.
+If the addon was not built with the `gpu` feature, requesting `backend: "gpu"` raises a runtime error pointing to `installGpu()`.
 
 ### Supported Features
 

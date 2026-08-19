@@ -9,12 +9,13 @@ fastLowess Rust crate.
 from .__version__ import __version__
 from ._core import (
     Diagnostics,
-    Lowess,
     LowessResult,
     OnlineLowess,
     OnlineOutput,
     StreamingLowess,
 )
+from ._gpu_installer import gpu_available, install_gpu
+from ._lowess import Lowess
 
 __all__ = [
     "Diagnostics",
@@ -24,4 +25,6 @@ __all__ = [
     "OnlineOutput",
     "StreamingLowess",
     "__version__",
+    "gpu_available",
+    "install_gpu",
 ]

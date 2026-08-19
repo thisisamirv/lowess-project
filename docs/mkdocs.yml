@@ -142,6 +142,7 @@ nav:
       - Intervals: user-guide/intervals.md
       - Cross-Validation: user-guide/cross-validation.md
       - Custom Weights: user-guide/custom-weights.md
+      - GPU Backend: user-guide/gpu-backend.md
       - Use Cases:
           - user-guide/use-cases/index.md
           - Genomics: user-guide/use-cases/genomics.md

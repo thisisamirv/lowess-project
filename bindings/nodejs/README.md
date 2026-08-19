@@ -49,7 +49,7 @@ The fastest, most robust, and most feature-complete language-agnostic LOWESS (Lo
 
 ### GPU Backend
 
-In addition to `parallel = true` (multi-core CPU), `LowessOptions` (batch) accepts `backend = "gpu"` to run on the GPU via `wgpu` (Vulkan/Metal/DX12). GPU support is opt-in and not included in prebuilt releases — build locally with `cargo build --features gpu` (from `bindings/cpp/`) to enable it. `StreamingOptions`/`OnlineOptions` remain CPU-only; the Rust core optimizes GPU for static batch data.
+In addition to `parallel: true` (multi-core CPU), the batch `Lowess` class accepts `backend: "gpu"` to run on the GPU via `wgpu` (Vulkan/Metal/DX12). GPU support is opt-in and not included in prebuilt npm binaries — run `await fastlowess.installGpu()` once to download a prebuilt GPU-enabled addon from the matching GitHub Release and restart Node.js, or build locally with `napi build --release --features gpu` (from `bindings/nodejs/`). `StreamingLowess`/`OnlineLowess` remain CPU-only; the Rust core optimizes GPU for static batch data.
 
 ## Documentation
 

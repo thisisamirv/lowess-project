@@ -25,6 +25,12 @@ fn map_runtime<T, E: ToString>(result: std::result::Result<T, E>) -> Result<T> {
     binding_support::map_runtime(result).map_err(to_napi_error)
 }
 
+/// True if this addon was built with the `gpu` Cargo feature enabled.
+#[napi(js_name = "gpu_enabled")]
+pub fn gpu_enabled() -> bool {
+    cfg!(feature = "gpu")
+}
+
 /// Diagnostic statistics for the LOWESS fit.
 #[napi(object)]
 pub struct Diagnostics {

@@ -6,6 +6,7 @@
 
 const { existsSync, readFileSync } = require('fs')
 const { join } = require('path')
+const gpuDownload = require('./gpu-download')
 
 const { platform, arch } = process
 
@@ -296,7 +297,7 @@ const _SMOOTH_OPTION_KEYS = new Set([
     'zero_weight_fallback', 'boundary_policy', 'scaling_method', 'auto_converge',
     'return_residuals', 'return_robustness_weights', 'return_diagnostics',
     'confidence_intervals', 'prediction_intervals', 'cv_fractions', 'cv_method',
-    'cv_k', 'cv_seed', 'return_se', 'parallel',
+    'cv_k', 'cv_seed', 'return_se', 'parallel', 'backend',
 ])
 
 const _STREAMING_OPTION_KEYS = new Set(['chunk_size', 'overlap', 'merge_strategy'])
@@ -333,6 +334,13 @@ function _normalizeCustomWeights(cw) {
 class Lowess extends _NativeLowess {
     constructor(opts) {
         _validateOptions(opts, _SMOOTH_OPTION_KEYS, 'SmoothOptions')
+        if (opts && opts.backend === 'gpu' && !gpuAvailable()) {
+            throw new Error(
+                'GPU backend not installed in this build. Run `await fastlowess.installGpu()` ' +
+                'once to download and install a GPU-enabled build, then restart Node.js. ' +
+                'See https://lowess.readthedocs.io/api/nodejs/#gpu-acceleration for details.'
+            )
+        }
         super(opts)
     }
 
@@ -365,3 +373,79 @@ module.exports.Lowess = Lowess
 module.exports.StreamingLowess = StreamingLowess
 module.exports.OnlineLowess = OnlineLowess
 module.exports.LowessResult = LowessResult
+
+// ---------------------------------------------------------------------------
+// GPU backend: availability check + one-time downloader/installer
+// ---------------------------------------------------------------------------
+
+function gpuAvailable() {
+    return typeof nativeBinding.gpu_enabled === 'function' && nativeBinding.gpu_enabled()
+}
+
+function _gpuPlatformSuffix() {
+    if (platform === 'win32' && arch === 'x64') return 'win32-x64-msvc'
+    if (platform === 'darwin' && arch === 'x64') return 'darwin-x64'
+    if (platform === 'darwin' && arch === 'arm64') return 'darwin-arm64'
+    if (platform === 'linux' && arch === 'x64' && !isMusl()) return 'linux-x64-gnu'
+    return null
+}
+
+/**
+ * Download and install the GPU-enabled fastlowess native binding for this
+ * platform, then restart Node.js to use it.
+ *
+ * Fetches a prebuilt `.node` addon (built with the `gpu` Cargo feature) from
+ * the matching GitHub Release and saves it as `fastlowess.node` next to this
+ * file — the same local-override path this loader already checks first, so
+ * no other configuration is needed. A running Node.js process cannot swap
+ * an already-loaded native addon, so a restart is required afterwards.
+ *
+ * @param {{yes?: boolean}} [options] Pass `{ yes: true }` to skip the
+ *   interactive y/N confirmation prompt (required when stdin is not a TTY).
+ */
+async function installGpu(options = {}) {
+    const { yes = false } = options
+    if (gpuAvailable()) {
+        console.log('GPU backend is already active.')
+        return
+    }
+
+    const suffix = _gpuPlatformSuffix()
+    if (!suffix) {
+        throw new Error(
+            `No prebuilt GPU binary available for ${platform}-${arch}. ` +
+            'Build from source instead: see https://lowess.readthedocs.io/api/nodejs/#gpu-acceleration'
+        )
+    }
+
+    const { version } = require('./package.json')
+    const assetName = `fastlowess-gpu.${suffix}.node`
+    const url = `https://github.com/${gpuDownload.REPO}/releases/download/v${version}/${assetName}`
+    const destPath = join(__dirname, 'fastlowess.node')
+
+    if (!yes) {
+        const ok = await gpuDownload.confirm(
+            `Download and install ${assetName} from github.com/${gpuDownload.REPO}? [y/N] `
+        )
+        if (!ok) {
+            console.log('Aborted.')
+            return
+        }
+    }
+
+    console.log(`Downloading ${url} ...`)
+    try {
+        await gpuDownload.downloadToFile(url, destPath)
+    } catch (e) {
+        throw new Error(
+            `Failed to download ${url}: ${e.message}\n` +
+            'A matching GPU build may not exist for this platform/version yet.'
+        )
+    }
+
+    console.log(`GPU backend installed at ${destPath}.`)
+    console.log('Restart Node.js for the change to take effect.')
+}
+
+module.exports.gpuAvailable = gpuAvailable
+module.exports.installGpu = installGpu

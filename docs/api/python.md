@@ -84,7 +84,25 @@ The batch `Lowess` class can run on a GPU-accelerated backend powered by `wgpu`.
 
 ### Enabling GPU Support
 
-GPU support is opt-in and **not included in published PyPI wheels**. Build the extension locally with the `gpu` Cargo feature enabled:
+GPU support is opt-in and **not included in published PyPI wheels**. Instead of building from source, run the one-time installer, which downloads a prebuilt GPU-enabled wheel from the matching [GitHub Release](https://github.com/thisisamirv/lowess-project/releases) and installs it in place of the CPU-only build:
+
+```python
+import fastlowess as fl
+
+fl.install_gpu()  # prompts for confirmation, then installs; restart Python afterwards
+```
+
+Or non-interactively:
+
+```sh
+python -c "import fastlowess; fastlowess.install_gpu(yes=True)"
+# or, via the console script installed alongside the package:
+fastlowess-install-gpu
+```
+
+Check whether the GPU backend is currently installed with `fastlowess.gpu_available()`.
+
+Alternatively, build from source locally with the `gpu` Cargo feature enabled:
 
 ```sh
 cd bindings/python
@@ -102,7 +120,7 @@ model = fl.Lowess(fraction=0.5, backend="gpu", confidence_intervals=0.95)
 result = model.fit(x, y)
 ```
 
-If the package was not built with the `gpu` feature, requesting `backend="gpu"` raises a runtime error explaining how to enable it.
+If the package was not built with the `gpu` feature, requesting `backend="gpu"` raises a runtime error pointing to `fastlowess.install_gpu()`.
 
 ### Supported Features
 

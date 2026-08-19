@@ -1,0 +1,617 @@
+name: Release GPU
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch: # Allow manual trigger for testing
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  # ============================================================================
+  # BUILD GPU WHEELS - Linux x86_64
+  # ============================================================================
+  linux-x86_64:
+    name: Build Linux x86_64 GPU (py${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Build GPU wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          working-directory: bindings/python
+          target: x86_64
+          args: --release --out dist --interpreter python${{ matrix.python }} --features gpu
+          manylinux: auto
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-wheels-linux-x86_64-py${{ matrix.python }}
+          path: bindings/python/dist
+
+  # ============================================================================
+  # BUILD GPU WHEELS - macOS x86_64 (Intel)
+  # ============================================================================
+  macos-x86_64:
+    name: Build macOS x86_64 GPU
+    runs-on: macos-15-intel
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.8"
+
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+
+      - name: Build GPU wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          working-directory: bindings/python
+          target: x86_64
+          args: --release --out dist --features gpu
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-wheels-macos-x86_64
+          path: bindings/python/dist
+
+  # ============================================================================
+  # BUILD GPU WHEELS - macOS ARM64 (Apple Silicon)
+  # ============================================================================
+  macos-aarch64:
+    name: Build macOS ARM64 GPU
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.8"
+
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+
+      - name: Build GPU wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          working-directory: bindings/python
+          target: aarch64
+          args: --release --out dist --features gpu
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-wheels-macos-aarch64
+          path: bindings/python/dist
+
+  # ============================================================================
+  # BUILD GPU WHEELS - Windows x86_64
+  # ============================================================================
+  windows-x86_64:
+    name: Build Windows x86_64 GPU
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.8"
+
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+
+      - name: Build GPU wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          working-directory: bindings/python
+          target: x86_64
+          args: --release --out dist --features gpu
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-wheels-windows-x86_64
+          path: bindings/python/dist
+
+  # ============================================================================
+  # BUILD GPU LIBRARY - Julia (Linux x86_64)
+  # ============================================================================
+  julia-linux-x86_64:
+    name: Build Julia GPU library (Linux x86_64)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Build GPU library
+        run: cargo build --release --features gpu --manifest-path bindings/julia/Cargo.toml
+
+      - name: Rename asset
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp target/release/libfastlowess_jl.so "dist/fastlowess_jl-gpu-${{ github.event.release.tag_name || 'dev' }}-linux-x86_64.so"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-julia-linux-x86_64
+          path: dist
+
+  # ============================================================================
+  # BUILD GPU LIBRARY - Julia (macOS x86_64)
+  # ============================================================================
+  julia-macos-x86_64:
+    name: Build Julia GPU library (macOS x86_64)
+    runs-on: macos-15-intel
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Build GPU library
+        run: cargo build --release --features gpu --manifest-path bindings/julia/Cargo.toml
+
+      - name: Rename asset
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp target/release/libfastlowess_jl.dylib "dist/fastlowess_jl-gpu-${{ github.event.release.tag_name || 'dev' }}-macos-x86_64.dylib"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-julia-macos-x86_64
+          path: dist
+
+  # ============================================================================
+  # BUILD GPU LIBRARY - Julia (macOS ARM64)
+  # ============================================================================
+  julia-macos-aarch64:
+    name: Build Julia GPU library (macOS ARM64)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Build GPU library
+        run: cargo build --release --features gpu --manifest-path bindings/julia/Cargo.toml
+
+      - name: Rename asset
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp target/release/libfastlowess_jl.dylib "dist/fastlowess_jl-gpu-${{ github.event.release.tag_name || 'dev' }}-macos-aarch64.dylib"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-julia-macos-aarch64
+          path: dist
+
+  # ============================================================================
+  # BUILD GPU LIBRARY - Julia (Windows x86_64)
+  # ============================================================================
+  julia-windows-x86_64:
+    name: Build Julia GPU library (Windows x86_64)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Build GPU library
+        run: cargo build --release --features gpu --manifest-path bindings/julia/Cargo.toml
+
+      - name: Rename asset
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          $tag = if ("${{ github.event.release.tag_name }}") { "${{ github.event.release.tag_name }}" } else { "dev" }
+          Copy-Item target/release/fastlowess_jl.dll "dist/fastlowess_jl-gpu-$tag-windows-x86_64.dll"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-julia-windows-x86_64
+          path: dist
+
+  # ============================================================================
+  # BUILD GPU LIBRARY - C++ (Linux x86_64)
+  # ============================================================================
+  cpp-linux-x86_64:
+    name: Build C++ GPU library (Linux x86_64)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Build GPU library
+        run: cargo build --release --features gpu --manifest-path bindings/cpp/Cargo.toml
+
+      - name: Rename asset
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp target/release/libfastlowess_cpp.so "dist/libfastlowess_cpp-gpu-${{ github.event.release.tag_name || 'dev' }}-linux-x86_64.so"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-cpp-linux-x86_64
+          path: dist
+
+  # ============================================================================
+  # BUILD GPU LIBRARY - C++ (macOS x86_64)
+  # ============================================================================
+  cpp-macos-x86_64:
+    name: Build C++ GPU library (macOS x86_64)
+    runs-on: macos-15-intel
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Build GPU library
+        run: cargo build --release --features gpu --manifest-path bindings/cpp/Cargo.toml
+
+      - name: Rename asset
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp target/release/libfastlowess_cpp.dylib "dist/libfastlowess_cpp-gpu-${{ github.event.release.tag_name || 'dev' }}-macos-x86_64.dylib"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-cpp-macos-x86_64
+          path: dist
+
+  # ============================================================================
+  # BUILD GPU LIBRARY - C++ (macOS ARM64)
+  # ============================================================================
+  cpp-macos-aarch64:
+    name: Build C++ GPU library (macOS ARM64)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Build GPU library
+        run: cargo build --release --features gpu --manifest-path bindings/cpp/Cargo.toml
+
+      - name: Rename asset
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp target/release/libfastlowess_cpp.dylib "dist/libfastlowess_cpp-gpu-${{ github.event.release.tag_name || 'dev' }}-macos-aarch64.dylib"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-cpp-macos-aarch64
+          path: dist
+
+  # ============================================================================
+  # BUILD GPU LIBRARY - C++ (Windows x86_64)
+  # ============================================================================
+  cpp-windows-x86_64:
+    name: Build C++ GPU library (Windows x86_64)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Build GPU library
+        run: cargo build --release --features gpu --manifest-path bindings/cpp/Cargo.toml
+
+      - name: Rename asset
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          $tag = if ("${{ github.event.release.tag_name }}") { "${{ github.event.release.tag_name }}" } else { "dev" }
+          Copy-Item target/release/fastlowess_cpp.dll "dist/libfastlowess_cpp-gpu-$tag-windows-x86_64.dll"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-cpp-windows-x86_64
+          path: dist
+
+  # ============================================================================
+  # BUILD GPU BINARY - Node.js (linux-x64-gnu)
+  # ============================================================================
+  node-linux-x64-gnu:
+    name: Build Node.js GPU binary (linux-x64-gnu)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        working-directory: bindings/nodejs
+        run: npm install --ignore-scripts
+
+      - name: Build GPU binary
+        working-directory: bindings/nodejs
+        run: npx napi build --release --target x86_64-unknown-linux-gnu --features gpu
+
+      - name: Rename asset
+        working-directory: bindings/nodejs
+        run: |
+          mkdir -p dist
+          cp fastlowess.linux-x64-gnu.node dist/fastlowess-gpu.linux-x64-gnu.node
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-node-linux-x64-gnu
+          path: bindings/nodejs/dist
+
+  # ============================================================================
+  # BUILD GPU BINARY - Node.js (darwin-x64)
+  # ============================================================================
+  node-darwin-x64:
+    name: Build Node.js GPU binary (darwin-x64)
+    runs-on: macos-15-intel
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        working-directory: bindings/nodejs
+        run: npm install --ignore-scripts
+
+      - name: Build GPU binary
+        working-directory: bindings/nodejs
+        run: npx napi build --release --target x86_64-apple-darwin --features gpu
+
+      - name: Rename asset
+        working-directory: bindings/nodejs
+        run: |
+          mkdir -p dist
+          cp fastlowess.darwin-x64.node dist/fastlowess-gpu.darwin-x64.node
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-node-darwin-x64
+          path: bindings/nodejs/dist
+
+  # ============================================================================
+  # BUILD GPU BINARY - Node.js (darwin-arm64)
+  # ============================================================================
+  node-darwin-arm64:
+    name: Build Node.js GPU binary (darwin-arm64)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        working-directory: bindings/nodejs
+        run: npm install --ignore-scripts
+
+      - name: Build GPU binary
+        working-directory: bindings/nodejs
+        run: npx napi build --release --target aarch64-apple-darwin --features gpu
+
+      - name: Rename asset
+        working-directory: bindings/nodejs
+        run: |
+          mkdir -p dist
+          cp fastlowess.darwin-arm64.node dist/fastlowess-gpu.darwin-arm64.node
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-node-darwin-arm64
+          path: bindings/nodejs/dist
+
+  # ============================================================================
+  # BUILD GPU BINARY - Node.js (win32-x64-msvc)
+  # ============================================================================
+  node-win32-x64-msvc:
+    name: Build Node.js GPU binary (win32-x64-msvc)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        working-directory: bindings/nodejs
+        run: npm install --ignore-scripts
+
+      - name: Build GPU binary
+        working-directory: bindings/nodejs
+        run: npx napi build --release --target x86_64-pc-windows-msvc --features gpu
+
+      - name: Rename asset
+        working-directory: bindings/nodejs
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Copy-Item fastlowess.win32-x64-msvc.node dist/fastlowess-gpu.win32-x64-msvc.node
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-node-win32-x64-msvc
+          path: bindings/nodejs/dist
+
+  # ============================================================================
+  # BUILD GPU LIBRARY - R (Linux x86_64)
+  # ============================================================================
+  r-linux-x86_64:
+    name: Build R GPU library (Linux x86_64)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: r-lib/actions/setup-r@v2
+
+      - name: Build and install with GPU feature
+        working-directory: benchmarks
+        run: make WITH_GPU=1 install
+
+      - name: Locate and rename shared library
+        run: |
+          LIBDIR=$(Rscript -e 'cat(system.file("libs", package="rfastlowess"))')
+          mkdir -p dist
+          cp "$LIBDIR/rfastlowess.so" "dist/librfastlowess-gpu-${{ github.event.release.tag_name || 'dev' }}-linux-x86_64.so"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-r-linux-x86_64
+          path: dist
+
+  # ============================================================================
+  # BUILD GPU LIBRARY - R (macOS x86_64)
+  # ============================================================================
+  r-macos-x86_64:
+    name: Build R GPU library (macOS x86_64)
+    runs-on: macos-15-intel
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: r-lib/actions/setup-r@v2
+
+      - name: Build and install with GPU feature
+        working-directory: benchmarks
+        run: make WITH_GPU=1 install
+
+      - name: Locate and rename shared library
+        run: |
+          LIBDIR=$(Rscript -e 'cat(system.file("libs", package="rfastlowess"))')
+          mkdir -p dist
+          cp "$LIBDIR/rfastlowess.so" "dist/librfastlowess-gpu-${{ github.event.release.tag_name || 'dev' }}-macos-x86_64.so"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-r-macos-x86_64
+          path: dist
+
+  # ============================================================================
+  # BUILD GPU LIBRARY - R (macOS ARM64)
+  # ============================================================================
+  r-macos-aarch64:
+    name: Build R GPU library (macOS ARM64)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: r-lib/actions/setup-r@v2
+
+      - name: Build and install with GPU feature
+        working-directory: benchmarks
+        run: make WITH_GPU=1 install
+
+      - name: Locate and rename shared library
+        run: |
+          LIBDIR=$(Rscript -e 'cat(system.file("libs", package="rfastlowess"))')
+          mkdir -p dist
+          cp "$LIBDIR/rfastlowess.so" "dist/librfastlowess-gpu-${{ github.event.release.tag_name || 'dev' }}-macos-aarch64.so"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-r-macos-aarch64
+          path: dist
+
+  # ============================================================================
+  # BUILD GPU LIBRARY - R (Windows x86_64)
+  # ============================================================================
+  r-windows-x86_64:
+    name: Build R GPU library (Windows x86_64)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          rtools-version: "45"
+
+      - name: Build and install with GPU feature
+        shell: bash
+        working-directory: benchmarks
+        run: make WITH_GPU=1 install
+
+      - name: Locate and rename shared library
+        shell: pwsh
+        run: |
+          $libDir = Rscript -e "cat(system.file('libs', package='rfastlowess'))"
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          $tag = if ("${{ github.event.release.tag_name }}") { "${{ github.event.release.tag_name }}" } else { "dev" }
+          Copy-Item "$libDir/rfastlowess.dll" "dist/librfastlowess-gpu-$tag-windows-x86_64.dll"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-r-windows-x86_64
+          path: dist
+
+  # ============================================================================
+  # ATTACH WHEELS/LIBRARIES TO THE GITHUB RELEASE (not published elsewhere)
+  # ============================================================================
+  attach-to-release:
+    name: Attach GPU wheels/libraries to GitHub Release
+    needs:
+      - linux-x86_64
+      - macos-x86_64
+      - macos-aarch64
+      - windows-x86_64
+      - julia-linux-x86_64
+      - julia-macos-x86_64
+      - julia-macos-aarch64
+      - julia-windows-x86_64
+      - cpp-linux-x86_64
+      - cpp-macos-x86_64
+      - cpp-macos-aarch64
+      - cpp-windows-x86_64
+      - node-linux-x64-gnu
+      - node-darwin-x64
+      - node-darwin-arm64
+      - node-win32-x64-msvc
+      - r-linux-x86_64
+      - r-macos-x86_64
+      - r-macos-aarch64
+      - r-windows-x86_64
+    runs-on: ubuntu-latest
+    # Only attach on release events; workflow_dispatch is for build verification only
+    if: github.event_name == 'release'
+    permissions:
+      contents: write # Required to upload release assets
+    steps:
+      - name: Download all wheel artifacts
+        uses: actions/download-artifact@v6
+        with:
+          pattern: gpu-*
+          path: dist
+          merge-multiple: true
+
+      - name: Upload wheels and libraries as release assets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${{ github.event.release.tag_name }}" dist/*.whl dist/*.so dist/*.dylib dist/*.dll dist/*.node --clobber

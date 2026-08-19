@@ -85,4 +85,12 @@ Comprehensive documentation for all LOWESS parameters and features.
 
     [:octicons-arrow-right-24: Custom Weights](custom-weights.md)
 
+- :material-expansion-card: **GPU Backend**
+
+    ---
+
+    Availability, checks, and usage per language
+
+    [:octicons-arrow-right-24: GPU Backend](gpu-backend.md)
+
 </div>

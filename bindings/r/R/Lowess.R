@@ -106,6 +106,14 @@ Lowess <- function(
     if (...length() > 0) {
         stop("All arguments after 'fraction' must be named.", call. = FALSE)
     }
+    if (identical(backend, "gpu") && !gpu_available()) {
+        stop(
+            "GPU backend not installed in this build. Run `install_gpu()` once to ",
+            "download and install a GPU-enabled build, then restart R. See ",
+            "https://lowess.readthedocs.io/api/r/#gpu-acceleration for details.",
+            call. = FALSE
+        )
+    }
     validate_params(fraction = fraction, iterations = iterations)
     handle <- do.call(RLowess$new, env_args(lowess_params))
 

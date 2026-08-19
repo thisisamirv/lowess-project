@@ -4,6 +4,9 @@
     "description": "High-performance LOWESS smoothing for Node.js",
     "main": "index.js",
     "types": "index.d.ts",
+    "bin": {
+        "fastlowess-install-gpu": "./bin/install-gpu.js"
+    },
     "scripts": {
         "build": "napi build --release",
         "build:debug": "napi build",

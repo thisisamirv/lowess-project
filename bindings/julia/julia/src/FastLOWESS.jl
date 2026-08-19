@@ -27,8 +27,10 @@ module FastLOWESS
 export Lowess, StreamingLowess, OnlineLowess
 export fit, process_chunk, finalize, add_point
 export LowessResult, OnlineOutput, Diagnostics
+export gpu_available, install_gpu
 
 import Base: finalize
+using Downloads: download
 
 # Try to import JLL package first
 try
@@ -106,6 +108,111 @@ end
 
 function __init__()
 	libfastlowess[] = find_library()
+end
+
+const _GPU_REPO = "thisisamirv/lowess-project"
+
+# Version string read straight from this package's own Project.toml so it
+# always matches the installed FastLOWESS.jl version, without depending on
+# `pkgversion` (Julia 1.9+) given this package supports Julia 1.6+.
+function _package_version()
+	project_file = joinpath(dirname(@__DIR__), "Project.toml")
+	m = match(r"^version\s*=\s*\"([^\"]+)\""m, read(project_file, String))
+	return m === nothing ? "unknown" : m.captures[1]
+end
+
+function _gpu_platform_tag()
+	Sys.iswindows() && return "windows"
+	Sys.isapple() && return "macos"
+	return "linux"
+end
+
+function _gpu_arch_tag()
+	arch = string(Sys.ARCH)
+	(arch == "x86_64") && return "x86_64"
+	(arch == "aarch64" || arch == "arm64") && return "aarch64"
+	return arch
+end
+
+"""
+	gpu_available()::Bool
+
+Return `true` if the currently loaded FastLOWESS native library was built
+with the GPU backend enabled.
+"""
+function gpu_available()
+	return (@ccall current_library().jl_gpu_enabled()::Cint) != 0
+end
+
+"""
+	install_gpu(; yes::Bool = false)
+
+Download and install the GPU-enabled FastLOWESS native library for this
+platform, then switch the current Julia session to use it immediately — no
+restart required. The GPU backend is not included in the default JLL binary;
+this fetches a prebuilt library from the matching GitHub Release
+(`github.com/thisisamirv/lowess-project`).
+
+Set `yes=true` to skip the interactive `y/N` confirmation prompt (required
+when stdin is not an interactive terminal).
+
+Once downloaded, the library is cached under `~/.fastlowess/gpu/` and reused
+on subsequent calls without re-downloading or re-prompting. To use the GPU
+build automatically in future sessions (without calling `install_gpu()`
+again), set `ENV["FASTLOWESS_LIB"]` to the printed cache path in your Julia
+startup config.
+"""
+function install_gpu(; yes::Bool = false)
+	if gpu_available()
+		println("GPU backend is already active.")
+		return nothing
+	end
+
+	version = _package_version()
+	platform = _gpu_platform_tag()
+	arch = _gpu_arch_tag()
+	ext = Sys.iswindows() ? "dll" : Sys.isapple() ? "dylib" : "so"
+	asset_name = "fastlowess_jl-gpu-v$(version)-$(platform)-$(arch).$(ext)"
+	url = "https://github.com/$(_GPU_REPO)/releases/download/v$(version)/$(asset_name)"
+
+	cache_dir = joinpath(homedir(), ".fastlowess", "gpu")
+	mkpath(cache_dir)
+	dest = joinpath(cache_dir, asset_name)
+
+	if isfile(dest)
+		println("Using cached GPU build at $(dest)")
+	else
+		if !yes
+			if !isa(stdin, Base.TTY)
+				error("install_gpu() requires confirmation. Pass yes=true to proceed non-interactively.")
+			end
+			print("Download and install $(asset_name) from github.com/$(_GPU_REPO)? [y/N] ")
+			answer = lowercase(strip(readline()))
+			if answer != "y" && answer != "yes"
+				println("Aborted.")
+				return nothing
+			end
+		end
+
+		println("Downloading $(url) ...")
+		try
+			download(url, dest)
+		catch e
+			rm(dest, force = true)
+			error("Failed to download $(url): $(e)\nA matching GPU build may not exist for this platform/version yet.")
+		end
+	end
+
+	previous = libfastlowess[]
+	libfastlowess[] = dest
+	if !gpu_available()
+		libfastlowess[] = previous
+		error("Downloaded library does not report GPU support. The download may be corrupted or mismatched; try again.")
+	end
+
+	println("GPU backend installed and active for this session.")
+	println("To use it automatically in future sessions: ENV[\"FASTLOWESS_LIB\"] = \"$(dest)\"")
+	return nothing
 end
 
 """

@@ -89,7 +89,19 @@ The batch `Lowess()` constructor can run on a GPU-accelerated backend powered by
 
 ### Enabling GPU Support
 
-GPU support is opt-in and **not included in CRAN/Bioconductor releases** (the default build strips `wgpu` and its dependencies to keep the package submission-safe). Build and install the package locally with `WITH_GPU=1`:
+GPU support is opt-in and **not included in CRAN/Bioconductor releases** (the default build strips `wgpu` and its dependencies to keep the package submission-safe). Instead of building from source, run the one-time installer, which downloads a prebuilt GPU-enabled shared library from the matching [GitHub Release](https://github.com/thisisamirv/lowess-project/releases) and installs it in place of the current (CPU-only) library:
+
+```r
+library(rfastlowess)
+
+install_gpu() # prompts for confirmation, then downloads and installs
+```
+
+Or non-interactively: `install_gpu(yes = TRUE)`.
+
+A running R session cannot swap an already-loaded shared library, so **restart R** after installing for the change to take effect. Check with `gpu_available()`.
+
+Alternatively, build from source locally with `WITH_GPU=1`:
 
 ```sh
 make -f bindings/r/Makefile WITH_GPU=1
@@ -108,7 +120,7 @@ model <- Lowess(fraction = 0.5, backend = "gpu", confidence_intervals = 0.95)
 result <- fit(model, x, y)
 ```
 
-If the package was not built with `WITH_GPU=1`, requesting `backend = "gpu"` raises an error explaining how to enable it.
+If the package was not built with `WITH_GPU=1`, requesting `backend = "gpu"` raises an error pointing to `install_gpu()`.
 
 ### Supported Features
 
