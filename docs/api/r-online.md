@@ -12,12 +12,13 @@ The `OnlineLowess` class updates the model incrementally with new data points.
 
 ```r
 library(rfastlowess)
-set.seed(42)
-x <- seq(0, 2 * pi, length.out = 100)
-y <- sin(x) + rnorm(100, sd = 0.3)
 
-library(rfastlowess)
-online <- OnlineLowess(fraction = 0.3, window_capacity = 50)
+online <- OnlineLowess(fraction = 0.3, window_capacity = 50L)
+print(online)
+#> <OnlineLowess Model>
+#>   Fraction:          0.3
+#>   Window Capacity:   50
+#>   Min Points:        3
 ```
 
 **Methods:**
@@ -28,8 +29,16 @@ set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.3)
 
-online <- OnlineLowess(fraction = 0.3, window_capacity = 50)
-result <- add_point(online, x[[1L]], y[[1L]])  # returns list or NULL
+online <- OnlineLowess(fraction = 0.3, window_capacity = 50L)
+
+# Returns NULL until min_points (3) are reached
+result <- add_point(online, x[[1L]], y[[1L]])  # NULL
+result <- add_point(online, x[[2L]], y[[2L]])  # NULL
+
+# Returns a named list once enough points are available
+result <- add_point(online, x[[3L]], y[[3L]])
+cat(result$smoothed)
+#> 0.2355
 ```
 
 * Adds a single point to the sliding window. Returns a named list (`$smoothed`, `$residual`, …) once the window has enough points, or `NULL` while still filling.

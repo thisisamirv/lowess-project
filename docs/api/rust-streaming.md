@@ -59,6 +59,25 @@ fn main() -> Result<(), LowessError> {
 
 * Finalizes processing and returns remaining buffered results.
 
+## Result Structure
+
+### `LowessResult<T>`
+
+Returned by `process_chunk()` and `finalize()`.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `x` | `Vec<T>` | Sorted x values |
+| `y` | `Vec<T>` | Smoothed y values |
+| `fraction_used` | `T` | Fraction used |
+| `iterations_used` | `Option<usize>` | Robustness iterations actually performed |
+| `residuals` | `Option<Vec<T>>` | Residuals (if `return_residuals()`) |
+| `robustness_weights` | `Option<Vec<T>>` | Robustness weights (if `return_robustness_weights()`) |
+| `diagnostics` | `Option<Diagnostics<T>>` | Fit metrics (if `return_diagnostics()`) |
+| `dimensions` | `usize` | Number of predictor dimensions |
+
+See [rust.md](rust.md) for the full `LowessResult<T>` field reference.
+
 ## Builder Options
 
 ### Streaming Options

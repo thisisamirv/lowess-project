@@ -82,6 +82,25 @@ int main() {
 
 * Finalizes the smoothing process and returns any remaining buffered results.
 
+## Result Structure
+
+### `fastlowess::LowessResult`
+
+Returned (inside `Expected`) by `process_chunk()` and `finalize()`.
+
+| Method | Return Type | Description |
+| --- | --- | --- |
+| `x_vector()` | `std::vector<double>` | Sorted x values |
+| `y_vector()` | `std::vector<double>` | Smoothed y values |
+| `fraction_used()` | `double` | Fraction used |
+| `iterations_used()` | `int` | Robustness iterations (-1 = N/A) |
+| `residuals()` | `std::vector<double>` | Residuals (if `return_residuals`; empty if not) |
+| `robustness_weights()` | `std::vector<double>` | Robustness weights (if `return_robustness_weights`; empty if not) |
+| `diagnostics()` | `Diagnostics` | Fit metrics — check `has_value()` (if `return_diagnostics`) |
+| `dimensions()` | `int` | Number of predictor dimensions |
+
+See [cpp.md](cpp.md) for the full `LowessResult` field reference.
+
 ## Options Structure
 
 ### `StreamingOptions` (inherits `LowessOptions`)

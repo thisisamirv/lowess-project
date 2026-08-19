@@ -14,12 +14,14 @@ The `Lowess` class allows configuring the LOWESS parameters once and fitting mul
 
 ```r
 library(rfastlowess)
-set.seed(42)
-x <- seq(0, 2 * pi, length.out = 100)
-y <- sin(x) + rnorm(100, sd = 0.3)
 
-library(rfastlowess)
 model <- Lowess(fraction = 0.5, iterations = 3)
+print(model)
+#> <Lowess Model>
+#>   Fraction:          0.5
+#>   Iterations:        3
+#>   Weight Function:   tricube
+#>   Parallel:          TRUE
 ```
 
 **Methods:**
@@ -32,6 +34,10 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Lowess(fraction = 0.5)
 result <- fit(model, x, y, custom_weights = NULL)
+print(result)
+#> <LowessResult>
+#>   Points:            100
+#>   Fraction Used:     0.5
 ```
 
 * Fits the model to the provided `x` and `y` numeric vectors.
@@ -184,6 +190,9 @@ result <- fit(model, x, y)
 
 # Print summary
 print(result)
+#> <LowessResult>
+#>   Points:            100
+#>   Fraction Used:     0.5
 
 # Plot result
 plot(result)

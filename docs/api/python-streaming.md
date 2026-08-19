@@ -49,6 +49,25 @@ final_result = stream.finalize()
 
 * Finalizes the smoothing process and returns any remaining buffered results.
 
+## Result Structure
+
+### `LowessResult`
+
+Returned by `process_chunk()` and `finalize()`.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `x` | `ndarray` | Sorted x values |
+| `y` | `ndarray` | Smoothed y values |
+| `fraction_used` | `float` | Fraction used |
+| `iterations_used` | `int \| None` | Robustness iterations actually performed |
+| `residuals` | `ndarray \| None` | Residuals (if `return_residuals`) |
+| `robustness_weights` | `ndarray \| None` | Robustness weights (if `return_robustness_weights`) |
+| `diagnostics` | `Diagnostics \| None` | Fit metrics (if `return_diagnostics`) |
+| `dimensions` | `int` | Number of predictor dimensions |
+
+See [python.md](python.md) for the full `LowessResult` field reference.
+
 ## Options Structure
 
 ### `StreamingOptions` (inherits `LowessOptions`)

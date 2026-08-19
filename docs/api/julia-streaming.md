@@ -54,6 +54,25 @@ final_result = finalize(stream)
 
 * Finalizes the smoothing process and returns any remaining buffered results.
 
+## Result Structure
+
+### `LowessResult`
+
+Returned by `process_chunk()` and `finalize()`.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `x` | `Vector{Float64}` | Sorted x values |
+| `y` | `Vector{Float64}` | Smoothed y values |
+| `fraction_used` | `Float64` | Fraction used |
+| `iterations_used` | `Int` | Robustness iterations actually performed (-1 = N/A) |
+| `residuals` | `Union{Vector{Float64}, Nothing}` | Residuals (if `return_residuals`) |
+| `robustness_weights` | `Union{Vector{Float64}, Nothing}` | Robustness weights (if `return_robustness_weights`) |
+| `diagnostics` | `Union{Diagnostics, Nothing}` | Fit metrics (if `return_diagnostics`) |
+| `dimensions` | `Int` | Number of predictor dimensions |
+
+See [julia.md](julia.md) for the full `LowessResult` field reference.
+
 ## Options Structure
 
 ### `StreamingOptions` (inherits `LowessOptions`)

@@ -48,6 +48,25 @@ const finalResult = stream.finalize();
 
 * Finalizes the smoothing process and returns any remaining buffered results.
 
+## Result Structure
+
+### `LowessResult`
+
+Returned by `process_chunk()` and `finalize()`.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `x` | `Float64Array` | Sorted x values |
+| `y` | `Float64Array` | Smoothed y values |
+| `fraction_used` | `number` | Fraction used |
+| `iterations_used` | `number \| undefined` | Robustness iterations actually performed |
+| `residuals` | `Float64Array \| undefined` | Residuals (if `return_residuals`) |
+| `robustness_weights` | `Float64Array \| undefined` | Robustness weights (if `return_robustness_weights`) |
+| `diagnostics` | `Diagnostics \| undefined` | Fit metrics (if `return_diagnostics`) |
+| `dimensions` | `number` | Number of predictor dimensions |
+
+See [wasm.md](wasm.md) for the full `LowessResult` field reference.
+
 ## Options Structure
 
 ### `StreamingOptions` (inherits `LowessOptions`)
