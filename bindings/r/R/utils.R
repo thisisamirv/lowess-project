@@ -73,6 +73,32 @@ validate_optional_count <- function(value, name, allow_zero = TRUE) {
     invisible(NULL)
 }
 
+#' Reject more than one unnamed positional argument
+#'
+#' @description
+#' Only the constructor's first argument (`fraction`) may be supplied
+#' positionally; every other argument must be named. Checked against the
+#' original call expression (not the post-matching formals), since R would
+#' otherwise happily fill later parameters (e.g. `window_capacity`,
+#' `min_points`, `chunk_size`) positionally without complaint.
+#'
+#' @param call The calling function's \code{sys.call()}.
+#' @param boundary_name Name of the last parameter mentioned in the error
+#'   message (the final positional-looking parameter in the signature).
+#' @noRd
+reject_extra_positional_args <- function(call, boundary_name) {
+    arg_names <- names(call)[-1]
+    if (is.null(arg_names)) {
+        arg_names <- rep("", length(call) - 1)
+    }
+    if (sum(arg_names == "") > 1) {
+        stop(
+            sprintf("All arguments after '%s' must be named.", boundary_name),
+            call. = FALSE
+        )
+    }
+}
+
 #' Validate constructor parameters
 #'
 #' @param fraction Smoothing fraction

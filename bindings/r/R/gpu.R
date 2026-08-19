@@ -49,23 +49,30 @@ install_gpu <- function(yes = FALSE) {
         ext <- ".dll"
     } else if (identical(sys_name, "Darwin")) {
         platform_tag <- "macos"
-        ext <- ".so" # R uses .so as the package shared-object extension on macOS too
+        # R uses .so as the package shared-object extension on macOS too
+        ext <- ".so"
     } else {
         platform_tag <- "linux"
         ext <- ".so"
     }
 
     machine <- Sys.info()[["machine"]]
-    arch <- if (grepl("arm|aarch64", machine, ignore.case = TRUE)) "aarch64" else "x86_64"
+    is_arm <- grepl("arm|aarch64", machine, ignore.case = TRUE)
+    arch <- if (is_arm) "aarch64" else "x86_64"
 
-    asset <- sprintf("librfastlowess-gpu-v%s-%s-%s%s", version, platform_tag, arch, ext)
+    asset <- sprintf(
+        "librfastlowess-gpu-v%s-%s-%s%s", version, platform_tag, arch, ext
+    )
     repo <- "thisisamirv/lowess-project"
-    url <- sprintf("https://github.com/%s/releases/download/v%s/%s", repo, version, asset)
+    url <- sprintf(
+        "https://github.com/%s/releases/download/v%s/%s", repo, version, asset
+    )
 
     if (!isTRUE(yes)) {
         if (!interactive()) {
             stop(
-                "install_gpu() requires confirmation. Pass yes = TRUE to proceed non-interactively.",
+                "install_gpu() requires confirmation. Pass yes = TRUE to ",
+                "proceed non-interactively.",
                 call. = FALSE
             )
         }

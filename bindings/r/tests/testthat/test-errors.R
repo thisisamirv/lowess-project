@@ -81,7 +81,3 @@ test_that("StreamingLowess rejects invalid inputs", {
         "x and y must have the same length"
     )
 })
-uble(1:5)),
-        "must match y"
-    )
-})

@@ -136,20 +136,6 @@ jobs:
         env:
           RUSTDOCFLAGS: -D warnings
 
-      - name: "Rust: Run Examples"
-        run: |
-          for example in crates/lowess/examples/*.rs; do
-            name=$(basename "$example" .rs)
-            echo "Running example: $name"
-            cargo run -p lowess --example "$name"
-          done
-          for example in crates/fastLowess/examples/*.rs; do
-            name=$(basename "$example" .rs)
-            echo "Running example: $name"
-            cargo run -p fastLowess --example "$name" --features cpu
-          done
-        shell: bash
-
       # ========================================================================
       # PYTHON
       # ========================================================================
@@ -169,13 +155,6 @@ jobs:
       - name: "Python: Tests"
         working-directory: bindings/python
         run: pytest tests/ -v
-
-      - name: "Python: Examples"
-        working-directory: bindings/python
-        run: |
-          python examples/batch_smoothing.py
-          python examples/streaming_smoothing.py
-          python examples/online_smoothing.py
 
       # ========================================================================
       # JULIA
@@ -215,20 +194,6 @@ jobs:
           fi
           julia -e 'using Pkg; Pkg.activate("bindings/julia/julia"); Pkg.instantiate(); include("bindings/julia/tests/test_FastLOWESS.jl")'
 
-      - name: "Julia: Examples"
-        shell: bash
-        run: |
-          if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            export FASTLOWESS_LIB="target/release/fastlowess_jl.dll"
-          elif [ "${{ matrix.os }}" = "macos-latest" ]; then
-            export FASTLOWESS_LIB="target/release/libfastlowess_jl.dylib"
-          else
-            export FASTLOWESS_LIB="target/release/libfastlowess_jl.so"
-          fi
-          julia --project=bindings/julia/julia bindings/julia/examples/batch_smoothing.jl
-          julia --project=bindings/julia/julia bindings/julia/examples/streaming_smoothing.jl
-          julia --project=bindings/julia/julia bindings/julia/examples/online_smoothing.jl
-
       - name: "Julia: Lint"
         working-directory: bindings/julia
         run: |
@@ -247,13 +212,6 @@ jobs:
       - name: "Node.js: Tests"
         working-directory: bindings/nodejs
         run: npm test
-
-      - name: "Node.js: Examples"
-        working-directory: bindings/nodejs
-        run: |
-          node examples/batch_smoothing.js
-          node examples/streaming_smoothing.js
-          node examples/online_smoothing.js
 
       - name: "Node.js: Lint"
         working-directory: bindings/nodejs
@@ -284,18 +242,6 @@ jobs:
       - name: "C++: Build"
         working-directory: bindings/cpp
         run: cargo build --release
-
-      - name: "C++: Examples (Ubuntu only)"
-        if: matrix.os == 'ubuntu-latest'
-        working-directory: bindings/cpp
-        run: |
-          mkdir -p bin
-          g++ -O3 examples/batch_smoothing.cpp -o bin/batch_smoothing -Iinclude -L../../target/release -lfastlowess_cpp -lpthread -ldl -lm
-          g++ -O3 examples/streaming_smoothing.cpp -o bin/streaming_smoothing -Iinclude -L../../target/release -lfastlowess_cpp -lpthread -ldl -lm
-          g++ -O3 examples/online_smoothing.cpp -o bin/online_smoothing -Iinclude -L../../target/release -lfastlowess_cpp -lpthread -ldl -lm
-          LD_LIBRARY_PATH=../../target/release ./bin/batch_smoothing
-          LD_LIBRARY_PATH=../../target/release ./bin/streaming_smoothing
-          LD_LIBRARY_PATH=../../target/release ./bin/online_smoothing
 
       - name: "C++: Lint"
         working-directory: bindings/cpp

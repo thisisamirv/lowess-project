@@ -46,9 +46,7 @@ OnlineLowess <- function(
     confidence_intervals = NULL,
     prediction_intervals = NULL
 ) {
-    if (...length() > 0) {
-        stop("All arguments after 'min_points' must be named.", call. = FALSE)
-    }
+    reject_extra_positional_args(sys.call(), "min_points")
     validate_params(
         fraction = fraction,
         window_capacity = window_capacity,
