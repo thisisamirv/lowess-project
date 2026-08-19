@@ -13,7 +13,7 @@ The `OnlineLowess` class updates the model incrementally with new data points.
 ```python
 import fastlowess as fl
 
-online = fl.OnlineLowess(fraction=0.3, window_capacity=50)
+online = fl.OnlineLowess(fraction=0.5, window_capacity=50)
 ```
 
 **Methods:**
@@ -25,7 +25,7 @@ import numpy as np
 x = np.linspace(0, 2 * np.pi, 100)
 y = np.sin(x) + 0.1
 
-online = fl.OnlineLowess(fraction=0.3, window_capacity=50, min_points=3)
+online = fl.OnlineLowess(fraction=0.5, window_capacity=50, min_points=3)
 
 # Returns None until min_points (3) are reached
 result = online.add_point(x[0], y[0])  # None

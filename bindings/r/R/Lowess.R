@@ -97,7 +97,9 @@ Lowess <- function(
     cv_seed = NULL,
     return_se = FALSE
 ) {
-    if (...length() > 0) stop("All arguments after 'fraction' must be named.", call. = FALSE)
+    if (...length() > 0) {
+        stop("All arguments after 'fraction' must be named.", call. = FALSE)
+    }
     validate_params(fraction = fraction, iterations = iterations)
     handle <- do.call(RLowess$new, env_args(lowess_params))
 

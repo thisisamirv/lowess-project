@@ -13,7 +13,7 @@ The `OnlineLowess` class updates the model incrementally with new data points.
 ```javascript
 const { OnlineLowess } = require('fastlowess-wasm');
 
-const online = new OnlineLowess({ fraction: 0.3 }, { window_capacity: 50, min_points: 3 });
+const online = new OnlineLowess({ fraction: 0.5 }, { window_capacity: 50, min_points: 3 });
 ```
 
 * `options`: An object containing `LowessOptions` fields.
@@ -28,7 +28,7 @@ const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
-const online = new OnlineLowess({ fraction: 0.3 }, { window_capacity: 50, min_points: 3 });
+const online = new OnlineLowess({ fraction: 0.5 }, { window_capacity: 50, min_points: 3 });
 
 // Returns undefined until min_points (3) are reached
 online.add_point(x[0], y[0]);  // undefined

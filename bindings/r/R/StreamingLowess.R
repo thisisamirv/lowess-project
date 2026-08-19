@@ -47,7 +47,9 @@ StreamingLowess <- function(
     confidence_intervals = NULL,
     prediction_intervals = NULL
 ) {
-    if (...length() > 0) stop("All arguments after 'chunk_size' must be named.", call. = FALSE)
+    if (...length() > 0) {
+        stop("All arguments after 'chunk_size' must be named.", call. = FALSE)
+    }
     validate_params(fraction = fraction, chunk_size = chunk_size)
     handle <- do.call(RStreamingLowess$new, env_args(streaming_params))
 

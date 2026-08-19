@@ -28,9 +28,8 @@ print(model)
 
 ```r
 library(rfastlowess)
-set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)
-y <- sin(x) + rnorm(100, sd = 0.3)
+y <- sin(x) + 0.1
 
 model <- Lowess(fraction = 0.5)
 result <- fit(model, x, y, custom_weights = NULL)
@@ -179,8 +178,8 @@ See [r-online.md](r-online.md).
 ```r
 library(rfastlowess)
 
-x <- seq(0, 10, length.out = 100)
-y <- sin(x) + rnorm(100, sd = 0.2)
+x <- seq(0, 2 * pi, length.out = 100)
+y <- sin(x) + 0.1
 
 # Configure model
 model <- Lowess(fraction = 0.5)

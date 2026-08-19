@@ -13,10 +13,10 @@ The `StreamingLowess` class processes data in chunks, suitable for very large da
 ```r
 library(rfastlowess)
 
-stream <- StreamingLowess(fraction = 0.3, chunk_size = 50L, overlap = 10L)
+stream <- StreamingLowess(fraction = 0.5, chunk_size = 50L, overlap = 10L)
 print(stream)
 #> <StreamingLowess Model>
-#>   Fraction:          0.3
+#>   Fraction:          0.5
 #>   Chunk Size:        50
 #>   Parallel:          TRUE
 ```
@@ -25,16 +25,15 @@ print(stream)
 
 ```r
 library(rfastlowess)
-set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)
-y <- sin(x) + rnorm(100, sd = 0.3)
+y <- sin(x) + 0.1
 
-stream <- StreamingLowess(fraction = 0.3, chunk_size = 50L, overlap = 10L)
+stream <- StreamingLowess(fraction = 0.5, chunk_size = 50L, overlap = 10L)
 partial_result <- process_chunk(stream, x[seq_len(50)], y[seq_len(50)])
 print(partial_result)
 #> <LowessResult>
 #>   Points:            40
-#>   Fraction Used:     0.3
+#>   Fraction Used:     0.5
 #>   Iterations Used:   0
 ```
 
@@ -42,18 +41,17 @@ print(partial_result)
 
 ```r
 library(rfastlowess)
-set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)
-y <- sin(x) + rnorm(100, sd = 0.3)
+y <- sin(x) + 0.1
 
-stream <- StreamingLowess(fraction = 0.3, chunk_size = 50L, overlap = 10L)
+stream <- StreamingLowess(fraction = 0.5, chunk_size = 50L, overlap = 10L)
 partial1 <- process_chunk(stream, x[seq_len(50)], y[seq_len(50)])
 partial2 <- process_chunk(stream, x[51:100], y[51:100])
 final_result <- finalize(stream)
 print(final_result)
 #> <LowessResult>
 #>   Points:            10
-#>   Fraction Used:     0.3
+#>   Fraction Used:     0.5
 ```
 
 * Finalizes the smoothing process and returns any remaining buffered results.

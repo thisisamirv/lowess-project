@@ -25,7 +25,7 @@ int main() {
     }
 
     fastlowess::OnlineOptions opts;
-    opts.fraction = 0.3;
+    opts.fraction = 0.5;
     opts.window_capacity = 50;
     opts.min_points = 3;
     fastlowess::OnlineLowess model(opts);
@@ -53,7 +53,7 @@ int main() {
     }
 
     fastlowess::OnlineOptions opts;
-    opts.fraction = 0.3;
+    opts.fraction = 0.5;
     opts.window_capacity = 50;
     opts.min_points = 3;
     fastlowess::OnlineLowess model(opts);

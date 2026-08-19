@@ -38,12 +38,12 @@ using FastLOWESS
 x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ 0.1
 
-stream = StreamingLowess(fraction=0.3, chunk_size=50, overlap=10)
+stream = StreamingLowess(fraction=0.5, chunk_size=50, overlap=10)
 process_chunk(stream, x[1:50], y[1:50])
 process_chunk(stream, x[51:end], y[51:end])
 final_result = finalize(stream)
 println(final_result.fraction_used)
-# 0.3
+# 0.5
 ```
 
 * Finalizes the smoothing process and returns any remaining buffered results.

@@ -81,17 +81,21 @@ def main():
                             for line in f:
                                 line = line.strip()
                                 # Handle dependency sections
-                                if (
-                                    line.startswith("[dependencies]")
-                                    or line.startswith("[dev-dependencies]")
-                                    or line.startswith("[build-dependencies]")
+                                if line.startswith(
+                                    (
+                                        "[dependencies]",
+                                        "[dev-dependencies]",
+                                        "[build-dependencies]",
+                                    )
                                 ):
                                     in_deps = True
                                     continue
-                                if line.startswith("[") and not (
-                                    line.startswith("[dependencies.")
-                                    or line.startswith("[dev-dependencies.")
-                                    or line.startswith("[build-dependencies.")
+                                if line.startswith("[") and not line.startswith(
+                                    (
+                                        "[dependencies.",
+                                        "[dev-dependencies.",
+                                        "[build-dependencies.",
+                                    )
                                 ):
                                     in_deps = False
                                     continue
@@ -143,12 +147,9 @@ def main():
 
                 if msrv_str:
                     msrv_ver = parse_version(msrv_str)
-                    if msrv_ver and project_rust_ver:
-                        # Pad versions for comparison (e.g., 1.70 vs 1.70.0)
-                        # Normally Rust versions are semver, but MSRV can be partial
-                        if msrv_ver > project_rust_ver:
-                            status = "FAIL (Too New)"
-                            violations.append((name, msrv_str, direct_deps[name]))
+                    if msrv_ver and project_rust_ver and msrv_ver > project_rust_ver:
+                        status = "FAIL (Too New)"
+                        violations.append((name, msrv_str, direct_deps[name]))
 
                 display_msrv = msrv_str if msrv_str else "N/A"
                 print(f"{name:<25} {version:<15} {display_msrv:<15} {status}")

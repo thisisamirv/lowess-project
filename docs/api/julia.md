@@ -166,8 +166,8 @@ See [julia-online.md](julia-online.md).
 ```julia
 using FastLOWESS
 
-x = collect(range(0, 10, length=100))
-y = sin.(x) .+ randn(100) .* 0.2
+x = collect(range(0, 2π, length=100))
+y = sin.(x) .+ 0.1
 
 # Configure model
 model = Lowess(fraction=0.5, iterations=3)

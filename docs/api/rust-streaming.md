@@ -50,11 +50,11 @@ fn main() -> Result<(), LowessError> {
     let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
     let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    let mut processor = StreamingLowess::new().fraction(0.3f64).chunk_size(50usize).overlap(10usize).build()?;
+    let mut processor = StreamingLowess::new().fraction(0.5f64).chunk_size(50usize).overlap(10usize).build()?;
     processor.process_chunk(&x[..50], &y[..50])?;
     processor.process_chunk(&x[50..], &y[50..])?;
     let final_result = processor.finalize()?;
-    println!("{}", final_result.fraction_used);  // 0.3
+    println!("{}", final_result.fraction_used);  // 0.5
 
     Ok(())
 }

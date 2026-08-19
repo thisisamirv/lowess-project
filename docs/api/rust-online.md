@@ -31,7 +31,7 @@ fn main() -> Result<(), LowessError> {
     let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
     let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    let mut processor = OnlineLowess::new().fraction(0.3f64).window_capacity(50usize).min_points(3usize).build()?;
+    let mut processor = OnlineLowess::new().fraction(0.5f64).window_capacity(50usize).min_points(3usize).build()?;;
 
     // Returns None until min_points (3) are reached
     let r1 = processor.add_point(x[0], y[0])?;  // None

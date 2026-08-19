@@ -47,11 +47,15 @@ test_that("print.LowessResult shows cv_scores when present", {
     set.seed(42)
     x <- seq(0, 10, length.out = 100)
     y <- sin(x) + rnorm(100, 0, 0.2)
-    result <- fit(Lowess(
-        cv_fractions = c(0.2, 0.3, 0.5),
-        cv_method = "kfold",
-        cv_k = 5L
-    ), x, y)
+    result <- fit(
+        Lowess(
+            cv_fractions = c(0.2, 0.3, 0.5),
+            cv_method = "kfold",
+            cv_k = 5L
+        ),
+        x,
+        y
+    )
     out <- capture.output(print(result))
     expect_true(any(grepl("CV Scores", out, fixed = TRUE)))
 })

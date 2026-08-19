@@ -135,11 +135,15 @@ test_that("Lowess robustness weights work", {
     y <- sin(x) + rnorm(50, sd = 0.1)
     y[25] <- y[25] + 5 # Add outlier
 
-    result <- fit(Lowess(
-        fraction = 0.5,
-        iterations = 3,
-        return_robustness_weights = TRUE
-    ), as.double(x), as.double(y))
+    result <- fit(
+        Lowess(
+            fraction = 0.5,
+            iterations = 3,
+            return_robustness_weights = TRUE
+        ),
+        as.double(x),
+        as.double(y)
+    )
 
     expect_true("robustness_weights" %in% names(result))
     expect_length(result$robustness_weights, length(y))
@@ -153,11 +157,15 @@ test_that("Lowess cross-validation works", {
     x <- seq(0, 10, length.out = 100)
     y <- sin(x) + rnorm(100, sd = 0.2)
 
-    result <- fit(Lowess(
-        cv_fractions = c(0.2, 0.3, 0.5, 0.7),
-        cv_method = "kfold",
-        cv_k = 5
-    ), as.double(x), as.double(y))
+    result <- fit(
+        Lowess(
+            cv_fractions = c(0.2, 0.3, 0.5, 0.7),
+            cv_method = "kfold",
+            cv_k = 5
+        ),
+        as.double(x),
+        as.double(y)
+    )
 
     expect_true("cv_scores" %in% names(result))
     expect_length(result$cv_scores, 4)
@@ -200,7 +208,8 @@ test_that("custom_weights: uniform weights produce same result as no weights", {
     weights <- rep(1.0, 20)
 
     result_no_w <- fit(Lowess(fraction = 0.4, iterations = 2), x, y)
-    result_unit_w <- fit(Lowess(fraction = 0.4, iterations = 2),
+    result_unit_w <- fit(
+        Lowess(fraction = 0.4, iterations = 2),
         x,
         y,
         custom_weights = weights
@@ -218,7 +227,8 @@ test_that("custom_weights: zero weight on outlier reduces its influence", {
 
     weights <- rep(1.0, 10)
     weights[6] <- 0.0
-    result_zero_w <- fit(Lowess(fraction = 0.5, iterations = 0),
+    result_zero_w <- fit(
+        Lowess(fraction = 0.5, iterations = 0),
         x,
         y,
         custom_weights = weights
@@ -239,7 +249,8 @@ test_that("custom_weights: high weight pulls fit toward spike", {
     weights_high <- rep(1.0, 15)
     weights_high[8] <- 100.0
 
-    result_high <- fit(Lowess(fraction = 0.6, iterations = 0),
+    result_high <- fit(
+        Lowess(fraction = 0.6, iterations = 0),
         x,
         y,
         custom_weights = weights_high
@@ -263,7 +274,8 @@ test_that("custom_weights: negative value raises error", {
     y <- as.double(1:5)
 
     expect_error(
-        fit(Lowess(fraction = 0.5),
+        fit(
+            Lowess(fraction = 0.5),
             x,
             y,
             custom_weights = c(1.0, -1.0, 1.0, 1.0, 1.0)

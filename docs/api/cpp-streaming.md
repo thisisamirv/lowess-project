@@ -73,7 +73,7 @@ int main() {
     }
 
     fastlowess::StreamingOptions opts;
-    opts.fraction = 0.3;
+    opts.fraction = 0.5;
     opts.chunk_size = 50;
     opts.overlap = 10;
     fastlowess::StreamingLowess model(opts);
@@ -82,7 +82,7 @@ int main() {
     model.process_chunk(x1, y1);
     model.process_chunk(x2, y2);
     auto result = model.finalize().value();
-    std::cout << result.fraction_used() << std::endl;  // 0.3
+    std::cout << result.fraction_used() << std::endl;  // 0.5
 
     return 0;
 }
