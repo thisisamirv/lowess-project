@@ -49,7 +49,7 @@ The fastest, most robust, and most feature-complete language-agnostic LOWESS (Lo
 
 ### GPU Backend
 
-In addition to `parallel=true` (multi-core CPU), the batch `Lowess` constructor accepts `backend="gpu"` to run on the GPU via `wgpu` (Vulkan/Metal/DX12). GPU support is opt-in and not included in prebuilt JLL binaries — run `install_gpu()` once to download a prebuilt GPU-enabled library from the matching GitHub Release and activate it immediately (no restart needed), or build locally with `cargo build --release --features gpu` (from `bindings/julia/`). `StreamingLowess`/`OnlineLowess` remain CPU-only; the Rust core optimizes GPU for static batch data.
+In addition to `parallel = true` (multi-core CPU), the batch `Lowess` class in every binding — except WebAssembly — as well as the `fastLowess` Rust crate itself, can run on the GPU via `wgpu` (Vulkan/Metal/DX12). It's opt-in and worth enabling for high-throughput processing of large datasets (roughly 10k+ points); for smaller inputs the CPU backend is typically faster. `StreamingLowess`/`OnlineLowess` remain CPU-only. See the [GPU Backend guide](https://lowess.readthedocs.io/en/latest/user-guide/gpu-backend/) for installation instructions and usage.
 
 ## Documentation
 

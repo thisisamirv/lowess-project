@@ -193,6 +193,5 @@ default:
 clean:
 	@echo "Cleaning $(CPP_PKG)..."
 	@cargo clean -p $(CPP_PKG)
-	@rm -rf $(CPP_DIR)/include/fastlowess.h $(CPP_DIR)/bin $(CPP_DIR)/build
-	@rm -rf $(CPP_DIR)/tests/build
+	@git clean -fdX -- $(CPP_DIR)
 	@echo "$(CPP_PKG) clean complete!"

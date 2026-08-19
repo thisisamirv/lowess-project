@@ -221,7 +221,7 @@ docs-serve:
 
 docs-clean:
 	@echo "Cleaning documentation build..."
-	@rm -rf site/ $(DOCS_VENV)/
+	@git clean -fdX -- site $(DOCS_VENV)
 	@echo "Documentation clean complete!"
 
 docs-test:
@@ -244,11 +244,7 @@ all-coverage: lowess-coverage fastLowess-coverage python-coverage r-coverage
 all-clean: r-clean lowess-clean fastLowess-clean python-clean julia-clean nodejs-clean wasm-clean cpp-clean
 	@echo "Cleaning project root..."
 	@cargo clean
-	@rm -rf target Cargo.lock .venv .ruff_cache .pytest_cache site docs-venv build bindings/python/.venv bindings/python/target crates/fastLowess/target crates/lowess/target .vscode tests/.pytest_cache local_*.tar.gz bindings/r/.r-lib bindings/r/docs
-	@rm -f Rplots.pdf .gitignore~ ..gitignore.un~
-	@rm -rf r.Rcheck/
-	@rm -f bindings/nodejs/fastlowess.node
-	@rm -f bindings/python/python/fastlowess/*.pyd bindings/python/python/fastlowess/*.pdb
+	@git clean -fdX .
 	@echo "All clean completed!"
 
 .PHONY: lowess lowess-coverage lowess-clean fastLowess fastLowess-coverage fastLowess-clean python python-coverage python-clean r r-coverage r-clean julia julia-clean julia-update-commit nodejs nodejs-clean wasm wasm-clean cpp cpp-clean check-msrv docs docs-serve docs-test docs-clean all all-coverage all-clean ensure-llvm-cov

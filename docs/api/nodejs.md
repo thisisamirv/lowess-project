@@ -87,7 +87,9 @@ GPU support is opt-in and **not included in prebuilt npm binaries**. Instead of 
 ```javascript
 const fastlowess = require('fastlowess');
 
-await fastlowess.installGpu(); // prompts for confirmation, then downloads
+(async () => {
+    await fastlowess.installGpu(); // prompts for confirmation, then downloads
+})();
 ```
 
 Or non-interactively:

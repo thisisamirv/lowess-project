@@ -146,7 +146,5 @@ _julia_checks_internal:
 clean:
 	@echo "Cleaning $(JL_PKG)..."
 	@cargo clean -p $(JL_PKG)
-	@rm -rf $(JL_DIR)/target
-	@rm -rf $(JL_DIR)/julia/Manifest.toml
-	@rm -rf $(JL_DIR)/Cargo.lock
+	@git clean -fdX -- $(JL_DIR)
 	@echo "$(JL_PKG) clean complete!"

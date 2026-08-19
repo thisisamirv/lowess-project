@@ -214,7 +214,8 @@ compare:
 clean:
 	@echo "Cleaning benchmark build artefacts..."
 	@if [ -f $(R_DIR)/src/Cargo.toml.orig ]; then mv $(R_DIR)/src/Cargo.toml.orig $(R_DIR)/src/Cargo.toml; fi
-	@rm -rf $(R_DIR)/src/vendor $(R_DIR)/src/vendor.tar.xz $(R_DIR)/src/.cargo
+	@rm -f  $(R_DIR)/src/vendor.tar.xz
+	@git clean -fdX -- $(R_DIR)/src/vendor $(R_DIR)/src/.cargo
 	@rm -f  $(R_DIR)/$(R_PKG_NAME)_*.tar.gz
 	@(cd $(R_DIR)/src && cargo clean -q 2>/dev/null || true)
 	@echo "Clean complete!"

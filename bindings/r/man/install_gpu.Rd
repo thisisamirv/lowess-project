@@ -27,10 +27,8 @@ A running R session cannot swap an already-loaded shared library, so
 \examples{
 # Check whether the GPU backend is already active before installing it
 gpu_available()
-\donttest{
 if (interactive()) {
     install_gpu()
-}
 }
 }
 \seealso{

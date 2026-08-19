@@ -697,8 +697,8 @@ jobs:
           mkdir -p "$R_LIBS_USER"
           echo "R_LIBS_USER=$R_LIBS_USER" >> "$GITHUB_ENV"
           RDscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); install.packages(c('remotes', 'rcmdcheck', 'testthat', 'knitr', 'rmarkdown', 'BiocManager'), lib = lib)"
-          RDscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); BiocManager::install('BiocStyle', lib = lib, ask = FALSE, update = FALSE)"
-          RDscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); remotes::install_deps(dependencies = TRUE, lib = lib)"
+          RDscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); BiocManager::install(c('BiocStyle', 'BiocGenerics'), lib = lib, ask = FALSE, update = FALSE)"
+          RDscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(BiocManager::repositories(), CRAN = 'https://cloud.r-project.org')); remotes::install_deps(dependencies = TRUE, lib = lib)"
       - name: Prepare Package Sources
         shell: bash
         run: |

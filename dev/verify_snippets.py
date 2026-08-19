@@ -374,6 +374,9 @@ def should_skip(snippet: Snippet, runner: str) -> str | None:
             code,
         ) and not re.search(r"\bimport\b.*fastlowess|\bfrom\b.*fastlowess", code):
             return "fastlowess not imported (snippet is not self-contained)"
+        # install_gpu() / backend="gpu" require a GPU-enabled build not present in CI
+        if re.search(r"\binstall_gpu\s*\(|backend\s*=\s*[\"']gpu[\"']", code):
+            return "requires gpu feature (not enabled in CI build)"
 
     if runner == "julia":
         # Skip package-management / installation snippets
@@ -384,6 +387,9 @@ def should_skip(snippet: Snippet, runner: str) -> str | None:
         # function *definitions*, not call sites — Julia rejects them as calls.
         if re.search(r";\s*\w+::", code, re.DOTALL):
             return "Julia method signature (keyword arg with type annotation — not callable)"
+        # install_gpu() / backend="gpu" require a GPU-enabled build not present in CI
+        if re.search(r"\binstall_gpu\s*\(|backend\s*=\s*[\"']gpu[\"']", code):
+            return "requires gpu feature (not enabled in CI build)"
     if runner == "nodejs":
         # TypeScript-only syntax (type annotations)
         if ": SmoothOptions" in code or ": LowessResult" in code:
@@ -391,6 +397,9 @@ def should_skip(snippet: Snippet, runner: str) -> str | None:
         # Snippets must load fastlowess themselves (no preamble)
         if not re.search(r"require\s*\(", code):
             return "no require() — snippet must load fastlowess itself"
+        # installGpu() / backend: "gpu" require a GPU-enabled build not present in CI
+        if re.search(r"\binstallGpu\s*\(|backend:\s*[\"']gpu[\"']", code):
+            return "requires gpu feature (not enabled in CI build)"
 
     if runner == "r":
         # Skip install/devtools snippets
@@ -406,6 +415,9 @@ def should_skip(snippet: Snippet, runner: str) -> str | None:
         # (e.g. 'model <- Lowess(...)') — not valid in a script context.
         if re.search(r"\(\s*\.\.\.\s*\)", code):
             return "R API signature with ... (not runnable outside function)"
+        # install_gpu() / backend = "gpu" require a GPU-enabled build not present in CI
+        if re.search(r"\binstall_gpu\s*\(|backend\s*=\s*[\"']gpu[\"']", code):
+            return "requires gpu feature (not enabled in CI build)"
 
     if runner == "wasm":
         # Skip any ES-module import syntax — wasm runner uses CJS require().

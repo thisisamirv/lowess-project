@@ -262,13 +262,6 @@ clean:
 		echo "Warning: Failed to clean src/target"; \
 	fi
 	@(cd $(R_DIR)/src && cargo clean 2>/dev/null || true)
-	@rm -rf $(R_DIR)/src/vendor $(R_DIR)/target $(R_LIB_DIR)
-	@rm -rf $(R_DIR)/$(R_PKG_NAME).Rcheck $(R_DIR)/..Rcheck $(R_DIR)/$(R_PKG_NAME).BiocCheck
-	@rm -f $(R_DIR)/$(R_PKG_NAME)_*.tar.gz
-	@rm -rf $(R_DIR)/src/*.o $(R_DIR)/src/*.so $(R_DIR)/src/*.dll $(R_DIR)/src/Cargo.toml.orig $(R_DIR)/src/Cargo.lock $(R_DIR)/Cargo.lock
-	@rm -rf $(R_DIR)/doc $(R_DIR)/Meta $(R_DIR)/vignettes/*.html $(R_DIR)/README.html
-	@$(PYTHON) -c "from pathlib import Path; [path.unlink() for path in Path(r'$(R_DIR)').rglob('*.Rout')]"
 	@Rscript -e "try(remove.packages('$(R_PKG_NAME)'), silent = TRUE)" || true
-	@rm -rf $(R_DIR)/src/Makevars $(R_DIR)/$(R_PKG_NAME)*.tgz
-	@rm -rf $(R_DIR)/benchmarks $(R_DIR)/validation $(R_DIR)/docs
+	@git clean -fdX -- $(R_DIR)
 	@echo "$(R_PKG_NAME) clean complete!"

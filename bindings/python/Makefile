@@ -90,18 +90,5 @@ coverage: ensure-llvm-cov
 clean:
 	@echo "Cleaning $(PY_PKG)..."
 	@cargo clean -p $(PY_PKG)
-	@rm -rf $(PY_DIR)/coverage_html
-	@rm -rf $(PY_DIR)/benchmarks
-	@rm -rf $(PY_DIR)/validation
-	@rm -rf $(PY_DIR)/.benchmarks
-	@rm -rf $(PY_DIR)/target/wheels
-	@rm -rf $(PY_DIR)/.pytest_cache
-	@rm -rf $(PY_DIR)/__pycache__
-	@rm -rf $(PY_DIR)/python/fastlowess/__pycache__
-	@rm -rf $(PY_DIR)/python/fastlowess/*so
-	@rm -rf $(PY_TEST_DIR)/__pycache__
-	@rm -rf $(PY_DIR)/*.egg-info
-	@rm -rf $(PY_DIR)/.ruff_cache
-	@rm -rf $(PY_DIR)/*.so
-	@rm -rf $(PY_DIR)/Cargo.lock
+	@git clean -fdX -- $(PY_DIR)
 	@echo "$(PY_PKG) clean complete!"

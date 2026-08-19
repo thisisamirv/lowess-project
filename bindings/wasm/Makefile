@@ -75,5 +75,5 @@ default:
 clean:
 	@echo "Cleaning $(WASM_PKG)..."
 	@cargo clean -p $(WASM_PKG)
-	@rm -rf $(WASM_DIR)/pkg $(WASM_DIR)/pkg-web $(WASM_DIR)/node_modules
+	@git clean -fdX -- $(WASM_DIR)
 	@echo "$(WASM_PKG) clean complete!"

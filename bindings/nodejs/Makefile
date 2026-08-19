@@ -67,5 +67,5 @@ default:
 clean:
 	@echo "Cleaning $(NODE_PKG)..."
 	@cargo clean -p $(NODE_PKG)
-	@rm -rf $(NODE_DIR)/node_modules $(NODE_DIR)/fastlowess.*.node
+	@git clean -fdX -- $(NODE_DIR)
 	@echo "$(NODE_PKG) clean complete!"

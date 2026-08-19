@@ -131,10 +131,8 @@ gpu_download_to <- function(url, ext, dest) {
 #' @examples
 #' # Check whether the GPU backend is already active before installing it
 #' gpu_available()
-#' \donttest{
 #' if (interactive()) {
 #'     install_gpu()
-#' }
 #' }
 #' @export
 install_gpu <- function(yes = FALSE) {

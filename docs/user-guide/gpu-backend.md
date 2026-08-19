@@ -164,7 +164,9 @@ Whether you need to **restart** afterwards depends on how each language loads it
     ```javascript
     const fastlowess = require('fastlowess');
 
-    await fastlowess.installGpu(); // prompts for confirmation, then downloads
+    (async () => {
+        await fastlowess.installGpu(); // prompts for confirmation, then downloads
+    })();
     ```
 
     Non-interactively:
