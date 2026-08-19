@@ -33,6 +33,18 @@ knitr::opts_chunk$set(
 `rfastlowess` is a high-performance R package for LOWESS (Locally Weighted
 Scatterplot Smoothing) built on a Rust backend.
 
+LOWESS fits a smooth curve through a scatter plot by performing a sequence of
+*local polynomial regressions*. For each point $x_i$, the algorithm selects
+the nearest `fraction` of observations, assigns distance-based weights (points
+farther away receive lower weight), fits a weighted least-squares polynomial,
+and reads off the predicted value at $x_i$. Because no global model is
+assumed, LOWESS adapts naturally to non-linear and non-stationary data.
+
+Optional robustness iterations guard against outliers: after each pass,
+residuals are used to recompute per-observation weights so that high-leverage
+outliers are progressively downweighted. This makes `iterations > 0` the right
+choice whenever the data may contain measurement errors or anomalies.
+
 **Full documentation**: <https://lowess.readthedocs.io/>
 
 ## Installation
@@ -46,9 +58,12 @@ install.packages("rfastlowess", repos = "https://thisisamirv.r-universe.dev")
 
 ### Basic Smoothing
 
-The package uses S3 classes to provide a user-friendly interface.
-Models and results can be inspected using `print()`.
-Results can also be visualized using `plot()`.
+`Lowess()` accepts all smoothing options at construction time and returns a
+reusable model object. Calling `fit(model, x, y)` runs the algorithm and
+returns a `LowessResult` list. Key result fields are `$x` (input x values),
+`$y` (smoothed fitted values), `$fraction_used`, and `$iterations_used`. The
+`fraction` parameter controls the bandwidth: a larger value produces a smoother
+curve at the cost of following local features less closely.
 
 ```{r basic_example}
 library(rfastlowess)
@@ -76,6 +91,18 @@ lines(result$x, result$y, col = "red", lwd = 2)
 
 ### Robust Smoothing with Intervals
 
+Real-world data often contains a small fraction of gross errors. Setting
+`iterations > 0` activates robustness re-weighting: after the initial fit,
+large residuals identify likely outliers and their contribution is downweighted
+for the next iteration. The bisquare robustness function (the default) reduces
+the weight of any point whose residual exceeds about six times the median
+absolute deviation to zero.
+
+Setting `confidence_intervals = 0.95` attaches pointwise 95% confidence bands
+to the smoothed curve. These reflect uncertainty in the mean response, not
+individual observations; `prediction_intervals` provides the wider bands
+covering future observations.
+
 ```{r robust_example}
 # Add outliers
 y_outliers <- y
@@ -95,13 +122,109 @@ lines(result_robust$x, result_robust$confidence_lower, col = "blue", lty = 2)
 lines(result_robust$x, result_robust$confidence_upper, col = "blue", lty = 2)
 ```
 
+### Diagnostics
+
+When `return_diagnostics = TRUE`, the result includes goodness-of-fit metrics
+that are useful for comparing different `fraction` values or kernel choices.
+`return_residuals = TRUE` attaches the raw residuals, and
+`return_robustness_weights = TRUE` exposes the final per-point robustness
+weights so you can see which observations were downweighted.
+
+```{r diagnostics_example}
+result_diag <- fit(Lowess(
+    fraction = 0.3,
+    iterations = 3,
+    return_diagnostics = TRUE,
+    return_residuals = TRUE,
+    return_robustness_weights = TRUE
+), x, y)
+
+cat("R-squared:  ", result_diag$r_squared, "\n")
+cat("RMSE:       ", result_diag$rmse, "\n")
+cat("MAE:        ", result_diag$mae, "\n")
+
+# Residual plot
+plot(x, result_diag$residuals,
+    type = "h", col = "steelblue",
+    main = "Residuals", ylab = "Residual"
+)
+abline(h = 0, lty = 2)
+```
+
+## Streaming Processing
+
+`StreamingLowess` processes data in fixed-size chunks and keeps only a small
+in-memory buffer, making it practical for datasets that would otherwise
+require loading everything into RAM at once. The `chunk_size` parameter
+controls how many observations are processed at a time; chunks are stitched
+together using a configurable overlap and `merge_strategy` to avoid boundary
+artefacts.
+
+After processing all chunks, call `finalize()` to retrieve the combined
+`LowessResult` covering the full input range.
+
+```{r streaming_example}
+x_full <- seq(0, 10, length.out = 200)
+y_full <- sin(x_full) + rnorm(200, sd = 0.2)
+
+model_s <- StreamingLowess(fraction = 0.3, chunk_size = 50L)
+
+# Feed data in chunks of 50
+chunk_breaks <- c(0, 50, 100, 150, 200)
+for (i in seq_len(length(chunk_breaks) - 1)) {
+    idx <- (chunk_breaks[i] + 1):chunk_breaks[i + 1]
+    process_chunk(model_s, x_full[idx], y_full[idx])
+}
+
+result_s <- finalize(model_s)
+
+plot(x_full, y_full, pch = 16, col = "gray", main = "Streaming LOWESS")
+lines(result_s$x, result_s$y, col = "red", lwd = 2)
+```
+
+## Online Processing
+
+`OnlineLowess` is designed for real-time data streams where observations
+arrive one at a time. The model maintains a sliding window of the most recent
+`window_capacity` points. `add_point(model, x, y)` adds a single observation
+and immediately returns the smoothed value at that point — or `NULL` if fewer
+than `min_points` have been seen yet.
+
+The `update_mode` parameter controls how the window is updated:
+`"full"` (default) re-smooths all window points after each addition, giving
+the most accurate estimate; `"incremental"` updates only the newest point,
+which is faster but less accurate.
+
+```{r online_example}
+model_o <- OnlineLowess(
+    fraction = 0.5,
+    window_capacity = 30L,
+    min_points = 3L
+)
+
+x_stream <- seq(0, 10, length.out = 60)
+y_stream <- sin(x_stream) + rnorm(60, sd = 0.2)
+
+smoothed_values <- numeric(length(x_stream))
+for (i in seq_along(x_stream)) {
+    out <- add_point(model_o, x_stream[i], y_stream[i])
+    smoothed_values[i] <- if (is.null(out)) NA_real_ else out$smoothed
+}
+
+plot(x_stream, y_stream, pch = 16, col = "gray", main = "Online LOWESS")
+lines(x_stream[!is.na(smoothed_values)],
+    smoothed_values[!is.na(smoothed_values)],
+    col = "red", lwd = 2
+)
+```
+
 ## Main Classes
 
-| Class              | Use Case                             |
-|--------------------|--------------------------------------|
-| `Lowess`           | Primary interface - batch processing |
-| `StreamingLowess`  | Large datasets (>100K points)        |
-| `OnlineLowess`     | Real-time data streams               |
+| Class              | Use Case                                         |
+|--------------------|--------------------------------------------------|
+| `Lowess`           | Primary interface — batch processing             |
+| `StreamingLowess`  | Large datasets processed chunk by chunk          |
+| `OnlineLowess`     | Real-time streams, one observation at a time     |
 
 ## Learn More
 

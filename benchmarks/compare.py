@@ -3,8 +3,8 @@ import re
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
 import numpy as np
+from matplotlib import ticker
 
 
 def load_json(p: Path):
@@ -20,8 +20,8 @@ def pick_time_value(entry: dict):
         if key in entry:
             try:
                 return float(entry[key]), entry.get("size")
-            except Exception:
-                pass
+            except (TypeError, ValueError):
+                continue
     # fallback
     for k, v in entry.items():
         if isinstance(v, (int, float)):
@@ -29,8 +29,8 @@ def pick_time_value(entry: dict):
                 continue
             try:
                 return float(v), entry.get("size")
-            except Exception:
-                pass
+            except (TypeError, ValueError):
+                continue
     return None, entry.get("size")
 
 
@@ -55,7 +55,7 @@ def load_all_data(output_dir: Path):
         if loaded:
             # Flatten category structure: {category: [entries]} -> {name: entry}
             flat = {}
-            for cat, entries in loaded.items():
+            for entries in loaded.values():
                 for entry in entries:
                     name = entry.get("name")
                     if name:
