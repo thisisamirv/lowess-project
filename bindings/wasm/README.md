@@ -57,7 +57,7 @@ The fastest, most robust, and most feature-complete language-agnostic LOWESS (Lo
 
 ## LOESS vs. LOWESS
 
-| Feature | LOESS (This Crate) | LOWESS |
+| Feature | LOESS | LOWESS (This Crate) |
 | --- | --- | --- |
 | **Polynomial Degree** | Linear, Quadratic, Cubic, Quartic | Linear (Degree 1) |
 | **Dimensions** | Multivariate (n-D support) | Univariate (1-D only) |
@@ -176,7 +176,7 @@ model <- Lowess(
     parallel = TRUE
 )
 custom_weights <- rep(1, length(x))
-result <- model$fit(x, y, custom_weights = custom_weights)
+result <- fit(model, x, y, custom_weights = custom_weights)
 
 # Result structure:
 result$x,
@@ -477,11 +477,11 @@ result.cv_scores()
 
 ## Contributing
 
-Contributions are welcome! Please see the [Contributing Guide](https://lowess.readthedocs.io/contributing/) for more information.
+Contributions are welcome! Please see the [Contributing Guide](https://lowess.readthedocs.io/en/latest/contributing/) for more information.
 
 ## Changelog
 
-See the [Changelog](https://lowess.readthedocs.io/changelog/) for a history of changes.
+See the [Changelog](https://lwoess.readthedocs.io/en/latest/changelog/) for a history of changes.
 
 ## License
 

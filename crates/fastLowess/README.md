@@ -57,7 +57,7 @@ The fastest, most robust, and most feature-complete language-agnostic LOWESS (Lo
 
 ## LOESS vs. LOWESS
 
-| Feature | LOESS (This Crate) | LOWESS |
+| Feature | LOESS | LOWESS (This Crate) |
 | --- | --- | --- |
 | **Polynomial Degree** | Linear, Quadratic, Cubic, Quartic | Linear (Degree 1) |
 | **Dimensions** | Multivariate (n-D support) | Univariate (1-D only) |
