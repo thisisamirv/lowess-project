@@ -16,3 +16,7 @@ Speedup relative to R's `stats::lowess` (higher is better):
 | **Scientific** (500–5K) | 0.9ms | 1.4× | 1.4× |
 
 *The R column shows the average time across scenarios in multi-scenario categories. Speedups are averages across the same range.*
+
+## GPU Backend
+
+For large batch datasets, the GPU backend can outperform CPU-parallel execution. The crossover point is driven by window size (`fraction × n`): at `fraction = 0.5`, GPU overtakes CPU around n ≥ 50K; at smaller fractions, around n ≥ 100K–250K. At n = 1M (`fraction = 0.5`, 3 iterations), GPU is **6.6×** faster than CPU-parallel (1.24s → 187ms). See [benchmarks/README.md](https://github.com/thisisamirv/lowess-project/blob/main/benchmarks/README.md#gpu-benchmarks) for the full sweep and transfer-overhead breakdown.

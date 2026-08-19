@@ -152,10 +152,9 @@ def install_gpu(yes: bool = False) -> None:
     req = urllib.request.Request(url, headers={"User-Agent": _USER_AGENT})
     with tempfile.TemporaryDirectory() as tmp:
         wheel_path = Path(tmp) / asset["name"]
-        with (
-            urllib.request.urlopen(req, timeout=300) as resp,
-            open(wheel_path, "wb") as f,
-        ):
+        with urllib.request.urlopen(req, timeout=300) as resp, open(
+            wheel_path, "wb"
+        ) as f:
             f.write(resp.read())
 
         print("Installing...")
