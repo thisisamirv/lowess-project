@@ -33,7 +33,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       # ---- Toolchain Setup ----
       - name: Install Rust Toolchain
@@ -47,12 +47,12 @@ jobs:
         run: rustup toolchain install stable-x86_64-pc-windows-gnu
 
       - name: Install Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -236,7 +236,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -244,7 +244,7 @@ jobs:
           components: rustfmt, clippy
 
       - name: Install Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
@@ -257,7 +257,7 @@ jobs:
         uses: r-lib/actions/setup-pandoc@v2
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -295,7 +295,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -303,7 +303,7 @@ jobs:
           components: rustfmt, clippy
 
       - name: Install Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
@@ -319,7 +319,7 @@ jobs:
         uses: r-lib/actions/setup-tinytex@v2
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -349,7 +349,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -360,7 +360,7 @@ jobs:
         run: rustup toolchain install stable-x86_64-pc-windows-gnu
 
       - name: Install Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
@@ -376,7 +376,7 @@ jobs:
         uses: r-lib/actions/setup-tinytex@v2
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -422,7 +422,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -554,7 +554,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install Rust Nightly
         uses: dtolnay/rust-toolchain@nightly
@@ -563,12 +563,12 @@ jobs:
           components: rust-src
 
       - name: Install Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -669,7 +669,7 @@ jobs:
       run:
         working-directory: bindings/r
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Install latest Rust
         shell: bash
         run: |
@@ -693,12 +693,14 @@ jobs:
           apt-get install -y --no-install-recommends libssl-dev libcurl4-openssl-dev libxml2-dev libuv1-dev jq
       - name: Install R Dependencies
         run: |
-          export R_LIBS_USER="$RUNNER_TEMP/Library"
-          mkdir -p "$R_LIBS_USER"
-          echo "R_LIBS_USER=$R_LIBS_USER" >> "$GITHUB_ENV"
-          RDscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); install.packages(c('remotes', 'rcmdcheck', 'testthat', 'knitr', 'rmarkdown', 'BiocManager'), lib = lib)"
-          RDscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); BiocManager::install(c('BiocStyle', 'BiocGenerics'), lib = lib, ask = FALSE, update = FALSE)"
-          RDscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(BiocManager::repositories(), CRAN = 'https://cloud.r-project.org')); remotes::install_deps(dependencies = TRUE, lib = lib)"
+          mkdir -p ~/.R
+          # Suppress warnings for all C++ standard variants (e.g. libsass uses C++11)
+          printf 'CFLAGS += -w\nCXXFLAGS += -w\nCXX11FLAGS += -w\nCXX14FLAGS += -w\nCXX17FLAGS += -w\nCXX20FLAGS += -w\n' >> ~/.R/Makevars
+          # 2>/dev/null: libsass submake hardcodes -Wall, ignoring ~/.R/Makevars;
+          # R-level errors still reach stdout and fail the step via exit code.
+          RDscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); install.packages(c('remotes', 'rcmdcheck', 'testthat', 'knitr', 'rmarkdown', 'BiocManager'))" 2>/dev/null
+          RDscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); BiocManager::install(c('BiocStyle', 'BiocGenerics'), ask = FALSE, update = FALSE)" 2>/dev/null
+          RDscript -e "options(repos = c(BiocManager::repositories(), CRAN = 'https://cloud.r-project.org')); remotes::install_deps(dependencies = TRUE)" 2>/dev/null
       - name: Prepare Package Sources
         shell: bash
         run: |
@@ -724,7 +726,7 @@ jobs:
           elif [ -f "$HOME/.cargo/env" ]; then
             . "$HOME/.cargo/env"
           fi
-          RDscript -e "rcmdcheck::rcmdcheck(args = c('--no-manual', '--ignore-vignettes'), build_args = c('--no-build-vignettes'), error_on = 'error', check_dir = 'check', libpath = .libPaths())"
+          RDscript -e "rcmdcheck::rcmdcheck(args = c('--no-manual', '--ignore-vignettes'), build_args = c('--no-build-vignettes'), error_on = 'error', check_dir = 'check')"
 
   # ============================================================================
   # GPU BACKEND
@@ -746,20 +748,20 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
 
       - name: Install Python
         if: matrix.language == 'python'
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
       - name: Setup Node
         if: matrix.language == 'nodejs'
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 22
 

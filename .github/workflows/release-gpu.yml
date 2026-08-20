@@ -22,7 +22,7 @@ jobs:
       matrix:
         python: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Build GPU wheels
         uses: PyO3/maturin-action@v1
@@ -45,10 +45,10 @@ jobs:
     name: Build macOS x86_64 GPU
     runs-on: macos-15-intel
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.8"
 
@@ -75,10 +75,10 @@ jobs:
     name: Build macOS ARM64 GPU
     runs-on: macos-14
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.8"
 
@@ -105,10 +105,10 @@ jobs:
     name: Build Windows x86_64 GPU
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.8"
 
@@ -135,7 +135,7 @@ jobs:
     name: Build Julia GPU library (Linux x86_64)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Build GPU library
         run: cargo build --release --features gpu --manifest-path bindings/julia/Cargo.toml
@@ -159,7 +159,7 @@ jobs:
     name: Build Julia GPU library (macOS x86_64)
     runs-on: macos-15-intel
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Build GPU library
         run: cargo build --release --features gpu --manifest-path bindings/julia/Cargo.toml
@@ -183,7 +183,7 @@ jobs:
     name: Build Julia GPU library (macOS ARM64)
     runs-on: macos-14
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Build GPU library
         run: cargo build --release --features gpu --manifest-path bindings/julia/Cargo.toml
@@ -207,7 +207,7 @@ jobs:
     name: Build Julia GPU library (Windows x86_64)
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Build GPU library
         run: cargo build --release --features gpu --manifest-path bindings/julia/Cargo.toml
@@ -232,7 +232,7 @@ jobs:
     name: Build C++ GPU library (Linux x86_64)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Build GPU library
         run: cargo build --release --features gpu --manifest-path bindings/cpp/Cargo.toml
@@ -256,7 +256,7 @@ jobs:
     name: Build C++ GPU library (macOS x86_64)
     runs-on: macos-15-intel
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Build GPU library
         run: cargo build --release --features gpu --manifest-path bindings/cpp/Cargo.toml
@@ -280,7 +280,7 @@ jobs:
     name: Build C++ GPU library (macOS ARM64)
     runs-on: macos-14
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Build GPU library
         run: cargo build --release --features gpu --manifest-path bindings/cpp/Cargo.toml
@@ -304,7 +304,7 @@ jobs:
     name: Build C++ GPU library (Windows x86_64)
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Build GPU library
         run: cargo build --release --features gpu --manifest-path bindings/cpp/Cargo.toml
@@ -329,10 +329,10 @@ jobs:
     name: Build Node.js GPU binary (linux-x64-gnu)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -363,10 +363,10 @@ jobs:
     name: Build Node.js GPU binary (darwin-x64)
     runs-on: macos-15-intel
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -397,10 +397,10 @@ jobs:
     name: Build Node.js GPU binary (darwin-arm64)
     runs-on: macos-14
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -431,10 +431,10 @@ jobs:
     name: Build Node.js GPU binary (win32-x64-msvc)
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -466,7 +466,7 @@ jobs:
     name: Build R GPU library (Linux x86_64)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: r-lib/actions/setup-r@v2
 
@@ -493,7 +493,7 @@ jobs:
     name: Build R GPU library (macOS x86_64)
     runs-on: macos-15-intel
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: r-lib/actions/setup-r@v2
 
@@ -520,7 +520,7 @@ jobs:
     name: Build R GPU library (macOS ARM64)
     runs-on: macos-14
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: r-lib/actions/setup-r@v2
 
@@ -547,7 +547,7 @@ jobs:
     name: Build R GPU library (Windows x86_64)
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: r-lib/actions/setup-r@v2
         with:
@@ -605,7 +605,7 @@ jobs:
       contents: write # Required to upload release assets
     steps:
       - name: Download all wheel artifacts
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           pattern: gpu-*
           path: dist

@@ -1,6 +1,6 @@
 [package]
 name = "rfastlowess"
-version = "2.0.0"
+version = "3.0.0"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
@@ -31,6 +31,10 @@ dev = []
 # which also skips stripping wgpu deps from the vendored fastLowess crate.
 # Not used for CRAN/Bioconductor submission builds.
 gpu = ["fastLowess/gpu"]
+
+
+
+
 
 [workspace]
 

@@ -65,20 +65,25 @@ gpu_asset_info <- function(version) {
     list(asset = asset, repo = repo, url = url, ext = ext)
 }
 
+# Wrappers for local_mocked_bindings(.package = "rfastlowess") in tests;
+# base::interactive() is primitive and cannot be intercepted that way directly.
+is_interactive <- function() interactive()
+read_line <- function(prompt) readline(prompt)
+
 #' Ask the User to Confirm the GPU Download, Unless Skipped
 #' @noRd
 gpu_confirm_download <- function(yes, asset, repo) {
     if (isTRUE(yes)) {
         return(invisible(TRUE))
     }
-    if (!interactive()) {
+    if (!is_interactive()) {
         stop(
             "install_gpu() requires confirmation. Pass yes = TRUE to ",
             "proceed non-interactively.",
             call. = FALSE
         )
     }
-    answer <- readline(sprintf(
+    answer <- read_line(sprintf(
         "Download and install %s from github.com/%s? [y/N] ",
         asset,
         repo
