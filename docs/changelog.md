@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **R:**
 
-- Strip all raw-dylib `*.dll` import stubs from archive before lld 19 linking on `aarch64-pc-windows-gnullvm`, and explicitly link `-lbcryptprimitives -lsynchronization` to restore `ProcessPrng` / `WaitOnAddress` / `WakeByAddress*` symbols. Required for Windows arm64 builds on R-Universe.
+- Used `llvm-objcopy --remove-section=.idata$4` to patch raw-dylib `*.dll` import stubs in `librfastlowess.a` before lld 19 linking on `aarch64-pc-windows-gnullvm`. Required for Windows arm64 builds on R-Universe.
 
 ## 3.0.0
 

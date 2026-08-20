@@ -5,20 +5,12 @@ RUST_TARGET := $(if $(CARGO_BUILD_TARGET),$(CARGO_BUILD_TARGET),x86_64-pc-window
 LIBDIR = $(TARGET_DIR)/$(RUST_TARGET)/release
 STATLIB = $(LIBDIR)/librfastlowess.a
 
-# On gnullvm we strip all raw-dylib *.dll stubs to work around lld 19's .idata$4
-# validation; provide the symbols they carried via explicit system libs instead.
-ifneq ($(findstring gnullvm,$(RUST_TARGET)),)
-GNULLVM_LIBS = -lbcryptprimitives -lsynchronization
-else
-GNULLVM_LIBS =
-endif
-
 # GNU-style linking for MinGW
 # --allow-multiple-definition works around duplicate raw-dylib Windows API
 # import stubs pulled in by --whole-archive when the GPU (wgpu) dependency
 # tree is enabled (multiple crates emit their own stub object for the same
 # kernel32/oleaut32/etc. symbol).
-PKG_LIBS = -L$(LIBDIR) -Wl,--whole-archive -lrfastlowess -Wl,--no-whole-archive -Wl,--allow-multiple-definition -lws2_32 -luserenv -ladvapi32 -lbcrypt -lncrypt -lntdll $(GNULLVM_LIBS) -Wl,--export-all-symbols -Wl,--strip-all
+PKG_LIBS = -L$(LIBDIR) -Wl,--whole-archive -lrfastlowess -Wl,--no-whole-archive -Wl,--allow-multiple-definition -lws2_32 -luserenv -ladvapi32 -lbcrypt -lncrypt -lntdll -Wl,--export-all-symbols -Wl,--strip-all
 
 # Set WITH_GPU=1 in the environment (e.g. R CMD INSTALL invocation) to build
 # with the GPU execution backend enabled (requires the vendored fastLowess
@@ -46,10 +38,13 @@ $(STATLIB):
 	@cp cargo-config.toml .cargo/config.toml
 	@mkdir -p $(TARGET_DIR)
 	@cargo build -q -j 2 --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR) --target $(RUST_TARGET) $(CARGO_FEATURES)
-	@# lld 19 rejects all raw-dylib *.dll import stubs with malformed .idata$4 on gnullvm
+	@# lld 19 rejects .idata$4 in raw-dylib stubs on gnullvm; patch each *.dll member in-place
 	@if echo "$(RUST_TARGET)" | grep -q gnullvm; then \
 		for _obj in $$(llvm-ar t $(STATLIB) | grep -i '\.dll$$'); do \
-			llvm-ar d $(STATLIB) "$$_obj" 2>/dev/null || true; \
+			llvm-ar x $(STATLIB) "$$_obj" 2>/dev/null && \
+			llvm-objcopy --remove-section='.idata$$4' "$$_obj" 2>/dev/null && \
+			llvm-ar r $(STATLIB) "$$_obj" && \
+			rm -f "$$_obj" || true; \
 		done; \
 	fi
 	@rm -rf .cargo
