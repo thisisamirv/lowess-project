@@ -224,3 +224,4 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: bindings/python/dist/
+          skip-existing: true
