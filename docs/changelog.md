@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Changed R version dependency to 4.2.0.
 
+### Fixed
+
+**R:**
+
+- Strip bcryptprimitives.dll raw-dylib stub from archive before lld 19 linking on aarch64-pc-windows-gnullvm. It is required for Windows arm64 builds on R-Universe.
+
 ## 3.0.0
 
 ### Added
