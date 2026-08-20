@@ -124,9 +124,11 @@ endif
 	@printf '\n\n[workspace]\n\n[patch.crates-io]\nlowess = { path = "vendor/lowess" }\n' >> $(R_DIR)/src/Cargo.toml
 	@(cd $(R_DIR)/src && cargo vendor -q --no-delete vendor)
 	@# Strip test/bench/example/doc dirs to reduce archive size
+	@# objc2 is excluded: its src/ files reference examples/ via include_str!
 	@find $(R_DIR)/src/vendor -mindepth 2 -maxdepth 2 -type d \
 		\( -name tests -o -name benches -o -name examples \
 		   -o -name doc -o -name docs -o -name .github -o -name .config \) \
+		! -path "*/objc2/examples" \
 		-exec rm -rf {} \; 2>/dev/null || true
 	@# Reset checksums — cargo accepts {"files":{}} for vendored crates.
 	@# Must preserve each crate's "package" checksum (only "files" is reset),
