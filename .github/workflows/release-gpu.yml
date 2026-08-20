@@ -349,7 +349,7 @@ jobs:
         working-directory: bindings/nodejs
         run: |
           mkdir -p dist
-          cp fastlowess.linux-x64-gnu.node dist/fastlowess-gpu.linux-x64-gnu.node
+          cp fastlowess.node dist/fastlowess-gpu.linux-x64-gnu.node
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -383,7 +383,7 @@ jobs:
         working-directory: bindings/nodejs
         run: |
           mkdir -p dist
-          cp fastlowess.darwin-x64.node dist/fastlowess-gpu.darwin-x64.node
+          cp fastlowess.node dist/fastlowess-gpu.darwin-x64.node
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -417,7 +417,7 @@ jobs:
         working-directory: bindings/nodejs
         run: |
           mkdir -p dist
-          cp fastlowess.darwin-arm64.node dist/fastlowess-gpu.darwin-arm64.node
+          cp fastlowess.node dist/fastlowess-gpu.darwin-arm64.node
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -452,7 +452,7 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          Copy-Item fastlowess.win32-x64-msvc.node dist/fastlowess-gpu.win32-x64-msvc.node
+          Copy-Item fastlowess.node dist/fastlowess-gpu.win32-x64-msvc.node
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
