@@ -1,8 +1,7 @@
-TARGET_DIR = ../target
+TARGET_DIR = ./target
 
-# Windows R always uses MinGW-GCC (both Rtools and Conda R)
-# So we always target x86_64-pc-windows-gnu
-RUST_TARGET = x86_64-pc-windows-gnu
+# R-Universe sets CARGO_BUILD_TARGET for cross-compilation (e.g. aarch64-pc-windows-gnullvm)
+RUST_TARGET = $(if $(CARGO_BUILD_TARGET),$(CARGO_BUILD_TARGET),x86_64-pc-windows-gnu)
 LIBDIR = $(TARGET_DIR)/$(RUST_TARGET)/release
 STATLIB = $(LIBDIR)/librfastlowess.a
 
