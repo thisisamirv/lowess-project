@@ -616,6 +616,8 @@ jobs:
     permissions:
       contents: write # Required to upload release assets
     steps:
+      - uses: actions/checkout@v7
+
       - name: Download all wheel artifacts
         uses: actions/download-artifact@v8
         with:
