@@ -187,7 +187,7 @@ lines(result_s$x, result_s$y, col = "red", lwd = 2)
 `OnlineLowess` is designed for real-time data streams where observations
 arrive one at a time. The model maintains a sliding window of the most recent
 `window_capacity` points. `add_point(model, x, y)` adds a single observation
-and immediately returns the smoothed value at that point — or `NULL` if fewer
+and immediately returns the smoothed value at that point - or `NULL` if fewer
 than `min_points` have been seen yet.
 
 The `update_mode` parameter controls how the window is updated:
@@ -222,7 +222,7 @@ lines(x_stream[!is.na(smoothed_values)],
 
 | Class              | Use Case                                         |
 |--------------------|--------------------------------------------------|
-| `Lowess`           | Primary interface — batch processing             |
+| `Lowess`           | Primary interface - batch processing             |
 | `StreamingLowess`  | Large datasets processed chunk by chunk          |
 | `OnlineLowess`     | Real-time streams, one observation at a time     |
 
