@@ -577,7 +577,7 @@ jobs:
           $libDir = Rscript -e "cat(system.file('libs', package='rfastlowess'))"
           New-Item -ItemType Directory -Force -Path dist | Out-Null
           $tag = if ("${{ github.event.release.tag_name }}") { "${{ github.event.release.tag_name }}" } else { "dev" }
-          Copy-Item "$libDir/rfastlowess.dll" "dist/librfastlowess-gpu-$tag-windows-x86_64.dll"
+          Copy-Item "$libDir/x64/rfastlowess.dll" "dist/librfastlowess-gpu-$tag-windows-x86_64.dll"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
