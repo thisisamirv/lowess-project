@@ -9,7 +9,7 @@ Description: Provides high-performance LOWESS smoothing (Locally Weighted Scatte
 License: MIT + file LICENSE | Apache License (== 2.0)
 SystemRequirements: 'Rust' programming language (via 'rustup' or system tools)
 Encoding: UTF-8
-Depends: R (>= 4.6.0)
+Depends: R (>= 4.2.0)
 Roxygen: list(markdown = TRUE, roclets = c("namespace", "rd", "srr::srr_stats_roclet"))
 biocViews: Preprocessing, StatisticalMethod, Regression, FunctionalPrediction, QualityControl, KEGG
 Imports: BiocGenerics
