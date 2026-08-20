@@ -38,9 +38,11 @@ $(STATLIB):
 	@cp cargo-config.toml .cargo/config.toml
 	@mkdir -p $(TARGET_DIR)
 	@cargo build -q -j 2 --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR) --target $(RUST_TARGET) $(CARGO_FEATURES)
-	@# lld 19 rejects raw-dylib stubs with malformed .idata$4 on gnullvm targets
+	@# lld 19 rejects all raw-dylib *.dll import stubs with malformed .idata$4 on gnullvm
 	@if echo "$(RUST_TARGET)" | grep -q gnullvm; then \
-		llvm-ar d $(STATLIB) bcryptprimitives.dll 2>/dev/null || true; \
+		for _obj in $$(llvm-ar t $(STATLIB) | grep -i '\.dll$$'); do \
+			llvm-ar d $(STATLIB) "$$_obj" 2>/dev/null || true; \
+		done; \
 	fi
 	@rm -rf .cargo
 
