@@ -5,19 +5,8 @@ RUST_TARGET := $(if $(CARGO_BUILD_TARGET),$(CARGO_BUILD_TARGET),x86_64-pc-window
 LIBDIR = $(TARGET_DIR)/$(RUST_TARGET)/release
 STATLIB = $(LIBDIR)/librfastlowess.a
 
-# GNU-style linking for MinGW
-# --allow-multiple-definition works around duplicate raw-dylib Windows API
-# import stubs pulled in by --whole-archive when the GPU (wgpu) dependency
-# tree is enabled (multiple crates emit their own stub object for the same
-# kernel32/oleaut32/etc. symbol).
-# On gnullvm (arm64), skip --whole-archive entirely: it forces every crate's
-# private raw-dylib stub for a given DLL into the link even when they cover
-# different, non-overlapping symbols of that DLL (e.g. std's stub provides
-# WaitOnAddress/WakeByAddressAll, once_cell's provides WakeByAddressSingle).
-# ld.lld's arm64pe backend can't reliably tolerate the resulting duplicates
-# (crashes or drops symbols), so let normal single-definition-per-symbol
-# archive resolution apply instead -- entrypoint.c already references the
-# extendr init symbol directly, so nothing needed from the archive is lost.
+# gnullvm: skip --whole-archive to avoid lld duplicate-symbol crashes from
+# per-crate raw-dylib stubs; entrypoint.c refs the extendr init symbol directly.
 ifneq ($(findstring gnullvm,$(RUST_TARGET)),)
 WHOLE_ARCHIVE_LIBS = -lrfastlowess
 else
@@ -51,8 +40,7 @@ $(STATLIB):
 	@cp cargo-config.toml .cargo/config.toml
 	@mkdir -p $(TARGET_DIR)
 	@cargo build -q -j 2 --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR) --target $(RUST_TARGET) $(CARGO_FEATURES)
-	@# lld 19 rejects .idata$4 relocations in raw-dylib stubs (rustc<=1.97, gnullvm)
-	@# ar x (no member arg) resolves long-name entries; ar/objcopy are in PATH with nm
+	@# ar x without a member name resolves long-name entries (>16 chars stored as /<offset>)
 	@if echo "$(RUST_TARGET)" | grep -q gnullvm; then \
 		_lib=$$(pwd)/$(STATLIB); \
 		mkdir -p _ar_patch; \

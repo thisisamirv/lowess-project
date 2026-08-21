@@ -84,7 +84,7 @@ Package: cbindgen (0.29.4)
 Authors: Emilio Cobos Álvarez <emilio@crisal.io>, Jeff Muizelaar <jmuizelaar@mozilla.com>, Kartikaya Gupta <kats@mozilla.com>, Ryan Hunt <rhunt@eqrion.net>
 License: MPL-2.0
 ----------------------------------------
-Package: cc (1.4.4)
+Package: cc (1.4.3)
 Authors: 
 License: MIT OR Apache-2.0
 ----------------------------------------
@@ -152,7 +152,7 @@ Package: document-features (0.2.12)
 Authors: Slint Developers <info@slint.dev>
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: either (1.18.0)
+Package: either (1.17.0)
 Authors: 
 License: MIT OR Apache-2.0
 ----------------------------------------
@@ -300,7 +300,7 @@ Package: naga-types (30.0.0)
 Authors: gfx-rs developers
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: napi (3.12.2)
+Package: napi (3.12.1)
 Authors: Nathan Sobo <nathan@github.com>, Yinan Long <lynweklm@gmail.com>
 License: MIT
 ----------------------------------------

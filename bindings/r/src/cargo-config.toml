@@ -5,20 +5,14 @@ replace-with = "vendored-sources"
 [source.vendored-sources]
 directory = "vendor"
 
-# Critical for WASM/emscripten: use v0 symbol mangling to avoid
-# invalid export names with special characters like $, <, >
+# v0 mangling avoids invalid WASM export names with $, <, >
 [build]
 rustflags = ["-C", "symbol-mangling-version=v0"]
 
-# WASM/Emscripten target configuration
 [target.wasm32-unknown-emscripten]
 rustflags = ["-C", "symbol-mangling-version=v0"]
 
-# Windows GNU target (Rtools45 uses .static.posix prefix). Rtools' bin
-# directory is always on PATH during R CMD INSTALL, so reference the
-# tool by name only -- a hardcoded drive/path (e.g. c:/rtools45/...)
-# breaks on machines where Rtools is installed elsewhere (e.g. CRAN's
-# Windows build server uses d:/rtools45).
+# Bare tool names work regardless of Rtools install location (c: vs d: etc.)
 [target.x86_64-pc-windows-gnu]
 linker = "x86_64-w64-mingw32.static.posix-gcc.exe"
 ar = "x86_64-w64-mingw32.static.posix-ar.exe"
