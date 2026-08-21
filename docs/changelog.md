@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **R:**
 
 - Used `ar x` (no member argument) to extract all members from `librfastlowess.a` into a temp directory, then `objcopy --remove-section=.idata$4` on each `.dll` stub, then `ar r` to re-insert. `ar x` without a member name resolves long-name archive entries automatically; named extraction silently fails for entries stored as `/<offset>` (long names >16 chars). Required for Windows arm64 builds on R-Universe, where lld 19 rejects `.idata$4` relocations referencing special section 0 in rustc-generated raw-dylib stubs.
+- Fixed CRAN Windows build failure (`error: linker ... not found`): `cargo-config.toml` hardcoded the MinGW linker and `ar` as absolute `c:/rtools45/...` paths, which don't exist on machines where Rtools is installed elsewhere (e.g. CRAN's Windows build server uses `d:/rtools45`). Fixed by referencing the tools by name only, resolved via `PATH`.
 
 ## 3.0.0
 

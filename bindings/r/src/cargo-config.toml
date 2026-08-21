@@ -14,7 +14,11 @@ rustflags = ["-C", "symbol-mangling-version=v0"]
 [target.wasm32-unknown-emscripten]
 rustflags = ["-C", "symbol-mangling-version=v0"]
 
-# Windows GNU target (Rtools45 uses .static.posix prefix)
+# Windows GNU target (Rtools45 uses .static.posix prefix). Rtools' bin
+# directory is always on PATH during R CMD INSTALL, so reference the
+# tool by name only -- a hardcoded drive/path (e.g. c:/rtools45/...)
+# breaks on machines where Rtools is installed elsewhere (e.g. CRAN's
+# Windows build server uses d:/rtools45).
 [target.x86_64-pc-windows-gnu]
-linker = "c:/rtools45/x86_64-w64-mingw32.static.posix/bin/x86_64-w64-mingw32.static.posix-gcc.exe"
-ar = "c:/rtools45/x86_64-w64-mingw32.static.posix/bin/x86_64-w64-mingw32.static.posix-ar.exe"
+linker = "x86_64-w64-mingw32.static.posix-gcc.exe"
+ar = "x86_64-w64-mingw32.static.posix-ar.exe"
