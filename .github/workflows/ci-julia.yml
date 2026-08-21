@@ -1,0 +1,139 @@
+name: CI — Julia
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  ASAN_OPTIONS: detect_leaks=0:strict_init_order=1
+
+jobs:
+  ci:
+    name: Julia (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: julia-actions/setup-julia@v3
+        with:
+          version: "1.11"
+      - name: Install Rust GNU (Windows)
+        if: matrix.os == 'windows-latest'
+        run: rustup toolchain install stable-x86_64-pc-windows-gnu
+
+      - name: Install GNU Make (Windows)
+        if: matrix.os == 'windows-latest'
+        run: choco install make -y
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: julia-${{ matrix.os }}
+
+      - name: Build
+        working-directory: bindings/julia
+        run: cargo build --release
+
+      - name: Verify Exports
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          nm -D target/release/libfastlowess_jl.so | grep -q jl_lowess_fit || exit 1
+          nm -D target/release/libfastlowess_jl.so | grep -q jl_streaming_lowess_new || exit 1
+          nm -D target/release/libfastlowess_jl.so | grep -q jl_online_lowess_new || exit 1
+          nm -D target/release/libfastlowess_jl.so | grep -q jl_lowess_free_result || exit 1
+
+      - name: Relax JLL dependency for CI
+        uses: ./.github/actions/relax-julia-jll
+
+      - name: Test
+        shell: bash
+        run: |
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            export FASTLOWESS_LIB="target/release/fastlowess_jl.dll"
+          elif [ "${{ matrix.os }}" = "macos-latest" ]; then
+            export FASTLOWESS_LIB="target/release/libfastlowess_jl.dylib"
+          else
+            export FASTLOWESS_LIB="target/release/libfastlowess_jl.so"
+          fi
+          julia -e 'using Pkg; Pkg.activate("bindings/julia/julia"); Pkg.instantiate(); include("bindings/julia/tests/test_FastLOWESS.jl")'
+
+      - name: Lint
+        working-directory: bindings/julia
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --all-targets -- -D warnings
+
+      - name: make julia
+        run: make julia
+
+  asan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          toolchain: nightly
+          components: rust-src
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: julia-asan
+      - name: Install System Dependencies
+        run: sudo apt-get install -y --no-install-recommends clang lld
+      - name: Build (ASAN)
+        env:
+          RUSTFLAGS: -Zsanitizer=address
+        run: |
+          cargo build \
+            -Zbuild-std --target x86_64-unknown-linux-gnu \
+            -p fastlowess-jl --release
+
+  gpu:
+    name: Julia GPU
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: julia-actions/setup-julia@v3
+        with:
+          version: "1.11"
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: julia-gpu
+      - uses: ./.github/actions/setup-lavapipe
+      - name: Build with GPU feature
+        working-directory: bindings/julia
+        run: cargo build --release --features gpu
+      - name: Relax JLL dependency for CI
+        uses: ./.github/actions/relax-julia-jll
+      - name: GPU smoke test
+        env:
+          FASTLOWESS_LIB: target/release/libfastlowess_jl.so
+        run: |
+          cat > /tmp/gpu_smoke.jl <<'JL'
+          using Pkg
+          Pkg.activate("bindings/julia/julia")
+          Pkg.instantiate()
+          using FastLOWESS
+          @assert gpu_available() "GPU backend not detected"
+          x = collect(range(0, 1, length = 50))
+          y = sin.(6 .* x) .+ 0.05
+          result = fit(Lowess(fraction = 0.3, backend = "gpu"), x, y)
+          @assert length(result.y) == length(x)
+          @assert all(isfinite, result.y)
+          println("Julia GPU OK")
+          JL
+          julia /tmp/gpu_smoke.jl

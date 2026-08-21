@@ -24,9 +24,9 @@ else
 	NPX := npx
 endif
 
-PYTHON      ?= python3
+PYTHON ?= python3
 PYO3_PYTHON ?= $(PYTHON)
-NODE        ?= node
+NODE ?= node
 
 # Set WITH_GPU=1 to build rfastlowess with the GPU execution backend enabled
 # (requires a Vulkan/Metal/DX12-capable GPU driver at runtime). Off by default
@@ -47,7 +47,7 @@ endif
 # inst/AUTHORS). Not preinstalled on plain Windows/macOS dev machines the
 # way it is on GitHub-hosted CI runners, so fall back to downloading a
 # static binary if it's not already on PATH.
-JQ_DIR   := $(R_DIR)/.bin
+JQ_DIR := $(R_DIR)/.bin
 ifeq ($(HOST_PLATFORM),windows)
 	JQ_LOCAL := $(JQ_DIR)/jq.exe
 	JQ_ASSET := jq-windows-amd64.exe
@@ -71,13 +71,13 @@ ifeq ($(OS),Windows_NT)
 	TEMP := /tmp
 endif
 
-R_PKG_NAME    := rfastlowess
-R_PKG_VERSION  = $(shell grep "^Version:" bindings/r/DESCRIPTION | sed 's/Version: //')
-R_PKG_TARBALL  = $(R_PKG_NAME)_$(R_PKG_VERSION).tar.gz
-R_DIR         := bindings/r
-R_LIB_DIR     := $(R_DIR)/.r-lib
+R_PKG_NAME := rfastlowess
+R_PKG_VERSION = $(shell grep "^Version:" bindings/r/DESCRIPTION | sed 's/Version: //')
+R_PKG_TARBALL = $(R_PKG_NAME)_$(R_PKG_VERSION).tar.gz
+R_DIR := bindings/r
+R_LIB_DIR := $(R_DIR)/.r-lib
 R_CARGO_TARGET :=
-R_CROSS_ENV    :=
+R_CROSS_ENV :=
 ifeq ($(OS),Windows_NT)
 	R_CARGO_TARGET := --target x86_64-pc-windows-gnu
 	R_CROSS_ENV    := PATH="/c/rtools45/x86_64-w64-mingw32.static.posix/bin:$$PATH"
@@ -213,8 +213,8 @@ endif
 		echo "Authors and Copyright Holders for Rust Dependencies:"; \
 		echo ""; \
 		(cargo metadata --format-version 1) | \
-			$(JQ) -r '. as $$root | [.packages[] | select(.id as $$id | ($$root.workspace_members | index($$id)) == null)] | unique_by(.name)[] | "Package: \(.name) (\(.version))\nAuthors: \(.authors | join(", "))\nLicense: \(.license // "Unknown")\n" + "-" * 40'; \
-	} > $(R_DIR)/inst/AUTHORS
+		$(JQ) -r '. as $$root | [.packages[] | select(.id as $$id | ($$root.workspace_members | index($$id)) == null)] | unique_by(.name)[] | "Package: \(.name) (\(.version))\nAuthors: \(.authors | join(", "))\nLicense: \(.license // "Unknown")\n" + "-" * 40'; \
+		} > $(R_DIR)/inst/AUTHORS
 	@cd $(R_DIR) && WITH_GPU=$(WITH_GPU) R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) R CMD build .
 	@echo "=============================================================================="
 	@echo "5. Installing..."
@@ -229,8 +229,8 @@ endif
 	@echo "=============================================================================="
 	@mkdir -p $(R_DIR)/src/.cargo && cp $(R_DIR)/src/cargo-config.toml $(R_DIR)/src/.cargo/config.toml
 	@if [ -n "$(R_CARGO_TARGET)" ]; then \
-	    GCC_LIBDIR="c:/rtools45/x86_64-w64-mingw32.static.posix/lib/gcc/x86_64-w64-mingw32.static.posix/14.3.0"; \
-	    test -f "$$GCC_LIBDIR/libgcc_eh.a" || x86_64-w64-mingw32.static.posix-ar rcs "$$GCC_LIBDIR/libgcc_eh.a"; \
+		GCC_LIBDIR="c:/rtools45/x86_64-w64-mingw32.static.posix/lib/gcc/x86_64-w64-mingw32.static.posix/14.3.0"; \
+		test -f "$$GCC_LIBDIR/libgcc_eh.a" || x86_64-w64-mingw32.static.posix-ar rcs "$$GCC_LIBDIR/libgcc_eh.a"; \
 	fi
 	@cd $(R_DIR)/src && $(R_CROSS_ENV) cargo test -q --no-run $(R_CARGO_TARGET)
 	@rm -rf $(R_DIR)/src/.cargo
@@ -244,6 +244,9 @@ endif
 	@ls -lh $(R_DIR)/$(R_PKG_TARBALL) || true
 	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); if (!requireNamespace('pkgstats', quietly = TRUE, lib.loc = lib) || !requireNamespace('pkgcheck', quietly = TRUE, lib.loc = lib)) { message('Skipping pkgcheck because pkgstats/pkgcheck are not available in R_LIBS_USER'); quit(status = 0) }; library(pkgstats, lib.loc = lib); library(pkgcheck, lib.loc = lib); token <- Sys.getenv('GITHUB_TOKEN', ''); if (nzchar(token) && !nzchar(Sys.getenv('GITHUB_PAT', ''))) Sys.setenv(GITHUB_PAT = token); tryCatch(pkgcheck(use_cache = FALSE), error = function(err) { msg <- conditionMessage(err); if (grepl('GitHub API error', msg, ignore.case = TRUE) || grepl('rate limit exceeded', msg, ignore.case = TRUE) || grepl('timeout', msg, ignore.case = TRUE) || grepl('could not resolve host', msg, ignore.case = TRUE)) { message('Skipping pkgcheck due to external GitHub/network failure: ', msg); return(invisible(NULL)); }; stop(err) })"
 	@if [ -f $(R_DIR)/src/Cargo.toml.orig ]; then mv $(R_DIR)/src/Cargo.toml.orig $(R_DIR)/src/Cargo.toml; fi
+	@echo "=============================================================================="
+	@echo "Doc snippet tests (r)..."
+	@$(PYTHON) dev/verify_snippets.py --lang r --timeout 120
 	@echo "All $(R_PKG_NAME) checks completed successfully!"
 
 coverage:

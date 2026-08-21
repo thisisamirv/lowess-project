@@ -1,0 +1,116 @@
+name: CI — Node.js
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  ASAN_OPTIONS: detect_leaks=0:strict_init_order=1
+
+jobs:
+  ci:
+    name: Node.js (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Install GNU Make (Windows)
+        if: matrix.os == 'windows-latest'
+        run: choco install make -y
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: nodejs-${{ matrix.os }}
+
+      - name: Build
+        working-directory: bindings/nodejs
+        run: |
+          npm install
+          npm run build
+
+      - name: Test
+        working-directory: bindings/nodejs
+        run: npm test
+
+      - name: Lint
+        working-directory: bindings/nodejs
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --all-targets -- -D warnings
+
+      - name: make nodejs
+        run: make nodejs
+
+  asan:
+    name: Node.js ASAN
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          toolchain: nightly
+          components: rust-src
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: nodejs-asan
+      - name: Install System Dependencies
+        run: sudo apt-get install -y --no-install-recommends clang lld
+      - name: Build (ASAN)
+        env:
+          RUSTFLAGS: -Zsanitizer=address
+        run: |
+          cargo build \
+            -Zbuild-std --target x86_64-unknown-linux-gnu \
+            -p fastlowess-node --release
+
+  gpu:
+    name: Node.js GPU
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: nodejs-gpu
+      - uses: ./.github/actions/setup-lavapipe
+      - name: Build with GPU feature
+        working-directory: bindings/nodejs
+        run: |
+          npm install
+          npx napi build --release --features gpu
+      - name: GPU smoke test
+        working-directory: bindings/nodejs
+        run: |
+          cat > /tmp/gpu_smoke.js <<'JS'
+          const fastlowess = require(process.cwd());
+          if (!fastlowess.gpuAvailable()) throw new Error("GPU not detected");
+          const n = 50;
+          const x = Float64Array.from({ length: n }, (_, i) => i / (n - 1));
+          const y = Float64Array.from(x, xi => Math.sin(6 * xi) + 0.05);
+          const result = new fastlowess.Lowess({ fraction: 0.3, backend: "gpu" }).fit(x, y);
+          if (result.y.length !== n) throw new Error("unexpected output length");
+          if (!Array.from(result.y).every(Number.isFinite)) throw new Error("non-finite values");
+          console.log("Node.js GPU OK");
+          JS
+          node /tmp/gpu_smoke.js

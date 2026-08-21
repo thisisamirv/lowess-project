@@ -24,17 +24,17 @@ else
 	NPX := npx
 endif
 
-PYTHON      ?= python3
+PYTHON ?= python3
 PYO3_PYTHON ?= $(PYTHON)
-NODE        ?= node
+NODE ?= node
 
 TEMP ?= /tmp
 ifeq ($(OS),Windows_NT)
 	TEMP := /tmp
 endif
 
-JL_PKG      := fastlowess-jl
-JL_DIR      := bindings/julia
+JL_PKG := fastlowess-jl
+JL_DIR := bindings/julia
 JL_TEST_DIR := bindings/julia/tests
 
 ifeq ($(HOST_PLATFORM),windows)
@@ -125,8 +125,8 @@ _julia_checks_internal:
 	@echo "=============================================================================="
 	@export FASTLOWESS_LIB=$(JL_SHARED_LIB_ABS) && \
 	julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.develop(path="$(JL_DIR)/julia"); \
-		Pkg.add("Aqua"); using Aqua, FastLOWESS; \
-		Aqua.test_all(FastLOWESS; ambiguities=false, stale_deps=(ignore=[:Aqua],))'
+	Pkg.add("Aqua"); using Aqua, FastLOWESS; \
+	Aqua.test_all(FastLOWESS; ambiguities=false, stale_deps=(ignore=[:Aqua],))'
 	@echo "=============================================================================="
 	@echo "8. JET.jl type-inference check..."
 	@echo "=============================================================================="
@@ -136,6 +136,9 @@ _julia_checks_internal:
 		report = JET.report_package(FastLOWESS; target_modules=(FastLOWESS,)); \
 		show(stderr, MIME("text/plain"), report); println(stderr); \
 		if length(JET.get_reports(report)) > 0; @error "JET found type errors"; exit(1); end'
+	@echo "=============================================================================="
+	@echo "Doc snippet tests (julia)..."
+	@$(PYTHON) dev/verify_snippets.py --lang julia --timeout 120
 	@echo "$(JL_PKG) checks completed successfully!"
 	@echo ""
 	@echo "To use in Julia:"

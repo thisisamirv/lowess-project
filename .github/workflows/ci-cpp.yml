@@ -1,0 +1,138 @@
+name: CI — C++
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  ASAN_OPTIONS: detect_leaks=0:strict_init_order=1
+
+jobs:
+  ci:
+    name: C++ (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Install Rust GNU (Windows)
+        if: matrix.os == 'windows-latest'
+        run: rustup toolchain install stable-x86_64-pc-windows-gnu
+
+      - name: Install GNU Make (Windows)
+        if: matrix.os == 'windows-latest'
+        run: choco install make -y
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: cpp-${{ matrix.os }}
+
+      - name: Build
+        working-directory: bindings/cpp
+        run: cargo build --release
+
+      - name: Lint
+        working-directory: bindings/cpp
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --all-targets -- -D warnings
+
+      - name: make cpp
+        run: make cpp
+
+  asan:
+    name: C++ ASAN
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          toolchain: nightly
+          components: rust-src
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: cpp-asan
+      - name: Install System Dependencies
+        run: sudo apt-get install -y --no-install-recommends clang lld cmake g++
+      - name: Build (ASAN)
+        env:
+          RUSTFLAGS: -Zsanitizer=address
+        run: |
+          cargo build \
+            -Zbuild-std --target x86_64-unknown-linux-gnu \
+            -p fastlowess-cpp --release
+      - name: Prepare sanitized library
+        run: |
+          mkdir -p target/release
+          cp target/x86_64-unknown-linux-gnu/release/libfastlowess_cpp.so target/release/
+      - name: C++ Tests (ASAN)
+        run: |
+          cmake -S bindings/cpp/tests -B bindings/cpp/tests/build-asan \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_CXX_FLAGS='-fsanitize=address -fno-omit-frame-pointer' \
+            -DCMAKE_EXE_LINKER_FLAGS='-fsanitize=address' \
+            -DFASTLOWESS_LIB_DIR="$(pwd)/target/release"
+          cmake --build bindings/cpp/tests/build-asan --config Debug
+          LD_LIBRARY_PATH=target/release \
+            ctest --test-dir bindings/cpp/tests/build-asan --output-on-failure
+
+  gpu:
+    name: C++ GPU
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: cpp-gpu
+      - uses: ./.github/actions/setup-lavapipe
+      - name: Build with GPU feature
+        working-directory: bindings/cpp
+        run: cargo build --release --features gpu
+      - name: GPU smoke test
+        run: |
+          cat > /tmp/gpu_smoke.cpp <<'CPP'
+          #include "fastlowess.hpp"
+          #include <cmath>
+          #include <cstdio>
+          #include <vector>
+          int main() {
+            if (!fastlowess::gpu::available()) { std::fprintf(stderr, "GPU not detected\n"); return 1; }
+            constexpr std::size_t n = 50;
+            std::vector<double> x(n), y(n);
+            for (std::size_t i = 0; i < n; ++i) {
+              x[i] = static_cast<double>(i) / (n - 1);
+              y[i] = std::sin(6.0 * x[i]) + 0.05;
+            }
+            fastlowess::LowessOptions opts;
+            opts.fraction = 0.3;
+            opts.backend = "gpu";
+            auto result = fastlowess::Lowess(opts).fit(x, y);
+            if (!result.has_value()) { std::fprintf(stderr, "fit failed: %s\n", result.error().c_str()); return 1; }
+            auto yf = result.value().y_vector();
+            if (yf.size() != n) { std::fprintf(stderr, "bad output length\n"); return 1; }
+            for (double v : yf) if (!std::isfinite(v)) { std::fprintf(stderr, "non-finite\n"); return 1; }
+            std::printf("C++ GPU OK\n");
+          }
+          CPP
+          g++ -O3 -std=c++17 /tmp/gpu_smoke.cpp -o /tmp/gpu_smoke \
+            -I"${GITHUB_WORKSPACE}/bindings/cpp/include" \
+            -L"${GITHUB_WORKSPACE}/target/release" \
+            -lfastlowess_cpp -lpthread -ldl -lm
+          LD_LIBRARY_PATH="${GITHUB_WORKSPACE}/target/release" /tmp/gpu_smoke

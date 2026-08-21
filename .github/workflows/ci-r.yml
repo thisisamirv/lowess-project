@@ -1,0 +1,291 @@
+name: CI — R
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  cmd-check:
+    name: R CMD check (${{ matrix.os }}, R ${{ matrix.r }})
+    runs-on: ${{ matrix.os }}
+    permissions:
+      issues: write
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        r: [release]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Install Rust GNU (Windows)
+        if: matrix.os == 'windows-latest'
+        run: rustup toolchain install stable-x86_64-pc-windows-gnu
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: r-cmd-check-${{ matrix.os }}-r${{ matrix.r }}-cargo
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.r }}
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - name: Bootstrap pak (Windows)
+        if: runner.os == 'Windows'
+        shell: Rscript {0}
+        run: |
+          install.packages(
+            "pak",
+            repos = sprintf(
+              "https://r-lib.github.io/p/pak/stable/%s/%s/%s",
+              .Platform$pkgType, R.Version()$os, R.Version()$arch
+            )
+          )
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          working-directory: bindings/r
+          extra-packages: |
+            any::rcmdcheck
+            any::BiocCheck
+            any::XML
+            any::devtools
+            any::lintr
+            any::BiocManager
+          needs: check
+
+      - name: Prepare Package Sources
+        uses: ./.github/actions/prepare-r-source
+
+      - uses: r-lib/actions/check-r-package@v2
+        with:
+          upload-snapshots: true
+          build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
+          args: 'c("--no-manual", "--as-cran")'
+          check-dir: '"check"'
+          error-on: '"error"'
+          upload-results: false
+          working-directory: bindings/r
+
+      - name: Install Package
+        working-directory: bindings/r
+        run: Rscript -e "devtools::install(quiet = TRUE)"
+
+      - name: Quality (BiocCheck/Lint)
+        working-directory: bindings/r
+        shell: bash
+        run: |
+          mkdir -p ~/.R
+          echo "CXXFLAGS += -w" >> ~/.R/Makevars
+          echo "CFLAGS += -w" >> ~/.R/Makevars
+          Rscript -e "my_linters <- lintr::linters_with_defaults(indentation_linter = lintr::indentation_linter(indent = 4L), object_usage_linter = NULL, object_name_linter = lintr::object_name_linter(styles = c('snake_case', 'symbols', 'CamelCase'))); lintr::lint_dir('R', linters = my_linters)"
+          R CMD build .
+          Rscript -e "BiocCheck::BiocCheck(list.files(pattern='[.]tar[.]gz$')[1], new_package=FALSE, no_check_vignettes=TRUE, quit_with_status=TRUE)"
+
+      - name: make r
+        if: matrix.os == 'ubuntu-latest'
+        run: make r
+
+  srr:
+    name: Software Review Requirements
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: r-srr
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-tinytex@v2
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          working-directory: bindings/r
+          extra-packages: |
+            any::rcmdcheck
+            any::BiocCheck
+            any::XML
+            any::devtools
+            any::lintr
+            any::BiocManager
+          needs: check
+
+      - name: Prepare Package Sources
+        uses: ./.github/actions/prepare-r-source
+
+      - name: Install SRR Dependencies
+        shell: Rscript {0}
+        run: |
+          install.packages(c("remotes", "covr"))
+          install.packages(c("pkgcheck", "pkgstats", "toml", "visNetwork"), repos = c("https://ropensci.r-universe.dev", "https://cloud.r-project.org"))
+          remotes::install_deps("bindings/r", dependencies = TRUE, repos = c(BiocManager::repositories(), "https://cloud.r-project.org"))
+
+      - name: Debug Coverage
+        shell: Rscript {0}
+        run: |
+          tryCatch({
+            print(covr::package_coverage("bindings/r"))
+          }, error = function(e) {
+            print(e)
+            message("Covr failed to run directly")
+          })
+
+      - name: Run pkgcheck
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: Rscript {0}
+        run: |
+          library(pkgcheck)
+          library(pkgstats)
+          check <- pkgcheck::pkgcheck("bindings/r")
+          print(check)
+          if (any(check$checks$error)) stop("pkgcheck failed with errors")
+
+  asan:
+    name: R ASAN
+    runs-on: ubuntu-latest
+    container:
+      image: rocker/r-devel-san:latest
+    env:
+      CARGO_HOME: /usr/local/cargo
+      RUSTUP_HOME: /usr/local/rustup
+    defaults:
+      run:
+        working-directory: bindings/r
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Rust
+        shell: bash
+        run: |
+          export CARGO_HOME=/usr/local/cargo
+          export RUSTUP_HOME=/usr/local/rustup
+          if command -v curl >/dev/null 2>&1; then
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          elif command -v wget >/dev/null 2>&1; then
+            wget -qO- https://sh.rustup.rs | sh -s -- -y
+          else
+            apt-get update
+            apt-get install -y --no-install-recommends wget ca-certificates
+            wget -qO- https://sh.rustup.rs | sh -s -- -y
+          fi
+          echo "$CARGO_HOME/bin" >> $GITHUB_PATH
+          echo "CARGO_HOME=$CARGO_HOME" >> $GITHUB_ENV
+          echo "RUSTUP_HOME=$RUSTUP_HOME" >> $GITHUB_ENV
+
+      - name: Install System Dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends libssl-dev libcurl4-openssl-dev libxml2-dev libuv1-dev jq
+
+      - name: Install R Dependencies
+        run: |
+          mkdir -p ~/.R
+          printf 'CFLAGS += -w\nCXXFLAGS += -w\nCXX11FLAGS += -w\nCXX14FLAGS += -w\nCXX17FLAGS += -w\nCXX20FLAGS += -w\n' >> ~/.R/Makevars
+          RDscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); install.packages(c('remotes', 'rcmdcheck', 'testthat', 'knitr', 'rmarkdown', 'BiocManager'))" 2>/dev/null
+          RDscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); BiocManager::install(c('BiocStyle', 'BiocGenerics'), ask = FALSE, update = FALSE)" 2>/dev/null
+          RDscript -e "options(repos = c(BiocManager::repositories(), CRAN = 'https://cloud.r-project.org')); remotes::install_deps(dependencies = TRUE)" 2>/dev/null
+
+      - name: Prepare Package Sources
+        shell: bash
+        run: |
+          if [ -f "$CARGO_HOME/env" ]; then
+            . "$CARGO_HOME/env"
+          elif [ -f "$HOME/.cargo/env" ]; then
+            . "$HOME/.cargo/env"
+          fi
+          chmod +x configure cleanup
+          mkdir -p inst
+          {
+            echo "Authors and Copyright Holders for Rust Dependencies:"
+            echo ""
+            (cd ../.. && cargo metadata --format-version 1) | \
+              jq -r '. as $root | [.packages[] | select(.id as $id | ($root.workspace_members | index($id)) == null)] | unique_by(.name)[] | "Package: \(.name) (\(.version))\nAuthors: \(.authors | join(", "))\nLicense: \(.license // "Unknown")\n" + "-" * 40'
+          } > inst/AUTHORS
+          test -f tests/testthat.R
+
+      - name: Run ASAN Check
+        shell: bash
+        run: |
+          if [ -f "$CARGO_HOME/env" ]; then
+            . "$CARGO_HOME/env"
+          elif [ -f "$HOME/.cargo/env" ]; then
+            . "$HOME/.cargo/env"
+          fi
+          RDscript -e "rcmdcheck::rcmdcheck(args = c('--no-manual', '--ignore-vignettes'), build_args = c('--no-build-vignettes'), error_on = 'error', check_dir = 'check')"
+
+  gpu:
+    name: R GPU
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: r-gpu
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: ./.github/actions/setup-lavapipe
+
+      - name: Install R runtime dependencies
+        run: |
+          Rscript -e '
+            options(repos = c(CRAN = "https://cloud.r-project.org"));
+            if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager", quiet = TRUE);
+            if (!requireNamespace("BiocGenerics", quietly = TRUE)) BiocManager::install("BiocGenerics", ask = FALSE, update = FALSE, quiet = TRUE)
+          '
+
+      - name: Build and install with GPU feature
+        working-directory: benchmarks
+        run: make WITH_GPU=1 install
+
+      - name: GPU smoke test
+        run: |
+          cat > /tmp/gpu_smoke.R <<'R'
+          library(rfastlowess)
+
+          stopifnot(gpu_available())
+
+          x <- seq(0, 1, length.out = 50)
+          y <- sin(6 * x) + 0.05
+
+          model <- Lowess(fraction = 0.3, backend = "gpu")
+          result <- fit(model, x, y)
+
+          stopifnot(length(result$y) == length(x))
+          stopifnot(all(is.finite(result$y)))
+          cat("R GPU backend OK\n")
+          R
+          Rscript /tmp/gpu_smoke.R

@@ -24,20 +24,20 @@ else
 	NPX := npx
 endif
 
-PYTHON      ?= python3
+PYTHON ?= python3
 PYO3_PYTHON ?= $(PYTHON)
-NODE        ?= node
+NODE ?= node
 
 TEMP ?= /tmp
 ifeq ($(OS),Windows_NT)
 	TEMP := /tmp
 endif
 
-CPP_PKG           := fastlowess-cpp
-CPP_DIR           := bindings/cpp
+CPP_PKG := fastlowess-cpp
+CPP_DIR := bindings/cpp
 CPP_CARGO_PROFILE := --profile release-c
-CPP_LIBRARY_DIR   := target/release-c
-CPP_CARGO_TARGET  :=
+CPP_LIBRARY_DIR := target/release-c
+CPP_CARGO_TARGET :=
 
 ifeq ($(OS),Windows_NT)
 	_CPP_GCC_MACHINE := $(shell gcc -dumpmachine 2>/dev/null)
@@ -90,7 +90,7 @@ else
 endif
 
 CPP_LIBRARY_DIR_ABS := $(abspath $(CPP_LIBRARY_DIR))
-CPP_TEST_LIB_ABS    := $(abspath $(CPP_TEST_LIB))
+CPP_TEST_LIB_ABS := $(abspath $(CPP_TEST_LIB))
 
 TEMP ?= /tmp
 
@@ -188,6 +188,9 @@ default:
 		(echo "Error: Valgrind detected memory errors"; exit 1); \
 		echo "Valgrind: no leaks."; \
 	fi
+	@echo "=============================================================================="
+	@echo "Doc snippet tests (cpp)..."
+	@$(PYTHON) dev/verify_snippets.py --lang cpp --timeout 120
 	@echo "$(CPP_PKG) checks completed successfully!"
 
 clean:

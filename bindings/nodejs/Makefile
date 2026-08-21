@@ -24,17 +24,17 @@ else
 	NPX := npx
 endif
 
-PYTHON      ?= python3
+PYTHON ?= python3
 PYO3_PYTHON ?= $(PYTHON)
-NODE        ?= node
+NODE ?= node
 
 TEMP ?= /tmp
 ifeq ($(OS),Windows_NT)
 	TEMP := /tmp
 endif
 
-NODE_PKG      := fastlowess-node
-NODE_DIR      := bindings/nodejs
+NODE_PKG := fastlowess-node
+NODE_DIR := bindings/nodejs
 NODE_TEST_DIR := bindings/nodejs/tests
 
 .PHONY: default clean
@@ -62,6 +62,9 @@ default:
 	@echo "3. Testing..."
 	@echo "=============================================================================="
 	@cd $(NODE_DIR) && $(NPM) test
+	@echo "=============================================================================="
+	@echo "Doc snippet tests (nodejs)..."
+	@$(PYTHON) dev/verify_snippets.py --lang nodejs --timeout 120
 	@echo "$(NODE_PKG) checks completed successfully!"
 
 clean:

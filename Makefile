@@ -236,7 +236,7 @@ docs-test:
 # ==============================================================================
 # All targets
 # ==============================================================================
-all: lowess fastLowess python r julia nodejs wasm cpp check-msrv docs-test
+all: lowess fastLowess python r julia nodejs wasm cpp check-msrv
 	@echo "All checks completed successfully!"
 
 all-coverage: lowess-coverage fastLowess-coverage python-coverage r-coverage

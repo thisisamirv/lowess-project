@@ -1,0 +1,116 @@
+name: CI — Rust
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  ASAN_OPTIONS: detect_leaks=0:strict_init_order=1
+
+jobs:
+  ci:
+    name: Rust (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Install Rust GNU (Windows)
+        if: matrix.os == 'windows-latest'
+        run: rustup toolchain install stable-x86_64-pc-windows-gnu
+
+      - name: Install GNU Make (Windows)
+        if: matrix.os == 'windows-latest'
+        run: choco install make -y
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: rust-${{ matrix.os }}
+
+      - name: Format
+        run: |
+          cargo fmt -p lowess --all -- --check
+          cargo fmt -p fastLowess --all -- --check
+
+      - name: Clippy
+        run: |
+          cargo clippy -p lowess --all-targets -- -D warnings
+          cargo clippy -p fastLowess --all-targets --features cpu -- -D warnings
+          cargo clippy -p fastLowess --all-targets --features gpu -- -D warnings
+
+      - name: Test (lowess)
+        shell: bash
+        run: |
+          cargo test -q -p lowess --test lowess --features dev
+          if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
+            cargo test -q -p lowess --test lowess --features dev --no-default-features
+          fi
+
+      - name: Build (fastLowess)
+        run: |
+          cargo build -p fastLowess --features cpu
+          cargo build -p fastLowess --features gpu
+
+      - name: Setup lavapipe
+        if: matrix.os == 'ubuntu-latest'
+        uses: ./.github/actions/setup-lavapipe
+
+      - name: Test (fastLowess)
+        shell: bash
+        run: |
+          if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
+            cargo test -q -p fastLowess --test fastLowess --features gpu,dev
+          else
+            cargo test -q -p fastLowess --test fastLowess --features cpu,dev
+          fi
+
+      - name: Docs
+        run: |
+          cargo doc -p lowess --no-deps
+          cargo doc -p fastLowess --no-deps --features cpu
+          cargo doc -p fastLowess --no-deps --features gpu
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+      - name: make lowess
+        run: make lowess
+
+      - name: make fastLowess
+        run: make fastLowess
+
+  asan:
+    name: Rust ASAN
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          toolchain: nightly
+          components: rust-src
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: rust-asan
+      - name: Test (ASAN)
+        env:
+          RUSTFLAGS: -Zsanitizer=address
+        run: |
+          cargo test \
+            -Zbuild-std --target x86_64-unknown-linux-gnu \
+            -p lowess --test lowess
+          cargo test \
+            -Zbuild-std --target x86_64-unknown-linux-gnu \
+            -p fastLowess --test fastLowess --features cpu

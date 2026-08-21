@@ -81,6 +81,8 @@ default:
 		cargo test -q -p $(LOWESS_PKG) --test $(LOWESS_PKG) --features $$feature || exit 1; \
 	done
 	@echo "=============================================================================="
+	@echo "Doc snippet tests (rust)..."
+	@$(PYTHON) dev/verify_snippets.py --lang rust --timeout 120
 	@echo "All $(LOWESS_PKG) crate checks completed successfully!"
 
 ensure-llvm-cov:

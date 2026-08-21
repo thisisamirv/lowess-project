@@ -24,22 +24,21 @@ else
 	NPX := npx
 endif
 
-PYTHON      ?= python3
+PYTHON ?= python3
 PYO3_PYTHON ?= $(PYTHON)
-NODE        ?= node
+NODE ?= node
 
 TEMP ?= /tmp
 ifeq ($(OS),Windows_NT)
 	TEMP := /tmp
 endif
 
-FEATURE_SET    ?= all
-RUN_GPU_TESTS  ?= auto
+FEATURE_SET ?= all
+RUN_GPU_TESTS ?= auto
 
-FASTLOWESS_PKG      := fastLowess
-FASTLOWESS_DIR      := crates/fastLowess
+FASTLOWESS_PKG := fastLowess
+FASTLOWESS_DIR := crates/fastLowess
 FASTLOWESS_FEATURES := cpu gpu dev
-
 
 ifeq ($(RUN_GPU_TESTS),auto)
 	ifeq ($(HOST_PLATFORM),linux)
@@ -93,8 +92,10 @@ default:
 			cargo test -q -p $(FASTLOWESS_PKG) --test $(FASTLOWESS_PKG) --features $$feature || exit 1; \
 		fi; \
 	done
+	@echo "=============================================================================="        @echo "=============================================================================="
+	@echo "Doc snippet tests (rust)..."
 	@echo "=============================================================================="
-	@echo "All $(FASTLOWESS_PKG) crate checks completed successfully!"
+	@$(PYTHON) dev/verify_snippets.py --lang rust --timeout 120	@echo "All $(FASTLOWESS_PKG) crate checks completed successfully!"
 
 ensure-llvm-cov:
 	@cargo llvm-cov --version > /dev/null 2>&1 || (echo "Installing cargo-llvm-cov..." && cargo install cargo-llvm-cov && cargo llvm-cov install-llvm-tools)
