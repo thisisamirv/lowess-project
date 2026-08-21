@@ -10,7 +10,20 @@ STATLIB = $(LIBDIR)/librfastlowess.a
 # import stubs pulled in by --whole-archive when the GPU (wgpu) dependency
 # tree is enabled (multiple crates emit their own stub object for the same
 # kernel32/oleaut32/etc. symbol).
-PKG_LIBS = -L$(LIBDIR) -Wl,--whole-archive -lrfastlowess -Wl,--no-whole-archive -Wl,--allow-multiple-definition -lws2_32 -luserenv -ladvapi32 -lbcrypt -lncrypt -lntdll -Wl,--export-all-symbols -Wl,--strip-all
+# On gnullvm (arm64), skip --whole-archive entirely: it forces every crate's
+# private raw-dylib stub for a given DLL into the link even when they cover
+# different, non-overlapping symbols of that DLL (e.g. std's stub provides
+# WaitOnAddress/WakeByAddressAll, once_cell's provides WakeByAddressSingle).
+# ld.lld's arm64pe backend can't reliably tolerate the resulting duplicates
+# (crashes or drops symbols), so let normal single-definition-per-symbol
+# archive resolution apply instead -- entrypoint.c already references the
+# extendr init symbol directly, so nothing needed from the archive is lost.
+ifneq ($(findstring gnullvm,$(RUST_TARGET)),)
+WHOLE_ARCHIVE_LIBS = -lrfastlowess
+else
+WHOLE_ARCHIVE_LIBS = -Wl,--whole-archive -lrfastlowess -Wl,--no-whole-archive
+endif
+PKG_LIBS = -L$(LIBDIR) $(WHOLE_ARCHIVE_LIBS) -Wl,--allow-multiple-definition -lws2_32 -luserenv -ladvapi32 -lbcrypt -lncrypt -lntdll -Wl,--export-all-symbols -Wl,--strip-all
 
 # Set WITH_GPU=1 in the environment (e.g. R CMD INSTALL invocation) to build
 # with the GPU execution backend enabled (requires the vendored fastLowess
@@ -40,12 +53,6 @@ $(STATLIB):
 	@cargo build -q -j 2 --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR) --target $(RUST_TARGET) $(CARGO_FEATURES)
 	@# lld 19 rejects .idata$4 relocations in raw-dylib stubs (rustc<=1.97, gnullvm)
 	@# ar x (no member arg) resolves long-name entries; ar/objcopy are in PATH with nm
-	@# Multiple crates/CGUs each embed their own private raw-dylib stub for the
-	@# same Windows API symbol (e.g. ProcessPrng, WakeByAddressAll); --whole-archive
-	@# then forces all copies into the link, producing duplicate definitions.
-	@# --allow-multiple-definition tolerates that on x86_64, but ld.lld's arm64pe
-	@# backend crashes on it instead, so fully dedupe each stub name (looping
-	@# since a name may appear more than once) before re-inserting one copy.
 	@if echo "$(RUST_TARGET)" | grep -q gnullvm; then \
 		_lib=$$(pwd)/$(STATLIB); \
 		mkdir -p _ar_patch; \
@@ -54,9 +61,6 @@ $(STATLIB):
 			for _dll in *.dll; do \
 				[ -f "$$_dll" ] && { \
 					objcopy --remove-section='.idata$$4' "$$_dll" 2>/dev/null || true; \
-					while ar t "$$_lib" "$$_dll" >/dev/null 2>&1; do \
-						ar d "$$_lib" "$$_dll" 2>/dev/null || break; \
-					done; \
 					ar r "$$_lib" "$$_dll" 2>/dev/null; \
 				}; \
 			done); \
