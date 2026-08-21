@@ -40,6 +40,12 @@ $(STATLIB):
 	@cargo build -q -j 2 --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR) --target $(RUST_TARGET) $(CARGO_FEATURES)
 	@# lld 19 rejects .idata$4 relocations in raw-dylib stubs (rustc<=1.97, gnullvm)
 	@# ar x (no member arg) resolves long-name entries; ar/objcopy are in PATH with nm
+	@# Multiple crates/CGUs each embed their own private raw-dylib stub for the
+	@# same Windows API symbol (e.g. ProcessPrng, WakeByAddressAll); --whole-archive
+	@# then forces all copies into the link, producing duplicate definitions.
+	@# --allow-multiple-definition tolerates that on x86_64, but ld.lld's arm64pe
+	@# backend crashes on it instead, so fully dedupe each stub name (looping
+	@# since a name may appear more than once) before re-inserting one copy.
 	@if echo "$(RUST_TARGET)" | grep -q gnullvm; then \
 		_lib=$$(pwd)/$(STATLIB); \
 		mkdir -p _ar_patch; \
@@ -48,6 +54,9 @@ $(STATLIB):
 			for _dll in *.dll; do \
 				[ -f "$$_dll" ] && { \
 					objcopy --remove-section='.idata$$4' "$$_dll" 2>/dev/null || true; \
+					while ar t "$$_lib" "$$_dll" >/dev/null 2>&1; do \
+						ar d "$$_lib" "$$_dll" 2>/dev/null || break; \
+					done; \
 					ar r "$$_lib" "$$_dll" 2>/dev/null; \
 				}; \
 			done); \
