@@ -38,13 +38,15 @@ $(STATLIB):
 	@cp cargo-config.toml .cargo/config.toml
 	@mkdir -p $(TARGET_DIR)
 	@cargo build -q -j 2 --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR) --target $(RUST_TARGET) $(CARGO_FEATURES)
-	@# lld 19 rejects .idata$4 in raw-dylib stubs on gnullvm; patch each *.dll member in-place
+	@# lld 19 rejects .idata$4 relocations in raw-dylib stubs (rustc<=1.97, gnullvm)
 	@if echo "$(RUST_TARGET)" | grep -q gnullvm; then \
-		for _obj in $$(llvm-ar t $(STATLIB) | grep -i '\.dll$$'); do \
-			llvm-ar x $(STATLIB) "$$_obj" 2>/dev/null && \
-			llvm-objcopy --remove-section='.idata$$4' "$$_obj" 2>/dev/null && \
-			llvm-ar r $(STATLIB) "$$_obj" && \
-			rm -f "$$_obj" || true; \
+		for _obj in $$(llvm-ar t $(STATLIB) 2>/dev/null | grep -i '\.dll$$'); do \
+			llvm-ar x $(STATLIB) "$$_obj" 2>/dev/null; \
+			[ -f "$$_obj" ] && { \
+				llvm-objcopy --remove-section='.idata$$4' "$$_obj" 2>/dev/null || true; \
+				llvm-ar r $(STATLIB) "$$_obj" 2>/dev/null; \
+				rm -f "$$_obj"; \
+			}; \
 		done; \
 	fi
 	@rm -rf .cargo
