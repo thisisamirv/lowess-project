@@ -39,15 +39,19 @@ $(STATLIB):
 	@mkdir -p $(TARGET_DIR)
 	@cargo build -q -j 2 --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR) --target $(RUST_TARGET) $(CARGO_FEATURES)
 	@# lld 19 rejects .idata$4 relocations in raw-dylib stubs (rustc<=1.97, gnullvm)
+	@# ar x (no member arg) resolves long-name entries; ar/objcopy are in PATH with nm
 	@if echo "$(RUST_TARGET)" | grep -q gnullvm; then \
-		for _obj in $$(llvm-ar t $(STATLIB) 2>/dev/null | grep -i '\.dll$$'); do \
-			llvm-ar x $(STATLIB) "$$_obj" 2>/dev/null; \
-			[ -f "$$_obj" ] && { \
-				llvm-objcopy --remove-section='.idata$$4' "$$_obj" 2>/dev/null || true; \
-				llvm-ar r $(STATLIB) "$$_obj" 2>/dev/null; \
-				rm -f "$$_obj"; \
-			}; \
-		done; \
+		_lib=$$(pwd)/$(STATLIB); \
+		mkdir -p _ar_patch; \
+		(cd _ar_patch || exit 0; \
+			ar x "$$_lib" 2>/dev/null; \
+			for _dll in *.dll; do \
+				[ -f "$$_dll" ] && { \
+					objcopy --remove-section='.idata$$4' "$$_dll" 2>/dev/null || true; \
+					ar r "$$_lib" "$$_dll" 2>/dev/null; \
+				}; \
+			done); \
+		rm -rf _ar_patch; \
 	fi
 	@rm -rf .cargo
 
