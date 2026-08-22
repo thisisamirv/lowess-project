@@ -28,6 +28,7 @@ import concurrent.futures
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -1021,6 +1022,11 @@ def run_cpp(snippet: Snippet, timeout: int) -> RunResult:
             )
         vcvarsall = _find_vcvarsall(compiler)
         msvc_env = _get_msvc_env(vcvarsall) if vcvarsall else dict(os.environ)
+        # Re-derive cl.exe from vcvarsall's PATH so compiler and STL headers match
+        _env_path = msvc_env.get("Path") or msvc_env.get("PATH", "")
+        _cl = shutil.which("cl", path=_env_path) if _env_path else None
+        if _cl:
+            compiler = _cl
     else:
         msvc_env = None
         compiler = _find_cpp_compiler()
