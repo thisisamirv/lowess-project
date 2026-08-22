@@ -886,9 +886,80 @@ def _find_cpp_compiler() -> str | None:
     return None
 
 
+def _find_msvc_compiler() -> str | None:
+    if (cl := _find_exe("cl")) is not None:
+        return cl
+    # cl.exe is not on PATH outside a Developer Command Prompt; find via vswhere.
+    vswhere = r"C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe"
+    if os.path.exists(vswhere):
+        try:
+            result = subprocess.run(
+                [vswhere, "-all", "-find", r"VC\Tools\MSVC\**\bin\Hostx64\x64\cl.exe"],
+                capture_output=True,
+                text=True,
+                check=False,
+                timeout=10,
+            )
+            for line in result.stdout.splitlines():
+                path = line.strip()
+                if path and os.path.exists(path):
+                    return path
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+    # Fallback: direct glob in standard VS / Build Tools install locations.
+    import glob as _glob
+
+    for pattern in [
+        r"C:\Program Files (x86)\Microsoft Visual Studio\*\*\VC\Tools\MSVC\*\bin\Hostx64\x64\cl.exe",
+        r"C:\Program Files\Microsoft Visual Studio\*\*\VC\Tools\MSVC\*\bin\Hostx64\x64\cl.exe",
+    ]:
+        matches = sorted(_glob.glob(pattern))
+        if matches:
+            return matches[-1]  # highest version sorts last
+    return None
+
+
+def _is_msvc_library(lib_dir: Path) -> bool:
+    return "windows-msvc" in str(lib_dir)
+
+
+def _find_vcvarsall(compiler_path: str) -> str | None:
+    """Walk up from cl.exe to find vcvarsall.bat (lives at VC/Auxiliary/Build/)."""
+    path = Path(compiler_path).parent
+    for _ in range(10):
+        candidate = path / "Auxiliary" / "Build" / "vcvarsall.bat"
+        if candidate.exists():
+            return str(candidate)
+        path = path.parent
+    return None
+
+
+def _get_msvc_env(vcvarsall: str) -> dict[str, str]:
+    """Return the environment after sourcing vcvarsall.bat x64."""
+    try:
+        result = subprocess.run(
+            f'"{vcvarsall}" x64 > nul 2>&1 && set',
+            shell=True,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=30,
+        )
+        env: dict[str, str] = {}
+        for line in result.stdout.splitlines():
+            key, sep, value = line.partition("=")
+            if sep:
+                env[key] = value
+        return env if env else dict(os.environ)
+    except (OSError, subprocess.TimeoutExpired):
+        return dict(os.environ)
+
+
 def _find_cpp_library() -> Path | None:
     """Return the path to the built fastlowess_cpp shared/static library, or None."""
     candidates = [
+        # MSVC target on Windows (always used since MinGW detection was removed)
+        REPO_ROOT / "target" / "x86_64-pc-windows-msvc" / "release-c",
         # MinGW targets on Windows (Makefile uses these when GCC is available)
         REPO_ROOT / "target" / "x86_64-pc-windows-gnu" / "release-c",
         REPO_ROOT / "target" / "aarch64-pc-windows-gnu" / "release-c",
@@ -917,15 +988,6 @@ def _find_cpp_library() -> Path | None:
 
 
 def run_cpp(snippet: Snippet, timeout: int) -> RunResult:
-    compiler = _find_cpp_compiler()
-    if compiler is None:
-        return RunResult(
-            snippet=snippet,
-            runner="cpp",
-            skipped=True,
-            skip_reason="no C++ compiler (g++/clang++) found in PATH",
-        )
-
     lib_dir = _find_cpp_library()
     if lib_dir is None:
         return RunResult(
@@ -937,6 +999,29 @@ def run_cpp(snippet: Snippet, timeout: int) -> RunResult:
 
     include_dir = str(REPO_ROOT / "bindings" / "cpp" / "include")
     lib_dir_str = str(lib_dir)
+    use_msvc = os.name == "nt" and _is_msvc_library(lib_dir)
+
+    if use_msvc:
+        compiler = _find_msvc_compiler()
+        if compiler is None:
+            return RunResult(
+                snippet=snippet,
+                runner="cpp",
+                skipped=True,
+                skip_reason="no MSVC cl.exe found in PATH (required for MSVC-built library)",
+            )
+        vcvarsall = _find_vcvarsall(compiler)
+        msvc_env = _get_msvc_env(vcvarsall) if vcvarsall else dict(os.environ)
+    else:
+        msvc_env = None
+        compiler = _find_cpp_compiler()
+        if compiler is None:
+            return RunResult(
+                snippet=snippet,
+                runner="cpp",
+                skipped=True,
+                skip_reason="no C++ compiler (g++/clang++) found in PATH",
+            )
 
     code = snippet.code
 
@@ -946,18 +1031,34 @@ def run_cpp(snippet: Snippet, timeout: int) -> RunResult:
         with open(src, "w", encoding="utf-8") as f:
             f.write(code)
 
-        compile_cmd = [
-            compiler,
-            "-std=c++17",
-            "-D_USE_MATH_DEFINES",
-            "-O0",
-            f"-I{include_dir}",
-            f"-L{lib_dir_str}",
-            src,
-            "-o",
-            exe,
-            "-lfastlowess_cpp",
-        ]
+        if use_msvc:
+            compile_cmd = [
+                compiler,
+                "/nologo",
+                "/EHsc",
+                "/std:c++20",
+                "/D_USE_MATH_DEFINES",
+                "/Od",
+                f"/I{include_dir}",
+                f"/Fe:{exe}",
+                src,
+                "/link",
+                f"/LIBPATH:{lib_dir_str}",
+                "fastlowess_cpp.lib",
+            ]
+        else:
+            compile_cmd = [
+                compiler,
+                "-std=c++17",
+                "-D_USE_MATH_DEFINES",
+                "-O0",
+                f"-I{include_dir}",
+                f"-L{lib_dir_str}",
+                src,
+                "-o",
+                exe,
+                "-lfastlowess_cpp",
+            ]
 
         try:
             t0 = time.monotonic()
@@ -967,21 +1068,10 @@ def run_cpp(snippet: Snippet, timeout: int) -> RunResult:
                 check=False,
                 timeout=60,
                 text=True,
+                env=msvc_env if use_msvc else None,
             )
             if cproc.returncode != 0:
                 dur = time.monotonic() - t0
-                # Detect MSVC-ABI / MinGW linker mismatch so we skip rather than fail.
-                _abi_markers = ("__chkstk", "??_7type_info", "_Unwind_Resume")
-                if os.name == "nt" and any(m in cproc.stderr for m in _abi_markers):
-                    return RunResult(
-                        snippet=snippet,
-                        runner="cpp",
-                        skipped=True,
-                        skip_reason=(
-                            "C++ library ABI mismatch (MSVC vs MinGW) — "
-                            "rebuild with: make cpp (using the x86_64-pc-windows-gnu target)"
-                        ),
-                    )
                 return RunResult(
                     snippet=snippet,
                     runner="cpp",

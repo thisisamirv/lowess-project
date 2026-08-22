@@ -108,6 +108,7 @@ Manifest.toml
 
 # C++
 compile_flags.txt
+*.obj
 
 # Stray generated dirs (accidental output under the wrong working directory)
 bindings/*/benchmarks/

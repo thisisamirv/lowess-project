@@ -114,13 +114,17 @@ default:
 	@echo "=============================================================================="
 	@echo "Installing R required packages (BiocManager, styler, testthat, rmarkdown, knitr, lintr, roxygen2, pkgdown, remotes)..."
 	@echo "This may take a while depending on your internet connection and system performance."
-	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "suppressMessages({ lib <- Sys.getenv('R_LIBS_USER'); dir.create(lib, recursive = TRUE, showWarnings = FALSE); .libPaths(c(lib, .libPaths())); options(repos = c(CRAN = 'https://cloud.r-project.org'), warn = 1); required_pkgs <- c('BiocManager', 'styler', 'testthat', 'rmarkdown', 'knitr', 'lintr', 'roxygen2', 'pkgdown', 'remotes'); missing <- required_pkgs[!vapply(required_pkgs, requireNamespace, logical(1), quietly = TRUE, lib.loc = lib)]; if (length(missing) > 0L) { tryCatch({ install.packages(missing, lib = lib, type = ifelse(Sys.info()[['sysname']] == 'Darwin', 'both', 'source'), INSTALL_opts = '--no-test-load', quiet = TRUE, dependencies = NA, Ncpus = parallel::detectCores()); still_missing <- missing[!vapply(missing, requireNamespace, logical(1), quietly = TRUE, lib.loc = lib)]; if (length(still_missing) > 0L) stop('Required R packages not available: ', paste(still_missing, collapse = ', '), call. = FALSE) }, error = function(err) stop('Failed to install required packages: ', conditionMessage(err), call. = FALSE)) }; optional_pkgs <- c('covr', 'prettycode', 'toml', 'V8', 'visNetwork'); missing_opt <- optional_pkgs[!vapply(optional_pkgs, requireNamespace, logical(1), quietly = TRUE, lib.loc = lib)]; if (length(missing_opt) > 0L) { tryCatch(install.packages(missing_opt, lib = lib, quiet = TRUE, dependencies = NA, Ncpus = parallel::detectCores()), error = function(err) invisible(NULL)) } })" >/dev/null
-	@echo "Installing R srr package..."
-	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "suppressMessages({ lib <- Sys.getenv('R_LIBS_USER'); if (!requireNamespace('srr', quietly = TRUE, lib.loc = lib)) { options(repos = c(ropenscireviewtools = 'https://ropensci-review-tools.r-universe.dev', CRAN = 'https://cloud.r-project.org')); tryCatch(suppressWarnings(install.packages('srr', lib = lib, quiet = TRUE)), error = function(err) invisible(NULL)) } })" >/dev/null
-	@echo "Installing R Bioconductor packages (BiocStyle, BiocCheck)..."
-	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "suppressMessages({ lib <- Sys.getenv('R_LIBS_USER'); if (!requireNamespace('BiocManager', quietly = TRUE, lib.loc = lib)) stop('Required R package not available: BiocManager', call. = FALSE); bioc_pkgs <- c('BiocStyle'); missing_bioc <- bioc_pkgs[!vapply(bioc_pkgs, requireNamespace, logical(1), quietly = TRUE, lib.loc = lib)]; if (length(missing_bioc) > 0L) { tryCatch({ BiocManager::install(missing_bioc, lib = lib, update = FALSE, ask = FALSE, force = TRUE, quiet = TRUE); still_missing <- missing_bioc[!vapply(missing_bioc, requireNamespace, logical(1), quietly = TRUE, lib.loc = lib)]; if (length(still_missing) > 0L) stop('Required Bioconductor packages not available: ', paste(still_missing, collapse = ', '), call. = FALSE) }, error = function(err) stop('Failed to install Bioconductor packages: ', conditionMessage(err), call. = FALSE)) }; optional_bioc <- c('BiocCheck'); missing_opt_bioc <- optional_bioc[!vapply(optional_bioc, requireNamespace, logical(1), quietly = TRUE, lib.loc = lib)]; if (length(missing_opt_bioc) > 0L) { tryCatch(suppressWarnings(BiocManager::install(missing_opt_bioc, lib = lib, update = FALSE, ask = FALSE, force = TRUE, quiet = TRUE)), error = function(err) invisible(NULL)) } })" >/dev/null
-	@echo "Installing R ropensci packages (pkgcheck, pkgstats)..."
-	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "suppressMessages({ lib <- Sys.getenv('R_LIBS_USER'); options(repos = c('https://ropensci.r-universe.dev', 'https://cloud.r-project.org')); install_optional <- function(pkg) { if (requireNamespace(pkg, quietly = TRUE, lib.loc = lib)) return(invisible(TRUE)); tryCatch(suppressWarnings(install.packages(pkg, lib = lib, quiet = TRUE)), error = function(err) invisible(NULL)); invisible(TRUE) }; invisible(vapply(c('pkgcheck', 'pkgstats'), install_optional, logical(1))) })" >/dev/null
+	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript \
+	  -e "lib <- Sys.getenv('R_LIBS_USER'); dir.create(lib, recursive = TRUE, showWarnings = FALSE); .libPaths(c(lib, .libPaths()))" \
+	  -e "# Bootstrap pak; it handles RSPM binary vs source selection automatically" \
+	  -e "if (!requireNamespace('pak', quietly = TRUE, lib.loc = lib)) install.packages('pak', lib = lib, repos = 'https://r-lib.github.io/p/pak/stable/')" \
+	  -e "# Required packages (CRAN + Bioconductor)" \
+	  -e "pak::pkg_install(c('BiocManager', 'styler', 'testthat', 'rmarkdown', 'knitr', 'lintr', 'roxygen2', 'pkgdown', 'remotes', 'bioc::BiocStyle'), lib = lib, ask = FALSE)" \
+	  -e "# srr lives on its own R-universe; optional so a dead mirror doesn't break the build" \
+	  -e "options(repos = c(ropenscireviewtools = 'https://ropensci-review-tools.r-universe.dev', CRAN = 'https://cloud.r-project.org')); try(pak::pkg_install('srr', lib = lib, ask = FALSE), silent = TRUE)" \
+	  -e "# Optional: BiocCheck, rOpenSci tooling, and local dev helpers" \
+	  -e "options(repos = c(ropensci = 'https://ropensci.r-universe.dev', CRAN = 'https://cloud.r-project.org')); try(pak::pkg_install(c('bioc::BiocCheck', 'pkgcheck', 'pkgstats', 'covr', 'prettycode', 'toml', 'V8', 'visNetwork'), lib = lib, ask = FALSE), silent = TRUE)" \
+	  >/dev/null
 	@echo "R development packages installed!"
 	@echo "=============================================================================="
 	@echo "3. Vendoring..."
@@ -177,7 +181,7 @@ endif
 	@(cd $(R_DIR)/src && $(R_CROSS_ENV) cargo build -q --release $(R_CARGO_TARGET) $(R_CARGO_FEATURES) || (mv Cargo.toml.orig Cargo.toml && exit 1))
 	@rm -rf $(R_DIR)/src/.cargo
 	@echo "=============================================================================="
-	@echo "4a. Formatting..."
+	@echo "5. Formatting..."
 	@echo "=============================================================================="
 	@cd $(R_DIR)/src && cargo fmt -q
 	@if ! command -v air >/dev/null 2>&1; then \
@@ -190,7 +194,7 @@ endif
 	@cd $(R_DIR)/src && $(R_CROSS_ENV) cargo clippy -q $(R_CARGO_TARGET) -- -D warnings
 	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); if (!requireNamespace('lintr', quietly = TRUE, lib.loc = lib)) stop('Required R package not available: lintr', call. = FALSE); my_linters <- lintr::linters_with_defaults(indentation_linter = lintr::indentation_linter(indent = 4L), object_name_linter = NULL, commented_code_linter = NULL, object_usage_linter = NULL); lints <- c(lintr::lint_dir('$(R_DIR)/R', linters = my_linters), lintr::lint_dir('$(R_DIR)/tests/testthat', linters = my_linters)); print(lints); if (length(lints) > 0L) quit(status = 1)"
 	@echo "=============================================================================="
-	@echo "4b. Documentation..."
+	@echo "6. Documentation..."
 	@echo "=============================================================================="
 	@rm -rf $(R_DIR)/*.Rcheck
 	@cd $(R_DIR)/src && RUSTDOCFLAGS="-D warnings" $(R_CROSS_ENV) cargo doc -q --no-deps $(R_CARGO_TARGET)
@@ -204,7 +208,7 @@ endif
 	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); for (pkg in c('pkgdown', 'rmarkdown', 'knitr')) { if (!requireNamespace(pkg, quietly = TRUE, lib.loc = lib)) install.packages(pkg, lib = lib, quiet = TRUE) }; if (!requireNamespace('pkgdown', quietly = TRUE, lib.loc = lib) || !requireNamespace('rmarkdown', quietly = TRUE, lib.loc = lib) || !requireNamespace('knitr', quietly = TRUE, lib.loc = lib)) stop('Required R packages not available for pkgdown site build', call. = FALSE); pkgdown::build_site(quiet = TRUE, install = FALSE)"
 	@rm -f $(R_DIR)/.gitignore
 	@echo "=============================================================================="
-	@echo "4c. Building..."
+	@echo "7. Packaging..."
 	@echo "=============================================================================="
 	@echo "Generating $(R_DIR)/inst/AUTHORS..."
 	@mkdir -p $(R_DIR)/inst
@@ -217,7 +221,7 @@ endif
 		} > $(R_DIR)/inst/AUTHORS
 	@cd $(R_DIR) && WITH_GPU=$(WITH_GPU) R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) R CMD build .
 	@echo "=============================================================================="
-	@echo "5. Installing..."
+	@echo "8. Installing..."
 	@echo "=============================================================================="
 	@rm -rf $(R_DIR)/00LOCK-$(R_PKG_NAME)
 	@mkdir -p $(R_LIB_DIR)
@@ -225,7 +229,7 @@ endif
 	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "suppressMessages({ lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); if (!requireNamespace('BiocManager', quietly = TRUE, lib.loc = lib)) install.packages('BiocManager', lib = lib, quiet = TRUE); if (!requireNamespace('BiocGenerics', quietly = TRUE, lib.loc = lib)) BiocManager::install('BiocGenerics', lib = lib, ask = FALSE, update = FALSE, quiet = TRUE); if (!requireNamespace('testthat', quietly = TRUE, lib.loc = lib)) install.packages('testthat', lib = lib, quiet = TRUE) })" >/dev/null
 	@cd $(R_DIR) && WITH_GPU=$(WITH_GPU) R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) R CMD INSTALL -l .r-lib $(R_PKG_TARBALL)
 	@echo "=============================================================================="
-	@echo "8. Testing..."
+	@echo "9. Testing..."
 	@echo "=============================================================================="
 	@mkdir -p $(R_DIR)/src/.cargo && cp $(R_DIR)/src/cargo-config.toml $(R_DIR)/src/.cargo/config.toml
 	@if [ -n "$(R_CARGO_TARGET)" ]; then \
@@ -236,7 +240,7 @@ endif
 	@rm -rf $(R_DIR)/src/.cargo
 	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "Sys.setenv(NOT_CRAN='true'); testthat::test_dir('$(R_DIR)/tests/testthat', package = 'rfastlowess')"
 	@echo "=============================================================================="
-	@echo "9. Submission checks..."
+	@echo "10. Submission checks..."
 	@echo "=============================================================================="
 	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) R_MAKEVARS_USER=$(CURDIR)/dev/Makevars.check R CMD check --as-cran --no-manual $(R_PKG_TARBALL) || true
 	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "if (requireNamespace('BiocCheck', quietly=TRUE, lib.loc = Sys.getenv('R_LIBS_USER'))) BiocCheck::BiocCheck('$(R_PKG_TARBALL)', new_package=FALSE)" || true

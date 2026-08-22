@@ -11,6 +11,7 @@
 
 #include <cmath>
 #include <cstdint>
+#include <cstdio> // stdin, fileno / _fileno
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
@@ -20,10 +21,10 @@
 #include <utility>
 #include <vector>
 
-#if defined(_WIN32)
-#include <io.h>
+#ifdef _WIN32
+#include <io.h> // _isatty  // NOLINT(misc-include-cleaner)
 #else
-#include <unistd.h>
+#include <unistd.h> // isatty
 #endif
 
 // Include the C header
@@ -641,7 +642,7 @@ namespace gpu {
 
 namespace detail {
 inline std::string platformTag() {
-#if defined(_WIN32)
+#ifdef _WIN32
   return "windows";
 #elif defined(__APPLE__)
   return "macos";
@@ -659,7 +660,7 @@ inline std::string archTag() {
 }
 
 inline std::string libraryExt() {
-#if defined(_WIN32)
+#ifdef _WIN32
   return "dll";
 #elif defined(__APPLE__)
   return "dylib";
@@ -669,28 +670,32 @@ inline std::string libraryExt() {
 }
 
 inline bool stdinIsInteractive() {
-#if defined(_WIN32)
-  return _isatty(_fileno(stdin)) != 0;
+#ifdef _WIN32
+  return _isatty(_fileno(stdin)) != 0; // NOLINT(misc-include-cleaner)
 #else
   return isatty(fileno(stdin)) != 0;
 #endif
 }
 
 inline std::string cacheDir() {
-#if defined(_WIN32)
-  const char *home = std::getenv("USERPROFILE");
+#ifdef _WIN32
+  char *home_buf = nullptr;
+  size_t home_sz = 0;
+  _dupenv_s(&home_buf, &home_sz, "USERPROFILE"); // NOLINT(misc-include-cleaner)
+  const std::string base = (home_buf != nullptr) ? home_buf : ".";
+  free(home_buf);
 #else
   const char *home = std::getenv("HOME");
+  const std::string base = (home != nullptr) ? home : ".";
 #endif
-  std::string base = (home != nullptr) ? home : ".";
   return base + "/.fastlowess/gpu";
 }
 
 inline void makeDir(const std::string &dir) {
-#if defined(_WIN32)
-  std::string cmd = "if not exist \"" + dir + "\" mkdir \"" + dir + "\"";
+#ifdef _WIN32
+  const std::string cmd = "if not exist \"" + dir + "\" mkdir \"" + dir + "\"";
 #else
-  std::string cmd = "mkdir -p \"" + dir + "\"";
+  const std::string cmd = "mkdir -p \"" + dir + "\"";
 #endif
   std::system(cmd.c_str()); // NOLINT
 }
