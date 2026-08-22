@@ -91,7 +91,8 @@ reject_extra_positional_args <- function(call, boundary_name) {
     if (is.null(arg_names)) {
         arg_names <- rep("", length(call) - 1)
     }
-    if (sum(arg_names == "") > 1) {
+    unnamed <- which(arg_names == "")
+    if (length(unnamed) > 1L || (length(unnamed) == 1L && unnamed[[1L]] != 1L)) {
         stop(
             sprintf("All arguments after '%s' must be named.", boundary_name),
             call. = FALSE
