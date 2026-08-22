@@ -39,10 +39,12 @@ $(STATLIB):
 	@mkdir -p .cargo
 	@cp cargo-config.toml .cargo/config.toml
 	@# Rtools45 posix-static toolchain omits libgcc_eh.a; stub in libgcc_mock/ and expose via LIBRARY_PATH so every linker call finds it
-	@mkdir -p $(TARGET_DIR)/libgcc_mock
-	@touch $(TARGET_DIR)/libgcc_mock/libgcc_eh.a
-	@if [ "$(RUST_TARGET)" = "x86_64-pc-windows-gnu" ]; then \
-		LIBRARY_PATH="$${LIBRARY_PATH};$(TARGET_DIR)/libgcc_mock" \
+	@# Use an absolute path: build scripts are linked from Cargo's temp dir, so relative paths in LIBRARY_PATH are not resolved against src/
+	@_libgcc_mock=$$(pwd)/$(TARGET_DIR)/libgcc_mock; \
+	mkdir -p "$$_libgcc_mock"; \
+	touch "$$_libgcc_mock/libgcc_eh.a"; \
+	if [ "$(RUST_TARGET)" = "x86_64-pc-windows-gnu" ]; then \
+		LIBRARY_PATH="$$_libgcc_mock" \
 			cargo build -q -j 2 --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR) --target $(RUST_TARGET) $(CARGO_FEATURES); \
 	else \
 		cargo build -q -j 2 --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR) --target $(RUST_TARGET) $(CARGO_FEATURES); \

@@ -80,7 +80,7 @@ In addition to `parallel = true` (multi-core CPU), the batch `Lowess` class in e
 
 The `lowess` project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution. It is on average **200-327x faster** than Python's `statsmodels.lowess` and **2-3x faster** than R's `lowess`.
 
-For more details on the performance comparison, see the [Benchmarks](https://lowess.readthedocs.io/benchmarks/) page.
+For more details on the performance comparison, see the [Benchmarks](https://lowess.readthedocs.io/en/latest/benchmarks/) page.
 
 ### Robustness
 
