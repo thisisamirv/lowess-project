@@ -39,6 +39,12 @@ $(STATLIB):
 	@mkdir -p .cargo
 	@cp cargo-config.toml .cargo/config.toml
 	@mkdir -p $(TARGET_DIR)
+	@# Rtools45 posix-static toolchain omits libgcc_eh.a; create a dummy so build scripts link
+	@if [ "$(RUST_TARGET)" = "x86_64-pc-windows-gnu" ]; then \
+		_gcc_lib=$$(x86_64-w64-mingw32.static.posix-gcc -print-file-name=libgcc.a); \
+		_gcc_libdir=$$(dirname "$$_gcc_lib"); \
+		test -f "$$_gcc_libdir/libgcc_eh.a" || x86_64-w64-mingw32.static.posix-ar rcs "$$_gcc_libdir/libgcc_eh.a"; \
+	fi
 	@cargo build -q -j 2 --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR) --target $(RUST_TARGET) $(CARGO_FEATURES)
 	@# ar x without a member name resolves long-name entries (>16 chars stored as /<offset>)
 	@if echo "$(RUST_TARGET)" | grep -q gnullvm; then \

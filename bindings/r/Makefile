@@ -117,7 +117,7 @@ default:
 	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript \
 	  -e "lib <- Sys.getenv('R_LIBS_USER'); dir.create(lib, recursive = TRUE, showWarnings = FALSE); .libPaths(c(lib, .libPaths()))" \
 	  -e "# Bootstrap pak; it handles RSPM binary vs source selection automatically" \
-	  -e "if (!requireNamespace('pak', quietly = TRUE, lib.loc = lib)) install.packages('pak', lib = lib, repos = 'https://r-lib.github.io/p/pak/stable/')" \
+	  -e "if (!requireNamespace('pak', quietly = TRUE, lib.loc = lib)) { options(install.lock = FALSE); install.packages('pak', lib = lib, repos = 'https://r-lib.github.io/p/pak/stable/') }" \
 	  -e "# Required packages (CRAN + Bioconductor)" \
 	  -e "pak::pkg_install(c('BiocManager', 'styler', 'testthat', 'rmarkdown', 'knitr', 'lintr', 'roxygen2', 'pkgdown', 'remotes', 'bioc::BiocStyle'), lib = lib, ask = FALSE)" \
 	  -e "# srr lives on its own R-universe; optional so a dead mirror doesn't break the build" \

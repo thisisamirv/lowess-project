@@ -1032,6 +1032,10 @@ def run_cpp(snippet: Snippet, timeout: int) -> RunResult:
             f.write(code)
 
         if use_msvc:
+            # Prefer the DLL import lib over the staticlib to avoid needing Windows system libs.
+            import_lib = "fastlowess_cpp.dll.lib"
+            if not (lib_dir / import_lib).exists():
+                import_lib = "fastlowess_cpp.lib"
             compile_cmd = [
                 compiler,
                 "/nologo",
@@ -1044,7 +1048,7 @@ def run_cpp(snippet: Snippet, timeout: int) -> RunResult:
                 src,
                 "/link",
                 f"/LIBPATH:{lib_dir_str}",
-                "fastlowess_cpp.lib",
+                import_lib,
             ]
         else:
             compile_cmd = [
