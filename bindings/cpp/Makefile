@@ -40,39 +40,18 @@ CPP_LIBRARY_DIR := target/release-c
 CPP_CARGO_TARGET :=
 
 ifeq ($(OS),Windows_NT)
-	_CPP_GCC_MACHINE := $(shell gcc -dumpmachine 2>/dev/null)
-	ifneq ($(findstring mingw,$(_CPP_GCC_MACHINE)),)
-		_CPP_WIN_TOOLCHAIN := mingw
-		CPP_CARGO_TARGET   := --target x86_64-pc-windows-gnu
-		CPP_LIBRARY_DIR    := target/x86_64-pc-windows-gnu/release-c
-	else
-		_CPP_WIN_TOOLCHAIN := msvc
-		CPP_CARGO_TARGET   := --target x86_64-pc-windows-msvc
-		CPP_LIBRARY_DIR    := target/x86_64-pc-windows-msvc/release-c
-	endif
+	_CPP_WIN_TOOLCHAIN := msvc
+	CPP_CARGO_TARGET   := --target x86_64-pc-windows-msvc
+	CPP_LIBRARY_DIR    := target/x86_64-pc-windows-msvc/release-c
 endif
 
 ifeq ($(HOST_PLATFORM),windows)
-	CPP_SHARED_LIB  := $(CPP_LIBRARY_DIR)/fastlowess_cpp.dll
-	CPP_EXPORT_SCAN := objdump -p $(CPP_SHARED_LIB)
-	ifeq ($(_CPP_WIN_TOOLCHAIN),mingw)
-		CPP_TEST_LIB := $(CPP_LIBRARY_DIR)/libfastlowess_cpp.dll.a
-		_HAVE_MINGW32_MAKE := $(shell mingw32-make --version 2>/dev/null | head -c 3)
-		ifneq ($(_HAVE_MINGW32_MAKE),)
-			CPP_CMAKE_GENERATOR := -G "MinGW Makefiles"
-			CPP_TEST_BUILD      := cmake --build .
-			CPP_TEST_RUN        := cp -f "$(abspath $(CPP_SHARED_LIB))" . && ./test_fastlowess_suite.exe
-		else
-			CPP_CMAKE_GENERATOR :=
-			CPP_TEST_BUILD      := cmake --build . --config Release
-			CPP_TEST_RUN        := cp -f "$(abspath $(CPP_SHARED_LIB))" Release/ && ./Release/test_fastlowess_suite.exe
-		endif
-	else
-		CPP_TEST_LIB        := $(CPP_LIBRARY_DIR)/fastlowess_cpp.lib
-		CPP_CMAKE_GENERATOR :=
-		CPP_TEST_BUILD      := cmake --build . --config Release
-		CPP_TEST_RUN        := cp -f "$(abspath $(CPP_SHARED_LIB))" Release/ && ./Release/test_fastlowess_suite.exe
-	endif
+	CPP_SHARED_LIB      := $(CPP_LIBRARY_DIR)/fastlowess_cpp.dll
+	CPP_EXPORT_SCAN     := objdump -p $(CPP_SHARED_LIB)
+	CPP_TEST_LIB        := $(CPP_LIBRARY_DIR)/fastlowess_cpp.lib
+	CPP_CMAKE_GENERATOR :=
+	CPP_TEST_BUILD      := cmake --build . --config Release
+	CPP_TEST_RUN        := cp -f "$(abspath $(CPP_SHARED_LIB))" Release/ && ./Release/test_fastlowess_suite.exe
 else ifeq ($(HOST_PLATFORM),macos)
 	CPP_SHARED_LIB      := $(CPP_LIBRARY_DIR)/libfastlowess_cpp.dylib
 	CPP_TEST_LIB        := $(CPP_SHARED_LIB)

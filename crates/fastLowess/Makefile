@@ -92,10 +92,11 @@ default:
 			cargo test -q -p $(FASTLOWESS_PKG) --test $(FASTLOWESS_PKG) --features $$feature || exit 1; \
 		fi; \
 	done
-	@echo "=============================================================================="        @echo "=============================================================================="
+	@echo "=============================================================================="
 	@echo "Doc snippet tests (rust)..."
 	@echo "=============================================================================="
-	@$(PYTHON) dev/verify_snippets.py --lang rust --timeout 120	@echo "All $(FASTLOWESS_PKG) crate checks completed successfully!"
+	@$(PYTHON) dev/verify_snippets.py --lang rust --timeout 120
+	@echo "All $(FASTLOWESS_PKG) crate checks completed successfully!"
 
 ensure-llvm-cov:
 	@cargo llvm-cov --version > /dev/null 2>&1 || (echo "Installing cargo-llvm-cov..." && cargo install cargo-llvm-cov && cargo llvm-cov install-llvm-tools)

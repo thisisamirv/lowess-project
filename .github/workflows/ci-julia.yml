@@ -81,6 +81,7 @@ jobs:
         run: make julia
 
   asan:
+    name: Julia ASAN
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7

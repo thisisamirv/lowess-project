@@ -2,5 +2,5 @@
 CC = "clang-cl"
 
 [target.x86_64-pc-windows-gnu]
-linker = "c:/rtools45/x86_64-w64-mingw32.static.posix/bin/x86_64-w64-mingw32.static.posix-gcc.exe"
-ar = "c:/rtools45/x86_64-w64-mingw32.static.posix/bin/x86_64-w64-mingw32.static.posix-ar.exe"
+linker = "x86_64-w64-mingw32.static.posix-gcc.exe"
+ar = "x86_64-w64-mingw32.static.posix-ar.exe"
