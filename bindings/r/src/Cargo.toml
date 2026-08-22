@@ -36,6 +36,10 @@ gpu = ["fastLowess/gpu"]
 
 
 
+
+
+
+
 [workspace]
 
 [patch.crates-io]
