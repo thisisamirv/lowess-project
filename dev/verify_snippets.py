@@ -886,6 +886,9 @@ def _find_cpp_compiler() -> str | None:
     return None
 
 
+_msvc_env_cache: dict[str, str] | None = None
+
+
 def _find_msvc_compiler() -> str | None:
     if (cl := _find_exe("cl")) is not None:
         return cl
@@ -936,23 +939,29 @@ def _find_vcvarsall(compiler_path: str) -> str | None:
 
 def _get_msvc_env(vcvarsall: str) -> dict[str, str]:
     """Return the environment after sourcing vcvarsall.bat x64."""
+    global _msvc_env_cache
+    if _msvc_env_cache is not None:
+        return _msvc_env_cache
     try:
+        # `call` is required: without it, vcvarsall.bat's GOTO :EOF causes cmd.exe
+        # to exit entirely, so `&& set` never runs and the env is never captured.
         result = subprocess.run(
-            f'"{vcvarsall}" x64 > nul 2>&1 && set',
+            f'call "{vcvarsall}" x64 > nul 2>&1 && set',
             shell=True,
             capture_output=True,
             text=True,
             check=False,
-            timeout=30,
+            timeout=60,
         )
         env: dict[str, str] = {}
         for line in result.stdout.splitlines():
             key, sep, value = line.partition("=")
             if sep:
                 env[key] = value
-        return env if env else dict(os.environ)
+        _msvc_env_cache = env if env else dict(os.environ)
     except (OSError, subprocess.TimeoutExpired):
-        return dict(os.environ)
+        _msvc_env_cache = dict(os.environ)
+    return _msvc_env_cache
 
 
 def _find_cpp_library() -> Path | None:
@@ -1333,9 +1342,10 @@ def main(argv: list[str] | None = None) -> int:
         print(bold("Failed snippets:"))
         for r in failures:
             print(f"  {red('FAIL')} {r.snippet.label}")
-            # Show first 5 lines of stderr
-            if r.stderr.strip():
-                for line in r.stderr.strip().splitlines()[:5]:
+            # cl.exe writes errors to stdout; other compilers use stderr
+            diag = (r.stderr or r.stdout).strip()
+            if diag:
+                for line in diag.splitlines()[:5]:
                     print(f"      {line}")
         print()
 
