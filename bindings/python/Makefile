@@ -46,9 +46,12 @@ else
 	PY_VENV_PYTHON := $(PY_VENV)/bin/python
 endif
 
-.PHONY: default clean coverage ensure-llvm-cov
+.PHONY: default dev clean coverage ensure-llvm-cov
 
 default:
+	@$(PYTHON) -m pip install -q --user $(PY_DIR)
+
+dev:
 	@echo "Running $(PY_PKG) checks..."
 	@echo "=============================================================================="
 	@echo "0. Environment Setup..."

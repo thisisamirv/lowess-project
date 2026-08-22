@@ -50,9 +50,13 @@ endif
 
 JL_SHARED_LIB_ABS := $(abspath $(JL_SHARED_LIB))
 
-.PHONY: default clean _julia_checks_internal
+.PHONY: default dev clean _julia_checks_internal
 
 default:
+	@cd $(JL_DIR) && cargo build -q --release
+	@julia -e 'using Pkg; Pkg.develop(path="$(JL_DIR)/julia")'
+
+dev:
 	@echo "Running $(JL_PKG) checks..."
 	@PROJECT_TOML="$(JL_DIR)/julia/Project.toml"; \
 	BACKUP="$$PROJECT_TOML.bak"; \

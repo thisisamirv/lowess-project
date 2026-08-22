@@ -24,9 +24,9 @@ else
 	NPX := npx
 endif
 
-PYTHON      ?= python3
+PYTHON ?= python3
 PYO3_PYTHON ?= $(PYTHON)
-NODE        ?= node
+NODE ?= node
 
 TEMP ?= /tmp
 ifeq ($(OS),Windows_NT)
@@ -35,13 +35,16 @@ endif
 
 FEATURE_SET ?= all
 
-LOWESS_PKG      := lowess
-LOWESS_DIR      := crates/lowess
+LOWESS_PKG := lowess
+LOWESS_DIR := crates/lowess
 LOWESS_FEATURES := std dev
 
-.PHONY: default clean coverage ensure-llvm-cov
+.PHONY: default dev clean coverage ensure-llvm-cov
 
 default:
+	@cargo build -q -p $(LOWESS_PKG)
+
+dev:
 	@echo "Running $(LOWESS_PKG) crate checks..."
 	@echo "=============================================================================="
 	@echo "1. Formatting..."

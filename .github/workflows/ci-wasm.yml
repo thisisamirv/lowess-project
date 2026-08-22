@@ -58,5 +58,5 @@ jobs:
           cargo clippy --all-targets -- -D warnings
           npm run lint
 
-      - name: make wasm
-        run: make wasm
+      - name: make wasm-dev
+        run: make wasm-dev

@@ -57,8 +57,8 @@ jobs:
           cargo clippy --all-targets -- -D warnings
           npm run lint
 
-      - name: make nodejs
-        run: make nodejs
+      - name: make nodejs-dev
+        run: make nodejs-dev
 
   asan:
     name: Node.js ASAN

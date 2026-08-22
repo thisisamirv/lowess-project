@@ -50,9 +50,12 @@ else
 	EFFECTIVE_RUN_GPU_TESTS := $(RUN_GPU_TESTS)
 endif
 
-.PHONY: default clean coverage ensure-llvm-cov
+.PHONY: default dev clean coverage ensure-llvm-cov
 
 default:
+	@cargo build -q -p $(FASTLOWESS_PKG)
+
+dev:
 	@echo "Running $(FASTLOWESS_PKG) crate checks..."
 	@echo "=============================================================================="
 	@echo "1. Formatting..."

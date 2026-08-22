@@ -51,8 +51,8 @@ jobs:
           cargo fmt --all -- --check
           cargo clippy --all-targets -- -D warnings
 
-      - name: make cpp
-        run: make cpp
+      - name: make cpp-dev
+        run: make cpp-dev
 
   asan:
     name: C++ ASAN

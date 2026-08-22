@@ -35,9 +35,18 @@ WASM_PKG := fastlowess-wasm
 WASM_DIR := bindings/wasm
 WASM_TEST_DIR := bindings/wasm/tests
 
-.PHONY: default clean
+.PHONY: default dev clean
 
 default:
+	@if ! command -v wasm-pack >/dev/null 2>&1; then \
+		echo "wasm-pack not found. Installing..."; \
+		cargo install wasm-pack; \
+	fi
+	@cd $(WASM_DIR) && wasm-pack build --target nodejs --out-dir pkg
+	@cd $(WASM_DIR) && wasm-pack build --target web --out-dir pkg-web
+	@cd $(WASM_DIR)/pkg && $(NPM) link
+
+dev:
 	@echo "Running $(WASM_PKG) checks..."
 	@echo "=============================================================================="
 	@echo "1. Formatting..."

@@ -83,9 +83,12 @@ ifeq ($(OS),Windows_NT)
 	R_CROSS_ENV    := PATH="/c/rtools45/x86_64-w64-mingw32.static.posix/bin:$$PATH"
 endif
 
-.PHONY: default clean coverage
+.PHONY: default dev clean coverage
 
 default:
+	@WITH_GPU=$(WITH_GPU) R CMD INSTALL $(R_DIR)
+
+dev:
 	@echo "Running $(R_PKG_NAME) checks..."
 	@# Sync version from Cargo.toml to DESCRIPTION
 	@VERSION=$$(grep "^version =" $(R_DIR)/src/Cargo.toml | head -n1 | sed 's/version = "\(.*\)"/\1/'); \

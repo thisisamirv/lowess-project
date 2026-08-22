@@ -56,8 +56,8 @@ jobs:
         working-directory: bindings/python
         run: pytest tests/ -v
 
-      - name: make python
-        run: make python
+      - name: make python-dev
+        run: make python-dev
 
   asan:
     name: Python ASAN

@@ -77,8 +77,8 @@ jobs:
           cargo fmt --all -- --check
           cargo clippy --all-targets -- -D warnings
 
-      - name: make julia
-        run: make julia
+      - name: make julia-dev
+        run: make julia-dev
 
   asan:
     name: Julia ASAN

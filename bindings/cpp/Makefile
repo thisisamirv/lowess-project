@@ -73,9 +73,17 @@ CPP_TEST_LIB_ABS := $(abspath $(CPP_TEST_LIB))
 
 TEMP ?= /tmp
 
-.PHONY: default clean
+.PHONY: default dev clean
 
 default:
+	@if [ -n "$(CPP_CARGO_TARGET)" ]; then \
+		_rust_target=$$(echo "$(CPP_CARGO_TARGET)" | sed 's/--target //'); \
+		rustup target add "$$_rust_target" 2>/dev/null || true; \
+	fi
+	@cargo build -q -p $(CPP_PKG) $(CPP_CARGO_PROFILE) $(CPP_CARGO_TARGET)
+	@echo "C header generated at $(CPP_DIR)/include/fastlowess.h"
+
+dev:
 	@echo "Running $(CPP_PKG) checks..."
 	@echo "=============================================================================="
 	@echo "1. Formatting..."

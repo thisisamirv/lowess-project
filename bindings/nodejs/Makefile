@@ -37,9 +37,14 @@ NODE_PKG := fastlowess-node
 NODE_DIR := bindings/nodejs
 NODE_TEST_DIR := bindings/nodejs/tests
 
-.PHONY: default clean
+.PHONY: default dev clean
 
 default:
+	@cd $(NODE_DIR) && $(NPM) install -q
+	@cd $(NODE_DIR) && $(NPM) run build
+	@cd $(NODE_DIR) && $(NPM) link
+
+dev:
 	@echo "Running $(NODE_PKG) checks..."
 	@echo "=============================================================================="
 	@echo "1. Formatting..."
