@@ -53,6 +53,7 @@ jobs:
       - name: Lint
         working-directory: bindings/wasm
         run: |
+          npm install
           cargo fmt --all -- --check
           cargo clippy --all-targets -- -D warnings
           npm run lint
