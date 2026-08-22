@@ -46,7 +46,7 @@ The fastest, most robust, and most feature-complete language-agnostic LOWESS (Lo
 
 > [!NOTE]
 >
-> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the [Installation Guide](https://lowess.readthedocs.io/getting-started/installation/) for detailed installation instructions.
+> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the [Installation Guide](https://lowess.readthedocs.io/en/latest/getting-started/installation/) for detailed installation instructions.
 
 ### GPU Backend
 
@@ -484,7 +484,7 @@ Contributions are welcome! Please see the [Contributing Guide](https://lowess.re
 
 ## Changelog
 
-See the [Changelog](https://lwoess.readthedocs.io/en/latest/changelog/) for a history of changes.
+See the [Changelog](https://lowess.readthedocs.io/en/latest/changelog/) for a history of changes.
 
 ## License
 
