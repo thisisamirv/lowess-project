@@ -21,6 +21,8 @@ print(online)
 #>   Min Points:        3
 ```
 
+* `...`: Not used. All parameters after `min_points` must be passed by name; passing extra positional arguments raises an error.
+
 **Methods:**
 
 ```r
@@ -50,6 +52,7 @@ cat(result$y)
 | --- | --- | --- | --- |
 | `window_capacity` | `integer` | `1000L` | Max points in sliding window |
 | `min_points` | `integer` | `3L` | Min points before smoothing starts |
+| `...` | — | — | Not used. Forces all parameters after `min_points` to be passed by name. |
 | `update_mode` | `character` | `"full"` | Update mode (`"full"` or `"incremental"`) |
 | `parallel` | `logical` | `FALSE` | Enable parallel execution (off by default; online LOWESS fits one point at a time) |
 

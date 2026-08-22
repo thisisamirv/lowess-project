@@ -21,6 +21,8 @@ print(stream)
 #>   Parallel:          TRUE
 ```
 
+* `...`: Not used. All parameters after `chunk_size` must be passed by name; passing extra positional arguments raises an error.
+
 **Methods:**
 
 ```r
@@ -84,6 +86,7 @@ See [r.md](r.md) for the full `LowessResult` field reference.
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `chunk_size` | `integer` | `5000L` | Data chunk size |
+| `...` | — | — | Not used. Forces all parameters after `chunk_size` to be passed by name. |
 | `overlap` | `integer` | `500L` | Overlap between chunks |
 | `merge_strategy` | `character` | `"weighted_average"` | Strategy for blending overlap regions |
 
