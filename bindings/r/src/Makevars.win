@@ -43,7 +43,13 @@ $(STATLIB):
 	@if [ "$(RUST_TARGET)" = "x86_64-pc-windows-gnu" ]; then \
 		_gcc_lib=$$(x86_64-w64-mingw32.static.posix-gcc -print-file-name=libgcc.a); \
 		_gcc_libdir=$$(dirname "$$_gcc_lib"); \
-		test -f "$$_gcc_libdir/libgcc_eh.a" || x86_64-w64-mingw32.static.posix-ar rcs "$$_gcc_libdir/libgcc_eh.a"; \
+		test -f "$$_gcc_libdir/libgcc_eh.a" \
+			|| x86_64-w64-mingw32.static.posix-ar rcs "$$_gcc_libdir/libgcc_eh.a" 2>/dev/null \
+			|| { \
+				x86_64-w64-mingw32.static.posix-ar rcs "$(TARGET_DIR)/libgcc_eh.a"; \
+				_sd=$$(cygpath -m "$$(pwd)/$(TARGET_DIR)"); \
+				awk -v sd="$$_sd" '/^ar = "x86_64-w64-mingw32/{print; print "rustflags = [\"-C\", \"symbol-mangling-version=v0\", \"-C\", \"link-arg=-L" sd "\"]"; next} 1' .cargo/config.toml > .cargo/config.toml.tmp && mv .cargo/config.toml.tmp .cargo/config.toml; \
+			}; \
 	fi
 	@cargo build -q -j 2 --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR) --target $(RUST_TARGET) $(CARGO_FEATURES)
 	@# ar x without a member name resolves long-name entries (>16 chars stored as /<offset>)
