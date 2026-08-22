@@ -28,27 +28,16 @@ import concurrent.futures
 import json
 import os
 import re
-import shutil
 import subprocess
 import sys
-import tempfile
-import textwrap
 import threading
-import time
 from collections import defaultdict
 from collections.abc import Iterator
-from dataclasses import dataclass
 from pathlib import Path
 
-# ---------------------------------------------------------------------------
-# Paths
-# ---------------------------------------------------------------------------
-
-REPO_ROOT = Path(__file__).resolve().parent.parent
-DOCS_DIR = REPO_ROOT / "docs"
-VIGNETTES_DIRS: list[Path] = [
-    REPO_ROOT / "bindings" / "r" / "vignettes",
-]
+import runners.python as _python_runner
+from runners import RUNNERS, SKIP_CHECKS
+from runners.base import DOCS_DIR, REPO_ROOT, VIGNETTES_DIRS, RunResult, Snippet
 
 # ---------------------------------------------------------------------------
 # Terminal colours (disabled on non-TTY or Windows without colour support)
@@ -85,8 +74,6 @@ def bold(t: str) -> str:
 # Python executable detection (prefer venv where fastlowess is installed)
 # ---------------------------------------------------------------------------
 
-_PYTHON_BIN: str = sys.executable  # may be replaced in main()
-
 
 def _find_python_with_fastlowess() -> str:
     """Return the best Python executable that has fastlowess installed."""
@@ -113,122 +100,10 @@ def _find_python_with_fastlowess() -> str:
 
 
 # ---------------------------------------------------------------------------
-# Language-specific boilerplate injected before every snippet
-# ---------------------------------------------------------------------------
-
-# Tab labels in the docs that map to each runner
-_TAB_ALIASES: dict[str, set[str]] = {
-    "python": {"Python"},
-    "julia": {"Julia"},
-    "nodejs": {"Node.js"},
-    # These are not run by default (need external toolchain)
-    "wasm": {"WebAssembly"},
-    "r": {"R"},
-    "cpp": {"C++"},
-    "rust": {
-        "Rust",
-        "Rust (fastLowess)",
-        "lowess (no_std compatible)",
-        "fastLowess (parallel)",
-    },
-}
-
-# Code-block language tags for each runner
-_LANG_TAGS: dict[str, set[str]] = {
-    "python": {"python"},
-    "julia": {"julia"},
-    "nodejs": {"javascript", "js"},
-    "wasm": {"javascript", "js"},
-    "r": {"r"},
-    "cpp": {"cpp", "c++"},
-    "rust": {"rust"},
-}
-
-_PYTHON_PREAMBLE = ""
-
-_JULIA_PREAMBLE = ""
-
-_NODEJS_PREAMBLE = ""
-
-_R_PREAMBLE = textwrap.dedent("""\
-    suppressMessages({{
-        .libPaths(c(
-            normalizePath(file.path(
-                Sys.getenv("LOWESS_REPO_ROOT", "{repo_root}"),
-                "bindings", "r", ".r-lib"
-            ), mustWork = FALSE),
-            .libPaths()
-        ))
-        library(rfastlowess)
-    }})
-    suppressWarnings(pdf(NULL))
-    plot.new()
-""").format(repo_root=str(REPO_ROOT).replace("\\", "/"))
-
-
-_WASM_PKG_DIR = REPO_ROOT / "bindings" / "wasm" / "pkg"
-
-_WASM_PREAMBLE = ""
-
-# Fixed temp project for Rust snippets (reuses Cargo artifacts)
-_RUST_SNIPPET_DIR = REPO_ROOT / "target" / "doc-snippet-runner"
-
-PREAMBLES: dict[str, str] = {
-    "python": _PYTHON_PREAMBLE,
-    "julia": _JULIA_PREAMBLE,
-    "nodejs": _NODEJS_PREAMBLE,
-    "r": _R_PREAMBLE,
-    "wasm": _WASM_PREAMBLE,
-}
-
-# ---------------------------------------------------------------------------
-# Snippet data class
-# ---------------------------------------------------------------------------
-
-
-@dataclass
-class Snippet:
-    file: Path
-    line: int  # 1-based line number of the opening fence
-    lang_tag: str  # code-block language tag (e.g. "python")
-    tab: str | None  # nearest === "Tab" label, or None
-    code: str
-
-    @property
-    def runner(self) -> str | None:
-        """Return which runner handles this snippet, or None to skip."""
-        for runner, tags in _LANG_TAGS.items():
-            if self.lang_tag.lower() in tags:
-                # For JS: distinguish Node.js from WASM by tab label
-                if runner in ("nodejs", "wasm"):
-                    if self.tab in _TAB_ALIASES["wasm"]:
-                        return "wasm"
-                    if self.tab in _TAB_ALIASES["nodejs"]:
-                        return "nodejs"
-                    # No tab: fall back to nodejs if no WASM markers
-                    if (
-                        "fastlowess-wasm" not in self.code
-                        and "fastlowess_wasm"
-                        not in self.code  # catches require('./fastlowess_wasm.js')
-                        and "import {" not in self.code[:80]
-                    ):
-                        return "nodejs"
-                    return "wasm"
-                return runner
-        return None
-
-    @property
-    def label(self) -> str:
-        tab = f" [{self.tab}]" if self.tab else ""
-        return f"{self.file.relative_to(REPO_ROOT)}:{self.line}{tab}"
-
-
-# ---------------------------------------------------------------------------
 # Markdown parser
 # ---------------------------------------------------------------------------
 
 _TAB_RE = re.compile(r'^[ \t]*===\s+"([^"]+)"', re.MULTILINE)
-_FENCE_RE = re.compile(r"^([ \t]*)```(\w+)", re.MULTILINE)
 
 
 def _rmd_chunk_is_runnable(opts_str: str) -> bool:
@@ -249,13 +124,11 @@ def extract_snippets(md_file: Path) -> list[Snippet]:
     is_rmd = md_file.suffix.lower() == ".rmd"
 
     current_tab: str | None = None
-    # Accumulate Rmd chunks to combine at the end
     rmd_chunks: list[tuple[int, str, str]] = []  # (start_line, chunk_name, code)
     i = 0
     while i < len(lines):
         line = lines[i]
 
-        # Track tab context
         m = _TAB_RE.match(line)
         if m:
             current_tab = m.group(1)
@@ -266,7 +139,7 @@ def extract_snippets(md_file: Path) -> list[Snippet]:
         m_rmd = re.match(r"^([ \t]*)```\{r([^}]*)\}\s*$", line)
         if m_rmd:
             fence_indent = m_rmd.group(1)
-            raw_opts = m_rmd.group(2)  # e.g. " chunk-name, eval = FALSE"
+            raw_opts = m_rmd.group(2)
             parts = raw_opts.split(",", 1)
             chunk_name = parts[0].strip() or ""
             opts_str = parts[1] if len(parts) > 1 else ""
@@ -285,7 +158,6 @@ def extract_snippets(md_file: Path) -> list[Snippet]:
                 )
             continue
 
-        # Detect fence opening: optional leading whitespace then ```lang
         m = re.match(r"^([ \t]*)```(\w+)\s*$", line)
         if m:
             fence_indent = m.group(1)
@@ -295,13 +167,10 @@ def extract_snippets(md_file: Path) -> list[Snippet]:
             i += 1
             while i < len(lines):
                 close = lines[i]
-                # Closing fence: same indent + ```
                 if re.match(r"^" + re.escape(fence_indent) + r"```\s*$", close):
                     i += 1
                     break
-                # Strip the common fence indent
-                stripped = close.removeprefix(fence_indent)
-                code_lines.append(stripped)
+                code_lines.append(close.removeprefix(fence_indent))
                 i += 1
             code = "\n".join(code_lines)
             result.append(
@@ -313,17 +182,14 @@ def extract_snippets(md_file: Path) -> list[Snippet]:
                     code=code,
                 )
             )
-            # A tab label covers only the next block (reset after capture)
             current_tab = None
             continue
 
-        # Reset tab on section headers or dividers
         if line.startswith("#") or line.strip() == "---":
             current_tab = None
 
         i += 1
 
-    # For Rmd: combine all runnable chunks into one snippet so they share state
     if is_rmd and rmd_chunks:
         first_line = rmd_chunks[0][0]
         combined_code = "\n\n".join(code for _, _, code in rmd_chunks)
@@ -349,814 +215,12 @@ def extract_snippets(md_file: Path) -> list[Snippet]:
 def should_skip(snippet: Snippet, runner: str) -> str | None:
     """Return a skip reason string, or None if the snippet should be run."""
     code = snippet.code
-
-    # MkDocs file-include directives are not runnable
     if "--8<--" in code:
         return "file-include (--8<--)"
-
-    # Empty or whitespace-only
     if not code.strip():
         return "empty"
-
-    # Skip snippets that reference variables or packages we can't supply
-    if runner == "python":
-        # Genomic-specific heavy I/O (would need real files)
-        if any(s in code for s in ["read_csv", "open(", "glob(", "argparse"]):
-            return "file I/O"
-        # Lines that are obviously just output examples (no executable Python)
-        if not any(c in code for c in ["=", "(", "import", "print"]):
-            return "no executable statements"
-        # Large synthetic datasets that exceed the per-snippet timeout
-        if re.search(r"total_points\s*=\s*[1-9][0-9]{4,}", code):
-            return "large synthetic dataset (too slow for CI)"
-        # Snippets that use fastlowess without importing it first
-        if re.search(
-            r"\bfl\b|\bfastlowess\b|\bLowess\b|\bStreamingLowess\b|\bOnlineLowess\b",
-            code,
-        ) and not re.search(r"\bimport\b.*fastlowess|\bfrom\b.*fastlowess", code):
-            return "fastlowess not imported (snippet is not self-contained)"
-        # install_gpu() / backend="gpu" require a GPU-enabled build not present in CI
-        if re.search(r"\binstall_gpu\s*\(|backend\s*=\s*[\"']gpu[\"']", code):
-            return "requires gpu feature (not enabled in CI build)"
-
-    if runner == "julia":
-        # Skip package-management / installation snippets
-        if re.search(r"\bPkg\.(add|develop|clone|rm|pin)\s*\(", code):
-            return "Pkg management snippet"
-        # Skip API method-signature snippets: type-annotated keyword arguments
-        # (e.g. `; custom_weights::Union{...} = nothing`) are valid only in
-        # function *definitions*, not call sites — Julia rejects them as calls.
-        if re.search(r";\s*\w+::", code, re.DOTALL):
-            return "Julia method signature (keyword arg with type annotation — not callable)"
-        # install_gpu() / backend="gpu" require a GPU-enabled build not present in CI
-        if re.search(r"\binstall_gpu\s*\(|backend\s*=\s*[\"']gpu[\"']", code):
-            return "requires gpu feature (not enabled in CI build)"
-    if runner == "nodejs":
-        # TypeScript-only syntax (type annotations)
-        if ": SmoothOptions" in code or ": LowessResult" in code:
-            return "TypeScript (not Node.js)"
-        # Snippets must load fastlowess themselves (no preamble)
-        if not re.search(r"require\s*\(", code):
-            return "no require() — snippet must load fastlowess itself"
-        # installGpu() / backend: "gpu" require a GPU-enabled build not present in CI
-        if re.search(r"\binstallGpu\s*\(|backend:\s*[\"']gpu[\"']", code):
-            return "requires gpu feature (not enabled in CI build)"
-
-    if runner == "r":
-        # Skip install/devtools snippets
-        if re.search(r"\binstall\.packages\b|\bdevtools::", code):
-            return "package installation snippet"
-        # Skip if no actual R statements (e.g., pure output blocks)
-        if not any(c in code for c in ["<-", "=", "(", "library"]):
-            return "no executable R statements"
-        # Multi-dim input (x2d/x3d) requires a package rebuild to work correctly
-        if re.search(r"\bx2d\b|\bx3d\b|\bdimensions\s*=\s*[23]\b", code):
-            return "multi-dim R (needs package rebuild)"
-        # API signature snippets that use R's '...' outside a function definition
-        # (e.g. 'model <- Lowess(...)') — not valid in a script context.
-        if re.search(r"\(\s*\.\.\.\s*\)", code):
-            return "R API signature with ... (not runnable outside function)"
-        # install_gpu() / backend = "gpu" require a GPU-enabled build not present in CI
-        if re.search(r"\binstall_gpu\s*\(|backend\s*=\s*[\"']gpu[\"']", code):
-            return "requires gpu feature (not enabled in CI build)"
-
-    if runner == "wasm":
-        # Skip any ES-module import syntax — wasm runner uses CJS require().
-        # Catches `import { X }`, `import init, { X }`, `import X from ...`, etc.
-        if re.search(r"^import\b", code, re.MULTILINE) or "await init(" in code:
-            return "ES module import (not supported in CJS runner)"
-        # Snippets must load the WASM package themselves (no preamble)
-        if not re.search(r"require\s*\(", code):
-            return "no require() — snippet must load the WASM package itself"
-
-    if runner == "rust":
-        # Without a structural wrapper, only complete programs (with fn main) compile
-        if not re.search(r"\bfn\s+main\s*\(", code):
-            return "fragment — no fn main (not a standalone Rust program)"
-        # Skip snippets that look like TOML config (Cargo.toml examples)
-        if code.strip().startswith("[") and "=" in code and "fn " not in code:
-            return "TOML/config snippet"
-        # Backend::GPU requires the optional gpu feature flag
-        if re.search(r"\bBackend\s*::\s*GPU\b", code):
-            return "requires gpu feature flag (not enabled in snippet workspace)"
-        # cross_validate / KFold are not in the stable public API
-        if re.search(r"\bcross_validate\b|\bKFold\b", code):
-            return "cross_validate/KFold not in stable public API"
-
-    if runner == "cpp" and not re.search(r"\bint\s+main\s*\(", code):
-        # only complete programs (with int main) compile
-        return "fragment — no int main (not a standalone C++ program)"
-
-    return None
-
-
-# ---------------------------------------------------------------------------
-# Runners
-# ---------------------------------------------------------------------------
-
-
-@dataclass
-class RunResult:
-    snippet: Snippet
-    runner: str
-    skipped: bool = False
-    skip_reason: str = ""
-    passed: bool = False
-    duration: float = 0.0
-    stdout: str = ""
-    stderr: str = ""
-    returncode: int = -1
-
-
-def run_python(snippet: Snippet, timeout: int) -> RunResult:
-    code = PREAMBLES["python"] + snippet.code
-    with tempfile.NamedTemporaryFile(
-        suffix=".py", mode="w", delete=False, encoding="utf-8"
-    ) as f:
-        f.write(code)
-        tmp = f.name
-    try:
-        t0 = time.monotonic()
-        proc = subprocess.run(
-            [_PYTHON_BIN, tmp],
-            capture_output=True,
-            check=False,
-            timeout=timeout,
-            text=True,
-            env={**os.environ, "MPLBACKEND": "Agg"},
-        )
-        dur = time.monotonic() - t0
-        return RunResult(
-            snippet=snippet,
-            runner="python",
-            passed=(proc.returncode == 0),
-            duration=dur,
-            stdout=proc.stdout,
-            stderr=proc.stderr,
-            returncode=proc.returncode,
-        )
-    except subprocess.TimeoutExpired:
-        return RunResult(
-            snippet=snippet,
-            runner="python",
-            passed=False,
-            duration=timeout,
-            stderr=f"Timed out after {timeout}s",
-        )
-    finally:
-        os.unlink(tmp)
-
-
-def run_julia(snippet: Snippet, timeout: int) -> RunResult:
-    code = PREAMBLES["julia"] + snippet.code
-    with tempfile.NamedTemporaryFile(
-        suffix=".jl", mode="w", delete=False, encoding="utf-8"
-    ) as f:
-        f.write(code)
-        tmp = f.name
-
-    julia_bin = _find_exe("julia")
-    if julia_bin is None:
-        os.unlink(tmp)
-        return RunResult(
-            snippet=snippet,
-            runner="julia",
-            skipped=True,
-            skip_reason="julia not found in PATH",
-        )
-
-    # Find the Julia project for the bindings
-    julia_project = REPO_ROOT / "bindings" / "julia" / "julia"
-    env = {**os.environ}
-    if julia_project.exists():
-        env["JULIA_PROJECT"] = str(julia_project)
-
-    # Prefer the locally-built library over a potentially-stale JLL artifact
-    if "FASTLOWESS_LIB" not in env:
-        _jl_lib_name = (
-            "fastlowess_jl.dll"
-            if sys.platform == "win32"
-            else (
-                "libfastlowess_jl.dylib"
-                if sys.platform == "darwin"
-                else "libfastlowess_jl.so"
-            )
-        )
-        _local_lib = REPO_ROOT / "target" / "release" / _jl_lib_name
-        if _local_lib.exists():
-            env["FASTLOWESS_LIB"] = str(_local_lib)
-
-    try:
-        t0 = time.monotonic()
-        proc = subprocess.run(
-            [julia_bin, "--startup-file=no", tmp],
-            capture_output=True,
-            check=False,
-            timeout=timeout,
-            text=True,
-            env=env,
-        )
-        dur = time.monotonic() - t0
-        return RunResult(
-            snippet=snippet,
-            runner="julia",
-            passed=(proc.returncode == 0),
-            duration=dur,
-            stdout=proc.stdout,
-            stderr=proc.stderr,
-            returncode=proc.returncode,
-        )
-    except subprocess.TimeoutExpired:
-        return RunResult(
-            snippet=snippet,
-            runner="julia",
-            passed=False,
-            duration=timeout,
-            stderr=f"Timed out after {timeout}s",
-        )
-    finally:
-        os.unlink(tmp)
-
-
-def _ensure_nodejs_selflink(nodejs_dir: Path) -> None:
-    """Create node_modules/fastlowess shim so require('fastlowess') resolves locally.
-
-    npm does not self-install the package, so we create a minimal shim that
-    re-exports the local binding.  The shim is idempotent and safe to leave in
-    node_modules alongside the real platform packages.
-    """
-    nm_fastlowess = nodejs_dir / "node_modules" / "fastlowess"
-    if nm_fastlowess.exists():
-        return
-    nm_fastlowess.mkdir(parents=True, exist_ok=True)
-    (nm_fastlowess / "index.js").write_text(
-        "module.exports = require('../../');\n", encoding="utf-8"
-    )
-    (nm_fastlowess / "package.json").write_text(
-        '{"name":"fastlowess","main":"index.js","version":"0.0.0"}\n',
-        encoding="utf-8",
-    )
-
-
-def _ensure_wasm_selflink(wasm_pkg_dir: Path) -> None:
-    """Create node_modules/fastlowess-wasm shim so require('fastlowess-wasm') resolves locally.
-
-    The wasm pkg/ directory IS the fastlowess-wasm package, but npm doesn't
-    self-install it, so we create a shim that re-exports from the pkg root.
-    """
-    nm_wasm = wasm_pkg_dir / "node_modules" / "fastlowess-wasm"
-    if nm_wasm.exists():
-        return
-    nm_wasm.mkdir(parents=True, exist_ok=True)
-    (nm_wasm / "index.js").write_text(
-        "module.exports = require('../../');\n", encoding="utf-8"
-    )
-    (nm_wasm / "package.json").write_text(
-        '{"name":"fastlowess-wasm","main":"index.js","version":"0.0.0"}\n',
-        encoding="utf-8",
-    )
-
-
-def run_nodejs(snippet: Snippet, timeout: int) -> RunResult:
-    code = snippet.code
-
-    node_bin = _find_exe("node")
-    if node_bin is None:
-        return RunResult(
-            snippet=snippet,
-            runner="nodejs",
-            skipped=True,
-            skip_reason="node not found in PATH",
-        )
-
-    # Write the temp file INSIDE the nodejs binding directory so that Node.js
-    # module resolution (file-relative) can find node_modules/fastlowess there.
-    nodejs_dir = REPO_ROOT / "bindings" / "nodejs"
-    cwd = str(nodejs_dir) if nodejs_dir.exists() else str(REPO_ROOT)
-
-    if nodejs_dir.exists():
-        _ensure_nodejs_selflink(nodejs_dir)
-
-    import uuid
-
-    tmp_name = f"_snippet_{uuid.uuid4().hex}.js"
-    tmp = str(Path(cwd) / tmp_name)
-    with open(tmp, "w", encoding="utf-8") as f:
-        f.write(code)
-
-    try:
-        t0 = time.monotonic()
-        proc = subprocess.run(
-            [node_bin, tmp],
-            capture_output=True,
-            check=False,
-            timeout=timeout,
-            text=True,
-            cwd=cwd,
-        )
-        dur = time.monotonic() - t0
-        return RunResult(
-            snippet=snippet,
-            runner="nodejs",
-            passed=(proc.returncode == 0),
-            duration=dur,
-            stdout=proc.stdout,
-            stderr=proc.stderr,
-            returncode=proc.returncode,
-        )
-    except subprocess.TimeoutExpired:
-        return RunResult(
-            snippet=snippet,
-            runner="nodejs",
-            passed=False,
-            duration=timeout,
-            stderr=f"Timed out after {timeout}s",
-        )
-    finally:
-        os.unlink(tmp)
-
-
-def run_r(snippet: Snippet, timeout: int) -> RunResult:
-    code = PREAMBLES["r"] + snippet.code
-    with tempfile.NamedTemporaryFile(
-        suffix=".R", mode="w", delete=False, encoding="utf-8"
-    ) as f:
-        f.write(code)
-        tmp = f.name
-
-    rscript = _find_exe("Rscript")
-    if rscript is None:
-        os.unlink(tmp)
-        return RunResult(
-            snippet=snippet,
-            runner="r",
-            skipped=True,
-            skip_reason="Rscript not found in PATH",
-        )
-
-    try:
-        t0 = time.monotonic()
-        proc = subprocess.run(
-            [rscript, "--vanilla", tmp],
-            capture_output=True,
-            check=False,
-            timeout=timeout,
-            text=True,
-            env={**os.environ, "LOWESS_REPO_ROOT": str(REPO_ROOT)},
-        )
-        dur = time.monotonic() - t0
-        return RunResult(
-            snippet=snippet,
-            runner="r",
-            passed=(proc.returncode == 0),
-            duration=dur,
-            stdout=proc.stdout,
-            stderr=proc.stderr,
-            returncode=proc.returncode,
-        )
-    except subprocess.TimeoutExpired:
-        return RunResult(
-            snippet=snippet,
-            runner="r",
-            passed=False,
-            duration=timeout,
-            stderr=f"Timed out after {timeout}s",
-        )
-    finally:
-        os.unlink(tmp)
-
-
-def run_wasm(snippet: Snippet, timeout: int) -> RunResult:
-    # WASM snippets run in Node.js with the pre-built wasm pkg
-    if not _WASM_PKG_DIR.exists():
-        return RunResult(
-            snippet=snippet,
-            runner="wasm",
-            skipped=True,
-            skip_reason="bindings/wasm/pkg/ not built (run 'make wasm' first)",
-        )
-
-    node_bin = _find_exe("node")
-    if node_bin is None:
-        return RunResult(
-            snippet=snippet,
-            runner="wasm",
-            skipped=True,
-            skip_reason="node not found in PATH",
-        )
-
-    # Write the temp file INSIDE _WASM_PKG_DIR so require('./fastlowess_wasm.js') resolves
-    _ensure_wasm_selflink(_WASM_PKG_DIR)
-
-    import uuid
-
-    tmp_name = f"_snippet_{uuid.uuid4().hex}.js"
-    tmp = str(_WASM_PKG_DIR / tmp_name)
-    code = snippet.code
-    with open(tmp, "w", encoding="utf-8") as f:
-        f.write(code)
-
-    try:
-        t0 = time.monotonic()
-        proc = subprocess.run(
-            [node_bin, tmp],
-            capture_output=True,
-            check=False,
-            timeout=timeout,
-            text=True,
-            cwd=str(_WASM_PKG_DIR),
-        )
-        dur = time.monotonic() - t0
-        return RunResult(
-            snippet=snippet,
-            runner="wasm",
-            passed=(proc.returncode == 0),
-            duration=dur,
-            stdout=proc.stdout,
-            stderr=proc.stderr,
-            returncode=proc.returncode,
-        )
-    except subprocess.TimeoutExpired:
-        return RunResult(
-            snippet=snippet,
-            runner="wasm",
-            passed=False,
-            duration=timeout,
-            stderr=f"Timed out after {timeout}s",
-        )
-    finally:
-        os.unlink(tmp)
-
-
-def _ensure_rust_snippet_project() -> bool:
-    """Create the persistent temp Cargo project for Rust snippet execution.
-
-    Returns True if the project is ready, False on error.
-    """
-    _RUST_SNIPPET_DIR.mkdir(parents=True, exist_ok=True)
-    cargo_toml = _RUST_SNIPPET_DIR / "Cargo.toml"
-    if not cargo_toml.exists():
-        # [workspace] prevents Cargo from merging this into the parent workspace
-        lowess_path = str(REPO_ROOT / "crates" / "lowess").replace("\\", "/")
-        fastlowess_path = str(REPO_ROOT / "crates" / "fastLowess").replace("\\", "/")
-        cargo_toml.write_text(
-            textwrap.dedent(f"""\
-                [workspace]
-
-                [package]
-                name = "doc-snippet"
-                version = "0.1.0"
-                edition = "2021"
-
-                [[bin]]
-                name = "doc-snippet"
-                path = "src/main.rs"
-
-                [dependencies]
-                lowess    = {{ path = "{lowess_path}" }}
-                fastLowess = {{ path = "{fastlowess_path}" }}
-            """),
-            encoding="utf-8",
-        )
-    src_dir = _RUST_SNIPPET_DIR / "src"
-    src_dir.mkdir(exist_ok=True)
-    return True
-
-
-def run_rust(snippet: Snippet, timeout: int) -> RunResult:
-    cargo_bin = _find_exe("cargo")
-    if cargo_bin is None:
-        return RunResult(
-            snippet=snippet,
-            runner="rust",
-            skipped=True,
-            skip_reason="cargo not found in PATH",
-        )
-
-    _ensure_rust_snippet_project()
-
-    main_path = _RUST_SNIPPET_DIR / "src" / "main.rs"
-    main_path.write_text(snippet.code, encoding="utf-8")
-
-    # Share the parent workspace's target dir to reuse compiled deps
-    target_dir = str(REPO_ROOT / "target" / "doc-snippet-target")
-
-    try:
-        t0 = time.monotonic()
-        proc = subprocess.run(
-            [
-                cargo_bin,
-                "run",
-                "--manifest-path",
-                str(_RUST_SNIPPET_DIR / "Cargo.toml"),
-                "--target-dir",
-                target_dir,
-                "--quiet",
-            ],
-            capture_output=True,
-            check=False,
-            timeout=timeout,
-            text=True,
-            cwd=str(REPO_ROOT),
-        )
-        dur = time.monotonic() - t0
-        return RunResult(
-            snippet=snippet,
-            runner="rust",
-            passed=(proc.returncode == 0),
-            duration=dur,
-            stdout=proc.stdout,
-            stderr=proc.stderr,
-            returncode=proc.returncode,
-        )
-    except subprocess.TimeoutExpired:
-        return RunResult(
-            snippet=snippet,
-            runner="rust",
-            passed=False,
-            duration=timeout,
-            stderr=f"Timed out after {timeout}s",
-        )
-
-
-def _find_cpp_compiler() -> str | None:
-    for name in ("g++", "clang++", "c++"):
-        exe = _find_exe(name)
-        if exe:
-            return exe
-    return None
-
-
-_msvc_env_cache: dict[str, str] | None = None
-
-
-def _find_msvc_compiler() -> str | None:
-    if (cl := _find_exe("cl")) is not None:
-        return cl
-    # cl.exe is not on PATH outside a Developer Command Prompt; find via vswhere.
-    vswhere = r"C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe"
-    if os.path.exists(vswhere):
-        try:
-            result = subprocess.run(
-                [vswhere, "-all", "-find", r"VC\Tools\MSVC\**\bin\Hostx64\x64\cl.exe"],
-                capture_output=True,
-                text=True,
-                check=False,
-                timeout=10,
-            )
-            for line in result.stdout.splitlines():
-                path = line.strip()
-                if path and os.path.exists(path):
-                    return path
-        except (OSError, subprocess.TimeoutExpired):
-            pass
-    # Fallback: direct glob in standard VS / Build Tools install locations.
-    import glob as _glob
-
-    for pattern in [
-        r"C:\Program Files (x86)\Microsoft Visual Studio\*\*\VC\Tools\MSVC\*\bin\Hostx64\x64\cl.exe",
-        r"C:\Program Files\Microsoft Visual Studio\*\*\VC\Tools\MSVC\*\bin\Hostx64\x64\cl.exe",
-    ]:
-        matches = sorted(_glob.glob(pattern))
-        if matches:
-            return matches[-1]  # highest version sorts last
-    return None
-
-
-def _is_msvc_library(lib_dir: Path) -> bool:
-    return "windows-msvc" in str(lib_dir)
-
-
-def _find_vcvarsall(compiler_path: str) -> str | None:
-    """Walk up from cl.exe to find vcvarsall.bat (lives at VC/Auxiliary/Build/)."""
-    path = Path(compiler_path).parent
-    for _ in range(10):
-        candidate = path / "Auxiliary" / "Build" / "vcvarsall.bat"
-        if candidate.exists():
-            return str(candidate)
-        path = path.parent
-    return None
-
-
-def _get_msvc_env(vcvarsall: str) -> dict[str, str]:
-    """Return the environment after sourcing vcvarsall.bat x64."""
-    global _msvc_env_cache
-    if _msvc_env_cache is not None:
-        return _msvc_env_cache
-    try:
-        # `call` is required: without it, vcvarsall.bat's GOTO :EOF causes cmd.exe
-        # to exit entirely, so `&& set` never runs and the env is never captured.
-        result = subprocess.run(
-            f'call "{vcvarsall}" x64 > nul 2>&1 && set',
-            shell=True,
-            capture_output=True,
-            text=True,
-            check=False,
-            timeout=60,
-        )
-        env: dict[str, str] = {}
-        for line in result.stdout.splitlines():
-            key, sep, value = line.partition("=")
-            if sep:
-                env[key] = value
-        _msvc_env_cache = env if env else dict(os.environ)
-    except (OSError, subprocess.TimeoutExpired):
-        _msvc_env_cache = dict(os.environ)
-    return _msvc_env_cache
-
-
-def _find_cpp_library() -> Path | None:
-    """Return the path to the built fastlowess_cpp shared/static library, or None."""
-    candidates = [
-        # MSVC target on Windows (always used since MinGW detection was removed)
-        REPO_ROOT / "target" / "x86_64-pc-windows-msvc" / "release-c",
-        # MinGW targets on Windows (Makefile uses these when GCC is available)
-        REPO_ROOT / "target" / "x86_64-pc-windows-gnu" / "release-c",
-        REPO_ROOT / "target" / "aarch64-pc-windows-gnu" / "release-c",
-        # Default release-c (MSVC on Windows, native on Unix)
-        REPO_ROOT / "target" / "release-c",
-        REPO_ROOT / "target" / "debug",
-    ]
-    lib_names = [
-        "fastlowess_cpp.dll",
-        "fastlowess_cpp.lib",
-        "libfastlowess_cpp.so",
-        "libfastlowess_cpp.dylib",
-        "libfastlowess_cpp.a",
-    ]
-    seen: set[Path] = set()
-    for d in candidates:
-        if d in seen:
-            continue
-        seen.add(d)
-        if not d.exists():
-            continue
-        for name in lib_names:
-            if (d / name).exists():
-                return d
-    return None
-
-
-def run_cpp(snippet: Snippet, timeout: int) -> RunResult:
-    lib_dir = _find_cpp_library()
-    if lib_dir is None:
-        return RunResult(
-            snippet=snippet,
-            runner="cpp",
-            skipped=True,
-            skip_reason="fastlowess_cpp library not built (run 'make cpp' first)",
-        )
-
-    include_dir = str(REPO_ROOT / "bindings" / "cpp" / "include")
-    lib_dir_str = str(lib_dir)
-    use_msvc = os.name == "nt" and _is_msvc_library(lib_dir)
-
-    if use_msvc:
-        compiler = _find_msvc_compiler()
-        if compiler is None:
-            return RunResult(
-                snippet=snippet,
-                runner="cpp",
-                skipped=True,
-                skip_reason="no MSVC cl.exe found in PATH (required for MSVC-built library)",
-            )
-        vcvarsall = _find_vcvarsall(compiler)
-        msvc_env = _get_msvc_env(vcvarsall) if vcvarsall else dict(os.environ)
-        # Re-derive cl.exe from vcvarsall's PATH so compiler and STL headers match
-        _env_path = msvc_env.get("Path") or msvc_env.get("PATH", "")
-        _cl = shutil.which("cl", path=_env_path) if _env_path else None
-        if _cl:
-            compiler = _cl
-    else:
-        msvc_env = None
-        compiler = _find_cpp_compiler()
-        if compiler is None:
-            return RunResult(
-                snippet=snippet,
-                runner="cpp",
-                skipped=True,
-                skip_reason="no C++ compiler (g++/clang++) found in PATH",
-            )
-
-    code = snippet.code
-
-    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
-        src = os.path.join(tmpdir, "snippet.cpp")
-        exe = os.path.join(tmpdir, "snippet.exe" if os.name == "nt" else "snippet")
-        with open(src, "w", encoding="utf-8") as f:
-            f.write(code)
-
-        if use_msvc:
-            # Prefer the DLL import lib over the staticlib to avoid needing Windows system libs.
-            import_lib = "fastlowess_cpp.dll.lib"
-            if not (lib_dir / import_lib).exists():
-                import_lib = "fastlowess_cpp.lib"
-            compile_cmd = [
-                compiler,
-                "/nologo",
-                "/EHsc",
-                "/std:c++20",
-                "/D_USE_MATH_DEFINES",
-                "/Od",
-                f"/I{include_dir}",
-                f"/Fe:{exe}",
-                src,
-                "/link",
-                f"/LIBPATH:{lib_dir_str}",
-                import_lib,
-            ]
-        else:
-            compile_cmd = [
-                compiler,
-                "-std=c++17",
-                "-D_USE_MATH_DEFINES",
-                "-O0",
-                f"-I{include_dir}",
-                f"-L{lib_dir_str}",
-                src,
-                "-o",
-                exe,
-                "-lfastlowess_cpp",
-            ]
-
-        try:
-            t0 = time.monotonic()
-            cproc = subprocess.run(
-                compile_cmd,
-                capture_output=True,
-                check=False,
-                timeout=60,
-                text=True,
-                env=msvc_env if use_msvc else None,
-            )
-            if cproc.returncode != 0:
-                dur = time.monotonic() - t0
-                return RunResult(
-                    snippet=snippet,
-                    runner="cpp",
-                    passed=False,
-                    duration=dur,
-                    stdout=cproc.stdout,
-                    stderr=cproc.stderr,
-                    returncode=cproc.returncode,
-                )
-
-            # Set library search path and run
-            env = dict(os.environ)
-            if os.name == "nt":
-                env["PATH"] = lib_dir_str + os.pathsep + env.get("PATH", "")
-            elif sys.platform == "darwin":
-                env["DYLD_LIBRARY_PATH"] = (
-                    lib_dir_str + os.pathsep + env.get("DYLD_LIBRARY_PATH", "")
-                )
-            else:
-                env["LD_LIBRARY_PATH"] = (
-                    lib_dir_str + os.pathsep + env.get("LD_LIBRARY_PATH", "")
-                )
-
-            rproc = subprocess.run(
-                [exe],
-                capture_output=True,
-                check=False,
-                timeout=timeout,
-                text=True,
-                env=env,
-            )
-            dur = time.monotonic() - t0
-            return RunResult(
-                snippet=snippet,
-                runner="cpp",
-                passed=(rproc.returncode == 0),
-                duration=dur,
-                stdout=rproc.stdout,
-                stderr=rproc.stderr,
-                returncode=rproc.returncode,
-            )
-        except subprocess.TimeoutExpired:
-            return RunResult(
-                snippet=snippet,
-                runner="cpp",
-                passed=False,
-                duration=timeout,
-                stderr=f"Timed out after {timeout}s",
-            )
-
-
-_RUNNERS = {
-    "python": run_python,
-    "julia": run_julia,
-    "nodejs": run_nodejs,
-    "r": run_r,
-    "wasm": run_wasm,
-    "rust": run_rust,
-    "cpp": run_cpp,
-}
-
-
-def _find_exe(name: str) -> str | None:
-    import shutil
-
-    return shutil.which(name)
+    check = SKIP_CHECKS.get(runner)
+    return check(snippet) if check else None
 
 
 # ---------------------------------------------------------------------------
@@ -1172,7 +236,6 @@ def iter_md_files(root: Path, file_filter: str | None) -> Iterator[Path]:
         if p.is_file():
             yield p
             return
-        # Treat as glob
         yield from sorted(REPO_ROOT.glob(file_filter))
         return
     yield from sorted(root.rglob("*.md"))
@@ -1181,12 +244,11 @@ def iter_md_files(root: Path, file_filter: str | None) -> Iterator[Path]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    # Ensure stdout/stderr use UTF-8 on Windows (avoids UnicodeEncodeError for
-    # characters like π that can't be encoded by the default cp1252 codec).
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[union-attr]
     if hasattr(sys.stderr, "reconfigure"):
         sys.stderr.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[union-attr]
+
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -1227,14 +289,10 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     active_runners: set[str] = (
-        {"python", "julia", "nodejs", "r", "wasm", "rust", "cpp"}
-        if args.lang == "all"
-        else {args.lang}
+        set(RUNNERS.keys()) if args.lang == "all" else {args.lang}
     )
 
-    # Detect best Python executable
-    global _PYTHON_BIN
-    _PYTHON_BIN = _find_python_with_fastlowess()
+    _python_runner.PYTHON_BIN = _find_python_with_fastlowess()
 
     # ---- Collect snippets ---------------------------------------------------
     snippets: list[Snippet] = []
@@ -1243,8 +301,7 @@ def main(argv: list[str] | None = None) -> int:
 
     total_found = len(snippets)
 
-    # Filter to only snippets we can handle
-    runnable: list[tuple[Snippet, str]] = []  # (snippet, runner)
+    runnable: list[tuple[Snippet, str]] = []
     for s in snippets:
         r = s.runner
         if r is None or r not in active_runners:
@@ -1271,9 +328,6 @@ def main(argv: list[str] | None = None) -> int:
     n_pass = n_fail = n_skip = 0
     _print_lock = threading.Lock()
 
-    # Group runnable snippets by runner so each language executes as a unit.
-    # Rust snippets share a single temp project (main.rs), so they must remain
-    # sequential within their language — parallelism is across languages only.
     _by_runner: dict[str, list[tuple[Snippet, str]]] = defaultdict(list)
     for _s, _r in runnable:
         _by_runner[_r].append((_s, _r))
@@ -1282,7 +336,7 @@ def main(argv: list[str] | None = None) -> int:
         lang_results: list[RunResult] = []
         for s, runner in lang_items:
             label = s.label
-            run_fn = _RUNNERS.get(runner)
+            run_fn = RUNNERS.get(runner)
             if run_fn is None:
                 res = RunResult(
                     snippet=s,
@@ -1342,13 +396,11 @@ def main(argv: list[str] | None = None) -> int:
     )
     print()
 
-    # Print failures in verbose mode (already shown inline) or always in brief
     failures = [r for r in results if not r.passed and not r.skipped]
     if failures and not args.verbose:
         print(bold("Failed snippets:"))
         for r in failures:
             print(f"  {red('FAIL')} {r.snippet.label}")
-            # cl.exe writes errors to stdout; other compilers use stderr
             diag = (r.stderr or r.stdout).strip()
             if diag:
                 for line in diag.splitlines()[:5]:
@@ -1382,7 +434,6 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _print_failure(snippet: Snippet, res: RunResult) -> None:
-    """Print detailed failure information."""
     sep = "-" * 56
     print()
     print(f"  {sep}")

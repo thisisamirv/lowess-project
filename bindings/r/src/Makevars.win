@@ -38,20 +38,15 @@ $(STATLIB):
 	@# Create .cargo/config.toml from non-hidden source (avoids R CMD check NOTE)
 	@mkdir -p .cargo
 	@cp cargo-config.toml .cargo/config.toml
-	@mkdir -p $(TARGET_DIR)
-	@# Rtools45 posix-static toolchain omits libgcc_eh.a; create a dummy so build scripts link
+	@# Rtools45 posix-static toolchain omits libgcc_eh.a; stub in libgcc_mock/ and expose via LIBRARY_PATH so every linker call finds it
+	@mkdir -p $(TARGET_DIR)/libgcc_mock
+	@touch $(TARGET_DIR)/libgcc_mock/libgcc_eh.a
 	@if [ "$(RUST_TARGET)" = "x86_64-pc-windows-gnu" ]; then \
-		_gcc_lib=$$(x86_64-w64-mingw32.static.posix-gcc -print-file-name=libgcc.a); \
-		_gcc_libdir=$$(dirname "$$_gcc_lib"); \
-		test -f "$$_gcc_libdir/libgcc_eh.a" \
-			|| x86_64-w64-mingw32.static.posix-ar rcs "$$_gcc_libdir/libgcc_eh.a" 2>/dev/null \
-			|| { \
-				x86_64-w64-mingw32.static.posix-ar rcs "$(TARGET_DIR)/libgcc_eh.a"; \
-				_sd=$$(cygpath -m "$$(pwd)/$(TARGET_DIR)"); \
-				awk -v sd="$$_sd" '/^ar = "x86_64-w64-mingw32/{print; print "rustflags = [\"-C\", \"symbol-mangling-version=v0\", \"-C\", \"link-arg=-L" sd "\"]"; next} 1' .cargo/config.toml > .cargo/config.toml.tmp && mv .cargo/config.toml.tmp .cargo/config.toml; \
-			}; \
+		LIBRARY_PATH="$${LIBRARY_PATH};$(TARGET_DIR)/libgcc_mock" \
+			cargo build -q -j 2 --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR) --target $(RUST_TARGET) $(CARGO_FEATURES); \
+	else \
+		cargo build -q -j 2 --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR) --target $(RUST_TARGET) $(CARGO_FEATURES); \
 	fi
-	@cargo build -q -j 2 --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR) --target $(RUST_TARGET) $(CARGO_FEATURES)
 	@# ar x without a member name resolves long-name entries (>16 chars stored as /<offset>)
 	@if echo "$(RUST_TARGET)" | grep -q gnullvm; then \
 		_lib=$$(pwd)/$(STATLIB); \
