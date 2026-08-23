@@ -56,21 +56,21 @@ outliers that remain.
 Set the weight to `0` at the bad point — it is excluded from every local fit
 that would otherwise include it.
 
-=== "Python"
-    ```python
-    import numpy as np
-    from fastlowess import Lowess
+```python
+import numpy as np
+from fastlowess import Lowess
 
-    x = np.arange(10, dtype=float)
-    y = x * 2.0
-    y[5] = 100.0               # spike at index 5
+x = np.arange(10, dtype=float)
+y = x * 2.0
+y[5] = 100.0               # spike at index 5
 
-    weights = np.ones(10)
-    weights[5] = 0.0           # exclude the spike
+weights = np.ones(10)
+weights[5] = 0.0           # exclude the spike
 
-    model = Lowess(fraction=0.5, iterations=0)
-    result = model.fit(x, y, custom_weights=weights)
-    ```
+model = Lowess(fraction=0.5, iterations=0)
+result = model.fit(x, y, custom_weights=weights)
+```
+
 ---
 
 ### Emphasize Important Points
@@ -78,25 +78,25 @@ that would otherwise include it.
 Assign high weights to measurements you trust most — calibration standards,
 reference instruments, or low-noise observations.
 
-=== "Python"
-    ```python
-    import fastlowess as fl
-    from fastlowess import Lowess
-    import numpy as np
+```python
+import fastlowess as fl
+from fastlowess import Lowess
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
-    calibration_indices = [5, 20, 40, 60, 80]
-    sigma = rng.uniform(0.1, 0.5, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
+calibration_indices = [5, 20, 40, 60, 80]
+sigma = rng.uniform(0.1, 0.5, 100)
 
-    weights = np.ones(len(x))
-    for i in calibration_indices:
-        weights[i] = 10.0      # trust calibration 10× more
+weights = np.ones(len(x))
+for i in calibration_indices:
+    weights[i] = 10.0      # trust calibration 10× more
 
-    model = Lowess(fraction=0.5)
-    result = model.fit(x, y, custom_weights=weights)
-    ```
+model = Lowess(fraction=0.5)
+result = model.fit(x, y, custom_weights=weights)
+```
+
 ---
 
 ### Propagate Measurement Uncertainty
@@ -105,22 +105,22 @@ If each observation has a known standard deviation $\sigma_i$, set
 $w_i = 1 / \sigma_i^2$ to give the fit information-theoretically optimal
 weighting.
 
-=== "Python"
-    ```python
-    import fastlowess as fl
-    from fastlowess import Lowess
-    import numpy as np
+```python
+import fastlowess as fl
+from fastlowess import Lowess
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
-    calibration_indices = [5, 20, 40, 60, 80]
-    sigma = rng.uniform(0.1, 0.5, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
+calibration_indices = [5, 20, 40, 60, 80]
+sigma = rng.uniform(0.1, 0.5, 100)
 
-    weights = 1.0 / sigma**2
-    model = Lowess(fraction=0.5)
-    result = model.fit(x, y, custom_weights=weights)
-    ```
+weights = 1.0 / sigma**2
+model = Lowess(fraction=0.5)
+result = model.fit(x, y, custom_weights=weights)
+```
+
 ---
 
 ## Combined with Robustness Iterations
@@ -128,29 +128,29 @@ weighting.
 Custom weights and robustness iterations compose naturally: use custom weights
 for *known* bad points and robustness for *unknown* contamination.
 
-=== "Python"
-    ```python
-    import fastlowess as fl
-    from fastlowess import Lowess
-    import numpy as np
+```python
+import fastlowess as fl
+from fastlowess import Lowess
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
-    calibration_indices = [5, 20, 40, 60, 80]
-    sigma = rng.uniform(0.1, 0.5, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
+calibration_indices = [5, 20, 40, 60, 80]
+sigma = rng.uniform(0.1, 0.5, 100)
 
-    x = np.arange(20, dtype=float)
-    y = x * 1.5
-    y[3]  = -50.0   # known bad
-    y[12] = 80.0    # unknown outlier
+x = np.arange(20, dtype=float)
+y = x * 1.5
+y[3]  = -50.0   # known bad
+y[12] = 80.0    # unknown outlier
 
-    weights = np.ones(20)
-    weights[3] = 0.0
+weights = np.ones(20)
+weights[3] = 0.0
 
-    model = Lowess(fraction=0.4, iterations=3)
-    result = model.fit(x, y, custom_weights=weights)
-    ```
+model = Lowess(fraction=0.4, iterations=3)
+result = model.fit(x, y, custom_weights=weights)
+```
+
 ---
 
 ## Validation Rules

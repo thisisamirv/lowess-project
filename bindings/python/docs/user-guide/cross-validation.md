@@ -15,66 +15,66 @@ Cross-validation helps select optimal parameters (especially `fraction`) by eval
 
 Split data into K folds, train on K-1, validate on 1.
 
-=== "Python"
-    ```python
-    import fastlowess as fl
-    import numpy as np
+```python
+import fastlowess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Lowess(cv_method="kfold",
-        cv_k=5,
-        cv_fractions=[0.2, 0.3, 0.5, 0.7]
-    )
-    result = model.fit(x, y)
+model = fl.Lowess(cv_method="kfold",
+    cv_k=5,
+    cv_fractions=[0.2, 0.3, 0.5, 0.7]
+)
+result = model.fit(x, y)
 
-    print(f"Selected fraction: {result.fraction_used}")
-    print(f"CV scores: {result.cv_scores}")
-    ```
+print(f"Selected fraction: {result.fraction_used}")
+print(f"CV scores: {result.cv_scores}")
+```
+
 ---
 
 ## Leave-One-Out (LOOCV)
 
 Each point is held out once. Most thorough but slowest.
 
-=== "Python"
-    ```python
-    import fastlowess as fl
-    import numpy as np
+```python
+import fastlowess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Lowess(cv_method="loocv",
-        cv_fractions=[0.2, 0.3, 0.5, 0.7]
-    )
-    result = model.fit(x, y)
-    ```
+model = fl.Lowess(cv_method="loocv",
+    cv_fractions=[0.2, 0.3, 0.5, 0.7]
+)
+result = model.fit(x, y)
+```
+
 ---
 
 ## Seeded Randomization
 
 Set a seed for reproducible fold assignments:
 
-=== "Python"
-    ```python
-    import fastlowess as fl
-    import numpy as np
+```python
+import fastlowess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Lowess(cv_method="kfold",
-        cv_k=5,
-        cv_fractions=[0.3, 0.5, 0.7],
-        cv_seed=42
-    )
-    result = model.fit(x, y)
-    ```
+model = fl.Lowess(cv_method="kfold",
+    cv_k=5,
+    cv_fractions=[0.3, 0.5, 0.7],
+    cv_seed=42
+)
+result = model.fit(x, y)
+```
+
 ---
 
 ## Comparison
@@ -104,26 +104,26 @@ Lower MSE indicates better fit on held-out data.
 
 ## Interpreting Results
 
-=== "Python"
-    ```python
-    import fastlowess as fl
-    import numpy as np
+```python
+import fastlowess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    # Example output
-    model = fl.Lowess(cv_method="kfold", cv_k=5,
-                       cv_fractions=[0.1, 0.3, 0.5, 0.7])
-    result = model.fit(x, y)
+# Example output
+model = fl.Lowess(cv_method="kfold", cv_k=5,
+                   cv_fractions=[0.1, 0.3, 0.5, 0.7])
+result = model.fit(x, y)
 
-    # Fraction  | CV Score (MSE)
-    # 0.1       | 0.0542  ← Undersmoothed
-    # 0.3       | 0.0231  ← Best
-    # 0.5       | 0.0298
-    # 0.7       | 0.0412  ← Oversmoothed
-    ```
+# Fraction  | CV Score (MSE)
+# 0.1       | 0.0542  ← Undersmoothed
+# 0.3       | 0.0231  ← Best
+# 0.5       | 0.0298
+# 0.7       | 0.0412  ← Oversmoothed
+```
+
 The fraction with **lowest CV score** is automatically selected.
 
 ---

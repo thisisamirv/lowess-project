@@ -33,18 +33,18 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
 
 **Use when**: Chunks are large and the overlap region has uniform data density.
 
-=== "Python"
-    ```python
-    from fastlowess import StreamingLowess
-    import numpy as np
+```python
+from fastlowess import StreamingLowess
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x_chunk = np.linspace(0, np.pi, 50)
-    y_chunk = np.sin(x_chunk) + rng.normal(0, 0.1, 50)
+rng = np.random.default_rng(42)
+x_chunk = np.linspace(0, np.pi, 50)
+y_chunk = np.sin(x_chunk) + rng.normal(0, 0.1, 50)
 
-    model = StreamingLowess(merge_strategy="average", chunk_size=5000, overlap=500)
-    result = model.process_chunk(x_chunk, y_chunk)
-    ```
+model = StreamingLowess(merge_strategy="average", chunk_size=5000, overlap=500)
+result = model.process_chunk(x_chunk, y_chunk)
+```
+
 ---
 
 ## Take First
@@ -53,11 +53,11 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
 
 **Use when**: You need final output values immediately after each chunk (no look-ahead revision); left-chunk data quality is higher.
 
-=== "Python"
-    ```python
-    from fastlowess import StreamingLowess
-    model = StreamingLowess(merge_strategy="take_first")
-    ```
+```python
+from fastlowess import StreamingLowess
+model = StreamingLowess(merge_strategy="take_first")
+```
+
 ---
 
 ## Take Last
@@ -66,11 +66,11 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
 
 **Use when**: Right-chunk context improves overlap quality; you are post-processing complete data rather than streaming live.
 
-=== "Python"
-    ```python
-    from fastlowess import StreamingLowess
-    model = StreamingLowess(merge_strategy="take_last")
-    ```
+```python
+from fastlowess import StreamingLowess
+model = StreamingLowess(merge_strategy="take_last")
+```
+
 ---
 
 ## Weighted Average
@@ -83,15 +83,15 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
 
 **Use when**: Minimising boundary artefacts is more important than speed; moderate overlap (10–20 % of chunk size).
 
-=== "Python"
-    ```python
-    from fastlowess import StreamingLowess
-    model = StreamingLowess(
-        merge_strategy="weighted_average",
-        chunk_size=5000,
-        overlap=500
-    )
-    ```
+```python
+from fastlowess import StreamingLowess
+model = StreamingLowess(
+    merge_strategy="weighted_average",
+    chunk_size=5000,
+    overlap=500
+)
+```
+
 ---
 
 ## Choosing a Strategy

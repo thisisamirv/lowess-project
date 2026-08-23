@@ -31,18 +31,18 @@ First centers residuals at their median, then takes the median of the absolute d
 
 **Use when**: Data may contain outliers (default for most applications).
 
-=== "Python"
-    ```python
-    import fastlowess as fl
-    import numpy as np
+```python
+import fastlowess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Lowess(iterations=3, scaling_method="mad")
-    result = model.fit(x, y)
-    ```
+model = fl.Lowess(iterations=3, scaling_method="mad")
+result = model.fit(x, y)
+```
+
 ---
 
 ## MAR — Median Absolute Residual
@@ -53,18 +53,18 @@ Uses the uncentered median — unlike MAD it does not subtract the residual medi
 
 **Use when**: Speed matters and data have minimal systematic bias in residuals.
 
-=== "Python"
-    ```python
-    import fastlowess as fl
-    import numpy as np
+```python
+import fastlowess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Lowess(iterations=3, scaling_method="mar")
-    result = model.fit(x, y)
-    ```
+model = fl.Lowess(iterations=3, scaling_method="mar")
+result = model.fit(x, y)
+```
+
 ---
 
 ## Mean — Mean Absolute Residual
@@ -75,18 +75,18 @@ Arithmetic mean of absolute residuals. Non-robust: a single extreme outlier infl
 
 **Use when**: Clean data with no outliers; maximum computation speed required.
 
-=== "Python"
-    ```python
-    import fastlowess as fl
-    import numpy as np
+```python
+import fastlowess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Lowess(iterations=3, scaling_method="mean")
-    result = model.fit(x, y)
-    ```
+model = fl.Lowess(iterations=3, scaling_method="mean")
+result = model.fit(x, y)
+```
+
 ---
 
 ## Choosing a Scaling Method

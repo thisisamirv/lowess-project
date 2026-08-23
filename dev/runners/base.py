@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-DOCS_DIR = REPO_ROOT / "docs"
+DOCS_DIR = REPO_ROOT / "bindings" / "python" / "docs"
 JULIA_DOCS_DIR = REPO_ROOT / "bindings" / "julia" / "julia" / "docs" / "src"
 VIGNETTES_DIRS: list[Path] = [REPO_ROOT / "bindings" / "r" / "vignettes"]
 RUST_CRATE_DOCS_DIRS: list[Path] = [

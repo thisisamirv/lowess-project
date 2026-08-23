@@ -24,18 +24,18 @@ Pads beyond both endpoints by replicating the first and last observed values. Pr
 
 **Use when**: No strong prior on boundary behaviour; general-purpose smoothing.
 
-=== "Python"
-    ```python
-    import fastlowess as fl
-    import numpy as np
+```python
+import fastlowess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Lowess(boundary_policy="extend")
-    result = model.fit(x, y)
-    ```
+model = fl.Lowess(boundary_policy="extend")
+result = model.fit(x, y)
+```
+
 ---
 
 ## Reflect
@@ -44,18 +44,18 @@ Mirrors the data about both endpoints before fitting, then discards the reflecte
 
 **Use when**: Circular data (e.g., angle, day-of-year), symmetric physical quantities, or when the derivative at the boundary should be near zero.
 
-=== "Python"
-    ```python
-    import fastlowess as fl
-    import numpy as np
+```python
+import fastlowess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Lowess(boundary_policy="reflect")
-    result = model.fit(x, y)
-    ```
+model = fl.Lowess(boundary_policy="reflect")
+result = model.fit(x, y)
+```
+
 ---
 
 ## Zero
@@ -64,18 +64,18 @@ Pads with zeros beyond both endpoints. Appropriate when the underlying process i
 
 **Use when**: Signal decays to zero at both ends; zero is a meaningful boundary value.
 
-=== "Python"
-    ```python
-    import fastlowess as fl
-    import numpy as np
+```python
+import fastlowess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Lowess(boundary_policy="zero")
-    result = model.fit(x, y)
-    ```
+model = fl.Lowess(boundary_policy="zero")
+result = model.fit(x, y)
+```
+
 ---
 
 ## No Boundary
@@ -87,18 +87,18 @@ Applies no padding. Each local fit uses only the points that are actually availa
 !!! note
     Without padding, boundary fits can have higher variance and visible edge artefacts, particularly with small `fraction` values.
 
-=== "Python"
-    ```python
-    import fastlowess as fl
-    import numpy as np
+```python
+import fastlowess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Lowess(boundary_policy="noboundary")
-    result = model.fit(x, y)
-    ```
+model = fl.Lowess(boundary_policy="noboundary")
+result = model.fit(x, y)
+```
+
 ---
 
 ## Choosing a Policy

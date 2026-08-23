@@ -85,36 +85,34 @@ A variety of features, supporting a range of use cases:
 
 Currently available for R, Python, Rust, Julia, Node.js, and WebAssembly.
 
-=== "Python"
+Install from PyPI:
 
-    Install from PyPI:
+```bash
+pip install fastlowess
+```
 
-    ```bash
-    pip install fastlowess
-    ```
+Or from conda-forge:
 
-    Or from conda-forge:
+```bash
+conda install -c conda-forge fastlowess
+```
 
-    ```bash
-    conda install -c conda-forge fastlowess
-    ```
 See the [Installation Guide](getting-started/installation.md) for more options and details.
 
 ## Quick Example
 
-=== "Python"
+```python
+import fastlowess as fl
+import numpy as np
 
-    ```python
-    import fastlowess as fl
-    import numpy as np
+x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+y = np.array([2.0, 4.1, 5.9, 8.2, 9.8])
 
-    x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
-    y = np.array([2.0, 4.1, 5.9, 8.2, 9.8])
+model = fl.Lowess(fraction=0.5, iterations=3)
+result = model.fit(x, y)
+print(result.y)
+```
 
-    model = fl.Lowess(fraction=0.5, iterations=3)
-    result = model.fit(x, y)
-    print(result.y)
-    ```
 ## Getting Started
 
 1. [Installation](getting-started/installation.md) — Set up the library for your language

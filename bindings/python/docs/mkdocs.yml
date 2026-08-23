@@ -4,11 +4,10 @@ site_author: Amir Valizadeh
 site_url: https://lowess.readthedocs.io/
 
 docs_dir: .
-site_dir: ../site
 
 repo_name: thisisamirv/lowess-project
 repo_url: https://github.com/thisisamirv/lowess-project
-edit_uri: edit/main/docs/
+edit_uri: edit/main/bindings/python/docs/
 
 copyright: Copyright &copy; 2025-2026 Amir Valizadeh
 
