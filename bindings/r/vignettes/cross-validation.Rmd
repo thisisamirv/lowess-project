@@ -115,8 +115,8 @@ model <- Lowess(cv_method = "kfold", cv_fractions = fractions)
 result <- fit(model, x, y)
 
 plot(fractions, result$cv_scores, type = "b",
-     xlab = "Fraction", ylab = "CV Score (MSE)",
-     main = "Cross-Validation Score by Fraction")
+    xlab = "Fraction", ylab = "CV Score (MSE)",
+    main = "Cross-Validation Score by Fraction")
 abline(v = result$fraction_used, col = "red", lty = 2)
 ```
 

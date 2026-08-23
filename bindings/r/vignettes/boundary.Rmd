@@ -110,7 +110,7 @@ policies <- c("extend", "reflect", "zero", "noboundary")
 colors   <- c("blue", "red", "green", "purple")
 
 plot(x, y, pch = 16, col = "gray",
-     main = "Boundary Policy Comparison")
+    main = "Boundary Policy Comparison")
 
 for (i in seq_along(policies)) {
     model  <- Lowess(boundary_policy = policies[i])

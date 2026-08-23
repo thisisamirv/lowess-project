@@ -159,8 +159,8 @@ lines(result$x, result$y, col = "blue", lwd = 2)
 lines(result$x, result$confidence_lower, col = "blue", lty = 2)
 lines(result$x, result$confidence_upper, col = "blue", lty = 2)
 legend("topright", c("Data", "Smoothed", "95% CI"),
-       pch = c(16, NA, NA), lty = c(NA, 1, 2),
-       col = c("gray", "blue", "blue"))
+        pch = c(16, NA, NA), lty = c(NA, 1, 2),
+        col = c("gray", "blue", "blue"))
 ```
 
 ```{r session-info}

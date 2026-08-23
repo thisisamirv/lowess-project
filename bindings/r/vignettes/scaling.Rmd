@@ -104,7 +104,7 @@ methods <- c("mad", "mar", "mean")
 colors  <- c("blue", "red", "green")
 
 plot(x, y, pch = 16, col = "gray",
-     main = "Scaling Method Comparison (with outliers)")
+    main = "Scaling Method Comparison (with outliers)")
 
 for (i in seq_along(methods)) {
     model  <- Lowess(iterations = 3, scaling_method = methods[i])

@@ -86,8 +86,8 @@ smoothed_x <- smoothed_x[seq_len(n_out)]
 smoothed_y <- smoothed_y[seq_len(n_out)]
 
 plot(times, signal, pch = 16, cex = 0.4, col = "gray",
-     xlab = "Time", ylab = "Value",
-     main = "Online LOWESS — Accumulated Output")
+    xlab = "Time", ylab = "Value",
+    main = "Online LOWESS — Accumulated Output")
 lines(smoothed_x, smoothed_y, col = "blue", lwd = 2)
 ```
 
@@ -142,7 +142,7 @@ for (i in seq_len(n_chunks)) {
     idx_from <- (i - 1) * chunk_size + 1
     idx_to   <- min(i * chunk_size, n_total)
     result   <- process_chunk(model, x_all[idx_from:idx_to],
-                                      y_all[idx_from:idx_to])
+                                    y_all[idx_from:idx_to])
 }
 
 final <- finalize(model)

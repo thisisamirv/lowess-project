@@ -41,7 +41,7 @@ result <- fit(model, x, y)
 
 # Plot with bands
 plot(x, y, pch = 16, col = "gray",
-     main = "LOWESS with 95% Confidence Intervals")
+    main = "LOWESS with 95% Confidence Intervals")
 lines(result$x, result$y, col = "blue", lwd = 2)
 lines(result$x, result$confidence_lower, col = "blue", lty = 2)
 lines(result$x, result$confidence_upper, col = "blue", lty = 2)
@@ -63,7 +63,7 @@ model <- Lowess(fraction = 0.5, prediction_intervals = 0.95)
 result <- fit(model, x, y)
 
 plot(x, y, pch = 16, col = "gray",
-     main = "LOWESS with 95% Prediction Intervals")
+    main = "LOWESS with 95% Prediction Intervals")
 lines(result$x, result$y, col = "blue", lwd = 2)
 lines(result$x, result$prediction_lower, col = "red", lty = 2)
 lines(result$x, result$prediction_upper, col = "red", lty = 2)
@@ -87,7 +87,7 @@ model <- Lowess(
 result <- fit(model, x, y)
 
 plot(x, y, pch = 16, col = "gray",
-     main = "Confidence vs Prediction Intervals")
+    main = "Confidence vs Prediction Intervals")
 lines(result$x, result$y, col = "blue", lwd = 2)
 
 # Confidence interval (narrow, blue)
@@ -99,9 +99,9 @@ lines(result$x, result$prediction_lower, col = "red", lty = 3)
 lines(result$x, result$prediction_upper, col = "red", lty = 3)
 
 legend("topright",
-       c("Data", "Smoothed", "95% CI", "95% PI"),
-       pch = c(16, NA, NA, NA), lty = c(NA, 1, 2, 3),
-       col = c("gray", "blue", "blue", "red"))
+        c("Data", "Smoothed", "95% CI", "95% PI"),
+        pch = c(16, NA, NA, NA), lty = c(NA, 1, 2, 3),
+        col = c("gray", "blue", "blue", "red"))
 ```
 
 ---

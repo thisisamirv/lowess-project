@@ -52,14 +52,14 @@ result <- fit(model, positions, observed)
 
 # Plot
 plot(positions, observed, pch = ".", col = "gray",
-     xlab = "Genomic Position (bp)", ylab = "Methylation Level",
-     main = "Methylation Profile Smoothing")
+    xlab = "Genomic Position (bp)", ylab = "Methylation Level",
+    main = "Methylation Profile Smoothing")
 lines(result$x, result$y, col = "blue", lwd = 2)
 lines(result$x, result$confidence_lower, col = "blue", lty = 2)
 lines(result$x, result$confidence_upper, col = "blue", lty = 2)
 legend("topright", c("Observed", "Smoothed", "95% CI"),
-       pch = c(1, NA, NA), lty = c(NA, 1, 2),
-       col = c("gray", "blue", "blue"))
+        pch = c(1, NA, NA), lty = c(NA, 1, 2),
+        col = c("gray", "blue", "blue"))
 ```
 
 ---
@@ -98,8 +98,8 @@ model <- Lowess(
 threshold <- quantile(result$y, 0.75)
 
 plot(positions, signal_noisy, pch = 16, cex = 0.4, col = "gray",
-     xlab = "Genomic Position", ylab = "Read Count",
-     main = "ChIP-seq Signal Smoothing")
+    xlab = "Genomic Position", ylab = "Read Count",
+    main = "ChIP-seq Signal Smoothing")
 lines(result$x, result$y, col = "blue", lwd = 2)
 abline(h = threshold, col = "red", lty = 2)
 ```

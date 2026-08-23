@@ -37,10 +37,10 @@ model <- Lowess(fraction = 0.1, iterations = 3)
 result <- fit(model, t, y)
 
 plot(t, y, col = "gray", pch = ".",
-     xlab = "Time", ylab = "Value", main = "Trend Extraction")
+    xlab = "Time", ylab = "Value", main = "Trend Extraction")
 lines(result$x, result$y, col = "blue", lwd = 2)
 legend("topleft", c("Observed", "Trend (LOWESS)"),
-       pch = c(1, NA), lty = c(NA, 1), col = c("gray", "blue"))
+        pch = c(1, NA), lty = c(NA, 1), col = c("gray", "blue"))
 ```
 
 ---
@@ -69,12 +69,12 @@ residual <- y - result$y
 
 par(mfrow = c(2, 1))
 plot(t, y, type = "l", col = "gray",
-     main = "Original + LOWESS Trend", xlab = "Month", ylab = "Value")
+    main = "Original + LOWESS Trend", xlab = "Month", ylab = "Value")
 lines(result$x, result$y, col = "blue", lwd = 2)
 
 plot(t, residual, type = "l", col = "darkgreen",
-     main = "Detrended Residual (Seasonal Component)",
-     xlab = "Month", ylab = "Residual")
+    main = "Detrended Residual (Seasonal Component)",
+    xlab = "Month", ylab = "Residual")
 abline(h = 0, lty = 2, col = "red")
 par(mfrow = c(1, 1))
 ```
@@ -97,7 +97,7 @@ model <- Lowess(fraction = 0.2, iterations = 2)
 result <- fit(model, t_irregular, y_irregular)
 
 plot(t_irregular, y_irregular, pch = 16, cex = 0.4, col = "gray",
-     xlab = "Time", ylab = "Value", main = "Irregularly Sampled Time Series")
+    xlab = "Time", ylab = "Value", main = "Irregularly Sampled Time Series")
 lines(result$x, result$y, col = "blue", lwd = 2)
 ```
 
@@ -124,8 +124,8 @@ model <- Lowess(
 result <- fit(model, t, y)
 
 plot(t, y, pch = ".", col = "gray",
-     xlab = "Time", ylab = "Value",
-     main = "Trend with 95% Confidence and Prediction Intervals")
+    xlab = "Time", ylab = "Value",
+    main = "Trend with 95% Confidence and Prediction Intervals")
 polygon(c(result$x, rev(result$x)),
         c(result$prediction_upper, rev(result$prediction_lower)),
         col = rgb(0, 0, 1, 0.08), border = NA)
@@ -134,8 +134,8 @@ polygon(c(result$x, rev(result$x)),
         col = rgb(0, 0, 1, 0.20), border = NA)
 lines(result$x, result$y, col = "blue", lwd = 2)
 legend("topleft", c("PI 95%", "CI 95%", "Trend"),
-       fill = c(rgb(0, 0, 1, 0.08), rgb(0, 0, 1, 0.20), NA),
-       lty  = c(NA, NA, 1), col = c(NA, NA, "blue"), border = NA)
+        fill = c(rgb(0, 0, 1, 0.08), rgb(0, 0, 1, 0.20), NA),
+        lty  = c(NA, NA, 1), col = c(NA, NA, "blue"), border = NA)
 ```
 
 ```{r session-info}
