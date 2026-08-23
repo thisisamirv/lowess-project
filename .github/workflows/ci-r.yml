@@ -103,7 +103,6 @@ jobs:
           Rscript -e "BiocCheck::BiocCheck(list.files(pattern='[.]tar[.]gz$')[1], new_package=FALSE, no_check_vignettes=TRUE, quit_with_status=TRUE)"
 
       - name: make r-dev
-        if: matrix.os == 'ubuntu-latest'
         run: make r-dev
 
   srr:
