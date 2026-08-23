@@ -25,8 +25,6 @@ Useful links:
 
 - <https://github.com/thisisamirv/lowess-project>
 
-- <https://lowess.readthedocs.io/>
-
 - Report bugs at <https://github.com/thisisamirv/lowess-project/issues>
 
 ## Author

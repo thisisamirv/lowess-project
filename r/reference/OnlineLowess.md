@@ -131,10 +131,6 @@ OnlineLowess(
 
 An OnlineLowess object.
 
-## See also
-
-<https://lowess.readthedocs.io/> for full documentation.
-
 ## Examples
 
 ``` r

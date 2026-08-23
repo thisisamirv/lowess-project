@@ -150,10 +150,6 @@ Lowess(
 
 A Lowess object.
 
-## See also
-
-<https://lowess.readthedocs.io/> for full documentation.
-
 ## Examples
 
 ``` r
