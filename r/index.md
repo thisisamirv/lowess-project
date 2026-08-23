@@ -14,7 +14,6 @@
 (C++)](https://img.shields.io/badge/libfastlowess_(C++)-44A833?logo=anaconda&logoColor=white)](https://anaconda.org/conda-forge/libfastlowess)
 [![rfastlowess
 (R)](https://img.shields.io/badge/rfastlowess_(R)-44A833?logo=anaconda&logoColor=white)](https://anaconda.org/conda-forge/r-rfastlowess)  
-[![CI](https://github.com/thisisamirv/lowess-project/actions/workflows/ci.yml/badge.svg)](https://github.com/thisisamirv/lowess-project/actions/workflows/ci.yml)
 [![Status at rOpenSci Software Peer
 Review](https://badges.ropensci.org/769_status.svg)](https://github.com/ropensci/software-review/issues/769)
 
