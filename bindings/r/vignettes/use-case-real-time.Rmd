@@ -70,7 +70,7 @@ for (i in seq_len(n)) {
     result <- add_point(model, times[i], signal[i])
     if (!is.null(result)) {
         n_out <- n_out + 1L
-        smoothed_x[n_out] <- result$x
+        smoothed_x[n_out] <- times[i]
         smoothed_y[n_out] <- result$y
     }
 }

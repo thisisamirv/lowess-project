@@ -86,9 +86,6 @@ jobs:
 
       - uses: julia-actions/cache@v3
 
-      - name: Relax JLL dependency for CI
-        uses: ./.github/actions/relax-julia-jll
-
       - name: Install docs dependencies
         run: |
           julia --project=bindings/julia/julia/docs -e '
