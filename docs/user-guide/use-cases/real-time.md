@@ -40,27 +40,6 @@ For true real-time applications where each point must be processed immediately.
         if result is not None:
             print(f"Time {xi:.0f}: smoothed = {result.y:.2f}")
     ```
-=== "WebAssembly"
-    ```javascript
-    const { OnlineLowess } = require('fastlowess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const processor = new OnlineLowess(
-        { fraction: 0.3, iterations: 1 },
-        { window_capacity: 25, min_points: 5, update_mode: "incremental" }
-    );
-
-    for (let i = 0; i < x.length; i++) {
-        const res = processor.add_point(x[i], y[i]);
-        if (res !== undefined && res !== null) {
-            // Update dashboard UI with res.y
-        }
-    }
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -133,27 +112,6 @@ For large datasets that arrive in batches or files.
     
     print(f"Processed {len(result.y)} points")
     ```
-=== "WebAssembly"
-    ```javascript
-    const { StreamingLowess } = require('fastlowess-wasm');
-
-    const n = 50;
-    const x1 = Float64Array.from({ length: n }, (_, i) => i);
-    const y1 = Float64Array.from(x1, xi => Math.sin(xi * 0.1) + 0.1);
-    const x2 = Float64Array.from({ length: n }, (_, i) => n + i);
-    const y2 = Float64Array.from(x2, xi => Math.sin(xi * 0.1) + 0.1);
-
-    const processor = new StreamingLowess(
-        { fraction: 0.1, iterations: 2 },
-        { chunk_size: 5000, overlap: 500 }
-    );
-
-    // Process chunks as they arrive
-    const result1 = processor.process_chunk(x1, y1);
-    const result2 = processor.process_chunk(x2, y2);
-    const finalResult = processor.finalize();
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -214,32 +172,6 @@ The dashboard pattern uses a plain LOWESS fit on a manually managed sliding wind
             model = fl.Lowess(fraction=0.4)
             result = model.fit(np.array(data_x, dtype=float), np.array(data_y, dtype=float))
             current_smoothed = result.y[-1]
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { Lowess } = require('fastlowess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    // Sliding window logic
-    const windowX = [], windowY = [];
-    for (let i = 0; i < x.length; i++) {
-        windowX.push(x[i]);
-        windowY.push(y[i]);
-
-        if (windowX.length > 50) {
-            windowX.shift();
-            windowY.shift();
-        }
-
-        if (windowX.length < 2) continue;
-        const model = new Lowess({ fraction: 0.4 });
-        const result = model.fit(new Float64Array(windowX), new Float64Array(windowY));
-        const smoothed = result.y[result.y.length - 1];
-    }
     ```
 
 === "C++"

@@ -40,23 +40,6 @@ Time series data often contains noise, seasonality, and trends. LOWESS provides 
     plt.title("Trend Extraction")
     plt.show()
     ```
-=== "WebAssembly"
-    ```javascript
-    const { Lowess } = require('fastlowess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Lowess({ 
-        fraction: 0.1, 
-        iterations: 3 
-    });
-    const result = model.fit(x, y);
-
-    // Trend values in result.y
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -121,24 +104,6 @@ Setting `return_residuals = True` stores `observed − smoothed` alongside the s
     plt.title("Detrended (Residuals)")
     plt.tight_layout()
     ```
-=== "WebAssembly"
-    ```javascript
-    const { Lowess } = require('fastlowess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Lowess({ 
-        fraction: 0.3, 
-        iterations: 3, 
-        return_residuals: true 
-    });
-    const result = model.fit(x, y);
-
-    // Access result.y (trend) and result.residuals (detrended)
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -205,24 +170,6 @@ Prediction intervals widen the uncertainty band to include both the uncertainty 
     )
     plt.legend()
     ```
-=== "WebAssembly"
-    ```javascript
-    const { Lowess } = require('fastlowess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Lowess({
-        fraction: 0.2,
-        iterations: 3,
-        prediction_intervals: 0.95
-    });
-    const result = model.fit(x, y);
-
-    // Access result.prediction_lower and result.prediction_upper
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -275,17 +222,6 @@ LOWESS naturally handles irregular time sampling:
     model = fl.Lowess(fraction=0.2)
     result = model.fit(t_irregular, y_irregular)
     ```
-=== "WebAssembly"
-    ```javascript
-    const { Lowess } = require('fastlowess-wasm');
-
-    const n = 100;
-    const tIrregular = Float64Array.from({ length: n }, (_, i) => i * 1.0 + (i * 31 % 10) * 0.1).sort((a, b) => a - b);
-    const yIrregular = Float64Array.from(tIrregular, t => 10 + 0.3 * t + 2.0 * Math.sin(t * 0.1));
-    const model = new Lowess({ fraction: 0.2 });
-    const result = model.fit(tIrregular, yIrregular);
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -339,21 +275,6 @@ Use different fractions to extract features at different scales:
     plt.legend()
     plt.title("Multi-Scale LOWESS")
     ```
-=== "WebAssembly"
-    ```javascript
-    const { Lowess } = require('fastlowess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const trends = [0.05, 0.2, 0.5].map(f => {
-        const model = new Lowess({ fraction: f });
-        const result = model.fit(x, y);
-        return result.y;
-    });
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -406,19 +327,6 @@ Biological application:
 
     print(f"R²: {result.diagnostics.r_squared:.3f}")
     ```
-=== "WebAssembly"
-    ```javascript
-    const { Lowess } = require('fastlowess-wasm');
-
-    const n = 24;
-    const hours = Float64Array.from({ length: n }, (_, i) => i);
-    const expression = Float64Array.from(hours, h => 5 + 3 * Math.sin(h * Math.PI / 12) + (h % 3) * 0.2);
-    const model = new Lowess({ fraction: 0.3, iterations: 3, return_diagnostics: true });
-    const result = model.fit(hours, expression);
-
-    console.log("R²:", result.diagnostics.r_squared);
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>

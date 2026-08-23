@@ -57,24 +57,6 @@ Standard mode for complete datasets. **Supports all features.**
     )
     result = model.fit(x, y)
     ```
-=== "WebAssembly"
-    ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Lowess({
-        fraction: 0.5,
-        iterations: 3,
-        confidence_intervals: 0.95,
-        prediction_intervals: 0.95,
-        return_diagnostics: true
-    });
-    const result = model.fit(x, y);
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -157,33 +139,6 @@ Process large datasets in chunks with configurable overlap.
     model.process_chunk(x, y)
     result = model.finalize()
     ```
-=== "WebAssembly"
-    ```javascript
-    const { StreamingLowess } = require('./fastlowess_wasm.js');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const dataChunks = [
-        { x: x.slice(0, 50), y: y.slice(0, 50) },
-        { x: x.slice(50), y: y.slice(50) }
-    ];
-
-    const processor = new StreamingLowess(
-        { fraction: 0.3, iterations: 2 },
-        { chunk_size: 5000, overlap: 500 }
-    );
-
-    // Process chunks
-    for (const {x, y} of dataChunks) {
-        const result = processor.process_chunk(x, y);
-        // ...
-    }
-
-    const finalResult = processor.finalize();
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -269,30 +224,6 @@ Incremental updates with a sliding window for real-time data.
         if result is not None:
             print(result.y)
     ```
-=== "WebAssembly"
-    ```javascript
-    const { OnlineLowess } = require('./fastlowess_wasm.js');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const sensorStream = Array.from({ length: n }, (_, i) => [x[i], y[i]]);
-
-    const processor = new OnlineLowess(
-        { fraction: 0.2, iterations: 1 },
-        { window_capacity: 100, min_points: 5, update_mode: "incremental" }
-    );
-
-    // Add points
-    for (const [xi, yi] of sensorStream) {
-        const output = processor.add_point(xi, yi);
-        if (output !== undefined && output !== null) {
-            console.log(`Smoothed: ${output.y.toFixed(2)}`);
-        }
-    }
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>

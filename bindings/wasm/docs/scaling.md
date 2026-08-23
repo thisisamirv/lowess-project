@@ -31,39 +31,16 @@ First centers residuals at their median, then takes the median of the absolute d
 
 **Use when**: Data may contain outliers (default for most applications).
 
-=== "Python"
-    ```python
-    import fastlowess as fl
-    import numpy as np
+```javascript
+const { Lowess } = require('fastlowess-wasm');
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+const n = 100;
+const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
-    model = fl.Lowess(iterations=3, scaling_method="mad")
-    result = model.fit(x, y)
-    ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastlowess::Lowess model({ .iterations = 3, .scaling_method = "mad" });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
+const model = new Lowess({ iterations: 3, scaling_method: "mad" });
+const result = model.fit(x, y);
+```
 
 ---
 
@@ -75,39 +52,16 @@ Uses the uncentered median — unlike MAD it does not subtract the residual medi
 
 **Use when**: Speed matters and data have minimal systematic bias in residuals.
 
-=== "Python"
-    ```python
-    import fastlowess as fl
-    import numpy as np
+```javascript
+const { Lowess } = require('fastlowess-wasm');
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+const n = 100;
+const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
-    model = fl.Lowess(iterations=3, scaling_method="mar")
-    result = model.fit(x, y)
-    ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastlowess::Lowess model({ .iterations = 3, .scaling_method = "mar" });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
+const model = new Lowess({ iterations: 3, scaling_method: "mar" });
+const result = model.fit(x, y);
+```
 
 ---
 
@@ -119,39 +73,16 @@ Arithmetic mean of absolute residuals. Non-robust: a single extreme outlier infl
 
 **Use when**: Clean data with no outliers; maximum computation speed required.
 
-=== "Python"
-    ```python
-    import fastlowess as fl
-    import numpy as np
+```javascript
+const { Lowess } = require('fastlowess-wasm');
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+const n = 100;
+const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
-    model = fl.Lowess(iterations=3, scaling_method="mean")
-    result = model.fit(x, y)
-    ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastlowess::Lowess model({ .iterations = 3, .scaling_method = "mean" });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
+const model = new Lowess({ iterations: 3, scaling_method: "mean" });
+const result = model.fit(x, y);
+```
 
 ---
 

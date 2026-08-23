@@ -71,21 +71,6 @@ that would otherwise include it.
     model = Lowess(fraction=0.5, iterations=0)
     result = model.fit(x, y, custom_weights=weights)
     ```
-=== "WebAssembly"
-    ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
-
-    const x = Float64Array.from({length: 10}, (_, i) => i);
-    const y = Float64Array.from(x, v => v * 2);
-    y[5] = 100.0; // spike
-
-    const weights = new Float64Array(10).fill(1.0);
-    weights[5] = 0.0; // exclude the spike
-
-    const model = new Lowess({fraction: 0.5, iterations: 0});
-    const result = model.fit(x, y, weights);
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -140,22 +125,6 @@ reference instruments, or low-noise observations.
     model = Lowess(fraction=0.5)
     result = model.fit(x, y, custom_weights=weights)
     ```
-=== "WebAssembly"
-    ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const calibrationIndices = [5, 20, 40, 60, 80];
-    const weights = new Float64Array(x.length).fill(1.0);
-    for (const i of calibrationIndices) weights[i] = 10.0;
-
-    const model = new Lowess({fraction: 0.5});
-    const result = model.fit(x, y, weights);
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -207,20 +176,6 @@ weighting.
     model = Lowess(fraction=0.5)
     result = model.fit(x, y, custom_weights=weights)
     ```
-=== "WebAssembly"
-    ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const sigma = Float64Array.from({ length: n }, (_, i) => 0.1 + (i % 4) * 0.1);
-    const weights = Float64Array.from(sigma, s => 1.0 / (s * s));
-    const model = new Lowess({fraction: 0.5});
-    const result = model.fit(x, y, weights);
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -279,21 +234,6 @@ for *known* bad points and robustness for *unknown* contamination.
     model = Lowess(fraction=0.4, iterations=3)
     result = model.fit(x, y, custom_weights=weights)
     ```
-=== "WebAssembly"
-    ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const weights = new Float64Array(x.length).fill(1.0);
-    weights[3] = 0.0;
-
-    const model = new Lowess({fraction: 0.4, iterations: 3});
-    const result = model.fit(x, y, weights);
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>

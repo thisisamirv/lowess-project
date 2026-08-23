@@ -61,26 +61,6 @@ A small `fraction = 0.1` lets LOWESS follow fine-scale spatial structure without
     plt.title("Methylation Profile Smoothing")
     plt.show()
     ```
-=== "WebAssembly"
-    ```javascript
-    const { Lowess } = require('fastlowess-wasm');
-
-    const n = 100;
-    const positions = Float64Array.from({ length: n }, (_, i) => i * 100.0);
-    const observed = Float64Array.from(positions, p => 50 + Math.sin(p / 100) * 20 + ((p * 7 % 17) / 17 - 0.5) * 5);
-
-    // positions and observed are your methylation data (Float64Array)
-    const model = new Lowess({
-        fraction: 0.1,
-        iterations: 3,
-        confidence_intervals: 0.95
-    });
-    const result = model.fit(positions, observed);
-
-    // Smoothed profile in result.y
-    // CI bounds in result.confidence_lower/upper
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -153,25 +133,6 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
     peaks = positions[result.y > threshold]
     print(f"Peak regions: {peaks}")
     ```
-=== "WebAssembly"
-    ```javascript
-    const { Lowess } = require('fastlowess-wasm');
-
-    const n = 100;
-    const positions = Float64Array.from({ length: n }, (_, i) => i * 100.0);
-    const observed = Float64Array.from(positions, p => 50 + Math.sin(p / 100) * 20 + ((p * 7 % 17) / 17 - 0.5) * 5);
-
-    const model = new Lowess({
-        fraction: 0.05,
-        iterations: 5
-    });
-    const result = model.fit(positions, observed);
-
-    // Find peaks
-    const smoothed = result.y;
-    const peaks = positions.filter((p, i) => smoothed[i] > 25.0);
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -229,22 +190,6 @@ For whole-genome data that doesn't fit in memory:
     model.process_chunk(positions, coverage)
     result = model.finalize()
     ```
-=== "WebAssembly"
-    ```javascript
-    const { StreamingLowess } = require('fastlowess-wasm');
-
-    const xChunk = Float64Array.from({ length: 1001 }, (_, i) => i * 10.0);
-    const yChunk = Float64Array.from(xChunk, p => 50 + Math.sin(p / 100) * 20 + 5.0);
-
-    const processor = new StreamingLowess(
-        { fraction: 0.05, iterations: 3 },
-        { chunk_size: 100, overlap: 10 }
-    );
-
-    processor.process_chunk(xChunk, yChunk);
-    const result = processor.finalize();
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>

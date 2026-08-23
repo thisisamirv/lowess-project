@@ -80,18 +80,6 @@ The proportion of data used for each local fit. **Most important parameter.**
     model = fl.Lowess(fraction=0.3)
     result = model.fit(x, y)
     ```
-=== "WebAssembly"
-    ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Lowess({fraction: 0.3});
-    const result = model.fit(x, y);
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -139,18 +127,6 @@ Number of robustness iterations for outlier resistance.
     model = fl.Lowess(iterations=5)
     result = model.fit(x, y)
     ```
-=== "WebAssembly"
-    ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Lowess({iterations: 5});
-    const result = model.fit(x, y);
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -194,18 +170,6 @@ Interpolation optimization threshold. Points within `delta` distance reuse the p
     model = fl.Lowess(delta=0.05)
     result = model.fit(x, y)
     ```
-=== "WebAssembly"
-    ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Lowess({delta: 0.05});
-    const result = model.fit(x, y);
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -258,18 +222,6 @@ See [Weight Functions](kernels.md) for detailed comparison.
     model = fl.Lowess(weight_function="epanechnikov")
     result = model.fit(x, y)
     ```
-=== "WebAssembly"
-    ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Lowess({weight_function: "epanechnikov"});
-    const result = model.fit(x, y);
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -318,18 +270,6 @@ See [Robustness](robustness.md) for detailed comparison.
     model = fl.Lowess(robustness_method="talwar")
     result = model.fit(x, y)
     ```
-=== "WebAssembly"
-    ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Lowess({robustness_method: "talwar"});
-    const result = model.fit(x, y);
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -381,18 +321,6 @@ For example:
     model = fl.Lowess(boundary_policy="reflect")
     result = model.fit(x, y)
     ```
-=== "WebAssembly"
-    ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Lowess({boundary_policy: "reflect"});
-    const result = model.fit(x, y);
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -443,18 +371,6 @@ For example:
     model = fl.Lowess(scaling_method="mad")
     result = model.fit(x, y)
     ```
-=== "WebAssembly"
-    ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Lowess({scaling_method: "mad"});
-    const result = model.fit(x, y);
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -505,18 +421,6 @@ For example:
     model = fl.Lowess(zero_weight_fallback="use_local_mean")
     result = model.fit(x, y)
     ```
-=== "WebAssembly"
-    ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Lowess({zero_weight_fallback: "use_local_mean"});
-    const result = model.fit(x, y);
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -557,18 +461,6 @@ Enable early stopping when robustness weights stabilize.
     model = fl.Lowess(iterations=20, auto_converge=1e-6)
     result = model.fit(x, y)
     ```
-=== "WebAssembly"
-    ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Lowess({iterations: 20, auto_converge: 1e-6});
-    const result = model.fit(x, y);
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -620,21 +512,6 @@ See [Custom Weights](custom-weights.md) for a full discussion.
     model = fl.Lowess(fraction=0.5)
     result = model.fit(x, y, custom_weights=weights)
     ```
-=== "WebAssembly"
-    ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const weights = new Float64Array(x.length).fill(1.0);
-    weights[5] = 0.0; // exclude index 5
-
-    const model = new Lowess({fraction: 0.5});
-    const result = model.fit(x, y, weights);
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -682,19 +559,6 @@ Include residuals (`y - smoothed`) in the output.
     result = model.fit(x, y)
     print(result.residuals)
     ```
-=== "WebAssembly"
-    ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Lowess({return_residuals: true});
-    const result = model.fit(x, y);
-    console.log(result.residuals);
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -747,19 +611,6 @@ Include fit quality metrics (Batch and Streaming only).
     result = model.fit(x, y)
     print(f"R²: {result.diagnostics.r_squared:.4f}")
     ```
-=== "WebAssembly"
-    ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Lowess({return_diagnostics: true});
-    const result = model.fit(x, y);
-    console.log("R²:", result.diagnostics.r_squared);
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -803,19 +654,6 @@ Include final robustness weights (useful for outlier detection).
     result = model.fit(x, y)
     outliers = [i for i, w in enumerate(result.robustness_weights) if w < 0.5]
     ```
-=== "WebAssembly"
-    ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Lowess({iterations: 3, return_robustness_weights: true});
-    const result = model.fit(x, y);
-    // result.robustness_weights contains outlier weights
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -861,19 +699,6 @@ Return per-point standard errors for the smoothed fit. Standard errors measure t
     result = model.fit(x, y)
     print(result.standard_errors)
     ```
-=== "WebAssembly"
-    ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Lowess({return_se: true});
-    const result = model.fit(x, y);
-    console.log(result.standard_errors);
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -918,18 +743,6 @@ See [Intervals](intervals.md) for detailed usage.
     model = fl.Lowess(confidence_intervals=0.95, prediction_intervals=0.95)
     result = model.fit(x, y)
     ```
-=== "WebAssembly"
-    ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Lowess({confidence_intervals: 0.95, prediction_intervals: 0.95});
-    const result = model.fit(x, y);
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -980,18 +793,6 @@ Selection strategy for automated parameter tuning.
     model = fl.Lowess(cv_method="kfold", cv_k=5)
     result = model.fit(x, y)
     ```
-=== "WebAssembly"
-    ```javascript
-    const { Lowess } = require('./fastlowess_wasm.js');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Lowess({ cv_method: "kfold", cv_k: 5 });
-    const result = model.fit(x, y);
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -1038,13 +839,6 @@ Points per chunk in Streaming mode.
     model.process_chunk(x, y)
     result = model.finalize()
     ```
-=== "WebAssembly"
-    ```javascript
-    const { StreamingLowess } = require('./fastlowess_wasm.js');
-
-    const processor = new StreamingLowess({}, { chunk_size: 10000 });
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -1089,13 +883,6 @@ Overlap between chunks in Streaming mode.
     model.process_chunk(x, y)
     result = model.finalize()
     ```
-=== "WebAssembly"
-    ```javascript
-    const { StreamingLowess } = require('./fastlowess_wasm.js');
-
-    const processor = new StreamingLowess({}, { overlap: 1000 });
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -1149,13 +936,6 @@ For example:
     model.process_chunk(x, y)
     result = model.finalize()
     ```
-=== "WebAssembly"
-    ```javascript
-    const { StreamingLowess } = require('./fastlowess_wasm.js');
-
-    const processor = new StreamingLowess({}, { merge_strategy: "weighted_average" });
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -1198,13 +978,6 @@ Maximum points held in memory for Online mode.
     model = fl.OnlineLowess(window_capacity=500)
     result = model.add_point(x[0], y[0])  # None until window fills
     ```
-=== "WebAssembly"
-    ```javascript
-    const { OnlineLowess } = require('./fastlowess_wasm.js');
-
-    const processor = new OnlineLowess({}, { window_capacity: 500 });
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -1248,13 +1021,6 @@ Minimum points required before Online filter starts producing outputs.
     model = fl.OnlineLowess(min_points=10)
     result = model.add_point(x[0], y[0])
     ```
-=== "WebAssembly"
-    ```javascript
-    const { OnlineLowess } = require('./fastlowess_wasm.js');
-
-    const processor = new OnlineLowess({}, { min_points: 10 });
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>
@@ -1304,13 +1070,6 @@ For example:
     model = fl.OnlineLowess(update_mode="full")
     result = model.add_point(x[0], y[0])
     ```
-=== "WebAssembly"
-    ```javascript
-    const { OnlineLowess } = require('./fastlowess_wasm.js');
-
-    const processor = new OnlineLowess({}, { update_mode: "full" });
-    ```
-
 === "C++"
     ```cpp
     #include <fastlowess.hpp>

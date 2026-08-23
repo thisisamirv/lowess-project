@@ -44,6 +44,7 @@ from runners.base import (
     REPO_ROOT,
     RUST_CRATE_DOCS_DIRS,
     VIGNETTES_DIRS,
+    WASM_BINDING_DOCS_DIR,
     RunResult,
     Snippet,
 )
@@ -267,6 +268,8 @@ def iter_md_files(root: Path, file_filter: str | None) -> Iterator[Path]:
             yield from sorted(rust_dir.glob("*.md"))
     if NODEJS_BINDING_DOCS_DIR.exists():
         yield from sorted(NODEJS_BINDING_DOCS_DIR.glob("*.md"))
+    if WASM_BINDING_DOCS_DIR.exists():
+        yield from sorted(WASM_BINDING_DOCS_DIR.glob("*.md"))
 
 
 def main(argv: list[str] | None = None) -> int:

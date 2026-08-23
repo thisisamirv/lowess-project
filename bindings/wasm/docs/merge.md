@@ -33,44 +33,19 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
 
 **Use when**: Chunks are large and the overlap region has uniform data density.
 
-=== "Python"
-    ```python
-    from fastlowess import StreamingLowess
-    import numpy as np
+```javascript
+const { StreamingLowess } = require('fastlowess-wasm');
 
-    rng = np.random.default_rng(42)
-    x_chunk = np.linspace(0, np.pi, 50)
-    y_chunk = np.sin(x_chunk) + rng.normal(0, 0.1, 50)
+const n = 100;
+const xChunk = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+const yChunk = Float64Array.from(xChunk, xi => Math.sin(xi) + 0.1);
 
-    model = StreamingLowess(merge_strategy="average", chunk_size=5000, overlap=500)
-    result = model.process_chunk(x_chunk, y_chunk)
-    ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastlowess::StreamingOptions opts;
-        opts.merge_strategy = "average";
-        opts.chunk_size = 5000;
-        opts.overlap = 500;
-        fastlowess::StreamingLowess stream(opts);
-        (void)stream.process_chunk(x, y);
-        auto result = stream.finalize().value();
-
-        return 0;
-    }
-    ```
+const processor = new StreamingLowess(
+    {},
+    { merge_strategy: "average", chunk_size: 5000, overlap: 500 }
+);
+const result = processor.process_chunk(xChunk, yChunk);
+```
 
 ---
 
@@ -80,26 +55,11 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
 
 **Use when**: You need final output values immediately after each chunk (no look-ahead revision); left-chunk data quality is higher.
 
-=== "Python"
-    ```python
-    from fastlowess import StreamingLowess
-    model = StreamingLowess(merge_strategy="take_first")
-    ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
+```javascript
+const { StreamingLowess } = require('fastlowess-wasm');
 
-    int main() {
-        fastlowess::StreamingOptions s_opts;
-        s_opts.merge_strategy = "take_first";
-        fastlowess::StreamingLowess model(s_opts);
-
-        return 0;
-    }
-    ```
+const stream = new StreamingLowess({}, { merge_strategy: 'take_first' });
+```
 
 ---
 
@@ -109,26 +69,11 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
 
 **Use when**: Right-chunk context improves overlap quality; you are post-processing complete data rather than streaming live.
 
-=== "Python"
-    ```python
-    from fastlowess import StreamingLowess
-    model = StreamingLowess(merge_strategy="take_last")
-    ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
+```javascript
+const { StreamingLowess } = require('fastlowess-wasm');
 
-    int main() {
-        fastlowess::StreamingOptions s_opts;
-        s_opts.merge_strategy = "take_last";
-        fastlowess::StreamingLowess model(s_opts);
-
-        return 0;
-    }
-    ```
+const stream = new StreamingLowess({}, { merge_strategy: 'take_last' });
+```
 
 ---
 
@@ -142,30 +87,14 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
 
 **Use when**: Minimising boundary artefacts is more important than speed; moderate overlap (10–20 % of chunk size).
 
-=== "Python"
-    ```python
-    from fastlowess import StreamingLowess
-    model = StreamingLowess(
-        merge_strategy="weighted_average",
-        chunk_size=5000,
-        overlap=500
-    )
-    ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
+```javascript
+const { StreamingLowess } = require('fastlowess-wasm');
 
-    int main() {
-        fastlowess::StreamingOptions s_opts;
-        s_opts.merge_strategy = "weighted_average";
-        fastlowess::StreamingLowess model(s_opts);
-
-        return 0;
-    }
-    ```
+const processor = new StreamingLowess(
+    {},
+    { merge_strategy: "weighted_average", chunk_size: 5000, overlap: 500 }
+);
+```
 
 ---
 
