@@ -11,9 +11,12 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
-> **See also:** [Choosing an Execution Mode](adapter-choice.html) for a comparison of all three modes.
+> **See also:** [Choosing an Execution Mode](adapter-choice.html) for a
+> comparison of all three modes.
 
-Processes data in fixed-size chunks with configurable overlap. Results for each chunk are returned after calling `process_chunk()`. Call `finalize()` after the last chunk to flush remaining buffered points.
+Processes data in fixed-size chunks with configurable overlap. Results for each
+chunk are returned after calling `process_chunk()`. Call `finalize()` after the
+last chunk to flush remaining buffered points.
 
 ## When to Use
 

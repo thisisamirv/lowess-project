@@ -13,13 +13,16 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 ## Overview
 
-LOWESS provides flexible trend extraction from time series without parametric assumptions. It handles irregular sampling, noise, and outliers naturally.
+LOWESS provides flexible trend extraction from time series without parametric
+assumptions. It handles irregular sampling, noise, and outliers naturally.
 
 ---
 
 ## Basic Trend Extraction
 
-`fraction = 0.1` sizes the neighbourhood to 10% of the data at each evaluation point — narrow enough to follow a slowly varying trend without smearing periodic variation. Three robustness `iterations` down-weight noise spikes.
+`fraction = 0.1` sizes the neighbourhood to 10% of the data at each evaluation
+point — narrow enough to follow a slowly varying trend without smearing periodic
+variation. Three robustness `iterations` down-weight noise spikes.
 
 ```{r use_case_time_series_1}
 library(rfastlowess)
@@ -102,7 +105,9 @@ lines(result$x, result$y, col = "blue", lwd = 2)
 
 ## Uncertainty Bands for Forecasting Context
 
-Prediction intervals widen the uncertainty band to include both the uncertainty in the fitted curve and the expected scatter of new observations. `fraction = 0.2` offers a balance between local detail and stable interval width.
+Prediction intervals widen the uncertainty band to include both the uncertainty
+in the fitted curve and the expected scatter of new observations. `fraction =
+0.2` offers a balance between local detail and stable interval width.
 
 ```{r use_case_time_series_4}
 library(rfastlowess)

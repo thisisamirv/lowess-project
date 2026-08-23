@@ -11,7 +11,8 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
-> **See also:** [Choosing an Execution Mode](adapter-choice.html) for a comparison of all three modes.
+> **See also:** [Choosing an Execution Mode](adapter-choice.html) for a
+> comparison of all three modes.
 
 Maintains a sliding window and processes each incoming point immediately.
 

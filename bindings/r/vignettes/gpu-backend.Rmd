@@ -13,12 +13,18 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 ## Overview
 
-The batch `Lowess` type can execute on a GPU-accelerated backend powered by `wgpu` (Vulkan / Metal / DX12). The GPU backend reimplements almost the entire LOWESS pipeline — local regression fitting, robustness iterations, interval bounds, and cross-validation — as compute shaders, so all anchor points are fitted in parallel.
+The batch `Lowess` type can execute on a GPU-accelerated backend powered by
+`wgpu` (Vulkan / Metal / DX12). The GPU backend reimplements almost the entire
+LOWESS pipeline — local regression fitting, robustness iterations, interval
+bounds, and cross-validation — as compute shaders, so all anchor points are
+fitted in parallel.
 
 > **Batch only.** GPU support applies to the batch `Lowess` type only.
 > `StreamingLowess` and `OnlineLowess` remain CPU-only.
 
-GPU acceleration is worth enabling for roughly 10K+ points. For smaller inputs the CPU backend (optionally with `parallel = TRUE`) is typically faster once GPU dispatch overhead is accounted for.
+GPU acceleration is worth enabling for roughly 10K+ points. For smaller inputs
+the CPU backend (optionally with `parallel = TRUE`) is typically faster once GPU
+dispatch overhead is accounted for.
 
 ---
 
@@ -43,13 +49,15 @@ library(rfastlowess)
 gpu_available()
 ```
 
-Returns `TRUE` if the currently loaded library was built with GPU support, `FALSE` otherwise.
+Returns `TRUE` if the currently loaded library was built with GPU support,
+`FALSE` otherwise.
 
 ---
 
 ## Installing GPU Support
 
-GPU support is opt-in and not included in standard CRAN / R-universe builds. Install it with a one-time download:
+GPU support is opt-in and not included in standard CRAN / R-universe builds.
+Install it with a one-time download:
 
 ```{r gpu_backend_2, eval=FALSE}
 library(rfastlowess)
@@ -58,7 +66,8 @@ install_gpu()          # interactive — prompts for confirmation
 install_gpu(yes = TRUE) # non-interactive
 ```
 
-`install_gpu()` downloads a prebuilt GPU-enabled library from the matching GitHub release and copies it into the installed package's `libs/` directory.
+`install_gpu()` downloads a prebuilt GPU-enabled library from the matching
+GitHub release and copies it into the installed package's `libs/` directory.
 
 **Restart R after installation.**
 
@@ -101,13 +110,16 @@ result <- fit(model, x, y)
 | `fraction = 0.5`, n ≥ 50K | GPU outperforms CPU-parallel |
 | `fraction = 0.1`, n ≥ 250K | GPU crossover point |
 
-At n = 1M (`fraction = 0.5`, 3 iterations), the GPU backend is approximately **6.6×** faster than CPU-parallel.
+At n = 1M (`fraction = 0.5`, 3 iterations), the GPU backend is approximately
+**6.6×** faster than CPU-parallel.
 
 ---
 
 ## Fallback Behaviour
 
-If `backend = "gpu"` is requested but GPU support is not installed, an informative error is raised pointing to `install_gpu()`. No silent fallback to CPU occurs.
+If `backend = "gpu"` is requested but GPU support is not installed, an
+informative error is raised pointing to `install_gpu()`. No silent fallback to
+CPU occurs.
 
 ```{r session-info}
 sessionInfo()

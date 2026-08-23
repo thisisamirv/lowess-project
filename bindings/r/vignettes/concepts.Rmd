@@ -13,9 +13,12 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 ## What is LOWESS?
 
-**LOWESS** (Locally Weighted Scatterplot Smoothing) is a nonparametric regression method that fits smooth curves through scatter plots without assuming a global functional form.
+**LOWESS** (Locally Weighted Scatterplot Smoothing) is a nonparametric
+regression method that fits smooth curves through scatter plots without assuming
+a global functional form.
 
-Unlike parametric methods (linear regression, polynomial fitting), LOWESS adapts locally to the data structure, making it ideal for:
+Unlike parametric methods (linear regression, polynomial fitting), LOWESS adapts
+locally to the data structure, making it ideal for:
 
 - **Exploratory data analysis** — Discover patterns without assumptions
 - **Trend estimation** — Extract signals from noisy time series
@@ -31,16 +34,19 @@ Unlike parametric methods (linear regression, polynomial fitting), LOWESS adapts
 For each point in your data, LOWESS:
 
 1. **Selects neighbors** — Choose the nearest points (controlled by `fraction`)
-2. **Assigns weights** — Closer points get higher weights (using a kernel function)
+2. **Assigns weights** — Closer points get higher weights (using a kernel
+   function)
 3. **Fits locally** — Perform weighted least squares regression
 4. **Extracts value** — Use the fitted value as the smoothed estimate
-5. **Iterates** (optional) — Reweight points based on residuals to reduce outlier influence
+5. **Iterates** (optional) — Reweight points based on residuals to reduce
+   outlier influence
 
 ---
 
 ## The Fraction Parameter
 
-The `fraction` (also called bandwidth or span) is the most important parameter. It controls what proportion of data is used for each local fit.
+The `fraction` (also called bandwidth or span) is the most important parameter.
+It controls what proportion of data is used for each local fit.
 
 ![Effect of the fraction parameter](../man/figures/fraction_comparison.svg)
 
@@ -51,13 +57,15 @@ The `fraction` (also called bandwidth or span) is the most important parameter. 
 | **0.5–0.7** | Heavy smoothing | Noisy data, trend extraction |
 | **0.7–1.0** | Very smooth | Strong noise, global trends |
 
-> **Tip:** Start with `fraction=0.67` (the default) and adjust based on visual inspection. Use cross-validation for automated selection.
+> **Tip:** Start with `fraction=0.67` (the default) and adjust based on visual
+> inspection. Use cross-validation for automated selection.
 
 ---
 
 ## Robustness Iterations
 
-Standard LOWESS is sensitive to outliers. **Robustness iterations** downweight points with large residuals:
+Standard LOWESS is sensitive to outliers. **Robustness iterations** downweight
+points with large residuals:
 
 ![Effect of robustness iterations](../man/figures/robust_iter_comparison.svg)
 
@@ -91,7 +99,7 @@ Choose the right mode based on your use case:
 | Mode | Use Case | Memory | Features |
 | --- | --- | --- | --- |
 | **Batch** | Complete datasets | Entire dataset | All features |
-| **Streaming** | Large files (>100K points) | One chunk | Residuals, robustness |
+| **Streaming** | >100K points | One chunk | Residuals, robustness |
 | **Online** | Real-time data | Fixed window | Incremental updates |
 
 Decision guide:

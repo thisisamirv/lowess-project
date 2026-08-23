@@ -15,7 +15,10 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 ## Overview
 
-Streaming LOWESS processes data in fixed-size chunks with a configurable overlap. Points inside the overlap zone are fitted twice — once by the left chunk and once by the right chunk. The `merge_strategy` decides how those two estimates are combined.
+Streaming LOWESS processes data in fixed-size chunks with a configurable
+overlap. Points inside the overlap zone are fitted twice — once by the left
+chunk and once by the right chunk. The `merge_strategy` decides how those two
+estimates are combined.
 
 ```text
 Chunk A:   [=========|=====]
@@ -39,7 +42,8 @@ Overlap:            [=====]
 
 ## Weighted Average (Default)
 
-Blends left- and right-chunk estimates using distance-based weights. Points closer to the centre of each chunk get higher weight.
+Blends left- and right-chunk estimates using distance-based weights. Points
+closer to the centre of each chunk get higher weight.
 
 **Use when**: General-purpose streaming; most reliable option.
 
@@ -64,7 +68,8 @@ print(head(result$y))
 
 ## Average
 
-Takes the arithmetic mean of the left-chunk and right-chunk estimates in the overlap region.
+Takes the arithmetic mean of the left-chunk and right-chunk estimates in the
+overlap region.
 
 **Use when**: Chunks are large and the overlap region has uniform data density.
 
@@ -84,7 +89,8 @@ print(head(result$y))
 
 Uses only the left-chunk estimate in the overlap region.
 
-**Use when**: The left chunk has a larger context window and is expected to be more accurate at the overlap boundary.
+**Use when**: The left chunk has a larger context window and is expected to be
+more accurate at the overlap boundary.
 
 ```{r merge_3}
 model <- StreamingLowess(
@@ -102,7 +108,8 @@ print(head(result$y))
 
 Uses only the right-chunk estimate in the overlap region.
 
-**Use when**: The right chunk is expected to provide better context (e.g., more data follows).
+**Use when**: The right chunk is expected to provide better context (e.g., more
+data follows).
 
 ```{r merge_4}
 model <- StreamingLowess(

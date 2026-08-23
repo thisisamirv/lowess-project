@@ -39,8 +39,10 @@ devtools::install_github("thisisamirv/lowess-project", subdir = "bindings/r")
 ## System Requirements
 
 - **R**: 4.4.0 or later
-- **Windows**: [Rtools](https://cran.r-project.org/bin/windows/Rtools/) — required for source installation
-- **Rust**: Required for source installation only ([rustup.rs](https://rustup.rs/))
+- **Windows**: [Rtools](https://cran.r-project.org/bin/windows/Rtools/) —
+  required for source installation
+- **Rust**: Required for source installation only
+  ([rustup.rs](https://rustup.rs/))
 
 On Windows with Rtools, add the MinGW GNU target:
 

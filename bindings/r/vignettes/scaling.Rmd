@@ -13,17 +13,21 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 ## Overview
 
-When `iterations > 0`, LOWESS computes robustness weights by comparing each residual to the current residual scale estimate. The `scaling_method` parameter controls how that scale is measured.
+When `iterations > 0`, LOWESS computes robustness weights by comparing each
+residual to the current residual scale estimate. The `scaling_method` parameter
+controls how that scale is measured.
 
 The robustness weight for point $i$ is:
 
 $$w_i = B\!\left(\frac{|r_i|}{6 \cdot \hat{\sigma}}\right)$$
 
-where $B$ is the bisquare function and $\hat{\sigma}$ is the scale estimate. A larger $\hat{\sigma}$ makes the algorithm more tolerant of large residuals; a smaller one makes it more aggressive.
+where $B$ is the bisquare function and $\hat{\sigma}$ is the scale estimate. A
+larger $\hat{\sigma}$ makes the algorithm more tolerant of large residuals; a
+smaller one makes it more aggressive.
 
 | Method | Formula | Robustness | Speed |
 | --- | --- | --- | --- |
-| `"mad"` | Median of \|residuals − median(residuals)\| | Very robust | Moderate |
+| `"mad"` | Median absolute deviation from median | Very robust | Moderate |
 | `"mar"` | Median of \|residuals\| | Robust | Fast |
 | `"mean"` | Mean of \|residuals\| | Less robust | Fastest |
 
@@ -35,7 +39,9 @@ where $B$ is the bisquare function and $\hat{\sigma}$ is the scale estimate. A l
 
 $$\hat{\sigma} = \text{median}(|r_i - \text{median}(r_i)|)$$
 
-First centers residuals at their median, then takes the median of the absolute deviations. Double use of the median makes it highly resistant to extreme outliers.
+First centers residuals at their median, then takes the median of the absolute
+deviations. Double use of the median makes it highly resistant to extreme
+outliers.
 
 **Use when**: Data may contain outliers (default for most applications).
 
@@ -56,7 +62,8 @@ print(head(result$y))
 
 $$\hat{\sigma} = \text{median}(|r_i|)$$
 
-Slightly less robust than MAD because it does not center residuals first, but faster to compute.
+Slightly less robust than MAD because it does not center residuals first, but
+faster to compute.
 
 **Use when**: Residuals are roughly symmetric around zero; speed is a concern.
 

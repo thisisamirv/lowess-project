@@ -15,20 +15,24 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 ![Boundary policy comparison](../man/figures/boundary_comparison.svg)
 
-Standard LOWESS neighbourhoods become asymmetric at the boundaries: fewer points exist on one side, pulling the local fit toward the data interior. The `boundary_policy` parameter controls how the data is padded to mitigate this effect.
+Standard LOWESS neighbourhoods become asymmetric at the boundaries: fewer points
+exist on one side, pulling the local fit toward the data interior. The
+`boundary_policy` parameter controls how the data is padded to mitigate this
+effect.
 
 | Policy | Padding Strategy | Best For |
 | --- | --- | --- |
 | `"extend"` | Repeat first / last value | Most datasets (default) |
 | `"reflect"` | Mirror data at boundaries | Periodic or symmetric data |
 | `"zero"` | Pad with zeros | Data known to approach zero |
-| `"noboundary"` | No padding (Cleveland original) | Reproducing reference behaviour |
+| `"noboundary"` | No padding (Cleveland original) | Reference behaviour |
 
 ---
 
 ## Extend (Default)
 
-Pads beyond both endpoints by replicating the first and last observed values. Prevents the fit from curling toward zero.
+Pads beyond both endpoints by replicating the first and last observed values.
+Prevents the fit from curling toward zero.
 
 **Use when**: No strong prior on boundary behaviour; general-purpose smoothing.
 
@@ -47,9 +51,11 @@ print(head(result$y))
 
 ## Reflect
 
-Mirrors data at both endpoints. Prevents inflection artifacts when the signal is periodic or symmetric.
+Mirrors data at both endpoints. Prevents inflection artifacts when the signal is
+periodic or symmetric.
 
-**Use when**: Signal is periodic (e.g. time-of-day) or the boundary is a known symmetry point.
+**Use when**: Signal is periodic (e.g. time-of-day) or the boundary is a known
+symmetry point.
 
 ```{r boundary_2}
 model <- Lowess(boundary_policy = "reflect")
@@ -63,7 +69,8 @@ print(head(result$y))
 
 Pads with zeros beyond the endpoints.
 
-**Use when**: The signal is known to decay to zero at the boundaries (e.g. impulse responses, genomic signals at chromosome ends).
+**Use when**: The signal is known to decay to zero at the boundaries (e.g.
+impulse responses, genomic signals at chromosome ends).
 
 ```{r boundary_3}
 model <- Lowess(boundary_policy = "zero")
@@ -77,9 +84,11 @@ print(head(result$y))
 
 Reproduces Cleveland's original behaviour — no padding applied.
 
-**Use when**: Comparing against reference implementations; the original Cleveland algorithm behaviour is required.
+**Use when**: Comparing against reference implementations; the original
+Cleveland algorithm behaviour is required.
 
-> **Note:** Without padding, boundary fits can have higher variance and visible edge artefacts, particularly with small `fraction` values.
+> **Note:** Without padding, boundary fits can have higher variance and visible
+> edge artefacts, particularly with small `fraction` values.
 
 ```{r boundary_4}
 model <- Lowess(boundary_policy = "noboundary")

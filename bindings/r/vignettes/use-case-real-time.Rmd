@@ -13,13 +13,19 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 ## Overview
 
-When data arrives continuously from sensors, logs, or streaming pipelines, the Online adapter provides incremental smoothing without reprocessing the entire dataset.
+When data arrives continuously from sensors, logs, or streaming pipelines, the
+Online adapter provides incremental smoothing without reprocessing the entire
+dataset.
 
 ---
 
 ## Online Mode: Point-by-Point
 
-`window_capacity = 25` limits the internal buffer to the 25 most recent observations; each `add_point()` call costs O(window) rather than growing with total history. `min_points = 5` suppresses output until the window holds enough points for a stable fit. `update_mode = "incremental"` re-fits only the most recent point rather than the full window, halving typical latency.
+`window_capacity = 25` limits the internal buffer to the 25 most recent
+observations; each `add_point()` call costs O(window) rather than growing with
+total history. `min_points = 5` suppresses output until the window holds enough
+points for a stable fit. `update_mode = "incremental"` re-fits only the most
+recent point rather than the full window, halving typical latency.
 
 ### Sensor Data Example
 
@@ -47,7 +53,8 @@ for (i in seq_along(times)) {
 
 ## Accumulating Results
 
-Collect online smoothed values into a vector for downstream analysis or plotting.
+Collect online smoothed values into a vector for downstream analysis or
+plotting.
 
 ```{r use_case_real_time_2}
 library(rfastlowess)
@@ -106,9 +113,11 @@ model_full <- OnlineLowess(
 
 ## Streaming Mode for Large Batches
 
-> **Note:** Always call `finalize()` after the last chunk to flush any remaining buffered points and produce output for the tail of the dataset.
+> **Note:** Always call `finalize()` after the last chunk to flush any remaining
+> buffered points and produce output for the tail of the dataset.
 
-For large historical files arriving in chunks (not true real-time), the Streaming adapter is more efficient than Online:
+For large historical files arriving in chunks (not true real-time), the
+Streaming adapter is more efficient than Online:
 
 ```{r use_case_real_time_4}
 library(rfastlowess)

@@ -28,27 +28,30 @@ Speedup relative to R's `stats::lowess` (higher is better):
 | **Scale** (1K–10K) | 1.6 ms | 1.5× | **1.6×** |
 | **Scientific** (500–5K) | 0.9 ms | 1.4× | 1.4× |
 
-*The R column shows the average time across scenarios in multi-scenario categories. Speedups are averages across the same range.*
+*The R column shows the average time across scenarios in multi-scenario
+categories. Speedups are averages across the same range.*
 
 ---
 
 ## GPU Backend
 
-For large batch datasets, the GPU backend can outperform CPU-parallel execution. The crossover point depends on `fraction × n`:
+For large batch datasets, the GPU backend can outperform CPU-parallel execution.
+The crossover point depends on `fraction × n`:
 
 | Scenario | CPU-Parallel | GPU | Speedup |
 | --- | --- | --- | --- |
 | n = 1M, fraction = 0.5 | 1.24 s | 187 ms | **6.6×** |
 
-At `fraction = 0.5`, GPU overtakes CPU around n ≥ 50K; at smaller fractions, around n ≥ 100K–250K. See [benchmarks/README.md](https://github.com/thisisamirv/lowess-project/blob/main/benchmarks/README.md#gpu-benchmarks) for the full sweep and transfer-overhead breakdown.
-
-See the [benchmarks README](https://github.com/thisisamirv/lowess-project/blob/main/benchmarks/README.md) for full sweep details and transfer-overhead breakdown.
+At `fraction = 0.5`, GPU overtakes CPU around n ≥ 50K; at smaller fractions,
+around n ≥ 100K–250K. See the benchmarks README in the source repository
+for the full sweep and transfer-overhead breakdown.
 
 ---
 
 ## Reproducing Benchmarks
 
-The benchmarks compare `rfastlowess` against `stats::lowess` using the `microbenchmark` package.
+The benchmarks compare `rfastlowess` against `stats::lowess` using the
+`microbenchmark` package.
 
 ```{r benchmarks_1, eval=FALSE}
 # Install benchmark dependency

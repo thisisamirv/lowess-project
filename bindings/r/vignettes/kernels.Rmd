@@ -13,7 +13,8 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 ## Overview
 
-Kernel functions determine how neighbouring points contribute to each local fit. Points closer to the target receive higher weights.
+Kernel functions determine how neighbouring points contribute to each local fit.
+Points closer to the target receive higher weights.
 
 ![Weight function comparison](../man/figures/kernel_comparison.svg)
 

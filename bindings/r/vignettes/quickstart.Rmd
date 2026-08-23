@@ -13,7 +13,8 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 ## Basic Smoothing
 
-Smooth a noisy sine wave. `fraction = 0.3` and `iterations = 3` are good starting values for most signals.
+Smooth a noisy sine wave. `fraction = 0.3` and `iterations = 3` are good
+starting values for most signals.
 
 ```{r quickstart_1}
 library(rfastlowess)
@@ -34,7 +35,8 @@ cat(sprintf("First smoothed value: %.4f (true: %.4f)\n",
 
 ## With Confidence and Prediction Intervals
 
-Set `confidence_intervals` and/or `prediction_intervals` to a coverage level (0–1).
+Set `confidence_intervals` and/or `prediction_intervals` to a coverage level
+(0–1).
 
 ```{r quickstart_2}
 library(rfastlowess)

@@ -11,20 +11,23 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
-`rfastlowess` provides three execution modes for different data sizes and processing needs:
+`rfastlowess` provides three execution modes for different data sizes and
+processing needs:
 
 ![Execution mode comparison](../man/figures/adapter_comparison.svg)
 
 | Mode | Class | Use Case | Memory | Key Features |
 | --- | --- | --- | --- | --- |
-| **Batch** | `Lowess` | Complete datasets in memory | Entire dataset | All features: CI, PI, CV, GPU |
-| **Streaming** | `StreamingLowess` | Large files (>100K points) | One chunk at a time | Chunked processing with overlap |
-| **Online** | `OnlineLowess` | Real-time / live data | Fixed sliding window | Point-by-point incremental updates |
+| **Batch** | `Lowess` | Full dataset | Entire dataset | CI, PI, CV, GPU |
+| **Streaming** | `StreamingLowess` | >100K points | Per chunk | With overlap |
+| **Online** | `OnlineLowess` | Live / real-time | Sliding window | Per-point |
 
 ## Quick Decision Guide
 
-- **Data fits in memory and you need intervals or CV** → [Batch Mode](batch.html)
-- **Data is too large for memory or arrives in file chunks** → [Streaming Mode](streaming.html)
+- **Data fits in memory and you need intervals or CV** → [Batch
+  Mode](batch.html)
+- **Data is too large for memory or arrives in file chunks** → [Streaming
+  Mode](streaming.html)
 - **Data arrives point-by-point in real time** → [Online Mode](online.html)
 
 ```{r session-info}

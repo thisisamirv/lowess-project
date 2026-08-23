@@ -11,9 +11,11 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
-> **See also:** [Choosing an Execution Mode](adapter-choice.html) for a comparison of all three modes.
+> **See also:** [Choosing an Execution Mode](adapter-choice.html) for a
+> comparison of all three modes.
 
-The default mode. Processes the entire dataset at once and supports all features.
+The default mode. Processes the entire dataset at once and supports all
+features.
 
 ![Gap handling](../man/figures/gap_handling.svg)
 

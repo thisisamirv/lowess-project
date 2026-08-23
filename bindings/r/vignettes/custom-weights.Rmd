@@ -13,13 +13,18 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 ## How Custom Weights Work
 
-Per-observation weights encode data quality directly into the LOWESS fit. Standard LOWESS assigns equal prior trust to all observations. Custom weights let you override this assumption point by point — before any distance or robustness weighting is applied.
+Per-observation weights encode data quality directly into the LOWESS fit.
+Standard LOWESS assigns equal prior trust to all observations. Custom weights
+let you override this assumption point by point — before any distance or
+robustness weighting is applied.
 
 The effective weight of observation $j$ in a local fit centred at $x_i$ is:
 
-$$w_{ij} = \text{custom\_weights}[j] \times K\!\left(\frac{d_{ij}}{h_i}\right) \times r_j$$
+$$w_{ij} = \text{custom\_weights}[j] \times K\!\left(\frac{d_{ij}}{h_i}\right)
+\times r_j$$
 
-where $K$ is the distance kernel, $h_i$ is the local bandwidth, and $r_j$ is the robustness weight from the current iteration.
+where $K$ is the distance kernel, $h_i$ is the local bandwidth, and $r_j$ is the
+robustness weight from the current iteration.
 
 > **Note:** `custom_weights` applies in **Batch** mode only. It is silently
 > ignored in Streaming and Online adapters.
@@ -43,9 +48,10 @@ where $K$ is the distance kernel, $h_i$ is the local bandwidth, and $r_j$ is the
 | **When known** | Before fitting | Computed from residuals |
 | **Knowledge required** | Prior knowledge of quality | None — data-driven |
 | **Effect** | Fixed throughout fit | Adapts each iteration |
-| **Use case** | Known bad sensors, calibration | Unknown outlier contamination |
+| **Use case** | Bad sensors, calibration | Unknown outlier contamination |
 
-They compose: use both simultaneously. Custom weights suppress known bad points; robustness iterations handle residual outliers.
+They compose: use both simultaneously. Custom weights suppress known bad points;
+robustness iterations handle residual outliers.
 
 ---
 

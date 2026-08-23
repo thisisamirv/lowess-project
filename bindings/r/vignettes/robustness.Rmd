@@ -13,7 +13,8 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 ## How Robustness Works
 
-Standard LOWESS can be biased by outliers. Robustness iterations downweight points with large residuals:
+Standard LOWESS can be biased by outliers. Robustness iterations downweight
+points with large residuals:
 
 1. Fit initial LOWESS
 2. Compute residuals
@@ -50,7 +51,8 @@ print(head(result$y))
 
 ### Huber
 
-Less aggressive than bisquare; still downweights outliers but keeps moderate residuals at reduced weight.
+Less aggressive than bisquare; still downweights outliers but keeps moderate
+residuals at reduced weight.
 
 **Use when**: Mild outlier contamination; want to preserve moderate deviations.
 

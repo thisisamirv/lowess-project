@@ -21,13 +21,13 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 | **weight_function** | `"tricube"` | 7 options | Distance kernel | All |
 | **robustness_method** | `"bisquare"` | 3 options | Outlier weighting | All |
 | **scaling_method** | `"mad"` | 3 options | Scale estimate | All |
-| **zero_weight_fallback** | `"use_local_mean"` | 3 options | Zero-weight handling | All |
+| **zero_weight_fallback** | `"use_local_mean"` | 3 | Zero-weight | All |
 | **boundary_policy** | `"extend"` | 4 options | Edge padding | All |
 | **auto_converge** | `NULL` | tolerance | Early stopping | All |
 | **return_residuals** | `FALSE` | logical | Include residuals | All |
 | **return_robustness_weights** | `FALSE` | logical | Include weights | All |
 | **return_se** | `FALSE` | logical | Return standard errors | All |
-| **return_diagnostics** | `FALSE` | logical | Include metrics | Batch, Streaming |
+| **return_diagnostics** | `FALSE` | logical | Metrics | Batch, Streaming |
 | **custom_weights** | `NULL` | positive | Per-observation weights | Batch |
 | **backend** | `"cpu"` | `"cpu"`, `"gpu"` | Compute backend | Batch |
 | **parallel** | `FALSE` | `TRUE`/`FALSE` | Parallel CPU execution | Batch |
@@ -36,7 +36,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 | **cv_method** | `NULL` | method | Auto-select fraction | Batch |
 | **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
 | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
-| **merge_strategy** | `"weighted_average"` | 4 options | Merge overlaps | Streaming |
+| **merge_strategy** | `"weighted_average"` | 4 | Chunk merge | Streaming |
 | **window_capacity** | 1000 | [3, ∞) | Max window size | Online |
 | **min_points** | 2 | [2, window] | Min before output | Online |
 | **update_mode** | `"incremental"` | 2 options | Update strategy | Online |
@@ -45,15 +45,17 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 ## Parameter Options
 
-| Parameter | Available Options |
-| --- | --- |
-| **weight_function** | `"tricube"`, `"epanechnikov"`, `"gaussian"`, `"biweight"`, `"cosine"`, `"triangle"`, `"uniform"` |
-| **robustness_method** | `"bisquare"`, `"huber"`, `"talwar"` |
-| **zero_weight_fallback** | `"use_local_mean"`, `"return_original"`, `"return_none"` |
-| **boundary_policy** | `"extend"`, `"reflect"`, `"zero"`, `"noboundary"` |
-| **scaling_method** | `"mad"`, `"mar"`, `"mean"` |
-| **merge_strategy** | `"average"`, `"weighted_average"`, `"take_first"`, `"take_last"` |
-| **update_mode** | `"incremental"`, `"full"` |
+- **weight_function**: `"tricube"` (default), `"epanechnikov"`, `"gaussian"`,
+  `"biweight"`, `"cosine"`, `"triangle"`, `"uniform"`
+- **robustness_method**: `"bisquare"` (default), `"huber"`, `"talwar"`
+- **zero_weight_fallback**: `"use_local_mean"` (default),
+  `"return_original"`, `"return_none"`
+- **boundary_policy**: `"extend"` (default), `"reflect"`, `"zero"`,
+  `"noboundary"`
+- **scaling_method**: `"mad"` (default), `"mar"`, `"mean"`
+- **merge_strategy**: `"weighted_average"` (default), `"average"`,
+  `"take_first"`, `"take_last"`
+- **update_mode**: `"incremental"` (default), `"full"`
 
 ---
 
@@ -83,7 +85,8 @@ print(head(result$y))
 
 ### iterations
 
-Number of robustness iterations. Each iteration downweights high-residual points.
+Number of robustness iterations. Each iteration downweights high-residual
+points.
 
 ```{r parameters_2}
 model <- Lowess(iterations = 3)
@@ -93,7 +96,9 @@ print(head(result$y))
 
 ### delta
 
-Distance threshold for skipping intermediate points (approximation). Setting `delta > 0` speeds up computation on dense grids. Passed as a fraction of the data range.
+Distance threshold for skipping intermediate points (approximation). Setting
+`delta > 0` speeds up computation on dense grids. Passed as a fraction of the
+data range.
 
 ```{r parameters_3}
 model <- Lowess(delta = 0.01)
