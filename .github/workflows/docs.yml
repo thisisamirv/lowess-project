@@ -1,0 +1,219 @@
+name: Docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "bindings/cpp/**"
+      - "bindings/julia/**"
+      - "bindings/nodejs/**"
+      - "bindings/r/**"
+      - "bindings/wasm/**"
+      - ".github/workflows/docs.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  filter:
+    runs-on: ubuntu-latest
+    outputs:
+      cpp: ${{ steps.f.outputs.cpp }}
+      julia: ${{ steps.f.outputs.julia }}
+      nodejs: ${{ steps.f.outputs.nodejs }}
+      r: ${{ steps.f.outputs.r }}
+      wasm: ${{ steps.f.outputs.wasm }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v3
+        id: f
+        with:
+          filters: |
+            cpp:
+              - 'bindings/cpp/**'
+              - '.github/workflows/docs.yml'
+            julia:
+              - 'bindings/julia/**'
+              - '.github/workflows/docs.yml'
+            nodejs:
+              - 'bindings/nodejs/**'
+              - '.github/workflows/docs.yml'
+            r:
+              - 'bindings/r/**'
+              - '.github/workflows/docs.yml'
+            wasm:
+              - 'bindings/wasm/**'
+              - '.github/workflows/docs.yml'
+
+  cpp:
+    needs: filter
+    if: needs.filter.outputs.cpp == 'true' || github.event_name == 'workflow_dispatch'
+    name: C++ — Doxygen
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Doxygen
+        run: sudo apt-get install -y doxygen
+
+      - name: Build docs
+        run: doxygen Doxyfile
+        working-directory: bindings/cpp
+
+      - uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: bindings/cpp/html
+          target-folder: cpp
+          clean: false
+
+  julia:
+    needs: filter
+    if: needs.filter.outputs.julia == 'true' || github.event_name == 'workflow_dispatch'
+    name: Julia — Documenter.jl
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: julia-actions/setup-julia@v3
+        with:
+          version: "1"
+
+      - uses: julia-actions/cache@v3
+
+      - name: Relax JLL dependency for CI
+        uses: ./.github/actions/relax-julia-jll
+
+      - name: Install docs dependencies
+        run: |
+          julia --project=bindings/julia/julia/docs -e '
+            using Pkg
+            Pkg.develop(PackageSpec(path = "bindings/julia/julia"))
+            Pkg.instantiate()
+          '
+
+      - name: Build docs
+        run: julia --project=bindings/julia/julia/docs bindings/julia/julia/docs/make.jl
+
+      - uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: bindings/julia/julia/docs/build
+          target-folder: julia
+          clean: false
+
+  nodejs:
+    needs: filter
+    if: needs.filter.outputs.nodejs == 'true' || github.event_name == 'workflow_dispatch'
+    name: Node.js — TypeDoc
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: bindings/nodejs
+
+      - name: Build docs
+        run: npm run docs
+        working-directory: bindings/nodejs
+
+      - uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: bindings/nodejs/typedoc-out
+          target-folder: nodejs
+          clean: false
+
+  r:
+    needs: filter
+    if: needs.filter.outputs.r == 'true' || github.event_name == 'workflow_dispatch'
+    name: R — pkgdown
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: docs-r-pkgdown
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          working-directory: bindings/r
+          extra-packages: any::pkgdown any::devtools
+
+      - uses: ./.github/actions/prepare-r-source
+
+      - name: Build pkgdown site
+        shell: Rscript {0}
+        run: pkgdown::build_site_github_pages(pkg = "bindings/r", new_process = FALSE, install = TRUE)
+
+      - uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: bindings/r/docs
+          target-folder: r
+          clean: false
+
+  wasm:
+    needs: filter
+    if: needs.filter.outputs.wasm == 'true' || github.event_name == 'workflow_dispatch'
+    name: WebAssembly — TypeDoc
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: docs-wasm
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Build WASM
+        run: wasm-pack build --target bundler --release
+        working-directory: bindings/wasm
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: bindings/wasm
+
+      - name: Build docs
+        run: npm run docs
+        working-directory: bindings/wasm
+
+      - uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: bindings/wasm/typedoc-out
+          target-folder: wasm
+          clean: false
