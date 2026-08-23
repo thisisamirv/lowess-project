@@ -42,15 +42,17 @@ result <- fit(model, positions, observed)
 
 # Plot
 plot(positions, observed, pch = ".", col = "gray",
-     xlab = "Genomic Position (bp)", ylab = "Methylation Level",
-     main = "Methylation Profile Smoothing")
+    xlab = "Genomic Position (bp)", ylab = "Methylation Level",
+    main = "Methylation Profile Smoothing")
 lines(result$x, result$y, col = "blue", lwd = 2)
 lines(result$x, result$confidence_lower, col = "blue", lty = 2)
 lines(result$x, result$confidence_upper, col = "blue", lty = 2)
 legend("topright", c("Observed", "Smoothed", "95% CI"),
-       pch = c(1, NA, NA), lty = c(NA, 1, 2),
-       col = c("gray", "blue", "blue"))
+        pch = c(1, NA, NA), lty = c(NA, 1, 2),
+        col = c("gray", "blue", "blue"))
 ```
+
+![](use-case-genomics_files/figure-html/use_case_genomics_1-1.png)
 
 ------------------------------------------------------------------------
 
@@ -89,11 +91,13 @@ model <- Lowess(
 threshold <- quantile(result$y, 0.75)
 
 plot(positions, signal_noisy, pch = 16, cex = 0.4, col = "gray",
-     xlab = "Genomic Position", ylab = "Read Count",
-     main = "ChIP-seq Signal Smoothing")
+    xlab = "Genomic Position", ylab = "Read Count",
+    main = "ChIP-seq Signal Smoothing")
 lines(result$x, result$y, col = "blue", lwd = 2)
 abline(h = threshold, col = "red", lty = 2)
 ```
+
+![](use-case-genomics_files/figure-html/use_case_genomics_2-1.png)
 
 ------------------------------------------------------------------------
 
@@ -122,4 +126,46 @@ for (chunk_i in 1:5) {
     result <- process_chunk(model, pos_chunk, val_chunk)
 }
 final <- finalize(model)
+print(head(final$y))
+#> [1] 0.3533869 0.3561734 0.3589968 0.3618561 0.3647504 0.3676785
+```
+
+``` r
+
+sessionInfo()
+#> R version 4.6.1 (2026-06-24)
+#> Platform: x86_64-pc-linux-gnu
+#> Running under: Ubuntu 24.04.4 LTS
+#> 
+#> Matrix products: default
+#> BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
+#> LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0
+#> 
+#> locale:
+#>  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       
+#>  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   
+#>  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          
+#> [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   
+#> 
+#> time zone: UTC
+#> tzcode source: system (glibc)
+#> 
+#> attached base packages:
+#> [1] stats     graphics  grDevices utils     datasets  methods   base     
+#> 
+#> other attached packages:
+#> [1] rfastlowess_3.0.0 BiocStyle_2.40.0 
+#> 
+#> loaded via a namespace (and not attached):
+#>  [1] cli_3.6.6           knitr_1.51          rlang_1.3.0        
+#>  [4] xfun_0.60           otel_0.2.0          generics_0.1.4     
+#>  [7] textshaping_1.0.5   jsonlite_2.0.0      htmltools_0.5.9    
+#> [10] ragg_1.5.2          sass_0.4.10         rmarkdown_2.31     
+#> [13] evaluate_1.0.5      jquerylib_0.1.4     fastmap_1.2.0      
+#> [16] yaml_2.3.12         lifecycle_1.0.5     bookdown_0.47      
+#> [19] BiocManager_1.30.27 compiler_4.6.1      fs_2.1.0           
+#> [22] htmlwidgets_1.6.4   systemfonts_1.3.2   digest_0.6.39      
+#> [25] R6_2.6.1            bslib_0.12.0        tools_4.6.1        
+#> [28] BiocGenerics_0.58.1 pkgdown_2.2.1       cachem_1.1.0       
+#> [31] desc_1.4.3
 ```

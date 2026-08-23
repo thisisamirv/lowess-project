@@ -141,7 +141,9 @@ option.</p>
 <span>    chunk_size <span class="op">=</span> <span class="fl">5000</span>,</span>
 <span>    overlap <span class="op">=</span> <span class="fl">500</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x_chunk</span>, <span class="va">y_chunk</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x_chunk</span>, <span class="va">y_chunk</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; numeric(0)</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -157,7 +159,9 @@ has uniform data density.</p>
 <span>    chunk_size <span class="op">=</span> <span class="fl">5000</span>,</span>
 <span>    overlap <span class="op">=</span> <span class="fl">500</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x_chunk</span>, <span class="va">y_chunk</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x_chunk</span>, <span class="va">y_chunk</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; numeric(0)</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -172,7 +176,9 @@ and is expected to be more accurate at the overlap boundary.</p>
 <span>    chunk_size <span class="op">=</span> <span class="fl">5000</span>,</span>
 <span>    overlap <span class="op">=</span> <span class="fl">500</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x_chunk</span>, <span class="va">y_chunk</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x_chunk</span>, <span class="va">y_chunk</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; numeric(0)</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -187,7 +193,9 @@ better context (e.g., more data follows).</p>
 <span>    chunk_size <span class="op">=</span> <span class="fl">5000</span>,</span>
 <span>    overlap <span class="op">=</span> <span class="fl">500</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x_chunk</span>, <span class="va">y_chunk</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x_chunk</span>, <span class="va">y_chunk</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; numeric(0)</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -261,6 +269,43 @@ better context (e.g., more data follows).</p>
 </tr>
 </tbody>
 </table>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>
+<span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
+<span><span class="co">#&gt; Running under: Ubuntu 24.04.4 LTS</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Matrix products: default</span></span>
+<span><span class="co">#&gt; BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
+<span><span class="co">#&gt; LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; locale:</span></span>
+<span><span class="co">#&gt;  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       </span></span>
+<span><span class="co">#&gt;  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   </span></span>
+<span><span class="co">#&gt;  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          </span></span>
+<span><span class="co">#&gt; [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; time zone: UTC</span></span>
+<span><span class="co">#&gt; tzcode source: system (glibc)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; attached base packages:</span></span>
+<span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; other attached packages:</span></span>
+<span><span class="co">#&gt; [1] rfastlowess_3.0.0 BiocStyle_2.40.0 </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
+<span><span class="co">#&gt;  [1] cli_3.6.6           knitr_1.51          rlang_1.3.0        </span></span>
+<span><span class="co">#&gt;  [4] xfun_0.60           otel_0.2.0          generics_0.1.4     </span></span>
+<span><span class="co">#&gt;  [7] textshaping_1.0.5   jsonlite_2.0.0      htmltools_0.5.9    </span></span>
+<span><span class="co">#&gt; [10] ragg_1.5.2          sass_0.4.10         rmarkdown_2.31     </span></span>
+<span><span class="co">#&gt; [13] evaluate_1.0.5      jquerylib_0.1.4     fastmap_1.2.0      </span></span>
+<span><span class="co">#&gt; [16] yaml_2.3.12         lifecycle_1.0.5     bookdown_0.47      </span></span>
+<span><span class="co">#&gt; [19] BiocManager_1.30.27 compiler_4.6.1      fs_2.1.0           </span></span>
+<span><span class="co">#&gt; [22] htmlwidgets_1.6.4   systemfonts_1.3.2   digest_0.6.39      </span></span>
+<span><span class="co">#&gt; [25] R6_2.6.1            bslib_0.12.0        tools_4.6.1        </span></span>
+<span><span class="co">#&gt; [28] BiocGenerics_0.58.1 pkgdown_2.2.1       cachem_1.1.0       </span></span>
+<span><span class="co">#&gt; [31] desc_1.4.3</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

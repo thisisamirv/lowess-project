@@ -16,11 +16,11 @@ where $`B`$ is the bisquare function and $`\hat{\sigma}`$ is the scale
 estimate. A larger $`\hat{\sigma}`$ makes the algorithm more tolerant of
 large residuals; a smaller one makes it more aggressive.
 
-| Method   | Formula                                     | Robustness  | Speed    |
-|----------|---------------------------------------------|-------------|----------|
-| `"mad"`  | Median of \|residuals − median(residuals)\| | Very robust | Moderate |
-| `"mar"`  | Median of \|residuals\|                     | Robust      | Fast     |
-| `"mean"` | Mean of \|residuals\|                       | Less robust | Fastest  |
+| Method   | Formula                               | Robustness  | Speed    |
+|----------|---------------------------------------|-------------|----------|
+| `"mad"`  | Median absolute deviation from median | Very robust | Moderate |
+| `"mar"`  | Median of \|residuals\|               | Robust      | Fast     |
+| `"mean"` | Mean of \|residuals\|                 | Less robust | Fastest  |
 
 ![Scaling method
 comparison](../reference/figures/scaling_comparison.svg)
@@ -50,6 +50,8 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Lowess(iterations = 3, scaling_method = "mad")
 result <- fit(model, x, y)
+print(head(result$y))
+#> [1] 0.4862648 0.4942855 0.5026953 0.5114688 0.5205144 0.5296957
 ```
 
 ------------------------------------------------------------------------
@@ -70,6 +72,8 @@ concern.
 
 model <- Lowess(iterations = 3, scaling_method = "mar")
 result <- fit(model, x, y)
+print(head(result$y))
+#> [1] 0.4870733 0.4951594 0.5036339 0.5124703 0.5215762 0.5308144
 ```
 
 ------------------------------------------------------------------------
@@ -89,6 +93,8 @@ scale.
 
 model <- Lowess(iterations = 3, scaling_method = "mean")
 result <- fit(model, x, y)
+print(head(result$y))
+#> [1] 0.5023604 0.5119281 0.5219198 0.5323007 0.5429772 0.5538188
 ```
 
 ------------------------------------------------------------------------
@@ -107,7 +113,7 @@ methods <- c("mad", "mar", "mean")
 colors  <- c("blue", "red", "green")
 
 plot(x, y, pch = 16, col = "gray",
-     main = "Scaling Method Comparison (with outliers)")
+    main = "Scaling Method Comparison (with outliers)")
 
 for (i in seq_along(methods)) {
     model  <- Lowess(iterations = 3, scaling_method = methods[i])
@@ -116,4 +122,46 @@ for (i in seq_along(methods)) {
 }
 
 legend("topright", methods, col = colors, lwd = 2)
+```
+
+![](scaling_files/figure-html/scaling_4-1.png)
+
+``` r
+
+sessionInfo()
+#> R version 4.6.1 (2026-06-24)
+#> Platform: x86_64-pc-linux-gnu
+#> Running under: Ubuntu 24.04.4 LTS
+#> 
+#> Matrix products: default
+#> BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
+#> LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0
+#> 
+#> locale:
+#>  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       
+#>  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   
+#>  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          
+#> [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   
+#> 
+#> time zone: UTC
+#> tzcode source: system (glibc)
+#> 
+#> attached base packages:
+#> [1] stats     graphics  grDevices utils     datasets  methods   base     
+#> 
+#> other attached packages:
+#> [1] rfastlowess_3.0.0 BiocStyle_2.40.0 
+#> 
+#> loaded via a namespace (and not attached):
+#>  [1] cli_3.6.6           knitr_1.51          rlang_1.3.0        
+#>  [4] xfun_0.60           otel_0.2.0          generics_0.1.4     
+#>  [7] textshaping_1.0.5   jsonlite_2.0.0      htmltools_0.5.9    
+#> [10] ragg_1.5.2          sass_0.4.10         rmarkdown_2.31     
+#> [13] evaluate_1.0.5      jquerylib_0.1.4     fastmap_1.2.0      
+#> [16] yaml_2.3.12         lifecycle_1.0.5     bookdown_0.47      
+#> [19] BiocManager_1.30.27 compiler_4.6.1      fs_2.1.0           
+#> [22] htmlwidgets_1.6.4   systemfonts_1.3.2   digest_0.6.39      
+#> [25] R6_2.6.1            bslib_0.12.0        tools_4.6.1        
+#> [28] BiocGenerics_0.58.1 pkgdown_2.2.1       cachem_1.1.0       
+#> [31] desc_1.4.3
 ```

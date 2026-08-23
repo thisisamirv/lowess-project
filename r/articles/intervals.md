@@ -11,10 +11,10 @@ Confidence and prediction intervals
 > **Batch** mode only. Streaming and Online modes do not support
 > intervals.
 
-| Type           | Represents                 | Width  | Use                       |
-|----------------|----------------------------|--------|---------------------------|
-| **Confidence** | Uncertainty in mean curve  | Narrow | Where is the true trend?  |
-| **Prediction** | Uncertainty for new points | Wide   | Where will new data fall? |
+| Type           | Represents             | Width  | Use                       |
+|----------------|------------------------|--------|---------------------------|
+| **Confidence** | Mean curve uncertainty | Narrow | Where is the true trend?  |
+| **Prediction** | New-point uncertainty  | Wide   | Where will new data fall? |
 
 ------------------------------------------------------------------------
 
@@ -34,11 +34,13 @@ result <- fit(model, x, y)
 
 # Plot with bands
 plot(x, y, pch = 16, col = "gray",
-     main = "LOWESS with 95% Confidence Intervals")
+    main = "LOWESS with 95% Confidence Intervals")
 lines(result$x, result$y, col = "blue", lwd = 2)
 lines(result$x, result$confidence_lower, col = "blue", lty = 2)
 lines(result$x, result$confidence_upper, col = "blue", lty = 2)
 ```
+
+![](intervals_files/figure-html/intervals_1-1.png)
 
 ------------------------------------------------------------------------
 
@@ -58,11 +60,13 @@ model <- Lowess(fraction = 0.5, prediction_intervals = 0.95)
 result <- fit(model, x, y)
 
 plot(x, y, pch = 16, col = "gray",
-     main = "LOWESS with 95% Prediction Intervals")
+    main = "LOWESS with 95% Prediction Intervals")
 lines(result$x, result$y, col = "blue", lwd = 2)
 lines(result$x, result$prediction_lower, col = "red", lty = 2)
 lines(result$x, result$prediction_upper, col = "red", lty = 2)
 ```
+
+![](intervals_files/figure-html/intervals_2-1.png)
 
 ------------------------------------------------------------------------
 
@@ -83,7 +87,7 @@ model <- Lowess(
 result <- fit(model, x, y)
 
 plot(x, y, pch = 16, col = "gray",
-     main = "Confidence vs Prediction Intervals")
+    main = "Confidence vs Prediction Intervals")
 lines(result$x, result$y, col = "blue", lwd = 2)
 
 # Confidence interval (narrow, blue)
@@ -95,10 +99,12 @@ lines(result$x, result$prediction_lower, col = "red", lty = 3)
 lines(result$x, result$prediction_upper, col = "red", lty = 3)
 
 legend("topright",
-       c("Data", "Smoothed", "95% CI", "95% PI"),
-       pch = c(16, NA, NA, NA), lty = c(NA, 1, 2, 3),
-       col = c("gray", "blue", "blue", "red"))
+        c("Data", "Smoothed", "95% CI", "95% PI"),
+        pch = c(16, NA, NA, NA), lty = c(NA, 1, 2, 3),
+        col = c("gray", "blue", "blue", "red"))
 ```
+
+![](intervals_files/figure-html/intervals_3-1.png)
 
 ------------------------------------------------------------------------
 
@@ -117,4 +123,46 @@ Pass any value between 0 and 1 (exclusive). Common choices:
 # 99% confidence intervals
 model <- Lowess(fraction = 0.5, confidence_intervals = 0.99)
 result <- fit(model, x, y)
+print(head(result$y))
+#> [1] 0.4722882 0.4822189 0.4927151 0.5037882 0.5153461 0.5273328
+```
+
+``` r
+
+sessionInfo()
+#> R version 4.6.1 (2026-06-24)
+#> Platform: x86_64-pc-linux-gnu
+#> Running under: Ubuntu 24.04.4 LTS
+#> 
+#> Matrix products: default
+#> BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
+#> LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0
+#> 
+#> locale:
+#>  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       
+#>  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   
+#>  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          
+#> [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   
+#> 
+#> time zone: UTC
+#> tzcode source: system (glibc)
+#> 
+#> attached base packages:
+#> [1] stats     graphics  grDevices utils     datasets  methods   base     
+#> 
+#> other attached packages:
+#> [1] rfastlowess_3.0.0 BiocStyle_2.40.0 
+#> 
+#> loaded via a namespace (and not attached):
+#>  [1] cli_3.6.6           knitr_1.51          rlang_1.3.0        
+#>  [4] xfun_0.60           otel_0.2.0          generics_0.1.4     
+#>  [7] textshaping_1.0.5   jsonlite_2.0.0      htmltools_0.5.9    
+#> [10] ragg_1.5.2          sass_0.4.10         rmarkdown_2.31     
+#> [13] evaluate_1.0.5      jquerylib_0.1.4     fastmap_1.2.0      
+#> [16] yaml_2.3.12         lifecycle_1.0.5     bookdown_0.47      
+#> [19] BiocManager_1.30.27 compiler_4.6.1      fs_2.1.0           
+#> [22] htmlwidgets_1.6.4   systemfonts_1.3.2   digest_0.6.39      
+#> [25] R6_2.6.1            bslib_0.12.0        tools_4.6.1        
+#> [28] BiocGenerics_0.58.1 pkgdown_2.2.1       cachem_1.1.0       
+#> [31] desc_1.4.3
 ```
