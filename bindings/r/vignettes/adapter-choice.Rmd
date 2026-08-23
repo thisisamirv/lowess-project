@@ -26,3 +26,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
 - **Data fits in memory and you need intervals or CV** → [Batch Mode](batch.html)
 - **Data is too large for memory or arrives in file chunks** → [Streaming Mode](streaming.html)
 - **Data arrives point-by-point in real time** → [Online Mode](online.html)
+
+```{r session-info}
+sessionInfo()
+```

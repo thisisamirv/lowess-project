@@ -138,3 +138,7 @@ for (i in seq_len(n_chunks)) {
 
 final <- finalize(model)
 ```
+
+```{r session-info}
+sessionInfo()
+```

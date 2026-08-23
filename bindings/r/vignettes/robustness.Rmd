@@ -137,3 +137,7 @@ for (i in seq_along(result$robustness_weights)) {
                     i, result$robustness_weights[i]))
 }
 ```
+
+```{r session-info}
+sessionInfo()
+```

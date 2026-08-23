@@ -107,3 +107,7 @@ for (i in seq_along(policies)) {
 
 legend("topright", policies, col = colors, lwd = 2)
 ```
+
+```{r session-info}
+sessionInfo()
+```

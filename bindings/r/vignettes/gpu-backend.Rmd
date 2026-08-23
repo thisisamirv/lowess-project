@@ -108,3 +108,7 @@ At n = 1M (`fraction = 0.5`, 3 iterations), the GPU backend is approximately **6
 ## Fallback Behaviour
 
 If `backend = "gpu"` is requested but GPU support is not installed, an informative error is raised pointing to `install_gpu()`. No silent fallback to CPU occurs.
+
+```{r session-info}
+sessionInfo()
+```

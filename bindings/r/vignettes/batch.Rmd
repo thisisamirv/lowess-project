@@ -56,3 +56,7 @@ print(result$confidence_lower)
 print(result$confidence_upper)
 print(result$diagnostics$r_squared)
 ```
+
+```{r session-info}
+sessionInfo()
+```

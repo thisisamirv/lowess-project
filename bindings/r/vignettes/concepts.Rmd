@@ -111,3 +111,7 @@ Decision guide:
 | Robust to outliers | ✓ | ✗ | ✗ |
 | Uncertainty estimates | ✓ | ✓ | ✗ |
 | Handles irregular sampling | ✓ | ✓ | ✗ |
+
+```{r session-info}
+sessionInfo()
+```

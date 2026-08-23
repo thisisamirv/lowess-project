@@ -132,3 +132,7 @@ legend("topleft", c("PI 95%", "CI 95%", "Trend"),
        fill = c(rgb(0, 0, 1, 0.08), rgb(0, 0, 1, 0.20), NA),
        lty  = c(NA, NA, 1), col = c(NA, NA, "blue"), border = NA)
 ```
+
+```{r session-info}
+sessionInfo()
+```

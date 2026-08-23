@@ -140,3 +140,7 @@ $$w(u) = \frac{1}{2}$$
 model <- Lowess(weight_function = "uniform")
 result <- fit(model, x, y)
 ```
+
+```{r session-info}
+sessionInfo()
+```

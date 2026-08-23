@@ -144,3 +144,7 @@ model <- OnlineLowess(
     update_mode = "incremental"
 )
 ```
+
+```{r session-info}
+sessionInfo()
+```

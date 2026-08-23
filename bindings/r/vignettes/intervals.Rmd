@@ -120,3 +120,7 @@ Pass any value between 0 and 1 (exclusive). Common choices:
 model <- Lowess(fraction = 0.5, confidence_intervals = 0.99)
 result <- fit(model, x, y)
 ```
+
+```{r session-info}
+sessionInfo()
+```

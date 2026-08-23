@@ -109,3 +109,7 @@ weights[40:50] <- 0.1
 model <- Lowess(fraction = 0.3, iterations = 3)
 result <- fit(model, x, y, custom_weights = weights)
 ```
+
+```{r session-info}
+sessionInfo()
+```

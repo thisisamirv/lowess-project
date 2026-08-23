@@ -104,3 +104,7 @@ for (i in seq_along(methods)) {
 
 legend("topright", methods, col = colors, lwd = 2)
 ```
+
+```{r session-info}
+sessionInfo()
+```

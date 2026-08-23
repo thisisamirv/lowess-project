@@ -159,3 +159,7 @@ legend("topright", c("Data", "Smoothed", "95% CI"),
        pch = c(16, NA, NA), lty = c(NA, 1, 2),
        col = c("gray", "blue", "blue"))
 ```
+
+```{r session-info}
+sessionInfo()
+```

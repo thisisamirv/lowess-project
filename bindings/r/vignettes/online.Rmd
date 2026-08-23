@@ -55,3 +55,7 @@ for (i in seq_along(times)) {
 > **Note:** `update_mode = "incremental"` refits only the most recent point
 > for lower latency. `update_mode = "full"` refits the entire window for
 > higher accuracy.
+
+```{r session-info}
+sessionInfo()
+```

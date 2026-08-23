@@ -60,3 +60,7 @@ model <- StreamingLowess(
 result <- process_chunk(model, x_chunk, y_chunk)
 final  <- finalize(model)
 ```
+
+```{r session-info}
+sessionInfo()
+```

@@ -150,3 +150,7 @@ cat("Selected fraction:", result$fraction_used, "\n")
 | **LOOCV** | N | Slow | Lowest | Lowest |
 
 Use **5-fold** or **10-fold** CV for most applications. LOOCV is only worth it for small datasets (N < 100).
+
+```{r session-info}
+sessionInfo()
+```

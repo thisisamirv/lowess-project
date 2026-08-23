@@ -145,3 +145,7 @@ model <- StreamingLowess(
 | Immediate finalised output | `"take_first"` |
 | Post-processing, right context better | `"take_last"` |
 | Minimising boundary artefacts | `"weighted_average"` |
+
+```{r session-info}
+sessionInfo()
+```
