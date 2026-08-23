@@ -51,7 +51,7 @@ Returns `TRUE` if the currently loaded library was built with GPU support, `FALS
 
 GPU support is opt-in and not included in standard CRAN / R-universe builds. Install it with a one-time download:
 
-```{r gpu_backend_2}
+```{r gpu_backend_2, eval=FALSE}
 library(rfastlowess)
 
 install_gpu()          # interactive — prompts for confirmation

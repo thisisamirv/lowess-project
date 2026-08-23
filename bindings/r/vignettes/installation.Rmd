@@ -15,7 +15,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
 
 Pre-built binaries — no Rust compiler required.
 
-```{r installation_1}
+```{r installation_1, eval=FALSE}
 install.packages("rfastlowess", repos = "https://thisisamirv.r-universe.dev")
 ```
 
@@ -30,7 +30,7 @@ install.packages("rfastlowess", repos = "https://thisisamirv.r-universe.dev")
 
 Requires [Rust](https://rustup.rs/) and Rtools (Windows).
 
-```{r installation_3}
+```{r installation_3, eval=FALSE}
 devtools::install_github("thisisamirv/lowess-project", subdir = "bindings/r")
 ```
 
