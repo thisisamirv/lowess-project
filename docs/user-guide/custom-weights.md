@@ -56,24 +56,6 @@ outliers that remain.
 Set the weight to `0` at the bad point — it is excluded from every local fit
 that would otherwise include it.
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    x <- 1:10
-    y <- x * 2.0
-    y[6] <- 100.0              # spike at index 6
-
-    weights <- rep(1.0, 10)
-    weights[6] <- 0.0          # exclude the spike
-
-    model <- Lowess(fraction = 0.5, iterations = 0L)
-    result <- fit(model, x, y, custom_weights = weights)
-    ```
-
 === "Python"
     ```python
     import numpy as np
@@ -203,21 +185,6 @@ that would otherwise include it.
 
 Assign high weights to measurements you trust most — calibration standards,
 reference instruments, or low-noise observations.
-
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-    calibration_indices <- c(3L, 6L, 8L)
-
-    weights <- rep(1.0, length(x))
-    weights[calibration_indices] <- 10.0   # trust calibration 10× more
-
-    model <- Lowess(fraction = 0.5)
-    result <- fit(model, x, y, custom_weights = weights)
-    ```
 
 === "Python"
     ```python
@@ -350,21 +317,6 @@ If each observation has a known standard deviation $\sigma_i$, set
 $w_i = 1 / \sigma_i^2$ to give the fit information-theoretically optimal
 weighting.
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-    sigma <- runif(100, 0.1, 0.5)
-
-    # sigma is a vector of measurement uncertainties
-    weights <- 1.0 / sigma^2
-
-    model <- Lowess(fraction = 0.5)
-    result <- fit(model, x, y, custom_weights = weights)
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -483,27 +435,6 @@ weighting.
 
 Custom weights and robustness iterations compose naturally: use custom weights
 for *known* bad points and robustness for *unknown* contamination.
-
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    x <- 0:19
-    y <- x * 1.5
-    y[4]  <- -50.0   # known bad — zero out
-    y[13] <- 80.0    # unknown outlier — let robustness handle it
-
-    weights <- rep(1.0, 20)
-    weights[4] <- 0.0
-
-    model <- Lowess(fraction = 0.4, iterations = 3L)
-    result <- fit(model, 
-        x, y, custom_weights = weights
-    )
-    ```
 
 === "Python"
     ```python

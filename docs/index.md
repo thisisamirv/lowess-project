@@ -85,20 +85,6 @@ A variety of features, supporting a range of use cases:
 
 Currently available for R, Python, Rust, Julia, Node.js, and WebAssembly.
 
-=== "R"
-
-    From R-universe (recommended, no Rust toolchain required):
-
-    ```r
-    install.packages("rfastlowess", repos = "https://thisisamirv.r-universe.dev")
-    ```
-
-    Or from conda-forge:
-
-    ```r
-    conda install -c conda-forge r-rfastlowess
-    ```
-
 === "Python"
 
     Install from PyPI:
@@ -183,19 +169,6 @@ Currently available for R, Python, Rust, Julia, Node.js, and WebAssembly.
 See the [Installation Guide](getting-started/installation.md) for more options and details.
 
 ## Quick Example
-
-=== "R"
-
-    ```r
-    library(rfastlowess)
-
-    x <- c(1, 2, 3, 4, 5)
-    y <- c(2.0, 4.1, 5.9, 8.2, 9.8)
-
-    model <- Lowess(fraction = 0.5, iterations = 3)
-    result <- fit(model, x, y)
-    print(result$y)
-    ```
 
 === "Python"
 

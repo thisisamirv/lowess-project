@@ -7,23 +7,6 @@ Get up and running with LOWESS in minutes.
 
 Smooth a noisy sine wave — the kind of signal where LOWESS shines. Each example recovers the underlying trend from 100 points of Gaussian noise.
 
-=== "R"
-
-    ```r
-    library(rfastlowess)
-
-    # 100-point noisy sine wave
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(fraction = 0.3, iterations = 3)
-    result <- fit(model, x, y)
-
-    cat(sprintf("First smoothed value: %.4f (true: %.4f)\n",
-                result$y[1], sin(x[1])))
-    ```
-
 === "Python"
 
     ```python
@@ -142,28 +125,6 @@ Smooth a noisy sine wave — the kind of signal where LOWESS shines. Each exampl
 ---
 
 ## With Confidence Intervals
-
-=== "R"
-
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(
-        fraction = 0.5,
-        iterations = 3,
-        confidence_intervals = 0.95,
-        prediction_intervals = 0.95,
-        return_diagnostics = TRUE
-    )
-    result <- fit(model, x, y)
-
-    print(result$confidence_lower)
-    print(result$confidence_upper)
-    print(result$diagnostics$r_squared)
-    ```
 
 === "Python"
 
@@ -334,34 +295,6 @@ Smooth a noisy sine wave — the kind of signal where LOWESS shines. Each exampl
 ## Handling Outliers
 
 LOWESS can robustly handle outliers through iterative reweighting:
-
-=== "R"
-
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    x_out <- seq(1, 6)
-    y_with_outlier <- c(2, 4, 6, 50, 10, 12)
-
-    model <- Lowess(
-        fraction = 0.5,
-        iterations = 5,
-        robustness_method = "bisquare",
-        return_robustness_weights = TRUE
-    )
-    result <- fit(model, x_out, y_with_outlier)
-
-    # Check downweighted points
-    weights <- result$robustness_weights
-    for (i in seq_along(weights)) {
-        if (weights[i] < 0.5) {
-            cat(sprintf("Point %d is likely an outlier (weight: %.3f)\n", i, weights[i]))
-        }
-    }
-    ```
 
 === "Python"
 
@@ -546,33 +479,6 @@ LOWESS can robustly handle outliers through iterative reweighting:
 ## Streaming Mode
 
 For datasets too large to fit in memory, stream them in fixed-size chunks with overlap.
-
-=== "R"
-
-    ```r
-    library(rfastlowess)
-
-    set.seed(42)
-    x <- seq(0, 10 * pi, length.out = 5000)
-    y <- sin(x / pi) * exp(-x / 30) + rnorm(5000, sd = 0.15)
-
-    # Process in 1000-point chunks with 100-point overlap
-    model <- StreamingLowess(
-        fraction       = 0.2,
-        chunk_size     = 1000L,
-        overlap        = 100L,
-        merge_strategy = "weighted_average"
-    )
-
-    chunk_size <- 1000L
-    for (start in seq(1, 4001, by = chunk_size)) {
-        end <- min(start + chunk_size - 1L, length(x))
-        process_chunk(model, x[start:end], y[start:end])
-    }
-    result <- finalize(model)
-    cat(sprintf("Smoothed %d points across %d chunks\n",
-                length(result$y), ceiling(5000 / chunk_size)))
-    ```
 
 === "Python"
 

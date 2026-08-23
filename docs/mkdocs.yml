@@ -1,5 +1,5 @@
 site_name: LOWESS Project
-site_description: High-performance LOWESS smoothing for Rust, Python, R, Julia, JavaScript, C++, and WebAssembly.
+site_description: High-performance LOWESS smoothing for Rust, Python, Julia, JavaScript, C++, and WebAssembly.
 site_author: Amir Valizadeh
 site_url: https://lowess.readthedocs.io/
 
@@ -150,7 +150,6 @@ nav:
           - Real-Time Processing: user-guide/use-cases/real-time.md
   - API Reference:
       - api/index.md
-      - R: api/r.md
       - Python: api/python.md
       - Rust: api/rust.md
       - Julia: api/julia.md

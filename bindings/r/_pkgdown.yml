@@ -36,6 +36,38 @@ reference:
       - gpu_available
       - install_gpu
 
+articles:
+  - title: Getting Started
+    contents:
+      - installation
+      - quickstart
+      - concepts
+  - title: User Guide
+    contents:
+      - parameters
+      - adapters
+      - intervals
+      - cross-validation
+  - title: Weight & Robustness
+    contents:
+      - kernels
+      - robustness
+      - scaling
+      - custom-weights
+  - title: Advanced
+    contents:
+      - boundary
+      - merge
+      - gpu-backend
+  - title: Use Cases
+    contents:
+      - use-case-genomics
+      - use-case-time-series
+      - use-case-real-time
+  - title: Reference
+    contents:
+      - benchmarks
+
 navbar:
   structure:
     left: [intro, reference, articles, news]
@@ -47,4 +79,4 @@ navbar:
       aria-label: GitHub
     intro:
       text: Get Started
-      href: articles/rfastlowess.html
+      href: articles/quickstart.html

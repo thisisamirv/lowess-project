@@ -3,27 +3,6 @@
 
 Install the LOWESS library for your preferred language.
 
-=== "R"
-
-    === "From R-universe (recommended)"
-
-    ```r
-    install.packages("rfastlowess", repos = "https://thisisamirv.r-universe.dev")
-    ```
-
-    === "From conda-forge"
-
-    ```r
-    conda install -c conda-forge r-rfastlowess
-    ```
-
-    === "From Source"
-
-    ```r
-    # Install Rust first: https://rustup.rs/
-    devtools::install_github("thisisamirv/lowess-project", subdir = "bindings/r")
-    ```
-
 === "Python"
 
     === "From PyPI (recommended)"
@@ -185,19 +164,6 @@ Install the LOWESS library for your preferred language.
 ---
 
 ## Verify Installation
-
-=== "R"
-
-    ```r
-    library(rfastlowess)
-    
-    x <- c(1, 2, 3)
-    y <- c(2, 4, 6)
-    
-    model <- Lowess()
-    result <- fit(model, x, y)
-    print("Installed successfully!")
-    ```
 
 === "Python"
 

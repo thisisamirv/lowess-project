@@ -38,6 +38,7 @@ from pathlib import Path
 import runners.python as _python_runner
 from runners import RUNNERS, SKIP_CHECKS
 from runners.base import DOCS_DIR, REPO_ROOT, VIGNETTES_DIRS, RunResult, Snippet
+from runners.r import skip_reason as _r_skip_reason
 
 # ---------------------------------------------------------------------------
 # Terminal colours (disabled on non-TTY or Windows without colour support)
@@ -153,9 +154,18 @@ def extract_snippets(md_file: Path) -> list[Snippet]:
                 code_lines_rmd.append(lines[i].removeprefix(fence_indent))
                 i += 1
             if _rmd_chunk_is_runnable(opts_str):
-                rmd_chunks.append(
-                    (start_line_rmd, chunk_name, "\n".join(code_lines_rmd))
+                chunk_code = "\n".join(code_lines_rmd)
+                # Skip chunks that are individually not runnable (e.g. install.packages).
+                # A single bad chunk must not suppress the whole combined vignette snippet.
+                dummy = Snippet(
+                    file=md_file,
+                    line=start_line_rmd,
+                    lang_tag="r",
+                    tab=None,
+                    code=chunk_code,
                 )
+                if _r_skip_reason(dummy) is None:
+                    rmd_chunks.append((start_line_rmd, chunk_name, chunk_code))
             continue
 
         m = re.match(r"^([ \t]*)```(\w+)\s*$", line)

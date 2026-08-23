@@ -68,17 +68,6 @@ The proportion of data used for each local fit. **Most important parameter.**
 | 0.5–0.7 | Heavy smoothing | Noisy data |
 | 0.7–1.0 | Very smooth | Trend extraction |
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(fraction = 0.3)
-    result <- fit(model, x, y)
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -183,17 +172,6 @@ Number of robustness iterations for outlier resistance.
 | 4–6 | Strong | Contaminated data |
 | 7+ | Very strong | Heavy outliers |
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(iterations = 5)
-    result <- fit(model, x, y)
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -293,17 +271,6 @@ Interpolation optimization threshold. Points within `delta` distance reuse the p
 
 - **Default**: 1% of x-range (Batch), 0.0 (Streaming/Online)
 - **Effect**: Higher values = faster but less accurate
-
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(delta = 0.05)
-    result <- fit(model, x, y)
-    ```
 
 === "Python"
     ```python
@@ -414,17 +381,6 @@ Distance weighting kernel for local fits.
 
 See [Weight Functions](kernels.md) for detailed comparison.
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(weight_function = "epanechnikov")
-    result <- fit(model, x, y)
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -529,17 +485,6 @@ Method for downweighting outliers during iterative refinement.
 | `"talwar"` | Hard threshold (0 or 1) | Extreme contamination |
 
 See [Robustness](robustness.md) for detailed comparison.
-
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(robustness_method = "talwar")
-    result <- fit(model, x, y)
-    ```
 
 === "Python"
     ```python
@@ -649,17 +594,6 @@ Edge handling strategy to reduce boundary bias. See [Boundary Handling](boundary
 
 For example:
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(boundary_policy = "reflect")
-    result <- fit(model, x, y)
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -766,17 +700,6 @@ Method for estimating residual scale during robustness iterations. See [Scaling 
 | `"mean"` | Mean Absolute Residual | Less robust |
 
 For example:
-
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(scaling_method = "mad")
-    result <- fit(model, x, y)
-    ```
 
 === "Python"
     ```python
@@ -885,17 +808,6 @@ Behavior when all neighborhood weights are zero.
 
 For example:
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(zero_weight_fallback = "use_local_mean")
-    result <- fit(model, x, y)
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -992,17 +904,6 @@ For example:
 ### auto_converge
 
 Enable early stopping when robustness weights stabilize.
-
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(iterations = 20, auto_converge = 1e-6)
-    result <- fit(model, x, y)
-    ```
 
 === "Python"
     ```python
@@ -1107,20 +1008,6 @@ available in the **Batch** adapter.
     `custom_weights` is silently ignored in Streaming and Online adapters.
 
 See [Custom Weights](custom-weights.md) for a full discussion.
-
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    weights <- rep(1.0, length(x))
-    weights[6] <- 0.0          # exclude index 6
-
-    model <- Lowess(fraction = 0.5)
-    result <- fit(model, x, y, custom_weights = weights)
-    ```
 
 === "Python"
     ```python
@@ -1243,18 +1130,6 @@ See [Custom Weights](custom-weights.md) for a full discussion.
 
 Include residuals (`y - smoothed`) in the output.
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(return_residuals = TRUE)
-    result <- fit(model, x, y)
-    print(result$residuals)
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -1371,18 +1246,6 @@ Include fit quality metrics (Batch and Streaming only).
 | `aic` | Akaike Information Criterion |
 | `aicc` | Corrected AIC |
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(return_diagnostics = TRUE)
-    result <- fit(model, x, y)
-    cat(sprintf("R²: %.4f\n", result$diagnostics$r_squared))
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -1491,18 +1354,6 @@ Include fit quality metrics (Batch and Streaming only).
 
 Include final robustness weights (useful for outlier detection).
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(iterations = 3, return_robustness_weights = TRUE)
-    result <- fit(model, x, y)
-    outliers <- which(result$robustness_weights < 0.5)
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -1610,18 +1461,6 @@ Include final robustness weights (useful for outlier detection).
 ### return_se
 
 Return per-point standard errors for the smoothed fit. Standard errors measure the uncertainty of each smoothed estimate and are used as the basis for confidence and prediction intervals when those are requested alongside `return_se`.
-
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(return_se = TRUE)
-    result <- fit(model, x, y)
-    print(result$standard_errors)
-    ```
 
 === "Python"
     ```python
@@ -1732,17 +1571,6 @@ Request uncertainty estimates (Batch only).
 
 See [Intervals](intervals.md) for detailed usage.
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(confidence_intervals = 0.95, prediction_intervals = 0.95)
-    result <- fit(model, x, y)
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -1851,17 +1679,6 @@ Selection strategy for automated parameter tuning.
 | `"kfold"` | K-Fold Cross-Validation | Fast |
 | `"loocv"` | Leave-One-Out Cross-Validation | Slow |
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(cv_method = "kfold", cv_k = 5)
-    result <- fit(model, x, y)
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -1963,16 +1780,6 @@ Selection strategy for automated parameter tuning.
 
 Points per chunk in Streaming mode.
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    result <- process_chunk(StreamingLowess(chunk_size = 10000), x, y)
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -2062,16 +1869,6 @@ Points per chunk in Streaming mode.
 ### overlap
 
 Overlap between chunks in Streaming mode.
-
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    result <- process_chunk(StreamingLowess(overlap = 1000), x, y)
-    ```
 
 === "Python"
     ```python
@@ -2172,16 +1969,6 @@ Method for merging overlapping chunks. See [Merge Strategies](merge.md) for a de
 
 For example:
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    result <- process_chunk(StreamingLowess(merge_strategy = "weighted_average"), x, y)
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -2271,16 +2058,6 @@ For example:
 
 Maximum points held in memory for Online mode.
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    result <- add_point(OnlineLowess(window_capacity = 500), x[[1]], y[[1]])
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -2368,16 +2145,6 @@ Maximum points held in memory for Online mode.
 ### min_points
 
 Minimum points required before Online filter starts producing outputs.
-
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    result <- add_point(OnlineLowess(min_points = 10), x[[1]], y[[1]])
-    ```
 
 === "Python"
     ```python
@@ -2472,16 +2239,6 @@ Optimization strategy for Online mode updates.
 | `"incremental"` | Incremental update | Fast |
 
 For example:
-
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    result <- add_point(OnlineLowess(update_mode = "full"), x[[1]], y[[1]])
-    ```
 
 === "Python"
     ```python

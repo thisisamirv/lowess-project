@@ -38,24 +38,6 @@ Standard mode for complete datasets. **Supports all features.**
 
 ### Example
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(
-        fraction = 0.5,
-        iterations = 3,
-        confidence_intervals = 0.95,
-        prediction_intervals = 0.95,
-        return_diagnostics = TRUE,
-        parallel = TRUE
-    )
-    result <- fit(model, x, y)
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -222,24 +204,6 @@ Process large datasets in chunks with configurable overlap.
 ![Merge Strategies](../assets/diagrams/merge_comparison.svg)
 
 ### Example
-
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- StreamingLowess(
-        fraction = 0.3,
-        iterations = 2,
-        chunk_size = 5000,
-        overlap = 500,
-        merge_strategy = "average"
-    )
-    result <- process_chunk(model, x, y)
-    final <- finalize(model)
-    ```
 
 === "Python"
     ```python
@@ -433,23 +397,6 @@ Incremental updates with a sliding window for real-time data.
 | `"full"` | Recompute entire window | More accurate |
 
 ### Example
-
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- OnlineLowess(
-        fraction = 0.2,
-        iterations = 1,
-        window_capacity = 100,
-        min_points = 5,
-        update_mode = "incremental"
-    )
-    smoothed <- sapply(seq_along(x), function(i) add_point(model, x[[i]], y[[i]]))
-    ```
 
 === "Python"
     ```python

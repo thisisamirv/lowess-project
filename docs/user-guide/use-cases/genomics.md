@@ -19,49 +19,6 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
 
 A small `fraction = 0.1` lets LOWESS follow fine-scale spatial structure without smearing the transitions between methylated and unmethylated regions. `confidence_intervals = 0.95` produces uncertainty bands that naturally widen at positions with sparser CpG coverage, making low-confidence segments immediately apparent in the plot.
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    positions <- seq(0, 10000, by = 10)
-    observed <- 50 + sin(positions / 100) * 20 + rnorm(length(positions), sd = 5)
-
-    library(rfastlowess)
-    set.seed(42)
-    positions <- seq(0, 10000, by = 10)
-    observed <- 50 + sin(positions / 100) * 20 + rnorm(length(positions), sd = 5)
-
-    library(rfastlowess)
-
-    # Simulate methylation data
-    set.seed(42)
-    n <- 1000
-    positions <- sort(runif(n, 0, 1e6))
-
-    # True pattern
-    true_meth <- 0.5 + 0.3 * sin(positions / 1e5)
-
-    # Observed with noise
-    observed <- true_meth + rnorm(n, sd = 0.15)
-    observed <- pmax(0, pmin(1, observed))
-
-    # Smooth
-    model <- Lowess(
-        fraction = 0.1,
-        iterations = 3,
-        confidence_intervals = 0.95
-    )
-    result <- fit(model, positions, observed)
-
-    # Plot
-    plot(positions, observed, pch = ".", col = "gray",
-         xlab = "Genomic Position (bp)", ylab = "Methylation Level",
-         main = "Methylation Profile Smoothing")
-    lines(result$x, result$y, col = "blue", lwd = 2)
-    lines(result$x, result$confidence_lower, col = "blue", lty = 2)
-    lines(result$x, result$confidence_upper, col = "blue", lty = 2)
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -240,42 +197,6 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
 
 `fraction = 0.05` provides high spatial resolution — important for resolving narrow binding peaks that would otherwise be smeared into the background. The larger `iterations = 5` is deliberate: Poisson-distributed read counts produce tall, isolated spikes, and extra robustness iterations progressively down-weight them so the estimated background level is not inflated by a handful of extreme counts.
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    positions <- seq(0, 10000, by = 10)
-    observed <- 50 + sin(positions / 100) * 20 + rnorm(length(positions), sd = 5)
-
-    library(rfastlowess)
-    set.seed(42)
-    positions <- seq(0, 10000, by = 10)
-    observed <- 50 + sin(positions / 100) * 20 + rnorm(length(positions), sd = 5)
-
-    set.seed(123)
-    positions <- seq(0, 10000, by = 10)
-    n <- length(positions)
-
-    # Simulate peaks
-    background <- 10
-    peak1 <- 50 * exp(-((positions - 2000)^2) / (2 * 200^2))
-    peak2 <- 80 * exp(-((positions - 5000)^2) / (2 * 300^2))
-    peak3 <- 40 * exp(-((positions - 8000)^2) / (2 * 150^2))
-
-    true_signal <- background + peak1 + peak2 + peak3
-    observed <- rpois(n, true_signal)
-
-    model <- Lowess(
-        fraction = 0.05,
-        iterations = 5
-    )
-    result <- fit(model, positions, observed)
-
-    # Find peaks
-    threshold <- quantile(result$y, 0.75)
-    peak_positions <- positions[result$y > threshold]
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -452,29 +373,6 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
 ## Large Genome Coverage (Streaming)
 
 For whole-genome data that doesn't fit in memory:
-
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    positions <- seq(0, 10000, by = 10)
-    observed <- 50 + sin(positions / 100) * 20 + rnorm(length(positions), sd = 5)
-
-    library(rfastlowess)
-    set.seed(42)
-    positions <- seq(0, 10000, by = 10)
-    observed <- 50 + sin(positions / 100) * 20 + rnorm(length(positions), sd = 5)
-    coverage <- observed  # alias: coverage = observed counts
-
-    model <- StreamingLowess(
-        fraction = 0.05,
-        chunk_size = 100000,
-        overlap = 10000,
-        merge_strategy = "weighted_average"
-    )
-    result <- process_chunk(model, positions, coverage)
-    final <- finalize(model)
-    ```
 
 === "Python"
     ```python

@@ -13,29 +13,6 @@ Time series data often contains noise, seasonality, and trends. LOWESS provides 
 
 `fraction = 0.1` sizes the neighbourhood as 10% of the data at each evaluation point — narrow enough to follow a slowly varying trend without smearing periodic variation. Three robustness `iterations` down-weight noise spikes so they cannot bias the fitted curve; this is especially important when the signal-to-noise ratio is low or when occasional outliers are expected.
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    library(rfastlowess)
-
-    set.seed(42)
-    t <- seq(0, 100, length.out = 500)
-    trend <- 10 + 0.5 * t + 3 * sin(t / 10)
-    noise <- rnorm(500, sd = 3)
-    y <- trend + noise
-
-    model <- Lowess(fraction = 0.1, iterations = 3)
-    result <- fit(model, t, y)
-
-    plot(t, y, col = "gray", pch = ".",
-         xlab = "Time", ylab = "Value", main = "Trend Extraction")
-    lines(result$x, result$y, col = "blue", lwd = 2)
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -178,30 +155,6 @@ Time series data often contains noise, seasonality, and trends. LOWESS provides 
 Remove trend to analyze residual patterns.
 
 Setting `return_residuals = True` stores `observed − smoothed` alongside the smooth. A slightly wider `fraction = 0.3` produces a smoother baseline trend, so short-duration oscillations end up in the residuals rather than being absorbed into the trend component. The residual series is then ready for spectral analysis, seasonality detection, or change-point methods.
-
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    library(rfastlowess)
-    set.seed(42)
-    t <- seq(0, 100, length.out = 500)
-    trend_true <- 10 + 0.5 * t + 3 * sin(t / 10)
-    y <- trend_true + rnorm(500, sd = 3)
-
-    model <- Lowess(fraction = 0.3, iterations = 3, return_residuals = TRUE)
-    result <- fit(model, t, y)
-
-    trend <- result$y
-    detrended <- result$residuals
-
-    par(mfrow = c(1, 2))
-    plot(t, trend, type = "l", main = "Trend")
-    plot(t, detrended, type = "l", main = "Detrended")
-    ```
 
 === "Python"
     ```python
@@ -347,33 +300,6 @@ Setting `return_residuals = True` stores `observed − smoothed` alongside the s
 ## Forecasting with Prediction Intervals
 
 Prediction intervals widen the uncertainty band to include both the uncertainty in the fitted curve (confidence interval) and the expected scatter of new observations around it. `fraction = 0.2` offers a balance between local detail and stable interval width — too small a fraction produces jagged interval edges; too large a fraction underestimates local variance near turning points.
-
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    library(rfastlowess)
-    set.seed(42)
-    t <- seq(0, 100, length.out = 500)
-    trend_true <- 10 + 0.5 * t + 3 * sin(t / 10)
-    y <- trend_true + rnorm(500, sd = 3)
-
-    model <- Lowess(
-        fraction = 0.2,
-        iterations = 3,
-        confidence_intervals = 0.95,
-        prediction_intervals = 0.95
-    )
-    result <- fit(model, t, y)
-
-    plot(t, y, col = "gray", pch = 16)
-    lines(result$x, result$y, col = "blue", lwd = 2)
-    lines(result$x, result$prediction_lower, col = "blue", lty = 2)
-    lines(result$x, result$prediction_upper, col = "blue", lty = 2)
-    ```
 
 === "Python"
     ```python
@@ -523,20 +449,6 @@ Prediction intervals widen the uncertainty band to include both the uncertainty 
 
 LOWESS naturally handles irregular time sampling:
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    t_irregular <- sort(runif(200, 0, 100))
-    y_irregular <- 10 + 0.3 * t_irregular + rnorm(200, sd = 2)
-
-    model <- Lowess(fraction = 0.2)
-    result <- fit(model, t_irregular, y_irregular)
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -646,31 +558,6 @@ LOWESS naturally handles irregular time sampling:
 ## Multi-Scale Analysis
 
 Use different fractions to extract features at different scales:
-
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    library(rfastlowess)
-    set.seed(42)
-    t <- seq(0, 100, length.out = 500)
-    trend_true <- 10 + 0.5 * t + 3 * sin(t / 10)
-    y <- trend_true + rnorm(500, sd = 3)
-
-    fractions <- c(0.05, 0.2, 0.5)
-
-    plot(t, y, col = "gray", pch = ".", main = "Multi-Scale LOWESS")
-    colors <- c("red", "blue", "green")
-    for (i in seq_along(fractions)) {
-        model <- Lowess(fraction = fractions[i])
-        result <- fit(model, t, y)
-        lines(result$x, result$y, col = colors[i], lwd = 2)
-    }
-    legend("topleft", legend = paste("f =", fractions), col = colors, lwd = 2)
-    ```
 
 === "Python"
     ```python
@@ -802,38 +689,6 @@ Use different fractions to extract features at different scales:
 ## Gene Expression Time Course
 
 Biological application:
-
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    # Gene expression over 24 hours
-    hours <- seq(0, 24, by = 0.5)
-
-    # Circadian pattern with measurement noise
-    expression <- 100 * (1 + 0.5 * sin(hours * pi / 12)) + rnorm(49, sd = 10)
-
-    model <- Lowess(
-        fraction = 0.3,
-        iterations = 3,
-        confidence_intervals = 0.95,
-        return_diagnostics = TRUE
-    )
-    result <- fit(model, hours, expression)
-
-    # Plot
-    plot(hours, expression, pch = 16, col = "gray",
-         xlab = "Time (hours)", ylab = "Expression Level",
-         main = "Gene Expression Time Course")
-    lines(result$x, result$y, col = "red", lwd = 2)
-    lines(result$x, result$confidence_lower, col = "red", lty = 2)
-    lines(result$x, result$confidence_upper, col = "red", lty = 2)
-
-    cat("R²:", result$diagnostics$r_squared, "\n")
-    ```
 
 === "Python"
     ```python

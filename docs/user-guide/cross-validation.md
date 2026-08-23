@@ -15,24 +15,6 @@ Cross-validation helps select optimal parameters (especially `fraction`) by eval
 
 Split data into K folds, train on K-1, validate on 1.
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(
-        cv_method = "kfold",
-        cv_k = 5,
-        cv_fractions = c(0.2, 0.3, 0.5, 0.7)
-    )
-    result <- fit(model, x, y)
-
-    cat("Selected fraction:", result$fraction_used, "\n")
-    cat("CV scores:", result$cv_scores, "\n")
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -177,20 +159,6 @@ Split data into K folds, train on K-1, validate on 1.
 
 Each point is held out once. Most thorough but slowest.
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(
-        cv_method = "loocv",
-        cv_fractions = c(0.2, 0.3, 0.5, 0.7)
-    )
-    result <- fit(model, x, y)
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -301,22 +269,6 @@ Each point is held out once. Most thorough but slowest.
 ## Seeded Randomization
 
 Set a seed for reproducible fold assignments:
-
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(
-        cv_method = "kfold",
-        cv_k = 5,
-        cv_fractions = c(0.3, 0.5, 0.7),
-        cv_seed = 42
-    )
-    result <- fit(model, x, y)
-    ```
 
 === "Python"
     ```python
@@ -465,25 +417,6 @@ Lower MSE indicates better fit on held-out data.
 ---
 
 ## Interpreting Results
-
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    # Example output
-    model <- Lowess(cv_method = "kfold", cv_k = 5,
-                    cv_fractions = c(0.1, 0.3, 0.5, 0.7))
-    result <- fit(model, x, y)
-
-    # Fraction  | CV Score (MSE)
-    # 0.1       | 0.0542  ← Undersmoothed
-    # 0.3       | 0.0231  ← Best
-    # 0.5       | 0.0298
-    # 0.7       | 0.0412  ← Oversmoothed
-    ```
 
 === "Python"
     ```python

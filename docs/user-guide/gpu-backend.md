@@ -42,13 +42,6 @@ GPU support is **opt-in** and not included in the default published artifacts (P
 
 Before requesting `backend = "gpu"` (or the language's equivalent spelling), check whether the currently loaded library was built with GPU support. Requesting the GPU backend when it isn't available raises a clear error pointing at the installer for that language, rather than a raw panic.
 
-=== "R"
-    ```r
-    library(rfastlowess)
-
-    gpu_available()
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -98,21 +91,6 @@ Whether you need to **restart** afterwards depends on how each language loads it
 | R | Yes | The shared library is loaded once per R session. |
 | C++ | Yes (relink/rebuild) | Your application links against the library at build/load time. |
 | Julia | **No** | `install_gpu()` re-points the internal library reference immediately. |
-
-=== "R"
-    ```r
-    library(rfastlowess)
-
-    install_gpu() # prompts for confirmation, then downloads and installs
-    ```
-
-    Non-interactively: `install_gpu(yes = TRUE)`. The library is copied into the installed package's `libs/` directory, overwriting the CPU-only build. **Restart R** afterwards.
-
-    Build from source instead:
-
-    ```sh
-    make -f bindings/r/Makefile WITH_GPU=1
-    ```
 
 === "Python"
     ```python
@@ -207,14 +185,6 @@ Whether you need to **restart** afterwards depends on how each language loads it
 ## Usage
 
 Once GPU support is available, request it by setting the backend option on the batch constructor.
-
-=== "R"
-    ```r
-    library(rfastlowess)
-
-    model <- Lowess(fraction = 0.5, backend = "gpu", confidence_intervals = 0.95)
-    result <- fit(model, x, y)
-    ```
 
 === "Python"
     ```python

@@ -24,17 +24,6 @@ Pads beyond both endpoints by replicating the first and last observed values. Pr
 
 **Use when**: No strong prior on boundary behaviour; general-purpose smoothing.
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(boundary_policy = "extend")
-    result <- fit(model, x, y)
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -134,17 +123,6 @@ Mirrors the data about both endpoints before fitting, then discards the reflecte
 
 **Use when**: Circular data (e.g., angle, day-of-year), symmetric physical quantities, or when the derivative at the boundary should be near zero.
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(boundary_policy = "reflect")
-    result <- fit(model, x, y)
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -243,17 +221,6 @@ Mirrors the data about both endpoints before fitting, then discards the reflecte
 Pads with zeros beyond both endpoints. Appropriate when the underlying process is known to be zero outside the observation window (e.g., a pulse signal or a bounded physical quantity).
 
 **Use when**: Signal decays to zero at both ends; zero is a meaningful boundary value.
-
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(boundary_policy = "zero")
-    result <- fit(model, x, y)
-    ```
 
 === "Python"
     ```python
@@ -356,17 +323,6 @@ Applies no padding. Each local fit uses only the points that are actually availa
 
 !!! note
     Without padding, boundary fits can have higher variance and visible edge artefacts, particularly with small `fraction` values.
-
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(boundary_policy = "noboundary")
-    result <- fit(model, x, y)
-    ```
 
 === "Python"
     ```python

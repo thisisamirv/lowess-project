@@ -17,32 +17,6 @@ For true real-time applications where each point must be processed immediately.
 
 ### Sensor Data Example
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    library(rfastlowess)
-
-    set.seed(42)
-    times <- 1:100
-    temperatures <- 20 + 5 * sin(times / 10) + rnorm(100)
-
-    model <- OnlineLowess(
-        fraction = 0.3,
-        window_capacity = 25,
-        min_points = 5,
-        update_mode = "incremental"
-    )
-    for (i in seq_along(times)) {
-        result <- add_point(model, times[i], temperatures[i])
-        if (!is.null(result))
-            cat(sprintf("Time %d: %.2f\n", times[i], result$y))
-    }
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -215,26 +189,6 @@ For large datasets that arrive in batches or files.
 
 ### Log File Processing
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    x <- seq(0, 100000, by = 1)
-    y <- sin(x / 1000) + rnorm(length(x), sd = 0.1)
-
-    model <- StreamingLowess(
-        fraction = 0.05,
-        chunk_size = 10000,
-        overlap = 1000,
-        merge_strategy = "weighted_average"
-    )
-    result <- process_chunk(model, x, y)
-    final <- finalize(model)
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -388,35 +342,6 @@ For large datasets that arrive in batches or files.
 ## Real-Time Dashboard Example
 
 The dashboard pattern uses a plain LOWESS fit on a manually managed sliding window rather than `OnlineLowess`. This is the simplest approach when your UI framework already owns the data buffer and you only need the most recent smoothed value per frame. The trade-off is a full O(window²) refit on every tick; for high-frequency streams prefer `OnlineLowess` with `update_mode = "incremental"` to bound per-frame cost.
-
-=== "R"
-    ```r
-    library(rfastlowess)
-
-    # Simulated real-time dashboard
-    window_capacity <- 50
-    data_x <- numeric(0)
-    data_y <- numeric(0)
-
-    for (i in 1:200) {
-        x <- i
-        y <- 25.0 + 10 * sin(i / 20) + rnorm(1, sd = 2)
-        
-        data_x <- c(data_x, x)
-        data_y <- c(data_y, y)
-        
-        if (length(data_x) > window_capacity) {
-            data_x <- tail(data_x, window_capacity)
-            data_y <- tail(data_y, window_capacity)
-        }
-        
-        if (length(data_x) >= 5) {
-            model <- Lowess(fraction = 0.4)
-            result <- fit(model, data_x, data_y)
-            current_smoothed <- tail(result$y, 1)
-        }
-    }
-    ```
 
 === "Python"
     ```python

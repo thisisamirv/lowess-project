@@ -1,0 +1,134 @@
+---
+title: "Quick Start"
+output: BiocStyle::html_document
+vignette: >
+  %\VignetteIndexEntry{Quick Start}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+```
+
+## Basic Smoothing
+
+Smooth a noisy sine wave. `fraction = 0.3` and `iterations = 3` are good starting values for most signals.
+
+```{r}
+library(rfastlowess)
+
+# 100-point noisy sine wave
+set.seed(42)
+x <- seq(0, 2 * pi, length.out = 100)
+y <- sin(x) + rnorm(100, sd = 0.3)
+
+model <- Lowess(fraction = 0.3, iterations = 3)
+result <- fit(model, x, y)
+
+cat(sprintf("First smoothed value: %.4f (true: %.4f)\n",
+            result$y[1], sin(x[1])))
+```
+
+---
+
+## With Confidence and Prediction Intervals
+
+Set `confidence_intervals` and/or `prediction_intervals` to a coverage level (0–1).
+
+```{r}
+library(rfastlowess)
+set.seed(42)
+x <- seq(0, 2 * pi, length.out = 100)
+y <- sin(x) + rnorm(100, sd = 0.3)
+
+model <- Lowess(
+    fraction = 0.5,
+    iterations = 3,
+    confidence_intervals = 0.95,
+    prediction_intervals = 0.95,
+    return_diagnostics = TRUE
+)
+result <- fit(model, x, y)
+
+print(result$confidence_lower)
+print(result$confidence_upper)
+print(result$diagnostics$r_squared)
+```
+
+---
+
+## Streaming Mode
+
+For large datasets (>100K points) that may not fit in memory.
+
+```{r}
+library(rfastlowess)
+set.seed(42)
+x <- seq(0, 2 * pi, length.out = 10000)
+y <- sin(x) + rnorm(10000, sd = 0.3)
+
+model <- StreamingLowess(
+    fraction = 0.3,
+    iterations = 2,
+    chunk_size = 5000,
+    overlap = 500,
+    merge_strategy = "weighted_average"
+)
+
+# Process one chunk at a time
+chunk_x <- x[1:5000]
+chunk_y <- y[1:5000]
+result <- process_chunk(model, chunk_x, chunk_y)
+
+# Finalize after all chunks
+final <- finalize(model)
+```
+
+---
+
+## Online Mode
+
+For real-time / point-by-point processing.
+
+```{r}
+library(rfastlowess)
+set.seed(42)
+times <- 1:100
+temperatures <- 20 + 5 * sin(times / 10) + rnorm(100)
+
+model <- OnlineLowess(
+    fraction = 0.3,
+    window_capacity = 25,
+    min_points = 5,
+    update_mode = "incremental"
+)
+
+for (i in seq_along(times)) {
+    result <- add_point(model, times[i], temperatures[i])
+    if (!is.null(result))
+        cat(sprintf("Time %d: %.2f\n", times[i], result$y))
+}
+```
+
+---
+
+## Plotting Results
+
+```{r}
+library(rfastlowess)
+set.seed(42)
+x <- seq(0, 2 * pi, length.out = 100)
+y <- sin(x) + rnorm(100, sd = 0.3)
+
+model <- Lowess(fraction = 0.5, confidence_intervals = 0.95)
+result <- fit(model, x, y)
+
+plot(x, y, pch = 16, col = "gray", main = "LOWESS Smoothing")
+lines(result$x, result$y, col = "blue", lwd = 2)
+lines(result$x, result$confidence_lower, col = "blue", lty = 2)
+lines(result$x, result$confidence_upper, col = "blue", lty = 2)
+legend("topright", c("Data", "Smoothed", "95% CI"),
+       pch = c(16, NA, NA), lty = c(NA, 1, 2),
+       col = c("gray", "blue", "blue"))
+```

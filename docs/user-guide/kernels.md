@@ -35,17 +35,6 @@ $$w(u) = (1 - |u|^3)^3$$
 
 **Use when**: Default choice for most applications.
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(weight_function = "tricube")
-    result <- fit(model, x, y)
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -146,17 +135,6 @@ Theoretically optimal for kernel density estimation.
 $$w(u) = \frac{3}{4}(1 - u^2)$$
 
 **Use when**: Optimal MSE properties desired.
-
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(weight_function = "epanechnikov")
-    result <- fit(model, x, y)
-    ```
 
 === "Python"
     ```python
@@ -259,17 +237,6 @@ $$w(u) = \exp(-u^2/2)$$
 
 **Use when**: Maximum smoothness needed, computational cost acceptable.
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(weight_function = "gaussian")
-    result <- fit(model, x, y)
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -370,17 +337,6 @@ Good balance of efficiency and smoothness.
 $$w(u) = (1 - u^2)^2$$
 
 **Use when**: Alternative to Tricube with slightly different properties.
-
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(weight_function = "biweight")
-    result <- fit(model, x, y)
-    ```
 
 === "Python"
     ```python
@@ -483,17 +439,6 @@ $$w(u) = \cos(\pi u / 2)$$
 
 **Use when**: Want smooth kernel with simple form.
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(weight_function = "cosine")
-    result <- fit(model, x, y)
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -595,17 +540,6 @@ $$w(u) = 1 - |u|$$
 
 **Use when**: Simple, interpretable weights.
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(weight_function = "triangle")
-    result <- fit(model, x, y)
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -706,17 +640,6 @@ Equal weights within window. Fastest but least smooth.
 $$w(u) = 1$$
 
 **Use when**: Speed is critical, smoothness less important.
-
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(weight_function = "uniform")
-    result <- fit(model, x, y)
-    ```
 
 === "Python"
     ```python

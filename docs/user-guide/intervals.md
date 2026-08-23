@@ -21,23 +21,6 @@ Confidence and prediction intervals for uncertainty quantification.
 
 Estimate uncertainty in the smoothed curve itself.
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(fraction = 0.5, confidence_intervals = 0.95)
-    result <- fit(model, x, y)
-
-    # Plot with bands
-    plot(x, y, pch = 16, col = "gray")
-    lines(result$x, result$y, col = "blue", lwd = 2)
-    lines(result$x, result$confidence_lower, col = "blue", lty = 2)
-    lines(result$x, result$confidence_upper, col = "blue", lty = 2)
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -171,24 +154,6 @@ Estimate uncertainty in the smoothed curve itself.
 
 Estimate where new observations might fall.
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(fraction = 0.5, prediction_intervals = 0.95)
-    result <- fit(model, x, y)
-
-    # Wider than confidence intervals
-    polygon(
-        c(result$x, rev(result$x)),
-        c(result$prediction_lower, rev(result$prediction_upper)),
-        col = rgb(1, 0, 0, 0.2), border = NA
-    )
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -298,21 +263,6 @@ Estimate where new observations might fall.
 ## Both Intervals
 
 Request both types simultaneously:
-
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(
-        fraction = 0.5,
-        confidence_intervals = 0.95,
-        prediction_intervals = 0.95
-    )
-    result <- fit(model, x, y)
-    ```
 
 === "Python"
     ```python
@@ -429,18 +379,6 @@ Common levels and their z-values:
 | 0.95 | 1.960 | 95% of intervals contain true value |
 | 0.99 | 2.576 | 99% of intervals contain true value |
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    # 99% confidence interval (wider)
-    model <- Lowess(confidence_intervals = 0.99)
-    result <- fit(model, x, y)
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -542,18 +480,6 @@ Common levels and their z-values:
 ## Standard Errors
 
 Access standard errors directly (available when intervals are computed):
-
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(confidence_intervals = 0.95)
-    result <- fit(model, x, y)
-    print(result$standard_errors)
-    ```
 
 === "Python"
     ```python

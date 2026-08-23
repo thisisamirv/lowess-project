@@ -5,14 +5,6 @@ Language-specific API documentation.
 
 <div class="grid cards" markdown>
 
-- :simple-r: **R**
-
-    ---
-
-    `rfastlowess` R package reference
-
-    [:octicons-arrow-right-24: R API](r.md)
-
 - :fontawesome-brands-python: **Python**
 
     ---

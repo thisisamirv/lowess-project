@@ -31,17 +31,6 @@ First centers residuals at their median, then takes the median of the absolute d
 
 **Use when**: Data may contain outliers (default for most applications).
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(iterations = 3, scaling_method = "mad")
-    result <- fit(model, x, y)
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -144,17 +133,6 @@ Uses the uncentered median — unlike MAD it does not subtract the residual medi
 
 **Use when**: Speed matters and data have minimal systematic bias in residuals.
 
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(iterations = 3, scaling_method = "mar")
-    result <- fit(model, x, y)
-    ```
-
 === "Python"
     ```python
     import fastlowess as fl
@@ -256,17 +234,6 @@ $$\hat{\sigma} = \frac{1}{n}\sum_i |r_i|$$
 Arithmetic mean of absolute residuals. Non-robust: a single extreme outlier inflates $\hat{\sigma}$, causing the algorithm to under-downweight it. Fastest to compute (no sort required). Useful when data are believed to be clean and speed is a priority.
 
 **Use when**: Clean data with no outliers; maximum computation speed required.
-
-=== "R"
-    ```r
-    library(rfastlowess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Lowess(iterations = 3, scaling_method = "mean")
-    result <- fit(model, x, y)
-    ```
 
 === "Python"
     ```python
