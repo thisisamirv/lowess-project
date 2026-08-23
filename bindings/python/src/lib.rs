@@ -224,6 +224,7 @@ impl PyStreamingLowess {
     #[pyo3(signature = (
         fraction=0.3,
         chunk_size=5000,
+        *,
         overlap=None,
         iterations=3,
         delta=None,
@@ -384,6 +385,7 @@ impl PyOnlineLowess {
         fraction=0.2,
         window_capacity=100,
         min_points=2,
+        *,
         iterations=3,
         delta=None,
         weight_function="tricube",
@@ -497,6 +499,7 @@ impl PyLowess {
     #[new]
     #[pyo3(signature = (
         fraction=0.67,
+        *,
         iterations=3,
         delta=None,
         weight_function="tricube",

@@ -123,6 +123,7 @@ class Lowess:
     def __new__(
         cls,
         fraction: float = 0.67,
+        *,
         iterations: int = 3,
         delta: float | None = None,
         weight_function: str = "tricube",
@@ -147,6 +148,7 @@ class Lowess:
     def __init__(
         self,
         fraction: float = 0.67,
+        *,
         iterations: int = 3,
         delta: float | None = None,
         weight_function: str = "tricube",
@@ -179,6 +181,7 @@ class StreamingLowess:
         self,
         fraction: float = 0.3,
         chunk_size: int = 5000,
+        *,
         overlap: int | None = None,
         iterations: int = 3,
         delta: float | None = None,
@@ -205,6 +208,7 @@ class OnlineLowess:
         fraction: float = 0.2,
         window_capacity: int = 100,
         min_points: int = 2,
+        *,
         iterations: int = 3,
         delta: float | None = None,
         weight_function: str = "tricube",
