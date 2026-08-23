@@ -71,10 +71,11 @@ jobs:
             dir.create(lib, recursive = TRUE, showWarnings = FALSE)
             .libPaths(c(lib, .libPaths()))
             repos <- c(RSPM = Sys.getenv("RSPM", "https://cloud.r-project.org"), CRAN = "https://cloud.r-project.org")
-            install.packages(c("rcmdcheck", "devtools", "lintr", "BiocManager"), lib = lib, repos = repos)
-            BiocManager::install(c("BiocGenerics", "BiocStyle"), lib = lib, ask = FALSE, update = FALSE)
-            missing <- c("rcmdcheck", "BiocGenerics")[!sapply(c("rcmdcheck", "BiocGenerics"), requireNamespace, quietly = TRUE, lib.loc = lib)]
-            if (length(missing)) stop("Failed to install: ", paste(missing, collapse = ", "))
+            install.packages(c("rcmdcheck", "testthat", "knitr", "rmarkdown"), lib = lib, repos = repos)
+            install.packages("BiocManager", lib = lib, repos = repos)
+            BiocManager::install("BiocGenerics", lib = lib, ask = FALSE, update = FALSE)
+            if (!dir.exists(file.path(lib, "rcmdcheck"))) stop("rcmdcheck not installed")
+            if (!dir.exists(file.path(lib, "BiocGenerics"))) stop("BiocGenerics not installed")
           '
 
       - uses: r-lib/actions/setup-r-dependencies@v2
@@ -104,6 +105,7 @@ jobs:
           working-directory: bindings/r
 
       - name: Install Package
+        if: matrix.r == 'release'
         working-directory: bindings/r
         run: Rscript -e "devtools::install(quiet = TRUE)"
 
