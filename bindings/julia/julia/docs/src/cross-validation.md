@@ -6,7 +6,7 @@ Automated parameter selection via cross-validation.
 
 Cross-validation helps select optimal parameters (especially `fraction`) by evaluating performance on held-out data.
 
-![Cross-Validation](../assets/diagrams/cv_comparison.svg)
+![Cross-Validation](assets/cv_comparison.svg)
 
 ---
 

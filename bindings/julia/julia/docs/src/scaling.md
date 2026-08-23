@@ -18,7 +18,7 @@ where $B$ is the bisquare function and $\hat{\sigma}$ is the scale estimate. A l
 | `"mar"` | Median of \|residuals\| | Robust | Fast |
 | `"mean"` | Mean of \|residuals\| | Less robust | Fastest |
 
-![Scaling Methods Comparison](../assets/diagrams/scaling_comparison.svg)
+![Scaling Methods Comparison](assets/scaling_comparison.svg)
 
 ---
 

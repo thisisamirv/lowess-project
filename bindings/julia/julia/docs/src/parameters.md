@@ -182,7 +182,7 @@ result = fit(model, x, y)
 
 Edge handling strategy to reduce boundary bias. See [Boundary Handling](boundary.md) for a detailed comparison.
 
-![Boundary Policy](../assets/diagrams/boundary_comparison.svg)
+![Boundary Policy](assets/boundary_comparison.svg)
 
 | Policy | Behavior | Use Case |
 | --- | --- | --- |
@@ -211,7 +211,7 @@ result = fit(model, x, y)
 
 Method for estimating residual scale during robustness iterations. See [Scaling Methods](scaling.md) for a detailed comparison.
 
-![Scaling Methods](../assets/diagrams/scaling_comparison.svg)
+![Scaling Methods](assets/scaling_comparison.svg)
 
 | Method | Description | Robustness |
 | --- | --- | --- |
@@ -239,7 +239,7 @@ result = fit(model, x, y)
 
 Behavior when all neighborhood weights are zero.
 
-![Zero Weight Fallback](../assets/diagrams/zero_weight_comparison.svg)
+![Zero Weight Fallback](assets/zero_weight_comparison.svg)
 
 | Option | Behavior |
 | --- | --- |

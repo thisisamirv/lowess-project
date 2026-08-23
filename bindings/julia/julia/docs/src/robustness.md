@@ -12,9 +12,9 @@ Standard LOWESS can be biased by outliers. Robustness iterations downweight poin
 4. Refit using combined distance × robustness weights
 5. Repeat steps 2–4
 
-![Robustness Methods](../assets/diagrams/robust_method_comparison.svg)
+![Robustness Methods](assets/robust_method_comparison.svg)
 
-![Robustness Iterations](../assets/diagrams/robust_iter_comparison.svg)
+![Robustness Iterations](assets/robust_iter_comparison.svg)
 
 ---
 
@@ -130,7 +130,7 @@ Residuals are scaled before computing robustness weights. Two methods:
 | **MAR** | `median(\|r\|)` | Robust, uncentered |
 | **Mean** | `mean(\|r\|)` | Less robust, fastest |
 
-![Scaling Methods Comparison](../assets/diagrams/scaling_comparison.svg)
+![Scaling Methods Comparison](assets/scaling_comparison.svg)
 
 ```julia
 using FastLOWESS

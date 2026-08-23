@@ -25,7 +25,7 @@ Process large datasets in chunks with configurable overlap.
 | `"take_first"` | Keep left chunk values |
 | `"take_last"` | Keep right chunk values |
 
-![Merge Strategies](../assets/diagrams/merge_comparison.svg)
+![Merge Strategies](assets/merge_comparison.svg)
 
 ## Example
 
