@@ -26,7 +26,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        r: [release, '4.2']
+        r: [release, "4.2"]
     steps:
       - uses: actions/checkout@v7
 
@@ -50,7 +50,7 @@ jobs:
       - uses: r-lib/actions/setup-pandoc@v2
 
       - name: Bootstrap pak (Windows)
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && matrix.r == 'release'
         shell: Rscript {0}
         run: |
           install.packages(
@@ -61,7 +61,20 @@ jobs:
             )
           )
 
+      # R 4.2: Bioc 3.15/16 source tarballs give 404 — pak cannot resolve them; use BiocManager directly
+      - name: Install R dependencies (R 4.2)
+        if: matrix.r == '4.2'
+        shell: Rscript {0}
+        run: |
+          options(repos = c(CRAN = "https://cloud.r-project.org"))
+          install.packages("BiocManager", quiet = TRUE)
+          BiocManager::install(
+            c("BiocGenerics", "BiocStyle", "rcmdcheck", "devtools", "lintr"),
+            ask = FALSE, update = FALSE, quiet = TRUE
+          )
+
       - uses: r-lib/actions/setup-r-dependencies@v2
+        if: matrix.r == 'release'
         with:
           working-directory: bindings/r
           extra-packages: |
@@ -91,6 +104,7 @@ jobs:
         run: Rscript -e "devtools::install(quiet = TRUE)"
 
       - name: Quality (BiocCheck/Lint)
+        if: matrix.r == 'release'
         working-directory: bindings/r
         shell: bash
         run: |
