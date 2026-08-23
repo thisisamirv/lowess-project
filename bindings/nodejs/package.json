@@ -39,7 +39,7 @@
     "devDependencies": {
         "@napi-rs/cli": "^3.8",
         "oxlint": "^1.79",
-        "typedoc": "^0.25",
+        "typedoc": "^0.24",
         "typedoc-plugin-pages": "^1.1"
     },
     "engines": {
