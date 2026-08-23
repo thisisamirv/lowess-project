@@ -29,7 +29,7 @@ To develop across all platforms, you will need the following tools installed. Yo
 
 **R**:
 
-- **R**: 4.2+ (with `Rscript` in PATH). Note: On Windows, you must ensure the R `bin\x64` directory (e.g., `C:\Program Files\R\R-4.x.x\bin\x64`) is added to your system `Path` via `sysdm.cpl` so that test binaries can locate `R.dll`.
+- **R**: 4.4.0+ (with `Rscript` in PATH). Note: On Windows, you must ensure the R `bin\x64` directory (e.g., `C:\Program Files\R\R-4.x.x\bin\x64`) is added to your system `Path` via `sysdm.cpl` so that test binaries can locate `R.dll`.
 - **Rtools**: Required on Windows for C/C++ compilation. You must manually add it to your PATH to use `make` (e.g., in PowerShell: `$env:PATH = "C:\rtools45\usr\bin;C:\rtools45\x86_64-w64-mingw32.static.posix\bin;" + $env:PATH`)
 - **Windows Rust Target**: `rustup target add x86_64-pc-windows-gnu` (R on Windows requires the GNU MinGW toolchain)
 - **LaTeX Distribution**: Required for building PDF manual during `R CMD check --as-cran`. Install TinyTeX (`install.packages('tinytex'); tinytex::install_tinytex()`) or MiKTeX (Windows) or MacTeX (macOS) or TeX Live (Linux)
@@ -87,12 +87,14 @@ The project is organized as a Cargo workspace with separate targets for each com
 
 ```bash
 # lowess crate (core algorithms)
-make lowess          # Format, lint, build, test, examples
+make lowess          # Build only (cargo build)
+make lowess-dev      # Format, lint, build, test, examples, doc snippets
 make lowess-coverage # Run coverage
 make lowess-clean    # Clean build artifacts
 
 # fastLowess crate (high-level API with adapters)
-make fastLowess          # Format, lint, build, test, examples
+make fastLowess          # Build only (cargo build)
+make fastLowess-dev      # Format, lint, build, test, doc snippets
 make fastLowess-coverage # Run coverage
 make fastLowess-clean    # Clean build artifacts
 ```
@@ -100,7 +102,8 @@ make fastLowess-clean    # Clean build artifacts
 ### Python Bindings
 
 ```bash
-make python          # Format, lint, build, test, examples
+make python          # Install to user environment (pip install --user)
+make python-dev      # Format, lint, build, test, doc snippets (uses .venv)
 make python-coverage # Run coverage
 make python-clean    # Clean build artifacts
 ```
@@ -108,7 +111,8 @@ make python-clean    # Clean build artifacts
 ### R Bindings
 
 ```bash
-make r          # Vendor, build, check, test
+make r          # Install the package (R CMD INSTALL)
+make r-dev      # Vendor, format, lint, check (--as-cran), test, doc snippets
 make r-coverage # Run coverage
 make r-clean    # Clean build artifacts
 ```
@@ -116,39 +120,45 @@ make r-clean    # Clean build artifacts
 ### Julia Bindings
 
 ```bash
-make julia       # Format, lint, build, test, verify exports, ABI check
+make julia       # Build Rust shared library and register package locally
+make julia-dev   # Format, lint, build, test, export verification, ABI check, doc snippets
 make julia-clean # Clean build artifacts
 ```
 
 ### Node.js Bindings
 
 ```bash
-make nodejs       # Format, lint, build, test
+make nodejs       # Build and link (npm install + build + npm link)
+make nodejs-dev   # Format, lint, audit, build, test, doc snippets
 make nodejs-clean # Clean build artifacts
 ```
 
 ### WebAssembly Bindings
 
 ```bash
-make wasm       # Format, lint, build, test
+make wasm       # Build WASM targets and link (wasm-pack + npm link)
+make wasm-dev   # Format, lint, build, test, doc snippets
 make wasm-clean # Clean build artifacts
 ```
 
 ### C++ Bindings
 
 ```bash
-make cpp       # Format, lint, build, test
+make cpp       # Build only (cargo build --profile release-c)
+make cpp-dev   # Format, lint, cbindgen, cmake tests, valgrind, doc snippets
 make cpp-clean # Clean build artifacts
 ```
 
 ### Full Workspace
 
 ```bash
-make all          # Run checks for all components (lowess, fastLowess, python, r, julia, nodejs, wasm, cpp)
+make all          # Build all components
+make all-dev      # Full quality-check workflow for all components
 make all-coverage # Run coverage for lowess, fastLowess, python, and r
 make all-clean    # Clean all build artifacts
 make docs         # Build MkDocs documentation
 make docs-serve   # Serve documentation locally
+make docs-test    # Run doc snippet tests across all languages
 ```
 
 ## Workspace Structure
@@ -195,10 +205,10 @@ lowess-project/
 ├── bindings/
 │   ├── python/           # PyO3 bindings (fastlowess package)
 │   ├── r/                # extendr bindings (rfastlowess package)
-│   ├── julia/            # C-API + Julia Wrapper
+│   ├── julia/            # C-API + Julia wrapper (FastLOWESS.jl)
 │   ├── nodejs/           # NAPI-RS bindings
 │   ├── wasm/             # wasm-bindgen bindings
-│   └── cpp/              # C++17 Header-only wrapper
+│   └── cpp/              # C++17 wrapper
 ├── validation/           # R vs lowess parity validation
 ├── benchmarks/           # Performance benchmarks (Criterion)
 ├── docs/                 # MkDocs documentation
@@ -252,11 +262,11 @@ cd bindings/nodejs && npm test
 # WASM tests
 wasm-pack test --node bindings/wasm
 
-# C++ tests (Linux; requires prior: cargo build -p fastlowess-cpp --release)
+# C++ tests (Linux; requires prior: cargo build -p fastlowess-cpp --profile release-c)
 mkdir -p bindings/cpp/tests/build
 cd bindings/cpp/tests/build
-cmake -DFASTLOWESS_LIB="$(pwd)/../../../target/release/libfastlowess_cpp.so" \
-      -DFASTLOWESS_LIB_DIR="$(pwd)/../../../target/release" ..
+cmake -DFASTLOWESS_LIB="$(pwd)/../../../target/release-c/libfastlowess_cpp.so" \
+      -DFASTLOWESS_LIB_DIR="$(pwd)/../../../target/release-c" ..
 make && ./test_fastlowess_suite
 ```
 
