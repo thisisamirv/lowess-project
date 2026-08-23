@@ -1,0 +1,50 @@
+name: Docs — Julia (Documenter.jl)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "bindings/julia/**"
+      - ".github/workflows/docs-julia.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: docs-julia-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  documenter:
+    name: Build & deploy Documenter.jl site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: julia-actions/setup-julia@v3
+        with:
+          version: "1"
+
+      - uses: julia-actions/cache@v3
+
+      - name: Relax JLL dependency for CI
+        uses: ./.github/actions/relax-julia-jll
+
+      - name: Install docs dependencies
+        run: |
+          julia --project=bindings/julia/julia/docs -e '
+            using Pkg
+            Pkg.develop(PackageSpec(path = "bindings/julia/julia"))
+            Pkg.instantiate()
+          '
+
+      - name: Build docs
+        run: julia --project=bindings/julia/julia/docs bindings/julia/julia/docs/make.jl
+
+      - uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: bindings/julia/julia/docs/build
+          target-folder: julia
+          clean: false
