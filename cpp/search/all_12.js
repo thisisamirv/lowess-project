@@ -1,0 +1,28 @@
+var searchData=
+[
+  ['take_20first_0',['Take First',['../md_docs_2merge.html#autotoc_md171',1,'']]],
+  ['take_20last_1',['Take Last',['../md_docs_2merge.html#autotoc_md173',1,'']]],
+  ['talwar_2',['Talwar',['../md_docs_2robustness.html#autotoc_md254',1,'']]],
+  ['the_20challenge_3',['The Challenge',['../md_docs_2use-case-genomics.html#autotoc_md283',1,'']]],
+  ['the_20fraction_20parameter_4',['The Fraction Parameter',['../index.html#autotoc_md66',1,'']]],
+  ['time_5',['use-case-real-time',['../md_docs_2use-case-real-time.html',1,'']]],
+  ['time_20course_6',['Gene Expression Time Course',['../md_docs_2use-case-time-series.html#autotoc_md325',1,'']]],
+  ['time_20dashboard_20example_7',['Real-Time Dashboard Example',['../md_docs_2use-case-real-time.html#autotoc_md303',1,'']]],
+  ['time_20processing_8',['Real-Time Processing',['../md_docs_2use-case-real-time.html#autotoc_md294',1,'']]],
+  ['time_20series_9',['time series',['../md_docs_2use-case-time-series.html#autotoc_md327',1,'Choosing Fraction for Time Series'],['../md_docs_2use-case-time-series.html',1,'use-case-time-series']]],
+  ['time_20series_20analysis_10',['Time Series Analysis',['../md_docs_2use-case-time-series.html#autotoc_md312',1,'']]],
+  ['to_20use_11',['to use',['../md_docs_2batch.html#autotoc_md46',1,'When to Use'],['../md_docs_2online.html#autotoc_md179',1,'When to Use'],['../md_docs_2streaming.html#autotoc_md274',1,'When to Use']]],
+  ['to_20use_20custom_20weights_12',['When to Use Custom Weights',['../md_docs_2custom-weights.html#autotoc_md98',1,'']]],
+  ['trend_20extraction_13',['Basic Trend Extraction',['../md_docs_2use-case-time-series.html#autotoc_md315',1,'']]],
+  ['triangle_14',['Triangle',['../md_docs_2kernels.html#autotoc_md161',1,'']]],
+  ['tricube_20default_15',['Tricube (Default)',['../md_docs_2kernels.html#autotoc_md151',1,'']]],
+  ['tt_20fastlowess_3a_3adiagnostics_20tt_16',['&lt;tt&gt;fastlowess::Diagnostics&lt;/tt&gt;',['../md_docs_2api.html#autotoc_md35',1,'']]],
+  ['tt_20fastlowess_3a_3alowess_20tt_17',['&lt;tt&gt;fastlowess::Lowess&lt;/tt&gt;',['../md_docs_2api.html#autotoc_md23',1,'']]],
+  ['tt_20fastlowess_3a_3alowessresult_20tt_18',['tt fastlowess::lowessresult tt',['../md_docs_2api.html#autotoc_md34',1,'&lt;tt&gt;fastlowess::LowessResult&lt;/tt&gt;'],['../md_docs_2api-streaming.html#autotoc_md16',1,'&lt;tt&gt;fastlowess::LowessResult&lt;/tt&gt;']]],
+  ['tt_20fastlowess_3a_3aonlinelowess_20tt_19',['&lt;tt&gt;fastlowess::OnlineLowess&lt;/tt&gt;',['../md_docs_2api-online.html#autotoc_md5',1,'']]],
+  ['tt_20fastlowess_3a_3aonlineoutput_20tt_20',['&lt;tt&gt;fastlowess::OnlineOutput&lt;/tt&gt;',['../md_docs_2api-online.html#autotoc_md9',1,'']]],
+  ['tt_20fastlowess_3a_3astreaminglowess_20tt_21',['&lt;tt&gt;fastlowess::StreamingLowess&lt;/tt&gt;',['../md_docs_2api-streaming.html#autotoc_md14',1,'']]],
+  ['tt_20lowessoptions_20tt_22',['&lt;tt&gt;LowessOptions&lt;/tt&gt;',['../md_docs_2api.html#autotoc_md25',1,'']]],
+  ['tt_20onlineoptions_20tt_20inherits_20tt_20lowessoptions_20tt_23',['&lt;tt&gt;OnlineOptions&lt;/tt&gt; (inherits &lt;tt&gt;LowessOptions&lt;/tt&gt;)',['../md_docs_2api-online.html#autotoc_md7',1,'']]],
+  ['tt_20streamingoptions_20tt_20inherits_20tt_20lowessoptions_20tt_24',['&lt;tt&gt;StreamingOptions&lt;/tt&gt; (inherits &lt;tt&gt;LowessOptions&lt;/tt&gt;)',['../md_docs_2api-streaming.html#autotoc_md18',1,'']]]
+];

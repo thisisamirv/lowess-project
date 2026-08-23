@@ -1,0 +1,28 @@
+var searchData=
+[
+  ['a_20kernel_0',['Choosing a Kernel',['../md_docs_2kernels.html#autotoc_md165',1,'']]],
+  ['a_20known_20outlier_1',['Suppress a Known Outlier',['../md_docs_2custom-weights.html#autotoc_md102',1,'']]],
+  ['a_20policy_2',['Choosing a Policy',['../md_docs_2boundary.html#autotoc_md60',1,'']]],
+  ['a_20scaling_20method_3',['Choosing a Scaling Method',['../md_docs_2scaling.html#autotoc_md272',1,'']]],
+  ['a_20strategy_4',['Choosing a Strategy',['../md_docs_2merge.html#autotoc_md177',1,'']]],
+  ['absolute_20deviation_20default_5',['MAD — Median Absolute Deviation (Default)',['../md_docs_2scaling.html#autotoc_md266',1,'']]],
+  ['absolute_20residual_6',['absolute residual',['../md_docs_2scaling.html#autotoc_md268',1,'MAR — Median Absolute Residual'],['../md_docs_2scaling.html#autotoc_md270',1,'Mean — Mean Absolute Residual']]],
+  ['acceleration_7',['GPU Acceleration',['../md_docs_2api.html#autotoc_md26',1,'']]],
+  ['adapter_8',['adapter',['../md_docs_2batch.html',1,'Batch Adapter'],['../md_docs_2online.html',1,'Online Adapter'],['../md_docs_2streaming.html',1,'Streaming Adapter']]],
+  ['adapter_20choice_9',['adapter-choice',['../md_docs_2adapter-choice.html',1,'']]],
+  ['adapter_20parameters_10',['Adapter Parameters',['../md_docs_2parameters.html#autotoc_md224',1,'']]],
+  ['adapter_2dchoice_2emd_11',['adapter-choice.md',['../adapter-choice_8md.html',1,'']]],
+  ['advantages_12',['Key Advantages',['../index.html#autotoc_md74',1,'']]],
+  ['also_13',['also',['../md_docs_2custom-weights.html#autotoc_md112',1,'See Also'],['../md_docs_2use-case-real-time.html#autotoc_md311',1,'See Also'],['../md_docs_2gpu-backend.html#autotoc_md123',1,'See also'],['../md_docs_2use-case-genomics.html#autotoc_md293',1,'See Also'],['../md_docs_2use-case-time-series.html#autotoc_md329',1,'See Also']]],
+  ['analysis_14',['analysis',['../md_docs_2use-case-time-series.html#autotoc_md323',1,'Multi-Scale Analysis'],['../md_docs_2use-case-time-series.html#autotoc_md312',1,'Time Series Analysis']]],
+  ['api_20reference_15',['api reference',['../md_docs_2api.html',1,'fastLowess C++ API Reference'],['../md_docs_2api-online.html',1,'OnlineLowess — C++ API Reference'],['../md_docs_2api-streaming.html',1,'StreamingLowess — C++ API Reference']]],
+  ['api_2donline_2emd_16',['api-online.md',['../api-online_8md.html',1,'']]],
+  ['api_2dstreaming_2emd_17',['api-streaming.md',['../api-streaming_8md.html',1,'']]],
+  ['api_2emd_18',['api.md',['../api_8md.html',1,'']]],
+  ['application_19',['Application',['../md_docs_2use-case-genomics.html#autotoc_md287',1,'']]],
+  ['auto_20convergence_20',['Auto-Convergence',['../md_docs_2robustness.html#autotoc_md262',1,'']]],
+  ['auto_5fconverge_21',['auto_converge',['../md_docs_2parameters.html#autotoc_md206',1,'']]],
+  ['availability_22',['availability',['../md_docs_2intervals.html#autotoc_md145',1,'Availability'],['../md_docs_2cross-validation.html#autotoc_md92',1,'Availability'],['../md_docs_2gpu-backend.html#autotoc_md118',1,'Checking Availability']]],
+  ['available_20kernels_23',['Available Kernels',['../md_docs_2kernels.html#autotoc_md149',1,'']]],
+  ['average_24',['average',['../md_docs_2merge.html#autotoc_md169',1,'Average'],['../md_docs_2merge.html#autotoc_md175',1,'Weighted Average']]]
+];

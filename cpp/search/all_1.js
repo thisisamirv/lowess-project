@@ -1,0 +1,25 @@
+var searchData=
+[
+  ['backend_0',['backend',['../md_docs_2gpu-backend.html#autotoc_md113',1,'GPU Backend'],['../md_docs_2gpu-backend.html',1,'gpu-backend']]],
+  ['basic_20smoothing_1',['Basic Smoothing',['../md_docs_2quickstart.html#autotoc_md237',1,'']]],
+  ['basic_20trend_20extraction_2',['Basic Trend Extraction',['../md_docs_2use-case-time-series.html#autotoc_md315',1,'']]],
+  ['basic_20usage_3',['Basic Usage',['../md_docs_2custom-weights.html#autotoc_md101',1,'']]],
+  ['batch_20adapter_4',['Batch Adapter',['../md_docs_2batch.html',1,'']]],
+  ['batch_2emd_5',['batch.md',['../batch_8md.html',1,'']]],
+  ['best_20practices_6',['Best Practices',['../md_docs_2cross-validation.html#autotoc_md94',1,'']]],
+  ['best_20practices_20for_20genomic_20data_7',['Best Practices for Genomic Data',['../md_docs_2use-case-genomics.html#autotoc_md291',1,'']]],
+  ['binaries_20linux_20x64_8',['Pre-built Binaries (Linux (x64))',['../md_docs_2installation.html#autotoc_md125',1,'']]],
+  ['binaries_20macos_20x64_9',['Pre-built Binaries (macOS (x64))',['../md_docs_2installation.html#autotoc_md126',1,'']]],
+  ['binaries_20windows_20x64_10',['Pre-built Binaries (Windows (x64))',['../md_docs_2installation.html#autotoc_md127',1,'']]],
+  ['bisquare_20default_11',['Bisquare (Default)',['../md_docs_2robustness.html#autotoc_md250',1,'']]],
+  ['biweight_12',['Biweight',['../md_docs_2kernels.html#autotoc_md157',1,'']]],
+  ['both_20intervals_13',['Both Intervals',['../md_docs_2intervals.html#autotoc_md139',1,'']]],
+  ['boundary_14',['boundary',['../md_docs_2boundary.html',1,'boundary'],['../md_docs_2boundary.html#autotoc_md58',1,'No Boundary']]],
+  ['boundary_20handling_15',['Boundary Handling',['../md_docs_2boundary.html#autotoc_md49',1,'']]],
+  ['boundary_2emd_16',['boundary.md',['../boundary_8md.html',1,'']]],
+  ['boundary_5fpolicy_17',['boundary_policy',['../md_docs_2parameters.html#autotoc_md200',1,'boundary_policy'],['../md_docs_2api.html#autotoc_md39',1,'boundary_policy']]],
+  ['built_20binaries_20linux_20x64_18',['Pre-built Binaries (Linux (x64))',['../md_docs_2installation.html#autotoc_md125',1,'']]],
+  ['built_20binaries_20macos_20x64_19',['Pre-built Binaries (macOS (x64))',['../md_docs_2installation.html#autotoc_md126',1,'']]],
+  ['built_20binaries_20windows_20x64_20',['Pre-built Binaries (Windows (x64))',['../md_docs_2installation.html#autotoc_md127',1,'']]],
+  ['by_20point_21',['Online Mode: Point-by-Point',['../md_docs_2use-case-real-time.html#autotoc_md297',1,'']]]
+];
