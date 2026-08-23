@@ -15,6 +15,8 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
 
 Maintains a sliding window and processes each incoming point immediately.
 
+![Online adapter comparison](../man/figures/online_comparison.svg)
+
 ## When to Use
 
 - Real-time data streams (sensors, logs)
@@ -53,5 +55,3 @@ for (i in seq_along(times)) {
 > **Note:** `update_mode = "incremental"` refits only the most recent point
 > for lower latency. `update_mode = "full"` refits the entire window for
 > higher accuracy.
-
-![Online adapter comparison](../man/figures/online_comparison.svg)

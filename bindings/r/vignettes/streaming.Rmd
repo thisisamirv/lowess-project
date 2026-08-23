@@ -38,6 +38,8 @@ Processes data in fixed-size chunks with configurable overlap. Results for each 
 | `"take_first"` | Keep left-chunk estimate |
 | `"take_last"` | Keep right-chunk estimate |
 
+![Merge strategy comparison](../man/figures/merge_comparison.svg)
+
 ## Example
 
 ```{r}
@@ -58,5 +60,3 @@ model <- StreamingLowess(
 result <- process_chunk(model, x_chunk, y_chunk)
 final  <- finalize(model)
 ```
-
-![Merge strategy comparison](../man/figures/merge_comparison.svg)

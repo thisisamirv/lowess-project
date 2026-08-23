@@ -15,6 +15,8 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
 
 The default mode. Processes the entire dataset at once and supports all features.
 
+![Gap handling](../man/figures/gap_handling.svg)
+
 ## When to Use
 
 - Dataset fits comfortably in memory
@@ -54,5 +56,3 @@ print(result$confidence_lower)
 print(result$confidence_upper)
 print(result$diagnostics$r_squared)
 ```
-
-![Gap handling](../man/figures/gap_handling.svg)
