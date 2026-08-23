@@ -151,7 +151,6 @@ nav:
   - API Reference:
       - api/index.md
       - Python: api/python.md
-      - Node.js: api/nodejs.md
       - WebAssembly: api/wasm.md
       - C++: api/cpp.md
   - Benchmarks: benchmarks.md

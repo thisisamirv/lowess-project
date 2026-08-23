@@ -37,22 +37,6 @@ Estimate uncertainty in the smoothed curve itself.
     print("CI Lower:", result.confidence_lower)
     print("CI Upper:", result.confidence_upper)
     ```
-=== "Node.js"
-    ```javascript
-    const fl = require('fastlowess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i*7+3)%17)/17-0.5)*0.6);
-
-    const model = new fl.Lowess({fraction: 0.5, confidence_intervals: 0.95});
-    const result = model.fit(x, y);
-
-    result.y.forEach((y, i) => {
-        console.log(`x=${result.x[i]}: y=${y} [${result.confidence_lower[i]}, ${result.confidence_upper[i]}]`);
-    });
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Lowess } = require('./fastlowess_wasm.js');
@@ -119,19 +103,6 @@ Estimate where new observations might fall.
     print("PI Lower:", result.prediction_lower)
     print("PI Upper:", result.prediction_upper)
     ```
-=== "Node.js"
-    ```javascript
-    const fl = require('fastlowess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i*7+3)%17)/17-0.5)*0.6);
-
-    const model = new fl.Lowess({fraction: 0.5, prediction_intervals: 0.95});
-    const result = model.fit(x, y);
-    console.log(`Prediction bounds: [${result.prediction_lower[0]}, ${result.prediction_upper[0]}]`);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Lowess } = require('./fastlowess_wasm.js');
@@ -189,20 +160,6 @@ Request both types simultaneously:
     )
     result = model.fit(x, y)
     ```
-=== "Node.js"
-    ```javascript
-    const fl = require('fastlowess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i*7+3)%17)/17-0.5)*0.6);
-
-    const model = new fl.Lowess({fraction: 0.5,
-        confidence_intervals: 0.95,
-        prediction_intervals: 0.95});
-    const result = model.fit(x, y);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Lowess } = require('./fastlowess_wasm.js');
@@ -264,19 +221,6 @@ Common levels and their z-values:
     model = fl.Lowess(confidence_intervals=0.90)
     result = model.fit(x, y)
     ```
-=== "Node.js"
-    ```javascript
-    const fl = require('fastlowess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i*7+3)%17)/17-0.5)*0.6);
-
-    // 99% confidence interval
-    const model = new fl.Lowess({confidence_intervals: 0.99});
-    const result = model.fit(x, y);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Lowess } = require('./fastlowess_wasm.js');
@@ -331,22 +275,6 @@ Access standard errors directly (available when intervals are computed):
     result = model.fit(x, y)
     print("Standard errors:", result.standard_errors)
     ```
-=== "Node.js"
-    ```javascript
-    const fl = require('fastlowess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i*7+3)%17)/17-0.5)*0.6);
-
-    const model = new fl.Lowess({confidence_intervals: 0.95});
-    const result = model.fit(x, y);
-
-    result.standard_errors.forEach((se, i) => {
-        console.log(`Point ${i}: SE = ${se.toFixed(4)}`);
-    });
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Lowess } = require('./fastlowess_wasm.js');

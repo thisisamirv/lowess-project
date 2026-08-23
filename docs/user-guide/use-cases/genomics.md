@@ -61,28 +61,6 @@ A small `fraction = 0.1` lets LOWESS follow fine-scale spatial structure without
     plt.title("Methylation Profile Smoothing")
     plt.show()
     ```
-=== "Node.js"
-    ```javascript
-    const fl = require('fastlowess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i*7+3)%17)/17-0.5)*0.6);
-    const positions = Float64Array.from({ length: 1000 }, (_, i) => i * 10.0);
-    const observed = Float64Array.from(positions, p => 50 + Math.sin(p/100)*20 + Math.random()*5);
-
-    // positions and observed are your methylation data (Float64Array)
-    const model = new fl.Lowess({
-        fraction: 0.1,
-        iterations: 3,
-        confidence_intervals: 0.95
-    });
-    const result = model.fit(positions, observed);
-
-    // Smoothed profile in result.y
-    // CI bounds in result.confidence_lower/upper
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Lowess } = require('fastlowess-wasm');
@@ -175,28 +153,6 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
     peaks = positions[result.y > threshold]
     print(f"Peak regions: {peaks}")
     ```
-=== "Node.js"
-    ```javascript
-    const fl = require('fastlowess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i*7+3)%17)/17-0.5)*0.6);
-    const positions = Float64Array.from({ length: 1000 }, (_, i) => i * 10.0);
-    const observed = Float64Array.from(positions, p => 50 + Math.sin(p/100)*20 + Math.random()*5);
-
-    const model = new fl.Lowess({
-        fraction: 0.05,
-        iterations: 5
-    });
-    const result = model.fit(positions, observed);
-
-    // Identify peaks above threshold
-    const smoothed = result.y;
-    const threshold = 50.0; // Example threshold
-    const peaks = positions.filter((p, i) => smoothed[i] > threshold);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Lowess } = require('fastlowess-wasm');
@@ -273,30 +229,6 @@ For whole-genome data that doesn't fit in memory:
     model.process_chunk(positions, coverage)
     result = model.finalize()
     ```
-=== "Node.js"
-    ```javascript
-    const { StreamingLowess } = require('fastlowess');
-
-    const positions = Float64Array.from({ length: 1000 }, (_, i) => i * 10.0);
-    const observed = Float64Array.from(positions, p => 50 + Math.sin(p/100)*20 + Math.random()*5);
-    // Array of genomic chunks to process
-    const genomicData = [
-        { positions: positions.slice(0, 500), coverage: observed.slice(0, 500) },
-        { positions: positions.slice(500), coverage: observed.slice(500) }
-    ];
-
-    const processor = new StreamingLowess(
-        { fraction: 0.05, iterations: 3 },
-        { chunk_size: 100000, overlap: 10000 }
-    );
-
-    // Process genomic chunks from stream or file
-    for (const chunk of genomicData) {
-        processor.process_chunk(chunk.positions, chunk.coverage);
-    }
-    const result = processor.finalize();
-    ```
-
 === "WebAssembly"
     ```javascript
     const { StreamingLowess } = require('fastlowess-wasm');

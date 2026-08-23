@@ -36,18 +36,6 @@ Pads beyond both endpoints by replicating the first and last observed values. Pr
     model = fl.Lowess(boundary_policy="extend")
     result = model.fit(x, y)
     ```
-=== "Node.js"
-    ```javascript
-    const { Lowess } = require('fastlowess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Lowess({ boundary_policy: "extend" });
-    const result = model.fit(x, y);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Lowess } = require('./fastlowess_wasm.js');
@@ -102,18 +90,6 @@ Mirrors the data about both endpoints before fitting, then discards the reflecte
     model = fl.Lowess(boundary_policy="reflect")
     result = model.fit(x, y)
     ```
-=== "Node.js"
-    ```javascript
-    const { Lowess } = require('fastlowess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Lowess({ boundary_policy: "reflect" });
-    const result = model.fit(x, y);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Lowess } = require('./fastlowess_wasm.js');
@@ -168,18 +144,6 @@ Pads with zeros beyond both endpoints. Appropriate when the underlying process i
     model = fl.Lowess(boundary_policy="zero")
     result = model.fit(x, y)
     ```
-=== "Node.js"
-    ```javascript
-    const { Lowess } = require('fastlowess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Lowess({ boundary_policy: "zero" });
-    const result = model.fit(x, y);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Lowess } = require('./fastlowess_wasm.js');
@@ -237,18 +201,6 @@ Applies no padding. Each local fit uses only the points that are actually availa
     model = fl.Lowess(boundary_policy="noboundary")
     result = model.fit(x, y)
     ```
-=== "Node.js"
-    ```javascript
-    const { Lowess } = require('fastlowess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Lowess({ boundary_policy: "noboundary" });
-    const result = model.fit(x, y);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Lowess } = require('./fastlowess_wasm.js');

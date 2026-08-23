@@ -1,0 +1,127 @@
+{
+  "entryPoints": [
+    "index.d.ts"
+  ],
+  "out": "typedoc-out",
+  "name": "fastlowess",
+  "readme": "README.md",
+  "plugin": [
+    "typedoc-plugin-pages"
+  ],
+  "pages": {
+    "groups": [
+      {
+        "title": "Getting Started",
+        "pages": [
+          {
+            "title": "Installation",
+            "source": "./docs/installation.md"
+          },
+          {
+            "title": "Quick Start",
+            "source": "./docs/quickstart.md"
+          },
+          {
+            "title": "Concepts",
+            "source": "./docs/concepts.md"
+          }
+        ]
+      },
+      {
+        "title": "User Guide",
+        "pages": [
+          {
+            "title": "Parameters",
+            "source": "./docs/parameters.md"
+          },
+          {
+            "title": "Execution Modes",
+            "source": "./docs/adapter-choice.md"
+          },
+          {
+            "title": "Batch Mode",
+            "source": "./docs/batch.md"
+          },
+          {
+            "title": "Streaming Mode",
+            "source": "./docs/streaming.md"
+          },
+          {
+            "title": "Online Mode",
+            "source": "./docs/online.md"
+          },
+          {
+            "title": "Intervals",
+            "source": "./docs/intervals.md"
+          },
+          {
+            "title": "Cross-Validation",
+            "source": "./docs/cross-validation.md"
+          },
+          {
+            "title": "Weight Functions",
+            "source": "./docs/kernels.md"
+          },
+          {
+            "title": "Robustness",
+            "source": "./docs/robustness.md"
+          },
+          {
+            "title": "Scaling Methods",
+            "source": "./docs/scaling.md"
+          },
+          {
+            "title": "Custom Weights",
+            "source": "./docs/custom-weights.md"
+          },
+          {
+            "title": "Boundary Handling",
+            "source": "./docs/boundary.md"
+          },
+          {
+            "title": "Merge Strategies",
+            "source": "./docs/merge.md"
+          },
+          {
+            "title": "GPU Backend",
+            "source": "./docs/gpu-backend.md"
+          }
+        ]
+      },
+      {
+        "title": "Use Cases",
+        "pages": [
+          {
+            "title": "Genomics",
+            "source": "./docs/use-case-genomics.md"
+          },
+          {
+            "title": "Time Series",
+            "source": "./docs/use-case-time-series.md"
+          },
+          {
+            "title": "Real-Time Processing",
+            "source": "./docs/use-case-real-time.md"
+          }
+        ]
+      },
+      {
+        "title": "API Reference",
+        "pages": [
+          {
+            "title": "API Overview",
+            "source": "./docs/api.md"
+          },
+          {
+            "title": "StreamingLowess",
+            "source": "./docs/api-streaming.md"
+          },
+          {
+            "title": "OnlineLowess",
+            "source": "./docs/api-online.md"
+          }
+        ]
+      }
+    ]
+  }
+}

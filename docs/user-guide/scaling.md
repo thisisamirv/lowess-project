@@ -43,18 +43,6 @@ First centers residuals at their median, then takes the median of the absolute d
     model = fl.Lowess(iterations=3, scaling_method="mad")
     result = model.fit(x, y)
     ```
-=== "Node.js"
-    ```javascript
-    const { Lowess } = require('fastlowess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Lowess({ iterations: 3, scaling_method: "mad" });
-    const result = model.fit(x, y);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Lowess } = require('./fastlowess_wasm.js');
@@ -111,18 +99,6 @@ Uses the uncentered median — unlike MAD it does not subtract the residual medi
     model = fl.Lowess(iterations=3, scaling_method="mar")
     result = model.fit(x, y)
     ```
-=== "Node.js"
-    ```javascript
-    const { Lowess } = require('fastlowess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Lowess({ iterations: 3, scaling_method: "mar" });
-    const result = model.fit(x, y);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Lowess } = require('./fastlowess_wasm.js');
@@ -179,18 +155,6 @@ Arithmetic mean of absolute residuals. Non-robust: a single extreme outlier infl
     model = fl.Lowess(iterations=3, scaling_method="mean")
     result = model.fit(x, y)
     ```
-=== "Node.js"
-    ```javascript
-    const { Lowess } = require('fastlowess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Lowess({ iterations: 3, scaling_method: "mean" });
-    const result = model.fit(x, y);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Lowess } = require('./fastlowess_wasm.js');

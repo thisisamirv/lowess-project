@@ -40,27 +40,6 @@ For true real-time applications where each point must be processed immediately.
         if result is not None:
             print(f"Time {xi:.0f}: smoothed = {result.y:.2f}")
     ```
-=== "Node.js"
-    ```javascript
-    const { OnlineLowess } = require('fastlowess');
-
-    const processor = new OnlineLowess(
-        { fraction: 0.3, iterations: 1 },
-        { window_capacity: 25, min_points: 5, update_mode: "incremental" }
-    );
-
-    // Simulate real-time data arrival
-    for (let i = 0; i < 100; i++) {
-        const x = i;
-        const y = 20 + 5 * Math.sin(x / 10) + Math.random();
-        
-        const res = processor.add_point(x, y);
-        if (res !== null) {
-            console.log(`Time ${x}: smoothed = ${res.y.toFixed(2)}`);
-        }
-    }
-    ```
-
 === "WebAssembly"
     ```javascript
     const { OnlineLowess } = require('fastlowess-wasm');
@@ -154,28 +133,6 @@ For large datasets that arrive in batches or files.
     
     print(f"Processed {len(result.y)} points")
     ```
-=== "Node.js"
-    ```javascript
-    const { StreamingLowess } = require('fastlowess');
-
-    const chunk1_x = Float64Array.from({ length: 50 }, (_, i) => i);
-    const chunk1_y = Float64Array.from(chunk1_x, v => Math.sin(v * 0.1));
-    const chunk2_x = Float64Array.from({ length: 50 }, (_, i) => i + 50);
-    const chunk2_y = Float64Array.from(chunk2_x, v => Math.sin(v * 0.1));
-
-    const processor = new StreamingLowess(
-        { fraction: 0.1, iterations: 2 },
-        { chunk_size: 5000, overlap: 500 }
-    );
-
-    // Process chunks
-    const r1 = processor.process_chunk(chunk1_x, chunk1_y);
-    const r2 = processor.process_chunk(chunk2_x, chunk2_y);
-
-    // Always get buffered data
-    const finalResult = processor.finalize();
-    ```
-
 === "WebAssembly"
     ```javascript
     const { StreamingLowess } = require('fastlowess-wasm');
@@ -257,36 +214,6 @@ The dashboard pattern uses a plain LOWESS fit on a manually managed sliding wind
             model = fl.Lowess(fraction=0.4)
             result = model.fit(np.array(data_x, dtype=float), np.array(data_y, dtype=float))
             current_smoothed = result.y[-1]
-    ```
-
-=== "Node.js"
-    ```javascript
-    const fl = require('fastlowess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i*7+3)%17)/17-0.5)*0.6);
-
-    const window_capacity = 50;
-    let dataX = [], dataY = [];
-
-    for (let i = 0; i < 200; i++) {
-        dataX.push(i);
-        dataY.push(25.0 + 10 * Math.sin(i / 20) + Math.random() * 4 - 2);
-
-        if (dataX.length > window_capacity) {
-            dataX.shift();
-            dataY.shift();
-        }
-
-        if (dataX.length >= 5) {
-            const xArr = new Float64Array(dataX);
-            const yArr = new Float64Array(dataY);
-            const model = new fl.Lowess({ fraction: 0.4 });
-            const result = model.fit(xArr, yArr);
-            const currentSmoothed = result.y[result.y.length - 1];
-        }
-    }
     ```
 
 === "WebAssembly"

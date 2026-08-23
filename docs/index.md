@@ -98,14 +98,6 @@ Currently available for R, Python, Rust, Julia, Node.js, and WebAssembly.
     ```bash
     conda install -c conda-forge fastlowess
     ```
-=== "Node.js"
-
-    Install from npm:
-
-    ```bash
-    npm install fastlowess
-    ```
-
 === "WebAssembly"
 
     Install from npm:
@@ -155,19 +147,6 @@ See the [Installation Guide](getting-started/installation.md) for more options a
     result = model.fit(x, y)
     print(result.y)
     ```
-=== "Node.js"
-
-    ```javascript
-    const fl = require("fastlowess");
-
-    const x = new Float64Array([1, 2, 3, 4, 5]);
-    const y = new Float64Array([2.0, 4.1, 5.9, 8.2, 9.8]);
-
-    const model = new fl.Lowess({ fraction: 0.5, iterations: 3 });
-    const result = model.fit(x, y);
-    console.log(result.y);
-    ```
-
 === "WebAssembly"
 
     ```javascript

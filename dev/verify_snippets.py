@@ -40,7 +40,9 @@ from runners import RUNNERS, SKIP_CHECKS
 from runners.base import (
     DOCS_DIR,
     JULIA_DOCS_DIR,
+    NODEJS_BINDING_DOCS_DIR,
     REPO_ROOT,
+    RUST_CRATE_DOCS_DIRS,
     VIGNETTES_DIRS,
     RunResult,
     Snippet,
@@ -260,6 +262,11 @@ def iter_md_files(root: Path, file_filter: str | None) -> Iterator[Path]:
         yield from sorted(JULIA_DOCS_DIR.glob("*.md"))
     for vdir in VIGNETTES_DIRS:
         yield from sorted(vdir.glob("*.Rmd"))
+    for rust_dir in RUST_CRATE_DOCS_DIRS:
+        if rust_dir.exists():
+            yield from sorted(rust_dir.glob("*.md"))
+    if NODEJS_BINDING_DOCS_DIR.exists():
+        yield from sorted(NODEJS_BINDING_DOCS_DIR.glob("*.md"))
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -71,21 +71,6 @@ that would otherwise include it.
     model = Lowess(fraction=0.5, iterations=0)
     result = model.fit(x, y, custom_weights=weights)
     ```
-=== "Node.js"
-    ```javascript
-    const fastlowess = require('fastlowess');
-
-    const x = Float64Array.from({length: 10}, (_, i) => i);
-    const y = Float64Array.from(x, v => v * 2);
-    y[5] = 100.0; // spike
-
-    const weights = new Float64Array(10).fill(1.0);
-    weights[5] = 0.0; // exclude the spike
-
-    const model = new fastlowess.Lowess({fraction: 0.5, iterations: 0});
-    const result = model.fit(x, y, weights);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Lowess } = require('./fastlowess_wasm.js');
@@ -155,23 +140,6 @@ reference instruments, or low-noise observations.
     model = Lowess(fraction=0.5)
     result = model.fit(x, y, custom_weights=weights)
     ```
-=== "Node.js"
-    ```javascript
-    const fastlowess = require('fastlowess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, xi => Math.sin(xi) + (Math.random() - 0.5) * 0.6);
-    const calibrationIndices = [5, 20, 40, 60, 80];
-    const sigma = Float64Array.from({ length: n }, () => 0.1 + Math.random() * 0.4);
-
-    const weights = new Float64Array(x.length).fill(1.0);
-    for (const i of calibrationIndices) weights[i] = 10.0;
-
-    const model = new fastlowess.Lowess({fraction: 0.5});
-    const result = model.fit(x, y, weights);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Lowess } = require('./fastlowess_wasm.js');
@@ -239,21 +207,6 @@ weighting.
     model = Lowess(fraction=0.5)
     result = model.fit(x, y, custom_weights=weights)
     ```
-=== "Node.js"
-    ```javascript
-    const fastlowess = require('fastlowess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, xi => Math.sin(xi) + (Math.random() - 0.5) * 0.6);
-    const calibrationIndices = [5, 20, 40, 60, 80];
-    const sigma = Float64Array.from({ length: n }, () => 0.1 + Math.random() * 0.4);
-
-    const weights = Float64Array.from(sigma, s => 1.0 / (s * s));
-    const model = new fastlowess.Lowess({fraction: 0.5});
-    const result = model.fit(x, y, weights);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Lowess } = require('./fastlowess_wasm.js');
@@ -326,22 +279,6 @@ for *known* bad points and robustness for *unknown* contamination.
     model = Lowess(fraction=0.4, iterations=3)
     result = model.fit(x, y, custom_weights=weights)
     ```
-=== "Node.js"
-    ```javascript
-    const fastlowess = require('fastlowess');
-
-    const x = Float64Array.from({length: 20}, (_, i) => i);
-    const y = Float64Array.from({length: 20}, (_, i) => i * 1.5);
-    y[3]  = -50.0;  // known bad
-    y[12] = 80.0;   // unknown outlier
-
-    const weights = new Float64Array(20).fill(1.0);
-    weights[3] = 0.0;
-
-    const model = new fastlowess.Lowess({fraction: 0.4, iterations: 3});
-    const result = model.fit(x, y, weights);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Lowess } = require('./fastlowess_wasm.js');

@@ -40,24 +40,6 @@ Time series data often contains noise, seasonality, and trends. LOWESS provides 
     plt.title("Trend Extraction")
     plt.show()
     ```
-=== "Node.js"
-    ```javascript
-    const fl = require('fastlowess');
-
-    const n = 500;
-    const t = Float64Array.from({ length: n }, (_, i) => i * 100 / (n - 1));
-    const y = Float64Array.from(t, ti => 10 + 0.5 * ti + 3 * Math.sin(ti / 10) + (Math.random()-0.5)*6);
-
-    // t and y are your time series arrays (Float64Array)
-    const model = new fl.Lowess({ 
-        fraction: 0.1, 
-        iterations: 3 
-    });
-    const result = model.fit(t, y);
-
-    console.log("Extracted trend:", result.y);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Lowess } = require('fastlowess-wasm');
@@ -139,25 +121,6 @@ Setting `return_residuals = True` stores `observed − smoothed` alongside the s
     plt.title("Detrended (Residuals)")
     plt.tight_layout()
     ```
-=== "Node.js"
-    ```javascript
-    const fl = require('fastlowess');
-
-    const n = 500;
-    const t = Float64Array.from({ length: n }, (_, i) => i * 100 / (n - 1));
-    const y = Float64Array.from(t, ti => 10 + 0.5 * ti + 3 * Math.sin(ti / 10) + (Math.random()-0.5)*6);
-
-    const model = new fl.Lowess({
-        fraction: 0.3,
-        iterations: 3,
-        return_residuals: true
-    });
-    const result = model.fit(t, y);
-
-    const trend = result.y;
-    const detrended = result.residuals;
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Lowess } = require('fastlowess-wasm');
@@ -242,24 +205,6 @@ Prediction intervals widen the uncertainty band to include both the uncertainty 
     )
     plt.legend()
     ```
-=== "Node.js"
-    ```javascript
-    const fl = require('fastlowess');
-
-    const n = 500;
-    const t = Float64Array.from({ length: n }, (_, i) => i * 100 / (n - 1));
-    const y = Float64Array.from(t, ti => 10 + 0.5 * ti + 3 * Math.sin(ti / 10) + (Math.random()-0.5)*6);
-
-    const model = new fl.Lowess({
-        fraction: 0.2,
-        iterations: 3,
-        prediction_intervals: 0.95
-    });
-    const result = model.fit(t, y);
-
-    console.log(`95% PI: [${result.prediction_lower[0]}, ${result.prediction_upper[0]}]`);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Lowess } = require('fastlowess-wasm');
@@ -330,22 +275,6 @@ LOWESS naturally handles irregular time sampling:
     model = fl.Lowess(fraction=0.2)
     result = model.fit(t_irregular, y_irregular)
     ```
-=== "Node.js"
-    ```javascript
-    const fl = require('fastlowess');
-
-    const n = 500;
-    const t = Float64Array.from({ length: n }, (_, i) => i * 100 / (n - 1));
-    const y = Float64Array.from(t, ti => 10 + 0.5 * ti + 3 * Math.sin(ti / 10) + (Math.random()-0.5)*6);
-
-    const tIrregular = Float64Array.from({ length: 200 }, () => Math.random() * 100).sort((a,b)=>a-b);
-    const yIrregular = Float64Array.from(tIrregular, t => 10 + 0.3 * t + Math.random() * 2);
-
-    // No special handling needed for irregular spacing
-    const model = new fl.Lowess({ fraction: 0.2 });
-    const result = model.fit(tIrregular, yIrregular);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Lowess } = require('fastlowess-wasm');
@@ -410,21 +339,6 @@ Use different fractions to extract features at different scales:
     plt.legend()
     plt.title("Multi-Scale LOWESS")
     ```
-=== "Node.js"
-    ```javascript
-    const fl = require('fastlowess');
-
-    const n = 500;
-    const t = Float64Array.from({ length: n }, (_, i) => i * 100 / (n - 1));
-    const y = Float64Array.from(t, ti => 10 + 0.5 * ti + 3 * Math.sin(ti / 10) + (Math.random()-0.5)*6);
-
-    const scales = [0.05, 0.2, 0.5];
-    const trends = scales.map(f => {
-        const model = new fl.Lowess({ fraction: f });
-        return model.fit(t, y).y;
-    });
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Lowess } = require('fastlowess-wasm');
@@ -492,23 +406,6 @@ Biological application:
 
     print(f"R²: {result.diagnostics.r_squared:.3f}")
     ```
-=== "Node.js"
-    ```javascript
-    const fl = require('fastlowess');
-
-    const hours = Float64Array.from({ length: 49 }, (_, i) => i * 0.5);
-    const expression = Float64Array.from(hours, h => 100*(1+0.5*Math.sin(h*Math.PI/12))+(Math.random()-0.5)*20);
-
-    const model = new fl.Lowess({
-        fraction: 0.3,
-        iterations: 3,
-        return_diagnostics: true
-    });
-    const result = model.fit(hours, expression);
-
-    console.log(`R²: ${result.diagnostics.r_squared.toFixed(3)}`);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Lowess } = require('fastlowess-wasm');

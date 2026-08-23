@@ -12,7 +12,8 @@
         "build:debug": "napi build",
         "test": "node --test tests/test_fastlowess.js",
         "lint": "oxlint index.js tests/test_fastlowess.js",
-        "universal": "napi universal"
+        "universal": "napi universal",
+        "docs": "typedoc"
     },
     "napi": {
         "binaryName": "fastlowess",
@@ -37,7 +38,9 @@
     },
     "devDependencies": {
         "@napi-rs/cli": "^3.8",
-        "oxlint": "^1.79"
+        "oxlint": "^1.79",
+        "typedoc": "^0.26.0",
+        "typedoc-plugin-pages": "^2.0.0"
     },
     "engines": {
         "node": ">= 20"

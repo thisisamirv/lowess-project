@@ -45,21 +45,6 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
     model = StreamingLowess(merge_strategy="average", chunk_size=5000, overlap=500)
     result = model.process_chunk(x_chunk, y_chunk)
     ```
-=== "Node.js"
-    ```javascript
-    const { StreamingLowess } = require('fastlowess');
-
-    const n = 50;
-    const xChunk = Float64Array.from({ length: n }, (_, i) => i * Math.PI / (n - 1));
-    const yChunk = Float64Array.from(xChunk, xi => Math.sin(xi));
-
-    const processor = new StreamingLowess(
-        {},
-        { merge_strategy: "average", chunk_size: 5000, overlap: 500 }
-    );
-    const result = processor.process_chunk(xChunk, yChunk);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { StreamingLowess } = require('./fastlowess_wasm.js');
@@ -115,16 +100,6 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
     from fastlowess import StreamingLowess
     model = StreamingLowess(merge_strategy="take_first")
     ```
-=== "Node.js"
-    ```javascript
-    const { StreamingLowess } = require('fastlowess');
-
-    const processor = new StreamingLowess(
-        {},
-        { merge_strategy: "take_first" }
-    );
-    ```
-
 === "WebAssembly"
     ```javascript
     const { StreamingLowess } = require('./fastlowess_wasm.js');
@@ -161,16 +136,6 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
     from fastlowess import StreamingLowess
     model = StreamingLowess(merge_strategy="take_last")
     ```
-=== "Node.js"
-    ```javascript
-    const { StreamingLowess } = require('fastlowess');
-
-    const processor = new StreamingLowess(
-        {},
-        { merge_strategy: "take_last" }
-    );
-    ```
-
 === "WebAssembly"
     ```javascript
     const { StreamingLowess } = require('./fastlowess_wasm.js');
@@ -215,20 +180,6 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
         overlap=500
     )
     ```
-=== "Node.js"
-    ```javascript
-    const { StreamingLowess } = require('fastlowess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const processor = new StreamingLowess(
-        {},
-        { merge_strategy: "weighted_average", chunk_size: 5000, overlap: 500 }
-    );
-    ```
-
 === "WebAssembly"
     ```javascript
     const { StreamingLowess } = require('./fastlowess_wasm.js');

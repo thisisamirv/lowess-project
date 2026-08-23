@@ -42,18 +42,11 @@ GPU support is **opt-in** and not included in the default published artifacts (P
 
 Before requesting `backend = "gpu"` (or the language's equivalent spelling), check whether the currently loaded library was built with GPU support. Requesting the GPU backend when it isn't available raises a clear error pointing at the installer for that language, rather than a raw panic.
 
-=== "Python"
-    ```python
-    import fastlowess as fl
+```javascript
+const fastlowess = require('fastlowess');
 
-    fl.gpu_available()
-    ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-
-    fastlowess::gpu::available();
-    ```
+fastlowess.gpuAvailable();
+```
 
 ---
 
@@ -71,42 +64,30 @@ Whether you need to **restart** afterwards depends on how each language loads it
 | C++ | Yes (relink/rebuild) | Your application links against the library at build/load time. |
 | Julia | **No** | `install_gpu()` re-points the internal library reference immediately. |
 
-=== "Python"
-    ```python
-    import fastlowess as fl
+```javascript
+const fastlowess = require('fastlowess');
 
-    fl.install_gpu()  # prompts for confirmation, then installs; restart Python afterwards
-    ```
+(async () => {
+    await fastlowess.installGpu(); // prompts for confirmation, then downloads
+})();
+```
 
-    Non-interactively:
+Non-interactively:
 
-    ```sh
-    python -c "import fastlowess; fastlowess.install_gpu(yes=True)"
-    # or, via the console script installed alongside the package:
-    fastlowess-install-gpu
-    ```
+```sh
+node -e "require('fastlowess').installGpu({ yes: true })"
+# or, via the console script installed alongside the package:
+npx fastlowess-install-gpu
+```
 
-    Build from source instead:
+The download is saved as `fastlowess.node` next to `index.js` — the same local-override path the loader already checks first. **Restart Node.js** afterwards.
 
-    ```sh
-    cd bindings/python
-    maturin develop --release --features gpu
-    ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
+Build from source instead:
 
-    fastlowess::gpu::install(); // prompts for confirmation via curl, then downloads
-    ```
-
-    Non-interactively: `fastlowess::gpu::install(/*yes=*/true)`. Requires `curl` on `PATH` (ships with Linux, macOS, and Windows 10+). A running process cannot swap the backend of a library it already linked against — after downloading, relink/rebuild your application against the downloaded library (or `dlopen`/`LoadLibrary` it manually) and restart.
-
-    Build from source instead:
-
-    ```sh
-    cd bindings/cpp
-    cargo build --release --features gpu
-    ```
+```sh
+cd bindings/nodejs
+npx napi build --release --features gpu
+```
 
 ---
 
@@ -114,24 +95,12 @@ Whether you need to **restart** afterwards depends on how each language loads it
 
 Once GPU support is available, request it by setting the backend option on the batch constructor.
 
-=== "Python"
-    ```python
-    import fastlowess as fl
+```javascript
+const { Lowess } = require('fastlowess');
 
-    model = fl.Lowess(fraction=0.5, backend="gpu", confidence_intervals=0.95)
-    result = model.fit(x, y)
-    ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-
-    fastlowess::LowessOptions opts;
-    opts.fraction = 0.5;
-    opts.backend = "gpu";
-    opts.confidence_intervals = 0.95;
-    fastlowess::Lowess model(opts);
-    auto result = model.fit(x, y);
-    ```
+const model = new Lowess({ fraction: 0.5, backend: "gpu", confidence_intervals: 0.95 });
+const result = model.fit(x, y);
+```
 
 If GPU support isn't available, requesting `backend = "gpu"` (or the equivalent) raises a runtime error pointing at the installer for that language rather than a raw Rust panic.
 

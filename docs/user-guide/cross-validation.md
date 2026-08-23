@@ -33,25 +33,6 @@ Split data into K folds, train on K-1, validate on 1.
     print(f"Selected fraction: {result.fraction_used}")
     print(f"CV scores: {result.cv_scores}")
     ```
-=== "Node.js"
-    ```javascript
-    const { Lowess } = require('fastlowess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Lowess({
-        cv_method: "kfold",
-        cv_k: 5,
-        cv_fractions: [0.2, 0.3, 0.5, 0.7]
-    });
-    const result = model.fit(x, y);
-
-    console.log("Selected fraction:", result.fraction_used);
-    console.log("CV scores:", result.cv_scores);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Lowess } = require('./fastlowess_wasm.js');
@@ -121,21 +102,6 @@ Each point is held out once. Most thorough but slowest.
     )
     result = model.fit(x, y)
     ```
-=== "Node.js"
-    ```javascript
-    const { Lowess } = require('fastlowess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Lowess({
-        cv_method: "loocv",
-        cv_fractions: [0.2, 0.3, 0.5, 0.7]
-    });
-    const result = model.fit(x, y);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Lowess } = require('./fastlowess_wasm.js');
@@ -198,23 +164,6 @@ Set a seed for reproducible fold assignments:
     )
     result = model.fit(x, y)
     ```
-=== "Node.js"
-    ```javascript
-    const fl = require('fastlowess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i*7+3)%17)/17-0.5)*0.6);
-
-    const model = new fl.Lowess({
-        cv_method: "kfold",
-        cv_k: 5,
-        cv_fractions: [0.3, 0.5, 0.7],
-        cv_seed: 42
-    });
-    const result = model.fit(x, y);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Lowess } = require('./fastlowess_wasm.js');
@@ -310,29 +259,6 @@ Lower MSE indicates better fit on held-out data.
     # 0.5       | 0.0298
     # 0.7       | 0.0412  ← Oversmoothed
     ```
-=== "Node.js"
-    ```javascript
-    const { Lowess } = require('fastlowess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    // Example output
-    const model = new Lowess({
-        cv_method: "kfold",
-        cv_k: 5,
-        cv_fractions: [0.1, 0.3, 0.5, 0.7]
-    });
-    const result = model.fit(x, y);
-
-    // Fraction  | CV Score (MSE)
-    // 0.1       | 0.0542  ← Undersmoothed
-    // 0.3       | 0.0231  ← Best
-    // 0.5       | 0.0298
-    // 0.7       | 0.0412  ← Oversmoothed
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Lowess } = require('./fastlowess_wasm.js');
