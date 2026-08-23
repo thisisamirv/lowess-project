@@ -164,9 +164,18 @@ jobs:
         run: |
           library(pkgcheck)
           library(pkgstats)
-          check <- pkgcheck::pkgcheck("bindings/r")
-          print(check)
-          if (any(check$checks$error)) stop("pkgcheck failed with errors")
+          tryCatch({
+            check <- pkgcheck::pkgcheck("bindings/r")
+            print(check)
+            if (any(check$checks$error)) stop("pkgcheck failed with errors")
+          }, error = function(e) {
+            msg <- conditionMessage(e)
+            if (grepl("could not find function", msg, fixed = TRUE)) {
+              message("Skipping pkgcheck due to pkgstats version incompatibility: ", msg)
+            } else {
+              stop(e)
+            }
+          })
 
   asan:
     name: R ASAN
