@@ -56,8 +56,8 @@ LOWESS (Locally Weighted Scatterplot Smoothing) implementation for
 >
 > Currently available for R, Python, Rust, Julia, Node.js, WebAssembly,
 > and C++. See the [Installation
-> Guide](https://lowess.readthedocs.io/en/latest/getting-started/installation/)
-> for detailed installation instructions.
+> Guide](https://thisisamirv.github.io/lowess-project/r/) for detailed
+> installation instructions.
 
 ### GPU Backend
 
@@ -68,14 +68,14 @@ class in every binding — except WebAssembly — as well as the
 processing of large datasets (roughly 10k+ points); for smaller inputs
 the CPU backend is typically faster. `StreamingLowess`/`OnlineLowess`
 remain CPU-only. See the [GPU Backend
-guide](https://lowess.readthedocs.io/en/latest/user-guide/gpu-backend/)
-for installation instructions and usage.
+guide](https://thisisamirv.github.io/lowess-project/r/) for installation
+instructions and usage.
 
 ## Documentation
 
 > \[!NOTE\]
 >
-> ### 📚 [View the full documentation](https://lowess.readthedocs.io/)
+> ### 📚 [View the full documentation](https://thisisamirv.github.io/lowess-project/r/)
 
 ------------------------------------------------------------------------
 
@@ -103,7 +103,7 @@ single-threaded or multi-threaded parallel execution. It is on average
 faster** than R’s `lowess`.
 
 For more details on the performance comparison, see the
-[Benchmarks](https://lowess.readthedocs.io/en/latest/benchmarks/) page.
+[Benchmarks](https://thisisamirv.github.io/lowess-project/r/) page.
 
 ### Robustness
 

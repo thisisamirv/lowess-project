@@ -87,12 +87,12 @@
 </h2>
 <blockquote>
 <p>[!NOTE]</p>
-<p>Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the <a href="https://lowess.readthedocs.io/en/latest/getting-started/installation/" class="external-link">Installation Guide</a> for detailed installation instructions.</p>
+<p>Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the <a href="https://thisisamirv.github.io/lowess-project/r/">Installation Guide</a> for detailed installation instructions.</p>
 </blockquote>
 <div class="section level3">
 <h3 id="gpu-backend">GPU Backend<a class="anchor" aria-label="anchor" href="#gpu-backend"></a>
 </h3>
-<p>In addition to <code>parallel = true</code> (multi-core CPU), the batch <code>Lowess</code> class in every binding — except WebAssembly — as well as the <code>fastLowess</code> Rust crate itself, can run on the GPU via <code>wgpu</code> (Vulkan/Metal/DX12). It’s opt-in and worth enabling for high-throughput processing of large datasets (roughly 10k+ points); for smaller inputs the CPU backend is typically faster. <code>StreamingLowess</code>/<code>OnlineLowess</code> remain CPU-only. See the <a href="https://lowess.readthedocs.io/en/latest/user-guide/gpu-backend/" class="external-link">GPU Backend guide</a> for installation instructions and usage.</p>
+<p>In addition to <code>parallel = true</code> (multi-core CPU), the batch <code>Lowess</code> class in every binding — except WebAssembly — as well as the <code>fastLowess</code> Rust crate itself, can run on the GPU via <code>wgpu</code> (Vulkan/Metal/DX12). It’s opt-in and worth enabling for high-throughput processing of large datasets (roughly 10k+ points); for smaller inputs the CPU backend is typically faster. <code>StreamingLowess</code>/<code>OnlineLowess</code> remain CPU-only. See the <a href="https://thisisamirv.github.io/lowess-project/r/">GPU Backend guide</a> for installation instructions and usage.</p>
 </div>
 </div>
 <div class="section level2">
@@ -100,7 +100,7 @@
 </h2>
 <blockquote>
 <p>[!NOTE]</p>
-<h3 id="books-view-the-full-documentation">📚 <a href="https://lowess.readthedocs.io/" class="external-link">View the full documentation</a>
+<h3 id="books-view-the-full-documentation">📚 <a href="https://thisisamirv.github.io/lowess-project/r/">View the full documentation</a>
 </h3>
 </blockquote>
 <hr>
@@ -154,7 +154,7 @@
 <h3 id="speed">Speed<a class="anchor" aria-label="anchor" href="#speed"></a>
 </h3>
 <p>The <code>lowess</code> project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution. It is on average <strong>200-327x faster</strong> than Python’s <code>statsmodels.lowess</code> and <strong>2-3x faster</strong> than R’s <code>lowess</code>.</p>
-<p>For more details on the performance comparison, see the <a href="https://lowess.readthedocs.io/en/latest/benchmarks/" class="external-link">Benchmarks</a> page.</p>
+<p>For more details on the performance comparison, see the <a href="https://thisisamirv.github.io/lowess-project/r/">Benchmarks</a> page.</p>
 </div>
 <div class="section level3">
 <h3 id="robustness">Robustness<a class="anchor" aria-label="anchor" href="#robustness"></a>
