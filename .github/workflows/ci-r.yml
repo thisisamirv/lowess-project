@@ -66,11 +66,17 @@ jobs:
         if: matrix.r == '4.2'
         shell: Rscript {0}
         run: |
-          options(repos = c(CRAN = "https://cloud.r-project.org"))
-          install.packages("BiocManager", quiet = TRUE)
+          lib <- Sys.getenv("R_LIBS_USER")
+          dir.create(lib, recursive = TRUE, showWarnings = FALSE)
+          .libPaths(c(lib, .libPaths()))
+          install.packages(
+            c("rcmdcheck", "devtools", "lintr"),
+            lib = lib, repos = "https://cloud.r-project.org", quiet = TRUE
+          )
+          install.packages("BiocManager", lib = lib, repos = "https://cloud.r-project.org", quiet = TRUE)
           BiocManager::install(
-            c("BiocGenerics", "BiocStyle", "rcmdcheck", "devtools", "lintr"),
-            ask = FALSE, update = FALSE, quiet = TRUE
+            c("BiocGenerics", "BiocStyle"),
+            lib = lib, ask = FALSE, update = FALSE, quiet = TRUE
           )
 
       - uses: r-lib/actions/setup-r-dependencies@v2
