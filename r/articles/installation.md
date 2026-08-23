@@ -1,0 +1,59 @@
+# Installation
+
+## From R-universe (recommended)
+
+Pre-built binaries — no Rust compiler required.
+
+``` r
+
+install.packages("rfastlowess", repos = "https://thisisamirv.r-universe.dev")
+```
+
+## From conda-forge
+
+``` r
+
+# In a conda environment
+# conda install -c conda-forge r-rfastlowess
+```
+
+## From Source (GitHub)
+
+Requires [Rust](https://rustup.rs/) and Rtools (Windows).
+
+``` r
+
+devtools::install_github("thisisamirv/lowess-project", subdir = "bindings/r")
+```
+
+------------------------------------------------------------------------
+
+## System Requirements
+
+- **R**: 4.4.0 or later
+- **Windows**: [Rtools](https://cran.r-project.org/bin/windows/Rtools/)
+  — required for source installation
+- **Rust**: Required for source installation only
+  ([rustup.rs](https://rustup.rs/))
+
+On Windows with Rtools, add the MinGW GNU target:
+
+``` sh
+rustup target add x86_64-pc-windows-gnu
+```
+
+------------------------------------------------------------------------
+
+## Verifying Installation
+
+``` r
+
+library(rfastlowess)
+
+# Fit a simple example
+x <- 1:10
+y <- x + rnorm(10, sd = 0.5)
+model <- Lowess()
+result <- fit(model, x, y)
+print(result$y)
+```

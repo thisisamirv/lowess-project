@@ -2,8 +2,25 @@ pandoc: 3.8.3
 pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
-  rfastlowess-intro: rfastlowess-intro.html
-last_built: 2026-08-23T02:00Z
+  adapters: adapters.html
+  benchmarks: benchmarks.html
+  boundary: boundary.html
+  concepts: concepts.html
+  cross-validation: cross-validation.html
+  custom-weights: custom-weights.html
+  gpu-backend: gpu-backend.html
+  installation: installation.html
+  intervals: intervals.html
+  kernels: kernels.html
+  merge: merge.html
+  parameters: parameters.html
+  quickstart: quickstart.html
+  robustness: robustness.html
+  scaling: scaling.html
+  use-case-genomics: use-case-genomics.html
+  use-case-real-time: use-case-real-time.html
+  use-case-time-series: use-case-time-series.html
+last_built: 2026-08-23T02:50Z
 urls:
   reference: https://thisisamirv.github.io/lowess-project/r/reference
   article: https://thisisamirv.github.io/lowess-project/r/articles

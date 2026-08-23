@@ -1,0 +1,118 @@
+# Use Case: Genomic Data Smoothing
+
+## Overview
+
+LOWESS is well-suited for genomic data such as DNA methylation profiles,
+ChIP-seq signals, and expression arrays. Sequencing depth variation, PCR
+artifacts, and biological heterogeneity all create noise that LOWESS
+handles gracefully without parametric assumptions.
+
+------------------------------------------------------------------------
+
+## Methylation Profile Smoothing
+
+A small `fraction = 0.1` lets LOWESS follow fine-scale spatial structure
+without smearing transitions between methylated and unmethylated
+regions. `confidence_intervals = 0.95` produces uncertainty bands that
+naturally widen at positions with sparser CpG coverage.
+
+``` r
+
+library(rfastlowess)
+
+# Simulate methylation data along a chromosome
+set.seed(42)
+n <- 1000
+positions <- sort(runif(n, 0, 1e6))
+
+# True methylation pattern
+true_meth <- 0.5 + 0.3 * sin(positions / 1e5)
+
+# Observed with noise
+observed <- true_meth + rnorm(n, sd = 0.15)
+observed <- pmax(0, pmin(1, observed))
+
+# Smooth
+model <- Lowess(
+    fraction = 0.1,
+    iterations = 3,
+    confidence_intervals = 0.95
+)
+result <- fit(model, positions, observed)
+
+# Plot
+plot(positions, observed, pch = ".", col = "gray",
+     xlab = "Genomic Position (bp)", ylab = "Methylation Level",
+     main = "Methylation Profile Smoothing")
+lines(result$x, result$y, col = "blue", lwd = 2)
+lines(result$x, result$confidence_lower, col = "blue", lty = 2)
+lines(result$x, result$confidence_upper, col = "blue", lty = 2)
+legend("topright", c("Observed", "Smoothed", "95% CI"),
+       pch = c(1, NA, NA), lty = c(NA, 1, 2),
+       col = c("gray", "blue", "blue"))
+```
+
+------------------------------------------------------------------------
+
+## ChIP-seq Signal Smoothing
+
+ChIP-seq read counts are discrete and often overdispersed. Robustness
+iterations guard against the PCR duplicate spikes.
+
+``` r
+
+library(rfastlowess)
+set.seed(42)
+
+# Simulated ChIP-seq enrichment
+n <- 500
+positions <- seq(1, 50000, length.out = n)
+signal <- 10 + 5 * dnorm(positions, mean = 25000, sd = 5000) * 1000
+
+# Add noise and spikes
+noise <- rpois(n, lambda = 2)
+signal_noisy <- signal + noise
+signal_noisy[c(100, 200, 300)] <- signal_noisy[c(100, 200, 300)] * 5
+
+# Smooth
+model <- Lowess(
+    fraction = 0.1,
+    iterations = 3
+)
+result <- fit(model, positions, signal_noisy)
+
+plot(positions, signal_noisy, pch = 16, cex = 0.4, col = "gray",
+     xlab = "Genomic Position", ylab = "Read Count",
+     main = "ChIP-seq Signal Smoothing")
+lines(result$x, result$y, col = "blue", lwd = 2)
+```
+
+------------------------------------------------------------------------
+
+## Large Genomic Datasets (Streaming)
+
+For whole-genome datasets that do not fit in memory, use the streaming
+adapter.
+
+``` r
+
+library(rfastlowess)
+
+model <- StreamingLowess(
+    fraction   = 0.05,
+    iterations = 2,
+    chunk_size = 50000,
+    overlap    = 2000,
+    merge_strategy = "weighted_average"
+)
+
+# Process chromosome in chunks
+# (in practice, read from a file or database)
+set.seed(42)
+for (chunk_i in 1:5) {
+    pos_chunk <- seq((chunk_i - 1) * 1e5 + 1, chunk_i * 1e5, length.out = 1000)
+    val_chunk <- sin(pos_chunk / 1e4) + rnorm(1000, sd = 0.2)
+    result <- process_chunk(model, pos_chunk, val_chunk)
+}
+final <- finalize(model)
+```

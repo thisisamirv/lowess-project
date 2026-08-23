@@ -1,0 +1,127 @@
+# Use Case: Time Series Analysis
+
+## Overview
+
+LOWESS provides flexible trend extraction from time series without
+parametric assumptions. It handles irregular sampling, noise, and
+outliers naturally.
+
+------------------------------------------------------------------------
+
+## Basic Trend Extraction
+
+`fraction = 0.1` sizes the neighbourhood to 10% of the data at each
+evaluation point — narrow enough to follow a slowly varying trend
+without smearing periodic variation. Three robustness `iterations`
+down-weight noise spikes.
+
+``` r
+
+library(rfastlowess)
+
+set.seed(42)
+t <- seq(0, 100, length.out = 500)
+trend <- 10 + 0.5 * t + 3 * sin(t / 10)
+noise <- rnorm(500, sd = 3)
+y <- trend + noise
+
+model <- Lowess(fraction = 0.1, iterations = 3)
+result <- fit(model, t, y)
+
+plot(t, y, col = "gray", pch = ".",
+     xlab = "Time", ylab = "Value", main = "Trend Extraction")
+lines(result$x, result$y, col = "blue", lwd = 2)
+legend("topleft", c("Observed", "Trend (LOWESS)"),
+       pch = c(1, NA), lty = c(NA, 1), col = c("gray", "blue"))
+```
+
+------------------------------------------------------------------------
+
+## Seasonal Decomposition
+
+Extract the trend component and compute the residual to inspect
+seasonality.
+
+``` r
+
+library(rfastlowess)
+set.seed(42)
+
+# Simulate monthly data with trend + seasonality + noise
+t <- 1:120  # 10 years monthly
+trend <- 100 + 0.5 * t
+seasonal <- 15 * sin(2 * pi * t / 12)
+noise <- rnorm(120, sd = 5)
+y <- trend + seasonal + noise
+
+# Extract trend with large fraction (heavy smoothing)
+model <- Lowess(fraction = 0.4, iterations = 2)
+result <- fit(model, t, y)
+
+# Residual = observed - trend (should show seasonality)
+residual <- y - result$y
+
+par(mfrow = c(2, 1))
+plot(t, y, type = "l", col = "gray",
+     main = "Original + LOWESS Trend", xlab = "Month", ylab = "Value")
+lines(result$x, result$y, col = "blue", lwd = 2)
+
+plot(t, residual, type = "l", col = "darkgreen",
+     main = "Detrended Residual (Seasonal Component)",
+     xlab = "Month", ylab = "Residual")
+abline(h = 0, lty = 2, col = "red")
+par(mfrow = c(1, 1))
+```
+
+------------------------------------------------------------------------
+
+## Irregular Time Grids
+
+LOWESS handles irregularly sampled data naturally — no interpolation
+needed.
+
+``` r
+
+library(rfastlowess)
+set.seed(42)
+
+# Irregular sampling: dense early, sparse later
+t_irregular <- c(sort(runif(200, 0, 50)), sort(runif(50, 50, 100)))
+y_irregular <- sin(t_irregular / 10) + rnorm(length(t_irregular), sd = 0.5)
+
+model <- Lowess(fraction = 0.2, iterations = 2)
+result <- fit(model, t_irregular, y_irregular)
+
+plot(t_irregular, y_irregular, pch = 16, cex = 0.4, col = "gray",
+     xlab = "Time", ylab = "Value", main = "Irregularly Sampled Time Series")
+lines(result$x, result$y, col = "blue", lwd = 2)
+```
+
+------------------------------------------------------------------------
+
+## Uncertainty Bands for Forecasting Context
+
+Confidence bands help communicate where the trend is uncertain.
+
+``` r
+
+library(rfastlowess)
+set.seed(42)
+t <- seq(0, 100, length.out = 500)
+y <- 10 + 0.3 * t + sin(t / 5) + rnorm(500, sd = 2)
+
+model <- Lowess(
+    fraction = 0.2,
+    iterations = 3,
+    confidence_intervals = 0.95
+)
+result <- fit(model, t, y)
+
+plot(t, y, pch = ".", col = "gray",
+     xlab = "Time", ylab = "Value",
+     main = "Trend with 95% Confidence Interval")
+polygon(c(result$x, rev(result$x)),
+        c(result$confidence_upper, rev(result$confidence_lower)),
+        col = rgb(0, 0, 1, 0.15), border = NA)
+lines(result$x, result$y, col = "blue", lwd = 2)
+```
