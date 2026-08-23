@@ -50,6 +50,7 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Lowess(weight_function = "tricube")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (tricube kernel):\n")
 print(head(result$y))
 ```
 
@@ -66,6 +67,7 @@ $$w(u) = \frac{3}{4}(1 - u^2)$$
 ```{r kernels_2}
 model <- Lowess(weight_function = "epanechnikov")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (epanechnikov kernel):\n")
 print(head(result$y))
 ```
 
@@ -82,6 +84,7 @@ $$w(u) = e^{-u^2/2}$$
 ```{r kernels_3}
 model <- Lowess(weight_function = "gaussian")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (gaussian kernel):\n")
 print(head(result$y))
 ```
 
@@ -98,6 +101,7 @@ $$w(u) = (1 - u^2)^2$$
 ```{r kernels_4}
 model <- Lowess(weight_function = "biweight")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (biweight kernel):\n")
 print(head(result$y))
 ```
 
@@ -114,6 +118,7 @@ $$w(u) = \frac{\pi}{4}\cos\!\left(\frac{\pi u}{2}\right)$$
 ```{r kernels_5}
 model <- Lowess(weight_function = "cosine")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (cosine kernel):\n")
 print(head(result$y))
 ```
 
@@ -130,6 +135,7 @@ $$w(u) = 1 - |u|$$
 ```{r kernels_6}
 model <- Lowess(weight_function = "triangle")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (triangle kernel):\n")
 print(head(result$y))
 ```
 
@@ -146,6 +152,7 @@ $$w(u) = \frac{1}{2}$$
 ```{r kernels_7}
 model <- Lowess(weight_function = "uniform")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (uniform kernel):\n")
 print(head(result$y))
 ```
 

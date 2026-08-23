@@ -44,6 +44,7 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Lowess(boundary_policy = "extend")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (extend policy):\n")
 print(head(result$y))
 ```
 
@@ -60,6 +61,7 @@ symmetry point.
 ```{r boundary_2}
 model <- Lowess(boundary_policy = "reflect")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (reflect policy):\n")
 print(head(result$y))
 ```
 
@@ -75,6 +77,7 @@ impulse responses, genomic signals at chromosome ends).
 ```{r boundary_3}
 model <- Lowess(boundary_policy = "zero")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (zero policy):\n")
 print(head(result$y))
 ```
 
@@ -93,6 +96,7 @@ Cleveland algorithm behaviour is required.
 ```{r boundary_4}
 model <- Lowess(boundary_policy = "noboundary")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (noboundary policy):\n")
 print(head(result$y))
 ```
 

@@ -80,6 +80,7 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Lowess(fraction = 0.3)
 result <- fit(model, x, y)
+cat("First 6 smoothed values (fraction=0.3):\n")
 print(head(result$y))
 ```
 
@@ -91,6 +92,7 @@ points.
 ```{r parameters_2}
 model <- Lowess(iterations = 3)
 result <- fit(model, x, y)
+cat("First 6 smoothed values (iterations=3):\n")
 print(head(result$y))
 ```
 
@@ -103,6 +105,7 @@ data range.
 ```{r parameters_3}
 model <- Lowess(delta = 0.01)
 result <- fit(model, x, y)
+cat("First 6 smoothed values (delta=0.01):\n")
 print(head(result$y))
 ```
 
@@ -113,6 +116,7 @@ Enable parallel CPU execution (multiple cores).
 ```{r parameters_4}
 model <- Lowess(parallel = TRUE)
 result <- fit(model, x, y)
+cat("First 6 smoothed values (parallel=TRUE):\n")
 print(head(result$y))
 ```
 
@@ -123,7 +127,7 @@ Return goodness-of-fit diagnostics (R², residuals, etc.).
 ```{r parameters_5}
 model <- Lowess(return_diagnostics = TRUE)
 result <- fit(model, x, y)
-print(result$diagnostics$r_squared)
+cat("R²:", result$diagnostics$r_squared, "\n")
 ```
 
 ---

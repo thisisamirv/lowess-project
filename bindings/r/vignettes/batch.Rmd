@@ -54,9 +54,11 @@ model <- Lowess(
 )
 result <- fit(model, x, y)
 
+cat("Confidence lower bounds:\n")
 print(result$confidence_lower)
+cat("Confidence upper bounds:\n")
 print(result$confidence_upper)
-print(result$diagnostics$r_squared)
+cat("R²:", result$diagnostics$r_squared, "\n")
 ```
 
 ```{r session-info}

@@ -53,9 +53,11 @@ model <- Lowess(
 )
 result <- fit(model, x, y)
 
+cat("Confidence lower bounds:\n")
 print(result$confidence_lower)
+cat("Confidence upper bounds:\n")
 print(result$confidence_upper)
-print(result$diagnostics$r_squared)
+cat("R²:", result$diagnostics$r_squared, "\n")
 ```
 
 ---
@@ -112,6 +114,7 @@ result <- process_chunk(model, chunk_x, chunk_y)
 
 # Finalize after all chunks
 final <- finalize(model)
+cat("First 6 smoothed values (streaming, weighted_average merge):\n")
 print(head(final$y))
 ```
 

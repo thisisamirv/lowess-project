@@ -62,6 +62,7 @@ model <- StreamingLowess(
 )
 result <- process_chunk(model, x_chunk, y_chunk)
 final  <- finalize(model)
+cat("First 6 smoothed values (streaming, weighted_average merge):\n")
 print(head(final$y))
 ```
 

@@ -46,6 +46,7 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Lowess(iterations = 3, robustness_method = "bisquare")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (bisquare robustness):\n")
 print(head(result$y))
 ```
 
@@ -59,6 +60,7 @@ residuals at reduced weight.
 ```{r robustness_2}
 model <- Lowess(iterations = 3, robustness_method = "huber")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (huber robustness):\n")
 print(head(result$y))
 ```
 
@@ -71,6 +73,7 @@ Hard thresholding — points above the threshold are excluded completely.
 ```{r robustness_3}
 model <- Lowess(iterations = 3, robustness_method = "talwar")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (talwar robustness):\n")
 print(head(result$y))
 ```
 

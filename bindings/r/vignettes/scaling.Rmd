@@ -53,6 +53,7 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Lowess(iterations = 3, scaling_method = "mad")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (MAD scaling):\n")
 print(head(result$y))
 ```
 
@@ -70,6 +71,7 @@ faster to compute.
 ```{r scaling_2}
 model <- Lowess(iterations = 3, scaling_method = "mar")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (MAR scaling):\n")
 print(head(result$y))
 ```
 
@@ -86,6 +88,7 @@ Least robust — influenced by outliers. Matches classic OLS residual scale.
 ```{r scaling_3}
 model <- Lowess(iterations = 3, scaling_method = "mean")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (mean scaling):\n")
 print(head(result$y))
 ```
 

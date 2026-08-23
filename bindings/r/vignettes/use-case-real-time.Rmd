@@ -146,6 +146,7 @@ for (i in seq_len(n_chunks)) {
 }
 
 final <- finalize(model)
+cat("First 6 smoothed values (streaming, weighted_average merge):\n")
 print(head(final$y))
 ```
 

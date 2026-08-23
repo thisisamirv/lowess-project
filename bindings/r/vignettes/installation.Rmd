@@ -62,6 +62,7 @@ x <- 1:10
 y <- x + rnorm(10, sd = 0.5)
 model <- Lowess()
 result <- fit(model, x, y)
+cat("Smoothed values:\n")
 print(result$y)
 ```
 
