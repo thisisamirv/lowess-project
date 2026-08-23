@@ -33,7 +33,7 @@ Maintains a sliding window and processes each incoming point immediately.
 
 ## Example
 
-```{r}
+```{r online_1}
 library(rfastlowess)
 set.seed(42)
 times <- 1:100

@@ -15,13 +15,13 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
 
 Pre-built binaries — no Rust compiler required.
 
-```{r}
+```{r installation_1}
 install.packages("rfastlowess", repos = "https://thisisamirv.r-universe.dev")
 ```
 
 ## From conda-forge
 
-```{r}
+```{r installation_2}
 # In a conda environment
 # conda install -c conda-forge r-rfastlowess
 ```
@@ -30,7 +30,7 @@ install.packages("rfastlowess", repos = "https://thisisamirv.r-universe.dev")
 
 Requires [Rust](https://rustup.rs/) and Rtools (Windows).
 
-```{r}
+```{r installation_3}
 devtools::install_github("thisisamirv/lowess-project", subdir = "bindings/r")
 ```
 
@@ -52,7 +52,7 @@ rustup target add x86_64-pc-windows-gnu
 
 ## Verifying Installation
 
-```{r}
+```{r installation_4}
 library(rfastlowess)
 
 # Fit a simple example

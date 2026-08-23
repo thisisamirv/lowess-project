@@ -42,7 +42,7 @@ Processes data in fixed-size chunks with configurable overlap. Results for each 
 
 ## Example
 
-```{r}
+```{r streaming_1}
 library(rfastlowess)
 set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)

@@ -23,7 +23,7 @@ When data arrives continuously from sensors, logs, or streaming pipelines, the O
 
 ### Sensor Data Example
 
-```{r}
+```{r use_case_real_time_1}
 library(rfastlowess)
 
 set.seed(42)
@@ -49,7 +49,7 @@ for (i in seq_along(times)) {
 
 Collect online smoothed values into a vector for downstream analysis or plotting.
 
-```{r}
+```{r use_case_real_time_2}
 library(rfastlowess)
 set.seed(42)
 n <- 200
@@ -93,7 +93,7 @@ lines(smoothed_x, smoothed_y, col = "blue", lwd = 2)
 | `"incremental"` | Re-fits only the newest point | Low | Moderate |
 | `"full"` | Re-fits the entire window | Higher | Higher |
 
-```{r}
+```{r use_case_real_time_3}
 # Full-window refit (more accurate, slower)
 model_full <- OnlineLowess(
     fraction       = 0.3,
@@ -110,7 +110,7 @@ model_full <- OnlineLowess(
 
 For large historical files arriving in chunks (not true real-time), the Streaming adapter is more efficient than Online:
 
-```{r}
+```{r use_case_real_time_4}
 library(rfastlowess)
 
 model <- StreamingLowess(

@@ -39,7 +39,7 @@ First centers residuals at their median, then takes the median of the absolute d
 
 **Use when**: Data may contain outliers (default for most applications).
 
-```{r}
+```{r scaling_1}
 library(rfastlowess)
 set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)
@@ -59,7 +59,7 @@ Slightly less robust than MAD because it does not center residuals first, but fa
 
 **Use when**: Residuals are roughly symmetric around zero; speed is a concern.
 
-```{r}
+```{r scaling_2}
 model <- Lowess(iterations = 3, scaling_method = "mar")
 result <- fit(model, x, y)
 ```
@@ -74,7 +74,7 @@ Least robust — influenced by outliers. Matches classic OLS residual scale.
 
 **Use when**: No outliers expected; comparisons with classical methods.
 
-```{r}
+```{r scaling_3}
 model <- Lowess(iterations = 3, scaling_method = "mean")
 result <- fit(model, x, y)
 ```
@@ -83,7 +83,7 @@ result <- fit(model, x, y)
 
 ## Comparing Scaling Methods
 
-```{r}
+```{r scaling_4}
 library(rfastlowess)
 set.seed(42)
 x <- 1:100

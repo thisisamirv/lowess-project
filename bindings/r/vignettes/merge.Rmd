@@ -43,7 +43,7 @@ Blends left- and right-chunk estimates using distance-based weights. Points clos
 
 **Use when**: General-purpose streaming; most reliable option.
 
-```{r}
+```{r merge_1}
 library(rfastlowess)
 set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)
@@ -67,7 +67,7 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
 
 **Use when**: Chunks are large and the overlap region has uniform data density.
 
-```{r}
+```{r merge_2}
 model <- StreamingLowess(
     merge_strategy = "average",
     chunk_size = 5000,
@@ -84,7 +84,7 @@ Uses only the left-chunk estimate in the overlap region.
 
 **Use when**: The left chunk has a larger context window and is expected to be more accurate at the overlap boundary.
 
-```{r}
+```{r merge_3}
 model <- StreamingLowess(
     merge_strategy = "take_first",
     chunk_size = 5000,
@@ -101,7 +101,7 @@ Uses only the right-chunk estimate in the overlap region.
 
 **Use when**: The right chunk is expected to provide better context (e.g., more data follows).
 
-```{r}
+```{r merge_4}
 model <- StreamingLowess(
     merge_strategy = "take_last",
     chunk_size = 5000,
@@ -120,7 +120,7 @@ result <- process_chunk(model, x_chunk, y_chunk)
 | Edge accuracy | `overlap` ≥ `fraction × chunk_size` |
 | Speed | Larger chunks → fewer merges → faster |
 
-```{r}
+```{r merge_5}
 # Rule of thumb: overlap = fraction * chunk_size
 fraction  <- 0.3
 chunk_size <- 5000

@@ -37,7 +37,7 @@ GPU acceleration is worth enabling for roughly 10K+ points. For smaller inputs t
 
 ## Checking GPU Availability
 
-```{r}
+```{r gpu_backend_1}
 library(rfastlowess)
 
 gpu_available()
@@ -51,7 +51,7 @@ Returns `TRUE` if the currently loaded library was built with GPU support, `FALS
 
 GPU support is opt-in and not included in standard CRAN / R-universe builds. Install it with a one-time download:
 
-```{r}
+```{r gpu_backend_2}
 library(rfastlowess)
 
 install_gpu()          # interactive — prompts for confirmation
@@ -74,7 +74,7 @@ make -f bindings/r/Makefile WITH_GPU=1
 
 Once GPU support is installed, pass `backend = "gpu"` to `Lowess()`:
 
-```{r}
+```{r gpu_backend_3}
 library(rfastlowess)
 set.seed(42)
 n <- 100000

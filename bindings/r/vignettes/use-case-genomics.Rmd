@@ -21,7 +21,7 @@ LOWESS is well-suited for genomic data such as DNA methylation profiles, ChIP-se
 
 A small `fraction = 0.1` lets LOWESS follow fine-scale spatial structure without smearing transitions between methylated and unmethylated regions. `confidence_intervals = 0.95` produces uncertainty bands that naturally widen at positions with sparser CpG coverage.
 
-```{r}
+```{r use_case_genomics_1}
 library(rfastlowess)
 
 # Simulate methylation data along a chromosome
@@ -64,7 +64,7 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
 
 `fraction = 0.05` provides high spatial resolution — important for resolving narrow binding peaks that would otherwise be smeared into the background. The larger `iterations = 5` is deliberate: Poisson-distributed read counts produce tall, isolated spikes, and extra robustness iterations progressively down-weight them so the estimated background level is not inflated by a handful of extreme counts.
 
-```{r}
+```{r use_case_genomics_2}
 library(rfastlowess)
 set.seed(42)
 
@@ -98,7 +98,7 @@ abline(h = threshold, col = "red", lty = 2)
 
 For whole-genome datasets that do not fit in memory, use the streaming adapter.
 
-```{r}
+```{r use_case_genomics_3}
 library(rfastlowess)
 
 model <- StreamingLowess(

@@ -29,7 +29,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
 
 Estimate uncertainty in the smoothed curve itself.
 
-```{r}
+```{r intervals_1}
 library(rfastlowess)
 set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)
@@ -52,7 +52,7 @@ lines(result$x, result$confidence_upper, col = "blue", lty = 2)
 
 Wider than confidence intervals — cover where new observations will fall.
 
-```{r}
+```{r intervals_2}
 library(rfastlowess)
 set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)
@@ -72,7 +72,7 @@ lines(result$x, result$prediction_upper, col = "red", lty = 2)
 
 ## Both Intervals Together
 
-```{r}
+```{r intervals_3}
 library(rfastlowess)
 set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)
@@ -115,7 +115,7 @@ Pass any value between 0 and 1 (exclusive). Common choices:
 | 0.95 | 1.960 | 95% of intervals contain true value |
 | 0.99 | 2.576 | 99% of intervals contain true value |
 
-```{r}
+```{r intervals_4}
 # 99% confidence intervals
 model <- Lowess(fraction = 0.5, confidence_intervals = 0.99)
 result <- fit(model, x, y)

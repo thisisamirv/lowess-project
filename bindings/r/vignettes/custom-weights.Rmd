@@ -53,7 +53,7 @@ They compose: use both simultaneously. Custom weights suppress known bad points;
 
 Set the weight to `0` at the bad point — it is excluded from every local fit.
 
-```{r}
+```{r custom_weights_1}
 library(rfastlowess)
 
 x <- 1:10
@@ -73,7 +73,7 @@ result <- fit(model, x, y, custom_weights = weights)
 
 Weight by $1/\sigma_i^2$ when measurement uncertainties are known.
 
-```{r}
+```{r custom_weights_2}
 library(rfastlowess)
 set.seed(42)
 x <- seq(0, 10, length.out = 100)
@@ -95,7 +95,7 @@ lines(result$x, result$y, col = "blue", lwd = 2)
 
 ## Combining Custom Weights with Robustness
 
-```{r}
+```{r custom_weights_3}
 library(rfastlowess)
 set.seed(42)
 x <- 1:100

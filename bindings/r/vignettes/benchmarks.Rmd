@@ -50,7 +50,7 @@ See the [benchmarks README](https://github.com/thisisamirv/lowess-project/blob/m
 
 The benchmarks compare `rfastlowess` against `stats::lowess` using the `microbenchmark` package.
 
-```{r}
+```{r benchmarks_1}
 # Install benchmark dependency
 # install.packages("microbenchmark")
 

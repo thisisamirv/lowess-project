@@ -23,7 +23,7 @@ Cross-validation helps select the optimal `fraction` parameter by evaluating per
 
 Split data into K folds, train on K-1, validate on 1. Repeat for each fold and average the scores.
 
-```{r}
+```{r cross_validation_1}
 library(rfastlowess)
 set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)
@@ -54,7 +54,7 @@ cat("CV scores:", result$cv_scores, "\n")
 
 Each point is held out once. More thorough but slower than k-fold.
 
-```{r}
+```{r cross_validation_2}
 library(rfastlowess)
 set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)
@@ -75,7 +75,7 @@ cat("Selected fraction:", result$fraction_used, "\n")
 
 Provide a fine grid of candidate fractions for more precise selection.
 
-```{r}
+```{r cross_validation_3}
 library(rfastlowess)
 set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)
@@ -101,7 +101,7 @@ print(data.frame(fraction = fractions, score = result$cv_scores))
 
 After fitting, `result$cv_scores` contains the CV score for each candidate fraction in the order they were passed.
 
-```{r}
+```{r cross_validation_4}
 library(rfastlowess)
 set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)
@@ -123,7 +123,7 @@ abline(v = result$fraction_used, col = "red", lty = 2)
 
 Set a seed for reproducible fold assignments in k-fold CV:
 
-```{r}
+```{r cross_validation_5}
 library(rfastlowess)
 set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)

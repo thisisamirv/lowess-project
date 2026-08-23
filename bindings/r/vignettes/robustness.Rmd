@@ -37,7 +37,7 @@ $$w(u) = \begin{cases} (1 - u^2)^2 & |u| < 1 \\ 0 & |u| \geq 1 \end{cases}$$
 
 **Use when**: General purpose, balanced approach.
 
-```{r}
+```{r robustness_1}
 library(rfastlowess)
 set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)
@@ -53,7 +53,7 @@ Less aggressive than bisquare; still downweights outliers but keeps moderate res
 
 **Use when**: Mild outlier contamination; want to preserve moderate deviations.
 
-```{r}
+```{r robustness_2}
 model <- Lowess(iterations = 3, robustness_method = "huber")
 result <- fit(model, x, y)
 ```
@@ -64,7 +64,7 @@ Hard thresholding — points above the threshold are excluded completely.
 
 **Use when**: Known contamination that should be fully excluded.
 
-```{r}
+```{r robustness_3}
 model <- Lowess(iterations = 3, robustness_method = "talwar")
 result <- fit(model, x, y)
 ```
@@ -80,7 +80,7 @@ result <- fit(model, x, y)
 | 4–6 | Strong | Data with clear outliers |
 | 7+ | Very strong | Heavy contamination |
 
-```{r}
+```{r robustness_4}
 library(rfastlowess)
 set.seed(42)
 x <- 1:100
@@ -121,7 +121,7 @@ legend("topright", c("Data", "iterations=0", "iterations=3"),
 
 Use robustness weights to identify potential outliers:
 
-```{r}
+```{r robustness_5}
 library(rfastlowess)
 set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)

@@ -21,7 +21,7 @@ LOWESS provides flexible trend extraction from time series without parametric as
 
 `fraction = 0.1` sizes the neighbourhood to 10% of the data at each evaluation point — narrow enough to follow a slowly varying trend without smearing periodic variation. Three robustness `iterations` down-weight noise spikes.
 
-```{r}
+```{r use_case_time_series_1}
 library(rfastlowess)
 
 set.seed(42)
@@ -46,7 +46,7 @@ legend("topleft", c("Observed", "Trend (LOWESS)"),
 
 Extract the trend component and compute the residual to inspect seasonality.
 
-```{r}
+```{r use_case_time_series_2}
 library(rfastlowess)
 set.seed(42)
 
@@ -82,7 +82,7 @@ par(mfrow = c(1, 1))
 
 LOWESS handles irregularly sampled data naturally — no interpolation needed.
 
-```{r}
+```{r use_case_time_series_3}
 library(rfastlowess)
 set.seed(42)
 
@@ -104,7 +104,7 @@ lines(result$x, result$y, col = "blue", lwd = 2)
 
 Prediction intervals widen the uncertainty band to include both the uncertainty in the fitted curve and the expected scatter of new observations. `fraction = 0.2` offers a balance between local detail and stable interval width.
 
-```{r}
+```{r use_case_time_series_4}
 library(rfastlowess)
 set.seed(42)
 t <- seq(0, 100, length.out = 500)

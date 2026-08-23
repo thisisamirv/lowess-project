@@ -70,7 +70,7 @@ The proportion of data used for each local fit. **Most important parameter.**
 | 0.5–0.7 | Heavy smoothing | Noisy data |
 | 0.7–1.0 | Very smooth | Trend extraction |
 
-```{r}
+```{r parameters_1}
 library(rfastlowess)
 set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)
@@ -84,7 +84,7 @@ result <- fit(model, x, y)
 
 Number of robustness iterations. Each iteration downweights high-residual points.
 
-```{r}
+```{r parameters_2}
 model <- Lowess(iterations = 3)
 result <- fit(model, x, y)
 ```
@@ -93,7 +93,7 @@ result <- fit(model, x, y)
 
 Distance threshold for skipping intermediate points (approximation). Setting `delta > 0` speeds up computation on dense grids. Passed as a fraction of the data range.
 
-```{r}
+```{r parameters_3}
 model <- Lowess(delta = 0.01)
 result <- fit(model, x, y)
 ```
@@ -102,7 +102,7 @@ result <- fit(model, x, y)
 
 Enable parallel CPU execution (multiple cores).
 
-```{r}
+```{r parameters_4}
 model <- Lowess(parallel = TRUE)
 result <- fit(model, x, y)
 ```
@@ -111,7 +111,7 @@ result <- fit(model, x, y)
 
 Return goodness-of-fit diagnostics (R², residuals, etc.).
 
-```{r}
+```{r parameters_5}
 model <- Lowess(return_diagnostics = TRUE)
 result <- fit(model, x, y)
 print(result$diagnostics$r_squared)
@@ -123,7 +123,7 @@ print(result$diagnostics$r_squared)
 
 ### chunk_size and overlap
 
-```{r}
+```{r parameters_6}
 model <- StreamingLowess(
     chunk_size = 5000,
     overlap = 500,
@@ -137,7 +137,7 @@ model <- StreamingLowess(
 
 ### window_capacity and min_points
 
-```{r}
+```{r parameters_7}
 model <- OnlineLowess(
     window_capacity = 50,
     min_points = 5,
