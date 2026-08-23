@@ -8,7 +8,7 @@ Every binding's batch `Lowess` type can execute on a GPU-accelerated backend pow
 
 This is worth enabling for high-throughput processing of large datasets (roughly 10k+ points); for smaller inputs the CPU backend (optionally with `parallel = true`) is typically faster once you account for GPU dispatch overhead. See [BENCHMARKS.md](https://github.com/thisisamirv/lowess-project/blob/main/BENCHMARKS.md) for crossover points measured on real hardware.
 
-> **Batch only.** GPU support applies to the batch `Lowess` type only. `StreamingLowess`/`OnlineLowess` remain CPU-only in every binding — the Rust core documents GPU as optimized for static batch data, not incremental chunk/point processing. See [rust.md](../api/rust.md#gpu-acceleration) for details.
+> **Batch only.** GPU support applies to the batch `Lowess` type only. `StreamingLowess`/`OnlineLowess` remain CPU-only in every binding.
 
 GPU support is **opt-in** and not included in the default published artifacts (PyPI wheels, npm binaries, CRAN/Bioconductor releases, JLL binaries, prebuilt C++ releases) — it requires either downloading a prebuilt GPU-enabled build via a one-time installer, or building from source with the `gpu` Cargo feature. Both paths are documented per language below.
 
@@ -94,6 +94,3 @@ result = fit(model, x, y)
 If GPU support isn't available, requesting `backend = "gpu"` (or the equivalent) raises a runtime error pointing at the installer for that language rather than a raw Rust panic.
 
 ## See also
-
-* [rust.md](../api/rust.md#gpu-acceleration) — why Streaming/Online adapters stay CPU-only.
-* Per-language API reference GPU sections: [python.md](../api/python.md#gpu-acceleration), [nodejs.md](../api/nodejs.md#gpu-acceleration), [julia.md](../api/julia.md#gpu-acceleration), [cpp.md](../api/cpp.md#gpu-acceleration), [r.md](../api/r.md#gpu-acceleration).

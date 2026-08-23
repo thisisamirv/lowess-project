@@ -123,9 +123,8 @@ flowchart TD
 ## Next Steps
 
 - [Quick Start](quickstart.md) — See it in action
-- [Parameters](../user-guide/parameters.md) — All configuration options
-- [Boundary Handling](../user-guide/boundary.md) — Edge bias reduction strategies
-- [Robustness](../user-guide/robustness.md) — Outlier downweighting methods
-- [Scaling Methods](../user-guide/scaling.md) — MAD, MAR, Mean scale estimation
-- [Merge Strategies](../user-guide/merge.md) — Chunk reconciliation in Streaming mode
-- [Tutorials](../tutorials/index.md) — Application-specific guides
+- [Parameters](parameters.md) — All configuration options
+- [Boundary Handling](boundary.md) — Edge bias reduction strategies
+- [Robustness](robustness.md) — Outlier downweighting methods
+- [Scaling Methods](scaling.md) — MAD, MAR, Mean scale estimation
+- [Merge Strategies](merge.md) — Chunk reconciliation in Streaming mode
