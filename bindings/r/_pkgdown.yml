@@ -37,7 +37,7 @@ reference:
       - install_gpu
 
 articles:
-  - title: Getting Started
+  - title: Introduction
     contents:
       - installation
       - quickstart
@@ -64,7 +64,7 @@ articles:
       - use-case-genomics
       - use-case-time-series
       - use-case-real-time
-  - title: Reference
+  - title: Performance
     contents:
       - benchmarks
 

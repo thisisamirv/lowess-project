@@ -124,7 +124,7 @@ print.OnlineLowess <- function(x, ...) {
 #' @param y Numeric vector of response values.
 #' @param custom_weights Optional numeric vector of non-negative per-observation
 #'   weights. \code{NULL} (default) applies no custom weighting.
-#' @param ... Not used.
+#' @param ... Must be empty.
 #' @return A \code{LowessResult} object.
 #' @examples
 #' x <- seq(0, 10, length.out = 100)
@@ -137,6 +137,7 @@ fit <- function(model, ...) UseMethod("fit")
 #' @rdname fit
 #' @export
 fit.Lowess <- function(model, x, y, custom_weights = NULL, ...) {
+    if (...length() > 0L) stop("unused arguments (...)")
     validated_args <- validate_common_args(
         x,
         y,
@@ -151,7 +152,7 @@ fit.Lowess <- function(model, x, y, custom_weights = NULL, ...) {
 #' @param model A \code{StreamingLowess} object.
 #' @param x Numeric vector of x values.
 #' @param y Numeric vector of y values.
-#' @param ... Not used.
+#' @param ... Must be empty.
 #' @return A \code{LowessResult} for this chunk.
 #' @examples
 #' x <- seq(0, 10, length.out = 100)
@@ -164,6 +165,7 @@ process_chunk <- function(model, ...) UseMethod("process_chunk")
 #' @rdname process_chunk
 #' @export
 process_chunk.StreamingLowess <- function(model, x, y, ...) {
+    if (...length() > 0L) stop("unused arguments (...)")
     args <- validate_common_args(
         x,
         y,
@@ -176,7 +178,7 @@ process_chunk.StreamingLowess <- function(model, x, y, ...) {
 #' Finalize a streaming LOWESS model
 #'
 #' @param model A \code{StreamingLowess} object.
-#' @param ... Not used.
+#' @param ... Must be empty.
 #' @return A \code{LowessResult} combining all processed chunks.
 #' @examples
 #' x <- seq(0, 10, length.out = 100)
@@ -189,6 +191,7 @@ finalize <- function(model, ...) UseMethod("finalize")
 
 #' @export
 finalize.StreamingLowess <- function(model, ...) {
+    if (...length() > 0L) stop("unused arguments (...)")
     model$handle$finalize()
 }
 
@@ -197,7 +200,7 @@ finalize.StreamingLowess <- function(model, ...) {
 #' @param model An \code{OnlineLowess} object.
 #' @param x A single numeric x value.
 #' @param y A single numeric y value.
-#' @param ... Not used.
+#' @param ... Must be empty.
 #' @return An online result list, or \code{NULL} if fewer than
 #'   \code{min_points} have been added.
 #' @examples
@@ -209,5 +212,8 @@ add_point <- function(model, ...) UseMethod("add_point")
 #' @rdname add_point
 #' @export
 add_point.OnlineLowess <- function(model, x, y, ...) {
+    if (...length() > 0L) stop("unused arguments (...)")
     model$handle$add_point(as.double(x), as.double(y))
+}
+double(x), as.double(y))
 }
