@@ -63,20 +63,6 @@ First centers residuals at their median, then takes the median of the absolute d
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Lowess(; iterations=3, scaling_method="mad")
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');
@@ -165,20 +151,6 @@ Uses the uncentered median — unlike MAD it does not subtract the residual medi
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Lowess(; iterations=3, scaling_method="mar")
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');
@@ -267,20 +239,6 @@ Arithmetic mean of absolute residuals. Non-robust: a single extreme outlier infl
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Lowess(; iterations=3, scaling_method="mean")
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');

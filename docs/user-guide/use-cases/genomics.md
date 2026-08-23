@@ -88,37 +88,6 @@ A small `fraction = 0.1` lets LOWESS follow fine-scale spatial structure without
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random
-
-    rng = MersenneTwister(42)
-    positions = collect(0.0:10.0:10000.0)
-    observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
-
-    using FastLOWESS
-    using Random
-
-    rng = MersenneTwister(42)
-    positions = collect(0.0:10.0:10000.0)
-    observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
-
-    using FastLOWESS
-
-    # positions and observed are your methylation data
-    model = Lowess(;
-        fraction=0.1,
-        iterations=3,
-        confidence_intervals=0.95
-    )
-    result = fit(model, positions, observed)
-
-    # Smoothed profile in result.y
-    # CI bounds in result.confidence_lower/upper
-    ```
-
 === "Node.js"
     ```javascript
     const fl = require('fastlowess');
@@ -266,35 +235,6 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random
-
-    rng = MersenneTwister(42)
-    positions = collect(0.0:10.0:10000.0)
-    observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
-
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    positions = collect(0.0:10.0:10000.0)
-    observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
-
-    using FastLOWESS
-
-    # positions and observed are your ChIP-seq data
-    model = Lowess(; fraction=0.05, iterations=5)
-    result = fit(model, positions, observed)
-
-    # Find peaks above 75th percentile
-    threshold = quantile(result.y, 0.75)
-    peak_indices = findall(y -> y > threshold, result.y)
-    peak_positions = positions[peak_indices]
-    ```
-
 === "Node.js"
     ```javascript
     const fl = require('fastlowess');
@@ -416,37 +356,6 @@ For whole-genome data that doesn't fit in memory:
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random
-
-    rng = MersenneTwister(42)
-    positions = collect(0.0:10.0:10000.0)
-    observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
-
-    using FastLOWESS
-    using Random
-
-    rng = MersenneTwister(42)
-    positions = collect(0.0:10.0:10000.0)
-    observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
-    coverage = observed
-
-    using FastLOWESS
-
-    # coverage and positions are chromosome-scale vectors
-    model = StreamingLowess(;
-        fraction=0.05,
-        chunk_size=100000,
-        overlap=10000,
-        merge_strategy="weighted_average"
-    )
-    process_chunk(model, positions, coverage)
-    result = finalize(model)
-    ```
-
 === "Node.js"
     ```javascript
     const { StreamingLowess } = require('fastlowess');

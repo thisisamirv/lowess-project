@@ -1,0 +1,143 @@
+# Genomic Data Smoothing
+
+LOWESS for methylation profiles, ChIP-seq signals, and other genomic data.
+
+## Overview
+
+Genomic data often contains noise from sequencing depth variation, PCR artifacts, or biological heterogeneity. LOWESS smoothing helps reveal underlying patterns.
+
+---
+
+## Methylation Profile Smoothing
+
+### The Challenge
+
+DNA methylation data (from bisulfite sequencing or arrays) shows position-dependent patterns that can be obscured by measurement noise.
+
+### Solution
+
+A small `fraction = 0.1` lets LOWESS follow fine-scale spatial structure without smearing the transitions between methylated and unmethylated regions. `confidence_intervals = 0.95` produces uncertainty bands that naturally widen at positions with sparser CpG coverage, making low-confidence segments immediately apparent in the plot.
+
+```julia
+using FastLOWESS
+using Random
+
+rng = MersenneTwister(42)
+positions = collect(0.0:10.0:10000.0)
+observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
+
+using FastLOWESS
+using Random
+
+rng = MersenneTwister(42)
+positions = collect(0.0:10.0:10000.0)
+observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
+
+using FastLOWESS
+
+# positions and observed are your methylation data
+model = Lowess(;
+    fraction=0.1,
+    iterations=3,
+    confidence_intervals=0.95
+)
+result = fit(model, positions, observed)
+
+# Smoothed profile in result.y
+# CI bounds in result.confidence_lower/upper
+```
+
+---
+
+## ChIP-seq Signal Smoothing
+
+### Application
+
+ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identify binding regions.
+
+`fraction = 0.05` provides high spatial resolution — important for resolving narrow binding peaks that would otherwise be smeared into the background. The larger `iterations = 5` is deliberate: Poisson-distributed read counts produce tall, isolated spikes, and extra robustness iterations progressively down-weight them so the estimated background level is not inflated by a handful of extreme counts.
+
+```julia
+using FastLOWESS
+using Random
+
+rng = MersenneTwister(42)
+positions = collect(0.0:10.0:10000.0)
+observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
+
+using FastLOWESS
+using Random, Statistics
+
+rng = MersenneTwister(42)
+positions = collect(0.0:10.0:10000.0)
+observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
+
+using FastLOWESS
+
+# positions and observed are your ChIP-seq data
+model = Lowess(; fraction=0.05, iterations=5)
+result = fit(model, positions, observed)
+
+# Find peaks above 75th percentile
+threshold = quantile(result.y, 0.75)
+peak_indices = findall(y -> y > threshold, result.y)
+peak_positions = positions[peak_indices]
+```
+
+---
+
+## Large Genome Coverage (Streaming)
+
+For whole-genome data that doesn't fit in memory:
+
+```julia
+using FastLOWESS
+using Random
+
+rng = MersenneTwister(42)
+positions = collect(0.0:10.0:10000.0)
+observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
+
+using FastLOWESS
+using Random
+
+rng = MersenneTwister(42)
+positions = collect(0.0:10.0:10000.0)
+observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
+coverage = observed
+
+using FastLOWESS
+
+# coverage and positions are chromosome-scale vectors
+model = StreamingLowess(;
+    fraction=0.05,
+    chunk_size=100000,
+    overlap=10000,
+    merge_strategy="weighted_average"
+)
+process_chunk(model, positions, coverage)
+result = finalize(model)
+```
+
+---
+
+## Best Practices for Genomic Data
+
+| Consideration | Recommendation |
+| --- | --- |
+| **Fraction** | 0.05–0.15 (preserve local features) |
+| **Iterations** | 3–5 (handle sequencing outliers) |
+| **Large data** | Use streaming mode |
+| **Sparse regions** | Use `boundary_policy="extend"` |
+| **Multiple chromosomes** | Process separately or ensure sorted |
+
+---
+
+## See Also
+
+- [Concepts](../getting-started/concepts.md) — How LOWESS works
+- [Parameters](../user-guide/parameters.md) — All options
+- [Robustness](../user-guide/robustness.md) — Outlier downweighting in depth
+- [Merge Strategies](../user-guide/merge.md) — Streaming chunk reconciliation
+- [Boundary Handling](../user-guide/boundary.md) — Edge handling for sparse regions
+- [Real-Time Processing](real-time.md) — For sequencing runs

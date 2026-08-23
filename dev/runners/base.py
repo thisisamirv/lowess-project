@@ -8,6 +8,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 DOCS_DIR = REPO_ROOT / "docs"
+JULIA_DOCS_DIR = REPO_ROOT / "bindings" / "julia" / "julia" / "docs" / "src"
 VIGNETTES_DIRS: list[Path] = [REPO_ROOT / "bindings" / "r" / "vignettes"]
 
 _TAB_ALIASES: dict[str, set[str]] = {

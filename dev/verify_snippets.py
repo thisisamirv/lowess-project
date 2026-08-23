@@ -37,7 +37,14 @@ from pathlib import Path
 
 import runners.python as _python_runner
 from runners import RUNNERS, SKIP_CHECKS
-from runners.base import DOCS_DIR, REPO_ROOT, VIGNETTES_DIRS, RunResult, Snippet
+from runners.base import (
+    DOCS_DIR,
+    JULIA_DOCS_DIR,
+    REPO_ROOT,
+    VIGNETTES_DIRS,
+    RunResult,
+    Snippet,
+)
 from runners.r import skip_reason as _r_skip_reason
 
 # ---------------------------------------------------------------------------
@@ -249,6 +256,8 @@ def iter_md_files(root: Path, file_filter: str | None) -> Iterator[Path]:
         yield from sorted(REPO_ROOT.glob(file_filter))
         return
     yield from sorted(root.rglob("*.md"))
+    if JULIA_DOCS_DIR.exists():
+        yield from sorted(JULIA_DOCS_DIR.glob("*.md"))
     for vdir in VIGNETTES_DIRS:
         yield from sorted(vdir.glob("*.Rmd"))
 
@@ -323,6 +332,7 @@ def main(argv: list[str] | None = None) -> int:
 
     print(bold("\nfastLowess doc snippet verifier"))
     print(f"Docs dir : {DOCS_DIR}")
+    print(f"Julia docs: {JULIA_DOCS_DIR}")
     print(f"Runners  : {', '.join(sorted(active_runners))}")
     print(f"Snippets : {len(runnable)} runnable / {total_found} total")
     if args.dry_run:

@@ -83,29 +83,6 @@ Standard mode for complete datasets. **Supports all features.**
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    using FastLOWESS
-
-    model = Lowess(;
-        fraction=0.5,
-        iterations=3,
-        confidence_intervals=0.95,
-        prediction_intervals=0.95,
-        return_diagnostics=true,
-        parallel=true
-    )
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const fastlowess = require('fastlowess');
@@ -258,29 +235,6 @@ Process large datasets in chunks with configurable overlap.
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    using FastLOWESS
-
-    model = StreamingLowess(;
-        fraction=0.3,
-        iterations=2,
-        chunk_size=5000,
-        overlap=500,
-        merge_strategy="average"
-    )
-    process_chunk(model, x, y)
-    result = finalize(model)
-    ```
-
 === "Node.js"
     ```javascript
     const { StreamingLowess } = require('fastlowess');
@@ -449,33 +403,6 @@ Incremental updates with a sliding window for real-time data.
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    using FastLOWESS
-
-    model = OnlineLowess(;
-        fraction=0.2,
-        iterations=1,
-        window_capacity=100,
-        min_points=5,
-        update_mode="incremental"
-    )
-    for i in eachindex(x)
-        result = add_point(model, x[i], y[i])
-        if result !== nothing
-            println(result.y)
-        end
-    end
-    ```
-
 === "Node.js"
     ```javascript
     const { OnlineLowess } = require('fastlowess');

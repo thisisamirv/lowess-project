@@ -69,7 +69,6 @@
 #'   Vulkan/Metal/DX12-capable GPU driver; not available in released
 #'   CRAN/Bioconductor binaries.
 #'
-#' @seealso \url{https://lowess.readthedocs.io/} for full documentation.
 #' @return A Lowess object.
 #' @examples
 #' x <- seq(0, 10, length.out = 100)

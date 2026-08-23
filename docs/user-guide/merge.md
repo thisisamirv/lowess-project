@@ -60,21 +60,6 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-    x_chunk = x[1:50]; y_chunk = y[1:50]
-
-    model = StreamingLowess(; merge_strategy="average", chunk_size=5000, overlap=500)
-    result = process_chunk(model, x_chunk, y_chunk)
-    ```
-
 === "Node.js"
     ```javascript
     const { StreamingLowess } = require('fastlowess');
@@ -158,19 +143,6 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = StreamingLowess(; merge_strategy="take_first")
-    ```
-
 === "Node.js"
     ```javascript
     const { StreamingLowess } = require('fastlowess');
@@ -230,19 +202,6 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = StreamingLowess(; merge_strategy="take_last")
-    ```
-
 === "Node.js"
     ```javascript
     const { StreamingLowess } = require('fastlowess');
@@ -312,23 +271,6 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = StreamingLowess(;
-        merge_strategy="weighted_average",
-        chunk_size=5000,
-        overlap=500
-    )
-    ```
-
 === "Node.js"
     ```javascript
     const { StreamingLowess } = require('fastlowess');

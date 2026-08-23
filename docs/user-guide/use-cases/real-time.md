@@ -68,37 +68,6 @@ For true real-time applications where each point must be processed immediately.
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    using FastLOWESS
-
-    # Simulate sensor readings 
-    times = collect(Float64, 1:100)
-    temperatures = 20.0 .+ 5.0 .* sin.(times ./ 10.0) .+ randn(100)
-
-    # Process with online mode
-    model = OnlineLowess(;
-        fraction=0.3,
-        window_capacity=25,
-        min_points=5,
-        update_mode="incremental"
-    )
-    for i in eachindex(times)
-        result = add_point(model, times[i], temperatures[i])
-        if result !== nothing
-            println("Time $(times[i]): smoothed = $(round(result.y; digits=2))")
-        end
-    end
-    ```
-
 === "Node.js"
     ```javascript
     const { OnlineLowess } = require('fastlowess');
@@ -242,26 +211,6 @@ For large datasets that arrive in batches or files.
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-
-    # Large dataset
-    x = collect(0.0:1.0:100000.0)
-    y = sin.(x ./ 1000) .+ randn(length(x)) .* 0.1
-
-    # Streaming mode handles everything internally
-    model = StreamingLowess(;
-        fraction=0.05,
-        chunk_size=10000,
-        overlap=1000,
-        merge_strategy="weighted_average"
-    )
-    process_chunk(model, x, y)
-    result = finalize(model)
-    ```
-
 === "Node.js"
     ```javascript
     const { StreamingLowess } = require('fastlowess');

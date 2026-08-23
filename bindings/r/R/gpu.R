@@ -20,8 +20,8 @@ check_gpu_backend <- function(backend) {
         stop(
             "GPU backend not installed in this build. Run `install_gpu()` ",
             "once to download and install a GPU-enabled build, then ",
-            "restart R. See https://lowess.readthedocs.io/api/r/",
-            "#gpu-acceleration for details.",
+            "restart R. See https://thisisamirv.github.io/lowess-project/r/",
+            "reference/gpu_available.html for details.",
             call. = FALSE
         )
     }

@@ -48,22 +48,6 @@ Install the LOWESS library for your preferred language.
         | `lowess` | `std` | Enable standard library (default) |
         | `fastLowess` | `cpu` | Enable CPU parallelism via Rayon |
         | `fastLowess` | `gpu` | Enable GPU acceleration via wgpu (beta) |
-
-=== "Julia"
-
-    === "From General Registry (recommended)"
-
-    ```julia
-    Pkg.add("FastLOWESS")
-    ```
-
-    === "From Source"
-
-    ```julia
-    using Pkg
-    Pkg.develop(url="https://github.com/thisisamirv/lowess-project", subdir="bindings/julia/julia")
-    ```
-
 === "Node.js"
 
     === "From NPM (recommended)"
@@ -195,20 +179,6 @@ Install the LOWESS library for your preferred language.
         Ok(())
     }
     ```
-
-=== "Julia"
-
-    ```julia
-    using FastLOWESS
-    
-    x = [1.0, 2.0, 3.0]
-    y = [2.0, 4.0, 6.0]
-    
-    model = Lowess()
-    result = fit(model, x, y)
-    println("Installed successfully!")
-    ```
-
 === "Node.js"
 
     ```javascript

@@ -100,27 +100,6 @@ that would otherwise include it.
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    x = collect(1.0:10.0)
-    y = x .* 2.0
-    y[6] = 100.0               # spike at index 6 (1-indexed)
-
-    weights = ones(10)
-    weights[6] = 0.0           # exclude the spike
-
-    model = Lowess(fraction = 0.5, iterations = 0)
-    result = fit(model, x, y; custom_weights = weights)
-    ```
-
 === "Node.js"
     ```javascript
     const fastlowess = require('fastlowess');
@@ -231,24 +210,6 @@ reference instruments, or low-noise observations.
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-    calibration_indices = [5, 20, 40, 60, 80]
-
-    weights = ones(length(x))
-    weights[calibration_indices] .= 10.0   # trust calibration 10× more
-
-    model = Lowess(fraction = 0.5)
-    result = fit(model, x, y; custom_weights = weights)
-    ```
-
 === "Node.js"
     ```javascript
     const fastlowess = require('fastlowess');
@@ -356,22 +317,6 @@ weighting.
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-    sigma = rand(rng, 100) .* 0.4 .+ 0.1
-
-    weights = 1.0 ./ sigma .^ 2
-    model = Lowess(fraction = 0.5)
-    result = fit(model, x, y; custom_weights = weights)
-    ```
-
 === "Node.js"
     ```javascript
     const fastlowess = require('fastlowess');
@@ -488,28 +433,6 @@ for *known* bad points and robustness for *unknown* contamination.
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    x = collect(0.0:19.0)
-    y = x .* 1.5
-    y[4]  = -50.0   # known bad (1-indexed)
-    y[13] = 80.0    # unknown outlier (1-indexed)
-
-    weights = ones(20)
-    weights[4] = 0.0
-
-    model = Lowess(fraction = 0.4, iterations = 3)
-    result = fit(model, x, y; custom_weights = weights)
-    ```
-
 === "Node.js"
     ```javascript
     const fastlowess = require('fastlowess');

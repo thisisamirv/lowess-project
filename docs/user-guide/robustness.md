@@ -61,20 +61,6 @@ $$w(u) = \begin{cases} (1 - u^2)^2 & |u| < 1 \\ 0 & |u| \geq 1 \end{cases}$$
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Lowess(; iterations=3, robustness_method="bisquare")
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');
@@ -165,20 +151,6 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}$$
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Lowess(; iterations=3, robustness_method="huber")
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');
@@ -269,20 +241,6 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Lowess(; iterations=3, robustness_method="talwar")
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');
@@ -392,26 +350,6 @@ Use robustness weights to identify potential outliers:
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Lowess(; iterations=5, return_robustness_weights=true)
-    result = fit(model, x, y)
-
-    for (i, w) in enumerate(result.robustness_weights)
-        if w < 0.5
-            println("Potential outlier at index $i: weight = $w")
-        end
-    end
-    ```
-
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');
@@ -525,20 +463,6 @@ Residuals are scaled before computing robustness weights. Two methods:
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Lowess(; iterations=3, scaling_method="mad")
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');
@@ -628,20 +552,6 @@ Stop iterations early when weights stabilize:
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Lowess(; iterations=10, auto_converge=1e-6)
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');

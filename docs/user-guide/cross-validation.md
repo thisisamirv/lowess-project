@@ -63,28 +63,6 @@ Split data into K folds, train on K-1, validate on 1.
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    using FastLOWESS
-
-    model = Lowess(; cv_method="kfold",
-        cv_k=5,
-        cv_fractions=[0.2, 0.3, 0.5, 0.7]
-    )
-    result = fit(model, x, y)
-
-    println("Selected fraction: ", result.fraction_used)
-    println("CV scores: ", result.cv_scores)
-    ```
-
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');
@@ -193,22 +171,6 @@ Each point is held out once. Most thorough but slowest.
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Lowess(; cv_method="loocv",
-        cv_fractions=[0.2, 0.3, 0.5, 0.7]
-    )
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');
@@ -308,24 +270,6 @@ Set a seed for reproducible fold assignments:
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Lowess(; cv_method="kfold",
-        cv_k=5,
-        cv_fractions=[0.3, 0.5, 0.7],
-        cv_seed=42
-    )
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const fl = require('fastlowess');
@@ -467,28 +411,6 @@ Lower MSE indicates better fit on held-out data.
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    # Example output
-    model = Lowess(; cv_method="kfold", cv_k=5,
-                    cv_fractions=[0.1, 0.3, 0.5, 0.7])
-    result = fit(model, x, y)
-
-    # Fraction  | CV Score (MSE)
-    # 0.1       | 0.0542  ← Undersmoothed
-    # 0.3       | 0.0231  ← Best
-    # 0.5       | 0.0298
-    # 0.7       | 0.0412  ← Oversmoothed
-    ```
-
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');

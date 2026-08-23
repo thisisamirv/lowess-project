@@ -99,20 +99,6 @@ The proportion of data used for each local fit. **Most important parameter.**
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Lowess(; fraction=0.3)
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');
@@ -203,20 +189,6 @@ Number of robustness iterations for outlier resistance.
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Lowess(; iterations=5)
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');
@@ -303,20 +275,6 @@ Interpolation optimization threshold. Points within `delta` distance reuse the p
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Lowess(; delta=0.05)
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');
@@ -412,20 +370,6 @@ See [Weight Functions](kernels.md) for detailed comparison.
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Lowess(; weight_function="epanechnikov")
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');
@@ -517,20 +461,6 @@ See [Robustness](robustness.md) for detailed comparison.
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Lowess(; robustness_method="talwar")
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');
@@ -625,20 +555,6 @@ For example:
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Lowess(; boundary_policy="reflect")
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');
@@ -732,20 +648,6 @@ For example:
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Lowess(; scaling_method="mad")
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');
@@ -839,20 +741,6 @@ For example:
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Lowess(; zero_weight_fallback="use_local_mean")
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');
@@ -937,20 +825,6 @@ Enable early stopping when robustness weights stabilize.
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Lowess(; iterations=20, auto_converge=1e-6)
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');
@@ -1049,23 +923,6 @@ See [Custom Weights](custom-weights.md) for a full discussion.
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    weights = ones(length(x))
-    weights[6] = 0.0           # exclude index 6 (1-indexed)
-
-    model = Lowess(fraction = 0.5)
-    result = fit(model, x, y; custom_weights = weights)
-    ```
-
 === "Node.js"
     ```javascript
     const fastlowess = require('fastlowess');
@@ -1166,21 +1023,6 @@ Include residuals (`y - smoothed`) in the output.
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Lowess(; return_residuals=true)
-    result = fit(model, x, y)
-    println(result.residuals)
-    ```
-
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');
@@ -1283,21 +1125,6 @@ Include fit quality metrics (Batch and Streaming only).
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Lowess(; return_diagnostics=true)
-    result = fit(model, x, y)
-    println("R²: ", result.diagnostics.r_squared)
-    ```
-
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');
@@ -1389,21 +1216,6 @@ Include final robustness weights (useful for outlier detection).
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Lowess(; iterations=3, return_robustness_weights=true)
-    result = fit(model, x, y)
-    # Points with result.robustness_weights < 0.5 are likely outliers
-    ```
-
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');
@@ -1498,21 +1310,6 @@ Return per-point standard errors for the smoothed fit. Standard errors measure t
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Lowess(; return_se=true)
-    result = fit(model, x, y)
-    println(result.standard_errors)
-    ```
-
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');
@@ -1603,20 +1400,6 @@ See [Intervals](intervals.md) for detailed usage.
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Lowess(; confidence_intervals=0.95, prediction_intervals=0.95)
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');
@@ -1709,20 +1492,6 @@ Selection strategy for automated parameter tuning.
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Lowess(; cv_method="kfold", cv_k=5)
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');
@@ -1806,21 +1575,6 @@ Points per chunk in Streaming mode.
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = StreamingLowess(; chunk_size=10000)
-    process_chunk(model, x, y)
-    result = finalize(model)
-    ```
-
 === "Node.js"
     ```javascript
     const { StreamingLowess } = require('fastlowess');
@@ -1896,21 +1650,6 @@ Overlap between chunks in Streaming mode.
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = StreamingLowess(; overlap=1000)
-    process_chunk(model, x, y)
-    result = finalize(model)
-    ```
-
 === "Node.js"
     ```javascript
     const { StreamingLowess } = require('fastlowess');
@@ -1995,21 +1734,6 @@ For example:
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = StreamingLowess(; merge_strategy="weighted_average")
-    process_chunk(model, x, y)
-    result = finalize(model)
-    ```
-
 === "Node.js"
     ```javascript
     const { StreamingLowess } = require('fastlowess');
@@ -2083,20 +1807,6 @@ Maximum points held in memory for Online mode.
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = OnlineLowess(; window_capacity=500)
-    result = add_point(model, x[1], y[1])  # nothing until window fills
-    ```
-
 === "Node.js"
     ```javascript
     const { OnlineLowess } = require('fastlowess');
@@ -2171,20 +1881,6 @@ Minimum points required before Online filter starts producing outputs.
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = OnlineLowess(; min_points=10)
-    result = add_point(model, x[1], y[1])
-    ```
-
 === "Node.js"
     ```javascript
     const { OnlineLowess } = require('fastlowess');
@@ -2265,20 +1961,6 @@ For example:
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = OnlineLowess(; update_mode="full")
-    result = add_point(model, x[1], y[1])
-    ```
-
 === "Node.js"
     ```javascript
     const { OnlineLowess } = require('fastlowess');

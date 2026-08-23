@@ -70,22 +70,6 @@ Time series data often contains noise, seasonality, and trends. LOWESS provides 
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-
-    t = collect(range(0, 100, length=500))
-    trend_true = 10.0 .+ 0.5 .* t .+ 3.0 .* sin.(t ./ 10.0)
-    y = trend_true .+ randn(500) .* 3.0
-
-    # Extract trend
-    model = Lowess(; fraction=0.1, iterations=3)
-    result = fit(model, t, y)
-
-    println("Extracted trend points: ", length(result.y))
-    ```
-
 === "Node.js"
     ```javascript
     const fl = require('fastlowess');
@@ -209,26 +193,6 @@ Setting `return_residuals = True` stores `observed − smoothed` alongside the s
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    t = collect(range(0, 100, length=500))
-    y = 10.0 .+ 0.5 .* t .+ 3.0 .* sin.(t ./ 10.0) .+ randn(rng, 500) .* 3.0
-
-    # Smooth to get trend and residuals
-    model = Lowess(; fraction=0.3, iterations=3, return_residuals=true)
-    result = fit(model, t, y)
-
-    trend = result.y
-    detrended = result.residuals
-
-    println("Detrended variance: ", var(detrended))
-    ```
-
 === "Node.js"
     ```javascript
     const fl = require('fastlowess');
@@ -356,28 +320,6 @@ Prediction intervals widen the uncertainty band to include both the uncertainty 
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    t = collect(range(0, 100, length=500))
-    y = 10.0 .+ 0.5 .* t .+ 3.0 .* sin.(t ./ 10.0) .+ randn(rng, 500) .* 3.0
-
-    model = Lowess(;
-        fraction=0.2,
-        iterations=3,
-        confidence_intervals=0.95,
-        prediction_intervals=0.95
-    )
-    result = fit(model, t, y)
-
-    # Intervals are available in result.prediction_lower/upper
-    println("First point 95% PI: [$(result.prediction_lower[1]), $(result.prediction_upper[1])]")
-    ```
-
 === "Node.js"
     ```javascript
     const fl = require('fastlowess');
@@ -485,25 +427,6 @@ LOWESS naturally handles irregular time sampling:
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    # Irregular time points (gaps in data)
-    t_irregular = sort(rand(200) .*100.0)
-    y_irregular = 10.0 .+ t_irregular .* 0.3 .+ randn(200) .* 2.0
-
-    # LOWESS handles this seamlessly
-    model = Lowess(; fraction=0.2)
-    result = fit(model, t_irregular, y_irregular)
-    ```
-
 === "Node.js"
     ```javascript
     const fl = require('fastlowess');
@@ -608,25 +531,6 @@ Use different fractions to extract features at different scales:
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    t = collect(range(0, 100, length=500))
-    y = 10.0 .+ 0.5 .* t .+ 3.0 .* sin.(t ./ 10.0) .+ randn(rng, 500) .* 3.0
-
-    fractions = [0.05, 0.2, 0.5]
-
-    results = map(fractions) do f
-        model = Lowess(; fraction=f)
-        result = fit(model, t, y)
-    end
-    # results[i].y contains smoothed values for each fraction
-    ```
-
 === "Node.js"
     ```javascript
     const fl = require('fastlowess');
@@ -738,32 +642,6 @@ Biological application:
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    using FastLOWESS
-
-    hours = collect(range(0, 24, step=0.5))
-    expression = 100 .*(1.0 .+ 0.5 .* sin.(hours .*pi ./ 12.0)) .+ randn(length(hours)) .* 10.0
-
-    model = Lowess(;
-        fraction=0.3,
-        iterations=3,
-        confidence_intervals=0.95,
-        return_diagnostics=true
-    )
-    result = fit(model, hours, expression)
-
-    println("R²: ", result.diagnostics.r_squared)
-    ```
-
 === "Node.js"
     ```javascript
     const fl = require('fastlowess');

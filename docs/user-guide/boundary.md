@@ -55,20 +55,6 @@ Pads beyond both endpoints by replicating the first and last observed values. Pr
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Lowess(; boundary_policy="extend")
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');
@@ -154,20 +140,6 @@ Mirrors the data about both endpoints before fitting, then discards the reflecte
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Lowess(; boundary_policy="reflect")
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');
@@ -253,20 +225,6 @@ Pads with zeros beyond both endpoints. Appropriate when the underlying process i
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Lowess(; boundary_policy="zero")
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');
@@ -355,20 +313,6 @@ Applies no padding. Each local fit uses only the points that are actually availa
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOWESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Lowess(; boundary_policy="noboundary")
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');

@@ -152,7 +152,6 @@ nav:
       - api/index.md
       - Python: api/python.md
       - Rust: api/rust.md
-      - Julia: api/julia.md
       - Node.js: api/nodejs.md
       - WebAssembly: api/wasm.md
       - C++: api/cpp.md
