@@ -106,6 +106,8 @@ model_full <- OnlineLowess(
 
 ## Streaming Mode for Large Batches
 
+> **Note:** Always call `finalize()` after the last chunk to flush any remaining buffered points and produce output for the tail of the dataset.
+
 For large historical files arriving in chunks (not true real-time), the Streaming adapter is more efficient than Online:
 
 ```{r}

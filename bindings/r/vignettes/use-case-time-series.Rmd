@@ -102,7 +102,7 @@ lines(result$x, result$y, col = "blue", lwd = 2)
 
 ## Uncertainty Bands for Forecasting Context
 
-Confidence bands help communicate where the trend is uncertain.
+Prediction intervals widen the uncertainty band to include both the uncertainty in the fitted curve and the expected scatter of new observations. `fraction = 0.2` offers a balance between local detail and stable interval width.
 
 ```{r}
 library(rfastlowess)
@@ -113,15 +113,22 @@ y <- 10 + 0.3 * t + sin(t / 5) + rnorm(500, sd = 2)
 model <- Lowess(
     fraction = 0.2,
     iterations = 3,
-    confidence_intervals = 0.95
+    confidence_intervals = 0.95,
+    prediction_intervals = 0.95
 )
 result <- fit(model, t, y)
 
 plot(t, y, pch = ".", col = "gray",
      xlab = "Time", ylab = "Value",
-     main = "Trend with 95% Confidence Interval")
+     main = "Trend with 95% Confidence and Prediction Intervals")
+polygon(c(result$x, rev(result$x)),
+        c(result$prediction_upper, rev(result$prediction_lower)),
+        col = rgb(0, 0, 1, 0.08), border = NA)
 polygon(c(result$x, rev(result$x)),
         c(result$confidence_upper, rev(result$confidence_lower)),
-        col = rgb(0, 0, 1, 0.15), border = NA)
+        col = rgb(0, 0, 1, 0.20), border = NA)
 lines(result$x, result$y, col = "blue", lwd = 2)
+legend("topleft", c("PI 95%", "CI 95%", "Trend"),
+       fill = c(rgb(0, 0, 1, 0.08), rgb(0, 0, 1, 0.20), NA),
+       lty  = c(NA, NA, 1), col = c(NA, NA, "blue"), border = NA)
 ```

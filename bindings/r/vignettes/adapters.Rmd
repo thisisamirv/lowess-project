@@ -43,7 +43,7 @@ The default mode. Processes the entire dataset at once and supports all features
 | Parameter | Default | Description |
 | --- | --- | --- |
 | `fraction` | 0.67 | Neighbourhood size |
-| `iterations` | 0 | Robustness iterations |
+| `iterations` | 3 | Robustness iterations |
 | `confidence_intervals` | `NULL` | CI coverage (e.g. 0.95) |
 | `prediction_intervals` | `NULL` | PI coverage (e.g. 0.95) |
 | `parallel` | `FALSE` | Enable CPU parallelism |
@@ -70,6 +70,8 @@ print(result$confidence_lower)
 print(result$confidence_upper)
 print(result$diagnostics$r_squared)
 ```
+
+![Gap handling](../man/figures/gap_handling.svg)
 
 ---
 
@@ -121,6 +123,8 @@ result <- process_chunk(model, x_chunk, y_chunk)
 final  <- finalize(model)
 ```
 
+![Merge strategy comparison](../man/figures/merge_comparison.svg)
+
 ---
 
 ## Online Mode
@@ -165,3 +169,5 @@ for (i in seq_along(times)) {
 > **Note:** `update_mode = "incremental"` refits only the most recent point
 > for lower latency. `update_mode = "full"` refits the entire window for
 > higher accuracy.
+
+![Online adapter comparison](../man/figures/online_comparison.svg)

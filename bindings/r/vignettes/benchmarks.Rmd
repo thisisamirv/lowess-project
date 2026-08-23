@@ -38,11 +38,9 @@ For large batch datasets, the GPU backend can outperform CPU-parallel execution.
 
 | Scenario | CPU-Parallel | GPU | Speedup |
 | --- | --- | --- | --- |
-| n = 50K, fraction = 0.5 | ~200 ms | ~180 ms | ~1.1× |
-| n = 100K, fraction = 0.5 | ~800 ms | ~350 ms | ~2.3× |
 | n = 1M, fraction = 0.5 | 1.24 s | 187 ms | **6.6×** |
 
-At `fraction = 0.5`, GPU overtakes CPU around n ≥ 50K. At smaller fractions, around n ≥ 100K–250K.
+At `fraction = 0.5`, GPU overtakes CPU around n ≥ 50K; at smaller fractions, around n ≥ 100K–250K. See [benchmarks/README.md](https://github.com/thisisamirv/lowess-project/blob/main/benchmarks/README.md#gpu-benchmarks) for the full sweep and transfer-overhead breakdown.
 
 See the [benchmarks README](https://github.com/thisisamirv/lowess-project/blob/main/benchmarks/README.md) for full sweep details and transfer-overhead breakdown.
 

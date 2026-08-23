@@ -58,6 +58,33 @@ print(result$diagnostics$r_squared)
 
 ---
 
+## Handling Outliers
+
+LOWESS can robustly handle outliers through iterative reweighting:
+
+```{r}
+library(rfastlowess)
+
+x_out <- seq(1, 6, length.out = 6)
+y_with_outlier <- c(2.0, 4.0, 6.0, 50.0, 10.0, 12.0)
+
+model <- Lowess(
+    fraction = 0.5,
+    iterations = 5,
+    robustness_method = "bisquare",
+    return_robustness_weights = TRUE
+)
+result <- fit(model, x_out, y_with_outlier)
+
+for (i in seq_along(result$robustness_weights)) {
+    if (result$robustness_weights[i] < 0.5)
+        cat(sprintf("Point %d is likely an outlier (weight: %.3f)\n",
+                    i, result$robustness_weights[i]))
+}
+```
+
+---
+
 ## Streaming Mode
 
 For large datasets (>100K points) that may not fit in memory.

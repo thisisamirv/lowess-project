@@ -60,7 +60,9 @@ legend("topright", c("Observed", "Smoothed", "95% CI"),
 
 ## ChIP-seq Signal Smoothing
 
-ChIP-seq read counts are discrete and often overdispersed. Robustness iterations guard against the PCR duplicate spikes.
+ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identify binding regions.
+
+`fraction = 0.05` provides high spatial resolution — important for resolving narrow binding peaks that would otherwise be smeared into the background. The larger `iterations = 5` is deliberate: Poisson-distributed read counts produce tall, isolated spikes, and extra robustness iterations progressively down-weight them so the estimated background level is not inflated by a handful of extreme counts.
 
 ```{r}
 library(rfastlowess)
@@ -78,20 +80,21 @@ signal_noisy[c(100, 200, 300)] <- signal_noisy[c(100, 200, 300)] * 5
 
 # Smooth
 model <- Lowess(
-    fraction = 0.1,
-    iterations = 3
+    fraction = 0.05,
+    iterations = 5
 )
-result <- fit(model, positions, signal_noisy)
+threshold <- quantile(result$y, 0.75)
 
 plot(positions, signal_noisy, pch = 16, cex = 0.4, col = "gray",
      xlab = "Genomic Position", ylab = "Read Count",
      main = "ChIP-seq Signal Smoothing")
 lines(result$x, result$y, col = "blue", lwd = 2)
+abline(h = threshold, col = "red", lty = 2)
 ```
 
 ---
 
-## Large Genomic Datasets (Streaming)
+## Large Genome Coverage (Streaming)
 
 For whole-genome datasets that do not fit in memory, use the streaming adapter.
 
@@ -100,9 +103,8 @@ library(rfastlowess)
 
 model <- StreamingLowess(
     fraction   = 0.05,
-    iterations = 2,
-    chunk_size = 50000,
-    overlap    = 2000,
+    chunk_size = 100000,
+    overlap    = 10000,
     merge_strategy = "weighted_average"
 )
 

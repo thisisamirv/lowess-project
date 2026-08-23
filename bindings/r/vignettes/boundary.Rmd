@@ -76,6 +76,8 @@ Reproduces Cleveland's original behaviour — no padding applied.
 
 **Use when**: Comparing against reference implementations; the original Cleveland algorithm behaviour is required.
 
+> **Note:** Without padding, boundary fits can have higher variance and visible edge artefacts, particularly with small `fraction` values.
+
 ```{r}
 model <- Lowess(boundary_policy = "noboundary")
 result <- fit(model, x, y)
