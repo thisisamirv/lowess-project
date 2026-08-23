@@ -64,20 +64,18 @@ jobs:
       # R 4.2: Bioc 3.15/16 source tarballs give 404 — pak cannot resolve them; use BiocManager directly
       - name: Install R dependencies (R 4.2)
         if: matrix.r == '4.2'
-        shell: Rscript {0}
+        shell: bash
         run: |
-          lib <- Sys.getenv("R_LIBS_USER")
-          dir.create(lib, recursive = TRUE, showWarnings = FALSE)
-          .libPaths(c(lib, .libPaths()))
-          install.packages(
-            c("rcmdcheck", "devtools", "lintr"),
-            lib = lib, repos = "https://cloud.r-project.org", quiet = TRUE
-          )
-          install.packages("BiocManager", lib = lib, repos = "https://cloud.r-project.org", quiet = TRUE)
-          BiocManager::install(
-            c("BiocGenerics", "BiocStyle"),
-            lib = lib, ask = FALSE, update = FALSE, quiet = TRUE
-          )
+          Rscript --no-save -e '
+            lib <- Sys.getenv("R_LIBS_USER")
+            dir.create(lib, recursive = TRUE, showWarnings = FALSE)
+            .libPaths(c(lib, .libPaths()))
+            repos <- c(RSPM = Sys.getenv("RSPM", "https://cloud.r-project.org"), CRAN = "https://cloud.r-project.org")
+            install.packages(c("rcmdcheck", "devtools", "lintr", "BiocManager"), lib = lib, repos = repos)
+            BiocManager::install(c("BiocGenerics", "BiocStyle"), lib = lib, ask = FALSE, update = FALSE)
+            missing <- c("rcmdcheck", "BiocGenerics")[!sapply(c("rcmdcheck", "BiocGenerics"), requireNamespace, quietly = TRUE, lib.loc = lib)]
+            if (length(missing)) stop("Failed to install: ", paste(missing, collapse = ", "))
+          '
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         if: matrix.r == 'release'
