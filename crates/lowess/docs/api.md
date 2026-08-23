@@ -18,7 +18,7 @@ Standard in-memory smoothing (batch, parallel by default).
 use lowess::prelude::*;
 
 fn main() -> Result<(), LowessError> {
-    let builder = Lowess::new(); // Batch is default
+    let builder = Lowess::<f64>::new(); // Batch is default
 
     Ok(())
 }

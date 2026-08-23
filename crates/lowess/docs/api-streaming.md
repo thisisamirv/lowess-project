@@ -14,7 +14,7 @@ Streaming mode for large datasets.
 use lowess::prelude::*;
 
 fn main() -> Result<(), LowessError> {
-    let mut processor = StreamingLowess::new();
+    let mut processor = StreamingLowess::<f64>::new();
 
     Ok(())
 }

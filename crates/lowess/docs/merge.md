@@ -37,7 +37,7 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
 use lowess::prelude::*;
 
 fn main() -> Result<(), LowessError> {
-    let model = StreamingLowess::new()
+    let model = StreamingLowess::<f64>::new()
         .merge_strategy("average")
         .chunk_size(5000)
         .overlap(500)
@@ -59,7 +59,7 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
 use lowess::prelude::*;
 
 fn main() -> Result<(), LowessError> {
-    let mut processor = StreamingLowess::new()
+    let mut processor = StreamingLowess::<f64>::new()
         .merge_strategy("take_first")
         .build()?;
 
@@ -79,7 +79,7 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
 use lowess::prelude::*;
 
 fn main() -> Result<(), LowessError> {
-    let mut processor = StreamingLowess::new()
+    let mut processor = StreamingLowess::<f64>::new()
         .merge_strategy("take_last")
         .build()?;
 
@@ -103,7 +103,7 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
 use lowess::prelude::*;
 
 fn main() -> Result<(), LowessError> {
-    let model = StreamingLowess::new()
+    let model = StreamingLowess::<f64>::new()
     .merge_strategy("weighted_average")
     .chunk_size(5000)
     .overlap(500)

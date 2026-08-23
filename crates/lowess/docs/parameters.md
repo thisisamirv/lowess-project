@@ -562,7 +562,7 @@ Points per chunk in Streaming mode.
 use lowess::prelude::*;
 
 fn main() -> Result<(), LowessError> {
-    let model = StreamingLowess::new()
+    let model = StreamingLowess::<f64>::new()
         .chunk_size(10000)
         .build()?;
 
@@ -580,7 +580,7 @@ Overlap between chunks in Streaming mode.
 use lowess::prelude::*;
 
 fn main() -> Result<(), LowessError> {
-    let model = StreamingLowess::new()
+    let model = StreamingLowess::<f64>::new()
         .overlap(1000)
         .build()?;
 
@@ -607,7 +607,7 @@ For example:
 use lowess::prelude::*;
 
 fn main() -> Result<(), LowessError> {
-    let model = StreamingLowess::new()
+    let model = StreamingLowess::<f64>::new()
         .merge_strategy("weighted_average")
         .build()?;
 
@@ -625,7 +625,7 @@ Maximum points held in memory for Online mode.
 use lowess::prelude::*;
 
 fn main() -> Result<(), LowessError> {
-    let model = OnlineLowess::new()
+    let model = OnlineLowess::<f64>::new()
         .window_capacity(500)
         .build()?;
 
@@ -643,7 +643,7 @@ Minimum points required before Online filter starts producing outputs.
 use lowess::prelude::*;
 
 fn main() -> Result<(), LowessError> {
-    let model = OnlineLowess::new()
+    let model = OnlineLowess::<f64>::new()
         .min_points(10)
         .build()?;
 
@@ -668,7 +668,7 @@ For example:
 use lowess::prelude::*;
 
 fn main() -> Result<(), LowessError> {
-    let model = OnlineLowess::new()
+    let model = OnlineLowess::<f64>::new()
         .update_mode("full")
         .build()?;
 
