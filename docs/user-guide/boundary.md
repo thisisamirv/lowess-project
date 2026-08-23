@@ -36,25 +36,6 @@ Pads beyond both endpoints by replicating the first and last observed values. Pr
     model = fl.Lowess(boundary_policy="extend")
     result = model.fit(x, y)
     ```
-
-=== "Rust"
-    ```rust
-    use fastLowess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LowessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Lowess::new()
-            .boundary_policy("extend")
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');
@@ -121,25 +102,6 @@ Mirrors the data about both endpoints before fitting, then discards the reflecte
     model = fl.Lowess(boundary_policy="reflect")
     result = model.fit(x, y)
     ```
-
-=== "Rust"
-    ```rust
-    use fastLowess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LowessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Lowess::new()
-            .boundary_policy("reflect")
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');
@@ -205,25 +167,6 @@ Pads with zeros beyond both endpoints. Appropriate when the underlying process i
 
     model = fl.Lowess(boundary_policy="zero")
     result = model.fit(x, y)
-    ```
-
-=== "Rust"
-    ```rust
-    use fastLowess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LowessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Lowess::new()
-            .boundary_policy("zero")
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
     ```
 === "Node.js"
     ```javascript
@@ -293,25 +236,6 @@ Applies no padding. Each local fit uses only the points that are actually availa
 
     model = fl.Lowess(boundary_policy="noboundary")
     result = model.fit(x, y)
-    ```
-
-=== "Rust"
-    ```rust
-    use fastLowess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LowessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Lowess::new()
-            .boundary_policy("noboundary")
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
     ```
 === "Node.js"
     ```javascript

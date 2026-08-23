@@ -71,35 +71,6 @@ that would otherwise include it.
     model = Lowess(fraction=0.5, iterations=0)
     result = model.fit(x, y, custom_weights=weights)
     ```
-
-=== "Rust"
-    ```rust
-    use fastLowess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LowessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let x: Vec<f64> = (0..10).map(|i| i as f64).collect();
-        let mut y: Vec<f64> = x.iter().map(|v| v * 2.0).collect();
-        y[5] = 100.0; // spike
-
-        let mut weights = vec![1.0_f64; 10];
-        weights[5] = 0.0; // exclude the spike
-
-        let model = Lowess::new()
-            .fraction(0.5)
-            .iterations(0)
-            .custom_weights(weights)
-            .build()?;
-
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const fastlowess = require('fastlowess');
@@ -184,32 +155,6 @@ reference instruments, or low-noise observations.
     model = Lowess(fraction=0.5)
     result = model.fit(x, y, custom_weights=weights)
     ```
-
-=== "Rust"
-    ```rust
-    use fastLowess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LowessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let calibration_indices = vec![5usize, 20, 40, 60, 80];
-        let mut weights = vec![1.0_f64; x.len()];
-        for &i in &calibration_indices {
-            weights[i] = 10.0; // trust calibration 10× more
-        }
-
-        let model = Lowess::new()
-            .fraction(0.5)
-            .custom_weights(weights)
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const fastlowess = require('fastlowess');
@@ -293,29 +238,6 @@ weighting.
     weights = 1.0 / sigma**2
     model = Lowess(fraction=0.5)
     result = model.fit(x, y, custom_weights=weights)
-    ```
-
-=== "Rust"
-    ```rust
-    use fastLowess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LowessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let sigma: Vec<f64> = (0..n).map(|i| 0.1 + (i % 4) as f64 * 0.1).collect();
-        let weights: Vec<f64> = sigma.iter().map(|s| 1.0 / (s * s)).collect();
-
-        let model = Lowess::new()
-            .fraction(0.5)
-            .custom_weights(weights)
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
     ```
 === "Node.js"
     ```javascript
@@ -403,35 +325,6 @@ for *known* bad points and robustness for *unknown* contamination.
 
     model = Lowess(fraction=0.4, iterations=3)
     result = model.fit(x, y, custom_weights=weights)
-    ```
-
-=== "Rust"
-    ```rust
-    use fastLowess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LowessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let x: Vec<f64> = (0..20).map(|i| i as f64).collect();
-        let mut y: Vec<f64> = x.iter().map(|v| v * 1.5).collect();
-        y[3]  = -50.0; // known bad
-        y[12] = 80.0;  // unknown outlier
-
-        let mut weights = vec![1.0_f64; 20];
-        weights[3] = 0.0;
-
-        let model = Lowess::new()
-            .fraction(0.4)
-            .iterations(3)
-            .custom_weights(weights)
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
     ```
 === "Node.js"
     ```javascript

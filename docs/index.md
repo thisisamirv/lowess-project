@@ -98,24 +98,6 @@ Currently available for R, Python, Rust, Julia, Node.js, and WebAssembly.
     ```bash
     conda install -c conda-forge fastlowess
     ```
-
-=== "Rust"
-
-    Add the crate to your `Cargo.toml`:
-
-    === "lowess (no_std compatible)"
-
-        ```toml
-        [dependencies]
-        lowess = "0.99"
-        ```
-
-    === "fastLowess (parallel)"
-
-        ```toml
-        [dependencies]
-        fastLowess = "*"
-        ```
 === "Node.js"
 
     Install from npm:
@@ -172,33 +154,6 @@ See the [Installation Guide](getting-started/installation.md) for more options a
     model = fl.Lowess(fraction=0.5, iterations=3)
     result = model.fit(x, y)
     print(result.y)
-    ```
-
-=== "Rust"
-
-    ```rust
-    use lowess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LowessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-
-        let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-        let y = vec![2.0, 4.1, 5.9, 8.2, 9.8];
-
-        let model = Lowess::new()
-            .fraction(0.5)
-            .iterations(3)
-            .build()?;
-
-        let result = model.fit(&x, &y)?;
-        println!("{}", result);
-
-        Ok(())
-    }
     ```
 === "Node.js"
 

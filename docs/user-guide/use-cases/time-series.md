@@ -40,36 +40,6 @@ Time series data often contains noise, seasonality, and trends. LOWESS provides 
     plt.title("Trend Extraction")
     plt.show()
     ```
-
-=== "Rust"
-    ```rust
-    use fastLowess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LowessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-
-        let n = 500usize;
-        let t: Vec<f64> = (0..n).map(|i| i as f64 * 100.0 / (n - 1) as f64).collect();
-        let y: Vec<f64> = t.iter().enumerate()
-            .map(|(i, &ti)| 10.0 + 0.5 * ti + 3.0 * (ti / 10.0).sin()
-                          + ((i * 7 + 3) as f64 % 1.7 - 0.85) * 3.0)
-            .collect();
-
-        let model = Lowess::new()
-            .fraction(0.1)
-            .iterations(3)
-            .build()?;
-
-        let result = model.fit(&t, &y)?;
-        // result.y contains the trend
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const fl = require('fastlowess');
@@ -168,30 +138,6 @@ Setting `return_residuals = True` stores `observed − smoothed` alongside the s
     plt.plot(t, detrended)
     plt.title("Detrended (Residuals)")
     plt.tight_layout()
-    ```
-
-=== "Rust"
-    ```rust
-    use fastLowess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LowessError> {
-        let n = 100usize;
-        let t: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = t.iter().map(|&ti| ti.sin() + 0.1).collect();
-
-        let model = Lowess::new()
-            .fraction(0.3)
-            .iterations(3)
-            .return_residuals()
-            .build()?;
-
-        let result = model.fit(&t, &y)?;
-        let trend = &result.y;
-        let detrended = result.residuals.as_ref().unwrap();
-
-        Ok(())
-    }
     ```
 === "Node.js"
     ```javascript
@@ -296,30 +242,6 @@ Prediction intervals widen the uncertainty band to include both the uncertainty 
     )
     plt.legend()
     ```
-
-=== "Rust"
-    ```rust
-    use fastLowess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LowessError> {
-        let n = 100usize;
-        let t: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = t.iter().map(|&ti| ti.sin() + 0.1).collect();
-
-        let model = Lowess::new()
-            .fraction(0.2)
-            .iterations(3)
-            .confidence_intervals(0.95)
-            .prediction_intervals(0.95)
-            .build()?;
-
-        let result = model.fit(&t, &y)?;
-        // Access result.prediction_lower and result.prediction_upper
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const fl = require('fastlowess');
@@ -408,25 +330,6 @@ LOWESS naturally handles irregular time sampling:
     model = fl.Lowess(fraction=0.2)
     result = model.fit(t_irregular, y_irregular)
     ```
-
-=== "Rust"
-    ```rust
-    use fastLowess::prelude::*;
-
-    fn main() -> Result<(), LowessError> {
-        let t_irregular: Vec<f64> = (0..100).map(|i| i as f64 * 1.0 + (i * 31 % 10) as f64 * 0.1).collect();
-        let y_irregular: Vec<f64> = t_irregular.iter().map(|&t| 10.0 + t * 0.3 + 2.0 * (t * 0.1).sin()).collect();
-
-        // Irregular sampling - no special handling needed
-        let model = Lowess::new()
-            .fraction(0.2)
-            .build()?;
-
-        let result = model.fit(&t_irregular, &y_irregular)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const fl = require('fastlowess');
@@ -506,30 +409,6 @@ Use different fractions to extract features at different scales:
 
     plt.legend()
     plt.title("Multi-Scale LOWESS")
-    ```
-
-=== "Rust"
-    ```rust
-    use fastLowess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LowessError> {
-        let n = 100usize;
-        let t: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = t.iter().map(|&ti| ti.sin() + 0.1).collect();
-
-        let fractions = [0.05, 0.2, 0.5];
-
-        for f in fractions {
-            let model = Lowess::new()
-                .fraction(f)
-                .build()?;
-            let result = model.fit(&t, &y)?;
-            // Store or plot result.y for each scale
-        }
-
-        Ok(())
-    }
     ```
 === "Node.js"
     ```javascript
@@ -612,35 +491,6 @@ Biological application:
     result = model.fit(hours, expression)
 
     print(f"R²: {result.diagnostics.r_squared:.3f}")
-    ```
-
-=== "Rust"
-    ```rust
-    use fastLowess::prelude::*;
-    use std::f64::consts::PI;
-
-    fn main() -> Result<(), LowessError> {
-
-        let hours: Vec<f64> = (0..49).map(|i| i as f64 * 0.5).collect(); // 0.0..24.0 step 0.5
-        let expression: Vec<f64> = hours.iter().enumerate()
-            .map(|(i, &h)| 100.0 * (1.0 + 0.5 * (h * PI / 12.0).sin())
-                          + ((i * 7 + 3) as f64 % 1.7 - 0.85) * 10.0)
-            .collect();
-
-        let model = Lowess::new()
-            .fraction(0.3)
-            .iterations(3)
-            .confidence_intervals(0.95)
-            .return_diagnostics()
-            .build()?;
-
-        let result = model.fit(&hours, &expression)?;
-        if let Some(diag) = &result.diagnostics {
-            println!("R²: {:.3}", diag.r_squared);
-        }
-
-        Ok(())
-    }
     ```
 === "Node.js"
     ```javascript

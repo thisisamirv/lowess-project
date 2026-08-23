@@ -26,28 +26,6 @@ Install the LOWESS library for your preferred language.
     pip install maturin
     maturin develop --release
     ```
-
-=== "Rust"
-
-    === "From crates.io"
-
-    ```toml
-    # lowess (no_std compatible)
-    [dependencies]
-    lowess = "1.3"
-
-    # fastLowess (parallel + GPU)
-    [dependencies]
-    fastLowess = { version = "1.3", features = ["cpu"] }
-    ```
-
-    === "Feature Flags"
-
-        | Crate | Feature | Description |
-        | --- | --- | --- |
-        | `lowess` | `std` | Enable standard library (default) |
-        | `fastLowess` | `cpu` | Enable CPU parallelism via Rayon |
-        | `fastLowess` | `gpu` | Enable GPU acceleration via wgpu (beta) |
 === "Node.js"
 
     === "From NPM (recommended)"
@@ -161,23 +139,6 @@ Install the LOWESS library for your preferred language.
     model = fl.Lowess()
     result = model.fit(x, y)
     print("Installed successfully!")
-    ```
-
-=== "Rust"
-
-    ```rust
-    use lowess::prelude::*;
-    
-    fn main() -> Result<(), LowessError> {
-        let x = vec![1.0, 2.0, 3.0];
-        let y = vec![2.0, 4.0, 6.0];
-        
-        let model = Lowess::new().build()?;
-        let result = model.fit(&x, &y)?;
-        
-        println!("Installed successfully!");
-        Ok(())
-    }
     ```
 === "Node.js"
 

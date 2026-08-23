@@ -45,21 +45,6 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
     model = StreamingLowess(merge_strategy="average", chunk_size=5000, overlap=500)
     result = model.process_chunk(x_chunk, y_chunk)
     ```
-
-=== "Rust"
-    ```rust
-    use fastLowess::prelude::*;
-
-    fn main() -> Result<(), LowessError> {
-        let model = StreamingLowess::new()
-            .merge_strategy("average")
-            .chunk_size(5000)
-            .overlap(500)
-            .build()?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { StreamingLowess } = require('fastlowess');
@@ -130,19 +115,6 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
     from fastlowess import StreamingLowess
     model = StreamingLowess(merge_strategy="take_first")
     ```
-
-=== "Rust"
-    ```rust
-    use fastLowess::prelude::*;
-
-    fn main() -> Result<(), LowessError> {
-        let mut processor = StreamingLowess::new()
-            .merge_strategy("take_first")
-            .build()?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { StreamingLowess } = require('fastlowess');
@@ -188,19 +160,6 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
     ```python
     from fastlowess import StreamingLowess
     model = StreamingLowess(merge_strategy="take_last")
-    ```
-
-=== "Rust"
-    ```rust
-    use fastLowess::prelude::*;
-
-    fn main() -> Result<(), LowessError> {
-        let mut processor = StreamingLowess::new()
-            .merge_strategy("take_last")
-            .build()?;
-
-        Ok(())
-    }
     ```
 === "Node.js"
     ```javascript
@@ -255,21 +214,6 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
         chunk_size=5000,
         overlap=500
     )
-    ```
-
-=== "Rust"
-    ```rust
-    use fastLowess::prelude::*;
-
-    fn main() -> Result<(), LowessError> {
-        let model = StreamingLowess::new()
-        .merge_strategy("weighted_average")
-        .chunk_size(5000)
-        .overlap(500)
-        .build()?;
-
-        Ok(())
-    }
     ```
 === "Node.js"
     ```javascript

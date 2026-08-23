@@ -208,6 +208,10 @@
 
 #![allow(non_snake_case)]
 
+/// User guide and worked examples (visible on docs.rs).
+#[cfg(doc)]
+pub mod doc;
+
 /// GPU-accelerated execution engine.
 #[cfg(feature = "gpu")]
 pub mod gpu {

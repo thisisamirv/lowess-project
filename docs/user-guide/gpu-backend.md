@@ -48,12 +48,6 @@ Before requesting `backend = "gpu"` (or the language's equivalent spelling), che
 
     fl.gpu_available()
     ```
-
-=== "Rust"
-    ```rust
-    // The `gpu` feature is a compile-time choice, not a runtime check —
-    // if the crate was built with `features = ["gpu"]`, `Backend::GPU` is available.
-    ```
 === "Node.js"
     ```javascript
     const fastlowess = require('fastlowess');
@@ -104,14 +98,6 @@ Whether you need to **restart** afterwards depends on how each language loads it
     ```sh
     cd bindings/python
     maturin develop --release --features gpu
-    ```
-
-=== "Rust"
-    No installer — enable the `gpu` Cargo feature directly:
-
-    ```toml
-    [dependencies]
-    fastLowess = { version = "*", features = ["gpu"] }
     ```
 === "Node.js"
     ```javascript
@@ -167,20 +153,6 @@ Once GPU support is available, request it by setting the backend option on the b
 
     model = fl.Lowess(fraction=0.5, backend="gpu", confidence_intervals=0.95)
     result = model.fit(x, y)
-    ```
-
-=== "Rust"
-    ```rust
-    use fastLowess::prelude::*;
-
-    fn main() -> Result<(), LowessError> {
-        let model = Lowess::new()
-            .backend(Backend::GPU)
-            .confidence_intervals(0.95)
-            .build()?;
-
-        Ok(())
-    }
     ```
 === "Node.js"
     ```javascript

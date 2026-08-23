@@ -33,36 +33,6 @@ Split data into K folds, train on K-1, validate on 1.
     print(f"Selected fraction: {result.fraction_used}")
     print(f"CV scores: {result.cv_scores}")
     ```
-
-=== "Rust"
-    ```rust
-    use fastLowess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LowessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-
-        let model = Lowess::new()
-            .cv_method("kfold")
-            .cv_k(5)
-            .cv_fractions(vec![0.2, 0.3, 0.5, 0.7])
-            .build()?;
-
-        let result = model.fit(&x, &y)?;
-
-        // The best fraction was automatically selected
-        println!("Selected fraction: {}", result.fraction_used);
-
-        if let Some(scores) = &result.cv_scores {
-            println!("CV scores: {:?}", scores);
-        }
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');
@@ -151,26 +121,6 @@ Each point is held out once. Most thorough but slowest.
     )
     result = model.fit(x, y)
     ```
-
-=== "Rust"
-    ```rust
-    use fastLowess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LowessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Lowess::new()
-            .cv_method("loocv")
-            .cv_fractions(vec![0.2, 0.3, 0.5, 0.7])
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Lowess } = require('fastlowess');
@@ -247,28 +197,6 @@ Set a seed for reproducible fold assignments:
         cv_seed=42
     )
     result = model.fit(x, y)
-    ```
-
-=== "Rust"
-    ```rust
-    use fastLowess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LowessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Lowess::new()
-            .cv_method("kfold")
-            .cv_k(5)
-            .cv_fractions(vec![0.3, 0.5, 0.7])
-            .cv_seed(42)
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
     ```
 === "Node.js"
     ```javascript
@@ -381,35 +309,6 @@ Lower MSE indicates better fit on held-out data.
     # 0.3       | 0.0231  ← Best
     # 0.5       | 0.0298
     # 0.7       | 0.0412  ← Oversmoothed
-    ```
-
-=== "Rust"
-    ```rust
-    use fastLowess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LowessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        // Example output
-        let model = Lowess::new()
-            .cv_method("kfold")
-            .cv_k(5)
-            .cv_fractions(vec![0.1, 0.3, 0.5, 0.7])
-            .build()?;
-
-        let result = model.fit(&x, &y)?;
-
-        // Fraction  | CV Score (MSE)
-        // 0.1       | 0.0542  ← Undersmoothed
-        // 0.3       | 0.0231  ← Best
-        // 0.5       | 0.0298
-        // 0.7       | 0.0412  ← Oversmoothed
-
-        Ok(())
-    }
     ```
 === "Node.js"
     ```javascript

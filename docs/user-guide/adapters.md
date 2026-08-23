@@ -57,32 +57,6 @@ Standard mode for complete datasets. **Supports all features.**
     )
     result = model.fit(x, y)
     ```
-
-=== "Rust"
-    ```rust
-    use fastLowess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LowessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-
-        let model = Lowess::new()
-            .fraction(0.5)
-            .iterations(3)
-            .confidence_intervals(0.95)
-            .prediction_intervals(0.95)
-            .return_diagnostics()
-            .parallel(true)
-            .build()?;
-
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const fastlowess = require('fastlowess');
@@ -200,40 +174,6 @@ Process large datasets in chunks with configurable overlap.
     )
     model.process_chunk(x, y)
     result = model.finalize()
-    ```
-
-=== "Rust"
-    ```rust
-    use fastLowess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn write_output(_data: &[f64]) {}
-
-    fn main() -> Result<(), LowessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let data_chunks = vec![
-            (x[..50].to_vec(), y[..50].to_vec()),
-            (x[50..].to_vec(), y[50..].to_vec()),
-        ];
-
-        let mut processor = StreamingLowess::new()
-            .build()?;
-
-        // Process chunks (e.g., from a file reader)
-        for (chunk_x, chunk_y) in data_chunks {
-            let result = processor.process_chunk(&chunk_x, &chunk_y)?;
-            write_output(&result.y);
-        }
-
-        // IMPORTANT: Get remaining buffered data
-        let final_result = processor.finalize()?;
-        write_output(&final_result.y);
-
-        Ok(())
-    }
     ```
 === "Node.js"
     ```javascript
@@ -372,36 +312,6 @@ Incremental updates with a sliding window for real-time data.
         result = model.add_point(float(xi), float(yi))
         if result is not None:
             print(result.y)
-    ```
-
-=== "Rust"
-    ```rust
-    use fastLowess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LowessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-        let sensor_stream: Vec<(f64, f64)> = x.iter().zip(y.iter()).map(|(&xi, &yi)| (xi, yi)).collect();
-
-        let mut processor = OnlineLowess::new()
-            .fraction(0.2)
-            .iterations(1)
-            .window_capacity(100)
-            .min_points(5)
-            .update_mode("incremental")
-            .build()?;
-
-        // Process points as they arrive
-        for (x, y) in sensor_stream {
-            if let Some(output) = processor.add_point(x, y)? {
-                println!("Smoothed: {:.2}", output.y);
-            }
-        }
-
-        Ok(())
-    }
     ```
 === "Node.js"
     ```javascript
