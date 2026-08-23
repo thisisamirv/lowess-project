@@ -338,7 +338,7 @@ class Lowess extends _NativeLowess {
             throw new Error(
                 'GPU backend not installed in this build. Run `await fastlowess.installGpu()` ' +
                 'once to download and install a GPU-enabled build, then restart Node.js. ' +
-                'See https://lowess.readthedocs.io/api/nodejs/#gpu-acceleration for details.'
+                'See https://thisisamirv.github.io/lowess-project/nodejs/ for details.'
             )
         }
         super(opts)
@@ -414,7 +414,7 @@ async function installGpu(options = {}) {
     if (!suffix) {
         throw new Error(
             `No prebuilt GPU binary available for ${platform}-${arch}. ` +
-            'Build from source instead: see https://lowess.readthedocs.io/api/nodejs/#gpu-acceleration'
+            'Build from source instead: see https://thisisamirv.github.io/lowess-project/nodejs/'
         )
     }
 

@@ -11,7 +11,7 @@ robustness weighting is applied.
 
 The effective weight of observation $j$ in a local fit centred at $x_i$ is:
 
-$$w_{ij} = \text{custom\_weights}[j] \times K\!\left(\frac{d_{ij}}{h_i}\right) \times r_j$$
+$$w_{ij} = \text{custom\_weights}_j \times K\!\left(\frac{d_{ij}}{h_i}\right) \times r_j$$
 
 where $K$ is the distance kernel, $h_i$ is the local bandwidth, and $r_j$ is
 the robustness weight from the current iteration.

@@ -3,8 +3,6 @@
 
 Install the LOWESS library for your preferred language.
 
-=== "From crates.io"
-
 ```toml
 # lowess (no_std compatible)
 [dependencies]
@@ -15,13 +13,14 @@ lowess = "1.3"
 fastLowess = { version = "1.3", features = ["cpu"] }
 ```
 
-=== "Feature Flags"
+## Feature Flags
 
-    | Crate | Feature | Description |
-    | --- | --- | --- |
-    | `lowess` | `std` | Enable standard library (default) |
-    | `fastLowess` | `cpu` | Enable CPU parallelism via Rayon |
-    | `fastLowess` | `gpu` | Enable GPU acceleration via wgpu (beta) |
+| Crate | Feature | Description |
+| --- | --- | --- |
+| `lowess` | `std` | Enable standard library (default) |
+| `fastLowess` | `cpu` | Enable CPU parallelism via Rayon |
+| `fastLowess` | `gpu` | Enable GPU acceleration via wgpu (beta) |
+
 ---
 
 ## Verify Installation

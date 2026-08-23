@@ -3,13 +3,13 @@
 
 Install the LOWESS library for your preferred language.
 
-=== "From NPM (recommended)"
+## From NPM (recommended)
 
 ```bash
 npm install fastlowess
 ```
 
-=== "From Source"
+## From Source
 
 ```bash
 git clone https://github.com/thisisamirv/lowess-project

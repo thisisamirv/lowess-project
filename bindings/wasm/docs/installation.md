@@ -3,13 +3,13 @@
 
 Install the LOWESS library for your preferred language.
 
-=== "From NPM (recommended)"
+## From NPM (recommended)
 
 ```bash
 npm install fastlowess-wasm
 ```
 
-=== "From CDN"
+## From CDN
 
 ```html
 <script type="module">
@@ -18,7 +18,7 @@ npm install fastlowess-wasm
 </script>
 ```
 
-=== "From Source"
+## From Source
 
 ```bash
 # Install Rust first: https://rustup.rs/
@@ -41,11 +41,11 @@ wasm-pack build --target web
 import init, { Lowess } from 'fastlowess-wasm';
 
 async function verify() {
-    await init();
-    const x = new Float64Array([1.0, 2.0, 3.0]);
-    const y = new Float64Array([2.0, 4.0, 6.0]);
-    const result = new Lowess({}).fit(x, y);
-    console.log("Installed successfully!");
+await init();
+const x = new Float64Array([1.0, 2.0, 3.0]);
+const y = new Float64Array([2.0, 4.0, 6.0]);
+const result = new Lowess({}).fit(x, y);
+console.log("Installed successfully!");
 }
 verify();
 ```

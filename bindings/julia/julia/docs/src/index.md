@@ -3,7 +3,7 @@
 High-performance LOWESS (Locally Weighted Scatterplot Smoothing) for Julia,
 backed by a Rust library.
 
-See the [main documentation](https://lowess.readthedocs.io/) and the
+See the [main documentation](https://thisisamirv.github.io/lowess-project/julia/) and the
 [GitHub repository](https://github.com/thisisamirv/lowess-project) for full details.
 
 ## Quick Start

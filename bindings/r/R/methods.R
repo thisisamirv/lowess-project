@@ -215,5 +215,3 @@ add_point.OnlineLowess <- function(model, x, y, ...) {
     if (...length() > 0L) stop("unused arguments (...)")
     model$handle$add_point(as.double(x), as.double(y))
 }
-double(x), as.double(y))
-}

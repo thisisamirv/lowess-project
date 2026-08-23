@@ -13,7 +13,7 @@
 //!
 //! ## Documentation
 //!
-//! > 📚 **Full Documentation**: [lowess.readthedocs.io](https://lowess.readthedocs.io/)
+//! > 📚 **Full Documentation**: [docs.rs/lowess](https://docs.rs/lowess)
 //! >
 //! > Comprehensive guides, API references, and tutorials.
 //!

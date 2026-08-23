@@ -18,17 +18,12 @@ For true real-time applications where each point must be processed immediately.
 
 ```julia
 using FastLOWESS
-using Random, Statistics
+using Random
 
 rng = MersenneTwister(42)
-x = collect(range(0, 2π, length=100))
-y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-using FastLOWESS
-
 # Simulate sensor readings 
 times = collect(Float64, 1:100)
-temperatures = 20.0 .+ 5.0 .* sin.(times ./ 10.0) .+ randn(100)
+temperatures = 20.0 .+ 5.0 .* sin.(times ./ 10.0) .+ randn(rng, 100)
 
 # Process with online mode
 model = OnlineLowess(;

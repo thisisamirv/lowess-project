@@ -14,7 +14,7 @@
 //!
 //! ## Documentation
 //!
-//! > 📚 **Full Documentation**: [lowess.readthedocs.io](https://lowess.readthedocs.io/)
+//! > 📚 **Full Documentation**: [docs.rs/fastLowess](https://docs.rs/fastLowess)
 //! >
 //! > Comprehensive guides, API references, and tutorials.
 //!

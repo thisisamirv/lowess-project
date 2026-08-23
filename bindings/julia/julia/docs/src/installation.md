@@ -2,13 +2,13 @@
 
 Install the LOWESS library for your preferred language.
 
-=== "From General Registry (recommended)"
+## From General Registry (recommended)
 
 ```julia
 Pkg.add("FastLOWESS")
 ```
 
-=== "From Source"
+## From Source
 
 ```julia
 using Pkg

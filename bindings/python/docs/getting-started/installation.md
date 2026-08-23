@@ -3,19 +3,19 @@
 
 Install the LOWESS library for your preferred language.
 
-=== "From PyPI (recommended)"
+## From PyPI (recommended)
 
 ```bash
 pip install fastlowess
 ```
 
-=== "From conda-forge"
+## From conda-forge
 
 ```bash
 conda install -c conda-forge fastlowess
 ```
 
-=== "From Source"
+## From Source
 
 ```bash
 # Install Rust first: https://rustup.rs/
