@@ -34,7 +34,7 @@ $$w(u) = (1 - |u|^3)^3$$
 
 **Use when**: Default choice for most applications.
 
-```julia
+```@example kernels
 using FastLOWESS
 using Random, Statistics
 
@@ -44,6 +44,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Lowess(; weight_function="tricube")
 result = fit(model, x, y)
+println("First smoothed value (tricube kernel): ", result.y[1])
 ```
 
 ---
@@ -56,7 +57,7 @@ $$w(u) = \frac{3}{4}(1 - u^2)$$
 
 **Use when**: Optimal MSE properties desired.
 
-```julia
+```@example kernels
 using FastLOWESS
 using Random, Statistics
 
@@ -66,6 +67,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Lowess(; weight_function="epanechnikov")
 result = fit(model, x, y)
+println("First smoothed value (epanechnikov kernel): ", result.y[1])
 ```
 
 ---
@@ -78,7 +80,7 @@ $$w(u) = \exp(-u^2/2)$$
 
 **Use when**: Maximum smoothness needed, computational cost acceptable.
 
-```julia
+```@example kernels
 using FastLOWESS
 using Random, Statistics
 
@@ -88,6 +90,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Lowess(; weight_function="gaussian")
 result = fit(model, x, y)
+println("First smoothed value (gaussian kernel): ", result.y[1])
 ```
 
 ---
@@ -100,7 +103,7 @@ $$w(u) = (1 - u^2)^2$$
 
 **Use when**: Alternative to Tricube with slightly different properties.
 
-```julia
+```@example kernels
 using FastLOWESS
 using Random, Statistics
 
@@ -110,6 +113,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Lowess(; weight_function="biweight")
 result = fit(model, x, y)
+println("First smoothed value (biweight kernel): ", result.y[1])
 ```
 
 ---
@@ -122,7 +126,7 @@ $$w(u) = \cos(\pi u / 2)$$
 
 **Use when**: Want smooth kernel with simple form.
 
-```julia
+```@example kernels
 using FastLOWESS
 using Random, Statistics
 
@@ -132,6 +136,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Lowess(; weight_function="cosine")
 result = fit(model, x, y)
+println("First smoothed value (cosine kernel): ", result.y[1])
 ```
 
 ---
@@ -144,7 +149,7 @@ $$w(u) = 1 - |u|$$
 
 **Use when**: Simple, interpretable weights.
 
-```julia
+```@example kernels
 using FastLOWESS
 using Random, Statistics
 
@@ -154,6 +159,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Lowess(; weight_function="triangle")
 result = fit(model, x, y)
+println("First smoothed value (triangle kernel): ", result.y[1])
 ```
 
 ---
@@ -166,7 +172,7 @@ $$w(u) = 1$$
 
 **Use when**: Speed is critical, smoothness less important.
 
-```julia
+```@example kernels
 using FastLOWESS
 using Random, Statistics
 
@@ -176,6 +182,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Lowess(; weight_function="uniform")
 result = fit(model, x, y)
+println("First smoothed value (uniform kernel): ", result.y[1])
 ```
 
 ---

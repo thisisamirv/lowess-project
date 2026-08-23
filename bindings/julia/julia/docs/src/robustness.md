@@ -28,7 +28,7 @@ $$w(u) = \begin{cases} (1 - u^2)^2 & |u| < 1 \\ 0 & |u| \geq 1 \end{cases}$$
 
 **Use when**: General purpose, balanced approach.
 
-```julia
+```@example robustness
 using FastLOWESS
 using Random, Statistics
 
@@ -38,6 +38,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Lowess(; iterations=3, robustness_method="bisquare")
 result = fit(model, x, y)
+println("First smoothed value (bisquare robustness): ", result.y[1])
 ```
 
 ---
@@ -50,7 +51,7 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}$$
 
 **Use when**: Moderate outliers, want to retain some influence.
 
-```julia
+```@example robustness
 using FastLOWESS
 using Random, Statistics
 
@@ -60,6 +61,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Lowess(; iterations=3, robustness_method="huber")
 result = fit(model, x, y)
+println("First smoothed value (huber robustness): ", result.y[1])
 ```
 
 ---
@@ -72,7 +74,7 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
 
 **Use when**: Extreme outliers, want binary exclusion.
 
-```julia
+```@example robustness
 using FastLOWESS
 using Random, Statistics
 
@@ -82,6 +84,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Lowess(; iterations=3, robustness_method="talwar")
 result = fit(model, x, y)
+println("First smoothed value (talwar robustness): ", result.y[1])
 ```
 
 ---
@@ -100,7 +103,7 @@ result = fit(model, x, y)
 
 Use robustness weights to identify potential outliers:
 
-```julia
+```@example robustness
 using FastLOWESS
 using Random, Statistics
 
@@ -132,7 +135,7 @@ Residuals are scaled before computing robustness weights. Two methods:
 
 ![Scaling Methods Comparison](assets/scaling_comparison.svg)
 
-```julia
+```@example robustness
 using FastLOWESS
 using Random, Statistics
 
@@ -142,6 +145,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Lowess(; iterations=3, scaling_method="mad")
 result = fit(model, x, y)
+println("First smoothed value (MAD scaling): ", result.y[1])
 ```
 
 ---
@@ -153,7 +157,7 @@ Stop iterations early when weights stabilize:
 !!! tip "Performance"
     Auto-convergence can significantly reduce computation when weights stabilize before reaching max iterations.
 
-```julia
+```@example robustness
 using FastLOWESS
 using Random, Statistics
 
@@ -163,4 +167,5 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Lowess(; iterations=10, auto_converge=1e-6)
 result = fit(model, x, y)
+println("First smoothed value (auto_converge enabled): ", result.y[1])
 ```

@@ -27,15 +27,13 @@ Incremental updates with a sliding window for real-time data.
 
 ## Example
 
-```julia
+```@example online
 using FastLOWESS
 using Random, Statistics
 
 rng = MersenneTwister(42)
 x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-using FastLOWESS
 
 model = OnlineLowess(;
     fraction=0.2,
@@ -47,7 +45,7 @@ model = OnlineLowess(;
 for i in eachindex(x)
     result = add_point(model, x[i], y[i])
     if result !== nothing
-        println(result.y)
+        println("Current smoothed value: ", result.y)
     end
 end
 ```

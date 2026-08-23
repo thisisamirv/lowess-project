@@ -29,15 +29,13 @@ Process large datasets in chunks with configurable overlap.
 
 ## Example
 
-```julia
+```@example streaming
 using FastLOWESS
 using Random, Statistics
 
 rng = MersenneTwister(42)
 x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-using FastLOWESS
 
 model = StreamingLowess(;
     fraction=0.3,
@@ -48,6 +46,7 @@ model = StreamingLowess(;
 )
 process_chunk(model, x, y)
 result = finalize(model)
+println("First smoothed value: ", result.y[1])
 ```
 
 ---

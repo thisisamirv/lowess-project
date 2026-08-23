@@ -20,15 +20,13 @@ Confidence and prediction intervals for uncertainty quantification.
 
 Estimate uncertainty in the smoothed curve itself.
 
-```julia
+```@example intervals
 using FastLOWESS
 using Random, Statistics
 
 rng = MersenneTwister(42)
 x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-using FastLOWESS
 
 model = Lowess(; fraction=0.5, confidence_intervals=0.95)
 result = fit(model, x, y)
@@ -44,7 +42,7 @@ end
 
 Estimate where new observations might fall.
 
-```julia
+```@example intervals
 using FastLOWESS
 using Random, Statistics
 
@@ -64,7 +62,7 @@ println("Prediction bounds: [$(result.prediction_lower[1]), $(result.prediction_
 
 Request both types simultaneously:
 
-```julia
+```@example intervals
 using FastLOWESS
 using Random, Statistics
 
@@ -76,6 +74,8 @@ result = fit(
     Lowess(fraction=0.5, confidence_intervals=0.95, prediction_intervals=0.95),
     x, y
 )
+println("Confidence interval at point 50: [$(round(result.confidence_lower[50]; digits=3)), $(round(result.confidence_upper[50]; digits=3))]")
+println("Prediction interval at point 50: [$(round(result.prediction_lower[50]; digits=3)), $(round(result.prediction_upper[50]; digits=3))]")
 ```
 
 ---
@@ -90,7 +90,7 @@ Common levels and their z-values:
 | 0.95 | 1.960 | 95% of intervals contain true value |
 | 0.99 | 2.576 | 99% of intervals contain true value |
 
-```julia
+```@example intervals
 using FastLOWESS
 using Random, Statistics
 
@@ -101,6 +101,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 # 99% confidence interval
 model = Lowess(; confidence_intervals=0.99)
 result = fit(model, x, y)
+println("First smoothed value (99% CI): ", result.y[1])
 ```
 
 ---
@@ -109,7 +110,7 @@ result = fit(model, x, y)
 
 Access standard errors directly (available when intervals are computed):
 
-```julia
+```@example intervals
 using FastLOWESS
 using Random, Statistics
 

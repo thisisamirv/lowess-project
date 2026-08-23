@@ -23,7 +23,7 @@ Pads beyond both endpoints by replicating the first and last observed values. Pr
 
 **Use when**: No strong prior on boundary behaviour; general-purpose smoothing.
 
-```julia
+```@example boundary
 using FastLOWESS
 using Random, Statistics
 
@@ -33,6 +33,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Lowess(; boundary_policy="extend")
 result = fit(model, x, y)
+println("First smoothed value (extend policy): ", result.y[1])
 ```
 
 ---
@@ -43,7 +44,7 @@ Mirrors the data about both endpoints before fitting, then discards the reflecte
 
 **Use when**: Circular data (e.g., angle, day-of-year), symmetric physical quantities, or when the derivative at the boundary should be near zero.
 
-```julia
+```@example boundary
 using FastLOWESS
 using Random, Statistics
 
@@ -53,6 +54,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Lowess(; boundary_policy="reflect")
 result = fit(model, x, y)
+println("First smoothed value (reflect policy): ", result.y[1])
 ```
 
 ---
@@ -63,7 +65,7 @@ Pads with zeros beyond both endpoints. Appropriate when the underlying process i
 
 **Use when**: Signal decays to zero at both ends; zero is a meaningful boundary value.
 
-```julia
+```@example boundary
 using FastLOWESS
 using Random, Statistics
 
@@ -73,6 +75,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Lowess(; boundary_policy="zero")
 result = fit(model, x, y)
+println("First smoothed value (zero policy): ", result.y[1])
 ```
 
 ---
@@ -86,7 +89,7 @@ Applies no padding. Each local fit uses only the points that are actually availa
 !!! note
     Without padding, boundary fits can have higher variance and visible edge artefacts, particularly with small `fraction` values.
 
-```julia
+```@example boundary
 using FastLOWESS
 using Random, Statistics
 
@@ -96,6 +99,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Lowess(; boundary_policy="noboundary")
 result = fit(model, x, y)
+println("First smoothed value (noboundary policy): ", result.y[1])
 ```
 
 ---

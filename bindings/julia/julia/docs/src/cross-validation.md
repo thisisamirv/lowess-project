@@ -14,15 +14,13 @@ Cross-validation helps select optimal parameters (especially `fraction`) by eval
 
 Split data into K folds, train on K-1, validate on 1.
 
-```julia
+```@example cross-validation
 using FastLOWESS
 using Random, Statistics
 
 rng = MersenneTwister(42)
 x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-using FastLOWESS
 
 model = Lowess(; cv_method="kfold",
     cv_k=5,
@@ -40,7 +38,7 @@ println("CV scores: ", result.cv_scores)
 
 Each point is held out once. Most thorough but slowest.
 
-```julia
+```@example cross-validation
 using FastLOWESS
 using Random, Statistics
 
@@ -52,6 +50,7 @@ model = Lowess(; cv_method="loocv",
     cv_fractions=[0.2, 0.3, 0.5, 0.7]
 )
 result = fit(model, x, y)
+println("First smoothed value (LOOCV-selected fraction): ", result.y[1])
 ```
 
 ---
@@ -60,7 +59,7 @@ result = fit(model, x, y)
 
 Set a seed for reproducible fold assignments:
 
-```julia
+```@example cross-validation
 using FastLOWESS
 using Random, Statistics
 
@@ -74,6 +73,7 @@ model = Lowess(; cv_method="kfold",
     cv_seed=42
 )
 result = fit(model, x, y)
+println("First smoothed value (k-fold CV, k=5): ", result.y[1])
 ```
 
 ---
@@ -105,7 +105,7 @@ Lower MSE indicates better fit on held-out data.
 
 ## Interpreting Results
 
-```julia
+```@example cross-validation
 using FastLOWESS
 using Random, Statistics
 
@@ -123,6 +123,7 @@ result = fit(model, x, y)
 # 0.3       | 0.0231  ← Best
 # 0.5       | 0.0298
 # 0.7       | 0.0412  ← Oversmoothed
+println("First smoothed value (manually selected fraction=0.3): ", result.y[1])
 ```
 
 The fraction with **lowest CV score** is automatically selected.

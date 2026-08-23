@@ -19,7 +19,7 @@ Pkg.develop(url="https://github.com/thisisamirv/lowess-project", subdir="binding
 
 ## Verify Installation
 
-```julia
+```@example installation
 using FastLOWESS
 
 x = [1.0, 2.0, 3.0]

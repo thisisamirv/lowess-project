@@ -32,7 +32,7 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
 
 **Use when**: Chunks are large and the overlap region has uniform data density.
 
-```julia
+```@example merge
 using FastLOWESS
 using Random, Statistics
 
@@ -43,6 +43,7 @@ x_chunk = x[1:50]; y_chunk = y[1:50]
 
 model = StreamingLowess(; merge_strategy="average", chunk_size=5000, overlap=500)
 result = process_chunk(model, x_chunk, y_chunk)
+println("First smoothed value (average strategy): ", result.y[1])
 ```
 
 ---
@@ -53,7 +54,7 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
 
 **Use when**: You need final output values immediately after each chunk (no look-ahead revision); left-chunk data quality is higher.
 
-```julia
+```@example merge
 using FastLOWESS
 using Random, Statistics
 
@@ -62,6 +63,9 @@ x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = StreamingLowess(; merge_strategy="take_first")
+process_chunk(model, x, y)
+result = finalize(model)
+println("First smoothed value (take_first strategy): ", round(result.y[1]; digits=4))
 ```
 
 ---
@@ -72,7 +76,7 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
 
 **Use when**: Right-chunk context improves overlap quality; you are post-processing complete data rather than streaming live.
 
-```julia
+```@example merge
 using FastLOWESS
 using Random, Statistics
 
@@ -81,6 +85,9 @@ x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = StreamingLowess(; merge_strategy="take_last")
+process_chunk(model, x, y)
+result = finalize(model)
+println("First smoothed value (take_last strategy): ", round(result.y[1]; digits=4))
 ```
 
 ---
@@ -95,7 +102,7 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
 
 **Use when**: Minimising boundary artefacts is more important than speed; moderate overlap (10–20 % of chunk size).
 
-```julia
+```@example merge
 using FastLOWESS
 using Random, Statistics
 
@@ -108,6 +115,9 @@ model = StreamingLowess(;
     chunk_size=5000,
     overlap=500
 )
+process_chunk(model, x, y)
+result = finalize(model)
+println("First smoothed value (weighted_average strategy): ", round(result.y[1]; digits=4))
 ```
 
 ---

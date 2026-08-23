@@ -16,7 +16,7 @@ For true real-time applications where each point must be processed immediately.
 
 ### Sensor Data Example
 
-```julia
+```@example use-case-real-time
 using FastLOWESS
 using Random
 
@@ -53,7 +53,7 @@ For large datasets that arrive in batches or files.
 
 ### Log File Processing
 
-```julia
+```@example use-case-real-time
 using FastLOWESS
 
 # Large dataset
@@ -69,6 +69,7 @@ model = StreamingLowess(;
 )
 process_chunk(model, x, y)
 result = finalize(model)
+println("First smoothed value (streaming mode): ", result.y[1])
 ```
 
 ---

@@ -55,7 +55,7 @@ outliers that remain.
 Set the weight to `0` at the bad point — it is excluded from every local fit
 that would otherwise include it.
 
-```julia
+```@example custom-weights
 using FastLOWESS
 using Random, Statistics
 
@@ -72,6 +72,7 @@ weights[6] = 0.0           # exclude the spike
 
 model = Lowess(fraction = 0.5, iterations = 0)
 result = fit(model, x, y; custom_weights = weights)
+println("First smoothed value (outlier excluded with zero weight): ", result.y[1])
 ```
 
 ---
@@ -81,7 +82,7 @@ result = fit(model, x, y; custom_weights = weights)
 Assign high weights to measurements you trust most — calibration standards,
 reference instruments, or low-noise observations.
 
-```julia
+```@example custom-weights
 using FastLOWESS
 using Random, Statistics
 
@@ -95,6 +96,7 @@ weights[calibration_indices] .= 10.0   # trust calibration 10× more
 
 model = Lowess(fraction = 0.5)
 result = fit(model, x, y; custom_weights = weights)
+println("First smoothed value (calibration points upweighted 10×): ", result.y[1])
 ```
 
 ---
@@ -105,7 +107,7 @@ If each observation has a known standard deviation $\sigma_i$, set
 $w_i = 1 / \sigma_i^2$ to give the fit information-theoretically optimal
 weighting.
 
-```julia
+```@example custom-weights
 using FastLOWESS
 using Random, Statistics
 
@@ -117,6 +119,7 @@ sigma = rand(rng, 100) .* 0.4 .+ 0.1
 weights = 1.0 ./ sigma .^ 2
 model = Lowess(fraction = 0.5)
 result = fit(model, x, y; custom_weights = weights)
+println("First smoothed value (inverse-variance weights): ", result.y[1])
 ```
 
 ---
@@ -126,7 +129,7 @@ result = fit(model, x, y; custom_weights = weights)
 Custom weights and robustness iterations compose naturally: use custom weights
 for *known* bad points and robustness for *unknown* contamination.
 
-```julia
+```@example custom-weights
 using FastLOWESS
 using Random, Statistics
 
@@ -144,6 +147,7 @@ weights[4] = 0.0
 
 model = Lowess(fraction = 0.4, iterations = 3)
 result = fit(model, x, y; custom_weights = weights)
+println("First smoothed value (custom weights + robust fitting): ", result.y[1])
 ```
 
 ---

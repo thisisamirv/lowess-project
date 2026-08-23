@@ -62,7 +62,7 @@ The proportion of data used for each local fit. **Most important parameter.**
 | 0.5–0.7 | Heavy smoothing | Noisy data |
 | 0.7–1.0 | Very smooth | Trend extraction |
 
-```julia
+```@example parameters
 using FastLOWESS
 using Random, Statistics
 
@@ -72,6 +72,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Lowess(; fraction=0.3)
 result = fit(model, x, y)
+println("First smoothed value (fraction=0.3): ", result.y[1])
 ```
 
 ---
@@ -87,7 +88,7 @@ Number of robustness iterations for outlier resistance.
 | 4–6 | Strong | Contaminated data |
 | 7+ | Very strong | Heavy outliers |
 
-```julia
+```@example parameters
 using FastLOWESS
 using Random, Statistics
 
@@ -97,6 +98,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Lowess(; iterations=5)
 result = fit(model, x, y)
+println("First smoothed value (iterations=5): ", result.y[1])
 ```
 
 ---
@@ -108,7 +110,7 @@ Interpolation optimization threshold. Points within `delta` distance reuse the p
 - **Default**: 1% of x-range (Batch), 0.0 (Streaming/Online)
 - **Effect**: Higher values = faster but less accurate
 
-```julia
+```@example parameters
 using FastLOWESS
 using Random, Statistics
 
@@ -118,6 +120,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Lowess(; delta=0.05)
 result = fit(model, x, y)
+println("First smoothed value (delta=0.05): ", result.y[1])
 ```
 
 ---
@@ -138,7 +141,7 @@ Distance weighting kernel for local fits.
 
 See [Weight Functions](kernels.md) for detailed comparison.
 
-```julia
+```@example parameters
 using FastLOWESS
 using Random, Statistics
 
@@ -148,6 +151,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Lowess(; weight_function="epanechnikov")
 result = fit(model, x, y)
+println("First smoothed value (epanechnikov kernel): ", result.y[1])
 ```
 
 ---
@@ -164,7 +168,7 @@ Method for downweighting outliers during iterative refinement.
 
 See [Robustness](robustness.md) for detailed comparison.
 
-```julia
+```@example parameters
 using FastLOWESS
 using Random, Statistics
 
@@ -174,6 +178,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Lowess(; robustness_method="talwar")
 result = fit(model, x, y)
+println("First smoothed value (talwar robustness): ", result.y[1])
 ```
 
 ---
@@ -193,7 +198,7 @@ Edge handling strategy to reduce boundary bias. See [Boundary Handling](boundary
 
 For example:
 
-```julia
+```@example parameters
 using FastLOWESS
 using Random, Statistics
 
@@ -203,6 +208,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Lowess(; boundary_policy="reflect")
 result = fit(model, x, y)
+println("First smoothed value (reflect boundary): ", result.y[1])
 ```
 
 ---
@@ -221,7 +227,7 @@ Method for estimating residual scale during robustness iterations. See [Scaling 
 
 For example:
 
-```julia
+```@example parameters
 using FastLOWESS
 using Random, Statistics
 
@@ -231,6 +237,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Lowess(; scaling_method="mad")
 result = fit(model, x, y)
+println("First smoothed value (MAD scaling): ", result.y[1])
 ```
 
 ---
@@ -249,7 +256,7 @@ Behavior when all neighborhood weights are zero.
 
 For example:
 
-```julia
+```@example parameters
 using FastLOWESS
 using Random, Statistics
 
@@ -259,6 +266,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Lowess(; zero_weight_fallback="use_local_mean")
 result = fit(model, x, y)
+println("First smoothed value (use_local_mean fallback): ", result.y[1])
 ```
 
 ---
@@ -267,7 +275,7 @@ result = fit(model, x, y)
 
 Enable early stopping when robustness weights stabilize.
 
-```julia
+```@example parameters
 using FastLOWESS
 using Random, Statistics
 
@@ -277,6 +285,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Lowess(; iterations=20, auto_converge=1e-6)
 result = fit(model, x, y)
+println("First smoothed value (auto_converge=1e-6): ", result.y[1])
 ```
 
 ---
@@ -291,7 +300,7 @@ available in the **Batch** adapter.
 
 See [Custom Weights](custom-weights.md) for a full discussion.
 
-```julia
+```@example parameters
 using FastLOWESS
 using Random, Statistics
 
@@ -304,6 +313,7 @@ weights[6] = 0.0           # exclude index 6 (1-indexed)
 
 model = Lowess(fraction = 0.5)
 result = fit(model, x, y; custom_weights = weights)
+println("First smoothed value (custom weights, index 6 excluded): ", result.y[1])
 ```
 
 ---
@@ -314,7 +324,7 @@ result = fit(model, x, y; custom_weights = weights)
 
 Include residuals (`y - smoothed`) in the output.
 
-```julia
+```@example parameters
 using FastLOWESS
 using Random, Statistics
 
@@ -324,7 +334,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Lowess(; return_residuals=true)
 result = fit(model, x, y)
-println(result.residuals)
+println("Residuals: ", result.residuals)
 ```
 
 ---
@@ -343,7 +353,7 @@ Include fit quality metrics (Batch and Streaming only).
 | `aic` | Akaike Information Criterion |
 | `aicc` | Corrected AIC |
 
-```julia
+```@example parameters
 using FastLOWESS
 using Random, Statistics
 
@@ -362,7 +372,7 @@ println("R²: ", result.diagnostics.r_squared)
 
 Include final robustness weights (useful for outlier detection).
 
-```julia
+```@example parameters
 using FastLOWESS
 using Random, Statistics
 
@@ -373,6 +383,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 model = Lowess(; iterations=3, return_robustness_weights=true)
 result = fit(model, x, y)
 # Points with result.robustness_weights < 0.5 are likely outliers
+println("First smoothed value (robustness weights computed): ", result.y[1])
 ```
 
 ---
@@ -381,7 +392,7 @@ result = fit(model, x, y)
 
 Return per-point standard errors for the smoothed fit. Standard errors measure the uncertainty of each smoothed estimate and are used as the basis for confidence and prediction intervals when those are requested alongside `return_se`.
 
-```julia
+```@example parameters
 using FastLOWESS
 using Random, Statistics
 
@@ -391,7 +402,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Lowess(; return_se=true)
 result = fit(model, x, y)
-println(result.standard_errors)
+println("Standard errors: ", result.standard_errors)
 ```
 
 ---
@@ -402,7 +413,7 @@ Request uncertainty estimates (Batch only).
 
 See [Intervals](intervals.md) for detailed usage.
 
-```julia
+```@example parameters
 using FastLOWESS
 using Random, Statistics
 
@@ -412,6 +423,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Lowess(; confidence_intervals=0.95, prediction_intervals=0.95)
 result = fit(model, x, y)
+println("First smoothed value (95% CI + PI): ", result.y[1])
 ```
 
 ---
@@ -427,7 +439,7 @@ Selection strategy for automated parameter tuning.
 | `"kfold"` | K-Fold Cross-Validation | Fast |
 | `"loocv"` | Leave-One-Out Cross-Validation | Slow |
 
-```julia
+```@example parameters
 using FastLOWESS
 using Random, Statistics
 
@@ -437,6 +449,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Lowess(; cv_method="kfold", cv_k=5)
 result = fit(model, x, y)
+println("First smoothed value (k-fold CV, k=5): ", result.y[1])
 ```
 
 ---
@@ -447,7 +460,7 @@ result = fit(model, x, y)
 
 Points per chunk in Streaming mode.
 
-```julia
+```@example parameters
 using FastLOWESS
 using Random, Statistics
 
@@ -458,6 +471,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 model = StreamingLowess(; chunk_size=10000)
 process_chunk(model, x, y)
 result = finalize(model)
+println("First smoothed value (chunk_size=10000): ", result.y[1])
 ```
 
 ---
@@ -466,7 +480,7 @@ result = finalize(model)
 
 Overlap between chunks in Streaming mode.
 
-```julia
+```@example parameters
 using FastLOWESS
 using Random, Statistics
 
@@ -477,6 +491,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 model = StreamingLowess(; overlap=1000)
 process_chunk(model, x, y)
 result = finalize(model)
+println("First smoothed value (overlap=1000): ", result.y[1])
 ```
 
 ---
@@ -494,7 +509,7 @@ Method for merging overlapping chunks. See [Merge Strategies](merge.md) for a de
 
 For example:
 
-```julia
+```@example parameters
 using FastLOWESS
 using Random, Statistics
 
@@ -505,6 +520,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 model = StreamingLowess(; merge_strategy="weighted_average")
 process_chunk(model, x, y)
 result = finalize(model)
+println("First smoothed value (weighted_average merge): ", result.y[1])
 ```
 
 ---
@@ -513,7 +529,7 @@ result = finalize(model)
 
 Maximum points held in memory for Online mode.
 
-```julia
+```@example parameters
 using FastLOWESS
 using Random, Statistics
 
@@ -523,6 +539,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = OnlineLowess(; window_capacity=500)
 result = add_point(model, x[1], y[1])  # nothing until window fills
+println("Result before window fills (capacity=500): ", result)
 ```
 
 ---
@@ -531,7 +548,7 @@ result = add_point(model, x[1], y[1])  # nothing until window fills
 
 Minimum points required before Online filter starts producing outputs.
 
-```julia
+```@example parameters
 using FastLOWESS
 using Random, Statistics
 
@@ -541,6 +558,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = OnlineLowess(; min_points=10)
 result = add_point(model, x[1], y[1])
+println("Result before min_points reached (min_points=10): ", result)
 ```
 
 ---
@@ -556,7 +574,7 @@ Optimization strategy for Online mode updates.
 
 For example:
 
-```julia
+```@example parameters
 using FastLOWESS
 using Random, Statistics
 
@@ -566,4 +584,5 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = OnlineLowess(; update_mode="full")
 result = add_point(model, x[1], y[1])
+println("Result after first point (update_mode=full): ", result)
 ```

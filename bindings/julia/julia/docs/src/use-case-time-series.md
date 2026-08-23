@@ -12,7 +12,7 @@ Time series data often contains noise, seasonality, and trends. LOWESS provides 
 
 `fraction = 0.1` sizes the neighbourhood as 10% of the data at each evaluation point — narrow enough to follow a slowly varying trend without smearing periodic variation. Three robustness `iterations` down-weight noise spikes so they cannot bias the fitted curve; this is especially important when the signal-to-noise ratio is low or when occasional outliers are expected.
 
-```julia
+```@example use-case-time-series
 using FastLOWESS
 
 t = collect(range(0, 100, length=500))
@@ -34,7 +34,7 @@ Remove trend to analyze residual patterns.
 
 Setting `return_residuals = True` stores `observed − smoothed` alongside the smooth. A slightly wider `fraction = 0.3` produces a smoother baseline trend, so short-duration oscillations end up in the residuals rather than being absorbed into the trend component. The residual series is then ready for spectral analysis, seasonality detection, or change-point methods.
 
-```julia
+```@example use-case-time-series
 using FastLOWESS
 using Random, Statistics
 
@@ -58,7 +58,7 @@ println("Detrended variance: ", var(detrended))
 
 Prediction intervals widen the uncertainty band to include both the uncertainty in the fitted curve (confidence interval) and the expected scatter of new observations around it. `fraction = 0.2` offers a balance between local detail and stable interval width — too small a fraction produces jagged interval edges; too large a fraction underestimates local variance near turning points.
 
-```julia
+```@example use-case-time-series
 using FastLOWESS
 using Random, Statistics
 
@@ -84,7 +84,7 @@ println("First point 95% PI: [$(result.prediction_lower[1]), $(result.prediction
 
 LOWESS naturally handles irregular time sampling:
 
-```julia
+```@example use-case-time-series
 using FastLOWESS
 using Random, Statistics
 
@@ -99,6 +99,7 @@ y_irregular = 10.0 .+ t_irregular .* 0.3 .+ randn(200) .* 2.0
 # LOWESS handles this seamlessly
 model = Lowess(; fraction=0.2)
 result = fit(model, t_irregular, y_irregular)
+println("First smoothed value (irregular time series): ", result.y[1])
 ```
 
 ---
@@ -107,7 +108,7 @@ result = fit(model, t_irregular, y_irregular)
 
 Use different fractions to extract features at different scales:
 
-```julia
+```@example use-case-time-series
 using FastLOWESS
 using Random, Statistics
 
@@ -121,7 +122,9 @@ results = map(fractions) do f
     model = Lowess(; fraction=f)
     result = fit(model, t, y)
 end
-# results[i].y contains smoothed values for each fraction
+for (f, res) in zip(fractions, results)
+    println("fraction=$(f): first smoothed value = $(round(res.y[1]; digits=4))")
+end
 ```
 
 ---
@@ -130,15 +133,13 @@ end
 
 Biological application:
 
-```julia
+```@example use-case-time-series
 using FastLOWESS
 using Random, Statistics
 
 rng = MersenneTwister(42)
 x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-using FastLOWESS
 
 hours = collect(range(0, 24, step=0.5))
 expression = 100 .*(1.0 .+ 0.5 .* sin.(hours .*pi ./ 12.0)) .+ randn(length(hours)) .* 10.0
