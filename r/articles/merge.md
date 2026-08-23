@@ -16,12 +16,12 @@ Overlap:            [=====]
                  applied here
 ```
 
-| Strategy | Method | Best For |
-|----|----|----|
-| `"average"` | Simple mean of both estimates | Uniform data density |
-| `"take_first"` | Left-chunk estimate only | Left chunk is more accurate |
-| `"take_last"` | Right-chunk estimate only | Right chunk is more accurate |
-| `"weighted_average"` | Distance-weighted mean (default) | Most situations |
+| Strategy             | Method                           | Robustness | Speed    |
+|----------------------|----------------------------------|------------|----------|
+| `"average"`          | Simple mean of both estimates    | Low        | Fastest  |
+| `"take_first"`       | Left-chunk estimate only         | Low        | Fastest  |
+| `"take_last"`        | Right-chunk estimate only        | Low        | Fastest  |
+| `"weighted_average"` | Distance-weighted mean (default) | High       | Moderate |
 
 ![Merge strategy comparison](../reference/figures/merge_comparison.svg)
 
@@ -135,3 +135,15 @@ model <- StreamingLowess(
     merge_strategy = "weighted_average"
 )
 ```
+
+------------------------------------------------------------------------
+
+## Choosing a Strategy
+
+| Situation                             | Recommended Strategy |
+|---------------------------------------|----------------------|
+| General purpose                       | `"weighted_average"` |
+| Maximum throughput                    | `"average"`          |
+| Immediate finalised output            | `"take_first"`       |
+| Post-processing, right context better | `"take_last"`        |
+| Minimising boundary artefacts         | `"weighted_average"` |

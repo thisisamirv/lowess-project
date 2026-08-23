@@ -187,6 +187,66 @@ for each candidate fraction in the order they were passed.</p>
 <span>     xlab <span class="op">=</span> <span class="st">"Fraction"</span>, ylab <span class="op">=</span> <span class="st">"CV Score (MSE)"</span>,</span>
 <span>     main <span class="op">=</span> <span class="st">"Cross-Validation Score by Fraction"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>v <span class="op">=</span> <span class="va">result</span><span class="op">$</span><span class="va">fraction_used</span>, col <span class="op">=</span> <span class="st">"red"</span>, lty <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="seeded-randomization">Seeded Randomization<a class="anchor" aria-label="anchor" href="#seeded-randomization"></a>
+</h2>
+<p>Set a seed for reproducible fold assignments in k-fold CV:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/thisisamirv/lowess-project" class="external-link">rfastlowess</a></span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
+<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span>, length.out <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
+<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span>, sd <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Lowess.html">Lowess</a></span><span class="op">(</span></span>
+<span>    cv_method <span class="op">=</span> <span class="st">"kfold"</span>,</span>
+<span>    cv_k <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>    cv_fractions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.2</span>, <span class="fl">0.3</span>, <span class="fl">0.5</span>, <span class="fl">0.7</span><span class="op">)</span>,</span>
+<span>    cv_seed <span class="op">=</span> <span class="fl">42L</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Selected fraction:"</span>, <span class="va">result</span><span class="op">$</span><span class="va">fraction_used</span>, <span class="st">"\n"</span><span class="op">)</span></span></code></pre></div>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="method-comparison">Method Comparison<a class="anchor" aria-label="anchor" href="#method-comparison"></a>
+</h2>
+<table class="table">
+<thead><tr class="header">
+<th>Method</th>
+<th>Folds</th>
+<th>Speed</th>
+<th>Variance</th>
+<th>Bias</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><strong>KFold(5)</strong></td>
+<td>5</td>
+<td>Fast</td>
+<td>Moderate</td>
+<td>Low</td>
+</tr>
+<tr class="even">
+<td><strong>KFold(10)</strong></td>
+<td>10</td>
+<td>Medium</td>
+<td>Lower</td>
+<td>Lower</td>
+</tr>
+<tr class="odd">
+<td><strong>LOOCV</strong></td>
+<td>N</td>
+<td>Slow</td>
+<td>Lowest</td>
+<td>Lowest</td>
+</tr>
+</tbody>
+</table>
+<p>Use <strong>5-fold</strong> or <strong>10-fold</strong> CV for most
+applications. LOOCV is only worth it for small datasets (N &lt;
+100).</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

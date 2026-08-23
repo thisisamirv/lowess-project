@@ -5,14 +5,19 @@
 | Parameter | Default | Range | Description | Mode |
 |----|----|----|----|----|
 | **fraction** | 0.67 | (0, 1\] | Neighbourhood size | All |
-| **iterations** | 0 | \[0, ∞) | Robustness iterations | All |
-| **degree** | 1 | 0, 1, 2 | Polynomial degree | All |
-| **delta** | 0.0 | \[0, ∞) | Distance threshold for skipping | Batch |
+| **iterations** | 3 | \[0, 1000\] | Robustness iterations | All |
+| **delta** | `NULL` | \[0, ∞) | Distance threshold for skipping | All |
 | **weight_function** | `"tricube"` | 7 options | Distance kernel | All |
 | **robustness_method** | `"bisquare"` | 3 options | Outlier weighting | All |
 | **scaling_method** | `"mad"` | 3 options | Scale estimate | All |
 | **zero_weight_fallback** | `"use_local_mean"` | 3 options | Zero-weight handling | All |
 | **boundary_policy** | `"extend"` | 4 options | Edge padding | All |
+| **auto_converge** | `NULL` | tolerance | Early stopping | All |
+| **return_residuals** | `FALSE` | logical | Include residuals | All |
+| **return_robustness_weights** | `FALSE` | logical | Include weights | All |
+| **return_se** | `FALSE` | logical | Return standard errors | All |
+| **return_diagnostics** | `FALSE` | logical | Include metrics | Batch, Streaming |
+| **custom_weights** | `NULL` | positive | Per-observation weights | Batch |
 | **backend** | `"cpu"` | `"cpu"`, `"gpu"` | Compute backend | Batch |
 | **parallel** | `FALSE` | `TRUE`/`FALSE` | Parallel CPU execution | Batch |
 | **confidence_intervals** | `NULL` | (0, 1) | CI coverage level | Batch |
@@ -74,17 +79,6 @@ high-residual points.
 ``` r
 
 model <- Lowess(iterations = 3)
-result <- fit(model, x, y)
-```
-
-### degree
-
-Polynomial degree for local fits: 0 (constant), 1 (linear, default), or
-2 (quadratic).
-
-``` r
-
-model <- Lowess(degree = 2L)
 result <- fit(model, x, y)
 ```
 

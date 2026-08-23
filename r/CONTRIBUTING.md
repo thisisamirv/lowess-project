@@ -1,5 +1,5 @@
 # Contributing to rfastlowess
 
-For contribution guidelines, please see the [Contributing
-Guide](https://lowess.readthedocs.io/en/latest/contributing/) in the
-docs.
+For contribution guidelines, please see
+[CONTRIBUTING.md](https://github.com/thisisamirv/lowess-project/blob/main/CONTRIBUTING.md)
+at the repository root.

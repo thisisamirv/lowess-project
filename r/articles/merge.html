@@ -78,35 +78,41 @@ Overlap:            [=====]
                  applied here</code></pre>
 <table class="table">
 <colgroup>
-<col width="33%">
-<col width="33%">
-<col width="33%">
+<col width="25%">
+<col width="25%">
+<col width="25%">
+<col width="25%">
 </colgroup>
 <thead><tr class="header">
 <th>Strategy</th>
 <th>Method</th>
-<th>Best For</th>
+<th>Robustness</th>
+<th>Speed</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
 <td><code>"average"</code></td>
 <td>Simple mean of both estimates</td>
-<td>Uniform data density</td>
+<td>Low</td>
+<td>Fastest</td>
 </tr>
 <tr class="even">
 <td><code>"take_first"</code></td>
 <td>Left-chunk estimate only</td>
-<td>Left chunk is more accurate</td>
+<td>Low</td>
+<td>Fastest</td>
 </tr>
 <tr class="odd">
 <td><code>"take_last"</code></td>
 <td>Right-chunk estimate only</td>
-<td>Right chunk is more accurate</td>
+<td>Low</td>
+<td>Fastest</td>
 </tr>
 <tr class="even">
 <td><code>"weighted_average"</code></td>
 <td>Distance-weighted mean (default)</td>
-<td>Most situations</td>
+<td>High</td>
+<td>Moderate</td>
 </tr>
 </tbody>
 </table>
@@ -222,6 +228,39 @@ better context (e.g., more data follows).</p>
 <span>    overlap        <span class="op">=</span> <span class="va">overlap</span>,</span>
 <span>    merge_strategy <span class="op">=</span> <span class="st">"weighted_average"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="choosing-a-strategy">Choosing a Strategy<a class="anchor" aria-label="anchor" href="#choosing-a-strategy"></a>
+</h2>
+<table class="table">
+<thead><tr class="header">
+<th>Situation</th>
+<th>Recommended Strategy</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>General purpose</td>
+<td><code>"weighted_average"</code></td>
+</tr>
+<tr class="even">
+<td>Maximum throughput</td>
+<td><code>"average"</code></td>
+</tr>
+<tr class="odd">
+<td>Immediate finalised output</td>
+<td><code>"take_first"</code></td>
+</tr>
+<tr class="even">
+<td>Post-processing, right context better</td>
+<td><code>"take_last"</code></td>
+</tr>
+<tr class="odd">
+<td>Minimising boundary artefacts</td>
+<td><code>"weighted_average"</code></td>
+</tr>
+</tbody>
+</table>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

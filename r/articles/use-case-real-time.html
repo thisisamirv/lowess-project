@@ -180,6 +180,11 @@ or plotting.</p>
 <div class="section level2">
 <h2 id="streaming-mode-for-large-batches">Streaming Mode for Large Batches<a class="anchor" aria-label="anchor" href="#streaming-mode-for-large-batches"></a>
 </h2>
+<blockquote>
+<p><strong>Note:</strong> Always call <code><a href="../reference/finalize.html">finalize()</a></code> after the
+last chunk to flush any remaining buffered points and produce output for
+the tail of the dataset.</p>
+</blockquote>
 <p>For large historical files arriving in chunks (not true real-time),
 the Streaming adapter is more efficient than Online:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">

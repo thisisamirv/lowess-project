@@ -119,3 +119,27 @@ legend("topright", c("Data", "iterations=0", "iterations=3"),
 | `"bisquare"` | Smooth to zero          | General purpose       |
 | `"huber"`    | Linear then downweights | Mild contamination    |
 | `"talwar"`   | Hard threshold (0/1)    | Severe point outliers |
+
+------------------------------------------------------------------------
+
+## Detecting Outliers
+
+Use robustness weights to identify potential outliers:
+
+``` r
+
+library(rfastlowess)
+set.seed(42)
+x <- seq(0, 2 * pi, length.out = 100)
+y <- sin(x) + rnorm(100, sd = 0.3)
+y[c(20, 50, 80)] <- y[c(20, 50, 80)] + 5  # inject outliers
+
+model <- Lowess(iterations = 5, return_robustness_weights = TRUE)
+result <- fit(model, x, y)
+
+for (i in seq_along(result$robustness_weights)) {
+    if (result$robustness_weights[i] < 0.5)
+        cat(sprintf("Point %d is likely an outlier (weight: %.3f)\n",
+                    i, result$robustness_weights[i]))
+}
+```

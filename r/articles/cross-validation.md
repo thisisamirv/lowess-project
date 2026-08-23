@@ -114,3 +114,39 @@ plot(fractions, result$cv_scores, type = "b",
      main = "Cross-Validation Score by Fraction")
 abline(v = result$fraction_used, col = "red", lty = 2)
 ```
+
+------------------------------------------------------------------------
+
+## Seeded Randomization
+
+Set a seed for reproducible fold assignments in k-fold CV:
+
+``` r
+
+library(rfastlowess)
+set.seed(42)
+x <- seq(0, 2 * pi, length.out = 100)
+y <- sin(x) + rnorm(100, sd = 0.3)
+
+model <- Lowess(
+    cv_method = "kfold",
+    cv_k = 5,
+    cv_fractions = c(0.2, 0.3, 0.5, 0.7),
+    cv_seed = 42L
+)
+result <- fit(model, x, y)
+cat("Selected fraction:", result$fraction_used, "\n")
+```
+
+------------------------------------------------------------------------
+
+## Method Comparison
+
+| Method        | Folds | Speed  | Variance | Bias   |
+|---------------|-------|--------|----------|--------|
+| **KFold(5)**  | 5     | Fast   | Moderate | Low    |
+| **KFold(10)** | 10    | Medium | Lower    | Lower  |
+| **LOOCV**     | N     | Slow   | Lowest   | Lowest |
+
+Use **5-fold** or **10-fold** CV for most applications. LOOCV is only
+worth it for small datasets (N \< 100).

@@ -89,61 +89,96 @@
 </tr>
 <tr class="even">
 <td><strong>iterations</strong></td>
-<td>0</td>
-<td>[0, ∞)</td>
+<td>3</td>
+<td>[0, 1000]</td>
 <td>Robustness iterations</td>
 <td>All</td>
 </tr>
 <tr class="odd">
-<td><strong>degree</strong></td>
-<td>1</td>
-<td>0, 1, 2</td>
-<td>Polynomial degree</td>
+<td><strong>delta</strong></td>
+<td><code>NULL</code></td>
+<td>[0, ∞)</td>
+<td>Distance threshold for skipping</td>
 <td>All</td>
 </tr>
 <tr class="even">
-<td><strong>delta</strong></td>
-<td>0.0</td>
-<td>[0, ∞)</td>
-<td>Distance threshold for skipping</td>
-<td>Batch</td>
-</tr>
-<tr class="odd">
 <td><strong>weight_function</strong></td>
 <td><code>"tricube"</code></td>
 <td>7 options</td>
 <td>Distance kernel</td>
 <td>All</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><strong>robustness_method</strong></td>
 <td><code>"bisquare"</code></td>
 <td>3 options</td>
 <td>Outlier weighting</td>
 <td>All</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><strong>scaling_method</strong></td>
 <td><code>"mad"</code></td>
 <td>3 options</td>
 <td>Scale estimate</td>
 <td>All</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><strong>zero_weight_fallback</strong></td>
 <td><code>"use_local_mean"</code></td>
 <td>3 options</td>
 <td>Zero-weight handling</td>
 <td>All</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><strong>boundary_policy</strong></td>
 <td><code>"extend"</code></td>
 <td>4 options</td>
 <td>Edge padding</td>
 <td>All</td>
 </tr>
+<tr class="odd">
+<td><strong>auto_converge</strong></td>
+<td><code>NULL</code></td>
+<td>tolerance</td>
+<td>Early stopping</td>
+<td>All</td>
+</tr>
 <tr class="even">
+<td><strong>return_residuals</strong></td>
+<td><code>FALSE</code></td>
+<td>logical</td>
+<td>Include residuals</td>
+<td>All</td>
+</tr>
+<tr class="odd">
+<td><strong>return_robustness_weights</strong></td>
+<td><code>FALSE</code></td>
+<td>logical</td>
+<td>Include weights</td>
+<td>All</td>
+</tr>
+<tr class="even">
+<td><strong>return_se</strong></td>
+<td><code>FALSE</code></td>
+<td>logical</td>
+<td>Return standard errors</td>
+<td>All</td>
+</tr>
+<tr class="odd">
+<td><strong>return_diagnostics</strong></td>
+<td><code>FALSE</code></td>
+<td>logical</td>
+<td>Include metrics</td>
+<td>Batch, Streaming</td>
+</tr>
+<tr class="even">
+<td><strong>custom_weights</strong></td>
+<td><code>NULL</code></td>
+<td>positive</td>
+<td>Per-observation weights</td>
+<td>Batch</td>
+</tr>
+<tr class="odd">
 <td><strong>backend</strong></td>
 <td><code>"cpu"</code></td>
 <td>
@@ -152,7 +187,7 @@
 <td>Compute backend</td>
 <td>Batch</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><strong>parallel</strong></td>
 <td><code>FALSE</code></td>
 <td>
@@ -161,63 +196,63 @@
 <td>Parallel CPU execution</td>
 <td>Batch</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><strong>confidence_intervals</strong></td>
 <td><code>NULL</code></td>
 <td>(0, 1)</td>
 <td>CI coverage level</td>
 <td>Batch</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><strong>prediction_intervals</strong></td>
 <td><code>NULL</code></td>
 <td>(0, 1)</td>
 <td>PI level</td>
 <td>Batch</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><strong>cv_method</strong></td>
 <td><code>NULL</code></td>
 <td>method</td>
 <td>Auto-select fraction</td>
 <td>Batch</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><strong>chunk_size</strong></td>
 <td>5000</td>
 <td>[10, ∞)</td>
 <td>Points per chunk</td>
 <td>Streaming</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><strong>overlap</strong></td>
 <td>500</td>
 <td>[0, chunk)</td>
 <td>Overlap between chunks</td>
 <td>Streaming</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><strong>merge_strategy</strong></td>
 <td><code>"weighted_average"</code></td>
 <td>4 options</td>
 <td>Merge overlaps</td>
 <td>Streaming</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><strong>window_capacity</strong></td>
 <td>1000</td>
 <td>[3, ∞)</td>
 <td>Max window size</td>
 <td>Online</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><strong>min_points</strong></td>
 <td>2</td>
 <td>[2, window]</td>
 <td>Min before output</td>
 <td>Online</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><strong>update_mode</strong></td>
 <td><code>"incremental"</code></td>
 <td>2 options</td>
@@ -349,21 +384,12 @@ high-residual points.</p>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="degree">degree<a class="anchor" aria-label="anchor" href="#degree"></a>
-</h3>
-<p>Polynomial degree for local fits: 0 (constant), 1 (linear, default),
-or 2 (quadratic).</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Lowess.html">Lowess</a></span><span class="op">(</span>degree <span class="op">=</span> <span class="fl">2L</span><span class="op">)</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
 <h3 id="delta">delta<a class="anchor" aria-label="anchor" href="#delta"></a>
 </h3>
 <p>Distance threshold for skipping intermediate points (approximation).
 Setting <code>delta &gt; 0</code> speeds up computation on dense grids.
 Passed as a fraction of the data range.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Lowess.html">Lowess</a></span><span class="op">(</span>delta <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -371,7 +397,7 @@ Passed as a fraction of the data range.</p>
 <h3 id="parallel">parallel<a class="anchor" aria-label="anchor" href="#parallel"></a>
 </h3>
 <p>Enable parallel CPU execution (multiple cores).</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Lowess.html">Lowess</a></span><span class="op">(</span>parallel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -379,7 +405,7 @@ Passed as a fraction of the data range.</p>
 <h3 id="return_diagnostics">return_diagnostics<a class="anchor" aria-label="anchor" href="#return_diagnostics"></a>
 </h3>
 <p>Return goodness-of-fit diagnostics (R², residuals, etc.).</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Lowess.html">Lowess</a></span><span class="op">(</span>return_diagnostics <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">diagnostics</span><span class="op">$</span><span class="va">r_squared</span><span class="op">)</span></span></code></pre></div>
@@ -392,7 +418,7 @@ Passed as a fraction of the data range.</p>
 <div class="section level3">
 <h3 id="chunk_size-and-overlap">chunk_size and overlap<a class="anchor" aria-label="anchor" href="#chunk_size-and-overlap"></a>
 </h3>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/StreamingLowess.html">StreamingLowess</a></span><span class="op">(</span></span>
 <span>    chunk_size <span class="op">=</span> <span class="fl">5000</span>,</span>
 <span>    overlap <span class="op">=</span> <span class="fl">500</span>,</span>
@@ -407,7 +433,7 @@ Passed as a fraction of the data range.</p>
 <div class="section level3">
 <h3 id="window_capacity-and-min_points">window_capacity and min_points<a class="anchor" aria-label="anchor" href="#window_capacity-and-min_points"></a>
 </h3>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/OnlineLowess.html">OnlineLowess</a></span><span class="op">(</span></span>
 <span>    window_capacity <span class="op">=</span> <span class="fl">50</span>,</span>
 <span>    min_points <span class="op">=</span> <span class="fl">5</span>,</span>

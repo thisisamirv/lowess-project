@@ -155,6 +155,11 @@ ends).</p>
 <p><strong>Use when</strong>: Comparing against reference
 implementations; the original Cleveland algorithm behaviour is
 required.</p>
+<blockquote>
+<p><strong>Note:</strong> Without padding, boundary fits can have higher
+variance and visible edge artefacts, particularly with small
+<code>fraction</code> values.</p>
+</blockquote>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Lowess.html">Lowess</a></span><span class="op">(</span>boundary_policy <span class="op">=</span> <span class="st">"noboundary"</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span></code></pre></div>

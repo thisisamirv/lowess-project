@@ -1,0 +1,61 @@
+# Streaming Mode (StreamingLowess)
+
+> **See also:** [Choosing an Execution
+> Mode](https://thisisamirv.github.io/lowess-project/r/articles/adapter-choice.md)
+> for a comparison of all three modes.
+
+Processes data in fixed-size chunks with configurable overlap. Results
+for each chunk are returned after calling
+[`process_chunk()`](https://thisisamirv.github.io/lowess-project/r/reference/process_chunk.md).
+Call
+[`finalize()`](https://thisisamirv.github.io/lowess-project/r/reference/finalize.md)
+after the last chunk to flush remaining buffered points.
+
+## When to Use
+
+- Dataset is too large to fit in memory
+- Processing data from a file or stream
+- Batch pipeline with memory constraints
+
+## Parameters
+
+| Parameter        | Default              | Description                     |
+|------------------|----------------------|---------------------------------|
+| `chunk_size`     | 5000                 | Points per chunk                |
+| `overlap`        | 500                  | Overlap between chunks          |
+| `merge_strategy` | `"weighted_average"` | How to merge overlapping values |
+
+## Merge Strategies
+
+| Strategy             | Behavior                              |
+|----------------------|---------------------------------------|
+| `"average"`          | Arithmetic mean of both estimates     |
+| `"weighted_average"` | Distance-weighted blend (recommended) |
+| `"take_first"`       | Keep left-chunk estimate              |
+| `"take_last"`        | Keep right-chunk estimate             |
+
+![Merge strategy comparison](../reference/figures/merge_comparison.svg)
+
+Merge strategy comparison
+
+## Example
+
+``` r
+
+library(rfastlowess)
+set.seed(42)
+x <- seq(0, 2 * pi, length.out = 100)
+y <- sin(x) + rnorm(100, sd = 0.3)
+x_chunk <- x[seq_len(50)]
+y_chunk <- y[seq_len(50)]
+
+model <- StreamingLowess(
+    fraction = 0.3,
+    iterations = 2,
+    chunk_size = 5000,
+    overlap = 500,
+    merge_strategy = "average"
+)
+result <- process_chunk(model, x_chunk, y_chunk)
+final  <- finalize(model)
+```

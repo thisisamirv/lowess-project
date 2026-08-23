@@ -512,13 +512,14 @@ result.cv_scores()
 
 ## Contributing
 
-Contributions are welcome! Please see the [Contributing
-Guide](https://lowess.readthedocs.io/en/latest/contributing/) for more
-information.
+Contributions are welcome! Please see
+[CONTRIBUTING.md](https://github.com/thisisamirv/lowess-project/blob/main/CONTRIBUTING.md)
+for more information.
 
 ## Changelog
 
-See the [Changelog](https://lowess.readthedocs.io/en/latest/changelog/)
+See
+[CHANGELOG.md](https://github.com/thisisamirv/lowess-project/blob/main/CHANGELOG.md)
 for a history of changes.
 
 ## License
