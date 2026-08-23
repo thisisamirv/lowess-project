@@ -17,29 +17,40 @@ For true real-time applications where each point must be processed immediately.
 
 ### Sensor Data Example
 
-=== "Python"
-    ```python
-    import fastlowess as fl
-    import numpy as np
+```cpp
+#include <fastlowess.hpp>
+#include <cmath>
+#include <iostream>
+#include <vector>
 
-    # Simulate sensor readings arriving over time
-    np.random.seed(42)
-    n_readings = 100
-    times = np.arange(n_readings)
-    temperatures = 20 + 5 * np.sin(times / 10) + np.random.normal(0, 1, n_readings)
+int main() {
+    const int n = 100;
+    std::vector<double> times(n), temperatures(n);
+    for (int i = 0; i < n; ++i) {
+        times[i] = i * 0.1;
+        temperatures[i] = 20.0 + std::sin(times[i]);
+    }
 
-    # Process with online mode
-    online = fl.OnlineLowess(
-        fraction=0.3,
-        window_capacity=25,    # Keep last 25 points
-        min_points=5,          # Wait for 5 points before output
-        update_mode="incremental"
-    )
-    for xi, yi in zip(times, temperatures):
-        result = online.add_point(float(xi), float(yi))
-        if result is not None:
-            print(f"Time {xi:.0f}: smoothed = {result.y:.2f}")
-    ```
+    // Online mode processes points incrementally
+    fastlowess::OnlineOptions opts;
+    opts.fraction = 0.3;
+    opts.iterations = 1;
+    opts.window_capacity = 25;
+    opts.min_points = 5;
+    opts.update_mode = "incremental";
+
+    fastlowess::OnlineLowess model(opts);
+    for (size_t i = 0; i < times.size(); ++i) {
+        auto res = model.add_point(times[i], temperatures[i]).value();
+        if (res.has_value()) {
+            std::cout << "Time " << times[i] << ": " << res.y() << std::endl;
+        }
+    }
+
+    return 0;
+}
+```
+
 ---
 
 ## Streaming Mode: Chunk Processing
@@ -53,59 +64,81 @@ For large datasets that arrive in batches or files.
 
 ### Log File Processing
 
-=== "Python"
-    ```python
-    import fastlowess as fl
-    import numpy as np
+```cpp
+#include <fastlowess.hpp>
+#include <cmath>
+#include <iostream>
+#include <vector>
 
-    # Simulate large dataset arriving in chunks
-    total_points = 100000
-    chunk_size = 10000
-    
-    # All at once with streaming handles chunking internally
-    x = np.arange(total_points, dtype=float)
-    y = np.sin(x / 1000) + np.random.normal(0, 0.1, total_points)
-    
-    model = fl.StreamingLowess(
-        fraction=0.05,
-        chunk_size=10000,
-        overlap=1000,
-        merge_strategy="weighted_average"
-    )
-    model.process_chunk(x, y)
-    result = model.finalize()
-    
-    print(f"Processed {len(result.y)} points")
-    ```
+int main() {
+    const int n = 100;
+    std::vector<double> x(n), y(n);
+    for (int i = 0; i < n; ++i) {
+        x[i] = i * 2 * M_PI / (n - 1);
+        y[i] = std::sin(x[i]) + 0.1;
+    }
+
+
+    fastlowess::StreamingOptions opts;
+    opts.fraction = 0.1;
+    opts.iterations = 2;
+    opts.chunk_size = 5000;
+    opts.overlap = 500;
+
+    fastlowess::StreamingLowess stream(opts);
+    (void)stream.process_chunk(x, y);
+    auto result = stream.finalize().value();
+
+    std::cout << "Processed " << result.y_vector().size() << " points" << std::endl;
+
+    return 0;
+}
+```
+
 ---
 
 ## Real-Time Dashboard Example
 
 The dashboard pattern uses a plain LOWESS fit on a manually managed sliding window rather than `OnlineLowess`. This is the simplest approach when your UI framework already owns the data buffer and you only need the most recent smoothed value per frame. The trade-off is a full O(window²) refit on every tick; for high-frequency streams prefer `OnlineLowess` with `update_mode = "incremental"` to bound per-frame cost.
 
-=== "Python"
-    ```python
-    import fastlowess as fl
-    import numpy as np
+```cpp
+#include <fastlowess.hpp>
+#include <cmath>
+#include <iostream>
+#include <vector>
 
-    # Simulated real-time dashboard sliding window
-    window_capacity = 50
-    data_x, data_y = [], []
-    
-    for i in range(200):
-        x, y = i, 25.0 + 10 * np.sin(i / 20) + np.random.normal(0, 2)
-        data_x.append(x)
-        data_y.append(y)
-        
-        if len(data_x) > window_capacity:
-            data_x = data_x[-window_capacity:]
-            data_y = data_y[-window_capacity:]
-        
-        if len(data_x) >= 5:
-            model = fl.Lowess(fraction=0.4)
-            result = model.fit(np.array(data_x, dtype=float), np.array(data_y, dtype=float))
-            current_smoothed = result.y[-1]
-    ```
+int main() {
+    const int n = 100;
+    std::vector<double> x(n), y(n);
+    for (int i = 0; i < n; ++i) {
+        x[i] = i * 2 * M_PI / (n - 1);
+        y[i] = std::sin(x[i]) + 0.1;
+    }
+
+    std::vector<double> windowX, windowY;
+
+    // Sliding window over preamble x/y data
+    for (std::size_t i = 0; i < n; ++i) {
+        windowX.push_back(x[i]);
+        windowY.push_back(y[i]);
+
+        if (windowX.size() > 50) {
+            windowX.erase(windowX.begin());
+            windowY.erase(windowY.begin());
+        }
+
+        if (windowX.size() < 2) continue;
+        fastlowess::LowessOptions sw_opts;
+        sw_opts.fraction = 0.4;
+        fastlowess::Lowess model(sw_opts);
+        auto result = model.fit(windowX, windowY).value();
+        const auto smoothed = result.y_vector().back();
+        (void)smoothed;
+    }
+
+    return 0;
+}
+```
 
 ---
 

@@ -40,33 +40,6 @@ Time series data often contains noise, seasonality, and trends. LOWESS provides 
     plt.title("Trend Extraction")
     plt.show()
     ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> t(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            t[i] = i * 2.0 * M_PI / (n - 1);
-            y[i] = std::sin(t[i]) + 0.1;
-        }
-
-        fastlowess::LowessOptions trend_opts;
-        trend_opts.fraction = 0.1;
-        trend_opts.iterations = 3;
-        fastlowess::Lowess basic_model(trend_opts);
-        auto basic_result = basic_model.fit(t, y).value();
-
-        // Trend in basic_result.y_vector()
-
-        return 0;
-    }
-    ```
-
 ---
 
 ## Detrending
@@ -104,35 +77,6 @@ Setting `return_residuals = True` stores `observed − smoothed` alongside the s
     plt.title("Detrended (Residuals)")
     plt.tight_layout()
     ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> t(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            t[i] = i * 2.0 * M_PI / (n - 1);
-            y[i] = std::sin(t[i]) + 0.1;
-        }
-
-        fastlowess::Lowess model({
-            .fraction = 0.3,
-            .iterations = 3,
-            .return_residuals = true
-        });
-        auto result = model.fit(t, y).value();
-
-        auto trend = result.y_vector();
-        auto detrended = result.residuals();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ## Forecasting with Prediction Intervals
@@ -170,35 +114,6 @@ Prediction intervals widen the uncertainty band to include both the uncertainty 
     )
     plt.legend()
     ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> t(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            t[i] = i * 2.0 * M_PI / (n - 1);
-            y[i] = std::sin(t[i]) + 0.1;
-        }
-
-        fastlowess::Lowess forecast_model({
-            .fraction = 0.2,
-            .iterations = 3,
-            .confidence_intervals = 0.95,
-            .prediction_intervals = 0.95
-        });
-        auto result = forecast_model.fit(t, y).value();
-
-        // Access result.prediction_lower() and result.prediction_upper()
-
-        return 0;
-    }
-    ```
-
 ---
 
 ## Handling Missing Data
@@ -222,28 +137,6 @@ LOWESS naturally handles irregular time sampling:
     model = fl.Lowess(fraction=0.2)
     result = model.fit(t_irregular, y_irregular)
     ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> tIrregular(n), yIrregular(n);
-        for (int i = 0; i < n; ++i) {
-            tIrregular[i] = i * 1.0 + (i * 31 % 10) * 0.1;
-            yIrregular[i] = 10.0 + 0.3 * tIrregular[i] + 2.0 * std::sin(tIrregular[i] * 0.1);
-        }
-
-        fastlowess::Lowess missing_model({ .fraction = 0.2 });
-        auto result = missing_model.fit(tIrregular, yIrregular).value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ## Multi-Scale Analysis
@@ -275,33 +168,6 @@ Use different fractions to extract features at different scales:
     plt.legend()
     plt.title("Multi-Scale LOWESS")
     ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> t(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            t[i] = i * 2.0 * M_PI / (n - 1);
-            y[i] = std::sin(t[i]) + 0.1;
-        }
-
-        std::vector<double> scales = {0.05, 0.2, 0.5};
-        std::vector<std::vector<double>> trends;
-        for (auto f : scales) {
-            fastlowess::Lowess scale_model({ .fraction = f });
-            auto result = scale_model.fit(t, y).value();
-            trends.push_back(result.y_vector());
-        }
-
-        return 0;
-    }
-    ```
-
 ---
 
 ## Gene Expression Time Course
@@ -327,34 +193,6 @@ Biological application:
 
     print(f"R²: {result.diagnostics.r_squared:.3f}")
     ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 49;
-        std::vector<double> hours(n), expression(n);
-        for (int i = 0; i < n; ++i) {
-            hours[i] = i * 0.5;
-            expression[i] = 100.0 * (1.0 + 0.5 * std::sin(hours[i] * M_PI / 12.0));
-        }
-
-        fastlowess::Lowess gene_model({
-            .fraction = 0.3,
-            .iterations = 3,
-            .return_diagnostics = true
-        });
-        auto result = gene_model.fit(hours, expression).value();
-
-        std::cout << "R²: " << result.diagnostics().r_squared() << std::endl;
-
-        return 0;
-    }
-    ```
-
 ---
 
 ## Choosing Fraction for Time Series

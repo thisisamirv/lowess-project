@@ -38,6 +38,7 @@ from pathlib import Path
 import runners.python as _python_runner
 from runners import RUNNERS, SKIP_CHECKS
 from runners.base import (
+    CPP_BINDING_DOCS_DIR,
     DOCS_DIR,
     JULIA_DOCS_DIR,
     NODEJS_BINDING_DOCS_DIR,
@@ -270,6 +271,8 @@ def iter_md_files(root: Path, file_filter: str | None) -> Iterator[Path]:
         yield from sorted(NODEJS_BINDING_DOCS_DIR.glob("*.md"))
     if WASM_BINDING_DOCS_DIR.exists():
         yield from sorted(WASM_BINDING_DOCS_DIR.glob("*.md"))
+    if CPP_BINDING_DOCS_DIR.exists():
+        yield from sorted(CPP_BINDING_DOCS_DIR.glob("*.md"))
 
 
 def main(argv: list[str] | None = None) -> int:

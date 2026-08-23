@@ -57,36 +57,6 @@ Standard mode for complete datasets. **Supports all features.**
     )
     result = model.fit(x, y)
     ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-
-        fastlowess::Lowess model({
-            .fraction = 0.5,
-            .iterations = 3,
-            .confidence_intervals = 0.95,
-            .prediction_intervals = 0.95,
-            .return_diagnostics = true,
-            .parallel = true
-        });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ## Streaming Adapter
@@ -139,36 +109,6 @@ Process large datasets in chunks with configurable overlap.
     model.process_chunk(x, y)
     result = model.finalize()
     ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-
-        fastlowess::StreamingOptions opts;
-        opts.fraction = 0.3;
-        opts.iterations = 2;
-        opts.chunk_size = 5000;
-        opts.overlap = 500;
-
-        fastlowess::StreamingLowess stream(opts);
-        (void)stream.process_chunk(x, y);
-        auto result = stream.finalize().value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 !!! warning "Always call finalize()"
@@ -224,40 +164,6 @@ Incremental updates with a sliding window for real-time data.
         if result is not None:
             print(result.y)
     ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-
-        fastlowess::OnlineOptions opts;
-        opts.fraction = 0.2;
-        opts.iterations = 1;
-        opts.window_capacity = 100;
-        opts.min_points = 5;
-        opts.update_mode = "incremental";
-
-        fastlowess::OnlineLowess model(opts);
-        for (size_t i = 0; i < x.size(); ++i) {
-            auto out = model.add_point(x[i], y[i]).value();
-            if (out.has_value())
-                std::cout << out.y() << std::endl;
-        }
-
-        return 0;
-    }
-    ```
-
 ---
 
 ## Feature Comparison

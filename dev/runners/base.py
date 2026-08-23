@@ -16,6 +16,7 @@ RUST_CRATE_DOCS_DIRS: list[Path] = [
 ]
 NODEJS_BINDING_DOCS_DIR = REPO_ROOT / "bindings" / "nodejs" / "docs"
 WASM_BINDING_DOCS_DIR = REPO_ROOT / "bindings" / "wasm" / "docs"
+CPP_BINDING_DOCS_DIR = REPO_ROOT / "bindings" / "cpp" / "docs"
 
 _TAB_ALIASES: dict[str, set[str]] = {
     "python": {"Python"},

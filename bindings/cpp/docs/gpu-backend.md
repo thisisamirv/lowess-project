@@ -42,12 +42,12 @@ GPU support is **opt-in** and not included in the default published artifacts (P
 
 Before requesting `backend = "gpu"` (or the language's equivalent spelling), check whether the currently loaded library was built with GPU support. Requesting the GPU backend when it isn't available raises a clear error pointing at the installer for that language, rather than a raw panic.
 
-=== "Python"
-    ```python
-    import fastlowess as fl
+```cpp
+#include <fastlowess.hpp>
 
-    fl.gpu_available()
-    ```
+fastlowess::gpu::available();
+```
+
 ---
 
 ## Installing GPU Support
@@ -64,40 +64,38 @@ Whether you need to **restart** afterwards depends on how each language loads it
 | C++ | Yes (relink/rebuild) | Your application links against the library at build/load time. |
 | Julia | **No** | `install_gpu()` re-points the internal library reference immediately. |
 
-=== "Python"
-    ```python
-    import fastlowess as fl
+```cpp
+#include <fastlowess.hpp>
 
-    fl.install_gpu()  # prompts for confirmation, then installs; restart Python afterwards
-    ```
+fastlowess::gpu::install(); // prompts for confirmation via curl, then downloads
+```
 
-    Non-interactively:
+Non-interactively: `fastlowess::gpu::install(/*yes=*/true)`. Requires `curl` on `PATH` (ships with Linux, macOS, and Windows 10+). A running process cannot swap the backend of a library it already linked against — after downloading, relink/rebuild your application against the downloaded library (or `dlopen`/`LoadLibrary` it manually) and restart.
 
-    ```sh
-    python -c "import fastlowess; fastlowess.install_gpu(yes=True)"
-    # or, via the console script installed alongside the package:
-    fastlowess-install-gpu
-    ```
+Build from source instead:
 
-    Build from source instead:
+```sh
+cd bindings/cpp
+cargo build --release --features gpu
+```
 
-    ```sh
-    cd bindings/python
-    maturin develop --release --features gpu
-    ```
 ---
 
 ## Usage
 
 Once GPU support is available, request it by setting the backend option on the batch constructor.
 
-=== "Python"
-    ```python
-    import fastlowess as fl
+```cpp
+#include <fastlowess.hpp>
 
-    model = fl.Lowess(fraction=0.5, backend="gpu", confidence_intervals=0.95)
-    result = model.fit(x, y)
-    ```
+fastlowess::LowessOptions opts;
+opts.fraction = 0.5;
+opts.backend = "gpu";
+opts.confidence_intervals = 0.95;
+fastlowess::Lowess model(opts);
+auto result = model.fit(x, y);
+```
+
 If GPU support isn't available, requesting `backend = "gpu"` (or the equivalent) raises a runtime error pointing at the installer for that language rather than a raw Rust panic.
 
 ## See also

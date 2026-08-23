@@ -98,22 +98,6 @@ Currently available for R, Python, Rust, Julia, Node.js, and WebAssembly.
     ```bash
     conda install -c conda-forge fastlowess
     ```
-=== "C++"
-
-    Install from source:
-
-    ```bash
-    git clone https://github.com/thisisamirv/lowess-project.git
-    cd lowess-project
-    make cpp
-    ```
-
-    Or from conda-forge:
-
-    ```bash
-    conda install -c conda-forge libfastlowess
-    ```
-
 See the [Installation Guide](getting-started/installation.md) for more options and details.
 
 ## Quick Example
@@ -131,32 +115,6 @@ See the [Installation Guide](getting-started/installation.md) for more options a
     result = model.fit(x, y)
     print(result.y)
     ```
-=== "C++"
-
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        std::vector<double> x = {1.0, 2.0, 3.0, 4.0, 5.0};
-        std::vector<double> y = {2.0, 4.1, 5.9, 8.2, 9.8};
-
-        fastlowess::LowessOptions options;
-        options.fraction = 0.5;
-        options.iterations = 3;
-
-        fastlowess::Lowess model(options);
-        auto result = model.fit(x, y).value();
-
-        for (const auto& val : result.y_vector()) {
-            std::cout << val << " ";
-        }
-        std::cout << std::endl;
-        return 0;
-    }
-    ```
-
 ## Getting Started
 
 1. [Installation](getting-started/installation.md) — Set up the library for your language

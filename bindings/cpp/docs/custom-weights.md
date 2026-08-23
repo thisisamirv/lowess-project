@@ -56,21 +56,33 @@ outliers that remain.
 Set the weight to `0` at the bad point — it is excluded from every local fit
 that would otherwise include it.
 
-=== "Python"
-    ```python
-    import numpy as np
-    from fastlowess import Lowess
+```cpp
+#include <fastlowess.hpp>
+#include <cmath>
+#include <iostream>
+#include <vector>
 
-    x = np.arange(10, dtype=float)
-    y = x * 2.0
-    y[5] = 100.0               # spike at index 5
+int main() {
+    std::vector<double> xw(10), yw(10);
+    for (std::size_t i = 0; i < 10; ++i) {
+        xw[i] = static_cast<double>(i);
+        yw[i] = xw[i] * 2.0;
+    }
+    yw[5] = 100.0; // spike
 
-    weights = np.ones(10)
-    weights[5] = 0.0           # exclude the spike
+    fastlowess::LowessOptions opts;
+    opts.fraction = 0.5;
+    opts.iterations = 0;
 
-    model = Lowess(fraction=0.5, iterations=0)
-    result = model.fit(x, y, custom_weights=weights)
-    ```
+    std::vector<double> weights(10, 1.0);
+    weights[5] = 0.0; // exclude the spike
+
+    auto result = fastlowess::Lowess(opts).fit(xw, yw, weights).value();
+
+    return 0;
+}
+```
+
 ---
 
 ### Emphasize Important Points
@@ -78,25 +90,32 @@ that would otherwise include it.
 Assign high weights to measurements you trust most — calibration standards,
 reference instruments, or low-noise observations.
 
-=== "Python"
-    ```python
-    import fastlowess as fl
-    from fastlowess import Lowess
-    import numpy as np
+```cpp
+#include <fastlowess.hpp>
+#include <cmath>
+#include <iostream>
+#include <vector>
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
-    calibration_indices = [5, 20, 40, 60, 80]
-    sigma = rng.uniform(0.1, 0.5, 100)
+int main() {
+    const int n = 100;
+    std::vector<double> x(n), y(n);
+    for (int i = 0; i < n; ++i) {
+        x[i] = i * 2 * M_PI / (n - 1);
+        y[i] = std::sin(x[i]) + 0.1;
+    }
 
-    weights = np.ones(len(x))
-    for i in calibration_indices:
-        weights[i] = 10.0      # trust calibration 10× more
+    std::vector<std::size_t> calibration_indices = {5, 20, 40, 60, 80};
+    std::vector<double> weights(x.size(), 1.0);
+    for (std::size_t idx : calibration_indices) weights[idx] = 10.0;
 
-    model = Lowess(fraction=0.5)
-    result = model.fit(x, y, custom_weights=weights)
-    ```
+    fastlowess::LowessOptions opts;
+    opts.fraction = 0.5;
+    auto result = fastlowess::Lowess(opts).fit(x, y, weights).value();
+
+    return 0;
+}
+```
+
 ---
 
 ### Propagate Measurement Uncertainty
@@ -105,22 +124,33 @@ If each observation has a known standard deviation $\sigma_i$, set
 $w_i = 1 / \sigma_i^2$ to give the fit information-theoretically optimal
 weighting.
 
-=== "Python"
-    ```python
-    import fastlowess as fl
-    from fastlowess import Lowess
-    import numpy as np
+```cpp
+#include <fastlowess.hpp>
+#include <cmath>
+#include <iostream>
+#include <vector>
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
-    calibration_indices = [5, 20, 40, 60, 80]
-    sigma = rng.uniform(0.1, 0.5, 100)
+int main() {
+    const int n = 100;
+    std::vector<double> x(n), y(n);
+    for (int i = 0; i < n; ++i) {
+        x[i] = i * 2 * M_PI / (n - 1);
+        y[i] = std::sin(x[i]) + 0.1;
+    }
 
-    weights = 1.0 / sigma**2
-    model = Lowess(fraction=0.5)
-    result = model.fit(x, y, custom_weights=weights)
-    ```
+    std::vector<double> sigma(n, 0.1);
+    for (int i = 0; i < n; ++i) sigma[i] = 0.1 + (i % 4) * 0.1;
+    std::vector<double> weights(sigma.size());
+    for (std::size_t i = 0; i < sigma.size(); ++i) weights[i] = 1.0 / (sigma[i] * sigma[i]);
+
+    fastlowess::LowessOptions opts;
+    opts.fraction = 0.5;
+    auto result = fastlowess::Lowess(opts).fit(x, y, weights).value();
+
+    return 0;
+}
+```
+
 ---
 
 ## Combined with Robustness Iterations
@@ -128,29 +158,33 @@ weighting.
 Custom weights and robustness iterations compose naturally: use custom weights
 for *known* bad points and robustness for *unknown* contamination.
 
-=== "Python"
-    ```python
-    import fastlowess as fl
-    from fastlowess import Lowess
-    import numpy as np
+```cpp
+#include <fastlowess.hpp>
+#include <cmath>
+#include <iostream>
+#include <vector>
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
-    calibration_indices = [5, 20, 40, 60, 80]
-    sigma = rng.uniform(0.1, 0.5, 100)
+int main() {
+    const int n = 100;
+    std::vector<double> x(n), y(n);
+    for (int i = 0; i < n; ++i) {
+        x[i] = i * 2 * M_PI / (n - 1);
+        y[i] = std::sin(x[i]) + 0.1;
+    }
 
-    x = np.arange(20, dtype=float)
-    y = x * 1.5
-    y[3]  = -50.0   # known bad
-    y[12] = 80.0    # unknown outlier
+    std::vector<double> weights(n, 1.0);
+    weights[3] = 0.0;
 
-    weights = np.ones(20)
-    weights[3] = 0.0
+    fastlowess::LowessOptions opts;
+    opts.fraction = 0.4;
+    opts.iterations = 3;
 
-    model = Lowess(fraction=0.4, iterations=3)
-    result = model.fit(x, y, custom_weights=weights)
-    ```
+    auto result = fastlowess::Lowess(opts).fit(x, y, weights).value();
+
+    return 0;
+}
+```
+
 ---
 
 ## Validation Rules

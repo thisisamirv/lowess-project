@@ -61,32 +61,6 @@ A small `fraction = 0.1` lets LOWESS follow fine-scale spatial structure without
     plt.title("Methylation Profile Smoothing")
     plt.show()
     ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> positions(n), observed(n);
-        for (int i = 0; i < n; ++i) {
-            positions[i] = i * 1000.0;
-            observed[i] = 50.0 + std::sin(positions[i] / 1000.0) * 20.0 + 5.0;
-        }
-
-        // positions and observed are std::vector<double>
-        fastlowess::Lowess model({ .fraction = 0.1, .iterations = 3, .confidence_intervals = 0.95 });
-        auto result = model.fit(positions, observed).value();
-
-        // Smoothed profile in result.y_vector()
-        // CI bounds in result.confidence_lower()/result.confidence_upper()
-
-        return 0;
-    }
-    ```
-
 ---
 
 ## ChIP-seq Signal Smoothing
@@ -133,38 +107,6 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
     peaks = positions[result.y > threshold]
     print(f"Peak regions: {peaks}")
     ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> positions(n), observed(n);
-        for (int i = 0; i < n; ++i) {
-            positions[i] = i * 1000.0;
-            observed[i] = 50.0 + std::sin(positions[i] / 1000.0) * 20.0 + 5.0;
-        }
-
-        fastlowess::Lowess model({ .fraction = 0.05, .iterations = 5 });
-        auto result = model.fit(positions, observed).value();
-
-        // Find peaks above threshold
-        std::vector<double> peaks;
-        const auto& y_vals = result.y_vector();
-        const auto& x_vals = result.x_vector();
-        for (size_t i = 0; i < y_vals.size(); ++i) {
-            if (y_vals[i] > 25.0) {
-                peaks.push_back(x_vals[i]);
-            }
-        }
-
-        return 0;
-    }
-    ```
-
 ---
 
 ## Large Genome Coverage (Streaming)
@@ -190,35 +132,6 @@ For whole-genome data that doesn't fit in memory:
     model.process_chunk(positions, coverage)
     result = model.finalize()
     ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> positions(n), coverage(n);
-        for (int i = 0; i < n; ++i) {
-            positions[i] = i * 1000.0;
-            coverage[i] = 50.0 + std::sin(positions[i] / 1000.0) * 20.0 + 5.0;
-        }
-
-        // coverage and positions are chromosome-scale vectors
-        fastlowess::StreamingOptions s_opts;
-        s_opts.fraction = 0.05;
-        s_opts.iterations = 3;
-        s_opts.chunk_size = 100000;
-        s_opts.overlap = 10000;
-        fastlowess::StreamingLowess stream(s_opts);
-        (void)stream.process_chunk(positions, coverage);
-        auto result = stream.finalize().value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ## Best Practices for Genomic Data

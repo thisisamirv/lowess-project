@@ -1,0 +1,60 @@
+# ---------------------------------------------------------------------------
+
+# Project
+
+# ---------------------------------------------------------------------------
+PROJECT_NAME           = "fastLowess"
+PROJECT_BRIEF          = "High-performance LOWESS smoothing — C++ API"
+OUTPUT_DIRECTORY       = .
+CREATE_SUBDIRS         = NO
+
+# ---------------------------------------------------------------------------
+
+# Input
+
+# ---------------------------------------------------------------------------
+INPUT                  = include docs
+FILE_PATTERNS          = *.hpp*.h *.md
+RECURSIVE              = NO
+EXTENSION_MAPPING      = md=markdown
+USE_MDFILE_AS_MAINPAGE = docs/concepts.md
+
+# ---------------------------------------------------------------------------
+
+# Extraction
+
+# ---------------------------------------------------------------------------
+EXTRACT_ALL            = YES
+EXTRACT_STATIC         = YES
+JAVADOC_AUTOBRIEF      = YES
+
+# ---------------------------------------------------------------------------
+
+# HTML output
+
+# ---------------------------------------------------------------------------
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+GENERATE_TREEVIEW      = YES
+DISABLE_INDEX          = NO
+FULL_SIDEBAR           = YES
+HTML_COLORSTYLE        = LIGHT
+
+# ---------------------------------------------------------------------------
+
+# Disable non-HTML formats
+
+# ---------------------------------------------------------------------------
+GENERATE_LATEX         = NO
+GENERATE_MAN           = NO
+GENERATE_RTF           = NO
+GENERATE_XML           = NO
+
+# ---------------------------------------------------------------------------
+
+# Warnings
+
+# ---------------------------------------------------------------------------
+QUIET                  = YES
+WARN_IF_UNDOCUMENTED   = NO
+WARN_NO_PARAMDOC       = NO

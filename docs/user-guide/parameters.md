@@ -80,28 +80,6 @@ The proportion of data used for each local fit. **Most important parameter.**
     model = fl.Lowess(fraction=0.3)
     result = model.fit(x, y)
     ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastlowess::Lowess model({ .fraction = 0.3});
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ### iterations
@@ -127,28 +105,6 @@ Number of robustness iterations for outlier resistance.
     model = fl.Lowess(iterations=5)
     result = model.fit(x, y)
     ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastlowess::Lowess model({ .iterations = 5});
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ### delta
@@ -170,28 +126,6 @@ Interpolation optimization threshold. Points within `delta` distance reuse the p
     model = fl.Lowess(delta=0.05)
     result = model.fit(x, y)
     ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastlowess::Lowess model({ .delta = 0.05});
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ### weight_function
@@ -222,28 +156,6 @@ See [Weight Functions](kernels.md) for detailed comparison.
     model = fl.Lowess(weight_function="epanechnikov")
     result = model.fit(x, y)
     ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastlowess::Lowess model({ .weight_function = "epanechnikov"});
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ### robustness_method
@@ -270,28 +182,6 @@ See [Robustness](robustness.md) for detailed comparison.
     model = fl.Lowess(robustness_method="talwar")
     result = model.fit(x, y)
     ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastlowess::Lowess model({ .robustness_method = "talwar"});
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ### boundary_policy
@@ -321,28 +211,6 @@ For example:
     model = fl.Lowess(boundary_policy="reflect")
     result = model.fit(x, y)
     ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastlowess::Lowess model({ .boundary_policy = "reflect"});
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ### scaling_method
@@ -371,28 +239,6 @@ For example:
     model = fl.Lowess(scaling_method="mad")
     result = model.fit(x, y)
     ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastlowess::Lowess model({ .scaling_method = "mad"});
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ### zero_weight_fallback
@@ -421,28 +267,6 @@ For example:
     model = fl.Lowess(zero_weight_fallback="use_local_mean")
     result = model.fit(x, y)
     ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastlowess::Lowess model({ .zero_weight_fallback = "use_local_mean"});
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ### auto_converge
@@ -461,28 +285,6 @@ Enable early stopping when robustness weights stabilize.
     model = fl.Lowess(iterations=20, auto_converge=1e-6)
     result = model.fit(x, y)
     ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastlowess::Lowess model({ .iterations = 20, .auto_converge = 1e-6});
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ### custom_weights
@@ -512,32 +314,6 @@ See [Custom Weights](custom-weights.md) for a full discussion.
     model = fl.Lowess(fraction=0.5)
     result = model.fit(x, y, custom_weights=weights)
     ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastlowess::LowessOptions opts;
-        opts.fraction = 0.5;
-        std::vector<double> weights(x.size(), 1.0);
-        weights[5] = 0.0; // exclude index 5
-
-        auto result = fastlowess::Lowess(opts).fit(x, y, weights).value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ## Output Options
@@ -559,29 +335,6 @@ Include residuals (`y - smoothed`) in the output.
     result = model.fit(x, y)
     print(result.residuals)
     ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastlowess::Lowess model({ .return_residuals = true});
-        auto result = model.fit(x, y).value();
-        auto residuals = result.residuals();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ### return_diagnostics
@@ -611,30 +364,6 @@ Include fit quality metrics (Batch and Streaming only).
     result = model.fit(x, y)
     print(f"R²: {result.diagnostics.r_squared:.4f}")
     ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastlowess::Lowess model({ .return_diagnostics = true});
-        auto result = model.fit(x, y).value();
-        auto diag = result.diagnostics();
-        std::cout << "R2: " << diag.r_squared() << std::endl;
-
-        return 0;
-    }
-    ```
-
 ---
 
 ### return_robustness_weights
@@ -654,32 +383,6 @@ Include final robustness weights (useful for outlier detection).
     result = model.fit(x, y)
     outliers = [i for i, w in enumerate(result.robustness_weights) if w < 0.5]
     ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastlowess::Lowess model({
-            .iterations = 3,
-            .return_robustness_weights = true
-            });
-        auto result = model.fit(x, y).value();
-        auto weights = result.robustness_weights();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ### return_se
@@ -699,30 +402,6 @@ Return per-point standard errors for the smoothed fit. Standard errors measure t
     result = model.fit(x, y)
     print(result.standard_errors)
     ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastlowess::LowessOptions opts;
-        opts.return_se = true;
-        auto result = fastlowess::Lowess(opts).fit(x, y).value();
-        auto se = result.standard_errors();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ### confidence_intervals / prediction_intervals
@@ -743,31 +422,6 @@ See [Intervals](intervals.md) for detailed usage.
     model = fl.Lowess(confidence_intervals=0.95, prediction_intervals=0.95)
     result = model.fit(x, y)
     ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastlowess::Lowess model({
-            .confidence_intervals = 0.95,
-            .prediction_intervals = 0.95
-            });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ## CV Methods
@@ -793,31 +447,6 @@ Selection strategy for automated parameter tuning.
     model = fl.Lowess(cv_method="kfold", cv_k=5)
     result = model.fit(x, y)
     ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastlowess::LowessOptions cv_opts;
-        cv_opts.cv_k = 5;
-        cv_opts.cv_fractions = {0.1, 0.3, 0.5};
-        fastlowess::Lowess model(cv_opts);
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ## Adapter Parameters
@@ -839,31 +468,6 @@ Points per chunk in Streaming mode.
     model.process_chunk(x, y)
     result = model.finalize()
     ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastlowess::StreamingOptions opts;
-        opts.chunk_size = 10000;
-        fastlowess::StreamingLowess stream(opts);
-        (void)stream.process_chunk(x, y);
-        auto result = stream.finalize().value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ### overlap
@@ -883,31 +487,6 @@ Overlap between chunks in Streaming mode.
     model.process_chunk(x, y)
     result = model.finalize()
     ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastlowess::StreamingOptions opts;
-        opts.overlap = 1000;
-        fastlowess::StreamingLowess stream(opts);
-        (void)stream.process_chunk(x, y);
-        auto result = stream.finalize().value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ### merge_strategy
@@ -936,30 +515,6 @@ For example:
     model.process_chunk(x, y)
     result = model.finalize()
     ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        // merge_strategy is handled internally in C++
-        fastlowess::StreamingLowess stream({});
-        (void)stream.process_chunk(x, y);
-        auto result = stream.finalize().value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ### window_capacity
@@ -978,31 +533,6 @@ Maximum points held in memory for Online mode.
     model = fl.OnlineLowess(window_capacity=500)
     result = model.add_point(x[0], y[0])  # None until window fills
     ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastlowess::OnlineOptions opts;
-        opts.window_capacity = 500;
-        fastlowess::OnlineLowess model(opts);
-        auto out = model.add_point(x[0], y[0]).value();
-        // out.has_value() == false until window fills
-
-        return 0;
-    }
-    ```
-
 ---
 
 ### min_points
@@ -1021,30 +551,6 @@ Minimum points required before Online filter starts producing outputs.
     model = fl.OnlineLowess(min_points=10)
     result = model.add_point(x[0], y[0])
     ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastlowess::OnlineOptions opts;
-        opts.min_points = 10;
-        fastlowess::OnlineLowess model(opts);
-        auto out = model.add_point(x[0], y[0]).value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ### update_mode
@@ -1069,27 +575,4 @@ For example:
 
     model = fl.OnlineLowess(update_mode="full")
     result = model.add_point(x[0], y[0])
-    ```
-=== "C++"
-    ```cpp
-    #include <fastlowess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastlowess::OnlineOptions opts;
-        opts.update_mode = "full";
-        fastlowess::OnlineLowess model(opts);
-        auto out = model.add_point(x[0], y[0]).value();
-
-        return 0;
-    }
     ```
