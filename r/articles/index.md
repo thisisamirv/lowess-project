@@ -1,6 +1,6 @@
 # Articles
 
-### Getting Started
+### Introduction
 
 - [Installation](https://thisisamirv.github.io/lowess-project/r/articles/installation.md):
 - [Quick
@@ -46,6 +46,6 @@
 - [Use Case: Real-Time
   Processing](https://thisisamirv.github.io/lowess-project/r/articles/use-case-real-time.md):
 
-### Reference
+### Performance
 
 - [Benchmarks](https://thisisamirv.github.io/lowess-project/r/articles/benchmarks.md):
