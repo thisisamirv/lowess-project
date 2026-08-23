@@ -8,7 +8,7 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
 ## Overview
@@ -74,7 +74,7 @@ make -f bindings/r/Makefile WITH_GPU=1
 
 Once GPU support is installed, pass `backend = "gpu"` to `Lowess()`:
 
-```{r gpu_backend_3}
+```{r gpu_backend_3, eval=FALSE}
 library(rfastlowess)
 set.seed(42)
 n <- 100000

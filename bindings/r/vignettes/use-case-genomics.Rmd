@@ -8,7 +8,7 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
 ## Overview
@@ -117,6 +117,7 @@ for (chunk_i in 1:5) {
     result <- process_chunk(model, pos_chunk, val_chunk)
 }
 final <- finalize(model)
+print(head(final$y))
 ```
 
 ```{r session-info}

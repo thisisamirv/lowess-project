@@ -8,7 +8,7 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
 ## CPU Benchmarks
@@ -50,7 +50,7 @@ See the [benchmarks README](https://github.com/thisisamirv/lowess-project/blob/m
 
 The benchmarks compare `rfastlowess` against `stats::lowess` using the `microbenchmark` package.
 
-```{r benchmarks_1}
+```{r benchmarks_1, eval=FALSE}
 # Install benchmark dependency
 # install.packages("microbenchmark")
 

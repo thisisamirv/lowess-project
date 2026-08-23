@@ -8,7 +8,7 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
 ## Overview
@@ -40,6 +40,7 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Lowess(boundary_policy = "extend")
 result <- fit(model, x, y)
+print(head(result$y))
 ```
 
 ---
@@ -53,6 +54,7 @@ Mirrors data at both endpoints. Prevents inflection artifacts when the signal is
 ```{r boundary_2}
 model <- Lowess(boundary_policy = "reflect")
 result <- fit(model, x, y)
+print(head(result$y))
 ```
 
 ---
@@ -66,6 +68,7 @@ Pads with zeros beyond the endpoints.
 ```{r boundary_3}
 model <- Lowess(boundary_policy = "zero")
 result <- fit(model, x, y)
+print(head(result$y))
 ```
 
 ---
@@ -81,6 +84,7 @@ Reproduces Cleveland's original behaviour — no padding applied.
 ```{r boundary_4}
 model <- Lowess(boundary_policy = "noboundary")
 result <- fit(model, x, y)
+print(head(result$y))
 ```
 
 ---

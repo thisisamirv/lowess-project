@@ -8,7 +8,7 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
 ## How Robustness Works
@@ -45,6 +45,7 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Lowess(iterations = 3, robustness_method = "bisquare")
 result <- fit(model, x, y)
+print(head(result$y))
 ```
 
 ### Huber
@@ -56,6 +57,7 @@ Less aggressive than bisquare; still downweights outliers but keeps moderate res
 ```{r robustness_2}
 model <- Lowess(iterations = 3, robustness_method = "huber")
 result <- fit(model, x, y)
+print(head(result$y))
 ```
 
 ### Talwar
@@ -67,6 +69,7 @@ Hard thresholding — points above the threshold are excluded completely.
 ```{r robustness_3}
 model <- Lowess(iterations = 3, robustness_method = "talwar")
 result <- fit(model, x, y)
+print(head(result$y))
 ```
 
 ---

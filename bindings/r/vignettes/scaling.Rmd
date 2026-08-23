@@ -8,7 +8,7 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
 ## Overview
@@ -47,6 +47,7 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Lowess(iterations = 3, scaling_method = "mad")
 result <- fit(model, x, y)
+print(head(result$y))
 ```
 
 ---
@@ -62,6 +63,7 @@ Slightly less robust than MAD because it does not center residuals first, but fa
 ```{r scaling_2}
 model <- Lowess(iterations = 3, scaling_method = "mar")
 result <- fit(model, x, y)
+print(head(result$y))
 ```
 
 ---
@@ -77,6 +79,7 @@ Least robust — influenced by outliers. Matches classic OLS residual scale.
 ```{r scaling_3}
 model <- Lowess(iterations = 3, scaling_method = "mean")
 result <- fit(model, x, y)
+print(head(result$y))
 ```
 
 ---

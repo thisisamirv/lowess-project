@@ -8,7 +8,7 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
 ## Basic Smoothing
@@ -110,6 +110,7 @@ result <- process_chunk(model, chunk_x, chunk_y)
 
 # Finalize after all chunks
 final <- finalize(model)
+print(head(final$y))
 ```
 
 ---

@@ -8,7 +8,7 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
 ## All Parameters
@@ -78,6 +78,7 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Lowess(fraction = 0.3)
 result <- fit(model, x, y)
+print(head(result$y))
 ```
 
 ### iterations
@@ -87,6 +88,7 @@ Number of robustness iterations. Each iteration downweights high-residual points
 ```{r parameters_2}
 model <- Lowess(iterations = 3)
 result <- fit(model, x, y)
+print(head(result$y))
 ```
 
 ### delta
@@ -96,6 +98,7 @@ Distance threshold for skipping intermediate points (approximation). Setting `de
 ```{r parameters_3}
 model <- Lowess(delta = 0.01)
 result <- fit(model, x, y)
+print(head(result$y))
 ```
 
 ### parallel
@@ -105,6 +108,7 @@ Enable parallel CPU execution (multiple cores).
 ```{r parameters_4}
 model <- Lowess(parallel = TRUE)
 result <- fit(model, x, y)
+print(head(result$y))
 ```
 
 ### return_diagnostics

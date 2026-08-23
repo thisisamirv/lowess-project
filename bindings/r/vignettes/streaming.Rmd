@@ -8,7 +8,7 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
 > **See also:** [Choosing an Execution Mode](adapter-choice.html) for a comparison of all three modes.
@@ -59,6 +59,7 @@ model <- StreamingLowess(
 )
 result <- process_chunk(model, x_chunk, y_chunk)
 final  <- finalize(model)
+print(head(final$y))
 ```
 
 ```{r session-info}
