@@ -32,9 +32,8 @@ dev = []
 # Not used for CRAN/Bioconductor submission builds.
 gpu = ["fastLowess/gpu"]
 
-
-
-
+[profile.release]
+strip = "symbols"
 
 [workspace]
 

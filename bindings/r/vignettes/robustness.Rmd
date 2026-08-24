@@ -1,6 +1,6 @@
 ---
 title: "Robustness"
-output: BiocStyle::html_document
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Robustness}
   %\VignetteEngine{knitr::rmarkdown}

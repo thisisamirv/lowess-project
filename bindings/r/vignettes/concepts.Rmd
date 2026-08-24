@@ -1,6 +1,6 @@
 ---
 title: "LOWESS Concepts"
-output: BiocStyle::html_document
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{LOWESS Concepts}
   %\VignetteEngine{knitr::rmarkdown}

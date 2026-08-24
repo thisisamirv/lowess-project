@@ -1,6 +1,6 @@
 ---
 title: "Weight Functions (Kernels)"
-output: BiocStyle::html_document
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Weight Functions (Kernels)}
   %\VignetteEngine{knitr::rmarkdown}

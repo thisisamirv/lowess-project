@@ -1,6 +1,6 @@
 ---
 title: "GPU Backend"
-output: BiocStyle::html_document
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{GPU Backend}
   %\VignetteEngine{knitr::rmarkdown}

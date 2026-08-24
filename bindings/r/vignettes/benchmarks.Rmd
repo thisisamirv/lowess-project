@@ -1,6 +1,6 @@
 ---
 title: "Benchmarks"
-output: BiocStyle::html_document
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Benchmarks}
   %\VignetteEngine{knitr::rmarkdown}

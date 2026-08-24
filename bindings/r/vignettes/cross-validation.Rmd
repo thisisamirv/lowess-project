@@ -1,6 +1,6 @@
 ---
 title: "Cross-Validation"
-output: BiocStyle::html_document
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Cross-Validation}
   %\VignetteEngine{knitr::rmarkdown}

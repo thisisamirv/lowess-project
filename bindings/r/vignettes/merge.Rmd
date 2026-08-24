@@ -1,6 +1,6 @@
 ---
 title: "Merge Strategies"
-output: BiocStyle::html_document
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Merge Strategies}
   %\VignetteEngine{knitr::rmarkdown}

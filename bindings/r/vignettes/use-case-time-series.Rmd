@@ -1,6 +1,6 @@
 ---
 title: "Use Case: Time Series Analysis"
-output: BiocStyle::html_document
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Use Case: Time Series Analysis}
   %\VignetteEngine{knitr::rmarkdown}

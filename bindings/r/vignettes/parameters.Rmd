@@ -1,6 +1,6 @@
 ---
 title: "Parameters Reference"
-output: BiocStyle::html_document
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Parameters Reference}
   %\VignetteEngine{knitr::rmarkdown}

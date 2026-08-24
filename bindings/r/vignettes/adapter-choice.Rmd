@@ -1,6 +1,6 @@
 ---
 title: "Choosing an Execution Mode"
-output: BiocStyle::html_document
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Choosing an Execution Mode}
   %\VignetteEngine{knitr::rmarkdown}

@@ -1,6 +1,6 @@
 ---
 title: "Scaling Methods"
-output: BiocStyle::html_document
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Scaling Methods}
   %\VignetteEngine{knitr::rmarkdown}

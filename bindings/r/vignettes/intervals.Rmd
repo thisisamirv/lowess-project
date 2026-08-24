@@ -1,6 +1,6 @@
 ---
 title: "Confidence and Prediction Intervals"
-output: BiocStyle::html_document
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Confidence and Prediction Intervals}
   %\VignetteEngine{knitr::rmarkdown}

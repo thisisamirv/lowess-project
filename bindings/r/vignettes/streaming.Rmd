@@ -1,6 +1,6 @@
 ---
 title: "Streaming Mode (StreamingLowess)"
-output: BiocStyle::html_document
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Streaming Mode (StreamingLowess)}
   %\VignetteEngine{knitr::rmarkdown}

@@ -1,6 +1,6 @@
 ---
 title: "Custom Weights"
-output: BiocStyle::html_document
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Custom Weights}
   %\VignetteEngine{knitr::rmarkdown}

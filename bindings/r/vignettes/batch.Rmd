@@ -1,6 +1,6 @@
 ---
 title: "Batch Mode (Lowess)"
-output: BiocStyle::html_document
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Batch Mode (Lowess)}
   %\VignetteEngine{knitr::rmarkdown}

@@ -1,6 +1,6 @@
 ---
 title: "Use Case: Genomic Data Smoothing"
-output: BiocStyle::html_document
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Use Case: Genomic Data Smoothing}
   %\VignetteEngine{knitr::rmarkdown}
