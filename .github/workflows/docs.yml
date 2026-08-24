@@ -107,7 +107,7 @@ jobs:
   nodejs:
     needs: filter
     if: needs.filter.outputs.nodejs == 'true' || github.event_name == 'workflow_dispatch'
-    name: Node.js — VitePress
+    name: Node.js — Starlight
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -129,7 +129,7 @@ jobs:
       - uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: gh-pages
-          folder: bindings/nodejs/docs/.vitepress/dist
+          folder: bindings/nodejs/dist
           target-folder: nodejs
           clean: false
 
@@ -176,7 +176,7 @@ jobs:
   wasm:
     needs: filter
     if: needs.filter.outputs.wasm == 'true' || github.event_name == 'workflow_dispatch'
-    name: WebAssembly — VitePress
+    name: WebAssembly — Starlight
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -215,6 +215,6 @@ jobs:
       - uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: gh-pages
-          folder: bindings/wasm/docs/.vitepress/dist
+          folder: bindings/wasm/dist
           target-folder: wasm
           clean: false

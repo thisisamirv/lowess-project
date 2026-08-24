@@ -7,7 +7,7 @@ const os = require('os');
 
 // Accept binding dir as first argument; fall back to cwd (e.g. when invoked via npm run snippets)
 const BINDING_DIR = process.argv[2] ? path.resolve(process.argv[2]) : process.cwd();
-const DOCS_DIR = path.join(BINDING_DIR, 'docs');
+const DOCS_DIR = path.join(BINDING_DIR, 'src', 'content', 'docs');
 const PKG_NAME = JSON.parse(fs.readFileSync(path.join(BINDING_DIR, 'package.json'), 'utf-8')).name;
 // wasm-pack outputs to pkg/; read main entry from there
 const pkgMeta = JSON.parse(fs.readFileSync(path.join(BINDING_DIR, 'pkg', 'package.json'), 'utf-8'));

@@ -1,12 +1,12 @@
 {
-  "plugin": [
-    "typedoc-plugin-markdown"
-  ],
-  "entryPoints": [
-    "pkg/fastlowess_wasm.d.ts"
-  ],
-  "out": "docs/reference",
-  "name": "fastlowess-wasm",
-  "readme": "none",
-  "indexFileName": "index"
+    "plugin": [
+        "typedoc-plugin-markdown"
+    ],
+    "entryPoints": [
+        "pkg/fastlowess_wasm.d.ts"
+    ],
+    "out": "src/content/docs/reference",
+    "name": "fastlowess-wasm",
+    "readme": "none",
+    "indexFileName": "index"
 }

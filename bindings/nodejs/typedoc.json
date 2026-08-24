@@ -1,12 +1,12 @@
 {
-  "plugin": [
-    "typedoc-plugin-markdown"
-  ],
-  "entryPoints": [
-    "index.d.ts"
-  ],
-  "out": "docs/reference",
-  "name": "fastlowess",
-  "readme": "none",
-  "indexFileName": "index"
+    "plugin": [
+        "typedoc-plugin-markdown"
+    ],
+    "entryPoints": [
+        "index.d.ts"
+    ],
+    "out": "src/content/docs/reference",
+    "name": "fastlowess",
+    "readme": "none",
+    "indexFileName": "index"
 }
