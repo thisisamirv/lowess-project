@@ -45,6 +45,8 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Lowess(weight_function = "tricube")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (tricube kernel):\n")
+#> First 6 smoothed values (tricube kernel):
 print(head(result$y))
 #> [1] 0.4862648 0.4942855 0.5026953 0.5114688 0.5205144 0.5296957
 ```
@@ -65,6 +67,8 @@ w(u) = \frac{3}{4}(1 - u^2)
 
 model <- Lowess(weight_function = "epanechnikov")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (epanechnikov kernel):\n")
+#> First 6 smoothed values (epanechnikov kernel):
 print(head(result$y))
 #> [1] 0.4980927 0.5058916 0.5141306 0.5214559 0.5283514 0.5346370
 ```
@@ -85,6 +89,8 @@ w(u) = e^{-u^2/2}
 
 model <- Lowess(weight_function = "gaussian")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (gaussian kernel):\n")
+#> First 6 smoothed values (gaussian kernel):
 print(head(result$y))
 #> [1] 0.5254291 0.5307319 0.5394626 0.5378479 0.5402746 0.5415505
 ```
@@ -105,6 +111,8 @@ w(u) = (1 - u^2)^2
 
 model <- Lowess(weight_function = "biweight")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (biweight kernel):\n")
+#> First 6 smoothed values (biweight kernel):
 print(head(result$y))
 #> [1] 0.4825590 0.4907817 0.4994624 0.5084966 0.5177105 0.5269509
 ```
@@ -126,6 +134,8 @@ biweight.
 
 model <- Lowess(weight_function = "cosine")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (cosine kernel):\n")
+#> First 6 smoothed values (cosine kernel):
 print(head(result$y))
 #> [1] 0.4941485 0.5019299 0.5101566 0.5176921 0.5249038 0.5316128
 ```
@@ -146,6 +156,8 @@ w(u) = 1 - |u|
 
 model <- Lowess(weight_function = "triangle")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (triangle kernel):\n")
+#> First 6 smoothed values (triangle kernel):
 print(head(result$y))
 #> [1] 0.4813591 0.4887843 0.4970441 0.5052547 0.5134863 0.5216037
 ```
@@ -166,6 +178,8 @@ w(u) = \frac{1}{2}
 
 model <- Lowess(weight_function = "uniform")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (uniform kernel):\n")
+#> First 6 smoothed values (uniform kernel):
 print(head(result$y))
 #> [1] 0.5375980 0.5415992 0.5503490 0.5447180 0.5450620 0.5440319
 ```

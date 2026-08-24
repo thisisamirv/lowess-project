@@ -45,6 +45,8 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Lowess(iterations = 3, robustness_method = "bisquare")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (bisquare robustness):\n")
+#> First 6 smoothed values (bisquare robustness):
 print(head(result$y))
 #> [1] 0.4862648 0.4942855 0.5026953 0.5114688 0.5205144 0.5296957
 ```
@@ -61,6 +63,8 @@ deviations.
 
 model <- Lowess(iterations = 3, robustness_method = "huber")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (huber robustness):\n")
+#> First 6 smoothed values (huber robustness):
 print(head(result$y))
 #> [1] 0.4937237 0.5027904 0.5122265 0.5219833 0.5319406 0.5419355
 ```
@@ -75,6 +79,8 @@ Hard thresholding — points above the threshold are excluded completely.
 
 model <- Lowess(iterations = 3, robustness_method = "talwar")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (talwar robustness):\n")
+#> First 6 smoothed values (talwar robustness):
 print(head(result$y))
 #> [1] 0.4606284 0.4670145 0.4736902 0.4805995 0.4876121 0.4945557
 ```

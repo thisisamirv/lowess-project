@@ -45,6 +45,8 @@ model <- Lowess(
 )
 result <- fit(model, x, y)
 
+cat("Confidence lower bounds:\n")
+#> Confidence lower bounds:
 print(result$confidence_lower)
 #>   [1]  0.402912806  0.444425371  0.422964886  0.424915481  0.433441883
 #>   [6]  0.446929963  0.457679203  0.460112021  0.503347796  0.476936803
@@ -66,6 +68,8 @@ print(result$confidence_lower)
 #>  [86] -0.688968767 -0.653976063 -0.627282024 -0.600788991 -0.568507847
 #>  [91] -0.521750850 -0.492030543 -0.460702506 -0.406396679 -0.371907161
 #>  [96] -0.344340162 -0.305085025 -0.264666341 -0.247019614 -0.203001699
+cat("Confidence upper bounds:\n")
+#> Confidence upper bounds:
 print(result$confidence_upper)
 #>   [1]  0.54166355  0.52001237  0.56246539  0.58266084  0.59725030  0.60773573
 #>   [7]  0.62172140  0.64481765  0.62802315  0.68189806  0.67873672  0.64102362
@@ -84,8 +88,8 @@ print(result$confidence_upper)
 #>  [85] -0.54027560 -0.46769448 -0.45078137 -0.42104518 -0.38712180 -0.35553728
 #>  [91] -0.33546335 -0.29624951 -0.25750939 -0.24160246 -0.20657384 -0.16587739
 #>  [97] -0.13837350 -0.11376134 -0.06828002 -0.05109043
-print(result$diagnostics$r_squared)
-#> [1] 0.7841212
+cat("R²:", result$diagnostics$r_squared, "\n")
+#> R²: 0.7841212
 ```
 
 ------------------------------------------------------------------------
@@ -144,6 +148,8 @@ result <- process_chunk(model, chunk_x, chunk_y)
 
 # Finalize after all chunks
 final <- finalize(model)
+cat("First 6 smoothed values (streaming, weighted_average merge):\n")
+#> First 6 smoothed values (streaming, weighted_average merge):
 print(head(final$y))
 #> [1] 0.3234034 0.3229753 0.3225477 0.3221207 0.3216941 0.3212681
 ```

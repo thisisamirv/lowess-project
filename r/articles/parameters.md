@@ -71,6 +71,8 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Lowess(fraction = 0.3)
 result <- fit(model, x, y)
+cat("First 6 smoothed values (fraction=0.3):\n")
+#> First 6 smoothed values (fraction=0.3):
 print(head(result$y))
 #> [1] 0.4246043 0.4368821 0.4512604 0.4675346 0.4850950 0.5036147
 ```
@@ -84,6 +86,8 @@ high-residual points.
 
 model <- Lowess(iterations = 3)
 result <- fit(model, x, y)
+cat("First 6 smoothed values (iterations=3):\n")
+#> First 6 smoothed values (iterations=3):
 print(head(result$y))
 #> [1] 0.4862648 0.4942855 0.5026953 0.5114688 0.5205144 0.5296957
 ```
@@ -98,6 +102,8 @@ fraction of the data range.
 
 model <- Lowess(delta = 0.01)
 result <- fit(model, x, y)
+cat("First 6 smoothed values (delta=0.01):\n")
+#> First 6 smoothed values (delta=0.01):
 print(head(result$y))
 #> [1] 0.4862648 0.4942855 0.5026953 0.5114688 0.5205144 0.5296957
 ```
@@ -110,6 +116,8 @@ Enable parallel CPU execution (multiple cores).
 
 model <- Lowess(parallel = TRUE)
 result <- fit(model, x, y)
+cat("First 6 smoothed values (parallel=TRUE):\n")
+#> First 6 smoothed values (parallel=TRUE):
 print(head(result$y))
 #> [1] 0.4862648 0.4942855 0.5026953 0.5114688 0.5205144 0.5296957
 ```
@@ -122,8 +130,8 @@ Return goodness-of-fit diagnostics (R², residuals, etc.).
 
 model <- Lowess(return_diagnostics = TRUE)
 result <- fit(model, x, y)
-print(result$diagnostics$r_squared)
-#> [1] 0.7296086
+cat("R²:", result$diagnostics$r_squared, "\n")
+#> R²: 0.7296086
 ```
 
 ------------------------------------------------------------------------

@@ -38,6 +38,8 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Lowess(boundary_policy = "extend")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (extend policy):\n")
+#> First 6 smoothed values (extend policy):
 print(head(result$y))
 #> [1] 0.4862648 0.4942855 0.5026953 0.5114688 0.5205144 0.5296957
 ```
@@ -56,6 +58,8 @@ known symmetry point.
 
 model <- Lowess(boundary_policy = "reflect")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (reflect policy):\n")
+#> First 6 smoothed values (reflect policy):
 print(head(result$y))
 #> [1] 0.6186141 0.6178251 0.6179654 0.6190096 0.6208929 0.6235246
 ```
@@ -73,6 +77,8 @@ Pads with zeros beyond the endpoints.
 
 model <- Lowess(boundary_policy = "zero")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (zero policy):\n")
+#> First 6 smoothed values (zero policy):
 print(head(result$y))
 #> [1] 0.2584769 0.2767076 0.2953720 0.3144259 0.3337405 0.3531253
 ```
@@ -93,6 +99,8 @@ Cleveland algorithm behaviour is required.
 
 model <- Lowess(boundary_policy = "noboundary")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (noboundary policy):\n")
+#> First 6 smoothed values (noboundary policy):
 print(head(result$y))
 #> [1] 0.6766520 0.6769305 0.6769029 0.6765617 0.6759035 0.6749280
 ```

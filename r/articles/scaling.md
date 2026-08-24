@@ -50,6 +50,8 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Lowess(iterations = 3, scaling_method = "mad")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (MAD scaling):\n")
+#> First 6 smoothed values (MAD scaling):
 print(head(result$y))
 #> [1] 0.4862648 0.4942855 0.5026953 0.5114688 0.5205144 0.5296957
 ```
@@ -72,6 +74,8 @@ concern.
 
 model <- Lowess(iterations = 3, scaling_method = "mar")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (MAR scaling):\n")
+#> First 6 smoothed values (MAR scaling):
 print(head(result$y))
 #> [1] 0.4870733 0.4951594 0.5036339 0.5124703 0.5215762 0.5308144
 ```
@@ -93,6 +97,8 @@ scale.
 
 model <- Lowess(iterations = 3, scaling_method = "mean")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (mean scaling):\n")
+#> First 6 smoothed values (mean scaling):
 print(head(result$y))
 #> [1] 0.5023604 0.5119281 0.5219198 0.5323007 0.5429772 0.5538188
 ```

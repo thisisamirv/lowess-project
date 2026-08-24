@@ -93,6 +93,8 @@ cat("Best fraction:", result$fraction_used, "\n")
 #> Best fraction: 0.2
 cat("CV scores:\n")
 #> CV scores:
+cat("CV scores by fraction:\n")
+#> CV scores by fraction:
 print(data.frame(fraction = fractions, score = result$cv_scores))
 #>    fraction     score
 #> 1      0.10 0.3851899

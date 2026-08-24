@@ -143,6 +143,8 @@ all features.</p>
 <span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
 <span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Confidence lower bounds:\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Confidence lower bounds:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">confidence_lower</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   [1]  0.402912806  0.444425371  0.422964886  0.424915481  0.433441883</span></span>
 <span><span class="co">#&gt;   [6]  0.446929963  0.457679203  0.460112021  0.503347796  0.476936803</span></span>
@@ -164,6 +166,8 @@ all features.</p>
 <span><span class="co">#&gt;  [86] -0.688968767 -0.653976063 -0.627282024 -0.600788991 -0.568507847</span></span>
 <span><span class="co">#&gt;  [91] -0.521750850 -0.492030543 -0.460702506 -0.406396679 -0.371907161</span></span>
 <span><span class="co">#&gt;  [96] -0.344340162 -0.305085025 -0.264666341 -0.247019614 -0.203001699</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Confidence upper bounds:\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Confidence upper bounds:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">confidence_upper</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   [1]  0.54166355  0.52001237  0.56246539  0.58266084  0.59725030  0.60773573</span></span>
 <span><span class="co">#&gt;   [7]  0.62172140  0.64481765  0.62802315  0.68189806  0.67873672  0.64102362</span></span>
@@ -182,8 +186,8 @@ all features.</p>
 <span><span class="co">#&gt;  [85] -0.54027560 -0.46769448 -0.45078137 -0.42104518 -0.38712180 -0.35553728</span></span>
 <span><span class="co">#&gt;  [91] -0.33546335 -0.29624951 -0.25750939 -0.24160246 -0.20657384 -0.16587739</span></span>
 <span><span class="co">#&gt;  [97] -0.13837350 -0.11376134 -0.06828002 -0.05109043</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">diagnostics</span><span class="op">$</span><span class="va">r_squared</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.7841212</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"R²:"</span>, <span class="va">result</span><span class="op">$</span><span class="va">diagnostics</span><span class="op">$</span><span class="va">r_squared</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; R²: 0.7841212</span></span></code></pre></div>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>

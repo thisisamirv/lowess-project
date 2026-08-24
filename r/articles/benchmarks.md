@@ -70,6 +70,7 @@ mb <- microbenchmark(
     },
     times = 50
 )
+cat("Benchmark results:\n")
 print(mb)
 ```
 

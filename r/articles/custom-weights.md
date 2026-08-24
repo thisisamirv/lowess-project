@@ -65,6 +65,8 @@ weights[6] <- 0.0          # exclude the spike
 
 model <- Lowess(fraction = 0.5, iterations = 0L)
 result <- fit(model, x, y, custom_weights = weights)
+cat("First 6 smoothed values (outlier excluded, no robustness):\n")
+#> First 6 smoothed values (outlier excluded, no robustness):
 print(head(result$y))
 #> [1]  2.572621  4.000000  6.000000  8.000000 10.000000 12.000000
 ```
@@ -114,6 +116,8 @@ weights[40:50] <- 0.1
 # Also use robustness for unknown outliers
 model <- Lowess(fraction = 0.3, iterations = 3)
 result <- fit(model, x, y, custom_weights = weights)
+cat("First 6 smoothed values (custom weights, robust fitting):\n")
+#> First 6 smoothed values (custom weights, robust fitting):
 print(head(result$y))
 #> [1] 0.5716412 0.5904751 0.6108481 0.6322355 0.6533279 0.6729328
 ```

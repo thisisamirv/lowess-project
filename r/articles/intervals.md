@@ -123,6 +123,8 @@ Pass any value between 0 and 1 (exclusive). Common choices:
 # 99% confidence intervals
 model <- Lowess(fraction = 0.5, confidence_intervals = 0.99)
 result <- fit(model, x, y)
+cat("First 6 smoothed values (99% CI):\n")
+#> First 6 smoothed values (99% CI):
 print(head(result$y))
 #> [1] 0.4722882 0.4822189 0.4927151 0.5037882 0.5153461 0.5273328
 ```
