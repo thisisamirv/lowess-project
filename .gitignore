@@ -95,6 +95,14 @@ npm-debug.log
 *.node
 build/
 
+# Starlight / Astro docs
+bindings/nodejs/dist/
+bindings/nodejs/.astro/
+bindings/nodejs/src/content/docs/reference/
+bindings/wasm/dist/
+bindings/wasm/.astro/
+bindings/wasm/src/content/docs/reference/
+
 # WebAssembly
 pkg/
 bindings/wasm/pkg/
