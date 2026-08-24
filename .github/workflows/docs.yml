@@ -83,8 +83,8 @@ jobs:
           clean: false
 
   cpp:
-    needs: filter
-    if: needs.filter.outputs.cpp == 'true' || github.event_name == 'workflow_dispatch'
+    needs: [filter, root]
+    if: always() && (needs.filter.outputs.cpp == 'true' || github.event_name == 'workflow_dispatch')
     name: C++ — Doxygen
     runs-on: ubuntu-latest
     steps:
@@ -105,8 +105,8 @@ jobs:
           clean: false
 
   julia:
-    needs: filter
-    if: needs.filter.outputs.julia == 'true' || github.event_name == 'workflow_dispatch'
+    needs: [filter, cpp]
+    if: always() && (needs.filter.outputs.julia == 'true' || github.event_name == 'workflow_dispatch')
     name: Julia — Documenter.jl
     runs-on: ubuntu-latest
     steps:
@@ -137,8 +137,8 @@ jobs:
           clean: false
 
   nodejs:
-    needs: filter
-    if: needs.filter.outputs.nodejs == 'true' || github.event_name == 'workflow_dispatch'
+    needs: [filter, julia]
+    if: always() && (needs.filter.outputs.nodejs == 'true' || github.event_name == 'workflow_dispatch')
     name: Node.js — Starlight
     runs-on: ubuntu-latest
     steps:
@@ -167,8 +167,8 @@ jobs:
           clean: false
 
   r:
-    needs: filter
-    if: needs.filter.outputs.r == 'true' || github.event_name == 'workflow_dispatch'
+    needs: [filter, nodejs]
+    if: always() && (needs.filter.outputs.r == 'true' || github.event_name == 'workflow_dispatch')
     name: R — pkgdown
     runs-on: ubuntu-latest
     env:
@@ -207,8 +207,8 @@ jobs:
           clean: false
 
   wasm:
-    needs: filter
-    if: needs.filter.outputs.wasm == 'true' || github.event_name == 'workflow_dispatch'
+    needs: [filter, r]
+    if: always() && (needs.filter.outputs.wasm == 'true' || github.event_name == 'workflow_dispatch')
     name: WebAssembly — Starlight
     runs-on: ubuntu-latest
     env:
