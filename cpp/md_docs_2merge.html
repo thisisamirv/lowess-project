@@ -159,13 +159,25 @@ Take First</h2>
 <div class="line"><span class="preprocessor">#include &lt;vector&gt;</span></div>
 <div class="line"> </div>
 <div class="line"><span class="keywordtype">int</span> main() {</div>
+<div class="line">    <span class="keyword">const</span> <span class="keywordtype">int</span> n = 20;</div>
+<div class="line">    std::vector&lt;double&gt; x(n), y(n);</div>
+<div class="line">    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; n; ++i) { x[i] = i; y[i] = i + 0.1; }</div>
+<div class="line"> </div>
 <div class="line">    fastlowess::StreamingOptions s_opts;</div>
+<div class="line">    s_opts.chunk_size = 10;</div>
+<div class="line">    s_opts.overlap = 2;</div>
 <div class="line">    s_opts.merge_strategy = <span class="stringliteral">&quot;take_first&quot;</span>;</div>
 <div class="line">    fastlowess::StreamingLowess model(s_opts);</div>
+<div class="line">    std::vector&lt;double&gt; x1(x.begin(), x.begin() + 10), y1(y.begin(), y.begin() + 10);</div>
+<div class="line">    std::vector&lt;double&gt; x2(x.begin() + 10, x.end()), y2(y.begin() + 10, y.end());</div>
+<div class="line">    model.process_chunk(x1, y1);</div>
+<div class="line">    model.process_chunk(x2, y2);</div>
+<div class="line">    <span class="keyword">auto</span> result = model.finalize().value();</div>
 <div class="line"> </div>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 17.6391</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md173"></a>
 Take Last</h2>
@@ -177,13 +189,25 @@ Take Last</h2>
 <div class="line"><span class="preprocessor">#include &lt;vector&gt;</span></div>
 <div class="line"> </div>
 <div class="line"><span class="keywordtype">int</span> main() {</div>
+<div class="line">    <span class="keyword">const</span> <span class="keywordtype">int</span> n = 20;</div>
+<div class="line">    std::vector&lt;double&gt; x(n), y(n);</div>
+<div class="line">    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; n; ++i) { x[i] = i; y[i] = i + 0.1; }</div>
+<div class="line"> </div>
 <div class="line">    fastlowess::StreamingOptions s_opts;</div>
+<div class="line">    s_opts.chunk_size = 10;</div>
+<div class="line">    s_opts.overlap = 2;</div>
 <div class="line">    s_opts.merge_strategy = <span class="stringliteral">&quot;take_last&quot;</span>;</div>
 <div class="line">    fastlowess::StreamingLowess model(s_opts);</div>
+<div class="line">    std::vector&lt;double&gt; x1(x.begin(), x.begin() + 10), y1(y.begin(), y.begin() + 10);</div>
+<div class="line">    std::vector&lt;double&gt; x2(x.begin() + 10, x.end()), y2(y.begin() + 10, y.end());</div>
+<div class="line">    model.process_chunk(x1, y1);</div>
+<div class="line">    model.process_chunk(x2, y2);</div>
+<div class="line">    <span class="keyword">auto</span> result = model.finalize().value();</div>
 <div class="line"> </div>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 17.6391</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md175"></a>
 Weighted Average</h2>
@@ -197,13 +221,25 @@ Weighted Average</h2>
 <div class="line"><span class="preprocessor">#include &lt;vector&gt;</span></div>
 <div class="line"> </div>
 <div class="line"><span class="keywordtype">int</span> main() {</div>
+<div class="line">    <span class="keyword">const</span> <span class="keywordtype">int</span> n = 20;</div>
+<div class="line">    std::vector&lt;double&gt; x(n), y(n);</div>
+<div class="line">    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; n; ++i) { x[i] = i; y[i] = i + 0.1; }</div>
+<div class="line"> </div>
 <div class="line">    fastlowess::StreamingOptions s_opts;</div>
+<div class="line">    s_opts.chunk_size = 10;</div>
+<div class="line">    s_opts.overlap = 2;</div>
 <div class="line">    s_opts.merge_strategy = <span class="stringliteral">&quot;weighted_average&quot;</span>;</div>
 <div class="line">    fastlowess::StreamingLowess model(s_opts);</div>
+<div class="line">    std::vector&lt;double&gt; x1(x.begin(), x.begin() + 10), y1(y.begin(), y.begin() + 10);</div>
+<div class="line">    std::vector&lt;double&gt; x2(x.begin() + 10, x.end()), y2(y.begin() + 10, y.end());</div>
+<div class="line">    model.process_chunk(x1, y1);</div>
+<div class="line">    model.process_chunk(x2, y2);</div>
+<div class="line">    <span class="keyword">auto</span> result = model.finalize().value();</div>
 <div class="line"> </div>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 17.6391</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md177"></a>
 Choosing a Strategy</h2>

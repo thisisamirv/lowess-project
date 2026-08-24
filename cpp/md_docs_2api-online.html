@@ -119,9 +119,13 @@ Class</h1>
 <div class="line">    opts.min_points = 3;</div>
 <div class="line">    fastlowess::OnlineLowess model(opts);</div>
 <div class="line"> </div>
-<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line">    <span class="keyword">auto</span> r = model.add_point(x[0], y[0]).value();</div>
+<div class="line">    <span class="keyword">auto</span> r2 = model.add_point(x[1], y[1]).value();</div>
+<div class="line">    <span class="keyword">auto</span> r3 = model.add_point(x[2], y[2]).value();</div>
+<div class="line">    <span class="keywordflow">if</span> (r3.has_value()) { std::cout &lt;&lt; <span class="stringliteral">&quot;y: &quot;</span> &lt;&lt; r3.y() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>; }</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y: 0.226592</div>
 </div><!-- fragment --><ul>
 <li><code>options</code>: An <code>OnlineOptions</code> struct (inherits from <code>LowessOptions</code>) with <code>window_capacity</code>, <code>min_points</code>, and <code>update_mode</code>.</li>
 </ul>

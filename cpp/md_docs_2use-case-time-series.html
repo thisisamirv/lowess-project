@@ -122,11 +122,10 @@ Basic Trend Extraction</h2>
 <div class="line">    fastlowess::Lowess basic_model(trend_opts);</div>
 <div class="line">    <span class="keyword">auto</span> basic_result = basic_model.fit(t, y).value();</div>
 <div class="line"> </div>
-<div class="line">    <span class="comment">// Trend in basic_result.y_vector()</span></div>
-<div class="line"> </div>
-<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; basic_result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.188448</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md317"></a>
 Detrending</h2>
@@ -239,9 +238,10 @@ Multi-Scale Analysis</h2>
 <div class="line">        trends.push_back(result.y_vector());</div>
 <div class="line">    }</div>
 <div class="line"> </div>
-<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; trends[0][0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.131712</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md325"></a>
 Gene Expression Time Course</h2>

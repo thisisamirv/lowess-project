@@ -821,7 +821,7 @@ window_capacity</h3>
 <div class="line">    <span class="keyword">auto</span> out = model.add_point(x[0], y[0]).value();</div>
 <div class="line">    <span class="comment">// out.has_value() == false until window fills</span></div>
 <div class="line"> </div>
-<div class="line">    <span class="keywordflow">if</span> (r.has_value()) { std::cout &lt;&lt; <span class="stringliteral">&quot;Online y: &quot;</span> &lt;&lt; r-&gt;y &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>; }</div>
+<div class="line">    <span class="keywordflow">if</span> (out.has_value()) { std::cout &lt;&lt; <span class="stringliteral">&quot;Online y: &quot;</span> &lt;&lt; out.y() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>; }</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 </div><!-- fragment --><hr  />
@@ -846,7 +846,7 @@ min_points</h3>
 <div class="line">    fastlowess::OnlineLowess model(opts);</div>
 <div class="line">    <span class="keyword">auto</span> out = model.add_point(x[0], y[0]).value();</div>
 <div class="line"> </div>
-<div class="line">    <span class="keywordflow">if</span> (r.has_value()) { std::cout &lt;&lt; <span class="stringliteral">&quot;Online y: &quot;</span> &lt;&lt; r-&gt;y &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>; }</div>
+<div class="line">    <span class="keywordflow">if</span> (out.has_value()) { std::cout &lt;&lt; <span class="stringliteral">&quot;Online y: &quot;</span> &lt;&lt; out.y() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>; }</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 </div><!-- fragment --><hr  />
@@ -880,7 +880,7 @@ update_mode</h3>
 <div class="line">    fastlowess::OnlineLowess model(opts);</div>
 <div class="line">    <span class="keyword">auto</span> out = model.add_point(x[0], y[0]).value();</div>
 <div class="line"> </div>
-<div class="line">    <span class="keywordflow">if</span> (r.has_value()) { std::cout &lt;&lt; <span class="stringliteral">&quot;Online y: &quot;</span> &lt;&lt; r-&gt;y &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>; }</div>
+<div class="line">    <span class="keywordflow">if</span> (out.has_value()) { std::cout &lt;&lt; <span class="stringliteral">&quot;Online y: &quot;</span> &lt;&lt; out.y() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>; }</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 </div><!-- fragment --> </div></div><!-- contents -->
