@@ -16,7 +16,6 @@ CREATE_SUBDIRS         = NO
 INPUT                  = include docs
 FILE_PATTERNS          = *.hpp*.h *.md
 RECURSIVE              = NO
-EXTENSION_MAPPING      = md=markdown
 USE_MDFILE_AS_MAINPAGE = docs/concepts.md
 
 # ---------------------------------------------------------------------------
@@ -58,3 +57,6 @@ GENERATE_XML           = NO
 QUIET                  = YES
 WARN_IF_UNDOCUMENTED   = NO
 WARN_NO_PARAMDOC       = NO
+WARN_IF_DOC_ERROR      = NO
+HAVE_DOT               = NO
+USE_MATHJAX            = YES

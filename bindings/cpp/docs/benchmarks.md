@@ -50,7 +50,8 @@ Use `std::chrono` to time serial vs parallel runs:
 #include <numeric>
 #include <vector>
 
-static double bench_ms(auto fn, int reps = 10) {
+template <typename Fn>
+static double bench_ms(Fn fn, int reps = 10) {
     // Warm-up
     fn();
     auto t0 = std::chrono::high_resolution_clock::now();

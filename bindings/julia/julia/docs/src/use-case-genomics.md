@@ -119,4 +119,4 @@ println("First smoothed value (streaming ChIP-seq): ", result.y[1])
 - [Robustness](robustness.md) — Outlier downweighting in depth
 - [Merge Strategies](merge.md) — Streaming chunk reconciliation
 - [Boundary Handling](boundary.md) — Edge handling for sparse regions
-- [Real-Time Processing](real-time.md) — For sequencing runs
+- [Real-Time Processing](use-case-real-time.md) — For sequencing runs

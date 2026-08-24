@@ -24,11 +24,11 @@ processing needs:
 
 ## Quick Decision Guide
 
-- **Data fits in memory and you need intervals or CV** →
-  [Batch Mode](batch.html)
-- **Data is too large for memory or arrives in file chunks** →
-  [Streaming Mode](streaming.html)
-- **Data arrives point-by-point in real time** → [Online Mode](online.html)
+| Situation | Mode |
+| --- | --- |
+| Data fits in memory; needs intervals or CV | Batch |
+| Data too large for memory or arrives in chunks | Streaming |
+| Data arrives point-by-point in real time | Online |
 
 ```{r session-info}
 sessionInfo()

@@ -115,4 +115,4 @@ The dashboard pattern uses a plain LOWESS fit on a manually managed sliding wind
 - [Execution Modes](adapter-choice.md) — Detailed mode comparison
 - [Merge Strategies](merge.md) — Chunk reconciliation in depth
 - [Scaling Methods](scaling.md) — Robustness scale estimation
-- [Time Series](time-series.md) — General time series analysis
+- [Time Series](use-case-time-series.md) — General time series analysis
