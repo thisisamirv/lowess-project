@@ -40,14 +40,20 @@ fn main() -> Result<(), LowessError> {
 
     // Access intervals
     if let (Some(lower), Some(upper)) = (&result.confidence_lower, &result.confidence_upper) {
-        for i in 0..result.y.len() {
-            println!("x={:.2}: y={:.2} [{:.2}, {:.2}]", 
+        for i in 0..3 {
+            println!("x={:.2}: y={:.2} [{:.2}, {:.2}]",
                 result.x[i], result.y[i], lower[i], upper[i]);
         }
     }
 
     Ok(())
 }
+```
+
+```output
+x=0.00: y=0.33 [0.29, 0.37]
+x=0.06: y=0.36 [0.32, 0.40]
+x=0.13: y=0.39 [0.34, 0.43]
 ```
 
 ---
@@ -80,6 +86,10 @@ fn main() -> Result<(), LowessError> {
 }
 ```
 
+```output
+Prediction bounds: [-0.04, 0.71]
+```
+
 ---
 
 ## Both Intervals
@@ -107,6 +117,10 @@ fn main() -> Result<(), LowessError> {
     }
     Ok(())
 }
+```
+
+```output
+First point 95% CI: [0.29412988645250643, 0.3746108343833247]
 ```
 
 ---
@@ -143,6 +157,10 @@ fn main() -> Result<(), LowessError> {
 }
 ```
 
+```output
+First lower CI bound (99%): 0.31714272639100155
+```
+
 ---
 
 ## Standard Errors
@@ -162,13 +180,19 @@ fn main() -> Result<(), LowessError> {
     let result = model.fit(&x, &y)?;
 
     if let Some(standard_errors) = &result.standard_errors {
-        for (i, &se) in standard_errors.iter().enumerate() {
+        for (i, &se) in standard_errors.iter().enumerate().take(3) {
             println!("Point {}: SE = {:.4}", i, se);
         }
     }
 
     Ok(())
 }
+```
+
+```output
+Point 0: SE = 0.0254
+Point 1: SE = 0.0269
+Point 2: SE = 0.0283
 ```
 
 ---

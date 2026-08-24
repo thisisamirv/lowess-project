@@ -44,6 +44,11 @@ fn main() -> Result<(), LowessError> {
 }
 ```
 
+```output
+Fraction used: 0.5
+Iterations used: None
+```
+
 * Fits the model to the provided `x` and `y` arrays.
 * Returns `Result<LowessResult<T>, LowessError>`.
 
@@ -271,4 +276,8 @@ fn main() -> Result<(), LowessError> {
     println!("Smoothed Y: {:?}", result.y);
     Ok(())
 }
+```
+
+```output
+Smoothed Y: [2.1, 4.0, 6.2, 8.0, 10.1]
 ```

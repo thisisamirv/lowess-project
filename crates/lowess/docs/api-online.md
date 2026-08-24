@@ -47,6 +47,10 @@ fn main() -> Result<(), LowessError> {
 }
 ```
 
+```output
+Smoothed value: 0.22659245357374927
+```
+
 * Adds a single point `(x, y)` to the window.
 * Returns `Result<Option<OnlineOutput<T>>, LowessError>`.
 

@@ -54,6 +54,10 @@ fn main() -> Result<(), LowessError> {
 }
 ```
 
+```output
+First smoothed value (tricube kernel): 0.38260776436644134
+```
+
 ---
 
 ## Epanechnikov
@@ -81,6 +85,10 @@ fn main() -> Result<(), LowessError> {
     println!("First smoothed value (epanechnikov kernel): {}", result.y[0]);
     Ok(())
 }
+```
+
+```output
+First smoothed value (epanechnikov kernel): 0.40672777844316566
 ```
 
 ---
@@ -112,6 +120,10 @@ fn main() -> Result<(), LowessError> {
 }
 ```
 
+```output
+First smoothed value (gaussian kernel): 0.435767018911707
+```
+
 ---
 
 ## Biweight
@@ -139,6 +151,10 @@ fn main() -> Result<(), LowessError> {
     println!("First smoothed value (biweight kernel): {}", result.y[0]);
     Ok(())
 }
+```
+
+```output
+First smoothed value (biweight kernel): 0.3759030457029011
 ```
 
 ---
@@ -170,6 +186,10 @@ fn main() -> Result<(), LowessError> {
 }
 ```
 
+```output
+First smoothed value (cosine kernel): 0.4008299554019581
+```
+
 ---
 
 ## Triangle
@@ -199,6 +219,10 @@ fn main() -> Result<(), LowessError> {
 }
 ```
 
+```output
+First smoothed value (triangle kernel): 0.3816572331939023
+```
+
 ---
 
 ## Uniform
@@ -226,6 +250,10 @@ fn main() -> Result<(), LowessError> {
     println!("First smoothed value (uniform kernel): {}", result.y[0]);
     Ok(())
 }
+```
+
+```output
+First smoothed value (uniform kernel): 0.45083991221911446
 ```
 
 ---

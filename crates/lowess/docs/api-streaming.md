@@ -39,6 +39,10 @@ fn main() -> Result<(), LowessError> {
 }
 ```
 
+```output
+Fraction used: 0.5
+```
+
 * Processes a chunk of data. Returns `LowessResult<T>` with partial results.
 
 ```rust
@@ -58,6 +62,10 @@ fn main() -> Result<(), LowessError> {
 
     Ok(())
 }
+```
+
+```output
+Fraction used: 0.5
 ```
 
 * Finalizes processing and returns remaining buffered results.

@@ -43,6 +43,10 @@ fn main() -> Result<(), LowessError> {
 }
 ```
 
+```output
+First smoothed value (fraction=0.1): 11.321590922416165
+```
+
 ---
 
 ## Detrending
@@ -77,6 +81,10 @@ fn main() -> Result<(), LowessError> {
 }
 ```
 
+```output
+First residual: -0.15824361645514948
+```
+
 ---
 
 ## Forecasting with Prediction Intervals
@@ -109,6 +117,10 @@ fn main() -> Result<(), LowessError> {
 }
 ```
 
+```output
+First point 95% CI: [0.2143361638963172, 0.23455701980290472]
+```
+
 ---
 
 ## Handling Missing Data
@@ -134,6 +146,10 @@ fn main() -> Result<(), LowessError> {
 }
 ```
 
+```output
+First smoothed value (fraction=0.2): 11.327309510260003
+```
+
 ---
 
 ## Multi-Scale Analysis
@@ -156,12 +172,16 @@ fn main() -> Result<(), LowessError> {
             .fraction(f)
             .build()?;
         let result = model.fit(&t, &y)?;
-        // Store or plot result.y for each scale
+        println!("First smoothed value (fraction={f}): {}", result.y[0]);
     }
-
-    println!("First smoothed value (fraction=?): {}", result.y[0]);
     Ok(())
 }
+```
+
+```output
+First smoothed value (fraction=0.05): 0.13171195982828227
+First smoothed value (fraction=0.2): 0.22444659184961097
+First smoothed value (fraction=0.5): 0.33437036041791557
 ```
 
 ---
@@ -196,6 +216,10 @@ fn main() -> Result<(), LowessError> {
 
     Ok(())
 }
+```
+
+```output
+RÂ²: 0.973
 ```
 
 ---

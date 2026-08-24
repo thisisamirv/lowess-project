@@ -39,19 +39,23 @@ use std::f64::consts::TAU;
 
 fn main() -> Result<(), LowessError> {
     let n = 100usize;
-    let x_chunk: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-    let y_chunk: Vec<f64> = x_chunk.iter().map(|&xi| xi.sin() + 0.1).collect();
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
     let mut model = StreamingLowess::new()
         .merge_strategy("average")
-        .chunk_size(5000)
-        .overlap(500)
         .build()?;
-    let result = model.process_chunk(&x_chunk, &y_chunk)?;
+    let _ = model.process_chunk(&x[..50], &y[..50])?;
+    let _ = model.process_chunk(&x[50..], &y[50..])?;
+    let result = model.finalize()?;
     println!("First smoothed value (average merge): {}", result.y[0]);
 
     Ok(())
 }
+```
+
+```output
+First smoothed value (average merge): 0.38260776436644134
 ```
 
 ---
@@ -68,17 +72,23 @@ use std::f64::consts::TAU;
 
 fn main() -> Result<(), LowessError> {
     let n = 100usize;
-    let x_chunk: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-    let y_chunk: Vec<f64> = x_chunk.iter().map(|&xi| xi.sin() + 0.1).collect();
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
     let mut processor = StreamingLowess::new()
         .merge_strategy("take_first")
         .build()?;
-    let result = processor.process_chunk(&x_chunk, &y_chunk)?;
+    let _ = processor.process_chunk(&x[..50], &y[..50])?;
+    let _ = processor.process_chunk(&x[50..], &y[50..])?;
+    let result = processor.finalize()?;
     println!("First smoothed value (take_first merge): {}", result.y[0]);
 
     Ok(())
 }
+```
+
+```output
+First smoothed value (take_first merge): 0.38260776436644134
 ```
 
 ---
@@ -95,17 +105,23 @@ use std::f64::consts::TAU;
 
 fn main() -> Result<(), LowessError> {
     let n = 100usize;
-    let x_chunk: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-    let y_chunk: Vec<f64> = x_chunk.iter().map(|&xi| xi.sin() + 0.1).collect();
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
     let mut processor = StreamingLowess::new()
         .merge_strategy("take_last")
         .build()?;
-    let result = processor.process_chunk(&x_chunk, &y_chunk)?;
+    let _ = processor.process_chunk(&x[..50], &y[..50])?;
+    let _ = processor.process_chunk(&x[50..], &y[50..])?;
+    let result = processor.finalize()?;
     println!("First smoothed value (take_last merge): {}", result.y[0]);
 
     Ok(())
 }
+```
+
+```output
+First smoothed value (take_last merge): 0.38260776436644134
 ```
 
 ---
@@ -126,19 +142,23 @@ use std::f64::consts::TAU;
 
 fn main() -> Result<(), LowessError> {
     let n = 100usize;
-    let x_chunk: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-    let y_chunk: Vec<f64> = x_chunk.iter().map(|&xi| xi.sin() + 0.1).collect();
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
     let mut model = StreamingLowess::new()
         .merge_strategy("weighted_average")
-        .chunk_size(5000)
-        .overlap(500)
         .build()?;
-    let result = model.process_chunk(&x_chunk, &y_chunk)?;
+    let _ = model.process_chunk(&x[..50], &y[..50])?;
+    let _ = model.process_chunk(&x[50..], &y[50..])?;
+    let result = model.finalize()?;
     println!("First smoothed value (weighted_average merge): {}", result.y[0]);
 
     Ok(())
 }
+```
+
+```output
+First smoothed value (weighted_average merge): 0.38260776436644134
 ```
 
 ---

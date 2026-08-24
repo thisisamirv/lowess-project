@@ -43,6 +43,10 @@ fn main() -> Result<(), LowessError> {
 }
 ```
 
+```output
+First smoothed value (extend boundary): 0.38260776436644134
+```
+
 ---
 
 ## Reflect
@@ -70,6 +74,10 @@ fn main() -> Result<(), LowessError> {
 }
 ```
 
+```output
+First smoothed value (reflect boundary): 0.7127616908322939
+```
+
 ---
 
 ## Zero
@@ -95,6 +103,10 @@ fn main() -> Result<(), LowessError> {
     println!("First smoothed value (zero boundary): {}", result.y[0]);
     Ok(())
 }
+```
+
+```output
+First smoothed value (zero boundary): 0.3356097941646352
 ```
 
 ---
@@ -125,6 +137,10 @@ fn main() -> Result<(), LowessError> {
     println!("First smoothed value (noboundary boundary): {}", result.y[0]);
     Ok(())
 }
+```
+
+```output
+First smoothed value (noboundary boundary): 0.6938276370262507
 ```
 
 ---

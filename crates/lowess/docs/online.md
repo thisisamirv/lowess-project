@@ -46,14 +46,24 @@ fn main() -> Result<(), LowessError> {
         .build()?;
 
     // Process points as they arrive
+    let mut count = 0;
     for (x, y) in sensor_stream {
         if let Some(output) = processor.add_point(x, y)? {
-            println!("Smoothed: {:.2}", output.y);
+            if count < 3 {
+                println!("Smoothed: {:.2}", output.y);
+            }
+            count += 1;
         }
     }
 
     Ok(())
 }
+```
+
+```output
+Smoothed: 0.35
+Smoothed: 0.41
+Smoothed: 0.47
 ```
 
 ---

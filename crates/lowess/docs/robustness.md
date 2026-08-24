@@ -49,6 +49,10 @@ fn main() -> Result<(), LowessError> {
 }
 ```
 
+```output
+First smoothed value (bisquare robustness): 0.38260776436644134
+```
+
 ---
 
 ### Huber
@@ -79,6 +83,10 @@ fn main() -> Result<(), LowessError> {
 }
 ```
 
+```output
+First smoothed value (huber robustness): 0.381704958772818
+```
+
 ---
 
 ### Talwar
@@ -107,6 +115,10 @@ fn main() -> Result<(), LowessError> {
     println!("First smoothed value (talwar robustness): {}", result.y[0]);
     Ok(())
 }
+```
+
+```output
+First smoothed value (talwar robustness): 0.37877937542419027
 ```
 
 ---
@@ -187,6 +199,10 @@ fn main() -> Result<(), LowessError> {
 }
 ```
 
+```output
+First smoothed value (mad scaling): 0.38260776436644134
+```
+
 ---
 
 ## Auto-Convergence
@@ -214,4 +230,8 @@ fn main() -> Result<(), LowessError> {
     println!("First smoothed value (auto-converge): {}", result.y[0]);
     Ok(())
 }
+```
+
+```output
+First smoothed value (auto-converge): 0.3826022035717678
 ```

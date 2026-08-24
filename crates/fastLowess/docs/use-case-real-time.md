@@ -31,17 +31,27 @@ fn main() -> Result<(), LowessError> {
         .build()?;
 
     // Simulate real-time data arrival
+    let mut count = 0;
     for i in 0..100 {
         let xi = i as f64;
         let yi = 20.0 + 5.0 * (xi / 10.0).sin() + (xi * 1.7).sin() * 0.5;
 
         if let Some(output) = processor.add_point(xi, yi)? {
-            println!("Time {}: smoothed = {:.2}", xi, output.y);
+            if count < 3 {
+                println!("Time {}: smoothed = {:.2}", xi, output.y);
+            }
+            count += 1;
         }
     }
 
     Ok(())
 }
+```
+
+```output
+Time 4: smoothed = 22.19
+Time 5: smoothed = 22.80
+Time 6: smoothed = 22.47
 ```
 
 ---
@@ -84,6 +94,10 @@ fn main() -> Result<(), LowessError> {
 
     Ok(())
 }
+```
+
+```output
+First smoothed value (streaming log): 0.5164838198010315
 ```
 
 ---

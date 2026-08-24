@@ -39,3 +39,7 @@ fn main() -> Result<(), LowessError> {
     Ok(())
 }
 ```
+
+```output
+Installed successfully!
+```

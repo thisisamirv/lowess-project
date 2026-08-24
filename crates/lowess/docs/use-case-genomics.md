@@ -48,6 +48,10 @@ fn main() -> Result<(), LowessError> {
 }
 ```
 
+```output
+First lower CI bound (95%): 0.1884475870962386
+```
+
 ---
 
 ## ChIP-seq Signal Smoothing
@@ -82,7 +86,7 @@ fn main() -> Result<(), LowessError> {
     let threshold = result.y.iter().copied()
         .fold(f64::NEG_INFINITY, f64::max) * 0.75;
     let peak_positions: Vec<f64> = positions.iter().zip(result.y.iter())
-        .filter(|(_, &y)| y > threshold)
+        .filter(|&(_, &y)| y > threshold)
         .map(|(&p, _)| p)
         .collect();
 
@@ -91,6 +95,10 @@ fn main() -> Result<(), LowessError> {
     }
     Ok(())
 }
+```
+
+```output
+First residual: -6.777600078629792
 ```
 
 ---
@@ -120,6 +128,10 @@ fn main() -> Result<(), LowessError> {
 
     Ok(())
 }
+```
+
+```output
+First smoothed value (streaming genome): 41.29765849569398
 ```
 
 ---

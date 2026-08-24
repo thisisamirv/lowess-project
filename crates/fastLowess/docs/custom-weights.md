@@ -85,6 +85,10 @@ fn main() -> Result<(), LowessError> {
 }
 ```
 
+```output
+First smoothed value (custom weights): 0.5726210350584308
+```
+
 ---
 
 ### Emphasize Important Points
@@ -118,6 +122,10 @@ fn main() -> Result<(), LowessError> {
 }
 ```
 
+```output
+First smoothed value (custom weights): 0.3237419725380614
+```
+
 ---
 
 ### Propagate Measurement Uncertainty
@@ -147,6 +155,10 @@ fn main() -> Result<(), LowessError> {
     println!("First smoothed value (custom weights): {}", result.y[0]);
     Ok(())
 }
+```
+
+```output
+First smoothed value (custom weights): 0.1522219803222456
 ```
 
 ---
@@ -183,6 +195,10 @@ fn main() -> Result<(), LowessError> {
     println!("First smoothed value (custom weights): {}", result.y[0]);
     Ok(())
 }
+```
+
+```output
+First smoothed value (custom weights): 1.7983966900445223
 ```
 
 ---

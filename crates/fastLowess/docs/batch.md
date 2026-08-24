@@ -40,4 +40,8 @@ fn main() -> Result<(), LowessError> {
 }
 ```
 
+```output
+RMSE: 0.1289
+```
+
 ---

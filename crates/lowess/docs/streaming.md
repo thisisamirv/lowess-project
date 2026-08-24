@@ -58,9 +58,13 @@ fn main() -> Result<(), LowessError> {
     let final_result = processor.finalize()?;
     write_output(&final_result.y);
 
-    println!("First smoothed value: {}", result.y[0]);
+    println!("First smoothed value: {}", final_result.y[0]);
     Ok(())
 }
+```
+
+```output
+First smoothed value: 0.38260776436644134
 ```
 
 ---
