@@ -60,7 +60,7 @@ dev:
 	@cd $(NODE_DIR) && $(NPX) -y depcheck --ignores="fastlowess-*,oxlint,typedoc-plugin-pages,typedoc-plugin-markdown,astro:content"
 	@cd $(NODE_DIR) && ($(NPM) outdated | grep -v "fastlowess-" || true)
 	@cd $(NODE_DIR) && $(NPM) ci --dry-run
-	@cd $(NODE_DIR) && $(NPX) -y -p typescript tsc index.d.ts --noEmit --allowJs --skipLibCheck --ignoreConfig
+	@cd $(NODE_DIR) && $(NPX) -y -p typescript tsc -p tsconfig.typedoc.json
 	@$(NPX) -y oxlint $(NODE_DIR)/index.js $(NODE_TEST_DIR)/test_fastlowess.js
 	@cd $(NODE_DIR) && $(NPM) run build
 	@echo "=============================================================================="
