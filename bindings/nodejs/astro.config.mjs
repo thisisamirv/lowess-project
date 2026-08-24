@@ -8,6 +8,9 @@ export default defineConfig({
         starlight({
             title: 'fastlowess',
             description: 'High-performance LOWESS smoothing for Node.js',
+            expressiveCode: {
+                langs: [{ name: 'output', scopeName: 'source.output', patterns: [], repository: {} }],
+            },
             sidebar: [
                 {
                     label: 'Getting Started',
@@ -67,7 +70,7 @@ export default defineConfig({
                         { label: 'Online API', slug: 'api-online' },
                     ],
                 },
-                { label: 'API Reference', slug: 'reference/' },
+                { label: 'API Reference', slug: 'reference' },
             ],
         }),
     ],

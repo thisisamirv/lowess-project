@@ -8,6 +8,9 @@ export default defineConfig({
         starlight({
             title: 'fastlowess-wasm',
             description: 'High-performance LOWESS smoothing for WebAssembly',
+            expressiveCode: {
+                langs: [{ name: 'output', scopeName: 'source.output', patterns: [], repository: {} }],
+            },
             sidebar: [
                 {
                     label: 'Getting Started',
@@ -66,7 +69,7 @@ export default defineConfig({
                         { label: 'Online API', slug: 'api-online' },
                     ],
                 },
-                { label: 'API Reference', slug: 'reference/' },
+                { label: 'API Reference', slug: 'reference' },
             ],
         }),
     ],
