@@ -38,6 +38,10 @@ int main() {
 }
 ```
 
+```output
+y[0]: 0.188448
+```
+
 ---
 
 ## Detrending
@@ -181,6 +185,10 @@ int main() {
     std::cout << "y[0]: " << trends[0][0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.131712
 ```
 
 ---

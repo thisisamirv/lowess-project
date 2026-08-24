@@ -12,7 +12,7 @@ add_point(model, ...)
 \arguments{
 \item{model}{An \code{OnlineLowess} object.}
 
-\item{...}{Not used.}
+\item{...}{Must be empty.}
 
 \item{x}{A single numeric x value.}
 

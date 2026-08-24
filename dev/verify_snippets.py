@@ -137,6 +137,7 @@ def extract_snippets(md_file: Path) -> list[Snippet]:
 
     current_tab: str | None = None
     rmd_chunks: list[tuple[int, str, str]] = []  # (start_line, chunk_name, code)
+    jl_examples: dict[str, list[tuple[int, str]]] = {}  # Documenter.jl @example groups
     i = 0
     while i < len(lines):
         line = lines[i]
@@ -177,6 +178,70 @@ def extract_snippets(md_file: Path) -> list[Snippet]:
                 )
                 if _r_skip_reason(dummy) is None:
                     rmd_chunks.append((start_line_rmd, chunk_name, chunk_code))
+            continue
+
+        # MyST directive: :::{directive-name} — treat jupyter-execute as python
+        _MYST_LANG: dict[str, str] = {"jupyter-execute": "python"}
+        m_myst = re.match(r"^([ \t]*):::\{([\w-]+)[^}]*\}\s*$", line)
+        if m_myst:
+            fence_indent = m_myst.group(1)
+            directive = m_myst.group(2)
+            lang_tag_myst = _MYST_LANG.get(directive)
+            start_line_myst = i + 1
+            code_lines_myst: list[str] = []
+            in_options = True
+            i += 1
+            while i < len(lines):
+                if re.match(r"^" + re.escape(fence_indent) + r":::\s*$", lines[i]):
+                    i += 1
+                    break
+                content = lines[i].removeprefix(fence_indent)
+                # RST option lines (:name: value) only appear before any code
+                if in_options and re.match(r"^:[\w-]+:\s*.*$", content):
+                    i += 1
+                    continue
+                in_options = False
+                code_lines_myst.append(content)
+                i += 1
+            if lang_tag_myst:
+                code = "\n".join(code_lines_myst)
+                result.append(
+                    Snippet(
+                        file=md_file,
+                        line=start_line_myst,
+                        lang_tag=lang_tag_myst,
+                        tab=current_tab,
+                        code=code,
+                    )
+                )
+                current_tab = None
+            continue
+
+        # Documenter.jl @example/@repl: blocks with same name share state, combined after loop
+        m_jl_ex = re.match(r"^([ \t]*)```@(example|repl)\s+(\S+)\s*$", line)
+        if m_jl_ex:
+            fence_indent = m_jl_ex.group(1)
+            ex_name = m_jl_ex.group(3)
+            start_line_jl = i + 1
+            code_lines_jl: list[str] = []
+            i += 1
+            while i < len(lines):
+                if re.match(r"^" + re.escape(fence_indent) + r"```\s*$", lines[i]):
+                    i += 1
+                    break
+                code_lines_jl.append(lines[i].removeprefix(fence_indent))
+                i += 1
+            jl_examples.setdefault(ex_name, []).append(
+                (start_line_jl, "\n".join(code_lines_jl))
+            )
+            continue
+
+        if re.match(r"^[ \t]*```@", line):
+            i += 1
+            while i < len(lines) and not re.match(r"^[ \t]*```\s*$", lines[i]):
+                i += 1
+            if i < len(lines):
+                i += 1
             continue
 
         m = re.match(r"^([ \t]*)```(\w+)\s*$", line)
@@ -230,6 +295,15 @@ def extract_snippets(md_file: Path) -> list[Snippet]:
             )
         )
 
+    for ex_name, blocks in jl_examples.items():
+        first_line = blocks[0][0]
+        combined = "\n\n".join(code for _, code in blocks)
+        result.append(
+            Snippet(
+                file=md_file, line=first_line, lang_tag="julia", tab=None, code=combined
+            )
+        )
+
     return result
 
 
@@ -249,7 +323,11 @@ def should_skip(snippet: Snippet, runner: str) -> str | None:
 # ---------------------------------------------------------------------------
 
 
-def iter_md_files(root: Path, file_filter: str | None) -> Iterator[Path]:
+def iter_md_files(
+    root: Path,
+    file_filter: str | None,
+    rust_docs_dirs: list[Path] | None = None,
+) -> Iterator[Path]:
     if file_filter:
         p = Path(file_filter)
         if not p.is_absolute():
@@ -264,7 +342,9 @@ def iter_md_files(root: Path, file_filter: str | None) -> Iterator[Path]:
         yield from sorted(JULIA_DOCS_DIR.glob("*.md"))
     for vdir in VIGNETTES_DIRS:
         yield from sorted(vdir.glob("*.Rmd"))
-    for rust_dir in RUST_CRATE_DOCS_DIRS:
+    for rust_dir in (
+        rust_docs_dirs if rust_docs_dirs is not None else RUST_CRATE_DOCS_DIRS
+    ):
         if rust_dir.exists():
             yield from sorted(rust_dir.glob("*.md"))
     if NODEJS_BINDING_DOCS_DIR.exists():
@@ -318,6 +398,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--output", metavar="FILE", help="Write JSON report to this file"
     )
+    parser.add_argument(
+        "--rust-docs",
+        metavar="DIR",
+        help="Restrict Rust snippet search to one crate docs directory",
+    )
     args = parser.parse_args(argv)
 
     active_runners: set[str] = (
@@ -326,9 +411,14 @@ def main(argv: list[str] | None = None) -> int:
 
     _python_runner.PYTHON_BIN = _find_python_with_fastlowess()
 
+    rust_docs: list[Path] | None = None
+    if args.rust_docs:
+        rrd = Path(args.rust_docs)
+        rust_docs = [rrd if rrd.is_absolute() else REPO_ROOT / rrd]
+
     # ---- Collect snippets ---------------------------------------------------
     snippets: list[Snippet] = []
-    for md in iter_md_files(DOCS_DIR, args.file):
+    for md in iter_md_files(DOCS_DIR, args.file, rust_docs):
         snippets.extend(extract_snippets(md))
 
     total_found = len(snippets)

@@ -80,7 +80,9 @@ dev:
 	@node --test $(WASM_TEST_DIR)/test_fastlowess_wasm.js
 	@echo "=============================================================================="
 	@echo "Doc snippet tests (wasm)..."
-	@echo "=============================================================================="	@$(NODE) dev/add-wasm-outputs.js $(WASM_DIR)	@$(PYTHON) dev/verify_snippets.py --lang wasm --timeout 120
+	@echo "=============================================================================="
+	@$(NODE) dev/add-wasm-outputs.js $(WASM_DIR)
+	@$(PYTHON) dev/verify_snippets.py --lang wasm --timeout 120
 	@echo "=============================================================================="
 clean:
 	@echo "Cleaning $(WASM_PKG)..."

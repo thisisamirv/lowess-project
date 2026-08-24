@@ -57,7 +57,7 @@ function processFile(filepath) {
         const existing = original.slice(pos).match(/^\n\n```output\n[\s\S]*?```/);
         if (existing) pos += existing[0].length;
 
-        if (!SKIP_PATTERNS.some(p => m[1].includes(p))) {
+        if (!SKIP_PATTERNS.some(p => m[1].includes(p)) && !/^import\b/m.test(m[1])) {
             const { output, error } = runSnippet(m[1]);
             if (error) {
                 errors.push(`  FAIL ${path.relative(DOCS_DIR, filepath)}\n${error}`);
@@ -65,6 +65,8 @@ function processFile(filepath) {
             } else if (output) {
                 result += `\n\n${BT}output\n${output}\n${BT}`;
             }
+        } else if (existing) {
+            result += existing[0];
         }
     }
 

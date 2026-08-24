@@ -39,7 +39,7 @@
     },
     "devDependencies": {
         "@napi-rs/cli": "^3.8",
-        "oxlint": "^1.79",
+        "oxlint": "^1.80",
         "typedoc": "^0.28",
         "typedoc-plugin-markdown": "^4.12",
         "@astrojs/starlight": "^0.41",

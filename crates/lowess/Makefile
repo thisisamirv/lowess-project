@@ -85,7 +85,7 @@ dev:
 	done
 	@echo "=============================================================================="
 	@echo "Doc snippet tests (rust)..."
-	@$(PYTHON) dev/verify_snippets.py --lang rust --timeout 120
+	@$(PYTHON) dev/verify_snippets.py --lang rust --rust-docs $(LOWESS_DIR)/docs --timeout 120
 	@echo "Adding Rust doc snippet outputs..."
 	@$(PYTHON) dev/add-rust-outputs.py $(LOWESS_DIR)/docs
 	@echo "All $(LOWESS_PKG) crate checks completed successfully!"

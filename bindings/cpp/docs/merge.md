@@ -99,6 +99,10 @@ int main() {
 }
 ```
 
+```output
+y[0]: 17.6391
+```
+
 ---
 
 ## Take Last
@@ -132,6 +136,10 @@ int main() {
     std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 17.6391
 ```
 
 ---
@@ -171,6 +179,10 @@ int main() {
     std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 17.6391
 ```
 
 ---

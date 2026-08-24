@@ -94,3 +94,30 @@ test_that("plot.LowessResult draws confidence interval lines when present", {
     result <- fit(Lowess(fraction = 0.5, confidence_intervals = 0.95), x, y)
     expect_no_error(plot(result, main = "With CI"))
 })
+
+test_that("fit.Lowess errors on unused ... arguments", {
+    model <- Lowess(fraction = 0.3)
+    x <- seq(0, 10, length.out = 50)
+    y <- sin(x)
+    expect_error(fit(model, x, y, extra = 1), "unused arguments")
+})
+
+test_that("process_chunk.StreamingLowess errors on unused ... arguments", {
+    model <- StreamingLowess(fraction = 0.3, chunk_size = 50L)
+    x <- seq(0, 10, length.out = 50)
+    y <- sin(x)
+    expect_error(process_chunk(model, x, y, extra = 1), "unused arguments")
+})
+
+test_that("finalize.StreamingLowess errors on unused ... arguments", {
+    model <- StreamingLowess(fraction = 0.3, chunk_size = 50L)
+    x <- seq(0, 10, length.out = 50)
+    y <- sin(x)
+    invisible(process_chunk(model, x, y))
+    expect_error(finalize(model, extra = 1), "unused arguments")
+})
+
+test_that("add_point.OnlineLowess errors on unused ... arguments", {
+    model <- OnlineLowess(fraction = 0.3, window_capacity = 20L)
+    expect_error(add_point(model, 1.0, 0.5, extra = 1), "unused arguments")
+})

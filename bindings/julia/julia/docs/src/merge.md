@@ -41,8 +41,9 @@ x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
 x_chunk = x[1:50]; y_chunk = y[1:50]
 
-model = StreamingLowess(; merge_strategy="average", chunk_size=5000, overlap=500)
-result = process_chunk(model, x_chunk, y_chunk)
+model = StreamingLowess(; merge_strategy="average")
+process_chunk(model, x_chunk, y_chunk)
+result = finalize(model)
 println("First smoothed value (average strategy): ", result.y[1])
 ```
 

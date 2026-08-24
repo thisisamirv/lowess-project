@@ -19,12 +19,6 @@ datasets
 }
 }
 
-\section{Documentation}{
-
-For comprehensive documentation, tutorials, and API reference, see:
-\url{https://lowess.readthedocs.io/}
-}
-
 \examples{
 # Basic smoothing
 x <- seq(1, 10, length.out = 100)
@@ -39,6 +33,7 @@ lines(result$x, result$y, col = "red", lwd = 2)
 Useful links:
 \itemize{
     \item \url{https://github.com/thisisamirv/lowess-project}
+    \item \url{https://thisisamirv.github.io/lowess-project/r/}
 \item Report bugs at \url{https://github.com/thisisamirv/lowess-project/issues}
 }
 

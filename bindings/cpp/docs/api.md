@@ -33,6 +33,10 @@ int main() {
 }
 ```
 
+```output
+y[0]: 0.528325
+```
+
 * `options`: A `LowessOptions` struct containing configuration parameters.
 
 **Methods:**

@@ -38,6 +38,10 @@ int main() {
 }
 ```
 
+```output
+y: 0.226592
+```
+
 * `options`: An `OnlineOptions` struct (inherits from `LowessOptions`) with `window_capacity`, `min_points`, and `update_mode`.
 
 **Methods:**

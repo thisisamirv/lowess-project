@@ -12,6 +12,17 @@ check_gpu_backend <- getFromNamespace("check_gpu_backend", "rfastlowess")
 gpu_asset_info <- getFromNamespace("gpu_asset_info", "rfastlowess")
 gpu_confirm_download <- getFromNamespace("gpu_confirm_download", "rfastlowess")
 gpu_download_to <- getFromNamespace("gpu_download_to", "rfastlowess")
+read_line <- getFromNamespace("read_line", "rfastlowess")
+
+# ── read_line ─────────────────────────────────────────────────────────────────
+
+test_that("read_line delegates to readline", {
+    testthat::local_mocked_bindings(
+        readline = function(prompt) paste0("echo:", prompt),
+        .package = "base"
+    )
+    expect_identical(read_line("Enter: "), "echo:Enter: ")
+})
 
 # ── gpu_available / gpu_enabled ──────────────────────────────────────────────
 

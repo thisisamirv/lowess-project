@@ -137,7 +137,9 @@ fit <- function(model, ...) UseMethod("fit")
 #' @rdname fit
 #' @export
 fit.Lowess <- function(model, x, y, custom_weights = NULL, ...) {
-    if (...length() > 0L) stop("unused arguments (...)")
+    if (...length() > 0L) {
+        stop("unused arguments (...)")
+    }
     validated_args <- validate_common_args(
         x,
         y,
@@ -165,7 +167,9 @@ process_chunk <- function(model, ...) UseMethod("process_chunk")
 #' @rdname process_chunk
 #' @export
 process_chunk.StreamingLowess <- function(model, x, y, ...) {
-    if (...length() > 0L) stop("unused arguments (...)")
+    if (...length() > 0L) {
+        stop("unused arguments (...)")
+    }
     args <- validate_common_args(
         x,
         y,
@@ -191,7 +195,9 @@ finalize <- function(model, ...) UseMethod("finalize")
 
 #' @export
 finalize.StreamingLowess <- function(model, ...) {
-    if (...length() > 0L) stop("unused arguments (...)")
+    if (...length() > 0L) {
+        stop("unused arguments (...)")
+    }
     model$handle$finalize()
 }
 
@@ -212,6 +218,8 @@ add_point <- function(model, ...) UseMethod("add_point")
 #' @rdname add_point
 #' @export
 add_point.OnlineLowess <- function(model, x, y, ...) {
-    if (...length() > 0L) stop("unused arguments (...)")
+    if (...length() > 0L) {
+        stop("unused arguments (...)")
+    }
     model$handle$add_point(as.double(x), as.double(y))
 }

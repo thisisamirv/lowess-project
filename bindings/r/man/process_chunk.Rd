@@ -12,7 +12,7 @@ process_chunk(model, ...)
 \arguments{
 \item{model}{A \code{StreamingLowess} object.}
 
-\item{...}{Not used.}
+\item{...}{Must be empty.}
 
 \item{x}{Numeric vector of x values.}
 

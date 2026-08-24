@@ -12,7 +12,7 @@ fit(model, ...)
 \arguments{
 \item{model}{A \code{Lowess} object.}
 
-\item{...}{Not used.}
+\item{...}{Must be empty.}
 
 \item{x}{Numeric vector of predictor values.}
 

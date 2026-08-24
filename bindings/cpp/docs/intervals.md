@@ -82,6 +82,10 @@ int main() {
 }
 ```
 
+```output
+95% PI: [-0.0401039, 0.708845]
+```
+
 ---
 
 ## Both Intervals
