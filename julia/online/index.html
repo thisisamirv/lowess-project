@@ -6,8 +6,6 @@ rng = MersenneTwister(42)
 x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
 
-using FastLOWESS
-
 model = OnlineLowess(;
     fraction=0.2,
     iterations=1,
@@ -18,6 +16,101 @@ model = OnlineLowess(;
 for i in eachindex(x)
     result = add_point(model, x[i], y[i])
     if result !== nothing
-        println(result.y)
+        println(&quot;Current smoothed value: &quot;, result.y)
     end
-end</code></pre><hr/></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../streaming/">« Streaming Adapter</a><a class="docs-footer-nextpage" href="../intervals/">Intervals »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Sunday 23 August 2026 17:18">Sunday 23 August 2026</span>. Using Julia version 1.12.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Current smoothed value: 0.23103531694201596
+Current smoothed value: 0.4962273769575686
+Current smoothed value: 0.6767458589597115
+Current smoothed value: 0.41363571386216635
+Current smoothed value: 0.31508056492212055
+Current smoothed value: 0.2833197903349513
+Current smoothed value: 0.5294724551049306
+Current smoothed value: 0.3866856463795669
+Current smoothed value: 0.8219493564299336
+Current smoothed value: 0.3401191486774122
+Current smoothed value: 0.8292168395201811
+Current smoothed value: 0.8076238486415503
+Current smoothed value: 0.35610392047307293
+Current smoothed value: 0.7215386371592492
+Current smoothed value: 0.6054398173223087
+Current smoothed value: 0.507842130187607
+Current smoothed value: 1.1739171661534265
+Current smoothed value: 1.3077337045980606
+Current smoothed value: 1.2815109177394322
+Current smoothed value: 1.4597318334078286
+Current smoothed value: 1.4815812524493148
+Current smoothed value: 1.2485820414349944
+Current smoothed value: 0.7947198298071063
+Current smoothed value: 0.6820759556990765
+Current smoothed value: 1.2609595898247115
+Current smoothed value: 1.0656788761623222
+Current smoothed value: 1.0346682667038987
+Current smoothed value: 0.9521775831474029
+Current smoothed value: 0.8574586349631979
+Current smoothed value: 1.1813388075116629
+Current smoothed value: 1.1548787953740058
+Current smoothed value: 1.000997774401839
+Current smoothed value: 0.833073910289404
+Current smoothed value: 0.8228485138095367
+Current smoothed value: 0.649641008160275
+Current smoothed value: 0.6987302355501062
+Current smoothed value: 0.09988739218485598
+Current smoothed value: 0.06774894925912989
+Current smoothed value: 0.058660045048474885
+Current smoothed value: 0.37245773101191504
+Current smoothed value: 0.42888764664038725
+Current smoothed value: 0.5842107449164016
+Current smoothed value: 0.5927024479811656
+Current smoothed value: 0.3658702490521063
+Current smoothed value: 0.3862966761675537
+Current smoothed value: 0.21884043603775805
+Current smoothed value: 0.3324664143642182
+Current smoothed value: 0.05914979355330896
+Current smoothed value: -0.3022710319990294
+Current smoothed value: -0.3460809602591226
+Current smoothed value: -0.21911549358876137
+Current smoothed value: -0.2414401597474427
+Current smoothed value: -0.3387960555857692
+Current smoothed value: -0.38247322785854276
+Current smoothed value: -0.3482301212592702
+Current smoothed value: -0.6081876374007837
+Current smoothed value: -0.6215079211792642
+Current smoothed value: -0.7025468401870638
+Current smoothed value: -0.480119503926712
+Current smoothed value: -0.48263130548795113
+Current smoothed value: -0.3993916625642221
+Current smoothed value: -0.6858576952173296
+Current smoothed value: -0.7136922474260525
+Current smoothed value: -1.1081745131599492
+Current smoothed value: -1.1904962013361757
+Current smoothed value: -1.2786599657680053
+Current smoothed value: -1.0942215019533998
+Current smoothed value: -0.8708082076586867
+Current smoothed value: -0.8586080785431025
+Current smoothed value: -0.7048742007543043
+Current smoothed value: -0.668426936249606
+Current smoothed value: -0.6910057046768587
+Current smoothed value: -0.5896469700740847
+Current smoothed value: -0.6550107102130669
+Current smoothed value: -0.7883530579839176
+Current smoothed value: -0.9251157113320287
+Current smoothed value: -0.8694945562723995
+Current smoothed value: -0.9768724039759833
+Current smoothed value: -1.031000753237643
+Current smoothed value: -1.0724175365913124
+Current smoothed value: -0.9669451564200564
+Current smoothed value: -0.8217022076569285
+Current smoothed value: -0.714106010273613
+Current smoothed value: -0.7684523149843809
+Current smoothed value: -0.60961927264005
+Current smoothed value: -0.707912253751674
+Current smoothed value: -0.7294137014349793
+Current smoothed value: -0.6337444159682981
+Current smoothed value: -0.6477149543474146
+Current smoothed value: -0.5934686951580406
+Current smoothed value: -0.578957243438841
+Current smoothed value: -0.46321358480491215
+Current smoothed value: -0.236736529499181
+Current smoothed value: -0.1798856324669309
+Current smoothed value: -0.041754056350105095
+Current smoothed value: -0.026561095141731883</code></pre><hr/></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../streaming/">« Streaming Adapter</a><a class="docs-footer-nextpage" href="../intervals/">Intervals »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Monday 24 August 2026 11:38">Monday 24 August 2026</span>. Using Julia version 1.12.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

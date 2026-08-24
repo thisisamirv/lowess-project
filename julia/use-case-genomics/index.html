@@ -6,14 +6,6 @@ rng = MersenneTwister(42)
 positions = collect(0.0:10.0:10000.0)
 observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
 
-using FastLOWESS
-using Random
-
-rng = MersenneTwister(42)
-positions = collect(0.0:10.0:10000.0)
-observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
-
-using FastLOWESS
 
 # positions and observed are your methylation data
 model = Lowess(;
@@ -24,21 +16,14 @@ model = Lowess(;
 result = fit(model, positions, observed)
 
 # Smoothed profile in result.y
-# CI bounds in result.confidence_lower/upper</code></pre><hr/><h2 id="ChIP-seq-Signal-Smoothing"><a class="docs-heading-anchor" href="#ChIP-seq-Signal-Smoothing">ChIP-seq Signal Smoothing</a><a id="ChIP-seq-Signal-Smoothing-1"></a><a class="docs-heading-anchor-permalink" href="#ChIP-seq-Signal-Smoothing" title="Permalink"></a></h2><h3 id="Application"><a class="docs-heading-anchor" href="#Application">Application</a><a id="Application-1"></a><a class="docs-heading-anchor-permalink" href="#Application" title="Permalink"></a></h3><p>ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identify binding regions.</p><p><code>fraction = 0.05</code> provides high spatial resolution — important for resolving narrow binding peaks that would otherwise be smeared into the background. The larger <code>iterations = 5</code> is deliberate: Poisson-distributed read counts produce tall, isolated spikes, and extra robustness iterations progressively down-weight them so the estimated background level is not inflated by a handful of extreme counts.</p><pre><code class="language-julia hljs">using FastLOWESS
-using Random
-
-rng = MersenneTwister(42)
-positions = collect(0.0:10.0:10000.0)
-observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
-
-using FastLOWESS
+# CI bounds in result.confidence_lower/upper
+println(&quot;First smoothed ChIP-seq enrichment value: &quot;, result.y[1])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">First smoothed ChIP-seq enrichment value: 58.704448943149764</code></pre><hr/><h2 id="ChIP-seq-Signal-Smoothing"><a class="docs-heading-anchor" href="#ChIP-seq-Signal-Smoothing">ChIP-seq Signal Smoothing</a><a id="ChIP-seq-Signal-Smoothing-1"></a><a class="docs-heading-anchor-permalink" href="#ChIP-seq-Signal-Smoothing" title="Permalink"></a></h2><h3 id="Application"><a class="docs-heading-anchor" href="#Application">Application</a><a id="Application-1"></a><a class="docs-heading-anchor-permalink" href="#Application" title="Permalink"></a></h3><p>ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identify binding regions.</p><p><code>fraction = 0.05</code> provides high spatial resolution — important for resolving narrow binding peaks that would otherwise be smeared into the background. The larger <code>iterations = 5</code> is deliberate: Poisson-distributed read counts produce tall, isolated spikes, and extra robustness iterations progressively down-weight them so the estimated background level is not inflated by a handful of extreme counts.</p><pre><code class="language-julia hljs">using FastLOWESS
 using Random, Statistics
 
 rng = MersenneTwister(42)
 positions = collect(0.0:10.0:10000.0)
 observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
 
-using FastLOWESS
 
 # positions and observed are your ChIP-seq data
 model = Lowess(; fraction=0.05, iterations=5)
@@ -47,14 +32,8 @@ result = fit(model, positions, observed)
 # Find peaks above 75th percentile
 threshold = quantile(result.y, 0.75)
 peak_indices = findall(y -&gt; y &gt; threshold, result.y)
-peak_positions = positions[peak_indices]</code></pre><hr/><h2 id="Large-Genome-Coverage-(Streaming)"><a class="docs-heading-anchor" href="#Large-Genome-Coverage-(Streaming)">Large Genome Coverage (Streaming)</a><a id="Large-Genome-Coverage-(Streaming)-1"></a><a class="docs-heading-anchor-permalink" href="#Large-Genome-Coverage-(Streaming)" title="Permalink"></a></h2><p>For whole-genome data that doesn&#39;t fit in memory:</p><pre><code class="language-julia hljs">using FastLOWESS
-using Random
-
-rng = MersenneTwister(42)
-positions = collect(0.0:10.0:10000.0)
-observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
-
-using FastLOWESS
+peak_positions = positions[peak_indices]
+println(&quot;First 3 detected peak positions: &quot;, peak_positions[1:3])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">First 3 detected peak positions: [0.0, 10.0, 20.0]</code></pre><hr/><h2 id="Large-Genome-Coverage-(Streaming)"><a class="docs-heading-anchor" href="#Large-Genome-Coverage-(Streaming)">Large Genome Coverage (Streaming)</a><a id="Large-Genome-Coverage-(Streaming)-1"></a><a class="docs-heading-anchor-permalink" href="#Large-Genome-Coverage-(Streaming)" title="Permalink"></a></h2><p>For whole-genome data that doesn&#39;t fit in memory:</p><pre><code class="language-julia hljs">using FastLOWESS
 using Random
 
 rng = MersenneTwister(42)
@@ -62,7 +41,6 @@ positions = collect(0.0:10.0:10000.0)
 observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
 coverage = observed
 
-using FastLOWESS
 
 # coverage and positions are chromosome-scale vectors
 model = StreamingLowess(;
@@ -72,4 +50,5 @@ model = StreamingLowess(;
     merge_strategy=&quot;weighted_average&quot;
 )
 process_chunk(model, positions, coverage)
-result = finalize(model)</code></pre><hr/><h2 id="Best-Practices-for-Genomic-Data"><a class="docs-heading-anchor" href="#Best-Practices-for-Genomic-Data">Best Practices for Genomic Data</a><a id="Best-Practices-for-Genomic-Data-1"></a><a class="docs-heading-anchor-permalink" href="#Best-Practices-for-Genomic-Data" title="Permalink"></a></h2><table><tr><th style="text-align: right">Consideration</th><th style="text-align: right">Recommendation</th></tr><tr><td style="text-align: right"><strong>Fraction</strong></td><td style="text-align: right">0.05–0.15 (preserve local features)</td></tr><tr><td style="text-align: right"><strong>Iterations</strong></td><td style="text-align: right">3–5 (handle sequencing outliers)</td></tr><tr><td style="text-align: right"><strong>Large data</strong></td><td style="text-align: right">Use streaming mode</td></tr><tr><td style="text-align: right"><strong>Sparse regions</strong></td><td style="text-align: right">Use <code>boundary_policy=&quot;extend&quot;</code></td></tr><tr><td style="text-align: right"><strong>Multiple chromosomes</strong></td><td style="text-align: right">Process separately or ensure sorted</td></tr></table><hr/><h2 id="See-Also"><a class="docs-heading-anchor" href="#See-Also">See Also</a><a id="See-Also-1"></a><a class="docs-heading-anchor-permalink" href="#See-Also" title="Permalink"></a></h2><ul><li><a href="../concepts/">Concepts</a> — How LOWESS works</li><li><a href="../parameters/">Parameters</a> — All options</li><li><a href="../robustness/">Robustness</a> — Outlier downweighting in depth</li><li><a href="../merge/">Merge Strategies</a> — Streaming chunk reconciliation</li><li><a href="../boundary/">Boundary Handling</a> — Edge handling for sparse regions</li><li><a href="real-time.md">Real-Time Processing</a> — For sequencing runs</li></ul></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../gpu-backend/">« GPU Backend</a><a class="docs-footer-nextpage" href="../use-case-time-series/">Time Series Analysis »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Sunday 23 August 2026 17:18">Sunday 23 August 2026</span>. Using Julia version 1.12.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+result = finalize(model)
+println(&quot;First smoothed value (streaming ChIP-seq): &quot;, result.y[1])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">First smoothed value (streaming ChIP-seq): 59.021203550602564</code></pre><hr/><h2 id="Best-Practices-for-Genomic-Data"><a class="docs-heading-anchor" href="#Best-Practices-for-Genomic-Data">Best Practices for Genomic Data</a><a id="Best-Practices-for-Genomic-Data-1"></a><a class="docs-heading-anchor-permalink" href="#Best-Practices-for-Genomic-Data" title="Permalink"></a></h2><table><tr><th style="text-align: right">Consideration</th><th style="text-align: right">Recommendation</th></tr><tr><td style="text-align: right"><strong>Fraction</strong></td><td style="text-align: right">0.05–0.15 (preserve local features)</td></tr><tr><td style="text-align: right"><strong>Iterations</strong></td><td style="text-align: right">3–5 (handle sequencing outliers)</td></tr><tr><td style="text-align: right"><strong>Large data</strong></td><td style="text-align: right">Use streaming mode</td></tr><tr><td style="text-align: right"><strong>Sparse regions</strong></td><td style="text-align: right">Use <code>boundary_policy=&quot;extend&quot;</code></td></tr><tr><td style="text-align: right"><strong>Multiple chromosomes</strong></td><td style="text-align: right">Process separately or ensure sorted</td></tr></table><hr/><h2 id="See-Also"><a class="docs-heading-anchor" href="#See-Also">See Also</a><a id="See-Also-1"></a><a class="docs-heading-anchor-permalink" href="#See-Also" title="Permalink"></a></h2><ul><li><a href="../concepts/">Concepts</a> — How LOWESS works</li><li><a href="../parameters/">Parameters</a> — All options</li><li><a href="../robustness/">Robustness</a> — Outlier downweighting in depth</li><li><a href="../merge/">Merge Strategies</a> — Streaming chunk reconciliation</li><li><a href="../boundary/">Boundary Handling</a> — Edge handling for sparse regions</li><li><a href="real-time.md">Real-Time Processing</a> — For sequencing runs</li></ul></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../gpu-backend/">« GPU Backend</a><a class="docs-footer-nextpage" href="../use-case-time-series/">Time Series Analysis »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Monday 24 August 2026 11:38">Monday 24 August 2026</span>. Using Julia version 1.12.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
