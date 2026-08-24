@@ -1,21 +1,11 @@
 # LOWESS Project
 
-[![lowess](https://img.shields.io/badge/lowess-000000?logo=rust&logoColor=white)](https://crates.io/crates/lowess)
-[![fastLowess](https://img.shields.io/badge/fastLowess-000000?logo=rust&logoColor=white)](https://crates.io/crates/fastLowess)
-[![PyPI](https://img.shields.io/badge/PyPI-3775A9?logo=pypi&logoColor=white)](https://pypi.org/project/fastlowess/)
 [![R-universe](https://img.shields.io/badge/R--universe-276DC3?logo=r&logoColor=white)](https://thisisamirv.r-universe.dev/rfastlowess)
-[![npm](https://img.shields.io/badge/npm-CB3837?logo=npm&logoColor=white)](https://www.npmjs.com/package/fastlowess)
-[![Julia](https://img.shields.io/badge/Julia-9558B2?logo=julia&logoColor=white)](https://juliahub.com/ui/Packages/General/FastLOWESS)
-[![WASM](https://img.shields.io/badge/WASM-654FF0?logo=webassembly&logoColor=white)](https://www.npmjs.com/package/fastlowess-wasm)
-[![C++](https://img.shields.io/badge/C++-00599C?logo=cplusplus&logoColor=white)](https://github.com/thisisamirv/lowess-project/releases/latest)  
-[![fastlowess
-(Python)](https://img.shields.io/badge/fastlowess_(Python)-44A833?logo=anaconda&logoColor=white)](https://anaconda.org/conda-forge/fastlowess)
-[![libfastlowess
-(C++)](https://img.shields.io/badge/libfastlowess_(C++)-44A833?logo=anaconda&logoColor=white)](https://anaconda.org/conda-forge/libfastlowess)
 [![rfastlowess
-(R)](https://img.shields.io/badge/rfastlowess_(R)-44A833?logo=anaconda&logoColor=white)](https://anaconda.org/conda-forge/r-rfastlowess)  
+(R)](https://img.shields.io/badge/rfastlowess_(R)-44A833?logo=anaconda&logoColor=white)](https://anaconda.org/conda-forge/r-rfastlowess)
 [![Status at rOpenSci Software Peer
 Review](https://badges.ropensci.org/769_status.svg)](https://github.com/ropensci/software-review/issues/769)
+[![CI](https://github.com/thisisamirv/lowess-project/actions/workflows/ci-r.yml/badge.svg)](https://github.com/thisisamirv/lowess-project/actions/workflows/ci-r.yml)
 
 ![One LOWESS to Rule Them
 All](https://raw.githubusercontent.com/thisisamirv/lowess-project/main/dev/logo.png)  
@@ -26,27 +16,9 @@ LOWESS (Locally Weighted Scatterplot Smoothing) implementation for
 **Rust**, **Python**, **R**, **Julia**, **JavaScript**, **C++**, and
 **WebAssembly**.
 
-> \[!IMPORTANT\]
->
-> The `lowess-project` contains a complete ecosystem for LOWESS
-> smoothing:
->
-> - **[`lowess`](https://crates.io/crates/lowess)** - Core
->   single-threaded Rust implementation with `no_std` support
-> - **[`fastLowess`](https://crates.io/crates/fastLowess)** - Parallel
->   CPU and GPU-accelerated Rust wrapper with ndarray integration  
-> - **[`R bindings`](https://thisisamirv.r-universe.dev/rfastlowess)** -
->   extendr-based R binding
-> - **[`Python bindings`](https://pypi.org/project/fastlowess/)** -
->   PyO3-based Python binding
-> - **[`Julia bindings`](https://juliahub.com/ui/Packages/General/FastLOWESS)** -
->   Native Julia binding with C FFI
-> - **[`JavaScript bindings`](https://www.npmjs.com/package/fastlowess)** -
->   Node.js binding
-> - **[`WebAssembly bindings`](https://www.npmjs.com/package/fastlowess-wasm)** -
->   WASM binding
-> - **[`C++ bindings`](https://github.com/thisisamirv/lowess-project/releases/latest)** -
->   Native C++ binding with CMake integration
+The `lowess-project` also offers bindings for Rust, Python, R, Julia,
+Node.js, WebAssembly, and C++ — see the [full
+repository](https://github.com/thisisamirv/lowess-project).
 
 ------------------------------------------------------------------------
 
@@ -56,8 +28,8 @@ LOWESS (Locally Weighted Scatterplot Smoothing) implementation for
 >
 > Currently available for R, Python, Rust, Julia, Node.js, WebAssembly,
 > and C++. See the [Installation
-> Guide](https://thisisamirv.github.io/lowess-project/r/) for detailed
-> installation instructions.
+> Guide](https://thisisamirv.github.io/lowess-project/r/getting-started/installation/)
+> for detailed installation instructions.
 
 ### GPU Backend
 
@@ -68,8 +40,8 @@ class in every binding — except WebAssembly — as well as the
 processing of large datasets (roughly 10k+ points); for smaller inputs
 the CPU backend is typically faster. `StreamingLowess`/`OnlineLowess`
 remain CPU-only. See the [GPU Backend
-guide](https://thisisamirv.github.io/lowess-project/r/) for installation
-instructions and usage.
+guide](https://thisisamirv.github.io/lowess-project/r/user-guide/gpu-backend/)
+for installation instructions and usage.
 
 ## Documentation
 
@@ -103,7 +75,8 @@ single-threaded or multi-threaded parallel execution. It is on average
 faster** than R’s `lowess`.
 
 For more details on the performance comparison, see the
-[Benchmarks](https://thisisamirv.github.io/lowess-project/r/) page.
+[Benchmarks](https://thisisamirv.github.io/lowess-project/r/benchmarks/)
+page.
 
 ### Robustness
 
@@ -183,8 +156,6 @@ All implementations are **numerical twins** of R’s `lowess`:
 
 ## API Reference
 
-**R:**
-
 ``` r
 library(rfastlowess)
 
@@ -227,285 +198,6 @@ result$diagnostics,
 result$iterations_used,
 result$fraction_used,
 result$cv_scores
-```
-
-**Python:**
-
-``` python
-from fastlowess import Lowess
-
-model = Lowess(
-    fraction=0.5,
-    iterations=3,
-    delta=0.01,
-    weight_function="tricube",
-    robustness_method="bisquare",
-    scaling_method="mad",
-    zero_weight_fallback="use_local_mean",
-    boundary_policy="extend",
-    confidence_intervals=0.95,
-    prediction_intervals=0.95,
-    return_diagnostics=True,
-    return_residuals=True,
-    return_robustness_weights=True,
-    return_se=True,
-    cv_fractions=[0.3, 0.5, 0.7],
-    cv_method="kfold",
-    cv_k=5,
-    cv_seed=123,
-    auto_converge=1e-4,
-    parallel=True
-)
-custom_weights = [1.0] * len(x)
-result = model.fit(x, y, custom_weights=custom_weights)
-
-# Result structure:
-result.x,
-result.y,
-result.standard_errors,
-result.confidence_lower,
-result.confidence_upper,
-result.prediction_lower,
-result.prediction_upper,
-result.residuals,
-result.robustness_weights,
-result.diagnostics,
-result.iterations_used,
-result.fraction_used,
-result.cv_scores
-```
-
-**Rust:**
-
-``` rust
-use lowess::prelude::*;
-
-let model = Lowess::new()
-    .fraction(0.5)
-    .iterations(3)
-    .delta(0.01)
-    .weight_function("tricube")
-    .robustness_method("bisquare")
-    .scaling_method("mad")
-    .zero_weight_fallback("use_local_mean")
-    .boundary_policy("extend")
-    .return_se()
-    .confidence_intervals(0.95)
-    .prediction_intervals(0.95)
-    .return_diagnostics()
-    .return_residuals()
-    .return_robustness_weights()
-    .cv_method("kfold")
-    .cv_k(5)
-    .cv_fractions(vec![0.3, 0.5, 0.7])
-    .cv_seed(123)
-    .auto_converge(1e-4)
-    .custom_weights(vec![1.0; x.len()])
-    .build()?;
-
-let result = model.fit(&x, &y)?;
-
-// Result structure:
-pub struct LowessResult<T> {
-    pub x: Vec<T>,                           // Sorted x values
-    pub y: Vec<T>,                           // Smoothed y values
-    pub standard_errors: Option<Vec<T>>,
-    pub confidence_lower: Option<Vec<T>>,
-    pub confidence_upper: Option<Vec<T>>,
-    pub prediction_lower: Option<Vec<T>>,
-    pub prediction_upper: Option<Vec<T>>,
-    pub residuals: Option<Vec<T>>,
-    pub robustness_weights: Option<Vec<T>>,
-    pub diagnostics: Option<Diagnostics<T>>,
-    pub iterations_used: Option<usize>,
-    pub fraction_used: T,
-    pub cv_scores: Option<Vec<T>>,
-}
-```
-
-**Julia:**
-
-``` julia
-using FastLOWESS
-
-model = Lowess(;
-    fraction=0.5,
-    iterations=3,
-    delta=NaN,  # NaN for auto
-    weight_function="tricube",
-    robustness_method="bisquare",
-    scaling_method="mad",
-    zero_weight_fallback="use_local_mean",
-    boundary_policy="extend",
-    confidence_intervals=NaN,
-    prediction_intervals=NaN,
-    return_diagnostics=true,
-    return_residuals=true,
-    return_robustness_weights=true,
-    return_se=true,
-    cv_fractions=Float64[], # e.g. [0.3, 0.5]
-    cv_method="kfold",
-    cv_k=5,
-    cv_seed=123,
-    auto_converge=NaN,
-    parallel=true
-)
-custom_weights = ones(length(x))
-result = fit(model, x, y; custom_weights=custom_weights)
-
-# Result structure:
-result.x,
-result.y,
-result.standard_errors,
-result.confidence_lower,
-result.confidence_upper,
-result.prediction_lower,
-result.prediction_upper,
-result.residuals,
-result.robustness_weights,
-result.diagnostics,
-result.iterations_used,
-result.fraction_used,
-result.cv_scores
-```
-
-**Node.js:**
-
-``` javascript
-import { Lowess } from "fastlowess"
-
-const model = new Lowess({
-    fraction: 0.5,
-    iterations: 3,
-    delta: 0.01,
-    weight_function: "tricube",
-    robustness_method: "bisquare",
-    scaling_method: "mad",
-    zero_weight_fallback: "use_local_mean",
-    boundary_policy: "extend",
-    return_se: true,
-    confidence_intervals: 0.95,
-    prediction_intervals: 0.95,
-    return_diagnostics: true,
-    return_residuals: true,
-    return_robustness_weights: true,
-    cv_fractions: [0.3, 0.5, 0.7],
-    cv_method: "kfold",
-    cv_k: 5,
-    cv_seed: 123,
-    auto_converge: 1e-4,
-    parallel: true
-})
-const custom_weights = Array(x.length).fill(1.0)
-const result = model.fit(x, y, custom_weights)
-
-// Result structure:
-result.x,
-result.y,
-result.standard_errors,
-result.confidence_lower,
-result.confidence_upper,
-result.prediction_lower,
-result.prediction_upper,
-result.residuals,
-result.robustness_weights,
-result.diagnostics,
-result.iterations_used,
-result.fraction_used,
-result.cv_scores
-```
-
-**WebAssembly:**
-
-``` javascript
-import { Lowess } from "fastlowess-wasm"
-
-const model = new Lowess({
-    fraction: 0.5,
-    iterations: 3,
-    delta: 0.01,
-    weight_function: "tricube",
-    robustness_method: "bisquare",
-    scaling_method: "mad",
-    zero_weight_fallback: "use_local_mean",
-    boundary_policy: "extend",
-    return_se: true,
-    confidence_intervals: 0.95,
-    prediction_intervals: 0.95,
-    return_diagnostics: true,
-    return_residuals: true,
-    return_robustness_weights: true,
-    cv_fractions: [0.3, 0.5, 0.7],
-    cv_method: "kfold",
-    cv_k: 5,
-    cv_seed: 123,
-    auto_converge: 1e-4,
-    parallel: true
-})
-const custom_weights = new Float64Array(x.length).fill(1)
-const result = model.fit(x, y, custom_weights)
-
-// Result structure:
-result.x,
-result.y,
-result.standard_errors,
-result.confidence_lower,
-result.confidence_upper,
-result.prediction_lower,
-result.prediction_upper,
-result.residuals,
-result.robustness_weights,
-result.diagnostics,
-result.iterations_used,
-result.fraction_used,
-result.cv_scores
-```
-
-**C++:**
-
-``` cpp
-#include "fastlowess.hpp"
-
-fastlowess::LowessOptions options;
-options.fraction = 0.5;
-options.iterations = 3;
-options.delta = 0.01;
-options.weight_function = "tricube";
-options.robustness_method = "bisquare";
-options.scaling_method = "mad";
-options.zero_weight_fallback = "use_local_mean";
-options.boundary_policy = "extend";
-options.confidence_intervals = 0.95;
-options.prediction_intervals = 0.95;
-options.return_diagnostics = true;
-options.return_residuals = true;
-options.return_robustness_weights = true;
-options.return_se = true;
-options.cv_fractions = {0.3, 0.5, 0.7};
-options.cv_method = "kfold";
-options.cv_k = 5;
-options.cv_seed = 123;
-options.auto_converge = 1e-4;
-options.parallel = true;
-
-fastlowess::Lowess model(options);
-std::vector<double> custom_weights(x.size(), 1.0);
-const auto result = model.fit(x, y, custom_weights).value();
-
-// Result structure:
-result.x_vector(),
-result.y_vector(),
-result.standard_errors(),
-result.confidence_lower(),
-result.confidence_upper(),
-result.prediction_lower(),
-result.prediction_upper(),
-result.residuals(),
-result.robustness_weights(),
-result.diagnostics(),
-result.iterations_used(),
-result.fraction_used(),
-result.cv_scores()
 ```
 
 ------------------------------------------------------------------------

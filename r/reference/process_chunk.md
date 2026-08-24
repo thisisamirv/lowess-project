@@ -19,7 +19,7 @@ process_chunk(model, x, y, ...)
 
 - ...:
 
-  Not used.
+  Must be empty.
 
 - x:
 

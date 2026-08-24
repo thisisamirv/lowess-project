@@ -63,7 +63,7 @@ result <- fit(model, t, y)
 # Residual = observed - trend (should show seasonality)
 residual <- y - result$y
 
-par(mfrow = c(2, 1))
+par(mfrow = c(2, 1), mar = c(4, 4, 2, 0.5))
 plot(t, y, type = "l", col = "gray",
     main = "Original + LOWESS Trend", xlab = "Month", ylab = "Value")
 lines(result$x, result$y, col = "blue", lwd = 2)

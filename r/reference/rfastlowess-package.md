@@ -14,16 +14,13 @@ implementation built on the Rust `fastLowess` crate.
 - [`OnlineLowess`](https://thisisamirv.github.io/lowess-project/r/reference/OnlineLowess.md):
   Sliding window for real-time data
 
-## Documentation
-
-For comprehensive documentation, tutorials, and API reference, see:
-<https://lowess.readthedocs.io/>
-
 ## See also
 
 Useful links:
 
 - <https://github.com/thisisamirv/lowess-project>
+
+- <https://thisisamirv.github.io/lowess-project/r/>
 
 - Report bugs at <https://github.com/thisisamirv/lowess-project/issues>
 

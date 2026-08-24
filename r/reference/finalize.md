@@ -16,7 +16,7 @@ finalize(model, ...)
 
 - ...:
 
-  Not used.
+  Must be empty.
 
 ## Value
 

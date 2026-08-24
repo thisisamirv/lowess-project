@@ -19,7 +19,7 @@ add_point(model, x, y, ...)
 
 - ...:
 
-  Not used.
+  Must be empty.
 
 - x:
 

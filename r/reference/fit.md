@@ -19,7 +19,7 @@ fit(model, x, y, custom_weights = NULL, ...)
 
 - ...:
 
-  Not used.
+  Must be empty.
 
 - x:
 
