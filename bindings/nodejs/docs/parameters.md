@@ -72,6 +72,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Lowess({fraction: 0.3});
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.0278
 ```
 
 ---
@@ -96,6 +101,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Lowess({iterations: 5});
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1661
 ```
 
 ---
@@ -116,6 +126,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Lowess({delta: 0.05});
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1662
 ```
 
 ---
@@ -145,6 +160,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Lowess({weight_function: "epanechnikov"});
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1905
 ```
 
 ---
@@ -170,6 +190,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Lowess({robustness_method: "talwar"});
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1410
 ```
 
 ---
@@ -198,6 +223,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Lowess({boundary_policy: "reflect"});
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.5823
 ```
 
 ---
@@ -225,6 +255,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Lowess({scaling_method: "mad"});
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1662
 ```
 
 ---
@@ -252,6 +287,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Lowess({zero_weight_fallback: "use_local_mean"});
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1662
 ```
 
 ---
@@ -269,6 +309,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Lowess({iterations: 20, auto_converge: 1e-6});
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1661
 ```
 
 ---
@@ -295,6 +340,11 @@ weights[5] = 0.0; // exclude index 5
 
 const model = new fastlowess.Lowess({fraction: 0.5});
 const result = model.fit(x, y, weights);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1245
 ```
 
 ---
@@ -314,7 +364,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Lowess({return_residuals: true});
 const result = model.fit(x, y);
-console.log(result.residuals);
+console.log("First 5 residuals:", [...result.residuals.slice(0, 5)].map(v => v.toFixed(4)));
+```
+
+```output
+First 5 residuals: [ '-0.3603', '-0.0766', '-0.3936', '-0.1115', '0.1696' ]
 ```
 
 ---
@@ -345,6 +399,10 @@ const result = model.fit(x, y);
 console.log("R²:", result.diagnostics.r_squared);
 ```
 
+```output
+R²: 0.846593484038835
+```
+
 ---
 
 ### return_robustness_weights
@@ -361,6 +419,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 const model = new Lowess({iterations: 3, return_robustness_weights: true});
 const result = model.fit(x, y);
 // result.robustness_weights contains outlier weights
+console.log("Robustness weights (first 3):", [...result.robustness_weights.slice(0, 3)].map(w => w.toFixed(4)));
+```
+
+```output
+Robustness weights (first 3): [ '0.7712', '0.9889', '0.7304' ]
 ```
 
 ---
@@ -378,7 +441,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Lowess({return_se: true});
 const result = model.fit(x, y);
-console.log(result.standard_errors);
+console.log("First 5 SEs:", [...result.standard_errors.slice(0, 5)].map(v => v.toFixed(4)));
+```
+
+```output
+First 5 SEs: [ '0.0339', '0.0392', '0.0345', '0.0407', '0.0410' ]
 ```
 
 ---
@@ -398,6 +465,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Lowess({confidence_intervals: 0.95, prediction_intervals: 0.95});
 const result = model.fit(x, y);
+console.log("95% CI: [" + result.confidence_lower[0].toFixed(4) + ", " + result.confidence_upper[0].toFixed(4) + "]");
+```
+
+```output
+95% CI: [0.0998, 0.2326]
 ```
 
 ---
@@ -422,6 +494,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Lowess({ cv_method: "kfold", cv_k: 5 });
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1662
 ```
 
 ---
@@ -440,6 +517,13 @@ const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
 const processor = new StreamingLowess({}, { chunk_size: 10000 });
+processor.process_chunk(x, y);
+const finalResult = processor.finalize();
+console.log("Smoothed", finalResult.y.length, "points");
+```
+
+```output
+Smoothed 100 points
 ```
 
 ---
@@ -456,6 +540,13 @@ const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
 const processor = new StreamingLowess({}, { overlap: 1000 });
+processor.process_chunk(x, y);
+const finalResult = processor.finalize();
+console.log("Smoothed", finalResult.y.length, "points");
+```
+
+```output
+Smoothed 100 points
 ```
 
 ---
@@ -481,6 +572,13 @@ const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
 const processor = new StreamingLowess({}, { merge_strategy: "weighted_average" });
+processor.process_chunk(x, y);
+const finalResult = processor.finalize();
+console.log("Smoothed", finalResult.y.length, "points");
+```
+
+```output
+Smoothed 100 points
 ```
 
 ---
@@ -497,6 +595,14 @@ const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
 const processor = new OnlineLowess({}, { window_capacity: 500 });
+for (let i = 0; i < n; i++) {
+    const r = processor.add_point(x[i], y[i]);
+    if (r !== null) { console.log("Online y:", r.y.toFixed(4)); break; }
+}
+```
+
+```output
+Online y: 0.1164
 ```
 
 ---
@@ -513,6 +619,14 @@ const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
 const processor = new OnlineLowess({}, { min_points: 10 });
+for (let i = 0; i < n; i++) {
+    const r = processor.add_point(x[i], y[i]);
+    if (r !== null) { console.log("Online y:", r.y.toFixed(4)); break; }
+}
+```
+
+```output
+Online y: 0.6437
 ```
 
 ---
@@ -536,4 +650,12 @@ const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
 const processor = new OnlineLowess({}, { update_mode: "full" });
+for (let i = 0; i < n; i++) {
+    const r = processor.add_point(x[i], y[i]);
+    if (r !== null) { console.log("Online y:", r.y.toFixed(4)); break; }
+}
+```
+
+```output
+Online y: 0.1164
 ```

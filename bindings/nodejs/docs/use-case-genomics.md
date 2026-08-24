@@ -26,7 +26,7 @@ const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i*7+3)%17)/17-0.5)*0.6);
 const positions = Float64Array.from({ length: 1000 }, (_, i) => i * 10.0);
-const observed = Float64Array.from(positions, p => 50 + Math.sin(p/100)*20 + Math.random()*5);
+const observed = Float64Array.from(positions, (p, i) => 50 + Math.sin(p/100)*20 + ((i*7+3)%17)/17*5);
 
 // positions and observed are your methylation data (Float64Array)
 const model = new fl.Lowess({
@@ -38,6 +38,11 @@ const result = model.fit(positions, observed);
 
 // Smoothed profile in result.y
 // CI bounds in result.confidence_lower/upper
+console.log("95% CI: [" + result.confidence_lower[0].toFixed(4) + ", " + result.confidence_upper[0].toFixed(4) + "]");
+```
+
+```output
+95% CI: [54.5520, 58.9813]
 ```
 
 ---
@@ -57,7 +62,7 @@ const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i*7+3)%17)/17-0.5)*0.6);
 const positions = Float64Array.from({ length: 1000 }, (_, i) => i * 10.0);
-const observed = Float64Array.from(positions, p => 50 + Math.sin(p/100)*20 + Math.random()*5);
+const observed = Float64Array.from(positions, (p, i) => 50 + Math.sin(p/100)*20 + ((i*7+3)%17)/17*5);
 
 const model = new fl.Lowess({
     fraction: 0.05,
@@ -69,6 +74,11 @@ const result = model.fit(positions, observed);
 const smoothed = result.y;
 const threshold = 50.0; // Example threshold
 const peaks = positions.filter((p, i) => smoothed[i] > threshold);
+console.log("Peak count:", peaks.length, " smoothed[0]:", result.y[0].toFixed(2));
+```
+
+```output
+Peak count: 570  smoothed[0]: 58.00
 ```
 
 ---
@@ -98,6 +108,11 @@ for (const chunk of genomicData) {
     processor.process_chunk(chunk.positions, chunk.coverage);
 }
 const result = processor.finalize();
+console.log("Smoothed", result.y.length, "points via streaming");
+```
+
+```output
+Smoothed 1000 points via streaming
 ```
 
 ---

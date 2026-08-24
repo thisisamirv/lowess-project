@@ -68,6 +68,11 @@ weights[5] = 0.0; // exclude the spike
 
 const model = new fastlowess.Lowess({fraction: 0.5, iterations: 0});
 const result = model.fit(x, y, weights);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.5726
 ```
 
 ---
@@ -82,15 +87,19 @@ const fastlowess = require('fastlowess');
 
 const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-const y = Float64Array.from(x, xi => Math.sin(xi) + (Math.random() - 0.5) * 0.6);
+const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i*7+3)%17)/17-0.5)*0.6);
 const calibrationIndices = [5, 20, 40, 60, 80];
-const sigma = Float64Array.from({ length: n }, () => 0.1 + Math.random() * 0.4);
 
 const weights = new Float64Array(x.length).fill(1.0);
 for (const i of calibrationIndices) weights[i] = 10.0;
 
 const model = new fastlowess.Lowess({fraction: 0.5});
 const result = model.fit(x, y, weights);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.0865
 ```
 
 ---
@@ -106,13 +115,17 @@ const fastlowess = require('fastlowess');
 
 const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-const y = Float64Array.from(x, xi => Math.sin(xi) + (Math.random() - 0.5) * 0.6);
-const calibrationIndices = [5, 20, 40, 60, 80];
-const sigma = Float64Array.from({ length: n }, () => 0.1 + Math.random() * 0.4);
+const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i*7+3)%17)/17-0.5)*0.6);
+const sigma = Float64Array.from({ length: n }, (_, i) => 0.1 + ((i*7+3)%17)/17*0.4);
 
 const weights = Float64Array.from(sigma, s => 1.0 / (s * s));
 const model = new fastlowess.Lowess({fraction: 0.5});
 const result = model.fit(x, y, weights);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: -0.1265
 ```
 
 ---
@@ -135,6 +148,11 @@ weights[3] = 0.0;
 
 const model = new fastlowess.Lowess({fraction: 0.4, iterations: 3});
 const result = model.fit(x, y, weights);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 1.7984
 ```
 
 ---

@@ -69,6 +69,7 @@ dev:
 	@cd $(NODE_DIR) && $(NPM) test
 	@echo "=============================================================================="
 	@echo "Doc snippet tests (nodejs)..."
+	@$(NODE) dev/add-nodejs-outputs.js $(NODE_DIR)
 	@$(PYTHON) dev/verify_snippets.py --lang nodejs --timeout 120
 	@echo "$(NODE_PKG) checks completed successfully!"
 

@@ -107,7 +107,7 @@ jobs:
   nodejs:
     needs: filter
     if: needs.filter.outputs.nodejs == 'true' || github.event_name == 'workflow_dispatch'
-    name: Node.js — TypeDoc
+    name: Node.js — VitePress
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -123,11 +123,13 @@ jobs:
       - name: Build docs
         run: npm run docs
         working-directory: bindings/nodejs
+        env:
+          VITE_BASE: /${{ github.event.repository.name }}/nodejs/
 
       - uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: gh-pages
-          folder: bindings/nodejs/typedoc-out
+          folder: bindings/nodejs/docs/.vitepress/dist
           target-folder: nodejs
           clean: false
 
@@ -174,7 +176,7 @@ jobs:
   wasm:
     needs: filter
     if: needs.filter.outputs.wasm == 'true' || github.event_name == 'workflow_dispatch'
-    name: WebAssembly — TypeDoc
+    name: WebAssembly — VitePress
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -207,10 +209,12 @@ jobs:
       - name: Build docs
         run: npm run docs
         working-directory: bindings/wasm
+        env:
+          VITE_BASE: /${{ github.event.repository.name }}/wasm/
 
       - uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: gh-pages
-          folder: bindings/wasm/typedoc-out
+          folder: bindings/wasm/docs/.vitepress/dist
           target-folder: wasm
           clean: false

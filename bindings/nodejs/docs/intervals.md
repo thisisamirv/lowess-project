@@ -31,9 +31,17 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i*7+3)%17)/17-0.5)*0
 const model = new fl.Lowess({fraction: 0.5, confidence_intervals: 0.95});
 const result = model.fit(x, y);
 
-result.y.forEach((y, i) => {
-    console.log(`x=${result.x[i]}: y=${y} [${result.confidence_lower[i]}, ${result.confidence_upper[i]}]`);
+result.y.slice(0, 5).forEach((y, i) => {
+    console.log(`x=${result.x[i].toFixed(4)}: y=${y.toFixed(4)} [${result.confidence_lower[i].toFixed(4)}, ${result.confidence_upper[i].toFixed(4)}]`);
 });
+```
+
+```output
+x=0.0000: y=0.1181 [0.0551, 0.1812]
+x=0.0635: y=0.1502 [0.0762, 0.2243]
+x=0.1269: y=0.1833 [0.1205, 0.2461]
+x=0.1904: y=0.2172 [0.1405, 0.2938]
+x=0.2539: y=0.2518 [0.1770, 0.3266]
 ```
 
 ---
@@ -54,6 +62,10 @@ const result = model.fit(x, y);
 console.log(`Prediction bounds: [${result.prediction_lower[0]}, ${result.prediction_upper[0]}]`);
 ```
 
+```output
+Prediction bounds: [-0.35046106311855035, 0.5866944919326049]
+```
+
 ---
 
 ## Both Intervals
@@ -71,6 +83,11 @@ const model = new fl.Lowess({fraction: 0.5,
     confidence_intervals: 0.95,
     prediction_intervals: 0.95});
 const result = model.fit(x, y);
+console.log("95% CI: [" + result.confidence_lower[0].toFixed(4) + ", " + result.confidence_upper[0].toFixed(4) + "]");
+```
+
+```output
+95% CI: [0.0551, 0.1812]
 ```
 
 ---
@@ -95,6 +112,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i*7+3)%17)/17-0.5)*0
 // 99% confidence interval
 const model = new fl.Lowess({confidence_intervals: 0.99});
 const result = model.fit(x, y);
+console.log("99% CI: [" + result.confidence_lower[0].toFixed(4) + ", " + result.confidence_upper[0].toFixed(4) + "]");
+```
+
+```output
+99% CI: [0.0789, 0.2534]
 ```
 
 ---
@@ -113,9 +135,17 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i*7+3)%17)/17-0.5)*0
 const model = new fl.Lowess({confidence_intervals: 0.95});
 const result = model.fit(x, y);
 
-result.standard_errors.forEach((se, i) => {
+result.standard_errors.slice(0, 5).forEach((se, i) => {
     console.log(`Point ${i}: SE = ${se.toFixed(4)}`);
 });
+```
+
+```output
+Point 0: SE = 0.0339
+Point 1: SE = 0.0392
+Point 2: SE = 0.0345
+Point 3: SE = 0.0407
+Point 4: SE = 0.0410
 ```
 
 ---

@@ -32,3 +32,7 @@ const model = new fl.Lowess({});
 const result = model.fit(x, y);
 console.log("Installed successfully!");
 ```
+
+```output
+Installed successfully!
+```

@@ -14,6 +14,16 @@ The `OnlineLowess` class updates the model incrementally with new data points.
 const { OnlineLowess } = require('fastlowess');
 
 const online = new OnlineLowess({ fraction: 0.5 }, { window_capacity: 50, min_points: 3 });
+// Feed enough points to pass min_points threshold
+for (let i = 0; i < 4; i++) {
+    const result = online.add_point(i, Math.sin(i * 0.5));
+    if (result !== null) console.log("Online smoothed at x=" + i + ":", result.y.toFixed(4));
+}
+```
+
+```output
+Online smoothed at x=2: 0.8415
+Online smoothed at x=3: 0.9975
 ```
 
 * `options`: An object containing `LowessOptions` fields.
@@ -37,6 +47,10 @@ online.add_point(x[1], y[1]);  // null
 // Returns OnlineOutput once enough points are available
 const result = online.add_point(x[2], y[2]);
 console.log(result.y);  // 0.22659245357374927
+```
+
+```output
+0.22659245357374927
 ```
 
 * Adds a single point to the sliding window and returns an `OnlineOutput` once enough points are available, or `null` while the window is still filling.

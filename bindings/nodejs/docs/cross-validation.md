@@ -33,6 +33,16 @@ console.log("Selected fraction:", result.fraction_used);
 console.log("CV scores:", result.cv_scores);
 ```
 
+```output
+Selected fraction: 0.3
+CV scores: Float64Array(4) [
+  0.3427592692457587,
+  0.3338935018825202,
+  0.4101138947556259,
+  0.4850593635927054
+]
+```
+
 ---
 
 ## Leave-One-Out (LOOCV)
@@ -51,6 +61,11 @@ const model = new Lowess({
     cv_fractions: [0.2, 0.3, 0.5, 0.7]
 });
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: -0.0283
 ```
 
 ---
@@ -73,6 +88,11 @@ const model = new fl.Lowess({
     cv_seed: 42
 });
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1751
 ```
 
 ---
@@ -124,6 +144,11 @@ const result = model.fit(x, y);
 // 0.3       | 0.0231  ← Best
 // 0.5       | 0.0298
 // 0.7       | 0.0412  ← Oversmoothed
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.0278
 ```
 
 The fraction with **lowest CV score** is automatically selected.

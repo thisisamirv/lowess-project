@@ -14,6 +14,15 @@ The `StreamingLowess` class processes data in chunks, suitable for very large da
 const { StreamingLowess } = require('fastlowess');
 
 const stream = new StreamingLowess({ fraction: 0.5 }, { chunk_size: 50, overlap: 10 });
+const x = Float64Array.from({ length: 10 }, (_, i) => i);
+const y = Float64Array.from({ length: 10 }, (_, i) => i * 0.5);
+stream.process_chunk(x, y);
+const result = stream.finalize();
+console.log("Smoothed", result.y.length, "points via streaming");
+```
+
+```output
+Smoothed 10 points via streaming
 ```
 
 * `options`: An object containing `LowessOptions` fields.
@@ -33,6 +42,10 @@ const partialResult = stream.process_chunk(x.slice(0, 50), y.slice(0, 50));
 console.log(partialResult.fraction_used);  // 0.5
 ```
 
+```output
+0.5
+```
+
 * Processes a chunk of data. Returns partial results.
 
 ```javascript
@@ -47,6 +60,10 @@ stream.process_chunk(x.slice(0, 50), y.slice(0, 50));
 stream.process_chunk(x.slice(50), y.slice(50));
 const finalResult = stream.finalize();
 console.log(finalResult.fraction_used);  // 0.5
+```
+
+```output
+0.5
 ```
 
 * Finalizes the smoothing process and returns any remaining buffered results.

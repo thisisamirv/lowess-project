@@ -28,13 +28,20 @@ const processor = new OnlineLowess(
 // Simulate real-time data arrival
 for (let i = 0; i < 100; i++) {
     const x = i;
-    const y = 20 + 5 * Math.sin(x / 10) + Math.random();
+    const y = 20 + 5 * Math.sin(x / 10) + ((i * 7 + 3) % 17) / 17;
     
     const res = processor.add_point(x, y);
-    if (res !== null) {
+    if (res !== null && x % 20 === 0) {
         console.log(`Time ${x}: smoothed = ${res.y.toFixed(2)}`);
     }
 }
+```
+
+```output
+Time 20: smoothed = 24.84
+Time 40: smoothed = 16.76
+Time 60: smoothed = 19.19
+Time 80: smoothed = 25.38
 ```
 
 ---
@@ -69,6 +76,11 @@ const r2 = processor.process_chunk(chunk2_x, chunk2_y);
 
 // Always get buffered data
 const finalResult = processor.finalize();
+console.log("Smoothed", finalResult.y.length, "points via streaming");
+```
+
+```output
+Smoothed 100 points via streaming
 ```
 
 ---
@@ -86,10 +98,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i*7+3)%17)/17-0.5)*0
 
 const window_capacity = 50;
 let dataX = [], dataY = [];
+let lastSmoothed = 0;
 
 for (let i = 0; i < 200; i++) {
     dataX.push(i);
-    dataY.push(25.0 + 10 * Math.sin(i / 20) + Math.random() * 4 - 2);
+    dataY.push(25.0 + 10 * Math.sin(i / 20) + ((i*7+3)%17)/17*4 - 2);
 
     if (dataX.length > window_capacity) {
         dataX.shift();
@@ -101,9 +114,14 @@ for (let i = 0; i < 200; i++) {
         const yArr = new Float64Array(dataY);
         const model = new fl.Lowess({ fraction: 0.4 });
         const result = model.fit(xArr, yArr);
-        const currentSmoothed = result.y[result.y.length - 1];
+        lastSmoothed = result.y[result.y.length - 1];
     }
 }
+console.log("Last smoothed value (sliding window):", lastSmoothed.toFixed(4));
+```
+
+```output
+Last smoothed value (sliding window): 19.9064
 ```
 
 ---

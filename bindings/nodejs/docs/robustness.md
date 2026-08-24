@@ -38,6 +38,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Lowess({ iterations: 3, robustness_method: "bisquare" });
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1662
 ```
 
 ---
@@ -59,6 +64,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Lowess({ iterations: 3, robustness_method: "huber" });
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1635
 ```
 
 ---
@@ -80,6 +90,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Lowess({ iterations: 3, robustness_method: "talwar" });
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1410
 ```
 
 ---
@@ -115,6 +130,13 @@ result.robustness_weights.forEach((w, i) => {
 });
 ```
 
+```output
+Potential outlier at index 26: weight = 0.484
+Potential outlier at index 31: weight = 0.470
+Potential outlier at index 70: weight = 0.447
+Potential outlier at index 75: weight = 0.483
+```
+
 ---
 
 ## Scale Estimation
@@ -138,6 +160,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Lowess({ iterations: 3, scaling_method: "mad" });
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1662
 ```
 
 ---
@@ -158,4 +185,9 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Lowess({ iterations: 10, auto_converge: 1e-6 });
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1661
 ```

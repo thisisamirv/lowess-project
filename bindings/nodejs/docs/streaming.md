@@ -52,6 +52,11 @@ for (const {x, y} of dataChunks) {
 }
 
 const finalResult = processor.finalize();
+console.log("Smoothed", finalResult.y.length, "points via streaming");
+```
+
+```output
+Smoothed 100 points via streaming
 ```
 
 ---

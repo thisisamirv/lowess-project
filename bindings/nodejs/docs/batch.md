@@ -27,6 +27,11 @@ const model = new fastlowess.Lowess({
     return_diagnostics: true
 });
 const result = model.fit(x, y);
+console.log("R\u00b2:", result.diagnostics.r_squared.toFixed(4));
+```
+
+```output
+R²: 0.9022
 ```
 
 ---

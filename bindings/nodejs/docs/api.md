@@ -16,6 +16,15 @@ The `Lowess` class allows configuring the LOWESS parameters once and fitting mul
 const { Lowess } = require('fastlowess');
 
 const model = new Lowess({ fraction: 0.5, iterations: 3 });
+const result = model.fit(
+    new Float64Array([0, 1, 2, 3, 4, 5]),
+    new Float64Array([0.0, 1.1, 1.9, 3.1, 3.9, 5.0])
+);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.0000
 ```
 
 * `options`: An object containing `LowessOptions` fields.
@@ -32,6 +41,10 @@ const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 const model = new Lowess({ fraction: 0.5 });
 const result = model.fit(x, y);
 console.log(result.fraction_used);  // 0.5
+```
+
+```output
+0.5
 ```
 
 * Fits the model to the provided `x` and `y` typed arrays.
@@ -269,4 +282,8 @@ const model = new Lowess({ fraction: 0.5 });
 const result = model.fit(x, y);
 
 console.log("Smoothed Y:", result.y);
+```
+
+```output
+Smoothed Y: Float64Array(5) [ 2.1, 4, 6.2, 8, 10.1 ]
 ```

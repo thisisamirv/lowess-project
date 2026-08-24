@@ -18,7 +18,7 @@ const fl = require('fastlowess');
 
 const n = 500;
 const t = Float64Array.from({ length: n }, (_, i) => i * 100 / (n - 1));
-const y = Float64Array.from(t, ti => 10 + 0.5 * ti + 3 * Math.sin(ti / 10) + (Math.random()-0.5)*6);
+const y = Float64Array.from(t, (ti, i) => 10 + 0.5 * ti + 3 * Math.sin(ti / 10) + (((i*7+3)%17)/17-0.5)*6);
 
 // t and y are your time series arrays (Float64Array)
 const model = new fl.Lowess({ 
@@ -27,7 +27,11 @@ const model = new fl.Lowess({
 });
 const result = model.fit(t, y);
 
-console.log("Extracted trend:", result.y);
+console.log("Extracted trend (first 5):", [...result.y.slice(0, 5)].map(v => v.toFixed(4)));
+```
+
+```output
+Extracted trend (first 5): [ '9.5077', '9.6531', '9.7984', '9.9438', '10.1072' ]
 ```
 
 ---
@@ -43,7 +47,7 @@ const fl = require('fastlowess');
 
 const n = 500;
 const t = Float64Array.from({ length: n }, (_, i) => i * 100 / (n - 1));
-const y = Float64Array.from(t, ti => 10 + 0.5 * ti + 3 * Math.sin(ti / 10) + (Math.random()-0.5)*6);
+const y = Float64Array.from(t, (ti, i) => 10 + 0.5 * ti + 3 * Math.sin(ti / 10) + (((i*7+3)%17)/17-0.5)*6);
 
 const model = new fl.Lowess({
     fraction: 0.3,
@@ -54,6 +58,11 @@ const result = model.fit(t, y);
 
 const trend = result.y;
 const detrended = result.residuals;
+console.log("Trend y[0]:", trend[0].toFixed(4), " residual:", detrended[0].toFixed(4));
+```
+
+```output
+Trend y[0]: 10.8521  residual: -2.7933
 ```
 
 ---
@@ -67,7 +76,7 @@ const fl = require('fastlowess');
 
 const n = 500;
 const t = Float64Array.from({ length: n }, (_, i) => i * 100 / (n - 1));
-const y = Float64Array.from(t, ti => 10 + 0.5 * ti + 3 * Math.sin(ti / 10) + (Math.random()-0.5)*6);
+const y = Float64Array.from(t, (ti, i) => 10 + 0.5 * ti + 3 * Math.sin(ti / 10) + (((i*7+3)%17)/17-0.5)*6);
 
 const model = new fl.Lowess({
     fraction: 0.2,
@@ -77,6 +86,10 @@ const model = new fl.Lowess({
 const result = model.fit(t, y);
 
 console.log(`95% PI: [${result.prediction_lower[0]}, ${result.prediction_upper[0]}]`);
+```
+
+```output
+95% PI: [5.750859573562526, 14.647374870447734]
 ```
 
 ---
@@ -90,14 +103,19 @@ const fl = require('fastlowess');
 
 const n = 500;
 const t = Float64Array.from({ length: n }, (_, i) => i * 100 / (n - 1));
-const y = Float64Array.from(t, ti => 10 + 0.5 * ti + 3 * Math.sin(ti / 10) + (Math.random()-0.5)*6);
+const y = Float64Array.from(t, (ti, i) => 10 + 0.5 * ti + 3 * Math.sin(ti / 10) + (((i*7+3)%17)/17-0.5)*6);
 
-const tIrregular = Float64Array.from({ length: 200 }, () => Math.random() * 100).sort((a,b)=>a-b);
-const yIrregular = Float64Array.from(tIrregular, t => 10 + 0.3 * t + Math.random() * 2);
+const tIrregular = Float64Array.from({ length: 200 }, (_, i) => i * 100 / 199 + ((i*7+3)%17)/17*0.5 - 0.25).sort((a, b) => a - b);
+const yIrregular = Float64Array.from(tIrregular, (t, i) => 10 + 0.3 * t + ((i*7+3)%17)/17*2);
 
 // No special handling needed for irregular spacing
 const model = new fl.Lowess({ fraction: 0.2 });
 const result = model.fit(tIrregular, yIrregular);
+console.log("Irregular fit y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+Irregular fit y[0]: 11.1604
 ```
 
 ---
@@ -111,13 +129,18 @@ const fl = require('fastlowess');
 
 const n = 500;
 const t = Float64Array.from({ length: n }, (_, i) => i * 100 / (n - 1));
-const y = Float64Array.from(t, ti => 10 + 0.5 * ti + 3 * Math.sin(ti / 10) + (Math.random()-0.5)*6);
+const y = Float64Array.from(t, (ti, i) => 10 + 0.5 * ti + 3 * Math.sin(ti / 10) + (((i*7+3)%17)/17-0.5)*6);
 
 const scales = [0.05, 0.2, 0.5];
 const trends = scales.map(f => {
     const model = new fl.Lowess({ fraction: f });
     return model.fit(t, y).y;
 });
+console.log("Trend y[0] (fraction=0.05):", trends[0][0].toFixed(4), " (0.2):", trends[1][0].toFixed(4));
+```
+
+```output
+Trend y[0] (fraction=0.05): 9.0412  (0.2): 10.1991
 ```
 
 ---
@@ -130,7 +153,7 @@ Biological application:
 const fl = require('fastlowess');
 
 const hours = Float64Array.from({ length: 49 }, (_, i) => i * 0.5);
-const expression = Float64Array.from(hours, h => 100*(1+0.5*Math.sin(h*Math.PI/12))+(Math.random()-0.5)*20);
+const expression = Float64Array.from(hours, (h, i) => 100*(1+0.5*Math.sin(h*Math.PI/12))+(((i*7+3)%17)/17-0.5)*20);
 
 const model = new fl.Lowess({
     fraction: 0.3,
@@ -140,6 +163,10 @@ const model = new fl.Lowess({
 const result = model.fit(hours, expression);
 
 console.log(`R²: ${result.diagnostics.r_squared.toFixed(3)}`);
+```
+
+```output
+R²: 0.967
 ```
 
 ---

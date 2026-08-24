@@ -44,7 +44,13 @@ const processor = new StreamingLowess(
     {},
     { merge_strategy: "average", chunk_size: 5000, overlap: 500 }
 );
-const result = processor.process_chunk(xChunk, yChunk);
+processor.process_chunk(xChunk, yChunk);
+const finalResult = processor.finalize();
+console.log("average: smoothed", finalResult.y.length, "points, y[0]:", finalResult.y[0].toFixed(4));
+```
+
+```output
+average: smoothed 50 points, y[0]: 0.1795
 ```
 
 ---
@@ -62,6 +68,15 @@ const processor = new StreamingLowess(
     {},
     { merge_strategy: "take_first" }
 );
+const x2 = Float64Array.from({ length: 6 }, (_, i) => i);
+const y2 = Float64Array.from({ length: 6 }, (_, i) => i * 0.5);
+processor.process_chunk(x2, y2);
+const r2 = processor.finalize();
+console.log("take_first: smoothed", r2.y.length, "points, y[0]:", r2.y[0].toFixed(4));
+```
+
+```output
+take_first: smoothed 6 points, y[0]: 0.2337
 ```
 
 ---
@@ -79,6 +94,15 @@ const processor = new StreamingLowess(
     {},
     { merge_strategy: "take_last" }
 );
+const x3 = Float64Array.from({ length: 6 }, (_, i) => i);
+const y3 = Float64Array.from({ length: 6 }, (_, i) => i * 0.5);
+processor.process_chunk(x3, y3);
+const r3 = processor.finalize();
+console.log("take_last: smoothed", r3.y.length, "points, y[0]:", r3.y[0].toFixed(4));
+```
+
+```output
+take_last: smoothed 6 points, y[0]: 0.2337
 ```
 
 ---
@@ -104,6 +128,13 @@ const processor = new StreamingLowess(
     {},
     { merge_strategy: "weighted_average", chunk_size: 5000, overlap: 500 }
 );
+processor.process_chunk(x, y);
+const finalResult = processor.finalize();
+console.log("weighted_average: smoothed", finalResult.y.length, "points, y[0]:", finalResult.y[0].toFixed(4));
+```
+
+```output
+weighted_average: smoothed 100 points, y[0]: 0.1662
 ```
 
 ---
