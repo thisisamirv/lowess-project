@@ -28,7 +28,7 @@ repository](https://github.com/thisisamirv/lowess-project).
 >
 > Currently available for R, Python, Rust, Julia, Node.js, WebAssembly,
 > and C++. See the [Installation
-> Guide](https://thisisamirv.github.io/lowess-project/r/getting-started/installation/)
+> Guide](https://thisisamirv.github.io/lowess-project/r/articles/installation.html)
 > for detailed installation instructions.
 
 ### GPU Backend
@@ -40,7 +40,7 @@ class in every binding — except WebAssembly — as well as the
 processing of large datasets (roughly 10k+ points); for smaller inputs
 the CPU backend is typically faster. `StreamingLowess`/`OnlineLowess`
 remain CPU-only. See the [GPU Backend
-guide](https://thisisamirv.github.io/lowess-project/r/user-guide/gpu-backend/)
+guide](https://thisisamirv.github.io/lowess-project/r/articles/gpu-backend.html)
 for installation instructions and usage.
 
 ## Documentation
@@ -75,7 +75,7 @@ single-threaded or multi-threaded parallel execution. It is on average
 faster** than R’s `lowess`.
 
 For more details on the performance comparison, see the
-[Benchmarks](https://thisisamirv.github.io/lowess-project/r/benchmarks/)
+[Benchmarks](https://thisisamirv.github.io/lowess-project/r/articles/benchmarks.html)
 page.
 
 ### Robustness
