@@ -80,6 +80,7 @@ fn main() -> Result<(), LowessError> {
 
     // CRITICAL: Get buffered overlap data
     let final_result = processor.finalize()?;
+    println!("First smoothed value (streaming log): {}", final_result.y[0]);
 
     Ok(())
 }

@@ -37,8 +37,8 @@ fn main() -> Result<(), LowessError> {
 
     let model = Lowess::new().fraction(0.5f64).build()?;
     let result = model.fit(&x, &y)?;
-    println!("{}", result.fraction_used);  // 0.5
-    println!("{:?}", result.iterations_used);  // None
+    println!("Fraction used: {}", result.fraction_used);
+    println!("Iterations used: {:?}", result.iterations_used);
 
     Ok(())
 }

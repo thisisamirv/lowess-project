@@ -37,7 +37,7 @@
 //! // Fit the model to the data
 //! let result = model.fit(&x, &y)?;
 //!
-//! println!("{}", result);
+//! println!("LOWESS result:\n{}", result);
 //! # Result::<(), LowessError>::Ok(())
 //! ```
 //!
@@ -88,7 +88,7 @@
 //!     .build()?;
 //!
 //! let result = model.fit(&x, &y)?;
-//! println!("{}", result);
+//! println!("LOWESS result:\n{}", result);
 //! # Result::<(), LowessError>::Ok(())
 //! ```
 //!

@@ -40,7 +40,7 @@ fn main() -> Result<(), LowessError> {
     // Returns Some(OnlineOutput) once enough points are available
     let r3 = processor.add_point(x[2], y[2])?;
     if let Some(output) = r3 {
-        println!("{}", output.y);  // 0.22659245357374927
+        println!("Smoothed value: {}", output.y);
     }
 
     Ok(())

@@ -44,6 +44,7 @@ fn main() -> Result<(), LowessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (bisquare robustness): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -73,6 +74,7 @@ fn main() -> Result<(), LowessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (huber robustness): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -102,6 +104,7 @@ fn main() -> Result<(), LowessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (talwar robustness): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -179,6 +182,7 @@ fn main() -> Result<(), LowessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (mad scaling): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -207,6 +211,7 @@ fn main() -> Result<(), LowessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (auto-converge): {}", result.y[0]);
     Ok(())
 }
 ```

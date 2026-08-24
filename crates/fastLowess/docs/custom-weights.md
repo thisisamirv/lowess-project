@@ -80,6 +80,7 @@ fn main() -> Result<(), LowessError> {
 
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (custom weights): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -112,6 +113,7 @@ fn main() -> Result<(), LowessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (custom weights): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -142,6 +144,7 @@ fn main() -> Result<(), LowessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (custom weights): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -177,6 +180,7 @@ fn main() -> Result<(), LowessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (custom weights): {}", result.y[0]);
     Ok(())
 }
 ```

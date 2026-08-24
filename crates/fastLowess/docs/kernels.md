@@ -49,6 +49,7 @@ fn main() -> Result<(), LowessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (tricube kernel): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -77,6 +78,7 @@ fn main() -> Result<(), LowessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (epanechnikov kernel): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -105,6 +107,7 @@ fn main() -> Result<(), LowessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (gaussian kernel): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -133,6 +136,7 @@ fn main() -> Result<(), LowessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (biweight kernel): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -161,6 +165,7 @@ fn main() -> Result<(), LowessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (cosine kernel): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -189,6 +194,7 @@ fn main() -> Result<(), LowessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (triangle kernel): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -217,6 +223,7 @@ fn main() -> Result<(), LowessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (uniform kernel): {}", result.y[0]);
     Ok(())
 }
 ```

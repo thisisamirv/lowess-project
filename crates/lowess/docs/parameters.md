@@ -77,6 +77,7 @@ fn main() -> Result<(), LowessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (fraction=0.3): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -108,6 +109,7 @@ fn main() -> Result<(), LowessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (5 iterations): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -135,6 +137,7 @@ fn main() -> Result<(), LowessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value: {}", result.y[0]);
     Ok(())
 }
 ```
@@ -171,6 +174,7 @@ fn main() -> Result<(), LowessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (epanechnikov kernel): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -203,6 +207,7 @@ fn main() -> Result<(), LowessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (talwar robustness): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -238,6 +243,7 @@ fn main() -> Result<(), LowessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (reflect boundary): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -272,6 +278,7 @@ fn main() -> Result<(), LowessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (mad scaling): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -306,6 +313,7 @@ fn main() -> Result<(), LowessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (use_local_mean fallback): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -331,6 +339,7 @@ fn main() -> Result<(), LowessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (auto-converge): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -365,6 +374,7 @@ fn main() -> Result<(), LowessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (custom weights): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -461,6 +471,9 @@ fn main() -> Result<(), LowessError> {
     let result = model.fit(&x, &y)?;
     // Points with weight < 0.5 are likely outliers
 
+    if let Some(w) = &result.robustness_weights {
+        println!("First robustness weight: {}", w[0]);
+    }
     Ok(())
 }
 ```
@@ -516,6 +529,9 @@ fn main() -> Result<(), LowessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    if let (Some(lo), Some(hi)) = (&result.confidence_lower, &result.confidence_upper) {
+        println!("First point 95% CI: [{}, {}]", lo[0], hi[0]);
+    }
     Ok(())
 }
 ```
@@ -546,6 +562,7 @@ fn main() -> Result<(), LowessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value: {}", result.y[0]);
     Ok(())
 }
 ```
@@ -562,9 +579,15 @@ Points per chunk in Streaming mode.
 use lowess::prelude::*;
 
 fn main() -> Result<(), LowessError> {
-    let model = StreamingLowess::<f64>::new()
+        let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * std::f64::consts::TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
+
+    let mut model = StreamingLowess::new()
         .chunk_size(10000)
         .build()?;
+    let result = model.process_chunk(&x, &y)?;
+    println!("First smoothed value (chunk_size=10000): {}", result.y[0]);
 
     Ok(())
 }
@@ -580,9 +603,15 @@ Overlap between chunks in Streaming mode.
 use lowess::prelude::*;
 
 fn main() -> Result<(), LowessError> {
-    let model = StreamingLowess::<f64>::new()
+        let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * std::f64::consts::TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
+
+    let mut model = StreamingLowess::new()
         .overlap(1000)
         .build()?;
+    let result = model.process_chunk(&x, &y)?;
+    println!("First smoothed value (overlap=1000): {}", result.y[0]);
 
     Ok(())
 }
@@ -607,9 +636,15 @@ For example:
 use lowess::prelude::*;
 
 fn main() -> Result<(), LowessError> {
-    let model = StreamingLowess::<f64>::new()
+        let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * std::f64::consts::TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
+
+    let mut model = StreamingLowess::new()
         .merge_strategy("weighted_average")
         .build()?;
+    let result = model.process_chunk(&x, &y)?;
+    println!("First smoothed value (weighted_average merge): {}", result.y[0]);
 
     Ok(())
 }
@@ -625,9 +660,14 @@ Maximum points held in memory for Online mode.
 use lowess::prelude::*;
 
 fn main() -> Result<(), LowessError> {
-    let model = OnlineLowess::<f64>::new()
+        let x = vec![0.0f64, 0.5, 1.0, 2.0, 3.0];
+    let y = vec![0.0f64, 0.5, 0.9, 1.9, 2.9];
+
+    let mut model = OnlineLowess::new()
         .window_capacity(500)
         .build()?;
+    let out = model.add_point(x[0], y[0])?;
+    println!("add_point result (window_capacity=500): {:?}", out);
 
     Ok(())
 }
@@ -643,9 +683,14 @@ Minimum points required before Online filter starts producing outputs.
 use lowess::prelude::*;
 
 fn main() -> Result<(), LowessError> {
-    let model = OnlineLowess::<f64>::new()
+        let x = vec![0.0f64, 0.5, 1.0, 2.0, 3.0];
+    let y = vec![0.0f64, 0.5, 0.9, 1.9, 2.9];
+
+    let mut model = OnlineLowess::new()
         .min_points(10)
         .build()?;
+    let out = model.add_point(x[0], y[0])?;
+    println!("add_point result (min_points=10): {:?}", out);
 
     Ok(())
 }
@@ -668,9 +713,14 @@ For example:
 use lowess::prelude::*;
 
 fn main() -> Result<(), LowessError> {
-    let model = OnlineLowess::<f64>::new()
+        let x = vec![0.0f64, 0.5, 1.0, 2.0, 3.0];
+    let y = vec![0.0f64, 0.5, 0.9, 1.9, 2.9];
+
+    let mut model = OnlineLowess::new()
         .update_mode("full")
         .build()?;
+    let out = model.add_point(x[0], y[0])?;
+    println!("add_point result (full mode): {:?}", out);
 
     Ok(())
 }

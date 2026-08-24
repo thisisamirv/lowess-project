@@ -38,6 +38,7 @@ fn main() -> Result<(), LowessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (extend boundary): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -64,6 +65,7 @@ fn main() -> Result<(), LowessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (reflect boundary): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -90,6 +92,7 @@ fn main() -> Result<(), LowessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (zero boundary): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -119,6 +122,7 @@ fn main() -> Result<(), LowessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (noboundary boundary): {}", result.y[0]);
     Ok(())
 }
 ```

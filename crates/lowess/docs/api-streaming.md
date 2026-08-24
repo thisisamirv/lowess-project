@@ -33,7 +33,7 @@ fn main() -> Result<(), LowessError> {
 
     let mut processor = StreamingLowess::new().fraction(0.5f64).chunk_size(50usize).overlap(10usize).build()?;
     let result = processor.process_chunk(&x[..50], &y[..50])?;
-    println!("{}", result.fraction_used);  // 0.5
+    println!("Fraction used: {}", result.fraction_used);
 
     Ok(())
 }
@@ -54,7 +54,7 @@ fn main() -> Result<(), LowessError> {
     processor.process_chunk(&x[..50], &y[..50])?;
     processor.process_chunk(&x[50..], &y[50..])?;
     let final_result = processor.finalize()?;
-    println!("{}", final_result.fraction_used);  // 0.5
+    println!("Fraction used: {}", final_result.fraction_used);
 
     Ok(())
 }

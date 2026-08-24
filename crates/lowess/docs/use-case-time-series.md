@@ -38,6 +38,7 @@ fn main() -> Result<(), LowessError> {
     let result = model.fit(&t, &y)?;
     // result.y contains the trend
 
+    println!("First smoothed value (fraction=0.1): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -69,6 +70,9 @@ fn main() -> Result<(), LowessError> {
     let trend = &result.y;
     let detrended = result.residuals.as_ref().unwrap();
 
+    if let Some(r) = &result.residuals {
+        println!("First residual: {}", r[0]);
+    }
     Ok(())
 }
 ```
@@ -98,6 +102,9 @@ fn main() -> Result<(), LowessError> {
     let result = model.fit(&t, &y)?;
     // Access result.prediction_lower and result.prediction_upper
 
+    if let (Some(lo), Some(hi)) = (&result.confidence_lower, &result.confidence_upper) {
+        println!("First point 95% CI: [{}, {}]", lo[0], hi[0]);
+    }
     Ok(())
 }
 ```
@@ -122,6 +129,7 @@ fn main() -> Result<(), LowessError> {
 
     let result = model.fit(&t_irregular, &y_irregular)?;
 
+    println!("First smoothed value (fraction=0.2): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -151,6 +159,7 @@ fn main() -> Result<(), LowessError> {
         // Store or plot result.y for each scale
     }
 
+    println!("First smoothed value (fraction=?): {}", result.y[0]);
     Ok(())
 }
 ```

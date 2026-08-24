@@ -33,6 +33,9 @@ fn main() -> Result<(), LowessError> {
 
     let result = model.fit(&x, &y)?;
 
+    if let Some(diag) = &result.diagnostics {
+        println!("RMSE: {:.4}", diag.rmse);
+    }
     Ok(())
 }
 ```

@@ -41,6 +41,9 @@ fn main() -> Result<(), LowessError> {
     // result.y contains smoothed methylation profile
     // result.confidence_lower/upper contain 95% CI bounds
 
+    if let Some(lo) = &result.confidence_lower {
+        println!("First lower CI bound (95%): {}", lo[0]);
+    }
     Ok(())
 }
 ```
@@ -83,6 +86,9 @@ fn main() -> Result<(), LowessError> {
         .map(|(&p, _)| p)
         .collect();
 
+    if let Some(r) = &result.residuals {
+        println!("First residual: {}", r[0]);
+    }
     Ok(())
 }
 ```
@@ -110,6 +116,7 @@ fn main() -> Result<(), LowessError> {
 
     processor.process_chunk(&x_chunk, &y_chunk)?;
     let result = processor.finalize()?;
+    println!("First smoothed value (streaming genome): {}", result.y[0]);
 
     Ok(())
 }

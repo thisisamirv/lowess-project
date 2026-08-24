@@ -35,13 +35,20 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
 
 ```rust
 use fastLowess::prelude::*;
+use std::f64::consts::TAU;
 
 fn main() -> Result<(), LowessError> {
-    let model = StreamingLowess::new()
+    let n = 100usize;
+    let x_chunk: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y_chunk: Vec<f64> = x_chunk.iter().map(|&xi| xi.sin() + 0.1).collect();
+
+    let mut model = StreamingLowess::new()
         .merge_strategy("average")
         .chunk_size(5000)
         .overlap(500)
         .build()?;
+    let result = model.process_chunk(&x_chunk, &y_chunk)?;
+    println!("First smoothed value (average merge): {}", result.y[0]);
 
     Ok(())
 }
@@ -57,11 +64,18 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
 
 ```rust
 use fastLowess::prelude::*;
+use std::f64::consts::TAU;
 
 fn main() -> Result<(), LowessError> {
+    let n = 100usize;
+    let x_chunk: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y_chunk: Vec<f64> = x_chunk.iter().map(|&xi| xi.sin() + 0.1).collect();
+
     let mut processor = StreamingLowess::new()
         .merge_strategy("take_first")
         .build()?;
+    let result = processor.process_chunk(&x_chunk, &y_chunk)?;
+    println!("First smoothed value (take_first merge): {}", result.y[0]);
 
     Ok(())
 }
@@ -77,11 +91,18 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
 
 ```rust
 use fastLowess::prelude::*;
+use std::f64::consts::TAU;
 
 fn main() -> Result<(), LowessError> {
+    let n = 100usize;
+    let x_chunk: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y_chunk: Vec<f64> = x_chunk.iter().map(|&xi| xi.sin() + 0.1).collect();
+
     let mut processor = StreamingLowess::new()
         .merge_strategy("take_last")
         .build()?;
+    let result = processor.process_chunk(&x_chunk, &y_chunk)?;
+    println!("First smoothed value (take_last merge): {}", result.y[0]);
 
     Ok(())
 }
@@ -101,13 +122,20 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
 
 ```rust
 use fastLowess::prelude::*;
+use std::f64::consts::TAU;
 
 fn main() -> Result<(), LowessError> {
-    let model = StreamingLowess::new()
-    .merge_strategy("weighted_average")
-    .chunk_size(5000)
-    .overlap(500)
-    .build()?;
+    let n = 100usize;
+    let x_chunk: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y_chunk: Vec<f64> = x_chunk.iter().map(|&xi| xi.sin() + 0.1).collect();
+
+    let mut model = StreamingLowess::new()
+        .merge_strategy("weighted_average")
+        .chunk_size(5000)
+        .overlap(500)
+        .build()?;
+    let result = model.process_chunk(&x_chunk, &y_chunk)?;
+    println!("First smoothed value (weighted_average merge): {}", result.y[0]);
 
     Ok(())
 }

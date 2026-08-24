@@ -65,6 +65,7 @@ fn main() -> Result<(), LowessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("Selected fraction (CV): {}", result.fraction_used);
     Ok(())
 }
 ```
@@ -92,6 +93,7 @@ fn main() -> Result<(), LowessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("Selected fraction (CV): {}", result.fraction_used);
     Ok(())
 }
 ```
@@ -149,6 +151,7 @@ fn main() -> Result<(), LowessError> {
     // 0.5       | 0.0298
     // 0.7       | 0.0412  ← Oversmoothed
 
+    println!("Selected fraction (CV): {}", result.fraction_used);
     Ok(())
 }
 ```
