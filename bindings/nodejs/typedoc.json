@@ -6,6 +6,9 @@
         "index.d.ts"
     ],
     "tsconfig": "tsconfig.typedoc.json",
+    "frontmatterGlobals": {
+        "title": "API Reference"
+    },
     "out": "src/content/docs/reference",
     "name": "fastlowess",
     "readme": "none",
