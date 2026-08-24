@@ -2,7 +2,12 @@
     "compilerOptions": {
         "module": "commonjs",
         "strict": true,
-        "noEmit": true
+        "noEmit": true,
+        "skipLibCheck": true,
+        "types": [],
+        "lib": [
+            "ESNext"
+        ]
     },
     "include": [
         "pkg/fastlowess_wasm.d.ts"
