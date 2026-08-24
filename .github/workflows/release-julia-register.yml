@@ -40,18 +40,41 @@ jobs:
 
           echo "commit=$COMMIT" >> $GITHUB_OUTPUT
 
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ steps.meta.outputs.commit }}
+
+      - name: Extract release notes from CHANGELOG
+        id: notes
+        run: |
+          VERSION=$(grep '^version' bindings/julia/julia/Project.toml | sed 's/version = "\(.*\)"/\1/')
+          VERSION_PAT=$(printf '%s' "$VERSION" | sed 's/\./\\./g')
+          SECTION=$(awk "/^## ${VERSION_PAT}$/{flag=1;next}/^## /{if(flag)exit}flag" CHANGELOG.md)
+          BODY="@JuliaRegistrator register subdir=bindings/julia/julia"
+          if [ -n "$SECTION" ]; then
+            BODY=$(printf '%s\n\nRelease notes:\n%s' "$BODY" "$SECTION")
+          fi
+          {
+            echo "body<<BODY_EOF"
+            printf '%s\n' "$BODY"
+            echo "BODY_EOF"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Trigger JuliaRegistrator
         uses: actions/github-script@v9
+        env:
+          COMMENT_BODY: ${{ steps.notes.outputs.body }}
         with:
           github-token: ${{ secrets.YGGDRASIL_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
             const commit_sha = '${{ steps.meta.outputs.commit }}';
+            const body = process.env.COMMENT_BODY;
             console.log(`Triggering registration for commit: ${commit_sha}`);
             await github.rest.repos.createCommitComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               commit_sha: commit_sha,
-              body: '@JuliaRegistrator register subdir=bindings/julia/julia'
+              body: body
             });
             console.log('✅ Registration comment posted.');
 

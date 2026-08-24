@@ -41,9 +41,11 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: sudo apt-get install -y cppcheck
 
-      - name: Install cppcheck (macOS)
+      - name: Install clang-tidy and cppcheck (macOS)
         if: matrix.os == 'macos-latest'
-        run: brew install cppcheck
+        run: |
+          brew install llvm cppcheck
+          echo "$(brew --prefix llvm)/bin" >> "$GITHUB_PATH"
 
       - uses: Swatinem/rust-cache@v2
         with:

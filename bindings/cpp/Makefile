@@ -199,7 +199,10 @@ install-tools:
 		winget install --id Cppcheck.Cppcheck --exact --accept-source-agreements --accept-package-agreements; \
 	elif [ "$(HOST_PLATFORM)" = "macos" ]; then \
 		brew install llvm cppcheck; \
-		echo "Note: add clang-tidy to PATH: export PATH=\"$$(brew --prefix llvm)/bin:\$$PATH\""; \
+		LLVM_BIN="$$(brew --prefix llvm)/bin"; \
+		EXPORT_LINE="export PATH=\"$$LLVM_BIN:\$$PATH\""; \
+		grep -qxF "$$EXPORT_LINE" ~/.zshrc 2>/dev/null || echo "$$EXPORT_LINE" >> ~/.zshrc; \
+		echo "Added clang-tidy to ~/.zshrc — re-open your shell or run: export PATH=\"$$LLVM_BIN:\$$PATH\""; \
 	else \
 		sudo apt-get install -y clang-tidy cppcheck; \
 	fi

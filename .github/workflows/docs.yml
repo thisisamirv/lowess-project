@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
     paths:
+      - "README.md"
       - "bindings/cpp/**"
       - "bindings/julia/**"
       - "bindings/nodejs/**"
@@ -23,6 +24,7 @@ jobs:
   filter:
     runs-on: ubuntu-latest
     outputs:
+      root: ${{ steps.f.outputs.root }}
       cpp: ${{ steps.f.outputs.cpp }}
       julia: ${{ steps.f.outputs.julia }}
       nodejs: ${{ steps.f.outputs.nodejs }}
@@ -34,6 +36,9 @@ jobs:
         id: f
         with:
           filters: |
+            root:
+              - 'README.md'
+              - '.github/workflows/docs.yml'
             cpp:
               - 'bindings/cpp/**'
               - '.github/workflows/docs.yml'
@@ -49,6 +54,33 @@ jobs:
             wasm:
               - 'bindings/wasm/**'
               - '.github/workflows/docs.yml'
+
+  root:
+    needs: filter
+    if: needs.filter.outputs.root == 'true' || github.event_name == 'workflow_dispatch'
+    name: Root — README
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install pandoc
+        run: sudo apt-get install -y pandoc
+      - name: Convert README.md to HTML
+        run: |
+          mkdir -p _site
+          pandoc README.md \
+            --from=gfm \
+            --to=html5 \
+            --standalone \
+            --metadata title="${{ github.event.repository.name }}" \
+            --css=https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.6.1/github-markdown-light.min.css \
+            -o _site/index.html
+          sed -i 's|<body>|<body class="markdown-body" style="max-width:980px;margin:0 auto;padding:45px">|' _site/index.html
+      - uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: _site
+          target-folder: .
+          clean: false
 
   cpp:
     needs: filter
