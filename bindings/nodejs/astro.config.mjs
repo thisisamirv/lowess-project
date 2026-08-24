@@ -20,6 +20,7 @@ export default defineConfig({
                         { label: 'Quick Start', slug: 'quickstart' },
                         { label: 'Concepts', slug: 'concepts' },
                         { label: 'Parameters', slug: 'parameters' },
+                        { label: 'Benchmarks', slug: 'benchmarks' },
                     ],
                 },
                 {

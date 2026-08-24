@@ -73,9 +73,12 @@ CPP_TEST_LIB_ABS := $(abspath $(CPP_TEST_LIB))
 
 TEMP ?= /tmp
 
-.PHONY: default dev clean
+.PHONY: default dev clean install-tools
 
 default:
+	@if ! command -v clang-tidy >/dev/null 2>&1 || ! command -v cppcheck >/dev/null 2>&1; then \
+		$(MAKE) -f $(THIS_MK) install-tools; \
+	fi
 	@if [ -n "$(CPP_CARGO_TARGET)" ]; then \
 		_rust_target=$$(echo "$(CPP_CARGO_TARGET)" | sed 's/--target //'); \
 		rustup target add "$$_rust_target" 2>/dev/null || true; \
@@ -105,7 +108,8 @@ dev:
 			exit $$clang_tidy_status; \
 		fi; \
 	else \
-		echo "clang-tidy not found. Skipping C++ lint pass."; \
+		echo "clang-tidy not found. Install it to run C++ linting."; \
+		exit 1; \
 	fi
 	@echo "Running cppcheck..."
 	@if command -v cppcheck >/dev/null 2>&1; then \
@@ -127,7 +131,8 @@ dev:
 		fi; \
 		rm -f "$$cppcheck_log"; \
 	else \
-		echo "cppcheck not found. Skipping static analysis pass."; \
+		echo "cppcheck not found. Install it to run static analysis."; \
+		exit 1; \
 	fi
 	@if [ -n "$(CPP_CARGO_TARGET)" ]; then \
 		_rust_target=$$(echo "$(CPP_CARGO_TARGET)" | sed 's/--target //'); \
@@ -186,3 +191,16 @@ clean:
 	@cargo clean -p $(CPP_PKG)
 	@git clean -fdX -- $(CPP_DIR)
 	@echo "$(CPP_PKG) clean complete!"
+
+install-tools:
+	@echo "Installing clang-tidy and cppcheck..."
+	@if [ "$(HOST_PLATFORM)" = "windows" ]; then \
+		winget install --id LLVM.LLVM --exact --accept-source-agreements --accept-package-agreements; \
+		winget install --id Cppcheck.Cppcheck --exact --accept-source-agreements --accept-package-agreements; \
+	elif [ "$(HOST_PLATFORM)" = "macos" ]; then \
+		brew install llvm cppcheck; \
+		echo "Note: add clang-tidy to PATH: export PATH=\"$$(brew --prefix llvm)/bin:\$$PATH\""; \
+	else \
+		sudo apt-get install -y clang-tidy cppcheck; \
+	fi
+	@echo "Done."

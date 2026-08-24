@@ -23,11 +23,11 @@ The `lowess-project` also offers bindings for Rust, Python, R, Julia, Node.js, W
 
 > [!NOTE]
 >
-> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the [Installation Guide](https://thisisamirv.github.io/lowess-project/cpp/getting-started/installation/) for detailed installation instructions.
+> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the [Installation Guide](https://thisisamirv.github.io/lowess-project/cpp/md_docs_2installation.html) for detailed installation instructions.
 
 ### GPU Backend
 
-In addition to `parallel = true` (multi-core CPU), the batch `Lowess` class in every binding — except WebAssembly — as well as the `fastLowess` Rust crate itself, can run on the GPU via `wgpu` (Vulkan/Metal/DX12). It's opt-in and worth enabling for high-throughput processing of large datasets (roughly 10k+ points); for smaller inputs the CPU backend is typically faster. `StreamingLowess`/`OnlineLowess` remain CPU-only. See the [GPU Backend guide](https://thisisamirv.github.io/lowess-project/cpp/user-guide/gpu-backend/) for installation instructions and usage.
+In addition to `parallel = true` (multi-core CPU), the batch `Lowess` class in every binding — except WebAssembly — as well as the `fastLowess` Rust crate itself, can run on the GPU via `wgpu` (Vulkan/Metal/DX12). It's opt-in and worth enabling for high-throughput processing of large datasets (roughly 10k+ points); for smaller inputs the CPU backend is typically faster. `StreamingLowess`/`OnlineLowess` remain CPU-only. See the [GPU Backend guide](https://thisisamirv.github.io/lowess-project/cpp/md_docs_2gpu-backend.html) for installation instructions and usage.
 
 ## Documentation
 
@@ -57,7 +57,7 @@ In addition to `parallel = true` (multi-core CPU), the batch `Lowess` class in e
 
 The `lowess` project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution. It is on average **200-327x faster** than Python's `statsmodels.lowess` and **2-3x faster** than R's `lowess`.
 
-For more details on the performance comparison, see the [Benchmarks](https://thisisamirv.github.io/lowess-project/cpp/benchmarks/) page.
+For more details on the performance comparison, see the [Benchmarks](https://thisisamirv.github.io/lowess-project/cpp/md_docs_2benchmarks.html) page.
 
 ### Robustness
 

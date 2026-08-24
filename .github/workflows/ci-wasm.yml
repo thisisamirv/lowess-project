@@ -31,9 +31,9 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 22
-      - uses: jetli/wasm-pack-action@v0.4.0
+      - uses: taiki-e/install-action@v2
         with:
-          version: "v0.15.0"
+          tool: wasm-pack@0.15.0
       - name: Install GNU Make (Windows)
         if: matrix.os == 'windows-latest'
         run: choco install make -y

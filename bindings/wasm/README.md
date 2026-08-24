@@ -22,11 +22,7 @@ The `lowess-project` also offers bindings for Rust, Python, R, Julia, Node.js, W
 
 > [!NOTE]
 >
-> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the [Installation Guide](https://thisisamirv.github.io/lowess-project/wasm/getting-started/installation/) for detailed installation instructions.
-
-### GPU Backend
-
-In addition to `parallel = true` (multi-core CPU), the batch `Lowess` class in every binding — except WebAssembly — as well as the `fastLowess` Rust crate itself, can run on the GPU via `wgpu` (Vulkan/Metal/DX12). It's opt-in and worth enabling for high-throughput processing of large datasets (roughly 10k+ points); for smaller inputs the CPU backend is typically faster. `StreamingLowess`/`OnlineLowess` remain CPU-only. See the [GPU Backend guide](https://thisisamirv.github.io/lowess-project/wasm/user-guide/gpu-backend/) for installation instructions and usage.
+> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the [Installation Guide](https://thisisamirv.github.io/lowess-project/wasm/installation/) for detailed installation instructions.
 
 ## Documentation
 
