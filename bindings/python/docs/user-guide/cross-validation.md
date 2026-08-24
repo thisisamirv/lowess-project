@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD024 MD033 MD046 -->
 # Cross-Validation
 
 Automated parameter selection via cross-validation.
@@ -15,7 +14,7 @@ Cross-validation helps select optimal parameters (especially `fraction`) by eval
 
 Split data into K folds, train on K-1, validate on 1.
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -31,7 +30,7 @@ result = model.fit(x, y)
 
 print(f"Selected fraction: {result.fraction_used}")
 print(f"CV scores: {result.cv_scores}")
-```
+:::
 
 ---
 
@@ -39,7 +38,7 @@ print(f"CV scores: {result.cv_scores}")
 
 Each point is held out once. Most thorough but slowest.
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -51,7 +50,8 @@ model = fl.Lowess(cv_method="loocv",
     cv_fractions=[0.2, 0.3, 0.5, 0.7]
 )
 result = model.fit(x, y)
-```
+print(f"Best fraction: {result.cv_best_fraction}  CV MSE: {result.cv_mse:.4f}")
+:::
 
 ---
 
@@ -59,7 +59,7 @@ result = model.fit(x, y)
 
 Set a seed for reproducible fold assignments:
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -73,7 +73,8 @@ model = fl.Lowess(cv_method="kfold",
     cv_seed=42
 )
 result = model.fit(x, y)
-```
+print(f"Best fraction: {result.cv_best_fraction}  CV MSE: {result.cv_mse:.4f}")
+:::
 
 ---
 
@@ -85,8 +86,9 @@ result = model.fit(x, y)
 | **KFold(10)** | 10 | Medium | Lower | Lower |
 | **LOOCV** | N | Slow | Lowest | Lowest |
 
-!!! tip "Recommendation"
-    Use **5-fold** or **10-fold** CV for most applications. LOOCV is only worth it for small datasets (N < 100).
+:::{tip} Recommendation
+Use **5-fold** or **10-fold** CV for most applications. LOOCV is only worth it for small datasets (N < 100).
+:::
 
 ---
 
@@ -104,7 +106,7 @@ Lower MSE indicates better fit on held-out data.
 
 ## Interpreting Results
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -112,17 +114,11 @@ rng = np.random.default_rng(42)
 x = np.linspace(0, 2 * np.pi, 100)
 y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-# Example output
 model = fl.Lowess(cv_method="kfold", cv_k=5,
                    cv_fractions=[0.1, 0.3, 0.5, 0.7])
 result = model.fit(x, y)
 
-# Fraction  | CV Score (MSE)
-# 0.1       | 0.0542  ← Undersmoothed
-# 0.3       | 0.0231  ← Best
-# 0.5       | 0.0298
-# 0.7       | 0.0412  ← Oversmoothed
-```
+:::
 
 The fraction with **lowest CV score** is automatically selected.
 
@@ -130,8 +126,9 @@ The fraction with **lowest CV score** is automatically selected.
 
 ## Availability
 
-!!! warning "Batch Mode Only"
-    Cross-validation is only available in **Batch** mode.
+:::{warning} Batch Mode Only
+Cross-validation is only available in **Batch** mode.
+:::
 
 | Feature | Batch | Streaming | Online |
 | --- | --- | --- | --- |

@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD024 MD033 MD046 -->
+<!-- markdownlint-disable MD046 -->
 # GPU Backend
 
 Run the batch LOWESS fit on the GPU via `wgpu` (Vulkan/Metal/DX12) instead of the CPU.
@@ -9,7 +9,7 @@ Every binding's batch `Lowess` type can execute on a GPU-accelerated backend pow
 
 This is worth enabling for high-throughput processing of large datasets (roughly 10k+ points); for smaller inputs the CPU backend (optionally with `parallel = true`) is typically faster once you account for GPU dispatch overhead. See [BENCHMARKS.md](https://github.com/thisisamirv/lowess-project/blob/main/BENCHMARKS.md) for crossover points measured on real hardware.
 
-> **Batch only.** GPU support applies to the batch `Lowess` type only. `StreamingLowess`/`OnlineLowess` remain CPU-only in every binding — the Rust core documents GPU as optimized for static batch data, not incremental chunk/point processing. See [rust.md](../api/rust.md#gpu-acceleration) for details.
+> **Batch only.** GPU support applies to the batch `Lowess` type only. `StreamingLowess`/`OnlineLowess` remain CPU-only in every binding — the Rust core documents GPU as optimized for static batch data, not incremental chunk/point processing. See [rust.md](https://github.com/thisisamirv/lowess-project) for details.
 
 GPU support is **opt-in** and not included in the default published artifacts (PyPI wheels, npm binaries, CRAN/Bioconductor releases, JLL binaries, prebuilt C++ releases) — it requires either downloading a prebuilt GPU-enabled build via a one-time installer, or building from source with the `gpu` Cargo feature. Both paths are documented per language below.
 
@@ -42,11 +42,12 @@ GPU support is **opt-in** and not included in the default published artifacts (P
 
 Before requesting `backend = "gpu"` (or the language's equivalent spelling), check whether the currently loaded library was built with GPU support. Requesting the GPU backend when it isn't available raises a clear error pointing at the installer for that language, rather than a raw panic.
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 
 fl.gpu_available()
-```
+print("GPU available:", fl.gpu_available())
+:::
 
 ---
 
@@ -64,11 +65,15 @@ Whether you need to **restart** afterwards depends on how each language loads it
 | C++ | Yes (relink/rebuild) | Your application links against the library at build/load time. |
 | Julia | **No** | `install_gpu()` re-points the internal library reference immediately. |
 
-```python
-import fastlowess as fl
+:::{jupyter-execute}
 
-fl.install_gpu()  # prompts for confirmation, then installs; restart Python afterwards
-```
+try:
+    import fastlowess as fl
+
+    fl.install_gpu()  # prompts for confirmation, then installs; restart Python afterwards
+except Exception as e:
+    print(f"(skipped in docs build: {e})")
+:::
 
 Non-interactively:
 
@@ -91,16 +96,21 @@ maturin develop --release --features gpu
 
 Once GPU support is available, request it by setting the backend option on the batch constructor.
 
-```python
-import fastlowess as fl
+:::{jupyter-execute}
 
-model = fl.Lowess(fraction=0.5, backend="gpu", confidence_intervals=0.95)
-result = model.fit(x, y)
-```
+try:
+    import fastlowess as fl
+
+    model = fl.Lowess(fraction=0.5, backend="gpu", confidence_intervals=0.95)
+    result = model.fit(x, y)
+    print(f"95% CI at midpoint: [{result.confidence_lower[50]:.4f}, {result.confidence_upper[50]:.4f}]")
+except Exception as e:
+    print(f"(skipped in docs build: {e})")
+:::
 
 If GPU support isn't available, requesting `backend = "gpu"` (or the equivalent) raises a runtime error pointing at the installer for that language rather than a raw Rust panic.
 
 ## See also
 
-* [rust.md](../api/rust.md#gpu-acceleration) — why Streaming/Online adapters stay CPU-only.
-* Per-language API reference GPU sections: [python.md](../api/python.md#gpu-acceleration), [nodejs.md](../api/nodejs.md#gpu-acceleration), [julia.md](../api/julia.md#gpu-acceleration), [cpp.md](../api/cpp.md#gpu-acceleration), [r.md](../api/r.md#gpu-acceleration).
+* [rust.md](https://github.com/thisisamirv/lowess-project) — why Streaming/Online adapters stay CPU-only.
+* Per-language API reference GPU sections: [python.md](../api/python.md#gpu-acceleration), [nodejs.md](https://lowess.readthedocs.io/api/python/#gpu), [julia.md](https://github.com/thisisamirv/lowess-project), [cpp.md](https://github.com/thisisamirv/lowess-project), [r.md](https://github.com/thisisamirv/lowess-project).

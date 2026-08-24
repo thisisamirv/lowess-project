@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD024 MD046 -->
 # Installation
 
 Install the LOWESS library for your preferred language.
@@ -29,7 +28,7 @@ maturin develop --release
 
 ## Verify Installation
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -39,4 +38,4 @@ y = np.array([2.0, 4.0, 6.0])
 model = fl.Lowess()
 result = model.fit(x, y)
 print("Installed successfully!")
-```
+:::

@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD033 -->
 # LOWESS Project
 
 The fastest, most robust, and most feature-complete language-agnostic LOWESS (Locally Weighted Scatterplot Smoothing) implementation for **Rust**, **Python**, **R**, **Julia**, **JavaScript**, **C++**, and **WebAssembly**.
@@ -101,7 +100,7 @@ See the [Installation Guide](getting-started/installation.md) for more options a
 
 ## Quick Example
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -111,7 +110,7 @@ y = np.array([2.0, 4.1, 5.9, 8.2, 9.8])
 model = fl.Lowess(fraction=0.5, iterations=3)
 result = model.fit(x, y)
 print(result.y)
-```
+:::
 
 ## Getting Started
 
@@ -119,77 +118,17 @@ print(result.y)
 2. [Quick Start](getting-started/quickstart.md) — Basic usage examples
 3. [Concepts](getting-started/concepts.md) — Understand how LOWESS works
 
-<!-- markdownlint-disable MD033 -->
-<div class="grid cards" markdown>
-
-- :fontawesome-brands-rust: **Rust**
-
-    ---
-
-    Pure Rust crates with zero-copy ndarray support, parallel execution, and GPU acceleration.
-
-    [:octicons-arrow-right-24: Rust API](api/rust.md)
-
-- :fontawesome-brands-python: **Python**
-
-    ---
-
-    Native Python bindings via PyO3 with NumPy integration and pip installation.
-
-    [:octicons-arrow-right-24: Python API](api/python.md)
-
-- :simple-r: **R**
-
-    ---
-
-    R package with Bioconductor-style documentation and seamless integration.
-
-    [:octicons-arrow-right-24: R API](api/r.md)
-
-- :simple-julia: **Julia**
-
-    ---
-
-    Native Julia package with C FFI, supporting parallel execution and JLL dependencies.
-
-    [:octicons-arrow-right-24: Julia API](api/julia.md)
-
-</div>
-
-<!-- markdownlint-disable MD033 -->
-<div class="grid cards" markdown>
-
-- :simple-nodedotjs: **Node.js**
-
-    ---
-
-    Native Node.js bindings with high-performance C++ core and support for asynchronous streaming.
-
-    [:octicons-arrow-right-24: Node.js API](api/nodejs.md)
-
-- :simple-webassembly: **WebAssembly**
-
-    ---
-
-    Optimized WebAssembly build for browsers and Node.js with zero-overhead data transfer.
-
-    [:octicons-arrow-right-24: WebAssembly API](api/wasm.md)
-
-</div>
-
-<!-- markdownlint-disable MD033 -->
-<div class="grid cards" markdown>
-
-- :material-language-cpp: **C++**
-
-    ---
-
-    Native C++ bindings with RAII memory management and STL container support.
-
-    [:octicons-arrow-right-24: C++ API](api/cpp.md)
-
-</div>
-
 ## License
 
 Dual-licensed under [MIT](https://opensource.org/licenses/MIT) or [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0).
+
+:::{toctree}
+:maxdepth: 1
+:hidden:
+:caption: Documentation
+
+getting-started/index
+user-guide/index
+api/index
+benchmarks
+:::

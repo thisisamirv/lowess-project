@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD024 MD033 MD046 -->
+<!-- markdownlint-disable MD024 -->
 # Execution Modes
 
 Choose the right adapter for your use case.
@@ -38,7 +38,7 @@ Standard mode for complete datasets. **Supports all features.**
 
 ### Example
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -55,7 +55,9 @@ model = fl.Lowess(
     parallel=True
 )
 result = model.fit(x, y)
-```
+print(f"95% CI at midpoint: [{result.confidence_lower[50]:.4f}, {result.confidence_upper[50]:.4f}]")
+print(f"R²: {result.diagnostics.r_squared:.4f}")
+:::
 
 ---
 
@@ -90,7 +92,7 @@ Process large datasets in chunks with configurable overlap.
 
 ### Example
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -107,12 +109,14 @@ model = fl.StreamingLowess(
 )
 model.process_chunk(x, y)
 result = model.finalize()
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
-!!! warning "Always call finalize()"
-    In Rust, always call `processor.finalize()` after processing all chunks to retrieve buffered overlap data.
+:::{warning} Always call finalize()
+In Rust, always call `processor.finalize()` after processing all chunks to retrieve buffered overlap data.
+:::
 
 ## Online Adapter
 
@@ -143,7 +147,7 @@ Incremental updates with a sliding window for real-time data.
 
 ### Example
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -162,7 +166,7 @@ for xi, yi in zip(x, y):
     result = model.add_point(float(xi), float(yi))
     if result is not None:
         print(result.y)
-```
+:::
 
 ---
 
@@ -183,4 +187,4 @@ for xi, yi in zip(x, y):
 ## Next Steps
 
 - [Parameters](parameters.md) — All configuration options
-- [Tutorials](../tutorials/real-time.md) — Real-time processing guide
+- [Tutorials](use-cases/real-time.md) — Real-time processing guide

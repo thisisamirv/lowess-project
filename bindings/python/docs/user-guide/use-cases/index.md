@@ -1,26 +1,12 @@
-<!-- markdownlint-disable MD033 -->
 # Use Cases
 
 Domain-focused guides showing real-world applications with parameter-choice rationale.
 
-<div class="grid cards" markdown>
+:::{toctree}
+:maxdepth: 1
+:caption: Use Cases
 
-- :material-dna: **[Genomics](genomics.md)**
-
-    ---
-
-    Methylation profile smoothing and ChIP-seq peak detection.
-
-- :material-chart-timeline: **[Time Series](time-series.md)**
-
-    ---
-
-    Trend extraction, detrending, and prediction intervals.
-
-- :material-broadcast: **[Real-Time Processing](real-time.md)**
-
-    ---
-
-    Online point-by-point updates, streaming chunk processing, and dashboard patterns.
-
-</div>
+genomics
+time-series
+real-time
+:::

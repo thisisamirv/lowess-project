@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD033 -->
 # Robustness
 
 Outlier handling through iterative reweighting.
@@ -29,7 +28,7 @@ $$w(u) = \begin{cases} (1 - u^2)^2 & |u| < 1 \\ 0 & |u| \geq 1 \end{cases}$$
 
 **Use when**: General purpose, balanced approach.
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -39,7 +38,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Lowess(iterations=3, robustness_method="bisquare")
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -51,7 +51,7 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}$$
 
 **Use when**: Moderate outliers, want to retain some influence.
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -61,7 +61,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Lowess(iterations=3, robustness_method="huber")
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -73,7 +74,7 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
 
 **Use when**: Extreme outliers, want binary exclusion.
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -83,7 +84,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Lowess(iterations=3, robustness_method="talwar")
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -101,7 +103,7 @@ result = model.fit(x, y)
 
 Use robustness weights to identify potential outliers:
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -115,7 +117,7 @@ result = model.fit(x, y)
 for i, w in enumerate(result.robustness_weights):
     if w < 0.5:
         print(f"Potential outlier at index {i}: weight = {w:.3f}")
-```
+:::
 
 ---
 
@@ -131,7 +133,7 @@ Residuals are scaled before computing robustness weights. Two methods:
 
 ![Scaling Methods Comparison](../assets/diagrams/scaling_comparison.svg)
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -141,7 +143,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Lowess(iterations=3, scaling_method="mad")
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -149,10 +152,10 @@ result = model.fit(x, y)
 
 Stop iterations early when weights stabilize:
 
-!!! tip "Performance"
-    Auto-convergence can significantly reduce computation when weights stabilize before reaching max iterations.
-
-```python
+:::{tip} Performance
+Auto-convergence can significantly reduce computation when weights stabilize before reaching max iterations.
+:::
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -162,4 +165,5 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Lowess(iterations=10, auto_converge=1e-6)
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::

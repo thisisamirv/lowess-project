@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD033 -->
 # Real-Time Processing
 
 Streaming and online LOWESS for live data.
@@ -17,17 +16,19 @@ For true real-time applications where each point must be processed immediately.
 
 ### Sensor Data Example
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
-# Simulate sensor readings arriving over time
+## Simulate sensor readings arriving over time
+
 np.random.seed(42)
 n_readings = 100
 times = np.arange(n_readings)
 temperatures = 20 + 5 * np.sin(times / 10) + np.random.normal(0, 1, n_readings)
 
-# Process with online mode
+## Process with online mode
+
 online = fl.OnlineLowess(
     fraction=0.3,
     window_capacity=25,    # Keep last 25 points
@@ -38,7 +39,7 @@ for xi, yi in zip(times, temperatures):
     result = online.add_point(float(xi), float(yi))
     if result is not None:
         print(f"Time {xi:.0f}: smoothed = {result.y:.2f}")
-```
+:::
 
 ---
 
@@ -48,20 +49,23 @@ For large datasets that arrive in batches or files.
 
 `chunk_size` controls how many data points are processed in one pass; matching it to your file-read buffer or message-batch size avoids unnecessary copying. `overlap` retains that many points from the previous chunk as context so the neighbourhood at chunk boundaries is not artificially truncated. `merge_strategy = "weighted_average"` blends the overlapping region smoothly; use `"last"` if chunk boundaries are guaranteed to be well separated and no blending is needed.
 
-!!! warning "Always call finalize()"
-    The streaming adapter buffers overlap data. Call `finalize()` after the last chunk to retrieve the buffered tail.
+:::{warning} Always call finalize()
+The streaming adapter buffers overlap data. Call `finalize()` after the last chunk to retrieve the buffered tail.
+:::
 
 ### Log File Processing
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
-# Simulate large dataset arriving in chunks
+## Simulate large dataset arriving in chunks
+
 total_points = 100000
 chunk_size = 10000
 
-# All at once with streaming handles chunking internally
+## All at once with streaming handles chunking internally
+
 x = np.arange(total_points, dtype=float)
 y = np.sin(x / 1000) + np.random.normal(0, 0.1, total_points)
 
@@ -75,7 +79,7 @@ model.process_chunk(x, y)
 result = model.finalize()
 
 print(f"Processed {len(result.y)} points")
-```
+:::
 
 ---
 
@@ -83,11 +87,12 @@ print(f"Processed {len(result.y)} points")
 
 The dashboard pattern uses a plain LOWESS fit on a manually managed sliding window rather than `OnlineLowess`. This is the simplest approach when your UI framework already owns the data buffer and you only need the most recent smoothed value per frame. The trade-off is a full O(window²) refit on every tick; for high-frequency streams prefer `OnlineLowess` with `update_mode = "incremental"` to bound per-frame cost.
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
-# Simulated real-time dashboard sliding window
+## Simulated real-time dashboard sliding window
+
 window_capacity = 50
 data_x, data_y = [], []
 
@@ -95,7 +100,7 @@ for i in range(200):
     x, y = i, 25.0 + 10 * np.sin(i / 20) + np.random.normal(0, 2)
     data_x.append(x)
     data_y.append(y)
-    
+
     if len(data_x) > window_capacity:
         data_x = data_x[-window_capacity:]
         data_y = data_y[-window_capacity:]
@@ -104,7 +109,7 @@ for i in range(200):
         model = fl.Lowess(fraction=0.4)
         result = model.fit(np.array(data_x, dtype=float), np.array(data_y, dtype=float))
         current_smoothed = result.y[-1]
-```
+:::
 
 ---
 
@@ -140,7 +145,7 @@ for i in range(200):
 
 ## See Also
 
-- [Execution Modes](../user-guide/adapters.md) — Detailed mode comparison
-- [Merge Strategies](../user-guide/merge.md) — Chunk reconciliation in depth
-- [Scaling Methods](../user-guide/scaling.md) — Robustness scale estimation
+- [Execution Modes](../adapters.md) — Detailed mode comparison
+- [Merge Strategies](../merge.md) — Chunk reconciliation in depth
+- [Scaling Methods](../scaling.md) — Robustness scale estimation
 - [Time Series](time-series.md) — General time series analysis

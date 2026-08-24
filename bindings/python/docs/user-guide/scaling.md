@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD024 MD033 -->
 # Scaling Methods
 
 Residual scale estimation during robustness iterations.
@@ -31,7 +30,7 @@ First centers residuals at their median, then takes the median of the absolute d
 
 **Use when**: Data may contain outliers (default for most applications).
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -41,7 +40,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Lowess(iterations=3, scaling_method="mad")
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -53,7 +53,7 @@ Uses the uncentered median — unlike MAD it does not subtract the residual medi
 
 **Use when**: Speed matters and data have minimal systematic bias in residuals.
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -63,7 +63,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Lowess(iterations=3, scaling_method="mar")
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -75,7 +76,7 @@ Arithmetic mean of absolute residuals. Non-robust: a single extreme outlier infl
 
 **Use when**: Clean data with no outliers; maximum computation speed required.
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -85,7 +86,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Lowess(iterations=3, scaling_method="mean")
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 

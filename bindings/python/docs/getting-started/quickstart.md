@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD024 MD046 -->
 # Quick Start
 
 Get up and running with LOWESS in minutes.
@@ -7,11 +6,12 @@ Get up and running with LOWESS in minutes.
 
 Smooth a noisy sine wave — the kind of signal where LOWESS shines. Each example recovers the underlying trend from 100 points of Gaussian noise.
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
-# 100-point noisy sine wave
+## 100-point noisy sine wave
+
 rng = np.random.default_rng(42)
 x = np.linspace(0, 2 * np.pi, 100)
 y = np.sin(x) + rng.normal(0, 0.3, 100)
@@ -20,13 +20,13 @@ model = fl.Lowess(fraction=0.3, iterations=3)
 result = model.fit(x, y)
 
 print(f"First smoothed value: {result.y[0]:.4f}  (true: {np.sin(x[0]):.4f})")
-```
+:::
 
 ---
 
 ## With Confidence Intervals
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -47,7 +47,7 @@ print("Smoothed:", result.y)
 print("CI Lower:", result.confidence_lower)
 print("CI Upper:", result.confidence_upper)
 print("R²:", result.diagnostics.r_squared)
-```
+:::
 
 ---
 
@@ -55,14 +55,14 @@ print("R²:", result.diagnostics.r_squared)
 
 LOWESS can robustly handle outliers through iterative reweighting:
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 import matplotlib.pyplot as plt
 
 np.random.seed(42)
 t = np.linspace(0, 100, 500)
-trend_true = 10 + 0.5 * t + 3 * np.sin(t / 10)
+trend_true = 10 + 0.5 *t + 3* np.sin(t / 10)
 y = trend_true + np.random.normal(0, 3, len(t))
 
 x_out = np.linspace(1, 6, 6)
@@ -76,11 +76,12 @@ model = fl.Lowess(
 )
 result = model.fit(x_out, y_with_outlier)
 
-# Check which points were downweighted
+## Check which points were downweighted
+
 for i, w in enumerate(result.robustness_weights):
     if w < 0.5:
         print(f"Point {i} is likely an outlier (weight: {w:.3f})")
-```
+:::
 
 ---
 
@@ -88,13 +89,13 @@ for i, w in enumerate(result.robustness_weights):
 
 For datasets too large to fit in memory, stream them in fixed-size chunks with overlap.
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
 rng = np.random.default_rng(42)
-x = np.linspace(0, 10 * np.pi, 5000)
-y = np.sin(x / np.pi) * np.exp(-x / 30) + rng.normal(0, 0.15, 5000)
+x = np.linspace(0, 10 *np.pi, 5000)
+y = np.sin(x / np.pi)* np.exp(-x / 30) + rng.normal(0, 0.15, 5000)
 
 model = fl.StreamingLowess(
     fraction=0.2,
@@ -109,7 +110,7 @@ for start in range(0, 4001, chunk_size):
     model.process_chunk(x[start:end], y[start:end])
 result = model.finalize()
 print(f"Smoothed {len(result.y)} points in streaming mode")
-```
+:::
 
 ---
 

@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD024 MD033 -->
 # Intervals
 
 Confidence and prediction intervals for uncertainty quantification.
@@ -7,8 +6,9 @@ Confidence and prediction intervals for uncertainty quantification.
 
 ![Confidence and Prediction Intervals](../assets/diagrams/intervals_comparison.svg)
 
-!!! note "Adapter support"
-    Confidence and prediction intervals are available in **Batch** mode only. Streaming and Online modes do not support intervals.
+:::{note} Adapter support
+Confidence and prediction intervals are available in **Batch** mode only. Streaming and Online modes do not support intervals.
+:::
 
 | Type | Represents | Width | Use |
 | --- | --- | --- | --- |
@@ -21,7 +21,7 @@ Confidence and prediction intervals for uncertainty quantification.
 
 Estimate uncertainty in the smoothed curve itself.
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -35,7 +35,7 @@ result = model.fit(x, y)
 print("Smoothed:", result.y)
 print("CI Lower:", result.confidence_lower)
 print("CI Upper:", result.confidence_upper)
-```
+:::
 
 ---
 
@@ -43,7 +43,7 @@ print("CI Upper:", result.confidence_upper)
 
 Estimate where new observations might fall.
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -56,7 +56,7 @@ result = model.fit(x, y)
 
 print("PI Lower:", result.prediction_lower)
 print("PI Upper:", result.prediction_upper)
-```
+:::
 
 ---
 
@@ -64,7 +64,7 @@ print("PI Upper:", result.prediction_upper)
 
 Request both types simultaneously:
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -78,7 +78,8 @@ model = fl.Lowess(
     prediction_intervals=0.95
 )
 result = model.fit(x, y)
-```
+print(f"95% CI at midpoint: [{result.confidence_lower[50]:.4f}, {result.confidence_upper[50]:.4f}]")
+:::
 
 ---
 
@@ -92,7 +93,7 @@ Common levels and their z-values:
 | 0.95 | 1.960 | 95% of intervals contain true value |
 | 0.99 | 2.576 | 99% of intervals contain true value |
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -100,10 +101,12 @@ rng = np.random.default_rng(42)
 x = np.linspace(0, 2 * np.pi, 100)
 y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-# 90% confidence interval (narrower)
+### 90% confidence interval (narrower)
+
 model = fl.Lowess(confidence_intervals=0.90)
 result = model.fit(x, y)
-```
+print(f"95% CI at midpoint: [{result.confidence_lower[50]:.4f}, {result.confidence_upper[50]:.4f}]")
+:::
 
 ---
 
@@ -111,7 +114,7 @@ result = model.fit(x, y)
 
 Access standard errors directly (available when intervals are computed):
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -122,14 +125,15 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 model = fl.Lowess(confidence_intervals=0.95)
 result = model.fit(x, y)
 print("Standard errors:", result.standard_errors)
-```
+:::
 
 ---
 
 ## Availability
 
-!!! warning "Batch Mode Only"
-    Confidence and prediction intervals are only available in **Batch** mode. Streaming and Online modes do not support intervals.
+:::{warning} Batch Mode Only
+Confidence and prediction intervals are only available in **Batch** mode. Streaming and Online modes do not support intervals.
+:::
 
 | Feature | Batch | Streaming | Online |
 | --- | --- | --- | --- |

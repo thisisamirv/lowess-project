@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD024 MD033 -->
 # Parameters
 
 Complete reference for all LOWESS configuration options.
@@ -60,7 +59,7 @@ The proportion of data used for each local fit. **Most important parameter.**
 | 0.5–0.7 | Heavy smoothing | Noisy data |
 | 0.7–1.0 | Very smooth | Trend extraction |
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -70,7 +69,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Lowess(fraction=0.3)
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -85,7 +85,7 @@ Number of robustness iterations for outlier resistance.
 | 4–6 | Strong | Contaminated data |
 | 7+ | Very strong | Heavy outliers |
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -95,7 +95,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Lowess(iterations=5)
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -106,7 +107,7 @@ Interpolation optimization threshold. Points within `delta` distance reuse the p
 - **Default**: 1% of x-range (Batch), 0.0 (Streaming/Online)
 - **Effect**: Higher values = faster but less accurate
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -116,7 +117,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Lowess(delta=0.05)
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -136,7 +138,7 @@ Distance weighting kernel for local fits.
 
 See [Weight Functions](kernels.md) for detailed comparison.
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -146,7 +148,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Lowess(weight_function="epanechnikov")
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -162,7 +165,7 @@ Method for downweighting outliers during iterative refinement.
 
 See [Robustness](robustness.md) for detailed comparison.
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -172,7 +175,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Lowess(robustness_method="talwar")
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -191,7 +195,7 @@ Edge handling strategy to reduce boundary bias. See [Boundary Handling](boundary
 
 For example:
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -201,7 +205,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Lowess(boundary_policy="reflect")
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -219,7 +224,7 @@ Method for estimating residual scale during robustness iterations. See [Scaling 
 
 For example:
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -229,7 +234,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Lowess(scaling_method="mad")
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -247,7 +253,7 @@ Behavior when all neighborhood weights are zero.
 
 For example:
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -257,7 +263,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Lowess(zero_weight_fallback="use_local_mean")
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -265,7 +272,7 @@ result = model.fit(x, y)
 
 Enable early stopping when robustness weights stabilize.
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -275,7 +282,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Lowess(iterations=20, auto_converge=1e-6)
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -284,12 +292,12 @@ result = model.fit(x, y)
 Per-observation weights applied before distance and robustness weighting. Only
 available in the **Batch** adapter.
 
-!!! note "Batch only"
-    `custom_weights` is silently ignored in Streaming and Online adapters.
-
+:::{note} Batch only
+`custom_weights` is silently ignored in Streaming and Online adapters.
+:::
 See [Custom Weights](custom-weights.md) for a full discussion.
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -304,7 +312,8 @@ weights[5] = 0.0           # exclude index 5
 
 model = fl.Lowess(fraction=0.5)
 result = model.fit(x, y, custom_weights=weights)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -314,7 +323,7 @@ result = model.fit(x, y, custom_weights=weights)
 
 Include residuals (`y - smoothed`) in the output.
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -325,7 +334,7 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 model = fl.Lowess(return_residuals=True)
 result = model.fit(x, y)
 print(result.residuals)
-```
+:::
 
 ---
 
@@ -343,7 +352,7 @@ Include fit quality metrics (Batch and Streaming only).
 | `aic` | Akaike Information Criterion |
 | `aicc` | Corrected AIC |
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -354,7 +363,7 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 model = fl.Lowess(return_diagnostics=True)
 result = model.fit(x, y)
 print(f"R²: {result.diagnostics.r_squared:.4f}")
-```
+:::
 
 ---
 
@@ -362,7 +371,7 @@ print(f"R²: {result.diagnostics.r_squared:.4f}")
 
 Include final robustness weights (useful for outlier detection).
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -373,7 +382,7 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 model = fl.Lowess(iterations=3, return_robustness_weights=True)
 result = model.fit(x, y)
 outliers = [i for i, w in enumerate(result.robustness_weights) if w < 0.5]
-```
+:::
 
 ---
 
@@ -381,7 +390,7 @@ outliers = [i for i, w in enumerate(result.robustness_weights) if w < 0.5]
 
 Return per-point standard errors for the smoothed fit. Standard errors measure the uncertainty of each smoothed estimate and are used as the basis for confidence and prediction intervals when those are requested alongside `return_se`.
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -392,7 +401,7 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 model = fl.Lowess(return_se=True)
 result = model.fit(x, y)
 print(result.standard_errors)
-```
+:::
 
 ---
 
@@ -402,7 +411,7 @@ Request uncertainty estimates (Batch only).
 
 See [Intervals](intervals.md) for detailed usage.
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -412,7 +421,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Lowess(confidence_intervals=0.95, prediction_intervals=0.95)
 result = model.fit(x, y)
-```
+print(f"95% CI at midpoint: [{result.confidence_lower[50]:.4f}, {result.confidence_upper[50]:.4f}]")
+:::
 
 ---
 
@@ -427,7 +437,7 @@ Selection strategy for automated parameter tuning.
 | `"kfold"` | K-Fold Cross-Validation | Fast |
 | `"loocv"` | Leave-One-Out Cross-Validation | Slow |
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -437,7 +447,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Lowess(cv_method="kfold", cv_k=5)
 result = model.fit(x, y)
-```
+print(f"Best fraction: {result.cv_best_fraction}  CV MSE: {result.cv_mse:.4f}")
+:::
 
 ---
 
@@ -447,7 +458,7 @@ result = model.fit(x, y)
 
 Points per chunk in Streaming mode.
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -458,7 +469,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 model = fl.StreamingLowess(chunk_size=10000)
 model.process_chunk(x, y)
 result = model.finalize()
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -466,7 +478,7 @@ result = model.finalize()
 
 Overlap between chunks in Streaming mode.
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -477,7 +489,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 model = fl.StreamingLowess(overlap=1000)
 model.process_chunk(x, y)
 result = model.finalize()
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -494,7 +507,7 @@ Method for merging overlapping chunks. See [Merge Strategies](merge.md) for a de
 
 For example:
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -505,7 +518,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 model = fl.StreamingLowess(merge_strategy="weighted_average")
 model.process_chunk(x, y)
 result = model.finalize()
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -513,7 +527,7 @@ result = model.finalize()
 
 Maximum points held in memory for Online mode.
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -523,7 +537,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.OnlineLowess(window_capacity=500)
 result = model.add_point(x[0], y[0])  # None until window fills
-```
+print("Online result:", result)
+:::
 
 ---
 
@@ -531,7 +546,7 @@ result = model.add_point(x[0], y[0])  # None until window fills
 
 Minimum points required before Online filter starts producing outputs.
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -541,7 +556,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.OnlineLowess(min_points=10)
 result = model.add_point(x[0], y[0])
-```
+print("Online result:", result)
+:::
 
 ---
 
@@ -556,7 +572,7 @@ Optimization strategy for Online mode updates.
 
 For example:
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -566,4 +582,5 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.OnlineLowess(update_mode="full")
 result = model.add_point(x[0], y[0])
-```
+print("Online result:", result)
+:::

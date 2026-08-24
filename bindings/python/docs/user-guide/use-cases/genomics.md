@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD033 -->
 # Genomic Data Smoothing
 
 LOWESS for methylation profiles, ChIP-seq signals, and other genomic data.
@@ -19,24 +18,28 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
 
 A small `fraction = 0.1` lets LOWESS follow fine-scale spatial structure without smearing the transitions between methylated and unmethylated regions. `confidence_intervals = 0.95` produces uncertainty bands that naturally widen at positions with sparser CpG coverage, making low-confidence segments immediately apparent in the plot.
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Simulate methylation data along a chromosome
+## Simulate methylation data along a chromosome
+
 np.random.seed(42)
 n_positions = 1000
 positions = np.sort(np.random.uniform(0, 1e6, n_positions))
 
-# True methylation pattern (varies along chromosome)
+## True methylation pattern (varies along chromosome)
+
 true_methylation = 0.5 + 0.3 * np.sin(positions / 1e5)
 
-# Observed with noise
+## Observed with noise
+
 observed = true_methylation + np.random.normal(0, 0.15, n_positions)
 observed = np.clip(observed, 0, 1)  # Methylation is 0-1
 
-# Smooth with LOWESS
+## Smooth with LOWESS
+
 model = fl.Lowess(
     fraction=0.1,           # Small fraction for local detail
     iterations=3,           # Robustness for outliers
@@ -44,7 +47,8 @@ model = fl.Lowess(
 )
 result = model.fit(positions, observed)
 
-# Plot
+## Plot
+
 plt.figure(figsize=(12, 5))
 plt.scatter(positions, observed, s=2, alpha=0.3, label="Observed")
 plt.plot(positions, result.y, "b-", linewidth=2, label="LOWESS smoothed")
@@ -59,7 +63,7 @@ plt.ylabel("Methylation Level")
 plt.legend()
 plt.title("Methylation Profile Smoothing")
 plt.show()
-```
+:::
 
 ---
 
@@ -71,7 +75,7 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
 
 `fraction = 0.05` provides high spatial resolution — important for resolving narrow binding peaks that would otherwise be smeared into the background. The larger `iterations = 5` is deliberate: Poisson-distributed read counts produce tall, isolated spikes, and extra robustness iterations progressively down-weight them so the estimated background level is not inflated by a handful of extreme counts.
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -79,21 +83,24 @@ np.random.seed(42)
 positions = np.arange(0, 10000, 10, dtype=float)
 coverage = np.random.poisson(50, len(positions)).astype(float)
 
-# Simulate ChIP-seq coverage with peaks
+## Simulate ChIP-seq coverage with peaks
+
 np.random.seed(123)
 positions = np.arange(0, 10000, 10, dtype=float)
 n = len(positions)
 
-# Background + peaks
+## Background + peaks
+
 background = 10
-peak1 = 50 * np.exp(-((positions - 2000) ** 2) / (2 * 200 ** 2))
-peak2 = 80 * np.exp(-((positions - 5000) ** 2) / (2 * 300 ** 2))
-peak3 = 40 * np.exp(-((positions - 8000) ** 2) / (2 * 150 ** 2))
+peak1 = 50 *np.exp(-((positions - 2000) **2) / (2* 200** 2))
+peak2 = 80 *np.exp(-((positions - 5000) **2) / (2* 300** 2))
+peak3 = 40 *np.exp(-((positions - 8000) **2) / (2* 150** 2))
 
 true_signal = background + peak1 + peak2 + peak3
 observed = np.random.poisson(true_signal)  # Poisson noise
 
-# Smooth with robustness for sporadic high counts
+## Smooth with robustness for sporadic high counts
+
 model = fl.Lowess(
     fraction=0.05,   # Very local smoothing
     iterations=5,    # Strong robustness
@@ -101,11 +108,12 @@ model = fl.Lowess(
 )
 result = model.fit(positions, observed.astype(float))
 
-# Identify peaks (smoothed signal significantly above background)
+## Identify peaks (smoothed signal significantly above background)
+
 threshold = np.percentile(result.y, 75)
 peaks = positions[result.y > threshold]
 print(f"Peak regions: {peaks}")
-```
+:::
 
 ---
 
@@ -113,7 +121,7 @@ print(f"Peak regions: {peaks}")
 
 For whole-genome data that doesn't fit in memory:
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -121,7 +129,8 @@ np.random.seed(42)
 positions = np.arange(0, 10000, 10, dtype=float)
 coverage = np.random.poisson(50, len(positions)).astype(float)
 
-# Process chromosome-by-chromosome or in chunks
+## Process chromosome-by-chromosome or in chunks
+
 model = fl.StreamingLowess(
     fraction=0.05,
     chunk_size=100000,    # 100kb chunks
@@ -130,7 +139,8 @@ model = fl.StreamingLowess(
 )
 model.process_chunk(positions, coverage)
 result = model.finalize()
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -148,9 +158,9 @@ result = model.finalize()
 
 ## See Also
 
-- [Concepts](../getting-started/concepts.md) — How LOWESS works
-- [Parameters](../user-guide/parameters.md) — All options
-- [Robustness](../user-guide/robustness.md) — Outlier downweighting in depth
-- [Merge Strategies](../user-guide/merge.md) — Streaming chunk reconciliation
-- [Boundary Handling](../user-guide/boundary.md) — Edge handling for sparse regions
+- [Concepts](../../getting-started/concepts.md) — How LOWESS works
+- [Parameters](../parameters.md) — All options
+- [Robustness](../robustness.md) — Outlier downweighting in depth
+- [Merge Strategies](../merge.md) — Streaming chunk reconciliation
+- [Boundary Handling](../boundary.md) — Edge handling for sparse regions
 - [Real-Time Processing](real-time.md) — For sequencing runs

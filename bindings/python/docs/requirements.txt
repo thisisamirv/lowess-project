@@ -1,4 +1,10 @@
-# MkDocs Material documentation dependencies
-mkdocs-material>=9.7
-mkdocs-git-revision-date-localized-plugin>=1.5
+# Sphinx documentation dependencies
+sphinx>=8
+furo>=2024
+myst-parser>=4
+jupyter-sphinx>=0.5
+sphinx-copybutton>=0.5
+sphinxcontrib-mermaid>=1
+ipykernel>=6
+fastlowess
 

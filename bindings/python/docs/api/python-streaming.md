@@ -10,15 +10,15 @@ The `StreamingLowess` class processes data in chunks, suitable for very large da
 
 **Constructor:**
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 
 stream = fl.StreamingLowess(chunk_size=50, overlap=10)
-```
+:::
 
 **Methods:**
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -28,12 +28,11 @@ y = np.sin(x) + 0.1
 stream = fl.StreamingLowess(fraction=0.5, chunk_size=50, overlap=10)
 partial_result = stream.process_chunk(x[:50], y[:50])
 print(partial_result)
-# LowessResult(n=40, fraction_used=0.5000)
-```
+:::
 
 * Processes a chunk of data. Returns partial results.
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -45,8 +44,7 @@ stream.process_chunk(x[:50], y[:50])
 stream.process_chunk(x[50:], y[50:])
 final_result = stream.finalize()
 print(final_result)
-# LowessResult(n=10, fraction_used=0.5000)
-```
+:::
 
 * Finalizes the smoothing process and returns any remaining buffered results.
 

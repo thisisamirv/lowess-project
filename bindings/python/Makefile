@@ -46,7 +46,10 @@ else
 	PY_VENV_PYTHON := $(PY_VENV)/bin/python
 endif
 
-.PHONY: default dev clean coverage ensure-llvm-cov
+PY_DOCS_DIR := $(PY_DIR)/docs
+PY_DOCS_BUILD := $(PY_DOCS_DIR)/_build
+
+.PHONY: default dev docs docs-dev clean coverage ensure-llvm-cov
 
 default:
 	@$(PYTHON) -m pip install -q --user $(PY_DIR)
@@ -98,3 +101,13 @@ clean:
 	@cargo clean -p $(PY_PKG)
 	@git clean -fdX -- $(PY_DIR)
 	@echo "$(PY_PKG) clean complete!"
+docs:
+	@echo "Building $(PY_PKG) docs (Sphinx)..."
+	@. $(PY_ACTIVATE) && python -m pip install -q --no-cache-dir sphinx furo myst-parser jupyter-sphinx sphinx-copybutton sphinxcontrib-mermaid ipykernel >/dev/null
+	@. $(PY_ACTIVATE) && sphinx-build -b html $(PY_DOCS_DIR) $(PY_DOCS_BUILD)/html
+	@echo "Docs built at $(PY_DOCS_BUILD)/html/index.html"
+
+docs-dev:
+	@echo "Serving $(PY_PKG) docs (Sphinx autobuild)..."
+	@. $(PY_ACTIVATE) && python -m pip install -q --no-cache-dir sphinx-autobuild >/dev/null
+	@. $(PY_ACTIVATE) && sphinx-autobuild $(PY_DOCS_DIR) $(PY_DOCS_BUILD)/html --open-browser

@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD046 -->
 # fastLowess Python API Reference
 
 The Python bindings provide a high-performance interface to the core Rust library, mirroring the Rust API structure.
@@ -12,17 +13,16 @@ The `Lowess` class allows configuring the LOWESS parameters once and fitting mul
 
 **Constructor:**
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 
 model = fl.Lowess(fraction=0.5, iterations=3)
 print(model)
-# Lowess(fraction=0.5000, iterations=3, parallel=true)
-```
+:::
 
 **Methods:**
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -32,8 +32,7 @@ y = np.sin(x) + 0.1
 model = fl.Lowess(fraction=0.5)
 result = model.fit(x, y)
 print(result)
-# LowessResult(n=100, fraction_used=0.5000)
-```
+:::
 
 * Fits the model to the provided `x` and `y` array-like objects.
 * `custom_weights`: Optional array of per-observation weights. All values must be ≥ 0 and length must match `x`. Batch only.
@@ -80,17 +79,21 @@ See [python-online.md](python-online.md) for `OnlineOptions`.
 
 The batch `Lowess` class can run on a GPU-accelerated backend powered by `wgpu`. This backend is designed for high-throughput processing of large datasets (10k+ points) where parallel regression fitting on the GPU significantly outperforms CPU execution.
 
-> GPU support applies to `Lowess` (batch) only. `StreamingLowess`/`OnlineLowess` remain CPU-only — see [rust.md](rust.md#gpu-acceleration) for why.
+> GPU support applies to `Lowess` (batch) only. `StreamingLowess`/`OnlineLowess` remain CPU-only — see [rust.md](https://lowess.readthedocs.io/gpu-backend/) for why.
 
 ### Enabling GPU Support
 
 GPU support is opt-in and **not included in published PyPI wheels**. Instead of building from source, run the one-time installer, which downloads a prebuilt GPU-enabled wheel from the matching [GitHub Release](https://github.com/thisisamirv/lowess-project/releases) and installs it in place of the CPU-only build:
 
-```python
-import fastlowess as fl
+:::{jupyter-execute}
 
-fl.install_gpu()  # prompts for confirmation, then installs; restart Python afterwards
-```
+try:
+    import fastlowess as fl
+
+    fl.install_gpu()  # prompts for confirmation, then installs; restart Python afterwards
+except Exception as e:
+    print(f"(skipped in docs build: {e})")
+:::
 
 Or non-interactively:
 
@@ -113,12 +116,17 @@ maturin develop --release --features gpu
 
 To use the GPU backend, pass `backend="gpu"` to the constructor:
 
-```python
-import fastlowess as fl
+:::{jupyter-execute}
 
-model = fl.Lowess(fraction=0.5, backend="gpu", confidence_intervals=0.95)
-result = model.fit(x, y)
-```
+try:
+    import fastlowess as fl
+
+    model = fl.Lowess(fraction=0.5, backend="gpu", confidence_intervals=0.95)
+    result = model.fit(x, y)
+    print(f"95% CI at midpoint: [{result.confidence_lower[50]:.4f}, {result.confidence_upper[50]:.4f}]")
+except Exception as e:
+    print(f"(skipped in docs build: {e})")
+:::
 
 If the package was not built with the `gpu` feature, requesting `backend="gpu"` raises a runtime error pointing to `fastlowess.install_gpu()`.
 
@@ -256,19 +264,20 @@ See [python-online.md](python-online.md).
 
 ## Example
 
-```python
+:::{jupyter-execute}
 from fastlowess import Lowess
 import numpy as np
 
 x = np.linspace(0, 2 * np.pi, 100)
 y = np.sin(x) + 0.1
 
-# Configure model
+## Configure model
+
 model = Lowess(fraction=0.5)
 
-# Fit data
+## Fit data
+
 result = model.fit(x, y)
 
 print(result)
-# LowessResult(n=100, fraction_used=0.5000)
-```
+:::

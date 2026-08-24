@@ -73,6 +73,7 @@ doc/
 Meta/
 docs-venv/
 site/
+_build/
 examples/python/plots/
 bindings/cpp/include/fastlowess.h
 bindings/cpp/bin/

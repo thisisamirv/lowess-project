@@ -10,15 +10,15 @@ The `OnlineLowess` class updates the model incrementally with new data points.
 
 **Constructor:**
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 
 online = fl.OnlineLowess(fraction=0.5, window_capacity=50)
-```
+:::
 
 **Methods:**
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 import numpy as np
 
@@ -27,15 +27,12 @@ y = np.sin(x) + 0.1
 
 online = fl.OnlineLowess(fraction=0.5, window_capacity=50, min_points=3)
 
-# Returns None until min_points (3) are reached
 result = online.add_point(x[0], y[0])  # None
 result = online.add_point(x[1], y[1])  # None
 
-# Returns OnlineOutput once enough points are available
 result = online.add_point(x[2], y[2])
 print(result)
-# OnlineOutput(y=0.2266)
-```
+:::
 
 * Adds a single point to the sliding window. Returns an `OnlineOutput` once the window has enough points, or `None` while still filling.
 

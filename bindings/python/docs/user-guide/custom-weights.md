@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD033 -->
 # Custom Weights
 
 Per-observation weights that encode data quality directly into the LOWESS fit.
@@ -16,9 +15,10 @@ $$w_{ij} = \text{custom\_weights}[j] \times K\!\left(\frac{d_{ij}}{h_i}\right) \
 where $K$ is the distance kernel, $h_i$ is the local bandwidth, and $r_j$ is
 the robustness weight from the current iteration.
 
-!!! note "Batch adapter only"
-    `custom_weights` applies in **Batch** mode. It is silently ignored in
-    Streaming and Online adapters.
+:::{note} Batch adapter only
+`custom_weights` applies in **Batch** mode. It is silently ignored in
+Streaming and Online adapters.
+:::
 
 ---
 
@@ -56,7 +56,7 @@ outliers that remain.
 Set the weight to `0` at the bad point — it is excluded from every local fit
 that would otherwise include it.
 
-```python
+:::{jupyter-execute}
 import numpy as np
 from fastlowess import Lowess
 
@@ -69,7 +69,8 @@ weights[5] = 0.0           # exclude the spike
 
 model = Lowess(fraction=0.5, iterations=0)
 result = model.fit(x, y, custom_weights=weights)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -78,7 +79,7 @@ result = model.fit(x, y, custom_weights=weights)
 Assign high weights to measurements you trust most — calibration standards,
 reference instruments, or low-noise observations.
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 from fastlowess import Lowess
 import numpy as np
@@ -95,7 +96,8 @@ for i in calibration_indices:
 
 model = Lowess(fraction=0.5)
 result = model.fit(x, y, custom_weights=weights)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -105,7 +107,7 @@ If each observation has a known standard deviation $\sigma_i$, set
 $w_i = 1 / \sigma_i^2$ to give the fit information-theoretically optimal
 weighting.
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 from fastlowess import Lowess
 import numpy as np
@@ -119,7 +121,8 @@ sigma = rng.uniform(0.1, 0.5, 100)
 weights = 1.0 / sigma**2
 model = Lowess(fraction=0.5)
 result = model.fit(x, y, custom_weights=weights)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -128,7 +131,7 @@ result = model.fit(x, y, custom_weights=weights)
 Custom weights and robustness iterations compose naturally: use custom weights
 for *known* bad points and robustness for *unknown* contamination.
 
-```python
+:::{jupyter-execute}
 import fastlowess as fl
 from fastlowess import Lowess
 import numpy as np
@@ -149,7 +152,8 @@ weights[3] = 0.0
 
 model = Lowess(fraction=0.4, iterations=3)
 result = model.fit(x, y, custom_weights=weights)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -162,10 +166,11 @@ result = model.fit(x, y, custom_weights=weights)
 | All-zero weight vector | Error: no points remain for any local fit |
 | Uniform weights (`1.0` everywhere) | Identical result to omitting weights |
 
-!!! warning "Zero-weight windows"
-    If a local neighbourhood contains only zero-weight points, the fit at
-    that centre point falls back to the behaviour specified by
-    `zero_weight_fallback` (default: `"use_local_mean"`).
+:::{warning} Zero-weight windows
+If a local neighbourhood contains only zero-weight points, the fit at
+that centre point falls back to the behaviour specified by
+`zero_weight_fallback` (default: `"use_local_mean"`).
+:::
 
 ---
 
