@@ -2,6 +2,7 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 
 export default defineConfig({
+    site: process.env.SITE,
     base: process.env.VITE_BASE ?? '/',
     outDir: './dist',
     integrations: [
@@ -9,7 +10,7 @@ export default defineConfig({
             title: 'fastlowess',
             description: 'High-performance LOWESS smoothing for Node.js',
             expressiveCode: {
-                langs: [{ name: 'output', scopeName: 'source.output', patterns: [], repository: {} }],
+                shiki: { langAlias: { output: 'text' } },
             },
             sidebar: [
                 {

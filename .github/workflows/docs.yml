@@ -124,6 +124,7 @@ jobs:
         run: npm run docs
         working-directory: bindings/nodejs
         env:
+          SITE: https://${{ github.repository_owner }}.github.io
           VITE_BASE: /${{ github.event.repository.name }}/nodejs/
 
       - uses: JamesIves/github-pages-deploy-action@v4
@@ -199,7 +200,7 @@ jobs:
           node-version: "22"
 
       - name: Build WASM
-        run: wasm-pack build --target bundler --release
+        run: wasm-pack build --target nodejs --release
         working-directory: bindings/wasm
 
       - name: Install dependencies
@@ -210,6 +211,7 @@ jobs:
         run: npm run docs
         working-directory: bindings/wasm
         env:
+          SITE: https://${{ github.repository_owner }}.github.io
           VITE_BASE: /${{ github.event.repository.name }}/wasm/
 
       - uses: JamesIves/github-pages-deploy-action@v4
