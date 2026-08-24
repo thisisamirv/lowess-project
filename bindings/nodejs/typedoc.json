@@ -8,5 +8,5 @@
     "out": "src/content/docs/reference",
     "name": "fastlowess",
     "readme": "none",
-    "indexFileName": "index"
+    "entryFileName": "index"
 }

@@ -205,10 +205,15 @@ def main() -> None:
     print(f"Building {len(tasks)} snippet(s) in one cargo invocation...")
     outputs = build_and_run_all(tasks)
 
+    n_errors = sum(1 for v in outputs.values() if v is None)
     updated = [md.name for md in md_files if process_file(md, outputs)]
     for name in updated:
         print(f"  updated: {name}")
     print(f"\nDone -- {len(updated)} file(s) updated.")
+
+    if n_errors:
+        print(f"\n{n_errors} snippet(s) failed.", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

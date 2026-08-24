@@ -33,9 +33,7 @@ int main() {
     fastlowess::Lowess basic_model(trend_opts);
     auto basic_result = basic_model.fit(t, y).value();
 
-    // Trend in basic_result.y_vector()
-
-    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
+    std::cout << "y[0]: " << basic_result.y_vector()[0] << "\n";
     return 0;
 }
 ```
@@ -180,7 +178,7 @@ int main() {
         trends.push_back(result.y_vector());
     }
 
-    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
+    std::cout << "y[0]: " << trends[0][0] << "\n";
     return 0;
 }
 ```

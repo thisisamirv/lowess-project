@@ -19,9 +19,14 @@ The `Lowess` class allows configuring the LOWESS parameters once and fitting mul
 #include <vector>
 
 int main() {
+    const int n = 10;
+    std::vector<double> x(n), y(n);
+    for (int i = 0; i < n; ++i) { x[i] = i; y[i] = i + 0.1; }
+
     fastlowess::LowessOptions opts;
     opts.fraction = 0.5;
     fastlowess::Lowess model(opts);
+    auto result = model.fit(x, y).value();
 
     std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;

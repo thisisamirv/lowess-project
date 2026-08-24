@@ -24,7 +24,7 @@ FENCE_RE = re.compile(r"```cpp\n([\s\S]*?)```", re.MULTILINE)
 OUTPUT_RE = re.compile(r"\n\n```output\n[\s\S]*?```")
 
 
-def process_file(md_path: Path) -> bool:
+def process_file(md_path: Path, failures: list[str]) -> bool:
     original = md_path.read_text(encoding="utf-8").replace("\r\n", "\n")
     result = ""
     pos = 0
@@ -49,8 +49,17 @@ def process_file(md_path: Path) -> bool:
         snippet = Snippet(file=md_path, line=0, lang_tag="cpp", tab=None, code=code)
         run_result = run_cpp(snippet, timeout=TIMEOUT)
 
-        if not run_result.skipped and run_result.passed and run_result.stdout:
-            result += f"\n\n```output\n{run_result.stdout.rstrip()}\n```"
+        if run_result.skipped:
+            if existing:
+                result += existing.group()
+        elif run_result.passed:
+            if run_result.stdout:
+                result += f"\n\n```output\n{run_result.stdout.rstrip()}\n```"
+        else:
+            err = (run_result.stderr or "").strip()
+            failures.append(f"  FAIL {md_path.name}\n{err}")
+            if existing:
+                result += existing.group()
 
     result += original[pos:]
 
@@ -61,12 +70,18 @@ def process_file(md_path: Path) -> bool:
 
 
 files = sorted(f for f in DOCS_DIR.glob("*.md") if f.name != "index.md")
+failures: list[str] = []
 updated = 0
 for f in files:
     sys.stdout.write(f"  {f.name}...")
-    changed = process_file(f)
+    changed = process_file(f, failures)
     sys.stdout.write(" updated\n" if changed else "\n")
     if changed:
         updated += 1
 
 print(f"add-cpp-outputs: {updated}/{len(files)} file(s) updated")
+
+if failures:
+    for msg in failures:
+        print(msg, file=sys.stderr)
+    sys.exit(1)

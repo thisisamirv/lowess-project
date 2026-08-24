@@ -21,29 +21,32 @@ const REQUIRE_RE = new RegExp(`require\\(['"]${PKG_NAME}['"]\\)`, 'g');
 
 function runSnippet(code) {
     const patched = code.replace(REQUIRE_RE, `require('${INDEX_PATH}')`);
-    const tmp = path.join(os.tmpdir(), `snippet-${Date.now()}-${Math.random().toString(36).slice(2)}.js`);
+    const tmpDir = os.tmpdir();
+    if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+    const tmp = path.join(tmpDir, `snippet-${Date.now()}-${Math.random().toString(36).slice(2)}.js`);
     fs.writeFileSync(tmp, patched, 'utf-8');
     try {
-        return execFileSync(process.execPath, [tmp], {
+        const output = execFileSync(process.execPath, [tmp], {
             cwd: BINDING_DIR,
             timeout: 15000,
             encoding: 'utf-8',
-            stdio: ['ignore', 'pipe', 'ignore'],
+            stdio: ['ignore', 'pipe', 'pipe'],
         }).trim() || null;
-    } catch {
-        // Silently skip blocks that fail (partial examples, undefined variables, etc.)
-        return null;
+        return { output, error: null };
+    } catch (e) {
+        return { output: null, error: e.stderr?.trim() || e.message };
     } finally {
         try { fs.unlinkSync(tmp); } catch { /* ignore */ }
     }
 }
 
 function processFile(filepath) {
-    if (SKIP_FILES.has(path.basename(filepath))) return false;
+    if (SKIP_FILES.has(path.basename(filepath))) return { changed: false, errors: [] };
 
     const original = fs.readFileSync(filepath, 'utf-8').replace(/\r\n/g, '\n');
     let result = '';
     let pos = 0;
+    const errors = [];
     const re = /```javascript\n([\s\S]*?)```/g;
     let m;
 
@@ -51,23 +54,25 @@ function processFile(filepath) {
         result += original.slice(pos, m.index + m[0].length);
         pos = m.index + m[0].length;
 
-        // Consume any existing runner-output block that directly follows
         const existing = original.slice(pos).match(/^\n\n```output\n[\s\S]*?```/);
         if (existing) pos += existing[0].length;
 
         if (!SKIP_PATTERNS.some(p => m[1].includes(p))) {
-            const out = runSnippet(m[1]);
-            if (out) result += `\n\n${BT}output\n${out}\n${BT}`;
+            const { output, error } = runSnippet(m[1]);
+            if (error) {
+                errors.push(`  FAIL ${path.relative(DOCS_DIR, filepath)}\n${error}`);
+                if (existing) result += existing[0];
+            } else if (output) {
+                result += `\n\n${BT}output\n${output}\n${BT}`;
+            }
         }
     }
 
     result += original.slice(pos);
 
-    if (result !== original) {
-        fs.writeFileSync(filepath, result, 'utf-8');
-        return true;
-    }
-    return false;
+    const changed = result !== original;
+    if (changed) fs.writeFileSync(filepath, result, 'utf-8');
+    return { changed, errors };
 }
 
 const files = fs.readdirSync(DOCS_DIR)
@@ -75,10 +80,18 @@ const files = fs.readdirSync(DOCS_DIR)
     .sort();
 
 let updated = 0;
+const allErrors = [];
 for (const f of files) {
     process.stdout.write(`  ${f}...`);
-    const changed = processFile(path.join(DOCS_DIR, f));
+    const { changed, errors } = processFile(path.join(DOCS_DIR, f));
     process.stdout.write(changed ? ' updated\n' : '\n');
     if (changed) updated++;
+    allErrors.push(...errors);
 }
 console.log(`add-wasm-outputs: ${updated}/${files.length} file(s) updated`);
+
+if (allErrors.length > 0) {
+    process.stderr.write('\nFailed snippets:\n');
+    for (const msg of allErrors) process.stderr.write(msg + '\n\n');
+    process.exit(1);
+}

@@ -816,7 +816,7 @@ int main() {
     auto out = model.add_point(x[0], y[0]).value();
     // out.has_value() == false until window fills
 
-    if (r.has_value()) { std::cout << "Online y: " << r->y << "\n"; }
+    if (out.has_value()) { std::cout << "Online y: " << out.y() << "\n"; }
     return 0;
 }
 ```
@@ -846,7 +846,7 @@ int main() {
     fastlowess::OnlineLowess model(opts);
     auto out = model.add_point(x[0], y[0]).value();
 
-    if (r.has_value()) { std::cout << "Online y: " << r->y << "\n"; }
+    if (out.has_value()) { std::cout << "Online y: " << out.y() << "\n"; }
     return 0;
 }
 ```
@@ -883,7 +883,7 @@ int main() {
     fastlowess::OnlineLowess model(opts);
     auto out = model.add_point(x[0], y[0]).value();
 
-    if (r.has_value()) { std::cout << "Online y: " << r->y << "\n"; }
+    if (out.has_value()) { std::cout << "Online y: " << out.y() << "\n"; }
     return 0;
 }
 ```

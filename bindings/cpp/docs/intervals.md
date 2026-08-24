@@ -77,7 +77,7 @@ int main() {
     fastlowess::Lowess model({ .fraction = 0.5, .prediction_intervals = 0.95});
     auto result = model.fit(x, y).value();
 
-    std::cout << "95% CI: [" << result.confidence_lower()[0] << ", " << result.confidence_upper()[0] << "]\n";
+    std::cout << "95% PI: [" << result.prediction_lower()[0] << ", " << result.prediction_upper()[0] << "]\n";
     return 0;
 }
 ```

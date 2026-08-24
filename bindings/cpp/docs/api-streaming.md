@@ -17,9 +17,19 @@ The `StreamingLowess` class processes data in chunks, suitable for very large da
 #include <vector>
 
 int main() {
+    const int n = 20;
+    std::vector<double> x(n), y(n);
+    for (int i = 0; i < n; ++i) { x[i] = i; y[i] = i + 0.1; }
+
     fastlowess::StreamingOptions opts;
-    opts.chunk_size = 5;
+    opts.chunk_size = 10;
+    opts.overlap = 2;
     fastlowess::StreamingLowess model(opts);
+    std::vector<double> x1(x.begin(), x.begin() + 10), y1(y.begin(), y.begin() + 10);
+    std::vector<double> x2(x.begin() + 10, x.end()), y2(y.begin() + 10, y.end());
+    model.process_chunk(x1, y1);
+    model.process_chunk(x2, y2);
+    auto result = model.finalize().value();
 
     std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;

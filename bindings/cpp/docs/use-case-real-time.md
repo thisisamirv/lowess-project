@@ -239,7 +239,6 @@ int main() {
         (void)smoothed;
     }
 
-    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
 ```

@@ -30,7 +30,10 @@ int main() {
     opts.min_points = 3;
     fastlowess::OnlineLowess model(opts);
 
-    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
+    auto r = model.add_point(x[0], y[0]).value();
+    auto r2 = model.add_point(x[1], y[1]).value();
+    auto r3 = model.add_point(x[2], y[2]).value();
+    if (r3.has_value()) { std::cout << "y: " << r3.y() << "\n"; }
     return 0;
 }
 ```
