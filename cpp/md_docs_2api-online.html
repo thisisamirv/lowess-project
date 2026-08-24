@@ -119,6 +119,7 @@ Class</h1>
 <div class="line">    opts.min_points = 3;</div>
 <div class="line">    fastlowess::OnlineLowess model(opts);</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 </div><!-- fragment --><ul>
@@ -156,6 +157,7 @@ Class</h1>
 <div class="line"> </div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">0.226592</div>
 </div><!-- fragment --><ul>
 <li>Adds a single point to the sliding window. Returns <code>Expected&lt;OnlineOutput&gt;</code> — check <code>has_value()</code> to see whether the window is ready.</li>
 </ul>

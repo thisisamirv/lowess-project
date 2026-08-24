@@ -128,8 +128,10 @@ Solution</h3>
 <div class="line">    <span class="comment">// Smoothed profile in result.y_vector()</span></div>
 <div class="line">    <span class="comment">// CI bounds in result.confidence_lower()/result.confidence_upper()</span></div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;95% CI: [&quot;</span> &lt;&lt; result.confidence_lower()[0] &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; result.confidence_upper()[0] &lt;&lt; <span class="stringliteral">&quot;]\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">95% CI: [51.6773, 68.7372]</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md286"></a>
 ChIP-seq Signal Smoothing</h2>
@@ -163,8 +165,10 @@ Application</h3>
 <div class="line">        }</div>
 <div class="line">    }</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 59.952</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md289"></a>
 Large Genome Coverage (Streaming)</h2>
@@ -192,8 +196,10 @@ Large Genome Coverage (Streaming)</h2>
 <div class="line">    (void)stream.process_chunk(positions, coverage);</div>
 <div class="line">    <span class="keyword">auto</span> result = stream.finalize().value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;Smoothed &quot;</span> &lt;&lt; result.y_vector().size() &lt;&lt; <span class="stringliteral">&quot; points\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">Smoothed 100 points</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md291"></a>
 Best Practices for Genomic Data</h2>

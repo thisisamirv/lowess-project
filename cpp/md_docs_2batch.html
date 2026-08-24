@@ -128,8 +128,10 @@ Example</h1>
 <div class="line">    });</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;95% CI: [&quot;</span> &lt;&lt; result.confidence_lower()[0] &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; result.confidence_upper()[0] &lt;&lt; <span class="stringliteral">&quot;]\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.29413, 0.374611]</div>
 </div><!-- fragment --><hr  />
  </div></div><!-- contents -->
 </div><!-- PageDoc -->

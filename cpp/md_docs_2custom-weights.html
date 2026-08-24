@@ -164,8 +164,10 @@ Suppress a Known Outlier</h3>
 <div class="line"> </div>
 <div class="line">    <span class="keyword">auto</span> result = fastlowess::Lowess(opts).fit(xw, yw, weights).value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.572621</div>
 </div><!-- fragment --><hr  />
 <h3><a class="anchor" id="autotoc_md104"></a>
 Emphasize Important Points</h3>
@@ -191,8 +193,10 @@ Emphasize Important Points</h3>
 <div class="line">    opts.fraction = 0.5;</div>
 <div class="line">    <span class="keyword">auto</span> result = fastlowess::Lowess(opts).fit(x, y, weights).value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.323742</div>
 </div><!-- fragment --><hr  />
 <h3><a class="anchor" id="autotoc_md106"></a>
 Propagate Measurement Uncertainty</h3>
@@ -219,8 +223,10 @@ Propagate Measurement Uncertainty</h3>
 <div class="line">    opts.fraction = 0.5;</div>
 <div class="line">    <span class="keyword">auto</span> result = fastlowess::Lowess(opts).fit(x, y, weights).value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.152222</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md108"></a>
 Combined with Robustness Iterations</h2>
@@ -247,8 +253,10 @@ Combined with Robustness Iterations</h2>
 <div class="line"> </div>
 <div class="line">    <span class="keyword">auto</span> result = fastlowess::Lowess(opts).fit(x, y, weights).value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.302856</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md110"></a>
 Validation Rules</h2>

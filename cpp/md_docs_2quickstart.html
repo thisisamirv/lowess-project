@@ -120,6 +120,7 @@ Basic Smoothing</h2>
 <div class="line">              &lt;&lt; <span class="stringliteral">&quot;  (true: &quot;</span> &lt;&lt; std::sin(x[0]) &lt;&lt; <span class="stringliteral">&quot;)\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">First smoothed: 0.02784  (true: 0)</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md239"></a>
 With Confidence Intervals</h2>
@@ -151,8 +152,10 @@ With Confidence Intervals</h2>
 <div class="line">    <span class="keyword">auto</span> upper = result.confidence_upper();</div>
 <div class="line">    <span class="keywordtype">double</span> r2 = result.diagnostics().r_squared();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;95% CI: [&quot;</span> &lt;&lt; result.confidence_lower()[0] &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; result.confidence_upper()[0] &lt;&lt; <span class="stringliteral">&quot;]\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.29413, 0.374611]</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md241"></a>
 Handling Outliers</h2>
@@ -222,6 +225,7 @@ Streaming Mode</h2>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;Smoothed &quot;</span> &lt;&lt; result.y_vector().size() &lt;&lt; <span class="stringliteral">&quot; points\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">Smoothed 100 points</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md245"></a>
 Next Steps</h2>

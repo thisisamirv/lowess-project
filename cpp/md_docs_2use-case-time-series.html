@@ -124,6 +124,7 @@ Basic Trend Extraction</h2>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// Trend in basic_result.y_vector()</span></div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 </div><!-- fragment --><hr  />
@@ -154,8 +155,10 @@ Detrending</h2>
 <div class="line">    <span class="keyword">auto</span> trend = result.y_vector();</div>
 <div class="line">    <span class="keyword">auto</span> detrended = result.residuals();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;residuals[0]: &quot;</span> &lt;&lt; result.residuals()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">residuals[0]: -0.158244</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md319"></a>
 Forecasting with Prediction Intervals</h2>
@@ -183,8 +186,10 @@ Forecasting with Prediction Intervals</h2>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// Access result.prediction_lower() and result.prediction_upper()</span></div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;95% CI: [&quot;</span> &lt;&lt; result.confidence_lower()[0] &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; result.confidence_upper()[0] &lt;&lt; <span class="stringliteral">&quot;]\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.214336, 0.234557]</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md321"></a>
 Handling Missing Data</h2>
@@ -205,8 +210,10 @@ Handling Missing Data</h2>
 <div class="line">    fastlowess::Lowess missing_model({ .fraction = 0.2 });</div>
 <div class="line">    <span class="keyword">auto</span> result = missing_model.fit(tIrregular, yIrregular).value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 11.3273</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md323"></a>
 Multi-Scale Analysis</h2>
@@ -232,6 +239,7 @@ Multi-Scale Analysis</h2>
 <div class="line">        trends.push_back(result.y_vector());</div>
 <div class="line">    }</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 </div><!-- fragment --><hr  />
@@ -262,6 +270,7 @@ Gene Expression Time Course</h2>
 <div class="line"> </div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">RÂ²: 0.993834</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md327"></a>
 Choosing Fraction for Time Series</h2>

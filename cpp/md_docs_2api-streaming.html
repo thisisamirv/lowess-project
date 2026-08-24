@@ -110,6 +110,7 @@ Class</h1>
 <div class="line">    opts.chunk_size = 5;</div>
 <div class="line">    fastlowess::StreamingLowess model(opts);</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 </div><!-- fragment --><ul>
@@ -140,6 +141,7 @@ Class</h1>
 <div class="line"> </div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">0.5</div>
 </div><!-- fragment --><ul>
 <li>Processes a chunk of data. Returns partial results.</li>
 </ul>
@@ -170,6 +172,7 @@ Class</h1>
 <div class="line"> </div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">0.5</div>
 </div><!-- fragment --><ul>
 <li>Finalizes the smoothing process and returns any remaining buffered results.</li>
 </ul>

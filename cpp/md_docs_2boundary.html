@@ -133,8 +133,10 @@ Extend (Default)</h2>
 <div class="line">    fastlowess::Lowess model({ .boundary_policy = <span class="stringliteral">&quot;extend&quot;</span> });</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.382608</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md54"></a>
 Reflect</h2>
@@ -156,8 +158,10 @@ Reflect</h2>
 <div class="line">    fastlowess::Lowess model({ .boundary_policy = <span class="stringliteral">&quot;reflect&quot;</span> });</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.712762</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md56"></a>
 Zero</h2>
@@ -179,8 +183,10 @@ Zero</h2>
 <div class="line">    fastlowess::Lowess model({ .boundary_policy = <span class="stringliteral">&quot;zero&quot;</span> });</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.33561</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md58"></a>
 No Boundary</h2>
@@ -203,8 +209,10 @@ No Boundary</h2>
 <div class="line">    fastlowess::Lowess model({ .boundary_policy = <span class="stringliteral">&quot;noboundary&quot;</span> });</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.693828</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md60"></a>
 Choosing a Policy</h2>

@@ -135,8 +135,10 @@ MAD — Median Absolute Deviation (Default)</h2>
 <div class="line">    fastlowess::Lowess model({ .iterations = 3, .scaling_method = <span class="stringliteral">&quot;mad&quot;</span> });</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.382608</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md268"></a>
 MAR — Median Absolute Residual</h2>
@@ -159,8 +161,10 @@ MAR — Median Absolute Residual</h2>
 <div class="line">    fastlowess::Lowess model({ .iterations = 3, .scaling_method = <span class="stringliteral">&quot;mar&quot;</span> });</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.382608</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md270"></a>
 Mean — Mean Absolute Residual</h2>
@@ -183,8 +187,10 @@ Mean — Mean Absolute Residual</h2>
 <div class="line">    fastlowess::Lowess model({ .iterations = 3, .scaling_method = <span class="stringliteral">&quot;mean&quot;</span> });</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.382189</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md272"></a>
 Choosing a Scaling Method</h2>

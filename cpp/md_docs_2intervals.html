@@ -135,8 +135,10 @@ Confidence Intervals</h2>
 <div class="line">    <span class="keyword">auto</span> ci_lower = result.confidence_lower();</div>
 <div class="line">    <span class="keyword">auto</span> ci_upper = result.confidence_upper();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;95% CI: [&quot;</span> &lt;&lt; result.confidence_lower()[0] &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; result.confidence_upper()[0] &lt;&lt; <span class="stringliteral">&quot;]\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.29413, 0.374611]</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md137"></a>
 Prediction Intervals</h2>
@@ -157,6 +159,7 @@ Prediction Intervals</h2>
 <div class="line">    fastlowess::Lowess model({ .fraction = 0.5, .prediction_intervals = 0.95});</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;95% CI: [&quot;</span> &lt;&lt; result.confidence_lower()[0] &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; result.confidence_upper()[0] &lt;&lt; <span class="stringliteral">&quot;]\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 </div><!-- fragment --><hr  />
@@ -179,8 +182,10 @@ Both Intervals</h2>
 <div class="line">    fastlowess::Lowess model({ .fraction = 0.5, .confidence_intervals = 0.95, .prediction_intervals = 0.95});</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;95% CI: [&quot;</span> &lt;&lt; result.confidence_lower()[0] &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; result.confidence_upper()[0] &lt;&lt; <span class="stringliteral">&quot;]\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.29413, 0.374611]</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md141"></a>
 Confidence Levels</h2>
@@ -211,8 +216,10 @@ Confidence Levels</h2>
 <div class="line">    fastlowess::Lowess model({ .confidence_intervals = 0.99});</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;95% CI: [&quot;</span> &lt;&lt; result.confidence_lower()[0] &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; result.confidence_upper()[0] &lt;&lt; <span class="stringliteral">&quot;]\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.317143, 0.448073]</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md143"></a>
 Standard Errors</h2>
@@ -233,8 +240,10 @@ Standard Errors</h2>
 <div class="line">    fastlowess::Lowess model({ .confidence_intervals = 0.95});</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;95% CI: [&quot;</span> &lt;&lt; result.confidence_lower()[0] &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; result.confidence_upper()[0] &lt;&lt; <span class="stringliteral">&quot;]\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.332797, 0.432418]</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md145"></a>
 Availability</h2>

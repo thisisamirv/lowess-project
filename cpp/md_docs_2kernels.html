@@ -144,8 +144,10 @@ Tricube (Default)</h2>
 <div class="line">    fastlowess::Lowess model({ .weight_function = <span class="stringliteral">&quot;tricube&quot;</span> });</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.382608</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md153"></a>
 Epanechnikov</h2>
@@ -168,8 +170,10 @@ Epanechnikov</h2>
 <div class="line">    fastlowess::Lowess model({ .weight_function = <span class="stringliteral">&quot;epanechnikov&quot;</span> });</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.406728</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md155"></a>
 Gaussian</h2>
@@ -192,8 +196,10 @@ Gaussian</h2>
 <div class="line">    fastlowess::Lowess model({ .weight_function = <span class="stringliteral">&quot;gaussian&quot;</span> });</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.435767</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md157"></a>
 Biweight</h2>
@@ -216,8 +222,10 @@ Biweight</h2>
 <div class="line">    fastlowess::Lowess model({ .weight_function = <span class="stringliteral">&quot;biweight&quot;</span> });</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.375903</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md159"></a>
 Cosine</h2>
@@ -240,8 +248,10 @@ Cosine</h2>
 <div class="line">    fastlowess::Lowess model({ .weight_function = <span class="stringliteral">&quot;cosine&quot;</span> });</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.40083</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md161"></a>
 Triangle</h2>
@@ -264,8 +274,10 @@ Triangle</h2>
 <div class="line">    fastlowess::Lowess model({ .weight_function = <span class="stringliteral">&quot;triangle&quot;</span> });</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.381657</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md163"></a>
 Uniform</h2>
@@ -288,8 +300,10 @@ Uniform</h2>
 <div class="line">    fastlowess::Lowess model({ .weight_function = <span class="stringliteral">&quot;uniform&quot;</span> });</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.45084</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md165"></a>
 Choosing a Kernel</h2>

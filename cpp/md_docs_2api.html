@@ -113,6 +113,7 @@ Classes</h1>
 <div class="line">    opts.fraction = 0.5;</div>
 <div class="line">    fastlowess::Lowess model(opts);</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 </div><!-- fragment --><ul>
@@ -144,6 +145,8 @@ Classes</h1>
 <div class="line"> </div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">0.5</div>
+<div class="line">-1</div>
 </div><!-- fragment --><ul>
 <li>Fits the model to the provided <code>x</code> and <code>y</code> data vectors.</li>
 <li>The second overload applies <code>custom_weights</code> — non-negative per-observation weights of length <code>n</code>. Batch only.</li>
@@ -422,6 +425,7 @@ Example</h1>
 <div class="line">    }</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">2.1 4 6.2 8 10.1</div>
 </div><!-- fragment --> </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->

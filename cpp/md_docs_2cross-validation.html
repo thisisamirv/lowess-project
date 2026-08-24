@@ -130,6 +130,7 @@ K-Fold Cross-Validation</h2>
 <div class="line"> </div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">Selected fraction: 0.2</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md82"></a>
 Leave-One-Out (LOOCV)</h2>
@@ -153,8 +154,10 @@ Leave-One-Out (LOOCV)</h2>
 <div class="line">    fastlowess::Lowess model(cv_opts);</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;Fraction used: &quot;</span> &lt;&lt; result.fraction_used() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">Fraction used: 0.2</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md84"></a>
 Seeded Randomization</h2>
@@ -182,8 +185,10 @@ Seeded Randomization</h2>
 <div class="line">    fastlowess::Lowess model(opts);</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;Fraction used: &quot;</span> &lt;&lt; result.fraction_used() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">Fraction used: 0.7</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md86"></a>
 Comparison</h2>
@@ -234,8 +239,10 @@ Interpreting Results</h2>
 <div class="line">    <span class="comment">// 0.5       | 0.0298</span></div>
 <div class="line">    <span class="comment">// 0.7       | 0.0412  ← Oversmoothed</span></div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;Fraction used: &quot;</span> &lt;&lt; result.fraction_used() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">Fraction used: 0.3</div>
 </div><!-- fragment --><p>The fraction with <b>lowest CV score</b> is automatically selected.</p>
 <hr  />
 <h2><a class="anchor" id="autotoc_md92"></a>

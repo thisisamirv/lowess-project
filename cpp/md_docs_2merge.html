@@ -144,8 +144,10 @@ Average</h2>
 <div class="line">    (void)stream.process_chunk(x, y);</div>
 <div class="line">    <span class="keyword">auto</span> result = stream.finalize().value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;Smoothed &quot;</span> &lt;&lt; result.y_vector().size() &lt;&lt; <span class="stringliteral">&quot; points\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">Smoothed 100 points</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md171"></a>
 Take First</h2>
@@ -161,6 +163,7 @@ Take First</h2>
 <div class="line">    s_opts.merge_strategy = <span class="stringliteral">&quot;take_first&quot;</span>;</div>
 <div class="line">    fastlowess::StreamingLowess model(s_opts);</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 </div><!-- fragment --><hr  />
@@ -178,6 +181,7 @@ Take Last</h2>
 <div class="line">    s_opts.merge_strategy = <span class="stringliteral">&quot;take_last&quot;</span>;</div>
 <div class="line">    fastlowess::StreamingLowess model(s_opts);</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 </div><!-- fragment --><hr  />
@@ -197,6 +201,7 @@ Weighted Average</h2>
 <div class="line">    s_opts.merge_strategy = <span class="stringliteral">&quot;weighted_average&quot;</span>;</div>
 <div class="line">    fastlowess::StreamingLowess model(s_opts);</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 </div><!-- fragment --><hr  />

@@ -154,8 +154,10 @@ Example</h1>
 <div class="line">    (void)stream.process_chunk(x, y);</div>
 <div class="line">    <span class="keyword">auto</span> result = stream.finalize().value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;Smoothed &quot;</span> &lt;&lt; result.y_vector().size() &lt;&lt; <span class="stringliteral">&quot; points\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">Smoothed 100 points</div>
 </div><!-- fragment --><hr  />
 <p>!!! warning "Always call finalize()" In Rust, always call <code>processor.finalize()</code> after processing all chunks to retrieve buffered overlap data. </p>
 </div></div><!-- contents -->
