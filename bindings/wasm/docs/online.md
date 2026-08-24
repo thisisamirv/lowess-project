@@ -41,13 +41,25 @@ const processor = new OnlineLowess(
     { window_capacity: 100, min_points: 5, update_mode: "incremental" }
 );
 
-// Add points
+// Add points; print first 5 results
+let printed = 0;
 for (const [xi, yi] of sensorStream) {
     const output = processor.add_point(xi, yi);
     if (output !== undefined && output !== null) {
-        console.log(`Smoothed: ${output.y.toFixed(2)}`);
+        if (printed < 5) console.log(`Smoothed: ${output.y.toFixed(2)}`);
+        printed++;
     }
 }
+console.log(`... (${printed - 5} more)`);
+```
+
+```output
+Smoothed: 0.45
+Smoothed: 0.15
+Smoothed: 0.46
+Smoothed: 0.17
+Smoothed: 0.47
+... (91 more)
 ```
 
 ---

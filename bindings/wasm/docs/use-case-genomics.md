@@ -33,9 +33,11 @@ const model = new Lowess({
     confidence_intervals: 0.95
 });
 const result = model.fit(positions, observed);
+console.log("CI lower[0]:", result.confidence_lower[0].toFixed(4));
+```
 
-// Smoothed profile in result.y
-// CI bounds in result.confidence_lower/upper
+```output
+CI lower[0]: 44.8225
 ```
 
 ---
@@ -64,6 +66,11 @@ const result = model.fit(positions, observed);
 // Find peaks
 const smoothed = result.y;
 const peaks = positions.filter((p, i) => smoothed[i] > 25.0);
+console.log("Peak count:", peaks.length);
+```
+
+```output
+Peak count: 100
 ```
 
 ---
@@ -85,6 +92,11 @@ const processor = new StreamingLowess(
 
 processor.process_chunk(xChunk, yChunk);
 const result = processor.finalize();
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 41.2977
 ```
 
 ---

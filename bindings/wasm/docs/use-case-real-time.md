@@ -29,12 +29,24 @@ const processor = new OnlineLowess(
     { window_capacity: 25, min_points: 5, update_mode: "incremental" }
 );
 
+let rt_printed = 0;
 for (let i = 0; i < x.length; i++) {
     const res = processor.add_point(x[i], y[i]);
     if (res !== undefined && res !== null) {
-        // Update dashboard UI with res.y
+        if (rt_printed < 5) console.log("Smoothed y:", res.y.toFixed(4));
+        rt_printed++;
     }
 }
+console.log(`... (${rt_printed - 5} more)`);
+```
+
+```output
+Smoothed y: 0.4453
+Smoothed y: 0.1532
+Smoothed y: 0.4599
+Smoothed y: 0.1651
+Smoothed y: 0.4685
+... (91 more)
 ```
 
 ---
@@ -68,6 +80,11 @@ const processor = new StreamingLowess(
 const result1 = processor.process_chunk(x1, y1);
 const result2 = processor.process_chunk(x2, y2);
 const finalResult = processor.finalize();
+console.log("y[0]:", finalResult.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.2230
 ```
 
 ---
@@ -98,7 +115,12 @@ for (let i = 0; i < x.length; i++) {
     const model = new Lowess({ fraction: 0.4 });
     const result = model.fit(new Float64Array(windowX), new Float64Array(windowY));
     const smoothed = result.y[result.y.length - 1];
+    if (i === x.length - 1) console.log("Smoothed:", smoothed.toFixed(4));
 }
+```
+
+```output
+Smoothed: 0.0358
 ```
 
 ---

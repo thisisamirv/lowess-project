@@ -68,6 +68,11 @@ weights[5] = 0.0; // exclude the spike
 
 const model = new Lowess({fraction: 0.5, iterations: 0});
 const result = model.fit(x, y, weights);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.5726
 ```
 
 ---
@@ -90,6 +95,11 @@ for (const i of calibrationIndices) weights[i] = 10.0;
 
 const model = new Lowess({fraction: 0.5});
 const result = model.fit(x, y, weights);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.0865
 ```
 
 ---
@@ -111,6 +121,11 @@ const sigma = Float64Array.from({ length: n }, (_, i) => 0.1 + (i % 4) * 0.1);
 const weights = Float64Array.from(sigma, s => 1.0 / (s * s));
 const model = new Lowess({fraction: 0.5});
 const result = model.fit(x, y, weights);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.0090
 ```
 
 ---
@@ -132,6 +147,11 @@ weights[3] = 0.0;
 
 const model = new Lowess({fraction: 0.4, iterations: 3});
 const result = model.fit(x, y, weights);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.0809
 ```
 
 ---

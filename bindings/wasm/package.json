@@ -4,7 +4,8 @@
     "description": "WASM bindings for fastlowess",
     "scripts": {
         "lint": "oxlint src tests",
-        "docs": "typedoc && vitepress build docs"
+        "snippets": "node ../../dev/add-wasm-outputs.js",
+        "docs": "npm run snippets && typedoc && vitepress build docs"
     },
     "devDependencies": {
         "oxlint": "^1.79",

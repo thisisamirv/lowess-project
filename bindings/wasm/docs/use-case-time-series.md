@@ -25,8 +25,11 @@ const model = new Lowess({
     iterations: 3 
 });
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
 
-// Trend values in result.y
+```output
+y[0]: -0.0967
 ```
 
 ---
@@ -50,8 +53,11 @@ const model = new Lowess({
     return_residuals: true 
 });
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4), "residual[0]:", result.residuals[0].toFixed(4));
+```
 
-// Access result.y (trend) and result.residuals (detrended)
+```output
+y[0]: 0.0278 residual[0]: -0.2220
 ```
 
 ---
@@ -73,8 +79,11 @@ const model = new Lowess({
     prediction_intervals: 0.95
 });
 const result = model.fit(x, y);
+console.log("Prediction lower[0]:", result.prediction_lower[0].toFixed(4));
+```
 
-// Access result.prediction_lower and result.prediction_upper
+```output
+Prediction lower[0]: -0.4637
 ```
 
 ---
@@ -91,6 +100,11 @@ const tIrregular = Float64Array.from({ length: n }, (_, i) => i * 1.0 + (i * 31 
 const yIrregular = Float64Array.from(tIrregular, t => 10 + 0.3 * t + 2.0 * Math.sin(t * 0.1));
 const model = new Lowess({ fraction: 0.2 });
 const result = model.fit(tIrregular, yIrregular);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 11.3273
 ```
 
 ---
@@ -111,6 +125,11 @@ const trends = [0.05, 0.2, 0.5].map(f => {
     const result = model.fit(x, y);
     return result.y;
 });
+console.log("Trend y[0] values:", trends.map(t => t[0].toFixed(4)));
+```
+
+```output
+Trend y[0] values: [ '-0.1058', '-0.0283', '0.1181' ]
 ```
 
 ---
@@ -129,6 +148,10 @@ const model = new Lowess({ fraction: 0.3, iterations: 3, return_diagnostics: tru
 const result = model.fit(hours, expression);
 
 console.log("R²:", result.diagnostics.r_squared);
+```
+
+```output
+R²: 0.9868322798406561
 ```
 
 ---

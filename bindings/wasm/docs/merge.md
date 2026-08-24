@@ -45,6 +45,12 @@ const processor = new StreamingLowess(
     { merge_strategy: "average", chunk_size: 5000, overlap: 500 }
 );
 const result = processor.process_chunk(xChunk, yChunk);
+const final = processor.finalize();
+console.log("y[0]:", final.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.3826
 ```
 
 ---
@@ -59,6 +65,11 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
 const { StreamingLowess } = require('fastlowess-wasm');
 
 const stream = new StreamingLowess({}, { merge_strategy: 'take_first' });
+console.log("typeof process_chunk:", typeof stream.process_chunk);
+```
+
+```output
+typeof process_chunk: function
 ```
 
 ---
@@ -73,6 +84,11 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
 const { StreamingLowess } = require('fastlowess-wasm');
 
 const stream = new StreamingLowess({}, { merge_strategy: 'take_last' });
+console.log("typeof process_chunk:", typeof stream.process_chunk);
+```
+
+```output
+typeof process_chunk: function
 ```
 
 ---
@@ -94,6 +110,11 @@ const processor = new StreamingLowess(
     {},
     { merge_strategy: "weighted_average", chunk_size: 5000, overlap: 500 }
 );
+console.log("typeof process_chunk:", typeof processor.process_chunk);
+```
+
+```output
+typeof process_chunk: function
 ```
 
 ---

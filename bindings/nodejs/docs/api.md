@@ -40,11 +40,11 @@ const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
 const model = new Lowess({ fraction: 0.5 });
 const result = model.fit(x, y);
-console.log(result.fraction_used);  // 0.5
+console.log("Fraction used:", result.fraction_used);
 ```
 
 ```output
-0.5
+Fraction used: 0.5
 ```
 
 * Fits the model to the provided `x` and `y` typed arrays.

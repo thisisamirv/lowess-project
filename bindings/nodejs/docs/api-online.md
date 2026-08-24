@@ -46,11 +46,11 @@ online.add_point(x[1], y[1]);  // null
 
 // Returns OnlineOutput once enough points are available
 const result = online.add_point(x[2], y[2]);
-console.log(result.y);  // 0.22659245357374927
+console.log("Smoothed y:", result.y);
 ```
 
 ```output
-0.22659245357374927
+Smoothed y: 0.22659245357374927
 ```
 
 * Adds a single point to the sliding window and returns an `OnlineOutput` once enough points are available, or `null` while the window is still filling.

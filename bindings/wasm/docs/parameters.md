@@ -72,6 +72,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Lowess({fraction: 0.3});
 const result = model.fit(x, y);
+console.log("Fraction used:", result.fraction_used);
+```
+
+```output
+Fraction used: 0.3
 ```
 
 ---
@@ -96,6 +101,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Lowess({iterations: 5});
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1661
 ```
 
 ---
@@ -116,6 +126,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Lowess({delta: 0.05});
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1662
 ```
 
 ---
@@ -145,6 +160,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Lowess({weight_function: "epanechnikov"});
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1905
 ```
 
 ---
@@ -170,6 +190,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Lowess({robustness_method: "talwar"});
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1410
 ```
 
 ---
@@ -198,6 +223,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Lowess({boundary_policy: "reflect"});
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.5823
 ```
 
 ---
@@ -225,6 +255,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Lowess({scaling_method: "mad"});
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1662
 ```
 
 ---
@@ -252,6 +287,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Lowess({zero_weight_fallback: "use_local_mean"});
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1662
 ```
 
 ---
@@ -269,6 +309,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Lowess({iterations: 20, auto_converge: 1e-6});
 const result = model.fit(x, y);
+console.log("Iterations used:", result.iterations_used);
+```
+
+```output
+Iterations used: 7
 ```
 
 ---
@@ -295,6 +340,11 @@ weights[5] = 0.0; // exclude index 5
 
 const model = new Lowess({fraction: 0.5});
 const result = model.fit(x, y, weights);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1245
 ```
 
 ---
@@ -314,7 +364,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Lowess({return_residuals: true});
 const result = model.fit(x, y);
-console.log(result.residuals);
+console.log("Residuals (first 5):", [...result.residuals.slice(0, 5)].map(v => v.toFixed(4)));
+```
+
+```output
+Residuals (first 5): [ '-0.3603', '-0.0766', '-0.3936', '-0.1115', '0.1696' ]
 ```
 
 ---
@@ -345,6 +399,10 @@ const result = model.fit(x, y);
 console.log("R²:", result.diagnostics.r_squared);
 ```
 
+```output
+R²: 0.846593484038835
+```
+
 ---
 
 ### return_robustness_weights
@@ -360,7 +418,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Lowess({iterations: 3, return_robustness_weights: true});
 const result = model.fit(x, y);
-// result.robustness_weights contains outlier weights
+console.log("Robustness weight[0]:", result.robustness_weights[0].toFixed(4));
+```
+
+```output
+Robustness weight[0]: 0.7712
 ```
 
 ---
@@ -378,7 +440,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Lowess({return_se: true});
 const result = model.fit(x, y);
-console.log(result.standard_errors);
+console.log("Standard errors (first 5):", [...result.standard_errors.slice(0, 5)].map(v => v.toFixed(4)));
+```
+
+```output
+Standard errors (first 5): [ '0.0339', '0.0392', '0.0345', '0.0407', '0.0410' ]
 ```
 
 ---
@@ -398,6 +464,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Lowess({confidence_intervals: 0.95, prediction_intervals: 0.95});
 const result = model.fit(x, y);
+console.log("CI lower[0]:", result.confidence_lower[0].toFixed(4));
+```
+
+```output
+CI lower[0]: 0.0998
 ```
 
 ---
@@ -422,6 +493,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Lowess({ cv_method: "kfold", cv_k: 5 });
 const result = model.fit(x, y);
+console.log("Fraction used:", result.fraction_used);
+```
+
+```output
+Fraction used: 0.67
 ```
 
 ---
@@ -436,6 +512,11 @@ Points per chunk in Streaming mode.
 const { StreamingLowess } = require('fastlowess-wasm');
 
 const processor = new StreamingLowess({}, { chunk_size: 10000 });
+console.log("typeof process_chunk:", typeof processor.process_chunk);
+```
+
+```output
+typeof process_chunk: function
 ```
 
 ---
@@ -448,6 +529,11 @@ Overlap between chunks in Streaming mode.
 const { StreamingLowess } = require('fastlowess-wasm');
 
 const processor = new StreamingLowess({}, { overlap: 1000 });
+console.log("typeof process_chunk:", typeof processor.process_chunk);
+```
+
+```output
+typeof process_chunk: function
 ```
 
 ---
@@ -469,6 +555,11 @@ For example:
 const { StreamingLowess } = require('fastlowess-wasm');
 
 const processor = new StreamingLowess({}, { merge_strategy: "weighted_average" });
+console.log("typeof process_chunk:", typeof processor.process_chunk);
+```
+
+```output
+typeof process_chunk: function
 ```
 
 ---
@@ -481,6 +572,11 @@ Maximum points held in memory for Online mode.
 const { OnlineLowess } = require('fastlowess-wasm');
 
 const processor = new OnlineLowess({}, { window_capacity: 500 });
+console.log("typeof add_point:", typeof processor.add_point);
+```
+
+```output
+typeof add_point: function
 ```
 
 ---
@@ -493,6 +589,11 @@ Minimum points required before Online filter starts producing outputs.
 const { OnlineLowess } = require('fastlowess-wasm');
 
 const processor = new OnlineLowess({}, { min_points: 10 });
+console.log("typeof add_point:", typeof processor.add_point);
+```
+
+```output
+typeof add_point: function
 ```
 
 ---
@@ -512,4 +613,9 @@ For example:
 const { OnlineLowess } = require('fastlowess-wasm');
 
 const processor = new OnlineLowess({}, { update_mode: "full" });
+console.log("typeof add_point:", typeof processor.add_point);
+```
+
+```output
+typeof add_point: function
 ```

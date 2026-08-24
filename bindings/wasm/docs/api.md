@@ -16,6 +16,11 @@ The `Lowess` class is the main entry point for batch smoothing.
 const { Lowess } = require('fastlowess-wasm');
 
 const model = new Lowess({ fraction: 0.5, iterations: 3 });
+console.log("typeof fit:", typeof model.fit);
+```
+
+```output
+typeof fit: function
 ```
 
 * `options`: An object containing `LowessOptions` fields.
@@ -31,7 +36,11 @@ const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
 const model = new Lowess({ fraction: 0.5 });
 const result = model.fit(x, y);
-console.log(result.fraction_used);  // 0.5
+console.log("Fraction used:", result.fraction_used);
+```
+
+```output
+Fraction used: 0.5
 ```
 
 * `x`: `Float64Array` of input x values.
@@ -176,4 +185,8 @@ const model = new Lowess({ fraction: 0.5 });
 const result = model.fit(x, y);
 
 console.log("Smoothed Y:", result.y);
+```
+
+```output
+Smoothed Y: Float64Array(5) [ 2.1, 4, 6.2, 8, 10.1 ]
 ```
