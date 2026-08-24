@@ -40,8 +40,13 @@ int main() {
     // Smoothed profile in result.y_vector()
     // CI bounds in result.confidence_lower()/result.confidence_upper()
 
+    std::cout << "95% CI: [" << result.confidence_lower()[0] << ", " << result.confidence_upper()[0] << "]\n";
     return 0;
 }
+```
+
+```output
+95% CI: [51.6773, 68.7372]
 ```
 
 ---
@@ -81,8 +86,13 @@ int main() {
         }
     }
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 59.952
 ```
 
 ---
@@ -115,8 +125,13 @@ int main() {
     (void)stream.process_chunk(positions, coverage);
     auto result = stream.finalize().value();
 
+    std::cout << "Smoothed " << result.y_vector().size() << " points\n";
     return 0;
 }
+```
+
+```output
+Smoothed 100 points
 ```
 
 ---

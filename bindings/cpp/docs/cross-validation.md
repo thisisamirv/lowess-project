@@ -44,6 +44,10 @@ int main() {
 }
 ```
 
+```output
+Selected fraction: 0.2
+```
+
 ---
 
 ## Leave-One-Out (LOOCV)
@@ -70,8 +74,13 @@ int main() {
     fastlowess::Lowess model(cv_opts);
     auto result = model.fit(x, y).value();
 
+    std::cout << "Fraction used: " << result.fraction_used() << "\n";
     return 0;
 }
+```
+
+```output
+Fraction used: 0.2
 ```
 
 ---
@@ -104,8 +113,13 @@ int main() {
     fastlowess::Lowess model(opts);
     auto result = model.fit(x, y).value();
 
+    std::cout << "Fraction used: " << result.fraction_used() << "\n";
     return 0;
 }
+```
+
+```output
+Fraction used: 0.7
 ```
 
 ---
@@ -165,8 +179,13 @@ int main() {
     // 0.5       | 0.0298
     // 0.7       | 0.0412  ← Oversmoothed
 
+    std::cout << "Fraction used: " << result.fraction_used() << "\n";
     return 0;
 }
+```
+
+```output
+Fraction used: 0.3
 ```
 
 The fraction with **lowest CV score** is automatically selected.

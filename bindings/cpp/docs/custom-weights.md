@@ -79,8 +79,13 @@ int main() {
 
     auto result = fastlowess::Lowess(opts).fit(xw, yw, weights).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.572621
 ```
 
 ---
@@ -112,8 +117,13 @@ int main() {
     opts.fraction = 0.5;
     auto result = fastlowess::Lowess(opts).fit(x, y, weights).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.323742
 ```
 
 ---
@@ -147,8 +157,13 @@ int main() {
     opts.fraction = 0.5;
     auto result = fastlowess::Lowess(opts).fit(x, y, weights).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.152222
 ```
 
 ---
@@ -181,8 +196,13 @@ int main() {
 
     auto result = fastlowess::Lowess(opts).fit(x, y, weights).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.302856
 ```
 
 ---

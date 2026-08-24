@@ -55,8 +55,13 @@ int main() {
     (void)stream.process_chunk(x, y);
     auto result = stream.finalize().value();
 
+    std::cout << "Smoothed " << result.y_vector().size() << " points\n";
     return 0;
 }
+```
+
+```output
+Smoothed 100 points
 ```
 
 ---
@@ -78,6 +83,7 @@ int main() {
     s_opts.merge_strategy = "take_first";
     fastlowess::StreamingLowess model(s_opts);
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
 ```
@@ -101,6 +107,7 @@ int main() {
     s_opts.merge_strategy = "take_last";
     fastlowess::StreamingLowess model(s_opts);
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
 ```
@@ -128,6 +135,7 @@ int main() {
     s_opts.merge_strategy = "weighted_average";
     fastlowess::StreamingLowess model(s_opts);
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
 ```

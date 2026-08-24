@@ -35,6 +35,7 @@ int main() {
 
     // Trend in basic_result.y_vector()
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
 ```
@@ -71,8 +72,13 @@ int main() {
     auto trend = result.y_vector();
     auto detrended = result.residuals();
 
+    std::cout << "residuals[0]: " << result.residuals()[0] << "\n";
     return 0;
 }
+```
+
+```output
+residuals[0]: -0.158244
 ```
 
 ---
@@ -105,8 +111,13 @@ int main() {
 
     // Access result.prediction_lower() and result.prediction_upper()
 
+    std::cout << "95% CI: [" << result.confidence_lower()[0] << ", " << result.confidence_upper()[0] << "]\n";
     return 0;
 }
+```
+
+```output
+95% CI: [0.214336, 0.234557]
 ```
 
 ---
@@ -132,8 +143,13 @@ int main() {
     fastlowess::Lowess missing_model({ .fraction = 0.2 });
     auto result = missing_model.fit(tIrregular, yIrregular).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 11.3273
 ```
 
 ---
@@ -164,6 +180,7 @@ int main() {
         trends.push_back(result.y_vector());
     }
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
 ```
@@ -199,6 +216,10 @@ int main() {
 
     return 0;
 }
+```
+
+```output
+RÂ²: 0.993834
 ```
 
 ---

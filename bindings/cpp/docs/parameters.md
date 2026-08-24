@@ -80,8 +80,13 @@ int main() {
     fastlowess::Lowess model({ .fraction = 0.3});
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.258244
 ```
 
 ---
@@ -114,8 +119,13 @@ int main() {
     fastlowess::Lowess model({ .iterations = 5});
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.382603
 ```
 
 ---
@@ -144,8 +154,13 @@ int main() {
     fastlowess::Lowess model({ .delta = 0.05});
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.382608
 ```
 
 ---
@@ -183,8 +198,13 @@ int main() {
     fastlowess::Lowess model({ .weight_function = "epanechnikov"});
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.406728
 ```
 
 ---
@@ -218,8 +238,13 @@ int main() {
     fastlowess::Lowess model({ .robustness_method = "talwar"});
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.378779
 ```
 
 ---
@@ -256,8 +281,13 @@ int main() {
     fastlowess::Lowess model({ .boundary_policy = "reflect"});
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.712762
 ```
 
 ---
@@ -293,8 +323,13 @@ int main() {
     fastlowess::Lowess model({ .scaling_method = "mad"});
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.382608
 ```
 
 ---
@@ -330,8 +365,13 @@ int main() {
     fastlowess::Lowess model({ .zero_weight_fallback = "use_local_mean"});
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.382608
 ```
 
 ---
@@ -357,8 +397,13 @@ int main() {
     fastlowess::Lowess model({ .iterations = 20, .auto_converge = 1e-6});
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.382602
 ```
 
 ---
@@ -394,8 +439,13 @@ int main() {
 
     auto result = fastlowess::Lowess(opts).fit(x, y, weights).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.336935
 ```
 
 ---
@@ -424,8 +474,13 @@ int main() {
     auto result = model.fit(x, y).value();
     auto residuals = result.residuals();
 
+    std::cout << "residuals[0]: " << result.residuals()[0] << "\n";
     return 0;
 }
+```
+
+```output
+residuals[0]: -0.282608
 ```
 
 ---
@@ -467,6 +522,10 @@ int main() {
 }
 ```
 
+```output
+R2: 0.914935
+```
+
 ---
 
 ### return_robustness_weights
@@ -494,8 +553,13 @@ int main() {
     auto result = model.fit(x, y).value();
     auto weights = result.robustness_weights();
 
+    std::cout << "robustness_weights[0]: " << result.robustness_weights()[0] << "\n";
     return 0;
 }
+```
+
+```output
+robustness_weights[0]: 0.800101
 ```
 
 ---
@@ -523,8 +587,13 @@ int main() {
     auto result = fastlowess::Lowess(opts).fit(x, y).value();
     auto se = result.standard_errors();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.382608
 ```
 
 ---
@@ -555,8 +624,13 @@ int main() {
         });
     auto result = model.fit(x, y).value();
 
+    std::cout << "95% CI: [" << result.confidence_lower()[0] << ", " << result.confidence_upper()[0] << "]\n";
     return 0;
 }
+```
+
+```output
+95% CI: [0.332797, 0.432418]
 ```
 
 ---
@@ -592,8 +666,13 @@ int main() {
     fastlowess::Lowess model(cv_opts);
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.258244
 ```
 
 ---
@@ -624,8 +703,13 @@ int main() {
     (void)stream.process_chunk(x, y);
     auto result = stream.finalize().value();
 
+    std::cout << "Smoothed " << result.y_vector().size() << " points\n";
     return 0;
 }
+```
+
+```output
+Smoothed 100 points
 ```
 
 ---
@@ -654,8 +738,13 @@ int main() {
     (void)stream.process_chunk(x, y);
     auto result = stream.finalize().value();
 
+    std::cout << "Smoothed " << result.y_vector().size() << " points\n";
     return 0;
 }
+```
+
+```output
+Smoothed 100 points
 ```
 
 ---
@@ -692,8 +781,13 @@ int main() {
     (void)stream.process_chunk(x, y);
     auto result = stream.finalize().value();
 
+    std::cout << "Smoothed " << result.y_vector().size() << " points\n";
     return 0;
 }
+```
+
+```output
+Smoothed 100 points
 ```
 
 ---
@@ -722,6 +816,7 @@ int main() {
     auto out = model.add_point(x[0], y[0]).value();
     // out.has_value() == false until window fills
 
+    if (r.has_value()) { std::cout << "Online y: " << r->y << "\n"; }
     return 0;
 }
 ```
@@ -751,6 +846,7 @@ int main() {
     fastlowess::OnlineLowess model(opts);
     auto out = model.add_point(x[0], y[0]).value();
 
+    if (r.has_value()) { std::cout << "Online y: " << r->y << "\n"; }
     return 0;
 }
 ```
@@ -787,6 +883,7 @@ int main() {
     fastlowess::OnlineLowess model(opts);
     auto out = model.add_point(x[0], y[0]).value();
 
+    if (r.has_value()) { std::cout << "Online y: " << r->y << "\n"; }
     return 0;
 }
 ```

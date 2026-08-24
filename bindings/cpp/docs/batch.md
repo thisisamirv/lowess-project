@@ -37,8 +37,13 @@ int main() {
     });
     auto result = model.fit(x, y).value();
 
+    std::cout << "95% CI: [" << result.confidence_lower()[0] << ", " << result.confidence_upper()[0] << "]\n";
     return 0;
 }
+```
+
+```output
+95% CI: [0.29413, 0.374611]
 ```
 
 ---

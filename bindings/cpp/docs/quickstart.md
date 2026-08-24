@@ -31,6 +31,10 @@ int main() {
 }
 ```
 
+```output
+First smoothed: 0.02784  (true: 0)
+```
+
 ---
 
 ## With Confidence Intervals
@@ -64,8 +68,13 @@ int main() {
     auto upper = result.confidence_upper();
     double r2 = result.diagnostics().r_squared();
 
+    std::cout << "95% CI: [" << result.confidence_lower()[0] << ", " << result.confidence_upper()[0] << "]\n";
     return 0;
 }
+```
+
+```output
+95% CI: [0.29413, 0.374611]
 ```
 
 ---
@@ -145,6 +154,10 @@ int main() {
     std::cout << "Smoothed " << result.y_vector().size() << " points\n";
     return 0;
 }
+```
+
+```output
+Smoothed 100 points
 ```
 
 ---

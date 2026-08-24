@@ -69,3 +69,7 @@ std::cout << "Installed successfully!" << std::endl;
 return 0;
 }
 ```
+
+```output
+Installed successfully!
+```

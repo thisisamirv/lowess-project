@@ -52,8 +52,13 @@ int main() {
     fastlowess::Lowess model({ .weight_function = "tricube" });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.382608
 ```
 
 ---
@@ -83,8 +88,13 @@ int main() {
     fastlowess::Lowess model({ .weight_function = "epanechnikov" });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.406728
 ```
 
 ---
@@ -114,8 +124,13 @@ int main() {
     fastlowess::Lowess model({ .weight_function = "gaussian" });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.435767
 ```
 
 ---
@@ -145,8 +160,13 @@ int main() {
     fastlowess::Lowess model({ .weight_function = "biweight" });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.375903
 ```
 
 ---
@@ -176,8 +196,13 @@ int main() {
     fastlowess::Lowess model({ .weight_function = "cosine" });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.40083
 ```
 
 ---
@@ -207,8 +232,13 @@ int main() {
     fastlowess::Lowess model({ .weight_function = "triangle" });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.381657
 ```
 
 ---
@@ -238,8 +268,13 @@ int main() {
     fastlowess::Lowess model({ .weight_function = "uniform" });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.45084
 ```
 
 ---

@@ -48,8 +48,13 @@ int main() {
      });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.382608
 ```
 
 ---
@@ -81,8 +86,13 @@ int main() {
      });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.381705
 ```
 
 ---
@@ -114,8 +124,13 @@ int main() {
      });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.378779
 ```
 
 ---
@@ -197,8 +212,13 @@ int main() {
      });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.382608
 ```
 
 ---
@@ -229,6 +249,11 @@ int main() {
      });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.382602
 ```

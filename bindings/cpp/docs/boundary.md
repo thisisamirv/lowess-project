@@ -41,8 +41,13 @@ int main() {
     fastlowess::Lowess model({ .boundary_policy = "extend" });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.382608
 ```
 
 ---
@@ -70,8 +75,13 @@ int main() {
     fastlowess::Lowess model({ .boundary_policy = "reflect" });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.712762
 ```
 
 ---
@@ -99,8 +109,13 @@ int main() {
     fastlowess::Lowess model({ .boundary_policy = "zero" });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.33561
 ```
 
 ---
@@ -131,8 +146,13 @@ int main() {
     fastlowess::Lowess model({ .boundary_policy = "noboundary" });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.693828
 ```
 
 ---

@@ -54,8 +54,13 @@ int main() {
     (void)stream.process_chunk(x, y);
     auto result = stream.finalize().value();
 
+    std::cout << "Smoothed " << result.y_vector().size() << " points\n";
     return 0;
 }
+```
+
+```output
+Smoothed 100 points
 ```
 
 ---

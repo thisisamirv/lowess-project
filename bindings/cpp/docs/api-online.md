@@ -30,6 +30,7 @@ int main() {
     opts.min_points = 3;
     fastlowess::OnlineLowess model(opts);
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
 ```
@@ -70,6 +71,10 @@ int main() {
 
     return 0;
 }
+```
+
+```output
+0.226592
 ```
 
 * Adds a single point to the sliding window. Returns `Expected<OnlineOutput>` — check `has_value()` to see whether the window is ready.

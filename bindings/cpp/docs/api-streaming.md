@@ -21,6 +21,7 @@ int main() {
     opts.chunk_size = 5;
     fastlowess::StreamingLowess model(opts);
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
 ```
@@ -56,6 +57,10 @@ int main() {
 }
 ```
 
+```output
+0.5
+```
+
 * Processes a chunk of data. Returns partial results.
 
 ```cpp
@@ -86,6 +91,10 @@ int main() {
 
     return 0;
 }
+```
+
+```output
+0.5
 ```
 
 * Finalizes the smoothing process and returns any remaining buffered results.
