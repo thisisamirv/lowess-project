@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import subprocess
+import tempfile
 import time
-import uuid
-from pathlib import Path
 
 from .base import REPO_ROOT, RunResult, Snippet, _find_exe
 
@@ -22,21 +22,6 @@ def skip_reason(snippet: Snippet) -> str | None:
 
 
 _WASM_PKG_DIR = REPO_ROOT / "bindings" / "wasm" / "pkg"
-
-
-def _ensure_wasm_selflink(wasm_pkg_dir: Path) -> None:
-    """Create node_modules/fastlowess-wasm shim so require('fastlowess-wasm') resolves locally."""
-    nm_wasm = wasm_pkg_dir / "node_modules" / "fastlowess-wasm"
-    if nm_wasm.exists():
-        return
-    nm_wasm.mkdir(parents=True, exist_ok=True)
-    (nm_wasm / "index.js").write_text(
-        "module.exports = require('../../');\n", encoding="utf-8"
-    )
-    (nm_wasm / "package.json").write_text(
-        '{"name":"fastlowess-wasm","main":"index.js","version":"0.0.0"}\n',
-        encoding="utf-8",
-    )
 
 
 def run_wasm(snippet: Snippet, timeout: int) -> RunResult:
@@ -57,14 +42,31 @@ def run_wasm(snippet: Snippet, timeout: int) -> RunResult:
             skip_reason="node not found in PATH",
         )
 
-    _ensure_wasm_selflink(_WASM_PKG_DIR)
-
-    tmp_name = f"_snippet_{uuid.uuid4().hex}.js"
-    tmp = str(_WASM_PKG_DIR / tmp_name)
-    with open(tmp, "w", encoding="utf-8") as f:
-        f.write(snippet.code)
-
+    pkg_meta_path = _WASM_PKG_DIR / "package.json"
     try:
+        pkg_meta = json.loads(pkg_meta_path.read_text(encoding="utf-8"))
+        index_path = str(_WASM_PKG_DIR / pkg_meta["main"]).replace("\\", "/")
+        pkg_name = pkg_meta.get("name", "")
+    except (OSError, json.JSONDecodeError, KeyError) as exc:
+        return RunResult(
+            snippet=snippet,
+            runner="wasm",
+            skipped=True,
+            skip_reason=f"pkg/package.json missing or invalid: {exc}",
+        )
+
+    # Patch require('<pkg-name>') → require('/abs/path') so the temp file
+    # can live outside the workspace (avoids VS Code TS language-server churn).
+    patched = re.sub(
+        r"require\(['\"]" + re.escape(pkg_name) + r"['\"]\)",
+        f"require('{index_path}')",
+        snippet.code,
+    )
+
+    tmp_fd, tmp = tempfile.mkstemp(suffix=".js", prefix="_wasm_snippet_")
+    try:
+        with os.fdopen(tmp_fd, "w", encoding="utf-8") as f:
+            f.write(patched)
         t0 = time.monotonic()
         proc = subprocess.run(
             [node_bin, tmp],
@@ -72,7 +74,6 @@ def run_wasm(snippet: Snippet, timeout: int) -> RunResult:
             check=False,
             timeout=timeout,
             text=True,
-            cwd=str(_WASM_PKG_DIR),
         )
         dur = time.monotonic() - t0
         return RunResult(
@@ -93,4 +94,7 @@ def run_wasm(snippet: Snippet, timeout: int) -> RunResult:
             stderr=f"Timed out after {timeout}s",
         )
     finally:
-        os.unlink(tmp)
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
