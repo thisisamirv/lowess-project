@@ -113,4 +113,4 @@ If GPU support isn't available, requesting `backend = "gpu"` (or the equivalent)
 ## See also
 
 * [rust.md](https://github.com/thisisamirv/lowess-project) — why Streaming/Online adapters stay CPU-only.
-* Per-language API reference GPU sections: [python.md](../api/python.md#gpu-acceleration), [nodejs.md](https://lowess.readthedocs.io/api/python/#gpu), [julia.md](https://github.com/thisisamirv/lowess-project), [cpp.md](https://github.com/thisisamirv/lowess-project), [r.md](https://github.com/thisisamirv/lowess-project).
+* [Python API — GPU Acceleration](../api/python.md#gpu-acceleration) — full parameter reference.

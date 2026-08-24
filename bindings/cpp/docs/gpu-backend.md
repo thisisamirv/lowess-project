@@ -101,4 +101,4 @@ If GPU support isn't available, requesting `backend = "gpu"` (or the equivalent)
 ## See also
 
 * [rust.md](../api/rust.md#gpu-acceleration) — why Streaming/Online adapters stay CPU-only.
-* Per-language API reference GPU sections: [python.md](../api/python.md#gpu-acceleration), [nodejs.md](../api/nodejs.md#gpu-acceleration), [julia.md](../api/julia.md#gpu-acceleration), [cpp.md](../api/cpp.md#gpu-acceleration), [r.md](../api/r.md#gpu-acceleration).
+* [C++ API — GPU Acceleration](../api/cpp.md#gpu-acceleration) — full parameter reference.

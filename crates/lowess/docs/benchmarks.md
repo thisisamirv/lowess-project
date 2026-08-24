@@ -2,7 +2,7 @@
 
 Speedup relative to R's `stats::lowess` (higher is better):
 
-| Category | R (baseline) | rlowess (Serial) | rlowess (Parallel) |
+| Category | R (baseline) | lowess (Serial) | lowess (Parallel) |
 | --- | --- | --- | --- |
 | **Clustered** | 2.34ms | 2.0× | **2.5×** |
 | **Constant Y** | 1.81ms | 1.7× | **3.2×** |
