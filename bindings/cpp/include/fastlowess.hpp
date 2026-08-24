@@ -673,7 +673,7 @@ inline bool stdinIsInteractive() {
 #ifdef _WIN32
   return _isatty(_fileno(stdin)) != 0; // NOLINT(misc-include-cleaner)
 #else
-  return isatty(fileno(stdin)) != 0;
+  return isatty(fileno(stdin)) != 0; // NOLINT(misc-include-cleaner)
 #endif
 }
 
