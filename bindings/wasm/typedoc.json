@@ -5,6 +5,7 @@
     "entryPoints": [
         "pkg/fastlowess_wasm.d.ts"
     ],
+    "tsconfig": "tsconfig.typedoc.json",
     "out": "src/content/docs/reference",
     "name": "fastlowess-wasm",
     "readme": "none",

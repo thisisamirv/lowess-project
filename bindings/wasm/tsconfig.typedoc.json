@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "strict": true,
+        "noEmit": true
+    },
+    "include": [
+        "pkg/fastlowess_wasm.d.ts"
+    ]
+}
