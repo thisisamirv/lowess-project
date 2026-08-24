@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>lowess-project</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.6.1/github-markdown-light.min.css" />
+</head>
+<body class="markdown-body" style="max-width:980px;margin:0 auto;padding:45px">
+<header id="title-block-header">
+<h1 class="title">lowess-project</h1>
+</header>
+<!-- markdownlint-disable MD024 MD033 -->
+
+<h1 id="lowess-project">LOWESS Project</h1>
+<p align="center">
+  <a href="https://crates.io/crates/lowess"><img src="https://img.shields.io/badge/lowess-000000?logo=rust&logoColor=white" alt="lowess"></a>
+  <a href="https://crates.io/crates/fastLowess"><img src="https://img.shields.io/badge/fastLowess-000000?logo=rust&logoColor=white" alt="fastLowess"></a>
+  <a href="https://pypi.org/project/fastlowess/"><img src="https://img.shields.io/badge/PyPI-3775A9?logo=pypi&logoColor=white" alt="PyPI"></a>
+  <a href="https://thisisamirv.r-universe.dev/rfastlowess"><img src="https://img.shields.io/badge/R--universe-276DC3?logo=r&logoColor=white" alt="R-universe"></a>
+  <a href="https://www.npmjs.com/package/fastlowess"><img src="https://img.shields.io/badge/npm-CB3837?logo=npm&logoColor=white" alt="npm"></a>
+  <a href="https://juliahub.com/ui/Packages/General/FastLOWESS"><img src="https://img.shields.io/badge/Julia-9558B2?logo=julia&logoColor=white" alt="Julia"></a>
+  <a href="https://www.npmjs.com/package/fastlowess-wasm"><img src="https://img.shields.io/badge/WASM-654FF0?logo=webassembly&logoColor=white" alt="WASM"></a>
+  <a href="https://github.com/thisisamirv/lowess-project/releases/latest"><img src="https://img.shields.io/badge/C++-00599C?logo=cplusplus&logoColor=white" alt="C++"></a>
+  <br>
+  <a href="https://anaconda.org/conda-forge/fastlowess"><img src="https://img.shields.io/badge/fastlowess_(Python)-44A833?logo=anaconda&logoColor=white" alt="fastlowess (Python)"></a>
+  <a href="https://anaconda.org/conda-forge/libfastlowess"><img src="https://img.shields.io/badge/libfastlowess_(C++)-44A833?logo=anaconda&logoColor=white" alt="libfastlowess (C++)"></a>
+  <a href="https://anaconda.org/conda-forge/r-rfastlowess"><img src="https://img.shields.io/badge/rfastlowess_(R)-44A833?logo=anaconda&logoColor=white" alt="rfastlowess (R)"></a>
+  <br>
+  <a href="https://github.com/ropensci/software-review/issues/769"><img src="https://badges.ropensci.org/769_status.svg" alt="Status at rOpenSci Software Peer Review"></a>
+  <br>
+  <a href="https://github.com/thisisamirv/lowess-project/actions/workflows/ci-rust.yml"><img src="https://github.com/thisisamirv/lowess-project/actions/workflows/ci-rust.yml/badge.svg" alt="CI - Rust"></a>
+  <a href="https://github.com/thisisamirv/lowess-project/actions/workflows/ci-python.yml"><img src="https://github.com/thisisamirv/lowess-project/actions/workflows/ci-python.yml/badge.svg" alt="CI - Python"></a>
+  <a href="https://github.com/thisisamirv/lowess-project/actions/workflows/ci-r.yml"><img src="https://github.com/thisisamirv/lowess-project/actions/workflows/ci-r.yml/badge.svg" alt="CI - R"></a>
+  <a href="https://github.com/thisisamirv/lowess-project/actions/workflows/ci-julia.yml"><img src="https://github.com/thisisamirv/lowess-project/actions/workflows/ci-julia.yml/badge.svg" alt="CI - Julia"></a>
+  <a href="https://github.com/thisisamirv/lowess-project/actions/workflows/ci-nodejs.yml"><img src="https://github.com/thisisamirv/lowess-project/actions/workflows/ci-nodejs.yml/badge.svg" alt="CI - Node.js"></a>
+  <a href="https://github.com/thisisamirv/lowess-project/actions/workflows/ci-wasm.yml"><img src="https://github.com/thisisamirv/lowess-project/actions/workflows/ci-wasm.yml/badge.svg" alt="CI - WASM"></a>
+  <a href="https://github.com/thisisamirv/lowess-project/actions/workflows/ci-cpp.yml"><img src="https://github.com/thisisamirv/lowess-project/actions/workflows/ci-cpp.yml/badge.svg" alt="CI - C++"></a>
+  <br>
+</p>
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/thisisamirv/lowess-project/main/dev/logo.png" alt="One LOWESS to Rule Them All" width="400">
+  <br>
+  <em>One LOWESS to Rule Them All</em>
+</p>
+
+<p>The fastest, most robust, and most feature-complete language-agnostic
+LOWESS (Locally Weighted Scatterplot Smoothing) implementation for
+<strong>Rust</strong>, <strong>Python</strong>, <strong>R</strong>,
+<strong>Julia</strong>, <strong>JavaScript</strong>,
+<strong>C++</strong>, and <strong>WebAssembly</strong>.</p>
+<blockquote>
+<p>[!IMPORTANT]</p>
+<p>The <code>lowess-project</code> contains a complete ecosystem for
+LOWESS smoothing:</p>
+<ul>
+<li><strong><a
+href="https://crates.io/crates/lowess"><code>lowess</code></a></strong>
+- Core single-threaded Rust implementation with <code>no_std</code>
+support</li>
+<li><strong><a
+href="https://crates.io/crates/fastLowess"><code>fastLowess</code></a></strong>
+- Parallel CPU and GPU-accelerated Rust wrapper with ndarray
+integration</li>
+<li><strong><a
+href="https://thisisamirv.r-universe.dev/rfastlowess"><code>R bindings</code></a></strong>
+- extendr-based R binding</li>
+<li><strong><a
+href="https://pypi.org/project/fastlowess/"><code>Python bindings</code></a></strong>
+- PyO3-based Python binding</li>
+<li><strong><a
+href="https://juliahub.com/ui/Packages/General/FastLOWESS"><code>Julia bindings</code></a></strong>
+- Native Julia binding with C FFI</li>
+<li><strong><a
+href="https://www.npmjs.com/package/fastlowess"><code>JavaScript bindings</code></a></strong>
+- Node.js binding</li>
+<li><strong><a
+href="https://www.npmjs.com/package/fastlowess-wasm"><code>WebAssembly bindings</code></a></strong>
+- WASM binding</li>
+<li><strong><a
+href="https://github.com/thisisamirv/lowess-project/releases/latest"><code>C++ bindings</code></a></strong>
+- Native C++ binding with CMake integration</li>
+</ul>
+</blockquote>
+<hr />
+<h2 id="installation">Installation</h2>
+<blockquote>
+<p>[!NOTE]</p>
+<p>Currently available for R, Python, Rust, Julia, Node.js, WebAssembly,
+and C++. See the documentation for your binding/crate (linked in the
+Documentation section above) for installation instructions.</p>
+</blockquote>
+<h3 id="gpu-backend">GPU Backend</h3>
+<p>In addition to <code>parallel = true</code> (multi-core CPU), the
+batch <code>Lowess</code> class in every binding — except WebAssembly —
+as well as the <code>fastLowess</code> Rust crate itself, can run on the
+GPU via <code>wgpu</code> (Vulkan/Metal/DX12). It's opt-in and worth
+enabling for high-throughput processing of large datasets (roughly 10k+
+points); for smaller inputs the CPU backend is typically faster.
+<code>StreamingLowess</code>/<code>OnlineLowess</code> remain CPU-only.
+See the documentation for your binding/crate for GPU backend
+installation and usage.</p>
+<h2 id="documentation">Documentation</h2>
+<blockquote>
+<p>[!NOTE]</p>
+<table>
+<thead>
+<tr class="header">
+<th>Binding / Crate</th>
+<th>Documentation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>lowess</code> (Rust)</td>
+<td><a href="https://docs.rs/lowess">docs.rs/lowess</a></td>
+</tr>
+<tr class="even">
+<td><code>fastLowess</code> (Rust)</td>
+<td><a href="https://docs.rs/fastLowess">docs.rs/fastLowess</a></td>
+</tr>
+<tr class="odd">
+<td>Python</td>
+<td><a
+href="https://lowess.readthedocs.io/">lowess.readthedocs.io</a></td>
+</tr>
+<tr class="even">
+<td>R</td>
+<td><a
+href="https://thisisamirv.github.io/lowess-project/r/">thisisamirv.github.io/lowess-project/r</a></td>
+</tr>
+<tr class="odd">
+<td>Julia</td>
+<td><a
+href="https://thisisamirv.github.io/lowess-project/julia/">thisisamirv.github.io/lowess-project/julia</a></td>
+</tr>
+<tr class="even">
+<td>Node.js</td>
+<td><a
+href="https://thisisamirv.github.io/lowess-project/nodejs/">thisisamirv.github.io/lowess-project/nodejs</a></td>
+</tr>
+<tr class="odd">
+<td>WebAssembly</td>
+<td><a
+href="https://thisisamirv.github.io/lowess-project/wasm/">thisisamirv.github.io/lowess-project/wasm</a></td>
+</tr>
+<tr class="even">
+<td>C++</td>
+<td><a
+href="https://thisisamirv.github.io/lowess-project/cpp/">thisisamirv.github.io/lowess-project/cpp</a></td>
+</tr>
+</tbody>
+</table>
+</blockquote>
+<hr />
+<h2 id="loess-vs-lowess">LOESS vs. LOWESS</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th>LOESS</th>
+<th>LOWESS (This Crate)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Polynomial Degree</strong></td>
+<td>Linear, Quadratic, Cubic, Quartic</td>
+<td>Linear (Degree 1)</td>
+</tr>
+<tr class="even">
+<td><strong>Dimensions</strong></td>
+<td>Multivariate (n-D support)</td>
+<td>Univariate (1-D only)</td>
+</tr>
+<tr class="odd">
+<td><strong>Flexibility</strong></td>
+<td>High (Distance metrics)</td>
+<td>Standard</td>
+</tr>
+<tr class="even">
+<td><strong>Complexity</strong></td>
+<td>Higher (Matrix inversion)</td>
+<td>Lower (Weighted average/slope)</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>[!TIP] <strong>Note:</strong> For a <strong>LOESS</strong>
+implementation, use <a
+href="https://github.com/thisisamirv/loess-project"><code>loess-project</code></a>.</p>
+</blockquote>
+<hr />
+<h2 id="why-this-package">Why this package?</h2>
+<h3 id="speed">Speed</h3>
+<p>The <code>lowess</code> project beats the competition in terms of
+speed, whether in single-threaded or multi-threaded parallel execution.
+It is on average <strong>200-327x faster</strong> than Python's
+<code>statsmodels.lowess</code> and <strong>2-3x faster</strong> than
+R's <code>lowess</code>.</p>
+<p>For more details on the performance comparison, see the Benchmarks
+page in the documentation for your binding/crate.</p>
+<h3 id="robustness">Robustness</h3>
+<p>This implementation is <em>more robust</em> than R's
+<code>lowess</code> and Python's <code>statsmodels</code> due to two key
+design choices:</p>
+<p><strong>MAD-Based Scale Estimation:</strong></p>
+<p>For robustness weight calculations, this crate uses <em>Median
+Absolute Deviation (MAD)</em> for scale estimation:</p>
+<pre class="text"><code>s = median(|r_i - median(r)|)</code></pre>
+<p>In contrast, <code>statsmodels</code> and R's <code>lowess</code>
+uses the median of absolute residuals (MAR):</p>
+<pre class="text"><code>s = median(|r_i|)</code></pre>
+<ul>
+<li>MAD is a <em>breakdown-point-optimal</em> estimator—it remains valid
+even when up to 50% of data are outliers.</li>
+<li>The median-centering step removes asymmetric bias from residual
+distributions.</li>
+<li>MAD provides consistent outlier detection regardless of whether
+residuals are centered around zero.</li>
+</ul>
+<p><strong>Boundary Padding:</strong></p>
+<p>This crate applies a range of different <em>boundary policies</em> at
+dataset edges:</p>
+<ul>
+<li><strong>Extend</strong>: Repeats edge values to maintain local
+neighborhood size.</li>
+<li><strong>Reflect</strong>: Mirrors data symmetrically around
+boundaries.</li>
+<li><strong>Zero</strong>: Pads with zeros (useful for signal
+processing).</li>
+<li><strong>NoBoundary</strong>: Original Cleveland behavior</li>
+</ul>
+<p><code>statsmodels</code> and R's <code>lowess</code> do not apply
+boundary padding, which can lead to:</p>
+<ul>
+<li>Biased estimates near boundaries due to asymmetric local
+neighborhoods.</li>
+<li>Increased variance at the edges of the smoothed curve.</li>
+</ul>
+<h3 id="features">Features</h3>
+<p>A variety of features, supporting a range of use cases:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th style="text-align: center;">This package</th>
+<th style="text-align: center;">statsmodels</th>
+<th style="text-align: center;">R (stats)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Kernel</td>
+<td style="text-align: center;">7 options</td>
+<td style="text-align: center;">only Tricube</td>
+<td style="text-align: center;">only Tricube</td>
+</tr>
+<tr class="even">
+<td>Robustness Weighting</td>
+<td style="text-align: center;">3 options</td>
+<td style="text-align: center;">only Huber</td>
+<td style="text-align: center;">only Huber</td>
+</tr>
+<tr class="odd">
+<td>Scale Estimation</td>
+<td style="text-align: center;">2 options</td>
+<td style="text-align: center;">only MAR</td>
+<td style="text-align: center;">only MAR</td>
+</tr>
+<tr class="even">
+<td>Boundary Padding</td>
+<td style="text-align: center;">4 options</td>
+<td style="text-align: center;">no padding</td>
+<td style="text-align: center;">no padding</td>
+</tr>
+<tr class="odd">
+<td>Zero Weight Fallback</td>
+<td style="text-align: center;">3 options</td>
+<td style="text-align: center;">no</td>
+<td style="text-align: center;">no</td>
+</tr>
+<tr class="even">
+<td>Auto Convergence</td>
+<td style="text-align: center;">yes</td>
+<td style="text-align: center;">no</td>
+<td style="text-align: center;">no</td>
+</tr>
+<tr class="odd">
+<td>Online Mode</td>
+<td style="text-align: center;">yes</td>
+<td style="text-align: center;">no</td>
+<td style="text-align: center;">no</td>
+</tr>
+<tr class="even">
+<td>Streaming Mode</td>
+<td style="text-align: center;">yes</td>
+<td style="text-align: center;">no</td>
+<td style="text-align: center;">no</td>
+</tr>
+<tr class="odd">
+<td>Confidence Intervals</td>
+<td style="text-align: center;">yes</td>
+<td style="text-align: center;">no</td>
+<td style="text-align: center;">no</td>
+</tr>
+<tr class="even">
+<td>Prediction Intervals</td>
+<td style="text-align: center;">yes</td>
+<td style="text-align: center;">no</td>
+<td style="text-align: center;">no</td>
+</tr>
+<tr class="odd">
+<td>Cross-Validation</td>
+<td style="text-align: center;">2 options</td>
+<td style="text-align: center;">no</td>
+<td style="text-align: center;">no</td>
+</tr>
+<tr class="even">
+<td>Parallel Execution</td>
+<td style="text-align: center;">yes</td>
+<td style="text-align: center;">no</td>
+<td style="text-align: center;">no</td>
+</tr>
+<tr class="odd">
+<td>GPU Acceleration</td>
+<td style="text-align: center;">yes</td>
+<td style="text-align: center;">no</td>
+<td style="text-align: center;">no</td>
+</tr>
+<tr class="even">
+<td><code>no-std</code> Support</td>
+<td style="text-align: center;">yes</td>
+<td style="text-align: center;">no</td>
+<td style="text-align: center;">no</td>
+</tr>
+</tbody>
+</table>
+<h2 id="validation">Validation</h2>
+<p>All implementations are <strong>numerical twins</strong> of R's
+<code>lowess</code>:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Aspect</th>
+<th>Status</th>
+<th>Details</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Accuracy</strong></td>
+<td>✅ EXACT MATCH</td>
+<td>Max diff &lt; 1e-12 across all scenarios</td>
+</tr>
+<tr class="even">
+<td><strong>Consistency</strong></td>
+<td>✅ PERFECT</td>
+<td>Multiple scenarios pass with strict tolerance</td>
+</tr>
+<tr class="odd">
+<td><strong>Robustness</strong></td>
+<td>✅ VERIFIED</td>
+<td>Robust smoothing matches R exactly</td>
+</tr>
+</tbody>
+</table>
+<h2 id="api-reference">API Reference</h2>
+<p><strong>R:</strong></p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rfastlowess)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">Lowess</span>(</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">fraction =</span> <span class="fl">0.5</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">iterations =</span> <span class="dv">3</span><span class="dt">L</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">delta =</span> <span class="fl">0.01</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">weight_function =</span> <span class="st">&quot;tricube&quot;</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">robustness_method =</span> <span class="st">&quot;bisquare&quot;</span>,</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">scaling_method =</span> <span class="st">&quot;mad&quot;</span>,</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">zero_weight_fallback =</span> <span class="st">&quot;use_local_mean&quot;</span>,</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">boundary_policy =</span> <span class="st">&quot;extend&quot;</span>,</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">confidence_intervals =</span> <span class="fl">0.95</span>,</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">prediction_intervals =</span> <span class="fl">0.95</span>,</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">return_diagnostics =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">return_residuals =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">return_robustness_weights =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">return_se =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">cv_fractions =</span> <span class="fu">c</span>(<span class="fl">0.3</span>, <span class="fl">0.5</span>, <span class="fl">0.7</span>),</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">cv_method =</span> <span class="st">&quot;kfold&quot;</span>,</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">cv_k =</span> <span class="dv">5</span><span class="dt">L</span>,</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">cv_seed =</span> <span class="dv">123</span><span class="dt">L</span>,</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">auto_converge =</span> <span class="fl">1e-4</span>,</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">parallel =</span> <span class="cn">TRUE</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>custom_weights <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="dv">1</span>, <span class="fu">length</span>(x))</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">fit</span>(model, x, y, <span class="at">custom_weights =</span> custom_weights)</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a><span class="co"># Result structure:</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>result<span class="sc">$</span>x,</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>result<span class="sc">$</span>y,</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>result<span class="sc">$</span>standard_errors,</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>result<span class="sc">$</span>confidence_lower,</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>result<span class="sc">$</span>confidence_upper,</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>result<span class="sc">$</span>prediction_lower,</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>result<span class="sc">$</span>prediction_upper,</span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>result<span class="sc">$</span>residuals,</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>result<span class="sc">$</span>robustness_weights,</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>result<span class="sc">$</span>diagnostics,</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>result<span class="sc">$</span>iterations_used,</span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>result<span class="sc">$</span>fraction_used,</span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>result<span class="sc">$</span>cv_scores</span></code></pre></div>
+<p><strong>Python:</strong></p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> fastlowess <span class="im">import</span> Lowess</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> Lowess(</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    fraction<span class="op">=</span><span class="fl">0.5</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    iterations<span class="op">=</span><span class="dv">3</span>,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    delta<span class="op">=</span><span class="fl">0.01</span>,</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    weight_function<span class="op">=</span><span class="st">&quot;tricube&quot;</span>,</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    robustness_method<span class="op">=</span><span class="st">&quot;bisquare&quot;</span>,</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    scaling_method<span class="op">=</span><span class="st">&quot;mad&quot;</span>,</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    zero_weight_fallback<span class="op">=</span><span class="st">&quot;use_local_mean&quot;</span>,</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    boundary_policy<span class="op">=</span><span class="st">&quot;extend&quot;</span>,</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    confidence_intervals<span class="op">=</span><span class="fl">0.95</span>,</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    prediction_intervals<span class="op">=</span><span class="fl">0.95</span>,</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    return_diagnostics<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    return_residuals<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    return_robustness_weights<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    return_se<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    cv_fractions<span class="op">=</span>[<span class="fl">0.3</span>, <span class="fl">0.5</span>, <span class="fl">0.7</span>],</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    cv_method<span class="op">=</span><span class="st">&quot;kfold&quot;</span>,</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    cv_k<span class="op">=</span><span class="dv">5</span>,</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    cv_seed<span class="op">=</span><span class="dv">123</span>,</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    auto_converge<span class="op">=</span><span class="fl">1e-4</span>,</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    parallel<span class="op">=</span><span class="va">True</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>custom_weights <span class="op">=</span> [<span class="fl">1.0</span>] <span class="op">*</span> <span class="bu">len</span>(x)</span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> model.fit(x, y, custom_weights<span class="op">=</span>custom_weights)</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a><span class="co"># Result structure:</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>result.x,</span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>result.y,</span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>result.standard_errors,</span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>result.confidence_lower,</span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>result.confidence_upper,</span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>result.prediction_lower,</span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>result.prediction_upper,</span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>result.residuals,</span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>result.robustness_weights,</span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>result.diagnostics,</span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>result.iterations_used,</span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>result.fraction_used,</span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>result.cv_scores</span></code></pre></div>
+<p><strong>Rust:</strong></p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">lowess::prelude::</span><span class="op">*;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> model <span class="op">=</span> <span class="pp">Lowess::</span>new()</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>fraction(<span class="dv">0.5</span>)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>iterations(<span class="dv">3</span>)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>delta(<span class="dv">0.01</span>)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>weight_function(<span class="st">&quot;tricube&quot;</span>)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>robustness_method(<span class="st">&quot;bisquare&quot;</span>)</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>scaling_method(<span class="st">&quot;mad&quot;</span>)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>zero_weight_fallback(<span class="st">&quot;use_local_mean&quot;</span>)</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>boundary_policy(<span class="st">&quot;extend&quot;</span>)</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>return_se()</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>confidence_intervals(<span class="dv">0.95</span>)</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>prediction_intervals(<span class="dv">0.95</span>)</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>return_diagnostics()</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>return_residuals()</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>return_robustness_weights()</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>cv_method(<span class="st">&quot;kfold&quot;</span>)</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>cv_k(<span class="dv">5</span>)</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>cv_fractions(<span class="pp">vec!</span>[<span class="dv">0.3</span><span class="op">,</span> <span class="dv">0.5</span><span class="op">,</span> <span class="dv">0.7</span>])</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>cv_seed(<span class="dv">123</span>)</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>auto_converge(<span class="dv">1e-4</span>)</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>custom_weights(<span class="pp">vec!</span>[<span class="dv">1.0</span><span class="op">;</span> x<span class="op">.</span>len()])</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>build()<span class="op">?;</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> result <span class="op">=</span> model<span class="op">.</span>fit(<span class="op">&amp;</span>x<span class="op">,</span> <span class="op">&amp;</span>y)<span class="op">?;</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a><span class="co">// Result structure:</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> LowessResult<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> x<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>T<span class="op">&gt;,</span>                           <span class="co">// Sorted x values</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> y<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>T<span class="op">&gt;,</span>                           <span class="co">// Smoothed y values</span></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> standard_errors<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span>T<span class="op">&gt;&gt;,</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> confidence_lower<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span>T<span class="op">&gt;&gt;,</span></span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> confidence_upper<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span>T<span class="op">&gt;&gt;,</span></span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> prediction_lower<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span>T<span class="op">&gt;&gt;,</span></span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> prediction_upper<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span>T<span class="op">&gt;&gt;,</span></span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> residuals<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span>T<span class="op">&gt;&gt;,</span></span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> robustness_weights<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span>T<span class="op">&gt;&gt;,</span></span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> diagnostics<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span>Diagnostics<span class="op">&lt;</span>T<span class="op">&gt;&gt;,</span></span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> iterations_used<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">usize</span><span class="op">&gt;,</span></span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> fraction_used<span class="op">:</span> T<span class="op">,</span></span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> cv_scores<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span>T<span class="op">&gt;&gt;,</span></span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Julia:</strong></p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode julia"><code class="sourceCode julia"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">FastLOWESS</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> <span class="fu">Lowess</span>(;</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    fraction<span class="op">=</span><span class="fl">0.5</span>,</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    iterations<span class="op">=</span><span class="fl">3</span>,</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    delta<span class="op">=</span><span class="cn">NaN</span>,  <span class="co"># NaN for auto</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    weight_function<span class="op">=</span><span class="st">&quot;tricube&quot;</span>,</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    robustness_method<span class="op">=</span><span class="st">&quot;bisquare&quot;</span>,</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    scaling_method<span class="op">=</span><span class="st">&quot;mad&quot;</span>,</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    zero_weight_fallback<span class="op">=</span><span class="st">&quot;use_local_mean&quot;</span>,</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    boundary_policy<span class="op">=</span><span class="st">&quot;extend&quot;</span>,</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    confidence_intervals<span class="op">=</span><span class="cn">NaN</span>,</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    prediction_intervals<span class="op">=</span><span class="cn">NaN</span>,</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    return_diagnostics<span class="op">=</span><span class="cn">true</span>,</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    return_residuals<span class="op">=</span><span class="cn">true</span>,</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    return_robustness_weights<span class="op">=</span><span class="cn">true</span>,</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    return_se<span class="op">=</span><span class="cn">true</span>,</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    cv_fractions<span class="op">=</span><span class="dt">Float64</span>[], <span class="co"># e.g. [0.3, 0.5]</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    cv_method<span class="op">=</span><span class="st">&quot;kfold&quot;</span>,</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    cv_k<span class="op">=</span><span class="fl">5</span>,</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    cv_seed<span class="op">=</span><span class="fl">123</span>,</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>    auto_converge<span class="op">=</span><span class="cn">NaN</span>,</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    parallel<span class="op">=</span><span class="cn">true</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>custom_weights <span class="op">=</span> <span class="fu">ones</span>(<span class="fu">length</span>(x))</span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> <span class="fu">fit</span>(model, x, y; custom_weights<span class="op">=</span>custom_weights)</span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a><span class="co"># Result structure:</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>result.x,</span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>result.y,</span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>result.standard_errors,</span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>result.confidence_lower,</span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>result.confidence_upper,</span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>result.prediction_lower,</span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>result.prediction_upper,</span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>result.residuals,</span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>result.robustness_weights,</span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>result.diagnostics,</span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>result.iterations_used,</span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>result.fraction_used,</span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>result.cv_scores</span></code></pre></div>
+<p><strong>Node.js:</strong></p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { Lowess } <span class="im">from</span> <span class="st">&quot;fastlowess&quot;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> model <span class="op">=</span> <span class="kw">new</span> <span class="fu">Lowess</span>({</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">fraction</span><span class="op">:</span> <span class="fl">0.5</span><span class="op">,</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">iterations</span><span class="op">:</span> <span class="dv">3</span><span class="op">,</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">delta</span><span class="op">:</span> <span class="fl">0.01</span><span class="op">,</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">weight_function</span><span class="op">:</span> <span class="st">&quot;tricube&quot;</span><span class="op">,</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">robustness_method</span><span class="op">:</span> <span class="st">&quot;bisquare&quot;</span><span class="op">,</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">scaling_method</span><span class="op">:</span> <span class="st">&quot;mad&quot;</span><span class="op">,</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">zero_weight_fallback</span><span class="op">:</span> <span class="st">&quot;use_local_mean&quot;</span><span class="op">,</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">boundary_policy</span><span class="op">:</span> <span class="st">&quot;extend&quot;</span><span class="op">,</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">return_se</span><span class="op">:</span> <span class="kw">true</span><span class="op">,</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">confidence_intervals</span><span class="op">:</span> <span class="fl">0.95</span><span class="op">,</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">prediction_intervals</span><span class="op">:</span> <span class="fl">0.95</span><span class="op">,</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">return_diagnostics</span><span class="op">:</span> <span class="kw">true</span><span class="op">,</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">return_residuals</span><span class="op">:</span> <span class="kw">true</span><span class="op">,</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">return_robustness_weights</span><span class="op">:</span> <span class="kw">true</span><span class="op">,</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>    <span class="dt">cv_fractions</span><span class="op">:</span> [<span class="fl">0.3</span><span class="op">,</span> <span class="fl">0.5</span><span class="op">,</span> <span class="fl">0.7</span>]<span class="op">,</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>    <span class="dt">cv_method</span><span class="op">:</span> <span class="st">&quot;kfold&quot;</span><span class="op">,</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    <span class="dt">cv_k</span><span class="op">:</span> <span class="dv">5</span><span class="op">,</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    <span class="dt">cv_seed</span><span class="op">:</span> <span class="dv">123</span><span class="op">,</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>    <span class="dt">auto_converge</span><span class="op">:</span> <span class="fl">1e-4</span><span class="op">,</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>    <span class="dt">parallel</span><span class="op">:</span> <span class="kw">true</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> custom_weights <span class="op">=</span> <span class="bu">Array</span>(x<span class="op">.</span><span class="at">length</span>)<span class="op">.</span><span class="fu">fill</span>(<span class="fl">1.0</span>)</span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> result <span class="op">=</span> model<span class="op">.</span><span class="fu">fit</span>(x<span class="op">,</span> y<span class="op">,</span> custom_weights)</span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a><span class="co">// Result structure:</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">x</span><span class="op">,</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">y</span><span class="op">,</span></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">standard_errors</span><span class="op">,</span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">confidence_lower</span><span class="op">,</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">confidence_upper</span><span class="op">,</span></span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">prediction_lower</span><span class="op">,</span></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">prediction_upper</span><span class="op">,</span></span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">residuals</span><span class="op">,</span></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">robustness_weights</span><span class="op">,</span></span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">diagnostics</span><span class="op">,</span></span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">iterations_used</span><span class="op">,</span></span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">fraction_used</span><span class="op">,</span></span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">cv_scores</span></span></code></pre></div>
+<p><strong>WebAssembly:</strong></p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { Lowess } <span class="im">from</span> <span class="st">&quot;fastlowess-wasm&quot;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> model <span class="op">=</span> <span class="kw">new</span> <span class="fu">Lowess</span>({</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">fraction</span><span class="op">:</span> <span class="fl">0.5</span><span class="op">,</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">iterations</span><span class="op">:</span> <span class="dv">3</span><span class="op">,</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">delta</span><span class="op">:</span> <span class="fl">0.01</span><span class="op">,</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">weight_function</span><span class="op">:</span> <span class="st">&quot;tricube&quot;</span><span class="op">,</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">robustness_method</span><span class="op">:</span> <span class="st">&quot;bisquare&quot;</span><span class="op">,</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">scaling_method</span><span class="op">:</span> <span class="st">&quot;mad&quot;</span><span class="op">,</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">zero_weight_fallback</span><span class="op">:</span> <span class="st">&quot;use_local_mean&quot;</span><span class="op">,</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">boundary_policy</span><span class="op">:</span> <span class="st">&quot;extend&quot;</span><span class="op">,</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">return_se</span><span class="op">:</span> <span class="kw">true</span><span class="op">,</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">confidence_intervals</span><span class="op">:</span> <span class="fl">0.95</span><span class="op">,</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">prediction_intervals</span><span class="op">:</span> <span class="fl">0.95</span><span class="op">,</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">return_diagnostics</span><span class="op">:</span> <span class="kw">true</span><span class="op">,</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">return_residuals</span><span class="op">:</span> <span class="kw">true</span><span class="op">,</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">return_robustness_weights</span><span class="op">:</span> <span class="kw">true</span><span class="op">,</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    <span class="dt">cv_fractions</span><span class="op">:</span> [<span class="fl">0.3</span><span class="op">,</span> <span class="fl">0.5</span><span class="op">,</span> <span class="fl">0.7</span>]<span class="op">,</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    <span class="dt">cv_method</span><span class="op">:</span> <span class="st">&quot;kfold&quot;</span><span class="op">,</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>    <span class="dt">cv_k</span><span class="op">:</span> <span class="dv">5</span><span class="op">,</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>    <span class="dt">cv_seed</span><span class="op">:</span> <span class="dv">123</span><span class="op">,</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>    <span class="dt">auto_converge</span><span class="op">:</span> <span class="fl">1e-4</span><span class="op">,</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>    <span class="dt">parallel</span><span class="op">:</span> <span class="kw">true</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> custom_weights <span class="op">=</span> <span class="kw">new</span> <span class="bu">Float64Array</span>(x<span class="op">.</span><span class="at">length</span>)<span class="op">.</span><span class="fu">fill</span>(<span class="dv">1</span>)</span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> result <span class="op">=</span> model<span class="op">.</span><span class="fu">fit</span>(x<span class="op">,</span> y<span class="op">,</span> custom_weights)</span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a><span class="co">// Result structure:</span></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">x</span><span class="op">,</span></span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">y</span><span class="op">,</span></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">standard_errors</span><span class="op">,</span></span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">confidence_lower</span><span class="op">,</span></span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">confidence_upper</span><span class="op">,</span></span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">prediction_lower</span><span class="op">,</span></span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">prediction_upper</span><span class="op">,</span></span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">residuals</span><span class="op">,</span></span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">robustness_weights</span><span class="op">,</span></span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">diagnostics</span><span class="op">,</span></span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">iterations_used</span><span class="op">,</span></span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">fraction_used</span><span class="op">,</span></span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">cv_scores</span></span></code></pre></div>
+<p><strong>C++:</strong></p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&quot;fastlowess.hpp&quot;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>fastlowess<span class="op">::</span>LowessOptions options<span class="op">;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>fraction <span class="op">=</span> <span class="fl">0.5</span><span class="op">;</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>iterations <span class="op">=</span> <span class="dv">3</span><span class="op">;</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>delta <span class="op">=</span> <span class="fl">0.01</span><span class="op">;</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>weight_function <span class="op">=</span> <span class="st">&quot;tricube&quot;</span><span class="op">;</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>robustness_method <span class="op">=</span> <span class="st">&quot;bisquare&quot;</span><span class="op">;</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>scaling_method <span class="op">=</span> <span class="st">&quot;mad&quot;</span><span class="op">;</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>zero_weight_fallback <span class="op">=</span> <span class="st">&quot;use_local_mean&quot;</span><span class="op">;</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>boundary_policy <span class="op">=</span> <span class="st">&quot;extend&quot;</span><span class="op">;</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>confidence_intervals <span class="op">=</span> <span class="fl">0.95</span><span class="op">;</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>prediction_intervals <span class="op">=</span> <span class="fl">0.95</span><span class="op">;</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>return_diagnostics <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>return_residuals <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>return_robustness_weights <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>return_se <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>cv_fractions <span class="op">=</span> <span class="op">{</span><span class="fl">0.3</span><span class="op">,</span> <span class="fl">0.5</span><span class="op">,</span> <span class="fl">0.7</span><span class="op">};</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>cv_method <span class="op">=</span> <span class="st">&quot;kfold&quot;</span><span class="op">;</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>cv_k <span class="op">=</span> <span class="dv">5</span><span class="op">;</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>cv_seed <span class="op">=</span> <span class="dv">123</span><span class="op">;</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>auto_converge <span class="op">=</span> <span class="fl">1e-4</span><span class="op">;</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>parallel <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>fastlowess<span class="op">::</span>Lowess model<span class="op">(</span>options<span class="op">);</span></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;</span> custom_weights<span class="op">(</span>x<span class="op">.</span>size<span class="op">(),</span> <span class="fl">1.0</span><span class="op">);</span></span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a><span class="at">const</span> <span class="kw">auto</span> result <span class="op">=</span> model<span class="op">.</span>fit<span class="op">(</span>x<span class="op">,</span> y<span class="op">,</span> custom_weights<span class="op">).</span>value<span class="op">();</span></span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a><span class="co">// Result structure:</span></span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span>x_vector<span class="op">(),</span></span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span>y_vector<span class="op">(),</span></span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span>standard_errors<span class="op">(),</span></span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span>confidence_lower<span class="op">(),</span></span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span>confidence_upper<span class="op">(),</span></span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span>prediction_lower<span class="op">(),</span></span>
+<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span>prediction_upper<span class="op">(),</span></span>
+<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span>residuals<span class="op">(),</span></span>
+<span id="cb9-38"><a href="#cb9-38" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span>robustness_weights<span class="op">(),</span></span>
+<span id="cb9-39"><a href="#cb9-39" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span>diagnostics<span class="op">(),</span></span>
+<span id="cb9-40"><a href="#cb9-40" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span>iterations_used<span class="op">(),</span></span>
+<span id="cb9-41"><a href="#cb9-41" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span>fraction_used<span class="op">(),</span></span>
+<span id="cb9-42"><a href="#cb9-42" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span>cv_scores<span class="op">()</span></span></code></pre></div>
+<hr />
+<h2 id="contributing">Contributing</h2>
+<p>Contributions are welcome! Please see <a
+href="https://github.com/thisisamirv/lowess-project/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a>
+for more information.</p>
+<h2 id="changelog">Changelog</h2>
+<p>See <a
+href="https://github.com/thisisamirv/lowess-project/blob/main/CHANGELOG.md">CHANGELOG.md</a>
+for a history of changes.</p>
+<h2 id="license">License</h2>
+<p>Licensed under <a
+href="https://github.com/thisisamirv/lowess-project/blob/main/LICENSE-MIT">MIT</a>
+or <a
+href="https://github.com/thisisamirv/lowess-project/blob/main/LICENSE-APACHE">Apache-2.0</a>.</p>
+<h2 id="citation">Citation</h2>
+<p>If you use this software in your research, please cite it using the
+<a
+href="https://github.com/thisisamirv/lowess-project/blob/main/CITATION.cff">CITATION.cff</a>
+file or the BibTeX entry below:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode bibtex"><code class="sourceCode bibtex"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">@software{lowess_project,</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co">  author = {Valizadeh, Amir},</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co">  title = {LOWESS Project: High-Performance Locally Weighted Scatterplot Smoothing},</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co">  year = {2026},</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co">  url = {https://github.com/thisisamirv/lowess-project},</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co">  license = {MIT OR Apache-2.0}</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co">}</span></span></code></pre></div>
+</body>
+</html>
