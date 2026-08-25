@@ -33,24 +33,6 @@ pub mod adapter_choice {
     #![doc = include_str!("../docs/adapter-choice.md")]
 }
 
-/// Batch mode — standard in-memory smoothing.
-#[cfg(doc)]
-pub mod batch {
-    #![doc = include_str!("../docs/batch.md")]
-}
-
-/// Streaming mode — chunk-by-chunk processing of large datasets.
-#[cfg(doc)]
-pub mod streaming {
-    #![doc = include_str!("../docs/streaming.md")]
-}
-
-/// Online mode — incremental smoothing for real-time data streams.
-#[cfg(doc)]
-pub mod online {
-    #![doc = include_str!("../docs/online.md")]
-}
-
 /// Confidence and prediction intervals.
 #[cfg(doc)]
 pub mod intervals {
