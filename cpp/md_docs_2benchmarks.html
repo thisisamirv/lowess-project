@@ -16,6 +16,13 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  extensions: ["tex2jax.js"],
+  jax: ["input/TeX","output/HTML-CSS"],
+});
+</script>
+<script type="text/javascript" async="async" src="https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
@@ -145,7 +152,8 @@ Reproducing Benchmarks</h2>
 <div class="line"><span class="preprocessor">#include &lt;numeric&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;vector&gt;</span></div>
 <div class="line"> </div>
-<div class="line"><span class="keyword">static</span> <span class="keywordtype">double</span> bench_ms(<span class="keyword">auto</span> fn, <span class="keywordtype">int</span> reps = 10) {</div>
+<div class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> Fn&gt;</div>
+<div class="line"><span class="keyword">static</span> <span class="keywordtype">double</span> bench_ms(Fn fn, <span class="keywordtype">int</span> reps = 10) {</div>
 <div class="line">    <span class="comment">// Warm-up</span></div>
 <div class="line">    fn();</div>
 <div class="line">    <span class="keyword">auto</span> t0 = std::chrono::high_resolution_clock::now();</div>
