@@ -20,9 +20,9 @@ last chunk to flush remaining buffered points.
 
 ## When to Use
 
-- Dataset is too large to fit in memory
-- Processing data from a file or stream
-- Batch pipeline with memory constraints
+- Dataset >100,000 points
+- Memory-constrained environments
+- Batch processing pipelines
 
 ## Parameters
 

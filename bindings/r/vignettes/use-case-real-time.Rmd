@@ -46,6 +46,7 @@ for (i in seq_along(times)) {
     result <- add_point(model, times[i], temperatures[i])
     if (!is.null(result))
         cat(sprintf("Time %d: %.2f\n", times[i], result$y))
+    if (i >= 10) break  # print only the first few outputs
 }
 ```
 

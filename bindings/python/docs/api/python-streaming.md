@@ -1,6 +1,12 @@
 # StreamingLowess — Python API Reference
 
-See also: [fastLowess Python API Reference](python.md)
+See also: [fastLowess](python.md)
+
+## When to Use
+
+- Dataset >100,000 points
+- Memory-constrained environments
+- Batch processing pipelines
 
 ## Class
 
@@ -30,7 +36,7 @@ partial_result = stream.process_chunk(x[:50], y[:50])
 print(partial_result)
 :::
 
-* Processes a chunk of data. Returns partial results.
+- Processes a chunk of data. Returns partial results.
 
 :::{jupyter-execute}
 import fastlowess as fl
@@ -46,7 +52,7 @@ final_result = stream.finalize()
 print(final_result)
 :::
 
-* Finalizes the smoothing process and returns any remaining buffered results.
+- Finalizes the smoothing process and returns any remaining buffered results.
 
 ## Result Structure
 
@@ -83,7 +89,9 @@ See [python.md](python.md) for the full `LowessResult` field reference.
 
 *See: [Merge Strategies](../user-guide/merge.md)*
 
-* `"weighted_average"` (default; alias: `"weighted"`)
-* `"average"` (alias: `"mean"`)
-* `"take_first"` (alias: `"first"`)
-* `"take_last"` (alias: `"last"`)
+| Strategy | Alias | Behavior |
+| --- | --- | --- |
+| `"weighted_average"` (default) | `"weighted"` | Distance-weighted blend |
+| `"average"` | `"mean"` | Average overlapping values |
+| `"take_first"` | `"first"` | Keep left chunk values |
+| `"take_last"` | `"last"` | Keep right chunk values |

@@ -13,7 +13,7 @@ The WebAssembly bindings provide a high-performance interface to the core Rust l
 
 ![Gap Handling](../assets/diagrams/gap_handling.svg)
 
-## Classes and Functions
+## Classes
 
 ### `Lowess`
 

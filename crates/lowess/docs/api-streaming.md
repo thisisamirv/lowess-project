@@ -103,7 +103,7 @@ See [rust.md](api.md) for the full `LowessResult<T>` field reference.
 | --- | --- | --- | --- |
 | `chunk_size(usize)` | `usize` | `5000` | Data chunk size |
 | `overlap(usize)` | `usize` | `500` | Overlap size |
-| `merge_strategy(...)` | `merge_strategy` | `"weighted_average"` | Merge strategy |
+| `merge_strategy(...)` | `merge_strategy` | `"weighted_average"` | Strategy for blending overlap regions |
 
 ## Options
 

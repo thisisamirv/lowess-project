@@ -53,10 +53,10 @@ model <- Lowess(
 )
 result <- fit(model, x, y)
 
-cat("Confidence lower bounds:\n")
-print(result$confidence_lower)
-cat("Confidence upper bounds:\n")
-print(result$confidence_upper)
+cat("Confidence lower bounds (first 5):\n")
+print(head(result$confidence_lower, 5))
+cat("Confidence upper bounds (first 5):\n")
+print(head(result$confidence_upper, 5))
 cat("R²:", result$diagnostics$r_squared, "\n")
 ```
 
@@ -141,6 +141,7 @@ for (i in seq_along(times)) {
     result <- add_point(model, times[i], temperatures[i])
     if (!is.null(result))
         cat(sprintf("Time %d: %.2f\n", times[i], result$y))
+    if (i >= 10) break  # print only the first few outputs
 }
 ```
 
