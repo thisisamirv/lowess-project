@@ -100,8 +100,8 @@ $(document).ready(function(){initNavTree('md_docs_2kernels.html',''); initResiza
   <div class="headertitle"><div class="title">Weight Functions</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md152"></a> Kernel functions for distance weighting.</p>
-<h1><a class="anchor" id="autotoc_md153"></a>
+<div class="textblock"><p><a class="anchor" id="autotoc_md154"></a> Kernel functions for distance weighting.</p>
+<h1><a class="anchor" id="autotoc_md155"></a>
 Overview</h1>
 <p>Weight functions (kernels) determine how neighboring points contribute to each local fit. Points closer to the target receive higher weights.</p>
 <div class="image">
@@ -109,7 +109,7 @@ Overview</h1>
 <div class="caption">
 Weight Functions</div></div>
     <hr  />
-<h1><a class="anchor" id="autotoc_md155"></a>
+<h1><a class="anchor" id="autotoc_md157"></a>
 Available Kernels</h1>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -131,7 +131,7 @@ Available Kernels</h1>
 </table>
 <p><b>Efficiency</b> = AMISE relative to Epanechnikov (1.0 = optimal)</p>
 <hr  />
-<h1><a class="anchor" id="autotoc_md157"></a>
+<h1><a class="anchor" id="autotoc_md159"></a>
 Tricube (Default)</h1>
 <p>Cleveland's original choice. Best all-around performance.</p>
 <p>$$w(u) = (1 - |u|^3)^3$$</p>
@@ -157,7 +157,7 @@ Tricube (Default)</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.382608</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md159"></a>
+<h1><a class="anchor" id="autotoc_md161"></a>
 Epanechnikov</h1>
 <p>Theoretically optimal for kernel density estimation.</p>
 <p>$$w(u) = \frac{3}{4}(1 - u^2)$$</p>
@@ -183,7 +183,7 @@ Epanechnikov</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.406728</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md161"></a>
+<h1><a class="anchor" id="autotoc_md163"></a>
 Gaussian</h1>
 <p>Infinitely smooth. No boundary effects.</p>
 <p>$$w(u) = \exp(-u^2/2)$$</p>
@@ -209,7 +209,7 @@ Gaussian</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.435767</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md163"></a>
+<h1><a class="anchor" id="autotoc_md165"></a>
 Biweight</h1>
 <p>Good balance of efficiency and smoothness.</p>
 <p>$$w(u) = (1 - u^2)^2$$</p>
@@ -235,7 +235,7 @@ Biweight</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.375903</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md165"></a>
+<h1><a class="anchor" id="autotoc_md167"></a>
 Cosine</h1>
 <p>Smooth and computationally efficient.</p>
 <p>$$w(u) = \cos(\pi u / 2)$$</p>
@@ -261,7 +261,7 @@ Cosine</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.40083</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md167"></a>
+<h1><a class="anchor" id="autotoc_md169"></a>
 Triangle</h1>
 <p>Simple linear taper.</p>
 <p>$$w(u) = 1 - |u|$$</p>
@@ -287,7 +287,7 @@ Triangle</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.381657</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md169"></a>
+<h1><a class="anchor" id="autotoc_md171"></a>
 Uniform</h1>
 <p>Equal weights within window. Fastest but least smooth.</p>
 <p>$$w(u) = 1$$</p>
@@ -313,7 +313,7 @@ Uniform</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.45084</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md171"></a>
+<h1><a class="anchor" id="autotoc_md173"></a>
 Choosing a Kernel</h1>
 <div class="fragment"><div class="line">flowchart TD</div>
 <div class="line">    A[Choose Kernel] --&gt; B{Need maximum smooth}</div>

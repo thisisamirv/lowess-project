@@ -190,16 +190,7 @@ Confidence intervals (narrow, mean curve uncertainty) vs Prediction intervals (w
 <h1><a class="anchor" id="autotoc_md78"></a>
 Execution Modes</h1>
 <p>Choose the right mode based on your use case:</p>
-<div class="fragment"><div class="line">flowchart TD</div>
-<div class="line">    A[Data Source] --&gt; B{Fits in memory?}</div>
-<div class="line">    B -- Yes --&gt; C{Real-time?}</div>
-<div class="line">    B -- No --&gt; D[Streaming]</div>
-<div class="line">    C -- No --&gt; E[Batch]</div>
-<div class="line">    C -- Yes --&gt; F[Online]</div>
-<div class="line">    E --&gt; G[Full features]</div>
-<div class="line">    D --&gt; H[Chunked processing]</div>
-<div class="line">    F --&gt; I[Sliding window]</div>
-</div><!-- fragment --><table class="markdownTable">
+<table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Mode   </th><th class="markdownTableHeadNone">Use Case   </th><th class="markdownTableHeadNone">Memory   </th><th class="markdownTableHeadNone">Features    </th></tr>
 <tr class="markdownTableRowOdd">
@@ -211,6 +202,19 @@ Execution Modes</h1>
 </table>
 <hr  />
 <h1><a class="anchor" id="autotoc_md80"></a>
+Quick Decision Guide</h1>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Situation   </th><th class="markdownTableHeadNone">Mode    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Data fits in memory; needs intervals or CV   </td><td class="markdownTableBodyNone">Batch    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Data too large for memory or arrives in chunks   </td><td class="markdownTableBodyNone">Streaming    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Data arrives point-by-point in real time   </td><td class="markdownTableBodyNone">Online   </td></tr>
+</table>
+<hr  />
+<h1><a class="anchor" id="autotoc_md82"></a>
 Key Advantages</h1>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -227,7 +231,7 @@ Key Advantages</h1>
 <td class="markdownTableBodyNone">Handles irregular sampling   </td><td class="markdownTableBodyNone">✓   </td><td class="markdownTableBodyNone">✓   </td><td class="markdownTableBodyNone">✗   </td></tr>
 </table>
 <hr  />
-<h1><a class="anchor" id="autotoc_md82"></a>
+<h1><a class="anchor" id="autotoc_md84"></a>
 Next Steps</h1>
 <ul>
 <li><a class="el" href="md_docs_2quickstart.html">Quick Start</a> — See it in action</li>
