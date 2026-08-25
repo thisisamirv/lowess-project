@@ -1,4 +1,4 @@
-# StreamingLowess — Python API Reference
+# StreamingLowess API
 
 See also: [fastLowess](python.md)
 

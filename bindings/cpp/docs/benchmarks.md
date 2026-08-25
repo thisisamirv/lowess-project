@@ -86,3 +86,9 @@ int main() {
     return 0;
 }
 ```
+
+```output
+Serial:   9.02036 ms
+Parallel: 6.4142 ms
+Speedup:  1.40631Ã—
+```

@@ -1,5 +1,5 @@
 <!-- markdownlint-disable MD046 -->
-# fastLowess Python API Reference
+# fastLowess
 
 The Python bindings provide a high-performance interface to the core Rust library, mirroring the Rust API structure.
 
