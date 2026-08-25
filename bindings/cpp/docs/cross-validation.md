@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD024 MD033 MD046 -->
 # Cross-Validation
 
 Automated parameter selection via cross-validation.

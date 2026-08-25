@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD033 -->
 # Concepts
 
 Understanding how LOWESS works and when to use it.

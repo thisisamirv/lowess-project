@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD024 MD046 MD033 MD037 -->
 # Time Series Analysis
 
 LOWESS for trend extraction and temporal smoothing.

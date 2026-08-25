@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD024 MD046 -->
 # Benchmarks
 
 ## CPU Benchmarks

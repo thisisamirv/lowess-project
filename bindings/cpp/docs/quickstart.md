@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD024 MD046 -->
 # Quick Start
 
 Get up and running with LOWESS in minutes.

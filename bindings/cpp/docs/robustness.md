@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD033 -->
 # Robustness
 
 Outlier handling through iterative reweighting.

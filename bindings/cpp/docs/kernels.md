@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD024 MD033 MD046 -->
 # Weight Functions
 
 Kernel functions for distance weighting.

@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD024 MD033 -->
 # Intervals
 
 Confidence and prediction intervals for uncertainty quantification.

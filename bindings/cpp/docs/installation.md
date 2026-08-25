@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD024 MD046 -->
 # Installation
 
 Install the LOWESS library for your preferred language.

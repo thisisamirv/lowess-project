@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD033 -->
 # Custom Weights
 
 Per-observation weights that encode data quality directly into the LOWESS fit.

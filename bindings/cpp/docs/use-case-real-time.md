@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD033 -->
 # Real-Time Processing
 
 Streaming and online LOWESS for live data.

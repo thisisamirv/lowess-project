@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD024 MD033 -->
 # Parameters
 
 Complete reference for all LOWESS configuration options.

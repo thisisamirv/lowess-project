@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD024 MD033 MD046 -->
 # Merge Strategies
 
 How overlapping chunk boundaries are reconciled in Streaming mode.

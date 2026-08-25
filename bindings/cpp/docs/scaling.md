@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD024 MD033 -->
 # Scaling Methods
 
 Residual scale estimation during robustness iterations.

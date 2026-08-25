@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD024 MD033 -->
 # Boundary Handling
 
 Edge strategies that reduce bias near the ends of the data range.
