@@ -116,6 +116,19 @@ gpu_download_to <- function(url, ext, dest) {
     file.copy(tmp, dest, overwrite = TRUE)
 }
 
+#' Resolve the Destination Directory for the Installed Shared Library
+#' @noRd
+gpu_lib_dir <- function(
+    os_type = .Platform$OS.type,
+    r_arch = .Platform$r_arch
+) {
+    lib_dir <- system.file("libs", package = "rfastlowess")
+    if (identical(os_type, "windows") && nzchar(r_arch)) {
+        lib_dir <- file.path(lib_dir, r_arch)
+    }
+    lib_dir
+}
+
 #' Download and Install the GPU-Enabled Backend
 #'
 #' @description
@@ -154,10 +167,7 @@ install_gpu <- function(yes = FALSE) {
         return(invisible(FALSE))
     }
 
-    lib_dir <- system.file("libs", package = "rfastlowess")
-    if (identical(.Platform$OS.type, "windows") && nzchar(.Platform$r_arch)) {
-        lib_dir <- file.path(lib_dir, .Platform$r_arch)
-    }
+    lib_dir <- gpu_lib_dir()
     dest <- file.path(lib_dir, paste0("rfastlowess", info$ext))
 
     gpu_download_to(info$url, info$ext, dest)

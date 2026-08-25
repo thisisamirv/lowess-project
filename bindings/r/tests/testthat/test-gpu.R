@@ -6,12 +6,14 @@
 #   gpu_asset_info (all three platform branches, via mocking)
 #   gpu_confirm_download (both branches)
 #   gpu_download_to (success and failure, via mocking)
+#   gpu_lib_dir (windows multi-arch and default branches)
 #   install_gpu (already-active and needs-confirmation branches)
 
 check_gpu_backend <- getFromNamespace("check_gpu_backend", "rfastlowess")
 gpu_asset_info <- getFromNamespace("gpu_asset_info", "rfastlowess")
 gpu_confirm_download <- getFromNamespace("gpu_confirm_download", "rfastlowess")
 gpu_download_to <- getFromNamespace("gpu_download_to", "rfastlowess")
+gpu_lib_dir <- getFromNamespace("gpu_lib_dir", "rfastlowess")
 read_line <- getFromNamespace("read_line", "rfastlowess")
 
 # ── read_line ─────────────────────────────────────────────────────────────────
@@ -182,7 +184,21 @@ test_that("gpu_download_to errors when the downloaded file is empty", {
 
 # ── install_gpu ──────────────────────────────────────────────────────────────
 
-test_that("install_gpu short-circuits when the GPU backend is already active", {
+test_that("gpu_lib_dir appends r_arch on windows multi-arch installs", {
+    base_dir <- system.file("libs", package = "rfastlowess")
+    expect_equal(
+        gpu_lib_dir(os_type = "windows", r_arch = "x64"),
+        file.path(base_dir, "x64")
+    )
+})
+
+test_that("gpu_lib_dir skips r_arch subdir off windows or without r_arch", {
+    base_dir <- system.file("libs", package = "rfastlowess")
+    expect_equal(gpu_lib_dir(os_type = "unix", r_arch = "x64"), base_dir)
+    expect_equal(gpu_lib_dir(os_type = "windows", r_arch = ""), base_dir)
+})
+
+test_that("install_gpu short-circuits when the backend is already active", {
     testthat::local_mocked_bindings(gpu_available = function() TRUE)
     expect_message(
         result <- install_gpu(),
