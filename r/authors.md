@@ -11,13 +11,13 @@ Source:
 [`inst/CITATION`](https://github.com/thisisamirv/lowess-project/blob/main/inst/CITATION)
 
 Valizadeh A (2026). *High-Performance LOWESS Smoothing for R*. R package
-version 3.0.0, <https://github.com/thisisamirv/lowess-project>.
+version 3.1.0, <https://github.com/thisisamirv/lowess-project>.
 
     @Manual{,
       title = {High-Performance LOWESS Smoothing for R},
       author = {Amir Valizadeh},
       year = {2026},
-      note = {R package version 3.0.0},
+      note = {R package version 3.1.0},
       url = {https://github.com/thisisamirv/lowess-project},
     }
 
