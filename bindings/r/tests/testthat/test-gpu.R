@@ -186,7 +186,7 @@ test_that("gpu_download_to errors when the downloaded file is empty", {
 
 test_that("gpu_lib_dir appends r_arch on windows multi-arch installs", {
     base_dir <- system.file("libs", package = "rfastlowess")
-    expect_equal(
+    expect_identical(
         gpu_lib_dir(os_type = "windows", r_arch = "x64"),
         file.path(base_dir, "x64")
     )
@@ -194,8 +194,8 @@ test_that("gpu_lib_dir appends r_arch on windows multi-arch installs", {
 
 test_that("gpu_lib_dir skips r_arch subdir off windows or without r_arch", {
     base_dir <- system.file("libs", package = "rfastlowess")
-    expect_equal(gpu_lib_dir(os_type = "unix", r_arch = "x64"), base_dir)
-    expect_equal(gpu_lib_dir(os_type = "windows", r_arch = ""), base_dir)
+    expect_identical(gpu_lib_dir(os_type = "unix", r_arch = "x64"), base_dir)
+    expect_identical(gpu_lib_dir(os_type = "windows", r_arch = ""), base_dir)
 })
 
 test_that("install_gpu short-circuits when the backend is already active", {
