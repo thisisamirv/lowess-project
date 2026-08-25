@@ -146,18 +146,14 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] rfastlowess_3.0.0 BiocStyle_2.40.0 
+#> [1] rfastlowess_3.0.0
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] cli_3.6.6           knitr_1.51          rlang_1.3.0        
-#>  [4] xfun_0.60           otel_0.2.0          generics_0.1.4     
-#>  [7] textshaping_1.0.5   jsonlite_2.0.0      htmltools_0.5.9    
-#> [10] ragg_1.5.2          sass_0.4.10         rmarkdown_2.31     
-#> [13] evaluate_1.0.5      jquerylib_0.1.4     fastmap_1.2.0      
-#> [16] yaml_2.3.12         lifecycle_1.0.5     bookdown_0.47      
-#> [19] BiocManager_1.30.27 compiler_4.6.1      fs_2.1.0           
-#> [22] htmlwidgets_1.6.4   systemfonts_1.3.2   digest_0.6.39      
-#> [25] R6_2.6.1            bslib_0.12.0        tools_4.6.1        
-#> [28] BiocGenerics_0.58.1 pkgdown_2.2.1       cachem_1.1.0       
-#> [31] desc_1.4.3
+#>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    
+#>  [5] xfun_0.60         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
+#>  [9] rmarkdown_2.31    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      
+#> [13] pkgdown_2.2.1     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2
+#> [17] compiler_4.6.1    tools_4.6.1       ragg_1.5.2        bslib_0.12.0     
+#> [21] evaluate_1.0.5    yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   
+#> [25] rlang_1.3.0       fs_2.1.0          htmlwidgets_1.6.4
 ```
