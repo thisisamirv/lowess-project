@@ -1,6 +1,6 @@
 [package]
 name = "fastlowess-wasm"
-version = "3.0.0"
+version = "3.1.0"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
@@ -17,7 +17,7 @@ categories = ["science", "algorithms"]
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-fastLowess = { path = "../../crates/fastLowess", version = "3.0", features = [
+fastLowess = { path = "../../crates/fastLowess", version = "3.1", features = [
     "dev",
     "cpu",
 ] }

@@ -52,8 +52,7 @@ jobs:
       - uses: r-lib/actions/setup-tinytex@v2
 
       - name: Install LaTeX packages for PDF manual
-        shell: Rscript {0}
-        run: tinytex::tlmgr_install(c("inconsolata", "times", "helvetic", "courier", "url"))
+        run: tlmgr install inconsolata times helvetic courier url
 
       - name: Bootstrap pak (Windows)
         if: runner.os == 'Windows'
@@ -123,8 +122,7 @@ jobs:
       - uses: r-lib/actions/setup-tinytex@v2
 
       - name: Install LaTeX packages for PDF manual
-        shell: Rscript {0}
-        run: tinytex::tlmgr_install(c("inconsolata", "times", "helvetic", "courier", "url"))
+        run: tlmgr install inconsolata times helvetic courier url
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
