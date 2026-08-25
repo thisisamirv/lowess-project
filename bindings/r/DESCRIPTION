@@ -11,9 +11,7 @@ SystemRequirements: 'Rust' programming language (via 'rustup' or system tools)
 Encoding: UTF-8
 Depends: R (>= 4.4.0)
 Roxygen: list(markdown = TRUE, roclets = c("namespace", "rd", "srr::srr_stats_roclet"))
-biocViews: Preprocessing, StatisticalMethod, Regression, FunctionalPrediction, QualityControl, KEGG
-Imports: BiocGenerics
-Suggests: BiocStyle, knitr, rmarkdown, testthat (>= 3.0.0)
+Suggests: knitr, rmarkdown, testthat (>= 3.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 BugReports: https://github.com/thisisamirv/lowess-project/issues

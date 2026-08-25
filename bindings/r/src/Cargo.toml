@@ -37,5 +37,8 @@ strip = "symbols"
 
 [workspace]
 
-[patch.crates-io]
-lowess = { path = "vendor/lowess" }
+
+
+
+
+

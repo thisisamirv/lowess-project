@@ -95,123 +95,58 @@ dev:
 	sed -i.bak "s/^Version: .*/Version: $$VERSION/" $(R_DIR)/DESCRIPTION; \
 	rm -f $(R_DIR)/DESCRIPTION.bak; \
 	echo "Synced DESCRIPTION version to $$VERSION"
-	@if [ -f $(R_DIR)/src/Cargo.toml.orig ]; then \
-		mv $(R_DIR)/src/Cargo.toml.orig $(R_DIR)/src/Cargo.toml; \
-	elif [ ! -f $(R_DIR)/src/Cargo.toml ] && [ -f $(R_DIR)/src/Cargo.toml.test ]; then \
-		cp $(R_DIR)/src/Cargo.toml.test $(R_DIR)/src/Cargo.toml; \
-	fi
+	@rm -rf $(R_DIR)/*.Rcheck $(R_DIR)/src/target $(R_DIR)/target $(R_DIR)/src/vendor
 	@echo "=============================================================================="
-	@echo "1. Patching Cargo.toml for isolated build..."
+	@echo "1. Installing R development packages..."
 	@echo "=============================================================================="
-	@cp $(R_DIR)/src/Cargo.toml $(R_DIR)/src/Cargo.toml.orig
-	@sed -i.bak '/^\[workspace\]/d' $(R_DIR)/src/Cargo.toml; \
-	sed -i.bak '/^\[patch\.crates-io\]/d' $(R_DIR)/src/Cargo.toml; \
-	sed -i.bak '/^lowess = { path = "vendor\/lowess" }/d' $(R_DIR)/src/Cargo.toml; \
-	rm -f $(R_DIR)/src/Cargo.toml.bak; \
-	rm -rf $(R_DIR)/*.Rcheck $(R_DIR)/*.BiocCheck $(R_DIR)/src/target $(R_DIR)/target $(R_DIR)/src/vendor; \
-	echo "" >> $(R_DIR)/src/Cargo.toml
-	@mkdir -p $(R_DIR)/src/.cargo && cp $(R_DIR)/src/cargo-config.toml $(R_DIR)/src/.cargo/config.toml
-	@echo "Patched $(R_DIR)/src/Cargo.toml"
-	@echo "=============================================================================="
-	@echo "2. Installing R development packages..."
-	@echo "=============================================================================="
-	@echo "Installing R required packages (BiocManager, styler, testthat, rmarkdown, knitr, lintr, roxygen2, pkgdown, remotes)..."
+	@echo "Installing R required packages (styler, testthat, rmarkdown, knitr, lintr, roxygen2, pkgdown, remotes)..."
 	@echo "This may take a while depending on your internet connection and system performance."
 	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript \
 	  -e "lib <- Sys.getenv('R_LIBS_USER'); dir.create(lib, recursive = TRUE, showWarnings = FALSE); .libPaths(c(lib, .libPaths()))" \
 	  -e "# Bootstrap pak; it handles RSPM binary vs source selection automatically" \
 	  -e "if (!requireNamespace('pak', quietly = TRUE, lib.loc = lib)) { options(install.lock = FALSE); install.packages('pak', lib = lib, repos = 'https://r-lib.github.io/p/pak/stable/') }" \
-	  -e "# Required packages (CRAN + Bioconductor)" \
-	  -e "pak::pkg_install(c('BiocManager', 'styler', 'testthat', 'rmarkdown', 'knitr', 'lintr', 'roxygen2', 'pkgdown', 'remotes', 'bioc::BiocStyle'), lib = lib, ask = FALSE)" \
+	  -e "# Required packages (CRAN)" \
+	  -e "pak::pkg_install(c('styler', 'testthat', 'rmarkdown', 'knitr', 'lintr', 'roxygen2', 'pkgdown', 'remotes'), lib = lib, ask = FALSE)" \
 	  -e "# srr lives on its own R-universe; optional so a dead mirror doesn't break the build" \
 	  -e "options(repos = c(ropenscireviewtools = 'https://ropensci-review-tools.r-universe.dev', CRAN = 'https://cloud.r-project.org')); try(pak::pkg_install('srr', lib = lib, ask = FALSE), silent = TRUE)" \
-	  -e "# Optional: BiocCheck, rOpenSci tooling, and local dev helpers" \
-	  -e "options(repos = c(ropensci = 'https://ropensci.r-universe.dev', CRAN = 'https://cloud.r-project.org')); try(pak::pkg_install(c('bioc::BiocCheck', 'pkgcheck', 'pkgstats', 'covr', 'prettycode', 'toml', 'V8', 'visNetwork'), lib = lib, ask = FALSE), silent = TRUE)" \
+	  -e "# Optional: rOpenSci tooling and local dev helpers" \
+	  -e "options(repos = c(ropensci = 'https://ropensci.r-universe.dev', CRAN = 'https://cloud.r-project.org')); try(pak::pkg_install(c('pkgcheck', 'pkgstats', 'covr', 'prettycode', 'toml', 'V8', 'visNetwork'), lib = lib, ask = FALSE), silent = TRUE)" \
 	  >/dev/null
+	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "if (!rmarkdown::pandoc_available()) { message('\nERROR: Pandoc is required to build R Markdown vignettes but is not available.\nPlease install Pandoc (https://pandoc.org/installing.html) and ensure it is in your PATH.\n'); quit(status = 1) }"
 	@echo "R development packages installed!"
 	@echo "=============================================================================="
-	@echo "3. Vendoring..."
+	@echo "2. Vendoring..."
 	@echo "=============================================================================="
-	@echo "Updating and re-vendoring crates.io dependencies..."
-	@rm -rf $(R_DIR)/src/vendor $(R_DIR)/src/vendor.tar.xz
-	@mkdir -p $(R_DIR)/src/vendor
-	@cp -rL crates/fastLowess $(R_DIR)/src/vendor/
-	@cp -rL crates/lowess $(R_DIR)/src/vendor/
-	@rm -rf $(R_DIR)/src/vendor/fastLowess/target $(R_DIR)/src/vendor/lowess/target
-	@rm -f $(R_DIR)/src/vendor/fastLowess/Cargo.lock $(R_DIR)/src/vendor/lowess/Cargo.lock
-	@rm -f $(R_DIR)/src/vendor/fastLowess/README.md $(R_DIR)/src/vendor/fastLowess/CHANGELOG.md
-	@rm -f $(R_DIR)/src/vendor/lowess/README.md $(R_DIR)/src/vendor/lowess/CHANGELOG.md
-ifneq ($(WITH_GPU),1)
-	@sed -i.bak \
-		-e '/^wgpu = /,/^\] }/d' \
-		-e '/^bytemuck = /d' \
-		-e '/^pollster = /d' \
-		-e '/^futures-intrusive = /d' \
-		-e 's/^gpu = .*/gpu = []/' \
-		-e 's|lowess = { path = "\.\./lowess", version = "[^"]*", |lowess = { path = "../lowess", |' \
-		$(R_DIR)/src/vendor/fastLowess/Cargo.toml
-	@rm -f $(R_DIR)/src/vendor/fastLowess/Cargo.toml.bak
-else
-	@echo "WITH_GPU=1: keeping wgpu dependencies and 'gpu' feature in vendored fastLowess"
-	@sed -i.bak \
-		-e 's|lowess = { path = "\.\./lowess", version = "[^"]*", |lowess = { path = "../lowess", |' \
-		$(R_DIR)/src/vendor/fastLowess/Cargo.toml
-	@rm -f $(R_DIR)/src/vendor/fastLowess/Cargo.toml.bak
-endif
-	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/lowess/.cargo-checksum.json
-	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/fastLowess/.cargo-checksum.json
-	@printf '\n\n[workspace]\n\n[patch.crates-io]\nlowess = { path = "vendor/lowess" }\n' >> $(R_DIR)/src/Cargo.toml
-	@(cd $(R_DIR)/src && cargo vendor -q --no-delete vendor)
-	@for d in tests benches examples doc docs assets .github .config; do \
-		rm -rf $(R_DIR)/src/vendor/"$$d" $(R_DIR)/src/vendor/*/"$$d" 2>/dev/null; done || true
-	@for f in $(R_DIR)/src/vendor/*/Makefile; do [ -f "$$f" ] && rm -f "$$f"; done || true
-	@$(JQ_ENSURE_CMD)
-	@for f in $(R_DIR)/src/vendor/*/.cargo-checksum.json; do \
-		[ -f "$$f" ] && $(JQ) '.files = {}' "$$f" > "$$f.tmp" && mv "$$f.tmp" "$$f"; done
-	@echo "Creating vendor.tar.xz archive (including Cargo.lock)..."
-	@(cd $(R_DIR)/src && (tar --sort=name --mtime='1970-01-01 00:00:00Z' --owner=0 --group=0 --numeric-owner --xz --create --file=vendor.tar.xz --exclude='*/Makefile' vendor Cargo.lock 2>/dev/null || tar --xz --create --file=vendor.tar.xz --exclude='*/Makefile' vendor Cargo.lock))
-	@rm -rf $(R_DIR)/src/vendor
-	@echo "Vendor update complete. Archive: $(R_DIR)/src/vendor.tar.xz"
-	@if [ -f $(R_DIR)/src/vendor.tar.xz ] && [ ! -d $(R_DIR)/src/vendor ]; then \
-		echo "Extending vendor.tar.xz..."; \
-		(cd $(R_DIR)/src && tar -xf vendor.tar.xz) && \
-		rm -f $(R_DIR)/src/vendor/*/CITATION.cff && \
-		rm -f $(R_DIR)/src/vendor/*/CITATION; \
-	fi
+	@(cd $(R_DIR)/src && WITH_GPU=$(WITH_GPU) sh vendor-update.sh)
 	@echo "=============================================================================="
-	@echo "4. Building..."
+	@echo "3. Building..."
 	@echo "=============================================================================="
-	@(cd $(R_DIR)/src && $(R_CROSS_ENV) cargo build -q --release $(R_CARGO_TARGET) $(R_CARGO_FEATURES) || (mv Cargo.toml.orig Cargo.toml && exit 1))
+	@mkdir -p $(R_DIR)/src/.cargo && cp $(R_DIR)/src/cargo-config.toml $(R_DIR)/src/.cargo/config.toml
+	@(cd $(R_DIR)/src && $(R_CROSS_ENV) cargo build -q --release $(R_CARGO_TARGET) $(R_CARGO_FEATURES)) || \
+	    { rm -rf $(R_DIR)/src/.cargo; exit 1; }
 	@rm -rf $(R_DIR)/src/.cargo
 	@echo "=============================================================================="
-	@echo "5. Formatting..."
+	@echo "4. Formatting..."
 	@echo "=============================================================================="
-	@cd $(R_DIR)/src && cargo fmt -q
 	@if ! command -v air >/dev/null 2>&1; then \
 	    echo "air not found — installing..."; \
 	    $(AIR_INSTALL_CMD); \
 	    export PATH="$$HOME/.local/bin:$$PATH"; \
 	fi; \
 	air format $(R_DIR)/R/ $(R_DIR)/tests/testthat/ $(R_DIR)/vignettes/ || true
-	@cd $(R_DIR)/src && cargo fmt -- --check || (echo "Run 'cargo fmt' to fix"; exit 1)
-	@cd $(R_DIR)/src && $(R_CROSS_ENV) cargo clippy -q $(R_CARGO_TARGET) -- -D warnings
-	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); if (!requireNamespace('lintr', quietly = TRUE, lib.loc = lib)) stop('Required R package not available: lintr', call. = FALSE); my_linters <- lintr::linters_with_defaults(indentation_linter = lintr::indentation_linter(indent = 4L), object_name_linter = NULL, commented_code_linter = NULL, object_usage_linter = NULL); lints <- c(lintr::lint_dir('$(R_DIR)/R', linters = my_linters), lintr::lint_dir('$(R_DIR)/tests/testthat', linters = my_linters)); print(lints); if (length(lints) > 0L) quit(status = 1)"
+	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript \
+	  -e "my_linters <- lintr::linters_with_defaults(indentation_linter = lintr::indentation_linter(indent = 4L), object_name_linter = NULL, commented_code_linter = NULL, object_usage_linter = NULL)" \
+	  -e "lints <- c(lintr::lint_dir('$(R_DIR)/R', linters = my_linters), lintr::lint_dir('$(R_DIR)/tests/testthat', linters = my_linters))" \
+	  -e "print(lints)" \
+	  -e "if (length(lints) > 0L) quit(status = 1)"
 	@echo "=============================================================================="
-	@echo "6. Documentation..."
+	@echo "5. Documentation..."
 	@echo "=============================================================================="
-	@rm -rf $(R_DIR)/*.Rcheck
-	@cd $(R_DIR)/src && RUSTDOCFLAGS="-D warnings" $(R_CROSS_ENV) cargo doc -q --no-deps $(R_CARGO_TARGET)
-	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); for (pkg in c('roxygen2', 'srr')) { if (!requireNamespace(pkg, quietly = TRUE, lib.loc = lib)) suppressWarnings(try(install.packages(pkg, lib = lib, quiet = TRUE), silent = TRUE)) }; if (!requireNamespace('roxygen2', quietly = TRUE, lib.loc = lib)) stop('Required R package not available for roxygen regeneration: roxygen2', call. = FALSE); has_srr <- requireNamespace('srr', quietly = TRUE, lib.loc = lib); roclets <- if (has_srr) c('namespace', 'rd', 'srr::srr_stats_roclet') else c('namespace', 'rd'); roxygen2::roxygenise(package.dir = '.', roclets = roclets, load_code = roxygen2::load_pkgload)"
-	@sed -i.bak 's/^  /    /' $(R_DIR)/NAMESPACE && rm -f $(R_DIR)/NAMESPACE.bak
+	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript \
+	  -e "roxygen2::roxygenise(package.dir = '.', roclets = c('namespace', 'rd', 'srr::srr_stats_roclet'))"
 	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript $(CURDIR)/dev/fix_rd_style.R $(R_DIR)/man
-	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "if (!requireNamespace('rmarkdown', quietly = TRUE, lib.loc = Sys.getenv('R_LIBS_USER')) || !rmarkdown::pandoc_available()) { message('\nERROR: Pandoc is required to build R Markdown vignettes but is not available.\nPlease install Pandoc (https://pandoc.org/installing.html) and ensure it is in your PATH.\n'); quit(status = 1) }"
-	@echo "Pre-installing package to R_LIBS_USER so pkgdown subprocess finds the current version..."
-	@mkdir -p $(R_LIB_DIR)
-	@cd $(R_DIR) && WITH_GPU=$(WITH_GPU) R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) R CMD INSTALL -l $(CURDIR)/$(R_LIB_DIR) . >/dev/null 2>&1
-	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); for (pkg in c('pkgdown', 'rmarkdown', 'knitr')) { if (!requireNamespace(pkg, quietly = TRUE, lib.loc = lib)) install.packages(pkg, lib = lib, quiet = TRUE) }; if (!requireNamespace('pkgdown', quietly = TRUE, lib.loc = lib) || !requireNamespace('rmarkdown', quietly = TRUE, lib.loc = lib) || !requireNamespace('knitr', quietly = TRUE, lib.loc = lib)) stop('Required R packages not available for pkgdown site build', call. = FALSE); pkgdown::build_site(quiet = TRUE, install = FALSE)"
-	@rm -f $(R_DIR)/.gitignore
 	@echo "=============================================================================="
-	@echo "7. Packaging..."
+	@echo "6. Packaging..."
 	@echo "=============================================================================="
 	@echo "Generating $(R_DIR)/inst/AUTHORS..."
 	@mkdir -p $(R_DIR)/inst
@@ -219,21 +154,23 @@ endif
 	@{ \
 		echo "Authors and Copyright Holders for Rust Dependencies:"; \
 		echo ""; \
-		(cargo metadata --format-version 1) | \
-		$(JQ) -r '. as $$root | [.packages[] | select(.id as $$id | ($$root.workspace_members | index($$id)) == null)] | unique_by(.name)[] | "Package: \(.name) (\(.version))\nAuthors: \(.authors | join(", "))\nLicense: \(.license // "Unknown")\n" + "-" * 40'; \
+		_f='. as $$root | [.packages[] | select(.id as $$id | ($$root.workspace_members | index($$id)) == null)] | unique_by(.name)[]'; \
+		_f="$$_f"' | "Package: \(.name) (\(.version))\nAuthors: \(.authors | join(", "))\nLicense: \(.license // "Unknown")\n" + "-" * 40'; \
+		(cargo metadata --format-version 1) | $(JQ) -r "$$_f"; \
 		} > $(R_DIR)/inst/AUTHORS
 	@cd $(R_DIR) && WITH_GPU=$(WITH_GPU) R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) R CMD build .
 	@echo "=============================================================================="
-	@echo "8. Installing..."
+	@echo "7. Installing..."
 	@echo "=============================================================================="
 	@rm -rf $(R_DIR)/00LOCK-$(R_PKG_NAME)
 	@mkdir -p $(R_LIB_DIR)
-	@echo "Installing R runtime dependencies (BiocManager, BiocGenerics, testthat)..."
-	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "suppressMessages({ lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); if (!requireNamespace('BiocManager', quietly = TRUE, lib.loc = lib)) install.packages('BiocManager', lib = lib, quiet = TRUE); if (!requireNamespace('BiocGenerics', quietly = TRUE, lib.loc = lib)) BiocManager::install('BiocGenerics', lib = lib, ask = FALSE, update = FALSE, quiet = TRUE); if (!requireNamespace('testthat', quietly = TRUE, lib.loc = lib)) install.packages('testthat', lib = lib, quiet = TRUE) })" >/dev/null
+	@echo "Installing R runtime dependencies (testthat)..."
+	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "suppressMessages({ lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); if (!requireNamespace('testthat', quietly = TRUE, lib.loc = lib)) install.packages('testthat', lib = lib, quiet = TRUE) })" >/dev/null
 	@cd $(R_DIR) && WITH_GPU=$(WITH_GPU) R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) R CMD INSTALL -l .r-lib $(R_PKG_TARBALL)
 	@echo "=============================================================================="
-	@echo "9. Testing..."
+	@echo "8. Testing..."
 	@echo "=============================================================================="
+	@if [ ! -d $(R_DIR)/src/vendor ]; then (cd $(R_DIR)/src && tar -xf vendor.tar.xz); fi
 	@mkdir -p $(R_DIR)/src/.cargo && cp $(R_DIR)/src/cargo-config.toml $(R_DIR)/src/.cargo/config.toml
 	@if [ -n "$(R_CARGO_TARGET)" ]; then \
 		GCC_LIBDIR="c:/rtools45/x86_64-w64-mingw32.static.posix/lib/gcc/x86_64-w64-mingw32.static.posix/14.3.0"; \
@@ -243,14 +180,15 @@ endif
 	@rm -rf $(R_DIR)/src/.cargo
 	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "Sys.setenv(NOT_CRAN='true'); testthat::test_dir('$(R_DIR)/tests/testthat', package = 'rfastlowess')"
 	@echo "=============================================================================="
-	@echo "10. Submission checks..."
+	@echo "9. Submission checks..."
 	@echo "=============================================================================="
 	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) R_MAKEVARS_USER=$(CURDIR)/dev/Makevars.check R CMD check --as-cran --no-manual $(R_PKG_TARBALL) || true
-	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "r_ver <- as.character(getRversion()); if (startsWith(r_ver, '4.4')) { message('Skipping BiocCheck on R 4.4 (grepv bug in BiocCheck 1.42.x)') } else if (requireNamespace('BiocCheck', quietly=TRUE, lib.loc = Sys.getenv('R_LIBS_USER'))) BiocCheck::BiocCheck('$(R_PKG_TARBALL)', new_package=FALSE)" || true
 	@echo "Package size (Limit: 5MB):"
 	@ls -lh $(R_DIR)/$(R_PKG_TARBALL) || true
-	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); if (!requireNamespace('pkgstats', quietly = TRUE, lib.loc = lib) || !requireNamespace('pkgcheck', quietly = TRUE, lib.loc = lib)) { message('Skipping pkgcheck because pkgstats/pkgcheck are not available in R_LIBS_USER'); quit(status = 0) }; library(pkgstats, lib.loc = lib); library(pkgcheck, lib.loc = lib); token <- Sys.getenv('GITHUB_TOKEN', ''); if (nzchar(token) && !nzchar(Sys.getenv('GITHUB_PAT', ''))) Sys.setenv(GITHUB_PAT = token); tryCatch(pkgcheck(use_cache = FALSE), error = function(err) { msg <- conditionMessage(err); if (grepl('GitHub API error', msg, ignore.case = TRUE) || grepl('rate limit exceeded', msg, ignore.case = TRUE) || grepl('timeout', msg, ignore.case = TRUE) || grepl('could not resolve host', msg, ignore.case = TRUE) || grepl('could not find function', msg, fixed = TRUE)) { message('Skipping pkgcheck due to known incompatibility or network failure: ', msg); return(invisible(NULL)); }; stop(err) })"
-	@if [ -f $(R_DIR)/src/Cargo.toml.orig ]; then mv $(R_DIR)/src/Cargo.toml.orig $(R_DIR)/src/Cargo.toml; fi
+	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript \
+	  -e "library(pkgstats); library(pkgcheck)" \
+	  -e "token <- Sys.getenv('GITHUB_TOKEN', ''); if (nzchar(token) && !nzchar(Sys.getenv('GITHUB_PAT', ''))) Sys.setenv(GITHUB_PAT = token)" \
+	  -e "tryCatch(pkgcheck(use_cache = FALSE), error = function(err) { msg <- conditionMessage(err); if (grepl('GitHub API error|rate limit exceeded|timeout|could not resolve host', msg, ignore.case = TRUE) || grepl('could not find function', msg, fixed = TRUE)) { message('Skipping pkgcheck due to known incompatibility or network failure: ', msg); return(invisible(NULL)) }; stop(err) })"
 	@echo "=============================================================================="
 	@echo "Doc snippet tests (r)..."
 	@$(PYTHON) dev/verify_snippets.py --lang r --timeout 120

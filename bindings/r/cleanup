@@ -1,4 +1,10 @@
 #!/bin/sh
+# Run vendor-update.sh when building from the monorepo (author's machine).
+# When installing from a distributed tarball, vendor.tar.xz is already bundled.
+export PATH="$PATH:$HOME/.cargo/bin"
+if [ -d "../../crates/fastLowess" ]; then
+	(cd src && WITH_GPU="${WITH_GPU:-0}" sh vendor-update.sh)
+	rm -rf src/vendor
+fi
 rm -f src/Makevars
 rm -rf src/.cargo
-echo "Cleaned up src/Makevars and src/.cargo"

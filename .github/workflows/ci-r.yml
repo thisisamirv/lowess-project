@@ -68,11 +68,8 @@ jobs:
           working-directory: bindings/r
           extra-packages: |
             any::rcmdcheck
-            any::BiocCheck
-            any::XML
             any::devtools
             any::lintr
-            any::BiocManager
           needs: check
 
       - name: Prepare Package Sources
@@ -92,17 +89,11 @@ jobs:
         working-directory: bindings/r
         run: Rscript -e "devtools::install(quiet = TRUE)"
 
-      - name: Quality (BiocCheck/Lint)
+      - name: Lint
         if: matrix.r == 'release'
         working-directory: bindings/r
-        shell: bash
         run: |
-          mkdir -p ~/.R
-          echo "CXXFLAGS += -w" >> ~/.R/Makevars
-          echo "CFLAGS += -w" >> ~/.R/Makevars
           Rscript -e "my_linters <- lintr::linters_with_defaults(indentation_linter = lintr::indentation_linter(indent = 4L), object_usage_linter = NULL, object_name_linter = lintr::object_name_linter(styles = c('snake_case', 'symbols', 'CamelCase'))); lintr::lint_dir('R', linters = my_linters)"
-          R CMD build .
-          Rscript -e "BiocCheck::BiocCheck(list.files(pattern='[.]tar[.]gz$')[1], new_package=FALSE, no_check_vignettes=TRUE, quit_with_status=TRUE)"
 
       - name: make r-dev
         run: make r-dev
@@ -132,11 +123,8 @@ jobs:
           working-directory: bindings/r
           extra-packages: |
             any::rcmdcheck
-            any::BiocCheck
-            any::XML
             any::devtools
             any::lintr
-            any::BiocManager
           needs: check
 
       - name: Prepare Package Sources
@@ -147,7 +135,7 @@ jobs:
         run: |
           install.packages(c("remotes", "covr"))
           install.packages(c("pkgcheck", "pkgstats", "toml", "visNetwork"), repos = c("https://ropensci.r-universe.dev", "https://cloud.r-project.org"))
-          remotes::install_deps("bindings/r", dependencies = TRUE, repos = c(BiocManager::repositories(), "https://cloud.r-project.org"))
+          remotes::install_deps("bindings/r", dependencies = TRUE, repos = "https://cloud.r-project.org")
 
       - name: Debug Coverage
         shell: Rscript {0}
@@ -220,9 +208,8 @@ jobs:
         run: |
           mkdir -p ~/.R
           printf 'CFLAGS += -w\nCXXFLAGS += -w\nCXX11FLAGS += -w\nCXX14FLAGS += -w\nCXX17FLAGS += -w\nCXX20FLAGS += -w\n' >> ~/.R/Makevars
-          RDscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); install.packages(c('remotes', 'rcmdcheck', 'testthat', 'knitr', 'rmarkdown', 'BiocManager'))" 2>/dev/null
-          RDscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); BiocManager::install(c('BiocStyle', 'BiocGenerics'), ask = FALSE, update = FALSE)" 2>/dev/null
-          RDscript -e "options(repos = c(BiocManager::repositories(), CRAN = 'https://cloud.r-project.org')); remotes::install_deps(dependencies = TRUE)" 2>/dev/null
+          RDscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); install.packages(c('remotes', 'rcmdcheck', 'testthat', 'knitr', 'rmarkdown'))" 2>/dev/null
+          RDscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); remotes::install_deps(dependencies = TRUE)" 2>/dev/null
 
       - name: Prepare Package Sources
         shell: bash
@@ -269,14 +256,6 @@ jobs:
           use-public-rspm: true
 
       - uses: ./.github/actions/setup-lavapipe
-
-      - name: Install R runtime dependencies
-        run: |
-          Rscript -e '
-            options(repos = c(CRAN = "https://cloud.r-project.org"));
-            if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager", quiet = TRUE);
-            if (!requireNamespace("BiocGenerics", quietly = TRUE)) BiocManager::install("BiocGenerics", ask = FALSE, update = FALSE, quiet = TRUE)
-          '
 
       - name: Build and install with GPU feature
         working-directory: benchmarks

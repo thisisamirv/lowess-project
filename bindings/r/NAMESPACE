@@ -25,10 +25,9 @@ export(fit)
 export(gpu_available)
 export(install_gpu)
 export(process_chunk)
-importFrom(BiocGenerics,normalize)
 importFrom(graphics,lines)
 importFrom(stats,
-    setNames,
-    smooth
+  setNames,
+  smooth
 )
 useDynLib(rfastlowess, .registration = TRUE)
