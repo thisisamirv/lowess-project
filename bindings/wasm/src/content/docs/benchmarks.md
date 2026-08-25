@@ -57,5 +57,5 @@ console.log(`WASM: ${ms.toFixed(2)} ms`);
 ```
 
 ```output
-WASM: 4.21 ms
+WASM: 18.28 ms
 ```

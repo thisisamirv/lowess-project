@@ -14,9 +14,34 @@
 //!
 //! ## Documentation
 //!
-//! > 📚 **Full Documentation**: [docs.rs/fastLowess](https://docs.rs/fastLowess)
-//! >
-//! > Comprehensive guides, API references, and tutorials.
+//! The [`doc`] module contains the full user guide, browsable on [docs.rs](https://docs.rs/fastLowess):
+//!
+//! - **Getting Started**
+//!   - [Concepts](doc::concepts)
+//!   - [Installation](doc::installation)
+//!   - [Quick Start](doc::quickstart)
+//!   - [Parameters](doc::parameters)
+//! - **API Reference**
+//!   - [Batch API](doc::api)
+//!   - [Streaming API](doc::api::streaming)
+//!   - [Online API](doc::api::online)
+//! - **Adapters**
+//!   - [Choosing an Adapter](doc::adapter_choice)
+//!   - [GPU Backend](doc::gpu_backend)
+//! - **Analysis**
+//!   - [Intervals](doc::intervals)
+//!   - [Cross-Validation](doc::cross_validation)
+//! - **Customization**
+//!   - [Kernels](doc::kernels)
+//!   - [Robustness](doc::robustness)
+//!   - [Scaling](doc::scaling)
+//!   - [Custom Weights](doc::custom_weights)
+//!   - [Boundary](doc::boundary)
+//!   - [Merge Strategies](doc::merge)
+//! - **Use Cases**
+//!   - [Genomics](doc::use_cases::genomics)
+//!   - [Time Series](doc::use_cases::time_series)
+//!   - [Real-Time](doc::use_cases::real_time)
 //!
 //! ## Quick Start
 //!
@@ -195,13 +220,12 @@
 //!
 //! - Cleveland, W. S. (1979). "Robust Locally Weighted Regression and Smoothing Scatterplots"
 //! - Cleveland, W. S. (1981). "LOWESS: A Program for Smoothing Scatterplots by Robust Locally Weighted Regression"
-//!
-//! ## srrstats Compliance for rOpenSci Statistical Software Review
-//!
-//! @srrstats {G1.0} Statistical literature references documented above (Cleveland 1979, 1981).
-//! @srrstats {G1.5} Parallel execution via Rayon for multi-threaded performance.
-//! @srrstats {G3.0} ndarray integration for zero-copy data passing and numerical operations.
-//!
+// ## srrstats Compliance for rOpenSci Statistical Software Review
+//
+// @srrstats {G1.0} Statistical literature references documented above (Cleveland 1979, 1981).
+// @srrstats {G1.5} Parallel execution via Rayon for multi-threaded performance.
+// @srrstats {G3.0} ndarray integration for zero-copy data passing and numerical operations.
+
 //! ## License
 //!
 //! See the repository for license information and contribution guidelines.

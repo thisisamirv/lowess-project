@@ -20,7 +20,7 @@ graph LR
 | **Streaming** | Large files (>100K) | Chunked | Residuals, robustness |
 | **Online** | Real-time sensors | Fixed window | Incremental updates |
 
-![Adapter Comparison](../assets/diagrams/adapter_comparison.svg)
+![Adapter Comparison](https://raw.githubusercontent.com/thisisamirv/lowess-project/main/crates/lowess/assets/diagrams/adapter_comparison.svg)
 
 ---
 

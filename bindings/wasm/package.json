@@ -5,7 +5,8 @@
     "scripts": {
         "lint": "oxlint src tests",
         "snippets": "node ../../dev/add-wasm-outputs.js",
-        "docs": "npm run snippets && typedoc && astro build"
+        "docs": "npm run snippets && typedoc && astro build",
+        "docs:preview": "astro preview"
     },
     "devDependencies": {
         "oxlint": "^1.80",

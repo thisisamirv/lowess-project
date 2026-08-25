@@ -7,7 +7,7 @@ Automated parameter selection via cross-validation.
 
 Cross-validation helps select optimal parameters (especially `fraction`) by evaluating performance on held-out data.
 
-![Cross-Validation](../assets/diagrams/cv_comparison.svg)
+![Cross-Validation](https://raw.githubusercontent.com/thisisamirv/lowess-project/main/crates/lowess/assets/diagrams/cv_comparison.svg)
 
 ---
 

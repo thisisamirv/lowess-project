@@ -25,6 +25,14 @@ def skip_reason(snippet: Snippet) -> str | None:
 
 _NODEJS_DIR = REPO_ROOT / "bindings" / "nodejs"
 
+# Rayon's global thread pool (spun up by `parallel: true`, the default for batch
+# `Lowess`) can race with libuv's handle teardown when the Node process exits on
+# Windows, aborting with "Assertion failed: !(handle->flags & UV_HANDLE_CLOSING)"
+# in src\\win\\async.c. This is a transient runtime race, not a snippet bug, so
+# retry a few times before reporting failure.
+_LIBUV_CRASH_RE = re.compile(r"UV_HANDLE_CLOSING|src\\win\\async\.c", re.IGNORECASE)
+_MAX_ATTEMPTS = 3
+
 
 def _ensure_nodejs_selflink(nodejs_dir: Path) -> None:
     """Create node_modules/fastlowess shim so require('fastlowess') resolves locally."""
@@ -70,6 +78,17 @@ def run_nodejs(snippet: Snippet, timeout: int) -> RunResult:
             text=True,
             cwd=cwd,
         )
+        for _ in range(_MAX_ATTEMPTS - 1):
+            if proc.returncode == 0 or not _LIBUV_CRASH_RE.search(proc.stderr or ""):
+                break
+            proc = subprocess.run(
+                [node_bin, tmp],
+                capture_output=True,
+                check=False,
+                timeout=timeout,
+                text=True,
+                cwd=cwd,
+            )
         dur = time.monotonic() - t0
         return RunResult(
             snippet=snippet,

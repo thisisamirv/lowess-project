@@ -2,12 +2,11 @@
 //!
 //! This module provides tools for quantifying uncertainty in LOWESS smoothing
 //! through standard errors, confidence intervals, and prediction intervals.
-//!
-//! ## srrstats Compliance
-//!
-//! @srrstats {RE5.0} Confidence intervals for the mean smoothed function.
-//! Prediction intervals for new observations.
-//! Acklam's rational approximation for inverse normal CDF (z-scores).
+// ## srrstats Compliance
+//
+// @srrstats {RE5.0} Confidence intervals for the mean smoothed function.
+// Prediction intervals for new observations.
+// Acklam's rational approximation for inverse normal CDF (z-scores).
 
 // External dependencies
 #[cfg(not(feature = "std"))]

@@ -14,7 +14,8 @@
         "lint": "oxlint index.js tests/test_fastlowess.js",
         "universal": "napi universal",
         "snippets": "node ../../dev/add-nodejs-outputs.js",
-        "docs": "npm run snippets && typedoc && astro build"
+        "docs": "npm run snippets && typedoc && astro build",
+        "docs:preview": "astro preview"
     },
     "napi": {
         "binaryName": "fastlowess",

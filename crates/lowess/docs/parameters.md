@@ -238,7 +238,7 @@ First smoothed value (talwar robustness): 0.37877937542419027
 
 Edge handling strategy to reduce boundary bias. See [Boundary Handling](boundary.md) for a detailed comparison.
 
-![Boundary Policy](../assets/diagrams/boundary_comparison.svg)
+![Boundary Policy](https://raw.githubusercontent.com/thisisamirv/lowess-project/main/crates/lowess/assets/diagrams/boundary_comparison.svg)
 
 | Policy | Behavior | Use Case |
 | --- | --- | --- |
@@ -278,7 +278,7 @@ First smoothed value (reflect boundary): 0.7127616908322939
 
 Method for estimating residual scale during robustness iterations. See [Scaling Methods](scaling.md) for a detailed comparison.
 
-![Scaling Methods](../assets/diagrams/scaling_comparison.svg)
+![Scaling Methods](https://raw.githubusercontent.com/thisisamirv/lowess-project/main/crates/lowess/assets/diagrams/scaling_comparison.svg)
 
 | Method | Description | Robustness |
 | --- | --- | --- |
@@ -317,7 +317,7 @@ First smoothed value (mad scaling): 0.38260776436644134
 
 Behavior when all neighborhood weights are zero.
 
-![Zero Weight Fallback](../assets/diagrams/zero_weight_comparison.svg)
+![Zero Weight Fallback](https://raw.githubusercontent.com/thisisamirv/lowess-project/main/crates/lowess/assets/diagrams/zero_weight_comparison.svg)
 
 | Option | Behavior |
 | --- | --- |

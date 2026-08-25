@@ -7,7 +7,7 @@ Kernel functions for distance weighting.
 
 Weight functions (kernels) determine how neighboring points contribute to each local fit. Points closer to the target receive higher weights.
 
-![Weight Functions](../assets/diagrams/kernel_comparison.svg)
+![Weight Functions](https://raw.githubusercontent.com/thisisamirv/lowess-project/main/crates/fastLowess/assets/diagrams/kernel_comparison.svg)
 
 ---
 

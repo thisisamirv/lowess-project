@@ -13,9 +13,9 @@ Standard LOWESS can be biased by outliers. Robustness iterations downweight poin
 4. Refit using combined distance × robustness weights
 5. Repeat steps 2–4
 
-![Robustness Methods](../assets/diagrams/robust_method_comparison.svg)
+![Robustness Methods](https://raw.githubusercontent.com/thisisamirv/lowess-project/main/crates/fastLowess/assets/diagrams/robust_method_comparison.svg)
 
-![Robustness Iterations](../assets/diagrams/robust_iter_comparison.svg)
+![Robustness Iterations](https://raw.githubusercontent.com/thisisamirv/lowess-project/main/crates/fastLowess/assets/diagrams/robust_iter_comparison.svg)
 
 ---
 
@@ -177,7 +177,7 @@ Residuals are scaled before computing robustness weights. Two methods:
 | **MAR** | `median(\|r\|)` | Robust, uncentered |
 | **Mean** | `mean(\|r\|)` | Less robust, fastest |
 
-![Scaling Methods Comparison](../assets/diagrams/scaling_comparison.svg)
+![Scaling Methods Comparison](https://raw.githubusercontent.com/thisisamirv/lowess-project/main/crates/fastLowess/assets/diagrams/scaling_comparison.svg)
 
 ```rust
 use fastLowess::prelude::*;

@@ -40,12 +40,9 @@ To develop across all platforms, you will need the following tools installed. Yo
   - **Windows**: System libraries are typically bundled with Rtools
 - **air**: R formatter — auto-installed by `make r` if not found (via the official installer script)
 - *The Makefile automatically installs the following R packages into `bindings/r/.r-lib/`:*
-  - *CRAN (required)*: `BiocManager`, `styler`, `testthat`, `rmarkdown`, `knitr`, `lintr`, `roxygen2`, `pkgdown`, `remotes`
+  - *CRAN (required)*: `styler`, `testthat`, `rmarkdown`, `knitr`, `lintr`, `roxygen2`, `pkgdown`, `remotes`
   - *CRAN (optional)*: `covr`, `prettycode`, `toml`, `V8`, `visNetwork`
-  - *Bioconductor (required)*: `BiocStyle`
-  - *Bioconductor (optional)*: `BiocCheck`
   - *ropensci (optional)*: `srr`, `pkgcheck`, `pkgstats`
-  - *Runtime*: `BiocGenerics`
 
 **Julia**:
 
@@ -66,10 +63,6 @@ To develop across all platforms, you will need the following tools installed. Yo
 - **Compiler**: `g++` or `clang++` with C++17 support
 - **Tools**: `cmake`, `make`, `clang-tidy`, `cppcheck`, `valgrind`
 - **cbindgen**: Install via `cargo install cbindgen` (for header generation)
-
-**Documentation**:
-
-- **Python**: `python3` (the Makefile automatically creates a virtual environment and installs `mkdocs`)
 
 ### Clone and Branch
 
@@ -156,8 +149,6 @@ make all          # Build all components
 make all-dev      # Full quality-check workflow for all components
 make all-coverage # Run coverage for lowess, fastLowess, python, and r
 make all-clean    # Clean all build artifacts
-make docs         # Build MkDocs documentation
-make docs-serve   # Serve documentation locally
 make docs-test    # Run doc snippet tests across all languages
 ```
 
@@ -244,7 +235,7 @@ Tests are organized by component:
 ```bash
 # Rust tests
 cargo test -p lowess --features dev
-cargo test -p fastLowess --features cpu
+cargo test -p fastLowess --features dev
 
 # Python tests
 pytest bindings/python/tests/

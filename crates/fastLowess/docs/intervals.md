@@ -5,7 +5,7 @@ Confidence and prediction intervals for uncertainty quantification.
 
 ## Overview
 
-![Confidence and Prediction Intervals](../assets/diagrams/intervals_comparison.svg)
+![Confidence and Prediction Intervals](https://raw.githubusercontent.com/thisisamirv/lowess-project/main/crates/fastLowess/assets/diagrams/intervals_comparison.svg)
 
 !!! note "Adapter support"
     Confidence and prediction intervals are available in **Batch** mode only. Streaming and Online modes do not support intervals.

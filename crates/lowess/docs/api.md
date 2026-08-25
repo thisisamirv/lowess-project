@@ -10,7 +10,7 @@ The Rust bindings provide the core implementation and high-performance extension
 - Need intervals, cross-validation, or diagnostics
 - Processing complete files
 
-![Gap Handling](../assets/diagrams/gap_handling.svg)
+![Gap Handling](https://raw.githubusercontent.com/thisisamirv/lowess-project/main/crates/lowess/assets/diagrams/gap_handling.svg)
 
 ## Structs & Usage
 

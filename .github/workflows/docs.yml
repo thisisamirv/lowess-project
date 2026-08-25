@@ -57,14 +57,15 @@ jobs:
 
   root:
     needs: filter
-    if: needs.filter.outputs.root == 'true' || github.event_name == 'workflow_dispatch'
     name: Root — README
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - name: Install pandoc
+        if: needs.filter.outputs.root == 'true' || github.event_name == 'workflow_dispatch'
         run: sudo apt-get install -y pandoc
       - name: Convert README.md to HTML
+        if: needs.filter.outputs.root == 'true' || github.event_name == 'workflow_dispatch'
         run: |
           mkdir -p _site
           pandoc README.md \
@@ -75,6 +76,8 @@ jobs:
             --css=https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.6.1/github-markdown-light.min.css \
             -o _site/index.html
           sed -i 's|<body>|<body class="markdown-body" style="max-width:980px;margin:0 auto;padding:45px">|' _site/index.html
+      - name: Ensure .nojekyll
+        run: mkdir -p _site && touch _site/.nojekyll
       - uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: gh-pages
