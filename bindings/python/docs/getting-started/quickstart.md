@@ -43,9 +43,9 @@ model = fl.Lowess(
 )
 result = model.fit(x, y)
 
-print("Smoothed:", result.y)
-print("CI Lower:", result.confidence_lower)
-print("CI Upper:", result.confidence_upper)
+print("Smoothed (first 5):", result.y[:5])
+print("CI Lower (first 5):", result.confidence_lower[:5])
+print("CI Upper (first 5):", result.confidence_upper[:5])
 print("R²:", result.diagnostics.r_squared)
 :::
 

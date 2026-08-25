@@ -114,9 +114,13 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 model = fl.Lowess(iterations=5, return_robustness_weights=True)
 result = model.fit(x, y)
 
+shown = 0
 for i, w in enumerate(result.robustness_weights):
     if w < 0.5:
         print(f"Potential outlier at index {i}: weight = {w:.3f}")
+        shown += 1
+        if shown >= 5:
+            break
 :::
 
 ---

@@ -32,9 +32,9 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 model = fl.Lowess(fraction=0.5, confidence_intervals=0.95)
 result = model.fit(x, y)
 
-print("Smoothed:", result.y)
-print("CI Lower:", result.confidence_lower)
-print("CI Upper:", result.confidence_upper)
+print("Smoothed (first 5):", result.y[:5])
+print("CI Lower (first 5):", result.confidence_lower[:5])
+print("CI Upper (first 5):", result.confidence_upper[:5])
 :::
 
 ---
@@ -54,8 +54,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 model = fl.Lowess(fraction=0.5, prediction_intervals=0.95)
 result = model.fit(x, y)
 
-print("PI Lower:", result.prediction_lower)
-print("PI Upper:", result.prediction_upper)
+print("PI Lower (first 5):", result.prediction_lower[:5])
+print("PI Upper (first 5):", result.prediction_upper[:5])
 :::
 
 ---
@@ -124,7 +124,7 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Lowess(confidence_intervals=0.95)
 result = model.fit(x, y)
-print("Standard errors:", result.standard_errors)
+print("Standard errors (first 5):", result.standard_errors[:5])
 :::
 
 ---

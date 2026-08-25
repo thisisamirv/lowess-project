@@ -333,7 +333,7 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Lowess(return_residuals=True)
 result = model.fit(x, y)
-print(result.residuals)
+print(result.residuals[:5])
 :::
 
 ---
@@ -400,7 +400,7 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Lowess(return_se=True)
 result = model.fit(x, y)
-print(result.standard_errors)
+print(result.standard_errors[:5])
 :::
 
 ---

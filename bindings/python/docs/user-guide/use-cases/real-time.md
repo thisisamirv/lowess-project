@@ -39,6 +39,8 @@ for xi, yi in zip(times, temperatures):
     result = online.add_point(float(xi), float(yi))
     if result is not None:
         print(f"Time {xi:.0f}: smoothed = {result.y:.2f}")
+        if xi >= 9:
+            break
 :::
 
 ---

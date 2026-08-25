@@ -81,23 +81,21 @@ Standard LOWESS is sensitive to outliers. **Robustness iterations** downweight p
 
 Choose the right mode based on your use case:
 
-```mermaid
-flowchart TD
-    A[Data Source] --> B{Fits in memory?}
-    B -- Yes --> C{Real-time?}
-    B -- No --> D[Streaming]
-    C -- No --> E[Batch]
-    C -- Yes --> F[Online]
-    E --> G[Full features]
-    D --> H[Chunked processing]
-    F --> I[Sliding window]
-```
-
 | Mode | Use Case | Memory | Features |
 | --- | --- | --- | --- |
 | **Batch** | Complete datasets | Entire dataset | All features |
 | **Streaming** | Large files (>100K points) | One chunk | Residuals, robustness |
 | **Online** | Real-time data | Fixed window | Incremental updates |
+
+---
+
+## Quick Decision Guide
+
+| Situation | Mode |
+| --- | --- |
+| Data fits in memory; needs intervals or CV | Batch |
+| Data too large for memory or arrives in chunks | Streaming |
+| Data arrives point-by-point in real time | Online |
 
 ---
 

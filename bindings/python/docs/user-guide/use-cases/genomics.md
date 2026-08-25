@@ -112,7 +112,7 @@ result = model.fit(positions, observed.astype(float))
 
 threshold = np.percentile(result.y, 75)
 peaks = positions[result.y > threshold]
-print(f"Peak regions: {peaks}")
+print(f"Found {len(peaks)} peak positions (first 5): {peaks[:5]}")
 :::
 
 ---

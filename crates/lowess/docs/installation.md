@@ -6,11 +6,11 @@ Install the LOWESS library for your preferred language.
 ```toml
 # lowess (no_std compatible)
 [dependencies]
-lowess = "1.3"
+lowess = "*"
 
 # lowess (parallel + GPU)
 [dependencies]
-lowess = { version = "1.3", features = ["cpu"] }
+lowess = { version = "*", features = ["cpu"] }
 ```
 
 ## Feature Flags
