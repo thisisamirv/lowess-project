@@ -34,7 +34,7 @@ MathJax.Hub.Config({
   <td id="projectalign">
    <div id="projectname">fastLowess
    </div>
-   <div id="projectbrief">High-performance LOWESS smoothing — C++ API</div>
+   <div id="projectbrief">High-performance LOWESS smoothing</div>
   </td>
  </tr>
  </tbody>
@@ -117,8 +117,11 @@ What is LOWESS?</h2>
 <hr  />
 <h2><a class="anchor" id="autotoc_md70"></a>
 How It Works</h2>
-<p>&lt;figure markdown="span"&gt; <img src="../assets/diagrams/lowess_concept.svg" alt="LOWESS Smoothing Concept" style="pointer-events: none;" class="inline"/> &lt;figcaption&gt;LOWESS fits local weighted regressions at each point, using a focused local window around each evaluation point&lt;/figcaption&gt; &lt;/figure&gt;</p>
-<p>For each point in your data, LOWESS:</p>
+<div class="image">
+<object type="image/svg+xml" data="lowess_concept.svg" style="pointer-events: none;"></object>
+<div class="caption">
+LOWESS fits local weighted regressions at each point, using a focused local window around each evaluation point</div></div>
+    <p>For each point in your data, LOWESS:</p>
 <ol type="1">
 <li><b>Selects neighbors</b> — Choose the nearest points (controlled by <code>fraction</code>)</li>
 <li><b>Assigns weights</b> — Closer points get higher weights (using a kernel function)</li>
@@ -130,8 +133,11 @@ How It Works</h2>
 <h2><a class="anchor" id="autotoc_md72"></a>
 The Fraction Parameter</h2>
 <p>The <code>fraction</code> (also called bandwidth or span) is the most important parameter. It controls what proportion of data is used for each local fit.</p>
-<p>&lt;figure markdown="span"&gt; <img src="../assets/diagrams/fraction_comparison.svg" alt="Fraction Effect" style="pointer-events: none;" class="inline"/> &lt;figcaption&gt;Small fraction vs large fraction — bandwidth controls how closely the fit follows local structure&lt;/figcaption&gt; &lt;/figure&gt;</p>
-<table class="markdownTable">
+<div class="image">
+<object type="image/svg+xml" data="fraction_comparison.svg" style="pointer-events: none;"></object>
+<div class="caption">
+Small fraction vs large fraction — bandwidth controls how closely the fit follows local structure</div></div>
+    <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Fraction   </th><th class="markdownTableHeadNone">Effect   </th><th class="markdownTableHeadNone">When to Use    </th></tr>
 <tr class="markdownTableRowOdd">
@@ -148,8 +154,11 @@ The Fraction Parameter</h2>
 <h2><a class="anchor" id="autotoc_md74"></a>
 Robustness Iterations</h2>
 <p>Standard LOWESS is sensitive to outliers. <b>Robustness iterations</b> downweight points with large residuals:</p>
-<p>&lt;figure markdown="span"&gt; <img src="../assets/diagrams/robust_iter_comparison.svg" alt="Robustness Effect" style="pointer-events: none;" class="inline"/> &lt;figcaption&gt;Non-robust LOWESS (iterations=0) vs robust LOWESS — outlier influence is suppressed through iterative reweighting&lt;/figcaption&gt; &lt;/figure&gt;</p>
-<table class="markdownTable">
+<div class="image">
+<object type="image/svg+xml" data="robust_iter_comparison.svg" style="pointer-events: none;"></object>
+<div class="caption">
+Non-robust LOWESS (iterations=0) vs robust LOWESS — outlier influence is suppressed through iterative reweighting</div></div>
+    <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Iterations   </th><th class="markdownTableHeadNone">Effect   </th><th class="markdownTableHeadNone">When to Use    </th></tr>
 <tr class="markdownTableRowOdd">
@@ -164,8 +173,11 @@ Robustness Iterations</h2>
 <hr  />
 <h2><a class="anchor" id="autotoc_md76"></a>
 Confidence vs Prediction Intervals</h2>
-<p>&lt;figure markdown="span"&gt; <img src="../assets/diagrams/intervals_comparison.svg" alt="Intervals" style="pointer-events: none;" class="inline"/> &lt;figcaption&gt;Confidence intervals (narrow, mean curve uncertainty) vs Prediction intervals (wide, new-point uncertainty)&lt;/figcaption&gt; &lt;/figure&gt;</p>
-<table class="markdownTable">
+<div class="image">
+<object type="image/svg+xml" data="intervals_comparison.svg" style="pointer-events: none;"></object>
+<div class="caption">
+Confidence intervals (narrow, mean curve uncertainty) vs Prediction intervals (wide, new-point uncertainty)</div></div>
+    <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Interval Type   </th><th class="markdownTableHeadNone">What It Represents   </th><th class="markdownTableHeadNone">Width    </th></tr>
 <tr class="markdownTableRowOdd">
@@ -222,12 +234,12 @@ Key Advantages</h2>
 Next Steps</h2>
 <ul>
 <li><a class="el" href="md_docs_2quickstart.html">Quick Start</a> — See it in action</li>
-<li>Parameters — All configuration options</li>
-<li>Boundary Handling — Edge bias reduction strategies</li>
-<li>Robustness — Outlier downweighting methods</li>
-<li>Scaling Methods — MAD, MAR, Mean scale estimation</li>
-<li>Merge Strategies — Chunk reconciliation in Streaming mode</li>
-<li>Tutorials — Application-specific guides </li>
+<li><a class="el" href="md_docs_2parameters.html">Parameters</a> — All configuration options</li>
+<li><a class="el" href="md_docs_2boundary.html">Boundary Handling</a> — Edge bias reduction strategies</li>
+<li><a class="el" href="md_docs_2robustness.html">Robustness</a> — Outlier downweighting methods</li>
+<li><a class="el" href="md_docs_2scaling.html">Scaling Methods</a> — MAD, MAR, Mean scale estimation</li>
+<li><a class="el" href="md_docs_2merge.html">Merge Strategies</a> — Chunk reconciliation in Streaming mode</li>
+<li><a class="el" href="md_docs_2quickstart.html">Tutorials</a> — Application-specific guides </li>
 </ul>
 </div></div><!-- PageDoc -->
 </div><!-- contents -->

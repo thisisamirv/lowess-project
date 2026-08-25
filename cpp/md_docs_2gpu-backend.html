@@ -34,7 +34,7 @@ MathJax.Hub.Config({
   <td id="projectalign">
    <div id="projectname">fastLowess
    </div>
-   <div id="projectbrief">High-performance LOWESS smoothing — C++ API</div>
+   <div id="projectbrief">High-performance LOWESS smoothing</div>
   </td>
  </tr>
  </tbody>
@@ -108,7 +108,7 @@ Overview</h2>
 <p>Every binding's batch <code>Lowess</code> type can execute on a GPU-accelerated backend powered by <code>wgpu</code>. It reimplements almost the entire LOWESS pipeline — local regression fitting, robustness iterations, interval bounds, and cross-validation — as WGSL compute shaders, so all anchor points are fit in parallel instead of one at a time on CPU cores.</p>
 <p>This is worth enabling for high-throughput processing of large datasets (roughly 10k+ points); for smaller inputs the CPU backend (optionally with <code>parallel = true</code>) is typically faster once you account for GPU dispatch overhead. See <a href="https://github.com/thisisamirv/lowess-project/blob/main/BENCHMARKS.md">BENCHMARKS.md</a> for crossover points measured on real hardware.</p>
 <blockquote class="doxtable">
-<p>&zwj;<b>Batch only.</b> GPU support applies to the batch <code>Lowess</code> type only. <code>StreamingLowess</code>/<code>OnlineLowess</code> remain CPU-only in every binding — the Rust core documents GPU as optimized for static batch data, not incremental chunk/point processing. See <a href="../api/rust.md#gpu-acceleration">rust.md</a> for details. </p>
+<p>&zwj;<b>Batch only.</b> GPU support applies to the batch <code>Lowess</code> type only. <code>StreamingLowess</code>/<code>OnlineLowess</code> remain CPU-only in every binding — the Rust core documents GPU as optimized for static batch data, not incremental chunk/point processing. See <a class="el" href="md_docs_2gpu-backend.html">rust.md</a> for details. </p>
 </blockquote>
 <p>GPU support is <b>opt-in</b> and not included in the default published artifacts (PyPI wheels, npm binaries, CRAN/Bioconductor releases, JLL binaries, prebuilt C++ releases) — it requires either downloading a prebuilt GPU-enabled build via a one-time installer, or building from source with the <code>gpu</code> Cargo feature. Both paths are documented per language below.</p>
 <h3><a class="anchor" id="autotoc_md121"></a>
@@ -193,8 +193,8 @@ Usage</h2>
 <h2><a class="anchor" id="autotoc_md129"></a>
 See also</h2>
 <ul>
-<li><a href="../api/rust.md#gpu-acceleration">rust.md</a> — why Streaming/Online adapters stay CPU-only.</li>
-<li><a href="../api/cpp.md#gpu-acceleration">C++ API — GPU Acceleration</a> — full parameter reference. </li>
+<li><a class="el" href="md_docs_2gpu-backend.html">rust.md</a> — why Streaming/Online adapters stay CPU-only.</li>
+<li><a class="el" href="md_docs_2gpu-backend.html">C++ API — GPU Acceleration</a> — full parameter reference. </li>
 </ul>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->

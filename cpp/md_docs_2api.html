@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>fastLowess: fastLowess C++ API Reference</title>
+<title>fastLowess: API</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -34,7 +34,7 @@ MathJax.Hub.Config({
   <td id="projectalign">
    <div id="projectname">fastLowess
    </div>
-   <div id="projectbrief">High-performance LOWESS smoothing — C++ API</div>
+   <div id="projectbrief">High-performance LOWESS smoothing</div>
   </td>
  </tr>
  </tbody>
@@ -97,12 +97,12 @@ $(document).ready(function(){initNavTree('md_docs_2api.html',''); initResizable(
 </div>
 
 <div><div class="header">
-  <div class="headertitle"><div class="title">fastLowess C++ API Reference</div></div>
+  <div class="headertitle"><div class="title">API</div></div>
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p><a class="anchor" id="autotoc_md21"></a> The C++ bindings provide a modern, object-oriented wrapper around the core Rust library, mirroring the Rust API structure.</p>
 <blockquote class="doxtable">
-<p>&zwj;<b>StreamingLowess</b> and <b>OnlineLowess</b> are documented separately: cpp-streaming.md, cpp-online.md </p>
+<p>&zwj;<b>StreamingLowess</b> and <b>OnlineLowess</b> are documented separately: <a class="el" href="md_docs_2api-streaming.html">cpp-streaming.md</a>, <a class="el" href="md_docs_2api-online.html">cpp-online.md</a> </p>
 </blockquote>
 <h1><a class="anchor" id="autotoc_md22"></a>
 Classes</h1>
@@ -165,8 +165,8 @@ Classes</h1>
 <li>The second overload applies <code>custom_weights</code> — non-negative per-observation weights of length <code>n</code>. Batch only.</li>
 <li>Returns a <code>LowessResult</code> object containing the smoothed values and optional diagnostics.</li>
 </ul>
-<p>See cpp-streaming.md for the <code>StreamingLowess</code> class.</p>
-<p>See cpp-online.md for the <code>OnlineLowess</code> class.</p>
+<p>See <a class="el" href="md_docs_2api-streaming.html">cpp-streaming.md</a> for the <code>StreamingLowess</code> class.</p>
+<p>See <a class="el" href="md_docs_2api-online.html">cpp-online.md</a> for the <code>OnlineLowess</code> class.</p>
 <h1><a class="anchor" id="autotoc_md24"></a>
 Options Structures</h1>
 <h2><a class="anchor" id="autotoc_md25"></a>
@@ -219,13 +219,13 @@ Options Structures</h1>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>custom_weights</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone"><code>{}</code>   </td><td class="markdownTableBodyNone">Per-observation case weights — passed to <code>fit()</code>, not the constructor (Batch only)   </td></tr>
 </table>
-<p>See cpp-streaming.md for <code>StreamingOptions</code>.</p>
-<p>See cpp-online.md for <code>OnlineOptions</code>.</p>
+<p>See <a class="el" href="md_docs_2api-streaming.html">cpp-streaming.md</a> for <code>StreamingOptions</code>.</p>
+<p>See <a class="el" href="md_docs_2api-online.html">cpp-online.md</a> for <code>OnlineOptions</code>.</p>
 <h1><a class="anchor" id="autotoc_md26"></a>
 GPU Acceleration</h1>
 <p>The batch <code>fastlowess::Lowess</code> class can run on a GPU-accelerated backend powered by <code>wgpu</code>. This backend is designed for high-throughput processing of large datasets (10k+ points) where parallel regression fitting on the GPU significantly outperforms CPU execution.</p>
 <blockquote class="doxtable">
-<p>&zwj;GPU support applies to <code>Lowess</code> (batch) only. <code>StreamingLowess</code>/<code>OnlineLowess</code> remain CPU-only — see <a href="rust.md#gpu-acceleration">rust.md</a> for why. </p>
+<p>&zwj;GPU support applies to <code>Lowess</code> (batch) only. <code>StreamingLowess</code>/<code>OnlineLowess</code> remain CPU-only — see <a class="el" href="md_docs_2gpu-backend.html">rust.md</a> for why. </p>
 </blockquote>
 <h2><a class="anchor" id="autotoc_md27"></a>
 Enabling GPU Support</h2>
@@ -306,7 +306,7 @@ Performance Considerations</h2>
 <p>The GPU backend is optimized for large datasets (N &gt; 100,000) and provides parallelization through compute shaders. For smaller datasets, the CPU backend (<code>backend = "cpu"</code>, the default) is faster.</p>
 <h1><a class="anchor" id="autotoc_md33"></a>
 Result Structure</h1>
-<p>See cpp-online.md for <code>OnlineOutput</code>.</p>
+<p>See <a class="el" href="md_docs_2api-online.html">cpp-online.md</a> for <code>OnlineOutput</code>.</p>
 <h2><a class="anchor" id="autotoc_md34"></a>
 &lt;tt&gt;fastlowess::LowessResult&lt;/tt&gt;</h2>
 <p>A RAII wrapper around the C result struct <code>fastlowess_CppLowessResult</code>.</p>
@@ -365,7 +365,7 @@ Result Structure</h1>
 Options</h1>
 <h2><a class="anchor" id="autotoc_md37"></a>
 weight_function</h2>
-<p><em>See: Weight Functions</em></p>
+<p><em>See: <a class="el" href="md_docs_2kernels.html">Weight Functions</a></em></p>
 <ul>
 <li><code>"tricube"</code> (default)</li>
 <li><code>"epanechnikov"</code></li>
@@ -377,7 +377,7 @@ weight_function</h2>
 </ul>
 <h2><a class="anchor" id="autotoc_md38"></a>
 robustness_method</h2>
-<p><em>See: Robustness</em></p>
+<p><em>See: <a class="el" href="md_docs_2robustness.html">Robustness</a></em></p>
 <ul>
 <li><code>"bisquare"</code> (default; alias: <code>"biweight"</code>)</li>
 <li><code>"huber"</code></li>
@@ -385,7 +385,7 @@ robustness_method</h2>
 </ul>
 <h2><a class="anchor" id="autotoc_md39"></a>
 boundary_policy</h2>
-<p><em>See: Boundary Handling</em></p>
+<p><em>See: <a class="el" href="md_docs_2boundary.html">Boundary Handling</a></em></p>
 <ul>
 <li><code>"extend"</code> (default; alias: <code>"pad"</code>)</li>
 <li><code>"reflect"</code> (alias: <code>"mirror"</code>)</li>
@@ -394,7 +394,7 @@ boundary_policy</h2>
 </ul>
 <h2><a class="anchor" id="autotoc_md40"></a>
 scaling_method</h2>
-<p><em>See: Scaling Methods</em></p>
+<p><em>See: <a class="el" href="md_docs_2scaling.html">Scaling Methods</a></em></p>
 <ul>
 <li><code>"mad"</code> (default; alias: <code>"median_absolute_deviation"</code>)</li>
 <li><code>"mar"</code> (alias: <code>"median_absolute_residual"</code>)</li>
@@ -402,7 +402,7 @@ scaling_method</h2>
 </ul>
 <h2><a class="anchor" id="autotoc_md41"></a>
 zero_weight_fallback</h2>
-<p><em>See: Parameters</em></p>
+<p><em>See: <a class="el" href="md_docs_2parameters.html">Parameters</a></em></p>
 <ul>
 <li><code>"use_local_mean"</code> (default; aliases: <code>"local_mean"</code>, <code>"mean"</code>)</li>
 <li><code>"return_original"</code> (alias: <code>"original"</code>)</li>
@@ -410,10 +410,10 @@ zero_weight_fallback</h2>
 </ul>
 <h2><a class="anchor" id="autotoc_md42"></a>
 merge_strategy</h2>
-<p>See cpp-streaming.md.</p>
+<p>See <a class="el" href="md_docs_2api-streaming.html">cpp-streaming.md</a>.</p>
 <h2><a class="anchor" id="autotoc_md43"></a>
 update_mode</h2>
-<p>See cpp-online.md.</p>
+<p>See <a class="el" href="md_docs_2api-online.html">cpp-online.md</a>.</p>
 <h1><a class="anchor" id="autotoc_md44"></a>
 Example</h1>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>

@@ -15,7 +15,7 @@ var searchData=
   ['advantages_12',['Key Advantages',['../index.html#autotoc_md80',1,'']]],
   ['also_13',['also',['../md_docs_2custom-weights.html#autotoc_md118',1,'See Also'],['../md_docs_2use-case-real-time.html#autotoc_md317',1,'See Also'],['../md_docs_2gpu-backend.html#autotoc_md129',1,'See also'],['../md_docs_2use-case-genomics.html#autotoc_md299',1,'See Also'],['../md_docs_2use-case-time-series.html#autotoc_md335',1,'See Also']]],
   ['analysis_14',['analysis',['../md_docs_2use-case-time-series.html#autotoc_md329',1,'Multi-Scale Analysis'],['../md_docs_2use-case-time-series.html#autotoc_md318',1,'Time Series Analysis']]],
-  ['api_20reference_15',['api reference',['../md_docs_2api.html',1,'fastLowess C++ API Reference'],['../md_docs_2api-online.html',1,'OnlineLowess — C++ API Reference'],['../md_docs_2api-streaming.html',1,'StreamingLowess — C++ API Reference']]],
+  ['api_15',['api',['../md_docs_2api.html',1,'API'],['../md_docs_2api-online.html',1,'OnlineLowess API'],['../md_docs_2api-streaming.html',1,'StreamingLowess API']]],
   ['api_2donline_2emd_16',['api-online.md',['../api-online_8md.html',1,'']]],
   ['api_2dstreaming_2emd_17',['api-streaming.md',['../api-streaming_8md.html',1,'']]],
   ['api_2emd_18',['api.md',['../api_8md.html',1,'']]],

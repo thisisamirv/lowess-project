@@ -5,7 +5,7 @@ var searchData=
   ['online_20mode_2',['Online Mode',['../md_docs_2use-case-real-time.html#autotoc_md312',1,'']]],
   ['online_20mode_3a_20point_20by_20point_3',['Online Mode: Point-by-Point',['../md_docs_2use-case-real-time.html#autotoc_md303',1,'']]],
   ['online_2emd_4',['online.md',['../online_8md.html',1,'']]],
-  ['onlinelowess_20—_20c_20api_20reference_5',['OnlineLowess — C++ API Reference',['../md_docs_2api-online.html',1,'']]],
+  ['onlinelowess_20api_5',['OnlineLowess API',['../md_docs_2api-online.html',1,'']]],
   ['onlineoptions_20tt_20inherits_20tt_20lowessoptions_20tt_6',['&lt;tt&gt;OnlineOptions&lt;/tt&gt; (inherits &lt;tt&gt;LowessOptions&lt;/tt&gt;)',['../md_docs_2api-online.html#autotoc_md7',1,'']]],
   ['options_7',['options',['../md_docs_2api-streaming.html#autotoc_md19',1,'Options'],['../md_docs_2api.html#autotoc_md36',1,'Options'],['../md_docs_2api-online.html#autotoc_md10',1,'Options'],['../md_docs_2parameters.html#autotoc_md216',1,'Output Options']]],
   ['options_20structure_8',['options structure',['../md_docs_2api-streaming.html#autotoc_md17',1,'Options Structure'],['../md_docs_2api-online.html#autotoc_md6',1,'Options Structure']]],

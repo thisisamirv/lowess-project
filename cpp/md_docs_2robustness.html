@@ -34,7 +34,7 @@ MathJax.Hub.Config({
   <td id="projectalign">
    <div id="projectname">fastLowess
    </div>
-   <div id="projectbrief">High-performance LOWESS smoothing — C++ API</div>
+   <div id="projectbrief">High-performance LOWESS smoothing</div>
   </td>
  </tr>
  </tbody>
@@ -113,9 +113,15 @@ How Robustness Works</h2>
 <li>Refit using combined distance × robustness weights</li>
 <li>Repeat steps 2–4</li>
 </ol>
-<p><img src="../assets/diagrams/robust_method_comparison.svg" alt="Robustness Methods" style="pointer-events: none;" class="inline"/></p>
-<p><img src="../assets/diagrams/robust_iter_comparison.svg" alt="Robustness Iterations" style="pointer-events: none;" class="inline"/></p>
-<hr  />
+<div class="image">
+<object type="image/svg+xml" data="robust_method_comparison.svg" style="pointer-events: none;"></object>
+<div class="caption">
+Robustness Methods</div></div>
+    <div class="image">
+<object type="image/svg+xml" data="robust_iter_comparison.svg" style="pointer-events: none;"></object>
+<div class="caption">
+Robustness Iterations</div></div>
+    <hr  />
 <h2><a class="anchor" id="autotoc_md255"></a>
 Robustness Methods</h2>
 <h3><a class="anchor" id="autotoc_md256"></a>
@@ -259,8 +265,11 @@ Scale Estimation</h2>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><b>Mean</b>   </td><td class="markdownTableBodyNone"><code>mean(\|r\|)</code>   </td><td class="markdownTableBodyNone">Less robust, fastest   </td></tr>
 </table>
-<p><img src="../assets/diagrams/scaling_comparison.svg" alt="Scaling Methods Comparison" style="pointer-events: none;" class="inline"/></p>
-<div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
+<div class="image">
+<object type="image/svg+xml" data="scaling_comparison.svg" style="pointer-events: none;"></object>
+<div class="caption">
+Scaling Methods Comparison</div></div>
+    <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;vector&gt;</span></div>

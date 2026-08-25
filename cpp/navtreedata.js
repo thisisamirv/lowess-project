@@ -40,7 +40,7 @@ var NAVTREE =
         [ "Overview", "md_docs_2adapter-choice.html#autotoc_md1", null ]
       ] ]
     ] ],
-    [ "OnlineLowess — C++ API Reference", "md_docs_2api-online.html", [
+    [ "OnlineLowess API", "md_docs_2api-online.html", [
       [ "Class", "md_docs_2api-online.html#autotoc_md4", [
         [ "<tt>fastlowess::OnlineLowess</tt>", "md_docs_2api-online.html#autotoc_md5", null ]
       ] ],
@@ -54,7 +54,7 @@ var NAVTREE =
         [ "update_mode", "md_docs_2api-online.html#autotoc_md11", null ]
       ] ]
     ] ],
-    [ "StreamingLowess — C++ API Reference", "md_docs_2api-streaming.html", [
+    [ "StreamingLowess API", "md_docs_2api-streaming.html", [
       [ "Class", "md_docs_2api-streaming.html#autotoc_md13", [
         [ "<tt>fastlowess::StreamingLowess</tt>", "md_docs_2api-streaming.html#autotoc_md14", null ]
       ] ],
@@ -68,7 +68,7 @@ var NAVTREE =
         [ "merge_strategy", "md_docs_2api-streaming.html#autotoc_md20", null ]
       ] ]
     ] ],
-    [ "fastLowess C++ API Reference", "md_docs_2api.html", [
+    [ "API", "md_docs_2api.html", [
       [ "Classes", "md_docs_2api.html#autotoc_md22", [
         [ "<tt>fastlowess::Lowess</tt>", "md_docs_2api.html#autotoc_md23", null ]
       ] ],

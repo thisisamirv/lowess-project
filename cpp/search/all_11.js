@@ -27,7 +27,7 @@ var searchData=
   ['streaming_20mode_24',['streaming mode',['../md_docs_2quickstart.html#autotoc_md249',1,'Streaming Mode'],['../md_docs_2use-case-real-time.html#autotoc_md313',1,'Streaming Mode']]],
   ['streaming_20mode_3a_20chunk_20processing_25',['Streaming Mode: Chunk Processing',['../md_docs_2use-case-real-time.html#autotoc_md306',1,'']]],
   ['streaming_2emd_26',['streaming.md',['../streaming_8md.html',1,'']]],
-  ['streaminglowess_20—_20c_20api_20reference_27',['StreamingLowess — C++ API Reference',['../md_docs_2api-streaming.html',1,'']]],
+  ['streaminglowess_20api_27',['StreamingLowess API',['../md_docs_2api-streaming.html',1,'']]],
   ['streamingoptions_20tt_20inherits_20tt_20lowessoptions_20tt_28',['&lt;tt&gt;StreamingOptions&lt;/tt&gt; (inherits &lt;tt&gt;LowessOptions&lt;/tt&gt;)',['../md_docs_2api-streaming.html#autotoc_md18',1,'']]],
   ['structure_29',['structure',['../md_docs_2api-streaming.html#autotoc_md17',1,'Options Structure'],['../md_docs_2api-online.html#autotoc_md6',1,'Options Structure'],['../md_docs_2api.html#autotoc_md33',1,'Result Structure'],['../md_docs_2api-streaming.html#autotoc_md15',1,'Result Structure'],['../md_docs_2api-online.html#autotoc_md8',1,'Result Structure']]],
   ['structures_30',['Options Structures',['../md_docs_2api.html#autotoc_md24',1,'']]],

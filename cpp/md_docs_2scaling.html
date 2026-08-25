@@ -34,7 +34,7 @@ MathJax.Hub.Config({
   <td id="projectalign">
    <div id="projectname">fastLowess
    </div>
-   <div id="projectbrief">High-performance LOWESS smoothing — C++ API</div>
+   <div id="projectbrief">High-performance LOWESS smoothing</div>
   </td>
  </tr>
  </tbody>
@@ -119,8 +119,11 @@ Overview</h2>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>"mean"</code>   </td><td class="markdownTableBodyNone">Mean of |residuals|   </td><td class="markdownTableBodyNone">Less robust   </td><td class="markdownTableBodyNone">Fastest   </td></tr>
 </table>
-<p><img src="../assets/diagrams/scaling_comparison.svg" alt="Scaling Methods Comparison" style="pointer-events: none;" class="inline"/></p>
-<hr  />
+<div class="image">
+<object type="image/svg+xml" data="scaling_comparison.svg" style="pointer-events: none;"></object>
+<div class="caption">
+Scaling Methods Comparison</div></div>
+    <hr  />
 <h2><a class="anchor" id="autotoc_md272"></a>
 MAD — Median Absolute Deviation (Default)</h2>
 <p>$$\hat{\sigma} = \text{median}(|r_i - \text{median}(r_i)|)$$</p>
