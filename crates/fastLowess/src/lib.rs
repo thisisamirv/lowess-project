@@ -27,7 +27,7 @@
 //!   - [Online API](doc::api::online)
 //! - **Adapters**
 //!   - [Choosing an Adapter](doc::adapter_choice)
-//!   - [GPU Backend](doc::gpu_backend)
+#![cfg_attr(feature = "gpu", doc = "  - [GPU Backend](doc::gpu_backend)")]
 //! - **Analysis**
 //!   - [Intervals](doc::intervals)
 //!   - [Cross-Validation](doc::cross_validation)

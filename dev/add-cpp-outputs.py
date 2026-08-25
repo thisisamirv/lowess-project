@@ -79,7 +79,10 @@ for f in files:
     if changed:
         updated += 1
 
-print(f"add-cpp-outputs: {updated}/{len(files)} file(s) updated")
+unchanged = len(files) - updated
+print(
+    f"\nDone -- {len(files)} file(s) assessed, {updated} updated, {unchanged} already up to date."
+)
 
 if failures:
     for msg in failures:

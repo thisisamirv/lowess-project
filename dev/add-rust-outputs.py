@@ -163,7 +163,7 @@ def collect_snippets(md_path: Path) -> list[tuple[int, int, str]]:
 
 def process_file(md_path: Path, outputs: dict[tuple[Path, int], str | None]) -> bool:
     original = md_path.read_text(encoding="utf-8").replace("\r\n", "\n")
-    result, pos, changed = "", 0, False
+    result, pos = "", 0
     for m in FENCE_RE.finditer(original):
         if "fn main(" not in m.group(1):
             result += original[pos : m.end()]
@@ -177,14 +177,13 @@ def process_file(md_path: Path, outputs: dict[tuple[Path, int], str | None]) -> 
         stdout = outputs.get((md_path, m.start()))
         if stdout and stdout.strip():
             result += f"\n\n```output\n{stdout.rstrip()}\n```"
-            changed = True
         elif stale:
             result += stale.group()
     result += original[pos:]
     if result != original:
         md_path.write_text(result, encoding="utf-8")
         return True
-    return changed
+    return False
 
 
 def main() -> None:
@@ -209,7 +208,13 @@ def main() -> None:
     updated = [md.name for md in md_files if process_file(md, outputs)]
     for name in updated:
         print(f"  updated: {name}")
-    print(f"\nDone -- {len(updated)} file(s) updated.")
+    n_assessed = len(md_files)
+    n_updated = len(updated)
+    n_unchanged = n_assessed - n_updated
+    print(
+        f"\nDone -- {n_assessed} file(s) assessed, "
+        f"{n_updated} updated, {n_unchanged} already up to date."
+    )
 
     if n_errors:
         print(f"\n{n_errors} snippet(s) failed.", file=sys.stderr)

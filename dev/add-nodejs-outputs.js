@@ -89,7 +89,10 @@ for (const f of files) {
     if (changed) updated++;
     allErrors.push(...errors);
 }
-console.log(`add-nodejs-outputs: ${updated}/${files.length} file(s) updated`);
+const unchanged = files.length - updated;
+console.log(
+    `\nDone -- ${files.length} file(s) assessed, ${updated} updated, ${unchanged} already up to date.`
+);
 
 if (allErrors.length > 0) {
     process.stderr.write('\nFailed snippets:\n');
