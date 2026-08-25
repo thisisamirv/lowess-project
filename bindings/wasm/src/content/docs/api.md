@@ -3,7 +3,7 @@ title: fastLowess WebAssembly API Reference
 ---
 The WebAssembly bindings provide a high-performance interface to the core Rust library, mirroring the Rust API structure.
 
-> **StreamingLowess** and **OnlineLowess** are documented separately: [wasm-streaming.md](wasm-streaming.md), [wasm-online.md](wasm-online.md)
+> **StreamingLowess** and **OnlineLowess** are documented separately: [wasm-streaming.md](api-streaming.md), [wasm-online.md](api-online.md)
 
 ## Classes and Functions
 
@@ -48,9 +48,9 @@ Fraction used: 0.5
 * `y`: `Float64Array` of input y values.
 * Returns: A `LowessResult` object.
 
-See [wasm-streaming.md](wasm-streaming.md) for the `StreamingLowess` class.
+See [wasm-streaming.md](api-streaming.md) for the `StreamingLowess` class.
 
-See [wasm-online.md](wasm-online.md) for the `OnlineLowess` class.
+See [wasm-online.md](api-online.md) for the `OnlineLowess` class.
 
 ## Options Structures
 
@@ -80,13 +80,13 @@ See [wasm-online.md](wasm-online.md) for the `OnlineLowess` class.
 | `cv_seed` | `number` | `null` | Random seed for cross-validation shuffling (Batch only) |
 | `custom_weights` | `Float64Array` | `null` | Per-observation case weights — passed to `fit()`, not the options object (Batch only) |
 
-See [wasm-streaming.md](wasm-streaming.md) for `StreamingOptions`.
+See [wasm-streaming.md](api-streaming.md) for `StreamingOptions`.
 
-See [wasm-online.md](wasm-online.md) for `OnlineOptions`.
+See [wasm-online.md](api-online.md) for `OnlineOptions`.
 
 ## Result Structure
 
-See [wasm-online.md](wasm-online.md) for `OnlineOutput`.
+See [wasm-online.md](api-online.md) for `OnlineOutput`.
 
 ### `LowessResult`
 
@@ -122,7 +122,7 @@ See [wasm-online.md](wasm-online.md) for `OnlineOutput`.
 
 ### weight_function
 
-*See: [Weight Functions](../user-guide/kernels.md)*
+*See: [Weight Functions](kernels.md)*
 
 * `"tricube"` (default)
 * `"epanechnikov"`
@@ -134,7 +134,7 @@ See [wasm-online.md](wasm-online.md) for `OnlineOutput`.
 
 ### robustness_method
 
-*See: [Robustness](../user-guide/robustness.md)*
+*See: [Robustness](robustness.md)*
 
 * `"bisquare"` (default; alias: `"biweight"`)
 * `"huber"`
@@ -142,7 +142,7 @@ See [wasm-online.md](wasm-online.md) for `OnlineOutput`.
 
 ### boundary_policy
 
-*See: [Boundary Handling](../user-guide/boundary.md)*
+*See: [Boundary Handling](boundary.md)*
 
 * `"extend"` (default; alias: `"pad"`)
 * `"reflect"` (alias: `"mirror"`)
@@ -151,7 +151,7 @@ See [wasm-online.md](wasm-online.md) for `OnlineOutput`.
 
 ### scaling_method
 
-*See: [Scaling Methods](../user-guide/scaling.md)*
+*See: [Scaling Methods](scaling.md)*
 
 * `"mad"` (default; alias: `"median_absolute_deviation"`)
 * `"mar"` (alias: `"median_absolute_residual"`)
@@ -159,7 +159,7 @@ See [wasm-online.md](wasm-online.md) for `OnlineOutput`.
 
 ### zero_weight_fallback
 
-*See: [Parameters](../user-guide/parameters.md)*
+*See: [Parameters](parameters.md)*
 
 * `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
 * `"return_original"` (alias: `"original"`)
@@ -167,11 +167,11 @@ See [wasm-online.md](wasm-online.md) for `OnlineOutput`.
 
 ### merge_strategy
 
-See [wasm-streaming.md](wasm-streaming.md).
+See [wasm-streaming.md](api-streaming.md).
 
 ### update_mode
 
-See [wasm-online.md](wasm-online.md).
+See [wasm-online.md](api-online.md).
 
 ## Example
 

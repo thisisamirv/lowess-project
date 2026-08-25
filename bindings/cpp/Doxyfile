@@ -4,7 +4,7 @@
 
 # ---------------------------------------------------------------------------
 PROJECT_NAME           = "fastLowess"
-PROJECT_BRIEF          = "High-performance LOWESS smoothing — C++ API"
+PROJECT_BRIEF          = "High-performance LOWESS smoothing"
 OUTPUT_DIRECTORY       = .
 CREATE_SUBDIRS         = NO
 

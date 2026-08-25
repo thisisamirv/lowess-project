@@ -3,7 +3,7 @@ title: fastLowess Node.js API Reference
 ---
 The Node.js bindings provide a high-performance interface to the core Rust library, mirroring the Rust API structure.
 
-> **StreamingLowess** and **OnlineLowess** are documented separately: [nodejs-streaming.md](nodejs-streaming.md), [nodejs-online.md](nodejs-online.md)
+> **StreamingLowess** and **OnlineLowess** are documented separately: [nodejs-streaming.md](api-streaming.md), [nodejs-online.md](api-online.md)
 
 ## Classes
 
@@ -51,9 +51,9 @@ Fraction used: 0.5
 * Fits the model to the provided `x` and `y` typed arrays.
 * Returns a `LowessResult` object containing the smoothed values and optional diagnostics.
 
-See [nodejs-streaming.md](nodejs-streaming.md) for the `StreamingLowess` class.
+See [nodejs-streaming.md](api-streaming.md) for the `StreamingLowess` class.
 
-See [nodejs-online.md](nodejs-online.md) for the `OnlineLowess` class.
+See [nodejs-online.md](api-online.md) for the `OnlineLowess` class.
 
 ## Options Structures
 
@@ -84,15 +84,15 @@ See [nodejs-online.md](nodejs-online.md) for the `OnlineLowess` class.
 | `cv_seed` | `number` | `null` | Random seed for cross-validation shuffling (Batch only) |
 | `custom_weights` | `Float64Array` | `null` | Per-observation case weights — passed to `fit()`, not the options object (Batch only) |
 
-See [nodejs-streaming.md](nodejs-streaming.md) for `StreamingOptions`.
+See [nodejs-streaming.md](api-streaming.md) for `StreamingOptions`.
 
-See [nodejs-online.md](nodejs-online.md) for `OnlineOptions`.
+See [nodejs-online.md](api-online.md) for `OnlineOptions`.
 
 ## GPU Acceleration
 
 The batch `Lowess` class can run on a GPU-accelerated backend powered by `wgpu`. This backend is designed for high-throughput processing of large datasets (10k+ points) where parallel regression fitting on the GPU significantly outperforms CPU execution.
 
-> GPU support applies to `Lowess` (batch) only. `StreamingLowess`/`OnlineLowess` remain CPU-only — see [rust.md](rust.md#gpu-acceleration) for why.
+> GPU support applies to `Lowess` (batch) only. `StreamingLowess`/`OnlineLowess` remain CPU-only — see [rust.md](gpu-backend.md) for why.
 
 ### Enabling GPU Support
 
@@ -181,7 +181,7 @@ The GPU backend is optimized for large datasets (N > 100,000) and provides paral
 
 ## Result Structure
 
-See [nodejs-online.md](nodejs-online.md) for `OnlineOutput`.
+See [nodejs-online.md](api-online.md) for `OnlineOutput`.
 
 ### `LowessResult`
 
@@ -217,7 +217,7 @@ See [nodejs-online.md](nodejs-online.md) for `OnlineOutput`.
 
 ### weight_function
 
-*See: [Weight Functions](../user-guide/kernels.md)*
+*See: [Weight Functions](kernels.md)*
 
 * `"tricube"` (default)
 * `"epanechnikov"`
@@ -229,7 +229,7 @@ See [nodejs-online.md](nodejs-online.md) for `OnlineOutput`.
 
 ### robustness_method
 
-*See: [Robustness](../user-guide/robustness.md)*
+*See: [Robustness](robustness.md)*
 
 * `"bisquare"` (default; alias: `"biweight"`)
 * `"huber"`
@@ -237,7 +237,7 @@ See [nodejs-online.md](nodejs-online.md) for `OnlineOutput`.
 
 ### boundary_policy
 
-*See: [Boundary Handling](../user-guide/boundary.md)*
+*See: [Boundary Handling](boundary.md)*
 
 * `"extend"` (default; alias: `"pad"`)
 * `"reflect"` (alias: `"mirror"`)
@@ -246,7 +246,7 @@ See [nodejs-online.md](nodejs-online.md) for `OnlineOutput`.
 
 ### scaling_method
 
-*See: [Scaling Methods](../user-guide/scaling.md)*
+*See: [Scaling Methods](scaling.md)*
 
 * `"mad"` (default; alias: `"median_absolute_deviation"`)
 * `"mar"` (alias: `"median_absolute_residual"`)
@@ -254,7 +254,7 @@ See [nodejs-online.md](nodejs-online.md) for `OnlineOutput`.
 
 ### zero_weight_fallback
 
-*See: [Parameters](../user-guide/parameters.md)*
+*See: [Parameters](parameters.md)*
 
 * `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
 * `"return_original"` (alias: `"original"`)
@@ -262,11 +262,11 @@ See [nodejs-online.md](nodejs-online.md) for `OnlineOutput`.
 
 ### merge_strategy
 
-See [nodejs-streaming.md](nodejs-streaming.md).
+See [nodejs-streaming.md](api-streaming.md).
 
 ### update_mode
 
-See [nodejs-online.md](nodejs-online.md).
+See [nodejs-online.md](api-online.md).
 
 ## Example
 

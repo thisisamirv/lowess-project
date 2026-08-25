@@ -1,6 +1,6 @@
 # OnlineLowess — Rust API Reference
 
-See also: [lowess & lowess Rust API Reference](rust.md)
+See also: [lowess & lowess Rust API Reference](api.md)
 
 ## Struct
 
@@ -96,7 +96,7 @@ Returned by `add_point()` inside `Option`. Is `None` while the window is still f
 
 ### update_mode
 
-*See: [Execution Modes](../user-guide/adapters.md)*
+*See: [Execution Modes](adapter-choice.md)*
 
 * `"full"` (default; alias: `"resmooth"`)
 * `"incremental"` (alias: `"single"`)

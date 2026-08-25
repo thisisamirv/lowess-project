@@ -1,6 +1,6 @@
-# StreamingLowess — C++ API Reference
+# StreamingLowess API
 
-See also: [fastLowess C++ API Reference](cpp.md)
+See also: [fastLowess](api.md)
 
 ## Class
 
@@ -130,7 +130,7 @@ Returned (inside `Expected`) by `process_chunk()` and `finalize()`.
 | `diagnostics()` | `Diagnostics` | Fit metrics — check `has_value()` (if `return_diagnostics`) |
 | `dimensions()` | `int` | Number of predictor dimensions |
 
-See [cpp.md](cpp.md) for the full `LowessResult` field reference.
+See [cpp.md](api.md) for the full `LowessResult` field reference.
 
 ## Options Structure
 
@@ -146,7 +146,7 @@ See [cpp.md](cpp.md) for the full `LowessResult` field reference.
 
 ### merge_strategy
 
-*See: [Merge Strategies](../user-guide/merge.md)*
+*See: [Merge Strategies](merge.md)*
 
 * `"weighted_average"` (default; alias: `"weighted"`)
 * `"average"` (alias: `"mean"`)

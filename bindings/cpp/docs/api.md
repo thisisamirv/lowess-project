@@ -1,8 +1,8 @@
-# fastLowess C++ API Reference
+# API
 
 The C++ bindings provide a modern, object-oriented wrapper around the core Rust library, mirroring the Rust API structure.
 
-> **StreamingLowess** and **OnlineLowess** are documented separately: [cpp-streaming.md](cpp-streaming.md), [cpp-online.md](cpp-online.md)
+> **StreamingLowess** and **OnlineLowess** are documented separately: [cpp-streaming.md](api-streaming.md), [cpp-online.md](api-online.md)
 
 ## Classes
 
@@ -78,9 +78,9 @@ int main() {
 * The second overload applies `custom_weights` — non-negative per-observation weights of length `n`. Batch only.
 * Returns a `LowessResult` object containing the smoothed values and optional diagnostics.
 
-See [cpp-streaming.md](cpp-streaming.md) for the `StreamingLowess` class.
+See [cpp-streaming.md](api-streaming.md) for the `StreamingLowess` class.
 
-See [cpp-online.md](cpp-online.md) for the `OnlineLowess` class.
+See [cpp-online.md](api-online.md) for the `OnlineLowess` class.
 
 ## Options Structures
 
@@ -111,15 +111,15 @@ See [cpp-online.md](cpp-online.md) for the `OnlineLowess` class.
 | `cv_seed` | `uint64_t` | `0` | Random seed for CV shuffling (Batch only; 0 = random) |
 | `custom_weights` | `std::vector<double>` | `{}` | Per-observation case weights — passed to `fit()`, not the constructor (Batch only) |
 
-See [cpp-streaming.md](cpp-streaming.md) for `StreamingOptions`.
+See [cpp-streaming.md](api-streaming.md) for `StreamingOptions`.
 
-See [cpp-online.md](cpp-online.md) for `OnlineOptions`.
+See [cpp-online.md](api-online.md) for `OnlineOptions`.
 
 ## GPU Acceleration
 
 The batch `fastlowess::Lowess` class can run on a GPU-accelerated backend powered by `wgpu`. This backend is designed for high-throughput processing of large datasets (10k+ points) where parallel regression fitting on the GPU significantly outperforms CPU execution.
 
-> GPU support applies to `Lowess` (batch) only. `StreamingLowess`/`OnlineLowess` remain CPU-only — see [rust.md](rust.md#gpu-acceleration) for why.
+> GPU support applies to `Lowess` (batch) only. `StreamingLowess`/`OnlineLowess` remain CPU-only — see [rust.md](gpu-backend.md) for why.
 
 ### Enabling GPU Support
 
@@ -204,7 +204,7 @@ The GPU backend is optimized for large datasets (N > 100,000) and provides paral
 
 ## Result Structure
 
-See [cpp-online.md](cpp-online.md) for `OnlineOutput`.
+See [cpp-online.md](api-online.md) for `OnlineOutput`.
 
 ### `fastlowess::LowessResult`
 
@@ -244,7 +244,7 @@ All accessors are const methods (not public fields):
 
 ### weight_function
 
-*See: [Weight Functions](../user-guide/kernels.md)*
+*See: [Weight Functions](kernels.md)*
 
 * `"tricube"` (default)
 * `"epanechnikov"`
@@ -256,7 +256,7 @@ All accessors are const methods (not public fields):
 
 ### robustness_method
 
-*See: [Robustness](../user-guide/robustness.md)*
+*See: [Robustness](robustness.md)*
 
 * `"bisquare"` (default; alias: `"biweight"`)
 * `"huber"`
@@ -264,7 +264,7 @@ All accessors are const methods (not public fields):
 
 ### boundary_policy
 
-*See: [Boundary Handling](../user-guide/boundary.md)*
+*See: [Boundary Handling](boundary.md)*
 
 * `"extend"` (default; alias: `"pad"`)
 * `"reflect"` (alias: `"mirror"`)
@@ -273,7 +273,7 @@ All accessors are const methods (not public fields):
 
 ### scaling_method
 
-*See: [Scaling Methods](../user-guide/scaling.md)*
+*See: [Scaling Methods](scaling.md)*
 
 * `"mad"` (default; alias: `"median_absolute_deviation"`)
 * `"mar"` (alias: `"median_absolute_residual"`)
@@ -281,7 +281,7 @@ All accessors are const methods (not public fields):
 
 ### zero_weight_fallback
 
-*See: [Parameters](../user-guide/parameters.md)*
+*See: [Parameters](parameters.md)*
 
 * `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
 * `"return_original"` (alias: `"original"`)
@@ -289,11 +289,11 @@ All accessors are const methods (not public fields):
 
 ### merge_strategy
 
-See [cpp-streaming.md](cpp-streaming.md).
+See [cpp-streaming.md](api-streaming.md).
 
 ### update_mode
 
-See [cpp-online.md](cpp-online.md).
+See [cpp-online.md](api-online.md).
 
 ## Example
 

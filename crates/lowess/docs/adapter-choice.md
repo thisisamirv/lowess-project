@@ -41,4 +41,4 @@ graph LR
 ## Next Steps
 
 - [Parameters](parameters.md) — All configuration options
-- [Tutorials](../tutorials/real-time.md) — Real-time processing guide
+- [Tutorials](use-case-real-time.md) — Real-time processing guide

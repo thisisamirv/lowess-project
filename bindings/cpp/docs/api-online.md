@@ -1,6 +1,6 @@
-# OnlineLowess — C++ API Reference
+# OnlineLowess API
 
-See also: [fastLowess C++ API Reference](cpp.md)
+See also: [fastLowess](api.md)
 
 ## Class
 
@@ -116,7 +116,7 @@ Returned (inside `Expected`) by `add_point()`. Check `has_value()` before readin
 
 ### update_mode
 
-*See: [Execution Modes](../user-guide/adapters.md)*
+*See: [Execution Modes](adapter-choice.md)*
 
 * `"full"` (default; alias: `"resmooth"`)
 * `"incremental"` (alias: `"single"`)

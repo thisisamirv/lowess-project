@@ -186,7 +186,7 @@ R²: 0.967
 
 ## See Also
 
-- [Real-Time Processing](real-time.md) — For streaming time series
-- [Cross-Validation](../user-guide/cross-validation.md) — Optimal fraction selection
-- [Boundary Handling](../user-guide/boundary.md) — Edge bias in trend extraction
-- [Parameters](../user-guide/parameters.md) — Full parameter reference
+- [Real-Time Processing](use-case-real-time.md) — For streaming time series
+- [Cross-Validation](cross-validation.md) — Optimal fraction selection
+- [Boundary Handling](boundary.md) — Edge bias in trend extraction
+- [Parameters](parameters.md) — Full parameter reference

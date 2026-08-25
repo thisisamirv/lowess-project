@@ -1,7 +1,7 @@
 ---
 title: OnlineLowess — Node.js API Reference
 ---
-See also: [fastLowess Node.js API Reference](nodejs.md)
+See also: [fastLowess Node.js API Reference](api.md)
 
 ## Class
 
@@ -85,7 +85,7 @@ Returned by `add_point()` once the window has enough points (`null` until then).
 
 ### update_mode
 
-*See: [Execution Modes](../user-guide/adapters.md)*
+*See: [Execution Modes](adapter-choice.md)*
 
 * `"full"` (default; alias: `"resmooth"`)
 * `"incremental"` (alias: `"single"`)

@@ -2,7 +2,7 @@
 
 The Rust bindings provide the core implementation and high-performance extensions. The API uses a Builder pattern consistent across both the `lowess` (pure Rust) and `lowess` (accelerated) crates.
 
-> **StreamingLowess** and **OnlineLowess** are documented separately: [rust-streaming.md](rust-streaming.md), [rust-online.md](rust-online.md)
+> **StreamingLowess** and **OnlineLowess** are documented separately: [rust-streaming.md](api-streaming.md), [rust-online.md](api-online.md)
 
 ## Structs & Usage
 
@@ -52,9 +52,9 @@ Iterations used: None
 * Fits the model to the provided `x` and `y` arrays.
 * Returns `Result<LowessResult<T>, LowessError>`.
 
-See [rust-streaming.md](rust-streaming.md) for `StreamingLowess`.
+See [rust-streaming.md](api-streaming.md) for `StreamingLowess`.
 
-See [rust-online.md](rust-online.md) for `OnlineLowess`.
+See [rust-online.md](api-online.md) for `OnlineLowess`.
 
 ## Builder Configuration
 
@@ -89,9 +89,9 @@ These chained methods configure the builder. They correspond to the "Options Str
 
 **Note:** In other language bindings `custom_weights` is a `fit()` argument; in Rust it is a builder step because all configuration lives on the builder and `fit()` consumes `self`.
 
-See [rust-streaming.md](rust-streaming.md) for Streaming Options.
+See [rust-streaming.md](api-streaming.md) for Streaming Options.
 
-See [rust-online.md](rust-online.md) for Online Options.
+See [rust-online.md](api-online.md) for Online Options.
 
 ## GPU Acceleration
 
@@ -168,7 +168,7 @@ The GPU backend is optimized for large datasets (N > 100,000) and provides paral
 
 ## Result Structure
 
-See [rust-online.md](rust-online.md) for `OnlineOutput<T>`.
+See [rust-online.md](api-online.md) for `OnlineOutput<T>`.
 
 ### `LowessResult<T>`
 
@@ -204,7 +204,7 @@ See [rust-online.md](rust-online.md) for `OnlineOutput<T>`.
 
 ### weight_function
 
-*See: [Weight Functions](../user-guide/kernels.md)*
+*See: [Weight Functions](kernels.md)*
 
 * `"tricube"` (default)
 * `"epanechnikov"`
@@ -216,7 +216,7 @@ See [rust-online.md](rust-online.md) for `OnlineOutput<T>`.
 
 ### robustness_method
 
-*See: [Robustness](../user-guide/robustness.md)*
+*See: [Robustness](robustness.md)*
 
 * `"bisquare"` (default; alias: `"biweight"`)
 * `"huber"`
@@ -224,7 +224,7 @@ See [rust-online.md](rust-online.md) for `OnlineOutput<T>`.
 
 ### boundary_policy
 
-*See: [Boundary Handling](../user-guide/boundary.md)*
+*See: [Boundary Handling](boundary.md)*
 
 * `"extend"` (default; alias: `"pad"`)
 * `"reflect"` (alias: `"mirror"`)
@@ -233,7 +233,7 @@ See [rust-online.md](rust-online.md) for `OnlineOutput<T>`.
 
 ### scaling_method
 
-*See: [Scaling Methods](../user-guide/scaling.md)*
+*See: [Scaling Methods](scaling.md)*
 
 * `"mad"` (default; alias: `"median_absolute_deviation"`)
 * `"mar"` (alias: `"median_absolute_residual"`)
@@ -241,7 +241,7 @@ See [rust-online.md](rust-online.md) for `OnlineOutput<T>`.
 
 ### zero_weight_fallback
 
-*See: [Parameters](../user-guide/parameters.md)*
+*See: [Parameters](parameters.md)*
 
 * `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
 * `"return_original"` (alias: `"original"`)
@@ -249,11 +249,11 @@ See [rust-online.md](rust-online.md) for `OnlineOutput<T>`.
 
 ### merge_strategy
 
-See [rust-streaming.md](rust-streaming.md).
+See [rust-streaming.md](api-streaming.md).
 
 ### update_mode
 
-See [rust-online.md](rust-online.md).
+See [rust-online.md](api-online.md).
 
 ## Example
 

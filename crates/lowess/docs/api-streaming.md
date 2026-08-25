@@ -1,6 +1,6 @@
 # StreamingLowess — Rust API Reference
 
-See also: [lowess & lowess Rust API Reference](rust.md)
+See also: [lowess & lowess Rust API Reference](api.md)
 
 ## Struct
 
@@ -87,7 +87,7 @@ Returned by `process_chunk()` and `finalize()`.
 | `diagnostics` | `Option<Diagnostics<T>>` | Fit metrics (if `return_diagnostics()`) |
 | `dimensions` | `usize` | Number of predictor dimensions |
 
-See [rust.md](rust.md) for the full `LowessResult<T>` field reference.
+See [rust.md](api.md) for the full `LowessResult<T>` field reference.
 
 ## Builder Options
 
@@ -103,7 +103,7 @@ See [rust.md](rust.md) for the full `LowessResult<T>` field reference.
 
 ### merge_strategy
 
-*See: [Merge Strategies](../user-guide/merge.md)*
+*See: [Merge Strategies](merge.md)*
 
 * `"weighted_average"` (default; alias: `"weighted"`)
 * `"average"` (alias: `"mean"`)

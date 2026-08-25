@@ -1,7 +1,7 @@
 ---
 title: StreamingLowess — WebAssembly API Reference
 ---
-See also: [fastLowess WebAssembly API Reference](wasm.md)
+See also: [fastLowess WebAssembly API Reference](api.md)
 
 ## Class
 
@@ -82,7 +82,7 @@ Returned by `process_chunk()` and `finalize()`.
 | `diagnostics` | `Diagnostics \| undefined` | Fit metrics (if `return_diagnostics`) |
 | `dimensions` | `number` | Number of predictor dimensions |
 
-See [wasm.md](wasm.md) for the full `LowessResult` field reference.
+See [wasm.md](api.md) for the full `LowessResult` field reference.
 
 ## Options Structure
 
@@ -98,7 +98,7 @@ See [wasm.md](wasm.md) for the full `LowessResult` field reference.
 
 ### merge_strategy
 
-*See: [Merge Strategies](../user-guide/merge.md)*
+*See: [Merge Strategies](merge.md)*
 
 * `"weighted_average"` (default; alias: `"weighted"`)
 * `"average"` (alias: `"mean"`)

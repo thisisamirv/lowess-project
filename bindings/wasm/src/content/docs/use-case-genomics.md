@@ -116,9 +116,9 @@ y[0]: 41.2977
 
 ## See Also
 
-- [Concepts](../getting-started/concepts.md) — How LOWESS works
-- [Parameters](../user-guide/parameters.md) — All options
-- [Robustness](../user-guide/robustness.md) — Outlier downweighting in depth
-- [Merge Strategies](../user-guide/merge.md) — Streaming chunk reconciliation
-- [Boundary Handling](../user-guide/boundary.md) — Edge handling for sparse regions
-- [Real-Time Processing](real-time.md) — For sequencing runs
+- [Concepts](concepts.md) — How LOWESS works
+- [Parameters](parameters.md) — All options
+- [Robustness](robustness.md) — Outlier downweighting in depth
+- [Merge Strategies](merge.md) — Streaming chunk reconciliation
+- [Boundary Handling](boundary.md) — Edge handling for sparse regions
+- [Real-Time Processing](use-case-real-time.md) — For sequencing runs
