@@ -31,14 +31,6 @@ export default defineConfig({
                     ],
                 },
                 {
-                    label: 'Usage',
-                    items: [
-                        { label: 'Batch', slug: 'batch' },
-                        { label: 'Streaming', slug: 'streaming' },
-                        { label: 'Online', slug: 'online' },
-                    ],
-                },
-                {
                     label: 'Analysis',
                     items: [
                         { label: 'Intervals', slug: 'intervals' },
