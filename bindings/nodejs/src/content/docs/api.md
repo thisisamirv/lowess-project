@@ -1,9 +1,17 @@
 ---
-title: fastLowess Node.js API Reference
+title: API
 ---
 The Node.js bindings provide a high-performance interface to the core Rust library, mirroring the Rust API structure.
 
 > **StreamingLowess** and **OnlineLowess** are documented separately: [nodejs-streaming.md](api-streaming.md), [nodejs-online.md](api-online.md)
+
+## When to Use
+
+- Dataset fits in memory
+- Need intervals, cross-validation, or diagnostics
+- Processing complete files
+
+![Gap Handling](../assets/diagrams/gap_handling.svg)
 
 ## Classes
 
@@ -28,7 +36,7 @@ console.log("y[0]:", result.y[0].toFixed(4));
 y[0]: 0.0000
 ```
 
-* `options`: An object containing `LowessOptions` fields.
+- `options`: An object containing `LowessOptions` fields.
 
 **Methods:**
 
@@ -48,8 +56,8 @@ console.log("Fraction used:", result.fraction_used);
 Fraction used: 0.5
 ```
 
-* Fits the model to the provided `x` and `y` typed arrays.
-* Returns a `LowessResult` object containing the smoothed values and optional diagnostics.
+- Fits the model to the provided `x` and `y` typed arrays.
+- Returns a `LowessResult` object containing the smoothed values and optional diagnostics.
 
 See [nodejs-streaming.md](api-streaming.md) for the `StreamingLowess` class.
 
@@ -140,15 +148,15 @@ If the addon was not built with the `gpu` feature, requesting `backend: "gpu"` r
 
 The GPU backend implements almost the entire LOWESS pipeline in WGSL compute shaders, providing native support for the following features:
 
-* **Weight Functions**: All standard kernels are supported (`"tricube"`, `"epanechnikov"`, `"gaussian"`, `"uniform"`, `"biweight"`, `"triangle"`, `"cosine"`).
-* **Robustness Methods**: Support for `"bisquare"`, `"huber"`, and `"talwar"` robustness weighting.
-* **Scaling Methods**: Residual scaling using `"mad"` (Median Absolute Deviation), `"mar"` (Median Absolute Residual), and `"mean"` (Mean Absolute Residual).
-* **Interval Bounds**: GPU-native computation of standard errors, confidence intervals, and prediction intervals.
-* **Optimization**:
-  * **Parallel Fitting**: Local regression for all anchor points is computed in parallel.
-  * **Robustness Loops**: Iterative weight updates and convergence checks occur entirely on the GPU.
-  * **Distance-based Skipping**: Support for the `delta` parameter to accelerate smoothing on dense grids.
-* **Validation**: GPU-accelerated `"kfold"` and `"loocv"` cross-validation.
+- **Weight Functions**: All standard kernels are supported (`"tricube"`, `"epanechnikov"`, `"gaussian"`, `"uniform"`, `"biweight"`, `"triangle"`, `"cosine"`).
+- **Robustness Methods**: Support for `"bisquare"`, `"huber"`, and `"talwar"` robustness weighting.
+- **Scaling Methods**: Residual scaling using `"mad"` (Median Absolute Deviation), `"mar"` (Median Absolute Residual), and `"mean"` (Mean Absolute Residual).
+- **Interval Bounds**: GPU-native computation of standard errors, confidence intervals, and prediction intervals.
+- **Optimization**:
+  - **Parallel Fitting**: Local regression for all anchor points is computed in parallel.
+  - **Robustness Loops**: Iterative weight updates and convergence checks occur entirely on the GPU.
+  - **Distance-based Skipping**: Support for the `delta` parameter to accelerate smoothing on dense grids.
+- **Validation**: GPU-accelerated `"kfold"` and `"loocv"` cross-validation.
 
 #### Feature Comparison
 
@@ -169,9 +177,9 @@ The GPU backend implements almost the entire LOWESS pipeline in WGSL compute sha
 
 The GPU backend leverages `wgpu` and supports:
 
-* **Vulkan** (Linux/Windows)
-* **Metal** (macOS/iOS)
-* **DirectX 12** (Windows)
+- **Vulkan** (Linux/Windows)
+- **Metal** (macOS/iOS)
+- **DirectX 12** (Windows)
 
 It requires a device supporting compute shaders. If no compatible GPU is found at runtime, model construction raises an error.
 
@@ -219,46 +227,46 @@ See [nodejs-online.md](api-online.md) for `OnlineOutput`.
 
 *See: [Weight Functions](kernels.md)*
 
-* `"tricube"` (default)
-* `"epanechnikov"`
-* `"gaussian"`
-* `"uniform"` (alias: `"boxcar"`)
-* `"biweight"` (alias: `"bisquare"`)
-* `"triangle"` (alias: `"triangular"`)
-* `"cosine"`
+- `"tricube"` (default)
+- `"epanechnikov"`
+- `"gaussian"`
+- `"uniform"` (alias: `"boxcar"`)
+- `"biweight"` (alias: `"bisquare"`)
+- `"triangle"` (alias: `"triangular"`)
+- `"cosine"`
 
 ### robustness_method
 
 *See: [Robustness](robustness.md)*
 
-* `"bisquare"` (default; alias: `"biweight"`)
-* `"huber"`
-* `"talwar"`
+- `"bisquare"` (default; alias: `"biweight"`)
+- `"huber"`
+- `"talwar"`
 
 ### boundary_policy
 
 *See: [Boundary Handling](boundary.md)*
 
-* `"extend"` (default; alias: `"pad"`)
-* `"reflect"` (alias: `"mirror"`)
-* `"zero"`
-* `"noboundary"` (alias: `"none"`)
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
 
 ### scaling_method
 
 *See: [Scaling Methods](scaling.md)*
 
-* `"mad"` (default; alias: `"median_absolute_deviation"`)
-* `"mar"` (alias: `"median_absolute_residual"`)
-* `"mean"` (alias: `"mean_absolute_residual"`)
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
 
 ### zero_weight_fallback
 
 *See: [Parameters](parameters.md)*
 
-* `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
-* `"return_original"` (alias: `"original"`)
-* `"return_none"` (alias: `"none"`)
+- `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
+- `"return_original"` (alias: `"original"`)
+- `"return_none"` (alias: `"none"`)
 
 ### merge_strategy
 

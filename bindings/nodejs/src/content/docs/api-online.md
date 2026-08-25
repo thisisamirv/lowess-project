@@ -1,7 +1,15 @@
 ---
-title: OnlineLowess — Node.js API Reference
+title: OnlineLowess API
 ---
-See also: [fastLowess Node.js API Reference](api.md)
+See also: [fastLowess](api.md)
+
+## When to Use
+
+- Data arrives incrementally (sensors, streams)
+- Need real-time smoothed values
+- Fixed memory budget
+
+![Online Adapter](../assets/diagrams/online_comparison.svg)
 
 ## Class
 
@@ -27,8 +35,8 @@ Online smoothed at x=2: 0.8415
 Online smoothed at x=3: 0.9975
 ```
 
-* `options`: An object containing `LowessOptions` fields.
-* `onlineOptions`: An object containing `OnlineOptions` fields.
+- `options`: An object containing `LowessOptions` fields.
+- `onlineOptions`: An object containing `OnlineOptions` fields.
 
 **Methods:**
 
@@ -54,7 +62,7 @@ console.log("Smoothed y:", result.y);
 Smoothed y: 0.22659245357374927
 ```
 
-* Adds a single point to the sliding window and returns an `OnlineOutput` once enough points are available, or `null` while the window is still filling.
+- Adds a single point to the sliding window and returns an `OnlineOutput` once enough points are available, or `null` while the window is still filling.
 
 ## Options Structure
 
@@ -63,8 +71,8 @@ Smoothed y: 0.22659245357374927
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `window_capacity` | `number` | `1000` | Max points in sliding window |
-| `min_points` | `number` | `3` | Min points before smoothing starts |
-| `update_mode` | `string` | `"full"` | Update mode (`"full"` or `"incremental"`) |
+| `min_points` | `number` | `2` | Min points before smoothing starts |
+| `update_mode` | `string` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
 | `parallel` | `boolean` | `false` | Enable parallel execution (off by default; online LOWESS fits one point at a time) |
 
 ## Result Structure
@@ -87,5 +95,7 @@ Returned by `add_point()` once the window has enough points (`null` until then).
 
 *See: [Execution Modes](adapter-choice.md)*
 
-* `"full"` (default; alias: `"resmooth"`)
-* `"incremental"` (alias: `"single"`)
+| Mode | Alias | Behavior | Speed |
+| --- | --- | --- | --- |
+| `"incremental"` (default) | `"single"` | Update only affected fits | Faster |
+| `"full"` | `"resmooth"` | Recompute entire window | More accurate |

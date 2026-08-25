@@ -1,7 +1,13 @@
 ---
-title: StreamingLowess — WebAssembly API Reference
+title: StreamingLowess API
 ---
-See also: [fastLowess WebAssembly API Reference](api.md)
+See also: [fastLowess](api.md)
+
+## When to Use
+
+- Dataset >100,000 points
+- Memory-constrained environments
+- Batch processing pipelines
 
 ## Class
 
@@ -22,8 +28,8 @@ console.log("typeof process_chunk:", typeof stream.process_chunk);
 typeof process_chunk: function
 ```
 
-* `options`: An object containing `LowessOptions` fields.
-* `streamingOptions`: An object containing `StreamingOptions` fields.
+- `options`: An object containing `LowessOptions` fields.
+- `streamingOptions`: An object containing `StreamingOptions` fields.
 
 **Methods:**
 
@@ -43,7 +49,7 @@ console.log("Fraction used:", partialResult.fraction_used);
 Fraction used: 0.5
 ```
 
-* Processes a chunk of data. Returns partial results.
+- Processes a chunk of data. Returns partial results.
 
 ```javascript
 const { StreamingLowess } = require('fastlowess-wasm');
@@ -63,7 +69,7 @@ console.log("Fraction used:", finalResult.fraction_used);
 Fraction used: 0.5
 ```
 
-* Finalizes the smoothing process and returns any remaining buffered results.
+- Finalizes the smoothing process and returns any remaining buffered results.
 
 ## Result Structure
 
@@ -100,7 +106,17 @@ See [wasm.md](api.md) for the full `LowessResult` field reference.
 
 *See: [Merge Strategies](merge.md)*
 
-* `"weighted_average"` (default; alias: `"weighted"`)
-* `"average"` (alias: `"mean"`)
-* `"take_first"` (alias: `"first"`)
-* `"take_last"` (alias: `"last"`)
+| Strategy | Alias | Behavior |
+| --- | --- | --- |
+| `"weighted_average"` (default) | `"weighted"` | Distance-weighted blend |
+| `"average"` | `"mean"` | Average overlapping values |
+| `"take_first"` | `"first"` | Keep left chunk values |
+| `"take_last"` | `"last"` | Keep right chunk values |
+
+![Merge Strategies](../assets/diagrams/merge_comparison.svg)
+
+---
+
+:::caution[Always call finalize()]
+The streaming adapter buffers overlap data. Call `finalize()` after the last chunk to retrieve the buffered tail.
+:::

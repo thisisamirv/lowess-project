@@ -4,13 +4,12 @@ Choose the right adapter for your use case.
 
 ## Overview
 
-```mermaid
-graph LR
-    A[Data] --> B{Size?}
-    B -->|Fits in memory| C{Real-time?}
-    B -->|Too large| D[Streaming]
-    C -->|No| E[Batch]
-    C -->|Yes| F[Online]
+```text
+Data
+  └─ Fits in memory?
+       ├─ No  ─────────────► Streaming
+       └─ Yes ─ Real-time? ─┬─ No  ─► Batch
+                            └─ Yes ─► Online
 ```
 
 | Mode | Use Case | Memory | Features |

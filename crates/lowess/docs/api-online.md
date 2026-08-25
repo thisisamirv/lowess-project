@@ -1,6 +1,14 @@
-# OnlineLowess — Rust API Reference
+# OnlineLowess API
 
-See also: [lowess & lowess Rust API Reference](api.md)
+See also: [lowess](api.md)
+
+## When to Use
+
+- Data arrives incrementally (sensors, streams)
+- Need real-time smoothed values
+- Fixed memory budget
+
+![Online Adapter](../assets/diagrams/online_comparison.svg)
 
 ## Struct
 
@@ -51,8 +59,8 @@ fn main() -> Result<(), LowessError> {
 Smoothed value: 0.22659245357374927
 ```
 
-* Adds a single point `(x, y)` to the window.
-* Returns `Result<Option<OnlineOutput<T>>, LowessError>`.
+- Adds a single point `(x, y)` to the window.
+- Returns `Result<Option<OnlineOutput<T>>, LowessError>`.
 
 ```rust
 use lowess::prelude::*;
@@ -65,7 +73,7 @@ fn main() -> Result<(), LowessError> {
 }
 ```
 
-* Clears the internal window buffer. **Rust-only** — this method is not exposed in other language bindings, where creating a new instance is the idiomatic alternative.
+- Clears the internal window buffer. **Rust-only** — this method is not exposed in other language bindings, where creating a new instance is the idiomatic alternative.
 
 ## Builder Options
 
@@ -74,8 +82,8 @@ fn main() -> Result<(), LowessError> {
 | Method | Argument Type | Default | Description |
 | --- | --- | --- | --- |
 | `window_capacity(usize)` | `usize` | `1000` | Max points in sliding window |
-| `min_points(usize)` | `usize` | `3` | Min points before smoothing starts |
-| `update_mode(...)` | `update_mode` | `"full"` | Update mode |
+| `min_points(usize)` | `usize` | `2` | Min points before smoothing starts |
+| `update_mode(...)` | `update_mode` | `"incremental"` | Update mode |
 | `parallel(bool)` | `bool` | `false` | Enable parallel execution (off by default; online LOWESS fits one point at a time) |
 
 ## Result Structure
@@ -98,5 +106,7 @@ Returned by `add_point()` inside `Option`. Is `None` while the window is still f
 
 *See: [Execution Modes](adapter-choice.md)*
 
-* `"full"` (default; alias: `"resmooth"`)
-* `"incremental"` (alias: `"single"`)
+| Mode | Alias | Behavior | Speed |
+| --- | --- | --- | --- |
+| `"incremental"` (default) | `"single"` | Update only affected fits | Faster |
+| `"full"` | `"resmooth"` | Recompute entire window | More accurate |

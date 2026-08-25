@@ -1,8 +1,16 @@
-# fastLowess & lowess Rust API Reference
+# fastLowess
 
 The Rust bindings provide the core implementation and high-performance extensions. The API uses a Builder pattern consistent across both the `lowess` (pure Rust) and `fastLowess` (accelerated) crates.
 
 > **StreamingLowess** and **OnlineLowess** are documented separately: [rust-streaming.md](api-streaming.md), [rust-online.md](api-online.md)
+
+## When to Use
+
+- Dataset fits in memory
+- Need intervals, cross-validation, or diagnostics
+- Processing complete files
+
+![Gap Handling](../assets/diagrams/gap_handling.svg)
 
 ## Structs & Usage
 
@@ -49,8 +57,8 @@ Fraction used: 0.5
 Iterations used: None
 ```
 
-* Fits the model to the provided `x` and `y` arrays.
-* Returns `Result<LowessResult<T>, LowessError>`.
+- Fits the model to the provided `x` and `y` arrays.
+- Returns `Result<LowessResult<T>, LowessError>`.
 
 See [rust-streaming.md](api-streaming.md) for `StreamingLowess`.
 
@@ -127,15 +135,15 @@ fn main() -> Result<(), LowessError> {
 
 The GPU backend implements almost the entire LOWESS pipeline in WGSL compute shaders, providing native support for the following features:
 
-* **Weight Functions**: All standard kernels are supported (`Tricube`, `Epanechnikov`, `Gaussian`, `Uniform`, `Biweight`, `Triangle`, `Cosine`).
-* **Robustness Methods**: Support for `Bisquare`, `Huber`, and `Talwar` robustness weighting.
-* **Scaling Methods**: Residual scaling using `MAD` (Median Absolute Deviation), `MAR` (Median Absolute Residual), and `Mean` (Mean Absolute Residual).
-* **Interval Bounds**: GPU-native computation of `Standard Errors`, `Confidence Intervals`, and `Prediction Intervals`.
-* **Optimization**:
-  * **Parallel Fitting**: Local regression for all anchor points is computed in parallel.
-  * **Robustness Loops**: Iterative weight updates and convergence checks occur entirely on the GPU.
-  * **Distance-based Skipping**: Support for the `delta` parameter to accelerate smoothing on dense grids.
-* **Validation**: GPU-accelerated `K-Fold` and `LOOCV` (Leave-One-Out Cross-Validation).
+- **Weight Functions**: All standard kernels are supported (`Tricube`, `Epanechnikov`, `Gaussian`, `Uniform`, `Biweight`, `Triangle`, `Cosine`).
+- **Robustness Methods**: Support for `Bisquare`, `Huber`, and `Talwar` robustness weighting.
+- **Scaling Methods**: Residual scaling using `MAD` (Median Absolute Deviation), `MAR` (Median Absolute Residual), and `Mean` (Mean Absolute Residual).
+- **Interval Bounds**: GPU-native computation of `Standard Errors`, `Confidence Intervals`, and `Prediction Intervals`.
+- **Optimization**:
+  - **Parallel Fitting**: Local regression for all anchor points is computed in parallel.
+  - **Robustness Loops**: Iterative weight updates and convergence checks occur entirely on the GPU.
+  - **Distance-based Skipping**: Support for the `delta` parameter to accelerate smoothing on dense grids.
+- **Validation**: GPU-accelerated `K-Fold` and `LOOCV` (Leave-One-Out Cross-Validation).
 
 #### Feature Comparison
 
@@ -156,9 +164,9 @@ The GPU backend implements almost the entire LOWESS pipeline in WGSL compute sha
 
 The GPU backend leverages `wgpu` and supports:
 
-* **Vulkan** (Linux/Windows)
-* **Metal** (macOS/iOS)
-* **DirectX 12** (Windows)
+- **Vulkan** (Linux/Windows)
+- **Metal** (macOS/iOS)
+- **DirectX 12** (Windows)
 
 It requires a device supporting compute shaders. If no compatible GPU is found at runtime, the initialization will return a `LowessError::RuntimeError`.
 
@@ -206,46 +214,46 @@ See [rust-online.md](api-online.md) for `OnlineOutput<T>`.
 
 *See: [Weight Functions](kernels.md)*
 
-* `"tricube"` (default)
-* `"epanechnikov"`
-* `"gaussian"`
-* `"uniform"` (alias: `"boxcar"`)
-* `"biweight"` (alias: `"bisquare"`)
-* `"triangle"` (alias: `"triangular"`)
-* `"cosine"`
+- `"tricube"` (default)
+- `"epanechnikov"`
+- `"gaussian"`
+- `"uniform"` (alias: `"boxcar"`)
+- `"biweight"` (alias: `"bisquare"`)
+- `"triangle"` (alias: `"triangular"`)
+- `"cosine"`
 
 ### robustness_method
 
 *See: [Robustness](robustness.md)*
 
-* `"bisquare"` (default; alias: `"biweight"`)
-* `"huber"`
-* `"talwar"`
+- `"bisquare"` (default; alias: `"biweight"`)
+- `"huber"`
+- `"talwar"`
 
 ### boundary_policy
 
 *See: [Boundary Handling](boundary.md)*
 
-* `"extend"` (default; alias: `"pad"`)
-* `"reflect"` (alias: `"mirror"`)
-* `"zero"`
-* `"noboundary"` (alias: `"none"`)
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
 
 ### scaling_method
 
 *See: [Scaling Methods](scaling.md)*
 
-* `"mad"` (default; alias: `"median_absolute_deviation"`)
-* `"mar"` (alias: `"median_absolute_residual"`)
-* `"mean"` (alias: `"mean_absolute_residual"`)
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
 
 ### zero_weight_fallback
 
 *See: [Parameters](parameters.md)*
 
-* `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
-* `"return_original"` (alias: `"original"`)
-* `"return_none"` (alias: `"none"`)
+- `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
+- `"return_original"` (alias: `"original"`)
+- `"return_none"` (alias: `"none"`)
 
 ### merge_strategy
 

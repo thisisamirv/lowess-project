@@ -1,9 +1,17 @@
 ---
-title: fastLowess WebAssembly API Reference
+title: API
 ---
 The WebAssembly bindings provide a high-performance interface to the core Rust library, mirroring the Rust API structure.
 
 > **StreamingLowess** and **OnlineLowess** are documented separately: [wasm-streaming.md](api-streaming.md), [wasm-online.md](api-online.md)
+
+## When to Use
+
+- Dataset fits in memory
+- Need intervals, cross-validation, or diagnostics
+- Processing complete files
+
+![Gap Handling](../assets/diagrams/gap_handling.svg)
 
 ## Classes and Functions
 
@@ -24,7 +32,7 @@ console.log("typeof fit:", typeof model.fit);
 typeof fit: function
 ```
 
-* `options`: An object containing `LowessOptions` fields.
+- `options`: An object containing `LowessOptions` fields.
 
 **Methods:**
 
@@ -44,9 +52,9 @@ console.log("Fraction used:", result.fraction_used);
 Fraction used: 0.5
 ```
 
-* `x`: `Float64Array` of input x values.
-* `y`: `Float64Array` of input y values.
-* Returns: A `LowessResult` object.
+- `x`: `Float64Array` of input x values.
+- `y`: `Float64Array` of input y values.
+- Returns: A `LowessResult` object.
 
 See [wasm-streaming.md](api-streaming.md) for the `StreamingLowess` class.
 
@@ -124,46 +132,46 @@ See [wasm-online.md](api-online.md) for `OnlineOutput`.
 
 *See: [Weight Functions](kernels.md)*
 
-* `"tricube"` (default)
-* `"epanechnikov"`
-* `"gaussian"`
-* `"uniform"` (alias: `"boxcar"`)
-* `"biweight"` (alias: `"bisquare"`)
-* `"triangle"` (alias: `"triangular"`)
-* `"cosine"`
+- `"tricube"` (default)
+- `"epanechnikov"`
+- `"gaussian"`
+- `"uniform"` (alias: `"boxcar"`)
+- `"biweight"` (alias: `"bisquare"`)
+- `"triangle"` (alias: `"triangular"`)
+- `"cosine"`
 
 ### robustness_method
 
 *See: [Robustness](robustness.md)*
 
-* `"bisquare"` (default; alias: `"biweight"`)
-* `"huber"`
-* `"talwar"`
+- `"bisquare"` (default; alias: `"biweight"`)
+- `"huber"`
+- `"talwar"`
 
 ### boundary_policy
 
 *See: [Boundary Handling](boundary.md)*
 
-* `"extend"` (default; alias: `"pad"`)
-* `"reflect"` (alias: `"mirror"`)
-* `"zero"`
-* `"noboundary"` (alias: `"none"`)
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
 
 ### scaling_method
 
 *See: [Scaling Methods](scaling.md)*
 
-* `"mad"` (default; alias: `"median_absolute_deviation"`)
-* `"mar"` (alias: `"median_absolute_residual"`)
-* `"mean"` (alias: `"mean_absolute_residual"`)
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
 
 ### zero_weight_fallback
 
 *See: [Parameters](parameters.md)*
 
-* `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
-* `"return_original"` (alias: `"original"`)
-* `"return_none"` (alias: `"none"`)
+- `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
+- `"return_original"` (alias: `"original"`)
+- `"return_none"` (alias: `"none"`)
 
 ### merge_strategy
 
