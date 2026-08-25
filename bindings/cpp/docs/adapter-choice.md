@@ -20,6 +20,6 @@ graph LR
 | **Streaming** | Large files (>100K) | Chunked | Residuals, robustness |
 | **Online** | Real-time sensors | Fixed window | Incremental updates |
 
-![Adapter Comparison](../assets/diagrams/adapter_comparison.svg)
+![Adapter Comparison](adapter_comparison.svg)
 
 ---

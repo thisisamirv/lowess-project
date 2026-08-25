@@ -8,7 +8,7 @@ Incremental updates with a sliding window for real-time data.
 - Need real-time smoothed values
 - Fixed memory budget
 
-![Online Adapter](../assets/diagrams/online_comparison.svg)
+![Online Adapter](online_comparison.svg)
 
 ## Parameters
 

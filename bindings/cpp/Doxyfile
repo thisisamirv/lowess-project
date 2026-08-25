@@ -15,6 +15,7 @@ CREATE_SUBDIRS         = NO
 # ---------------------------------------------------------------------------
 INPUT                  = include docs
 FILE_PATTERNS          = *.hpp*.h *.md
+IMAGE_PATH             = assets/diagrams
 RECURSIVE              = NO
 USE_MDFILE_AS_MAINPAGE = docs/concepts.md
 

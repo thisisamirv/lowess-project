@@ -8,7 +8,7 @@ Standard mode for complete datasets. **Supports all features.**
 - Need intervals, cross-validation, or diagnostics
 - Processing complete files
 
-![Gap Handling](../assets/diagrams/gap_handling.svg)
+![Gap Handling](gap_handling.svg)
 
 ## Example
 

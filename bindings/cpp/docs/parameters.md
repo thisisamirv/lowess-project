@@ -253,7 +253,7 @@ y[0]: 0.378779
 
 Edge handling strategy to reduce boundary bias. See [Boundary Handling](boundary.md) for a detailed comparison.
 
-![Boundary Policy](../assets/diagrams/boundary_comparison.svg)
+![Boundary Policy](boundary_comparison.svg)
 
 | Policy | Behavior | Use Case |
 | --- | --- | --- |
@@ -296,7 +296,7 @@ y[0]: 0.712762
 
 Method for estimating residual scale during robustness iterations. See [Scaling Methods](scaling.md) for a detailed comparison.
 
-![Scaling Methods](../assets/diagrams/scaling_comparison.svg)
+![Scaling Methods](scaling_comparison.svg)
 
 | Method | Description | Robustness |
 | --- | --- | --- |
@@ -338,7 +338,7 @@ y[0]: 0.382608
 
 Behavior when all neighborhood weights are zero.
 
-![Zero Weight Fallback](../assets/diagrams/zero_weight_comparison.svg)
+![Zero Weight Fallback](zero_weight_comparison.svg)
 
 | Option | Behavior |
 | --- | --- |
