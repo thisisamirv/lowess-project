@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>fastLowess: adapter-choice</title>
+<title>fastLowess: Execution Modes</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -97,20 +97,17 @@ $(document).ready(function(){initNavTree('md_docs_2adapter-choice.html',''); ini
 </div>
 
 <div><div class="header">
-  <div class="headertitle"><div class="title">adapter-choice</div></div>
+  <div class="headertitle"><div class="title">Execution Modes</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1><a class="anchor" id="autotoc_md0"></a>
-Execution Modes</h1>
-<p>Choose the right adapter for your use case.</p>
-<h2><a class="anchor" id="autotoc_md1"></a>
-Overview</h2>
-<div class="fragment"><div class="line">graph LR</div>
-<div class="line">    A[Data] --&gt; B{Size?}</div>
-<div class="line">    B --&gt;|Fits in memory| C{Real-time?}</div>
-<div class="line">    B --&gt;|Too large| D[Streaming]</div>
-<div class="line">    C --&gt;|No| E[Batch]</div>
-<div class="line">    C --&gt;|Yes| F[Online]</div>
+<div class="textblock"><p><a class="anchor" id="autotoc_md0"></a> Choose the right adapter for your use case.</p>
+<h1><a class="anchor" id="autotoc_md1"></a>
+Overview</h1>
+<div class="fragment"><div class="line">Data</div>
+<div class="line">  └─ Fits in memory?</div>
+<div class="line">       ├─ No  ─────────────► Streaming</div>
+<div class="line">       └─ Yes ─ Real-time? ─┬─ No  ─► Batch</div>
+<div class="line">                            └─ Yes ─► Online</div>
 </div><!-- fragment --><table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Mode   </th><th class="markdownTableHeadNone">Use Case   </th><th class="markdownTableHeadNone">Memory   </th><th class="markdownTableHeadNone">Features    </th></tr>

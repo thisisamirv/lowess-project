@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>fastLowess: custom-weights</title>
+<title>fastLowess: Custom Weights</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -97,22 +97,20 @@ $(document).ready(function(){initNavTree('md_docs_2custom-weights.html',''); ini
 </div>
 
 <div><div class="header">
-  <div class="headertitle"><div class="title">custom-weights</div></div>
+  <div class="headertitle"><div class="title">Custom Weights</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1><a class="anchor" id="autotoc_md101"></a>
-Custom Weights</h1>
-<p>Per-observation weights that encode data quality directly into the LOWESS fit.</p>
-<h2><a class="anchor" id="autotoc_md102"></a>
-How Custom Weights Work</h2>
+<div class="textblock"><p><a class="anchor" id="autotoc_md101"></a> Per-observation weights that encode data quality directly into the LOWESS fit.</p>
+<h1><a class="anchor" id="autotoc_md102"></a>
+How Custom Weights Work</h1>
 <p>Standard LOWESS assigns equal prior trust to all observations. Custom weights let you override this assumption point by point — before any distance or robustness weighting is applied.</p>
 <p>The effective weight of observation $j$ in a local fit centred at $x_i$ is:</p>
 <p>$$w_{ij} = \text{custom_weights}[j] \times K!\left(\frac{d_{ij}}{h_i}\right) \times r_j$$</p>
 <p>where $K$ is the distance kernel, $h_i$ is the local bandwidth, and $r_j$ is the robustness weight from the current iteration.</p>
 <p>!!! note "Batch adapter only" <code>custom_weights</code> applies in <b>Batch</b> mode. It is silently ignored in Streaming and Online adapters.</p>
 <hr  />
-<h2><a class="anchor" id="autotoc_md104"></a>
-When to Use Custom Weights</h2>
+<h1><a class="anchor" id="autotoc_md104"></a>
+When to Use Custom Weights</h1>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Situation   </th><th class="markdownTableHeadNone">Recommended weight    </th></tr>
@@ -127,8 +125,8 @@ When to Use Custom Weights</h2>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone">Measurement uncertainty $\sigma_i$   </td><td class="markdownTableBodyNone">$1 / \sigma_i^2$   </td></tr>
 </table>
-<h3><a class="anchor" id="autotoc_md105"></a>
-Custom Weights vs. Robustness Iterations</h3>
+<h2><a class="anchor" id="autotoc_md105"></a>
+Custom Weights vs. Robustness Iterations</h2>
 <p>Both mechanisms handle unreliable data, but they serve different purposes:</p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -144,10 +142,10 @@ Custom Weights vs. Robustness Iterations</h3>
 </table>
 <p>They compose: you can use both simultaneously. Custom weights suppress <em>a priori</em> bad points; robustness iterations then handle any <em>residual</em> outliers that remain.</p>
 <hr  />
-<h2><a class="anchor" id="autotoc_md107"></a>
-Basic Usage</h2>
-<h3><a class="anchor" id="autotoc_md108"></a>
-Suppress a Known Outlier</h3>
+<h1><a class="anchor" id="autotoc_md107"></a>
+Basic Usage</h1>
+<h2><a class="anchor" id="autotoc_md108"></a>
+Suppress a Known Outlier</h2>
 <p>Set the weight to <code>0</code> at the bad point — it is excluded from every local fit that would otherwise include it.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
@@ -176,8 +174,8 @@ Suppress a Known Outlier</h3>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.572621</div>
 </div><!-- fragment --><hr  />
-<h3><a class="anchor" id="autotoc_md110"></a>
-Emphasize Important Points</h3>
+<h2><a class="anchor" id="autotoc_md110"></a>
+Emphasize Important Points</h2>
 <p>Assign high weights to measurements you trust most — calibration standards, reference instruments, or low-noise observations.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
@@ -205,8 +203,8 @@ Emphasize Important Points</h3>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.323742</div>
 </div><!-- fragment --><hr  />
-<h3><a class="anchor" id="autotoc_md112"></a>
-Propagate Measurement Uncertainty</h3>
+<h2><a class="anchor" id="autotoc_md112"></a>
+Propagate Measurement Uncertainty</h2>
 <p>If each observation has a known standard deviation $\sigma_i$, set $w_i = 1 / \sigma_i^2$ to give the fit information-theoretically optimal weighting.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
@@ -235,8 +233,8 @@ Propagate Measurement Uncertainty</h3>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.152222</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md114"></a>
-Combined with Robustness Iterations</h2>
+<h1><a class="anchor" id="autotoc_md114"></a>
+Combined with Robustness Iterations</h1>
 <p>Custom weights and robustness iterations compose naturally: use custom weights for <em>known</em> bad points and robustness for <em>unknown</em> contamination.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
@@ -265,8 +263,8 @@ Combined with Robustness Iterations</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.302856</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md116"></a>
-Validation Rules</h2>
+<h1><a class="anchor" id="autotoc_md116"></a>
+Validation Rules</h1>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Rule   </th><th class="markdownTableHeadNone">Effect    </th></tr>
@@ -281,8 +279,8 @@ Validation Rules</h2>
 </table>
 <p>!!! warning "Zero-weight windows" If a local neighbourhood contains only zero-weight points, the fit at that centre point falls back to the behaviour specified by <code>zero_weight_fallback</code> (default: <code>"use_local_mean"</code>).</p>
 <hr  />
-<h2><a class="anchor" id="autotoc_md118"></a>
-See Also</h2>
+<h1><a class="anchor" id="autotoc_md118"></a>
+See Also</h1>
 <ul>
 <li><a class="el" href="md_docs_2robustness.html">Robustness</a> — adaptive outlier downweighting via IRLS</li>
 <li><a href="parameters.md#custom_weights">Parameters</a> — full parameter reference </li>

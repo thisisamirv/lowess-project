@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['backend_0',['gpu-backend',['../md_docs_2gpu-backend.html',1,'']]],
-  ['batch_20adapter_1',['Batch Adapter',['../md_docs_2batch.html',1,'']]],
-  ['benchmarks_2',['benchmarks',['../md_docs_2benchmarks.html',1,'']]],
-  ['boundary_3',['boundary',['../md_docs_2boundary.html',1,'']]]
+  ['backend_0',['GPU Backend',['../md_docs_2gpu-backend.html',1,'']]],
+  ['benchmarks_1',['Benchmarks',['../md_docs_2benchmarks.html',1,'']]],
+  ['boundary_20handling_2',['Boundary Handling',['../md_docs_2boundary.html',1,'']]]
 ];

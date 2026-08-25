@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>fastLowess: benchmarks</title>
+<title>fastLowess: Benchmarks</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -97,13 +97,12 @@ $(document).ready(function(){initNavTree('md_docs_2benchmarks.html',''); initRes
 </div>
 
 <div><div class="header">
-  <div class="headertitle"><div class="title">benchmarks</div></div>
+  <div class="headertitle"><div class="title">Benchmarks</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1><a class="anchor" id="autotoc_md49"></a>
-Benchmarks</h1>
-<h2><a class="anchor" id="autotoc_md50"></a>
-CPU Benchmarks</h2>
+<div class="textblock"><p><a class="anchor" id="autotoc_md49"></a> </p>
+<h1><a class="anchor" id="autotoc_md50"></a>
+CPU Benchmarks</h1>
 <p>Speedup relative to R's <code>stats::lowess</code> (higher is better):</p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -131,8 +130,8 @@ CPU Benchmarks</h2>
 </table>
 <p><em>The R column shows average time across scenarios in multi-scenario categories. Speedups are averages across the same range.</em></p>
 <hr  />
-<h2><a class="anchor" id="autotoc_md52"></a>
-GPU Backend</h2>
+<h1><a class="anchor" id="autotoc_md52"></a>
+GPU Backend</h1>
 <p>For large batch datasets the GPU backend outperforms CPU-parallel execution. The crossover depends on <code>fraction × n</code>:</p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -142,8 +141,8 @@ GPU Backend</h2>
 </table>
 <p>At <code>fraction = 0.5</code>, GPU overtakes CPU around n ≥ 50K; at smaller fractions, around n ≥ 100K–250K. See the benchmarks README in the source repository for the full sweep and transfer-overhead breakdown.</p>
 <hr  />
-<h2><a class="anchor" id="autotoc_md54"></a>
-Reproducing Benchmarks</h2>
+<h1><a class="anchor" id="autotoc_md54"></a>
+Reproducing Benchmarks</h1>
 <p>Use <code>std::chrono</code> to time serial vs parallel runs:</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;chrono&gt;</span></div>

@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['fastlowess_0',['fastLowess',['../index.html',1,'']]]
+  ['data_20smoothing_0',['Genomic Data Smoothing',['../md_docs_2use-case-genomics.html',1,'']]]
 ];

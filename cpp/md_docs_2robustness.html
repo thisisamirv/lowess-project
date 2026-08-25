@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>fastLowess: robustness</title>
+<title>fastLowess: Robustness</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -97,14 +97,12 @@ $(document).ready(function(){initNavTree('md_docs_2robustness.html',''); initRes
 </div>
 
 <div><div class="header">
-  <div class="headertitle"><div class="title">robustness</div></div>
+  <div class="headertitle"><div class="title">Robustness</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1><a class="anchor" id="autotoc_md252"></a>
-Robustness</h1>
-<p>Outlier handling through iterative reweighting.</p>
-<h2><a class="anchor" id="autotoc_md253"></a>
-How Robustness Works</h2>
+<div class="textblock"><p><a class="anchor" id="autotoc_md246"></a> Outlier handling through iterative reweighting.</p>
+<h1><a class="anchor" id="autotoc_md247"></a>
+How Robustness Works</h1>
 <p>Standard LOWESS can be biased by outliers. Robustness iterations downweight points with large residuals:</p>
 <ol type="1">
 <li>Fit initial LOWESS</li>
@@ -122,10 +120,10 @@ Robustness Methods</div></div>
 <div class="caption">
 Robustness Iterations</div></div>
     <hr  />
-<h2><a class="anchor" id="autotoc_md255"></a>
-Robustness Methods</h2>
-<h3><a class="anchor" id="autotoc_md256"></a>
-Bisquare (Default)</h3>
+<h1><a class="anchor" id="autotoc_md249"></a>
+Robustness Methods</h1>
+<h2><a class="anchor" id="autotoc_md250"></a>
+Bisquare (Default)</h2>
 <p>Smooth downweighting. Points transition gradually from full weight to zero.</p>
 <p>$$w(u) = \begin{cases} (1 - u^2)^2 &amp; |u| &lt; 1 \ 0 &amp; |u| \geq 1 \end{cases}$$</p>
 <p><b>Use when</b>: General purpose, balanced approach.</p>
@@ -152,8 +150,8 @@ Bisquare (Default)</h3>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.382608</div>
 </div><!-- fragment --><hr  />
-<h3><a class="anchor" id="autotoc_md258"></a>
-Huber</h3>
+<h2><a class="anchor" id="autotoc_md252"></a>
+Huber</h2>
 <p>Linear penalty beyond threshold. Less aggressive than Bisquare.</p>
 <p>$$w(u) = \begin{cases} 1 &amp; |u| \leq k \ k/|u| &amp; |u| &gt; k \end{cases}$$</p>
 <p><b>Use when</b>: Moderate outliers, want to retain some influence.</p>
@@ -180,8 +178,8 @@ Huber</h3>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.381705</div>
 </div><!-- fragment --><hr  />
-<h3><a class="anchor" id="autotoc_md260"></a>
-Talwar</h3>
+<h2><a class="anchor" id="autotoc_md254"></a>
+Talwar</h2>
 <p>Hard threshold. Points are either fully weighted or completely excluded.</p>
 <p>$$w(u) = \begin{cases} 1 &amp; |u| \leq k \ 0 &amp; |u| &gt; k \end{cases}$$</p>
 <p><b>Use when</b>: Extreme outliers, want binary exclusion.</p>
@@ -208,8 +206,8 @@ Talwar</h3>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.378779</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md262"></a>
-Comparison</h2>
+<h1><a class="anchor" id="autotoc_md256"></a>
+Comparison</h1>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Method   </th><th class="markdownTableHeadNone">Transition   </th><th class="markdownTableHeadNone">Aggressiveness   </th><th class="markdownTableHeadNone">Use Case    </th></tr>
@@ -221,8 +219,8 @@ Comparison</h2>
 <td class="markdownTableBodyNone"><b>Talwar</b>   </td><td class="markdownTableBodyNone">Hard   </td><td class="markdownTableBodyNone">Strong   </td><td class="markdownTableBodyNone">Extreme contamination   </td></tr>
 </table>
 <hr  />
-<h2><a class="anchor" id="autotoc_md264"></a>
-Detecting Outliers</h2>
+<h1><a class="anchor" id="autotoc_md258"></a>
+Detecting Outliers</h1>
 <p>Use robustness weights to identify potential outliers:</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
@@ -252,8 +250,8 @@ Detecting Outliers</h2>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md266"></a>
-Scale Estimation</h2>
+<h1><a class="anchor" id="autotoc_md260"></a>
+Scale Estimation</h1>
 <p>Residuals are scaled before computing robustness weights. Two methods:</p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -292,8 +290,8 @@ Scaling Methods Comparison</div></div>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.382608</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md268"></a>
-Auto-Convergence</h2>
+<h1><a class="anchor" id="autotoc_md262"></a>
+Auto-Convergence</h1>
 <p>Stop iterations early when weights stabilize:</p>
 <p>!!! tip "Performance" Auto-convergence can significantly reduce computation when weights stabilize before reaching max iterations.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>

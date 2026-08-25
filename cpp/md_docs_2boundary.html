@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>fastLowess: boundary</title>
+<title>fastLowess: Boundary Handling</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -97,14 +97,12 @@ $(document).ready(function(){initNavTree('md_docs_2boundary.html',''); initResiz
 </div>
 
 <div><div class="header">
-  <div class="headertitle"><div class="title">boundary</div></div>
+  <div class="headertitle"><div class="title">Boundary Handling</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1><a class="anchor" id="autotoc_md55"></a>
-Boundary Handling</h1>
-<p>Edge strategies that reduce bias near the ends of the data range.</p>
-<h2><a class="anchor" id="autotoc_md56"></a>
-Overview</h2>
+<div class="textblock"><p><a class="anchor" id="autotoc_md55"></a> Edge strategies that reduce bias near the ends of the data range.</p>
+<h1><a class="anchor" id="autotoc_md56"></a>
+Overview</h1>
 <p>Standard LOWESS neighbourhoods become asymmetric at the boundaries: fewer points exist on one side, pulling the local fit toward the data interior. The <code>boundary_policy</code> parameter controls how the data is padded to mitigate this effect.</p>
 <div class="image">
 <object type="image/svg+xml" data="boundary_comparison.svg" style="pointer-events: none;"></object>
@@ -123,8 +121,8 @@ Boundary Handling</div></div>
 <td class="markdownTableBodyNone"><code>"noboundary"</code>   </td><td class="markdownTableBodyNone">No padding (Cleveland original)   </td><td class="markdownTableBodyNone">Reproducing reference behaviour   </td></tr>
 </table>
 <hr  />
-<h2><a class="anchor" id="autotoc_md58"></a>
-Extend (Default)</h2>
+<h1><a class="anchor" id="autotoc_md58"></a>
+Extend (Default)</h1>
 <p>Pads beyond both endpoints by replicating the first and last observed values. Prevents the fit from curling toward zero and is a safe default for nearly all use cases.</p>
 <p><b>Use when</b>: No strong prior on boundary behaviour; general-purpose smoothing.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
@@ -148,8 +146,8 @@ Extend (Default)</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.382608</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md60"></a>
-Reflect</h2>
+<h1><a class="anchor" id="autotoc_md60"></a>
+Reflect</h1>
 <p>Mirrors the data about both endpoints before fitting, then discards the reflected region from the output. Preserves continuity of derivatives, making it ideal for periodic or spatially symmetric signals.</p>
 <p><b>Use when</b>: Circular data (e.g., angle, day-of-year), symmetric physical quantities, or when the derivative at the boundary should be near zero.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
@@ -173,8 +171,8 @@ Reflect</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.712762</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md62"></a>
-Zero</h2>
+<h1><a class="anchor" id="autotoc_md62"></a>
+Zero</h1>
 <p>Pads with zeros beyond both endpoints. Appropriate when the underlying process is known to be zero outside the observation window (e.g., a pulse signal or a bounded physical quantity).</p>
 <p><b>Use when</b>: Signal decays to zero at both ends; zero is a meaningful boundary value.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
@@ -198,8 +196,8 @@ Zero</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.33561</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md64"></a>
-No Boundary</h2>
+<h1><a class="anchor" id="autotoc_md64"></a>
+No Boundary</h1>
 <p>Applies no padding. Each local fit uses only the points that are actually available, which may be fewer than the requested neighbourhood at the endpoints. This reproduces the original Cleveland (1979) algorithm exactly.</p>
 <p><b>Use when</b>: Reproducing reference results; you prefer the raw LOWESS boundary behaviour.</p>
 <p>!!! note Without padding, boundary fits can have higher variance and visible edge artefacts, particularly with small <code>fraction</code> values.</p>
@@ -224,8 +222,8 @@ No Boundary</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.693828</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md66"></a>
-Choosing a Policy</h2>
+<h1><a class="anchor" id="autotoc_md66"></a>
+Choosing a Policy</h1>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Situation   </th><th class="markdownTableHeadNone">Recommended Policy    </th></tr>

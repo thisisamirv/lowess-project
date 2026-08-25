@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>fastLowess: installation</title>
+<title>fastLowess: Installation</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -97,29 +97,27 @@ $(document).ready(function(){initNavTree('md_docs_2installation.html',''); initR
 </div>
 
 <div><div class="header">
-  <div class="headertitle"><div class="title">installation</div></div>
+  <div class="headertitle"><div class="title">Installation</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1><a class="anchor" id="autotoc_md130"></a>
-Installation</h1>
-<p>Install the LOWESS library for your preferred language.</p>
-<h2><a class="anchor" id="autotoc_md131"></a>
-Pre-built Binaries (Linux (x64))</h2>
+<div class="textblock"><p><a class="anchor" id="autotoc_md130"></a> Install the LOWESS library for your preferred language.</p>
+<h1><a class="anchor" id="autotoc_md131"></a>
+Pre-built Binaries (Linux (x64))</h1>
 <div class="fragment"><div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-linux-x64.so</div>
 <div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp</div>
 <div class="line">g++ -o myapp myapp.cpp -L. -lfastlowess-linux-x64</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md132"></a>
-Pre-built Binaries (macOS (x64))</h2>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md132"></a>
+Pre-built Binaries (macOS (x64))</h1>
 <div class="fragment"><div class="line">curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-macos-x64.dylib</div>
 <div class="line">curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp</div>
 <div class="line">clang++ -o myapp myapp.cpp -L. -lfastlowess-macos-x64</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md133"></a>
-Pre-built Binaries (Windows (x64))</h2>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md133"></a>
+Pre-built Binaries (Windows (x64))</h1>
 <div class="fragment"><div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess-win32-x64.dll</div>
 <div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp</div>
 <div class="line">cl myapp.cpp /link fastlowess-win32-x64.lib</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md134"></a>
-From Source</h2>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md134"></a>
+From Source</h1>
 <div class="fragment"><div class="line"># Install Rust first: https://rustup.rs/</div>
 <div class="line">git clone https://github.com/thisisamirv/lowess-project</div>
 <div class="line">cd lowess-project/bindings/cpp</div>
@@ -131,12 +129,12 @@ From Source</h2>
 <div class="line"># Library is at: target/release/libfastlowess_cpp.so (Linux)</div>
 <div class="line">#                target/release/libfastlowess_cpp.dylib (macOS)</div>
 <div class="line">#                target/release/fastlowess_cpp.dll (Windows)</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md135"></a>
-From conda-forge</h2>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md135"></a>
+From conda-forge</h1>
 <div class="fragment"><div class="line">conda install -c conda-forge libfastlowess</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md137"></a>
-Verify Installation</h2>
+<h1><a class="anchor" id="autotoc_md137"></a>
+Verify Installation</h1>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;vector&gt;</span></div>

@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['—_20c_20api_20reference_0',['— c api reference',['../md_docs_2api-online.html',1,'OnlineLowess — C++ API Reference'],['../md_docs_2api-streaming.html',1,'StreamingLowess — C++ API Reference']]]
+  ['weight_20functions_0',['Weight Functions',['../md_docs_2kernels.html',1,'']]],
+  ['weights_1',['Custom Weights',['../md_docs_2custom-weights.html',1,'']]]
 ];

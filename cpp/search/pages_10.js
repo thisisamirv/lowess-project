@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['weights_0',['custom-weights',['../md_docs_2custom-weights.html',1,'']]]
+  ['validation_0',['Cross-Validation',['../md_docs_2cross-validation.html',1,'']]]
 ];

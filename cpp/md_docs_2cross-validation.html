@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>fastLowess: cross-validation</title>
+<title>fastLowess: Cross-Validation</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -97,22 +97,20 @@ $(document).ready(function(){initNavTree('md_docs_2cross-validation.html',''); i
 </div>
 
 <div><div class="header">
-  <div class="headertitle"><div class="title">cross-validation</div></div>
+  <div class="headertitle"><div class="title">Cross-Validation</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1><a class="anchor" id="autotoc_md83"></a>
-Cross-Validation</h1>
-<p>Automated parameter selection via cross-validation.</p>
-<h2><a class="anchor" id="autotoc_md84"></a>
-Overview</h2>
+<div class="textblock"><p><a class="anchor" id="autotoc_md83"></a> Automated parameter selection via cross-validation.</p>
+<h1><a class="anchor" id="autotoc_md84"></a>
+Overview</h1>
 <p>Cross-validation helps select optimal parameters (especially <code>fraction</code>) by evaluating performance on held-out data.</p>
 <div class="image">
 <object type="image/svg+xml" data="cv_comparison.svg" style="pointer-events: none;"></object>
 <div class="caption">
 Cross-Validation</div></div>
     <hr  />
-<h2><a class="anchor" id="autotoc_md86"></a>
-K-Fold Cross-Validation</h2>
+<h1><a class="anchor" id="autotoc_md86"></a>
+K-Fold Cross-Validation</h1>
 <p>Split data into K folds, train on K-1, validate on 1.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
@@ -142,8 +140,8 @@ K-Fold Cross-Validation</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">Selected fraction: 0.2</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md88"></a>
-Leave-One-Out (LOOCV)</h2>
+<h1><a class="anchor" id="autotoc_md88"></a>
+Leave-One-Out (LOOCV)</h1>
 <p>Each point is held out once. Most thorough but slowest.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
@@ -169,8 +167,8 @@ Leave-One-Out (LOOCV)</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">Fraction used: 0.2</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md90"></a>
-Seeded Randomization</h2>
+<h1><a class="anchor" id="autotoc_md90"></a>
+Seeded Randomization</h1>
 <p>Set a seed for reproducible fold assignments:</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
@@ -200,8 +198,8 @@ Seeded Randomization</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">Fraction used: 0.7</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md92"></a>
-Comparison</h2>
+<h1><a class="anchor" id="autotoc_md92"></a>
+Comparison</h1>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Method   </th><th class="markdownTableHeadNone">Folds   </th><th class="markdownTableHeadNone">Speed   </th><th class="markdownTableHeadNone">Variance   </th><th class="markdownTableHeadNone">Bias    </th></tr>
@@ -214,14 +212,14 @@ Comparison</h2>
 </table>
 <p>!!! tip "Recommendation" Use <b>5-fold</b> or <b>10-fold</b> CV for most applications. LOOCV is only worth it for small datasets (N &lt; 100).</p>
 <hr  />
-<h2><a class="anchor" id="autotoc_md94"></a>
-CV Metrics</h2>
+<h1><a class="anchor" id="autotoc_md94"></a>
+CV Metrics</h1>
 <p>Cross-validation uses MSE (Mean Squared Error) by default:</p>
 <div class="fragment"><div class="line">MSE = mean((y_true - y_pred)²)</div>
 </div><!-- fragment --><p>Lower MSE indicates better fit on held-out data.</p>
 <hr  />
-<h2><a class="anchor" id="autotoc_md96"></a>
-Interpreting Results</h2>
+<h1><a class="anchor" id="autotoc_md96"></a>
+Interpreting Results</h1>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
@@ -255,8 +253,8 @@ Interpreting Results</h2>
 </div><!-- fragment --><div class="fragment"><div class="line">Fraction used: 0.3</div>
 </div><!-- fragment --><p>The fraction with <b>lowest CV score</b> is automatically selected.</p>
 <hr  />
-<h2><a class="anchor" id="autotoc_md98"></a>
-Availability</h2>
+<h1><a class="anchor" id="autotoc_md98"></a>
+Availability</h1>
 <p>!!! warning "Batch Mode Only" Cross-validation is only available in <b>Batch</b> mode.</p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -267,8 +265,8 @@ Availability</h2>
 <td class="markdownTableBodyNone">LOOCV   </td><td class="markdownTableBodyNone">✓   </td><td class="markdownTableBodyNone">✗   </td><td class="markdownTableBodyNone">✗   </td></tr>
 </table>
 <hr  />
-<h2><a class="anchor" id="autotoc_md100"></a>
-Best Practices</h2>
+<h1><a class="anchor" id="autotoc_md100"></a>
+Best Practices</h1>
 <ol type="1">
 <li><b>Test a range</b>: Include fractions from 0.1 to 0.9</li>
 <li><b>Use enough folds</b>: 5-10 folds balance speed and accuracy</li>

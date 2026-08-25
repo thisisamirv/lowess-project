@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['merge_0',['merge',['../md_docs_2merge.html',1,'']]]
+  ['handling_0',['Boundary Handling',['../md_docs_2boundary.html',1,'']]]
 ];

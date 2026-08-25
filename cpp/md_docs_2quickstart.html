@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>fastLowess: quickstart</title>
+<title>fastLowess: Quick Start</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -97,14 +97,12 @@ $(document).ready(function(){initNavTree('md_docs_2quickstart.html',''); initRes
 </div>
 
 <div><div class="header">
-  <div class="headertitle"><div class="title">quickstart</div></div>
+  <div class="headertitle"><div class="title">Quick Start</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1><a class="anchor" id="autotoc_md242"></a>
-Quick Start</h1>
-<p>Get up and running with LOWESS in minutes.</p>
-<h2><a class="anchor" id="autotoc_md243"></a>
-Basic Smoothing</h2>
+<div class="textblock"><p><a class="anchor" id="autotoc_md236"></a> Get up and running with LOWESS in minutes.</p>
+<h1><a class="anchor" id="autotoc_md237"></a>
+Basic Smoothing</h1>
 <p>Smooth a noisy sine wave — the kind of signal where LOWESS shines. Each example recovers the underlying trend from 100 points of Gaussian noise.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
@@ -129,8 +127,8 @@ Basic Smoothing</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">First smoothed: 0.02784  (true: 0)</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md245"></a>
-With Confidence Intervals</h2>
+<h1><a class="anchor" id="autotoc_md239"></a>
+With Confidence Intervals</h1>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
@@ -164,8 +162,8 @@ With Confidence Intervals</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.29413, 0.374611]</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md247"></a>
-Handling Outliers</h2>
+<h1><a class="anchor" id="autotoc_md241"></a>
+Handling Outliers</h1>
 <p>LOWESS can robustly handle outliers through iterative reweighting:</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
@@ -197,8 +195,8 @@ Handling Outliers</h2>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md249"></a>
-Streaming Mode</h2>
+<h1><a class="anchor" id="autotoc_md243"></a>
+Streaming Mode</h1>
 <p>For datasets too large to fit in memory, stream them in fixed-size chunks with overlap.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
@@ -234,8 +232,8 @@ Streaming Mode</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">Smoothed 100 points</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md251"></a>
-Next Steps</h2>
+<h1><a class="anchor" id="autotoc_md245"></a>
+Next Steps</h1>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Topic   </th><th class="markdownTableHeadNone">Link    </th></tr>

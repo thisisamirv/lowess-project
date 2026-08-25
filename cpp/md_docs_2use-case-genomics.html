@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>fastLowess: use-case-genomics</title>
+<title>fastLowess: Genomic Data Smoothing</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -97,23 +97,21 @@ $(document).ready(function(){initNavTree('md_docs_2use-case-genomics.html',''); 
 </div>
 
 <div><div class="header">
-  <div class="headertitle"><div class="title">use-case-genomics</div></div>
+  <div class="headertitle"><div class="title">Genomic Data Smoothing</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1><a class="anchor" id="autotoc_md285"></a>
-Genomic Data Smoothing</h1>
-<p>LOWESS for methylation profiles, ChIP-seq signals, and other genomic data.</p>
-<h2><a class="anchor" id="autotoc_md286"></a>
-Overview</h2>
+<div class="textblock"><p><a class="anchor" id="autotoc_md273"></a> LOWESS for methylation profiles, ChIP-seq signals, and other genomic data.</p>
+<h1><a class="anchor" id="autotoc_md274"></a>
+Overview</h1>
 <p>Genomic data often contains noise from sequencing depth variation, PCR artifacts, or biological heterogeneity. LOWESS smoothing helps reveal underlying patterns.</p>
 <hr  />
-<h2><a class="anchor" id="autotoc_md288"></a>
-Methylation Profile Smoothing</h2>
-<h3><a class="anchor" id="autotoc_md289"></a>
-The Challenge</h3>
+<h1><a class="anchor" id="autotoc_md276"></a>
+Methylation Profile Smoothing</h1>
+<h2><a class="anchor" id="autotoc_md277"></a>
+The Challenge</h2>
 <p>DNA methylation data (from bisulfite sequencing or arrays) shows position-dependent patterns that can be obscured by measurement noise.</p>
-<h3><a class="anchor" id="autotoc_md290"></a>
-Solution</h3>
+<h2><a class="anchor" id="autotoc_md278"></a>
+Solution</h2>
 <p>A small <code>fraction = 0.1</code> lets LOWESS follow fine-scale spatial structure without smearing the transitions between methylated and unmethylated regions. <code>confidence_intervals = 0.95</code> produces uncertainty bands that naturally widen at positions with sparser CpG coverage, making low-confidence segments immediately apparent in the plot.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
@@ -140,10 +138,10 @@ Solution</h3>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">95% CI: [51.6773, 68.7372]</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md292"></a>
-ChIP-seq Signal Smoothing</h2>
-<h3><a class="anchor" id="autotoc_md293"></a>
-Application</h3>
+<h1><a class="anchor" id="autotoc_md280"></a>
+ChIP-seq Signal Smoothing</h1>
+<h2><a class="anchor" id="autotoc_md281"></a>
+Application</h2>
 <p>ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identify binding regions.</p>
 <p><code>fraction = 0.05</code> provides high spatial resolution — important for resolving narrow binding peaks that would otherwise be smeared into the background. The larger <code>iterations = 5</code> is deliberate: Poisson-distributed read counts produce tall, isolated spikes, and extra robustness iterations progressively down-weight them so the estimated background level is not inflated by a handful of extreme counts.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
@@ -177,8 +175,8 @@ Application</h3>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 59.952</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md295"></a>
-Large Genome Coverage (Streaming)</h2>
+<h1><a class="anchor" id="autotoc_md283"></a>
+Large Genome Coverage (Streaming)</h1>
 <p>For whole-genome data that doesn't fit in memory:</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
@@ -208,8 +206,8 @@ Large Genome Coverage (Streaming)</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">Smoothed 100 points</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md297"></a>
-Best Practices for Genomic Data</h2>
+<h1><a class="anchor" id="autotoc_md285"></a>
+Best Practices for Genomic Data</h1>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Consideration   </th><th class="markdownTableHeadNone">Recommendation    </th></tr>
@@ -225,8 +223,8 @@ Best Practices for Genomic Data</h2>
 <td class="markdownTableBodyNone"><b>Multiple chromosomes</b>   </td><td class="markdownTableBodyNone">Process separately or ensure sorted   </td></tr>
 </table>
 <hr  />
-<h2><a class="anchor" id="autotoc_md299"></a>
-See Also</h2>
+<h1><a class="anchor" id="autotoc_md287"></a>
+See Also</h1>
 <ul>
 <li><a class="el" href="index.html#md_docs_2concepts">Concepts</a> — How LOWESS works</li>
 <li><a class="el" href="md_docs_2parameters.html">Parameters</a> — All options</li>
