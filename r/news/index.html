@@ -52,6 +52,7 @@
 <div class="section level3">
 <h3 id="fixed-development-version">Fixed<a class="anchor" aria-label="anchor" href="#fixed-development-version"></a></h3>
 <ul><li>Fixed <code>docs.yml</code> triggering GitHub’s “pages build and deployment” once per docs job; per-language jobs now upload artifacts, and a single final <code>deploy</code> job pushes to <code>gh-pages</code> once per run.</li>
+<li>Fixed <code>docs.yml</code>’s reliance on GitHub’s legacy branch-based Pages deployment, which auto-triggers an unpinned, GitHub-managed “pages build and deployment” job on every <code>gh-pages</code> push (surfacing deprecation warnings, e.g. for Node.js 20, that aren’t fixable from this repo). The former <code>deploy</code> job is now <code>build</code>, which still pushes the merged <code>_site</code> to <code>gh-pages</code> as a cache for future incremental runs, but publishing now goes through <code>actions/upload-pages-artifact</code> and a new <code>deploy</code> job using the official <code>actions/deploy-pages</code>, which this repo pins directly. Requires the repository’s Pages source to be switched to “GitHub Actions” in settings.</li>
 </ul></div>
 </div>
     <div class="section level2">
