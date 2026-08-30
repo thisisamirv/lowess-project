@@ -4,7 +4,7 @@ The C++ bindings provide a modern, object-oriented wrapper around the core Rust 
 
 > **StreamingLowess** and **OnlineLowess** are documented separately: [cpp-streaming.md](api-streaming.md), [cpp-online.md](api-online.md)
 
-## When to Use
+## When to Use Batch Adapter
 
 - Dataset fits in memory
 - Need intervals, cross-validation, or diagnostics
@@ -14,7 +14,7 @@ The C++ bindings provide a modern, object-oriented wrapper around the core Rust 
 
 ## Classes
 
-### `fastlowess::Lowess`
+### fastlowess::Lowess
 
 The `Lowess` class allows configuring the LOWESS parameters once and fitting multiple datasets using those parameters.
 
@@ -92,7 +92,7 @@ See [cpp-online.md](api-online.md) for the `OnlineLowess` class.
 
 ## Options Structures
 
-### `LowessOptions`
+### LowessOptions
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -214,7 +214,7 @@ The GPU backend is optimized for large datasets (N > 100,000) and provides paral
 
 See [cpp-online.md](api-online.md) for `OnlineOutput`.
 
-### `fastlowess::LowessResult`
+### fastlowess::LowessResult
 
 A RAII wrapper around the C result struct `fastlowess_CppLowessResult`.
 
@@ -234,7 +234,7 @@ A RAII wrapper around the C result struct `fastlowess_CppLowessResult`.
 | `cv_scores()` | `std::vector<double>` | CV score per tested fraction (empty if CV not run) |
 | `diagnostics()` | `Diagnostics` | Fit metrics — check `diagnostics().has_value()` before use (if `return_diagnostics`) |
 
-### `fastlowess::Diagnostics`
+### fastlowess::Diagnostics
 
 All accessors are const methods (not public fields):
 

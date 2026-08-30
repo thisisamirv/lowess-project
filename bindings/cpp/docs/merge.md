@@ -147,9 +147,9 @@ y[0]: 17.6391
 
 Assigns each overlap point a weight proportional to its proximity to the centre of its respective chunk: points near the left-chunk centre get higher left weight; points near the right-chunk centre get higher right weight. This produces the smoothest transition across chunk boundaries.
 
-$$\hat{y} = \frac{w_L \hat{y}_L + w_R \hat{y}_R}{w_L + w_R}$$
+\f[\hat{y} = \frac{w_L \hat{y}_L + w_R \hat{y}_R}{w_L + w_R}\f]
 
-where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
+where \f$w_L\f$ and \f$w_R\f$ are linear distance weights from the chunk centres.
 
 **Use when**: Minimising boundary artefacts is more important than speed; moderate overlap (10–20 % of chunk size).
 
@@ -196,5 +196,4 @@ y[0]: 17.6391
 | Post-processing, right context better | `"take_last"` |
 | Minimising boundary artefacts | `"weighted_average"` |
 
-!!! tip "Overlap size matters"
-    A larger overlap gives the merge strategy more room to blend, reducing boundary artefacts regardless of the strategy chosen. A good starting point is 10 % of `chunk_size`.
+> **Overlap size matters:** A larger overlap gives the merge strategy more room to blend, reducing boundary artefacts regardless of the strategy chosen. A good starting point is 10 % of `chunk_size`.

@@ -8,16 +8,15 @@ Standard LOWESS assigns equal prior trust to all observations. Custom weights
 let you override this assumption point by point — before any distance or
 robustness weighting is applied.
 
-The effective weight of observation $j$ in a local fit centred at $x_i$ is:
+The effective weight of observation \f$j\f$ in a local fit centred at \f$x_i\f$ is:
 
-$$w_{ij} = \text{custom\_weights}[j] \times K\!\left(\frac{d_{ij}}{h_i}\right) \times r_j$$
+\f[w_{ij} = \text{custom\_weights}[j] \times K\!\left(\frac{d_{ij}}{h_i}\right) \times r_j\f]
 
-where $K$ is the distance kernel, $h_i$ is the local bandwidth, and $r_j$ is
+where \f$K\f$ is the distance kernel, \f$h_i\f$ is the local bandwidth, and \f$r_j\f$ is
 the robustness weight from the current iteration.
 
-!!! note "Batch adapter only"
-    `custom_weights` applies in **Batch** mode. It is silently ignored in
-    Streaming and Online adapters.
+> **Batch adapter only:** `custom_weights` applies in **Batch** mode. It is silently ignored in
+> Streaming and Online adapters.
 
 ---
 
@@ -29,7 +28,7 @@ the robustness weight from the current iteration.
 | Unreliable sensor / low precision | `0.1 – 0.5` |
 | Standard observation | `1.0` (default) |
 | Carefully calibrated measurement | `> 1.0` |
-| Measurement uncertainty $\sigma_i$ | $1 / \sigma_i^2$ |
+| Measurement uncertainty \f$\sigma_i\f$ | \f$1 / \sigma_i^2\f$ |
 
 ### Custom Weights vs. Robustness Iterations
 
@@ -129,8 +128,8 @@ y[0]: 0.323742
 
 ### Propagate Measurement Uncertainty
 
-If each observation has a known standard deviation $\sigma_i$, set
-$w_i = 1 / \sigma_i^2$ to give the fit information-theoretically optimal
+If each observation has a known standard deviation \f$\sigma_i\f$, set
+\f$w_i = 1 / \sigma_i^2\f$ to give the fit information-theoretically optimal
 weighting.
 
 ```cpp
@@ -215,10 +214,9 @@ y[0]: 0.302856
 | All-zero weight vector | Error: no points remain for any local fit |
 | Uniform weights (`1.0` everywhere) | Identical result to omitting weights |
 
-!!! warning "Zero-weight windows"
-    If a local neighbourhood contains only zero-weight points, the fit at
-    that centre point falls back to the behaviour specified by
-    `zero_weight_fallback` (default: `"use_local_mean"`).
+> **Zero-weight windows:** If a local neighbourhood contains only zero-weight points, the fit at
+> that centre point falls back to the behaviour specified by
+> `zero_weight_fallback` (default: `"use_local_mean"`).
 
 ---
 

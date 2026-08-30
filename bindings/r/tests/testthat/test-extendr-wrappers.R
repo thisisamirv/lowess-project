@@ -1,6 +1,7 @@
 RLowess <- getFromNamespace("RLowess", "rfastlowess")
 RStreamingLowess <- getFromNamespace("RStreamingLowess", "rfastlowess")
 ROnlineLowess <- getFromNamespace("ROnlineLowess", "rfastlowess")
+Nullable <- getFromNamespace("Nullable", "rfastlowess")
 
 test_that("RLowess generated accessors dispatch fit methods", {
     null_value <- Nullable(NULL)

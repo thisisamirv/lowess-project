@@ -42,8 +42,7 @@ The `fraction` (also called bandwidth or span) is the most important parameter. 
 | **0.5–0.7** | Heavy smoothing | Noisy data, trend extraction |
 | **0.7–1.0** | Very smooth | Strong noise, global trends |
 
-!!! tip "Rule of Thumb"
-    Start with `fraction=0.67` (the default) and adjust based on visual inspection. Use cross-validation for automated selection.
+> **Rule of Thumb:** Start with `fraction=0.67` (the default) and adjust based on visual inspection. Use cross-validation for automated selection.
 
 ---
 

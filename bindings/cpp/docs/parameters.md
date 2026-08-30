@@ -30,8 +30,7 @@ Complete reference for all LOWESS configuration options.
 | **min_points** | 2 | [2, window] | Min before output | Online |
 | **update_mode** | `"incremental"` | 2 options | Update strategy | Online |
 
-!!! note "Rust option values"
-    In Rust, pass option-like parameters as strings (case-insensitive), e.g. `"tricube"`, `"bisquare"`, `"extend"`, `"average"`.
+> **Rust option values:** In Rust, pass option-like parameters as strings (case-insensitive), e.g. `"tricube"`, `"bisquare"`, `"extend"`, `"average"`.
 
 ---
 
@@ -412,8 +411,7 @@ y[0]: 0.382602
 Per-observation weights applied before distance and robustness weighting. Only
 available in the **Batch** adapter.
 
-!!! note "Batch only"
-    `custom_weights` is silently ignored in Streaming and Online adapters.
+> **Batch only:** `custom_weights` is silently ignored in Streaming and Online adapters.
 
 See [Custom Weights](custom-weights.md) for a full discussion.
 

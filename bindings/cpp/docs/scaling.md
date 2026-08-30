@@ -6,11 +6,11 @@ Residual scale estimation during robustness iterations.
 
 When `iterations > 0`, LOWESS computes robustness weights by comparing each residual to the current residual scale estimate. The `scaling_method` parameter controls how that scale is measured.
 
-The robustness weight for point $i$ is:
+The robustness weight for point \f$i\f$ is:
 
-$$w_i = B\!\left(\frac{|r_i|}{6 \cdot \hat{\sigma}}\right)$$
+\f[w_i = B\!\left(\frac{|r_i|}{6 \cdot \hat{\sigma}}\right)\f]
 
-where $B$ is the bisquare function and $\hat{\sigma}$ is the scale estimate. A larger $\hat{\sigma}$ makes the algorithm more tolerant of large residuals; a smaller one makes it more aggressive.
+where \f$B\f$ is the bisquare function and \f$\hat{\sigma}\f$ is the scale estimate. A larger \f$\hat{\sigma}\f$ makes the algorithm more tolerant of large residuals; a smaller one makes it more aggressive.
 
 | Method | Formula | Robustness | Speed |
 | --- | --- | --- | --- |
@@ -24,7 +24,7 @@ where $B$ is the bisquare function and $\hat{\sigma}$ is the scale estimate. A l
 
 ## MAD — Median Absolute Deviation (Default)
 
-$$\hat{\sigma} = \text{median}(|r_i - \text{median}(r_i)|)$$
+\f[\hat{\sigma} = \text{median}(|r_i - \text{median}(r_i)|)\f]
 
 First centers residuals at their median, then takes the median of the absolute deviations. Double use of the median makes it highly resistant to extreme outliers. This is the standard choice for robust regression.
 
@@ -60,7 +60,7 @@ y[0]: 0.382608
 
 ## MAR — Median Absolute Residual
 
-$$\hat{\sigma} = \text{median}(|r_i|)$$
+\f[\hat{\sigma} = \text{median}(|r_i|)\f]
 
 Uses the uncentered median — unlike MAD it does not subtract the residual median first. Still robust (median-based) but slightly less resistant than MAD when residuals are systematically shifted. Faster than MAD in practice because it requires only one partial sort.
 
@@ -96,9 +96,9 @@ y[0]: 0.382608
 
 ## Mean — Mean Absolute Residual
 
-$$\hat{\sigma} = \frac{1}{n}\sum_i |r_i|$$
+\f[\hat{\sigma} = \frac{1}{n}\sum_i |r_i|\f]
 
-Arithmetic mean of absolute residuals. Non-robust: a single extreme outlier inflates $\hat{\sigma}$, causing the algorithm to under-downweight it. Fastest to compute (no sort required). Useful when data are believed to be clean and speed is a priority.
+Arithmetic mean of absolute residuals. Non-robust: a single extreme outlier inflates \f$\hat{\sigma}\f$, causing the algorithm to under-downweight it. Fastest to compute (no sort required). Useful when data are believed to be clean and speed is a priority.
 
 **Use when**: Clean data with no outliers; maximum computation speed required.
 

@@ -6,6 +6,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+**docs:**
+
+- Merged the separate "Installation" and "Documentation" sections in every crate/binding README into a single "Installation & Documentation" section, and replaced GitHub-only `[!NOTE]`/`[!TIP]`/`[!IMPORTANT]` alert syntax (which rendered as literal text on pkgdown/Doxygen/Documenter) with plain blockquotes in every crate/binding README (the top-level repository README keeps GitHub alert syntax, since it's only ever viewed on GitHub).
+- Removed the redundant "API Reference" section from the R binding README now that pkgdown publishes a dedicated Reference page.
+- Shortened the "GPU Backend" README section in every crate/binding to a minimal blurb linking to the GPU Backend page in the docs, instead of repeating the full explanation in each README.
+- Added a "Read more about how LOWESS works" link to the Concepts page right after the LOESS vs. LOWESS comparison table, in every crate/binding README (excluding the top-level repository README).
+
+**R:**
+
+- Removed the `rfastlowess-package` topic from the pkgdown reference index: its "Main Classes" summary duplicated the `Lowess`/`StreamingLowess`/`OnlineLowess` entries listed right next to it, and roxygen2's auto-generated `rfastlowess`/`rfastlowess-package` aliases showed up as a confusing double entry. The topic is now tagged `@keywords internal` so `?rfastlowess`/`?rfastlowess-package` still work without appearing in the index.
+- Unexported the internal `Nullable()` helper (dropped `@export`, its `NAMESPACE` entry, and its `man`/pkgdown Reference page); it was never meant to be called by users. Tests now access it via `getFromNamespace()`, matching the existing `coerce_nullable` convention.
+
+### Fixed
+
+**C++:**
+
+- Fixed the Doxygen site homepage showing `docs/concepts.md` instead of `README.md`. `Doxyfile` now includes `README.md` in `INPUT` and sets it as `USE_MDFILE_AS_MAINPAGE`.
+- Fixed Doxygen rendering the "View the full documentation" blockquote as raw `<a>` tag text instead of a styled link, by dropping the markdown heading (`###`) nested inside the blockquote.
+- Fixed Doxygen rendering headings that mixed a heading level with an inline code span (e.g. `` ### `fastlowess::Lowess` ``) as literal `<tt>...</tt>` tag text in `api.md`, `api-streaming.md`, and `api-online.md`; the backticks were dropped from those headings.
+- Fixed Doxygen rendering MkDocs-only `!!! note/warning/tip "title"` admonitions as literal `!!! ...` text across the cpp docs; converted every occurrence to a plain `> **Title:** ...` blockquote.
+- Fixed Doxygen rendering inline/display LaTeX math (`$...$`/`$$...$$`) as literal text across the cpp docs; converted every occurrence to Doxygen's `\f$...\f$`/`\f[...\f]` syntax.
+
+**Julia:**
+
+- Fixed the Documenter site homepage being a separately maintained `docs/src/index.md` instead of the top-level `README.md`. `make.jl` now regenerates `index.md` from `README.md` before every build, and the stale static copy was removed.
+
+**Node.js:**
+
+- Fixed the docs homepage's "Get Started" button jumping straight to the Installation page without ever showing the README content. `README.md` is now embedded on the Starlight homepage below the hero via a new `dev/add-readme-to-docs.js` script, wired into both `npm run docs` and `make nodejs-dev`.
+
+**WASM:**
+
+- Same fix as Node.js: `README.md` is now embedded on the Starlight homepage via `dev/add-readme-to-docs.js`, wired into `npm run docs` and `make wasm-dev`.
+
 ## 3.1.0
 
 ### Added

@@ -23,7 +23,7 @@ The `lowess-project` also offers bindings for Rust, Python, R, Julia, Node.js, W
 
 > Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the [Installation Guide](https://thisisamirv.github.io/lowess-project/cpp/md_docs_2installation.html) for detailed installation instructions.
 >
-> ### 📚 [View the full documentation](https://thisisamirv.github.io/lowess-project/cpp/)
+> 📚 [View the full documentation](https://thisisamirv.github.io/lowess-project/cpp/)
 
 ### GPU Backend
 
@@ -40,7 +40,8 @@ GPU acceleration (`wgpu`: Vulkan/Metal/DX12) is also supported for high-throughp
 | **Flexibility** | High (Distance metrics) | Standard |
 | **Complexity** | Higher (Matrix inversion) | Lower (Weighted average/slope) |
 
-> [!TIP]
+Read more about how LOWESS works in the [Concepts](https://thisisamirv.github.io/lowess-project/cpp/md_docs_2concepts.html).
+
 > **Note:** For a **LOESS** implementation, use [`loess-project`](https://github.com/thisisamirv/loess-project).
 
 ---

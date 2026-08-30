@@ -31,4 +31,5 @@
 #' @useDynLib rfastlowess, .registration = TRUE
 #' @importFrom stats smooth
 #' @importFrom stats setNames
+#' @keywords internal
 "_PACKAGE"

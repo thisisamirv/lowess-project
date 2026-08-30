@@ -5,7 +5,7 @@ The WebAssembly bindings provide a high-performance interface to the core Rust l
 
 > **StreamingLowess** and **OnlineLowess** are documented separately: [wasm-streaming.md](api-streaming.md), [wasm-online.md](api-online.md)
 
-## When to Use
+## When to Use Batch Adapter
 
 - Dataset fits in memory
 - Need intervals, cross-validation, or diagnostics

@@ -6,8 +6,7 @@ Confidence and prediction intervals for uncertainty quantification.
 
 ![Confidence and Prediction Intervals](intervals_comparison.svg)
 
-!!! note "Adapter support"
-    Confidence and prediction intervals are available in **Batch** mode only. Streaming and Online modes do not support intervals.
+> **Adapter support:** Confidence and prediction intervals are available in **Batch** mode only. Streaming and Online modes do not support intervals.
 
 | Type | Represents | Width | Use |
 | --- | --- | --- | --- |
@@ -191,8 +190,7 @@ int main() {
 
 ## Availability
 
-!!! warning "Batch Mode Only"
-    Confidence and prediction intervals are only available in **Batch** mode. Streaming and Online modes do not support intervals.
+> **Batch Mode Only:** Confidence and prediction intervals are only available in **Batch** mode. Streaming and Online modes do not support intervals.
 
 | Feature | Batch | Streaming | Online |
 | --- | --- | --- | --- |

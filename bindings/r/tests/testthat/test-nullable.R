@@ -1,4 +1,6 @@
 #' @srrstats {G2.13, G2.14} Nullable handles NULL/non-NULL optional values.
+Nullable <- getFromNamespace("Nullable", "rfastlowess")
+
 test_that("Nullable returns NULL for NULL input", {
     expect_null(Nullable(NULL))
 })

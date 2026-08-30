@@ -157,8 +157,7 @@ For large datasets that arrive in batches or files.
 
 `chunk_size` controls how many data points are processed in one pass; matching it to your file-read buffer or message-batch size avoids unnecessary copying. `overlap` retains that many points from the previous chunk as context so the neighbourhood at chunk boundaries is not artificially truncated. `merge_strategy = "weighted_average"` blends the overlapping region smoothly; use `"last"` if chunk boundaries are guaranteed to be well separated and no blending is needed.
 
-!!! warning "Always call finalize()"
-    The streaming adapter buffers overlap data. Call `finalize()` after the last chunk to retrieve the buffered tail.
+> **Always call finalize():** The streaming adapter buffers overlap data. Call `finalize()` after the last chunk to retrieve the buffered tail.
 
 ### Log File Processing
 

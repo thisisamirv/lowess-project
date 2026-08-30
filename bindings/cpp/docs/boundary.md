@@ -125,8 +125,7 @@ Applies no padding. Each local fit uses only the points that are actually availa
 
 **Use when**: Reproducing reference results; you prefer the raw LOWESS boundary behaviour.
 
-!!! note
-    Without padding, boundary fits can have higher variance and visible edge artefacts, particularly with small `fraction` values.
+> **Note:** Without padding, boundary fits can have higher variance and visible edge artefacts, particularly with small `fraction` values.
 
 ```cpp
 #include <fastlowess.hpp>

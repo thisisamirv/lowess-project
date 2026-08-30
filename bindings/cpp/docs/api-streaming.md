@@ -10,7 +10,7 @@ See also: [fastLowess](api.md)
 
 ## Class
 
-### `fastlowess::StreamingLowess`
+### fastlowess::StreamingLowess
 
 The `StreamingLowess` class processes data in chunks, suitable for very large datasets or streaming applications.
 
@@ -121,7 +121,7 @@ int main() {
 
 ## Result Structure
 
-### `fastlowess::LowessResult`
+### fastlowess::LowessResult
 
 Returned (inside `Expected`) by `process_chunk()` and `finalize()`.
 
@@ -140,7 +140,7 @@ See [cpp.md](api.md) for the full `LowessResult` field reference.
 
 ## Options Structure
 
-### `StreamingOptions` (inherits `LowessOptions`)
+### StreamingOptions (inherits LowessOptions)
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -165,5 +165,4 @@ See [cpp.md](api.md) for the full `LowessResult` field reference.
 
 ---
 
-!!! warning "Always call finalize()"
-    The streaming adapter buffers overlap data. Call `finalize()` after the last chunk to retrieve the buffered tail.
+> **Always call finalize():** The streaming adapter buffers overlap data. Call `finalize()` after the last chunk to retrieve the buffered tail.

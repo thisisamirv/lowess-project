@@ -30,7 +30,7 @@ Weight functions (kernels) determine how neighboring points contribute to each l
 
 Cleveland's original choice. Best all-around performance.
 
-$$w(u) = (1 - |u|^3)^3$$
+\f[w(u) = (1 - |u|^3)^3\f]
 
 **Use when**: Default choice for most applications.
 
@@ -66,7 +66,7 @@ y[0]: 0.382608
 
 Theoretically optimal for kernel density estimation.
 
-$$w(u) = \frac{3}{4}(1 - u^2)$$
+\f[w(u) = \frac{3}{4}(1 - u^2)\f]
 
 **Use when**: Optimal MSE properties desired.
 
@@ -102,7 +102,7 @@ y[0]: 0.406728
 
 Infinitely smooth. No boundary effects.
 
-$$w(u) = \exp(-u^2/2)$$
+\f[w(u) = \exp(-u^2/2)\f]
 
 **Use when**: Maximum smoothness needed, computational cost acceptable.
 
@@ -138,7 +138,7 @@ y[0]: 0.435767
 
 Good balance of efficiency and smoothness.
 
-$$w(u) = (1 - u^2)^2$$
+\f[w(u) = (1 - u^2)^2\f]
 
 **Use when**: Alternative to Tricube with slightly different properties.
 
@@ -174,7 +174,7 @@ y[0]: 0.375903
 
 Smooth and computationally efficient.
 
-$$w(u) = \cos(\pi u / 2)$$
+\f[w(u) = \cos(\pi u / 2)\f]
 
 **Use when**: Want smooth kernel with simple form.
 
@@ -210,7 +210,7 @@ y[0]: 0.40083
 
 Simple linear taper.
 
-$$w(u) = 1 - |u|$$
+\f[w(u) = 1 - |u|\f]
 
 **Use when**: Simple, interpretable weights.
 
@@ -246,7 +246,7 @@ y[0]: 0.381657
 
 Equal weights within window. Fastest but least smooth.
 
-$$w(u) = 1$$
+\f[w(u) = 1\f]
 
 **Use when**: Speed is critical, smoothness less important.
 
@@ -293,5 +293,4 @@ flowchart TD
     H -- No --> J[Biweight]
 ```
 
-!!! tip "Recommendation"
-    Stick with **Tricube** (default) unless you have specific requirements. The differences between kernels are usually small in practice.
+> **Recommendation:** Stick with **Tricube** (default) unless you have specific requirements. The differences between kernels are usually small in practice.
