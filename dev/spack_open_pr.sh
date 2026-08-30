@@ -20,16 +20,14 @@ LOCAL_PACKAGE_FILE_ABS="$(pwd)/${LOCAL_PACKAGE_FILE}"
 FORK_OWNER="$(gh api user --jq .login)"
 
 WORKDIR="$(mktemp -d)"
-trap 'rm -rf "$WORKDIR"' EXIT
+trap 'rm -rf "$WORKDIR" 2>/dev/null || true' EXIT
 cd "$WORKDIR"
 
 # gh forks (idempotent if already forked) and waits for the fork to be
 # ready before cloning, avoiding a race with a freshly-created fork.
-# (--remote is unsupported when an explicit repository argument is given,
-# so "upstream" is added manually below.)
+# Cloning a fork automatically configures "upstream" -> spack/spack-packages.
 gh repo fork "$UPSTREAM_REPO" --clone=true
 cd spack-packages
-git remote add upstream "https://github.com/${UPSTREAM_REPO}.git"
 
 git fetch upstream develop
 git checkout -B "$BRANCH" upstream/develop
