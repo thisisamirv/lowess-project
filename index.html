@@ -166,26 +166,12 @@ href="https://github.com/thisisamirv/lowess-project/releases/latest"><code>C++ b
 </ul>
 </blockquote>
 <hr />
-<h2 id="installation">Installation</h2>
+<h2 id="installation--documentation">Installation &amp;
+Documentation</h2>
 <blockquote>
-<p>[!NOTE]</p>
 <p>Currently available for R, Python, Rust, Julia, Node.js, WebAssembly,
-and C++. See the documentation for your binding/crate (linked in the
-Documentation section above) for installation instructions.</p>
-</blockquote>
-<h3 id="gpu-backend">GPU Backend</h3>
-<p>In addition to <code>parallel = true</code> (multi-core CPU), the
-batch <code>Lowess</code> class in every binding — except WebAssembly —
-as well as the <code>fastLowess</code> Rust crate itself, can run on the
-GPU via <code>wgpu</code> (Vulkan/Metal/DX12). It's opt-in and worth
-enabling for high-throughput processing of large datasets (roughly 10k+
-points); for smaller inputs the CPU backend is typically faster.
-<code>StreamingLowess</code>/<code>OnlineLowess</code> remain CPU-only.
-See the documentation for your binding/crate for GPU backend
-installation and usage.</p>
-<h2 id="documentation">Documentation</h2>
-<blockquote>
-<p>[!NOTE]</p>
+and C++. See the documentation for your binding/crate below for
+installation instructions.</p>
 <table>
 <thead>
 <tr class="header">
@@ -236,6 +222,10 @@ href="https://thisisamirv.github.io/lowess-project/cpp/">thisisamirv.github.io/l
 </table>
 </blockquote>
 <hr />
+<h2 id="gpu-backend">GPU Backend</h2>
+<p>GPU acceleration (<code>wgpu</code>: Vulkan/Metal/DX12) is also
+supported for high-throughput batch smoothing. See the GPU Backend page
+in the documentation for your binding/crate for details.</p>
 <h2 id="loess-vs-lowess">LOESS vs. LOWESS</h2>
 <table>
 <thead>
