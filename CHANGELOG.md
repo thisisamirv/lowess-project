@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **C++:**
 
 - Restructured the Doxygen site's navigation, which previously listed all ~20 doc pages flat in the sidebar. Added explicit `\page` IDs to every page and grouped them into five nested hub pages (`Getting Started`, `User Guide`, `Customization`, `Advanced`, `Use Cases`) via `\subpage`, mirroring the category grouping already used by the R (`_pkgdown.yml`) and Node.js/WASM (Starlight sidebar) docs sites. `StreamingLowess`/`OnlineLowess` now nest under `API` the same way. `Benchmarks` and `News` remain standalone top-level pages. Updated `README.md`'s hardcoded Doxygen URLs (`md_docs_2*.html`) to the new explicit page names.
+- Added a Spack recipe (`bindings/cpp/spack/package.py`, a `CargoPackage` with custom `build()`/`install()` phases since `fastlowess-cpp` builds a cdylib rather than a `cargo install`-able binary). `release-cpp.yml` now updates the recipe's `version()`/`sha256` on every release and opens a PR to `spack/spack-packages` (via `dev/spack_release.py` and `dev/spack_open_pr.sh`), so `fastlowess-cpp` stays installable via `spack install fastlowess-cpp`.
 
 **R:**
 

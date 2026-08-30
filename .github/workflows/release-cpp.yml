@@ -73,3 +73,30 @@ jobs:
         with:
           tag_name: ${{ github.event.release.tag_name || github.event.inputs.tag }}
           files: bindings/cpp/include/fastlowess.hpp
+
+  spack-release:
+    name: Update Spack recipe
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Update package.py with new version + sha256
+        run: |
+          python dev/spack_release.py \
+            --repo thisisamirv/lowess-project \
+            --tag "${{ github.event.release.tag_name || github.event.inputs.tag }}" \
+            --package-file bindings/cpp/spack/package.py
+
+      - name: Commit updated recipe
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add bindings/cpp/spack/package.py
+          git commit -m "cpp: update Spack recipe for ${{ github.event.release.tag_name || github.event.inputs.tag }}" || echo "No changes to commit"
+          git push
+
+      - name: Open PR to spack/spack-packages
+        env:
+          GH_TOKEN: ${{ secrets.SPACK_PACKAGES_PAT }}
+        run: |
+          bash dev/spack_open_pr.sh fastlowess-cpp bindings/cpp/spack/package.py "${{ github.event.release.tag_name || github.event.inputs.tag }}"
