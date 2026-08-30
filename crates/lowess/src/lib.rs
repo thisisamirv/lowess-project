@@ -40,6 +40,8 @@
 //!   - [Genomics](doc::use_cases::genomics)
 //!   - [Time Series](doc::use_cases::time_series)
 //!   - [Real-Time](doc::use_cases::real_time)
+//! - **News**
+//!   - [Release Notes](doc::news)
 //!
 //! ## Quick Start
 //!

@@ -73,6 +73,7 @@ dev:
 	@$(NODE) dev/add-nodejs-outputs.js $(NODE_DIR)
 	@$(NODE) dev/add-readme-to-docs.js $(NODE_DIR)
 	@$(PYTHON) dev/verify_snippets.py --lang nodejs --timeout 120
+	@$(PYTHON) dev/update_changelogs.py
 	@echo "$(NODE_PKG) checks completed successfully!"
 
 clean:

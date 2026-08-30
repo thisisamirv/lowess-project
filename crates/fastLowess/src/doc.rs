@@ -117,3 +117,9 @@ pub mod api {
         #![doc = include_str!("../docs/api-online.md")]
     }
 }
+
+/// Release notes and changelog for this crate.
+#[cfg(doc)]
+pub mod news {
+    #![doc = include_str!("../docs/news.md")]
+}

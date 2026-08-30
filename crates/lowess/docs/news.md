@@ -1,0 +1,220 @@
+<!-- markdownlint-disable MD024 MD025 -->
+# lowess (development version)
+
+## Fixed
+
+* Fixed inline/display LaTeX math (`$...$`/`$$...$$`) rendering as literal text on docs.rs for `fastLowess` and `lowess`; added a `katex-header.html` (loaded via `--html-in-header` in `[package.metadata.docs.rs]`) that renders it client-side with KaTeX.
+
+# lowess 3.1.0
+
+## Changed
+
+* Moved crate documentation from ReadTheDocs to <https://docs.rs/lowess>.
+* `make lowess` (`default:`) now only runs `cargo build`. The full dev workflow moves to `make lowess-dev`.
+
+# lowess 3.0.0
+
+## Changed
+
+* Renamed `OnlineOutput`'s `smoothed` and `std_error` fields to `y` and `standard_error`, matching `LowessResult`. This is a **breaking change**.
+* Updated `wide` to v1.6.
+
+# lowess 2.0.0
+
+## Added
+
+* Added `iterations_used: Option<usize>` field to `OnlineOutput<T>`, reporting the number of robustness iterations performed when `UpdateMode::Full` is active. Returns `Some(0)` for the degenerate two-point linear fit and `None` when `UpdateMode::Incremental` is used.
+* Added `ParseErrors(Vec<LowessError>)` variant to `LowessError`, which collects all string-parse failures that accumulate in the builder and reports them together when `build()` is called.
+* Added `"take_first"` and `"take_last"` as accepted string aliases for `MergeStrategy::TakeFirst` and `MergeStrategy::TakeLast`.
+* Added `"resmooth"` as an accepted string alias for `UpdateMode::Full` and `"single"` as an alias for `UpdateMode::Incremental`, aligning string-parse behaviour with the `loess-rs` crate.
+* Added `custom_weights(Vec<T>)` builder method on `LowessBuilder` (Batch adapter only). Accepts a vector of non-negative per-observation weights that are multiplied into the distance and robustness weights before each local regression, allowing known-bad points to be suppressed (`0.0`) or high-quality measurements to be emphasised.
+* Centralized all `impl FromStr` blocks for the seven option enums (`WeightFunction`, `BoundaryPolicy`, `ScalingMethod`, `RobustnessMethod`, `ZeroWeightFallback`, `MergeStrategy`, `UpdateMode`) directly in `api.rs`, consolidating previously scattered implementations into a single source of truth. Parse and canonical-name helpers are exposed via `lowess::internals::alias` (requires `dev` feature), allowing `fastLowess::binding_support` to delegate all string-to-enum parsing through that path.
+* Added module-level `defaults.rs` files within each sub-module (`math/`, `algorithms/`, `adapters/`) to centralize default values close to the types they govern, propagating them from a single source of truth to ensure consistency across bindings and crates.
+
+## Changed
+
+* Added `Lowess<T>`, `StreamingLowess<T>`, and `OnlineLowess<T>` type aliases as the primary user-facing constructors (e.g. `StreamingLowess::new().chunk_size(50).build()`). Mode-specific builder methods (`chunk_size`, `overlap`, `window_capacity`, `min_points`, `update_mode`) are now called directly on the type alias rather than after `.adapter()`.
+* Made `BatchLowessBuilder`, `StreamingLowessBuilder`, and `OnlineLowessBuilder` internal-only: all public setter methods have been removed from these types. All smoothing configuration now flows through `LowessBuilder<T, Mode>` (exposed via the type aliases above). This is a **breaking change** for any code that called setter methods on an adapter builder directly.
+* Changed all enum-typed builder methods to accept strings instead: `weight_function`, `robustness_method`, `scaling_method`, `boundary_policy`, `zero_weight_fallback`, `merge_strategy`, and `update_mode` now take `impl IntoEnum<T>` (accepting both enum variants and strings such as `.weight_function("tricube")`) rather than requiring enum variants to be imported. This is a **breaking change** for any code passing enum variants directly.
+* Inlined the `IntoEnum<E>` trait and its macro-generated impls for all enum-typed builder parameters directly into `api.rs` (`lowess`) and `binding_support.rs` (`fastLowess`), eliminating a previously separate `parse` module. This allows builder methods to accept either a typed enum value (e.g. `.weight_function(WeightFunction::Tricube)`) or a string (e.g. `.weight_function("tricube")`) interchangeably.
+* Replaced the `cross_validate(CVConfig)` builder method (which required importing `KFold` or `LOOCV` types) with a string-based cross-validation API: `.cv_method("kfold")` / `.cv_method("loocv")`, `.cv_k(n)`, `.cv_fractions(vec![...])`, and `.cv_seed(n)`. `KFold` and `LOOCV` are no longer exported from the prelude. This is a **breaking change** for any code using the old `cross_validate` API.
+* Added a `binding_support` module providing shared helpers for all language binding frontends: string-to-enum parse functions (`parse_weight_function`, `parse_robustness_method`, `parse_scaling_method`, `parse_boundary_policy`, `parse_zero_weight_fallback`, `parse_merge_strategy`, `parse_update_mode`), matching canonical-string display functions, `BuilderOptionSet` / `TypedBuilderOptionSet` structs, and `apply_builder_options` / `apply_typed_builder_options` / `apply_cross_validation` helpers. This consolidates previously duplicated logic that was scattered across every binding into a single source of truth.
+* Renamed the internal `auto_convergence` struct field to `auto_converge` on `BatchLowessBuilder`, `OnlineLowessBuilder`, `StreamingLowessBuilder`, and the executor config types, making the field name consistent with the existing `auto_converge()` setter method. This is a **breaking change** for any code that accessed these fields directly.
+* Changed `build()` to wrap all accumulated string-parse errors in a `LowessError::ParseErrors(Vec<LowessError>)` value instead of surfacing only the first error. This is a **breaking change** for code that matched on `LowessError::InvalidOption` as the error returned from `build()`.
+* Made the `IntoEnum<E>` trait `pub(crate)` in both `lowess` and `fastLowess`, restricting it to crate-internal use. Callers do not need to name this trait; builder methods continue to accept both enum variants and string literals unchanged.
+* Updated `wide` dependency to v1.5, `wgpu` to v30.0, and `pollster` to v1.0.
+
+# lowess 1.3.0
+
+## Added
+
+* Upgraded `wide` to version 1.4.
+
+## Changed
+
+* Updated MSRV to 1.89 to access the significant improvements made in `wide` since version 0.7.
+
+# lowess 1.2.0
+
+## Fixed
+
+* Fixed documentation.
+* Fixed SRR tags.
+
+# lowess 1.1.1
+
+## Added
+
+* Added srr tags
+
+# lowess 1.1.0
+
+## Added
+
+* Added `Mean` scaling method (Mean Absolute Deviation)
+* Added hooks for custom fitting backends
+* Added hooks for delegating boundary handling to the executor
+
+## Fixed
+
+* `FitPassFn` now returns `Result` to allow error propagation from custom fitting backends (e.g. GPU).
+* Adapters (Batch, Streaming, Online) now propagate errors from the executor instead of assuming success.
+* Fixed a bug where the `Extend` boundary policy was never applied.
+* Implemented Coordinate Centering to preserve precision during accumulation.
+
+# lowess 1.0.0
+
+## Changed
+
+* Refactored the constants to make the library robust safely against custom numeric types.
+* Minor improvements to the documentation.
+
+# lowess 0.99.5
+
+## Fixed
+
+* Fixed `StreamingAdapter` indexing bug that caused merged overlap points to be skipped in output
+* Simplified `StreamingAdapter` API: user now provides contiguous, non-overlapping chunks while the adapter handles internal buffering and merging
+* Standardized `OnlineLowess` default `min_points` to 2 (enabling smoothing after just one point)
+* Sanitized residual output to avoid "negative zero" (`-0.0000`) display for near-zero values
+
+# lowess 0.7.0
+
+## Added
+
+* `NoBoundary` variant to `BoundaryPolicy` enum (original Cleveland behavior)
+* `ScalingMethod` enum with `MAR` and `MAD` variants for configurable robust scale estimation
+* SIMD-optimized weighted least squares accumulation for `f64` and `f32`
+* `WLSSolver` trait for type-specific SIMD dispatch
+* `CVBuffer` struct for pre-allocated cross-validation scratch buffers
+* `VecExt` trait for efficient vector reuse
+* Persistent scratch buffers to `OnlineBuffer` and `StreamingBuffer`
+
+## Changed
+
+* Changed license from AGPL-3.0-or-later to dual MIT OR Apache-2.0
+* Refactored partition-related types
+* Replaced `RangeInclusive` iterations with `while` loops for improved performance
+* Optimized `compute_window_weights` and `median_inplace`
+* Added boundary thresholds for numerical stability
+* Unified scale estimation logic under `ScalingMethod`
+* Refactored `LowessExecutor` to accept optional external buffers
+* Optimized K-Fold Cross-Validation performance
+
+# lowess 0.6.0
+
+## Added
+
+* `cv_seed` field to `CVConfig` for reproducible K-Fold cross-validation
+* `Backend` enum (`CPU`, `GPU`) as placeholder for GPU acceleration
+* Development-only fields: `custom_fit_pass`, `custom_cv_pass`, `custom_interval_pass`, `backend`, `parallel`
+* `from_config` and `to_config` methods to `LowessExecutor`
+
+## Changed
+
+* Refactored `cross_validate` API to use `CVConfig` struct
+* Refactored `Window::recenter` to be bidirectional
+* Updated `prelude` to export enum variants directly
+* Reorganized `src/engine/executor.rs` into unified logical flow
+* Hidden internal-only fields from public documentation
+
+## Fixed
+
+* Various broken documentation links
+* `WeightParams` struct to remove unused field
+* Bug in `Batch` and `Streaming` adapter conversion logic
+
+## Removed
+
+* Unused `GLSModel::local_wls` method
+* `CVMethod` and `CrossValidationStrategy` enums
+* Type exports from `prelude` that caused ambiguity
+* `.cargo/config.toml`
+
+# lowess 0.5.3
+
+## Changed
+
+* Consolidated validation logic into `src/engine/validator.rs`
+* Optimized sorting, window operations, MAD computation, and regression
+* Refactored robustness to use scratch buffers (allocation-free)
+* Optimized interpolation and cross-validation
+* Optimized delta interpolation with binary search
+
+# lowess 0.4.0
+
+## Changed
+
+* Transformed into core LOWESS implementation
+* Removed `rayon` and `ndarray` dependencies
+* Improved performance from 4-16× to 4-29× faster than statsmodels
+* Changed license from MIT to dual AGPL-3.0 and Commercial License
+* Reduced LOC from 3863 to 3263
+
+## Removed
+
+* Validation and comparison code
+* Benchmarking code
+* Convenience re-exports
+
+# lowess 0.3.0
+
+## Changed
+
+* Updated Rust version to 1.86.0
+* Modified features: default std mode includes ndarray/std and rayon
+* Improved documentation
+
+## Fixed
+
+* no-std build now compiles successfully
+
+# lowess 0.2.0
+
+## Changed
+
+* Restructured project to reduce intra-module dependencies
+* Renamed "quartic" kernel to "biweight"
+* Cross-validation now uses true k-fold validation
+* Online LOWESS performs O(span) incremental updates
+* Numerous performance optimizations and numerical stability improvements
+
+# lowess 0.1.0
+
+## Added
+
+* Initial LOWESS implementation based on Cleveland (1979)
+* Type-safe builder pattern API
+* Support for `f32` and `f64` types
+* Seven kernel weight functions
+* Statistical features (standard errors, confidence/prediction intervals)
+* Comprehensive diagnostics
+* Cross-validation with multiple strategies
+* Delta-based interpolation
+* Streaming and online processing variants
+* Optional `parallel` and `ndarray` features
+* Comprehensive error handling
+* Extensive documentation
+
+For the full changelog, see:
+<https://github.com/thisisamirv/lowess-project/blob/main/CHANGELOG.md>

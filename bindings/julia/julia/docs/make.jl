@@ -64,6 +64,7 @@ makedocs(
 			["use-case-genomics.md", "use-case-time-series.md", "use-case-real-time.md"],
 		"Performance" => ["benchmarks.md"],
 		"API Reference" => "api.md",
+		"News" => "NEWS.md",
 	],
 	authors = "Amir Valizadeh",
 	warnonly = true,

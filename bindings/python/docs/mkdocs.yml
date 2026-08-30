@@ -151,3 +151,4 @@ nav:
       - api/index.md
       - Python: api/python.md
   - Benchmarks: benchmarks.md
+  - News: NEWS.md

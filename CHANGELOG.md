@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a "Read more about how LOWESS works" link to the Concepts page right after the LOESS vs. LOWESS comparison table, in every crate/binding README (excluding the top-level repository README).
 - Renamed the batch adapter's "When to Use" heading to "When to Use Batch Adapter" across every binding/crate's batch API docs.
 - Vendored the [doxygen-awesome-css](https://github.com/jothepro/doxygen-awesome-css) theme (v2.4.2) for the cpp Doxygen site (`bindings/cpp/docs/doxygen-awesome-css/`), replacing the plain default Doxygen look with a modern, sidebar-only theme with automatic dark mode support.
+- Added `dev/update_changelogs.py`, which extracts the matching `**<Language>:**` entries from the root `CHANGELOG.md` for every binding/crate and regenerates a per-target `NEWS.md` in CRAN's conventional per-version format. Added a `NEWS.md`/`news.md` page to the cpp, Julia, Node.js, Python, and WASM docs sites and to the `fastLowess`/`lowess` crate docs (wired into each site's navigation and rustdoc module tree), and wired the script into every binding/crate's `Makefile` `dev` target.
 
 **R:**
 

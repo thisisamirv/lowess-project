@@ -145,6 +145,7 @@ dev:
 	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript \
 	  -e "roxygen2::roxygenise(package.dir = '.', roclets = c('namespace', 'rd', 'srr::srr_stats_roclet'))"
 	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript $(CURDIR)/dev/fix_rd_style.R $(R_DIR)/man
+	@$(PYTHON) dev/update_changelogs.py
 	@echo "=============================================================================="
 	@echo "6. Packaging..."
 	@echo "=============================================================================="
