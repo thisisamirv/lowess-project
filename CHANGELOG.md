@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed the redundant "API Reference" section from the R binding README now that pkgdown publishes a dedicated Reference page.
 - Shortened the "GPU Backend" README section in every crate/binding to a minimal blurb linking to the GPU Backend page in the docs, instead of repeating the full explanation in each README.
 - Added a "Read more about how LOWESS works" link to the Concepts page right after the LOESS vs. LOWESS comparison table, in every crate/binding README (excluding the top-level repository README).
+- Renamed the batch adapter's "When to Use" heading to "When to Use Batch Adapter" across every binding/crate's batch API docs.
+- Vendored the [doxygen-awesome-css](https://github.com/jothepro/doxygen-awesome-css) theme (v2.4.2) for the cpp Doxygen site (`bindings/cpp/docs/doxygen-awesome-css/`), replacing the plain default Doxygen look with a modern, sidebar-only theme with automatic dark mode support.
 
 **R:**
 
