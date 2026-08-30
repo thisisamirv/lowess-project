@@ -277,7 +277,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: indexmap (2.14.0)
+    Package: indexmap (2.14.1)
     Authors:
     License: Apache-2.0 OR MIT
     ----------------------------------------
@@ -729,7 +729,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: gfx-rs developers
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: wide (1.6.1)
+    Package: wide (1.7.0)
     Authors: Lokathor <zefria@gmail.com>
     License: Zlib OR Apache-2.0 OR MIT
     ----------------------------------------
