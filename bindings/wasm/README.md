@@ -18,15 +18,9 @@ The `lowess-project` also offers bindings for Rust, Python, R, Julia, Node.js, W
 
 ---
 
-## Installation
+## Installation & Documentation
 
-> [!NOTE]
->
 > Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the [Installation Guide](https://thisisamirv.github.io/lowess-project/wasm/installation/) for detailed installation instructions.
-
-## Documentation
-
-> [!NOTE]
 >
 > ### 📚 [View the full documentation](https://thisisamirv.github.io/lowess-project/wasm/)
 

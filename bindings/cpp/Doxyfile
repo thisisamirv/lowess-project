@@ -13,11 +13,11 @@ CREATE_SUBDIRS         = NO
 # Input
 
 # ---------------------------------------------------------------------------
-INPUT                  = include docs
+INPUT                  = README.md include docs
 FILE_PATTERNS          = *.hpp*.h *.md
 IMAGE_PATH             = assets/diagrams
 RECURSIVE              = NO
-USE_MDFILE_AS_MAINPAGE = docs/concepts.md
+USE_MDFILE_AS_MAINPAGE = README.md
 
 # ---------------------------------------------------------------------------
 

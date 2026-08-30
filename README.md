@@ -50,19 +50,9 @@ The fastest, most robust, and most feature-complete language-agnostic LOWESS (Lo
 
 ---
 
-## Installation
+## Installation & Documentation
 
-> [!NOTE]
->
-> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the documentation for your binding/crate (linked in the Documentation section above) for installation instructions.
-
-### GPU Backend
-
-In addition to `parallel = true` (multi-core CPU), the batch `Lowess` class in every binding — except WebAssembly — as well as the `fastLowess` Rust crate itself, can run on the GPU via `wgpu` (Vulkan/Metal/DX12). It's opt-in and worth enabling for high-throughput processing of large datasets (roughly 10k+ points); for smaller inputs the CPU backend is typically faster. `StreamingLowess`/`OnlineLowess` remain CPU-only. See the documentation for your binding/crate for GPU backend installation and usage.
-
-## Documentation
-
-> [!NOTE]
+> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the documentation for your binding/crate below for installation instructions.
 >
 > | Binding / Crate | Documentation |
 > | --- | --- |
@@ -76,6 +66,10 @@ In addition to `parallel = true` (multi-core CPU), the batch `Lowess` class in e
 > | C++ | [thisisamirv.github.io/lowess-project/cpp](https://thisisamirv.github.io/lowess-project/cpp/) |
 
 ---
+
+## GPU Backend
+
+GPU acceleration (`wgpu`: Vulkan/Metal/DX12) is also supported for high-throughput batch smoothing. See the GPU Backend page in the documentation for your binding/crate for details.
 
 ## LOESS vs. LOWESS
 
