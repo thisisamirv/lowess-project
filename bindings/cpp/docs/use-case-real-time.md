@@ -1,3 +1,5 @@
+\page use_case_real_time Real-Time Processing
+
 # Real-Time Processing
 
 Streaming and online LOWESS for live data.

@@ -46,6 +46,7 @@ TARGETS = [
         "labels": ["C++"],
         "package": "fastlowess (C++)",
         "output": "bindings/cpp/docs/NEWS.md",
+        "doxygen_page": "\\page news News",
     },
     {
         "labels": ["Julia"],
@@ -136,8 +137,11 @@ def render_news(
     package: str,
     versions: list[tuple[str, dict[str, list[str]]]],
     frontmatter_title: str | None = None,
+    doxygen_page: str | None = None,
 ) -> str:
     header = "<!-- markdownlint-disable MD024 MD025 -->"
+    if doxygen_page:
+        header = f"{doxygen_page}\n\n{header}"
     if frontmatter_title:
         header = f"---\ntitle: {frontmatter_title}\n---\n{header}"
     blocks = []
@@ -165,7 +169,12 @@ def main() -> None:
         output_path = REPO_ROOT / target["output"]
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(
-            render_news(package, versions, target.get("frontmatter_title")),
+            render_news(
+                package,
+                versions,
+                target.get("frontmatter_title"),
+                target.get("doxygen_page"),
+            ),
             encoding="utf-8",
         )
         print(

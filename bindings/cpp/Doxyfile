@@ -7,6 +7,7 @@ PROJECT_NAME           = "fastlowess-cpp"
 PROJECT_BRIEF          = "High-performance LOWESS smoothing"
 OUTPUT_DIRECTORY       = .
 CREATE_SUBDIRS         = NO
+TOC_INCLUDE_HEADINGS   = 0
 
 # ---------------------------------------------------------------------------
 

@@ -1,3 +1,5 @@
+\page benchmarks Benchmarks
+
 # Benchmarks
 
 ## CPU Benchmarks

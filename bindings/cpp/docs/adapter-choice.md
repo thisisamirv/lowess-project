@@ -1,3 +1,5 @@
+\page adapter_choice Execution Modes
+
 # Execution Modes
 
 Choose the right adapter for your use case.

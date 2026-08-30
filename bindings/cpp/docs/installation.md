@@ -1,3 +1,5 @@
+\page installation Installation
+
 # Installation
 
 Install the LOWESS library for your preferred language.

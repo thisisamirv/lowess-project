@@ -1,3 +1,5 @@
+\page quickstart Quick Start
+
 # Quick Start
 
 Get up and running with LOWESS in minutes.

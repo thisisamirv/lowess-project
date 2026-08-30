@@ -1,3 +1,5 @@
+\page use_case_genomics Genomic Data Smoothing
+
 # Genomic Data Smoothing
 
 LOWESS for methylation profiles, ChIP-seq signals, and other genomic data.

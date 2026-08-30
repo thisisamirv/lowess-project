@@ -1,3 +1,5 @@
+\page cross_validation Cross-Validation
+
 # Cross-Validation
 
 Automated parameter selection via cross-validation.

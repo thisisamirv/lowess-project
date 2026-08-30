@@ -1,3 +1,5 @@
+\page gpu_backend GPU Backend
+
 # GPU Backend
 
 Run the batch LOWESS fit on the GPU via `wgpu` (Vulkan/Metal/DX12) instead of the CPU.

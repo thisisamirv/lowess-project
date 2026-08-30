@@ -1,3 +1,5 @@
+\page kernels Weight Functions
+
 # Weight Functions
 
 Kernel functions for distance weighting.

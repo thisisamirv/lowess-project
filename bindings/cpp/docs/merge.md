@@ -1,3 +1,5 @@
+\page merge Merge Strategies
+
 # Merge Strategies
 
 How overlapping chunk boundaries are reconciled in Streaming mode.

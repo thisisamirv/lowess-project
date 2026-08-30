@@ -1,3 +1,5 @@
+\page intervals Intervals
+
 # Intervals
 
 Confidence and prediction intervals for uncertainty quantification.

@@ -21,13 +21,13 @@ The `lowess-project` also offers bindings for Rust, Python, R, Julia, Node.js, W
 
 ## Installation & Documentation
 
-> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the [Installation Guide](https://thisisamirv.github.io/lowess-project/cpp/md_docs_2installation.html) for detailed installation instructions.
+> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the [Installation Guide](https://thisisamirv.github.io/lowess-project/cpp/installation.html) for detailed installation instructions.
 >
 > 📚 [View the full documentation](https://thisisamirv.github.io/lowess-project/cpp/)
 
 ### GPU Backend
 
-GPU acceleration (`wgpu`: Vulkan/Metal/DX12) is also supported for high-throughput batch smoothing. See the [GPU Backend guide](https://thisisamirv.github.io/lowess-project/cpp/md_docs_2gpu-backend.html) for details.
+GPU acceleration (`wgpu`: Vulkan/Metal/DX12) is also supported for high-throughput batch smoothing. See the [GPU Backend guide](https://thisisamirv.github.io/lowess-project/cpp/gpu_backend.html) for details.
 
 ---
 
@@ -40,7 +40,7 @@ GPU acceleration (`wgpu`: Vulkan/Metal/DX12) is also supported for high-throughp
 | **Flexibility** | High (Distance metrics) | Standard |
 | **Complexity** | Higher (Matrix inversion) | Lower (Weighted average/slope) |
 
-Read more about how LOWESS works in the [Concepts](https://thisisamirv.github.io/lowess-project/cpp/md_docs_2concepts.html).
+Read more about how LOWESS works in the [Concepts](https://thisisamirv.github.io/lowess-project/cpp/concepts.html).
 
 > **Note:** For a **LOESS** implementation, use [`loess-project`](https://github.com/thisisamirv/loess-project).
 
@@ -52,7 +52,7 @@ Read more about how LOWESS works in the [Concepts](https://thisisamirv.github.io
 
 The `lowess` project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution. It is on average **200-327x faster** than Python's `statsmodels.lowess` and **2-3x faster** than R's `lowess`.
 
-For more details on the performance comparison, see the [Benchmarks](https://thisisamirv.github.io/lowess-project/cpp/md_docs_2benchmarks.html) page.
+For more details on the performance comparison, see the [Benchmarks](https://thisisamirv.github.io/lowess-project/cpp/benchmarks.html) page.
 
 ### Robustness
 

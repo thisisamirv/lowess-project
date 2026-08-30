@@ -1,3 +1,5 @@
+\page boundary Boundary Handling
+
 # Boundary Handling
 
 Edge strategies that reduce bias near the ends of the data range.

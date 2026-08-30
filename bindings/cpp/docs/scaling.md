@@ -1,3 +1,5 @@
+\page scaling Scaling Methods
+
 # Scaling Methods
 
 Residual scale estimation during robustness iterations.

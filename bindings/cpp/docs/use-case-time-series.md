@@ -1,3 +1,5 @@
+\page use_case_time_series Time Series Analysis
+
 # Time Series Analysis
 
 LOWESS for trend extraction and temporal smoothing.
