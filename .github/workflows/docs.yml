@@ -268,10 +268,10 @@ jobs:
           path: bindings/wasm/dist
           retention-days: 1
 
-  deploy:
+  build:
     needs: [filter, root, cpp, julia, nodejs, r, wasm]
     if: always()
-    name: Deploy — publish once
+    name: Build — merge & cache
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -340,9 +340,33 @@ jobs:
       - name: Ensure .nojekyll
         run: touch _site/.nojekyll
 
+      # Kept as a merge cache for future incremental runs (partial rebuilds
+      # read prior languages' output from this branch); no longer the
+      # Pages source itself once repo settings use "GitHub Actions" deployment.
       - uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: gh-pages
           folder: _site
           target-folder: .
           clean: false
+
+      - uses: actions/configure-pages@v6
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    name: Deploy — GitHub Pages
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
