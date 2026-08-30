@@ -2,7 +2,7 @@
 
 The Rust bindings provide the core implementation and high-performance extensions. The API uses a Builder pattern consistent across both the `lowess` (pure Rust) and `fastLowess` (accelerated) crates.
 
-> **StreamingLowess** and **OnlineLowess** are documented separately: [rust-streaming.md](api-streaming.md), [rust-online.md](api-online.md)
+> **StreamingLowess** and **OnlineLowess** are documented separately: [Streaming Adapter](api-streaming.md), [Online Adapter](api-online.md)
 
 ## When to Use Batch Adapter
 
@@ -10,15 +10,13 @@ The Rust bindings provide the core implementation and high-performance extension
 - Need intervals, cross-validation, or diagnostics
 - Processing complete files
 
-![Gap Handling](https://raw.githubusercontent.com/thisisamirv/lowess-project/main/crates/lowess/assets/diagrams/gap_handling.svg)
-
 ## Structs & Usage
 
-The `lowess` crate exposes three dedicated wrapper structs — `Lowess`, `StreamingLowess`, and `OnlineLowess` — that mirror the distinct classes available in other language bindings. Each struct wraps a `LowessBuilder<f64>` and its `build()` method delegates to the corresponding parallel adapter.
+The `lowess` crate exposes three dedicated wrapper structs — `Lowess`, `StreamingLowess`, and `OnlineLowess` — that mirror the distinct classes available in other language bindings. Each struct wraps a `LowessBuilder<f64>` and its `build()` method delegates to the corresponding adapter. The `lowess` crate has no `parallel` or `gpu` feature — for CPU-parallel and GPU-accelerated execution, use the `fastLowess` crate instead.
 
 ### `Lowess`
 
-Standard in-memory smoothing (batch, parallel by default).
+Standard in-memory smoothing (batch).
 
 **Constructor:**
 
@@ -60,9 +58,9 @@ Iterations used: None
 - Fits the model to the provided `x` and `y` arrays.
 - Returns `Result<LowessResult<T>, LowessError>`.
 
-See [rust-streaming.md](api-streaming.md) for `StreamingLowess`.
+See [Streaming Adapter](api-streaming.md) for `StreamingLowess`.
 
-See [rust-online.md](api-online.md) for `OnlineLowess`.
+See [Online Adapter](api-online.md) for `OnlineLowess`.
 
 ## Builder Configuration
 
@@ -88,12 +86,10 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `return_residuals()` | `bool` | `false` | Include residuals in result |
 | `return_robustness_weights()` | `bool` | `false` | Include robustness weights in result |
 | `return_se()` | `bool` | `false` | Return standard errors |
-| `parallel(bool)` | `bool` | `true` | Enable parallel execution |
 | `cv_method(str)` | `&str` | `"kfold"` | CV strategy: `"kfold"` (fast) or `"loocv"` (slow, exhaustive) — defaults to `"kfold"` when `cv_fractions` is provided |
 | `cv_k(usize)` | `usize` | `5` | K for k-fold CV |
 | `cv_fractions(Vec<f64>)` | `Vec<f64>` | `None` | Fraction grid for CV |
 | `cv_seed(u64)` | `u64` | `None` | RNG seed for CV |
-| `backend(...)` | `Backend` | `CPU` | `lowess` only: `CPU` or `GPU` |
 
 `fraction` is the most important parameter: it controls the size of the local neighbourhood used at each point.
 
@@ -115,13 +111,13 @@ These chained methods configure the builder. They correspond to the "Options Str
 
 **Note:** In other language bindings `custom_weights` is a `fit()` argument; in Rust it is a builder step because all configuration lives on the builder and `fit()` consumes `self`.
 
-See [rust-streaming.md](api-streaming.md) for Streaming Options.
+See [Streaming Adapter](api-streaming.md) for Streaming Options.
 
-See [rust-online.md](api-online.md) for Online Options.
+See [Online Adapter](api-online.md) for Online Options.
 
 ## Result Structure
 
-See [rust-online.md](api-online.md) for `OnlineOutput<T>`.
+See [Online Adapter](api-online.md) for `OnlineOutput<T>`.
 
 ### `LowessResult<T>`
 
@@ -201,14 +197,6 @@ Behavior when all neighborhood weights are zero:
 | `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
 | `"return_original"` (alias: `"original"`) | Return the original y value |
 | `"return_none"` (alias: `"none"`) | Return `NaN` |
-
-### merge_strategy
-
-See [rust-streaming.md](api-streaming.md).
-
-### update_mode
-
-See [rust-online.md](api-online.md).
 
 ## Example
 

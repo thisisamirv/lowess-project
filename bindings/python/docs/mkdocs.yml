@@ -148,6 +148,6 @@ nav:
           - Real-Time Processing: user-guide/use-cases/real-time.md
   - API Reference:
       - api/index.md
-      - Python: api/python.md
+      - Python: api/api.md
   - Benchmarks: benchmarks.md
   - News: NEWS.md

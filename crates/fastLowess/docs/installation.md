@@ -26,7 +26,7 @@ fastLowess = { version = "*", features = ["cpu"] }
 ## Verify Installation
 
 ```rust
-use lowess::prelude::*;
+use fastLowess::prelude::*;
 
 fn main() -> Result<(), LowessError> {
     let x = vec![1.0, 2.0, 3.0];

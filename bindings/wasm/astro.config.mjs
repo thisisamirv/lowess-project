@@ -4,7 +4,7 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 
 export default defineConfig({
-    site: process.env.SITE,
+    site: process.env.SITE ?? 'https://thisisamirv.github.io',
     base: process.env.VITE_BASE ?? '/',
     outDir: './dist',
     markdown: {

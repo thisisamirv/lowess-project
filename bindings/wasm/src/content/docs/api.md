@@ -3,15 +3,13 @@ title: API
 ---
 The WebAssembly bindings provide a high-performance interface to the core Rust library, mirroring the Rust API structure.
 
-> **StreamingLowess** and **OnlineLowess** are documented separately: [wasm-streaming.md](api-streaming.md), [wasm-online.md](api-online.md)
+> **StreamingLowess** and **OnlineLowess** are documented separately: [Streaming Adapter](api-streaming.md), [Online Adapter](api-online.md)
 
 ## When to Use Batch Adapter
 
 - Dataset fits in memory
 - Need intervals, cross-validation, or diagnostics
 - Processing complete files
-
-![Gap Handling](../assets/diagrams/gap_handling.svg)
 
 ## Classes
 
@@ -56,9 +54,9 @@ Fraction used: 0.5
 - `y`: `Float64Array` of input y values.
 - Returns: A `LowessResult` object.
 
-See [wasm-streaming.md](api-streaming.md) for the `StreamingLowess` class.
+See [Streaming Adapter](api-streaming.md) for the `StreamingLowess` class.
 
-See [wasm-online.md](api-online.md) for the `OnlineLowess` class.
+See [Online Adapter](api-online.md) for the `OnlineLowess` class.
 
 ## Options Structures
 
@@ -106,13 +104,13 @@ See [wasm-online.md](api-online.md) for the `OnlineLowess` class.
 | 4-6 | Strong | Contaminated data |
 | 7+ | Very strong | Heavy outliers |
 
-See [wasm-streaming.md](api-streaming.md) for `StreamingOptions`.
+See [Streaming Adapter](api-streaming.md) for `StreamingOptions`.
 
-See [wasm-online.md](api-online.md) for `OnlineOptions`.
+See [Online Adapter](api-online.md) for `OnlineOptions`.
 
 ## Result Structure
 
-See [wasm-online.md](api-online.md) for `OnlineOutput`.
+See [Online Adapter](api-online.md) for `OnlineOutput`.
 
 ### `LowessResult`
 
@@ -192,14 +190,6 @@ Behavior when all neighborhood weights are zero:
 | `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
 | `"return_original"` (alias: `"original"`) | Return the original y value |
 | `"return_none"` (alias: `"none"`) | Return `NaN` |
-
-### merge_strategy
-
-See [wasm-streaming.md](api-streaming.md).
-
-### update_mode
-
-See [wasm-online.md](api-online.md).
 
 ## Example
 

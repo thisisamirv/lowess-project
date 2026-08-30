@@ -34,8 +34,6 @@ Standard mode for complete datasets. **Supports all features.**
 - Need intervals, cross-validation, or diagnostics
 - Processing complete files
 
-![Gap Handling](../assets/diagrams/gap_handling.svg)
-
 ### Example
 
 :::{jupyter-execute}
@@ -190,5 +188,5 @@ for xi, yi in zip(x, y):
 
 ## Next Steps
 
-- [API Reference](../api/python.md) — All configuration options
+- [API Reference](../api/api.md) — All configuration options
 - [Tutorials](use-cases/real-time.md) — Real-time processing guide

@@ -8,8 +8,6 @@ Standard mode for complete datasets. **Supports all features.**
 - Need intervals, cross-validation, or diagnostics
 - Processing complete files
 
-![Gap Handling](assets/gap_handling.svg)
-
 ## Example
 
 ```@example batch

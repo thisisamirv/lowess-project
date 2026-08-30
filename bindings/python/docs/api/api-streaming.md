@@ -1,6 +1,6 @@
 # StreamingLowess API
 
-See also: [fastLowess](python.md)
+See also: [fastLowess](api.md)
 
 ## When to Use
 
@@ -71,7 +71,7 @@ Returned by `process_chunk()` and `finalize()`.
 | `diagnostics` | `Diagnostics \| None` | Fit metrics (if `return_diagnostics`) |
 | `dimensions` | `int` | Number of predictor dimensions |
 
-See [python.md](python.md) for the full `LowessResult` field reference.
+See [api.md](api.md) for the full `LowessResult` field reference.
 
 ## Options Structure
 

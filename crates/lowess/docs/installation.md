@@ -8,9 +8,9 @@ Install the LOWESS library for your preferred language.
 [dependencies]
 lowess = "*"
 
-# lowess (parallel + GPU)
+# fastLowess (parallel + GPU)
 [dependencies]
-lowess = { version = "*", features = ["cpu"] }
+fastLowess = { version = "*", features = ["cpu"] }
 ```
 
 ## Feature Flags
@@ -18,8 +18,8 @@ lowess = { version = "*", features = ["cpu"] }
 | Crate | Feature | Description |
 | --- | --- | --- |
 | `lowess` | `std` | Enable standard library (default) |
-| `lowess` | `cpu` | Enable CPU parallelism via Rayon |
-| `lowess` | `gpu` | Enable GPU acceleration via wgpu (beta) |
+| `fastLowess` | `cpu` | Enable CPU parallelism via Rayon |
+| `fastLowess` | `gpu` | Enable GPU acceleration via wgpu (beta) |
 
 ---
 

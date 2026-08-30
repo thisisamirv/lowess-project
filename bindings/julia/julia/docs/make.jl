@@ -33,39 +33,67 @@ end
 
 readme = read(README_PATH, String)
 readme = replace(readme, "\r\n" => "\n")
-readme = replace(readme, r"<!--.*?-->\n?"s => "")
+readme = replace(readme, r"\A<!--.*?-->\n?"s => "")
 readme = replace(readme, r"<p align=\"center\">\n.*?\n</p>"s => convert_center_block)
+# index.md is its own generated page with its own markdownlint needs (the
+# tagline right after the logo trips MD036), not the same as README.md's.
+readme = "<!-- markdownlint-disable MD036 -->\n" * readme
 write(INDEX_PATH, readme)
 
-makedocs(
-	sitename = "FastLOWESS.jl",
-	modules = [FastLOWESS],
-	format = Documenter.HTML(
-		prettyurls = get(ENV, "CI", "false") == "true",
-		canonical = "https://thisisamirv.github.io/lowess-project/julia/stable/",
-		repolink = "https://github.com/thisisamirv/lowess-project",
-	),
-	pages = [
-		"Home" => "index.md",
-		"Introduction" => ["installation.md", "quickstart.md", "concepts.md"],
-		"User Guide" => [
-			"adapter-choice.md",
-			"batch.md",
-			"streaming.md",
-			"online.md",
-			"intervals.md",
-			"cross-validation.md",
+# Documenter's Markdown parser also does not treat `<!-- ... -->` as an invisible
+# HTML comment — it renders it as literal text (e.g. a leading
+# `<!-- markdownlint-disable ... -->` shows up verbatim on the page). Every
+# docs/src/*.md page keeps such a comment on its first line for editor/markdownlint
+# purposes, so temporarily strip just that leading comment line from each page
+# before building, then restore the original file afterwards — this keeps the
+# comment in the on-disk source while hiding it from the rendered site.
+const SRC_DIR = joinpath(@__DIR__, "src")
+const LEADING_COMMENT_RE = r"\A<!--.*?-->\n?"s
+
+original_contents = Dict{String, String}()
+for path ∈ filter(p -> endswith(p, ".md"), readdir(SRC_DIR; join = true))
+	content = read(path, String)
+	if occursin(LEADING_COMMENT_RE, content)
+		original_contents[path] = content
+		write(path, replace(content, LEADING_COMMENT_RE => ""))
+	end
+end
+
+try
+	makedocs(
+		sitename = "FastLOWESS.jl",
+		modules = [FastLOWESS],
+		format = Documenter.HTML(
+			prettyurls = get(ENV, "CI", "false") == "true",
+			canonical = "https://thisisamirv.github.io/lowess-project/julia/stable/",
+			repolink = "https://github.com/thisisamirv/lowess-project",
+		),
+		pages = [
+			"Home" => "index.md",
+			"Introduction" => ["installation.md", "quickstart.md", "concepts.md"],
+			"User Guide" => [
+				"adapter-choice.md",
+				"batch.md",
+				"api-streaming.md",
+				"api-online.md",
+				"intervals.md",
+				"cross-validation.md",
+			],
+			"Weight & Robustness" =>
+				["kernels.md", "robustness.md", "scaling.md", "custom-weights.md"],
+			"Advanced" => ["boundary.md", "merge.md", "gpu-backend.md"],
+			"Use Cases" =>
+				["use-case-genomics.md", "use-case-time-series.md", "use-case-real-time.md"],
+			"Performance" => ["benchmarks.md"],
+			"API Reference" => "api.md",
+			"News" => "NEWS.md",
 		],
-		"Weight & Robustness" =>
-			["kernels.md", "robustness.md", "scaling.md", "custom-weights.md"],
-		"Advanced" => ["boundary.md", "merge.md", "gpu-backend.md"],
-		"Use Cases" =>
-			["use-case-genomics.md", "use-case-time-series.md", "use-case-real-time.md"],
-		"Performance" => ["benchmarks.md"],
-		"API Reference" => "api.md",
-		"News" => "NEWS.md",
-	],
-	authors = "Amir Valizadeh",
-	warnonly = true,
-	checkdocs = :none,
-)
+		authors = "Amir Valizadeh",
+		warnonly = true,
+		checkdocs = :none,
+	)
+finally
+	for (path, content) ∈ original_contents
+		write(path, content)
+	end
+end

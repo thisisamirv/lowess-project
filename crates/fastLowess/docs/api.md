@@ -2,15 +2,13 @@
 
 The Rust bindings provide the core implementation and high-performance extensions. The API uses a Builder pattern consistent across both the `lowess` (pure Rust) and `fastLowess` (accelerated) crates.
 
-> **StreamingLowess** and **OnlineLowess** are documented separately: [rust-streaming.md](api-streaming.md), [rust-online.md](api-online.md)
+> **StreamingLowess** and **OnlineLowess** are documented separately: [Streaming Adapter](api-streaming.md), [Online Adapter](api-online.md)
 
 ## When to Use Batch Adapter
 
 - Dataset fits in memory
 - Need intervals, cross-validation, or diagnostics
 - Processing complete files
-
-![Gap Handling](https://raw.githubusercontent.com/thisisamirv/lowess-project/main/crates/fastLowess/assets/diagrams/gap_handling.svg)
 
 ## Structs & Usage
 
@@ -60,9 +58,9 @@ Iterations used: None
 - Fits the model to the provided `x` and `y` arrays.
 - Returns `Result<LowessResult<T>, LowessError>`.
 
-See [rust-streaming.md](api-streaming.md) for `StreamingLowess`.
+See [Streaming Adapter](api-streaming.md) for `StreamingLowess`.
 
-See [rust-online.md](api-online.md) for `OnlineLowess`.
+See [Online Adapter](api-online.md) for `OnlineLowess`.
 
 ## Builder Configuration
 
@@ -115,9 +113,9 @@ These chained methods configure the builder. They correspond to the "Options Str
 
 **Note:** In other language bindings `custom_weights` is a `fit()` argument; in Rust it is a builder step because all configuration lives on the builder and `fit()` consumes `self`.
 
-See [rust-streaming.md](api-streaming.md) for Streaming Options.
+See [Streaming Adapter](api-streaming.md) for Streaming Options.
 
-See [rust-online.md](api-online.md) for Online Options.
+See [Online Adapter](api-online.md) for Online Options.
 
 ## GPU Acceleration
 
@@ -125,7 +123,7 @@ The `fastLowess` crate provides an optional GPU-accelerated backend using `wgpu`
 
 ## Result Structure
 
-See [rust-online.md](api-online.md) for `OnlineOutput<T>`.
+See [Online Adapter](api-online.md) for `OnlineOutput<T>`.
 
 ### `LowessResult<T>`
 
@@ -205,14 +203,6 @@ Behavior when all neighborhood weights are zero:
 | `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
 | `"return_original"` (alias: `"original"`) | Return the original y value |
 | `"return_none"` (alias: `"none"`) | Return `NaN` |
-
-### merge_strategy
-
-See [rust-streaming.md](api-streaming.md).
-
-### update_mode
-
-See [rust-online.md](api-online.md).
 
 ## Example
 

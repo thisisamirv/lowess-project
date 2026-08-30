@@ -34,7 +34,6 @@ graph LR
 | Diagnostics | ✓ | ✓ | ✗ |
 | Residuals | ✓ | ✓ | ✓ |
 | Robustness weights | ✓ | ✓ | ✓ |
-| Parallel execution | ✓ | ✓ | ✗ |
 
 ---
 

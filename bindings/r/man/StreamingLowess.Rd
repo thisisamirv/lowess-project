@@ -128,5 +128,5 @@ y <- sin(x) + rnorm(100, 0, 0.1)
 model <- StreamingLowess(fraction = 0.2, chunk_size = 50)
 res1 <- process_chunk(model, x[1:50], y[1:50])
 res2 <- process_chunk(model, x[51:100], y[51:100])
-final <- finalize(model)
+finalize(model)
 }

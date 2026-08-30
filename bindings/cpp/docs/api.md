@@ -2,15 +2,13 @@
 
 The C++ bindings provide a modern, object-oriented wrapper around the core Rust library, mirroring the Rust API structure.
 
-> **StreamingLowess** and **OnlineLowess** are documented separately: [cpp-streaming.md](api-streaming.md), [cpp-online.md](api-online.md)
+> **StreamingLowess** and **OnlineLowess** are documented separately: [Streaming Adapter](api-streaming.md), [Online Adapter](api-online.md)
 
 ## When to Use Batch Adapter
 
 - Dataset fits in memory
 - Need intervals, cross-validation, or diagnostics
 - Processing complete files
-
-![Gap Handling](gap_handling.svg)
 
 ## Classes
 
@@ -86,9 +84,9 @@ int main() {
 - The second overload applies `custom_weights` — non-negative per-observation weights of length `n`. Batch only.
 - Returns a `LowessResult` object containing the smoothed values and optional diagnostics.
 
-See [cpp-streaming.md](api-streaming.md) for the `StreamingLowess` class.
+See [Streaming Adapter](api-streaming.md) for the `StreamingLowess` class.
 
-See [cpp-online.md](api-online.md) for the `OnlineLowess` class.
+See [Online Adapter](api-online.md) for the `OnlineLowess` class.
 
 ## Options Structures
 
@@ -137,9 +135,9 @@ See [cpp-online.md](api-online.md) for the `OnlineLowess` class.
 | 4-6 | Strong | Contaminated data |
 | 7+ | Very strong | Heavy outliers |
 
-See [cpp-streaming.md](api-streaming.md) for `StreamingOptions`.
+See [Streaming Adapter](api-streaming.md) for `StreamingOptions`.
 
-See [cpp-online.md](api-online.md) for `OnlineOptions`.
+See [Online Adapter](api-online.md) for `OnlineOptions`.
 
 ## GPU Acceleration
 
@@ -147,7 +145,7 @@ The batch `fastlowess::Lowess` class can optionally run on a GPU-accelerated bac
 
 ## Result Structure
 
-See [cpp-online.md](api-online.md) for `OnlineOutput`.
+See [Online Adapter](api-online.md) for `OnlineOutput`.
 
 ### fastlowess::LowessResult
 
@@ -231,14 +229,6 @@ Behavior when all neighborhood weights are zero:
 | `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
 | `"return_original"` (alias: `"original"`) | Return the original y value |
 | `"return_none"` (alias: `"none"`) | Return `NaN` |
-
-### merge_strategy
-
-See [cpp-streaming.md](api-streaming.md).
-
-### update_mode
-
-See [cpp-online.md](api-online.md).
 
 ## Example
 

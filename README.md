@@ -35,8 +35,6 @@
 
 The fastest, most robust, and most feature-complete language-agnostic LOWESS (Locally Weighted Scatterplot Smoothing) implementation for **Rust**, **Python**, **R**, **Julia**, **JavaScript**, **C++**, and **WebAssembly**.
 
-> [!IMPORTANT]
->
 > The `lowess-project` contains a complete ecosystem for LOWESS smoothing:
 >
 > - **[`lowess`](https://crates.io/crates/lowess)** - Core single-threaded Rust implementation with `no_std` support
@@ -80,7 +78,6 @@ GPU acceleration (`wgpu`: Vulkan/Metal/DX12) is also supported for high-throughp
 | **Flexibility** | High (Distance metrics) | Standard |
 | **Complexity** | Higher (Matrix inversion) | Lower (Weighted average/slope) |
 
-> [!TIP]
 > **Note:** For a **LOESS** implementation, use [`loess-project`](https://github.com/thisisamirv/loess-project).
 
 ---

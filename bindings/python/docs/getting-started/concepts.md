@@ -132,7 +132,7 @@ flowchart TD
 ## Next Steps
 
 - [Quick Start](quickstart.md) — See it in action
-- [API Reference](../api/python.md) — All configuration options
+- [API Reference](../api/api.md) — All configuration options
 - [Boundary Handling](../user-guide/boundary.md) — Edge bias reduction strategies
 - [Robustness](../user-guide/robustness.md) — Outlier downweighting methods
 - [Scaling Methods](../user-guide/scaling.md) — MAD, MAR, Mean scale estimation

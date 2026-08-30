@@ -9,13 +9,12 @@
 //! 5. Kernel Comparison
 //! 6. Robustness Method Comparison
 //! 7. Boundary Policy Comparison
-//! 8. Gap Handling
-//! 9. Cross-Validation Comparison
-//! 10. Scaling Method Comparison
-//! 11. Zero Weight Fallback Comparison
-//! 12. Streaming Adapter Comparison
-//! 13. Online Adapter Comparison
-//! 14. Auto-Convergence Comparison
+//! 8. Cross-Validation Comparison
+//! 9. Scaling Method Comparison
+//! 10. Zero Weight Fallback Comparison
+//! 11. Streaming Adapter Comparison
+//! 12. Online Adapter Comparison
+//! 13. Auto-Convergence Comparison
 
 use fastLowess::prelude::*;
 use std::fs::File;
@@ -51,9 +50,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     run_boundary_policy_comparison()?;
-    println!();
-
-    run_gap_handling()?;
     println!();
 
     run_cv_comparison()?;
@@ -656,44 +652,6 @@ fn run_boundary_policy_comparison() -> Result<(), Box<dyn std::error::Error>> {
             results[2].y[i],
             results[3].y[i]
         )?;
-    }
-    println!("Results exported to {}", path);
-    Ok(())
-}
-
-/// 11. Gap Handling
-fn run_gap_handling() -> Result<(), Box<dyn std::error::Error>> {
-    let n = 150;
-    let mut x = Vec::new();
-    let mut y = Vec::new();
-
-    for i in 0..n {
-        let t = (i as f64 / (n - 1) as f64) * 10.0;
-        // Create a large gap in the middle
-        if t > 4.0 && t < 7.0 {
-            continue;
-        }
-        let signal = (t).sin();
-        let noise = 0.1 * (i as f64 * 7.0).cos();
-        x.push(t);
-        y.push(signal + noise);
-    }
-
-    println!("11. Gap Handling");
-    println!("----------------");
-
-    let result = Lowess::new()
-        .fraction(0.3)
-        .build()
-        .unwrap()
-        .fit(&x, &y)
-        .unwrap();
-
-    let path = "../output/visual/gap_handling.csv";
-    let mut file = File::create(path)?;
-    writeln!(file, "x,y_noisy,y_smooth")?;
-    for i in 0..x.len() {
-        writeln!(file, "{},{},{}", x[i], y[i], result.y[i])?;
     }
     println!("Results exported to {}", path);
     Ok(())

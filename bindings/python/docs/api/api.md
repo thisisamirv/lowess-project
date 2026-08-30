@@ -3,15 +3,13 @@
 
 The Python bindings provide a high-performance interface to the core Rust library, mirroring the Rust API structure.
 
-> **StreamingLowess** and **OnlineLowess** are documented separately: [python-streaming.md](python-streaming.md), [python-online.md](python-online.md)
+> **StreamingLowess** and **OnlineLowess** are documented separately: [Streaming Adapter](api-streaming.md), [Online Adapter](api-online.md)
 
 ## When to Use Batch Adapter
 
 - Dataset fits in memory
 - Need intervals, cross-validation, or diagnostics
 - Processing complete files
-
-![Gap Handling](../assets/diagrams/gap_handling.svg)
 
 ## Classes
 
@@ -46,9 +44,9 @@ print(result)
 - `custom_weights`: Optional array of per-observation weights. All values must be ≥ 0 and length must match `x`. Batch only.
 - Returns a `LowessResult` object containing the smoothed values and optional diagnostics.
 
-See [python-streaming.md](python-streaming.md) for the `StreamingLowess` class.
+See [Streaming Adapter](api-streaming.md) for the `StreamingLowess` class.
 
-See [python-online.md](python-online.md) for the `OnlineLowess` class.
+See [Online Adapter](api-online.md) for the `OnlineLowess` class.
 
 ## Options Structures
 
@@ -97,9 +95,9 @@ See [python-online.md](python-online.md) for the `OnlineLowess` class.
 | 4-6 | Strong | Contaminated data |
 | 7+ | Very strong | Heavy outliers |
 
-See [python-streaming.md](python-streaming.md) for `StreamingOptions`.
+See [Streaming Adapter](api-streaming.md) for `StreamingOptions`.
 
-See [python-online.md](python-online.md) for `OnlineOptions`.
+See [Online Adapter](api-online.md) for `OnlineOptions`.
 
 ## GPU Acceleration
 
@@ -107,7 +105,7 @@ The batch `Lowess` class can optionally run on a GPU-accelerated backend powered
 
 ## Result Structure
 
-See [python-online.md](python-online.md) for `OnlineOutput`.
+See [Online Adapter](api-online.md) for `OnlineOutput`.
 
 ### `LowessResult`
 
@@ -187,14 +185,6 @@ Behavior when all neighborhood weights are zero:
 | `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
 | `"return_original"` (alias: `"original"`) | Return the original y value |
 | `"return_none"` (alias: `"none"`) | Return `NaN` |
-
-### merge_strategy
-
-See [python-streaming.md](python-streaming.md).
-
-### update_mode
-
-See [python-online.md](python-online.md).
 
 ## Example
 
