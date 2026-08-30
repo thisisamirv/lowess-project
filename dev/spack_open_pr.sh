@@ -25,9 +25,11 @@ cd "$WORKDIR"
 
 # gh forks (idempotent if already forked) and waits for the fork to be
 # ready before cloning, avoiding a race with a freshly-created fork.
-# --remote sets up both "origin" (the fork) and "upstream" (spack/spack-packages).
-gh repo fork "$UPSTREAM_REPO" --clone=true --remote=true
+# (--remote is unsupported when an explicit repository argument is given,
+# so "upstream" is added manually below.)
+gh repo fork "$UPSTREAM_REPO" --clone=true
 cd spack-packages
+git remote add upstream "https://github.com/${UPSTREAM_REPO}.git"
 
 git fetch upstream develop
 git checkout -B "$BRANCH" upstream/develop
