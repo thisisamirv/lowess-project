@@ -126,10 +126,6 @@ All implementations are **numerical twins** of R's `lowess`:
 
 Contributions are welcome! Please see [CONTRIBUTING.md](https://github.com/thisisamirv/lowess-project/blob/main/CONTRIBUTING.md) for more information.
 
-## Changelog
-
-See [CHANGELOG.md](https://github.com/thisisamirv/lowess-project/blob/main/CHANGELOG.md) for a history of changes.
-
 ## License
 
 Licensed under [MIT](https://github.com/thisisamirv/lowess-project/blob/main/LICENSE-MIT) or [Apache-2.0](https://github.com/thisisamirv/lowess-project/blob/main/LICENSE-APACHE).

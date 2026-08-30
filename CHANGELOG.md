@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Merged the separate "Installation" and "Documentation" sections in every crate/binding README into a single "Installation & Documentation" section, and replaced GitHub-only `[!NOTE]`/`[!TIP]`/`[!IMPORTANT]` alert syntax (which rendered as literal text on pkgdown/Doxygen/Documenter) with plain blockquotes in every crate/binding README (the top-level repository README keeps GitHub alert syntax, since it's only ever viewed on GitHub).
 - Removed the redundant "API Reference" section from the R binding README now that pkgdown publishes a dedicated Reference page.
 - Removed the "API Reference" section (a full code sample per language) from every remaining crate/binding README and the top-level repository README, now that each has its own dedicated API reference page in the docs.
+- Removed the "Changelog" section from every crate/binding README (excluding the top-level repository README), now that each binding's docs site has its own News page.
 - Shortened the "GPU Backend" README section in every crate/binding to a minimal blurb linking to the GPU Backend page in the docs, instead of repeating the full explanation in each README.
 - Added a "Read more about how LOWESS works" link to the Concepts page right after the LOESS vs. LOWESS comparison table, in every crate/binding README (excluding the top-level repository README).
 - Renamed the batch adapter's "When to Use" heading to "When to Use Batch Adapter" across every binding/crate's batch API docs.
