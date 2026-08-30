@@ -161,6 +161,9 @@ int main() {
         x[i] = i * 2 * M_PI / (n - 1);
         y[i] = std::sin(x[i]) + 0.1;
     }
+    y[20] += 5.0;  // inject outliers
+    y[50] += 5.0;
+    y[80] += 5.0;
 
     fastlowess::Lowess model({ .iterations = 5,
         .return_robustness_weights = true
@@ -168,9 +171,11 @@ int main() {
     auto result = model.fit(x, y).value();
 
     auto weights = result.robustness_weights();
-    for (size_t i = 0; i < weights.size(); ++i) {
+    int shown = 0;
+    for (size_t i = 0; i < weights.size() && shown < 5; ++i) {
         if (weights[i] < 0.5) {
             std::cout << "Potential outlier at " << i << std::endl;
+            ++shown;
         }
     }
 

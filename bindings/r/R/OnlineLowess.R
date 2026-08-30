@@ -29,10 +29,12 @@
 #' model <- OnlineLowess(fraction = 0.2, window_capacity = 20)
 #' x <- 1:50
 #' y <- sin(x * 0.1) + rnorm(50, 0, 0.1)
+#' smoothed <- numeric(0)
 #' for (i in seq_along(x)) {
 #'     result <- add_point(model, x[i], y[i])
-#'     if (!is.null(result)) cat("smoothed:", result$y, "\n")
+#'     if (!is.null(result)) smoothed <- c(smoothed, result$y)
 #' }
+#' head(smoothed, 5)
 #' @export
 OnlineLowess <- function(
     fraction = 0.67,

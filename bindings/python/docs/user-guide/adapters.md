@@ -5,14 +5,13 @@ Choose the right adapter for your use case.
 
 ## Overview
 
-```mermaid
-graph LR
-    A[Data] --> B{Size?}
-    B -->|Fits in memory| C{Real-time?}
-    B -->|Too large| D[Streaming]
-    C -->|No| E[Batch]
-    C -->|Yes| F[Online]
-```
+Choose the first row below whose condition applies:
+
+| Condition | Adapter |
+| --- | --- |
+| Data too large to fit in memory | `Streaming` |
+| Fits in memory, need real-time/incremental updates | `Online` |
+| Fits in memory, no real-time requirement | `Batch` |
 
 | Mode | Use Case | Memory | Features |
 | --- | --- | --- | --- |

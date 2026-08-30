@@ -210,8 +210,9 @@ finalize.StreamingLowess <- function(model, ...) {
 #' @return An online result list, or \code{NULL} if fewer than
 #'   \code{min_points} have been added.
 #' @examples
-#' model <- OnlineLowess(fraction = 0.2, window_capacity = 20L)
-#' add_point(model, 1.0, 0.5)
+#' model <- OnlineLowess(fraction = 0.2, window_capacity = 20L, min_points = 2L)
+#' invisible(add_point(model, 1.0, 0.5))
+#' add_point(model, 2.0, 0.6)
 #' @export
 add_point <- function(model, ...) UseMethod("add_point")
 

@@ -238,7 +238,7 @@ RÂ²: 0.973
 
 ## See Also
 
-- [Real-Time Processing](use-case-real-time.md) — For streaming time series
-- [Cross-Validation](cross-validation.md) — Optimal fraction selection
-- [Boundary Handling](boundary.md) — Edge bias in trend extraction
-- [API Reference](api.md) — Full parameter reference
+- [Real-Time Processing](crate::doc::use_cases::real_time) — For streaming time series
+- [Cross-Validation](crate::doc::cross_validation) — Optimal fraction selection
+- [Boundary Handling](crate::doc::boundary) — Edge bias in trend extraction
+- [API Reference](crate::doc::api) — Full parameter reference

@@ -1,6 +1,6 @@
 # StreamingLowess API
 
-See also: [fastLowess](api.md)
+See also: [fastLowess](crate::doc::api)
 
 ## When to Use
 
@@ -93,7 +93,7 @@ Returned by `process_chunk()` and `finalize()`.
 | `diagnostics` | `Option<Diagnostics<T>>` | Fit metrics (if `return_diagnostics()`) |
 | `dimensions` | `usize` | Number of predictor dimensions |
 
-See [rust.md](api.md) for the full `LowessResult<T>` field reference.
+See [rust.md](crate::doc::api) for the full `LowessResult<T>` field reference.
 
 ## Builder Options
 
@@ -109,7 +109,7 @@ See [rust.md](api.md) for the full `LowessResult<T>` field reference.
 
 ### merge_strategy
 
-*See: [Merge Strategies](merge.md)*
+*See: [Merge Strategies](crate::doc::merge)*
 
 | Strategy | Alias | Behavior |
 | --- | --- | --- |

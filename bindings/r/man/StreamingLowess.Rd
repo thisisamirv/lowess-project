@@ -5,25 +5,25 @@
 \title{LOWESS Streaming Smoothing}
 \usage{
 StreamingLowess(
-    fraction = 0.67,
-    chunk_size = 5000L,
-    ...,
-    overlap = NULL,
-    iterations = 3L,
-    delta = NULL,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    scaling_method = "mad",
-    boundary_policy = "extend",
-    zero_weight_fallback = "use_local_mean",
-    auto_converge = NULL,
-    return_diagnostics = FALSE,
-    return_residuals = FALSE,
-    return_robustness_weights = FALSE,
-    merge_strategy = "weighted_average",
-    parallel = TRUE,
-    confidence_intervals = NULL,
-    prediction_intervals = NULL
+  fraction = 0.67,
+  chunk_size = 5000L,
+  ...,
+  overlap = NULL,
+  iterations = 3L,
+  delta = NULL,
+  weight_function = "tricube",
+  robustness_method = "bisquare",
+  scaling_method = "mad",
+  boundary_policy = "extend",
+  zero_weight_fallback = "use_local_mean",
+  auto_converge = NULL,
+  return_diagnostics = FALSE,
+  return_residuals = FALSE,
+  return_robustness_weights = FALSE,
+  merge_strategy = "weighted_average",
+  parallel = TRUE,
+  confidence_intervals = NULL,
+  prediction_intervals = NULL
 )
 }
 \arguments{
@@ -115,11 +115,11 @@ in memory, see \code{\link{Lowess}}; for point-by-point real-time data,
 see \code{\link{OnlineLowess}}.
 
 Overlapping regions between chunks are reconciled via \code{merge_strategy}:\tabular{ll}{
-    Strategy \tab Behavior \cr
-    \code{"average"} \tab Arithmetic mean of both estimates \cr
-    \code{"weighted_average"} \tab Distance-weighted blend (recommended, default) \cr
-    \code{"take_first"} \tab Keep left-chunk estimate \cr
-    \code{"take_last"} \tab Keep right-chunk estimate \cr
+   Strategy \tab Behavior \cr
+   \code{"average"} \tab Arithmetic mean of both estimates \cr
+   \code{"weighted_average"} \tab Distance-weighted blend (recommended, default) \cr
+   \code{"take_first"} \tab Keep left-chunk estimate \cr
+   \code{"take_last"} \tab Keep right-chunk estimate \cr
 }
 }
 \examples{

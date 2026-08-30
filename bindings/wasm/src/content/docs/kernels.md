@@ -212,18 +212,15 @@ y[0]: 0.2381
 
 ## Choosing a Kernel
 
-```mermaid
-flowchart TD
-    A[Choose Kernel] --> B{Need maximum smooth}
-    B -- Yes --> C[Gaussian]
-    B -- No --> D{Default acceptable}
-    D -- Yes --> E[Tricube]
-    D -- No --> F{Optimal MSE}
-    F -- Yes --> G[Epanechnikov]
-    F -- No --> H{Speed critical}
-    H -- Yes --> I[Uniform]
-    H -- No --> J[Biweight]
-```
+Choose the first row below whose condition applies:
+
+| Condition | Kernel |
+| --- | --- |
+| Need maximum smoothness | `Gaussian` |
+| Default is acceptable | `Tricube` |
+| Need optimal asymptotic MSE | `Epanechnikov` |
+| Speed is critical | `Uniform` |
+| None of the above | `Biweight` |
 
 :::tip[Recommendation]
 Stick with **Tricube** (default) unless you have specific requirements. The differences between kernels are usually small in practice.

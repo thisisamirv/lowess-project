@@ -37,6 +37,7 @@ for i in eachindex(times)
     if result !== nothing
         println("Time $(times[i]): smoothed = $(round(result.y; digits=2))")
     end
+    i >= 7 && break  # print only the first few outputs
 end
 ```
 

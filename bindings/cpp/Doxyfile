@@ -3,7 +3,7 @@
 # Project
 
 # ---------------------------------------------------------------------------
-PROJECT_NAME           = "fastLowess"
+PROJECT_NAME           = "fastlowess-cpp"
 PROJECT_BRIEF          = "High-performance LOWESS smoothing"
 OUTPUT_DIRECTORY       = .
 CREATE_SUBDIRS         = NO
@@ -14,7 +14,7 @@ CREATE_SUBDIRS         = NO
 
 # ---------------------------------------------------------------------------
 INPUT                  = README.md include docs
-FILE_PATTERNS          = *.hpp*.h *.md
+FILE_PATTERNS          = *.hpp *.h *.md
 IMAGE_PATH             = assets/diagrams
 RECURSIVE              = NO
 USE_MDFILE_AS_MAINPAGE = README.md

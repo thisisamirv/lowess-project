@@ -5,28 +5,28 @@
 \title{LOWESS Batch Smoothing}
 \usage{
 Lowess(
-    fraction = 0.67,
-    ...,
-    iterations = 3L,
-    delta = NULL,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    scaling_method = "mad",
-    boundary_policy = "extend",
-    confidence_intervals = NULL,
-    prediction_intervals = NULL,
-    return_diagnostics = FALSE,
-    return_residuals = FALSE,
-    return_robustness_weights = FALSE,
-    zero_weight_fallback = "use_local_mean",
-    auto_converge = NULL,
-    cv_fractions = NULL,
-    cv_method = "kfold",
-    cv_k = 5L,
-    parallel = TRUE,
-    cv_seed = NULL,
-    return_se = FALSE,
-    backend = "cpu"
+  fraction = 0.67,
+  ...,
+  iterations = 3L,
+  delta = NULL,
+  weight_function = "tricube",
+  robustness_method = "bisquare",
+  scaling_method = "mad",
+  boundary_policy = "extend",
+  confidence_intervals = NULL,
+  prediction_intervals = NULL,
+  return_diagnostics = FALSE,
+  return_residuals = FALSE,
+  return_robustness_weights = FALSE,
+  zero_weight_fallback = "use_local_mean",
+  auto_converge = NULL,
+  cv_fractions = NULL,
+  cv_method = "kfold",
+  cv_k = 5L,
+  parallel = TRUE,
+  cv_seed = NULL,
+  return_se = FALSE,
+  backend = "cpu"
 )
 }
 \arguments{
@@ -126,11 +126,11 @@ real-time data, see \code{\link{OnlineLowess}}.
 
 \code{fraction} is the most important parameter: it controls the size of the
 local neighbourhood used at each point.\tabular{lll}{
-    Range \tab Effect \tab Use case \cr
-    0.1-0.3 \tab Fine detail \tab Rapidly changing signals \cr
-    0.3-0.5 \tab Balanced \tab General purpose \cr
-    0.5-0.7 \tab Heavy smoothing \tab Noisy data \cr
-    0.7-1.0 \tab Very smooth \tab Trend extraction \cr
+   Range \tab Effect \tab Use case \cr
+   0.1-0.3 \tab Fine detail \tab Rapidly changing signals \cr
+   0.3-0.5 \tab Balanced \tab General purpose \cr
+   0.5-0.7 \tab Heavy smoothing \tab Noisy data \cr
+   0.7-1.0 \tab Very smooth \tab Trend extraction \cr
 }
 }
 \examples{

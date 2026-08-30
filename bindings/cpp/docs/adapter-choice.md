@@ -4,13 +4,13 @@ Choose the right adapter for your use case.
 
 ## Overview
 
-```text
-Data
-  └─ Fits in memory?
-       ├─ No  ─────────────► Streaming
-       └─ Yes ─ Real-time? ─┬─ No  ─► Batch
-                            └─ Yes ─► Online
-```
+Choose the first row below whose condition applies:
+
+| Condition | Adapter |
+| --- | --- |
+| Data too large to fit in memory | `Streaming` |
+| Fits in memory, need real-time/incremental updates | `Online` |
+| Fits in memory, no real-time requirement | `Batch` |
 
 | Mode | Use Case | Memory | Features |
 | --- | --- | --- | --- |

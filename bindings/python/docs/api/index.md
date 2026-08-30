@@ -6,7 +6,7 @@ Language-specific API documentation.
 :maxdepth: 1
 :caption: API Reference
 
-python
-python-streaming
-python-online
+api
+api-streaming
+api-online
 :::

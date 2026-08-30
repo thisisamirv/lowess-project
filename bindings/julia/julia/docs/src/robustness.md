@@ -114,9 +114,12 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 model = Lowess(; iterations=5, return_robustness_weights=true)
 result = fit(model, x, y)
 
+shown = 0
 for (i, w) in enumerate(result.robustness_weights)
-    if w < 0.5
+    global shown
+    if w < 0.5 && shown < 5
         println("Potential outlier at index $i: weight = $w")
+        shown += 1
     end
 end
 ```

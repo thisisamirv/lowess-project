@@ -133,4 +133,4 @@ First smoothed value (mean scaling): 0.3821886150146138
 | Speed matters; residuals have minimal systematic bias | `"mar"` |
 | Clean data, no outliers | `"mean"` |
 
-See [Robustness](robustness.md) for a broader discussion of outlier handling.
+See [Robustness](crate::doc::robustness) for a broader discussion of outlier handling.

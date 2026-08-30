@@ -113,10 +113,10 @@ Choose the right mode based on your use case:
 
 ## Next Steps
 
-- [Quick Start](quickstart.md) — See it in action
-- [API Reference](api.md) — All configuration options
-- [Boundary Handling](boundary.md) — Edge bias reduction strategies
-- [Robustness](robustness.md) — Outlier downweighting methods
-- [Scaling Methods](scaling.md) — MAD, MAR, Mean scale estimation
-- [Merge Strategies](merge.md) — Chunk reconciliation in Streaming mode
-- [Tutorials](quickstart.md) — Application-specific guides
+- [Quick Start](crate::doc::quickstart) — See it in action
+- [API Reference](crate::doc::api) — All configuration options
+- [Boundary Handling](crate::doc::boundary) — Edge bias reduction strategies
+- [Robustness](crate::doc::robustness) — Outlier downweighting methods
+- [Scaling Methods](crate::doc::scaling) — MAD, MAR, Mean scale estimation
+- [Merge Strategies](crate::doc::merge) — Chunk reconciliation in Streaming mode
+- [Tutorials](crate::doc::quickstart) — Application-specific guides

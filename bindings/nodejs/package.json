@@ -15,7 +15,7 @@
         "universal": "napi universal",
         "snippets": "node ../../dev/add-nodejs-outputs.js",
         "readme": "node ../../dev/add-readme-to-docs.js",
-        "docs": "npm run snippets && npm run readme && typedoc && astro build",
+        "docs": "npm run snippets && npm run readme && typedoc && node ../../dev/lowercase-typedoc-refs.js src/content/docs/reference && astro build",
         "docs:preview": "astro preview"
     },
     "napi": {

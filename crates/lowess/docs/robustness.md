@@ -144,7 +144,10 @@ use std::f64::consts::TAU;
 fn main() -> Result<(), LowessError> {
     let n = 100usize;
     let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
+    let mut y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
+    for &i in &[20usize, 50, 80] {
+        y[i] += 5.0; // inject outliers
+    }
 
     let model = Lowess::new()
         .iterations(5)
@@ -154,9 +157,13 @@ fn main() -> Result<(), LowessError> {
     let result = model.fit(&x, &y)?;
 
     if let Some(weights) = &result.robustness_weights {
+        let mut count = 0;
         for (i, &w) in weights.iter().enumerate() {
             if w < 0.5 {
-                println!("Potential outlier at index {}: weight = {:.3}", i, w);
+                if count < 5 {
+                    println!("Potential outlier at index {}: weight = {:.3}", i, w);
+                }
+                count += 1;
             }
         }
     }

@@ -140,7 +140,7 @@ model <- Lowess(iterations = 5, return_robustness_weights = TRUE)
 result <- fit(model, x, y)
 
 for (i in seq_along(result$robustness_weights)) {
-    if (result$robustness_weights[i] < 0.5)
+    if (result$robustness_weights[i] < 0.05)
         cat(sprintf("Point %d is likely an outlier (weight: %.3f)\n",
                     i, result$robustness_weights[i]))
 }

@@ -2,7 +2,7 @@
 
 Standard mode for complete datasets. **Supports all features.**
 
-## When to Use
+## When to Use Batch Adapter
 
 - Dataset fits in memory
 - Need intervals, cross-validation, or diagnostics

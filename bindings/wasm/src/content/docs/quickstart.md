@@ -72,7 +72,7 @@ const x = new Float64Array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
 const yWithOutlier = new Float64Array([2.0, 4.0, 6.0, 50.0, 10.0, 12.0]);
 
 const model = new Lowess({
-    fraction: 0.5,
+    fraction: 0.7,
     iterations: 5,
     robustness_method: "bisquare",
     return_robustness_weights: true

@@ -1,6 +1,6 @@
 # OnlineLowess API
 
-See also: [lowess](api.md)
+See also: [lowess](crate::doc::api)
 
 ## When to Use
 
@@ -103,7 +103,7 @@ Returned by `add_point()` inside `Option`. Is `None` while the window is still f
 
 ### update_mode
 
-*See: [Execution Modes](adapter-choice.md)*
+*See: [Execution Modes](crate::doc::adapter_choice)*
 
 | Mode | Alias | Behavior | Speed |
 | --- | --- | --- | --- |

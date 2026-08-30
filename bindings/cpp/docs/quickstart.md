@@ -94,7 +94,7 @@ int main() {
     std::vector<double> y_outlier = {2.0, 4.0, 6.0, 50.0, 10.0, 12.0};
 
     fastlowess::LowessOptions options;
-    options.fraction = 0.5;
+    options.fraction = 0.7;
     options.iterations = 5;
     options.robustness_method = "bisquare";
     options.return_robustness_weights = true;

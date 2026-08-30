@@ -2,7 +2,7 @@
 
 The Rust bindings provide the core implementation and high-performance extensions. The API uses a Builder pattern consistent across both the `lowess` (pure Rust) and `fastLowess` (accelerated) crates.
 
-> **StreamingLowess** and **OnlineLowess** are documented separately: [Streaming Adapter](api-streaming.md), [Online Adapter](api-online.md)
+> **StreamingLowess** and **OnlineLowess** are documented separately: [Streaming Adapter](crate::doc::api::streaming), [Online Adapter](crate::doc::api::online)
 
 ## When to Use Batch Adapter
 
@@ -58,9 +58,9 @@ Iterations used: None
 - Fits the model to the provided `x` and `y` arrays.
 - Returns `Result<LowessResult<T>, LowessError>`.
 
-See [Streaming Adapter](api-streaming.md) for `StreamingLowess`.
+See [Streaming Adapter](crate::doc::api::streaming) for `StreamingLowess`.
 
-See [Online Adapter](api-online.md) for `OnlineLowess`.
+See [Online Adapter](crate::doc::api::online) for `OnlineLowess`.
 
 ## Builder Configuration
 
@@ -79,9 +79,9 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `boundary_policy(...)` | `boundary_policy` | `"extend"` | Boundary handling policy |
 | `zero_weight_fallback(...)` | `zero_weight_fallback` | `"use_local_mean"` | Zero-weight handling |
 | `auto_converge(T)` | `T: Float` | `NaN` | Auto-convergence tolerance |
-| `confidence_intervals(T)` | `T: Float` | `NaN` | Confidence level (e.g., 0.95) — see [Intervals](intervals.md) |
-| `prediction_intervals(T)` | `T: Float` | `NaN` | Prediction level (e.g., 0.95) — see [Intervals](intervals.md) |
-| `custom_weights(Vec<T>)` | `Vec<T: Float>` | `None` | Per-observation weights (Batch only) — see [Custom Weights](custom-weights.md) |
+| `confidence_intervals(T)` | `T: Float` | `NaN` | Confidence level (e.g., 0.95) — see [Intervals](crate::doc::intervals) |
+| `prediction_intervals(T)` | `T: Float` | `NaN` | Prediction level (e.g., 0.95) — see [Intervals](crate::doc::intervals) |
+| `custom_weights(Vec<T>)` | `Vec<T: Float>` | `None` | Per-observation weights (Batch only) — see [Custom Weights](crate::doc::custom_weights) |
 | `return_diagnostics()` | `bool` | `false` | Compute RMSE, MAE, R², AIC |
 | `return_residuals()` | `bool` | `false` | Include residuals in result |
 | `return_robustness_weights()` | `bool` | `false` | Include robustness weights in result |
@@ -111,13 +111,13 @@ These chained methods configure the builder. They correspond to the "Options Str
 
 **Note:** In other language bindings `custom_weights` is a `fit()` argument; in Rust it is a builder step because all configuration lives on the builder and `fit()` consumes `self`.
 
-See [Streaming Adapter](api-streaming.md) for Streaming Options.
+See [Streaming Adapter](crate::doc::api::streaming) for Streaming Options.
 
-See [Online Adapter](api-online.md) for Online Options.
+See [Online Adapter](crate::doc::api::online) for Online Options.
 
 ## Result Structure
 
-See [Online Adapter](api-online.md) for `OnlineOutput<T>`.
+See [Online Adapter](crate::doc::api::online) for `OnlineOutput<T>`.
 
 ### `LowessResult<T>`
 
@@ -153,7 +153,7 @@ See [Online Adapter](api-online.md) for `OnlineOutput<T>`.
 
 ### weight_function
 
-*See: [Weight Functions](kernels.md)*
+*See: [Weight Functions](crate::doc::kernels)*
 
 - `"tricube"` (default)
 - `"epanechnikov"`
@@ -165,7 +165,7 @@ See [Online Adapter](api-online.md) for `OnlineOutput<T>`.
 
 ### robustness_method
 
-*See: [Robustness](robustness.md)*
+*See: [Robustness](crate::doc::robustness)*
 
 - `"bisquare"` (default; alias: `"biweight"`)
 - `"huber"`
@@ -173,7 +173,7 @@ See [Online Adapter](api-online.md) for `OnlineOutput<T>`.
 
 ### boundary_policy
 
-*See: [Boundary Handling](boundary.md)*
+*See: [Boundary Handling](crate::doc::boundary)*
 
 - `"extend"` (default; alias: `"pad"`)
 - `"reflect"` (alias: `"mirror"`)
@@ -182,7 +182,7 @@ See [Online Adapter](api-online.md) for `OnlineOutput<T>`.
 
 ### scaling_method
 
-*See: [Scaling Methods](scaling.md)*
+*See: [Scaling Methods](crate::doc::scaling)*
 
 - `"mad"` (default; alias: `"median_absolute_deviation"`)
 - `"mar"` (alias: `"median_absolute_residual"`)

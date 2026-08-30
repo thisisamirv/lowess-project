@@ -169,9 +169,9 @@ y[0]: 0.0809
 
 :::caution[Zero-weight windows]
 If a local neighbourhood contains only zero-weight points, the fit at
+that centre point falls back to the behaviour specified by
+`zero_weight_fallback` (default: `"use_local_mean"`).
 :::
-    that centre point falls back to the behaviour specified by
-    `zero_weight_fallback` (default: `"use_local_mean"`).
 
 ---
 

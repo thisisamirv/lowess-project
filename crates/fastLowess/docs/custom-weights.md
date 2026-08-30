@@ -221,5 +221,5 @@ First smoothed value (custom weights): 1.7983966900445223
 
 ## See Also
 
-- [Robustness](robustness.md) — adaptive outlier downweighting via IRLS
-- [API Reference](api.md) — full parameter reference
+- [Robustness](crate::doc::robustness) — adaptive outlier downweighting via IRLS
+- [API Reference](crate::doc::api) — full parameter reference

@@ -65,7 +65,7 @@ x = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
 y_with_outlier = [2.0, 4.0, 6.0, 50.0, 10.0, 12.0]
 
 model = Lowess(;
-    fraction=0.5,
+    fraction=0.7,
     iterations=5,
     robustness_method="bisquare",
     return_robustness_weights=true

@@ -124,9 +124,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 const model = new Lowess({ iterations: 5, return_robustness_weights: true });
 const result = model.fit(x, y);
 
+let shown = 0;
 result.robustness_weights.forEach((w, i) => {
-    if (w < 0.5) {
+    if (w < 0.5 && shown < 5) {
         console.log(`Potential outlier at index ${i}: weight = ${w.toFixed(3)}`);
+        shown++;
     }
 });
 ```

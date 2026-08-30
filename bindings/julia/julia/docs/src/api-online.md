@@ -42,10 +42,13 @@ model = OnlineLowess(;
     min_points=5,
     update_mode="incremental"
 )
+shown = 0
 for i in eachindex(x)
+    global shown
     result = add_point(model, x[i], y[i])
-    if result !== nothing
+    if result !== nothing && shown < 5
         println("Current smoothed value: ", result.y)
+        shown += 1
     end
 end
 ```

@@ -5,25 +5,25 @@
 \title{LOWESS Online Smoothing}
 \usage{
 OnlineLowess(
-    fraction = 0.67,
-    window_capacity = 1000L,
-    min_points = 3L,
-    ...,
-    iterations = 3L,
-    delta = NULL,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    scaling_method = "mad",
-    boundary_policy = "extend",
-    zero_weight_fallback = "use_local_mean",
-    update_mode = "full",
-    auto_converge = NULL,
-    return_robustness_weights = FALSE,
-    return_diagnostics = FALSE,
-    return_residuals = FALSE,
-    parallel = FALSE,
-    confidence_intervals = NULL,
-    prediction_intervals = NULL
+  fraction = 0.67,
+  window_capacity = 1000L,
+  min_points = 3L,
+  ...,
+  iterations = 3L,
+  delta = NULL,
+  weight_function = "tricube",
+  robustness_method = "bisquare",
+  scaling_method = "mad",
+  boundary_policy = "extend",
+  zero_weight_fallback = "use_local_mean",
+  update_mode = "full",
+  auto_converge = NULL,
+  return_robustness_weights = FALSE,
+  return_diagnostics = FALSE,
+  return_residuals = FALSE,
+  parallel = FALSE,
+  confidence_intervals = NULL,
+  prediction_intervals = NULL
 )
 }
 \arguments{
@@ -115,8 +115,10 @@ in chunks, see \code{\link{StreamingLowess}}.
 model <- OnlineLowess(fraction = 0.2, window_capacity = 20)
 x <- 1:50
 y <- sin(x * 0.1) + rnorm(50, 0, 0.1)
+smoothed <- numeric(0)
 for (i in seq_along(x)) {
     result <- add_point(model, x[i], y[i])
-    if (!is.null(result)) cat("smoothed:", result$y, "\n")
+    if (!is.null(result)) smoothed <- c(smoothed, result$y)
 }
+head(smoothed, 5)
 }

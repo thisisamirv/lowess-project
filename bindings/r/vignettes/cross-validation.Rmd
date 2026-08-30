@@ -93,9 +93,10 @@ model <- Lowess(
 result <- fit(model, x, y)
 
 cat("Best fraction:", result$fraction_used, "\n")
-cat("CV scores:\n")
-cat("CV scores by fraction:\n")
-print(data.frame(fraction = fractions, score = result$cv_scores))
+
+scores_df <- data.frame(fraction = fractions, score = result$cv_scores)
+cat("Top 3 fractions by CV score:\n")
+print(head(scores_df[order(scores_df$score), ], 3))
 ```
 
 ---
