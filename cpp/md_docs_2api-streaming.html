@@ -100,17 +100,17 @@ $(document).ready(function(){initNavTree('md_docs_2api-streaming.html',''); init
   <div class="headertitle"><div class="title">StreamingLowess API</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md13"></a> See also: <a class="el" href="md_docs_2api.html">fastLowess</a></p>
-<h1><a class="anchor" id="autotoc_md14"></a>
+<div class="textblock"><p><a class="anchor" id="autotoc_md32"></a> See also: <a class="el" href="md_docs_2api.html">fastLowess</a></p>
+<h1><a class="anchor" id="autotoc_md33"></a>
 When to Use</h1>
 <ul>
 <li>Dataset &gt;100,000 points</li>
 <li>Memory-constrained environments</li>
 <li>Batch processing pipelines</li>
 </ul>
-<h1><a class="anchor" id="autotoc_md15"></a>
+<h1><a class="anchor" id="autotoc_md34"></a>
 Class</h1>
-<h2><a class="anchor" id="autotoc_md16"></a>
+<h2><a class="anchor" id="autotoc_md35"></a>
 &lt;tt&gt;fastlowess::StreamingLowess&lt;/tt&gt;</h2>
 <p>The <code>StreamingLowess</code> class processes data in chunks, suitable for very large datasets or streaming applications.</p>
 <p><b>Constructor:</b></p>
@@ -201,9 +201,9 @@ Class</h1>
 </div><!-- fragment --><ul>
 <li>Finalizes the smoothing process and returns any remaining buffered results.</li>
 </ul>
-<h1><a class="anchor" id="autotoc_md17"></a>
+<h1><a class="anchor" id="autotoc_md36"></a>
 Result Structure</h1>
-<h2><a class="anchor" id="autotoc_md18"></a>
+<h2><a class="anchor" id="autotoc_md37"></a>
 &lt;tt&gt;fastlowess::LowessResult&lt;/tt&gt;</h2>
 <p>Returned (inside <code>Expected</code>) by <code>process_chunk()</code> and <code>finalize()</code>.</p>
 <table class="markdownTable">
@@ -227,9 +227,9 @@ Result Structure</h1>
 <td class="markdownTableBodyNone"><code>dimensions()</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone">Number of predictor dimensions   </td></tr>
 </table>
 <p>See <a class="el" href="md_docs_2api.html">cpp.md</a> for the full <code>LowessResult</code> field reference.</p>
-<h1><a class="anchor" id="autotoc_md19"></a>
+<h1><a class="anchor" id="autotoc_md38"></a>
 Options Structure</h1>
-<h2><a class="anchor" id="autotoc_md20"></a>
+<h2><a class="anchor" id="autotoc_md39"></a>
 &lt;tt&gt;StreamingOptions&lt;/tt&gt; (inherits &lt;tt&gt;LowessOptions&lt;/tt&gt;)</h2>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -241,9 +241,9 @@ Options Structure</h1>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>merge_strategy</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone">"weighted_average"   </td><td class="markdownTableBodyNone">Strategy for blending overlap regions   </td></tr>
 </table>
-<h1><a class="anchor" id="autotoc_md21"></a>
+<h1><a class="anchor" id="autotoc_md40"></a>
 Options</h1>
-<h2><a class="anchor" id="autotoc_md22"></a>
+<h2><a class="anchor" id="autotoc_md41"></a>
 merge_strategy</h2>
 <p><em>See: <a class="el" href="md_docs_2merge.html">Merge Strategies</a></em></p>
 <table class="markdownTable">

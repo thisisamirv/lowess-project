@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['functions_0',['Weight Functions',['../md_docs_2kernels.html',1,'']]]
+  ['fastlowess_0',['fastLowess',['../index.html',1,'']]],
+  ['functions_1',['Weight Functions',['../md_docs_2kernels.html',1,'']]]
 ];

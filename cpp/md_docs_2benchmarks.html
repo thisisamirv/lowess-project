@@ -100,8 +100,8 @@ $(document).ready(function(){initNavTree('md_docs_2benchmarks.html',''); initRes
   <div class="headertitle"><div class="title">Benchmarks</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md49"></a> </p>
-<h1><a class="anchor" id="autotoc_md50"></a>
+<div class="textblock"><p><a class="anchor" id="autotoc_md68"></a> </p>
+<h1><a class="anchor" id="autotoc_md69"></a>
 CPU Benchmarks</h1>
 <p>Speedup relative to R's <code>stats::lowess</code> (higher is better):</p>
 <table class="markdownTable">
@@ -130,7 +130,7 @@ CPU Benchmarks</h1>
 </table>
 <p><em>The R column shows average time across scenarios in multi-scenario categories. Speedups are averages across the same range.</em></p>
 <hr  />
-<h1><a class="anchor" id="autotoc_md52"></a>
+<h1><a class="anchor" id="autotoc_md71"></a>
 GPU Backend</h1>
 <p>For large batch datasets the GPU backend outperforms CPU-parallel execution. The crossover depends on <code>fraction × n</code>:</p>
 <table class="markdownTable">
@@ -141,7 +141,7 @@ GPU Backend</h1>
 </table>
 <p>At <code>fraction = 0.5</code>, GPU overtakes CPU around n ≥ 50K; at smaller fractions, around n ≥ 100K–250K. See the benchmarks README in the source repository for the full sweep and transfer-overhead breakdown.</p>
 <hr  />
-<h1><a class="anchor" id="autotoc_md54"></a>
+<h1><a class="anchor" id="autotoc_md73"></a>
 Reproducing Benchmarks</h1>
 <p>Use <code>std::chrono</code> to time serial vs parallel runs:</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>

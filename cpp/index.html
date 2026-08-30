@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>fastLowess: Concepts</title>
+<title>fastLowess: fastLowess</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -97,152 +97,194 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 </div>
 
 <div><div class="header">
-  <div class="headertitle"><div class="title">Concepts </div></div>
+  <div class="headertitle"><div class="title">fastLowess </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="md_docs_2concepts"></a> Understanding how LOWESS works and when to use it.</p>
-<h1><a class="anchor" id="autotoc_md68"></a>
-What is LOWESS?</h1>
-<p><b>LOWESS</b> (Locally Weighted Scatterplot Smoothing) is a nonparametric regression method that fits smooth curves through scatter plots without assuming a global functional form.</p>
-<p>Unlike parametric methods (linear regression, polynomial fitting), LOWESS adapts locally to the data structure, making it ideal for:</p>
-<ul>
-<li><b>Exploratory data analysis</b> — Discover patterns without assumptions</li>
-<li><b>Trend estimation</b> — Extract signals from noisy time series</li>
-<li><b>Baseline correction</b> — Remove systematic effects in spectroscopy</li>
-<li><b>Genomic smoothing</b> — Smooth methylation, ChIP-seq, or expression data</li>
-</ul>
+<div class="textblock"><p><a class="anchor" id="md_README"></a></p>
+<h1><a class="anchor" id="autotoc_md0"></a>
+LOWESS Project</h1>
+<p><a href="https://github.com/thisisamirv/lowess-project/releases/latest"><img src="https://img.shields.io/badge/C++-00599C?logo=cplusplus&amp;logoColor=white" alt="C++" class="inline"/></a> <a href="https://anaconda.org/conda-forge/libfastlowess"><img src="https://img.shields.io/badge/libfastlowess_(C++)-44A833?logo=anaconda&amp;logoColor=white" alt="libfastlowess (C++)" class="inline"/></a> <a href="https://github.com/thisisamirv/lowess-project/actions/workflows/ci-cpp.yml"><img src="https://github.com/thisisamirv/lowess-project/actions/workflows/ci-cpp.yml/badge.svg" alt="CI" style="pointer-events: none;" class="inline"/></a> </p>
+<p><img src="https://raw.githubusercontent.com/thisisamirv/lowess-project/main/dev/logo.png" alt="One LOWESS to Rule Them All" width="400" class="inline"/> <br  />
+ <em>One LOWESS to Rule Them All</em> </p>
+<p>The fastest, most robust, and most feature-complete language-agnostic LOWESS (Locally Weighted Scatterplot Smoothing) implementation for <b>Rust</b>, <b>Python</b>, <b>R</b>, <b>Julia</b>, <b>JavaScript</b>, <b>C++</b>, and <b>WebAssembly</b>.</p>
+<p>The <code>lowess-project</code> also offers bindings for Rust, Python, R, Julia, Node.js, WebAssembly, and C++ — see the <a href="https://github.com/thisisamirv/lowess-project">full repository</a>.</p>
 <hr  />
-<h1><a class="anchor" id="autotoc_md70"></a>
-How It Works</h1>
-<div class="image">
-<object type="image/svg+xml" data="lowess_concept.svg" style="pointer-events: none;"></object>
-<div class="caption">
-LOWESS fits local weighted regressions at each point, using a focused local window around each evaluation point</div></div>
-    <p>For each point in your data, LOWESS:</p>
-<ol type="1">
-<li><b>Selects neighbors</b> — Choose the nearest points (controlled by <code>fraction</code>)</li>
-<li><b>Assigns weights</b> — Closer points get higher weights (using a kernel function)</li>
-<li><b>Fits locally</b> — Perform weighted least squares regression</li>
-<li><b>Extracts value</b> — Use the fitted value as the smoothed estimate</li>
-<li><b>Iterates</b> (optional) — Reweight points based on residuals to reduce outlier influence</li>
-</ol>
+<h2><a class="anchor" id="autotoc_md2"></a>
+Installation &amp; Documentation</h2>
+<blockquote class="doxtable">
+<p>&zwj;Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the <a href="https://thisisamirv.github.io/lowess-project/cpp/md_docs_2installation.html">Installation Guide</a> for detailed installation instructions.</p>
+<p></p>
+</blockquote>
+<h3><a class="anchor" id="autotoc_md3"></a>
+📚 &lt;a href="https://thisisamirv.github.io/lowess-project/cpp/" &gt;View the full documentation&lt;/a&gt;</h3>
+<h3><a class="anchor" id="autotoc_md4"></a>
+GPU Backend</h3>
+<p>GPU acceleration (<code>wgpu</code>: Vulkan/Metal/DX12) is also supported for high-throughput batch smoothing. See the <a href="https://thisisamirv.github.io/lowess-project/cpp/md_docs_2gpu-backend.html">GPU Backend guide</a> for details.</p>
 <hr  />
-<h1><a class="anchor" id="autotoc_md72"></a>
-The Fraction Parameter</h1>
-<p>The <code>fraction</code> (also called bandwidth or span) is the most important parameter. It controls what proportion of data is used for each local fit.</p>
-<div class="image">
-<object type="image/svg+xml" data="fraction_comparison.svg" style="pointer-events: none;"></object>
-<div class="caption">
-Small fraction vs large fraction — bandwidth controls how closely the fit follows local structure</div></div>
-    <table class="markdownTable">
-<tr class="markdownTableHead">
-<th class="markdownTableHeadNone">Fraction   </th><th class="markdownTableHeadNone">Effect   </th><th class="markdownTableHeadNone">When to Use    </th></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><b>0.1–0.3</b>   </td><td class="markdownTableBodyNone">Fine detail, follows data closely   </td><td class="markdownTableBodyNone">Rapidly changing signals    </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><b>0.3–0.5</b>   </td><td class="markdownTableBodyNone">Balanced smoothing   </td><td class="markdownTableBodyNone">Most applications    </td></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><b>0.5–0.7</b>   </td><td class="markdownTableBodyNone">Heavy smoothing   </td><td class="markdownTableBodyNone">Noisy data, trend extraction    </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><b>0.7–1.0</b>   </td><td class="markdownTableBodyNone">Very smooth   </td><td class="markdownTableBodyNone">Strong noise, global trends   </td></tr>
-</table>
-<p>!!! tip "Rule of Thumb" Start with <code>fraction=0.67</code> (the default) and adjust based on visual inspection. Use cross-validation for automated selection.</p>
-<hr  />
-<h1><a class="anchor" id="autotoc_md74"></a>
-Robustness Iterations</h1>
-<p>Standard LOWESS is sensitive to outliers. <b>Robustness iterations</b> downweight points with large residuals:</p>
-<div class="image">
-<object type="image/svg+xml" data="robust_iter_comparison.svg" style="pointer-events: none;"></object>
-<div class="caption">
-Non-robust LOWESS (iterations=0) vs robust LOWESS — outlier influence is suppressed through iterative reweighting</div></div>
-    <table class="markdownTable">
-<tr class="markdownTableHead">
-<th class="markdownTableHeadNone">Iterations   </th><th class="markdownTableHeadNone">Effect   </th><th class="markdownTableHeadNone">When to Use    </th></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><b>0</b>   </td><td class="markdownTableBodyNone">No robustness (fastest)   </td><td class="markdownTableBodyNone">Clean data, speed-critical    </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><b>1–3</b>   </td><td class="markdownTableBodyNone">Moderate robustness   </td><td class="markdownTableBodyNone">Most applications    </td></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><b>4–6</b>   </td><td class="markdownTableBodyNone">Strong robustness   </td><td class="markdownTableBodyNone">Data with outliers    </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><b>7+</b>   </td><td class="markdownTableBodyNone">Very strong   </td><td class="markdownTableBodyNone">Heavy contamination   </td></tr>
-</table>
-<hr  />
-<h1><a class="anchor" id="autotoc_md76"></a>
-Confidence vs Prediction Intervals</h1>
-<div class="image">
-<object type="image/svg+xml" data="intervals_comparison.svg" style="pointer-events: none;"></object>
-<div class="caption">
-Confidence intervals (narrow, mean curve uncertainty) vs Prediction intervals (wide, new-point uncertainty)</div></div>
-    <table class="markdownTable">
-<tr class="markdownTableHead">
-<th class="markdownTableHeadNone">Interval Type   </th><th class="markdownTableHeadNone">What It Represents   </th><th class="markdownTableHeadNone">Width    </th></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><b>Confidence</b>   </td><td class="markdownTableBodyNone">Uncertainty in the <em>mean curve</em>   </td><td class="markdownTableBodyNone">Narrow    </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><b>Prediction</b>   </td><td class="markdownTableBodyNone">Uncertainty for <em>new observations</em>   </td><td class="markdownTableBodyNone">Wide   </td></tr>
-</table>
-<ul>
-<li>Use <b>confidence intervals</b> to show where the true trend likely lies</li>
-<li>Use <b>prediction intervals</b> to show where new data points might fall</li>
-</ul>
-<hr  />
-<h1><a class="anchor" id="autotoc_md78"></a>
-Execution Modes</h1>
-<p>Choose the right mode based on your use case:</p>
+<h2><a class="anchor" id="autotoc_md6"></a>
+LOESS vs. LOWESS</h2>
 <table class="markdownTable">
 <tr class="markdownTableHead">
-<th class="markdownTableHeadNone">Mode   </th><th class="markdownTableHeadNone">Use Case   </th><th class="markdownTableHeadNone">Memory   </th><th class="markdownTableHeadNone">Features    </th></tr>
+<th class="markdownTableHeadNone">Feature   </th><th class="markdownTableHeadNone">LOESS   </th><th class="markdownTableHeadNone">LOWESS (This Crate)    </th></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><b>Batch</b>   </td><td class="markdownTableBodyNone">Complete datasets   </td><td class="markdownTableBodyNone">Entire dataset   </td><td class="markdownTableBodyNone">All features    </td></tr>
+<td class="markdownTableBodyNone"><b>Polynomial Degree</b>   </td><td class="markdownTableBodyNone">Linear, Quadratic, Cubic, Quartic   </td><td class="markdownTableBodyNone">Linear (Degree 1)    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><b>Streaming</b>   </td><td class="markdownTableBodyNone">Large files (&gt;100K points)   </td><td class="markdownTableBodyNone">One chunk   </td><td class="markdownTableBodyNone">Residuals, robustness    </td></tr>
+<td class="markdownTableBodyNone"><b>Dimensions</b>   </td><td class="markdownTableBodyNone">Multivariate (n-D support)   </td><td class="markdownTableBodyNone">Univariate (1-D only)    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><b>Online</b>   </td><td class="markdownTableBodyNone">Real-time data   </td><td class="markdownTableBodyNone">Fixed window   </td><td class="markdownTableBodyNone">Incremental updates   </td></tr>
+<td class="markdownTableBodyNone"><b>Flexibility</b>   </td><td class="markdownTableBodyNone">High (Distance metrics)   </td><td class="markdownTableBodyNone">Standard    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><b>Complexity</b>   </td><td class="markdownTableBodyNone">Higher (Matrix inversion)   </td><td class="markdownTableBodyNone">Lower (Weighted average/slope)   </td></tr>
 </table>
-<hr  />
-<h1><a class="anchor" id="autotoc_md80"></a>
-Quick Decision Guide</h1>
-<table class="markdownTable">
-<tr class="markdownTableHead">
-<th class="markdownTableHeadNone">Situation   </th><th class="markdownTableHeadNone">Mode    </th></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone">Data fits in memory; needs intervals or CV   </td><td class="markdownTableBodyNone">Batch    </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone">Data too large for memory or arrives in chunks   </td><td class="markdownTableBodyNone">Streaming    </td></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone">Data arrives point-by-point in real time   </td><td class="markdownTableBodyNone">Online   </td></tr>
-</table>
-<hr  />
-<h1><a class="anchor" id="autotoc_md82"></a>
-Key Advantages</h1>
-<table class="markdownTable">
-<tr class="markdownTableHead">
-<th class="markdownTableHeadNone">Feature   </th><th class="markdownTableHeadNone">LOWESS   </th><th class="markdownTableHeadNone">Polynomial Regression   </th><th class="markdownTableHeadNone">Moving Average    </th></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone">No parametric assumptions   </td><td class="markdownTableBodyNone">✓   </td><td class="markdownTableBodyNone">✗   </td><td class="markdownTableBodyNone">✓    </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone">Adapts to local structure   </td><td class="markdownTableBodyNone">✓   </td><td class="markdownTableBodyNone">✗   </td><td class="markdownTableBodyNone">Partial    </td></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone">Robust to outliers   </td><td class="markdownTableBodyNone">✓   </td><td class="markdownTableBodyNone">✗   </td><td class="markdownTableBodyNone">✗    </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone">Uncertainty estimates   </td><td class="markdownTableBodyNone">✓   </td><td class="markdownTableBodyNone">✓   </td><td class="markdownTableBodyNone">✗    </td></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone">Handles irregular sampling   </td><td class="markdownTableBodyNone">✓   </td><td class="markdownTableBodyNone">✓   </td><td class="markdownTableBodyNone">✗   </td></tr>
-</table>
-<hr  />
-<h1><a class="anchor" id="autotoc_md84"></a>
-Next Steps</h1>
-<ul>
-<li><a class="el" href="md_docs_2quickstart.html">Quick Start</a> — See it in action</li>
-<li><a class="el" href="md_docs_2parameters.html">Parameters</a> — All configuration options</li>
-<li><a class="el" href="md_docs_2boundary.html">Boundary Handling</a> — Edge bias reduction strategies</li>
-<li><a class="el" href="md_docs_2robustness.html">Robustness</a> — Outlier downweighting methods</li>
-<li><a class="el" href="md_docs_2scaling.html">Scaling Methods</a> — MAD, MAR, Mean scale estimation</li>
-<li><a class="el" href="md_docs_2merge.html">Merge Strategies</a> — Chunk reconciliation in Streaming mode</li>
-<li><a class="el" href="md_docs_2quickstart.html">Tutorials</a> — Application-specific guides </li>
+<blockquote class="doxtable">
+<p>&zwj;[!TIP] <b>Note:</b> For a <b>LOESS</b> implementation, use <a href="https://github.com/thisisamirv/loess-project"><code>loess-project</code></a>. </p>
+</blockquote>
+<h2><a class="anchor" id="autotoc_md7"></a>
+&lt;/blockquote&gt;</h2>
+<h2><a class="anchor" id="autotoc_md8"></a>
+Why this package?</h2>
+<h3><a class="anchor" id="autotoc_md9"></a>
+Speed</h3>
+<p>The <code>lowess</code> project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution. It is on average <b>200-327x faster</b> than Python's <code>statsmodels.lowess</code> and <b>2-3x faster</b> than R's <code>lowess</code>.</p>
+<p>For more details on the performance comparison, see the <a href="https://thisisamirv.github.io/lowess-project/cpp/md_docs_2benchmarks.html">Benchmarks</a> page.</p>
+<h3><a class="anchor" id="autotoc_md10"></a>
+Robustness</h3>
+<p>This implementation is <em>more robust</em> than R's <code>lowess</code> and Python's <code>statsmodels</code> due to two key design choices:</p>
+<p><b>MAD-Based Scale Estimation:</b></p>
+<p>For robustness weight calculations, this crate uses <em>Median Absolute Deviation (MAD)</em> for scale estimation:</p>
+<div class="fragment"><div class="line">s = median(|r_i - median(r)|)</div>
+</div><!-- fragment --><p>In contrast, <code>statsmodels</code> and R's <code>lowess</code> uses the median of absolute residuals (MAR):</p>
+<div class="fragment"><div class="line">s = median(|r_i|)</div>
+</div><!-- fragment --><ul>
+<li>MAD is a <em>breakdown-point-optimal</em> estimator—it remains valid even when up to 50% of data are outliers.</li>
+<li>The median-centering step removes asymmetric bias from residual distributions.</li>
+<li>MAD provides consistent outlier detection regardless of whether residuals are centered around zero.</li>
 </ul>
-</div></div><!-- PageDoc -->
+<p><b>Boundary Padding:</b></p>
+<p>This crate applies a range of different <em>boundary policies</em> at dataset edges:</p>
+<ul>
+<li><b>Extend</b>: Repeats edge values to maintain local neighborhood size.</li>
+<li><b>Reflect</b>: Mirrors data symmetrically around boundaries.</li>
+<li><b>Zero</b>: Pads with zeros (useful for signal processing).</li>
+<li><b>NoBoundary</b>: Original Cleveland behavior</li>
+</ul>
+<p><code>statsmodels</code> and R's <code>lowess</code> do not apply boundary padding, which can lead to:</p>
+<ul>
+<li>Biased estimates near boundaries due to asymmetric local neighborhoods.</li>
+<li>Increased variance at the edges of the smoothed curve.</li>
+</ul>
+<h3><a class="anchor" id="autotoc_md11"></a>
+Features</h3>
+<p>A variety of features, supporting a range of use cases:</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Feature   </th><th class="markdownTableHeadCenter">This package   </th><th class="markdownTableHeadCenter">statsmodels   </th><th class="markdownTableHeadCenter">R (stats)    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Kernel   </td><td class="markdownTableBodyCenter">7 options   </td><td class="markdownTableBodyCenter">only Tricube   </td><td class="markdownTableBodyCenter">only Tricube    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Robustness Weighting   </td><td class="markdownTableBodyCenter">3 options   </td><td class="markdownTableBodyCenter">only Huber   </td><td class="markdownTableBodyCenter">only Huber    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Scale Estimation   </td><td class="markdownTableBodyCenter">2 options   </td><td class="markdownTableBodyCenter">only MAR   </td><td class="markdownTableBodyCenter">only MAR    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Boundary Padding   </td><td class="markdownTableBodyCenter">4 options   </td><td class="markdownTableBodyCenter">no padding   </td><td class="markdownTableBodyCenter">no padding    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Zero Weight Fallback   </td><td class="markdownTableBodyCenter">3 options   </td><td class="markdownTableBodyCenter">no   </td><td class="markdownTableBodyCenter">no    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Auto Convergence   </td><td class="markdownTableBodyCenter">yes   </td><td class="markdownTableBodyCenter">no   </td><td class="markdownTableBodyCenter">no    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Online Mode   </td><td class="markdownTableBodyCenter">yes   </td><td class="markdownTableBodyCenter">no   </td><td class="markdownTableBodyCenter">no    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Streaming Mode   </td><td class="markdownTableBodyCenter">yes   </td><td class="markdownTableBodyCenter">no   </td><td class="markdownTableBodyCenter">no    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Confidence Intervals   </td><td class="markdownTableBodyCenter">yes   </td><td class="markdownTableBodyCenter">no   </td><td class="markdownTableBodyCenter">no    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Prediction Intervals   </td><td class="markdownTableBodyCenter">yes   </td><td class="markdownTableBodyCenter">no   </td><td class="markdownTableBodyCenter">no    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Cross-Validation   </td><td class="markdownTableBodyCenter">2 options   </td><td class="markdownTableBodyCenter">no   </td><td class="markdownTableBodyCenter">no    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Parallel Execution   </td><td class="markdownTableBodyCenter">yes   </td><td class="markdownTableBodyCenter">no   </td><td class="markdownTableBodyCenter">no    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">GPU Acceleration   </td><td class="markdownTableBodyCenter">yes   </td><td class="markdownTableBodyCenter">no   </td><td class="markdownTableBodyCenter">no    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>no-std</code> Support   </td><td class="markdownTableBodyCenter">yes   </td><td class="markdownTableBodyCenter">no   </td><td class="markdownTableBodyCenter">no   </td></tr>
+</table>
+<h2><a class="anchor" id="autotoc_md12"></a>
+Validation</h2>
+<p>All implementations are <b>numerical twins</b> of R's <code>lowess</code>:</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Aspect   </th><th class="markdownTableHeadNone">Status   </th><th class="markdownTableHeadNone">Details    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><b>Accuracy</b>   </td><td class="markdownTableBodyNone">✅ EXACT MATCH   </td><td class="markdownTableBodyNone">Max diff &lt; 1e-12 across all scenarios    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><b>Consistency</b>   </td><td class="markdownTableBodyNone">✅ PERFECT   </td><td class="markdownTableBodyNone">Multiple scenarios pass with strict tolerance    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><b>Robustness</b>   </td><td class="markdownTableBodyNone">✅ VERIFIED   </td><td class="markdownTableBodyNone">Robust smoothing matches R exactly   </td></tr>
+</table>
+<h2><a class="anchor" id="autotoc_md13"></a>
+API Reference</h2>
+<div class="fragment"><div class="line"><span class="preprocessor">#include &quot;fastlowess.hpp&quot;</span></div>
+<div class="line"> </div>
+<div class="line">fastlowess::LowessOptions options;</div>
+<div class="line">options.fraction = 0.5;</div>
+<div class="line">options.iterations = 3;</div>
+<div class="line">options.delta = 0.01;</div>
+<div class="line">options.weight_function = <span class="stringliteral">&quot;tricube&quot;</span>;</div>
+<div class="line">options.robustness_method = <span class="stringliteral">&quot;bisquare&quot;</span>;</div>
+<div class="line">options.scaling_method = <span class="stringliteral">&quot;mad&quot;</span>;</div>
+<div class="line">options.zero_weight_fallback = <span class="stringliteral">&quot;use_local_mean&quot;</span>;</div>
+<div class="line">options.boundary_policy = <span class="stringliteral">&quot;extend&quot;</span>;</div>
+<div class="line">options.confidence_intervals = 0.95;</div>
+<div class="line">options.prediction_intervals = 0.95;</div>
+<div class="line">options.return_diagnostics = <span class="keyword">true</span>;</div>
+<div class="line">options.return_residuals = <span class="keyword">true</span>;</div>
+<div class="line">options.return_robustness_weights = <span class="keyword">true</span>;</div>
+<div class="line">options.return_se = <span class="keyword">true</span>;</div>
+<div class="line">options.cv_fractions = {0.3, 0.5, 0.7};</div>
+<div class="line">options.cv_method = <span class="stringliteral">&quot;kfold&quot;</span>;</div>
+<div class="line">options.cv_k = 5;</div>
+<div class="line">options.cv_seed = 123;</div>
+<div class="line">options.auto_converge = 1e-4;</div>
+<div class="line">options.parallel = <span class="keyword">true</span>;</div>
+<div class="line"> </div>
+<div class="line">fastlowess::Lowess model(options);</div>
+<div class="line">std::vector&lt;double&gt; custom_weights(x.size(), 1.0);</div>
+<div class="line"><span class="keyword">const</span> <span class="keyword">auto</span> result = model.fit(x, y, custom_weights).value();</div>
+<div class="line"> </div>
+<div class="line"><span class="comment">// Result structure:</span></div>
+<div class="line">result.x_vector(),</div>
+<div class="line">result.y_vector(),</div>
+<div class="line">result.standard_errors(),</div>
+<div class="line">result.confidence_lower(),</div>
+<div class="line">result.confidence_upper(),</div>
+<div class="line">result.prediction_lower(),</div>
+<div class="line">result.prediction_upper(),</div>
+<div class="line">result.residuals(),</div>
+<div class="line">result.robustness_weights(),</div>
+<div class="line">result.diagnostics(),</div>
+<div class="line">result.iterations_used(),</div>
+<div class="line">result.fraction_used(),</div>
+<div class="line">result.cv_scores()</div>
+</div><!-- fragment --><hr  />
+<h2><a class="anchor" id="autotoc_md15"></a>
+Contributing</h2>
+<p>Contributions are welcome! Please see <a href="https://github.com/thisisamirv/lowess-project/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a> for more information.</p>
+<h2><a class="anchor" id="autotoc_md16"></a>
+Changelog</h2>
+<p>See <a href="https://github.com/thisisamirv/lowess-project/blob/main/CHANGELOG.md">CHANGELOG.md</a> for a history of changes.</p>
+<h2><a class="anchor" id="autotoc_md17"></a>
+License</h2>
+<p>Licensed under <a href="https://github.com/thisisamirv/lowess-project/blob/main/LICENSE-MIT">MIT</a> or <a href="https://github.com/thisisamirv/lowess-project/blob/main/LICENSE-APACHE">Apache-2.0</a>.</p>
+<h2><a class="anchor" id="autotoc_md18"></a>
+Citation</h2>
+<p>If you use this software in your research, please cite it using the <a href="https://github.com/thisisamirv/lowess-project/blob/main/CITATION.cff">CITATION.cff</a> file or the BibTeX entry below:</p>
+<div class="fragment"><div class="line">@software{lowess_project,</div>
+<div class="line">  author = {Valizadeh, Amir},</div>
+<div class="line">  title = {LOWESS Project: High-Performance Locally Weighted Scatterplot Smoothing},</div>
+<div class="line">  year = {2026},</div>
+<div class="line">  url = {https://github.com/thisisamirv/lowess-project},</div>
+<div class="line">  license = {MIT OR Apache-2.0}</div>
+<div class="line">}</div>
+</div><!-- fragment --> </div></div><!-- PageDoc -->
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

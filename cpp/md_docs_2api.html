@@ -100,11 +100,11 @@ $(document).ready(function(){initNavTree('md_docs_2api.html',''); initResizable(
   <div class="headertitle"><div class="title">API</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md24"></a> The C++ bindings provide a modern, object-oriented wrapper around the core Rust library, mirroring the Rust API structure.</p>
+<div class="textblock"><p><a class="anchor" id="autotoc_md43"></a> The C++ bindings provide a modern, object-oriented wrapper around the core Rust library, mirroring the Rust API structure.</p>
 <blockquote class="doxtable">
 <p>&zwj;<b>StreamingLowess</b> and <b>OnlineLowess</b> are documented separately: <a class="el" href="md_docs_2api-streaming.html">cpp-streaming.md</a>, <a class="el" href="md_docs_2api-online.html">cpp-online.md</a> </p>
 </blockquote>
-<h1><a class="anchor" id="autotoc_md25"></a>
+<h1><a class="anchor" id="autotoc_md44"></a>
 When to Use</h1>
 <ul>
 <li>Dataset fits in memory</li>
@@ -115,9 +115,9 @@ When to Use</h1>
 <object type="image/svg+xml" data="gap_handling.svg" style="pointer-events: none;"></object>
 <div class="caption">
 Gap Handling</div></div>
-    <h1><a class="anchor" id="autotoc_md26"></a>
+    <h1><a class="anchor" id="autotoc_md45"></a>
 Classes</h1>
-<h2><a class="anchor" id="autotoc_md27"></a>
+<h2><a class="anchor" id="autotoc_md46"></a>
 &lt;tt&gt;fastlowess::Lowess&lt;/tt&gt;</h2>
 <p>The <code>Lowess</code> class allows configuring the LOWESS parameters once and fitting multiple datasets using those parameters.</p>
 <p><b>Constructor:</b></p>
@@ -178,9 +178,9 @@ Classes</h1>
 </ul>
 <p>See <a class="el" href="md_docs_2api-streaming.html">cpp-streaming.md</a> for the <code>StreamingLowess</code> class.</p>
 <p>See <a class="el" href="md_docs_2api-online.html">cpp-online.md</a> for the <code>OnlineLowess</code> class.</p>
-<h1><a class="anchor" id="autotoc_md28"></a>
+<h1><a class="anchor" id="autotoc_md47"></a>
 Options Structures</h1>
-<h2><a class="anchor" id="autotoc_md29"></a>
+<h2><a class="anchor" id="autotoc_md48"></a>
 &lt;tt&gt;LowessOptions&lt;/tt&gt;</h2>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -232,13 +232,13 @@ Options Structures</h1>
 </table>
 <p>See <a class="el" href="md_docs_2api-streaming.html">cpp-streaming.md</a> for <code>StreamingOptions</code>.</p>
 <p>See <a class="el" href="md_docs_2api-online.html">cpp-online.md</a> for <code>OnlineOptions</code>.</p>
-<h1><a class="anchor" id="autotoc_md30"></a>
+<h1><a class="anchor" id="autotoc_md49"></a>
 GPU Acceleration</h1>
 <p>The batch <code>fastlowess::Lowess</code> class can run on a GPU-accelerated backend powered by <code>wgpu</code>. This backend is designed for high-throughput processing of large datasets (10k+ points) where parallel regression fitting on the GPU significantly outperforms CPU execution.</p>
 <blockquote class="doxtable">
 <p>&zwj;GPU support applies to <code>Lowess</code> (batch) only. <code>StreamingLowess</code>/<code>OnlineLowess</code> remain CPU-only — see <a class="el" href="md_docs_2gpu-backend.html">rust.md</a> for why. </p>
 </blockquote>
-<h2><a class="anchor" id="autotoc_md31"></a>
+<h2><a class="anchor" id="autotoc_md50"></a>
 Enabling GPU Support</h2>
 <p>GPU support is opt-in and <b>not included in prebuilt releases</b>. Instead of building from source, call the one-time installer, which downloads a prebuilt GPU-enabled shared library from the matching <a href="https://github.com/thisisamirv/lowess-project/releases">GitHub Release</a>:</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
@@ -249,7 +249,7 @@ Enabling GPU Support</h2>
 <p>Alternatively, build from source locally with the <code>gpu</code> Cargo feature enabled, then link against it and the platform GPU libraries (Vulkan/Metal/DX12):</p>
 <div class="fragment"><div class="line">cd bindings/cpp</div>
 <div class="line">cargo build --release --features gpu</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md32"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md51"></a>
 Usage</h2>
 <p>To use the GPU backend, set <code>backend</code> on <code>LowessOptions</code>:</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
@@ -261,7 +261,7 @@ Usage</h2>
 <div class="line">fastlowess::Lowess model(opts);</div>
 <div class="line"><span class="keyword">auto</span> result = model.fit(x, y);</div>
 </div><!-- fragment --><p>If the library was not built with the <code>gpu</code> feature, requesting <code>backend = "gpu"</code> raises a runtime error pointing to <code>fastlowess::gpu::install()</code>.</p>
-<h2><a class="anchor" id="autotoc_md33"></a>
+<h2><a class="anchor" id="autotoc_md52"></a>
 Supported Features</h2>
 <p>The GPU backend implements almost the entire LOWESS pipeline in WGSL compute shaders, providing native support for the following features:</p>
 <ul>
@@ -277,7 +277,7 @@ Supported Features</h2>
 </li>
 <li><b>Validation</b>: GPU-accelerated <code>"kfold"</code> and <code>"loocv"</code> cross-validation.</li>
 </ul>
-<h3><a class="anchor" id="autotoc_md34"></a>
+<h3><a class="anchor" id="autotoc_md53"></a>
 Feature Comparison</h3>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -303,7 +303,7 @@ Feature Comparison</h3>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone">Interpolation (Delta)   </td><td class="markdownTableBodyNone">✅   </td><td class="markdownTableBodyNone">✅   </td><td class="markdownTableBodyNone">Anchor-based skipping supported   </td></tr>
 </table>
-<h2><a class="anchor" id="autotoc_md35"></a>
+<h2><a class="anchor" id="autotoc_md54"></a>
 Hardware Requirements</h2>
 <p>The GPU backend leverages <code>wgpu</code> and supports:</p>
 <ul>
@@ -312,13 +312,13 @@ Hardware Requirements</h2>
 <li><b>DirectX 12</b> (Windows)</li>
 </ul>
 <p>It requires a device supporting compute shaders. If no compatible GPU is found at runtime, model construction raises an error.</p>
-<h2><a class="anchor" id="autotoc_md36"></a>
+<h2><a class="anchor" id="autotoc_md55"></a>
 Performance Considerations</h2>
 <p>The GPU backend is optimized for large datasets (N &gt; 100,000) and provides parallelization through compute shaders. For smaller datasets, the CPU backend (<code>backend = "cpu"</code>, the default) is faster.</p>
-<h1><a class="anchor" id="autotoc_md37"></a>
+<h1><a class="anchor" id="autotoc_md56"></a>
 Result Structure</h1>
 <p>See <a class="el" href="md_docs_2api-online.html">cpp-online.md</a> for <code>OnlineOutput</code>.</p>
-<h2><a class="anchor" id="autotoc_md38"></a>
+<h2><a class="anchor" id="autotoc_md57"></a>
 &lt;tt&gt;fastlowess::LowessResult&lt;/tt&gt;</h2>
 <p>A RAII wrapper around the C result struct <code>fastlowess_CppLowessResult</code>.</p>
 <table class="markdownTable">
@@ -351,7 +351,7 @@ Result Structure</h1>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>diagnostics()</code>   </td><td class="markdownTableBodyNone"><code>Diagnostics</code>   </td><td class="markdownTableBodyNone">Fit metrics — check <code>diagnostics().has_value()</code> before use (if <code>return_diagnostics</code>)   </td></tr>
 </table>
-<h2><a class="anchor" id="autotoc_md39"></a>
+<h2><a class="anchor" id="autotoc_md58"></a>
 &lt;tt&gt;fastlowess::Diagnostics&lt;/tt&gt;</h2>
 <p>All accessors are const methods (not public fields):</p>
 <table class="markdownTable">
@@ -372,9 +372,9 @@ Result Structure</h1>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>aicc()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">AICc (NaN if not computed)   </td></tr>
 </table>
-<h1><a class="anchor" id="autotoc_md40"></a>
+<h1><a class="anchor" id="autotoc_md59"></a>
 Options</h1>
-<h2><a class="anchor" id="autotoc_md41"></a>
+<h2><a class="anchor" id="autotoc_md60"></a>
 weight_function</h2>
 <p><em>See: <a class="el" href="md_docs_2kernels.html">Weight Functions</a></em></p>
 <ul>
@@ -386,7 +386,7 @@ weight_function</h2>
 <li><code>"triangle"</code> (alias: <code>"triangular"</code>)</li>
 <li><code>"cosine"</code></li>
 </ul>
-<h2><a class="anchor" id="autotoc_md42"></a>
+<h2><a class="anchor" id="autotoc_md61"></a>
 robustness_method</h2>
 <p><em>See: <a class="el" href="md_docs_2robustness.html">Robustness</a></em></p>
 <ul>
@@ -394,7 +394,7 @@ robustness_method</h2>
 <li><code>"huber"</code></li>
 <li><code>"talwar"</code></li>
 </ul>
-<h2><a class="anchor" id="autotoc_md43"></a>
+<h2><a class="anchor" id="autotoc_md62"></a>
 boundary_policy</h2>
 <p><em>See: <a class="el" href="md_docs_2boundary.html">Boundary Handling</a></em></p>
 <ul>
@@ -403,7 +403,7 @@ boundary_policy</h2>
 <li><code>"zero"</code></li>
 <li><code>"noboundary"</code> (alias: <code>"none"</code>)</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md44"></a>
+<h2><a class="anchor" id="autotoc_md63"></a>
 scaling_method</h2>
 <p><em>See: <a class="el" href="md_docs_2scaling.html">Scaling Methods</a></em></p>
 <ul>
@@ -411,7 +411,7 @@ scaling_method</h2>
 <li><code>"mar"</code> (alias: <code>"median_absolute_residual"</code>)</li>
 <li><code>"mean"</code> (alias: <code>"mean_absolute_residual"</code>)</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md45"></a>
+<h2><a class="anchor" id="autotoc_md64"></a>
 zero_weight_fallback</h2>
 <p><em>See: <a class="el" href="md_docs_2parameters.html">Parameters</a></em></p>
 <ul>
@@ -419,13 +419,13 @@ zero_weight_fallback</h2>
 <li><code>"return_original"</code> (alias: <code>"original"</code>)</li>
 <li><code>"return_none"</code> (alias: <code>"none"</code>)</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md46"></a>
+<h2><a class="anchor" id="autotoc_md65"></a>
 merge_strategy</h2>
 <p>See <a class="el" href="md_docs_2api-streaming.html">cpp-streaming.md</a>.</p>
-<h2><a class="anchor" id="autotoc_md47"></a>
+<h2><a class="anchor" id="autotoc_md66"></a>
 update_mode</h2>
 <p>See <a class="el" href="md_docs_2api-online.html">cpp-online.md</a>.</p>
-<h1><a class="anchor" id="autotoc_md48"></a>
+<h1><a class="anchor" id="autotoc_md67"></a>
 Example</h1>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>

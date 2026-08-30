@@ -100,8 +100,8 @@ $(document).ready(function(){initNavTree('md_docs_2merge.html',''); initResizabl
   <div class="headertitle"><div class="title">Merge Strategies</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md174"></a> How overlapping chunk boundaries are reconciled in Streaming mode.</p>
-<h1><a class="anchor" id="autotoc_md175"></a>
+<div class="textblock"><p><a class="anchor" id="autotoc_md193"></a> How overlapping chunk boundaries are reconciled in Streaming mode.</p>
+<h1><a class="anchor" id="autotoc_md194"></a>
 Overview</h1>
 <p>Streaming LOWESS processes data in fixed-size chunks with a configurable overlap. Points inside the overlap zone are fitted twice — once by the left chunk and once by the right chunk. The <code>merge_strategy</code> decides how those two estimates are combined into a single output value.</p>
 <div class="fragment"><div class="line">Chunk A:   [=========|=====]</div>
@@ -127,7 +127,7 @@ Overview</h1>
 <div class="caption">
 Merge Strategies</div></div>
     <hr  />
-<h1><a class="anchor" id="autotoc_md177"></a>
+<h1><a class="anchor" id="autotoc_md196"></a>
 Average</h1>
 <p>Takes the arithmetic mean of the left-chunk and right-chunk estimates in the overlap region. Fast and sufficient when both chunks have similar smoothing quality.</p>
 <p><b>Use when</b>: Chunks are large and the overlap region has uniform data density.</p>
@@ -157,7 +157,7 @@ Average</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">Smoothed 100 points</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md179"></a>
+<h1><a class="anchor" id="autotoc_md198"></a>
 Take First</h1>
 <p>Keeps only the left-chunk estimate in the overlap zone and discards the right-chunk estimate. Produces a definitive, non-revised output as soon as the right boundary of each chunk is reached.</p>
 <p><b>Use when</b>: You need final output values immediately after each chunk (no look-ahead revision); left-chunk data quality is higher.</p>
@@ -187,7 +187,7 @@ Take First</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 17.6391</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md181"></a>
+<h1><a class="anchor" id="autotoc_md200"></a>
 Take Last</h1>
 <p>Keeps only the right-chunk estimate in the overlap zone. The right chunk sees more of the surrounding data, so its fit can be more accurate near the left boundary of the new chunk.</p>
 <p><b>Use when</b>: Right-chunk context improves overlap quality; you are post-processing complete data rather than streaming live.</p>
@@ -217,7 +217,7 @@ Take Last</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 17.6391</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md183"></a>
+<h1><a class="anchor" id="autotoc_md202"></a>
 Weighted Average</h1>
 <p>Assigns each overlap point a weight proportional to its proximity to the centre of its respective chunk: points near the left-chunk centre get higher left weight; points near the right-chunk centre get higher right weight. This produces the smoothest transition across chunk boundaries.</p>
 <p>$$\hat{y} = \frac{w_L \hat{y}_L + w_R \hat{y}_R}{w_L + w_R}$$</p>
@@ -249,7 +249,7 @@ Weighted Average</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 17.6391</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md185"></a>
+<h1><a class="anchor" id="autotoc_md204"></a>
 Choosing a Strategy</h1>
 <table class="markdownTable">
 <tr class="markdownTableHead">
