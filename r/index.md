@@ -49,6 +49,9 @@ for details.
 | **Flexibility** | High (Distance metrics) | Standard |
 | **Complexity** | Higher (Matrix inversion) | Lower (Weighted average/slope) |
 
+Read more about how LOWESS works in the
+[Concepts](https://thisisamirv.github.io/lowess-project/r/articles/concepts.html).
+
 > **Note:** For a **LOESS** implementation, use
 > [`loess-project`](https://github.com/thisisamirv/loess-project).
 

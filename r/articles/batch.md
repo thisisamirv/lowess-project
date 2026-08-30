@@ -11,7 +11,7 @@ features.
 
 Gap Handling
 
-## When to Use
+## When to Use Batch Adapter
 
 - Dataset fits in memory
 - Need intervals, cross-validation, or diagnostics

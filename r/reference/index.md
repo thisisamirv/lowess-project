@@ -4,9 +4,6 @@
 
 Main R6 classes for LOWESS smoothing.
 
-- [`rfastlowess`](https://thisisamirv.github.io/lowess-project/r/reference/rfastlowess-package.md)
-  [`rfastlowess-package`](https://thisisamirv.github.io/lowess-project/r/reference/rfastlowess-package.md)
-  : rfastlowess: High-performance LOWESS Smoothing for R
 - [`Lowess()`](https://thisisamirv.github.io/lowess-project/r/reference/Lowess.md)
   : LOWESS Batch Smoothing
 - [`StreamingLowess()`](https://thisisamirv.github.io/lowess-project/r/reference/StreamingLowess.md)
@@ -36,13 +33,6 @@ Objects returned by fit methods and helper functions.
   : Print OnlineLowess Model
 - [`print(`*`<StreamingLowess>`*`)`](https://thisisamirv.github.io/lowess-project/r/reference/print.StreamingLowess.md)
   : Print StreamingLowess Model
-
-## Types
-
-Helper types for documentation.
-
-- [`Nullable()`](https://thisisamirv.github.io/lowess-project/r/reference/Nullable.md)
-  : Nullable Value Wrapper
 
 ## GPU Backend
 
