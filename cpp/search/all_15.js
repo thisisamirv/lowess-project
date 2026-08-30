@@ -1,7 +1,7 @@
 var searchData=
 [
-  ['news_0',['NEWS',['../md_docs_2NEWS.html',1,'']]],
-  ['news_2emd_1',['NEWS.md',['../NEWS_8md.html',1,'']]],
-  ['next_20steps_2',['next steps',['../md_docs_2concepts.html#autotoc_md90',1,'Next Steps'],['../md_docs_2quickstart.html#autotoc_md232',1,'Next Steps']]],
-  ['no_20boundary_3',['No Boundary',['../md_docs_2boundary.html#autotoc_md71',1,'']]]
+  ['weight_20functions_0',['Weight Functions',['../kernels.html',1,'customization']]],
+  ['weight_5ffunction_1',['weight_function',['../structfastlowess_1_1LowessOptions.html#a73dba24a8c056492b21bf2215a1c253f',1,'fastlowess::LowessOptions::weight_function'],['../structfastlowess_1_1OnlineOptions.html#a7e39e17c0be1d7c223eb7347b40fcba1',1,'fastlowess::OnlineOptions::weight_function']]],
+  ['weights_2',['Custom Weights',['../custom_weights.html',1,'customization']]],
+  ['window_5fcapacity_3',['window_capacity',['../structfastlowess_1_1OnlineOptions.html#ab1a4b461877e41a676ab9b555995bfab',1,'fastlowess::OnlineOptions']]]
 ];

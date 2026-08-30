@@ -238,32 +238,15 @@ excluded.</p>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
 <span></span>
 <span><span class="kw">for</span> <span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">robustness_weights</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">robustness_weights</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">&lt;</span> <span class="fl">0.5</span><span class="op">)</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">robustness_weights</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">&lt;</span> <span class="fl">0.05</span><span class="op">)</span></span>
 <span>        <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Point %d is likely an outlier (weight: %.3f)\n"</span>,</span>
 <span>                    <span class="va">i</span>, <span class="va">result</span><span class="op">$</span><span class="va">robustness_weights</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
-<span><span class="co">#&gt; Point 2 is likely an outlier (weight: 0.312)</span></span>
-<span><span class="co">#&gt; Point 9 is likely an outlier (weight: 0.403)</span></span>
-<span><span class="co">#&gt; Point 12 is likely an outlier (weight: 0.082)</span></span>
-<span><span class="co">#&gt; Point 18 is likely an outlier (weight: 0.461)</span></span>
 <span><span class="co">#&gt; Point 20 is likely an outlier (weight: 0.000)</span></span>
-<span><span class="co">#&gt; Point 24 is likely an outlier (weight: 0.066)</span></span>
 <span><span class="co">#&gt; Point 25 is likely an outlier (weight: 0.000)</span></span>
-<span><span class="co">#&gt; Point 29 is likely an outlier (weight: 0.363)</span></span>
-<span><span class="co">#&gt; Point 31 is likely an outlier (weight: 0.384)</span></span>
-<span><span class="co">#&gt; Point 32 is likely an outlier (weight: 0.274)</span></span>
-<span><span class="co">#&gt; Point 33 is likely an outlier (weight: 0.143)</span></span>
-<span><span class="co">#&gt; Point 35 is likely an outlier (weight: 0.441)</span></span>
-<span><span class="co">#&gt; Point 48 is likely an outlier (weight: 0.482)</span></span>
 <span><span class="co">#&gt; Point 50 is likely an outlier (weight: 0.000)</span></span>
 <span><span class="co">#&gt; Point 59 is likely an outlier (weight: 0.000)</span></span>
-<span><span class="co">#&gt; Point 65 is likely an outlier (weight: 0.378)</span></span>
-<span><span class="co">#&gt; Point 71 is likely an outlier (weight: 0.114)</span></span>
-<span><span class="co">#&gt; Point 74 is likely an outlier (weight: 0.131)</span></span>
-<span><span class="co">#&gt; Point 75 is likely an outlier (weight: 0.316)</span></span>
-<span><span class="co">#&gt; Point 79 is likely an outlier (weight: 0.185)</span></span>
-<span><span class="co">#&gt; Point 80 is likely an outlier (weight: 0.000)</span></span>
-<span><span class="co">#&gt; Point 85 is likely an outlier (weight: 0.182)</span></span></code></pre></div>
+<span><span class="co">#&gt; Point 80 is likely an outlier (weight: 0.000)</span></span></code></pre></div>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>

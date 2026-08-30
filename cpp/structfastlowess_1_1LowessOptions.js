@@ -1,0 +1,25 @@
+var structfastlowess_1_1LowessOptions =
+[
+    [ "auto_converge", "structfastlowess_1_1LowessOptions.html#ab818fecad4f18a4f6ab947ebe75deb06", null ],
+    [ "backend", "structfastlowess_1_1LowessOptions.html#a7df2673737a72e038efa19cca56c2942", null ],
+    [ "boundary_policy", "structfastlowess_1_1LowessOptions.html#a72b5c3c5def7e1939fdfb784a089d938", null ],
+    [ "confidence_intervals", "structfastlowess_1_1LowessOptions.html#a1d07294a88a01279d0d3668a8a70e23f", null ],
+    [ "custom_weights", "structfastlowess_1_1LowessOptions.html#a1c46edade7f9e883483994d12a49e0da", null ],
+    [ "cv_fractions", "structfastlowess_1_1LowessOptions.html#a8df67ab5c18aaea06b523bc3330d3447", null ],
+    [ "cv_k", "structfastlowess_1_1LowessOptions.html#aac93982af4c822840c6264041da36df2", null ],
+    [ "cv_method", "structfastlowess_1_1LowessOptions.html#a20d46eb7c38e21cb9c3e7015a1977ab6", null ],
+    [ "cv_seed", "structfastlowess_1_1LowessOptions.html#ac314d3cc3bb84cdb41829044a4ae7963", null ],
+    [ "delta", "structfastlowess_1_1LowessOptions.html#a081dff19ecd79c14dcc29648959a25d2", null ],
+    [ "fraction", "structfastlowess_1_1LowessOptions.html#ac4c7e581cd561fc11a928f9901bb5ec6", null ],
+    [ "iterations", "structfastlowess_1_1LowessOptions.html#a3a9b03636d3cb266eb345e3f405ba66b", null ],
+    [ "parallel", "structfastlowess_1_1LowessOptions.html#a689dba738384297e91479aa158dc2e45", null ],
+    [ "prediction_intervals", "structfastlowess_1_1LowessOptions.html#a48d749c4b025fc0467ef40c62ce6a939", null ],
+    [ "return_diagnostics", "structfastlowess_1_1LowessOptions.html#a1afdf08dc8d17bf1820edf63b25fd84e", null ],
+    [ "return_residuals", "structfastlowess_1_1LowessOptions.html#a90450e39a90a6211fdbb7c2812cce131", null ],
+    [ "return_robustness_weights", "structfastlowess_1_1LowessOptions.html#a0e2eb41d4d35c6b037c6a767e0848c2b", null ],
+    [ "return_se", "structfastlowess_1_1LowessOptions.html#a6b1d86216ff15cd283112a762fc0d302", null ],
+    [ "robustness_method", "structfastlowess_1_1LowessOptions.html#a503bd268254dd2f6cba9c14d73c3c4a8", null ],
+    [ "scaling_method", "structfastlowess_1_1LowessOptions.html#a099f2f5f556cf0a9c0aa992aae58dcf5", null ],
+    [ "weight_function", "structfastlowess_1_1LowessOptions.html#a73dba24a8c056492b21bf2215a1c253f", null ],
+    [ "zero_weight_fallback", "structfastlowess_1_1LowessOptions.html#a9dda3a3571f061d44f818bc923ef7c2f", null ]
+];

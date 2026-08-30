@@ -1,7 +1,9 @@
 var searchData=
 [
-  ['1_200_0',['fastlowess (C++) 3.1.0',['../md_docs_2NEWS.html#autotoc_md193',1,'']]],
-  ['1_200_200_1',['fastlowess (C++) 1.0.0',['../md_docs_2NEWS.html#autotoc_md210',1,'']]],
-  ['1_202_200_2',['fastlowess (C++) 1.2.0',['../md_docs_2NEWS.html#autotoc_md208',1,'']]],
-  ['1_203_200_3',['fastlowess (C++) 1.3.0',['../md_docs_2NEWS.html#autotoc_md204',1,'']]]
+  ['backend_0',['backend',['../structfastlowess_1_1LowessOptions.html#a7df2673737a72e038efa19cca56c2942',1,'fastlowess::LowessOptions::backend'],['../gpu_backend.html',1,'GPU Backend']]],
+  ['benchmarks_1',['Benchmarks',['../benchmarks.html',1,'']]],
+  ['benchmarks_2emd_2',['benchmarks.md',['../benchmarks_8md.html',1,'']]],
+  ['boundary_20handling_3',['Boundary Handling',['../boundary.html',1,'advanced']]],
+  ['boundary_2emd_4',['boundary.md',['../boundary_8md.html',1,'']]],
+  ['boundary_5fpolicy_5',['boundary_policy',['../structfastlowess_1_1LowessOptions.html#a72b5c3c5def7e1939fdfb784a089d938',1,'fastlowess::LowessOptions::boundary_policy'],['../structfastlowess_1_1OnlineOptions.html#a92d3dfc8fe8d21583f611148514f0d26',1,'fastlowess::OnlineOptions::boundary_policy']]]
 ];

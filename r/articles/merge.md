@@ -150,6 +150,9 @@ model <- StreamingLowess(
     overlap        = overlap,
     merge_strategy = "weighted_average"
 )
+cat(sprintf("overlap = %d points (%.0f%% of chunk)\n",
+            overlap, 100 * overlap / chunk_size))
+#> overlap = 1500 points (30% of chunk)
 ```
 
 ------------------------------------------------------------------------

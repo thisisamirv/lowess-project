@@ -37,7 +37,19 @@ added.
 ## Examples
 
 ``` r
-model <- OnlineLowess(fraction = 0.2, window_capacity = 20L)
-add_point(model, 1.0, 0.5)
-#> NULL
+model <- OnlineLowess(fraction = 0.2, window_capacity = 20L, min_points = 2L)
+invisible(add_point(model, 1.0, 0.5))
+add_point(model, 2.0, 0.6)
+#> $y
+#> [1] 0.6
+#> 
+#> $residual
+#> [1] 0
+#> 
+#> $robustness_weight
+#> [1] 1
+#> 
+#> $iterations_used
+#> [1] 0
+#> 
 ```

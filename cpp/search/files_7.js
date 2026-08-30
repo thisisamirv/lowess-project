@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['news_2emd_0',['NEWS.md',['../NEWS_8md.html',1,'']]]
+  ['merge_2emd_0',['merge.md',['../merge_8md.html',1,'']]]
 ];

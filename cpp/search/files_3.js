@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['gpu_2dbackend_2emd_0',['gpu-backend.md',['../gpu-backend_8md.html',1,'']]]
+  ['fastlowess_2ehpp_0',['fastlowess.hpp',['../fastlowess_8hpp.html',1,'']]]
 ];

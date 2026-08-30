@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>fastLowess: fastLowess</title>
+<title>fastlowess-cpp: fastlowess-cpp</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -34,7 +34,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">fastLowess
+   <div id="projectname">fastlowess-cpp
    </div>
    <div id="projectbrief">High-performance LOWESS smoothing</div>
   </td>
@@ -99,30 +99,28 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 </div>
 
 <div><div class="header">
-  <div class="headertitle"><div class="title">fastLowess </div></div>
+  <div class="headertitle"><div class="title">fastlowess-cpp </div></div>
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p><a class="anchor" id="md_README"></a></p>
-<h1><a class="anchor" id="autotoc_md0"></a>
-LOWESS Project</h1>
+<h1>LOWESS Project</h1>
+<p align="center"></p>
 <p><a href="https://github.com/thisisamirv/lowess-project/releases/latest"><img src="https://img.shields.io/badge/C++-00599C?logo=cplusplus&amp;logoColor=white" alt="C++" class="inline"/></a> <a href="https://anaconda.org/conda-forge/libfastlowess"><img src="https://img.shields.io/badge/libfastlowess_(C++)-44A833?logo=anaconda&amp;logoColor=white" alt="libfastlowess (C++)" class="inline"/></a> <a href="https://github.com/thisisamirv/lowess-project/actions/workflows/ci-cpp.yml"><img src="https://github.com/thisisamirv/lowess-project/actions/workflows/ci-cpp.yml/badge.svg" alt="CI" style="pointer-events: none;" class="inline"/></a> </p>
+<p align="center"></p>
 <p><img src="https://raw.githubusercontent.com/thisisamirv/lowess-project/main/dev/logo.png" alt="One LOWESS to Rule Them All" width="400" class="inline"/> <br  />
  <em>One LOWESS to Rule Them All</em> </p>
 <p>The fastest, most robust, and most feature-complete language-agnostic LOWESS (Locally Weighted Scatterplot Smoothing) implementation for <b>Rust</b>, <b>Python</b>, <b>R</b>, <b>Julia</b>, <b>JavaScript</b>, <b>C++</b>, and <b>WebAssembly</b>.</p>
 <p>The <code>lowess-project</code> also offers bindings for Rust, Python, R, Julia, Node.js, WebAssembly, and C++ — see the <a href="https://github.com/thisisamirv/lowess-project">full repository</a>.</p>
 <hr  />
-<h2><a class="anchor" id="autotoc_md2"></a>
-Installation &amp; Documentation</h2>
+<h2>Installation &amp; Documentation</h2>
 <blockquote class="doxtable">
-<p>&zwj;Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the <a href="https://thisisamirv.github.io/lowess-project/cpp/md_docs_2installation.html">Installation Guide</a> for detailed installation instructions.</p>
+<p>&zwj;Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the <a href="https://thisisamirv.github.io/lowess-project/cpp/installation.html">Installation Guide</a> for detailed installation instructions.</p>
 <p>📚 <a href="https://thisisamirv.github.io/lowess-project/cpp/">View the full documentation</a> </p>
 </blockquote>
-<h3><a class="anchor" id="autotoc_md3"></a>
-GPU Backend</h3>
-<p>GPU acceleration (<code>wgpu</code>: Vulkan/Metal/DX12) is also supported for high-throughput batch smoothing. See the <a href="https://thisisamirv.github.io/lowess-project/cpp/md_docs_2gpu-backend.html">GPU Backend guide</a> for details.</p>
+<h3>GPU Backend</h3>
+<p>GPU acceleration (<code>wgpu</code>: Vulkan/Metal/DX12) is also supported for high-throughput batch smoothing. See the <a href="https://thisisamirv.github.io/lowess-project/cpp/gpu_backend.html">GPU Backend guide</a> for details.</p>
 <hr  />
-<h2><a class="anchor" id="autotoc_md5"></a>
-LOESS vs. LOWESS</h2>
+<h2>LOESS vs. LOWESS</h2>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Feature   </th><th class="markdownTableHeadNone">LOESS   </th><th class="markdownTableHeadNone">LOWESS (This Crate)    </th></tr>
@@ -135,19 +133,16 @@ LOESS vs. LOWESS</h2>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><b>Complexity</b>   </td><td class="markdownTableBodyNone">Higher (Matrix inversion)   </td><td class="markdownTableBodyNone">Lower (Weighted average/slope)   </td></tr>
 </table>
-<p>Read more about how LOWESS works in the <a href="https://thisisamirv.github.io/lowess-project/cpp/md_docs_2concepts.html">Concepts</a>.</p>
+<p>Read more about how LOWESS works in the <a href="https://thisisamirv.github.io/lowess-project/cpp/concepts.html">Concepts</a>.</p>
 <blockquote class="doxtable">
 <p>&zwj;<b>Note:</b> For a <b>LOESS</b> implementation, use <a href="https://github.com/thisisamirv/loess-project"><code>loess-project</code></a>. </p>
 </blockquote>
 <hr  />
-<h2><a class="anchor" id="autotoc_md6"></a>
-Why this package?</h2>
-<h3><a class="anchor" id="autotoc_md7"></a>
-Speed</h3>
+<h2>Why this package?</h2>
+<h3>Speed</h3>
 <p>The <code>lowess</code> project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution. It is on average <b>200-327x faster</b> than Python's <code>statsmodels.lowess</code> and <b>2-3x faster</b> than R's <code>lowess</code>.</p>
-<p>For more details on the performance comparison, see the <a href="https://thisisamirv.github.io/lowess-project/cpp/md_docs_2benchmarks.html">Benchmarks</a> page.</p>
-<h3><a class="anchor" id="autotoc_md8"></a>
-Robustness</h3>
+<p>For more details on the performance comparison, see the <a href="https://thisisamirv.github.io/lowess-project/cpp/benchmarks.html">Benchmarks</a> page.</p>
+<h3>Robustness</h3>
 <p>This implementation is <em>more robust</em> than R's <code>lowess</code> and Python's <code>statsmodels</code> due to two key design choices:</p>
 <p><b>MAD-Based Scale Estimation:</b></p>
 <p>For robustness weight calculations, this crate uses <em>Median Absolute Deviation (MAD)</em> for scale estimation:</p>
@@ -172,8 +167,7 @@ Robustness</h3>
 <li>Biased estimates near boundaries due to asymmetric local neighborhoods.</li>
 <li>Increased variance at the edges of the smoothed curve.</li>
 </ul>
-<h3><a class="anchor" id="autotoc_md9"></a>
-Features</h3>
+<h3>Features</h3>
 <p>A variety of features, supporting a range of use cases:</p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -207,8 +201,7 @@ Features</h3>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>no-std</code> Support   </td><td class="markdownTableBodyCenter">yes   </td><td class="markdownTableBodyCenter">no   </td><td class="markdownTableBodyCenter">no   </td></tr>
 </table>
-<h2><a class="anchor" id="autotoc_md10"></a>
-Validation</h2>
+<h2>Validation</h2>
 <p>All implementations are <b>numerical twins</b> of R's <code>lowess</code>:</p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -221,14 +214,11 @@ Validation</h2>
 <td class="markdownTableBodyNone"><b>Robustness</b>   </td><td class="markdownTableBodyNone">✅ VERIFIED   </td><td class="markdownTableBodyNone">Robust smoothing matches R exactly   </td></tr>
 </table>
 <hr  />
-<h2><a class="anchor" id="autotoc_md12"></a>
-Contributing</h2>
+<h2>Contributing</h2>
 <p>Contributions are welcome! Please see <a href="https://github.com/thisisamirv/lowess-project/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a> for more information.</p>
-<h2><a class="anchor" id="autotoc_md13"></a>
-License</h2>
+<h2>License</h2>
 <p>Licensed under <a href="https://github.com/thisisamirv/lowess-project/blob/main/LICENSE-MIT">MIT</a> or <a href="https://github.com/thisisamirv/lowess-project/blob/main/LICENSE-APACHE">Apache-2.0</a>.</p>
-<h2><a class="anchor" id="autotoc_md14"></a>
-Citation</h2>
+<h2>Citation</h2>
 <p>If you use this software in your research, please cite it using the <a href="https://github.com/thisisamirv/lowess-project/blob/main/CITATION.cff">CITATION.cff</a> file or the BibTeX entry below:</p>
 <div class="fragment"><div class="line">@software{lowess_project,</div>
 <div class="line">  author = {Valizadeh, Amir},</div>

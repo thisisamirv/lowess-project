@@ -152,32 +152,15 @@ model <- Lowess(iterations = 5, return_robustness_weights = TRUE)
 result <- fit(model, x, y)
 
 for (i in seq_along(result$robustness_weights)) {
-    if (result$robustness_weights[i] < 0.5)
+    if (result$robustness_weights[i] < 0.05)
         cat(sprintf("Point %d is likely an outlier (weight: %.3f)\n",
                     i, result$robustness_weights[i]))
 }
-#> Point 2 is likely an outlier (weight: 0.312)
-#> Point 9 is likely an outlier (weight: 0.403)
-#> Point 12 is likely an outlier (weight: 0.082)
-#> Point 18 is likely an outlier (weight: 0.461)
 #> Point 20 is likely an outlier (weight: 0.000)
-#> Point 24 is likely an outlier (weight: 0.066)
 #> Point 25 is likely an outlier (weight: 0.000)
-#> Point 29 is likely an outlier (weight: 0.363)
-#> Point 31 is likely an outlier (weight: 0.384)
-#> Point 32 is likely an outlier (weight: 0.274)
-#> Point 33 is likely an outlier (weight: 0.143)
-#> Point 35 is likely an outlier (weight: 0.441)
-#> Point 48 is likely an outlier (weight: 0.482)
 #> Point 50 is likely an outlier (weight: 0.000)
 #> Point 59 is likely an outlier (weight: 0.000)
-#> Point 65 is likely an outlier (weight: 0.378)
-#> Point 71 is likely an outlier (weight: 0.114)
-#> Point 74 is likely an outlier (weight: 0.131)
-#> Point 75 is likely an outlier (weight: 0.316)
-#> Point 79 is likely an outlier (weight: 0.185)
 #> Point 80 is likely an outlier (weight: 0.000)
-#> Point 85 is likely an outlier (weight: 0.182)
 ```
 
 ``` r

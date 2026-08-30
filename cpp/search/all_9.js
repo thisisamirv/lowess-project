@@ -1,26 +1,9 @@
 var searchData=
 [
-  ['a_20kernel_0',['Choosing a Kernel',['../md_docs_2kernels.html#autotoc_md177',1,'']]],
-  ['a_20known_20outlier_1',['Suppress a Known Outlier',['../md_docs_2custom-weights.html#autotoc_md114',1,'']]],
-  ['a_20policy_2',['Choosing a Policy',['../md_docs_2boundary.html#autotoc_md73',1,'']]],
-  ['a_20scaling_20method_3',['Choosing a Scaling Method',['../md_docs_2scaling.html#autotoc_md259',1,'']]],
-  ['a_20strategy_4',['Choosing a Strategy',['../md_docs_2merge.html#autotoc_md189',1,'']]],
-  ['absolute_20deviation_20default_5',['MAD — Median Absolute Deviation (Default)',['../md_docs_2scaling.html#autotoc_md253',1,'']]],
-  ['absolute_20residual_6',['absolute residual',['../md_docs_2scaling.html#autotoc_md255',1,'MAR — Median Absolute Residual'],['../md_docs_2scaling.html#autotoc_md257',1,'Mean — Mean Absolute Residual']]],
-  ['acceleration_7',['GPU Acceleration',['../md_docs_2api.html#autotoc_md45',1,'']]],
-  ['adapter_8',['When to Use Batch Adapter',['../md_docs_2api.html#autotoc_md40',1,'']]],
-  ['adapter_2dchoice_2emd_9',['adapter-choice.md',['../adapter-choice_8md.html',1,'']]],
-  ['added_10',['added',['../md_docs_2NEWS.html#autotoc_md216',1,'Added'],['../md_docs_2NEWS.html#autotoc_md194',1,'Added'],['../md_docs_2NEWS.html#autotoc_md198',1,'Added'],['../md_docs_2NEWS.html#autotoc_md201',1,'Added'],['../md_docs_2NEWS.html#autotoc_md205',1,'Added'],['../md_docs_2NEWS.html#autotoc_md211',1,'Added']]],
-  ['advantages_11',['Key Advantages',['../md_docs_2concepts.html#autotoc_md88',1,'']]],
-  ['also_12',['also',['../md_docs_2use-case-genomics.html#autotoc_md274',1,'See Also'],['../md_docs_2custom-weights.html#autotoc_md123',1,'See Also'],['../md_docs_2use-case-real-time.html#autotoc_md292',1,'See Also'],['../md_docs_2use-case-time-series.html#autotoc_md310',1,'See Also']]],
-  ['analysis_13',['analysis',['../md_docs_2use-case-time-series.html#autotoc_md304',1,'Multi-Scale Analysis'],['../md_docs_2use-case-time-series.html',1,'Time Series Analysis']]],
-  ['api_14',['api',['../md_docs_2api.html',1,'API'],['../md_docs_2api-online.html',1,'OnlineLowess API'],['../md_docs_2api-streaming.html',1,'StreamingLowess API']]],
-  ['api_2donline_2emd_15',['api-online.md',['../api-online_8md.html',1,'']]],
-  ['api_2dstreaming_2emd_16',['api-streaming.md',['../api-streaming_8md.html',1,'']]],
-  ['api_2emd_17',['api.md',['../api_8md.html',1,'']]],
-  ['application_18',['Application',['../md_docs_2use-case-genomics.html#autotoc_md268',1,'']]],
-  ['auto_20convergence_19',['Auto-Convergence',['../md_docs_2robustness.html#autotoc_md249',1,'']]],
-  ['availability_20',['availability',['../md_docs_2intervals.html#autotoc_md157',1,'Availability'],['../md_docs_2cross-validation.html#autotoc_md105',1,'Availability'],['../md_docs_2gpu-backend.html#autotoc_md129',1,'Checking Availability']]],
-  ['available_20kernels_21',['Available Kernels',['../md_docs_2kernels.html#autotoc_md161',1,'']]],
-  ['average_22',['average',['../md_docs_2merge.html#autotoc_md181',1,'Average'],['../md_docs_2merge.html#autotoc_md187',1,'Weighted Average']]]
+  ['k_5fdefault_5fchunk_5fsize_0',['k_default_chunk_size',['../namespacefastlowess_1_1detail.html#a59395fbc126884e972f950ea475927f8',1,'fastlowess::detail']]],
+  ['k_5fdefault_5fcv_5fk_1',['k_default_cv_k',['../namespacefastlowess_1_1detail.html#a5eb3a6d91be5b909dd7c62048d9b8495',1,'fastlowess::detail']]],
+  ['k_5fdefault_5ffraction_2',['k_default_fraction',['../namespacefastlowess_1_1detail.html#a5fc83238a1904dec0d45c19ead8497f2',1,'fastlowess::detail']]],
+  ['k_5fdefault_5foverlap_3',['k_default_overlap',['../namespacefastlowess_1_1detail.html#a39f4c1131a05b5752d76de552794e37e',1,'fastlowess::detail']]],
+  ['k_5fdefault_5fwindow_5fcapacity_4',['k_default_window_capacity',['../namespacefastlowess_1_1detail.html#afa163c018568540f591596db74c4b96a',1,'fastlowess::detail']]],
+  ['kernels_2emd_5',['kernels.md',['../kernels_8md.html',1,'']]]
 ];

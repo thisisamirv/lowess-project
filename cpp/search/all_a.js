@@ -1,26 +1,7 @@
 var searchData=
 [
-  ['backend_0',['backend',['../md_docs_2benchmarks.html#autotoc_md59',1,'GPU Backend'],['../md_docs_2gpu-backend.html',1,'GPU Backend'],['../index.html#autotoc_md3',1,'GPU Backend']]],
-  ['basic_20smoothing_1',['Basic Smoothing',['../md_docs_2quickstart.html#autotoc_md224',1,'']]],
-  ['basic_20trend_20extraction_2',['Basic Trend Extraction',['../md_docs_2use-case-time-series.html#autotoc_md296',1,'']]],
-  ['basic_20usage_3',['Basic Usage',['../md_docs_2custom-weights.html#autotoc_md113',1,'']]],
-  ['batch_20adapter_4',['When to Use Batch Adapter',['../md_docs_2api.html#autotoc_md40',1,'']]],
-  ['benchmarks_5',['benchmarks',['../md_docs_2benchmarks.html',1,'Benchmarks'],['../md_docs_2benchmarks.html#autotoc_md57',1,'CPU Benchmarks'],['../md_docs_2benchmarks.html#autotoc_md61',1,'Reproducing Benchmarks']]],
-  ['benchmarks_2emd_6',['benchmarks.md',['../benchmarks_8md.html',1,'']]],
-  ['best_20practices_7',['Best Practices',['../md_docs_2cross-validation.html#autotoc_md107',1,'']]],
-  ['best_20practices_20for_20genomic_20data_8',['Best Practices for Genomic Data',['../md_docs_2use-case-genomics.html#autotoc_md272',1,'']]],
-  ['binaries_20linux_20x64_9',['Pre-built Binaries (Linux (x64))',['../md_docs_2installation.html#autotoc_md137',1,'']]],
-  ['binaries_20macos_20x64_10',['Pre-built Binaries (macOS (x64))',['../md_docs_2installation.html#autotoc_md138',1,'']]],
-  ['binaries_20windows_20x64_11',['Pre-built Binaries (Windows (x64))',['../md_docs_2installation.html#autotoc_md139',1,'']]],
-  ['bisquare_20default_12',['Bisquare (Default)',['../md_docs_2robustness.html#autotoc_md237',1,'']]],
-  ['biweight_13',['Biweight',['../md_docs_2kernels.html#autotoc_md169',1,'']]],
-  ['both_20intervals_14',['Both Intervals',['../md_docs_2intervals.html#autotoc_md151',1,'']]],
-  ['boundary_15',['No Boundary',['../md_docs_2boundary.html#autotoc_md71',1,'']]],
-  ['boundary_20handling_16',['Boundary Handling',['../md_docs_2boundary.html',1,'']]],
-  ['boundary_2emd_17',['boundary.md',['../boundary_8md.html',1,'']]],
-  ['boundary_5fpolicy_18',['boundary_policy',['../md_docs_2api.html#autotoc_md52',1,'']]],
-  ['built_20binaries_20linux_20x64_19',['Pre-built Binaries (Linux (x64))',['../md_docs_2installation.html#autotoc_md137',1,'']]],
-  ['built_20binaries_20macos_20x64_20',['Pre-built Binaries (macOS (x64))',['../md_docs_2installation.html#autotoc_md138',1,'']]],
-  ['built_20binaries_20windows_20x64_21',['Pre-built Binaries (Windows (x64))',['../md_docs_2installation.html#autotoc_md139',1,'']]],
-  ['by_20point_22',['Online Mode: Point-by-Point',['../md_docs_2use-case-real-time.html#autotoc_md278',1,'']]]
+  ['lowess_0',['lowess',['../classfastlowess_1_1Lowess.html',1,'fastlowess::Lowess'],['../classfastlowess_1_1Lowess.html#aeb64128717ffc0cfeec679d9902a531f',1,'fastlowess::Lowess::Lowess(const LowessOptions &amp;options={})'],['../classfastlowess_1_1Lowess.html#a6881fe78c6cc7b606c2a4a35f9c3d2e7',1,'fastlowess::Lowess::Lowess(const Lowess &amp;)=delete'],['../classfastlowess_1_1Lowess.html#aee45723ef740443b160b664dd8fccff8',1,'fastlowess::Lowess::Lowess(Lowess &amp;&amp;other) noexcept']]],
+  ['lowesserror_1',['lowesserror',['../classfastlowess_1_1LowessError.html',1,'fastlowess::LowessError'],['../classfastlowess_1_1LowessError.html#aa757849d28bbb66407c72f9872200d86',1,'fastlowess::LowessError::LowessError()']]],
+  ['lowessoptions_2',['LowessOptions',['../structfastlowess_1_1LowessOptions.html',1,'fastlowess']]],
+  ['lowessresult_3',['lowessresult',['../classfastlowess_1_1LowessResult.html',1,'fastlowess::LowessResult'],['../classfastlowess_1_1LowessResult.html#a0892db62a16346f5dbfdf7e1c35edeee',1,'fastlowess::LowessResult::LowessResult()=default'],['../classfastlowess_1_1LowessResult.html#ac86141f193bac1ef68fad68d2cae44a4',1,'fastlowess::LowessResult::LowessResult(const fastlowess_CppLowessResult &amp;c_result)'],['../classfastlowess_1_1LowessResult.html#a99de99bdf1f6b24516cbda340b4bb73a',1,'fastlowess::LowessResult::LowessResult(const LowessResult &amp;)=delete'],['../classfastlowess_1_1LowessResult.html#a0fdb2fea87519fa6de8feea9f8a8015b',1,'fastlowess::LowessResult::LowessResult(LowessResult &amp;&amp;other) noexcept']]]
 ];

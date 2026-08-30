@@ -1,12 +1,10 @@
 var searchData=
 [
-  ['emphasize_20important_20points_0',['Emphasize Important Points',['../md_docs_2custom-weights.html#autotoc_md116',1,'']]],
-  ['epanechnikov_1',['Epanechnikov',['../md_docs_2kernels.html#autotoc_md165',1,'']]],
-  ['errors_2',['Standard Errors',['../md_docs_2intervals.html#autotoc_md155',1,'']]],
-  ['estimation_3',['Scale Estimation',['../md_docs_2robustness.html#autotoc_md247',1,'']]],
-  ['example_4',['example',['../md_docs_2api.html#autotoc_md55',1,'Example'],['../md_docs_2use-case-real-time.html#autotoc_md284',1,'Real-Time Dashboard Example'],['../md_docs_2use-case-real-time.html#autotoc_md279',1,'Sensor Data Example']]],
-  ['execution_20modes_5',['execution modes',['../md_docs_2adapter-choice.html',1,'Execution Modes'],['../md_docs_2concepts.html#autotoc_md84',1,'Execution Modes']]],
-  ['expression_20time_20course_6',['Gene Expression Time Course',['../md_docs_2use-case-time-series.html#autotoc_md306',1,'']]],
-  ['extend_20default_7',['Extend (Default)',['../md_docs_2boundary.html#autotoc_md65',1,'']]],
-  ['extraction_8',['Basic Trend Extraction',['../md_docs_2use-case-time-series.html#autotoc_md296',1,'']]]
+  ['onlinelowess_0',['onlinelowess',['../classfastlowess_1_1OnlineLowess.html',1,'fastlowess::OnlineLowess'],['../classfastlowess_1_1OnlineOutput.html#a5e236589da58bef059203559a019ad80',1,'fastlowess::OnlineOutput::OnlineLowess'],['../classfastlowess_1_1OnlineLowess.html#a24db2d32e3fec45bb3388336c0200dc0',1,'fastlowess::OnlineLowess::OnlineLowess(const OnlineOptions &amp;options={})'],['../classfastlowess_1_1OnlineLowess.html#a6ad68adac17764c91153df5a02ac1ce5',1,'fastlowess::OnlineLowess::OnlineLowess(const OnlineLowess &amp;)=delete'],['../classfastlowess_1_1OnlineLowess.html#a9a99929c5de21a4dc41a1b7182f48c33',1,'fastlowess::OnlineLowess::OnlineLowess(OnlineLowess &amp;&amp;other) noexcept']]],
+  ['onlinelowess_20api_1',['OnlineLowess API',['../api_online.html',1,'api']]],
+  ['onlineoptions_2',['OnlineOptions',['../structfastlowess_1_1OnlineOptions.html',1,'fastlowess']]],
+  ['onlineoutput_3',['OnlineOutput',['../classfastlowess_1_1OnlineOutput.html',1,'fastlowess']]],
+  ['operator_20bool_4',['operator bool',['../classfastlowess_1_1Expected.html#ad361b5ccf1163a38e469847f2b1adf77',1,'fastlowess::Expected']]],
+  ['operator_3d_5',['operator=',['../classfastlowess_1_1LowessResult.html#a04a160b03c6a45ac17f2174a0bb3c4bf',1,'fastlowess::LowessResult::operator=(const LowessResult &amp;)=delete'],['../classfastlowess_1_1LowessResult.html#ae6b0e9c3e30441ec6f43e4ea26192a12',1,'fastlowess::LowessResult::operator=(LowessResult &amp;&amp;other) noexcept'],['../classfastlowess_1_1Lowess.html#ab3155790ce17e0cf0095fb0d164dfe5a',1,'fastlowess::Lowess::operator=(const Lowess &amp;)=delete'],['../classfastlowess_1_1Lowess.html#a030edd9a891a18f6eb0618d5fdfe645e',1,'fastlowess::Lowess::operator=(Lowess &amp;&amp;other) noexcept'],['../classfastlowess_1_1StreamingLowess.html#a1e94c519cf117eecb284684997bcc918',1,'fastlowess::StreamingLowess::operator=(const StreamingLowess &amp;)=delete'],['../classfastlowess_1_1StreamingLowess.html#a16667e2acce6caafdf86206c3760dc11',1,'fastlowess::StreamingLowess::operator=(StreamingLowess &amp;&amp;other) noexcept'],['../classfastlowess_1_1OnlineLowess.html#aafaf996884e4d874efd715f6a717a9b9',1,'fastlowess::OnlineLowess::operator=(const OnlineLowess &amp;)=delete'],['../classfastlowess_1_1OnlineLowess.html#ac54027a3e4fc8cc0dd8c58793cbe63c3',1,'fastlowess::OnlineLowess::operator=(OnlineLowess &amp;&amp;other) noexcept']]],
+  ['overlap_6',['overlap',['../structfastlowess_1_1StreamingOptions.html#a493fdf1cc257a60df0d57efc7e9f7cc5',1,'fastlowess::StreamingOptions']]]
 ];

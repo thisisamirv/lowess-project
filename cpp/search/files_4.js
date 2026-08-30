@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['installation_2emd_0',['installation.md',['../installation_8md.html',1,'']]],
-  ['intervals_2emd_1',['intervals.md',['../intervals_8md.html',1,'']]]
+  ['getting_2dstarted_2emd_0',['getting-started.md',['../getting-started_8md.html',1,'']]],
+  ['gpu_2dbackend_2emd_1',['gpu-backend.md',['../gpu-backend_8md.html',1,'']]]
 ];

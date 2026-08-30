@@ -21,6 +21,14 @@
   per-binding/crate `NEWS.md`/`news.md` from the root `CHANGELOG.md`.
   Wired into every docs site’s navigation, the Rust crates’ rustdoc
   module tree, and every `Makefile` `dev` target.
+- Replaced `kernels.md`’s “Choosing a Kernel” mermaid flowchart (every
+  binding/crate) with an equivalent decision table, since Doxygen and
+  rustdoc don’t render mermaid and the deeply-nested diamond chain was
+  hard to read even where it did render.
+- Replaced `adapter-choice.md`/`adapters.md`’s “Overview” flowchart
+  (mermaid in most bindings/crates, ASCII art in the C++ docs) with an
+  equivalent decision table, unifying on a single rendering-agnostic
+  format across every binding/crate.
 - Moved the duplicated “GPU Acceleration” section (installation, usage,
   supported features, feature comparison) out of `api.md` in the C++,
   Node.js, and Python bindings and the `fastLowess` crate into each
@@ -80,6 +88,53 @@
   and a new `deploy` job using the official `actions/deploy-pages`,
   which this repo pins directly. Requires the repository’s Pages source
   to be switched to “GitHub Actions” in settings.
+- Fixed the “Handling Outliers” quickstart example (every binding and
+  the `lowess`/`fastLowess` crates) printing nothing: with only 6 points
+  and `fraction = 0.5`, the local window is small enough that tricube
+  weighting drives the farthest neighbor’s weight to ~0, leaving just 2
+  effectively-weighted points, which a degree-1 fit reproduces exactly
+  (zero residual, no downweighting) — confirmed directly against the
+  `lowess`/`loess` core, not binding-specific. Bumped to
+  `fraction = 0.7`, which correctly downweights the injected outlier.
+- Fixed the R
+  [`OnlineLowess()`](https://thisisamirv.github.io/lowess-project/r/reference/OnlineLowess.md)
+  roxygen example printing one line per point (48 lines for a 50-point
+  loop); it now collects the smoothed values and prints only
+  `head(smoothed, 5)`.
+- Fixed the R
+  [`add_point()`](https://thisisamirv.github.io/lowess-project/r/reference/add_point.md)
+  roxygen example always printing `NULL`, since a single call never
+  reaches the default `min_points = 3`; it now uses `min_points = 2L`
+  and shows the second (non-`NULL`) call’s result.
+- Fixed the R `robustness.Rmd` “Detecting Outliers” example printing 22
+  lines at the `weight < 0.5` threshold, most of them incidental noise
+  rather than the 3 deliberately injected outliers; tightened to
+  `weight < 0.05`, which isolates the points effectively excluded by the
+  fit.
+- Fixed the R `merge.Rmd` “Choosing Chunk Size and Overlap” example
+  constructing a `StreamingLowess` model but never printing anything; it
+  now prints the computed overlap size and its percentage of
+  `chunk_size`.
+- Fixed the R `use-case-genomics.Rmd` ChIP-seq example never calling
+  [`fit()`](https://thisisamirv.github.io/lowess-project/r/reference/fit.md),
+  so `result` referenced a stale variable from an earlier chunk and the
+  smoothed line either failed to plot or didn’t align with the current
+  example’s x-range; added the missing
+  `result <- fit(model, positions, signal_noisy)` call.
+- Fixed the R `use-case-real-time.Rmd` “Update Modes” example
+  constructing a `"full"`-mode `OnlineLowess` model but never feeding it
+  data or plotting a result; it now runs the same accumulate-and-plot
+  pattern as the preceding example.
+- Fixed the “Detecting Outliers” example’s `robustness.md` page (C++,
+  Node.js, WASM, and the `lowess`/`fastLowess` crates) printing an
+  unbounded number of “is likely an outlier” lines; capped output at 5
+  lines, matching the already-capped Julia and Python versions and the R
+  vignette fix above.
+- Fixed the Julia `intervals.md` “Confidence Intervals” and “Standard
+  Errors” examples each looping over all 100 points instead of a short
+  sample; switched to
+  `result.y[1:5]`/`result.confidence_lower[1:5]`/`result.standard_errors[1:5]`-style
+  slicing, matching the already-concise Python version.
 
 ## rfastlowess 3.1.0
 

@@ -1,15 +1,17 @@
 var searchData=
 [
-  ['important_20points_0',['Emphasize Important Points',['../md_docs_2custom-weights.html#autotoc_md116',1,'']]],
-  ['inherits_20lowessoptions_1',['inherits lowessoptions',['../md_docs_2api-online.html#autotoc_md23',1,'OnlineOptions (inherits LowessOptions)'],['../md_docs_2api-streaming.html#autotoc_md35',1,'StreamingOptions (inherits LowessOptions)']]],
-  ['installation_2',['installation',['../md_docs_2installation.html',1,'Installation'],['../md_docs_2installation.html#autotoc_md143',1,'Verify Installation']]],
-  ['installation_20documentation_3',['Installation &amp; Documentation',['../index.html#autotoc_md2',1,'']]],
-  ['installation_2emd_4',['installation.md',['../installation_8md.html',1,'']]],
-  ['installing_20gpu_20support_5',['Installing GPU Support',['../md_docs_2gpu-backend.html#autotoc_md131',1,'']]],
-  ['interpreting_20results_6',['Interpreting Results',['../md_docs_2cross-validation.html#autotoc_md103',1,'']]],
-  ['intervals_7',['intervals',['../md_docs_2intervals.html#autotoc_md151',1,'Both Intervals'],['../md_docs_2intervals.html#autotoc_md147',1,'Confidence Intervals'],['../md_docs_2concepts.html#autotoc_md82',1,'Confidence vs Prediction Intervals'],['../md_docs_2use-case-time-series.html#autotoc_md300',1,'Forecasting with Prediction Intervals'],['../md_docs_2intervals.html',1,'Intervals'],['../md_docs_2intervals.html#autotoc_md149',1,'Prediction Intervals'],['../md_docs_2quickstart.html#autotoc_md226',1,'With Confidence Intervals']]],
-  ['intervals_2emd_8',['intervals.md',['../intervals_8md.html',1,'']]],
-  ['is_20lowess_9',['What is LOWESS?',['../md_docs_2concepts.html#autotoc_md75',1,'']]],
-  ['it_20works_10',['How It Works',['../md_docs_2concepts.html#autotoc_md77',1,'']]],
-  ['iterations_11',['iterations',['../md_docs_2custom-weights.html#autotoc_md120',1,'Combined with Robustness Iterations'],['../md_docs_2custom-weights.html#autotoc_md111',1,'Custom Weights vs. Robustness Iterations'],['../md_docs_2concepts.html#autotoc_md80',1,'Robustness Iterations']]]
+  ['scaling_20methods_0',['Scaling Methods',['../scaling.html',1,'customization']]],
+  ['scaling_2emd_1',['scaling.md',['../scaling_8md.html',1,'']]],
+  ['scaling_5fmethod_2',['scaling_method',['../structfastlowess_1_1LowessOptions.html#a099f2f5f556cf0a9c0aa992aae58dcf5',1,'fastlowess::LowessOptions::scaling_method'],['../structfastlowess_1_1OnlineOptions.html#ad99c563c46f1c75f7b2e12cdfb889eea',1,'fastlowess::OnlineOptions::scaling_method']]],
+  ['series_20analysis_3',['Time Series Analysis',['../use_case_time_series.html',1,'use_cases']]],
+  ['size_4',['size',['../classfastlowess_1_1LowessResult.html#aac2ee9f7edd671370098a32c902f3825',1,'fastlowess::LowessResult']]],
+  ['smoothing_5',['Genomic Data Smoothing',['../use_case_genomics.html',1,'use_cases']]],
+  ['standard_5ferror_6',['standard_error',['../classfastlowess_1_1OnlineOutput.html#a6daf4f19a07656b8034624c731ce623c',1,'fastlowess::OnlineOutput']]],
+  ['standard_5ferrors_7',['standard_errors',['../classfastlowess_1_1LowessResult.html#a639b05174c5a1003425c96088f0786cc',1,'fastlowess::LowessResult']]],
+  ['start_8',['Quick Start',['../quickstart.html',1,'getting_started']]],
+  ['started_9',['Getting Started',['../getting_started.html',1,'']]],
+  ['strategies_10',['Merge Strategies',['../merge.html',1,'advanced']]],
+  ['streaminglowess_11',['streaminglowess',['../classfastlowess_1_1StreamingLowess.html#a7598a426037d92f3e4c648dec8896989',1,'fastlowess::StreamingLowess::StreamingLowess(const StreamingLowess &amp;)=delete'],['../classfastlowess_1_1StreamingLowess.html#a4022a36817d7d5c8657ce8c4a6e11a3d',1,'fastlowess::StreamingLowess::StreamingLowess(StreamingLowess &amp;&amp;other) noexcept'],['../classfastlowess_1_1StreamingLowess.html',1,'fastlowess::StreamingLowess'],['../classfastlowess_1_1StreamingLowess.html#aead0b92d8add6a3b0afb09858f589e0c',1,'fastlowess::StreamingLowess::StreamingLowess()']]],
+  ['streaminglowess_20api_12',['StreamingLowess API',['../api_streaming.html',1,'api']]],
+  ['streamingoptions_13',['StreamingOptions',['../structfastlowess_1_1StreamingOptions.html',1,'fastlowess']]]
 ];

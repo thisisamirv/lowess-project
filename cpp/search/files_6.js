@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['merge_2emd_0',['merge.md',['../merge_8md.html',1,'']]]
+  ['kernels_2emd_0',['kernels.md',['../kernels_8md.html',1,'']]]
 ];

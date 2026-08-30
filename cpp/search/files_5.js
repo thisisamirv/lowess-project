@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['kernels_2emd_0',['kernels.md',['../kernels_8md.html',1,'']]]
+  ['installation_2emd_0',['installation.md',['../installation_8md.html',1,'']]],
+  ['intervals_2emd_1',['intervals.md',['../intervals_8md.html',1,'']]]
 ];

@@ -19,102 +19,10 @@ for i in eachindex(times)
     if result !== nothing
         println(&quot;Time $(times[i]): smoothed = $(round(result.y; digits=2))&quot;)
     end
+    i &gt;= 7 &amp;&amp; break  # print only the first few outputs
 end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Time 5.0: smoothed = 22.33
 Time 6.0: smoothed = 23.44
-Time 7.0: smoothed = 24.24
-Time 8.0: smoothed = 23.53
-Time 9.0: smoothed = 23.35
-Time 10.0: smoothed = 23.35
-Time 11.0: smoothed = 24.14
-Time 12.0: smoothed = 23.97
-Time 13.0: smoothed = 25.03
-Time 14.0: smoothed = 24.12
-Time 15.0: smoothed = 24.75
-Time 16.0: smoothed = 24.88
-Time 17.0: smoothed = 23.77
-Time 18.0: smoothed = 24.14
-Time 19.0: smoothed = 23.63
-Time 20.0: smoothed = 23.35
-Time 21.0: smoothed = 24.73
-Time 22.0: smoothed = 24.95
-Time 23.0: smoothed = 24.98
-Time 24.0: smoothed = 25.16
-Time 25.0: smoothed = 24.75
-Time 26.0: smoothed = 23.64
-Time 27.0: smoothed = 21.92
-Time 28.0: smoothed = 20.86
-Time 29.0: smoothed = 21.64
-Time 30.0: smoothed = 20.78
-Time 31.0: smoothed = 20.48
-Time 32.0: smoothed = 19.92
-Time 33.0: smoothed = 19.14
-Time 34.0: smoothed = 19.59
-Time 35.0: smoothed = 19.24
-Time 36.0: smoothed = 18.44
-Time 37.0: smoothed = 17.57
-Time 38.0: smoothed = 17.26
-Time 39.0: smoothed = 16.45
-Time 40.0: smoothed = 16.43
-Time 41.0: smoothed = 14.16
-Time 42.0: smoothed = 14.0
-Time 43.0: smoothed = 14.05
-Time 44.0: smoothed = 15.31
-Time 45.0: smoothed = 15.53
-Time 46.0: smoothed = 16.25
-Time 47.0: smoothed = 16.1
-Time 48.0: smoothed = 15.3
-Time 49.0: smoothed = 15.82
-Time 50.0: smoothed = 15.67
-Time 51.0: smoothed = 16.63
-Time 52.0: smoothed = 15.96
-Time 53.0: smoothed = 14.93
-Time 54.0: smoothed = 15.41
-Time 55.0: smoothed = 16.78
-Time 56.0: smoothed = 17.54
-Time 57.0: smoothed = 17.76
-Time 58.0: smoothed = 17.99
-Time 59.0: smoothed = 18.56
-Time 60.0: smoothed = 18.03
-Time 61.0: smoothed = 18.88
-Time 62.0: smoothed = 19.42
-Time 63.0: smoothed = 21.42
-Time 64.0: smoothed = 22.03
-Time 65.0: smoothed = 22.83
-Time 66.0: smoothed = 21.66
-Time 67.0: smoothed = 21.99
-Time 68.0: smoothed = 20.68
-Time 69.0: smoothed = 21.48
-Time 70.0: smoothed = 22.23
-Time 71.0: smoothed = 24.15
-Time 72.0: smoothed = 25.88
-Time 73.0: smoothed = 25.81
-Time 74.0: smoothed = 26.15
-Time 75.0: smoothed = 25.77
-Time 76.0: smoothed = 25.51
-Time 77.0: smoothed = 26.07
-Time 78.0: smoothed = 25.76
-Time 79.0: smoothed = 25.1
-Time 80.0: smoothed = 24.53
-Time 81.0: smoothed = 24.98
-Time 82.0: smoothed = 24.47
-Time 83.0: smoothed = 24.21
-Time 84.0: smoothed = 23.74
-Time 85.0: smoothed = 24.01
-Time 86.0: smoothed = 24.45
-Time 87.0: smoothed = 24.35
-Time 88.0: smoothed = 22.9
-Time 89.0: smoothed = 22.9
-Time 90.0: smoothed = 21.21
-Time 91.0: smoothed = 20.42
-Time 92.0: smoothed = 20.56
-Time 93.0: smoothed = 19.85
-Time 94.0: smoothed = 19.58
-Time 95.0: smoothed = 18.95
-Time 96.0: smoothed = 18.88
-Time 97.0: smoothed = 19.53
-Time 98.0: smoothed = 18.7
-Time 99.0: smoothed = 18.36
-Time 100.0: smoothed = 17.06</code></pre><hr/><h2 id="Streaming-Mode:-Chunk-Processing"><a class="docs-heading-anchor" href="#Streaming-Mode:-Chunk-Processing">Streaming Mode: Chunk Processing</a><a id="Streaming-Mode:-Chunk-Processing-1"></a><a class="docs-heading-anchor-permalink" href="#Streaming-Mode:-Chunk-Processing" title="Permalink"></a></h2><p>For large datasets that arrive in batches or files.</p><p><code>chunk_size</code> controls how many data points are processed in one pass; matching it to your file-read buffer or message-batch size avoids unnecessary copying. <code>overlap</code> retains that many points from the previous chunk as context so the neighbourhood at chunk boundaries is not artificially truncated. <code>merge_strategy = &quot;weighted_average&quot;</code> blends the overlapping region smoothly; use <code>&quot;last&quot;</code> if chunk boundaries are guaranteed to be well separated and no blending is needed.</p><div class="admonition is-warning" id="Always-call-finalize()-3aa2d26e02816eab"><header class="admonition-header">Always call finalize()<a class="admonition-anchor" href="#Always-call-finalize()-3aa2d26e02816eab" title="Permalink"></a></header><div class="admonition-body"><p>The streaming adapter buffers overlap data. Call <code>finalize()</code> after the last chunk to retrieve the buffered tail.</p></div></div><h3 id="Log-File-Processing"><a class="docs-heading-anchor" href="#Log-File-Processing">Log File Processing</a><a id="Log-File-Processing-1"></a><a class="docs-heading-anchor-permalink" href="#Log-File-Processing" title="Permalink"></a></h3><pre><code class="language-julia hljs">using FastLOWESS
+Time 7.0: smoothed = 24.24</code></pre><hr/><h2 id="Streaming-Mode:-Chunk-Processing"><a class="docs-heading-anchor" href="#Streaming-Mode:-Chunk-Processing">Streaming Mode: Chunk Processing</a><a id="Streaming-Mode:-Chunk-Processing-1"></a><a class="docs-heading-anchor-permalink" href="#Streaming-Mode:-Chunk-Processing" title="Permalink"></a></h2><p>For large datasets that arrive in batches or files.</p><p><code>chunk_size</code> controls how many data points are processed in one pass; matching it to your file-read buffer or message-batch size avoids unnecessary copying. <code>overlap</code> retains that many points from the previous chunk as context so the neighbourhood at chunk boundaries is not artificially truncated. <code>merge_strategy = &quot;weighted_average&quot;</code> blends the overlapping region smoothly; use <code>&quot;last&quot;</code> if chunk boundaries are guaranteed to be well separated and no blending is needed.</p><div class="admonition is-warning" id="Always-call-finalize()-3aa2d26e02816eab"><header class="admonition-header">Always call finalize()<a class="admonition-anchor" href="#Always-call-finalize()-3aa2d26e02816eab" title="Permalink"></a></header><div class="admonition-body"><p>The streaming adapter buffers overlap data. Call <code>finalize()</code> after the last chunk to retrieve the buffered tail.</p></div></div><h3 id="Log-File-Processing"><a class="docs-heading-anchor" href="#Log-File-Processing">Log File Processing</a><a id="Log-File-Processing-1"></a><a class="docs-heading-anchor-permalink" href="#Log-File-Processing" title="Permalink"></a></h3><pre><code class="language-julia hljs">using FastLOWESS
 
 # Large dataset
 x = collect(0.0:1.0:100000.0)
@@ -129,4 +37,4 @@ model = StreamingLowess(;
 )
 process_chunk(model, x, y)
 result = finalize(model)
-println(&quot;First smoothed value (streaming mode): &quot;, result.y[1])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">First smoothed value (streaming mode): -0.6397884554682522</code></pre><hr/><h2 id="Real-Time-Dashboard-Example"><a class="docs-heading-anchor" href="#Real-Time-Dashboard-Example">Real-Time Dashboard Example</a><a id="Real-Time-Dashboard-Example-1"></a><a class="docs-heading-anchor-permalink" href="#Real-Time-Dashboard-Example" title="Permalink"></a></h2><p>The dashboard pattern uses a plain LOWESS fit on a manually managed sliding window rather than <code>OnlineLowess</code>. This is the simplest approach when your UI framework already owns the data buffer and you only need the most recent smoothed value per frame. The trade-off is a full O(window²) refit on every tick; for high-frequency streams prefer <code>OnlineLowess</code> with <code>update_mode = &quot;incremental&quot;</code> to bound per-frame cost.</p><hr/><h2 id="Choosing-Parameters"><a class="docs-heading-anchor" href="#Choosing-Parameters">Choosing Parameters</a><a id="Choosing-Parameters-1"></a><a class="docs-heading-anchor-permalink" href="#Choosing-Parameters" title="Permalink"></a></h2><h3 id="Online-Mode"><a class="docs-heading-anchor" href="#Online-Mode">Online Mode</a><a id="Online-Mode-1"></a><a class="docs-heading-anchor-permalink" href="#Online-Mode" title="Permalink"></a></h3><table><tr><th style="text-align: right">Parameter</th><th style="text-align: right">Guidance</th></tr><tr><td style="text-align: right"><code>window_capacity</code></td><td style="text-align: right">Enough history for <code>fraction</code> to work</td></tr><tr><td style="text-align: right"><code>min_points</code></td><td style="text-align: right">2–5 typically; higher for stability</td></tr><tr><td style="text-align: right"><code>update_mode</code></td><td style="text-align: right"><code>&quot;incremental&quot;</code> for speed, <code>&quot;full&quot;</code> for accuracy</td></tr></table><h3 id="Streaming-Mode"><a class="docs-heading-anchor" href="#Streaming-Mode">Streaming Mode</a><a id="Streaming-Mode-1"></a><a class="docs-heading-anchor-permalink" href="#Streaming-Mode" title="Permalink"></a></h3><table><tr><th style="text-align: right">Parameter</th><th style="text-align: right">Guidance</th></tr><tr><td style="text-align: right"><code>chunk_size</code></td><td style="text-align: right">Balance memory vs. processing overhead</td></tr><tr><td style="text-align: right"><code>overlap</code></td><td style="text-align: right">10–20% of chunk_size for smooth transitions</td></tr><tr><td style="text-align: right"><code>merge_strategy</code></td><td style="text-align: right"><code>&quot;weighted_average&quot;</code> for best quality, <code>&quot;average&quot;</code> for simplicity</td></tr></table><hr/><h2 id="Performance-Considerations"><a class="docs-heading-anchor" href="#Performance-Considerations">Performance Considerations</a><a id="Performance-Considerations-1"></a><a class="docs-heading-anchor-permalink" href="#Performance-Considerations" title="Permalink"></a></h2><table><tr><th style="text-align: right">Mode</th><th style="text-align: right">Memory</th><th style="text-align: right">Latency</th><th style="text-align: right">Use Case</th></tr><tr><td style="text-align: right"><strong>Online</strong></td><td style="text-align: right">Fixed (window)</td><td style="text-align: right">~1ms/point</td><td style="text-align: right">Sensors, dashboards</td></tr><tr><td style="text-align: right"><strong>Streaming</strong></td><td style="text-align: right">~chunk_size</td><td style="text-align: right">~100ms/chunk</td><td style="text-align: right">Large files, ETL</td></tr><tr><td style="text-align: right"><strong>Batch</strong></td><td style="text-align: right">Full dataset</td><td style="text-align: right">N/A</td><td style="text-align: right">Analysis, reports</td></tr></table><hr/><h2 id="See-Also"><a class="docs-heading-anchor" href="#See-Also">See Also</a><a id="See-Also-1"></a><a class="docs-heading-anchor-permalink" href="#See-Also" title="Permalink"></a></h2><ul><li><a href="../adapter-choice/">Execution Modes</a> — Detailed mode comparison</li><li><a href="../merge/">Merge Strategies</a> — Chunk reconciliation in depth</li><li><a href="../scaling/">Scaling Methods</a> — Robustness scale estimation</li><li><a href="../use-case-time-series/">Time Series</a> — General time series analysis</li></ul></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../use-case-time-series/">« Time Series Analysis</a><a class="docs-footer-nextpage" href="../benchmarks/">Benchmarks »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Sunday 30 August 2026 18:05">Sunday 30 August 2026</span>. Using Julia version 1.12.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+println(&quot;First smoothed value (streaming mode): &quot;, result.y[1])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">First smoothed value (streaming mode): -0.6546742532003282</code></pre><hr/><h2 id="Real-Time-Dashboard-Example"><a class="docs-heading-anchor" href="#Real-Time-Dashboard-Example">Real-Time Dashboard Example</a><a id="Real-Time-Dashboard-Example-1"></a><a class="docs-heading-anchor-permalink" href="#Real-Time-Dashboard-Example" title="Permalink"></a></h2><p>The dashboard pattern uses a plain LOWESS fit on a manually managed sliding window rather than <code>OnlineLowess</code>. This is the simplest approach when your UI framework already owns the data buffer and you only need the most recent smoothed value per frame. The trade-off is a full O(window²) refit on every tick; for high-frequency streams prefer <code>OnlineLowess</code> with <code>update_mode = &quot;incremental&quot;</code> to bound per-frame cost.</p><hr/><h2 id="Choosing-Parameters"><a class="docs-heading-anchor" href="#Choosing-Parameters">Choosing Parameters</a><a id="Choosing-Parameters-1"></a><a class="docs-heading-anchor-permalink" href="#Choosing-Parameters" title="Permalink"></a></h2><h3 id="Online-Mode"><a class="docs-heading-anchor" href="#Online-Mode">Online Mode</a><a id="Online-Mode-1"></a><a class="docs-heading-anchor-permalink" href="#Online-Mode" title="Permalink"></a></h3><table><tr><th style="text-align: right">Parameter</th><th style="text-align: right">Guidance</th></tr><tr><td style="text-align: right"><code>window_capacity</code></td><td style="text-align: right">Enough history for <code>fraction</code> to work</td></tr><tr><td style="text-align: right"><code>min_points</code></td><td style="text-align: right">2–5 typically; higher for stability</td></tr><tr><td style="text-align: right"><code>update_mode</code></td><td style="text-align: right"><code>&quot;incremental&quot;</code> for speed, <code>&quot;full&quot;</code> for accuracy</td></tr></table><h3 id="Streaming-Mode"><a class="docs-heading-anchor" href="#Streaming-Mode">Streaming Mode</a><a id="Streaming-Mode-1"></a><a class="docs-heading-anchor-permalink" href="#Streaming-Mode" title="Permalink"></a></h3><table><tr><th style="text-align: right">Parameter</th><th style="text-align: right">Guidance</th></tr><tr><td style="text-align: right"><code>chunk_size</code></td><td style="text-align: right">Balance memory vs. processing overhead</td></tr><tr><td style="text-align: right"><code>overlap</code></td><td style="text-align: right">10–20% of chunk_size for smooth transitions</td></tr><tr><td style="text-align: right"><code>merge_strategy</code></td><td style="text-align: right"><code>&quot;weighted_average&quot;</code> for best quality, <code>&quot;average&quot;</code> for simplicity</td></tr></table><hr/><h2 id="Performance-Considerations"><a class="docs-heading-anchor" href="#Performance-Considerations">Performance Considerations</a><a id="Performance-Considerations-1"></a><a class="docs-heading-anchor-permalink" href="#Performance-Considerations" title="Permalink"></a></h2><table><tr><th style="text-align: right">Mode</th><th style="text-align: right">Memory</th><th style="text-align: right">Latency</th><th style="text-align: right">Use Case</th></tr><tr><td style="text-align: right"><strong>Online</strong></td><td style="text-align: right">Fixed (window)</td><td style="text-align: right">~1ms/point</td><td style="text-align: right">Sensors, dashboards</td></tr><tr><td style="text-align: right"><strong>Streaming</strong></td><td style="text-align: right">~chunk_size</td><td style="text-align: right">~100ms/chunk</td><td style="text-align: right">Large files, ETL</td></tr><tr><td style="text-align: right"><strong>Batch</strong></td><td style="text-align: right">Full dataset</td><td style="text-align: right">N/A</td><td style="text-align: right">Analysis, reports</td></tr></table><hr/><h2 id="See-Also"><a class="docs-heading-anchor" href="#See-Also">See Also</a><a id="See-Also-1"></a><a class="docs-heading-anchor-permalink" href="#See-Also" title="Permalink"></a></h2><ul><li><a href="../adapter-choice/">Execution Modes</a> — Detailed mode comparison</li><li><a href="../merge/">Merge Strategies</a> — Chunk reconciliation in depth</li><li><a href="../scaling/">Scaling Methods</a> — Robustness scale estimation</li><li><a href="../use-case-time-series/">Time Series</a> — General time series analysis</li></ul></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../use-case-time-series/">« Time Series Analysis</a><a class="docs-footer-nextpage" href="../benchmarks/">Benchmarks »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Sunday 30 August 2026 23:24">Sunday 30 August 2026</span>. Using Julia version 1.12.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

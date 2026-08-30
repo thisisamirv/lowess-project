@@ -168,29 +168,15 @@ selection.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Best fraction:"</span>, <span class="va">result</span><span class="op">$</span><span class="va">fraction_used</span>, <span class="st">"\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Best fraction: 0.2</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"CV scores:\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; CV scores:</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"CV scores by fraction:\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; CV scores by fraction:</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="va">fractions</span>, score <span class="op">=</span> <span class="va">result</span><span class="op">$</span><span class="va">cv_scores</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt;    fraction     score</span></span>
-<span><span class="co">#&gt; 1      0.10 0.3851899</span></span>
-<span><span class="co">#&gt; 2      0.15 0.3711534</span></span>
-<span><span class="co">#&gt; 3      0.20 0.3508004</span></span>
-<span><span class="co">#&gt; 4      0.25 0.3517818</span></span>
-<span><span class="co">#&gt; 5      0.30 0.3568073</span></span>
-<span><span class="co">#&gt; 6      0.35 0.3651356</span></span>
-<span><span class="co">#&gt; 7      0.40 0.3839338</span></span>
-<span><span class="co">#&gt; 8      0.45 0.3965866</span></span>
-<span><span class="co">#&gt; 9      0.50 0.4080908</span></span>
-<span><span class="co">#&gt; 10     0.55 0.4202877</span></span>
-<span><span class="co">#&gt; 11     0.60 0.4398273</span></span>
-<span><span class="co">#&gt; 12     0.65 0.4541805</span></span>
-<span><span class="co">#&gt; 13     0.70 0.4652196</span></span>
-<span><span class="co">#&gt; 14     0.75 0.4796631</span></span>
-<span><span class="co">#&gt; 15     0.80 0.5049745</span></span>
-<span><span class="co">#&gt; 16     0.85 0.5205908</span></span>
-<span><span class="co">#&gt; 17     0.90 0.5358147</span></span></code></pre></div>
+<span></span>
+<span><span class="va">scores_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="va">fractions</span>, score <span class="op">=</span> <span class="va">result</span><span class="op">$</span><span class="va">cv_scores</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Top 3 fractions by CV score:\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Top 3 fractions by CV score:</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">scores_df</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">scores_df</span><span class="op">$</span><span class="va">score</span><span class="op">)</span>, <span class="op">]</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   fraction     score</span></span>
+<span><span class="co">#&gt; 3     0.20 0.3508004</span></span>
+<span><span class="co">#&gt; 4     0.25 0.3517818</span></span>
+<span><span class="co">#&gt; 5     0.30 0.3568073</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">

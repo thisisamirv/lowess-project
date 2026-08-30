@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['validation_0',['Cross-Validation',['../md_docs_2cross-validation.html',1,'']]]
+  ['use_20cases_0',['Use Cases',['../use_cases.html',1,'']]],
+  ['user_20guide_1',['User Guide',['../user_guide.html',1,'']]]
 ];

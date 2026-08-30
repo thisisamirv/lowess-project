@@ -71,7 +71,7 @@ x_out <- seq(1, 6, length.out = 6)
 y_with_outlier <- c(2.0, 4.0, 6.0, 50.0, 10.0, 12.0)
 
 model <- Lowess(
-    fraction = 0.5,
+    fraction = 0.7,
     iterations = 5,
     robustness_method = "bisquare",
     return_robustness_weights = TRUE
@@ -83,6 +83,7 @@ for (i in seq_along(result$robustness_weights)) {
         cat(sprintf("Point %d is likely an outlier (weight: %.3f)\n",
                     i, result$robustness_weights[i]))
 }
+#> Point 4 is likely an outlier (weight: 0.000)
 ```
 
 ------------------------------------------------------------------------

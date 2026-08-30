@@ -8,25 +8,25 @@ sliding window and processes each incoming point immediately via
 
 ``` r
 OnlineLowess(
-    fraction = 0.67,
-    window_capacity = 1000L,
-    min_points = 3L,
-    ...,
-    iterations = 3L,
-    delta = NULL,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    scaling_method = "mad",
-    boundary_policy = "extend",
-    zero_weight_fallback = "use_local_mean",
-    update_mode = "full",
-    auto_converge = NULL,
-    return_robustness_weights = FALSE,
-    return_diagnostics = FALSE,
-    return_residuals = FALSE,
-    parallel = FALSE,
-    confidence_intervals = NULL,
-    prediction_intervals = NULL
+  fraction = 0.67,
+  window_capacity = 1000L,
+  min_points = 3L,
+  ...,
+  iterations = 3L,
+  delta = NULL,
+  weight_function = "tricube",
+  robustness_method = "bisquare",
+  scaling_method = "mad",
+  boundary_policy = "extend",
+  zero_weight_fallback = "use_local_mean",
+  update_mode = "full",
+  auto_converge = NULL,
+  return_robustness_weights = FALSE,
+  return_diagnostics = FALSE,
+  return_residuals = FALSE,
+  parallel = FALSE,
+  confidence_intervals = NULL,
+  prediction_intervals = NULL
 )
 ```
 
@@ -152,56 +152,11 @@ for large batches processed in chunks, see
 model <- OnlineLowess(fraction = 0.2, window_capacity = 20)
 x <- 1:50
 y <- sin(x * 0.1) + rnorm(50, 0, 0.1)
+smoothed <- numeric(0)
 for (i in seq_along(x)) {
     result <- add_point(model, x[i], y[i])
-    if (!is.null(result)) cat("smoothed:", result$y, "\n")
+    if (!is.null(result)) smoothed <- c(smoothed, result$y)
 }
-#> smoothed: 0.1898465 
-#> smoothed: 0.3098642 
-#> smoothed: 0.303798 
-#> smoothed: 0.4955887 
-#> smoothed: 0.5883635 
-#> smoothed: 0.6636898 
-#> smoothed: 0.8060396 
-#> smoothed: 0.9393165 
-#> smoothed: 0.8703191 
-#> smoothed: 0.792098 
-#> smoothed: 0.9894119 
-#> smoothed: 0.9412698 
-#> smoothed: 1.054355 
-#> smoothed: 1.212259 
-#> smoothed: 1.034151 
-#> smoothed: 0.8054195 
-#> smoothed: 0.9712403 
-#> smoothed: 1.000525 
-#> smoothed: 1.051605 
-#> smoothed: 0.9085959 
-#> smoothed: 0.8759512 
-#> smoothed: 0.7673623 
-#> smoothed: 0.6433562 
-#> smoothed: 0.5474333 
-#> smoothed: 0.487741 
-#> smoothed: 0.3626028 
-#> smoothed: 0.2387935 
-#> smoothed: 0.1632822 
-#> smoothed: 0.008794605 
-#> smoothed: 0.02624432 
-#> smoothed: -0.1008816 
-#> smoothed: -0.2942475 
-#> smoothed: -0.437884 
-#> smoothed: -0.4105094 
-#> smoothed: -0.5534598 
-#> smoothed: -0.6339198 
-#> smoothed: -0.6103589 
-#> smoothed: -0.7065212 
-#> smoothed: -0.8071765 
-#> smoothed: -0.9127774 
-#> smoothed: -0.7308494 
-#> smoothed: -0.8729999 
-#> smoothed: -0.8782367 
-#> smoothed: -0.8666742 
-#> smoothed: -1.037569 
-#> smoothed: -0.980147 
-#> smoothed: -1.080798 
-#> smoothed: -0.8662901 
+head(smoothed, 5)
+#> [1] 0.1898465 0.3098642 0.3037980 0.4955887 0.5883635
 ```

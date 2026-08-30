@@ -36,55 +36,18 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 model = Lowess(; iterations=5, return_robustness_weights=true)
 result = fit(model, x, y)
 
+shown = 0
 for (i, w) in enumerate(result.robustness_weights)
-    if w &lt; 0.5
+    global shown
+    if w &lt; 0.5 &amp;&amp; shown &lt; 5
         println(&quot;Potential outlier at index $i: weight = $w&quot;)
+        shown += 1
     end
 end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Potential outlier at index 2: weight = 0.38693931906870316
 Potential outlier at index 21: weight = 0.0
 Potential outlier at index 22: weight = 0.010439659941864604
 Potential outlier at index 23: weight = 0.0
-Potential outlier at index 24: weight = 0.0
-Potential outlier at index 25: weight = 0.0
-Potential outlier at index 26: weight = 0.023395022374177052
-Potential outlier at index 29: weight = 0.0
-Potential outlier at index 31: weight = 0.13220583405533723
-Potential outlier at index 32: weight = 0.21690169011944369
-Potential outlier at index 33: weight = 0.43051692707799316
-Potential outlier at index 34: weight = 0.0
-Potential outlier at index 35: weight = 0.04440572865514955
-Potential outlier at index 36: weight = 0.386186917247005
-Potential outlier at index 38: weight = 0.12311455474532798
-Potential outlier at index 40: weight = 0.3625322763204385
-Potential outlier at index 41: weight = 0.0
-Potential outlier at index 44: weight = 0.2878628262866162
-Potential outlier at index 46: weight = 0.27913836947213516
-Potential outlier at index 49: weight = 0.44659812265841126
-Potential outlier at index 51: weight = 0.22789354180822236
-Potential outlier at index 52: weight = 0.47344323007716277
-Potential outlier at index 53: weight = 0.0
-Potential outlier at index 57: weight = 0.49453323661552084
-Potential outlier at index 60: weight = 0.0
-Potential outlier at index 62: weight = 0.225582030463708
-Potential outlier at index 66: weight = 0.0
-Potential outlier at index 67: weight = 0.4750958799451656
-Potential outlier at index 68: weight = 0.0
-Potential outlier at index 69: weight = 0.0
-Potential outlier at index 70: weight = 0.0
-Potential outlier at index 73: weight = 0.17066170634194724
-Potential outlier at index 75: weight = 0.45286596315242933
-Potential outlier at index 76: weight = 0.4209287021041021
-Potential outlier at index 78: weight = 0.24781172548335417
-Potential outlier at index 79: weight = 0.0014078681811974766
-Potential outlier at index 80: weight = 0.0
-Potential outlier at index 82: weight = 0.0
-Potential outlier at index 83: weight = 0.06357816581068063
-Potential outlier at index 84: weight = 0.019141546279460367
-Potential outlier at index 88: weight = 0.015488787762502043
-Potential outlier at index 90: weight = 0.0
-Potential outlier at index 91: weight = 0.3646059826846296
-Potential outlier at index 97: weight = 0.0
-Potential outlier at index 99: weight = 0.11471026741941674</code></pre><hr/><h2 id="Scale-Estimation"><a class="docs-heading-anchor" href="#Scale-Estimation">Scale Estimation</a><a id="Scale-Estimation-1"></a><a class="docs-heading-anchor-permalink" href="#Scale-Estimation" title="Permalink"></a></h2><p>Residuals are scaled before computing robustness weights. Two methods:</p><table><tr><th style="text-align: right">Method</th><th style="text-align: right">Formula</th><th style="text-align: right">Robustness</th></tr><tr><td style="text-align: right"><strong>MAD</strong></td><td style="text-align: right"><code>median(|r − median(r)|)</code></td><td style="text-align: right">Very robust (default)</td></tr><tr><td style="text-align: right"><strong>MAR</strong></td><td style="text-align: right"><code>median(|r|)</code></td><td style="text-align: right">Robust, uncentered</td></tr><tr><td style="text-align: right"><strong>Mean</strong></td><td style="text-align: right"><code>mean(|r|)</code></td><td style="text-align: right">Less robust, fastest</td></tr></table><p><img src="../assets/scaling_comparison.svg" alt="Scaling Methods Comparison"/></p><pre><code class="language-julia hljs">using FastLOWESS
+Potential outlier at index 24: weight = 0.0</code></pre><hr/><h2 id="Scale-Estimation"><a class="docs-heading-anchor" href="#Scale-Estimation">Scale Estimation</a><a id="Scale-Estimation-1"></a><a class="docs-heading-anchor-permalink" href="#Scale-Estimation" title="Permalink"></a></h2><p>Residuals are scaled before computing robustness weights. Two methods:</p><table><tr><th style="text-align: right">Method</th><th style="text-align: right">Formula</th><th style="text-align: right">Robustness</th></tr><tr><td style="text-align: right"><strong>MAD</strong></td><td style="text-align: right"><code>median(|r − median(r)|)</code></td><td style="text-align: right">Very robust (default)</td></tr><tr><td style="text-align: right"><strong>MAR</strong></td><td style="text-align: right"><code>median(|r|)</code></td><td style="text-align: right">Robust, uncentered</td></tr><tr><td style="text-align: right"><strong>Mean</strong></td><td style="text-align: right"><code>mean(|r|)</code></td><td style="text-align: right">Less robust, fastest</td></tr></table><p><img src="../assets/scaling_comparison.svg" alt="Scaling Methods Comparison"/></p><pre><code class="language-julia hljs">using FastLOWESS
 using Random, Statistics
 
 rng = MersenneTwister(42)
@@ -102,4 +65,4 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Lowess(; iterations=10, auto_converge=1e-6)
 result = fit(model, x, y)
-println(&quot;First smoothed value (auto_converge enabled): &quot;, result.y[1])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">First smoothed value (auto_converge enabled): 0.40528007658848925</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../kernels/">« Weight Functions</a><a class="docs-footer-nextpage" href="../scaling/">Scaling Methods »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Sunday 30 August 2026 18:05">Sunday 30 August 2026</span>. Using Julia version 1.12.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+println(&quot;First smoothed value (auto_converge enabled): &quot;, result.y[1])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">First smoothed value (auto_converge enabled): 0.40528007658848925</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../kernels/">« Weight Functions</a><a class="docs-footer-nextpage" href="../scaling/">Scaling Methods »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Sunday 30 August 2026 23:24">Sunday 30 August 2026</span>. Using Julia version 1.12.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

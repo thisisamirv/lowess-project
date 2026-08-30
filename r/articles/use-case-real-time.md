@@ -110,7 +110,30 @@ model_full <- OnlineLowess(
     window_capacity = 25,
     update_mode     = "full"
 )
+
+smoothed_full_x <- numeric(n)
+smoothed_full_y <- numeric(n)
+n_full <- 0L
+
+for (i in seq_len(n)) {
+    result <- add_point(model_full, times[i], signal[i])
+    if (!is.null(result)) {
+        n_full <- n_full + 1L
+        smoothed_full_x[n_full] <- times[i]
+        smoothed_full_y[n_full] <- result$y
+    }
+}
+
+smoothed_full_x <- smoothed_full_x[seq_len(n_full)]
+smoothed_full_y <- smoothed_full_y[seq_len(n_full)]
+
+plot(times, signal, pch = 16, cex = 0.4, col = "gray",
+    xlab = "Time", ylab = "Value",
+    main = "Online LOWESS — Full-Window Refit")
+lines(smoothed_full_x, smoothed_full_y, col = "blue", lwd = 2)
 ```
+
+![](use-case-real-time_files/figure-html/use_case_real_time_3-1.png)
 
 ------------------------------------------------------------------------
 
