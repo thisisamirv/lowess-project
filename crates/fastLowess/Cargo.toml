@@ -25,6 +25,7 @@ include = [
     "README.md",
     "LICENSE-MIT",
     "LICENSE-APACHE",
+    "katex-header.html",
 ]
 
 [dependencies]
@@ -62,4 +63,4 @@ dev = []
 # Document all features
 [package.metadata.docs.rs]
 all-features = true
-rustdoc-args = ["--cfg", "docsrs"]
+rustdoc-args = ["--cfg", "docsrs", "--html-in-header", "katex-header.html"]

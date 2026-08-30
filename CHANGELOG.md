@@ -66,6 +66,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed `concepts.md` figures not rendering: the MkDocs-only `<figure markdown="span">`/attr_list (`{ width="..." }`) syntax isn't supported by Starlight's Markdown renderer, so the image markdown inside was left as raw unprocessed text. Converted all 4 figures to plain `![alt](src)` images with an italicized caption below.
 - Fixed inline/display LaTeX math (`$...$`/`$$...$$`) rendering as literal text on the Node.js/WASM docs sites; wired `remark-math`/`rehype-katex` into `astro.config.mjs` and added a KaTeX stylesheet, so the existing math syntax now renders properly.
 
+**Rust:**
+
+- Fixed inline/display LaTeX math (`$...$`/`$$...$$`) rendering as literal text on docs.rs for `fastLowess` and `lowess`; added a `katex-header.html` (loaded via `--html-in-header` in `[package.metadata.docs.rs]`) that renders it client-side with KaTeX.
+
 ## 3.1.0
 
 ### Added

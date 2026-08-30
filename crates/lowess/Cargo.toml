@@ -25,6 +25,7 @@ include = [
     "README.md",
     "LICENSE-MIT",
     "LICENSE-APACHE",
+    "katex-header.html",
 ]
 
 [dependencies]
@@ -40,4 +41,4 @@ std = ["num-traits/std", "wide/std"]
 dev = []
 
 [package.metadata.docs.rs]
-rustdoc-args = ["--cfg", "docsrs"]
+rustdoc-args = ["--cfg", "docsrs", "--html-in-header", "katex-header.html"]
