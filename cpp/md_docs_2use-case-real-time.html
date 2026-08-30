@@ -24,6 +24,8 @@ MathJax.Hub.Config({
 </script>
 <script type="text/javascript" async="async" src="https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
+<link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen-awesome-sidebar-only.css" rel="stylesheet" type="text/css"/>
 </head>
 <body>
 <div id="top"><!-- do not remove this div, it is closed by doxygen! -->
@@ -100,16 +102,16 @@ $(document).ready(function(){initNavTree('md_docs_2use-case-real-time.html','');
   <div class="headertitle"><div class="title">Real-Time Processing</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md309"></a> Streaming and online LOWESS for live data.</p>
-<h1><a class="anchor" id="autotoc_md310"></a>
+<div class="textblock"><p><a class="anchor" id="autotoc_md308"></a> Streaming and online LOWESS for live data.</p>
+<h1><a class="anchor" id="autotoc_md309"></a>
 Overview</h1>
 <p>When data arrives continuously—from sensors, logs, or streaming pipelines—you need incremental smoothing that doesn't require reprocessing the entire dataset.</p>
 <hr  />
-<h1><a class="anchor" id="autotoc_md312"></a>
+<h1><a class="anchor" id="autotoc_md311"></a>
 Online Mode: Point-by-Point</h1>
 <p>For true real-time applications where each point must be processed immediately.</p>
 <p><code>window_capacity = 25</code> limits the internal buffer to the 25 most recent observations; each <code>add_point</code> call costs O(window) rather than growing with total history. <code>min_points = 5</code> suppresses output until the window holds enough points for a stable fit — calls made before that threshold return <code>null</code>/<code>None</code>/<code>nothing</code>. <code>update_mode = "incremental"</code> re-fits only the most recent point rather than the full window, halving typical latency at a modest accuracy cost.</p>
-<h2><a class="anchor" id="autotoc_md313"></a>
+<h2><a class="anchor" id="autotoc_md312"></a>
 Sensor Data Example</h2>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
@@ -239,12 +241,14 @@ Sensor Data Example</h2>
 <div class="line">Time 9.8: 19.6314</div>
 <div class="line">Time 9.9: 19.539</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md315"></a>
+<h1><a class="anchor" id="autotoc_md314"></a>
 Streaming Mode: Chunk Processing</h1>
 <p>For large datasets that arrive in batches or files.</p>
 <p><code>chunk_size</code> controls how many data points are processed in one pass; matching it to your file-read buffer or message-batch size avoids unnecessary copying. <code>overlap</code> retains that many points from the previous chunk as context so the neighbourhood at chunk boundaries is not artificially truncated. <code>merge_strategy = "weighted_average"</code> blends the overlapping region smoothly; use <code>"last"</code> if chunk boundaries are guaranteed to be well separated and no blending is needed.</p>
-<p>!!! warning "Always call finalize()" The streaming adapter buffers overlap data. Call <code>finalize()</code> after the last chunk to retrieve the buffered tail.</p>
-<h2><a class="anchor" id="autotoc_md316"></a>
+<blockquote class="doxtable">
+<p>&zwj;<b>Always call finalize():</b> The streaming adapter buffers overlap data. Call <code>finalize()</code> after the last chunk to retrieve the buffered tail. </p>
+</blockquote>
+<h2><a class="anchor" id="autotoc_md315"></a>
 Log File Processing</h2>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
@@ -276,7 +280,7 @@ Log File Processing</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">Processed 100 points</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md318"></a>
+<h1><a class="anchor" id="autotoc_md317"></a>
 Real-Time Dashboard Example</h1>
 <p>The dashboard pattern uses a plain LOWESS fit on a manually managed sliding window rather than <code>OnlineLowess</code>. This is the simplest approach when your UI framework already owns the data buffer and you only need the most recent smoothed value per frame. The trade-off is a full O(window²) refit on every tick; for high-frequency streams prefer <code>OnlineLowess</code> with <code>update_mode = "incremental"</code> to bound per-frame cost.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
@@ -316,9 +320,9 @@ Real-Time Dashboard Example</h1>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md320"></a>
+<h1><a class="anchor" id="autotoc_md319"></a>
 Choosing Parameters</h1>
-<h2><a class="anchor" id="autotoc_md321"></a>
+<h2><a class="anchor" id="autotoc_md320"></a>
 Online Mode</h2>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -330,7 +334,7 @@ Online Mode</h2>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>update_mode</code>   </td><td class="markdownTableBodyNone"><code>"incremental"</code> for speed, <code>"full"</code> for accuracy   </td></tr>
 </table>
-<h2><a class="anchor" id="autotoc_md322"></a>
+<h2><a class="anchor" id="autotoc_md321"></a>
 Streaming Mode</h2>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -343,7 +347,7 @@ Streaming Mode</h2>
 <td class="markdownTableBodyNone"><code>merge_strategy</code>   </td><td class="markdownTableBodyNone"><code>"weighted_average"</code> for best quality, <code>"average"</code> for simplicity   </td></tr>
 </table>
 <hr  />
-<h1><a class="anchor" id="autotoc_md324"></a>
+<h1><a class="anchor" id="autotoc_md323"></a>
 Performance Considerations</h1>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -356,7 +360,7 @@ Performance Considerations</h1>
 <td class="markdownTableBodyNone"><b>Batch</b>   </td><td class="markdownTableBodyNone">Full dataset   </td><td class="markdownTableBodyNone">N/A   </td><td class="markdownTableBodyNone">Analysis, reports   </td></tr>
 </table>
 <hr  />
-<h1><a class="anchor" id="autotoc_md326"></a>
+<h1><a class="anchor" id="autotoc_md325"></a>
 See Also</h1>
 <ul>
 <li><a class="el" href="md_docs_2adapter-choice.html">Execution Modes</a> — Detailed mode comparison</li>

@@ -24,6 +24,8 @@ MathJax.Hub.Config({
 </script>
 <script type="text/javascript" async="async" src="https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
+<link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen-awesome-sidebar-only.css" rel="stylesheet" type="text/css"/>
 </head>
 <body>
 <div id="top"><!-- do not remove this div, it is closed by doxygen! -->
@@ -100,8 +102,8 @@ $(document).ready(function(){initNavTree('md_docs_2concepts.html',''); initResiz
   <div class="headertitle"><div class="title">Concepts</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md86"></a> Understanding how LOWESS works and when to use it.</p>
-<h1><a class="anchor" id="autotoc_md87"></a>
+<div class="textblock"><p><a class="anchor" id="autotoc_md85"></a> Understanding how LOWESS works and when to use it.</p>
+<h1><a class="anchor" id="autotoc_md86"></a>
 What is LOWESS?</h1>
 <p><b>LOWESS</b> (Locally Weighted Scatterplot Smoothing) is a nonparametric regression method that fits smooth curves through scatter plots without assuming a global functional form.</p>
 <p>Unlike parametric methods (linear regression, polynomial fitting), LOWESS adapts locally to the data structure, making it ideal for:</p>
@@ -112,7 +114,7 @@ What is LOWESS?</h1>
 <li><b>Genomic smoothing</b> — Smooth methylation, ChIP-seq, or expression data</li>
 </ul>
 <hr  />
-<h1><a class="anchor" id="autotoc_md89"></a>
+<h1><a class="anchor" id="autotoc_md88"></a>
 How It Works</h1>
 <div class="image">
 <object type="image/svg+xml" data="lowess_concept.svg" style="pointer-events: none;"></object>
@@ -127,7 +129,7 @@ LOWESS fits local weighted regressions at each point, using a focused local wind
 <li><b>Iterates</b> (optional) — Reweight points based on residuals to reduce outlier influence</li>
 </ol>
 <hr  />
-<h1><a class="anchor" id="autotoc_md91"></a>
+<h1><a class="anchor" id="autotoc_md90"></a>
 The Fraction Parameter</h1>
 <p>The <code>fraction</code> (also called bandwidth or span) is the most important parameter. It controls what proportion of data is used for each local fit.</p>
 <div class="image">
@@ -146,9 +148,12 @@ Small fraction vs large fraction — bandwidth controls how closely the fit foll
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><b>0.7–1.0</b>   </td><td class="markdownTableBodyNone">Very smooth   </td><td class="markdownTableBodyNone">Strong noise, global trends   </td></tr>
 </table>
-<p>!!! tip "Rule of Thumb" Start with <code>fraction=0.67</code> (the default) and adjust based on visual inspection. Use cross-validation for automated selection.</p>
-<hr  />
-<h1><a class="anchor" id="autotoc_md93"></a>
+<blockquote class="doxtable">
+<p>&zwj;<b>Rule of Thumb:</b> Start with <code>fraction=0.67</code> (the default) and adjust based on visual inspection. Use cross-validation for automated selection. </p>
+</blockquote>
+<h1><a class="anchor" id="autotoc_md91"></a>
+&lt;/blockquote&gt;</h1>
+<h1><a class="anchor" id="autotoc_md92"></a>
 Robustness Iterations</h1>
 <p>Standard LOWESS is sensitive to outliers. <b>Robustness iterations</b> downweight points with large residuals:</p>
 <div class="image">
@@ -168,7 +173,7 @@ Non-robust LOWESS (iterations=0) vs robust LOWESS — outlier influence is suppr
 <td class="markdownTableBodyNone"><b>7+</b>   </td><td class="markdownTableBodyNone">Very strong   </td><td class="markdownTableBodyNone">Heavy contamination   </td></tr>
 </table>
 <hr  />
-<h1><a class="anchor" id="autotoc_md95"></a>
+<h1><a class="anchor" id="autotoc_md94"></a>
 Confidence vs Prediction Intervals</h1>
 <div class="image">
 <object type="image/svg+xml" data="intervals_comparison.svg" style="pointer-events: none;"></object>
@@ -187,7 +192,7 @@ Confidence intervals (narrow, mean curve uncertainty) vs Prediction intervals (w
 <li>Use <b>prediction intervals</b> to show where new data points might fall</li>
 </ul>
 <hr  />
-<h1><a class="anchor" id="autotoc_md97"></a>
+<h1><a class="anchor" id="autotoc_md96"></a>
 Execution Modes</h1>
 <p>Choose the right mode based on your use case:</p>
 <table class="markdownTable">
@@ -201,7 +206,7 @@ Execution Modes</h1>
 <td class="markdownTableBodyNone"><b>Online</b>   </td><td class="markdownTableBodyNone">Real-time data   </td><td class="markdownTableBodyNone">Fixed window   </td><td class="markdownTableBodyNone">Incremental updates   </td></tr>
 </table>
 <hr  />
-<h1><a class="anchor" id="autotoc_md99"></a>
+<h1><a class="anchor" id="autotoc_md98"></a>
 Quick Decision Guide</h1>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -214,7 +219,7 @@ Quick Decision Guide</h1>
 <td class="markdownTableBodyNone">Data arrives point-by-point in real time   </td><td class="markdownTableBodyNone">Online   </td></tr>
 </table>
 <hr  />
-<h1><a class="anchor" id="autotoc_md101"></a>
+<h1><a class="anchor" id="autotoc_md100"></a>
 Key Advantages</h1>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -231,7 +236,7 @@ Key Advantages</h1>
 <td class="markdownTableBodyNone">Handles irregular sampling   </td><td class="markdownTableBodyNone">✓   </td><td class="markdownTableBodyNone">✓   </td><td class="markdownTableBodyNone">✗   </td></tr>
 </table>
 <hr  />
-<h1><a class="anchor" id="autotoc_md103"></a>
+<h1><a class="anchor" id="autotoc_md102"></a>
 Next Steps</h1>
 <ul>
 <li><a class="el" href="md_docs_2quickstart.html">Quick Start</a> — See it in action</li>

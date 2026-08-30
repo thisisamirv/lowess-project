@@ -24,6 +24,8 @@ MathJax.Hub.Config({
 </script>
 <script type="text/javascript" async="async" src="https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
+<link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen-awesome-sidebar-only.css" rel="stylesheet" type="text/css"/>
 </head>
 <body>
 <div id="top"><!-- do not remove this div, it is closed by doxygen! -->
@@ -100,8 +102,8 @@ $(document).ready(function(){initNavTree('md_docs_2kernels.html',''); initResiza
   <div class="headertitle"><div class="title">Weight Functions</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md173"></a> Kernel functions for distance weighting.</p>
-<h1><a class="anchor" id="autotoc_md174"></a>
+<div class="textblock"><p><a class="anchor" id="autotoc_md172"></a> Kernel functions for distance weighting.</p>
+<h1><a class="anchor" id="autotoc_md173"></a>
 Overview</h1>
 <p>Weight functions (kernels) determine how neighboring points contribute to each local fit. Points closer to the target receive higher weights.</p>
 <div class="image">
@@ -109,7 +111,7 @@ Overview</h1>
 <div class="caption">
 Weight Functions</div></div>
     <hr  />
-<h1><a class="anchor" id="autotoc_md176"></a>
+<h1><a class="anchor" id="autotoc_md175"></a>
 Available Kernels</h1>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -131,10 +133,12 @@ Available Kernels</h1>
 </table>
 <p><b>Efficiency</b> = AMISE relative to Epanechnikov (1.0 = optimal)</p>
 <hr  />
-<h1><a class="anchor" id="autotoc_md178"></a>
+<h1><a class="anchor" id="autotoc_md177"></a>
 Tricube (Default)</h1>
 <p>Cleveland's original choice. Best all-around performance.</p>
-<p>$$w(u) = (1 - |u|^3)^3$$</p>
+<p class="formulaDsp">
+\[w(u) = (1 - |u|^3)^3\]
+</p>
 <p><b>Use when</b>: Default choice for most applications.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
@@ -157,10 +161,12 @@ Tricube (Default)</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.382608</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md180"></a>
+<h1><a class="anchor" id="autotoc_md179"></a>
 Epanechnikov</h1>
 <p>Theoretically optimal for kernel density estimation.</p>
-<p>$$w(u) = \frac{3}{4}(1 - u^2)$$</p>
+<p class="formulaDsp">
+\[w(u) = \frac{3}{4}(1 - u^2)\]
+</p>
 <p><b>Use when</b>: Optimal MSE properties desired.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
@@ -183,10 +189,12 @@ Epanechnikov</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.406728</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md182"></a>
+<h1><a class="anchor" id="autotoc_md181"></a>
 Gaussian</h1>
 <p>Infinitely smooth. No boundary effects.</p>
-<p>$$w(u) = \exp(-u^2/2)$$</p>
+<p class="formulaDsp">
+\[w(u) = \exp(-u^2/2)\]
+</p>
 <p><b>Use when</b>: Maximum smoothness needed, computational cost acceptable.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
@@ -209,10 +217,12 @@ Gaussian</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.435767</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md184"></a>
+<h1><a class="anchor" id="autotoc_md183"></a>
 Biweight</h1>
 <p>Good balance of efficiency and smoothness.</p>
-<p>$$w(u) = (1 - u^2)^2$$</p>
+<p class="formulaDsp">
+\[w(u) = (1 - u^2)^2\]
+</p>
 <p><b>Use when</b>: Alternative to Tricube with slightly different properties.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
@@ -235,10 +245,12 @@ Biweight</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.375903</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md186"></a>
+<h1><a class="anchor" id="autotoc_md185"></a>
 Cosine</h1>
 <p>Smooth and computationally efficient.</p>
-<p>$$w(u) = \cos(\pi u / 2)$$</p>
+<p class="formulaDsp">
+\[w(u) = \cos(\pi u / 2)\]
+</p>
 <p><b>Use when</b>: Want smooth kernel with simple form.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
@@ -261,10 +273,12 @@ Cosine</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.40083</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md188"></a>
+<h1><a class="anchor" id="autotoc_md187"></a>
 Triangle</h1>
 <p>Simple linear taper.</p>
-<p>$$w(u) = 1 - |u|$$</p>
+<p class="formulaDsp">
+\[w(u) = 1 - |u|\]
+</p>
 <p><b>Use when</b>: Simple, interpretable weights.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
@@ -287,10 +301,12 @@ Triangle</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.381657</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md190"></a>
+<h1><a class="anchor" id="autotoc_md189"></a>
 Uniform</h1>
 <p>Equal weights within window. Fastest but least smooth.</p>
-<p>$$w(u) = 1$$</p>
+<p class="formulaDsp">
+\[w(u) = 1\]
+</p>
 <p><b>Use when</b>: Speed is critical, smoothness less important.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
@@ -313,7 +329,7 @@ Uniform</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.45084</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md192"></a>
+<h1><a class="anchor" id="autotoc_md191"></a>
 Choosing a Kernel</h1>
 <div class="fragment"><div class="line">flowchart TD</div>
 <div class="line">    A[Choose Kernel] --&gt; B{Need maximum smooth}</div>
@@ -325,7 +341,9 @@ Choosing a Kernel</h1>
 <div class="line">    F -- No --&gt; H{Speed critical}</div>
 <div class="line">    H -- Yes --&gt; I[Uniform]</div>
 <div class="line">    H -- No --&gt; J[Biweight]</div>
-</div><!-- fragment --><p>!!! tip "Recommendation" Stick with <b>Tricube</b> (default) unless you have specific requirements. The differences between kernels are usually small in practice. </p>
+</div><!-- fragment --><blockquote class="doxtable">
+<p>&zwj;<b>Recommendation:</b> Stick with <b>Tricube</b> (default) unless you have specific requirements. The differences between kernels are usually small in practice. </p>
+</blockquote>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->

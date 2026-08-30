@@ -24,6 +24,8 @@ MathJax.Hub.Config({
 </script>
 <script type="text/javascript" async="async" src="https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
+<link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen-awesome-sidebar-only.css" rel="stylesheet" type="text/css"/>
 </head>
 <body>
 <div id="top"><!-- do not remove this div, it is closed by doxygen! -->
@@ -100,13 +102,15 @@ $(document).ready(function(){initNavTree('md_docs_2scaling.html',''); initResiza
   <div class="headertitle"><div class="title">Scaling Methods</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md284"></a> Residual scale estimation during robustness iterations.</p>
-<h1><a class="anchor" id="autotoc_md285"></a>
+<div class="textblock"><p><a class="anchor" id="autotoc_md283"></a> Residual scale estimation during robustness iterations.</p>
+<h1><a class="anchor" id="autotoc_md284"></a>
 Overview</h1>
 <p>When <code>iterations &gt; 0</code>, LOWESS computes robustness weights by comparing each residual to the current residual scale estimate. The <code>scaling_method</code> parameter controls how that scale is measured.</p>
-<p>The robustness weight for point $i$ is:</p>
-<p>$$w_i = B!\left(\frac{|r_i|}{6 \cdot \hat{\sigma}}\right)$$</p>
-<p>where $B$ is the bisquare function and $\hat{\sigma}$ is the scale estimate. A larger $\hat{\sigma}$ makes the algorithm more tolerant of large residuals; a smaller one makes it more aggressive.</p>
+<p>The robustness weight for point \(i\) is:</p>
+<p class="formulaDsp">
+\[w_i = B\!\left(\frac{|r_i|}{6 \cdot \hat{\sigma}}\right)\]
+</p>
+<p>where \(B\) is the bisquare function and \(\hat{\sigma}\) is the scale estimate. A larger \(\hat{\sigma}\) makes the algorithm more tolerant of large residuals; a smaller one makes it more aggressive.</p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Method   </th><th class="markdownTableHeadNone">Formula   </th><th class="markdownTableHeadNone">Robustness   </th><th class="markdownTableHeadNone">Speed    </th></tr>
@@ -122,9 +126,11 @@ Overview</h1>
 <div class="caption">
 Scaling Methods Comparison</div></div>
     <hr  />
-<h1><a class="anchor" id="autotoc_md287"></a>
+<h1><a class="anchor" id="autotoc_md286"></a>
 MAD — Median Absolute Deviation (Default)</h1>
-<p>$$\hat{\sigma} = \text{median}(|r_i - \text{median}(r_i)|)$$</p>
+<p class="formulaDsp">
+\[\hat{\sigma} = \text{median}(|r_i - \text{median}(r_i)|)\]
+</p>
 <p>First centers residuals at their median, then takes the median of the absolute deviations. Double use of the median makes it highly resistant to extreme outliers. This is the standard choice for robust regression.</p>
 <p><b>Use when</b>: Data may contain outliers (default for most applications).</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
@@ -148,9 +154,11 @@ MAD — Median Absolute Deviation (Default)</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.382608</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md289"></a>
+<h1><a class="anchor" id="autotoc_md288"></a>
 MAR — Median Absolute Residual</h1>
-<p>$$\hat{\sigma} = \text{median}(|r_i|)$$</p>
+<p class="formulaDsp">
+\[\hat{\sigma} = \text{median}(|r_i|)\]
+</p>
 <p>Uses the uncentered median — unlike MAD it does not subtract the residual median first. Still robust (median-based) but slightly less resistant than MAD when residuals are systematically shifted. Faster than MAD in practice because it requires only one partial sort.</p>
 <p><b>Use when</b>: Speed matters and data have minimal systematic bias in residuals.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
@@ -174,10 +182,12 @@ MAR — Median Absolute Residual</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.382608</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md291"></a>
+<h1><a class="anchor" id="autotoc_md290"></a>
 Mean — Mean Absolute Residual</h1>
-<p>$$\hat{\sigma} = \frac{1}{n}\sum_i |r_i|$$</p>
-<p>Arithmetic mean of absolute residuals. Non-robust: a single extreme outlier inflates $\hat{\sigma}$, causing the algorithm to under-downweight it. Fastest to compute (no sort required). Useful when data are believed to be clean and speed is a priority.</p>
+<p class="formulaDsp">
+\[\hat{\sigma} = \frac{1}{n}\sum_i |r_i|\]
+</p>
+<p>Arithmetic mean of absolute residuals. Non-robust: a single extreme outlier inflates \(\hat{\sigma}\), causing the algorithm to under-downweight it. Fastest to compute (no sort required). Useful when data are believed to be clean and speed is a priority.</p>
 <p><b>Use when</b>: Clean data with no outliers; maximum computation speed required.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
@@ -200,7 +210,7 @@ Mean — Mean Absolute Residual</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.382189</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md293"></a>
+<h1><a class="anchor" id="autotoc_md292"></a>
 Choosing a Scaling Method</h1>
 <table class="markdownTable">
 <tr class="markdownTableHead">

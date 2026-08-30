@@ -24,6 +24,8 @@ MathJax.Hub.Config({
 </script>
 <script type="text/javascript" async="async" src="https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
+<link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen-awesome-sidebar-only.css" rel="stylesheet" type="text/css"/>
 </head>
 <body>
 <div id="top"><!-- do not remove this div, it is closed by doxygen! -->
@@ -100,8 +102,8 @@ $(document).ready(function(){initNavTree('md_docs_2gpu-backend.html',''); initRe
   <div class="headertitle"><div class="title">GPU Backend</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md140"></a> Run the batch LOWESS fit on the GPU via <code>wgpu</code> (Vulkan/Metal/DX12) instead of the CPU.</p>
-<h1><a class="anchor" id="autotoc_md141"></a>
+<div class="textblock"><p><a class="anchor" id="autotoc_md139"></a> Run the batch LOWESS fit on the GPU via <code>wgpu</code> (Vulkan/Metal/DX12) instead of the CPU.</p>
+<h1><a class="anchor" id="autotoc_md140"></a>
 Overview</h1>
 <p>Every binding's batch <code>Lowess</code> type can execute on a GPU-accelerated backend powered by <code>wgpu</code>. It reimplements almost the entire LOWESS pipeline — local regression fitting, robustness iterations, interval bounds, and cross-validation — as WGSL compute shaders, so all anchor points are fit in parallel instead of one at a time on CPU cores.</p>
 <p>This is worth enabling for high-throughput processing of large datasets (roughly 10k+ points); for smaller inputs the CPU backend (optionally with <code>parallel = true</code>) is typically faster once you account for GPU dispatch overhead. See <a href="https://github.com/thisisamirv/lowess-project/blob/main/BENCHMARKS.md">BENCHMARKS.md</a> for crossover points measured on real hardware.</p>
@@ -109,7 +111,7 @@ Overview</h1>
 <p>&zwj;<b>Batch only.</b> GPU support applies to the batch <code>Lowess</code> type only. <code>StreamingLowess</code>/<code>OnlineLowess</code> remain CPU-only in every binding — the Rust core documents GPU as optimized for static batch data, not incremental chunk/point processing. See <a class="el" href="md_docs_2gpu-backend.html">rust.md</a> for details. </p>
 </blockquote>
 <p>GPU support is <b>opt-in</b> and not included in the default published artifacts (PyPI wheels, npm binaries, CRAN/Bioconductor releases, JLL binaries, prebuilt C++ releases) — it requires either downloading a prebuilt GPU-enabled build via a one-time installer, or building from source with the <code>gpu</code> Cargo feature. Both paths are documented per language below.</p>
-<h2><a class="anchor" id="autotoc_md142"></a>
+<h2><a class="anchor" id="autotoc_md141"></a>
 Supported Features</h2>
 <ul>
 <li><b>Weight Functions</b>: All standard kernels (<code>tricube</code>, <code>epanechnikov</code>, <code>gaussian</code>, <code>uniform</code>, <code>biweight</code>, <code>triangle</code>, <code>cosine</code>).</li>
@@ -124,7 +126,7 @@ Supported Features</h2>
 </li>
 <li><b>Validation</b>: GPU-accelerated <code>kfold</code> and <code>loocv</code> cross-validation.</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md143"></a>
+<h2><a class="anchor" id="autotoc_md142"></a>
 Feature Comparison</h2>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -143,14 +145,14 @@ Feature Comparison</h2>
 <td class="markdownTableBodyNone">Custom per-observation weights   </td><td class="markdownTableBodyNone">✅   </td><td class="markdownTableBodyNone">✅   </td><td class="markdownTableBodyNone"></td></tr>
 </table>
 <hr  />
-<h1><a class="anchor" id="autotoc_md145"></a>
+<h1><a class="anchor" id="autotoc_md144"></a>
 Checking Availability</h1>
 <p>Before requesting <code>backend = "gpu"</code> (or the language's equivalent spelling), check whether the currently loaded library was built with GPU support. Requesting the GPU backend when it isn't available raises a clear error pointing at the installer for that language, rather than a raw panic.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
 <div class="line"> </div>
 <div class="line">fastlowess::gpu::available();</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md147"></a>
+<h1><a class="anchor" id="autotoc_md146"></a>
 Installing GPU Support</h1>
 <p>Each binding (except Rust, where the <code>gpu</code> Cargo feature is enabled directly, and WebAssembly, which does not support the GPU backend) ships a one-time installer that downloads a prebuilt GPU-enabled build from the matching <a href="https://github.com/thisisamirv/lowess-project/releases">GitHub Release</a> (built by <code>.github/workflows/release-gpu.yml</code> for Linux/macOS/Windows x86_64 and macOS arm64). Building from source with the <code>gpu</code> Cargo feature is always available as an alternative.</p>
 <p>Whether you need to <b>restart</b> afterwards depends on how each language loads its native library:</p>
@@ -176,7 +178,7 @@ Installing GPU Support</h1>
 <div class="fragment"><div class="line">cd bindings/cpp</div>
 <div class="line">cargo build --release --features gpu</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md149"></a>
+<h1><a class="anchor" id="autotoc_md148"></a>
 Usage</h1>
 <p>Once GPU support is available, request it by setting the backend option on the batch constructor.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
@@ -188,7 +190,7 @@ Usage</h1>
 <div class="line">fastlowess::Lowess model(opts);</div>
 <div class="line"><span class="keyword">auto</span> result = model.fit(x, y);</div>
 </div><!-- fragment --><p>If GPU support isn't available, requesting <code>backend = "gpu"</code> (or the equivalent) raises a runtime error pointing at the installer for that language rather than a raw Rust panic.</p>
-<h1><a class="anchor" id="autotoc_md150"></a>
+<h1><a class="anchor" id="autotoc_md149"></a>
 See also</h1>
 <ul>
 <li><a class="el" href="md_docs_2gpu-backend.html">rust.md</a> — why Streaming/Online adapters stay CPU-only.</li>
