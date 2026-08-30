@@ -1,14 +1,24 @@
 #' LOWESS Online Smoothing
 #'
 #' @description
-#' Create a stateful LOWESS model for real-time online data.
+#' Create a stateful LOWESS model for real-time online data. Maintains a
+#' sliding window and processes each incoming point immediately via
+#' \code{\link{add_point}}.
+#'
+#' @details
+#' Best suited when data arrives incrementally (e.g. sensors or streams),
+#' real-time smoothed values are needed, or memory is fixed. For datasets
+#' that fit in memory, see \code{\link{Lowess}}; for large batches processed
+#' in chunks, see \code{\link{StreamingLowess}}.
 #'
 #' @srrstats {G2.0} Input validation for fraction, window_capacity, min_points.
 #' @srrstats {G1.6} Sliding window for incremental updates.
 #'
 #' @inheritParams Lowess
-#' @param window_capacity Maximum number of points kept in the sliding window.
-#' @param min_points Minimum number of points required before smoothing begins.
+#' @param window_capacity Maximum number of points kept in the sliding
+#'   window, at least 3. Default: 1000.
+#' @param min_points Minimum number of points required before smoothing
+#'   begins, between 2 and \code{window_capacity}. Default: 3.
 #' @param update_mode Window update strategy: \code{"full"} (default; alias:
 #'   \code{"resmooth"}) re-smooths all window points after each addition;
 #'   \code{"incremental"} (alias: \code{"single"}) updates only the newest

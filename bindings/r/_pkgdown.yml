@@ -9,7 +9,7 @@ development:
 
 reference:
   - title: Core LOWESS Interface
-    desc: Main R6 classes for LOWESS smoothing.
+    desc: Main S3 classes for LOWESS smoothing.
     contents:
       - Lowess
       - StreamingLowess
@@ -40,11 +40,7 @@ articles:
       - concepts
   - title: User Guide
     contents:
-      - parameters
       - adapter-choice
-      - batch
-      - streaming
-      - online
       - intervals
       - cross-validation
   - title: Weight & Robustness

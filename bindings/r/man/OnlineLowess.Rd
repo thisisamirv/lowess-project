@@ -27,20 +27,24 @@ OnlineLowess(
 )
 }
 \arguments{
-\item{fraction}{Smoothing fraction (between 0 and 1). Default: 0.67.}
+\item{fraction}{Smoothing fraction, greater than 0 and up to 1. Default:
+0.67. See Details for guidance on choosing a value.}
 
-\item{window_capacity}{Maximum number of points kept in the sliding window.}
+\item{window_capacity}{Maximum number of points kept in the sliding
+window, at least 3. Default: 1000.}
 
-\item{min_points}{Minimum number of points required before smoothing begins.}
+\item{min_points}{Minimum number of points required before smoothing
+begins, between 2 and \code{window_capacity}. Default: 3.}
 
 \item{...}{Not used; forces all subsequent arguments to be named.}
 
-\item{iterations}{Number of robustness iterations (non-negative integer).
-Default: 3.}
+\item{iterations}{Number of robustness iterations, between 0 and 1000
+(inclusive). Default: 3.}
 
-\item{delta}{Interpolation distance threshold; points within \code{delta}
-of each other on x share the same local fit. \code{NULL} (default) sets
-it automatically to 1/100th of the x range.}
+\item{delta}{Interpolation distance threshold, as a non-negative fraction
+of the x range; points within \code{delta} of each other on x share the
+same local fit. \code{NULL} (default) sets it automatically to 1/100th
+of the x range.}
 
 \item{weight_function}{Kernel weight function. One of \code{"tricube"}
 (default), \code{"gaussian"}, \code{"uniform"} (alias: \code{"boxcar"}),
@@ -85,17 +89,27 @@ result. Default: \code{FALSE}.}
 
 \item{parallel}{Logical; enable parallel processing. Default: \code{TRUE}.}
 
-\item{confidence_intervals}{Confidence level for confidence intervals
-(e.g., 0.95). \code{NULL} (default) disables confidence intervals.}
+\item{confidence_intervals}{Confidence level for confidence intervals,
+greater than 0 and less than 1 (e.g., 0.95). \code{NULL} (default)
+disables confidence intervals.}
 
-\item{prediction_intervals}{Confidence level for prediction intervals
-(e.g., 0.95). \code{NULL} (default) disables prediction intervals.}
+\item{prediction_intervals}{Confidence level for prediction intervals,
+greater than 0 and less than 1 (e.g., 0.95). \code{NULL} (default)
+disables prediction intervals.}
 }
 \value{
 An OnlineLowess object.
 }
 \description{
-Create a stateful LOWESS model for real-time online data.
+Create a stateful LOWESS model for real-time online data. Maintains a
+sliding window and processes each incoming point immediately via
+\code{\link{add_point}}.
+}
+\details{
+Best suited when data arrives incrementally (e.g. sensors or streams),
+real-time smoothed values are needed, or memory is fixed. For datasets
+that fit in memory, see \code{\link{Lowess}}; for large batches processed
+in chunks, see \code{\link{StreamingLowess}}.
 }
 \examples{
 model <- OnlineLowess(fraction = 0.2, window_capacity = 20)
