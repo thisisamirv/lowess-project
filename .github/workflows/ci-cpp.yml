@@ -33,9 +33,17 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: rustup toolchain install stable-x86_64-pc-windows-gnu
 
-      - name: Install GNU Make and cppcheck (Windows)
+      - name: Install GNU Make (Windows)
         if: matrix.os == 'windows-latest'
-        run: choco install make cppcheck -y
+        run: choco install make -y
+
+      - name: Install cppcheck (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          winget install --id Cppcheck.Cppcheck --exact --accept-source-agreements --accept-package-agreements
+          $cppcheckExe = Get-ChildItem -Path "C:\Program Files\Cppcheck","$env:LOCALAPPDATA\Programs\Cppcheck" -Filter cppcheck.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $cppcheckExe) { throw "cppcheck.exe not found after winget install" }
+          $cppcheckExe.DirectoryName | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
 
       - name: Install cppcheck (Linux)
         if: matrix.os == 'ubuntu-latest'
@@ -44,6 +52,7 @@ jobs:
       - name: Install clang-tidy and cppcheck (macOS)
         if: matrix.os == 'macos-latest'
         run: |
+          brew untap aws/tap || true
           brew install llvm cppcheck
           echo "$(brew --prefix llvm)/bin" >> "$GITHUB_PATH"
 
