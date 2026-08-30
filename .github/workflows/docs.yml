@@ -55,17 +55,23 @@ jobs:
               - 'bindings/wasm/**'
               - '.github/workflows/docs.yml'
 
+  # Each of the jobs below only builds its own docs and uploads the result as a
+  # workflow artifact — nothing is pushed to gh-pages here. This lets them all
+  # run in parallel, and keeps GitHub's own "pages build and deployment" from
+  # firing once per job. The `deploy` job merges every artifact into a single
+  # commit at the end, so the branch (and its auto-triggered Pages build) is
+  # only touched once per workflow run.
+
   root:
     needs: filter
+    if: needs.filter.outputs.root == 'true' || github.event_name == 'workflow_dispatch'
     name: Root — README
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - name: Install pandoc
-        if: needs.filter.outputs.root == 'true' || github.event_name == 'workflow_dispatch'
         run: sudo apt-get install -y pandoc
       - name: Convert README.md to HTML
-        if: needs.filter.outputs.root == 'true' || github.event_name == 'workflow_dispatch'
         run: |
           mkdir -p _site
           pandoc README.md \
@@ -76,18 +82,15 @@ jobs:
             --css=https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.6.1/github-markdown-light.min.css \
             -o _site/index.html
           sed -i 's|<body>|<body class="markdown-body" style="max-width:980px;margin:0 auto;padding:45px">|' _site/index.html
-      - name: Ensure .nojekyll
-        run: mkdir -p _site && touch _site/.nojekyll
-      - uses: JamesIves/github-pages-deploy-action@v4
+      - uses: actions/upload-artifact@v7
         with:
-          branch: gh-pages
-          folder: _site
-          target-folder: .
-          clean: false
+          name: docs-root
+          path: _site
+          retention-days: 1
 
   cpp:
-    needs: [filter, root]
-    if: always() && (needs.filter.outputs.cpp == 'true' || github.event_name == 'workflow_dispatch')
+    needs: filter
+    if: needs.filter.outputs.cpp == 'true' || github.event_name == 'workflow_dispatch'
     name: C++ — Doxygen
     runs-on: ubuntu-latest
     steps:
@@ -100,16 +103,15 @@ jobs:
         run: doxygen Doxyfile
         working-directory: bindings/cpp
 
-      - uses: JamesIves/github-pages-deploy-action@v4
+      - uses: actions/upload-artifact@v7
         with:
-          branch: gh-pages
-          folder: bindings/cpp/html
-          target-folder: cpp
-          clean: false
+          name: docs-cpp
+          path: bindings/cpp/html
+          retention-days: 1
 
   julia:
-    needs: [filter, cpp]
-    if: always() && (needs.filter.outputs.julia == 'true' || github.event_name == 'workflow_dispatch')
+    needs: filter
+    if: needs.filter.outputs.julia == 'true' || github.event_name == 'workflow_dispatch'
     name: Julia — Documenter.jl
     runs-on: ubuntu-latest
     steps:
@@ -135,16 +137,15 @@ jobs:
       - name: Build docs
         run: julia --project=bindings/julia/julia/docs bindings/julia/julia/docs/make.jl
 
-      - uses: JamesIves/github-pages-deploy-action@v4
+      - uses: actions/upload-artifact@v7
         with:
-          branch: gh-pages
-          folder: bindings/julia/julia/docs/build
-          target-folder: julia
-          clean: false
+          name: docs-julia
+          path: bindings/julia/julia/docs/build
+          retention-days: 1
 
   nodejs:
-    needs: [filter, julia]
-    if: always() && (needs.filter.outputs.nodejs == 'true' || github.event_name == 'workflow_dispatch')
+    needs: filter
+    if: needs.filter.outputs.nodejs == 'true' || github.event_name == 'workflow_dispatch'
     name: Node.js — Starlight
     runs-on: ubuntu-latest
     steps:
@@ -175,16 +176,15 @@ jobs:
           SITE: https://${{ github.repository_owner }}.github.io
           VITE_BASE: /${{ github.event.repository.name }}/nodejs/
 
-      - uses: JamesIves/github-pages-deploy-action@v4
+      - uses: actions/upload-artifact@v7
         with:
-          branch: gh-pages
-          folder: bindings/nodejs/dist
-          target-folder: nodejs
-          clean: false
+          name: docs-nodejs
+          path: bindings/nodejs/dist
+          retention-days: 1
 
   r:
-    needs: [filter, nodejs]
-    if: always() && (needs.filter.outputs.r == 'true' || github.event_name == 'workflow_dispatch')
+    needs: filter
+    if: needs.filter.outputs.r == 'true' || github.event_name == 'workflow_dispatch'
     name: R — pkgdown
     runs-on: ubuntu-latest
     env:
@@ -215,16 +215,15 @@ jobs:
         shell: Rscript {0}
         run: pkgdown::build_site_github_pages(pkg = "bindings/r", new_process = FALSE, install = TRUE)
 
-      - uses: JamesIves/github-pages-deploy-action@v4
+      - uses: actions/upload-artifact@v7
         with:
-          branch: gh-pages
-          folder: bindings/r/docs
-          target-folder: r
-          clean: false
+          name: docs-r
+          path: bindings/r/docs
+          retention-days: 1
 
   wasm:
-    needs: [filter, r]
-    if: always() && (needs.filter.outputs.wasm == 'true' || github.event_name == 'workflow_dispatch')
+    needs: filter
+    if: needs.filter.outputs.wasm == 'true' || github.event_name == 'workflow_dispatch'
     name: WebAssembly — Starlight
     runs-on: ubuntu-latest
     env:
@@ -263,9 +262,84 @@ jobs:
           SITE: https://${{ github.repository_owner }}.github.io
           VITE_BASE: /${{ github.event.repository.name }}/wasm/
 
+      - uses: actions/upload-artifact@v7
+        with:
+          name: docs-wasm
+          path: bindings/wasm/dist
+          retention-days: 1
+
+  deploy:
+    needs: [filter, root, cpp, julia, nodejs, r, wasm]
+    if: always()
+    name: Deploy — publish once
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout existing gh-pages content
+        uses: actions/checkout@v7
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: _site
+
+      - name: Drop nested git metadata from the gh-pages checkout
+        run: |
+          mkdir -p _site
+          rm -rf _site/.git
+
+      - name: Download root artifact
+        if: needs.filter.outputs.root == 'true' || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: docs-root
+          path: _site
+
+      - name: Download cpp artifact
+        if: needs.filter.outputs.cpp == 'true' || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: docs-cpp
+          path: _site/cpp
+
+      - name: Download julia artifact
+        if: needs.filter.outputs.julia == 'true' || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: docs-julia
+          path: _site/julia
+
+      - name: Download nodejs artifact
+        if: needs.filter.outputs.nodejs == 'true' || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: docs-nodejs
+          path: _site/nodejs
+
+      - name: Download r artifact
+        if: needs.filter.outputs.r == 'true' || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: docs-r
+          path: _site/r
+
+      - name: Download wasm artifact
+        if: needs.filter.outputs.wasm == 'true' || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: docs-wasm
+          path: _site/wasm
+
+      - name: Ensure .nojekyll
+        run: touch _site/.nojekyll
+
       - uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: gh-pages
-          folder: bindings/wasm/dist
-          target-folder: wasm
+          folder: _site
+          target-folder: .
           clean: false

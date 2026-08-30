@@ -26,6 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+**Monorepo:**
+
+- Fixed `docs.yml` triggering GitHub's automatic "pages build and deployment" run once per docs sub-job (up to 6 times per push), since each job pushed to `gh-pages` independently. The per-language jobs now only build and upload their output as workflow artifacts; a new final `deploy` job merges every artifact with the existing `gh-pages` content and pushes once per workflow run.
+
 **C++:**
 
 - Fixed the Doxygen site homepage showing `docs/concepts.md` instead of `README.md`. `Doxyfile` now includes `README.md` in `INPUT` and sets it as `USE_MDFILE_AS_MAINPAGE`.
