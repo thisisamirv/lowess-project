@@ -30,6 +30,7 @@ class FastlowessCpp(CargoPackage):
 
     # version() lines below are appended/updated by dev/spack_release.py on
     # every release; keep newest first.
+    version("3.1.0", sha256="610a6af65a3e8eaa5483332c256e7ce6c3fe2b7ac3ec0f04e08ecd70bf6abe0f")
     version(
         "3.1.0",
         sha256="610a6af65a3e8eaa5483332c256e7ce6c3fe2b7ac3ec0f04e08ecd70bf6abe0f",
