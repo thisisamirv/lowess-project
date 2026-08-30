@@ -3,7 +3,6 @@
 <url><loc>https://thisisamirv.github.io/lowess-project/r/CONTRIBUTING.html</loc></url>
 <url><loc>https://thisisamirv.github.io/lowess-project/r/LICENSE-text.html</loc></url>
 <url><loc>https://thisisamirv.github.io/lowess-project/r/articles/adapter-choice.html</loc></url>
-<url><loc>https://thisisamirv.github.io/lowess-project/r/articles/batch.html</loc></url>
 <url><loc>https://thisisamirv.github.io/lowess-project/r/articles/benchmarks.html</loc></url>
 <url><loc>https://thisisamirv.github.io/lowess-project/r/articles/boundary.html</loc></url>
 <url><loc>https://thisisamirv.github.io/lowess-project/r/articles/concepts.html</loc></url>
@@ -15,12 +14,9 @@
 <url><loc>https://thisisamirv.github.io/lowess-project/r/articles/intervals.html</loc></url>
 <url><loc>https://thisisamirv.github.io/lowess-project/r/articles/kernels.html</loc></url>
 <url><loc>https://thisisamirv.github.io/lowess-project/r/articles/merge.html</loc></url>
-<url><loc>https://thisisamirv.github.io/lowess-project/r/articles/online.html</loc></url>
-<url><loc>https://thisisamirv.github.io/lowess-project/r/articles/parameters.html</loc></url>
 <url><loc>https://thisisamirv.github.io/lowess-project/r/articles/quickstart.html</loc></url>
 <url><loc>https://thisisamirv.github.io/lowess-project/r/articles/robustness.html</loc></url>
 <url><loc>https://thisisamirv.github.io/lowess-project/r/articles/scaling.html</loc></url>
-<url><loc>https://thisisamirv.github.io/lowess-project/r/articles/streaming.html</loc></url>
 <url><loc>https://thisisamirv.github.io/lowess-project/r/articles/use-case-genomics.html</loc></url>
 <url><loc>https://thisisamirv.github.io/lowess-project/r/articles/use-case-real-time.html</loc></url>
 <url><loc>https://thisisamirv.github.io/lowess-project/r/articles/use-case-time-series.html</loc></url>

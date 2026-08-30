@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['parameters_2emd_0',['parameters.md',['../parameters_8md.html',1,'']]]
+  ['news_2emd_0',['NEWS.md',['../NEWS_8md.html',1,'']]]
 ];

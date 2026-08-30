@@ -139,15 +139,14 @@ LOESS vs. LOWESS</h2>
 <blockquote class="doxtable">
 <p>&zwj;<b>Note:</b> For a <b>LOESS</b> implementation, use <a href="https://github.com/thisisamirv/loess-project"><code>loess-project</code></a>. </p>
 </blockquote>
+<hr  />
 <h2><a class="anchor" id="autotoc_md6"></a>
-&lt;/blockquote&gt;</h2>
-<h2><a class="anchor" id="autotoc_md7"></a>
 Why this package?</h2>
-<h3><a class="anchor" id="autotoc_md8"></a>
+<h3><a class="anchor" id="autotoc_md7"></a>
 Speed</h3>
 <p>The <code>lowess</code> project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution. It is on average <b>200-327x faster</b> than Python's <code>statsmodels.lowess</code> and <b>2-3x faster</b> than R's <code>lowess</code>.</p>
 <p>For more details on the performance comparison, see the <a href="https://thisisamirv.github.io/lowess-project/cpp/md_docs_2benchmarks.html">Benchmarks</a> page.</p>
-<h3><a class="anchor" id="autotoc_md9"></a>
+<h3><a class="anchor" id="autotoc_md8"></a>
 Robustness</h3>
 <p>This implementation is <em>more robust</em> than R's <code>lowess</code> and Python's <code>statsmodels</code> due to two key design choices:</p>
 <p><b>MAD-Based Scale Estimation:</b></p>
@@ -173,7 +172,7 @@ Robustness</h3>
 <li>Biased estimates near boundaries due to asymmetric local neighborhoods.</li>
 <li>Increased variance at the edges of the smoothed curve.</li>
 </ul>
-<h3><a class="anchor" id="autotoc_md10"></a>
+<h3><a class="anchor" id="autotoc_md9"></a>
 Features</h3>
 <p>A variety of features, supporting a range of use cases:</p>
 <table class="markdownTable">
@@ -208,7 +207,7 @@ Features</h3>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>no-std</code> Support   </td><td class="markdownTableBodyCenter">yes   </td><td class="markdownTableBodyCenter">no   </td><td class="markdownTableBodyCenter">no   </td></tr>
 </table>
-<h2><a class="anchor" id="autotoc_md11"></a>
+<h2><a class="anchor" id="autotoc_md10"></a>
 Validation</h2>
 <p>All implementations are <b>numerical twins</b> of R's <code>lowess</code>:</p>
 <table class="markdownTable">
@@ -221,61 +220,14 @@ Validation</h2>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><b>Robustness</b>   </td><td class="markdownTableBodyNone">✅ VERIFIED   </td><td class="markdownTableBodyNone">Robust smoothing matches R exactly   </td></tr>
 </table>
+<hr  />
 <h2><a class="anchor" id="autotoc_md12"></a>
-API Reference</h2>
-<div class="fragment"><div class="line"><span class="preprocessor">#include &quot;fastlowess.hpp&quot;</span></div>
-<div class="line"> </div>
-<div class="line">fastlowess::LowessOptions options;</div>
-<div class="line">options.fraction = 0.5;</div>
-<div class="line">options.iterations = 3;</div>
-<div class="line">options.delta = 0.01;</div>
-<div class="line">options.weight_function = <span class="stringliteral">&quot;tricube&quot;</span>;</div>
-<div class="line">options.robustness_method = <span class="stringliteral">&quot;bisquare&quot;</span>;</div>
-<div class="line">options.scaling_method = <span class="stringliteral">&quot;mad&quot;</span>;</div>
-<div class="line">options.zero_weight_fallback = <span class="stringliteral">&quot;use_local_mean&quot;</span>;</div>
-<div class="line">options.boundary_policy = <span class="stringliteral">&quot;extend&quot;</span>;</div>
-<div class="line">options.confidence_intervals = 0.95;</div>
-<div class="line">options.prediction_intervals = 0.95;</div>
-<div class="line">options.return_diagnostics = <span class="keyword">true</span>;</div>
-<div class="line">options.return_residuals = <span class="keyword">true</span>;</div>
-<div class="line">options.return_robustness_weights = <span class="keyword">true</span>;</div>
-<div class="line">options.return_se = <span class="keyword">true</span>;</div>
-<div class="line">options.cv_fractions = {0.3, 0.5, 0.7};</div>
-<div class="line">options.cv_method = <span class="stringliteral">&quot;kfold&quot;</span>;</div>
-<div class="line">options.cv_k = 5;</div>
-<div class="line">options.cv_seed = 123;</div>
-<div class="line">options.auto_converge = 1e-4;</div>
-<div class="line">options.parallel = <span class="keyword">true</span>;</div>
-<div class="line"> </div>
-<div class="line">fastlowess::Lowess model(options);</div>
-<div class="line">std::vector&lt;double&gt; custom_weights(x.size(), 1.0);</div>
-<div class="line"><span class="keyword">const</span> <span class="keyword">auto</span> result = model.fit(x, y, custom_weights).value();</div>
-<div class="line"> </div>
-<div class="line"><span class="comment">// Result structure:</span></div>
-<div class="line">result.x_vector(),</div>
-<div class="line">result.y_vector(),</div>
-<div class="line">result.standard_errors(),</div>
-<div class="line">result.confidence_lower(),</div>
-<div class="line">result.confidence_upper(),</div>
-<div class="line">result.prediction_lower(),</div>
-<div class="line">result.prediction_upper(),</div>
-<div class="line">result.residuals(),</div>
-<div class="line">result.robustness_weights(),</div>
-<div class="line">result.diagnostics(),</div>
-<div class="line">result.iterations_used(),</div>
-<div class="line">result.fraction_used(),</div>
-<div class="line">result.cv_scores()</div>
-</div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md14"></a>
 Contributing</h2>
 <p>Contributions are welcome! Please see <a href="https://github.com/thisisamirv/lowess-project/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a> for more information.</p>
-<h2><a class="anchor" id="autotoc_md15"></a>
-Changelog</h2>
-<p>See <a href="https://github.com/thisisamirv/lowess-project/blob/main/CHANGELOG.md">CHANGELOG.md</a> for a history of changes.</p>
-<h2><a class="anchor" id="autotoc_md16"></a>
+<h2><a class="anchor" id="autotoc_md13"></a>
 License</h2>
 <p>Licensed under <a href="https://github.com/thisisamirv/lowess-project/blob/main/LICENSE-MIT">MIT</a> or <a href="https://github.com/thisisamirv/lowess-project/blob/main/LICENSE-APACHE">Apache-2.0</a>.</p>
-<h2><a class="anchor" id="autotoc_md17"></a>
+<h2><a class="anchor" id="autotoc_md14"></a>
 Citation</h2>
 <p>If you use this software in your research, please cite it using the <a href="https://github.com/thisisamirv/lowess-project/blob/main/CITATION.cff">CITATION.cff</a> file or the BibTeX entry below:</p>
 <div class="fragment"><div class="line">@software{lowess_project,</div>

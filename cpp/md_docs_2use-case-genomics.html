@@ -102,17 +102,17 @@ $(document).ready(function(){initNavTree('md_docs_2use-case-genomics.html',''); 
   <div class="headertitle"><div class="title">Genomic Data Smoothing</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md293"></a> LOWESS for methylation profiles, ChIP-seq signals, and other genomic data.</p>
-<h1><a class="anchor" id="autotoc_md294"></a>
+<div class="textblock"><p><a class="anchor" id="autotoc_md260"></a> LOWESS for methylation profiles, ChIP-seq signals, and other genomic data.</p>
+<h1><a class="anchor" id="autotoc_md261"></a>
 Overview</h1>
 <p>Genomic data often contains noise from sequencing depth variation, PCR artifacts, or biological heterogeneity. LOWESS smoothing helps reveal underlying patterns.</p>
 <hr  />
-<h1><a class="anchor" id="autotoc_md296"></a>
+<h1><a class="anchor" id="autotoc_md263"></a>
 Methylation Profile Smoothing</h1>
-<h2><a class="anchor" id="autotoc_md297"></a>
+<h2><a class="anchor" id="autotoc_md264"></a>
 The Challenge</h2>
 <p>DNA methylation data (from bisulfite sequencing or arrays) shows position-dependent patterns that can be obscured by measurement noise.</p>
-<h2><a class="anchor" id="autotoc_md298"></a>
+<h2><a class="anchor" id="autotoc_md265"></a>
 Solution</h2>
 <p>A small <code>fraction = 0.1</code> lets LOWESS follow fine-scale spatial structure without smearing the transitions between methylated and unmethylated regions. <code>confidence_intervals = 0.95</code> produces uncertainty bands that naturally widen at positions with sparser CpG coverage, making low-confidence segments immediately apparent in the plot.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
@@ -140,9 +140,9 @@ Solution</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">95% CI: [51.6773, 68.7372]</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md300"></a>
+<h1><a class="anchor" id="autotoc_md267"></a>
 ChIP-seq Signal Smoothing</h1>
-<h2><a class="anchor" id="autotoc_md301"></a>
+<h2><a class="anchor" id="autotoc_md268"></a>
 Application</h2>
 <p>ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identify binding regions.</p>
 <p><code>fraction = 0.05</code> provides high spatial resolution — important for resolving narrow binding peaks that would otherwise be smeared into the background. The larger <code>iterations = 5</code> is deliberate: Poisson-distributed read counts produce tall, isolated spikes, and extra robustness iterations progressively down-weight them so the estimated background level is not inflated by a handful of extreme counts.</p>
@@ -177,7 +177,7 @@ Application</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 59.952</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md303"></a>
+<h1><a class="anchor" id="autotoc_md270"></a>
 Large Genome Coverage (Streaming)</h1>
 <p>For whole-genome data that doesn't fit in memory:</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
@@ -208,7 +208,7 @@ Large Genome Coverage (Streaming)</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">Smoothed 100 points</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md305"></a>
+<h1><a class="anchor" id="autotoc_md272"></a>
 Best Practices for Genomic Data</h1>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -225,11 +225,11 @@ Best Practices for Genomic Data</h1>
 <td class="markdownTableBodyNone"><b>Multiple chromosomes</b>   </td><td class="markdownTableBodyNone">Process separately or ensure sorted   </td></tr>
 </table>
 <hr  />
-<h1><a class="anchor" id="autotoc_md307"></a>
+<h1><a class="anchor" id="autotoc_md274"></a>
 See Also</h1>
 <ul>
 <li><a class="el" href="md_docs_2concepts.html">Concepts</a> — How LOWESS works</li>
-<li><a class="el" href="md_docs_2parameters.html">Parameters</a> — All options</li>
+<li><a class="el" href="md_docs_2api.html">API Reference</a> — All options</li>
 <li><a class="el" href="md_docs_2robustness.html">Robustness</a> — Outlier downweighting in depth</li>
 <li><a class="el" href="md_docs_2merge.html">Merge Strategies</a> — Streaming chunk reconciliation</li>
 <li><a class="el" href="md_docs_2boundary.html">Boundary Handling</a> — Edge handling for sparse regions</li>

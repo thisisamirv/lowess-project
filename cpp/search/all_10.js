@@ -1,25 +1,11 @@
 var searchData=
 [
-  ['randomization_0',['Seeded Randomization',['../md_docs_2cross-validation.html#autotoc_md110',1,'']]],
-  ['readme_2emd_1',['README.md',['../README_8md.html',1,'']]],
-  ['real_20time_20dashboard_20example_2',['Real-Time Dashboard Example',['../md_docs_2use-case-real-time.html#autotoc_md317',1,'']]],
-  ['real_20time_20processing_3',['Real-Time Processing',['../md_docs_2use-case-real-time.html',1,'']]],
-  ['reference_4',['reference',['../index.html#autotoc_md12',1,'API Reference'],['../md_docs_2parameters.html#autotoc_md205',1,'Quick Reference']]],
-  ['reflect_5',['Reflect',['../md_docs_2boundary.html#autotoc_md78',1,'']]],
-  ['reproducing_20benchmarks_6',['Reproducing Benchmarks',['../md_docs_2benchmarks.html#autotoc_md72',1,'']]],
-  ['requirements_7',['Hardware Requirements',['../md_docs_2api.html#autotoc_md53',1,'']]],
-  ['residual_8',['residual',['../md_docs_2scaling.html#autotoc_md288',1,'MAR — Median Absolute Residual'],['../md_docs_2scaling.html#autotoc_md290',1,'Mean — Mean Absolute Residual']]],
-  ['result_20structure_9',['result structure',['../md_docs_2api-online.html#autotoc_md27',1,'Result Structure'],['../md_docs_2api-streaming.html#autotoc_md35',1,'Result Structure'],['../md_docs_2api.html#autotoc_md55',1,'Result Structure']]],
-  ['results_10',['Interpreting Results',['../md_docs_2cross-validation.html#autotoc_md116',1,'']]],
-  ['return_5fdiagnostics_11',['return_diagnostics',['../md_docs_2parameters.html#autotoc_md233',1,'']]],
-  ['return_5fresiduals_12',['return_residuals',['../md_docs_2parameters.html#autotoc_md231',1,'']]],
-  ['return_5frobustness_5fweights_13',['return_robustness_weights',['../md_docs_2parameters.html#autotoc_md235',1,'']]],
-  ['return_5fse_14',['return_se',['../md_docs_2parameters.html#autotoc_md237',1,'']]],
-  ['robustness_15',['robustness',['../md_docs_2robustness.html',1,'Robustness'],['../index.html#autotoc_md9',1,'Robustness']]],
-  ['robustness_20iterations_16',['robustness iterations',['../md_docs_2custom-weights.html#autotoc_md134',1,'Combined with Robustness Iterations'],['../md_docs_2custom-weights.html#autotoc_md125',1,'Custom Weights vs. Robustness Iterations'],['../md_docs_2concepts.html#autotoc_md92',1,'Robustness Iterations']]],
-  ['robustness_20methods_17',['Robustness Methods',['../md_docs_2robustness.html#autotoc_md269',1,'']]],
-  ['robustness_20works_18',['How Robustness Works',['../md_docs_2robustness.html#autotoc_md267',1,'']]],
-  ['robustness_2emd_19',['robustness.md',['../robustness_8md.html',1,'']]],
-  ['robustness_5fmethod_20',['robustness_method',['../md_docs_2parameters.html#autotoc_md218',1,'robustness_method'],['../md_docs_2api.html#autotoc_md60',1,'robustness_method']]],
-  ['rules_21',['Validation Rules',['../md_docs_2custom-weights.html#autotoc_md136',1,'']]]
+  ['handling_0',['Boundary Handling',['../md_docs_2boundary.html',1,'']]],
+  ['handling_20missing_20data_1',['Handling Missing Data',['../md_docs_2use-case-time-series.html#autotoc_md302',1,'']]],
+  ['handling_20outliers_2',['Handling Outliers',['../md_docs_2quickstart.html#autotoc_md228',1,'']]],
+  ['hardware_20requirements_3',['Hardware Requirements',['../md_docs_2gpu-backend.html#autotoc_md134',1,'']]],
+  ['how_20custom_20weights_20work_4',['How Custom Weights Work',['../md_docs_2custom-weights.html#autotoc_md109',1,'']]],
+  ['how_20it_20works_5',['How It Works',['../md_docs_2concepts.html#autotoc_md77',1,'']]],
+  ['how_20robustness_20works_6',['How Robustness Works',['../md_docs_2robustness.html#autotoc_md234',1,'']]],
+  ['huber_7',['Huber',['../md_docs_2robustness.html#autotoc_md239',1,'']]]
 ];

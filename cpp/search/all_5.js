@@ -1,25 +1,4 @@
 var searchData=
 [
-  ['fastlowess_0',['fastLowess',['../index.html',1,'']]],
-  ['fastlowess_3a_3adiagnostics_1',['fastlowess::Diagnostics',['../md_docs_2api.html#autotoc_md57',1,'']]],
-  ['fastlowess_3a_3alowess_2',['fastlowess::Lowess',['../md_docs_2api.html#autotoc_md45',1,'']]],
-  ['fastlowess_3a_3alowessresult_3',['fastlowess::lowessresult',['../md_docs_2api-streaming.html#autotoc_md36',1,'fastlowess::LowessResult'],['../md_docs_2api.html#autotoc_md56',1,'fastlowess::LowessResult']]],
-  ['fastlowess_3a_3aonlinelowess_4',['fastlowess::OnlineLowess',['../md_docs_2api-online.html#autotoc_md24',1,'']]],
-  ['fastlowess_3a_3aonlineoutput_5',['fastlowess::OnlineOutput',['../md_docs_2api-online.html#autotoc_md28',1,'']]],
-  ['fastlowess_3a_3astreaminglowess_6',['fastlowess::StreamingLowess',['../md_docs_2api-streaming.html#autotoc_md34',1,'']]],
-  ['feature_20comparison_7',['feature comparison',['../md_docs_2api.html#autotoc_md52',1,'Feature Comparison'],['../md_docs_2gpu-backend.html#autotoc_md142',1,'Feature Comparison']]],
-  ['features_8',['features',['../index.html#autotoc_md10',1,'Features'],['../md_docs_2api.html#autotoc_md51',1,'Supported Features'],['../md_docs_2gpu-backend.html#autotoc_md141',1,'Supported Features']]],
-  ['file_20processing_9',['Log File Processing',['../md_docs_2use-case-real-time.html#autotoc_md315',1,'']]],
-  ['first_10',['Take First',['../md_docs_2merge.html#autotoc_md197',1,'']]],
-  ['fold_20cross_20validation_11',['K-Fold Cross-Validation',['../md_docs_2cross-validation.html#autotoc_md106',1,'']]],
-  ['for_20genomic_20data_12',['Best Practices for Genomic Data',['../md_docs_2use-case-genomics.html#autotoc_md305',1,'']]],
-  ['for_20time_20series_13',['Choosing Fraction for Time Series',['../md_docs_2use-case-time-series.html#autotoc_md341',1,'']]],
-  ['forecasting_20with_20prediction_20intervals_14',['Forecasting with Prediction Intervals',['../md_docs_2use-case-time-series.html#autotoc_md333',1,'']]],
-  ['forge_15',['From conda-forge',['../md_docs_2installation.html#autotoc_md155',1,'']]],
-  ['fraction_16',['fraction',['../md_docs_2parameters.html#autotoc_md210',1,'']]],
-  ['fraction_20for_20time_20series_17',['Choosing Fraction for Time Series',['../md_docs_2use-case-time-series.html#autotoc_md341',1,'']]],
-  ['fraction_20parameter_18',['The Fraction Parameter',['../md_docs_2concepts.html#autotoc_md90',1,'']]],
-  ['from_20conda_20forge_19',['From conda-forge',['../md_docs_2installation.html#autotoc_md155',1,'']]],
-  ['from_20source_20',['From Source',['../md_docs_2installation.html#autotoc_md154',1,'']]],
-  ['functions_21',['Weight Functions',['../md_docs_2kernels.html',1,'']]]
+  ['6_0',['fastlowess (C++) 0.99.6',['../md_docs_2NEWS.html#autotoc_md219',1,'']]]
 ];

@@ -38,5 +38,6 @@ added.
 
 ``` r
 model <- OnlineLowess(fraction = 0.2, window_capacity = 20L)
-result <- add_point(model, 1.0, 0.5)
+add_point(model, 1.0, 0.5)
+#> NULL
 ```

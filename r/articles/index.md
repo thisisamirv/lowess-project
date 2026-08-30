@@ -10,16 +10,8 @@
 
 ### User Guide
 
-- [Parameters
-  Reference](https://thisisamirv.github.io/lowess-project/r/articles/parameters.md):
 - [Choosing an Execution
   Mode](https://thisisamirv.github.io/lowess-project/r/articles/adapter-choice.md):
-- [Batch Mode
-  (Lowess)](https://thisisamirv.github.io/lowess-project/r/articles/batch.md):
-- [Streaming Mode
-  (StreamingLowess)](https://thisisamirv.github.io/lowess-project/r/articles/streaming.md):
-- [Online Mode
-  (OnlineLowess)](https://thisisamirv.github.io/lowess-project/r/articles/online.md):
 - [Confidence and Prediction
   Intervals](https://thisisamirv.github.io/lowess-project/r/articles/intervals.md):
 - [Cross-Validation](https://thisisamirv.github.io/lowess-project/r/articles/cross-validation.md):

@@ -152,12 +152,6 @@ Contributions are welcome! Please see
 [CONTRIBUTING.md](https://github.com/thisisamirv/lowess-project/blob/main/CONTRIBUTING.md)
 for more information.
 
-## Changelog
-
-See
-[CHANGELOG.md](https://github.com/thisisamirv/lowess-project/blob/main/CHANGELOG.md)
-for a history of changes.
-
 ## License
 
 Licensed under

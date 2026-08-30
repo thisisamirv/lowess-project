@@ -1,6 +1,8 @@
 # LOWESS Batch Smoothing
 
-Create a stateful LOWESS model for batch smoothing.
+Create a stateful LOWESS model for batch smoothing. This is the default
+mode: it processes the entire dataset at once and supports every feature
+(confidence/prediction intervals, cross-validation, GPU backend).
 
 ## Usage
 
@@ -35,7 +37,8 @@ Lowess(
 
 - fraction:
 
-  Smoothing fraction (between 0 and 1). Default: 0.67.
+  Smoothing fraction, greater than 0 and up to 1. Default: 0.67. See
+  Details for guidance on choosing a value.
 
 - ...:
 
@@ -43,13 +46,14 @@ Lowess(
 
 - iterations:
 
-  Number of robustness iterations (non-negative integer). Default: 3.
+  Number of robustness iterations, between 0 and 1000 (inclusive).
+  Default: 3.
 
 - delta:
 
-  Interpolation distance threshold; points within `delta` of each other
-  on x share the same local fit. `NULL` (default) sets it automatically
-  to 1/100th of the x range.
+  Interpolation distance threshold, as a non-negative fraction of the x
+  range; points within `delta` of each other on x share the same local
+  fit. `NULL` (default) sets it automatically to 1/100th of the x range.
 
 - weight_function:
 
@@ -78,13 +82,13 @@ Lowess(
 
 - confidence_intervals:
 
-  Confidence level for confidence intervals (e.g., 0.95). `NULL`
-  (default) disables confidence intervals.
+  Confidence level for confidence intervals, greater than 0 and less
+  than 1 (e.g., 0.95). `NULL` (default) disables confidence intervals.
 
 - prediction_intervals:
 
-  Confidence level for prediction intervals (e.g., 0.95). `NULL`
-  (default) disables prediction intervals.
+  Confidence level for prediction intervals, greater than 0 and less
+  than 1 (e.g., 0.95). `NULL` (default) disables prediction intervals.
 
 - return_diagnostics:
 
@@ -149,6 +153,26 @@ Lowess(
 ## Value
 
 A Lowess object.
+
+## Details
+
+Best suited when the dataset fits in memory and you need intervals,
+cross-validation, or diagnostics. For datasets that don't fit in memory
+or arrive in chunks, see
+[`StreamingLowess`](https://thisisamirv.github.io/lowess-project/r/reference/StreamingLowess.md);
+for point-by-point real-time data, see
+[`OnlineLowess`](https://thisisamirv.github.io/lowess-project/r/reference/OnlineLowess.md).
+
+`fraction` is the most important parameter: it controls the size of the
+local neighbourhood used at each point.
+
+|         |                 |                          |
+|---------|-----------------|--------------------------|
+| Range   | Effect          | Use case                 |
+| 0.1-0.3 | Fine detail     | Rapidly changing signals |
+| 0.3-0.5 | Balanced        | General purpose          |
+| 0.5-0.7 | Heavy smoothing | Noisy data               |
+| 0.7-1.0 | Very smooth     | Trend extraction         |
 
 ## Examples
 

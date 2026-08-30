@@ -44,5 +44,8 @@ A `LowessResult` object.
 x <- seq(0, 10, length.out = 100)
 y <- sin(x) + rnorm(100, 0, 0.1)
 model <- Lowess(fraction = 0.2)
-result <- fit(model, x, y)
+fit(model, x, y)
+#> <LowessResult>
+#>   Points:            100 
+#>   Fraction Used:     0.2 
 ```

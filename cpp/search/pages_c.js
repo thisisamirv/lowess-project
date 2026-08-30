@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['quick_20start_0',['Quick Start',['../md_docs_2quickstart.html',1,'']]]
+  ['processing_0',['Real-Time Processing',['../md_docs_2use-case-real-time.html',1,'']]]
 ];

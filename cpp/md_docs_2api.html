@@ -102,24 +102,20 @@ $(document).ready(function(){initNavTree('md_docs_2api.html',''); initResizable(
   <div class="headertitle"><div class="title">API</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md42"></a> The C++ bindings provide a modern, object-oriented wrapper around the core Rust library, mirroring the Rust API structure.</p>
+<div class="textblock"><p><a class="anchor" id="autotoc_md39"></a> The C++ bindings provide a modern, object-oriented wrapper around the core Rust library, mirroring the Rust API structure.</p>
 <blockquote class="doxtable">
-<p>&zwj;<b>StreamingLowess</b> and <b>OnlineLowess</b> are documented separately: <a class="el" href="md_docs_2api-streaming.html">cpp-streaming.md</a>, <a class="el" href="md_docs_2api-online.html">cpp-online.md</a> </p>
+<p>&zwj;<b>StreamingLowess</b> and <b>OnlineLowess</b> are documented separately: <a class="el" href="md_docs_2api-streaming.html">Streaming Adapter</a>, <a class="el" href="md_docs_2api-online.html">Online Adapter</a> </p>
 </blockquote>
-<h1><a class="anchor" id="autotoc_md43"></a>
+<h1><a class="anchor" id="autotoc_md40"></a>
 When to Use Batch Adapter</h1>
 <ul>
 <li>Dataset fits in memory</li>
 <li>Need intervals, cross-validation, or diagnostics</li>
 <li>Processing complete files</li>
 </ul>
-<div class="image">
-<object type="image/svg+xml" data="gap_handling.svg" style="pointer-events: none;"></object>
-<div class="caption">
-Gap Handling</div></div>
-    <h1><a class="anchor" id="autotoc_md44"></a>
+<h1><a class="anchor" id="autotoc_md41"></a>
 Classes</h1>
-<h2><a class="anchor" id="autotoc_md45"></a>
+<h2><a class="anchor" id="autotoc_md42"></a>
 fastlowess::Lowess</h2>
 <p>The <code>Lowess</code> class allows configuring the LOWESS parameters once and fitting multiple datasets using those parameters.</p>
 <p><b>Constructor:</b></p>
@@ -178,11 +174,11 @@ fastlowess::Lowess</h2>
 <li>The second overload applies <code>custom_weights</code> — non-negative per-observation weights of length <code>n</code>. Batch only.</li>
 <li>Returns a <code>LowessResult</code> object containing the smoothed values and optional diagnostics.</li>
 </ul>
-<p>See <a class="el" href="md_docs_2api-streaming.html">cpp-streaming.md</a> for the <code>StreamingLowess</code> class.</p>
-<p>See <a class="el" href="md_docs_2api-online.html">cpp-online.md</a> for the <code>OnlineLowess</code> class.</p>
-<h1><a class="anchor" id="autotoc_md46"></a>
+<p>See <a class="el" href="md_docs_2api-streaming.html">Streaming Adapter</a> for the <code>StreamingLowess</code> class.</p>
+<p>See <a class="el" href="md_docs_2api-online.html">Online Adapter</a> for the <code>OnlineLowess</code> class.</p>
+<h1><a class="anchor" id="autotoc_md43"></a>
 Options Structures</h1>
-<h2><a class="anchor" id="autotoc_md47"></a>
+<h2><a class="anchor" id="autotoc_md44"></a>
 LowessOptions</h2>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -192,7 +188,7 @@ LowessOptions</h2>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>iterations</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone">3   </td><td class="markdownTableBodyNone">Number of robustifying iterations    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>delta</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">NaN   </td><td class="markdownTableBodyNone">Interpolation distance (NaN for auto)    </td></tr>
+<td class="markdownTableBodyNone"><code>delta</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">NaN   </td><td class="markdownTableBodyNone">Interpolation distance (<code>NaN</code> auto-sets it to 1% of the x-range in Batch, or 0.0 in Streaming/Online)    </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>weight_function</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone">"tricube"   </td><td class="markdownTableBodyNone">Weight function name    </td></tr>
 <tr class="markdownTableRowOdd">
@@ -206,9 +202,9 @@ LowessOptions</h2>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>auto_converge</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">NaN   </td><td class="markdownTableBodyNone">Auto-convergence tolerance    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>confidence_intervals</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">NaN   </td><td class="markdownTableBodyNone">Confidence level (e.g., 0.95)    </td></tr>
+<td class="markdownTableBodyNone"><code>confidence_intervals</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">NaN   </td><td class="markdownTableBodyNone">Confidence level (e.g., 0.95) — see <a class="el" href="md_docs_2intervals.html">Intervals</a>    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>prediction_intervals</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">NaN   </td><td class="markdownTableBodyNone">Prediction level (e.g., 0.95)    </td></tr>
+<td class="markdownTableBodyNone"><code>prediction_intervals</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">NaN   </td><td class="markdownTableBodyNone">Prediction level (e.g., 0.95) — see <a class="el" href="md_docs_2intervals.html">Intervals</a>    </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>return_diagnostics</code>   </td><td class="markdownTableBodyNone"><code>bool</code>   </td><td class="markdownTableBodyNone">false   </td><td class="markdownTableBodyNone">Compute RMSE, MAE, R², AIC    </td></tr>
 <tr class="markdownTableRowOdd">
@@ -222,7 +218,7 @@ LowessOptions</h2>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>backend</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone"><code>"cpu"</code>   </td><td class="markdownTableBodyNone">Execution backend (<code>"cpu"</code> or <code>"gpu"</code>); GPU requires the library to be built with the <code>gpu</code> Cargo feature (Batch only)    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>cv_method</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone">"kfold"   </td><td class="markdownTableBodyNone">CV method (<code>"kfold"</code> or <code>"loocv"</code>) (Batch only)    </td></tr>
+<td class="markdownTableBodyNone"><code>cv_method</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone">"kfold"   </td><td class="markdownTableBodyNone">CV method (<code>"kfold"</code> fast or <code>"loocv"</code> slow, exhaustive) (Batch only)    </td></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>cv_k</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone">5   </td><td class="markdownTableBodyNone">Number of folds for k-fold CV (Batch only)    </td></tr>
 <tr class="markdownTableRowEven">
@@ -230,97 +226,43 @@ LowessOptions</h2>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>cv_seed</code>   </td><td class="markdownTableBodyNone"><code>uint64_t</code>   </td><td class="markdownTableBodyNone"><code>0</code>   </td><td class="markdownTableBodyNone">Random seed for CV shuffling (Batch only; 0 = random)    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>custom_weights</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone"><code>{}</code>   </td><td class="markdownTableBodyNone">Per-observation case weights — passed to <code>fit()</code>, not the constructor (Batch only)   </td></tr>
+<td class="markdownTableBodyNone"><code>custom_weights</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone"><code>{}</code>   </td><td class="markdownTableBodyNone">Per-observation case weights — passed to <code>fit()</code>, not the constructor (Batch only; see <a class="el" href="md_docs_2custom-weights.html">Custom Weights</a>)   </td></tr>
 </table>
-<p>See <a class="el" href="md_docs_2api-streaming.html">cpp-streaming.md</a> for <code>StreamingOptions</code>.</p>
-<p>See <a class="el" href="md_docs_2api-online.html">cpp-online.md</a> for <code>OnlineOptions</code>.</p>
-<h1><a class="anchor" id="autotoc_md48"></a>
-GPU Acceleration</h1>
-<p>The batch <code>fastlowess::Lowess</code> class can run on a GPU-accelerated backend powered by <code>wgpu</code>. This backend is designed for high-throughput processing of large datasets (10k+ points) where parallel regression fitting on the GPU significantly outperforms CPU execution.</p>
-<blockquote class="doxtable">
-<p>&zwj;GPU support applies to <code>Lowess</code> (batch) only. <code>StreamingLowess</code>/<code>OnlineLowess</code> remain CPU-only — see <a class="el" href="md_docs_2gpu-backend.html">rust.md</a> for why. </p>
-</blockquote>
-<h2><a class="anchor" id="autotoc_md49"></a>
-Enabling GPU Support</h2>
-<p>GPU support is opt-in and <b>not included in prebuilt releases</b>. Instead of building from source, call the one-time installer, which downloads a prebuilt GPU-enabled shared library from the matching <a href="https://github.com/thisisamirv/lowess-project/releases">GitHub Release</a>:</p>
-<div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
-<div class="line"> </div>
-<div class="line">fastlowess::gpu::install(); <span class="comment">// prompts for confirmation via curl, then downloads</span></div>
-</div><!-- fragment --><p>Or non-interactively: <code>fastlowess::gpu::install(/*yes=*/true)</code>. Requires <code>curl</code> on <code>PATH</code> (ships with Linux, macOS, and Windows 10+).</p>
-<p>Unlike Python/Julia, a running C++ process cannot swap the backend of a library it already linked against — after downloading, relink/rebuild your application against the downloaded library (or <code>dlopen</code>/<code>LoadLibrary</code> it manually) and restart. Check with <code>fastlowess::gpu::available()</code>.</p>
-<p>Alternatively, build from source locally with the <code>gpu</code> Cargo feature enabled, then link against it and the platform GPU libraries (Vulkan/Metal/DX12):</p>
-<div class="fragment"><div class="line">cd bindings/cpp</div>
-<div class="line">cargo build --release --features gpu</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md50"></a>
-Usage</h2>
-<p>To use the GPU backend, set <code>backend</code> on <code>LowessOptions</code>:</p>
-<div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
-<div class="line"> </div>
-<div class="line">fastlowess::LowessOptions opts;</div>
-<div class="line">opts.fraction = 0.5;</div>
-<div class="line">opts.backend = <span class="stringliteral">&quot;gpu&quot;</span>;</div>
-<div class="line">opts.confidence_intervals = 0.95;</div>
-<div class="line">fastlowess::Lowess model(opts);</div>
-<div class="line"><span class="keyword">auto</span> result = model.fit(x, y);</div>
-</div><!-- fragment --><p>If the library was not built with the <code>gpu</code> feature, requesting <code>backend = "gpu"</code> raises a runtime error pointing to <code>fastlowess::gpu::install()</code>.</p>
-<h2><a class="anchor" id="autotoc_md51"></a>
-Supported Features</h2>
-<p>The GPU backend implements almost the entire LOWESS pipeline in WGSL compute shaders, providing native support for the following features:</p>
-<ul>
-<li><b>Weight Functions</b>: All standard kernels are supported (<code>"tricube"</code>, <code>"epanechnikov"</code>, <code>"gaussian"</code>, <code>"uniform"</code>, <code>"biweight"</code>, <code>"triangle"</code>, <code>"cosine"</code>).</li>
-<li><b>Robustness Methods</b>: Support for <code>"bisquare"</code>, <code>"huber"</code>, and <code>"talwar"</code> robustness weighting.</li>
-<li><b>Scaling Methods</b>: Residual scaling using <code>"mad"</code> (Median Absolute Deviation), <code>"mar"</code> (Median Absolute Residual), and <code>"mean"</code> (Mean Absolute Residual).</li>
-<li><b>Interval Bounds</b>: GPU-native computation of standard errors, confidence intervals, and prediction intervals.</li>
-<li><b>Optimization</b>:<ul>
-<li><b>Parallel Fitting</b>: Local regression for all anchor points is computed in parallel.</li>
-<li><b>Robustness Loops</b>: Iterative weight updates and convergence checks occur entirely on the GPU.</li>
-<li><b>Distance-based Skipping</b>: Support for the <code>delta</code> parameter to accelerate smoothing on dense grids.</li>
-</ul>
-</li>
-<li><b>Validation</b>: GPU-accelerated <code>"kfold"</code> and <code>"loocv"</code> cross-validation.</li>
-</ul>
-<h3><a class="anchor" id="autotoc_md52"></a>
-Feature Comparison</h3>
+<p><code>fraction</code> is the most important parameter: it controls the size of the local neighbourhood used at each point.</p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
-<th class="markdownTableHeadNone">Feature   </th><th class="markdownTableHeadNone">CPU   </th><th class="markdownTableHeadNone">GPU   </th><th class="markdownTableHeadNone">Notes    </th></tr>
+<th class="markdownTableHeadNone">Range   </th><th class="markdownTableHeadNone">Effect   </th><th class="markdownTableHeadNone">Use case    </th></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone">Batch Smoothing   </td><td class="markdownTableBodyNone">✅   </td><td class="markdownTableBodyNone">✅   </td><td class="markdownTableBodyNone">GPU recommended for N &gt; 10,000    </td></tr>
+<td class="markdownTableBodyNone">0.1-0.3   </td><td class="markdownTableBodyNone">Fine detail   </td><td class="markdownTableBodyNone">Rapidly changing signals    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone">Streaming/Online   </td><td class="markdownTableBodyNone">✅   </td><td class="markdownTableBodyNone">❌   </td><td class="markdownTableBodyNone">GPU optimized for static batch data    </td></tr>
+<td class="markdownTableBodyNone">0.3-0.5   </td><td class="markdownTableBodyNone">Balanced   </td><td class="markdownTableBodyNone">General purpose    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone">All Weight Functions   </td><td class="markdownTableBodyNone">✅   </td><td class="markdownTableBodyNone">✅   </td><td class="markdownTableBodyNone">Identical numerical implementation    </td></tr>
+<td class="markdownTableBodyNone">0.5-0.7   </td><td class="markdownTableBodyNone">Heavy smoothing   </td><td class="markdownTableBodyNone">Noisy data    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone">Robustness (bisquare+)   </td><td class="markdownTableBodyNone">✅   </td><td class="markdownTableBodyNone">✅   </td><td class="markdownTableBodyNone">Full support for all methods    </td></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone">Scaling (mad/mar/mean)   </td><td class="markdownTableBodyNone">✅   </td><td class="markdownTableBodyNone">✅   </td><td class="markdownTableBodyNone">Full support for all methods    </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone">Boundary Policies   </td><td class="markdownTableBodyNone">✅   </td><td class="markdownTableBodyNone">✅   </td><td class="markdownTableBodyNone">extend, reflect, zero, noboundary    </td></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone">Auto-Convergence   </td><td class="markdownTableBodyNone">✅   </td><td class="markdownTableBodyNone">✅   </td><td class="markdownTableBodyNone">Tolerance checking occurs on GPU    </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone">Intervals &amp; SE   </td><td class="markdownTableBodyNone">✅   </td><td class="markdownTableBodyNone">✅   </td><td class="markdownTableBodyNone">Native GPU interval calculation    </td></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone">Cross-Validation   </td><td class="markdownTableBodyNone">✅   </td><td class="markdownTableBodyNone">✅   </td><td class="markdownTableBodyNone">Parallel CV folds on GPU    </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone">Interpolation (Delta)   </td><td class="markdownTableBodyNone">✅   </td><td class="markdownTableBodyNone">✅   </td><td class="markdownTableBodyNone">Anchor-based skipping supported   </td></tr>
+<td class="markdownTableBodyNone">0.7-1.0   </td><td class="markdownTableBodyNone">Very smooth   </td><td class="markdownTableBodyNone">Trend extraction   </td></tr>
 </table>
-<h2><a class="anchor" id="autotoc_md53"></a>
-Hardware Requirements</h2>
-<p>The GPU backend leverages <code>wgpu</code> and supports:</p>
-<ul>
-<li><b>Vulkan</b> (Linux/Windows)</li>
-<li><b>Metal</b> (macOS/iOS)</li>
-<li><b>DirectX 12</b> (Windows)</li>
-</ul>
-<p>It requires a device supporting compute shaders. If no compatible GPU is found at runtime, model construction raises an error.</p>
-<h2><a class="anchor" id="autotoc_md54"></a>
-Performance Considerations</h2>
-<p>The GPU backend is optimized for large datasets (N &gt; 100,000) and provides parallelization through compute shaders. For smaller datasets, the CPU backend (<code>backend = "cpu"</code>, the default) is faster.</p>
-<h1><a class="anchor" id="autotoc_md55"></a>
+<p><code>iterations</code> controls robustness to outliers, at the cost of speed.</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Value   </th><th class="markdownTableHeadNone">Effect   </th><th class="markdownTableHeadNone">Performance    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">0   </td><td class="markdownTableBodyNone">No robustness   </td><td class="markdownTableBodyNone">Fastest    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">1-3   </td><td class="markdownTableBodyNone">Moderate   </td><td class="markdownTableBodyNone">Recommended    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">4-6   </td><td class="markdownTableBodyNone">Strong   </td><td class="markdownTableBodyNone">Contaminated data    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">7+   </td><td class="markdownTableBodyNone">Very strong   </td><td class="markdownTableBodyNone">Heavy outliers   </td></tr>
+</table>
+<p>See <a class="el" href="md_docs_2api-streaming.html">Streaming Adapter</a> for <code>StreamingOptions</code>.</p>
+<p>See <a class="el" href="md_docs_2api-online.html">Online Adapter</a> for <code>OnlineOptions</code>.</p>
+<h1><a class="anchor" id="autotoc_md45"></a>
+GPU Acceleration</h1>
+<p>The batch <code>fastlowess::Lowess</code> class can optionally run on a GPU-accelerated backend powered by <code>wgpu</code>, for high-throughput processing of large datasets (10k+ points). GPU support applies to <code>Lowess</code> (batch) only — <code>StreamingLowess</code>/<code>OnlineLowess</code> remain CPU-only. See the <a class="el" href="md_docs_2gpu-backend.html">GPU Backend guide</a> for installation, usage, supported features, and hardware requirements.</p>
+<h1><a class="anchor" id="autotoc_md46"></a>
 Result Structure</h1>
-<p>See <a class="el" href="md_docs_2api-online.html">cpp-online.md</a> for <code>OnlineOutput</code>.</p>
-<h2><a class="anchor" id="autotoc_md56"></a>
+<p>See <a class="el" href="md_docs_2api-online.html">Online Adapter</a> for <code>OnlineOutput</code>.</p>
+<h2><a class="anchor" id="autotoc_md47"></a>
 fastlowess::LowessResult</h2>
 <p>A RAII wrapper around the C result struct <code>fastlowess_CppLowessResult</code>.</p>
 <table class="markdownTable">
@@ -353,7 +295,7 @@ fastlowess::LowessResult</h2>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>diagnostics()</code>   </td><td class="markdownTableBodyNone"><code>Diagnostics</code>   </td><td class="markdownTableBodyNone">Fit metrics — check <code>diagnostics().has_value()</code> before use (if <code>return_diagnostics</code>)   </td></tr>
 </table>
-<h2><a class="anchor" id="autotoc_md57"></a>
+<h2><a class="anchor" id="autotoc_md48"></a>
 fastlowess::Diagnostics</h2>
 <p>All accessors are const methods (not public fields):</p>
 <table class="markdownTable">
@@ -374,9 +316,9 @@ fastlowess::Diagnostics</h2>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>aicc()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">AICc (NaN if not computed)   </td></tr>
 </table>
-<h1><a class="anchor" id="autotoc_md58"></a>
+<h1><a class="anchor" id="autotoc_md49"></a>
 Options</h1>
-<h2><a class="anchor" id="autotoc_md59"></a>
+<h2><a class="anchor" id="autotoc_md50"></a>
 weight_function</h2>
 <p><em>See: <a class="el" href="md_docs_2kernels.html">Weight Functions</a></em></p>
 <ul>
@@ -388,7 +330,7 @@ weight_function</h2>
 <li><code>"triangle"</code> (alias: <code>"triangular"</code>)</li>
 <li><code>"cosine"</code></li>
 </ul>
-<h2><a class="anchor" id="autotoc_md60"></a>
+<h2><a class="anchor" id="autotoc_md51"></a>
 robustness_method</h2>
 <p><em>See: <a class="el" href="md_docs_2robustness.html">Robustness</a></em></p>
 <ul>
@@ -396,7 +338,7 @@ robustness_method</h2>
 <li><code>"huber"</code></li>
 <li><code>"talwar"</code></li>
 </ul>
-<h2><a class="anchor" id="autotoc_md61"></a>
+<h2><a class="anchor" id="autotoc_md52"></a>
 boundary_policy</h2>
 <p><em>See: <a class="el" href="md_docs_2boundary.html">Boundary Handling</a></em></p>
 <ul>
@@ -405,7 +347,7 @@ boundary_policy</h2>
 <li><code>"zero"</code></li>
 <li><code>"noboundary"</code> (alias: <code>"none"</code>)</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md62"></a>
+<h2><a class="anchor" id="autotoc_md53"></a>
 scaling_method</h2>
 <p><em>See: <a class="el" href="md_docs_2scaling.html">Scaling Methods</a></em></p>
 <ul>
@@ -413,21 +355,20 @@ scaling_method</h2>
 <li><code>"mar"</code> (alias: <code>"median_absolute_residual"</code>)</li>
 <li><code>"mean"</code> (alias: <code>"mean_absolute_residual"</code>)</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md63"></a>
+<h2><a class="anchor" id="autotoc_md54"></a>
 zero_weight_fallback</h2>
-<p><em>See: <a class="el" href="md_docs_2parameters.html">Parameters</a></em></p>
-<ul>
-<li><code>"use_local_mean"</code> (default; aliases: <code>"local_mean"</code>, <code>"mean"</code>)</li>
-<li><code>"return_original"</code> (alias: <code>"original"</code>)</li>
-<li><code>"return_none"</code> (alias: <code>"none"</code>)</li>
-</ul>
-<h2><a class="anchor" id="autotoc_md64"></a>
-merge_strategy</h2>
-<p>See <a class="el" href="md_docs_2api-streaming.html">cpp-streaming.md</a>.</p>
-<h2><a class="anchor" id="autotoc_md65"></a>
-update_mode</h2>
-<p>See <a class="el" href="md_docs_2api-online.html">cpp-online.md</a>.</p>
-<h1><a class="anchor" id="autotoc_md66"></a>
+<p>Behavior when all neighborhood weights are zero:</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Option   </th><th class="markdownTableHeadNone">Behavior    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>"use_local_mean"</code> (default; aliases: <code>"local_mean"</code>, <code>"mean"</code>)   </td><td class="markdownTableBodyNone">Use the mean of the neighborhood    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>"return_original"</code> (alias: <code>"original"</code>)   </td><td class="markdownTableBodyNone">Return the original y value    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>"return_none"</code> (alias: <code>"none"</code>)   </td><td class="markdownTableBodyNone">Return <code>NaN</code>   </td></tr>
+</table>
+<h1><a class="anchor" id="autotoc_md55"></a>
 Example</h1>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>

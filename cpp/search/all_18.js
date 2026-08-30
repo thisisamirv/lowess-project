@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['—_20mean_20absolute_20residual_0',['Mean — Mean Absolute Residual',['../md_docs_2scaling.html#autotoc_md290',1,'']]],
-  ['—_20median_20absolute_20deviation_20default_1',['MAD — Median Absolute Deviation (Default)',['../md_docs_2scaling.html#autotoc_md286',1,'']]],
-  ['—_20median_20absolute_20residual_2',['MAR — Median Absolute Residual',['../md_docs_2scaling.html#autotoc_md288',1,'']]]
+  ['quick_20decision_20guide_0',['Quick Decision Guide',['../md_docs_2concepts.html#autotoc_md86',1,'']]],
+  ['quick_20start_1',['Quick Start',['../md_docs_2quickstart.html',1,'']]],
+  ['quickstart_2emd_2',['quickstart.md',['../quickstart_8md.html',1,'']]]
 ];

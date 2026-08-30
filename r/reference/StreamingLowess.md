@@ -1,6 +1,12 @@
 # LOWESS Streaming Smoothing
 
-Create a stateful LOWESS model for streaming data.
+Create a stateful LOWESS model for streaming data. Processes data in
+fixed-size chunks with configurable overlap: results for each chunk are
+returned by
+[`process_chunk`](https://thisisamirv.github.io/lowess-project/r/reference/process_chunk.md),
+and
+[`finalize`](https://thisisamirv.github.io/lowess-project/r/reference/finalize.md)
+flushes any remaining buffered points after the last chunk.
 
 ## Usage
 
@@ -32,11 +38,13 @@ StreamingLowess(
 
 - fraction:
 
-  Smoothing fraction (between 0 and 1). Default: 0.67.
+  Smoothing fraction, greater than 0 and up to 1. Default: 0.67. See
+  Details for guidance on choosing a value.
 
 - chunk_size:
 
-  Number of data points per processing chunk.
+  Number of data points per processing chunk, at least 10. Default:
+  5000.
 
 - ...:
 
@@ -44,17 +52,19 @@ StreamingLowess(
 
 - overlap:
 
-  Number of overlapping points between consecutive chunks.
+  Number of overlapping points between consecutive chunks, less than
+  `chunk_size`. `NULL` (default) uses the backend's default of 500.
 
 - iterations:
 
-  Number of robustness iterations (non-negative integer). Default: 3.
+  Number of robustness iterations, between 0 and 1000 (inclusive).
+  Default: 3.
 
 - delta:
 
-  Interpolation distance threshold; points within `delta` of each other
-  on x share the same local fit. `NULL` (default) sets it automatically
-  to 1/100th of the x range.
+  Interpolation distance threshold, as a non-negative fraction of the x
+  range; points within `delta` of each other on x share the same local
+  fit. `NULL` (default) sets it automatically to 1/100th of the x range.
 
 - weight_function:
 
@@ -120,17 +130,36 @@ StreamingLowess(
 
 - confidence_intervals:
 
-  Confidence level for confidence intervals (e.g., 0.95). `NULL`
-  (default) disables confidence intervals.
+  Confidence level for confidence intervals, greater than 0 and less
+  than 1 (e.g., 0.95). `NULL` (default) disables confidence intervals.
 
 - prediction_intervals:
 
-  Confidence level for prediction intervals (e.g., 0.95). `NULL`
-  (default) disables prediction intervals.
+  Confidence level for prediction intervals, greater than 0 and less
+  than 1 (e.g., 0.95). `NULL` (default) disables prediction intervals.
 
 ## Value
 
 A StreamingLowess object.
+
+## Details
+
+Best suited for datasets over 100,000 points, memory-constrained
+environments, or batch processing pipelines. For smaller datasets that
+fit in memory, see
+[`Lowess`](https://thisisamirv.github.io/lowess-project/r/reference/Lowess.md);
+for point-by-point real-time data, see
+[`OnlineLowess`](https://thisisamirv.github.io/lowess-project/r/reference/OnlineLowess.md).
+
+Overlapping regions between chunks are reconciled via `merge_strategy`:
+
+|                      |                                                |
+|----------------------|------------------------------------------------|
+| Strategy             | Behavior                                       |
+| `"average"`          | Arithmetic mean of both estimates              |
+| `"weighted_average"` | Distance-weighted blend (recommended, default) |
+| `"take_first"`       | Keep left-chunk estimate                       |
+| `"take_last"`        | Keep right-chunk estimate                      |
 
 ## Examples
 
@@ -140,5 +169,8 @@ y <- sin(x) + rnorm(100, 0, 0.1)
 model <- StreamingLowess(fraction = 0.2, chunk_size = 50)
 res1 <- process_chunk(model, x[1:50], y[1:50])
 res2 <- process_chunk(model, x[51:100], y[51:100])
-final <- finalize(model)
+finalize(model)
+#> <LowessResult>
+#>   Points:            5 
+#>   Fraction Used:     0.2 
 ```

@@ -133,7 +133,6 @@ LOWESS (Locally Weighted Scatterplot Smoothing) implementation for
 <strong>Julia</strong>, <strong>JavaScript</strong>,
 <strong>C++</strong>, and <strong>WebAssembly</strong>.</p>
 <blockquote>
-<p>[!IMPORTANT]</p>
 <p>The <code>lowess-project</code> contains a complete ecosystem for
 LOWESS smoothing:</p>
 <ul>
@@ -259,8 +258,8 @@ in the documentation for your binding/crate for details.</p>
 </tbody>
 </table>
 <blockquote>
-<p>[!TIP] <strong>Note:</strong> For a <strong>LOESS</strong>
-implementation, use <a
+<p><strong>Note:</strong> For a <strong>LOESS</strong> implementation,
+use <a
 href="https://github.com/thisisamirv/loess-project"><code>loess-project</code></a>.</p>
 </blockquote>
 <hr />
@@ -438,310 +437,6 @@ neighborhoods.</li>
 </tr>
 </tbody>
 </table>
-<h2 id="api-reference">API Reference</h2>
-<p><strong>R:</strong></p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rfastlowess)</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">Lowess</span>(</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">fraction =</span> <span class="fl">0.5</span>,</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">iterations =</span> <span class="dv">3</span><span class="dt">L</span>,</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">delta =</span> <span class="fl">0.01</span>,</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">weight_function =</span> <span class="st">&quot;tricube&quot;</span>,</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">robustness_method =</span> <span class="st">&quot;bisquare&quot;</span>,</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">scaling_method =</span> <span class="st">&quot;mad&quot;</span>,</span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">zero_weight_fallback =</span> <span class="st">&quot;use_local_mean&quot;</span>,</span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">boundary_policy =</span> <span class="st">&quot;extend&quot;</span>,</span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">confidence_intervals =</span> <span class="fl">0.95</span>,</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">prediction_intervals =</span> <span class="fl">0.95</span>,</span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">return_diagnostics =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">return_residuals =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">return_robustness_weights =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">return_se =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">cv_fractions =</span> <span class="fu">c</span>(<span class="fl">0.3</span>, <span class="fl">0.5</span>, <span class="fl">0.7</span>),</span>
-<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">cv_method =</span> <span class="st">&quot;kfold&quot;</span>,</span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">cv_k =</span> <span class="dv">5</span><span class="dt">L</span>,</span>
-<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">cv_seed =</span> <span class="dv">123</span><span class="dt">L</span>,</span>
-<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">auto_converge =</span> <span class="fl">1e-4</span>,</span>
-<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">parallel =</span> <span class="cn">TRUE</span></span>
-<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>custom_weights <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="dv">1</span>, <span class="fu">length</span>(x))</span>
-<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">fit</span>(model, x, y, <span class="at">custom_weights =</span> custom_weights)</span>
-<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a><span class="co"># Result structure:</span></span>
-<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>result<span class="sc">$</span>x,</span>
-<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>result<span class="sc">$</span>y,</span>
-<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>result<span class="sc">$</span>standard_errors,</span>
-<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>result<span class="sc">$</span>confidence_lower,</span>
-<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>result<span class="sc">$</span>confidence_upper,</span>
-<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>result<span class="sc">$</span>prediction_lower,</span>
-<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>result<span class="sc">$</span>prediction_upper,</span>
-<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>result<span class="sc">$</span>residuals,</span>
-<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>result<span class="sc">$</span>robustness_weights,</span>
-<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>result<span class="sc">$</span>diagnostics,</span>
-<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>result<span class="sc">$</span>iterations_used,</span>
-<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>result<span class="sc">$</span>fraction_used,</span>
-<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>result<span class="sc">$</span>cv_scores</span></code></pre></div>
-<p><strong>Python:</strong></p>
-<div class="sourceCode" id="cb4"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> fastlowess <span class="im">import</span> Lowess</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> Lowess(</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    fraction<span class="op">=</span><span class="fl">0.5</span>,</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    iterations<span class="op">=</span><span class="dv">3</span>,</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    delta<span class="op">=</span><span class="fl">0.01</span>,</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    weight_function<span class="op">=</span><span class="st">&quot;tricube&quot;</span>,</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    robustness_method<span class="op">=</span><span class="st">&quot;bisquare&quot;</span>,</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    scaling_method<span class="op">=</span><span class="st">&quot;mad&quot;</span>,</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    zero_weight_fallback<span class="op">=</span><span class="st">&quot;use_local_mean&quot;</span>,</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    boundary_policy<span class="op">=</span><span class="st">&quot;extend&quot;</span>,</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    confidence_intervals<span class="op">=</span><span class="fl">0.95</span>,</span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    prediction_intervals<span class="op">=</span><span class="fl">0.95</span>,</span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    return_diagnostics<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    return_residuals<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    return_robustness_weights<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    return_se<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    cv_fractions<span class="op">=</span>[<span class="fl">0.3</span>, <span class="fl">0.5</span>, <span class="fl">0.7</span>],</span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    cv_method<span class="op">=</span><span class="st">&quot;kfold&quot;</span>,</span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    cv_k<span class="op">=</span><span class="dv">5</span>,</span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    cv_seed<span class="op">=</span><span class="dv">123</span>,</span>
-<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    auto_converge<span class="op">=</span><span class="fl">1e-4</span>,</span>
-<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    parallel<span class="op">=</span><span class="va">True</span></span>
-<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>custom_weights <span class="op">=</span> [<span class="fl">1.0</span>] <span class="op">*</span> <span class="bu">len</span>(x)</span>
-<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> model.fit(x, y, custom_weights<span class="op">=</span>custom_weights)</span>
-<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a><span class="co"># Result structure:</span></span>
-<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>result.x,</span>
-<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>result.y,</span>
-<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>result.standard_errors,</span>
-<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>result.confidence_lower,</span>
-<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>result.confidence_upper,</span>
-<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>result.prediction_lower,</span>
-<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>result.prediction_upper,</span>
-<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>result.residuals,</span>
-<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>result.robustness_weights,</span>
-<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>result.diagnostics,</span>
-<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>result.iterations_used,</span>
-<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>result.fraction_used,</span>
-<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>result.cv_scores</span></code></pre></div>
-<p><strong>Rust:</strong></p>
-<div class="sourceCode" id="cb5"><pre
-class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">lowess::prelude::</span><span class="op">*;</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> model <span class="op">=</span> <span class="pp">Lowess::</span>new()</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>fraction(<span class="dv">0.5</span>)</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>iterations(<span class="dv">3</span>)</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>delta(<span class="dv">0.01</span>)</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>weight_function(<span class="st">&quot;tricube&quot;</span>)</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>robustness_method(<span class="st">&quot;bisquare&quot;</span>)</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>scaling_method(<span class="st">&quot;mad&quot;</span>)</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>zero_weight_fallback(<span class="st">&quot;use_local_mean&quot;</span>)</span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>boundary_policy(<span class="st">&quot;extend&quot;</span>)</span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>return_se()</span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>confidence_intervals(<span class="dv">0.95</span>)</span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>prediction_intervals(<span class="dv">0.95</span>)</span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>return_diagnostics()</span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>return_residuals()</span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>return_robustness_weights()</span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>cv_method(<span class="st">&quot;kfold&quot;</span>)</span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>cv_k(<span class="dv">5</span>)</span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>cv_fractions(<span class="pp">vec!</span>[<span class="dv">0.3</span><span class="op">,</span> <span class="dv">0.5</span><span class="op">,</span> <span class="dv">0.7</span>])</span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>cv_seed(<span class="dv">123</span>)</span>
-<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>auto_converge(<span class="dv">1e-4</span>)</span>
-<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>custom_weights(<span class="pp">vec!</span>[<span class="dv">1.0</span><span class="op">;</span> x<span class="op">.</span>len()])</span>
-<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>build()<span class="op">?;</span></span>
-<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> result <span class="op">=</span> model<span class="op">.</span>fit(<span class="op">&amp;</span>x<span class="op">,</span> <span class="op">&amp;</span>y)<span class="op">?;</span></span>
-<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a><span class="co">// Result structure:</span></span>
-<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">struct</span> LowessResult<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">{</span></span>
-<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> x<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>T<span class="op">&gt;,</span>                           <span class="co">// Sorted x values</span></span>
-<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> y<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>T<span class="op">&gt;,</span>                           <span class="co">// Smoothed y values</span></span>
-<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> standard_errors<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span>T<span class="op">&gt;&gt;,</span></span>
-<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> confidence_lower<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span>T<span class="op">&gt;&gt;,</span></span>
-<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> confidence_upper<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span>T<span class="op">&gt;&gt;,</span></span>
-<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> prediction_lower<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span>T<span class="op">&gt;&gt;,</span></span>
-<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> prediction_upper<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span>T<span class="op">&gt;&gt;,</span></span>
-<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> residuals<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span>T<span class="op">&gt;&gt;,</span></span>
-<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> robustness_weights<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span>T<span class="op">&gt;&gt;,</span></span>
-<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> diagnostics<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span>Diagnostics<span class="op">&lt;</span>T<span class="op">&gt;&gt;,</span></span>
-<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> iterations_used<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">usize</span><span class="op">&gt;,</span></span>
-<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> fraction_used<span class="op">:</span> T<span class="op">,</span></span>
-<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> cv_scores<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span>T<span class="op">&gt;&gt;,</span></span>
-<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
-<p><strong>Julia:</strong></p>
-<div class="sourceCode" id="cb6"><pre
-class="sourceCode julia"><code class="sourceCode julia"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">FastLOWESS</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> <span class="fu">Lowess</span>(;</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    fraction<span class="op">=</span><span class="fl">0.5</span>,</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    iterations<span class="op">=</span><span class="fl">3</span>,</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    delta<span class="op">=</span><span class="cn">NaN</span>,  <span class="co"># NaN for auto</span></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    weight_function<span class="op">=</span><span class="st">&quot;tricube&quot;</span>,</span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    robustness_method<span class="op">=</span><span class="st">&quot;bisquare&quot;</span>,</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    scaling_method<span class="op">=</span><span class="st">&quot;mad&quot;</span>,</span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    zero_weight_fallback<span class="op">=</span><span class="st">&quot;use_local_mean&quot;</span>,</span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    boundary_policy<span class="op">=</span><span class="st">&quot;extend&quot;</span>,</span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    confidence_intervals<span class="op">=</span><span class="cn">NaN</span>,</span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    prediction_intervals<span class="op">=</span><span class="cn">NaN</span>,</span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    return_diagnostics<span class="op">=</span><span class="cn">true</span>,</span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    return_residuals<span class="op">=</span><span class="cn">true</span>,</span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    return_robustness_weights<span class="op">=</span><span class="cn">true</span>,</span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    return_se<span class="op">=</span><span class="cn">true</span>,</span>
-<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    cv_fractions<span class="op">=</span><span class="dt">Float64</span>[], <span class="co"># e.g. [0.3, 0.5]</span></span>
-<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    cv_method<span class="op">=</span><span class="st">&quot;kfold&quot;</span>,</span>
-<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    cv_k<span class="op">=</span><span class="fl">5</span>,</span>
-<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    cv_seed<span class="op">=</span><span class="fl">123</span>,</span>
-<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>    auto_converge<span class="op">=</span><span class="cn">NaN</span>,</span>
-<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    parallel<span class="op">=</span><span class="cn">true</span></span>
-<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>custom_weights <span class="op">=</span> <span class="fu">ones</span>(<span class="fu">length</span>(x))</span>
-<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> <span class="fu">fit</span>(model, x, y; custom_weights<span class="op">=</span>custom_weights)</span>
-<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a><span class="co"># Result structure:</span></span>
-<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>result.x,</span>
-<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>result.y,</span>
-<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>result.standard_errors,</span>
-<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>result.confidence_lower,</span>
-<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>result.confidence_upper,</span>
-<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>result.prediction_lower,</span>
-<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>result.prediction_upper,</span>
-<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>result.residuals,</span>
-<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>result.robustness_weights,</span>
-<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>result.diagnostics,</span>
-<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>result.iterations_used,</span>
-<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>result.fraction_used,</span>
-<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>result.cv_scores</span></code></pre></div>
-<p><strong>Node.js:</strong></p>
-<div class="sourceCode" id="cb7"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { Lowess } <span class="im">from</span> <span class="st">&quot;fastlowess&quot;</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> model <span class="op">=</span> <span class="kw">new</span> <span class="fu">Lowess</span>({</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">fraction</span><span class="op">:</span> <span class="fl">0.5</span><span class="op">,</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">iterations</span><span class="op">:</span> <span class="dv">3</span><span class="op">,</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">delta</span><span class="op">:</span> <span class="fl">0.01</span><span class="op">,</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">weight_function</span><span class="op">:</span> <span class="st">&quot;tricube&quot;</span><span class="op">,</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">robustness_method</span><span class="op">:</span> <span class="st">&quot;bisquare&quot;</span><span class="op">,</span></span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">scaling_method</span><span class="op">:</span> <span class="st">&quot;mad&quot;</span><span class="op">,</span></span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">zero_weight_fallback</span><span class="op">:</span> <span class="st">&quot;use_local_mean&quot;</span><span class="op">,</span></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">boundary_policy</span><span class="op">:</span> <span class="st">&quot;extend&quot;</span><span class="op">,</span></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">return_se</span><span class="op">:</span> <span class="kw">true</span><span class="op">,</span></span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">confidence_intervals</span><span class="op">:</span> <span class="fl">0.95</span><span class="op">,</span></span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">prediction_intervals</span><span class="op">:</span> <span class="fl">0.95</span><span class="op">,</span></span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">return_diagnostics</span><span class="op">:</span> <span class="kw">true</span><span class="op">,</span></span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">return_residuals</span><span class="op">:</span> <span class="kw">true</span><span class="op">,</span></span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">return_robustness_weights</span><span class="op">:</span> <span class="kw">true</span><span class="op">,</span></span>
-<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>    <span class="dt">cv_fractions</span><span class="op">:</span> [<span class="fl">0.3</span><span class="op">,</span> <span class="fl">0.5</span><span class="op">,</span> <span class="fl">0.7</span>]<span class="op">,</span></span>
-<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>    <span class="dt">cv_method</span><span class="op">:</span> <span class="st">&quot;kfold&quot;</span><span class="op">,</span></span>
-<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    <span class="dt">cv_k</span><span class="op">:</span> <span class="dv">5</span><span class="op">,</span></span>
-<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    <span class="dt">cv_seed</span><span class="op">:</span> <span class="dv">123</span><span class="op">,</span></span>
-<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>    <span class="dt">auto_converge</span><span class="op">:</span> <span class="fl">1e-4</span><span class="op">,</span></span>
-<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>    <span class="dt">parallel</span><span class="op">:</span> <span class="kw">true</span></span>
-<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>})</span>
-<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> custom_weights <span class="op">=</span> <span class="bu">Array</span>(x<span class="op">.</span><span class="at">length</span>)<span class="op">.</span><span class="fu">fill</span>(<span class="fl">1.0</span>)</span>
-<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> result <span class="op">=</span> model<span class="op">.</span><span class="fu">fit</span>(x<span class="op">,</span> y<span class="op">,</span> custom_weights)</span>
-<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a><span class="co">// Result structure:</span></span>
-<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">x</span><span class="op">,</span></span>
-<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">y</span><span class="op">,</span></span>
-<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">standard_errors</span><span class="op">,</span></span>
-<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">confidence_lower</span><span class="op">,</span></span>
-<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">confidence_upper</span><span class="op">,</span></span>
-<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">prediction_lower</span><span class="op">,</span></span>
-<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">prediction_upper</span><span class="op">,</span></span>
-<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">residuals</span><span class="op">,</span></span>
-<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">robustness_weights</span><span class="op">,</span></span>
-<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">diagnostics</span><span class="op">,</span></span>
-<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">iterations_used</span><span class="op">,</span></span>
-<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">fraction_used</span><span class="op">,</span></span>
-<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">cv_scores</span></span></code></pre></div>
-<p><strong>WebAssembly:</strong></p>
-<div class="sourceCode" id="cb8"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { Lowess } <span class="im">from</span> <span class="st">&quot;fastlowess-wasm&quot;</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> model <span class="op">=</span> <span class="kw">new</span> <span class="fu">Lowess</span>({</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">fraction</span><span class="op">:</span> <span class="fl">0.5</span><span class="op">,</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">iterations</span><span class="op">:</span> <span class="dv">3</span><span class="op">,</span></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">delta</span><span class="op">:</span> <span class="fl">0.01</span><span class="op">,</span></span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">weight_function</span><span class="op">:</span> <span class="st">&quot;tricube&quot;</span><span class="op">,</span></span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">robustness_method</span><span class="op">:</span> <span class="st">&quot;bisquare&quot;</span><span class="op">,</span></span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">scaling_method</span><span class="op">:</span> <span class="st">&quot;mad&quot;</span><span class="op">,</span></span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">zero_weight_fallback</span><span class="op">:</span> <span class="st">&quot;use_local_mean&quot;</span><span class="op">,</span></span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">boundary_policy</span><span class="op">:</span> <span class="st">&quot;extend&quot;</span><span class="op">,</span></span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">return_se</span><span class="op">:</span> <span class="kw">true</span><span class="op">,</span></span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">confidence_intervals</span><span class="op">:</span> <span class="fl">0.95</span><span class="op">,</span></span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">prediction_intervals</span><span class="op">:</span> <span class="fl">0.95</span><span class="op">,</span></span>
-<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">return_diagnostics</span><span class="op">:</span> <span class="kw">true</span><span class="op">,</span></span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">return_residuals</span><span class="op">:</span> <span class="kw">true</span><span class="op">,</span></span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">return_robustness_weights</span><span class="op">:</span> <span class="kw">true</span><span class="op">,</span></span>
-<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    <span class="dt">cv_fractions</span><span class="op">:</span> [<span class="fl">0.3</span><span class="op">,</span> <span class="fl">0.5</span><span class="op">,</span> <span class="fl">0.7</span>]<span class="op">,</span></span>
-<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    <span class="dt">cv_method</span><span class="op">:</span> <span class="st">&quot;kfold&quot;</span><span class="op">,</span></span>
-<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>    <span class="dt">cv_k</span><span class="op">:</span> <span class="dv">5</span><span class="op">,</span></span>
-<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>    <span class="dt">cv_seed</span><span class="op">:</span> <span class="dv">123</span><span class="op">,</span></span>
-<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>    <span class="dt">auto_converge</span><span class="op">:</span> <span class="fl">1e-4</span><span class="op">,</span></span>
-<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>    <span class="dt">parallel</span><span class="op">:</span> <span class="kw">true</span></span>
-<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>})</span>
-<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> custom_weights <span class="op">=</span> <span class="kw">new</span> <span class="bu">Float64Array</span>(x<span class="op">.</span><span class="at">length</span>)<span class="op">.</span><span class="fu">fill</span>(<span class="dv">1</span>)</span>
-<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> result <span class="op">=</span> model<span class="op">.</span><span class="fu">fit</span>(x<span class="op">,</span> y<span class="op">,</span> custom_weights)</span>
-<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a><span class="co">// Result structure:</span></span>
-<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">x</span><span class="op">,</span></span>
-<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">y</span><span class="op">,</span></span>
-<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">standard_errors</span><span class="op">,</span></span>
-<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">confidence_lower</span><span class="op">,</span></span>
-<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">confidence_upper</span><span class="op">,</span></span>
-<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">prediction_lower</span><span class="op">,</span></span>
-<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">prediction_upper</span><span class="op">,</span></span>
-<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">residuals</span><span class="op">,</span></span>
-<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">robustness_weights</span><span class="op">,</span></span>
-<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">diagnostics</span><span class="op">,</span></span>
-<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">iterations_used</span><span class="op">,</span></span>
-<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">fraction_used</span><span class="op">,</span></span>
-<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span><span class="at">cv_scores</span></span></code></pre></div>
-<p><strong>C++:</strong></p>
-<div class="sourceCode" id="cb9"><pre
-class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&quot;fastlowess.hpp&quot;</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>fastlowess<span class="op">::</span>LowessOptions options<span class="op">;</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>fraction <span class="op">=</span> <span class="fl">0.5</span><span class="op">;</span></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>iterations <span class="op">=</span> <span class="dv">3</span><span class="op">;</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>delta <span class="op">=</span> <span class="fl">0.01</span><span class="op">;</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>weight_function <span class="op">=</span> <span class="st">&quot;tricube&quot;</span><span class="op">;</span></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>robustness_method <span class="op">=</span> <span class="st">&quot;bisquare&quot;</span><span class="op">;</span></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>scaling_method <span class="op">=</span> <span class="st">&quot;mad&quot;</span><span class="op">;</span></span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>zero_weight_fallback <span class="op">=</span> <span class="st">&quot;use_local_mean&quot;</span><span class="op">;</span></span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>boundary_policy <span class="op">=</span> <span class="st">&quot;extend&quot;</span><span class="op">;</span></span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>confidence_intervals <span class="op">=</span> <span class="fl">0.95</span><span class="op">;</span></span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>prediction_intervals <span class="op">=</span> <span class="fl">0.95</span><span class="op">;</span></span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>return_diagnostics <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
-<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>return_residuals <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
-<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>return_robustness_weights <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
-<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>return_se <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
-<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>cv_fractions <span class="op">=</span> <span class="op">{</span><span class="fl">0.3</span><span class="op">,</span> <span class="fl">0.5</span><span class="op">,</span> <span class="fl">0.7</span><span class="op">};</span></span>
-<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>cv_method <span class="op">=</span> <span class="st">&quot;kfold&quot;</span><span class="op">;</span></span>
-<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>cv_k <span class="op">=</span> <span class="dv">5</span><span class="op">;</span></span>
-<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>cv_seed <span class="op">=</span> <span class="dv">123</span><span class="op">;</span></span>
-<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>auto_converge <span class="op">=</span> <span class="fl">1e-4</span><span class="op">;</span></span>
-<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>options<span class="op">.</span>parallel <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
-<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>fastlowess<span class="op">::</span>Lowess model<span class="op">(</span>options<span class="op">);</span></span>
-<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;</span> custom_weights<span class="op">(</span>x<span class="op">.</span>size<span class="op">(),</span> <span class="fl">1.0</span><span class="op">);</span></span>
-<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a><span class="at">const</span> <span class="kw">auto</span> result <span class="op">=</span> model<span class="op">.</span>fit<span class="op">(</span>x<span class="op">,</span> y<span class="op">,</span> custom_weights<span class="op">).</span>value<span class="op">();</span></span>
-<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a><span class="co">// Result structure:</span></span>
-<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span>x_vector<span class="op">(),</span></span>
-<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span>y_vector<span class="op">(),</span></span>
-<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span>standard_errors<span class="op">(),</span></span>
-<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span>confidence_lower<span class="op">(),</span></span>
-<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span>confidence_upper<span class="op">(),</span></span>
-<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span>prediction_lower<span class="op">(),</span></span>
-<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span>prediction_upper<span class="op">(),</span></span>
-<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span>residuals<span class="op">(),</span></span>
-<span id="cb9-38"><a href="#cb9-38" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span>robustness_weights<span class="op">(),</span></span>
-<span id="cb9-39"><a href="#cb9-39" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span>diagnostics<span class="op">(),</span></span>
-<span id="cb9-40"><a href="#cb9-40" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span>iterations_used<span class="op">(),</span></span>
-<span id="cb9-41"><a href="#cb9-41" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span>fraction_used<span class="op">(),</span></span>
-<span id="cb9-42"><a href="#cb9-42" aria-hidden="true" tabindex="-1"></a>result<span class="op">.</span>cv_scores<span class="op">()</span></span></code></pre></div>
 <hr />
 <h2 id="contributing">Contributing</h2>
 <p>Contributions are welcome! Please see <a
@@ -761,13 +456,13 @@ href="https://github.com/thisisamirv/lowess-project/blob/main/LICENSE-APACHE">Ap
 <a
 href="https://github.com/thisisamirv/lowess-project/blob/main/CITATION.cff">CITATION.cff</a>
 file or the BibTeX entry below:</p>
-<div class="sourceCode" id="cb10"><pre
-class="sourceCode bibtex"><code class="sourceCode bibtex"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">@software{lowess_project,</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co">  author = {Valizadeh, Amir},</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co">  title = {LOWESS Project: High-Performance Locally Weighted Scatterplot Smoothing},</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co">  year = {2026},</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co">  url = {https://github.com/thisisamirv/lowess-project},</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co">  license = {MIT OR Apache-2.0}</span></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bibtex"><code class="sourceCode bibtex"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">@software{lowess_project,</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">  author = {Valizadeh, Amir},</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">  title = {LOWESS Project: High-Performance Locally Weighted Scatterplot Smoothing},</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">  year = {2026},</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">  url = {https://github.com/thisisamirv/lowess-project},</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co">  license = {MIT OR Apache-2.0}</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co">}</span></span></code></pre></div>
 </body>
 </html>

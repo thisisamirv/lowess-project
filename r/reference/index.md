@@ -2,7 +2,7 @@
 
 ## Core LOWESS Interface
 
-Main R6 classes for LOWESS smoothing.
+Main S3 classes for LOWESS smoothing.
 
 - [`Lowess()`](https://thisisamirv.github.io/lowess-project/r/reference/Lowess.md)
   : LOWESS Batch Smoothing

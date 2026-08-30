@@ -102,8 +102,8 @@ $(document).ready(function(){initNavTree('md_docs_2intervals.html',''); initResi
   <div class="headertitle"><div class="title">Intervals</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md158"></a> Confidence and prediction intervals for uncertainty quantification.</p>
-<h1><a class="anchor" id="autotoc_md159"></a>
+<div class="textblock"><p><a class="anchor" id="autotoc_md144"></a> Confidence and prediction intervals for uncertainty quantification.</p>
+<h1><a class="anchor" id="autotoc_md145"></a>
 Overview</h1>
 <div class="image">
 <object type="image/svg+xml" data="intervals_comparison.svg" style="pointer-events: none;"></object>
@@ -121,7 +121,7 @@ Confidence and Prediction Intervals</div></div>
 <td class="markdownTableBodyNone"><b>Prediction</b>   </td><td class="markdownTableBodyNone">Uncertainty for new points   </td><td class="markdownTableBodyNone">Wide   </td><td class="markdownTableBodyNone">Where will new data fall?   </td></tr>
 </table>
 <hr  />
-<h1><a class="anchor" id="autotoc_md161"></a>
+<h1><a class="anchor" id="autotoc_md147"></a>
 Confidence Intervals</h1>
 <p>Estimate uncertainty in the smoothed curve itself.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
@@ -152,7 +152,7 @@ Confidence Intervals</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.29413, 0.374611]</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md163"></a>
+<h1><a class="anchor" id="autotoc_md149"></a>
 Prediction Intervals</h1>
 <p>Estimate where new observations might fall.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
@@ -176,7 +176,7 @@ Prediction Intervals</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">95% PI: [-0.0401039, 0.708845]</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md165"></a>
+<h1><a class="anchor" id="autotoc_md151"></a>
 Both Intervals</h1>
 <p>Request both types simultaneously:</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
@@ -200,7 +200,7 @@ Both Intervals</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.29413, 0.374611]</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md167"></a>
+<h1><a class="anchor" id="autotoc_md153"></a>
 Confidence Levels</h1>
 <p>Common levels and their z-values:</p>
 <table class="markdownTable">
@@ -234,7 +234,7 @@ Confidence Levels</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.317143, 0.448073]</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md169"></a>
+<h1><a class="anchor" id="autotoc_md155"></a>
 Standard Errors</h1>
 <p>Access standard errors directly (available when intervals are computed):</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastlowess.hpp&gt;</span></div>
@@ -258,7 +258,7 @@ Standard Errors</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.332797, 0.432418]</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md171"></a>
+<h1><a class="anchor" id="autotoc_md157"></a>
 Availability</h1>
 <blockquote class="doxtable">
 <p>&zwj;<b>Batch Mode Only:</b> Confidence and prediction intervals are only available in <b>Batch</b> mode. Streaming and Online modes do not support intervals. </p>

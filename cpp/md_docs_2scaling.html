@@ -102,8 +102,8 @@ $(document).ready(function(){initNavTree('md_docs_2scaling.html',''); initResiza
   <div class="headertitle"><div class="title">Scaling Methods</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md283"></a> Residual scale estimation during robustness iterations.</p>
-<h1><a class="anchor" id="autotoc_md284"></a>
+<div class="textblock"><p><a class="anchor" id="autotoc_md250"></a> Residual scale estimation during robustness iterations.</p>
+<h1><a class="anchor" id="autotoc_md251"></a>
 Overview</h1>
 <p>When <code>iterations &gt; 0</code>, LOWESS computes robustness weights by comparing each residual to the current residual scale estimate. The <code>scaling_method</code> parameter controls how that scale is measured.</p>
 <p>The robustness weight for point \(i\) is:</p>
@@ -126,7 +126,7 @@ Overview</h1>
 <div class="caption">
 Scaling Methods Comparison</div></div>
     <hr  />
-<h1><a class="anchor" id="autotoc_md286"></a>
+<h1><a class="anchor" id="autotoc_md253"></a>
 MAD — Median Absolute Deviation (Default)</h1>
 <p class="formulaDsp">
 \[\hat{\sigma} = \text{median}(|r_i - \text{median}(r_i)|)\]
@@ -154,7 +154,7 @@ MAD — Median Absolute Deviation (Default)</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.382608</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md288"></a>
+<h1><a class="anchor" id="autotoc_md255"></a>
 MAR — Median Absolute Residual</h1>
 <p class="formulaDsp">
 \[\hat{\sigma} = \text{median}(|r_i|)\]
@@ -182,7 +182,7 @@ MAR — Median Absolute Residual</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.382608</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md290"></a>
+<h1><a class="anchor" id="autotoc_md257"></a>
 Mean — Mean Absolute Residual</h1>
 <p class="formulaDsp">
 \[\hat{\sigma} = \frac{1}{n}\sum_i |r_i|\]
@@ -210,7 +210,7 @@ Mean — Mean Absolute Residual</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.382189</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md292"></a>
+<h1><a class="anchor" id="autotoc_md259"></a>
 Choosing a Scaling Method</h1>
 <table class="markdownTable">
 <tr class="markdownTableHead">

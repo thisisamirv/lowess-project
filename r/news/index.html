@@ -35,11 +35,321 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.0.0" id="rfastlowess-000">rfastlowess 0.0.0<a class="anchor" aria-label="anchor" href="#rfastlowess-000"></a></h2>
-<ul><li>For the changelog, see: <a href="https://github.com/thisisamirv/lowess-project/blob/main/CHANGELOG.md" class="external-link uri">https://github.com/thisisamirv/lowess-project/blob/main/CHANGELOG.md</a>
-</li>
+<h2 class="pkg-version" data-toc-text="development version" id="rfastlowess-development-version">rfastlowess (development version)<a class="anchor" aria-label="anchor" href="#rfastlowess-development-version"></a></h2>
+<div class="section level3">
+<h3 id="changed-development-version">Changed<a class="anchor" aria-label="anchor" href="#changed-development-version"></a></h3>
+<ul><li>Consolidated every crate/binding README: merged the “Installation” and “Documentation” sections, replaced GitHub-only alert syntax with plain blockquotes, removed the redundant “API Reference” and “Changelog” sections (each now has its own docs-site page), shortened the “GPU Backend” blurb, and added a “Read more” link to the Concepts page. The top-level repository README is unchanged, since it’s only ever viewed on GitHub.</li>
+<li>Renamed the batch adapter’s “When to Use” heading to “When to Use Batch Adapter” across every binding/crate’s API docs.</li>
+<li>Vendored the <a href="https://github.com/jothepro/doxygen-awesome-css" class="external-link">doxygen-awesome-css</a> theme (v2.4.2) for a modern, sidebar-only cpp Doxygen site with automatic dark mode.</li>
+<li>Added <code>dev/update_changelogs.py</code>, which regenerates a per-binding/crate <code>NEWS.md</code>/<code>news.md</code> from the root <code>CHANGELOG.md</code>. Wired into every docs site’s navigation, the Rust crates’ rustdoc module tree, and every <code>Makefile</code> <code>dev</code> target.</li>
+<li>Moved the duplicated “GPU Acceleration” section (installation, usage, supported features, feature comparison) out of <code>api.md</code> in the C++, Node.js, and Python bindings and the <code>fastLowess</code> crate into each one’s dedicated <code>gpu-backend.md</code> guide, which also gained the “Hardware Requirements” and “Performance Considerations” subsections previously only in <code>api.md</code>; <code>api.md</code> now links to <code>gpu-backend.md</code> with a short blurb instead. Removed the same section from the <code>lowess</code> crate’s <code>api.md</code> entirely, since that crate has no <code>gpu</code> Cargo feature or GPU backend to document.</li>
+<li>Consolidated <code>parameters.md</code>/the auto-generated <code>@autodocs</code> parameter reference across every binding and crate (C++, Julia, Node.js, Python, WASM, <code>fastLowess</code>, <code>lowess</code>): merged its unique content (fraction/iterations choice guidance, <code>delta</code>’s per-adapter default, and an inline <code>zero_weight_fallback</code> behavior table) into each <code>api.md</code>’s builder/options tables (Julia: into the <code>Lowess</code>/<code>StreamingLowess</code>/<code>OnlineLowess</code> docstrings), and removed <code>parameters.md</code> itself along with its docs-site navigation entries, <code>doc::parameters</code> rustdoc module, and cross-references (now pointing at <code>api.md</code>) — the parameter tables, kernel/robustness/boundary/scaling/merge-strategy option lists, and interval/custom-weights code examples it duplicated already live on their own dedicated pages.</li>
+<li>Removed the <code>rfastlowess-package</code> pkgdown topic, which duplicated the adapter class list, and unexported the internal <code>Nullable()</code> helper.</li>
+<li>Fixed <code>_pkgdown.yml</code> describing the core interface as “R6 classes” when the package actually uses S3 classes.</li>
+<li>Merged <code>vignettes/parameters.Rmd</code>’s parameter reference (ranges, defaults, and fraction-choice guidance) into the <code>@param</code>/<code>@details</code> roxygen docs of <code><a href="../reference/Lowess.html">Lowess()</a></code>, <code><a href="../reference/StreamingLowess.html">StreamingLowess()</a></code>, and <code><a href="../reference/OnlineLowess.html">OnlineLowess()</a></code>, and removed the now-redundant vignette.</li>
+<li>Merged <code>vignettes/batch.Rmd</code>, <code>streaming.Rmd</code>, and <code>online.Rmd</code>’s unique content (When to Use guidance, merge strategy comparison) into the <code>@description</code>/<code>@details</code> roxygen docs of <code><a href="../reference/Lowess.html">Lowess()</a></code>, <code><a href="../reference/StreamingLowess.html">StreamingLowess()</a></code>, and <code><a href="../reference/OnlineLowess.html">OnlineLowess()</a></code>, and removed the now-redundant vignettes and their orphaned <code>gap_handling.svg</code>/<code>online_comparison.svg</code> diagrams.</li>
 </ul></div>
-  </main></div>
+<div class="section level3">
+<h3 id="fixed-development-version">Fixed<a class="anchor" aria-label="anchor" href="#fixed-development-version"></a></h3>
+<ul><li>Fixed <code>docs.yml</code> triggering GitHub’s “pages build and deployment” once per docs job; per-language jobs now upload artifacts, and a single final <code>deploy</code> job pushes to <code>gh-pages</code> once per run.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="3.1.0" id="rfastlowess-310">rfastlowess 3.1.0<a class="anchor" aria-label="anchor" href="#rfastlowess-310"></a></h2>
+<div class="section level3">
+<h3 id="added-3-1-0">Added<a class="anchor" aria-label="anchor" href="#added-3-1-0"></a></h3>
+<ul><li>Added a GitHub Pages landing page at the repository root, built from <code>README.md</code> via pandoc and deployed by <code>docs.yml</code>.</li>
+<li>Added a GitHub workflow for running validation scripts.</li>
+<li>Added <code>lenght</code> gaurds for extra arguments.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changed-3-1-0">Changed<a class="anchor" aria-label="anchor" href="#changed-3-1-0"></a></h3>
+<ul><li>Split the monolithic <code>.github/workflows/ci.yml</code> into seven per-language workflow files: <code>ci-rust.yml</code>, <code>ci-python.yml</code>, <code>ci-julia.yml</code>, <code>ci-nodejs.yml</code>, <code>ci-wasm.yml</code>, <code>ci-cpp.yml</code>, and <code>ci-r.yml</code>. Each file carries the relevant <code>ci</code> (multi-OS matrix), <code>asan</code>, and <code>gpu</code> jobs for its language.</li>
+<li>Each crate/binding sub-Makefile now runs <code>dev/verify_snippets.py --lang &lt;lang&gt;</code> for its own language as the final step of <code>make default</code>. The root <code>docs-test</code> target remains as a convenience to run all languages at once.</li>
+<li>Split <code>dev/verify_snippets.py</code> into a lean orchestrator and a <code>dev/runners/</code> package. Each language has its own module (<code>python.py</code>, <code>julia.py</code>, <code>nodejs.py</code>, <code>r.py</code>, <code>wasm.py</code>, <code>rust.py</code>, <code>cpp.py</code>) containing its <code>run_&lt;lang&gt;()</code> function and a <code>skip_reason()</code> predicate. Shared types (<code>Snippet</code>, <code>RunResult</code>) and utilities live in <code>runners/base.py</code>; the registry (<code>RUNNERS</code>, <code>SKIP_CHECKS</code>) is exported from <code>runners/__init__.py</code>.</li>
+<li>Moved CHANGELOG and CONTRIBUTING guides to project root.</li>
+<li>Updated README files to be binding/crate specific instead of one generic README for all bindings/crates.</li>
+<li>Simplified <code>bindings/r/Makefile</code>: replaced <code>Cargo.toml.orig</code> save/restore vendoring with <code>src/vendor-update.sh</code>; made <code>[workspace]</code> permanent in <code>src/Cargo.toml</code>; removed Bioconductor dependencies, redundant <code>cargo fmt --check</code>, <code>NAMESPACE</code> indentation post-processing, and <code><a href="https://pkgdown.r-lib.org/reference/build_site.html" class="external-link">pkgdown::build_site</a></code> from the dev workflow.</li>
+<li>Moved R documentation from ReadTheDocs to GitHub Pages, served by pkgdown at <a href="https://thisisamirv.github.io/loess-project/r/" class="external-link uri">https://thisisamirv.github.io/loess-project/r/</a>. The ReadTheDocs site no longer includes R-specific content.</li>
+<li>Changed R version dependency to 4.4.0 due to issues with installing Bioconducter packages on R &lt; 4.4.0.</li>
+<li>Replaced the multi-step <code>install.packages</code> / <code><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">BiocManager::install</a></code> package installation logic in <code>bindings/r/Makefile</code> with a single <a href="https://pak.r-lib.org/" class="external-link"><code>pak</code></a>-based block. <code>pak</code> handles RSPM binary vs source selection automatically (including Linux), skips already-installed packages, and installs CRAN, Bioconductor (<code>bioc::</code> prefix), and R-universe packages in one call.</li>
+<li>
+<code>make r</code> (<code>default:</code>) now runs <code>R CMD INSTALL $(R_DIR)</code> directly; R’s <code>configure</code> script handles Rust compilation from the committed <code>vendor.tar.xz</code>. The full dev workflow moves to <code>make r-dev</code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="fixed-3-1-0">Fixed<a class="anchor" aria-label="anchor" href="#fixed-3-1-0"></a></h3>
+<ul><li>Fixed <code>.cargo/config.toml</code> hardcoding absolute <code>c:/rtools45/...</code> paths for the <code>x86_64-pc-windows-gnu</code> linker and ar tool. Replaced with bare tool names resolved via <code>PATH</code>, matching the existing fix in <code>bindings/r/src/cargo-config.toml</code>.</li>
+<li>Fixed Windows arm64 (R-Universe) build: <code>ar x</code> without a member name correctly resolves long-name archive entries (&gt;16 chars stored as <code>/&lt;offset&gt;</code>); named extraction silently fails for such entries. Used <code>objcopy --remove-section=.idata$4</code> on each extracted <code>.dll</code> stub to strip the invalid relocations that lld 19 rejects, then <code>ar r</code> to re-insert.</li>
+<li>Fixed <code>ld.lld</code> crashing or dropping symbols (<code>WakeByAddressSingle</code>, <code>WaitOnAddress</code>) on Windows arm64: <code>--whole-archive</code> pulls every crate’s raw-dylib stub for a given DLL into the link, but different crates’ stubs cover different, non-overlapping symbols of that DLL — <code>--allow-multiple-definition</code> works on x86_64 but crashes lld’s arm64pe backend. Fixed by dropping <code>--whole-archive</code> on <code>gnullvm</code>; normal archive resolution applies and nothing is lost since <code>entrypoint.c</code> already references the extendr init symbol directly.</li>
+<li>Fixed CRAN Windows build (<code>error: linker not found</code>): <code>cargo-config.toml</code> hardcoded linker/ar as <code>c:/rtools45/...</code> absolute paths, which break when Rtools is installed on a different drive. Fixed by using bare tool names resolved via <code>PATH</code>.</li>
+<li>Fixed CRAN Windows build (<code>cannot find -lgcc_eh</code>): the Rtools gcc lib directory is not writable on CRAN’s server, and config-file <code>rustflags</code> does not reach build-script linker invocations. <code>Makevars.win</code> creates an empty stub via <code>touch</code> in <code>$(TARGET_DIR)/libgcc_mock/</code> and passes <code>LIBRARY_PATH</code> inline on <code>cargo build</code>. The path is resolved to an absolute path via <code>$(pwd)</code> at shell execution time — a relative path silently fails because Cargo invokes GCC to link build scripts from its own temp directory, not from <code>src/</code>.</li>
+<li>Fixed <code>Lowess(fraction = 0.3, 4)</code> incorrectly succeeding: <code>reject_extra_positional_args()</code> counted unnamed arguments but did not check their position, so a single unnamed arg in any non-first slot passed validation. The check now rejects any unnamed argument that is not in position 1.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="3.0.0" id="rfastlowess-300">rfastlowess 3.0.0<a class="anchor" aria-label="anchor" href="#rfastlowess-300"></a></h2>
+<div class="section level3">
+<h3 id="added-3-0-0">Added<a class="anchor" aria-label="anchor" href="#added-3-0-0"></a></h3>
+<ul><li>Exposed a <code>backend</code> option (<code>"cpu"</code> default, <code>"gpu"</code>) on <code>Lowess</code>, gated behind an opt-in <code>gpu</code> Cargo feature not enabled in CRAN/Bioconductor releases. Run <code><a href="../reference/install_gpu.html">install_gpu()</a></code> to download a prebuilt GPU library (requires restarting R), or build locally with <code>make -f bindings/r/Makefile WITH_GPU=1</code>.</li>
+<li>Introduced S3 generics <code><a href="../reference/fit.html">fit()</a></code>, <code><a href="../reference/process_chunk.html">process_chunk()</a></code>, <code><a href="../reference/finalize.html">finalize()</a></code>, and <code><a href="../reference/add_point.html">add_point()</a></code>, replacing the previous list-closure API.</li>
+<li>
+<code>bindings/r/Makefile</code> now auto-installs <a href="https://posit-dev.github.io/air/" class="external-link">Air</a> if missing, before running <code>air format</code>.</li>
+<li>Added a <code>reject_extra_positional_args()</code> helper to reject extra unnamed arguments.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="fixed-3-0-0">Fixed<a class="anchor" aria-label="anchor" href="#fixed-3-0-0"></a></h3>
+<ul><li>Fixed incorrect URLs in R binding docs.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changed-3-0-0">Changed<a class="anchor" aria-label="anchor" href="#changed-3-0-0"></a></h3>
+<ul><li>Removed <code>dev/isolate_cargo.py</code>, <code>dev/check_root_cargo.py</code>, <code>dev/fix_doc_snippets.py</code>, and <code>check_js_licenses.js</code> — workspace isolation, doc-snippet transformation, and license checks are no longer needed.</li>
+<li>Split the monolithic root <code>Makefile</code> into per-crate/binding sub-Makefiles (e.g. <code>crates/lowess/Makefile</code>, <code>bindings/r/Makefile</code>), each invokable directly via <code>make -f path/Makefile</code>. The root <code>Makefile</code> now only aggregates (<code>docs</code>, <code>check-msrv</code>, <code>all*</code>).</li>
+<li>Moved Rust and binding tests into their respective crate/binding directories (e.g. <code>tests/lowess/</code> → <code>crates/lowess/tests/lowess/</code>, <code>tests/cpp/</code> → <code>bindings/cpp/tests/</code>). Removed the standalone <code>tests/</code> workspace packages and <code>bindings/r/demo/</code>.</li>
+<li>Renamed the <code>smoothed</code> and <code>std_error</code> fields returned by <code>OnlineLowess</code>’s <code><a href="../reference/add_point.html">add_point()</a></code> to <code>y</code> and <code>standard_error</code>. This is a <strong>breaking change</strong>.</li>
+<li>Replaced <code>dev/style_pkg.R</code> with <a href="https://posit-dev.github.io/air/" class="external-link">Air</a> for formatting.</li>
+<li>Removed <code>dev/fix_rd_style.R</code>, <code>dev/prepare_cargo.py</code>, <code>dev/patch_vendor_crates.py</code>, <code>dev/clean_checksums.py</code>, and <code>dev/prepare_cran.sh</code> — their logic is now inlined directly in <code>bindings/r/Makefile</code>, so the R build no longer requires any Python scripts.</li>
+<li>Added <code>...</code> to <code><a href="../reference/Lowess.html">Lowess()</a></code>, <code><a href="../reference/StreamingLowess.html">StreamingLowess()</a></code>, and <code><a href="../reference/OnlineLowess.html">OnlineLowess()</a></code> to force named arguments for optional parameters.</li>
+<li>Added <code>Depends: R (&gt;= 4.6)</code> to <code>DESCRIPTION</code> and a matching CI matrix entry.</li>
+<li>Expanded roxygen2 <code>@param</code> docs and added a <code>See Also</code> section linking to <a href="https://lowess.readthedocs.io/" class="external-link uri">https://lowess.readthedocs.io/</a>.</li>
+<li>Expanded <code>rfastlowess-intro.Rmd</code> vignettes.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="2.0.0" id="rfastlowess-200">rfastlowess 2.0.0<a class="anchor" aria-label="anchor" href="#rfastlowess-200"></a></h2>
+<div class="section level3">
+<h3 id="added-2-0-0">Added<a class="anchor" aria-label="anchor" href="#added-2-0-0"></a></h3>
+<ul><li>Added <code>custom_weights</code> parameter to <code>fit(Lowess, )</code>. Accepts a numeric vector of non-negative per-observation weights. Batch only.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changed-2-0-0">Changed<a class="anchor" aria-label="anchor" href="#changed-2-0-0"></a></h3>
+<ul><li>Renamed all public API method and option names from camelCase to snake_case across every binding and all documentation. This is a <strong>breaking change</strong> for all consumers of the C++, Node.js, and WASM APIs.</li>
+<li>Converted all documentation tables to compact single-space format.</li>
+<li>Updated <code>.clang-tidy</code> to configure <code>lower_case</code> as the required naming convention for functions and member functions, matching the new snake_case public API.</li>
+<li>Moved <code>BENCHMARKS.md</code>, <code>CHANGELOG.md</code>, and <code>CONTRIBUTING.md</code> from the repository root into <code>docs/</code> and added them to the documentation site navigation.</li>
+<li>Added a <code>[patch.crates-io]</code> section to the root <code>Cargo.toml</code> so all workspace bindings resolve <code>fastLowess</code> and <code>lowess</code> to the local workspace crates during development, replacing the previously-used registry (crates.io) versions.</li>
+<li>Eliminated all local <code>parse_*</code> functions that each binding previously duplicated independently. Option parsing and builder application now delegates to <code>fastLowess::binding_support</code>, ensuring consistent aliases, validation messages, and behaviour across every language frontend.</li>
+<li>Replaced direct use of <code>KFold</code> / <code>LOOCV</code> constructor types in the cross-validation path with <code>binding_support::apply_cross_validation</code>.</li>
+<li>Split the Julia release CI workflow into two separate workflows: <code>release-julia-jll.yml</code> (triggered on release, opens the Yggdrasil PR) and <code>release-julia-register.yml</code> (manual dispatch, triggers JuliaRegistrator once the JLL PR is merged).</li>
+<li>Major documentation improvements.</li>
+<li>Replaced <code>$add_points(x, y)</code> (vector inputs returning a list result) on <code>OnlineLowess</code> with <code>$add_point(x, y)</code> (scalar inputs returning <code>numeric</code> or <code>NULL</code>). The method now processes one point at a time and returns <code>NULL</code> until enough points have been accumulated. This is a <strong>breaking change</strong>.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.3.0" id="rfastlowess-130">rfastlowess 1.3.0<a class="anchor" aria-label="anchor" href="#rfastlowess-130"></a></h2>
+<div class="section level3">
+<h3 id="added-1-3-0">Added<a class="anchor" aria-label="anchor" href="#added-1-3-0"></a></h3>
+<ul><li>Added prerequisites for different bindings and platforms to <code>CONTRIBUTING.md</code>
+</li>
+<li>Updated <code>docs/assets/diagrams/lowess_smoothing_concept.svg</code> to correctly illustrate LOWESS concepts (robustness iterations, bisquare re-weighting, outlier downweighting) instead of the generic LOESS algorithm it previously depicted.</li>
+<li>Modified <code>docs/requirements.txt</code> to update the versions of the documentation dependencies.</li>
+<li>Improved CI tests and coverage.</li>
+<li>Modified Makefile to be truely cross-platform.</li>
+<li>Added sanitizer check for all bindings and crates.</li>
+<li>Upgraded <code>rextendr</code> scaffold to 0.5.0: bumped <code>Config/rextendr/version</code> in <code>DESCRIPTION</code> and updated <code>entrypoint.c</code> to register the extendr panic hook (<code>register_extendr_panic_hook()</code>), so Rust panics now surface as R errors instead of crashing the session.</li>
+<li>Added <code>dev/fix_rd_style.R</code> post-processing script to automatically normalize Rd file indentation (to 4 spaces) and wrap long lines (&gt; 80 characters), ensuring compliance with CRAN/pkgcheck stylistic notes.</li>
+<li>Added <code>bindings/r/_pkgdown.yml</code> configuration and updated the <code>Makefile</code> to use <code><a href="https://pkgdown.r-lib.org/reference/build_site.html" class="external-link">pkgdown::build_site()</a></code>, satisfying the <code>pkgcheck</code> requirement for a dedicated documentation website.</li>
+<li>Added automatic copying of shared tests from the project root into the R package within <code>dev/prepare_cran.sh</code>, ensuring <code>R CMD build</code> is self-contained.</li>
+<li>Added direct <code>extendr</code> wrapper coverage tests plus extra validation-path tests in the R package, lifting <code><a href="http://covr.r-lib.org/reference/package_coverage.html" class="external-link">covr::package_coverage()</a></code> to 100% and clearing the package-level <code>pkgcheck</code>/<code>goodpractice</code> coverage complaints.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changed-1-3-0">Changed<a class="anchor" aria-label="anchor" href="#changed-1-3-0"></a></h3>
+<ul><li>Refactored the R binding validation helpers to reuse <code>validate_common_args()</code> and <code>coerce_nullable()</code> in production code, split <code>validate_params()</code> into smaller helper validators, and consolidated duplicated constructor parameter documentation with <code>@inheritParams</code> before regenerating the Rd files.</li>
+<li>Updated MSRV to 1.89 to access the significant improvements made in <code>wide</code> since version 0.7.</li>
+<li>Abides by new rOpenSci standards.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="fixed-1-3-0">Fixed<a class="anchor" aria-label="anchor" href="#fixed-1-3-0"></a></h3>
+<ul><li>Fixed R ASAN tests failing to compile vignettes by passing <code>--no-build-vignettes</code> to <code>rcmdcheck</code>.</li>
+<li>Upgraded ASAN test environment to use modern <code>rocker/r-devel-san:latest</code> image and <code>RDscript</code> to resolve outdated <code>readelf</code> warnings.</li>
+<li>Fixed <code>Makefile</code> idempotency checks on Linux by providing a default <code>/tmp</code> fallback for the <code>TEMP</code> directory variable.</li>
+<li>Fixed accidental root <code>Cargo.toml</code> workspace isolation leaks by adding checked-in <code>pre-commit</code> and <code>pre-push</code> git hook guards that restore <code>Cargo.toml.bak</code> when present and fail loudly if required workspace members are still commented out.</li>
+<li>Added a repo-local <code>.cargo/config.toml</code> that sets <code>CC=clang-cl</code> for <code>x86_64-pc-windows-msvc</code>, fixing Criterion 0.8 benchmark builds on Windows when <code>cc-rs</code> would otherwise pick <code>clang.exe</code> and fail to link <code>alloca</code>.</li>
+<li>Added strict pre-flight check for Pandoc in <code>make r</code> with a clear error message, as it is strictly required for building R Markdown vignettes on all platforms.</li>
+<li>Fixed <code>make r</code> failure on Windows when the native <code>tar.exe</code> (bsdtar) doesn’t support GNU-specific reproducible build flags by adding an automatic fallback.</li>
+<li>Fixed <code>FIND: Parameter format not correct</code> error on Windows by replacing <code>find</code> commands with cross-platform <code>rm -f</code> wildcard expansions to prevent clashing with Windows’ native <code>find.exe</code>.</li>
+<li>Fixed local compilation error by automatically installing required Python TOML dependencies (<code>tomli</code>, <code>tomli_w</code>) in the Makefile’s R build target.</li>
+<li>Fixed <code>make r</code> vignette build crash by adding the missing <code>BiocStyle</code> R dependency to the Makefile’s automated installation step.</li>
+<li>Replaced the deprecated <code><a href="https://devtools.r-lib.org/reference/build_vignettes.html" class="external-link">devtools::build_vignettes()</a></code> command with <code><a href="https://pkgdown.r-lib.org/reference/build_articles.html" class="external-link">pkgdown::build_articles()</a></code> for local vignette previewing, and added <code>pkgdown</code> to the development dependencies.</li>
+<li>Fixed <code>cargo test</code> and <code>cargo build</code> failing on Windows due to the default MSVC linker trying to link against <code>R.lib</code> by enforcing <code>--target x86_64-pc-windows-gnu</code> for all R-bound Cargo commands.</li>
+<li>Fixed <code>R CMD check</code> <code>WARNING</code> on Windows caused by R’s own <code>Boolean.h</code> using a C23 enum underlying type feature: the previous pragma-based suppression triggered a CRAN <code>NOTE</code>. Fixed by pre-defining a standard C <code>Rboolean</code> enum and setting the <code>R_EXT_BOOLEAN_H_</code> header guard in <code>entrypoint.c</code> to prevent R’s problematic version from loading.</li>
+<li>Fixed <code>R CMD check</code> <code>ERROR</code> in the testing phase: <code>test_check()</code> always resolves tests from <code>tests/testthat/</code> inside the package and ignores custom path arguments. Fixed by updating <code>dev/prepare_cran.sh</code> to copy shared tests from <code>tests/r/testthat/</code> into <code>bindings/r/tests/testthat/</code> before <code>R CMD build</code>, and simplifying <code>testthat.R</code> to a standard <code>test_check("rfastlowess")</code> call.</li>
+<li>Fixed missing R packages (<code>devtools</code>, <code>remotes</code>) in the Makefile’s dependency installation step.</li>
+<li>Fixed <code>%1 is not a valid Win32 application</code> and <code>section below image base</code> DLL linkage errors on Windows by adding <code>-Wl,--strip-all</code> to <code>Makevars.win</code> <code>PKG_LIBS</code>.</li>
+<li>Fixed rOpenSci <code>pkgcheck</code> warning by adding documentation website URL to <code>DESCRIPTION</code>.</li>
+<li>Fixed CRAN note regarding non-API call <code>R_NamespaceRegistry</code> by upgrading <code>extendr-api</code> dependency to <code>0.9.0</code>.</li>
+<li>Fixed compilation error by providing the <code>Result</code> alias that was removed from <code>extendr_api::prelude</code> in <code>0.9.0</code>.</li>
+<li>Fixed the remaining SRR/pkgcheck findings in the R package by removing dead internal helper paths, reducing <code>validate_params()</code> cyclomatic complexity, eliminating duplicated roxygen parameter blocks, and covering the generated <code>extendr-wrappers.R</code> dispatch paths.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.2.0" id="rfastlowess-120">rfastlowess 1.2.0<a class="anchor" aria-label="anchor" href="#rfastlowess-120"></a></h2>
+<div class="section level3">
+<h3 id="added-1-2-0">Added<a class="anchor" aria-label="anchor" href="#added-1-2-0"></a></h3>
+<ul><li>Added new tests.</li>
+<li>Added a reference to the <code>CONTRIBUTING.md</code> file.</li>
+<li>Added new examples for the <code>print</code> and <code>plot</code> methods.</li>
+<li>Added test coverage evaluation.</li>
+<li>Added missing srr tags.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changed-1-2-0">Changed<a class="anchor" aria-label="anchor" href="#changed-1-2-0"></a></h3>
+<ul><li>Removed the <code>coerce_params</code> dead code.</li>
+<li>Spread srr tags to different files and removed extra tags from <code>srr-stats-standards.R</code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="fixed-1-2-0">Fixed<a class="anchor" aria-label="anchor" href="#fixed-1-2-0"></a></h3>
+<ul><li>Fixed project logo.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.0.0" id="rfastlowess-100">rfastlowess 1.0.0<a class="anchor" aria-label="anchor" href="#rfastlowess-100"></a></h2>
+<div class="section level3">
+<h3 id="added-1-0-0">Added<a class="anchor" aria-label="anchor" href="#added-1-0-0"></a></h3>
+<ul><li>Added <code>mean</code> scaling method (Mean Absolute Deviation)</li>
+<li>Implemented <code>print</code> and <code>plot</code> methods for <code>LowessResult</code> objects</li>
+<li>Added srr tags</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changed-1-0-0">Changed<a class="anchor" aria-label="anchor" href="#changed-1-0-0"></a></h3>
+<ul><li>Return results as <code>LowessResult</code> S3 objects instead of raw vectors</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.99.9" id="rfastlowess-0999">rfastlowess 0.99.9<a class="anchor" aria-label="anchor" href="#rfastlowess-0999"></a></h2>
+<div class="section level3">
+<h3 id="changed-0-99-9">Changed<a class="anchor" aria-label="anchor" href="#changed-0-99-9"></a></h3>
+<ul><li>Bump rust version to 1.88 for better stability</li>
+<li>Change function-based builder pattern in the bindings to class-based builder pattern, allowing true streaming and online processing</li>
+<li>Improve API docs</li>
+<li>Package is now available on conda-forge (r-rfastlowess)</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.99.7" id="rfastlowess-0997">rfastlowess 0.99.7<a class="anchor" aria-label="anchor" href="#rfastlowess-0997"></a></h2>
+<div class="section level3">
+<h3 id="fixed-0-99-7">Fixed<a class="anchor" aria-label="anchor" href="#fixed-0-99-7"></a></h3>
+<ul><li>Fix README file links</li>
+<li>Fix Makefile bug with R versioning</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.99.6" id="rfastlowess-0996">rfastlowess 0.99.6<a class="anchor" aria-label="anchor" href="#rfastlowess-0996"></a></h2>
+<div class="section level3">
+<h3 id="fixed-0-99-6">Fixed<a class="anchor" aria-label="anchor" href="#fixed-0-99-6"></a></h3>
+<ul><li>Fix README file formats and links</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.99.5" id="rfastlowess-0995">rfastlowess 0.99.5<a class="anchor" aria-label="anchor" href="#rfastlowess-0995"></a></h2>
+<div class="section level3">
+<h3 id="changed-0-99-5">Changed<a class="anchor" aria-label="anchor" href="#changed-0-99-5"></a></h3>
+<ul><li>Reduced package size significantly by removing unnecessary dev files and docs from the final package.</li>
+<li>Implemented comprehensive Cargo workspace inheritance pattern</li>
+<li>Unified MSRV to 1.85.0</li>
+<li>Centralized all metadata (version, authors, edition, license, etc.) in root <code>Cargo.toml</code>
+</li>
+<li>All crates now use <code>workspace = true</code> for shared configuration</li>
+<li>Created unified <code>README.md</code> for all crates/packages</li>
+<li>Created unified <code>CHANGELOG.md</code> for all crates/packages</li>
+<li>Created unified <code>LICENSE</code> for all crates/packages</li>
+<li>Created unified <code>.gitignore</code> for all crates/packages</li>
+<li>Added comprehensive badges from all packages</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.99.2" id="rfastlowess-0992">rfastlowess 0.99.2<a class="anchor" aria-label="anchor" href="#rfastlowess-0992"></a></h2>
+<div class="section level3">
+<h3 id="changed-0-99-2">Changed<a class="anchor" aria-label="anchor" href="#changed-0-99-2"></a></h3>
+<ul><li>Prepared package for rOpenSci Software Peer Review</li>
+<li>Renamed main functions to avoid conflicts with base R:</li>
+<li>Updated documentation to reflect new API and rOpenSci guidelines</li>
+</ul></div>
+<div class="section level3">
+<h3 id="added-0-99-2">Added<a class="anchor" aria-label="anchor" href="#added-0-99-2"></a></h3>
+<ul><li>Documentation website using <code>pkgdown</code> with automated deployment</li>
+<li>Comprehensive function documentation with examples and cross-references</li>
+<li>URL validation using <code>urlchecker</code> in CI workflow</li>
+<li>Rigorous parameter validation for all exported functions</li>
+<li>Expanded test suite achieving &gt;96% coverage</li>
+<li>Codecov CI workflow and badge</li>
+</ul></div>
+<div class="section level3">
+<h3 id="fixed-0-99-2">Fixed<a class="anchor" aria-label="anchor" href="#fixed-0-99-2"></a></h3>
+<ul><li>Documentation URLs</li>
+<li>Package startup messages</li>
+<li>
+<code>pkgcheck</code> workflow to run on host runner</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.99.1" id="rfastlowess-0991">rfastlowess 0.99.1<a class="anchor" aria-label="anchor" href="#rfastlowess-0991"></a></h2>
+<div class="section level3">
+<h3 id="changed-0-99-1">Changed<a class="anchor" aria-label="anchor" href="#changed-0-99-1"></a></h3>
+<ul><li>Modified package for Bioconductor submission</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.99.0" id="rfastlowess-0990">rfastlowess 0.99.0<a class="anchor" aria-label="anchor" href="#rfastlowess-0990"></a></h2>
+<div class="section level3">
+<h3 id="added-0-99-0">Added<a class="anchor" aria-label="anchor" href="#added-0-99-0"></a></h3>
+<ul><li>Support for new features in <code>fastLowess</code> v0.4.0, including <code>NoBoundary</code> boundary policy and <code>MAD</code>/<code>MAR</code> scaling methods</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changed-0-99-0">Changed<a class="anchor" aria-label="anchor" href="#changed-0-99-0"></a></h3>
+<ul><li>Changed license from AGPL-3.0-or-later to dual MIT OR Apache-2.0</li>
+<li>Updated documentation</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.4.0" id="rfastlowess-040">rfastlowess 0.4.0<a class="anchor" aria-label="anchor" href="#rfastlowess-040"></a></h2>
+<div class="section level3">
+<h3 id="added-0-4-0">Added<a class="anchor" aria-label="anchor" href="#added-0-4-0"></a></h3>
+<ul><li>Support for new features in <code>fastLowess</code> v0.4.0</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changed-0-4-0">Changed<a class="anchor" aria-label="anchor" href="#changed-0-4-0"></a></h3>
+<ul><li>Changed license from AGPL-3.0-or-later to dual MIT OR Apache-2.0</li>
+<li>Updated documentation</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.3.0" id="rfastlowess-030">rfastlowess 0.3.0<a class="anchor" aria-label="anchor" href="#rfastlowess-030"></a></h2>
+<div class="section level3">
+<h3 id="added-0-3-0">Added<a class="anchor" aria-label="anchor" href="#added-0-3-0"></a></h3>
+<ul><li>Option to install from R-universe without Rust</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changed-0-3-0">Changed<a class="anchor" aria-label="anchor" href="#changed-0-3-0"></a></h3>
+<ul><li>Updated to <code>fastLowess</code> v0.3.0 and <code>lowess</code> v0.6.0</li>
+<li>Updated cross-validation API</li>
+</ul></div>
+<div class="section level3">
+<h3 id="fixed-0-3-0">Fixed<a class="anchor" aria-label="anchor" href="#fixed-0-3-0"></a></h3>
+<ul><li>Automated vendor checksum fixing for CI builds</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.2.0" id="rfastlowess-020">rfastlowess 0.2.0<a class="anchor" aria-label="anchor" href="#rfastlowess-020"></a></h2>
+<div class="section level3">
+<h3 id="added-0-2-0">Added<a class="anchor" aria-label="anchor" href="#added-0-2-0"></a></h3>
+<ul><li>Support for new features in <code>fastLowess</code> v0.2.0</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changed-0-2-0">Changed<a class="anchor" aria-label="anchor" href="#changed-0-2-0"></a></h3>
+<ul><li>Improved documentation</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.1.0" id="rfastlowess-010">rfastlowess 0.1.0<a class="anchor" aria-label="anchor" href="#rfastlowess-010"></a></h2>
+<div class="section level3">
+<h3 id="added-0-1-0">Added<a class="anchor" aria-label="anchor" href="#added-0-1-0"></a></h3>
+<ul><li>R binding for <code>fastLowess</code>
+</li>
+</ul><p>For the full changelog, see: <a href="https://github.com/thisisamirv/lowess-project/blob/main/CHANGELOG.md" class="external-link uri">https://github.com/thisisamirv/lowess-project/blob/main/CHANGELOG.md</a></p>
+</div>
+</div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">
