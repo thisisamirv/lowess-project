@@ -76,7 +76,7 @@ pub mod merge {
 }
 
 /// GPU-accelerated backend via wgpu.
-#[cfg(all(doc, feature = "gpu"))]
+#[cfg(doc)]
 pub mod gpu_backend {
     #![doc = include_str!("../docs/gpu-backend.md")]
 }

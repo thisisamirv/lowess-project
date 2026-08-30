@@ -62,6 +62,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed the "Detecting Outliers" example's `robustness.md` page (C++, Node.js, WASM, and the `lowess`/`fastLowess` crates) printing an unbounded number of "is likely an outlier" lines; capped output at 5 lines, matching the already-capped Julia and Python versions and the R vignette fix above.
 - Fixed the Julia `intervals.md` "Confidence Intervals" and "Standard Errors" examples each looping over all 100 points instead of a short sample; switched to `result.y[1:5]`/`result.confidence_lower[1:5]`/`result.standard_errors[1:5]`-style slicing, matching the already-concise Python version.
 
+**fastLowess:**
+
+- Fixed `cargo doc` failing with `unresolved link to`crate::doc::gpu_backend`` whenever documenting with a feature set that excludes `gpu` (e.g. `--features cpu`): `api.md`'s GPU Backend link isn't itself feature-gated, but the `gpu_backend` doc module was gated behind `#[cfg(all(doc, feature = "gpu"))]`. Changed to `#[cfg(doc)]` (matching every other doc submodule), since it's a plain Markdown page with no dependency on the `gpu` feature's actual code.
+
 **C++:**
 
 - Fixed several Doxygen rendering bugs: the homepage showed `concepts.md` instead of `README.md`; blockquotes, heading+codespan combinations, MkDocs-only admonitions, inline/display math, and `---` after a blockquote all rendered as literal or broken text. `README.md` is now the Doxygen main page, and the affected docs use Doxygen-native syntax (`\f$...\f$`/`\f[...\f]` math, blockquote admonitions, explicit `<hr>`).
