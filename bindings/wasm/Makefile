@@ -58,6 +58,7 @@ dev:
 	@cargo clippy -q -p $(WASM_PKG) --all-targets -- -D warnings
 	@echo "Linting WASM JS files..."
 	@cd $(WASM_DIR) && $(NPM) install -q
+	@cd $(WASM_DIR) && $(NPM) update
 	@cd $(WASM_DIR) && $(NPM) audit || true
 	@cd $(WASM_DIR) && $(NPX) -y depcheck --ignores="oxlint,typedoc-plugin-pages,typedoc-plugin-markdown,astro:content"
 	@cd $(WASM_DIR) && ($(NPM) outdated | grep -v "fastlowess-" || true)

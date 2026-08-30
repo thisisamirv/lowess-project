@@ -40,12 +40,15 @@
         "fastlowess-win32-x64-msvc": "^3.1.0"
     },
     "devDependencies": {
-        "@napi-rs/cli": "^3.8",
-        "oxlint": "^1.80",
-        "typedoc": "^0.28",
-        "typedoc-plugin-markdown": "^4.12",
         "@astrojs/starlight": "^0.41",
-        "astro": "^7.2"
+        "@napi-rs/cli": "^3.8",
+        "astro": "^7.2",
+        "katex": "^0.18",
+        "oxlint": "^1.80",
+        "rehype-katex": "^7.0",
+        "remark-math": "^6.0",
+        "typedoc": "^0.28",
+        "typedoc-plugin-markdown": "^4.13"
     },
     "engines": {
         "node": ">= 20"

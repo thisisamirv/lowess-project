@@ -56,6 +56,7 @@ dev:
 	@cargo clippy -q -p $(NODE_PKG) --all-targets -- -D warnings
 	@echo "Linting Node.js files..."
 	@cd $(NODE_DIR) && $(NPM) install
+	@cd $(NODE_DIR) && $(NPM) update
 	@cd $(NODE_DIR) && $(NPM) audit || true
 	@cd $(NODE_DIR) && $(NPX) -y depcheck --ignores="fastlowess-*,oxlint,typedoc-plugin-pages,typedoc-plugin-markdown,astro:content"
 	@cd $(NODE_DIR) && ($(NPM) outdated | grep -v "fastlowess-" || true)

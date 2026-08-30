@@ -10,11 +10,14 @@
         "docs:preview": "astro preview"
     },
     "devDependencies": {
-        "oxlint": "^1.80",
-        "typedoc": "^0.28",
-        "typedoc-plugin-markdown": "^4.12",
         "@astrojs/starlight": "^0.41",
-        "astro": "^7.2"
+        "astro": "^7.2",
+        "katex": "^0.18",
+        "oxlint": "^1.80",
+        "rehype-katex": "^7.0",
+        "remark-math": "^6.0",
+        "typedoc": "^0.28",
+        "typedoc-plugin-markdown": "^4.13"
     },
     "license": "MIT OR Apache-2.0"
 }

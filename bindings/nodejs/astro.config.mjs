@@ -1,14 +1,21 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 
 export default defineConfig({
     site: process.env.SITE,
     base: process.env.VITE_BASE ?? '/',
     outDir: './dist',
+    markdown: {
+        remarkPlugins: [remarkMath],
+        rehypePlugins: [rehypeKatex],
+    },
     integrations: [
         starlight({
             title: 'fastlowess',
             description: 'High-performance LOWESS smoothing for Node.js',
+            customCss: ['./src/styles/katex.css'],
             expressiveCode: {
                 shiki: { langAlias: { output: 'text' } },
             },

@@ -133,7 +133,7 @@ Fraction used: 0.7
 
 > **Recommendation:** Use **5-fold** or **10-fold** CV for most applications. LOOCV is only worth it for small datasets (N < 100).
 
----
+<hr>
 
 ## CV Metrics
 

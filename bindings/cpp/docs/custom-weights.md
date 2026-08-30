@@ -18,7 +18,7 @@ the robustness weight from the current iteration.
 > **Batch adapter only:** `custom_weights` applies in **Batch** mode. It is silently ignored in
 > Streaming and Online adapters.
 
----
+<hr>
 
 ## When to Use Custom Weights
 
@@ -218,7 +218,7 @@ y[0]: 0.302856
 > that centre point falls back to the behaviour specified by
 > `zero_weight_fallback` (default: `"use_local_mean"`).
 
----
+<hr>
 
 ## See Also
 

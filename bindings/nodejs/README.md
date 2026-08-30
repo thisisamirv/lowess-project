@@ -120,52 +120,6 @@ All implementations are **numerical twins** of R's `lowess`:
 | **Consistency** | ✅ PERFECT | Multiple scenarios pass with strict tolerance |
 | **Robustness** | ✅ VERIFIED | Robust smoothing matches R exactly |
 
-## API Reference
-
-```javascript
-import { Lowess } from "fastlowess"
-
-const model = new Lowess({
-    fraction: 0.5,
-    iterations: 3,
-    delta: 0.01,
-    weight_function: "tricube",
-    robustness_method: "bisquare",
-    scaling_method: "mad",
-    zero_weight_fallback: "use_local_mean",
-    boundary_policy: "extend",
-    return_se: true,
-    confidence_intervals: 0.95,
-    prediction_intervals: 0.95,
-    return_diagnostics: true,
-    return_residuals: true,
-    return_robustness_weights: true,
-    cv_fractions: [0.3, 0.5, 0.7],
-    cv_method: "kfold",
-    cv_k: 5,
-    cv_seed: 123,
-    auto_converge: 1e-4,
-    parallel: true
-})
-const custom_weights = Array(x.length).fill(1.0)
-const result = model.fit(x, y, custom_weights)
-
-// Result structure:
-result.x,
-result.y,
-result.standard_errors,
-result.confidence_lower,
-result.confidence_upper,
-result.prediction_lower,
-result.prediction_upper,
-result.residuals,
-result.robustness_weights,
-result.diagnostics,
-result.iterations_used,
-result.fraction_used,
-result.cv_scores
-```
-
 ---
 
 ## Contributing

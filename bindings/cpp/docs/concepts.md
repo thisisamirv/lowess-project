@@ -44,7 +44,7 @@ The `fraction` (also called bandwidth or span) is the most important parameter. 
 
 > **Rule of Thumb:** Start with `fraction=0.67` (the default) and adjust based on visual inspection. Use cross-validation for automated selection.
 
----
+<hr>
 
 ## Robustness Iterations
 

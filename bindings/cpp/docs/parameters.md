@@ -32,7 +32,7 @@ Complete reference for all LOWESS configuration options.
 
 > **Rust option values:** In Rust, pass option-like parameters as strings (case-insensitive), e.g. `"tricube"`, `"bisquare"`, `"extend"`, `"average"`.
 
----
+<hr>
 
 ## Parameter Options Summary
 

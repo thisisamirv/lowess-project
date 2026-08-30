@@ -44,7 +44,7 @@ Read more about how LOWESS works in the [Concepts](https://thisisamirv.github.io
 
 > **Note:** For a **LOESS** implementation, use [`loess-project`](https://github.com/thisisamirv/loess-project).
 
----
+<hr>
 
 ## Why this package?
 
@@ -120,53 +120,6 @@ All implementations are **numerical twins** of R's `lowess`:
 | **Accuracy** | ✅ EXACT MATCH | Max diff < 1e-12 across all scenarios |
 | **Consistency** | ✅ PERFECT | Multiple scenarios pass with strict tolerance |
 | **Robustness** | ✅ VERIFIED | Robust smoothing matches R exactly |
-
-## API Reference
-
-```cpp
-#include "fastlowess.hpp"
-
-fastlowess::LowessOptions options;
-options.fraction = 0.5;
-options.iterations = 3;
-options.delta = 0.01;
-options.weight_function = "tricube";
-options.robustness_method = "bisquare";
-options.scaling_method = "mad";
-options.zero_weight_fallback = "use_local_mean";
-options.boundary_policy = "extend";
-options.confidence_intervals = 0.95;
-options.prediction_intervals = 0.95;
-options.return_diagnostics = true;
-options.return_residuals = true;
-options.return_robustness_weights = true;
-options.return_se = true;
-options.cv_fractions = {0.3, 0.5, 0.7};
-options.cv_method = "kfold";
-options.cv_k = 5;
-options.cv_seed = 123;
-options.auto_converge = 1e-4;
-options.parallel = true;
-
-fastlowess::Lowess model(options);
-std::vector<double> custom_weights(x.size(), 1.0);
-const auto result = model.fit(x, y, custom_weights).value();
-
-// Result structure:
-result.x_vector(),
-result.y_vector(),
-result.standard_errors(),
-result.confidence_lower(),
-result.confidence_upper(),
-result.prediction_lower(),
-result.prediction_upper(),
-result.residuals(),
-result.robustness_weights(),
-result.diagnostics(),
-result.iterations_used(),
-result.fraction_used(),
-result.cv_scores()
-```
 
 ---
 
