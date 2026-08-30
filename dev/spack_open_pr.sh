@@ -19,6 +19,10 @@ BRANCH="${PACKAGE_NAME}-${VERSION}"
 LOCAL_PACKAGE_FILE_ABS="$(pwd)/${LOCAL_PACKAGE_FILE}"
 FORK_OWNER="$(gh api user --jq .login)"
 
+# Plain `git` commands (push/fetch) don't pick up GH_TOKEN on their own,
+# only `gh` subcommands do; this wires gh's credential helper into git.
+gh auth setup-git
+
 WORKDIR="$(mktemp -d)"
 trap 'rm -rf "$WORKDIR" 2>/dev/null || true' EXIT
 cd "$WORKDIR"
