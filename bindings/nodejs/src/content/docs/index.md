@@ -15,7 +15,6 @@ hero:
 ---
 
 <!-- markdownlint-disable MD024 MD033 -->
-# LOWESS Project
 
 <p align="center">
   <a href="https://www.npmjs.com/package/fastlowess"><img src="https://img.shields.io/badge/npm-CB3837?logo=npm&logoColor=white" alt="npm"></a>
@@ -42,7 +41,7 @@ The `lowess-project` also offers bindings for Rust, Python, R, Julia, Node.js, W
 
 ### GPU Backend
 
-In addition to `parallel = true` (multi-core CPU), the batch `Lowess` class in every binding — except WebAssembly — as well as the `fastLowess` Rust crate itself, can run on the GPU via `wgpu` (Vulkan/Metal/DX12). It's opt-in and worth enabling for high-throughput processing of large datasets (roughly 10k+ points); for smaller inputs the CPU backend is typically faster. `StreamingLowess`/`OnlineLowess` remain CPU-only. See the [GPU Backend guide](https://thisisamirv.github.io/lowess-project/nodejs/gpu-backend/) for installation instructions and usage.
+GPU acceleration (`wgpu`: Vulkan/Metal/DX12) is also supported for high-throughput batch smoothing. See the [GPU Backend guide](https://thisisamirv.github.io/lowess-project/nodejs/gpu-backend/) for details.
 
 ---
 
@@ -55,7 +54,8 @@ In addition to `parallel = true` (multi-core CPU), the batch `Lowess` class in e
 | **Flexibility** | High (Distance metrics) | Standard |
 | **Complexity** | Higher (Matrix inversion) | Lower (Weighted average/slope) |
 
-> [!TIP]
+Read more about how LOWESS works in the [Concepts](https://thisisamirv.github.io/lowess-project/nodejs/concepts/).
+
 > **Note:** For a **LOESS** implementation, use [`loess-project`](https://github.com/thisisamirv/loess-project).
 
 ---
@@ -135,61 +135,11 @@ All implementations are **numerical twins** of R's `lowess`:
 | **Consistency** | ✅ PERFECT | Multiple scenarios pass with strict tolerance |
 | **Robustness** | ✅ VERIFIED | Robust smoothing matches R exactly |
 
-## API Reference
-
-```javascript
-import { Lowess } from "fastlowess"
-
-const model = new Lowess({
-    fraction: 0.5,
-    iterations: 3,
-    delta: 0.01,
-    weight_function: "tricube",
-    robustness_method: "bisquare",
-    scaling_method: "mad",
-    zero_weight_fallback: "use_local_mean",
-    boundary_policy: "extend",
-    return_se: true,
-    confidence_intervals: 0.95,
-    prediction_intervals: 0.95,
-    return_diagnostics: true,
-    return_residuals: true,
-    return_robustness_weights: true,
-    cv_fractions: [0.3, 0.5, 0.7],
-    cv_method: "kfold",
-    cv_k: 5,
-    cv_seed: 123,
-    auto_converge: 1e-4,
-    parallel: true
-})
-const custom_weights = Array(x.length).fill(1.0)
-const result = model.fit(x, y, custom_weights)
-
-// Result structure:
-result.x,
-result.y,
-result.standard_errors,
-result.confidence_lower,
-result.confidence_upper,
-result.prediction_lower,
-result.prediction_upper,
-result.residuals,
-result.robustness_weights,
-result.diagnostics,
-result.iterations_used,
-result.fraction_used,
-result.cv_scores
-```
-
 ---
 
 ## Contributing
 
 Contributions are welcome! Please see [CONTRIBUTING.md](https://github.com/thisisamirv/lowess-project/blob/main/CONTRIBUTING.md) for more information.
-
-## Changelog
-
-See [CHANGELOG.md](https://github.com/thisisamirv/lowess-project/blob/main/CHANGELOG.md) for a history of changes.
 
 ## License
 

@@ -12,20 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **docs:**
 
-- Merged the separate "Installation" and "Documentation" sections in every crate/binding README into a single "Installation & Documentation" section, and replaced GitHub-only `[!NOTE]`/`[!TIP]`/`[!IMPORTANT]` alert syntax (which rendered as literal text on pkgdown/Doxygen/Documenter) with plain blockquotes in every crate/binding README (the top-level repository README keeps GitHub alert syntax, since it's only ever viewed on GitHub).
-- Removed the redundant "API Reference" section from the R binding README now that pkgdown publishes a dedicated Reference page.
-- Removed the "API Reference" section (a full code sample per language) from every remaining crate/binding README and the top-level repository README, now that each has its own dedicated API reference page in the docs.
-- Removed the "Changelog" section from every crate/binding README (excluding the top-level repository README), now that each binding's docs site has its own News page.
-- Shortened the "GPU Backend" README section in every crate/binding to a minimal blurb linking to the GPU Backend page in the docs, instead of repeating the full explanation in each README.
-- Added a "Read more about how LOWESS works" link to the Concepts page right after the LOESS vs. LOWESS comparison table, in every crate/binding README (excluding the top-level repository README).
-- Renamed the batch adapter's "When to Use" heading to "When to Use Batch Adapter" across every binding/crate's batch API docs.
-- Vendored the [doxygen-awesome-css](https://github.com/jothepro/doxygen-awesome-css) theme (v2.4.2) for the cpp Doxygen site (`bindings/cpp/docs/doxygen-awesome-css/`), replacing the plain default Doxygen look with a modern, sidebar-only theme with automatic dark mode support.
-- Added `dev/update_changelogs.py`, which extracts the matching `**<Language>:**` entries from the root `CHANGELOG.md` for every binding/crate and regenerates a per-target `NEWS.md` in CRAN's conventional per-version format. Added a `NEWS.md`/`news.md` page to the cpp, Julia, Node.js, Python, and WASM docs sites and to the `fastLowess`/`lowess` crate docs (wired into each site's navigation and rustdoc module tree), and wired the script into every binding/crate's `Makefile` `dev` target.
+- Consolidated every crate/binding README: merged the "Installation" and "Documentation" sections, replaced GitHub-only alert syntax with plain blockquotes, removed the redundant "API Reference" and "Changelog" sections (each now has its own docs-site page), shortened the "GPU Backend" blurb, and added a "Read more" link to the Concepts page. The top-level repository README is unchanged, since it's only ever viewed on GitHub.
+- Renamed the batch adapter's "When to Use" heading to "When to Use Batch Adapter" across every binding/crate's API docs.
+- Vendored the [doxygen-awesome-css](https://github.com/jothepro/doxygen-awesome-css) theme (v2.4.2) for a modern, sidebar-only cpp Doxygen site with automatic dark mode.
+- Added `dev/update_changelogs.py`, which regenerates a per-binding/crate `NEWS.md`/`news.md` from the root `CHANGELOG.md`. Wired into every docs site's navigation, the Rust crates' rustdoc module tree, and every `Makefile` `dev` target.
 
 **R:**
 
-- Removed the `rfastlowess-package` topic from the pkgdown reference index: its "Main Classes" summary duplicated the `Lowess`/`StreamingLowess`/`OnlineLowess` entries listed right next to it, and roxygen2's auto-generated `rfastlowess`/`rfastlowess-package` aliases showed up as a confusing double entry. The topic is now tagged `@keywords internal` so `?rfastlowess`/`?rfastlowess-package` still work without appearing in the index.
-- Unexported the internal `Nullable()` helper (dropped `@export`, its `NAMESPACE` entry, and its `man`/pkgdown Reference page); it was never meant to be called by users. Tests now access it via `getFromNamespace()`, matching the existing `coerce_nullable` convention.
+- Removed the `rfastlowess-package` pkgdown topic, which duplicated the adapter class list, and unexported the internal `Nullable()` helper.
 
 **Node.js:**
 
@@ -41,36 +35,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Monorepo:**
 
-- Fixed `docs.yml` triggering GitHub's automatic "pages build and deployment" run once per docs sub-job (up to 6 times per push), since each job pushed to `gh-pages` independently. The per-language jobs now only build and upload their output as workflow artifacts; a new final `deploy` job merges every artifact with the existing `gh-pages` content and pushes once per workflow run.
+- Fixed `docs.yml` triggering GitHub's "pages build and deployment" once per docs job; per-language jobs now upload artifacts, and a single final `deploy` job pushes to `gh-pages` once per run.
 
 **C++:**
 
-- Fixed the Doxygen site homepage showing `docs/concepts.md` instead of `README.md`. `Doxyfile` now includes `README.md` in `INPUT` and sets it as `USE_MDFILE_AS_MAINPAGE`.
-- Fixed Doxygen rendering the "View the full documentation" blockquote as raw `<a>` tag text instead of a styled link, by dropping the markdown heading (`###`) nested inside the blockquote.
-- Fixed Doxygen rendering headings that mixed a heading level with an inline code span (e.g. `` ### `fastlowess::Lowess` ``) as literal `<tt>...</tt>` tag text in `api.md`, `api-streaming.md`, and `api-online.md`; the backticks were dropped from those headings.
-- Fixed Doxygen rendering MkDocs-only `!!! note/warning/tip "title"` admonitions as literal `!!! ...` text across the cpp docs; converted every occurrence to a plain `> **Title:** ...` blockquote.
-- Fixed Doxygen rendering inline/display LaTeX math (`$...$`/`$$...$$`) as literal text across the cpp docs; converted every occurrence to Doxygen's `\f$...\f$`/`\f[...\f]` syntax.
-- Fixed Doxygen leaking a stray `</blockquote>` tag when a `---` thematic break immediately followed a `>` blockquote; replaced those specific separators with an explicit `<hr>` tag across the cpp docs.
+- Fixed several Doxygen rendering bugs: the homepage showed `concepts.md` instead of `README.md`; blockquotes, heading+codespan combinations, MkDocs-only admonitions, inline/display math, and `---` after a blockquote all rendered as literal or broken text. `README.md` is now the Doxygen main page, and the affected docs use Doxygen-native syntax (`\f$...\f$`/`\f[...\f]` math, blockquote admonitions, explicit `<hr>`).
 
 **Julia:**
 
-- Fixed the Documenter site homepage being a separately maintained `docs/src/index.md` instead of the top-level `README.md`. `make.jl` now regenerates `index.md` from `README.md` before every build, and the stale static copy was removed.
-- Fixed the README's raw `<p align="center">` badge/logo HTML blocks rendering as literal text on the Documenter site (unlike GitHub/pkgdown/Starlight/Doxygen); `make.jl` now converts them to plain Markdown image/link syntax before writing `index.md`.
-- Fixed the README's `<!-- markdownlint-disable ... -->` comment rendering as literal text on the Documenter site; `make.jl` now strips HTML comments before writing `index.md`.
+- Fixed the Documenter homepage: it was a stale, separately maintained `index.md` instead of the README, and the README's centered badge/logo HTML and markdownlint comment rendered as literal text. `make.jl` now regenerates `index.md` from `README.md` on every build.
 
 **Node.js:**
 
-- Fixed the docs homepage's "Get Started" button jumping straight to the Installation page without ever showing the README content. `README.md` is now embedded on the Starlight homepage below the hero via a new `dev/add-readme-to-docs.js` script, wired into both `npm run docs` and `make nodejs-dev`.
+- Fixed the docs homepage never showing the README content ("Get Started" jumped straight to Installation): a new `dev/add-readme-to-docs.js` script embeds `README.md` below the hero (stripping its redundant `# LOWESS Project` H1, since the hero already shows the title), wired into `npm run docs` and `make nodejs-dev`.
 
 **WASM:**
 
-- Same fix as Node.js: `README.md` is now embedded on the Starlight homepage via `dev/add-readme-to-docs.js`, wired into `npm run docs` and `make wasm-dev`.
-- Fixed `concepts.md` figures not rendering: the MkDocs-only `<figure markdown="span">`/attr_list (`{ width="..." }`) syntax isn't supported by Starlight's Markdown renderer, so the image markdown inside was left as raw unprocessed text. Converted all 4 figures to plain `![alt](src)` images with an italicized caption below.
-- Fixed inline/display LaTeX math (`$...$`/`$$...$$`) rendering as literal text on the Node.js/WASM docs sites; wired `remark-math`/`rehype-katex` into `astro.config.mjs` and added a KaTeX stylesheet, so the existing math syntax now renders properly.
+- Same fix as Node.js: `README.md` is now embedded via `dev/add-readme-to-docs.js`, wired into `npm run docs` and `make wasm-dev`.
+- Fixed `concepts.md` figures (MkDocs-only `<figure>`/attr_list syntax) not rendering; converted to plain images with italicized captions.
+- Fixed inline/display LaTeX math rendering as literal text; wired `remark-math`/`rehype-katex` into `astro.config.mjs`.
 
 **Rust:**
 
-- Fixed inline/display LaTeX math (`$...$`/`$$...$$`) rendering as literal text on docs.rs for `fastLowess` and `lowess`; added a `katex-header.html` (loaded via `--html-in-header` in `[package.metadata.docs.rs]`) that renders it client-side with KaTeX.
+- Fixed inline/display LaTeX math rendering as literal text on docs.rs; added a `katex-header.html` that renders it client-side with KaTeX.
 
 ## 3.1.0
 

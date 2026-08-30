@@ -32,6 +32,10 @@ SECTION_RE = re.compile(r"^### (\w+)")
 LANG_RE = re.compile(r"^\*\*([^*]+):\*\*$")
 BULLET_RE = re.compile(r"^- (.*)$")
 
+# Labels merged into every target in addition to its own labels below, since
+# these apply to all bindings/crates rather than one specific language.
+COMMON_LABELS = ["docs", "Monorepo"]
+
 # Each target's `labels` are matched against the "**Label:**" headings in
 # CHANGELOG.md (case-sensitive, exact match). `package` is the display name
 # used in the "# <package> <version>" heading; use None to resolve it from
@@ -157,7 +161,7 @@ def main() -> None:
     changelog_text = CHANGELOG_PATH.read_text(encoding="utf-8")
     for target in TARGETS:
         package = target["package"] or read_description_field("Package") or "package"
-        versions = parse_entries(changelog_text, target["labels"])
+        versions = parse_entries(changelog_text, target["labels"] + COMMON_LABELS)
         output_path = REPO_ROOT / target["output"]
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(

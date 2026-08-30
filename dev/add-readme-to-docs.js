@@ -17,7 +17,10 @@ if (!frontmatterMatch) {
     throw new Error(`No frontmatter block found in ${INDEX_PATH}`);
 }
 const frontmatter = frontmatterMatch[0];
-const readme = fs.readFileSync(README_PATH, 'utf-8').replace(/\r\n/g, '\n');
+const readme = fs.readFileSync(README_PATH, 'utf-8')
+    .replace(/\r\n/g, '\n')
+    // Starlight's hero already shows the title; drop the README's H1 so it isn't duplicated.
+    .replace(/^(<!--[^\n]*-->\n)?# .+\n\n?/, '$1\n');
 
 fs.writeFileSync(INDEX_PATH, `${frontmatter}\n${readme}`, 'utf-8');
 console.log(`Embedded README.md into ${path.relative(BINDING_DIR, INDEX_PATH)}`);
