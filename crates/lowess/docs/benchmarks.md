@@ -50,3 +50,7 @@ fn main() -> Result<(), LowessError> {
     Ok(())
 }
 ```
+
+```output
+Fit: 296.82 ms
+```

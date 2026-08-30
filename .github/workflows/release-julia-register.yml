@@ -44,12 +44,12 @@ jobs:
         with:
           ref: ${{ steps.meta.outputs.commit }}
 
-      - name: Extract release notes from CHANGELOG
+      - name: Extract release notes from NEWS
         id: notes
         run: |
           VERSION=$(grep '^version' bindings/julia/julia/Project.toml | sed 's/version = "\(.*\)"/\1/')
           VERSION_PAT=$(printf '%s' "$VERSION" | sed 's/\./\\./g')
-          SECTION=$(awk "/^## ${VERSION_PAT}$/{flag=1;next}/^## /{if(flag)exit}flag" CHANGELOG.md)
+          SECTION=$(awk "/^# FastLOWESS\\.jl ${VERSION_PAT}$/{flag=1;next}/^# FastLOWESS\\.jl /{if(flag)exit}flag" bindings/julia/julia/docs/src/NEWS.md)
           BODY="@JuliaRegistrator register subdir=bindings/julia/julia"
           if [ -n "$SECTION" ]; then
             BODY=$(printf '%s\n\nRelease notes:\n%s' "$BODY" "$SECTION")

@@ -274,6 +274,9 @@ jobs:
     name: Deploy — publish once
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
       - name: Checkout existing gh-pages content
         uses: actions/checkout@v7
         continue-on-error: true

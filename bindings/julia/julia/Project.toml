@@ -1,32 +1,32 @@
-name = "FastLOWESS"
-uuid = "5d760c97-4851-4f57-8eaf-1b3e829bbf83"
-version = "3.1.0"
-authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
-license = "MIT OR Apache-2.0"
-repository = "https://github.com/thisisamirv/lowess-project"
-homepage = "https://github.com/thisisamirv/lowess-project"
-documentation = "https://thisisamirv.github.io/lowess-project/julia/"
 rust-version = "1.89"
-readme = "README.md"
-description = "High-performance LOWESS (Locally Weighted Scatterplot Smoothing)"
+homepage = "https://github.com/thisisamirv/lowess-project"
 keywords = ["lowess", "smoothing", "statistics", "regression", "bioinformatics"]
+documentation = "https://thisisamirv.github.io/lowess-project/julia/"
+readme = "README.md"
+repository = "https://github.com/thisisamirv/lowess-project"
+name = "FastLOWESS"
+version = "3.1.0"
+description = "High-performance LOWESS (Locally Weighted Scatterplot Smoothing)"
+uuid = "5d760c97-4851-4f57-8eaf-1b3e829bbf83"
 categories = ["science", "algorithms"]
+license = "MIT OR Apache-2.0"
+authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
+
+[targets]
+test = ["Test", "Random"]
+
+[compat]
+Downloads = "1"
+julia = "1.6"
+fastlowess_jll = "3.1.0, 3.1.0"
+Test = "1"
+Random = "1"
 
 [deps]
 Downloads = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
 fastlowess_jll = "7381d214-3001-5784-8d9a-8eb8e8688076"
 
-[compat]
-julia = "1.6"
-Downloads = "1"
-fastlowess_jll = "3.1.0"
-Test = "1"
-Random = "1"
-
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
-
-[targets]
-test = ["Test", "Random"]
