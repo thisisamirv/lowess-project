@@ -190,5 +190,5 @@ for xi, yi in zip(x, y):
 
 ## Next Steps
 
-- [Parameters](parameters.md) — All configuration options
+- [API Reference](../api/python.md) — All configuration options
 - [Tutorials](use-cases/real-time.md) — Real-time processing guide

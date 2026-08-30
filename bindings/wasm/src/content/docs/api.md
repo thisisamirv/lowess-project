@@ -68,25 +68,43 @@ See [wasm-online.md](api-online.md) for the `OnlineLowess` class.
 | --- | --- | --- | --- |
 | `fraction` | `number` | `0.67` | Smoothing fraction (bandwidth) |
 | `iterations` | `number` | `3` | Number of robustifying iterations |
-| `delta` | `number` | `NaN` | Interpolation distance (NaN for auto) |
+| `delta` | `number` | `NaN` | Interpolation distance (`NaN` auto-sets it to 1% of the x-range in Batch, or 0.0 in Streaming/Online) |
 | `weight_function` | `string` | `"tricube"` | Weight function name |
 | `robustness_method` | `string` | `"bisquare"` | Robustness method name |
 | `scaling_method` | `string` | `"mad"` | Residual scaling method |
 | `boundary_policy` | `string` | `"extend"` | Boundary handling policy |
 | `zero_weight_fallback` | `string` | `"use_local_mean"` | Zero-weight handling |
 | `auto_converge` | `number` | `null` | Auto-convergence tolerance |
-| `confidence_intervals` | `number` | `null` | Confidence level (e.g., 0.95) |
-| `prediction_intervals` | `number` | `null` | Prediction level (e.g., 0.95) |
+| `confidence_intervals` | `number` | `null` | Confidence level (e.g., 0.95) — see [Intervals](intervals.md) |
+| `prediction_intervals` | `number` | `null` | Prediction level (e.g., 0.95) — see [Intervals](intervals.md) |
 | `return_diagnostics` | `boolean` | `false` | Include diagnostics in result |
 | `return_residuals` | `boolean` | `false` | Include residuals in result |
 | `return_robustness_weights` | `boolean` | `false` | Include weights in result |
 | `return_se` | `boolean` | `false` | Return standard errors |
 | `parallel` | `boolean` | `true` | Enable parallel execution |
-| `cv_method` | `string` | `"kfold"` | CV method (`"kfold"` or `"loocv"`) (Batch only) |
+| `cv_method` | `string` | `"kfold"` | CV method (`"kfold"` fast or `"loocv"` slow, exhaustive) (Batch only) |
 | `cv_k` | `number` | `5` | Number of folds for k-fold CV (Batch only) |
 | `cv_fractions` | `number[]` | `null` | Fractions to test for cross-validation (Batch only) |
 | `cv_seed` | `number` | `null` | Random seed for cross-validation shuffling (Batch only) |
-| `custom_weights` | `Float64Array` | `null` | Per-observation case weights — passed to `fit()`, not the options object (Batch only) |
+| `custom_weights` | `Float64Array` | `null` | Per-observation case weights — passed to `fit()`, not the options object (Batch only; see [Custom Weights](custom-weights.md)) |
+
+`fraction` is the most important parameter: it controls the size of the local neighbourhood used at each point.
+
+| Range | Effect | Use case |
+| --- | --- | --- |
+| 0.1-0.3 | Fine detail | Rapidly changing signals |
+| 0.3-0.5 | Balanced | General purpose |
+| 0.5-0.7 | Heavy smoothing | Noisy data |
+| 0.7-1.0 | Very smooth | Trend extraction |
+
+`iterations` controls robustness to outliers, at the cost of speed.
+
+| Value | Effect | Performance |
+| --- | --- | --- |
+| 0 | No robustness | Fastest |
+| 1-3 | Moderate | Recommended |
+| 4-6 | Strong | Contaminated data |
+| 7+ | Very strong | Heavy outliers |
 
 See [wasm-streaming.md](api-streaming.md) for `StreamingOptions`.
 
@@ -167,11 +185,13 @@ See [wasm-online.md](api-online.md) for `OnlineOutput`.
 
 ### zero_weight_fallback
 
-*See: [Parameters](parameters.md)*
+Behavior when all neighborhood weights are zero:
 
-- `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
-- `"return_original"` (alias: `"original"`)
-- `"return_none"` (alias: `"none"`)
+| Option | Behavior |
+| --- | --- |
+| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
+| `"return_original"` (alias: `"original"`) | Return the original y value |
+| `"return_none"` (alias: `"none"`) | Return `NaN` |
 
 ### merge_strategy
 

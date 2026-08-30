@@ -131,7 +131,6 @@ nav:
       - Concepts: getting-started/concepts.md
   - User Guide:
       - user-guide/index.md
-      - Parameters: user-guide/parameters.md
       - Execution Modes: user-guide/adapters.md
       - Weight Functions: user-guide/kernels.md
       - Boundary Handling: user-guide/boundary.md

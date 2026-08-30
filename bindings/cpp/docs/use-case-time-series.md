@@ -246,4 +246,4 @@ RÂ²: 0.993834
 - [Real-Time Processing](use-case-real-time.md) — For streaming time series
 - [Cross-Validation](cross-validation.md) — Optimal fraction selection
 - [Boundary Handling](boundary.md) — Edge bias in trend extraction
-- [Parameters](parameters.md) — Full parameter reference
+- [API Reference](api.md) — Full parameter reference

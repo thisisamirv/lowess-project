@@ -19,7 +19,6 @@
 //!   - [Concepts](doc::concepts)
 //!   - [Installation](doc::installation)
 //!   - [Quick Start](doc::quickstart)
-//!   - [Parameters](doc::parameters)
 //! - **API Reference**
 //!   - [Batch API](doc::api)
 //!   - [Streaming API](doc::api::streaming)

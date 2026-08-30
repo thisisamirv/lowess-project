@@ -21,12 +21,6 @@ pub mod quickstart {
     #![doc = include_str!("../docs/quickstart.md")]
 }
 
-/// Complete parameter reference for all configuration options.
-#[cfg(doc)]
-pub mod parameters {
-    #![doc = include_str!("../docs/parameters.md")]
-}
-
 /// Choosing between Batch, Streaming, and Online execution modes.
 #[cfg(doc)]
 pub mod adapter_choice {

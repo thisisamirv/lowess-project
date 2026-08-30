@@ -128,7 +128,7 @@ Smoothed 100 points
 | Topic | Link |
 | --- | --- |
 | How LOWESS works | [Concepts](concepts.md) |
-| All parameters explained | [Parameters](parameters.md) |
+| All parameters explained | [API Reference](api.md) |
 | Batch vs Streaming vs Online | [Execution Modes](adapter-choice.md) |
 | Edge handling | [Boundary](boundary.md) |
 | Outlier handling in depth | [Robustness](robustness.md) |

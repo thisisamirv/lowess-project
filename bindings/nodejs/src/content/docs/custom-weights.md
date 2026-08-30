@@ -1,7 +1,7 @@
 ---
 title: Custom Weights
 ---
-<!-- markdownlint-disable MD033 -->
+<!-- markdownlint-disable MD033 MD046 -->
 Per-observation weights that encode data quality directly into the LOWESS fit.
 
 ## How Custom Weights Work
@@ -179,4 +179,4 @@ If a local neighbourhood contains only zero-weight points, the fit at
 ## See Also
 
 - [Robustness](robustness.md) — adaptive outlier downweighting via IRLS
-- [Parameters](parameters.md#custom_weights) — full parameter reference
+- [API Reference](api.md) — full parameter reference

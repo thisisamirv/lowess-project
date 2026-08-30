@@ -124,7 +124,7 @@ Choose the right mode based on your use case:
 ## Next Steps
 
 - [Quick Start](quickstart.md) — See it in action
-- [Parameters](parameters.md) — All configuration options
+- [API Reference](api.md) — All configuration options
 - [Boundary Handling](boundary.md) — Edge bias reduction strategies
 - [Robustness](robustness.md) — Outlier downweighting methods
 - [Scaling Methods](scaling.md) — MAD, MAR, Mean scale estimation

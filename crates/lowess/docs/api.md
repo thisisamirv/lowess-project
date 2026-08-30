@@ -74,105 +74,50 @@ These chained methods configure the builder. They correspond to the "Options Str
 | --- | --- | --- | --- |
 | `fraction(T)` | `T: Float` | `0.67` | Smoothing fraction (bandwidth) |
 | `iterations(usize)` | `usize` | `3` | Number of robustifying iterations |
-| `delta(T)` | `T: Float` | `NaN` | Interpolation distance (NaN for auto) |
+| `delta(T)` | `T: Float` | `NaN` | Interpolation distance (`NaN` auto-sets it to 1% of the x-range in Batch, or 0.0 in Streaming/Online) |
 | `weight_function(...)` | `weight_function` | `"tricube"` | Weight function |
 | `robustness_method(...)` | `robustness_method` | `"bisquare"` | Robustness method |
 | `scaling_method(...)` | `scaling_method` | `"mad"` | Residual scaling method |
 | `boundary_policy(...)` | `boundary_policy` | `"extend"` | Boundary handling policy |
 | `zero_weight_fallback(...)` | `zero_weight_fallback` | `"use_local_mean"` | Zero-weight handling |
 | `auto_converge(T)` | `T: Float` | `NaN` | Auto-convergence tolerance |
-| `confidence_intervals(T)` | `T: Float` | `NaN` | Confidence level (e.g., 0.95) |
-| `prediction_intervals(T)` | `T: Float` | `NaN` | Prediction level (e.g., 0.95) |
-| `custom_weights(Vec<T>)` | `Vec<T: Float>` | `None` | Per-observation weights (Batch only) |
+| `confidence_intervals(T)` | `T: Float` | `NaN` | Confidence level (e.g., 0.95) — see [Intervals](intervals.md) |
+| `prediction_intervals(T)` | `T: Float` | `NaN` | Prediction level (e.g., 0.95) — see [Intervals](intervals.md) |
+| `custom_weights(Vec<T>)` | `Vec<T: Float>` | `None` | Per-observation weights (Batch only) — see [Custom Weights](custom-weights.md) |
 | `return_diagnostics()` | `bool` | `false` | Compute RMSE, MAE, R², AIC |
 | `return_residuals()` | `bool` | `false` | Include residuals in result |
 | `return_robustness_weights()` | `bool` | `false` | Include robustness weights in result |
 | `return_se()` | `bool` | `false` | Return standard errors |
 | `parallel(bool)` | `bool` | `true` | Enable parallel execution |
-| `cv_method(str)` | `&str` | `"kfold"` | CV strategy: `"kfold"` or `"loocv"` (defaults to `"kfold"` when `cv_fractions` is provided) |
+| `cv_method(str)` | `&str` | `"kfold"` | CV strategy: `"kfold"` (fast) or `"loocv"` (slow, exhaustive) — defaults to `"kfold"` when `cv_fractions` is provided |
 | `cv_k(usize)` | `usize` | `5` | K for k-fold CV |
 | `cv_fractions(Vec<f64>)` | `Vec<f64>` | `None` | Fraction grid for CV |
 | `cv_seed(u64)` | `u64` | `None` | RNG seed for CV |
 | `backend(...)` | `Backend` | `CPU` | `lowess` only: `CPU` or `GPU` |
+
+`fraction` is the most important parameter: it controls the size of the local neighbourhood used at each point.
+
+| Range | Effect | Use case |
+| --- | --- | --- |
+| 0.1-0.3 | Fine detail | Rapidly changing signals |
+| 0.3-0.5 | Balanced | General purpose |
+| 0.5-0.7 | Heavy smoothing | Noisy data |
+| 0.7-1.0 | Very smooth | Trend extraction |
+
+`iterations` controls robustness to outliers, at the cost of speed.
+
+| Value | Effect | Performance |
+| --- | --- | --- |
+| 0 | No robustness | Fastest |
+| 1-3 | Moderate | Recommended |
+| 4-6 | Strong | Contaminated data |
+| 7+ | Very strong | Heavy outliers |
 
 **Note:** In other language bindings `custom_weights` is a `fit()` argument; in Rust it is a builder step because all configuration lives on the builder and `fit()` consumes `self`.
 
 See [rust-streaming.md](api-streaming.md) for Streaming Options.
 
 See [rust-online.md](api-online.md) for Online Options.
-
-## GPU Acceleration
-
-The `lowess` crate provides a GPU-accelerated backend using `wgpu`. This backend is designed for high-throughput processing of large datasets (10k+ points) where parallel regression fitting on the GPU significantly outperforms CPU execution.
-
-### Enabling GPU Support
-
-GPU support is optional and must be enabled via the `gpu` feature in `lowess`:
-
-```toml
-[dependencies]
-lowess = { version = "*", features = ["gpu"] }
-```
-
-### Usage
-
-To use the GPU backend, configure the builder with `Backend::GPU`:
-
-```rust
-use lowess::prelude::*;
-
-fn main() -> Result<(), LowessError> {
-    let model = Lowess::new()
-        .backend(Backend::GPU)
-        .confidence_intervals(0.95)
-        .build()?;
-
-    Ok(())
-}
-```
-
-### Supported Features
-
-The GPU backend implements almost the entire LOWESS pipeline in WGSL compute shaders, providing native support for the following features:
-
-- **Weight Functions**: All standard kernels are supported (`Tricube`, `Epanechnikov`, `Gaussian`, `Uniform`, `Biweight`, `Triangle`, `Cosine`).
-- **Robustness Methods**: Support for `Bisquare`, `Huber`, and `Talwar` robustness weighting.
-- **Scaling Methods**: Residual scaling using `MAD` (Median Absolute Deviation), `MAR` (Median Absolute Residual), and `Mean` (Mean Absolute Residual).
-- **Interval Bounds**: GPU-native computation of `Standard Errors`, `Confidence Intervals`, and `Prediction Intervals`.
-- **Optimization**:
-  - **Parallel Fitting**: Local regression for all anchor points is computed in parallel.
-  - **Robustness Loops**: Iterative weight updates and convergence checks occur entirely on the GPU.
-  - **Distance-based Skipping**: Support for the `delta` parameter to accelerate smoothing on dense grids.
-- **Validation**: GPU-accelerated `K-Fold` and `LOOCV` (Leave-One-Out Cross-Validation).
-
-#### Feature Comparison
-
-| Feature | CPU | GPU (lowess) | Notes |
-| --- | --- | --- | --- |
-| Batch Smoothing | ✅ | ✅ | GPU recommended for N > 10,000 |
-| Streaming/Online | ✅ | ❌ | GPU optimized for static batch data |
-| All Weight Functions | ✅ | ✅ | Identical numerical implementation |
-| Robustness (Bisquare+) | ✅ | ✅ | Full support for all methods |
-| Scaling (MAD/MAR/Mean) | ✅ | ✅ | Full support for all methods |
-| Boundary Policies | ✅ | ✅ | Extend, Reflect, Zero, NoBoundary |
-| Auto-Convergence | ✅ | ✅ | Tolerance checking occurs on GPU |
-| Intervals & SE | ✅ | ✅ | Native GPU interval calculation |
-| Cross-Validation | ✅ | ✅ | Parallel CV folders on GPU |
-| Interpolation (Delta) | ✅ | ✅ | Anchor-based skipping supported |
-
-### Hardware Requirements
-
-The GPU backend leverages `wgpu` and supports:
-
-- **Vulkan** (Linux/Windows)
-- **Metal** (macOS/iOS)
-- **DirectX 12** (Windows)
-
-It requires a device supporting compute shaders. If no compatible GPU is found at runtime, the initialization will return a `LowessError::RuntimeError`.
-
-### Performance Considerations
-
-The GPU backend is optimized for large datasets (N > 100,000) and provides parallelization through compute shaders. For smaller datasets, the CPU backend is faster.
 
 ## Result Structure
 
@@ -249,11 +194,13 @@ See [rust-online.md](api-online.md) for `OnlineOutput<T>`.
 
 ### zero_weight_fallback
 
-*See: [Parameters](parameters.md)*
+Behavior when all neighborhood weights are zero:
 
-- `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
-- `"return_original"` (alias: `"original"`)
-- `"return_none"` (alias: `"none"`)
+| Option | Behavior |
+| --- | --- |
+| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
+| `"return_original"` (alias: `"original"`) | Return the original y value |
+| `"return_none"` (alias: `"none"`) | Return `NaN` |
 
 ### merge_strategy
 

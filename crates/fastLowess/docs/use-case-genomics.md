@@ -151,7 +151,7 @@ First smoothed value (streaming genome): 41.29765849569398
 ## See Also
 
 - [Concepts](concepts.md) — How LOWESS works
-- [Parameters](parameters.md) — All options
+- [API Reference](api.md) — All options
 - [Robustness](robustness.md) — Outlier downweighting in depth
 - [Merge Strategies](merge.md) — Streaming chunk reconciliation
 - [Boundary Handling](boundary.md) — Edge handling for sparse regions

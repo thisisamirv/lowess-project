@@ -39,5 +39,5 @@ graph LR
 
 ## Next Steps
 
-- [Parameters](parameters.md) — All configuration options
+- [API Reference](api.md) — All configuration options
 - [Tutorials](use-case-real-time.md) — Real-time processing guide

@@ -105,7 +105,16 @@ const result = model.fit(x, y);
 
 If GPU support isn't available, requesting `backend = "gpu"` (or the equivalent) raises a runtime error pointing at the installer for that language rather than a raw Rust panic.
 
-## See also
+## Hardware Requirements
 
-* [rust.md](gpu-backend.md) — why Streaming/Online adapters stay CPU-only.
-* [Node.js API — GPU Acceleration](gpu-backend.md) — full parameter reference.
+The GPU backend leverages `wgpu` and supports:
+
+* **Vulkan** (Linux/Windows)
+* **Metal** (macOS/iOS)
+* **DirectX 12** (Windows)
+
+It requires a device supporting compute shaders. If no compatible GPU is found at runtime, model construction raises an error.
+
+## Performance Considerations
+
+The GPU backend is optimized for large datasets (N > 100,000) and provides parallelization through compute shaders. For smaller datasets, the CPU backend (`backend: "cpu"`, the default) is faster.
