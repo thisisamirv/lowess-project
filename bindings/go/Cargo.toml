@@ -1,12 +1,12 @@
 [package]
-name = "fastlowess-node"
+name = "fastlowess-go"
 version = "3.1.0"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/thisisamirv/lowess-project"
 homepage = "https://github.com/thisisamirv/lowess-project"
-documentation = "https://thisisamirv.github.io/lowess-project/nodejs/"
+documentation = "https://thisisamirv.github.io/lowess-project/go/"
 rust-version = "1.89"
 readme = "README.md"
 description = "High-performance LOWESS (Locally Weighted Scatterplot Smoothing)"
@@ -14,22 +14,19 @@ keywords = ["lowess", "smoothing", "statistics", "regression", "bioinformatics"]
 categories = ["science", "algorithms"]
 
 [lib]
-crate-type = ["cdylib"]
+name = "fastlowess_go"
+crate-type = ["staticlib"]
 
 [dependencies]
 fastLowess = { path = "../../crates/fastLowess", version = "3.1", features = [
-    "dev",
     "cpu",
+    "dev",
 ] }
-napi = { version = "3.12", features = ["napi4"] }
-napi-derive = "3.6"
+libc = "0.2"
 
 [build-dependencies]
-napi-build = "2.4"
+cbindgen = "0.29"
 
 [features]
 default = []
-# Enables the GPU execution backend (requires a Vulkan/Metal/DX12-capable
-# GPU driver at runtime). Not enabled in prebuilt npm binaries by default;
-# build locally with `napi build --features gpu` to opt in.
 gpu = ["fastLowess/gpu"]

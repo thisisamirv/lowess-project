@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+**Go:**
+
+- Added a new Go binding (`bindings/go`), consuming the `fastLowess` Rust core via a dedicated `cgo`-compatible C ABI (`fastlowess-go` crate, mirroring the C++ binding's FFI approach). Provides `Lowess` (batch), `StreamingLowess`, and `OnlineLowess` model types with an idiomatic Go API (`Options` struct, `Result`/`PointResult`/`Diagnostics` types, `Close()`-based resource management with a GC finalizer safety net). Ships with unit tests, a `Makefile` (`go`/`go-dev`/`go-clean` targets, wired into the root `Makefile`), CI (`ci-go.yml`, `release-go.yml`), and docs (`getting-started.md`, `api.md`, `api-streaming.md`, `api-online.md`, `installation.md`, `benchmarks.md`). The native library builds for the GNU ABI on Windows (`x86_64-pc-windows-gnu`), since Go's `cgo` drives a GCC-compatible compiler there rather than MSVC. Doc snippets are verified via a new `dev/runners/go.py` (wired into `dev/verify_snippets.py`, `dev/add-go-outputs.py`), which runs each snippet in a throwaway module that `replace`s the binding with the local checkout.
+
 ### Changed
 
 **Monorepo:**
@@ -39,6 +45,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Node.js:**
 
+- Updated `napi` to v3.12.
+- Updated `napi-derive` to v3.6.
+- Updated `napi-build` to v2.4.
 - Updated `typedoc-plugin-markdown` to v4.13.
 - `make nodejs-dev` now runs `npm update` after `npm install`, so dependencies are kept current.
 
@@ -46,6 +55,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated `typedoc-plugin-markdown` to v4.13.
 - `make wasm-dev` now runs `npm update` after `npm install`, so dependencies are kept current.
+
+**lowess:**
+
+- Updated `wide` to v1.7.
 
 ### Fixed
 

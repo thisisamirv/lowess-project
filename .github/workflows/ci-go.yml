@@ -1,0 +1,52 @@
+name: CI — Go
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  ci:
+    name: Go (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.21"
+
+      - name: Install Rust GNU + GNU Make (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          rustup toolchain install stable-x86_64-pc-windows-gnu
+          rustup target add x86_64-pc-windows-gnu
+          choco install make mingw -y
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: go-${{ matrix.os }}
+
+      - name: Lint (Rust)
+        working-directory: bindings/go
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --all-targets -- -D warnings
+
+      - name: make go-dev
+        run: make go-dev

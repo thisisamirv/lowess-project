@@ -13,6 +13,7 @@ Usage
     python dev/verify_snippets.py --lang wasm        # WebAssembly only
     python dev/verify_snippets.py --lang rust        # Rust only
     python dev/verify_snippets.py --lang cpp         # C++ only
+    python dev/verify_snippets.py --lang go          # Go only
     python dev/verify_snippets.py --file docs/api/python.md
     python dev/verify_snippets.py --dry-run          # list snippets, don't run
     python dev/verify_snippets.py --verbose          # show snippet source on failure
@@ -40,6 +41,7 @@ from runners import RUNNERS, SKIP_CHECKS
 from runners.base import (
     CPP_BINDING_DOCS_DIR,
     DOCS_DIR,
+    GO_BINDING_DOCS_DIR,
     JULIA_DOCS_DIR,
     NODEJS_BINDING_DOCS_DIR,
     REPO_ROOT,
@@ -353,6 +355,8 @@ def iter_md_files(
         yield from sorted(WASM_BINDING_DOCS_DIR.glob("*.md"))
     if CPP_BINDING_DOCS_DIR.exists():
         yield from sorted(CPP_BINDING_DOCS_DIR.glob("*.md"))
+    if GO_BINDING_DOCS_DIR.exists():
+        yield from sorted(GO_BINDING_DOCS_DIR.glob("*.md"))
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -367,7 +371,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--lang",
-        choices=["python", "julia", "nodejs", "r", "wasm", "rust", "cpp", "all"],
+        choices=["python", "julia", "nodejs", "r", "wasm", "rust", "cpp", "go", "all"],
         default="all",
         help="Which language runner to use (default: all)",
     )

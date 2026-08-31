@@ -49,6 +49,11 @@ TARGETS = [
         "doxygen_page": "\\page news News",
     },
     {
+        "labels": ["Go"],
+        "package": "fastlowess (Go)",
+        "output": "bindings/go/docs/NEWS.md",
+    },
+    {
         "labels": ["Julia"],
         "package": "FastLOWESS.jl",
         "output": "bindings/julia/julia/docs/src/NEWS.md",

@@ -1,0 +1,19 @@
+no_includes = true
+language = "C"
+
+[parse]
+parse_deps = false
+
+[export]
+include = ["GoLowessResult"]
+prefix = "fastlowess_"
+renaming_overrides_prefixing = true
+
+[fn]
+rename_args = "None"
+
+[struct]
+rename_fields = "None"
+
+[enum]
+rename_variants = "ScreamingSnakeCase"

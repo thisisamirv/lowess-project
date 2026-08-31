@@ -17,6 +17,7 @@ RUST_CRATE_DOCS_DIRS: list[Path] = [
 NODEJS_BINDING_DOCS_DIR = REPO_ROOT / "bindings" / "nodejs" / "src" / "content" / "docs"
 WASM_BINDING_DOCS_DIR = REPO_ROOT / "bindings" / "wasm" / "src" / "content" / "docs"
 CPP_BINDING_DOCS_DIR = REPO_ROOT / "bindings" / "cpp" / "docs"
+GO_BINDING_DOCS_DIR = REPO_ROOT / "bindings" / "go" / "docs"
 
 _TAB_ALIASES: dict[str, set[str]] = {
     "python": {"Python"},
@@ -25,6 +26,7 @@ _TAB_ALIASES: dict[str, set[str]] = {
     "wasm": {"WebAssembly"},
     "r": {"R"},
     "cpp": {"C++"},
+    "go": {"Go"},
     "rust": {
         "Rust",
         "Rust (fastLowess)",
@@ -40,6 +42,7 @@ _LANG_TAGS: dict[str, set[str]] = {
     "wasm": {"javascript", "js"},
     "r": {"r"},
     "cpp": {"cpp", "c++"},
+    "go": {"go"},
     "rust": {"rust"},
 }
 

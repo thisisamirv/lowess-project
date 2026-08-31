@@ -1,0 +1,67 @@
+name: Release Go
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to upload assets to (e.g., v0.99.8)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-upload:
+    name: Build ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            asset_name: libfastlowess_go-linux-x64.a
+            cargo_target: ""
+            target_dir: target/release
+          - os: macos-latest
+            asset_name: libfastlowess_go-macos-x64.a
+            cargo_target: ""
+            target_dir: target/release
+          - os: windows-latest
+            asset_name: libfastlowess_go-win32-x64.a
+            cargo_target: "--target x86_64-pc-windows-gnu"
+            target_dir: target/x86_64-pc-windows-gnu/release
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Rust GNU target (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          rustup toolchain install stable-x86_64-pc-windows-gnu
+          rustup target add x86_64-pc-windows-gnu
+
+      - name: Build Go native library
+        working-directory: bindings/go
+        run: cargo build --release --lib ${{ matrix.cargo_target }}
+
+      - name: Prepare Asset
+        shell: bash
+        run: mv ${{ matrix.target_dir }}/libfastlowess_go.a ${{ matrix.asset_name }}
+
+      - name: Upload Library to Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.event.release.tag_name || github.event.inputs.tag }}
+          files: ${{ matrix.asset_name }}
+
+      - name: Upload Header to Release
+        if: matrix.os == 'ubuntu-latest'
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.event.release.tag_name || github.event.inputs.tag }}
+          files: bindings/go/include/fastlowess_go.h
