@@ -64,7 +64,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
                 <configuration>
-                    <argLine>-Dfastlowess.native.dir=${fastlowess.native.dir}</argLine>
+                    <argLine>-Dfastlowess.native.dir=${fastlowess.native.dir} --enable-native-access=ALL-UNNAMED</argLine>
                 </configuration>
             </plugin>
             <plugin>
@@ -96,3 +96,4 @@
         </plugins>
     </build>
 </project>
+

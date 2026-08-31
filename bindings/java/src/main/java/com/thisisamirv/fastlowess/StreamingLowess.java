@@ -2,7 +2,8 @@ package com.thisisamirv.fastlowess;
 
 /**
  * A streaming LOWESS model that processes data in chunks.
- */ public final class StreamingLowess implements AutoCloseable {
+ */
+public final class StreamingLowess implements AutoCloseable {
 
     private long handle;
 
@@ -41,7 +42,6 @@ package com.thisisamirv.fastlowess;
     /**
      * Merges all processed chunks into a final result.
      */
-        
     public Result finish() {
         checkOpen();
         NativeResult r = NativeBridge.streamingFinalize(handle);
