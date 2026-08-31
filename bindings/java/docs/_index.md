@@ -4,7 +4,9 @@ title: "fastlowess (Java)"
 
 <!-- markdownlint-disable MD024 MD033 -->
 <p align="center">
-  <a href="https://central.sonatype.com/artifact/com.thisisamirv/fastlowess"><img src="https://img.shields.io/badge/Java-007396?logo=openjdk&logoColor=white" alt="Java"></a>
+  <a href="https://central.sonatype.com/artifact/io.github.thisisamirv/fastlowess"><img src="https://img.shields.io/badge/Java-007396?logo=openjdk&logoColor=white" alt="Java"></a>
+  <a href="https://central.sonatype.com/artifact/io.github.thisisamirv/fastlowess"><img src="https://img.shields.io/badge/Maven_Central-C71A36?logo=apachemaven&logoColor=white" alt="Maven Central"></a>
+  <a href="https://github.com/thisisamirv/lowess-project/actions/workflows/ci-java.yml"><img src="https://github.com/thisisamirv/lowess-project/actions/workflows/ci-java.yml/badge.svg" alt="CI"></a>
 </p>
 
 <p align="center">

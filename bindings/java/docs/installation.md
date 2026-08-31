@@ -25,7 +25,7 @@ Outside the monorepo, add the Maven coordinate to your `pom.xml`:
 
 ```xml
 <dependency>
-    <groupId>com.thisisamirv</groupId>
+    <groupId>io.github.thisisamirv</groupId>
     <artifactId>fastlowess</artifactId>
     <version>3.1.0</version>
 </dependency>
@@ -37,9 +37,7 @@ Then point the JVM at a prebuilt native library, either via the `fastlowess.nati
 java -Dfastlowess.native.dir=/path/to/native/lib -cp your-app.jar com.example.Main
 ```
 
-Prebuilt native libraries are attached to [GitHub releases](https://github.com/thisisamirv/lowess-project/releases) for common platforms (`fastlowess_java.dll` on Windows, `libfastlowess_java.so` on Linux, `libfastlowess_java.dylib` on macOS).
-
-Alternatively, build the native library yourself from the [`lowess-project`](https://github.com/thisisamirv/lowess-project) source:
+Build the native library yourself from the [`lowess-project`](https://github.com/thisisamirv/lowess-project) source:
 
 ```sh
 git clone https://github.com/thisisamirv/lowess-project

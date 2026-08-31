@@ -4,7 +4,7 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.thisisamirv</groupId>
+    <groupId>io.github.thisisamirv</groupId>
     <artifactId>fastlowess</artifactId>
     <version>3.1.0</version>
     <packaging>jar</packaging>
@@ -96,4 +96,46 @@
             </plugin>
         </plugins>
     </build>
+
+    <!-- Activated via `mvn -Prelease deploy` (see release-java.yml). Kept out of the
+         default build so contributors without a GPG key/Central credentials can still
+         run `mvn test`/`mvn package` locally without failures. -->
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <!-- GPG-signs every artifact (jar, sources, javadoc) — required by Maven
+                    Central. -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.2.7</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- Publishes to Maven Central via the Central Portal; javadoc.io then
+                         automatically mirrors the attached javadoc jar. Requires a "central"
+                         <server> in ~/.m2/settings.xml (see release-java.yml). -->
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.7.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                            <autoPublish>true</autoPublish>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

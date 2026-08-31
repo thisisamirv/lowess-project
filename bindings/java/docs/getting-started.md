@@ -9,7 +9,7 @@ Add the dependency to your `pom.xml`:
 
 ```xml
 <dependency>
-    <groupId>com.thisisamirv</groupId>
+    <groupId>io.github.thisisamirv</groupId>
     <artifactId>fastlowess</artifactId>
     <version>3.1.0</version>
 </dependency>

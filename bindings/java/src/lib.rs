@@ -1,7 +1,7 @@
 //! Java bindings for fastLowess (via JNI).
 //!
 //! Provides JNI-exported native methods, consumed by the
-//! `com.thisisamirv.fastlowess.NativeBridge` Java class. Errors (both
+//! `fastlowess.NativeBridge` Java class. Errors (both
 //! ordinary failures and Rust panics) are surfaced as thrown
 //! `java.lang.RuntimeException`s via [`jni::errors::ThrowRuntimeExAndDefault`],
 //! since the JVM has native exception support (unlike C/Go).

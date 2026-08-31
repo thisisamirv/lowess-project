@@ -14,6 +14,10 @@ endif
 
 PYTHON ?= python3
 
+CHECKSTYLE_VERSION := 14.1.0
+CHECKSTYLE_JAR := checkstyle-$(CHECKSTYLE_VERSION)-all.jar
+CHECKSTYLE_URL := https://github.com/checkstyle/checkstyle/releases/download/checkstyle-$(CHECKSTYLE_VERSION)/$(CHECKSTYLE_JAR)
+
 JAVA_PKG := fastlowess-java
 JAVA_DIR := bindings/java
 
@@ -43,11 +47,21 @@ dev:
 	@cargo fmt -p $(JAVA_PKG) -- --check
 	@cargo clippy -q -p $(JAVA_PKG) --all-targets -- -D warnings
 	@echo "=============================================================================="
-	@echo "2. Building..."
+	@echo "2. Java lint (Checkstyle)..."
+	@echo "=============================================================================="
+	@CS_JAR="$$HOME/.cache/checkstyle/$(CHECKSTYLE_JAR)"; \
+		if [ ! -f "$$CS_JAR" ]; then \
+			echo "Checkstyle not found. Downloading v$(CHECKSTYLE_VERSION)..."; \
+			mkdir -p "$$(dirname "$$CS_JAR")"; \
+			curl -fsSL -o "$$CS_JAR" "$(CHECKSTYLE_URL)"; \
+		fi; \
+		java -jar "$$CS_JAR" -c $(JAVA_DIR)/checkstyle.xml $(JAVA_DIR)/src/main/java $(JAVA_DIR)/src/test/java
+	@echo "=============================================================================="
+	@echo "3. Building..."
 	@echo "=============================================================================="
 	@cargo build -q -p $(JAVA_PKG)
 	@echo "=============================================================================="
-	@echo "3. Verifying library exports..."
+	@echo "4. Verifying library exports..."
 	@echo "=============================================================================="
 	@$(JAVA_EXPORT_SCAN) 2>/dev/null | grep -q Java_fastlowess_NativeBridge_lowessNew || \
 		(echo "Error: Java_fastlowess_NativeBridge_lowessNew not exported"; exit 1)
@@ -57,7 +71,7 @@ dev:
 		(echo "Error: Java_fastlowess_NativeBridge_onlineNew not exported"; exit 1)
 	@echo "All exports verified!"
 	@echo "=============================================================================="
-	@echo "4. Maven build & tests..."
+	@echo "5. Maven build & tests..."
 	@echo "=============================================================================="
 	@cd $(JAVA_DIR) && mvn -q clean test
 	@echo "=============================================================================="

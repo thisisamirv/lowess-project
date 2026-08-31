@@ -1,0 +1,52 @@
+name: Release Java
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch: # Allow manual trigger for testing
+
+permissions:
+  contents: read
+
+jobs:
+  publish-maven-central:
+    name: Publish to Maven Central
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: release-java-central
+
+      # Builds the native library for this job's own (Linux) runner only, needed to
+      # run the JUnit tests bound to the `deploy` goal's lifecycle. Users on other
+      # platforms build it themselves via `cargo build -p fastlowess-java --release`
+      # (see bindings/java/docs/installation.md).
+      - name: Build native library
+        run: cargo build -p fastlowess-java --release
+
+      # server-id/server-username/server-password generate a <server> entry in
+      # ~/.m2/settings.xml that central-publishing-maven-plugin's
+      # <publishingServerId>central</publishingServerId> (see pom.xml's "release"
+      # profile) reads its Central Portal credentials from.
+      - uses: actions/setup-java@v5
+        with:
+          distribution: "temurin"
+          java-version: "25"
+          server-id: central
+          server-username: CENTRAL_USERNAME
+          server-password: CENTRAL_PASSWORD
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: GPG_PASSPHRASE
+
+      - name: Deploy to Maven Central
+        working-directory: bindings/java
+        env:
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          mvn -B -Prelease -Dfastlowess.native.dir=$(pwd)/../../target/release clean deploy
