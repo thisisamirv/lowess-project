@@ -31,7 +31,7 @@ endif
 
 GO_LIBRARY_DIR_ABS := $(abspath $(GO_LIBRARY_DIR))
 
-.PHONY: default dev clean
+.PHONY: default dev clean docs
 
 default:
 	@if [ -n "$(GO_CARGO_TARGET)" ]; then \
@@ -95,3 +95,12 @@ clean:
 	@cargo clean -p $(GO_PKG)
 	@git clean -fdX -- $(GO_DIR)
 	@echo "$(GO_PKG) clean complete!"
+
+docs:
+	@echo "Building $(GO_PKG) docs (Hugo)..."
+	@if ! command -v hugo >/dev/null 2>&1; then \
+		echo "hugo not found. Installing latest version..."; \
+		go install github.com/gohugoio/hugo@latest; \
+	fi
+	@cd $(GO_DIR)/docs-site && hugo --gc --minify
+	@echo "Docs built at $(GO_DIR)/docs-site/public/index.html"

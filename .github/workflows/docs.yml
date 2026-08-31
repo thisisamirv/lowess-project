@@ -6,6 +6,7 @@ on:
     paths:
       - "README.md"
       - "bindings/cpp/**"
+      - "bindings/go/**"
       - "bindings/julia/**"
       - "bindings/nodejs/**"
       - "bindings/r/**"
@@ -26,6 +27,7 @@ jobs:
     outputs:
       root: ${{ steps.f.outputs.root }}
       cpp: ${{ steps.f.outputs.cpp }}
+      go: ${{ steps.f.outputs.go }}
       julia: ${{ steps.f.outputs.julia }}
       nodejs: ${{ steps.f.outputs.nodejs }}
       r: ${{ steps.f.outputs.r }}
@@ -41,6 +43,9 @@ jobs:
               - '.github/workflows/docs.yml'
             cpp:
               - 'bindings/cpp/**'
+              - '.github/workflows/docs.yml'
+            go:
+              - 'bindings/go/**'
               - '.github/workflows/docs.yml'
             julia:
               - 'bindings/julia/**'
@@ -107,6 +112,31 @@ jobs:
         with:
           name: docs-cpp
           path: bindings/cpp/html
+          retention-days: 1
+
+  go:
+    needs: filter
+    if: needs.filter.outputs.go == 'true' || github.event_name == 'workflow_dispatch'
+    name: Go — Hugo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version: "1.21"
+
+      - name: Install Hugo
+        run: go install github.com/gohugoio/hugo@v0.165.0
+
+      - name: Build docs
+        run: hugo --gc --minify
+        working-directory: bindings/go/docs-site
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: docs-go
+          path: bindings/go/docs-site/public
           retention-days: 1
 
   julia:
@@ -269,7 +299,7 @@ jobs:
           retention-days: 1
 
   build:
-    needs: [filter, root, cpp, julia, nodejs, r, wasm]
+    needs: [filter, root, cpp, go, julia, nodejs, r, wasm]
     if: always()
     name: Build — merge & cache
     runs-on: ubuntu-latest
@@ -304,6 +334,14 @@ jobs:
         with:
           name: docs-cpp
           path: _site/cpp
+
+      - name: Download go artifact
+        if: needs.filter.outputs.go == 'true' || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: docs-go
+          path: _site/go
 
       - name: Download julia artifact
         if: needs.filter.outputs.julia == 'true' || github.event_name == 'workflow_dispatch'

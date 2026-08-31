@@ -1,4 +1,7 @@
-# Custom Weights
+---
+title: "Custom Weights"
+weight: 70
+---
 
 Per-observation weights that encode data quality directly into the LOWESS fit.
 
@@ -101,19 +104,47 @@ First smoothed value (custom weights): 0.5726210350584308
 Assign high weights to measurements you trust most — calibration standards, reference instruments, or low-noise observations.
 
 ```go
-weights := make([]float64, len(x))
-for i := range weights {
- weights[i] = 1.0
-}
-for _, i := range []int{5, 20, 40, 60, 80} {
- weights[i] = 10.0 // trust calibration 10x more
-}
+package main
 
-opts := fastlowess.DefaultOptions()
-opts.Fraction = 0.5
-model, err := fastlowess.NewLowess(opts)
-// ...
-result, err := model.Fit(x, y, weights)
+import (
+ "fmt"
+ "log"
+ "math"
+
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+)
+
+func main() {
+ n := 100
+ x := make([]float64, n)
+ y := make([]float64, n)
+ for i := 0; i < n; i++ {
+  x[i] = float64(i) * 2 * math.Pi / float64(n-1)
+  y[i] = math.Sin(x[i]) + 0.1
+ }
+
+ weights := make([]float64, len(x))
+ for i := range weights {
+  weights[i] = 1.0
+ }
+ for _, i := range []int{5, 20, 40, 60, 80} {
+  weights[i] = 10.0 // trust calibration 10x more
+ }
+
+ opts := fastlowess.DefaultOptions()
+ opts.Fraction = 0.5
+ model, err := fastlowess.NewLowess(opts)
+ if err != nil {
+  log.Fatal(err)
+ }
+ defer model.Close()
+
+ result, err := model.Fit(x, y, weights)
+ if err != nil {
+  log.Fatal(err)
+ }
+ fmt.Println("First smoothed value (custom weights):", result.Y[0])
+}
 ```
 
 ```output
@@ -127,18 +158,46 @@ First smoothed value (custom weights): 0.3237419725380614
 If each observation has a known standard deviation $\sigma_i$, set $w_i = 1 / \sigma_i^2$ to give the fit information-theoretically optimal weighting.
 
 ```go
-sigma := make([]float64, len(x))
-weights := make([]float64, len(x))
-for i := range sigma {
- sigma[i] = 0.1 + float64(i%4)*0.1
- weights[i] = 1.0 / (sigma[i] * sigma[i])
-}
+package main
 
-opts := fastlowess.DefaultOptions()
-opts.Fraction = 0.5
-model, err := fastlowess.NewLowess(opts)
-// ...
-result, err := model.Fit(x, y, weights)
+import (
+ "fmt"
+ "log"
+ "math"
+
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+)
+
+func main() {
+ n := 100
+ x := make([]float64, n)
+ y := make([]float64, n)
+ for i := 0; i < n; i++ {
+  x[i] = float64(i) * 2 * math.Pi / float64(n-1)
+  y[i] = math.Sin(x[i]) + 0.1
+ }
+
+ sigma := make([]float64, len(x))
+ weights := make([]float64, len(x))
+ for i := range sigma {
+  sigma[i] = 0.1 + float64(i%4)*0.1
+  weights[i] = 1.0 / (sigma[i] * sigma[i])
+ }
+
+ opts := fastlowess.DefaultOptions()
+ opts.Fraction = 0.5
+ model, err := fastlowess.NewLowess(opts)
+ if err != nil {
+  log.Fatal(err)
+ }
+ defer model.Close()
+
+ result, err := model.Fit(x, y, weights)
+ if err != nil {
+  log.Fatal(err)
+ }
+ fmt.Println("First smoothed value (custom weights):", result.Y[0])
+}
 ```
 
 ```output
@@ -152,27 +211,46 @@ First smoothed value (custom weights): 0.1522219803222457
 Custom weights and robustness iterations compose naturally: use custom weights for *known* bad points and robustness for *unknown* contamination.
 
 ```go
-x := make([]float64, 20)
-y := make([]float64, 20)
-for i := range x {
- x[i] = float64(i)
- y[i] = float64(i) * 1.5
-}
-y[3] = -50.0 // known bad
-y[12] = 80.0 // unknown outlier
+package main
 
-weights := make([]float64, 20)
-for i := range weights {
- weights[i] = 1.0
-}
-weights[3] = 0.0
+import (
+ "fmt"
+ "log"
 
-opts := fastlowess.DefaultOptions()
-opts.Fraction = 0.4
-opts.Iterations = 3
-model, err := fastlowess.NewLowess(opts)
-// ...
-result, err := model.Fit(x, y, weights)
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+)
+
+func main() {
+ x := make([]float64, 20)
+ y := make([]float64, 20)
+ for i := range x {
+  x[i] = float64(i)
+  y[i] = float64(i) * 1.5
+ }
+ y[3] = -50.0 // known bad
+ y[12] = 80.0 // unknown outlier
+
+ weights := make([]float64, 20)
+ for i := range weights {
+  weights[i] = 1.0
+ }
+ weights[3] = 0.0
+
+ opts := fastlowess.DefaultOptions()
+ opts.Fraction = 0.4
+ opts.Iterations = 3
+ model, err := fastlowess.NewLowess(opts)
+ if err != nil {
+  log.Fatal(err)
+ }
+ defer model.Close()
+
+ result, err := model.Fit(x, y, weights)
+ if err != nil {
+  log.Fatal(err)
+ }
+ fmt.Println("First smoothed value (custom weights):", result.Y[0])
+}
 ```
 
 ```output

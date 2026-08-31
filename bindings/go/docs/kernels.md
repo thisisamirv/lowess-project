@@ -1,4 +1,7 @@
-# Weight Functions
+---
+title: "Weight Functions"
+weight: 40
+---
 
 Kernel functions for distance weighting.
 
@@ -83,7 +86,39 @@ $$w(u) = \frac{3}{4}(1 - u^2)$$
 **Use when**: Optimal MSE properties desired.
 
 ```go
-opts.WeightFunction = "epanechnikov"
+package main
+
+import (
+ "fmt"
+ "log"
+ "math"
+
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+)
+
+func main() {
+ n := 100
+ x := make([]float64, n)
+ y := make([]float64, n)
+ for i := 0; i < n; i++ {
+  x[i] = float64(i) * 2 * math.Pi / float64(n-1)
+  y[i] = math.Sin(x[i]) + 0.1
+ }
+
+ opts := fastlowess.DefaultOptions()
+ opts.WeightFunction = "epanechnikov"
+ model, err := fastlowess.NewLowess(opts)
+ if err != nil {
+  log.Fatal(err)
+ }
+ defer model.Close()
+
+ result, err := model.Fit(x, y)
+ if err != nil {
+  log.Fatal(err)
+ }
+ fmt.Println("First smoothed value (epanechnikov kernel):", result.Y[0])
+}
 ```
 
 ```output
@@ -101,7 +136,39 @@ $$w(u) = \exp(-u^2/2)$$
 **Use when**: Maximum smoothness needed, computational cost acceptable.
 
 ```go
-opts.WeightFunction = "gaussian"
+package main
+
+import (
+ "fmt"
+ "log"
+ "math"
+
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+)
+
+func main() {
+ n := 100
+ x := make([]float64, n)
+ y := make([]float64, n)
+ for i := 0; i < n; i++ {
+  x[i] = float64(i) * 2 * math.Pi / float64(n-1)
+  y[i] = math.Sin(x[i]) + 0.1
+ }
+
+ opts := fastlowess.DefaultOptions()
+ opts.WeightFunction = "gaussian"
+ model, err := fastlowess.NewLowess(opts)
+ if err != nil {
+  log.Fatal(err)
+ }
+ defer model.Close()
+
+ result, err := model.Fit(x, y)
+ if err != nil {
+  log.Fatal(err)
+ }
+ fmt.Println("First smoothed value (gaussian kernel):", result.Y[0])
+}
 ```
 
 ```output
@@ -119,7 +186,39 @@ $$w(u) = (1 - u^2)^2$$
 **Use when**: Alternative to Tricube with slightly different properties.
 
 ```go
-opts.WeightFunction = "biweight"
+package main
+
+import (
+ "fmt"
+ "log"
+ "math"
+
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+)
+
+func main() {
+ n := 100
+ x := make([]float64, n)
+ y := make([]float64, n)
+ for i := 0; i < n; i++ {
+  x[i] = float64(i) * 2 * math.Pi / float64(n-1)
+  y[i] = math.Sin(x[i]) + 0.1
+ }
+
+ opts := fastlowess.DefaultOptions()
+ opts.WeightFunction = "biweight"
+ model, err := fastlowess.NewLowess(opts)
+ if err != nil {
+  log.Fatal(err)
+ }
+ defer model.Close()
+
+ result, err := model.Fit(x, y)
+ if err != nil {
+  log.Fatal(err)
+ }
+ fmt.Println("First smoothed value (biweight kernel):", result.Y[0])
+}
 ```
 
 ```output
@@ -137,7 +236,39 @@ $$w(u) = \cos(\pi u / 2)$$
 **Use when**: Want smooth kernel with simple form.
 
 ```go
-opts.WeightFunction = "cosine"
+package main
+
+import (
+ "fmt"
+ "log"
+ "math"
+
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+)
+
+func main() {
+ n := 100
+ x := make([]float64, n)
+ y := make([]float64, n)
+ for i := 0; i < n; i++ {
+  x[i] = float64(i) * 2 * math.Pi / float64(n-1)
+  y[i] = math.Sin(x[i]) + 0.1
+ }
+
+ opts := fastlowess.DefaultOptions()
+ opts.WeightFunction = "cosine"
+ model, err := fastlowess.NewLowess(opts)
+ if err != nil {
+  log.Fatal(err)
+ }
+ defer model.Close()
+
+ result, err := model.Fit(x, y)
+ if err != nil {
+  log.Fatal(err)
+ }
+ fmt.Println("First smoothed value (cosine kernel):", result.Y[0])
+}
 ```
 
 ```output
@@ -155,7 +286,39 @@ $$w(u) = 1 - |u|$$
 **Use when**: Simple, interpretable weights.
 
 ```go
-opts.WeightFunction = "triangle"
+package main
+
+import (
+ "fmt"
+ "log"
+ "math"
+
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+)
+
+func main() {
+ n := 100
+ x := make([]float64, n)
+ y := make([]float64, n)
+ for i := 0; i < n; i++ {
+  x[i] = float64(i) * 2 * math.Pi / float64(n-1)
+  y[i] = math.Sin(x[i]) + 0.1
+ }
+
+ opts := fastlowess.DefaultOptions()
+ opts.WeightFunction = "triangle"
+ model, err := fastlowess.NewLowess(opts)
+ if err != nil {
+  log.Fatal(err)
+ }
+ defer model.Close()
+
+ result, err := model.Fit(x, y)
+ if err != nil {
+  log.Fatal(err)
+ }
+ fmt.Println("First smoothed value (triangle kernel):", result.Y[0])
+}
 ```
 
 ```output
@@ -173,7 +336,39 @@ $$w(u) = 1$$
 **Use when**: Speed is critical, smoothness less important.
 
 ```go
-opts.WeightFunction = "uniform"
+package main
+
+import (
+ "fmt"
+ "log"
+ "math"
+
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+)
+
+func main() {
+ n := 100
+ x := make([]float64, n)
+ y := make([]float64, n)
+ for i := 0; i < n; i++ {
+  x[i] = float64(i) * 2 * math.Pi / float64(n-1)
+  y[i] = math.Sin(x[i]) + 0.1
+ }
+
+ opts := fastlowess.DefaultOptions()
+ opts.WeightFunction = "uniform"
+ model, err := fastlowess.NewLowess(opts)
+ if err != nil {
+  log.Fatal(err)
+ }
+ defer model.Close()
+
+ result, err := model.Fit(x, y)
+ if err != nil {
+  log.Fatal(err)
+ }
+ fmt.Println("First smoothed value (uniform kernel):", result.Y[0])
+}
 ```
 
 ```output

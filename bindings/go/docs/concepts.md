@@ -1,5 +1,9 @@
+---
+title: "Concepts"
+weight: 20
+---
+
 <!-- markdownlint-disable MD036 -->
-# Concepts
 
 Understanding how LOWESS works and when to use it.
 

@@ -1,4 +1,7 @@
-# Intervals
+---
+title: "Intervals"
+weight: 60
+---
 
 Confidence and prediction intervals for uncertainty quantification.
 
@@ -75,10 +78,42 @@ x=0.13: y=0.39 [0.34, 0.43]
 Estimate where new observations might fall.
 
 ```go
-opts := fastlowess.DefaultOptions()
-opts.Fraction = 0.5
-pi := 0.95 // 95% PI
-opts.PredictionIntervals = &pi
+package main
+
+import (
+ "fmt"
+ "log"
+ "math"
+
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+)
+
+func main() {
+ n := 100
+ x := make([]float64, n)
+ y := make([]float64, n)
+ for i := 0; i < n; i++ {
+  x[i] = float64(i) * 2 * math.Pi / float64(n-1)
+  y[i] = math.Sin(x[i]) + 0.1
+ }
+
+ opts := fastlowess.DefaultOptions()
+ opts.Fraction = 0.5
+ pi := 0.95 // 95% PI
+ opts.PredictionIntervals = &pi
+
+ model, err := fastlowess.NewLowess(opts)
+ if err != nil {
+  log.Fatal(err)
+ }
+ defer model.Close()
+
+ result, err := model.Fit(x, y)
+ if err != nil {
+  log.Fatal(err)
+ }
+ fmt.Printf("Prediction bounds: [%.2f, %.2f]\n", result.PredictionLower[0], result.PredictionUpper[0])
+}
 ```
 
 ```output
@@ -92,12 +127,44 @@ Prediction bounds: [-0.04, 0.71]
 Request both types simultaneously:
 
 ```go
-opts := fastlowess.DefaultOptions()
-opts.Fraction = 0.5
-ci := 0.95
-pi := 0.95
-opts.ConfidenceIntervals = &ci
-opts.PredictionIntervals = &pi
+package main
+
+import (
+ "fmt"
+ "log"
+ "math"
+
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+)
+
+func main() {
+ n := 100
+ x := make([]float64, n)
+ y := make([]float64, n)
+ for i := 0; i < n; i++ {
+  x[i] = float64(i) * 2 * math.Pi / float64(n-1)
+  y[i] = math.Sin(x[i]) + 0.1
+ }
+
+ opts := fastlowess.DefaultOptions()
+ opts.Fraction = 0.5
+ ci := 0.95
+ pi := 0.95
+ opts.ConfidenceIntervals = &ci
+ opts.PredictionIntervals = &pi
+
+ model, err := fastlowess.NewLowess(opts)
+ if err != nil {
+  log.Fatal(err)
+ }
+ defer model.Close()
+
+ result, err := model.Fit(x, y)
+ if err != nil {
+  log.Fatal(err)
+ }
+ fmt.Printf("First point 95%% CI: [%v, %v]\n", result.ConfidenceLower[0], result.ConfidenceUpper[0])
+}
 ```
 
 ```output
@@ -117,9 +184,42 @@ Common levels and their z-values:
 | 0.99 | 2.576 | 99% of intervals contain true value |
 
 ```go
-// 99% confidence interval
-ci := 0.99
-opts.ConfidenceIntervals = &ci
+package main
+
+import (
+ "fmt"
+ "log"
+ "math"
+
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+)
+
+func main() {
+ n := 100
+ x := make([]float64, n)
+ y := make([]float64, n)
+ for i := 0; i < n; i++ {
+  x[i] = float64(i) * 2 * math.Pi / float64(n-1)
+  y[i] = math.Sin(x[i]) + 0.1
+ }
+
+ // 99% confidence interval
+ opts := fastlowess.DefaultOptions()
+ ci := 0.99
+ opts.ConfidenceIntervals = &ci
+
+ model, err := fastlowess.NewLowess(opts)
+ if err != nil {
+  log.Fatal(err)
+ }
+ defer model.Close()
+
+ result, err := model.Fit(x, y)
+ if err != nil {
+  log.Fatal(err)
+ }
+ fmt.Println("First lower CI bound (99%):", result.ConfidenceLower[0])
+}
 ```
 
 ```output
@@ -133,13 +233,40 @@ First lower CI bound (99%): 0.3171427263910015
 Access standard errors directly (available when intervals are computed):
 
 ```go
-opts := fastlowess.DefaultOptions()
-opts.ReturnSE = true
-model, err := fastlowess.NewLowess(opts)
-// ...
-result, err := model.Fit(x, y)
-for i := 0; i < 3; i++ {
- fmt.Printf("Point %d: SE = %.4f\n", i, result.StandardErrors[i])
+package main
+
+import (
+ "fmt"
+ "log"
+ "math"
+
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+)
+
+func main() {
+ n := 100
+ x := make([]float64, n)
+ y := make([]float64, n)
+ for i := 0; i < n; i++ {
+  x[i] = float64(i) * 2 * math.Pi / float64(n-1)
+  y[i] = math.Sin(x[i]) + 0.1
+ }
+
+ opts := fastlowess.DefaultOptions()
+ opts.ReturnSE = true
+ model, err := fastlowess.NewLowess(opts)
+ if err != nil {
+  log.Fatal(err)
+ }
+ defer model.Close()
+
+ result, err := model.Fit(x, y)
+ if err != nil {
+  log.Fatal(err)
+ }
+ for i := 0; i < 3; i++ {
+  fmt.Printf("Point %d: SE = %.4f\n", i, result.StandardErrors[i])
+ }
 }
 ```
 

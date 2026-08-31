@@ -1,3 +1,8 @@
+---
+title: "News"
+weight: 100
+---
+
 <!-- markdownlint-disable MD024 MD025 -->
 # fastlowess (Go) (development version)
 

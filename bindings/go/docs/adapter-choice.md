@@ -1,4 +1,7 @@
-# Execution Modes
+---
+title: "Execution Modes"
+weight: 25
+---
 
 Choose the right adapter for your use case.
 

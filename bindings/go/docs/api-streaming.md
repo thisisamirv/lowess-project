@@ -1,4 +1,7 @@
-# StreamingLowess API
+---
+title: "StreamingLowess API"
+weight: 32
+---
 
 For datasets that don't fit in memory or arrive in chunks. Processes data incrementally, merging overlapping regions between chunks.
 

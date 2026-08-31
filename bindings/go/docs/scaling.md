@@ -1,4 +1,7 @@
-# Scaling Methods
+---
+title: "Scaling Methods"
+weight: 50
+---
 
 Residual scale estimation during robustness iterations.
 
@@ -31,10 +34,40 @@ First centers residuals at their median, then takes the median of the absolute d
 **Use when**: Data may contain outliers (default for most applications).
 
 ```go
-opts := fastlowess.DefaultOptions()
-opts.Iterations = 3
-opts.ScalingMethod = "mad"
-model, err := fastlowess.NewLowess(opts)
+package main
+
+import (
+ "fmt"
+ "log"
+ "math"
+
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+)
+
+func main() {
+ n := 100
+ x := make([]float64, n)
+ y := make([]float64, n)
+ for i := 0; i < n; i++ {
+  x[i] = float64(i) * 2 * math.Pi / float64(n-1)
+  y[i] = math.Sin(x[i]) + 0.1
+ }
+
+ opts := fastlowess.DefaultOptions()
+ opts.Iterations = 3
+ opts.ScalingMethod = "mad"
+ model, err := fastlowess.NewLowess(opts)
+ if err != nil {
+  log.Fatal(err)
+ }
+ defer model.Close()
+
+ result, err := model.Fit(x, y)
+ if err != nil {
+  log.Fatal(err)
+ }
+ fmt.Println("First smoothed value (mad scaling):", result.Y[0])
+}
 ```
 
 ```output
@@ -52,7 +85,40 @@ Uses the uncentered median — unlike MAD it does not subtract the residual medi
 **Use when**: Speed matters and data have minimal systematic bias in residuals.
 
 ```go
-opts.ScalingMethod = "mar"
+package main
+
+import (
+ "fmt"
+ "log"
+ "math"
+
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+)
+
+func main() {
+ n := 100
+ x := make([]float64, n)
+ y := make([]float64, n)
+ for i := 0; i < n; i++ {
+  x[i] = float64(i) * 2 * math.Pi / float64(n-1)
+  y[i] = math.Sin(x[i]) + 0.1
+ }
+
+ opts := fastlowess.DefaultOptions()
+ opts.Iterations = 3
+ opts.ScalingMethod = "mar"
+ model, err := fastlowess.NewLowess(opts)
+ if err != nil {
+  log.Fatal(err)
+ }
+ defer model.Close()
+
+ result, err := model.Fit(x, y)
+ if err != nil {
+  log.Fatal(err)
+ }
+ fmt.Println("First smoothed value (mar scaling):", result.Y[0])
+}
 ```
 
 ```output
@@ -70,7 +136,40 @@ Arithmetic mean of absolute residuals. Non-robust: a single extreme outlier infl
 **Use when**: Clean data with no outliers; maximum computation speed required.
 
 ```go
-opts.ScalingMethod = "mean"
+package main
+
+import (
+ "fmt"
+ "log"
+ "math"
+
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+)
+
+func main() {
+ n := 100
+ x := make([]float64, n)
+ y := make([]float64, n)
+ for i := 0; i < n; i++ {
+  x[i] = float64(i) * 2 * math.Pi / float64(n-1)
+  y[i] = math.Sin(x[i]) + 0.1
+ }
+
+ opts := fastlowess.DefaultOptions()
+ opts.Iterations = 3
+ opts.ScalingMethod = "mean"
+ model, err := fastlowess.NewLowess(opts)
+ if err != nil {
+  log.Fatal(err)
+ }
+ defer model.Close()
+
+ result, err := model.Fit(x, y)
+ if err != nil {
+  log.Fatal(err)
+ }
+ fmt.Println("First smoothed value (mean scaling):", result.Y[0])
+}
 ```
 
 ```output

@@ -1,4 +1,7 @@
-# Benchmarks
+---
+title: "Benchmarks"
+weight: 90
+---
 
 The Go binding calls the same `fastLowess` Rust core as every other binding (C++, Python, R, Julia, Node.js, WASM) through a thin `cgo` FFI layer, so its raw fit performance is governed by the same underlying engine — see the [C++ binding's benchmarks](https://thisisamirv.github.io/lowess-project/cpp/benchmarks.html) for representative numbers (R baseline vs. serial vs. parallel, across scale/fraction/iteration/pathological-data scenarios).
 

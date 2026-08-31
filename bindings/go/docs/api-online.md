@@ -1,4 +1,7 @@
-# OnlineLowess API
+---
+title: "OnlineLowess API"
+weight: 34
+---
 
 For real-time data: processes one `(x, y)` point at a time and returns a smoothed value immediately once enough points have been seen.
 

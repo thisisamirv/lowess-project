@@ -1,4 +1,7 @@
-# Robustness
+---
+title: "Robustness"
+weight: 45
+---
 
 Outlier handling through iterative reweighting.
 
@@ -29,10 +32,40 @@ $$w(u) = \begin{cases} (1 - u^2)^2 & |u| < 1 \\ 0 & |u| \geq 1 \end{cases}$$
 **Use when**: General purpose, balanced approach.
 
 ```go
-opts := fastlowess.DefaultOptions()
-opts.Iterations = 3
-opts.RobustnessMethod = "bisquare"
-model, err := fastlowess.NewLowess(opts)
+package main
+
+import (
+ "fmt"
+ "log"
+ "math"
+
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+)
+
+func main() {
+ n := 100
+ x := make([]float64, n)
+ y := make([]float64, n)
+ for i := 0; i < n; i++ {
+  x[i] = float64(i) * 2 * math.Pi / float64(n-1)
+  y[i] = math.Sin(x[i]) + 0.1
+ }
+
+ opts := fastlowess.DefaultOptions()
+ opts.Iterations = 3
+ opts.RobustnessMethod = "bisquare"
+ model, err := fastlowess.NewLowess(opts)
+ if err != nil {
+  log.Fatal(err)
+ }
+ defer model.Close()
+
+ result, err := model.Fit(x, y)
+ if err != nil {
+  log.Fatal(err)
+ }
+ fmt.Println("First smoothed value (bisquare robustness):", result.Y[0])
+}
 ```
 
 ```output
@@ -50,7 +83,40 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}$$
 **Use when**: Moderate outliers, want to retain some influence.
 
 ```go
-opts.RobustnessMethod = "huber"
+package main
+
+import (
+ "fmt"
+ "log"
+ "math"
+
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+)
+
+func main() {
+ n := 100
+ x := make([]float64, n)
+ y := make([]float64, n)
+ for i := 0; i < n; i++ {
+  x[i] = float64(i) * 2 * math.Pi / float64(n-1)
+  y[i] = math.Sin(x[i]) + 0.1
+ }
+
+ opts := fastlowess.DefaultOptions()
+ opts.Iterations = 3
+ opts.RobustnessMethod = "huber"
+ model, err := fastlowess.NewLowess(opts)
+ if err != nil {
+  log.Fatal(err)
+ }
+ defer model.Close()
+
+ result, err := model.Fit(x, y)
+ if err != nil {
+  log.Fatal(err)
+ }
+ fmt.Println("First smoothed value (huber robustness):", result.Y[0])
+}
 ```
 
 ```output
@@ -68,7 +134,40 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
 **Use when**: Extreme outliers, want binary exclusion.
 
 ```go
-opts.RobustnessMethod = "talwar"
+package main
+
+import (
+ "fmt"
+ "log"
+ "math"
+
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+)
+
+func main() {
+ n := 100
+ x := make([]float64, n)
+ y := make([]float64, n)
+ for i := 0; i < n; i++ {
+  x[i] = float64(i) * 2 * math.Pi / float64(n-1)
+  y[i] = math.Sin(x[i]) + 0.1
+ }
+
+ opts := fastlowess.DefaultOptions()
+ opts.Iterations = 3
+ opts.RobustnessMethod = "talwar"
+ model, err := fastlowess.NewLowess(opts)
+ if err != nil {
+  log.Fatal(err)
+ }
+ defer model.Close()
+
+ result, err := model.Fit(x, y)
+ if err != nil {
+  log.Fatal(err)
+ }
+ fmt.Println("First smoothed value (talwar robustness):", result.Y[0])
+}
 ```
 
 ```output
@@ -161,7 +260,40 @@ Residuals are scaled before computing robustness weights. Two methods:
 ![Scaling Methods Comparison](../assets/diagrams/scaling_comparison.svg)
 
 ```go
-opts.ScalingMethod = "mad" // Default
+package main
+
+import (
+ "fmt"
+ "log"
+ "math"
+
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+)
+
+func main() {
+ n := 100
+ x := make([]float64, n)
+ y := make([]float64, n)
+ for i := 0; i < n; i++ {
+  x[i] = float64(i) * 2 * math.Pi / float64(n-1)
+  y[i] = math.Sin(x[i]) + 0.1
+ }
+
+ opts := fastlowess.DefaultOptions()
+ opts.Iterations = 3
+ opts.ScalingMethod = "mad" // Default
+ model, err := fastlowess.NewLowess(opts)
+ if err != nil {
+  log.Fatal(err)
+ }
+ defer model.Close()
+
+ result, err := model.Fit(x, y)
+ if err != nil {
+  log.Fatal(err)
+ }
+ fmt.Println("First smoothed value (mad scaling):", result.Y[0])
+}
 ```
 
 ```output
@@ -179,11 +311,41 @@ Stop iterations early when weights stabilize:
 > **Performance:** Auto-convergence can significantly reduce computation when weights stabilize before reaching max iterations.
 
 ```go
-opts := fastlowess.DefaultOptions()
-opts.Iterations = 10 // Maximum iterations
-converge := 1e-6      // Stop when change < 1e-6
-opts.AutoConverge = &converge
-model, err := fastlowess.NewLowess(opts)
+package main
+
+import (
+ "fmt"
+ "log"
+ "math"
+
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+)
+
+func main() {
+ n := 100
+ x := make([]float64, n)
+ y := make([]float64, n)
+ for i := 0; i < n; i++ {
+  x[i] = float64(i) * 2 * math.Pi / float64(n-1)
+  y[i] = math.Sin(x[i]) + 0.1
+ }
+
+ opts := fastlowess.DefaultOptions()
+ opts.Iterations = 10 // Maximum iterations
+ converge := 1e-6      // Stop when change < 1e-6
+ opts.AutoConverge = &converge
+ model, err := fastlowess.NewLowess(opts)
+ if err != nil {
+  log.Fatal(err)
+ }
+ defer model.Close()
+
+ result, err := model.Fit(x, y)
+ if err != nil {
+  log.Fatal(err)
+ }
+ fmt.Println("First smoothed value (auto-converge):", result.Y[0])
+}
 ```
 
 ```output

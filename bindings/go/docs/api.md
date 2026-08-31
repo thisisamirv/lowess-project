@@ -1,4 +1,7 @@
-# API
+---
+title: "API"
+weight: 30
+---
 
 Batch `Lowess` reference. Best suited when the dataset fits in memory and you need intervals, cross-validation, or diagnostics.
 

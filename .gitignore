@@ -119,6 +119,11 @@ Manifest.toml
 compile_flags.txt
 *.obj
 
+# Hugo (Go docs)
+bindings/go/docs-site/public/
+bindings/go/docs-site/resources/
+bindings/go/docs-site/.hugo_build.lock
+
 # Stray generated dirs (accidental output under the wrong working directory)
 bindings/*/benchmarks/
 bindings/*/validation/

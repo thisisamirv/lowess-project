@@ -1,4 +1,7 @@
-# Merge Strategies
+---
+title: "Merge Strategies"
+weight: 75
+---
 
 How overlapping chunk boundaries are reconciled in Streaming mode.
 
@@ -88,7 +91,46 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
 **Use when**: You need final output values immediately after each chunk (no look-ahead revision); left-chunk data quality is higher.
 
 ```go
-opts.MergeStrategy = "take_first"
+package main
+
+import (
+ "fmt"
+ "log"
+ "math"
+
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+)
+
+func main() {
+ n := 100
+ x := make([]float64, n)
+ y := make([]float64, n)
+ for i := 0; i < n; i++ {
+  x[i] = float64(i) * 2 * math.Pi / float64(n-1)
+  y[i] = math.Sin(x[i]) + 0.1
+ }
+
+ opts := fastlowess.DefaultStreamingOptions()
+ opts.MergeStrategy = "take_first"
+
+ model, err := fastlowess.NewStreamingLowess(opts)
+ if err != nil {
+  log.Fatal(err)
+ }
+ defer model.Close()
+
+ if _, err := model.ProcessChunk(x[:50], y[:50]); err != nil {
+  log.Fatal(err)
+ }
+ if _, err := model.ProcessChunk(x[50:], y[50:]); err != nil {
+  log.Fatal(err)
+ }
+ result, err := model.Finalize()
+ if err != nil {
+  log.Fatal(err)
+ }
+ fmt.Println("First smoothed value (take_first merge):", result.Y[0])
+}
 ```
 
 ```output
@@ -104,7 +146,46 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
 **Use when**: Right-chunk context improves overlap quality; you are post-processing complete data rather than streaming live.
 
 ```go
-opts.MergeStrategy = "take_last"
+package main
+
+import (
+ "fmt"
+ "log"
+ "math"
+
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+)
+
+func main() {
+ n := 100
+ x := make([]float64, n)
+ y := make([]float64, n)
+ for i := 0; i < n; i++ {
+  x[i] = float64(i) * 2 * math.Pi / float64(n-1)
+  y[i] = math.Sin(x[i]) + 0.1
+ }
+
+ opts := fastlowess.DefaultStreamingOptions()
+ opts.MergeStrategy = "take_last"
+
+ model, err := fastlowess.NewStreamingLowess(opts)
+ if err != nil {
+  log.Fatal(err)
+ }
+ defer model.Close()
+
+ if _, err := model.ProcessChunk(x[:50], y[:50]); err != nil {
+  log.Fatal(err)
+ }
+ if _, err := model.ProcessChunk(x[50:], y[50:]); err != nil {
+  log.Fatal(err)
+ }
+ result, err := model.Finalize()
+ if err != nil {
+  log.Fatal(err)
+ }
+ fmt.Println("First smoothed value (take_last merge):", result.Y[0])
+}
 ```
 
 ```output
@@ -124,7 +205,46 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
 **Use when**: Minimising boundary artefacts is more important than speed; moderate overlap (10–20% of chunk size).
 
 ```go
-opts.MergeStrategy = "weighted_average" // Default
+package main
+
+import (
+ "fmt"
+ "log"
+ "math"
+
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+)
+
+func main() {
+ n := 100
+ x := make([]float64, n)
+ y := make([]float64, n)
+ for i := 0; i < n; i++ {
+  x[i] = float64(i) * 2 * math.Pi / float64(n-1)
+  y[i] = math.Sin(x[i]) + 0.1
+ }
+
+ opts := fastlowess.DefaultStreamingOptions()
+ opts.MergeStrategy = "weighted_average" // Default
+
+ model, err := fastlowess.NewStreamingLowess(opts)
+ if err != nil {
+  log.Fatal(err)
+ }
+ defer model.Close()
+
+ if _, err := model.ProcessChunk(x[:50], y[:50]); err != nil {
+  log.Fatal(err)
+ }
+ if _, err := model.ProcessChunk(x[50:], y[50:]); err != nil {
+  log.Fatal(err)
+ }
+ result, err := model.Finalize()
+ if err != nil {
+  log.Fatal(err)
+ }
+ fmt.Println("First smoothed value (weighted_average merge):", result.Y[0])
+}
 ```
 
 ```output

@@ -1,4 +1,7 @@
-# Cross-Validation
+---
+title: "Cross-Validation"
+weight: 65
+---
 
 Automated parameter selection via cross-validation.
 
@@ -68,8 +71,41 @@ CV scores: [0.2660065925434152 0.26663733476135054 0.36243048571062464 0.4466813
 Each point is held out once. Most thorough but slowest.
 
 ```go
-opts.CVMethod = "loocv"
-opts.CVFractions = []float64{0.2, 0.3, 0.5, 0.7}
+package main
+
+import (
+ "fmt"
+ "log"
+ "math"
+
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+)
+
+func main() {
+ n := 100
+ x := make([]float64, n)
+ y := make([]float64, n)
+ for i := 0; i < n; i++ {
+  x[i] = float64(i) * 2 * math.Pi / float64(n-1)
+  y[i] = math.Sin(x[i]) + 0.1
+ }
+
+ opts := fastlowess.DefaultOptions()
+ opts.CVMethod = "loocv"
+ opts.CVFractions = []float64{0.2, 0.3, 0.5, 0.7}
+
+ model, err := fastlowess.NewLowess(opts)
+ if err != nil {
+  log.Fatal(err)
+ }
+ defer model.Close()
+
+ result, err := model.Fit(x, y)
+ if err != nil {
+  log.Fatal(err)
+ }
+ fmt.Println("Selected fraction (CV):", result.FractionUsed)
+}
 ```
 
 ```output
@@ -83,12 +119,44 @@ Selected fraction (CV): 0.2
 Set a seed for reproducible fold assignments:
 
 ```go
-opts := fastlowess.DefaultOptions()
-opts.CVMethod = "kfold"
-opts.CVK = 5
-opts.CVFractions = []float64{0.3, 0.5, 0.7}
-seed := uint64(42)
-opts.CVSeed = &seed
+package main
+
+import (
+ "fmt"
+ "log"
+ "math"
+
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+)
+
+func main() {
+ n := 100
+ x := make([]float64, n)
+ y := make([]float64, n)
+ for i := 0; i < n; i++ {
+  x[i] = float64(i) * 2 * math.Pi / float64(n-1)
+  y[i] = math.Sin(x[i]) + 0.1
+ }
+
+ opts := fastlowess.DefaultOptions()
+ opts.CVMethod = "kfold"
+ opts.CVK = 5
+ opts.CVFractions = []float64{0.3, 0.5, 0.7}
+ seed := uint64(42)
+ opts.CVSeed = &seed
+
+ model, err := fastlowess.NewLowess(opts)
+ if err != nil {
+  log.Fatal(err)
+ }
+ defer model.Close()
+
+ result, err := model.Fit(x, y)
+ if err != nil {
+  log.Fatal(err)
+ }
+ fmt.Println("Selected fraction (CV):", result.FractionUsed)
+}
 ```
 
 ```output
@@ -124,16 +192,48 @@ Lower MSE indicates better fit on held-out data.
 ## Interpreting Results
 
 ```go
-opts := fastlowess.DefaultOptions()
-opts.CVMethod = "kfold"
-opts.CVK = 5
-opts.CVFractions = []float64{0.1, 0.3, 0.5, 0.7}
+package main
 
-// Fraction  | CV Score (MSE)
-// 0.1       | 0.0542  <- Undersmoothed
-// 0.3       | 0.0231  <- Best
-// 0.5       | 0.0298
-// 0.7       | 0.0412  <- Oversmoothed
+import (
+ "fmt"
+ "log"
+ "math"
+
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+)
+
+func main() {
+ n := 100
+ x := make([]float64, n)
+ y := make([]float64, n)
+ for i := 0; i < n; i++ {
+  x[i] = float64(i) * 2 * math.Pi / float64(n-1)
+  y[i] = math.Sin(x[i]) + 0.1
+ }
+
+ opts := fastlowess.DefaultOptions()
+ opts.CVMethod = "kfold"
+ opts.CVK = 5
+ opts.CVFractions = []float64{0.1, 0.3, 0.5, 0.7}
+
+ // Fraction  | CV Score (MSE)
+ // 0.1       | 0.0542  <- Undersmoothed
+ // 0.3       | 0.0231  <- Best
+ // 0.5       | 0.0298
+ // 0.7       | 0.0412  <- Oversmoothed
+
+ model, err := fastlowess.NewLowess(opts)
+ if err != nil {
+  log.Fatal(err)
+ }
+ defer model.Close()
+
+ result, err := model.Fit(x, y)
+ if err != nil {
+  log.Fatal(err)
+ }
+ fmt.Println("Selected fraction (CV):", result.FractionUsed)
+}
 ```
 
 ```output

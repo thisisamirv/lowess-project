@@ -1,4 +1,7 @@
-# Boundary Handling
+---
+title: "Boundary Handling"
+weight: 55
+---
 
 Edge strategies that reduce bias near the ends of the data range.
 
@@ -24,9 +27,39 @@ Pads beyond both endpoints by replicating the first and last observed values. Pr
 **Use when**: No strong prior on boundary behaviour; general-purpose smoothing.
 
 ```go
-opts := fastlowess.DefaultOptions()
-opts.BoundaryPolicy = "extend"
-model, err := fastlowess.NewLowess(opts)
+package main
+
+import (
+ "fmt"
+ "log"
+ "math"
+
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+)
+
+func main() {
+ n := 100
+ x := make([]float64, n)
+ y := make([]float64, n)
+ for i := 0; i < n; i++ {
+  x[i] = float64(i) * 2 * math.Pi / float64(n-1)
+  y[i] = math.Sin(x[i]) + 0.1
+ }
+
+ opts := fastlowess.DefaultOptions()
+ opts.BoundaryPolicy = "extend"
+ model, err := fastlowess.NewLowess(opts)
+ if err != nil {
+  log.Fatal(err)
+ }
+ defer model.Close()
+
+ result, err := model.Fit(x, y)
+ if err != nil {
+  log.Fatal(err)
+ }
+ fmt.Println("First smoothed value (extend boundary):", result.Y[0])
+}
 ```
 
 ```output
@@ -42,7 +75,39 @@ Mirrors the data about both endpoints before fitting, then discards the reflecte
 **Use when**: Circular data (e.g., angle, day-of-year), symmetric physical quantities, or when the derivative at the boundary should be near zero.
 
 ```go
-opts.BoundaryPolicy = "reflect"
+package main
+
+import (
+ "fmt"
+ "log"
+ "math"
+
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+)
+
+func main() {
+ n := 100
+ x := make([]float64, n)
+ y := make([]float64, n)
+ for i := 0; i < n; i++ {
+  x[i] = float64(i) * 2 * math.Pi / float64(n-1)
+  y[i] = math.Sin(x[i]) + 0.1
+ }
+
+ opts := fastlowess.DefaultOptions()
+ opts.BoundaryPolicy = "reflect"
+ model, err := fastlowess.NewLowess(opts)
+ if err != nil {
+  log.Fatal(err)
+ }
+ defer model.Close()
+
+ result, err := model.Fit(x, y)
+ if err != nil {
+  log.Fatal(err)
+ }
+ fmt.Println("First smoothed value (reflect boundary):", result.Y[0])
+}
 ```
 
 ```output
@@ -58,7 +123,39 @@ Pads with zeros beyond both endpoints. Appropriate when the underlying process i
 **Use when**: Signal decays to zero at both ends; zero is a meaningful boundary value.
 
 ```go
-opts.BoundaryPolicy = "zero"
+package main
+
+import (
+ "fmt"
+ "log"
+ "math"
+
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+)
+
+func main() {
+ n := 100
+ x := make([]float64, n)
+ y := make([]float64, n)
+ for i := 0; i < n; i++ {
+  x[i] = float64(i) * 2 * math.Pi / float64(n-1)
+  y[i] = math.Sin(x[i]) + 0.1
+ }
+
+ opts := fastlowess.DefaultOptions()
+ opts.BoundaryPolicy = "zero"
+ model, err := fastlowess.NewLowess(opts)
+ if err != nil {
+  log.Fatal(err)
+ }
+ defer model.Close()
+
+ result, err := model.Fit(x, y)
+ if err != nil {
+  log.Fatal(err)
+ }
+ fmt.Println("First smoothed value (zero boundary):", result.Y[0])
+}
 ```
 
 ```output
@@ -76,7 +173,39 @@ Applies no padding. Each local fit uses only the points that are actually availa
 > **Note:** Without padding, boundary fits can have higher variance and visible edge artefacts, particularly with small `Fraction` values.
 
 ```go
-opts.BoundaryPolicy = "noboundary"
+package main
+
+import (
+ "fmt"
+ "log"
+ "math"
+
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+)
+
+func main() {
+ n := 100
+ x := make([]float64, n)
+ y := make([]float64, n)
+ for i := 0; i < n; i++ {
+  x[i] = float64(i) * 2 * math.Pi / float64(n-1)
+  y[i] = math.Sin(x[i]) + 0.1
+ }
+
+ opts := fastlowess.DefaultOptions()
+ opts.BoundaryPolicy = "noboundary"
+ model, err := fastlowess.NewLowess(opts)
+ if err != nil {
+  log.Fatal(err)
+ }
+ defer model.Close()
+
+ result, err := model.Fit(x, y)
+ if err != nil {
+  log.Fatal(err)
+ }
+ fmt.Println("First smoothed value (noboundary boundary):", result.Y[0])
+}
 ```
 
 ```output
