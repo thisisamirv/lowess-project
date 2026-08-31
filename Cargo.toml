@@ -9,6 +9,7 @@ members = [
     "bindings/wasm",
     "bindings/cpp",
     "bindings/go",
+    "bindings/java",
     "validation/fastLowess",
     "benchmarks/fastLowess",
 ]

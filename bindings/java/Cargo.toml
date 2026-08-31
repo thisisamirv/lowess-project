@@ -1,0 +1,32 @@
+[package]
+name = "fastlowess-java"
+version = "3.1.0"
+authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
+edition = "2024"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/thisisamirv/lowess-project"
+homepage = "https://github.com/thisisamirv/lowess-project"
+documentation = "https://thisisamirv.github.io/lowess-project/java/"
+rust-version = "1.89"
+readme = "README.md"
+description = "High-performance LOWESS (Locally Weighted Scatterplot Smoothing)"
+keywords = ["lowess", "smoothing", "statistics", "regression", "bioinformatics"]
+categories = ["science", "algorithms"]
+
+[lib]
+name = "fastlowess_java"
+crate-type = ["cdylib"]
+
+[dependencies]
+fastLowess = { path = "../../crates/fastLowess", version = "3.1", features = [
+    "cpu",
+    "dev",
+] }
+jni = "0.22"
+
+[features]
+default = []
+# Enables the GPU execution backend (requires a Vulkan/Metal/DX12-capable
+# GPU driver at runtime). Not enabled in prebuilt JAR native libraries by
+# default; build locally with `--features gpu` to opt in.
+gpu = ["fastLowess/gpu"]
