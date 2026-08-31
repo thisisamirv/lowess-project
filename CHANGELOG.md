@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+**Monorepo:**
+
+- Added a `large` benchmark category to `benchmarks/rfastlowess.R` and `benchmarks/stats_lowess.R` (n = 50000, `delta = 0` to disable `stats::lowess`'s interpolation shortcut for a fair, exact-computation comparison), since every existing category completed in well under 100ms. Reliably takes ~13-16s for `stats::lowess` and ~3s for `fastLowess` (serial). Expanded it to 4 scenarios stressing different parameters: `large_delta_0` (the original exact-fit case), `large_delta_0.1` (same workload with `delta` left at its default/auto value, showing the interpolation shortcut's speedup), `large_high_iter` (10 robustness iterations instead of 3), and `large_high_fraction` (n = 20000, `fraction = 0.67`, since a 0.67 fraction at n = 50000 takes over a minute). `benchmarks/compare.py`'s plot grid grew from 5x2 to 7x2 rows to fit the new categories (`large_delta_0`/`large_delta_0.1` share one "large_delta" chart, matching how `fraction_*`/`iterations_*` already group into shared charts).
+
 **docs:**
 
 - Consolidated every crate/binding README: merged the "Installation" and "Documentation" sections, replaced GitHub-only alert syntax with plain blockquotes, removed the redundant "API Reference" and "Changelog" sections (each now has its own docs-site page), shortened the "GPU Backend" blurb, and added a "Read more" link to the Concepts page. The top-level repository README is unchanged, since it's only ever viewed on GitHub.
@@ -49,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed `docs.yml` triggering GitHub's "pages build and deployment" once per docs job; per-language jobs now upload artifacts, and a single final `deploy` job pushes to `gh-pages` once per run.
 - Fixed `docs.yml`'s reliance on GitHub's legacy branch-based Pages deployment, which auto-triggers an unpinned, GitHub-managed "pages build and deployment" job on every `gh-pages` push (surfacing deprecation warnings, e.g. for Node.js 20, that aren't fixable from this repo). The former `deploy` job is now `build`, which still pushes the merged `_site` to `gh-pages` as a cache for future incremental runs, but publishing now goes through `actions/upload-pages-artifact` and a new `deploy` job using the official `actions/deploy-pages`, which this repo pins directly. Requires the repository's Pages source to be switched to "GitHub Actions" in settings.
+- Fixed every benchmark category in `benchmarks/rfastlowess.R` failing with `attempt to apply non-function`: it called the R6-style `model$fit(x, y)`, but `fit` is an S3 generic (`fit(model, x, y)`), not a field on the `Lowess` object. Also fixed `benchmarks/stats_lowess.R` resolving its `output/` directory relative to the current working directory instead of the script's own location (unlike `rfastlowess.R`, which already did this correctly), so results could land outside `benchmarks/output/` depending on how the script was invoked.
 
 **docs:**
 

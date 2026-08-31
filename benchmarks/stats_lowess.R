@@ -277,6 +277,55 @@ benchmark_pathological <- function(iterations = 10) {
     results
 }
 
+benchmark_large <- function(iterations = 3) {
+    # delta = 0 disables stats::lowess's interpolation shortcut, forcing an
+    # exact fit at every point; at n = 50000 this reliably takes >= 5s.
+    results <- list()
+    size <- 50000
+    data <- generate_sine_data(size)
+    run <- function() {
+        lowess(x = data$x, y = data$y, f = 0.1, iter = 3, delta = 0)
+    }
+    results$large_delta_0 <- run_benchmark(
+        "large_delta_0", size, run, iterations,
+        warmup = 1
+    )
+
+    # Same workload as above but with delta left at its default (auto ~=
+    # 1/100th of the x range = 0.1 here), showing how much the
+    # interpolation shortcut speeds things up at scale.
+    run_delta_default <- function() {
+        lowess(x = data$x, y = data$y, f = 0.1, iter = 3)
+    }
+    results$large_delta_0.1 <- run_benchmark(
+        "large_delta_0.1", size, run_delta_default, iterations,
+        warmup = 1
+    )
+
+    # More robustness iterations at the same scale (still delta = 0).
+    run_high_iter <- function() {
+        lowess(x = data$x, y = data$y, f = 0.1, iter = 10, delta = 0)
+    }
+    results$large_high_iter <- run_benchmark(
+        "large_high_iter", size, run_high_iter, iterations,
+        warmup = 1
+    )
+
+    # Larger fraction (wider local window) at a smaller size, since the
+    # per-point cost grows with fraction * n and 0.67 * 50000 is too slow.
+    size_frac <- 20000
+    data_frac <- generate_sine_data(size_frac)
+    run_high_frac <- function() {
+        lowess(x = data_frac$x, y = data_frac$y, f = 0.67, iter = 3, delta = 0)
+    }
+    results$large_high_fraction <- run_benchmark(
+        "large_high_fraction", size_frac, run_high_frac, iterations,
+        warmup = 1
+    )
+
+    results
+}
+
 # ============================================================================
 # Main Execution
 # ============================================================================
@@ -296,9 +345,19 @@ main <- function() {
     all_results$scientific <- unname(benchmark_scientific(iterations))
     all_results$genomic <- unname(benchmark_genomic(iterations))
     all_results$pathological <- unname(benchmark_pathological(iterations))
+    all_results$large <- unname(benchmark_large())
 
-    # Move to output directory
-    out_dir <- "output"
+    # Move to output directory, resolved relative to this script's own
+    # location so results land in the right place regardless of the
+    # working directory the script was invoked from.
+    all_args <- commandArgs(trailingOnly = FALSE)
+    file_flag <- grep("--file=", all_args, value = TRUE)
+    if (length(file_flag) > 0) {
+        script_dir <- dirname(normalizePath(sub("--file=", "", file_flag)))
+    } else {
+        script_dir <- getwd()
+    }
+    out_dir <- file.path(script_dir, "output")
     if (!dir.exists(out_dir)) {
         dir.create(out_dir, recursive = TRUE)
     }

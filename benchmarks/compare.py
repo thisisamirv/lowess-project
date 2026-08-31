@@ -70,10 +70,10 @@ def _category(name: str) -> str:
 
 
 def plot_benchmarks(data: dict, plots_dir: Path) -> None:
-    """Generate a 2-column x 5-row grid of category subplots and save as SVG."""
+    """Generate a 2-column x 7-row grid of category subplots and save as SVG."""
     plots_dir.mkdir(parents=True, exist_ok=True)
 
-    ROWS, COLS = 5, 2
+    ROWS, COLS = 7, 2
 
     all_systems = ["R", "rfastlowess (Serial)", "rfastlowess (Parallel)"]
     systems = [s for s in all_systems if any(data.get(s, {}).values())]

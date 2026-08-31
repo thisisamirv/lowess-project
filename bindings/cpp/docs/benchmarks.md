@@ -16,6 +16,10 @@ Speedup relative to R's `stats::lowess` (higher is better):
 | **Genomic** (1K–100K) | 11.2 ms | 2.2× | **2.4×** |
 | **High Noise** | 7.08 ms | 1.5× | **3.6×** |
 | **Iterations** (0–10) | 3.0 ms | 1.9× | **2.7×** |
+| **Large** (50K, delta=0) | 5805.90 ms | 1.9× | **5.5×** |
+| **Large** (50K, delta=auto) | 14.46 ms | 1.7× | **2.2×** |
+| **Large** (50K, 10 iter) | 31694.32 ms | 3.5× | **9.7×** |
+| **Large** (20K, fraction=0.67) | 12627.11 ms | 3.6× | **17.4×** |
 | **Scale** (1K–10K) | 1.6 ms | 1.5× | **1.6×** |
 | **Scientific** (500–5K) | 0.9 ms | 1.4× | 1.4× |
 
