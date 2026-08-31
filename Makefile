@@ -97,6 +97,9 @@ CPP_DIR := bindings/cpp
 CPP_CARGO_PROFILE := --profile release-c
 CPP_LIBRARY_DIR := target/release-c
 
+# Java bindings
+JAVA_DIR := bindings/java
+
 ifeq ($(OS),Windows_NT)
 	_CPP_GCC_MACHINE := $(shell gcc -dumpmachine 2>/dev/null)
 	ifneq ($(findstring mingw,$(_CPP_GCC_MACHINE)),)
@@ -236,6 +239,18 @@ go-clean:
 	@"$(MAKE)" -f bindings/go/Makefile clean
 
 # ==============================================================================
+# Java bindings
+# ==============================================================================
+java:
+	@"$(MAKE)" -f bindings/java/Makefile
+
+java-dev:
+	@"$(MAKE)" -f bindings/java/Makefile dev
+
+java-clean:
+	@"$(MAKE)" -f bindings/java/Makefile clean
+
+# ==============================================================================
 # Development checks
 # ==============================================================================
 check-msrv:
@@ -256,20 +271,20 @@ docs-test:
 # ==============================================================================
 # All targets
 # ==============================================================================
-all: lowess fastLowess python r julia nodejs wasm cpp go check-msrv
+all: lowess fastLowess python r julia nodejs wasm cpp go java check-msrv
 	@echo "All checks completed successfully!"
 
-all-dev: lowess-dev fastLowess-dev python-dev r-dev julia-dev nodejs-dev wasm-dev cpp-dev go-dev check-msrv
+all-dev: lowess-dev fastLowess-dev python-dev r-dev julia-dev nodejs-dev wasm-dev cpp-dev go-dev java-dev check-msrv
 	@echo "All dev checks completed successfully!"
 
 all-coverage: lowess-coverage fastLowess-coverage python-coverage r-coverage
 	@echo "All coverage completed!"
 
-all-clean: r-clean lowess-clean fastLowess-clean python-clean julia-clean nodejs-clean wasm-clean cpp-clean go-clean
+all-clean: r-clean lowess-clean fastLowess-clean python-clean julia-clean nodejs-clean wasm-clean cpp-clean go-clean java-clean
 	@echo "Cleaning project root..."
 	@cargo clean
 	@$(PYTHON) dev/kill_locked_venv.py $(PY_VENV)
 	@git clean -fdX .
 	@echo "All clean completed!"
 
-.PHONY: lowess lowess-dev lowess-coverage lowess-clean fastLowess fastLowess-dev fastLowess-coverage fastLowess-clean python python-dev python-coverage python-clean r r-dev r-coverage r-clean julia julia-dev julia-clean julia-update-commit nodejs nodejs-dev nodejs-clean wasm wasm-dev wasm-clean cpp cpp-dev cpp-clean go go-dev go-clean check-msrv docs-test all all-dev all-coverage all-clean ensure-llvm-cov
+.PHONY: lowess lowess-dev lowess-coverage lowess-clean fastLowess fastLowess-dev fastLowess-coverage fastLowess-clean python python-dev python-coverage python-clean r r-dev r-coverage r-clean julia julia-dev julia-clean julia-update-commit nodejs nodejs-dev nodejs-clean wasm wasm-dev wasm-clean cpp cpp-dev cpp-clean go go-dev go-clean java java-dev java-clean check-msrv docs-test all all-dev all-coverage all-clean ensure-llvm-cov

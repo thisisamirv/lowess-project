@@ -7,6 +7,7 @@ on:
       - "README.md"
       - "bindings/cpp/**"
       - "bindings/go/**"
+      - "bindings/java/**"
       - "bindings/julia/**"
       - "bindings/nodejs/**"
       - "bindings/r/**"
@@ -28,6 +29,7 @@ jobs:
       root: ${{ steps.f.outputs.root }}
       cpp: ${{ steps.f.outputs.cpp }}
       go: ${{ steps.f.outputs.go }}
+      java: ${{ steps.f.outputs.java }}
       julia: ${{ steps.f.outputs.julia }}
       nodejs: ${{ steps.f.outputs.nodejs }}
       r: ${{ steps.f.outputs.r }}
@@ -46,6 +48,9 @@ jobs:
               - '.github/workflows/docs.yml'
             go:
               - 'bindings/go/**'
+              - '.github/workflows/docs.yml'
+            java:
+              - 'bindings/java/**'
               - '.github/workflows/docs.yml'
             julia:
               - 'bindings/julia/**'
@@ -137,6 +142,34 @@ jobs:
         with:
           name: docs-go
           path: bindings/go/docs-site/public
+          retention-days: 1
+
+  java:
+    needs: filter
+    if: needs.filter.outputs.java == 'true' || github.event_name == 'workflow_dispatch'
+    name: Java — Hugo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version: "1.21"
+
+      - name: Install Hugo
+        run: go install github.com/gohugoio/hugo@v0.165.0
+
+      - name: Embed README as homepage
+        run: python3 dev/add-readme-to-docs.py bindings/java
+
+      - name: Build docs
+        run: hugo --gc --minify
+        working-directory: bindings/java/docs-site
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: docs-java
+          path: bindings/java/docs-site/public
           retention-days: 1
 
   julia:
@@ -299,7 +332,7 @@ jobs:
           retention-days: 1
 
   build:
-    needs: [filter, root, cpp, go, julia, nodejs, r, wasm]
+    needs: [filter, root, cpp, go, java, julia, nodejs, r, wasm]
     if: always()
     name: Build — merge & cache
     runs-on: ubuntu-latest
@@ -342,6 +375,14 @@ jobs:
         with:
           name: docs-go
           path: _site/go
+
+      - name: Download java artifact
+        if: needs.filter.outputs.java == 'true' || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: docs-java
+          path: _site/java
 
       - name: Download julia artifact
         if: needs.filter.outputs.julia == 'true' || github.event_name == 'workflow_dispatch'

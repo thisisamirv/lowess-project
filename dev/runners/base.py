@@ -18,6 +18,7 @@ NODEJS_BINDING_DOCS_DIR = REPO_ROOT / "bindings" / "nodejs" / "src" / "content" 
 WASM_BINDING_DOCS_DIR = REPO_ROOT / "bindings" / "wasm" / "src" / "content" / "docs"
 CPP_BINDING_DOCS_DIR = REPO_ROOT / "bindings" / "cpp" / "docs"
 GO_BINDING_DOCS_DIR = REPO_ROOT / "bindings" / "go" / "docs"
+JAVA_BINDING_DOCS_DIR = REPO_ROOT / "bindings" / "java" / "docs"
 
 _TAB_ALIASES: dict[str, set[str]] = {
     "python": {"Python"},
@@ -27,6 +28,7 @@ _TAB_ALIASES: dict[str, set[str]] = {
     "r": {"R"},
     "cpp": {"C++"},
     "go": {"Go"},
+    "java": {"Java"},
     "rust": {
         "Rust",
         "Rust (fastLowess)",
@@ -43,6 +45,7 @@ _LANG_TAGS: dict[str, set[str]] = {
     "r": {"r"},
     "cpp": {"cpp", "c++"},
     "go": {"go"},
+    "java": {"java"},
     "rust": {"rust"},
 }
 

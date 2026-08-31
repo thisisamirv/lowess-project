@@ -80,6 +80,12 @@ bindings/cpp/bin/
 bindings/cpp/build/
 bindings/cpp/tests/build/
 
+# Hugo (bindings/*/docs-site/) — rendered output and build caches, not the
+# checked-in scaffold (hugo.toml, go.mod/go.sum, layouts/)
+bindings/*/docs-site/public/
+bindings/*/docs-site/resources/
+bindings/*/docs-site/.hugo_build.lock
+
 # Benchmarks
 /target/criterion/
 

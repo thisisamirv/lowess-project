@@ -26,8 +26,8 @@ use jni::strings::JNIStr;
 use jni::sys::{jboolean, jdouble, jint, jlong};
 use jni::{Env, errors::Error as JniError, jni_sig, jni_str};
 
-const RESULT_CLASS: &JNIStr = jni_str!("com/thisisamirv/fastlowess/NativeResult");
-const ONLINE_OUTPUT_CLASS: &JNIStr = jni_str!("com/thisisamirv/fastlowess/NativeOnlineOutput");
+const RESULT_CLASS: &JNIStr = jni_str!("fastlowess/NativeResult");
+const ONLINE_OUTPUT_CLASS: &JNIStr = jni_str!("fastlowess/NativeOnlineOutput");
 // Keep in sync with NativeResult's constructor parameter list.
 const RESULT_CTOR_SIG: MethodSignature<'static, 'static> =
     jni_sig!("([D[D[D[D[D[D[D[D[D[DDIDDDDDDDZ)V");
@@ -178,7 +178,7 @@ fn result_to_jobject<'local>(
 
 /// Returns the crate version.
 #[unsafe(no_mangle)]
-pub extern "system" fn Java_com_thisisamirv_fastlowess_NativeBridge_version<'local>(
+pub extern "system" fn Java_fastlowess_NativeBridge_version<'local>(
     mut env: EnvUnowned<'local>,
     _class: JClass<'local>,
 ) -> JString<'local> {
@@ -190,7 +190,7 @@ pub extern "system" fn Java_com_thisisamirv_fastlowess_NativeBridge_version<'loc
 
 /// Returns true if this library was built with the `gpu` Cargo feature enabled.
 #[unsafe(no_mangle)]
-pub extern "system" fn Java_com_thisisamirv_fastlowess_NativeBridge_gpuEnabled(
+pub extern "system" fn Java_fastlowess_NativeBridge_gpuEnabled(
     _env: EnvUnowned,
     _class: JClass,
 ) -> jboolean {
@@ -212,7 +212,7 @@ struct JavaLowess {
 
 #[unsafe(no_mangle)]
 #[allow(clippy::too_many_arguments)]
-pub extern "system" fn Java_com_thisisamirv_fastlowess_NativeBridge_lowessNew<'local>(
+pub extern "system" fn Java_fastlowess_NativeBridge_lowessNew<'local>(
     mut env: EnvUnowned<'local>,
     _class: JClass<'local>,
     fraction: jdouble,
@@ -292,7 +292,7 @@ pub extern "system" fn Java_com_thisisamirv_fastlowess_NativeBridge_lowessNew<'l
 }
 
 #[unsafe(no_mangle)]
-pub extern "system" fn Java_com_thisisamirv_fastlowess_NativeBridge_lowessSetCvSeed(
+pub extern "system" fn Java_fastlowess_NativeBridge_lowessSetCvSeed(
     _env: EnvUnowned,
     _class: JClass,
     handle: jlong,
@@ -305,7 +305,7 @@ pub extern "system" fn Java_com_thisisamirv_fastlowess_NativeBridge_lowessSetCvS
 }
 
 #[unsafe(no_mangle)]
-pub extern "system" fn Java_com_thisisamirv_fastlowess_NativeBridge_lowessFit<'local>(
+pub extern "system" fn Java_fastlowess_NativeBridge_lowessFit<'local>(
     mut env: EnvUnowned<'local>,
     _class: JClass<'local>,
     handle: jlong,
@@ -343,7 +343,7 @@ pub extern "system" fn Java_com_thisisamirv_fastlowess_NativeBridge_lowessFit<'l
 }
 
 #[unsafe(no_mangle)]
-pub extern "system" fn Java_com_thisisamirv_fastlowess_NativeBridge_lowessFree(
+pub extern "system" fn Java_fastlowess_NativeBridge_lowessFree(
     _env: EnvUnowned,
     _class: JClass,
     handle: jlong,
@@ -363,7 +363,7 @@ struct JavaStreamingLowess {
 
 #[unsafe(no_mangle)]
 #[allow(clippy::too_many_arguments)]
-pub extern "system" fn Java_com_thisisamirv_fastlowess_NativeBridge_streamingNew<'local>(
+pub extern "system" fn Java_fastlowess_NativeBridge_streamingNew<'local>(
     mut env: EnvUnowned<'local>,
     _class: JClass<'local>,
     fraction: jdouble,
@@ -443,7 +443,7 @@ pub extern "system" fn Java_com_thisisamirv_fastlowess_NativeBridge_streamingNew
 }
 
 #[unsafe(no_mangle)]
-pub extern "system" fn Java_com_thisisamirv_fastlowess_NativeBridge_streamingProcess<'local>(
+pub extern "system" fn Java_fastlowess_NativeBridge_streamingProcess<'local>(
     mut env: EnvUnowned<'local>,
     _class: JClass<'local>,
     handle: jlong,
@@ -470,7 +470,7 @@ pub extern "system" fn Java_com_thisisamirv_fastlowess_NativeBridge_streamingPro
 }
 
 #[unsafe(no_mangle)]
-pub extern "system" fn Java_com_thisisamirv_fastlowess_NativeBridge_streamingFinalize<'local>(
+pub extern "system" fn Java_fastlowess_NativeBridge_streamingFinalize<'local>(
     mut env: EnvUnowned<'local>,
     _class: JClass<'local>,
     handle: jlong,
@@ -487,7 +487,7 @@ pub extern "system" fn Java_com_thisisamirv_fastlowess_NativeBridge_streamingFin
 }
 
 #[unsafe(no_mangle)]
-pub extern "system" fn Java_com_thisisamirv_fastlowess_NativeBridge_streamingFree(
+pub extern "system" fn Java_fastlowess_NativeBridge_streamingFree(
     _env: EnvUnowned,
     _class: JClass,
     handle: jlong,
@@ -507,7 +507,7 @@ struct JavaOnlineLowess {
 
 #[unsafe(no_mangle)]
 #[allow(clippy::too_many_arguments)]
-pub extern "system" fn Java_com_thisisamirv_fastlowess_NativeBridge_onlineNew<'local>(
+pub extern "system" fn Java_fastlowess_NativeBridge_onlineNew<'local>(
     mut env: EnvUnowned<'local>,
     _class: JClass<'local>,
     fraction: jdouble,
@@ -581,7 +581,7 @@ pub extern "system" fn Java_com_thisisamirv_fastlowess_NativeBridge_onlineNew<'l
 }
 
 #[unsafe(no_mangle)]
-pub extern "system" fn Java_com_thisisamirv_fastlowess_NativeBridge_onlineAddPoint<'local>(
+pub extern "system" fn Java_fastlowess_NativeBridge_onlineAddPoint<'local>(
     mut env: EnvUnowned<'local>,
     _class: JClass<'local>,
     handle: jlong,
@@ -623,7 +623,7 @@ pub extern "system" fn Java_com_thisisamirv_fastlowess_NativeBridge_onlineAddPoi
 }
 
 #[unsafe(no_mangle)]
-pub extern "system" fn Java_com_thisisamirv_fastlowess_NativeBridge_onlineFree(
+pub extern "system" fn Java_fastlowess_NativeBridge_onlineFree(
     _env: EnvUnowned,
     _class: JClass,
     handle: jlong,

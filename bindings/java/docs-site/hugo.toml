@@ -1,0 +1,53 @@
+baseURL = "https://thisisamirv.github.io/lowess-project/java/"
+title = "fastlowess (Java)"
+disableKinds = ["taxonomy", "term", "RSS", "sitemap", "robotsTXT", "404"]
+
+# Content lives in ../docs (shared with the rest of the monorepo's plain
+# markdown docs) and image assets in ../assets, so nothing needs to be
+# duplicated into this site directory.
+[module]
+[[module.imports]]
+path = "github.com/alex-shpak/hugo-book"
+[[module.mounts]]
+source = "../docs"
+target = "content"
+[[module.mounts]]
+source = "../assets"
+target = "static/assets"
+[[module.mounts]]
+source = "layouts"
+target = "layouts"
+
+# Pretty (directory-per-page) URLs: content/kernels.md -> .../java/kernels/.
+# This matches the Node.js/WASM Starlight sites, so the existing relative
+# links in the shared docs (e.g. "../assets/diagrams/x.svg") resolve the
+# same way (one level up from the current page reaches the site root).
+
+[markup]
+[markup.goldmark]
+[markup.goldmark.renderer]
+unsafe = true
+[markup.goldmark.extensions.passthrough]
+enable = true
+[markup.goldmark.extensions.passthrough.delimiters]
+block = [["$$", "$$"]]
+inline = [["$", "$"]]
+[markup.tableOfContents]
+startLevel = 2
+[markup.highlight]
+style = "base16-snazzy"
+noClasses = false
+
+[params]
+BookTheme = "auto"
+BookSection = "/"
+BookRepo = "https://github.com/thisisamirv/lowess-project"
+BookToC = true
+BookSearch = true
+BookComments = false
+
+[menu]
+[[menu.after]]
+name = "GitHub"
+url = "https://github.com/thisisamirv/lowess-project"
+weight = 10

@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from . import cpp, go, julia, nodejs, python, r, rust, wasm
+from . import cpp, go, java, julia, nodejs, python, r, rust, wasm
 from .cpp import run_cpp
 from .go import run_go
+from .java import run_java
 from .julia import run_julia
 from .nodejs import run_nodejs
 from .python import run_python
@@ -23,6 +24,7 @@ RUNNERS: dict[str, Callable] = {
     "rust": run_rust,
     "cpp": run_cpp,
     "go": run_go,
+    "java": run_java,
 }
 
 SKIP_CHECKS: dict[str, Callable] = {
@@ -34,4 +36,5 @@ SKIP_CHECKS: dict[str, Callable] = {
     "rust": rust.skip_reason,
     "cpp": cpp.skip_reason,
     "go": go.skip_reason,
+    "java": java.skip_reason,
 }

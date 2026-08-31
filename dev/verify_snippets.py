@@ -14,6 +14,7 @@ Usage
     python dev/verify_snippets.py --lang rust        # Rust only
     python dev/verify_snippets.py --lang cpp         # C++ only
     python dev/verify_snippets.py --lang go          # Go only
+    python dev/verify_snippets.py --lang java        # Java only
     python dev/verify_snippets.py --file docs/api/python.md
     python dev/verify_snippets.py --dry-run          # list snippets, don't run
     python dev/verify_snippets.py --verbose          # show snippet source on failure
@@ -42,6 +43,7 @@ from runners.base import (
     CPP_BINDING_DOCS_DIR,
     DOCS_DIR,
     GO_BINDING_DOCS_DIR,
+    JAVA_BINDING_DOCS_DIR,
     JULIA_DOCS_DIR,
     NODEJS_BINDING_DOCS_DIR,
     REPO_ROOT,
@@ -357,6 +359,8 @@ def iter_md_files(
         yield from sorted(CPP_BINDING_DOCS_DIR.glob("*.md"))
     if GO_BINDING_DOCS_DIR.exists():
         yield from sorted(GO_BINDING_DOCS_DIR.glob("*.md"))
+    if JAVA_BINDING_DOCS_DIR.exists():
+        yield from sorted(JAVA_BINDING_DOCS_DIR.glob("*.md"))
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -371,7 +375,18 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--lang",
-        choices=["python", "julia", "nodejs", "r", "wasm", "rust", "cpp", "go", "all"],
+        choices=[
+            "python",
+            "julia",
+            "nodejs",
+            "r",
+            "wasm",
+            "rust",
+            "cpp",
+            "go",
+            "java",
+            "all",
+        ],
         default="all",
         help="Which language runner to use (default: all)",
     )
