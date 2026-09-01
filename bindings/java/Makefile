@@ -79,7 +79,7 @@ dev:
 	@echo "=============================================================================="
 	@$(PYTHON) dev/add-java-outputs.py $(JAVA_DIR)
 	@$(PYTHON) dev/verify_snippets.py --lang java --timeout 120
-	@$(PYTHON) dev/update_changelogs.py
+	@$(PYTHON) dev/update_changelogs.py java
 	@$(PYTHON) dev/add-readme-to-docs.py $(JAVA_DIR)
 	@echo "$(JAVA_PKG) checks completed successfully!"
 

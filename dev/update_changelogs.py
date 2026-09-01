@@ -20,6 +20,7 @@ Versions with no matching entries are skipped entirely.
 """
 
 import re
+import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -41,53 +42,62 @@ COMMON_LABELS = ["docs", "Monorepo"]
 # used in the "# <package> <version>" heading; use None to resolve it from
 # bindings/r/DESCRIPTION's Package field instead.
 TARGETS = [
-    {"labels": ["R"], "package": None, "output": "bindings/r/NEWS.md"},
+    {"key": "r", "labels": ["R"], "package": None, "output": "bindings/r/NEWS.md"},
     {
+        "key": "cpp",
         "labels": ["C++"],
         "package": "fastlowess (C++)",
         "output": "bindings/cpp/docs/NEWS.md",
         "doxygen_page": "\\page news News",
     },
     {
+        "key": "go",
         "labels": ["Go"],
         "package": "fastlowess (Go)",
         "output": "bindings/go/docs/NEWS.md",
         "hugo_weight": 100,
     },
     {
+        "key": "java",
         "labels": ["Java"],
         "package": "fastlowess (Java)",
         "output": "bindings/java/docs/NEWS.md",
         "hugo_weight": 100,
     },
     {
+        "key": "julia",
         "labels": ["Julia"],
         "package": "FastLOWESS.jl",
         "output": "bindings/julia/julia/docs/src/NEWS.md",
     },
     {
+        "key": "nodejs",
         "labels": ["Node.js"],
         "package": "fastlowess (Node.js)",
         "output": "bindings/nodejs/src/content/docs/NEWS.md",
         "frontmatter_title": "News",
     },
     {
+        "key": "python",
         "labels": ["Python"],
         "package": "fastlowess (Python)",
         "output": "bindings/python/docs/NEWS.md",
     },
     {
+        "key": "wasm",
         "labels": ["WASM", "WebAssembly"],
         "package": "fastlowess-wasm",
         "output": "bindings/wasm/src/content/docs/NEWS.md",
         "frontmatter_title": "News",
     },
     {
+        "key": "fastlowess",
         "labels": ["fastLowess", "lowess and fastLowess", "Rust"],
         "package": "fastLowess",
         "output": "crates/fastLowess/docs/news.md",
     },
     {
+        "key": "lowess",
         "labels": ["lowess", "lowess and fastLowess", "Rust"],
         "package": "lowess",
         "output": "crates/lowess/docs/news.md",
@@ -177,25 +187,36 @@ def render_news(
 
 
 def main() -> None:
+    if len(sys.argv) != 2:
+        keys = ", ".join(t["key"] for t in TARGETS)
+        raise SystemExit(
+            f"Usage: update_changelogs.py <target>\nAvailable targets: {keys}"
+        )
+    key = sys.argv[1]
+    try:
+        target = next(t for t in TARGETS if t["key"] == key)
+    except StopIteration:
+        keys = ", ".join(t["key"] for t in TARGETS)
+        raise SystemExit(f"Unknown target {key!r}. Available targets: {keys}") from None
+
     changelog_text = CHANGELOG_PATH.read_text(encoding="utf-8")
-    for target in TARGETS:
-        package = target["package"] or read_description_field("Package") or "package"
-        versions = parse_entries(changelog_text, target["labels"] + COMMON_LABELS)
-        output_path = REPO_ROOT / target["output"]
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(
-            render_news(
-                package,
-                versions,
-                target.get("frontmatter_title"),
-                target.get("doxygen_page"),
-                target.get("hugo_weight"),
-            ),
-            encoding="utf-8",
-        )
-        print(
-            f"Wrote {output_path.relative_to(REPO_ROOT)} from {len(versions)} changelog version(s)"
-        )
+    package = target["package"] or read_description_field("Package") or "package"
+    versions = parse_entries(changelog_text, target["labels"] + COMMON_LABELS)
+    output_path = REPO_ROOT / target["output"]
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
+        render_news(
+            package,
+            versions,
+            target.get("frontmatter_title"),
+            target.get("doxygen_page"),
+            target.get("hugo_weight"),
+        ),
+        encoding="utf-8",
+    )
+    print(
+        f"Wrote {output_path.relative_to(REPO_ROOT)} from {len(versions)} changelog version(s)"
+    )
 
 
 if __name__ == "__main__":

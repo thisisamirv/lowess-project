@@ -98,7 +98,7 @@ dev:
 	@echo "Doc snippet tests (go)..."
 	@$(PYTHON) dev/add-go-outputs.py $(GO_DIR)
 	@$(PYTHON) dev/verify_snippets.py --lang go --timeout 120
-	@$(PYTHON) dev/update_changelogs.py
+	@$(PYTHON) dev/update_changelogs.py go
 	@echo "$(GO_PKG) checks completed successfully!"
 
 clean:
