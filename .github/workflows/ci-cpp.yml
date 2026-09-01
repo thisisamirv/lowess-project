@@ -112,11 +112,10 @@ jobs:
       - name: make cpp-dev
         run: make cpp-dev
 
-  # Experimental: native MinGW-w64 (not the Rtools cross-compiler pinned in the
-  # workspace .cargo/config.toml for the R binding, which lacks libgcc_eh — see
-  # docs/NEWS.md). Non-blocking until proven stable across CI runs.
+  # Native MinGW-w64 (not the Rtools cross-compiler pinned in the workspace
+  # .cargo/config.toml for the R binding, which lacks libgcc_eh — see docs/NEWS.md).
   mingw:
-    name: C++ (windows-latest, MinGW-w64) [experimental]
+    name: C++ (windows-latest, MinGW-w64)
     runs-on: windows-latest
     continue-on-error: true
     env:
@@ -127,35 +126,31 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: x86_64-pc-windows-gnu
+      - name: Install GNU Make (Windows)
+        run: choco install make -y
       - name: Install native MinGW-w64
         run: |
           choco install mingw -y
-          $gcc = Get-ChildItem -Path "C:\ProgramData\chocolatey\lib\mingw","C:\tools\mingw64" -Filter gcc.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          $gcc = Get-ChildItem -Path "C:\ProgramData\mingw64","C:\ProgramData\chocolatey\lib\mingw","C:\tools\mingw64" -Filter gcc.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
           if (-not $gcc) { throw "gcc.exe not found after choco install mingw" }
           $gcc.DirectoryName | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+      - name: Install cppcheck (Windows)
+        run: |
+          winget install --id Cppcheck.Cppcheck --exact --accept-source-agreements --accept-package-agreements
+          $cppcheckExe = Get-ChildItem -Path "C:\Program Files\Cppcheck","$env:LOCALAPPDATA\Programs\Cppcheck" -Filter cppcheck.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $cppcheckExe) { throw "cppcheck.exe not found after winget install" }
+          $cppcheckExe.DirectoryName | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
       - uses: Swatinem/rust-cache@v2
         with:
           key: cpp-windows-mingw
-      - name: Build (MinGW target)
-        working-directory: bindings/cpp
-        run: cargo build --profile release-c --target x86_64-pc-windows-gnu
-      - name: Configure & build C++ tests (MinGW)
-        run: |
-          cmake -S bindings/cpp/tests -B bindings/cpp/tests/build-mingw `
-            -G "MinGW Makefiles" `
-            -DCMAKE_BUILD_TYPE=Release `
-            -DFASTLOWESS_LIB_DIR="$(Resolve-Path target/x86_64-pc-windows-gnu/release-c)"
-          cmake --build bindings/cpp/tests/build-mingw
-      - name: Run C++ tests (MinGW)
-        run: |
-          Copy-Item target/x86_64-pc-windows-gnu/release-c/fastlowess_cpp.dll bindings/cpp/tests/build-mingw/
-          & bindings/cpp/tests/build-mingw/test_fastlowess_suite.exe
+      - name: make cpp-dev
+        run: make cpp-dev CPP_WIN_TOOLCHAIN=mingw
 
-  # Experimental: Intel oneAPI C++ compiler (icpx) as a consumer of the C ABI
-  # header. Only exercises the test harness build, not the Rust cdylib itself.
+  # Intel oneAPI C++ compiler (icpx) as a consumer of the C ABI header. Only
+  # exercises the test harness build, not the Rust cdylib itself.
   # Non-blocking: the multi-GB apt package can be slow/flaky in CI.
   intel-oneapi:
-    name: C++ (ubuntu-latest, Intel oneAPI) [experimental]
+    name: C++ (ubuntu-latest, Intel oneAPI)
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
@@ -164,9 +159,8 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           key: cpp-intel-oneapi
-      - name: Build library
-        working-directory: bindings/cpp
-        run: cargo build --release
+      - name: Install cppcheck
+        run: sudo apt-get install -y cppcheck
       - name: Install Intel oneAPI C++ compiler
         run: |
           wget -qO- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB \
@@ -175,17 +169,13 @@ jobs:
             | sudo tee /etc/apt/sources.list.d/oneAPI.list
           sudo apt-get update
           sudo apt-get install -y intel-oneapi-compiler-dpcpp-cpp
-      - name: Configure & build C++ tests (icpx)
+      - name: make cpp-dev (icpx)
+        env:
+          CC: icx
+          CXX: icpx
         run: |
           source /opt/intel/oneapi/setvars.sh
-          cmake -S bindings/cpp/tests -B bindings/cpp/tests/build-intel \
-            -DCMAKE_C_COMPILER=icx -DCMAKE_CXX_COMPILER=icpx \
-            -DFASTLOWESS_LIB_DIR="$(pwd)/target/release"
-          cmake --build bindings/cpp/tests/build-intel
-      - name: Run C++ tests (icpx)
-        run: |
-          LD_LIBRARY_PATH=target/release \
-            ctest --test-dir bindings/cpp/tests/build-intel --output-on-failure
+          make cpp-dev
 
   asan:
     name: C++ ASAN
