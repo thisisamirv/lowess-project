@@ -100,7 +100,7 @@ func NewOnlineLowess(opts OnlineOptions) (*OnlineLowess, error) {
 }
 
 func finalizeOnline(o *OnlineLowess) {
-	o.Close()
+	_ = o.Close()
 }
 
 // AddPoint adds a single (x, y) observation. ok is false while the window is

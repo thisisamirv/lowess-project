@@ -95,7 +95,7 @@ func NewStreamingLowess(opts StreamingOptions) (*StreamingLowess, error) {
 }
 
 func finalizeStreaming(s *StreamingLowess) {
-	s.Close()
+	_ = s.Close()
 }
 
 // ProcessChunk fits and returns the result for one chunk of data.

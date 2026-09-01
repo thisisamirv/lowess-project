@@ -14,6 +14,8 @@ endif
 
 PYTHON ?= python3
 
+GOLANGCI_LINT_VERSION := v2.13.2
+
 GO_PKG := fastlowess-go
 GO_DIR := bindings/go
 GO_CARGO_PROFILE := --profile release-c
@@ -82,6 +84,15 @@ dev:
 	@echo "=============================================================================="
 	@cd $(GO_DIR)/fastlowess && test -z "$$(gofmt -l .)" || (echo "Error: gofmt found unformatted files"; gofmt -l .; exit 1)
 	@cd $(GO_DIR)/fastlowess && go vet ./...
+	@echo "=============================================================================="
+	@echo "2b. Go lint (golangci-lint)..."
+	@echo "=============================================================================="
+	@if ! command -v golangci-lint >/dev/null 2>&1; then \
+		echo "golangci-lint not found. Installing $(GOLANGCI_LINT_VERSION)..."; \
+		curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b "$$(go env GOPATH)/bin" $(GOLANGCI_LINT_VERSION); \
+		export PATH="$$(go env GOPATH)/bin:$$PATH"; \
+	fi; \
+	cd $(GO_DIR)/fastlowess && golangci-lint run ./...
 	@cd $(GO_DIR)/fastlowess && go test ./... -v
 	@echo "=============================================================================="
 	@echo "Doc snippet tests (go)..."

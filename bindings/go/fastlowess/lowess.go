@@ -179,7 +179,7 @@ func NewLowess(opts Options) (*Lowess, error) {
 }
 
 func finalizeLowess(l *Lowess) {
-	l.Close()
+	_ = l.Close()
 }
 
 // Fit smooths y as a function of x. An optional customWeights slice (same
