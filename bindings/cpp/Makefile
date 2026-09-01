@@ -45,11 +45,15 @@ ifeq ($(OS),Windows_NT)
 	CPP_LIBRARY_DIR    := target/x86_64-pc-windows-msvc/release-c
 endif
 
+# Optional Windows CMake toolset override, e.g. `CPP_CMAKE_TOOLSET="-T ClangCL"`
+# to build the test harness with clang-cl instead of cl.exe.
+CPP_CMAKE_TOOLSET ?=
+
 ifeq ($(HOST_PLATFORM),windows)
 	CPP_SHARED_LIB      := $(CPP_LIBRARY_DIR)/fastlowess_cpp.dll
 	CPP_EXPORT_SCAN     := objdump -p $(CPP_SHARED_LIB)
 	CPP_TEST_LIB        := $(CPP_LIBRARY_DIR)/fastlowess_cpp.lib
-	CPP_CMAKE_GENERATOR :=
+	CPP_CMAKE_GENERATOR := $(CPP_CMAKE_TOOLSET)
 	CPP_TEST_BUILD      := cmake --build . --config Release
 	CPP_TEST_RUN        := cp -f "$(abspath $(CPP_SHARED_LIB))" Release/ && ./Release/test_fastlowess_suite.exe
 else ifeq ($(HOST_PLATFORM),macos)
