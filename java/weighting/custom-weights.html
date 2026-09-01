@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Custom Weights :: fastlowess (Java)</title>
+    <link rel="canonical" href="https://thisisamirv.github.io/lowess-project/java/weighting/custom-weights.html">
+    <meta name="generator" content="Antora 3.2.0">
+    <link rel="stylesheet" href="../_/css/site.css">
+  </head>
+  <body class="article">
+<header class="header">
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <a class="navbar-item" href="https://thisisamirv.github.io/lowess-project/java">fastlowess (Java)</a>
+            <button class="navbar-burger" aria-controls="topbar-nav" aria-expanded="false"
+                aria-label="Toggle main menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+        <div id="topbar-nav" class="navbar-menu">
+            <div class="navbar-end">
+                <a class="navbar-item" href="#">Home</a>
+                <div class="navbar-item">
+                    <span class="control">
+                        <a class="button is-primary" href="#">Download</a>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </nav>
+</header><div class="body">
+<div class="nav-container" data-component="ROOT" data-version="">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <button class="nav-menu-toggle" aria-label="Toggle expand/collapse all" style="display: none"></button>
+    <h3 class="title"><a href="../index.html">fastlowess (Java)</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">fastlowess (Java)</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Introduction</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../introduction/getting-started.html">Getting Started</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../introduction/installation.html">Installation</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../introduction/concepts.html">Concepts</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">User Guide</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/adapter-choice.html">Execution Modes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/intervals.html">Intervals</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/cross-validation.html">Cross-Validation</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">API Reference</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api.html">API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-streaming.html">StreamingLowess API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-online.html">OnlineLowess API</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Weight &amp; Robustness</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="kernels.html">Weight Functions</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="robustness.html">Robustness</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="scaling.html">Scaling Methods</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="custom-weights.html">Custom Weights</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Advanced</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../advanced/boundary.html">Boundary Handling</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../advanced/merge.html">Merge Strategies</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../advanced/gpu-backend.html">GPU Backend</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Use Cases</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../use-case/use-case-genomics.html">Genomic Data Smoothing</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../use-case/use-case-real-time.html">Real-Time Processing</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../use-case/use-case-time-series.html">Time Series Analysis</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../benchmarks.html">Benchmarks</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../NEWS.html">News</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">fastlowess (Java)</span>
+    <span class="version"></span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <div class="title"><a href="../index.html">fastlowess (Java)</a></div>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">fastlowess (Java)</a></li>
+    <li>Weight &amp; Robustness</li>
+    <li><a href="custom-weights.html">Custom Weights</a></li>
+  </ul>
+</nav>
+<div class="edit-this-page"><a href="https://github.com/thisisamirv/lowess-project/edit/main/bindings/java/docs/modules/ROOT/pages/weighting/custom-weights.adoc">Edit this Page</a></div>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Custom Weights</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Per-observation weights that encode data quality directly into the LOWESS fit.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="how-custom-weights-work"><a class="anchor" href="#how-custom-weights-work"></a>How Custom Weights Work</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Standard LOWESS assigns equal prior trust to all observations. Custom weights let you override this assumption point by point — before any distance or robustness weighting is applied.</p>
+</div>
+<div class="paragraph">
+<p>The effective weight of observation \(j\) in a local fit centred at \(x_i\) is:</p>
+</div>
+<div class="stemblock">
+<div class="content">
+\[w_{ij} = \text{customWeights}_j \times K\!\left(\frac{d_{ij}}{h_i}\right) \times r_j\]
+</div>
+</div>
+<div class="paragraph">
+<p>where \(K\) is the distance kernel, \(h_i\) is the local bandwidth, and \(r_j\) is the robustness weight from the current iteration.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Batch adapter only:</strong> <code>customWeights</code> applies in <strong>Batch</strong> (<code>Lowess</code>) mode. It is silently ignored in <code>StreamingLowess</code> and <code>OnlineLowess</code>.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="when-to-use-custom-weights"><a class="anchor" href="#when-to-use-custom-weights"></a>When to Use Custom Weights</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Situation</th>
+<th class="tableblock halign-left valign-top">Recommended weight</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Point known to be erroneous</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>0.0</code> — fully excluded</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unreliable sensor / low precision</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>0.1 – 0.5</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Standard observation</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>1.0</code> (default)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Carefully calibrated measurement</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>&gt; 1.0</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Measurement uncertainty \(\sigma_i\)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\(1 / \sigma_i^2\)</p></td>
+</tr>
+</tbody>
+</table>
+<div class="sect2">
+<h3 id="custom-weights-vs-robustness-iterations"><a class="anchor" href="#custom-weights-vs-robustness-iterations"></a>Custom Weights vs. Robustness Iterations</h3>
+<div class="paragraph">
+<p>Both mechanisms handle unreliable data, but they serve different purposes:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top"></th>
+<th class="tableblock halign-left valign-top">Custom Weights</th>
+<th class="tableblock halign-left valign-top">Robustness Iterations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>When known</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Before fitting</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Computed from residuals</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Knowledge required</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Prior knowledge of quality</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None — data-driven</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Effect</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Fixed throughout fit</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Adapts each iteration</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Use case</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Known bad sensors, calibration</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unknown outlier contamination</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>They compose: you can use both simultaneously. Custom weights suppress <em>a priori</em> bad points; robustness iterations then handle any <em>residual</em> outliers that remain.</p>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="basic-usage"><a class="anchor" href="#basic-usage"></a>Basic Usage</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="suppress-a-known-outlier"><a class="anchor" href="#suppress-a-known-outlier"></a>Suppress a Known Outlier</h3>
+<div class="paragraph">
+<p>Set the weight to <code>0</code> at the bad point — it is excluded from every local fit that would otherwise include it.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        double[] x = new double[10];
+        double[] y = new double[10];
+        for (int i = 0; i &lt; 10; i++) {
+            x[i] = i;
+            y[i] = i * 2.0;
+        }
+        y[5] = 100.0; // spike
+
+        double[] weights = new double[10];
+        java.util.Arrays.fill(weights, 1.0);
+        weights[5] = 0.0; // exclude the spike
+
+        Options options = Options.builder().fraction(0.5).iterations(0).build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y, weights);
+            System.out.println("First smoothed value (custom weights): " + result.y()[0]);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">First smoothed value (custom weights): 0.5726210350584308</code></pre>
+</div>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="emphasize-important-points"><a class="anchor" href="#emphasize-important-points"></a>Emphasize Important Points</h3>
+<div class="paragraph">
+<p>Assign high weights to measurements you trust most — calibration standards, reference instruments, or low-noise observations.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        double[] weights = new double[x.length];
+        java.util.Arrays.fill(weights, 1.0);
+        for (int i : new int[] { 5, 20, 40, 60, 80 }) {
+            weights[i] = 10.0; // trust calibration 10x more
+        }
+
+        Options options = Options.builder().fraction(0.5).build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y, weights);
+            System.out.println("First smoothed value (custom weights): " + result.y()[0]);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">First smoothed value (custom weights): 0.32374197253806136</code></pre>
+</div>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="propagate-measurement-uncertainty"><a class="anchor" href="#propagate-measurement-uncertainty"></a>Propagate Measurement Uncertainty</h3>
+<div class="paragraph">
+<p>If each observation has a known standard deviation \(\sigma_i\), set \(w_i = 1 / \sigma_i^2\) to give the fit information-theoretically optimal weighting.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        double[] sigma = new double[x.length];
+        double[] weights = new double[x.length];
+        for (int i = 0; i &lt; sigma.length; i++) {
+            sigma[i] = 0.1 + (i % 4) * 0.1;
+            weights[i] = 1.0 / (sigma[i] * sigma[i]);
+        }
+
+        Options options = Options.builder().fraction(0.5).build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y, weights);
+            System.out.println("First smoothed value (custom weights): " + result.y()[0]);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">First smoothed value (custom weights): 0.1522219803222456</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="combined-with-robustness-iterations"><a class="anchor" href="#combined-with-robustness-iterations"></a>Combined with Robustness Iterations</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Custom weights and robustness iterations compose naturally: use custom weights for <em>known</em> bad points and robustness for <em>unknown</em> contamination.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        double[] x2 = new double[20];
+        double[] y2 = new double[20];
+        for (int i = 0; i &lt; 20; i++) {
+            x2[i] = i;
+            y2[i] = i * 1.5;
+        }
+        y2[3] = -50.0; // known bad
+        y2[12] = 80.0; // unknown outlier
+
+        double[] weights2 = new double[20];
+        java.util.Arrays.fill(weights2, 1.0);
+        weights2[3] = 0.0;
+
+        Options options = Options.builder().fraction(0.4).iterations(3).build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x2, y2, weights2);
+            System.out.println("First smoothed value (custom weights): " + result.y()[0]);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">First smoothed value (custom weights): 1.7983966900445223</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="validation-rules"><a class="anchor" href="#validation-rules"></a>Validation Rules</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Rule</th>
+<th class="tableblock halign-left valign-top">Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Length must equal <code>n</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>RuntimeException</code> at <code>fit</code> time if mismatched</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">All values must be ≥ 0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Negative weights are rejected</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">All-zero weight vector</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Error: no points remain for any local fit</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Uniform weights (<code>1.0</code> everywhere)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Identical result to omitting weights</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Zero-weight windows:</strong> If a local neighbourhood contains only zero-weight points, the fit at that centre point falls back to the behaviour specified by <code>zeroWeightFallback</code> (default: <code>"use_local_mean"</code>).</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="see-also"><a class="anchor" href="#see-also"></a>See Also</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="robustness.html" class="xref page">Robustness</a> — adaptive outlier downweighting via IRLS</p>
+</li>
+<li>
+<p><a href="../api/api.html" class="xref page">API Reference</a> — full parameter reference</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <p>This page was built using the Antora default UI.</p>
+  <p>The source code for this UI is licensed under the terms of the MPL-2.0 license.</p>
+</footer>
+<script id="site-script" src="../_/js/site.js" data-ui-root-path="../_"></script>
+<script async src="../_/js/vendor/highlight.js"></script>
+<script>
+    window.MathJax = {
+        tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+        options: { ignoreHtmlClass: 'nostem|nolatexmath' }
+    };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>  </body>
+</html>

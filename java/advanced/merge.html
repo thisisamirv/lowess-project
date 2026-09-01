@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Merge Strategies :: fastlowess (Java)</title>
+    <link rel="canonical" href="https://thisisamirv.github.io/lowess-project/java/advanced/merge.html">
+    <meta name="generator" content="Antora 3.2.0">
+    <link rel="stylesheet" href="../_/css/site.css">
+  </head>
+  <body class="article">
+<header class="header">
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <a class="navbar-item" href="https://thisisamirv.github.io/lowess-project/java">fastlowess (Java)</a>
+            <button class="navbar-burger" aria-controls="topbar-nav" aria-expanded="false"
+                aria-label="Toggle main menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+        <div id="topbar-nav" class="navbar-menu">
+            <div class="navbar-end">
+                <a class="navbar-item" href="#">Home</a>
+                <div class="navbar-item">
+                    <span class="control">
+                        <a class="button is-primary" href="#">Download</a>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </nav>
+</header><div class="body">
+<div class="nav-container" data-component="ROOT" data-version="">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <button class="nav-menu-toggle" aria-label="Toggle expand/collapse all" style="display: none"></button>
+    <h3 class="title"><a href="../index.html">fastlowess (Java)</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">fastlowess (Java)</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Introduction</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../introduction/getting-started.html">Getting Started</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../introduction/installation.html">Installation</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../introduction/concepts.html">Concepts</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">User Guide</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/adapter-choice.html">Execution Modes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/intervals.html">Intervals</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/cross-validation.html">Cross-Validation</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">API Reference</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api.html">API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-streaming.html">StreamingLowess API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-online.html">OnlineLowess API</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Weight &amp; Robustness</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/kernels.html">Weight Functions</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/robustness.html">Robustness</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/scaling.html">Scaling Methods</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/custom-weights.html">Custom Weights</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Advanced</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="boundary.html">Boundary Handling</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="merge.html">Merge Strategies</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="gpu-backend.html">GPU Backend</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Use Cases</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../use-case/use-case-genomics.html">Genomic Data Smoothing</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../use-case/use-case-real-time.html">Real-Time Processing</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../use-case/use-case-time-series.html">Time Series Analysis</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../benchmarks.html">Benchmarks</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../NEWS.html">News</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">fastlowess (Java)</span>
+    <span class="version"></span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <div class="title"><a href="../index.html">fastlowess (Java)</a></div>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">fastlowess (Java)</a></li>
+    <li>Advanced</li>
+    <li><a href="merge.html">Merge Strategies</a></li>
+  </ul>
+</nav>
+<div class="edit-this-page"><a href="https://github.com/thisisamirv/lowess-project/edit/main/bindings/java/docs/modules/ROOT/pages/advanced/merge.adoc">Edit this Page</a></div>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Merge Strategies</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>How overlapping chunk boundaries are reconciled in Streaming mode.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="overview"><a class="anchor" href="#overview"></a>Overview</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>StreamingLowess</code> processes data in fixed-size chunks with a configurable overlap. Points inside the overlap zone are fitted twice — once by the left chunk and once by the right chunk. <code>mergeStrategy</code> decides how those two estimates are combined into a single output value.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">Chunk A:   [=========|=====]
+Chunk B:            [=====|=========]
+Overlap:            [=====]
+                      ^
+                mergeStrategy
+                applied here</code></pre>
+</div>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Strategy</th>
+<th class="tableblock halign-left valign-top">Method</th>
+<th class="tableblock halign-left valign-top">Robustness</th>
+<th class="tableblock halign-left valign-top">Speed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"average"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Simple mean of both estimates</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Low</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Fastest</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"take_first"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Left-chunk estimate only</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Low</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Fastest</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"take_last"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Right-chunk estimate only</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Low</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Fastest</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"weighted_average"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Distance-weighted mean</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">High</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Moderate</p></td>
+</tr>
+</tbody>
+</table>
+<div class="imageblock">
+<div class="content">
+<img src="../_images/merge_comparison.svg" alt="Merge Strategies">
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="average"><a class="anchor" href="#average"></a>Average</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Takes the arithmetic mean of the left-chunk and right-chunk estimates in the overlap region. Fast and sufficient when both chunks have similar smoothing quality.</p>
+</div>
+<div class="paragraph">
+<p><strong>Use when</strong>: Chunks are large and the overlap region has uniform data density.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Result;
+import fastlowess.StreamingLowess;
+import fastlowess.StreamingOptions;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        StreamingOptions options = StreamingOptions.builder().overlap(10).mergeStrategy("average").build();
+
+        try (StreamingLowess model = new StreamingLowess(options)) {
+            model.processChunk(java.util.Arrays.copyOfRange(x, 0, 50), java.util.Arrays.copyOfRange(y, 0, 50));
+            model.processChunk(java.util.Arrays.copyOfRange(x, 50, x.length), java.util.Arrays.copyOfRange(y, 50, y.length));
+
+            Result result = model.finish();
+            System.out.println("First smoothed value (average merge): " + result.y()[0]);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">First smoothed value (average merge): -0.4085108268565776</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="take-first"><a class="anchor" href="#take-first"></a>Take First</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Keeps only the left-chunk estimate in the overlap zone and discards the right-chunk estimate. Produces a definitive, non-revised output as soon as the right boundary of each chunk is reached.</p>
+</div>
+<div class="paragraph">
+<p><strong>Use when</strong>: You need final output values immediately after each chunk (no look-ahead revision); left-chunk data quality is higher.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Result;
+import fastlowess.StreamingLowess;
+import fastlowess.StreamingOptions;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        StreamingOptions options = StreamingOptions.builder().overlap(10).mergeStrategy("take_first").build();
+
+        try (StreamingLowess model = new StreamingLowess(options)) {
+            model.processChunk(java.util.Arrays.copyOfRange(x, 0, 50), java.util.Arrays.copyOfRange(y, 0, 50));
+            model.processChunk(java.util.Arrays.copyOfRange(x, 50, x.length), java.util.Arrays.copyOfRange(y, 50, y.length));
+
+            Result result = model.finish();
+            System.out.println("First smoothed value (take_first merge): " + result.y()[0]);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">First smoothed value (take_first merge): -0.4085108268565776</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="take-last"><a class="anchor" href="#take-last"></a>Take Last</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Keeps only the right-chunk estimate in the overlap zone. The right chunk sees more of the surrounding data, so its fit can be more accurate near the left boundary of the new chunk.</p>
+</div>
+<div class="paragraph">
+<p><strong>Use when</strong>: Right-chunk context improves overlap quality; you are post-processing complete data rather than streaming live.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Result;
+import fastlowess.StreamingLowess;
+import fastlowess.StreamingOptions;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        StreamingOptions options = StreamingOptions.builder().overlap(10).mergeStrategy("take_last").build();
+
+        try (StreamingLowess model = new StreamingLowess(options)) {
+            model.processChunk(java.util.Arrays.copyOfRange(x, 0, 50), java.util.Arrays.copyOfRange(y, 0, 50));
+            model.processChunk(java.util.Arrays.copyOfRange(x, 50, x.length), java.util.Arrays.copyOfRange(y, 50, y.length));
+
+            Result result = model.finish();
+            System.out.println("First smoothed value (take_last merge): " + result.y()[0]);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">First smoothed value (take_last merge): -0.4085108268565776</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="weighted-average"><a class="anchor" href="#weighted-average"></a>Weighted Average</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Assigns each overlap point a weight proportional to its proximity to the centre of its respective chunk: points near the left-chunk centre get higher left weight; points near the right-chunk centre get higher right weight. This produces the smoothest transition across chunk boundaries.</p>
+</div>
+<div class="stemblock">
+<div class="content">
+\[\hat{y} = \frac{w_L \hat{y}_L + w_R \hat{y}_R}{w_L + w_R}\]
+</div>
+</div>
+<div class="paragraph">
+<p>where \(w_L\) and \(w_R\) are linear distance weights from the chunk centres.</p>
+</div>
+<div class="paragraph">
+<p><strong>Use when</strong>: Minimising boundary artefacts is more important than speed; moderate overlap (10–20% of chunk size).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Result;
+import fastlowess.StreamingLowess;
+import fastlowess.StreamingOptions;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        StreamingOptions options = StreamingOptions.builder().overlap(10).mergeStrategy("weighted_average").build(); // Default merge strategy
+
+        try (StreamingLowess model = new StreamingLowess(options)) {
+            model.processChunk(java.util.Arrays.copyOfRange(x, 0, 50), java.util.Arrays.copyOfRange(y, 0, 50));
+            model.processChunk(java.util.Arrays.copyOfRange(x, 50, x.length), java.util.Arrays.copyOfRange(y, 50, y.length));
+
+            Result result = model.finish();
+            System.out.println("First smoothed value (weighted_average merge): " + result.y()[0]);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">First smoothed value (weighted_average merge): -0.4085108268565776</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="choosing-a-strategy"><a class="anchor" href="#choosing-a-strategy"></a>Choosing a Strategy</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Situation</th>
+<th class="tableblock halign-left valign-top">Recommended Strategy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">General purpose</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"weighted_average"</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Maximum throughput</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"average"</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Immediate finalised output</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"take_first"</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Post-processing, right context better</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"take_last"</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Minimising boundary artefacts</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"weighted_average"</code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Overlap size matters:</strong> A larger overlap gives the merge strategy more room to blend, reducing boundary artefacts regardless of the strategy chosen. A good starting point is 10% of <code>chunkSize</code>.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>All examples above use the same 100-point noisy sine wave (see <a href="../weighting/kernels.html#choosing-a-kernel" class="xref page">Weight Functions</a> for the generation code).</p>
+</div>
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <p>This page was built using the Antora default UI.</p>
+  <p>The source code for this UI is licensed under the terms of the MPL-2.0 license.</p>
+</footer>
+<script id="site-script" src="../_/js/site.js" data-ui-root-path="../_"></script>
+<script async src="../_/js/vendor/highlight.js"></script>
+<script>
+    window.MathJax = {
+        tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+        options: { ignoreHtmlClass: 'nostem|nolatexmath' }
+    };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>  </body>
+</html>

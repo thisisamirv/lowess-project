@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Getting Started :: fastlowess (Java)</title>
+    <link rel="canonical" href="https://thisisamirv.github.io/lowess-project/java/introduction/getting-started.html">
+    <meta name="generator" content="Antora 3.2.0">
+    <link rel="stylesheet" href="../_/css/site.css">
+  </head>
+  <body class="article">
+<header class="header">
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <a class="navbar-item" href="https://thisisamirv.github.io/lowess-project/java">fastlowess (Java)</a>
+            <button class="navbar-burger" aria-controls="topbar-nav" aria-expanded="false"
+                aria-label="Toggle main menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+        <div id="topbar-nav" class="navbar-menu">
+            <div class="navbar-end">
+                <a class="navbar-item" href="#">Home</a>
+                <div class="navbar-item">
+                    <span class="control">
+                        <a class="button is-primary" href="#">Download</a>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </nav>
+</header><div class="body">
+<div class="nav-container" data-component="ROOT" data-version="">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <button class="nav-menu-toggle" aria-label="Toggle expand/collapse all" style="display: none"></button>
+    <h3 class="title"><a href="../index.html">fastlowess (Java)</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">fastlowess (Java)</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Introduction</span>
+<ul class="nav-list">
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="getting-started.html">Getting Started</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="installation.html">Installation</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="concepts.html">Concepts</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">User Guide</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/adapter-choice.html">Execution Modes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/intervals.html">Intervals</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/cross-validation.html">Cross-Validation</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">API Reference</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api.html">API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-streaming.html">StreamingLowess API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-online.html">OnlineLowess API</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Weight &amp; Robustness</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/kernels.html">Weight Functions</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/robustness.html">Robustness</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/scaling.html">Scaling Methods</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/custom-weights.html">Custom Weights</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Advanced</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../advanced/boundary.html">Boundary Handling</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../advanced/merge.html">Merge Strategies</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../advanced/gpu-backend.html">GPU Backend</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Use Cases</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../use-case/use-case-genomics.html">Genomic Data Smoothing</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../use-case/use-case-real-time.html">Real-Time Processing</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../use-case/use-case-time-series.html">Time Series Analysis</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../benchmarks.html">Benchmarks</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../NEWS.html">News</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">fastlowess (Java)</span>
+    <span class="version"></span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <div class="title"><a href="../index.html">fastlowess (Java)</a></div>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">fastlowess (Java)</a></li>
+    <li>Introduction</li>
+    <li><a href="getting-started.html">Getting Started</a></li>
+  </ul>
+</nav>
+<div class="edit-this-page"><a href="https://github.com/thisisamirv/lowess-project/edit/main/bindings/java/docs/modules/ROOT/pages/introduction/getting-started.adoc">Edit this Page</a></div>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Getting Started</h1>
+<div class="sect1">
+<h2 id="installation"><a class="anchor" href="#installation"></a>Installation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Add the dependency to your <code>pom.xml</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;dependency&gt;
+    &lt;groupId&gt;io.github.thisisamirv&lt;/groupId&gt;
+    &lt;artifactId&gt;fastlowess&lt;/artifactId&gt;
+    &lt;version&gt;3.1.0&lt;/version&gt;
+&lt;/dependency&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This binding loads a native library via JNI. See <a href="installation.html" class="xref page">Installation</a> for details on providing the native <code>fastlowess_java</code> library.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="a-first-fit"><a class="anchor" href="#a-first-fit"></a>A first fit</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            x[i] = i / 10.0;
+            y[i] = Math.sin(x[i]) + 0.1 * Math.sin(i);
+        }
+
+        Options options = Options.builder()
+                .fraction(0.2) // smaller fraction = less smoothing, more local detail
+                .build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y);
+
+            for (int i = 0; i &lt; 5; i++) {
+                System.out.printf("x=%.2f  y=%.3f  smoothed=%.3f%n", result.x()[i], y[i], result.y()[i]);
+            }
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">x=0.00  y=0.000  smoothed=0.166
+x=0.10  y=0.184  smoothed=0.215
+x=0.20  y=0.290  smoothed=0.270
+x=0.30  y=0.310  smoothed=0.331
+x=0.40  y=0.314  smoothed=0.395</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>fraction</code> is the most important tuning parameter: it controls the size of the local neighbourhood used at each point.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Range</th>
+<th class="tableblock halign-left valign-top">Effect</th>
+<th class="tableblock halign-left valign-top">Use case</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.1-0.3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Fine detail</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Rapidly changing signals</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.3-0.5</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Balanced</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">General purpose</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.5-0.7</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Heavy smoothing</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Noisy data</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.7-1.0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Very smooth</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Trend extraction</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="choosing-a-model"><a class="anchor" href="#choosing-a-model"></a>Choosing a model</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><strong><code>Lowess</code></strong> (batch): the whole dataset fits in memory and you want every feature (intervals, cross-validation, GPU). Start here.</p>
+</li>
+<li>
+<p><strong><code>StreamingLowess</code></strong>: the dataset doesn&#8217;t fit in memory or arrives in chunks.</p>
+</li>
+<li>
+<p><strong><code>OnlineLowess</code></strong>: you need a smoothed value immediately as each point arrives (real-time).</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>See <a href="../api/api.html" class="xref page">API</a>, <a href="../api/api-streaming.html" class="xref page">StreamingLowess API</a>, and <a href="../api/api-online.html" class="xref page">OnlineLowess API</a> for the full reference of each.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="handling-outliers"><a class="anchor" href="#handling-outliers"></a>Handling outliers</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>LOWESS can robustly handle outliers through iterative reweighting:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        double[] x = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0 };
+        double[] yWithOutlier = { 2.0, 4.0, 6.0, 50.0, 10.0, 12.0 }; // 50.0 is an outlier
+
+        Options options = Options.builder()
+                .fraction(0.7)
+                .iterations(3)                   // more iterations for outliers
+                .robustnessMethod("bisquare")    // default, smooth downweighting
+                .returnRobustnessWeights(true)   // see which points were downweighted
+                .build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, yWithOutlier);
+
+            // Outliers will have low robustness weights
+            double[] weights = result.robustnessWeights().orElseThrow();
+            for (int i = 0; i &lt; weights.length; i++) {
+                if (weights[i] &lt; 0.5) {
+                    System.out.printf("Point %d is likely an outlier (weight: %.3f)%n", i, weights[i]);
+                }
+            }
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">Point 3 is likely an outlier (weight: 0.000)</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="streaming-mode"><a class="anchor" href="#streaming-mode"></a>Streaming mode</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>For datasets too large to fit in memory, stream them in fixed-size chunks with overlap:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Result;
+import fastlowess.StreamingLowess;
+import fastlowess.StreamingOptions;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 5000;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            x[i] = i * 10.0 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i] / Math.PI) * Math.exp(-x[i] / 30.0);
+        }
+
+        int chunkSize = 1000;
+        StreamingOptions options = StreamingOptions.builder()
+                .fraction(0.2)
+                .chunkSize(chunkSize)
+                .overlap(100)
+                .build();
+
+        try (StreamingLowess model = new StreamingLowess(options)) {
+            for (int i = 0; i &lt; n; i += chunkSize) {
+                int end = Math.min(i + chunkSize, n);
+                double[] xChunk = java.util.Arrays.copyOfRange(x, i, end);
+                double[] yChunk = java.util.Arrays.copyOfRange(y, i, end);
+                model.processChunk(xChunk, yChunk);
+            }
+
+            Result result = model.finish();
+            System.out.println("Smoothed " + result.y().length + " points in the final chunk");
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">Smoothed 100 points in the final chunk</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="next-steps"><a class="anchor" href="#next-steps"></a>Next steps</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Topic</th>
+<th class="tableblock halign-left valign-top">Link</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">How LOWESS works</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="concepts.html" class="xref page">Concepts</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">All parameters explained</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../api/api.html" class="xref page">API Reference</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Batch vs Streaming vs Online</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../guide/adapter-choice.html" class="xref page">Execution Modes</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Edge handling</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../advanced/boundary.html" class="xref page">Boundary Handling</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Outlier handling in depth</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../weighting/robustness.html" class="xref page">Robustness</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Kernel functions</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../weighting/kernels.html" class="xref page">Weight Functions</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Residual scale estimation</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../weighting/scaling.html" class="xref page">Scaling Methods</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Automated parameter selection</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../guide/cross-validation.html" class="xref page">Cross-Validation</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Per-observation weights</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../weighting/custom-weights.html" class="xref page">Custom Weights</a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <p>This page was built using the Antora default UI.</p>
+  <p>The source code for this UI is licensed under the terms of the MPL-2.0 license.</p>
+</footer>
+<script id="site-script" src="../_/js/site.js" data-ui-root-path="../_"></script>
+<script async src="../_/js/vendor/highlight.js"></script>
+<script>
+    window.MathJax = {
+        tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+        options: { ignoreHtmlClass: 'nostem|nolatexmath' }
+    };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>  </body>
+</html>

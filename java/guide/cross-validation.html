@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Cross-Validation :: fastlowess (Java)</title>
+    <link rel="canonical" href="https://thisisamirv.github.io/lowess-project/java/guide/cross-validation.html">
+    <meta name="generator" content="Antora 3.2.0">
+    <link rel="stylesheet" href="../_/css/site.css">
+  </head>
+  <body class="article">
+<header class="header">
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <a class="navbar-item" href="https://thisisamirv.github.io/lowess-project/java">fastlowess (Java)</a>
+            <button class="navbar-burger" aria-controls="topbar-nav" aria-expanded="false"
+                aria-label="Toggle main menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+        <div id="topbar-nav" class="navbar-menu">
+            <div class="navbar-end">
+                <a class="navbar-item" href="#">Home</a>
+                <div class="navbar-item">
+                    <span class="control">
+                        <a class="button is-primary" href="#">Download</a>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </nav>
+</header><div class="body">
+<div class="nav-container" data-component="ROOT" data-version="">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <button class="nav-menu-toggle" aria-label="Toggle expand/collapse all" style="display: none"></button>
+    <h3 class="title"><a href="../index.html">fastlowess (Java)</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">fastlowess (Java)</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Introduction</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../introduction/getting-started.html">Getting Started</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../introduction/installation.html">Installation</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../introduction/concepts.html">Concepts</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">User Guide</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="adapter-choice.html">Execution Modes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="intervals.html">Intervals</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="cross-validation.html">Cross-Validation</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">API Reference</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api.html">API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-streaming.html">StreamingLowess API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-online.html">OnlineLowess API</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Weight &amp; Robustness</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/kernels.html">Weight Functions</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/robustness.html">Robustness</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/scaling.html">Scaling Methods</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/custom-weights.html">Custom Weights</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Advanced</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../advanced/boundary.html">Boundary Handling</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../advanced/merge.html">Merge Strategies</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../advanced/gpu-backend.html">GPU Backend</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Use Cases</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../use-case/use-case-genomics.html">Genomic Data Smoothing</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../use-case/use-case-real-time.html">Real-Time Processing</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../use-case/use-case-time-series.html">Time Series Analysis</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../benchmarks.html">Benchmarks</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../NEWS.html">News</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">fastlowess (Java)</span>
+    <span class="version"></span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <div class="title"><a href="../index.html">fastlowess (Java)</a></div>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">fastlowess (Java)</a></li>
+    <li>User Guide</li>
+    <li><a href="cross-validation.html">Cross-Validation</a></li>
+  </ul>
+</nav>
+<div class="edit-this-page"><a href="https://github.com/thisisamirv/lowess-project/edit/main/bindings/java/docs/modules/ROOT/pages/guide/cross-validation.adoc">Edit this Page</a></div>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Cross-Validation</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Automated parameter selection via cross-validation.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="overview"><a class="anchor" href="#overview"></a>Overview</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Cross-validation helps select optimal parameters (especially <code>fraction</code>) by evaluating performance on held-out data.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="../_images/cv_comparison.svg" alt="Cross-Validation">
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="k-fold-cross-validation"><a class="anchor" href="#k-fold-cross-validation"></a>K-Fold Cross-Validation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Split data into K folds, train on K-1, validate on 1.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        Options options = Options.builder()
+                .cvMethod("kfold")
+                .cvK(5)
+                .cvFractions(new double[] { 0.2, 0.3, 0.5, 0.7 })
+                .build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y);
+
+            // The best fraction was automatically selected
+            System.out.println("Selected fraction: " + result.fractionUsed());
+            System.out.println("CV scores: " + java.util.Arrays.toString(result.cvScores().orElseThrow()));
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">Selected fraction: 0.2
+CV scores: [0.2660065925434151, 0.26663733476135043, 0.36243048571062464, 0.4466813477111353]</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="leave-one-out-loocv"><a class="anchor" href="#leave-one-out-loocv"></a>Leave-One-Out (LOOCV)</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Each point is held out once. Most thorough but slowest.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        Options options = Options.builder()
+                .cvMethod("loocv")
+                .cvFractions(new double[] { 0.2, 0.3, 0.5, 0.7 })
+                .build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y);
+            System.out.println("Selected fraction (CV): " + result.fractionUsed());
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">Selected fraction (CV): 0.2</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="seeded-randomization"><a class="anchor" href="#seeded-randomization"></a>Seeded Randomization</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Set a seed for reproducible fold assignments:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        Options options = Options.builder()
+                .cvMethod("kfold")
+                .cvK(5)
+                .cvFractions(new double[] { 0.3, 0.5, 0.7 })
+                .cvSeed(42L)
+                .build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y);
+            System.out.println("Selected fraction (CV): " + result.fractionUsed());
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">Selected fraction (CV): 0.7</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="comparison"><a class="anchor" href="#comparison"></a>Comparison</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Method</th>
+<th class="tableblock halign-left valign-top">Folds</th>
+<th class="tableblock halign-left valign-top">Speed</th>
+<th class="tableblock halign-left valign-top">Variance</th>
+<th class="tableblock halign-left valign-top">Bias</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>KFold(5)</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">5</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Fast</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Moderate</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Low</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>KFold(10)</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">10</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Medium</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Lower</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Lower</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>LOOCV</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">N</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Slow</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Lowest</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Lowest</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Recommendation:</strong> Use <strong>5-fold</strong> or <strong>10-fold</strong> CV for most applications. LOOCV is only worth it for small datasets (N &lt; 100).</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="cv-metrics"><a class="anchor" href="#cv-metrics"></a>CV Metrics</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Cross-validation uses MSE (Mean Squared Error) by default:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">MSE = mean((y_true - y_pred)^2)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Lower MSE indicates better fit on held-out data.</p>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="interpreting-results"><a class="anchor" href="#interpreting-results"></a>Interpreting Results</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        Options options = Options.builder()
+                .cvMethod("kfold")
+                .cvK(5)
+                .cvFractions(new double[] { 0.1, 0.3, 0.5, 0.7 })
+                .build();
+
+        // Fraction  | CV Score (MSE)
+        // 0.1       | 0.0542  &lt;- Undersmoothed
+        // 0.3       | 0.0231  &lt;- Best
+        // 0.5       | 0.0298
+        // 0.7       | 0.0412  &lt;- Oversmoothed
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y);
+            System.out.println("Selected fraction (CV): " + result.fractionUsed());
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">Selected fraction (CV): 0.3</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The fraction with <strong>lowest CV score</strong> is automatically selected.</p>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="availability"><a class="anchor" href="#availability"></a>Availability</h2>
+<div class="sectionbody">
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Batch Mode Only:</strong> Cross-validation is only available in <strong>Batch</strong> mode.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Feature</th>
+<th class="tableblock halign-left valign-top">Batch</th>
+<th class="tableblock halign-left valign-top">Streaming</th>
+<th class="tableblock halign-left valign-top">Online</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">K-Fold CV</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">LOOCV</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="best-practices"><a class="anchor" href="#best-practices"></a>Best Practices</h2>
+<div class="sectionbody">
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Test a range</strong>: Include fractions from 0.1 to 0.9</p>
+</li>
+<li>
+<p><strong>Use enough folds</strong>: 5-10 folds balance speed and accuracy</p>
+</li>
+<li>
+<p><strong>Set a seed</strong>: For reproducible results</p>
+</li>
+<li>
+<p><strong>Check the curve</strong>: CV optimizes MSE, but visual inspection matters</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <p>This page was built using the Antora default UI.</p>
+  <p>The source code for this UI is licensed under the terms of the MPL-2.0 license.</p>
+</footer>
+<script id="site-script" src="../_/js/site.js" data-ui-root-path="../_"></script>
+<script async src="../_/js/vendor/highlight.js"></script>
+<script>
+    window.MathJax = {
+        tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+        options: { ignoreHtmlClass: 'nostem|nolatexmath' }
+    };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>  </body>
+</html>

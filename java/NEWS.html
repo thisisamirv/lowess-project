@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>News :: fastlowess (Java)</title>
+    <link rel="canonical" href="https://thisisamirv.github.io/lowess-project/java/NEWS.html">
+    <meta name="generator" content="Antora 3.2.0">
+    <link rel="stylesheet" href="./_/css/site.css">
+  </head>
+  <body class="article">
+<header class="header">
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <a class="navbar-item" href="https://thisisamirv.github.io/lowess-project/java">fastlowess (Java)</a>
+            <button class="navbar-burger" aria-controls="topbar-nav" aria-expanded="false"
+                aria-label="Toggle main menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+        <div id="topbar-nav" class="navbar-menu">
+            <div class="navbar-end">
+                <a class="navbar-item" href="#">Home</a>
+                <div class="navbar-item">
+                    <span class="control">
+                        <a class="button is-primary" href="#">Download</a>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </nav>
+</header><div class="body">
+<div class="nav-container" data-component="ROOT" data-version="">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <button class="nav-menu-toggle" aria-label="Toggle expand/collapse all" style="display: none"></button>
+    <h3 class="title"><a href="index.html">fastlowess (Java)</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="index.html">fastlowess (Java)</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Introduction</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="introduction/getting-started.html">Getting Started</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="introduction/installation.html">Installation</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="introduction/concepts.html">Concepts</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">User Guide</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="guide/adapter-choice.html">Execution Modes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="guide/intervals.html">Intervals</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="guide/cross-validation.html">Cross-Validation</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">API Reference</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="api/api.html">API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="api/api-streaming.html">StreamingLowess API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="api/api-online.html">OnlineLowess API</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Weight &amp; Robustness</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="weighting/kernels.html">Weight Functions</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="weighting/robustness.html">Robustness</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="weighting/scaling.html">Scaling Methods</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="weighting/custom-weights.html">Custom Weights</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Advanced</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="advanced/boundary.html">Boundary Handling</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="advanced/merge.html">Merge Strategies</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="advanced/gpu-backend.html">GPU Backend</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Use Cases</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="use-case/use-case-genomics.html">Genomic Data Smoothing</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="use-case/use-case-real-time.html">Real-Time Processing</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="use-case/use-case-time-series.html">Time Series Analysis</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="benchmarks.html">Benchmarks</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="1">
+    <a class="nav-link" href="NEWS.html">News</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">fastlowess (Java)</span>
+    <span class="version"></span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <div class="title"><a href="index.html">fastlowess (Java)</a></div>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="index.html">fastlowess (Java)</a></li>
+    <li><a href="NEWS.html">News</a></li>
+  </ul>
+</nav>
+<div class="edit-this-page"><a href="https://github.com/thisisamirv/lowess-project/edit/main/bindings/java/docs/modules/ROOT/pages/NEWS.adoc">Edit this Page</a></div>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">News</h1>
+<div class="sect1">
+<h2 id="fastlowess-java-3-2-0"><a class="anchor" href="#fastlowess-java-3-2-0"></a>fastlowess (Java) 3.2.0</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="added"><a class="anchor" href="#added"></a>Added</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Added <code>dev/add-readme-to-docs.py</code>, which auto-detects the Hugo (Go, Java) vs Starlight (Node.js, WASM) docs-site flavor and embeds <code>README.md</code> accordingly; wired into the corresponding Makefiles and <code>package.json</code> scripts.</p>
+</li>
+<li>
+<p>Added a new Java binding (<code>bindings/java</code>), consuming the <code>fastLowess</code> Rust core via a JNI shared library (<code>fastlowess-java</code> crate, using the <code>jni</code> crate).</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="changed"><a class="anchor" href="#changed"></a>Changed</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Modified <code>verify_snippets.py</code> to verify snippets and also add the output of the snippets to the markdown file.</p>
+</li>
+<li>
+<p>Added a <code>large</code> benchmark category to <code>benchmarks/rfastlowess.R</code> and <code>benchmarks/stats_lowess.R</code> (n = 50000, <code>delta = 0</code> to disable <code>stats::lowess&#8217;s interpolation shortcut for a fair, exact-computation comparison), since every existing category completed in well under 100ms. Reliably takes ~13-16s for `stats::lowess</code> and ~3s for <code>fastLowess</code> (serial). Expanded it to 4 scenarios stressing different parameters: <code>large_delta_0</code> (the original exact-fit case), <code>large_delta_0.1</code> (same workload with <code>delta</code> left at its default/auto value, showing the interpolation shortcut&#8217;s speedup), <code>large_high_iter</code> (10 robustness iterations instead of 3), and <code>large_high_fraction</code> (n = 20000, <code>fraction = 0.67</code>, since a 0.67 fraction at n = 50000 takes over a minute). <code>benchmarks/compare.py&#8217;s plot grid grew from 5x2 to 7x2 rows to fit the new categories (`large_delta_0</code>/<code>large_delta_0.1</code> share one "large_delta" chart, matching how <code>fraction_*</code>/<code>iterations_*</code> already group into shared charts).</p>
+</li>
+<li>
+<p>Consolidated every crate/binding README: merged the "Installation" and "Documentation" sections, replaced GitHub-only alert syntax with plain blockquotes, removed the redundant "API Reference" and "Changelog" sections (each now has its own docs-site page), shortened the "GPU Backend" blurb, and added a "Read more" link to the Concepts page. The top-level repository README is unchanged, since it&#8217;s only ever viewed on GitHub.</p>
+</li>
+<li>
+<p>Renamed the batch adapter&#8217;s "When to Use" heading to "When to Use Batch Adapter" across every binding/crate&#8217;s API docs.</p>
+</li>
+<li>
+<p>Vendored the <a href="https://github.com/jothepro/doxygen-awesome-css">doxygen-awesome-css</a> theme (v2.4.2) for a modern, sidebar-only cpp Doxygen site with automatic dark mode.</p>
+</li>
+<li>
+<p>Added <code>dev/update_changelogs.py</code>, which regenerates a per-binding/crate <code>NEWS.md</code>/<code>news.md</code> from the root <code>CHANGELOG.md</code>. Wired into every docs site&#8217;s navigation, the Rust crates' rustdoc module tree, and every <code>Makefile</code> <code>dev</code> target.</p>
+</li>
+<li>
+<p>Replaced `kernels.md&#8217;s "Choosing a Kernel" mermaid flowchart (every binding/crate) with an equivalent decision table, since Doxygen and rustdoc don&#8217;t render mermaid and the deeply-nested diamond chain was hard to read even where it did render.</p>
+</li>
+<li>
+<p>Replaced <code>adapter-choice.md</code>/`adapters.md&#8217;s "Overview" flowchart (mermaid in most bindings/crates, ASCII art in the C++ docs) with an equivalent decision table, unifying on a single rendering-agnostic format across every binding/crate.</p>
+</li>
+<li>
+<p>Moved the duplicated "GPU Acceleration" section (installation, usage, supported features, feature comparison) out of <code>api.md</code> in the C++, Node.js, and Python bindings and the <code>fastLowess</code> crate into each one&#8217;s dedicated <code>gpu-backend.md</code> guide, which also gained the "Hardware Requirements" and "Performance Considerations" subsections previously only in <code>api.md</code>; <code>api.md</code> now links to <code>gpu-backend.md</code> with a short blurb instead. Removed the same section from the <code>lowess</code> crate&#8217;s <code>api.md</code> entirely, since that crate has no <code>gpu</code> Cargo feature or GPU backend to document.</p>
+</li>
+<li>
+<p>Consolidated <code>parameters.md</code>/the auto-generated <code>@autodocs</code> parameter reference across every binding and crate (C++, Julia, Node.js, Python, WASM, <code>fastLowess</code>, <code>lowess</code>): merged its unique content (fraction/iterations choice guidance, <code>delta&#8217;s per-adapter default, and an inline `zero_weight_fallback</code> behavior table) into each <code>api.md&#8217;s builder/options tables (Julia: into the `Lowess</code>/<code>StreamingLowess</code>/<code>OnlineLowess</code> docstrings), and removed <code>parameters.md</code> itself along with its docs-site navigation entries, <code>doc::parameters</code> rustdoc module, and cross-references (now pointing at <code>api.md</code>) — the parameter tables, kernel/robustness/boundary/scaling/merge-strategy option lists, and interval/custom-weights code examples it duplicated already live on their own dedicated pages.</p>
+</li>
+<li>
+<p>Standardized docs across all bindings and crates.</p>
+</li>
+<li>
+<p>Replaced the Unicode superscript <code>²</code> character with plain ASCII throughout every doc page and doc-comment (<code>R²</code> → <code>R2</code>; <code>(y_true - y_pred)²</code>/<code>O(window²)</code> → <code>^2</code>), including the <code>wasm</code> binding&#8217;s JSDoc comments, the Julia docstrings in <code>FastLOWESS.jl</code>, and the <code>fastLowess</code>/<code>lowess</code> crates' rustdoc examples. Also changed the <code>lowess</code> crate&#8217;s <code>Diagnostics</code> <code>Display</code> impl to print <code>R2</code> instead of <code>R²</code> so the <code>fastLowess</code> doc example showing its captured output stays accurate.</p>
+</li>
+<li>
+<p>Harmonized the docs-site directory structure across every binding and crate to mirror the Go binding&#8217;s layout: <code>introduction/</code>, <code>guide/</code>, <code>weighting/</code>, <code>advanced/</code>, <code>use-case/</code>, and <code>api/</code> subdirectories, each grouped under a hub page/index. Applied to Node.js and WASM (Starlight <code>sidebar</code> in <code>astro.config.mjs</code>, category groups "Getting Started"/"User Guide"/"Weight &amp; Robustness"/"Advanced"/"Use Cases"/"API Guide"), Python (Sphinx <code>:::{toctree}</code>, also removed the dead, pre-Sphinx-migration <code>mkdocs.yml</code>), Julia (<code>Documenter.jl&#8217;s `pages=[&#8230;&#8203;]</code> in <code>docs/make.jl</code>, which also needed its leading-comment-stripping logic switched from a non-recursive <code>readdir</code> to <code>walkdir</code> to keep working on the now-nested files), and the <code>fastLowess</code>/<code>lowess</code> crates (nested <code>#[cfg(doc)]</code> modules in <code>src/doc.rs</code>, e.g. <code>introduction::\{concepts,installation,quickstart\}</code>). C++'s Doxygen site, whose <code>\page</code>/<code>\subpage</code> hierarchy is independent of physical file location, had its docs physically moved into matching subdirectories too (<code>Doxyfile&#8217;s `RECURSIVE</code> flipped to <code>YES</code>), and its "Customization"/"Use Cases" hub pages renamed to "Weight &amp; Robustness"/"use_case" for naming parity with every other binding. Java already matched this layout under Hugo and now carries it forward into its new Antora site (see <strong>Java</strong> below). R&#8217;s <code>vignettes/</code> remains an intentional exception (flat layout is a CRAN/pkgdown requirement).</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="fixed"><a class="anchor" href="#fixed"></a>Fixed</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Fixed <code>docs.yml</code> triggering GitHub&#8217;s "pages build and deployment" once per docs job; per-language jobs now upload artifacts, and a single final <code>deploy</code> job pushes to <code>gh-pages</code> once per run.</p>
+</li>
+<li>
+<p>Fixed <code>docs.yml&#8217;s reliance on GitHub&#8217;s legacy branch-based Pages deployment, which auto-triggers an unpinned, GitHub-managed "pages build and deployment" job on every `gh-pages</code> push (surfacing deprecation warnings, e.g. for Node.js 20, that aren&#8217;t fixable from this repo). The former <code>deploy</code> job is now <code>build</code>, which still pushes the merged <code>_site</code> to <code>gh-pages</code> as a cache for future incremental runs, but publishing now goes through <code>actions/upload-pages-artifact</code> and a new <code>deploy</code> job using the official <code>actions/deploy-pages</code>, which this repo pins directly. Requires the repository&#8217;s Pages source to be switched to "GitHub Actions" in settings.</p>
+</li>
+<li>
+<p>Fixed every benchmark category in <code>benchmarks/rfastlowess.R</code> failing with <code>attempt to apply non-function</code>: it called the R6-style <code>model$fit(x, y)</code>, but <code>fit</code> is an S3 generic (<code>fit(model, x, y)</code>), not a field on the <code>Lowess</code> object. Also fixed <code>benchmarks/stats_lowess.R</code> resolving its <code>output/</code> directory relative to the current working directory instead of the script&#8217;s own location (unlike <code>rfastlowess.R</code>, which already did this correctly), so results could land outside <code>benchmarks/output/</code> depending on how the script was invoked.</p>
+</li>
+<li>
+<p>Fixed the "Handling Outliers" quickstart example (every binding and the <code>lowess</code>/<code>fastLowess</code> crates) printing nothing: with only 6 points and <code>fraction = 0.5</code>, the local window is small enough that tricube weighting drives the farthest neighbor&#8217;s weight to ~0, leaving just 2 effectively-weighted points, which a degree-1 fit reproduces exactly (zero residual, no downweighting) — confirmed directly against the <code>lowess</code>/<code>loess</code> core, not binding-specific. Bumped to <code>fraction = 0.7</code>, which correctly downweights the injected outlier.</p>
+</li>
+<li>
+<p>Fixed the R <code>OnlineLowess()</code> roxygen example printing one line per point (48 lines for a 50-point loop); it now collects the smoothed values and prints only <code>head(smoothed, 5)</code>.</p>
+</li>
+<li>
+<p>Fixed the R <code>add_point()</code> roxygen example always printing <code>NULL</code>, since a single call never reaches the default <code>min_points = 3</code>; it now uses <code>min_points = 2L</code> and shows the second (non-<code>NULL</code>) call&#8217;s result.</p>
+</li>
+<li>
+<p>Fixed the R <code>robustness.Rmd</code> "Detecting Outliers" example printing 22 lines at the <code>weight &lt; 0.5</code> threshold, most of them incidental noise rather than the 3 deliberately injected outliers; tightened to <code>weight &lt; 0.05</code>, which isolates the points effectively excluded by the fit.</p>
+</li>
+<li>
+<p>Fixed the R <code>merge.Rmd</code> "Choosing Chunk Size and Overlap" example constructing a <code>StreamingLowess</code> model but never printing anything; it now prints the computed overlap size and its percentage of <code>chunk_size</code>.</p>
+</li>
+<li>
+<p>Fixed the R <code>use-case-genomics.Rmd</code> ChIP-seq example never calling <code>fit()</code>, so <code>result</code> referenced a stale variable from an earlier chunk and the smoothed line either failed to plot or didn&#8217;t align with the current example&#8217;s x-range; added the missing <code>result &#8592; fit(model, positions, signal_noisy)</code> call.</p>
+</li>
+<li>
+<p>Fixed the R <code>use-case-real-time.Rmd</code> "Update Modes" example constructing a <code>"full"</code>-mode <code>OnlineLowess</code> model but never feeding it data or plotting a result; it now runs the same accumulate-and-plot pattern as the preceding example.</p>
+</li>
+<li>
+<p>Fixed the "Detecting Outliers" example&#8217;s <code>robustness.md</code> page (C++, Node.js, WASM, and the <code>lowess</code>/<code>fastLowess</code> crates) printing an unbounded number of "is likely an outlier" lines; capped output at 5 lines, matching the already-capped Julia and Python versions and the R vignette fix above.</p>
+</li>
+<li>
+<p>Fixed the Julia <code>intervals.md</code> "Confidence Intervals" and "Standard Errors" examples each looping over all 100 points instead of a short sample; switched to <code>result.y[1:5]</code>/<code>result.confidence_lower[1:5]</code>/<code>result.standard_errors[1:5]</code>-style slicing, matching the already-concise Python version.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="fastlowess-java-3-1-0"><a class="anchor" href="#fastlowess-java-3-1-0"></a>fastlowess (Java) 3.1.0</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="added-2"><a class="anchor" href="#added-2"></a>Added</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Added a GitHub Pages landing page at the repository root, built from <code>README.md</code> via pandoc and deployed by <code>docs.yml</code>.</p>
+</li>
+<li>
+<p>Added a GitHub workflow for running validation scripts.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="changed-2"><a class="anchor" href="#changed-2"></a>Changed</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Split the monolithic <code>.github/workflows/ci.yml</code> into seven per-language workflow files: <code>ci-rust.yml</code>, <code>ci-python.yml</code>, <code>ci-julia.yml</code>, <code>ci-nodejs.yml</code>, <code>ci-wasm.yml</code>, <code>ci-cpp.yml</code>, and <code>ci-r.yml</code>. Each file carries the relevant <code>ci</code> (multi-OS matrix), <code>asan</code>, and <code>gpu</code> jobs for its language.</p>
+</li>
+<li>
+<p>Each crate/binding sub-Makefile now runs <code>dev/verify_snippets.py --lang &lt;lang&gt;</code> for its own language as the final step of <code>make default</code>. The root <code>docs-test</code> target remains as a convenience to run all languages at once.</p>
+</li>
+<li>
+<p>Split <code>dev/verify_snippets.py</code> into a lean orchestrator and a <code>dev/runners/</code> package. Each language has its own module (<code>python.py</code>, <code>julia.py</code>, <code>nodejs.py</code>, <code>r.py</code>, <code>wasm.py</code>, <code>rust.py</code>, <code>cpp.py</code>) containing its <code>run_&lt;lang&gt;()</code> function and a <code>skip_reason()</code> predicate. Shared types (<code>Snippet</code>, <code>RunResult</code>) and utilities live in <code>runners/base.py</code>; the registry (<code>RUNNERS</code>, <code>SKIP_CHECKS</code>) is exported from <code>runners/<em>init</em>.py</code>.</p>
+</li>
+<li>
+<p>Moved CHANGELOG and CONTRIBUTING guides to project root.</p>
+</li>
+<li>
+<p>Updated README files to be binding/crate specific instead of one generic README for all bindings/crates.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="fixed-2"><a class="anchor" href="#fixed-2"></a>Fixed</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Fixed <code>.cargo/config.toml</code> hardcoding absolute <code>c:/rtools45/&#8230;&#8203;</code> paths for the <code>x86_64-pc-windows-gnu</code> linker and ar tool. Replaced with bare tool names resolved via <code>PATH</code>, matching the existing fix in <code>bindings/r/src/cargo-config.toml</code>.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="fastlowess-java-3-0-0"><a class="anchor" href="#fastlowess-java-3-0-0"></a>fastlowess (Java) 3.0.0</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="changed-3"><a class="anchor" href="#changed-3"></a>Changed</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Removed <code>dev/isolate_cargo.py</code>, <code>dev/check_root_cargo.py</code>, <code>dev/fix_doc_snippets.py</code>, and <code>check_js_licenses.js</code> — workspace isolation, doc-snippet transformation, and license checks are no longer needed.</p>
+</li>
+<li>
+<p>Split the monolithic root <code>Makefile</code> into per-crate/binding sub-Makefiles (e.g. <code>crates/lowess/Makefile</code>, <code>bindings/r/Makefile</code>), each invokable directly via <code>make -f path/Makefile</code>. The root <code>Makefile</code> now only aggregates (<code>docs</code>, <code>check-msrv</code>, <code>all*</code>).</p>
+</li>
+<li>
+<p>Moved Rust and binding tests into their respective crate/binding directories (e.g. <code>tests/lowess/</code> → <code>crates/lowess/tests/lowess/</code>, <code>tests/cpp/</code> → <code>bindings/cpp/tests/</code>). Removed the standalone <code>tests/</code> workspace packages and <code>bindings/r/demo/</code>.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="fastlowess-java-2-0-0"><a class="anchor" href="#fastlowess-java-2-0-0"></a>fastlowess (Java) 2.0.0</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="changed-4"><a class="anchor" href="#changed-4"></a>Changed</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Renamed all public API method and option names from camelCase to snake_case across every binding and all documentation. This is a <strong>breaking change</strong> for all consumers of the C++, Node.js, and WASM APIs.</p>
+</li>
+<li>
+<p>Converted all documentation tables to compact single-space format.</p>
+</li>
+<li>
+<p>Updated <code>.clang-tidy</code> to configure <code>lower_case</code> as the required naming convention for functions and member functions, matching the new snake_case public API.</p>
+</li>
+<li>
+<p>Moved <code>BENCHMARKS.md</code>, <code>CHANGELOG.md</code>, and <code>CONTRIBUTING.md</code> from the repository root into <code>docs/</code> and added them to the documentation site navigation.</p>
+</li>
+<li>
+<p>Added a <code>[patch.crates-io]</code> section to the root <code>Cargo.toml</code> so all workspace bindings resolve <code>fastLowess</code> and <code>lowess</code> to the local workspace crates during development, replacing the previously-used registry (crates.io) versions.</p>
+</li>
+<li>
+<p>Eliminated all local <code>parse_*</code> functions that each binding previously duplicated independently. Option parsing and builder application now delegates to <code>fastLowess::binding_support</code>, ensuring consistent aliases, validation messages, and behaviour across every language frontend.</p>
+</li>
+<li>
+<p>Replaced direct use of <code>KFold</code> / <code>LOOCV</code> constructor types in the cross-validation path with <code>binding_support::apply_cross_validation</code>.</p>
+</li>
+<li>
+<p>Split the Julia release CI workflow into two separate workflows: <code>release-julia-jll.yml</code> (triggered on release, opens the Yggdrasil PR) and <code>release-julia-register.yml</code> (manual dispatch, triggers JuliaRegistrator once the JLL PR is merged).</p>
+</li>
+<li>
+<p>Major documentation improvements.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="fastlowess-java-1-3-0"><a class="anchor" href="#fastlowess-java-1-3-0"></a>fastlowess (Java) 1.3.0</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="added-3"><a class="anchor" href="#added-3"></a>Added</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Added prerequisites for different bindings and platforms to <code>CONTRIBUTING.md</code></p>
+</li>
+<li>
+<p>Updated <code>docs/assets/diagrams/lowess_smoothing_concept.svg</code> to correctly illustrate LOWESS concepts (robustness iterations, bisquare re-weighting, outlier downweighting) instead of the generic LOESS algorithm it previously depicted.</p>
+</li>
+<li>
+<p>Modified <code>docs/requirements.txt</code> to update the versions of the documentation dependencies.</p>
+</li>
+<li>
+<p>Improved CI tests and coverage.</p>
+</li>
+<li>
+<p>Modified Makefile to be truely cross-platform.</p>
+</li>
+<li>
+<p>Added sanitizer check for all bindings and crates.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="fixed-3"><a class="anchor" href="#fixed-3"></a>Fixed</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Fixed R ASAN tests failing to compile vignettes by passing <code>--no-build-vignettes</code> to <code>rcmdcheck</code>.</p>
+</li>
+<li>
+<p>Upgraded ASAN test environment to use modern <code>rocker/r-devel-san:latest</code> image and <code>RDscript</code> to resolve outdated <code>readelf</code> warnings.</p>
+</li>
+<li>
+<p>Fixed <code>Makefile</code> idempotency checks on Linux by providing a default <code>/tmp</code> fallback for the <code>TEMP</code> directory variable.</p>
+</li>
+<li>
+<p>Fixed accidental root <code>Cargo.toml</code> workspace isolation leaks by adding checked-in <code>pre-commit</code> and <code>pre-push</code> git hook guards that restore <code>Cargo.toml.bak</code> when present and fail loudly if required workspace members are still commented out.</p>
+</li>
+<li>
+<p>Added a repo-local <code>.cargo/config.toml</code> that sets <code>CC=clang-cl</code> for <code>x86_64-pc-windows-msvc</code>, fixing Criterion 0.8 benchmark builds on Windows when <code>cc-rs</code> would otherwise pick <code>clang.exe</code> and fail to link <code>alloca</code>.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="fastlowess-java-1-2-0"><a class="anchor" href="#fastlowess-java-1-2-0"></a>fastlowess (Java) 1.2.0</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="fixed-4"><a class="anchor" href="#fixed-4"></a>Fixed</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Fixed project logo.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="fastlowess-java-0-99-9"><a class="anchor" href="#fastlowess-java-0-99-9"></a>fastlowess (Java) 0.99.9</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="changed-5"><a class="anchor" href="#changed-5"></a>Changed</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Bump rust version to 1.88 for better stability</p>
+</li>
+<li>
+<p>Change function-based builder pattern in the bindings to class-based builder pattern, allowing true streaming and online processing</p>
+</li>
+<li>
+<p>Improve API docs</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="fastlowess-java-0-99-7"><a class="anchor" href="#fastlowess-java-0-99-7"></a>fastlowess (Java) 0.99.7</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="fixed-5"><a class="anchor" href="#fixed-5"></a>Fixed</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Fix README file links</p>
+</li>
+<li>
+<p>Fix Makefile bug with R versioning</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="fastlowess-java-0-99-6"><a class="anchor" href="#fastlowess-java-0-99-6"></a>fastlowess (Java) 0.99.6</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="fixed-6"><a class="anchor" href="#fixed-6"></a>Fixed</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Fix README file formats and links</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="fastlowess-java-0-99-5"><a class="anchor" href="#fastlowess-java-0-99-5"></a>fastlowess (Java) 0.99.5</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="changed-6"><a class="anchor" href="#changed-6"></a>Changed</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Reduced package size significantly by removing unnecessary dev files and docs from the final package.</p>
+</li>
+<li>
+<p>Implemented comprehensive Cargo workspace inheritance pattern</p>
+</li>
+<li>
+<p>Unified MSRV to 1.85.0</p>
+</li>
+<li>
+<p>Centralized all metadata (version, authors, edition, license, etc.) in root <code>Cargo.toml</code></p>
+</li>
+<li>
+<p>All crates now use <code>workspace = true</code> for shared configuration</p>
+</li>
+<li>
+<p>Created unified <code>README.md</code> for all crates/packages</p>
+</li>
+<li>
+<p>Created unified <code>CHANGELOG.md</code> for all crates/packages</p>
+</li>
+<li>
+<p>Created unified <code>LICENSE</code> for all crates/packages</p>
+</li>
+<li>
+<p>Created unified <code>.gitignore</code> for all crates/packages</p>
+</li>
+<li>
+<p>Added comprehensive badges from all packages</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>For the full changelog, see:
+<a href="https://github.com/thisisamirv/lowess-project/blob/main/CHANGELOG.md" class="bare">https://github.com/thisisamirv/lowess-project/blob/main/CHANGELOG.md</a></p>
+</div>
+</div>
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <p>This page was built using the Antora default UI.</p>
+  <p>The source code for this UI is licensed under the terms of the MPL-2.0 license.</p>
+</footer>
+<script id="site-script" src="./_/js/site.js" data-ui-root-path="./_"></script>
+<script async src="./_/js/vendor/highlight.js"></script>
+<script>
+    window.MathJax = {
+        tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+        options: { ignoreHtmlClass: 'nostem|nolatexmath' }
+    };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>  </body>
+</html>

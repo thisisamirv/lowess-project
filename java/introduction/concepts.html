@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Concepts :: fastlowess (Java)</title>
+    <link rel="canonical" href="https://thisisamirv.github.io/lowess-project/java/introduction/concepts.html">
+    <meta name="generator" content="Antora 3.2.0">
+    <link rel="stylesheet" href="../_/css/site.css">
+  </head>
+  <body class="article">
+<header class="header">
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <a class="navbar-item" href="https://thisisamirv.github.io/lowess-project/java">fastlowess (Java)</a>
+            <button class="navbar-burger" aria-controls="topbar-nav" aria-expanded="false"
+                aria-label="Toggle main menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+        <div id="topbar-nav" class="navbar-menu">
+            <div class="navbar-end">
+                <a class="navbar-item" href="#">Home</a>
+                <div class="navbar-item">
+                    <span class="control">
+                        <a class="button is-primary" href="#">Download</a>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </nav>
+</header><div class="body">
+<div class="nav-container" data-component="ROOT" data-version="">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <button class="nav-menu-toggle" aria-label="Toggle expand/collapse all" style="display: none"></button>
+    <h3 class="title"><a href="../index.html">fastlowess (Java)</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">fastlowess (Java)</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Introduction</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="getting-started.html">Getting Started</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="installation.html">Installation</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="concepts.html">Concepts</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">User Guide</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/adapter-choice.html">Execution Modes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/intervals.html">Intervals</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/cross-validation.html">Cross-Validation</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">API Reference</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api.html">API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-streaming.html">StreamingLowess API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-online.html">OnlineLowess API</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Weight &amp; Robustness</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/kernels.html">Weight Functions</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/robustness.html">Robustness</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/scaling.html">Scaling Methods</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/custom-weights.html">Custom Weights</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Advanced</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../advanced/boundary.html">Boundary Handling</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../advanced/merge.html">Merge Strategies</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../advanced/gpu-backend.html">GPU Backend</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Use Cases</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../use-case/use-case-genomics.html">Genomic Data Smoothing</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../use-case/use-case-real-time.html">Real-Time Processing</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../use-case/use-case-time-series.html">Time Series Analysis</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../benchmarks.html">Benchmarks</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../NEWS.html">News</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">fastlowess (Java)</span>
+    <span class="version"></span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <div class="title"><a href="../index.html">fastlowess (Java)</a></div>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">fastlowess (Java)</a></li>
+    <li>Introduction</li>
+    <li><a href="concepts.html">Concepts</a></li>
+  </ul>
+</nav>
+<div class="edit-this-page"><a href="https://github.com/thisisamirv/lowess-project/edit/main/bindings/java/docs/modules/ROOT/pages/introduction/concepts.adoc">Edit this Page</a></div>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Concepts</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Understanding how LOWESS works and when to use it.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="what-is-lowess"><a class="anchor" href="#what-is-lowess"></a>What is LOWESS?</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><strong>LOWESS</strong> (Locally Weighted Scatterplot Smoothing) is a nonparametric regression method that fits smooth curves through scatter plots without assuming a global functional form.</p>
+</div>
+<div class="paragraph">
+<p>Unlike parametric methods (linear regression, polynomial fitting), LOWESS adapts locally to the data structure, making it ideal for:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Exploratory data analysis</strong> — Discover patterns without assumptions</p>
+</li>
+<li>
+<p><strong>Trend estimation</strong> — Extract signals from noisy time series</p>
+</li>
+<li>
+<p><strong>Baseline correction</strong> — Remove systematic effects in spectroscopy</p>
+</li>
+<li>
+<p><strong>Genomic smoothing</strong> — Smooth methylation, ChIP-seq, or expression data</p>
+</li>
+</ul>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="how-it-works"><a class="anchor" href="#how-it-works"></a>How It Works</h2>
+<div class="sectionbody">
+<div class="imageblock">
+<div class="content">
+<img src="../_images/lowess_concept.svg" alt="LOWESS Smoothing Concept">
+</div>
+</div>
+<div class="paragraph">
+<p><em>LOWESS fits local weighted regressions at each point, using a focused local window around each evaluation point</em></p>
+</div>
+<div class="paragraph">
+<p>For each point in your data, LOWESS:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Selects neighbors</strong> — Choose the nearest points (controlled by <code>fraction</code>)</p>
+</li>
+<li>
+<p><strong>Assigns weights</strong> — Closer points get higher weights (using a kernel function)</p>
+</li>
+<li>
+<p><strong>Fits locally</strong> — Perform weighted least squares regression</p>
+</li>
+<li>
+<p><strong>Extracts value</strong> — Use the fitted value as the smoothed estimate</p>
+</li>
+<li>
+<p><strong>Iterates</strong> (optional) — Reweight points based on residuals to reduce outlier influence</p>
+</li>
+</ol>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="the-fraction-parameter"><a class="anchor" href="#the-fraction-parameter"></a>The Fraction Parameter</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>fraction</code> (also called bandwidth or span) is the most important parameter. It controls what proportion of data is used for each local fit.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Fraction</th>
+<th class="tableblock halign-left valign-top">Effect</th>
+<th class="tableblock halign-left valign-top">When to Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>0.1–0.3</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Fine detail, follows data closely</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Rapidly changing signals</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>0.3–0.5</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Balanced smoothing</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Most applications</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>0.5–0.7</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Heavy smoothing</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Noisy data, trend extraction</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>0.7–1.0</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Very smooth</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Strong noise, global trends</p></td>
+</tr>
+</tbody>
+</table>
+<div class="imageblock">
+<div class="content">
+<img src="../_images/fraction_comparison.svg" alt="Fraction Effect">
+</div>
+</div>
+<div class="paragraph">
+<p><em>Small fraction vs large fraction — bandwidth controls how closely the fit follows local structure</em></p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Rule of Thumb:</strong> Start with <code>fraction = 0.67</code> (the default) and adjust based on visual inspection. Use cross-validation for automated selection.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="robustness-iterations"><a class="anchor" href="#robustness-iterations"></a>Robustness Iterations</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Standard LOWESS is sensitive to outliers. <strong>Robustness iterations</strong> downweight points with large residuals:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Iterations</th>
+<th class="tableblock halign-left valign-top">Effect</th>
+<th class="tableblock halign-left valign-top">When to Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>0</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No robustness (fastest)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Clean data, speed-critical</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>1–3</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Moderate robustness</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Most applications</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>4–6</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Strong robustness</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Data with outliers</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>7+</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Very strong</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Heavy contamination</p></td>
+</tr>
+</tbody>
+</table>
+<div class="imageblock">
+<div class="content">
+<img src="../_images/robust_iter_comparison.svg" alt="Robustness Effect">
+</div>
+</div>
+<div class="paragraph">
+<p><em>Non-robust LOWESS (iterations=0) vs robust LOWESS — outlier influence is suppressed through iterative reweighting</em></p>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="confidence-vs-prediction-intervals"><a class="anchor" href="#confidence-vs-prediction-intervals"></a>Confidence vs Prediction Intervals</h2>
+<div class="sectionbody">
+<div class="imageblock">
+<div class="content">
+<img src="../_images/intervals_comparison.svg" alt="Intervals">
+</div>
+</div>
+<div class="paragraph">
+<p><em>Confidence intervals (narrow, mean curve uncertainty) vs Prediction intervals (wide, new-point uncertainty)</em></p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Interval Type</th>
+<th class="tableblock halign-left valign-top">What It Represents</th>
+<th class="tableblock halign-left valign-top">Width</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Confidence</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Uncertainty in the <em>mean curve</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Narrow</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Prediction</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Uncertainty for <em>new observations</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Wide</p></td>
+</tr>
+</tbody>
+</table>
+<div class="ulist">
+<ul>
+<li>
+<p>Use <strong>confidence intervals</strong> to show where the true trend likely lies</p>
+</li>
+<li>
+<p>Use <strong>prediction intervals</strong> to show where new data points might fall</p>
+</li>
+</ul>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="execution-modes"><a class="anchor" href="#execution-modes"></a>Execution Modes</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Choose the right mode based on your use case:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Mode</th>
+<th class="tableblock halign-left valign-top">Use Case</th>
+<th class="tableblock halign-left valign-top">Memory</th>
+<th class="tableblock halign-left valign-top">Features</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><code>Lowess</code></strong> (batch)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Complete datasets</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Entire dataset</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">All features</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><code>StreamingLowess</code></strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Large files (&gt;100K points)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">One chunk</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Residuals, robustness</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><code>OnlineLowess</code></strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Real-time data</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Fixed window</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Incremental updates</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="quick-decision-guide"><a class="anchor" href="#quick-decision-guide"></a>Quick Decision Guide</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Situation</th>
+<th class="tableblock halign-left valign-top">Mode</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Data fits in memory; needs intervals or CV</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Lowess</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Data too large for memory or arrives in chunks</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>StreamingLowess</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Data arrives point-by-point in real time</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>OnlineLowess</code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>See <a href="../guide/adapter-choice.html" class="xref page">Execution Modes</a> for a fuller comparison.</p>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="key-advantages"><a class="anchor" href="#key-advantages"></a>Key Advantages</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Feature</th>
+<th class="tableblock halign-left valign-top">LOWESS</th>
+<th class="tableblock halign-left valign-top">Polynomial Regression</th>
+<th class="tableblock halign-left valign-top">Moving Average</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No parametric assumptions</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Adapts to local structure</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Partial</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Robust to outliers</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Uncertainty estimates</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Handles irregular sampling</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="next-steps"><a class="anchor" href="#next-steps"></a>Next Steps</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="getting-started.html" class="xref page">Getting Started</a> — See it in action</p>
+</li>
+<li>
+<p><a href="../api/api.html" class="xref page">API Reference</a> — All configuration options</p>
+</li>
+<li>
+<p><a href="../advanced/boundary.html" class="xref page">Boundary Handling</a> — Edge bias reduction strategies</p>
+</li>
+<li>
+<p><a href="../weighting/robustness.html" class="xref page">Robustness</a> — Outlier downweighting methods</p>
+</li>
+<li>
+<p><a href="../weighting/scaling.html" class="xref page">Scaling Methods</a> — MAD, MAR, Mean scale estimation</p>
+</li>
+<li>
+<p><a href="../advanced/merge.html" class="xref page">Merge Strategies</a> — Chunk reconciliation in Streaming mode</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <p>This page was built using the Antora default UI.</p>
+  <p>The source code for this UI is licensed under the terms of the MPL-2.0 license.</p>
+</footer>
+<script id="site-script" src="../_/js/site.js" data-ui-root-path="../_"></script>
+<script async src="../_/js/vendor/highlight.js"></script>
+<script>
+    window.MathJax = {
+        tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+        options: { ignoreHtmlClass: 'nostem|nolatexmath' }
+    };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>  </body>
+</html>

@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Weight Functions :: fastlowess (Java)</title>
+    <link rel="canonical" href="https://thisisamirv.github.io/lowess-project/java/weighting/kernels.html">
+    <meta name="generator" content="Antora 3.2.0">
+    <link rel="stylesheet" href="../_/css/site.css">
+  </head>
+  <body class="article">
+<header class="header">
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <a class="navbar-item" href="https://thisisamirv.github.io/lowess-project/java">fastlowess (Java)</a>
+            <button class="navbar-burger" aria-controls="topbar-nav" aria-expanded="false"
+                aria-label="Toggle main menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+        <div id="topbar-nav" class="navbar-menu">
+            <div class="navbar-end">
+                <a class="navbar-item" href="#">Home</a>
+                <div class="navbar-item">
+                    <span class="control">
+                        <a class="button is-primary" href="#">Download</a>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </nav>
+</header><div class="body">
+<div class="nav-container" data-component="ROOT" data-version="">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <button class="nav-menu-toggle" aria-label="Toggle expand/collapse all" style="display: none"></button>
+    <h3 class="title"><a href="../index.html">fastlowess (Java)</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">fastlowess (Java)</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Introduction</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../introduction/getting-started.html">Getting Started</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../introduction/installation.html">Installation</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../introduction/concepts.html">Concepts</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">User Guide</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/adapter-choice.html">Execution Modes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/intervals.html">Intervals</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/cross-validation.html">Cross-Validation</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">API Reference</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api.html">API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-streaming.html">StreamingLowess API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-online.html">OnlineLowess API</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Weight &amp; Robustness</span>
+<ul class="nav-list">
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="kernels.html">Weight Functions</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="robustness.html">Robustness</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="scaling.html">Scaling Methods</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="custom-weights.html">Custom Weights</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Advanced</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../advanced/boundary.html">Boundary Handling</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../advanced/merge.html">Merge Strategies</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../advanced/gpu-backend.html">GPU Backend</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Use Cases</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../use-case/use-case-genomics.html">Genomic Data Smoothing</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../use-case/use-case-real-time.html">Real-Time Processing</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../use-case/use-case-time-series.html">Time Series Analysis</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../benchmarks.html">Benchmarks</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../NEWS.html">News</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">fastlowess (Java)</span>
+    <span class="version"></span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <div class="title"><a href="../index.html">fastlowess (Java)</a></div>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">fastlowess (Java)</a></li>
+    <li>Weight &amp; Robustness</li>
+    <li><a href="kernels.html">Weight Functions</a></li>
+  </ul>
+</nav>
+<div class="edit-this-page"><a href="https://github.com/thisisamirv/lowess-project/edit/main/bindings/java/docs/modules/ROOT/pages/weighting/kernels.adoc">Edit this Page</a></div>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Weight Functions</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Kernel functions for distance weighting.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="overview"><a class="anchor" href="#overview"></a>Overview</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Weight functions (kernels) determine how neighboring points contribute to each local fit. Points closer to the target receive higher weights.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="../_images/kernel_comparison.svg" alt="Weight Functions">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="available-kernels"><a class="anchor" href="#available-kernels"></a>Available Kernels</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Kernel</th>
+<th class="tableblock halign-left valign-top">Efficiency</th>
+<th class="tableblock halign-left valign-top">Smoothness</th>
+<th class="tableblock halign-left valign-top">Support</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Tricube</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.998</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Very smooth</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Compact</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Epanechnikov</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1.000</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Smooth</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Compact</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Gaussian</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.961</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Infinite</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unbounded</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Biweight</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.995</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Very smooth</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Compact</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Cosine</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.999</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Smooth</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Compact</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Triangle</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.989</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Moderate</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Compact</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Uniform</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.943</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Compact</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p><strong>Efficiency</strong> = AMISE relative to Epanechnikov (1.0 = optimal)</p>
+</div>
+<div class="paragraph">
+<p>All examples below use the same 100-point noisy sine wave (<code>x[i] = i * 2 * Math.PI / (n - 1); y[i] = Math.sin(x[i]) + 0.1</code>, <code>n = 100</code>).</p>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="tricube-default"><a class="anchor" href="#tricube-default"></a>Tricube (Default)</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Cleveland&#8217;s original choice. Best all-around performance.</p>
+</div>
+<div class="stemblock">
+<div class="content">
+\[w(u) = (1 - |u|^3)^3\]
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Use when</strong>: Default choice for most applications.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        Options options = Options.builder().weightFunction("tricube").build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y);
+            System.out.println("First smoothed value (tricube kernel): " + result.y()[0]);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">First smoothed value (tricube kernel): 0.38260776436644134</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="epanechnikov"><a class="anchor" href="#epanechnikov"></a>Epanechnikov</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Theoretically optimal for kernel density estimation.</p>
+</div>
+<div class="stemblock">
+<div class="content">
+\[w(u) = \frac{3}{4}(1 - u^2)\]
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Use when</strong>: Optimal MSE properties desired.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        Options options = Options.builder().weightFunction("epanechnikov").build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y);
+            System.out.println("First smoothed value (epanechnikov kernel): " + result.y()[0]);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">First smoothed value (epanechnikov kernel): 0.40672777844316566</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="gaussian"><a class="anchor" href="#gaussian"></a>Gaussian</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Infinitely smooth. No boundary effects.</p>
+</div>
+<div class="stemblock">
+<div class="content">
+\[w(u) = \exp(-u^2/2)\]
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Use when</strong>: Maximum smoothness needed, computational cost acceptable.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        Options options = Options.builder().weightFunction("gaussian").build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y);
+            System.out.println("First smoothed value (gaussian kernel): " + result.y()[0]);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">First smoothed value (gaussian kernel): 0.435767018911707</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="biweight"><a class="anchor" href="#biweight"></a>Biweight</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Good balance of efficiency and smoothness.</p>
+</div>
+<div class="stemblock">
+<div class="content">
+\[w(u) = (1 - u^2)^2\]
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Use when</strong>: Alternative to Tricube with slightly different properties.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        Options options = Options.builder().weightFunction("biweight").build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y);
+            System.out.println("First smoothed value (biweight kernel): " + result.y()[0]);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">First smoothed value (biweight kernel): 0.3759030457029011</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="uniform"><a class="anchor" href="#uniform"></a>Uniform</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Equal weight within the window; no distance decay.</p>
+</div>
+<div class="stemblock">
+<div class="content">
+\[w(u) = 1\]
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Use when</strong>: You want a simple moving-average-like behavior within the neighborhood.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        Options options = Options.builder().weightFunction("uniform").build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y);
+            System.out.println("First smoothed value (uniform kernel): " + result.y()[0]);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">First smoothed value (uniform kernel): 0.45083991221911446</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="triangle"><a class="anchor" href="#triangle"></a>Triangle</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Linear decay to zero at the neighborhood edge.</p>
+</div>
+<div class="stemblock">
+<div class="content">
+\[w(u) = 1 - |u|\]
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Use when</strong>: A simple, cheap-to-evaluate kernel with compact support is preferred.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        Options options = Options.builder().weightFunction("triangle").build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y);
+            System.out.println("First smoothed value (triangle kernel): " + result.y()[0]);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">First smoothed value (triangle kernel): 0.3816572331939023</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="cosine"><a class="anchor" href="#cosine"></a>Cosine</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Smooth compact-support kernel, close in efficiency to Tricube.</p>
+</div>
+<div class="stemblock">
+<div class="content">
+\[w(u) = \cos\!\left(\frac{\pi u}{2}\right)\]
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Use when</strong>: An alternative smooth kernel to Tricube is desired.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        Options options = Options.builder().weightFunction("cosine").build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y);
+            System.out.println("First smoothed value (cosine kernel): " + result.y()[0]);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">First smoothed value (cosine kernel): 0.4008299554019581</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="choosing-a-kernel"><a class="anchor" href="#choosing-a-kernel"></a>Choosing a Kernel</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Situation</th>
+<th class="tableblock halign-left valign-top">Recommended Kernel</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">General purpose</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>tricube</code> (default)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Theoretical MSE optimality</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>epanechnikov</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Maximum smoothness, no boundary artifacts</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>gaussian</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Simple, cheap alternative</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>uniform</code>, <code>triangle</code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <p>This page was built using the Antora default UI.</p>
+  <p>The source code for this UI is licensed under the terms of the MPL-2.0 license.</p>
+</footer>
+<script id="site-script" src="../_/js/site.js" data-ui-root-path="../_"></script>
+<script async src="../_/js/vendor/highlight.js"></script>
+<script>
+    window.MathJax = {
+        tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+        options: { ignoreHtmlClass: 'nostem|nolatexmath' }
+    };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>  </body>
+</html>

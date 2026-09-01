@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Genomic Data Smoothing :: fastlowess (Java)</title>
+    <link rel="canonical" href="https://thisisamirv.github.io/lowess-project/java/use-case/use-case-genomics.html">
+    <meta name="generator" content="Antora 3.2.0">
+    <link rel="stylesheet" href="../_/css/site.css">
+  </head>
+  <body class="article">
+<header class="header">
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <a class="navbar-item" href="https://thisisamirv.github.io/lowess-project/java">fastlowess (Java)</a>
+            <button class="navbar-burger" aria-controls="topbar-nav" aria-expanded="false"
+                aria-label="Toggle main menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+        <div id="topbar-nav" class="navbar-menu">
+            <div class="navbar-end">
+                <a class="navbar-item" href="#">Home</a>
+                <div class="navbar-item">
+                    <span class="control">
+                        <a class="button is-primary" href="#">Download</a>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </nav>
+</header><div class="body">
+<div class="nav-container" data-component="ROOT" data-version="">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <button class="nav-menu-toggle" aria-label="Toggle expand/collapse all" style="display: none"></button>
+    <h3 class="title"><a href="../index.html">fastlowess (Java)</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">fastlowess (Java)</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Introduction</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../introduction/getting-started.html">Getting Started</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../introduction/installation.html">Installation</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../introduction/concepts.html">Concepts</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">User Guide</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/adapter-choice.html">Execution Modes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/intervals.html">Intervals</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/cross-validation.html">Cross-Validation</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">API Reference</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api.html">API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-streaming.html">StreamingLowess API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-online.html">OnlineLowess API</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Weight &amp; Robustness</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/kernels.html">Weight Functions</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/robustness.html">Robustness</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/scaling.html">Scaling Methods</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/custom-weights.html">Custom Weights</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Advanced</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../advanced/boundary.html">Boundary Handling</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../advanced/merge.html">Merge Strategies</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../advanced/gpu-backend.html">GPU Backend</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Use Cases</span>
+<ul class="nav-list">
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="use-case-genomics.html">Genomic Data Smoothing</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="use-case-real-time.html">Real-Time Processing</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="use-case-time-series.html">Time Series Analysis</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../benchmarks.html">Benchmarks</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../NEWS.html">News</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">fastlowess (Java)</span>
+    <span class="version"></span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <div class="title"><a href="../index.html">fastlowess (Java)</a></div>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">fastlowess (Java)</a></li>
+    <li>Use Cases</li>
+    <li><a href="use-case-genomics.html">Genomic Data Smoothing</a></li>
+  </ul>
+</nav>
+<div class="edit-this-page"><a href="https://github.com/thisisamirv/lowess-project/edit/main/bindings/java/docs/modules/ROOT/pages/use-case/use-case-genomics.adoc">Edit this Page</a></div>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Genomic Data Smoothing</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>LOWESS for methylation profiles, ChIP-seq signals, and other genomic data.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="overview"><a class="anchor" href="#overview"></a>Overview</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Genomic data often contains noise from sequencing depth variation, PCR artifacts, or biological heterogeneity. LOWESS smoothing helps reveal underlying patterns.</p>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="methylation-profile-smoothing"><a class="anchor" href="#methylation-profile-smoothing"></a>Methylation Profile Smoothing</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="the-challenge"><a class="anchor" href="#the-challenge"></a>The Challenge</h3>
+<div class="paragraph">
+<p>DNA methylation data (from bisulfite sequencing or arrays) shows position-dependent patterns that can be obscured by measurement noise.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="solution"><a class="anchor" href="#solution"></a>Solution</h3>
+<div class="paragraph">
+<p>A small <code>fraction = 0.1</code> lets LOWESS follow fine-scale spatial structure without smearing the transitions between methylated and unmethylated regions. <code>confidenceIntervals = 0.95</code> produces uncertainty bands that naturally widen at positions with sparser CpG coverage, making low-confidence segments immediately apparent in the plot.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] positions = new double[n];
+        double[] observed = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            positions[i] = i * 1000.0;
+            observed[i] = 50.0 + Math.sin(positions[i] / 1000.0) * 20.0 + 5.0;
+        }
+
+        Options options = Options.builder()
+                .fraction(0.1)
+                .iterations(3)
+                .confidenceIntervals(0.95)
+                .build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(positions, observed);
+
+            double[] lower = result.confidenceLower().orElseThrow();
+            double[] upper = result.confidenceUpper().orElseThrow();
+            System.out.printf("95%% CI: [%s, %s]%n", lower[0], upper[0]);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">95% CI: [51.67728847225472, 68.73718630709101]</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="chip-seq-signal-smoothing"><a class="anchor" href="#chip-seq-signal-smoothing"></a>ChIP-seq Signal Smoothing</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="application"><a class="anchor" href="#application"></a>Application</h3>
+<div class="paragraph">
+<p>ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identify binding regions.</p>
+</div>
+<div class="paragraph">
+<p><code>fraction = 0.05</code> provides high spatial resolution — important for resolving narrow binding peaks that would otherwise be smeared into the background. The larger <code>iterations = 5</code> is deliberate: Poisson-distributed read counts produce tall, isolated spikes, and extra robustness iterations progressively down-weight them so the estimated background level is not inflated by a handful of extreme counts.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] positions = new double[n];
+        double[] observed = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            positions[i] = i * 1000.0;
+            observed[i] = 50.0 + Math.sin(positions[i] / 1000.0) * 20.0 + 5.0;
+        }
+
+        Options options = Options.builder()
+                .fraction(0.05)
+                .iterations(5)
+                .build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(positions, observed);
+
+            int peakCount = 0;
+            for (double y : result.y()) {
+                if (y &gt; 65.0) peakCount++;
+            }
+            System.out.println("y[0]: " + result.y()[0]);
+            System.out.println("Peak count: " + peakCount);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">y[0]: 59.951990929979125
+Peak count: 26</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="large-genome-coverage-streaming"><a class="anchor" href="#large-genome-coverage-streaming"></a>Large Genome Coverage (Streaming)</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>For whole-genome data that doesn&#8217;t fit in memory:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Result;
+import fastlowess.StreamingLowess;
+import fastlowess.StreamingOptions;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 1001;
+        double[] xChunk = new double[n];
+        double[] yChunk = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            xChunk[i] = i * 10.0;
+            yChunk[i] = 50.0 + Math.sin(xChunk[i] / 100.0) * 20.0 + 5.0;
+        }
+
+        StreamingOptions options = StreamingOptions.builder()
+                .fraction(0.05)
+                .iterations(3)
+                .chunkSize(50)
+                .overlap(10)
+                .mergeStrategy("weighted_average")
+                .build();
+
+        try (StreamingLowess model = new StreamingLowess(options)) {
+            model.processChunk(xChunk, yChunk);
+            Result result = model.finish();
+            System.out.println("y[0]: " + result.y()[0]);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">y[0]: 41.29765849569398</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="best-practices-for-genomic-data"><a class="anchor" href="#best-practices-for-genomic-data"></a>Best Practices for Genomic Data</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Consideration</th>
+<th class="tableblock halign-left valign-top">Recommendation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Fraction</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.05–0.15 (preserve local features)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Iterations</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3–5 (handle sequencing outliers)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Large data</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Use streaming mode</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Sparse regions</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Use <code>boundaryPolicy = "extend"</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Multiple chromosomes</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Process separately or ensure sorted</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="see-also"><a class="anchor" href="#see-also"></a>See Also</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="../introduction/concepts.html" class="xref page">Concepts</a> — How LOWESS works</p>
+</li>
+<li>
+<p><a href="../api/api.html" class="xref page">API Reference</a> — All options</p>
+</li>
+<li>
+<p><a href="../weighting/robustness.html" class="xref page">Robustness</a> — Outlier downweighting in depth</p>
+</li>
+<li>
+<p><a href="../advanced/merge.html" class="xref page">Merge Strategies</a> — Streaming chunk reconciliation</p>
+</li>
+<li>
+<p><a href="../advanced/boundary.html" class="xref page">Boundary Handling</a> — Edge handling for sparse regions</p>
+</li>
+<li>
+<p><a href="use-case-real-time.html" class="xref page">Real-Time Processing</a> — For sequencing runs</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <p>This page was built using the Antora default UI.</p>
+  <p>The source code for this UI is licensed under the terms of the MPL-2.0 license.</p>
+</footer>
+<script id="site-script" src="../_/js/site.js" data-ui-root-path="../_"></script>
+<script async src="../_/js/vendor/highlight.js"></script>
+<script>
+    window.MathJax = {
+        tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+        options: { ignoreHtmlClass: 'nostem|nolatexmath' }
+    };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>  </body>
+</html>
