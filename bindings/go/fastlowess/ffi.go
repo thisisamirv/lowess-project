@@ -17,11 +17,6 @@ import (
 	"unsafe"
 )
 
-// Version returns the version of the underlying fastLowess Rust library.
-func Version() string {
-	return C.GoString(C.go_version())
-}
-
 // GPUEnabled reports whether this build of the native library was compiled
 // with GPU backend support (the `gpu` Cargo feature).
 func GPUEnabled() bool {

@@ -8,6 +8,8 @@ const { existsSync, readFileSync } = require('fs')
 const { join } = require('path')
 const gpuDownload = require('./gpu-download')
 
+const { version: VERSION } = require('./package.json')
+
 const { platform, arch } = process
 
 let nativeBinding = null
@@ -418,9 +420,8 @@ async function installGpu(options = {}) {
         )
     }
 
-    const { version } = require('./package.json')
     const assetName = `fastlowess-gpu.${suffix}.node`
-    const url = `https://github.com/${gpuDownload.REPO}/releases/download/v${version}/${assetName}`
+    const url = `https://github.com/${gpuDownload.REPO}/releases/download/v${VERSION}/${assetName}`
     const destPath = join(__dirname, 'fastlowess.node')
 
     if (!yes) {
@@ -449,3 +450,4 @@ async function installGpu(options = {}) {
 
 module.exports.gpuAvailable = gpuAvailable
 module.exports.installGpu = installGpu
+module.exports.VERSION = VERSION

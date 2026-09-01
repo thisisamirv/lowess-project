@@ -12,11 +12,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Go:**
 
-- Added a new Go binding (`bindings/go`), consuming the `fastLowess` Rust core via a dedicated `cgo`-compatible C ABI (`fastlowess-go` crate, mirroring the C++ binding's FFI approach). Provides `Lowess` (batch), `StreamingLowess`, and `OnlineLowess` model types with an idiomatic Go API (`Options` struct, `Result`/`PointResult`/`Diagnostics` types, `Close()`-based resource management with a GC finalizer safety net). Ships with unit tests, a `Makefile` (`go`/`go-dev`/`go-clean` targets, wired into the root `Makefile`), CI (`ci-go.yml`, `release-go.yml`), and docs (`getting-started.md`, `api.md`, `api-streaming.md`, `api-online.md`, `installation.md`, `benchmarks.md`). The native library builds for the GNU ABI on Windows (`x86_64-pc-windows-gnu`), since Go's `cgo` drives a GCC-compatible compiler there rather than MSVC. Doc snippets are verified via a new `dev/runners/go.py` (wired into `dev/verify_snippets.py`, `dev/add-go-outputs.py`), which runs each snippet in a throwaway module that `replace`s the binding with the local checkout.
+- Added a new Go binding (`bindings/go`), consuming the `fastLowess` Rust core via a dedicated `cgo`-compatible C ABI (`fastlowess-go` crate, mirroring the C++ binding's FFI approach).
 
 **Java:**
 
-- Added a new Java binding (`bindings/java`), consuming the `fastLowess` Rust core via a JNI shared library (`fastlowess-java` crate, using the `jni` crate). Provides `Lowess` (batch), `StreamingLowess`, and `OnlineLowess` model types with an idiomatic Java API (fluent `Options`/`StreamingOptions`/`OnlineOptions` builders, `Result`/`PointResult`/`Diagnostics` records with `Optional`/`OptionalInt`/`OptionalDouble` accessors, `AutoCloseable`-based resource management for use with try-with-resources). Targets Java 25 LTS (`maven.compiler.release`). Ships with JUnit 5 unit tests, a `Makefile` (`java`/`java-dev`/`java-clean` targets, wired into the root `Makefile`), and docs (`getting-started.md`, `api.md`, `api-streaming.md`, `api-online.md`, `installation.md`, `concepts.md`, `adapter-choice.md`, `kernels.md`, `robustness.md`, `scaling.md`, `boundary.md`, `intervals.md`, `cross-validation.md`, `custom-weights.md`, `merge.md`, `gpu-backend.md`, `benchmarks.md`).
+- Added a new Java binding (`bindings/java`), consuming the `fastLowess` Rust core via a JNI shared library (`fastlowess-java` crate, using the `jni` crate).
+
+**Node.js:**
+
+- Added a `VERSION` export (`bindings/nodejs/index.js`), sourced from `package.json`, so consumers can query the Node.js binding's own version without reaching into `require('fastlowess/package.json')` directly.
 
 ### Changed
 

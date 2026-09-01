@@ -99,11 +99,6 @@ const char *go_last_error_message(void);
 int go_gpu_enabled(void);
 
 /**
- * Returns the crate version as a static, null-terminated C string.
- */
-const char *go_version(void);
-
-/**
  * Go wrapper constructor.
  *
  * # Safety

@@ -9,10 +9,16 @@ public final class FastLowess {
     }
 
     /**
-     * Returns the fastLowess crate version backing this binding.
+     * The released version of this Java binding (bindings/java), tracked
+     * independently of the underlying fastLowess Rust core's crate version.
+     */
+    public static final String VERSION = "3.1.0";
+
+    /**
+     * Returns the version of this Java binding.
      */
     public static String version() {
-        return NativeBridge.version();
+        return VERSION;
     }
 
     /**

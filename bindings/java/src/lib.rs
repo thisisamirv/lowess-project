@@ -176,18 +176,6 @@ fn result_to_jobject<'local>(
     Ok(obj)
 }
 
-/// Returns the crate version.
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_fastlowess_NativeBridge_version<'local>(
-    mut env: EnvUnowned<'local>,
-    _class: JClass<'local>,
-) -> JString<'local> {
-    env.with_env(|env| -> jni::errors::Result<JString<'local>> {
-        env.new_string(env!("CARGO_PKG_VERSION"))
-    })
-    .resolve::<ThrowRuntimeExAndDefault>()
-}
-
 /// Returns true if this library was built with the `gpu` Cargo feature enabled.
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_fastlowess_NativeBridge_gpuEnabled(

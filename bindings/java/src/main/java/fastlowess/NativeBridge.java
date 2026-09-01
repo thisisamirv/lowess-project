@@ -94,8 +94,6 @@ final class NativeBridge {
         return osName + "-" + archName;
     }
 
-    static native String version();
-
     static native boolean gpuEnabled();
 
     static native long lowessNew(
