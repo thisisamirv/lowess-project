@@ -24,7 +24,7 @@ Options options = Options.builder()
 | --- | --- | --- | --- |
 | `fraction` | `double` | `0.67` | Smoothing fraction, in (0, 1]. |
 | `iterations` | `int` | `3` | Robustness iterations, in [0, 1000]. |
-| `delta` | `double` | `0.0` (auto) | Interpolation distance threshold, as a fraction of the x range. |
+| `delta` | `double` | `NaN` (auto) | Interpolation distance threshold, as a fraction of the x range. |
 | `weightFunction` | `String` | `"tricube"` | Kernel: `tricube`, `gaussian`, `uniform`, `cosine`, `epanechnikov`, `biweight`, `triangle`. |
 | `robustnessMethod` | `String` | `"bisquare"` | Outlier downweighting: `bisquare`, `huber`, `talwar`. |
 | `scalingMethod` | `String` | `"mad"` | Residual scale estimator: `mad`, `mar`, `mean`. |
@@ -43,6 +43,24 @@ Options options = Options.builder()
 | `cvSeed` | `long` (boxed) | `null` (random) | RNG seed for reproducible k-fold splits. |
 | `parallel` | `boolean` | `true` | Enable parallel processing. |
 | `backend` | `String` | `"cpu"` | `cpu` or `gpu` (requires a `gpu`-feature build of the native library). |
+
+`fraction` is the most important parameter: it controls the size of the local neighbourhood used at each point.
+
+| Range | Effect | Use case |
+| --- | --- | --- |
+| 0.1-0.3 | Fine detail | Rapidly changing signals |
+| 0.3-0.5 | Balanced | General purpose |
+| 0.5-0.7 | Heavy smoothing | Noisy data |
+| 0.7-1.0 | Very smooth | Trend extraction |
+
+`iterations` controls robustness to outliers, at the cost of speed.
+
+| Value | Effect | Performance |
+| --- | --- | --- |
+| 0 | No robustness | Fastest |
+| 1-3 | Moderate | Recommended |
+| 4-6 | Strong | Contaminated data |
+| 7+ | Very strong | Heavy outliers |
 
 ## `new Lowess(Options options)`
 
@@ -75,6 +93,55 @@ Releases native resources. Safe to call multiple times. Implements `AutoCloseabl
 
 `Diagnostics` holds `rmse()`, `mae()`, `rSquared()`, `aic()`, `aicc()`, `effectiveDf()`, `residualSd()` (the last three are `Optional<Double>`).
 
+## Options
+
+### weightFunction
+
+*See: [Weight Functions](../weighting/kernels.md)*
+
+- `"tricube"` (default)
+- `"epanechnikov"`
+- `"gaussian"`
+- `"uniform"` (alias: `"boxcar"`)
+- `"biweight"` (alias: `"bisquare"`)
+- `"triangle"` (alias: `"triangular"`)
+- `"cosine"`
+
+### robustnessMethod
+
+*See: [Robustness](../weighting/robustness.md)*
+
+- `"bisquare"` (default; alias: `"biweight"`)
+- `"huber"`
+- `"talwar"`
+
+### boundaryPolicy
+
+*See: [Boundary Handling](../advanced/boundary.md)*
+
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
+
+### scalingMethod
+
+*See: [Scaling Methods](../weighting/scaling.md)*
+
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
+
+### zeroWeightFallback
+
+Behavior when all neighborhood weights are zero:
+
+| Option | Behavior |
+| --- | --- |
+| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
+| `"return_original"` (alias: `"original"`) | Return the original y value |
+| `"return_none"` (alias: `"none"`) | Return `NaN` |
+
 ## Custom weights
 
 ```java
@@ -102,4 +169,30 @@ try (Lowess model = new Lowess(options)) {
     System.out.println(java.util.Arrays.toString(result.cvScores().orElseThrow()));
     System.out.println(result.fractionUsed()); // the CV-selected fraction
 }
+```
+
+## Example
+
+```java
+import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        double[] x = {1, 2, 3, 4, 5};
+        double[] y = {2.1, 4.0, 6.2, 8.0, 10.1};
+
+        Options options = Options.builder().fraction(0.5).build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y);
+            System.out.println(java.util.Arrays.toString(result.y()));
+        }
+    }
+}
+```
+
+```output
+[2.1, 4.0, 6.2, 8.0, 10.1]
 ```

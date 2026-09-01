@@ -102,9 +102,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **fastLowess:**
 
 - Fixed `cargo doc` failing with `unresolved link to`crate::doc::gpu_backend`` whenever documenting with a feature set that excludes `gpu` (e.g. `--features cpu`): `api.md`'s GPU Backend link isn't itself feature-gated, but the `gpu_backend` doc module was gated behind `#[cfg(all(doc, feature = "gpu"))]`. Changed to `#[cfg(doc)]` (matching every other doc submodule), since it's a plain Markdown page with no dependency on the `gpu` feature's actual code.
+- Fixed a misleading comment on `binding_support::default_overlap()` claiming wasm/nodejs use a flat `500`-point overlap default while cpp/julia/python/r use `chunk_size / 10`; every binding actually funnels through the same `build_streaming()` helper and always computes `chunk_size / 10` (equal to `500` only at the default `chunk_size` of `5000`). No behavior changed, only the outdated comment.
 
 **C++:**
 
+- Fixed `OnlineOptions`' `min_points` (was `3`, should be `2`) and `update_mode` (was `"full"`, should be `"incremental"`) defaults diverging from the Rust core; added a `k_default_min_points` constant alongside the existing default constants in `fastlowess.hpp`.
 - Fixed several Doxygen rendering bugs: the homepage showed `concepts.md` instead of `README.md`; blockquotes, heading+codespan combinations, MkDocs-only admonitions, inline/display math, and `---` after a blockquote all rendered as literal or broken text. `README.md` is now the Doxygen main page, and the affected docs use Doxygen-native syntax (`\f$...\f$`/`\f[...\f]` math, blockquote admonitions, explicit `<hr>`).
 - Fixed `ci-cpp.yml`'s macOS job warning that the pre-installed `aws/tap` Homebrew tap is untrusted; `brew untap aws/tap` now runs before `brew install llvm cppcheck`, since that tap isn't needed for this build.
 - Fixed `ci-cpp.yml`'s Windows job installing `cppcheck` via Chocolatey, whose package is missing its `cfg/std.cfg` library files, causing `make cpp-dev`'s static analysis pass to be silently skipped; it now installs `cppcheck` via `winget` instead (matching the already-working `install-tools` target), with its install directory added to `$GITHUB_PATH`.
@@ -113,6 +115,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Julia:**
 
+- Fixed `OnlineLowess`'s `min_points` (was `3`, should be `2`) and `update_mode` (was `"full"`, should be `"incremental"`) keyword-argument defaults diverging from the Rust core.
 - Fixed the Documenter homepage: it was a stale, separately maintained `index.md` instead of the README, and the README's centered badge/logo HTML and markdownlint comment rendered as literal text. `make.jl` now regenerates `index.md` from `README.md` on every build.
 - Fixed `release-julia-register.yml` extracting the matching version section from the root `CHANGELOG.md`, which includes every binding/crate's entries; it now extracts from the already Julia-filtered `bindings/julia/julia/docs/src/NEWS.md` instead, so the JuliaRegistrator release notes only cover Julia-relevant changes.
 - Fixed `make julia-dev` failing with "empty intersection between `fastlowess_jll@X.Y.Z` and project compatibility ..." whenever a locally cached `Manifest.toml` still pinned an older `fastlowess_jll` version after a new one was published: `Pkg.resolve()` treats an already-pinned manifest entry as fixed and won't search the registry for an upgrade, even when the relaxed compat bound requires one. The `dev` target now runs `Pkg.update("fastlowess_jll")` before `Pkg.resolve()` to actively pick up the newly published version.
@@ -135,7 +138,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Python:**
 
+- Fixed `StreamingLowess`'s `fraction` default (was `0.3`, should be `0.67`) and `OnlineLowess`'s `fraction` (was `0.2`), `window_capacity` (was `100`), and `update_mode` (was `"full"`) defaults (should be `0.67`, `1000`, and `"incremental"` respectively) diverging from the Rust core and the batch `Lowess` default.
 - Fixed the "API Reference" page rendering empty: its `api/index.md` toctree still referenced the pre-rename `python`/`python-streaming`/`python-online` document names; updated to `api`/`api-streaming`/`api-online`, matching the files' current names. Sphinx toctree entries omit the `.md` extension, so this was missed by the earlier rename's link verification.
+
+**R:**
+
+- Fixed `OnlineLowess()`'s `min_points` (was `3L`, should be `2L`) and `update_mode` (was `"full"`, should be `"incremental"`) defaults diverging from the Rust core; updated the roxygen docs and `man/OnlineLowess.Rd` to match.
 
 **Rust:**
 

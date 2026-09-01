@@ -44,24 +44,49 @@ Releases native resources. Safe to call multiple times.
 ## Example
 
 ```go
-opts := fastlowess.DefaultStreamingOptions()
-opts.ChunkSize = 1000
+package main
 
-model, err := fastlowess.NewStreamingLowess(opts)
-if err != nil {
-    log.Fatal(err)
-}
-defer model.Close()
+import (
+ "fmt"
+ "log"
 
-for _, chunk := range chunks {
-    if _, err := model.ProcessChunk(chunk.X, chunk.Y); err != nil {
-        log.Fatal(err)
-    }
-}
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+)
 
-result, err := model.Finalize()
-if err != nil {
-    log.Fatal(err)
+func main() {
+ const n = 20
+ x := make([]float64, n)
+ y := make([]float64, n)
+ for i := 0; i < n; i++ {
+  x[i] = float64(i)
+  y[i] = float64(i) + 0.1
+ }
+
+ opts := fastlowess.DefaultStreamingOptions()
+ opts.ChunkSize = 10
+ opts.Overlap = 2
+
+ model, err := fastlowess.NewStreamingLowess(opts)
+ if err != nil {
+  log.Fatal(err)
+ }
+ defer model.Close()
+
+ if _, err := model.ProcessChunk(x[:10], y[:10]); err != nil {
+  log.Fatal(err)
+ }
+ if _, err := model.ProcessChunk(x[10:], y[10:]); err != nil {
+  log.Fatal(err)
+ }
+
+ result, err := model.Finalize()
+ if err != nil {
+  log.Fatal(err)
+ }
+ fmt.Printf("y[0]: %.4f\n", result.Y[0])
 }
-fmt.Println(len(result.Y))
+```
+
+```output
+y[0]: 17.6391
 ```

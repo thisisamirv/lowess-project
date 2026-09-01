@@ -23,3 +23,22 @@ Choose the first row below whose condition applies:
 ![Adapter Comparison](adapter_comparison.svg)
 
 ---
+
+## Feature Comparison
+
+| Feature | Batch | Streaming | Online |
+| --- | --- | --- | --- |
+| Confidence intervals | ✓ | ✗ | ✗ |
+| Prediction intervals | ✓ | ✗ | ✗ |
+| Cross-validation | ✓ | ✗ | ✗ |
+| Diagnostics | ✓ | ✓ | ✗ |
+| Residuals | ✓ | ✓ | ✓ |
+| Robustness weights | ✓ | ✓ | ✓ |
+| Parallel execution | ✓ | ✓ | ✗ |
+
+---
+
+## Next Steps
+
+- [API Reference](api.md) — All configuration options
+- [Streaming API](api-streaming.md) · [Online API](api-online.md)

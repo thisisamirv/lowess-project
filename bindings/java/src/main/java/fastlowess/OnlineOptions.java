@@ -28,8 +28,8 @@ public final class OnlineOptions {
     public static final class Builder {
 
         private final Options.Builder common = Options.builder();
-        int windowCapacity = 100;
-        int minPoints = 10;
+        int windowCapacity = 1000;
+        int minPoints = 2;
         String updateMode = null;
 
         Builder() {
@@ -112,7 +112,7 @@ public final class OnlineOptions {
 
         /**
          * Maximum number of points retained in the sliding window (default
-         * {@code 100}).
+         * {@code 1000}).
          */
         public Builder windowCapacity(int windowCapacity) {
             this.windowCapacity = windowCapacity;
@@ -121,7 +121,7 @@ public final class OnlineOptions {
 
         /**
          * Minimum number of points required before a fit is produced (default
-         * {@code 10}).
+         * {@code 2}).
          */
         public Builder minPoints(int minPoints) {
             this.minPoints = minPoints;
@@ -130,7 +130,7 @@ public final class OnlineOptions {
 
         /**
          * One of {@code "incremental"}, {@code "full"} (default
-         * {@code "full"}).
+         * {@code "incremental"}).
          */
         public Builder updateMode(String updateMode) {
             this.updateMode = updateMode;

@@ -43,6 +43,24 @@ opts.ReturnDiagnostics = true
 | `Parallel` | `bool` | `true` | Enable parallel processing. |
 | `Backend` | `string` | `"cpu"` | `cpu` or `gpu` (requires a `gpu`-feature build of the native library). |
 
+`Fraction` is the most important parameter: it controls the size of the local neighbourhood used at each point.
+
+| Range | Effect | Use case |
+| --- | --- | --- |
+| 0.1-0.3 | Fine detail | Rapidly changing signals |
+| 0.3-0.5 | Balanced | General purpose |
+| 0.5-0.7 | Heavy smoothing | Noisy data |
+| 0.7-1.0 | Very smooth | Trend extraction |
+
+`Iterations` controls robustness to outliers, at the cost of speed.
+
+| Value | Effect | Performance |
+| --- | --- | --- |
+| 0 | No robustness | Fastest |
+| 1-3 | Moderate | Recommended |
+| 4-6 | Strong | Contaminated data |
+| 7+ | Very strong | Heavy outliers |
+
 ## `fastlowess.NewLowess(opts Options) (*Lowess, error)`
 
 Creates a new batch model. Returns an error if any option is out of range (some validation is eager at construction, e.g. `Iterations`; some is deferred to `Fit`, e.g. `Fraction`).
@@ -72,6 +90,55 @@ Releases native resources. Safe to call multiple times. A finalizer is registere
 
 `Diagnostics` holds `RMSE`, `MAE`, `RSquared`, `AIC`, `AICc`, `EffectiveDF`, `ResidualSD`.
 
+## Options
+
+### WeightFunction
+
+*See: [Weight Functions](../weighting/kernels.md)*
+
+- `"tricube"` (default)
+- `"epanechnikov"`
+- `"gaussian"`
+- `"uniform"` (alias: `"boxcar"`)
+- `"biweight"` (alias: `"bisquare"`)
+- `"triangle"` (alias: `"triangular"`)
+- `"cosine"`
+
+### RobustnessMethod
+
+*See: [Robustness](../weighting/robustness.md)*
+
+- `"bisquare"` (default; alias: `"biweight"`)
+- `"huber"`
+- `"talwar"`
+
+### BoundaryPolicy
+
+*See: [Boundary Handling](../advanced/boundary.md)*
+
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
+
+### ScalingMethod
+
+*See: [Scaling Methods](../weighting/scaling.md)*
+
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
+
+### ZeroWeightFallback
+
+Behavior when all neighborhood weights are zero:
+
+| Option | Behavior |
+| --- | --- |
+| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
+| `"return_original"` (alias: `"original"`) | Return the original y value |
+| `"return_none"` (alias: `"none"`) | Return `NaN` |
+
 ## Custom weights
 
 ```go
@@ -98,4 +165,40 @@ model, _ := fastlowess.NewLowess(opts)
 defer model.Close()
 result, _ := model.Fit(x, y)
 fmt.Println(result.CVScores, result.FractionUsed) // FractionUsed = the CV-selected fraction
+```
+
+## Example
+
+```go
+package main
+
+import (
+ "fmt"
+
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+)
+
+func main() {
+ x := []float64{1, 2, 3, 4, 5}
+ y := []float64{2.1, 4.0, 6.2, 8.0, 10.1}
+
+ opts := fastlowess.DefaultOptions()
+ opts.Fraction = 0.5
+
+ model, err := fastlowess.NewLowess(opts)
+ if err != nil {
+  panic(err)
+ }
+ defer model.Close()
+
+ result, err := model.Fit(x, y)
+ if err != nil {
+  panic(err)
+ }
+ fmt.Println(result.Y)
+}
+```
+
+```output
+[2.1 4 6.2 8 10.1]
 ```

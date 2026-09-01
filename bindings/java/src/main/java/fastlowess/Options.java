@@ -68,7 +68,7 @@ public final class Options {
 
         double fraction = 0.67;
         int iterations = 3;
-        double delta = 0.0;
+        double delta = Double.NaN;
         String weightFunction = null;
         String robustnessMethod = null;
         String scalingMethod = null;
@@ -110,7 +110,8 @@ public final class Options {
 
         /**
          * Skips recomputation for points within this distance of the last fit
-         * point (default {@code 0.0}).
+         * point (default {@code NaN}, which auto-sets it to 1% of the x-range
+         * in Batch mode, or {@code 0.0} in Streaming/Online mode).
          */
         public Builder delta(double delta) {
             this.delta = delta;

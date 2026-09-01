@@ -222,7 +222,7 @@ pub struct PyStreamingLowess {
 impl PyStreamingLowess {
     #[new]
     #[pyo3(signature = (
-        fraction=0.3,
+        fraction=0.67,
         chunk_size=5000,
         *,
         overlap=None,
@@ -382,8 +382,8 @@ pub struct PyOnlineLowess {
 impl PyOnlineLowess {
     #[new]
     #[pyo3(signature = (
-        fraction=0.2,
-        window_capacity=100,
+        fraction=0.67,
+        window_capacity=1000,
         min_points=2,
         *,
         iterations=3,
@@ -392,7 +392,7 @@ impl PyOnlineLowess {
         robustness_method="bisquare",
         scaling_method="mad",
         boundary_policy="extend",
-        update_mode="full",
+        update_mode="incremental",
         auto_converge=None,
         return_robustness_weights=false,
         return_diagnostics=false,

@@ -770,8 +770,10 @@ pub fn lowess_error_message(err: &LowessError) -> String {
 // batch, streaming, and online constructors.
 
 // Compute the default overlap size from a chunk size when the caller does not
-// specify one. cpp, julia, python, and r all use this same formula instead of
-// the flat 500-point default used by wasm/nodejs.
+// specify one. Used by every binding via `build_streaming` below, so overlap
+// scales with a custom `chunk_size` instead of staying pinned to the flat
+// `DEFAULT_STREAMING_OVERLAP` (500) — which it equals only at the default
+// chunk_size of 5000.
 pub fn default_overlap(chunk_size: usize) -> usize {
     let default = chunk_size / 10;
     default.min(chunk_size.saturating_sub(10)).max(1)

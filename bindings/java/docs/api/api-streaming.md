@@ -20,8 +20,8 @@ StreamingOptions options = StreamingOptions.builder()
 
 | Setting | Type | Default | Description |
 | --- | --- | --- | --- |
-| `chunkSize` | `int` | `1000` | Number of points processed per chunk. |
-| `overlap` | `int` | `0` | Points shared between consecutive chunks. |
+| `chunkSize` | `int` | `5000` | Number of points processed per chunk. |
+| `overlap` | `int` | library default | Points shared between consecutive chunks. Negative means "use the library default" (`500`). |
 | `mergeStrategy` | `String` | `"weighted_average"` | How overlapping chunk results are combined. |
 
 *See also: [Merge Strategies](../advanced/merge.md)*
@@ -49,14 +49,36 @@ import fastlowess.Result;
 import fastlowess.StreamingLowess;
 import fastlowess.StreamingOptions;
 
-StreamingOptions options = StreamingOptions.builder().chunkSize(1000).build();
+public class Example {
+    public static void main(String[] args) {
+        final int n = 20;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i < n; i++) {
+            x[i] = i;
+            y[i] = i + 0.1;
+        }
 
-try (StreamingLowess model = new StreamingLowess(options)) {
-    for (Chunk chunk : chunks) {
-        model.processChunk(chunk.x(), chunk.y());
+        StreamingOptions options = StreamingOptions.builder()
+                .chunkSize(10)
+                .overlap(2)
+                .build();
+
+        try (StreamingLowess model = new StreamingLowess(options)) {
+            double[] x1 = java.util.Arrays.copyOfRange(x, 0, 10);
+            double[] y1 = java.util.Arrays.copyOfRange(y, 0, 10);
+            double[] x2 = java.util.Arrays.copyOfRange(x, 10, 20);
+            double[] y2 = java.util.Arrays.copyOfRange(y, 10, 20);
+            model.processChunk(x1, y1);
+            model.processChunk(x2, y2);
+
+            Result result = model.finish();
+            System.out.printf("y[0]: %.4f%n", result.y()[0]);
+        }
     }
-
-    Result result = model.finish();
-    System.out.println(result.y().length);
 }
+```
+
+```output
+y[0]: 17.6391
 ```

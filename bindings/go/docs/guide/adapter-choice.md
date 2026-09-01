@@ -35,6 +35,7 @@ Choose the first row below whose condition applies:
 | Diagnostics | ✓ | ✓ | ✗ |
 | Residuals | ✓ | ✓ | ✓ |
 | Robustness weights | ✓ | ✓ | ✓ |
+| Parallel execution | ✓ | ✓ | ✗ |
 
 ---
 

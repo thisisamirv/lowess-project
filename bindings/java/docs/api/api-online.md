@@ -22,9 +22,9 @@ OnlineOptions options = OnlineOptions.builder()
 
 | Setting | Type | Default | Description |
 | --- | --- | --- | --- |
-| `windowCapacity` | `int` | `100` | Maximum number of recent points retained. |
-| `minPoints` | `int` | `10` | Minimum points required before output starts. |
-| `updateMode` | `String` | `"full"` | How the window is updated as new points arrive: `incremental`, `full`. |
+| `windowCapacity` | `int` | `1000` | Maximum number of recent points retained. |
+| `minPoints` | `int` | `2` | Minimum points required before output starts. |
+| `updateMode` | `String` | `"incremental"` | How the window is updated as new points arrive: `incremental`, `full`. |
 
 ## `new OnlineLowess(OnlineOptions options)`
 
@@ -55,12 +55,38 @@ import fastlowess.PointResult;
 
 import java.util.Optional;
 
-OnlineOptions options = OnlineOptions.builder().build();
+public class Example {
+    public static void main(String[] args) {
+        final int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i < n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
 
-try (OnlineLowess model = new OnlineLowess(options)) {
-    for (Point point : sensorReadings) {
-        Optional<PointResult> res = model.addPoint(point.x(), point.y());
-        res.ifPresent(r -> System.out.println("smoothed: " + r.y()));
+        OnlineOptions options = OnlineOptions.builder()
+                .fraction(0.5)
+                .windowCapacity(50)
+                .minPoints(3)
+                .build();
+
+        try (OnlineLowess model = new OnlineLowess(options)) {
+            Optional<PointResult> r1 = model.addPoint(x[0], y[0]);
+            System.out.println(r1.isPresent());
+
+            Optional<PointResult> r2 = model.addPoint(x[1], y[1]);
+            System.out.println(r2.isPresent());
+
+            Optional<PointResult> r3 = model.addPoint(x[2], y[2]);
+            r3.ifPresent(r -> System.out.println(r.y()));
+        }
     }
 }
+```
+
+```output
+false
+false
+0.22659245357374927
 ```

@@ -38,6 +38,7 @@ constexpr int k_default_cv_k = 5;
 constexpr int k_default_chunk_size = 5000;
 constexpr int k_default_overlap = 500;
 constexpr int k_default_window_capacity = 1000;
+constexpr int k_default_min_points = 2;
 } // namespace detail
 
 /**
@@ -187,8 +188,8 @@ struct OnlineOptions {
   std::vector<double> custom_weights;
 
   int window_capacity = detail::k_default_window_capacity;
-  int min_points = 3;
-  std::string update_mode = "full";
+  int min_points = detail::k_default_min_points;
+  std::string update_mode = "incremental";
 };
 
 /**

@@ -48,20 +48,60 @@ Releases native resources. Safe to call multiple times.
 ## Example
 
 ```go
-opts := fastlowess.DefaultOnlineOptions()
-model, err := fastlowess.NewOnlineLowess(opts)
-if err != nil {
-    log.Fatal(err)
-}
-defer model.Close()
+package main
 
-for point := range sensorReadings {
-    res, ok, err := model.AddPoint(point.X, point.Y)
-    if err != nil {
-        log.Fatal(err)
-    }
-    if ok {
-        fmt.Println("smoothed:", res.Y)
-    }
+import (
+ "fmt"
+ "log"
+ "math"
+
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+)
+
+func main() {
+ const n = 100
+ x := make([]float64, n)
+ y := make([]float64, n)
+ for i := 0; i < n; i++ {
+  x[i] = float64(i) * 2 * math.Pi / float64(n-1)
+  y[i] = math.Sin(x[i]) + 0.1
+ }
+
+ opts := fastlowess.DefaultOnlineOptions()
+ opts.Fraction = 0.5
+ opts.WindowCapacity = 50
+ opts.MinPoints = 3
+
+ model, err := fastlowess.NewOnlineLowess(opts)
+ if err != nil {
+  log.Fatal(err)
+ }
+ defer model.Close()
+
+ _, ok1, err := model.AddPoint(x[0], y[0])
+ if err != nil {
+  log.Fatal(err)
+ }
+ fmt.Println(ok1)
+
+ _, ok2, err := model.AddPoint(x[1], y[1])
+ if err != nil {
+  log.Fatal(err)
+ }
+ fmt.Println(ok2)
+
+ res, ok3, err := model.AddPoint(x[2], y[2])
+ if err != nil {
+  log.Fatal(err)
+ }
+ if ok3 {
+  fmt.Println(res.Y)
+ }
 }
+```
+
+```output
+false
+false
+0.22659245357374927
 ```

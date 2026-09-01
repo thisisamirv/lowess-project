@@ -28,7 +28,7 @@ public final class StreamingOptions {
     public static final class Builder {
 
         private final Options.Builder common = Options.builder();
-        int chunkSize = 1000;
+        int chunkSize = 5000;
         int overlap = -1;
         String mergeStrategy = null;
 
@@ -111,7 +111,7 @@ public final class StreamingOptions {
         }
 
         /**
-         * Number of points processed per chunk (default {@code 1000}).
+         * Number of points processed per chunk (default {@code 5000}).
          */
         public Builder chunkSize(int chunkSize) {
             this.chunkSize = chunkSize;
