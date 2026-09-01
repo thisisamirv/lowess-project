@@ -1,0 +1,15 @@
+{
+  "name": "fastlowess (Go)",
+  "short_name": "fastlowess (Go)",
+  "start_url": "/lowess-project/go/",
+  "scope": "/lowess-project/go/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "/lowess-project/go/favicon.svg",
+      "sizes": "512x512"
+    }
+  ]
+}

@@ -117,6 +117,10 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Lokathor <zefria@gmail.com>
     License: Zlib OR Apache-2.0 OR MIT
     ----------------------------------------
+    Package: bytes (1.12.1)
+    Authors: Carl Lerche <me@carllerche.com>, Sean McArthur <sean@seanmonstar.com>
+    License: MIT
+    ----------------------------------------
     Package: cast (0.3.0)
     Authors: Jorge Aparicio <jorge@japaric.io>
     License: MIT OR Apache-2.0
@@ -156,6 +160,10 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Package: colorchoice (1.0.5)
     Authors:
     License: MIT OR Apache-2.0
+    ----------------------------------------
+    Package: combine (4.6.8)
+    Authors: Markus Westerlind <marwes91@gmail.com>
+    License: MIT
     ----------------------------------------
     Package: console_error_panic_hook (0.1.7)
     Authors: Nick Fitzgerald <fitzgen@gmail.com>
@@ -287,6 +295,22 @@ Scatterplots.” *Journal of the American Statistical Association*,
     ----------------------------------------
     Package: itoa (1.0.18)
     Authors: David Tolnay <dtolnay@gmail.com>
+    License: MIT OR Apache-2.0
+    ----------------------------------------
+    Package: jni (0.22.4)
+    Authors: jni team
+    License: MIT OR Apache-2.0
+    ----------------------------------------
+    Package: jni-macros (0.22.4)
+    Authors:
+    License: MIT OR Apache-2.0
+    ----------------------------------------
+    Package: jni-sys (0.4.1)
+    Authors: Steven Fackler <sfackler@gmail.com>, Robert Bragg <robert@sixbynine.org>
+    License: MIT OR Apache-2.0
+    ----------------------------------------
+    Package: jni-sys-macros (0.4.1)
+    Authors: Robert Bragg <robert@sixbynine.org>
     License: MIT OR Apache-2.0
     ----------------------------------------
     Package: js-sys (0.3.104)
@@ -533,6 +557,10 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: The Rust Project Developers
     License: Apache-2.0/MIT
     ----------------------------------------
+    Package: rustc_version (0.4.1)
+    Authors:
+    License: MIT OR Apache-2.0
+    ----------------------------------------
     Package: rustix (1.1.4)
     Authors: Dan Gohman <dev@sunfishcode.online>, Jakub Konka <kubkon@jakubkonka.com>
     License: Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT
@@ -583,6 +611,14 @@ Scatterplots.” *Journal of the American Statistical Association*,
     ----------------------------------------
     Package: shlex (2.0.1)
     Authors: comex <comexk@gmail.com>, Fenhl <fenhl@fenhl.net>, Adrian Taylor <adetaylor@chromium.org>, Alex Touchet <alextouchet@outlook.com>, Daniel Parks <dp+git@oxidized.org>, Garrett Berg <googberg@gmail.com>
+    License: MIT OR Apache-2.0
+    ----------------------------------------
+    Package: simd_cesu8 (1.2.0)
+    Authors: Sean C. Roach <me@seancroach.dev>
+    License: Apache-2.0 OR MIT
+    ----------------------------------------
+    Package: simdutf8 (0.1.5)
+    Authors: Hans Kratz <hans@appfour.com>
     License: MIT OR Apache-2.0
     ----------------------------------------
     Package: slab (0.4.12)
