@@ -80,12 +80,35 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Update package.py with new version + sha256
+      - name: Determine version and sha256
+        id: meta
         run: |
-          python dev/spack_release.py \
-            --repo thisisamirv/lowess-project \
-            --tag "${{ github.event.release.tag_name || github.event.inputs.tag }}" \
-            --package-file bindings/cpp/spack/package.py
+          TAG="${{ github.event.release.tag_name || github.event.inputs.tag }}"
+          VERSION="${TAG#v}"
+          URL="https://github.com/${{ github.repository }}/archive/refs/tags/${TAG}.tar.gz"
+
+          echo "Downloading $URL to compute sha256..."
+          SHA256=$(curl -sL "$URL" | sha256sum | cut -d' ' -f1)
+          echo "sha256: $SHA256"
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "sha256=$SHA256" >> "$GITHUB_OUTPUT"
+
+      - name: Update package.py with new version + sha256
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+          SHA256: ${{ steps.meta.outputs.sha256 }}
+          PACKAGE_FILE: bindings/cpp/spack/package.py
+        run: |
+          if grep -qE "version\(\"${VERSION}\"" "$PACKAGE_FILE"; then
+            # Refresh the sha256 of an already-present version() line in place.
+            sed -i -E "s/version\(\"${VERSION}\", sha256=\"[0-9a-f]+\"\)/version(\"${VERSION}\", sha256=\"${SHA256}\")/" "$PACKAGE_FILE"
+          else
+            # Insert a new version() line right after the anchor comment,
+            # keeping Spack's newest-first convention.
+            sed -i "/# spack-release job on every release; keep newest first\\./a\\    version(\"${VERSION}\", sha256=\"${SHA256}\")" "$PACKAGE_FILE"
+          fi
+          echo "Updated $PACKAGE_FILE with version $VERSION"
 
       - name: Commit updated recipe
         run: |
@@ -95,8 +118,85 @@ jobs:
           git commit -m "cpp: update Spack recipe for ${{ github.event.release.tag_name || github.event.inputs.tag }}" || echo "No changes to commit"
           git push
 
-      - name: Open PR to spack/spack-packages
+      - name: Check Spack fork exists
         env:
           GH_TOKEN: ${{ secrets.SPACK_PACKAGES_PAT }}
+          OWNER: ${{ github.repository_owner }}
         run: |
-          bash dev/spack_open_pr.sh fastlowess-cpp bindings/cpp/spack/package.py "${{ github.event.release.tag_name || github.event.inputs.tag }}"
+          if gh repo view "$OWNER/spack-packages" > /dev/null 2>&1; then
+            echo "✅ Fork exists: $OWNER/spack-packages"
+          else
+            echo "⚠️ Fork does not exist. Forking..."
+            gh repo fork spack/spack-packages --clone=false
+            sleep 10
+          fi
+
+      - name: Clone Spack fork
+        env:
+          GH_TOKEN: ${{ secrets.SPACK_PACKAGES_PAT }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git clone "https://x-access-token:${GH_TOKEN}@github.com/$OWNER/spack-packages.git" spack-fork
+          cd spack-fork
+          git remote add upstream https://github.com/spack/spack-packages.git
+          git fetch upstream develop
+          git checkout develop
+          git reset --hard upstream/develop
+          git push origin develop --force
+          echo "✅ Fork synced with upstream"
+
+      - name: Check for existing PR
+        id: check-pr
+        env:
+          GH_TOKEN: ${{ secrets.SPACK_PACKAGES_PAT }}
+          VERSION: ${{ steps.meta.outputs.version }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          BRANCH="fastlowess-cpp-$VERSION"
+          EXISTING_PR=$(gh pr list \
+            --repo spack/spack-packages \
+            --head "$OWNER:$BRANCH" \
+            --json number \
+            --jq '.[0].number' 2>/dev/null || echo "")
+
+          if [ -n "$EXISTING_PR" ]; then
+            echo "⚠️ PR #$EXISTING_PR already exists for v$VERSION"
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "✅ No existing PR found for v$VERSION"
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create Pull Request
+        if: steps.check-pr.outputs.exists != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.SPACK_PACKAGES_PAT }}
+          VERSION: ${{ steps.meta.outputs.version }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          BRANCH="fastlowess-cpp-$VERSION"
+          cd spack-fork
+          git push origin --delete "$BRANCH" 2>/dev/null || true
+          git checkout -b "$BRANCH"
+
+          mkdir -p repos/spack_repo/builtin/packages/fastlowess_cpp
+          cp ../bindings/cpp/spack/package.py repos/spack_repo/builtin/packages/fastlowess_cpp/package.py
+          git add repos/spack_repo/builtin/packages/fastlowess_cpp/package.py
+
+          if git diff --cached --quiet; then
+            echo "No changes for fastlowess-cpp $VERSION; skipping PR."
+            exit 0
+          fi
+
+          git commit -m "fastlowess-cpp: add v$VERSION"
+          git push --force origin "$BRANCH"
+
+          gh pr create \
+            --repo spack/spack-packages \
+            --head "${OWNER}:${BRANCH}" \
+            --base develop \
+            --title "fastlowess-cpp: add v$VERSION" \
+            --body "Adds version $VERSION of \`fastlowess-cpp\`. Recipe is maintained upstream at the package's own repository and mirrored here automatically on each release." ||
+            echo "PR creation failed or a PR already exists for branch $BRANCH; check spack/spack-packages pull requests."
