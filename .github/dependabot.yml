@@ -1,0 +1,119 @@
+version: 2
+
+updates:
+  # GitHub Actions used across all workflow files and composite actions.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      github-actions:
+        patterns: ["*"]
+    labels: ["dependencies", "github-actions"]
+    commit-message:
+      prefix: "chore(ci)"
+
+  # Rust workspace: crates/{lowess,fastLowess}, all bindings except R,
+  # validation/fastLowess, benchmarks/fastLowess (see root Cargo.toml members).
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    groups:
+      rust-dependencies:
+        patterns: ["*"]
+    labels: ["dependencies", "rust"]
+    commit-message:
+      prefix: "chore(cargo)"
+
+  # R binding's Rust crate: standalone Cargo project, excluded from the
+  # workspace above (see bindings/r/src/Cargo.toml, cross-compiled via Rtools).
+  - package-ecosystem: "cargo"
+    directory: "/bindings/r/src"
+    schedule:
+      interval: "weekly"
+    groups:
+      rust-dependencies:
+        patterns: ["*"]
+    labels: ["dependencies", "rust", "r"]
+    commit-message:
+      prefix: "chore(r)"
+
+  - package-ecosystem: "npm"
+    directory: "/bindings/nodejs"
+    schedule:
+      interval: "weekly"
+    groups:
+      npm-dependencies:
+        patterns: ["*"]
+    labels: ["dependencies", "nodejs"]
+    commit-message:
+      prefix: "chore(nodejs)"
+
+  - package-ecosystem: "npm"
+    directory: "/bindings/wasm"
+    schedule:
+      interval: "weekly"
+    groups:
+      npm-dependencies:
+        patterns: ["*"]
+    labels: ["dependencies", "wasm"]
+    commit-message:
+      prefix: "chore(wasm)"
+
+  - package-ecosystem: "pip"
+    directory: "/bindings/python"
+    schedule:
+      interval: "weekly"
+    groups:
+      python-dependencies:
+        patterns: ["*"]
+    labels: ["dependencies", "python"]
+    commit-message:
+      prefix: "chore(python)"
+
+  - package-ecosystem: "maven"
+    directory: "/bindings/java"
+    schedule:
+      interval: "weekly"
+    groups:
+      maven-dependencies:
+        patterns: ["*"]
+    labels: ["dependencies", "java"]
+    commit-message:
+      prefix: "chore(java)"
+
+  - package-ecosystem: "gomod"
+    directory: "/bindings/go/fastlowess"
+    schedule:
+      interval: "weekly"
+    groups:
+      go-dependencies:
+        patterns: ["*"]
+    labels: ["dependencies", "go"]
+    commit-message:
+      prefix: "chore(go)"
+
+  - package-ecosystem: "gomod"
+    directory: "/bindings/go/tests"
+    schedule:
+      interval: "weekly"
+    groups:
+      go-dependencies:
+        patterns: ["*"]
+    labels: ["dependencies", "go"]
+    commit-message:
+      prefix: "chore(go)"
+
+  # Hugo module dependencies (theme imports) for the Go binding's docs site.
+  - package-ecosystem: "gomod"
+    directory: "/bindings/go/docs-site"
+    schedule:
+      interval: "weekly"
+    groups:
+      go-dependencies:
+        patterns: ["*"]
+    labels: ["dependencies", "go", "docs"]
+    commit-message:
+      prefix: "chore(docs)"

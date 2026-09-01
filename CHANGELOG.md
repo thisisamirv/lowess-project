@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Monorepo:**
 
 - Added `dev/add-readme-to-docs.py`, which auto-detects the Hugo (Go, Java) vs Starlight (Node.js, WASM) docs-site flavor and embeds `README.md` accordingly; wired into the corresponding Makefiles and `package.json` scripts.
+- Added `.github/dependabot.yml`, covering every dependency ecosystem in the repo: `github-actions` (workflows and composite actions), `cargo` (the root workspace and the standalone `bindings/r/src` crate), `npm` (`bindings/nodejs`, `bindings/wasm`), `pip` (`bindings/python`), `maven` (`bindings/java`), and `gomod` (`bindings/go/fastlowess`, `bindings/go/tests`, `bindings/go/docs-site`). Each ecosystem/directory is grouped so all its updates (including majors) land in a single weekly PR.
 
 **C++:**
 
