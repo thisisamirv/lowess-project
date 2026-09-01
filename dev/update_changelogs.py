@@ -61,8 +61,8 @@ TARGETS = [
         "key": "java",
         "labels": ["Java"],
         "package": "fastlowess (Java)",
-        "output": "bindings/java/docs/NEWS.md",
-        "hugo_weight": 100,
+        "output": "bindings/java/docs/modules/ROOT/pages/NEWS.adoc",
+        "asciidoc": True,
     },
     {
         "key": "julia",
@@ -120,6 +120,52 @@ def changelog_url() -> str:
     return f"{REPO_URL}/blob/main/CHANGELOG.md"
 
 
+# --- Minimal Markdown -> AsciiDoc inline conversion, for the `asciidoc` target ---
+_CODE_SPAN_RE = re.compile(r"`([^`]+)`")
+_BOLD_RE = re.compile(r"\*\*(.+?)\*\*")
+_ITALIC_RE = re.compile(r"(?<!\*)\*([^*\n]+?)\*(?!\*)")
+_LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
+_INLINE_MATH_RE = re.compile(r"\$([^$\n]+)\$")
+
+
+def _adoc_inline(text: str) -> str:
+    """Convert one line of Markdown (as used in CHANGELOG.md bullets) to AsciiDoc."""
+    saved: list[str] = []
+
+    def protect_code(m: re.Match) -> str:
+        # Escape literal braces so Asciidoctor doesn't treat them as an
+        # attribute reference (e.g. a code span mentioning `{toctree}`).
+        saved.append(m.group(0).replace("{", "\\{").replace("}", "\\}"))
+        return f"\x00{len(saved) - 1}\x00"
+
+    text = _CODE_SPAN_RE.sub(protect_code, text)
+
+    bold_saved: list[str] = []
+
+    def protect_bold(m: re.Match) -> str:
+        bold_saved.append(m.group(1))
+        return f"\x01{len(bold_saved) - 1}\x01"
+
+    text = _BOLD_RE.sub(protect_bold, text)
+    text = _ITALIC_RE.sub(r"_\1_", text)
+    for i, content in enumerate(bold_saved):
+        text = text.replace(f"\x01{i}\x01", f"*{content}*")
+
+    def convert_link(m: re.Match) -> str:
+        label, target = m.group(1), m.group(2)
+        if target.startswith(("http://", "https://", "mailto:")):
+            return f"{target}[{label}]"
+        path, _, anchor = target.partition("#")
+        path = path.replace(".md", ".adoc")
+        return f"xref:{path}{f'#{anchor}' if anchor else ''}[{label}]"
+
+    text = _LINK_RE.sub(convert_link, text)
+    text = _INLINE_MATH_RE.sub(r"stem:[\1]", text)
+    for i, span in enumerate(saved):
+        text = text.replace(f"\x00{i}\x00", span)
+    return text
+
+
 def parse_entries(
     changelog_text: str, labels: list[str]
 ) -> list[tuple[str, dict[str, list[str]]]]:
@@ -161,7 +207,10 @@ def render_news(
     frontmatter_title: str | None = None,
     doxygen_page: str | None = None,
     hugo_weight: int | None = None,
+    asciidoc: bool = False,
 ) -> str:
+    if asciidoc:
+        return _render_news_asciidoc(package, versions)
     header = "<!-- markdownlint-disable MD024 MD025 -->"
     if doxygen_page:
         header = f"{doxygen_page}\n\n{header}"
@@ -184,6 +233,26 @@ def render_news(
     footer = f"For the full changelog, see:\n<{changelog_url()}>\n"
     body = "\n".join(blocks) + "\n" + footer if blocks else footer
     return header + "\n" + body
+
+
+def _render_news_asciidoc(
+    package: str, versions: list[tuple[str, dict[str, list[str]]]]
+) -> str:
+    blocks = []
+    for version, sections in versions:
+        if not sections:
+            continue
+        lines = [f"== {package} {version}", ""]
+        for section, bullets in sections.items():
+            lines.append(f"=== {section}")
+            lines.append("")
+            lines.extend(f"* {_adoc_inline(bullet)}" for bullet in bullets)
+            lines.append("")
+        blocks.append("\n".join(lines).rstrip() + "\n")
+
+    footer = f"For the full changelog, see:\n{changelog_url()}\n"
+    body = "\n".join(blocks) + "\n" + footer if blocks else footer
+    return "= News\n\n" + body
 
 
 def main() -> None:
@@ -211,6 +280,7 @@ def main() -> None:
             target.get("frontmatter_title"),
             target.get("doxygen_page"),
             target.get("hugo_weight"),
+            target.get("asciidoc", False),
         ),
         encoding="utf-8",
     )

@@ -1,0 +1,28 @@
+* xref:index.adoc[fastlowess (Java)]
+* Introduction
+** xref:introduction/getting-started.adoc[Getting Started]
+** xref:introduction/installation.adoc[Installation]
+** xref:introduction/concepts.adoc[Concepts]
+* User Guide
+** xref:guide/adapter-choice.adoc[Execution Modes]
+** xref:guide/intervals.adoc[Intervals]
+** xref:guide/cross-validation.adoc[Cross-Validation]
+* API Reference
+** xref:api/api.adoc[API]
+** xref:api/api-streaming.adoc[StreamingLowess API]
+** xref:api/api-online.adoc[OnlineLowess API]
+* Weight & Robustness
+** xref:weighting/kernels.adoc[Weight Functions]
+** xref:weighting/robustness.adoc[Robustness]
+** xref:weighting/scaling.adoc[Scaling Methods]
+** xref:weighting/custom-weights.adoc[Custom Weights]
+* Advanced
+** xref:advanced/boundary.adoc[Boundary Handling]
+** xref:advanced/merge.adoc[Merge Strategies]
+** xref:advanced/gpu-backend.adoc[GPU Backend]
+* Use Cases
+** xref:use-case/use-case-genomics.adoc[Genomic Data Smoothing]
+** xref:use-case/use-case-real-time.adoc[Real-Time Processing]
+** xref:use-case/use-case-time-series.adoc[Time Series Analysis]
+* xref:benchmarks.adoc[Benchmarks]
+* xref:NEWS.adoc[News]

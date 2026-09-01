@@ -1,0 +1,11 @@
+name: java
+title: fastlowess (Java)
+version: ~
+start_page: ROOT:index.adoc
+nav:
+  - modules/ROOT/nav.adoc
+asciidoc:
+  attributes:
+    stem: latexmath
+    idprefix: ""
+    idseparator: "-"

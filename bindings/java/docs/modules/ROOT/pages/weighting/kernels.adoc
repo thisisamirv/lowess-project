@@ -1,0 +1,352 @@
+= Weight Functions
+
+Kernel functions for distance weighting.
+
+== Overview
+
+Weight functions (kernels) determine how neighboring points contribute to each local fit. Points closer to the target receive higher weights.
+
+image::kernel_comparison.svg[Weight Functions]
+
+== Available Kernels
+
+[cols="1,1,1,1",options="header"]
+|===
+|Kernel |Efficiency |Smoothness |Support
+
+|*Tricube* |0.998 |Very smooth |Compact
+|*Epanechnikov* |1.000 |Smooth |Compact
+|*Gaussian* |0.961 |Infinite |Unbounded
+|*Biweight* |0.995 |Very smooth |Compact
+|*Cosine* |0.999 |Smooth |Compact
+|*Triangle* |0.989 |Moderate |Compact
+|*Uniform* |0.943 |None |Compact
+|===
+
+*Efficiency* = AMISE relative to Epanechnikov (1.0 = optimal)
+
+All examples below use the same 100-point noisy sine wave (`x[i] = i * 2 * Math.PI / (n - 1); y[i] = Math.sin(x[i]) + 0.1`, `n = 100`).
+
+'''
+
+== Tricube (Default)
+
+Cleveland's original choice. Best all-around performance.
+
+[stem]
+++++
+w(u) = (1 - |u|^3)^3
+++++
+
+*Use when*: Default choice for most applications.
+
+[source,java]
+----
+import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i < n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        Options options = Options.builder().weightFunction("tricube").build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y);
+            System.out.println("First smoothed value (tricube kernel): " + result.y()[0]);
+        }
+    }
+}
+----
+
+[source,console]
+----
+First smoothed value (tricube kernel): 0.38260776436644134
+----
+
+'''
+
+== Epanechnikov
+
+Theoretically optimal for kernel density estimation.
+
+[stem]
+++++
+w(u) = \frac{3}{4}(1 - u^2)
+++++
+
+*Use when*: Optimal MSE properties desired.
+
+[source,java]
+----
+import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i < n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        Options options = Options.builder().weightFunction("epanechnikov").build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y);
+            System.out.println("First smoothed value (epanechnikov kernel): " + result.y()[0]);
+        }
+    }
+}
+----
+
+[source,console]
+----
+First smoothed value (epanechnikov kernel): 0.40672777844316566
+----
+
+'''
+
+== Gaussian
+
+Infinitely smooth. No boundary effects.
+
+[stem]
+++++
+w(u) = \exp(-u^2/2)
+++++
+
+*Use when*: Maximum smoothness needed, computational cost acceptable.
+
+[source,java]
+----
+import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i < n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        Options options = Options.builder().weightFunction("gaussian").build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y);
+            System.out.println("First smoothed value (gaussian kernel): " + result.y()[0]);
+        }
+    }
+}
+----
+
+[source,console]
+----
+First smoothed value (gaussian kernel): 0.435767018911707
+----
+
+'''
+
+== Biweight
+
+Good balance of efficiency and smoothness.
+
+[stem]
+++++
+w(u) = (1 - u^2)^2
+++++
+
+*Use when*: Alternative to Tricube with slightly different properties.
+
+[source,java]
+----
+import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i < n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        Options options = Options.builder().weightFunction("biweight").build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y);
+            System.out.println("First smoothed value (biweight kernel): " + result.y()[0]);
+        }
+    }
+}
+----
+
+[source,console]
+----
+First smoothed value (biweight kernel): 0.3759030457029011
+----
+
+'''
+
+== Uniform
+
+Equal weight within the window; no distance decay.
+
+[stem]
+++++
+w(u) = 1
+++++
+
+*Use when*: You want a simple moving-average-like behavior within the neighborhood.
+
+[source,java]
+----
+import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i < n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        Options options = Options.builder().weightFunction("uniform").build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y);
+            System.out.println("First smoothed value (uniform kernel): " + result.y()[0]);
+        }
+    }
+}
+----
+
+[source,console]
+----
+First smoothed value (uniform kernel): 0.45083991221911446
+----
+
+'''
+
+== Triangle
+
+Linear decay to zero at the neighborhood edge.
+
+[stem]
+++++
+w(u) = 1 - |u|
+++++
+
+*Use when*: A simple, cheap-to-evaluate kernel with compact support is preferred.
+
+[source,java]
+----
+import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i < n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        Options options = Options.builder().weightFunction("triangle").build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y);
+            System.out.println("First smoothed value (triangle kernel): " + result.y()[0]);
+        }
+    }
+}
+----
+
+[source,console]
+----
+First smoothed value (triangle kernel): 0.3816572331939023
+----
+
+'''
+
+== Cosine
+
+Smooth compact-support kernel, close in efficiency to Tricube.
+
+[stem]
+++++
+w(u) = \cos\!\left(\frac{\pi u}{2}\right)
+++++
+
+*Use when*: An alternative smooth kernel to Tricube is desired.
+
+[source,java]
+----
+import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i < n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        Options options = Options.builder().weightFunction("cosine").build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y);
+            System.out.println("First smoothed value (cosine kernel): " + result.y()[0]);
+        }
+    }
+}
+----
+
+[source,console]
+----
+First smoothed value (cosine kernel): 0.4008299554019581
+----
+
+'''
+
+[#choosing-a-kernel]
+== Choosing a Kernel
+
+[cols="1,1",options="header"]
+|===
+|Situation |Recommended Kernel
+
+|General purpose |`tricube` (default)
+|Theoretical MSE optimality |`epanechnikov`
+|Maximum smoothness, no boundary artifacts |`gaussian`
+|Simple, cheap alternative |`uniform`, `triangle`
+|===
+

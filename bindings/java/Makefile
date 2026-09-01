@@ -95,11 +95,7 @@ clean:
 	@echo "$(JAVA_PKG) clean complete!"
 
 docs:
-	@echo "Building $(JAVA_PKG) docs (Hugo)..."
+	@echo "Building $(JAVA_PKG) docs (Antora)..."
 	@$(PYTHON) dev/add-readme-to-docs.py $(JAVA_DIR)
-	@if ! command -v hugo >/dev/null 2>&1; then \
-		echo "hugo not found. Installing latest version..."; \
-		go install github.com/gohugoio/hugo@latest; \
-	fi
-	@cd $(JAVA_DIR)/docs-site && hugo --gc --minify
-	@echo "Docs built at $(JAVA_DIR)/docs-site/public/index.html"
+	@cd $(JAVA_DIR)/docs-site && npx --yes -p @antora/cli@3 -p @antora/site-generator@3 antora antora-playbook.yml
+	@echo "Docs built at $(JAVA_DIR)/docs-site/public/java/index.html"

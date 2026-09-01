@@ -1,0 +1,251 @@
+= Custom Weights
+
+Per-observation weights that encode data quality directly into the LOWESS fit.
+
+== How Custom Weights Work
+
+Standard LOWESS assigns equal prior trust to all observations. Custom weights let you override this assumption point by point — before any distance or robustness weighting is applied.
+
+The effective weight of observation stem:[j] in a local fit centred at stem:[x_i] is:
+
+[stem]
+++++
+w_{ij} = \text{customWeights}_j \times K\!\left(\frac{d_{ij}}{h_i}\right) \times r_j
+++++
+
+where stem:[K] is the distance kernel, stem:[h_i] is the local bandwidth, and stem:[r_j] is the robustness weight from the current iteration.
+
+[NOTE]
+====
+*Batch adapter only:* `customWeights` applies in *Batch* (`Lowess`) mode. It is silently ignored in `StreamingLowess` and `OnlineLowess`.
+====
+
+'''
+
+== When to Use Custom Weights
+
+[cols="1,1",options="header"]
+|===
+|Situation |Recommended weight
+
+|Point known to be erroneous |`0.0` — fully excluded
+|Unreliable sensor / low precision |`0.1 – 0.5`
+|Standard observation |`1.0` (default)
+|Carefully calibrated measurement |`> 1.0`
+|Measurement uncertainty stem:[\sigma_i] |stem:[1 / \sigma_i^2]
+|===
+
+=== Custom Weights vs. Robustness Iterations
+
+Both mechanisms handle unreliable data, but they serve different purposes:
+
+[cols="1,1,1",options="header"]
+|===
+| |Custom Weights |Robustness Iterations
+
+|*When known* |Before fitting |Computed from residuals
+|*Knowledge required* |Prior knowledge of quality |None — data-driven
+|*Effect* |Fixed throughout fit |Adapts each iteration
+|*Use case* |Known bad sensors, calibration |Unknown outlier contamination
+|===
+
+They compose: you can use both simultaneously. Custom weights suppress _a priori_ bad points; robustness iterations then handle any _residual_ outliers that remain.
+
+'''
+
+== Basic Usage
+
+=== Suppress a Known Outlier
+
+Set the weight to `0` at the bad point — it is excluded from every local fit that would otherwise include it.
+
+[source,java]
+----
+import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        double[] x = new double[10];
+        double[] y = new double[10];
+        for (int i = 0; i < 10; i++) {
+            x[i] = i;
+            y[i] = i * 2.0;
+        }
+        y[5] = 100.0; // spike
+
+        double[] weights = new double[10];
+        java.util.Arrays.fill(weights, 1.0);
+        weights[5] = 0.0; // exclude the spike
+
+        Options options = Options.builder().fraction(0.5).iterations(0).build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y, weights);
+            System.out.println("First smoothed value (custom weights): " + result.y()[0]);
+        }
+    }
+}
+----
+
+[source,console]
+----
+First smoothed value (custom weights): 0.5726210350584308
+----
+
+'''
+
+=== Emphasize Important Points
+
+Assign high weights to measurements you trust most — calibration standards, reference instruments, or low-noise observations.
+
+[source,java]
+----
+import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i < n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        double[] weights = new double[x.length];
+        java.util.Arrays.fill(weights, 1.0);
+        for (int i : new int[] { 5, 20, 40, 60, 80 }) {
+            weights[i] = 10.0; // trust calibration 10x more
+        }
+
+        Options options = Options.builder().fraction(0.5).build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y, weights);
+            System.out.println("First smoothed value (custom weights): " + result.y()[0]);
+        }
+    }
+}
+----
+
+[source,console]
+----
+First smoothed value (custom weights): 0.32374197253806136
+----
+
+'''
+
+=== Propagate Measurement Uncertainty
+
+If each observation has a known standard deviation stem:[\sigma_i], set stem:[w_i = 1 / \sigma_i^2] to give the fit information-theoretically optimal weighting.
+
+[source,java]
+----
+import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i < n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        double[] sigma = new double[x.length];
+        double[] weights = new double[x.length];
+        for (int i = 0; i < sigma.length; i++) {
+            sigma[i] = 0.1 + (i % 4) * 0.1;
+            weights[i] = 1.0 / (sigma[i] * sigma[i]);
+        }
+
+        Options options = Options.builder().fraction(0.5).build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y, weights);
+            System.out.println("First smoothed value (custom weights): " + result.y()[0]);
+        }
+    }
+}
+----
+
+[source,console]
+----
+First smoothed value (custom weights): 0.1522219803222456
+----
+
+'''
+
+== Combined with Robustness Iterations
+
+Custom weights and robustness iterations compose naturally: use custom weights for _known_ bad points and robustness for _unknown_ contamination.
+
+[source,java]
+----
+import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        double[] x2 = new double[20];
+        double[] y2 = new double[20];
+        for (int i = 0; i < 20; i++) {
+            x2[i] = i;
+            y2[i] = i * 1.5;
+        }
+        y2[3] = -50.0; // known bad
+        y2[12] = 80.0; // unknown outlier
+
+        double[] weights2 = new double[20];
+        java.util.Arrays.fill(weights2, 1.0);
+        weights2[3] = 0.0;
+
+        Options options = Options.builder().fraction(0.4).iterations(3).build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x2, y2, weights2);
+            System.out.println("First smoothed value (custom weights): " + result.y()[0]);
+        }
+    }
+}
+----
+
+[source,console]
+----
+First smoothed value (custom weights): 1.7983966900445223
+----
+
+'''
+
+== Validation Rules
+
+[cols="1,1",options="header"]
+|===
+|Rule |Effect
+
+|Length must equal `n` |`RuntimeException` at `fit` time if mismatched
+|All values must be ≥ 0 |Negative weights are rejected
+|All-zero weight vector |Error: no points remain for any local fit
+|Uniform weights (`1.0` everywhere) |Identical result to omitting weights
+|===
+
+[NOTE]
+====
+*Zero-weight windows:* If a local neighbourhood contains only zero-weight points, the fit at that centre point falls back to the behaviour specified by `zeroWeightFallback` (default: `"use_local_mean"`).
+====
+
+'''
+
+== See Also
+
+* xref:./robustness.adoc[Robustness] — adaptive outlier downweighting via IRLS
+* xref:../api/api.adoc[API Reference] — full parameter reference
+

@@ -1,0 +1,19 @@
+site:
+  title: fastlowess (Java)
+  url: https://thisisamirv.github.io/lowess-project/java
+  start_page: java::index.adoc
+
+content:
+  sources:
+    - url: ../../..
+      start_path: bindings/java/docs
+      branches: HEAD
+
+ui:
+  bundle:
+    url: https://gitlab.com/antora/antora-ui-default/-/jobs/artifacts/HEAD/raw/build/ui-bundle.zip?job=bundle-stable
+    snapshot: true
+  supplemental_files: ./supplemental-ui
+
+output:
+  dir: ./public

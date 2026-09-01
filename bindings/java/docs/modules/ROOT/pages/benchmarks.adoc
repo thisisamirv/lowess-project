@@ -1,0 +1,6 @@
+= Benchmarks
+
+The Java binding calls the same `fastLowess` Rust core as every other binding (C++, Python, R, Julia, Node.js, WASM, Go) through a thin JNI layer, so its raw fit performance is governed by the same underlying engine — see the https://thisisamirv.github.io/lowess-project/cpp/benchmarks.html[C++ binding's benchmarks] for representative numbers (R baseline vs. serial vs. parallel, across scale/fraction/iteration/pathological-data scenarios).
+
+A dedicated JMH benchmark harness (wired into `benchmarks/compare.py` alongside the R/Rust comparisons) has not been added yet — this is a good follow-up once the binding has seen some real-world use. In the meantime, JUnit tests combined with manual timing (or https://openjdk.org/projects/code-tools/jmh/[JMH]) can be used for local relative comparisons between option configurations (e.g. serial vs. `parallel(true)`, different `fraction`/`iterations` values).
+

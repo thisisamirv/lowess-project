@@ -130,6 +130,10 @@ bindings/go/docs-site/public/
 bindings/go/docs-site/resources/
 bindings/go/docs-site/.hugo_build.lock
 
+# Antora (Java docs)
+bindings/java/docs-site/public/
+bindings/java/docs-site/.cache/
+
 # Stray generated dirs (accidental output under the wrong working directory)
 bindings/*/benchmarks/
 bindings/*/validation/
