@@ -108,7 +108,7 @@ Choose the right mode based on your use case:
 | Data too large for memory or arrives in chunks | `StreamingLowess` |
 | Data arrives point-by-point in real time | `OnlineLowess` |
 
-See [Execution Modes](adapter-choice.md) for a fuller comparison.
+See [Execution Modes](../guide/adapter-choice.md) for a fuller comparison.
 
 ---
 
@@ -127,8 +127,8 @@ See [Execution Modes](adapter-choice.md) for a fuller comparison.
 ## Next Steps
 
 - [Getting Started](getting-started.md) — See it in action
-- [API Reference](api.md) — All configuration options
-- [Boundary Handling](boundary.md) — Edge bias reduction strategies
-- [Robustness](robustness.md) — Outlier downweighting methods
-- [Scaling Methods](scaling.md) — MAD, MAR, Mean scale estimation
-- [Merge Strategies](merge.md) — Chunk reconciliation in Streaming mode
+- [API Reference](../api/api.md) — All configuration options
+- [Boundary Handling](../advanced/boundary.md) — Edge bias reduction strategies
+- [Robustness](../weighting/robustness.md) — Outlier downweighting methods
+- [Scaling Methods](../weighting/scaling.md) — MAD, MAR, Mean scale estimation
+- [Merge Strategies](../advanced/merge.md) — Chunk reconciliation in Streaming mode

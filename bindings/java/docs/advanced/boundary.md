@@ -179,4 +179,4 @@ First smoothed value (noboundary boundary): 0.6938276370262506
 | Signal known to be zero at boundaries | `"zero"` |
 | Replicating original Cleveland behaviour | `"noboundary"` |
 
-All examples above use the same 100-point noisy sine wave (see [Weight Functions](kernels.md#choosing-a-kernel) for the generation code).
+All examples above use the same 100-point noisy sine wave (see [Weight Functions](../weighting/kernels.md#choosing-a-kernel) for the generation code).

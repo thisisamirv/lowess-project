@@ -24,7 +24,7 @@ StreamingOptions options = StreamingOptions.builder()
 | `overlap` | `int` | `0` | Points shared between consecutive chunks. |
 | `mergeStrategy` | `String` | `"weighted_average"` | How overlapping chunk results are combined. |
 
-*See also: [Merge Strategies](merge.md)*
+*See also: [Merge Strategies](../advanced/merge.md)*
 
 ![Merge Strategies](../assets/diagrams/merge_comparison.svg)
 

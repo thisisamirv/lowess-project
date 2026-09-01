@@ -235,4 +235,4 @@ Point 2: SE = 0.0283
 | Prediction intervals | ✓ | ✗ | ✗ |
 | Standard errors | ✓ | ✗ | ✗ |
 
-All examples above use the same 100-point noisy sine wave (see [Weight Functions](kernels.md#choosing-a-kernel) for the generation code).
+All examples above use the same 100-point noisy sine wave (see [Weight Functions](../weighting/kernels.md#choosing-a-kernel) for the generation code).

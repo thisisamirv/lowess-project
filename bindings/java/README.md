@@ -2,7 +2,6 @@
 # LOWESS Project
 
 <p align="center">
-  <a href="https://central.sonatype.com/artifact/io.github.thisisamirv/fastlowess"><img src="https://img.shields.io/badge/Java-007396?logo=openjdk&logoColor=white" alt="Java"></a>
   <a href="https://central.sonatype.com/artifact/io.github.thisisamirv/fastlowess"><img src="https://img.shields.io/badge/Maven_Central-C71A36?logo=apachemaven&logoColor=white" alt="Maven Central"></a>
   <a href="https://github.com/thisisamirv/lowess-project/actions/workflows/ci-java.yml"><img src="https://github.com/thisisamirv/lowess-project/actions/workflows/ci-java.yml/badge.svg" alt="CI"></a>
 </p>
@@ -21,13 +20,13 @@ The `lowess-project` also offers bindings for Rust, Python, R, Julia, Node.js, W
 
 ## Installation & Documentation
 
-> See the [Installation Guide](https://thisisamirv.github.io/lowess-project/java/installation/) for detailed installation instructions.
+> See the [Installation Guide](https://thisisamirv.github.io/lowess-project/java/introduction/installation/) for detailed installation instructions.
 >
 > ### 📚 [View the full documentation](https://thisisamirv.github.io/lowess-project/java/)
 
 ### GPU Backend
 
-GPU acceleration (`wgpu`: Vulkan/Metal/DX12) is also supported for high-throughput batch smoothing. See the [GPU Backend guide](https://thisisamirv.github.io/lowess-project/java/gpu-backend/) for details.
+GPU acceleration (`wgpu`: Vulkan/Metal/DX12) is also supported for high-throughput batch smoothing. See the [GPU Backend guide](https://thisisamirv.github.io/lowess-project/java/advanced/gpu-backend/) for details.
 
 ---
 
@@ -40,7 +39,7 @@ GPU acceleration (`wgpu`: Vulkan/Metal/DX12) is also supported for high-throughp
 | **Flexibility** | High (Distance metrics) | Standard |
 | **Complexity** | Higher (Matrix inversion) | Lower (Weighted average/slope) |
 
-Read more about how LOWESS works in the [Concepts](https://thisisamirv.github.io/lowess-project/java/concepts/).
+Read more about how LOWESS works in the [Concepts](https://thisisamirv.github.io/lowess-project/java/introduction/concepts/).
 
 > **Note:** For a **LOESS** implementation, use [`loess-project`](https://github.com/thisisamirv/loess-project).
 

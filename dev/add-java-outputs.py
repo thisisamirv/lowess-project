@@ -71,7 +71,7 @@ def process_file(md_path: Path, failures: list[str]) -> bool:
     return False
 
 
-files = sorted(f for f in DOCS_DIR.glob("*.md") if f.name != "index.md")
+files = sorted(f for f in DOCS_DIR.rglob("*.md") if f.name != "index.md")
 failures: list[str] = []
 updated = 0
 for f in files:

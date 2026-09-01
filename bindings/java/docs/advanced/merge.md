@@ -205,4 +205,4 @@ First smoothed value (weighted_average merge): -0.4085108268565776
 
 > **Overlap size matters:** A larger overlap gives the merge strategy more room to blend, reducing boundary artefacts regardless of the strategy chosen. A good starting point is 10% of `chunkSize`.
 
-All examples above use the same 100-point noisy sine wave (see [Weight Functions](kernels.md#choosing-a-kernel) for the generation code).
+All examples above use the same 100-point noisy sine wave (see [Weight Functions](../weighting/kernels.md#choosing-a-kernel) for the generation code).
