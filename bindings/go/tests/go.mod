@@ -1,6 +1,6 @@
 module github.com/thisisamirv/lowess-project/bindings/go/tests
 
-go 1.21
+go 1.23
 
 require github.com/thisisamirv/lowess-project/bindings/go/fastlowess v0.0.0
 

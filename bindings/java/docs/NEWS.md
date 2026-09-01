@@ -4,11 +4,11 @@ weight: 100
 ---
 
 <!-- markdownlint-disable MD024 MD025 -->
-# fastlowess (Java) (development version)
+# fastlowess (Java) 3.2.0
 
 ## Added
 
-* Added a new Java binding (`bindings/java`), consuming the `fastLowess` Rust core via a JNI shared library (`fastlowess-java` crate, using the `jni` crate). Provides `Lowess` (batch), `StreamingLowess`, and `OnlineLowess` model types with an idiomatic Java API (fluent `Options`/`StreamingOptions`/`OnlineOptions` builders, `Result`/`PointResult`/`Diagnostics` records with `Optional`/`OptionalInt`/`OptionalDouble` accessors, `AutoCloseable`-based resource management for use with try-with-resources). Targets Java 25 LTS (`maven.compiler.release`). Ships with JUnit 5 unit tests, a `Makefile` (`java`/`java-dev`/`java-clean` targets, wired into the root `Makefile`), and docs (`getting-started.md`, `api.md`, `api-streaming.md`, `api-online.md`, `installation.md`, `concepts.md`, `adapter-choice.md`, `kernels.md`, `robustness.md`, `scaling.md`, `boundary.md`, `intervals.md`, `cross-validation.md`, `custom-weights.md`, `merge.md`, `gpu-backend.md`, `benchmarks.md`).
+* Added a new Java binding (`bindings/java`), consuming the `fastLowess` Rust core via a JNI shared library (`fastlowess-java` crate, using the `jni` crate).
 
 ## Changed
 

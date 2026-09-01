@@ -172,6 +172,12 @@ fn main() -> Result<(), LowessError> {
 }
 ```
 
+```output
+Potential outlier at index 20: weight = 0.000
+Potential outlier at index 50: weight = 0.000
+Potential outlier at index 80: weight = 0.000
+```
+
 ---
 
 ## Scale Estimation

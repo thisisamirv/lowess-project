@@ -1,6 +1,6 @@
 [package]
 name = "rfastlowess"
-version = "3.1.0"
+version = "3.2.0"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
@@ -36,11 +36,5 @@ gpu = ["fastLowess/gpu"]
 strip = "symbols"
 
 [workspace]
-
-
-
-
-
-
 
 

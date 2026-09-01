@@ -2,7 +2,11 @@
 title: News
 ---
 <!-- markdownlint-disable MD024 MD025 -->
-# fastlowess (Node.js) (development version)
+# fastlowess (Node.js) 3.2.0
+
+## Added
+
+* Added a `VERSION` export (`bindings/nodejs/index.js`), sourced from `package.json`, so consumers can query the Node.js binding's own version without reaching into `require('fastlowess/package.json')` directly.
 
 ## Changed
 

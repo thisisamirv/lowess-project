@@ -41,7 +41,7 @@ def run_go(snippet: Snippet, timeout: int) -> RunResult:
         # without needing it published or network access.
         (mod_dir / "go.mod").write_text(
             "module snippet\n\n"
-            "go 1.21\n\n"
+            "go 1.23\n\n"
             f"require {MODULE_PATH} v0.0.0\n\n"
             f"replace {MODULE_PATH} => {GO_MODULE_DIR.as_posix()}\n",
             encoding="utf-8",

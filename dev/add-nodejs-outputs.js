@@ -29,7 +29,7 @@ function runSnippet(code) {
     try {
         const output = execFileSync(process.execPath, [tmp], {
             cwd: BINDING_DIR,
-            timeout: 15000,
+            timeout: 60000,
             encoding: 'utf-8',
             stdio: ['ignore', 'pipe', 'pipe'],
         }).trim() || null;

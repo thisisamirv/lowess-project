@@ -73,7 +73,7 @@ console.log(`Speedup:  ${(serialMs / parallelMs).toFixed(2)}×`);
 ```
 
 ```output
-Serial:   7.45 ms
-Parallel: 3.40 ms
-Speedup:  2.19×
+Serial:   7.76 ms
+Parallel: 2.98 ms
+Speedup:  2.60×
 ```

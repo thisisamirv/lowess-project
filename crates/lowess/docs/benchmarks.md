@@ -56,5 +56,5 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-Fit: 296.82 ms
+Fit: 247.53 ms
 ```

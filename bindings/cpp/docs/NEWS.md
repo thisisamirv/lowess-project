@@ -1,7 +1,11 @@
 \page news News
 
 <!-- markdownlint-disable MD024 MD025 -->
-# fastlowess (C++) (development version)
+# fastlowess (C++) 3.2.0
+
+## Added
+
+* Library is now available on Spack (`fastlowess-cpp`).
 
 ## Changed
 

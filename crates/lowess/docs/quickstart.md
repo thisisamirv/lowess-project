@@ -112,6 +112,10 @@ fn main() -> Result<(), LowessError> {
 }
 ```
 
+```output
+Point 3 is likely an outlier (weight: 0.000)
+```
+
 ---
 
 ## Streaming Mode

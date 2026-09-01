@@ -66,7 +66,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-Serial:   299.22 ms
-Parallel: 54.15 ms
-Speedup:  5.53x
+Serial:   269.32 ms
+Parallel: 47.21 ms
+Speedup:  5.70x
 ```

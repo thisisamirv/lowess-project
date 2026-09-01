@@ -1,5 +1,5 @@
 <!-- markdownlint-disable MD024 MD025 -->
-# fastlowess (Python) (development version)
+# fastlowess (Python) 3.2.0
 
 ## Changed
 

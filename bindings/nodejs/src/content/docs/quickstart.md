@@ -87,6 +87,10 @@ result.robustness_weights.forEach((w, i) => {
 });
 ```
 
+```output
+Point 3 is likely an outlier (weight: 0.000)
+```
+
 ---
 
 ## Streaming Mode

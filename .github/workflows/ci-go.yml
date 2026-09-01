@@ -16,12 +16,13 @@ env:
 
 jobs:
   ci:
-    name: Go (${{ matrix.os }})
+    name: Go ${{ matrix.go-version }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
+        go-version: ["1.23", "stable"]
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -29,7 +30,7 @@ jobs:
           components: rustfmt, clippy
       - uses: actions/setup-go@v7
         with:
-          go-version: "1.21"
+          go-version: ${{ matrix.go-version }}
 
       - name: Install Rust GNU + GNU Make (Windows)
         if: matrix.os == 'windows-latest'
@@ -40,7 +41,7 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
-          key: go-${{ matrix.os }}
+          key: go-${{ matrix.os }}-${{ matrix.go-version }}
 
       - name: Lint (Rust)
         working-directory: bindings/go

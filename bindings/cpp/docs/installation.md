@@ -50,6 +50,12 @@ cargo build --release
 conda install -c conda-forge libfastlowess
 ```
 
+## From Spack
+
+```bash
+spack install fastlowess-cpp
+```
+
 ---
 
 ## Verify Installation

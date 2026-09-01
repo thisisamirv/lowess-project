@@ -19,7 +19,7 @@ test = ["Test", "Random"]
 [compat]
 Downloads = "1"
 julia = "1.6"
-fastlowess_jll = "3.1.0, 3.1.0"
+fastlowess_jll = "3.2.0"
 Test = "1"
 Random = "1"
 

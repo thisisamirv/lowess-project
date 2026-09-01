@@ -2,7 +2,7 @@
 title: News
 ---
 <!-- markdownlint-disable MD024 MD025 -->
-# fastlowess-wasm (development version)
+# fastlowess-wasm 3.2.0
 
 ## Changed
 

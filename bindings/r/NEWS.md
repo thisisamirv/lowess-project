@@ -1,5 +1,5 @@
 <!-- markdownlint-disable MD024 MD025 -->
-# rfastlowess (development version)
+# rfastlowess 3.2.0
 
 ## Changed
 

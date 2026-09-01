@@ -1,5 +1,5 @@
 <!-- markdownlint-disable MD024 MD025 -->
-# lowess (development version)
+# lowess 3.2.0
 
 ## Changed
 

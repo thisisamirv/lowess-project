@@ -1,5 +1,5 @@
 <!-- markdownlint-disable MD024 MD025 -->
-# fastLowess (development version)
+# fastLowess 3.2.0
 
 ## Changed
 
