@@ -67,7 +67,8 @@ def run_r(snippet: Snippet, timeout: int) -> RunResult:
             capture_output=True,
             check=False,
             timeout=timeout,
-            text=True,
+            encoding="utf-8",
+            errors="replace",
             env={**os.environ, "LOWESS_REPO_ROOT": str(REPO_ROOT)},
         )
         dur = time.monotonic() - t0

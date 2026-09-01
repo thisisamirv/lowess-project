@@ -46,7 +46,8 @@ def run_python(snippet: Snippet, timeout: int) -> RunResult:
             capture_output=True,
             check=False,
             timeout=timeout,
-            text=True,
+            encoding="utf-8",
+            errors="replace",
             env={**os.environ, "MPLBACKEND": "Agg"},
         )
         dur = time.monotonic() - t0

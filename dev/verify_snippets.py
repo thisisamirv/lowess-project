@@ -21,6 +21,11 @@ Usage
     python dev/verify_snippets.py --output out.json  # also write JSON report
     python dev/verify_snippets.py --timeout 60       # per-snippet timeout (seconds)
     python dev/verify_snippets.py --stop-on-fail     # exit after first failure
+    python dev/verify_snippets.py --lang go --update-outputs
+        # also inject/update ```output blocks in the docs for languages whose
+        # stdout should be embedded (cpp, go, java, rust, nodejs, wasm) --
+        # replaces the former dev/add-{cpp,go,java,rust,nodejs,wasm}-outputs
+        # scripts, which are no longer needed.
 """
 
 from __future__ import annotations
@@ -323,6 +328,81 @@ def should_skip(snippet: Snippet, runner: str) -> str | None:
 
 
 # ---------------------------------------------------------------------------
+# ```output block injection (merges the former dev/add-{cpp,go,java,rust,
+# nodejs,wasm}-outputs.{py,js} scripts into this one). A runner is
+# "output-capable" when its snippets are standalone programs/scripts whose
+# stdout should be embedded back into the docs as a ```output block; R,
+# Julia, and Python docs execute at their own doc-build time instead, so
+# they're intentionally excluded here.
+# ---------------------------------------------------------------------------
+
+OUTPUT_CAPABLE_RUNNERS = {"cpp", "go", "java", "rust", "nodejs", "wasm"}
+
+
+def _splice_output_block(lines: list[str], res: RunResult) -> None:
+    """Insert/update/remove the ```output block following one snippet, in place."""
+    snippet = res.snippet
+    code_line_count = len(snippet.code.split("\n"))
+    open_idx = snippet.line - 1  # 0-based index of the opening ``` fence
+    close_idx = open_idx + 1 + code_line_count  # 0-based index of the closing ``` fence
+    if close_idx >= len(lines) or not lines[close_idx].strip().startswith("```"):
+        return  # file has drifted from what was parsed; don't risk corrupting it
+
+    end_of_existing = None
+    if (
+        close_idx + 2 < len(lines)
+        and lines[close_idx + 1] == ""
+        and lines[close_idx + 2].strip() == "```output"
+    ):
+        j = close_idx + 3
+        while j < len(lines) and lines[j].strip() != "```":
+            j += 1
+        if j < len(lines):
+            end_of_existing = j
+
+    if res.skipped or not res.passed:
+        return  # leave any existing output block untouched
+
+    new_block = (
+        ["", "```output", *res.stdout.rstrip().split("\n"), "```"]
+        if res.stdout.strip()
+        else []  # passed with no output -> drop any stale block
+    )
+    if end_of_existing is not None:
+        lines[close_idx + 1 : end_of_existing + 1] = new_block
+    else:
+        lines[close_idx + 1 : close_idx + 1] = new_block
+
+
+def update_outputs(results: list[RunResult]) -> None:
+    """Rewrite ```output blocks in-place for every output-capable result."""
+    by_file: dict[Path, list[RunResult]] = defaultdict(list)
+    for res in results:
+        if res.runner in OUTPUT_CAPABLE_RUNNERS:
+            by_file[res.snippet.file].append(res)
+
+    if not by_file:
+        return
+
+    print(bold("Doc outputs"))
+    updated = 0
+    for file in sorted(by_file):
+        text = file.read_text(encoding="utf-8").replace("\r\n", "\n")
+        lines = text.split("\n")
+        for res in sorted(by_file[file], key=lambda r: r.snippet.line, reverse=True):
+            _splice_output_block(lines, res)
+        new_text = "\n".join(lines)
+        if new_text != text:
+            file.write_text(new_text, encoding="utf-8")
+            updated += 1
+            print(f"  updated: {file.relative_to(REPO_ROOT)}")
+    print(
+        f"  {len(by_file)} file(s) assessed, {updated} updated, "
+        f"{len(by_file) - updated} already up to date.\n"
+    )
+
+
+# ---------------------------------------------------------------------------
 # Main logic
 # ---------------------------------------------------------------------------
 
@@ -421,6 +501,14 @@ def main(argv: list[str] | None = None) -> int:
         "--rust-docs",
         metavar="DIR",
         help="Restrict Rust snippet search to one crate docs directory",
+    )
+    parser.add_argument(
+        "--update-outputs",
+        action="store_true",
+        help=(
+            "Inject/update ```output blocks in source docs for languages whose "
+            f"stdout should be embedded ({', '.join(sorted(OUTPUT_CAPABLE_RUNNERS))})"
+        ),
     )
     args = parser.parse_args(argv)
 
@@ -528,6 +616,11 @@ def main(argv: list[str] | None = None) -> int:
                     n_pass += 1
                 else:
                     n_fail += 1
+
+    # ---- Output injection -----------------------------------------------------
+    if args.update_outputs:
+        print()
+        update_outputs(results)
 
     # ---- Summary ------------------------------------------------------------
     print()

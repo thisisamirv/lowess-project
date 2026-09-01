@@ -41,7 +41,8 @@ def _find_msvc_compiler() -> str | None:
             result = subprocess.run(
                 [vswhere, "-all", "-find", r"VC\Tools\MSVC\**\bin\Hostx64\x64\cl.exe"],
                 capture_output=True,
-                text=True,
+                encoding="utf-8",
+                errors="replace",
                 check=False,
                 timeout=10,
             )
@@ -88,7 +89,8 @@ def _get_msvc_env(vcvarsall: str) -> dict[str, str]:
             f'call "{vcvarsall}" x64 > nul 2>&1 && set',
             shell=True,
             capture_output=True,
-            text=True,
+            encoding="utf-8",
+            errors="replace",
             check=False,
             timeout=60,
         )
@@ -216,7 +218,8 @@ def run_cpp(snippet: Snippet, timeout: int) -> RunResult:
                 capture_output=True,
                 check=False,
                 timeout=60,
-                text=True,
+                encoding="utf-8",
+                errors="replace",
                 env=msvc_env if use_msvc else None,
             )
             if cproc.returncode != 0:
@@ -248,7 +251,8 @@ def run_cpp(snippet: Snippet, timeout: int) -> RunResult:
                 capture_output=True,
                 check=False,
                 timeout=timeout,
-                text=True,
+                encoding="utf-8",
+                errors="replace",
                 env=env,
             )
             dur = time.monotonic() - t0

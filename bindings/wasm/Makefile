@@ -82,9 +82,8 @@ dev:
 	@echo "=============================================================================="
 	@echo "Doc snippet tests (wasm)..."
 	@echo "=============================================================================="
-	@$(NODE) dev/add-wasm-outputs.js $(WASM_DIR)
 	@$(NODE) dev/add-readme-to-docs.js $(WASM_DIR)
-	@$(PYTHON) dev/verify_snippets.py --lang wasm --timeout 120
+	@$(PYTHON) dev/verify_snippets.py --lang wasm --timeout 120 --update-outputs
 	@$(PYTHON) dev/update_changelogs.py wasm
 	@echo "=============================================================================="
 clean:

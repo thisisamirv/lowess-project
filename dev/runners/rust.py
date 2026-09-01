@@ -100,7 +100,8 @@ def run_rust(snippet: Snippet, timeout: int) -> RunResult:
             capture_output=True,
             check=False,
             timeout=timeout,
-            text=True,
+            encoding="utf-8",
+            errors="replace",
             cwd=str(REPO_ROOT),
         )
         dur = time.monotonic() - t0

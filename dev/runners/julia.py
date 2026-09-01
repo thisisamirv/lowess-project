@@ -67,7 +67,8 @@ def run_julia(snippet: Snippet, timeout: int) -> RunResult:
             capture_output=True,
             check=False,
             timeout=timeout,
-            text=True,
+            encoding="utf-8",
+            errors="replace",
             env=env,
         )
         dur = time.monotonic() - t0

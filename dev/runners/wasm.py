@@ -73,7 +73,8 @@ def run_wasm(snippet: Snippet, timeout: int) -> RunResult:
             capture_output=True,
             check=False,
             timeout=timeout,
-            text=True,
+            encoding="utf-8",
+            errors="replace",
         )
         dur = time.monotonic() - t0
         return RunResult(

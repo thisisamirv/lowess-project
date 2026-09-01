@@ -96,8 +96,7 @@ dev:
 	@cd $(GO_DIR)/fastlowess && go test ./... -v
 	@echo "=============================================================================="
 	@echo "Doc snippet tests (go)..."
-	@$(PYTHON) dev/add-go-outputs.py $(GO_DIR)
-	@$(PYTHON) dev/verify_snippets.py --lang go --timeout 120
+	@$(PYTHON) dev/verify_snippets.py --lang go --timeout 120 --update-outputs
 	@$(PYTHON) dev/update_changelogs.py go
 	@echo "$(GO_PKG) checks completed successfully!"
 

@@ -75,7 +75,8 @@ def run_nodejs(snippet: Snippet, timeout: int) -> RunResult:
             capture_output=True,
             check=False,
             timeout=timeout,
-            text=True,
+            encoding="utf-8",
+            errors="replace",
             cwd=cwd,
         )
         for _ in range(_MAX_ATTEMPTS - 1):
@@ -86,7 +87,8 @@ def run_nodejs(snippet: Snippet, timeout: int) -> RunResult:
                 capture_output=True,
                 check=False,
                 timeout=timeout,
-                text=True,
+                encoding="utf-8",
+                errors="replace",
                 cwd=cwd,
             )
         dur = time.monotonic() - t0

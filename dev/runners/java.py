@@ -82,7 +82,8 @@ def run_java(snippet: Snippet, timeout: int) -> RunResult:
                 capture_output=True,
                 check=False,
                 timeout=timeout,
-                text=True,
+                encoding="utf-8",
+                errors="replace",
             )
         except subprocess.TimeoutExpired:
             return RunResult(
@@ -116,7 +117,8 @@ def run_java(snippet: Snippet, timeout: int) -> RunResult:
                 capture_output=True,
                 check=False,
                 timeout=timeout,
-                text=True,
+                encoding="utf-8",
+                errors="replace",
             )
         except subprocess.TimeoutExpired:
             return RunResult(
