@@ -98,4 +98,4 @@ docs:
 	@echo "Building $(JAVA_PKG) docs (Antora)..."
 	@$(PYTHON) dev/add-readme-to-docs.py $(JAVA_DIR)
 	@cd $(JAVA_DIR)/docs-site && npx --yes -p @antora/cli@3 -p @antora/site-generator@3 antora antora-playbook.yml
-	@echo "Docs built at $(JAVA_DIR)/docs-site/public/java/index.html"
+	@echo "Docs built at $(JAVA_DIR)/docs-site/public/index.html"

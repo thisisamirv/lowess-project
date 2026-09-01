@@ -1,7 +1,7 @@
 site:
   title: fastlowess (Java)
   url: https://thisisamirv.github.io/lowess-project/java
-  start_page: java::index.adoc
+  start_page: ROOT::index.adoc
 
 content:
   sources:
