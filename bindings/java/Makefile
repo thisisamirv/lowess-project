@@ -75,6 +75,11 @@ dev:
 	@echo "=============================================================================="
 	@cd $(JAVA_DIR) && mvn -q clean test
 	@echo "=============================================================================="
+	@echo "6. Checking for outdated Maven plugins & dependencies..."
+	@echo "=============================================================================="
+	@cd $(JAVA_DIR) && mvn -q versions:display-plugin-updates
+	@cd $(JAVA_DIR) && mvn -q versions:display-dependency-updates
+	@echo "=============================================================================="
 	@echo "Doc snippet tests (java)..."
 	@echo "=============================================================================="
 	@$(PYTHON) dev/verify_snippets.py --lang java --timeout 120 --update-outputs

@@ -8,10 +8,12 @@ weight: 100
 
 ## Added
 
+* Added `dev/add-readme-to-docs.py`, which auto-detects the Hugo (Go, Java) vs Starlight (Node.js, WASM) docs-site flavor and embeds `README.md` accordingly; wired into the corresponding Makefiles and `package.json` scripts.
 * Added a new Java binding (`bindings/java`), consuming the `fastLowess` Rust core via a JNI shared library (`fastlowess-java` crate, using the `jni` crate).
 
 ## Changed
 
+* Modified `verify_snippets.py` to verify snippets and also add the output of the snippets to the markdown file.
 * Added a `large` benchmark category to `benchmarks/rfastlowess.R` and `benchmarks/stats_lowess.R` (n = 50000, `delta = 0` to disable `stats::lowess`'s interpolation shortcut for a fair, exact-computation comparison), since every existing category completed in well under 100ms. Reliably takes ~13-16s for `stats::lowess` and ~3s for `fastLowess` (serial). Expanded it to 4 scenarios stressing different parameters: `large_delta_0` (the original exact-fit case), `large_delta_0.1` (same workload with `delta` left at its default/auto value, showing the interpolation shortcut's speedup), `large_high_iter` (10 robustness iterations instead of 3), and `large_high_fraction` (n = 20000, `fraction = 0.67`, since a 0.67 fraction at n = 50000 takes over a minute). `benchmarks/compare.py`'s plot grid grew from 5x2 to 7x2 rows to fit the new categories (`large_delta_0`/`large_delta_0.1` share one "large_delta" chart, matching how `fraction_*`/`iterations_*` already group into shared charts).
 * Consolidated every crate/binding README: merged the "Installation" and "Documentation" sections, replaced GitHub-only alert syntax with plain blockquotes, removed the redundant "API Reference" and "Changelog" sections (each now has its own docs-site page), shortened the "GPU Backend" blurb, and added a "Read more" link to the Concepts page. The top-level repository README is unchanged, since it's only ever viewed on GitHub.
 * Renamed the batch adapter's "When to Use" heading to "When to Use Batch Adapter" across every binding/crate's API docs.
