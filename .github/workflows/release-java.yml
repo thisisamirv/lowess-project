@@ -32,7 +32,7 @@ jobs:
       # ~/.m2/settings.xml that central-publishing-maven-plugin's
       # <publishingServerId>central</publishingServerId> (see pom.xml's "release"
       # profile) reads its Central Portal credentials from.
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         with:
           distribution: "temurin"
           java-version: "25"

@@ -586,6 +586,205 @@ jobs:
           path: dist
 
   # ============================================================================
+  # BUILD GPU LIBRARY - Go (Linux x86_64)
+  # ============================================================================
+  go-linux-x86_64:
+    name: Build Go GPU library (Linux x86_64)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build GPU library
+        run: cargo build --release --features gpu --manifest-path bindings/go/Cargo.toml
+
+      - name: Rename asset
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp target/release/libfastlowess_go.a "dist/libfastlowess_go-gpu-${{ github.event.release.tag_name || 'dev' }}-linux-x86_64.a"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-go-linux-x86_64
+          path: dist
+
+  # ============================================================================
+  # BUILD GPU LIBRARY - Go (macOS x86_64)
+  # ============================================================================
+  go-macos-x86_64:
+    name: Build Go GPU library (macOS x86_64)
+    runs-on: macos-15-intel
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build GPU library
+        run: cargo build --release --features gpu --manifest-path bindings/go/Cargo.toml
+
+      - name: Rename asset
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp target/release/libfastlowess_go.a "dist/libfastlowess_go-gpu-${{ github.event.release.tag_name || 'dev' }}-macos-x86_64.a"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-go-macos-x86_64
+          path: dist
+
+  # ============================================================================
+  # BUILD GPU LIBRARY - Go (macOS ARM64)
+  # ============================================================================
+  go-macos-aarch64:
+    name: Build Go GPU library (macOS ARM64)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build GPU library
+        run: cargo build --release --features gpu --manifest-path bindings/go/Cargo.toml
+
+      - name: Rename asset
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp target/release/libfastlowess_go.a "dist/libfastlowess_go-gpu-${{ github.event.release.tag_name || 'dev' }}-macos-aarch64.a"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-go-macos-aarch64
+          path: dist
+
+  # ============================================================================
+  # BUILD GPU LIBRARY - Go (Windows x86_64)
+  # ============================================================================
+  go-windows-x86_64:
+    name: Build Go GPU library (Windows x86_64)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Rust GNU target
+        run: |
+          rustup toolchain install stable-x86_64-pc-windows-gnu
+          rustup target add x86_64-pc-windows-gnu
+
+      - name: Build GPU library
+        run: cargo build --release --features gpu --manifest-path bindings/go/Cargo.toml --target x86_64-pc-windows-gnu
+
+      - name: Rename asset
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          $tag = if ("${{ github.event.release.tag_name }}") { "${{ github.event.release.tag_name }}" } else { "dev" }
+          Copy-Item target/x86_64-pc-windows-gnu/release/libfastlowess_go.a "dist/libfastlowess_go-gpu-$tag-windows-x86_64.a"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-go-windows-x86_64
+          path: dist
+
+  # ============================================================================
+  # BUILD GPU LIBRARY - Java (Linux x86_64)
+  # ============================================================================
+  java-linux-x86_64:
+    name: Build Java GPU library (Linux x86_64)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build GPU library
+        run: cargo build --release --features gpu --manifest-path bindings/java/Cargo.toml
+
+      - name: Rename asset
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp target/release/libfastlowess_java.so "dist/libfastlowess_java-gpu-${{ github.event.release.tag_name || 'dev' }}-linux-x86_64.so"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-java-linux-x86_64
+          path: dist
+
+  # ============================================================================
+  # BUILD GPU LIBRARY - Java (macOS x86_64)
+  # ============================================================================
+  java-macos-x86_64:
+    name: Build Java GPU library (macOS x86_64)
+    runs-on: macos-15-intel
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build GPU library
+        run: cargo build --release --features gpu --manifest-path bindings/java/Cargo.toml
+
+      - name: Rename asset
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp target/release/libfastlowess_java.dylib "dist/libfastlowess_java-gpu-${{ github.event.release.tag_name || 'dev' }}-macos-x86_64.dylib"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-java-macos-x86_64
+          path: dist
+
+  # ============================================================================
+  # BUILD GPU LIBRARY - Java (macOS ARM64)
+  # ============================================================================
+  java-macos-aarch64:
+    name: Build Java GPU library (macOS ARM64)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build GPU library
+        run: cargo build --release --features gpu --manifest-path bindings/java/Cargo.toml
+
+      - name: Rename asset
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp target/release/libfastlowess_java.dylib "dist/libfastlowess_java-gpu-${{ github.event.release.tag_name || 'dev' }}-macos-aarch64.dylib"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-java-macos-aarch64
+          path: dist
+
+  # ============================================================================
+  # BUILD GPU LIBRARY - Java (Windows x86_64)
+  # ============================================================================
+  java-windows-x86_64:
+    name: Build Java GPU library (Windows x86_64)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build GPU library
+        run: cargo build --release --features gpu --manifest-path bindings/java/Cargo.toml
+
+      - name: Rename asset
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          $tag = if ("${{ github.event.release.tag_name }}") { "${{ github.event.release.tag_name }}" } else { "dev" }
+          Copy-Item target/release/fastlowess_java.dll "dist/libfastlowess_java-gpu-$tag-windows-x86_64.dll"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-java-windows-x86_64
+          path: dist
+
+  # ============================================================================
   # ATTACH WHEELS/LIBRARIES TO THE GITHUB RELEASE (not published elsewhere)
   # ============================================================================
   attach-to-release:
@@ -611,6 +810,14 @@ jobs:
       - r-macos-x86_64
       - r-macos-aarch64
       - r-windows-x86_64
+      - go-linux-x86_64
+      - go-macos-x86_64
+      - go-macos-aarch64
+      - go-windows-x86_64
+      - java-linux-x86_64
+      - java-macos-x86_64
+      - java-macos-aarch64
+      - java-windows-x86_64
     runs-on: ubuntu-latest
     if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
     permissions:
@@ -628,4 +835,4 @@ jobs:
       - name: Upload wheels and libraries as release assets
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "${{ github.event.release.tag_name || github.event.inputs.tag }}" dist/*.whl dist/*.so dist/*.dylib dist/*.dll dist/*.node --clobber
+        run: gh release upload "${{ github.event.release.tag_name || github.event.inputs.tag }}" dist/*.whl dist/*.so dist/*.dylib dist/*.dll dist/*.node dist/*.a --clobber
