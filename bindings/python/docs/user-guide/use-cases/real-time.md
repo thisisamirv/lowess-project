@@ -22,25 +22,26 @@ import numpy as np
 
 ## Simulate sensor readings arriving over time
 
-np.random.seed(42)
-n_readings = 100
-times = np.arange(n_readings)
-temperatures = 20 + 5 * np.sin(times / 10) + np.random.normal(0, 1, n_readings)
+times = np.arange(100, dtype=float)
+temperatures = 20.0 + 5.0 *np.sin(times / 10.0) + np.sin(times* 1.7) * 0.5
 
 ## Process with online mode
 
 online = fl.OnlineLowess(
     fraction=0.3,
+    iterations=1,
     window_capacity=25,    # Keep last 25 points
     min_points=5,          # Wait for 5 points before output
     update_mode="incremental"
 )
+count = 0
 for xi, yi in zip(times, temperatures):
     result = online.add_point(float(xi), float(yi))
     if result is not None:
-        print(f"Time {xi:.0f}: smoothed = {result.y:.2f}")
-        if xi >= 9:
-            break
+        if count < 5:
+            print(f"Time {xi:.0f}: smoothed = {result.y:.4f}")
+        count += 1
+print(f"... ({count - 5} more)")
 :::
 
 ---
@@ -61,33 +62,30 @@ The streaming adapter buffers overlap data. Call `finalize()` after the last chu
 import fastlowess as fl
 import numpy as np
 
-## Simulate large dataset arriving in chunks
-
-total_points = 100000
-chunk_size = 10000
-
-## All at once with streaming handles chunking internally
-
-x = np.arange(total_points, dtype=float)
-y = np.sin(x / 1000) + np.random.normal(0, 0.1, total_points)
+chunk1_x = np.arange(50, dtype=float)
+chunk1_y = np.sin(chunk1_x) + 0.1
+chunk2_x = np.arange(50, 100, dtype=float)
+chunk2_y = np.sin(chunk2_x) + 0.1
 
 model = fl.StreamingLowess(
-    fraction=0.05,
-    chunk_size=10000,
-    overlap=1000,
+    fraction=0.1,
+    iterations=2,
+    chunk_size=50,
+    overlap=10,
     merge_strategy="weighted_average"
 )
-model.process_chunk(x, y)
+model.process_chunk(chunk1_x, chunk1_y)
+model.process_chunk(chunk2_x, chunk2_y)
 result = model.finalize()
 
-print(f"Processed {len(result.y)} points")
+print(f"y[0]: {result.y[0]:.6f}")
 :::
 
 ---
 
 ## Real-Time Dashboard Example
 
-The dashboard pattern uses a plain LOWESS fit on a manually managed sliding window rather than `OnlineLowess`. This is the simplest approach when your UI framework already owns the data buffer and you only need the most recent smoothed value per frame. The trade-off is a full O(window²) refit on every tick; for high-frequency streams prefer `OnlineLowess` with `update_mode = "incremental"` to bound per-frame cost.
+The dashboard pattern uses a plain LOWESS fit on a manually managed sliding window rather than `OnlineLowess`. This is the simplest approach when your UI framework already owns the data buffer and you only need the most recent smoothed value per frame. The trade-off is a full O(window^2) refit on every tick; for high-frequency streams prefer `OnlineLowess` with `update_mode = "incremental"` to bound per-frame cost.
 
 :::{jupyter-execute}
 import fastlowess as fl
@@ -95,22 +93,30 @@ import numpy as np
 
 ## Simulated real-time dashboard sliding window
 
+n = 100
+x = np.linspace(0, 2 * np.pi, n)
+y = np.sin(x) + 0.1
+
 window_capacity = 50
 data_x, data_y = [], []
+latest = 0.0
 
-for i in range(200):
-    x, y = i, 25.0 + 10 * np.sin(i / 20) + np.random.normal(0, 2)
-    data_x.append(x)
-    data_y.append(y)
+for i in range(n):
+    data_x.append(x[i])
+    data_y.append(y[i])
 
     if len(data_x) > window_capacity:
         data_x = data_x[-window_capacity:]
         data_y = data_y[-window_capacity:]
-    
-    if len(data_x) >= 5:
-        model = fl.Lowess(fraction=0.4)
-        result = model.fit(np.array(data_x, dtype=float), np.array(data_y, dtype=float))
-        current_smoothed = result.y[-1]
+
+    if len(data_x) < 2:
+        continue
+
+    model = fl.Lowess(fraction=0.4)
+    result = model.fit(np.array(data_x, dtype=float), np.array(data_y, dtype=float))
+    latest = result.y[-1]
+
+print(f"Smoothed (dashboard, latest tick): {latest:.4f}")
 :::
 
 ---

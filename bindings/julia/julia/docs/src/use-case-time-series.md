@@ -15,15 +15,15 @@ Time series data often contains noise, seasonality, and trends. LOWESS provides 
 ```@example use-case-time-series
 using FastLOWESS
 
-t = collect(range(0, 100, length=500))
-trend_true = 10.0 .+ 0.5 .* t .+ 3.0 .* sin.(t ./ 10.0)
-y = trend_true .+ randn(500) .* 3.0
+n = 500
+t = collect(range(0, 100, length=n))
+y = [10.0 + 0.5 * t[i] + 3.0 * sin(t[i] / 10.0) + (mod((i - 1) * 7 + 3, 1.7) - 0.85) * 3.0 for i in 1:n]
 
 # Extract trend
 model = Lowess(; fraction=0.1, iterations=3)
 result = fit(model, t, y)
 
-println("Extracted trend points: ", length(result.y))
+println("y[0]: ", result.y[1])
 ```
 
 ---
@@ -36,11 +36,10 @@ Setting `return_residuals = True` stores `observed − smoothed` alongside the s
 
 ```@example use-case-time-series
 using FastLOWESS
-using Random, Statistics
 
-rng = MersenneTwister(42)
-t = collect(range(0, 100, length=500))
-y = 10.0 .+ 0.5 .* t .+ 3.0 .* sin.(t ./ 10.0) .+ randn(rng, 500) .* 3.0
+n = 100
+t = collect(range(0, 2π, length=n))
+y = sin.(t) .+ 0.1
 
 # Smooth to get trend and residuals
 model = Lowess(; fraction=0.3, iterations=3, return_residuals=true)
@@ -49,7 +48,7 @@ result = fit(model, t, y)
 trend = result.y
 detrended = result.residuals
 
-println("Detrended variance: ", var(detrended))
+println("residuals[0]: ", detrended[1])
 ```
 
 ---
@@ -60,11 +59,10 @@ Prediction intervals widen the uncertainty band to include both the uncertainty 
 
 ```@example use-case-time-series
 using FastLOWESS
-using Random, Statistics
 
-rng = MersenneTwister(42)
-t = collect(range(0, 100, length=500))
-y = 10.0 .+ 0.5 .* t .+ 3.0 .* sin.(t ./ 10.0) .+ randn(rng, 500) .* 3.0
+n = 100
+t = collect(range(0, 2π, length=n))
+y = sin.(t) .+ 0.1
 
 model = Lowess(;
     fraction=0.2,
@@ -75,7 +73,7 @@ model = Lowess(;
 result = fit(model, t, y)
 
 # Intervals are available in result.prediction_lower/upper
-println("First point 95% PI: [$(result.prediction_lower[1]), $(result.prediction_upper[1])]")
+println("95% PI: [$(result.prediction_lower[1]), $(result.prediction_upper[1])]")
 ```
 
 ---
@@ -86,20 +84,14 @@ LOWESS naturally handles irregular time sampling:
 
 ```@example use-case-time-series
 using FastLOWESS
-using Random, Statistics
 
-rng = MersenneTwister(42)
-x = collect(range(0, 2π, length=100))
-y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-# Irregular time points (gaps in data)
-t_irregular = sort(rand(200) .*100.0)
-y_irregular = 10.0 .+ t_irregular .* 0.3 .+ randn(200) .* 2.0
+t_irregular = [i * 1.0 + mod(i * 31, 10) * 0.1 for i in 0:99]
+y_irregular = [10.0 + 0.3 * t + 2.0 * sin(t * 0.1) for t in t_irregular]
 
 # LOWESS handles this seamlessly
 model = Lowess(; fraction=0.2)
 result = fit(model, t_irregular, y_irregular)
-println("First smoothed value (irregular time series): ", result.y[1])
+println("y[0]: ", result.y[1])
 ```
 
 ---
@@ -110,11 +102,10 @@ Use different fractions to extract features at different scales:
 
 ```@example use-case-time-series
 using FastLOWESS
-using Random, Statistics
 
-rng = MersenneTwister(42)
-t = collect(range(0, 100, length=500))
-y = 10.0 .+ 0.5 .* t .+ 3.0 .* sin.(t ./ 10.0) .+ randn(rng, 500) .* 3.0
+n = 100
+t = collect(range(0, 2π, length=n))
+y = sin.(t) .+ 0.1
 
 fractions = [0.05, 0.2, 0.5]
 
@@ -123,7 +114,7 @@ results = map(fractions) do f
     result = fit(model, t, y)
 end
 for (f, res) in zip(fractions, results)
-    println("fraction=$(f): first smoothed value = $(round(res.y[1]; digits=4))")
+    println("fraction=$(f): y[0] = $(round(res.y[1]; digits=4))")
 end
 ```
 
@@ -135,14 +126,9 @@ Biological application:
 
 ```@example use-case-time-series
 using FastLOWESS
-using Random, Statistics
 
-rng = MersenneTwister(42)
-x = collect(range(0, 2π, length=100))
-y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-hours = collect(range(0, 24, step=0.5))
-expression = 100 .*(1.0 .+ 0.5 .* sin.(hours .*pi ./ 12.0)) .+ randn(length(hours)) .* 10.0
+hours = collect(0.0:0.5:24.0)[1:49]
+expression = [100.0 * (1.0 + 0.5 * sin(hours[i] * pi / 12.0)) + (mod((i - 1) * 7 + 3, 1.7) - 0.85) * 10.0 for i in 1:49]
 
 model = Lowess(;
     fraction=0.3,
@@ -152,7 +138,7 @@ model = Lowess(;
 )
 result = fit(model, hours, expression)
 
-println("R²: ", result.diagnostics.r_squared)
+println("R2: ", result.diagnostics.r_squared)
 ```
 
 ---

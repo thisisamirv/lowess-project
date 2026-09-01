@@ -7,10 +7,6 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
-```
-
 ## CPU Benchmarks
 
 Speedup relative to R's `stats::lowess` (higher is better):
@@ -49,42 +45,3 @@ The crossover point depends on `fraction × n`:
 At `fraction = 0.5`, GPU overtakes CPU around n ≥ 50K; at smaller fractions,
 around n ≥ 100K–250K. See the benchmarks README in the source repository
 for the full sweep and transfer-overhead breakdown.
-
----
-
-## Reproducing Benchmarks
-
-The benchmarks compare `rfastlowess` against `stats::lowess` using the
-`microbenchmark` package.
-
-```{r benchmarks_1, eval=FALSE}
-# Install benchmark dependency
-# install.packages("microbenchmark")
-
-library(rfastlowess)
-library(microbenchmark)
-
-set.seed(42)
-n <- 5000
-x <- seq(0, 10, length.out = n)
-y <- sin(x) + rnorm(n, sd = 0.3)
-
-mb <- microbenchmark(
-    stats_lowess = stats::lowess(x, y, f = 0.67),
-    rfastlowess_serial = {
-        m <- Lowess(fraction = 0.67)
-        fit(m, x, y)
-    },
-    rfastlowess_parallel = {
-        m <- Lowess(fraction = 0.67, parallel = TRUE)
-        fit(m, x, y)
-    },
-    times = 50
-)
-cat("Benchmark results:\n")
-print(mb)
-```
-
-```{r session-info}
-sessionInfo()
-```

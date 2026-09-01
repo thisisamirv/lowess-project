@@ -17,13 +17,12 @@ import fastlowess as fl
 import numpy as np
 import matplotlib.pyplot as plt
 
-## Simulate noisy time series with trend
+## Deterministic trend + seasonal time series
 
-np.random.seed(42)
-t = np.linspace(0, 100, 500)
-trend = 10 + 0.5 *t + 3* np.sin(t / 10)
-noise = np.random.normal(0, 3, len(t))
-y = trend + noise
+n = 500
+t = np.linspace(0, 100, n)
+i = np.arange(n)
+y = 10 + 0.5 *t + 3* np.sin(t / 10) + (np.mod(i *7 + 3, 1.7) - 0.85)* 3
 
 ## Extract trend with LOWESS
 
@@ -40,6 +39,8 @@ plt.ylabel("Value")
 plt.legend()
 plt.title("Trend Extraction")
 plt.show()
+
+print(f"y[0]: {result.y[0]:.4f}")
 :::
 
 ---
@@ -55,10 +56,9 @@ import fastlowess as fl
 import numpy as np
 import matplotlib.pyplot as plt
 
-np.random.seed(42)
-t = np.linspace(0, 100, 500)
-trend_true = 10 + 0.5 *t + 3* np.sin(t / 10)
-y = trend_true + np.random.normal(0, 3, len(t))
+n = 100
+t = np.linspace(0, 2 * np.pi, n)
+y = np.sin(t) + 0.1
 
 ## Smooth to get trend
 
@@ -79,6 +79,8 @@ plt.subplot(1, 2, 2)
 plt.plot(t, detrended)
 plt.title("Detrended (Residuals)")
 plt.tight_layout()
+
+print(f"residuals[0]: {detrended[0]:.4f}")
 :::
 
 ---
@@ -92,10 +94,9 @@ import fastlowess as fl
 import numpy as np
 import matplotlib.pyplot as plt
 
-np.random.seed(42)
-t = np.linspace(0, 100, 500)
-trend_true = 10 + 0.5 *t + 3* np.sin(t / 10)
-y = trend_true + np.random.normal(0, 3, len(t))
+n = 100
+t = np.linspace(0, 2 * np.pi, n)
+y = np.sin(t) + 0.1
 
 model = fl.Lowess(
     fraction=0.2,
@@ -117,6 +118,8 @@ plt.fill_between(
     alpha=0.2, color="blue", label="95% Prediction"
 )
 plt.legend()
+
+print(f"95% PI: [{result.prediction_lower[0]:.4f}, {result.prediction_upper[0]:.4f}]")
 :::
 
 ---
@@ -129,20 +132,14 @@ LOWESS naturally handles irregular time sampling:
 import fastlowess as fl
 import numpy as np
 
-rng = np.random.default_rng(42)
-x = np.linspace(0, 2 * np.pi, 100)
-y = np.sin(x) + rng.normal(0, 0.3, 100)
-
-## Irregular time points (gaps in data)
-
-t_irregular = np.sort(np.random.uniform(0, 100, 200))
-y_irregular = 10 + t_irregular * 0.3 + np.random.normal(0, 2, 200)
+t_irregular = np.array([i *1.0 + (i* 31 % 10) *0.1 for i in range(100)])
+y_irregular = 10 + t_irregular* 0.3 + 2.0 *np.sin(t_irregular* 0.1)
 
 ## LOWESS handles this seamlessly
 
 model = fl.Lowess(fraction=0.2)
 result = model.fit(t_irregular, y_irregular)
-print(f"Smoothed y[0]: {result.y[0]:.4f}")
+print(f"y[0]: {result.y[0]:.4f}")
 :::
 
 ---
@@ -156,10 +153,9 @@ import fastlowess as fl
 import numpy as np
 import matplotlib.pyplot as plt
 
-np.random.seed(42)
-t = np.linspace(0, 100, 500)
-trend_true = 10 + 0.5 *t + 3* np.sin(t / 10)
-y = trend_true + np.random.normal(0, 3, len(t))
+n = 100
+t = np.linspace(0, 2 * np.pi, n)
+y = np.sin(t) + 0.1
 
 ## Multiple smoothing scales
 
@@ -172,6 +168,7 @@ for f in fractions:
     model = fl.Lowess(fraction=f)
     result = model.fit(t, y)
     plt.plot(t, result.y, label=f"fraction={f}")
+    print(f"fraction={f}: y[0] = {result.y[0]:.4f}")
 
 plt.legend()
 plt.title("Multi-Scale LOWESS")
@@ -190,7 +187,8 @@ import fastlowess as fl
 ## Gene expression over 24 hours
 
 hours = np.arange(0, 24.5, 0.5)
-expression = 100 *(1 + 0.5* np.sin(hours * np.pi / 12)) + np.random.normal(0, 10, len(hours))
+i = np.arange(len(hours))
+expression = 100 *(1 + 0.5* np.sin(hours *np.pi / 12)) + (np.mod(i* 7 + 3, 1.7) - 0.85) * 10
 
 model = fl.Lowess(
     fraction=0.3,
@@ -200,7 +198,7 @@ model = fl.Lowess(
 )
 result = model.fit(hours, expression)
 
-print(f"R²: {result.diagnostics.r_squared:.3f}")
+print(f"R2: {result.diagnostics.r_squared:.3f}")
 :::
 
 ---

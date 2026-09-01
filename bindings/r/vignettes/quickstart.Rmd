@@ -57,7 +57,7 @@ cat("Confidence lower bounds (first 5):\n")
 print(head(result$confidence_lower, 5))
 cat("Confidence upper bounds (first 5):\n")
 print(head(result$confidence_upper, 5))
-cat("R²:", result$diagnostics$r_squared, "\n")
+cat("R2:", result$diagnostics$r_squared, "\n")
 ```
 
 ---

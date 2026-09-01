@@ -147,13 +147,13 @@ int main() {
     fastlowess::Lowess model({ .confidence_intervals = 0.99});
     auto result = model.fit(x, y).value();
 
-    std::cout << "95% CI: [" << result.confidence_lower()[0] << ", " << result.confidence_upper()[0] << "]\n";
+    std::cout << "99% CI: [" << result.confidence_lower()[0] << ", " << result.confidence_upper()[0] << "]\n";
     return 0;
 }
 ```
 
 ```output
-95% CI: [0.317143, 0.448073]
+99% CI: [0.317143, 0.448073]
 ```
 
 ---
@@ -165,6 +165,7 @@ Access standard errors directly (available when intervals are computed):
 ```cpp
 #include <fastlowess.hpp>
 #include <cmath>
+#include <iomanip>
 #include <iostream>
 #include <vector>
 
@@ -176,16 +177,23 @@ int main() {
         y[i] = std::sin(x[i]) + 0.1;
     }
 
-    fastlowess::Lowess model({ .confidence_intervals = 0.95});
+    fastlowess::LowessOptions opts;
+    opts.return_se = true;
+    fastlowess::Lowess model(opts);
     auto result = model.fit(x, y).value();
 
-    std::cout << "95% CI: [" << result.confidence_lower()[0] << ", " << result.confidence_upper()[0] << "]\n";
+    auto se = result.standard_errors();
+    for (int i = 0; i < 3; ++i) {
+        std::cout << "Point " << i << ": SE = " << std::fixed << std::setprecision(4) << se[i] << "\n";
+    }
     return 0;
 }
 ```
 
 ```output
-95% CI: [0.332797, 0.432418]
+Point 0: SE = 0.0254
+Point 1: SE = 0.0269
+Point 2: SE = 0.0283
 ```
 
 ---

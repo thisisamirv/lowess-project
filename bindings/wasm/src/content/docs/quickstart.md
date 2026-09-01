@@ -34,7 +34,7 @@ const { Lowess } = require('fastlowess-wasm');
 
 const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
 const model = new Lowess({
     fraction: 0.5,
@@ -48,14 +48,14 @@ const result = model.fit(x, y);
 console.log("Smoothed (first 5):", [...result.y.slice(0, 5)].map(v => v.toFixed(4)));
 console.log("CI lower (first 5):", [...result.confidence_lower.slice(0, 5)].map(v => v.toFixed(4)));
 console.log("CI upper (first 5):", [...result.confidence_upper.slice(0, 5)].map(v => v.toFixed(4)));
-console.log("R²:", result.diagnostics.r_squared.toFixed(4));
+console.log("R2:", result.diagnostics.r_squared.toFixed(4));
 ```
 
 ```output
-Smoothed (first 5): [ '0.1181', '0.1502', '0.1833', '0.2172', '0.2518' ]
-CI lower (first 5): [ '0.0551', '0.0762', '0.1205', '0.1405', '0.1770' ]
-CI upper (first 5): [ '0.1812', '0.2243', '0.2461', '0.2938', '0.3266' ]
-R²: 0.9022
+Smoothed (first 5): [ '0.3344', '0.3610', '0.3887', '0.4175', '0.4471' ]
+CI lower (first 5): [ '0.2941', '0.3184', '0.3440', '0.3709', '0.3989' ]
+CI upper (first 5): [ '0.3746', '0.4036', '0.4335', '0.4641', '0.4954' ]
+R2: 0.9664
 ```
 
 ---

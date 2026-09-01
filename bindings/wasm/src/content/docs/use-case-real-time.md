@@ -21,18 +21,16 @@ For true real-time applications where each point must be processed immediately.
 ```javascript
 const { OnlineLowess } = require('fastlowess-wasm');
 
-const n = 100;
-const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
 const processor = new OnlineLowess(
     { fraction: 0.3, iterations: 1 },
     { window_capacity: 25, min_points: 5, update_mode: "incremental" }
 );
 
 let rt_printed = 0;
-for (let i = 0; i < x.length; i++) {
-    const res = processor.add_point(x[i], y[i]);
+for (let i = 0; i < 100; i++) {
+    const xi = i;
+    const yi = 20.0 + 5.0 * Math.sin(xi / 10.0) + Math.sin(xi * 1.7) * 0.5;
+    const res = processor.add_point(xi, yi);
     if (res !== undefined && res !== null) {
         if (rt_printed < 5) console.log("Smoothed y:", res.y.toFixed(4));
         rt_printed++;
@@ -42,11 +40,11 @@ console.log(`... (${rt_printed - 5} more)`);
 ```
 
 ```output
-Smoothed y: 0.4453
-Smoothed y: 0.1532
-Smoothed y: 0.4599
-Smoothed y: 0.1651
-Smoothed y: 0.4685
+Smoothed y: 22.1941
+Smoothed y: 22.7964
+Smoothed y: 22.4733
+Smoothed y: 22.9120
+Smoothed y: 24.0164
 ... (91 more)
 ```
 
@@ -67,40 +65,39 @@ The streaming adapter buffers overlap data. Call `finalize()` after the last chu
 ```javascript
 const { StreamingLowess } = require('fastlowess-wasm');
 
-const n = 50;
-const x1 = Float64Array.from({ length: n }, (_, i) => i);
-const y1 = Float64Array.from(x1, xi => Math.sin(xi * 0.1) + 0.1);
-const x2 = Float64Array.from({ length: n }, (_, i) => n + i);
-const y2 = Float64Array.from(x2, xi => Math.sin(xi * 0.1) + 0.1);
+const chunk1_x = Float64Array.from({ length: 50 }, (_, i) => i);
+const chunk1_y = Float64Array.from(chunk1_x, xi => Math.sin(xi) + 0.1);
+const chunk2_x = Float64Array.from({ length: 50 }, (_, i) => i + 50);
+const chunk2_y = Float64Array.from(chunk2_x, xi => Math.sin(xi) + 0.1);
 
 const processor = new StreamingLowess(
     { fraction: 0.1, iterations: 2 },
-    { chunk_size: 5000, overlap: 500 }
+    { chunk_size: 50, overlap: 10 }
 );
 
 // Process chunks as they arrive
-const result1 = processor.process_chunk(x1, y1);
-const result2 = processor.process_chunk(x2, y2);
+processor.process_chunk(chunk1_x, chunk1_y);
+processor.process_chunk(chunk2_x, chunk2_y);
 const finalResult = processor.finalize();
-console.log("y[0]:", finalResult.y[0].toFixed(4));
+console.log("y[0]:", finalResult.y[0].toFixed(6));
 ```
 
 ```output
-y[0]: 0.2230
+y[0]: 0.516484
 ```
 
 ---
 
 ## Real-Time Dashboard Example
 
-The dashboard pattern uses a plain LOWESS fit on a manually managed sliding window rather than `OnlineLowess`. This is the simplest approach when your UI framework already owns the data buffer and you only need the most recent smoothed value per frame. The trade-off is a full O(window²) refit on every tick; for high-frequency streams prefer `OnlineLowess` with `update_mode = "incremental"` to bound per-frame cost.
+The dashboard pattern uses a plain LOWESS fit on a manually managed sliding window rather than `OnlineLowess`. This is the simplest approach when your UI framework already owns the data buffer and you only need the most recent smoothed value per frame. The trade-off is a full O(window^2) refit on every tick; for high-frequency streams prefer `OnlineLowess` with `update_mode = "incremental"` to bound per-frame cost.
 
 ```javascript
 const { Lowess } = require('fastlowess-wasm');
 
 const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
 // Sliding window logic
 const windowX = [], windowY = [];
@@ -117,12 +114,12 @@ for (let i = 0; i < x.length; i++) {
     const model = new Lowess({ fraction: 0.4 });
     const result = model.fit(new Float64Array(windowX), new Float64Array(windowY));
     const smoothed = result.y[result.y.length - 1];
-    if (i === x.length - 1) console.log("Smoothed:", smoothed.toFixed(4));
+    if (i === x.length - 1) console.log("Smoothed (dashboard, latest tick):", smoothed.toFixed(4));
 }
 ```
 
 ```output
-Smoothed: 0.0358
+Smoothed (dashboard, latest tick): -0.0663
 ```
 
 ---

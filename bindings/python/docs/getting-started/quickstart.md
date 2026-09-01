@@ -46,7 +46,7 @@ result = model.fit(x, y)
 print("Smoothed (first 5):", result.y[:5])
 print("CI Lower (first 5):", result.confidence_lower[:5])
 print("CI Upper (first 5):", result.confidence_upper[:5])
-print("R²:", result.diagnostics.r_squared)
+print("R2:", result.diagnostics.r_squared)
 :::
 
 ---

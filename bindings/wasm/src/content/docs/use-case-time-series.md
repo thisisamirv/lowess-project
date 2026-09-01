@@ -17,20 +17,20 @@ Time series data often contains noise, seasonality, and trends. LOWESS provides 
 ```javascript
 const { Lowess } = require('fastlowess-wasm');
 
-const n = 100;
-const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+const n = 500;
+const t = Float64Array.from({ length: n }, (_, i) => i * 100.0 / (n - 1));
+const y = Float64Array.from(t, (ti, i) => 10.0 + 0.5 * ti + 3.0 * Math.sin(ti / 10.0) + (((i * 7 + 3) % 1.7) - 0.85) * 3.0);
 
 const model = new Lowess({ 
     fraction: 0.1, 
     iterations: 3 
 });
-const result = model.fit(x, y);
+const result = model.fit(t, y);
 console.log("y[0]:", result.y[0].toFixed(4));
 ```
 
 ```output
-y[0]: -0.0967
+y[0]: 11.3216
 ```
 
 ---
@@ -46,7 +46,7 @@ const { Lowess } = require('fastlowess-wasm');
 
 const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
 const model = new Lowess({ 
     fraction: 0.3, 
@@ -58,7 +58,7 @@ console.log("y[0]:", result.y[0].toFixed(4), "residual[0]:", result.residuals[0]
 ```
 
 ```output
-y[0]: 0.0278 residual[0]: -0.2220
+y[0]: 0.2582 residual[0]: -0.1582
 ```
 
 ---
@@ -72,7 +72,7 @@ const { Lowess } = require('fastlowess-wasm');
 
 const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
 const model = new Lowess({
     fraction: 0.2,
@@ -84,7 +84,7 @@ console.log("Prediction lower[0]:", result.prediction_lower[0].toFixed(4));
 ```
 
 ```output
-Prediction lower[0]: -0.4637
+Prediction lower[0]: 0.1580
 ```
 
 ---
@@ -119,7 +119,7 @@ const { Lowess } = require('fastlowess-wasm');
 
 const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
 const trends = [0.05, 0.2, 0.5].map(f => {
     const model = new Lowess({ fraction: f });
@@ -130,7 +130,7 @@ console.log("Trend y[0] values:", trends.map(t => t[0].toFixed(4)));
 ```
 
 ```output
-Trend y[0] values: [ '-0.1058', '-0.0283', '0.1181' ]
+Trend y[0] values: [ '0.1317', '0.2244', '0.3344' ]
 ```
 
 ---
@@ -142,17 +142,16 @@ Biological application:
 ```javascript
 const { Lowess } = require('fastlowess-wasm');
 
-const n = 24;
-const hours = Float64Array.from({ length: n }, (_, i) => i);
-const expression = Float64Array.from(hours, h => 5 + 3 * Math.sin(h * Math.PI / 12) + (h % 3) * 0.2);
-const model = new Lowess({ fraction: 0.3, iterations: 3, return_diagnostics: true });
+const hours = Float64Array.from({ length: 49 }, (_, i) => i * 0.5);
+const expression = Float64Array.from(hours, (h, i) => 100.0 * (1.0 + 0.5 * Math.sin(h * Math.PI / 12)) + (((i * 7 + 3) % 1.7) - 0.85) * 10.0);
+const model = new Lowess({ fraction: 0.3, iterations: 3, confidence_intervals: 0.95, return_diagnostics: true });
 const result = model.fit(hours, expression);
 
-console.log("R²:", result.diagnostics.r_squared);
+console.log("R2:", result.diagnostics.r_squared.toFixed(4));
 ```
 
 ```output
-R²: 0.9868322798406561
+R2: 0.9731
 ```
 
 ---

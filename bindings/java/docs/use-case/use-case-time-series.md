@@ -1,0 +1,263 @@
+---
+title: "Time Series Analysis"
+weight: 90
+---
+
+LOWESS for trend extraction and temporal smoothing.
+
+## Overview
+
+Time series data often contains noise, seasonality, and trends. LOWESS provides flexible trend extraction without parametric assumptions.
+
+---
+
+## Basic Trend Extraction
+
+`fraction = 0.1` sizes the neighbourhood as 10% of the data at each evaluation point — narrow enough to follow a slowly varying trend without smearing periodic variation. Three robustness `iterations` down-weight noise spikes so they cannot bias the fitted curve.
+
+```java
+import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 500;
+        double[] t = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i < n; i++) {
+            t[i] = i * 100.0 / (n - 1);
+            y[i] = 10.0 + 0.5 * t[i] + 3.0 * Math.sin(t[i] / 10.0) + (((i * 7 + 3) % 1.7) - 0.85) * 3.0;
+        }
+
+        Options options = Options.builder().fraction(0.1).iterations(3).build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(t, y);
+            System.out.println("y[0]: " + result.y()[0]);
+        }
+    }
+}
+```
+
+```output
+y[0]: 11.321590922416165
+```
+
+---
+
+## Detrending
+
+Remove trend to analyze residual patterns.
+
+Setting `returnResiduals = true` stores `observed − smoothed` alongside the smooth. A slightly wider `fraction = 0.3` produces a smoother baseline trend, so short-duration oscillations end up in the residuals rather than being absorbed into the trend component.
+
+```java
+import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] t = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i < n; i++) {
+            t[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(t[i]) + 0.1;
+        }
+
+        Options options = Options.builder()
+                .fraction(0.3)
+                .iterations(3)
+                .returnResiduals(true)
+                .build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(t, y);
+            double[] residuals = result.residuals().orElseThrow();
+            System.out.println("residuals[0]: " + residuals[0]);
+        }
+    }
+}
+```
+
+```output
+residuals[0]: -0.15824361645514948
+```
+
+---
+
+## Forecasting with Prediction Intervals
+
+Prediction intervals widen the uncertainty band to include both the uncertainty in the fitted curve (confidence interval) and the expected scatter of new observations around it. `fraction = 0.2` offers a balance between local detail and stable interval width.
+
+```java
+import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] t = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i < n; i++) {
+            t[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(t[i]) + 0.1;
+        }
+
+        Options options = Options.builder()
+                .fraction(0.2)
+                .iterations(3)
+                .confidenceIntervals(0.95)
+                .predictionIntervals(0.95)
+                .build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(t, y);
+            double[] lower = result.predictionLower().orElseThrow();
+            double[] upper = result.predictionUpper().orElseThrow();
+            System.out.printf("95%% PI: [%s, %s]%n", lower[0], upper[0]);
+        }
+    }
+}
+```
+
+```output
+95% PI: [0.15801046224996285, 0.2908827214492591]
+```
+
+---
+
+## Handling Missing Data
+
+LOWESS naturally handles irregular time sampling:
+
+```java
+import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] tIrregular = new double[n];
+        double[] yIrregular = new double[n];
+        for (int i = 0; i < n; i++) {
+            tIrregular[i] = i * 1.0 + (i * 31 % 10) * 0.1;
+            yIrregular[i] = 10.0 + 0.3 * tIrregular[i] + 2.0 * Math.sin(tIrregular[i] * 0.1);
+        }
+
+        Options options = Options.builder().fraction(0.2).build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(tIrregular, yIrregular);
+            System.out.println("y[0]: " + result.y()[0]);
+        }
+    }
+}
+```
+
+```output
+y[0]: 11.327309510260003
+```
+
+---
+
+## Multi-Scale Analysis
+
+Use different fractions to extract features at different scales:
+
+```java
+import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] t = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i < n; i++) {
+            t[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(t[i]) + 0.1;
+        }
+
+        for (double f : new double[] {0.05, 0.2, 0.5}) {
+            Options options = Options.builder().fraction(f).build();
+            try (Lowess model = new Lowess(options)) {
+                Result result = model.fit(t, y);
+                System.out.printf("fraction=%s: y[0] = %s%n", f, result.y()[0]);
+            }
+        }
+    }
+}
+```
+
+```output
+fraction=0.05: y[0] = 0.13171195982828227
+fraction=0.2: y[0] = 0.22444659184961097
+fraction=0.5: y[0] = 0.33437036041791557
+```
+
+---
+
+## Gene Expression Time Course
+
+Biological application:
+
+```java
+import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 49;
+        double[] hours = new double[n];
+        double[] expression = new double[n];
+        for (int i = 0; i < n; i++) {
+            hours[i] = i * 0.5;
+            expression[i] = 100.0 * (1.0 + 0.5 * Math.sin(hours[i] * Math.PI / 12.0)) + (((i * 7 + 3) % 1.7) - 0.85) * 10.0;
+        }
+
+        Options options = Options.builder()
+                .fraction(0.3)
+                .iterations(3)
+                .returnDiagnostics(true)
+                .build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(hours, expression);
+            double rSquared = result.diagnostics().orElseThrow().rSquared();
+            System.out.printf("R2: %.3f%n", rSquared);
+        }
+    }
+}
+```
+
+```output
+R2: 0.973
+```
+
+---
+
+## Choosing Fraction for Time Series
+
+| Data Type | Recommended Fraction | Rationale |
+| --- | --- | --- |
+| Daily data (years) | 0.3–0.5 | Capture annual trends |
+| Hourly data (days) | 0.1–0.2 | Capture daily patterns |
+| Sensor data (minutes) | 0.05–0.1 | Preserve short-term features |
+| Noisy data | Higher | Reduce noise impact |
+| Clean data | Lower | Preserve detail |
+
+---
+
+## See Also
+
+- [Real-Time Processing](use-case-real-time.md) — For streaming time series
+- [Cross-Validation](../guide/cross-validation.md) — Optimal fraction selection
+- [Boundary Handling](../advanced/boundary.md) — Edge bias in trend extraction
+- [API Reference](../api/api.md) — Full parameter reference

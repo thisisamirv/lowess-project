@@ -38,20 +38,18 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
 const { StreamingLowess } = require('fastlowess-wasm');
 
 const n = 100;
-const xChunk = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-const yChunk = Float64Array.from(xChunk, xi => Math.sin(xi) + 0.1);
+const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
-const processor = new StreamingLowess(
-    {},
-    { merge_strategy: "average", chunk_size: 5000, overlap: 500 }
-);
-const result = processor.process_chunk(xChunk, yChunk);
-const final = processor.finalize();
-console.log("y[0]:", final.y[0].toFixed(4));
+const processor = new StreamingLowess({}, { merge_strategy: "average" });
+processor.process_chunk(x.slice(0, 50), y.slice(0, 50));
+processor.process_chunk(x.slice(50), y.slice(50));
+const result = processor.finalize();
+console.log("First smoothed value (average merge):", result.y[0].toFixed(4));
 ```
 
 ```output
-y[0]: 0.3826
+First smoothed value (average merge): 0.3826
 ```
 
 ---
@@ -65,12 +63,19 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
 ```javascript
 const { StreamingLowess } = require('fastlowess-wasm');
 
+const n = 100;
+const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
+
 const stream = new StreamingLowess({}, { merge_strategy: 'take_first' });
-console.log("typeof process_chunk:", typeof stream.process_chunk);
+stream.process_chunk(x.slice(0, 50), y.slice(0, 50));
+stream.process_chunk(x.slice(50), y.slice(50));
+const result = stream.finalize();
+console.log("First smoothed value (take_first merge):", result.y[0].toFixed(4));
 ```
 
 ```output
-typeof process_chunk: function
+First smoothed value (take_first merge): 0.3826
 ```
 
 ---
@@ -84,12 +89,19 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
 ```javascript
 const { StreamingLowess } = require('fastlowess-wasm');
 
+const n = 100;
+const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
+
 const stream = new StreamingLowess({}, { merge_strategy: 'take_last' });
-console.log("typeof process_chunk:", typeof stream.process_chunk);
+stream.process_chunk(x.slice(0, 50), y.slice(0, 50));
+stream.process_chunk(x.slice(50), y.slice(50));
+const result = stream.finalize();
+console.log("First smoothed value (take_last merge):", result.y[0].toFixed(4));
 ```
 
 ```output
-typeof process_chunk: function
+First smoothed value (take_last merge): 0.3826
 ```
 
 ---
@@ -107,15 +119,19 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
 ```javascript
 const { StreamingLowess } = require('fastlowess-wasm');
 
-const processor = new StreamingLowess(
-    {},
-    { merge_strategy: "weighted_average", chunk_size: 5000, overlap: 500 }
-);
-console.log("typeof process_chunk:", typeof processor.process_chunk);
+const n = 100;
+const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
+
+const processor = new StreamingLowess({}, { merge_strategy: "weighted_average" });
+processor.process_chunk(x.slice(0, 50), y.slice(0, 50));
+processor.process_chunk(x.slice(50), y.slice(50));
+const result = processor.finalize();
+console.log("First smoothed value (weighted_average merge):", result.y[0].toFixed(4));
 ```
 
 ```output
-typeof process_chunk: function
+First smoothed value (weighted_average merge): 0.3826
 ```
 
 ---

@@ -346,7 +346,7 @@ impl<T: Float + Display> Display for Diagnostics<T> {
         writeln!(f, "LOWESS Diagnostics:")?;
         writeln!(f, "  RMSE:         {:.6}", self.rmse)?;
         writeln!(f, "  MAE:          {:.6}", self.mae)?;
-        writeln!(f, "  R²:           {:.6}", self.r_squared)?;
+        writeln!(f, "  R2:           {:.6}", self.r_squared)?;
         writeln!(f, "  Residual SD:  {:.6}", self.residual_sd)?;
 
         if let Some(df) = self.effective_df {

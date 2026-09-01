@@ -50,19 +50,20 @@ int main() {
 
     fastlowess::StreamingOptions opts;
     opts.merge_strategy = "average";
-    opts.chunk_size = 5000;
-    opts.overlap = 500;
-    fastlowess::StreamingLowess stream(opts);
-    (void)stream.process_chunk(x, y);
-    auto result = stream.finalize().value();
+    fastlowess::StreamingLowess model(opts);
+    std::vector<double> x1(x.begin(), x.begin() + 50), y1(y.begin(), y.begin() + 50);
+    std::vector<double> x2(x.begin() + 50, x.end()), y2(y.begin() + 50, y.end());
+    model.process_chunk(x1, y1);
+    model.process_chunk(x2, y2);
+    auto result = model.finalize().value();
 
-    std::cout << "Smoothed " << result.y_vector().size() << " points\n";
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
 ```
 
 ```output
-Smoothed 100 points
+y[0]: 0.382608
 ```
 
 ---
@@ -80,17 +81,18 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
 #include <vector>
 
 int main() {
-    const int n = 20;
+    const int n = 100;
     std::vector<double> x(n), y(n);
-    for (int i = 0; i < n; ++i) { x[i] = i; y[i] = i + 0.1; }
+    for (int i = 0; i < n; ++i) {
+        x[i] = i * 2 * M_PI / (n - 1);
+        y[i] = std::sin(x[i]) + 0.1;
+    }
 
     fastlowess::StreamingOptions s_opts;
-    s_opts.chunk_size = 10;
-    s_opts.overlap = 2;
     s_opts.merge_strategy = "take_first";
     fastlowess::StreamingLowess model(s_opts);
-    std::vector<double> x1(x.begin(), x.begin() + 10), y1(y.begin(), y.begin() + 10);
-    std::vector<double> x2(x.begin() + 10, x.end()), y2(y.begin() + 10, y.end());
+    std::vector<double> x1(x.begin(), x.begin() + 50), y1(y.begin(), y.begin() + 50);
+    std::vector<double> x2(x.begin() + 50, x.end()), y2(y.begin() + 50, y.end());
     model.process_chunk(x1, y1);
     model.process_chunk(x2, y2);
     auto result = model.finalize().value();
@@ -101,7 +103,7 @@ int main() {
 ```
 
 ```output
-y[0]: 17.6391
+y[0]: 0.382608
 ```
 
 ---
@@ -119,17 +121,18 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
 #include <vector>
 
 int main() {
-    const int n = 20;
+    const int n = 100;
     std::vector<double> x(n), y(n);
-    for (int i = 0; i < n; ++i) { x[i] = i; y[i] = i + 0.1; }
+    for (int i = 0; i < n; ++i) {
+        x[i] = i * 2 * M_PI / (n - 1);
+        y[i] = std::sin(x[i]) + 0.1;
+    }
 
     fastlowess::StreamingOptions s_opts;
-    s_opts.chunk_size = 10;
-    s_opts.overlap = 2;
     s_opts.merge_strategy = "take_last";
     fastlowess::StreamingLowess model(s_opts);
-    std::vector<double> x1(x.begin(), x.begin() + 10), y1(y.begin(), y.begin() + 10);
-    std::vector<double> x2(x.begin() + 10, x.end()), y2(y.begin() + 10, y.end());
+    std::vector<double> x1(x.begin(), x.begin() + 50), y1(y.begin(), y.begin() + 50);
+    std::vector<double> x2(x.begin() + 50, x.end()), y2(y.begin() + 50, y.end());
     model.process_chunk(x1, y1);
     model.process_chunk(x2, y2);
     auto result = model.finalize().value();
@@ -140,7 +143,7 @@ int main() {
 ```
 
 ```output
-y[0]: 17.6391
+y[0]: 0.382608
 ```
 
 ---
@@ -162,17 +165,18 @@ where \f$w_L\f$ and \f$w_R\f$ are linear distance weights from the chunk centres
 #include <vector>
 
 int main() {
-    const int n = 20;
+    const int n = 100;
     std::vector<double> x(n), y(n);
-    for (int i = 0; i < n; ++i) { x[i] = i; y[i] = i + 0.1; }
+    for (int i = 0; i < n; ++i) {
+        x[i] = i * 2 * M_PI / (n - 1);
+        y[i] = std::sin(x[i]) + 0.1;
+    }
 
     fastlowess::StreamingOptions s_opts;
-    s_opts.chunk_size = 10;
-    s_opts.overlap = 2;
     s_opts.merge_strategy = "weighted_average";
     fastlowess::StreamingLowess model(s_opts);
-    std::vector<double> x1(x.begin(), x.begin() + 10), y1(y.begin(), y.begin() + 10);
-    std::vector<double> x2(x.begin() + 10, x.end()), y2(y.begin() + 10, y.end());
+    std::vector<double> x1(x.begin(), x.begin() + 50), y1(y.begin(), y.begin() + 50);
+    std::vector<double> x2(x.begin() + 50, x.end()), y2(y.begin() + 50, y.end());
     model.process_chunk(x1, y1);
     model.process_chunk(x2, y2);
     auto result = model.finalize().value();
@@ -183,7 +187,7 @@ int main() {
 ```
 
 ```output
-y[0]: 17.6391
+y[0]: 0.382608
 ```
 
 ---

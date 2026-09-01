@@ -78,22 +78,20 @@ int main() {
     auto result = model.fit(positions, observed).value();
 
     // Find peaks above threshold
-    std::vector<double> peaks;
-    const auto& y_vals = result.y_vector();
-    const auto& x_vals = result.x_vector();
-    for (size_t i = 0; i < y_vals.size(); ++i) {
-        if (y_vals[i] > 25.0) {
-            peaks.push_back(x_vals[i]);
-        }
+    int peak_count = 0;
+    for (double y : result.y_vector()) {
+        if (y > 65.0) ++peak_count;
     }
 
     std::cout << "y[0]: " << result.y_vector()[0] << "\n";
+    std::cout << "Peak count: " << peak_count << "\n";
     return 0;
 }
 ```
 
 ```output
 y[0]: 59.952
+Peak count: 26
 ```
 
 ---
@@ -109,30 +107,30 @@ For whole-genome data that doesn't fit in memory:
 #include <vector>
 
 int main() {
-    const int n = 100;
-    std::vector<double> positions(n), coverage(n);
+    const int n = 1001;
+    std::vector<double> x_chunk(n), y_chunk(n);
     for (int i = 0; i < n; ++i) {
-        positions[i] = i * 1000.0;
-        coverage[i] = 50.0 + std::sin(positions[i] / 1000.0) * 20.0 + 5.0;
+        x_chunk[i] = i * 10.0;
+        y_chunk[i] = 50.0 + std::sin(x_chunk[i] / 100.0) * 20.0 + 5.0;
     }
 
-    // coverage and positions are chromosome-scale vectors
     fastlowess::StreamingOptions s_opts;
     s_opts.fraction = 0.05;
     s_opts.iterations = 3;
-    s_opts.chunk_size = 100000;
-    s_opts.overlap = 10000;
+    s_opts.chunk_size = 50;
+    s_opts.overlap = 10;
+    s_opts.merge_strategy = "weighted_average";
     fastlowess::StreamingLowess stream(s_opts);
-    (void)stream.process_chunk(positions, coverage);
+    (void)stream.process_chunk(x_chunk, y_chunk);
     auto result = stream.finalize().value();
 
-    std::cout << "Smoothed " << result.y_vector().size() << " points\n";
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
 ```
 
 ```output
-Smoothed 100 points
+y[0]: 41.2977
 ```
 
 ---

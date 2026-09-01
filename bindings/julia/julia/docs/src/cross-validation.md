@@ -96,7 +96,7 @@ println("First smoothed value (k-fold CV, k=5): ", result.y[1])
 Cross-validation uses MSE (Mean Squared Error) by default:
 
 ```text
-MSE = mean((y_true - y_pred)²)
+MSE = mean((y_true - y_pred)^2)
 ```
 
 Lower MSE indicates better fit on held-out data.

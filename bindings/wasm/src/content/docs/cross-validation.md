@@ -21,7 +21,7 @@ const { Lowess } = require('fastlowess-wasm');
 
 const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
 const model = new Lowess({
     cv_method: "kfold",
@@ -35,12 +35,12 @@ console.log("CV scores:", result.cv_scores);
 ```
 
 ```output
-Selected fraction: 0.3
+Selected fraction: 0.2
 CV scores: Float64Array(4) [
-  0.3427592692457587,
-  0.3338935018825202,
-  0.4101138947556259,
-  0.4850593635927054
+  0.26600659254341497,
+  0.2666373347613506,
+  0.36243048571062475,
+  0.4466813477111353
 ]
 ```
 
@@ -55,7 +55,7 @@ const { Lowess } = require('fastlowess-wasm');
 
 const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
 const model = new Lowess({
     cv_method: "loocv",
@@ -80,7 +80,7 @@ const { Lowess } = require('fastlowess-wasm');
 
 const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
 const model = new Lowess({
     cv_method: "kfold",
@@ -117,7 +117,7 @@ Use **5-fold** or **10-fold** CV for most applications. LOOCV is only worth it f
 Cross-validation uses MSE (Mean Squared Error) by default:
 
 ```text
-MSE = mean((y_true - y_pred)²)
+MSE = mean((y_true - y_pred)^2)
 ```
 
 Lower MSE indicates better fit on held-out data.
@@ -131,7 +131,7 @@ const { Lowess } = require('fastlowess-wasm');
 
 const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
 // Example output
 const model = new Lowess({

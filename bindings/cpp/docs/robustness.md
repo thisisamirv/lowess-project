@@ -185,6 +185,12 @@ int main() {
 }
 ```
 
+```output
+Potential outlier at 20
+Potential outlier at 50
+Potential outlier at 80
+```
+
 ---
 
 ## Scale Estimation

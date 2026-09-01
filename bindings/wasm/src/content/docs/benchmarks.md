@@ -32,34 +32,3 @@ The WebAssembly build runs single-threaded (no `parallel` option). The figures
 above reflect the native Node.js binding with worker-thread parallelism. WASM
 serial performance is comparable to the Serial column.
 :::
-
----
-
-## Reproducing Benchmarks
-
-Use `performance.now()` to time serial WASM runs:
-
-```javascript
-const { Lowess } = require('fastlowess-wasm');
-
-function benchMs(fn, reps = 10) {
-    fn(); // warm-up
-    const { performance } = require('perf_hooks');
-    const t0 = performance.now();
-    for (let i = 0; i < reps; i++) fn();
-    return (performance.now() - t0) / reps;
-}
-
-const n = 5000;
-const x = Float64Array.from({ length: n }, (_, i) => (i / (n - 1)) * 10);
-const y = Float64Array.from(x, (xi, i) =>
-    Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6
-);
-
-const ms = benchMs(() => new Lowess({ fraction: 0.67 }).fit(x, y));
-console.log(`WASM: ${ms.toFixed(2)} ms`);
-```
-
-```output
-WASM: 12.85 ms
-```

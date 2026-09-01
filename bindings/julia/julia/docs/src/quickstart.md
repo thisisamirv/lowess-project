@@ -44,7 +44,7 @@ result = fit(model, x, y)
 println("Smoothed: ", result.y)
 println("CI Lower: ", result.confidence_lower)
 println("CI Upper: ", result.confidence_upper)
-println("R²: ", result.diagnostics.r_squared)
+println("R2: ", result.diagnostics.r_squared)
 ```
 
 ---

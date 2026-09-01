@@ -125,7 +125,7 @@
 //! LOWESS Diagnostics:
 //!   RMSE:         0.191925
 //!   MAE:          0.181676
-//!   R²:           0.998205
+//!   R2:           0.998205
 //!   Residual SD:  0.297750
 //!   Effective DF: 8.00
 //!   AIC:          -10.41

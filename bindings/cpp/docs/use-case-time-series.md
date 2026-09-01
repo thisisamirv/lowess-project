@@ -21,11 +21,11 @@ Time series data often contains noise, seasonality, and trends. LOWESS provides 
 #include <vector>
 
 int main() {
-    const int n = 100;
+    const int n = 500;
     std::vector<double> t(n), y(n);
     for (int i = 0; i < n; ++i) {
-        t[i] = i * 2.0 * M_PI / (n - 1);
-        y[i] = std::sin(t[i]) + 0.1;
+        t[i] = i * 100.0 / (n - 1);
+        y[i] = 10.0 + 0.5 * t[i] + 3.0 * std::sin(t[i] / 10.0) + (std::fmod(i * 7 + 3, 1.7) - 0.85) * 3.0;
     }
 
     fastlowess::LowessOptions trend_opts;
@@ -40,7 +40,7 @@ int main() {
 ```
 
 ```output
-y[0]: 0.188448
+y[0]: 11.3216
 ```
 
 ---
@@ -112,15 +112,13 @@ int main() {
     });
     auto result = forecast_model.fit(t, y).value();
 
-    // Access result.prediction_lower() and result.prediction_upper()
-
-    std::cout << "95% CI: [" << result.confidence_lower()[0] << ", " << result.confidence_upper()[0] << "]\n";
+    std::cout << "95% PI: [" << result.prediction_lower()[0] << ", " << result.prediction_upper()[0] << "]\n";
     return 0;
 }
 ```
 
 ```output
-95% CI: [0.214336, 0.234557]
+95% PI: [0.158010, 0.290883]
 ```
 
 ---
@@ -209,7 +207,7 @@ int main() {
     std::vector<double> hours(n), expression(n);
     for (int i = 0; i < n; ++i) {
         hours[i] = i * 0.5;
-        expression[i] = 100.0 * (1.0 + 0.5 * std::sin(hours[i] * M_PI / 12.0));
+        expression[i] = 100.0 * (1.0 + 0.5 * std::sin(hours[i] * M_PI / 12.0)) + (std::fmod(i * 7 + 3, 1.7) - 0.85) * 10.0;
     }
 
     fastlowess::Lowess gene_model({
@@ -219,14 +217,14 @@ int main() {
     });
     auto result = gene_model.fit(hours, expression).value();
 
-    std::cout << "R²: " << result.diagnostics().r_squared() << std::endl;
+    std::cout << "R2: " << result.diagnostics().r_squared() << std::endl;
 
     return 0;
 }
 ```
 
 ```output
-RÂ²: 0.993834
+R2: 0.973054
 ```
 
 ---

@@ -15,14 +15,8 @@ Time series data often contains noise, seasonality, and trends. LOWESS provides 
 
 ```rust
 use fastLowess::prelude::*;
-use std::f64::consts::TAU;
 
 fn main() -> Result<(), LowessError> {
-    let n = 100usize;
-    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-
     let n = 500usize;
     let t: Vec<f64> = (0..n).map(|i| i as f64 * 100.0 / (n - 1) as f64).collect();
     let y: Vec<f64> = t.iter().enumerate()
@@ -110,15 +104,15 @@ fn main() -> Result<(), LowessError> {
     let result = model.fit(&t, &y)?;
     // Access result.prediction_lower and result.prediction_upper
 
-    if let (Some(lo), Some(hi)) = (&result.confidence_lower, &result.confidence_upper) {
-        println!("First point 95% CI: [{}, {}]", lo[0], hi[0]);
+    if let (Some(lo), Some(hi)) = (&result.prediction_lower, &result.prediction_upper) {
+        println!("95% PI: [{}, {}]", lo[0], hi[0]);
     }
     Ok(())
 }
 ```
 
 ```output
-First point 95% CI: [0.2143361638963172, 0.23455701980290472]
+95% PI: [0.15801046224996285, 0.2908827214492591]
 ```
 
 ---
@@ -211,7 +205,7 @@ fn main() -> Result<(), LowessError> {
 
     let result = model.fit(&hours, &expression)?;
     if let Some(diag) = &result.diagnostics {
-        println!("R²: {:.3}", diag.r_squared);
+        println!("R2: {:.3}", diag.r_squared);
     }
 
     Ok(())
@@ -219,7 +213,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-RÂ²: 0.973
+R2: 0.973
 ```
 
 ---

@@ -82,7 +82,7 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `confidence_intervals(T)` | `T: Float` | `NaN` | Confidence level (e.g., 0.95) — see [Intervals](crate::doc::intervals) |
 | `prediction_intervals(T)` | `T: Float` | `NaN` | Prediction level (e.g., 0.95) — see [Intervals](crate::doc::intervals) |
 | `custom_weights(Vec<T>)` | `Vec<T: Float>` | `None` | Per-observation weights (Batch only) — see [Custom Weights](crate::doc::custom_weights) |
-| `return_diagnostics()` | `bool` | `false` | Compute RMSE, MAE, R², AIC |
+| `return_diagnostics()` | `bool` | `false` | Compute RMSE, MAE, R2, AIC |
 | `return_residuals()` | `bool` | `false` | Include residuals in result |
 | `return_robustness_weights()` | `bool` | `false` | Include robustness weights in result |
 | `return_se()` | `bool` | `false` | Return standard errors |

@@ -25,14 +25,6 @@ For true real-time applications where each point must be processed immediately.
 #include <vector>
 
 int main() {
-    const int n = 100;
-    std::vector<double> times(n), temperatures(n);
-    for (int i = 0; i < n; ++i) {
-        times[i] = i * 0.1;
-        temperatures[i] = 20.0 + std::sin(times[i]);
-    }
-
-    // Online mode processes points incrementally
     fastlowess::OnlineOptions opts;
     opts.fraction = 0.3;
     opts.iterations = 1;
@@ -42,24 +34,30 @@ int main() {
 
     fastlowess::OnlineLowess model(opts);
     int shown = 0;
-    for (size_t i = 0; i < times.size(); ++i) {
-        auto res = model.add_point(times[i], temperatures[i]).value();
+    for (int i = 0; i < 100; ++i) {
+        double xi = static_cast<double>(i);
+        double yi = 20.0 + 5.0 * std::sin(xi / 10.0) + std::sin(xi * 1.7) * 0.5;
+        auto res = model.add_point(xi, yi).value();
         if (res.has_value()) {
-            if (shown < 3) {
-                std::cout << "Time " << times[i] << ": " << res.y() << std::endl;
+            if (shown < 5) {
+                std::cout << "Time " << xi << ": smoothed = " << res.y() << "\n";
             }
             ++shown;
         }
     }
+    std::cout << "... (" << (shown - 5) << " more)\n";
 
     return 0;
 }
 ```
 
 ```output
-Time 0.4: 20.3894
-Time 0.5: 20.4794
-Time 0.6: 20.5646
+Time 4: smoothed = 22.1941
+Time 5: smoothed = 22.7964
+Time 6: smoothed = 22.4733
+Time 7: smoothed = 22.9120
+Time 8: smoothed = 24.0164
+... (91 more)
 ```
 
 ---
@@ -81,39 +79,41 @@ For large datasets that arrive in batches or files.
 #include <vector>
 
 int main() {
-    const int n = 100;
-    std::vector<double> x(n), y(n);
-    for (int i = 0; i < n; ++i) {
-        x[i] = i * 2 * M_PI / (n - 1);
-        y[i] = std::sin(x[i]) + 0.1;
+    std::vector<double> chunk1_x(50), chunk1_y(50), chunk2_x(50), chunk2_y(50);
+    for (int i = 0; i < 50; ++i) {
+        chunk1_x[i] = i;
+        chunk1_y[i] = std::sin(chunk1_x[i]) + 0.1;
+        chunk2_x[i] = i + 50;
+        chunk2_y[i] = std::sin(chunk2_x[i]) + 0.1;
     }
-
 
     fastlowess::StreamingOptions opts;
     opts.fraction = 0.1;
     opts.iterations = 2;
-    opts.chunk_size = 5000;
-    opts.overlap = 500;
+    opts.chunk_size = 50;
+    opts.overlap = 10;
+    opts.merge_strategy = "weighted_average";
 
     fastlowess::StreamingLowess stream(opts);
-    (void)stream.process_chunk(x, y);
+    (void)stream.process_chunk(chunk1_x, chunk1_y);
+    (void)stream.process_chunk(chunk2_x, chunk2_y);
     auto result = stream.finalize().value();
 
-    std::cout << "Processed " << result.y_vector().size() << " points" << std::endl;
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
 
     return 0;
 }
 ```
 
 ```output
-Processed 100 points
+y[0]: 0.516484
 ```
 
 ---
 
 ## Real-Time Dashboard Example
 
-The dashboard pattern uses a plain LOWESS fit on a manually managed sliding window rather than `OnlineLowess`. This is the simplest approach when your UI framework already owns the data buffer and you only need the most recent smoothed value per frame. The trade-off is a full O(window²) refit on every tick; for high-frequency streams prefer `OnlineLowess` with `update_mode = "incremental"` to bound per-frame cost.
+The dashboard pattern uses a plain LOWESS fit on a manually managed sliding window rather than `OnlineLowess`. This is the simplest approach when your UI framework already owns the data buffer and you only need the most recent smoothed value per frame. The trade-off is a full O(window^2) refit on every tick; for high-frequency streams prefer `OnlineLowess` with `update_mode = "incremental"` to bound per-frame cost.
 
 ```cpp
 #include <fastlowess.hpp>
@@ -130,9 +130,10 @@ int main() {
     }
 
     std::vector<double> windowX, windowY;
+    double latest = 0.0;
 
     // Sliding window over preamble x/y data
-    for (std::size_t i = 0; i < n; ++i) {
+    for (std::size_t i = 0; i < x.size(); ++i) {
         windowX.push_back(x[i]);
         windowY.push_back(y[i]);
 
@@ -146,12 +147,17 @@ int main() {
         sw_opts.fraction = 0.4;
         fastlowess::Lowess model(sw_opts);
         auto result = model.fit(windowX, windowY).value();
-        const auto smoothed = result.y_vector().back();
-        (void)smoothed;
+        latest = result.y_vector().back();
     }
+
+    std::cout << "Smoothed (dashboard, latest tick): " << latest << "\n";
 
     return 0;
 }
+```
+
+```output
+Smoothed (dashboard, latest tick): -0.0663473
 ```
 
 ---

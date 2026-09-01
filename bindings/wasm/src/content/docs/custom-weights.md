@@ -89,7 +89,7 @@ const { Lowess } = require('fastlowess-wasm');
 
 const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
 const calibrationIndices = [5, 20, 40, 60, 80];
 const weights = new Float64Array(x.length).fill(1.0);
@@ -101,7 +101,7 @@ console.log("y[0]:", result.y[0].toFixed(4));
 ```
 
 ```output
-y[0]: 0.0865
+y[0]: 0.3237
 ```
 
 ---
@@ -117,7 +117,7 @@ const { Lowess } = require('fastlowess-wasm');
 
 const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
 const sigma = Float64Array.from({ length: n }, (_, i) => 0.1 + (i % 4) * 0.1);
 const weights = Float64Array.from(sigma, s => 1.0 / (s * s));
@@ -127,7 +127,7 @@ console.log("y[0]:", result.y[0].toFixed(4));
 ```
 
 ```output
-y[0]: 0.0090
+y[0]: 0.1522
 ```
 
 ---

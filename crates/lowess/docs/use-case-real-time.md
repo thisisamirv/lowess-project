@@ -37,21 +37,25 @@ fn main() -> Result<(), LowessError> {
         let yi = 20.0 + 5.0 * (xi / 10.0).sin() + (xi * 1.7).sin() * 0.5;
 
         if let Some(output) = processor.add_point(xi, yi)? {
-            if count < 3 {
-                println!("Time {}: smoothed = {:.2}", xi, output.y);
+            if count < 5 {
+                println!("Time {}: smoothed = {:.4}", xi, output.y);
             }
             count += 1;
         }
     }
+    println!("... ({} more)", count - 5);
 
     Ok(())
 }
 ```
 
 ```output
-Time 4: smoothed = 22.19
-Time 5: smoothed = 22.80
-Time 6: smoothed = 22.47
+Time 4: smoothed = 22.1941
+Time 5: smoothed = 22.7964
+Time 6: smoothed = 22.4733
+Time 7: smoothed = 22.9120
+Time 8: smoothed = 24.0164
+... (91 more)
 ```
 
 ---
@@ -104,7 +108,45 @@ First smoothed value (streaming log): 0.5164838198010315
 
 ## Real-Time Dashboard Example
 
-The dashboard pattern uses a plain LOWESS fit on a manually managed sliding window rather than `OnlineLowess`. This is the simplest approach when your UI framework already owns the data buffer and you only need the most recent smoothed value per frame. The trade-off is a full O(window²) refit on every tick; for high-frequency streams prefer `OnlineLowess` with `update_mode = "incremental"` to bound per-frame cost.
+The dashboard pattern uses a plain LOWESS fit on a manually managed sliding window rather than `OnlineLowess`. This is the simplest approach when your UI framework already owns the data buffer and you only need the most recent smoothed value per frame. The trade-off is a full O(window^2) refit on every tick; for high-frequency streams prefer `OnlineLowess` with `update_mode = "incremental"` to bound per-frame cost.
+
+```rust
+use lowess::prelude::*;
+use std::f64::consts::TAU;
+
+fn main() -> Result<(), LowessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
+
+    let mut window_x: Vec<f64> = Vec::new();
+    let mut window_y: Vec<f64> = Vec::new();
+    let mut latest = 0.0;
+
+    for i in 0..x.len() {
+        window_x.push(x[i]);
+        window_y.push(y[i]);
+        if window_x.len() > 50 {
+            window_x.remove(0);
+            window_y.remove(0);
+        }
+        if window_x.len() < 2 {
+            continue;
+        }
+
+        let model = Lowess::new().fraction(0.4).build()?;
+        let result = model.fit(&window_x, &window_y)?;
+        latest = *result.y.last().unwrap();
+    }
+
+    println!("Smoothed (dashboard, latest tick): {}", latest);
+    Ok(())
+}
+```
+
+```output
+Smoothed (dashboard, latest tick): -0.06634730089857399
+```
 
 ---
 

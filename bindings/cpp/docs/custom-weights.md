@@ -180,14 +180,15 @@ for *known* bad points and robustness for *unknown* contamination.
 #include <vector>
 
 int main() {
-    const int n = 100;
-    std::vector<double> x(n), y(n);
-    for (int i = 0; i < n; ++i) {
-        x[i] = i * 2 * M_PI / (n - 1);
-        y[i] = std::sin(x[i]) + 0.1;
+    std::vector<double> x(20), y(20);
+    for (int i = 0; i < 20; ++i) {
+        x[i] = static_cast<double>(i);
+        y[i] = x[i] * 1.5;
     }
+    y[3]  = -50.0; // known bad
+    y[12] = 80.0;  // unknown outlier
 
-    std::vector<double> weights(n, 1.0);
+    std::vector<double> weights(20, 1.0);
     weights[3] = 0.0;
 
     fastlowess::LowessOptions opts;
@@ -202,7 +203,7 @@ int main() {
 ```
 
 ```output
-y[0]: 0.302856
+y[0]: 1.7984
 ```
 
 ---

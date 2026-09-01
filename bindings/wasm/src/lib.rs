@@ -39,7 +39,7 @@ export interface SmoothOptions {
     return_residuals?: boolean;
     /** Include robustness weights in result. Default: false. */
     return_robustness_weights?: boolean;
-    /** Compute diagnostics (RMSE, MAE, R², etc.). Default: false. */
+    /** Compute diagnostics (RMSE, MAE, R2, etc.). Default: false. */
     return_diagnostics?: boolean;
     /** Include standard errors in result. Default: false. */
     return_se?: boolean;

@@ -21,15 +21,11 @@ A small `fraction = 0.1` lets LOWESS follow fine-scale spatial structure without
 
 ```rust
 use lowess::prelude::*;
-use std::f64::consts::TAU;
 
 fn main() -> Result<(), LowessError> {
     let n = 100usize;
-    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-    let positions = x.clone();
-    let observed = y.clone();
+    let positions: Vec<f64> = (0..n).map(|i| i as f64 * 1000.0).collect();
+    let observed: Vec<f64> = positions.iter().map(|&p| 50.0 + (p / 1000.0).sin() * 20.0 + 5.0).collect();
 
     let model = Lowess::new()
         .fraction(0.1)
@@ -41,15 +37,15 @@ fn main() -> Result<(), LowessError> {
     // result.y contains smoothed methylation profile
     // result.confidence_lower/upper contain 95% CI bounds
 
-    if let Some(lo) = &result.confidence_lower {
-        println!("First lower CI bound (95%): {}", lo[0]);
+    if let (Some(lo), Some(hi)) = (&result.confidence_lower, &result.confidence_upper) {
+        println!("95% CI: [{}, {}]", lo[0], hi[0]);
     }
     Ok(())
 }
 ```
 
 ```output
-First lower CI bound (95%): 0.1884475870962386
+95% CI: [51.67728847225472, 68.73718630709101]
 ```
 
 ---
@@ -64,41 +60,31 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
 
 ```rust
 use lowess::prelude::*;
-use std::f64::consts::TAU;
 
 fn main() -> Result<(), LowessError> {
     let n = 100usize;
-    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-    let positions: Vec<f64> = (0..1000).map(|i| i as f64 *10.0).collect(); // 0 to 9990 step 10
-    let observed: Vec<f64> = positions.iter().map(|&p| (p / 1000.0).sin().abs()* 100.0 + 10.0).collect();
+    let positions: Vec<f64> = (0..n).map(|i| i as f64 * 1000.0).collect();
+    let observed: Vec<f64> = positions.iter().map(|&p| 50.0 + (p / 1000.0).sin() * 20.0 + 5.0).collect();
 
     let model = Lowess::new()
         .fraction(0.05)
         .iterations(5)
-        .return_residuals()
         .build()?;
 
     let result = model.fit(&positions, &observed)?;
 
     // Find peaks above threshold
-    let threshold = result.y.iter().copied()
-        .fold(f64::NEG_INFINITY, f64::max) * 0.75;
-    let peak_positions: Vec<f64> = positions.iter().zip(result.y.iter())
-        .filter(|&(_, &y)| y > threshold)
-        .map(|(&p, _)| p)
-        .collect();
+    let peak_count = result.y.iter().filter(|&&y| y > 65.0).count();
 
-    if let Some(r) = &result.residuals {
-        println!("First residual: {}", r[0]);
-    }
+    println!("y[0]: {}", result.y[0]);
+    println!("Peak count: {}", peak_count);
     Ok(())
 }
 ```
 
 ```output
-First residual: -6.777600078629792
+y[0]: 59.951990929979125
+Peak count: 26
 ```
 
 ---
@@ -124,14 +110,14 @@ fn main() -> Result<(), LowessError> {
 
     processor.process_chunk(&x_chunk, &y_chunk)?;
     let result = processor.finalize()?;
-    println!("First smoothed value (streaming genome): {}", result.y[0]);
+    println!("y[0]: {}", result.y[0]);
 
     Ok(())
 }
 ```
 
 ```output
-First smoothed value (streaming genome): 41.29765849569398
+y[0]: 41.29765849569398
 ```
 
 ---

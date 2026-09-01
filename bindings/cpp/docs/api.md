@@ -107,7 +107,7 @@ See [Online Adapter](api-online.md) for the `OnlineLowess` class.
 | `auto_converge` | `double` | NaN | Auto-convergence tolerance |
 | `confidence_intervals` | `double` | NaN | Confidence level (e.g., 0.95) — see [Intervals](intervals.md) |
 | `prediction_intervals` | `double` | NaN | Prediction level (e.g., 0.95) — see [Intervals](intervals.md) |
-| `return_diagnostics` | `bool` | false | Compute RMSE, MAE, R², AIC |
+| `return_diagnostics` | `bool` | false | Compute RMSE, MAE, R2, AIC |
 | `return_residuals` | `bool` | false | Include residuals in result |
 | `return_robustness_weights` | `bool` | false | Include robustness weights in result |
 | `return_se` | `bool` | false | Return standard errors |

@@ -22,39 +22,3 @@ Speedup relative to R's `stats::lowess` (higher is better):
 | **Scientific** (500–5K) | 0.9ms | 1.4× |
 
 *The R column shows the average time across scenarios in multi-scenario categories. Speedups are averages across the same range. The `lowess` crate has no `parallel` or `gpu` feature — for CPU-parallel and GPU-accelerated numbers, see the `fastLowess` crate's benchmarks.*
-
-## Reproducing Benchmarks
-
-Use `std::time::Instant` to time fit calls:
-
-```rust
-use lowess::prelude::*;
-use std::time::Instant;
-
-fn main() -> Result<(), LowessError> {
-    let n = 5000usize;
-    let x: Vec<f64> = (0..n).map(|i| i as f64 / (n - 1) as f64 * 10.0).collect();
-    let y: Vec<f64> = x
-        .iter()
-        .enumerate()
-        .map(|(i, &xi)| xi.sin() + (((i * 7 + 3) % 17) as f64 / 17.0 - 0.5) * 0.6)
-        .collect();
-
-    let reps = 10u32;
-    let run = || Lowess::new().fraction(0.67).build().unwrap().fit(&x, &y).unwrap();
-    run(); // warm-up
-    let t0 = Instant::now();
-    for _ in 0..reps {
-        run();
-    }
-    let elapsed_ms = t0.elapsed().as_secs_f64() * 1000.0 / f64::from(reps);
-
-    println!("Fit: {:.2} ms", elapsed_ms);
-
-    Ok(())
-}
-```
-
-```output
-Fit: 247.53 ms
-```

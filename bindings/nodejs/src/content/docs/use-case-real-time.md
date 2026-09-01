@@ -27,22 +27,27 @@ const processor = new OnlineLowess(
 );
 
 // Simulate real-time data arrival
+let count = 0;
 for (let i = 0; i < 100; i++) {
-    const x = i;
-    const y = 20 + 5 * Math.sin(x / 10) + ((i * 7 + 3) % 17) / 17;
-    
-    const res = processor.add_point(x, y);
-    if (res !== null && x % 20 === 0) {
-        console.log(`Time ${x}: smoothed = ${res.y.toFixed(2)}`);
+    const xi = i;
+    const yi = 20.0 + 5.0 * Math.sin(xi / 10.0) + Math.sin(xi * 1.7) * 0.5;
+
+    const res = processor.add_point(xi, yi);
+    if (res !== null && res !== undefined) {
+        if (count < 5) console.log(`Time ${xi}: smoothed = ${res.y.toFixed(4)}`);
+        count++;
     }
 }
+console.log(`... (${count - 5} more)`);
 ```
 
 ```output
-Time 20: smoothed = 24.84
-Time 40: smoothed = 16.76
-Time 60: smoothed = 19.19
-Time 80: smoothed = 25.38
+Time 4: smoothed = 22.1941
+Time 5: smoothed = 22.7964
+Time 6: smoothed = 22.4733
+Time 7: smoothed = 22.9120
+Time 8: smoothed = 24.0164
+... (91 more)
 ```
 
 ---
@@ -63,67 +68,63 @@ The streaming adapter buffers overlap data. Call `finalize()` after the last chu
 const { StreamingLowess } = require('fastlowess');
 
 const chunk1_x = Float64Array.from({ length: 50 }, (_, i) => i);
-const chunk1_y = Float64Array.from(chunk1_x, v => Math.sin(v * 0.1));
+const chunk1_y = Float64Array.from(chunk1_x, xi => Math.sin(xi) + 0.1);
 const chunk2_x = Float64Array.from({ length: 50 }, (_, i) => i + 50);
-const chunk2_y = Float64Array.from(chunk2_x, v => Math.sin(v * 0.1));
+const chunk2_y = Float64Array.from(chunk2_x, xi => Math.sin(xi) + 0.1);
 
 const processor = new StreamingLowess(
     { fraction: 0.1, iterations: 2 },
-    { chunk_size: 5000, overlap: 500 }
+    { chunk_size: 50, overlap: 10, merge_strategy: "weighted_average" }
 );
 
-// Process chunks
-const r1 = processor.process_chunk(chunk1_x, chunk1_y);
-const r2 = processor.process_chunk(chunk2_x, chunk2_y);
+// Process chunks as they arrive
+processor.process_chunk(chunk1_x, chunk1_y);
+processor.process_chunk(chunk2_x, chunk2_y);
 
-// Always get buffered data
+// CRITICAL: Get buffered overlap data
 const finalResult = processor.finalize();
-console.log("Smoothed", finalResult.y.length, "points via streaming");
+console.log("y[0]:", finalResult.y[0].toFixed(6));
 ```
 
 ```output
-Smoothed 100 points via streaming
+y[0]: 0.516484
 ```
 
 ---
 
 ## Real-Time Dashboard Example
 
-The dashboard pattern uses a plain LOWESS fit on a manually managed sliding window rather than `OnlineLowess`. This is the simplest approach when your UI framework already owns the data buffer and you only need the most recent smoothed value per frame. The trade-off is a full O(window²) refit on every tick; for high-frequency streams prefer `OnlineLowess` with `update_mode = "incremental"` to bound per-frame cost.
+The dashboard pattern uses a plain LOWESS fit on a manually managed sliding window rather than `OnlineLowess`. This is the simplest approach when your UI framework already owns the data buffer and you only need the most recent smoothed value per frame. The trade-off is a full O(window^2) refit on every tick; for high-frequency streams prefer `OnlineLowess` with `update_mode = "incremental"` to bound per-frame cost.
 
 ```javascript
 const fl = require('fastlowess');
 
 const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i*7+3)%17)/17-0.5)*0.6);
+const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
-const window_capacity = 50;
-let dataX = [], dataY = [];
+let windowX = [], windowY = [];
 let lastSmoothed = 0;
 
-for (let i = 0; i < 200; i++) {
-    dataX.push(i);
-    dataY.push(25.0 + 10 * Math.sin(i / 20) + ((i*7+3)%17)/17*4 - 2);
+for (let i = 0; i < x.length; i++) {
+    windowX.push(x[i]);
+    windowY.push(y[i]);
 
-    if (dataX.length > window_capacity) {
-        dataX.shift();
-        dataY.shift();
+    if (windowX.length > 50) {
+        windowX.shift();
+        windowY.shift();
     }
 
-    if (dataX.length >= 5) {
-        const xArr = new Float64Array(dataX);
-        const yArr = new Float64Array(dataY);
-        const model = new fl.Lowess({ fraction: 0.4 });
-        const result = model.fit(xArr, yArr);
-        lastSmoothed = result.y[result.y.length - 1];
-    }
+    if (windowX.length < 2) continue;
+    const model = new fl.Lowess({ fraction: 0.4 });
+    const result = model.fit(new Float64Array(windowX), new Float64Array(windowY));
+    lastSmoothed = result.y[result.y.length - 1];
 }
-console.log("Last smoothed value (sliding window):", lastSmoothed.toFixed(4));
+console.log("Smoothed (dashboard, latest tick):", lastSmoothed.toFixed(4));
 ```
 
 ```output
-Last smoothed value (sliding window): 19.9064
+Smoothed (dashboard, latest tick): -0.0663
 ```
 
 ---

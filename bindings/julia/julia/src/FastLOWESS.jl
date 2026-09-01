@@ -34,80 +34,80 @@ using Downloads: download
 
 # Try to import JLL package first
 try
-    using fastlowess_jll
+	using fastlowess_jll
 catch e
-    # JLL not available, will use fallback
+	# JLL not available, will use fallback
 end
 
 # Library name varies by platform
 const LIBNAME =
-    Sys.iswindows() ? "fastlowess_jl.dll" :
-    Sys.isapple() ? "libfastlowess_jl.dylib" : "libfastlowess_jl.so"
+	Sys.iswindows() ? "fastlowess_jl.dll" :
+	Sys.isapple() ? "libfastlowess_jl.dylib" : "libfastlowess_jl.so"
 
 # Try to load from JLL package first, fall back to local build
 function find_library()
-    # Option 1: Check environment variable (PRIORITY)
-    if haskey(ENV, "FASTLOWESS_LIB")
-        lib = ENV["FASTLOWESS_LIB"]
-        @info "Using library from FASTLOWESS_LIB: $lib"
-        return lib
-    end
+	# Option 1: Check environment variable (PRIORITY)
+	if haskey(ENV, "FASTLOWESS_LIB")
+		lib = ENV["FASTLOWESS_LIB"]
+		@info "Using library from FASTLOWESS_LIB: $lib"
+		return lib
+	end
 
-    # Option 2: Use JLL package if available (for registered package)
-    if @isdefined(fastlowess_jll)
-        try
-            if hasproperty(fastlowess_jll, :libfastlowess_jl)
-                lib = fastlowess_jll.libfastlowess_jl
-                @info "Using fastlowess_jll library: $lib"
-                return lib
-            end
-        catch e
-            @warn "Failed to load from fastlowess_jll" exception = e
-        end
-    end
+	# Option 2: Use JLL package if available (for registered package)
+	if @isdefined(fastlowess_jll)
+		try
+			if hasproperty(fastlowess_jll, :libfastlowess_jl)
+				lib = fastlowess_jll.libfastlowess_jl
+				@info "Using fastlowess_jll library: $lib"
+				return lib
+			end
+		catch e
+			@warn "Failed to load from fastlowess_jll" exception = e
+		end
+	end
 
-    # Option 3: Check relative paths (development mode)
-    # Path: julia/src/fastlowess.jl -> julia/ -> bindings/julia/ -> bindings/ -> lowess-project/
-    src_dir = @__DIR__                        # julia/src/
-    julia_dir = dirname(src_dir)              # julia/
-    bindings_julia_dir = dirname(julia_dir)   # bindings/julia/
-    bindings_dir = dirname(bindings_julia_dir)# bindings/
-    workspace_root = dirname(bindings_dir)    # lowess-project/
+	# Option 3: Check relative paths (development mode)
+	# Path: julia/src/fastlowess.jl -> julia/ -> bindings/julia/ -> bindings/ -> lowess-project/
+	src_dir = @__DIR__                        # julia/src/
+	julia_dir = dirname(src_dir)              # julia/
+	bindings_julia_dir = dirname(julia_dir)   # bindings/julia/
+	bindings_dir = dirname(bindings_julia_dir)# bindings/
+	workspace_root = dirname(bindings_dir)    # lowess-project/
 
-    candidates = [
-        # Workspace root target (most common for workspace members)
-        joinpath(workspace_root, "target", "release", LIBNAME),
-        joinpath(workspace_root, "target", "debug", LIBNAME),
-        # Local target (if built standalone)
-        joinpath(bindings_julia_dir, "target", "release", LIBNAME),
-        joinpath(bindings_julia_dir, "target", "debug", LIBNAME),
-        # Same directory as module
-        joinpath(julia_dir, LIBNAME),
-    ]
+	candidates = [
+		# Workspace root target (most common for workspace members)
+		joinpath(workspace_root, "target", "release", LIBNAME),
+		joinpath(workspace_root, "target", "debug", LIBNAME),
+		# Local target (if built standalone)
+		joinpath(bindings_julia_dir, "target", "release", LIBNAME),
+		joinpath(bindings_julia_dir, "target", "debug", LIBNAME),
+		# Same directory as module
+		joinpath(julia_dir, LIBNAME),
+	]
 
-    for path ∈ candidates
-        if isfile(path)
-            @info "Using local library: $path"
-            return path
-        end
-    end
+	for path ∈ candidates
+		if isfile(path)
+			@info "Using local library: $path"
+			return path
+		end
+	end
 
-    # Fall back to system path
-    @warn "Library not found in JLL or local paths, falling back to system path"
-    return LIBNAME
+	# Fall back to system path
+	@warn "Library not found in JLL or local paths, falling back to system path"
+	return LIBNAME
 end
 
 const libfastlowess = Ref("")
 
 function current_library()
-    if isempty(libfastlowess[])
-        libfastlowess[] = find_library()
-    end
-    return libfastlowess[]
+	if isempty(libfastlowess[])
+		libfastlowess[] = find_library()
+	end
+	return libfastlowess[]
 end
 
 function __init__()
-    libfastlowess[] = find_library()
+	libfastlowess[] = find_library()
 end
 
 const _GPU_REPO = "thisisamirv/lowess-project"
@@ -116,22 +116,22 @@ const _GPU_REPO = "thisisamirv/lowess-project"
 # always matches the installed FastLOWESS.jl version, without depending on
 # `pkgversion` (Julia 1.9+) given this package supports Julia 1.6+.
 function _package_version()
-    project_file = joinpath(dirname(@__DIR__), "Project.toml")
-    m = match(r"^version\s*=\s*\"([^\"]+)\""m, read(project_file, String))
-    return m === nothing ? "unknown" : m.captures[1]
+	project_file = joinpath(dirname(@__DIR__), "Project.toml")
+	m = match(r"^version\s*=\s*\"([^\"]+)\""m, read(project_file, String))
+	return m === nothing ? "unknown" : m.captures[1]
 end
 
 function _gpu_platform_tag()
-    Sys.iswindows() && return "windows"
-    Sys.isapple() && return "macos"
-    return "linux"
+	Sys.iswindows() && return "windows"
+	Sys.isapple() && return "macos"
+	return "linux"
 end
 
 function _gpu_arch_tag()
-    arch = string(Sys.ARCH)
-    (arch == "x86_64") && return "x86_64"
-    (arch == "aarch64" || arch == "arm64") && return "aarch64"
-    return arch
+	arch = string(Sys.ARCH)
+	(arch == "x86_64") && return "x86_64"
+	(arch == "aarch64" || arch == "arm64") && return "aarch64"
+	return arch
 end
 
 """
@@ -141,7 +141,7 @@ Return `true` if the currently loaded FastLOWESS native library was built
 with the GPU backend enabled.
 """
 function gpu_available()
-    return (@ccall current_library().jl_gpu_enabled()::Cint) != 0
+	return (@ccall current_library().jl_gpu_enabled()::Cint) != 0
 end
 
 """
@@ -163,64 +163,64 @@ again), set `ENV["FASTLOWESS_LIB"]` to the printed cache path in your Julia
 startup config.
 """
 function install_gpu(; yes::Bool = false)
-    if gpu_available()
-        println("GPU backend is already active.")
-        return nothing
-    end
+	if gpu_available()
+		println("GPU backend is already active.")
+		return nothing
+	end
 
-    version = _package_version()
-    platform = _gpu_platform_tag()
-    arch = _gpu_arch_tag()
-    ext = Sys.iswindows() ? "dll" : Sys.isapple() ? "dylib" : "so"
-    asset_name = "fastlowess_jl-gpu-v$(version)-$(platform)-$(arch).$(ext)"
-    url = "https://github.com/$(_GPU_REPO)/releases/download/v$(version)/$(asset_name)"
+	version = _package_version()
+	platform = _gpu_platform_tag()
+	arch = _gpu_arch_tag()
+	ext = Sys.iswindows() ? "dll" : Sys.isapple() ? "dylib" : "so"
+	asset_name = "fastlowess_jl-gpu-v$(version)-$(platform)-$(arch).$(ext)"
+	url = "https://github.com/$(_GPU_REPO)/releases/download/v$(version)/$(asset_name)"
 
-    cache_dir = joinpath(homedir(), ".fastlowess", "gpu")
-    mkpath(cache_dir)
-    dest = joinpath(cache_dir, asset_name)
+	cache_dir = joinpath(homedir(), ".fastlowess", "gpu")
+	mkpath(cache_dir)
+	dest = joinpath(cache_dir, asset_name)
 
-    if isfile(dest)
-        println("Using cached GPU build at $(dest)")
-    else
-        if !yes
-            if !isa(stdin, Base.TTY)
-                error(
-                    "install_gpu() requires confirmation. Pass yes=true to proceed non-interactively.",
-                )
-            end
-            print("Download and install $(asset_name) from github.com/$(_GPU_REPO)? [y/N] ")
-            answer = lowercase(strip(readline()))
-            if answer != "y" && answer != "yes"
-                println("Aborted.")
-                return nothing
-            end
-        end
+	if isfile(dest)
+		println("Using cached GPU build at $(dest)")
+	else
+		if !yes
+			if !isa(stdin, Base.TTY)
+				error(
+					"install_gpu() requires confirmation. Pass yes=true to proceed non-interactively.",
+				)
+			end
+			print("Download and install $(asset_name) from github.com/$(_GPU_REPO)? [y/N] ")
+			answer = lowercase(strip(readline()))
+			if answer != "y" && answer != "yes"
+				println("Aborted.")
+				return nothing
+			end
+		end
 
-        println("Downloading $(url) ...")
-        try
-            download(url, dest)
-        catch e
-            rm(dest, force = true)
-            error(
-                "Failed to download $(url): $(e)\nA matching GPU build may not exist for this platform/version yet.",
-            )
-        end
-    end
+		println("Downloading $(url) ...")
+		try
+			download(url, dest)
+		catch e
+			rm(dest, force = true)
+			error(
+				"Failed to download $(url): $(e)\nA matching GPU build may not exist for this platform/version yet.",
+			)
+		end
+	end
 
-    previous = libfastlowess[]
-    libfastlowess[] = dest
-    if !gpu_available()
-        libfastlowess[] = previous
-        error(
-            "Downloaded library does not report GPU support. The download may be corrupted or mismatched; try again.",
-        )
-    end
+	previous = libfastlowess[]
+	libfastlowess[] = dest
+	if !gpu_available()
+		libfastlowess[] = previous
+		error(
+			"Downloaded library does not report GPU support. The download may be corrupted or mismatched; try again.",
+		)
+	end
 
-    println("GPU backend installed and active for this session.")
-    println(
-        "To use it automatically in future sessions: ENV[\"FASTLOWESS_LIB\"] = \"$(dest)\"",
-    )
-    return nothing
+	println("GPU backend installed and active for this session.")
+	println(
+		"To use it automatically in future sessions: ENV[\"FASTLOWESS_LIB\"] = \"$(dest)\"",
+	)
+	return nothing
 end
 
 """
@@ -238,13 +238,13 @@ Diagnostic statistics for LOWESS fit quality.
 - `residual_sd::Float64`: Residual standard deviation
 """
 struct Diagnostics
-    rmse::Float64
-    mae::Float64
-    r_squared::Float64
-    aic::Float64
-    aicc::Float64
-    effective_df::Float64
-    residual_sd::Float64
+	rmse::Float64
+	mae::Float64
+	r_squared::Float64
+	aic::Float64
+	aicc::Float64
+	effective_df::Float64
+	residual_sd::Float64
 end
 
 """
@@ -268,19 +268,19 @@ Result from LOWESS smoothing.
 - `diagnostics::Union{Diagnostics, Nothing}`: Diagnostic metrics
 """
 struct LowessResult
-    x::Vector{Float64}
-    y::Vector{Float64}
-    standard_errors::Union{Vector{Float64},Nothing}
-    confidence_lower::Union{Vector{Float64},Nothing}
-    confidence_upper::Union{Vector{Float64},Nothing}
-    prediction_lower::Union{Vector{Float64},Nothing}
-    prediction_upper::Union{Vector{Float64},Nothing}
-    residuals::Union{Vector{Float64},Nothing}
-    robustness_weights::Union{Vector{Float64},Nothing}
-    cv_scores::Union{Vector{Float64},Nothing}
-    fraction_used::Float64
-    iterations_used::Union{Int,Nothing}
-    diagnostics::Union{Diagnostics,Nothing}
+	x::Vector{Float64}
+	y::Vector{Float64}
+	standard_errors::Union{Vector{Float64}, Nothing}
+	confidence_lower::Union{Vector{Float64}, Nothing}
+	confidence_upper::Union{Vector{Float64}, Nothing}
+	prediction_lower::Union{Vector{Float64}, Nothing}
+	prediction_upper::Union{Vector{Float64}, Nothing}
+	residuals::Union{Vector{Float64}, Nothing}
+	robustness_weights::Union{Vector{Float64}, Nothing}
+	cv_scores::Union{Vector{Float64}, Nothing}
+	fraction_used::Float64
+	iterations_used::Union{Int, Nothing}
+	diagnostics::Union{Diagnostics, Nothing}
 end
 
 """
@@ -296,130 +296,130 @@ Result from a single `add_point` call.
 - `iterations_used::Union{Int, Nothing}`: Number of robustness iterations
 """
 struct OnlineOutput
-    y::Float64
-    standard_error::Union{Float64,Nothing}
-    residual::Union{Float64,Nothing}
-    robustness_weight::Union{Float64,Nothing}
-    iterations_used::Union{Int,Nothing}
+	y::Float64
+	standard_error::Union{Float64, Nothing}
+	residual::Union{Float64, Nothing}
+	robustness_weight::Union{Float64, Nothing}
+	iterations_used::Union{Int, Nothing}
 end
 
 # C FFI struct for per-point online output (must match Rust definition).
 struct CJlOnlineOutput
-    has_value::Cint
-    y::Cdouble
-    standard_error::Cdouble
-    residual::Cdouble
-    robustness_weight::Cdouble
-    iterations_used::Cint
-    error::Ptr{Cchar}
+	has_value::Cint
+	y::Cdouble
+	standard_error::Cdouble
+	residual::Cdouble
+	robustness_weight::Cdouble
+	iterations_used::Cint
+	error::Ptr{Cchar}
 end
 
 # C FFI result struct (must match Rust definition)
 struct CJlLowessResult
-    x::Ptr{Cdouble}
-    y::Ptr{Cdouble}
-    n::Culong
-    standard_errors::Ptr{Cdouble}
-    confidence_lower::Ptr{Cdouble}
-    confidence_upper::Ptr{Cdouble}
-    prediction_lower::Ptr{Cdouble}
-    prediction_upper::Ptr{Cdouble}
-    residuals::Ptr{Cdouble}
-    robustness_weights::Ptr{Cdouble}
-    cv_scores::Ptr{Cdouble}
-    cv_scores_len::Culong
-    fraction_used::Cdouble
-    iterations_used::Cint
-    rmse::Cdouble
-    mae::Cdouble
-    r_squared::Cdouble
-    aic::Cdouble
-    aicc::Cdouble
-    effective_df::Cdouble
-    residual_sd::Cdouble
-    error::Ptr{Cchar}
+	x::Ptr{Cdouble}
+	y::Ptr{Cdouble}
+	n::Culong
+	standard_errors::Ptr{Cdouble}
+	confidence_lower::Ptr{Cdouble}
+	confidence_upper::Ptr{Cdouble}
+	prediction_lower::Ptr{Cdouble}
+	prediction_upper::Ptr{Cdouble}
+	residuals::Ptr{Cdouble}
+	robustness_weights::Ptr{Cdouble}
+	cv_scores::Ptr{Cdouble}
+	cv_scores_len::Culong
+	fraction_used::Cdouble
+	iterations_used::Cint
+	rmse::Cdouble
+	mae::Cdouble
+	r_squared::Cdouble
+	aic::Cdouble
+	aicc::Cdouble
+	effective_df::Cdouble
+	residual_sd::Cdouble
+	error::Ptr{Cchar}
 end
 
 function ptr_to_vector(ptr::Ptr{Cdouble}, n::Int)
-    if ptr == C_NULL
-        return nothing
-    end
-    return unsafe_wrap(Array, ptr, n, own = false) |> copy
+	if ptr == C_NULL
+		return nothing
+	end
+	return unsafe_wrap(Array, ptr, n, own = false) |> copy
 end
 
 function convert_result(c_result::CJlLowessResult)
-    # Check for error
-    if c_result.error != Ptr{Cchar}(C_NULL)
-        error_msg = unsafe_string(Ptr{UInt8}(c_result.error))
-        # Free the result before throwing
-        @ccall current_library().jl_lowess_free_result(
-            Ref(c_result)::Ptr{CJlLowessResult},
-        )::Cvoid
-        error("fastlowess error: $error_msg")
-    end
+	# Check for error
+	if c_result.error != Ptr{Cchar}(C_NULL)
+		error_msg = unsafe_string(Ptr{UInt8}(c_result.error))
+		# Free the result before throwing
+		@ccall current_library().jl_lowess_free_result(
+			Ref(c_result)::Ptr{CJlLowessResult},
+		)::Cvoid
+		error("fastlowess error: $error_msg")
+	end
 
-    n = Int(c_result.n)
+	n = Int(c_result.n)
 
-    # Extract arrays
-    x = ptr_to_vector(c_result.x, n)
-    y = ptr_to_vector(c_result.y, n)
+	# Extract arrays
+	x = ptr_to_vector(c_result.x, n)
+	y = ptr_to_vector(c_result.y, n)
 
-    if x === nothing || y === nothing
-        @ccall current_library().jl_lowess_free_result(
-            Ref(c_result)::Ptr{CJlLowessResult},
-        )::Cvoid
-        error("fastlowess error: result arrays are null")
-    end
+	if x === nothing || y === nothing
+		@ccall current_library().jl_lowess_free_result(
+			Ref(c_result)::Ptr{CJlLowessResult},
+		)::Cvoid
+		error("fastlowess error: result arrays are null")
+	end
 
-    x = x::Vector{Float64}
-    y = y::Vector{Float64}
+	x = x::Vector{Float64}
+	y = y::Vector{Float64}
 
-    standard_errors = ptr_to_vector(c_result.standard_errors, n)
-    confidence_lower = ptr_to_vector(c_result.confidence_lower, n)
-    confidence_upper = ptr_to_vector(c_result.confidence_upper, n)
-    prediction_lower = ptr_to_vector(c_result.prediction_lower, n)
-    prediction_upper = ptr_to_vector(c_result.prediction_upper, n)
-    residuals = ptr_to_vector(c_result.residuals, n)
-    robustness_weights = ptr_to_vector(c_result.robustness_weights, n)
-    cv_scores = ptr_to_vector(c_result.cv_scores, Int(c_result.cv_scores_len))
+	standard_errors = ptr_to_vector(c_result.standard_errors, n)
+	confidence_lower = ptr_to_vector(c_result.confidence_lower, n)
+	confidence_upper = ptr_to_vector(c_result.confidence_upper, n)
+	prediction_lower = ptr_to_vector(c_result.prediction_lower, n)
+	prediction_upper = ptr_to_vector(c_result.prediction_upper, n)
+	residuals = ptr_to_vector(c_result.residuals, n)
+	robustness_weights = ptr_to_vector(c_result.robustness_weights, n)
+	cv_scores = ptr_to_vector(c_result.cv_scores, Int(c_result.cv_scores_len))
 
-    # Extract diagnostics
-    diagnostics = if !isnan(c_result.rmse)
-        Diagnostics(
-            c_result.rmse,
-            c_result.mae,
-            c_result.r_squared,
-            c_result.aic,
-            c_result.aicc,
-            c_result.effective_df,
-            c_result.residual_sd,
-        )
-    else
-        nothing
-    end
+	# Extract diagnostics
+	diagnostics = if !isnan(c_result.rmse)
+		Diagnostics(
+			c_result.rmse,
+			c_result.mae,
+			c_result.r_squared,
+			c_result.aic,
+			c_result.aicc,
+			c_result.effective_df,
+			c_result.residual_sd,
+		)
+	else
+		nothing
+	end
 
-    result = LowessResult(
-        x,
-        y,
-        standard_errors,
-        confidence_lower,
-        confidence_upper,
-        prediction_lower,
-        prediction_upper,
-        residuals,
-        robustness_weights,
-        cv_scores,
-        c_result.fraction_used,
-        c_result.iterations_used == -1 ? nothing : Int(c_result.iterations_used),
-        diagnostics,
-    )
+	result = LowessResult(
+		x,
+		y,
+		standard_errors,
+		confidence_lower,
+		confidence_upper,
+		prediction_lower,
+		prediction_upper,
+		residuals,
+		robustness_weights,
+		cv_scores,
+		c_result.fraction_used,
+		c_result.iterations_used == -1 ? nothing : Int(c_result.iterations_used),
+		diagnostics,
+	)
 
-    # Free the C result
-    @ccall current_library().jl_lowess_free_result(
-        Ref(c_result)::Ptr{CJlLowessResult},
-    )::Cvoid
+	# Free the C result
+	@ccall current_library().jl_lowess_free_result(
+		Ref(c_result)::Ptr{CJlLowessResult},
+	)::Cvoid
 
-    return result
+	return result
 end
 
 """
@@ -428,35 +428,35 @@ end
 Append the results from `b` to `a`. This modifies `a` in place.
 """
 function Base.append!(a::LowessResult, b::LowessResult)
-    append!(a.x, b.x)
-    append!(a.y, b.y)
+	append!(a.x, b.x)
+	append!(a.y, b.y)
 
-    if a.standard_errors !== nothing && b.standard_errors !== nothing
-        append!(a.standard_errors, b.standard_errors)
-    end
-    if a.confidence_lower !== nothing && b.confidence_lower !== nothing
-        append!(a.confidence_lower, b.confidence_lower)
-    end
-    if a.confidence_upper !== nothing && b.confidence_upper !== nothing
-        append!(a.confidence_upper, b.confidence_upper)
-    end
-    if a.prediction_lower !== nothing && b.prediction_lower !== nothing
-        append!(a.prediction_lower, b.prediction_lower)
-    end
-    if a.prediction_upper !== nothing && b.prediction_upper !== nothing
-        append!(a.prediction_upper, b.prediction_upper)
-    end
-    if a.residuals !== nothing && b.residuals !== nothing
-        append!(a.residuals, b.residuals)
-    end
-    if a.robustness_weights !== nothing && b.robustness_weights !== nothing
-        append!(a.robustness_weights, b.robustness_weights)
-    end
+	if a.standard_errors !== nothing && b.standard_errors !== nothing
+		append!(a.standard_errors, b.standard_errors)
+	end
+	if a.confidence_lower !== nothing && b.confidence_lower !== nothing
+		append!(a.confidence_lower, b.confidence_lower)
+	end
+	if a.confidence_upper !== nothing && b.confidence_upper !== nothing
+		append!(a.confidence_upper, b.confidence_upper)
+	end
+	if a.prediction_lower !== nothing && b.prediction_lower !== nothing
+		append!(a.prediction_lower, b.prediction_lower)
+	end
+	if a.prediction_upper !== nothing && b.prediction_upper !== nothing
+		append!(a.prediction_upper, b.prediction_upper)
+	end
+	if a.residuals !== nothing && b.residuals !== nothing
+		append!(a.residuals, b.residuals)
+	end
+	if a.robustness_weights !== nothing && b.robustness_weights !== nothing
+		append!(a.robustness_weights, b.robustness_weights)
+	end
 
-    # Update fraction_used and iterations_used if they differ?
-    # Streaming usually keeps them constant. We'll keep a's values.
+	# Update fraction_used and iterations_used if they differ?
+	# Streaming usually keeps them constant. We'll keep a's values.
 
-    return a
+	return a
 end
 
 
@@ -476,7 +476,7 @@ Stateful batch LOWESS smoother.
 - `boundary_policy::String = "extend"`: Handling of edge effects
 - `confidence_intervals::Float64 = NaN`: Confidence level (e.g., 0.95), NaN to disable
 - `prediction_intervals::Float64 = NaN`: Prediction interval level, NaN to disable
-- `return_diagnostics::Bool = false`: Whether to compute RMSE, MAE, R², etc.
+- `return_diagnostics::Bool = false`: Whether to compute RMSE, MAE, R2, etc.
 - `return_residuals::Bool = false`: Whether to include residuals
 - `return_robustness_weights::Bool = false`: Whether to include robustness weights
 - `zero_weight_fallback::String = "use_local_mean"`: Fallback when all weights are zero. See Notes for a description of each option.
@@ -526,70 +526,70 @@ result = fit(l, x, y)
 ```
 """
 mutable struct Lowess
-    handle::Ptr{Cvoid}
+	handle::Ptr{Cvoid}
 
-    function Lowess(;
-        fraction::Float64 = 0.67,
-        iterations::Int = 3,
-        delta::Float64 = NaN,
-        weight_function::String = "tricube",
-        robustness_method::String = "bisquare",
-        scaling_method::String = "mad",
-        boundary_policy::String = "extend",
-        confidence_intervals::Float64 = NaN,
-        prediction_intervals::Float64 = NaN,
-        return_diagnostics::Bool = false,
-        return_residuals::Bool = false,
-        return_robustness_weights::Bool = false,
-        zero_weight_fallback::String = "use_local_mean",
-        auto_converge::Float64 = NaN,
-        cv_fractions::Vector{Float64} = Float64[],
-        cv_method::String = "kfold",
-        cv_k::Int = 5,
-        parallel::Bool = true,
-        cv_seed::Union{Int,Nothing} = nothing,
-        return_se::Bool = false,
-        backend::String = "cpu",
-    )
-        cv_ptr = isempty(cv_fractions) ? Ptr{Cdouble}(C_NULL) : pointer(cv_fractions)
-        cv_len = length(cv_fractions)
+	function Lowess(;
+		fraction::Float64 = 0.67,
+		iterations::Int = 3,
+		delta::Float64 = NaN,
+		weight_function::String = "tricube",
+		robustness_method::String = "bisquare",
+		scaling_method::String = "mad",
+		boundary_policy::String = "extend",
+		confidence_intervals::Float64 = NaN,
+		prediction_intervals::Float64 = NaN,
+		return_diagnostics::Bool = false,
+		return_residuals::Bool = false,
+		return_robustness_weights::Bool = false,
+		zero_weight_fallback::String = "use_local_mean",
+		auto_converge::Float64 = NaN,
+		cv_fractions::Vector{Float64} = Float64[],
+		cv_method::String = "kfold",
+		cv_k::Int = 5,
+		parallel::Bool = true,
+		cv_seed::Union{Int, Nothing} = nothing,
+		return_se::Bool = false,
+		backend::String = "cpu",
+	)
+		cv_ptr = isempty(cv_fractions) ? Ptr{Cdouble}(C_NULL) : pointer(cv_fractions)
+		cv_len = length(cv_fractions)
 
-        handle = @ccall current_library().jl_lowess_new(
-            fraction::Cdouble,
-            Cint(iterations)::Cint,
-            delta::Cdouble,
-            weight_function::Cstring,
-            robustness_method::Cstring,
-            scaling_method::Cstring,
-            boundary_policy::Cstring,
-            confidence_intervals::Cdouble,
-            prediction_intervals::Cdouble,
-            Cint(return_diagnostics)::Cint,
-            Cint(return_residuals)::Cint,
-            Cint(return_robustness_weights)::Cint,
-            zero_weight_fallback::Cstring,
-            auto_converge::Cdouble,
-            cv_ptr::Ptr{Cdouble},
-            Culong(cv_len)::Culong,
-            cv_method::Cstring,
-            Cint(cv_k)::Cint,
-            Cint(parallel)::Cint,
-            Culong(cv_seed !== nothing ? cv_seed : 0)::Culong,
-            Cint(return_se)::Cint,
-            backend::Cstring,
-        )::Ptr{Cvoid}
+		handle = @ccall current_library().jl_lowess_new(
+			fraction::Cdouble,
+			Cint(iterations)::Cint,
+			delta::Cdouble,
+			weight_function::Cstring,
+			robustness_method::Cstring,
+			scaling_method::Cstring,
+			boundary_policy::Cstring,
+			confidence_intervals::Cdouble,
+			prediction_intervals::Cdouble,
+			Cint(return_diagnostics)::Cint,
+			Cint(return_residuals)::Cint,
+			Cint(return_robustness_weights)::Cint,
+			zero_weight_fallback::Cstring,
+			auto_converge::Cdouble,
+			cv_ptr::Ptr{Cdouble},
+			Culong(cv_len)::Culong,
+			cv_method::Cstring,
+			Cint(cv_k)::Cint,
+			Cint(parallel)::Cint,
+			Culong(cv_seed !== nothing ? cv_seed : 0)::Culong,
+			Cint(return_se)::Cint,
+			backend::Cstring,
+		)::Ptr{Cvoid}
 
-        if handle == C_NULL
-            error("Failed to create Lowess configuration")
-        end
+		if handle == C_NULL
+			error("Failed to create Lowess configuration")
+		end
 
-        obj = new(handle)
-        finalizer(
-            x -> @ccall(current_library().jl_lowess_free(x.handle::Ptr{Cvoid})::Cvoid),
-            obj,
-        )
-        return obj
-    end
+		obj = new(handle)
+		finalizer(
+			x -> @ccall(current_library().jl_lowess_free(x.handle::Ptr{Cvoid})::Cvoid),
+			obj,
+		)
+		return obj
+	end
 end
 
 """
@@ -603,34 +603,34 @@ Fit the LOWESS model to data.
   finite and non-negative. Pass `nothing` (default) to disable.
 """
 function fit(
-    l::Lowess,
-    x::Vector{Float64},
-    y::Vector{Float64};
-    custom_weights::Union{Vector{Float64},Nothing} = nothing,
+	l::Lowess,
+	x::Vector{Float64},
+	y::Vector{Float64};
+	custom_weights::Union{Vector{Float64}, Nothing} = nothing,
 )
-    n = length(x)
-    if n != length(y)
-        throw(ArgumentError("x and y must have the same length"))
-    end
+	n = length(x)
+	if n != length(y)
+		throw(ArgumentError("x and y must have the same length"))
+	end
 
-    if custom_weights !== nothing
-        if length(custom_weights) != n
-            throw(ArgumentError("custom_weights must have the same length as y"))
-        end
-    end
+	if custom_weights !== nothing
+		if length(custom_weights) != n
+			throw(ArgumentError("custom_weights must have the same length as y"))
+		end
+	end
 
-    c_result = @ccall current_library().jl_lowess_fit(
-        l.handle::Ptr{Cvoid},
-        x::Ptr{Cdouble},
-        y::Ptr{Cdouble},
-        Culong(n)::Culong,
-        (
-            custom_weights !== nothing ? pointer(custom_weights) : Ptr{Cdouble}(C_NULL)
-        )::Ptr{Cdouble},
-        Culong(custom_weights !== nothing ? length(custom_weights) : 0)::Culong,
-    )::CJlLowessResult
+	c_result = @ccall current_library().jl_lowess_fit(
+		l.handle::Ptr{Cvoid},
+		x::Ptr{Cdouble},
+		y::Ptr{Cdouble},
+		Culong(n)::Culong,
+		(
+			custom_weights !== nothing ? pointer(custom_weights) : Ptr{Cdouble}(C_NULL)
+		)::Ptr{Cdouble},
+		Culong(custom_weights !== nothing ? length(custom_weights) : 0)::Culong,
+	)::CJlLowessResult
 
-    return convert_result(c_result)
+	return convert_result(c_result)
 end
 
 """
@@ -658,58 +658,58 @@ Stateful streaming LOWESS smoother.
 - `parallel::Bool = true`: Enable parallel execution
 """
 mutable struct StreamingLowess
-    handle::Ptr{Cvoid}
+	handle::Ptr{Cvoid}
 
-    function StreamingLowess(;
-        fraction::Float64 = 0.67,
-        chunk_size::Int = 5000,
-        overlap::Int = 500,
-        iterations::Int = 3,
-        delta::Float64 = NaN,
-        weight_function::String = "tricube",
-        robustness_method::String = "bisquare",
-        scaling_method::String = "mad",
-        boundary_policy::String = "extend",
-        auto_converge::Float64 = NaN,
-        return_diagnostics::Bool = false,
-        return_residuals::Bool = false,
-        return_robustness_weights::Bool = false,
-        zero_weight_fallback::String = "use_local_mean",
-        merge_strategy::String = "weighted_average",
-        parallel::Bool = true,
-    )
-        handle = @ccall current_library().jl_streaming_lowess_new(
-            fraction::Cdouble,
-            Cint(chunk_size)::Cint,
-            Cint(overlap)::Cint,
-            Cint(iterations)::Cint,
-            delta::Cdouble,
-            weight_function::Cstring,
-            robustness_method::Cstring,
-            scaling_method::Cstring,
-            boundary_policy::Cstring,
-            auto_converge::Cdouble,
-            Cint(return_diagnostics)::Cint,
-            Cint(return_residuals)::Cint,
-            Cint(return_robustness_weights)::Cint,
-            zero_weight_fallback::Cstring,
-            merge_strategy::Cstring,
-            Cint(parallel)::Cint,
-        )::Ptr{Cvoid}
+	function StreamingLowess(;
+		fraction::Float64 = 0.67,
+		chunk_size::Int = 5000,
+		overlap::Int = 500,
+		iterations::Int = 3,
+		delta::Float64 = NaN,
+		weight_function::String = "tricube",
+		robustness_method::String = "bisquare",
+		scaling_method::String = "mad",
+		boundary_policy::String = "extend",
+		auto_converge::Float64 = NaN,
+		return_diagnostics::Bool = false,
+		return_residuals::Bool = false,
+		return_robustness_weights::Bool = false,
+		zero_weight_fallback::String = "use_local_mean",
+		merge_strategy::String = "weighted_average",
+		parallel::Bool = true,
+	)
+		handle = @ccall current_library().jl_streaming_lowess_new(
+			fraction::Cdouble,
+			Cint(chunk_size)::Cint,
+			Cint(overlap)::Cint,
+			Cint(iterations)::Cint,
+			delta::Cdouble,
+			weight_function::Cstring,
+			robustness_method::Cstring,
+			scaling_method::Cstring,
+			boundary_policy::Cstring,
+			auto_converge::Cdouble,
+			Cint(return_diagnostics)::Cint,
+			Cint(return_residuals)::Cint,
+			Cint(return_robustness_weights)::Cint,
+			zero_weight_fallback::Cstring,
+			merge_strategy::Cstring,
+			Cint(parallel)::Cint,
+		)::Ptr{Cvoid}
 
-        if handle == C_NULL
-            error("Failed to create StreamingLowess")
-        end
+		if handle == C_NULL
+			error("Failed to create StreamingLowess")
+		end
 
-        obj = new(handle)
-        finalizer(
-            x -> @ccall(
-                current_library().jl_streaming_lowess_free(x.handle::Ptr{Cvoid})::Cvoid
-            ),
-            obj,
-        )
-        return obj
-    end
+		obj = new(handle)
+		finalizer(
+			x -> @ccall(
+				current_library().jl_streaming_lowess_free(x.handle::Ptr{Cvoid})::Cvoid
+			),
+			obj,
+		)
+		return obj
+	end
 end
 
 """
@@ -718,19 +718,19 @@ end
 Process a chunk of data.
 """
 function process_chunk(s::StreamingLowess, x::Vector{Float64}, y::Vector{Float64})
-    n = length(x)
-    if n != length(y)
-        throw(ArgumentError("x and y must have the same length"))
-    end
+	n = length(x)
+	if n != length(y)
+		throw(ArgumentError("x and y must have the same length"))
+	end
 
-    c_result = @ccall current_library().jl_streaming_lowess_process_chunk(
-        s.handle::Ptr{Cvoid},
-        x::Ptr{Cdouble},
-        y::Ptr{Cdouble},
-        Culong(n)::Culong,
-    )::CJlLowessResult
+	c_result = @ccall current_library().jl_streaming_lowess_process_chunk(
+		s.handle::Ptr{Cvoid},
+		x::Ptr{Cdouble},
+		y::Ptr{Cdouble},
+		Culong(n)::Culong,
+	)::CJlLowessResult
 
-    return convert_result(c_result)
+	return convert_result(c_result)
 end
 
 """
@@ -739,11 +739,11 @@ end
 Finalize streaming and return remaining buffered data.
 """
 function finalize(s::StreamingLowess)
-    c_result = @ccall current_library().jl_streaming_lowess_finalize(
-        s.handle::Ptr{Cvoid},
-    )::CJlLowessResult
+	c_result = @ccall current_library().jl_streaming_lowess_finalize(
+		s.handle::Ptr{Cvoid},
+	)::CJlLowessResult
 
-    return convert_result(c_result)
+	return convert_result(c_result)
 end
 
 """
@@ -764,65 +764,65 @@ Stateful online LOWESS smoother.
 - `update_mode::String = "incremental"`: Update strategy ("full" or "incremental")
 - `auto_converge::Float64 = NaN`: Auto-convergence tolerance
 - `return_robustness_weights::Bool = false`: Include weights
-- `return_diagnostics::Bool = false`: Compute diagnostics (RMSE, MAE, R², etc.)
+- `return_diagnostics::Bool = false`: Compute diagnostics (RMSE, MAE, R2, etc.)
 - `return_residuals::Bool = false`: Include residuals in the result
 - `zero_weight_fallback::String = "use_local_mean"`: Zero weight handling. See `Lowess` for a description of each option.
 - `parallel::Bool = false`: Enable parallel execution (default `false` for online mode;
   online LOWESS processes one point at a time and rarely benefits from parallelism)
 """
 mutable struct OnlineLowess
-    handle::Ptr{Cvoid}
+	handle::Ptr{Cvoid}
 
-    function OnlineLowess(;
-        fraction::Float64 = 0.67,
-        window_capacity::Int = 1000,
-        min_points::Int = 2,
-        iterations::Int = 3,
-        delta::Float64 = NaN,
-        weight_function::String = "tricube",
-        robustness_method::String = "bisquare",
-        scaling_method::String = "mad",
-        boundary_policy::String = "extend",
-        update_mode::String = "incremental",
-        auto_converge::Float64 = NaN,
-        return_robustness_weights::Bool = false,
-        return_diagnostics::Bool = false,
-        return_residuals::Bool = false,
-        zero_weight_fallback::String = "use_local_mean",
-        parallel::Bool = false,
-    )
-        handle = @ccall current_library().jl_online_lowess_new(
-            fraction::Cdouble,
-            Cint(window_capacity)::Cint,
-            Cint(min_points)::Cint,
-            Cint(iterations)::Cint,
-            delta::Cdouble,
-            weight_function::Cstring,
-            robustness_method::Cstring,
-            scaling_method::Cstring,
-            boundary_policy::Cstring,
-            update_mode::Cstring,
-            auto_converge::Cdouble,
-            Cint(return_robustness_weights)::Cint,
-            Cint(return_diagnostics)::Cint,
-            Cint(return_residuals)::Cint,
-            zero_weight_fallback::Cstring,
-            Cint(parallel)::Cint,
-        )::Ptr{Cvoid}
+	function OnlineLowess(;
+		fraction::Float64 = 0.67,
+		window_capacity::Int = 1000,
+		min_points::Int = 2,
+		iterations::Int = 3,
+		delta::Float64 = NaN,
+		weight_function::String = "tricube",
+		robustness_method::String = "bisquare",
+		scaling_method::String = "mad",
+		boundary_policy::String = "extend",
+		update_mode::String = "incremental",
+		auto_converge::Float64 = NaN,
+		return_robustness_weights::Bool = false,
+		return_diagnostics::Bool = false,
+		return_residuals::Bool = false,
+		zero_weight_fallback::String = "use_local_mean",
+		parallel::Bool = false,
+	)
+		handle = @ccall current_library().jl_online_lowess_new(
+			fraction::Cdouble,
+			Cint(window_capacity)::Cint,
+			Cint(min_points)::Cint,
+			Cint(iterations)::Cint,
+			delta::Cdouble,
+			weight_function::Cstring,
+			robustness_method::Cstring,
+			scaling_method::Cstring,
+			boundary_policy::Cstring,
+			update_mode::Cstring,
+			auto_converge::Cdouble,
+			Cint(return_robustness_weights)::Cint,
+			Cint(return_diagnostics)::Cint,
+			Cint(return_residuals)::Cint,
+			zero_weight_fallback::Cstring,
+			Cint(parallel)::Cint,
+		)::Ptr{Cvoid}
 
-        if handle == C_NULL
-            error("Failed to create OnlineLowess")
-        end
+		if handle == C_NULL
+			error("Failed to create OnlineLowess")
+		end
 
-        obj = new(handle)
-        finalizer(
-            x -> @ccall(
-                current_library().jl_online_lowess_free(x.handle::Ptr{Cvoid})::Cvoid
-            ),
-            obj,
-        )
-        return obj
-    end
+		obj = new(handle)
+		finalizer(
+			x -> @ccall(
+				current_library().jl_online_lowess_free(x.handle::Ptr{Cvoid})::Cvoid
+			),
+			obj,
+		)
+		return obj
+	end
 end
 
 """
@@ -833,31 +833,31 @@ Returns `nothing` while the window is still filling (fewer than `min_points`
 have been seen), and an `OnlineOutput` once smoothing begins.
 """
 function add_point(o::OnlineLowess, x::Float64, y::Float64)
-    c_result = @ccall current_library().jl_online_lowess_add_point(
-        o.handle::Ptr{Cvoid},
-        x::Cdouble,
-        y::Cdouble,
-    )::CJlOnlineOutput
+	c_result = @ccall current_library().jl_online_lowess_add_point(
+		o.handle::Ptr{Cvoid},
+		x::Cdouble,
+		y::Cdouble,
+	)::CJlOnlineOutput
 
-    if c_result.error != Ptr{Cchar}(C_NULL)
-        error_msg = unsafe_string(Ptr{UInt8}(c_result.error))
-        @ccall current_library().jl_online_free_output(
-            Ref(c_result)::Ptr{CJlOnlineOutput},
-        )::Cvoid
-        error("fastlowess error: $error_msg")
-    end
+	if c_result.error != Ptr{Cchar}(C_NULL)
+		error_msg = unsafe_string(Ptr{UInt8}(c_result.error))
+		@ccall current_library().jl_online_free_output(
+			Ref(c_result)::Ptr{CJlOnlineOutput},
+		)::Cvoid
+		error("fastlowess error: $error_msg")
+	end
 
-    if c_result.has_value == 0
-        return nothing
-    end
+	if c_result.has_value == 0
+		return nothing
+	end
 
-    return OnlineOutput(
-        c_result.y,
-        isnan(c_result.standard_error) ? nothing : c_result.standard_error,
-        isnan(c_result.residual) ? nothing : c_result.residual,
-        isnan(c_result.robustness_weight) ? nothing : c_result.robustness_weight,
-        c_result.iterations_used == -1 ? nothing : Int(c_result.iterations_used),
-    )
+	return OnlineOutput(
+		c_result.y,
+		isnan(c_result.standard_error) ? nothing : c_result.standard_error,
+		isnan(c_result.residual) ? nothing : c_result.residual,
+		isnan(c_result.robustness_weight) ? nothing : c_result.robustness_weight,
+		c_result.iterations_used == -1 ? nothing : Int(c_result.iterations_used),
+	)
 end
 
 end # module FastLOWESS

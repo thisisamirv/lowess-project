@@ -41,7 +41,7 @@ const { Lowess } = require('fastlowess');
 
 const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
 const model = new Lowess({ weight_function: "tricube" });
 const result = model.fit(x, y);
@@ -49,7 +49,7 @@ console.log("y[0]:", result.y[0].toFixed(4));
 ```
 
 ```output
-y[0]: 0.1662
+y[0]: 0.3826
 ```
 
 ---
@@ -67,7 +67,7 @@ const { Lowess } = require('fastlowess');
 
 const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
 const model = new Lowess({ weight_function: "epanechnikov" });
 const result = model.fit(x, y);
@@ -75,7 +75,7 @@ console.log("y[0]:", result.y[0].toFixed(4));
 ```
 
 ```output
-y[0]: 0.1905
+y[0]: 0.4067
 ```
 
 ---
@@ -93,7 +93,7 @@ const { Lowess } = require('fastlowess');
 
 const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
 const model = new Lowess({ weight_function: "gaussian" });
 const result = model.fit(x, y);
@@ -101,7 +101,7 @@ console.log("y[0]:", result.y[0].toFixed(4));
 ```
 
 ```output
-y[0]: 0.2220
+y[0]: 0.4358
 ```
 
 ---
@@ -119,7 +119,7 @@ const { Lowess } = require('fastlowess');
 
 const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
 const model = new Lowess({ weight_function: "biweight" });
 const result = model.fit(x, y);
@@ -127,7 +127,7 @@ console.log("y[0]:", result.y[0].toFixed(4));
 ```
 
 ```output
-y[0]: 0.1593
+y[0]: 0.3759
 ```
 
 ---
@@ -145,7 +145,7 @@ const { Lowess } = require('fastlowess');
 
 const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
 const model = new Lowess({ weight_function: "cosine" });
 const result = model.fit(x, y);
@@ -153,7 +153,7 @@ console.log("y[0]:", result.y[0].toFixed(4));
 ```
 
 ```output
-y[0]: 0.1845
+y[0]: 0.4008
 ```
 
 ---
@@ -171,7 +171,7 @@ const { Lowess } = require('fastlowess');
 
 const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
 const model = new Lowess({ weight_function: "triangle" });
 const result = model.fit(x, y);
@@ -179,7 +179,7 @@ console.log("y[0]:", result.y[0].toFixed(4));
 ```
 
 ```output
-y[0]: 0.1646
+y[0]: 0.3817
 ```
 
 ---
@@ -197,7 +197,7 @@ const { Lowess } = require('fastlowess');
 
 const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
 const model = new Lowess({ weight_function: "uniform" });
 const result = model.fit(x, y);
@@ -205,7 +205,7 @@ console.log("y[0]:", result.y[0].toFixed(4));
 ```
 
 ```output
-y[0]: 0.2381
+y[0]: 0.4508
 ```
 
 ---

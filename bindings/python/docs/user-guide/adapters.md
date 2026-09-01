@@ -53,7 +53,7 @@ model = fl.Lowess(
 )
 result = model.fit(x, y)
 print(f"95% CI at midpoint: [{result.confidence_lower[50]:.4f}, {result.confidence_upper[50]:.4f}]")
-print(f"R²: {result.diagnostics.r_squared:.4f}")
+print(f"R2: {result.diagnostics.r_squared:.4f}")
 :::
 
 ---

@@ -24,10 +24,8 @@ A small `fraction = 0.1` lets LOWESS follow fine-scale spatial structure without
 const fl = require('fastlowess');
 
 const n = 100;
-const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i*7+3)%17)/17-0.5)*0.6);
-const positions = Float64Array.from({ length: 1000 }, (_, i) => i * 10.0);
-const observed = Float64Array.from(positions, (p, i) => 50 + Math.sin(p/100)*20 + ((i*7+3)%17)/17*5);
+const positions = Float64Array.from({ length: n }, (_, i) => i * 1000.0);
+const observed = Float64Array.from(positions, p => 50 + Math.sin(p / 1000) * 20 + 5);
 
 // positions and observed are your methylation data (Float64Array)
 const model = new fl.Lowess({
@@ -43,7 +41,7 @@ console.log("95% CI: [" + result.confidence_lower[0].toFixed(4) + ", " + result.
 ```
 
 ```output
-95% CI: [54.5520, 58.9813]
+95% CI: [51.6773, 68.7372]
 ```
 
 ---
@@ -60,10 +58,8 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
 const fl = require('fastlowess');
 
 const n = 100;
-const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i*7+3)%17)/17-0.5)*0.6);
-const positions = Float64Array.from({ length: 1000 }, (_, i) => i * 10.0);
-const observed = Float64Array.from(positions, (p, i) => 50 + Math.sin(p/100)*20 + ((i*7+3)%17)/17*5);
+const positions = Float64Array.from({ length: n }, (_, i) => i * 1000.0);
+const observed = Float64Array.from(positions, p => 50 + Math.sin(p / 1000) * 20 + 5);
 
 const model = new fl.Lowess({
     fraction: 0.05,
@@ -72,14 +68,15 @@ const model = new fl.Lowess({
 const result = model.fit(positions, observed);
 
 // Identify peaks above threshold
-const smoothed = result.y;
-const threshold = 50.0; // Example threshold
-const peaks = positions.filter((p, i) => smoothed[i] > threshold);
-console.log("Peak count:", peaks.length, " smoothed[0]:", result.y[0].toFixed(2));
+let peakCount = 0;
+for (const y of result.y) if (y > 65.0) peakCount++;
+console.log("y[0]:", result.y[0].toFixed(4));
+console.log("Peak count:", peakCount);
 ```
 
 ```output
-Peak count: 570  smoothed[0]: 58.00
+y[0]: 59.9520
+Peak count: 26
 ```
 
 ---
@@ -91,29 +88,22 @@ For whole-genome data that doesn't fit in memory:
 ```javascript
 const { StreamingLowess } = require('fastlowess');
 
-const positions = Float64Array.from({ length: 1000 }, (_, i) => i * 10.0);
-const observed = Float64Array.from(positions, p => 50 + Math.sin(p/100)*20 + Math.random()*5);
-// Array of genomic chunks to process
-const genomicData = [
-    { positions: positions.slice(0, 500), coverage: observed.slice(0, 500) },
-    { positions: positions.slice(500), coverage: observed.slice(500) }
-];
+const n = 1001;
+const xChunk = Float64Array.from({ length: n }, (_, i) => i * 10.0);
+const yChunk = Float64Array.from(xChunk, p => 50 + Math.sin(p / 100) * 20 + 5.0);
 
 const processor = new StreamingLowess(
     { fraction: 0.05, iterations: 3 },
-    { chunk_size: 100000, overlap: 10000 }
+    { chunk_size: 50, overlap: 10, merge_strategy: "weighted_average" }
 );
 
-// Process genomic chunks from stream or file
-for (const chunk of genomicData) {
-    processor.process_chunk(chunk.positions, chunk.coverage);
-}
+processor.process_chunk(xChunk, yChunk);
 const result = processor.finalize();
-console.log("Smoothed", result.y.length, "points via streaming");
+console.log("y[0]:", result.y[0].toFixed(4));
 ```
 
 ```output
-Smoothed 1000 points via streaming
+y[0]: 41.2977
 ```
 
 ---

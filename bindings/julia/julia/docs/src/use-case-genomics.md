@@ -20,12 +20,9 @@ A small `fraction = 0.1` lets LOWESS follow fine-scale spatial structure without
 
 ```@example use-case-genomics
 using FastLOWESS
-using Random
 
-rng = MersenneTwister(42)
-positions = collect(0.0:10.0:10000.0)
-observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
-
+positions = collect(0.0:1000.0:99000.0)
+observed = 50.0 .+ sin.(positions ./ 1000.0) .* 20.0 .+ 5.0
 
 # positions and observed are your methylation data
 model = Lowess(;
@@ -37,7 +34,7 @@ result = fit(model, positions, observed)
 
 # Smoothed profile in result.y
 # CI bounds in result.confidence_lower/upper
-println("First smoothed ChIP-seq enrichment value: ", result.y[1])
+println("95% CI: [", result.confidence_lower[1], ", ", result.confidence_upper[1], "]")
 ```
 
 ---
@@ -52,22 +49,18 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
 
 ```@example use-case-genomics
 using FastLOWESS
-using Random, Statistics
 
-rng = MersenneTwister(42)
-positions = collect(0.0:10.0:10000.0)
-observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
-
+positions = collect(0.0:1000.0:99000.0)
+observed = 50.0 .+ sin.(positions ./ 1000.0) .* 20.0 .+ 5.0
 
 # positions and observed are your ChIP-seq data
 model = Lowess(; fraction=0.05, iterations=5)
 result = fit(model, positions, observed)
 
-# Find peaks above 75th percentile
-threshold = quantile(result.y, 0.75)
-peak_indices = findall(y -> y > threshold, result.y)
-peak_positions = positions[peak_indices]
-println("First 3 detected peak positions: ", peak_positions[1:3])
+# Find peaks above threshold
+peak_count = count(y -> y > 65.0, result.y)
+println("y[0]: ", result.y[1])
+println("Peak count: ", peak_count)
 ```
 
 ---
@@ -78,24 +71,21 @@ For whole-genome data that doesn't fit in memory:
 
 ```@example use-case-genomics
 using FastLOWESS
-using Random
 
-rng = MersenneTwister(42)
 positions = collect(0.0:10.0:10000.0)
-observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
-coverage = observed
-
+coverage = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ 5.0
 
 # coverage and positions are chromosome-scale vectors
 model = StreamingLowess(;
     fraction=0.05,
-    chunk_size=100000,
-    overlap=10000,
+    iterations=3,
+    chunk_size=50,
+    overlap=10,
     merge_strategy="weighted_average"
 )
 process_chunk(model, positions, coverage)
 result = finalize(model)
-println("First smoothed value (streaming ChIP-seq): ", result.y[1])
+println("y[0]: ", result.y[1])
 ```
 
 ---
