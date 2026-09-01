@@ -108,6 +108,7 @@ clean:
 
 docs:
 	@echo "Building $(GO_PKG) docs (Hugo)..."
+	@$(PYTHON) dev/add-readme-to-docs.py $(GO_DIR)
 	@if ! command -v hugo >/dev/null 2>&1; then \
 		echo "hugo not found. Installing latest version..."; \
 		go install github.com/gohugoio/hugo@latest; \

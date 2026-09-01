@@ -5,7 +5,7 @@
     "scripts": {
         "lint": "oxlint src tests",
         "snippets": "python3 ../../dev/verify_snippets.py --lang wasm --timeout 120 --update-outputs",
-        "readme": "node ../../dev/add-readme-to-docs.js",
+        "readme": "python3 ../../dev/add-readme-to-docs.py",
         "docs": "npm run snippets && npm run readme && typedoc && node ../../dev/lowercase-typedoc-refs.js src/content/docs/reference && astro build",
         "docs:preview": "astro preview"
     },
