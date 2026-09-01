@@ -358,7 +358,7 @@ def iter_md_files(
     if CPP_BINDING_DOCS_DIR.exists():
         yield from sorted(CPP_BINDING_DOCS_DIR.glob("*.md"))
     if GO_BINDING_DOCS_DIR.exists():
-        yield from sorted(GO_BINDING_DOCS_DIR.glob("*.md"))
+        yield from sorted(GO_BINDING_DOCS_DIR.rglob("*.md"))
     if JAVA_BINDING_DOCS_DIR.exists():
         yield from sorted(JAVA_BINDING_DOCS_DIR.rglob("*.md"))
 

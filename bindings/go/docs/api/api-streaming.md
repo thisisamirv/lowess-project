@@ -23,7 +23,7 @@ opts.Overlap = 200
 | `Overlap` | `int` | library default | Points shared between consecutive chunks. Negative means "use the library default". |
 | `MergeStrategy` | `string` | `"weighted_average"` | How overlapping chunk results are combined. |
 
-*See also: [Merge Strategies](merge.md)*
+*See also: [Merge Strategies](../advanced/merge.md)*
 
 ![Merge Strategies](../assets/diagrams/merge_comparison.svg)
 

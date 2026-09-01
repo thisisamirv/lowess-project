@@ -1,18 +1,21 @@
 {{- /*
-Rewrites bare same-directory ".md" links (e.g. "api.md", "api.md#custom-weights")
-so they resolve correctly under pretty URLs, where every content page gets its
-own directory (e.g. content/kernels.md -> /kernels/). A same-directory link
-therefore has to climb back out of the current page's own directory first.
+Rewrites relative ".md" links (e.g. "api.md", "../weighting/kernels.md#foo")
+into the linked page's real permalink via .Page.GetPage, which resolves the
+path relative to the current page's content-tree location. This means link
+targets resolve correctly regardless of category-folder nesting depth,
+without any manual "../" climbing.
 */ -}}
 {{- $dest := .Destination -}}
 {{- if strings.Contains $dest ".md" -}}
+{{- $anchor := "" -}}
+{{- $path := $dest -}}
 {{- if strings.Contains $dest "#" -}}
 {{- $parts := split $dest "#" -}}
-{{- $file := strings.TrimSuffix ".md" (index $parts 0) -}}
-{{- $dest = printf "../%s/#%s" $file (index $parts 1) -}}
-{{- else -}}
-{{- $file := strings.TrimSuffix ".md" $dest -}}
-{{- $dest = printf "../%s/" $file -}}
+{{- $path = index $parts 0 -}}
+{{- $anchor = printf "#%s" (index $parts 1) -}}
+{{- end -}}
+{{- with .Page.GetPage $path -}}
+{{- $dest = printf "%s%s" .RelPermalink $anchor -}}
 {{- end -}}
 {{- end -}}
 <a href="{{ $dest | safeURL }}" {{- with .Title }} title="{{ . }}" {{- end }}>{{ .Text | safeHTML }}</a>

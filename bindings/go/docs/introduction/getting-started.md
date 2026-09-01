@@ -78,7 +78,7 @@ x=0.40  y=0.314  smoothed=0.395
 - **`StreamingLowess`**: the dataset doesn't fit in memory or arrives in chunks.
 - **`OnlineLowess`**: you need a smoothed value immediately as each point arrives (real-time).
 
-See [api.md](api.md), [api-streaming.md](api-streaming.md), and [api-online.md](api-online.md) for the full reference of each.
+See [api.md](../api/api.md), [api-streaming.md](../api/api-streaming.md), and [api-online.md](../api/api-online.md) for the full reference of each.
 
 ## Handling outliers
 
@@ -190,13 +190,13 @@ Smoothed 100 points in the final chunk
 | Topic | Link |
 | --- | --- |
 | How LOWESS works | [Concepts](concepts.md) |
-| All parameters explained | [API Reference](api.md) |
-| Batch vs Streaming vs Online | [Execution Modes](adapter-choice.md) |
-| Edge handling | [Boundary Handling](boundary.md) |
-| Outlier handling in depth | [Robustness](robustness.md) |
-| Kernel functions | [Weight Functions](kernels.md) |
-| Residual scale estimation | [Scaling Methods](scaling.md) |
-| Automated parameter selection | [Cross-Validation](cross-validation.md) |
-| Per-observation weights | [Custom Weights](custom-weights.md) |
-| Reconciling streaming chunk overlaps | [Merge Strategies](merge.md) |
-| Running on the GPU | [GPU Backend](gpu-backend.md) |
+| All parameters explained | [API Reference](../api/api.md) |
+| Batch vs Streaming vs Online | [Execution Modes](../guide/adapter-choice.md) |
+| Edge handling | [Boundary Handling](../advanced/boundary.md) |
+| Outlier handling in depth | [Robustness](../weighting/robustness.md) |
+| Kernel functions | [Weight Functions](../weighting/kernels.md) |
+| Residual scale estimation | [Scaling Methods](../weighting/scaling.md) |
+| Automated parameter selection | [Cross-Validation](../guide/cross-validation.md) |
+| Per-observation weights | [Custom Weights](../weighting/custom-weights.md) |
+| Reconciling streaming chunk overlaps | [Merge Strategies](../advanced/merge.md) |
+| Running on the GPU | [GPU Backend](../advanced/gpu-backend.md) |
