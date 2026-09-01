@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>fastlowess (Java) :: fastlowess (Java)</title>
+    <link rel="canonical" href="https://thisisamirv.github.io/lowess-project/java/java/index.html">
+    <meta name="generator" content="Antora 3.2.0">
+    <link rel="stylesheet" href="../_/css/site.css">
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://thisisamirv.github.io/lowess-project/java">fastlowess (Java)</a>
+      <button class="navbar-burger" aria-controls="topbar-nav" aria-expanded="false" aria-label="Toggle main menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="#">Home</a>
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link" href="#">Products</a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="#">Product A</a>
+            <a class="navbar-item" href="#">Product B</a>
+            <a class="navbar-item" href="#">Product C</a>
+          </div>
+        </div>
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link" href="#">Services</a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="#">Service A</a>
+            <a class="navbar-item" href="#">Service B</a>
+            <a class="navbar-item" href="#">Service C</a>
+          </div>
+        </div>
+        <div class="navbar-item">
+          <span class="control">
+            <a class="button is-primary" href="#">Download</a>
+          </span>
+        </div>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="java" data-version="">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <button class="nav-menu-toggle" aria-label="Toggle expand/collapse all" style="display: none"></button>
+    <h3 class="title"><a href="index.html">fastlowess (Java)</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item is-current-page" data-depth="1">
+    <a class="nav-link" href="index.html">fastlowess (Java)</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Introduction</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="introduction/getting-started.html">Getting Started</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="introduction/installation.html">Installation</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="introduction/concepts.html">Concepts</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">User Guide</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="guide/adapter-choice.html">Execution Modes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="guide/intervals.html">Intervals</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="guide/cross-validation.html">Cross-Validation</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">API Reference</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="api/api.html">API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="api/api-streaming.html">StreamingLowess API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="api/api-online.html">OnlineLowess API</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Weight &amp; Robustness</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="weighting/kernels.html">Weight Functions</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="weighting/robustness.html">Robustness</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="weighting/scaling.html">Scaling Methods</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="weighting/custom-weights.html">Custom Weights</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Advanced</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="advanced/boundary.html">Boundary Handling</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="advanced/merge.html">Merge Strategies</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="advanced/gpu-backend.html">GPU Backend</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Use Cases</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="use-case/use-case-genomics.html">Genomic Data Smoothing</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="use-case/use-case-real-time.html">Real-Time Processing</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="use-case/use-case-time-series.html">Time Series Analysis</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="benchmarks.html">Benchmarks</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="NEWS.html">News</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">fastlowess (Java)</span>
+    <span class="version"></span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <div class="title"><a href="index.html">fastlowess (Java)</a></div>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="index.html" class="home-link is-current"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="index.html">fastlowess (Java)</a></li>
+  </ul>
+</nav>
+<div class="edit-this-page"><a href="https://github.com/thisisamirv/lowess-project/edit/main/bindings/java/docs/modules/ROOT/pages/index.adoc">Edit this Page</a></div>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">fastlowess (Java)</h1>
+<div id="preamble">
+<div class="sectionbody">
+<p align="center">
+  <a href="https://central.sonatype.com/artifact/io.github.thisisamirv/fastlowess"><img src="https://img.shields.io/badge/Maven_Central-C71A36?logo=apachemaven&logoColor=white" alt="Maven Central"></a>
+  <a href="https://github.com/thisisamirv/lowess-project/actions/workflows/ci-java.yml"><img src="https://github.com/thisisamirv/lowess-project/actions/workflows/ci-java.yml/badge.svg" alt="CI"></a>
+</p>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/thisisamirv/lowess-project/main/dev/logo.png" alt="One LOWESS to Rule Them All" width="400">
+  <br>
+  <em>One LOWESS to Rule Them All</em>
+</p>
+<div class="paragraph">
+<p>The fastest, most robust, and most feature-complete language-agnostic LOWESS (Locally Weighted Scatterplot Smoothing) implementation for <strong>Rust</strong>, <strong>Python</strong>, <strong>R</strong>, <strong>Julia</strong>, <strong>JavaScript</strong>, <strong>C++</strong>, <strong>Go</strong>, and <strong>WebAssembly</strong>.</p>
+</div>
+<div class="paragraph">
+<p>The <code>lowess-project</code> also offers bindings for Rust, Python, R, Julia, Node.js, WebAssembly, C++, Go, and Java — see the <a href="https://github.com/thisisamirv/lowess-project">full repository</a>.</p>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="installation-documentation"><a class="anchor" href="#installation-documentation"></a>Installation &amp; Documentation</h2>
+<div class="sectionbody">
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>See the <a href="https://thisisamirv.github.io/lowess-project/java/introduction/installation/">Installation Guide</a> for detailed installation instructions.</p>
+</div>
+<div class="paragraph">
+<p><strong>📚 <a href="https://thisisamirv.github.io/lowess-project/java/">View the full documentation</a></strong></p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="gpu-backend"><a class="anchor" href="#gpu-backend"></a>GPU Backend</h3>
+<div class="paragraph">
+<p>GPU acceleration (<code>wgpu</code>: Vulkan/Metal/DX12) is also supported for high-throughput batch smoothing. See the <a href="https://thisisamirv.github.io/lowess-project/java/advanced/gpu-backend/">GPU Backend guide</a> for details.</p>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="loess-vs-lowess"><a class="anchor" href="#loess-vs-lowess"></a>LOESS vs. LOWESS</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Feature</th>
+<th class="tableblock halign-left valign-top">LOESS</th>
+<th class="tableblock halign-left valign-top">LOWESS (This Crate)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Polynomial Degree</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Linear, Quadratic, Cubic, Quartic</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Linear (Degree 1)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Dimensions</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Multivariate (n-D support)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Univariate (1-D only)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Flexibility</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">High (Distance metrics)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Standard</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Complexity</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Higher (Matrix inversion)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Lower (Weighted average/slope)</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Read more about how LOWESS works in the <a href="https://thisisamirv.github.io/lowess-project/java/introduction/concepts/">Concepts</a>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Note:</strong> For a <strong>LOESS</strong> implementation, use <a href="https://github.com/thisisamirv/loess-project"><code>loess-project</code></a>.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="why-this-package"><a class="anchor" href="#why-this-package"></a>Why this package?</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="speed"><a class="anchor" href="#speed"></a>Speed</h3>
+<div class="paragraph">
+<p>The <code>lowess</code> project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution. It is on average <strong>200-327x faster</strong> than Python&#8217;s <code>statsmodels.lowess</code> and <strong>2-3x faster</strong> than R&#8217;s <code>lowess</code>.</p>
+</div>
+<div class="paragraph">
+<p>For more details on the performance comparison, see the <a href="https://thisisamirv.github.io/lowess-project/java/benchmarks/">Benchmarks</a> page.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="robustness"><a class="anchor" href="#robustness"></a>Robustness</h3>
+<div class="paragraph">
+<p>This implementation is <em>more robust</em> than R&#8217;s <code>lowess</code> and Python&#8217;s <code>statsmodels</code> due to two key design choices:</p>
+</div>
+<div class="paragraph">
+<p><strong>MAD-Based Scale Estimation:</strong></p>
+</div>
+<div class="paragraph">
+<p>For robustness weight calculations, this crate uses <em>Median Absolute Deviation (MAD)</em> for scale estimation:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">s = median(|r_i - median(r)|)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In contrast, <code>statsmodels</code> and R&#8217;s <code>lowess</code> uses the median of absolute residuals (MAR):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">s = median(|r_i|)</code></pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>MAD is a <em>breakdown-point-optimal</em> estimator—it remains valid even when up to 50% of data are outliers.</p>
+</li>
+<li>
+<p>The median-centering step removes asymmetric bias from residual distributions.</p>
+</li>
+<li>
+<p>MAD provides consistent outlier detection regardless of whether residuals are centered around zero.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Boundary Padding:</strong></p>
+</div>
+<div class="paragraph">
+<p>This crate applies a range of different <em>boundary policies</em> at dataset edges:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Extend</strong>: Repeats edge values to maintain local neighborhood size.</p>
+</li>
+<li>
+<p><strong>Reflect</strong>: Mirrors data symmetrically around boundaries.</p>
+</li>
+<li>
+<p><strong>Zero</strong>: Pads with zeros (useful for signal processing).</p>
+</li>
+<li>
+<p><strong>NoBoundary</strong>: Original Cleveland behavior</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><code>statsmodels</code> and R&#8217;s <code>lowess</code> do not apply boundary padding, which can lead to:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Biased estimates near boundaries due to asymmetric local neighborhoods.</p>
+</li>
+<li>
+<p>Increased variance at the edges of the smoothed curve.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="features"><a class="anchor" href="#features"></a>Features</h3>
+<div class="paragraph">
+<p>A variety of features, supporting a range of use cases:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Feature</th>
+<th class="tableblock halign-center valign-top">This package</th>
+<th class="tableblock halign-center valign-top">statsmodels</th>
+<th class="tableblock halign-center valign-top">R (stats)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Kernel</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">7 options</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">only Tricube</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">only Tricube</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Robustness Weighting</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">3 options</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">only Huber</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">only Huber</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Scale Estimation</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">2 options</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">only MAR</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">only MAR</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Boundary Padding</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">4 options</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">no padding</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">no padding</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Zero Weight Fallback</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">3 options</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">no</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">no</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Auto Convergence</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">yes</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">no</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">no</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Online Mode</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">yes</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">no</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">no</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Streaming Mode</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">yes</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">no</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">no</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Confidence Intervals</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">yes</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">no</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">no</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Prediction Intervals</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">yes</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">no</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">no</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Cross-Validation</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">2 options</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">no</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">no</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Parallel Execution</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">yes</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">no</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">no</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">GPU Acceleration</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">yes</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">no</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">no</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>no-std</code> Support</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">yes</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">no</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">no</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="validation"><a class="anchor" href="#validation"></a>Validation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>All implementations are <strong>numerical twins</strong> of R&#8217;s <code>lowess</code>:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Aspect</th>
+<th class="tableblock halign-left valign-top">Status</th>
+<th class="tableblock halign-left valign-top">Details</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Accuracy</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅ EXACT MATCH</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Max diff &lt; 1e-12 across all scenarios</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Consistency</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅ PERFECT</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Multiple scenarios pass with strict tolerance</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Robustness</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅ VERIFIED</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Robust smoothing matches R exactly</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="contributing"><a class="anchor" href="#contributing"></a>Contributing</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Contributions are welcome! Please see <a href="https://github.com/thisisamirv/lowess-project/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a> for more information.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="license"><a class="anchor" href="#license"></a>License</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Licensed under <a href="https://github.com/thisisamirv/lowess-project/blob/main/LICENSE-MIT">MIT</a> or <a href="https://github.com/thisisamirv/lowess-project/blob/main/LICENSE-APACHE">Apache-2.0</a>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="citation"><a class="anchor" href="#citation"></a>Citation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>If you use this software in your research, please cite it using the <a href="https://github.com/thisisamirv/lowess-project/blob/main/CITATION.cff">CITATION.cff</a> file or the BibTeX entry below:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bibtex hljs" data-lang="bibtex">@software{lowess_project,
+  author = {Valizadeh, Amir},
+  title = {LOWESS Project: High-Performance Locally Weighted Scatterplot Smoothing},
+  year = {2026},
+  url = {https://github.com/thisisamirv/lowess-project},
+  license = {MIT OR Apache-2.0}
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <p>This page was built using the Antora default UI.</p>
+  <p>The source code for this UI is licensed under the terms of the MPL-2.0 license.</p>
+</footer>
+<script>
+    window.MathJax = {
+        tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+        options: { ignoreHtmlClass: 'nostem|nolatexmath' }
+    };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>  </body>
+</html>

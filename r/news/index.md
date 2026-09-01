@@ -1,6 +1,6 @@
 # Changelog
 
-## rfastlowess (development version)
+## rfastlowess 3.2.0
 
 ### Changed
 

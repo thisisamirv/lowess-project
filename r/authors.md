@@ -11,13 +11,13 @@ Source:
 [`inst/CITATION`](https://github.com/thisisamirv/lowess-project/blob/main/inst/CITATION)
 
 Valizadeh A (2026). *High-Performance LOWESS Smoothing for R*. R package
-version 3.1.0, <https://github.com/thisisamirv/lowess-project>.
+version 3.2.0, <https://github.com/thisisamirv/lowess-project>.
 
     @Manual{,
       title = {High-Performance LOWESS Smoothing for R},
       author = {Amir Valizadeh},
       year = {2026},
-      note = {R package version 3.1.0},
+      note = {R package version 3.2.0},
       url = {https://github.com/thisisamirv/lowess-project},
     }
 
@@ -625,7 +625,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Carl Lerche <me@carllerche.com>
     License: MIT
     ----------------------------------------
-    Package: smallvec (1.15.2)
+    Package: smallvec (1.16.0)
     Authors: The Servo Project Developers
     License: MIT OR Apache-2.0
     ----------------------------------------

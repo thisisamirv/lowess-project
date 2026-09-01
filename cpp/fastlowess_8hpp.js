@@ -15,6 +15,7 @@ var fastlowess_8hpp =
     [ "k_default_chunk_size", "fastlowess_8hpp.html#a59395fbc126884e972f950ea475927f8", null ],
     [ "k_default_cv_k", "fastlowess_8hpp.html#a5eb3a6d91be5b909dd7c62048d9b8495", null ],
     [ "k_default_fraction", "fastlowess_8hpp.html#a5fc83238a1904dec0d45c19ead8497f2", null ],
+    [ "k_default_min_points", "fastlowess_8hpp.html#a31bddea1fe97f0be85b41979195e88a1", null ],
     [ "k_default_overlap", "fastlowess_8hpp.html#a39f4c1131a05b5752d76de552794e37e", null ],
     [ "k_default_window_capacity", "fastlowess_8hpp.html#afa163c018568540f591596db74c4b96a", null ]
 ];

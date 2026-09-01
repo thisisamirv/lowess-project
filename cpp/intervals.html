@@ -149,9 +149,9 @@ Confidence and Prediction Intervals</div></div>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;95% CI: [&quot;</span> &lt;&lt; result.confidence_lower()[0] &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; result.confidence_upper()[0] &lt;&lt; <span class="stringliteral">&quot;]\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-<div class="ttc" id="aclassfastlowess_1_1Expected_html_aeb88e40ff81b811771e6e2013fad7a6c"><div class="ttname"><a href="classfastlowess_1_1Expected.html#aeb88e40ff81b811771e6e2013fad7a6c">fastlowess::Expected::value</a></div><div class="ttdeci">T &amp; value() &amp;</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:71</div></div>
-<div class="ttc" id="aclassfastlowess_1_1Lowess_html"><div class="ttname"><a href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a></div><div class="ttdoc">Batch LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:424</div></div>
-<div class="ttc" id="aclassfastlowess_1_1Lowess_html_a504a722970109b32ab8318352d224a2e"><div class="ttname"><a href="classfastlowess_1_1Lowess.html#a504a722970109b32ab8318352d224a2e">fastlowess::Lowess::fit</a></div><div class="ttdeci">Expected&lt; LowessResult &gt; fit(const std::vector&lt; double &gt; &amp;x_values, const std::vector&lt; double &gt; &amp;y_values, const std::vector&lt; double &gt; &amp;custom_weights={})</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:468</div></div>
+<div class="ttc" id="aclassfastlowess_1_1Expected_html_aeb88e40ff81b811771e6e2013fad7a6c"><div class="ttname"><a href="classfastlowess_1_1Expected.html#aeb88e40ff81b811771e6e2013fad7a6c">fastlowess::Expected::value</a></div><div class="ttdeci">T &amp; value() &amp;</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:72</div></div>
+<div class="ttc" id="aclassfastlowess_1_1Lowess_html"><div class="ttname"><a href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a></div><div class="ttdoc">Batch LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:425</div></div>
+<div class="ttc" id="aclassfastlowess_1_1Lowess_html_a504a722970109b32ab8318352d224a2e"><div class="ttname"><a href="classfastlowess_1_1Lowess.html#a504a722970109b32ab8318352d224a2e">fastlowess::Lowess::fit</a></div><div class="ttdeci">Expected&lt; LowessResult &gt; fit(const std::vector&lt; double &gt; &amp;x_values, const std::vector&lt; double &gt; &amp;y_values, const std::vector&lt; double &gt; &amp;custom_weights={})</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:469</div></div>
 <div class="ttc" id="afastlowess_8hpp_html"><div class="ttname"><a href="fastlowess_8hpp.html">fastlowess.hpp</a></div><div class="ttdoc">C++ wrapper for fastLowess library.</div></div>
 </div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.29413, 0.374611]</div>
 </div><!-- fragment --><hr  />
@@ -229,15 +229,16 @@ Confidence and Prediction Intervals</div></div>
 <div class="line">    <a class="code hl_class" href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a> model({ .confidence_intervals = 0.99});</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).<a class="code hl_function" href="classfastlowess_1_1Expected.html#aeb88e40ff81b811771e6e2013fad7a6c">value</a>();</div>
 <div class="line"> </div>
-<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;95% CI: [&quot;</span> &lt;&lt; result.confidence_lower()[0] &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; result.confidence_upper()[0] &lt;&lt; <span class="stringliteral">&quot;]\n&quot;</span>;</div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;99% CI: [&quot;</span> &lt;&lt; result.confidence_lower()[0] &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; result.confidence_upper()[0] &lt;&lt; <span class="stringliteral">&quot;]\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-</div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.317143, 0.448073]</div>
+</div><!-- fragment --><div class="fragment"><div class="line">99% CI: [0.317143, 0.448073]</div>
 </div><!-- fragment --><hr  />
 <h2>Standard Errors</h2>
 <p>Access standard errors directly (available when intervals are computed):</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;<a class="code" href="fastlowess_8hpp.html">fastlowess.hpp</a>&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;iomanip&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;vector&gt;</span></div>
 <div class="line"> </div>
@@ -249,13 +250,22 @@ Confidence and Prediction Intervals</div></div>
 <div class="line">        y[i] = std::sin(x[i]) + 0.1;</div>
 <div class="line">    }</div>
 <div class="line"> </div>
-<div class="line">    <a class="code hl_class" href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a> model({ .confidence_intervals = 0.95});</div>
+<div class="line">    <a class="code hl_struct" href="structfastlowess_1_1LowessOptions.html">fastlowess::LowessOptions</a> opts;</div>
+<div class="line">    opts.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#a6b1d86216ff15cd283112a762fc0d302">return_se</a> = <span class="keyword">true</span>;</div>
+<div class="line">    <a class="code hl_class" href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a> model(opts);</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).<a class="code hl_function" href="classfastlowess_1_1Expected.html#aeb88e40ff81b811771e6e2013fad7a6c">value</a>();</div>
 <div class="line"> </div>
-<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;95% CI: [&quot;</span> &lt;&lt; result.confidence_lower()[0] &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; result.confidence_upper()[0] &lt;&lt; <span class="stringliteral">&quot;]\n&quot;</span>;</div>
+<div class="line">    <span class="keyword">auto</span> se = result.standard_errors();</div>
+<div class="line">    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; 3; ++i) {</div>
+<div class="line">        std::cout &lt;&lt; <span class="stringliteral">&quot;Point &quot;</span> &lt;&lt; i &lt;&lt; <span class="stringliteral">&quot;: SE = &quot;</span> &lt;&lt; std::fixed &lt;&lt; std::setprecision(4) &lt;&lt; se[i] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line">    }</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-</div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.332797, 0.432418]</div>
+<div class="ttc" id="astructfastlowess_1_1LowessOptions_html"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html">fastlowess::LowessOptions</a></div><div class="ttdoc">Options for configuring LOWESS smoothing.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:116</div></div>
+<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_a6b1d86216ff15cd283112a762fc0d302"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#a6b1d86216ff15cd283112a762fc0d302">fastlowess::LowessOptions::return_se</a></div><div class="ttdeci">bool return_se</div><div class="ttdoc">Return standard errors.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:134</div></div>
+</div><!-- fragment --><div class="fragment"><div class="line">Point 0: SE = 0.0254</div>
+<div class="line">Point 1: SE = 0.0269</div>
+<div class="line">Point 2: SE = 0.0283</div>
 </div><!-- fragment --><hr  />
 <h2>Availability</h2>
 <blockquote class="doxtable">

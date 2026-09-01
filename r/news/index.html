@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rfastlowess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">3.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">3.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -35,9 +35,9 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="development version" id="rfastlowess-development-version">rfastlowess (development version)<a class="anchor" aria-label="anchor" href="#rfastlowess-development-version"></a></h2>
+<h2 class="pkg-version" data-toc-text="3.2.0" id="rfastlowess-320">rfastlowess 3.2.0<a class="anchor" aria-label="anchor" href="#rfastlowess-320"></a></h2>
 <div class="section level3">
-<h3 id="changed-development-version">Changed<a class="anchor" aria-label="anchor" href="#changed-development-version"></a></h3>
+<h3 id="changed-3-2-0">Changed<a class="anchor" aria-label="anchor" href="#changed-3-2-0"></a></h3>
 <ul><li>Added a <code>large</code> benchmark category to <code>benchmarks/rfastlowess.R</code> and <code>benchmarks/stats_lowess.R</code> (n = 50000, <code>delta = 0</code> to disable <code><a href="https://rdrr.io/r/stats/lowess.html" class="external-link">stats::lowess</a></code>’s interpolation shortcut for a fair, exact-computation comparison), since every existing category completed in well under 100ms. Reliably takes ~13-16s for <code><a href="https://rdrr.io/r/stats/lowess.html" class="external-link">stats::lowess</a></code> and ~3s for <code>fastLowess</code> (serial). Expanded it to 4 scenarios stressing different parameters: <code>large_delta_0</code> (the original exact-fit case), <code>large_delta_0.1</code> (same workload with <code>delta</code> left at its default/auto value, showing the interpolation shortcut’s speedup), <code>large_high_iter</code> (10 robustness iterations instead of 3), and <code>large_high_fraction</code> (n = 20000, <code>fraction = 0.67</code>, since a 0.67 fraction at n = 50000 takes over a minute). <code>benchmarks/compare.py</code>’s plot grid grew from 5x2 to 7x2 rows to fit the new categories (<code>large_delta_0</code>/<code>large_delta_0.1</code> share one “large_delta” chart, matching how <code>fraction_*</code>/<code>iterations_*</code> already group into shared charts).</li>
 <li>Consolidated every crate/binding README: merged the “Installation” and “Documentation” sections, replaced GitHub-only alert syntax with plain blockquotes, removed the redundant “API Reference” and “Changelog” sections (each now has its own docs-site page), shortened the “GPU Backend” blurb, and added a “Read more” link to the Concepts page. The top-level repository README is unchanged, since it’s only ever viewed on GitHub.</li>
 <li>Renamed the batch adapter’s “When to Use” heading to “When to Use Batch Adapter” across every binding/crate’s API docs.</li>
@@ -53,7 +53,7 @@
 <li>Merged <code>vignettes/batch.Rmd</code>, <code>streaming.Rmd</code>, and <code>online.Rmd</code>’s unique content (When to Use guidance, merge strategy comparison) into the <code>@description</code>/<code>@details</code> roxygen docs of <code><a href="../reference/Lowess.html">Lowess()</a></code>, <code><a href="../reference/StreamingLowess.html">StreamingLowess()</a></code>, and <code><a href="../reference/OnlineLowess.html">OnlineLowess()</a></code>, and removed the now-redundant vignettes and their orphaned <code>gap_handling.svg</code>/<code>online_comparison.svg</code> diagrams.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="fixed-development-version">Fixed<a class="anchor" aria-label="anchor" href="#fixed-development-version"></a></h3>
+<h3 id="fixed-3-2-0">Fixed<a class="anchor" aria-label="anchor" href="#fixed-3-2-0"></a></h3>
 <ul><li>Fixed <code>docs.yml</code> triggering GitHub’s “pages build and deployment” once per docs job; per-language jobs now upload artifacts, and a single final <code>deploy</code> job pushes to <code>gh-pages</code> once per run.</li>
 <li>Fixed <code>docs.yml</code>’s reliance on GitHub’s legacy branch-based Pages deployment, which auto-triggers an unpinned, GitHub-managed “pages build and deployment” job on every <code>gh-pages</code> push (surfacing deprecation warnings, e.g. for Node.js 20, that aren’t fixable from this repo). The former <code>deploy</code> job is now <code>build</code>, which still pushes the merged <code>_site</code> to <code>gh-pages</code> as a cache for future incremental runs, but publishing now goes through <code>actions/upload-pages-artifact</code> and a new <code>deploy</code> job using the official <code>actions/deploy-pages</code>, which this repo pins directly. Requires the repository’s Pages source to be switched to “GitHub Actions” in settings.</li>
 <li>Fixed every benchmark category in <code>benchmarks/rfastlowess.R</code> failing with <code>attempt to apply non-function</code>: it called the R6-style <code>model$fit(x, y)</code>, but <code>fit</code> is an S3 generic (<code>fit(model, x, y)</code>), not a field on the <code>Lowess</code> object. Also fixed <code>benchmarks/stats_lowess.R</code> resolving its <code>output/</code> directory relative to the current working directory instead of the script’s own location (unlike <code>rfastlowess.R</code>, which already did this correctly), so results could land outside <code>benchmarks/output/</code> depending on how the script was invoked.</li>

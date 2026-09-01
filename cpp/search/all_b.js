@@ -1,11 +1,7 @@
 var searchData=
 [
-  ['mae_0',['mae',['../classfastlowess_1_1Diagnostics.html#a812eb500cf3423bb2fbc9066c39a4845',1,'fastlowess::Diagnostics']]],
-  ['make_5ferror_1',['make_error',['../classfastlowess_1_1Expected.html#a07ad9d1391104dfc037bb25930fab91a',1,'fastlowess::Expected']]],
-  ['merge_20strategies_2',['Merge Strategies',['../merge.html',1,'advanced']]],
-  ['merge_2emd_3',['merge.md',['../merge_8md.html',1,'']]],
-  ['merge_5fstrategy_4',['merge_strategy',['../structfastlowess_1_1StreamingOptions.html#a5c33b791424c7b5f6aa95e1f8e8a6121',1,'fastlowess::StreamingOptions']]],
-  ['methods_5',['Scaling Methods',['../scaling.html',1,'customization']]],
-  ['min_5fpoints_6',['min_points',['../structfastlowess_1_1OnlineOptions.html#a749706bb2b58779a0ef79c22d0683d32',1,'fastlowess::OnlineOptions']]],
-  ['modes_7',['Execution Modes',['../adapter_choice.html',1,'user_guide']]]
+  ['lowess_0',['lowess',['../classfastlowess_1_1Lowess.html',1,'fastlowess::Lowess'],['../classfastlowess_1_1Lowess.html#aeb64128717ffc0cfeec679d9902a531f',1,'fastlowess::Lowess::Lowess(const LowessOptions &amp;options={})'],['../classfastlowess_1_1Lowess.html#a6881fe78c6cc7b606c2a4a35f9c3d2e7',1,'fastlowess::Lowess::Lowess(const Lowess &amp;)=delete'],['../classfastlowess_1_1Lowess.html#aee45723ef740443b160b664dd8fccff8',1,'fastlowess::Lowess::Lowess(Lowess &amp;&amp;other) noexcept']]],
+  ['lowesserror_1',['lowesserror',['../classfastlowess_1_1LowessError.html',1,'fastlowess::LowessError'],['../classfastlowess_1_1LowessError.html#aa757849d28bbb66407c72f9872200d86',1,'fastlowess::LowessError::LowessError()']]],
+  ['lowessoptions_2',['LowessOptions',['../structfastlowess_1_1LowessOptions.html',1,'fastlowess']]],
+  ['lowessresult_3',['lowessresult',['../classfastlowess_1_1LowessResult.html',1,'fastlowess::LowessResult'],['../classfastlowess_1_1LowessResult.html#a0892db62a16346f5dbfdf7e1c35edeee',1,'fastlowess::LowessResult::LowessResult()=default'],['../classfastlowess_1_1LowessResult.html#ac86141f193bac1ef68fad68d2cae44a4',1,'fastlowess::LowessResult::LowessResult(const fastlowess_CppLowessResult &amp;c_result)'],['../classfastlowess_1_1LowessResult.html#a99de99bdf1f6b24516cbda340b4bb73a',1,'fastlowess::LowessResult::LowessResult(const LowessResult &amp;)=delete'],['../classfastlowess_1_1LowessResult.html#a0fdb2fea87519fa6de8feea9f8a8015b',1,'fastlowess::LowessResult::LowessResult(LowessResult &amp;&amp;other) noexcept']]]
 ];

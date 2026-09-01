@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>API :: fastlowess (Java)</title>
+    <link rel="canonical" href="https://thisisamirv.github.io/lowess-project/java/java/api/api.html">
+    <meta name="generator" content="Antora 3.2.0">
+    <link rel="stylesheet" href="../../_/css/site.css">
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://thisisamirv.github.io/lowess-project/java">fastlowess (Java)</a>
+      <button class="navbar-burger" aria-controls="topbar-nav" aria-expanded="false" aria-label="Toggle main menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="#">Home</a>
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link" href="#">Products</a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="#">Product A</a>
+            <a class="navbar-item" href="#">Product B</a>
+            <a class="navbar-item" href="#">Product C</a>
+          </div>
+        </div>
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link" href="#">Services</a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="#">Service A</a>
+            <a class="navbar-item" href="#">Service B</a>
+            <a class="navbar-item" href="#">Service C</a>
+          </div>
+        </div>
+        <div class="navbar-item">
+          <span class="control">
+            <a class="button is-primary" href="#">Download</a>
+          </span>
+        </div>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="java" data-version="">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <button class="nav-menu-toggle" aria-label="Toggle expand/collapse all" style="display: none"></button>
+    <h3 class="title"><a href="../index.html">fastlowess (Java)</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">fastlowess (Java)</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Introduction</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../introduction/getting-started.html">Getting Started</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../introduction/installation.html">Installation</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../introduction/concepts.html">Concepts</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">User Guide</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/adapter-choice.html">Execution Modes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/intervals.html">Intervals</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/cross-validation.html">Cross-Validation</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">API Reference</span>
+<ul class="nav-list">
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="api.html">API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="api-streaming.html">StreamingLowess API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="api-online.html">OnlineLowess API</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Weight &amp; Robustness</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/kernels.html">Weight Functions</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/robustness.html">Robustness</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/scaling.html">Scaling Methods</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/custom-weights.html">Custom Weights</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Advanced</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../advanced/boundary.html">Boundary Handling</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../advanced/merge.html">Merge Strategies</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../advanced/gpu-backend.html">GPU Backend</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Use Cases</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../use-case/use-case-genomics.html">Genomic Data Smoothing</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../use-case/use-case-real-time.html">Real-Time Processing</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../use-case/use-case-time-series.html">Time Series Analysis</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../benchmarks.html">Benchmarks</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../NEWS.html">News</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">fastlowess (Java)</span>
+    <span class="version"></span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <div class="title"><a href="../index.html">fastlowess (Java)</a></div>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">fastlowess (Java)</a></li>
+    <li>API Reference</li>
+    <li><a href="api.html">API</a></li>
+  </ul>
+</nav>
+<div class="edit-this-page"><a href="https://github.com/thisisamirv/lowess-project/edit/main/bindings/java/docs/modules/ROOT/pages/api/api.adoc">Edit this Page</a></div>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">API</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Batch <code>Lowess</code> reference. Best suited when the dataset fits in memory and you need intervals, cross-validation, or diagnostics.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>StreamingLowess</strong> and <strong>OnlineLowess</strong> are documented separately: <a href="api-streaming.html" class="xref page">StreamingLowess API</a>, <a href="api-online.html" class="xref page">OnlineLowess API</a></p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="options-builder-options-builder"><a class="anchor" href="#options-builder-options-builder"></a><code>Options.builder() Options.Builder</code></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Returns a fluent builder pre-populated with recommended defaults. Start from this and override only the settings you need:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Options options = Options.builder()
+        .fraction(0.3)
+        .returnDiagnostics(true)
+        .build();</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="options-settings"><a class="anchor" href="#options-settings"></a><code>Options</code> settings</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Setting</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fraction</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>0.67</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Smoothing fraction, in (0, 1].</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>iterations</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>int</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>3</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Robustness iterations, in [0, 1000].</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>delta</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>NaN</code> (auto)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Interpolation distance threshold, as a fraction of the x range.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>weightFunction</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"tricube"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Kernel: <code>tricube</code>, <code>gaussian</code>, <code>uniform</code>, <code>cosine</code>, <code>epanechnikov</code>, <code>biweight</code>, <code>triangle</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>robustnessMethod</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"bisquare"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Outlier downweighting: <code>bisquare</code>, <code>huber</code>, <code>talwar</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>scalingMethod</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"mad"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Residual scale estimator: <code>mad</code>, <code>mar</code>, <code>mean</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boundaryPolicy</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"extend"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Boundary handling: <code>extend</code>, <code>reflect</code>, <code>zero</code>, <code>noboundary</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>zeroWeightFallback</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"use_local_mean"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Fallback when all robustness weights hit zero: <code>use_local_mean</code>, <code>return_original</code>, <code>return_none</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>confidenceIntervals</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>NaN</code> (disabled)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Confidence level in (0, 1), e.g. <code>0.95</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>predictionIntervals</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>NaN</code> (disabled)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Confidence level in (0, 1), e.g. <code>0.95</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>autoConverge</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>NaN</code> (disabled)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Convergence tolerance for early stopping.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnDiagnostics</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Populate <code>Result.diagnostics()</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnResiduals</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Populate <code>Result.residuals()</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnRobustnessWeights</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Populate <code>Result.robustnessWeights()</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnSe</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Populate <code>Result.standardErrors()</code> (hat-matrix statistics).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cvFractions</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double[]</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>null</code> (disabled)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Candidate fractions for cross-validation.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cvMethod</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"kfold"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>kfold</code> or <code>loocv</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cvK</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>int</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>5</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of folds for k-fold CV.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cvSeed</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>long</code> (boxed)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>null</code> (random)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">RNG seed for reproducible k-fold splits.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>parallel</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>true</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Enable parallel processing.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>backend</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"cpu"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cpu</code> or <code>gpu</code> (requires a <code>gpu</code>-feature build of the native library).</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p><code>fraction</code> is the most important parameter: it controls the size of the local neighbourhood used at each point.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Range</th>
+<th class="tableblock halign-left valign-top">Effect</th>
+<th class="tableblock halign-left valign-top">Use case</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.1-0.3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Fine detail</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Rapidly changing signals</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.3-0.5</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Balanced</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">General purpose</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.5-0.7</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Heavy smoothing</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Noisy data</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.7-1.0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Very smooth</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Trend extraction</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p><code>iterations</code> controls robustness to outliers, at the cost of speed.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Value</th>
+<th class="tableblock halign-left valign-top">Effect</th>
+<th class="tableblock halign-left valign-top">Performance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No robustness</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Fastest</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1-3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Moderate</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Recommended</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4-6</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Strong</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Contaminated data</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">7+</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Very strong</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Heavy outliers</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="new-lowessoptions-options"><a class="anchor" href="#new-lowessoptions-options"></a><code>new Lowess(Options options)</code></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Creates a new batch model. Throws <code>RuntimeException</code> if any option is out of range (some validation is eager at construction, e.g. <code>iterations</code>; some is deferred to <code>fit</code>, e.g. <code>fraction</code>).</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="lowess-fitdouble-x-double-y-result"><a class="anchor" href="#lowess-fitdouble-x-double-y-result"></a><code>Lowess.fit(double[] x, double[] y) Result</code></h2>
+<div class="sectionbody">
+
+</div>
+</div>
+<div class="sect1">
+<h2 id="lowess-fitdouble-x-double-y-double-customweights-result"><a class="anchor" href="#lowess-fitdouble-x-double-y-double-customweights-result"></a><code>Lowess.fit(double[] x, double[] y, double[] customWeights) Result</code></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Smooths <code>y</code> as a function of <code>x</code>. <code>x</code> and <code>y</code> must be non-empty and the same length. An optional <code>customWeights</code> array (same length) applies per-observation case weights; pass <code>null</code> (or use the two-argument overload) for uniform weights.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="lowess-close"><a class="anchor" href="#lowess-close"></a><code>Lowess.close()</code></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Releases native resources. Safe to call multiple times. Implements <code>AutoCloseable</code>, so prefer try-with-resources over relying on the garbage collector.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="result-accessors"><a class="anchor" href="#result-accessors"></a><code>Result</code> accessors</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Accessor</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Populated when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>x()</code>, <code>y()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double[]</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Always.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>standardErrors()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;double[]&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnSe</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>confidenceLower()</code>, <code>confidenceUpper()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;double[]&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>confidenceIntervals</code> set</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>predictionLower()</code>, <code>predictionUpper()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;double[]&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>predictionIntervals</code> set</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>residuals()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;double[]&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnResiduals</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>robustnessWeights()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;double[]&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnRobustnessWeights</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cvScores()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;double[]&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cvFractions</code> set</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fractionUsed()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Always.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>iterationsUsed()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>OptionalInt</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Always (empty if not available).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>diagnostics()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;Diagnostics&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnDiagnostics</code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p><code>Diagnostics</code> holds <code>rmse()</code>, <code>mae()</code>, <code>rSquared()</code>, <code>aic()</code>, <code>aicc()</code>, <code>effectiveDf()</code>, <code>residualSd()</code> (the last three are <code>Optional&lt;Double&gt;</code>).</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="options"><a class="anchor" href="#options"></a>Options</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="weightfunction"><a class="anchor" href="#weightfunction"></a>weightFunction</h3>
+<div class="paragraph">
+<p><em>See: <a href="../weighting/kernels.html" class="xref page">Weight Functions</a></em></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>"tricube"</code> (default)</p>
+</li>
+<li>
+<p><code>"epanechnikov"</code></p>
+</li>
+<li>
+<p><code>"gaussian"</code></p>
+</li>
+<li>
+<p><code>"uniform"</code> (alias: <code>"boxcar"</code>)</p>
+</li>
+<li>
+<p><code>"biweight"</code> (alias: <code>"bisquare"</code>)</p>
+</li>
+<li>
+<p><code>"triangle"</code> (alias: <code>"triangular"</code>)</p>
+</li>
+<li>
+<p><code>"cosine"</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="robustnessmethod"><a class="anchor" href="#robustnessmethod"></a>robustnessMethod</h3>
+<div class="paragraph">
+<p><em>See: <a href="../weighting/robustness.html" class="xref page">Robustness</a></em></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>"bisquare"</code> (default; alias: <code>"biweight"</code>)</p>
+</li>
+<li>
+<p><code>"huber"</code></p>
+</li>
+<li>
+<p><code>"talwar"</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="boundarypolicy"><a class="anchor" href="#boundarypolicy"></a>boundaryPolicy</h3>
+<div class="paragraph">
+<p><em>See: <a href="../advanced/boundary.html" class="xref page">Boundary Handling</a></em></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>"extend"</code> (default; alias: <code>"pad"</code>)</p>
+</li>
+<li>
+<p><code>"reflect"</code> (alias: <code>"mirror"</code>)</p>
+</li>
+<li>
+<p><code>"zero"</code></p>
+</li>
+<li>
+<p><code>"noboundary"</code> (alias: <code>"none"</code>)</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="scalingmethod"><a class="anchor" href="#scalingmethod"></a>scalingMethod</h3>
+<div class="paragraph">
+<p><em>See: <a href="../weighting/scaling.html" class="xref page">Scaling Methods</a></em></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>"mad"</code> (default; alias: <code>"median_absolute_deviation"</code>)</p>
+</li>
+<li>
+<p><code>"mar"</code> (alias: <code>"median_absolute_residual"</code>)</p>
+</li>
+<li>
+<p><code>"mean"</code> (alias: <code>"mean_absolute_residual"</code>)</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="zeroweightfallback"><a class="anchor" href="#zeroweightfallback"></a>zeroWeightFallback</h3>
+<div class="paragraph">
+<p>Behavior when all neighborhood weights are zero:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Option</th>
+<th class="tableblock halign-left valign-top">Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"use_local_mean"</code> (default; aliases: <code>"local_mean"</code>, <code>"mean"</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Use the mean of the neighborhood</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"return_original"</code> (alias: <code>"original"</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return the original y value</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"return_none"</code> (alias: <code>"none"</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return <code>NaN</code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="custom-weights"><a class="anchor" href="#custom-weights"></a>Custom weights</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">double[] weights = new double[x.length];
+java.util.Arrays.fill(weights, 1.0);
+weights[0] = 5.0; // trust the first observation more
+
+try (Lowess model = new Lowess(Options.builder().build())) {
+    Result result = model.fit(x, y, weights);
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="cross-validation"><a class="anchor" href="#cross-validation"></a>Cross-validation</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Options options = Options.builder()
+        .cvFractions(new double[] { 0.1, 0.2, 0.3, 0.5 })
+        .cvMethod("kfold")
+        .cvK(5)
+        .cvSeed(42L)
+        .build();
+
+try (Lowess model = new Lowess(options)) {
+    Result result = model.fit(x, y);
+    System.out.println(java.util.Arrays.toString(result.cvScores().orElseThrow()));
+    System.out.println(result.fractionUsed()); // the CV-selected fraction
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="example"><a class="anchor" href="#example"></a>Example</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        double[] x = {1, 2, 3, 4, 5};
+        double[] y = {2.1, 4.0, 6.2, 8.0, 10.1};
+
+        Options options = Options.builder().fraction(0.5).build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y);
+            System.out.println(java.util.Arrays.toString(result.y()));
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">[2.1, 4.0, 6.2, 8.0, 10.1]</code></pre>
+</div>
+</div>
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <p>This page was built using the Antora default UI.</p>
+  <p>The source code for this UI is licensed under the terms of the MPL-2.0 license.</p>
+</footer>
+<script>
+    window.MathJax = {
+        tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+        options: { ignoreHtmlClass: 'nostem|nolatexmath' }
+    };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>  </body>
+</html>

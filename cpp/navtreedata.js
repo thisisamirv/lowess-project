@@ -35,11 +35,10 @@ var NAVTREE =
       [ "OnlineLowess API", "api_online.html", null ]
     ] ],
     [ "Benchmarks", "benchmarks.html", null ],
-    [ "Customization", "customization.html", [
-      [ "Weight Functions", "kernels.html", null ],
-      [ "Robustness", "robustness.html", null ],
-      [ "Scaling Methods", "scaling.html", null ],
-      [ "Custom Weights", "custom_weights.html", null ]
+    [ "User Guide", "user_guide.html", [
+      [ "Execution Modes", "adapter_choice.html", null ],
+      [ "Intervals", "intervals.html", null ],
+      [ "Cross-Validation", "cross_validation.html", null ]
     ] ],
     [ "Getting Started", "getting_started.html", [
       [ "Installation", "installation.html", null ],
@@ -47,15 +46,16 @@ var NAVTREE =
       [ "Concepts", "concepts.html", null ]
     ] ],
     [ "News", "news.html", null ],
-    [ "Use Cases", "use_cases.html", [
+    [ "Use Cases", "use_case.html", [
       [ "Genomic Data Smoothing", "use_case_genomics.html", null ],
       [ "Time Series Analysis", "use_case_time_series.html", null ],
       [ "Real-Time Processing", "use_case_real_time.html", null ]
     ] ],
-    [ "User Guide", "user_guide.html", [
-      [ "Execution Modes", "adapter_choice.html", null ],
-      [ "Intervals", "intervals.html", null ],
-      [ "Cross-Validation", "cross_validation.html", null ]
+    [ "Weight & Robustness", "weighting.html", [
+      [ "Weight Functions", "kernels.html", null ],
+      [ "Robustness", "robustness.html", null ],
+      [ "Scaling Methods", "scaling.html", null ],
+      [ "Custom Weights", "custom_weights.html", null ]
     ] ],
     [ "Namespaces", "namespaces.html", [
       [ "Namespace List", "namespaces.html", "namespaces_dup" ],
@@ -84,7 +84,7 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "adapter_choice.html",
-"structfastlowess_1_1LowessOptions.html#a8df67ab5c18aaea06b523bc3330d3447"
+"structfastlowess_1_1LowessOptions.html#a6b1d86216ff15cd283112a762fc0d302"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

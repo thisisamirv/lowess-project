@@ -31,6 +31,6 @@ print(model)
 #> <OnlineLowess Model>
 #>   Fraction:          0.2 
 #>   Window Capacity:   20 
-#>   Min Points:        3 
+#>   Min Points:        2 
 #>   Update Mode:       
 ```

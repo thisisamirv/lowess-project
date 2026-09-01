@@ -53,8 +53,8 @@ cat("Confidence upper bounds (first 5):\n")
 #> Confidence upper bounds (first 5):
 print(head(result$confidence_upper, 5))
 #> [1] 0.5416635 0.5200124 0.5624654 0.5826608 0.5972503
-cat("R²:", result$diagnostics$r_squared, "\n")
-#> R²: 0.7841212
+cat("R2:", result$diagnostics$r_squared, "\n")
+#> R2: 0.7841212
 ```
 
 ------------------------------------------------------------------------
@@ -203,7 +203,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] rfastlowess_3.1.0
+#> [1] rfastlowess_3.2.0
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    

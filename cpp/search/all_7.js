@@ -1,5 +1,8 @@
 var searchData=
 [
-  ['handling_0',['Boundary Handling',['../boundary.html',1,'advanced']]],
-  ['has_5fvalue_1',['has_value',['../classfastlowess_1_1Expected.html#a8515f14a4a841c380b59f8ff702232a5',1,'fastlowess::Expected::has_value()'],['../classfastlowess_1_1OnlineOutput.html#af9ee53d7c3732342c2eb7dce5ec490da',1,'fastlowess::OnlineOutput::has_value()'],['../classfastlowess_1_1Diagnostics.html#a3f6dcd4b9feb2a5760b9892df3b8d200',1,'fastlowess::Diagnostics::has_value()']]]
+  ['genomic_20data_20smoothing_0',['Genomic Data Smoothing',['../use_case_genomics.html',1,'use_case']]],
+  ['getting_20started_1',['Getting Started',['../getting_started.html',1,'']]],
+  ['gpu_20backend_2',['GPU Backend',['../gpu_backend.html',1,'advanced']]],
+  ['gpu_2dbackend_2emd_3',['gpu-backend.md',['../gpu-backend_8md.html',1,'']]],
+  ['guide_4',['User Guide',['../user_guide.html',1,'']]]
 ];

@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Time Series Analysis :: fastlowess (Java)</title>
+    <link rel="canonical" href="https://thisisamirv.github.io/lowess-project/java/java/use-case/use-case-time-series.html">
+    <meta name="generator" content="Antora 3.2.0">
+    <link rel="stylesheet" href="../../_/css/site.css">
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://thisisamirv.github.io/lowess-project/java">fastlowess (Java)</a>
+      <button class="navbar-burger" aria-controls="topbar-nav" aria-expanded="false" aria-label="Toggle main menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="#">Home</a>
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link" href="#">Products</a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="#">Product A</a>
+            <a class="navbar-item" href="#">Product B</a>
+            <a class="navbar-item" href="#">Product C</a>
+          </div>
+        </div>
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link" href="#">Services</a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="#">Service A</a>
+            <a class="navbar-item" href="#">Service B</a>
+            <a class="navbar-item" href="#">Service C</a>
+          </div>
+        </div>
+        <div class="navbar-item">
+          <span class="control">
+            <a class="button is-primary" href="#">Download</a>
+          </span>
+        </div>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="java" data-version="">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <button class="nav-menu-toggle" aria-label="Toggle expand/collapse all" style="display: none"></button>
+    <h3 class="title"><a href="../index.html">fastlowess (Java)</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">fastlowess (Java)</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Introduction</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../introduction/getting-started.html">Getting Started</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../introduction/installation.html">Installation</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../introduction/concepts.html">Concepts</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">User Guide</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/adapter-choice.html">Execution Modes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/intervals.html">Intervals</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/cross-validation.html">Cross-Validation</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">API Reference</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api.html">API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-streaming.html">StreamingLowess API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-online.html">OnlineLowess API</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Weight &amp; Robustness</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/kernels.html">Weight Functions</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/robustness.html">Robustness</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/scaling.html">Scaling Methods</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/custom-weights.html">Custom Weights</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Advanced</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../advanced/boundary.html">Boundary Handling</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../advanced/merge.html">Merge Strategies</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../advanced/gpu-backend.html">GPU Backend</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Use Cases</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="use-case-genomics.html">Genomic Data Smoothing</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="use-case-real-time.html">Real-Time Processing</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="use-case-time-series.html">Time Series Analysis</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../benchmarks.html">Benchmarks</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../NEWS.html">News</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">fastlowess (Java)</span>
+    <span class="version"></span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <div class="title"><a href="../index.html">fastlowess (Java)</a></div>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">fastlowess (Java)</a></li>
+    <li>Use Cases</li>
+    <li><a href="use-case-time-series.html">Time Series Analysis</a></li>
+  </ul>
+</nav>
+<div class="edit-this-page"><a href="https://github.com/thisisamirv/lowess-project/edit/main/bindings/java/docs/modules/ROOT/pages/use-case/use-case-time-series.adoc">Edit this Page</a></div>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Time Series Analysis</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>LOWESS for trend extraction and temporal smoothing.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="overview"><a class="anchor" href="#overview"></a>Overview</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Time series data often contains noise, seasonality, and trends. LOWESS provides flexible trend extraction without parametric assumptions.</p>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="basic-trend-extraction"><a class="anchor" href="#basic-trend-extraction"></a>Basic Trend Extraction</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>fraction = 0.1</code> sizes the neighbourhood as 10% of the data at each evaluation point — narrow enough to follow a slowly varying trend without smearing periodic variation. Three robustness <code>iterations</code> down-weight noise spikes so they cannot bias the fitted curve.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 500;
+        double[] t = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            t[i] = i * 100.0 / (n - 1);
+            y[i] = 10.0 + 0.5 * t[i] + 3.0 * Math.sin(t[i] / 10.0) + (((i * 7 + 3) % 1.7) - 0.85) * 3.0;
+        }
+
+        Options options = Options.builder().fraction(0.1).iterations(3).build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(t, y);
+            System.out.println("y[0]: " + result.y()[0]);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">y[0]: 11.321590922416165</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="detrending"><a class="anchor" href="#detrending"></a>Detrending</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Remove trend to analyze residual patterns.</p>
+</div>
+<div class="paragraph">
+<p>Setting <code>returnResiduals = true</code> stores <code>observed − smoothed</code> alongside the smooth. A slightly wider <code>fraction = 0.3</code> produces a smoother baseline trend, so short-duration oscillations end up in the residuals rather than being absorbed into the trend component.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] t = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            t[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(t[i]) + 0.1;
+        }
+
+        Options options = Options.builder()
+                .fraction(0.3)
+                .iterations(3)
+                .returnResiduals(true)
+                .build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(t, y);
+            double[] residuals = result.residuals().orElseThrow();
+            System.out.println("residuals[0]: " + residuals[0]);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">residuals[0]: -0.15824361645514948</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="forecasting-with-prediction-intervals"><a class="anchor" href="#forecasting-with-prediction-intervals"></a>Forecasting with Prediction Intervals</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Prediction intervals widen the uncertainty band to include both the uncertainty in the fitted curve (confidence interval) and the expected scatter of new observations around it. <code>fraction = 0.2</code> offers a balance between local detail and stable interval width.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] t = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            t[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(t[i]) + 0.1;
+        }
+
+        Options options = Options.builder()
+                .fraction(0.2)
+                .iterations(3)
+                .confidenceIntervals(0.95)
+                .predictionIntervals(0.95)
+                .build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(t, y);
+            double[] lower = result.predictionLower().orElseThrow();
+            double[] upper = result.predictionUpper().orElseThrow();
+            System.out.printf("95%% PI: [%s, %s]%n", lower[0], upper[0]);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">95% PI: [0.15801046224996285, 0.2908827214492591]</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="handling-missing-data"><a class="anchor" href="#handling-missing-data"></a>Handling Missing Data</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>LOWESS naturally handles irregular time sampling:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] tIrregular = new double[n];
+        double[] yIrregular = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            tIrregular[i] = i * 1.0 + (i * 31 % 10) * 0.1;
+            yIrregular[i] = 10.0 + 0.3 * tIrregular[i] + 2.0 * Math.sin(tIrregular[i] * 0.1);
+        }
+
+        Options options = Options.builder().fraction(0.2).build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(tIrregular, yIrregular);
+            System.out.println("y[0]: " + result.y()[0]);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">y[0]: 11.327309510260003</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="multi-scale-analysis"><a class="anchor" href="#multi-scale-analysis"></a>Multi-Scale Analysis</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Use different fractions to extract features at different scales:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] t = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            t[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(t[i]) + 0.1;
+        }
+
+        for (double f : new double[] {0.05, 0.2, 0.5}) {
+            Options options = Options.builder().fraction(f).build();
+            try (Lowess model = new Lowess(options)) {
+                Result result = model.fit(t, y);
+                System.out.printf("fraction=%s: y[0] = %s%n", f, result.y()[0]);
+            }
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">fraction=0.05: y[0] = 0.13171195982828227
+fraction=0.2: y[0] = 0.22444659184961097
+fraction=0.5: y[0] = 0.33437036041791557</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="gene-expression-time-course"><a class="anchor" href="#gene-expression-time-course"></a>Gene Expression Time Course</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Biological application:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 49;
+        double[] hours = new double[n];
+        double[] expression = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            hours[i] = i * 0.5;
+            expression[i] = 100.0 * (1.0 + 0.5 * Math.sin(hours[i] * Math.PI / 12.0)) + (((i * 7 + 3) % 1.7) - 0.85) * 10.0;
+        }
+
+        Options options = Options.builder()
+                .fraction(0.3)
+                .iterations(3)
+                .returnDiagnostics(true)
+                .build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(hours, expression);
+            double rSquared = result.diagnostics().orElseThrow().rSquared();
+            System.out.printf("R2: %.3f%n", rSquared);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">R2: 0.973</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="choosing-fraction-for-time-series"><a class="anchor" href="#choosing-fraction-for-time-series"></a>Choosing Fraction for Time Series</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Data Type</th>
+<th class="tableblock halign-left valign-top">Recommended Fraction</th>
+<th class="tableblock halign-left valign-top">Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Daily data (years)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.3–0.5</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Capture annual trends</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Hourly data (days)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.1–0.2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Capture daily patterns</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sensor data (minutes)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.05–0.1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Preserve short-term features</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Noisy data</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Higher</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Reduce noise impact</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Clean data</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Lower</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Preserve detail</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="see-also"><a class="anchor" href="#see-also"></a>See Also</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="use-case-real-time.html" class="xref page">Real-Time Processing</a> — For streaming time series</p>
+</li>
+<li>
+<p><a href="../guide/cross-validation.html" class="xref page">Cross-Validation</a> — Optimal fraction selection</p>
+</li>
+<li>
+<p><a href="../advanced/boundary.html" class="xref page">Boundary Handling</a> — Edge bias in trend extraction</p>
+</li>
+<li>
+<p><a href="../api/api.html" class="xref page">API Reference</a> — Full parameter reference</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <p>This page was built using the Antora default UI.</p>
+  <p>The source code for this UI is licensed under the terms of the MPL-2.0 license.</p>
+</footer>
+<script>
+    window.MathJax = {
+        tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+        options: { ignoreHtmlClass: 'nostem|nolatexmath' }
+    };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>  </body>
+</html>

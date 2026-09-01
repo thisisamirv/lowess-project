@@ -1,9 +1,14 @@
 var searchData=
 [
-  ['backend_0',['backend',['../structfastlowess_1_1LowessOptions.html#a7df2673737a72e038efa19cca56c2942',1,'fastlowess::LowessOptions::backend'],['../gpu_backend.html',1,'GPU Backend']]],
-  ['benchmarks_1',['Benchmarks',['../benchmarks.html',1,'']]],
-  ['benchmarks_2emd_2',['benchmarks.md',['../benchmarks_8md.html',1,'']]],
-  ['boundary_20handling_3',['Boundary Handling',['../boundary.html',1,'advanced']]],
-  ['boundary_2emd_4',['boundary.md',['../boundary_8md.html',1,'']]],
-  ['boundary_5fpolicy_5',['boundary_policy',['../structfastlowess_1_1LowessOptions.html#a72b5c3c5def7e1939fdfb784a089d938',1,'fastlowess::LowessOptions::boundary_policy'],['../structfastlowess_1_1OnlineOptions.html#a92d3dfc8fe8d21583f611148514f0d26',1,'fastlowess::OnlineOptions::boundary_policy']]]
+  ['adapter_2dchoice_2emd_0',['adapter-choice.md',['../adapter-choice_8md.html',1,'']]],
+  ['add_5fpoint_1',['add_point',['../classfastlowess_1_1OnlineLowess.html#a6bb43023f9e7f8884320dd29ac803aa9',1,'fastlowess::OnlineLowess']]],
+  ['advanced_2',['Advanced',['../advanced.html',1,'']]],
+  ['aic_3',['aic',['../classfastlowess_1_1Diagnostics.html#aa23b246dc8a2ee2581e742c0e75c3afc',1,'fastlowess::Diagnostics']]],
+  ['aicc_4',['aicc',['../classfastlowess_1_1Diagnostics.html#a54514eec30d53ab40080f8e9896e6ef4',1,'fastlowess::Diagnostics']]],
+  ['analysis_5',['Time Series Analysis',['../use_case_time_series.html',1,'use_case']]],
+  ['api_6',['api',['../api.html',1,'API'],['../api_online.html',1,'OnlineLowess API'],['../api_streaming.html',1,'StreamingLowess API']]],
+  ['api_2donline_2emd_7',['api-online.md',['../api-online_8md.html',1,'']]],
+  ['api_2dstreaming_2emd_8',['api-streaming.md',['../api-streaming_8md.html',1,'']]],
+  ['api_2emd_9',['api.md',['../api_8md.html',1,'']]],
+  ['auto_5fconverge_10',['auto_converge',['../structfastlowess_1_1LowessOptions.html#ab818fecad4f18a4f6ab947ebe75deb06',1,'fastlowess::LowessOptions::auto_converge'],['../structfastlowess_1_1OnlineOptions.html#a6950c44ed0571eed6219ecd34e78b0bd',1,'fastlowess::OnlineOptions::auto_converge']]]
 ];

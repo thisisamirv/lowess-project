@@ -20,17 +20,9 @@ naturally widen at positions with sparser CpG coverage.
 
 library(rfastlowess)
 
-# Simulate methylation data along a chromosome
-set.seed(42)
-n <- 1000
-positions <- sort(runif(n, 0, 1e6))
-
-# True methylation pattern
-true_meth <- 0.5 + 0.3 * sin(positions / 1e5)
-
-# Observed with noise
-observed <- true_meth + rnorm(n, sd = 0.15)
-observed <- pmax(0, pmin(1, observed))
+# Deterministic methylation profile along a chromosome
+positions <- seq(0, 99000, by = 1000)
+observed <- (50 + sin(positions / 1000) * 20 + 5) / 100  # Methylation is 0-1
 
 # Smooth
 model <- Lowess(
@@ -54,6 +46,12 @@ legend("topright", c("Observed", "Smoothed", "95% CI"),
 
 ![](use-case-genomics_files/figure-html/use_case_genomics_1-1.png)
 
+``` r
+
+cat(sprintf("95%% CI: [%.4f, %.4f]\n", result$confidence_lower[1], result$confidence_upper[1]))
+#> 95% CI: [0.5168, 0.6874]
+```
+
 ------------------------------------------------------------------------
 
 ## ChIP-seq Signal Smoothing
@@ -71,34 +69,35 @@ background level is not inflated by a handful of extreme counts.
 ``` r
 
 library(rfastlowess)
-set.seed(42)
 
-# Simulated ChIP-seq enrichment
-n <- 500
-positions <- seq(1, 50000, length.out = n)
-signal <- 10 + 5 * dnorm(positions, mean = 25000, sd = 5000) * 1000
-
-# Add noise and spikes
-noise <- rpois(n, lambda = 2)
-signal_noisy <- signal + noise
-signal_noisy[c(100, 200, 300)] <- signal_noisy[c(100, 200, 300)] * 5
+# Deterministic ChIP-seq-style coverage profile
+positions <- seq(0, 99000, by = 1000)
+signal <- 50 + sin(positions / 1000) * 20 + 5
 
 # Smooth
 model <- Lowess(
     fraction = 0.05,
     iterations = 5
 )
-result <- fit(model, positions, signal_noisy)
-threshold <- quantile(result$y, 0.75)
+result <- fit(model, positions, signal)
+peak_count <- sum(result$y > 65.0)
 
-plot(positions, signal_noisy, pch = 16, cex = 0.4, col = "gray",
+plot(positions, signal, pch = 16, cex = 0.4, col = "gray",
     xlab = "Genomic Position", ylab = "Read Count",
     main = "ChIP-seq Signal Smoothing")
 lines(result$x, result$y, col = "blue", lwd = 2)
-abline(h = threshold, col = "red", lty = 2)
+abline(h = 65.0, col = "red", lty = 2)
 ```
 
 ![](use-case-genomics_files/figure-html/use_case_genomics_2-1.png)
+
+``` r
+
+cat(sprintf("y[0]: %.4f\n", result$y[1]))
+#> y[0]: 59.9520
+cat(sprintf("Peak count: %d\n", peak_count))
+#> Peak count: 26
+```
 
 ------------------------------------------------------------------------
 
@@ -113,24 +112,19 @@ library(rfastlowess)
 
 model <- StreamingLowess(
     fraction   = 0.05,
-    chunk_size = 100000,
-    overlap    = 10000,
+    iterations = 3,
+    chunk_size = 50,
+    overlap    = 10,
     merge_strategy = "weighted_average"
 )
 
-# Process chromosome in chunks
-# (in practice, read from a file or database)
-set.seed(42)
-for (chunk_i in 1:5) {
-    pos_chunk <- seq((chunk_i - 1) * 1e5 + 1, chunk_i * 1e5, length.out = 1000)
-    val_chunk <- sin(pos_chunk / 1e4) + rnorm(1000, sd = 0.2)
-    result <- process_chunk(model, pos_chunk, val_chunk)
-}
+# Deterministic whole-genome coverage, processed as a single chunk
+positions <- seq(0, 10000, by = 10)
+coverage <- 50 + sin(positions / 100) * 20 + 5
+result <- process_chunk(model, positions, coverage)
 final <- finalize(model)
-cat("First 6 smoothed values (streaming, weighted_average merge):\n")
-#> First 6 smoothed values (streaming, weighted_average merge):
-print(head(final$y))
-#> [1] 0.3533869 0.3561734 0.3589968 0.3618561 0.3647504 0.3676785
+cat(sprintf("y[0]: %.4f\n", final$y[1]))
+#> y[0]: 41.2977
 ```
 
 ``` r
@@ -157,7 +151,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] rfastlowess_3.1.0
+#> [1] rfastlowess_3.2.0
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    

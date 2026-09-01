@@ -137,11 +137,11 @@ $(document).ready(function(){initNavTree('api_streaming.html',''); initResizable
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-<div class="ttc" id="aclassfastlowess_1_1StreamingLowess_html"><div class="ttname"><a href="classfastlowess_1_1StreamingLowess.html">fastlowess::StreamingLowess</a></div><div class="ttdoc">Streaming LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:502</div></div>
+<div class="ttc" id="aclassfastlowess_1_1StreamingLowess_html"><div class="ttname"><a href="classfastlowess_1_1StreamingLowess.html">fastlowess::StreamingLowess</a></div><div class="ttdoc">Streaming LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:503</div></div>
 <div class="ttc" id="afastlowess_8hpp_html"><div class="ttname"><a href="fastlowess_8hpp.html">fastlowess.hpp</a></div><div class="ttdoc">C++ wrapper for fastLowess library.</div></div>
-<div class="ttc" id="astructfastlowess_1_1StreamingOptions_html"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html">fastlowess::StreamingOptions</a></div><div class="ttdoc">Options for streaming LOWESS.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:154</div></div>
-<div class="ttc" id="astructfastlowess_1_1StreamingOptions_html_a493fdf1cc257a60df0d57efc7e9f7cc5"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html#a493fdf1cc257a60df0d57efc7e9f7cc5">fastlowess::StreamingOptions::overlap</a></div><div class="ttdeci">int overlap</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:156</div></div>
-<div class="ttc" id="astructfastlowess_1_1StreamingOptions_html_aef557d1b8515c43f5027f0afea85018a"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html#aef557d1b8515c43f5027f0afea85018a">fastlowess::StreamingOptions::chunk_size</a></div><div class="ttdeci">int chunk_size</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:155</div></div>
+<div class="ttc" id="astructfastlowess_1_1StreamingOptions_html"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html">fastlowess::StreamingOptions</a></div><div class="ttdoc">Options for streaming LOWESS.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:155</div></div>
+<div class="ttc" id="astructfastlowess_1_1StreamingOptions_html_a493fdf1cc257a60df0d57efc7e9f7cc5"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html#a493fdf1cc257a60df0d57efc7e9f7cc5">fastlowess::StreamingOptions::overlap</a></div><div class="ttdeci">int overlap</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:157</div></div>
+<div class="ttc" id="astructfastlowess_1_1StreamingOptions_html_aef557d1b8515c43f5027f0afea85018a"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html#aef557d1b8515c43f5027f0afea85018a">fastlowess::StreamingOptions::chunk_size</a></div><div class="ttdeci">int chunk_size</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:156</div></div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 17.6391</div>
 </div><!-- fragment --><ul>
 <li><code>options</code>: A <code>StreamingOptions</code> struct (inherits from <code>LowessOptions</code>) with additional <code>chunk_size</code>, <code>overlap</code>, and <code>merge_strategy</code> parameters.</li>
@@ -171,7 +171,7 @@ $(document).ready(function(){initNavTree('api_streaming.html',''); initResizable
 <div class="line"> </div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_ac4c7e581cd561fc11a928f9901bb5ec6"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#ac4c7e581cd561fc11a928f9901bb5ec6">fastlowess::LowessOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdoc">Smoothing fraction (0, 1].</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:116</div></div>
+<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_ac4c7e581cd561fc11a928f9901bb5ec6"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#ac4c7e581cd561fc11a928f9901bb5ec6">fastlowess::LowessOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdoc">Smoothing fraction (0, 1].</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:117</div></div>
 </div><!-- fragment --><div class="fragment"><div class="line">0.5</div>
 </div><!-- fragment --><ul>
 <li>Processes a chunk of data. Returns partial results.</li>

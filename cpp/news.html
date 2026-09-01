@@ -102,7 +102,11 @@ $(document).ready(function(){initNavTree('news.html',''); initResizable(); });
   <div class="headertitle"><div class="title">News</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1>fastlowess (C++) (development version)</h1>
+<div class="textblock"><h1>fastlowess (C++) 3.2.0</h1>
+<h2>Added</h2>
+<ul>
+<li>Library is now available on Spack (<code>fastlowess-cpp</code>).</li>
+</ul>
 <h2>Changed</h2>
 <ul>
 <li>Added a <code>large</code> benchmark category to <code>benchmarks/rfastlowess.R</code> and <code>benchmarks/stats_lowess.R</code> (n = 50000, <code>delta = 0</code> to disable <code>stats::lowess</code>'s interpolation shortcut for a fair, exact-computation comparison), since every existing category completed in well under 100ms. Reliably takes ~13-16s for <code>stats::lowess</code> and ~3s for <code>fastLowess</code> (serial). Expanded it to 4 scenarios stressing different parameters: <code>large_delta_0</code> (the original exact-fit case), <code>large_delta_0.1</code> (same workload with <code>delta</code> left at its default/auto value, showing the interpolation shortcut's speedup), <code>large_high_iter</code> (10 robustness iterations instead of 3), and <code>large_high_fraction</code> (n = 20000, <code>fraction = 0.67</code>, since a 0.67 fraction at n = 50000 takes over a minute). <code>benchmarks/compare.py</code>'s plot grid grew from 5x2 to 7x2 rows to fit the new categories (<code>large_delta_0</code>/<code>large_delta_0.1</code> share one "large_delta" chart, matching how <code>fraction_*</code>/<code>iterations_*</code> already group into shared charts).</li>

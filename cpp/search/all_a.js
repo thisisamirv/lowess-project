@@ -1,7 +1,10 @@
 var searchData=
 [
-  ['lowess_0',['lowess',['../classfastlowess_1_1Lowess.html',1,'fastlowess::Lowess'],['../classfastlowess_1_1Lowess.html#aeb64128717ffc0cfeec679d9902a531f',1,'fastlowess::Lowess::Lowess(const LowessOptions &amp;options={})'],['../classfastlowess_1_1Lowess.html#a6881fe78c6cc7b606c2a4a35f9c3d2e7',1,'fastlowess::Lowess::Lowess(const Lowess &amp;)=delete'],['../classfastlowess_1_1Lowess.html#aee45723ef740443b160b664dd8fccff8',1,'fastlowess::Lowess::Lowess(Lowess &amp;&amp;other) noexcept']]],
-  ['lowesserror_1',['lowesserror',['../classfastlowess_1_1LowessError.html',1,'fastlowess::LowessError'],['../classfastlowess_1_1LowessError.html#aa757849d28bbb66407c72f9872200d86',1,'fastlowess::LowessError::LowessError()']]],
-  ['lowessoptions_2',['LowessOptions',['../structfastlowess_1_1LowessOptions.html',1,'fastlowess']]],
-  ['lowessresult_3',['lowessresult',['../classfastlowess_1_1LowessResult.html',1,'fastlowess::LowessResult'],['../classfastlowess_1_1LowessResult.html#a0892db62a16346f5dbfdf7e1c35edeee',1,'fastlowess::LowessResult::LowessResult()=default'],['../classfastlowess_1_1LowessResult.html#ac86141f193bac1ef68fad68d2cae44a4',1,'fastlowess::LowessResult::LowessResult(const fastlowess_CppLowessResult &amp;c_result)'],['../classfastlowess_1_1LowessResult.html#a99de99bdf1f6b24516cbda340b4bb73a',1,'fastlowess::LowessResult::LowessResult(const LowessResult &amp;)=delete'],['../classfastlowess_1_1LowessResult.html#a0fdb2fea87519fa6de8feea9f8a8015b',1,'fastlowess::LowessResult::LowessResult(LowessResult &amp;&amp;other) noexcept']]]
+  ['k_5fdefault_5fchunk_5fsize_0',['k_default_chunk_size',['../namespacefastlowess_1_1detail.html#a59395fbc126884e972f950ea475927f8',1,'fastlowess::detail']]],
+  ['k_5fdefault_5fcv_5fk_1',['k_default_cv_k',['../namespacefastlowess_1_1detail.html#a5eb3a6d91be5b909dd7c62048d9b8495',1,'fastlowess::detail']]],
+  ['k_5fdefault_5ffraction_2',['k_default_fraction',['../namespacefastlowess_1_1detail.html#a5fc83238a1904dec0d45c19ead8497f2',1,'fastlowess::detail']]],
+  ['k_5fdefault_5fmin_5fpoints_3',['k_default_min_points',['../namespacefastlowess_1_1detail.html#a31bddea1fe97f0be85b41979195e88a1',1,'fastlowess::detail']]],
+  ['k_5fdefault_5foverlap_4',['k_default_overlap',['../namespacefastlowess_1_1detail.html#a39f4c1131a05b5752d76de552794e37e',1,'fastlowess::detail']]],
+  ['k_5fdefault_5fwindow_5fcapacity_5',['k_default_window_capacity',['../namespacefastlowess_1_1detail.html#afa163c018568540f591596db74c4b96a',1,'fastlowess::detail']]],
+  ['kernels_2emd_6',['kernels.md',['../kernels_8md.html',1,'']]]
 ];

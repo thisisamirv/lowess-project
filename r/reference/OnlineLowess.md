@@ -8,25 +8,25 @@ sliding window and processes each incoming point immediately via
 
 ``` r
 OnlineLowess(
-  fraction = 0.67,
-  window_capacity = 1000L,
-  min_points = 3L,
-  ...,
-  iterations = 3L,
-  delta = NULL,
-  weight_function = "tricube",
-  robustness_method = "bisquare",
-  scaling_method = "mad",
-  boundary_policy = "extend",
-  zero_weight_fallback = "use_local_mean",
-  update_mode = "full",
-  auto_converge = NULL,
-  return_robustness_weights = FALSE,
-  return_diagnostics = FALSE,
-  return_residuals = FALSE,
-  parallel = FALSE,
-  confidence_intervals = NULL,
-  prediction_intervals = NULL
+    fraction = 0.67,
+    window_capacity = 1000L,
+    min_points = 2L,
+    ...,
+    iterations = 3L,
+    delta = NULL,
+    weight_function = "tricube",
+    robustness_method = "bisquare",
+    scaling_method = "mad",
+    boundary_policy = "extend",
+    zero_weight_fallback = "use_local_mean",
+    update_mode = "incremental",
+    auto_converge = NULL,
+    return_robustness_weights = FALSE,
+    return_diagnostics = FALSE,
+    return_residuals = FALSE,
+    parallel = FALSE,
+    confidence_intervals = NULL,
+    prediction_intervals = NULL
 )
 ```
 
@@ -45,7 +45,7 @@ OnlineLowess(
 - min_points:
 
   Minimum number of points required before smoothing begins, between 2
-  and `window_capacity`. Default: 3.
+  and `window_capacity`. Default: 2.
 
 - ...:
 
@@ -96,9 +96,9 @@ OnlineLowess(
 
 - update_mode:
 
-  Window update strategy: `"full"` (default; alias: `"resmooth"`)
-  re-smooths all window points after each addition; `"incremental"`
-  (alias: `"single"`) updates only the newest point.
+  Window update strategy: `"incremental"` (default; alias: `"single"`)
+  updates only the newest point; `"full"` (alias: `"resmooth"`)
+  re-smooths all window points after each addition.
 
 - auto_converge:
 
@@ -158,5 +158,5 @@ for (i in seq_along(x)) {
     if (!is.null(result)) smoothed <- c(smoothed, result$y)
 }
 head(smoothed, 5)
-#> [1] 0.1898465 0.3098642 0.3037980 0.4955887 0.5883635
+#> [1] 0.1201261 0.1898465 0.3098642 0.3037980 0.4955887
 ```

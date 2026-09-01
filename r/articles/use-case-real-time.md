@@ -24,28 +24,31 @@ recent point rather than the full window, halving typical latency.
 
 library(rfastlowess)
 
-set.seed(42)
-times <- 1:100
-temperatures <- 20 + 5 * sin(times / 10) + rnorm(100)
+times <- 0:99
+temperatures <- 20 + 5 * sin(times / 10) + sin(times * 1.7) * 0.5
 
 model <- OnlineLowess(
     fraction = 0.3,
+    iterations = 1,
     window_capacity = 25,
     min_points = 5,
     update_mode = "incremental"
 )
+count <- 0
 for (i in seq_along(times)) {
     result <- add_point(model, times[i], temperatures[i])
-    if (!is.null(result))
-        cat(sprintf("Time %d: %.2f\n", times[i], result$y))
-    if (i >= 10) break  # print only the first few outputs
+    if (!is.null(result)) {
+        if (count < 5) cat(sprintf("Time %d: smoothed = %.4f\n", times[i], result$y))
+        count <- count + 1
+    }
 }
-#> Time 5: 22.80
-#> Time 6: 22.72
-#> Time 7: 24.73
-#> Time 8: 23.49
-#> Time 9: 25.94
-#> Time 10: 24.14
+#> Time 4: smoothed = 22.1941
+#> Time 5: smoothed = 22.7964
+#> Time 6: smoothed = 22.4733
+#> Time 7: smoothed = 22.9120
+#> Time 8: smoothed = 24.0164
+cat(sprintf("... (%d more)\n", count - 5))
+#> ... (91 more)
 ```
 
 ------------------------------------------------------------------------
@@ -152,33 +155,32 @@ Streaming adapter is more efficient than Online:
 library(rfastlowess)
 
 model <- StreamingLowess(
-    fraction       = 0.3,
+    fraction       = 0.1,
     iterations     = 2,
-    chunk_size     = 5000,
-    overlap        = 500,
+    chunk_size     = 50,
+    overlap        = 10,
     merge_strategy = "weighted_average"
 )
 
-set.seed(42)
-n_total <- 20000
-x_all <- seq_len(n_total)
-y_all <- sin(x_all / 500) + rnorm(n_total, sd = 0.5)
+chunk1_x <- 0:49
+chunk1_y <- sin(chunk1_x) + 0.1
+chunk2_x <- 50:99
+chunk2_y <- sin(chunk2_x) + 0.1
 
-chunk_size <- 5000
-n_chunks <- ceiling(n_total / chunk_size)
-
-for (i in seq_len(n_chunks)) {
-    idx_from <- (i - 1) * chunk_size + 1
-    idx_to   <- min(i * chunk_size, n_total)
-    result   <- process_chunk(model, x_all[idx_from:idx_to],
-                                    y_all[idx_from:idx_to])
-}
+process_chunk(model, chunk1_x, chunk1_y)
+#> <LowessResult>
+#>   Points:            40 
+#>   Fraction Used:     0.1 
+#>   Iterations Used:   0
+process_chunk(model, chunk2_x, chunk2_y)
+#> <LowessResult>
+#>   Points:            50 
+#>   Fraction Used:     0.1 
+#>   Iterations Used:   0
 
 final <- finalize(model)
-cat("First 6 smoothed values (streaming, weighted_average merge):\n")
-#> First 6 smoothed values (streaming, weighted_average merge):
-print(head(final$y))
-#> [1] 0.8387164 0.8396539 0.8405907 0.8415269 0.8424623 0.8433970
+cat(sprintf("y[0]: %.6f\n", final$y[1]))
+#> y[0]: 0.516484
 ```
 
 ``` r
@@ -205,7 +207,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] rfastlowess_3.1.0
+#> [1] rfastlowess_3.2.0
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    

@@ -19,11 +19,10 @@ down-weight noise spikes.
 
 library(rfastlowess)
 
-set.seed(42)
-t <- seq(0, 100, length.out = 500)
-trend <- 10 + 0.5 * t + 3 * sin(t / 10)
-noise <- rnorm(500, sd = 3)
-y <- trend + noise
+n <- 500
+t <- seq(0, 100, length.out = n)
+i <- 0:(n - 1)
+y <- 10 + 0.5 * t + 3 * sin(t / 10) + ((i * 7 + 3) %% 1.7 - 0.85) * 3
 
 model <- Lowess(fraction = 0.1, iterations = 3)
 result <- fit(model, t, y)
@@ -36,6 +35,12 @@ legend("topleft", c("Observed", "Trend (LOWESS)"),
 ```
 
 ![](use-case-time-series_files/figure-html/use_case_time_series_1-1.png)
+
+``` r
+
+cat(sprintf("y[0]: %.4f\n", result$y[1]))
+#> y[0]: 11.3216
+```
 
 ------------------------------------------------------------------------
 
@@ -91,11 +96,9 @@ needed.
 ``` r
 
 library(rfastlowess)
-set.seed(42)
 
-# Irregular sampling: dense early, sparse later
-t_irregular <- c(sort(runif(200, 0, 50)), sort(runif(50, 50, 100)))
-y_irregular <- sin(t_irregular / 10) + rnorm(length(t_irregular), sd = 0.5)
+t_irregular <- sapply(0:99, function(i) i * 1.0 + (i * 31 %% 10) * 0.1)
+y_irregular <- 10 + 0.3 * t_irregular + 2.0 * sin(t_irregular * 0.1)
 
 model <- Lowess(fraction = 0.2, iterations = 2)
 result <- fit(model, t_irregular, y_irregular)
@@ -106,6 +109,12 @@ lines(result$x, result$y, col = "blue", lwd = 2)
 ```
 
 ![](use-case-time-series_files/figure-html/use_case_time_series_3-1.png)
+
+``` r
+
+cat(sprintf("y[0]: %.4f\n", result$y[1]))
+#> y[0]: 11.3662
+```
 
 ------------------------------------------------------------------------
 
@@ -119,9 +128,10 @@ stable interval width.
 ``` r
 
 library(rfastlowess)
-set.seed(42)
-t <- seq(0, 100, length.out = 500)
-y <- 10 + 0.3 * t + sin(t / 5) + rnorm(500, sd = 2)
+
+n <- 100
+t <- seq(0, 2 * pi, length.out = n)
+y <- sin(t) + 0.1
 
 model <- Lowess(
     fraction = 0.2,
@@ -150,6 +160,12 @@ legend("topleft", c("PI 95%", "CI 95%", "Trend"),
 
 ``` r
 
+cat(sprintf("95%% PI: [%.4f, %.4f]\n", result$prediction_lower[1], result$prediction_upper[1]))
+#> 95% PI: [0.1580, 0.2909]
+```
+
+``` r
+
 sessionInfo()
 #> R version 4.6.1 (2026-06-24)
 #> Platform: x86_64-pc-linux-gnu
@@ -172,7 +188,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] rfastlowess_3.1.0
+#> [1] rfastlowess_3.2.0
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    

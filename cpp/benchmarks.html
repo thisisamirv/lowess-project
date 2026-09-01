@@ -147,63 +147,8 @@ $(document).ready(function(){initNavTree('benchmarks.html',''); initResizable();
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone">n = 1M, fraction = 0.5   </td><td class="markdownTableBodyNone">1.24 s   </td><td class="markdownTableBodyNone">187 ms   </td><td class="markdownTableBodyNone"><b>6.6×</b>   </td></tr>
 </table>
-<p>At <code>fraction = 0.5</code>, GPU overtakes CPU around n ≥ 50K; at smaller fractions, around n ≥ 100K–250K. See the benchmarks README in the source repository for the full sweep and transfer-overhead breakdown.</p>
-<hr  />
-<h2>Reproducing Benchmarks</h2>
-<p>Use <code>std::chrono</code> to time serial vs parallel runs:</p>
-<div class="fragment"><div class="line"><span class="preprocessor">#include &lt;<a class="code" href="fastlowess_8hpp.html">fastlowess.hpp</a>&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;chrono&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;numeric&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;vector&gt;</span></div>
-<div class="line"> </div>
-<div class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> Fn&gt;</div>
-<div class="line"><span class="keyword">static</span> <span class="keywordtype">double</span> bench_ms(Fn fn, <span class="keywordtype">int</span> reps = 10) {</div>
-<div class="line">    <span class="comment">// Warm-up</span></div>
-<div class="line">    fn();</div>
-<div class="line">    <span class="keyword">auto</span> t0 = std::chrono::high_resolution_clock::now();</div>
-<div class="line">    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; reps; ++i) fn();</div>
-<div class="line">    <span class="keyword">auto</span> t1 = std::chrono::high_resolution_clock::now();</div>
-<div class="line">    <span class="keywordflow">return</span> std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count() / reps;</div>
-<div class="line">}</div>
-<div class="line"> </div>
-<div class="line"><span class="keywordtype">int</span> main() {</div>
-<div class="line">    <span class="keyword">const</span> <span class="keywordtype">int</span> n = 5000;</div>
-<div class="line">    std::vector&lt;double&gt; x(n), y(n);</div>
-<div class="line">    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; n; ++i) {</div>
-<div class="line">        x[i] = <span class="keyword">static_cast&lt;</span><span class="keywordtype">double</span><span class="keyword">&gt;</span>(i) / (n - 1) * 10.0;</div>
-<div class="line">        y[i] = std::sin(x[i]) + ((i * 7 + 3) % 17 / 17.0 - 0.5) * 0.6;</div>
-<div class="line">    }</div>
-<div class="line"> </div>
-<div class="line">    <a class="code hl_struct" href="structfastlowess_1_1LowessOptions.html">fastlowess::LowessOptions</a> opts;</div>
-<div class="line">    opts.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#ac4c7e581cd561fc11a928f9901bb5ec6">fraction</a> = 0.67;</div>
-<div class="line"> </div>
-<div class="line">    <span class="keyword">auto</span> serial_ms = bench_ms([&amp;] {</div>
-<div class="line">        opts.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#a689dba738384297e91479aa158dc2e45">parallel</a> = <span class="keyword">false</span>;</div>
-<div class="line">        <a class="code hl_class" href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a>(opts).<a class="code hl_function" href="classfastlowess_1_1Lowess.html#a504a722970109b32ab8318352d224a2e">fit</a>(x, y);</div>
-<div class="line">    });</div>
-<div class="line"> </div>
-<div class="line">    <span class="keyword">auto</span> parallel_ms = bench_ms([&amp;] {</div>
-<div class="line">        opts.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#a689dba738384297e91479aa158dc2e45">parallel</a> = <span class="keyword">true</span>;</div>
-<div class="line">        <a class="code hl_class" href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a>(opts).<a class="code hl_function" href="classfastlowess_1_1Lowess.html#a504a722970109b32ab8318352d224a2e">fit</a>(x, y);</div>
-<div class="line">    });</div>
-<div class="line"> </div>
-<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;Serial:   &quot;</span> &lt;&lt; serial_ms   &lt;&lt; <span class="stringliteral">&quot; ms\n&quot;</span>;</div>
-<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;Parallel: &quot;</span> &lt;&lt; parallel_ms &lt;&lt; <span class="stringliteral">&quot; ms\n&quot;</span>;</div>
-<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;Speedup:  &quot;</span> &lt;&lt; serial_ms / parallel_ms &lt;&lt; <span class="stringliteral">&quot;×\n&quot;</span>;</div>
-<div class="line">    <span class="keywordflow">return</span> 0;</div>
-<div class="line">}</div>
-<div class="ttc" id="aclassfastlowess_1_1Lowess_html"><div class="ttname"><a href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a></div><div class="ttdoc">Batch LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:424</div></div>
-<div class="ttc" id="aclassfastlowess_1_1Lowess_html_a504a722970109b32ab8318352d224a2e"><div class="ttname"><a href="classfastlowess_1_1Lowess.html#a504a722970109b32ab8318352d224a2e">fastlowess::Lowess::fit</a></div><div class="ttdeci">Expected&lt; LowessResult &gt; fit(const std::vector&lt; double &gt; &amp;x_values, const std::vector&lt; double &gt; &amp;y_values, const std::vector&lt; double &gt; &amp;custom_weights={})</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:468</div></div>
-<div class="ttc" id="afastlowess_8hpp_html"><div class="ttname"><a href="fastlowess_8hpp.html">fastlowess.hpp</a></div><div class="ttdoc">C++ wrapper for fastLowess library.</div></div>
-<div class="ttc" id="astructfastlowess_1_1LowessOptions_html"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html">fastlowess::LowessOptions</a></div><div class="ttdoc">Options for configuring LOWESS smoothing.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:115</div></div>
-<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_a689dba738384297e91479aa158dc2e45"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#a689dba738384297e91479aa158dc2e45">fastlowess::LowessOptions::parallel</a></div><div class="ttdeci">bool parallel</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:134</div></div>
-<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_ac4c7e581cd561fc11a928f9901bb5ec6"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#ac4c7e581cd561fc11a928f9901bb5ec6">fastlowess::LowessOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdoc">Smoothing fraction (0, 1].</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:116</div></div>
-</div><!-- fragment --><div class="fragment"><div class="line">Serial:   6.45143 ms</div>
-<div class="line">Parallel: 4.48294 ms</div>
-<div class="line">Speedup:  1.43911Ã—</div>
-</div><!-- fragment --> </div></div><!-- contents -->
+<p>At <code>fraction = 0.5</code>, GPU overtakes CPU around n ≥ 50K; at smaller fractions, around n ≥ 100K–250K. See the benchmarks README in the source repository for the full sweep and transfer-overhead breakdown. </p>
+</div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->
 <!-- start footer part -->

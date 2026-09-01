@@ -115,11 +115,11 @@ $(document).ready(function(){initNavTree('use_case_time_series.html',''); initRe
 <div class="line"><span class="preprocessor">#include &lt;vector&gt;</span></div>
 <div class="line"> </div>
 <div class="line"><span class="keywordtype">int</span> main() {</div>
-<div class="line">    <span class="keyword">const</span> <span class="keywordtype">int</span> n = 100;</div>
+<div class="line">    <span class="keyword">const</span> <span class="keywordtype">int</span> n = 500;</div>
 <div class="line">    std::vector&lt;double&gt; t(n), y(n);</div>
 <div class="line">    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; n; ++i) {</div>
-<div class="line">        t[i] = i * 2.0 * M_PI / (n - 1);</div>
-<div class="line">        y[i] = std::sin(t[i]) + 0.1;</div>
+<div class="line">        t[i] = i * 100.0 / (n - 1);</div>
+<div class="line">        y[i] = 10.0 + 0.5 * t[i] + 3.0 * std::sin(t[i] / 10.0) + (std::fmod(i * 7 + 3, 1.7) - 0.85) * 3.0;</div>
 <div class="line">    }</div>
 <div class="line"> </div>
 <div class="line">    <a class="code hl_struct" href="structfastlowess_1_1LowessOptions.html">fastlowess::LowessOptions</a> trend_opts;</div>
@@ -131,12 +131,12 @@ $(document).ready(function(){initNavTree('use_case_time_series.html',''); initRe
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; basic_result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-<div class="ttc" id="aclassfastlowess_1_1Lowess_html"><div class="ttname"><a href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a></div><div class="ttdoc">Batch LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:424</div></div>
+<div class="ttc" id="aclassfastlowess_1_1Lowess_html"><div class="ttname"><a href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a></div><div class="ttdoc">Batch LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:425</div></div>
 <div class="ttc" id="afastlowess_8hpp_html"><div class="ttname"><a href="fastlowess_8hpp.html">fastlowess.hpp</a></div><div class="ttdoc">C++ wrapper for fastLowess library.</div></div>
-<div class="ttc" id="astructfastlowess_1_1LowessOptions_html"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html">fastlowess::LowessOptions</a></div><div class="ttdoc">Options for configuring LOWESS smoothing.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:115</div></div>
-<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_a3a9b03636d3cb266eb345e3f405ba66b"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#a3a9b03636d3cb266eb345e3f405ba66b">fastlowess::LowessOptions::iterations</a></div><div class="ttdeci">int iterations</div><div class="ttdoc">Robustness iterations.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:117</div></div>
-<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_ac4c7e581cd561fc11a928f9901bb5ec6"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#ac4c7e581cd561fc11a928f9901bb5ec6">fastlowess::LowessOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdoc">Smoothing fraction (0, 1].</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:116</div></div>
-</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.188448</div>
+<div class="ttc" id="astructfastlowess_1_1LowessOptions_html"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html">fastlowess::LowessOptions</a></div><div class="ttdoc">Options for configuring LOWESS smoothing.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:116</div></div>
+<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_a3a9b03636d3cb266eb345e3f405ba66b"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#a3a9b03636d3cb266eb345e3f405ba66b">fastlowess::LowessOptions::iterations</a></div><div class="ttdeci">int iterations</div><div class="ttdoc">Robustness iterations.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:118</div></div>
+<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_ac4c7e581cd561fc11a928f9901bb5ec6"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#ac4c7e581cd561fc11a928f9901bb5ec6">fastlowess::LowessOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdoc">Smoothing fraction (0, 1].</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:117</div></div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 11.3216</div>
 </div><!-- fragment --><hr  />
 <h2>Detrending</h2>
 <p>Remove trend to analyze residual patterns.</p>
@@ -167,8 +167,8 @@ $(document).ready(function(){initNavTree('use_case_time_series.html',''); initRe
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;residuals[0]: &quot;</span> &lt;&lt; result.residuals()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-<div class="ttc" id="aclassfastlowess_1_1Expected_html_aeb88e40ff81b811771e6e2013fad7a6c"><div class="ttname"><a href="classfastlowess_1_1Expected.html#aeb88e40ff81b811771e6e2013fad7a6c">fastlowess::Expected::value</a></div><div class="ttdeci">T &amp; value() &amp;</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:71</div></div>
-<div class="ttc" id="aclassfastlowess_1_1Lowess_html_a504a722970109b32ab8318352d224a2e"><div class="ttname"><a href="classfastlowess_1_1Lowess.html#a504a722970109b32ab8318352d224a2e">fastlowess::Lowess::fit</a></div><div class="ttdeci">Expected&lt; LowessResult &gt; fit(const std::vector&lt; double &gt; &amp;x_values, const std::vector&lt; double &gt; &amp;y_values, const std::vector&lt; double &gt; &amp;custom_weights={})</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:468</div></div>
+<div class="ttc" id="aclassfastlowess_1_1Expected_html_aeb88e40ff81b811771e6e2013fad7a6c"><div class="ttname"><a href="classfastlowess_1_1Expected.html#aeb88e40ff81b811771e6e2013fad7a6c">fastlowess::Expected::value</a></div><div class="ttdeci">T &amp; value() &amp;</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:72</div></div>
+<div class="ttc" id="aclassfastlowess_1_1Lowess_html_a504a722970109b32ab8318352d224a2e"><div class="ttname"><a href="classfastlowess_1_1Lowess.html#a504a722970109b32ab8318352d224a2e">fastlowess::Lowess::fit</a></div><div class="ttdeci">Expected&lt; LowessResult &gt; fit(const std::vector&lt; double &gt; &amp;x_values, const std::vector&lt; double &gt; &amp;y_values, const std::vector&lt; double &gt; &amp;custom_weights={})</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:469</div></div>
 </div><!-- fragment --><div class="fragment"><div class="line">residuals[0]: -0.158244</div>
 </div><!-- fragment --><hr  />
 <h2>Forecasting with Prediction Intervals</h2>
@@ -194,12 +194,10 @@ $(document).ready(function(){initNavTree('use_case_time_series.html',''); initRe
 <div class="line">    });</div>
 <div class="line">    <span class="keyword">auto</span> result = forecast_model.fit(t, y).<a class="code hl_function" href="classfastlowess_1_1Expected.html#aeb88e40ff81b811771e6e2013fad7a6c">value</a>();</div>
 <div class="line"> </div>
-<div class="line">    <span class="comment">// Access result.prediction_lower() and result.prediction_upper()</span></div>
-<div class="line"> </div>
-<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;95% CI: [&quot;</span> &lt;&lt; result.confidence_lower()[0] &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; result.confidence_upper()[0] &lt;&lt; <span class="stringliteral">&quot;]\n&quot;</span>;</div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;95% PI: [&quot;</span> &lt;&lt; result.prediction_lower()[0] &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; result.prediction_upper()[0] &lt;&lt; <span class="stringliteral">&quot;]\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-</div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.214336, 0.234557]</div>
+</div><!-- fragment --><div class="fragment"><div class="line">95% PI: [0.158010, 0.290883]</div>
 </div><!-- fragment --><hr  />
 <h2>Handling Missing Data</h2>
 <p>LOWESS naturally handles irregular time sampling:</p>
@@ -264,7 +262,7 @@ $(document).ready(function(){initNavTree('use_case_time_series.html',''); initRe
 <div class="line">    std::vector&lt;double&gt; hours(n), expression(n);</div>
 <div class="line">    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; n; ++i) {</div>
 <div class="line">        hours[i] = i * 0.5;</div>
-<div class="line">        expression[i] = 100.0 * (1.0 + 0.5 * std::sin(hours[i] * M_PI / 12.0));</div>
+<div class="line">        expression[i] = 100.0 * (1.0 + 0.5 * std::sin(hours[i] * M_PI / 12.0)) + (std::fmod(i * 7 + 3, 1.7) - 0.85) * 10.0;</div>
 <div class="line">    }</div>
 <div class="line"> </div>
 <div class="line">    <a class="code hl_class" href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a> gene_model({</div>
@@ -274,11 +272,11 @@ $(document).ready(function(){initNavTree('use_case_time_series.html',''); initRe
 <div class="line">    });</div>
 <div class="line">    <span class="keyword">auto</span> result = gene_model.fit(hours, expression).<a class="code hl_function" href="classfastlowess_1_1Expected.html#aeb88e40ff81b811771e6e2013fad7a6c">value</a>();</div>
 <div class="line"> </div>
-<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;R²: &quot;</span> &lt;&lt; result.diagnostics().r_squared() &lt;&lt; std::endl;</div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;R2: &quot;</span> &lt;&lt; result.diagnostics().r_squared() &lt;&lt; std::endl;</div>
 <div class="line"> </div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-</div><!-- fragment --><div class="fragment"><div class="line">RÂ²: 0.993834</div>
+</div><!-- fragment --><div class="fragment"><div class="line">R2: 0.973054</div>
 </div><!-- fragment --><hr  />
 <h2>Choosing Fraction for Time Series</h2>
 <table class="markdownTable">
@@ -309,7 +307,7 @@ $(document).ready(function(){initNavTree('use_case_time_series.html',''); initRe
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="use_cases.html">Use Cases</a></li>
+    <li class="navelem"><a class="el" href="use_case.html">Use Cases</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
   </ul>
 </div>
