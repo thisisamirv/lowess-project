@@ -130,6 +130,7 @@ jobs:
       - uses: actions/setup-go@v7
         with:
           go-version: "1.26"
+          cache-dependency-path: bindings/go/docs-site/go.sum
 
       - name: Install Hugo
         run: go install github.com/gohugoio/hugo@v0.165.0

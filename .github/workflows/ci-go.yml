@@ -31,6 +31,9 @@ jobs:
       - uses: actions/setup-go@v7
         with:
           go-version: ${{ matrix.go-version }}
+          cache-dependency-path: |
+            bindings/go/fastlowess/go.mod
+            bindings/go/tests/go.mod
 
       - name: Install Rust GNU + GNU Make (Windows)
         if: matrix.os == 'windows-latest'
