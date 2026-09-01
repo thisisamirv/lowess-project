@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 type: software
 title: "LOWESS Project"
-abstract: "The fastest, most robust, and most feature-complete language-agnostic LOWESS (Locally Weighted Scatterplot Smoothing) implementation for Rust, Python, R, Julia, JavaScript, C++, and WebAssembly."
+abstract: "The fastest, most robust, and most feature-complete language-agnostic LOWESS (Locally Weighted Scatterplot Smoothing) implementation for Rust, Python, R, Julia, JavaScript, C++, Go, Java, and WebAssembly."
 authors:
   - family-names: "Valizadeh"
     given-names: "Amir"
@@ -23,6 +23,8 @@ keywords:
   - nodejs
   - wasm
   - cpp
+  - go
+  - java
 date-released: "2026-01-01"
 version: "3.1.0"
 references:

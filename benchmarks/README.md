@@ -13,6 +13,29 @@ Compares `stats::lowess` (base R) against `rfastlowess` (this package) across a 
 | **Scientific** | n = 500 / 1 000 / 5 000 | Damped-oscillator signal, fraction 0.15 |
 | **Genomic** | n = 1 000 / 5 000 / 100 000 | Step-function expression data, fraction 0.1 |
 | **Pathological** | clustered, high-noise | Edge cases: clustered x-values and high-noise signal |
+| **Large Scale** | n = 20 000 / 50 000 | Stress tests at scale: exact fit (`delta = 0`), interpolation shortcut, high iteration count, high fraction |
+
+## Large Scale Benchmarks
+
+Every other scenario above completes in well under 100ms, which doesn't stress-test performance differences at scale. The `large` category forces `delta = 0` (disabling `stats::lowess`'s interpolation shortcut, which skips recomputation between nearby points) for an exact, apples-to-apples comparison, across four variants:
+
+| Variant | Size | Description |
+| --- | --- | --- |
+| `large_delta_0` | 50 000 | Exact fit baseline: fraction 0.1, 3 iterations, `delta = 0` |
+| `large_delta_0.1` | 50 000 | Same workload with `delta` left at its default (auto ≈ 0.1), showing the interpolation shortcut's speedup |
+| `large_high_iter` | 50 000 | 10 robustness iterations instead of 3 (still `delta = 0`) |
+| `large_high_fraction` | 20 000 | Fraction 0.67 (wider local window) at a smaller size, since 0.67 × 50 000 is too slow to run repeatedly |
+
+Median times, and fastLowess's speedup over `stats::lowess`:
+
+| Variant | `stats::lowess` | fastLowess (serial) | fastLowess (parallel) | Speedup (serial) | Speedup (parallel) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `large_delta_0` | 5.12 s | 3.13 s | 1.06 s | 1.6× | 4.8× |
+| `large_delta_0.1` | 13.8 ms | 8.8 ms | 6.1 ms | 1.6× | 2.3× |
+| `large_high_iter` | 37.7 s | 9.1 s | 3.3 s | 4.1× | 11.6× |
+| `large_high_fraction` | 16.2 s | 3.5 s | 0.7 s | 4.6× | 22.3× |
+
+The speedup grows with the amount of per-point work (more iterations, wider fraction): parallel execution pays off most when there's more to parallelize, reaching **22×** at `large_high_fraction`. The `large_delta_0.1` variant shows how much of `stats::lowess`'s exact-fit cost simply disappears once its interpolation shortcut is allowed to kick in (5.12s → 13.8ms) — fastLowess's own shortcut yields a similar drop (3.13s → 8.8ms serial).
 
 ## GPU Benchmarks
 
