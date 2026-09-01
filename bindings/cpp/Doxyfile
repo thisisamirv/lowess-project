@@ -17,7 +17,7 @@ TOC_INCLUDE_HEADINGS   = 0
 INPUT                  = README.md include docs
 FILE_PATTERNS          = *.hpp *.h *.md
 IMAGE_PATH             = assets/diagrams
-RECURSIVE              = NO
+RECURSIVE              = YES
 USE_MDFILE_AS_MAINPAGE = README.md
 
 # ---------------------------------------------------------------------------

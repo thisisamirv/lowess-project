@@ -128,7 +128,10 @@ Dual-licensed under [MIT](https://opensource.org/licenses/MIT) or [Apache-2.0](h
 :caption: Documentation
 
 getting-started/index
-user-guide/index
+guide/index
+weighting/index
+advanced/index
+use-case/index
 api/index
 benchmarks
 :::

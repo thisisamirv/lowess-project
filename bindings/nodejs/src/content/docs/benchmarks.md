@@ -39,4 +39,4 @@ The crossover depends on `fraction × n`:
 | n = 1M, fraction = 0.5 | 1.24 s | 187 ms | **6.6×** |
 
 At `fraction = 0.5`, GPU overtakes CPU around n ≥ 50K; at smaller fractions,
-around n ≥ 100K–250K. See the [GPU Backend](gpu-backend.md) guide for setup.
+around n ≥ 100K–250K. See the [GPU Backend](advanced/gpu-backend.md) guide for setup.

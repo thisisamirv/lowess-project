@@ -17,30 +17,30 @@
 //! The [`doc`] module contains the full user guide, browsable on [docs.rs](https://docs.rs/fastLowess):
 //!
 //! - **Getting Started**
-//!   - [Concepts](doc::concepts)
-//!   - [Installation](doc::installation)
-//!   - [Quick Start](doc::quickstart)
+//!   - [Concepts](doc::introduction::concepts)
+//!   - [Installation](doc::introduction::installation)
+//!   - [Quick Start](doc::introduction::quickstart)
 //! - **API Reference**
 //!   - [Batch API](doc::api)
 //!   - [Streaming API](doc::api::streaming)
 //!   - [Online API](doc::api::online)
 //! - **Adapters**
-//!   - [Choosing an Adapter](doc::adapter_choice)
-#![cfg_attr(feature = "gpu", doc = "  - [GPU Backend](doc::gpu_backend)")]
+//!   - [Choosing an Adapter](doc::guide::adapter_choice)
+#![cfg_attr(feature = "gpu", doc = "  - [GPU Backend](doc::advanced::gpu_backend)")]
 //! - **Analysis**
-//!   - [Intervals](doc::intervals)
-//!   - [Cross-Validation](doc::cross_validation)
+//!   - [Intervals](doc::guide::intervals)
+//!   - [Cross-Validation](doc::guide::cross_validation)
 //! - **Customization**
-//!   - [Kernels](doc::kernels)
-//!   - [Robustness](doc::robustness)
-//!   - [Scaling](doc::scaling)
-//!   - [Custom Weights](doc::custom_weights)
-//!   - [Boundary](doc::boundary)
-//!   - [Merge Strategies](doc::merge)
+//!   - [Kernels](doc::weighting::kernels)
+//!   - [Robustness](doc::weighting::robustness)
+//!   - [Scaling](doc::weighting::scaling)
+//!   - [Custom Weights](doc::weighting::custom_weights)
+//!   - [Boundary](doc::advanced::boundary)
+//!   - [Merge Strategies](doc::advanced::merge)
 //! - **Use Cases**
-//!   - [Genomics](doc::use_cases::genomics)
-//!   - [Time Series](doc::use_cases::time_series)
-//!   - [Real-Time](doc::use_cases::real_time)
+//!   - [Genomics](doc::use_case::genomics)
+//!   - [Time Series](doc::use_case::time_series)
+//!   - [Real-Time](doc::use_case::real_time)
 //! - **News**
 //!   - [Release Notes](doc::news)
 //!

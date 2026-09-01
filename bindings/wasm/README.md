@@ -20,7 +20,7 @@ The `lowess-project` also offers bindings for Rust, Python, R, Julia, Node.js, W
 
 ## Installation & Documentation
 
-> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the [Installation Guide](https://thisisamirv.github.io/lowess-project/wasm/installation/) for detailed installation instructions.
+> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the [Installation Guide](https://thisisamirv.github.io/lowess-project/wasm/introduction/installation/) for detailed installation instructions.
 >
 > ### 📚 [View the full documentation](https://thisisamirv.github.io/lowess-project/wasm/)
 
@@ -35,7 +35,7 @@ The `lowess-project` also offers bindings for Rust, Python, R, Julia, Node.js, W
 | **Flexibility** | High (Distance metrics) | Standard |
 | **Complexity** | Higher (Matrix inversion) | Lower (Weighted average/slope) |
 
-Read more about how LOWESS works in the [Concepts](https://thisisamirv.github.io/lowess-project/wasm/concepts/).
+Read more about how LOWESS works in the [Concepts](https://thisisamirv.github.io/lowess-project/wasm/introduction/concepts/).
 
 > **Note:** For a **LOESS** implementation, use [`loess-project`](https://github.com/thisisamirv/loess-project).
 

@@ -8,37 +8,37 @@ const INDEX_PATH = joinpath(@__DIR__, "src", "index.md")
 # render the raw `<p align="center">` badge/logo HTML blocks at the top of the
 # shared README — convert them to plain Markdown before using it as the homepage.
 function html_center_block_to_markdown(block::AbstractString)
-    lines = String[]
-    for raw_line ∈ eachsplit(strip(block), '\n')
-        line = strip(raw_line)
-        if (
-            m = match(
-                r"^<a href=\"([^\"]+)\"><img src=\"([^\"]+)\" alt=\"([^\"]+)\"></a>$",
-                line,
-            )
-        ) !== nothing
-            push!(lines, "[![$(m[3])]($(m[2]))]($(m[1]))")
-        elseif (
-            m = match(
-                r"^<img src=\"([^\"]+)\" alt=\"([^\"]+)\"(?: width=\"[^\"]+\")?>$",
-                line,
-            )
-        ) !== nothing
-            push!(lines, "![$(m[2])]($(m[1]))")
-        elseif (m = match(r"^<em>(.+)</em>$", line)) !== nothing
-            push!(lines, "*$(m[1])*")
-        elseif line == "<br>" || isempty(line)
-            continue
-        else
-            push!(lines, line)
-        end
-    end
-    return join(lines, "\n\n")
+	lines = String[]
+	for raw_line ∈ eachsplit(strip(block), '\n')
+		line = strip(raw_line)
+		if (
+			m = match(
+				r"^<a href=\"([^\"]+)\"><img src=\"([^\"]+)\" alt=\"([^\"]+)\"></a>$",
+				line,
+			)
+		) !== nothing
+			push!(lines, "[![$(m[3])]($(m[2]))]($(m[1]))")
+		elseif (
+			m = match(
+				r"^<img src=\"([^\"]+)\" alt=\"([^\"]+)\"(?: width=\"[^\"]+\")?>$",
+				line,
+			)
+		) !== nothing
+			push!(lines, "![$(m[2])]($(m[1]))")
+		elseif (m = match(r"^<em>(.+)</em>$", line)) !== nothing
+			push!(lines, "*$(m[1])*")
+		elseif line == "<br>" || isempty(line)
+			continue
+		else
+			push!(lines, line)
+		end
+	end
+	return join(lines, "\n\n")
 end
 
 function convert_center_block(matched::AbstractString)
-    inner = match(r"<p align=\"center\">\n(.*)\n</p>"s, matched).captures[1]
-    return html_center_block_to_markdown(inner)
+	inner = match(r"<p align=\"center\">\n(.*)\n</p>"s, matched).captures[1]
+	return html_center_block_to_markdown(inner)
 end
 
 readme = read(README_PATH, String)
@@ -60,53 +60,66 @@ write(INDEX_PATH, readme)
 const SRC_DIR = joinpath(@__DIR__, "src")
 const LEADING_COMMENT_RE = r"\A<!--.*?-->\n?"s
 
-original_contents = Dict{String,String}()
-for path ∈ filter(p -> endswith(p, ".md"), readdir(SRC_DIR; join = true))
-    content = read(path, String)
-    if occursin(LEADING_COMMENT_RE, content)
-        original_contents[path] = content
-        write(path, replace(content, LEADING_COMMENT_RE => ""))
-    end
+original_contents = Dict{String, String}()
+md_paths = String[]
+for (root, _, files) ∈ walkdir(SRC_DIR)
+	for file ∈ files
+		endswith(file, ".md") && push!(md_paths, joinpath(root, file))
+	end
+end
+for path ∈ md_paths
+	content = read(path, String)
+	if occursin(LEADING_COMMENT_RE, content)
+		original_contents[path] = content
+		write(path, replace(content, LEADING_COMMENT_RE => ""))
+	end
 end
 
 try
-    makedocs(
-        sitename = "FastLOWESS.jl",
-        modules = [FastLOWESS],
-        format = Documenter.HTML(
-            prettyurls = get(ENV, "CI", "false") == "true",
-            canonical = "https://thisisamirv.github.io/lowess-project/julia/stable/",
-            repolink = "https://github.com/thisisamirv/lowess-project",
-        ),
-        pages = [
-            "Home" => "index.md",
-            "Introduction" => ["installation.md", "quickstart.md", "concepts.md"],
-            "User Guide" => [
-                "adapter-choice.md",
-                "batch.md",
-                "api-streaming.md",
-                "api-online.md",
-                "intervals.md",
-                "cross-validation.md",
-            ],
-            "Weight & Robustness" =>
-                ["kernels.md", "robustness.md", "scaling.md", "custom-weights.md"],
-            "Advanced" => ["boundary.md", "merge.md", "gpu-backend.md"],
-            "Use Cases" => [
-                "use-case-genomics.md",
-                "use-case-time-series.md",
-                "use-case-real-time.md",
-            ],
-            "Performance" => ["benchmarks.md"],
-            "API Reference" => "api.md",
-            "News" => "NEWS.md",
-        ],
-        authors = "Amir Valizadeh",
-        warnonly = true,
-        checkdocs = :none,
-    )
+	makedocs(
+		sitename = "FastLOWESS.jl",
+		modules = [FastLOWESS],
+		format = Documenter.HTML(
+			prettyurls = get(ENV, "CI", "false") == "true",
+			canonical = "https://thisisamirv.github.io/lowess-project/julia/stable/",
+			repolink = "https://github.com/thisisamirv/lowess-project",
+		),
+		pages = [
+			"Home" => "index.md",
+			"Introduction" => [
+				"introduction/installation.md",
+				"introduction/quickstart.md",
+				"introduction/concepts.md",
+			],
+			"User Guide" => [
+				"guide/adapter-choice.md",
+				"guide/intervals.md",
+				"guide/cross-validation.md",
+			],
+			"Weight & Robustness" => [
+				"weighting/kernels.md",
+				"weighting/robustness.md",
+				"weighting/scaling.md",
+				"weighting/custom-weights.md",
+			],
+			"Advanced" =>
+				["advanced/boundary.md", "advanced/merge.md", "advanced/gpu-backend.md"],
+			"Use Cases" => [
+				"use-case/use-case-genomics.md",
+				"use-case/use-case-time-series.md",
+				"use-case/use-case-real-time.md",
+			],
+			"Performance" => ["benchmarks.md"],
+			"API Guide" => ["api/api.md", "api/api-streaming.md", "api/api-online.md"],
+			"API Reference" => "api.md",
+			"News" => "NEWS.md",
+		],
+		authors = "Amir Valizadeh",
+		warnonly = true,
+		checkdocs = :none,
+	)
 finally
-    for (path, content) ∈ original_contents
-        write(path, content)
-    end
+	for (path, content) ∈ original_contents
+		write(path, content)
+	end
 end

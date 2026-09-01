@@ -423,20 +423,20 @@ def iter_md_files(
         return
     yield from sorted(root.rglob("*.md"))
     if JULIA_DOCS_DIR.exists():
-        yield from sorted(JULIA_DOCS_DIR.glob("*.md"))
+        yield from sorted(JULIA_DOCS_DIR.rglob("*.md"))
     for vdir in VIGNETTES_DIRS:
         yield from sorted(vdir.glob("*.Rmd"))
     for rust_dir in (
         rust_docs_dirs if rust_docs_dirs is not None else RUST_CRATE_DOCS_DIRS
     ):
         if rust_dir.exists():
-            yield from sorted(rust_dir.glob("*.md"))
+            yield from sorted(rust_dir.rglob("*.md"))
     if NODEJS_BINDING_DOCS_DIR.exists():
-        yield from sorted(NODEJS_BINDING_DOCS_DIR.glob("*.md"))
+        yield from sorted(NODEJS_BINDING_DOCS_DIR.rglob("*.md"))
     if WASM_BINDING_DOCS_DIR.exists():
-        yield from sorted(WASM_BINDING_DOCS_DIR.glob("*.md"))
+        yield from sorted(WASM_BINDING_DOCS_DIR.rglob("*.md"))
     if CPP_BINDING_DOCS_DIR.exists():
-        yield from sorted(CPP_BINDING_DOCS_DIR.glob("*.md"))
+        yield from sorted(CPP_BINDING_DOCS_DIR.rglob("*.md"))
     if GO_BINDING_DOCS_DIR.exists():
         yield from sorted(GO_BINDING_DOCS_DIR.rglob("*.md"))
     if JAVA_BINDING_DOCS_DIR.exists():

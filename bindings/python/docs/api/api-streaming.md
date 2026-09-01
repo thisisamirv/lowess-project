@@ -87,7 +87,7 @@ See [api.md](api.md) for the full `LowessResult` field reference.
 
 ### merge_strategy
 
-*See: [Merge Strategies](../user-guide/merge.md)*
+*See: [Merge Strategies](../advanced/merge.md)*
 
 | Strategy | Alias | Behavior |
 | --- | --- | --- |

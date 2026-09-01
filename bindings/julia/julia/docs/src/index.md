@@ -17,13 +17,13 @@ The `lowess-project` also offers bindings for Rust, Python, R, Julia, Node.js, W
 
 ## Installation & Documentation
 
-> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the [Installation Guide](https://thisisamirv.github.io/lowess-project/julia/installation/) for detailed installation instructions.
+> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the [Installation Guide](https://thisisamirv.github.io/lowess-project/julia/introduction/installation/) for detailed installation instructions.
 >
 > ### 📚 [View the full documentation](https://thisisamirv.github.io/lowess-project/julia/)
 
 ### GPU Backend
 
-GPU acceleration (`wgpu`: Vulkan/Metal/DX12) is also supported for high-throughput batch smoothing. See the [GPU Backend guide](https://thisisamirv.github.io/lowess-project/julia/gpu-backend/) for details.
+GPU acceleration (`wgpu`: Vulkan/Metal/DX12) is also supported for high-throughput batch smoothing. See the [GPU Backend guide](https://thisisamirv.github.io/lowess-project/julia/advanced/gpu-backend/) for details.
 
 ---
 
@@ -36,7 +36,7 @@ GPU acceleration (`wgpu`: Vulkan/Metal/DX12) is also supported for high-throughp
 | **Flexibility** | High (Distance metrics) | Standard |
 | **Complexity** | Higher (Matrix inversion) | Lower (Weighted average/slope) |
 
-Read more about how LOWESS works in the [Concepts](https://thisisamirv.github.io/lowess-project/julia/concepts/).
+Read more about how LOWESS works in the [Concepts](https://thisisamirv.github.io/lowess-project/julia/introduction/concepts/).
 
 > **Note:** For a **LOESS** implementation, use [`loess-project`](https://github.com/thisisamirv/loess-project).
 

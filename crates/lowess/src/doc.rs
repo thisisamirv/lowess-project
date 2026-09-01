@@ -3,106 +3,102 @@
 //! Browse the submodules below for conceptual guides and worked examples.
 //! For the API itself, see [`prelude`](crate::prelude).
 
-/// Conceptual introduction: what LOWESS is and how it works.
+/// Getting started: concepts, installation, and a quick tour.
 #[cfg(doc)]
-pub mod concepts {
-    #![doc = include_str!("../docs/concepts.md")]
+pub mod introduction {
+    /// Conceptual introduction: what LOWESS is and how it works.
+    pub mod concepts {
+        #![doc = include_str!("../docs/introduction/concepts.md")]
+    }
+    /// Installation instructions across build configurations.
+    pub mod installation {
+        #![doc = include_str!("../docs/introduction/installation.md")]
+    }
+    /// Get up and running in minutes.
+    pub mod quickstart {
+        #![doc = include_str!("../docs/introduction/quickstart.md")]
+    }
 }
 
-/// Installation instructions across build configurations.
+/// Adapter selection, uncertainty quantification, and parameter tuning.
 #[cfg(doc)]
-pub mod installation {
-    #![doc = include_str!("../docs/installation.md")]
+pub mod guide {
+    /// Choosing between Batch, Streaming, and Online execution modes.
+    pub mod adapter_choice {
+        #![doc = include_str!("../docs/guide/adapter-choice.md")]
+    }
+    /// Confidence and prediction intervals.
+    pub mod intervals {
+        #![doc = include_str!("../docs/guide/intervals.md")]
+    }
+    /// Automated fraction selection via cross-validation.
+    pub mod cross_validation {
+        #![doc = include_str!("../docs/guide/cross-validation.md")]
+    }
 }
 
-/// Get up and running in minutes.
+/// Weight functions, outlier handling, and residual scaling.
 #[cfg(doc)]
-pub mod quickstart {
-    #![doc = include_str!("../docs/quickstart.md")]
+pub mod weighting {
+    /// Distance-weighting kernel functions.
+    pub mod kernels {
+        #![doc = include_str!("../docs/weighting/kernels.md")]
+    }
+    /// Robustness iterations and outlier downweighting.
+    pub mod robustness {
+        #![doc = include_str!("../docs/weighting/robustness.md")]
+    }
+    /// Residual scaling methods (MAD, MAR, Mean).
+    pub mod scaling {
+        #![doc = include_str!("../docs/weighting/scaling.md")]
+    }
+    /// Per-observation custom weights.
+    pub mod custom_weights {
+        #![doc = include_str!("../docs/weighting/custom-weights.md")]
+    }
 }
 
-/// Choosing between Batch, Streaming, and Online execution modes.
+/// Boundary handling and streaming chunk reconciliation.
 #[cfg(doc)]
-pub mod adapter_choice {
-    #![doc = include_str!("../docs/adapter-choice.md")]
-}
-
-/// Confidence and prediction intervals.
-#[cfg(doc)]
-pub mod intervals {
-    #![doc = include_str!("../docs/intervals.md")]
-}
-
-/// Automated fraction selection via cross-validation.
-#[cfg(doc)]
-pub mod cross_validation {
-    #![doc = include_str!("../docs/cross-validation.md")]
-}
-
-/// Distance-weighting kernel functions.
-#[cfg(doc)]
-pub mod kernels {
-    #![doc = include_str!("../docs/kernels.md")]
-}
-
-/// Robustness iterations and outlier downweighting.
-#[cfg(doc)]
-pub mod robustness {
-    #![doc = include_str!("../docs/robustness.md")]
-}
-
-/// Residual scaling methods (MAD, MAR, Mean).
-#[cfg(doc)]
-pub mod scaling {
-    #![doc = include_str!("../docs/scaling.md")]
-}
-
-/// Per-observation custom weights.
-#[cfg(doc)]
-pub mod custom_weights {
-    #![doc = include_str!("../docs/custom-weights.md")]
-}
-
-/// Boundary handling strategies for edge bias reduction.
-#[cfg(doc)]
-pub mod boundary {
-    #![doc = include_str!("../docs/boundary.md")]
-}
-
-/// Merge strategies for Streaming mode overlap regions.
-#[cfg(doc)]
-pub mod merge {
-    #![doc = include_str!("../docs/merge.md")]
+pub mod advanced {
+    /// Boundary handling strategies for edge bias reduction.
+    pub mod boundary {
+        #![doc = include_str!("../docs/advanced/boundary.md")]
+    }
+    /// Merge strategies for Streaming mode overlap regions.
+    pub mod merge {
+        #![doc = include_str!("../docs/advanced/merge.md")]
+    }
 }
 
 /// Application examples: use cases and real-world patterns.
 #[cfg(doc)]
-pub mod use_cases {
+pub mod use_case {
     /// Smoothing genomic data: methylation, ChIP-seq, coverage.
     pub mod genomics {
-        #![doc = include_str!("../docs/use-case-genomics.md")]
+        #![doc = include_str!("../docs/use-case/use-case-genomics.md")]
     }
     /// Time series smoothing and trend extraction.
     pub mod time_series {
-        #![doc = include_str!("../docs/use-case-time-series.md")]
+        #![doc = include_str!("../docs/use-case/use-case-time-series.md")]
     }
     /// Real-time sensor and streaming data processing.
     pub mod real_time {
-        #![doc = include_str!("../docs/use-case-real-time.md")]
+        #![doc = include_str!("../docs/use-case/use-case-real-time.md")]
     }
 }
 
 /// Full Rust API reference: structs, builder methods, and result types.
 #[cfg(doc)]
 pub mod api {
-    #![doc = include_str!("../docs/api.md")]
+    #![doc = include_str!("../docs/api/api.md")]
     /// `StreamingLowess` API reference.
     pub mod streaming {
-        #![doc = include_str!("../docs/api-streaming.md")]
+        #![doc = include_str!("../docs/api/api-streaming.md")]
     }
     /// `OnlineLowess` API reference.
     pub mod online {
-        #![doc = include_str!("../docs/api-online.md")]
+        #![doc = include_str!("../docs/api/api-online.md")]
     }
 }
 

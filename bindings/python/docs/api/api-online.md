@@ -73,7 +73,7 @@ Returned by `add_point()` once the window has enough points (`None` until then).
 
 ### update_mode
 
-*See: [Execution Modes](../user-guide/adapters.md)*
+*See: [Execution Modes](../guide/adapters.md)*
 
 | Mode | Alias | Behavior | Speed |
 | --- | --- | --- | --- |

@@ -120,7 +120,7 @@ print(f"Smoothed {len(result.y)} points in streaming mode")
 | --- | --- |
 | How LOWESS works | [Concepts](concepts.md) |
 | All parameters explained | [API Reference](../api/api.md) |
-| Batch vs Streaming vs Online | [Execution Modes](../user-guide/adapters.md) |
-| Edge handling | [Boundary](../user-guide/boundary.md) |
-| Outlier handling in depth | [Robustness](../user-guide/robustness.md) |
+| Batch vs Streaming vs Online | [Execution Modes](../guide/adapters.md) |
+| Edge handling | [Boundary](../advanced/boundary.md) |
+| Outlier handling in depth | [Robustness](../weighting/robustness.md) |
 | Full API per language | [API Reference](../api/index.md) |
