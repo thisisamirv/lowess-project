@@ -182,6 +182,27 @@
 <article class="doc">
 <h1 class="page">News</h1>
 <div class="sect1">
+<h2 id="fastlowess-java-development-version"><a class="anchor" href="#fastlowess-java-development-version"></a>fastlowess (Java) (development version)</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="fixed"><a class="anchor" href="#fixed"></a>Fixed</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Fixed <code>actions/setup-java@v6</code> warning that <code>server-username</code>, <code>server-password</code>, and <code>gpg-passphrase</code> are deprecated in <code>release-java.yml</code>; migrated to <code>server-username-env-var</code>, <code>server-password-env-var</code>, and <code>gpg-passphrase-env-var</code>.</p>
+</li>
+<li>
+<p>Fixed Surefire warning that <code>fastlowess.native.dir</code> was "configured twice" whenever <code>mvn -Dfastlowess.native.dir=&#8230;&#8203;</code> overrode the <code>pom.xml</code> default: the property was duplicated between the command-line user property and <code>maven-surefire-plugin&#8217;s `&lt;argLine&gt;</code>. Moved it into <code>&lt;systemPropertyVariables&gt;</code> instead, leaving <code>&lt;argLine&gt;</code> with only the <code>--enable-native-access=ALL-UNNAMED</code> JVM flag.</p>
+</li>
+<li>
+<p>Fixed ~100 <code>mvn javadoc:jar</code> warnings (missing <code>@param</code>/<code>@return</code> tags and undocumented public methods/constructors) across <code>Options</code>, <code>StreamingOptions</code>, <code>OnlineOptions</code>, <code>PointResult</code>, <code>Diagnostics</code>, <code>Result</code>, <code>FastLowess</code>, <code>Lowess</code>, <code>OnlineLowess</code>, and <code>StreamingLowess</code>. <code>maven-javadoc-plugin</code> now sets <code>failOnWarning</code>, and <code>make java-dev</code> runs <code>mvn javadoc:jar</code> as a dedicated check step, so regressions fail CI instead of silently accumulating.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="fastlowess-java-3-2-0"><a class="anchor" href="#fastlowess-java-3-2-0"></a>fastlowess (Java) 3.2.0</h2>
 <div class="sectionbody">
 <div class="sect2">
@@ -193,6 +214,9 @@
 </li>
 <li>
 <p>Added <code>.github/dependabot.yml</code>, covering every dependency ecosystem in the repo (<code>github-actions</code>, <code>cargo</code>, <code>npm</code>, <code>pip</code>, <code>maven</code>, <code>gomod</code>). Each directory is grouped so all its updates, including majors, land in a single weekly PR.</p>
+</li>
+<li>
+<p>Added <code>dev/check_pinned_versions.py</code> and a weekly <code>.github/workflows/check-versions.yml</code>, which check hardcoded tool/library version pins that Dependabot can&#8217;t see (Corrosion&#8217;s CMake <code>FetchContent</code> tag, the vendored doxygen-awesome-css theme, the Checkstyle jar, golangci-lint, and Hugo) against their latest GitHub release and fail CI if any are outdated. Read-only: it never opens PRs or edits files itself.</p>
 </li>
 <li>
 <p>Added a new Java binding (<code>bindings/java</code>), consuming the <code>fastLowess</code> Rust core via a JNI shared library (<code>fastlowess-java</code> crate, using the <code>jni</code> crate).</p>
@@ -250,7 +274,7 @@
 </div>
 </div>
 <div class="sect2">
-<h3 id="fixed"><a class="anchor" href="#fixed"></a>Fixed</h3>
+<h3 id="fixed-2"><a class="anchor" href="#fixed-2"></a>Fixed</h3>
 <div class="ulist">
 <ul>
 <li>
@@ -333,7 +357,7 @@
 </div>
 </div>
 <div class="sect2">
-<h3 id="fixed-2"><a class="anchor" href="#fixed-2"></a>Fixed</h3>
+<h3 id="fixed-3"><a class="anchor" href="#fixed-3"></a>Fixed</h3>
 <div class="ulist">
 <ul>
 <li>
@@ -433,7 +457,7 @@
 </div>
 </div>
 <div class="sect2">
-<h3 id="fixed-3"><a class="anchor" href="#fixed-3"></a>Fixed</h3>
+<h3 id="fixed-4"><a class="anchor" href="#fixed-4"></a>Fixed</h3>
 <div class="ulist">
 <ul>
 <li>
@@ -460,7 +484,7 @@
 <h2 id="fastlowess-java-1-2-0"><a class="anchor" href="#fastlowess-java-1-2-0"></a>fastlowess (Java) 1.2.0</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="fixed-4"><a class="anchor" href="#fixed-4"></a>Fixed</h3>
+<h3 id="fixed-5"><a class="anchor" href="#fixed-5"></a>Fixed</h3>
 <div class="ulist">
 <ul>
 <li>
@@ -496,7 +520,7 @@
 <h2 id="fastlowess-java-0-99-7"><a class="anchor" href="#fastlowess-java-0-99-7"></a>fastlowess (Java) 0.99.7</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="fixed-5"><a class="anchor" href="#fixed-5"></a>Fixed</h3>
+<h3 id="fixed-6"><a class="anchor" href="#fixed-6"></a>Fixed</h3>
 <div class="ulist">
 <ul>
 <li>
@@ -514,7 +538,7 @@
 <h2 id="fastlowess-java-0-99-6"><a class="anchor" href="#fastlowess-java-0-99-6"></a>fastlowess (Java) 0.99.6</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="fixed-6"><a class="anchor" href="#fixed-6"></a>Fixed</h3>
+<h3 id="fixed-7"><a class="anchor" href="#fixed-7"></a>Fixed</h3>
 <div class="ulist">
 <ul>
 <li>
