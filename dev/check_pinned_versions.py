@@ -61,6 +61,30 @@ PINS = [
         "pattern": re.compile(r"gohugoio/hugo@v(?P<version>\d+\.\d+\.\d+)"),
         "repo": "gohugoio/hugo",
     },
+    {
+        "name": "rextendr scaffold (DESCRIPTION)",
+        "file": REPO_ROOT / "bindings/r/DESCRIPTION",
+        "pattern": re.compile(r"Config/rextendr/version:\s*(?P<version>\d+\.\d+\.\d+)"),
+        "repo": "extendr/rextendr",
+    },
+    {
+        "name": "roxygen2 (DESCRIPTION)",
+        "file": REPO_ROOT / "bindings/r/DESCRIPTION",
+        "pattern": re.compile(r"Config/roxygen2/version:\s*(?P<version>\d+\.\d+\.\d+)"),
+        "repo": "r-lib/roxygen2",
+    },
+    {
+        "name": "KaTeX (lowess crate CDN header)",
+        "file": REPO_ROOT / "crates/lowess/katex-header.html",
+        "pattern": re.compile(r"katex@(?P<version>\d+\.\d+\.\d+)"),
+        "repo": "KaTeX/KaTeX",
+    },
+    {
+        "name": "KaTeX (fastLowess crate CDN header)",
+        "file": REPO_ROOT / "crates/fastLowess/katex-header.html",
+        "pattern": re.compile(r"katex@(?P<version>\d+\.\d+\.\d+)"),
+        "repo": "KaTeX/KaTeX",
+    },
 ]
 
 

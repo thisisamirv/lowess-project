@@ -12,11 +12,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Monorepo:**
 
+- Added `dev/bump_version.py --version X.Y.Z`, which updates the version across every Rust crate/binding `Cargo.toml`, the internal `fastLowess`/`lowess` path-dependency requirements, each binding's own version file (`package.json` + npm subpackages, `pyproject`-adjacent `__version__.py`, `pom.xml`, `DESCRIPTION`, `Project.toml`, `version.go`, `CMakeLists.txt`, `FastLowess.java`), `CITATION.cff`, and the Spack recipe's example `url`, in one pass. Supports `--dry-run`.
 - Added an optional `commit` input to every release workflow's `workflow_dispatch` trigger, so a manual run can pin the checked-out/built commit instead of always building from the triggering ref.
 
 **Node.js:**
 
 - Added two prebuilt targets, `aarch64-unknown-linux-musl` (via cargo-zigbuild) and `armv7-unknown-linux-gnueabihf` (via an apt cross toolchain), with matching optional npm subpackages.
+
+### Changed
+
+**Monorepo:**
+
+- Added four new pins to `dev/check_pinned_versions.py`: the R binding's `Config/rextendr/version`/`Config/roxygen2/version` (`DESCRIPTION`), and the vendored KaTeX CDN version in both `crates/lowess/katex-header.html` and `crates/fastLowess/katex-header.html`.
+
+**lowess:**
+
+- Bumped the vendored KaTeX CDN version (`katex-header.html`) from `0.18.4` to `0.18.5`, updating the SRI `integrity` hashes to match.
+
+**fastLowess:**
+
+- Bumped the vendored KaTeX CDN version (`katex-header.html`) from `0.18.4` to `0.18.5`, updating the SRI `integrity` hashes to match.
 
 ### Fixed
 
@@ -42,6 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **C++:**
 
 - Fixed `release-cpp.yml`'s `spack-release` job failing on `git push` due to a detached HEAD; it now checks out the default branch explicitly and pushes via `git push origin HEAD:<default-branch>`.
+- Fixed `bindings/cpp/spack/package.py`'s example `url` (`archive/refs/tags/vX.Y.Z.tar.gz`) going stale, since `release-cpp.yml`'s `spack-release` job only ever updated the `version()`/`sha256` block below it. `dev/bump_version.py` now also refreshes that `url` line.
 
 **Node.js:**
 
