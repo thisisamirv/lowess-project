@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed Surefire warning that `fastlowess.native.dir` was "configured twice" whenever `mvn -Dfastlowess.native.dir=...` overrode the `pom.xml` default: the property was duplicated between the command-line user property and `maven-surefire-plugin`'s `<argLine>`. Moved it into `<systemPropertyVariables>` instead, leaving `<argLine>` with only the `--enable-native-access=ALL-UNNAMED` JVM flag.
 - Fixed ~100 `mvn javadoc:jar` warnings (missing `@param`/`@return` tags and undocumented public methods/constructors) across `Options`, `StreamingOptions`, `OnlineOptions`, `PointResult`, `Diagnostics`, `Result`, `FastLowess`, `Lowess`, `OnlineLowess`, and `StreamingLowess`. `maven-javadoc-plugin` now sets `failOnWarning`, and `make java-dev` runs `mvn javadoc:jar` as a dedicated check step, so regressions fail CI instead of silently accumulating.
 
+**Python:**
+
+- Fixed `release-pypi.yml`'s macOS/Windows jobs printing a `[notice] A new release of pip is available` notice on every `pip install --upgrade pip` invocation; added `PIP_DISABLE_PIP_VERSION_CHECK: "1"` to the workflow's `env`.
+
 ## 3.2.0
 
 ### Added
