@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Python:**
 
 - Fixed `release-pypi.yml`'s macOS/Windows jobs printing a `[notice] A new release of pip is available` notice on every `pip install --upgrade pip` invocation; added `PIP_DISABLE_PIP_VERSION_CHECK: "1"` to the workflow's `env`.
+- Fixed the same pip version-check notice in `release-gpu.yml`'s macOS/Windows GPU wheel jobs; added the same `PIP_DISABLE_PIP_VERSION_CHECK: "1"` to its `env`.
 
 ## 3.2.0
 
