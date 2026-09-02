@@ -12,32 +12,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Monorepo:**
 
-- Added an optional `commit` input to every release workflow's `workflow_dispatch` trigger (`release-cpp.yml`, `release-go.yml`, `release-gpu.yml`, `release-java.yml`, `release-node.yml`, `release-pypi.yml`, `release-wasm.yml`, `release-julia-jll.yml`), so a manual run can pin the checked-out/built commit via `ref: ${{ github.event.inputs.commit || github.sha }}` instead of always building from the tip of whichever branch/tag triggered the run.
+- Added an optional `commit` input to every release workflow's `workflow_dispatch` trigger, so a manual run can pin the checked-out/built commit instead of always building from the triggering ref.
 
 **Node.js:**
 
-- Added two prebuilt targets: `aarch64-unknown-linux-musl` (Alpine on ARM64, e.g. containerized Raspberry Pi) via `napi build --cross-compile` (cargo-zigbuild, no cross toolchain package available), and `armv7-unknown-linux-gnueabihf` (32-bit ARM) via the `gcc-arm-linux-gnueabihf` apt cross toolchain, matching the existing `aarch64-unknown-linux-gnu` pattern. New `fastlowess-linux-arm64-musl`/`fastlowess-linux-arm-gnueabihf` optional npm subpackages.
+- Added two prebuilt targets, `aarch64-unknown-linux-musl` (via cargo-zigbuild) and `armv7-unknown-linux-gnueabihf` (via an apt cross toolchain), with matching optional npm subpackages.
 
 ### Fixed
 
+**Monorepo:**
+
+- Fixed `release-conda.yml` failing on `sed: can't read recipe/meta.yaml`: the `fastlowess-feedstock` repo migrated to rattler-build's `recipe/recipe.yaml` format. Updated the version/sha256/build-number `sed` patterns to match and removed the now-dead R-package-name-fix, Python-dependency-injection, and `build_r.sh` generation steps.
+
 **Java:**
 
-- Fixed `actions/setup-java@v6` warning that `server-username`, `server-password`, and `gpg-passphrase` are deprecated in `release-java.yml`; migrated to `server-username-env-var`, `server-password-env-var`, and `gpg-passphrase-env-var`.
-- Fixed Surefire warning that `fastlowess.native.dir` was "configured twice" whenever `mvn -Dfastlowess.native.dir=...` overrode the `pom.xml` default: the property was duplicated between the command-line user property and `maven-surefire-plugin`'s `<argLine>`. Moved it into `<systemPropertyVariables>` instead, leaving `<argLine>` with only the `--enable-native-access=ALL-UNNAMED` JVM flag.
-- Fixed ~100 `mvn javadoc:jar` warnings (missing `@param`/`@return` tags and undocumented public methods/constructors) across `Options`, `StreamingOptions`, `OnlineOptions`, `PointResult`, `Diagnostics`, `Result`, `FastLowess`, `Lowess`, `OnlineLowess`, and `StreamingLowess`. `maven-javadoc-plugin` now sets `failOnWarning`, and `make java-dev` runs `mvn javadoc:jar` as a dedicated check step, so regressions fail CI instead of silently accumulating.
+- Fixed `actions/setup-java@v6`'s deprecation warning for `server-username`/`server-password`/`gpg-passphrase` in `release-java.yml`; migrated to the `-env-var` variants.
+- Fixed Surefire warning that `fastlowess.native.dir` was "configured twice"; moved it from `<argLine>` into `<systemPropertyVariables>`.
+- Fixed ~100 `mvn javadoc:jar` warnings (missing `@param`/`@return` tags, undocumented methods) across the public API. `maven-javadoc-plugin` now sets `failOnWarning`, and `make java-dev` runs it as a dedicated check step.
 
 **Python:**
 
-- Fixed `release-pypi.yml`'s macOS/Windows jobs printing a `[notice] A new release of pip is available` notice on every `pip install --upgrade pip` invocation; added `PIP_DISABLE_PIP_VERSION_CHECK: "1"` to the workflow's `env`.
-- Fixed the same pip version-check notice in `release-gpu.yml`'s macOS/Windows GPU wheel jobs; added the same `PIP_DISABLE_PIP_VERSION_CHECK: "1"` to its `env`.
+- Fixed `release-pypi.yml`'s macOS/Windows jobs printing a pip version-check notice on every run; added `PIP_DISABLE_PIP_VERSION_CHECK: "1"` to the workflow's `env`.
+- Fixed the same pip version-check notice in `release-gpu.yml`; added the same `env` variable.
 
 **C++:**
 
-- Fixed `release-cpp.yml`'s `spack-release` job failing with `fatal: You are not currently on a branch` on `git push`: `actions/checkout@v7` leaves a detached HEAD at the release tag by default. It now checks out `${{ github.event.repository.default_branch }}` explicitly and pushes via `git push origin HEAD:<default-branch>` instead of a bare `git push`.
+- Fixed `release-cpp.yml`'s `spack-release` job failing on `git push` due to a detached HEAD; it now checks out the default branch explicitly and pushes via `git push origin HEAD:<default-branch>`.
 
 **Node.js:**
 
-- Fixed `astro build` failing in CI with "`markdown.remarkPlugins`... run on the `unified` processor from `@astrojs/markdown-remark`, which is no longer installed by default": Astro 7's new default Markdown processor dropped the implicit dependency that `astro.config.mjs`'s `remarkPlugins`/`rehypePlugins` (for KaTeX) relies on. Added `@astrojs/markdown-remark` as an explicit devDependency.
+- Fixed `astro build` failing since Astro 7 no longer bundles `@astrojs/markdown-remark` by default, which `astro.config.mjs`'s KaTeX plugins need; added it as an explicit devDependency.
 
 **WASM:**
 
