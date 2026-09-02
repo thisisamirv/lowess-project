@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added an optional `commit` input to every release workflow's `workflow_dispatch` trigger (`release-cpp.yml`, `release-go.yml`, `release-gpu.yml`, `release-java.yml`, `release-node.yml`, `release-pypi.yml`, `release-wasm.yml`, `release-julia-jll.yml`), so a manual run can pin the checked-out/built commit via `ref: ${{ github.event.inputs.commit || github.sha }}` instead of always building from the tip of whichever branch/tag triggered the run.
 
+**Node.js:**
+
+- Added two prebuilt targets: `aarch64-unknown-linux-musl` (Alpine on ARM64, e.g. containerized Raspberry Pi) via `napi build --cross-compile` (cargo-zigbuild, no cross toolchain package available), and `armv7-unknown-linux-gnueabihf` (32-bit ARM) via the `gcc-arm-linux-gnueabihf` apt cross toolchain, matching the existing `aarch64-unknown-linux-gnu` pattern. New `fastlowess-linux-arm64-musl`/`fastlowess-linux-arm-gnueabihf` optional npm subpackages.
+
 ### Fixed
 
 **Java:**
