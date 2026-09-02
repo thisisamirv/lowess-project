@@ -79,6 +79,7 @@ bindings/cpp/include/fastlowess.h
 bindings/cpp/bin/
 bindings/cpp/build/
 bindings/cpp/tests/build/
+bindings/cpp/html/
 
 # Hugo (bindings/*/docs-site/) — rendered output and build caches, not the
 # checked-in scaffold (hugo.toml, go.mod/go.sum, layouts/)

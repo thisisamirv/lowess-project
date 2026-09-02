@@ -10,6 +10,10 @@ Auto-detects the docs-site flavor from what exists in the binding directory:
   - Starlight (bindings/nodejs, bindings/wasm): rewrites the body of the
     already-existing src/content/docs/index.md, preserving its own
     hand-authored frontmatter (hero, etc.) above it.
+  - Sphinx (bindings/python): rewrites docs/index.md with the README body,
+    preserving the existing hidden `:::{toctree}` block at the end (Sphinx's
+    site navigation is defined inline in the root doc, unlike the other
+    flavors' separate nav files).
 
 In all cases the README's redundant top-level `# LOWESS Project` heading is
 stripped, since the page's own title (Hugo frontmatter / Antora doctitle /
@@ -63,6 +67,21 @@ def _embed_starlight(index_path: Path) -> None:
 
     body = H1_RE.sub(lambda m: (m.group(1) or "") + "\n", _read_readme(), count=1)
     index_path.write_text(f"{frontmatter}\n{body}", encoding="utf-8")
+
+
+def _embed_sphinx(index_path: Path) -> None:
+    existing = index_path.read_text(encoding="utf-8").replace("\r\n", "\n")
+    toctree_match = re.search(r":::\{toctree\}[\s\S]*?\n:::\n?", existing)
+    if not toctree_match:
+        raise ValueError(f"No toctree block found in {index_path}")
+    toctree = toctree_match.group(0)
+
+    # Unlike Hugo/Antora/Starlight, Sphinx has no separate title mechanism
+    # (frontmatter/hero) that renders into the page body, so the README's
+    # own H1 is kept as the page's visible title instead of being stripped.
+    body = _read_readme()
+    index_path.parent.mkdir(parents=True, exist_ok=True)
+    index_path.write_text(f"{body.rstrip()}\n\n{toctree}", encoding="utf-8")
 
 
 # --- Markdown -> AsciiDoc conversion, for the Antora flavor ---------------
@@ -295,6 +314,7 @@ def main() -> None:
     hugo_toml = BINDING_DIR / "docs-site" / "hugo.toml"
     antora_yml = BINDING_DIR / "docs" / "antora.yml"
     starlight_index = BINDING_DIR / "src" / "content" / "docs" / "index.md"
+    sphinx_conf = BINDING_DIR / "docs" / "conf.py"
 
     if hugo_toml.exists():
         index_path = BINDING_DIR / "docs" / "_index.md"
@@ -305,10 +325,13 @@ def main() -> None:
     elif starlight_index.exists():
         index_path = starlight_index
         _embed_starlight(index_path)
+    elif sphinx_conf.exists():
+        index_path = BINDING_DIR / "docs" / "index.md"
+        _embed_sphinx(index_path)
     else:
         sys.exit(
             f"Don't know how to embed README for {BINDING_DIR}: none of "
-            f"{hugo_toml}, {antora_yml}, {starlight_index} exist."
+            f"{hugo_toml}, {antora_yml}, {starlight_index}, {sphinx_conf} exist."
         )
 
     print(f"Embedded README.md into {index_path.relative_to(REPO_ROOT)}")

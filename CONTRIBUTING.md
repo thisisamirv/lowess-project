@@ -232,9 +232,10 @@ lowess-project/
 │   └── java/             # JNI bindings
 ├── validation/           # R vs lowess parity validation
 ├── benchmarks/           # Performance benchmarks (Criterion)
-├── docs/                 # MkDocs documentation
 └── Makefile              # Build automation
 ```
+
+Documentation lives alongside each crate/binding rather than in a shared top-level directory: `crates/*/src/doc.rs` (rustdoc, via `#[cfg(doc)]` modules) and `bindings/*/docs`/`docs-site` (Sphinx, Documenter.jl, Doxygen, Antora, Starlight, Hugo, or pkgdown, depending on the language).
 
 ## Pull Requests
 

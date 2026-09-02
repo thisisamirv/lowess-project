@@ -88,7 +88,9 @@ LOWESS handles irregularly sampled data naturally — no interpolation needed.
 ```{r use_case_time_series_3}
 library(rfastlowess)
 
-t_irregular <- sapply(0:99, function(i) i * 1.0 + (i * 31 %% 10) * 0.1)
+t_irregular <- vapply(
+    0:99, function(i) i * 1.0 + (i * 31 %% 10) * 0.1, numeric(1)
+)
 y_irregular <- 10 + 0.3 * t_irregular + 2.0 * sin(t_irregular * 0.1)
 
 model <- Lowess(fraction = 0.2, iterations = 2)
@@ -136,7 +138,10 @@ lines(result$x, result$y, col = "blue", lwd = 2)
 legend("topleft", c("PI 95%", "CI 95%", "Trend"),
         fill = c(rgb(0, 0, 1, 0.08), rgb(0, 0, 1, 0.20), NA),
         lty  = c(NA, NA, 1), col = c(NA, NA, "blue"), border = NA)
-cat(sprintf("95%% PI: [%.4f, %.4f]\n", result$prediction_lower[1], result$prediction_upper[1]))
+cat(sprintf(
+    "95%% PI: [%.4f, %.4f]\n",
+    result$prediction_lower[1], result$prediction_upper[1]
+))
 ```
 
 ```{r session-info}

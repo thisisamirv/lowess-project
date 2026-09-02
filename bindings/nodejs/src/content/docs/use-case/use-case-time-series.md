@@ -90,7 +90,7 @@ console.log(`95% PI: [${result.prediction_lower[0]}, ${result.prediction_upper[0
 ```
 
 ```output
-95% PI: [0.15801046224996285, 0.2908827214492591]
+95% PI: [0.15801046224996296, 0.29088272144925936]
 ```
 
 ---

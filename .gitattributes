@@ -4,6 +4,35 @@
 # Force LF line endings for vendored dependencies to ensure checksum consistency
 bindings/r/src/vendor/** text eol=lf
 
+# Binary formats: never touch line endings, never diff as text.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.zip binary
+*.7z binary
+*.gz binary
+*.xz binary
+*.tar binary
+*.so binary
+*.dylib binary
+*.dll binary
+*.a binary
+*.lib binary
+*.exe binary
+*.class binary
+*.jar binary
+*.node binary
+*.wasm binary
+*.rds binary
+*.RData binary
+
 # Export Ignore
 .github/ export-ignore
 .gitignore export-ignore

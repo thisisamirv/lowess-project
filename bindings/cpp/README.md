@@ -4,6 +4,7 @@
 <p align="center">
   <a href="https://github.com/thisisamirv/lowess-project/releases/latest"><img src="https://img.shields.io/badge/C++-00599C?logo=cplusplus&logoColor=white" alt="C++"></a>
   <a href="https://anaconda.org/conda-forge/libfastlowess"><img src="https://img.shields.io/badge/libfastlowess_(C++)-44A833?logo=anaconda&logoColor=white" alt="libfastlowess (C++)"></a>
+  <a href="https://packages.spack.io/package.html?name=fastlowess-cpp"><img src="https://img.shields.io/badge/fastlowess--cpp-Spack-1A73E8" alt="fastlowess-cpp (Spack)"></a>
   <a href="https://github.com/thisisamirv/lowess-project/actions/workflows/ci-cpp.yml"><img src="https://github.com/thisisamirv/lowess-project/actions/workflows/ci-cpp.yml/badge.svg" alt="CI"></a>
 </p>
 
@@ -13,7 +14,7 @@
   <em>One LOWESS to Rule Them All</em>
 </p>
 
-The fastest, most robust, and most feature-complete language-agnostic LOWESS (Locally Weighted Scatterplot Smoothing) implementation for **Rust**, **Python**, **R**, **Julia**, **JavaScript**, **C++**, and **WebAssembly**.
+The fastest, most robust, and most feature-complete language-agnostic LOWESS (Locally Weighted Scatterplot Smoothing) implementation for **Rust**, **Python**, **R**, **Julia**, **JavaScript**, **C++**, **Go**, **Java**, and **WebAssembly**.
 
 The `lowess-project` also offers bindings for Rust, Python, R, Julia, Node.js, WebAssembly, C++, Go, and Java — see the [full repository](https://github.com/thisisamirv/lowess-project).
 

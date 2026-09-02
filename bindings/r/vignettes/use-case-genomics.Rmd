@@ -52,7 +52,10 @@ lines(result$x, result$confidence_upper, col = "blue", lty = 2)
 legend("topright", c("Observed", "Smoothed", "95% CI"),
         pch = c(1, NA, NA), lty = c(NA, 1, 2),
         col = c("gray", "blue", "blue"))
-cat(sprintf("95%% CI: [%.4f, %.4f]\n", result$confidence_lower[1], result$confidence_upper[1]))
+cat(sprintf(
+    "95%% CI: [%.4f, %.4f]\n",
+    result$confidence_lower[1], result$confidence_upper[1]
+))
 ```
 
 ---

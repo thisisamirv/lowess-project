@@ -82,6 +82,7 @@ dev:
 	@echo "=============================================================================="
 	@echo "Doc snippet tests (java)..."
 	@echo "=============================================================================="
+	@$(PYTHON) dev/check_links.py --lang java
 	@$(PYTHON) dev/verify_snippets.py --lang java --timeout 120 --update-outputs
 	@$(PYTHON) dev/update_changelogs.py java
 	@$(PYTHON) dev/add-readme-to-docs.py $(JAVA_DIR)

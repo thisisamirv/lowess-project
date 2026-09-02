@@ -55,7 +55,7 @@ int main() {
 Time 4: smoothed = 22.1941
 Time 5: smoothed = 22.7964
 Time 6: smoothed = 22.4733
-Time 7: smoothed = 22.9120
+Time 7: smoothed = 22.912
 Time 8: smoothed = 24.0164
 ... (91 more)
 ```
@@ -194,7 +194,7 @@ Smoothed (dashboard, latest tick): -0.0663473
 
 ## See Also
 
-- [Execution Modes](adapter-choice.md) — Detailed mode comparison
-- [Merge Strategies](merge.md) — Chunk reconciliation in depth
-- [Scaling Methods](scaling.md) — Robustness scale estimation
+- [Execution Modes](../guide/adapter-choice.md) — Detailed mode comparison
+- [Merge Strategies](../advanced/merge.md) — Chunk reconciliation in depth
+- [Scaling Methods](../weighting/scaling.md) — Robustness scale estimation
 - [Time Series](use-case-time-series.md) — General time series analysis

@@ -262,6 +262,7 @@ check-msrv:
 # ==============================================================================
 docs-test:
 	@echo "Running doc snippet tests..."
+	@$(PYTHON) dev/check_links.py
 	@if [ -f "$(PY_VENV_PYTHON)" ]; then \
 		$(PY_VENV_PYTHON) dev/verify_snippets.py --timeout 120; \
 	else \

@@ -98,6 +98,7 @@ dev:
 	@echo "=============================================================================="
 	@echo "Doc snippet tests (rust)..."
 	@echo "=============================================================================="
+	@$(PYTHON) dev/check_links.py --lang rust
 	@$(PYTHON) dev/verify_snippets.py --lang rust --rust-docs $(FASTLOWESS_DIR)/docs --timeout 120 --update-outputs
 	@$(PYTHON) dev/update_changelogs.py fastlowess
 	@echo "All $(FASTLOWESS_PKG) crate checks completed successfully!"

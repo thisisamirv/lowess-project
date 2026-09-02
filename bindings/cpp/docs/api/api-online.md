@@ -126,7 +126,7 @@ Returned (inside `Expected`) by `add_point()`. Check `has_value()` before readin
 
 ### update_mode
 
-*See: [Execution Modes](adapter-choice.md)*
+*See: [Execution Modes](../guide/adapter-choice.md)*
 
 | Mode | Alias | Behavior | Speed |
 | --- | --- | --- | --- |

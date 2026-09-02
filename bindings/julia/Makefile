@@ -142,6 +142,7 @@ _julia_checks_internal:
 		if length(JET.get_reports(report)) > 0; @error "JET found type errors"; exit(1); end'
 	@echo "=============================================================================="
 	@echo "Doc snippet tests (julia)..."
+	@$(PYTHON) dev/check_links.py --lang julia
 	@$(PYTHON) dev/verify_snippets.py --lang julia --timeout 120
 	@$(PYTHON) dev/update_changelogs.py julia
 	@echo "$(JL_PKG) checks completed successfully!"

@@ -118,7 +118,7 @@ int main() {
 ```
 
 ```output
-95% PI: [0.158010, 0.290883]
+95% PI: [0.15801, 0.290883]
 ```
 
 ---
@@ -244,6 +244,6 @@ R2: 0.973054
 ## See Also
 
 - [Real-Time Processing](use-case-real-time.md) — For streaming time series
-- [Cross-Validation](cross-validation.md) — Optimal fraction selection
-- [Boundary Handling](boundary.md) — Edge bias in trend extraction
-- [API Reference](api.md) — Full parameter reference
+- [Cross-Validation](../guide/cross-validation.md) — Optimal fraction selection
+- [Boundary Handling](../advanced/boundary.md) — Edge bias in trend extraction
+- [API Reference](../api/api.md) — Full parameter reference

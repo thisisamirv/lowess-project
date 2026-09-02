@@ -10,7 +10,7 @@ authors:
     orcid: "https://orcid.org/0000-0000-0000-0000"
 license: "MIT OR Apache-2.0"
 repository-code: "https://github.com/thisisamirv/lowess-project"
-url: "https://lowess.readthedocs.io/"
+url: "https://thisisamirv.github.io/lowess-project/"
 keywords:
   - lowess
   - smoothing

@@ -13,7 +13,7 @@
   <em>One LOWESS to Rule Them All</em>
 </p>
 
-The fastest, most robust, and most feature-complete language-agnostic LOWESS (Locally Weighted Scatterplot Smoothing) implementation for **Rust**, **Python**, **R**, **Julia**, **JavaScript**, **C++**, and **WebAssembly**.
+The fastest, most robust, and most feature-complete language-agnostic LOWESS (Locally Weighted Scatterplot Smoothing) implementation for **Rust**, **Python**, **R**, **Julia**, **JavaScript**, **C++**, **Go**, **Java**, and **WebAssembly**.
 
 The `lowess-project` also offers bindings for Rust, Python, R, Julia, Node.js, WebAssembly, C++, Go, and Java — see the [full repository](https://github.com/thisisamirv/lowess-project).
 
@@ -21,7 +21,7 @@ The `lowess-project` also offers bindings for Rust, Python, R, Julia, Node.js, W
 
 ## Installation & Documentation
 
-> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the [Installation Guide](https://lowess.readthedocs.io/en/latest/getting-started/installation/) for detailed installation instructions.
+> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the [Installation Guide](https://lowess.readthedocs.io/en/latest/introduction/installation/) for detailed installation instructions.
 >
 > ### 📚 [View the full documentation](https://lowess.readthedocs.io/)
 
@@ -40,7 +40,7 @@ GPU acceleration (`wgpu`: Vulkan/Metal/DX12) is also supported for high-throughp
 | **Flexibility** | High (Distance metrics) | Standard |
 | **Complexity** | Higher (Matrix inversion) | Lower (Weighted average/slope) |
 
-Read more about how LOWESS works in the [Concepts](https://lowess.readthedocs.io/en/latest/getting-started/concepts.html).
+Read more about how LOWESS works in the [Concepts](https://lowess.readthedocs.io/en/latest/introduction/concepts.html).
 
 > **Note:** For a **LOESS** implementation, use [`loess-project`](https://github.com/thisisamirv/loess-project).
 

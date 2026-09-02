@@ -105,8 +105,8 @@ See [Online Adapter](api-online.md) for the `OnlineLowess` class.
 | `boundary_policy` | `std::string` | "extend" | Boundary handling policy |
 | `zero_weight_fallback` | `std::string` | "use_local_mean" | Zero-weight handling strategy |
 | `auto_converge` | `double` | NaN | Auto-convergence tolerance |
-| `confidence_intervals` | `double` | NaN | Confidence level (e.g., 0.95) — see [Intervals](intervals.md) |
-| `prediction_intervals` | `double` | NaN | Prediction level (e.g., 0.95) — see [Intervals](intervals.md) |
+| `confidence_intervals` | `double` | NaN | Confidence level (e.g., 0.95) — see [Intervals](../guide/intervals.md) |
+| `prediction_intervals` | `double` | NaN | Prediction level (e.g., 0.95) — see [Intervals](../guide/intervals.md) |
 | `return_diagnostics` | `bool` | false | Compute RMSE, MAE, R2, AIC |
 | `return_residuals` | `bool` | false | Include residuals in result |
 | `return_robustness_weights` | `bool` | false | Include robustness weights in result |
@@ -117,7 +117,7 @@ See [Online Adapter](api-online.md) for the `OnlineLowess` class.
 | `cv_k` | `int` | 5 | Number of folds for k-fold CV (Batch only) |
 | `cv_fractions` | `std::vector<double>` | `{}` | Fractions to test for cross-validation (Batch only) |
 | `cv_seed` | `uint64_t` | `0` | Random seed for CV shuffling (Batch only; 0 = random) |
-| `custom_weights` | `std::vector<double>` | `{}` | Per-observation case weights — passed to `fit()`, not the constructor (Batch only; see [Custom Weights](custom-weights.md)) |
+| `custom_weights` | `std::vector<double>` | `{}` | Per-observation case weights — passed to `fit()`, not the constructor (Batch only; see [Custom Weights](../weighting/custom-weights.md)) |
 
 `fraction` is the most important parameter: it controls the size of the local neighbourhood used at each point.
 
@@ -143,7 +143,7 @@ See [Online Adapter](api-online.md) for `OnlineOptions`.
 
 ## GPU Acceleration
 
-The batch `fastlowess::Lowess` class can optionally run on a GPU-accelerated backend powered by `wgpu`, for high-throughput processing of large datasets (10k+ points). GPU support applies to `Lowess` (batch) only — `StreamingLowess`/`OnlineLowess` remain CPU-only. See the [GPU Backend guide](gpu-backend.md) for installation, usage, supported features, and hardware requirements.
+The batch `fastlowess::Lowess` class can optionally run on a GPU-accelerated backend powered by `wgpu`, for high-throughput processing of large datasets (10k+ points). GPU support applies to `Lowess` (batch) only — `StreamingLowess`/`OnlineLowess` remain CPU-only. See the [GPU Backend guide](../advanced/gpu-backend.md) for installation, usage, supported features, and hardware requirements.
 
 ## Result Structure
 
@@ -187,7 +187,7 @@ All accessors are const methods (not public fields):
 
 ### weight_function
 
-*See: [Weight Functions](kernels.md)*
+*See: [Weight Functions](../weighting/kernels.md)*
 
 - `"tricube"` (default)
 - `"epanechnikov"`
@@ -199,7 +199,7 @@ All accessors are const methods (not public fields):
 
 ### robustness_method
 
-*See: [Robustness](robustness.md)*
+*See: [Robustness](../weighting/robustness.md)*
 
 - `"bisquare"` (default; alias: `"biweight"`)
 - `"huber"`
@@ -207,7 +207,7 @@ All accessors are const methods (not public fields):
 
 ### boundary_policy
 
-*See: [Boundary Handling](boundary.md)*
+*See: [Boundary Handling](../advanced/boundary.md)*
 
 - `"extend"` (default; alias: `"pad"`)
 - `"reflect"` (alias: `"mirror"`)
@@ -216,7 +216,7 @@ All accessors are const methods (not public fields):
 
 ### scaling_method
 
-*See: [Scaling Methods](scaling.md)*
+*See: [Scaling Methods](../weighting/scaling.md)*
 
 - `"mad"` (default; alias: `"median_absolute_deviation"`)
 - `"mar"` (alias: `"median_absolute_residual"`)

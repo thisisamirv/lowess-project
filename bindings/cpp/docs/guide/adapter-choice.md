@@ -40,5 +40,5 @@ Choose the first row below whose condition applies:
 
 ## Next Steps
 
-- [API Reference](api.md) — All configuration options
-- [Streaming API](api-streaming.md) · [Online API](api-online.md)
+- [API Reference](../api/api.md) — All configuration options
+- [Streaming API](../api/api-streaming.md) · [Online API](../api/api-online.md)

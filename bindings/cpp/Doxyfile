@@ -40,6 +40,9 @@ GENERATE_TREEVIEW      = YES
 DISABLE_INDEX          = NO
 FULL_SIDEBAR           = NO
 HTML_COLORSTYLE        = LIGHT
+# renovate: doxygen-awesome-css version: v2.4.2 (https://github.com/jothepro/doxygen-awesome-css)
+# Vendored as static files, not fetched at build time — re-vendor manually
+# after Renovate bumps this comment (see /renovate.json).
 HTML_EXTRA_STYLESHEET  = docs/doxygen-awesome-css/doxygen-awesome.css \
                          docs/doxygen-awesome-css/doxygen-awesome-sidebar-only.css
 

@@ -133,9 +133,9 @@ print(f"y[0]: {result.y[0]:.4f}")
 
 ## See Also
 
-- [Concepts](../../getting-started/concepts.md) — How LOWESS works
-- [API Reference](../../api/api.md) — All options
-- [Robustness](../robustness.md) — Outlier downweighting in depth
-- [Merge Strategies](../merge.md) — Streaming chunk reconciliation
-- [Boundary Handling](../boundary.md) — Edge handling for sparse regions
+- [Concepts](../introduction/concepts.md) — How LOWESS works
+- [API Reference](../api/api.md) — All options
+- [Robustness](../weighting/robustness.md) — Outlier downweighting in depth
+- [Merge Strategies](../advanced/merge.md) — Streaming chunk reconciliation
+- [Boundary Handling](../advanced/boundary.md) — Edge handling for sparse regions
 - [Real-Time Processing](real-time.md) — For sequencing runs
