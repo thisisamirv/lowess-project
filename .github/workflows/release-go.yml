@@ -71,3 +71,30 @@ jobs:
         with:
           tag_name: ${{ github.event.release.tag_name || github.event.inputs.tag }}
           files: bindings/go/include/fastlowess_go.h
+
+  # Go's module resolver (and pkg.go.dev) only recognizes a nested module as
+  # "tagged"/"stable" if a tag matching <module-subdir>/vX.Y.Z exists, in
+  # addition to the repo-wide vX.Y.Z tag used for the GitHub Release.
+  tag-go-module:
+    name: Tag Go module
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.commit || github.sha }}
+          fetch-depth: 0
+
+      - name: Create and push nested module tag
+        env:
+          TAG: ${{ github.event.release.tag_name || github.event.inputs.tag }}
+        run: |
+          MODULE_TAG="bindings/go/fastlowess/${TAG}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git rev-parse "$MODULE_TAG" >/dev/null 2>&1; then
+            echo "Tag $MODULE_TAG already exists, skipping."
+          else
+            git tag "$MODULE_TAG" "${{ github.event.inputs.commit || github.sha }}"
+            git push origin "$MODULE_TAG"
+          fi
+
