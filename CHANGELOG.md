@@ -31,6 +31,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed `release-cpp.yml`'s `spack-release` job failing with `fatal: You are not currently on a branch` on `git push`: `actions/checkout@v7` leaves a detached HEAD at the release tag by default. It now checks out `${{ github.event.repository.default_branch }}` explicitly and pushes via `git push origin HEAD:<default-branch>` instead of a bare `git push`.
 
+**Node.js:**
+
+- Fixed `astro build` failing in CI with "`markdown.remarkPlugins`... run on the `unified` processor from `@astrojs/markdown-remark`, which is no longer installed by default": Astro 7's new default Markdown processor dropped the implicit dependency that `astro.config.mjs`'s `remarkPlugins`/`rehypePlugins` (for KaTeX) relies on. Added `@astrojs/markdown-remark` as an explicit devDependency.
+
+**WASM:**
+
+- Fixed the same `astro build` `@astrojs/markdown-remark` failure as Node.js; added the same explicit devDependency.
+
 ## 3.2.0
 
 ### Added

@@ -40,6 +40,7 @@
         "fastlowess-win32-x64-msvc": "^3.2.0"
     },
     "devDependencies": {
+        "@astrojs/markdown-remark": "^7.3",
         "@astrojs/starlight": "^0.41",
         "@napi-rs/cli": "^3.8",
         "astro": "^7.2",
