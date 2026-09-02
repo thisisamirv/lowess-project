@@ -9,6 +9,10 @@ on:
         description: "Version to update to (without v prefix, e.g., 0.1.2)"
         required: true
         type: string
+      commit:
+        description: "Commit SHA to build from (defaults to HEAD of the workflow's own ref)"
+        required: false
+        type: string
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -46,6 +50,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           path: lowess-project
+          ref: ${{ github.event.inputs.commit || github.sha }}
 
       - name: Determine Version and Commit
         id: meta

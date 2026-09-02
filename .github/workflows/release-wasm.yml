@@ -4,6 +4,11 @@ on:
   release:
     types: [created]
   workflow_dispatch:
+    inputs:
+      commit:
+        description: "Commit SHA to build from (defaults to the workflow's own ref)"
+        required: false
+        type: string
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -14,6 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.commit || github.sha }}
 
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable

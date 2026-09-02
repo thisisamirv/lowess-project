@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+**Monorepo:**
+
+- Added an optional `commit` input to every release workflow's `workflow_dispatch` trigger (`release-cpp.yml`, `release-go.yml`, `release-gpu.yml`, `release-java.yml`, `release-node.yml`, `release-pypi.yml`, `release-wasm.yml`, `release-julia-jll.yml`), so a manual run can pin the checked-out/built commit via `ref: ${{ github.event.inputs.commit || github.sha }}` instead of always building from the tip of whichever branch/tag triggered the run.
+
 ### Fixed
 
 **Java:**

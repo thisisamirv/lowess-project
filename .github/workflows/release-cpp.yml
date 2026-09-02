@@ -9,6 +9,10 @@ on:
         description: "Tag to upload assets to (e.g., v0.99.8)"
         required: true
         type: string
+      commit:
+        description: "Commit SHA to build from (defaults to the workflow's own ref)"
+        required: false
+        type: string
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -38,6 +42,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.commit || github.sha }}
 
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable

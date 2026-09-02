@@ -4,6 +4,11 @@ on:
   release:
     types: [created]
   workflow_dispatch:
+    inputs:
+      commit:
+        description: "Commit SHA to build from (defaults to the workflow's own ref)"
+        required: false
+        type: string
 
 env:
   DEBUG: "napi:*"
@@ -52,6 +57,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.commit || github.sha }}
 
       - name: Setup Node
         uses: actions/setup-node@v7
@@ -106,6 +113,8 @@ jobs:
     needs: build
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.commit || github.sha }}
 
       - name: Setup Node
         uses: actions/setup-node@v7
