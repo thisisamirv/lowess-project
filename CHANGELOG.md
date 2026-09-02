@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed `release-pypi.yml`'s macOS/Windows jobs printing a `[notice] A new release of pip is available` notice on every `pip install --upgrade pip` invocation; added `PIP_DISABLE_PIP_VERSION_CHECK: "1"` to the workflow's `env`.
 - Fixed the same pip version-check notice in `release-gpu.yml`'s macOS/Windows GPU wheel jobs; added the same `PIP_DISABLE_PIP_VERSION_CHECK: "1"` to its `env`.
 
+**C++:**
+
+- Fixed `release-cpp.yml`'s `spack-release` job failing with `fatal: You are not currently on a branch` on `git push`: `actions/checkout@v7` leaves a detached HEAD at the release tag by default. It now checks out `${{ github.event.repository.default_branch }}` explicitly and pushes via `git push origin HEAD:<default-branch>` instead of a bare `git push`.
+
 ## 3.2.0
 
 ### Added

@@ -78,7 +78,12 @@ jobs:
     name: Update Spack recipe
     runs-on: ubuntu-latest
     steps:
+      # release/workflow_dispatch events check out a detached HEAD at the
+      # release tag by default; check out the default branch instead so the
+      # "Commit updated recipe" step below has something to push to.
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.repository.default_branch }}
 
       - name: Determine version and sha256
         id: meta
@@ -116,7 +121,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add bindings/cpp/spack/package.py
           git commit -m "cpp: update Spack recipe for ${{ github.event.release.tag_name || github.event.inputs.tag }}" || echo "No changes to commit"
-          git push
+          git push origin HEAD:${{ github.event.repository.default_branch }}
 
       - name: Check Spack fork exists
         env:
