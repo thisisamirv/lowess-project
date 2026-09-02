@@ -97,7 +97,9 @@ needed.
 
 library(rfastlowess)
 
-t_irregular <- sapply(0:99, function(i) i * 1.0 + (i * 31 %% 10) * 0.1)
+t_irregular <- vapply(
+    0:99, function(i) i * 1.0 + (i * 31 %% 10) * 0.1, numeric(1)
+)
 y_irregular <- 10 + 0.3 * t_irregular + 2.0 * sin(t_irregular * 0.1)
 
 model <- Lowess(fraction = 0.2, iterations = 2)
@@ -160,7 +162,10 @@ legend("topleft", c("PI 95%", "CI 95%", "Trend"),
 
 ``` r
 
-cat(sprintf("95%% PI: [%.4f, %.4f]\n", result$prediction_lower[1], result$prediction_upper[1]))
+cat(sprintf(
+    "95%% PI: [%.4f, %.4f]\n",
+    result$prediction_lower[1], result$prediction_upper[1]
+))
 #> 95% PI: [0.1580, 0.2909]
 ```
 

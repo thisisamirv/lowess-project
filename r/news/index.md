@@ -2,25 +2,32 @@
 
 ## rfastlowess 3.2.0
 
+### Added
+
+- Added `dev/add-readme-to-docs.py`, which auto-detects the Hugo (Go,
+  Java) vs Starlight (Node.js, WASM) docs-site flavor and embeds
+  `README.md` accordingly; wired into the corresponding Makefiles and
+  `package.json` scripts.
+- Added `.github/dependabot.yml`, covering every dependency ecosystem in
+  the repo (`github-actions`, `cargo`, `npm`, `pip`, `maven`, `gomod`).
+  Each directory is grouped so all its updates, including majors, land
+  in a single weekly PR.
+
 ### Changed
 
-- Added a `large` benchmark category to `benchmarks/rfastlowess.R` and
-  `benchmarks/stats_lowess.R` (n = 50000, `delta = 0` to disable
-  [`stats::lowess`](https://rdrr.io/r/stats/lowess.html)’s interpolation
-  shortcut for a fair, exact-computation comparison), since every
-  existing category completed in well under 100ms. Reliably takes
-  ~13-16s for [`stats::lowess`](https://rdrr.io/r/stats/lowess.html) and
-  ~3s for `fastLowess` (serial). Expanded it to 4 scenarios stressing
-  different parameters: `large_delta_0` (the original exact-fit case),
-  `large_delta_0.1` (same workload with `delta` left at its default/auto
-  value, showing the interpolation shortcut’s speedup),
-  `large_high_iter` (10 robustness iterations instead of 3), and
-  `large_high_fraction` (n = 20000, `fraction = 0.67`, since a 0.67
-  fraction at n = 50000 takes over a minute). `benchmarks/compare.py`’s
-  plot grid grew from 5x2 to 7x2 rows to fit the new categories
-  (`large_delta_0`/`large_delta_0.1` share one “large_delta” chart,
-  matching how `fraction_*`/`iterations_*` already group into shared
-  charts).
+- Modified `verify_snippets.py` to verify snippets and also add the
+  output of the snippets to the markdown file.
+- Added a `large` benchmark category (n = 50000) to
+  `benchmarks/rfastlowess.R` and `benchmarks/stats_lowess.R`, since
+  every existing category ran in well under 100ms. Covers 4 scenarios
+  (`large_delta_0`, `large_delta_0.1`, `large_high_iter`,
+  `large_high_fraction`) stressing `delta`, iteration count, and
+  fraction. `benchmarks/compare.py`’s plot grid grew from 5x2 to 7x2 to
+  fit them.
+- Added `.gitattributes`, normalizing all text files to LF line endings
+  (`* text=auto eol=lf`) and marking binary formats (images, archives,
+  compiled libraries, `.rds`/`.RData`, etc.) so Git never treats them as
+  text.
 - Consolidated every crate/binding README: merged the “Installation” and
   “Documentation” sections, replaced GitHub-only alert syntax with plain
   blockquotes, removed the redundant “API Reference” and “Changelog”
@@ -46,28 +53,39 @@
   (mermaid in most bindings/crates, ASCII art in the C++ docs) with an
   equivalent decision table, unifying on a single rendering-agnostic
   format across every binding/crate.
-- Moved the duplicated “GPU Acceleration” section (installation, usage,
-  supported features, feature comparison) out of `api.md` in the C++,
-  Node.js, and Python bindings and the `fastLowess` crate into each
-  one’s dedicated `gpu-backend.md` guide, which also gained the
-  “Hardware Requirements” and “Performance Considerations” subsections
-  previously only in `api.md`; `api.md` now links to `gpu-backend.md`
-  with a short blurb instead. Removed the same section from the `lowess`
-  crate’s `api.md` entirely, since that crate has no `gpu` Cargo feature
-  or GPU backend to document.
-- Consolidated `parameters.md`/the auto-generated `@autodocs` parameter
-  reference across every binding and crate (C++, Julia, Node.js, Python,
-  WASM, `fastLowess`, `lowess`): merged its unique content
-  (fraction/iterations choice guidance, `delta`’s per-adapter default,
-  and an inline `zero_weight_fallback` behavior table) into each
-  `api.md`’s builder/options tables (Julia: into the
-  `Lowess`/`StreamingLowess`/`OnlineLowess` docstrings), and removed
-  `parameters.md` itself along with its docs-site navigation entries,
-  `doc::parameters` rustdoc module, and cross-references (now pointing
-  at `api.md`) — the parameter tables,
-  kernel/robustness/boundary/scaling/merge-strategy option lists, and
-  interval/custom-weights code examples it duplicated already live on
-  their own dedicated pages.
+- Moved the duplicated “GPU Acceleration” section out of `api.md` (C++,
+  Node.js, Python, `fastLowess`) into each one’s dedicated
+  `gpu-backend.md` guide, which also gained “Hardware
+  Requirements”/“Performance Considerations”; `api.md` now just links to
+  it. Removed the section entirely from the `lowess` crate, which has no
+  `gpu` feature.
+- Consolidated `parameters.md`/the auto-generated parameter reference
+  across every binding and crate: merged its unique content
+  (fraction/iterations guidance, `delta` defaults,
+  `zero_weight_fallback` behavior) into each `api.md`’s option tables,
+  then removed `parameters.md` and its nav entries/rustdoc module — the
+  option lists and examples it duplicated already live on their own
+  pages.
+- Standardized docs across all bindings and crates.
+- Replaced the Unicode superscript `²` character with plain ASCII
+  throughout every doc page and doc-comment (`R²` → `R2`;
+  `(y_true - y_pred)²`/`O(window²)` → `^2`), including the `wasm`
+  binding’s JSDoc comments, the Julia docstrings in `FastLOWESS.jl`, and
+  the `fastLowess`/`lowess` crates’ rustdoc examples. Also changed the
+  `lowess` crate’s `Diagnostics` `Display` impl to print `R2` instead of
+  `R²` so the `fastLowess` doc example showing its captured output stays
+  accurate.
+- Harmonized the docs-site directory structure across every
+  binding/crate to mirror Go’s layout (`introduction/`, `guide/`,
+  `weighting/`, `advanced/`, `use-case/`, `api/`, each grouped under a
+  hub page): Node.js/WASM (Starlight `sidebar`), Python (Sphinx toctree,
+  also removed the dead `mkdocs.yml`), Julia (`Documenter.jl`
+  `pages=[...]`, switched to recursive `walkdir`), and
+  `fastLowess`/`lowess` (nested `#[cfg(doc)]` modules). C++’s Doxygen
+  pages were physically moved to match (`RECURSIVE: YES`), with two hub
+  pages renamed for parity. Java already matched this layout and now
+  carries it into its new Antora site. R’s `vignettes/` stays flat
+  (CRAN/pkgdown requirement).
 - Removed the `rfastlowess-package` pkgdown topic, which duplicated the
   adapter class list, and unexported the internal `Nullable()` helper.
 - Fixed `_pkgdown.yml` describing the core interface as “R6 classes”
@@ -96,15 +114,12 @@
   per docs job; per-language jobs now upload artifacts, and a single
   final `deploy` job pushes to `gh-pages` once per run.
 - Fixed `docs.yml`’s reliance on GitHub’s legacy branch-based Pages
-  deployment, which auto-triggers an unpinned, GitHub-managed “pages
-  build and deployment” job on every `gh-pages` push (surfacing
-  deprecation warnings, e.g. for Node.js 20, that aren’t fixable from
-  this repo). The former `deploy` job is now `build`, which still pushes
-  the merged `_site` to `gh-pages` as a cache for future incremental
-  runs, but publishing now goes through `actions/upload-pages-artifact`
-  and a new `deploy` job using the official `actions/deploy-pages`,
-  which this repo pins directly. Requires the repository’s Pages source
-  to be switched to “GitHub Actions” in settings.
+  deployment, which auto-triggered an unpinned “pages build and
+  deployment” job on every `gh-pages` push. The former `deploy` job is
+  now `build` (still pushes `_site` to `gh-pages` as a cache);
+  publishing now goes through `actions/upload-pages-artifact` and a new
+  `deploy` job using `actions/deploy-pages`. Requires the repo’s Pages
+  source set to “GitHub Actions”.
 - Fixed every benchmark category in `benchmarks/rfastlowess.R` failing
   with `attempt to apply non-function`: it called the R6-style
   `model$fit(x, y)`, but `fit` is an S3 generic (`fit(model, x, y)`),
@@ -114,14 +129,12 @@
   (unlike `rfastlowess.R`, which already did this correctly), so results
   could land outside `benchmarks/output/` depending on how the script
   was invoked.
-- Fixed the “Handling Outliers” quickstart example (every binding and
-  the `lowess`/`fastLowess` crates) printing nothing: with only 6 points
-  and `fraction = 0.5`, the local window is small enough that tricube
-  weighting drives the farthest neighbor’s weight to ~0, leaving just 2
-  effectively-weighted points, which a degree-1 fit reproduces exactly
-  (zero residual, no downweighting) — confirmed directly against the
-  `lowess`/`loess` core, not binding-specific. Bumped to
-  `fraction = 0.7`, which correctly downweights the injected outlier.
+- Fixed the “Handling Outliers” quickstart example (every binding,
+  `lowess`/`fastLowess`) printing nothing: with only 6 points and
+  `fraction = 0.5`, tricube weighting left just 2 effectively-weighted
+  points, which a degree-1 fit reproduces exactly (zero residual).
+  Bumped to `fraction = 0.7`, which correctly downweights the injected
+  outlier.
 - Fixed the R
   [`OnlineLowess()`](https://thisisamirv.github.io/lowess-project/r/reference/OnlineLowess.md)
   roxygen example printing one line per point (48 lines for a 50-point
@@ -161,6 +174,11 @@
   sample; switched to
   `result.y[1:5]`/`result.confidence_lower[1:5]`/`result.standard_errors[1:5]`-style
   slicing, matching the already-concise Python version.
+- Fixed
+  [`OnlineLowess()`](https://thisisamirv.github.io/lowess-project/r/reference/OnlineLowess.md)’s
+  `min_points` (was `3L`, should be `2L`) and `update_mode` (was
+  `"full"`, should be `"incremental"`) defaults diverging from the Rust
+  core; updated the roxygen docs and `man/OnlineLowess.Rd` to match.
 
 ## rfastlowess 3.1.0
 
@@ -200,7 +218,7 @@
   [`pkgdown::build_site`](https://pkgdown.r-lib.org/reference/build_site.html)
   from the dev workflow.
 - Moved R documentation from ReadTheDocs to GitHub Pages, served by
-  pkgdown at <https://thisisamirv.github.io/loess-project/r/>. The
+  pkgdown at <https://thisisamirv.github.io/lowess-project/r/>. The
   ReadTheDocs site no longer includes R-specific content.
 - Changed R version dependency to 4.4.0 due to issues with installing
   Bioconducter packages on R \< 4.4.0.

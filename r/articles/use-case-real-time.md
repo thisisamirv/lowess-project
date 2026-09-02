@@ -38,7 +38,9 @@ count <- 0
 for (i in seq_along(times)) {
     result <- add_point(model, times[i], temperatures[i])
     if (!is.null(result)) {
-        if (count < 5) cat(sprintf("Time %d: smoothed = %.4f\n", times[i], result$y))
+        if (count < 5) {
+            cat(sprintf("Time %d: smoothed = %.4f\n", times[i], result$y))
+        }
         count <- count + 1
     }
 }

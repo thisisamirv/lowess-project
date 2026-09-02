@@ -48,7 +48,10 @@ legend("topright", c("Observed", "Smoothed", "95% CI"),
 
 ``` r
 
-cat(sprintf("95%% CI: [%.4f, %.4f]\n", result$confidence_lower[1], result$confidence_upper[1]))
+cat(sprintf(
+    "95%% CI: [%.4f, %.4f]\n",
+    result$confidence_lower[1], result$confidence_upper[1]
+))
 #> 95% CI: [0.5168, 0.6874]
 ```
 
