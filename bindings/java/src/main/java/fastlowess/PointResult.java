@@ -6,6 +6,14 @@ import java.util.OptionalInt;
 /**
  * A single smoothed output produced by
  * {@link OnlineLowess#addPoint(double, double)}.
+ *
+ * @param y the smoothed value
+ * @param standardError the standard error of the smoothed value, if computed
+ * @param residual the residual (observed minus smoothed), if computed
+ * @param robustnessWeight the final robustness weight applied to this point, if
+ * computed
+ * @param iterationsUsed the number of robustness iterations performed, if
+ * applicable
  */
 public record PointResult(
         double y,

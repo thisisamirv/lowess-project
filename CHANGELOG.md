@@ -6,6 +6,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+**Java:**
+
+- Fixed `actions/setup-java@v6` warning that `server-username`, `server-password`, and `gpg-passphrase` are deprecated in `release-java.yml`; migrated to `server-username-env-var`, `server-password-env-var`, and `gpg-passphrase-env-var`.
+- Fixed Surefire warning that `fastlowess.native.dir` was "configured twice" whenever `mvn -Dfastlowess.native.dir=...` overrode the `pom.xml` default: the property was duplicated between the command-line user property and `maven-surefire-plugin`'s `<argLine>`. Moved it into `<systemPropertyVariables>` instead, leaving `<argLine>` with only the `--enable-native-access=ALL-UNNAMED` JVM flag.
+- Fixed ~100 `mvn javadoc:jar` warnings (missing `@param`/`@return` tags and undocumented public methods/constructors) across `Options`, `StreamingOptions`, `OnlineOptions`, `PointResult`, `Diagnostics`, `Result`, `FastLowess`, `Lowess`, `OnlineLowess`, and `StreamingLowess`. `maven-javadoc-plugin` now sets `failOnWarning`, and `make java-dev` runs `mvn javadoc:jar` as a dedicated check step, so regressions fail CI instead of silently accumulating.
+
 ## 3.2.0
 
 ### Added

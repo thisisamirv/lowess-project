@@ -4,6 +4,14 @@ import java.util.Optional;
 
 /**
  * Goodness-of-fit diagnostics computed for a LOWESS fit.
+ *
+ * @param rmse root mean squared error
+ * @param mae mean absolute error
+ * @param rSquared R-squared
+ * @param aic Akaike Information Criterion, if computed
+ * @param aicc corrected Akaike Information Criterion, if computed
+ * @param effectiveDf effective degrees of freedom, if computed
+ * @param residualSd residual standard deviation
  */
 public record Diagnostics(
         double rmse,

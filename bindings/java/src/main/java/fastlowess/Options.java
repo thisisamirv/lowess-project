@@ -57,6 +57,11 @@ public final class Options {
         this.cvSeed = b.cvSeed;
     }
 
+    /**
+     * Creates a new builder.
+     *
+     * @return a new {@link Builder}
+     */
     public static Builder builder() {
         return new Builder();
     }
@@ -94,6 +99,10 @@ public final class Options {
         /**
          * The fraction of points used to compute each local regression (default
          * {@code 0.67}).
+         *
+         * @param fraction the fraction of points used to compute each local
+         * regression
+         * @return this builder, for chaining
          */
         public Builder fraction(double fraction) {
             this.fraction = fraction;
@@ -102,6 +111,9 @@ public final class Options {
 
         /**
          * The number of robustifying iterations (default {@code 3}).
+         *
+         * @param iterations the number of robustifying iterations
+         * @return this builder, for chaining
          */
         public Builder iterations(int iterations) {
             this.iterations = iterations;
@@ -112,6 +124,9 @@ public final class Options {
          * Skips recomputation for points within this distance of the last fit
          * point (default {@code NaN}, which auto-sets it to 1% of the x-range
          * in Batch mode, or {@code 0.0} in Streaming/Online mode).
+         *
+         * @param delta the interpolation distance
+         * @return this builder, for chaining
          */
         public Builder delta(double delta) {
             this.delta = delta;
@@ -122,6 +137,9 @@ public final class Options {
          * One of
          * {@code "tricube"}, {@code "epanechnikov"}, {@code "gaussian"}, {@code "uniform"}, {@code "biweight"}, {@code "triangle"}, {@code "cosine"}
          * (default {@code "tricube"}).
+         *
+         * @param weightFunction the weight function name
+         * @return this builder, for chaining
          */
         public Builder weightFunction(String weightFunction) {
             this.weightFunction = weightFunction;
@@ -131,6 +149,9 @@ public final class Options {
         /**
          * One of {@code "bisquare"}, {@code "huber"}, {@code "talwar"} (default
          * {@code "bisquare"}).
+         *
+         * @param robustnessMethod the robustness method name
+         * @return this builder, for chaining
          */
         public Builder robustnessMethod(String robustnessMethod) {
             this.robustnessMethod = robustnessMethod;
@@ -140,6 +161,9 @@ public final class Options {
         /**
          * One of {@code "mad"}, {@code "mar"}, {@code "mean"} (default
          * {@code "mad"}).
+         *
+         * @param scalingMethod the residual scaling method name
+         * @return this builder, for chaining
          */
         public Builder scalingMethod(String scalingMethod) {
             this.scalingMethod = scalingMethod;
@@ -150,6 +174,9 @@ public final class Options {
          * One of
          * {@code "extend"}, {@code "reflect"}, {@code "zero"}, {@code "noboundary"}
          * (default {@code "extend"}).
+         *
+         * @param boundaryPolicy the boundary handling policy name
+         * @return this builder, for chaining
          */
         public Builder boundaryPolicy(String boundaryPolicy) {
             this.boundaryPolicy = boundaryPolicy;
@@ -159,6 +186,9 @@ public final class Options {
         /**
          * How to handle all-zero local weight windows (default
          * {@code "use_local_mean"}).
+         *
+         * @param zeroWeightFallback the zero-weight handling strategy name
+         * @return this builder, for chaining
          */
         public Builder zeroWeightFallback(String zeroWeightFallback) {
             this.zeroWeightFallback = zeroWeightFallback;
@@ -168,6 +198,9 @@ public final class Options {
         /**
          * Stops iterating early once the relative change in fitted values drops
          * below this value.
+         *
+         * @param autoConverge the auto-convergence tolerance
+         * @return this builder, for chaining
          */
         public Builder autoConverge(double autoConverge) {
             this.autoConverge = autoConverge;
@@ -176,6 +209,9 @@ public final class Options {
 
         /**
          * Requests confidence intervals at the given level (e.g. {@code 0.95}).
+         *
+         * @param confidenceIntervals the confidence level
+         * @return this builder, for chaining
          */
         public Builder confidenceIntervals(double confidenceIntervals) {
             this.confidenceIntervals = confidenceIntervals;
@@ -184,6 +220,9 @@ public final class Options {
 
         /**
          * Requests prediction intervals at the given level (e.g. {@code 0.95}).
+         *
+         * @param predictionIntervals the prediction level
+         * @return this builder, for chaining
          */
         public Builder predictionIntervals(double predictionIntervals) {
             this.predictionIntervals = predictionIntervals;
@@ -192,6 +231,9 @@ public final class Options {
 
         /**
          * Whether {@link Result#diagnostics()} should be populated.
+         *
+         * @param returnDiagnostics whether to compute diagnostics
+         * @return this builder, for chaining
          */
         public Builder returnDiagnostics(boolean returnDiagnostics) {
             this.returnDiagnostics = returnDiagnostics;
@@ -200,6 +242,9 @@ public final class Options {
 
         /**
          * Whether {@link Result#residuals()} should be populated.
+         *
+         * @param returnResiduals whether to include residuals in the result
+         * @return this builder, for chaining
          */
         public Builder returnResiduals(boolean returnResiduals) {
             this.returnResiduals = returnResiduals;
@@ -208,6 +253,10 @@ public final class Options {
 
         /**
          * Whether {@link Result#robustnessWeights()} should be populated.
+         *
+         * @param returnRobustnessWeights whether to include robustness weights
+         * in the result
+         * @return this builder, for chaining
          */
         public Builder returnRobustnessWeights(boolean returnRobustnessWeights) {
             this.returnRobustnessWeights = returnRobustnessWeights;
@@ -217,6 +266,9 @@ public final class Options {
         /**
          * Whether to use the multi-threaded execution path (default
          * {@code true}).
+         *
+         * @param parallel whether to enable parallel execution
+         * @return this builder, for chaining
          */
         public Builder parallel(boolean parallel) {
             this.parallel = parallel;
@@ -225,6 +277,9 @@ public final class Options {
 
         /**
          * Whether {@link Result#standardErrors()} should be populated.
+         *
+         * @param returnSe whether to return standard errors
+         * @return this builder, for chaining
          */
         public Builder returnSe(boolean returnSe) {
             this.returnSe = returnSe;
@@ -233,6 +288,9 @@ public final class Options {
 
         /**
          * One of {@code "cpu"}, {@code "gpu"} (default {@code "cpu"}).
+         *
+         * @param backend the execution backend name
+         * @return this builder, for chaining
          */
         public Builder backend(String backend) {
             this.backend = backend;
@@ -242,6 +300,9 @@ public final class Options {
         /**
          * Candidate fractions to cross-validate; enables
          * {@link Result#cvScores()}.
+         *
+         * @param cvFractions the fractions to test for cross-validation
+         * @return this builder, for chaining
          */
         public Builder cvFractions(double[] cvFractions) {
             this.cvFractions = cvFractions;
@@ -251,6 +312,9 @@ public final class Options {
         /**
          * One of {@code "kfold"}, {@code "loocv"} (default {@code "kfold"});
          * only used when {@code cvFractions} is set.
+         *
+         * @param cvMethod the cross-validation method name
+         * @return this builder, for chaining
          */
         public Builder cvMethod(String cvMethod) {
             this.cvMethod = cvMethod;
@@ -260,6 +324,9 @@ public final class Options {
         /**
          * Number of folds for {@code "kfold"} cross-validation (default
          * {@code 5}).
+         *
+         * @param cvK the number of folds
+         * @return this builder, for chaining
          */
         public Builder cvK(int cvK) {
             this.cvK = cvK;
@@ -268,12 +335,20 @@ public final class Options {
 
         /**
          * Seeds the cross-validation fold assignment for reproducibility.
+         *
+         * @param cvSeed the random seed
+         * @return this builder, for chaining
          */
         public Builder cvSeed(long cvSeed) {
             this.cvSeed = cvSeed;
             return this;
         }
 
+        /**
+         * Builds the immutable {@link Options}.
+         *
+         * @return the constructed options
+         */
         public Options build() {
             return new Options(this);
         }

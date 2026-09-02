@@ -92,8 +92,10 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven-surefire-plugin.version}</version>
                 <configuration>
-                    <argLine>-Dfastlowess.native.dir=${fastlowess.native.dir}
-                        --enable-native-access=ALL-UNNAMED</argLine>
+                    <argLine>--enable-native-access=ALL-UNNAMED</argLine>
+                    <systemPropertyVariables>
+                        <fastlowess.native.dir>${fastlowess.native.dir}</fastlowess.native.dir>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
             <plugin>
@@ -113,6 +115,9 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>${maven-javadoc-plugin.version}</version>
+                <configuration>
+                    <failOnWarning>true</failOnWarning>
+                </configuration>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>

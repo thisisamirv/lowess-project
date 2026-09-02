@@ -1,11 +1,20 @@
 = News
 
+== fastlowess (Java) (development version)
+
+=== Fixed
+
+* Fixed `actions/setup-java@v6` warning that `server-username`, `server-password`, and `gpg-passphrase` are deprecated in `release-java.yml`; migrated to `server-username-env-var`, `server-password-env-var`, and `gpg-passphrase-env-var`.
+* Fixed Surefire warning that `fastlowess.native.dir` was "configured twice" whenever `mvn -Dfastlowess.native.dir=...` overrode the `pom.xml` default: the property was duplicated between the command-line user property and `maven-surefire-plugin`'s `<argLine>`. Moved it into `<systemPropertyVariables>` instead, leaving `<argLine>` with only the `--enable-native-access=ALL-UNNAMED` JVM flag.
+* Fixed ~100 `mvn javadoc:jar` warnings (missing `@param`/`@return` tags and undocumented public methods/constructors) across `Options`, `StreamingOptions`, `OnlineOptions`, `PointResult`, `Diagnostics`, `Result`, `FastLowess`, `Lowess`, `OnlineLowess`, and `StreamingLowess`. `maven-javadoc-plugin` now sets `failOnWarning`, and `make java-dev` runs `mvn javadoc:jar` as a dedicated check step, so regressions fail CI instead of silently accumulating.
+
 == fastlowess (Java) 3.2.0
 
 === Added
 
 * Added `dev/add-readme-to-docs.py`, which auto-detects the Hugo (Go, Java) vs Starlight (Node.js, WASM) docs-site flavor and embeds `README.md` accordingly; wired into the corresponding Makefiles and `package.json` scripts.
 * Added `.github/dependabot.yml`, covering every dependency ecosystem in the repo (`github-actions`, `cargo`, `npm`, `pip`, `maven`, `gomod`). Each directory is grouped so all its updates, including majors, land in a single weekly PR.
+* Added `dev/check_pinned_versions.py` and a weekly `.github/workflows/check-versions.yml`, which check hardcoded tool/library version pins that Dependabot can't see (Corrosion's CMake `FetchContent` tag, the vendored doxygen-awesome-css theme, the Checkstyle jar, golangci-lint, and Hugo) against their latest GitHub release and fail CI if any are outdated. Read-only: it never opens PRs or edits files itself.
 * Added a new Java binding (`bindings/java`), consuming the `fastLowess` Rust core via a JNI shared library (`fastlowess-java` crate, using the `jni` crate).
 
 === Changed

@@ -8,6 +8,11 @@ public final class Lowess implements AutoCloseable {
 
     private long handle;
 
+    /**
+     * Creates a new batch model from the given options.
+     *
+     * @param options the model configuration
+     */
     public Lowess(Options options) {
         this.handle = NativeBridge.lowessNew(
                 options.fraction,
@@ -37,6 +42,10 @@ public final class Lowess implements AutoCloseable {
 
     /**
      * Fits the model to {@code x}/{@code y}, using uniform weights.
+     *
+     * @param x the x values
+     * @param y the y values
+     * @return the fit result
      */
     public Result fit(double[] x, double[] y) {
         return fit(x, y, null);
@@ -44,6 +53,12 @@ public final class Lowess implements AutoCloseable {
 
     /**
      * Fits the model to {@code x}/{@code y}, using the given per-point weights.
+     *
+     * @param x the x values
+     * @param y the y values
+     * @param customWeights non-negative per-observation weights, or
+     * {@code null}
+     * @return the fit result
      */
     public Result fit(double[] x, double[] y, double[] customWeights) {
         checkOpen();

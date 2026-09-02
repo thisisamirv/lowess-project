@@ -75,7 +75,11 @@ dev:
 	@echo "=============================================================================="
 	@cd $(JAVA_DIR) && mvn -q clean test
 	@echo "=============================================================================="
-	@echo "6. Checking for outdated Maven plugins & dependencies..."
+	@echo "6. Javadoc (fails on missing @param/@return/comments)..."
+	@echo "=============================================================================="
+	@cd $(JAVA_DIR) && mvn -q javadoc:jar
+	@echo "=============================================================================="
+	@echo "7. Checking for outdated Maven plugins & dependencies..."
 	@echo "=============================================================================="
 	@cd $(JAVA_DIR) && mvn -q versions:display-plugin-updates
 	@cd $(JAVA_DIR) && mvn -q versions:display-dependency-updates

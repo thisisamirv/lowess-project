@@ -16,6 +16,8 @@ public final class FastLowess {
 
     /**
      * Returns the version of this Java binding.
+     *
+     * @return the version string
      */
     public static String version() {
         return VERSION;
@@ -24,6 +26,8 @@ public final class FastLowess {
     /**
      * Returns true if this library was built with the GPU execution backend
      * enabled.
+     *
+     * @return true if GPU support is compiled in
      */
     public static boolean gpuEnabled() {
         return NativeBridge.gpuEnabled();

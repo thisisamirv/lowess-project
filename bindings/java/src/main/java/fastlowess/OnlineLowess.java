@@ -9,6 +9,11 @@ public final class OnlineLowess implements AutoCloseable {
 
     private long handle;
 
+    /**
+     * Creates a new online model from the given options.
+     *
+     * @param options the model configuration
+     */
     public OnlineLowess(OnlineOptions options) {
         Options c = options.common;
         this.handle = NativeBridge.onlineNew(
@@ -35,6 +40,11 @@ public final class OnlineLowess implements AutoCloseable {
     /**
      * Adds a point to the model, returning a smoothed output once at least
      * {@code minPoints} have been seen, or {@link Optional#empty()} otherwise.
+     *
+     * @param x the x value
+     * @param y the y value
+     * @return the smoothed output, or {@link Optional#empty()} if not enough
+     * points have been seen yet
      */
     public Optional<PointResult> addPoint(double x, double y) {
         checkOpen();
