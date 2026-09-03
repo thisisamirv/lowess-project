@@ -47,6 +47,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed pkg.go.dev showing "License: None detected" and refusing to render documentation, and the "Tagged version"/"Stable version" checks failing: the Go module lives at `bindings/go/fastlowess` but `LICENSE-MIT`/`LICENSE-APACHE` only existed one directory up at `bindings/go`, outside where pkg.go.dev scans for a nested module's license. Copied both license files into `bindings/go/fastlowess`. `release-go.yml` now also pushes a `bindings/go/fastlowess/vX.Y.Z` tag (in addition to the repo-wide `vX.Y.Z` release tag), which Go's nested-module versioning requires to recognize a release as tagged/stable.
 
+**Julia:**
+
+- Project version not bumped, resulting in unsuccessful release of version 3.2.0.
+
 **Java:**
 
 - Fixed `actions/setup-java@v6`'s deprecation warning for `server-username`/`server-password`/`gpg-passphrase` in `release-java.yml`; migrated to the `-env-var` variants.
