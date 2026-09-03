@@ -65,7 +65,7 @@ PINS = [
         "name": "MathJax (go binding docs-site CDN)",
         "file": REPO_ROOT
         / "bindings/go/docs-site/layouts/_partials/docs/inject/head.html",
-        "pattern": re.compile(r"mathjax/(?P<version>\d+\.\d+\.\d+)/es5"),
+        "pattern": re.compile(r"mathjax/(?P<version>\d+\.\d+\.\d+)/tex-mml-chtml"),
         "repo": "mathjax/MathJax",
     },
     {

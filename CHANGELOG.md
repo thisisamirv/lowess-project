@@ -50,6 +50,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated `@astrojs/starlight` to v0.42 and `astro` to v7.3.
 
+**Java:**
+
+- Bumped the docs-site's jsDelivr MathJax CDN reference (`footer-scripts.hbs`) from the rolling `mathjax@3` to the pinned `mathjax@4.1.3`.
+
+**Go:**
+
+- Bumped docs-site MathJax CDN version from `3.2.2` to `4.1.3`, updating `dev/check_pinned_versions.py`'s pattern to match MathJax 4's CDN layout (the `es5/` path component was dropped).
+
 ### Fixed
 
 **Monorepo:**

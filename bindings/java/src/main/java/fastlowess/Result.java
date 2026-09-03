@@ -16,8 +16,10 @@ import java.util.OptionalInt;
  * @param residuals residuals, if computed
  * @param robustnessWeights robustness weights, if computed
  * @param cvScores cross-validation scores per tested fraction, if CV was run
- * @param fractionUsed the fraction used (as set, or selected by cross-validation)
- * @param iterationsUsed the number of robustness iterations actually performed, if applicable
+ * @param fractionUsed the fraction used (as set, or selected by
+ * cross-validation)
+ * @param iterationsUsed the number of robustness iterations actually performed,
+ * if applicable
  * @param diagnostics fit diagnostics, if requested
  */
 public record Result(
