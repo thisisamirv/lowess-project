@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added two prebuilt targets, `aarch64-unknown-linux-musl` (via cargo-zigbuild) and `armv7-unknown-linux-gnueabihf` (via an apt cross toolchain), with matching optional npm subpackages.
 
+**C++:**
+
+- Added ARM64 release binaries to `release-cpp.yml`: `libfastlowess-linux-arm64.so` (native `ubuntu-24.04-arm` runner), `fastlowess-win32-arm64.dll` (native `windows-11-arm` runner), and `libfastlowess-macos-arm64.dylib`. The macOS x64 job is now explicitly pinned to `macos-13` (the last Intel-based GitHub-hosted image) rather than `macos-latest`, since `macos-latest` has pointed at Apple Silicon (arm64) runners since 2024 — the previous single `macos-latest` job's "macos-x64" asset was actually an arm64 binary mislabeled as x64. Documented all four new/relabeled binaries in `introduction/installation.md`.
+
 ### Changed
 
 **Monorepo:**

@@ -1,12 +1,31 @@
 \page news News
 
 <!-- markdownlint-disable MD024 MD025 -->
+# fastlowess (C++) (development version)
+
+## Added
+
+* Added `dev/bump_version.py --version X.Y.Z`, which updates the version across every Rust crate/binding `Cargo.toml`, the internal `fastLowess`/`lowess` path-dependency requirements, each binding's own version file (`package.json` + npm subpackages, `pyproject`-adjacent `__version__.py`, `pom.xml`, `DESCRIPTION`, `Project.toml`, `version.go`, `CMakeLists.txt`, `FastLowess.java`), `CITATION.cff`, and the Spack recipe's example `url`, in one pass. Supports `--dry-run`.
+* Added an optional `commit` input to every release workflow's `workflow_dispatch` trigger, so a manual run can pin the checked-out/built commit instead of always building from the triggering ref.
+* Added ARM64 release binaries to `release-cpp.yml`: `libfastlowess-linux-arm64.so` (native `ubuntu-24.04-arm` runner), `fastlowess-win32-arm64.dll` (native `windows-11-arm` runner), and `libfastlowess-macos-arm64.dylib`. The macOS x64 job is now explicitly pinned to `macos-13` (the last Intel-based GitHub-hosted image) rather than `macos-latest`, since `macos-latest` has pointed at Apple Silicon (arm64) runners since 2024 — the previous single `macos-latest` job's "macos-x64" asset was actually an arm64 binary mislabeled as x64. Documented all four new/relabeled binaries in `introduction/installation.md`.
+
+## Changed
+
+* Added four new pins to `dev/check_pinned_versions.py`: the R binding's `Config/rextendr/version`/`Config/roxygen2/version` (`DESCRIPTION`), and the vendored KaTeX CDN version in both `crates/lowess/katex-header.html` and `crates/fastLowess/katex-header.html`.
+
+## Fixed
+
+* Fixed `release-conda.yml` failing on `sed: can't read recipe/meta.yaml`: the `fastlowess-feedstock` repo migrated to rattler-build's `recipe/recipe.yaml` format. Updated the version/sha256/build-number `sed` patterns to match and removed the now-dead R-package-name-fix, Python-dependency-injection, and `build_r.sh` generation steps.
+* Fixed `release-cpp.yml`'s `spack-release` job failing on `git push` due to a detached HEAD; it now checks out the default branch explicitly and pushes via `git push origin HEAD:<default-branch>`.
+* Fixed `bindings/cpp/spack/package.py`'s example `url` (`archive/refs/tags/vX.Y.Z.tar.gz`) going stale, since `release-cpp.yml`'s `spack-release` job only ever updated the `version()`/`sha256` block below it. `dev/bump_version.py` now also refreshes that `url` line.
+
 # fastlowess (C++) 3.2.0
 
 ## Added
 
 * Added `dev/add-readme-to-docs.py`, which auto-detects the Hugo (Go, Java) vs Starlight (Node.js, WASM) docs-site flavor and embeds `README.md` accordingly; wired into the corresponding Makefiles and `package.json` scripts.
 * Added `.github/dependabot.yml`, covering every dependency ecosystem in the repo (`github-actions`, `cargo`, `npm`, `pip`, `maven`, `gomod`). Each directory is grouped so all its updates, including majors, land in a single weekly PR.
+* Added `dev/check_pinned_versions.py` and a weekly `.github/workflows/check-versions.yml`, which check hardcoded tool/library version pins that Dependabot can't see (Corrosion's CMake `FetchContent` tag, the vendored doxygen-awesome-css theme, the Checkstyle jar, golangci-lint, and Hugo) against their latest GitHub release and fail CI if any are outdated. Read-only: it never opens PRs or edits files itself.
 * Library is now available on Spack (`fastlowess-cpp`).
 
 ## Changed

@@ -12,6 +12,14 @@ wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fast
 g++ -o myapp myapp.cpp -L. -lfastlowess-linux-x64
 ```
 
+## Pre-built Binaries (Linux (ARM64))
+
+```bash
+wget https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-linux-arm64.so
+wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp
+g++ -o myapp myapp.cpp -L. -lfastlowess-linux-arm64
+```
+
 ## Pre-built Binaries (macOS (x64))
 
 ```bash
@@ -20,12 +28,28 @@ curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/
 clang++ -o myapp myapp.cpp -L. -lfastlowess-macos-x64
 ```
 
+## Pre-built Binaries (macOS (ARM64))
+
+```bash
+curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-macos-arm64.dylib
+curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp
+clang++ -o myapp myapp.cpp -L. -lfastlowess-macos-arm64
+```
+
 ## Pre-built Binaries (Windows (x64))
 
 ```powershell
 wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess-win32-x64.dll
 wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp
 cl myapp.cpp /link fastlowess-win32-x64.lib
+```
+
+## Pre-built Binaries (Windows (ARM64))
+
+```powershell
+wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess-win32-arm64.dll
+wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp
+cl myapp.cpp /link fastlowess-win32-arm64.lib
 ```
 
 ## From Source

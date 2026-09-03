@@ -31,13 +31,25 @@ jobs:
             artifact_name: libfastlowess.so
             asset_name: libfastlowess-linux-x64.so
             target_dir: target/release
+          - os: ubuntu-24.04-arm
+            artifact_name: libfastlowess.so
+            asset_name: libfastlowess-linux-arm64.so
+            target_dir: target/release
           - os: windows-latest
             artifact_name: fastlowess.dll
             asset_name: fastlowess-win32-x64.dll
             target_dir: target/release
-          - os: macos-latest
+          - os: windows-11-arm
+            artifact_name: fastlowess.dll
+            asset_name: fastlowess-win32-arm64.dll
+            target_dir: target/release
+          - os: macos-13
             artifact_name: libfastlowess.dylib
             asset_name: libfastlowess-macos-x64.dylib
+            target_dir: target/release
+          - os: macos-latest
+            artifact_name: libfastlowess.dylib
+            asset_name: libfastlowess-macos-arm64.dylib
             target_dir: target/release
 
     steps:
