@@ -62,6 +62,13 @@ PINS = [
         "repo": "gohugoio/hugo",
     },
     {
+        "name": "MathJax (go binding docs-site CDN)",
+        "file": REPO_ROOT
+        / "bindings/go/docs-site/layouts/_partials/docs/inject/head.html",
+        "pattern": re.compile(r"mathjax/(?P<version>\d+\.\d+\.\d+)/es5"),
+        "repo": "mathjax/MathJax",
+    },
+    {
         "name": "rextendr scaffold (DESCRIPTION)",
         "file": REPO_ROOT / "bindings/r/DESCRIPTION",
         "pattern": re.compile(r"Config/rextendr/version:\s*(?P<version>\d+\.\d+\.\d+)"),

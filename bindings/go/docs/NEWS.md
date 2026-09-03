@@ -14,6 +14,7 @@ weight: 100
 ## Changed
 
 * Added four new pins to `dev/check_pinned_versions.py`: the R binding's `Config/rextendr/version`/`Config/roxygen2/version` (`DESCRIPTION`), and the vendored KaTeX CDN version in both `crates/lowess/katex-header.html` and `crates/fastLowess/katex-header.html`.
+* Added a `dev/check_pinned_versions.py` pin for the Go binding's docs-site MathJax CDN version (`bindings/go/docs-site/layouts/_partials/docs/inject/head.html`), which was previously unchecked.
 
 ## Fixed
 
