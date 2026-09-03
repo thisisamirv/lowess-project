@@ -111,7 +111,7 @@ test_that("Lowess diagnostics work", {
     expect_true("mae" %in% names(result$diagnostics))
     expect_true("r_squared" %in% names(result$diagnostics))
 
-    #  R² should be between 0 and 1
+    #  R2 should be between 0 and 1
     expect_gte(result$diagnostics$r_squared, 0)
     expect_lte(result$diagnostics$r_squared, 1)
 })

@@ -1,15 +1,35 @@
 <!-- markdownlint-disable MD024 MD025 -->
+# fastlowess (Python) (development version)
+
+## Added
+
+* Added `dev/bump_version.py --version X.Y.Z`, which updates the version across every Rust crate/binding `Cargo.toml`, the internal `fastLowess`/`lowess` path-dependency requirements, each binding's own version file (`package.json` + npm subpackages, `pyproject`-adjacent `__version__.py`, `pom.xml`, `DESCRIPTION`, `Project.toml`, `version.go`, `CMakeLists.txt`, `FastLowess.java`), `CITATION.cff`, and the Spack recipe's example `url`, in one pass. Supports `--dry-run`.
+* Added an optional `commit` input to every release workflow's `workflow_dispatch` trigger, so a manual run can pin the checked-out/built commit instead of always building from the triggering ref.
+
+## Changed
+
+* Added four new pins to `dev/check_pinned_versions.py`: the R binding's `Config/rextendr/version`/`Config/roxygen2/version` (`DESCRIPTION`), and the vendored KaTeX CDN version in both `crates/lowess/katex-header.html` and `crates/fastLowess/katex-header.html`.
+
+## Fixed
+
+* Fixed a handful of `R²`/`O(n²)` Unicode superscripts that the earlier ASCII-fication pass (see below) missed: `bindings/r/tests/testthat/test-fastlowess.R`, and the `lowess` crate's `src/algorithms/interpolation.rs`, `src/api.rs`, `src/evaluation/diagnostics.rs`, and `tests/lowess/{adapters_batch_tests,evaluation_diagnostics_tests}.rs` doc-comments/test-comments — all missed because they were added or edited after that pass ran. Replaced with `R2`/`O(n^2)`, matching the rest of the codebase.
+* Fixed `release-conda.yml` failing on `sed: can't read recipe/meta.yaml`: the `fastlowess-feedstock` repo migrated to rattler-build's `recipe/recipe.yaml` format. Updated the version/sha256/build-number `sed` patterns to match and removed the now-dead R-package-name-fix, Python-dependency-injection, and `build_r.sh` generation steps.
+* Fixed `release-pypi.yml`'s macOS/Windows jobs printing a pip version-check notice on every run; added `PIP_DISABLE_PIP_VERSION_CHECK: "1"` to the workflow's `env`.
+* Fixed the same pip version-check notice in `release-gpu.yml`; added the same `env` variable.
+
 # fastlowess (Python) 3.2.0
 
 ## Added
 
 * Added `dev/add-readme-to-docs.py`, which auto-detects the Hugo (Go, Java) vs Starlight (Node.js, WASM) docs-site flavor and embeds `README.md` accordingly; wired into the corresponding Makefiles and `package.json` scripts.
 * Added `.github/dependabot.yml`, covering every dependency ecosystem in the repo (`github-actions`, `cargo`, `npm`, `pip`, `maven`, `gomod`). Each directory is grouped so all its updates, including majors, land in a single weekly PR.
+* Added `dev/check_pinned_versions.py` and a weekly `.github/workflows/check-versions.yml`, which check hardcoded tool/library version pins that Dependabot can't see (Corrosion's CMake `FetchContent` tag, the vendored doxygen-awesome-css theme, the Checkstyle jar, golangci-lint, and Hugo) against their latest GitHub release and fail CI if any are outdated. Read-only: it never opens PRs or edits files itself.
 
 ## Changed
 
 * Modified `verify_snippets.py` to verify snippets and also add the output of the snippets to the markdown file.
 * Added a `large` benchmark category (n = 50000) to `benchmarks/rfastlowess.R` and `benchmarks/stats_lowess.R`, since every existing category ran in well under 100ms. Covers 4 scenarios (`large_delta_0`, `large_delta_0.1`, `large_high_iter`, `large_high_fraction`) stressing `delta`, iteration count, and fraction. `benchmarks/compare.py`'s plot grid grew from 5x2 to 7x2 to fit them.
+* Added `.gitattributes`, normalizing all text files to LF line endings (`* text=auto eol=lf`) and marking binary formats (images, archives, compiled libraries, `.rds`/`.RData`, etc.) so Git never treats them as text.
 * Consolidated every crate/binding README: merged the "Installation" and "Documentation" sections, replaced GitHub-only alert syntax with plain blockquotes, removed the redundant "API Reference" and "Changelog" sections (each now has its own docs-site page), shortened the "GPU Backend" blurb, and added a "Read more" link to the Concepts page. The top-level repository README is unchanged, since it's only ever viewed on GitHub.
 * Renamed the batch adapter's "When to Use" heading to "When to Use Batch Adapter" across every binding/crate's API docs.
 * Vendored the [doxygen-awesome-css](https://github.com/jothepro/doxygen-awesome-css) theme (v2.4.2) for a modern, sidebar-only cpp Doxygen site with automatic dark mode.

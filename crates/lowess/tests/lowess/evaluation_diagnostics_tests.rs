@@ -2,7 +2,7 @@
 //! Tests for diagnostic metrics computation.
 //!
 //! These tests verify the diagnostic metrics used in LOWESS for:
-//! - Model quality assessment (RMSE, MAE, R²)
+//! - Model quality assessment (RMSE, MAE, R2)
 //! - Residual analysis
 //! - Model selection (AIC, AICc)
 //! - Effective degrees of freedom
@@ -10,7 +10,7 @@
 //!
 //! ## Test Organization
 //!
-//! 1. **Basic Metrics** - RMSE, MAE, R² computation
+//! 1. **Basic Metrics** - RMSE, MAE, R2 computation
 //! 2. **Residual Statistics** - Residual SD and effective DF
 //! 3. **Model Selection** - AIC and AICc
 //! 4. **Coverage** - Interval coverage computation
@@ -69,7 +69,7 @@ fn test_rmse_mae_typical() {
     );
 }
 
-/// Test R² with single point.
+/// Test R2 with single point.
 ///
 /// Verifies that single point returns 1.
 #[test]
@@ -84,7 +84,7 @@ fn test_r_squared_single() {
     );
 }
 
-/// Test R² with perfect fit.
+/// Test R2 with perfect fit.
 ///
 /// Verifies that perfect fit returns 1.
 #[test]
@@ -99,14 +99,14 @@ fn test_r_squared_perfect_fit() {
     );
 }
 
-/// Test R² with zero total variance.
+/// Test R2 with zero total variance.
 ///
 /// Verifies handling when all y values are identical.
 #[test]
 fn test_r_squared_zero_variance() {
     let y_eq = vec![3.0f64, 3.0, 3.0];
 
-    // Imperfect fit with zero variance => R² = 0
+    // Imperfect fit with zero variance => R2 = 0
     let ys_bad = vec![2.0f64, 3.0, 4.0];
     assert_relative_eq!(
         Diagnostics::calculate_r_squared(&y_eq, &ys_bad),
@@ -115,16 +115,16 @@ fn test_r_squared_zero_variance() {
     );
 }
 
-/// Test R² with typical case.
+/// Test R2 with typical case.
 ///
-/// Verifies correct R² calculation.
+/// Verifies correct R2 calculation.
 #[test]
 fn test_r_squared_typical() {
     // y = [1, 2, 3], ys = [1, 2, 2]
     // Mean(y) = 2
-    // SS_res = (1-1)² + (2-2)² + (3-2)² = 1
-    // SS_tot = (1-2)² + (2-2)² + (3-2)² = 2
-    // R² = 1 - 1/2 = 0.5
+    // SS_res = (1-1)^2 + (2-2)^2 + (3-2)^2 = 1
+    // SS_tot = (1-2)^2 + (2-2)^2 + (3-2)^2 = 2
+    // R2 = 1 - 1/2 = 0.5
     let y = vec![1.0f64, 2.0, 3.0];
     let ys = vec![1.0f64, 2.0, 2.0];
 

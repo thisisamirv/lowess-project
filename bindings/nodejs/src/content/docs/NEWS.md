@@ -2,12 +2,31 @@
 title: News
 ---
 <!-- markdownlint-disable MD024 MD025 -->
+# fastlowess (Node.js) (development version)
+
+## Added
+
+* Added `dev/bump_version.py --version X.Y.Z`, which updates the version across every Rust crate/binding `Cargo.toml`, the internal `fastLowess`/`lowess` path-dependency requirements, each binding's own version file (`package.json` + npm subpackages, `pyproject`-adjacent `__version__.py`, `pom.xml`, `DESCRIPTION`, `Project.toml`, `version.go`, `CMakeLists.txt`, `FastLowess.java`), `CITATION.cff`, and the Spack recipe's example `url`, in one pass. Supports `--dry-run`.
+* Added an optional `commit` input to every release workflow's `workflow_dispatch` trigger, so a manual run can pin the checked-out/built commit instead of always building from the triggering ref.
+* Added two prebuilt targets, `aarch64-unknown-linux-musl` (via cargo-zigbuild) and `armv7-unknown-linux-gnueabihf` (via an apt cross toolchain), with matching optional npm subpackages.
+
+## Changed
+
+* Added four new pins to `dev/check_pinned_versions.py`: the R binding's `Config/rextendr/version`/`Config/roxygen2/version` (`DESCRIPTION`), and the vendored KaTeX CDN version in both `crates/lowess/katex-header.html` and `crates/fastLowess/katex-header.html`.
+
+## Fixed
+
+* Fixed a handful of `R²`/`O(n²)` Unicode superscripts that the earlier ASCII-fication pass (see below) missed: `bindings/r/tests/testthat/test-fastlowess.R`, and the `lowess` crate's `src/algorithms/interpolation.rs`, `src/api.rs`, `src/evaluation/diagnostics.rs`, and `tests/lowess/{adapters_batch_tests,evaluation_diagnostics_tests}.rs` doc-comments/test-comments — all missed because they were added or edited after that pass ran. Replaced with `R2`/`O(n^2)`, matching the rest of the codebase.
+* Fixed `release-conda.yml` failing on `sed: can't read recipe/meta.yaml`: the `fastlowess-feedstock` repo migrated to rattler-build's `recipe/recipe.yaml` format. Updated the version/sha256/build-number `sed` patterns to match and removed the now-dead R-package-name-fix, Python-dependency-injection, and `build_r.sh` generation steps.
+* Fixed `astro build` failing since Astro 7 no longer bundles `@astrojs/markdown-remark` by default, which `astro.config.mjs`'s KaTeX plugins need; added it as an explicit devDependency.
+
 # fastlowess (Node.js) 3.2.0
 
 ## Added
 
 * Added `dev/add-readme-to-docs.py`, which auto-detects the Hugo (Go, Java) vs Starlight (Node.js, WASM) docs-site flavor and embeds `README.md` accordingly; wired into the corresponding Makefiles and `package.json` scripts.
 * Added `.github/dependabot.yml`, covering every dependency ecosystem in the repo (`github-actions`, `cargo`, `npm`, `pip`, `maven`, `gomod`). Each directory is grouped so all its updates, including majors, land in a single weekly PR.
+* Added `dev/check_pinned_versions.py` and a weekly `.github/workflows/check-versions.yml`, which check hardcoded tool/library version pins that Dependabot can't see (Corrosion's CMake `FetchContent` tag, the vendored doxygen-awesome-css theme, the Checkstyle jar, golangci-lint, and Hugo) against their latest GitHub release and fail CI if any are outdated. Read-only: it never opens PRs or edits files itself.
 * Added a `VERSION` export (`bindings/nodejs/index.js`), sourced from `package.json`, so consumers can query the Node.js binding's own version without reaching into `require('fastlowess/package.json')` directly.
 
 ## Changed

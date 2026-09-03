@@ -6,7 +6,7 @@
 //! - Robust iterations with configurable robustness methods
 //! - Confidence and prediction intervals
 //! - Cross-validation for parameter selection
-//! - Diagnostic metrics (RMSE, MAE, R², etc.)
+//! - Diagnostic metrics (RMSE, MAE, R2, etc.)
 //! - Auto-convergence detection
 //!
 //! ## Test Organization
@@ -196,7 +196,7 @@ fn test_batch_confidence_and_prediction_intervals() {
 
 /// Test diagnostic metrics computation.
 ///
-/// Verifies that RMSE, MAE, R², and other diagnostics are computed correctly.
+/// Verifies that RMSE, MAE, R2, and other diagnostics are computed correctly.
 #[test]
 fn test_batch_diagnostics() {
     let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -225,7 +225,7 @@ fn test_batch_diagnostics() {
     assert!(diag.mae >= 0.0, "MAE should be non-negative");
     assert!(
         diag.r_squared >= 0.0 && diag.r_squared <= 1.0,
-        "R² should be in [0, 1]"
+        "R2 should be in [0, 1]"
     );
     assert!(
         diag.residual_sd >= 0.0,

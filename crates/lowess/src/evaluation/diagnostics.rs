@@ -5,7 +5,7 @@
 //! model selection criteria, and coverage statistics.
 // ## srrstats Compliance
 //
-// @srrstats {RE3.0} Goodness-of-fit metrics: RMSE, MAE, R² (coefficient of determination).
+// @srrstats {RE3.0} Goodness-of-fit metrics: RMSE, MAE, R2 (coefficient of determination).
 // @srrstats {RE3.2} Model selection criteria: AIC, AICc with finite-sample correction.
 // @srrstats {G2.6} Standard error estimation from residuals via MAD-based sigma.
 

@@ -516,7 +516,7 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
         self
     }
 
-    // Include statistical diagnostics (Metric, R², etc.) in output.
+    // Include statistical diagnostics (Metric, R2, etc.) in output.
     pub fn return_diagnostics(mut self) -> Self {
         self.return_diagnostics = Some(true);
         self

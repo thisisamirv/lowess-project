@@ -15,6 +15,7 @@
 
 ## Fixed
 
+* Fixed a handful of `R²`/`O(n²)` Unicode superscripts that the earlier ASCII-fication pass (see below) missed: `bindings/r/tests/testthat/test-fastlowess.R`, and the `lowess` crate's `src/algorithms/interpolation.rs`, `src/api.rs`, `src/evaluation/diagnostics.rs`, and `tests/lowess/{adapters_batch_tests,evaluation_diagnostics_tests}.rs` doc-comments/test-comments — all missed because they were added or edited after that pass ran. Replaced with `R2`/`O(n^2)`, matching the rest of the codebase.
 * Fixed `release-conda.yml` failing on `sed: can't read recipe/meta.yaml`: the `fastlowess-feedstock` repo migrated to rattler-build's `recipe/recipe.yaml` format. Updated the version/sha256/build-number `sed` patterns to match and removed the now-dead R-package-name-fix, Python-dependency-injection, and `build_r.sh` generation steps.
 * Fixed `release-cpp.yml`'s `spack-release` job failing on `git push` due to a detached HEAD; it now checks out the default branch explicitly and pushes via `git push origin HEAD:<default-branch>`.
 * Fixed `bindings/cpp/spack/package.py`'s example `url` (`archive/refs/tags/vX.Y.Z.tar.gz`) going stale, since `release-cpp.yml`'s `spack-release` job only ever updated the `version()`/`sha256` block below it. `dev/bump_version.py` now also refreshes that `url` line.
