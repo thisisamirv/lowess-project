@@ -5,6 +5,9 @@ on:
     - cron: "0 6 * * 1" # every Monday at 06:00 UTC
   workflow_dispatch:
 
+permissions:
+  issues: write
+
 jobs:
   check:
     name: Check hardcoded tool/library version pins
@@ -17,6 +20,35 @@ jobs:
           python-version: "3.12"
 
       - name: Check pinned versions
+        id: check
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python dev/check_pinned_versions.py
+        run: |
+          if python dev/check_pinned_versions.py > check-output.txt 2>&1; then
+            echo "outdated=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "outdated=true" >> "$GITHUB_OUTPUT"
+          fi
+          cat check-output.txt
+
+      - name: Open or update issue for outdated pins
+        if: steps.check.outputs.outdated == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          {
+            echo "\`dev/check_pinned_versions.py\` found outdated or unreachable version pins:"
+            echo
+            echo '```'
+            cat check-output.txt
+            echo '```'
+            echo
+            echo "_Opened automatically by [check-versions.yml](../actions/workflows/check-versions.yml). Close once the pin(s) above have been updated._"
+          } > issue-body.md
+
+          existing=$(gh issue list --search "\"Outdated pinned versions\" in:title" --state open --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body-file issue-body.md
+          else
+            gh issue create --title "Outdated pinned versions" --body-file issue-body.md
+          fi
