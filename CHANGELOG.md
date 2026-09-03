@@ -37,6 +37,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Bumped the vendored KaTeX CDN version (`katex-header.html`) from `0.18.4` to `0.18.5`, updating the SRI `integrity` hashes to match.
 
+**Node.js:**
+
+- Updated `@astrojs/starlight` to v0.42, `@napi-rs/cli` to v3.9, and `astro` to v7.3.
+
+**WASM:**
+
+- Updated `@astrojs/starlight` to v0.42 and `astro` to v7.3.
+
 ### Fixed
 
 **Monorepo:**
