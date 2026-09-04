@@ -78,4 +78,10 @@ jobs:
           cargo clippy --all-targets -- -D warnings
 
       - name: make go-dev
-        run: make go-dev
+        shell: bash
+        run: |
+          if [ "${{ matrix.os }}" = "windows-11-arm" ]; then
+            make go-dev GO_CARGO_TARGET="--target aarch64-pc-windows-gnullvm" GO_LIBRARY_DIR="target/aarch64-pc-windows-gnullvm/release-c"
+          else
+            make go-dev
+          fi
