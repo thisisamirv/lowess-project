@@ -75,7 +75,14 @@ def _check_markdown_file(f: Path) -> list[str]:
             if not t or t.startswith("/"):
                 continue
             resolved = (f.parent / t).resolve()
-            if not (resolved.exists() or Path(f"{resolved}.md").exists()):
+            # R vignettes conventionally cross-reference the *rendered*
+            # sibling.html, since R CMD build renders each .Rmd to .html.
+            rmd_candidate = resolved.with_suffix(".Rmd")
+            if not (
+                resolved.exists()
+                or Path(f"{resolved}.md").exists()
+                or (resolved.suffix == ".html" and rmd_candidate.exists())
+            ):
                 errors.append(
                     f"{f.relative_to(REPO_ROOT)}:{lineno}: broken link -> {target}"
                 )
