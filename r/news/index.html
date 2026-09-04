@@ -35,11 +35,29 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="development version" id="rfastlowess-development-version">rfastlowess (development version)<a class="anchor" aria-label="anchor" href="#rfastlowess-development-version"></a></h2>
+<div class="section level3">
+<h3 id="added-development-version">Added<a class="anchor" aria-label="anchor" href="#added-development-version"></a></h3>
+<ul><li>Added <code>dev/bump_version.py --version X.Y.Z</code>, which updates the version across every Rust crate/binding <code>Cargo.toml</code>, the internal <code>fastLowess</code>/<code>lowess</code> path-dependency requirements, each binding’s own version file (<code>package.json</code> + npm subpackages, <code>pyproject</code>-adjacent <code>__version__.py</code>, <code>pom.xml</code>, <code>DESCRIPTION</code>, <code>Project.toml</code>, <code>version.go</code>, <code>CMakeLists.txt</code>, <code>FastLowess.java</code>), <code>CITATION.cff</code>, and the Spack recipe’s example <code>url</code>, in one pass. Supports <code>--dry-run</code>.</li>
+<li>Added an optional <code>commit</code> input to every release workflow’s <code>workflow_dispatch</code> trigger, so a manual run can pin the checked-out/built commit instead of always building from the triggering ref.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changed-development-version">Changed<a class="anchor" aria-label="anchor" href="#changed-development-version"></a></h3>
+<ul><li>Added four new pins to <code>dev/check_pinned_versions.py</code>: the R binding’s <code>Config/rextendr/version</code>/<code>Config/roxygen2/version</code> (<code>DESCRIPTION</code>), and the vendored KaTeX CDN version in both <code>crates/lowess/katex-header.html</code> and <code>crates/fastLowess/katex-header.html</code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="fixed-development-version">Fixed<a class="anchor" aria-label="anchor" href="#fixed-development-version"></a></h3>
+<ul><li>Fixed a handful of <code>R²</code>/<code>O(n²)</code> Unicode superscripts that the earlier ASCII-fication pass (see below) missed: <code>bindings/r/tests/testthat/test-fastlowess.R</code>, and the <code>lowess</code> crate’s <code>src/algorithms/interpolation.rs</code>, <code>src/api.rs</code>, <code>src/evaluation/diagnostics.rs</code>, and <code>tests/lowess/{adapters_batch_tests,evaluation_diagnostics_tests}.rs</code> doc-comments/test-comments — all missed because they were added or edited after that pass ran. Replaced with <code>R2</code>/<code>O(n^2)</code>, matching the rest of the codebase.</li>
+<li>Fixed <code>release-conda.yml</code> failing on <code>sed: can't read recipe/meta.yaml</code>: the <code>fastlowess-feedstock</code> repo migrated to rattler-build’s <code>recipe/recipe.yaml</code> format. Updated the version/sha256/build-number <code>sed</code> patterns to match and removed the now-dead R-package-name-fix, Python-dependency-injection, and <code>build_r.sh</code> generation steps.</li>
+</ul></div>
+</div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="3.2.0" id="rfastlowess-320">rfastlowess 3.2.0<a class="anchor" aria-label="anchor" href="#rfastlowess-320"></a></h2>
 <div class="section level3">
 <h3 id="added-3-2-0">Added<a class="anchor" aria-label="anchor" href="#added-3-2-0"></a></h3>
 <ul><li>Added <code>dev/add-readme-to-docs.py</code>, which auto-detects the Hugo (Go, Java) vs Starlight (Node.js, WASM) docs-site flavor and embeds <code>README.md</code> accordingly; wired into the corresponding Makefiles and <code>package.json</code> scripts.</li>
 <li>Added <code>.github/dependabot.yml</code>, covering every dependency ecosystem in the repo (<code>github-actions</code>, <code>cargo</code>, <code>npm</code>, <code>pip</code>, <code>maven</code>, <code>gomod</code>). Each directory is grouped so all its updates, including majors, land in a single weekly PR.</li>
+<li>Added <code>dev/check_pinned_versions.py</code> and a weekly <code>.github/workflows/check-versions.yml</code>, which check hardcoded tool/library version pins that Dependabot can’t see (Corrosion’s CMake <code>FetchContent</code> tag, the vendored doxygen-awesome-css theme, the Checkstyle jar, golangci-lint, and Hugo) against their latest GitHub release and fail CI if any are outdated. Read-only: it never opens PRs or edits files itself.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="changed-3-2-0">Changed<a class="anchor" aria-label="anchor" href="#changed-3-2-0"></a></h3>

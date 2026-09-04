@@ -108,14 +108,26 @@ $(document).ready(function(){initNavTree('installation.html',''); initResizable(
 <div class="fragment"><div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-linux-x64.so</div>
 <div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp</div>
 <div class="line">g++ -o myapp myapp.cpp -L. -lfastlowess-linux-x64</div>
+</div><!-- fragment --><h2>Pre-built Binaries (Linux (ARM64))</h2>
+<div class="fragment"><div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-linux-arm64.so</div>
+<div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp</div>
+<div class="line">g++ -o myapp myapp.cpp -L. -lfastlowess-linux-arm64</div>
 </div><!-- fragment --><h2>Pre-built Binaries (macOS (x64))</h2>
 <div class="fragment"><div class="line">curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-macos-x64.dylib</div>
 <div class="line">curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp</div>
 <div class="line">clang++ -o myapp myapp.cpp -L. -lfastlowess-macos-x64</div>
+</div><!-- fragment --><h2>Pre-built Binaries (macOS (ARM64))</h2>
+<div class="fragment"><div class="line">curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-macos-arm64.dylib</div>
+<div class="line">curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp</div>
+<div class="line">clang++ -o myapp myapp.cpp -L. -lfastlowess-macos-arm64</div>
 </div><!-- fragment --><h2>Pre-built Binaries (Windows (x64))</h2>
 <div class="fragment"><div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess-win32-x64.dll</div>
 <div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp</div>
 <div class="line">cl myapp.cpp /link fastlowess-win32-x64.lib</div>
+</div><!-- fragment --><h2>Pre-built Binaries (Windows (ARM64))</h2>
+<div class="fragment"><div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess-win32-arm64.dll</div>
+<div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp</div>
+<div class="line">cl myapp.cpp /link fastlowess-win32-arm64.lib</div>
 </div><!-- fragment --><h2>From Source</h2>
 <div class="fragment"><div class="line"># Install Rust first: https://rustup.rs/</div>
 <div class="line">git clone https://github.com/thisisamirv/lowess-project</div>

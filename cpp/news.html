@@ -102,11 +102,31 @@ $(document).ready(function(){initNavTree('news.html',''); initResizable(); });
   <div class="headertitle"><div class="title">News</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1>fastlowess (C++) 3.2.0</h1>
+<div class="textblock"><h1>fastlowess (C++) (development version)</h1>
+<h2>Added</h2>
+<ul>
+<li>Added <code>dev/bump_version.py --version X.Y.Z</code>, which updates the version across every Rust crate/binding <code>Cargo.toml</code>, the internal <code>fastLowess</code>/<code>lowess</code> path-dependency requirements, each binding's own version file (<code>package.json</code> + npm subpackages, <code>pyproject</code>-adjacent <code>__version__.py</code>, <code>pom.xml</code>, <code>DESCRIPTION</code>, <code>Project.toml</code>, <code>version.go</code>, <code>CMakeLists.txt</code>, <code>FastLowess.java</code>), <code>CITATION.cff</code>, and the Spack recipe's example <code>url</code>, in one pass. Supports <code>--dry-run</code>.</li>
+<li>Added an optional <code>commit</code> input to every release workflow's <code>workflow_dispatch</code> trigger, so a manual run can pin the checked-out/built commit instead of always building from the triggering ref.</li>
+<li>Added ARM64 release binaries to <code>release-cpp.yml</code>: <code>libfastlowess-linux-arm64.so</code> (native <code>ubuntu-24.04-arm</code> runner), <code>fastlowess-win32-arm64.dll</code> (native <code>windows-11-arm</code> runner), and <code>libfastlowess-macos-arm64.dylib</code>. The macOS x64 job is now explicitly pinned to <code>macos-13</code> (the last Intel-based GitHub-hosted image) rather than <code>macos-latest</code>, since <code>macos-latest</code> has pointed at Apple Silicon (arm64) runners since 2024 — the previous single <code>macos-latest</code> job's "macos-x64" asset was actually an arm64 binary mislabeled as x64. Documented all four new/relabeled binaries in <code><a class="el" href="installation_8md.html">introduction/installation.md</a></code>.</li>
+</ul>
+<h2>Changed</h2>
+<ul>
+<li>Added four new pins to <code>dev/check_pinned_versions.py</code>: the R binding's <code>Config/rextendr/version</code>/<code>Config/roxygen2/version</code> (<code>DESCRIPTION</code>), and the vendored KaTeX CDN version in both <code>crates/lowess/katex-header.html</code> and <code>crates/fastLowess/katex-header.html</code>.</li>
+<li>Changed <code>check-versions.yml</code> to no longer fail CI when <code>dev/check_pinned_versions.py</code> finds an outdated or unreachable pin; it now opens a GitHub issue titled "Outdated pinned versions" with the check output (or comments on the existing open one), so a stale pin no longer blocks unrelated work.</li>
+</ul>
+<h2>Fixed</h2>
+<ul>
+<li>Fixed a handful of <code>R²</code>/<code>O(n²)</code> Unicode superscripts that the earlier ASCII-fication pass (see below) missed: <code>bindings/r/tests/testthat/test-fastlowess.R</code>, and the <code>lowess</code> crate's <code>src/algorithms/interpolation.rs</code>, <code>src/api.rs</code>, <code>src/evaluation/diagnostics.rs</code>, and <code>tests/lowess/{adapters_batch_tests,evaluation_diagnostics_tests}.rs</code> doc-comments/test-comments — all missed because they were added or edited after that pass ran. Replaced with <code>R2</code>/<code>O(n^2)</code>, matching the rest of the codebase.</li>
+<li>Fixed <code>release-conda.yml</code> failing on <code>sed: can't read recipe/meta.yaml</code>: the <code>fastlowess-feedstock</code> repo migrated to rattler-build's <code>recipe/recipe.yaml</code> format. Updated the version/sha256/build-number <code>sed</code> patterns to match and removed the now-dead R-package-name-fix, Python-dependency-injection, and <code>build_r.sh</code> generation steps.</li>
+<li>Fixed <code>release-cpp.yml</code>'s <code>spack-release</code> job failing on <code>git push</code> due to a detached HEAD; it now checks out the default branch explicitly and pushes via <code>git push origin HEAD:&lt;default-branch&gt;</code>.</li>
+<li>Fixed <code>bindings/cpp/spack/package.py</code>'s example <code>url</code> (<code>archive/refs/tags/vX.Y.Z.tar.gz</code>) going stale, since <code>release-cpp.yml</code>'s <code>spack-release</code> job only ever updated the <code>version()</code>/<code>sha256</code> block below it. <code>dev/bump_version.py</code> now also refreshes that <code>url</code> line.</li>
+</ul>
+<h1>fastlowess (C++) 3.2.0</h1>
 <h2>Added</h2>
 <ul>
 <li>Added <code>dev/add-readme-to-docs.py</code>, which auto-detects the Hugo (Go, Java) vs Starlight (Node.js, WASM) docs-site flavor and embeds <code><a class="el" href="README_8md.html">README.md</a></code> accordingly; wired into the corresponding Makefiles and <code>package.json</code> scripts.</li>
 <li>Added <code>.github/dependabot.yml</code>, covering every dependency ecosystem in the repo (<code>github-actions</code>, <code>cargo</code>, <code>npm</code>, <code>pip</code>, <code>maven</code>, <code>gomod</code>). Each directory is grouped so all its updates, including majors, land in a single weekly PR.</li>
+<li>Added <code>dev/check_pinned_versions.py</code> and a weekly <code>.github/workflows/check-versions.yml</code>, which check hardcoded tool/library version pins that Dependabot can't see (Corrosion's CMake <code>FetchContent</code> tag, the vendored doxygen-awesome-css theme, the Checkstyle jar, golangci-lint, and Hugo) against their latest GitHub release and fail CI if any are outdated. Read-only: it never opens PRs or edits files itself.</li>
 <li>Library is now available on Spack (<code>fastlowess-cpp</code>).</li>
 </ul>
 <h2>Changed</h2>
