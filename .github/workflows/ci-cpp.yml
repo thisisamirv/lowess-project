@@ -44,16 +44,17 @@ jobs:
         if: runner.os == 'Windows'
         run: choco install make -y
 
-      # The x64-only step above bundles objdump via its GNU/MinGW sysroot; on
-      # arm64 that step is skipped (rustup refuses a host GNU toolchain there),
-      # so the Makefile's objdump-based symbol-export check needs it separately.
-      - name: Install objdump (Windows arm64)
-        if: runner.arch == 'ARM64'
+      # The x64-only step above bundles objdump via its GNU/MinGW sysroot, but
+      # that GNU binutils build lacks full arm64 PE/COFF export-table support
+      # (silently produced no exports), so arm64 uses LLVM's objdump instead,
+      # which parses any PE machine type uniformly.
+      - name: Install llvm-objdump (Windows arm64)
+        if: runner.os == 'Windows' && runner.arch == 'ARM64'
         run: |
-          choco install mingw -y
-          $objdump = Get-ChildItem -Path "C:\ProgramData\mingw64","C:\ProgramData\chocolatey\lib\mingw","C:\tools\mingw64" -Filter objdump.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
-          if (-not $objdump) { throw "objdump.exe not found after choco install mingw" }
-          $objdump.DirectoryName | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+          choco install llvm -y
+          $llvmObjdump = Get-ChildItem -Path "C:\Program Files\LLVM" -Filter llvm-objdump.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $llvmObjdump) { throw "llvm-objdump.exe not found after choco install llvm" }
+          $llvmObjdump.DirectoryName | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
 
       - name: Install cppcheck (Windows)
         if: runner.os == 'Windows'
@@ -92,7 +93,7 @@ jobs:
         shell: bash
         run: |
           if [ "${{ matrix.os }}" = "windows-11-arm" ]; then
-            make cpp-dev CPP_CARGO_TARGET="--target aarch64-pc-windows-msvc" CPP_LIBRARY_DIR="target/aarch64-pc-windows-msvc/release-c"
+            make cpp-dev CPP_CARGO_TARGET="--target aarch64-pc-windows-msvc" CPP_LIBRARY_DIR="target/aarch64-pc-windows-msvc/release-c" CPP_EXPORT_SCAN="llvm-objdump -p target/aarch64-pc-windows-msvc/release-c/fastlowess_cpp.dll"
           else
             make cpp-dev
           fi
