@@ -182,17 +182,20 @@
 <article class="doc">
 <h1 class="page">News</h1>
 <div class="sect1">
-<h2 id="fastlowess-java-development-version"><a class="anchor" href="#fastlowess-java-development-version"></a>fastlowess (Java) (development version)</h2>
+<h2 id="fastlowess-java-3-2-1"><a class="anchor" href="#fastlowess-java-3-2-1"></a>fastlowess (Java) 3.2.1</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="added"><a class="anchor" href="#added"></a>Added</h3>
 <div class="ulist">
 <ul>
 <li>
-<p>Added <code>dev/bump_version.py --version X.Y.Z</code>, which updates the version across every Rust crate/binding <code>Cargo.toml</code>, the internal <code>fastLowess</code>/<code>lowess</code> path-dependency requirements, each binding&#8217;s own version file (<code>package.json</code> + npm subpackages, <code>pyproject</code>-adjacent <code><em>version</em>.py</code>, <code>pom.xml</code>, <code>DESCRIPTION</code>, <code>Project.toml</code>, <code>version.go</code>, <code>CMakeLists.txt</code>, <code>FastLowess.java</code>), <code>CITATION.cff</code>, and the Spack recipe&#8217;s example <code>url</code>, in one pass. Supports <code>--dry-run</code>.</p>
+<p>Added <code>dev/bump_version.py --version X.Y.Z</code> to bump every crate/binding&#8217;s version files, <code>CITATION.cff</code>, and the Spack recipe in one pass (supports <code>--dry-run</code>); now also bumps <code>Project.toml&#8217;s `fastlowess_jll</code> compat floor (safe pre-publish since <code>make julia-dev</code>/CI relax it to an OR-list at test-time).</p>
 </li>
 <li>
-<p>Added an optional <code>commit</code> input to every release workflow&#8217;s <code>workflow_dispatch</code> trigger, so a manual run can pin the checked-out/built commit instead of always building from the triggering ref.</p>
+<p>Added an optional <code>commit</code> input to every release workflow&#8217;s <code>workflow_dispatch</code> trigger, to pin the built commit for manual runs.</p>
+</li>
+<li>
+<p>Added an <code>aarch64-pc-windows-gnullvm</code> linker entry to the root <code>.cargo/config.toml</code>, matching the existing <code>x86_64-pc-windows-gnu</code> one; makes local arm64 Windows builds work without a manual env var.</p>
 </li>
 </ul>
 </div>
@@ -202,7 +205,16 @@
 <div class="ulist">
 <ul>
 <li>
-<p>Added four new pins to <code>dev/check_pinned_versions.py</code>: the R binding&#8217;s <code>Config/rextendr/version</code>/<code>Config/roxygen2/version</code> (<code>DESCRIPTION</code>), and the vendored KaTeX CDN version in both <code>crates/lowess/katex-header.html</code> and <code>crates/fastLowess/katex-header.html</code>.</p>
+<p>Added four new pins to <code>dev/check_pinned_versions.py</code>: R&#8217;s <code>rextendr</code>/<code>roxygen2</code> versions and the vendored KaTeX CDN version in both Rust crates.</p>
+</li>
+<li>
+<p>Changed <code>check-versions.yml</code> to open/update a GitHub issue instead of failing CI when a pin goes stale or unreachable.</p>
+</li>
+<li>
+<p>Pinned the docs-site&#8217;s jsDelivr MathJax CDN reference to <code>mathjax@4.1.3</code> (was the rolling <code>@3</code>).</p>
+</li>
+<li>
+<p>Bumped <code>maven-compiler-plugin</code> to 3.16.0 and <code>maven-surefire-plugin</code> to 3.6.0.</p>
 </li>
 </ul>
 </div>
@@ -212,19 +224,31 @@
 <div class="ulist">
 <ul>
 <li>
-<p>Fixed a handful of <code>R²</code>/<code>O(n²)</code> Unicode superscripts that the earlier ASCII-fication pass (see below) missed: <code>bindings/r/tests/testthat/test-fastlowess.R</code>, and the <code>lowess</code> crate&#8217;s <code>src/algorithms/interpolation.rs</code>, <code>src/api.rs</code>, <code>src/evaluation/diagnostics.rs</code>, and <code>tests/lowess/\{adapters_batch_tests,evaluation_diagnostics_tests\}.rs</code> doc-comments/test-comments — all missed because they were added or edited after that pass ran. Replaced with <code>R2</code>/<code>O(n^2)</code>, matching the rest of the codebase.</p>
+<p>Fixed a handful of <code>R²</code>/<code>O(n²)</code> Unicode superscripts the earlier ASCII-fication pass missed (added/edited after it ran) — R tests and several <code>lowess</code> crate doc-comments — replaced with <code>R2</code>/<code>O(n^2)</code>.</p>
 </li>
 <li>
-<p>Fixed <code>release-conda.yml</code> failing on <code>sed: can&#8217;t read recipe/meta.yaml</code>: the <code>fastlowess-feedstock</code> repo migrated to rattler-build&#8217;s <code>recipe/recipe.yaml</code> format. Updated the version/sha256/build-number <code>sed</code> patterns to match and removed the now-dead R-package-name-fix, Python-dependency-injection, and <code>build_r.sh</code> generation steps.</p>
+<p>Fixed <code>release-conda.yml&#8217;s `sed</code> patterns for the feedstock&#8217;s new rattler-build <code>recipe/recipe.yaml</code> format, removing now-dead R-package-name-fix/Python-dependency-injection/<code>build_r.sh</code> steps.</p>
 </li>
 <li>
-<p>Fixed <code>actions/setup-java@v6&#8217;s deprecation warning for `server-username</code>/<code>server-password</code>/<code>gpg-passphrase</code> in <code>release-java.yml</code>; migrated to the <code>-env-var</code> variants.</p>
+<p>Fixed <code>dev/check_links.py</code> false-flagging valid R vignette links to a sibling&#8217;s rendered <code>.html</code> (R CMD build renders <code>.Rmd</code>→<code>.html</code>) as broken.</p>
 </li>
 <li>
-<p>Fixed Surefire warning that <code>fastlowess.native.dir</code> was "configured twice"; moved it from <code>&lt;argLine&gt;</code> into <code>&lt;systemPropertyVariables&gt;</code>.</p>
+<p>Fixed every binding&#8217;s/crate&#8217;s docs and doc-comments describing <code>LowessResult.x</code> (and equivalents) as "Sorted x values"; it&#8217;s actually returned in the same order as the input <code>x</code> (the algorithm sorts internally, then un-sorts every output field back to the original order). Also strengthened Python&#8217;s <code>test_unsorted_input</code> to assert this instead of only checking output length.</p>
 </li>
 <li>
-<p>Fixed ~100 <code>mvn javadoc:jar</code> warnings (missing <code>@param</code>/<code>@return</code> tags, undocumented methods) across the public API. <code>maven-javadoc-plugin</code> now sets <code>failOnWarning</code>, and <code>make java-dev</code> runs it as a dedicated check step.</p>
+<p>Fixed <code>.github/dependabot.yml&#8217;s `cargo</code> entry for <code>/bindings/r/src</code>, which could never succeed: its <code>fastLowess = \{ path = "vendor/fastLowess" \}</code> path dependency is only committed as <code>vendor.tar.xz</code>, never as loose files Dependabot can read. Removed the entry and added <code>extendr-api&#8217;s version to `dev/check_pinned_versions.py</code> instead, which also uncovered and fixed a version-comparison bug there: comparing raw tuples treated a shorthand pin like <code>"0.9"</code> as older than <code>"0.9.0"</code> due to tuple-length tiebreaking; now padded to equal length first.</p>
+</li>
+<li>
+<p>Fixed <code>actions/setup-java@v6&#8217;s deprecation warning by migrating `release-java.yml</code> to the <code>-env-var</code> credential inputs.</p>
+</li>
+<li>
+<p>Fixed a Surefire "configured twice" warning by moving <code>fastlowess.native.dir</code> into <code>&lt;systemPropertyVariables&gt;</code>.</p>
+</li>
+<li>
+<p>Fixed ~100 <code>mvn javadoc:jar</code> warnings (missing tags/undocumented methods); <code>maven-javadoc-plugin</code> now sets <code>failOnWarning</code> as a dedicated <code>make java-dev</code> check step.</p>
+</li>
+<li>
+<p>Fixed <code>OnlineOptions.Builder()</code> never calling <code>parallel(false)</code>, silently defaulting online mode&#8217;s <code>parallel</code> to <code>true</code> unlike every other binding.</p>
 </li>
 </ul>
 </div>

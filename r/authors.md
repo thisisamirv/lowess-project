@@ -11,13 +11,13 @@ Source:
 [`inst/CITATION`](https://github.com/thisisamirv/lowess-project/blob/main/inst/CITATION)
 
 Valizadeh A (2026). *High-Performance LOWESS Smoothing for R*. R package
-version 3.2.0, <https://github.com/thisisamirv/lowess-project>.
+version 3.2.1, <https://github.com/thisisamirv/lowess-project>.
 
     @Manual{,
       title = {High-Performance LOWESS Smoothing for R},
       author = {Amir Valizadeh},
       year = {2026},
-      note = {R package version 3.2.0},
+      note = {R package version 3.2.1},
       url = {https://github.com/thisisamirv/lowess-project},
     }
 
@@ -129,7 +129,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Emilio Cobos Álvarez <emilio@crisal.io>, Jeff Muizelaar <jmuizelaar@mozilla.com>, Kartikaya Gupta <kats@mozilla.com>, Ryan Hunt <rhunt@eqrion.net>
     License: MPL-2.0
     ----------------------------------------
-    Package: cc (1.4.4)
+    Package: cc (1.4.5)
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
@@ -217,7 +217,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Stjepan Glavina <stjepang@gmail.com>
     License: Apache-2.0 OR MIT
     ----------------------------------------
-    Package: find-msvc-tools (0.1.11)
+    Package: find-msvc-tools (0.1.12)
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
