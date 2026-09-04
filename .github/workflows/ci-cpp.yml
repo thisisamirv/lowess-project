@@ -44,6 +44,17 @@ jobs:
         if: runner.os == 'Windows'
         run: choco install make -y
 
+      # The x64-only step above bundles objdump via its GNU/MinGW sysroot; on
+      # arm64 that step is skipped (rustup refuses a host GNU toolchain there),
+      # so the Makefile's objdump-based symbol-export check needs it separately.
+      - name: Install objdump (Windows arm64)
+        if: runner.arch == 'ARM64'
+        run: |
+          choco install mingw -y
+          $objdump = Get-ChildItem -Path "C:\ProgramData\mingw64","C:\ProgramData\chocolatey\lib\mingw","C:\tools\mingw64" -Filter objdump.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $objdump) { throw "objdump.exe not found after choco install mingw" }
+          $objdump.DirectoryName | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+
       - name: Install cppcheck (Windows)
         if: runner.os == 'Windows'
         run: |
