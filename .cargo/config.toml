@@ -4,3 +4,6 @@ CC = "clang-cl"
 [target.x86_64-pc-windows-gnu]
 linker = "x86_64-w64-mingw32.static.posix-gcc.exe"
 ar = "x86_64-w64-mingw32.static.posix-ar.exe"
+
+[target.aarch64-pc-windows-gnullvm]
+linker = "aarch64-w64-mingw32-clang"

@@ -64,7 +64,7 @@ jobs:
           Expand-Archive -Path llvm-mingw.zip -DestinationPath C:\llvm-mingw
           $bin = (Get-ChildItem -Path C:\llvm-mingw -Directory | Select-Object -First 1).FullName + "\bin"
           Add-Content -Path $env:GITHUB_PATH -Value $bin
-          Add-Content -Path $env:GITHUB_ENV -Value "CARGO_TARGET_AARCH64_PC_WINDOWS_GNULLVM_LINKER=aarch64-w64-mingw32-clang"
+          # Linker for this target comes from the repo's root .cargo/config.toml.
           # Go's cgo compiles runtime/cgo's own arch-specific .S files via $CC,
           # so it must resolve to the target-prefixed wrapper, not a generic
           # clang/gcc that could default to the wrong triple.
@@ -86,6 +86,7 @@ jobs:
         shell: bash
         run: |
           if [ "${{ matrix.os }}" = "windows-11-arm" ]; then
+            export GOOS=windows GOARCH=arm64
             make go-dev GO_CARGO_TARGET="--target aarch64-pc-windows-gnullvm" GO_LIBRARY_DIR="target/aarch64-pc-windows-gnullvm/release-c"
           else
             make go-dev

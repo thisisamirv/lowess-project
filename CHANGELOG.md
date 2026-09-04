@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `dev/bump_version.py --version X.Y.Z`, which updates the version across every Rust crate/binding `Cargo.toml`, the internal `fastLowess`/`lowess` path-dependency requirements, each binding's own version file (`package.json` + npm subpackages, `pyproject`-adjacent `__version__.py`, `pom.xml`, `DESCRIPTION`, `Project.toml`, `version.go`, `CMakeLists.txt`, `FastLowess.java`), `CITATION.cff`, and the Spack recipe's example `url`, in one pass. Supports `--dry-run`.
 - `dev/bump_version.py` now also bumps `Project.toml`'s `fastlowess_jll` `[compat]` floor to the new version; safe even though the corresponding JLL isn't published yet, since `make julia-dev`/CI already relax this to an OR-list including the actual latest-registered version at test-time.
 - Added an optional `commit` input to every release workflow's `workflow_dispatch` trigger, so a manual run can pin the checked-out/built commit instead of always building from the triggering ref.
+- Added `aarch64-pc-windows-gnullvm` linker setting into the repo's root `.cargo/config.toml`, matching the existing `x86_64-pc-windows-gnu` entry; also makes local arm64 Windows builds work without manually setting the env var.
 
 **Node.js:**
 

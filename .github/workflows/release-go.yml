@@ -79,7 +79,7 @@ jobs:
           Expand-Archive -Path llvm-mingw.zip -DestinationPath C:\llvm-mingw
           $bin = (Get-ChildItem -Path C:\llvm-mingw -Directory | Select-Object -First 1).FullName + "\bin"
           Add-Content -Path $env:GITHUB_PATH -Value $bin
-          Add-Content -Path $env:GITHUB_ENV -Value "CARGO_TARGET_AARCH64_PC_WINDOWS_GNULLVM_LINKER=aarch64-w64-mingw32-clang"
+          # Linker for this target comes from the repo's root .cargo/config.toml.
 
       - name: Build Go native library
         working-directory: bindings/go
