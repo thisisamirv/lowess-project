@@ -21,7 +21,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os:
+          [
+            ubuntu-latest,
+            ubuntu-24.04-arm,
+            macos-latest,
+            windows-latest,
+            windows-11-arm,
+          ]
         go-version: ["1.23", "stable"]
     steps:
       - uses: actions/checkout@v7
@@ -35,12 +42,30 @@ jobs:
             bindings/go/fastlowess/go.mod
             bindings/go/tests/go.mod
 
-      - name: Install Rust GNU + GNU Make (Windows)
+      - name: Install Rust GNU + GNU Make (Windows x64)
         if: matrix.os == 'windows-latest'
         run: |
           rustup toolchain install stable-x86_64-pc-windows-gnu
           rustup target add x86_64-pc-windows-gnu
           choco install make mingw -y
+
+      # cgo needs a GNU-flavor C toolchain (MSVC .lib archives aren't
+      # cgo-compatible). aarch64-pc-windows-gnu doesn't exist as a Rust
+      # target/rustup toolchain, so this cross-compiles via the gnullvm ABI
+      # using llvm-mingw's aarch64-w64-mingw32-clang, matching release-go.yml.
+      - name: Install llvm-mingw + GNU Make (Windows arm64)
+        if: matrix.os == 'windows-11-arm'
+        shell: pwsh
+        run: |
+          rustup target add aarch64-pc-windows-gnullvm
+          $ver = "20241030"
+          $url = "https://github.com/mstorsjo/llvm-mingw/releases/download/$ver/llvm-mingw-$ver-ucrt-x86_64.zip"
+          Invoke-WebRequest -Uri $url -OutFile llvm-mingw.zip
+          Expand-Archive -Path llvm-mingw.zip -DestinationPath C:\llvm-mingw
+          $bin = (Get-ChildItem -Path C:\llvm-mingw -Directory | Select-Object -First 1).FullName + "\bin"
+          Add-Content -Path $env:GITHUB_PATH -Value $bin
+          Add-Content -Path $env:GITHUB_ENV -Value "CARGO_TARGET_AARCH64_PC_WINDOWS_GNULLVM_LINKER=aarch64-w64-mingw32-clang"
+          choco install make -y
 
       - uses: Swatinem/rust-cache@v2
         with:

@@ -23,10 +23,16 @@ GO_CARGO_TARGET :=
 
 # Go's cgo drives a GCC-compatible C compiler (MinGW-w64 on Windows), so the
 # native library must be built for the GNU ABI on Windows, unlike the C++
-# binding which targets MSVC.
+# binding which targets MSVC. There's no aarch64-pc-windows-gnu Rust target,
+# so arm64 hosts use the gnullvm ABI (llvm-mingw) instead.
 ifeq ($(HOST_PLATFORM),windows)
-	GO_CARGO_TARGET := --target x86_64-pc-windows-gnu
-	GO_LIBRARY_DIR  := target/x86_64-pc-windows-gnu/release-c
+	ifeq ($(PROCESSOR_ARCHITECTURE),ARM64)
+		GO_CARGO_TARGET := --target aarch64-pc-windows-gnullvm
+		GO_LIBRARY_DIR  := target/aarch64-pc-windows-gnullvm/release-c
+	else
+		GO_CARGO_TARGET := --target x86_64-pc-windows-gnu
+		GO_LIBRARY_DIR  := target/x86_64-pc-windows-gnu/release-c
+	endif
 else
 	GO_LIBRARY_DIR  := target/release-c
 endif

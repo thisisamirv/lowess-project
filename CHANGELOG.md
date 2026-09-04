@@ -26,6 +26,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Go:**
 
 - Added a `dev/check_pinned_versions.py` pin for the Go binding's docs-site MathJax CDN version (`bindings/go/docs-site/layouts/_partials/docs/inject/head.html`), which was previously unchecked.
+- Added ARM64 release binaries to `release-go.yml`: `libfastlowess_go-linux-arm64.a` (native `ubuntu-24.04-arm` runner) and `libfastlowess_go-win32-arm64.a` (cross-compiled via `aarch64-pc-windows-gnullvm` + llvm-mingw on `windows-11-arm`). The macOS x64 job is now explicitly pinned to `macos-13` rather than `macos-latest`, matching the same mislabeled-arm64-as-x64 fix already applied to `release-cpp.yml`.
+- Added an arm64 job to `ci-go.yml`, building and testing on native `ubuntu-24.04-arm` and `windows-11-arm` runners with the same llvm-mingw/`aarch64-pc-windows-gnullvm` toolchain as the release workflow, so arm64 support is verified on every push instead of only at release time.
+
+**Python:**
+
+- Added a Windows ARM64 wheel-build job to `release-pypi.yml`, using a native `windows-11-arm` runner (Linux and macOS ARM64 wheels were already built). Builds with Python 3.11 instead of the other jobs' 3.8, since python.org's official Windows installers only ship win-arm64 builds from 3.11 onward; the resulting wheel is still `abi3-py38`-compatible regardless of which interpreter builds it.
 
 ### Changed
 
@@ -69,6 +75,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed pkg.go.dev showing "License: None detected" and refusing to render documentation, and the "Tagged version"/"Stable version" checks failing: the Go module lives at `bindings/go/fastlowess` but `LICENSE-MIT`/`LICENSE-APACHE` only existed one directory up at `bindings/go`, outside where pkg.go.dev scans for a nested module's license. Copied both license files into `bindings/go/fastlowess`. `release-go.yml` now also pushes a `bindings/go/fastlowess/vX.Y.Z` tag (in addition to the repo-wide `vX.Y.Z` release tag), which Go's nested-module versioning requires to recognize a release as tagged/stable.
 - Fixed `OnlineOptions`'s `MinPoints`/`UpdateMode` defaults (`3`/`"full"`) diverging from every other binding (already fixed in C++/Julia/Python/R) and the Rust core; now `2`/`"incremental"`, matching `docs/api/api-online.md`'s Default column.
+- Fixed `bindings/go/Makefile` unconditionally targeting `x86_64-pc-windows-gnu` on any Windows host, which would have cross-compiled for the wrong architecture on arm64; it now checks `PROCESSOR_ARCHITECTURE` and targets `aarch64-pc-windows-gnullvm` on arm64 instead.
+- Fixed `ffi.go`'s `#cgo windows LDFLAGS` hardcoding the x64 GNU build's library path for all Windows builds regardless of architecture, which would have failed to link on arm64; split into `windows,amd64`/`windows,arm64` variants pointing at the correct target directory.
 
 **Julia:**
 

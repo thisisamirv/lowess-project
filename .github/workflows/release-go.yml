@@ -28,14 +28,26 @@ jobs:
             asset_name: libfastlowess_go-linux-x64.a
             cargo_target: ""
             target_dir: target/release
-          - os: macos-latest
+          - os: ubuntu-24.04-arm
+            asset_name: libfastlowess_go-linux-arm64.a
+            cargo_target: ""
+            target_dir: target/release
+          - os: macos-13
             asset_name: libfastlowess_go-macos-x64.a
+            cargo_target: ""
+            target_dir: target/release
+          - os: macos-latest
+            asset_name: libfastlowess_go-macos-arm64.a
             cargo_target: ""
             target_dir: target/release
           - os: windows-latest
             asset_name: libfastlowess_go-win32-x64.a
             cargo_target: "--target x86_64-pc-windows-gnu"
             target_dir: target/x86_64-pc-windows-gnu/release
+          - os: windows-11-arm
+            asset_name: libfastlowess_go-win32-arm64.a
+            cargo_target: "--target aarch64-pc-windows-gnullvm"
+            target_dir: target/aarch64-pc-windows-gnullvm/release
 
     steps:
       - uses: actions/checkout@v7
@@ -45,11 +57,29 @@ jobs:
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Install Rust GNU target (Windows)
+      - name: Install Rust GNU target (Windows x64)
         if: matrix.os == 'windows-latest'
         run: |
           rustup toolchain install stable-x86_64-pc-windows-gnu
           rustup target add x86_64-pc-windows-gnu
+
+      # cgo needs a GNU-flavor C toolchain (MSVC .lib archives aren't
+      # cgo-compatible). aarch64-pc-windows-gnu doesn't exist as a Rust
+      # target/rustup toolchain, so this cross-compiles via the gnullvm ABI
+      # using llvm-mingw's aarch64-w64-mingw32-clang, matching the pattern
+      # winit/wgpu use for Windows arm64 Rust builds.
+      - name: Install llvm-mingw + Rust target (Windows arm64)
+        if: matrix.os == 'windows-11-arm'
+        shell: pwsh
+        run: |
+          rustup target add aarch64-pc-windows-gnullvm
+          $ver = "20241030"
+          $url = "https://github.com/mstorsjo/llvm-mingw/releases/download/$ver/llvm-mingw-$ver-ucrt-x86_64.zip"
+          Invoke-WebRequest -Uri $url -OutFile llvm-mingw.zip
+          Expand-Archive -Path llvm-mingw.zip -DestinationPath C:\llvm-mingw
+          $bin = (Get-ChildItem -Path C:\llvm-mingw -Directory | Select-Object -First 1).FullName + "\bin"
+          Add-Content -Path $env:GITHUB_PATH -Value $bin
+          Add-Content -Path $env:GITHUB_ENV -Value "CARGO_TARGET_AARCH64_PC_WINDOWS_GNULLVM_LINKER=aarch64-w64-mingw32-clang"
 
       - name: Build Go native library
         working-directory: bindings/go
@@ -97,4 +127,3 @@ jobs:
             git tag "$MODULE_TAG" "${{ github.event.inputs.commit || github.sha }}"
             git push origin "$MODULE_TAG"
           fi
-
