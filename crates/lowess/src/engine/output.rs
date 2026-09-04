@@ -19,7 +19,7 @@ use crate::evaluation::diagnostics::Diagnostics;
 // Comprehensive LOWESS output containing smoothed values and diagnostics.
 #[derive(Debug, Clone, PartialEq)]
 pub struct LowessResult<T> {
-    // Sorted x-values (independent variable).
+    // x-values, in the same order as the input (independent variable).
     pub x: Vec<T>,
 
     // Smoothed y-values (dependent variable).

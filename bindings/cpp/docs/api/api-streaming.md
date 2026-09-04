@@ -129,7 +129,7 @@ Returned (inside `Expected`) by `process_chunk()` and `finalize()`.
 
 | Method | Return Type | Description |
 | --- | --- | --- |
-| `x_vector()` | `std::vector<double>` | Sorted x values |
+| `x_vector()` | `std::vector<double>` | x values (same order as input) |
 | `y_vector()` | `std::vector<double>` | Smoothed y values |
 | `fraction_used()` | `double` | Fraction used |
 | `iterations_used()` | `int` | Robustness iterations (-1 = N/A) |

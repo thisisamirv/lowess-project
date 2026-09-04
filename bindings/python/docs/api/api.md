@@ -111,7 +111,7 @@ See [Online Adapter](api-online.md) for `OnlineOutput`.
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `x` | `ndarray` | Sorted x values |
+| `x` | `ndarray` | x values (same order as input) |
 | `y` | `ndarray` | Smoothed y values |
 | `fraction_used` | `float` | Fraction used (set or selected by CV) |
 | `iterations_used` | `int \| None` | Robustness iterations actually performed |

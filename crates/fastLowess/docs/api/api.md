@@ -129,7 +129,7 @@ See [Online Adapter](crate::doc::api::online) for `OnlineOutput<T>`.
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `x` | `Array1<T>` | Sorted x values |
+| `x` | `Array1<T>` | x values (same order as input) |
 | `y` | `Array1<T>` | Smoothed y values |
 | `fraction_used` | `T` | Fraction used (set or selected by CV) |
 | `iterations_used` | `Option<usize>` | Robustness iterations actually performed |

@@ -10,7 +10,7 @@ typedef struct fastlowess_GoStreamingLowess fastlowess_GoStreamingLowess;
  */
 typedef struct fastlowess_GoLowessResult {
   /**
-   * Sorted x values (length = n)
+   * x values, in the same order as the input (length = n)
    */
   double *x;
   /**

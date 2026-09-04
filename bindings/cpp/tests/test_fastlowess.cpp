@@ -50,19 +50,26 @@ constexpr double k_cw_outlier_value = 100.0;
 constexpr double k_cw_slope = 2.0;
 
 constexpr std::array<double, k_small_sample_size> k_sample_x_values = {
-    1.0, 2.0, 3.0, 4.0, 5.0};
+    1.0, 2.0, 3.0, 4.0, 5.0,
+};
 constexpr std::array<double, k_small_sample_size> k_sample_y_values = {
-    2.0, 4.1, 5.9, 8.2, 9.8};
+    2.0, 4.1, 5.9, 8.2, 9.8,
+};
 constexpr std::array<double, k_small_sample_size> k_outlier_y_values = {
-    2.0, 4.1, 100.0, 8.2, 9.8};
+    2.0, 4.1, 100.0, 8.2, 9.8,
+};
 constexpr std::array<double, k_small_sample_size> k_reuse_x_values = {
-    10.0, 20.0, 30.0, 40.0, 50.0};
+    10.0, 20.0, 30.0, 40.0, 50.0,
+};
 constexpr std::array<double, k_small_sample_size> k_reuse_y_values = {
-    20.0, 40.0, 60.0, 80.0, 100.0};
+    20.0, 40.0, 60.0, 80.0, 100.0,
+};
 constexpr std::array<double, k_online_window_capacity> k_online_x_values = {
-    1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0};
+    1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0,
+};
 constexpr std::array<double, k_online_window_capacity> k_online_y_values = {
-    2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0};
+    2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0,
+};
 
 struct SeriesData {
   std::vector<double> x_values;
@@ -320,10 +327,10 @@ void testStreamingReturnsAllPoints() {
   options.chunk_size = k_streaming_return_all_chunk_size;
   fastlowess::StreamingLowess streaming_lowess(options);
 
-  auto first_chunk_result =
+  const auto first_chunk_result =
       streaming_lowess.process_chunk(linear_data.x_values, linear_data.y_values)
           .value();
-  auto final_result = streaming_lowess.finalize().value();
+  const auto final_result = streaming_lowess.finalize().value();
 
   const std::size_t total_point_count =
       first_chunk_result.y_vector().size() + final_result.y_vector().size();
@@ -343,10 +350,10 @@ void testStreamingBasic() {
   options.chunk_size = k_streaming_basic_chunk_size;
   fastlowess::StreamingLowess streaming_lowess(options);
 
-  auto first_chunk_result =
+  const auto first_chunk_result =
       streaming_lowess.process_chunk(sine_data.x_values, sine_data.y_values)
           .value();
-  auto final_result = streaming_lowess.finalize().value();
+  const auto final_result = streaming_lowess.finalize().value();
 
   assertTrue(!first_chunk_result.y_vector().empty() ||
                  !final_result.y_vector().empty(),
@@ -364,25 +371,25 @@ void testStreamingAccuracy() {
   streaming_options.fraction = k_basic_fraction;
   streaming_options.chunk_size = k_streaming_accuracy_chunk_size;
   fastlowess::StreamingLowess streaming_lowess(streaming_options);
-  auto first_chunk_result =
+  const auto first_chunk_result =
       streaming_lowess.process_chunk(linear_data.x_values, linear_data.y_values)
           .value();
-  auto final_result = streaming_lowess.finalize().value();
+  const auto final_result = streaming_lowess.finalize().value();
 
   std::vector<double> streaming_y_values;
-  auto first_y_values = first_chunk_result.y_vector();
+  const auto first_y_values = first_chunk_result.y_vector();
   streaming_y_values.insert(streaming_y_values.end(), first_y_values.begin(),
                             first_y_values.end());
-  auto final_y_values = final_result.y_vector();
+  const auto final_y_values = final_result.y_vector();
   streaming_y_values.insert(streaming_y_values.end(), final_y_values.begin(),
                             final_y_values.end());
 
   fastlowess::LowessOptions batch_options;
   batch_options.fraction = k_basic_fraction;
   fastlowess::Lowess batch_lowess(batch_options);
-  auto batch_result =
+  const auto batch_result =
       batch_lowess.fit(linear_data.x_values, linear_data.y_values).value();
-  auto batch_y_values = batch_result.y_vector();
+  const auto batch_y_values = batch_result.y_vector();
 
   assertTrue(streaming_y_values.size() == batch_y_values.size(),
              "Streaming and batch sizes differ");

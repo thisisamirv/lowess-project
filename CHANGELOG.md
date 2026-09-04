@@ -6,49 +6,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## 3.2.1
 
 ### Added
 
 **Monorepo:**
 
-- Added `dev/bump_version.py --version X.Y.Z`, which updates the version across every Rust crate/binding `Cargo.toml`, the internal `fastLowess`/`lowess` path-dependency requirements, each binding's own version file (`package.json` + npm subpackages, `pyproject`-adjacent `__version__.py`, `pom.xml`, `DESCRIPTION`, `Project.toml`, `version.go`, `CMakeLists.txt`, `FastLowess.java`), `CITATION.cff`, and the Spack recipe's example `url`, in one pass. Supports `--dry-run`.
-- `dev/bump_version.py` now also bumps `Project.toml`'s `fastlowess_jll` `[compat]` floor to the new version; safe even though the corresponding JLL isn't published yet, since `make julia-dev`/CI already relax this to an OR-list including the actual latest-registered version at test-time.
-- Added an optional `commit` input to every release workflow's `workflow_dispatch` trigger, so a manual run can pin the checked-out/built commit instead of always building from the triggering ref.
-- Added `aarch64-pc-windows-gnullvm` linker setting into the repo's root `.cargo/config.toml`, matching the existing `x86_64-pc-windows-gnu` entry; also makes local arm64 Windows builds work without manually setting the env var.
+- Added `dev/bump_version.py --version X.Y.Z` to bump every crate/binding's version files, `CITATION.cff`, and the Spack recipe in one pass (supports `--dry-run`); now also bumps `Project.toml`'s `fastlowess_jll` compat floor (safe pre-publish since `make julia-dev`/CI relax it to an OR-list at test-time).
+- Added an optional `commit` input to every release workflow's `workflow_dispatch` trigger, to pin the built commit for manual runs.
+- Added an `aarch64-pc-windows-gnullvm` linker entry to the root `.cargo/config.toml`, matching the existing `x86_64-pc-windows-gnu` one; makes local arm64 Windows builds work without a manual env var.
 
 **Node.js:**
 
-- Added two prebuilt targets, `aarch64-unknown-linux-musl` (via cargo-zigbuild) and `armv7-unknown-linux-gnueabihf` (via an apt cross toolchain), with matching optional npm subpackages.
+- Added `aarch64-unknown-linux-musl` and `armv7-unknown-linux-gnueabihf` prebuilt targets with matching optional npm subpackages.
 
 **C++:**
 
-- Added ARM64 release binaries to `release-cpp.yml`: `libfastlowess-linux-arm64.so` (native `ubuntu-24.04-arm` runner), `fastlowess-win32-arm64.dll` (native `windows-11-arm` runner), and `libfastlowess-macos-arm64.dylib`. The macOS x64 job is now explicitly pinned to `macos-13` (the last Intel-based GitHub-hosted image) rather than `macos-latest`, since `macos-latest` has pointed at Apple Silicon (arm64) runners since 2024 — the previous single `macos-latest` job's "macos-x64" asset was actually an arm64 binary mislabeled as x64. Documented all four new/relabeled binaries in `introduction/installation.md`.
+- Added ARM64 release binaries to `release-cpp.yml` (Linux, Windows, macOS); the macOS x64 job is now pinned to `macos-13` instead of `macos-latest`, which has been Apple Silicon since 2024 and was silently shipping an arm64 binary mislabeled as x64.
 
 **Go:**
 
-- Added a `dev/check_pinned_versions.py` pin for the Go binding's docs-site MathJax CDN version (`bindings/go/docs-site/layouts/_partials/docs/inject/head.html`), which was previously unchecked.
-- Added ARM64 release binaries to `release-go.yml`: `libfastlowess_go-linux-arm64.a` (native `ubuntu-24.04-arm` runner) and `libfastlowess_go-win32-arm64.a` (cross-compiled via `aarch64-pc-windows-gnullvm` + llvm-mingw on `windows-11-arm`). The macOS x64 job is now explicitly pinned to `macos-13` rather than `macos-latest`, matching the same mislabeled-arm64-as-x64 fix already applied to `release-cpp.yml`.
-- Added an arm64 job to `ci-go.yml`, building and testing on native `ubuntu-24.04-arm` and `windows-11-arm` runners with the same llvm-mingw/`aarch64-pc-windows-gnullvm` toolchain as the release workflow, so arm64 support is verified on every push instead of only at release time.
+- Added a `dev/check_pinned_versions.py` pin for the docs-site MathJax CDN version.
+- Added ARM64 release binaries to `release-go.yml` (native Linux, cross-compiled Windows via `aarch64-pc-windows-gnullvm` + llvm-mingw), with the same macOS x64/`macos-13` mislabeling fix as C++.
+- Added an arm64 job to `ci-go.yml` using the same llvm-mingw toolchain, so arm64 support is verified on every push.
 
 **Python:**
 
-- Added a Windows ARM64 wheel-build job to `release-pypi.yml`, using a native `windows-11-arm` runner (Linux and macOS ARM64 wheels were already built). Builds with Python 3.11 instead of the other jobs' 3.8, since python.org's official Windows installers only ship win-arm64 builds from 3.11 onward; the resulting wheel is still `abi3-py38`-compatible regardless of which interpreter builds it.
+- Added a Windows ARM64 wheel-build job to `release-pypi.yml` (Linux/macOS ARM64 wheels already existed), using Python 3.11 as the build interpreter since python.org only ships win-arm64 installers from 3.11 onward; the wheel remains `abi3-py38`-compatible regardless.
 
 ### Changed
 
 **Monorepo:**
 
-- Added four new pins to `dev/check_pinned_versions.py`: the R binding's `Config/rextendr/version`/`Config/roxygen2/version` (`DESCRIPTION`), and the vendored KaTeX CDN version in both `crates/lowess/katex-header.html` and `crates/fastLowess/katex-header.html`.
-- Changed `check-versions.yml` to no longer fail CI when `dev/check_pinned_versions.py` finds an outdated or unreachable pin; it now opens a GitHub issue titled "Outdated pinned versions" with the check output (or comments on the existing open one), so a stale pin no longer blocks unrelated work.
+- Added four new pins to `dev/check_pinned_versions.py`: R's `rextendr`/`roxygen2` versions and the vendored KaTeX CDN version in both Rust crates.
+- Changed `check-versions.yml` to open/update a GitHub issue instead of failing CI when a pin goes stale or unreachable.
 
-**lowess:**
+**lowess/fastLowess:**
 
-- Bumped the vendored KaTeX CDN version (`katex-header.html`) from `0.18.4` to `0.18.5`, updating the SRI `integrity` hashes to match.
-
-**fastLowess:**
-
-- Bumped the vendored KaTeX CDN version (`katex-header.html`) from `0.18.4` to `0.18.5`, updating the SRI `integrity` hashes to match.
+- Bumped the vendored KaTeX CDN version from `0.18.4` to `0.18.5`, updating SRI hashes to match.
 
 **Node.js:**
 
@@ -60,26 +55,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Java:**
 
-- Bumped the docs-site's jsDelivr MathJax CDN reference (`footer-scripts.hbs`) from the rolling `mathjax@3` to the pinned `mathjax@4.1.3`.
+- Pinned the docs-site's jsDelivr MathJax CDN reference to `mathjax@4.1.3` (was the rolling `@3`).
+- Bumped `maven-compiler-plugin` to 3.16.0 and `maven-surefire-plugin` to 3.6.0.
 
 **Go:**
 
-- Bumped docs-site MathJax CDN version from `3.2.2` to `4.1.3`, updating `dev/check_pinned_versions.py`'s pattern to match MathJax 4's CDN layout (the `es5/` path component was dropped).
+- Bumped docs-site MathJax CDN version from `3.2.2` to `4.1.3`, updating `dev/check_pinned_versions.py`'s pattern for MathJax 4's CDN layout.
 
 ### Fixed
 
 **Monorepo:**
 
-- Fixed a handful of `R²`/`O(n²)` Unicode superscripts that the earlier ASCII-fication pass (see below) missed: `bindings/r/tests/testthat/test-fastlowess.R`, and the `lowess` crate's `src/algorithms/interpolation.rs`, `src/api.rs`, `src/evaluation/diagnostics.rs`, and `tests/lowess/{adapters_batch_tests,evaluation_diagnostics_tests}.rs` doc-comments/test-comments — all missed because they were added or edited after that pass ran. Replaced with `R2`/`O(n^2)`, matching the rest of the codebase.
-- Fixed `release-conda.yml` failing on `sed: can't read recipe/meta.yaml`: the `fastlowess-feedstock` repo migrated to rattler-build's `recipe/recipe.yaml` format. Updated the version/sha256/build-number `sed` patterns to match and removed the now-dead R-package-name-fix, Python-dependency-injection, and `build_r.sh` generation steps.
-- Fixed `dev/check_links.py` false-flagging R vignette links to a sibling's rendered `dimensions.html` (a valid cross-reference, since R CMD build renders each `.Rmd` to `.html`) as broken; it now also resolves against the sibling `.Rmd` source.
+- Fixed a handful of `R²`/`O(n²)` Unicode superscripts the earlier ASCII-fication pass missed (added/edited after it ran) — R tests and several `lowess` crate doc-comments — replaced with `R2`/`O(n^2)`.
+- Fixed `release-conda.yml`'s `sed` patterns for the feedstock's new rattler-build `recipe/recipe.yaml` format, removing now-dead R-package-name-fix/Python-dependency-injection/`build_r.sh` steps.
+- Fixed `dev/check_links.py` false-flagging valid R vignette links to a sibling's rendered `.html` (R CMD build renders `.Rmd`→`.html`) as broken.
+- Fixed every binding's/crate's docs and doc-comments describing `LowessResult.x` (and equivalents) as "Sorted x values"; it's actually returned in the same order as the input `x` (the algorithm sorts internally, then un-sorts every output field back to the original order). Also strengthened Python's `test_unsorted_input` to assert this instead of only checking output length.
+- Fixed `.github/dependabot.yml`'s `cargo` entry for `/bindings/r/src`, which could never succeed: its `fastLowess = { path = "vendor/fastLowess" }` path dependency is only committed as `vendor.tar.xz`, never as loose files Dependabot can read. Removed the entry and added `extendr-api`'s version to `dev/check_pinned_versions.py` instead, which also uncovered and fixed a version-comparison bug there: comparing raw tuples treated a shorthand pin like `"0.9"` as older than `"0.9.0"` due to tuple-length tiebreaking; now padded to equal length first.
 
 **Go:**
 
-- Fixed pkg.go.dev showing "License: None detected" and refusing to render documentation, and the "Tagged version"/"Stable version" checks failing: the Go module lives at `bindings/go/fastlowess` but `LICENSE-MIT`/`LICENSE-APACHE` only existed one directory up at `bindings/go`, outside where pkg.go.dev scans for a nested module's license. Copied both license files into `bindings/go/fastlowess`. `release-go.yml` now also pushes a `bindings/go/fastlowess/vX.Y.Z` tag (in addition to the repo-wide `vX.Y.Z` release tag), which Go's nested-module versioning requires to recognize a release as tagged/stable.
-- Fixed `OnlineOptions`'s `MinPoints`/`UpdateMode` defaults (`3`/`"full"`) diverging from every other binding (already fixed in C++/Julia/Python/R) and the Rust core; now `2`/`"incremental"`, matching `docs/api/api-online.md`'s Default column.
-- Fixed `bindings/go/Makefile` unconditionally targeting `x86_64-pc-windows-gnu` on any Windows host, which would have cross-compiled for the wrong architecture on arm64; it now checks `PROCESSOR_ARCHITECTURE` and targets `aarch64-pc-windows-gnullvm` on arm64 instead.
-- Fixed `ffi.go`'s `#cgo windows LDFLAGS` hardcoding the x64 GNU build's library path for all Windows builds regardless of architecture, which would have failed to link on arm64; split into `windows,amd64`/`windows,arm64` variants pointing at the correct target directory.
+- Fixed pkg.go.dev showing "License: None detected" and failing tagged/stable checks: `LICENSE-MIT`/`LICENSE-APACHE` lived one directory above the actual Go module. Copied both into `bindings/go/fastlowess`; `release-go.yml` now also pushes a nested-module `vX.Y.Z` tag.
+- Fixed `OnlineOptions`'s `MinPoints`/`UpdateMode` defaults (`3`/`"full"`) diverging from every other binding and the Rust core; now `2`/`"incremental"`.
+- Fixed `bindings/go/Makefile` and `ffi.go`'s cgo `LDFLAGS` both unconditionally targeting the x64 GNU build on any Windows host, which would have cross-compiled/linked for the wrong architecture on arm64.
 
 **Julia:**
 
@@ -87,28 +84,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Java:**
 
-- Fixed `actions/setup-java@v6`'s deprecation warning for `server-username`/`server-password`/`gpg-passphrase` in `release-java.yml`; migrated to the `-env-var` variants.
-- Fixed Surefire warning that `fastlowess.native.dir` was "configured twice"; moved it from `<argLine>` into `<systemPropertyVariables>`.
-- Fixed ~100 `mvn javadoc:jar` warnings (missing `@param`/`@return` tags, undocumented methods) across the public API. `maven-javadoc-plugin` now sets `failOnWarning`, and `make java-dev` runs it as a dedicated check step.
-- Fixed `OnlineOptions.Builder()` never calling `parallel(false)`, silently defaulting online mode's `parallel` to `true` (inherited from `Options.Builder`) unlike every other binding; fixed the constructor and a matching stale doc sentence in `api-online.adoc`.
+- Fixed `actions/setup-java@v6`'s deprecation warning by migrating `release-java.yml` to the `-env-var` credential inputs.
+- Fixed a Surefire "configured twice" warning by moving `fastlowess.native.dir` into `<systemPropertyVariables>`.
+- Fixed ~100 `mvn javadoc:jar` warnings (missing tags/undocumented methods); `maven-javadoc-plugin` now sets `failOnWarning` as a dedicated `make java-dev` check step.
+- Fixed `OnlineOptions.Builder()` never calling `parallel(false)`, silently defaulting online mode's `parallel` to `true` unlike every other binding.
 
 **Python:**
 
-- Fixed `release-pypi.yml`'s macOS/Windows jobs printing a pip version-check notice on every run; added `PIP_DISABLE_PIP_VERSION_CHECK: "1"` to the workflow's `env`.
-- Fixed the same pip version-check notice in `release-gpu.yml`; added the same `env` variable.
+- Fixed `release-pypi.yml`/`release-gpu.yml`'s macOS/Windows jobs printing a pip version-check notice on every run; added `PIP_DISABLE_PIP_VERSION_CHECK: "1"`.
 
 **C++:**
 
-- Fixed `release-cpp.yml`'s `spack-release` job failing on `git push` due to a detached HEAD; it now checks out the default branch explicitly and pushes via `git push origin HEAD:<default-branch>`.
-- Fixed `bindings/cpp/spack/package.py`'s example `url` (`archive/refs/tags/vX.Y.Z.tar.gz`) going stale, since `release-cpp.yml`'s `spack-release` job only ever updated the `version()`/`sha256` block below it. `dev/bump_version.py` now also refreshes that `url` line.
+- Fixed `release-cpp.yml`'s `spack-release` job failing to `git push` from a detached HEAD; now checks out and pushes to the default branch explicitly.
+- Fixed `bindings/cpp/spack/package.py`'s example `url` going stale (only `version()`/`sha256` were auto-updated); `dev/bump_version.py` now refreshes it too.
 
-**Node.js:**
+**Node.js/WASM:**
 
-- Fixed `astro build` failing since Astro 7 no longer bundles `@astrojs/markdown-remark` by default, which `astro.config.mjs`'s KaTeX plugins need; added it as an explicit devDependency.
-
-**WASM:**
-
-- Fixed the same `astro build` `@astrojs/markdown-remark` failure as Node.js; added the same explicit devDependency.
+- Fixed `astro build` failing since Astro 7 no longer bundles `@astrojs/markdown-remark` by default, which the KaTeX plugins need; added it as an explicit devDependency in both.
 
 ## 3.2.0
 

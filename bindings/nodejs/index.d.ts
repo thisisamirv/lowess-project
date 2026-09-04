@@ -12,7 +12,7 @@ export declare class Lowess {
 
 /** Result of a LOWESS fit. */
 export declare class LowessResult {
-  /** Get the sorted x values. */
+  /** Get the x values (same order as input). */
   get x(): Float64Array
   /** Get the smoothed y values. */
   get y(): Float64Array

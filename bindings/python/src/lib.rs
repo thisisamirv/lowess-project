@@ -89,7 +89,7 @@ pub struct PyLowessResult {
 
 #[pymethods]
 impl PyLowessResult {
-    /// Sorted x values
+    /// x values, in the same order as the input
     #[getter]
     fn x<'py>(&self, py: Python<'py>) -> Bound<'py, PyArray1<f64>> {
         PyArray1::from_vec(py, self.inner.x.clone())

@@ -62,7 +62,7 @@ Returned by `process_chunk()` and `finalize()`.
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `x` | `ndarray` | Sorted x values |
+| `x` | `ndarray` | x values (same order as input) |
 | `y` | `ndarray` | Smoothed y values |
 | `fraction_used` | `float` | Fraction used |
 | `iterations_used` | `int \| None` | Robustness iterations actually performed |

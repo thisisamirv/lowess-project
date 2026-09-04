@@ -131,7 +131,7 @@ pub struct CppOnlineOutput {
 /// All arrays are allocated by Rust and must be freed by Rust.
 #[repr(C)]
 pub struct CppLowessResult {
-    /// Sorted x values (length = n)
+    /// x values, in the same order as the input (length = n)
     pub x: *mut c_double,
     /// Smoothed y values (length = n)
     pub y: *mut c_double,

@@ -57,7 +57,7 @@ public:
 template <typename T> class Expected {
 public:
   // Success constructor
-  Expected(T val) : val_(std::move(val)), has_val_(true) {}
+  explicit Expected(T val) : val_(std::move(val)), has_val_(true) {}
 
   // Error constructor
   struct ErrorTag {};

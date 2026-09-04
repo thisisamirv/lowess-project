@@ -253,7 +253,7 @@ end
 Result from LOWESS smoothing.
 
 # Fields
-- `x::Vector{Float64}`: Sorted x values
+- `x::Vector{Float64}`: x values (same order as input)
 - `y::Vector{Float64}`: Smoothed y values
 - `standard_errors::Union{Vector{Float64}, Nothing}`: Standard errors (if computed)
 - `confidence_lower::Union{Vector{Float64}, Nothing}`: Lower confidence bounds

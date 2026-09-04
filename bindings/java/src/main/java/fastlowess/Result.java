@@ -6,7 +6,7 @@ import java.util.OptionalInt;
 /**
  * The result of fitting or updating a LOWESS model.
  *
- * @param x the sorted x values
+ * @param x the x values, in the same order as the input
  * @param y the smoothed y values
  * @param standardErrors per-point standard errors, if computed
  * @param confidenceLower lower confidence bounds, if computed

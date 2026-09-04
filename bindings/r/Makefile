@@ -189,7 +189,7 @@ dev:
 	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript \
 	  -e "library(pkgstats); library(pkgcheck)" \
 	  -e "token <- Sys.getenv('GITHUB_TOKEN', ''); if (nzchar(token) && !nzchar(Sys.getenv('GITHUB_PAT', ''))) Sys.setenv(GITHUB_PAT = token)" \
-	  -e "tryCatch(pkgcheck(use_cache = FALSE), error = function(err) { msg <- conditionMessage(err); if (grepl('GitHub API error|rate limit exceeded|timeout|could not resolve host', msg, ignore.case = TRUE) || grepl('could not find function', msg, fixed = TRUE)) { message('Skipping pkgcheck due to known incompatibility or network failure: ', msg); return(invisible(NULL)) }; stop(err) })"
+	  -e "tryCatch(pkgcheck(use_cache = TRUE), error = function(err) { msg <- conditionMessage(err); if (grepl('GitHub API error|rate limit exceeded|timeout|could not resolve host', msg, ignore.case = TRUE) || grepl('could not find function', msg, fixed = TRUE)) { message('Skipping pkgcheck due to known incompatibility or network failure: ', msg); return(invisible(NULL)) }; stop(err) })"
 	@echo "=============================================================================="
 	@echo "Doc snippet tests (r)..."
 	@$(PYTHON) dev/check_links.py --lang r

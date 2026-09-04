@@ -84,7 +84,7 @@ Returned by `process_chunk()` and `finalize()`.
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `x` | `Vec<T>` | Sorted x values |
+| `x` | `Vec<T>` | x values (same order as input) |
 | `y` | `Vec<T>` | Smoothed y values |
 | `fraction_used` | `T` | Fraction used |
 | `iterations_used` | `Option<usize>` | Robustness iterations actually performed |

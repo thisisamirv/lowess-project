@@ -83,7 +83,7 @@ Returned by `process_chunk()` and `finalize()`.
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `x` | `Float64Array` | Sorted x values |
+| `x` | `Float64Array` | x values (same order as input) |
 | `y` | `Float64Array` | Smoothed y values |
 | `fraction_used` | `number` | Fraction used |
 | `iterations_used` | `number \| null` | Robustness iterations actually performed |

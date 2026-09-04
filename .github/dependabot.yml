@@ -27,19 +27,6 @@ updates:
     commit-message:
       prefix: "chore(cargo)"
 
-  # R binding's Rust crate: standalone Cargo project, excluded from the
-  # workspace above (see bindings/r/src/Cargo.toml, cross-compiled via Rtools).
-  - package-ecosystem: "cargo"
-    directory: "/bindings/r/src"
-    schedule:
-      interval: "weekly"
-    groups:
-      rust-dependencies:
-        patterns: ["*"]
-    labels: ["dependencies", "rust", "r"]
-    commit-message:
-      prefix: "chore(r)"
-
   - package-ecosystem: "npm"
     directory: "/bindings/nodejs"
     schedule:

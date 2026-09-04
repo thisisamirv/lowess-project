@@ -67,7 +67,7 @@ class LowessResult:
 
     @property
     def x(self) -> NDArray[np.float64]:
-        """Sorted x values."""
+        """x values (same order as input)."""
 
     @property
     def y(self) -> NDArray[np.float64]:

@@ -59,6 +59,7 @@ from runners.base import (
     Snippet,
 )
 from runners.r import skip_reason as _r_skip_reason
+from runners.rust import run_rust_batch
 
 # ---------------------------------------------------------------------------
 # Terminal colours (disabled on non-TTY or Windows without colour support)
@@ -635,8 +636,38 @@ def main(argv: list[str] | None = None) -> int:
     for _s, _r in runnable:
         _by_runner[_r].append((_s, _r))
 
+    def _report(s: Snippet, runner: str, res: RunResult) -> None:
+        with _print_lock:
+            sys.stdout.write(f"  {cyan(runner):20s}  {s.label} … ")
+            if res.skipped:
+                print(yellow(f"SKIP ({res.skip_reason})"))
+            elif res.passed:
+                print(green(f"PASS ({res.duration:.2f}s)"))
+            else:
+                print(red(f"FAIL ({res.duration:.2f}s, exit {res.returncode})"))
+                if args.verbose:
+                    _print_failure(s, res)
+
     def _run_language(lang_items: list[tuple[Snippet, str]]) -> list[RunResult]:
         lang_results: list[RunResult] = []
+
+        # Rust snippets are batch-compiled in one `cargo build` (see run_rust_batch)
+        # instead of one `cargo run` per snippet, so they're handled all at once here.
+        if lang_items and lang_items[0][1] == "rust":
+            batch_results = run_rust_batch([s for s, _ in lang_items], args.timeout)
+            for (s, runner), res in zip(lang_items, batch_results):
+                _report(s, runner, res)
+                lang_results.append(res)
+                if args.stop_on_fail and not res.skipped and not res.passed:
+                    with _print_lock:
+                        print(
+                            red(
+                                f"\n[{runner}] Stopped after first failure (--stop-on-fail)."
+                            )
+                        )
+                    break
+            return lang_results
+
         for s, runner in lang_items:
             label = s.label
             run_fn = RUNNERS.get(runner)
@@ -653,16 +684,7 @@ def main(argv: list[str] | None = None) -> int:
                     )
             else:
                 res = run_fn(s, args.timeout)
-                with _print_lock:
-                    sys.stdout.write(f"  {cyan(runner):20s}  {label} … ")
-                    if res.skipped:
-                        print(yellow(f"SKIP ({res.skip_reason})"))
-                    elif res.passed:
-                        print(green(f"PASS ({res.duration:.2f}s)"))
-                    else:
-                        print(red(f"FAIL ({res.duration:.2f}s, exit {res.returncode})"))
-                        if args.verbose:
-                            _print_failure(s, res)
+                _report(s, runner, res)
 
             lang_results.append(res)
             if args.stop_on_fail and not res.skipped and not res.passed:

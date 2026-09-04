@@ -124,7 +124,7 @@ See [Online Adapter](api-online.md) for `OnlineOutput`.
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `x` | `Float64Array` | Sorted x values |
+| `x` | `Float64Array` | x values (same order as input) |
 | `y` | `Float64Array` | Smoothed y values |
 | `fraction_used` | `number` | Fraction used (set or selected by CV) |
 | `iterations_used` | `number \| null` | Robustness iterations actually performed |

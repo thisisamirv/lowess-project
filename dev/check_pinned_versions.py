@@ -81,6 +81,17 @@ PINS = [
         "repo": "r-lib/roxygen2",
     },
     {
+        # bindings/r/src is a standalone Cargo project (not a workspace member),
+        # excluded from the root cargo dependabot.yml entry; its own
+        # `directory: "/bindings/r/src"` entry was removed since Dependabot's
+        # file-fetcher can never resolve its `vendor/fastLowess` path
+        # dependency (only committed as vendor.tar.xz, never as loose files).
+        "name": "extendr-api (bindings/r/src/Cargo.toml)",
+        "file": REPO_ROOT / "bindings/r/src/Cargo.toml",
+        "pattern": re.compile(r'extendr-api = "(?P<version>\d+\.\d+)"'),
+        "repo": "extendr/extendr",
+    },
+    {
         "name": "KaTeX (lowess crate CDN header)",
         "file": REPO_ROOT / "crates/lowess/katex-header.html",
         "pattern": re.compile(r"katex@(?P<version>\d+\.\d+\.\d+)"),
@@ -97,6 +108,16 @@ PINS = [
 
 def _version_tuple(v: str) -> tuple[int, ...]:
     return tuple(int(p) for p in v.split("."))
+
+
+def _is_outdated(current: str, latest: str) -> bool:
+    # Pad to equal length so a shorthand pin like Cargo's "0.9" compares
+    # equal to "0.9.0" instead of being treated as older due to tuple length.
+    c, l = _version_tuple(current), _version_tuple(latest)
+    n = max(len(c), len(l))
+    c += (0,) * (n - len(c))
+    l += (0,) * (n - len(l))
+    return l > c
 
 
 def _latest_release(repo: str, tag_prefix: str = "") -> str:
@@ -138,7 +159,7 @@ def main() -> None:
             )
             continue
 
-        if _version_tuple(latest) > _version_tuple(current):
+        if _is_outdated(current, latest):
             outdated.append(
                 f"{pin['name']}: {current} -> {latest} "
                 f"(https://github.com/{pin['repo']}/releases/tag/"

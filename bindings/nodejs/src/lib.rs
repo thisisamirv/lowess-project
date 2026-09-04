@@ -61,7 +61,7 @@ pub struct LowessResult {
 
 #[napi]
 impl LowessResult {
-    /// Get the sorted x values.
+    /// Get the x values (same order as input).
     #[napi(getter)]
     pub fn get_x(&self) -> Float64Array {
         Float64Array::from(self.inner.x.as_slice())
