@@ -43,7 +43,7 @@ jobs:
             artifact_name: fastlowess.dll
             asset_name: fastlowess-win32-arm64.dll
             target_dir: target/release
-          - os: macos-13
+          - os: macos-15-intel
             artifact_name: libfastlowess.dylib
             asset_name: libfastlowess-macos-x64.dylib
             target_dir: target/release
