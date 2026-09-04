@@ -277,6 +277,7 @@ impl PyStreamingLowess {
                 return_robustness_weights,
                 return_diagnostics,
                 return_se: false,
+                return_sorted: false,
                 confidence_intervals: None,
                 prediction_intervals: None,
                 parallel: Some(parallel),
@@ -435,6 +436,7 @@ impl PyOnlineLowess {
                 return_robustness_weights,
                 return_diagnostics,
                 return_se: false,
+                return_sorted: false,
                 confidence_intervals: None,
                 prediction_intervals: None,
                 parallel: Some(parallel),
@@ -519,6 +521,7 @@ impl PyLowess {
         parallel=true,
         cv_seed=None,
         return_se=false,
+        return_sorted=false,
         backend="cpu"
     ))]
     #[allow(clippy::too_many_arguments)]
@@ -543,6 +546,7 @@ impl PyLowess {
         parallel: bool,
         cv_seed: Option<u64>,
         return_se: bool,
+        return_sorted: bool,
         backend: &str,
     ) -> PyResult<Self> {
         let builder = map_invalid_arg(binding_support::apply_builder_options(
@@ -561,6 +565,7 @@ impl PyLowess {
                 return_robustness_weights,
                 return_diagnostics,
                 return_se,
+                return_sorted,
                 confidence_intervals,
                 prediction_intervals,
                 parallel: Some(parallel),

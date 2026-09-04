@@ -35,7 +35,9 @@ Smoothed 10 points via streaming
 - `options`: An object containing `LowessOptions` fields.
 - `streamingOptions`: An object containing `StreamingOptions` fields.
 
-**Methods:**
+#### `process_chunk(x, y)`
+
+Feeds one chunk of data into the model. Each chunk is fit together with the trailing `overlap` points buffered from the previous call, then only the points that are fully resolved are returned — the tail of the chunk (the next `overlap` points) is held back internally, since it will be refit once the following chunk arrives and its estimate reconciled via `merge_strategy`. This is what lets the adapter process a dataset far larger than memory allows, one bounded-size chunk at a time, without ever materializing the whole dataset at once.
 
 ```javascript
 const { StreamingLowess } = require('fastlowess');
@@ -53,7 +55,9 @@ console.log("Fraction used:", partialResult.fraction_used);
 Fraction used: 0.5
 ```
 
-- Processes a chunk of data. Returns partial results.
+#### `finalize()`
+
+Flushes the overlap points still buffered from the last `process_chunk()` call. Because each call withholds its tail until the next chunk arrives to resolve it, the final chunk's tail would never be emitted otherwise — always call `finalize()` once after the last chunk to retrieve it.
 
 ```javascript
 const { StreamingLowess } = require('fastlowess');
@@ -73,38 +77,119 @@ console.log("Fraction used:", finalResult.fraction_used);
 Fraction used: 0.5
 ```
 
-- Finalizes the smoothing process and returns any remaining buffered results.
-
-## Result Structure
-
-### `LowessResult`
-
-Returned by `process_chunk()` and `finalize()`.
-
-| Field | Type | Description |
-| --- | --- | --- |
-| `x` | `Float64Array` | x values (same order as input) |
-| `y` | `Float64Array` | Smoothed y values |
-| `fraction_used` | `number` | Fraction used |
-| `iterations_used` | `number \| null` | Robustness iterations actually performed |
-| `residuals` | `Float64Array \| null` | Residuals (if `return_residuals`) |
-| `robustness_weights` | `Float64Array \| null` | Robustness weights (if `return_robustness_weights`) |
-| `diagnostics` | `Diagnostics \| null` | Fit metrics (if `return_diagnostics`) |
-| `dimensions` | `number` | Number of predictor dimensions |
-
-See [nodejs.md](api.md) for the full `LowessResult` field reference.
-
 ## Options Structure
 
 ### `StreamingOptions` (inherits `LowessOptions`)
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
+| `fraction` | `number` | `0.67` | Smoothing fraction (bandwidth) |
+| `iterations` | `number` | `3` | Number of robustifying iterations |
+| `delta` | `number` | `NaN` | Interpolation distance (`NaN` auto-sets it to 0.0 in Streaming, i.e. interpolation disabled) |
+| `weight_function` | `string` | `"tricube"` | Weight function name |
+| `robustness_method` | `string` | `"bisquare"` | Robustness method name |
+| `scaling_method` | `string` | `"mad"` | Residual scaling method |
+| `boundary_policy` | `string` | `"extend"` | Boundary handling policy |
+| `zero_weight_fallback` | `string` | `"use_local_mean"` | Zero-weight handling |
+| `auto_converge` | `number` | `null` | Auto-convergence tolerance |
+| `return_diagnostics` | `boolean` | `false` | Include diagnostics in result |
+| `return_residuals` | `boolean` | `false` | Include residuals in result |
+| `return_robustness_weights` | `boolean` | `false` | Include weights in result |
+| `parallel` | `boolean` | `true` | Enable parallel execution |
 | `chunk_size` | `number` | `5000` | Data chunk size |
 | `overlap` | `number` | `500` | Overlap between chunks |
 | `merge_strategy` | `string` | `"weighted_average"` | Strategy for blending overlap regions |
 
+Confidence/prediction intervals, standard errors, cross-validation, GPU `backend`, `custom_weights`, and `return_sorted` are Batch-only and not available here; see [fastLowess](api.md) for those.
+
 ## Options
+
+### fraction
+
+`fraction` is the most important parameter: it controls the size of the local neighbourhood used at each point.
+
+| Range | Effect | Use case |
+| --- | --- | --- |
+| 0.1-0.3 | Fine detail | Rapidly changing signals |
+| 0.3-0.5 | Balanced | General purpose |
+| 0.5-0.7 | Heavy smoothing | Noisy data |
+| 0.7-1.0 | Very smooth | Trend extraction |
+
+### iterations
+
+`iterations` controls robustness to outliers, at the cost of speed.
+
+| Value | Effect | Performance |
+| --- | --- | --- |
+| 0 | No robustness | Fastest |
+| 1-3 | Moderate | Recommended |
+| 4-6 | Strong | Contaminated data |
+| 7+ | Very strong | Heavy outliers |
+
+### delta
+
+Points within `delta` of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `NaN` (default) auto-sets it to `0` in Streaming mode, i.e. interpolation is disabled and every point is fit exactly.
+
+### weight_function
+
+*See: [Weight Functions](../weighting/kernels.md)*
+
+- `"tricube"` (default)
+- `"epanechnikov"`
+- `"gaussian"`
+- `"uniform"` (alias: `"boxcar"`)
+- `"biweight"` (alias: `"bisquare"`)
+- `"triangle"` (alias: `"triangular"`)
+- `"cosine"`
+
+### robustness_method
+
+*See: [Robustness](../weighting/robustness.md)*
+
+- `"bisquare"` (default; alias: `"biweight"`)
+- `"huber"`
+- `"talwar"`
+
+### scaling_method
+
+*See: [Scaling Methods](../weighting/scaling.md)*
+
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
+
+### boundary_policy
+
+*See: [Boundary Handling](../advanced/boundary.md)*
+
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
+
+### zero_weight_fallback
+
+Behavior when all neighborhood weights are zero:
+
+| Option | Behavior |
+| --- | --- |
+| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
+| `"return_original"` (alias: `"original"`) | Return the original y value |
+| `"return_none"` (alias: `"none"`) | Return `NaN` |
+
+### auto_converge
+
+*See: [Robustness](../weighting/robustness.md#auto-convergence)*
+
+Convergence tolerance for early stopping of robustness iterations. `null` (default) disables early stopping.
+
+### chunk_size
+
+Number of points processed per chunk. Larger chunks reduce per-chunk overhead and give each local fit more surrounding context, at the cost of higher peak memory; smaller chunks bound memory tightly but increase the fraction of points that fall in overlap regions. A good starting point is balancing available memory against how much processing overhead per chunk is acceptable — match it to your file-read buffer or message-batch size to avoid unnecessary copying.
+
+### overlap
+
+Number of points retained from the previous chunk as context, so the neighbourhood at chunk boundaries isn't artificially truncated. Points inside the overlap zone are fitted twice (once by each chunk) and reconciled via `merge_strategy`. A good starting point is 10–20% of `chunk_size`: too little overlap causes visible boundary artefacts, while too much wastes computation refitting the same points twice.
 
 ### merge_strategy
 
@@ -124,3 +209,37 @@ See [nodejs.md](api.md) for the full `LowessResult` field reference.
 :::caution[Always call finalize()]
 The streaming adapter buffers overlap data. Call `finalize()` after the last chunk to retrieve the buffered tail.
 :::
+
+## Result Structure
+
+### `LowessResult`
+
+Returned by `process_chunk()` and `finalize()`.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `x` | `Float64Array` | x values (same order as input) |
+| `y` | `Float64Array` | Smoothed y values |
+| `fraction_used` | `number` | Fraction used |
+| `iterations_used` | `number \| null` | Robustness iterations actually performed |
+| `standard_errors` | `Float64Array \| null` | Always `null` (Batch only) |
+| `confidence_lower` | `Float64Array \| null` | Always `null` (Batch only) |
+| `confidence_upper` | `Float64Array \| null` | Always `null` (Batch only) |
+| `prediction_lower` | `Float64Array \| null` | Always `null` (Batch only) |
+| `prediction_upper` | `Float64Array \| null` | Always `null` (Batch only) |
+| `residuals` | `Float64Array \| null` | Residuals (if `return_residuals`) |
+| `robustness_weights` | `Float64Array \| null` | Robustness weights (if `return_robustness_weights`) |
+| `cv_scores` | `Float64Array \| null` | Always `null` (Batch only) |
+| `diagnostics` | `Diagnostics \| null` | Fit metrics (if `return_diagnostics`) |
+
+### `Diagnostics`
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `rmse` | `number` | Root Mean Squared Error |
+| `mae` | `number` | Mean Absolute Error |
+| `r_squared` | `number` | R-squared |
+| `residual_sd` | `number` | Residual standard deviation |
+| `effective_df` | `number \| null` | Always `null` (requires standard errors, Batch only) |
+| `aic` | `number \| null` | Always `null` (requires `effective_df`, Batch only) |
+| `aicc` | `number \| null` | Always `null` (requires `effective_df`, Batch only) |

@@ -61,6 +61,11 @@ type Options struct {
 	// ReturnSE requests hat-matrix statistics (effective degrees of freedom,
 	// leverage, standard errors). Batch model only.
 	ReturnSE bool
+	// ReturnSorted requests results sorted ascending by x instead of in the
+	// original input order. Batch model only. To get both orderings without
+	// re-fitting, sort the default (unsorted) result client-side rather than
+	// calling Fit twice.
+	ReturnSorted bool
 
 	// CVFractions is a set of candidate fractions for cross-validation.
 	// Empty disables CV. Batch model only.
@@ -159,6 +164,7 @@ func NewLowess(opts Options) (*Lowess, error) {
 			C.int(opts.CVK),
 			boolToCInt(opts.Parallel),
 			boolToCInt(opts.ReturnSE),
+			boolToCInt(opts.ReturnSorted),
 			backend,
 		)
 		if ptr == nil {

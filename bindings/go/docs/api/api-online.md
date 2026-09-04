@@ -7,43 +7,193 @@ For real-time data: processes one `(x, y)` point at a time and returns a smoothe
 
 See also: [API](api.md)
 
+## When to Use
+
+- Data arrives incrementally (sensors, streams)
+- Need real-time smoothed values
+- Fixed memory budget
+
 ![Online Adapter](../assets/diagrams/online_comparison.svg)
 
-## `fastlowess.DefaultOnlineOptions() OnlineOptions`
+## Class
+
+### `OnlineLowess`
+
+The `OnlineLowess` type updates the model incrementally with new data points.
+
+**Constructor:**
 
 ```go
 opts := fastlowess.DefaultOnlineOptions()
 opts.WindowCapacity = 200
 opts.MinPoints = 10
+
+model, err := fastlowess.NewOnlineLowess(opts)
+if err != nil {
+ panic(err)
+}
+defer model.Close()
 ```
 
-`OnlineOptions` embeds [`Options`](api.md) (all the same fields apply, except `ReturnSE`, `CVFractions`/`CVMethod`/`CVK`/`CVSeed`, and `Backend`, which are batch-only). Note `Parallel` defaults to `false` for online use, since per-point updates rarely benefit from parallelism. Additional fields:
+- `fastlowess.NewOnlineLowess(opts OnlineOptions) (*OnlineLowess, error)` creates a new online model with the given options.
+- `opts`: An `OnlineOptions` struct (embeds `Options`).
+
+**Methods:**
+
+#### `AddPoint(x, y float64) (res PointResult, ok bool, err error)`
+
+Adds a single point to the sliding window and returns the smoothed value for that point; `ok` is `false` while the window is still filling up (fewer than `MinPoints` seen so far). Once the window reaches `WindowCapacity`, each new point evicts the oldest one, so memory stays bounded regardless of how much history has passed through. `UpdateMode` controls how much work each call does: `"incremental"` re-fits only the newest point, while `"full"` re-smooths the entire window for a more accurate but slower result.
+
+```go
+res, ok, err := model.AddPoint(x, y)
+if err != nil {
+ panic(err)
+}
+if ok {
+ fmt.Println(res.Y)
+}
+```
+
+- `(*OnlineLowess) Close() error` releases native resources. Safe to call multiple times.
+
+## Options Structure
+
+### `OnlineOptions` (embeds `Options`)
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `WindowCapacity` | `int` | `1000` | Maximum number of recent points retained. |
-| `MinPoints` | `int` | `2` | Minimum points required before output starts. |
-| `UpdateMode` | `string` | `"incremental"` | How the window is updated as new points arrive. |
+| `Fraction` | `float64` | `0.67` | Smoothing fraction (bandwidth) |
+| `Iterations` | `int` | `3` | Number of robustifying iterations |
+| `Delta` | `*float64` | `nil` | Interpolation distance (`nil` auto-sets it to 0.0 in Online, i.e. interpolation disabled) |
+| `WeightFunction` | `string` | `"tricube"` | Weight function name |
+| `RobustnessMethod` | `string` | `"bisquare"` | Robustness method name |
+| `ScalingMethod` | `string` | `"mad"` | Residual scaling method |
+| `BoundaryPolicy` | `string` | `"extend"` | Boundary handling policy |
+| `ZeroWeightFallback` | `string` | `"use_local_mean"` | Zero-weight handling |
+| `AutoConverge` | `*float64` | `nil` | Auto-convergence tolerance |
+| `ReturnDiagnostics` | `bool` | `false` | No effect for Online — `PointResult` has no diagnostics field |
+| `ReturnResiduals` | `bool` | `false` | No effect for Online — `Residual` is always populated |
+| `ReturnRobustnessWeights` | `bool` | `false` | Include `RobustnessWeight` in result |
+| `WindowCapacity` | `int` | `1000` | Maximum number of recent points retained |
+| `MinPoints` | `int` | `2` | Minimum points required before output starts |
+| `UpdateMode` | `string` | `"incremental"` | How the window is updated as new points arrive |
+| `Parallel` | `bool` | `false` | Enable parallel execution (off by default; online LOWESS fits one point at a time) |
 
-## `fastlowess.NewOnlineLowess(opts OnlineOptions) (*OnlineLowess, error)`
+Confidence/prediction intervals, standard errors, cross-validation, GPU `Backend`, `CustomWeights`, and `ReturnSorted` are Batch-only and not available here; see [API](api.md) for those.
 
-## `(*OnlineLowess) AddPoint(x, y float64) (res PointResult, ok bool, err error)`
+## Options
 
-Adds a single observation. `ok` is `false` while the window is still filling (fewer than `MinPoints` seen so far); once `ok` is `true`, `res` holds the smoothed value for the most recently added point.
+### Fraction
 
-## `(*OnlineLowess) Close() error`
+`Fraction` is the most important parameter: it controls the size of the local neighbourhood used at each point.
 
-Releases native resources. Safe to call multiple times.
+| Range | Effect | Use case |
+| --- | --- | --- |
+| 0.1-0.3 | Fine detail | Rapidly changing signals |
+| 0.3-0.5 | Balanced | General purpose |
+| 0.5-0.7 | Heavy smoothing | Noisy data |
+| 0.7-1.0 | Very smooth | Trend extraction |
 
-## `PointResult` fields
+### Iterations
+
+`Iterations` controls robustness to outliers, at the cost of speed.
+
+| Value | Effect | Performance |
+| --- | --- | --- |
+| 0 | No robustness | Fastest |
+| 1-3 | Moderate | Recommended |
+| 4-6 | Strong | Contaminated data |
+| 7+ | Very strong | Heavy outliers |
+
+### Delta
+
+Points within `Delta` of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `nil` (default) auto-sets it to `0` in Online mode, i.e. interpolation is disabled and every point is fit exactly.
+
+### WeightFunction
+
+*See: [Weight Functions](../weighting/kernels.md)*
+
+- `"tricube"` (default)
+- `"epanechnikov"`
+- `"gaussian"`
+- `"uniform"` (alias: `"boxcar"`)
+- `"biweight"` (alias: `"bisquare"`)
+- `"triangle"` (alias: `"triangular"`)
+- `"cosine"`
+
+### RobustnessMethod
+
+*See: [Robustness](../weighting/robustness.md)*
+
+- `"bisquare"` (default; alias: `"biweight"`)
+- `"huber"`
+- `"talwar"`
+
+### ScalingMethod
+
+*See: [Scaling Methods](../weighting/scaling.md)*
+
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
+
+### BoundaryPolicy
+
+*See: [Boundary Handling](../advanced/boundary.md)*
+
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
+
+### ZeroWeightFallback
+
+Behavior when all neighborhood weights are zero:
+
+| Option | Behavior |
+| --- | --- |
+| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
+| `"return_original"` (alias: `"original"`) | Return the original y value |
+| `"return_none"` (alias: `"none"`) | Return `NaN` |
+
+### AutoConverge
+
+*See: [Robustness](../weighting/robustness.md#auto-convergence)*
+
+Convergence tolerance for early stopping of robustness iterations. `nil` (default) disables early stopping.
+
+### WindowCapacity
+
+Maximum number of most recent points kept in the sliding window; older points are discarded as new ones arrive. Each `AddPoint` call costs O(`WindowCapacity`) rather than growing with total history.
+
+### MinPoints
+
+Minimum number of points required before smoothing starts. `AddPoint` returns `ok == false` until the window reaches this size.
+
+### UpdateMode
+
+*See: [Execution Modes](../guide/adapter-choice.md)*
+
+| Mode | Behavior | Speed |
+| --- | --- | --- |
+| `"incremental"` (default) | Update only affected fits | Faster |
+| `"full"` | Recompute entire window | More accurate |
+
+## Result Structure
+
+### `PointResult`
+
+Returned by `AddPoint` once the window has enough points (`ok == false` until then).
 
 | Field | Type | Notes |
 | --- | --- | --- |
-| `Y` | `float64` | Smoothed value. |
-| `StandardError` | `float64` | `NaN` if not computed. |
-| `Residual` | `float64` | `NaN` if not computed. |
-| `RobustnessWeight` | `float64` | `NaN` if not computed. |
-| `IterationsUsed` | `int` | `-1` if not applicable. |
+| `Y` | `float64` | Smoothed value for the latest point. |
+| `StandardError` | `float64` | Always `NaN` — standard errors require `ReturnSE`/confidence intervals, which are Batch-only. |
+| `Residual` | `float64` | Residual y − smoothed; always populated regardless of `ReturnResiduals`. |
+| `RobustnessWeight` | `float64` | Robustness weight, if `ReturnRobustnessWeights` was set. |
+| `IterationsUsed` | `int` | Robustness iterations performed (`-1` if not applicable). |
+
+There is no diagnostics structure for `OnlineLowess`: `ReturnDiagnostics` has no effect and `PointResult` carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful.
 
 ## Example
 

@@ -86,10 +86,6 @@ int main() {
 - The second overload applies `custom_weights` — non-negative per-observation weights of length `n`. Batch only.
 - Returns a `LowessResult` object containing the smoothed values and optional diagnostics.
 
-See [Streaming Adapter](api-streaming.md) for the `StreamingLowess` class.
-
-See [Online Adapter](api-online.md) for the `OnlineLowess` class.
-
 ## Options Structures
 
 ### LowessOptions
@@ -98,26 +94,31 @@ See [Online Adapter](api-online.md) for the `OnlineLowess` class.
 | --- | --- | --- | --- |
 | `fraction` | `double` | 0.67 | Smoothing fraction (bandwidth) |
 | `iterations` | `int` | 3 | Number of robustifying iterations |
-| `delta` | `double` | NaN | Interpolation distance (`NaN` auto-sets it to 1% of the x-range in Batch, or 0.0 in Streaming/Online) |
+| `delta` | `double` | NaN | Interpolation distance (`NaN` auto-sets it to 1% of the x-range) |
 | `weight_function` | `std::string` | "tricube" | Weight function name |
 | `robustness_method` | `std::string` | "bisquare" | Robustness method name |
 | `scaling_method` | `std::string` | "mad" | Residual scaling method |
 | `boundary_policy` | `std::string` | "extend" | Boundary handling policy |
 | `zero_weight_fallback` | `std::string` | "use_local_mean" | Zero-weight handling strategy |
 | `auto_converge` | `double` | NaN | Auto-convergence tolerance |
-| `confidence_intervals` | `double` | NaN | Confidence level (e.g., 0.95) — see [Intervals](../guide/intervals.md) |
-| `prediction_intervals` | `double` | NaN | Prediction level (e.g., 0.95) — see [Intervals](../guide/intervals.md) |
+| `confidence_intervals` | `double` | NaN | Confidence level (e.g., 0.95) |
+| `prediction_intervals` | `double` | NaN | Prediction level (e.g., 0.95) |
 | `return_diagnostics` | `bool` | false | Compute RMSE, MAE, R2, AIC |
 | `return_residuals` | `bool` | false | Include residuals in result |
 | `return_robustness_weights` | `bool` | false | Include robustness weights in result |
 | `return_se` | `bool` | false | Return standard errors |
+| `return_sorted` | `bool` | false | Return results sorted ascending by `x` instead of in original input order |
 | `parallel` | `bool` | true | Enable parallel execution |
-| `backend` | `std::string` | `"cpu"` | Execution backend (`"cpu"` or `"gpu"`); GPU requires the library to be built with the `gpu` Cargo feature (Batch only) |
-| `cv_method` | `std::string` | "kfold" | CV method (`"kfold"` fast or `"loocv"` slow, exhaustive) (Batch only) |
-| `cv_k` | `int` | 5 | Number of folds for k-fold CV (Batch only) |
-| `cv_fractions` | `std::vector<double>` | `{}` | Fractions to test for cross-validation (Batch only) |
-| `cv_seed` | `uint64_t` | `0` | Random seed for CV shuffling (Batch only; 0 = random) |
-| `custom_weights` | `std::vector<double>` | `{}` | Per-observation case weights — passed to `fit()`, not the constructor (Batch only; see [Custom Weights](../weighting/custom-weights.md)) |
+| `backend` | `std::string` | `"cpu"` | Execution backend (`"cpu"` or `"gpu"`); GPU requires the library to be built with the `gpu` Cargo feature |
+| `cv_method` | `std::string` | "kfold" | CV method (`"kfold"` fast or `"loocv"` slow, exhaustive) |
+| `cv_k` | `int` | 5 | Number of folds for k-fold CV |
+| `cv_fractions` | `std::vector<double>` | `{}` | Fractions to test for cross-validation |
+| `cv_seed` | `uint64_t` | `0` | Random seed for CV shuffling (0 = random) |
+| `custom_weights` | `std::vector<double>` | `{}` | Per-observation case weights — passed to `fit()`, not the constructor |
+
+## Options
+
+### fraction
 
 `fraction` is the most important parameter: it controls the size of the local neighbourhood used at each point.
 
@@ -128,6 +129,8 @@ See [Online Adapter](api-online.md) for the `OnlineLowess` class.
 | 0.5-0.7 | Heavy smoothing | Noisy data |
 | 0.7-1.0 | Very smooth | Trend extraction |
 
+### iterations
+
 `iterations` controls robustness to outliers, at the cost of speed.
 
 | Value | Effect | Performance |
@@ -137,17 +140,106 @@ See [Online Adapter](api-online.md) for the `OnlineLowess` class.
 | 4-6 | Strong | Contaminated data |
 | 7+ | Very strong | Heavy outliers |
 
-See [Streaming Adapter](api-streaming.md) for `StreamingOptions`.
+### delta
 
-See [Online Adapter](api-online.md) for `OnlineOptions`.
+Points within `delta` of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `NaN` (default) auto-sets it to 1% of the x-range. Set it to `0` explicitly to disable interpolation and fit every point exactly.
 
-## GPU Acceleration
+### weight_function
+
+*See: [Weight Functions](../weighting/kernels.md)*
+
+- `"tricube"` (default)
+- `"epanechnikov"`
+- `"gaussian"`
+- `"uniform"` (alias: `"boxcar"`)
+- `"biweight"` (alias: `"bisquare"`)
+- `"triangle"` (alias: `"triangular"`)
+- `"cosine"`
+
+### robustness_method
+
+*See: [Robustness](../weighting/robustness.md)*
+
+- `"bisquare"` (default; alias: `"biweight"`)
+- `"huber"`
+- `"talwar"`
+
+### scaling_method
+
+*See: [Scaling Methods](../weighting/scaling.md)*
+
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
+
+### boundary_policy
+
+*See: [Boundary Handling](../advanced/boundary.md)*
+
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
+
+### zero_weight_fallback
+
+Behavior when all neighborhood weights are zero:
+
+| Option | Behavior |
+| --- | --- |
+| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
+| `"return_original"` (alias: `"original"`) | Return the original y value |
+| `"return_none"` (alias: `"none"`) | Return `NaN` |
+
+### auto_converge
+
+*See: [Robustness](../weighting/robustness.md#auto-convergence)*
+
+Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
+
+### confidence_intervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the confidence interval around the mean response (e.g. `0.95`). `NaN` (default) disables confidence intervals.
+
+### prediction_intervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the prediction interval for new observations (e.g. `0.95`). `NaN` (default) disables prediction intervals.
+
+### return_se
+
+*See: [Intervals](../guide/intervals.md#standard-errors)*
+
+Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) in addition to standard errors.
+
+### return_sorted
+
+When set to `true`, it reorders every result field (residuals, intervals, etc.) by `x` in an ascending manner, instead of in original input order.
+To get both orderings, sort the default result client-side (e.g. via `std::sort` over an index vector) instead of calling `fit()` twice.
+
+### backend
 
 The batch `fastlowess::Lowess` class can optionally run on a GPU-accelerated backend powered by `wgpu`, for high-throughput processing of large datasets (10k+ points). GPU support applies to `Lowess` (batch) only — `StreamingLowess`/`OnlineLowess` remain CPU-only. See the [GPU Backend guide](../advanced/gpu-backend.md) for installation, usage, supported features, and hardware requirements.
 
-## Result Structure
+### CV Options
 
-See [Online Adapter](api-online.md) for `OnlineOutput`.
+*See: [Cross-Validation](../guide/cross-validation.md)*
+
+- `cv_method`: `"kfold"` (default) — fast, evaluates each candidate fraction over `cv_k` folds; `"loocv"` — slow, exhaustive leave-one-out cross-validation
+- `cv_k`: Number of folds for k-fold CV. Ignored when `cv_method="loocv"`.
+- `cv_fractions`: Candidate fractions to evaluate. Cross-validation is disabled unless this is set.
+- `cv_seed`: Seed for reproducible k-fold shuffling. `0` (default) uses a random seed.
+
+### custom_weights
+
+*See: [Custom Weights](../weighting/custom-weights.md)*
+
+Per-observation weights, passed to `fit()` rather than the constructor.
+
+## Result Structure
 
 ### fastlowess::LowessResult
 
@@ -182,55 +274,6 @@ All accessors are const methods (not public fields):
 | `effective_df()` | `double` | Effective degrees of freedom (NaN if not computed) |
 | `aic()` | `double` | AIC (NaN if not computed) |
 | `aicc()` | `double` | AICc (NaN if not computed) |
-
-## Options
-
-### weight_function
-
-*See: [Weight Functions](../weighting/kernels.md)*
-
-- `"tricube"` (default)
-- `"epanechnikov"`
-- `"gaussian"`
-- `"uniform"` (alias: `"boxcar"`)
-- `"biweight"` (alias: `"bisquare"`)
-- `"triangle"` (alias: `"triangular"`)
-- `"cosine"`
-
-### robustness_method
-
-*See: [Robustness](../weighting/robustness.md)*
-
-- `"bisquare"` (default; alias: `"biweight"`)
-- `"huber"`
-- `"talwar"`
-
-### boundary_policy
-
-*See: [Boundary Handling](../advanced/boundary.md)*
-
-- `"extend"` (default; alias: `"pad"`)
-- `"reflect"` (alias: `"mirror"`)
-- `"zero"`
-- `"noboundary"` (alias: `"none"`)
-
-### scaling_method
-
-*See: [Scaling Methods](../weighting/scaling.md)*
-
-- `"mad"` (default; alias: `"median_absolute_deviation"`)
-- `"mar"` (alias: `"median_absolute_residual"`)
-- `"mean"` (alias: `"mean_absolute_residual"`)
-
-### zero_weight_fallback
-
-Behavior when all neighborhood weights are zero:
-
-| Option | Behavior |
-| --- | --- |
-| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
-| `"return_original"` (alias: `"original"`) | Return the original y value |
-| `"return_none"` (alias: `"none"`) | Return `NaN` |
 
 ## Example
 

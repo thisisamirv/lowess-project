@@ -143,6 +143,7 @@ class Lowess:
         parallel: bool = True,
         cv_seed: int | None = None,
         return_se: bool = False,
+        return_sorted: bool = False,
         backend: str = "cpu",
     ) -> Self: ...
     def __init__(
@@ -168,6 +169,7 @@ class Lowess:
         parallel: bool = True,
         cv_seed: int | None = None,
         return_se: bool = False,
+        return_sorted: bool = False,
         backend: str = "cpu",
     ) -> None: ...
     def fit(

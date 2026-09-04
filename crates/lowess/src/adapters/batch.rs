@@ -82,6 +82,9 @@ pub struct BatchLowessBuilder<T: Float> {
     // Whether to return robustness weights
     pub return_robustness_weights: bool,
 
+    // Whether to return results sorted ascending by x instead of in original input order
+    pub return_sorted: bool,
+
     // Policy for handling zero-weight neighborhoods
     pub zero_weight_fallback: ZeroWeightFallback,
 
@@ -155,6 +158,7 @@ impl<T: Float> BatchLowessBuilder<T> {
             return_diagnostics: DEFAULT_RETURN_DIAGNOSTICS,
             compute_residuals: DEFAULT_RETURN_RESIDUALS,
             return_robustness_weights: DEFAULT_RETURN_ROBUSTNESS_WEIGHTS,
+            return_sorted: DEFAULT_RETURN_SORTED,
             zero_weight_fallback: DEFAULT_ZERO_WEIGHT_FALLBACK_ENUM,
             boundary_policy: DEFAULT_BOUNDARY_POLICY_ENUM,
             scaling_method: DEFAULT_SCALING_METHOD_ENUM,
@@ -334,27 +338,63 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> BatchLowess<T> {
                 _ => (None, None, None, None),
             };
 
-        // Unsort results using sorting module
+        // Unsort results back to original input order, unless `return_sorted` was
+        // requested, in which case the already-sorted arrays are returned as-is.
         let indices = &sorted.indices;
-        let y_smooth_out = unsort(&y_smooth, indices);
-        let std_errors_out = std_errors.as_ref().map(|se| unsort(se, indices));
-        let residuals_out = if self.config.compute_residuals {
-            Some(unsort(&residuals, indices))
+        let (
+            x_out,
+            y_smooth_out,
+            std_errors_out,
+            residuals_out,
+            rob_weights_out,
+            cl_out,
+            cu_out,
+            pl_out,
+            pu_out,
+        ) = if self.config.return_sorted {
+            (
+                sorted.x.clone(),
+                y_smooth,
+                std_errors,
+                if self.config.compute_residuals {
+                    Some(residuals)
+                } else {
+                    None
+                },
+                if self.config.return_robustness_weights {
+                    Some(rob_weights)
+                } else {
+                    None
+                },
+                conf_lower,
+                conf_upper,
+                pred_lower,
+                pred_upper,
+            )
         } else {
-            None
+            (
+                x.to_vec(),
+                unsort(&y_smooth, indices),
+                std_errors.as_ref().map(|se| unsort(se, indices)),
+                if self.config.compute_residuals {
+                    Some(unsort(&residuals, indices))
+                } else {
+                    None
+                },
+                if self.config.return_robustness_weights {
+                    Some(unsort(&rob_weights, indices))
+                } else {
+                    None
+                },
+                conf_lower.as_ref().map(|v| unsort(v, indices)),
+                conf_upper.as_ref().map(|v| unsort(v, indices)),
+                pred_lower.as_ref().map(|v| unsort(v, indices)),
+                pred_upper.as_ref().map(|v| unsort(v, indices)),
+            )
         };
-        let rob_weights_out = if self.config.return_robustness_weights {
-            Some(unsort(&rob_weights, indices))
-        } else {
-            None
-        };
-        let cl_out = conf_lower.as_ref().map(|v| unsort(v, indices));
-        let cu_out = conf_upper.as_ref().map(|v| unsort(v, indices));
-        let pl_out = pred_lower.as_ref().map(|v| unsort(v, indices));
-        let pu_out = pred_upper.as_ref().map(|v| unsort(v, indices));
 
         Ok(LowessResult {
-            x: x.to_vec(),
+            x: x_out,
             y: y_smooth_out,
             standard_errors: std_errors_out,
             confidence_lower: cl_out,

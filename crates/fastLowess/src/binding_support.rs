@@ -421,6 +421,8 @@ pub struct BuilderOptionSet<'a> {
     pub return_robustness_weights: bool,
     pub return_diagnostics: bool,
     pub return_se: bool,
+    // Return results sorted ascending by x instead of in original input order (Batch only).
+    pub return_sorted: bool,
     pub confidence_intervals: Option<f64>,
     pub prediction_intervals: Option<f64>,
     pub parallel: Option<bool>,
@@ -456,6 +458,8 @@ pub struct TypedBuilderOptionSet {
     pub return_robustness_weights: bool,
     pub return_diagnostics: bool,
     pub return_se: bool,
+    // Return results sorted ascending by x instead of in original input order (Batch only).
+    pub return_sorted: bool,
     pub confidence_intervals: Option<f64>,
     pub prediction_intervals: Option<f64>,
     pub parallel: Option<bool>,
@@ -642,6 +646,7 @@ pub fn apply_builder_options(
         return_robustness_weights: options.return_robustness_weights,
         return_diagnostics: options.return_diagnostics,
         return_se: options.return_se,
+        return_sorted: options.return_sorted,
         confidence_intervals: options.confidence_intervals,
         prediction_intervals: options.prediction_intervals,
         parallel: options.parallel,
@@ -711,6 +716,9 @@ pub fn apply_typed_builder_options(
     }
     if options.return_se {
         builder = builder.return_se();
+    }
+    if options.return_sorted {
+        builder = builder.return_sorted();
     }
     if let Some(cw) = options.custom_weights {
         builder = builder.custom_weights(cw);

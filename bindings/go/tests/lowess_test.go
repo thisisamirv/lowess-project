@@ -2,6 +2,7 @@ package fastlowess_test
 
 import (
 	"math"
+	"sort"
 	"testing"
 
 	"github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
@@ -798,6 +799,78 @@ func TestEdgeCases(t *testing.T) {
 		res := fitOrFatal(t, opts, x, y)
 		if len(res.Y) != 5 {
 			t.Fatalf("expected 5 values, got %d", len(res.Y))
+		}
+	})
+
+	t.Run("ReturnSortedDefaultsToOriginalOrder", func(t *testing.T) {
+		x := []float64{3.0, 1.0, 5.0, 2.0, 4.0}
+		y := []float64{6.0, 2.0, 10.0, 4.0, 8.0}
+
+		opts := fastlowess.DefaultOptions()
+		opts.Fraction = 0.7
+		res := fitOrFatal(t, opts, x, y)
+		for i := range x {
+			if res.X[i] != x[i] {
+				t.Fatalf("expected x[%d]=%v (original order), got %v", i, x[i], res.X[i])
+			}
+		}
+	})
+
+	t.Run("ReturnSortedTrue", func(t *testing.T) {
+		x := []float64{3.0, 1.0, 5.0, 2.0, 4.0}
+		y := []float64{6.0, 2.0, 10.0, 4.0, 8.0}
+
+		opts := fastlowess.DefaultOptions()
+		opts.Fraction = 0.7
+		opts.ReturnResiduals = true
+		opts.ReturnRobustnessWeights = true
+		opts.ReturnSorted = true
+		res := fitOrFatal(t, opts, x, y)
+
+		if !sort.Float64sAreSorted(res.X) {
+			t.Fatalf("expected x to be ascending, got %v", res.X)
+		}
+		same := true
+		for i := range x {
+			if res.X[i] != x[i] {
+				same = false
+				break
+			}
+		}
+		if same {
+			t.Fatalf("expected sorted x to differ from unsorted input order")
+		}
+
+		unsortedOpts := fastlowess.DefaultOptions()
+		unsortedOpts.Fraction = 0.7
+		unsortedOpts.ReturnResiduals = true
+		unsortedOpts.ReturnRobustnessWeights = true
+		unsortedRes := fitOrFatal(t, unsortedOpts, x, y)
+
+		type pair struct{ x, y float64 }
+		sortedPairs := make([]pair, len(res.X))
+		for i := range res.X {
+			sortedPairs[i] = pair{res.X[i], res.Y[i]}
+		}
+		sort.Slice(sortedPairs, func(i, j int) bool { return sortedPairs[i].x < sortedPairs[j].x })
+
+		unsortedPairs := make([]pair, len(unsortedRes.X))
+		for i := range unsortedRes.X {
+			unsortedPairs[i] = pair{unsortedRes.X[i], unsortedRes.Y[i]}
+		}
+		sort.Slice(unsortedPairs, func(i, j int) bool { return unsortedPairs[i].x < unsortedPairs[j].x })
+
+		for i := range sortedPairs {
+			if sortedPairs[i] != unsortedPairs[i] {
+				t.Fatalf("return_sorted should not change fitted values, only their order: %v vs %v", sortedPairs[i], unsortedPairs[i])
+			}
+		}
+
+		if len(res.Residuals) != len(x) {
+			t.Fatalf("expected %d residuals, got %d", len(x), len(res.Residuals))
+		}
+		if len(res.RobustnessWeights) != len(x) {
+			t.Fatalf("expected %d robustness weights, got %d", len(x), len(res.RobustnessWeights))
 		}
 	})
 

@@ -27,6 +27,7 @@ public final class Options {
     final boolean returnRobustnessWeights;
     final boolean parallel;
     final boolean returnSe;
+    final boolean returnSorted;
     final String backend;
     final double[] cvFractions;
     final String cvMethod;
@@ -50,6 +51,7 @@ public final class Options {
         this.returnRobustnessWeights = b.returnRobustnessWeights;
         this.parallel = b.parallel;
         this.returnSe = b.returnSe;
+        this.returnSorted = b.returnSorted;
         this.backend = b.backend;
         this.cvFractions = b.cvFractions;
         this.cvMethod = b.cvMethod;
@@ -87,6 +89,7 @@ public final class Options {
         boolean returnRobustnessWeights = false;
         boolean parallel = true;
         boolean returnSe = false;
+        boolean returnSorted = false;
         String backend = null;
         double[] cvFractions = null;
         String cvMethod = null;
@@ -283,6 +286,20 @@ public final class Options {
          */
         public Builder returnSe(boolean returnSe) {
             this.returnSe = returnSe;
+            return this;
+        }
+
+        /**
+         * Whether to return results sorted ascending by x instead of in the
+         * original input order (Batch only). To get both orderings without
+         * re-fitting, sort the default (unsorted) result client-side rather
+         * than calling {@link Lowess#fit} twice.
+         *
+         * @param returnSorted whether to return results sorted ascending by x
+         * @return this builder, for chaining
+         */
+        public Builder returnSorted(boolean returnSorted) {
+            this.returnSorted = returnSorted;
             return this;
         }
 

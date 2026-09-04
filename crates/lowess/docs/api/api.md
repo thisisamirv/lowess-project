@@ -10,7 +10,7 @@ The Rust bindings provide the core implementation and high-performance extension
 - Need intervals, cross-validation, or diagnostics
 - Processing complete files
 
-## Structs & Usage
+## Classes
 
 The `lowess` crate exposes three dedicated wrapper structs — `Lowess`, `StreamingLowess`, and `OnlineLowess` — that mirror the distinct classes available in other language bindings. Each struct wraps a `LowessBuilder<f64>` and its `build()` method delegates to the corresponding adapter. The `lowess` crate has no `parallel` or `gpu` feature — for CPU-parallel and GPU-accelerated execution, use the `fastLowess` crate instead.
 
@@ -58,11 +58,7 @@ Iterations used: None
 - Fits the model to the provided `x` and `y` arrays.
 - Returns `Result<LowessResult<T>, LowessError>`.
 
-See [Streaming Adapter](crate::doc::api::streaming) for `StreamingLowess`.
-
-See [Online Adapter](crate::doc::api::online) for `OnlineLowess`.
-
-## Builder Configuration
+## Options Structures
 
 These chained methods configure the builder. They correspond to the "Options Structures" in other bindings.
 
@@ -72,24 +68,29 @@ These chained methods configure the builder. They correspond to the "Options Str
 | --- | --- | --- | --- |
 | `fraction(T)` | `T: Float` | `0.67` | Smoothing fraction (bandwidth) |
 | `iterations(usize)` | `usize` | `3` | Number of robustifying iterations |
-| `delta(T)` | `T: Float` | `NaN` | Interpolation distance (`NaN` auto-sets it to 1% of the x-range in Batch, or 0.0 in Streaming/Online) |
+| `delta(T)` | `T: Float` | `NaN` | Interpolation distance (`NaN` auto-sets it to 1% of the x-range) |
 | `weight_function(...)` | `weight_function` | `"tricube"` | Weight function |
 | `robustness_method(...)` | `robustness_method` | `"bisquare"` | Robustness method |
 | `scaling_method(...)` | `scaling_method` | `"mad"` | Residual scaling method |
 | `boundary_policy(...)` | `boundary_policy` | `"extend"` | Boundary handling policy |
 | `zero_weight_fallback(...)` | `zero_weight_fallback` | `"use_local_mean"` | Zero-weight handling |
 | `auto_converge(T)` | `T: Float` | `NaN` | Auto-convergence tolerance |
-| `confidence_intervals(T)` | `T: Float` | `NaN` | Confidence level (e.g., 0.95) — see [Intervals](crate::doc::guide::intervals) |
-| `prediction_intervals(T)` | `T: Float` | `NaN` | Prediction level (e.g., 0.95) — see [Intervals](crate::doc::guide::intervals) |
-| `custom_weights(Vec<T>)` | `Vec<T: Float>` | `None` | Per-observation weights (Batch only) — see [Custom Weights](crate::doc::weighting::custom_weights) |
+| `confidence_intervals(T)` | `T: Float` | `NaN` | Confidence level (e.g., 0.95) |
+| `prediction_intervals(T)` | `T: Float` | `NaN` | Prediction level (e.g., 0.95) |
 | `return_diagnostics()` | `bool` | `false` | Compute RMSE, MAE, R2, AIC |
 | `return_residuals()` | `bool` | `false` | Include residuals in result |
 | `return_robustness_weights()` | `bool` | `false` | Include robustness weights in result |
 | `return_se()` | `bool` | `false` | Return standard errors |
+| `return_sorted()` | `bool` | `false` | Return results sorted ascending by `x` instead of in original input order |
 | `cv_method(str)` | `&str` | `"kfold"` | CV strategy: `"kfold"` (fast) or `"loocv"` (slow, exhaustive) — defaults to `"kfold"` when `cv_fractions` is provided |
 | `cv_k(usize)` | `usize` | `5` | K for k-fold CV |
 | `cv_fractions(Vec<f64>)` | `Vec<f64>` | `None` | Fraction grid for CV |
 | `cv_seed(u64)` | `u64` | `None` | RNG seed for CV |
+| `custom_weights(Vec<T>)` | `Vec<T: Float>` | `None` | Per-observation weights |
+
+## Options
+
+### fraction
 
 `fraction` is the most important parameter: it controls the size of the local neighbourhood used at each point.
 
@@ -100,6 +101,8 @@ These chained methods configure the builder. They correspond to the "Options Str
 | 0.5-0.7 | Heavy smoothing | Noisy data |
 | 0.7-1.0 | Very smooth | Trend extraction |
 
+### iterations
+
 `iterations` controls robustness to outliers, at the cost of speed.
 
 | Value | Effect | Performance |
@@ -109,15 +112,102 @@ These chained methods configure the builder. They correspond to the "Options Str
 | 4-6 | Strong | Contaminated data |
 | 7+ | Very strong | Heavy outliers |
 
+### delta
+
+Points within `delta` of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `NaN` (default) auto-sets it to 1% of the x-range. Set it to `0.0` explicitly to disable interpolation and fit every point exactly.
+
+### weight_function
+
+*See: [Weight Functions](crate::doc::weighting::kernels)*
+
+- `"tricube"` (default)
+- `"epanechnikov"`
+- `"gaussian"`
+- `"uniform"` (alias: `"boxcar"`)
+- `"biweight"` (alias: `"bisquare"`)
+- `"triangle"` (alias: `"triangular"`)
+- `"cosine"`
+
+### robustness_method
+
+*See: [Robustness](crate::doc::weighting::robustness)*
+
+- `"bisquare"` (default; alias: `"biweight"`)
+- `"huber"`
+- `"talwar"`
+
+### scaling_method
+
+*See: [Scaling Methods](crate::doc::weighting::scaling)*
+
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
+
+### boundary_policy
+
+*See: [Boundary Handling](crate::doc::advanced::boundary)*
+
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
+
+### zero_weight_fallback
+
+Behavior when all neighborhood weights are zero:
+
+| Option | Behavior |
+| --- | --- |
+| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
+| `"return_original"` (alias: `"original"`) | Return the original y value |
+| `"return_none"` (alias: `"none"`) | Return `NaN` |
+
+### auto_converge
+
+*See: [Robustness](crate::doc::weighting::robustness)*
+
+Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
+
+### confidence_intervals
+
+*See: [Intervals](crate::doc::guide::intervals)*
+
+Confidence level for the confidence interval around the mean response (e.g. `0.95`). `NaN` (default) disables confidence intervals.
+
+### prediction_intervals
+
+*See: [Intervals](crate::doc::guide::intervals)*
+
+Confidence level for the prediction interval for new observations (e.g. `0.95`). `NaN` (default) disables prediction intervals.
+
+### return_se
+
+*See: [Intervals](crate::doc::guide::intervals)*
+
+Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) in addition to standard errors.
+
+### return_sorted
+
+When set to `true`, it reorders every result field (residuals, intervals, etc.) by `x` in an ascending manner, instead of in original input order.
+To get both orderings, sort the default result client-side instead of calling `fit()` twice.
+
+### CV Options
+
+*See: [Cross-Validation](crate::doc::guide::cross_validation)*
+
+- `cv_method`: `"kfold"` (default) — fast, evaluates each candidate fraction over `cv_k` folds; `"loocv"` — slow, exhaustive leave-one-out cross-validation
+- `cv_k`: Number of folds for k-fold CV. Ignored when `cv_method="loocv"`.
+- `cv_fractions`: Candidate fractions to evaluate. Cross-validation is disabled unless this is set.
+- `cv_seed`: Seed for reproducible k-fold shuffling. `None` (default) uses a random seed.
+
+### custom_weights
+
+*See: [Custom Weights](crate::doc::weighting::custom_weights)*
+
 **Note:** In other language bindings `custom_weights` is a `fit()` argument; in Rust it is a builder step because all configuration lives on the builder and `fit()` consumes `self`.
 
-See [Streaming Adapter](crate::doc::api::streaming) for Streaming Options.
-
-See [Online Adapter](crate::doc::api::online) for Online Options.
-
 ## Result Structure
-
-See [Online Adapter](crate::doc::api::online) for `OnlineOutput<T>`.
 
 ### `LowessResult<T>`
 
@@ -148,55 +238,6 @@ See [Online Adapter](crate::doc::api::online) for `OnlineOutput<T>`.
 | `effective_df` | `Option<T>` | Effective degrees of freedom (`None` if not computed) |
 | `aic` | `Option<T>` | AIC (`None` if not computed) |
 | `aicc` | `Option<T>` | AICc (`None` if not computed) |
-
-## Options
-
-### weight_function
-
-*See: [Weight Functions](crate::doc::weighting::kernels)*
-
-- `"tricube"` (default)
-- `"epanechnikov"`
-- `"gaussian"`
-- `"uniform"` (alias: `"boxcar"`)
-- `"biweight"` (alias: `"bisquare"`)
-- `"triangle"` (alias: `"triangular"`)
-- `"cosine"`
-
-### robustness_method
-
-*See: [Robustness](crate::doc::weighting::robustness)*
-
-- `"bisquare"` (default; alias: `"biweight"`)
-- `"huber"`
-- `"talwar"`
-
-### boundary_policy
-
-*See: [Boundary Handling](crate::doc::advanced::boundary)*
-
-- `"extend"` (default; alias: `"pad"`)
-- `"reflect"` (alias: `"mirror"`)
-- `"zero"`
-- `"noboundary"` (alias: `"none"`)
-
-### scaling_method
-
-*See: [Scaling Methods](crate::doc::weighting::scaling)*
-
-- `"mad"` (default; alias: `"median_absolute_deviation"`)
-- `"mar"` (alias: `"median_absolute_residual"`)
-- `"mean"` (alias: `"mean_absolute_residual"`)
-
-### zero_weight_fallback
-
-Behavior when all neighborhood weights are zero:
-
-| Option | Behavior |
-| --- | --- |
-| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
-| `"return_original"` (alias: `"original"`) | Return the original y value |
-| `"return_none"` (alias: `"none"`) | Return `NaN` |
 
 ## Example
 

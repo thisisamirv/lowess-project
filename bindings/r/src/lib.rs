@@ -79,6 +79,7 @@ impl RLowess {
         parallel: bool,
         cv_seed: Nullable<i32>,
         return_se: bool,
+        return_sorted: bool,
         backend: &str,
     ) -> Result<Self> {
         let fractions = match cv_fractions {
@@ -114,6 +115,7 @@ impl RLowess {
                 return_robustness_weights,
                 return_diagnostics,
                 return_se,
+                return_sorted,
                 confidence_intervals: match confidence_intervals {
                     NotNull(v) => Some(v),
                     Null => None,

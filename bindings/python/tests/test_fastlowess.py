@@ -506,6 +506,46 @@ class TestEdgeCases:
         # result.x preserves the input's original order; it is not re-sorted.
         np.testing.assert_array_equal(result.x, x)
 
+    def test_return_sorted_false_default(self):
+        """Test that return_sorted defaults to False (original input order)."""
+        x = np.array([3.0, 1.0, 5.0, 2.0, 4.0])
+        y = np.array([6.0, 2.0, 10.0, 4.0, 8.0])
+
+        lowess = fastlowess.Lowess(fraction=0.7)
+        result = lowess.fit(x, y)
+        np.testing.assert_array_equal(result.x, x)
+
+    def test_return_sorted_true(self):
+        """Test that return_sorted=True returns results sorted ascending by x."""
+        x = np.array([3.0, 1.0, 5.0, 2.0, 4.0])
+        y = np.array([6.0, 2.0, 10.0, 4.0, 8.0])
+
+        lowess = fastlowess.Lowess(
+            fraction=0.7,
+            return_residuals=True,
+            return_robustness_weights=True,
+            return_sorted=True,
+        )
+        result = lowess.fit(x, y)
+
+        # x must be strictly ascending, and differ from the unsorted input order.
+        assert np.all(np.diff(result.x) >= 0)
+        assert not np.array_equal(result.x, x)
+
+        # Same (x, y) pairs as the unsorted-order fit, just reordered.
+        unsorted_result = fastlowess.Lowess(
+            fraction=0.7,
+            return_residuals=True,
+            return_robustness_weights=True,
+        ).fit(x, y)
+
+        sorted_pairs = sorted(zip(result.x, result.y))
+        unsorted_pairs = sorted(zip(unsorted_result.x, unsorted_result.y))
+        np.testing.assert_allclose(sorted_pairs, unsorted_pairs)
+
+        assert len(result.residuals) == len(x)
+        assert len(result.robustness_weights) == len(x)
+
     def test_duplicate_x_values(self):
         """Test with duplicate x values."""
         x = np.array([1.0, 1.0, 2.0, 2.0, 3.0])

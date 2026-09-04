@@ -210,6 +210,14 @@ impl Lowess {
         self
     }
 
+    // Return results sorted ascending by x instead of in original input order.
+    // To get both orderings, sort the default (unsorted) result client-side
+    // instead of calling `fit()` twice.
+    pub fn return_sorted(mut self) -> Self {
+        self.0 = self.0.return_sorted();
+        self
+    }
+
     pub fn build(self) -> Result<ParallelBatchLowess<f64>, LowessError> {
         Batch::convert(self.0).build()
     }

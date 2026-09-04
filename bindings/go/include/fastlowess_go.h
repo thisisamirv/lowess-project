@@ -124,6 +124,7 @@ struct fastlowess_GoLowess *go_lowess_new(double fraction,
                                           int cv_k,
                                           int parallel,
                                           int return_se,
+                                          int return_sorted,
                                           const char *backend);
 
 /**

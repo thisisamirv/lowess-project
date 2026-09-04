@@ -34,6 +34,7 @@ public final class Lowess implements AutoCloseable {
                 options.cvK,
                 options.parallel,
                 options.returnSe,
+                options.returnSorted,
                 options.backend);
         if (options.cvSeed != null) {
             NativeBridge.lowessSetCvSeed(handle, options.cvSeed);

@@ -29,3 +29,6 @@ pub const DEFAULT_RETURN_RESIDUALS: bool = false;
 
 // False means do not compute or return robustness weights.
 pub const DEFAULT_RETURN_ROBUSTNESS_WEIGHTS: bool = false;
+
+// False means return results in the original input order (Batch adapter only).
+pub const DEFAULT_RETURN_SORTED: bool = false;

@@ -161,6 +161,7 @@ param_types <- list(
     return_residuals = "logical",
     return_robustness_weights = "logical",
     return_se = "logical",
+    return_sorted = "logical",
     parallel = "logical",
     backend = "character",
     delta = "nullable",
@@ -222,6 +223,7 @@ lowess_params <- c(
     "parallel",
     "cv_seed",
     "return_se",
+    "return_sorted",
     "backend"
 )
 

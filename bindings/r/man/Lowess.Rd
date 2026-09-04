@@ -26,6 +26,7 @@ Lowess(
     parallel = TRUE,
     cv_seed = NULL,
     return_se = FALSE,
+    return_sorted = FALSE,
     backend = "cpu"
 )
 }
@@ -103,6 +104,12 @@ generator. \code{NULL} (default) uses a random seed.}
 \item{return_se}{Logical; if \code{TRUE}, compute hat-matrix statistics
 (effective degrees of freedom, leverage, standard errors).
 Default: \code{FALSE}.}
+
+\item{return_sorted}{Logical; if \code{TRUE}, return results sorted
+ascending by \code{x} instead of in the original input order. Default:
+\code{FALSE}. To get both orderings without re-fitting, sort the default
+(unsorted) result client-side (e.g. \code{order(result$x)}) rather than
+calling \code{fit()} twice.}
 
 \item{backend}{Execution backend: \code{"cpu"} (default) or \code{"gpu"}.
 GPU support requires the package to be built locally with

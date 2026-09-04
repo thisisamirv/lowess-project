@@ -55,11 +55,8 @@ Fraction used: 0.5
 ```
 
 - Fits the model to the provided `x` and `y` typed arrays.
+- `customWeights`: Optional `Float64Array` of per-observation weights. All values must be ≥ 0 and length must match `x`.
 - Returns a `LowessResult` object containing the smoothed values and optional diagnostics.
-
-See [Streaming Adapter](api-streaming.md) for the `StreamingLowess` class.
-
-See [Online Adapter](api-online.md) for the `OnlineLowess` class.
 
 ## Options Structures
 
@@ -69,26 +66,31 @@ See [Online Adapter](api-online.md) for the `OnlineLowess` class.
 | --- | --- | --- | --- |
 | `fraction` | `number` | `0.67` | Smoothing fraction (bandwidth) |
 | `iterations` | `number` | `3` | Number of robustifying iterations |
-| `delta` | `number` | `NaN` | Interpolation distance (`NaN` auto-sets it to 1% of the x-range in Batch, or 0.0 in Streaming/Online) |
+| `delta` | `number` | `NaN` | Interpolation distance (`NaN` auto-sets it to 1% of the x-range) |
 | `weight_function` | `string` | `"tricube"` | Weight function name |
 | `robustness_method` | `string` | `"bisquare"` | Robustness method name |
 | `scaling_method` | `string` | `"mad"` | Residual scaling method |
 | `boundary_policy` | `string` | `"extend"` | Boundary handling policy |
 | `zero_weight_fallback` | `string` | `"use_local_mean"` | Zero-weight handling |
 | `auto_converge` | `number` | `null` | Auto-convergence tolerance |
-| `confidence_intervals` | `number` | `null` | Confidence level (e.g., 0.95) — see [Intervals](../guide/intervals.md) |
-| `prediction_intervals` | `number` | `null` | Prediction level (e.g., 0.95) — see [Intervals](../guide/intervals.md) |
+| `confidence_intervals` | `number` | `null` | Confidence level (e.g., 0.95) |
+| `prediction_intervals` | `number` | `null` | Prediction level (e.g., 0.95) |
 | `return_diagnostics` | `boolean` | `false` | Include diagnostics in result |
 | `return_residuals` | `boolean` | `false` | Include residuals in result |
 | `return_robustness_weights` | `boolean` | `false` | Include weights in result |
 | `return_se` | `boolean` | `false` | Return standard errors |
+| `return_sorted` | `boolean` | `false` | Return results sorted ascending by `x` instead of in original input order |
 | `parallel` | `boolean` | `true` | Enable parallel execution |
-| `backend` | `string` | `"cpu"` | Execution backend (`"cpu"` or `"gpu"`); GPU requires the package to be built with the `gpu` Cargo feature (Batch only) |
-| `cv_method` | `string` | `"kfold"` | CV method (`"kfold"` fast or `"loocv"` slow, exhaustive) (Batch only) |
-| `cv_k` | `number` | `5` | Number of folds for k-fold CV (Batch only) |
-| `cv_fractions` | `number[]` | `null` | Fractions to test for cross-validation (Batch only) |
-| `cv_seed` | `number` | `null` | Random seed for cross-validation shuffling (Batch only) |
-| `custom_weights` | `Float64Array` | `null` | Per-observation case weights — passed to `fit()`, not the options object (Batch only; see [Custom Weights](../weighting/custom-weights.md)) |
+| `backend` | `string` | `"cpu"` | Execution backend (`"cpu"` or `"gpu"`); GPU requires the package to be built with the `gpu` Cargo feature |
+| `cv_method` | `string` | `"kfold"` | CV method (`"kfold"` fast or `"loocv"` slow, exhaustive) |
+| `cv_k` | `number` | `5` | Number of folds for k-fold CV |
+| `cv_fractions` | `number[]` | `null` | Fractions to test for cross-validation |
+| `cv_seed` | `number` | `null` | Random seed for cross-validation shuffling |
+| `custom_weights` | `Float64Array` | `null` | Per-observation case weights — passed to `fit()`, not the options object |
+
+## Options
+
+### fraction
 
 `fraction` is the most important parameter: it controls the size of the local neighbourhood used at each point.
 
@@ -99,6 +101,8 @@ See [Online Adapter](api-online.md) for the `OnlineLowess` class.
 | 0.5-0.7 | Heavy smoothing | Noisy data |
 | 0.7-1.0 | Very smooth | Trend extraction |
 
+### iterations
+
 `iterations` controls robustness to outliers, at the cost of speed.
 
 | Value | Effect | Performance |
@@ -108,49 +112,9 @@ See [Online Adapter](api-online.md) for the `OnlineLowess` class.
 | 4-6 | Strong | Contaminated data |
 | 7+ | Very strong | Heavy outliers |
 
-See [Streaming Adapter](api-streaming.md) for `StreamingOptions`.
+### delta
 
-See [Online Adapter](api-online.md) for `OnlineOptions`.
-
-## GPU Acceleration
-
-The batch `Lowess` class can optionally run on a GPU-accelerated backend powered by `wgpu`, for high-throughput processing of large datasets (10k+ points). GPU support applies to `Lowess` (batch) only — `StreamingLowess`/`OnlineLowess` remain CPU-only. See the [GPU Backend guide](../advanced/gpu-backend.md) for installation, usage, supported features, and hardware requirements.
-
-## Result Structure
-
-See [Online Adapter](api-online.md) for `OnlineOutput`.
-
-### `LowessResult`
-
-| Field | Type | Description |
-| --- | --- | --- |
-| `x` | `Float64Array` | x values (same order as input) |
-| `y` | `Float64Array` | Smoothed y values |
-| `fraction_used` | `number` | Fraction used (set or selected by CV) |
-| `iterations_used` | `number \| null` | Robustness iterations actually performed |
-| `standard_errors` | `Float64Array \| null` | Per-point standard errors |
-| `confidence_lower` | `Float64Array \| null` | Lower confidence bounds |
-| `confidence_upper` | `Float64Array \| null` | Upper confidence bounds |
-| `prediction_lower` | `Float64Array \| null` | Lower prediction bounds |
-| `prediction_upper` | `Float64Array \| null` | Upper prediction bounds |
-| `residuals` | `Float64Array \| null` | Residuals (if `return_residuals`) |
-| `robustness_weights` | `Float64Array \| null` | Robustness weights (if `return_robustness_weights`) |
-| `cv_scores` | `Float64Array \| null` | CV score per tested fraction |
-| `diagnostics` | `Diagnostics \| null` | Fit metrics (if `return_diagnostics`) |
-
-### `Diagnostics`
-
-| Field | Type | Description |
-| --- | --- | --- |
-| `rmse` | `number` | Root Mean Squared Error |
-| `mae` | `number` | Mean Absolute Error |
-| `r_squared` | `number` | R-squared |
-| `residual_sd` | `number` | Residual standard deviation |
-| `effective_df` | `number` \| `null` | Effective degrees of freedom |
-| `aic` | `number` \| `null` | AIC |
-| `aicc` | `number` \| `null` | AICc |
-
-## Options
+Points within `delta` of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `NaN` (default) auto-sets it to 1% of the x-range. Set it to `0` explicitly to disable interpolation and fit every point exactly.
 
 ### weight_function
 
@@ -198,6 +162,91 @@ Behavior when all neighborhood weights are zero:
 | `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
 | `"return_original"` (alias: `"original"`) | Return the original y value |
 | `"return_none"` (alias: `"none"`) | Return `NaN` |
+
+### auto_converge
+
+*See: [Robustness](../weighting/robustness.md#auto-convergence)*
+
+Convergence tolerance for early stopping of robustness iterations. `null` (default) disables early stopping.
+
+### confidence_intervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the confidence interval around the mean response (e.g. `0.95`). `null` (default) disables confidence intervals.
+
+### prediction_intervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the prediction interval for new observations (e.g. `0.95`). `null` (default) disables prediction intervals.
+
+### return_se
+
+*See: [Intervals](../guide/intervals.md#standard-errors)*
+
+Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) in addition to standard errors.
+
+### return_sorted
+
+When set to `true`, it reorders every result field (residuals, intervals, etc.) by `x` in an ascending manner, instead of in original input order.
+To get both orderings, sort the default result client-side (e.g. by the returned `x` array's sort order) instead of calling `fit()` twice.
+
+### backend
+
+*See: [GPU Backend](../advanced/gpu-backend.md)*
+
+The batch `Lowess` class can optionally run on a GPU-accelerated backend powered by `wgpu`, for high-throughput processing of large datasets (10k+ points). GPU support applies to `Lowess` (batch) only — `StreamingLowess`/`OnlineLowess` remain CPU-only.
+
+- `"cpu"` (default)
+- `"gpu"` — requires the package to be built with the `gpu` Cargo feature
+
+### CV Options
+
+*See: [Cross-Validation](../guide/cross-validation.md)*
+
+- `cv_method`: `"kfold"` (default) — fast, evaluates each candidate fraction over `cv_k` folds; `"loocv"` — slow, exhaustive leave-one-out cross-validation
+- `cv_k`: Number of folds for k-fold CV. Ignored when `cv_method="loocv"`.
+- `cv_fractions`: Candidate fractions to evaluate. Cross-validation is disabled unless this is set.
+- `cv_seed`: Seed for reproducible k-fold shuffling. `null` (default) uses a random seed.
+
+### custom_weights
+
+*See: [Custom Weights](../weighting/custom-weights.md)*
+
+Per-observation weights, passed to `fit()` rather than the options object.
+
+## Result Structure
+
+### `LowessResult`
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `x` | `Float64Array` | x values (same order as input) |
+| `y` | `Float64Array` | Smoothed y values |
+| `fraction_used` | `number` | Fraction used (set or selected by CV) |
+| `iterations_used` | `number \| null` | Robustness iterations actually performed |
+| `standard_errors` | `Float64Array \| null` | Per-point standard errors |
+| `confidence_lower` | `Float64Array \| null` | Lower confidence bounds |
+| `confidence_upper` | `Float64Array \| null` | Upper confidence bounds |
+| `prediction_lower` | `Float64Array \| null` | Lower prediction bounds |
+| `prediction_upper` | `Float64Array \| null` | Upper prediction bounds |
+| `residuals` | `Float64Array \| null` | Residuals (if `return_residuals`) |
+| `robustness_weights` | `Float64Array \| null` | Robustness weights (if `return_robustness_weights`) |
+| `cv_scores` | `Float64Array \| null` | CV score per tested fraction |
+| `diagnostics` | `Diagnostics \| null` | Fit metrics (if `return_diagnostics`) |
+
+### `Diagnostics`
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `rmse` | `number` | Root Mean Squared Error |
+| `mae` | `number` | Mean Absolute Error |
+| `r_squared` | `number` | R-squared |
+| `residual_sd` | `number` | Residual standard deviation |
+| `effective_df` | `number` \| `null` | Effective degrees of freedom |
+| `aic` | `number` \| `null` | AIC |
+| `aicc` | `number` \| `null` | AICc |
 
 ## Example
 

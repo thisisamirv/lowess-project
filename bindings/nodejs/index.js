@@ -299,7 +299,7 @@ const _SMOOTH_OPTION_KEYS = new Set([
     'zero_weight_fallback', 'boundary_policy', 'scaling_method', 'auto_converge',
     'return_residuals', 'return_robustness_weights', 'return_diagnostics',
     'confidence_intervals', 'prediction_intervals', 'cv_fractions', 'cv_method',
-    'cv_k', 'cv_seed', 'return_se', 'parallel', 'backend',
+    'cv_k', 'cv_seed', 'return_se', 'return_sorted', 'parallel', 'backend',
 ])
 
 const _STREAMING_OPTION_KEYS = new Set(['chunk_size', 'overlap', 'merge_strategy'])

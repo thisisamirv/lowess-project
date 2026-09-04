@@ -303,6 +303,7 @@ pub unsafe extern "C" fn go_lowess_new(
     cv_k: c_int,
     parallel: c_int,
     return_se: c_int,
+    return_sorted: c_int,
     backend: *const c_char,
 ) -> *mut GoLowess {
     with_panic_ptr(|| {
@@ -357,6 +358,7 @@ pub unsafe extern "C" fn go_lowess_new(
                 return_robustness_weights: return_robustness_weights != 0,
                 return_diagnostics: return_diagnostics != 0,
                 return_se: return_se != 0,
+                return_sorted: return_sorted != 0,
                 confidence_intervals: (!confidence_intervals.is_nan())
                     .then_some(confidence_intervals),
                 prediction_intervals: (!prediction_intervals.is_nan())

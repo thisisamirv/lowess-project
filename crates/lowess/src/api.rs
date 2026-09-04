@@ -156,6 +156,9 @@ pub struct LowessBuilder<T, Mode = BatchMode> {
     // Return final robustness weights w_i.
     pub return_robustness_weights: Option<bool>,
 
+    // Return results sorted ascending by x instead of in original input order (Batch only).
+    pub return_sorted: Option<bool>,
+
     // Policy for handling data boundaries (default: Extend).
     pub boundary_policy: Option<BoundaryPolicy>,
 
@@ -255,6 +258,7 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
             return_diagnostics: None,
             compute_residuals: None,
             return_robustness_weights: None,
+            return_sorted: None,
             boundary_policy: None,
             zero_weight_fallback: None,
             merge_strategy: None,
@@ -534,6 +538,14 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
         self
     }
 
+    // Return results sorted ascending by x instead of in original input order
+    // (Batch only). To get both orderings, sort the default (unsorted) result
+    // client-side instead of calling `build().fit()` twice.
+    pub fn return_sorted(mut self) -> Self {
+        self.return_sorted = Some(true);
+        self
+    }
+
     // ++++++++++++++++++++++++++++++++++++++
     // +               DEV                  +
     // ++++++++++++++++++++++++++++++++++++++
@@ -660,6 +672,9 @@ impl<T: Float> LowessAdapter<T> for Batch {
         }
         if let Some(cr) = builder.compute_residuals {
             result.compute_residuals = cr;
+        }
+        if let Some(rs) = builder.return_sorted {
+            result.return_sorted = rs;
         }
 
         // ++++++++++++++++++++++++++++++++++++++

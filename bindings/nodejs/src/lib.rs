@@ -230,6 +230,10 @@ pub struct SmoothOptions {
     /// Compute standard errors. Default: false.
     #[napi(js_name = "return_se")]
     pub return_se: Option<bool>,
+    /// Return results sorted ascending by x instead of in original input order.
+    /// Batch (`Lowess`) only; ignored by `StreamingLowess`/`OnlineLowess`. Default: false.
+    #[napi(js_name = "return_sorted")]
+    pub return_sorted: Option<bool>,
     /// Enable parallel execution. Default: true.
     pub parallel: Option<bool>,
     /// Execution backend: "cpu" (default) or "gpu" (requires the package to be
@@ -240,9 +244,10 @@ pub struct SmoothOptions {
 
 /// Build a LowessBuilder from an optional SmoothOptions, applying all fields.
 ///
-/// `include_backend` gates the GPU `backend` option: it is only meaningful
-/// for the Batch (`Lowess`) adapter, so `StreamingLowess`/`OnlineLowess`
-/// callers pass `false` and any `backend` value in `opts` is ignored.
+/// `include_backend` gates the GPU `backend` option and the `return_sorted`
+/// option: both are only meaningful for the Batch (`Lowess`) adapter, so
+/// `StreamingLowess`/`OnlineLowess` callers pass `false` and any `backend`/
+/// `return_sorted` value in `opts` is ignored.
 fn options_to_builder(
     opts: Option<&SmoothOptions>,
     include_backend: bool,
@@ -265,6 +270,7 @@ fn options_to_builder(
                 return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
                 return_diagnostics: opts.return_diagnostics.unwrap_or(false),
                 return_se: opts.return_se.unwrap_or(false),
+                return_sorted: include_backend && opts.return_sorted.unwrap_or(false),
                 confidence_intervals: opts.confidence_intervals,
                 prediction_intervals: opts.prediction_intervals,
                 parallel: opts.parallel,

@@ -4,7 +4,19 @@ For datasets that don't fit in memory or arrive in chunks. Processes data increm
 
 See also: xref:./api.adoc[API]
 
-== `StreamingOptions.builder() StreamingOptions.Builder`
+== When to Use
+
+* Dataset >100,000 points
+* Memory-constrained environments
+* Batch processing pipelines
+
+== Class
+
+=== `StreamingLowess`
+
+The `StreamingLowess` class processes data in chunks, suitable for very large datasets or streaming applications.
+
+*Constructor:*
 
 [source,java]
 ----
@@ -12,36 +24,221 @@ StreamingOptions options = StreamingOptions.builder()
         .chunkSize(2000)
         .overlap(200)
         .build();
+
+try (StreamingLowess model = new StreamingLowess(options)) {
+    // ...
+}
 ----
 
-`StreamingOptions.Builder` exposes all the same settings as xref:./api.adoc[`Options.Builder`] (except `returnSe`, `cvFractions`/`cvMethod`/`cvK`/`cvSeed`, and `backend`, which are batch-only), plus:
+* `new StreamingLowess(StreamingOptions options)` creates a new streaming model with the given options.
+* `options`: A `StreamingOptions` instance (exposes all `Options` settings plus `chunkSize`, `overlap`, and `mergeStrategy`).
+
+*Methods:*
+
+==== `processChunk(double[] x, double[] y) Result`
+
+Feeds one chunk of data into the model. Each chunk is fit together with the trailing `overlap` points buffered from the previous call, then only the points that are fully resolved are returned -- the tail of the chunk (the next `overlap` points) is held back internally, since it will be refit once the following chunk arrives and its estimate reconciled via `mergeStrategy`. This is what lets the adapter process a dataset far larger than memory allows, one bounded-size chunk at a time, without ever materializing the whole dataset at once.
+
+[source,java]
+----
+Result partial = model.processChunk(x, y);
+----
+
+==== `finish() Result`
+
+Flushes the overlap points still buffered from the last `processChunk` call. Because each call withholds its tail until the next chunk arrives to resolve it, the final chunk's tail would never be emitted otherwise -- always call `finish()` once after the last chunk to retrieve it.
+
+[source,java]
+----
+Result result = model.finish();
+----
+
+* `StreamingLowess.close()` releases native resources. Safe to call multiple times. Implements `AutoCloseable`.
+
+== Options Structure
+
+=== `StreamingOptions`
 
 [cols="1,1,1,1",options="header"]
 |===
 |Setting |Type |Default |Description
 
-|`chunkSize` |`int` |`5000` |Number of points processed per chunk.
-|`overlap` |`int` |library default |Points shared between consecutive chunks. Negative means "use the library default" (`500`).
-|`mergeStrategy` |`String` |`"weighted_average"` |How overlapping chunk results are combined.
+|`fraction` |`double` |`0.67` |Smoothing fraction (bandwidth)
+|`iterations` |`int` |`3` |Number of robustifying iterations
+|`delta` |`double` |`NaN` |Interpolation distance (`NaN` auto-sets it to 0.0 in Streaming, i.e. interpolation disabled)
+|`weightFunction` |`String` |`"tricube"` |Weight function name
+|`robustnessMethod` |`String` |`"bisquare"` |Robustness method name
+|`scalingMethod` |`String` |`"mad"` |Residual scaling method
+|`boundaryPolicy` |`String` |`"extend"` |Boundary handling policy
+|`zeroWeightFallback` |`String` |`"use_local_mean"` |Zero-weight handling
+|`autoConverge` |`double` |`NaN` |Auto-convergence tolerance
+|`returnDiagnostics` |`boolean` |`false` |Include diagnostics in result
+|`returnResiduals` |`boolean` |`false` |Include residuals in result
+|`returnRobustnessWeights` |`boolean` |`false` |Include weights in result
+|`parallel` |`boolean` |`true` |Enable parallel execution
+|`chunkSize` |`int` |`5000` |Data chunk size
+|`overlap` |`int` |library default |Overlap between chunks (negative means "use the library default")
+|`mergeStrategy` |`String` |`"weighted_average"` |Strategy for blending overlap regions
 |===
 
-_See also: xref:../advanced/merge.adoc[Merge Strategies]_
+Confidence/prediction intervals, standard errors, cross-validation, GPU `backend`, `customWeights`, and `returnSorted` are Batch-only and not available here; see xref:./api.adoc[API] for those.
+
+== Options
+
+=== fraction
+
+`fraction` is the most important parameter: it controls the size of the local neighbourhood used at each point.
+
+[cols="1,1,1",options="header"]
+|===
+|Range |Effect |Use case
+
+|0.1-0.3 |Fine detail |Rapidly changing signals
+|0.3-0.5 |Balanced |General purpose
+|0.5-0.7 |Heavy smoothing |Noisy data
+|0.7-1.0 |Very smooth |Trend extraction
+|===
+
+=== iterations
+
+`iterations` controls robustness to outliers, at the cost of speed.
+
+[cols="1,1,1",options="header"]
+|===
+|Value |Effect |Performance
+
+|0 |No robustness |Fastest
+|1-3 |Moderate |Recommended
+|4-6 |Strong |Contaminated data
+|7+ |Very strong |Heavy outliers
+|===
+
+=== delta
+
+Points within `delta` of each other on the x-axis share the same local fit instead of each computing its own regression -- an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `NaN` (default) auto-sets it to `0` in Streaming mode, i.e. interpolation is disabled and every point is fit exactly.
+
+=== weightFunction
+
+_See: xref:../weighting/kernels.adoc[Weight Functions]_
+
+* `"tricube"` (default)
+* `"epanechnikov"`
+* `"gaussian"`
+* `"uniform"` (alias: `"boxcar"`)
+* `"biweight"` (alias: `"bisquare"`)
+* `"triangle"` (alias: `"triangular"`)
+* `"cosine"`
+
+=== robustnessMethod
+
+_See: xref:../weighting/robustness.adoc[Robustness]_
+
+* `"bisquare"` (default; alias: `"biweight"`)
+* `"huber"`
+* `"talwar"`
+
+=== scalingMethod
+
+_See: xref:../weighting/scaling.adoc[Scaling Methods]_
+
+* `"mad"` (default; alias: `"median_absolute_deviation"`)
+* `"mar"` (alias: `"median_absolute_residual"`)
+* `"mean"` (alias: `"mean_absolute_residual"`)
+
+=== boundaryPolicy
+
+_See: xref:../advanced/boundary.adoc[Boundary Handling]_
+
+* `"extend"` (default; alias: `"pad"`)
+* `"reflect"` (alias: `"mirror"`)
+* `"zero"`
+* `"noboundary"` (alias: `"none"`)
+
+=== zeroWeightFallback
+
+Behavior when all neighborhood weights are zero:
+
+[cols="1,1",options="header"]
+|===
+|Option |Behavior
+
+|`"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) |Use the mean of the neighborhood
+|`"return_original"` (alias: `"original"`) |Return the original y value
+|`"return_none"` (alias: `"none"`) |Return `NaN`
+|===
+
+=== autoConverge
+
+_See: xref:../weighting/robustness.adoc#_auto_convergence[Robustness]_
+
+Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
+
+=== chunkSize
+
+Number of points processed per chunk. Larger chunks reduce per-chunk overhead and give each local fit more surrounding context, at the cost of higher peak memory; smaller chunks bound memory tightly but increase the fraction of points that fall in overlap regions. A good starting point is balancing available memory against how much processing overhead per chunk is acceptable -- match it to your file-read buffer or message-batch size to avoid unnecessary copying.
+
+=== overlap
+
+Number of points retained from the previous chunk as context, so the neighbourhood at chunk boundaries isn't artificially truncated. Points inside the overlap zone are fitted twice (once by each chunk) and reconciled via `mergeStrategy`. A good starting point is 10-20% of `chunkSize`: too little overlap causes visible boundary artefacts, while too much wastes computation refitting the same points twice.
+
+=== mergeStrategy
+
+_See: xref:../advanced/merge.adoc[Merge Strategies]_
+
+[cols="1,1",options="header"]
+|===
+|Strategy |Behavior
+
+|`"weighted_average"` (default) |Distance-weighted blend
+|`"average"` |Average overlapping values
+|`"take_first"` |Keep left chunk values
+|`"take_last"` |Keep right chunk values
+|===
 
 image::merge_comparison.svg[Merge Strategies]
 
-== `new StreamingLowess(StreamingOptions options)`
+[CAUTION]
+.Always call finish()
+====
+The streaming adapter buffers overlap data. Call `finish()` after the last chunk to retrieve the buffered tail.
+====
 
-== `StreamingLowess.processChunk(double[] x, double[] y) Result`
+== Result Structure
 
-Fits and returns the result for one chunk. Call repeatedly as chunks arrive.
+=== `Result`
 
-== `StreamingLowess.finish() Result`
+Returned by `processChunk` and `finish`.
 
-Flushes any buffered data and returns the final merged result. Call once after the last `processChunk`.
+[cols="1,1,1",options="header"]
+|===
+|Accessor |Type |Populated when
 
-== `StreamingLowess.close()`
+|`x()`, `y()` |`double[]` |Always.
+|`standardErrors()` |`Optional<double[]>` |Always empty (Batch only)
+|`confidenceLower()`, `confidenceUpper()` |`Optional<double[]>` |Always empty (Batch only)
+|`predictionLower()`, `predictionUpper()` |`Optional<double[]>` |Always empty (Batch only)
+|`residuals()` |`Optional<double[]>` |`returnResiduals`
+|`robustnessWeights()` |`Optional<double[]>` |`returnRobustnessWeights`
+|`cvScores()` |`Optional<double[]>` |Always empty (Batch only)
+|`fractionUsed()` |`double` |Always.
+|`iterationsUsed()` |`OptionalInt` |Always (empty if not available).
+|`diagnostics()` |`Optional<Diagnostics>` |`returnDiagnostics`
+|===
 
-Releases native resources. Safe to call multiple times. Implements `AutoCloseable`.
+=== `Diagnostics`
+
+[cols="1,1,1",options="header"]
+|===
+|Accessor |Type |Description
+
+|`rmse()` |`double` |Root Mean Squared Error
+|`mae()` |`double` |Mean Absolute Error
+|`rSquared()` |`double` |R-squared
+|`residualSd()` |`double` |Residual standard deviation
+|`effectiveDf()` |`Optional<Double>` |Always empty (requires standard errors, Batch only)
+|`aic()` |`Optional<Double>` |Always empty (requires `effectiveDf`, Batch only)
+|`aicc()` |`Optional<Double>` |Always empty (requires `effectiveDf`, Batch only)
+|===
 
 == Example
 
@@ -85,4 +282,5 @@ public class Example {
 ----
 y[0]: 17.6391
 ----
+
 

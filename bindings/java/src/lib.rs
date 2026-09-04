@@ -222,6 +222,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_lowessNew<'local>(
     cv_k: jint,
     parallel: jboolean,
     return_se: jboolean,
+    return_sorted: jboolean,
     backend: JString<'local>,
 ) -> jlong {
     env.with_env(|env| -> AppResult<jlong> {
@@ -260,6 +261,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_lowessNew<'local>(
                 return_robustness_weights,
                 return_diagnostics,
                 return_se,
+                return_sorted,
                 confidence_intervals: opt_f64(confidence_intervals),
                 prediction_intervals: opt_f64(prediction_intervals),
                 parallel: Some(parallel),

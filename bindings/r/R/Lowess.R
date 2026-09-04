@@ -85,6 +85,11 @@
 #' @param return_se Logical; if \code{TRUE}, compute hat-matrix statistics
 #'   (effective degrees of freedom, leverage, standard errors).
 #'   Default: \code{FALSE}.
+#' @param return_sorted Logical; if \code{TRUE}, return results sorted
+#'   ascending by \code{x} instead of in the original input order. Default:
+#'   \code{FALSE}. To get both orderings without re-fitting, sort the default
+#'   (unsorted) result client-side (e.g. \code{order(result$x)}) rather than
+#'   calling \code{fit()} twice.
 #' @param backend Execution backend: \code{"cpu"} (default) or \code{"gpu"}.
 #'   GPU support requires the package to be built locally with
 #'   \code{WITH_GPU=1} (see \code{bindings/r/Makefile}) and a
@@ -122,6 +127,7 @@ Lowess <- function(
     parallel = TRUE,
     cv_seed = NULL,
     return_se = FALSE,
+    return_sorted = FALSE,
     backend = "cpu"
 ) {
     reject_extra_positional_args(sys.call(), "fraction")

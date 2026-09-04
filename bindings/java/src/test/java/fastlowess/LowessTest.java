@@ -65,4 +65,64 @@ class LowessTest {
                 IllegalStateException.class, () -> model.fit(linspace(5), linspace(5)));
         assertNotNull(ex);
     }
+
+    @Test
+    void returnSortedDefaultsToOriginalOrder() {
+        double[] x = {3.0, 1.0, 5.0, 2.0, 4.0};
+        double[] y = {6.0, 2.0, 10.0, 4.0, 8.0};
+
+        try (Lowess model = new Lowess(Options.builder().fraction(0.7).build())) {
+            Result result = model.fit(x, y);
+            assertTrue(java.util.Arrays.equals(result.x(), x));
+        }
+    }
+
+    @Test
+    void returnSortedTrueReturnsAscendingByX() {
+        double[] x = {3.0, 1.0, 5.0, 2.0, 4.0};
+        double[] y = {6.0, 2.0, 10.0, 4.0, 8.0};
+
+        Options sortedOptions = Options.builder()
+                .fraction(0.7)
+                .returnResiduals(true)
+                .returnRobustnessWeights(true)
+                .returnSorted(true)
+                .build();
+
+        try (Lowess sortedModel = new Lowess(sortedOptions)) {
+            Result result = sortedModel.fit(x, y);
+
+            for (int i = 1; i < result.x().length; i++) {
+                assertTrue(result.x()[i - 1] <= result.x()[i], "x should be ascending");
+            }
+            assertTrue(!java.util.Arrays.equals(result.x(), x),
+                    "sorted x should differ from unsorted input order");
+
+            Options unsortedOptions = Options.builder()
+                    .fraction(0.7)
+                    .returnResiduals(true)
+                    .returnRobustnessWeights(true)
+                    .build();
+            try (Lowess unsortedModel = new Lowess(unsortedOptions)) {
+                Result unsortedResult = unsortedModel.fit(x, y);
+
+                double[][] sortedPairs = new double[result.x().length][2];
+                for (int i = 0; i < result.x().length; i++) {
+                    sortedPairs[i] = new double[]{result.x()[i], result.y()[i]};
+                }
+                double[][] unsortedPairs = new double[unsortedResult.x().length][2];
+                for (int i = 0; i < unsortedResult.x().length; i++) {
+                    unsortedPairs[i] = new double[]{unsortedResult.x()[i], unsortedResult.y()[i]};
+                }
+                java.util.Comparator<double[]> byX = (a, b) -> Double.compare(a[0], b[0]);
+                java.util.Arrays.sort(sortedPairs, byX);
+                java.util.Arrays.sort(unsortedPairs, byX);
+                assertTrue(java.util.Arrays.deepEquals(sortedPairs, unsortedPairs),
+                        "return_sorted should not change fitted values, only their order");
+            }
+
+            assertEquals(x.length, result.residuals().orElseThrow().length);
+            assertEquals(x.length, result.robustnessWeights().orElseThrow().length);
+        }
+    }
 }

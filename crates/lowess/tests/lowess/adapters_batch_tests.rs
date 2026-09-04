@@ -567,6 +567,84 @@ fn test_batch_unsorted_data_large() {
     }
 }
 
+/// Test that `return_sorted()` (default off) preserves original input order.
+#[test]
+fn test_batch_return_sorted_false_default() {
+    let x = vec![3.0, 1.0, 5.0, 2.0, 4.0];
+    let y = vec![6.0, 2.0, 10.0, 4.0, 8.0];
+
+    let result = Lowess::new()
+        .fraction(0.7)
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    assert_eq!(result.x, x, "x should equal original input order by default");
+}
+
+/// Test that `return_sorted()` returns all result fields sorted ascending by x.
+#[test]
+fn test_batch_return_sorted_true() {
+    let x = vec![3.0, 1.0, 5.0, 2.0, 4.0];
+    let y = vec![6.0, 2.0, 10.0, 4.0, 8.0];
+
+    let result = Lowess::new()
+        .fraction(0.7)
+        .return_residuals()
+        .return_robustness_weights()
+        .return_sorted()
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    // x must be strictly ascending
+    assert!(
+        result.x.windows(2).all(|w| w[0] <= w[1]),
+        "x should be ascending when return_sorted is set"
+    );
+    assert_ne!(result.x, x, "sorted x should differ from the unsorted input order");
+
+    // Same (x, y) pairs as the unsorted-order fit, just reordered.
+    let unsorted_result = Lowess::new()
+        .fraction(0.7)
+        .return_residuals()
+        .return_robustness_weights()
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    let mut sorted_pairs: Vec<(f64, f64)> = result
+        .x
+        .iter()
+        .zip(result.y.iter())
+        .map(|(&x, &y)| (x, y))
+        .collect();
+    sorted_pairs.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+
+    let mut unsorted_pairs: Vec<(f64, f64)> = unsorted_result
+        .x
+        .iter()
+        .zip(unsorted_result.y.iter())
+        .map(|(&x, &y)| (x, y))
+        .collect();
+    unsorted_pairs.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+
+    assert_eq!(
+        sorted_pairs, unsorted_pairs,
+        "return_sorted should not change the fitted values, only their order"
+    );
+
+    // Residuals/robustness weights arrive in the same length, reordered too.
+    assert_eq!(result.residuals.as_ref().unwrap().len(), x.len());
+    assert_eq!(result.robustness_weights.as_ref().unwrap().len(), x.len());
+}
+
 /// Test with all identical x-values (degenerate case).
 #[test]
 fn test_batch_all_identical_x() {

@@ -146,6 +146,11 @@ export interface SmoothOptions {
   cv_seed?: number
   /** Compute standard errors. Default: false. */
   return_se?: boolean
+  /**
+   * Return results sorted ascending by x instead of in original input order.
+   * Batch (`Lowess`) only; ignored by `StreamingLowess`/`OnlineLowess`. Default: false.
+   */
+  return_sorted?: boolean
   /** Enable parallel execution. Default: true. */
   parallel?: boolean
   /**

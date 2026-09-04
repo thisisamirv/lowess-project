@@ -152,6 +152,53 @@ test_that("Lowess robustness weights work", {
     expect_lt(result$robustness_weights[25], median(result$robustness_weights))
 })
 
+test_that("Lowess return_sorted defaults to original input order", {
+    x <- c(3.0, 1.0, 5.0, 2.0, 4.0)
+    y <- c(6.0, 2.0, 10.0, 4.0, 8.0)
+
+    result <- fit(Lowess(fraction = 0.7), x, y)
+
+    expect_equal(result$x, x)
+})
+
+test_that("Lowess return_sorted = TRUE returns results sorted ascending by x", {
+    x <- c(3.0, 1.0, 5.0, 2.0, 4.0)
+    y <- c(6.0, 2.0, 10.0, 4.0, 8.0)
+
+    result <- fit(
+        Lowess(
+            fraction = 0.7,
+            return_residuals = TRUE,
+            return_robustness_weights = TRUE,
+            return_sorted = TRUE
+        ),
+        x,
+        y
+    )
+
+    # x must be strictly ascending, and differ from the unsorted input order.
+    expect_true(all(diff(result$x) >= 0))
+    expect_false(isTRUE(all.equal(result$x, x)))
+
+    # Same (x, y) pairs as the unsorted-order fit, just reordered.
+    unsorted_result <- fit(
+        Lowess(
+            fraction = 0.7,
+            return_residuals = TRUE,
+            return_robustness_weights = TRUE
+        ),
+        x,
+        y
+    )
+
+    sorted_order <- order(result$x)
+    unsorted_order <- order(unsorted_result$x)
+    expect_equal(result$y[sorted_order], unsorted_result$y[unsorted_order])
+
+    expect_length(result$residuals, length(x))
+    expect_length(result$robustness_weights, length(x))
+})
+
 test_that("Lowess cross-validation works", {
     set.seed(42)
     x <- seq(0, 10, length.out = 100)

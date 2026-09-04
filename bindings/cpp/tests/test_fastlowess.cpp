@@ -1,5 +1,6 @@
 #include "../include/fastlowess.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstdio>
@@ -247,6 +248,38 @@ void testLowessWithRobustnessWeights() {
     assertTrue(weight_value >= 0.0 && weight_value <= 1.0,
                "Weight out of range");
   }
+}
+
+void testLowessReturnSorted() {
+  std::cout << "Running testLowessReturnSorted...\n";
+
+  const std::vector<double> unsorted_x = {3.0, 1.0, 5.0, 2.0, 4.0};
+  const std::vector<double> unsorted_y = {6.0, 2.0, 10.0, 4.0, 8.0};
+
+  fastlowess::LowessOptions default_options;
+  default_options.fraction = k_robust_fraction;
+  fastlowess::Lowess default_lowess(default_options);
+  auto default_result = default_lowess.fit(unsorted_x, unsorted_y).value();
+  assertTrue(default_result.x_vector() == unsorted_x,
+             "return_sorted should default to original input order");
+
+  fastlowess::LowessOptions sorted_options;
+  sorted_options.fraction = k_robust_fraction;
+  sorted_options.return_residuals = true;
+  sorted_options.return_robustness_weights = true;
+  sorted_options.return_sorted = true;
+  fastlowess::Lowess sorted_lowess(sorted_options);
+  auto sorted_result = sorted_lowess.fit(unsorted_x, unsorted_y).value();
+
+  const auto sorted_x = sorted_result.x_vector();
+  assertTrue(std::is_sorted(sorted_x.begin(), sorted_x.end()),
+             "return_sorted x should be ascending");
+  assertTrue(sorted_x != unsorted_x,
+             "sorted x should differ from unsorted input order");
+  assertTrue(sorted_result.residuals().size() == unsorted_x.size(),
+             "Residuals missing under return_sorted");
+  assertTrue(sorted_result.robustness_weights().size() == unsorted_x.size(),
+             "Robustness weights missing under return_sorted");
 }
 
 void testLowessWithConfidenceIntervals() {
@@ -548,6 +581,7 @@ int main() {
     testLowessWithDiagnostics();
     testLowessWithResiduals();
     testLowessWithRobustnessWeights();
+    testLowessReturnSorted();
     testLowessWithConfidenceIntervals();
     testLowessWithPredictionIntervals();
     testLowessReuse();

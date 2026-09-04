@@ -4,9 +4,21 @@ For real-time data: processes one `(x, y)` point at a time and returns a smoothe
 
 See also: xref:./api.adoc[API]
 
+== When to Use
+
+* Data arrives incrementally (sensors, streams)
+* Need real-time smoothed values
+* Fixed memory budget
+
 image::online_comparison.svg[Online Adapter]
 
-== `OnlineOptions.builder() OnlineOptions.Builder`
+== Class
+
+=== `OnlineLowess`
+
+The `OnlineLowess` class updates the model incrementally with new data points.
+
+*Constructor:*
 
 [source,java]
 ----
@@ -14,41 +26,185 @@ OnlineOptions options = OnlineOptions.builder()
         .windowCapacity(200)
         .minPoints(10)
         .build();
+
+try (OnlineLowess model = new OnlineLowess(options)) {
+    // ...
+}
 ----
 
-`OnlineOptions.Builder` exposes all the same settings as xref:./api.adoc[`Options.Builder`] (except `returnSe`, `cvFractions`/`cvMethod`/`cvK`/`cvSeed`, and `backend`, which are batch-only). Note `parallel` defaults to `false` for online use, since per-point updates rarely benefit from parallelism. Additional settings:
+* `new OnlineLowess(OnlineOptions options)` creates a new online model with the given options.
+* `options`: An `OnlineOptions` instance (exposes all `Options` settings plus `windowCapacity`, `minPoints`, and `updateMode`).
+
+*Methods:*
+
+==== `addPoint(double x, double y) Optional<PointResult>`
+
+Adds a single point to the sliding window and returns the smoothed value for that point, or `Optional.empty()` while the window is still filling up (fewer than `minPoints` seen so far). Once the window reaches `windowCapacity`, each new point evicts the oldest one, so memory stays bounded regardless of how much history has passed through. `updateMode` controls how much work each call does: `"incremental"` re-fits only the newest point, while `"full"` re-smooths the entire window for a more accurate but slower result.
+
+[source,java]
+----
+Optional<PointResult> result = model.addPoint(x, y);
+result.ifPresent(r -> System.out.println(r.y()));
+----
+
+* `OnlineLowess.close()` releases native resources. Safe to call multiple times. Implements `AutoCloseable`.
+
+== Options Structure
+
+=== `OnlineOptions`
 
 [cols="1,1,1,1",options="header"]
 |===
 |Setting |Type |Default |Description
 
-|`windowCapacity` |`int` |`1000` |Maximum number of recent points retained.
-|`minPoints` |`int` |`2` |Minimum points required before output starts.
-|`updateMode` |`String` |`"incremental"` |How the window is updated as new points arrive: `incremental`, `full`.
+|`fraction` |`double` |`0.67` |Smoothing fraction (bandwidth)
+|`iterations` |`int` |`3` |Number of robustifying iterations
+|`delta` |`double` |`NaN` |Interpolation distance (`NaN` auto-sets it to 0.0 in Online, i.e. interpolation disabled)
+|`weightFunction` |`String` |`"tricube"` |Weight function name
+|`robustnessMethod` |`String` |`"bisquare"` |Robustness method name
+|`scalingMethod` |`String` |`"mad"` |Residual scaling method
+|`boundaryPolicy` |`String` |`"extend"` |Boundary handling policy
+|`zeroWeightFallback` |`String` |`"use_local_mean"` |Zero-weight handling
+|`autoConverge` |`double` |`NaN` |Auto-convergence tolerance
+|`returnDiagnostics` |`boolean` |`false` |No effect for Online -- `PointResult` has no diagnostics field
+|`returnResiduals` |`boolean` |`false` |No effect for Online -- `residual()` is always populated
+|`returnRobustnessWeights` |`boolean` |`false` |Include `robustnessWeight()` in result
+|`windowCapacity` |`int` |`1000` |Maximum number of recent points retained
+|`minPoints` |`int` |`2` |Minimum points required before output starts
+|`updateMode` |`String` |`"incremental"` |How the window is updated as new points arrive: `incremental`, `full`
+|`parallel` |`boolean` |`false` |Enable parallel execution (off by default; online LOWESS fits one point at a time)
 |===
 
-== `new OnlineLowess(OnlineOptions options)`
+Confidence/prediction intervals, standard errors, cross-validation, GPU `backend`, `customWeights`, and `returnSorted` are Batch-only and not available here; see xref:./api.adoc[API] for those.
 
-== `OnlineLowess.addPoint(double x, double y) Optional<PointResult>`
+== Options
 
-Adds a single observation. Returns `Optional.empty()` while the window is still filling (fewer than `minPoints` seen so far); once populated, the `PointResult` holds the smoothed value for the most recently added point.
+=== fraction
 
-== `OnlineLowess.close()`
+`fraction` is the most important parameter: it controls the size of the local neighbourhood used at each point.
 
-Releases native resources. Safe to call multiple times. Implements `AutoCloseable`.
+[cols="1,1,1",options="header"]
+|===
+|Range |Effect |Use case
 
-== `PointResult` accessors
+|0.1-0.3 |Fine detail |Rapidly changing signals
+|0.3-0.5 |Balanced |General purpose
+|0.5-0.7 |Heavy smoothing |Noisy data
+|0.7-1.0 |Very smooth |Trend extraction
+|===
+
+=== iterations
+
+`iterations` controls robustness to outliers, at the cost of speed.
+
+[cols="1,1,1",options="header"]
+|===
+|Value |Effect |Performance
+
+|0 |No robustness |Fastest
+|1-3 |Moderate |Recommended
+|4-6 |Strong |Contaminated data
+|7+ |Very strong |Heavy outliers
+|===
+
+=== delta
+
+Points within `delta` of each other on the x-axis share the same local fit instead of each computing its own regression -- an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `NaN` (default) auto-sets it to `0` in Online mode, i.e. interpolation is disabled and every point is fit exactly.
+
+=== weightFunction
+
+_See: xref:../weighting/kernels.adoc[Weight Functions]_
+
+* `"tricube"` (default)
+* `"epanechnikov"`
+* `"gaussian"`
+* `"uniform"` (alias: `"boxcar"`)
+* `"biweight"` (alias: `"bisquare"`)
+* `"triangle"` (alias: `"triangular"`)
+* `"cosine"`
+
+=== robustnessMethod
+
+_See: xref:../weighting/robustness.adoc[Robustness]_
+
+* `"bisquare"` (default; alias: `"biweight"`)
+* `"huber"`
+* `"talwar"`
+
+=== scalingMethod
+
+_See: xref:../weighting/scaling.adoc[Scaling Methods]_
+
+* `"mad"` (default; alias: `"median_absolute_deviation"`)
+* `"mar"` (alias: `"median_absolute_residual"`)
+* `"mean"` (alias: `"mean_absolute_residual"`)
+
+=== boundaryPolicy
+
+_See: xref:../advanced/boundary.adoc[Boundary Handling]_
+
+* `"extend"` (default; alias: `"pad"`)
+* `"reflect"` (alias: `"mirror"`)
+* `"zero"`
+* `"noboundary"` (alias: `"none"`)
+
+=== zeroWeightFallback
+
+Behavior when all neighborhood weights are zero:
+
+[cols="1,1",options="header"]
+|===
+|Option |Behavior
+
+|`"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) |Use the mean of the neighborhood
+|`"return_original"` (alias: `"original"`) |Return the original y value
+|`"return_none"` (alias: `"none"`) |Return `NaN`
+|===
+
+=== autoConverge
+
+_See: xref:../weighting/robustness.adoc#_auto_convergence[Robustness]_
+
+Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
+
+=== windowCapacity
+
+Maximum number of most recent points kept in the sliding window; older points are discarded as new ones arrive. Each `addPoint` call costs O(`windowCapacity`) rather than growing with total history.
+
+=== minPoints
+
+Minimum number of points required before smoothing starts. `addPoint` returns `Optional.empty()` until the window reaches this size.
+
+=== updateMode
+
+_See: xref:../guide/adapter-choice.adoc[Execution Modes]_
+
+[cols="1,1,1",options="header"]
+|===
+|Mode |Behavior |Speed
+
+|`"incremental"` (default) |Update only affected fits |Faster
+|`"full"` |Recompute entire window |More accurate
+|===
+
+== Result Structure
+
+=== `PointResult`
+
+Returned by `addPoint` once the window has enough points (`Optional.empty()` until then).
 
 [cols="1,1,1",options="header"]
 |===
 |Accessor |Type |Notes
 
-|`y()` |`double` |Smoothed value.
-|`standardError()` |`OptionalDouble` |Empty if not computed.
-|`residual()` |`OptionalDouble` |Empty if not computed.
-|`robustnessWeight()` |`OptionalDouble` |Empty if not computed.
-|`iterationsUsed()` |`OptionalInt` |Empty if not applicable.
+|`y()` |`double` |Smoothed value for the latest point.
+|`standardError()` |`OptionalDouble` |Always empty -- standard errors require `returnSe`/confidence intervals, which are Batch-only.
+|`residual()` |`OptionalDouble` |Residual y minus smoothed; always populated regardless of `returnResiduals`.
+|`robustnessWeight()` |`OptionalDouble` |Robustness weight, if `returnRobustnessWeights` was set.
+|`iterationsUsed()` |`OptionalInt` |Robustness iterations performed.
 |===
+
+There is no diagnostics accessor for `OnlineLowess`: `returnDiagnostics` has no effect and `PointResult` carries no diagnostics field, since diagnostics like RMSE/R^2^ need more than one point's worth of history to be meaningful.
 
 == Example
 
@@ -96,4 +252,5 @@ false
 false
 0.22659245357374927
 ----
+
 

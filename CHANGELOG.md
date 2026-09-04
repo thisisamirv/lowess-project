@@ -8,7 +8,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+**lowess:**
+
+- Added a `return_sorted` option to the batch adapter's builder (`.return_sorted()`), to return results sorted ascending by `x` instead of in the original input order (statsmodels-style). Default `false` preserves the existing always-unsorted behavior.
+
+**fastLowess:**
+
+- Added `return_sorted` to `BuilderOptionSet`/`TypedBuilderOptionSet` and the shared `Lowess` (Batch) builder, so every language binding can opt in via the same option name.
+
+**Python:**
+
+- Added a `return_sorted` option to `Lowess`, to return results sorted ascending by `x` instead of in original input order.
+
+**R:**
+
+- Added a `return_sorted` option to `Lowess()`, to return results sorted ascending by `x` instead of in original input order.
+
+**Julia:**
+
+- Added a `return_sorted` option to `Lowess`, to return results sorted ascending by `x` instead of in original input order.
+
+**Node.js:**
+
+- Added a `return_sorted` option to `Lowess`'s `SmoothOptions`, to return results sorted ascending by `x` instead of in original input order.
+
+**WASM:**
+
+- Added a `return_sorted` option to `Lowess`'s `SmoothOptions`, to return results sorted ascending by `x` instead of in original input order.
+
+**C++:**
+
+- Added a `return_sorted` option to `LowessOptions`, to return results sorted ascending by `x` instead of in original input order.
+
+**Go:**
+
+- Added a `ReturnSorted` option to `Options`, to return results sorted ascending by `X` instead of in original input order.
+
+**Java:**
+
+- Added a `returnSorted` option to `Options`, to return results sorted ascending by `x` instead of in original input order.
+
 ### Changed
+
+**docs:**
+
+- Improved API docs for all bindings and crates significantly.
 
 **C++:**
 

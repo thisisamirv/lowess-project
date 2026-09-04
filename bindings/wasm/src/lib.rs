@@ -43,6 +43,8 @@ export interface SmoothOptions {
     return_diagnostics?: boolean;
     /** Include standard errors in result. Default: false. */
     return_se?: boolean;
+    /** Return results sorted ascending by x instead of in original input order. Default: false. */
+    return_sorted?: boolean;
     /** Confidence interval level (e.g. 0.95). Disabled when absent. */
     confidence_intervals?: number;
     /** Prediction interval level (e.g. 0.95). Disabled when absent. */
@@ -149,6 +151,7 @@ pub struct SmoothOptions {
     pub return_robustness_weights: Option<bool>,
     pub return_diagnostics: Option<bool>,
     pub return_se: Option<bool>,
+    pub return_sorted: Option<bool>,
     pub confidence_intervals: Option<f64>,
     pub prediction_intervals: Option<f64>,
     #[serde(rename = "parallel")]
@@ -381,6 +384,7 @@ fn options_to_builder(opts: Option<SmoothOptions>) -> Result<LowessBuilder<f64>,
                 return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
                 return_diagnostics: opts.return_diagnostics.unwrap_or(false),
                 return_se: opts.return_se.unwrap_or(false),
+                return_sorted: opts.return_sorted.unwrap_or(false),
                 confidence_intervals: opts.confidence_intervals,
                 prediction_intervals: opts.prediction_intervals,
                 parallel: opts.parallel,

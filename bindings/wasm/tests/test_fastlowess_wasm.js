@@ -19,6 +19,45 @@ test('WASM batch smoothing', () => {
     assert.ok(result.diagnostics.rmse < 0.1);
 });
 
+test('WASM return_sorted defaults to original input order', () => {
+    const x = new Float64Array([3, 1, 5, 2, 4]);
+    const y = new Float64Array([6, 2, 10, 4, 8]);
+
+    const result = new fastlowess.Lowess({ fraction: 0.7 }).fit(x, y);
+
+    assert.deepStrictEqual(Array.from(result.x), Array.from(x));
+});
+
+test('WASM return_sorted = true returns results sorted ascending by x', () => {
+    const x = new Float64Array([3, 1, 5, 2, 4]);
+    const y = new Float64Array([6, 2, 10, 4, 8]);
+
+    const result = new fastlowess.Lowess({
+        fraction: 0.7,
+        return_residuals: true,
+        return_robustness_weights: true,
+        return_sorted: true
+    }).fit(x, y);
+
+    for (let i = 1; i < result.x.length; i++) {
+        assert.ok(result.x[i - 1] <= result.x[i]);
+    }
+    assert.notDeepStrictEqual(Array.from(result.x), Array.from(x));
+
+    const unsortedResult = new fastlowess.Lowess({
+        fraction: 0.7,
+        return_residuals: true,
+        return_robustness_weights: true
+    }).fit(x, y);
+
+    const sortedPairs = Array.from(result.x).map((xv, i) => [xv, result.y[i]]).sort();
+    const unsortedPairs = Array.from(unsortedResult.x).map((xv, i) => [xv, unsortedResult.y[i]]).sort();
+    assert.deepStrictEqual(sortedPairs, unsortedPairs);
+
+    assert.strictEqual(result.residuals.length, x.length);
+    assert.strictEqual(result.robustness_weights.length, x.length);
+});
+
 test('WASM streaming smoothing', () => {
     const streamer = new fastlowess.StreamingLowess({
         fraction: 0.3

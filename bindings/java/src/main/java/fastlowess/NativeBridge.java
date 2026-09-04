@@ -116,6 +116,7 @@ final class NativeBridge {
             int cvK,
             boolean parallel,
             boolean returnSe,
+            boolean returnSorted,
             String backend);
 
     static native void lowessSetCvSeed(long handle, long seed);
