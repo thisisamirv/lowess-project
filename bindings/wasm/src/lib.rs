@@ -35,30 +35,84 @@ export interface SmoothOptions {
     scaling_method?: string;
     /** Auto-convergence tolerance. Disabled when absent. */
     auto_converge?: number;
+    /** Include residuals in result. Ignored by OnlineLowess (`residual` is always included regardless). Default: false. */
+    return_residuals?: boolean;
+    /** Include robustness weights in result. Default: false. */
+    return_robustness_weights?: boolean;
+    /** Compute diagnostics (RMSE, MAE, R2, etc.). Ignored by OnlineLowess (it has no diagnostics field). Default: false. */
+    return_diagnostics?: boolean;
+    /** Include standard errors in result. Batch (Lowess) only; ignored by StreamingLowess/OnlineLowess. Default: false. */
+    return_se?: boolean;
+    /** Return results sorted ascending by x instead of in original input order. Batch (Lowess) only; ignored by StreamingLowess/OnlineLowess. Default: false. */
+    return_sorted?: boolean;
+    /** Confidence interval level (e.g. 0.95). Batch (Lowess) only; ignored by StreamingLowess/OnlineLowess. Disabled when absent. */
+    confidence_intervals?: number;
+    /** Prediction interval level (e.g. 0.95). Batch (Lowess) only; ignored by StreamingLowess/OnlineLowess. Disabled when absent. */
+    prediction_intervals?: number;
+    /** Enable parallel execution. Ignored by OnlineLowess (it processes one point at a time). Default: true. */
+    parallel?: boolean;
+    /** Fractions to test for cross-validation. Batch (Lowess) only; ignored by StreamingLowess/OnlineLowess. CV disabled when absent. */
+    cv_fractions?: number[];
+    /** CV method ("kfold" or "loocv"). Batch (Lowess) only; ignored by StreamingLowess/OnlineLowess. Default: "kfold". */
+    cv_method?: string;
+    /** Number of folds for k-fold CV. Batch (Lowess) only; ignored by StreamingLowess/OnlineLowess. Default: 5. */
+    cv_k?: number;
+    /** Random seed for CV fold assignment. Batch (Lowess) only; ignored by StreamingLowess/OnlineLowess. */
+    cv_seed?: number;
+}
+
+/** Configuration options for streaming LOWESS smoothing. A subset of `SmoothOptions`: confidence/prediction intervals, standard errors, cross-validation, and `return_sorted` have no equivalent here. */
+export interface StreamingSmoothOptions {
+    /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
+    fraction?: number;
+    /** Number of robustness iterations. Default: 3. */
+    iterations?: number;
+    /** Delta for interpolation speedup. Default: auto. Set to 0 to disable. */
+    delta?: number;
+    /** Kernel function ("tricube", "epanechnikov", "gaussian", "uniform", "biweight", "triangle", "cosine"). Default: "tricube". */
+    weight_function?: string;
+    /** Robustness method ("bisquare", "huber", "talwar"). Default: "bisquare". */
+    robustness_method?: string;
+    /** Fallback when all weights are zero ("use_local_mean", "return_original", "return_none"). Default: "use_local_mean". */
+    zero_weight_fallback?: string;
+    /** Boundary handling ("extend", "reflect", "zero", "noboundary"). Default: "extend". */
+    boundary_policy?: string;
+    /** Scaling method ("mad", "mar", "mean"). Default: "mad". */
+    scaling_method?: string;
+    /** Auto-convergence tolerance. Disabled when absent. */
+    auto_converge?: number;
     /** Include residuals in result. Default: false. */
     return_residuals?: boolean;
     /** Include robustness weights in result. Default: false. */
     return_robustness_weights?: boolean;
     /** Compute diagnostics (RMSE, MAE, R2, etc.). Default: false. */
     return_diagnostics?: boolean;
-    /** Include standard errors in result. Default: false. */
-    return_se?: boolean;
-    /** Return results sorted ascending by x instead of in original input order. Default: false. */
-    return_sorted?: boolean;
-    /** Confidence interval level (e.g. 0.95). Disabled when absent. */
-    confidence_intervals?: number;
-    /** Prediction interval level (e.g. 0.95). Disabled when absent. */
-    prediction_intervals?: number;
     /** Enable parallel execution. Default: true. */
     parallel?: boolean;
-    /** Fractions to test for cross-validation. CV disabled when absent. */
-    cv_fractions?: number[];
-    /** CV method ("kfold" or "loocv"). Default: "kfold". */
-    cv_method?: string;
-    /** Number of folds for k-fold CV. Default: 5. */
-    cv_k?: number;
-    /** Random seed for CV fold assignment. */
-    cv_seed?: number;
+}
+
+/** Configuration options for online LOWESS smoothing. A subset of `SmoothOptions`: diagnostics, residuals, parallel execution, confidence/prediction intervals, standard errors, cross-validation, and `return_sorted` have no equivalent here. */
+export interface OnlineSmoothOptions {
+    /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
+    fraction?: number;
+    /** Number of robustness iterations. Default: 3. */
+    iterations?: number;
+    /** Delta for interpolation speedup. Default: auto. Set to 0 to disable. */
+    delta?: number;
+    /** Kernel function ("tricube", "epanechnikov", "gaussian", "uniform", "biweight", "triangle", "cosine"). Default: "tricube". */
+    weight_function?: string;
+    /** Robustness method ("bisquare", "huber", "talwar"). Default: "bisquare". */
+    robustness_method?: string;
+    /** Fallback when all weights are zero ("use_local_mean", "return_original", "return_none"). Default: "use_local_mean". */
+    zero_weight_fallback?: string;
+    /** Boundary handling ("extend", "reflect", "zero", "noboundary"). Default: "extend". */
+    boundary_policy?: string;
+    /** Scaling method ("mad", "mar", "mean"). Default: "mad". */
+    scaling_method?: string;
+    /** Auto-convergence tolerance. Disabled when absent. */
+    auto_converge?: number;
+    /** Include robustness weights in result. Default: false. */
+    return_robustness_weights?: boolean;
 }
 
 /** Configuration options for streaming LOWESS. */
@@ -92,7 +146,7 @@ export class Lowess {
 /** Streaming LOWESS smoother for large datasets. */
 export class StreamingLowess {
     free(): void;
-    constructor(options?: SmoothOptions, streamingOpts?: StreamingOptions);
+    constructor(options?: StreamingSmoothOptions, streamingOpts?: StreamingOptions);
     /** Process a chunk of data. */
     process_chunk(x: Float64Array, y: Float64Array): LowessResult;
     /** Finalize the stream and return remaining data. */
@@ -102,7 +156,7 @@ export class StreamingLowess {
 /** Online LOWESS smoother for real-time data. */
 export class OnlineLowess {
     free(): void;
-    constructor(options?: SmoothOptions, onlineOpts?: OnlineOptions);
+    constructor(options?: OnlineSmoothOptions, onlineOpts?: OnlineOptions);
     /** Add a single point and get the smoothed output (or null if not enough points yet). */
     add_point(x: number, y: number): OnlineOutput | null;
 }
@@ -174,6 +228,37 @@ pub struct OnlineOptions {
     pub window_capacity: Option<usize>,
     pub min_points: Option<usize>,
     pub update_mode: Option<String>,
+}
+
+#[derive(Deserialize)]
+pub struct StreamingSmoothOptions {
+    pub fraction: Option<f64>,
+    pub iterations: Option<usize>,
+    pub delta: Option<f64>,
+    pub weight_function: Option<String>,
+    pub robustness_method: Option<String>,
+    pub zero_weight_fallback: Option<String>,
+    pub boundary_policy: Option<String>,
+    pub scaling_method: Option<String>,
+    pub auto_converge: Option<f64>,
+    pub return_residuals: Option<bool>,
+    pub return_robustness_weights: Option<bool>,
+    pub return_diagnostics: Option<bool>,
+    pub parallel: Option<bool>,
+}
+
+#[derive(Deserialize)]
+pub struct OnlineSmoothOptions {
+    pub fraction: Option<f64>,
+    pub iterations: Option<usize>,
+    pub delta: Option<f64>,
+    pub weight_function: Option<String>,
+    pub robustness_method: Option<String>,
+    pub zero_weight_fallback: Option<String>,
+    pub boundary_policy: Option<String>,
+    pub scaling_method: Option<String>,
+    pub auto_converge: Option<f64>,
+    pub return_robustness_weights: Option<bool>,
 }
 
 #[wasm_bindgen]
@@ -365,10 +450,18 @@ impl Lowess {
     }
 }
 
-fn options_to_builder(opts: Option<SmoothOptions>) -> Result<LowessBuilder<f64>, JsValue> {
+/// Which adapter `options_to_builder` is configuring a builder for.
+///
+/// `return_diagnostics`/`return_residuals`/`parallel` are no-ops for Online
+/// (it processes one point at a time and has no diagnostics), so they're
+/// dropped there. `return_sorted`/`confidence_intervals`/
+/// `prediction_intervals`/`return_se`/`cv_fractions`/`cv_method`/`cv_k`/
+/// `cv_seed` are Batch-only and dropped for both Streaming and Online.
+/// Build a `LowessBuilder` from Batch options, applying every field.
+fn batch_options_to_builder(opts: Option<SmoothOptions>) -> Result<LowessBuilder<f64>, JsValue> {
     let mut builder = LowessBuilder::<f64>::new();
     if let Some(opts) = opts {
-        let configured_builder = map_invalid_arg(shared_parse::apply_builder_options(
+        builder = map_invalid_arg(shared_parse::apply_builder_options(
             builder,
             shared_parse::BuilderOptionSet {
                 fraction: opts.fraction,
@@ -389,19 +482,68 @@ fn options_to_builder(opts: Option<SmoothOptions>) -> Result<LowessBuilder<f64>,
                 prediction_intervals: opts.prediction_intervals,
                 parallel: opts.parallel,
                 backend: None,
-                chunk_size: None,
-                overlap: None,
-                merge_strategy: None,
-                window_capacity: None,
-                min_points: None,
-                update_mode: None,
                 cv_fractions: opts.cv_fractions.as_deref(),
                 cv_method: opts.cv_method.as_deref(),
                 cv_k: opts.cv_k.map(|v| v as usize),
                 cv_seed: opts.cv_seed,
+                ..Default::default()
             },
         ))?;
-        builder = configured_builder;
+    }
+    Ok(builder)
+}
+
+/// Build a `LowessBuilder` from Streaming options, applying every field.
+fn streaming_options_to_builder(
+    opts: Option<StreamingSmoothOptions>,
+) -> Result<LowessBuilder<f64>, JsValue> {
+    let mut builder = LowessBuilder::<f64>::new();
+    if let Some(opts) = opts {
+        builder = map_invalid_arg(shared_parse::apply_builder_options(
+            builder,
+            shared_parse::BuilderOptionSet {
+                fraction: opts.fraction,
+                iterations: opts.iterations,
+                delta: opts.delta,
+                weight_function: opts.weight_function.as_deref(),
+                robustness_method: opts.robustness_method.as_deref(),
+                zero_weight_fallback: opts.zero_weight_fallback.as_deref(),
+                boundary_policy: opts.boundary_policy.as_deref(),
+                scaling_method: opts.scaling_method.as_deref(),
+                auto_converge: opts.auto_converge,
+                return_residuals: opts.return_residuals.unwrap_or(false),
+                return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
+                return_diagnostics: opts.return_diagnostics.unwrap_or(false),
+                parallel: opts.parallel,
+                ..Default::default()
+            },
+        ))?;
+    }
+    Ok(builder)
+}
+
+/// Build a `LowessBuilder` from Online options, applying every field.
+fn online_options_to_builder(
+    opts: Option<OnlineSmoothOptions>,
+) -> Result<LowessBuilder<f64>, JsValue> {
+    let mut builder = LowessBuilder::<f64>::new();
+    if let Some(opts) = opts {
+        builder = map_invalid_arg(shared_parse::apply_builder_options(
+            builder,
+            shared_parse::BuilderOptionSet {
+                fraction: opts.fraction,
+                iterations: opts.iterations,
+                delta: opts.delta,
+                weight_function: opts.weight_function.as_deref(),
+                robustness_method: opts.robustness_method.as_deref(),
+                zero_weight_fallback: opts.zero_weight_fallback.as_deref(),
+                boundary_policy: opts.boundary_policy.as_deref(),
+                scaling_method: opts.scaling_method.as_deref(),
+                auto_converge: opts.auto_converge,
+                return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
+                ..Default::default()
+            },
+        ))?;
     }
     Ok(builder)
 }
@@ -417,7 +559,7 @@ fn smooth(
     } else {
         None
     };
-    let builder = options_to_builder(opts)?;
+    let builder = batch_options_to_builder(opts)?;
 
     let x_vec = x.to_vec();
     let y_vec = y.to_vec();
@@ -441,11 +583,13 @@ impl StreamingLowess {
     #[allow(non_snake_case)]
     pub fn new(options: JsValue, streamingOpts: JsValue) -> Result<StreamingLowess, JsValue> {
         let opts = if !options.is_undefined() && !options.is_null() {
-            Some(serde_wasm_bindgen::from_value::<SmoothOptions>(options)?)
+            Some(serde_wasm_bindgen::from_value::<StreamingSmoothOptions>(
+                options,
+            )?)
         } else {
             None
         };
-        let builder = options_to_builder(opts)?;
+        let builder = streaming_options_to_builder(opts)?;
 
         let (chunk_size, overlap, merge_strategy) =
             if !streamingOpts.is_undefined() && !streamingOpts.is_null() {
@@ -497,11 +641,13 @@ impl OnlineLowess {
     #[allow(non_snake_case)]
     pub fn new(options: JsValue, onlineOpts: JsValue) -> Result<OnlineLowess, JsValue> {
         let opts = if !options.is_undefined() && !options.is_null() {
-            Some(serde_wasm_bindgen::from_value::<SmoothOptions>(options)?)
+            Some(serde_wasm_bindgen::from_value::<OnlineSmoothOptions>(
+                options,
+            )?)
         } else {
             None
         };
-        let builder = options_to_builder(opts)?;
+        let builder = online_options_to_builder(opts)?;
 
         let (window_capacity, min_points, update_mode) =
             if !onlineOpts.is_undefined() && !onlineOpts.is_null() {

@@ -37,11 +37,6 @@ public final class OnlineOptions {
         int minPoints = 2;
         String updateMode = null;
 
-        Builder() {
-            // Per-point updates rarely benefit from parallelism, unlike Batch/Streaming.
-            common.parallel(false);
-        }
-
         /**
          * @param fraction the fraction of points used to compute each local
          * regression
@@ -134,46 +129,6 @@ public final class OnlineOptions {
         }
 
         /**
-         * @param confidenceIntervals the confidence level
-         * @return this builder, for chaining
-         * @see Options.Builder#confidenceIntervals(double)
-         */
-        public Builder confidenceIntervals(double confidenceIntervals) {
-            common.confidenceIntervals(confidenceIntervals);
-            return this;
-        }
-
-        /**
-         * @param predictionIntervals the prediction level
-         * @return this builder, for chaining
-         * @see Options.Builder#predictionIntervals(double)
-         */
-        public Builder predictionIntervals(double predictionIntervals) {
-            common.predictionIntervals(predictionIntervals);
-            return this;
-        }
-
-        /**
-         * @param returnDiagnostics whether to compute diagnostics
-         * @return this builder, for chaining
-         * @see Options.Builder#returnDiagnostics(boolean)
-         */
-        public Builder returnDiagnostics(boolean returnDiagnostics) {
-            common.returnDiagnostics(returnDiagnostics);
-            return this;
-        }
-
-        /**
-         * @param returnResiduals whether to include residuals in the result
-         * @return this builder, for chaining
-         * @see Options.Builder#returnResiduals(boolean)
-         */
-        public Builder returnResiduals(boolean returnResiduals) {
-            common.returnResiduals(returnResiduals);
-            return this;
-        }
-
-        /**
          * @param returnRobustnessWeights whether to include robustness weights
          * in the result
          * @return this builder, for chaining
@@ -181,16 +136,6 @@ public final class OnlineOptions {
          */
         public Builder returnRobustnessWeights(boolean returnRobustnessWeights) {
             common.returnRobustnessWeights(returnRobustnessWeights);
-            return this;
-        }
-
-        /**
-         * @param parallel whether to enable parallel execution
-         * @return this builder, for chaining
-         * @see Options.Builder#parallel(boolean)
-         */
-        public Builder parallel(boolean parallel) {
-            common.parallel(parallel);
             return this;
         }
 

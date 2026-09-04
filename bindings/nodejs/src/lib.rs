@@ -231,30 +231,105 @@ pub struct SmoothOptions {
     #[napi(js_name = "return_se")]
     pub return_se: Option<bool>,
     /// Return results sorted ascending by x instead of in original input order.
-    /// Batch (`Lowess`) only; ignored by `StreamingLowess`/`OnlineLowess`. Default: false.
+    /// Default: false.
     #[napi(js_name = "return_sorted")]
     pub return_sorted: Option<bool>,
     /// Enable parallel execution. Default: true.
     pub parallel: Option<bool>,
     /// Execution backend: "cpu" (default) or "gpu" (requires the package to be
     /// built with the `gpu` Cargo feature and a Vulkan/Metal/DX12-capable GPU).
-    /// Batch (`Lowess`) only; ignored by `StreamingLowess`/`OnlineLowess`.
     pub backend: Option<String>,
 }
 
-/// Build a LowessBuilder from an optional SmoothOptions, applying all fields.
+/// Configuration options for streaming LOWESS smoothing.
 ///
-/// `include_backend` gates the GPU `backend` option and the `return_sorted`
-/// option: both are only meaningful for the Batch (`Lowess`) adapter, so
-/// `StreamingLowess`/`OnlineLowess` callers pass `false` and any `backend`/
-/// `return_sorted` value in `opts` is ignored.
-fn options_to_builder(
-    opts: Option<&SmoothOptions>,
-    include_backend: bool,
-) -> Result<LowessBuilder<f64>> {
+/// A subset of [`SmoothOptions`]: confidence/prediction intervals, standard
+/// errors, cross-validation, `return_sorted`, and `backend` are Batch-only
+/// and have no equivalent here, so they aren't fields on this type.
+#[napi(object)]
+pub struct StreamingSmoothOptions {
+    /// Smoothing fraction (0 < fraction <= 1). Default: 0.67.
+    pub fraction: Option<f64>,
+    /// Number of robustness iterations. Default: 3.
+    pub iterations: Option<u32>,
+    /// Delta for interpolation speedup. Default: NaN (auto).
+    /// Set to 0.0 to disable interpolation.
+    pub delta: Option<f64>,
+    /// Weight function ("tricube", "epanechnikov", "gaussian", "uniform", "biweight", "triangle", "cosine"). Default: "tricube".
+    #[napi(js_name = "weight_function")]
+    pub weight_function: Option<String>,
+    /// Robustness method ("bisquare", "huber", "talwar"). Default: "bisquare".
+    #[napi(js_name = "robustness_method")]
+    pub robustness_method: Option<String>,
+    /// Fallback strategy when weights are zero ("use_local_mean", "return_original", "return_none"). Default: "use_local_mean".
+    #[napi(js_name = "zero_weight_fallback")]
+    pub zero_weight_fallback: Option<String>,
+    /// Boundary handling ("extend", "reflect", "zero", "noboundary"). Default: "extend".
+    #[napi(js_name = "boundary_policy")]
+    pub boundary_policy: Option<String>,
+    /// Scaling method ("mad", "mar", "mean"). Default: "mad".
+    #[napi(js_name = "scaling_method")]
+    pub scaling_method: Option<String>,
+    /// Auto-convergence tolerance. Default: None.
+    #[napi(js_name = "auto_converge")]
+    pub auto_converge: Option<f64>,
+    /// Return residuals in result. Default: false.
+    #[napi(js_name = "return_residuals")]
+    pub return_residuals: Option<bool>,
+    /// Return robustness weights in result. Default: false.
+    #[napi(js_name = "return_robustness_weights")]
+    pub return_robustness_weights: Option<bool>,
+    /// Return diagnostics (RMSE, etc.). Default: false.
+    #[napi(js_name = "return_diagnostics")]
+    pub return_diagnostics: Option<bool>,
+    /// Enable parallel execution. Default: true.
+    pub parallel: Option<bool>,
+}
+
+/// Configuration options for online LOWESS smoothing.
+///
+/// A subset of [`SmoothOptions`]: diagnostics, residuals, parallel execution,
+/// confidence/prediction intervals, standard errors, cross-validation,
+/// `return_sorted`, and `backend` are all no-ops for online processing (it
+/// handles one point at a time and always returns a residual/SE inline), so
+/// they aren't fields on this type.
+#[napi(object)]
+pub struct OnlineSmoothOptions {
+    /// Smoothing fraction (0 < fraction <= 1). Default: 0.67.
+    pub fraction: Option<f64>,
+    /// Number of robustness iterations. Default: 3.
+    pub iterations: Option<u32>,
+    /// Delta for interpolation speedup. Default: NaN (auto).
+    /// Set to 0.0 to disable interpolation.
+    pub delta: Option<f64>,
+    /// Weight function ("tricube", "epanechnikov", "gaussian", "uniform", "biweight", "triangle", "cosine"). Default: "tricube".
+    #[napi(js_name = "weight_function")]
+    pub weight_function: Option<String>,
+    /// Robustness method ("bisquare", "huber", "talwar"). Default: "bisquare".
+    #[napi(js_name = "robustness_method")]
+    pub robustness_method: Option<String>,
+    /// Fallback strategy when weights are zero ("use_local_mean", "return_original", "return_none"). Default: "use_local_mean".
+    #[napi(js_name = "zero_weight_fallback")]
+    pub zero_weight_fallback: Option<String>,
+    /// Boundary handling ("extend", "reflect", "zero", "noboundary"). Default: "extend".
+    #[napi(js_name = "boundary_policy")]
+    pub boundary_policy: Option<String>,
+    /// Scaling method ("mad", "mar", "mean"). Default: "mad".
+    #[napi(js_name = "scaling_method")]
+    pub scaling_method: Option<String>,
+    /// Auto-convergence tolerance. Default: None.
+    #[napi(js_name = "auto_converge")]
+    pub auto_converge: Option<f64>,
+    /// Return robustness weights in result. Default: false.
+    #[napi(js_name = "return_robustness_weights")]
+    pub return_robustness_weights: Option<bool>,
+}
+
+/// Build a `LowessBuilder` from Batch options, applying every field.
+fn batch_options_to_builder(opts: Option<&SmoothOptions>) -> Result<LowessBuilder<f64>> {
     let mut builder = LowessBuilder::<f64>::new();
     if let Some(opts) = opts {
-        let configured_builder = map_invalid_arg(binding_support::apply_builder_options(
+        builder = map_invalid_arg(binding_support::apply_builder_options(
             builder,
             binding_support::BuilderOptionSet {
                 fraction: opts.fraction,
@@ -270,28 +345,71 @@ fn options_to_builder(
                 return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
                 return_diagnostics: opts.return_diagnostics.unwrap_or(false),
                 return_se: opts.return_se.unwrap_or(false),
-                return_sorted: include_backend && opts.return_sorted.unwrap_or(false),
+                return_sorted: opts.return_sorted.unwrap_or(false),
                 confidence_intervals: opts.confidence_intervals,
                 prediction_intervals: opts.prediction_intervals,
                 parallel: opts.parallel,
-                backend: if include_backend {
-                    opts.backend.as_deref()
-                } else {
-                    None
-                },
-                chunk_size: None,
-                overlap: None,
-                merge_strategy: None,
-                window_capacity: None,
-                min_points: None,
-                update_mode: None,
+                backend: opts.backend.as_deref(),
                 cv_fractions: opts.cv_fractions.as_deref(),
                 cv_method: opts.cv_method.as_deref(),
                 cv_k: opts.cv_k.map(|v| v as usize),
                 cv_seed: opts.cv_seed.map(|s| s as u64),
+                ..Default::default()
             },
         ))?;
-        builder = configured_builder;
+    }
+    Ok(builder)
+}
+
+/// Build a `LowessBuilder` from Streaming options, applying every field.
+fn streaming_options_to_builder(
+    opts: Option<&StreamingSmoothOptions>,
+) -> Result<LowessBuilder<f64>> {
+    let mut builder = LowessBuilder::<f64>::new();
+    if let Some(opts) = opts {
+        builder = map_invalid_arg(binding_support::apply_builder_options(
+            builder,
+            binding_support::BuilderOptionSet {
+                fraction: opts.fraction,
+                iterations: opts.iterations.map(|v| v as usize),
+                delta: opts.delta,
+                weight_function: opts.weight_function.as_deref(),
+                robustness_method: opts.robustness_method.as_deref(),
+                zero_weight_fallback: opts.zero_weight_fallback.as_deref(),
+                boundary_policy: opts.boundary_policy.as_deref(),
+                scaling_method: opts.scaling_method.as_deref(),
+                auto_converge: opts.auto_converge,
+                return_residuals: opts.return_residuals.unwrap_or(false),
+                return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
+                return_diagnostics: opts.return_diagnostics.unwrap_or(false),
+                parallel: opts.parallel,
+                ..Default::default()
+            },
+        ))?;
+    }
+    Ok(builder)
+}
+
+/// Build a `LowessBuilder` from Online options, applying every field.
+fn online_options_to_builder(opts: Option<&OnlineSmoothOptions>) -> Result<LowessBuilder<f64>> {
+    let mut builder = LowessBuilder::<f64>::new();
+    if let Some(opts) = opts {
+        builder = map_invalid_arg(binding_support::apply_builder_options(
+            builder,
+            binding_support::BuilderOptionSet {
+                fraction: opts.fraction,
+                iterations: opts.iterations.map(|v| v as usize),
+                delta: opts.delta,
+                weight_function: opts.weight_function.as_deref(),
+                robustness_method: opts.robustness_method.as_deref(),
+                zero_weight_fallback: opts.zero_weight_fallback.as_deref(),
+                boundary_policy: opts.boundary_policy.as_deref(),
+                scaling_method: opts.scaling_method.as_deref(),
+                auto_converge: opts.auto_converge,
+                return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
+                ..Default::default()
+            },
+        ))?;
     }
     Ok(builder)
 }
@@ -350,7 +468,7 @@ impl Lowess {
     }
 
     fn create_builder(&self) -> Result<LowessBuilder<f64>> {
-        options_to_builder(self.options.as_ref(), true)
+        batch_options_to_builder(self.options.as_ref())
     }
 }
 
@@ -398,10 +516,10 @@ impl StreamingLowess {
     /// Create a new streaming LOWESS smoother.
     #[napi(constructor)]
     pub fn new(
-        options: Option<SmoothOptions>,
+        options: Option<StreamingSmoothOptions>,
         streaming_opts: Option<StreamingOptions>,
     ) -> Result<Self> {
-        let builder = options_to_builder(options.as_ref(), false)?;
+        let builder = streaming_options_to_builder(options.as_ref())?;
 
         let (chunk_size, overlap, merge_strategy) = match streaming_opts {
             Some(s) => (
@@ -480,8 +598,11 @@ pub struct OnlineLowess {
 impl OnlineLowess {
     /// Create a new online LOWESS smoother.
     #[napi(constructor)]
-    pub fn new(options: Option<SmoothOptions>, online_opts: Option<OnlineOptions>) -> Result<Self> {
-        let builder = options_to_builder(options.as_ref(), false)?;
+    pub fn new(
+        options: Option<OnlineSmoothOptions>,
+        online_opts: Option<OnlineOptions>,
+    ) -> Result<Self> {
+        let builder = online_options_to_builder(options.as_ref())?;
 
         let (window_capacity, min_points, update_mode) = match online_opts {
             Some(o) => (

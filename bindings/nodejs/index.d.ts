@@ -43,7 +43,7 @@ export declare class LowessResult {
 /** Online LOWESS smoother for real-time data. */
 export declare class OnlineLowess {
   /** Create a new online LOWESS smoother. */
-  constructor(options?: SmoothOptions | undefined | null, onlineOpts?: OnlineOptions | undefined | null)
+  constructor(options?: OnlineSmoothOptions | undefined | null, onlineOpts?: OnlineOptions | undefined | null)
   /** Add a single point and get the smoothed value if enough points are available. */
   add_point(x: number, y: number): OnlineOutput | null
 }
@@ -51,7 +51,7 @@ export declare class OnlineLowess {
 /** Streaming LOWESS smoother for large datasets. */
 export declare class StreamingLowess {
   /** Create a new streaming LOWESS smoother. */
-  constructor(options?: SmoothOptions | undefined | null, streamingOpts?: StreamingOptions | undefined | null)
+  constructor(options?: StreamingSmoothOptions | undefined | null, streamingOpts?: StreamingOptions | undefined | null)
   /** Process a chunk of data. */
   process_chunk(x: Float64Array, y: Float64Array): LowessResult
   /** Finalize the stream and return remaining data. */
@@ -103,6 +103,41 @@ export interface OnlineOutput {
   iterations_used?: number
 }
 
+/**
+ * Configuration options for online LOWESS smoothing.
+ *
+ * A subset of [`SmoothOptions`]: diagnostics, residuals, parallel execution,
+ * confidence/prediction intervals, standard errors, cross-validation,
+ * `return_sorted`, and `backend` are all no-ops for online processing (it
+ * handles one point at a time and always returns a residual/SE inline), so
+ * they aren't fields on this type.
+ */
+export interface OnlineSmoothOptions {
+  /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
+  fraction?: number
+  /** Number of robustness iterations. Default: 3. */
+  iterations?: number
+  /**
+   * Delta for interpolation speedup. Default: NaN (auto).
+   * Set to 0.0 to disable interpolation.
+   */
+  delta?: number
+  /** Weight function ("tricube", "epanechnikov", "gaussian", "uniform", "biweight", "triangle", "cosine"). Default: "tricube". */
+  weight_function?: string
+  /** Robustness method ("bisquare", "huber", "talwar"). Default: "bisquare". */
+  robustness_method?: string
+  /** Fallback strategy when weights are zero ("use_local_mean", "return_original", "return_none"). Default: "use_local_mean". */
+  zero_weight_fallback?: string
+  /** Boundary handling ("extend", "reflect", "zero", "noboundary"). Default: "extend". */
+  boundary_policy?: string
+  /** Scaling method ("mad", "mar", "mean"). Default: "mad". */
+  scaling_method?: string
+  /** Auto-convergence tolerance. Default: None. */
+  auto_converge?: number
+  /** Return robustness weights in result. Default: false. */
+  return_robustness_weights?: boolean
+}
+
 /** Configuration options for LOWESS smoothing. */
 export interface SmoothOptions {
   /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
@@ -148,7 +183,7 @@ export interface SmoothOptions {
   return_se?: boolean
   /**
    * Return results sorted ascending by x instead of in original input order.
-   * Batch (`Lowess`) only; ignored by `StreamingLowess`/`OnlineLowess`. Default: false.
+   * Default: false.
    */
   return_sorted?: boolean
   /** Enable parallel execution. Default: true. */
@@ -156,7 +191,6 @@ export interface SmoothOptions {
   /**
    * Execution backend: "cpu" (default) or "gpu" (requires the package to be
    * built with the `gpu` Cargo feature and a Vulkan/Metal/DX12-capable GPU).
-   * Batch (`Lowess`) only; ignored by `StreamingLowess`/`OnlineLowess`.
    */
   backend?: string
 }
@@ -169,4 +203,43 @@ export interface StreamingOptions {
   overlap?: number
   /** Strategy for merging chunk overlaps. Default: "weighted_average". */
   merge_strategy?: string
+}
+
+/**
+ * Configuration options for streaming LOWESS smoothing.
+ *
+ * A subset of [`SmoothOptions`]: confidence/prediction intervals, standard
+ * errors, cross-validation, `return_sorted`, and `backend` are Batch-only
+ * and have no equivalent here, so they aren't fields on this type.
+ */
+export interface StreamingSmoothOptions {
+  /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
+  fraction?: number
+  /** Number of robustness iterations. Default: 3. */
+  iterations?: number
+  /**
+   * Delta for interpolation speedup. Default: NaN (auto).
+   * Set to 0.0 to disable interpolation.
+   */
+  delta?: number
+  /** Weight function ("tricube", "epanechnikov", "gaussian", "uniform", "biweight", "triangle", "cosine"). Default: "tricube". */
+  weight_function?: string
+  /** Robustness method ("bisquare", "huber", "talwar"). Default: "bisquare". */
+  robustness_method?: string
+  /** Fallback strategy when weights are zero ("use_local_mean", "return_original", "return_none"). Default: "use_local_mean". */
+  zero_weight_fallback?: string
+  /** Boundary handling ("extend", "reflect", "zero", "noboundary"). Default: "extend". */
+  boundary_policy?: string
+  /** Scaling method ("mad", "mar", "mean"). Default: "mad". */
+  scaling_method?: string
+  /** Auto-convergence tolerance. Default: None. */
+  auto_converge?: number
+  /** Return residuals in result. Default: false. */
+  return_residuals?: boolean
+  /** Return robustness weights in result. Default: false. */
+  return_robustness_weights?: boolean
+  /** Return diagnostics (RMSE, etc.). Default: false. */
+  return_diagnostics?: boolean
+  /** Enable parallel execution. Default: true. */
+  parallel?: boolean
 }

@@ -178,9 +178,7 @@ struct fastlowess_GoStreamingLowess *go_streaming_new(double fraction,
                                                       int parallel,
                                                       int chunk_size,
                                                       int overlap,
-                                                      const char *merge_strategy,
-                                                      double confidence_intervals,
-                                                      double prediction_intervals);
+                                                      const char *merge_strategy);
 
 /**
  * Process a chunk of data.
@@ -224,16 +222,11 @@ struct fastlowess_GoOnlineLowess *go_online_new(double fraction,
                                                 const char *scaling_method,
                                                 const char *boundary_policy,
                                                 int return_robustness_weights,
-                                                int return_diagnostics,
-                                                int return_residuals,
                                                 const char *zero_weight_fallback,
                                                 double auto_converge,
-                                                int parallel,
                                                 int window_capacity,
                                                 int min_points,
-                                                const char *update_mode,
-                                                double confidence_intervals,
-                                                double prediction_intervals);
+                                                const char *update_mode);
 
 /**
  * Add a single point to the model and return its smoothed value.

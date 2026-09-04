@@ -687,10 +687,7 @@ pub unsafe extern "C" fn jl_online_lowess_new(
     update_mode: *const c_char,
     auto_converge: c_double,
     return_robustness_weights: c_int,
-    return_diagnostics: c_int,
-    return_residuals: c_int,
     zero_weight_fallback: *const c_char,
-    parallel: c_int,
 ) -> *mut JlOnlineLowess {
     clear_last_error_message();
     let result =
@@ -755,11 +752,11 @@ pub unsafe extern "C" fn jl_online_lowess_new(
                     boundary_policy: Some(bp_str),
                     zero_weight_fallback: Some(zwf_str),
                     auto_converge: (!auto_converge.is_nan()).then_some(auto_converge),
-                    return_residuals: return_residuals != 0,
+                    return_residuals: false,
                     return_robustness_weights: return_robustness_weights != 0,
-                    return_diagnostics: return_diagnostics != 0,
+                    return_diagnostics: false,
                     return_se: false,
-                    parallel: Some(parallel != 0),
+                    parallel: None,
                     ..Default::default()
                 },
             )) {

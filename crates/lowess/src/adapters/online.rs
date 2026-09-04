@@ -28,7 +28,6 @@ use crate::math::boundary::BoundaryPolicy;
 use crate::math::defaults::*;
 use crate::math::kernel::WeightFunction;
 use crate::math::scaling::ScalingMethod;
-use crate::primitives::backend::Backend;
 use crate::primitives::buffer::{OnlineBuffer, VecExt};
 use crate::primitives::errors::LowessError;
 
@@ -82,9 +81,6 @@ pub struct OnlineLowessBuilder<T: Float> {
     // Scaling method for robust scale estimation (MAR/MAD)
     pub scaling_method: ScalingMethod,
 
-    // Whether to return residuals
-    pub compute_residuals: bool,
-
     // Whether to return robustness weights
     pub return_robustness_weights: bool,
 
@@ -109,14 +105,6 @@ pub struct OnlineLowessBuilder<T: Float> {
     // Custom fit pass function.
     #[doc(hidden)]
     pub custom_fit_pass: Option<FitPassFn<T>>,
-
-    // Execution backend hint.
-    #[doc(hidden)]
-    pub backend: Option<Backend>,
-
-    // Parallel execution hint.
-    #[doc(hidden)]
-    pub parallel: Option<bool>,
 
     // Tracks if any parameter was set multiple times (for validation)
     #[doc(hidden)]
@@ -144,7 +132,6 @@ impl<T: Float> OnlineLowessBuilder<T> {
             zero_weight_fallback: DEFAULT_ZERO_WEIGHT_FALLBACK_ENUM,
             boundary_policy: DEFAULT_BOUNDARY_POLICY_ENUM,
             scaling_method: DEFAULT_SCALING_METHOD_ENUM,
-            compute_residuals: DEFAULT_RETURN_RESIDUALS,
             return_robustness_weights: DEFAULT_RETURN_ROBUSTNESS_WEIGHTS,
             auto_converge: default_auto_converge(),
             deferred_error: None,
@@ -152,8 +139,6 @@ impl<T: Float> OnlineLowessBuilder<T> {
             custom_cv_pass: None,
             custom_interval_pass: None,
             custom_fit_pass: None,
-            backend: None,
-            parallel: None,
             duplicate_param: None,
         }
     }
@@ -328,8 +313,8 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
                     custom_cv_pass: self.config.custom_cv_pass,
                     custom_interval_pass: self.config.custom_interval_pass,
                     custom_fit_pass: self.config.custom_fit_pass,
-                    parallel: self.config.parallel.unwrap_or(false),
-                    backend: self.config.backend,
+                    parallel: false,
+                    backend: None,
                     delegate_boundary_handling: false,
                     custom_weights: None,
                 };

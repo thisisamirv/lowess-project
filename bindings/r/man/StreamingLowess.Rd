@@ -21,9 +21,7 @@ StreamingLowess(
     return_residuals = FALSE,
     return_robustness_weights = FALSE,
     merge_strategy = "weighted_average",
-    parallel = TRUE,
-    confidence_intervals = NULL,
-    prediction_intervals = NULL
+    parallel = TRUE
 )
 }
 \arguments{
@@ -90,14 +88,6 @@ robustness weights. Default: \code{FALSE}.}
 \code{"take_last"} (alias: \code{"last"}).}
 
 \item{parallel}{Logical; enable parallel processing. Default: \code{TRUE}.}
-
-\item{confidence_intervals}{Confidence level for confidence intervals,
-greater than 0 and less than 1 (e.g., 0.95). \code{NULL} (default)
-disables confidence intervals.}
-
-\item{prediction_intervals}{Confidence level for prediction intervals,
-greater than 0 and less than 1 (e.g., 0.95). \code{NULL} (default)
-disables prediction intervals.}
 }
 \value{
 A StreamingLowess object.

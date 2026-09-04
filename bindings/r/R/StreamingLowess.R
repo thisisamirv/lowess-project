@@ -62,9 +62,7 @@ StreamingLowess <- function(
     return_residuals = FALSE,
     return_robustness_weights = FALSE,
     merge_strategy = "weighted_average",
-    parallel = TRUE,
-    confidence_intervals = NULL,
-    prediction_intervals = NULL
+    parallel = TRUE
 ) {
     reject_extra_positional_args(sys.call(), "chunk_size")
     validate_params(fraction = fraction, chunk_size = chunk_size)

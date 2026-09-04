@@ -3,7 +3,6 @@
 // Mirrors the shape of rfastlowess_parallel.json so gpu_transfer.py
 // can compute meaningful transfer-fraction comparisons.
 
-use fastLowess::internals::api::Backend;
 use fastLowess::prelude::*;
 use serde::Serialize;
 use std::env;
@@ -50,7 +49,7 @@ fn bench_size(n: usize, n_iter: usize, warmup: usize) -> BenchEntry {
     let model = Lowess::new()
         .fraction(0.3)
         .iterations(3)
-        .backend(Backend::GPU)
+        .backend("gpu")
         .build()
         .expect("GPU model build failed");
 
@@ -59,7 +58,7 @@ fn bench_size(n: usize, n_iter: usize, warmup: usize) -> BenchEntry {
         let m = Lowess::new()
             .fraction(0.3)
             .iterations(3)
-            .backend(Backend::GPU)
+            .backend("gpu")
             .build()
             .expect("GPU model build failed");
         let t0 = Instant::now();

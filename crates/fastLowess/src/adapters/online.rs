@@ -5,14 +5,10 @@
 //! smoothed values for new points as they arrive.
 // ## srrstats Compliance
 //
-// @srrstats {G1.6} Sliding window with optional parallel re-smoothing.
+// @srrstats {G1.6} Sliding window for real-time incremental updates (always sequential; no parallel/GPU backend).
 // @srrstats {G2.1} Configurable min_points threshold before smoothing starts.
 
 // Feature-gated imports
-#[cfg(feature = "cpu")]
-use crate::engine::executor::smooth_pass_parallel;
-#[cfg(feature = "gpu")]
-use crate::engine::gpu::fit_pass_gpu;
 use crate::input::LowessInput;
 
 // External dependencies
@@ -23,10 +19,10 @@ use std::result::Result;
 // Export dependencies from lowess crate
 use lowess::internals::adapters::online::{OnlineLowess, OnlineLowessBuilder, OnlineOutput};
 use lowess::internals::algorithms::regression::WLSSolver;
-use lowess::internals::primitives::backend::Backend;
 use lowess::internals::primitives::errors::LowessError;
 
-// Builder for online LOWESS processor with parallel support.
+// Builder for online LOWESS processor. Online processing is always sequential
+// (one point at a time), so there is no parallel or GPU backend option here.
 #[derive(Debug, Clone)]
 pub struct ParallelOnlineLowessBuilder<T: Float> {
     // Base builder from the lowess crate
@@ -44,10 +40,8 @@ impl<T: Float> Default for ParallelOnlineLowessBuilder<T> {
 #[allow(private_bounds)]
 impl<T: Float> ParallelOnlineLowessBuilder<T> {
     fn new() -> Self {
-        let mut base = OnlineLowessBuilder::default();
-        base.parallel = Some(false); // Default to non-parallel in fastLowess for Online
         Self {
-            base,
+            base: OnlineLowessBuilder::default(),
             parse_errors: Vec::new(),
         }
     }
@@ -103,42 +97,9 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> ParallelOnlineLowessB
             return Err(LowessError::ParseErrors(self.parse_errors));
         }
 
-        // Configure the base builder with parallel callback if enabled
-        let mut builder = self.base.clone();
-
-        match builder.backend.unwrap_or(Backend::CPU) {
-            Backend::CPU => {
-                #[cfg(feature = "cpu")]
-                {
-                    if builder.parallel.unwrap_or(false) {
-                        builder.custom_smooth_pass = Some(smooth_pass_parallel);
-                    } else {
-                        builder.custom_smooth_pass = None;
-                    }
-                }
-                #[cfg(not(feature = "cpu"))]
-                {
-                    builder.custom_smooth_pass = None;
-                }
-            }
-            Backend::GPU => {
-                #[cfg(feature = "gpu")]
-                {
-                    // For Online, we currently use fit_pass_gpu as a hook
-                    builder.custom_fit_pass = Some(fit_pass_gpu);
-                }
-                #[cfg(not(feature = "gpu"))]
-                {
-                    return Err(LowessError::UnsupportedFeature {
-                        adapter: "Online",
-                        feature: "GPU backend (requires 'gpu' feature)",
-                    });
-                }
-            }
-        }
-
-        // Delegate execution to the base implementation
-        let processor = builder.build()?;
+        // Online processing is always sequential (one point at a time), so
+        // there is no parallel/GPU dispatch here — delegate directly.
+        let processor = self.base.build()?;
 
         Ok(ParallelOnlineLowess { processor })
     }

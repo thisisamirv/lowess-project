@@ -372,8 +372,6 @@ pub extern "system" fn Java_fastlowess_NativeBridge_streamingNew<'local>(
     chunk_size: jint,
     overlap: jint,
     merge_strategy: JString<'local>,
-    confidence_intervals: jdouble,
-    prediction_intervals: jdouble,
 ) -> jlong {
     env.with_env(|env| -> AppResult<jlong> {
         let wf = jstring_or_default(env, &weight_function, shared_parse::DEFAULT_WEIGHT_FUNCTION);
@@ -412,8 +410,8 @@ pub extern "system" fn Java_fastlowess_NativeBridge_streamingNew<'local>(
                 return_residuals,
                 return_robustness_weights,
                 return_diagnostics,
-                confidence_intervals: opt_f64(confidence_intervals),
-                prediction_intervals: opt_f64(prediction_intervals),
+                confidence_intervals: None,
+                prediction_intervals: None,
                 parallel: Some(parallel),
                 ..Default::default()
             },
@@ -508,16 +506,11 @@ pub extern "system" fn Java_fastlowess_NativeBridge_onlineNew<'local>(
     scaling_method: JString<'local>,
     boundary_policy: JString<'local>,
     return_robustness_weights: jboolean,
-    return_diagnostics: jboolean,
-    return_residuals: jboolean,
     zero_weight_fallback: JString<'local>,
     auto_converge: jdouble,
-    parallel: jboolean,
     window_capacity: jint,
     min_points: jint,
     update_mode: JString<'local>,
-    confidence_intervals: jdouble,
-    prediction_intervals: jdouble,
 ) -> jlong {
     env.with_env(|env| -> AppResult<jlong> {
         let wf = jstring_or_default(env, &weight_function, shared_parse::DEFAULT_WEIGHT_FUNCTION);
@@ -551,12 +544,12 @@ pub extern "system" fn Java_fastlowess_NativeBridge_onlineNew<'local>(
                 boundary_policy: Some(&bp),
                 scaling_method: Some(&sm),
                 auto_converge: opt_f64(auto_converge),
-                return_residuals,
+                return_residuals: false,
                 return_robustness_weights,
-                return_diagnostics,
-                confidence_intervals: opt_f64(confidence_intervals),
-                prediction_intervals: opt_f64(prediction_intervals),
-                parallel: Some(parallel),
+                return_diagnostics: false,
+                confidence_intervals: None,
+                prediction_intervals: None,
+                parallel: None,
                 ..Default::default()
             },
         )?;

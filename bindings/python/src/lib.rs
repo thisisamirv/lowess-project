@@ -396,10 +396,7 @@ impl PyOnlineLowess {
         update_mode="incremental",
         auto_converge=None,
         return_robustness_weights=false,
-        return_diagnostics=false,
-        return_residuals=false,
-        zero_weight_fallback="use_local_mean",
-        parallel=false
+        zero_weight_fallback="use_local_mean"
     ))]
     #[allow(clippy::too_many_arguments)]
     fn new(
@@ -415,10 +412,7 @@ impl PyOnlineLowess {
         update_mode: &str,
         auto_converge: Option<f64>,
         return_robustness_weights: bool,
-        return_diagnostics: bool,
-        return_residuals: bool,
         zero_weight_fallback: &str,
-        parallel: bool,
     ) -> PyResult<Self> {
         let builder = map_invalid_arg(binding_support::apply_builder_options(
             LowessBuilder::<f64>::new(),
@@ -432,14 +426,14 @@ impl PyOnlineLowess {
                 boundary_policy: Some(boundary_policy),
                 zero_weight_fallback: Some(zero_weight_fallback),
                 auto_converge,
-                return_residuals,
+                return_residuals: false,
                 return_robustness_weights,
-                return_diagnostics,
+                return_diagnostics: false,
                 return_se: false,
                 return_sorted: false,
                 confidence_intervals: None,
                 prediction_intervals: None,
-                parallel: Some(parallel),
+                parallel: None,
                 chunk_size: None,
                 overlap: None,
                 merge_strategy: None,

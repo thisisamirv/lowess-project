@@ -220,10 +220,7 @@ class OnlineLowess:
         update_mode: str = "full",
         auto_converge: float | None = None,
         return_robustness_weights: bool = False,
-        return_diagnostics: bool = False,
-        return_residuals: bool = False,
         zero_weight_fallback: str = "use_local_mean",
-        parallel: bool = False,
     ) -> None: ...
     def add_point(self, x: float, y: float) -> OnlineOutput | None: ...
 

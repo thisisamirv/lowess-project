@@ -178,8 +178,6 @@ impl RStreamingLowess {
         merge_strategy: &str,
         parallel: bool,
         delta: Nullable<f64>,
-        confidence_intervals: Nullable<f64>,
-        prediction_intervals: Nullable<f64>,
     ) -> Result<Self> {
         let chunk_size = require_positive_usize("chunk_size", chunk_size)?;
         let overlap_size = match overlap {
@@ -209,14 +207,8 @@ impl RStreamingLowess {
                 return_residuals,
                 return_robustness_weights,
                 return_diagnostics,
-                confidence_intervals: match confidence_intervals {
-                    NotNull(v) => Some(v),
-                    Null => None,
-                },
-                prediction_intervals: match prediction_intervals {
-                    NotNull(v) => Some(v),
-                    Null => None,
-                },
+                confidence_intervals: None,
+                prediction_intervals: None,
                 parallel: Some(parallel),
                 ..Default::default()
             },
@@ -267,12 +259,7 @@ impl ROnlineLowess {
         update_mode: &str,
         auto_converge: Nullable<f64>,
         return_robustness_weights: bool,
-        return_diagnostics: bool,
-        return_residuals: bool,
-        parallel: bool,
         delta: Nullable<f64>,
-        confidence_intervals: Nullable<f64>,
-        prediction_intervals: Nullable<f64>,
     ) -> Result<Self> {
         let window_capacity = require_positive_usize("window_capacity", window_capacity)?;
         let min_points = require_positive_usize("min_points", min_points)?;
@@ -296,18 +283,12 @@ impl ROnlineLowess {
                     NotNull(v) => Some(v),
                     Null => None,
                 },
-                return_residuals,
+                return_residuals: false,
                 return_robustness_weights,
-                return_diagnostics,
-                confidence_intervals: match confidence_intervals {
-                    NotNull(v) => Some(v),
-                    Null => None,
-                },
-                prediction_intervals: match prediction_intervals {
-                    NotNull(v) => Some(v),
-                    Null => None,
-                },
-                parallel: Some(parallel),
+                return_diagnostics: false,
+                confidence_intervals: None,
+                prediction_intervals: None,
+                parallel: None,
                 ..Default::default()
             },
         ))?;

@@ -12,8 +12,6 @@
 // Internal dependencies
 #[cfg(feature = "cpu")]
 use crate::engine::executor::smooth_pass_parallel;
-#[cfg(feature = "gpu")]
-use crate::engine::gpu::fit_pass_gpu;
 
 // External dependencies
 use num_traits::Float;
@@ -24,7 +22,6 @@ use std::result::Result;
 use lowess::internals::adapters::streaming::{StreamingLowess, StreamingLowessBuilder};
 use lowess::internals::algorithms::regression::WLSSolver;
 use lowess::internals::engine::output::LowessResult;
-use lowess::internals::primitives::backend::Backend;
 use lowess::internals::primitives::errors::LowessError;
 
 // Builder for streaming LOWESS processor with parallel support.
@@ -80,37 +77,21 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> ParallelStreamingLowe
             return Err(LowessError::ParseErrors(self.parse_errors));
         }
 
-        // Configure the base builder with parallel callback if enabled
+        // Configure the base builder with the parallel smooth pass if enabled.
+        // Streaming has no GPU backend; execution is always CPU-based.
         let mut builder = self.base.clone();
 
-        match builder.backend.unwrap_or(Backend::CPU) {
-            Backend::CPU => {
-                #[cfg(feature = "cpu")]
-                {
-                    if builder.parallel.unwrap_or(true) {
-                        builder.custom_smooth_pass = Some(smooth_pass_parallel);
-                    } else {
-                        builder.custom_smooth_pass = None;
-                    }
-                }
-                #[cfg(not(feature = "cpu"))]
-                {
-                    builder.custom_smooth_pass = None;
-                }
+        #[cfg(feature = "cpu")]
+        {
+            if builder.parallel.unwrap_or(true) {
+                builder.custom_smooth_pass = Some(smooth_pass_parallel);
+            } else {
+                builder.custom_smooth_pass = None;
             }
-            Backend::GPU => {
-                #[cfg(feature = "gpu")]
-                {
-                    builder.custom_fit_pass = Some(fit_pass_gpu);
-                }
-                #[cfg(not(feature = "gpu"))]
-                {
-                    return Err(LowessError::UnsupportedFeature {
-                        adapter: "Streaming",
-                        feature: "GPU backend (requires 'gpu' feature)",
-                    });
-                }
-            }
+        }
+        #[cfg(not(feature = "cpu"))]
+        {
+            builder.custom_smooth_pass = None;
         }
 
         // Delegate execution to the base implementation

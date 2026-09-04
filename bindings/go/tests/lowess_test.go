@@ -596,8 +596,6 @@ func TestOnlineLowess(t *testing.T) {
 		opts.Fraction = 0.5
 		opts.WindowCapacity = 50
 		opts.MinPoints = 5
-		opts.ReturnDiagnostics = true
-		opts.ReturnResiduals = true
 		model, err := fastlowess.NewOnlineLowess(opts)
 		if err != nil {
 			t.Fatalf("NewOnlineLowess failed: %v", err)

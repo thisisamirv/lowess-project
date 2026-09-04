@@ -35,7 +35,7 @@ Online smoothed at x=2: 0.8415
 Online smoothed at x=3: 0.9975
 ```
 
-- `options`: An object containing `LowessOptions` fields.
+- `options`: An object containing `OnlineSmoothOptions` fields (a subset of the Batch `LowessOptions` fields — see below).
 - `onlineOptions`: An object containing `OnlineOptions` fields.
 
 #### `add_point(x, y)`
@@ -68,7 +68,7 @@ Smoothed y: 0.22659245357374927
 
 ## Options Structure
 
-### `OnlineOptions` (inherits `LowessOptions`)
+### `OnlineSmoothOptions`
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -81,15 +81,12 @@ Smoothed y: 0.22659245357374927
 | `boundary_policy` | `string` | `"extend"` | Boundary handling policy |
 | `zero_weight_fallback` | `string` | `"use_local_mean"` | Zero-weight handling |
 | `auto_converge` | `number` | `null` | Auto-convergence tolerance |
-| `return_diagnostics` | `boolean` | `false` | No effect for Online — `OnlineOutput` has no diagnostics field |
-| `return_residuals` | `boolean` | `false` | No effect for Online — `residual` is always included in `OnlineOutput` |
 | `return_robustness_weights` | `boolean` | `false` | Include `robustness_weight` in result |
 | `window_capacity` | `number` | `1000` | Max points in sliding window |
 | `min_points` | `number` | `2` | Min points before smoothing starts |
 | `update_mode` | `string` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
-| `parallel` | `boolean` | `false` | Enable parallel execution (off by default; online LOWESS fits one point at a time) |
 
-Confidence/prediction intervals, standard errors, cross-validation, GPU `backend`, `custom_weights`, and `return_sorted` are Batch-only and not available here; see [fastLowess](api.md) for those.
+Confidence/prediction intervals, standard errors, cross-validation, GPU `backend`, `custom_weights`, `return_sorted`, `return_diagnostics`, `return_residuals`, and `parallel` are Batch-only (or Batch/Streaming-only) and not available here; see [fastLowess](api.md) for those.
 
 ## Options
 
@@ -199,8 +196,8 @@ Returned by `add_point()` once the window has enough points (`null` until then).
 | --- | --- | --- |
 | `y` | `number` | Smoothed value for the latest point |
 | `standard_error` | `number \| null` | Always `null` — standard errors require `return_se`/confidence intervals, which are Batch-only |
-| `residual` | `number \| null` | Residual y − smoothed; always present regardless of `return_residuals` |
+| `residual` | `number \| null` | Residual y − smoothed; always present (there is no `return_residuals` option for Online) |
 | `robustness_weight` | `number \| null` | Robustness weight, if `return_robustness_weights` was set |
 | `iterations_used` | `number \| null` | Robustness iterations performed |
 
-There is no `Diagnostics` object for `OnlineLowess`: `return_diagnostics` has no effect and `OnlineOutput` carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful.
+There is no `Diagnostics` object or `return_diagnostics` option for `OnlineLowess`: `OnlineOutput` carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful.

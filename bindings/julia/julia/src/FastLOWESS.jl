@@ -792,10 +792,7 @@ mutable struct OnlineLowess
 		update_mode::String = "incremental",
 		auto_converge::Float64 = NaN,
 		return_robustness_weights::Bool = false,
-		return_diagnostics::Bool = false,
-		return_residuals::Bool = false,
 		zero_weight_fallback::String = "use_local_mean",
-		parallel::Bool = false,
 	)
 		handle = @ccall current_library().jl_online_lowess_new(
 			fraction::Cdouble,
@@ -810,10 +807,7 @@ mutable struct OnlineLowess
 			update_mode::Cstring,
 			auto_converge::Cdouble,
 			Cint(return_robustness_weights)::Cint,
-			Cint(return_diagnostics)::Cint,
-			Cint(return_residuals)::Cint,
 			zero_weight_fallback::Cstring,
-			Cint(parallel)::Cint,
 		)::Ptr{Cvoid}
 
 		if handle == C_NULL

@@ -66,16 +66,13 @@ result.ifPresent(r -> System.out.println(r.y()));
 |`boundaryPolicy` |`String` |`"extend"` |Boundary handling policy
 |`zeroWeightFallback` |`String` |`"use_local_mean"` |Zero-weight handling
 |`autoConverge` |`double` |`NaN` |Auto-convergence tolerance
-|`returnDiagnostics` |`boolean` |`false` |No effect for Online -- `PointResult` has no diagnostics field
-|`returnResiduals` |`boolean` |`false` |No effect for Online -- `residual()` is always populated
 |`returnRobustnessWeights` |`boolean` |`false` |Include `robustnessWeight()` in result
 |`windowCapacity` |`int` |`1000` |Maximum number of recent points retained
 |`minPoints` |`int` |`2` |Minimum points required before output starts
 |`updateMode` |`String` |`"incremental"` |How the window is updated as new points arrive: `incremental`, `full`
-|`parallel` |`boolean` |`false` |Enable parallel execution (off by default; online LOWESS fits one point at a time)
 |===
 
-Confidence/prediction intervals, standard errors, cross-validation, GPU `backend`, `customWeights`, and `returnSorted` are Batch-only and not available here; see xref:./api.adoc[API] for those.
+Confidence/prediction intervals, standard errors, cross-validation, GPU `backend`, `customWeights`, `returnSorted`, `returnDiagnostics`, `returnResiduals`, and `parallel` are Batch-only (or Batch/Streaming-only) and not available here; see xref:./api.adoc[API] for those.
 
 == Options
 
@@ -199,12 +196,12 @@ Returned by `addPoint` once the window has enough points (`Optional.empty()` unt
 
 |`y()` |`double` |Smoothed value for the latest point.
 |`standardError()` |`OptionalDouble` |Always empty -- standard errors require `returnSe`/confidence intervals, which are Batch-only.
-|`residual()` |`OptionalDouble` |Residual y minus smoothed; always populated regardless of `returnResiduals`.
+|`residual()` |`OptionalDouble` |Residual y minus smoothed; always populated (there is no `returnResiduals` option for Online).
 |`robustnessWeight()` |`OptionalDouble` |Robustness weight, if `returnRobustnessWeights` was set.
 |`iterationsUsed()` |`OptionalInt` |Robustness iterations performed.
 |===
 
-There is no diagnostics accessor for `OnlineLowess`: `returnDiagnostics` has no effect and `PointResult` carries no diagnostics field, since diagnostics like RMSE/R^2^ need more than one point's worth of history to be meaningful.
+There is no diagnostics accessor or `returnDiagnostics` option for `OnlineLowess`: `PointResult` carries no diagnostics field, since diagnostics like RMSE/R^2^ need more than one point's worth of history to be meaningful.
 
 == Example
 

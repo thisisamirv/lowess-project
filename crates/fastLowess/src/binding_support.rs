@@ -1012,18 +1012,6 @@ impl<T: Float> ParallelBatchLowessBuilder<T> {
 }
 
 impl<T: Float> ParallelOnlineLowessBuilder<T> {
-    // Set parallel execution mode.
-    pub fn parallel(mut self, parallel: bool) -> Self {
-        self.base.parallel = Some(parallel);
-        self
-    }
-
-    // Set the execution backend.
-    pub fn backend(mut self, backend: Backend) -> Self {
-        self.base.backend = Some(backend);
-        self
-    }
-
     // Set the smoothing fraction (span).
     pub fn fraction(mut self, fraction: T) -> Self {
         self.base.fraction = fraction;
@@ -1088,12 +1076,6 @@ impl<T: Float> ParallelOnlineLowessBuilder<T> {
         self
     }
 
-    // Set whether to compute residuals.
-    pub fn compute_residuals(mut self, enabled: bool) -> Self {
-        self.base.compute_residuals = enabled;
-        self
-    }
-
     // Set whether to return robustness weights.
     pub fn return_robustness_weights(mut self, enabled: bool) -> Self {
         self.base.return_robustness_weights = enabled;
@@ -1127,12 +1109,6 @@ impl<T: Float> ParallelStreamingLowessBuilder<T> {
     // Set parallel execution mode.
     pub fn parallel(mut self, parallel: bool) -> Self {
         self.base.parallel = Some(parallel);
-        self
-    }
-
-    // Set the execution backend.
-    pub fn backend(mut self, backend: Backend) -> Self {
-        self.base.backend = Some(backend);
         self
     }
 

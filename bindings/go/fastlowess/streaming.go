@@ -10,9 +10,51 @@ import (
 	"runtime"
 )
 
-// StreamingOptions configures a StreamingLowess model.
+// StreamingOptions configures a StreamingLowess model. Confidence/prediction
+// intervals, standard errors, cross-validation, and the GPU Backend are
+// Batch-only and have no effect here.
 type StreamingOptions struct {
-	Options
+	// Fraction is the smoothing fraction, in (0, 1]. Default: 0.67.
+	Fraction float64
+	// Iterations is the number of robustness iterations, in [0, 1000]. Default: 3.
+	Iterations int
+	// Delta is the interpolation distance threshold. Nil sets it automatically
+	// to 0.0 for Streaming (interpolation disabled).
+	Delta *float64
+
+	// WeightFunction is the kernel weight function: "tricube" (default),
+	// "gaussian", "uniform" (alias "boxcar"), "cosine", "epanechnikov",
+	// "biweight" (alias "bisquare"), or "triangle" (alias "triangular").
+	WeightFunction string
+	// RobustnessMethod is the outlier downweighting method: "bisquare"
+	// (default, alias "biweight"), "huber", or "talwar".
+	RobustnessMethod string
+	// ScalingMethod is the residual scale estimator for robustness weights:
+	// "mad" (default, alias "median_absolute_deviation"), "mar" (alias
+	// "median_absolute_residual"), or "mean" (alias "mean_absolute_residual").
+	ScalingMethod string
+	// BoundaryPolicy is the boundary handling strategy: "extend" (default,
+	// alias "pad"), "reflect" (alias "mirror"), "zero", or "noboundary"
+	// (alias "none").
+	BoundaryPolicy string
+	// ZeroWeightFallback is the fallback policy when all robustness weights
+	// drop to zero: "use_local_mean" (default, aliases "local_mean", "mean"),
+	// "return_original" (alias "original"), or "return_none" (alias "none").
+	ZeroWeightFallback string
+
+	// AutoConverge is the convergence tolerance for early stopping of
+	// robustness iterations. Nil disables early stopping.
+	AutoConverge *float64
+
+	// ReturnDiagnostics requests fit-quality metrics (RMSE, MAE, R-squared, AIC, etc.).
+	ReturnDiagnostics bool
+	// ReturnResiduals requests residuals in the result.
+	ReturnResiduals bool
+	// ReturnRobustnessWeights requests per-point robustness weights in the result.
+	ReturnRobustnessWeights bool
+	// Parallel enables parallel processing. Default: true.
+	Parallel bool
+
 	// ChunkSize is the number of points processed per chunk. Default: 5000.
 	ChunkSize int
 	// Overlap is the number of points shared between consecutive chunks.
@@ -26,10 +68,17 @@ type StreamingOptions struct {
 // DefaultStreamingOptions returns recommended defaults for streaming use.
 func DefaultStreamingOptions() StreamingOptions {
 	return StreamingOptions{
-		Options:       DefaultOptions(),
-		ChunkSize:     5000,
-		Overlap:       -1,
-		MergeStrategy: "weighted_average",
+		Fraction:           0.67,
+		Iterations:         3,
+		WeightFunction:     "tricube",
+		RobustnessMethod:   "bisquare",
+		ScalingMethod:      "mad",
+		BoundaryPolicy:     "extend",
+		ZeroWeightFallback: "use_local_mean",
+		Parallel:           true,
+		ChunkSize:          5000,
+		Overlap:            -1,
+		MergeStrategy:      "weighted_average",
 	}
 }
 
@@ -56,8 +105,6 @@ func NewStreamingLowess(opts StreamingOptions) (*StreamingLowess, error) {
 	ms := cStringOrNil(opts.MergeStrategy)
 	defer freeCString(ms)
 
-	ci, ciSet := optPtr(opts.ConfidenceIntervals)
-	pi, piSet := optPtr(opts.PredictionIntervals)
 	delta, deltaSet := optPtr(opts.Delta)
 	autoConverge, autoConvergeSet := optPtr(opts.AutoConverge)
 
@@ -78,8 +125,6 @@ func NewStreamingLowess(opts StreamingOptions) (*StreamingLowess, error) {
 			C.int(opts.ChunkSize),
 			C.int(opts.Overlap),
 			ms,
-			optFloat(ci, ciSet),
-			optFloat(pi, piSet),
 		)
 		if ptr == nil {
 			errMsg = lastError()

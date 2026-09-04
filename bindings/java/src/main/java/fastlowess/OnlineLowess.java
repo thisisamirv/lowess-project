@@ -25,16 +25,11 @@ public final class OnlineLowess implements AutoCloseable {
                 c.scalingMethod,
                 c.boundaryPolicy,
                 c.returnRobustnessWeights,
-                c.returnDiagnostics,
-                c.returnResiduals,
                 c.zeroWeightFallback,
                 c.autoConverge,
-                c.parallel,
                 options.windowCapacity,
                 options.minPoints,
-                options.updateMode,
-                c.confidenceIntervals,
-                c.predictionIntervals);
+                options.updateMode);
     }
 
     /**

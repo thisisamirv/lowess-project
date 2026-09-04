@@ -12,43 +12,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **lowess:**
 
-- Added a `return_sorted` option to the batch adapter's builder (`.return_sorted()`), to return results sorted ascending by `x` instead of in the original input order (statsmodels-style). Default `false` preserves the existing always-unsorted behavior.
+- Added `.return_sorted()` to the batch builder, to return results sorted ascending by `x` instead of input order. Default `false`.
 
 **fastLowess:**
 
-- Added `return_sorted` to `BuilderOptionSet`/`TypedBuilderOptionSet` and the shared `Lowess` (Batch) builder, so every language binding can opt in via the same option name.
+- Added `return_sorted` to `BuilderOptionSet`/`TypedBuilderOptionSet` and the `Lowess` (Batch) builder.
 
 **Python:**
 
-- Added a `return_sorted` option to `Lowess`, to return results sorted ascending by `x` instead of in original input order.
+- Added a `return_sorted` option to `Lowess`.
 
 **R:**
 
-- Added a `return_sorted` option to `Lowess()`, to return results sorted ascending by `x` instead of in original input order.
+- Added a `return_sorted` option to `Lowess()`.
 
 **Julia:**
 
-- Added a `return_sorted` option to `Lowess`, to return results sorted ascending by `x` instead of in original input order.
+- Added a `return_sorted` option to `Lowess`.
 
 **Node.js:**
 
-- Added a `return_sorted` option to `Lowess`'s `SmoothOptions`, to return results sorted ascending by `x` instead of in original input order.
+- Added a `return_sorted` option to `Lowess`'s `SmoothOptions`.
 
 **WASM:**
 
-- Added a `return_sorted` option to `Lowess`'s `SmoothOptions`, to return results sorted ascending by `x` instead of in original input order.
+- Added a `return_sorted` option to `Lowess`'s `SmoothOptions`.
 
 **C++:**
 
-- Added a `return_sorted` option to `LowessOptions`, to return results sorted ascending by `x` instead of in original input order.
+- Added a `return_sorted` option to `LowessOptions`.
 
 **Go:**
 
-- Added a `ReturnSorted` option to `Options`, to return results sorted ascending by `X` instead of in original input order.
+- Added a `ReturnSorted` option to `Options`.
 
 **Java:**
 
-- Added a `returnSorted` option to `Options`, to return results sorted ascending by `x` instead of in original input order.
+- Added a `returnSorted` option to `Options`.
 
 ### Changed
 
@@ -56,13 +56,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Improved API docs for all bindings and crates significantly.
 
+**lowess:**
+
+- Removed the dead `compute_residuals`/`parallel`/`backend` fields from `OnlineLowessBuilder` — never read (or, for `backend`, never reachable). `StreamingLowessBuilder` lost its unused `backend` field too.
+
+**fastLowess:**
+
+- Removed the dead `compute_residuals`/`parallel`/`backend` fields from `OnlineLowessBuilder`; `StreamingLowessBuilder` lost its unused `backend` field.
+- Removed `.confidence_intervals()`, `.prediction_intervals()`, and `.return_se()` from the `StreamingLowess`/`OnlineLowess` wrapper structs — these leaked in via the shared builder macro and were silently ignored. Breaking change for direct Rust consumers; `Lowess`'s own methods are unaffected.
+
+**Python:**
+
+- Removed `return_diagnostics`, `return_residuals`, and `parallel` from `OnlineLowess`'s constructor — accepted but had no effect. Breaking change; `Lowess`/`StreamingLowess` are unaffected.
+
+**R:**
+
+- Removed `return_diagnostics`, `return_residuals`, and `parallel` from `OnlineLowess()`'s constructor, same reason as Python. Breaking change.
+- Removed `confidence_intervals` and `prediction_intervals` from `OnlineLowess()`'s and `StreamingLowess()`'s constructors — never actually computed. Breaking change; `Lowess()` is unaffected.
+
+**Julia:**
+
+- Removed `return_diagnostics`, `return_residuals`, and `parallel` from `OnlineLowess`, same reason as Python. Breaking change.
+
+**Node.js:**
+
+- Split `SmoothOptions` into `SmoothOptions` (Batch), `StreamingSmoothOptions`, and `OnlineSmoothOptions`. Passing Batch-only fields to `StreamingLowess`/`OnlineLowess` is now a TypeScript compile-time error instead of a silent no-op. Breaking change for TypeScript consumers; `Lowess` is unaffected.
+
+**WASM:**
+
+- Same `SmoothOptions` split as Node.js, for the same reason. Breaking change for TypeScript consumers.
+
 **C++:**
 
-- Repinned the macOS x64 job in `release-cpp.yml` from `macos-13` to `macos-15-intel`, GitHub's dedicated Intel-macOS label.
+- Repinned the macOS x64 job in `release-cpp.yml` to `macos-15-intel`.
+- Removed `return_diagnostics`, `return_residuals`, and `parallel` from `OnlineOptions`, same reason as Python. Breaking change.
+- Removed `confidence_intervals` and `prediction_intervals` from `OnlineOptions`; `StreamingOptions` no longer forwards its inherited copies. Breaking change.
+- Removed the dead `custom_weights` field from `OnlineOptions` — declared but never read. Breaking change.
 
 **Go:**
 
-- Repinned the macOS x64 job in `release-go.yml` from `macos-13` to `macos-15-intel`.
+- Repinned the macOS x64 job in `release-go.yml` to `macos-15-intel`.
+- `OnlineOptions` no longer embeds `Options`; removed `ReturnDiagnostics`, `ReturnResiduals`, `Parallel`, and the never-read `Backend`. Breaking change.
+- `StreamingOptions` no longer embeds `Options` either; both lost `ConfidenceIntervals`/`PredictionIntervals`, and `StreamingOptions` also lost `ReturnSE`/`ReturnSorted`/`CVFractions`/`CVMethod`/`CVK`/`CVSeed`/`Backend`. Breaking change.
+
+**Java:**
+
+- Removed `returnDiagnostics`, `returnResiduals`, and `parallel` from `OnlineOptions.Builder`, same reason as Python. Breaking change.
+- Removed `confidenceIntervals` and `predictionIntervals` from `OnlineOptions.Builder` and `StreamingOptions.Builder`. Breaking change.
 
 ## 3.2.1
 

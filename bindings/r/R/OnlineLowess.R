@@ -50,12 +50,7 @@ OnlineLowess <- function(
     zero_weight_fallback = "use_local_mean",
     update_mode = "incremental",
     auto_converge = NULL,
-    return_robustness_weights = FALSE,
-    return_diagnostics = FALSE,
-    return_residuals = FALSE,
-    parallel = FALSE,
-    confidence_intervals = NULL,
-    prediction_intervals = NULL
+    return_robustness_weights = FALSE
 ) {
     reject_extra_positional_args(sys.call(), "min_points")
     validate_params(
@@ -72,8 +67,7 @@ OnlineLowess <- function(
                 fraction = fraction,
                 window_capacity = window_capacity,
                 min_points = min_points,
-                iterations = iterations,
-                parallel = parallel
+                iterations = iterations
             )
         ),
         class = "OnlineLowess"

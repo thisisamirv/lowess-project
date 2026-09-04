@@ -490,9 +490,6 @@ pub unsafe extern "C" fn cpp_streaming_new(
     chunk_size: c_int,
     overlap: c_int,
     merge_strategy: *const c_char,
-    // Interval options
-    confidence_intervals: c_double,
-    prediction_intervals: c_double,
 ) -> *mut CppStreamingLowess {
     with_panic_ptr(|| {
         clear_last_error();
@@ -541,10 +538,8 @@ pub unsafe extern "C" fn cpp_streaming_new(
                 return_residuals: return_residuals != 0,
                 return_robustness_weights: return_robustness_weights != 0,
                 return_diagnostics: return_diagnostics != 0,
-                confidence_intervals: (!confidence_intervals.is_nan())
-                    .then_some(confidence_intervals),
-                prediction_intervals: (!prediction_intervals.is_nan())
-                    .then_some(prediction_intervals),
+                confidence_intervals: None,
+                prediction_intervals: None,
                 parallel: Some(parallel != 0),
                 ..Default::default()
             },
@@ -650,18 +645,12 @@ pub unsafe extern "C" fn cpp_online_new(
     scaling_method: *const c_char,
     boundary_policy: *const c_char,
     return_robustness_weights: c_int,
-    return_diagnostics: c_int,
-    return_residuals: c_int,
     zero_weight_fallback: *const c_char,
     auto_converge: c_double,
-    parallel: c_int,
     // Online opts
     window_capacity: c_int,
     min_points: c_int,
     update_mode: *const c_char,
-    // Interval options
-    confidence_intervals: c_double,
-    prediction_intervals: c_double,
 ) -> *mut CppOnlineLowess {
     with_panic_ptr(|| {
         clear_last_error();
@@ -712,14 +701,12 @@ pub unsafe extern "C" fn cpp_online_new(
                 boundary_policy: Some(bp_str),
                 scaling_method: Some(sm_str),
                 auto_converge: (!auto_converge.is_nan()).then_some(auto_converge),
-                return_residuals: return_residuals != 0,
+                return_residuals: false,
                 return_robustness_weights: return_robustness_weights != 0,
-                return_diagnostics: return_diagnostics != 0,
-                confidence_intervals: (!confidence_intervals.is_nan())
-                    .then_some(confidence_intervals),
-                prediction_intervals: (!prediction_intervals.is_nan())
-                    .then_some(prediction_intervals),
-                parallel: Some(parallel != 0),
+                return_diagnostics: false,
+                confidence_intervals: None,
+                prediction_intervals: None,
+                parallel: None,
                 ..Default::default()
             },
         ) {

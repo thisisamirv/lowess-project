@@ -46,7 +46,7 @@ Before requesting `backend = "gpu"` (or the language's equivalent spelling), che
 
 # use fastLowess::prelude::*;
 # use std::f64::consts::TAU;
-# fn main() -> Result<(), fastLowess::LowessError> {
+# fn main() -> Result<(), LowessError> {
 // The `gpu` feature is a compile-time choice, not a runtime check —
 // if the crate was built with `features = ["gpu"]`, `Backend::GPU` is available.
 
@@ -88,7 +88,7 @@ use fastLowess::prelude::*;
 
 fn main() -> Result<(), LowessError> {
     let model = Lowess::new()
-        .backend(Backend::GPU)
+        .backend("gpu")
         .confidence_intervals(0.95)
         .build()?;
 

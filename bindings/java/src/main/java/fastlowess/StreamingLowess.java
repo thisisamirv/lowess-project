@@ -30,9 +30,7 @@ public final class StreamingLowess implements AutoCloseable {
                 c.parallel,
                 options.chunkSize,
                 options.overlap,
-                options.mergeStrategy,
-                c.confidenceIntervals,
-                c.predictionIntervals);
+                options.mergeStrategy);
     }
 
     /**

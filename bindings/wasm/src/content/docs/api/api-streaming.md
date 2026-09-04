@@ -28,7 +28,7 @@ console.log("typeof process_chunk:", typeof stream.process_chunk);
 typeof process_chunk: function
 ```
 
-- `options`: An object containing `LowessOptions` fields.
+- `options`: An object containing `StreamingSmoothOptions` fields (a subset of the Batch `LowessOptions` fields — see below).
 - `streamingOptions`: An object containing `StreamingOptions` fields.
 
 #### `process_chunk(x, y)`
@@ -75,7 +75,7 @@ Fraction used: 0.5
 
 ## Options Structure
 
-### `StreamingOptions` (inherits `LowessOptions`)
+### `StreamingSmoothOptions`
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |

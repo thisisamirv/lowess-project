@@ -32,7 +32,6 @@ use crate::math::boundary::BoundaryPolicy;
 use crate::math::defaults::*;
 use crate::math::kernel::WeightFunction;
 use crate::math::scaling::ScalingMethod;
-use crate::primitives::backend::Backend;
 use crate::primitives::buffer::{StreamingBuffer, VecExt};
 use crate::primitives::errors::LowessError;
 use crate::primitives::sorting::sort_by_x;
@@ -125,10 +124,6 @@ pub struct StreamingLowessBuilder<T: Float> {
     #[doc(hidden)]
     pub custom_fit_pass: Option<FitPassFn<T>>,
 
-    // Execution backend hint.
-    #[doc(hidden)]
-    pub backend: Option<Backend>,
-
     // Parallel execution hint.
     #[doc(hidden)]
     pub parallel: Option<bool>,
@@ -168,7 +163,6 @@ impl<T: Float> StreamingLowessBuilder<T> {
             custom_cv_pass: None,
             custom_interval_pass: None,
             custom_fit_pass: None,
-            backend: None,
             parallel: None,
             duplicate_param: None,
         }
@@ -268,7 +262,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
             custom_interval_pass: self.config.custom_interval_pass,
             custom_fit_pass: self.config.custom_fit_pass,
             parallel: self.config.parallel.unwrap_or(false),
-            backend: self.config.backend,
+            backend: None,
             delegate_boundary_handling: false,
             custom_weights: None,
         };

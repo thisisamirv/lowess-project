@@ -164,8 +164,9 @@ struct StreamingOptions : public LowessOptions {
 /**
  * @brief Options for online LOWESS.
  *
- * Mirrors LowessOptions fields but defaults parallel to false, since
- * online LOWESS processes one point at a time and parallelism rarely helps.
+ * Online LOWESS processes one point at a time, so it has no `parallel` or
+ * `backend` option, and diagnostics/residuals are always computed for free.
+ * Confidence/prediction intervals also aren't available here (Batch-only).
  */
 struct OnlineOptions {
   double fraction = detail::k_default_fraction; ///< Smoothing fraction (0, 1]
@@ -178,16 +179,9 @@ struct OnlineOptions {
   std::string boundary_policy = "extend";
   std::string zero_weight_fallback = "use_local_mean";
 
-  double confidence_intervals = NAN; ///< Confidence level (NaN = disabled)
-  double prediction_intervals = NAN; ///< Prediction level (NaN = disabled)
-  double auto_converge = NAN;        ///< Auto-convergence threshold
+  double auto_converge = NAN; ///< Auto-convergence threshold
 
-  bool return_diagnostics = false;
-  bool return_residuals = false;
   bool return_robustness_weights = false;
-  bool parallel = false; ///< Parallelism rarely helps for single-point updates
-
-  std::vector<double> custom_weights;
 
   int window_capacity = detail::k_default_window_capacity;
   int min_points = detail::k_default_min_points;
@@ -514,8 +508,7 @@ public:
         options.return_robustness_weights ? 1 : 0,
         options.zero_weight_fallback.c_str(), options.auto_converge,
         options.parallel ? 1 : 0, options.chunk_size, options.overlap,
-        options.merge_strategy.c_str(), options.confidence_intervals,
-        options.prediction_intervals);
+        options.merge_strategy.c_str());
   }
 
   ~StreamingLowess() {
@@ -592,11 +585,9 @@ public:
         options.weight_function.c_str(), options.robustness_method.c_str(),
         options.scaling_method.c_str(), options.boundary_policy.c_str(),
         options.return_robustness_weights ? 1 : 0,
-        options.return_diagnostics ? 1 : 0, options.return_residuals ? 1 : 0,
         options.zero_weight_fallback.c_str(), options.auto_converge,
-        options.parallel ? 1 : 0, options.window_capacity, options.min_points,
-        options.update_mode.c_str(), options.confidence_intervals,
-        options.prediction_intervals);
+        options.window_capacity, options.min_points,
+        options.update_mode.c_str());
   }
 
   ~OnlineLowess() {

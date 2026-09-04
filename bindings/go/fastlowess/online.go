@@ -10,9 +10,45 @@ import (
 	"runtime"
 )
 
-// OnlineOptions configures an OnlineLowess model.
+// OnlineOptions configures an OnlineLowess model. Online LOWESS processes
+// one point at a time, so it has no Parallel or Backend option, and
+// ReturnDiagnostics/ReturnResiduals are always computed for free.
 type OnlineOptions struct {
-	Options
+	// Fraction is the smoothing fraction, in (0, 1]. Default: 0.67.
+	Fraction float64
+	// Iterations is the number of robustness iterations, in [0, 1000]. Default: 3.
+	Iterations int
+	// Delta is the interpolation distance threshold. Nil sets it automatically
+	// to 0.0 for Online (interpolation disabled).
+	Delta *float64
+
+	// WeightFunction is the kernel weight function: "tricube" (default),
+	// "gaussian", "uniform" (alias "boxcar"), "cosine", "epanechnikov",
+	// "biweight" (alias "bisquare"), or "triangle" (alias "triangular").
+	WeightFunction string
+	// RobustnessMethod is the outlier downweighting method: "bisquare"
+	// (default, alias "biweight"), "huber", or "talwar".
+	RobustnessMethod string
+	// ScalingMethod is the residual scale estimator for robustness weights:
+	// "mad" (default, alias "median_absolute_deviation"), "mar" (alias
+	// "median_absolute_residual"), or "mean" (alias "mean_absolute_residual").
+	ScalingMethod string
+	// BoundaryPolicy is the boundary handling strategy: "extend" (default,
+	// alias "pad"), "reflect" (alias "mirror"), "zero", or "noboundary"
+	// (alias "none").
+	BoundaryPolicy string
+	// ZeroWeightFallback is the fallback policy when all robustness weights
+	// drop to zero: "use_local_mean" (default, aliases "local_mean", "mean"),
+	// "return_original" (alias "original"), or "return_none" (alias "none").
+	ZeroWeightFallback string
+
+	// AutoConverge is the convergence tolerance for early stopping of
+	// robustness iterations. Nil disables early stopping.
+	AutoConverge *float64
+
+	// ReturnRobustnessWeights requests per-point robustness weights in the result.
+	ReturnRobustnessWeights bool
+
 	// WindowCapacity is the maximum number of recent points retained.
 	// Default: 1000.
 	WindowCapacity int
@@ -24,17 +60,19 @@ type OnlineOptions struct {
 	UpdateMode string
 }
 
-// DefaultOnlineOptions returns recommended defaults for online use. Note
-// Parallel defaults to false, since per-point updates rarely benefit from
-// parallelism.
+// DefaultOnlineOptions returns recommended defaults for online use.
 func DefaultOnlineOptions() OnlineOptions {
-	opts := DefaultOptions()
-	opts.Parallel = false
 	return OnlineOptions{
-		Options:        opts,
-		WindowCapacity: 1000,
-		MinPoints:      2,
-		UpdateMode:     "incremental",
+		Fraction:           0.67,
+		Iterations:         3,
+		WeightFunction:     "tricube",
+		RobustnessMethod:   "bisquare",
+		ScalingMethod:      "mad",
+		BoundaryPolicy:     "extend",
+		ZeroWeightFallback: "use_local_mean",
+		WindowCapacity:     1000,
+		MinPoints:          2,
+		UpdateMode:         "incremental",
 	}
 }
 
@@ -61,8 +99,6 @@ func NewOnlineLowess(opts OnlineOptions) (*OnlineLowess, error) {
 	um := cStringOrNil(opts.UpdateMode)
 	defer freeCString(um)
 
-	ci, ciSet := optPtr(opts.ConfidenceIntervals)
-	pi, piSet := optPtr(opts.PredictionIntervals)
 	delta, deltaSet := optPtr(opts.Delta)
 	autoConverge, autoConvergeSet := optPtr(opts.AutoConverge)
 
@@ -75,16 +111,11 @@ func NewOnlineLowess(opts OnlineOptions) (*OnlineLowess, error) {
 			optFloat(delta, deltaSet),
 			wf, rm, sm, bp,
 			boolToCInt(opts.ReturnRobustnessWeights),
-			boolToCInt(opts.ReturnDiagnostics),
-			boolToCInt(opts.ReturnResiduals),
 			zwf,
 			optFloat(autoConverge, autoConvergeSet),
-			boolToCInt(opts.Parallel),
 			C.int(opts.WindowCapacity),
 			C.int(opts.MinPoints),
 			um,
-			optFloat(ci, ciSet),
-			optFloat(pi, piSet),
 		)
 		if ptr == nil {
 			errMsg = lastError()

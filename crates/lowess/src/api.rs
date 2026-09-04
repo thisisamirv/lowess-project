@@ -83,6 +83,7 @@ impl_into_enum_for!(ScalingMethod);
 impl_into_enum_for!(UpdateMode);
 impl_into_enum_for!(WeightFunction);
 impl_into_enum_for!(ZeroWeightFallback);
+impl_into_enum_for!(Backend);
 
 // Mode markers for the type-alias-based builder API.
 #[derive(Debug, Clone, Copy, Default)]
@@ -573,8 +574,11 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
 
     // Set the execution backend hint (only for dev)
     #[doc(hidden)]
-    pub fn backend(mut self, backend: Backend) -> Self {
-        self.backend = Some(backend);
+    pub fn backend(mut self, backend: impl IntoEnum<Backend>) -> Self {
+        match backend.into_enum() {
+            Ok(b) => self.backend = Some(b),
+            Err(e) => self.parse_errors.push(e),
+        }
         self
     }
 
@@ -780,9 +784,6 @@ impl<T: Float> LowessAdapter<T> for Streaming {
         if let Some(ip) = builder.custom_interval_pass {
             result.custom_interval_pass = Some(ip);
         }
-        if let Some(b) = builder.backend {
-            result.backend = Some(b);
-        }
         if let Some(p) = builder.parallel {
             result.parallel = Some(p);
         }
@@ -859,9 +860,6 @@ impl<T: Float> LowessAdapter<T> for Online {
             result.scaling_method = sm;
         }
 
-        if let Some(cr) = builder.compute_residuals {
-            result.compute_residuals = cr;
-        }
         if let Some(rw) = builder.return_robustness_weights {
             result.return_robustness_weights = rw;
         }
@@ -881,12 +879,6 @@ impl<T: Float> LowessAdapter<T> for Online {
         }
         if let Some(ip) = builder.custom_interval_pass {
             result.custom_interval_pass = Some(ip);
-        }
-        if let Some(b) = builder.backend {
-            result.backend = Some(b);
-        }
-        if let Some(p) = builder.parallel {
-            result.parallel = Some(p);
         }
         result.duplicate_param = builder.duplicate_param;
         if result.deferred_error.is_none() && !builder.parse_errors.is_empty() {
@@ -943,6 +935,24 @@ impl FromStr for BoundaryPolicy {
                 option: "boundary_policy",
                 value: s.to_string(),
                 valid: "extend, reflect, zero, noboundary",
+            }),
+        }
+    }
+}
+
+// Backend
+
+impl FromStr for Backend {
+    type Err = LowessError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "cpu" => Ok(Backend::CPU),
+            "gpu" => Ok(Backend::GPU),
+            _ => Err(LowessError::InvalidOption {
+                option: "backend",
+                value: s.to_string(),
+                valid: "cpu, gpu",
             }),
         }
     }

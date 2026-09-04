@@ -95,15 +95,12 @@ fn main() -> Result<(), LowessError> {
 | `boundary_policy(...)` | `boundary_policy` | `"extend"` | Boundary handling policy |
 | `zero_weight_fallback(...)` | `zero_weight_fallback` | `"use_local_mean"` | Zero-weight handling |
 | `auto_converge(T)` | `T: Float` | `NaN` | Auto-convergence tolerance |
-| `return_diagnostics()` | `bool` | `false` | No effect for Online — `OnlineOutput<T>` has no diagnostics field |
-| `return_residuals()` | `bool` | `false` | No effect for Online — `residual` is always included in `OnlineOutput<T>` |
 | `return_robustness_weights()` | `bool` | `false` | Include `robustness_weight` in result |
 | `window_capacity(usize)` | `usize` | `1000` | Max points in sliding window |
 | `min_points(usize)` | `usize` | `2` | Min points before smoothing starts |
 | `update_mode(...)` | `update_mode` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
-| `parallel(bool)` | `bool` | `false` | Enable parallel execution (off by default; online LOWESS fits one point at a time) |
 
-Confidence/prediction intervals, standard errors, cross-validation, GPU `backend`, `custom_weights`, and `return_sorted` are Batch-only and not available here; see [fastLowess](crate::doc::api) for those.
+Confidence/prediction intervals, standard errors, cross-validation, GPU `backend`, `custom_weights`, `return_sorted`, `return_diagnostics()`, `return_residuals()`, and `parallel()` are Batch-only (or Batch/Streaming-only) and not available here; see [fastLowess](crate::doc::api) for those.
 
 ## Options
 
@@ -213,8 +210,8 @@ Returned by `add_point()` inside `Option`. Is `None` while the window is still f
 | --- | --- | --- |
 | `y` | `T` | Smoothed value for the latest point |
 | `standard_error` | `Option<T>` | Always `None` — standard errors require `return_se()`/confidence intervals, which are Batch-only |
-| `residual` | `Option<T>` | Residual y − smoothed; always present regardless of `return_residuals()` |
+| `residual` | `Option<T>` | Residual y − smoothed; always present (there is no `return_residuals()` option for Online) |
 | `robustness_weight` | `Option<T>` | Robustness weight, if `return_robustness_weights()` was set |
 | `iterations_used` | `Option<usize>` | Robustness iterations performed |
 
-There is no `Diagnostics<T>` for `OnlineLowess`: `return_diagnostics()` has no effect and `OnlineOutput<T>` carries no diagnostics field, since diagnostics like RMSE/R2 need more than one point's worth of history to be meaningful.
+There is no `Diagnostics<T>` or `return_diagnostics()` option for `OnlineLowess`: `OnlineOutput<T>` carries no diagnostics field, since diagnostics like RMSE/R2 need more than one point's worth of history to be meaningful.

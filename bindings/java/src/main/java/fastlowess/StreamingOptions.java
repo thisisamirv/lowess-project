@@ -132,26 +132,6 @@ public final class StreamingOptions {
         }
 
         /**
-         * @param confidenceIntervals the confidence level
-         * @return this builder, for chaining
-         * @see Options.Builder#confidenceIntervals(double)
-         */
-        public Builder confidenceIntervals(double confidenceIntervals) {
-            common.confidenceIntervals(confidenceIntervals);
-            return this;
-        }
-
-        /**
-         * @param predictionIntervals the prediction level
-         * @return this builder, for chaining
-         * @see Options.Builder#predictionIntervals(double)
-         */
-        public Builder predictionIntervals(double predictionIntervals) {
-            common.predictionIntervals(predictionIntervals);
-            return this;
-        }
-
-        /**
          * @param returnDiagnostics whether to compute diagnostics
          * @return this builder, for chaining
          * @see Options.Builder#returnDiagnostics(boolean)

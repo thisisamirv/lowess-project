@@ -36,7 +36,7 @@ defer model.Close()
 ```
 
 - `fastlowess.NewOnlineLowess(opts OnlineOptions) (*OnlineLowess, error)` creates a new online model with the given options.
-- `opts`: An `OnlineOptions` struct (embeds `Options`).
+- `opts`: An `OnlineOptions` struct.
 
 **Methods:**
 
@@ -58,7 +58,7 @@ if ok {
 
 ## Options Structure
 
-### `OnlineOptions` (embeds `Options`)
+### `OnlineOptions`
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -71,15 +71,12 @@ if ok {
 | `BoundaryPolicy` | `string` | `"extend"` | Boundary handling policy |
 | `ZeroWeightFallback` | `string` | `"use_local_mean"` | Zero-weight handling |
 | `AutoConverge` | `*float64` | `nil` | Auto-convergence tolerance |
-| `ReturnDiagnostics` | `bool` | `false` | No effect for Online — `PointResult` has no diagnostics field |
-| `ReturnResiduals` | `bool` | `false` | No effect for Online — `Residual` is always populated |
 | `ReturnRobustnessWeights` | `bool` | `false` | Include `RobustnessWeight` in result |
 | `WindowCapacity` | `int` | `1000` | Maximum number of recent points retained |
 | `MinPoints` | `int` | `2` | Minimum points required before output starts |
 | `UpdateMode` | `string` | `"incremental"` | How the window is updated as new points arrive |
-| `Parallel` | `bool` | `false` | Enable parallel execution (off by default; online LOWESS fits one point at a time) |
 
-Confidence/prediction intervals, standard errors, cross-validation, GPU `Backend`, `CustomWeights`, and `ReturnSorted` are Batch-only and not available here; see [API](api.md) for those.
+Confidence/prediction intervals, standard errors, cross-validation, GPU `Backend`, `CustomWeights`, `ReturnSorted`, `ReturnDiagnostics`, `ReturnResiduals`, and `Parallel` are Batch-only (or Batch/Streaming-only) and not available here; see [API](api.md) for those.
 
 ## Options
 
@@ -189,11 +186,11 @@ Returned by `AddPoint` once the window has enough points (`ok == false` until th
 | --- | --- | --- |
 | `Y` | `float64` | Smoothed value for the latest point. |
 | `StandardError` | `float64` | Always `NaN` — standard errors require `ReturnSE`/confidence intervals, which are Batch-only. |
-| `Residual` | `float64` | Residual y − smoothed; always populated regardless of `ReturnResiduals`. |
+| `Residual` | `float64` | Residual y − smoothed; always populated (there is no `ReturnResiduals` option for Online). |
 | `RobustnessWeight` | `float64` | Robustness weight, if `ReturnRobustnessWeights` was set. |
 | `IterationsUsed` | `int` | Robustness iterations performed (`-1` if not applicable). |
 
-There is no diagnostics structure for `OnlineLowess`: `ReturnDiagnostics` has no effect and `PointResult` carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful.
+There is no diagnostics structure or `ReturnDiagnostics` option for `OnlineLowess`: `PointResult` carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful.
 
 ## Example
 

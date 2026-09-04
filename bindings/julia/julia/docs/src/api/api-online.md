@@ -68,15 +68,12 @@ end
 | `boundary_policy` | `String` | `"extend"` | Boundary handling policy |
 | `zero_weight_fallback` | `String` | `"use_local_mean"` | Zero-weight handling |
 | `auto_converge` | `Float64` | `NaN` | Auto-convergence tolerance |
-| `return_diagnostics` | `Bool` | `false` | No effect for Online — `OnlineOutput` has no diagnostics field |
-| `return_residuals` | `Bool` | `false` | No effect for Online — `residual` is always included in `OnlineOutput` |
 | `return_robustness_weights` | `Bool` | `false` | Include `robustness_weight` in result |
 | `window_capacity` | `Int` | `1000` | Max points in sliding window |
 | `min_points` | `Int` | `2` | Min points before smoothing starts |
 | `update_mode` | `String` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
-| `parallel` | `Bool` | `false` | Enable parallel execution (off by default; online LOWESS fits one point at a time) |
 
-Confidence/prediction intervals, standard errors, cross-validation, GPU `backend`, `custom_weights`, and `return_sorted` are Batch-only and not available here; see [Batch Adapter](api.md) for those.
+Confidence/prediction intervals, standard errors, cross-validation, GPU `backend`, `custom_weights`, `return_sorted`, `return_diagnostics`, `return_residuals`, and `parallel` are Batch-only (or Batch/Streaming-only) and not available here; see [Batch Adapter](api.md) for those.
 
 ## Options
 
@@ -186,11 +183,11 @@ Returned by `add_point` once the window has enough points (`nothing` until then)
 | --- | --- | --- |
 | `y` | `Float64` | Smoothed value for the latest point |
 | `standard_error` | `Union{Float64, Nothing}` | Always `nothing` — standard errors require `return_se`/confidence intervals, which are Batch-only |
-| `residual` | `Union{Float64, Nothing}` | Residual y − smoothed; always present regardless of `return_residuals` |
+| `residual` | `Union{Float64, Nothing}` | Residual y − smoothed; always present (there is no `return_residuals` option for Online) |
 | `robustness_weight` | `Union{Float64, Nothing}` | Robustness weight, if `return_robustness_weights` was set |
 | `iterations_used` | `Union{Int, Nothing}` | Robustness iterations performed |
 
-There is no `Diagnostics` object for `OnlineLowess`: `return_diagnostics` has no effect and `OnlineOutput` carries no diagnostics field, since diagnostics like RMSE/R2 need more than one point's worth of history to be meaningful.
+There is no `Diagnostics` object or `return_diagnostics` option for `OnlineLowess`: `OnlineOutput` carries no diagnostics field, since diagnostics like RMSE/R2 need more than one point's worth of history to be meaningful.
 
 ## Example
 

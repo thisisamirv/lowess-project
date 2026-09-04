@@ -18,12 +18,7 @@ OnlineLowess(
     zero_weight_fallback = "use_local_mean",
     update_mode = "incremental",
     auto_converge = NULL,
-    return_robustness_weights = FALSE,
-    return_diagnostics = FALSE,
-    return_residuals = FALSE,
-    parallel = FALSE,
-    confidence_intervals = NULL,
-    prediction_intervals = NULL
+    return_robustness_weights = FALSE
 )
 }
 \arguments{
@@ -80,22 +75,6 @@ iterations. \code{NULL} (default) disables early stopping.}
 
 \item{return_robustness_weights}{Logical; if \code{TRUE}, return per-point
 robustness weights. Default: \code{FALSE}.}
-
-\item{return_diagnostics}{Logical; if \code{TRUE}, return fit-quality
-metrics (RMSE, MAE, R-squared, AIC, etc.). Default: \code{FALSE}.}
-
-\item{return_residuals}{Logical; if \code{TRUE}, return residuals in the
-result. Default: \code{FALSE}.}
-
-\item{parallel}{Logical; enable parallel processing. Default: \code{TRUE}.}
-
-\item{confidence_intervals}{Confidence level for confidence intervals,
-greater than 0 and less than 1 (e.g., 0.95). \code{NULL} (default)
-disables confidence intervals.}
-
-\item{prediction_intervals}{Confidence level for prediction intervals,
-greater than 0 and less than 1 (e.g., 0.95). \code{NULL} (default)
-disables prediction intervals.}
 }
 \value{
 An OnlineLowess object.

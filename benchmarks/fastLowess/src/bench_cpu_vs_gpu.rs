@@ -4,7 +4,6 @@
 // time for each backend. Outputs rust_benchmark_cpu_vs_gpu.json so that
 // compare_cpu_gpu.py can find the crossover points.
 
-use fastLowess::internals::api::Backend;
 use fastLowess::prelude::*;
 use serde::Serialize;
 use std::env;
@@ -67,7 +66,7 @@ fn r3(v: f64) -> f64 {
     (v * 1000.0).round() / 1000.0
 }
 
-fn time_fit(x: &[f64], y: &[f64], fraction: f64, iters: usize, backend: Backend) -> f64 {
+fn time_fit(x: &[f64], y: &[f64], fraction: f64, iters: usize, backend: &str) -> f64 {
     let m = Lowess::new()
         .fraction(fraction)
         .iterations(iters)
@@ -102,7 +101,7 @@ fn main() {
     {
         let (x, y) = generate_sine(1_000);
         for _ in 0..n_warmup {
-            let _ = time_fit(&x, &y, 0.3, 3, Backend::GPU);
+            let _ = time_fit(&x, &y, 0.3, 3, "gpu");
         }
     }
     eprintln!("GPU warm-up done.\n");
@@ -129,10 +128,10 @@ fn main() {
 
                 // ── CPU parallel ──────────────────────────────────────────
                 for _ in 0..n_warmup {
-                    let _ = time_fit(&x, &y, fraction, iters, Backend::CPU);
+                    let _ = time_fit(&x, &y, fraction, iters, "cpu");
                 }
                 let mut cpu_times: Vec<f64> = (0..n_timed)
-                    .map(|_| time_fit(&x, &y, fraction, iters, Backend::CPU))
+                    .map(|_| time_fit(&x, &y, fraction, iters, "cpu"))
                     .collect();
                 cpu_times.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
@@ -140,10 +139,10 @@ fn main() {
                 // Per-cell warm-up matches CPU warm-up: lets wgpu settle buffer
                 // allocations and dispatch parameters for this (n, fraction, iters).
                 for _ in 0..n_warmup {
-                    let _ = time_fit(&x, &y, fraction, iters, Backend::GPU);
+                    let _ = time_fit(&x, &y, fraction, iters, "gpu");
                 }
                 let mut gpu_times: Vec<f64> = (0..n_timed)
-                    .map(|_| time_fit(&x, &y, fraction, iters, Backend::GPU))
+                    .map(|_| time_fit(&x, &y, fraction, iters, "gpu"))
                     .collect();
                 gpu_times.sort_by(|a, b| a.partial_cmp(b).unwrap());
 

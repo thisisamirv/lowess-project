@@ -141,9 +141,7 @@ final class NativeBridge {
             boolean parallel,
             int chunkSize,
             int overlap,
-            String mergeStrategy,
-            double confidenceIntervals,
-            double predictionIntervals);
+            String mergeStrategy);
 
     static native NativeResult streamingProcess(long handle, double[] x, double[] y);
 
@@ -160,16 +158,11 @@ final class NativeBridge {
             String scalingMethod,
             String boundaryPolicy,
             boolean returnRobustnessWeights,
-            boolean returnDiagnostics,
-            boolean returnResiduals,
             String zeroWeightFallback,
             double autoConverge,
-            boolean parallel,
             int windowCapacity,
             int minPoints,
-            String updateMode,
-            double confidenceIntervals,
-            double predictionIntervals);
+            String updateMode);
 
     static native NativeOnlineOutput onlineAddPoint(long handle, double x, double y);
 
