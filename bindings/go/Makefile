@@ -26,7 +26,10 @@ GO_CARGO_TARGET :=
 # binding which targets MSVC. There's no aarch64-pc-windows-gnu Rust target,
 # so arm64 hosts use the gnullvm ABI (llvm-mingw) instead.
 ifeq ($(HOST_PLATFORM),windows)
-	ifeq ($(PROCESSOR_ARCHITECTURE),ARM64)
+	# make/bash on windows-11-arm runners are usually x64 binaries running
+	# under emulation, so PROCESSOR_ARCHITECTURE reports AMD64 there; the true
+	# host arch only shows up in PROCESSOR_ARCHITEW6432 in that case.
+	ifneq (,$(filter ARM64,$(PROCESSOR_ARCHITECTURE) $(PROCESSOR_ARCHITEW6432)))
 		GO_CARGO_TARGET := --target aarch64-pc-windows-gnullvm
 		GO_LIBRARY_DIR  := target/aarch64-pc-windows-gnullvm/release-c
 	else
