@@ -46,11 +46,7 @@ jobs:
 
       - name: Install cppcheck (Windows)
         if: runner.os == 'Windows'
-        run: |
-          winget install --id Cppcheck.Cppcheck --exact --accept-source-agreements --accept-package-agreements
-          $cppcheckExe = Get-ChildItem -Path "C:\Program Files\Cppcheck","$env:LOCALAPPDATA\Programs\Cppcheck" -Filter cppcheck.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
-          if (-not $cppcheckExe) { throw "cppcheck.exe not found after winget install" }
-          $cppcheckExe.DirectoryName | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+        run: choco install cppcheck -y
 
       - name: Install cppcheck (Linux)
         if: runner.os == 'Linux'
