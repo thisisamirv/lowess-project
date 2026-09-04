@@ -46,7 +46,11 @@ jobs:
 
       - name: Install cppcheck (Windows)
         if: runner.os == 'Windows'
-        run: choco install cppcheck -y
+        run: |
+          choco install cppcheck -y
+          $cppcheckExe = Get-ChildItem -Path "C:\Program Files\Cppcheck" -Filter cppcheck.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $cppcheckExe) { throw "cppcheck.exe not found after choco install" }
+          $cppcheckExe.DirectoryName | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
 
       - name: Install cppcheck (Linux)
         if: runner.os == 'Linux'
