@@ -4,24 +4,33 @@ weight: 100
 ---
 
 <!-- markdownlint-disable MD024 MD025 -->
-# fastlowess (Go) (development version)
+# fastlowess (Go) 3.2.1
 
 ## Added
 
-* Added `dev/bump_version.py --version X.Y.Z`, which updates the version across every Rust crate/binding `Cargo.toml`, the internal `fastLowess`/`lowess` path-dependency requirements, each binding's own version file (`package.json` + npm subpackages, `pyproject`-adjacent `__version__.py`, `pom.xml`, `DESCRIPTION`, `Project.toml`, `version.go`, `CMakeLists.txt`, `FastLowess.java`), `CITATION.cff`, and the Spack recipe's example `url`, in one pass. Supports `--dry-run`.
-* Added an optional `commit` input to every release workflow's `workflow_dispatch` trigger, so a manual run can pin the checked-out/built commit instead of always building from the triggering ref.
-* Added a `dev/check_pinned_versions.py` pin for the Go binding's docs-site MathJax CDN version (`bindings/go/docs-site/layouts/_partials/docs/inject/head.html`), which was previously unchecked.
+* Added `dev/bump_version.py --version X.Y.Z` to bump every crate/binding's version files, `CITATION.cff`, and the Spack recipe in one pass (supports `--dry-run`); now also bumps `Project.toml`'s `fastlowess_jll` compat floor (safe pre-publish since `make julia-dev`/CI relax it to an OR-list at test-time).
+* Added an optional `commit` input to every release workflow's `workflow_dispatch` trigger, to pin the built commit for manual runs.
+* Added an `aarch64-pc-windows-gnullvm` linker entry to the root `.cargo/config.toml`, matching the existing `x86_64-pc-windows-gnu` one; makes local arm64 Windows builds work without a manual env var.
+* Added a `dev/check_pinned_versions.py` pin for the docs-site MathJax CDN version.
+* Added ARM64 release binaries to `release-go.yml` (native Linux, cross-compiled Windows via `aarch64-pc-windows-gnullvm` + llvm-mingw), with the same macOS x64/`macos-13` mislabeling fix as C++.
+* Added an arm64 job to `ci-go.yml` using the same llvm-mingw toolchain, so arm64 support is verified on every push.
 
 ## Changed
 
-* Added four new pins to `dev/check_pinned_versions.py`: the R binding's `Config/rextendr/version`/`Config/roxygen2/version` (`DESCRIPTION`), and the vendored KaTeX CDN version in both `crates/lowess/katex-header.html` and `crates/fastLowess/katex-header.html`.
-* Changed `check-versions.yml` to no longer fail CI when `dev/check_pinned_versions.py` finds an outdated or unreachable pin; it now opens a GitHub issue titled "Outdated pinned versions" with the check output (or comments on the existing open one), so a stale pin no longer blocks unrelated work.
+* Added four new pins to `dev/check_pinned_versions.py`: R's `rextendr`/`roxygen2` versions and the vendored KaTeX CDN version in both Rust crates.
+* Changed `check-versions.yml` to open/update a GitHub issue instead of failing CI when a pin goes stale or unreachable.
+* Bumped docs-site MathJax CDN version from `3.2.2` to `4.1.3`, updating `dev/check_pinned_versions.py`'s pattern for MathJax 4's CDN layout.
 
 ## Fixed
 
-* Fixed a handful of `R²`/`O(n²)` Unicode superscripts that the earlier ASCII-fication pass (see below) missed: `bindings/r/tests/testthat/test-fastlowess.R`, and the `lowess` crate's `src/algorithms/interpolation.rs`, `src/api.rs`, `src/evaluation/diagnostics.rs`, and `tests/lowess/{adapters_batch_tests,evaluation_diagnostics_tests}.rs` doc-comments/test-comments — all missed because they were added or edited after that pass ran. Replaced with `R2`/`O(n^2)`, matching the rest of the codebase.
-* Fixed `release-conda.yml` failing on `sed: can't read recipe/meta.yaml`: the `fastlowess-feedstock` repo migrated to rattler-build's `recipe/recipe.yaml` format. Updated the version/sha256/build-number `sed` patterns to match and removed the now-dead R-package-name-fix, Python-dependency-injection, and `build_r.sh` generation steps.
-* Fixed pkg.go.dev showing "License: None detected" and refusing to render documentation, and the "Tagged version"/"Stable version" checks failing: the Go module lives at `bindings/go/fastlowess` but `LICENSE-MIT`/`LICENSE-APACHE` only existed one directory up at `bindings/go`, outside where pkg.go.dev scans for a nested module's license. Copied both license files into `bindings/go/fastlowess`. `release-go.yml` now also pushes a `bindings/go/fastlowess/vX.Y.Z` tag (in addition to the repo-wide `vX.Y.Z` release tag), which Go's nested-module versioning requires to recognize a release as tagged/stable.
+* Fixed a handful of `R²`/`O(n²)` Unicode superscripts the earlier ASCII-fication pass missed (added/edited after it ran) — R tests and several `lowess` crate doc-comments — replaced with `R2`/`O(n^2)`.
+* Fixed `release-conda.yml`'s `sed` patterns for the feedstock's new rattler-build `recipe/recipe.yaml` format, removing now-dead R-package-name-fix/Python-dependency-injection/`build_r.sh` steps.
+* Fixed `dev/check_links.py` false-flagging valid R vignette links to a sibling's rendered `.html` (R CMD build renders `.Rmd`→`.html`) as broken.
+* Fixed every binding's/crate's docs and doc-comments describing `LowessResult.x` (and equivalents) as "Sorted x values"; it's actually returned in the same order as the input `x` (the algorithm sorts internally, then un-sorts every output field back to the original order). Also strengthened Python's `test_unsorted_input` to assert this instead of only checking output length.
+* Fixed `.github/dependabot.yml`'s `cargo` entry for `/bindings/r/src`, which could never succeed: its `fastLowess = { path = "vendor/fastLowess" }` path dependency is only committed as `vendor.tar.xz`, never as loose files Dependabot can read. Removed the entry and added `extendr-api`'s version to `dev/check_pinned_versions.py` instead, which also uncovered and fixed a version-comparison bug there: comparing raw tuples treated a shorthand pin like `"0.9"` as older than `"0.9.0"` due to tuple-length tiebreaking; now padded to equal length first.
+* Fixed pkg.go.dev showing "License: None detected" and failing tagged/stable checks: `LICENSE-MIT`/`LICENSE-APACHE` lived one directory above the actual Go module. Copied both into `bindings/go/fastlowess`; `release-go.yml` now also pushes a nested-module `vX.Y.Z` tag.
+* Fixed `OnlineOptions`'s `MinPoints`/`UpdateMode` defaults (`3`/`"full"`) diverging from every other binding and the Rust core; now `2`/`"incremental"`.
+* Fixed `bindings/go/Makefile` and `ffi.go`'s cgo `LDFLAGS` both unconditionally targeting the x64 GNU build on any Windows host, which would have cross-compiled/linked for the wrong architecture on arm64.
 
 # fastlowess (Go) 3.2.0
 

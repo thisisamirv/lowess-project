@@ -43,12 +43,13 @@ printf '{"files":{},"package":null}' >vendor/lowess/.cargo-checksum.json
 printf '{"files":{},"package":null}' >vendor/fastLowess/.cargo-checksum.json
 
 # Temporarily isolate from the monorepo workspace so cargo vendor scopes
-# only to this package, then restore the clean Cargo.toml immediately after
+# only to this package, then restore the clean Cargo.toml immediately after.
+# Restoring from a backup (rather than sed-deleting the appended lines)
+# avoids leaving stray blank lines behind on every run.
+cp Cargo.toml Cargo.toml.orig
 printf '\n\n[patch.crates-io]\nlowess = { path = "vendor/lowess" }\n' >>Cargo.toml
 cargo vendor -q --no-delete vendor
-sed -i.bak '/^\[patch\.crates-io\]/d;/^lowess = { path = "vendor\/lowess" }/d' \
-	Cargo.toml
-rm -f Cargo.toml.bak
+mv Cargo.toml.orig Cargo.toml
 
 # Drop directories that bulk up the archive
 for d in tests benches examples doc docs assets .github .config; do
