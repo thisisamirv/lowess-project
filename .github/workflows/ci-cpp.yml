@@ -74,7 +74,13 @@ jobs:
           cargo clippy --all-targets -- -D warnings
 
       - name: make cpp-dev
-        run: make cpp-dev
+        shell: bash
+        run: |
+          if [ "${{ matrix.os }}" = "windows-11-arm" ]; then
+            make cpp-dev CPP_CARGO_TARGET="--target aarch64-pc-windows-msvc" CPP_LIBRARY_DIR="target/aarch64-pc-windows-msvc/release-c"
+          else
+            make cpp-dev
+          fi
 
   clangcl:
     name: C++ (windows-latest, clang-cl)
