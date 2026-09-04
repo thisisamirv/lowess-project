@@ -87,6 +87,9 @@ jobs:
         run: |
           if [ "${{ matrix.os }}" = "windows-11-arm" ]; then
             export GOOS=windows GOARCH=arm64
+            echo "--- diagnostics ---"
+            go env GOOS GOARCH CC CXX CGO_ENABLED
+            echo "-------------------"
             make go-dev GO_CARGO_TARGET="--target aarch64-pc-windows-gnullvm" GO_LIBRARY_DIR="target/aarch64-pc-windows-gnullvm/release-c"
           else
             make go-dev
