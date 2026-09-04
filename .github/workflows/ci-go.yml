@@ -65,6 +65,11 @@ jobs:
           $bin = (Get-ChildItem -Path C:\llvm-mingw -Directory | Select-Object -First 1).FullName + "\bin"
           Add-Content -Path $env:GITHUB_PATH -Value $bin
           Add-Content -Path $env:GITHUB_ENV -Value "CARGO_TARGET_AARCH64_PC_WINDOWS_GNULLVM_LINKER=aarch64-w64-mingw32-clang"
+          # Go's cgo compiles runtime/cgo's own arch-specific .S files via $CC,
+          # so it must resolve to the target-prefixed wrapper, not a generic
+          # clang/gcc that could default to the wrong triple.
+          Add-Content -Path $env:GITHUB_ENV -Value "CC=aarch64-w64-mingw32-clang"
+          Add-Content -Path $env:GITHUB_ENV -Value "CXX=aarch64-w64-mingw32-clang++"
           choco install make -y
 
       - uses: Swatinem/rust-cache@v2
