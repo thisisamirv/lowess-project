@@ -17,10 +17,10 @@ type OnlineOptions struct {
 	// Default: 1000.
 	WindowCapacity int
 	// MinPoints is the minimum number of points required before the model
-	// starts producing output. Default: 3.
+	// starts producing output. Default: 2.
 	MinPoints int
 	// UpdateMode controls how the window is updated as new points arrive,
-	// e.g. "full" (default).
+	// e.g. "incremental" (default).
 	UpdateMode string
 }
 
@@ -33,8 +33,8 @@ func DefaultOnlineOptions() OnlineOptions {
 	return OnlineOptions{
 		Options:        opts,
 		WindowCapacity: 1000,
-		MinPoints:      3,
-		UpdateMode:     "full",
+		MinPoints:      2,
+		UpdateMode:     "incremental",
 	}
 }
 

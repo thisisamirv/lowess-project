@@ -38,6 +38,8 @@ public final class OnlineOptions {
         String updateMode = null;
 
         Builder() {
+            // Per-point updates rarely benefit from parallelism, unlike Batch/Streaming.
+            common.parallel(false);
         }
 
         /**

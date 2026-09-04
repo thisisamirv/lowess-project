@@ -22,8 +22,8 @@ opts.MinPoints = 10
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `WindowCapacity` | `int` | `1000` | Maximum number of recent points retained. |
-| `MinPoints` | `int` | `3` | Minimum points required before output starts. |
-| `UpdateMode` | `string` | `"full"` | How the window is updated as new points arrive. |
+| `MinPoints` | `int` | `2` | Minimum points required before output starts. |
+| `UpdateMode` | `string` | `"incremental"` | How the window is updated as new points arrive. |
 
 ## `fastlowess.NewOnlineLowess(opts OnlineOptions) (*OnlineLowess, error)`
 
