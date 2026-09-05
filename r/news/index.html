@@ -61,6 +61,7 @@
 <h3 id="fixed-4-0-0">Fixed<a class="anchor" aria-label="anchor" href="#fixed-4-0-0"></a></h3>
 <ul><li>Fixed <code>CONTRIBUTING.md</code> stating a stale Go prerequisite (<code>1.21+</code>, actually <code>1.23+</code> per <code>go.mod</code>/CI), an inaccurate <code>air</code> auto-install target (claimed <code>make r</code>, actually <code>make r-dev</code>), and a stale example crate version (<code>2.0.0</code>) in the Workspace Structure section.</li>
 <li>Fixed <code>use-case-real-time.Rmd</code>’s dashboard example crashing at 2 data points: the internal <code>validate_common_args()</code> hardcoded a stricter <code>min_points = 3L</code> than the Rust core’s actual minimum of 2. Lowered its default to <code>2L</code> to match every other binding.</li>
+<li>Fixed <code><a href="../reference/install_gpu.html">install_gpu()</a></code> segfaulting: it overwrote the currently-loaded shared library in place (<code>file.copy(overwrite = TRUE)</code>), which can corrupt a still memory-mapped file and crash later when an unfaulted page is read back from the now-modified file on disk. It now installs via a same-directory temp file plus an atomic <code><a href="https://rdrr.io/r/base/files.html" class="external-link">file.rename()</a></code>.</li>
 </ul></div>
 </div>
     <div class="section level2">

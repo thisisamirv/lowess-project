@@ -105,12 +105,12 @@ $(document).ready(function(){initNavTree('gpu_backend.html',''); initResizable()
 <div class="textblock"><h1>GPU Backend</h1>
 <p>Run the batch LOWESS fit on the GPU via <code>wgpu</code> (Vulkan/Metal/DX12) instead of the CPU.</p>
 <h2>Overview</h2>
-<p>Every binding's batch <code>Lowess</code> type can execute on a GPU-accelerated backend powered by <code>wgpu</code>. It reimplements almost the entire LOWESS pipeline — local regression fitting, robustness iterations, interval bounds, and cross-validation — as WGSL compute shaders, so all anchor points are fit in parallel instead of one at a time on CPU cores.</p>
+<p>The batch <code>Lowess</code> type can execute on a GPU-accelerated backend powered by <code>wgpu</code>. It reimplements almost the entire LOWESS pipeline — local regression fitting, robustness iterations, interval bounds, and cross-validation — as WGSL compute shaders, so all anchor points are fit in parallel instead of one at a time on CPU cores.</p>
 <p>This is worth enabling for high-throughput processing of large datasets (roughly 10k+ points); for smaller inputs the CPU backend (optionally with <code>parallel = true</code>) is typically faster once you account for GPU dispatch overhead. See <a href="https://github.com/thisisamirv/lowess-project/blob/main/BENCHMARKS.md">BENCHMARKS.md</a> for crossover points measured on real hardware.</p>
 <blockquote class="doxtable">
-<p>&zwj;<b>Batch only.</b> GPU support applies to the batch <code>Lowess</code> type only. <code>StreamingLowess</code>/<code>OnlineLowess</code> remain CPU-only in every binding — the Rust core documents GPU as optimized for static batch data, not incremental chunk/point processing. </p>
+<p>&zwj;<b>Batch only.</b> GPU support applies to the batch <code>Lowess</code> type only. <code>StreamingLowess</code>/<code>OnlineLowess</code> remain CPU-only — the Rust core documents GPU as optimized for static batch data, not incremental chunk/point processing. </p>
 </blockquote>
-<p>GPU support is <b>opt-in</b> and not included in the default published artifacts (PyPI wheels, npm binaries, CRAN/Bioconductor releases, JLL binaries, prebuilt C++ releases) — it requires either downloading a prebuilt GPU-enabled build via a one-time installer, or building from source with the <code>gpu</code> Cargo feature. Both paths are documented per language below.</p>
+<p>GPU support is <b>opt-in</b> and not included in prebuilt C++ releases — download a prebuilt GPU-enabled build via the one-time installer below, or build from source with the <code>gpu</code> Cargo feature.</p>
 <h3>Supported Features</h3>
 <ul>
 <li><b>Weight Functions</b>: All standard kernels (<code>tricube</code>, <code>epanechnikov</code>, <code>gaussian</code>, <code>uniform</code>, <code>biweight</code>, <code>triangle</code>, <code>cosine</code>).</li>
@@ -144,33 +144,14 @@ $(document).ready(function(){initNavTree('gpu_backend.html',''); initResizable()
 </table>
 <hr  />
 <h2>Checking Availability</h2>
-<p>Before requesting <code>backend = "gpu"</code> (or the language's equivalent spelling), check whether the currently loaded library was built with GPU support. Requesting the GPU backend when it isn't available raises a clear error pointing at the installer for that language, rather than a raw panic.</p>
+<p>Before requesting <code>backend = "gpu"</code>, check whether the currently loaded library was built with GPU support. Requesting the GPU backend when it isn't available raises a clear error pointing at <code>fastlowess::gpu::install()</code>, rather than a raw panic.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;<a class="code" href="fastlowess_8hpp.html">fastlowess.hpp</a>&gt;</span></div>
 <div class="line"> </div>
 <div class="line">fastlowess::gpu::available();</div>
 <div class="ttc" id="afastlowess_8hpp_html"><div class="ttname"><a href="fastlowess_8hpp.html">fastlowess.hpp</a></div><div class="ttdoc">C++ wrapper for fastLowess library.</div></div>
 </div><!-- fragment --><hr  />
 <h2>Installing GPU Support</h2>
-<p>Each binding (except Rust, where the <code>gpu</code> Cargo feature is enabled directly; WebAssembly, which does not support the GPU backend; and Go, which links the native library statically at build time) ships a one-time installer that downloads a prebuilt GPU-enabled build from the <a href="https://github.com/thisisamirv/lowess-project/releases/tag/gpu-builds"><code>gpu-builds</code> release</a> (built by <code>.github/workflows/release-gpu.yml</code>) — a single perpetual release holding GPU artifacts for every version, so individual version release pages stay uncluttered; the source version is embedded in each asset's filename instead. Building from source with the <code>gpu</code> Cargo feature is always available as an alternative.</p>
-<p>Whether you need to <b>restart</b> afterwards depends on how each language loads its native library:</p>
-<table class="markdownTable">
-<tr class="markdownTableHead">
-<th class="markdownTableHeadNone">Language   </th><th class="markdownTableHeadNone">Restart required?   </th><th class="markdownTableHeadNone">Why    </th></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone">Python   </td><td class="markdownTableBodyNone">Yes   </td><td class="markdownTableBodyNone">The native extension module is loaded once per process.    </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone">Node.js   </td><td class="markdownTableBodyNone">Yes   </td><td class="markdownTableBodyNone">The native addon (<code>.node</code> file) is loaded once per process.    </td></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone">R   </td><td class="markdownTableBodyNone">Yes   </td><td class="markdownTableBodyNone">The shared library is loaded once per R session.    </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone">C++   </td><td class="markdownTableBodyNone">Yes (relink/rebuild)   </td><td class="markdownTableBodyNone">Your application links against the library at build/load time.    </td></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone">Java   </td><td class="markdownTableBodyNone">Yes   </td><td class="markdownTableBodyNone">The native library is loaded once per JVM process.    </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone">Go   </td><td class="markdownTableBodyNone">Yes (rebuild)   </td><td class="markdownTableBodyNone"><code>cgo</code> links the static library at build time.    </td></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone">Julia   </td><td class="markdownTableBodyNone"><b>No</b>   </td><td class="markdownTableBodyNone"><code>install_gpu()</code> re-points the internal library reference immediately.   </td></tr>
-</table>
+<p>This binding ships a one-time installer that downloads a prebuilt GPU-enabled build from the <a href="https://github.com/thisisamirv/lowess-project/releases/tag/gpu-builds"><code>gpu-builds</code> release</a> (built by <code>.github/workflows/release-gpu.yml</code>) — a single perpetual release holding GPU artifacts for every version, so individual version release pages stay uncluttered; the source version is embedded in each asset's filename instead. Building from source with the <code>gpu</code> Cargo feature is always available as an alternative.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;<a class="code" href="fastlowess_8hpp.html">fastlowess.hpp</a>&gt;</span></div>
 <div class="line"> </div>
 <div class="line">fastlowess::gpu::install(); <span class="comment">// prompts for confirmation via curl, then downloads</span></div>
@@ -194,7 +175,7 @@ $(document).ready(function(){initNavTree('gpu_backend.html',''); initResizable()
 <div class="ttc" id="astructfastlowess_1_1LowessOptions_html_a1d07294a88a01279d0d3668a8a70e23f"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#a1d07294a88a01279d0d3668a8a70e23f">fastlowess::LowessOptions::confidence_intervals</a></div><div class="ttdeci">double confidence_intervals</div><div class="ttdoc">Confidence level (NaN = disabled)</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:130</div></div>
 <div class="ttc" id="astructfastlowess_1_1LowessOptions_html_a7df2673737a72e038efa19cca56c2942"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#a7df2673737a72e038efa19cca56c2942">fastlowess::LowessOptions::backend</a></div><div class="ttdeci">std::string backend</div><div class="ttdoc">Execution backend: &quot;cpu&quot; (default) or &quot;gpu&quot; (requires the library to be built with the gpu Cargo feat...</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:143</div></div>
 <div class="ttc" id="astructfastlowess_1_1LowessOptions_html_ac4c7e581cd561fc11a928f9901bb5ec6"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#ac4c7e581cd561fc11a928f9901bb5ec6">fastlowess::LowessOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdoc">Smoothing fraction (0, 1].</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:120</div></div>
-</div><!-- fragment --><p>If GPU support isn't available, requesting <code>backend = "gpu"</code> (or the equivalent) raises a runtime error pointing at the installer for that language rather than a raw Rust panic.</p>
+</div><!-- fragment --><p>If GPU support isn't available, requesting <code>backend = "gpu"</code> raises a runtime error pointing at <code>fastlowess::gpu::install()</code> rather than a raw Rust panic.</p>
 <h2>Hardware Requirements</h2>
 <p>The GPU backend leverages <code>wgpu</code> and supports:</p>
 <ul>

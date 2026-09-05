@@ -73,6 +73,14 @@
   points: the internal `validate_common_args()` hardcoded a stricter
   `min_points = 3L` than the Rust core’s actual minimum of 2. Lowered
   its default to `2L` to match every other binding.
+- Fixed
+  [`install_gpu()`](https://thisisamirv.github.io/lowess-project/r/reference/install_gpu.md)
+  segfaulting: it overwrote the currently-loaded shared library in place
+  (`file.copy(overwrite = TRUE)`), which can corrupt a still
+  memory-mapped file and crash later when an unfaulted page is read back
+  from the now-modified file on disk. It now installs via a
+  same-directory temp file plus an atomic
+  [`file.rename()`](https://rdrr.io/r/base/files.html).
 
 ## rfastlowess 3.2.1
 
