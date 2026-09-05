@@ -196,6 +196,24 @@ class TestLowess:
         assert result1.diagnostics is not None
         assert result2.diagnostics is not None
 
+    def test_lowess_missing_drop_removes_nan_rows(self):
+        """Test Lowess with missing="drop" removes non-finite rows."""
+        x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+        y = np.array([2.0, np.nan, 6.0, 8.0, 10.0])
+
+        lowess = fastlowess.Lowess(fraction=0.5, missing="drop")
+        result = lowess.fit(x, y)
+
+        assert len(result.y) == len(x) - 1
+
+    def test_lowess_missing_error_default_rejects_nan(self):
+        """Test Lowess default missing="error" raises on NaN."""
+        x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+        y = np.array([2.0, np.nan, 6.0, 8.0, 10.0])
+
+        with pytest.raises(ValueError):
+            fastlowess.Lowess(fraction=0.5).fit(x, y)
+
 
 class TestStreamingLowess:
     """Tests for the StreamingLowess class."""
@@ -296,6 +314,21 @@ class TestStreamingLowess:
         total_points = len(chunk_result.y) + len(final_result.y)
         assert total_points == len(x)
 
+    def test_streaming_missing_drop_removes_nan_rows(self):
+        """Test streaming with missing="drop" removes non-finite rows."""
+        x = np.linspace(0, 100, 50)
+        y = np.sin(x / 10)
+        y[5] = np.nan
+
+        streaming = fastlowess.StreamingLowess(
+            fraction=0.1, chunk_size=50, missing="drop"
+        )
+        chunk_result = streaming.process_chunk(x, y)
+        final_result = streaming.finalize()
+
+        total_points = len(chunk_result.y) + len(final_result.y)
+        assert total_points == len(x) - 1
+
 
 class TestOnlineLowess:
     """Tests for the OnlineLowess class."""
@@ -311,6 +344,15 @@ class TestOnlineLowess:
 
         for x_value, y_value in zip(x, y):
             online.add_point(float(x_value), float(y_value))
+
+    def test_online_missing_drop_ignores_nan_point(self):
+        """Test online with missing="drop" ignores non-finite points."""
+        online = fastlowess.OnlineLowess(
+            fraction=0.5, window_capacity=10, missing="drop"
+        )
+
+        result = online.add_point(1.0, float("nan"))
+        assert result is None
 
     def test_online_basic(self):
         """Test basic online smoothing."""
@@ -469,6 +511,11 @@ class TestErrorHandling:
         with pytest.raises(ValueError):
             lowess = fastlowess.Lowess(cv_fractions=[0.5], cv_method="invalid")
             lowess.fit(x, y)
+
+    def test_invalid_missing_policy(self):
+        """Test error on invalid missing policy."""
+        with pytest.raises(ValueError):
+            fastlowess.Lowess(fraction=0.5, missing="invalid")
 
 
 class TestEdgeCases:

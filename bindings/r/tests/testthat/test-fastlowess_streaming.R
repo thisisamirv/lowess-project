@@ -119,3 +119,19 @@ test_that("StreamingLowess parallel execution works", {
     # Results should be nearly identical
     expect_equal(result_serial$y, result_parallel$y, tolerance = 1e-8)
 })
+
+test_that("StreamingLowess missing = \"drop\" removes non-finite rows", {
+    x <- seq(0, 10, length.out = 50)
+    y <- sin(x)
+    y[5] <- NaN
+
+    result <- bulk_stream(
+        x,
+        y,
+        fraction = 0.1,
+        chunk_size = 50,
+        missing = "drop"
+    )
+
+    expect_length(result$y, length(x) - 1)
+})

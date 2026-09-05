@@ -60,6 +60,7 @@ result, err := model.Fit(x, y)
 | `ScalingMethod` | `string` | `"mad"` | Residual scale estimator: `mad`, `mar`, `mean`. |
 | `BoundaryPolicy` | `string` | `"extend"` | Boundary handling: `extend`, `reflect`, `zero`, `noboundary`. |
 | `ZeroWeightFallback` | `string` | `"use_local_mean"` | Fallback when all robustness weights hit zero: `use_local_mean`, `return_original`, `return_none`. |
+| `Missing` | `string` | `"error"` | Policy for non-finite (NaN/Inf) values in input data: `error`, `drop`. |
 | `ConfidenceIntervals` | `*float64` | `nil` (disabled) | Confidence level in (0, 1), e.g. `0.95`. |
 | `PredictionIntervals` | `*float64` | `nil` (disabled) | Confidence level in (0, 1), e.g. `0.95`. |
 | `AutoConverge` | `*float64` | `nil` (disabled) | Convergence tolerance for early stopping. |
@@ -157,6 +158,17 @@ Behavior when all neighborhood weights are zero:
 | `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
 | `"return_original"` (alias: `"original"`) | Return the original y value |
 | `"return_none"` (alias: `"none"`) | Return `NaN` |
+
+### Missing
+
+Policy for handling non-finite (NaN/Inf) values in `X`/`Y` (and `CustomWeights`):
+
+| Option | Behavior |
+| --- | --- |
+| `"error"` (default) | Return an error if any value is non-finite |
+| `"drop"` | Silently remove observations where `X` or `Y` is non-finite before fitting |
+
+**Note:** A length mismatch between `X` and `Y` always errors, even under `"drop"`.
 
 ### AutoConverge
 

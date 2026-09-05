@@ -494,6 +494,8 @@ Stateful batch LOWESS smoother.
 - `backend::String = "cpu"`: Execution backend (`"cpu"` or `"gpu"`). GPU requires
   the library to be built with the `gpu` Cargo feature and a Vulkan/Metal/DX12-
   capable GPU driver.
+- `missing::String = "error"`: Policy for non-finite (NaN/Inf) values in input
+  data. See Notes for a description of each option.
 
 # Notes
 `fraction` is the most important parameter: it controls the size of the local
@@ -522,6 +524,15 @@ neighbourhood used at each point.
 | `"use_local_mean"` (default) | Use the mean of the neighborhood |
 | `"return_original"` | Return the original y value |
 | `"return_none"` | Return `NaN` |
+
+`missing` controls the behavior when `x`/`y` (or `custom_weights`) contain non-finite (NaN/Inf) values:
+
+| Option | Behavior |
+| --- | --- |
+| `"error"` (default) | Raise an error if any value is non-finite |
+| `"drop"` | Silently remove observations where `x` or `y` is non-finite before fitting |
+
+A length mismatch between `x` and `y` always errors, even under `"drop"`.
 
 # Example
 ```julia
@@ -555,6 +566,7 @@ mutable struct Lowess
 		return_se::Bool = false,
 		return_sorted::Bool = false,
 		backend::String = "cpu",
+		missing::String = "error",
 	)
 		cv_ptr = isempty(cv_fractions) ? Ptr{Cdouble}(C_NULL) : pointer(cv_fractions)
 		cv_len = length(cv_fractions)
@@ -583,6 +595,7 @@ mutable struct Lowess
 			Cint(return_se)::Cint,
 			Cint(return_sorted)::Cint,
 			backend::Cstring,
+			missing::Cstring,
 		)::Ptr{Cvoid}
 
 		if handle == C_NULL
@@ -662,6 +675,8 @@ Stateful streaming LOWESS smoother.
 - `merge_strategy::String = "weighted_average"`: Strategy for merging overlapping chunk
   regions: "average", "weighted_average", "take_first", "take_last"
 - `parallel::Bool = true`: Enable parallel execution
+- `missing::String = "error"`: Policy for non-finite (NaN/Inf) values in each chunk.
+  See `Lowess` for a description of each option.
 """
 mutable struct StreamingLowess
 	handle::Ptr{Cvoid}
@@ -683,6 +698,7 @@ mutable struct StreamingLowess
 		zero_weight_fallback::String = "use_local_mean",
 		merge_strategy::String = "weighted_average",
 		parallel::Bool = true,
+		missing::String = "error",
 	)
 		handle = @ccall current_library().jl_streaming_lowess_new(
 			fraction::Cdouble,
@@ -701,6 +717,7 @@ mutable struct StreamingLowess
 			zero_weight_fallback::Cstring,
 			merge_strategy::Cstring,
 			Cint(parallel)::Cint,
+			missing::Cstring,
 		)::Ptr{Cvoid}
 
 		if handle == C_NULL
@@ -771,6 +788,9 @@ Stateful online LOWESS smoother.
 - `auto_converge::Float64 = NaN`: Auto-convergence tolerance
 - `return_robustness_weights::Bool = false`: Include weights
 - `zero_weight_fallback::String = "use_local_mean"`: Zero weight handling. See `Lowess` for a description of each option.
+- `missing::String = "error"`: Policy for non-finite (NaN/Inf) `x`/`y` values passed
+  to `add_point`. `"error"` (default) raises, `"drop"` silently ignores the point
+  (returns `nothing` instead of adding it to the window).
 
 Confidence/prediction intervals, standard errors, cross-validation, `return_sorted`, `return_diagnostics`, `return_residuals`, and `parallel` are Batch-only (or Batch/Streaming-only) and have no equivalent here. Online always runs sequentially.
 """
@@ -791,6 +811,7 @@ mutable struct OnlineLowess
 		auto_converge::Float64 = NaN,
 		return_robustness_weights::Bool = false,
 		zero_weight_fallback::String = "use_local_mean",
+		missing::String = "error",
 	)
 		handle = @ccall current_library().jl_online_lowess_new(
 			fraction::Cdouble,
@@ -806,6 +827,7 @@ mutable struct OnlineLowess
 			auto_converge::Cdouble,
 			Cint(return_robustness_weights)::Cint,
 			zero_weight_fallback::Cstring,
+			missing::Cstring,
 		)::Ptr{Cvoid}
 
 		if handle == C_NULL

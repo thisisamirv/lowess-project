@@ -19,6 +19,7 @@ public final class Options {
     final String scalingMethod;
     final String boundaryPolicy;
     final String zeroWeightFallback;
+    final String missing;
     final double autoConverge;
     final double confidenceIntervals;
     final double predictionIntervals;
@@ -43,6 +44,7 @@ public final class Options {
         this.scalingMethod = b.scalingMethod;
         this.boundaryPolicy = b.boundaryPolicy;
         this.zeroWeightFallback = b.zeroWeightFallback;
+        this.missing = b.missing;
         this.autoConverge = b.autoConverge;
         this.confidenceIntervals = b.confidenceIntervals;
         this.predictionIntervals = b.predictionIntervals;
@@ -81,6 +83,7 @@ public final class Options {
         String scalingMethod = null;
         String boundaryPolicy = null;
         String zeroWeightFallback = null;
+        String missing = null;
         double autoConverge = Double.NaN;
         double confidenceIntervals = Double.NaN;
         double predictionIntervals = Double.NaN;
@@ -195,6 +198,19 @@ public final class Options {
          */
         public Builder zeroWeightFallback(String zeroWeightFallback) {
             this.zeroWeightFallback = zeroWeightFallback;
+            return this;
+        }
+
+        /**
+         * Policy for non-finite (NaN/Infinity) values in input data (default
+         * {@code "error"}): {@code "error"} throws, {@code "drop"} silently
+         * removes affected observations before fitting.
+         *
+         * @param missing the missing-value handling policy name
+         * @return this builder, for chaining
+         */
+        public Builder missing(String missing) {
+            this.missing = missing;
             return this;
         }
 

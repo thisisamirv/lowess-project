@@ -581,7 +581,10 @@ fn test_batch_return_sorted_false_default() {
         .fit(&x, &y)
         .unwrap();
 
-    assert_eq!(result.x, x, "x should equal original input order by default");
+    assert_eq!(
+        result.x, x,
+        "x should equal original input order by default"
+    );
 }
 
 /// Test that `return_sorted()` returns all result fields sorted ascending by x.
@@ -606,7 +609,10 @@ fn test_batch_return_sorted_true() {
         result.x.windows(2).all(|w| w[0] <= w[1]),
         "x should be ascending when return_sorted is set"
     );
-    assert_ne!(result.x, x, "sorted x should differ from the unsorted input order");
+    assert_ne!(
+        result.x, x,
+        "sorted x should differ from the unsorted input order"
+    );
 
     // Same (x, y) pairs as the unsorted-order fit, just reordered.
     let unsorted_result = Lowess::new()
@@ -643,6 +649,127 @@ fn test_batch_return_sorted_true() {
     // Residuals/robustness weights arrive in the same length, reordered too.
     assert_eq!(result.residuals.as_ref().unwrap().len(), x.len());
     assert_eq!(result.robustness_weights.as_ref().unwrap().len(), x.len());
+}
+
+// ============================================================================
+// Missing Value Handling (`missing`)
+// ============================================================================
+
+/// Test that the default `missing` policy ("error") rejects NaN in `y`.
+#[test]
+fn test_batch_missing_error_default_rejects_nan() {
+    let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+    let y = vec![1.0, 2.0, f64::NAN, 4.0, 5.0];
+
+    let result = Lowess::new().adapter(Batch).build().unwrap().fit(&x, &y);
+
+    assert!(
+        matches!(result, Err(LowessError::InvalidNumericValue(_))),
+        "default missing policy should reject NaN values"
+    );
+}
+
+/// Test that `.missing("error")` explicitly rejects NaN in `x`.
+#[test]
+fn test_batch_missing_error_explicit_rejects_nan() {
+    let x = vec![1.0, 2.0, f64::NAN, 4.0, 5.0];
+    let y = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+
+    let result = Lowess::new()
+        .missing("error")
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y);
+
+    assert!(
+        matches!(result, Err(LowessError::InvalidNumericValue(_))),
+        "explicit missing(\"error\") should reject NaN values"
+    );
+}
+
+/// Test that `.missing("drop")` silently removes rows with NaN/Inf and
+/// shortens the output arrays accordingly.
+#[test]
+fn test_batch_missing_drop_removes_nan_rows() {
+    let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+    let y = vec![1.0, 2.0, f64::NAN, 4.0, f64::INFINITY];
+
+    let result = Lowess::new()
+        .fraction(0.9)
+        .missing("drop")
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .expect("drop policy should silently remove non-finite rows");
+
+    // Only the 3 finite rows (indices 0, 1, 3) should remain.
+    assert_eq!(result.x.len(), 3);
+    assert_eq!(result.y.len(), 3);
+    assert_eq!(result.x, vec![1.0, 2.0, 4.0]);
+}
+
+/// Test that `.missing("drop")` keeps `custom_weights` aligned with the
+/// filtered rows instead of erroring on a stale length.
+#[test]
+fn test_batch_missing_drop_filters_custom_weights_in_lockstep() {
+    let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+    let y = vec![1.0, 2.0, f64::NAN, 4.0, 5.0];
+    let weights = vec![1.0, 1.0, 1.0, 1.0, 1.0];
+
+    let result = Lowess::new()
+        .fraction(0.9)
+        .missing("drop")
+        .custom_weights(weights)
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y);
+
+    assert!(
+        result.is_ok(),
+        "custom_weights should be filtered in lockstep with dropped rows"
+    );
+    assert_eq!(result.unwrap().y.len(), 4);
+}
+
+/// Test that an unrecognized `missing` string is rejected at build time.
+#[test]
+fn test_batch_missing_invalid_string_rejected() {
+    let result = Lowess::<f64>::new().missing("bogus").adapter(Batch).build();
+
+    match result {
+        Err(e) => {
+            let message = e.to_string();
+            assert!(
+                message.contains("missing"),
+                "error message should reference the 'missing' option, got: {message}"
+            );
+        }
+        Ok(_) => panic!("unrecognized missing policy string should be rejected"),
+    }
+}
+
+/// Test that `.missing("drop")` still rejects mismatched `x`/`y` lengths
+/// instead of silently truncating — a length mismatch is a caller error,
+/// not a data-quality issue for the drop policy to mask.
+#[test]
+fn test_batch_missing_drop_still_rejects_mismatched_lengths() {
+    let x = vec![1.0, 2.0, 3.0];
+    let y = vec![1.0, 2.0];
+
+    let result = Lowess::new()
+        .missing("drop")
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y);
+
+    assert!(
+        matches!(result, Err(LowessError::MismatchedInputs { .. })),
+        "mismatched lengths should still error under the drop policy"
+    );
 }
 
 /// Test with all identical x-values (degenerate case).

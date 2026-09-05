@@ -26,7 +26,7 @@ use crate::algorithms::robustness::RobustnessMethod;
 use crate::engine::executor::{CVPassFn, FitPassFn, IntervalPassFn, SmoothPassFn};
 use crate::engine::executor::{LowessConfig, LowessExecutor};
 use crate::engine::output::LowessResult;
-use crate::engine::validator::Validator;
+use crate::engine::validator::{MissingPolicy, Validator};
 use crate::evaluation::diagnostics::DiagnosticsState;
 use crate::math::boundary::BoundaryPolicy;
 use crate::math::defaults::*;
@@ -102,6 +102,9 @@ pub struct StreamingLowessBuilder<T: Float> {
     // Whether to return robustness weights
     pub return_robustness_weights: bool,
 
+    // Policy for handling non-finite (NaN/Inf) values in input data
+    pub missing: MissingPolicy,
+
     // Deferred error from adapter conversion
     pub deferred_error: Option<LowessError>,
 
@@ -158,6 +161,7 @@ impl<T: Float> StreamingLowessBuilder<T> {
             return_diagnostics: DEFAULT_RETURN_DIAGNOSTICS,
             return_robustness_weights: DEFAULT_RETURN_ROBUSTNESS_WEIGHTS,
             auto_converge: default_auto_converge(),
+            missing: DEFAULT_MISSING_POLICY_ENUM,
             deferred_error: None,
             custom_smooth_pass: None,
             custom_cv_pass: None,
@@ -218,7 +222,17 @@ pub struct StreamingLowess<T: Float> {
 impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
     // Process a chunk of data.
     pub fn process_chunk(&mut self, x: &[T], y: &[T]) -> Result<LowessResult<T>, LowessError> {
-        // Validate inputs using standard validator
+        // Validate lengths first, then apply the missing-value policy.
+        Validator::validate_lengths(x, y)?;
+        let (x_owned, y_owned) = match self.config.missing {
+            MissingPolicy::Drop => {
+                let (xs, ys, _) = Validator::drop_non_finite(x, y, None);
+                (xs, ys)
+            }
+            MissingPolicy::Error => (x.to_vec(), y.to_vec()),
+        };
+        let x: &[T] = &x_owned;
+        let y: &[T] = &y_owned;
         Validator::validate_inputs(x, y)?;
 
         // Sort chunk by x

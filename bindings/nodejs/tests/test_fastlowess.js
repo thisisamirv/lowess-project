@@ -183,3 +183,61 @@ test('custom_weights: wrong length throws error', () => {
         new fastlowess.Lowess({ fraction: 0.5 }).fit(x, y, new Float64Array([1, 1, 1]));
     });
 });
+
+test('missing: default ("error") throws on NaN', () => {
+    const x = new Float64Array([1, 2, 3, 4, 5]);
+    const y = new Float64Array([2, NaN, 6, 8, 10]);
+
+    assert.throws(() => {
+        new fastlowess.Lowess({ fraction: 0.5 }).fit(x, y);
+    });
+});
+
+test('missing: "drop" removes non-finite rows', () => {
+    const x = new Float64Array([1, 2, 3, 4, 5]);
+    const y = new Float64Array([2, NaN, 6, 8, 10]);
+
+    const model = new fastlowess.Lowess({ fraction: 0.5, missing: 'drop' });
+    const result = model.fit(x, y);
+
+    assert.strictEqual(result.y.length, x.length - 1);
+});
+
+test('missing: invalid policy throws', () => {
+    const x = new Float64Array([1, 2, 3, 4, 5]);
+    const y = new Float64Array([2, 4, 6, 8, 10]);
+
+    assert.throws(() => {
+        new fastlowess.Lowess({ fraction: 0.5, missing: 'invalid' }).fit(x, y);
+    });
+});
+
+test('streaming missing: "drop" removes non-finite rows', () => {
+    const streamer = new fastlowess.StreamingLowess({
+        fraction: 0.1,
+        missing: 'drop'
+    }, {
+        chunk_size: 50
+    });
+
+    const x = new Float64Array(Array.from({ length: 50 }, (_, i) => i));
+    const y = new Float64Array(Array.from({ length: 50 }, (_, i) => i));
+    y[5] = NaN;
+
+    const result = streamer.process_chunk(x, y);
+    const finalResult = streamer.finalize();
+
+    assert.strictEqual(result.y.length + finalResult.y.length, x.length - 1);
+});
+
+test('online missing: "drop" ignores non-finite point', () => {
+    const online = new fastlowess.OnlineLowess({
+        fraction: 0.5,
+        missing: 'drop'
+    }, {
+        window_capacity: 10
+    });
+
+    const res = online.add_point(1, NaN);
+    assert.strictEqual(res, null);
+});

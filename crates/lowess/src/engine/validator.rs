@@ -12,37 +12,82 @@
 // External dependencies
 #[cfg(not(feature = "std"))]
 use alloc::format;
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
 use num_traits::Float;
+#[cfg(feature = "std")]
+use std::vec::Vec;
 
 // Internal dependencies
 use crate::primitives::errors::LowessError;
+
+// Policy for handling non-finite (NaN/Inf) values in input data.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum MissingPolicy {
+    // Return an error if any input value is non-finite (default).
+    #[default]
+    Error,
+
+    // Silently remove observations where x or y is non-finite before fitting.
+    Drop,
+}
 
 // Validation utility for LOWESS configuration and input data.
 pub struct Validator;
 
 impl Validator {
-    // Validate input arrays for LOWESS smoothing.
-    pub fn validate_inputs<T: Float>(x: &[T], y: &[T]) -> Result<(), LowessError> {
-        // Check 1: Non-empty arrays
+    // Validate non-empty arrays and matching lengths. Runs ahead of any
+    // missing-value filtering, since a length mismatch is a caller error,
+    // not a data-quality issue that `MissingPolicy::Drop` should mask.
+    pub fn validate_lengths<T: Float>(x: &[T], y: &[T]) -> Result<(), LowessError> {
         if x.is_empty() || y.is_empty() {
             return Err(LowessError::EmptyInput);
         }
-
-        // Check 2: Matching lengths
-        let n = x.len();
-        if n != y.len() {
+        if x.len() != y.len() {
             return Err(LowessError::MismatchedInputs {
-                x_len: n,
+                x_len: x.len(),
                 y_len: y.len(),
             });
         }
+        Ok(())
+    }
 
-        // Check 3: Sufficient points for regression
+    // Remove observations where x or y is non-finite, keeping any
+    // `custom_weights` in lockstep. Used when `MissingPolicy::Drop` is set.
+    pub fn drop_non_finite<T: Float>(
+        x: &[T],
+        y: &[T],
+        custom_weights: Option<&[T]>,
+    ) -> (Vec<T>, Vec<T>, Option<Vec<T>>) {
+        let n = x.len();
+        let mut xs = Vec::with_capacity(n);
+        let mut ys = Vec::with_capacity(n);
+        let mut ws = custom_weights.map(|w| Vec::with_capacity(w.len().min(n)));
+        for i in 0..n {
+            if x[i].is_finite() && y[i].is_finite() {
+                xs.push(x[i]);
+                ys.push(y[i]);
+                if let (Some(w), Some(wv)) = (custom_weights, ws.as_mut())
+                    && i < w.len()
+                {
+                    wv.push(w[i]);
+                }
+            }
+        }
+        (xs, ys, ws)
+    }
+
+    // Validate input arrays for LOWESS smoothing.
+    pub fn validate_inputs<T: Float>(x: &[T], y: &[T]) -> Result<(), LowessError> {
+        Self::validate_lengths(x, y)?;
+        let n = x.len();
+
+        // Check: Sufficient points for regression
         if n < 2 {
             return Err(LowessError::TooFewPoints { got: n, min: 2 });
         }
 
-        // Check 4: All values finite (combined loop for cache locality)
+        // Check: All values finite (combined loop for cache locality)
         for i in 0..n {
             if !x[i].is_finite() {
                 return Err(LowessError::InvalidNumericValue(format!(

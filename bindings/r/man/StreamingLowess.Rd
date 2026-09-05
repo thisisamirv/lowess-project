@@ -5,23 +5,24 @@
 \title{LOWESS Streaming Smoothing}
 \usage{
 StreamingLowess(
-    fraction = 0.67,
-    chunk_size = 5000L,
-    ...,
-    overlap = NULL,
-    iterations = 3L,
-    delta = NULL,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    scaling_method = "mad",
-    boundary_policy = "extend",
-    zero_weight_fallback = "use_local_mean",
-    auto_converge = NULL,
-    return_diagnostics = FALSE,
-    return_residuals = FALSE,
-    return_robustness_weights = FALSE,
-    merge_strategy = "weighted_average",
-    parallel = TRUE
+  fraction = 0.67,
+  chunk_size = 5000L,
+  ...,
+  overlap = NULL,
+  iterations = 3L,
+  delta = NULL,
+  weight_function = "tricube",
+  robustness_method = "bisquare",
+  scaling_method = "mad",
+  boundary_policy = "extend",
+  zero_weight_fallback = "use_local_mean",
+  auto_converge = NULL,
+  return_diagnostics = FALSE,
+  return_residuals = FALSE,
+  return_robustness_weights = FALSE,
+  merge_strategy = "weighted_average",
+  parallel = TRUE,
+  missing = "error"
 )
 }
 \arguments{
@@ -89,6 +90,10 @@ robustness weights. Default: \code{FALSE}.}
 \code{"take_last"} (alias: \code{"last"}).}
 
 \item{parallel}{Logical; enable parallel processing. Default: \code{TRUE}.}
+
+\item{missing}{Policy for non-finite (NaN/Infinity) values in input data:
+\code{"error"} (default) raises an error, \code{"drop"} silently removes
+affected observations before fitting.}
 }
 \value{
 A StreamingLowess object.
@@ -106,11 +111,11 @@ in memory, see \code{\link{Lowess}}; for point-by-point real-time data,
 see \code{\link{OnlineLowess}}.
 
 Overlapping regions between chunks are reconciled via \code{merge_strategy}:\tabular{lll}{
-    Strategy \tab Alias \tab Behavior \cr
-    \code{"weighted_average"} (default) \tab \code{"weighted"} \tab Distance-weighted blend \cr
-    \code{"average"} \tab \code{"mean"} \tab Average overlapping values \cr
-    \code{"take_first"} \tab \code{"first"} \tab Keep left chunk values \cr
-    \code{"take_last"} \tab \code{"last"} \tab Keep right chunk values \cr
+   Strategy \tab Alias \tab Behavior \cr
+   \code{"weighted_average"} (default) \tab \code{"weighted"} \tab Distance-weighted blend \cr
+   \code{"average"} \tab \code{"mean"} \tab Average overlapping values \cr
+   \code{"take_first"} \tab \code{"first"} \tab Keep left chunk values \cr
+   \code{"take_last"} \tab \code{"last"} \tab Keep right chunk values \cr
 }
 }
 \examples{

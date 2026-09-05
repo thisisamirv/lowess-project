@@ -125,4 +125,35 @@ class LowessTest {
             assertEquals(x.length, result.robustnessWeights().orElseThrow().length);
         }
     }
+
+    @Test
+    void missingDefaultThrowsOnNan() {
+        double[] x = {1.0, 2.0, 3.0, 4.0, 5.0};
+        double[] y = {2.0, Double.NaN, 6.0, 8.0, 10.0};
+
+        try (Lowess model = new Lowess(Options.builder().fraction(0.5).build())) {
+            RuntimeException ex = org.junit.jupiter.api.Assertions.assertThrows(
+                    RuntimeException.class, () -> model.fit(x, y));
+            assertNotNull(ex);
+        }
+    }
+
+    @Test
+    void missingDropRemovesNonFiniteRows() {
+        double[] x = {1.0, 2.0, 3.0, 4.0, 5.0};
+        double[] y = {2.0, Double.NaN, 6.0, 8.0, 10.0};
+
+        try (Lowess model = new Lowess(Options.builder().fraction(0.5).missing("drop").build())) {
+            Result result = model.fit(x, y);
+            assertEquals(x.length - 1, result.y().length);
+        }
+    }
+
+    @Test
+    void missingInvalidPolicyThrows() {
+        Options opts = Options.builder().fraction(0.5).missing("invalid").build();
+        RuntimeException ex = org.junit.jupiter.api.Assertions.assertThrows(
+                RuntimeException.class, () -> new Lowess(opts));
+        assertNotNull(ex);
+    }
 }

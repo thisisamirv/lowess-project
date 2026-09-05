@@ -117,7 +117,8 @@ final class NativeBridge {
             boolean parallel,
             boolean returnSe,
             boolean returnSorted,
-            String backend);
+            String backend,
+            String missing);
 
     static native void lowessSetCvSeed(long handle, long seed);
 
@@ -141,7 +142,8 @@ final class NativeBridge {
             boolean parallel,
             int chunkSize,
             int overlap,
-            String mergeStrategy);
+            String mergeStrategy,
+            String missing);
 
     static native NativeResult streamingProcess(long handle, double[] x, double[] y);
 
@@ -162,7 +164,8 @@ final class NativeBridge {
             double autoConverge,
             int windowCapacity,
             int minPoints,
-            String updateMode);
+            String updateMode,
+            String missing);
 
     static native NativeOnlineOutput onlineAddPoint(long handle, double x, double y);
 

@@ -36,6 +36,7 @@ constexpr std::size_t k_streaming_accuracy_point_count = 200U;
 constexpr std::size_t k_streaming_accuracy_chunk_size = 1000U;
 constexpr std::size_t k_online_window_capacity = 10U;
 constexpr std::size_t k_online_min_points = 3U;
+constexpr std::size_t k_streaming_missing_nan_idx = 5U;
 constexpr int k_robust_iterations = 3;
 constexpr std::size_t k_cw_uniform_point_count = 20U;
 constexpr std::size_t k_cw_outlier_point_count = 10U;
@@ -572,6 +573,75 @@ void testCustomWeightsHighWeightPullsFit() {
              "high weight at spike should pull fit up");
 }
 
+void testMissingDefaultErrorsOnNan() {
+  std::cout << "Running testMissingDefaultErrorsOnNan...\n";
+
+  const std::vector<double> x_values = {1.0, 2.0, 3.0, 4.0, 5.0};
+  const std::vector<double> y_values = {2.0, std::nan(""), 6.0, 8.0, 10.0};
+
+  fastlowess::LowessOptions options;
+  options.fraction = k_basic_fraction;
+  fastlowess::Lowess lowess(options);
+  auto result = lowess.fit(x_values, y_values);
+
+  assertTrue(!result.has_value(),
+             "Expected error result for default missing policy");
+}
+
+void testMissingDropRemovesNonFiniteRows() {
+  std::cout << "Running testMissingDropRemovesNonFiniteRows...\n";
+
+  const std::vector<double> x_values = {1.0, 2.0, 3.0, 4.0, 5.0};
+  const std::vector<double> y_values = {2.0, std::nan(""), 6.0, 8.0, 10.0};
+
+  fastlowess::LowessOptions options;
+  options.fraction = k_basic_fraction;
+  options.missing = "drop";
+  fastlowess::Lowess lowess(options);
+  auto result = lowess.fit(x_values, y_values).value();
+
+  assertTrue(result.size() == x_values.size() - 1,
+             "missing=drop should remove the non-finite row");
+}
+
+void testStreamingMissingDropRemovesNonFiniteRows() {
+  std::cout << "Running testStreamingMissingDropRemovesNonFiniteRows...\n";
+
+  std::vector<double> x_values(k_streaming_accuracy_point_count);
+  std::vector<double> y_values(k_streaming_accuracy_point_count);
+  for (std::size_t i = 0; i < k_streaming_accuracy_point_count; ++i) {
+    x_values[i] = static_cast<double>(i);
+    y_values[i] = std::sin(x_values[i] / k_streaming_basic_sine_divisor);
+  }
+  y_values[k_streaming_missing_nan_idx] = std::nan("");
+
+  fastlowess::StreamingOptions options;
+  options.fraction = k_streaming_basic_fraction;
+  options.chunk_size = k_streaming_accuracy_chunk_size;
+  options.missing = "drop";
+  fastlowess::StreamingLowess stream(options);
+
+  auto chunk_result = stream.process_chunk(x_values, y_values).value();
+  auto final_result = stream.finalize().value();
+
+  assertTrue(chunk_result.size() + final_result.size() == x_values.size() - 1,
+             "missing=drop should remove the non-finite row in streaming");
+}
+
+void testOnlineMissingDropIgnoresNonFinitePoint() {
+  std::cout << "Running testOnlineMissingDropIgnoresNonFinitePoint...\n";
+
+  fastlowess::OnlineOptions options;
+  options.fraction = k_basic_fraction;
+  options.window_capacity = k_online_window_capacity;
+  options.missing = "drop";
+  fastlowess::OnlineLowess online_lowess(options);
+
+  auto result = online_lowess.add_point(1.0, std::nan("")).value();
+  assertTrue(!result.has_value(),
+             "missing=drop should ignore the non-finite point");
+}
+
 } // namespace
 
 int main() {
@@ -593,6 +663,10 @@ int main() {
     testCustomWeightsUniformMatchesNoWeights();
     testCustomWeightsZeroWeightReducesOutlierInfluence();
     testCustomWeightsHighWeightPullsFit();
+    testMissingDefaultErrorsOnNan();
+    testMissingDropRemovesNonFiniteRows();
+    testStreamingMissingDropRemovesNonFiniteRows();
+    testOnlineMissingDropIgnoresNonFinitePoint();
 
     std::cout << "All C++ tests passed!\n";
   } catch (const std::exception &exception) {

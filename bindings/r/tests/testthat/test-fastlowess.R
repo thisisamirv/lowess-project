@@ -329,3 +329,25 @@ test_that("custom_weights: negative value raises error", {
         )
     )
 })
+
+test_that("missing default (\"error\") raises on NaN", {
+    x <- c(1.0, 2.0, 3.0, 4.0, 5.0)
+    y <- c(2.0, NaN, 6.0, 8.0, 10.0)
+
+    expect_error(fit(Lowess(fraction = 0.5), x, y))
+})
+
+test_that("missing = \"drop\" removes non-finite rows", {
+    x <- c(1.0, 2.0, 3.0, 4.0, 5.0)
+    y <- c(2.0, NaN, 6.0, 8.0, 10.0)
+
+    result <- fit(Lowess(fraction = 0.5, missing = "drop"), x, y)
+
+    expect_length(result$y, length(x) - 1)
+})
+
+test_that("missing: invalid policy raises error", {
+    expect_error(
+        fit(Lowess(fraction = 0.5, missing = "invalid"), c(1.0, 2.0), c(1.0, 2.0))
+    )
+})

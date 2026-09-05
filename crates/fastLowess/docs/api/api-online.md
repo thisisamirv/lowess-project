@@ -94,6 +94,7 @@ fn main() -> Result<(), LowessError> {
 | `scaling_method(...)` | `scaling_method` | `"mad"` | Residual scaling method |
 | `boundary_policy(...)` | `boundary_policy` | `"extend"` | Boundary handling policy |
 | `zero_weight_fallback(...)` | `zero_weight_fallback` | `"use_local_mean"` | Zero-weight handling |
+| `missing(...)` | `missing` | `"error"` | Policy for non-finite (NaN/Inf) values in each point |
 | `auto_converge(T)` | `T: Float` | `NaN` | Auto-convergence tolerance |
 | `return_robustness_weights()` | `bool` | `false` | Include `robustness_weight` in result |
 | `window_capacity(usize)` | `usize` | `1000` | Max points in sliding window |
@@ -176,6 +177,15 @@ Behavior when all neighborhood weights are zero:
 | `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
 | `"return_original"` (alias: `"original"`) | Return the original y value |
 | `"return_none"` (alias: `"none"`) | Return `NaN` |
+
+### missing
+
+Policy for handling a non-finite (NaN/Inf) `x` or `y` value passed to `add_point`:
+
+| Option | Behavior |
+| --- | --- |
+| `"error"` (default) | Return an error (`InvalidNumericValue`) |
+| `"drop"` | Silently ignore the point — `add_point` returns `Ok(None)` instead of adding it to the window |
 
 ### auto_converge
 

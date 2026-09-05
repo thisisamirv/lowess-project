@@ -136,6 +136,8 @@ export interface OnlineSmoothOptions {
   auto_converge?: number
   /** Return robustness weights in result. Default: false. */
   return_robustness_weights?: boolean
+  /** Policy for non-finite (NaN/Inf) `x`/`y` values passed to `addPoint` ("error", "drop"). Default: "error". */
+  missing?: string
 }
 
 /** Configuration options for LOWESS smoothing. */
@@ -193,6 +195,8 @@ export interface SmoothOptions {
    * built with the `gpu` Cargo feature and a Vulkan/Metal/DX12-capable GPU).
    */
   backend?: string
+  /** Policy for non-finite (NaN/Inf) values in input data ("error", "drop"). Default: "error". */
+  missing?: string
 }
 
 /** Configuration options for streaming processing. */
@@ -242,4 +246,6 @@ export interface StreamingSmoothOptions {
   return_diagnostics?: boolean
   /** Enable parallel execution. Default: true. */
   parallel?: boolean
+  /** Policy for non-finite (NaN/Inf) values in each chunk ("error", "drop"). Default: "error". */
+  missing?: string
 }

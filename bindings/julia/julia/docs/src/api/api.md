@@ -56,6 +56,7 @@ println("First smoothed value: ", result.y[1])
 | `scaling_method` | `String` | `"mad"` | Residual scaling method |
 | `boundary_policy` | `String` | `"extend"` | Boundary handling policy |
 | `zero_weight_fallback` | `String` | `"use_local_mean"` | Zero-weight handling strategy |
+| `missing` | `String` | `"error"` | Policy for non-finite (NaN/Inf) values in input data |
 | `auto_converge` | `Float64` | `NaN` | Auto-convergence tolerance |
 | `confidence_intervals` | `Float64` | `NaN` | Confidence level (e.g., 0.95) |
 | `prediction_intervals` | `Float64` | `NaN` | Prediction level (e.g., 0.95) |
@@ -146,6 +147,17 @@ Behavior when all neighborhood weights are zero:
 | `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
 | `"return_original"` (alias: `"original"`) | Return the original y value |
 | `"return_none"` (alias: `"none"`) | Return `NaN` |
+
+### missing
+
+Policy for handling non-finite (NaN/Inf) values in `x`/`y` (and `custom_weights`):
+
+| Option | Behavior |
+| --- | --- |
+| `"error"` (default) | Raise an error if any value is non-finite |
+| `"drop"` | Silently remove observations where `x` or `y` is non-finite before fitting |
+
+**Note:** A length mismatch between `x` and `y` always errors, even under `"drop"`.
 
 ### auto_converge
 

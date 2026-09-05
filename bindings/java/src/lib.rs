@@ -224,6 +224,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_lowessNew<'local>(
     return_se: jboolean,
     return_sorted: jboolean,
     backend: JString<'local>,
+    missing: JString<'local>,
 ) -> jlong {
     env.with_env(|env| -> AppResult<jlong> {
         let wf = jstring_or_default(env, &weight_function, shared_parse::DEFAULT_WEIGHT_FUNCTION);
@@ -241,6 +242,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_lowessNew<'local>(
         );
         let cv_method_str = jstring_or_default(env, &cv_method, "kfold");
         let backend_str = jstring_or_default(env, &backend, shared_parse::DEFAULT_BACKEND);
+        let missing_str = jstring_or_default(env, &missing, shared_parse::DEFAULT_MISSING_POLICY);
         let cv_fractions_vec = jarray_to_option_vec(env, &cv_fractions);
 
         let iterations = shared_parse::require_non_negative_usize("iterations", iterations)?;
@@ -266,6 +268,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_lowessNew<'local>(
                 prediction_intervals: opt_f64(prediction_intervals),
                 parallel: Some(parallel),
                 backend: Some(&backend_str),
+                missing: Some(&missing_str),
                 ..Default::default()
             },
         )?;
@@ -372,6 +375,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_streamingNew<'local>(
     chunk_size: jint,
     overlap: jint,
     merge_strategy: JString<'local>,
+    missing: JString<'local>,
 ) -> jlong {
     env.with_env(|env| -> AppResult<jlong> {
         let wf = jstring_or_default(env, &weight_function, shared_parse::DEFAULT_WEIGHT_FUNCTION);
@@ -392,6 +396,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_streamingNew<'local>(
             &merge_strategy,
             shared_parse::DEFAULT_STREAMING_MERGE_STRATEGY,
         );
+        let missing_str = jstring_or_default(env, &missing, shared_parse::DEFAULT_MISSING_POLICY);
 
         let chunk_size = shared_parse::require_positive_usize("chunkSize", chunk_size)?;
 
@@ -413,6 +418,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_streamingNew<'local>(
                 confidence_intervals: None,
                 prediction_intervals: None,
                 parallel: Some(parallel),
+                missing: Some(&missing_str),
                 ..Default::default()
             },
         )?;
@@ -511,6 +517,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_onlineNew<'local>(
     window_capacity: jint,
     min_points: jint,
     update_mode: JString<'local>,
+    missing: JString<'local>,
 ) -> jlong {
     env.with_env(|env| -> AppResult<jlong> {
         let wf = jstring_or_default(env, &weight_function, shared_parse::DEFAULT_WEIGHT_FUNCTION);
@@ -527,6 +534,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_onlineNew<'local>(
             shared_parse::DEFAULT_ZERO_WEIGHT_FALLBACK,
         );
         let um = jstring_or_default(env, &update_mode, shared_parse::DEFAULT_ONLINE_UPDATE_MODE);
+        let missing_str = jstring_or_default(env, &missing, shared_parse::DEFAULT_MISSING_POLICY);
 
         let window_capacity =
             shared_parse::require_positive_usize("windowCapacity", window_capacity)?;
@@ -550,6 +558,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_onlineNew<'local>(
                 confidence_intervals: None,
                 prediction_intervals: None,
                 parallel: None,
+                missing: Some(&missing_str),
                 ..Default::default()
             },
         )?;

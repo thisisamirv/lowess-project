@@ -140,6 +140,9 @@ struct LowessOptions {
   /// Execution backend: "cpu" (default) or "gpu" (requires the library to be
   /// built with the `gpu` Cargo feature and a Vulkan/Metal/DX12-capable GPU).
   std::string backend = "cpu";
+  /// Policy for non-finite (NaN/Inf) values in input data: "error" (default)
+  /// or "drop".
+  std::string missing = "error";
 
   // Cross-validation options
   std::vector<double> cv_fractions;
@@ -186,6 +189,10 @@ struct OnlineOptions {
   double auto_converge = NAN; ///< Auto-convergence threshold
 
   bool return_robustness_weights = false;
+
+  /// Policy for non-finite (NaN/Inf) `x`/`y` values passed to add_point():
+  /// "error" (default) or "drop".
+  std::string missing = "error";
 
   int window_capacity = detail::k_default_window_capacity;
   int min_points = detail::k_default_min_points;
@@ -437,7 +444,7 @@ public:
         static_cast<unsigned long>(options.cv_fractions.size()),
         options.cv_method.c_str(), options.cv_k, options.parallel ? 1 : 0,
         options.return_se ? 1 : 0, options.return_sorted ? 1 : 0,
-        options.backend.c_str());
+        options.backend.c_str(), options.missing.c_str());
     if (options.cv_seed > 0) {
       cpp_lowess_set_cv_seed(ptr_, static_cast<unsigned long>(options.cv_seed));
     }
@@ -512,7 +519,7 @@ public:
         options.return_robustness_weights ? 1 : 0,
         options.zero_weight_fallback.c_str(), options.auto_converge,
         options.parallel ? 1 : 0, options.chunk_size, options.overlap,
-        options.merge_strategy.c_str());
+        options.merge_strategy.c_str(), options.missing.c_str());
   }
 
   ~StreamingLowess() {
@@ -591,7 +598,7 @@ public:
         options.return_robustness_weights ? 1 : 0,
         options.zero_weight_fallback.c_str(), options.auto_converge,
         options.window_capacity, options.min_points,
-        options.update_mode.c_str());
+        options.update_mode.c_str(), options.missing.c_str());
   }
 
   ~OnlineLowess() {

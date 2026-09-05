@@ -95,6 +95,9 @@
 #'   \code{WITH_GPU=1} (see \code{bindings/r/Makefile}) and a
 #'   Vulkan/Metal/DX12-capable GPU driver; not available in released
 #'   CRAN/Bioconductor binaries.
+#' @param missing Policy for non-finite (NaN/Infinity) values in input data:
+#'   \code{"error"} (default) raises an error, \code{"drop"} silently removes
+#'   affected observations before fitting.
 #'
 #' @return A Lowess object.
 #' @examples
@@ -128,7 +131,8 @@ Lowess <- function(
     cv_seed = NULL,
     return_se = FALSE,
     return_sorted = FALSE,
-    backend = "cpu"
+    backend = "cpu",
+    missing = "error"
 ) {
     reject_extra_positional_args(sys.call(), "fraction")
     check_gpu_backend(backend)

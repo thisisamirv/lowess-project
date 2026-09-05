@@ -63,6 +63,11 @@ type StreamingOptions struct {
 	// MergeStrategy controls how overlapping chunk results are combined,
 	// e.g. "weighted_average" (default).
 	MergeStrategy string
+
+	// Missing is the policy for non-finite (NaN/Inf) values in each chunk:
+	// "error" (default) returns an error, "drop" silently removes affected
+	// rows before merging the chunk with the overlap buffer.
+	Missing string
 }
 
 // DefaultStreamingOptions returns recommended defaults for streaming use.
@@ -79,6 +84,7 @@ func DefaultStreamingOptions() StreamingOptions {
 		ChunkSize:          5000,
 		Overlap:            -1,
 		MergeStrategy:      "weighted_average",
+		Missing:            "error",
 	}
 }
 
@@ -104,6 +110,8 @@ func NewStreamingLowess(opts StreamingOptions) (*StreamingLowess, error) {
 	defer freeCString(zwf)
 	ms := cStringOrNil(opts.MergeStrategy)
 	defer freeCString(ms)
+	missing := cStringOrNil(opts.Missing)
+	defer freeCString(missing)
 
 	delta, deltaSet := optPtr(opts.Delta)
 	autoConverge, autoConvergeSet := optPtr(opts.AutoConverge)
@@ -125,6 +133,7 @@ func NewStreamingLowess(opts StreamingOptions) (*StreamingLowess, error) {
 			C.int(opts.ChunkSize),
 			C.int(opts.Overlap),
 			ms,
+			missing,
 		)
 		if ptr == nil {
 			errMsg = lastError()

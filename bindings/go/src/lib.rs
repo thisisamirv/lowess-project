@@ -305,6 +305,7 @@ pub unsafe extern "C" fn go_lowess_new(
     return_se: c_int,
     return_sorted: c_int,
     backend: *const c_char,
+    missing: *const c_char,
 ) -> *mut GoLowess {
     with_panic_ptr(|| {
         clear_last_error();
@@ -342,6 +343,9 @@ pub unsafe extern "C" fn go_lowess_new(
         let backend_str =
             shared_parse::parse_c_str_or_default(backend, shared_parse::DEFAULT_BACKEND);
 
+        let missing_str =
+            shared_parse::parse_c_str_or_default(missing, shared_parse::DEFAULT_MISSING_POLICY);
+
         let builder = match shared_parse::apply_builder_options(
             LowessBuilder::<f64>::new(),
             shared_parse::BuilderOptionSet {
@@ -365,6 +369,7 @@ pub unsafe extern "C" fn go_lowess_new(
                     .then_some(prediction_intervals),
                 parallel: Some(parallel != 0),
                 backend: Some(backend_str),
+                missing: Some(missing_str),
                 ..Default::default()
             },
         ) {
@@ -486,6 +491,7 @@ pub unsafe extern "C" fn go_streaming_new(
     chunk_size: c_int,
     overlap: c_int,
     merge_strategy: *const c_char,
+    missing: *const c_char,
 ) -> *mut GoStreamingLowess {
     with_panic_ptr(|| {
         clear_last_error();
@@ -514,6 +520,9 @@ pub unsafe extern "C" fn go_streaming_new(
             shared_parse::DEFAULT_STREAMING_MERGE_STRATEGY,
         );
 
+        let missing_str =
+            shared_parse::parse_c_str_or_default(missing, shared_parse::DEFAULT_MISSING_POLICY);
+
         let chunk_size = match shared_parse::require_positive_usize("chunk_size", chunk_size) {
             Ok(v) => v,
             Err(e) => return null_with_error(&e),
@@ -537,6 +546,7 @@ pub unsafe extern "C" fn go_streaming_new(
                 confidence_intervals: None,
                 prediction_intervals: None,
                 parallel: Some(parallel != 0),
+                missing: Some(missing_str),
                 ..Default::default()
             },
         ) {
@@ -647,6 +657,7 @@ pub unsafe extern "C" fn go_online_new(
     window_capacity: c_int,
     min_points: c_int,
     update_mode: *const c_char,
+    missing: *const c_char,
 ) -> *mut GoOnlineLowess {
     with_panic_ptr(|| {
         clear_last_error();
@@ -674,6 +685,9 @@ pub unsafe extern "C" fn go_online_new(
             update_mode,
             shared_parse::DEFAULT_ONLINE_UPDATE_MODE,
         );
+
+        let missing_str =
+            shared_parse::parse_c_str_or_default(missing, shared_parse::DEFAULT_MISSING_POLICY);
 
         let window_capacity =
             match shared_parse::require_positive_usize("window_capacity", window_capacity) {
@@ -703,6 +717,7 @@ pub unsafe extern "C" fn go_online_new(
                 confidence_intervals: None,
                 prediction_intervals: None,
                 parallel: None,
+                missing: Some(missing_str),
                 ..Default::default()
             },
         ) {

@@ -2,6 +2,7 @@
 
 use crate::algorithms::regression::ZeroWeightFallback;
 use crate::algorithms::robustness::RobustnessMethod;
+use crate::engine::validator::MissingPolicy;
 
 // Default number of robustness iterations.
 pub const DEFAULT_ITERATIONS: usize = 3;
@@ -15,6 +16,11 @@ pub const DEFAULT_ROBUSTNESS_METHOD: &str = "bisquare";
 pub const DEFAULT_ZERO_WEIGHT_FALLBACK_ENUM: ZeroWeightFallback = ZeroWeightFallback::UseLocalMean;
 #[cfg(feature = "dev")]
 pub const DEFAULT_ZERO_WEIGHT_FALLBACK: &str = "use_local_mean";
+
+// Default missing-value (NaN/Inf) handling policy.
+pub const DEFAULT_MISSING_POLICY_ENUM: MissingPolicy = MissingPolicy::Error;
+#[cfg(feature = "dev")]
+pub const DEFAULT_MISSING_POLICY: &str = "error";
 
 // Default auto-convergence tolerance: `None` disables early stopping.
 pub const fn default_auto_converge<T>() -> Option<T> {

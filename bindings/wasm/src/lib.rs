@@ -59,6 +59,8 @@ export interface SmoothOptions {
     cv_k?: number;
     /** Random seed for CV fold assignment. Batch (Lowess) only; ignored by StreamingLowess/OnlineLowess. */
     cv_seed?: number;
+    /** Policy for non-finite (NaN/Inf) values in input data ("error", "drop"). Default: "error". */
+    missing?: string;
 }
 
 /** Configuration options for streaming LOWESS smoothing. A subset of `SmoothOptions`: confidence/prediction intervals, standard errors, cross-validation, and `return_sorted` have no equivalent here. */
@@ -89,6 +91,8 @@ export interface StreamingSmoothOptions {
     return_diagnostics?: boolean;
     /** Enable parallel execution. Default: true. */
     parallel?: boolean;
+    /** Policy for non-finite (NaN/Inf) values in each chunk ("error", "drop"). Default: "error". */
+    missing?: string;
 }
 
 /** Configuration options for online LOWESS smoothing. A subset of `SmoothOptions`: diagnostics, residuals, parallel execution, confidence/prediction intervals, standard errors, cross-validation, and `return_sorted` have no equivalent here. */
@@ -113,6 +117,8 @@ export interface OnlineSmoothOptions {
     auto_converge?: number;
     /** Include robustness weights in result. Default: false. */
     return_robustness_weights?: boolean;
+    /** Policy for non-finite (NaN/Inf) `x`/`y` values passed to `add_point` ("error", "drop"). Default: "error". */
+    missing?: string;
 }
 
 /** Configuration options for streaming LOWESS. */
@@ -214,6 +220,7 @@ pub struct SmoothOptions {
     pub cv_method: Option<String>,
     pub cv_k: Option<u32>,
     pub cv_seed: Option<u64>,
+    pub missing: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -245,6 +252,7 @@ pub struct StreamingSmoothOptions {
     pub return_robustness_weights: Option<bool>,
     pub return_diagnostics: Option<bool>,
     pub parallel: Option<bool>,
+    pub missing: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -259,6 +267,7 @@ pub struct OnlineSmoothOptions {
     pub scaling_method: Option<String>,
     pub auto_converge: Option<f64>,
     pub return_robustness_weights: Option<bool>,
+    pub missing: Option<String>,
 }
 
 #[wasm_bindgen]
@@ -482,6 +491,7 @@ fn batch_options_to_builder(opts: Option<SmoothOptions>) -> Result<LowessBuilder
                 prediction_intervals: opts.prediction_intervals,
                 parallel: opts.parallel,
                 backend: None,
+                missing: opts.missing.as_deref(),
                 cv_fractions: opts.cv_fractions.as_deref(),
                 cv_method: opts.cv_method.as_deref(),
                 cv_k: opts.cv_k.map(|v| v as usize),
@@ -515,6 +525,7 @@ fn streaming_options_to_builder(
                 return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
                 return_diagnostics: opts.return_diagnostics.unwrap_or(false),
                 parallel: opts.parallel,
+                missing: opts.missing.as_deref(),
                 ..Default::default()
             },
         ))?;
@@ -541,6 +552,7 @@ fn online_options_to_builder(
                 scaling_method: opts.scaling_method.as_deref(),
                 auto_converge: opts.auto_converge,
                 return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
+                missing: opts.missing.as_deref(),
                 ..Default::default()
             },
         ))?;

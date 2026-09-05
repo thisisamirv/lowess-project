@@ -50,7 +50,8 @@ OnlineLowess <- function(
     zero_weight_fallback = "use_local_mean",
     update_mode = "incremental",
     auto_converge = NULL,
-    return_robustness_weights = FALSE
+    return_robustness_weights = FALSE,
+    missing = "error"
 ) {
     reject_extra_positional_args(sys.call(), "min_points")
     validate_params(

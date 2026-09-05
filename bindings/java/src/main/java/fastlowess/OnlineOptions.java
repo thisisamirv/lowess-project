@@ -119,6 +119,16 @@ public final class OnlineOptions {
         }
 
         /**
+         * @param missing the missing-value handling policy name
+         * @return this builder, for chaining
+         * @see Options.Builder#missing(String)
+         */
+        public Builder missing(String missing) {
+            common.missing(missing);
+            return this;
+        }
+
+        /**
          * @param autoConverge the auto-convergence tolerance
          * @return this builder, for chaining
          * @see Options.Builder#autoConverge(double)

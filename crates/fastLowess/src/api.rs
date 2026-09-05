@@ -125,6 +125,10 @@ macro_rules! impl_common_builder {
                 self.0 = self.0.boundary_policy(s);
                 self
             }
+            pub fn missing(mut self, s: &str) -> Self {
+                self.0 = self.0.missing(s);
+                self
+            }
             // numeric options
             pub fn fraction(mut self, f: f64) -> Self {
                 self.0 = self.0.fraction(f);

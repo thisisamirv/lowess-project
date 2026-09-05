@@ -272,6 +272,7 @@ pub unsafe extern "C" fn jl_lowess_new(
     return_se: c_int,
     return_sorted: c_int,
     backend: *const c_char,
+    missing: *const c_char,
 ) -> *mut JlLowessConfig {
     clear_last_error_message();
     let result = catch_unwind(|| {
@@ -310,6 +311,10 @@ pub unsafe extern "C" fn jl_lowess_new(
         let backend_str =
             unsafe { shared_parse::parse_c_str_or_default(backend, shared_parse::DEFAULT_BACKEND) };
 
+        let missing_str = unsafe {
+            shared_parse::parse_c_str_or_default(missing, shared_parse::DEFAULT_MISSING_POLICY)
+        };
+
         let cv_fractions_slice =
             unsafe { shared_parse::option_slice_from_ptr(cv_fractions, cv_fractions_len as usize) };
 
@@ -336,6 +341,7 @@ pub unsafe extern "C" fn jl_lowess_new(
                     .then_some(prediction_intervals),
                 parallel: Some(parallel != 0),
                 backend: Some(backend_str),
+                missing: Some(missing_str),
                 cv_fractions: cv_fractions_slice,
                 cv_method: Some(cv_method_str),
                 cv_k: Some(cv_k as usize),
@@ -494,6 +500,7 @@ pub unsafe extern "C" fn jl_streaming_lowess_new(
     zero_weight_fallback: *const c_char,
     merge_strategy: *const c_char,
     parallel: c_int,
+    missing: *const c_char,
 ) -> *mut JlStreamingLowess {
     clear_last_error_message();
     let result = catch_unwind(|| {
@@ -534,6 +541,10 @@ pub unsafe extern "C" fn jl_streaming_lowess_new(
             )
         };
 
+        let missing_str = unsafe {
+            shared_parse::parse_c_str_or_default(missing, shared_parse::DEFAULT_MISSING_POLICY)
+        };
+
         let chunk_size_usize = unwrap_or_return_null!(shared_parse::require_positive_usize(
             "chunk_size",
             chunk_size
@@ -560,6 +571,7 @@ pub unsafe extern "C" fn jl_streaming_lowess_new(
                 return_diagnostics: return_diagnostics != 0,
                 return_se: false,
                 parallel: Some(parallel != 0),
+                missing: Some(missing_str),
                 ..Default::default()
             },
         )) {
@@ -688,6 +700,7 @@ pub unsafe extern "C" fn jl_online_lowess_new(
     auto_converge: c_double,
     return_robustness_weights: c_int,
     zero_weight_fallback: *const c_char,
+    missing: *const c_char,
 ) -> *mut JlOnlineLowess {
     clear_last_error_message();
     let result =
@@ -729,6 +742,10 @@ pub unsafe extern "C" fn jl_online_lowess_new(
                 )
             };
 
+            let missing_str = unsafe {
+                shared_parse::parse_c_str_or_default(missing, shared_parse::DEFAULT_MISSING_POLICY)
+            };
+
             let iterations_usize = unwrap_or_return_null!(
                 shared_parse::require_non_negative_usize("iterations", iterations)
             );
@@ -757,6 +774,7 @@ pub unsafe extern "C" fn jl_online_lowess_new(
                     return_diagnostics: false,
                     return_se: false,
                     parallel: None,
+                    missing: Some(missing_str),
                     ..Default::default()
                 },
             )) {

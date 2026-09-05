@@ -145,3 +145,14 @@ test_that("OnlineLowess robustness works", {
     expect_false(all(vapply(results_no_robust, is.null, logical(1))))
     expect_false(all(vapply(results_robust, is.null, logical(1))))
 })
+
+test_that("OnlineLowess missing = \"drop\" ignores non-finite point", {
+    ol <- OnlineLowess(
+        fraction = 0.5,
+        window_capacity = 10,
+        missing = "drop"
+    )
+
+    result <- add_point(ol, 1.0, NaN)
+    expect_null(result)
+})

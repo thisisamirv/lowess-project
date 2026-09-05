@@ -42,6 +42,7 @@ macro_rules! impl_into_enum_for {
 
 impl_into_enum_for!(BoundaryPolicy);
 impl_into_enum_for!(MergeStrategy);
+impl_into_enum_for!(MissingPolicy);
 impl_into_enum_for!(RobustnessMethod);
 impl_into_enum_for!(UpdateMode);
 impl_into_enum_for!(WeightFunction);
@@ -56,6 +57,7 @@ pub use lowess::internals::adapters::streaming::MergeStrategy;
 pub use lowess::internals::algorithms::regression::ZeroWeightFallback;
 pub use lowess::internals::algorithms::robustness::RobustnessMethod;
 use lowess::internals::alias;
+pub use lowess::internals::engine::validator::MissingPolicy;
 pub use lowess::internals::math::boundary::BoundaryPolicy;
 pub use lowess::internals::math::kernel::WeightFunction;
 pub use lowess::internals::math::scaling::ScalingMethod;
@@ -128,6 +130,7 @@ pub const CUSTOM_WEIGHTS_MUST_BE_NON_NEGATIVE: &str = "custom_weights must be no
 // `lowess::defaults` so that all bindings share a single source of truth.
 pub use lowess::internals::adapters::defaults::DEFAULT_ONLINE_UPDATE_MODE;
 pub use lowess::internals::adapters::defaults::DEFAULT_STREAMING_MERGE_STRATEGY;
+pub use lowess::internals::algorithms::defaults::DEFAULT_MISSING_POLICY;
 pub use lowess::internals::algorithms::defaults::DEFAULT_ROBUSTNESS_METHOD;
 pub use lowess::internals::algorithms::defaults::DEFAULT_ZERO_WEIGHT_FALLBACK;
 pub use lowess::internals::math::defaults::DEFAULT_BOUNDARY_POLICY;
@@ -423,6 +426,8 @@ pub struct BuilderOptionSet<'a> {
     pub return_se: bool,
     // Return results sorted ascending by x instead of in original input order (Batch only).
     pub return_sorted: bool,
+    // Policy for non-finite (NaN/Inf) values in input data: "error" (default) or "drop".
+    pub missing: Option<&'a str>,
     pub confidence_intervals: Option<f64>,
     pub prediction_intervals: Option<f64>,
     pub parallel: Option<bool>,
@@ -453,6 +458,7 @@ pub struct TypedBuilderOptionSet {
     pub zero_weight_fallback: Option<ZeroWeightFallback>,
     pub boundary_policy: Option<BoundaryPolicy>,
     pub scaling_method: Option<ScalingMethod>,
+    pub missing: Option<MissingPolicy>,
     pub auto_converge: Option<f64>,
     pub return_residuals: bool,
     pub return_robustness_weights: bool,
@@ -498,6 +504,10 @@ pub fn parse_robustness_method(name: &str) -> Result<RobustnessMethod, String> {
 
 pub fn parse_zero_weight_fallback(name: &str) -> Result<ZeroWeightFallback, String> {
     alias::parse_zero_weight_fallback(name).map_err(|e| e.to_string())
+}
+
+pub fn parse_missing_policy(name: &str) -> Result<MissingPolicy, String> {
+    alias::parse_missing_policy(name).map_err(|e| e.to_string())
 }
 
 // Execution backend: "cpu" (default) or "gpu". Case-insensitive.
@@ -548,6 +558,10 @@ pub fn scaling_method_str(value: ScalingMethod) -> &'static str {
 
 pub fn zero_weight_fallback_str(value: ZeroWeightFallback) -> &'static str {
     alias::zero_weight_fallback_str(value)
+}
+
+pub fn missing_policy_str(value: MissingPolicy) -> &'static str {
+    alias::missing_policy_str(value)
 }
 
 pub fn boundary_policy_str(value: BoundaryPolicy) -> &'static str {
@@ -647,6 +661,7 @@ pub fn apply_builder_options(
         return_diagnostics: options.return_diagnostics,
         return_se: options.return_se,
         return_sorted: options.return_sorted,
+        missing: options.missing.map(parse_missing_policy).transpose()?,
         confidence_intervals: options.confidence_intervals,
         prediction_intervals: options.prediction_intervals,
         parallel: options.parallel,
@@ -719,6 +734,9 @@ pub fn apply_typed_builder_options(
     }
     if options.return_sorted {
         builder = builder.return_sorted();
+    }
+    if let Some(m) = options.missing {
+        builder = builder.missing(m);
     }
     if let Some(cw) = options.custom_weights {
         builder = builder.custom_weights(cw);
@@ -923,6 +941,16 @@ impl<T: Float> ParallelBatchLowessBuilder<T> {
         self
     }
 
+    // Set the policy for non-finite (NaN/Inf) values in input data.
+    #[allow(private_bounds)]
+    pub fn missing(mut self, policy: impl IntoEnum<MissingPolicy>) -> Self {
+        match policy.into_enum() {
+            Ok(m) => self.base.missing = m,
+            Err(e) => self.parse_errors.push(e),
+        }
+        self
+    }
+
     // Set the boundary handling policy.
     #[allow(private_bounds)]
     pub fn boundary_policy(mut self, policy: impl IntoEnum<BoundaryPolicy>) -> Self {
@@ -1057,6 +1085,16 @@ impl<T: Float> ParallelOnlineLowessBuilder<T> {
         self
     }
 
+    // Set the policy for non-finite (NaN/Inf) values in input data.
+    #[allow(private_bounds)]
+    pub fn missing(mut self, policy: impl IntoEnum<MissingPolicy>) -> Self {
+        match policy.into_enum() {
+            Ok(m) => self.base.missing = m,
+            Err(e) => self.parse_errors.push(e),
+        }
+        self
+    }
+
     // Set the boundary handling policy.
     #[allow(private_bounds)]
     pub fn boundary_policy(mut self, policy: impl IntoEnum<BoundaryPolicy>) -> Self {
@@ -1152,6 +1190,16 @@ impl<T: Float> ParallelStreamingLowessBuilder<T> {
     pub fn zero_weight_fallback(mut self, fallback: impl IntoEnum<ZeroWeightFallback>) -> Self {
         match fallback.into_enum() {
             Ok(f) => self.base.zero_weight_fallback = f,
+            Err(e) => self.parse_errors.push(e),
+        }
+        self
+    }
+
+    // Set the policy for non-finite (NaN/Inf) values in input data.
+    #[allow(private_bounds)]
+    pub fn missing(mut self, policy: impl IntoEnum<MissingPolicy>) -> Self {
+        match policy.into_enum() {
+            Ok(m) => self.base.missing = m,
             Err(e) => self.parse_errors.push(e),
         }
         self

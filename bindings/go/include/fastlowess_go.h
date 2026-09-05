@@ -125,7 +125,8 @@ struct fastlowess_GoLowess *go_lowess_new(double fraction,
                                           int parallel,
                                           int return_se,
                                           int return_sorted,
-                                          const char *backend);
+                                          const char *backend,
+                                          const char *missing);
 
 /**
  * Set CV seed for reproducible K-fold splits.
@@ -178,7 +179,8 @@ struct fastlowess_GoStreamingLowess *go_streaming_new(double fraction,
                                                       int parallel,
                                                       int chunk_size,
                                                       int overlap,
-                                                      const char *merge_strategy);
+                                                      const char *merge_strategy,
+                                                      const char *missing);
 
 /**
  * Process a chunk of data.
@@ -226,7 +228,8 @@ struct fastlowess_GoOnlineLowess *go_online_new(double fraction,
                                                 double auto_converge,
                                                 int window_capacity,
                                                 int min_points,
-                                                const char *update_mode);
+                                                const char *update_mode,
+                                                const char *missing);
 
 /**
  * Add a single point to the model and return its smoothed value.

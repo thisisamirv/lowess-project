@@ -23,7 +23,7 @@ use crate::algorithms::regression::{WLSSolver, ZeroWeightFallback};
 use crate::algorithms::robustness::RobustnessMethod;
 use crate::engine::executor::{CVPassFn, FitPassFn, IntervalPassFn, SmoothPassFn};
 use crate::engine::executor::{LowessConfig, LowessExecutor};
-use crate::engine::validator::Validator;
+use crate::engine::validator::{MissingPolicy, Validator};
 use crate::math::boundary::BoundaryPolicy;
 use crate::math::defaults::*;
 use crate::math::kernel::WeightFunction;
@@ -84,6 +84,9 @@ pub struct OnlineLowessBuilder<T: Float> {
     // Whether to return robustness weights
     pub return_robustness_weights: bool,
 
+    // Policy for handling non-finite (NaN/Inf) values in input data
+    pub missing: MissingPolicy,
+
     // Deferred error from adapter conversion
     pub deferred_error: Option<LowessError>,
 
@@ -134,6 +137,7 @@ impl<T: Float> OnlineLowessBuilder<T> {
             scaling_method: DEFAULT_SCALING_METHOD_ENUM,
             return_robustness_weights: DEFAULT_RETURN_ROBUSTNESS_WEIGHTS,
             auto_converge: default_auto_converge(),
+            missing: DEFAULT_MISSING_POLICY_ENUM,
             deferred_error: None,
             custom_smooth_pass: None,
             custom_cv_pass: None,
@@ -203,9 +207,18 @@ pub struct OnlineLowess<T: Float> {
 impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
     // Add a new point and get its smoothed value.
     pub fn add_point(&mut self, x: T, y: T) -> Result<Option<OnlineOutput<T>>, LowessError> {
-        // Validate new point
-        Validator::validate_scalar(x, "x")?;
-        Validator::validate_scalar(y, "y")?;
+        // Validate new point according to the configured missing-value policy
+        match self.config.missing {
+            MissingPolicy::Error => {
+                Validator::validate_scalar(x, "x")?;
+                Validator::validate_scalar(y, "y")?;
+            }
+            MissingPolicy::Drop => {
+                if !x.is_finite() || !y.is_finite() {
+                    return Ok(None);
+                }
+            }
+        }
 
         // Add to window
         self.window_x.push_back(x);

@@ -238,7 +238,8 @@ impl PyStreamingLowess {
         return_robustness_weights=false,
         zero_weight_fallback="use_local_mean",
         parallel=true,
-        merge_strategy="weighted_average"
+        merge_strategy="weighted_average",
+        missing="error"
     ))]
     #[allow(clippy::too_many_arguments)]
     fn new(
@@ -258,6 +259,7 @@ impl PyStreamingLowess {
         zero_weight_fallback: &str,
         parallel: bool,
         merge_strategy: &str,
+        missing: &str,
     ) -> PyResult<Self> {
         let overlap_size = overlap.unwrap_or_else(|| binding_support::default_overlap(chunk_size));
 
@@ -278,6 +280,7 @@ impl PyStreamingLowess {
                 return_diagnostics,
                 return_se: false,
                 return_sorted: false,
+                missing: Some(missing),
                 confidence_intervals: None,
                 prediction_intervals: None,
                 parallel: Some(parallel),
@@ -396,7 +399,8 @@ impl PyOnlineLowess {
         update_mode="incremental",
         auto_converge=None,
         return_robustness_weights=false,
-        zero_weight_fallback="use_local_mean"
+        zero_weight_fallback="use_local_mean",
+        missing="error"
     ))]
     #[allow(clippy::too_many_arguments)]
     fn new(
@@ -413,6 +417,7 @@ impl PyOnlineLowess {
         auto_converge: Option<f64>,
         return_robustness_weights: bool,
         zero_weight_fallback: &str,
+        missing: &str,
     ) -> PyResult<Self> {
         let builder = map_invalid_arg(binding_support::apply_builder_options(
             LowessBuilder::<f64>::new(),
@@ -431,6 +436,7 @@ impl PyOnlineLowess {
                 return_diagnostics: false,
                 return_se: false,
                 return_sorted: false,
+                missing: Some(missing),
                 confidence_intervals: None,
                 prediction_intervals: None,
                 parallel: None,
@@ -516,7 +522,8 @@ impl PyLowess {
         cv_seed=None,
         return_se=false,
         return_sorted=false,
-        backend="cpu"
+        backend="cpu",
+        missing="error"
     ))]
     #[allow(clippy::too_many_arguments)]
     fn new(
@@ -542,6 +549,7 @@ impl PyLowess {
         return_se: bool,
         return_sorted: bool,
         backend: &str,
+        missing: &str,
     ) -> PyResult<Self> {
         let builder = map_invalid_arg(binding_support::apply_builder_options(
             LowessBuilder::<f64>::new(),
@@ -560,6 +568,7 @@ impl PyLowess {
                 return_diagnostics,
                 return_se,
                 return_sorted,
+                missing: Some(missing),
                 confidence_intervals,
                 prediction_intervals,
                 parallel: Some(parallel),

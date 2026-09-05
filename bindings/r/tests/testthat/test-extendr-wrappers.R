@@ -26,7 +26,9 @@ test_that("RLowess generated accessors dispatch fit methods", {
         parallel = FALSE,
         cv_seed = null_value,
         return_se = FALSE,
-        backend = "cpu"
+        return_sorted = FALSE,
+        backend = "cpu",
+        missing = "error"
     )
 
     x <- as.double(1:10)
@@ -58,8 +60,7 @@ test_that("RStreamingLowess generated accessors dispatch chunked methods", {
         merge_strategy = "weighted_average",
         parallel = FALSE,
         delta = null_value,
-        confidence_intervals = null_value,
-        prediction_intervals = null_value
+        missing = "error"
     )
 
     x <- as.double(1:10)
@@ -87,12 +88,8 @@ test_that("ROnlineLowess generated accessors dispatch add_point", {
         update_mode = "incremental",
         auto_converge = null_value,
         return_robustness_weights = FALSE,
-        return_diagnostics = FALSE,
-        return_residuals = FALSE,
-        parallel = FALSE,
         delta = null_value,
-        confidence_intervals = null_value,
-        prediction_intervals = null_value
+        missing = "error"
     )
     handle_bracket <- ROnlineLowess$new(
         fraction = 0.3,
@@ -107,12 +104,8 @@ test_that("ROnlineLowess generated accessors dispatch add_point", {
         update_mode = "incremental",
         auto_converge = null_value,
         return_robustness_weights = FALSE,
-        return_diagnostics = FALSE,
-        return_residuals = FALSE,
-        parallel = FALSE,
         delta = null_value,
-        confidence_intervals = null_value,
-        prediction_intervals = null_value
+        missing = "error"
     )
 
     # Prime both handles with enough points to get a result

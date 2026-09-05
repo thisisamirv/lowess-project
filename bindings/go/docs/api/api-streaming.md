@@ -70,6 +70,7 @@ result, err := model.Finalize()
 | `ScalingMethod` | `string` | `"mad"` | Residual scaling method |
 | `BoundaryPolicy` | `string` | `"extend"` | Boundary handling policy |
 | `ZeroWeightFallback` | `string` | `"use_local_mean"` | Zero-weight handling |
+| `Missing` | `string` | `"error"` | Policy for non-finite (NaN/Inf) values in each chunk |
 | `AutoConverge` | `*float64` | `nil` | Auto-convergence tolerance |
 | `ReturnDiagnostics` | `bool` | `false` | Include diagnostics in result |
 | `ReturnResiduals` | `bool` | `false` | Include residuals in result |
@@ -155,6 +156,17 @@ Behavior when all neighborhood weights are zero:
 | `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
 | `"return_original"` (alias: `"original"`) | Return the original y value |
 | `"return_none"` (alias: `"none"`) | Return `NaN` |
+
+### Missing
+
+Policy for handling non-finite (NaN/Inf) values within each chunk:
+
+| Option | Behavior |
+| --- | --- |
+| `"error"` (default) | Return an error if any value in the chunk is non-finite |
+| `"drop"` | Silently remove rows where `X` or `Y` is non-finite before merging the chunk with the overlap buffer |
+
+**Note:** A length mismatch between `X` and `Y` always errors, even under `"drop"`.
 
 ### AutoConverge
 

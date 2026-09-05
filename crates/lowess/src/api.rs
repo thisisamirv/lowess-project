@@ -35,6 +35,7 @@ pub use crate::adapters::streaming::MergeStrategy;
 pub use crate::algorithms::regression::ZeroWeightFallback;
 pub use crate::algorithms::robustness::RobustnessMethod;
 pub use crate::engine::output::LowessResult;
+pub use crate::engine::validator::MissingPolicy;
 
 pub use crate::math::boundary::BoundaryPolicy;
 pub use crate::math::kernel::WeightFunction;
@@ -78,6 +79,7 @@ macro_rules! impl_into_enum_for {
 
 impl_into_enum_for!(BoundaryPolicy);
 impl_into_enum_for!(MergeStrategy);
+impl_into_enum_for!(MissingPolicy);
 impl_into_enum_for!(RobustnessMethod);
 impl_into_enum_for!(ScalingMethod);
 impl_into_enum_for!(UpdateMode);
@@ -159,6 +161,9 @@ pub struct LowessBuilder<T, Mode = BatchMode> {
 
     // Return results sorted ascending by x instead of in original input order (Batch only).
     pub return_sorted: Option<bool>,
+
+    // Policy for handling non-finite (NaN/Inf) values in input data.
+    pub missing: Option<MissingPolicy>,
 
     // Policy for handling data boundaries (default: Extend).
     pub boundary_policy: Option<BoundaryPolicy>,
@@ -260,6 +265,7 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
             compute_residuals: None,
             return_robustness_weights: None,
             return_sorted: None,
+            missing: None,
             boundary_policy: None,
             zero_weight_fallback: None,
             merge_strategy: None,
@@ -547,6 +553,18 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
         self
     }
 
+    // Set the policy for handling non-finite (NaN/Inf) values in input data.
+    pub fn missing(mut self, policy: impl IntoEnum<MissingPolicy>) -> Self {
+        if self.missing.is_some() {
+            self.duplicate_param = Some("missing");
+        }
+        match policy.into_enum() {
+            Ok(p) => self.missing = Some(p),
+            Err(e) => self.parse_errors.push(e),
+        }
+        self
+    }
+
     // ++++++++++++++++++++++++++++++++++++++
     // +               DEV                  +
     // ++++++++++++++++++++++++++++++++++++++
@@ -680,6 +698,9 @@ impl<T: Float> LowessAdapter<T> for Batch {
         if let Some(rs) = builder.return_sorted {
             result.return_sorted = rs;
         }
+        if let Some(m) = builder.missing {
+            result.missing = m;
+        }
 
         // ++++++++++++++++++++++++++++++++++++++
         // +               DEV                  +
@@ -769,6 +790,9 @@ impl<T: Float> LowessAdapter<T> for Streaming {
         }
         if let Some(ac) = builder.auto_converge {
             result.auto_converge = Some(ac);
+        }
+        if let Some(m) = builder.missing {
+            result.missing = m;
         }
 
         // ++++++++++++++++++++++++++++++++++++++
@@ -866,6 +890,9 @@ impl<T: Float> LowessAdapter<T> for Online {
         if let Some(ac) = builder.auto_converge {
             result.auto_converge = Some(ac);
         }
+        if let Some(m) = builder.missing {
+            result.missing = m;
+        }
 
         // ++++++++++++++++++++++++++++++++++++++
         // +               DEV                  +
@@ -935,6 +962,24 @@ impl FromStr for BoundaryPolicy {
                 option: "boundary_policy",
                 value: s.to_string(),
                 valid: "extend, reflect, zero, noboundary",
+            }),
+        }
+    }
+}
+
+// MissingPolicy
+
+impl FromStr for MissingPolicy {
+    type Err = LowessError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "error" => Ok(MissingPolicy::Error),
+            "drop" => Ok(MissingPolicy::Drop),
+            _ => Err(LowessError::InvalidOption {
+                option: "missing",
+                value: s.to_string(),
+                valid: "error, drop",
             }),
         }
     }
@@ -1064,8 +1109,8 @@ impl FromStr for UpdateMode {
 #[cfg(feature = "dev")]
 pub mod helpers {
     use super::{
-        BoundaryPolicy, LowessError, MergeStrategy, RobustnessMethod, ScalingMethod, UpdateMode,
-        WeightFunction, ZeroWeightFallback,
+        BoundaryPolicy, LowessError, MergeStrategy, MissingPolicy, RobustnessMethod, ScalingMethod,
+        UpdateMode, WeightFunction, ZeroWeightFallback,
     };
 
     // Parse helpers
@@ -1095,6 +1140,10 @@ pub mod helpers {
     }
 
     pub fn parse_merge_strategy(s: &str) -> Result<MergeStrategy, LowessError> {
+        s.parse()
+    }
+
+    pub fn parse_missing_policy(s: &str) -> Result<MissingPolicy, LowessError> {
         s.parse()
     }
 
@@ -1160,6 +1209,13 @@ pub mod helpers {
             MergeStrategy::WeightedAverage => "weighted_average",
             MergeStrategy::TakeFirst => "take_first",
             MergeStrategy::TakeLast => "take_last",
+        }
+    }
+
+    pub fn missing_policy_str(v: MissingPolicy) -> &'static str {
+        match v {
+            MissingPolicy::Error => "error",
+            MissingPolicy::Drop => "drop",
         }
     }
 }

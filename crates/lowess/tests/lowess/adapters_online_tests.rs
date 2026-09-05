@@ -847,3 +847,51 @@ fn test_online_reset_complete() {
     let _output = processor.add_point(100.0, 200.0).unwrap();
     assert_eq!(processor.window_size(), 1);
 }
+
+// ============================================================================
+// Missing Value Handling (`missing`)
+// ============================================================================
+
+/// Test that the default `missing` policy ("error") rejects a NaN point.
+#[test]
+fn test_online_missing_error_default_rejects_nan() {
+    let mut processor = OnlineLowess::new()
+        .window_capacity(10)
+        .min_points(2)
+        .build()
+        .unwrap();
+
+    let result = processor.add_point(1.0, f64::NAN);
+    assert!(
+        matches!(result, Err(LowessError::InvalidNumericValue(_))),
+        "default missing policy should reject a NaN point"
+    );
+}
+
+/// Test that `.missing("drop")` silently ignores a non-finite point instead
+/// of adding it to the window or erroring.
+#[test]
+fn test_online_missing_drop_ignores_nan_point() {
+    let mut processor = OnlineLowess::new()
+        .missing("drop")
+        .window_capacity(10)
+        .min_points(2)
+        .build()
+        .unwrap();
+
+    let result = processor
+        .add_point(1.0, f64::NAN)
+        .expect("drop policy should not error on a non-finite point");
+
+    assert!(result.is_none(), "a dropped point should produce no output");
+    assert_eq!(
+        processor.window_size(),
+        0,
+        "a dropped point should not be added to the window"
+    );
+
+    // Subsequent finite points should still work normally.
+    processor.add_point(1.0, 2.0).unwrap();
+    processor.add_point(2.0, 4.0).unwrap();
+    assert_eq!(processor.window_size(), 2);
+}

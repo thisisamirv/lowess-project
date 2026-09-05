@@ -750,3 +750,51 @@ fn test_streaming_finalize_multiple_times() {
     let result3 = processor.finalize().unwrap();
     assert!(result3.x.is_empty());
 }
+
+// ============================================================================
+// Missing Value Handling (`missing`)
+// ============================================================================
+
+/// Test that the default `missing` policy ("error") rejects NaN in a chunk.
+#[test]
+fn test_streaming_missing_error_default_rejects_nan() {
+    let mut processor = StreamingLowess::new()
+        .chunk_size(10)
+        .overlap(1)
+        .build()
+        .unwrap();
+
+    let x: Vec<f64> = (0..10).map(|i| i as f64).collect();
+    let mut y: Vec<f64> = x.iter().map(|&xi| xi * 2.0).collect();
+    y[4] = f64::NAN;
+
+    let result = processor.process_chunk(&x, &y);
+    assert!(
+        matches!(result, Err(LowessError::InvalidNumericValue(_))),
+        "default missing policy should reject NaN values in a chunk"
+    );
+}
+
+/// Test that `.missing("drop")` removes non-finite rows within each chunk
+/// before merging with the overlap buffer.
+#[test]
+fn test_streaming_missing_drop_removes_nan_rows() {
+    let mut processor = StreamingLowess::new()
+        .fraction(0.9)
+        .missing("drop")
+        .chunk_size(10)
+        .overlap(1)
+        .build()
+        .unwrap();
+
+    let x: Vec<f64> = (0..10).map(|i| i as f64).collect();
+    let mut y: Vec<f64> = x.iter().map(|&xi| xi * 2.0).collect();
+    y[4] = f64::NAN;
+
+    let result = processor
+        .process_chunk(&x, &y)
+        .expect("drop policy should silently remove non-finite rows");
+
+    // 9 finite rows in, minus 1 overlap held back = 8 returned.
+    assert_eq!(result.y.len(), 8);
+}

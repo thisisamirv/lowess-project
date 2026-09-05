@@ -71,6 +71,7 @@ Result result = model.finish();
 |`scalingMethod` |`String` |`"mad"` |Residual scaling method
 |`boundaryPolicy` |`String` |`"extend"` |Boundary handling policy
 |`zeroWeightFallback` |`String` |`"use_local_mean"` |Zero-weight handling
+|`missing` |`String` |`"error"` |Policy for non-finite (NaN/Infinity) values in each chunk
 |`autoConverge` |`double` |`NaN` |Auto-convergence tolerance
 |`returnDiagnostics` |`boolean` |`false` |Include diagnostics in result
 |`returnResiduals` |`boolean` |`false` |Include residuals in result
@@ -166,6 +167,20 @@ Behavior when all neighborhood weights are zero:
 |`"return_original"` (alias: `"original"`) |Return the original y value
 |`"return_none"` (alias: `"none"`) |Return `NaN`
 |===
+
+=== missing
+
+Policy for handling non-finite (NaN/Infinity) values within each chunk:
+
+[cols="1,1",options="header"]
+|===
+|Option |Behavior
+
+|`"error"` (default) |Throw if any value in the chunk is non-finite
+|`"drop"` |Silently remove rows where `x` or `y` is non-finite before merging the chunk with the overlap buffer
+|===
+
+NOTE: A length mismatch between `x` and `y` always throws, even under `"drop"`.
 
 === autoConverge
 

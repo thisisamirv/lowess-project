@@ -65,6 +65,7 @@ result.ifPresent(r -> System.out.println(r.y()));
 |`scalingMethod` |`String` |`"mad"` |Residual scaling method
 |`boundaryPolicy` |`String` |`"extend"` |Boundary handling policy
 |`zeroWeightFallback` |`String` |`"use_local_mean"` |Zero-weight handling
+|`missing` |`String` |`"error"` |Policy for non-finite (NaN/Infinity) values in each point
 |`autoConverge` |`double` |`NaN` |Auto-convergence tolerance
 |`returnRobustnessWeights` |`boolean` |`false` |Include `robustnessWeight()` in result
 |`windowCapacity` |`int` |`1000` |Maximum number of recent points retained
@@ -156,6 +157,18 @@ Behavior when all neighborhood weights are zero:
 |`"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) |Use the mean of the neighborhood
 |`"return_original"` (alias: `"original"`) |Return the original y value
 |`"return_none"` (alias: `"none"`) |Return `NaN`
+|===
+
+=== missing
+
+Policy for handling a non-finite (NaN/Infinity) `x` or `y` value passed to `addPoint`:
+
+[cols="1,1",options="header"]
+|===
+|Option |Behavior
+
+|`"error"` (default) |Throw
+|`"drop"` |Silently ignore the point — `addPoint` returns `Optional.empty()` instead of adding it to the window
 |===
 
 === autoConverge

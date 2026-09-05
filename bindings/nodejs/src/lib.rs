@@ -239,6 +239,9 @@ pub struct SmoothOptions {
     /// Execution backend: "cpu" (default) or "gpu" (requires the package to be
     /// built with the `gpu` Cargo feature and a Vulkan/Metal/DX12-capable GPU).
     pub backend: Option<String>,
+    /// Policy for non-finite (NaN/Inf) values in input data ("error", "drop"). Default: "error".
+    #[napi(js_name = "missing")]
+    pub missing: Option<String>,
 }
 
 /// Configuration options for streaming LOWESS smoothing.
@@ -284,6 +287,9 @@ pub struct StreamingSmoothOptions {
     pub return_diagnostics: Option<bool>,
     /// Enable parallel execution. Default: true.
     pub parallel: Option<bool>,
+    /// Policy for non-finite (NaN/Inf) values in each chunk ("error", "drop"). Default: "error".
+    #[napi(js_name = "missing")]
+    pub missing: Option<String>,
 }
 
 /// Configuration options for online LOWESS smoothing.
@@ -323,6 +329,9 @@ pub struct OnlineSmoothOptions {
     /// Return robustness weights in result. Default: false.
     #[napi(js_name = "return_robustness_weights")]
     pub return_robustness_weights: Option<bool>,
+    /// Policy for non-finite (NaN/Inf) `x`/`y` values passed to `addPoint` ("error", "drop"). Default: "error".
+    #[napi(js_name = "missing")]
+    pub missing: Option<String>,
 }
 
 /// Build a `LowessBuilder` from Batch options, applying every field.
@@ -350,6 +359,7 @@ fn batch_options_to_builder(opts: Option<&SmoothOptions>) -> Result<LowessBuilde
                 prediction_intervals: opts.prediction_intervals,
                 parallel: opts.parallel,
                 backend: opts.backend.as_deref(),
+                missing: opts.missing.as_deref(),
                 cv_fractions: opts.cv_fractions.as_deref(),
                 cv_method: opts.cv_method.as_deref(),
                 cv_k: opts.cv_k.map(|v| v as usize),
@@ -383,6 +393,7 @@ fn streaming_options_to_builder(
                 return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
                 return_diagnostics: opts.return_diagnostics.unwrap_or(false),
                 parallel: opts.parallel,
+                missing: opts.missing.as_deref(),
                 ..Default::default()
             },
         ))?;
@@ -407,6 +418,7 @@ fn online_options_to_builder(opts: Option<&OnlineSmoothOptions>) -> Result<Lowes
                 scaling_method: opts.scaling_method.as_deref(),
                 auto_converge: opts.auto_converge,
                 return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
+                missing: opts.missing.as_deref(),
                 ..Default::default()
             },
         ))?;

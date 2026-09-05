@@ -142,6 +142,24 @@ using FastLOWESS
 			@test length(result.prediction_lower) == length(x)
 			@test length(result.prediction_upper) == length(x)
 		end
+
+		@testset "missing = \"drop\" removes non-finite rows" begin
+			x = [1.0, 2.0, 3.0, 4.0, 5.0]
+			y = [2.0, NaN, 6.0, 8.0, 10.0]
+
+			model = Lowess(fraction = 0.5, missing = "drop")
+			result = fit(model, x, y)
+
+			@test length(result.y) == length(x) - 1
+		end
+
+		@testset "missing default (\"error\") raises on NaN" begin
+			x = [1.0, 2.0, 3.0, 4.0, 5.0]
+			y = [2.0, NaN, 6.0, 8.0, 10.0]
+
+			model = Lowess(fraction = 0.5)
+			@test_throws ErrorException fit(model, x, y)
+		end
 	end
 
 	@testset "Weight Functions" begin
@@ -237,6 +255,18 @@ using FastLOWESS
 
 			@test stream_y ≈ result_batch.y rtol = 1e-10
 		end
+
+		@testset "missing = \"drop\" removes non-finite rows" begin
+			x = collect(range(0, 100, length = 50))
+			y = sin.(x ./ 10)
+			y[5] = NaN
+
+			stream = StreamingLowess(fraction = 0.1, chunk_size = 50, missing = "drop")
+			r1 = process_chunk(stream, x, y)
+			r2 = finalize(stream)
+
+			@test length(r1.y) + length(r2.y) == length(x) - 1
+		end
 	end
 
 	@testset "OnlineLowess" begin
@@ -281,6 +311,12 @@ using FastLOWESS
 
 			@test length(results_full) > 0
 			@test length(results_inc) > 0
+		end
+
+		@testset "missing = \"drop\" ignores non-finite point" begin
+			online = OnlineLowess(fraction = 0.5, window_capacity = 10, missing = "drop")
+			result = add_point(online, 1.0, NaN)
+			@test result === nothing
 		end
 	end
 
@@ -453,6 +489,10 @@ using FastLOWESS
 				fraction = 0.5,
 				robustness_method = "invalid",
 			)
+		end
+
+		@testset "invalid missing policy" begin
+			@test_throws ErrorException Lowess(fraction = 0.5, missing = "invalid")
 		end
 	end
 

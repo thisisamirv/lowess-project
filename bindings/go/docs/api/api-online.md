@@ -70,6 +70,7 @@ if ok {
 | `ScalingMethod` | `string` | `"mad"` | Residual scaling method |
 | `BoundaryPolicy` | `string` | `"extend"` | Boundary handling policy |
 | `ZeroWeightFallback` | `string` | `"use_local_mean"` | Zero-weight handling |
+| `Missing` | `string` | `"error"` | Policy for non-finite (NaN/Inf) values in each point |
 | `AutoConverge` | `*float64` | `nil` | Auto-convergence tolerance |
 | `ReturnRobustnessWeights` | `bool` | `false` | Include `RobustnessWeight` in result |
 | `WindowCapacity` | `int` | `1000` | Maximum number of recent points retained |
@@ -152,6 +153,15 @@ Behavior when all neighborhood weights are zero:
 | `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
 | `"return_original"` (alias: `"original"`) | Return the original y value |
 | `"return_none"` (alias: `"none"`) | Return `NaN` |
+
+### Missing
+
+Policy for handling a non-finite (NaN/Inf) `x` or `y` value passed to `AddPoint`:
+
+| Option | Behavior |
+| --- | --- |
+| `"error"` (default) | Return an error |
+| `"drop"` | Silently ignore the point — `AddPoint` returns `ok=false` instead of adding it to the window |
 
 ### AutoConverge
 

@@ -157,6 +157,7 @@ param_types <- list(
     zero_weight_fallback = "character",
     cv_method = "character",
     merge_strategy = "character",
+    missing = "character",
     return_diagnostics = "logical",
     return_residuals = "logical",
     return_robustness_weights = "logical",
@@ -223,7 +224,8 @@ lowess_params <- c(
     "cv_seed",
     "return_se",
     "return_sorted",
-    "backend"
+    "backend",
+    "missing"
 )
 
 online_params <- c(
@@ -239,7 +241,8 @@ online_params <- c(
     "update_mode",
     "auto_converge",
     "return_robustness_weights",
-    "delta"
+    "delta",
+    "missing"
 )
 
 streaming_params <- c(
@@ -258,5 +261,6 @@ streaming_params <- c(
     "return_robustness_weights",
     "merge_strategy",
     "parallel",
-    "delta"
+    "delta",
+    "missing"
 )

@@ -13,44 +13,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **lowess:**
 
 - Added `.return_sorted()` to the batch builder, to return results sorted ascending by `x` instead of input order. Default `false`.
+- Added a `missing` option (`"error"` default, or `"drop"`) to the builder, controlling how non-finite (NaN/Inf) `x`/`y` values are handled: Batch and Streaming filter non-finite rows (and matching `custom_weights` entries) before fitting; Online silently ignores non-finite points, returning `Ok(None)` from `add_point`. A length mismatch between `x` and `y` always errors, even under `"drop"`.
 - Added `release-rust.yml` to publish to crates.io on release.
 
 **fastLowess:**
 
 - Added `return_sorted` to `BuilderOptionSet`/`TypedBuilderOptionSet` and the `Lowess` (Batch) builder.
+- Added `missing` to `BuilderOptionSet`/`TypedBuilderOptionSet` and the `Lowess`/`StreamingLowess`/`OnlineLowess` builders.
 - Now published via `release-rust.yml`, 3 minutes after `lowess` to let the crates.io index catch up.
 
 **Python:**
 
 - Added a `return_sorted` option to `Lowess`.
+- Added a `missing` option to `Lowess`, `StreamingLowess`, and `OnlineLowess`.
 
 **R:**
 
 - Added a `return_sorted` option to `Lowess()`.
+- Added a `missing` option to `Lowess()`, `StreamingLowess()`, and `OnlineLowess()`.
 
 **Julia:**
 
 - Added a `return_sorted` option to `Lowess`.
+- Added a `missing` option to `Lowess`, `StreamingLowess`, and `OnlineLowess`.
 
 **Node.js:**
 
 - Added a `return_sorted` option to `Lowess`'s `SmoothOptions`.
+- Added a `missing` option to `SmoothOptions`, `StreamingSmoothOptions`, and `OnlineSmoothOptions`.
 
 **WASM:**
 
 - Added a `return_sorted` option to `Lowess`'s `SmoothOptions`.
+- Added a `missing` option to `SmoothOptions`, `StreamingSmoothOptions`, and `OnlineSmoothOptions`.
 
 **C++:**
 
 - Added a `return_sorted` option to `LowessOptions`.
+- Added a `missing` option to `LowessOptions` and `OnlineOptions` (inherited by `StreamingOptions`).
 
 **Go:**
 
 - Added a `ReturnSorted` option to `Options`.
+- Added a `Missing` option to `Options`, `StreamingOptions`, and `OnlineOptions`.
 
 **Java:**
 
 - Added a `returnSorted` option to `Options`.
+- Added a `missing` option to `Options.Builder` (shared by `Options`, `StreamingOptions`, and `OnlineOptions`).
 
 ### Changed
 

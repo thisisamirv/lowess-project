@@ -25,7 +25,7 @@ use crate::algorithms::robustness::RobustnessMethod;
 use crate::engine::executor::{CVPassFn, FitPassFn, IntervalPassFn, SmoothPassFn};
 use crate::engine::executor::{LowessConfig, LowessExecutor};
 use crate::engine::output::LowessResult;
-use crate::engine::validator::Validator;
+use crate::engine::validator::{MissingPolicy, Validator};
 use crate::evaluation::cv::CVKind;
 use crate::evaluation::diagnostics::Diagnostics;
 use crate::evaluation::intervals::IntervalMethod;
@@ -84,6 +84,9 @@ pub struct BatchLowessBuilder<T: Float> {
 
     // Whether to return results sorted ascending by x instead of in original input order
     pub return_sorted: bool,
+
+    // Policy for handling non-finite (NaN/Inf) values in input data
+    pub missing: MissingPolicy,
 
     // Policy for handling zero-weight neighborhoods
     pub zero_weight_fallback: ZeroWeightFallback,
@@ -159,6 +162,7 @@ impl<T: Float> BatchLowessBuilder<T> {
             compute_residuals: DEFAULT_RETURN_RESIDUALS,
             return_robustness_weights: DEFAULT_RETURN_ROBUSTNESS_WEIGHTS,
             return_sorted: DEFAULT_RETURN_SORTED,
+            missing: DEFAULT_MISSING_POLICY_ENUM,
             zero_weight_fallback: DEFAULT_ZERO_WEIGHT_FALLBACK_ENUM,
             boundary_policy: DEFAULT_BOUNDARY_POLICY_ENUM,
             scaling_method: DEFAULT_SCALING_METHOD_ENUM,
@@ -227,10 +231,23 @@ pub struct BatchLowess<T: Float> {
 impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> BatchLowess<T> {
     // Perform LOWESS smoothing on the provided data.
     pub fn fit(self, x: &[T], y: &[T]) -> Result<LowessResult<T>, LowessError> {
+        Validator::validate_lengths(x, y)?;
+
+        // Apply the missing-value policy before any other validation, so a
+        // `Drop` policy sees the filtered data and `Error` sees the raw data.
+        let (x_owned, y_owned, custom_weights) = match self.config.missing {
+            MissingPolicy::Drop => {
+                Validator::drop_non_finite(x, y, self.config.custom_weights.as_deref())
+            }
+            MissingPolicy::Error => (x.to_vec(), y.to_vec(), self.config.custom_weights.clone()),
+        };
+        let x: &[T] = &x_owned;
+        let y: &[T] = &y_owned;
+
         Validator::validate_inputs(x, y)?;
 
         // Validate custom weights length against data
-        if let Some(ref cw) = self.config.custom_weights {
+        if let Some(ref cw) = custom_weights {
             Validator::validate_custom_weights(cw, y.len())?;
         }
 
@@ -274,7 +291,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> BatchLowess<T> {
             parallel: self.config.parallel.unwrap_or(false),
             backend: self.config.backend,
             delegate_boundary_handling: self.config.delegate_boundary_handling,
-            custom_weights: self.config.custom_weights,
+            custom_weights,
         };
 
         // Execute unified LOWESS

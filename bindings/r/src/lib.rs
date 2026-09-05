@@ -81,6 +81,7 @@ impl RLowess {
         return_se: bool,
         return_sorted: bool,
         backend: &str,
+        missing: &str,
     ) -> Result<Self> {
         let fractions = match cv_fractions {
             NotNull(v) => Some(v),
@@ -130,6 +131,7 @@ impl RLowess {
                 cv_k: Some(cv_k),
                 cv_seed: seed,
                 backend: Some(backend),
+                missing: Some(missing),
                 ..Default::default()
             },
         ))?;
@@ -178,6 +180,7 @@ impl RStreamingLowess {
         merge_strategy: &str,
         parallel: bool,
         delta: Nullable<f64>,
+        missing: &str,
     ) -> Result<Self> {
         let chunk_size = require_positive_usize("chunk_size", chunk_size)?;
         let overlap_size = match overlap {
@@ -210,6 +213,7 @@ impl RStreamingLowess {
                 confidence_intervals: None,
                 prediction_intervals: None,
                 parallel: Some(parallel),
+                missing: Some(missing),
                 ..Default::default()
             },
         ))?;
@@ -260,6 +264,7 @@ impl ROnlineLowess {
         auto_converge: Nullable<f64>,
         return_robustness_weights: bool,
         delta: Nullable<f64>,
+        missing: &str,
     ) -> Result<Self> {
         let window_capacity = require_positive_usize("window_capacity", window_capacity)?;
         let min_points = require_positive_usize("min_points", min_points)?;
@@ -289,6 +294,7 @@ impl ROnlineLowess {
                 confidence_intervals: None,
                 prediction_intervals: None,
                 parallel: None,
+                missing: Some(missing),
                 ..Default::default()
             },
         ))?;

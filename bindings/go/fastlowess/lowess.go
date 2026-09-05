@@ -84,6 +84,11 @@ type Options struct {
 	// support requires the native library to be built with the `gpu`
 	// Cargo feature. Batch model only.
 	Backend string
+
+	// Missing is the policy for non-finite (NaN/Inf) values in input data:
+	// "error" (default) returns an error, "drop" silently removes affected
+	// observations before fitting.
+	Missing string
 }
 
 // DefaultOptions returns the library's recommended defaults. Start from this
@@ -101,6 +106,7 @@ func DefaultOptions() Options {
 		CVK:                5,
 		Parallel:           true,
 		Backend:            "cpu",
+		Missing:            "error",
 	}
 }
 
@@ -137,6 +143,8 @@ func NewLowess(opts Options) (*Lowess, error) {
 	defer freeCString(cvMethod)
 	backend := cStringOrNil(opts.Backend)
 	defer freeCString(backend)
+	missing := cStringOrNil(opts.Missing)
+	defer freeCString(missing)
 
 	ci, ciSet := optPtr(opts.ConfidenceIntervals)
 	pi, piSet := optPtr(opts.PredictionIntervals)
@@ -166,6 +174,7 @@ func NewLowess(opts Options) (*Lowess, error) {
 			boolToCInt(opts.ReturnSE),
 			boolToCInt(opts.ReturnSorted),
 			backend,
+			missing,
 		)
 		if ptr == nil {
 			errMsg = lastError()

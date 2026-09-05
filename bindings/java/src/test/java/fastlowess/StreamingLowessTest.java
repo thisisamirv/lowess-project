@@ -31,4 +31,22 @@ class StreamingLowessTest {
             assertTrue(finalResult.x().length > 0);
         }
     }
+
+    @Test
+    void missingDropRemovesNonFiniteRows() {
+        double[] x = new double[50];
+        double[] y = new double[50];
+        for (int i = 0; i < 50; i++) {
+            x[i] = i;
+            y[i] = Math.sin(i / 10.0);
+        }
+        y[5] = Double.NaN;
+
+        try (StreamingLowess model = new StreamingLowess(
+                StreamingOptions.builder().fraction(0.1).chunkSize(50).missing("drop").build())) {
+            Result chunkResult = model.processChunk(x, y);
+            Result finalResult = model.finish();
+            assertEquals(x.length - 1, chunkResult.x().length + finalResult.x().length);
+        }
+    }
 }

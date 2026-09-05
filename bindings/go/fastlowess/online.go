@@ -58,6 +58,11 @@ type OnlineOptions struct {
 	// UpdateMode controls how the window is updated as new points arrive,
 	// e.g. "incremental" (default).
 	UpdateMode string
+
+	// Missing is the policy for non-finite (NaN/Inf) x/y values passed to
+	// AddPoint: "error" (default) returns an error, "drop" silently ignores
+	// the point.
+	Missing string
 }
 
 // DefaultOnlineOptions returns recommended defaults for online use.
@@ -73,6 +78,7 @@ func DefaultOnlineOptions() OnlineOptions {
 		WindowCapacity:     1000,
 		MinPoints:          2,
 		UpdateMode:         "incremental",
+		Missing:            "error",
 	}
 }
 
@@ -98,6 +104,8 @@ func NewOnlineLowess(opts OnlineOptions) (*OnlineLowess, error) {
 	defer freeCString(zwf)
 	um := cStringOrNil(opts.UpdateMode)
 	defer freeCString(um)
+	missing := cStringOrNil(opts.Missing)
+	defer freeCString(missing)
 
 	delta, deltaSet := optPtr(opts.Delta)
 	autoConverge, autoConvergeSet := optPtr(opts.AutoConverge)
@@ -116,6 +124,7 @@ func NewOnlineLowess(opts OnlineOptions) (*OnlineLowess, error) {
 			C.int(opts.WindowCapacity),
 			C.int(opts.MinPoints),
 			um,
+			missing,
 		)
 		if ptr == nil {
 			errMsg = lastError()

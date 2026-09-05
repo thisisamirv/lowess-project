@@ -145,6 +145,7 @@ class Lowess:
         return_se: bool = False,
         return_sorted: bool = False,
         backend: str = "cpu",
+        missing: str = "error",
     ) -> Self: ...
     def __init__(
         self,
@@ -171,6 +172,7 @@ class Lowess:
         return_se: bool = False,
         return_sorted: bool = False,
         backend: str = "cpu",
+        missing: str = "error",
     ) -> None: ...
     def fit(
         self, x: ArrayLike, y: ArrayLike, custom_weights: ArrayLike | None = None
@@ -198,6 +200,7 @@ class StreamingLowess:
         zero_weight_fallback: str = "use_local_mean",
         parallel: bool = True,
         merge_strategy: str = "weighted_average",
+        missing: str = "error",
     ) -> None: ...
     def process_chunk(self, x: ArrayLike, y: ArrayLike) -> LowessResult: ...
     def finalize(self) -> LowessResult: ...
@@ -221,6 +224,7 @@ class OnlineLowess:
         auto_converge: float | None = None,
         return_robustness_weights: bool = False,
         zero_weight_fallback: str = "use_local_mean",
+        missing: str = "error",
     ) -> None: ...
     def add_point(self, x: float, y: float) -> OnlineOutput | None: ...
 

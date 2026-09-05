@@ -20,4 +20,13 @@ class OnlineLowessTest {
             assertTrue(sawValue, "expected at least one point result once minPoints was reached");
         }
     }
+
+    @Test
+    void missingDropIgnoresNonFinitePoint() {
+        try (OnlineLowess model = new OnlineLowess(
+                OnlineOptions.builder().fraction(0.5).windowCapacity(10).missing("drop").build())) {
+            Optional<PointResult> point = model.addPoint(1.0, Double.NaN);
+            assertTrue(point.isEmpty(), "expected non-finite point to be ignored under missing=drop");
+        }
+    }
 }

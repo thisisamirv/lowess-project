@@ -63,6 +63,7 @@ Result result = model.fit(x, y);
 |`scalingMethod` |`String` |`"mad"` |Residual scale estimator: `mad`, `mar`, `mean`.
 |`boundaryPolicy` |`String` |`"extend"` |Boundary handling: `extend`, `reflect`, `zero`, `noboundary`.
 |`zeroWeightFallback` |`String` |`"use_local_mean"` |Fallback when all robustness weights hit zero: `use_local_mean`, `return_original`, `return_none`.
+|`missing` |`String` |`"error"` |Policy for non-finite (NaN/Infinity) values in input data: `error`, `drop`.
 |`confidenceIntervals` |`double` |`NaN` (disabled) |Confidence level in (0, 1), e.g. `0.95`.
 |`predictionIntervals` |`double` |`NaN` (disabled) |Confidence level in (0, 1), e.g. `0.95`.
 |`autoConverge` |`double` |`NaN` (disabled) |Convergence tolerance for early stopping.
@@ -172,6 +173,20 @@ Behavior when all neighborhood weights are zero:
 |`"return_original"` (alias: `"original"`) |Return the original y value
 |`"return_none"` (alias: `"none"`) |Return `NaN`
 |===
+
+=== missing
+
+Policy for handling non-finite (NaN/Infinity) values in `x`/`y` (and `customWeights`):
+
+[cols="1,1",options="header"]
+|===
+|Option |Behavior
+
+|`"error"` (default) |Throw if any value is non-finite
+|`"drop"` |Silently remove observations where `x` or `y` is non-finite before fitting
+|===
+
+NOTE: A length mismatch between `x` and `y` always throws, even under `"drop"`.
 
 === autoConverge
 

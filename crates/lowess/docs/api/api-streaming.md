@@ -94,6 +94,7 @@ Fraction used: 0.5
 | `scaling_method(...)` | `scaling_method` | `"mad"` | Residual scaling method |
 | `boundary_policy(...)` | `boundary_policy` | `"extend"` | Boundary handling policy |
 | `zero_weight_fallback(...)` | `zero_weight_fallback` | `"use_local_mean"` | Zero-weight handling |
+| `missing(...)` | `missing` | `"error"` | Policy for non-finite (NaN/Inf) values in each chunk |
 | `auto_converge(T)` | `T: Float` | `NaN` | Auto-convergence tolerance |
 | `return_diagnostics()` | `bool` | `false` | Include diagnostics in result |
 | `return_residuals()` | `bool` | `false` | Include residuals in result |
@@ -178,6 +179,17 @@ Behavior when all neighborhood weights are zero:
 | `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
 | `"return_original"` (alias: `"original"`) | Return the original y value |
 | `"return_none"` (alias: `"none"`) | Return `NaN` |
+
+### missing
+
+Policy for handling non-finite (NaN/Inf) values within each chunk:
+
+| Option | Behavior |
+| --- | --- |
+| `"error"` (default) | Return an error (`InvalidNumericValue`) if any value in the chunk is non-finite |
+| `"drop"` | Silently remove rows where `x` or `y` is non-finite before merging the chunk with the overlap buffer |
+
+**Note:** A length mismatch between `x` and `y` always errors, even under `"drop"`.
 
 ### auto_converge
 
