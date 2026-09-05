@@ -119,11 +119,27 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: docs-julia
+
       - uses: julia-actions/setup-julia@v3
         with:
           version: "1"
 
       - uses: julia-actions/cache@v3
+
+      # `Pkg.instantiate()` below resolves fastlowess_jll to whatever is
+      # currently registered, which can lag behind this commit's Rust FFI
+      # surface (extra/renamed ccall parameters, changed struct layout) and
+      # silently corrupt memory instead of erroring. Build the library from
+      # this commit and point FASTLOWESS_LIB at it (checked before
+      # fastlowess_jll in find_library()) so the docs build always matches
+      # the source.
+      - name: Build native library
+        run: cargo build --release --manifest-path bindings/julia/Cargo.toml
 
       - name: Relax JLL dependency for docs build
         uses: ./.github/actions/relax-julia-jll
@@ -137,6 +153,8 @@ jobs:
           '
 
       - name: Build docs
+        env:
+          FASTLOWESS_LIB: target/release/libfastlowess_jl.so
         run: julia --project=bindings/julia/julia/docs bindings/julia/julia/docs/make.jl
 
       - uses: actions/upload-artifact@v7
