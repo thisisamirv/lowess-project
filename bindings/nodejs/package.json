@@ -9,7 +9,9 @@
     },
     "scripts": {
         "build": "napi build --release --platform",
+        "postbuild": "node scripts/patch-index.js",
         "build:debug": "napi build --platform",
+        "postbuild:debug": "node scripts/patch-index.js",
         "test": "node --test tests/test_fastlowess.js",
         "lint": "oxlint index.js tests/test_fastlowess.js",
         "universal": "napi universal",

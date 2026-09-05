@@ -99,7 +99,7 @@ jobs:
         working-directory: bindings/nodejs
         run: |
           npm install
-          npx napi build --release --features gpu
+          npx napi build --release --platform --features gpu
       - name: GPU smoke test
         working-directory: bindings/nodejs
         run: |

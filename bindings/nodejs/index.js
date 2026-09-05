@@ -705,3 +705,5 @@ module.exports.LowessResult = nativeBinding.LowessResult
 module.exports.OnlineLowess = nativeBinding.OnlineLowess
 module.exports.StreamingLowess = nativeBinding.StreamingLowess
 module.exports.gpu_enabled = nativeBinding.gpu_enabled
+
+module.exports.installGpu = require('./gpu-installer.js').installGpu

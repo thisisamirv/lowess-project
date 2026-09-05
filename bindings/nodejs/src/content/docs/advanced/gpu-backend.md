@@ -81,7 +81,7 @@ node -e "require('fastlowess').installGpu({ yes: true })"
 npx fastlowess-install-gpu
 ```
 
-The download is saved as `fastlowess.node` next to `index.js` — the same local-override path the loader already checks first. **Restart Node.js** afterwards.
+The download is saved as `fastlowess.<platform>.node` (e.g. `fastlowess.linux-x64-gnu.node`) next to `index.js` — the same local-override path the loader already checks first, before the optionalDependency package. **Restart Node.js** afterwards.
 
 Build from source instead:
 

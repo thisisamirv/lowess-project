@@ -23,58 +23,7 @@ permissions:
   contents: write
 
 jobs:
-  filter:
-    runs-on: ubuntu-latest
-    outputs:
-      root: ${{ steps.f.outputs.root }}
-      cpp: ${{ steps.f.outputs.cpp }}
-      go: ${{ steps.f.outputs.go }}
-      java: ${{ steps.f.outputs.java }}
-      julia: ${{ steps.f.outputs.julia }}
-      nodejs: ${{ steps.f.outputs.nodejs }}
-      r: ${{ steps.f.outputs.r }}
-      wasm: ${{ steps.f.outputs.wasm }}
-    steps:
-      - uses: actions/checkout@v7
-      - uses: dorny/paths-filter@v4
-        id: f
-        with:
-          filters: |
-            root:
-              - 'README.md'
-              - '.github/workflows/docs.yml'
-            cpp:
-              - 'bindings/cpp/**'
-              - '.github/workflows/docs.yml'
-            go:
-              - 'bindings/go/**'
-              - '.github/workflows/docs.yml'
-            java:
-              - 'bindings/java/**'
-              - '.github/workflows/docs.yml'
-            julia:
-              - 'bindings/julia/**'
-              - '.github/workflows/docs.yml'
-            nodejs:
-              - 'bindings/nodejs/**'
-              - '.github/workflows/docs.yml'
-            r:
-              - 'bindings/r/**'
-              - '.github/workflows/docs.yml'
-            wasm:
-              - 'bindings/wasm/**'
-              - '.github/workflows/docs.yml'
-
-  # Each of the jobs below only builds its own docs and uploads the result as a
-  # workflow artifact — nothing is pushed to gh-pages here. This lets them all
-  # run in parallel, and keeps GitHub's own "pages build and deployment" from
-  # firing once per job. The `deploy` job merges every artifact into a single
-  # commit at the end, so the branch (and its auto-triggered Pages build) is
-  # only touched once per workflow run.
-
   root:
-    needs: filter
-    if: needs.filter.outputs.root == 'true' || github.event_name == 'workflow_dispatch'
     name: Root — README
     runs-on: ubuntu-latest
     steps:
@@ -99,8 +48,6 @@ jobs:
           retention-days: 1
 
   cpp:
-    needs: filter
-    if: needs.filter.outputs.cpp == 'true' || github.event_name == 'workflow_dispatch'
     name: C++ — Doxygen
     runs-on: ubuntu-latest
     steps:
@@ -120,8 +67,6 @@ jobs:
           retention-days: 1
 
   go:
-    needs: filter
-    if: needs.filter.outputs.go == 'true' || github.event_name == 'workflow_dispatch'
     name: Go — Hugo
     runs-on: ubuntu-latest
     steps:
@@ -146,8 +91,6 @@ jobs:
           retention-days: 1
 
   java:
-    needs: filter
-    if: needs.filter.outputs.java == 'true' || github.event_name == 'workflow_dispatch'
     name: Java — Antora
     runs-on: ubuntu-latest
     steps:
@@ -171,8 +114,6 @@ jobs:
           retention-days: 1
 
   julia:
-    needs: filter
-    if: needs.filter.outputs.julia == 'true' || github.event_name == 'workflow_dispatch'
     name: Julia — Documenter.jl
     runs-on: ubuntu-latest
     steps:
@@ -205,8 +146,6 @@ jobs:
           retention-days: 1
 
   nodejs:
-    needs: filter
-    if: needs.filter.outputs.nodejs == 'true' || github.event_name == 'workflow_dispatch'
     name: Node.js — Starlight
     runs-on: ubuntu-latest
     steps:
@@ -244,8 +183,6 @@ jobs:
           retention-days: 1
 
   r:
-    needs: filter
-    if: needs.filter.outputs.r == 'true' || github.event_name == 'workflow_dispatch'
     name: R — pkgdown
     runs-on: ubuntu-latest
     env:
@@ -283,8 +220,6 @@ jobs:
           retention-days: 1
 
   wasm:
-    needs: filter
-    if: needs.filter.outputs.wasm == 'true' || github.event_name == 'workflow_dispatch'
     name: WebAssembly — Starlight
     runs-on: ubuntu-latest
     env:
@@ -330,7 +265,7 @@ jobs:
           retention-days: 1
 
   build:
-    needs: [filter, root, cpp, go, java, julia, nodejs, r, wasm]
+    needs: [root, cpp, go, java, julia, nodejs, r, wasm]
     if: always()
     name: Build — merge & cache
     runs-on: ubuntu-latest
@@ -351,7 +286,6 @@ jobs:
           rm -rf _site/.git
 
       - name: Download root artifact
-        if: needs.filter.outputs.root == 'true' || github.event_name == 'workflow_dispatch'
         continue-on-error: true
         uses: actions/download-artifact@v8
         with:
@@ -359,7 +293,6 @@ jobs:
           path: _site
 
       - name: Download cpp artifact
-        if: needs.filter.outputs.cpp == 'true' || github.event_name == 'workflow_dispatch'
         continue-on-error: true
         uses: actions/download-artifact@v8
         with:
@@ -367,7 +300,6 @@ jobs:
           path: _site/cpp
 
       - name: Download go artifact
-        if: needs.filter.outputs.go == 'true' || github.event_name == 'workflow_dispatch'
         continue-on-error: true
         uses: actions/download-artifact@v8
         with:
@@ -375,7 +307,6 @@ jobs:
           path: _site/go
 
       - name: Download java artifact
-        if: needs.filter.outputs.java == 'true' || github.event_name == 'workflow_dispatch'
         continue-on-error: true
         uses: actions/download-artifact@v8
         with:
@@ -383,7 +314,6 @@ jobs:
           path: _site/java
 
       - name: Download julia artifact
-        if: needs.filter.outputs.julia == 'true' || github.event_name == 'workflow_dispatch'
         continue-on-error: true
         uses: actions/download-artifact@v8
         with:
@@ -391,7 +321,6 @@ jobs:
           path: _site/julia
 
       - name: Download nodejs artifact
-        if: needs.filter.outputs.nodejs == 'true' || github.event_name == 'workflow_dispatch'
         continue-on-error: true
         uses: actions/download-artifact@v8
         with:
@@ -399,7 +328,6 @@ jobs:
           path: _site/nodejs
 
       - name: Download r artifact
-        if: needs.filter.outputs.r == 'true' || github.event_name == 'workflow_dispatch'
         continue-on-error: true
         uses: actions/download-artifact@v8
         with:
@@ -407,7 +335,6 @@ jobs:
           path: _site/r
 
       - name: Download wasm artifact
-        if: needs.filter.outputs.wasm == 'true' || github.event_name == 'workflow_dispatch'
         continue-on-error: true
         uses: actions/download-artifact@v8
         with:

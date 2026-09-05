@@ -145,6 +145,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Node.js:**
 
 - Fixed `OnlineOptions` doc comments stating `min_points` defaults to `3` (actually `2`) and `update_mode` defaults to `"full"` (actually `"incremental"`).
+- Fixed `npm run build`/`build:debug` emitting only the generic `fastlowess.node`, which the loader in `index.js` never checks; added the missing `--platform` flag.
+- Fixed `installGpu()` being non-functional: it lived inside the auto-generated `index.js`, which `napi build` fully rewrites, silently discarding it. Moved it to `gpu-installer.js`, re-attached via a new `postbuild` step. Also fixed it downloading to the wrong filename (the loader never checked it) and an `EBUSY` error on Windows from locking the file it was trying to overwrite.
 
 **WASM:**
 
