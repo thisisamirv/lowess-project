@@ -1,0 +1,59 @@
+name: Release Rust
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: "Commit SHA to build from (defaults to the workflow's own ref)"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  # ============================================================================
+  # PUBLISH lowess
+  # ============================================================================
+  publish-lowess:
+    name: Publish lowess to crates.io
+    runs-on: ubuntu-latest
+    environment: crates-io
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.commit || github.sha }}
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Publish lowess
+        run: cargo publish -p lowess
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+  # ============================================================================
+  # PUBLISH fastLowess (after crates.io index has picked up lowess)
+  # ============================================================================
+  publish-fastlowess:
+    name: Publish fastLowess to crates.io
+    needs: publish-lowess
+    runs-on: ubuntu-latest
+    environment: crates-io
+    steps:
+      - name: Wait for crates.io index to pick up lowess
+        run: sleep 180
+
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.commit || github.sha }}
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Publish fastLowess
+        run: cargo publish -p fastLowess
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}

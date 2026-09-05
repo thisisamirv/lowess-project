@@ -13,10 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **lowess:**
 
 - Added `.return_sorted()` to the batch builder, to return results sorted ascending by `x` instead of input order. Default `false`.
+- Added `release-rust.yml` to publish to crates.io on release.
 
 **fastLowess:**
 
 - Added `return_sorted` to `BuilderOptionSet`/`TypedBuilderOptionSet` and the `Lowess` (Batch) builder.
+- Now published via `release-rust.yml`, 3 minutes after `lowess` to let the crates.io index catch up.
 
 **Python:**
 
