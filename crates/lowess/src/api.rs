@@ -727,9 +727,9 @@ impl<T: Float> LowessAdapter<T> for Streaming {
         if let Some(chunk_size) = builder.chunk_size {
             result.chunk_size = chunk_size;
         }
-        if let Some(overlap) = builder.overlap {
-            result.overlap = overlap;
-        }
+        result.overlap = builder
+            .overlap
+            .unwrap_or_else(|| crate::adapters::defaults::default_overlap(result.chunk_size));
         if let Some(fraction) = builder.fraction {
             result.fraction = fraction;
         }

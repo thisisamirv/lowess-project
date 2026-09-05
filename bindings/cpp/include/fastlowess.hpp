@@ -36,7 +36,9 @@ namespace detail {
 constexpr double k_default_fraction = 0.67;
 constexpr int k_default_cv_k = 5;
 constexpr int k_default_chunk_size = 5000;
-constexpr int k_default_overlap = 500;
+/// Sentinel meaning "use the library default" (chunk_size / 10, clamped to
+/// [1, chunk_size - 10]); negative values are never sent to the FFI layer.
+constexpr int k_default_overlap = -1;
 constexpr int k_default_window_capacity = 1000;
 constexpr int k_default_min_points = 2;
 } // namespace detail
@@ -156,6 +158,8 @@ struct LowessOptions {
  */
 struct StreamingOptions : public LowessOptions {
   int chunk_size = detail::k_default_chunk_size;
+  /// Negative (the default) means "use the library default"
+  /// (chunk_size / 10, clamped to [1, chunk_size - 10]).
   int overlap = detail::k_default_overlap;
   std::string merge_strategy =
       "weighted_average"; ///< weighted_average, average, take_first, take_last

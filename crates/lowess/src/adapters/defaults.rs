@@ -6,8 +6,12 @@ use crate::adapters::streaming::MergeStrategy;
 // Default number of data points per chunk.
 pub const DEFAULT_STREAMING_CHUNK_SIZE: usize = 5_000;
 
-// Default overlap between consecutive chunks.
-pub const DEFAULT_STREAMING_OVERLAP: usize = 500;
+// Compute the default overlap size from a chunk size when the caller does
+// not specify one: `chunk_size / 10`, clamped to `[1, chunk_size - 10]`.
+pub fn default_overlap(chunk_size: usize) -> usize {
+    let default = chunk_size / 10;
+    default.min(chunk_size.saturating_sub(10)).max(1)
+}
 
 // Default merge strategy for overlapping chunk regions.
 pub const DEFAULT_STREAMING_MERGE_STRATEGY_ENUM: MergeStrategy = MergeStrategy::WeightedAverage;

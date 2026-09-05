@@ -100,7 +100,7 @@ Fraction used: 0.5
 | `return_robustness_weights()` | `bool` | `false` | Include weights in result |
 | `parallel(bool)` | `bool` | `true` | Enable parallel execution |
 | `chunk_size(usize)` | `usize` | `5000` | Data chunk size |
-| `overlap(usize)` | `usize` | `500` | Overlap between chunks |
+| `overlap(usize)` | `usize` | `chunk_size / 10` | Overlap between chunks |
 | `merge_strategy(...)` | `merge_strategy` | `"weighted_average"` | Strategy for blending overlap regions |
 
 Confidence/prediction intervals, standard errors, cross-validation, GPU `backend`, `custom_weights`, and `return_sorted` are Batch-only and not available here; see [fastLowess](crate::doc::api) for those.
@@ -193,6 +193,9 @@ Number of points processed per chunk. Larger chunks reduce per-chunk overhead an
 ### overlap
 
 Number of points retained from the previous chunk as context, so the neighbourhood at chunk boundaries isn't artificially truncated. Points inside the overlap zone are fitted twice (once by each chunk) and reconciled via `merge_strategy`. A good starting point is 10–20% of `chunk_size`: too little overlap causes visible boundary artefacts, while too much wastes computation refitting the same points twice.
+
+- Not called (default) — computes `chunk_size / 10`, clamped to at least 1 and less than `chunk_size`
+- Any `usize >= 1` and `< chunk_size`
 
 ### merge_strategy
 

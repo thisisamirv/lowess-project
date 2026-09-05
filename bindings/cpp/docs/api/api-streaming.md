@@ -143,7 +143,7 @@ int main() {
 | `return_robustness_weights` | `bool` | false | Include weights in result |
 | `parallel` | `bool` | true | Enable parallel execution |
 | `chunk_size` | `int` | 5000 | Data chunk size |
-| `overlap` | `int` | 500 | Overlap between chunks |
+| `overlap` | `int` | chunk_size / 10 | Overlap between chunks |
 | `merge_strategy` | `std::string` | "weighted_average" | Strategy for blending overlap regions |
 
 Confidence/prediction intervals, standard errors, cross-validation, GPU `backend`, `custom_weights`, and `return_sorted` are Batch-only and not available here; see [fastLowess](api.md) for those.
@@ -236,6 +236,9 @@ Number of points processed per chunk. Larger chunks reduce per-chunk overhead an
 ### overlap
 
 Number of points retained from the previous chunk as context, so the neighbourhood at chunk boundaries isn't artificially truncated. Points inside the overlap zone are fitted twice (once by each chunk) and reconciled via `merge_strategy`. A good starting point is 10–20% of `chunk_size`: too little overlap causes visible boundary artefacts, while too much wastes computation refitting the same points twice.
+
+- `-1` (default) — uses the library default (`chunk_size / 10`, clamped to `[1, chunk_size - 10]`)
+- Any value `>= 0` and `< chunk_size`
 
 ### merge_strategy
 

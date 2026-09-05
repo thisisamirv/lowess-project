@@ -144,7 +144,7 @@ impl<T: Float> StreamingLowessBuilder<T> {
     fn new() -> Self {
         Self {
             chunk_size: DEFAULT_STREAMING_CHUNK_SIZE,
-            overlap: DEFAULT_STREAMING_OVERLAP,
+            overlap: default_overlap(DEFAULT_STREAMING_CHUNK_SIZE),
             fraction: T::from(DEFAULT_FRACTION).unwrap(),
             iterations: DEFAULT_ITERATIONS,
             delta: T::from(DEFAULT_DELTA).unwrap(),

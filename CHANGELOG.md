@@ -59,11 +59,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **lowess:**
 
 - Removed the dead `compute_residuals`/`parallel`/`backend` fields from `OnlineLowessBuilder` — never read (or, for `backend`, never reachable). `StreamingLowessBuilder` lost its unused `backend` field too.
+- `Streaming::convert()` (used by the `StreamingLowess::new()...build()` type-alias API) no longer resolves `overlap` to a flat `500` when unset; it now resolves dynamically to `chunk_size / 10` (clamped to `[1, chunk_size - 10]`), matching every language binding's `build_streaming()` helper. Breaking change for callers relying on the previous flat default with a customized `chunk_size`.
 
 **fastLowess:**
 
 - Removed the dead `compute_residuals`/`parallel`/`backend` fields from `OnlineLowessBuilder`; `StreamingLowessBuilder` lost its unused `backend` field.
 - Removed `.confidence_intervals()`, `.prediction_intervals()`, and `.return_se()` from the `StreamingLowess`/`OnlineLowess` wrapper structs — these leaked in via the shared builder macro and were silently ignored. Breaking change for direct Rust consumers; `Lowess`'s own methods are unaffected.
+- Fixed a misleading comment on `binding_support::default_overlap()` claiming it existed to make overlap scale with `chunk_size` unlike the (now-removed) flat `DEFAULT_STREAMING_OVERLAP` constant in `lowess`; that constant is gone now that `lowess`'s own `Streaming::convert()` also resolves dynamically (see `lowess`'s changelog entry above).
 
 **Python:**
 
@@ -92,6 +94,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed `return_diagnostics`, `return_residuals`, and `parallel` from `OnlineOptions`, same reason as Python. Breaking change.
 - Removed `confidence_intervals` and `prediction_intervals` from `OnlineOptions`; `StreamingOptions` no longer forwards its inherited copies. Breaking change.
 - Removed the dead `custom_weights` field from `OnlineOptions` — declared but never read. Breaking change.
+- `StreamingOptions::overlap`'s default changed from a fixed `500` to `-1` (a sentinel meaning "use the library default"), so it now resolves dynamically to `chunk_size / 10` like every other language binding, instead of always passing a concrete `500` to the native constructor regardless of `chunk_size`. Breaking change for callers relying on the previous flat default.
 
 **Go:**
 
