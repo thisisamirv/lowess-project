@@ -54,15 +54,26 @@ Requesting the GPU backend when it isn't available returns a clear error from `N
 
 ---
 
-## Building with GPU Support
+## Installing GPU Support
 
-Unlike the Python, Node.js, and R bindings, the Go binding does not ship a one-time GPU installer. Build the native library from source with the `gpu` Cargo feature instead:
+Download and install a prebuilt GPU-enabled `fastlowess_go` static library for this platform from the matching [GitHub Release](https://github.com/thisisamirv/lowess-project/releases) (built by `.github/workflows/release-gpu.yml`):
+
+```go
+err := fastlowess.InstallGPU(false) // prompts for confirmation, then downloads
+```
+
+Non-interactively: `fastlowess.InstallGPU(true)`. The library is saved to `~/.fastlowess/gpu/libfastlowess_go.a`. Since `cgo` links against the static library at build time, a running program can't swap it — rebuild afterwards with `CGO_LDFLAGS` pointing at the downloaded directory (printed on success), e.g.:
+
+```sh
+export CGO_LDFLAGS="-L$HOME/.fastlowess/gpu -lfastlowess_go -lm -ldl -lpthread"  # Linux
+go build ./...
+```
+
+Building from source with the `gpu` Cargo feature is always available as an alternative:
 
 ```sh
 cargo build -p fastlowess-go --profile release-c --features gpu
 ```
-
-Since `cgo` links against the static library at build time, rebuild your Go binary (`go build ./...`) after replacing the library with a GPU-enabled one — there's no runtime re-pointing like Julia's `install_gpu()`.
 
 ---
 

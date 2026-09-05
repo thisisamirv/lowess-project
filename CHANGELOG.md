@@ -66,11 +66,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a `ReturnSorted` option to `Options`.
 - Added a `Missing` option to `Options`, `StreamingOptions`, and `OnlineOptions`.
 - `release-gpu.yml` now also builds GPU libraries for `linux-arm64` and `windows-arm64` (the latter via the same llvm-mingw/gnullvm cross toolchain as `release-go.yml`), matching its platform coverage.
+- Added `fastlowess.InstallGPU()`, a one-time GPU downloader: fetches a prebuilt GPU-enabled static library from the matching GitHub Release to `~/.fastlowess/gpu/libfastlowess_go.a`. Since `cgo` links statically at build time, this only downloads the library — rebuild afterwards with `CGO_LDFLAGS` pointing at it (printed on success).
 
 **Java:**
 
 - Added a `returnSorted` option to `Options`.
 - Added a `missing` option to `Options.Builder` (shared by `Options`, `StreamingOptions`, and `OnlineOptions`).
+- Added `FastLowess.installGpu()`, a one-time GPU installer matching Python/Node.js/R/C++/Julia: downloads a prebuilt GPU-enabled native library from the matching GitHub Release to `~/.fastlowess/gpu/`; point `NativeBridge` at it via `-Dfastlowess.native.dir`.
 
 ### Changed
 

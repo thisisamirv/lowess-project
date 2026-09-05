@@ -94,3 +94,67 @@ jobs:
           else
             make go-dev
           fi
+
+  gpu:
+    name: Go GPU
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-go@v7
+        with:
+          go-version: stable
+          cache-dependency-path: |
+            bindings/go/fastlowess/go.mod
+            bindings/go/tests/go.mod
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: go-gpu
+      - uses: ./.github/actions/setup-lavapipe
+      - name: Build CPU library
+        run: make go
+      - name: Test InstallGPU()
+        working-directory: bindings/go/fastlowess
+        run: |
+          mkdir -p /tmp/gputest
+          cat > /tmp/gputest/main.go <<'GO'
+          package main
+
+          import (
+              "fmt"
+              "os"
+
+              "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+          )
+
+          func main() {
+              if fastlowess.GPUEnabled() {
+                  fmt.Println("GPU should not be active before InstallGPU()")
+                  os.Exit(1)
+              }
+              if err := fastlowess.InstallGPU(true); err != nil {
+                  fmt.Println(err)
+                  os.Exit(1)
+              }
+              home, _ := os.UserHomeDir()
+              dest := home + "/.fastlowess/gpu/libfastlowess_go.a"
+              info, err := os.Stat(dest)
+              if err != nil || info.Size() == 0 {
+                  fmt.Println("InstallGPU() did not download a usable library to", dest)
+                  os.Exit(1)
+              }
+              fmt.Println("Go InstallGPU() download OK:", dest)
+          }
+          GO
+          cat > /tmp/gputest/go.mod <<MOD
+          module gputest
+
+          go 1.23
+
+          require github.com/thisisamirv/lowess-project/bindings/go/fastlowess v0.0.0
+
+          replace github.com/thisisamirv/lowess-project/bindings/go/fastlowess => $GITHUB_WORKSPACE/bindings/go/fastlowess
+          MOD
+          cd /tmp/gputest
+          go mod tidy
+          go run .

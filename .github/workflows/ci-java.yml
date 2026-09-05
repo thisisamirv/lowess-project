@@ -48,3 +48,73 @@ jobs:
 
       - name: make java-dev
         run: make java-dev
+
+  gpu:
+    name: Java GPU
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-java@v6
+        with:
+          distribution: "temurin"
+          java-version: "25"
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: java-gpu
+      - uses: ./.github/actions/setup-lavapipe
+      - name: Build CPU library
+        run: cargo build --release --manifest-path bindings/java/Cargo.toml
+      - name: Compile Java sources
+        working-directory: bindings/java
+        run: mvn -q -DskipTests compile
+      - name: Test installGpu()
+        working-directory: bindings/java
+        run: |
+          mkdir -p /tmp/gputest
+          cat > /tmp/gputest/GpuPrecheck.java <<'JAVA'
+          import fastlowess.FastLowess;
+          public class GpuPrecheck {
+              public static void main(String[] args) {
+                  if (FastLowess.gpuEnabled()) throw new RuntimeException("GPU should not be active before installGpu()");
+              }
+          }
+          JAVA
+          cat > /tmp/gputest/GpuInstall.java <<'JAVA'
+          import fastlowess.FastLowess;
+          public class GpuInstall {
+              public static void main(String[] args) {
+                  FastLowess.installGpu(true);
+              }
+          }
+          JAVA
+          cat > /tmp/gputest/GpuSmoke.java <<'JAVA'
+          import fastlowess.FastLowess;
+          import fastlowess.Lowess;
+          import fastlowess.Options;
+          import fastlowess.Result;
+          public class GpuSmoke {
+              public static void main(String[] args) {
+                  if (!FastLowess.gpuEnabled()) throw new RuntimeException("installGpu() did not activate the GPU backend");
+                  int n = 50;
+                  double[] x = new double[n];
+                  double[] y = new double[n];
+                  for (int i = 0; i < n; i++) {
+                      x[i] = (double) i / (n - 1);
+                      y[i] = Math.sin(6 * x[i]) + 0.05;
+                  }
+                  Options options = Options.builder().fraction(0.3).backend("gpu").build();
+                  try (Lowess model = new Lowess(options)) {
+                      Result result = model.fit(x, y);
+                      if (result.y().length != n) throw new RuntimeException("unexpected output length");
+                      for (double v : result.y()) if (!Double.isFinite(v)) throw new RuntimeException("non-finite values");
+                  }
+                  System.out.println("Java installGpu() OK");
+              }
+          }
+          JAVA
+          javac -cp target/classes -d /tmp/gputest /tmp/gputest/GpuPrecheck.java /tmp/gputest/GpuInstall.java /tmp/gputest/GpuSmoke.java
+
+          java -cp "target/classes:/tmp/gputest" -Dfastlowess.native.dir="$GITHUB_WORKSPACE/target/release" GpuPrecheck
+          java -cp "target/classes:/tmp/gputest" -Dfastlowess.native.dir="$GITHUB_WORKSPACE/target/release" GpuInstall
+          java -cp "target/classes:/tmp/gputest" -Dfastlowess.native.dir="$HOME/.fastlowess/gpu" GpuSmoke

@@ -58,9 +58,18 @@ Requesting the GPU backend when it isn't available throws a clear `RuntimeExcept
 
 '''
 
-== Building with GPU Support
+== Installing GPU Support
 
-Unlike the Python, Node.js, and R bindings, the Java binding does not ship a one-time GPU installer. Build the native library from source with the `gpu` Cargo feature instead:
+Download and install a prebuilt GPU-enabled `fastlowess_java` native library for this platform from the matching https://github.com/thisisamirv/lowess-project/releases[GitHub Release] (built by `.github/workflows/release-gpu.yml` for Linux/macOS/Windows x86_64 and macOS arm64):
+
+[source,java]
+----
+FastLowess.installGpu(); // prompts for confirmation, then downloads
+----
+
+Non-interactively: `FastLowess.installGpu(true)`. The library is saved to `~/.fastlowess/gpu/` under the standard platform library name. A running JVM cannot swap an already-loaded native library — restart the JVM afterwards, pointing `NativeBridge` at the downloaded build via `-Dfastlowess.native.dir=<dir printed above>`.
+
+Building from source with the `gpu` Cargo feature is always available as an alternative:
 
 [source,sh]
 ----

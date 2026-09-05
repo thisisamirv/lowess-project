@@ -63,6 +63,8 @@ Whether you need to **restart** afterwards depends on how each language loads it
 | Node.js | Yes | The native addon (`.node` file) is loaded once per process. |
 | R | Yes | The shared library is loaded once per R session. |
 | C++ | Yes (relink/rebuild) | Your application links against the library at build/load time. |
+| Java | Yes | The native library is loaded once per JVM process. |
+| Go | Yes (rebuild) | `cgo` links the static library at build time. |
 | Julia | **No** | `install_gpu()` re-points the internal library reference immediately. |
 
 ```javascript
