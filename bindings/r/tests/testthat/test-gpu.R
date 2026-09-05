@@ -65,7 +65,7 @@ test_that("gpu_asset_info builds a well-formed asset name and URL", {
     expect_identical(
         info$url,
         sprintf(
-            "https://github.com/%s/releases/download/v1.2.3/%s",
+            "https://github.com/%s/releases/download/gpu-builds/%s",
             info$repo,
             info$asset
         )

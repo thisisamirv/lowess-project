@@ -123,19 +123,36 @@ jobs:
         run: cargo build --release --features gpu --target-dir "$GITHUB_WORKSPACE/target-gpu"
       - name: Relax JLL dependency for CI
         uses: ./.github/actions/relax-julia-jll
-      - name: Test install_gpu(local_path)
+      - name: Precheck GPU inactive, then install
         env:
           FASTLOWESS_LIB: target/release/libfastlowess_jl.so
           GPU_LOCAL_PATH: target-gpu/release/libfastlowess_jl.so
         run: |
-          cat > /tmp/gpu_install_test.jl <<'JL'
+          cat > /tmp/gpu_precheck.jl <<'JL'
           using Pkg
           Pkg.activate("bindings/julia/julia")
           Pkg.instantiate()
           using FastLOWESS
           @assert !gpu_available() "GPU backend should not be active before install_gpu()"
+          JL
+          julia /tmp/gpu_precheck.jl
+
+          cat > /tmp/gpu_install.jl <<'JL'
+          using Pkg
+          Pkg.activate("bindings/julia/julia")
+          using FastLOWESS
           install_gpu(yes = true, local_path = ENV["GPU_LOCAL_PATH"])
-          @assert gpu_available() "install_gpu() did not activate the GPU backend"
+          JL
+          julia /tmp/gpu_install.jl
+      - name: Test GPU backend after restart
+        env:
+          FASTLOWESS_LIB: target-gpu/release/libfastlowess_jl.so
+        run: |
+          cat > /tmp/gpu_smoke.jl <<'JL'
+          using Pkg
+          Pkg.activate("bindings/julia/julia")
+          using FastLOWESS
+          @assert gpu_available() "install_gpu() did not activate the GPU backend after restart"
           x = collect(range(0, 1, length = 50))
           y = sin.(6 .* x) .+ 0.05
           result = fit(Lowess(fraction = 0.3, backend = "gpu"), x, y)
@@ -143,4 +160,4 @@ jobs:
           @assert all(isfinite, result.y)
           println("Julia install_gpu() OK")
           JL
-          julia /tmp/gpu_install_test.jl
+          julia /tmp/gpu_smoke.jl

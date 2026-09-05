@@ -169,6 +169,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **R:**
 
 - Fixed `use-case-real-time.Rmd`'s dashboard example crashing at 2 data points: the internal `validate_common_args()` hardcoded a stricter `min_points = 3L` than the Rust core's actual minimum of 2. Lowered its default to `2L` to match every other binding.
+- Fixed `install_gpu()` segfaulting: it overwrote the currently-loaded shared library in place (`file.copy(overwrite = TRUE)`), which can corrupt a still memory-mapped file and crash later when an unfaulted page is read back from the now-modified file on disk. It now installs via a same-directory temp file plus an atomic `file.rename()`.
+
+**Julia:**
+
+- Fixed `install_gpu()` claiming the GPU backend was "active for this session, no restart required". It now correctly state a restart is required, like every other language.
 
 ## 3.2.1
 

@@ -5,13 +5,13 @@ Run the batch LOWESS fit on the GPU via `wgpu` (Vulkan/Metal/DX12) instead of th
 
 ## Overview
 
-Every binding's batch `Lowess` type can execute on a GPU-accelerated backend powered by `wgpu`. It reimplements almost the entire LOWESS pipeline — local regression fitting, robustness iterations, interval bounds, and cross-validation — as WGSL compute shaders, so all anchor points are fit in parallel instead of one at a time on CPU cores.
+The batch `Lowess` type can execute on a GPU-accelerated backend powered by `wgpu`. It reimplements almost the entire LOWESS pipeline — local regression fitting, robustness iterations, interval bounds, and cross-validation — as WGSL compute shaders, so all anchor points are fit in parallel instead of one at a time on CPU cores.
 
 This is worth enabling for high-throughput processing of large datasets (roughly 10k+ points); for smaller inputs the CPU backend (optionally with `parallel = true`) is typically faster once you account for GPU dispatch overhead. See [BENCHMARKS.md](https://github.com/thisisamirv/lowess-project/blob/main/BENCHMARKS.md) for crossover points measured on real hardware.
 
-> **Batch only.** GPU support applies to the batch `Lowess` type only. `StreamingLowess`/`OnlineLowess` remain CPU-only in every binding — the Rust core documents GPU as optimized for static batch data, not incremental chunk/point processing.
+> **Batch only.** GPU support applies to the batch `Lowess` type only. `StreamingLowess`/`OnlineLowess` remain CPU-only — the Rust core documents GPU as optimized for static batch data, not incremental chunk/point processing.
 
-GPU support is **opt-in** and not included in the default published artifacts (PyPI wheels, npm binaries, CRAN/Bioconductor releases, JLL binaries, prebuilt C++ releases) — it requires either downloading a prebuilt GPU-enabled build via a one-time installer, or building from source with the `gpu` Cargo feature. Both paths are documented per language below.
+GPU support is **opt-in** and not included in the default published PyPI wheels — download a prebuilt GPU-enabled build via the one-time installer below, or build from source with the `gpu` Cargo feature.
 
 ### Supported Features
 
@@ -40,7 +40,7 @@ GPU support is **opt-in** and not included in the default published artifacts (P
 
 ## Checking Availability
 
-Before requesting `backend = "gpu"` (or the language's equivalent spelling), check whether the currently loaded library was built with GPU support. Requesting the GPU backend when it isn't available raises a clear error pointing at the installer for that language, rather than a raw panic.
+Before requesting `backend = "gpu"`, check whether the currently loaded library was built with GPU support. Requesting the GPU backend when it isn't available raises a clear error pointing at `install_gpu()`, rather than a raw panic.
 
 :::{jupyter-execute}
 import fastlowess as fl
@@ -53,19 +53,7 @@ print("GPU available:", fl.gpu_available())
 
 ## Installing GPU Support
 
-Each binding (except Rust, where the `gpu` Cargo feature is enabled directly; WebAssembly, which does not support the GPU backend; and Go, which links the native library statically at build time) ships a one-time installer that downloads a prebuilt GPU-enabled build from the [`gpu-builds` release](https://github.com/thisisamirv/lowess-project/releases/tag/gpu-builds) (built by `.github/workflows/release-gpu.yml`) — a single perpetual release holding GPU artifacts for every version, so individual version release pages stay uncluttered; the source version is embedded in each asset's filename instead. Building from source with the `gpu` Cargo feature is always available as an alternative.
-
-Whether you need to **restart** afterwards depends on how each language loads its native library:
-
-| Language | Restart required? | Why |
-| --- | --- | --- |
-| Python | Yes | The native extension module is loaded once per process. |
-| Node.js | Yes | The native addon (`.node` file) is loaded once per process. |
-| R | Yes | The shared library is loaded once per R session. |
-| C++ | Yes (relink/rebuild) | Your application links against the library at build/load time. |
-| Java | Yes | The native library is loaded once per JVM process. |
-| Go | Yes (rebuild) | `cgo` links the static library at build time. |
-| Julia | **No** | `install_gpu()` re-points the internal library reference immediately. |
+This binding ships a one-time installer that downloads a prebuilt GPU-enabled build from the [`gpu-builds` release](https://github.com/thisisamirv/lowess-project/releases/tag/gpu-builds) (built by `.github/workflows/release-gpu.yml`) — a single perpetual release holding GPU artifacts for every version, so individual version release pages stay uncluttered; the source version is embedded in each asset's filename instead. Building from source with the `gpu` Cargo feature is always available as an alternative.
 
 :::{jupyter-execute}
 
@@ -110,7 +98,7 @@ except Exception as e:
     print(f"(skipped in docs build: {e})")
 :::
 
-If GPU support isn't available, requesting `backend = "gpu"` (or the equivalent) raises a runtime error pointing at the installer for that language rather than a raw Rust panic.
+If GPU support isn't available, requesting `backend="gpu"` raises a runtime error pointing at `install_gpu()` rather than a raw Rust panic.
 
 ## Hardware Requirements
 

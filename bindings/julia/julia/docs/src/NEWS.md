@@ -24,6 +24,7 @@
 ## Fixed
 
 * Fixed `CONTRIBUTING.md` stating a stale Go prerequisite (`1.21+`, actually `1.23+` per `go.mod`/CI), an inaccurate `air` auto-install target (claimed `make r`, actually `make r-dev`), and a stale example crate version (`2.0.0`) in the Workspace Structure section.
+* Fixed `install_gpu()` claiming the GPU backend was "active for this session, no restart required". It now correctly state a restart is required, like every other language.
 
 # FastLOWESS.jl 3.2.1
 

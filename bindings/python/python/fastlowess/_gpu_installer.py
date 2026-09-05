@@ -89,8 +89,7 @@ def _fetch_release_assets() -> list[dict]:
             data = json.load(resp)
     except urllib.error.HTTPError as e:
         raise RuntimeError(
-            f"Could not find the '{_GPU_RELEASE_TAG}' GitHub release "
-            f"({_API_URL}): {e}"
+            f"Could not find the '{_GPU_RELEASE_TAG}' GitHub release ({_API_URL}): {e}"
         ) from e
     return data.get("assets", [])
 

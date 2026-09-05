@@ -95,6 +95,29 @@ gpu_confirm_download <- function(yes, asset, repo) {
     isTRUE(tolower(trimws(answer)) %in% c("y", "yes"))
 }
 
+#' Atomically Replace an Installed Shared Library
+#'
+#' A running R session may still have the current library memory-mapped;
+#' truncating/rewriting that file in place (file.copy(overwrite = TRUE))
+#' can segfault later when a not-yet-paged-in section is faulted in from
+#' the now-modified file on disk. Installing via a same-directory temp file
+#' plus file.rename() keeps the old (still-mapped) inode intact instead.
+#' @noRd
+gpu_replace_file <- function(src, dest) {
+    tmp <- tempfile(
+        tmpdir = dirname(dest),
+        fileext = paste0(".", tools::file_ext(dest))
+    )
+    on.exit(unlink(tmp), add = TRUE)
+    if (!file.copy(src, tmp, overwrite = TRUE)) {
+        stop("Failed to stage install to ", dirname(dest), ".", call. = FALSE)
+    }
+    if (!file.rename(tmp, dest) && !file.copy(tmp, dest, overwrite = TRUE)) {
+        stop("Failed to install to ", dest, ".", call. = FALSE)
+    }
+    invisible(TRUE)
+}
+
 #' Download the GPU Library to its Destination Path
 #' @noRd
 gpu_download_to <- function(url, ext, dest) {
@@ -117,7 +140,7 @@ gpu_download_to <- function(url, ext, dest) {
             call. = FALSE
         )
     }
-    file.copy(tmp, dest, overwrite = TRUE)
+    gpu_replace_file(tmp, dest)
 }
 
 #' Resolve the Destination Directory for the Installed Shared Library
@@ -195,7 +218,7 @@ install_gpu <- function(yes = FALSE, local_path = NULL) {
         ext <- paste0(".", tools::file_ext(local_path))
         dest <- file.path(lib_dir, paste0("rfastlowess", ext))
         message("Installing ", local_path, " ...")
-        file.copy(local_path, dest, overwrite = TRUE)
+        gpu_replace_file(local_path, dest)
         message("GPU backend installed at ", dest, ".")
         message("Restart R for the change to take effect.")
         return(invisible(TRUE))

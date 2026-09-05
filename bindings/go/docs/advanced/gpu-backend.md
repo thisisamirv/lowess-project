@@ -13,7 +13,7 @@ This is worth enabling for high-throughput processing of large datasets (roughly
 
 > **Batch only.** GPU support applies to the batch `Lowess` type only. `StreamingLowess`/`OnlineLowess` remain CPU-only — the Rust core documents GPU as optimized for static batch data, not incremental chunk/point processing.
 
-GPU support is **opt-in** and not included in a default build of `fastlowess-go` — it requires building the native library from source with the `gpu` Cargo feature.
+GPU support is **opt-in** and not included in a default build of `fastlowess-go` — download a prebuilt GPU-enabled build via the one-time installer below, or build the native library from source with the `gpu` Cargo feature.
 
 ### Supported Features
 

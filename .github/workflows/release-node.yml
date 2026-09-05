@@ -113,7 +113,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p npm/${{ matrix.settings.pkg_name }}
-          cp fastlowess.node npm/${{ matrix.settings.pkg_name }}/fastlowess.node
+          cp fastlowess.${{ matrix.settings.pkg_name }}.node npm/${{ matrix.settings.pkg_name }}/fastlowess.node
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v7
