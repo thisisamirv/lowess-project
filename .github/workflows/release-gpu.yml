@@ -40,6 +40,14 @@ jobs:
           args: --release --out dist --features gpu
           manylinux: auto
 
+      - name: Rename asset
+        working-directory: bindings/python
+        shell: bash
+        run: |
+          for f in dist/*.whl; do
+            mv "$f" "$(dirname "$f")/$(basename "$f" | sed -E 's/^fastlowess-/fastlowess-gpu-/')"
+          done
+
       - name: Upload wheels
         uses: actions/upload-artifact@v7
         with:
@@ -71,6 +79,14 @@ jobs:
           working-directory: bindings/python
           target: x86_64
           args: --release --out dist --features gpu
+
+      - name: Rename asset
+        working-directory: bindings/python
+        shell: bash
+        run: |
+          for f in dist/*.whl; do
+            mv "$f" "$(dirname "$f")/$(basename "$f" | sed -E 's/^fastlowess-/fastlowess-gpu-/')"
+          done
 
       - name: Upload wheels
         uses: actions/upload-artifact@v7
@@ -104,6 +120,14 @@ jobs:
           target: aarch64
           args: --release --out dist --features gpu
 
+      - name: Rename asset
+        working-directory: bindings/python
+        shell: bash
+        run: |
+          for f in dist/*.whl; do
+            mv "$f" "$(dirname "$f")/$(basename "$f" | sed -E 's/^fastlowess-/fastlowess-gpu-/')"
+          done
+
       - name: Upload wheels
         uses: actions/upload-artifact@v7
         with:
@@ -136,10 +160,93 @@ jobs:
           target: x86_64
           args: --release --out dist --features gpu
 
+      - name: Rename asset
+        working-directory: bindings/python
+        shell: pwsh
+        run: |
+          Get-ChildItem dist/*.whl | ForEach-Object {
+            $newName = $_.Name -replace '^fastlowess-', 'fastlowess-gpu-'
+            Rename-Item $_.FullName $newName
+          }
+
       - name: Upload wheels
         uses: actions/upload-artifact@v7
         with:
           name: gpu-wheels-windows-x86_64
+          path: bindings/python/dist
+
+  # ============================================================================
+  # BUILD GPU WHEELS - Linux ARM64 (aarch64)
+  # ============================================================================
+  linux-aarch64:
+    name: Build Linux ARM64 GPU
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.commit || github.sha }}
+
+      - name: Build GPU wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          working-directory: bindings/python
+          target: aarch64
+          args: --release --out dist --interpreter python3.8 --features gpu
+          manylinux: auto
+
+      - name: Rename asset
+        working-directory: bindings/python
+        shell: bash
+        run: |
+          for f in dist/*.whl; do
+            mv "$f" "$(dirname "$f")/$(basename "$f" | sed -E 's/^fastlowess-/fastlowess-gpu-/')"
+          done
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-wheels-linux-aarch64
+          path: bindings/python/dist
+
+  # ============================================================================
+  # BUILD GPU WHEELS - Windows ARM64
+  # ============================================================================
+  windows-arm64:
+    name: Build Windows ARM64 GPU
+    runs-on: windows-11-arm
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.commit || github.sha }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+
+      - name: Build GPU wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          working-directory: bindings/python
+          target: aarch64
+          args: --release --out dist --features gpu
+
+      - name: Rename asset
+        working-directory: bindings/python
+        shell: pwsh
+        run: |
+          Get-ChildItem dist/*.whl | ForEach-Object {
+            $newName = $_.Name -replace '^fastlowess-', 'fastlowess-gpu-'
+            Rename-Item $_.FullName $newName
+          }
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-wheels-windows-arm64
           path: bindings/python/dist
 
   # ============================================================================
@@ -248,6 +355,37 @@ jobs:
           path: dist
 
   # ============================================================================
+  # BUILD GPU LIBRARY - Julia (Linux ARM64)
+  # ============================================================================
+  julia-linux-aarch64:
+    name: Build Julia GPU library (Linux ARM64)
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.commit || github.sha }}
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Build GPU library
+        run: cargo build --release --features gpu --manifest-path bindings/julia/Cargo.toml
+
+      - name: Rename asset
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp target/release/libfastlowess_jl.so "dist/fastlowess_jl-gpu-${{ github.event.release.tag_name || 'dev' }}-linux-aarch64.so"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-julia-linux-aarch64
+          path: dist
+
+  # ============================================================================
   # BUILD GPU LIBRARY - C++ (Linux x86_64)
   # ============================================================================
   cpp-linux-x86_64:
@@ -350,6 +488,69 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: gpu-cpp-windows-x86_64
+          path: dist
+
+  # ============================================================================
+  # BUILD GPU LIBRARY - C++ (Linux ARM64)
+  # ============================================================================
+  cpp-linux-arm64:
+    name: Build C++ GPU library (Linux ARM64)
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.commit || github.sha }}
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Build GPU library
+        run: cargo build --release --features gpu --manifest-path bindings/cpp/Cargo.toml
+
+      - name: Rename asset
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp target/release/libfastlowess_cpp.so "dist/libfastlowess_cpp-gpu-${{ github.event.release.tag_name || 'dev' }}-linux-aarch64.so"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-cpp-linux-arm64
+          path: dist
+
+  # ============================================================================
+  # BUILD GPU LIBRARY - C++ (Windows ARM64)
+  # ============================================================================
+  cpp-windows-arm64:
+    name: Build C++ GPU library (Windows ARM64)
+    runs-on: windows-11-arm
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.commit || github.sha }}
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Build GPU library
+        run: cargo build --release --features gpu --manifest-path bindings/cpp/Cargo.toml
+
+      - name: Rename asset
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          $tag = if ("${{ github.event.release.tag_name }}") { "${{ github.event.release.tag_name }}" } else { "dev" }
+          Copy-Item target/release/fastlowess_cpp.dll "dist/libfastlowess_cpp-gpu-$tag-windows-aarch64.dll"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-cpp-windows-arm64
           path: dist
 
   # ============================================================================
@@ -495,6 +696,237 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: gpu-node-win32-x64-msvc
+          path: bindings/nodejs/dist
+
+  # ============================================================================
+  # BUILD GPU BINARY - Node.js (linux-x64-musl)
+  # ============================================================================
+  node-linux-x64-musl:
+    name: Build Node.js GPU binary (linux-x64-musl)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.commit || github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Install musl tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: x86_64-unknown-linux-musl
+
+      - name: Install dependencies
+        working-directory: bindings/nodejs
+        run: npm install --ignore-scripts
+
+      - name: Build GPU binary
+        working-directory: bindings/nodejs
+        run: npx napi build --release --target x86_64-unknown-linux-musl --features gpu
+
+      - name: Rename asset
+        working-directory: bindings/nodejs
+        run: |
+          mkdir -p dist
+          cp fastlowess.node dist/fastlowess-gpu.linux-x64-musl.node
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-node-linux-x64-musl
+          path: bindings/nodejs/dist
+
+  # ============================================================================
+  # BUILD GPU BINARY - Node.js (linux-arm64-gnu)
+  # ============================================================================
+  node-linux-arm64-gnu:
+    name: Build Node.js GPU binary (linux-arm64-gnu)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.commit || github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Install Cross-Compilation Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+          echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: aarch64-unknown-linux-gnu
+
+      - name: Install dependencies
+        working-directory: bindings/nodejs
+        run: npm install --ignore-scripts
+
+      - name: Build GPU binary
+        working-directory: bindings/nodejs
+        run: npx napi build --release --target aarch64-unknown-linux-gnu --features gpu
+
+      - name: Rename asset
+        working-directory: bindings/nodejs
+        run: |
+          mkdir -p dist
+          cp fastlowess.node dist/fastlowess-gpu.linux-arm64-gnu.node
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-node-linux-arm64-gnu
+          path: bindings/nodejs/dist
+
+  # ============================================================================
+  # BUILD GPU BINARY - Node.js (linux-arm64-musl)
+  # ============================================================================
+  node-linux-arm64-musl:
+    name: Build Node.js GPU binary (linux-arm64-musl)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.commit || github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Install Zig
+        uses: mlugg/setup-zig@v2
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: aarch64-unknown-linux-musl
+
+      - name: Install dependencies
+        working-directory: bindings/nodejs
+        run: npm install --ignore-scripts
+
+      - name: Build GPU binary
+        working-directory: bindings/nodejs
+        run: npx napi build --release --target aarch64-unknown-linux-musl --cross-compile --features gpu
+
+      - name: Rename asset
+        working-directory: bindings/nodejs
+        run: |
+          mkdir -p dist
+          cp fastlowess.node dist/fastlowess-gpu.linux-arm64-musl.node
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-node-linux-arm64-musl
+          path: bindings/nodejs/dist
+
+  # ============================================================================
+  # BUILD GPU BINARY - Node.js (linux-arm-gnueabihf)
+  # ============================================================================
+  node-linux-arm-gnueabihf:
+    name: Build Node.js GPU binary (linux-arm-gnueabihf)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.commit || github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Install Cross-Compilation Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
+          echo "CARGO_TARGET_ARMV7_UNKNOWN_LINUX_GNUEABIHF_LINKER=arm-linux-gnueabihf-gcc" >> $GITHUB_ENV
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: armv7-unknown-linux-gnueabihf
+
+      - name: Install dependencies
+        working-directory: bindings/nodejs
+        run: npm install --ignore-scripts
+
+      - name: Build GPU binary
+        working-directory: bindings/nodejs
+        run: npx napi build --release --target armv7-unknown-linux-gnueabihf --features gpu
+
+      - name: Rename asset
+        working-directory: bindings/nodejs
+        run: |
+          mkdir -p dist
+          cp fastlowess.node dist/fastlowess-gpu.linux-arm-gnueabihf.node
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-node-linux-arm-gnueabihf
+          path: bindings/nodejs/dist
+
+  # ============================================================================
+  # BUILD GPU BINARY - Node.js (win32-arm64-msvc)
+  # ============================================================================
+  node-win32-arm64-msvc:
+    name: Build Node.js GPU binary (win32-arm64-msvc)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.commit || github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: aarch64-pc-windows-msvc
+
+      - name: Install dependencies
+        working-directory: bindings/nodejs
+        run: npm install --ignore-scripts
+
+      - name: Build GPU binary
+        working-directory: bindings/nodejs
+        run: npx napi build --release --target aarch64-pc-windows-msvc --features gpu
+
+      - name: Rename asset
+        working-directory: bindings/nodejs
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Copy-Item fastlowess.node dist/fastlowess-gpu.win32-arm64-msvc.node
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-node-win32-arm64-msvc
           path: bindings/nodejs/dist
 
   # ============================================================================
@@ -741,6 +1173,80 @@ jobs:
           path: dist
 
   # ============================================================================
+  # BUILD GPU LIBRARY - Go (Linux ARM64)
+  # ============================================================================
+  go-linux-arm64:
+    name: Build Go GPU library (Linux ARM64)
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.commit || github.sha }}
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Build GPU library
+        run: cargo build --release --features gpu --manifest-path bindings/go/Cargo.toml
+
+      - name: Rename asset
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp target/release/libfastlowess_go.a "dist/libfastlowess_go-gpu-${{ github.event.release.tag_name || 'dev' }}-linux-arm64.a"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-go-linux-arm64
+          path: dist
+
+  # ============================================================================
+  # BUILD GPU LIBRARY - Go (Windows ARM64)
+  # ============================================================================
+  go-windows-arm64:
+    name: Build Go GPU library (Windows ARM64)
+    runs-on: windows-11-arm
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.commit || github.sha }}
+
+      # cgo needs a GNU-flavor C toolchain (MSVC .lib archives aren't
+      # cgo-compatible); aarch64-pc-windows-gnu doesn't exist as a Rust
+      # target, so this cross-compiles via the gnullvm ABI using
+      # llvm-mingw's aarch64-w64-mingw32-clang, matching release-go.yml.
+      - name: Install llvm-mingw + Rust target
+        shell: pwsh
+        run: |
+          rustup target add aarch64-pc-windows-gnullvm
+          $ver = "20241030"
+          $url = "https://github.com/mstorsjo/llvm-mingw/releases/download/$ver/llvm-mingw-$ver-ucrt-x86_64.zip"
+          Invoke-WebRequest -Uri $url -OutFile llvm-mingw.zip
+          Expand-Archive -Path llvm-mingw.zip -DestinationPath C:\llvm-mingw
+          $bin = (Get-ChildItem -Path C:\llvm-mingw -Directory | Select-Object -First 1).FullName + "\bin"
+          Add-Content -Path $env:GITHUB_PATH -Value $bin
+          # Linker for this target comes from the repo's root .cargo/config.toml.
+
+      - name: Build GPU library
+        run: cargo build --release --features gpu --manifest-path bindings/go/Cargo.toml --target aarch64-pc-windows-gnullvm
+
+      - name: Rename asset
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          $tag = if ("${{ github.event.release.tag_name }}") { "${{ github.event.release.tag_name }}" } else { "dev" }
+          Copy-Item target/aarch64-pc-windows-gnullvm/release/libfastlowess_go.a "dist/libfastlowess_go-gpu-$tag-windows-arm64.a"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-go-windows-arm64
+          path: dist
+
+  # ============================================================================
   # BUILD GPU LIBRARY - Java (Linux x86_64)
   # ============================================================================
   java-linux-x86_64:
@@ -855,18 +1361,28 @@ jobs:
       - macos-x86_64
       - macos-aarch64
       - windows-x86_64
+      - linux-aarch64
+      - windows-arm64
       - julia-linux-x86_64
       - julia-macos-x86_64
       - julia-macos-aarch64
       - julia-windows-x86_64
+      - julia-linux-aarch64
       - cpp-linux-x86_64
       - cpp-macos-x86_64
       - cpp-macos-aarch64
       - cpp-windows-x86_64
+      - cpp-linux-arm64
+      - cpp-windows-arm64
       - node-linux-x64-gnu
       - node-darwin-x64
       - node-darwin-arm64
       - node-win32-x64-msvc
+      - node-linux-x64-musl
+      - node-linux-arm64-gnu
+      - node-linux-arm64-musl
+      - node-linux-arm-gnueabihf
+      - node-win32-arm64-msvc
       - r-linux-x86_64
       - r-macos-x86_64
       - r-macos-aarch64
@@ -875,6 +1391,8 @@ jobs:
       - go-macos-x86_64
       - go-macos-aarch64
       - go-windows-x86_64
+      - go-linux-arm64
+      - go-windows-arm64
       - java-linux-x86_64
       - java-macos-x86_64
       - java-macos-aarch64

@@ -15,16 +15,48 @@
 
 const path = require('path')
 const { execFileSync } = require('child_process')
+const { readFileSync } = require('fs')
 const gpuDownload = require('./gpu-download')
 
 const { version } = require('./package.json')
 
-// Only these 4 platforms are built by release-gpu.yml.
+// Musl detection, mirrored from the isMusl() helper napi-rs generates into
+// index.js (that copy gets wiped on every `napi build`, so it's duplicated
+// here rather than imported).
+const isFileMusl = (f) => f.includes('libc.musl-') || f.includes('ld-musl-')
+
+function isMusl() {
+    if (process.platform !== 'linux') return false
+    try {
+        return readFileSync('/usr/bin/ldd', 'utf-8').includes('musl')
+    } catch {
+        // fall through
+    }
+    try {
+        return execFileSync('ldd', ['--version'], { encoding: 'utf8' }).includes('musl')
+    } catch {
+        return false
+    }
+}
+
+// These 9 platforms are built by release-gpu.yml.
 function currentPlatformSuffix() {
-    if (process.platform === 'win32' && process.arch === 'x64') return 'win32-x64-msvc'
-    if (process.platform === 'darwin' && process.arch === 'x64') return 'darwin-x64'
-    if (process.platform === 'darwin' && process.arch === 'arm64') return 'darwin-arm64'
-    if (process.platform === 'linux' && process.arch === 'x64') return 'linux-x64-gnu'
+    if (process.platform === 'win32') {
+        if (process.arch === 'x64') return 'win32-x64-msvc'
+        if (process.arch === 'arm64') return 'win32-arm64-msvc'
+        return null
+    }
+    if (process.platform === 'darwin') {
+        if (process.arch === 'x64') return 'darwin-x64'
+        if (process.arch === 'arm64') return 'darwin-arm64'
+        return null
+    }
+    if (process.platform === 'linux') {
+        if (process.arch === 'x64') return isMusl() ? 'linux-x64-musl' : 'linux-x64-gnu'
+        if (process.arch === 'arm64') return isMusl() ? 'linux-arm64-musl' : 'linux-arm64-gnu'
+        if (process.arch === 'arm') return 'linux-arm-gnueabihf'
+        return null
+    }
     return null
 }
 

@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added a `return_sorted` option to `Lowess`.
 - Added a `missing` option to `Lowess`, `StreamingLowess`, and `OnlineLowess`.
+- `release-gpu.yml` now also builds GPU wheels for `linux-aarch64` and `windows-arm64`, matching `release-pypi.yml`'s platform coverage (previously only 4 of its 6 platforms had a GPU wheel).
 
 **R:**
 
@@ -41,11 +42,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added a `return_sorted` option to `Lowess`.
 - Added a `missing` option to `Lowess`, `StreamingLowess`, and `OnlineLowess`.
+- `release-gpu.yml` now also builds a `linux-aarch64` GPU library.
 
 **Node.js:**
 
 - Added a `return_sorted` option to `Lowess`'s `SmoothOptions`.
 - Added a `missing` option to `SmoothOptions`, `StreamingSmoothOptions`, and `OnlineSmoothOptions`.
+- Expanded `release-gpu.yml`'s Node.js GPU binary builds from 4 platforms to all 9 the regular npm release covers (added `linux-x64-musl`, `linux-arm64-gnu`, `linux-arm64-musl`, `linux-arm-gnueabihf`, `win32-arm64-msvc`); `installGpu()` now detects all of them too.
 
 **WASM:**
 
@@ -56,11 +59,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added a `return_sorted` option to `LowessOptions`.
 - Added a `missing` option to `LowessOptions` and `OnlineOptions` (inherited by `StreamingOptions`).
+- `release-gpu.yml` now also builds GPU libraries for `linux-arm64` and `windows-arm64`, matching `release-cpp.yml`'s platform coverage.
 
 **Go:**
 
 - Added a `ReturnSorted` option to `Options`.
 - Added a `Missing` option to `Options`, `StreamingOptions`, and `OnlineOptions`.
+- `release-gpu.yml` now also builds GPU libraries for `linux-arm64` and `windows-arm64` (the latter via the same llvm-mingw/gnullvm cross toolchain as `release-go.yml`), matching its platform coverage.
 
 **Java:**
 
@@ -141,6 +146,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Python:**
 
 - Fixed `_core.pyi` stating stale defaults that diverged from the actual PyO3 runtime (and every other binding): `StreamingLowess.fraction` (`0.3`→`0.67`), `OnlineLowess.fraction` (`0.2`→`0.67`), `OnlineLowess.window_capacity` (`100`→`1000`), and `OnlineLowess.update_mode` (`"full"`→`"incremental"`). Runtime behavior was already correct.
+- Fixed `install_gpu()` never finding a matching wheel: `release-gpu.yml`'s Python jobs uploaded the GPU wheel under its default maturin filename (identical to the CPU wheel, with no `gpu` marker), so `_find_gpu_wheel_asset()`'s filename filter never matched. Added the missing rename step, matching every other language's GPU job.
 
 **Node.js:**
 

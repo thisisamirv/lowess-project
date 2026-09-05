@@ -24,6 +24,8 @@ title: News
 
 * Fixed `CONTRIBUTING.md` stating a stale Go prerequisite (`1.21+`, actually `1.23+` per `go.mod`/CI), an inaccurate `air` auto-install target (claimed `make r`, actually `make r-dev`), and a stale example crate version (`2.0.0`) in the Workspace Structure section.
 * Fixed `OnlineOptions` doc comments stating `min_points` defaults to `3` (actually `2`) and `update_mode` defaults to `"full"` (actually `"incremental"`).
+* Fixed `npm run build`/`build:debug` emitting only the generic `fastlowess.node`, which the loader in `index.js` never checks; added the missing `--platform` flag.
+* Fixed `installGpu()` being non-functional: it lived inside the auto-generated `index.js`, which `napi build` fully rewrites, silently discarding it. Moved it to `gpu-installer.js`, re-attached via a new `postbuild` step. Also fixed it downloading to the wrong filename (the loader never checked it) and an `EBUSY` error on Windows from locking the file it was trying to overwrite.
 
 # fastlowess (Node.js) 3.2.1
 
