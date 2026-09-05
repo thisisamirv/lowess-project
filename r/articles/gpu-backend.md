@@ -59,8 +59,11 @@ install_gpu(yes = TRUE) # non-interactive
 ```
 
 [`install_gpu()`](https://thisisamirv.github.io/lowess-project/r/reference/install_gpu.md)
-downloads a prebuilt GPU-enabled library from the matching GitHub
-release and copies it into the installed package’s `libs/` directory.
+downloads a prebuilt GPU-enabled library from the [`gpu-builds`
+release](https://github.com/thisisamirv/lowess-project/releases/tag/gpu-builds)
+— a single perpetual release holding GPU artifacts for every version, so
+individual version release pages stay uncluttered — and copies it into
+the installed package’s `libs/` directory.
 
 **Restart R after installation.**
 

@@ -148,8 +148,10 @@ builds. Install it with a one-time download:</p>
 <span><span class="fu"><a href="../reference/install_gpu.html">install_gpu</a></span><span class="op">(</span><span class="op">)</span>          <span class="co"># interactive — prompts for confirmation</span></span>
 <span><span class="fu"><a href="../reference/install_gpu.html">install_gpu</a></span><span class="op">(</span>yes <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="co"># non-interactive</span></span></code></pre></div>
 <p><code><a href="../reference/install_gpu.html">install_gpu()</a></code> downloads a prebuilt GPU-enabled library
-from the matching GitHub release and copies it into the installed
-package’s <code>libs/</code> directory.</p>
+from the <a href="https://github.com/thisisamirv/lowess-project/releases/tag/gpu-builds" class="external-link"><code>gpu-builds</code>
+release</a> — a single perpetual release holding GPU artifacts for every
+version, so individual version release pages stay uncluttered — and
+copies it into the installed package’s <code>libs/</code> directory.</p>
 <p><strong>Restart R after installation.</strong></p>
 <p>Alternatively, build from source with GPU support:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">make</span> <span class="at">-f</span> bindings/r/Makefile WITH_GPU=1</span></code></pre></div>

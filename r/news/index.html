@@ -41,6 +41,9 @@
 <ul><li>Added an “Ideas for Contribution” section to <code>CONTRIBUTING.md</code>, listing concrete Batch/Streaming/Online adapter feature gaps (out-of-sample prediction, exposing local slope/derivative, adaptive fraction selection, STL-style decomposition, bootstrap intervals, concurrent chunk processing, checkpointable streaming state, populating <code>OnlineOutput.standard_error</code>, time-based window eviction, configurable warm-up) to invite contributions.</li>
 <li>
 <code>dev/bump_version.py</code> now also updates the example crate version in <code>CONTRIBUTING.md</code>’s “Individual crate Cargo.toml” snippet.</li>
+<li>Every GPU installer (Python, Node.js, R, Julia, C++, Java, Go) now accepts a local path to an already-built GPU artifact, installing from it directly instead of downloading from a GitHub Release — useful for testing the installer itself or installing an unreleased build. <code>ci-*.yml</code>’s <code>gpu</code> jobs now build the <code>gpu</code> feature locally and exercise this path end-to-end instead of depending on a matching published release existing.</li>
+<li>
+<code>release-gpu.yml</code> now uploads every GPU artifact (across all languages and all versions) to a single perpetual <code>gpu-builds</code> release instead of the release page for the version just published, so version release pages stay uncluttered; each asset’s filename embeds its source version instead. Every installer’s download URL updated to match.</li>
 <li>Added a <code>return_sorted</code> option to <code><a href="../reference/Lowess.html">Lowess()</a></code>.</li>
 <li>Added a <code>missing</code> option to <code><a href="../reference/Lowess.html">Lowess()</a></code>, <code><a href="../reference/StreamingLowess.html">StreamingLowess()</a></code>, and <code><a href="../reference/OnlineLowess.html">OnlineLowess()</a></code>.</li>
 </ul></div>

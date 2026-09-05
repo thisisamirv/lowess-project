@@ -56,7 +56,7 @@ included in CRAN/Bioconductor releases.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">install_gpu</span><span class="op">(</span>yes <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">install_gpu</span><span class="op">(</span>yes <span class="op">=</span> <span class="cn">FALSE</span>, local_path <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -66,6 +66,14 @@ included in CRAN/Bioconductor releases.</p>
 <dl><dt id="arg-yes">yes<a class="anchor" aria-label="anchor" href="#arg-yes"></a></dt>
 <dd><p>Logical; skip the interactive <code>y/N</code> confirmation prompt.
 Must be <code>TRUE</code> when the session is not interactive.</p></dd>
+
+
+<dt id="arg-local-path">local_path<a class="anchor" aria-label="anchor" href="#arg-local-path"></a></dt>
+<dd><p>Character; path to a GPU-enabled shared library already
+built locally (e.g. via <code>WITH_GPU=1 make install</code> in
+<code>benchmarks/</code>). When given, skips the GitHub Release lookup/download
+and installs directly from this path — useful for testing the installer
+itself, or installing an unreleased build.</p></dd>
 
 </dl></div>
     <div class="section level2">

@@ -11,7 +11,7 @@ A running R session cannot swap an already-loaded shared library, so
 ## Usage
 
 ``` r
-install_gpu(yes = FALSE)
+install_gpu(yes = FALSE, local_path = NULL)
 ```
 
 ## Arguments
@@ -20,6 +20,14 @@ install_gpu(yes = FALSE)
 
   Logical; skip the interactive `y/N` confirmation prompt. Must be
   `TRUE` when the session is not interactive.
+
+- local_path:
+
+  Character; path to a GPU-enabled shared library already built locally
+  (e.g. via `WITH_GPU=1 make install` in `benchmarks/`). When given,
+  skips the GitHub Release lookup/download and installs directly from
+  this path — useful for testing the installer itself, or installing an
+  unreleased build.
 
 ## Value
 
