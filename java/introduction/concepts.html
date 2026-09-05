@@ -257,7 +257,15 @@
 <h2 id="the-fraction-parameter"><a class="anchor" href="#the-fraction-parameter"></a>The Fraction Parameter</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p><code>fraction</code> (also called bandwidth or span) is the most important parameter. It controls what proportion of data is used for each local fit.</p>
+<p>The <code>fraction</code> (also called bandwidth or span) is the most important parameter. It controls what proportion of data is used for each local fit.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="../_images/fraction_comparison.svg" alt="Fraction Effect">
+</div>
+</div>
+<div class="paragraph">
+<p><em>Small fraction vs large fraction — bandwidth controls how closely the fit follows local structure</em></p>
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
@@ -295,14 +303,6 @@
 </tr>
 </tbody>
 </table>
-<div class="imageblock">
-<div class="content">
-<img src="../_images/fraction_comparison.svg" alt="Fraction Effect">
-</div>
-</div>
-<div class="paragraph">
-<p><em>Small fraction vs large fraction — bandwidth controls how closely the fit follows local structure</em></p>
-</div>
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -325,6 +325,14 @@
 <div class="sectionbody">
 <div class="paragraph">
 <p>Standard LOWESS is sensitive to outliers. <strong>Robustness iterations</strong> downweight points with large residuals:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="../_images/robust_iter_comparison.svg" alt="Robustness Effect">
+</div>
+</div>
+<div class="paragraph">
+<p><em>Non-robust LOWESS (iterations=0) vs robust LOWESS — outlier influence is suppressed through iterative reweighting</em></p>
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
@@ -362,14 +370,6 @@
 </tr>
 </tbody>
 </table>
-<div class="imageblock">
-<div class="content">
-<img src="../_images/robust_iter_comparison.svg" alt="Robustness Effect">
-</div>
-</div>
-<div class="paragraph">
-<p><em>Non-robust LOWESS (iterations=0) vs robust LOWESS — outlier influence is suppressed through iterative reweighting</em></p>
-</div>
 <hr>
 </div>
 </div>

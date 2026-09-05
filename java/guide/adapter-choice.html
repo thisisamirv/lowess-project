@@ -266,6 +266,364 @@
 </div>
 </div>
 <div class="sect1">
+<h2 id="batch-adapter"><a class="anchor" href="#batch-adapter"></a>Batch Adapter</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Standard mode for complete datasets. <strong>Supports all features.</strong></p>
+</div>
+<div class="sect2">
+<h3 id="when-to-use"><a class="anchor" href="#when-to-use"></a>When to Use</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Dataset fits in memory</p>
+</li>
+<li>
+<p>Need intervals, cross-validation, or diagnostics</p>
+</li>
+<li>
+<p>Processing complete files</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="example"><a class="anchor" href="#example"></a>Example</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        Options options = Options.builder()
+                .fraction(0.5)
+                .iterations(3)
+                .confidenceIntervals(0.95)
+                .predictionIntervals(0.95)
+                .returnDiagnostics(true)
+                .parallel(true)
+                .build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y);
+            int mid = n / 2;
+            System.out.printf("95%% CI at midpoint: [%.4f, %.4f]%n",
+                    result.confidenceLower().get()[mid], result.confidenceUpper().get()[mid]);
+            System.out.printf("R2: %.4f%n", result.diagnostics().get().rSquared());
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">95% CI at midpoint: [0.0393, 0.1077]
+R2: 0.9664</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="streaming-adapter"><a class="anchor" href="#streaming-adapter"></a>Streaming Adapter</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Process large datasets in chunks with configurable overlap.</p>
+</div>
+<div class="sect2">
+<h3 id="when-to-use-2"><a class="anchor" href="#when-to-use-2"></a>When to Use</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Dataset &gt;100,000 points</p>
+</li>
+<li>
+<p>Memory-constrained environments</p>
+</li>
+<li>
+<p>Batch processing pipelines</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="parameters"><a class="anchor" href="#parameters"></a>Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>chunk_size</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">5000</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Points per chunk</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>overlap</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>chunk_size / 10</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Overlap between chunks</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>merge_strategy</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"weighted_average"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">How to merge overlaps</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="merge-strategies"><a class="anchor" href="#merge-strategies"></a>Merge Strategies</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Strategy</th>
+<th class="tableblock halign-left valign-top">Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"average"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Average overlapping values</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"weighted_average"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Distance-weighted blend</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"take_first"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Keep left chunk values</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"take_last"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Keep right chunk values</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="example-2"><a class="anchor" href="#example-2"></a>Example</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Result;
+import fastlowess.StreamingLowess;
+import fastlowess.StreamingOptions;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        StreamingOptions options = StreamingOptions.builder()
+                .fraction(0.3)
+                .iterations(2)
+                .chunkSize(5000)
+                .overlap(500)
+                .mergeStrategy("average")
+                .build();
+
+        try (StreamingLowess model = new StreamingLowess(options)) {
+            model.processChunk(x, y);
+            Result result = model.finish();
+            System.out.printf("Smoothed y[0]: %.4f%n", result.y()[0]);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">Smoothed y[0]: 0.2578</code></pre>
+</div>
+</div>
+<hr>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="Caution"></i>
+</td>
+<td class="content">
+<div class="title">Always call finish()</div>
+<div class="paragraph">
+<p>Always call <code>model.finish()</code> after processing all chunks to retrieve buffered overlap data.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="online-adapter"><a class="anchor" href="#online-adapter"></a>Online Adapter</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Incremental updates with a sliding window for real-time data.</p>
+</div>
+<div class="sect2">
+<h3 id="when-to-use-3"><a class="anchor" href="#when-to-use-3"></a>When to Use</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Data arrives incrementally (sensors, streams)</p>
+</li>
+<li>
+<p>Need real-time smoothed values</p>
+</li>
+<li>
+<p>Fixed memory budget</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="parameters-2"><a class="anchor" href="#parameters-2"></a>Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>window_capacity</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1000</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Max points in window</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>min_points</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Points before output starts</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>update_mode</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"incremental"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Update strategy</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="update-modes"><a class="anchor" href="#update-modes"></a>Update Modes</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Mode</th>
+<th class="tableblock halign-left valign-top">Behavior</th>
+<th class="tableblock halign-left valign-top">Speed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"incremental"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Update only affected fits</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Faster</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"full"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Recompute entire window</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">More accurate</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="example-3"><a class="anchor" href="#example-3"></a>Example</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.OnlineLowess;
+import fastlowess.OnlineOptions;
+import fastlowess.PointResult;
+
+import java.util.Optional;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        OnlineOptions options = OnlineOptions.builder()
+                .fraction(0.2)
+                .iterations(1)
+                .windowCapacity(100)
+                .minPoints(5)
+                .updateMode("incremental")
+                .build();
+
+        try (OnlineLowess model = new OnlineLowess(options)) {
+            int shown = 0;
+            for (int i = 0; i &lt; n &amp;&amp; shown &lt; 5; i++) {
+                Optional&lt;PointResult&gt; result = model.addPoint(x[i], y[i]);
+                if (result.isPresent()) {
+                    System.out.println(result.get().y());
+                    shown++;
+                }
+            }
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">0.3511479871810792
+0.4120334456984871
+0.4716624556603275
+0.5297949120891716
+0.5861967361004687</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="feature-comparison"><a class="anchor" href="#feature-comparison"></a>Feature Comparison</h2>
 <div class="sectionbody">
 <table class="tableblock frame-all grid-all stretch">

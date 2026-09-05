@@ -204,24 +204,82 @@
 </div>
 </div>
 <div class="sect1">
-<h2 id="options-builder-options-builder"><a class="anchor" href="#options-builder-options-builder"></a><code>Options.builder() Options.Builder</code></h2>
+<h2 id="when-to-use-batch-adapter"><a class="anchor" href="#when-to-use-batch-adapter"></a>When to Use Batch Adapter</h2>
 <div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Dataset fits in memory</p>
+</li>
+<li>
+<p>Need intervals, cross-validation, or diagnostics</p>
+</li>
+<li>
+<p>Processing complete files</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="classes"><a class="anchor" href="#classes"></a>Classes</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="lowess"><a class="anchor" href="#lowess"></a><code>Lowess</code></h3>
 <div class="paragraph">
-<p>Returns a fluent builder pre-populated with recommended defaults. Start from this and override only the settings you need:</p>
+<p>The <code>Lowess</code> class allows configuring the LOWESS parameters once and fitting multiple datasets using those parameters.</p>
+</div>
+<div class="paragraph">
+<p><strong>Constructor:</strong></p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Options options = Options.builder()
         .fraction(0.3)
         .returnDiagnostics(true)
-        .build();</code></pre>
+        .build();
+
+try (Lowess model = new Lowess(options)) {
+    // ...
+}</code></pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>new Lowess(Options options)</code> creates a new batch model. Throws <code>RuntimeException</code> if any option is out of range (some validation is eager at construction, e.g. <code>iterations</code>; some is deferred to <code>fit</code>, e.g. <code>fraction</code>).</p>
+</li>
+<li>
+<p><code>options</code>: An <code>Options</code> instance. Use <code>Options.builder()</code> (pre-populated with recommended defaults) and override only the settings you need.</p>
+</li>
+</ul>
+</div>
+<div class="sect3">
+<h4 id="fitx-y-fitx-y-customweights"><a class="anchor" href="#fitx-y-fitx-y-customweights"></a><code>fit(x, y)</code> / <code>fit(x, y, customWeights)</code></h4>
+<div class="paragraph">
+<p><code>Lowess.fit(double[] x, double[] y) Result</code> and <code>Lowess.fit(double[] x, double[] y, double[] customWeights) Result</code> smooth <code>y</code> as a function of <code>x</code>. <code>x</code> and <code>y</code> must be non-empty and the same length. An optional <code>customWeights</code> array (same length) applies per-observation case weights; pass <code>null</code> (or use the two-argument overload) for uniform weights. Returns a <code>Result</code> containing the smoothed values and optional diagnostics.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Result result = model.fit(x, y);</code></pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>Lowess.close()</code> releases native resources. Safe to call multiple times. Implements <code>AutoCloseable</code>, so prefer try-with-resources over relying on the garbage collector.</p>
+</li>
+</ul>
+</div>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="options-settings"><a class="anchor" href="#options-settings"></a><code>Options</code> settings</h2>
+<h2 id="options-structures"><a class="anchor" href="#options-structures"></a>Options Structures</h2>
 <div class="sectionbody">
+<div class="sect2">
+<h3 id="options"><a class="anchor" href="#options"></a><code>Options</code></h3>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 25%;">
@@ -287,6 +345,12 @@
 <td class="tableblock halign-left valign-top"><p class="tableblock">Fallback when all robustness weights hit zero: <code>use_local_mean</code>, <code>return_original</code>, <code>return_none</code>.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>missing</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"error"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Policy for non-finite (NaN/Infinity) values in input data: <code>error</code>, <code>drop</code>.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>confidenceIntervals</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>NaN</code> (disabled)</p></td>
@@ -329,10 +393,22 @@
 <td class="tableblock halign-left valign-top"><p class="tableblock">Populate <code>Result.standardErrors()</code> (hat-matrix statistics).</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cvFractions</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double[]</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>null</code> (disabled)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Candidate fractions for cross-validation.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnSorted</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return results sorted ascending by <code>x</code> instead of in original input order.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>parallel</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>true</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Enable parallel processing.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>backend</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"cpu"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cpu</code> or <code>gpu</code> (requires a <code>gpu</code>-feature build of the native library).</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>cvMethod</code></p></td>
@@ -347,25 +423,38 @@
 <td class="tableblock halign-left valign-top"><p class="tableblock">Number of folds for k-fold CV.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cvFractions</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double[]</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>null</code> (disabled)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Candidate fractions for cross-validation.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>cvSeed</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>long</code> (boxed)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>null</code> (random)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">RNG seed for reproducible k-fold splits.</p></td>
 </tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>parallel</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>true</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Enable parallel processing.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>backend</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"cpu"</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cpu</code> or <code>gpu</code> (requires a <code>gpu</code>-feature build of the native library).</p></td>
-</tr>
 </tbody>
 </table>
+<div class="paragraph">
+<p>Use <code>Options.builder()</code> (pre-populated with recommended defaults) and override only the settings you need:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Options options = Options.builder()
+        .fraction(0.3)
+        .returnDiagnostics(true)
+        .build();</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="options-2"><a class="anchor" href="#options-2"></a>Options</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="fraction"><a class="anchor" href="#fraction"></a>fraction</h3>
 <div class="paragraph">
 <p><code>fraction</code> is the most important parameter: it controls the size of the local neighbourhood used at each point.</p>
 </div>
@@ -405,6 +494,9 @@
 </tr>
 </tbody>
 </table>
+</div>
+<div class="sect2">
+<h3 id="iterations"><a class="anchor" href="#iterations"></a>iterations</h3>
 <div class="paragraph">
 <p><code>iterations</code> controls robustness to outliers, at the cost of speed.</p>
 </div>
@@ -445,40 +537,366 @@
 </tbody>
 </table>
 </div>
-</div>
-<div class="sect1">
-<h2 id="new-lowessoptions-options"><a class="anchor" href="#new-lowessoptions-options"></a><code>new Lowess(Options options)</code></h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="delta"><a class="anchor" href="#delta"></a>delta</h3>
 <div class="paragraph">
-<p>Creates a new batch model. Throws <code>RuntimeException</code> if any option is out of range (some validation is eager at construction, e.g. <code>iterations</code>; some is deferred to <code>fit</code>, e.g. <code>fraction</code>).</p>
+<p>Points within <code>delta</code> of each other on the x-axis share the same local fit instead of each computing its own regression&#8201;&#8212;&#8201;an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. <code>NaN</code> (default) auto-sets it to 1% of the x-range. Set it to <code>0.0</code> explicitly to disable interpolation and fit every point exactly.</p>
 </div>
 </div>
+<div class="sect2">
+<h3 id="weightfunction"><a class="anchor" href="#weightfunction"></a>weightFunction</h3>
+<div class="paragraph">
+<p><em>See: <a href="../weighting/kernels.html" class="xref page">Weight Functions</a></em></p>
 </div>
-<div class="sect1">
-<h2 id="lowess-fitdouble-x-double-y-result"><a class="anchor" href="#lowess-fitdouble-x-double-y-result"></a><code>Lowess.fit(double[] x, double[] y) Result</code></h2>
-<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><code>"tricube"</code> (default)</p>
+</li>
+<li>
+<p><code>"epanechnikov"</code></p>
+</li>
+<li>
+<p><code>"gaussian"</code></p>
+</li>
+<li>
+<p><code>"uniform"</code> (alias: <code>"boxcar"</code>)</p>
+</li>
+<li>
+<p><code>"biweight"</code> (alias: <code>"bisquare"</code>)</p>
+</li>
+<li>
+<p><code>"triangle"</code> (alias: <code>"triangular"</code>)</p>
+</li>
+<li>
+<p><code>"cosine"</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="robustnessmethod"><a class="anchor" href="#robustnessmethod"></a>robustnessMethod</h3>
+<div class="paragraph">
+<p><em>See: <a href="../weighting/robustness.html" class="xref page">Robustness</a></em></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>"bisquare"</code> (default; alias: <code>"biweight"</code>)</p>
+</li>
+<li>
+<p><code>"huber"</code></p>
+</li>
+<li>
+<p><code>"talwar"</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="scalingmethod"><a class="anchor" href="#scalingmethod"></a>scalingMethod</h3>
+<div class="paragraph">
+<p><em>See: <a href="../weighting/scaling.html" class="xref page">Scaling Methods</a></em></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>"mad"</code> (default; alias: <code>"median_absolute_deviation"</code>)</p>
+</li>
+<li>
+<p><code>"mar"</code> (alias: <code>"median_absolute_residual"</code>)</p>
+</li>
+<li>
+<p><code>"mean"</code> (alias: <code>"mean_absolute_residual"</code>)</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="boundarypolicy"><a class="anchor" href="#boundarypolicy"></a>boundaryPolicy</h3>
+<div class="paragraph">
+<p><em>See: <a href="../advanced/boundary.html" class="xref page">Boundary Handling</a></em></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>"extend"</code> (default; alias: <code>"pad"</code>)</p>
+</li>
+<li>
+<p><code>"reflect"</code> (alias: <code>"mirror"</code>)</p>
+</li>
+<li>
+<p><code>"zero"</code></p>
+</li>
+<li>
+<p><code>"noboundary"</code> (alias: <code>"none"</code>)</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="zeroweightfallback"><a class="anchor" href="#zeroweightfallback"></a>zeroWeightFallback</h3>
+<div class="paragraph">
+<p>Behavior when all neighborhood weights are zero:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Option</th>
+<th class="tableblock halign-left valign-top">Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"use_local_mean"</code> (default; aliases: <code>"local_mean"</code>, <code>"mean"</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Use the mean of the neighborhood</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"return_original"</code> (alias: <code>"original"</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return the original y value</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"return_none"</code> (alias: <code>"none"</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return <code>NaN</code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="missing"><a class="anchor" href="#missing"></a>missing</h3>
+<div class="paragraph">
+<p>Policy for handling non-finite (NaN/Infinity) values in <code>x</code>/<code>y</code> (and <code>customWeights</code>):</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Option</th>
+<th class="tableblock halign-left valign-top">Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"error"</code> (default)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Throw if any value is non-finite</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"drop"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Silently remove observations where <code>x</code> or <code>y</code> is non-finite before fitting</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+A length mismatch between <code>x</code> and <code>y</code> always throws, even under <code>"drop"</code>.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="autoconverge"><a class="anchor" href="#autoconverge"></a>autoConverge</h3>
+<div class="paragraph">
+<p><em>See: <a href="../weighting/robustness.html#_auto_convergence" class="xref page">Robustness</a></em></p>
+</div>
+<div class="paragraph">
+<p>Convergence tolerance for early stopping of robustness iterations. <code>NaN</code> (default) disables early stopping.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="confidenceintervals"><a class="anchor" href="#confidenceintervals"></a>confidenceIntervals</h3>
+<div class="paragraph">
+<p><em>See: <a href="../guide/intervals.html" class="xref page">Intervals</a></em></p>
+</div>
+<div class="paragraph">
+<p>Confidence level for the confidence interval around the mean response (e.g. <code>0.95</code>). <code>NaN</code> (default) disables confidence intervals.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="predictionintervals"><a class="anchor" href="#predictionintervals"></a>predictionIntervals</h3>
+<div class="paragraph">
+<p><em>See: <a href="../guide/intervals.html" class="xref page">Intervals</a></em></p>
+</div>
+<div class="paragraph">
+<p>Confidence level for the prediction interval for new observations (e.g. <code>0.95</code>). <code>NaN</code> (default) disables prediction intervals.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="returndiagnostics"><a class="anchor" href="#returndiagnostics"></a>returnDiagnostics</h3>
+<div class="paragraph">
+<p>Populate <code>Result.diagnostics()</code> (RMSE, MAE, R², AIC/AICc, effective degrees of freedom). AIC/AICc/effective degrees of freedom additionally require <code>returnSe = true</code> (or confidence/prediction intervals) to be populated, since they depend on hat-matrix statistics.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>false</code> (default) — leaves <code>Result.diagnostics()</code> empty</p>
+</li>
+<li>
+<p><code>true</code> — populates <code>Result.diagnostics()</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="returnresiduals"><a class="anchor" href="#returnresiduals"></a>returnResiduals</h3>
+<div class="paragraph">
+<p>Populate <code>Result.residuals()</code> (<code>y - fitted</code>).</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>false</code> (default) — leaves <code>Result.residuals()</code> empty</p>
+</li>
+<li>
+<p><code>true</code> — populates <code>Result.residuals()</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="returnrobustnessweights"><a class="anchor" href="#returnrobustnessweights"></a>returnRobustnessWeights</h3>
+<div class="paragraph">
+<p>Populate <code>Result.robustnessWeights()</code> (from the last robustness iteration).</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>false</code> (default) — leaves <code>Result.robustnessWeights()</code> empty</p>
+</li>
+<li>
+<p><code>true</code> — populates <code>Result.robustnessWeights()</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="returnse"><a class="anchor" href="#returnse"></a>returnSe</h3>
+<div class="paragraph">
+<p><em>See: <a href="../guide/intervals.html" class="xref page">Intervals</a></em></p>
+</div>
+<div class="paragraph">
+<p>Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) in addition to standard errors.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="returnsorted"><a class="anchor" href="#returnsorted"></a>returnSorted</h3>
+<div class="paragraph">
+<p>When set to <code>true</code>, it reorders every result field (residuals, intervals, etc.) by <code>x</code> in an ascending manner, instead of in original input order.
+To get both orderings, sort the default result client-side (e.g. via a <code>Comparator</code> over the returned <code>x()</code> array) instead of calling <code>fit()</code> twice.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="parallel"><a class="anchor" href="#parallel"></a>parallel</h3>
+<div class="paragraph">
+<p>Enable multi-threaded execution via Rayon.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>true</code> (default) — parallelizes the local regression fits across CPU cores</p>
+</li>
+<li>
+<p><code>false</code> — forces single-threaded execution (useful for benchmarking or deterministic profiling)</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="backend"><a class="anchor" href="#backend"></a>backend</h3>
+<div class="paragraph">
+<p><em>See: <a href="../advanced/gpu-backend.html" class="xref page">GPU Backend</a></em></p>
+</div>
+<div class="paragraph">
+<p>The batch <code>Lowess</code> class can optionally run on a GPU-accelerated backend powered by <code>wgpu</code>, for high-throughput processing of large datasets (10k+ points).</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>"cpu"</code> (default)</p>
+</li>
+<li>
+<p><code>"gpu"</code>&#8201;&#8212;&#8201;requires a <code>gpu</code>-feature build of the native library</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="cv-options"><a class="anchor" href="#cv-options"></a>CV Options</h3>
+<div class="paragraph">
+<p><em>See: <a href="../guide/cross-validation.html" class="xref page">Cross-Validation</a></em></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>cvMethod</code>: <code>"kfold"</code> (default)&#8201;&#8212;&#8201;fast, evaluates each candidate fraction over <code>cvK</code> folds; <code>"loocv"</code>&#8201;&#8212;&#8201;slow, exhaustive leave-one-out cross-validation</p>
+</li>
+<li>
+<p><code>cvK</code>: Number of folds for k-fold CV. Ignored when <code>cvMethod="loocv"</code>.</p>
+</li>
+<li>
+<p><code>cvFractions</code>: Candidate fractions to evaluate. Cross-validation is disabled unless this is set.</p>
+</li>
+<li>
+<p><code>cvSeed</code>: Seed for reproducible k-fold shuffling. <code>null</code> (default) uses a random seed.</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Options options = Options.builder()
+        .cvFractions(new double[] { 0.1, 0.2, 0.3, 0.5 })
+        .cvMethod("kfold")
+        .cvK(5)
+        .cvSeed(42L)
+        .build();
 
+try (Lowess model = new Lowess(options)) {
+    Result result = model.fit(x, y);
+    System.out.println(java.util.Arrays.toString(result.cvScores().orElseThrow()));
+    System.out.println(result.fractionUsed()); // the CV-selected fraction
+}</code></pre>
 </div>
 </div>
-<div class="sect1">
-<h2 id="lowess-fitdouble-x-double-y-double-customweights-result"><a class="anchor" href="#lowess-fitdouble-x-double-y-double-customweights-result"></a><code>Lowess.fit(double[] x, double[] y, double[] customWeights) Result</code></h2>
-<div class="sectionbody">
+</div>
+<div class="sect2">
+<h3 id="customweights"><a class="anchor" href="#customweights"></a>customWeights</h3>
 <div class="paragraph">
-<p>Smooths <code>y</code> as a function of <code>x</code>. <code>x</code> and <code>y</code> must be non-empty and the same length. An optional <code>customWeights</code> array (same length) applies per-observation case weights; pass <code>null</code> (or use the two-argument overload) for uniform weights.</p>
+<p><em>See: <a href="../weighting/custom-weights.html" class="xref page">Custom Weights</a></em></p>
 </div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="lowess-close"><a class="anchor" href="#lowess-close"></a><code>Lowess.close()</code></h2>
-<div class="sectionbody">
 <div class="paragraph">
-<p>Releases native resources. Safe to call multiple times. Implements <code>AutoCloseable</code>, so prefer try-with-resources over relying on the garbage collector.</p>
+<p>Per-observation weights, passed to <code>fit()</code> rather than the constructor.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">double[] weights = new double[x.length];
+java.util.Arrays.fill(weights, 1.0);
+weights[0] = 5.0; // trust the first observation more
+
+try (Lowess model = new Lowess(Options.builder().build())) {
+    Result result = model.fit(x, y, weights);
+}</code></pre>
+</div>
+</div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="result-accessors"><a class="anchor" href="#result-accessors"></a><code>Result</code> accessors</h2>
+<h2 id="result-structure"><a class="anchor" href="#result-structure"></a>Result Structure</h2>
 <div class="sectionbody">
+<div class="sect2">
+<h3 id="result"><a class="anchor" href="#result"></a><code>Result</code></h3>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 33.3333%;">
@@ -545,173 +963,60 @@
 </tr>
 </tbody>
 </table>
-<div class="paragraph">
-<p><code>Diagnostics</code> holds <code>rmse()</code>, <code>mae()</code>, <code>rSquared()</code>, <code>aic()</code>, <code>aicc()</code>, <code>effectiveDf()</code>, <code>residualSd()</code> (the last three are <code>Optional&lt;Double&gt;</code>).</p>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="options"><a class="anchor" href="#options"></a>Options</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="weightfunction"><a class="anchor" href="#weightfunction"></a>weightFunction</h3>
-<div class="paragraph">
-<p><em>See: <a href="../weighting/kernels.html" class="xref page">Weight Functions</a></em></p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>"tricube"</code> (default)</p>
-</li>
-<li>
-<p><code>"epanechnikov"</code></p>
-</li>
-<li>
-<p><code>"gaussian"</code></p>
-</li>
-<li>
-<p><code>"uniform"</code> (alias: <code>"boxcar"</code>)</p>
-</li>
-<li>
-<p><code>"biweight"</code> (alias: <code>"bisquare"</code>)</p>
-</li>
-<li>
-<p><code>"triangle"</code> (alias: <code>"triangular"</code>)</p>
-</li>
-<li>
-<p><code>"cosine"</code></p>
-</li>
-</ul>
-</div>
 </div>
 <div class="sect2">
-<h3 id="robustnessmethod"><a class="anchor" href="#robustnessmethod"></a>robustnessMethod</h3>
-<div class="paragraph">
-<p><em>See: <a href="../weighting/robustness.html" class="xref page">Robustness</a></em></p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>"bisquare"</code> (default; alias: <code>"biweight"</code>)</p>
-</li>
-<li>
-<p><code>"huber"</code></p>
-</li>
-<li>
-<p><code>"talwar"</code></p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect2">
-<h3 id="boundarypolicy"><a class="anchor" href="#boundarypolicy"></a>boundaryPolicy</h3>
-<div class="paragraph">
-<p><em>See: <a href="../advanced/boundary.html" class="xref page">Boundary Handling</a></em></p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>"extend"</code> (default; alias: <code>"pad"</code>)</p>
-</li>
-<li>
-<p><code>"reflect"</code> (alias: <code>"mirror"</code>)</p>
-</li>
-<li>
-<p><code>"zero"</code></p>
-</li>
-<li>
-<p><code>"noboundary"</code> (alias: <code>"none"</code>)</p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect2">
-<h3 id="scalingmethod"><a class="anchor" href="#scalingmethod"></a>scalingMethod</h3>
-<div class="paragraph">
-<p><em>See: <a href="../weighting/scaling.html" class="xref page">Scaling Methods</a></em></p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>"mad"</code> (default; alias: <code>"median_absolute_deviation"</code>)</p>
-</li>
-<li>
-<p><code>"mar"</code> (alias: <code>"median_absolute_residual"</code>)</p>
-</li>
-<li>
-<p><code>"mean"</code> (alias: <code>"mean_absolute_residual"</code>)</p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect2">
-<h3 id="zeroweightfallback"><a class="anchor" href="#zeroweightfallback"></a>zeroWeightFallback</h3>
-<div class="paragraph">
-<p>Behavior when all neighborhood weights are zero:</p>
-</div>
+<h3 id="diagnostics"><a class="anchor" href="#diagnostics"></a><code>Diagnostics</code></h3>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
 </colgroup>
 <thead>
 <tr>
-<th class="tableblock halign-left valign-top">Option</th>
-<th class="tableblock halign-left valign-top">Behavior</th>
+<th class="tableblock halign-left valign-top">Accessor</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"use_local_mean"</code> (default; aliases: <code>"local_mean"</code>, <code>"mean"</code>)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Use the mean of the neighborhood</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>rmse()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Root Mean Squared Error</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"return_original"</code> (alias: <code>"original"</code>)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Return the original y value</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>mae()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Mean Absolute Error</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"return_none"</code> (alias: <code>"none"</code>)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Return <code>NaN</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>rSquared()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">R-squared</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>residualSd()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Residual standard deviation</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>effectiveDf()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;Double&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Effective degrees of freedom</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>aic()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;Double&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">AIC</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>aicc()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;Double&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">AICc</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="custom-weights"><a class="anchor" href="#custom-weights"></a>Custom weights</h2>
-<div class="sectionbody">
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">double[] weights = new double[x.length];
-java.util.Arrays.fill(weights, 1.0);
-weights[0] = 5.0; // trust the first observation more
-
-try (Lowess model = new Lowess(Options.builder().build())) {
-    Result result = model.fit(x, y, weights);
-}</code></pre>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="cross-validation"><a class="anchor" href="#cross-validation"></a>Cross-validation</h2>
-<div class="sectionbody">
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Options options = Options.builder()
-        .cvFractions(new double[] { 0.1, 0.2, 0.3, 0.5 })
-        .cvMethod("kfold")
-        .cvK(5)
-        .cvSeed(42L)
-        .build();
-
-try (Lowess model = new Lowess(options)) {
-    Result result = model.fit(x, y);
-    System.out.println(java.util.Arrays.toString(result.cvScores().orElseThrow()));
-    System.out.println(result.fractionUsed()); // the CV-selected fraction
-}</code></pre>
-</div>
 </div>
 </div>
 </div>

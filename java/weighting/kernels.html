@@ -467,114 +467,18 @@ public class Example {
 </div>
 </div>
 <div class="sect1">
-<h2 id="uniform"><a class="anchor" href="#uniform"></a>Uniform</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Equal weight within the window; no distance decay.</p>
-</div>
-<div class="stemblock">
-<div class="content">
-\[w(u) = 1\]
-</div>
-</div>
-<div class="paragraph">
-<p><strong>Use when</strong>: You want a simple moving-average-like behavior within the neighborhood.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
-import fastlowess.Options;
-import fastlowess.Result;
-
-public class Example {
-    public static void main(String[] args) {
-        int n = 100;
-        double[] x = new double[n];
-        double[] y = new double[n];
-        for (int i = 0; i &lt; n; i++) {
-            x[i] = i * 2 * Math.PI / (n - 1);
-            y[i] = Math.sin(x[i]) + 0.1;
-        }
-
-        Options options = Options.builder().weightFunction("uniform").build();
-
-        try (Lowess model = new Lowess(options)) {
-            Result result = model.fit(x, y);
-            System.out.println("First smoothed value (uniform kernel): " + result.y()[0]);
-        }
-    }
-}</code></pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">First smoothed value (uniform kernel): 0.45083991221911446</code></pre>
-</div>
-</div>
-<hr>
-</div>
-</div>
-<div class="sect1">
-<h2 id="triangle"><a class="anchor" href="#triangle"></a>Triangle</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Linear decay to zero at the neighborhood edge.</p>
-</div>
-<div class="stemblock">
-<div class="content">
-\[w(u) = 1 - |u|\]
-</div>
-</div>
-<div class="paragraph">
-<p><strong>Use when</strong>: A simple, cheap-to-evaluate kernel with compact support is preferred.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
-import fastlowess.Options;
-import fastlowess.Result;
-
-public class Example {
-    public static void main(String[] args) {
-        int n = 100;
-        double[] x = new double[n];
-        double[] y = new double[n];
-        for (int i = 0; i &lt; n; i++) {
-            x[i] = i * 2 * Math.PI / (n - 1);
-            y[i] = Math.sin(x[i]) + 0.1;
-        }
-
-        Options options = Options.builder().weightFunction("triangle").build();
-
-        try (Lowess model = new Lowess(options)) {
-            Result result = model.fit(x, y);
-            System.out.println("First smoothed value (triangle kernel): " + result.y()[0]);
-        }
-    }
-}</code></pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">First smoothed value (triangle kernel): 0.3816572331939023</code></pre>
-</div>
-</div>
-<hr>
-</div>
-</div>
-<div class="sect1">
 <h2 id="cosine"><a class="anchor" href="#cosine"></a>Cosine</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Smooth compact-support kernel, close in efficiency to Tricube.</p>
+<p>Smooth and computationally efficient.</p>
 </div>
 <div class="stemblock">
 <div class="content">
-\[w(u) = \cos\!\left(\frac{\pi u}{2}\right)\]
+\[w(u) = \cos(\pi u / 2)\]
 </div>
 </div>
 <div class="paragraph">
-<p><strong>Use when</strong>: An alternative smooth kernel to Tricube is desired.</p>
+<p><strong>Use when</strong>: Want smooth kernel with simple form.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -611,8 +515,107 @@ public class Example {
 </div>
 </div>
 <div class="sect1">
+<h2 id="triangle"><a class="anchor" href="#triangle"></a>Triangle</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Simple linear taper.</p>
+</div>
+<div class="stemblock">
+<div class="content">
+\[w(u) = 1 - |u|\]
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Use when</strong>: Simple, interpretable weights.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        Options options = Options.builder().weightFunction("triangle").build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y);
+            System.out.println("First smoothed value (triangle kernel): " + result.y()[0]);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">First smoothed value (triangle kernel): 0.3816572331939023</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="uniform"><a class="anchor" href="#uniform"></a>Uniform</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Equal weights within window. Fastest but least smooth.</p>
+</div>
+<div class="stemblock">
+<div class="content">
+\[w(u) = 1\]
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Use when</strong>: Speed is critical, smoothness less important.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        Options options = Options.builder().weightFunction("uniform").build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y);
+            System.out.println("First smoothed value (uniform kernel): " + result.y()[0]);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">First smoothed value (uniform kernel): 0.45083991221911446</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
 <h2 id="choosing-a-kernel"><a class="anchor" href="#choosing-a-kernel"></a>Choosing a Kernel</h2>
 <div class="sectionbody">
+<div class="paragraph">
+<p>Choose the first row below whose condition applies:</p>
+</div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 50%;">
@@ -620,29 +623,47 @@ public class Example {
 </colgroup>
 <thead>
 <tr>
-<th class="tableblock halign-left valign-top">Situation</th>
-<th class="tableblock halign-left valign-top">Recommended Kernel</th>
+<th class="tableblock halign-left valign-top">Condition</th>
+<th class="tableblock halign-left valign-top">Kernel</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">General purpose</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>tricube</code> (default)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Need maximum smoothness</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Gaussian</code></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Theoretical MSE optimality</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>epanechnikov</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Default is acceptable</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Tricube</code></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Maximum smoothness, no boundary artifacts</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>gaussian</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Need optimal asymptotic MSE</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Epanechnikov</code></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Simple, cheap alternative</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>uniform</code>, <code>triangle</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Speed is critical</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Uniform</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None of the above</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Biweight</code></p></td>
 </tr>
 </tbody>
 </table>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Recommendation:</strong> Stick with <strong>Tricube</strong> (default) unless you have specific requirements. The differences between kernels are usually small in practice.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
 </div>
 </div>
 </article>

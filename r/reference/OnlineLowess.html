@@ -11,7 +11,7 @@ add_point."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">rfastlowess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">3.2.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">4.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -62,11 +62,7 @@ sliding window and processes each incoming point immediately via
 <span>    update_mode <span class="op">=</span> <span class="st">"incremental"</span>,</span>
 <span>    auto_converge <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>    return_robustness_weights <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>    return_diagnostics <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>    return_residuals <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>    parallel <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>    confidence_intervals <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>    prediction_intervals <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>    missing <span class="op">=</span> <span class="st">"error"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -156,30 +152,10 @@ iterations. <code>NULL</code> (default) disables early stopping.</p></dd>
 robustness weights. Default: <code>FALSE</code>.</p></dd>
 
 
-<dt id="arg-return-diagnostics">return_diagnostics<a class="anchor" aria-label="anchor" href="#arg-return-diagnostics"></a></dt>
-<dd><p>Logical; if <code>TRUE</code>, return fit-quality
-metrics (RMSE, MAE, R-squared, AIC, etc.). Default: <code>FALSE</code>.</p></dd>
-
-
-<dt id="arg-return-residuals">return_residuals<a class="anchor" aria-label="anchor" href="#arg-return-residuals"></a></dt>
-<dd><p>Logical; if <code>TRUE</code>, return residuals in the
-result. Default: <code>FALSE</code>.</p></dd>
-
-
-<dt id="arg-parallel">parallel<a class="anchor" aria-label="anchor" href="#arg-parallel"></a></dt>
-<dd><p>Logical; enable parallel processing. Default: <code>TRUE</code>.</p></dd>
-
-
-<dt id="arg-confidence-intervals">confidence_intervals<a class="anchor" aria-label="anchor" href="#arg-confidence-intervals"></a></dt>
-<dd><p>Confidence level for confidence intervals,
-greater than 0 and less than 1 (e.g., 0.95). <code>NULL</code> (default)
-disables confidence intervals.</p></dd>
-
-
-<dt id="arg-prediction-intervals">prediction_intervals<a class="anchor" aria-label="anchor" href="#arg-prediction-intervals"></a></dt>
-<dd><p>Confidence level for prediction intervals,
-greater than 0 and less than 1 (e.g., 0.95). <code>NULL</code> (default)
-disables prediction intervals.</p></dd>
+<dt id="arg-missing">missing<a class="anchor" aria-label="anchor" href="#arg-missing"></a></dt>
+<dd><p>Policy for non-finite (NaN/Infinity) values in input data:
+<code>"error"</code> (default) raises an error, <code>"drop"</code> silently removes
+affected observations before fitting.</p></dd>
 
 </dl></div>
     <div class="section level2">

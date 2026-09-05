@@ -135,15 +135,16 @@ $(document).ready(function(){initNavTree('api.html',''); initResizable(); });
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-<div class="ttc" id="aclassfastlowess_1_1Lowess_html"><div class="ttname"><a href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a></div><div class="ttdoc">Batch LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:425</div></div>
+<div class="ttc" id="aclassfastlowess_1_1Lowess_html"><div class="ttname"><a href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a></div><div class="ttdoc">Batch LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:432</div></div>
 <div class="ttc" id="afastlowess_8hpp_html"><div class="ttname"><a href="fastlowess_8hpp.html">fastlowess.hpp</a></div><div class="ttdoc">C++ wrapper for fastLowess library.</div></div>
-<div class="ttc" id="astructfastlowess_1_1LowessOptions_html"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html">fastlowess::LowessOptions</a></div><div class="ttdoc">Options for configuring LOWESS smoothing.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:116</div></div>
-<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_ac4c7e581cd561fc11a928f9901bb5ec6"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#ac4c7e581cd561fc11a928f9901bb5ec6">fastlowess::LowessOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdoc">Smoothing fraction (0, 1].</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:117</div></div>
+<div class="ttc" id="astructfastlowess_1_1LowessOptions_html"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html">fastlowess::LowessOptions</a></div><div class="ttdoc">Options for configuring LOWESS smoothing.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:118</div></div>
+<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_ac4c7e581cd561fc11a928f9901bb5ec6"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#ac4c7e581cd561fc11a928f9901bb5ec6">fastlowess::LowessOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdoc">Smoothing fraction (0, 1].</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:119</div></div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.528325</div>
 </div><!-- fragment --><ul>
 <li><code>options</code>: A <code>LowessOptions</code> struct containing configuration parameters.</li>
 </ul>
-<p><b>Methods:</b></p>
+<h4><code>fit(x, y)</code> / <code>fit(x, y, custom_weights)</code></h4>
+<p>Fits the model to the provided <code>x</code> and <code>y</code> data vectors. The second overload applies <code>custom_weights</code> — non-negative per-observation weights of length <code>n</code>. Returns a <code>LowessResult</code> object containing the smoothed values and optional diagnostics.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;<a class="code" href="fastlowess_8hpp.html">fastlowess.hpp</a>&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
@@ -171,14 +172,7 @@ $(document).ready(function(){initNavTree('api.html',''); initResizable(); });
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">0.5</div>
 <div class="line">-1</div>
-</div><!-- fragment --><ul>
-<li>Fits the model to the provided <code>x</code> and <code>y</code> data vectors.</li>
-<li>The second overload applies <code>custom_weights</code> — non-negative per-observation weights of length <code>n</code>. Batch only.</li>
-<li>Returns a <code>LowessResult</code> object containing the smoothed values and optional diagnostics.</li>
-</ul>
-<p>See <a class="el" href="api-streaming_8md.html">Streaming Adapter</a> for the <code>StreamingLowess</code> class.</p>
-<p>See <a class="el" href="api-online_8md.html">Online Adapter</a> for the <code>OnlineLowess</code> class.</p>
-<h2>Options Structures</h2>
+</div><!-- fragment --><h2>Options Structures</h2>
 <h3>LowessOptions</h3>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -188,7 +182,7 @@ $(document).ready(function(){initNavTree('api.html',''); initResizable(); });
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>iterations</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone">3   </td><td class="markdownTableBodyNone">Number of robustifying iterations    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>delta</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">NaN   </td><td class="markdownTableBodyNone">Interpolation distance (<code>NaN</code> auto-sets it to 1% of the x-range in Batch, or 0.0 in Streaming/Online)    </td></tr>
+<td class="markdownTableBodyNone"><code>delta</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">NaN   </td><td class="markdownTableBodyNone">Interpolation distance (<code>NaN</code> auto-sets it to 1% of the x-range)    </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>weight_function</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone">"tricube"   </td><td class="markdownTableBodyNone">Weight function name    </td></tr>
 <tr class="markdownTableRowOdd">
@@ -200,34 +194,40 @@ $(document).ready(function(){initNavTree('api.html',''); initResizable(); });
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>zero_weight_fallback</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone">"use_local_mean"   </td><td class="markdownTableBodyNone">Zero-weight handling strategy    </td></tr>
 <tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>missing</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone">"error"   </td><td class="markdownTableBodyNone">Policy for non-finite (NaN/Inf) values in input data    </td></tr>
+<tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>auto_converge</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">NaN   </td><td class="markdownTableBodyNone">Auto-convergence tolerance    </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>confidence_intervals</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">NaN   </td><td class="markdownTableBodyNone">Confidence level (e.g., 0.95) — see <a class="el" href="intervals_8md.html">Intervals</a>    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>prediction_intervals</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">NaN   </td><td class="markdownTableBodyNone">Prediction level (e.g., 0.95) — see <a class="el" href="intervals_8md.html">Intervals</a>    </td></tr>
+<td class="markdownTableBodyNone"><code>confidence_intervals</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">NaN   </td><td class="markdownTableBodyNone">Confidence level (e.g., 0.95)    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>return_diagnostics</code>   </td><td class="markdownTableBodyNone"><code>bool</code>   </td><td class="markdownTableBodyNone">false   </td><td class="markdownTableBodyNone">Compute RMSE, MAE, R2, AIC    </td></tr>
+<td class="markdownTableBodyNone"><code>prediction_intervals</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">NaN   </td><td class="markdownTableBodyNone">Prediction level (e.g., 0.95)    </td></tr>
 <tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>return_diagnostics</code>   </td><td class="markdownTableBodyNone"><code>bool</code>   </td><td class="markdownTableBodyNone">false   </td><td class="markdownTableBodyNone">Include diagnostics in result    </td></tr>
+<tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>return_residuals</code>   </td><td class="markdownTableBodyNone"><code>bool</code>   </td><td class="markdownTableBodyNone">false   </td><td class="markdownTableBodyNone">Include residuals in result    </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>return_robustness_weights</code>   </td><td class="markdownTableBodyNone"><code>bool</code>   </td><td class="markdownTableBodyNone">false   </td><td class="markdownTableBodyNone">Include robustness weights in result    </td></tr>
 <tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>return_robustness_weights</code>   </td><td class="markdownTableBodyNone"><code>bool</code>   </td><td class="markdownTableBodyNone">false   </td><td class="markdownTableBodyNone">Include weights in result    </td></tr>
+<tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>return_se</code>   </td><td class="markdownTableBodyNone"><code>bool</code>   </td><td class="markdownTableBodyNone">false   </td><td class="markdownTableBodyNone">Return standard errors    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>return_sorted</code>   </td><td class="markdownTableBodyNone"><code>bool</code>   </td><td class="markdownTableBodyNone">false   </td><td class="markdownTableBodyNone">Return results sorted ascending by <code>x</code> instead of in original input order    </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>parallel</code>   </td><td class="markdownTableBodyNone"><code>bool</code>   </td><td class="markdownTableBodyNone">true   </td><td class="markdownTableBodyNone">Enable parallel execution    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>backend</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone"><code>"cpu"</code>   </td><td class="markdownTableBodyNone">Execution backend (<code>"cpu"</code> or <code>"gpu"</code>); GPU requires the library to be built with the <code>gpu</code> Cargo feature (Batch only)    </td></tr>
+<td class="markdownTableBodyNone"><code>backend</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone"><code>"cpu"</code>   </td><td class="markdownTableBodyNone">Execution backend (<code>"cpu"</code> or <code>"gpu"</code>); GPU requires the library to be built with the <code>gpu</code> Cargo feature    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>cv_method</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone">"kfold"   </td><td class="markdownTableBodyNone">CV method (<code>"kfold"</code> fast or <code>"loocv"</code> slow, exhaustive) (Batch only)    </td></tr>
+<td class="markdownTableBodyNone"><code>cv_method</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone">"kfold"   </td><td class="markdownTableBodyNone">CV method (<code>"kfold"</code> fast or <code>"loocv"</code> slow, exhaustive)    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>cv_k</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone">5   </td><td class="markdownTableBodyNone">Number of folds for k-fold CV (Batch only)    </td></tr>
+<td class="markdownTableBodyNone"><code>cv_k</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone">5   </td><td class="markdownTableBodyNone">Number of folds for k-fold CV    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>cv_fractions</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone"><code>{}</code>   </td><td class="markdownTableBodyNone">Fractions to test for cross-validation (Batch only)    </td></tr>
+<td class="markdownTableBodyNone"><code>cv_fractions</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone"><code>{}</code>   </td><td class="markdownTableBodyNone">Fractions to test for cross-validation    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>cv_seed</code>   </td><td class="markdownTableBodyNone"><code>uint64_t</code>   </td><td class="markdownTableBodyNone"><code>0</code>   </td><td class="markdownTableBodyNone">Random seed for CV shuffling (Batch only; 0 = random)    </td></tr>
+<td class="markdownTableBodyNone"><code>cv_seed</code>   </td><td class="markdownTableBodyNone"><code>uint64_t</code>   </td><td class="markdownTableBodyNone"><code>0</code>   </td><td class="markdownTableBodyNone">Random seed for CV shuffling (0 = random)    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>custom_weights</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone"><code>{}</code>   </td><td class="markdownTableBodyNone">Per-observation case weights — passed to <code>fit()</code>, not the constructor (Batch only; see <a class="el" href="custom-weights_8md.html">Custom Weights</a>)   </td></tr>
+<td class="markdownTableBodyNone"><code>custom_weights</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone"><code>{}</code>   </td><td class="markdownTableBodyNone">Per-observation case weights — passed to <code>fit()</code>, not the constructor   </td></tr>
 </table>
+<h2>Options</h2>
+<h3>fraction</h3>
 <p><code>fraction</code> is the most important parameter: it controls the size of the local neighbourhood used at each point.</p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -241,6 +241,7 @@ $(document).ready(function(){initNavTree('api.html',''); initResizable(); });
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone">0.7-1.0   </td><td class="markdownTableBodyNone">Very smooth   </td><td class="markdownTableBodyNone">Trend extraction   </td></tr>
 </table>
+<h3>iterations</h3>
 <p><code>iterations</code> controls robustness to outliers, at the cost of speed.</p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -254,12 +255,117 @@ $(document).ready(function(){initNavTree('api.html',''); initResizable(); });
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone">7+   </td><td class="markdownTableBodyNone">Very strong   </td><td class="markdownTableBodyNone">Heavy outliers   </td></tr>
 </table>
-<p>See <a class="el" href="api-streaming_8md.html">Streaming Adapter</a> for <code>StreamingOptions</code>.</p>
-<p>See <a class="el" href="api-online_8md.html">Online Adapter</a> for <code>OnlineOptions</code>.</p>
-<h2>GPU Acceleration</h2>
-<p>The batch <code><a class="el" href="classfastlowess_1_1Lowess.html" title="Batch LOWESS model.">fastlowess::Lowess</a></code> class can optionally run on a GPU-accelerated backend powered by <code>wgpu</code>, for high-throughput processing of large datasets (10k+ points). GPU support applies to <code>Lowess</code> (batch) only — <code>StreamingLowess</code>/<code>OnlineLowess</code> remain CPU-only. See the <a class="el" href="gpu-backend_8md.html">GPU Backend guide</a> for installation, usage, supported features, and hardware requirements.</p>
+<h3>delta</h3>
+<p>Points within <code>delta</code> of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. <code>NaN</code> (default) auto-sets it to 1% of the x-range. Set it to <code>0</code> explicitly to disable interpolation and fit every point exactly.</p>
+<h3>weight_function</h3>
+<p><em>See: <a class="el" href="kernels_8md.html">Weight Functions</a></em></p>
+<ul>
+<li><code>"tricube"</code> (default)</li>
+<li><code>"epanechnikov"</code></li>
+<li><code>"gaussian"</code></li>
+<li><code>"uniform"</code> (alias: <code>"boxcar"</code>)</li>
+<li><code>"biweight"</code> (alias: <code>"bisquare"</code>)</li>
+<li><code>"triangle"</code> (alias: <code>"triangular"</code>)</li>
+<li><code>"cosine"</code></li>
+</ul>
+<h3>robustness_method</h3>
+<p><em>See: <a class="el" href="robustness_8md.html">Robustness</a></em></p>
+<ul>
+<li><code>"bisquare"</code> (default; alias: <code>"biweight"</code>)</li>
+<li><code>"huber"</code></li>
+<li><code>"talwar"</code></li>
+</ul>
+<h3>scaling_method</h3>
+<p><em>See: <a class="el" href="scaling_8md.html">Scaling Methods</a></em></p>
+<ul>
+<li><code>"mad"</code> (default; alias: <code>"median_absolute_deviation"</code>)</li>
+<li><code>"mar"</code> (alias: <code>"median_absolute_residual"</code>)</li>
+<li><code>"mean"</code> (alias: <code>"mean_absolute_residual"</code>)</li>
+</ul>
+<h3>boundary_policy</h3>
+<p><em>See: <a class="el" href="boundary_8md.html">Boundary Handling</a></em></p>
+<ul>
+<li><code>"extend"</code> (default; alias: <code>"pad"</code>)</li>
+<li><code>"reflect"</code> (alias: <code>"mirror"</code>)</li>
+<li><code>"zero"</code></li>
+<li><code>"noboundary"</code> (alias: <code>"none"</code>)</li>
+</ul>
+<h3>zero_weight_fallback</h3>
+<p>Behavior when all neighborhood weights are zero:</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Option   </th><th class="markdownTableHeadNone">Behavior    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>"use_local_mean"</code> (default; aliases: <code>"local_mean"</code>, <code>"mean"</code>)   </td><td class="markdownTableBodyNone">Use the mean of the neighborhood    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>"return_original"</code> (alias: <code>"original"</code>)   </td><td class="markdownTableBodyNone">Return the original y value    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>"return_none"</code> (alias: <code>"none"</code>)   </td><td class="markdownTableBodyNone">Return <code>NaN</code>   </td></tr>
+</table>
+<h3>missing</h3>
+<p>Policy for handling non-finite (NaN/Inf) values in <code>x</code>/<code>y</code> (and <code>custom_weights</code>):</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Option   </th><th class="markdownTableHeadNone">Behavior    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>"error"</code> (default)   </td><td class="markdownTableBodyNone">Return an error result if any value is non-finite    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>"drop"</code>   </td><td class="markdownTableBodyNone">Silently remove observations where <code>x</code> or <code>y</code> is non-finite before fitting   </td></tr>
+</table>
+<p><b>Note:</b> A length mismatch between <code>x</code> and <code>y</code> always errors, even under <code>"drop"</code>.</p>
+<h3>auto_converge</h3>
+<p><em>See: <a href="../weighting/robustness.md#auto-convergence">Robustness</a></em></p>
+<p>Convergence tolerance for early stopping of robustness iterations. <code>NaN</code> (default) disables early stopping.</p>
+<h3>confidence_intervals</h3>
+<p><em>See: <a class="el" href="intervals_8md.html">Intervals</a></em></p>
+<p>Confidence level for the confidence interval around the mean response (e.g. <code>0.95</code>). <code>NaN</code> (default) disables confidence intervals.</p>
+<h3>prediction_intervals</h3>
+<p><em>See: <a class="el" href="intervals_8md.html">Intervals</a></em></p>
+<p>Confidence level for the prediction interval for new observations (e.g. <code>0.95</code>). <code>NaN</code> (default) disables prediction intervals.</p>
+<h3>return_diagnostics</h3>
+<p>*See: `Diagnostics`*</p>
+<p>Include a <code>Diagnostics</code> object (RMSE, MAE, R², AIC/AICc, effective degrees of freedom) in the result. AIC/AICc/effective degrees of freedom additionally require <code>return_se = true</code> (or confidence/prediction intervals) to be populated, since they depend on hat-matrix statistics.</p>
+<ul>
+<li><code>false</code> (default) — leaves <code>diagnostics()</code> empty</li>
+<li><code>true</code> — populates <code>diagnostics()</code></li>
+</ul>
+<h3>return_residuals</h3>
+<p>Include per-point residuals (<code>y - fitted</code>) in the result.</p>
+<ul>
+<li><code>false</code> (default) — leaves <code>residuals()</code> empty</li>
+<li><code>true</code> — populates <code>residuals()</code></li>
+</ul>
+<h3>return_robustness_weights</h3>
+<p>Include the final per-point robustness weights (from the last robustness iteration) in the result.</p>
+<ul>
+<li><code>false</code> (default) — leaves <code>robustness_weights()</code> empty</li>
+<li><code>true</code> — populates <code>robustness_weights()</code></li>
+</ul>
+<h3>return_se</h3>
+<p><em>See: <a href="../guide/intervals.md#standard-errors">Intervals</a></em></p>
+<p>Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) in addition to standard errors.</p>
+<h3>return_sorted</h3>
+<p>When set to <code>true</code>, it reorders every result field (residuals, intervals, etc.) by <code>x</code> in an ascending manner, instead of in original input order. To get both orderings, sort the default result client-side (e.g. via <code>std::sort</code> over an index vector) instead of calling <code>fit()</code> twice.</p>
+<h3>parallel</h3>
+<p>Enable multi-threaded execution via Rayon.</p>
+<ul>
+<li><code>true</code> (default) — parallelizes the local regression fits across CPU cores</li>
+<li><code>false</code> — forces single-threaded execution (useful for benchmarking or deterministic profiling)</li>
+</ul>
+<h3>backend</h3>
+<p>The batch <code><a class="el" href="classfastlowess_1_1Lowess.html" title="Batch LOWESS model.">fastlowess::Lowess</a></code> class can optionally run on a GPU-accelerated backend powered by <code>wgpu</code>, for high-throughput processing of large datasets (10k+ points). See the <a class="el" href="gpu-backend_8md.html">GPU Backend guide</a> for installation, usage, supported features, and hardware requirements.</p>
+<h3>CV Options</h3>
+<p><em>See: <a class="el" href="cross-validation_8md.html">Cross-Validation</a></em></p>
+<ul>
+<li><code>cv_method</code>: <code>"kfold"</code> (default) — fast, evaluates each candidate fraction over <code>cv_k</code> folds; <code>"loocv"</code> — slow, exhaustive leave-one-out cross-validation</li>
+<li><code>cv_k</code>: Number of folds for k-fold CV. Ignored when <code>cv_method="loocv"</code>.</li>
+<li><code>cv_fractions</code>: Candidate fractions to evaluate. Cross-validation is disabled unless this is set.</li>
+<li><code>cv_seed</code>: Seed for reproducible k-fold shuffling. <code>0</code> (default) uses a random seed.</li>
+</ul>
+<h3>custom_weights</h3>
+<p><em>See: <a class="el" href="custom-weights_8md.html">Custom Weights</a></em></p>
+<p>Per-observation weights, passed to <code>fit()</code> rather than the constructor.</p>
 <h2>Result Structure</h2>
-<p>See <a class="el" href="api-online_8md.html">Online Adapter</a> for <code>OnlineOutput</code>.</p>
 <h3><a class="el" href="classfastlowess_1_1LowessResult.html" title="Result of LOWESS smoothing operation.">fastlowess::LowessResult</a></h3>
 <p>A RAII wrapper around the C result struct <code>fastlowess_CppLowessResult</code>.</p>
 <table class="markdownTable">
@@ -311,52 +417,6 @@ $(document).ready(function(){initNavTree('api.html',''); initResizable(); });
 <td class="markdownTableBodyNone"><code>aic()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">AIC (NaN if not computed)    </td></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>aicc()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">AICc (NaN if not computed)   </td></tr>
-</table>
-<h2>Options</h2>
-<h3>weight_function</h3>
-<p><em>See: <a class="el" href="kernels_8md.html">Weight Functions</a></em></p>
-<ul>
-<li><code>"tricube"</code> (default)</li>
-<li><code>"epanechnikov"</code></li>
-<li><code>"gaussian"</code></li>
-<li><code>"uniform"</code> (alias: <code>"boxcar"</code>)</li>
-<li><code>"biweight"</code> (alias: <code>"bisquare"</code>)</li>
-<li><code>"triangle"</code> (alias: <code>"triangular"</code>)</li>
-<li><code>"cosine"</code></li>
-</ul>
-<h3>robustness_method</h3>
-<p><em>See: <a class="el" href="robustness_8md.html">Robustness</a></em></p>
-<ul>
-<li><code>"bisquare"</code> (default; alias: <code>"biweight"</code>)</li>
-<li><code>"huber"</code></li>
-<li><code>"talwar"</code></li>
-</ul>
-<h3>boundary_policy</h3>
-<p><em>See: <a class="el" href="boundary_8md.html">Boundary Handling</a></em></p>
-<ul>
-<li><code>"extend"</code> (default; alias: <code>"pad"</code>)</li>
-<li><code>"reflect"</code> (alias: <code>"mirror"</code>)</li>
-<li><code>"zero"</code></li>
-<li><code>"noboundary"</code> (alias: <code>"none"</code>)</li>
-</ul>
-<h3>scaling_method</h3>
-<p><em>See: <a class="el" href="scaling_8md.html">Scaling Methods</a></em></p>
-<ul>
-<li><code>"mad"</code> (default; alias: <code>"median_absolute_deviation"</code>)</li>
-<li><code>"mar"</code> (alias: <code>"median_absolute_residual"</code>)</li>
-<li><code>"mean"</code> (alias: <code>"mean_absolute_residual"</code>)</li>
-</ul>
-<h3>zero_weight_fallback</h3>
-<p>Behavior when all neighborhood weights are zero:</p>
-<table class="markdownTable">
-<tr class="markdownTableHead">
-<th class="markdownTableHeadNone">Option   </th><th class="markdownTableHeadNone">Behavior    </th></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>"use_local_mean"</code> (default; aliases: <code>"local_mean"</code>, <code>"mean"</code>)   </td><td class="markdownTableBodyNone">Use the mean of the neighborhood    </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>"return_original"</code> (alias: <code>"original"</code>)   </td><td class="markdownTableBodyNone">Return the original y value    </td></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>"return_none"</code> (alias: <code>"none"</code>)   </td><td class="markdownTableBodyNone">Return <code>NaN</code>   </td></tr>
 </table>
 <h2>Example</h2>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;<a class="code" href="fastlowess_8hpp.html">fastlowess.hpp</a>&gt;</span></div>

@@ -29,8 +29,7 @@ StreamingLowess(
     return_robustness_weights = FALSE,
     merge_strategy = "weighted_average",
     parallel = TRUE,
-    confidence_intervals = NULL,
-    prediction_intervals = NULL
+    missing = "error"
 )
 ```
 
@@ -53,7 +52,8 @@ StreamingLowess(
 - overlap:
 
   Number of overlapping points between consecutive chunks, less than
-  `chunk_size`. `NULL` (default) uses the backend's default of 500.
+  `chunk_size`. `NULL` (default) computes `chunk_size / 10`, clamped to
+  at least 1 and less than `chunk_size`.
 
 - iterations:
 
@@ -128,15 +128,11 @@ StreamingLowess(
 
   Logical; enable parallel processing. Default: `TRUE`.
 
-- confidence_intervals:
+- missing:
 
-  Confidence level for confidence intervals, greater than 0 and less
-  than 1 (e.g., 0.95). `NULL` (default) disables confidence intervals.
-
-- prediction_intervals:
-
-  Confidence level for prediction intervals, greater than 0 and less
-  than 1 (e.g., 0.95). `NULL` (default) disables prediction intervals.
+  Policy for non-finite (NaN/Infinity) values in input data: `"error"`
+  (default) raises an error, `"drop"` silently removes affected
+  observations before fitting.
 
 ## Value
 
@@ -153,13 +149,13 @@ for point-by-point real-time data, see
 
 Overlapping regions between chunks are reconciled via `merge_strategy`:
 
-|                      |                                                |
-|----------------------|------------------------------------------------|
-| Strategy             | Behavior                                       |
-| `"average"`          | Arithmetic mean of both estimates              |
-| `"weighted_average"` | Distance-weighted blend (recommended, default) |
-| `"take_first"`       | Keep left-chunk estimate                       |
-| `"take_last"`        | Keep right-chunk estimate                      |
+|                                |              |                            |
+|--------------------------------|--------------|----------------------------|
+| Strategy                       | Alias        | Behavior                   |
+| `"weighted_average"` (default) | `"weighted"` | Distance-weighted blend    |
+| `"average"`                    | `"mean"`     | Average overlapping values |
+| `"take_first"`                 | `"first"`    | Keep left chunk values     |
+| `"take_last"`                  | `"last"`     | Keep right chunk values    |
 
 ## Examples
 

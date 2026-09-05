@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rfastlowess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">3.2.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">4.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,21 +61,25 @@
 
     
     
+<!-- markdownlint-disable MD024 -->
+<p>LOWESS for trend extraction and temporal smoothing.</p>
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
-<p>LOWESS provides flexible trend extraction from time series without
-parametric assumptions. It handles irregular sampling, noise, and
-outliers naturally.</p>
+<p>Time series data often contains noise, seasonality, and trends.
+LOWESS provides flexible trend extraction without parametric
+assumptions.</p>
 <hr>
 </div>
 <div class="section level2">
 <h2 id="basic-trend-extraction">Basic Trend Extraction<a class="anchor" aria-label="anchor" href="#basic-trend-extraction"></a>
 </h2>
-<p><code>fraction = 0.1</code> sizes the neighbourhood to 10% of the
+<p><code>fraction = 0.1</code> sizes the neighbourhood as 10% of the
 data at each evaluation point — narrow enough to follow a slowly varying
 trend without smearing periodic variation. Three robustness
-<code>iterations</code> down-weight noise spikes.</p>
+<code>iterations</code> down-weight noise spikes so they cannot bias the
+fitted curve; this is especially important when the signal-to-noise
+ratio is low or when occasional outliers are expected.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/thisisamirv/lowess-project" class="external-link">rfastlowess</a></span><span class="op">)</span></span>
 <span></span>
@@ -84,90 +88,57 @@ trend without smearing periodic variation. Three robustness
 <span><span class="va">i</span> <span class="op">&lt;-</span> <span class="fl">0</span><span class="op">:</span><span class="op">(</span><span class="va">n</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fl">10</span> <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">t</span> <span class="op">+</span> <span class="fl">3</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">t</span> <span class="op">/</span> <span class="fl">10</span><span class="op">)</span> <span class="op">+</span> <span class="op">(</span><span class="op">(</span><span class="va">i</span> <span class="op">*</span> <span class="fl">7</span> <span class="op">+</span> <span class="fl">3</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/Arithmetic.html" class="external-link">%%</a></span> <span class="fl">1.7</span> <span class="op">-</span> <span class="fl">0.85</span><span class="op">)</span> <span class="op">*</span> <span class="fl">3</span></span>
 <span></span>
-<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Lowess.html">Lowess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.1</span>, iterations <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="co"># t and y are your time series vectors</span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Lowess.html">Lowess</a></span><span class="op">(</span></span>
+<span>    fraction <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>    iterations <span class="op">=</span> <span class="fl">3</span></span>
+<span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">t</span>, <span class="va">y</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">t</span>, <span class="va">y</span>, col <span class="op">=</span> <span class="st">"gray"</span>, pch <span class="op">=</span> <span class="st">"."</span>,</span>
-<span>    xlab <span class="op">=</span> <span class="st">"Time"</span>, ylab <span class="op">=</span> <span class="st">"Value"</span>, main <span class="op">=</span> <span class="st">"Trend Extraction"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">x</span>, <span class="va">result</span><span class="op">$</span><span class="va">y</span>, col <span class="op">=</span> <span class="st">"blue"</span>, lwd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"topleft"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Observed"</span>, <span class="st">"Trend (LOWESS)"</span><span class="op">)</span>,</span>
-<span>        pch <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="cn">NA</span><span class="op">)</span>, lty <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="cn">NA</span>, <span class="fl">1</span><span class="op">)</span>, col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"gray"</span>, <span class="st">"blue"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="use-case-time-series_files/figure-html/use_case_time_series_1-1.png" class="r-plt" alt="" width="700"></p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"y[0]: %.4f\n"</span>, <span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"y[0]: %.4f\n"</span>, <span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; y[0]: 11.3216</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="seasonal-decomposition">Seasonal Decomposition<a class="anchor" aria-label="anchor" href="#seasonal-decomposition"></a>
+<h2 id="detrending">Detrending<a class="anchor" aria-label="anchor" href="#detrending"></a>
 </h2>
-<p>Extract the trend component and compute the residual to inspect
-seasonality.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<p>Remove trend to analyze residual patterns.</p>
+<p>Setting <code>return_residuals = TRUE</code> stores
+<code>observed - smoothed</code> alongside the smooth. A slightly wider
+<code>fraction = 0.3</code> produces a smoother baseline trend, so
+short-duration oscillations end up in the residuals rather than being
+absorbed into the trend component. The residual series is then ready for
+spectral analysis, seasonality detection, or change-point methods.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/thisisamirv/lowess-project" class="external-link">rfastlowess</a></span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Simulate monthly data with trend + seasonality + noise</span></span>
-<span><span class="va">t</span> <span class="op">&lt;-</span> <span class="fl">1</span><span class="op">:</span><span class="fl">120</span>  <span class="co"># 10 years monthly</span></span>
-<span><span class="va">trend</span> <span class="op">&lt;-</span> <span class="fl">100</span> <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">t</span></span>
-<span><span class="va">seasonal</span> <span class="op">&lt;-</span> <span class="fl">15</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span> <span class="op">*</span> <span class="va">t</span> <span class="op">/</span> <span class="fl">12</span><span class="op">)</span></span>
-<span><span class="va">noise</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">120</span>, sd <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
-<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="va">trend</span> <span class="op">+</span> <span class="va">seasonal</span> <span class="op">+</span> <span class="va">noise</span></span>
+<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">100</span></span>
+<span><span class="va">t</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span>, length.out <span class="op">=</span> <span class="va">n</span><span class="op">)</span></span>
+<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">t</span><span class="op">)</span> <span class="op">+</span> <span class="fl">0.1</span></span>
 <span></span>
-<span><span class="co"># Extract trend with large fraction (heavy smoothing)</span></span>
-<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Lowess.html">Lowess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.4</span>, iterations <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Lowess.html">Lowess</a></span><span class="op">(</span></span>
+<span>    fraction <span class="op">=</span> <span class="fl">0.3</span>,</span>
+<span>    iterations <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>    return_residuals <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">t</span>, <span class="va">y</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Residual = observed - trend (should show seasonality)</span></span>
-<span><span class="va">residual</span> <span class="op">&lt;-</span> <span class="va">y</span> <span class="op">-</span> <span class="va">result</span><span class="op">$</span><span class="va">y</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">1</span><span class="op">)</span>, mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">4</span>, <span class="fl">2</span>, <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">t</span>, <span class="va">y</span>, type <span class="op">=</span> <span class="st">"l"</span>, col <span class="op">=</span> <span class="st">"gray"</span>,</span>
-<span>    main <span class="op">=</span> <span class="st">"Original + LOWESS Trend"</span>, xlab <span class="op">=</span> <span class="st">"Month"</span>, ylab <span class="op">=</span> <span class="st">"Value"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">x</span>, <span class="va">result</span><span class="op">$</span><span class="va">y</span>, col <span class="op">=</span> <span class="st">"blue"</span>, lwd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">t</span>, <span class="va">residual</span>, type <span class="op">=</span> <span class="st">"l"</span>, col <span class="op">=</span> <span class="st">"darkgreen"</span>,</span>
-<span>    main <span class="op">=</span> <span class="st">"Detrended Residual (Seasonal Component)"</span>,</span>
-<span>    xlab <span class="op">=</span> <span class="st">"Month"</span>, ylab <span class="op">=</span> <span class="st">"Residual"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>h <span class="op">=</span> <span class="fl">0</span>, lty <span class="op">=</span> <span class="fl">2</span>, col <span class="op">=</span> <span class="st">"red"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="use-case-time-series_files/figure-html/use_case_time_series_2-1.png" class="r-plt" alt="" width="700"></p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">trend</span> <span class="op">&lt;-</span> <span class="va">result</span><span class="op">$</span><span class="va">y</span></span>
+<span><span class="va">detrended</span> <span class="op">&lt;-</span> <span class="va">result</span><span class="op">$</span><span class="va">residuals</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Trend y[0]: %.4f  residual: %.4f\n"</span>, <span class="va">trend</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="va">detrended</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Trend y[0]: 0.2582  residual: -0.1582</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="irregular-time-grids">Irregular Time Grids<a class="anchor" aria-label="anchor" href="#irregular-time-grids"></a>
-</h2>
-<p>LOWESS handles irregularly sampled data naturally — no interpolation
-needed.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/thisisamirv/lowess-project" class="external-link">rfastlowess</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">t_irregular</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span></span>
-<span>    <span class="fl">0</span><span class="op">:</span><span class="fl">99</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="va">i</span> <span class="op">*</span> <span class="fl">1.0</span> <span class="op">+</span> <span class="op">(</span><span class="va">i</span> <span class="op">*</span> <span class="fl">31</span> <span class="op"><a href="https://rdrr.io/r/base/Arithmetic.html" class="external-link">%%</a></span> <span class="fl">10</span><span class="op">)</span> <span class="op">*</span> <span class="fl">0.1</span>, <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span><span class="va">y_irregular</span> <span class="op">&lt;-</span> <span class="fl">10</span> <span class="op">+</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="va">t_irregular</span> <span class="op">+</span> <span class="fl">2.0</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">t_irregular</span> <span class="op">*</span> <span class="fl">0.1</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Lowess.html">Lowess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.2</span>, iterations <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">t_irregular</span>, <span class="va">y_irregular</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">t_irregular</span>, <span class="va">y_irregular</span>, pch <span class="op">=</span> <span class="fl">16</span>, cex <span class="op">=</span> <span class="fl">0.4</span>, col <span class="op">=</span> <span class="st">"gray"</span>,</span>
-<span>    xlab <span class="op">=</span> <span class="st">"Time"</span>, ylab <span class="op">=</span> <span class="st">"Value"</span>, main <span class="op">=</span> <span class="st">"Irregularly Sampled Time Series"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">x</span>, <span class="va">result</span><span class="op">$</span><span class="va">y</span>, col <span class="op">=</span> <span class="st">"blue"</span>, lwd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
-<p><img src="use-case-time-series_files/figure-html/use_case_time_series_3-1.png" class="r-plt" alt="" width="700"></p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"y[0]: %.4f\n"</span>, <span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; y[0]: 11.3662</span></span></code></pre></div>
-<hr>
-</div>
-<div class="section level2">
-<h2 id="uncertainty-bands-for-forecasting-context">Uncertainty Bands for Forecasting Context<a class="anchor" aria-label="anchor" href="#uncertainty-bands-for-forecasting-context"></a>
+<h2 id="forecasting-with-prediction-intervals">Forecasting with Prediction Intervals<a class="anchor" aria-label="anchor" href="#forecasting-with-prediction-intervals"></a>
 </h2>
 <p>Prediction intervals widen the uncertainty band to include both the
-uncertainty in the fitted curve and the expected scatter of new
-observations. <code>fraction = 0.2</code> offers a balance between local
-detail and stable interval width.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+uncertainty in the fitted curve (confidence interval) and the expected
+scatter of new observations around it. <code>fraction = 0.2</code>
+offers a balance between local detail and stable interval width — too
+small a fraction produces jagged interval edges; too large a fraction
+underestimates local variance near turning points.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/thisisamirv/lowess-project" class="external-link">rfastlowess</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">100</span></span>
@@ -182,27 +153,131 @@ detail and stable interval width.</p>
 <span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">t</span>, <span class="va">y</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">t</span>, <span class="va">y</span>, pch <span class="op">=</span> <span class="st">"."</span>, col <span class="op">=</span> <span class="st">"gray"</span>,</span>
-<span>    xlab <span class="op">=</span> <span class="st">"Time"</span>, ylab <span class="op">=</span> <span class="st">"Value"</span>,</span>
-<span>    main <span class="op">=</span> <span class="st">"Trend with 95% Confidence and Prediction Intervals"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/polygon.html" class="external-link">polygon</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">x</span>, <span class="fu"><a href="https://rdrr.io/r/base/rev.html" class="external-link">rev</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">x</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>        <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">prediction_upper</span>, <span class="fu"><a href="https://rdrr.io/r/base/rev.html" class="external-link">rev</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">prediction_lower</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>        col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/rgb.html" class="external-link">rgb</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0.08</span><span class="op">)</span>, border <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/polygon.html" class="external-link">polygon</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">x</span>, <span class="fu"><a href="https://rdrr.io/r/base/rev.html" class="external-link">rev</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">x</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>        <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">confidence_upper</span>, <span class="fu"><a href="https://rdrr.io/r/base/rev.html" class="external-link">rev</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">confidence_lower</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>        col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/rgb.html" class="external-link">rgb</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0.20</span><span class="op">)</span>, border <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">x</span>, <span class="va">result</span><span class="op">$</span><span class="va">y</span>, col <span class="op">=</span> <span class="st">"blue"</span>, lwd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"topleft"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"PI 95%"</span>, <span class="st">"CI 95%"</span>, <span class="st">"Trend"</span><span class="op">)</span>,</span>
-<span>        fill <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/grDevices/rgb.html" class="external-link">rgb</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0.08</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/grDevices/rgb.html" class="external-link">rgb</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0.20</span><span class="op">)</span>, <span class="cn">NA</span><span class="op">)</span>,</span>
-<span>        lty  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="cn">NA</span>, <span class="cn">NA</span>, <span class="fl">1</span><span class="op">)</span>, col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="cn">NA</span>, <span class="cn">NA</span>, <span class="st">"blue"</span><span class="op">)</span>, border <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span></span></code></pre></div>
-<p><img src="use-case-time-series_files/figure-html/use_case_time_series_4-1.png" class="r-plt" alt="" width="700"></p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span></span>
 <span>    <span class="st">"95%% PI: [%.4f, %.4f]\n"</span>,</span>
 <span>    <span class="va">result</span><span class="op">$</span><span class="va">prediction_lower</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="va">result</span><span class="op">$</span><span class="va">prediction_upper</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
 <span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; 95% PI: [0.1580, 0.2909]</span></span></code></pre></div>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<hr>
+</div>
+<div class="section level2">
+<h2 id="handling-missing-data">Handling Missing Data<a class="anchor" aria-label="anchor" href="#handling-missing-data"></a>
+</h2>
+<p>LOWESS naturally handles irregular time sampling:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/thisisamirv/lowess-project" class="external-link">rfastlowess</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">t_irregular</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span></span>
+<span>    <span class="fl">0</span><span class="op">:</span><span class="fl">99</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="va">i</span> <span class="op">*</span> <span class="fl">1.0</span> <span class="op">+</span> <span class="op">(</span><span class="va">i</span> <span class="op">*</span> <span class="fl">31</span> <span class="op"><a href="https://rdrr.io/r/base/Arithmetic.html" class="external-link">%%</a></span> <span class="fl">10</span><span class="op">)</span> <span class="op">*</span> <span class="fl">0.1</span>, <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">y_irregular</span> <span class="op">&lt;-</span> <span class="fl">10</span> <span class="op">+</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="va">t_irregular</span> <span class="op">+</span> <span class="fl">2.0</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">t_irregular</span> <span class="op">*</span> <span class="fl">0.1</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># No special handling needed for irregular spacing</span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Lowess.html">Lowess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">t_irregular</span>, <span class="va">y_irregular</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"y[0]: %.4f\n"</span>, <span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; y[0]: 11.4324</span></span></code></pre></div>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="multi-scale-analysis">Multi-Scale Analysis<a class="anchor" aria-label="anchor" href="#multi-scale-analysis"></a>
+</h2>
+<p>Use different fractions to extract features at different scales:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/thisisamirv/lowess-project" class="external-link">rfastlowess</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">100</span></span>
+<span><span class="va">t</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span>, length.out <span class="op">=</span> <span class="va">n</span><span class="op">)</span></span>
+<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">t</span><span class="op">)</span> <span class="op">+</span> <span class="fl">0.1</span></span>
+<span></span>
+<span><span class="va">scales</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">0.2</span>, <span class="fl">0.5</span><span class="op">)</span></span>
+<span><span class="va">trends</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">scales</span>, <span class="kw">function</span><span class="op">(</span><span class="va">f</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Lowess.html">Lowess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="va">f</span><span class="op">)</span></span>
+<span>    <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">t</span>, <span class="va">y</span><span class="op">)</span><span class="op">$</span><span class="va">y</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Trend y[0] values:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">trends</span>, <span class="kw">function</span><span class="op">(</span><span class="va">tr</span><span class="op">)</span> <span class="va">tr</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Trend y[0] values: 0.131712 0.2244466 0.3343704</span></span></code></pre></div>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="gene-expression-time-course">Gene Expression Time Course<a class="anchor" aria-label="anchor" href="#gene-expression-time-course"></a>
+</h2>
+<p>Biological application:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/thisisamirv/lowess-project" class="external-link">rfastlowess</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">hours</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">24</span>, by <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
+<span><span class="va">i</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">hours</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span></span>
+<span><span class="va">expression</span> <span class="op">&lt;-</span> <span class="fl">100</span> <span class="op">*</span> <span class="op">(</span><span class="fl">1</span> <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">hours</span> <span class="op">*</span> <span class="va">pi</span> <span class="op">/</span> <span class="fl">12</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="op">(</span><span class="op">(</span><span class="va">i</span> <span class="op">*</span> <span class="fl">7</span> <span class="op">+</span> <span class="fl">3</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/Arithmetic.html" class="external-link">%%</a></span> <span class="fl">1.7</span> <span class="op">-</span> <span class="fl">0.85</span><span class="op">)</span> <span class="op">*</span> <span class="fl">10</span></span>
+<span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Lowess.html">Lowess</a></span><span class="op">(</span></span>
+<span>    fraction <span class="op">=</span> <span class="fl">0.3</span>,</span>
+<span>    iterations <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>    confidence_intervals <span class="op">=</span> <span class="fl">0.95</span>,</span>
+<span>    return_diagnostics <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">hours</span>, <span class="va">expression</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"R2: %.3f\n"</span>, <span class="va">result</span><span class="op">$</span><span class="va">diagnostics</span><span class="op">$</span><span class="va">r_squared</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; R2: 0.973</span></span></code></pre></div>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="choosing-fraction-for-time-series">Choosing Fraction for Time Series<a class="anchor" aria-label="anchor" href="#choosing-fraction-for-time-series"></a>
+</h2>
+<table class="table">
+<thead><tr class="header">
+<th>Data Type</th>
+<th>Recommended Fraction</th>
+<th>Rationale</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Daily data (years)</td>
+<td>0.3–0.5</td>
+<td>Capture annual trends</td>
+</tr>
+<tr class="even">
+<td>Hourly data (days)</td>
+<td>0.1–0.2</td>
+<td>Capture daily patterns</td>
+</tr>
+<tr class="odd">
+<td>Sensor data (minutes)</td>
+<td>0.05–0.1</td>
+<td>Preserve short-term features</td>
+</tr>
+<tr class="even">
+<td>Noisy data</td>
+<td>Higher</td>
+<td>Reduce noise impact</td>
+</tr>
+<tr class="odd">
+<td>Clean data</td>
+<td>Lower</td>
+<td>Preserve detail</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="see-also">See Also<a class="anchor" aria-label="anchor" href="#see-also"></a>
+</h2>
+<ul>
+<li>
+<a href="use-case-real-time.html">Real-Time Processing</a> — For
+streaming time series</li>
+<li>
+<a href="cross-validation.html">Cross-Validation</a> — Optimal
+fraction selection</li>
+<li>
+<a href="boundary.html">Boundary Handling</a> — Edge bias in trend
+extraction</li>
+<li>
+<code><a href="../reference/Lowess.html">?Lowess</a></code> — Full parameter reference</li>
+</ul>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
@@ -225,7 +300,7 @@ detail and stable interval width.</p>
 <span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; other attached packages:</span></span>
-<span><span class="co">#&gt; [1] rfastlowess_3.2.1</span></span>
+<span><span class="co">#&gt; [1] rfastlowess_4.0.0</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
 <span><span class="co">#&gt;  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    </span></span>

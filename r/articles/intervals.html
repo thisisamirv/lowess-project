@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rfastlowess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">3.2.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">4.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,6 +61,7 @@
 
     
     
+<!-- markdownlint-disable MD024 -->
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
@@ -68,8 +69,8 @@
 <img src="../reference/figures/intervals_comparison.svg" alt="Confidence and prediction intervals"><div class="figcaption">Confidence and prediction intervals</div>
 </div>
 <blockquote>
-<p><strong>Note:</strong> Confidence and prediction intervals are
-available in <strong>Batch</strong> mode only. Streaming and Online
+<p><strong>Adapter support:</strong> Confidence and prediction intervals
+are available in <strong>Batch</strong> mode only. Streaming and Online
 modes do not support intervals.</p>
 </blockquote>
 <table class="table">
@@ -88,15 +89,15 @@ modes do not support intervals.</p>
 <tbody>
 <tr class="odd">
 <td><strong>Confidence</strong></td>
-<td>Mean curve uncertainty</td>
+<td>Uncertainty in mean curve</td>
 <td>Narrow</td>
-<td>Where is the true trend?</td>
+<td>Trend location</td>
 </tr>
 <tr class="even">
 <td><strong>Prediction</strong></td>
-<td>New-point uncertainty</td>
+<td>Uncertainty for new points</td>
 <td>Wide</td>
-<td>Where will new data fall?</td>
+<td>New data location</td>
 </tr>
 </tbody>
 </table>
@@ -122,14 +123,18 @@ modes do not support intervals.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">x</span>, <span class="va">result</span><span class="op">$</span><span class="va">confidence_lower</span>, col <span class="op">=</span> <span class="st">"blue"</span>, lty <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">x</span>, <span class="va">result</span><span class="op">$</span><span class="va">confidence_upper</span>, col <span class="op">=</span> <span class="st">"blue"</span>, lty <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
 <p><img src="intervals_files/figure-html/intervals_1-1.png" class="r-plt" alt="" width="700"></p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"95% CI at midpoint: ["</span>, <span class="va">result</span><span class="op">$</span><span class="va">confidence_lower</span><span class="op">[</span><span class="fl">50</span><span class="op">]</span>, <span class="st">", "</span>,</span>
+<span>    <span class="va">result</span><span class="op">$</span><span class="va">confidence_upper</span><span class="op">[</span><span class="fl">50</span><span class="op">]</span>, <span class="st">"]\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; 95% CI at midpoint: [ -0.04604079 ,  0.1249563 ]</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
 <h2 id="prediction-intervals">Prediction Intervals<a class="anchor" aria-label="anchor" href="#prediction-intervals"></a>
 </h2>
-<p>Wider than confidence intervals — cover where new observations will
-fall.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<p>Estimate where new observations might fall.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/thisisamirv/lowess-project" class="external-link">rfastlowess</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
 <span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span>, length.out <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
@@ -144,12 +149,18 @@ fall.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">x</span>, <span class="va">result</span><span class="op">$</span><span class="va">prediction_lower</span>, col <span class="op">=</span> <span class="st">"red"</span>, lty <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">x</span>, <span class="va">result</span><span class="op">$</span><span class="va">prediction_upper</span>, col <span class="op">=</span> <span class="st">"red"</span>, lty <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
 <p><img src="intervals_files/figure-html/intervals_2-1.png" class="r-plt" alt="" width="700"></p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Prediction bounds: ["</span>, <span class="va">result</span><span class="op">$</span><span class="va">prediction_lower</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="st">", "</span>,</span>
+<span>    <span class="va">result</span><span class="op">$</span><span class="va">prediction_upper</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="st">"]\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Prediction bounds: [ -0.1534391 ,  1.098015 ]</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="both-intervals-together">Both Intervals Together<a class="anchor" aria-label="anchor" href="#both-intervals-together"></a>
+<h2 id="both-intervals">Both Intervals<a class="anchor" aria-label="anchor" href="#both-intervals"></a>
 </h2>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<p>Request both types simultaneously:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/thisisamirv/lowess-project" class="external-link">rfastlowess</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
 <span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span>, length.out <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
@@ -179,12 +190,17 @@ fall.</p>
 <span>        pch <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">16</span>, <span class="cn">NA</span>, <span class="cn">NA</span>, <span class="cn">NA</span><span class="op">)</span>, lty <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="cn">NA</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span>,</span>
 <span>        col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"gray"</span>, <span class="st">"blue"</span>, <span class="st">"blue"</span>, <span class="st">"red"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><img src="intervals_files/figure-html/intervals_3-1.png" class="r-plt" alt="" width="700"></p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"95% CI at midpoint: ["</span>, <span class="va">result</span><span class="op">$</span><span class="va">confidence_lower</span><span class="op">[</span><span class="fl">50</span><span class="op">]</span>, <span class="st">", "</span>,</span>
+<span>    <span class="va">result</span><span class="op">$</span><span class="va">confidence_upper</span><span class="op">[</span><span class="fl">50</span><span class="op">]</span>, <span class="st">"]\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; 95% CI at midpoint: [ -0.04604079 ,  0.1249563 ]</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="choosing-a-coverage-level">Choosing a Coverage Level<a class="anchor" aria-label="anchor" href="#choosing-a-coverage-level"></a>
+<h2 id="confidence-levels">Confidence Levels<a class="anchor" aria-label="anchor" href="#confidence-levels"></a>
 </h2>
-<p>Pass any value between 0 and 1 (exclusive). Common choices:</p>
+<p>Common levels and their z-values:</p>
 <table class="table">
 <thead><tr class="header">
 <th>Level</th>
@@ -209,15 +225,64 @@ fall.</p>
 </tr>
 </tbody>
 </table>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># 99% confidence intervals</span></span>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># 99% confidence interval</span></span>
 <span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Lowess.html">Lowess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.5</span>, confidence_intervals <span class="op">=</span> <span class="fl">0.99</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (99% CI):\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; First 6 smoothed values (99% CI):</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.4722882 0.4822189 0.4927151 0.5037882 0.5153461 0.5273328</span></span></code></pre></div>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"99% CI at midpoint: ["</span>, <span class="va">result</span><span class="op">$</span><span class="va">confidence_lower</span><span class="op">[</span><span class="fl">50</span><span class="op">]</span>, <span class="st">", "</span>,</span>
+<span>    <span class="va">result</span><span class="op">$</span><span class="va">confidence_upper</span><span class="op">[</span><span class="fl">50</span><span class="op">]</span>, <span class="st">"]\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; 99% CI at midpoint: [ -0.07291176 ,  0.1518273 ]</span></span></code></pre></div>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="standard-errors">Standard Errors<a class="anchor" aria-label="anchor" href="#standard-errors"></a>
+</h2>
+<p>Access standard errors directly (available when intervals are
+computed):</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Lowess.html">Lowess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.5</span>, return_se <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Standard errors (first 5):"</span>, <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">standard_errors</span>, <span class="fl">5</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Standard errors (first 5): 0.0353956 0.0192824 0.03558686 0.04024116 0.04178786</span></span></code></pre></div>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="availability">Availability<a class="anchor" aria-label="anchor" href="#availability"></a>
+</h2>
+<blockquote>
+<p><strong>Batch Mode Only:</strong> Confidence and prediction intervals
+are only available in <strong>Batch</strong> mode. Streaming and Online
+modes do not support intervals.</p>
+</blockquote>
+<table class="table">
+<thead><tr class="header">
+<th>Feature</th>
+<th>Batch</th>
+<th>Streaming</th>
+<th>Online</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Confidence intervals</td>
+<td>✓</td>
+<td>✗</td>
+<td>✗</td>
+</tr>
+<tr class="even">
+<td>Prediction intervals</td>
+<td>✓</td>
+<td>✗</td>
+<td>✗</td>
+</tr>
+<tr class="odd">
+<td>Standard errors</td>
+<td>✓</td>
+<td>✗</td>
+<td>✗</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
@@ -240,7 +305,7 @@ fall.</p>
 <span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; other attached packages:</span></span>
-<span><span class="co">#&gt; [1] rfastlowess_3.2.1</span></span>
+<span><span class="co">#&gt; [1] rfastlowess_4.0.0</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
 <span><span class="co">#&gt;  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    </span></span>

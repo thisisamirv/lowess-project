@@ -462,6 +462,143 @@ public class Example {
 <pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">Point 3 is likely an outlier (weight: 0.000)</code></pre>
 </div>
 </div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="scale-estimation"><a class="anchor" href="#scale-estimation"></a>Scale Estimation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Residuals are scaled before computing robustness weights. Two methods:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Method</th>
+<th class="tableblock halign-left valign-top">Formula</th>
+<th class="tableblock halign-left valign-top">Robustness</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>MAD</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>median(|r - median(r)|)</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Very robust (default)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>MAR</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>median(|r|)</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Robust, uncentered</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Mean</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>mean(|r|)</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Less robust, fastest</p></td>
+</tr>
+</tbody>
+</table>
+<div class="imageblock">
+<div class="content">
+<img src="../_images/scaling_comparison.svg" alt="Scaling Methods Comparison">
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        Options options = Options.builder()
+                .iterations(3)
+                .scalingMethod("mad")
+                .build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y);
+            System.out.println("First smoothed value (mad scaling): " + result.y()[0]);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">First smoothed value (mad scaling): 0.38260776436644134</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="auto-convergence"><a class="anchor" href="#auto-convergence"></a>Auto-Convergence</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Stop iterations early when weights stabilize:</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Performance:</strong> Auto-convergence can significantly reduce computation when weights stabilize before reaching max iterations.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        Options options = Options.builder()
+                .iterations(10)
+                .autoConverge(1e-6)
+                .build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y);
+            System.out.println("First smoothed value (auto-converge): " + result.y()[0]);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">First smoothed value (auto-converge): 0.3826022035717678</code></pre>
+</div>
+</div>
+<hr>
 <div class="paragraph">
 <p>All examples above use the same 100-point noisy sine wave (see <a href="kernels.html#choosing-a-kernel" class="xref page">Weight Functions</a> for the generation code), except the outlier-detection example above, which uses a small dataset with a deliberate spike.</p>
 </div>

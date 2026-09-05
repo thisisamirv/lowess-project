@@ -1,9 +1,11 @@
 # Quick Start
 
+Get up and running with LOWESS in minutes.
+
 ## Basic Smoothing
 
-Smooth a noisy sine wave. `fraction = 0.3` and `iterations = 3` are good
-starting values for most signals.
+Smooth a noisy sine wave — the kind of signal where LOWESS shines. Each
+example recovers the underlying trend from 100 points of Gaussian noise.
 
 ``` r
 
@@ -24,10 +26,7 @@ cat(sprintf("First smoothed value: %.4f (true: %.4f)\n",
 
 ------------------------------------------------------------------------
 
-## With Confidence and Prediction Intervals
-
-Set `confidence_intervals` and/or `prediction_intervals` to a coverage
-level (0–1).
+## With Confidence Intervals
 
 ``` r
 
@@ -45,14 +44,12 @@ model <- Lowess(
 )
 result <- fit(model, x, y)
 
-cat("Confidence lower bounds (first 5):\n")
-#> Confidence lower bounds (first 5):
-print(head(result$confidence_lower, 5))
-#> [1] 0.4029128 0.4444254 0.4229649 0.4249155 0.4334419
-cat("Confidence upper bounds (first 5):\n")
-#> Confidence upper bounds (first 5):
-print(head(result$confidence_upper, 5))
-#> [1] 0.5416635 0.5200124 0.5624654 0.5826608 0.5972503
+cat("Smoothed (first 5):", head(result$y, 5), "\n")
+#> Smoothed (first 5): 0.4722882 0.4822189 0.4927151 0.5037882 0.5153461
+cat("CI lower (first 5):", head(result$confidence_lower, 5), "\n")
+#> CI lower (first 5): 0.4029128 0.4444254 0.4229649 0.4249155 0.4334419
+cat("CI upper (first 5):", head(result$confidence_upper, 5), "\n")
+#> CI upper (first 5): 0.5416635 0.5200124 0.5624654 0.5826608 0.5972503
 cat("R2:", result$diagnostics$r_squared, "\n")
 #> R2: 0.7841212
 ```
@@ -78,6 +75,7 @@ model <- Lowess(
 )
 result <- fit(model, x_out, y_with_outlier)
 
+# Outliers will have low robustness weights
 for (i in seq_along(result$robustness_weights)) {
     if (result$robustness_weights[i] < 0.5)
         cat(sprintf("Point %d is likely an outlier (weight: %.3f)\n",
@@ -90,94 +88,44 @@ for (i in seq_along(result$robustness_weights)) {
 
 ## Streaming Mode
 
-For large datasets (\>100K points) that may not fit in memory.
+For datasets too large to fit in memory, stream them in fixed-size
+chunks with overlap.
 
 ``` r
 
 library(rfastlowess)
 set.seed(42)
-x <- seq(0, 2 * pi, length.out = 10000)
-y <- sin(x) + rnorm(10000, sd = 0.3)
+x <- seq(0, 10 * pi, length.out = 5000)
+y <- sin(x / pi) * exp(-x / 30) + rnorm(5000, sd = 0.15)
 
 model <- StreamingLowess(
-    fraction = 0.3,
-    iterations = 2,
-    chunk_size = 5000,
-    overlap = 500,
+    fraction = 0.2,
+    chunk_size = 1000,
+    overlap = 100,
     merge_strategy = "weighted_average"
 )
 
-# Process one chunk at a time
-chunk_x <- x[1:5000]
-chunk_y <- y[1:5000]
-result <- process_chunk(model, chunk_x, chunk_y)
-
-# Finalize after all chunks
-final <- finalize(model)
-cat("First 6 smoothed values (streaming, weighted_average merge):\n")
-#> First 6 smoothed values (streaming, weighted_average merge):
-print(head(final$y))
-#> [1] 0.3234034 0.3229753 0.3225477 0.3221207 0.3216941 0.3212681
-```
-
-------------------------------------------------------------------------
-
-## Online Mode
-
-For real-time / point-by-point processing.
-
-``` r
-
-library(rfastlowess)
-set.seed(42)
-times <- 1:100
-temperatures <- 20 + 5 * sin(times / 10) + rnorm(100)
-
-model <- OnlineLowess(
-    fraction = 0.3,
-    window_capacity = 25,
-    min_points = 5,
-    update_mode = "incremental"
-)
-
-for (i in seq_along(times)) {
-    result <- add_point(model, times[i], temperatures[i])
-    if (!is.null(result))
-        cat(sprintf("Time %d: %.2f\n", times[i], result$y))
-    if (i >= 10) break  # print only the first few outputs
+chunk_size <- 1000
+for (start in seq(1, 4001, by = chunk_size)) {
+    end <- min(start + chunk_size - 1, length(x))
+    process_chunk(model, x[start:end], y[start:end])
 }
-#> Time 5: 22.80
-#> Time 6: 22.72
-#> Time 7: 24.73
-#> Time 8: 23.49
-#> Time 9: 25.94
-#> Time 10: 24.14
+result <- finalize(model)
+cat(sprintf("Smoothed %d points in streaming mode\n", length(result$y)))
+#> Smoothed 100 points in streaming mode
 ```
 
 ------------------------------------------------------------------------
 
-## Plotting Results
+## Next Steps
 
-``` r
-
-library(rfastlowess)
-set.seed(42)
-x <- seq(0, 2 * pi, length.out = 100)
-y <- sin(x) + rnorm(100, sd = 0.3)
-
-model <- Lowess(fraction = 0.5, confidence_intervals = 0.95)
-result <- fit(model, x, y)
-
-plot(x, y, pch = 16, col = "gray", main = "LOWESS Smoothing")
-lines(result$x, result$y, col = "blue", lwd = 2)
-lines(result$x, result$confidence_lower, col = "blue", lty = 2)
-lines(result$x, result$confidence_upper, col = "blue", lty = 2)
-legend("topright", c("Data", "Smoothed", "95% CI"),
-        pch = c(16, NA, NA), lty = c(NA, 1, 2),
-        col = c("gray", "blue", "blue"))
-```
-
-![](quickstart_files/figure-html/quickstart_6-1.png)
+| Topic | Link |
+|----|----|
+| How LOWESS works | [Concepts](https://thisisamirv.github.io/lowess-project/r/articles/concepts.md) |
+| All parameters explained | [`?Lowess`](https://thisisamirv.github.io/lowess-project/r/reference/Lowess.md) |
+| Batch vs Streaming vs Online | [Execution Modes](https://thisisamirv.github.io/lowess-project/r/articles/adapter-choice.md) |
+| Edge handling | [Boundary](https://thisisamirv.github.io/lowess-project/r/articles/boundary.md) |
+| Outlier handling in depth | [Robustness](https://thisisamirv.github.io/lowess-project/r/articles/robustness.md) |
 
 ``` r
 
@@ -203,7 +151,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] rfastlowess_3.2.1
+#> [1] rfastlowess_4.0.0
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    

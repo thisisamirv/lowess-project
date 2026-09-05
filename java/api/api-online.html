@@ -190,6 +190,24 @@
 <div class="paragraph">
 <p>See also: <a href="api.html" class="xref page">API</a></p>
 </div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="when-to-use"><a class="anchor" href="#when-to-use"></a>When to Use</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Data arrives incrementally (sensors, streams)</p>
+</li>
+<li>
+<p>Need real-time smoothed values</p>
+</li>
+<li>
+<p>Fixed memory budget</p>
+</li>
+</ul>
+</div>
 <div class="imageblock">
 <div class="content">
 <img src="../_images/online_comparison.svg" alt="Online Adapter">
@@ -198,19 +216,68 @@
 </div>
 </div>
 <div class="sect1">
-<h2 id="onlineoptions-builder-onlineoptions-builder"><a class="anchor" href="#onlineoptions-builder-onlineoptions-builder"></a><code>OnlineOptions.builder() OnlineOptions.Builder</code></h2>
+<h2 id="class"><a class="anchor" href="#class"></a>Class</h2>
 <div class="sectionbody">
+<div class="sect2">
+<h3 id="onlinelowess"><a class="anchor" href="#onlinelowess"></a><code>OnlineLowess</code></h3>
+<div class="paragraph">
+<p>The <code>OnlineLowess</code> class updates the model incrementally with new data points.</p>
+</div>
+<div class="paragraph">
+<p><strong>Constructor:</strong></p>
+</div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">OnlineOptions options = OnlineOptions.builder()
         .windowCapacity(200)
         .minPoints(10)
-        .build();</code></pre>
+        .build();
+
+try (OnlineLowess model = new OnlineLowess(options)) {
+    // ...
+}</code></pre>
 </div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>new OnlineLowess(OnlineOptions options)</code> creates a new online model with the given options.</p>
+</li>
+<li>
+<p><code>options</code>: An <code>OnlineOptions</code> instance (exposes all <code>Options</code> settings plus <code>windowCapacity</code>, <code>minPoints</code>, and <code>updateMode</code>).</p>
+</li>
+</ul>
 </div>
 <div class="paragraph">
-<p><code>OnlineOptions.Builder</code> exposes all the same settings as <a href="api.html" class="xref page"><code>Options.Builder</code></a> (except <code>returnSe</code>, <code>cvFractions</code>/<code>cvMethod</code>/<code>cvK</code>/<code>cvSeed</code>, and <code>backend</code>, which are batch-only). Note <code>parallel</code> defaults to <code>false</code> for online use, since per-point updates rarely benefit from parallelism. Additional settings:</p>
+<p><strong>Methods:</strong></p>
 </div>
+<div class="sect3">
+<h4 id="addpointdouble-x-double-y-optionalpointresult"><a class="anchor" href="#addpointdouble-x-double-y-optionalpointresult"></a><code>addPoint(double x, double y) Optional&lt;PointResult&gt;</code></h4>
+<div class="paragraph">
+<p>Adds a single point to the sliding window and returns the smoothed value for that point, or <code>Optional.empty()</code> while the window is still filling up (fewer than <code>minPoints</code> seen so far). Once the window reaches <code>windowCapacity</code>, each new point evicts the oldest one, so memory stays bounded regardless of how much history has passed through. <code>updateMode</code> controls how much work each call does: <code>"incremental"</code> re-fits only the newest point, while <code>"full"</code> re-smooths the entire window for a more accurate but slower result.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Optional&lt;PointResult&gt; result = model.addPoint(x, y);
+result.ifPresent(r -&gt; System.out.println(r.y()));</code></pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>OnlineLowess.close()</code> releases native resources. Safe to call multiple times. Implements <code>AutoCloseable</code>.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="options-structure"><a class="anchor" href="#options-structure"></a>Options Structure</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="onlineoptions"><a class="anchor" href="#onlineoptions"></a><code>OnlineOptions</code></h3>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 25%;">
@@ -228,52 +295,425 @@
 </thead>
 <tbody>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fraction</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>0.67</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Smoothing fraction (bandwidth)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>iterations</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>int</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>3</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of robustifying iterations</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>delta</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>NaN</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Interpolation distance (<code>NaN</code> auto-sets it to 0.0 in Online, i.e. interpolation disabled)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>weightFunction</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"tricube"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Weight function name</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>robustnessMethod</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"bisquare"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Robustness method name</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>scalingMethod</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"mad"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Residual scaling method</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boundaryPolicy</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"extend"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Boundary handling policy</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>zeroWeightFallback</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"use_local_mean"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Zero-weight handling</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>missing</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"error"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Policy for non-finite (NaN/Infinity) values in each point</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>autoConverge</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>NaN</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Auto-convergence tolerance</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnRobustnessWeights</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Include <code>robustnessWeight()</code> in result</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>windowCapacity</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>int</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>1000</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Maximum number of recent points retained.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Maximum number of recent points retained</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>minPoints</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>int</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>2</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Minimum points required before output starts.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Minimum points required before output starts</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>updateMode</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>"incremental"</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">How the window is updated as new points arrive: <code>incremental</code>, <code>full</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">How the window is updated as new points arrive: <code>incremental</code>, <code>full</code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Confidence/prediction intervals, standard errors, cross-validation, GPU <code>backend</code>, <code>customWeights</code>, <code>returnSorted</code>, <code>returnDiagnostics</code>, <code>returnResiduals</code>, and <code>parallel</code> are Batch-only (or Batch/Streaming-only) and not available here; see <a href="api.html" class="xref page">API</a> for those.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="options"><a class="anchor" href="#options"></a>Options</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="fraction"><a class="anchor" href="#fraction"></a>fraction</h3>
+<div class="paragraph">
+<p><code>fraction</code> is the most important parameter: it controls the size of the local neighbourhood used at each point.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Range</th>
+<th class="tableblock halign-left valign-top">Effect</th>
+<th class="tableblock halign-left valign-top">Use case</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.1-0.3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Fine detail</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Rapidly changing signals</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.3-0.5</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Balanced</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">General purpose</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.5-0.7</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Heavy smoothing</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Noisy data</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.7-1.0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Very smooth</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Trend extraction</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="iterations"><a class="anchor" href="#iterations"></a>iterations</h3>
+<div class="paragraph">
+<p><code>iterations</code> controls robustness to outliers, at the cost of speed.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Value</th>
+<th class="tableblock halign-left valign-top">Effect</th>
+<th class="tableblock halign-left valign-top">Performance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No robustness</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Fastest</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1-3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Moderate</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Recommended</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4-6</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Strong</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Contaminated data</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">7+</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Very strong</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Heavy outliers</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="delta"><a class="anchor" href="#delta"></a>delta</h3>
+<div class="paragraph">
+<p>Points within <code>delta</code> of each other on the x-axis share the same local fit instead of each computing its own regression&#8201;&#8212;&#8201;an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. <code>NaN</code> (default) auto-sets it to <code>0</code> in Online mode, i.e. interpolation is disabled and every point is fit exactly.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="weightfunction"><a class="anchor" href="#weightfunction"></a>weightFunction</h3>
+<div class="paragraph">
+<p><em>See: <a href="../weighting/kernels.html" class="xref page">Weight Functions</a></em></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>"tricube"</code> (default)</p>
+</li>
+<li>
+<p><code>"epanechnikov"</code></p>
+</li>
+<li>
+<p><code>"gaussian"</code></p>
+</li>
+<li>
+<p><code>"uniform"</code> (alias: <code>"boxcar"</code>)</p>
+</li>
+<li>
+<p><code>"biweight"</code> (alias: <code>"bisquare"</code>)</p>
+</li>
+<li>
+<p><code>"triangle"</code> (alias: <code>"triangular"</code>)</p>
+</li>
+<li>
+<p><code>"cosine"</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="robustnessmethod"><a class="anchor" href="#robustnessmethod"></a>robustnessMethod</h3>
+<div class="paragraph">
+<p><em>See: <a href="../weighting/robustness.html" class="xref page">Robustness</a></em></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>"bisquare"</code> (default; alias: <code>"biweight"</code>)</p>
+</li>
+<li>
+<p><code>"huber"</code></p>
+</li>
+<li>
+<p><code>"talwar"</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="scalingmethod"><a class="anchor" href="#scalingmethod"></a>scalingMethod</h3>
+<div class="paragraph">
+<p><em>See: <a href="../weighting/scaling.html" class="xref page">Scaling Methods</a></em></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>"mad"</code> (default; alias: <code>"median_absolute_deviation"</code>)</p>
+</li>
+<li>
+<p><code>"mar"</code> (alias: <code>"median_absolute_residual"</code>)</p>
+</li>
+<li>
+<p><code>"mean"</code> (alias: <code>"mean_absolute_residual"</code>)</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="boundarypolicy"><a class="anchor" href="#boundarypolicy"></a>boundaryPolicy</h3>
+<div class="paragraph">
+<p><em>See: <a href="../advanced/boundary.html" class="xref page">Boundary Handling</a></em></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>"extend"</code> (default; alias: <code>"pad"</code>)</p>
+</li>
+<li>
+<p><code>"reflect"</code> (alias: <code>"mirror"</code>)</p>
+</li>
+<li>
+<p><code>"zero"</code></p>
+</li>
+<li>
+<p><code>"noboundary"</code> (alias: <code>"none"</code>)</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="zeroweightfallback"><a class="anchor" href="#zeroweightfallback"></a>zeroWeightFallback</h3>
+<div class="paragraph">
+<p>Behavior when all neighborhood weights are zero:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Option</th>
+<th class="tableblock halign-left valign-top">Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"use_local_mean"</code> (default; aliases: <code>"local_mean"</code>, <code>"mean"</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Use the mean of the neighborhood</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"return_original"</code> (alias: <code>"original"</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return the original y value</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"return_none"</code> (alias: <code>"none"</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return <code>NaN</code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="missing"><a class="anchor" href="#missing"></a>missing</h3>
+<div class="paragraph">
+<p>Policy for handling a non-finite (NaN/Infinity) <code>x</code> or <code>y</code> value passed to <code>addPoint</code>:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Option</th>
+<th class="tableblock halign-left valign-top">Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"error"</code> (default)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Throw</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"drop"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Silently ignore the point — <code>addPoint</code> returns <code>Optional.empty()</code> instead of adding it to the window</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="autoconverge"><a class="anchor" href="#autoconverge"></a>autoConverge</h3>
+<div class="paragraph">
+<p><em>See: <a href="../weighting/robustness.html#_auto_convergence" class="xref page">Robustness</a></em></p>
+</div>
+<div class="paragraph">
+<p>Convergence tolerance for early stopping of robustness iterations. <code>NaN</code> (default) disables early stopping.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="returnrobustnessweights"><a class="anchor" href="#returnrobustnessweights"></a>returnRobustnessWeights</h3>
+<div class="paragraph">
+<p>Include the robustness weight for the latest point (from the last robustness iteration) in the result.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>false</code> (default) — leaves <code>robustnessWeight()</code> empty</p>
+</li>
+<li>
+<p><code>true</code> — populates <code>robustnessWeight()</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="windowcapacity"><a class="anchor" href="#windowcapacity"></a>windowCapacity</h3>
+<div class="paragraph">
+<p>Maximum number of most recent points kept in the sliding window; older points are discarded as new ones arrive. Each <code>addPoint</code> call costs O(<code>windowCapacity</code>) rather than growing with total history.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="minpoints"><a class="anchor" href="#minpoints"></a>minPoints</h3>
+<div class="paragraph">
+<p>Minimum number of points required before smoothing starts. <code>addPoint</code> returns <code>Optional.empty()</code> until the window reaches this size.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="updatemode"><a class="anchor" href="#updatemode"></a>updateMode</h3>
+<div class="paragraph">
+<p><em>See: <a href="../guide/adapter-choice.html" class="xref page">Execution Modes</a></em></p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Mode</th>
+<th class="tableblock halign-left valign-top">Alias</th>
+<th class="tableblock halign-left valign-top">Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Speed</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"incremental"</code> (default)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"single"</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Update only affected fits</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Faster</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"full"</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"resmooth"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Recompute entire window</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">More accurate</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
-<div class="sect1">
-<h2 id="new-onlinelowessonlineoptions-options"><a class="anchor" href="#new-onlinelowessonlineoptions-options"></a><code>new OnlineLowess(OnlineOptions options)</code></h2>
-<div class="sectionbody">
-
-</div>
 </div>
 <div class="sect1">
-<h2 id="onlinelowess-addpointdouble-x-double-y-optionalpointresult"><a class="anchor" href="#onlinelowess-addpointdouble-x-double-y-optionalpointresult"></a><code>OnlineLowess.addPoint(double x, double y) Optional&lt;PointResult&gt;</code></h2>
+<h2 id="result-structure"><a class="anchor" href="#result-structure"></a>Result Structure</h2>
 <div class="sectionbody">
+<div class="sect2">
+<h3 id="pointresult"><a class="anchor" href="#pointresult"></a><code>PointResult</code></h3>
 <div class="paragraph">
-<p>Adds a single observation. Returns <code>Optional.empty()</code> while the window is still filling (fewer than <code>minPoints</code> seen so far); once populated, the <code>PointResult</code> holds the smoothed value for the most recently added point.</p>
+<p>Returned by <code>addPoint</code> once the window has enough points (<code>Optional.empty()</code> until then).</p>
 </div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="onlinelowess-close"><a class="anchor" href="#onlinelowess-close"></a><code>OnlineLowess.close()</code></h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Releases native resources. Safe to call multiple times. Implements <code>AutoCloseable</code>.</p>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="pointresult-accessors"><a class="anchor" href="#pointresult-accessors"></a><code>PointResult</code> accessors</h2>
-<div class="sectionbody">
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 33.3333%;">
@@ -291,30 +731,34 @@
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>y()</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Smoothed value.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Smoothed value for the latest point.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>standardError()</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>OptionalDouble</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Empty if not computed.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Always empty&#8201;&#8212;&#8201;standard errors require <code>returnSe</code>/confidence intervals, which are Batch-only.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>residual()</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>OptionalDouble</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Empty if not computed.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Residual y minus smoothed; always populated (there is no <code>returnResiduals</code> option for Online).</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>robustnessWeight()</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>OptionalDouble</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Empty if not computed.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Robustness weight, if <code>returnRobustnessWeights</code> was set.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>iterationsUsed()</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>OptionalInt</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Empty if not applicable.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Robustness iterations performed.</p></td>
 </tr>
 </tbody>
 </table>
+<div class="paragraph">
+<p>There is no diagnostics accessor or <code>returnDiagnostics</code> option for <code>OnlineLowess</code>: <code>PointResult</code> carries no diagnostics field, since diagnostics like RMSE/R<sup>2</sup> need more than one point&#8217;s worth of history to be meaningful.</p>
+</div>
+</div>
 </div>
 </div>
 <div class="sect1">

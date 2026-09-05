@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rfastlowess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">3.2.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">4.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,6 +61,7 @@
 
     
     
+<!-- markdownlint-disable MD024 -->
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
@@ -81,12 +82,6 @@ is the scale estimate. A larger
 makes the algorithm more tolerant of large residuals; a smaller one
 makes it more aggressive.</p>
 <table class="table">
-<colgroup>
-<col width="25%">
-<col width="25%">
-<col width="25%">
-<col width="25%">
-</colgroup>
 <thead><tr class="header">
 <th>Method</th>
 <th>Formula</th>
@@ -96,7 +91,7 @@ makes it more aggressive.</p>
 <tbody>
 <tr class="odd">
 <td><code>"mad"</code></td>
-<td>Median absolute deviation from median</td>
+<td>Median |r − median(r)|</td>
 <td>Very robust</td>
 <td>Moderate</td>
 </tr>
@@ -125,7 +120,8 @@ makes it more aggressive.</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>σ</mi><mo accent="true">̂</mo></mover><mo>=</mo><mtext mathvariant="normal">median</mtext><mo stretchy="false" form="prefix">(</mo><mo stretchy="false" form="prefix">|</mo><msub><mi>r</mi><mi>i</mi></msub><mo>−</mo><mtext mathvariant="normal">median</mtext><mo stretchy="false" form="prefix">(</mo><msub><mi>r</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">|</mo><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\hat{\sigma} = \text{median}(|r_i - \text{median}(r_i)|)</annotation></semantics></math></p>
 <p>First centers residuals at their median, then takes the median of the
 absolute deviations. Double use of the median makes it highly resistant
-to extreme outliers.</p>
+to extreme outliers. This is the standard choice for robust
+regression.</p>
 <p><strong>Use when</strong>: Data may contain outliers (default for
 most applications).</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
@@ -136,71 +132,73 @@ most applications).</p>
 <span></span>
 <span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Lowess.html">Lowess</a></span><span class="op">(</span>iterations <span class="op">=</span> <span class="fl">3</span>, scaling_method <span class="op">=</span> <span class="st">"mad"</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (MAD scaling):\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; First 6 smoothed values (MAD scaling):</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.4862648 0.4942855 0.5026953 0.5114688 0.5205144 0.5296957</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Smoothed y[0]:"</span>, <span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Smoothed y[0]: 0.4862648</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
 <h2 id="mar-median-absolute-residual">MAR — Median Absolute Residual<a class="anchor" aria-label="anchor" href="#mar-median-absolute-residual"></a>
 </h2>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>σ</mi><mo accent="true">̂</mo></mover><mo>=</mo><mtext mathvariant="normal">median</mtext><mo stretchy="false" form="prefix">(</mo><mo stretchy="false" form="prefix">|</mo><msub><mi>r</mi><mi>i</mi></msub><mo stretchy="false" form="prefix">|</mo><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\hat{\sigma} = \text{median}(|r_i|)</annotation></semantics></math></p>
-<p>Slightly less robust than MAD because it does not center residuals
-first, but faster to compute.</p>
-<p><strong>Use when</strong>: Residuals are roughly symmetric around
-zero; speed is a concern.</p>
+<p>Uses the uncentered median — unlike MAD it does not subtract the
+residual median first. Still robust (median-based) but slightly less
+resistant than MAD when residuals are systematically shifted. Faster
+than MAD in practice because it requires only one partial sort.</p>
+<p><strong>Use when</strong>: Speed matters and data have minimal
+systematic bias in residuals.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Lowess.html">Lowess</a></span><span class="op">(</span>iterations <span class="op">=</span> <span class="fl">3</span>, scaling_method <span class="op">=</span> <span class="st">"mar"</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (MAR scaling):\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; First 6 smoothed values (MAR scaling):</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.4870733 0.4951594 0.5036339 0.5124703 0.5215762 0.5308144</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Smoothed y[0]:"</span>, <span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Smoothed y[0]: 0.4870733</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="mean-absolute-residual">Mean Absolute Residual<a class="anchor" aria-label="anchor" href="#mean-absolute-residual"></a>
+<h2 id="mean-mean-absolute-residual">Mean — Mean Absolute Residual<a class="anchor" aria-label="anchor" href="#mean-mean-absolute-residual"></a>
 </h2>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>σ</mi><mo accent="true">̂</mo></mover><mo>=</mo><mfrac><mn>1</mn><mi>n</mi></mfrac><munder><mo>∑</mo><mi>i</mi></munder><mo stretchy="false" form="prefix">|</mo><msub><mi>r</mi><mi>i</mi></msub><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">\hat{\sigma} = \frac{1}{n}\sum_i |r_i|</annotation></semantics></math></p>
-<p>Least robust — influenced by outliers. Matches classic OLS residual
-scale.</p>
-<p><strong>Use when</strong>: No outliers expected; comparisons with
-classical methods.</p>
+<p>Arithmetic mean of absolute residuals. Non-robust: a single extreme
+outlier inflates
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>σ</mi><mo accent="true">̂</mo></mover><annotation encoding="application/x-tex">\hat{\sigma}</annotation></semantics></math>,
+causing the algorithm to under-downweight it. Fastest to compute (no
+sort required). Useful when data are believed to be clean and speed is a
+priority.</p>
+<p><strong>Use when</strong>: Clean data with no outliers; maximum
+computation speed required.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Lowess.html">Lowess</a></span><span class="op">(</span>iterations <span class="op">=</span> <span class="fl">3</span>, scaling_method <span class="op">=</span> <span class="st">"mean"</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (mean scaling):\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; First 6 smoothed values (mean scaling):</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.5023604 0.5119281 0.5219198 0.5323007 0.5429772 0.5538188</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Smoothed y[0]:"</span>, <span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Smoothed y[0]: 0.5023604</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="comparing-scaling-methods">Comparing Scaling Methods<a class="anchor" aria-label="anchor" href="#comparing-scaling-methods"></a>
+<h2 id="choosing-a-scaling-method">Choosing a Scaling Method<a class="anchor" aria-label="anchor" href="#choosing-a-scaling-method"></a>
 </h2>
+<table class="table">
+<thead><tr class="header">
+<th>Situation</th>
+<th>Recommended Method</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>General purpose, possible outliers</td>
+<td>
+<code>"mad"</code> (default)</td>
+</tr>
+<tr class="even">
+<td>Speed matters; residuals have minimal systematic bias</td>
+<td><code>"mar"</code></td>
+</tr>
+<tr class="odd">
+<td>Clean data, no outliers</td>
+<td><code>"mean"</code></td>
+</tr>
+</tbody>
+</table>
+<p>See <a href="robustness.html">Robustness</a> for a broader discussion
+of outlier handling.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/thisisamirv/lowess-project" class="external-link">rfastlowess</a></span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
-<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fl">1</span><span class="op">:</span><span class="fl">100</span></span>
-<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">x</span> <span class="op">/</span> <span class="fl">10</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span>, sd <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
-<span><span class="va">y</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">20</span>, <span class="fl">50</span>, <span class="fl">80</span><span class="op">)</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">y</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">20</span>, <span class="fl">50</span>, <span class="fl">80</span><span class="op">)</span><span class="op">]</span> <span class="op">+</span> <span class="fl">5</span>  <span class="co"># outliers</span></span>
-<span></span>
-<span><span class="va">methods</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"mad"</span>, <span class="st">"mar"</span>, <span class="st">"mean"</span><span class="op">)</span></span>
-<span><span class="va">colors</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"blue"</span>, <span class="st">"red"</span>, <span class="st">"green"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, pch <span class="op">=</span> <span class="fl">16</span>, col <span class="op">=</span> <span class="st">"gray"</span>,</span>
-<span>    main <span class="op">=</span> <span class="st">"Scaling Method Comparison (with outliers)"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="kw">for</span> <span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">methods</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="va">model</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Lowess.html">Lowess</a></span><span class="op">(</span>iterations <span class="op">=</span> <span class="fl">3</span>, scaling_method <span class="op">=</span> <span class="va">methods</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span></span>
-<span>    <span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">x</span>, <span class="va">result</span><span class="op">$</span><span class="va">y</span>, col <span class="op">=</span> <span class="va">colors</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, lwd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="op">}</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"topright"</span>, <span class="va">methods</span>, col <span class="op">=</span> <span class="va">colors</span>, lwd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
-<p><img src="scaling_files/figure-html/scaling_4-1.png" class="r-plt" alt="" width="700"></p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
@@ -223,7 +221,7 @@ classical methods.</p>
 <span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; other attached packages:</span></span>
-<span><span class="co">#&gt; [1] rfastlowess_3.2.1</span></span>
+<span><span class="co">#&gt; [1] rfastlowess_4.0.0</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
 <span><span class="co">#&gt;  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    </span></span>

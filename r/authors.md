@@ -11,13 +11,13 @@ Source:
 [`inst/CITATION`](https://github.com/thisisamirv/lowess-project/blob/main/inst/CITATION)
 
 Valizadeh A (2026). *High-Performance LOWESS Smoothing for R*. R package
-version 3.2.1, <https://github.com/thisisamirv/lowess-project>.
+version 4.0.0, <https://github.com/thisisamirv/lowess-project>.
 
     @Manual{,
       title = {High-Performance LOWESS Smoothing for R},
       author = {Amir Valizadeh},
       year = {2026},
-      note = {R package version 3.2.1},
+      note = {R package version 4.0.0},
       url = {https://github.com/thisisamirv/lowess-project},
     }
 
@@ -173,15 +173,15 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: rutrum <dave@rutrum.net>
     License: MIT
     ----------------------------------------
-    Package: crossbeam-deque (0.8.7)
+    Package: crossbeam-deque (0.8.8)
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: crossbeam-epoch (0.9.20)
+    Package: crossbeam-epoch (0.9.21)
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: crossbeam-utils (0.8.22)
+    Package: crossbeam-utils (0.8.23)
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
@@ -285,7 +285,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: indexmap (2.14.1)
+    Package: indexmap (2.14.2)
     Authors:
     License: Apache-2.0 OR MIT
     ----------------------------------------
@@ -313,7 +313,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Robert Bragg <robert@sixbynine.org>
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: js-sys (0.3.104)
+    Package: js-sys (0.3.105)
     Authors: The wasm-bindgen Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
@@ -353,7 +353,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Andrew Gallant <jamslam@gmail.com>, bluss
     License: Unlicense OR MIT
     ----------------------------------------
-    Package: minicov (0.3.9)
+    Package: minicov (0.3.8)
     Authors: Amanieu d'Antras <amanieu@gmail.com>
     License: Apache-2.0/MIT
     ----------------------------------------
@@ -481,7 +481,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors:
     License: Apache-2.0 OR MIT
     ----------------------------------------
-    Package: portable-atomic-util (0.2.7)
+    Package: portable-atomic-util (0.2.8)
     Authors:
     License: Apache-2.0 OR MIT
     ----------------------------------------
@@ -701,39 +701,39 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Andrew Gallant <jamslam@gmail.com>
     License: Unlicense/MIT
     ----------------------------------------
-    Package: wasm-bindgen (0.2.127)
+    Package: wasm-bindgen (0.2.128)
     Authors: The wasm-bindgen Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: wasm-bindgen-futures (0.4.77)
+    Package: wasm-bindgen-futures (0.4.78)
     Authors: The wasm-bindgen Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: wasm-bindgen-macro (0.2.127)
+    Package: wasm-bindgen-macro (0.2.128)
     Authors: The wasm-bindgen Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: wasm-bindgen-macro-support (0.2.127)
+    Package: wasm-bindgen-macro-support (0.2.128)
     Authors: The wasm-bindgen Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: wasm-bindgen-shared (0.2.127)
+    Package: wasm-bindgen-shared (0.2.128)
     Authors: The wasm-bindgen Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: wasm-bindgen-test (0.3.77)
+    Package: wasm-bindgen-test (0.3.78)
     Authors: The wasm-bindgen Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: wasm-bindgen-test-macro (0.3.77)
+    Package: wasm-bindgen-test-macro (0.3.78)
     Authors: The wasm-bindgen Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: wasm-bindgen-test-shared (0.2.127)
+    Package: wasm-bindgen-test-shared (0.2.128)
     Authors: The wasm-bindgen Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: web-sys (0.3.104)
+    Package: web-sys (0.3.105)
     Authors: The wasm-bindgen Developers
     License: MIT OR Apache-2.0
     ----------------------------------------

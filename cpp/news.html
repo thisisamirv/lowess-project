@@ -102,7 +102,32 @@ $(document).ready(function(){initNavTree('news.html',''); initResizable(); });
   <div class="headertitle"><div class="title">News</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1>fastlowess (C++) 3.2.1</h1>
+<div class="textblock"><h1>fastlowess (C++) 4.0.0</h1>
+<h2>Added</h2>
+<ul>
+<li>Added an "Ideas for Contribution" section to <code>CONTRIBUTING.md</code>, listing concrete Batch/Streaming/Online adapter feature gaps (out-of-sample prediction, exposing local slope/derivative, adaptive fraction selection, STL-style decomposition, bootstrap intervals, concurrent chunk processing, checkpointable streaming state, populating <code>OnlineOutput.standard_error</code>, time-based window eviction, configurable warm-up) to invite contributions.</li>
+<li><code>dev/bump_version.py</code> now also updates the example crate version in <code>CONTRIBUTING.md</code>'s "Individual crate Cargo.toml" snippet.</li>
+<li>Added a <code>return_sorted</code> option to <code>LowessOptions</code>.</li>
+<li>Added a <code>missing</code> option to <code>LowessOptions</code> and <code>OnlineOptions</code> (inherited by <code>StreamingOptions</code>).</li>
+</ul>
+<h2>Changed</h2>
+<ul>
+<li>Go doc-snippet verification now batch-builds every snippet in one <code>go build ./...</code> under a persistent module instead of one <code>go run</code> per snippet, then runs the binaries concurrently; <code>verify_snippets.py</code>'s <code>BATCH_RUNNERS</code> dispatch (previously Rust-only) now covers <code>go</code> too.</li>
+<li>C++ doc-snippet verification now resolves the compiler/library/MSVC setup once, then compiles+links+runs every snippet concurrently instead of one at a time. Fixed an MSVC race from concurrent <code>cl.exe</code> invocations colliding on a shared <code>snippet.obj</code> by giving each snippet its own <code>/Fo</code> output and <code>cwd</code>.</li>
+<li>Improved API docs for all bindings and crates significantly.</li>
+<li>Fixed several bindings' docs (Node.js, WASM, Go, Java, R) showing a flat <code>500</code> default for <code>overlap</code> instead of the actual dynamic <code>chunk_size / 10</code> (clamped to <code>[1, chunk_size - 10]</code>).</li>
+<li>Renamed Python's <code>docs/guide/adapters.md</code> and <code>docs/use-case/{genomics,real-time,time-series}.md</code> to match every other binding/crate's filenames (<code><a class="el" href="adapter-choice_8md.html">adapter-choice.md</a></code>, <code>use-case-*.md</code>).</li>
+<li>Repinned the macOS x64 job in <code>release-cpp.yml</code> to <code>macos-15-intel</code>.</li>
+<li>Removed <code>return_diagnostics</code>/<code>return_residuals</code>/<code>parallel</code> from <code>OnlineOptions</code>, same reason as Python. Breaking change.</li>
+<li>Removed <code>confidence_intervals</code>/<code>prediction_intervals</code> from <code>OnlineOptions</code>; <code>StreamingOptions</code> no longer forwards its inherited copies. Breaking change.</li>
+<li>Removed the dead, never-read <code>custom_weights</code> field from <code>OnlineOptions</code>. Breaking change.</li>
+<li><code>StreamingOptions::overlap</code>'s default changed from a fixed <code>500</code> to <code>-1</code> (sentinel for "use the library default"), resolving dynamically to <code>chunk_size / 10</code>. Breaking change.</li>
+</ul>
+<h2>Fixed</h2>
+<ul>
+<li>Fixed <code>CONTRIBUTING.md</code> stating a stale Go prerequisite (<code>1.21+</code>, actually <code>1.23+</code> per <code>go.mod</code>/CI), an inaccurate <code>air</code> auto-install target (claimed <code>make r</code>, actually <code>make r-dev</code>), and a stale example crate version (<code>2.0.0</code>) in the Workspace Structure section.</li>
+</ul>
+<h1>fastlowess (C++) 3.2.1</h1>
 <h2>Added</h2>
 <ul>
 <li>Added <code>dev/bump_version.py --version X.Y.Z</code> to bump every crate/binding's version files, <code>CITATION.cff</code>, and the Spack recipe in one pass (supports <code>--dry-run</code>); now also bumps <code>Project.toml</code>'s <code>fastlowess_jll</code> compat floor (safe pre-publish since <code>make julia-dev</code>/CI relax it to an OR-list at test-time).</li>

@@ -1,30 +1,39 @@
 # Use Case: Genomic Data Smoothing
 
+LOWESS for methylation profiles, ChIP-seq signals, and other genomic
+data.
+
 ## Overview
 
-LOWESS is well-suited for genomic data such as DNA methylation profiles,
-ChIP-seq signals, and expression arrays. Sequencing depth variation, PCR
-artifacts, and biological heterogeneity all create noise that LOWESS
-handles gracefully without parametric assumptions.
+Genomic data often contains noise from sequencing depth variation, PCR
+artifacts, or biological heterogeneity. LOWESS smoothing helps reveal
+underlying patterns.
 
 ------------------------------------------------------------------------
 
 ## Methylation Profile Smoothing
 
+### The Challenge
+
+DNA methylation data (from bisulfite sequencing or arrays) shows
+position-dependent patterns that can be obscured by measurement noise.
+
+### Solution
+
 A small `fraction = 0.1` lets LOWESS follow fine-scale spatial structure
-without smearing transitions between methylated and unmethylated
+without smearing the transitions between methylated and unmethylated
 regions. `confidence_intervals = 0.95` produces uncertainty bands that
-naturally widen at positions with sparser CpG coverage.
+naturally widen at positions with sparser CpG coverage, making
+low-confidence segments immediately apparent in the plot.
 
 ``` r
 
 library(rfastlowess)
 
-# Deterministic methylation profile along a chromosome
 positions <- seq(0, 99000, by = 1000)
-observed <- (50 + sin(positions / 1000) * 20 + 5) / 100  # Methylation is 0-1
+observed <- 50 + sin(positions / 1000) * 20 + 5
 
-# Smooth
+# positions and observed are your methylation data
 model <- Lowess(
     fraction = 0.1,
     iterations = 3,
@@ -32,7 +41,8 @@ model <- Lowess(
 )
 result <- fit(model, positions, observed)
 
-# Plot
+# Smoothed profile in result$y
+# CI bounds in result$confidence_lower/upper
 plot(positions, observed, pch = ".", col = "gray",
     xlab = "Genomic Position (bp)", ylab = "Methylation Level",
     main = "Methylation Profile Smoothing")
@@ -52,12 +62,14 @@ cat(sprintf(
     "95%% CI: [%.4f, %.4f]\n",
     result$confidence_lower[1], result$confidence_upper[1]
 ))
-#> 95% CI: [0.5168, 0.6874]
+#> 95% CI: [51.6773, 68.7372]
 ```
 
 ------------------------------------------------------------------------
 
 ## ChIP-seq Signal Smoothing
+
+### Application
 
 ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can
 help identify binding regions.
@@ -73,29 +85,17 @@ background level is not inflated by a handful of extreme counts.
 
 library(rfastlowess)
 
-# Deterministic ChIP-seq-style coverage profile
 positions <- seq(0, 99000, by = 1000)
 signal <- 50 + sin(positions / 1000) * 20 + 5
 
-# Smooth
 model <- Lowess(
     fraction = 0.05,
     iterations = 5
 )
 result <- fit(model, positions, signal)
+
+# Identify peaks above threshold
 peak_count <- sum(result$y > 65.0)
-
-plot(positions, signal, pch = 16, cex = 0.4, col = "gray",
-    xlab = "Genomic Position", ylab = "Read Count",
-    main = "ChIP-seq Signal Smoothing")
-lines(result$x, result$y, col = "blue", lwd = 2)
-abline(h = 65.0, col = "red", lty = 2)
-```
-
-![](use-case-genomics_files/figure-html/use_case_genomics_2-1.png)
-
-``` r
-
 cat(sprintf("y[0]: %.4f\n", result$y[1]))
 #> y[0]: 59.9520
 cat(sprintf("Peak count: %d\n", peak_count))
@@ -106,29 +106,64 @@ cat(sprintf("Peak count: %d\n", peak_count))
 
 ## Large Genome Coverage (Streaming)
 
-For whole-genome datasets that do not fit in memory, use the streaming
-adapter.
+For whole-genome data that doesn’t fit in memory:
 
 ``` r
 
 library(rfastlowess)
 
+positions <- seq(0, 10000, by = 10)
+coverage <- 50 + sin(positions / 100) * 20 + 5.0
+
 model <- StreamingLowess(
-    fraction   = 0.05,
+    fraction = 0.05,
     iterations = 3,
     chunk_size = 50,
-    overlap    = 10,
+    overlap = 10,
     merge_strategy = "weighted_average"
 )
 
-# Deterministic whole-genome coverage, processed as a single chunk
-positions <- seq(0, 10000, by = 10)
-coverage <- 50 + sin(positions / 100) * 20 + 5
-result <- process_chunk(model, positions, coverage)
-final <- finalize(model)
-cat(sprintf("y[0]: %.4f\n", final$y[1]))
+process_chunk(model, positions, coverage)
+#> <LowessResult>
+#>   Points:            991 
+#>   Fraction Used:     0.05 
+#>   Iterations Used:   0
+result <- finalize(model)
+cat(sprintf("y[0]: %.4f\n", result$y[1]))
 #> y[0]: 41.2977
 ```
+
+------------------------------------------------------------------------
+
+## Best Practices for Genomic Data
+
+| Consideration            | Recommendation                      |
+|--------------------------|-------------------------------------|
+| **Fraction**             | 0.05–0.15 (preserve local features) |
+| **Iterations**           | 3–5 (handle sequencing outliers)    |
+| **Large data**           | Use streaming mode                  |
+| **Sparse regions**       | Use `boundary_policy="extend"`      |
+| **Multiple chromosomes** | Process separately or ensure sorted |
+
+------------------------------------------------------------------------
+
+## See Also
+
+- [Concepts](https://thisisamirv.github.io/lowess-project/r/articles/concepts.md)
+  — How LOWESS works
+- [`?Lowess`](https://thisisamirv.github.io/lowess-project/r/reference/Lowess.md)
+  — All options
+- [Robustness](https://thisisamirv.github.io/lowess-project/r/articles/robustness.md)
+  — Outlier downweighting in depth
+- [Merge
+  Strategies](https://thisisamirv.github.io/lowess-project/r/articles/merge.md)
+  — Streaming chunk reconciliation
+- [Boundary
+  Handling](https://thisisamirv.github.io/lowess-project/r/articles/boundary.md)
+  — Edge handling for sparse regions
+- [Real-Time
+  Processing](https://thisisamirv.github.io/lowess-project/r/articles/use-case-real-time.md)
+  — For sequencing runs
 
 ``` r
 
@@ -154,7 +189,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] rfastlowess_3.2.1
+#> [1] rfastlowess_4.0.0
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    

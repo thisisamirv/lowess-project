@@ -193,19 +193,96 @@
 </div>
 </div>
 <div class="sect1">
-<h2 id="streamingoptions-builder-streamingoptions-builder"><a class="anchor" href="#streamingoptions-builder-streamingoptions-builder"></a><code>StreamingOptions.builder() StreamingOptions.Builder</code></h2>
+<h2 id="when-to-use"><a class="anchor" href="#when-to-use"></a>When to Use</h2>
 <div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Dataset &gt;100,000 points</p>
+</li>
+<li>
+<p>Memory-constrained environments</p>
+</li>
+<li>
+<p>Batch processing pipelines</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="class"><a class="anchor" href="#class"></a>Class</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="streaminglowess"><a class="anchor" href="#streaminglowess"></a><code>StreamingLowess</code></h3>
+<div class="paragraph">
+<p>The <code>StreamingLowess</code> class processes data in chunks, suitable for very large datasets or streaming applications.</p>
+</div>
+<div class="paragraph">
+<p><strong>Constructor:</strong></p>
+</div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">StreamingOptions options = StreamingOptions.builder()
         .chunkSize(2000)
         .overlap(200)
-        .build();</code></pre>
+        .build();
+
+try (StreamingLowess model = new StreamingLowess(options)) {
+    // ...
+}</code></pre>
 </div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>new StreamingLowess(StreamingOptions options)</code> creates a new streaming model with the given options.</p>
+</li>
+<li>
+<p><code>options</code>: A <code>StreamingOptions</code> instance (exposes all <code>Options</code> settings plus <code>chunkSize</code>, <code>overlap</code>, and <code>mergeStrategy</code>).</p>
+</li>
+</ul>
 </div>
 <div class="paragraph">
-<p><code>StreamingOptions.Builder</code> exposes all the same settings as <a href="api.html" class="xref page"><code>Options.Builder</code></a> (except <code>returnSe</code>, <code>cvFractions</code>/<code>cvMethod</code>/<code>cvK</code>/<code>cvSeed</code>, and <code>backend</code>, which are batch-only), plus:</p>
+<p><strong>Methods:</strong></p>
 </div>
+<div class="sect3">
+<h4 id="processchunkdouble-x-double-y-result"><a class="anchor" href="#processchunkdouble-x-double-y-result"></a><code>processChunk(double[] x, double[] y) Result</code></h4>
+<div class="paragraph">
+<p>Feeds one chunk of data into the model. Each chunk is fit together with the trailing <code>overlap</code> points buffered from the previous call, then only the points that are fully resolved are returned&#8201;&#8212;&#8201;the tail of the chunk (the next <code>overlap</code> points) is held back internally, since it will be refit once the following chunk arrives and its estimate reconciled via <code>mergeStrategy</code>. This is what lets the adapter process a dataset far larger than memory allows, one bounded-size chunk at a time, without ever materializing the whole dataset at once.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Result partial = model.processChunk(x, y);</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="finish-result"><a class="anchor" href="#finish-result"></a><code>finish() Result</code></h4>
+<div class="paragraph">
+<p>Flushes the overlap points still buffered from the last <code>processChunk</code> call. Because each call withholds its tail until the next chunk arrives to resolve it, the final chunk&#8217;s tail would never be emitted otherwise&#8201;&#8212;&#8201;always call <code>finish()</code> once after the last chunk to retrieve it.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Result result = model.finish();</code></pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>StreamingLowess.close()</code> releases native resources. Safe to call multiple times. Implements <code>AutoCloseable</code>.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="options-structure"><a class="anchor" href="#options-structure"></a>Options Structure</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="streamingoptions"><a class="anchor" href="#streamingoptions"></a><code>StreamingOptions</code></h3>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 25%;">
@@ -223,62 +300,632 @@
 </thead>
 <tbody>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fraction</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>0.67</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Smoothing fraction (bandwidth)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>iterations</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>int</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>3</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of robustifying iterations</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>delta</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>NaN</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Interpolation distance (<code>NaN</code> auto-sets it to 0.0 in Streaming, i.e. interpolation disabled)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>weightFunction</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"tricube"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Weight function name</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>robustnessMethod</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"bisquare"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Robustness method name</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>scalingMethod</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"mad"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Residual scaling method</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boundaryPolicy</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"extend"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Boundary handling policy</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>zeroWeightFallback</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"use_local_mean"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Zero-weight handling</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>missing</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"error"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Policy for non-finite (NaN/Infinity) values in each chunk</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>autoConverge</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>NaN</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Auto-convergence tolerance</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnDiagnostics</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Include diagnostics in result</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnResiduals</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Include residuals in result</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnRobustnessWeights</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Include weights in result</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>parallel</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>true</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Enable parallel execution</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>chunkSize</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>int</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>5000</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Number of points processed per chunk.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Data chunk size</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>overlap</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>int</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">library default</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Points shared between consecutive chunks. Negative means "use the library default" (<code>500</code>).</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>chunk_size / 10</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Overlap between chunks</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>mergeStrategy</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>"weighted_average"</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">How overlapping chunk results are combined.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Strategy for blending overlap regions</p></td>
 </tr>
 </tbody>
 </table>
 <div class="paragraph">
-<p><em>See also: <a href="../advanced/merge.html" class="xref page">Merge Strategies</a></em></p>
-</div>
-<div class="imageblock">
-<div class="content">
-<img src="../_images/merge_comparison.svg" alt="Merge Strategies">
+<p>Confidence/prediction intervals, standard errors, cross-validation, GPU <code>backend</code>, <code>customWeights</code>, and <code>returnSorted</code> are Batch-only and not available here; see <a href="api.html" class="xref page">API</a> for those.</p>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="new-streaminglowessstreamingoptions-options"><a class="anchor" href="#new-streaminglowessstreamingoptions-options"></a><code>new StreamingLowess(StreamingOptions options)</code></h2>
+<h2 id="options"><a class="anchor" href="#options"></a>Options</h2>
 <div class="sectionbody">
-
-</div>
-</div>
-<div class="sect1">
-<h2 id="streaminglowess-processchunkdouble-x-double-y-result"><a class="anchor" href="#streaminglowess-processchunkdouble-x-double-y-result"></a><code>StreamingLowess.processChunk(double[] x, double[] y) Result</code></h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="fraction"><a class="anchor" href="#fraction"></a>fraction</h3>
 <div class="paragraph">
-<p>Fits and returns the result for one chunk. Call repeatedly as chunks arrive.</p>
+<p><code>fraction</code> is the most important parameter: it controls the size of the local neighbourhood used at each point.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Range</th>
+<th class="tableblock halign-left valign-top">Effect</th>
+<th class="tableblock halign-left valign-top">Use case</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.1-0.3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Fine detail</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Rapidly changing signals</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.3-0.5</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Balanced</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">General purpose</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.5-0.7</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Heavy smoothing</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Noisy data</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.7-1.0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Very smooth</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Trend extraction</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="iterations"><a class="anchor" href="#iterations"></a>iterations</h3>
+<div class="paragraph">
+<p><code>iterations</code> controls robustness to outliers, at the cost of speed.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Value</th>
+<th class="tableblock halign-left valign-top">Effect</th>
+<th class="tableblock halign-left valign-top">Performance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No robustness</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Fastest</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1-3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Moderate</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Recommended</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4-6</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Strong</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Contaminated data</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">7+</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Very strong</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Heavy outliers</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="delta"><a class="anchor" href="#delta"></a>delta</h3>
+<div class="paragraph">
+<p>Points within <code>delta</code> of each other on the x-axis share the same local fit instead of each computing its own regression&#8201;&#8212;&#8201;an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. <code>NaN</code> (default) auto-sets it to <code>0</code> in Streaming mode, i.e. interpolation is disabled and every point is fit exactly.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="weightfunction"><a class="anchor" href="#weightfunction"></a>weightFunction</h3>
+<div class="paragraph">
+<p><em>See: <a href="../weighting/kernels.html" class="xref page">Weight Functions</a></em></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>"tricube"</code> (default)</p>
+</li>
+<li>
+<p><code>"epanechnikov"</code></p>
+</li>
+<li>
+<p><code>"gaussian"</code></p>
+</li>
+<li>
+<p><code>"uniform"</code> (alias: <code>"boxcar"</code>)</p>
+</li>
+<li>
+<p><code>"biweight"</code> (alias: <code>"bisquare"</code>)</p>
+</li>
+<li>
+<p><code>"triangle"</code> (alias: <code>"triangular"</code>)</p>
+</li>
+<li>
+<p><code>"cosine"</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="robustnessmethod"><a class="anchor" href="#robustnessmethod"></a>robustnessMethod</h3>
+<div class="paragraph">
+<p><em>See: <a href="../weighting/robustness.html" class="xref page">Robustness</a></em></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>"bisquare"</code> (default; alias: <code>"biweight"</code>)</p>
+</li>
+<li>
+<p><code>"huber"</code></p>
+</li>
+<li>
+<p><code>"talwar"</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="scalingmethod"><a class="anchor" href="#scalingmethod"></a>scalingMethod</h3>
+<div class="paragraph">
+<p><em>See: <a href="../weighting/scaling.html" class="xref page">Scaling Methods</a></em></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>"mad"</code> (default; alias: <code>"median_absolute_deviation"</code>)</p>
+</li>
+<li>
+<p><code>"mar"</code> (alias: <code>"median_absolute_residual"</code>)</p>
+</li>
+<li>
+<p><code>"mean"</code> (alias: <code>"mean_absolute_residual"</code>)</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="boundarypolicy"><a class="anchor" href="#boundarypolicy"></a>boundaryPolicy</h3>
+<div class="paragraph">
+<p><em>See: <a href="../advanced/boundary.html" class="xref page">Boundary Handling</a></em></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>"extend"</code> (default; alias: <code>"pad"</code>)</p>
+</li>
+<li>
+<p><code>"reflect"</code> (alias: <code>"mirror"</code>)</p>
+</li>
+<li>
+<p><code>"zero"</code></p>
+</li>
+<li>
+<p><code>"noboundary"</code> (alias: <code>"none"</code>)</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="zeroweightfallback"><a class="anchor" href="#zeroweightfallback"></a>zeroWeightFallback</h3>
+<div class="paragraph">
+<p>Behavior when all neighborhood weights are zero:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Option</th>
+<th class="tableblock halign-left valign-top">Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"use_local_mean"</code> (default; aliases: <code>"local_mean"</code>, <code>"mean"</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Use the mean of the neighborhood</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"return_original"</code> (alias: <code>"original"</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return the original y value</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"return_none"</code> (alias: <code>"none"</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return <code>NaN</code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="missing"><a class="anchor" href="#missing"></a>missing</h3>
+<div class="paragraph">
+<p>Policy for handling non-finite (NaN/Infinity) values within each chunk:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Option</th>
+<th class="tableblock halign-left valign-top">Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"error"</code> (default)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Throw if any value in the chunk is non-finite</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"drop"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Silently remove rows where <code>x</code> or <code>y</code> is non-finite before merging the chunk with the overlap buffer</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+A length mismatch between <code>x</code> and <code>y</code> always throws, even under <code>"drop"</code>.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="autoconverge"><a class="anchor" href="#autoconverge"></a>autoConverge</h3>
+<div class="paragraph">
+<p><em>See: <a href="../weighting/robustness.html#_auto_convergence" class="xref page">Robustness</a></em></p>
+</div>
+<div class="paragraph">
+<p>Convergence tolerance for early stopping of robustness iterations. <code>NaN</code> (default) disables early stopping.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="returndiagnostics"><a class="anchor" href="#returndiagnostics"></a>returnDiagnostics</h3>
+<div class="paragraph">
+<p>Include a <code>Diagnostics</code> object (RMSE, MAE, R², residual_sd) in the result. <code>effectiveDf</code>/<code>aic</code>/<code>aicc</code> require standard errors, which are Batch-only, so they&#8217;re always empty here.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>false</code> (default) — leaves <code>Result.diagnostics()</code> empty</p>
+</li>
+<li>
+<p><code>true</code> — populates <code>Result.diagnostics()</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="returnresiduals"><a class="anchor" href="#returnresiduals"></a>returnResiduals</h3>
+<div class="paragraph">
+<p>Include per-point residuals (<code>y - fitted</code>) in the result.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>false</code> (default) — leaves <code>Result.residuals()</code> empty</p>
+</li>
+<li>
+<p><code>true</code> — populates <code>Result.residuals()</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="returnrobustnessweights"><a class="anchor" href="#returnrobustnessweights"></a>returnRobustnessWeights</h3>
+<div class="paragraph">
+<p>Include the final per-point robustness weights (from the last robustness iteration) in the result.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>false</code> (default) — leaves <code>Result.robustnessWeights()</code> empty</p>
+</li>
+<li>
+<p><code>true</code> — populates <code>Result.robustnessWeights()</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="parallel"><a class="anchor" href="#parallel"></a>parallel</h3>
+<div class="paragraph">
+<p>Enable multi-threaded execution via Rayon.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>true</code> (default) — parallelizes the local regression fits across CPU cores</p>
+</li>
+<li>
+<p><code>false</code> — forces single-threaded execution</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="chunksize"><a class="anchor" href="#chunksize"></a>chunkSize</h3>
+<div class="paragraph">
+<p>Number of points processed per chunk. Larger chunks reduce per-chunk overhead and give each local fit more surrounding context, at the cost of higher peak memory; smaller chunks bound memory tightly but increase the fraction of points that fall in overlap regions. A good starting point is balancing available memory against how much processing overhead per chunk is acceptable&#8201;&#8212;&#8201;match it to your file-read buffer or message-batch size to avoid unnecessary copying.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="overlap"><a class="anchor" href="#overlap"></a>overlap</h3>
+<div class="paragraph">
+<p>Number of points retained from the previous chunk as context, so the neighbourhood at chunk boundaries isn&#8217;t artificially truncated. Points inside the overlap zone are fitted twice (once by each chunk) and reconciled via <code>mergeStrategy</code>. A good starting point is 10-20% of <code>chunkSize</code>: too little overlap causes visible boundary artefacts, while too much wastes computation refitting the same points twice.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>-1</code> (default) — computes <code>chunk_size / 10</code>, clamped to at least 1 and less than <code>chunkSize</code></p>
+</li>
+<li>
+<p>Any integer <code>&gt;= 1</code> and <code>&lt; chunkSize</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="mergestrategy"><a class="anchor" href="#mergestrategy"></a>mergeStrategy</h3>
+<div class="paragraph">
+<p><em>See: <a href="../advanced/merge.html" class="xref page">Merge Strategies</a></em></p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Strategy</th>
+<th class="tableblock halign-left valign-top">Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"weighted_average"</code> (default)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Distance-weighted blend</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"average"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Average overlapping values</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"take_first"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Keep left chunk values</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"take_last"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Keep right chunk values</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="streaminglowess-finish-result"><a class="anchor" href="#streaminglowess-finish-result"></a><code>StreamingLowess.finish() Result</code></h2>
+<h2 id="result-structure"><a class="anchor" href="#result-structure"></a>Result Structure</h2>
 <div class="sectionbody">
+<div class="sect2">
+<h3 id="result"><a class="anchor" href="#result"></a><code>Result</code></h3>
 <div class="paragraph">
-<p>Flushes any buffered data and returns the final merged result. Call once after the last <code>processChunk</code>.</p>
+<p>Returned by <code>processChunk</code> and <code>finish</code>.</p>
 </div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Accessor</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Populated when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>x()</code>, <code>y()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double[]</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Always.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>standardErrors()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;double[]&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Always empty (Batch only)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>confidenceLower()</code>, <code>confidenceUpper()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;double[]&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Always empty (Batch only)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>predictionLower()</code>, <code>predictionUpper()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;double[]&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Always empty (Batch only)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>residuals()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;double[]&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnResiduals</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>robustnessWeights()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;double[]&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnRobustnessWeights</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cvScores()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;double[]&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Always empty (Batch only)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fractionUsed()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Always.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>iterationsUsed()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>OptionalInt</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Always (empty if not available).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>diagnostics()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;Diagnostics&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnDiagnostics</code></p></td>
+</tr>
+</tbody>
+</table>
 </div>
-</div>
-<div class="sect1">
-<h2 id="streaminglowess-close"><a class="anchor" href="#streaminglowess-close"></a><code>StreamingLowess.close()</code></h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Releases native resources. Safe to call multiple times. Implements <code>AutoCloseable</code>.</p>
+<div class="sect2">
+<h3 id="diagnostics"><a class="anchor" href="#diagnostics"></a><code>Diagnostics</code></h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Accessor</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>rmse()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Root Mean Squared Error</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>mae()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Mean Absolute Error</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>rSquared()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">R-squared</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>residualSd()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Residual standard deviation</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>effectiveDf()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;Double&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Always empty (requires standard errors, Batch only)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>aic()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;Double&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Always empty (requires <code>effectiveDf</code>, Batch only)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>aicc()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;Double&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Always empty (requires <code>effectiveDf</code>, Batch only)</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 </div>

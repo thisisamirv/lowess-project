@@ -22,6 +22,170 @@ Execution mode comparison
 | Data too large for memory or arrives in chunks | Streaming |
 | Data arrives point-by-point in real time       | Online    |
 
+------------------------------------------------------------------------
+
+## Batch Adapter
+
+Standard mode for complete datasets. **Supports all features.**
+
+### When to Use
+
+- Dataset fits in memory
+- Need intervals, cross-validation, or diagnostics
+- Processing complete files
+
+### Example
+
+``` r
+
+library(rfastlowess)
+set.seed(42)
+x <- seq(0, 2 * pi, length.out = 100)
+y <- sin(x) + rnorm(100, sd = 0.3)
+
+model <- Lowess(
+    fraction = 0.5,
+    iterations = 3,
+    confidence_intervals = 0.95,
+    prediction_intervals = 0.95,
+    return_diagnostics = TRUE,
+    parallel = TRUE
+)
+result <- fit(model, x, y)
+cat("95% CI at midpoint: [", result$confidence_lower[50], ", ",
+    result$confidence_upper[50], "]\n")
+#> 95% CI at midpoint: [ -0.04604079 ,  0.1249563 ]
+```
+
+------------------------------------------------------------------------
+
+## Streaming Adapter
+
+Process large datasets in chunks with configurable overlap.
+
+### When to Use
+
+- Dataset \>100,000 points
+- Memory-constrained environments
+- Batch processing pipelines
+
+### Parameters
+
+| Parameter        | Default              | Description            |
+|------------------|----------------------|------------------------|
+| `chunk_size`     | 5000                 | Points per chunk       |
+| `overlap`        | `chunk_size / 10`    | Overlap between chunks |
+| `merge_strategy` | `"weighted_average"` | How to merge overlaps  |
+
+### Merge Strategies
+
+| Strategy             | Behavior                   |
+|----------------------|----------------------------|
+| `"average"`          | Average overlapping values |
+| `"weighted_average"` | Distance-weighted blend    |
+| `"take_first"`       | Keep left chunk values     |
+| `"take_last"`        | Keep right chunk values    |
+
+### Example
+
+``` r
+
+library(rfastlowess)
+x <- seq(0, 2 * pi, length.out = 100)
+y <- sin(x) + 0.1
+
+model <- StreamingLowess(
+    fraction = 0.3,
+    iterations = 2,
+    chunk_size = 5000,
+    overlap = 500,
+    merge_strategy = "average"
+)
+process_chunk(model, x, y)
+#> <LowessResult>
+#>   Points:            0 
+#>   Fraction Used:     0.3 
+#>   Iterations Used:   0
+result <- finalize(model)
+cat("Smoothed y[0]:", result$y[1], "\n")
+#> Smoothed y[0]: 0.2578452
+```
+
+> **Always call finalize():** The streaming adapter buffers overlap
+> data. Call `finalize(model)` after the last chunk to retrieve the
+> buffered tail.
+
+------------------------------------------------------------------------
+
+## Online Adapter
+
+Incremental updates with a sliding window for real-time data.
+
+### When to Use
+
+- Data arrives incrementally (sensors, streams)
+- Need real-time smoothed values
+- Fixed memory budget
+
+### Parameters
+
+| Parameter         | Default         | Description                 |
+|-------------------|-----------------|-----------------------------|
+| `window_capacity` | 1000            | Max points in window        |
+| `min_points`      | 2               | Points before output starts |
+| `update_mode`     | `"incremental"` | Update strategy             |
+
+### Update Modes
+
+| Mode            | Behavior                  | Speed         |
+|-----------------|---------------------------|---------------|
+| `"incremental"` | Update only affected fits | Faster        |
+| `"full"`        | Recompute entire window   | More accurate |
+
+### Example
+
+``` r
+
+library(rfastlowess)
+x <- seq(0, 2 * pi, length.out = 100)
+y <- sin(x) + 0.1
+
+model <- OnlineLowess(
+    fraction = 0.2,
+    iterations = 1,
+    window_capacity = 100,
+    min_points = 5,
+    update_mode = "incremental"
+)
+shown <- 0
+for (i in seq_along(x)) {
+    result <- add_point(model, x[i], y[i])
+    if (!is.null(result) && shown < 5) {
+        cat("Current smoothed value:", result$y, "\n")
+        shown <- shown + 1
+    }
+}
+#> Current smoothed value: 0.351148 
+#> Current smoothed value: 0.4120334 
+#> Current smoothed value: 0.4716625 
+#> Current smoothed value: 0.5297949 
+#> Current smoothed value: 0.5861967
+```
+
+------------------------------------------------------------------------
+
+## Feature Comparison
+
+| Feature              | Batch | Streaming | Online |
+|----------------------|-------|-----------|--------|
+| Confidence intervals | ✓     | ✗         | ✗      |
+| Prediction intervals | ✓     | ✗         | ✗      |
+| Cross-validation     | ✓     | ✗         | ✗      |
+| Diagnostics          | ✓     | ✓         | ✗      |
+| Residuals            | ✓     | ✓         | ✓      |
+| Robustness weights   | ✓     | ✓         | ✓      |
+| Parallel execution   | ✓     | ✓         | ✗      |
+
 ``` r
 
 sessionInfo()
@@ -44,6 +208,9 @@ sessionInfo()
 #> 
 #> attached base packages:
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
+#> 
+#> other attached packages:
+#> [1] rfastlowess_4.0.0
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    

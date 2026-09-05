@@ -1,19 +1,22 @@
 # Use Case: Time Series Analysis
 
+LOWESS for trend extraction and temporal smoothing.
+
 ## Overview
 
-LOWESS provides flexible trend extraction from time series without
-parametric assumptions. It handles irregular sampling, noise, and
-outliers naturally.
+Time series data often contains noise, seasonality, and trends. LOWESS
+provides flexible trend extraction without parametric assumptions.
 
 ------------------------------------------------------------------------
 
 ## Basic Trend Extraction
 
-`fraction = 0.1` sizes the neighbourhood to 10% of the data at each
+`fraction = 0.1` sizes the neighbourhood as 10% of the data at each
 evaluation point — narrow enough to follow a slowly varying trend
 without smearing periodic variation. Three robustness `iterations`
-down-weight noise spikes.
+down-weight noise spikes so they cannot bias the fitted curve; this is
+especially important when the signal-to-noise ratio is low or when
+occasional outliers are expected.
 
 ``` r
 
@@ -24,19 +27,12 @@ t <- seq(0, 100, length.out = n)
 i <- 0:(n - 1)
 y <- 10 + 0.5 * t + 3 * sin(t / 10) + ((i * 7 + 3) %% 1.7 - 0.85) * 3
 
-model <- Lowess(fraction = 0.1, iterations = 3)
+# t and y are your time series vectors
+model <- Lowess(
+    fraction = 0.1,
+    iterations = 3
+)
 result <- fit(model, t, y)
-
-plot(t, y, col = "gray", pch = ".",
-    xlab = "Time", ylab = "Value", main = "Trend Extraction")
-lines(result$x, result$y, col = "blue", lwd = 2)
-legend("topleft", c("Observed", "Trend (LOWESS)"),
-        pch = c(1, NA), lty = c(NA, 1), col = c("gray", "blue"))
-```
-
-![](use-case-time-series_files/figure-html/use_case_time_series_1-1.png)
-
-``` r
 
 cat(sprintf("y[0]: %.4f\n", result$y[1]))
 #> y[0]: 11.3216
@@ -44,88 +40,48 @@ cat(sprintf("y[0]: %.4f\n", result$y[1]))
 
 ------------------------------------------------------------------------
 
-## Seasonal Decomposition
+## Detrending
 
-Extract the trend component and compute the residual to inspect
-seasonality.
+Remove trend to analyze residual patterns.
+
+Setting `return_residuals = TRUE` stores `observed - smoothed` alongside
+the smooth. A slightly wider `fraction = 0.3` produces a smoother
+baseline trend, so short-duration oscillations end up in the residuals
+rather than being absorbed into the trend component. The residual series
+is then ready for spectral analysis, seasonality detection, or
+change-point methods.
 
 ``` r
 
 library(rfastlowess)
-set.seed(42)
 
-# Simulate monthly data with trend + seasonality + noise
-t <- 1:120  # 10 years monthly
-trend <- 100 + 0.5 * t
-seasonal <- 15 * sin(2 * pi * t / 12)
-noise <- rnorm(120, sd = 5)
-y <- trend + seasonal + noise
+n <- 100
+t <- seq(0, 2 * pi, length.out = n)
+y <- sin(t) + 0.1
 
-# Extract trend with large fraction (heavy smoothing)
-model <- Lowess(fraction = 0.4, iterations = 2)
+model <- Lowess(
+    fraction = 0.3,
+    iterations = 3,
+    return_residuals = TRUE
+)
 result <- fit(model, t, y)
 
-# Residual = observed - trend (should show seasonality)
-residual <- y - result$y
-
-par(mfrow = c(2, 1), mar = c(4, 4, 2, 0.5))
-plot(t, y, type = "l", col = "gray",
-    main = "Original + LOWESS Trend", xlab = "Month", ylab = "Value")
-lines(result$x, result$y, col = "blue", lwd = 2)
-
-plot(t, residual, type = "l", col = "darkgreen",
-    main = "Detrended Residual (Seasonal Component)",
-    xlab = "Month", ylab = "Residual")
-abline(h = 0, lty = 2, col = "red")
-```
-
-![](use-case-time-series_files/figure-html/use_case_time_series_2-1.png)
-
-``` r
-
-par(mfrow = c(1, 1))
+trend <- result$y
+detrended <- result$residuals
+cat(sprintf("Trend y[0]: %.4f  residual: %.4f\n", trend[1], detrended[1]))
+#> Trend y[0]: 0.2582  residual: -0.1582
 ```
 
 ------------------------------------------------------------------------
 
-## Irregular Time Grids
-
-LOWESS handles irregularly sampled data naturally — no interpolation
-needed.
-
-``` r
-
-library(rfastlowess)
-
-t_irregular <- vapply(
-    0:99, function(i) i * 1.0 + (i * 31 %% 10) * 0.1, numeric(1)
-)
-y_irregular <- 10 + 0.3 * t_irregular + 2.0 * sin(t_irregular * 0.1)
-
-model <- Lowess(fraction = 0.2, iterations = 2)
-result <- fit(model, t_irregular, y_irregular)
-
-plot(t_irregular, y_irregular, pch = 16, cex = 0.4, col = "gray",
-    xlab = "Time", ylab = "Value", main = "Irregularly Sampled Time Series")
-lines(result$x, result$y, col = "blue", lwd = 2)
-```
-
-![](use-case-time-series_files/figure-html/use_case_time_series_3-1.png)
-
-``` r
-
-cat(sprintf("y[0]: %.4f\n", result$y[1]))
-#> y[0]: 11.3662
-```
-
-------------------------------------------------------------------------
-
-## Uncertainty Bands for Forecasting Context
+## Forecasting with Prediction Intervals
 
 Prediction intervals widen the uncertainty band to include both the
-uncertainty in the fitted curve and the expected scatter of new
-observations. `fraction = 0.2` offers a balance between local detail and
-stable interval width.
+uncertainty in the fitted curve (confidence interval) and the expected
+scatter of new observations around it. `fraction = 0.2` offers a balance
+between local detail and stable interval width — too small a fraction
+produces jagged interval edges; too large a fraction underestimates
+local variance near turning points.
 
 ``` r
 
@@ -143,31 +99,110 @@ model <- Lowess(
 )
 result <- fit(model, t, y)
 
-plot(t, y, pch = ".", col = "gray",
-    xlab = "Time", ylab = "Value",
-    main = "Trend with 95% Confidence and Prediction Intervals")
-polygon(c(result$x, rev(result$x)),
-        c(result$prediction_upper, rev(result$prediction_lower)),
-        col = rgb(0, 0, 1, 0.08), border = NA)
-polygon(c(result$x, rev(result$x)),
-        c(result$confidence_upper, rev(result$confidence_lower)),
-        col = rgb(0, 0, 1, 0.20), border = NA)
-lines(result$x, result$y, col = "blue", lwd = 2)
-legend("topleft", c("PI 95%", "CI 95%", "Trend"),
-        fill = c(rgb(0, 0, 1, 0.08), rgb(0, 0, 1, 0.20), NA),
-        lty  = c(NA, NA, 1), col = c(NA, NA, "blue"), border = NA)
-```
-
-![](use-case-time-series_files/figure-html/use_case_time_series_4-1.png)
-
-``` r
-
 cat(sprintf(
     "95%% PI: [%.4f, %.4f]\n",
     result$prediction_lower[1], result$prediction_upper[1]
 ))
 #> 95% PI: [0.1580, 0.2909]
 ```
+
+------------------------------------------------------------------------
+
+## Handling Missing Data
+
+LOWESS naturally handles irregular time sampling:
+
+``` r
+
+library(rfastlowess)
+
+t_irregular <- vapply(
+    0:99, function(i) i * 1.0 + (i * 31 %% 10) * 0.1, numeric(1)
+)
+y_irregular <- 10 + 0.3 * t_irregular + 2.0 * sin(t_irregular * 0.1)
+
+# No special handling needed for irregular spacing
+model <- Lowess(fraction = 0.2)
+result <- fit(model, t_irregular, y_irregular)
+cat(sprintf("y[0]: %.4f\n", result$y[1]))
+#> y[0]: 11.4324
+```
+
+------------------------------------------------------------------------
+
+## Multi-Scale Analysis
+
+Use different fractions to extract features at different scales:
+
+``` r
+
+library(rfastlowess)
+
+n <- 100
+t <- seq(0, 2 * pi, length.out = n)
+y <- sin(t) + 0.1
+
+scales <- c(0.05, 0.2, 0.5)
+trends <- lapply(scales, function(f) {
+    model <- Lowess(fraction = f)
+    fit(model, t, y)$y
+})
+cat("Trend y[0] values:", vapply(trends, function(tr) tr[1], numeric(1)), "\n")
+#> Trend y[0] values: 0.131712 0.2244466 0.3343704
+```
+
+------------------------------------------------------------------------
+
+## Gene Expression Time Course
+
+Biological application:
+
+``` r
+
+library(rfastlowess)
+
+hours <- seq(0, 24, by = 0.5)
+i <- seq_along(hours) - 1
+expression <- 100 * (1 + 0.5 * sin(hours * pi / 12)) +
+    ((i * 7 + 3) %% 1.7 - 0.85) * 10
+
+model <- Lowess(
+    fraction = 0.3,
+    iterations = 3,
+    confidence_intervals = 0.95,
+    return_diagnostics = TRUE
+)
+result <- fit(model, hours, expression)
+cat(sprintf("R2: %.3f\n", result$diagnostics$r_squared))
+#> R2: 0.973
+```
+
+------------------------------------------------------------------------
+
+## Choosing Fraction for Time Series
+
+| Data Type             | Recommended Fraction | Rationale                    |
+|-----------------------|----------------------|------------------------------|
+| Daily data (years)    | 0.3–0.5              | Capture annual trends        |
+| Hourly data (days)    | 0.1–0.2              | Capture daily patterns       |
+| Sensor data (minutes) | 0.05–0.1             | Preserve short-term features |
+| Noisy data            | Higher               | Reduce noise impact          |
+| Clean data            | Lower                | Preserve detail              |
+
+------------------------------------------------------------------------
+
+## See Also
+
+- [Real-Time
+  Processing](https://thisisamirv.github.io/lowess-project/r/articles/use-case-real-time.md)
+  — For streaming time series
+- [Cross-Validation](https://thisisamirv.github.io/lowess-project/r/articles/cross-validation.md)
+  — Optimal fraction selection
+- [Boundary
+  Handling](https://thisisamirv.github.io/lowess-project/r/articles/boundary.md)
+  — Edge bias in trend extraction
+- [`?Lowess`](https://thisisamirv.github.io/lowess-project/r/reference/Lowess.md)
+  — Full parameter reference
 
 ``` r
 
@@ -193,7 +228,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] rfastlowess_3.2.1
+#> [1] rfastlowess_4.0.0
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    

@@ -1,5 +1,7 @@
 # LOWESS Concepts
 
+Understanding how LOWESS works and when to use it.
+
 ## What is LOWESS?
 
 **LOWESS** (Locally Weighted Scatterplot Smoothing) is a nonparametric
@@ -54,8 +56,9 @@ Effect of the fraction parameter
 | **0.5–0.7** | Heavy smoothing                   | Noisy data, trend extraction |
 | **0.7–1.0** | Very smooth                       | Strong noise, global trends  |
 
-> **Tip:** Start with `fraction=0.67` (the default) and adjust based on
-> visual inspection. Use cross-validation for automated selection.
+> **Rule of Thumb:** Start with `fraction=0.67` (the default) and adjust
+> based on visual inspection. Use cross-validation for automated
+> selection.
 
 ------------------------------------------------------------------------
 
@@ -99,17 +102,21 @@ Confidence and prediction intervals
 
 Choose the right mode based on your use case:
 
-| Mode          | Use Case          | Memory         | Features              |
-|---------------|-------------------|----------------|-----------------------|
-| **Batch**     | Complete datasets | Entire dataset | All features          |
-| **Streaming** | \>100K points     | One chunk      | Residuals, robustness |
-| **Online**    | Real-time data    | Fixed window   | Incremental updates   |
+| Mode          | Use Case                 | Memory         | Features              |
+|---------------|--------------------------|----------------|-----------------------|
+| **Batch**     | Complete datasets        | Entire dataset | All features          |
+| **Streaming** | Large files (\>100K pts) | One chunk      | Residuals, robustness |
+| **Online**    | Real-time data           | Fixed window   | Incremental updates   |
 
-Decision guide:
+------------------------------------------------------------------------
 
-- Data fits in memory and no real-time requirement → **Batch**
-- Data does not fit in memory → **Streaming**
-- Real-time / point-by-point processing needed → **Online**
+## Quick Decision Guide
+
+| Situation                                      | Mode      |
+|------------------------------------------------|-----------|
+| Data fits in memory; needs intervals or CV     | Batch     |
+| Data too large for memory or arrives in chunks | Streaming |
+| Data arrives point-by-point in real time       | Online    |
 
 ------------------------------------------------------------------------
 
@@ -122,6 +129,30 @@ Decision guide:
 | Robust to outliers         | ✓      | ✗                     | ✗              |
 | Uncertainty estimates      | ✓      | ✓                     | ✗              |
 | Handles irregular sampling | ✓      | ✓                     | ✗              |
+
+------------------------------------------------------------------------
+
+## Next Steps
+
+- [Quick
+  Start](https://thisisamirv.github.io/lowess-project/r/articles/quickstart.md)
+  — See it in action
+- [`?Lowess`](https://thisisamirv.github.io/lowess-project/r/reference/Lowess.md)
+  — All configuration options
+- [Boundary
+  Handling](https://thisisamirv.github.io/lowess-project/r/articles/boundary.md)
+  — Edge bias reduction strategies
+- [Robustness](https://thisisamirv.github.io/lowess-project/r/articles/robustness.md)
+  — Outlier downweighting methods
+- [Scaling
+  Methods](https://thisisamirv.github.io/lowess-project/r/articles/scaling.md)
+  — MAD, MAR, Mean scale estimation
+- [Merge
+  Strategies](https://thisisamirv.github.io/lowess-project/r/articles/merge.md)
+  — Chunk reconciliation in Streaming mode
+- [Use Case
+  Tutorials](https://thisisamirv.github.io/lowess-project/r/articles/use-case-genomics.md)
+  — Application-specific guides
 
 ``` r
 

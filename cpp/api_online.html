@@ -143,17 +143,18 @@ Online Adapter</div></div>
 <div class="line">    <span class="keywordflow">if</span> (r3.has_value()) { std::cout &lt;&lt; <span class="stringliteral">&quot;y: &quot;</span> &lt;&lt; r3.y() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>; }</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-<div class="ttc" id="aclassfastlowess_1_1OnlineLowess_html"><div class="ttname"><a href="classfastlowess_1_1OnlineLowess.html">fastlowess::OnlineLowess</a></div><div class="ttdoc">Online LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:584</div></div>
+<div class="ttc" id="aclassfastlowess_1_1OnlineLowess_html"><div class="ttname"><a href="classfastlowess_1_1OnlineLowess.html">fastlowess::OnlineLowess</a></div><div class="ttdoc">Online LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:591</div></div>
 <div class="ttc" id="afastlowess_8hpp_html"><div class="ttname"><a href="fastlowess_8hpp.html">fastlowess.hpp</a></div><div class="ttdoc">C++ wrapper for fastLowess library.</div></div>
-<div class="ttc" id="astructfastlowess_1_1OnlineOptions_html"><div class="ttname"><a href="structfastlowess_1_1OnlineOptions.html">fastlowess::OnlineOptions</a></div><div class="ttdoc">Options for online LOWESS.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:168</div></div>
-<div class="ttc" id="astructfastlowess_1_1OnlineOptions_html_a6acb9ee334a76cd3701228b0cab4ac62"><div class="ttname"><a href="structfastlowess_1_1OnlineOptions.html#a6acb9ee334a76cd3701228b0cab4ac62">fastlowess::OnlineOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdoc">Smoothing fraction (0, 1].</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:169</div></div>
-<div class="ttc" id="astructfastlowess_1_1OnlineOptions_html_a749706bb2b58779a0ef79c22d0683d32"><div class="ttname"><a href="structfastlowess_1_1OnlineOptions.html#a749706bb2b58779a0ef79c22d0683d32">fastlowess::OnlineOptions::min_points</a></div><div class="ttdeci">int min_points</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:191</div></div>
-<div class="ttc" id="astructfastlowess_1_1OnlineOptions_html_ab1a4b461877e41a676ab9b555995bfab"><div class="ttname"><a href="structfastlowess_1_1OnlineOptions.html#ab1a4b461877e41a676ab9b555995bfab">fastlowess::OnlineOptions::window_capacity</a></div><div class="ttdeci">int window_capacity</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:190</div></div>
+<div class="ttc" id="astructfastlowess_1_1OnlineOptions_html"><div class="ttname"><a href="structfastlowess_1_1OnlineOptions.html">fastlowess::OnlineOptions</a></div><div class="ttdoc">Options for online LOWESS.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:178</div></div>
+<div class="ttc" id="astructfastlowess_1_1OnlineOptions_html_a6acb9ee334a76cd3701228b0cab4ac62"><div class="ttname"><a href="structfastlowess_1_1OnlineOptions.html#a6acb9ee334a76cd3701228b0cab4ac62">fastlowess::OnlineOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdoc">Smoothing fraction (0, 1].</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:179</div></div>
+<div class="ttc" id="astructfastlowess_1_1OnlineOptions_html_a749706bb2b58779a0ef79c22d0683d32"><div class="ttname"><a href="structfastlowess_1_1OnlineOptions.html#a749706bb2b58779a0ef79c22d0683d32">fastlowess::OnlineOptions::min_points</a></div><div class="ttdeci">int min_points</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:198</div></div>
+<div class="ttc" id="astructfastlowess_1_1OnlineOptions_html_ab1a4b461877e41a676ab9b555995bfab"><div class="ttname"><a href="structfastlowess_1_1OnlineOptions.html#ab1a4b461877e41a676ab9b555995bfab">fastlowess::OnlineOptions::window_capacity</a></div><div class="ttdeci">int window_capacity</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:197</div></div>
 </div><!-- fragment --><div class="fragment"><div class="line">y: 0.226592</div>
 </div><!-- fragment --><ul>
 <li><code>options</code>: An <code>OnlineOptions</code> struct (inherits from <code>LowessOptions</code>) with <code>window_capacity</code>, <code>min_points</code>, and <code>update_mode</code>.</li>
 </ul>
-<p><b>Methods:</b></p>
+<h4><code>add_point(x, y)</code></h4>
+<p>Adds a single point to the sliding window and returns the smoothed value for that point, or a result with <code>has_value() == false</code> while the window is still filling up (fewer than <code>min_points</code> seen so far). Once the window reaches <code>window_capacity</code>, each new point evicts the oldest one, so memory stays bounded regardless of how much history has passed through. <code>update_mode</code> controls how much work each call does: <code>"incremental"</code> re-fits only the newest point, while <code>"full"</code> re-smooths the entire window for a more accurate but slower result.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;<a class="code" href="fastlowess_8hpp.html">fastlowess.hpp</a>&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
@@ -186,22 +187,149 @@ Online Adapter</div></div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">0.226592</div>
-</div><!-- fragment --><ul>
-<li>Adds a single point to the sliding window. Returns <code>Expected&lt;OnlineOutput&gt;</code> — check <code>has_value()</code> to see whether the window is ready.</li>
-</ul>
-<h2>Options Structure</h2>
-<h3>OnlineOptions (inherits LowessOptions)</h3>
+</div><!-- fragment --><h2>Options Structure</h2>
+<h3>OnlineOptions</h3>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Field   </th><th class="markdownTableHeadNone">Type   </th><th class="markdownTableHeadNone">Default   </th><th class="markdownTableHeadNone">Description    </th></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>window_capacity</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone">1000   </td><td class="markdownTableBodyNone">Max points in sliding window    </td></tr>
+<td class="markdownTableBodyNone"><code>fraction</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">0.67   </td><td class="markdownTableBodyNone">Smoothing fraction (bandwidth)    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>min_points</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone">2   </td><td class="markdownTableBodyNone">Min points before smoothing starts    </td></tr>
+<td class="markdownTableBodyNone"><code>iterations</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone">3   </td><td class="markdownTableBodyNone">Number of robustifying iterations    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>update_mode</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone">"incremental"   </td><td class="markdownTableBodyNone">Update mode (<code>"full"</code> or <code>"incremental"</code>)    </td></tr>
+<td class="markdownTableBodyNone"><code>delta</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">NaN   </td><td class="markdownTableBodyNone">Interpolation distance (<code>NaN</code> auto-sets it to 0.0 in Online, i.e. interpolation disabled)    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>parallel</code>   </td><td class="markdownTableBodyNone"><code>bool</code>   </td><td class="markdownTableBodyNone"><code>false</code>   </td><td class="markdownTableBodyNone">Enable parallel execution (off by default; online LOWESS fits one point at a time)   </td></tr>
+<td class="markdownTableBodyNone"><code>weight_function</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone">"tricube"   </td><td class="markdownTableBodyNone">Weight function name    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>robustness_method</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone">"bisquare"   </td><td class="markdownTableBodyNone">Robustness method name    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>scaling_method</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone">"mad"   </td><td class="markdownTableBodyNone">Residual scaling method    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>boundary_policy</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone">"extend"   </td><td class="markdownTableBodyNone">Boundary handling policy    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>zero_weight_fallback</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone">"use_local_mean"   </td><td class="markdownTableBodyNone">Zero-weight handling    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>missing</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone">"error"   </td><td class="markdownTableBodyNone">Policy for non-finite (NaN/Inf) values in each point    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>auto_converge</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">NaN   </td><td class="markdownTableBodyNone">Auto-convergence tolerance    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>return_robustness_weights</code>   </td><td class="markdownTableBodyNone"><code>bool</code>   </td><td class="markdownTableBodyNone">false   </td><td class="markdownTableBodyNone">Include <code>robustness_weight()</code> in result    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>window_capacity</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone">1000   </td><td class="markdownTableBodyNone">Max points in sliding window    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>min_points</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone">2   </td><td class="markdownTableBodyNone">Min points before smoothing starts    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>update_mode</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone">"incremental"   </td><td class="markdownTableBodyNone">Update mode (<code>"full"</code> or <code>"incremental"</code>)   </td></tr>
+</table>
+<p>Confidence/prediction intervals, standard errors, cross-validation, GPU <code>backend</code>, <code>custom_weights</code>, <code>return_sorted</code>, <code>return_diagnostics</code>, <code>return_residuals</code>, and <code>parallel</code> are Batch-only (or Batch/Streaming-only) and not available here; see <a class="el" href="api_8md.html">fastLowess</a> for those.</p>
+<h2>Options</h2>
+<h3>fraction</h3>
+<p><code>fraction</code> is the most important parameter: it controls the size of the local neighbourhood used at each point.</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Range   </th><th class="markdownTableHeadNone">Effect   </th><th class="markdownTableHeadNone">Use case    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">0.1-0.3   </td><td class="markdownTableBodyNone">Fine detail   </td><td class="markdownTableBodyNone">Rapidly changing signals    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">0.3-0.5   </td><td class="markdownTableBodyNone">Balanced   </td><td class="markdownTableBodyNone">General purpose    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">0.5-0.7   </td><td class="markdownTableBodyNone">Heavy smoothing   </td><td class="markdownTableBodyNone">Noisy data    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">0.7-1.0   </td><td class="markdownTableBodyNone">Very smooth   </td><td class="markdownTableBodyNone">Trend extraction   </td></tr>
+</table>
+<h3>iterations</h3>
+<p><code>iterations</code> controls robustness to outliers, at the cost of speed.</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Value   </th><th class="markdownTableHeadNone">Effect   </th><th class="markdownTableHeadNone">Performance    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">0   </td><td class="markdownTableBodyNone">No robustness   </td><td class="markdownTableBodyNone">Fastest    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">1-3   </td><td class="markdownTableBodyNone">Moderate   </td><td class="markdownTableBodyNone">Recommended    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">4-6   </td><td class="markdownTableBodyNone">Strong   </td><td class="markdownTableBodyNone">Contaminated data    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">7+   </td><td class="markdownTableBodyNone">Very strong   </td><td class="markdownTableBodyNone">Heavy outliers   </td></tr>
+</table>
+<h3>delta</h3>
+<p>Points within <code>delta</code> of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. <code>NaN</code> (default) auto-sets it to <code>0</code> in Online mode, i.e. interpolation is disabled and every point is fit exactly.</p>
+<h3>weight_function</h3>
+<p><em>See: <a class="el" href="kernels_8md.html">Weight Functions</a></em></p>
+<ul>
+<li><code>"tricube"</code> (default)</li>
+<li><code>"epanechnikov"</code></li>
+<li><code>"gaussian"</code></li>
+<li><code>"uniform"</code> (alias: <code>"boxcar"</code>)</li>
+<li><code>"biweight"</code> (alias: <code>"bisquare"</code>)</li>
+<li><code>"triangle"</code> (alias: <code>"triangular"</code>)</li>
+<li><code>"cosine"</code></li>
+</ul>
+<h3>robustness_method</h3>
+<p><em>See: <a class="el" href="robustness_8md.html">Robustness</a></em></p>
+<ul>
+<li><code>"bisquare"</code> (default; alias: <code>"biweight"</code>)</li>
+<li><code>"huber"</code></li>
+<li><code>"talwar"</code></li>
+</ul>
+<h3>scaling_method</h3>
+<p><em>See: <a class="el" href="scaling_8md.html">Scaling Methods</a></em></p>
+<ul>
+<li><code>"mad"</code> (default; alias: <code>"median_absolute_deviation"</code>)</li>
+<li><code>"mar"</code> (alias: <code>"median_absolute_residual"</code>)</li>
+<li><code>"mean"</code> (alias: <code>"mean_absolute_residual"</code>)</li>
+</ul>
+<h3>boundary_policy</h3>
+<p><em>See: <a class="el" href="boundary_8md.html">Boundary Handling</a></em></p>
+<ul>
+<li><code>"extend"</code> (default; alias: <code>"pad"</code>)</li>
+<li><code>"reflect"</code> (alias: <code>"mirror"</code>)</li>
+<li><code>"zero"</code></li>
+<li><code>"noboundary"</code> (alias: <code>"none"</code>)</li>
+</ul>
+<h3>zero_weight_fallback</h3>
+<p>Behavior when all neighborhood weights are zero:</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Option   </th><th class="markdownTableHeadNone">Behavior    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>"use_local_mean"</code> (default; aliases: <code>"local_mean"</code>, <code>"mean"</code>)   </td><td class="markdownTableBodyNone">Use the mean of the neighborhood    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>"return_original"</code> (alias: <code>"original"</code>)   </td><td class="markdownTableBodyNone">Return the original y value    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>"return_none"</code> (alias: <code>"none"</code>)   </td><td class="markdownTableBodyNone">Return <code>NaN</code>   </td></tr>
+</table>
+<h3>missing</h3>
+<p>Policy for handling a non-finite (NaN/Inf) <code>x</code> or <code>y</code> value passed to <code>add_point</code>:</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Option   </th><th class="markdownTableHeadNone">Behavior    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>"error"</code> (default)   </td><td class="markdownTableBodyNone">Return an error result    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>"drop"</code>   </td><td class="markdownTableBodyNone">Silently ignore the point — <code>add_point</code> succeeds but returns an <code>OnlineOutput</code> whose <code>has_value()</code> is <code>false</code> instead of adding it to the window   </td></tr>
+</table>
+<h3>auto_converge</h3>
+<p><em>See: <a href="../weighting/robustness.md#auto-convergence">Robustness</a></em></p>
+<p>Convergence tolerance for early stopping of robustness iterations. <code>NaN</code> (default) disables early stopping.</p>
+<h3>return_robustness_weights</h3>
+<p>Include the robustness weight for the latest point (from the last robustness iteration) in the result.</p>
+<ul>
+<li><code>false</code> (default) — leaves <code>robustness_weight()</code> as NaN</li>
+<li><code>true</code> — populates <code>robustness_weight()</code></li>
+</ul>
+<h3>window_capacity</h3>
+<p>Maximum number of most recent points kept in the sliding window; older points are discarded as new ones arrive. Each <code>add_point()</code> call costs O(<code>window_capacity</code>) rather than growing with total history.</p>
+<h3>min_points</h3>
+<p>Minimum number of points required before smoothing starts. <code>add_point()</code> returns a result with <code>has_value() == false</code> until the window reaches this size.</p>
+<h3>update_mode</h3>
+<p><em>See: <a class="el" href="adapter-choice_8md.html">Execution Modes</a></em></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Mode   </th><th class="markdownTableHeadNone">Alias   </th><th class="markdownTableHeadNone">Behavior   </th><th class="markdownTableHeadNone">Speed    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>"incremental"</code> (default)   </td><td class="markdownTableBodyNone"><code>"single"</code>   </td><td class="markdownTableBodyNone">Update only affected fits   </td><td class="markdownTableBodyNone">Faster    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>"full"</code>   </td><td class="markdownTableBodyNone"><code>"resmooth"</code>   </td><td class="markdownTableBodyNone">Recompute entire window   </td><td class="markdownTableBodyNone">More accurate   </td></tr>
 </table>
 <h2>Result Structure</h2>
 <h3><a class="el" href="classfastlowess_1_1OnlineOutput.html" title="Result of a single online update step.">fastlowess::OnlineOutput</a></h3>
@@ -214,25 +342,15 @@ Online Adapter</div></div>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>y()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Smoothed value for the latest point    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>standard_error()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Standard error (NaN if not computed)    </td></tr>
+<td class="markdownTableBodyNone"><code>standard_error()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Always NaN — standard errors require <code>return_se</code>/confidence intervals, which are Batch-only    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>residual()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Residual y − smoothed (NaN if not computed)    </td></tr>
+<td class="markdownTableBodyNone"><code>residual()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Residual y − smoothed; always populated (there is no <code>return_residuals</code> option for Online)    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>robustness_weight()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Robustness weight (NaN if not computed)    </td></tr>
+<td class="markdownTableBodyNone"><code>robustness_weight()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Robustness weight, if <code>return_robustness_weights</code> was set    </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>iterations_used()</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone">Robustness iterations performed (−1 if N/A)   </td></tr>
 </table>
-<h2>Options</h2>
-<h3>update_mode</h3>
-<p><em>See: <a class="el" href="adapter-choice_8md.html">Execution Modes</a></em></p>
-<table class="markdownTable">
-<tr class="markdownTableHead">
-<th class="markdownTableHeadNone">Mode   </th><th class="markdownTableHeadNone">Alias   </th><th class="markdownTableHeadNone">Behavior   </th><th class="markdownTableHeadNone">Speed    </th></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>"incremental"</code> (default)   </td><td class="markdownTableBodyNone"><code>"single"</code>   </td><td class="markdownTableBodyNone">Update only affected fits   </td><td class="markdownTableBodyNone">Faster    </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>"full"</code>   </td><td class="markdownTableBodyNone"><code>"resmooth"</code>   </td><td class="markdownTableBodyNone">Recompute entire window   </td><td class="markdownTableBodyNone">More accurate   </td></tr>
-</table>
+<p>There is no <code>Diagnostics</code> object or <code>return_diagnostics</code> option for <code>OnlineLowess</code>: <code>OnlineOutput</code> carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful. </p>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->

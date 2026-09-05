@@ -137,16 +137,17 @@ $(document).ready(function(){initNavTree('api_streaming.html',''); initResizable
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-<div class="ttc" id="aclassfastlowess_1_1StreamingLowess_html"><div class="ttname"><a href="classfastlowess_1_1StreamingLowess.html">fastlowess::StreamingLowess</a></div><div class="ttdoc">Streaming LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:503</div></div>
+<div class="ttc" id="aclassfastlowess_1_1StreamingLowess_html"><div class="ttname"><a href="classfastlowess_1_1StreamingLowess.html">fastlowess::StreamingLowess</a></div><div class="ttdoc">Streaming LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:511</div></div>
 <div class="ttc" id="afastlowess_8hpp_html"><div class="ttname"><a href="fastlowess_8hpp.html">fastlowess.hpp</a></div><div class="ttdoc">C++ wrapper for fastLowess library.</div></div>
-<div class="ttc" id="astructfastlowess_1_1StreamingOptions_html"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html">fastlowess::StreamingOptions</a></div><div class="ttdoc">Options for streaming LOWESS.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:155</div></div>
-<div class="ttc" id="astructfastlowess_1_1StreamingOptions_html_a493fdf1cc257a60df0d57efc7e9f7cc5"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html#a493fdf1cc257a60df0d57efc7e9f7cc5">fastlowess::StreamingOptions::overlap</a></div><div class="ttdeci">int overlap</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:157</div></div>
-<div class="ttc" id="astructfastlowess_1_1StreamingOptions_html_aef557d1b8515c43f5027f0afea85018a"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html#aef557d1b8515c43f5027f0afea85018a">fastlowess::StreamingOptions::chunk_size</a></div><div class="ttdeci">int chunk_size</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:156</div></div>
+<div class="ttc" id="astructfastlowess_1_1StreamingOptions_html"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html">fastlowess::StreamingOptions</a></div><div class="ttdoc">Options for streaming LOWESS.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:162</div></div>
+<div class="ttc" id="astructfastlowess_1_1StreamingOptions_html_a493fdf1cc257a60df0d57efc7e9f7cc5"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html#a493fdf1cc257a60df0d57efc7e9f7cc5">fastlowess::StreamingOptions::overlap</a></div><div class="ttdeci">int overlap</div><div class="ttdoc">Negative (the default) means &quot;use the library default&quot; (chunk_size / 10, clamped to [1,...</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:166</div></div>
+<div class="ttc" id="astructfastlowess_1_1StreamingOptions_html_aef557d1b8515c43f5027f0afea85018a"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html#aef557d1b8515c43f5027f0afea85018a">fastlowess::StreamingOptions::chunk_size</a></div><div class="ttdeci">int chunk_size</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:163</div></div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 17.6391</div>
 </div><!-- fragment --><ul>
 <li><code>options</code>: A <code>StreamingOptions</code> struct (inherits from <code>LowessOptions</code>) with additional <code>chunk_size</code>, <code>overlap</code>, and <code>merge_strategy</code> parameters.</li>
 </ul>
-<p><b>Methods:</b></p>
+<h4><code>process_chunk(x, y)</code></h4>
+<p>Feeds one chunk of data into the model. Each chunk is fit together with the trailing <code>overlap</code> points buffered from the previous call, then only the points that are fully resolved are returned — the tail of the chunk (the next <code>overlap</code> points) is held back internally, since it will be refit once the following chunk arrives and its estimate reconciled via <code>merge_strategy</code>. This is what lets the adapter process a dataset far larger than memory allows, one bounded-size chunk at a time, without ever materializing the whole dataset at once.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;<a class="code" href="fastlowess_8hpp.html">fastlowess.hpp</a>&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
@@ -171,11 +172,10 @@ $(document).ready(function(){initNavTree('api_streaming.html',''); initResizable
 <div class="line"> </div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_ac4c7e581cd561fc11a928f9901bb5ec6"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#ac4c7e581cd561fc11a928f9901bb5ec6">fastlowess::LowessOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdoc">Smoothing fraction (0, 1].</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:117</div></div>
+<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_ac4c7e581cd561fc11a928f9901bb5ec6"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#ac4c7e581cd561fc11a928f9901bb5ec6">fastlowess::LowessOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdoc">Smoothing fraction (0, 1].</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:119</div></div>
 </div><!-- fragment --><div class="fragment"><div class="line">0.5</div>
-</div><!-- fragment --><ul>
-<li>Processes a chunk of data. Returns partial results.</li>
-</ul>
+</div><!-- fragment --><h4><code>finalize()</code></h4>
+<p>Flushes the overlap points still buffered from the last <code>process_chunk()</code> call. Because each call withholds its tail until the next chunk arrives to resolve it, the final chunk's tail would never be emitted otherwise — always call <code>finalize()</code> once after the last chunk to retrieve it.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;<a class="code" href="fastlowess_8hpp.html">fastlowess.hpp</a>&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
@@ -204,9 +204,184 @@ $(document).ready(function(){initNavTree('api_streaming.html',''); initResizable
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">0.5</div>
-</div><!-- fragment --><ul>
-<li>Finalizes the smoothing process and returns any remaining buffered results.</li>
+</div><!-- fragment --><h2>Options Structure</h2>
+<h3>StreamingOptions (inherits LowessOptions)</h3>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Field   </th><th class="markdownTableHeadNone">Type   </th><th class="markdownTableHeadNone">Default   </th><th class="markdownTableHeadNone">Description    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>fraction</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">0.67   </td><td class="markdownTableBodyNone">Smoothing fraction (bandwidth)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>iterations</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone">3   </td><td class="markdownTableBodyNone">Number of robustifying iterations    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>delta</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">NaN   </td><td class="markdownTableBodyNone">Interpolation distance (<code>NaN</code> auto-sets it to 0.0 in Streaming, i.e. interpolation disabled)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>weight_function</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone">"tricube"   </td><td class="markdownTableBodyNone">Weight function name    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>robustness_method</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone">"bisquare"   </td><td class="markdownTableBodyNone">Robustness method name    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>scaling_method</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone">"mad"   </td><td class="markdownTableBodyNone">Residual scaling method    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>boundary_policy</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone">"extend"   </td><td class="markdownTableBodyNone">Boundary handling policy    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>zero_weight_fallback</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone">"use_local_mean"   </td><td class="markdownTableBodyNone">Zero-weight handling    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>missing</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone">"error"   </td><td class="markdownTableBodyNone">Policy for non-finite (NaN/Inf) values in each chunk    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>auto_converge</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">NaN   </td><td class="markdownTableBodyNone">Auto-convergence tolerance    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>return_diagnostics</code>   </td><td class="markdownTableBodyNone"><code>bool</code>   </td><td class="markdownTableBodyNone">false   </td><td class="markdownTableBodyNone">Include diagnostics in result    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>return_residuals</code>   </td><td class="markdownTableBodyNone"><code>bool</code>   </td><td class="markdownTableBodyNone">false   </td><td class="markdownTableBodyNone">Include residuals in result    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>return_robustness_weights</code>   </td><td class="markdownTableBodyNone"><code>bool</code>   </td><td class="markdownTableBodyNone">false   </td><td class="markdownTableBodyNone">Include weights in result    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>parallel</code>   </td><td class="markdownTableBodyNone"><code>bool</code>   </td><td class="markdownTableBodyNone">true   </td><td class="markdownTableBodyNone">Enable parallel execution    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>chunk_size</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone">5000   </td><td class="markdownTableBodyNone">Data chunk size    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>overlap</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone">chunk_size / 10   </td><td class="markdownTableBodyNone">Overlap between chunks    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>merge_strategy</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone">"weighted_average"   </td><td class="markdownTableBodyNone">Strategy for blending overlap regions   </td></tr>
+</table>
+<p>Confidence/prediction intervals, standard errors, cross-validation, GPU <code>backend</code>, <code>custom_weights</code>, and <code>return_sorted</code> are Batch-only and not available here; see <a class="el" href="api_8md.html">fastLowess</a> for those.</p>
+<h2>Options</h2>
+<h3>fraction</h3>
+<p><code>fraction</code> is the most important parameter: it controls the size of the local neighbourhood used at each point.</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Range   </th><th class="markdownTableHeadNone">Effect   </th><th class="markdownTableHeadNone">Use case    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">0.1-0.3   </td><td class="markdownTableBodyNone">Fine detail   </td><td class="markdownTableBodyNone">Rapidly changing signals    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">0.3-0.5   </td><td class="markdownTableBodyNone">Balanced   </td><td class="markdownTableBodyNone">General purpose    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">0.5-0.7   </td><td class="markdownTableBodyNone">Heavy smoothing   </td><td class="markdownTableBodyNone">Noisy data    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">0.7-1.0   </td><td class="markdownTableBodyNone">Very smooth   </td><td class="markdownTableBodyNone">Trend extraction   </td></tr>
+</table>
+<h3>iterations</h3>
+<p><code>iterations</code> controls robustness to outliers, at the cost of speed.</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Value   </th><th class="markdownTableHeadNone">Effect   </th><th class="markdownTableHeadNone">Performance    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">0   </td><td class="markdownTableBodyNone">No robustness   </td><td class="markdownTableBodyNone">Fastest    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">1-3   </td><td class="markdownTableBodyNone">Moderate   </td><td class="markdownTableBodyNone">Recommended    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">4-6   </td><td class="markdownTableBodyNone">Strong   </td><td class="markdownTableBodyNone">Contaminated data    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">7+   </td><td class="markdownTableBodyNone">Very strong   </td><td class="markdownTableBodyNone">Heavy outliers   </td></tr>
+</table>
+<h3>delta</h3>
+<p>Points within <code>delta</code> of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. <code>NaN</code> (default) auto-sets it to <code>0</code> in Streaming mode, i.e. interpolation is disabled and every point is fit exactly.</p>
+<h3>weight_function</h3>
+<p><em>See: <a class="el" href="kernels_8md.html">Weight Functions</a></em></p>
+<ul>
+<li><code>"tricube"</code> (default)</li>
+<li><code>"epanechnikov"</code></li>
+<li><code>"gaussian"</code></li>
+<li><code>"uniform"</code> (alias: <code>"boxcar"</code>)</li>
+<li><code>"biweight"</code> (alias: <code>"bisquare"</code>)</li>
+<li><code>"triangle"</code> (alias: <code>"triangular"</code>)</li>
+<li><code>"cosine"</code></li>
 </ul>
+<h3>robustness_method</h3>
+<p><em>See: <a class="el" href="robustness_8md.html">Robustness</a></em></p>
+<ul>
+<li><code>"bisquare"</code> (default; alias: <code>"biweight"</code>)</li>
+<li><code>"huber"</code></li>
+<li><code>"talwar"</code></li>
+</ul>
+<h3>scaling_method</h3>
+<p><em>See: <a class="el" href="scaling_8md.html">Scaling Methods</a></em></p>
+<ul>
+<li><code>"mad"</code> (default; alias: <code>"median_absolute_deviation"</code>)</li>
+<li><code>"mar"</code> (alias: <code>"median_absolute_residual"</code>)</li>
+<li><code>"mean"</code> (alias: <code>"mean_absolute_residual"</code>)</li>
+</ul>
+<h3>boundary_policy</h3>
+<p><em>See: <a class="el" href="boundary_8md.html">Boundary Handling</a></em></p>
+<ul>
+<li><code>"extend"</code> (default; alias: <code>"pad"</code>)</li>
+<li><code>"reflect"</code> (alias: <code>"mirror"</code>)</li>
+<li><code>"zero"</code></li>
+<li><code>"noboundary"</code> (alias: <code>"none"</code>)</li>
+</ul>
+<h3>zero_weight_fallback</h3>
+<p>Behavior when all neighborhood weights are zero:</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Option   </th><th class="markdownTableHeadNone">Behavior    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>"use_local_mean"</code> (default; aliases: <code>"local_mean"</code>, <code>"mean"</code>)   </td><td class="markdownTableBodyNone">Use the mean of the neighborhood    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>"return_original"</code> (alias: <code>"original"</code>)   </td><td class="markdownTableBodyNone">Return the original y value    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>"return_none"</code> (alias: <code>"none"</code>)   </td><td class="markdownTableBodyNone">Return <code>NaN</code>   </td></tr>
+</table>
+<h3>missing</h3>
+<p>Policy for handling non-finite (NaN/Inf) values within each chunk:</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Option   </th><th class="markdownTableHeadNone">Behavior    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>"error"</code> (default)   </td><td class="markdownTableBodyNone">Return an error result if any value in the chunk is non-finite    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>"drop"</code>   </td><td class="markdownTableBodyNone">Silently remove rows where <code>x</code> or <code>y</code> is non-finite before merging the chunk with the overlap buffer   </td></tr>
+</table>
+<p><b>Note:</b> A length mismatch between <code>x</code> and <code>y</code> always errors, even under <code>"drop"</code>.</p>
+<h3>auto_converge</h3>
+<p><em>See: <a href="../weighting/robustness.md#auto-convergence">Robustness</a></em></p>
+<p>Convergence tolerance for early stopping of robustness iterations. <code>NaN</code> (default) disables early stopping.</p>
+<h3>return_diagnostics</h3>
+<p>*See: `Diagnostics`*</p>
+<p>Include a <code>Diagnostics</code> object (RMSE, MAE, R², residual_sd) in the result. <code>effective_df</code>/<code>aic</code>/<code>aicc</code> require standard errors, which are Batch-only, so they're always empty/NaN here.</p>
+<ul>
+<li><code>false</code> (default) — leaves <code>diagnostics()</code> empty</li>
+<li><code>true</code> — populates <code>diagnostics()</code></li>
+</ul>
+<h3>return_residuals</h3>
+<p>Include per-point residuals (<code>y - fitted</code>) in the result.</p>
+<ul>
+<li><code>false</code> (default) — leaves <code>residuals()</code> empty</li>
+<li><code>true</code> — populates <code>residuals()</code></li>
+</ul>
+<h3>return_robustness_weights</h3>
+<p>Include the final per-point robustness weights (from the last robustness iteration) in the result.</p>
+<ul>
+<li><code>false</code> (default) — leaves <code>robustness_weights()</code> empty</li>
+<li><code>true</code> — populates <code>robustness_weights()</code></li>
+</ul>
+<h3>parallel</h3>
+<p>Enable multi-threaded execution via Rayon.</p>
+<ul>
+<li><code>true</code> (default) — parallelizes the local regression fits across CPU cores</li>
+<li><code>false</code> — forces single-threaded execution</li>
+</ul>
+<h3>chunk_size</h3>
+<p>Number of points processed per chunk. Larger chunks reduce per-chunk overhead and give each local fit more surrounding context, at the cost of higher peak memory; smaller chunks bound memory tightly but increase the fraction of points that fall in overlap regions. A good starting point is balancing available memory against how much processing overhead per chunk is acceptable — match it to your file-read buffer or message-batch size to avoid unnecessary copying.</p>
+<h3>overlap</h3>
+<p>Number of points retained from the previous chunk as context, so the neighbourhood at chunk boundaries isn't artificially truncated. Points inside the overlap zone are fitted twice (once by each chunk) and reconciled via <code>merge_strategy</code>. A good starting point is 10–20% of <code>chunk_size</code>: too little overlap causes visible boundary artefacts, while too much wastes computation refitting the same points twice.</p>
+<ul>
+<li><code>-1</code> (default) — computes <code>chunk_size / 10</code>, clamped to at least 1 and less than <code>chunk_size</code></li>
+<li>Any integer <code>&gt;= 1</code> and <code>&lt; chunk_size</code></li>
+</ul>
+<h3>merge_strategy</h3>
+<p><em>See: <a class="el" href="merge_8md.html">Merge Strategies</a></em></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Strategy   </th><th class="markdownTableHeadNone">Alias   </th><th class="markdownTableHeadNone">Behavior    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>"weighted_average"</code> (default)   </td><td class="markdownTableBodyNone"><code>"weighted"</code>   </td><td class="markdownTableBodyNone">Distance-weighted blend    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>"average"</code>   </td><td class="markdownTableBodyNone"><code>"mean"</code>   </td><td class="markdownTableBodyNone">Average overlapping values    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>"take_first"</code>   </td><td class="markdownTableBodyNone"><code>"first"</code>   </td><td class="markdownTableBodyNone">Keep left chunk values    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>"take_last"</code>   </td><td class="markdownTableBodyNone"><code>"last"</code>   </td><td class="markdownTableBodyNone">Keep right chunk values   </td></tr>
+</table>
 <h2>Result Structure</h2>
 <h3><a class="el" href="classfastlowess_1_1LowessResult.html" title="Result of LOWESS smoothing operation.">fastlowess::LowessResult</a></h3>
 <p>Returned (inside <code>Expected</code>) by <code>process_chunk()</code> and <code>finalize()</code>.</p>
@@ -222,50 +397,43 @@ $(document).ready(function(){initNavTree('api_streaming.html',''); initResizable
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>iterations_used()</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone">Robustness iterations (-1 = N/A)    </td></tr>
 <tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>standard_errors()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Always empty (Batch only)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>confidence_lower()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Always empty (Batch only)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>confidence_upper()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Always empty (Batch only)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>prediction_lower()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Always empty (Batch only)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>prediction_upper()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Always empty (Batch only)    </td></tr>
+<tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>residuals()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Residuals (if <code>return_residuals</code>; empty if not)    </td></tr>
-<tr class="markdownTableRowEven">
+<tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>robustness_weights()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Robustness weights (if <code>return_robustness_weights</code>; empty if not)    </td></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>diagnostics()</code>   </td><td class="markdownTableBodyNone"><code>Diagnostics</code>   </td><td class="markdownTableBodyNone">Fit metrics — check <code>has_value()</code> (if <code>return_diagnostics</code>)    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>dimensions()</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone">Number of predictor dimensions   </td></tr>
+<td class="markdownTableBodyNone"><code>cv_scores()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Always empty (Batch only)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>diagnostics()</code>   </td><td class="markdownTableBodyNone"><code>Diagnostics</code>   </td><td class="markdownTableBodyNone">Fit metrics — check <code>has_value()</code> (if <code>return_diagnostics</code>)   </td></tr>
 </table>
-<p>See <a class="el" href="api_8md.html">cpp.md</a> for the full <code>LowessResult</code> field reference.</p>
-<h2>Options Structure</h2>
-<h3>StreamingOptions (inherits LowessOptions)</h3>
+<h3><a class="el" href="classfastlowess_1_1Diagnostics.html" title="Diagnostics from LOWESS fitting.">fastlowess::Diagnostics</a></h3>
 <table class="markdownTable">
 <tr class="markdownTableHead">
-<th class="markdownTableHeadNone">Field   </th><th class="markdownTableHeadNone">Type   </th><th class="markdownTableHeadNone">Default   </th><th class="markdownTableHeadNone">Description    </th></tr>
+<th class="markdownTableHeadNone">Method   </th><th class="markdownTableHeadNone">Return Type   </th><th class="markdownTableHeadNone">Description    </th></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>chunk_size</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone">5000   </td><td class="markdownTableBodyNone">Data chunk size    </td></tr>
+<td class="markdownTableBodyNone"><code>rmse()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Root Mean Squared Error    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>overlap</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone">500   </td><td class="markdownTableBodyNone">Overlap between chunks    </td></tr>
+<td class="markdownTableBodyNone"><code>mae()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Mean Absolute Error    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>merge_strategy</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone">"weighted_average"   </td><td class="markdownTableBodyNone">Strategy for blending overlap regions   </td></tr>
+<td class="markdownTableBodyNone"><code>r_squared()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">R-squared    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>residual_sd()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Residual standard deviation    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>effective_df()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Always NaN (requires standard errors, Batch only)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>aic()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Always NaN (requires <code>effective_df</code>, Batch only)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>aicc()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Always NaN (requires <code>effective_df</code>, Batch only)   </td></tr>
 </table>
-<h2>Options</h2>
-<h3>merge_strategy</h3>
-<p><em>See: <a class="el" href="merge_8md.html">Merge Strategies</a></em></p>
-<table class="markdownTable">
-<tr class="markdownTableHead">
-<th class="markdownTableHeadNone">Strategy   </th><th class="markdownTableHeadNone">Alias   </th><th class="markdownTableHeadNone">Behavior    </th></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>"weighted_average"</code> (default)   </td><td class="markdownTableBodyNone"><code>"weighted"</code>   </td><td class="markdownTableBodyNone">Distance-weighted blend    </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>"average"</code>   </td><td class="markdownTableBodyNone"><code>"mean"</code>   </td><td class="markdownTableBodyNone">Average overlapping values    </td></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>"take_first"</code>   </td><td class="markdownTableBodyNone"><code>"first"</code>   </td><td class="markdownTableBodyNone">Keep left chunk values    </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>"take_last"</code>   </td><td class="markdownTableBodyNone"><code>"last"</code>   </td><td class="markdownTableBodyNone">Keep right chunk values   </td></tr>
-</table>
-<div class="image">
-<object type="image/svg+xml" data="merge_comparison.svg" style="pointer-events: none;"></object>
-<div class="caption">
-Merge Strategies</div></div>
-    <hr  />
-<blockquote class="doxtable">
-<p>&zwj;<b>Always call finalize():</b> The streaming adapter buffers overlap data. Call <code>finalize()</code> after the last chunk to retrieve the buffered tail. </p>
-</blockquote>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->

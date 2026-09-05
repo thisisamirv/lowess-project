@@ -22,11 +22,7 @@ OnlineLowess(
     update_mode = "incremental",
     auto_converge = NULL,
     return_robustness_weights = FALSE,
-    return_diagnostics = FALSE,
-    return_residuals = FALSE,
-    parallel = FALSE,
-    confidence_intervals = NULL,
-    prediction_intervals = NULL
+    missing = "error"
 )
 ```
 
@@ -110,28 +106,11 @@ OnlineLowess(
   Logical; if `TRUE`, return per-point robustness weights. Default:
   `FALSE`.
 
-- return_diagnostics:
+- missing:
 
-  Logical; if `TRUE`, return fit-quality metrics (RMSE, MAE, R-squared,
-  AIC, etc.). Default: `FALSE`.
-
-- return_residuals:
-
-  Logical; if `TRUE`, return residuals in the result. Default: `FALSE`.
-
-- parallel:
-
-  Logical; enable parallel processing. Default: `TRUE`.
-
-- confidence_intervals:
-
-  Confidence level for confidence intervals, greater than 0 and less
-  than 1 (e.g., 0.95). `NULL` (default) disables confidence intervals.
-
-- prediction_intervals:
-
-  Confidence level for prediction intervals, greater than 0 and less
-  than 1 (e.g., 0.95). `NULL` (default) disables prediction intervals.
+  Policy for non-finite (NaN/Infinity) values in input data: `"error"`
+  (default) raises an error, `"drop"` silently removes affected
+  observations before fitting.
 
 ## Value
 

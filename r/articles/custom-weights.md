@@ -2,10 +2,9 @@
 
 ## How Custom Weights Work
 
-Per-observation weights encode data quality directly into the LOWESS
-fit. Standard LOWESS assigns equal prior trust to all observations.
-Custom weights let you override this assumption point by point — before
-any distance or robustness weighting is applied.
+Standard LOWESS assigns equal prior trust to all observations. Custom
+weights let you override this assumption point by point — before any
+distance or robustness weighting is applied.
 
 The effective weight of observation $`j`$ in a local fit centred at
 $`x_i`$ is:
@@ -18,8 +17,8 @@ w_{ij} = \text{custom\_weights}[j] \times K\!\left(\frac{d_{ij}}{h_i}\right)
 where $`K`$ is the distance kernel, $`h_i`$ is the local bandwidth, and
 $`r_j`$ is the robustness weight from the current iteration.
 
-> **Note:** `custom_weights` applies in **Batch** mode only. It is
-> silently ignored in Streaming and Online adapters.
+> **Batch adapter only:** `custom_weights` applies in **Batch** mode. It
+> is silently ignored in Streaming and Online adapters.
 
 ------------------------------------------------------------------------
 
@@ -35,22 +34,28 @@ $`r_j`$ is the robustness weight from the current iteration.
 
 ### Custom Weights vs. Robustness Iterations
 
+Both mechanisms handle unreliable data, but they serve different
+purposes:
+
 |  | Custom Weights | Robustness Iterations |
 |----|----|----|
 | **When known** | Before fitting | Computed from residuals |
 | **Knowledge required** | Prior knowledge of quality | None — data-driven |
 | **Effect** | Fixed throughout fit | Adapts each iteration |
-| **Use case** | Bad sensors, calibration | Unknown outlier contamination |
+| **Use case** | Known bad sensors | Unknown outlier contamination |
 
-They compose: use both simultaneously. Custom weights suppress known bad
-points; robustness iterations handle residual outliers.
+They compose: you can use both simultaneously. Custom weights suppress
+*a priori* bad points; robustness iterations then handle any *residual*
+outliers that remain.
 
 ------------------------------------------------------------------------
 
-## Suppress a Known Outlier
+## Basic Usage
+
+### Suppress a Known Outlier
 
 Set the weight to `0` at the bad point — it is excluded from every local
-fit.
+fit that would otherwise include it.
 
 ``` r
 
@@ -65,30 +70,50 @@ weights[6] <- 0.0          # exclude the spike
 
 model <- Lowess(fraction = 0.5, iterations = 0L)
 result <- fit(model, x, y, custom_weights = weights)
-cat("First 6 smoothed values (outlier excluded, no robustness):\n")
-#> First 6 smoothed values (outlier excluded, no robustness):
-print(head(result$y))
-#> [1]  2.572621  4.000000  6.000000  8.000000 10.000000 12.000000
+cat("Smoothed y[0]:", result$y[1], "\n")
+#> Smoothed y[0]: 2.572621
 ```
 
 ------------------------------------------------------------------------
 
-## Inverse-Variance Weights
+### Emphasize Important Points
 
-Weight by $`1/\sigma_i^2`$ when measurement uncertainties are known.
+Assign high weights to measurements you trust most — calibration
+standards, reference instruments, or low-noise observations.
 
 ``` r
 
 library(rfastlowess)
-set.seed(42)
-x <- seq(0, 10, length.out = 100)
-y <- sin(x) + rnorm(100, sd = 0.5)
+x <- seq(0, 2 * pi, length.out = 100)
+y <- sin(x) + 0.1
+calibration_indices <- c(6, 21, 41, 61, 81)
 
-# Measurement precision varies along x
-sigma <- 0.1 + 0.5 * abs(sin(x))
+weights <- rep(1.0, length(x))
+weights[calibration_indices] <- 10.0
+
+model <- Lowess(fraction = 0.5)
+result <- fit(model, x, y, custom_weights = weights)
+cat("Smoothed y[0]:", result$y[1], "\n")
+#> Smoothed y[0]: 0.323742
+```
+
+------------------------------------------------------------------------
+
+### Propagate Measurement Uncertainty
+
+If each observation has a known standard deviation $`\sigma_i`$, set
+$`w_i = 1 / \sigma_i^2`$ to give the fit information-theoretically
+optimal weighting.
+
+``` r
+
+library(rfastlowess)
+x <- seq(0, 2 * pi, length.out = 100)
+y <- sin(x) + 0.1
+sigma <- 0.1 + (seq_along(x) %% 4) * 0.1
+
 weights <- 1 / sigma^2
-
-model <- Lowess(fraction = 0.3)
+model <- Lowess(fraction = 0.5)
 result <- fit(model, x, y, custom_weights = weights)
 
 plot(x, y, pch = 16, cex = 0.5 + weights / max(weights),
@@ -96,31 +121,64 @@ plot(x, y, pch = 16, cex = 0.5 + weights / max(weights),
 lines(result$x, result$y, col = "blue", lwd = 2)
 ```
 
-![](custom-weights_files/figure-html/custom_weights_2-1.png)
+![](custom-weights_files/figure-html/custom_weights_3-1.png)
+
+``` r
+
+
+cat("Smoothed y[0]:", result$y[1], "\n")
+#> Smoothed y[0]: 0.1922027
+```
 
 ------------------------------------------------------------------------
 
-## Combining Custom Weights with Robustness
+## Combined with Robustness Iterations
+
+Custom weights and robustness iterations compose naturally: use custom
+weights for *known* bad points and robustness for *unknown*
+contamination.
 
 ``` r
 
 library(rfastlowess)
-set.seed(42)
-x <- 1:100
-y <- sin(x / 10) + rnorm(100, sd = 0.3)
+x <- 0:19
+y <- x * 1.5
+y[4]  <- -50.0   # known bad
+y[13] <- 80.0    # unknown outlier
 
-# Known bad region: indices 40–50
-weights <- rep(1.0, 100)
-weights[40:50] <- 0.1
+weights <- rep(1.0, 20)
+weights[4] <- 0.0
 
-# Also use robustness for unknown outliers
-model <- Lowess(fraction = 0.3, iterations = 3)
+model <- Lowess(fraction = 0.4, iterations = 3)
 result <- fit(model, x, y, custom_weights = weights)
-cat("First 6 smoothed values (custom weights, robust fitting):\n")
-#> First 6 smoothed values (custom weights, robust fitting):
-print(head(result$y))
-#> [1] 0.5716412 0.5904751 0.6108481 0.6322355 0.6533279 0.6729328
+cat("Smoothed y[0]:", result$y[1], "\n")
+#> Smoothed y[0]: 1.798397
 ```
+
+------------------------------------------------------------------------
+
+## Validation Rules
+
+| Rule | Effect |
+|----|----|
+| Length must equal `n` | Error at fit time if mismatched |
+| All values must be ≥ 0 | Negative weights are rejected |
+| All-zero weight vector | Error: no points remain for any local fit |
+| Uniform weights (`1.0` everywhere) | Identical result to omitting weights |
+
+> **Zero-weight windows:** If a local neighbourhood contains only
+> zero-weight points, the fit at that centre point falls back to the
+> behaviour specified by `zero_weight_fallback` (default:
+> `"use_local_mean"`).
+
+------------------------------------------------------------------------
+
+## See Also
+
+- [Robustness](https://thisisamirv.github.io/lowess-project/r/articles/robustness.md)
+  — adaptive outlier downweighting via IRLS
+- [`?Lowess`](https://thisisamirv.github.io/lowess-project/r/reference/Lowess.md)
+  — full parameter reference
 
 ``` r
 
@@ -146,7 +204,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] rfastlowess_3.2.1
+#> [1] rfastlowess_4.0.0
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    

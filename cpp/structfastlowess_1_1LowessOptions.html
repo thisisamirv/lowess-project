@@ -159,11 +159,17 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a6b1d86216ff15cd283112a762fc0d302" id="r_a6b1d86216ff15cd283112a762fc0d302"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1LowessOptions.html#a6b1d86216ff15cd283112a762fc0d302">return_se</a> = <a class="el" href="classfastlowess_1_1Expected.html">false</a></td></tr>
 <tr class="memdesc:a6b1d86216ff15cd283112a762fc0d302"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return standard errors.  <br /></td></tr>
 <tr class="separator:a6b1d86216ff15cd283112a762fc0d302"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa37000981a16b3bc74215b4ca56e13c7" id="r_aa37000981a16b3bc74215b4ca56e13c7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1LowessOptions.html#aa37000981a16b3bc74215b4ca56e13c7">return_sorted</a> = <a class="el" href="classfastlowess_1_1Expected.html">false</a></td></tr>
+<tr class="memdesc:aa37000981a16b3bc74215b4ca56e13c7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return results sorted ascending by x instead of in original input order.  <br /></td></tr>
+<tr class="separator:aa37000981a16b3bc74215b4ca56e13c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a689dba738384297e91479aa158dc2e45" id="r_a689dba738384297e91479aa158dc2e45"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1LowessOptions.html#a689dba738384297e91479aa158dc2e45">parallel</a> = <a class="el" href="classfastlowess_1_1Expected.html">true</a></td></tr>
 <tr class="separator:a689dba738384297e91479aa158dc2e45"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7df2673737a72e038efa19cca56c2942" id="r_a7df2673737a72e038efa19cca56c2942"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1LowessOptions.html#a7df2673737a72e038efa19cca56c2942">backend</a> = &quot;cpu&quot;</td></tr>
 <tr class="memdesc:a7df2673737a72e038efa19cca56c2942"><td class="mdescLeft">&#160;</td><td class="mdescRight">Execution backend: "cpu" (default) or "gpu" (requires the library to be built with the <code>gpu</code> Cargo feature and a Vulkan/Metal/DX12-capable GPU).  <br /></td></tr>
 <tr class="separator:a7df2673737a72e038efa19cca56c2942"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3521ff4161c3135d1b6a61ee06bba7cb" id="r_a3521ff4161c3135d1b6a61ee06bba7cb"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1LowessOptions.html#a3521ff4161c3135d1b6a61ee06bba7cb">missing</a> = &quot;error&quot;</td></tr>
+<tr class="memdesc:a3521ff4161c3135d1b6a61ee06bba7cb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Policy for non-finite (NaN/Inf) values in input data: "error" (default) or "drop".  <br /></td></tr>
+<tr class="separator:a3521ff4161c3135d1b6a61ee06bba7cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8df67ab5c18aaea06b523bc3330d3447" id="r_a8df67ab5c18aaea06b523bc3330d3447"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="classfastlowess_1_1Expected.html">double</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1LowessOptions.html#a8df67ab5c18aaea06b523bc3330d3447">cv_fractions</a></td></tr>
 <tr class="separator:a8df67ab5c18aaea06b523bc3330d3447"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a20d46eb7c38e21cb9c3e7015a1977ab6" id="r_a20d46eb7c38e21cb9c3e7015a1977ab6"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1LowessOptions.html#a20d46eb7c38e21cb9c3e7015a1977ab6">cv_method</a> = &quot;kfold&quot;</td></tr>
@@ -365,6 +371,22 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a3521ff4161c3135d1b6a61ee06bba7cb" name="a3521ff4161c3135d1b6a61ee06bba7cb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3521ff4161c3135d1b6a61ee06bba7cb">&#9670;&#160;</a></span>missing</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::string fastlowess::LowessOptions::missing = &quot;error&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Policy for non-finite (NaN/Inf) values in input data: "error" (default) or "drop". </p>
+
+</div>
+</div>
 <a id="a689dba738384297e91479aa158dc2e45" name="a689dba738384297e91479aa158dc2e45"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a689dba738384297e91479aa158dc2e45">&#9670;&#160;</a></span>parallel</h2>
 
@@ -450,6 +472,22 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Return standard errors. </p>
+
+</div>
+</div>
+<a id="aa37000981a16b3bc74215b4ca56e13c7" name="aa37000981a16b3bc74215b4ca56e13c7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa37000981a16b3bc74215b4ca56e13c7">&#9670;&#160;</a></span>return_sorted</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classfastlowess_1_1Expected.html">bool</a> fastlowess::LowessOptions::return_sorted = <a class="el" href="classfastlowess_1_1Expected.html">false</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Return results sorted ascending by x instead of in original input order. </p>
 
 </div>
 </div>

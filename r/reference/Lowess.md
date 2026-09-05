@@ -29,7 +29,9 @@ Lowess(
     parallel = TRUE,
     cv_seed = NULL,
     return_se = FALSE,
-    backend = "cpu"
+    return_sorted = FALSE,
+    backend = "cpu",
+    missing = "error"
 )
 ```
 
@@ -143,12 +145,27 @@ Lowess(
   Logical; if `TRUE`, compute hat-matrix statistics (effective degrees
   of freedom, leverage, standard errors). Default: `FALSE`.
 
+- return_sorted:
+
+  Logical; if `TRUE`, return results sorted ascending by `x` instead of
+  in the original input order. Default: `FALSE`. To get both orderings
+  without re-fitting, sort the default (unsorted) result client-side
+  (e.g. `order(result$x)`) rather than calling
+  [`fit()`](https://thisisamirv.github.io/lowess-project/r/reference/fit.md)
+  twice.
+
 - backend:
 
   Execution backend: `"cpu"` (default) or `"gpu"`. GPU support requires
   the package to be built locally with `WITH_GPU=1` (see
   `bindings/r/Makefile`) and a Vulkan/Metal/DX12-capable GPU driver; not
   available in released CRAN/Bioconductor binaries.
+
+- missing:
+
+  Policy for non-finite (NaN/Infinity) values in input data: `"error"`
+  (default) raises an error, `"drop"` silently removes affected
+  observations before fitting.
 
 ## Value
 

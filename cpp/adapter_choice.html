@@ -131,6 +131,197 @@ $(document).ready(function(){initNavTree('adapter_choice.html',''); initResizabl
 <div class="caption">
 Adapter Comparison</div></div>
     <hr  />
+<h2>Batch Adapter</h2>
+<p>Standard mode for complete datasets. <b>Supports all features.</b></p>
+<h3>When to Use</h3>
+<ul>
+<li>Dataset fits in memory</li>
+<li>Need intervals, cross-validation, or diagnostics</li>
+<li>Processing complete files</li>
+</ul>
+<h3>Example</h3>
+<div class="fragment"><div class="line"><span class="preprocessor">#include &lt;<a class="code" href="fastlowess_8hpp.html">fastlowess.hpp</a>&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;vector&gt;</span></div>
+<div class="line"> </div>
+<div class="line"><span class="keywordtype">int</span> main() {</div>
+<div class="line">    <span class="keyword">const</span> <span class="keywordtype">int</span> n = 100;</div>
+<div class="line">    std::vector&lt;double&gt; x(n), y(n);</div>
+<div class="line">    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; n; ++i) {</div>
+<div class="line">        x[i] = i * 2 * M_PI / (n - 1);</div>
+<div class="line">        y[i] = std::sin(x[i]) + 0.1;</div>
+<div class="line">    }</div>
+<div class="line"> </div>
+<div class="line">    <a class="code hl_struct" href="structfastlowess_1_1LowessOptions.html">fastlowess::LowessOptions</a> opts;</div>
+<div class="line">    opts.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#ac4c7e581cd561fc11a928f9901bb5ec6">fraction</a> = 0.5;</div>
+<div class="line">    opts.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#a3a9b03636d3cb266eb345e3f405ba66b">iterations</a> = 3;</div>
+<div class="line">    opts.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#a1d07294a88a01279d0d3668a8a70e23f">confidence_intervals</a> = 0.95;</div>
+<div class="line">    opts.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#a48d749c4b025fc0467ef40c62ce6a939">prediction_intervals</a> = 0.95;</div>
+<div class="line">    opts.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#a1afdf08dc8d17bf1820edf63b25fd84e">return_diagnostics</a> = <span class="keyword">true</span>;</div>
+<div class="line">    opts.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#a689dba738384297e91479aa158dc2e45">parallel</a> = <span class="keyword">true</span>;</div>
+<div class="line">    <a class="code hl_class" href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a> model(opts);</div>
+<div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
+<div class="line"> </div>
+<div class="line">    <span class="keywordtype">int</span> mid = n / 2;</div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;95% CI at midpoint: [&quot;</span> &lt;&lt; result.confidence_lower()[mid] &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; result.confidence_upper()[mid] &lt;&lt; <span class="stringliteral">&quot;]\n&quot;</span>;</div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;R2: &quot;</span> &lt;&lt; result.diagnostics().r_squared() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line">    <span class="keywordflow">return</span> 0;</div>
+<div class="line">}</div>
+<div class="ttc" id="aclassfastlowess_1_1Lowess_html"><div class="ttname"><a href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a></div><div class="ttdoc">Batch LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:432</div></div>
+<div class="ttc" id="afastlowess_8hpp_html"><div class="ttname"><a href="fastlowess_8hpp.html">fastlowess.hpp</a></div><div class="ttdoc">C++ wrapper for fastLowess library.</div></div>
+<div class="ttc" id="astructfastlowess_1_1LowessOptions_html"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html">fastlowess::LowessOptions</a></div><div class="ttdoc">Options for configuring LOWESS smoothing.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:118</div></div>
+<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_a1afdf08dc8d17bf1820edf63b25fd84e"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#a1afdf08dc8d17bf1820edf63b25fd84e">fastlowess::LowessOptions::return_diagnostics</a></div><div class="ttdeci">bool return_diagnostics</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:133</div></div>
+<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_a1d07294a88a01279d0d3668a8a70e23f"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#a1d07294a88a01279d0d3668a8a70e23f">fastlowess::LowessOptions::confidence_intervals</a></div><div class="ttdeci">double confidence_intervals</div><div class="ttdoc">Confidence level (NaN = disabled)</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:129</div></div>
+<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_a3a9b03636d3cb266eb345e3f405ba66b"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#a3a9b03636d3cb266eb345e3f405ba66b">fastlowess::LowessOptions::iterations</a></div><div class="ttdeci">int iterations</div><div class="ttdoc">Robustness iterations.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:120</div></div>
+<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_a48d749c4b025fc0467ef40c62ce6a939"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#a48d749c4b025fc0467ef40c62ce6a939">fastlowess::LowessOptions::prediction_intervals</a></div><div class="ttdeci">double prediction_intervals</div><div class="ttdoc">Prediction level (NaN = disabled)</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:130</div></div>
+<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_a689dba738384297e91479aa158dc2e45"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#a689dba738384297e91479aa158dc2e45">fastlowess::LowessOptions::parallel</a></div><div class="ttdeci">bool parallel</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:139</div></div>
+<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_ac4c7e581cd561fc11a928f9901bb5ec6"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#ac4c7e581cd561fc11a928f9901bb5ec6">fastlowess::LowessOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdoc">Smoothing fraction (0, 1].</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:119</div></div>
+</div><!-- fragment --><div class="fragment"><div class="line">95% CI at midpoint: [0.0393153, 0.10767]</div>
+<div class="line">R2: 0.966427</div>
+</div><!-- fragment --><hr  />
+<h2>Streaming Adapter</h2>
+<p>Process large datasets in chunks with configurable overlap.</p>
+<h3>When to Use</h3>
+<ul>
+<li>Dataset &gt;100,000 points</li>
+<li>Memory-constrained environments</li>
+<li>Batch processing pipelines</li>
+</ul>
+<h3>Parameters</h3>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Parameter   </th><th class="markdownTableHeadNone">Default   </th><th class="markdownTableHeadNone">Description    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>chunk_size</code>   </td><td class="markdownTableBodyNone">5000   </td><td class="markdownTableBodyNone">Points per chunk    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>overlap</code>   </td><td class="markdownTableBodyNone"><code>chunk_size / 10</code>   </td><td class="markdownTableBodyNone">Overlap between chunks    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>merge_strategy</code>   </td><td class="markdownTableBodyNone"><code>"weighted_average"</code>   </td><td class="markdownTableBodyNone">How to merge overlaps   </td></tr>
+</table>
+<h3>Merge Strategies</h3>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Strategy   </th><th class="markdownTableHeadNone">Behavior    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>"average"</code>   </td><td class="markdownTableBodyNone">Average overlapping values    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>"weighted_average"</code>   </td><td class="markdownTableBodyNone">Distance-weighted blend    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>"take_first"</code>   </td><td class="markdownTableBodyNone">Keep left chunk values    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>"take_last"</code>   </td><td class="markdownTableBodyNone">Keep right chunk values   </td></tr>
+</table>
+<h3>Example</h3>
+<div class="fragment"><div class="line"><span class="preprocessor">#include &lt;<a class="code" href="fastlowess_8hpp.html">fastlowess.hpp</a>&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;vector&gt;</span></div>
+<div class="line"> </div>
+<div class="line"><span class="keywordtype">int</span> main() {</div>
+<div class="line">    <span class="keyword">const</span> <span class="keywordtype">int</span> n = 100;</div>
+<div class="line">    std::vector&lt;double&gt; x(n), y(n);</div>
+<div class="line">    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; n; ++i) {</div>
+<div class="line">        x[i] = i * 2 * M_PI / (n - 1);</div>
+<div class="line">        y[i] = std::sin(x[i]) + 0.1;</div>
+<div class="line">    }</div>
+<div class="line"> </div>
+<div class="line">    <a class="code hl_struct" href="structfastlowess_1_1StreamingOptions.html">fastlowess::StreamingOptions</a> opts;</div>
+<div class="line">    opts.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#ac4c7e581cd561fc11a928f9901bb5ec6">fraction</a> = 0.3;</div>
+<div class="line">    opts.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#a3a9b03636d3cb266eb345e3f405ba66b">iterations</a> = 2;</div>
+<div class="line">    opts.<a class="code hl_variable" href="structfastlowess_1_1StreamingOptions.html#aef557d1b8515c43f5027f0afea85018a">chunk_size</a> = 5000;</div>
+<div class="line">    opts.<a class="code hl_variable" href="structfastlowess_1_1StreamingOptions.html#a493fdf1cc257a60df0d57efc7e9f7cc5">overlap</a> = 500;</div>
+<div class="line">    opts.<a class="code hl_variable" href="structfastlowess_1_1StreamingOptions.html#a5c33b791424c7b5f6aa95e1f8e8a6121">merge_strategy</a> = <span class="stringliteral">&quot;average&quot;</span>;</div>
+<div class="line">    <a class="code hl_class" href="classfastlowess_1_1StreamingLowess.html">fastlowess::StreamingLowess</a> model(opts);</div>
+<div class="line">    model.process_chunk(x, y);</div>
+<div class="line">    <span class="keyword">auto</span> result = model.finalize().value();</div>
+<div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;Smoothed y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line">    <span class="keywordflow">return</span> 0;</div>
+<div class="line">}</div>
+<div class="ttc" id="aclassfastlowess_1_1StreamingLowess_html"><div class="ttname"><a href="classfastlowess_1_1StreamingLowess.html">fastlowess::StreamingLowess</a></div><div class="ttdoc">Streaming LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:511</div></div>
+<div class="ttc" id="astructfastlowess_1_1StreamingOptions_html"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html">fastlowess::StreamingOptions</a></div><div class="ttdoc">Options for streaming LOWESS.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:162</div></div>
+<div class="ttc" id="astructfastlowess_1_1StreamingOptions_html_a493fdf1cc257a60df0d57efc7e9f7cc5"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html#a493fdf1cc257a60df0d57efc7e9f7cc5">fastlowess::StreamingOptions::overlap</a></div><div class="ttdeci">int overlap</div><div class="ttdoc">Negative (the default) means &quot;use the library default&quot; (chunk_size / 10, clamped to [1,...</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:166</div></div>
+<div class="ttc" id="astructfastlowess_1_1StreamingOptions_html_a5c33b791424c7b5f6aa95e1f8e8a6121"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html#a5c33b791424c7b5f6aa95e1f8e8a6121">fastlowess::StreamingOptions::merge_strategy</a></div><div class="ttdeci">std::string merge_strategy</div><div class="ttdoc">weighted_average, average, take_first, take_last</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:167</div></div>
+<div class="ttc" id="astructfastlowess_1_1StreamingOptions_html_aef557d1b8515c43f5027f0afea85018a"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html#aef557d1b8515c43f5027f0afea85018a">fastlowess::StreamingOptions::chunk_size</a></div><div class="ttdeci">int chunk_size</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:163</div></div>
+</div><!-- fragment --><div class="fragment"><div class="line">Smoothed y[0]: 0.257845</div>
+</div><!-- fragment --><hr  />
+<blockquote class="doxtable">
+<p>&zwj;<b>Always call finalize():</b> Always call <code>model.finalize()</code> after processing all chunks to retrieve buffered overlap data. </p>
+</blockquote>
+<h2>Online Adapter</h2>
+<p>Incremental updates with a sliding window for real-time data.</p>
+<h3>When to Use</h3>
+<ul>
+<li>Data arrives incrementally (sensors, streams)</li>
+<li>Need real-time smoothed values</li>
+<li>Fixed memory budget</li>
+</ul>
+<h3>Parameters</h3>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Parameter   </th><th class="markdownTableHeadNone">Default   </th><th class="markdownTableHeadNone">Description    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>window_capacity</code>   </td><td class="markdownTableBodyNone">1000   </td><td class="markdownTableBodyNone">Max points in window    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>min_points</code>   </td><td class="markdownTableBodyNone">2   </td><td class="markdownTableBodyNone">Points before output starts    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>update_mode</code>   </td><td class="markdownTableBodyNone"><code>"incremental"</code>   </td><td class="markdownTableBodyNone">Update strategy   </td></tr>
+</table>
+<h3>Update Modes</h3>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Mode   </th><th class="markdownTableHeadNone">Behavior   </th><th class="markdownTableHeadNone">Speed    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>"incremental"</code>   </td><td class="markdownTableBodyNone">Update only affected fits   </td><td class="markdownTableBodyNone">Faster    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>"full"</code>   </td><td class="markdownTableBodyNone">Recompute entire window   </td><td class="markdownTableBodyNone">More accurate   </td></tr>
+</table>
+<h3>Example</h3>
+<div class="fragment"><div class="line"><span class="preprocessor">#include &lt;<a class="code" href="fastlowess_8hpp.html">fastlowess.hpp</a>&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;vector&gt;</span></div>
+<div class="line"> </div>
+<div class="line"><span class="keywordtype">int</span> main() {</div>
+<div class="line">    <span class="keyword">const</span> <span class="keywordtype">int</span> n = 100;</div>
+<div class="line">    std::vector&lt;double&gt; x(n), y(n);</div>
+<div class="line">    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; n; ++i) {</div>
+<div class="line">        x[i] = i * 2 * M_PI / (n - 1);</div>
+<div class="line">        y[i] = std::sin(x[i]) + 0.1;</div>
+<div class="line">    }</div>
+<div class="line"> </div>
+<div class="line">    <a class="code hl_struct" href="structfastlowess_1_1OnlineOptions.html">fastlowess::OnlineOptions</a> opts;</div>
+<div class="line">    opts.<a class="code hl_variable" href="structfastlowess_1_1OnlineOptions.html#a6acb9ee334a76cd3701228b0cab4ac62">fraction</a> = 0.2;</div>
+<div class="line">    opts.<a class="code hl_variable" href="structfastlowess_1_1OnlineOptions.html#a2c8c2dd03559f291a428467d8d231790">iterations</a> = 1;</div>
+<div class="line">    opts.<a class="code hl_variable" href="structfastlowess_1_1OnlineOptions.html#ab1a4b461877e41a676ab9b555995bfab">window_capacity</a> = 100;</div>
+<div class="line">    opts.<a class="code hl_variable" href="structfastlowess_1_1OnlineOptions.html#a749706bb2b58779a0ef79c22d0683d32">min_points</a> = 5;</div>
+<div class="line">    opts.<a class="code hl_variable" href="structfastlowess_1_1OnlineOptions.html#a7080c8dae563a963909e271a74d9cbab">update_mode</a> = <span class="stringliteral">&quot;incremental&quot;</span>;</div>
+<div class="line">    <a class="code hl_class" href="classfastlowess_1_1OnlineLowess.html">fastlowess::OnlineLowess</a> model(opts);</div>
+<div class="line"> </div>
+<div class="line">    <span class="keywordtype">int</span> shown = 0;</div>
+<div class="line">    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; n &amp;&amp; shown &lt; 5; ++i) {</div>
+<div class="line">        <span class="keyword">auto</span> r = model.add_point(x[i], y[i]).value();</div>
+<div class="line">        <span class="keywordflow">if</span> (r.has_value()) {</div>
+<div class="line">            std::cout &lt;&lt; r.y() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line">            ++shown;</div>
+<div class="line">        }</div>
+<div class="line">    }</div>
+<div class="line">    <span class="keywordflow">return</span> 0;</div>
+<div class="line">}</div>
+<div class="ttc" id="aclassfastlowess_1_1OnlineLowess_html"><div class="ttname"><a href="classfastlowess_1_1OnlineLowess.html">fastlowess::OnlineLowess</a></div><div class="ttdoc">Online LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:591</div></div>
+<div class="ttc" id="astructfastlowess_1_1OnlineOptions_html"><div class="ttname"><a href="structfastlowess_1_1OnlineOptions.html">fastlowess::OnlineOptions</a></div><div class="ttdoc">Options for online LOWESS.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:178</div></div>
+<div class="ttc" id="astructfastlowess_1_1OnlineOptions_html_a2c8c2dd03559f291a428467d8d231790"><div class="ttname"><a href="structfastlowess_1_1OnlineOptions.html#a2c8c2dd03559f291a428467d8d231790">fastlowess::OnlineOptions::iterations</a></div><div class="ttdeci">int iterations</div><div class="ttdoc">Robustness iterations.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:180</div></div>
+<div class="ttc" id="astructfastlowess_1_1OnlineOptions_html_a6acb9ee334a76cd3701228b0cab4ac62"><div class="ttname"><a href="structfastlowess_1_1OnlineOptions.html#a6acb9ee334a76cd3701228b0cab4ac62">fastlowess::OnlineOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdoc">Smoothing fraction (0, 1].</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:179</div></div>
+<div class="ttc" id="astructfastlowess_1_1OnlineOptions_html_a7080c8dae563a963909e271a74d9cbab"><div class="ttname"><a href="structfastlowess_1_1OnlineOptions.html#a7080c8dae563a963909e271a74d9cbab">fastlowess::OnlineOptions::update_mode</a></div><div class="ttdeci">std::string update_mode</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:199</div></div>
+<div class="ttc" id="astructfastlowess_1_1OnlineOptions_html_a749706bb2b58779a0ef79c22d0683d32"><div class="ttname"><a href="structfastlowess_1_1OnlineOptions.html#a749706bb2b58779a0ef79c22d0683d32">fastlowess::OnlineOptions::min_points</a></div><div class="ttdeci">int min_points</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:198</div></div>
+<div class="ttc" id="astructfastlowess_1_1OnlineOptions_html_ab1a4b461877e41a676ab9b555995bfab"><div class="ttname"><a href="structfastlowess_1_1OnlineOptions.html#ab1a4b461877e41a676ab9b555995bfab">fastlowess::OnlineOptions::window_capacity</a></div><div class="ttdeci">int window_capacity</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:197</div></div>
+</div><!-- fragment --><div class="fragment"><div class="line">0.351148</div>
+<div class="line">0.412033</div>
+<div class="line">0.471662</div>
+<div class="line">0.529795</div>
+<div class="line">0.586197</div>
+</div><!-- fragment --><hr  />
 <h2>Feature Comparison</h2>
 <table class="markdownTable">
 <tr class="markdownTableHead">

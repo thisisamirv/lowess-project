@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rfastlowess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">3.2.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">4.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,12 +61,14 @@
 
     
     
+<!-- markdownlint-disable MD024 -->
+<p>Get up and running with LOWESS in minutes.</p>
 <div class="section level2">
 <h2 id="basic-smoothing">Basic Smoothing<a class="anchor" aria-label="anchor" href="#basic-smoothing"></a>
 </h2>
-<p>Smooth a noisy sine wave. <code>fraction = 0.3</code> and
-<code>iterations = 3</code> are good starting values for most
-signals.</p>
+<p>Smooth a noisy sine wave — the kind of signal where LOWESS shines.
+Each example recovers the underlying trend from 100 points of Gaussian
+noise.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/thisisamirv/lowess-project" class="external-link">rfastlowess</a></span><span class="op">)</span></span>
 <span></span>
@@ -84,10 +86,8 @@ signals.</p>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="with-confidence-and-prediction-intervals">With Confidence and Prediction Intervals<a class="anchor" aria-label="anchor" href="#with-confidence-and-prediction-intervals"></a>
+<h2 id="with-confidence-intervals">With Confidence Intervals<a class="anchor" aria-label="anchor" href="#with-confidence-intervals"></a>
 </h2>
-<p>Set <code>confidence_intervals</code> and/or
-<code>prediction_intervals</code> to a coverage level (0–1).</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/thisisamirv/lowess-project" class="external-link">rfastlowess</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
@@ -103,14 +103,12 @@ signals.</p>
 <span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Confidence lower bounds (first 5):\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Confidence lower bounds (first 5):</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">confidence_lower</span>, <span class="fl">5</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.4029128 0.4444254 0.4229649 0.4249155 0.4334419</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Confidence upper bounds (first 5):\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Confidence upper bounds (first 5):</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">confidence_upper</span>, <span class="fl">5</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.5416635 0.5200124 0.5624654 0.5826608 0.5972503</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Smoothed (first 5):"</span>, <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span>, <span class="fl">5</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Smoothed (first 5): 0.4722882 0.4822189 0.4927151 0.5037882 0.5153461</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"CI lower (first 5):"</span>, <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">confidence_lower</span>, <span class="fl">5</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; CI lower (first 5): 0.4029128 0.4444254 0.4229649 0.4249155 0.4334419</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"CI upper (first 5):"</span>, <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">confidence_upper</span>, <span class="fl">5</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; CI upper (first 5): 0.5416635 0.5200124 0.5624654 0.5826608 0.5972503</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"R2:"</span>, <span class="va">result</span><span class="op">$</span><span class="va">diagnostics</span><span class="op">$</span><span class="va">r_squared</span>, <span class="st">"\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R2: 0.7841212</span></span></code></pre></div>
 <hr>
@@ -134,6 +132,7 @@ reweighting:</p>
 <span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x_out</span>, <span class="va">y_with_outlier</span><span class="op">)</span></span>
 <span></span>
+<span><span class="co"># Outliers will have low robustness weights</span></span>
 <span><span class="kw">for</span> <span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">robustness_weights</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="kw">if</span> <span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">robustness_weights</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">&lt;</span> <span class="fl">0.5</span><span class="op">)</span></span>
 <span>        <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Point %d is likely an outlier (weight: %.3f)\n"</span>,</span>
@@ -145,86 +144,67 @@ reweighting:</p>
 <div class="section level2">
 <h2 id="streaming-mode">Streaming Mode<a class="anchor" aria-label="anchor" href="#streaming-mode"></a>
 </h2>
-<p>For large datasets (&gt;100K points) that may not fit in memory.</p>
+<p>For datasets too large to fit in memory, stream them in fixed-size
+chunks with overlap.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/thisisamirv/lowess-project" class="external-link">rfastlowess</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
-<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span>, length.out <span class="op">=</span> <span class="fl">10000</span><span class="op">)</span></span>
-<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">10000</span>, sd <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
+<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">10</span> <span class="op">*</span> <span class="va">pi</span>, length.out <span class="op">=</span> <span class="fl">5000</span><span class="op">)</span></span>
+<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">x</span> <span class="op">/</span> <span class="va">pi</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">x</span> <span class="op">/</span> <span class="fl">30</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">5000</span>, sd <span class="op">=</span> <span class="fl">0.15</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/StreamingLowess.html">StreamingLowess</a></span><span class="op">(</span></span>
-<span>    fraction <span class="op">=</span> <span class="fl">0.3</span>,</span>
-<span>    iterations <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>    chunk_size <span class="op">=</span> <span class="fl">5000</span>,</span>
-<span>    overlap <span class="op">=</span> <span class="fl">500</span>,</span>
+<span>    fraction <span class="op">=</span> <span class="fl">0.2</span>,</span>
+<span>    chunk_size <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>    overlap <span class="op">=</span> <span class="fl">100</span>,</span>
 <span>    merge_strategy <span class="op">=</span> <span class="st">"weighted_average"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Process one chunk at a time</span></span>
-<span><span class="va">chunk_x</span> <span class="op">&lt;-</span> <span class="va">x</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5000</span><span class="op">]</span></span>
-<span><span class="va">chunk_y</span> <span class="op">&lt;-</span> <span class="va">y</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5000</span><span class="op">]</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">chunk_x</span>, <span class="va">chunk_y</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Finalize after all chunks</span></span>
-<span><span class="va">final</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/finalize.html">finalize</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (streaming, weighted_average merge):\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; First 6 smoothed values (streaming, weighted_average merge):</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">final</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.3234034 0.3229753 0.3225477 0.3221207 0.3216941 0.3212681</span></span></code></pre></div>
-<hr>
-</div>
-<div class="section level2">
-<h2 id="online-mode">Online Mode<a class="anchor" aria-label="anchor" href="#online-mode"></a>
-</h2>
-<p>For real-time / point-by-point processing.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/thisisamirv/lowess-project" class="external-link">rfastlowess</a></span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
-<span><span class="va">times</span> <span class="op">&lt;-</span> <span class="fl">1</span><span class="op">:</span><span class="fl">100</span></span>
-<span><span class="va">temperatures</span> <span class="op">&lt;-</span> <span class="fl">20</span> <span class="op">+</span> <span class="fl">5</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">times</span> <span class="op">/</span> <span class="fl">10</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/OnlineLowess.html">OnlineLowess</a></span><span class="op">(</span></span>
-<span>    fraction <span class="op">=</span> <span class="fl">0.3</span>,</span>
-<span>    window_capacity <span class="op">=</span> <span class="fl">25</span>,</span>
-<span>    min_points <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>    update_mode <span class="op">=</span> <span class="st">"incremental"</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="kw">for</span> <span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">times</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_point.html">add_point</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">times</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, <span class="va">temperatures</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span></span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span><span class="op">)</span></span>
-<span>        <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Time %d: %.2f\n"</span>, <span class="va">times</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, <span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="va">i</span> <span class="op">&gt;=</span> <span class="fl">10</span><span class="op">)</span> <span class="kw">break</span>  <span class="co"># print only the first few outputs</span></span>
+<span><span class="va">chunk_size</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
+<span><span class="kw">for</span> <span class="op">(</span><span class="va">start</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">4001</span>, by <span class="op">=</span> <span class="va">chunk_size</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">end</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">start</span> <span class="op">+</span> <span class="va">chunk_size</span> <span class="op">-</span> <span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span>
+<span>    <span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span><span class="op">[</span><span class="va">start</span><span class="op">:</span><span class="va">end</span><span class="op">]</span>, <span class="va">y</span><span class="op">[</span><span class="va">start</span><span class="op">:</span><span class="va">end</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
-<span><span class="co">#&gt; Time 5: 22.80</span></span>
-<span><span class="co">#&gt; Time 6: 22.72</span></span>
-<span><span class="co">#&gt; Time 7: 24.73</span></span>
-<span><span class="co">#&gt; Time 8: 23.49</span></span>
-<span><span class="co">#&gt; Time 9: 25.94</span></span>
-<span><span class="co">#&gt; Time 10: 24.14</span></span></code></pre></div>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/finalize.html">finalize</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Smoothed %d points in streaming mode\n"</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Smoothed 100 points in streaming mode</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="plotting-results">Plotting Results<a class="anchor" aria-label="anchor" href="#plotting-results"></a>
+<h2 id="next-steps">Next Steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>
 </h2>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/thisisamirv/lowess-project" class="external-link">rfastlowess</a></span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
-<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span>, length.out <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
-<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span>, sd <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Lowess.html">Lowess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.5</span>, confidence_intervals <span class="op">=</span> <span class="fl">0.95</span><span class="op">)</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, pch <span class="op">=</span> <span class="fl">16</span>, col <span class="op">=</span> <span class="st">"gray"</span>, main <span class="op">=</span> <span class="st">"LOWESS Smoothing"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">x</span>, <span class="va">result</span><span class="op">$</span><span class="va">y</span>, col <span class="op">=</span> <span class="st">"blue"</span>, lwd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">x</span>, <span class="va">result</span><span class="op">$</span><span class="va">confidence_lower</span>, col <span class="op">=</span> <span class="st">"blue"</span>, lty <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">x</span>, <span class="va">result</span><span class="op">$</span><span class="va">confidence_upper</span>, col <span class="op">=</span> <span class="st">"blue"</span>, lty <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"topright"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Data"</span>, <span class="st">"Smoothed"</span>, <span class="st">"95% CI"</span><span class="op">)</span>,</span>
-<span>        pch <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">16</span>, <span class="cn">NA</span>, <span class="cn">NA</span><span class="op">)</span>, lty <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="cn">NA</span>, <span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>,</span>
-<span>        col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"gray"</span>, <span class="st">"blue"</span>, <span class="st">"blue"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="quickstart_files/figure-html/quickstart_6-1.png" class="r-plt" alt="" width="700"></p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr class="header">
+<th>Topic</th>
+<th>Link</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>How LOWESS works</td>
+<td><a href="concepts.html">Concepts</a></td>
+</tr>
+<tr class="even">
+<td>All parameters explained</td>
+<td><code><a href="../reference/Lowess.html">?Lowess</a></code></td>
+</tr>
+<tr class="odd">
+<td>Batch vs Streaming vs Online</td>
+<td><a href="adapter-choice.html">Execution Modes</a></td>
+</tr>
+<tr class="even">
+<td>Edge handling</td>
+<td><a href="boundary.html">Boundary</a></td>
+</tr>
+<tr class="odd">
+<td>Outlier handling in depth</td>
+<td><a href="robustness.html">Robustness</a></td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
@@ -247,7 +227,7 @@ reweighting:</p>
 <span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; other attached packages:</span></span>
-<span><span class="co">#&gt; [1] rfastlowess_3.2.1</span></span>
+<span><span class="co">#&gt; [1] rfastlowess_4.0.0</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
 <span><span class="co">#&gt;  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    </span></span>

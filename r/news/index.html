@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rfastlowess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">3.2.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">4.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -34,6 +34,32 @@
       <small>Source: <a href="https://github.com/thisisamirv/lowess-project/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="4.0.0" id="rfastlowess-400">rfastlowess 4.0.0<a class="anchor" aria-label="anchor" href="#rfastlowess-400"></a></h2>
+<div class="section level3">
+<h3 id="added-4-0-0">Added<a class="anchor" aria-label="anchor" href="#added-4-0-0"></a></h3>
+<ul><li>Added an “Ideas for Contribution” section to <code>CONTRIBUTING.md</code>, listing concrete Batch/Streaming/Online adapter feature gaps (out-of-sample prediction, exposing local slope/derivative, adaptive fraction selection, STL-style decomposition, bootstrap intervals, concurrent chunk processing, checkpointable streaming state, populating <code>OnlineOutput.standard_error</code>, time-based window eviction, configurable warm-up) to invite contributions.</li>
+<li>
+<code>dev/bump_version.py</code> now also updates the example crate version in <code>CONTRIBUTING.md</code>’s “Individual crate Cargo.toml” snippet.</li>
+<li>Added a <code>return_sorted</code> option to <code><a href="../reference/Lowess.html">Lowess()</a></code>.</li>
+<li>Added a <code>missing</code> option to <code><a href="../reference/Lowess.html">Lowess()</a></code>, <code><a href="../reference/StreamingLowess.html">StreamingLowess()</a></code>, and <code><a href="../reference/OnlineLowess.html">OnlineLowess()</a></code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changed-4-0-0">Changed<a class="anchor" aria-label="anchor" href="#changed-4-0-0"></a></h3>
+<ul><li>Go doc-snippet verification now batch-builds every snippet in one <code>go build ./...</code> under a persistent module instead of one <code>go run</code> per snippet, then runs the binaries concurrently; <code>verify_snippets.py</code>’s <code>BATCH_RUNNERS</code> dispatch (previously Rust-only) now covers <code>go</code> too.</li>
+<li>C++ doc-snippet verification now resolves the compiler/library/MSVC setup once, then compiles+links+runs every snippet concurrently instead of one at a time. Fixed an MSVC race from concurrent <code>cl.exe</code> invocations colliding on a shared <code>snippet.obj</code> by giving each snippet its own <code>/Fo</code> output and <code>cwd</code>.</li>
+<li>Improved API docs for all bindings and crates significantly.</li>
+<li>Fixed several bindings’ docs (Node.js, WASM, Go, Java, R) showing a flat <code>500</code> default for <code>overlap</code> instead of the actual dynamic <code>chunk_size / 10</code> (clamped to <code>[1, chunk_size - 10]</code>).</li>
+<li>Renamed Python’s <code>docs/guide/adapters.md</code> and <code>docs/use-case/{genomics,real-time,time-series}.md</code> to match every other binding/crate’s filenames (<code>adapter-choice.md</code>, <code>use-case-*.md</code>).</li>
+<li>Removed <code>return_diagnostics</code>, <code>return_residuals</code>, and <code>parallel</code> from <code><a href="../reference/OnlineLowess.html">OnlineLowess()</a></code>’s constructor, same reason as Python. Breaking change.</li>
+<li>Removed <code>confidence_intervals</code> and <code>prediction_intervals</code> from <code><a href="../reference/OnlineLowess.html">OnlineLowess()</a></code>’s and <code><a href="../reference/StreamingLowess.html">StreamingLowess()</a></code>’s constructors — never actually computed. Breaking change; <code><a href="../reference/Lowess.html">Lowess()</a></code> is unaffected.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="fixed-4-0-0">Fixed<a class="anchor" aria-label="anchor" href="#fixed-4-0-0"></a></h3>
+<ul><li>Fixed <code>CONTRIBUTING.md</code> stating a stale Go prerequisite (<code>1.21+</code>, actually <code>1.23+</code> per <code>go.mod</code>/CI), an inaccurate <code>air</code> auto-install target (claimed <code>make r</code>, actually <code>make r-dev</code>), and a stale example crate version (<code>2.0.0</code>) in the Workspace Structure section.</li>
+<li>Fixed <code>use-case-real-time.Rmd</code>’s dashboard example crashing at 2 data points: the internal <code>validate_common_args()</code> hardcoded a stricter <code>min_points = 3L</code> than the Rust core’s actual minimum of 2. Lowered its default to <code>2L</code> to match every other binding.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="3.2.1" id="rfastlowess-321">rfastlowess 3.2.1<a class="anchor" aria-label="anchor" href="#rfastlowess-321"></a></h2>
 <div class="section level3">

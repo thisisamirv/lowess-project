@@ -11,19 +11,18 @@ downweight points with large residuals:
 4.  Refit using combined distance × robustness weights
 5.  Repeat steps 2–4
 
+![Robustness Methods](../reference/figures/robust_method_comparison.svg)
+
+Robustness Methods
+
+![Robustness
+Iterations](../reference/figures/robust_iter_comparison.svg)
+
+Robustness Iterations
+
 ------------------------------------------------------------------------
 
 ## Robustness Methods
-
-![Robustness method
-comparison](../reference/figures/robust_method_comparison.svg)
-
-Robustness method comparison
-
-![Effect of robustness
-iterations](../reference/figures/robust_iter_comparison.svg)
-
-Effect of robustness iterations
 
 ### Bisquare (Default)
 
@@ -45,94 +44,59 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Lowess(iterations = 3, robustness_method = "bisquare")
 result <- fit(model, x, y)
-cat("First 6 smoothed values (bisquare robustness):\n")
-#> First 6 smoothed values (bisquare robustness):
-print(head(result$y))
-#> [1] 0.4862648 0.4942855 0.5026953 0.5114688 0.5205144 0.5296957
+cat("Smoothed y[0]:", result$y[1], "\n")
+#> Smoothed y[0]: 0.4862648
 ```
+
+------------------------------------------------------------------------
 
 ### Huber
 
-Less aggressive than bisquare; still downweights outliers but keeps
-moderate residuals at reduced weight.
+Linear penalty beyond threshold. Less aggressive than Bisquare.
 
-**Use when**: Mild outlier contamination; want to preserve moderate
-deviations.
+``` math
+w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}
+```
+
+**Use when**: Moderate outliers, want to retain some influence.
 
 ``` r
 
 model <- Lowess(iterations = 3, robustness_method = "huber")
 result <- fit(model, x, y)
-cat("First 6 smoothed values (huber robustness):\n")
-#> First 6 smoothed values (huber robustness):
-print(head(result$y))
-#> [1] 0.4937237 0.5027904 0.5122265 0.5219833 0.5319406 0.5419355
+cat("Smoothed y[0]:", result$y[1], "\n")
+#> Smoothed y[0]: 0.4937237
 ```
+
+------------------------------------------------------------------------
 
 ### Talwar
 
-Hard thresholding — points above the threshold are excluded completely.
+Hard threshold. Points are either fully weighted or completely excluded.
 
-**Use when**: Known contamination that should be fully excluded.
+``` math
+w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}
+```
+
+**Use when**: Extreme outliers, want binary exclusion.
 
 ``` r
 
 model <- Lowess(iterations = 3, robustness_method = "talwar")
 result <- fit(model, x, y)
-cat("First 6 smoothed values (talwar robustness):\n")
-#> First 6 smoothed values (talwar robustness):
-print(head(result$y))
-#> [1] 0.4606284 0.4670145 0.4736902 0.4805995 0.4876121 0.4945557
+cat("Smoothed y[0]:", result$y[1], "\n")
+#> Smoothed y[0]: 0.4606284
 ```
 
 ------------------------------------------------------------------------
 
-## Choosing the Number of Iterations
+## Comparison
 
-| Iterations | Effect                  | When to Use                |
-|------------|-------------------------|----------------------------|
-| 0          | No robustness (fastest) | Clean data, speed-critical |
-| 1–3        | Moderate                | Most applications          |
-| 4–6        | Strong                  | Data with clear outliers   |
-| 7+         | Very strong             | Heavy contamination        |
-
-``` r
-
-library(rfastlowess)
-set.seed(42)
-x <- 1:100
-y <- sin(x / 10) + rnorm(100, sd = 0.3)
-
-# Inject outliers
-y[c(25, 50, 75)] <- y[c(25, 50, 75)] + 5
-
-# Without robustness
-model_0 <- Lowess(iterations = 0)
-result_0 <- fit(model_0, x, y)
-
-# With robustness
-model_3 <- Lowess(iterations = 3)
-result_3 <- fit(model_3, x, y)
-
-plot(x, y, pch = 16, col = "gray", main = "Effect of Robustness Iterations")
-lines(result_0$x, result_0$y, col = "red", lwd = 2, lty = 2)
-lines(result_3$x, result_3$y, col = "blue", lwd = 2)
-legend("topright", c("Data", "iterations=0", "iterations=3"),
-        pch = c(16, NA, NA), lty = c(NA, 2, 1),
-        col = c("gray", "red", "blue"))
-```
-
-![](robustness_files/figure-html/robustness_4-1.png)
-
-------------------------------------------------------------------------
-
-## Method Comparison
-
-| Method       | Handling                | Best For              |
-|--------------|-------------------------|-----------------------|
-| `"bisquare"` | Smooth to zero          | General purpose       |
-| `"huber"`    | Linear then downweights | Mild contamination    |
-| `"talwar"`   | Hard threshold (0/1)    | Severe point outliers |
+| Method       | Transition | Aggressiveness | Use Case              |
+|--------------|------------|----------------|-----------------------|
+| **Bisquare** | Smooth     | Moderate       | General purpose       |
+| **Huber**    | Gradual    | Mild           | Preserve influence    |
+| **Talwar**   | Hard       | Strong         | Extreme contamination |
 
 ------------------------------------------------------------------------
 
@@ -151,16 +115,71 @@ y[c(20, 50, 80)] <- y[c(20, 50, 80)] + 5  # inject outliers
 model <- Lowess(iterations = 5, return_robustness_weights = TRUE)
 result <- fit(model, x, y)
 
+shown <- 0
 for (i in seq_along(result$robustness_weights)) {
-    if (result$robustness_weights[i] < 0.05)
-        cat(sprintf("Point %d is likely an outlier (weight: %.3f)\n",
+    if (result$robustness_weights[i] < 0.5 && shown < 5) {
+        cat(sprintf("Potential outlier at index %d: weight = %.3f\n",
                     i, result$robustness_weights[i]))
+        shown <- shown + 1
+    }
 }
-#> Point 20 is likely an outlier (weight: 0.000)
-#> Point 25 is likely an outlier (weight: 0.000)
-#> Point 50 is likely an outlier (weight: 0.000)
-#> Point 59 is likely an outlier (weight: 0.000)
-#> Point 80 is likely an outlier (weight: 0.000)
+#> Potential outlier at index 2: weight = 0.312
+#> Potential outlier at index 9: weight = 0.403
+#> Potential outlier at index 12: weight = 0.082
+#> Potential outlier at index 18: weight = 0.461
+#> Potential outlier at index 20: weight = 0.000
+```
+
+------------------------------------------------------------------------
+
+## Scale Estimation
+
+Residuals are scaled before computing robustness weights. Two methods:
+
+| Method   | Formula                     | Robustness            |
+|----------|-----------------------------|-----------------------|
+| **MAD**  | `median(\|r - median(r)\|)` | Very robust (default) |
+| **MAR**  | `median(\|r\|)`             | Robust, uncentered    |
+| **Mean** | `mean(\|r\|)`               | Less robust, fastest  |
+
+![Scaling Methods
+Comparison](../reference/figures/scaling_comparison.svg)
+
+Scaling Methods Comparison
+
+``` r
+
+library(rfastlowess)
+set.seed(42)
+x <- seq(0, 2 * pi, length.out = 100)
+y <- sin(x) + rnorm(100, sd = 0.3)
+
+model <- Lowess(iterations = 3, scaling_method = "mad")
+result <- fit(model, x, y)
+cat("Smoothed y[0]:", result$y[1], "\n")
+#> Smoothed y[0]: 0.4862648
+```
+
+------------------------------------------------------------------------
+
+## Auto-Convergence
+
+Stop iterations early when weights stabilize:
+
+> **Performance:** Auto-convergence can significantly reduce computation
+> when weights stabilize before reaching max iterations.
+
+``` r
+
+library(rfastlowess)
+set.seed(42)
+x <- seq(0, 2 * pi, length.out = 100)
+y <- sin(x) + rnorm(100, sd = 0.3)
+
+model <- Lowess(iterations = 10, auto_converge = 1e-6)
+result <- fit(model, x, y)
+cat("Smoothed y[0]:", result$y[1], "\n")
+#> Smoothed y[0]: 0.4784941
 ```
 
 ``` r
@@ -187,7 +206,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] rfastlowess_3.2.1
+#> [1] rfastlowess_4.0.0
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    

@@ -268,7 +268,7 @@ Time 8.0: smoothed = 24.0164
 <p>For large datasets that arrive in batches or files.</p>
 </div>
 <div class="paragraph">
-<p><code>chunkSize</code> controls how many data points are processed in one pass; matching it to your file-read buffer or message-batch size avoids unnecessary copying. <code>overlap</code> retains that many points from the previous chunk as context so the neighbourhood at chunk boundaries is not artificially truncated. <code>mergeStrategy = "weighted_average"</code> blends the overlapping region smoothly.</p>
+<p><code>chunkSize</code> controls how many data points are processed in one pass; matching it to your file-read buffer or message-batch size avoids unnecessary copying. <code>overlap</code> retains that many points from the previous chunk as context so the neighbourhood at chunk boundaries is not artificially truncated. <code>mergeStrategy = "weighted_average"</code> blends the overlapping region smoothly; use <code>"last"</code> if chunk boundaries are guaranteed to be well separated and no blending is needed.</p>
 </div>
 <div class="admonitionblock note">
 <table>
