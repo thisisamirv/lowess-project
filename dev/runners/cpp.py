@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import concurrent.futures
 import glob as _glob
 import os
 import re
@@ -134,14 +135,32 @@ def _find_cpp_library() -> Path | None:
 
 
 def run_cpp(snippet: Snippet, timeout: int) -> RunResult:
+    return run_cpp_batch([snippet], timeout)[0]
+
+
+def run_cpp_batch(snippets: list[Snippet], timeout: int) -> list[RunResult]:
+    """Compile and run every C++ snippet concurrently instead of one at a time.
+
+    Each snippet already compiles/links/runs in its own temp dir, fully
+    independent of the others, so the only thing serializing them was running
+    the loop itself. Resolve the shared setup (compiler, library dir, MSVC
+    environment) once for the whole batch, then compile+run every snippet at
+    the same time instead of one g++/clang++/cl.exe invocation after another.
+    """
+    if not snippets:
+        return []
+
     lib_dir = _find_cpp_library()
     if lib_dir is None:
-        return RunResult(
-            snippet=snippet,
-            runner="cpp",
-            skipped=True,
-            skip_reason="fastlowess_cpp library not built (run 'make cpp' first)",
-        )
+        return [
+            RunResult(
+                snippet=s,
+                runner="cpp",
+                skipped=True,
+                skip_reason="fastlowess_cpp library not built (run 'make cpp' first)",
+            )
+            for s in snippets
+        ]
 
     include_dir = str(REPO_ROOT / "bindings" / "cpp" / "include")
     lib_dir_str = str(lib_dir)
@@ -150,12 +169,15 @@ def run_cpp(snippet: Snippet, timeout: int) -> RunResult:
     if use_msvc:
         compiler = _find_msvc_compiler()
         if compiler is None:
-            return RunResult(
-                snippet=snippet,
-                runner="cpp",
-                skipped=True,
-                skip_reason="no MSVC cl.exe found in PATH (required for MSVC-built library)",
-            )
+            return [
+                RunResult(
+                    snippet=s,
+                    runner="cpp",
+                    skipped=True,
+                    skip_reason="no MSVC cl.exe found in PATH (required for MSVC-built library)",
+                )
+                for s in snippets
+            ]
         vcvarsall = _find_vcvarsall(compiler)
         msvc_env = _get_msvc_env(vcvarsall) if vcvarsall else dict(os.environ)
         _env_path = msvc_env.get("Path") or msvc_env.get("PATH", "")
@@ -166,13 +188,36 @@ def run_cpp(snippet: Snippet, timeout: int) -> RunResult:
         msvc_env = None
         compiler = _find_cpp_compiler()
         if compiler is None:
-            return RunResult(
-                snippet=snippet,
-                runner="cpp",
-                skipped=True,
-                skip_reason="no C++ compiler (g++/clang++) found in PATH",
-            )
+            return [
+                RunResult(
+                    snippet=s,
+                    runner="cpp",
+                    skipped=True,
+                    skip_reason="no C++ compiler (g++/clang++) found in PATH",
+                )
+                for s in snippets
+            ]
 
+    def _run_one(snippet: Snippet) -> RunResult:
+        return _compile_and_run(
+            snippet, timeout, include_dir, lib_dir_str, compiler, msvc_env, use_msvc
+        )
+
+    with concurrent.futures.ThreadPoolExecutor(
+        max_workers=min(8, len(snippets))
+    ) as executor:
+        return list(executor.map(_run_one, snippets))
+
+
+def _compile_and_run(
+    snippet: Snippet,
+    timeout: int,
+    include_dir: str,
+    lib_dir_str: str,
+    compiler: str,
+    msvc_env: dict[str, str] | None,
+    use_msvc: bool,
+) -> RunResult:
     with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
         src = os.path.join(tmpdir, "snippet.cpp")
         exe = os.path.join(tmpdir, "snippet.exe" if os.name == "nt" else "snippet")
@@ -181,7 +226,7 @@ def run_cpp(snippet: Snippet, timeout: int) -> RunResult:
 
         if use_msvc:
             import_lib = "fastlowess_cpp.dll.lib"
-            if not (lib_dir / import_lib).exists():
+            if not (Path(lib_dir_str) / import_lib).exists():
                 import_lib = "fastlowess_cpp.lib"
             compile_cmd = [
                 compiler,
@@ -192,6 +237,7 @@ def run_cpp(snippet: Snippet, timeout: int) -> RunResult:
                 "/Od",
                 f"/I{include_dir}",
                 f"/Fe:{exe}",
+                f"/Fo:{tmpdir}{os.sep}",
                 src,
                 "/link",
                 f"/LIBPATH:{lib_dir_str}",
@@ -215,6 +261,7 @@ def run_cpp(snippet: Snippet, timeout: int) -> RunResult:
             t0 = time.monotonic()
             cproc = subprocess.run(
                 compile_cmd,
+                cwd=tmpdir,
                 capture_output=True,
                 check=False,
                 timeout=60,

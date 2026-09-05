@@ -574,10 +574,10 @@ pub struct OnlineOptions {
     /// Maximum number of points to keep in the window. Default: 1000.
     #[napi(js_name = "window_capacity")]
     pub window_capacity: Option<u32>,
-    /// Minimum points required before smoothing starts. Default: 3.
+    /// Minimum points required before smoothing starts. Default: 2.
     #[napi(js_name = "min_points")]
     pub min_points: Option<u32>,
-    /// Update mode ("full", "incremental"). Default: "full".
+    /// Update mode ("full", "incremental"). Default: "incremental".
     #[napi(js_name = "update_mode")]
     pub update_mode: Option<String>,
 }

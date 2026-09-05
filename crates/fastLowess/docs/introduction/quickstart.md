@@ -31,7 +31,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-First smoothed: 0.2250  (true: 0.0000)
+First smoothed value: 0.2250  (true: 0.0000)
 ```
 
 ---

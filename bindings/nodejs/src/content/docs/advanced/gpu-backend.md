@@ -46,7 +46,7 @@ Before requesting `backend = "gpu"` (or the language's equivalent spelling), che
 ```javascript
 const fastlowess = require('fastlowess');
 
-fastlowess.gpuAvailable();
+fastlowess.gpu_enabled();
 ```
 
 ---

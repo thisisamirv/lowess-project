@@ -195,7 +195,8 @@ public final class StreamingOptions {
 
         /**
          * Number of points overlapped between consecutive chunks (default:
-         * library default of {@code 500}). Any negative value means "use the
+         * library default of {@code chunk_size / 10}, clamped to
+         * {@code [1, chunk_size - 10]}). Any negative value means "use the
          * library default".
          *
          * @param overlap the overlap size

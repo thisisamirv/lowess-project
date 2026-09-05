@@ -158,7 +158,7 @@ test_that("Lowess return_sorted defaults to original input order", {
 
     result <- fit(Lowess(fraction = 0.7), x, y)
 
-    expect_equal(result$x, x)
+    expect_identical(result$x, x)
 })
 
 test_that("Lowess return_sorted = TRUE returns results sorted ascending by x", {
@@ -193,7 +193,9 @@ test_that("Lowess return_sorted = TRUE returns results sorted ascending by x", {
 
     sorted_order <- order(result$x)
     unsorted_order <- order(unsorted_result$x)
-    expect_equal(result$y[sorted_order], unsorted_result$y[unsorted_order])
+    # Two independent fits with default parallel = TRUE; Rayon's reduction
+    # order can differ minutely, so compare with tolerance, not identity.
+    expect_equal(result$y[sorted_order], unsorted_result$y[unsorted_order]) # nolint: expect_identical_linter.
 
     expect_length(result$residuals, length(x))
     expect_length(result$robustness_weights, length(x))
@@ -348,6 +350,10 @@ test_that("missing = \"drop\" removes non-finite rows", {
 
 test_that("missing: invalid policy raises error", {
     expect_error(
-        fit(Lowess(fraction = 0.5, missing = "invalid"), c(1.0, 2.0), c(1.0, 2.0))
+        fit(
+            Lowess(fraction = 0.5, missing = "invalid"),
+            c(1.0, 2.0),
+            c(1.0, 2.0)
+        )
     )
 })

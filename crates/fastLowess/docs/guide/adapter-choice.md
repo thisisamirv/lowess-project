@@ -65,6 +65,11 @@ fn main() -> Result<(), LowessError> {
 }
 ```
 
+```output
+95% CI at midpoint: [0.0393, 0.1077]
+R2: 0.9664
+```
+
 ---
 
 ## Streaming Adapter
@@ -118,6 +123,10 @@ fn main() -> Result<(), LowessError> {
 
     Ok(())
 }
+```
+
+```output
+Smoothed y[0]: 0.2578
 ```
 
 ---
@@ -182,6 +191,14 @@ fn main() -> Result<(), LowessError> {
 
     Ok(())
 }
+```
+
+```output
+0.3511479871810792
+0.4120334456984871
+0.4716624556603275
+0.5297949120891716
+0.5861967361004687
 ```
 
 ---

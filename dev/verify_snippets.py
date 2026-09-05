@@ -39,7 +39,7 @@ import subprocess
 import sys
 import threading
 from collections import defaultdict
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from pathlib import Path
 
 import runners.python as _python_runner
@@ -58,8 +58,19 @@ from runners.base import (
     RunResult,
     Snippet,
 )
+from runners.cpp import run_cpp_batch
+from runners.go import run_go_batch
 from runners.r import skip_reason as _r_skip_reason
 from runners.rust import run_rust_batch
+
+# Runners whose snippets are compiled/built together instead of one process
+# per snippet (Rust/Go share one build invocation; C++ resolves its shared
+# compiler/library setup once, then compiles+runs every snippet concurrently).
+BATCH_RUNNERS: dict[str, Callable[[list[Snippet], int], list[RunResult]]] = {
+    "rust": run_rust_batch,
+    "go": run_go_batch,
+    "cpp": run_cpp_batch,
+}
 
 # ---------------------------------------------------------------------------
 # Terminal colours (disabled on non-TTY or Windows without colour support)
@@ -651,10 +662,11 @@ def main(argv: list[str] | None = None) -> int:
     def _run_language(lang_items: list[tuple[Snippet, str]]) -> list[RunResult]:
         lang_results: list[RunResult] = []
 
-        # Rust snippets are batch-compiled in one `cargo build` (see run_rust_batch)
-        # instead of one `cargo run` per snippet, so they're handled all at once here.
-        if lang_items and lang_items[0][1] == "rust":
-            batch_results = run_rust_batch([s for s, _ in lang_items], args.timeout)
+        # Rust/Go/C++ snippets run through a batch function (see BATCH_RUNNERS)
+        # instead of one-at-a-time via RUNNERS, so they're handled all at once here.
+        batch_fn = BATCH_RUNNERS.get(lang_items[0][1]) if lang_items else None
+        if batch_fn is not None:
+            batch_results = batch_fn([s for s, _ in lang_items], args.timeout)
             for (s, runner), res in zip(lang_items, batch_results):
                 _report(s, runner, res)
                 lang_results.append(res)

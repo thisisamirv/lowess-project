@@ -183,7 +183,7 @@ class StreamingLowess:
 
     def __init__(
         self,
-        fraction: float = 0.3,
+        fraction: float = 0.67,
         chunk_size: int = 5000,
         *,
         overlap: int | None = None,
@@ -210,8 +210,8 @@ class OnlineLowess:
 
     def __init__(
         self,
-        fraction: float = 0.2,
-        window_capacity: int = 100,
+        fraction: float = 0.67,
+        window_capacity: int = 1000,
         min_points: int = 2,
         *,
         iterations: int = 3,
@@ -220,7 +220,7 @@ class OnlineLowess:
         robustness_method: str = "bisquare",
         scaling_method: str = "mad",
         boundary_policy: str = "extend",
-        update_mode: str = "full",
+        update_mode: str = "incremental",
         auto_converge: float | None = None,
         return_robustness_weights: bool = False,
         zero_weight_fallback: str = "use_local_mean",

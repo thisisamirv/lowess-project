@@ -1,4 +1,26 @@
 <!-- markdownlint-disable MD024 MD025 -->
+# rfastlowess Unreleased
+
+## Added
+
+* Added a `return_sorted` option to `Lowess()`.
+* Added a `missing` option to `Lowess()`, `StreamingLowess()`, and `OnlineLowess()`.
+
+## Changed
+
+* `dev/runners/go.py`'s `run_go`/doc-snippet verification now batch-builds every Go snippet in one `go build ./...` (each snippet as its own `cmd/snippet_NNNN` package under a persistent module), instead of one `go run` per snippet in a fresh throwaway module. Avoids repeating module resolution and cgo compile/link overhead per snippet; built binaries then run concurrently. `verify_snippets.py`'s batch dispatch (previously Rust-only) is generalized via a `BATCH_RUNNERS` mapping to cover both `rust` and `go`.
+* `dev/runners/cpp.py`'s doc-snippet verification now resolves the shared compiler/library/MSVC-environment setup once per run, then compiles+links+runs every C++ snippet concurrently (previously strictly one g++/clang++/cl.exe invocation at a time), added to `BATCH_RUNNERS`. Fixed a resulting MSVC race where concurrent `cl.exe` invocations collided on a shared `snippet.obj` in the working directory, by pinning each snippet's intermediate object file (`/Fo`) and compiler `cwd` to its own temp dir.
+* Improved API docs for all bindings and crates significantly.
+* Fixed several bindings' docs showing a flat `500` default for `overlap` (Node.js, WASM, Go, Java, R) when the actual behavior is a dynamic `chunk_size / 10` (clamped to `[1, chunk_size - 10]`), matching every language binding's `build_streaming()` helper.
+* Renamed Python's `docs/guide/adapters.md` to `docs/guide/adapter-choice.md`, matching every other binding/crate's filename for the same page.
+* Renamed Python's `docs/use-case/{genomics,real-time,time-series}.md` to `docs/use-case/use-case-{genomics,real-time,time-series}.md`, matching every other binding/crate's filenames for the same pages.
+* Removed `return_diagnostics`, `return_residuals`, and `parallel` from `OnlineLowess()`'s constructor, same reason as Python. Breaking change.
+* Removed `confidence_intervals` and `prediction_intervals` from `OnlineLowess()`'s and `StreamingLowess()`'s constructors — never actually computed. Breaking change; `Lowess()` is unaffected.
+
+## Fixed
+
+* Fixed `use-case-real-time.Rmd`'s dashboard example crashing (`At least 3 data points are required`) once the sliding window held exactly 2 points, since the R binding's internal `validate_common_args()` hardcoded a stricter `min_points = 3L` than the Rust core's actual minimum of 2 (and every other binding's equivalent example). Lowered `validate_common_args()`'s default to `min_points = 2L` to match, instead of special-casing the vignette.
+
 # rfastlowess 3.2.1
 
 ## Added

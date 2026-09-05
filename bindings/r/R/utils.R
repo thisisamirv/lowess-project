@@ -24,7 +24,7 @@
 #' @srrstats {G2.15} NA checks on inputs before passing to algorithms.
 #' @srrstats {G2.16} Inf/NaN validation in input vectors.
 #' @srrstats {G3.0} Tolerance-based comparisons used in robustness weights.
-validate_common_args <- function(x, y, fraction, iterations, min_points = 3L) {
+validate_common_args <- function(x, y, fraction, iterations, min_points = 2L) {
     if (length(x) != length(y)) {
         stop("x and y must have the same length")
     }
@@ -188,7 +188,8 @@ env_args <- function(param_names) {
         if (is.null(type)) {
             return(val)
         }
-        switch(type,
+        switch(
+            type,
             double = as.double(val),
             integer = as.integer(val),
             character = as.character(val),

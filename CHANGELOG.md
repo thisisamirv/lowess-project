@@ -10,10 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+**Monorepo:**
+
+- Added an "Ideas for Contribution" section to `CONTRIBUTING.md`, listing concrete Batch/Streaming/Online adapter feature gaps (out-of-sample prediction, exposing local slope/derivative, adaptive fraction selection, STL-style decomposition, bootstrap intervals, concurrent chunk processing, checkpointable streaming state, populating `OnlineOutput.standard_error`, time-based window eviction, configurable warm-up) to invite contributions.
+
 **lowess:**
 
 - Added `.return_sorted()` to the batch builder, to return results sorted ascending by `x` instead of input order. Default `false`.
-- Added a `missing` option (`"error"` default, or `"drop"`) to the builder, controlling how non-finite (NaN/Inf) `x`/`y` values are handled: Batch and Streaming filter non-finite rows (and matching `custom_weights` entries) before fitting; Online silently ignores non-finite points, returning `Ok(None)` from `add_point`. A length mismatch between `x` and `y` always errors, even under `"drop"`.
+- Added a `missing` option (`"error"` default, or `"drop"`) controlling non-finite (NaN/Inf) `x`/`y` handling: Batch/Streaming drop non-finite rows (and matching `custom_weights`); Online skips non-finite points, returning `Ok(None)`. Length mismatches always error.
 - Added `release-rust.yml` to publish to crates.io on release.
 
 **fastLowess:**
@@ -64,23 +68,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+**Monorepo:**
+
+- Go doc-snippet verification now batch-builds every snippet in one `go build ./...` under a persistent module instead of one `go run` per snippet, then runs the binaries concurrently; `verify_snippets.py`'s `BATCH_RUNNERS` dispatch (previously Rust-only) now covers `go` too.
+- C++ doc-snippet verification now resolves the compiler/library/MSVC setup once, then compiles+links+runs every snippet concurrently instead of one at a time. Fixed an MSVC race from concurrent `cl.exe` invocations colliding on a shared `snippet.obj` by giving each snippet its own `/Fo` output and `cwd`.
+
 **docs:**
 
 - Improved API docs for all bindings and crates significantly.
-- Fixed several bindings' docs showing a flat `500` default for `overlap` (Node.js, WASM, Go, Java, R) when the actual behavior is a dynamic `chunk_size / 10` (clamped to `[1, chunk_size - 10]`), matching every language binding's `build_streaming()` helper.
-- Renamed Python's `docs/guide/adapters.md` to `docs/guide/adapter-choice.md`, matching every other binding/crate's filename for the same page.
-- Renamed Python's `docs/use-case/{genomics,real-time,time-series}.md` to `docs/use-case/use-case-{genomics,real-time,time-series}.md`, matching every other binding/crate's filenames for the same pages.
+- Fixed several bindings' docs (Node.js, WASM, Go, Java, R) showing a flat `500` default for `overlap` instead of the actual dynamic `chunk_size / 10` (clamped to `[1, chunk_size - 10]`).
+- Renamed Python's `docs/guide/adapters.md` and `docs/use-case/{genomics,real-time,time-series}.md` to match every other binding/crate's filenames (`adapter-choice.md`, `use-case-*.md`).
 
 **lowess:**
 
-- Removed the dead `compute_residuals`/`parallel`/`backend` fields from `OnlineLowessBuilder` — never read (or, for `backend`, never reachable). `StreamingLowessBuilder` lost its unused `backend` field too.
-- `Streaming::convert()` (used by the `StreamingLowess::new()...build()` type-alias API) no longer resolves `overlap` to a flat `500` when unset; it now resolves dynamically to `chunk_size / 10` (clamped to `[1, chunk_size - 10]`), matching every language binding's `build_streaming()` helper. Breaking change for callers relying on the previous flat default with a customized `chunk_size`.
+- Removed the dead, unreachable `compute_residuals`/`parallel`/`backend` fields from `OnlineLowessBuilder`; `StreamingLowessBuilder` lost its unused `backend` field too.
+- `Streaming::convert()` no longer resolves `overlap` to a flat `500` when unset; it now resolves dynamically to `chunk_size / 10` (clamped to `[1, chunk_size - 10]`). Breaking change for callers relying on the previous flat default with a customized `chunk_size`.
 
 **fastLowess:**
 
-- Removed the dead `compute_residuals`/`parallel`/`backend` fields from `OnlineLowessBuilder`; `StreamingLowessBuilder` lost its unused `backend` field.
-- Removed `.confidence_intervals()`, `.prediction_intervals()`, and `.return_se()` from the `StreamingLowess`/`OnlineLowess` wrapper structs — these leaked in via the shared builder macro and were silently ignored. Breaking change for direct Rust consumers; `Lowess`'s own methods are unaffected.
-- Fixed a misleading comment on `binding_support::default_overlap()` claiming it existed to make overlap scale with `chunk_size` unlike the (now-removed) flat `DEFAULT_STREAMING_OVERLAP` constant in `lowess`; that constant is gone now that `lowess`'s own `Streaming::convert()` also resolves dynamically (see `lowess`'s changelog entry above).
+- Removed the same dead `compute_residuals`/`parallel`/`backend` fields as `lowess`.
+- Removed `.confidence_intervals()`, `.prediction_intervals()`, and `.return_se()` from the `StreamingLowess`/`OnlineLowess` wrapper structs — leaked in via the shared builder macro and silently ignored. Breaking change; `Lowess` is unaffected.
+- Fixed a stale comment on `binding_support::default_overlap()` referencing the now-removed flat `DEFAULT_STREAMING_OVERLAP` constant in `lowess`.
 
 **Python:**
 
@@ -94,23 +102,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Julia:**
 
 - Removed `return_diagnostics`, `return_residuals`, and `parallel` from `OnlineLowess`, same reason as Python. Breaking change.
-- `StreamingLowess`'s `overlap` keyword argument default changed from a fixed `500` to `-1` (a sentinel meaning "use the library default"), so it now resolves dynamically to `chunk_size / 10` like every other language binding, instead of always passing a concrete `500` regardless of `chunk_size`. Breaking change for callers relying on the previous flat default.
+- `StreamingLowess`'s `overlap` default changed from a fixed `500` to `-1` (sentinel for "use the library default"), resolving dynamically to `chunk_size / 10` like every other binding. Breaking change for customized `chunk_size` callers.
 
 **Node.js:**
 
-- Split `SmoothOptions` into `SmoothOptions` (Batch), `StreamingSmoothOptions`, and `OnlineSmoothOptions`. Passing Batch-only fields to `StreamingLowess`/`OnlineLowess` is now a TypeScript compile-time error instead of a silent no-op. Breaking change for TypeScript consumers; `Lowess` is unaffected.
+- Split `SmoothOptions` into `SmoothOptions` (Batch), `StreamingSmoothOptions`, and `OnlineSmoothOptions`. Passing Batch-only fields to `StreamingLowess`/`OnlineLowess` is now a TypeScript compile-time error instead of a silent no-op. Breaking change; `Lowess` is unaffected.
 
 **WASM:**
 
-- Same `SmoothOptions` split as Node.js, for the same reason. Breaking change for TypeScript consumers.
+- Same `SmoothOptions` split as Node.js, for the same reason. Breaking change.
 
 **C++:**
 
 - Repinned the macOS x64 job in `release-cpp.yml` to `macos-15-intel`.
-- Removed `return_diagnostics`, `return_residuals`, and `parallel` from `OnlineOptions`, same reason as Python. Breaking change.
-- Removed `confidence_intervals` and `prediction_intervals` from `OnlineOptions`; `StreamingOptions` no longer forwards its inherited copies. Breaking change.
-- Removed the dead `custom_weights` field from `OnlineOptions` — declared but never read. Breaking change.
-- `StreamingOptions::overlap`'s default changed from a fixed `500` to `-1` (a sentinel meaning "use the library default"), so it now resolves dynamically to `chunk_size / 10` like every other language binding, instead of always passing a concrete `500` to the native constructor regardless of `chunk_size`. Breaking change for callers relying on the previous flat default.
+- Removed `return_diagnostics`/`return_residuals`/`parallel` from `OnlineOptions`, same reason as Python. Breaking change.
+- Removed `confidence_intervals`/`prediction_intervals` from `OnlineOptions`; `StreamingOptions` no longer forwards its inherited copies. Breaking change.
+- Removed the dead, never-read `custom_weights` field from `OnlineOptions`. Breaking change.
+- `StreamingOptions::overlap`'s default changed from a fixed `500` to `-1` (sentinel for "use the library default"), resolving dynamically to `chunk_size / 10`. Breaking change.
 
 **Go:**
 
@@ -122,6 +130,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Removed `returnDiagnostics`, `returnResiduals`, and `parallel` from `OnlineOptions.Builder`, same reason as Python. Breaking change.
 - Removed `confidenceIntervals` and `predictionIntervals` from `OnlineOptions.Builder` and `StreamingOptions.Builder`. Breaking change.
+
+### Fixed
+
+**Monorepo:**
+
+- Fixed `CONTRIBUTING.md` stating a stale Go prerequisite (`1.21+`, actually `1.23+` per `go.mod`/CI), an inaccurate `air` auto-install target (claimed `make r`, actually `make r-dev`), and a stale example crate version (`2.0.0`) in the Workspace Structure section.
+
+**Python:**
+
+- Fixed `_core.pyi` stating stale defaults that diverged from the actual PyO3 runtime (and every other binding): `StreamingLowess.fraction` (`0.3`→`0.67`), `OnlineLowess.fraction` (`0.2`→`0.67`), `OnlineLowess.window_capacity` (`100`→`1000`), and `OnlineLowess.update_mode` (`"full"`→`"incremental"`). Runtime behavior was already correct.
+
+**Node.js:**
+
+- Fixed `OnlineOptions` doc comments stating `min_points` defaults to `3` (actually `2`) and `update_mode` defaults to `"full"` (actually `"incremental"`).
+
+**WASM:**
+
+- Fixed the same class of stale doc-comment defaults as Node.js: `StreamingOptions.overlap` stated a flat `500` instead of the dynamic `chunk_size / 10`, and `OnlineOptions.window_capacity`/`update_mode` stated `100`/`"full"` instead of `1000`/`"incremental"`.
+
+**Java:**
+
+- Fixed `StreamingOptions.Builder.overlap()`'s Javadoc stating a stale flat `500` default; it's actually dynamic (`chunk_size / 10`, clamped to `[1, chunk_size - 10]`).
+
+**R:**
+
+- Fixed `use-case-real-time.Rmd`'s dashboard example crashing at 2 data points: the internal `validate_common_args()` hardcoded a stricter `min_points = 3L` than the Rust core's actual minimum of 2. Lowered its default to `2L` to match every other binding.
 
 ## 3.2.1
 

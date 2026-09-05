@@ -149,7 +149,7 @@ trends <- lapply(scales, function(f) {
     model <- Lowess(fraction = f)
     fit(model, t, y)$y
 })
-cat("Trend y[0] values:", sapply(trends, function(tr) tr[1]), "\n")
+cat("Trend y[0] values:", vapply(trends, function(tr) tr[1], numeric(1)), "\n")
 ```
 
 ---

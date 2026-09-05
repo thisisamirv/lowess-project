@@ -9,6 +9,32 @@ Before opening a new issue, please search existing ones.
 - **Bugs**: Include a minimal reproducible example, environment details (OS, Rust/Python/R version), and expected vs actual behavior.
 - **Features**: Describe the use case and provide examples of the proposed API or behavior.
 
+## Ideas for Contribution
+
+The Batch adapter already covers a comprehensive set of options (kernels, robustness, cross-validation, intervals, GPU execution, custom weights, etc.), but there's still room to grow. Contributions in any of these areas are especially welcome:
+
+**Batch:**
+
+- **Out-of-sample prediction**: `fit(x, y)` only returns smoothed values at the input `x` positions; there's no way to evaluate the fitted curve at new x-values not in the training set (like R's `predict.loess(model, newdata)`). Would need `fit()` to retain the local-fit structure for a later `predict(new_x)` call.
+- **Expose local slope/derivative**: each point's local WLS fit already computes a slope internally ([regression.rs](crates/lowess/src/algorithms/regression.rs)), but only the fitted `y` is kept. A `return_derivative` option exposing that per-point slope would enable rate-of-change/turning-point analysis with minimal new computation.
+- **Adaptive/automatic fraction selection**: CV-based bandwidth selection currently requires hand-picking a `cv_fractions` grid. A continuous search (e.g. golden-section over `(0, 1]` minimizing CV error or AICc) would remove the hardest tuning decision.
+- **STL-style seasonal-trend decomposition**: Cleveland's STL is built from repeated LOWESS passes (trend + seasonal + remainder); none of the current adapters offer this, despite already having the necessary primitives.
+- **Bootstrap-based intervals**: an alternative to the existing analytic hat-matrix SE-based confidence/prediction intervals, useful when the residual-normality assumption is questionable.
+
+**Streaming:**
+
+- **Concurrent chunk processing**: `parallel` currently only parallelizes the local regression fits *within* a single chunk; independent chunks still go through `process_chunk()` one at a time. A `process_chunks(&[...])` helper that processes chunks concurrently (carefully handling overlap-merge ordering) could meaningfully speed up large offline chunked jobs.
+- **Checkpointable/resumable state**: `StreamingBuffer`/the builder state have no serialization support, so a long-running streaming session can't be saved and resumed across process restarts — useful for production ETL pipelines processing files far larger than memory over multiple runs.
+- **Iterator-based convenience wrapper**: a `process_stream(impl Iterator<Item = (Vec<T>, Vec<T>)>)` helper that repeatedly calls `process_chunk`/`finalize` internally, reducing boilerplate for the common "read chunks from a file/socket" pattern.
+
+**Online:**
+
+- **Populate `standard_error`**: `OnlineOutput.standard_error` exists in the struct but is always `None` — the fast `Incremental` path never computes it, and the `Full` path builds its `LowessConfig` with `return_variance: None`, so it's never populated there either. Wiring up real standard errors (at least for `Full` mode) would give real-time uncertainty for dashboards.
+- **Time/x-range-based window eviction**: `window_capacity` is a point-count cap; for irregularly-sampled real-time data (e.g. sensor gaps), a "keep points within the last N x-units" policy would be a useful alternative.
+- **Configurable warm-up behavior**: `add_point()` returns `None` until `min_points` is reached; an option to return an early, lower-confidence estimate immediately (e.g. a running mean) instead of a gap could help dashboards that don't want to show blanks.
+
+If you'd like to work on one of these, please open an issue first to discuss the approach and API shape.
+
 ## Development Setup
 
 The project uses a root `Makefile` that delegates to per-component `Makefile`s in each crate and binding directory.
@@ -38,7 +64,7 @@ To develop across all platforms, you will need the following tools installed. Yo
   - **Linux/Ubuntu**: `libcurl4-openssl-dev`, `libssl-dev`, `libxml2-dev`, `libfontconfig1-dev`, `libharfbuzz-dev`, `libfribidi-dev`, `libfreetype6-dev`, `libpng-dev`, `libtiff5-dev`, `libjpeg-dev`, `libprotobuf-dev`, `protobuf-compiler`, `libuv1-dev`, `libgit2-dev`, `libssh2-1-dev`, `libmagick++-dev`
   - **macOS**: System libraries are typically available; install Xcode Command Line Tools if needed
   - **Windows**: System libraries are typically bundled with Rtools
-- **air**: R formatter — auto-installed by `make r` if not found (via the official installer script)
+- **air**: R formatter — auto-installed by `make r-dev` if not found (via the official installer script)
 - *The Makefile automatically installs the following R packages into `bindings/r/.r-lib/`:*
   - *CRAN (required)*: `styler`, `testthat`, `rmarkdown`, `knitr`, `lintr`, `roxygen2`, `pkgdown`, `remotes`
   - *CRAN (optional)*: `covr`, `prettycode`, `toml`, `V8`, `visNetwork`
@@ -66,7 +92,7 @@ To develop across all platforms, you will need the following tools installed. Yo
 
 **Go**:
 
-- **Go**: 1.21+ (with `go` in PATH)
+- **Go**: 1.23+ (with `go` in PATH)
 - **cgo**: `CGO_ENABLED=1` and a C compiler (GCC/Clang; on Windows, a MinGW-w64 toolchain, since Go's `cgo` invokes `gcc` rather than MSVC's `cl.exe`)
 - **golangci-lint**: auto-installed by `make go-dev` if not found (via the official install script)
 
@@ -201,7 +227,7 @@ Each crate defines its own version and all metadata independently:
 # Individual crate Cargo.toml
 [package]
 name = "lowess"
-version = "2.0.0"
+version = "3.2.1"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 rust-version = "1.89"

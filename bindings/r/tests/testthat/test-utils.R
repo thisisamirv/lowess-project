@@ -21,10 +21,10 @@ test_that("validate_common_args rejects mismatched lengths", {
     )
 })
 
-test_that("validate_common_args rejects fewer than 3 points", {
+test_that("validate_common_args rejects fewer than 2 points", {
     expect_error(
-        validate_common_args(1:2, 1:2, 0.5, 3),
-        "At least 3 data points are required"
+        validate_common_args(1, 1, 0.5, 3),
+        "At least 2 data points are required"
     )
 })
 

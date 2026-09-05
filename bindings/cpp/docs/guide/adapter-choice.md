@@ -62,9 +62,14 @@ int main() {
 
     int mid = n / 2;
     std::cout << "95% CI at midpoint: [" << result.confidence_lower()[mid] << ", " << result.confidence_upper()[mid] << "]\n";
-    std::cout << "R2: " << result.diagnostics().value().r_squared() << "\n";
+    std::cout << "R2: " << result.diagnostics().r_squared() << "\n";
     return 0;
 }
+```
+
+```output
+95% CI at midpoint: [0.0393153, 0.10767]
+R2: 0.966427
 ```
 
 ---
@@ -125,6 +130,10 @@ int main() {
     std::cout << "Smoothed y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+Smoothed y[0]: 0.257845
 ```
 
 ---
@@ -190,6 +199,14 @@ int main() {
     }
     return 0;
 }
+```
+
+```output
+0.351148
+0.412033
+0.471662
+0.529795
+0.586197
 ```
 
 ---

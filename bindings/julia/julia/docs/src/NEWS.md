@@ -1,4 +1,22 @@
 <!-- markdownlint-disable MD024 MD025 -->
+# FastLOWESS.jl Unreleased
+
+## Added
+
+* Added a `return_sorted` option to `Lowess`.
+* Added a `missing` option to `Lowess`, `StreamingLowess`, and `OnlineLowess`.
+
+## Changed
+
+* `dev/runners/go.py`'s `run_go`/doc-snippet verification now batch-builds every Go snippet in one `go build ./...` (each snippet as its own `cmd/snippet_NNNN` package under a persistent module), instead of one `go run` per snippet in a fresh throwaway module. Avoids repeating module resolution and cgo compile/link overhead per snippet; built binaries then run concurrently. `verify_snippets.py`'s batch dispatch (previously Rust-only) is generalized via a `BATCH_RUNNERS` mapping to cover both `rust` and `go`.
+* `dev/runners/cpp.py`'s doc-snippet verification now resolves the shared compiler/library/MSVC-environment setup once per run, then compiles+links+runs every C++ snippet concurrently (previously strictly one g++/clang++/cl.exe invocation at a time), added to `BATCH_RUNNERS`. Fixed a resulting MSVC race where concurrent `cl.exe` invocations collided on a shared `snippet.obj` in the working directory, by pinning each snippet's intermediate object file (`/Fo`) and compiler `cwd` to its own temp dir.
+* Improved API docs for all bindings and crates significantly.
+* Fixed several bindings' docs showing a flat `500` default for `overlap` (Node.js, WASM, Go, Java, R) when the actual behavior is a dynamic `chunk_size / 10` (clamped to `[1, chunk_size - 10]`), matching every language binding's `build_streaming()` helper.
+* Renamed Python's `docs/guide/adapters.md` to `docs/guide/adapter-choice.md`, matching every other binding/crate's filename for the same page.
+* Renamed Python's `docs/use-case/{genomics,real-time,time-series}.md` to `docs/use-case/use-case-{genomics,real-time,time-series}.md`, matching every other binding/crate's filenames for the same pages.
+* Removed `return_diagnostics`, `return_residuals`, and `parallel` from `OnlineLowess`, same reason as Python. Breaking change.
+* `StreamingLowess`'s `overlap` keyword argument default changed from a fixed `500` to `-1` (a sentinel meaning "use the library default"), so it now resolves dynamically to `chunk_size / 10` like every other language binding, instead of always passing a concrete `500` regardless of `chunk_size`. Breaking change for callers relying on the previous flat default.
+
 # FastLOWESS.jl 3.2.1
 
 ## Added

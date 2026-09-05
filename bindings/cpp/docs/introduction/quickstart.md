@@ -33,7 +33,7 @@ int main() {
 ```
 
 ```output
-First smoothed: 0.02784  (true: 0)
+First smoothed value: 0.02784  (true: 0)
 ```
 
 ---

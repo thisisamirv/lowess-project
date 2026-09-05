@@ -23,7 +23,7 @@ console.log(`First smoothed value: ${result.y[0].toFixed(4)}  (true: ${Math.sin(
 ```
 
 ```output
-First smoothed: 0.0278  (true: 0.0000)
+First smoothed value: 0.0278  (true: 0.0000)
 ```
 
 ---

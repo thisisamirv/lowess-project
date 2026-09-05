@@ -1,6 +1,25 @@
 \page news News
 
 <!-- markdownlint-disable MD024 MD025 -->
+# fastlowess (C++) Unreleased
+
+## Added
+
+* Added a `return_sorted` option to `LowessOptions`.
+* Added a `missing` option to `LowessOptions` and `OnlineOptions` (inherited by `StreamingOptions`).
+
+## Changed
+
+* Improved API docs for all bindings and crates significantly.
+* Fixed several bindings' docs showing a flat `500` default for `overlap` (Node.js, WASM, Go, Java, R) when the actual behavior is a dynamic `chunk_size / 10` (clamped to `[1, chunk_size - 10]`), matching every language binding's `build_streaming()` helper.
+* Renamed Python's `docs/guide/adapters.md` to `docs/guide/adapter-choice.md`, matching every other binding/crate's filename for the same page.
+* Renamed Python's `docs/use-case/{genomics,real-time,time-series}.md` to `docs/use-case/use-case-{genomics,real-time,time-series}.md`, matching every other binding/crate's filenames for the same pages.
+* Repinned the macOS x64 job in `release-cpp.yml` to `macos-15-intel`.
+* Removed `return_diagnostics`, `return_residuals`, and `parallel` from `OnlineOptions`, same reason as Python. Breaking change.
+* Removed `confidence_intervals` and `prediction_intervals` from `OnlineOptions`; `StreamingOptions` no longer forwards its inherited copies. Breaking change.
+* Removed the dead `custom_weights` field from `OnlineOptions` — declared but never read. Breaking change.
+* `StreamingOptions::overlap`'s default changed from a fixed `500` to `-1` (a sentinel meaning "use the library default"), so it now resolves dynamically to `chunk_size / 10` like every other language binding, instead of always passing a concrete `500` to the native constructor regardless of `chunk_size`. Breaking change for callers relying on the previous flat default.
+
 # fastlowess (C++) 3.2.1
 
 ## Added

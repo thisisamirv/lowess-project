@@ -125,7 +125,7 @@ export interface OnlineSmoothOptions {
 export interface StreamingOptions {
     /** Size of each processing chunk. Default: 5000. */
     chunk_size?: number;
-    /** Overlap between adjacent chunks. Default: 500. */
+    /** Overlap between adjacent chunks. Default: chunk_size / 10, min. 1. */
     overlap?: number;
     /** Strategy for merging chunks (\"average\", \"weighted_average\", \"take_first\", \"take_last\"). Default: \"weighted_average\". */
     merge_strategy?: string;
@@ -133,11 +133,11 @@ export interface StreamingOptions {
 
 /** Configuration options for online LOWESS. */
 export interface OnlineOptions {
-    /** Maximum number of points to retain in the sliding window. Default: 100. */
+    /** Maximum number of points to retain in the sliding window. Default: 1000. */
     window_capacity?: number;
     /** Minimum points required before smoothing starts. Default: 2. */
     min_points?: number;
-    /** Update strategy ("full" or "incremental"). Default: "full". */
+    /** Update strategy ("full" or "incremental"). Default: "incremental". */
     update_mode?: string;
 }
 
