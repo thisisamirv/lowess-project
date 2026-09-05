@@ -20,6 +20,11 @@ import (
 
 const gpuRepo = "thisisamirv/lowess-project"
 
+// GPU artifacts across all versions live in this one perpetual release
+// instead of cluttering each version's own release page; the source version
+// is embedded in each asset's filename instead.
+const gpuReleaseTag = "gpu-builds"
+
 // platformArchTag returns the "<platform>-<arch>" suffix release-gpu.yml
 // uses for this binding's GPU static library, or "" if this platform/arch
 // combination isn't built.
@@ -50,15 +55,53 @@ func platformArchTag() string {
 	return ""
 }
 
-// InstallGPU downloads a prebuilt GPU-enabled fastlowess_go static library
-// for this platform from the matching GitHub Release, saving it to
-// ~/.fastlowess/gpu/libfastlowess_go.a.
+// InstallGPU installs a GPU-enabled fastlowess_go static library for this
+// platform, saving it to ~/.fastlowess/gpu/libfastlowess_go.a.
 //
 // Pass yes=true to skip the interactive y/N confirmation prompt; this is
 // required when stdin is not an interactive terminal.
-func InstallGPU(yes bool) error {
+//
+// Pass a non-empty localPath to install a GPU-enabled library already built
+// locally (e.g. via `cargo build -p fastlowess-go --profile release-c
+// --features gpu`) instead of downloading one from the matching GitHub
+// Release — useful for testing the installer itself, or installing an
+// unreleased build.
+func InstallGPU(yes bool, localPath string) error {
 	if GPUEnabled() {
 		fmt.Println("GPU backend is already active.")
+		return nil
+	}
+
+	home, err := os.UserHomeDir()
+	if err != nil {
+		home = "."
+	}
+	dir := filepath.Join(home, ".fastlowess", "gpu")
+	dest := filepath.Join(dir, "libfastlowess_go.a")
+
+	if localPath != "" {
+		if _, err := os.Stat(localPath); err != nil {
+			return fmt.Errorf("no such file: %s", localPath)
+		}
+		if !yes {
+			fmt.Printf("Install %s in place of the current build? [y/N] ", localPath)
+			reader := bufio.NewReader(os.Stdin)
+			answer, _ := reader.ReadString('\n')
+			answer = strings.TrimSpace(strings.ToLower(answer))
+			if answer != "y" && answer != "yes" {
+				fmt.Println("Aborted.")
+				return nil
+			}
+		}
+
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			return fmt.Errorf("failed to create %s: %w", dir, err)
+		}
+		fmt.Printf("Installing %s ...\n", localPath)
+		if err := copyGPULibrary(localPath, dest); err != nil {
+			return fmt.Errorf("failed to copy %s: %w", localPath, err)
+		}
+		printRebuildInstructions(dest, dir)
 		return nil
 	}
 
@@ -69,7 +112,7 @@ func InstallGPU(yes bool) error {
 	}
 
 	assetName := fmt.Sprintf("libfastlowess_go-gpu-v%s-%s.a", version, tag)
-	url := fmt.Sprintf("https://github.com/%s/releases/download/v%s/%s", gpuRepo, version, assetName)
+	url := fmt.Sprintf("https://github.com/%s/releases/download/%s/%s", gpuRepo, gpuReleaseTag, assetName)
 
 	if !yes {
 		fmt.Printf("Download and install %s from github.com/%s? [y/N] ", assetName, gpuRepo)
@@ -82,15 +125,9 @@ func InstallGPU(yes bool) error {
 		}
 	}
 
-	home, err := os.UserHomeDir()
-	if err != nil {
-		home = "."
-	}
-	dir := filepath.Join(home, ".fastlowess", "gpu")
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return fmt.Errorf("failed to create %s: %w", dir, err)
 	}
-	dest := filepath.Join(dir, "libfastlowess_go.a")
 
 	fmt.Printf("Downloading %s ...\n", url)
 	if err := downloadGPULibrary(url, dest); err != nil {
@@ -98,6 +135,11 @@ func InstallGPU(yes bool) error {
 			"a matching GPU build may not exist for this platform/version yet", url, err)
 	}
 
+	printRebuildInstructions(dest, dir)
+	return nil
+}
+
+func printRebuildInstructions(dest, dir string) {
 	fmt.Printf("GPU library installed at %s.\n", dest)
 	fmt.Println("A running program can't swap a statically-linked library, so rebuild with " +
 		"CGO_LDFLAGS pointing at it, e.g.:")
@@ -110,7 +152,30 @@ func InstallGPU(yes bool) error {
 		fmt.Printf("  export CGO_LDFLAGS=\"-L%s -lfastlowess_go -lm -ldl -lpthread\"\n", dir)
 	}
 	fmt.Println("then `go build ./...`.")
-	return nil
+}
+
+func copyGPULibrary(src, dest string) error {
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = in.Close() }()
+
+	tmp := dest + ".tmp"
+	out, err := os.Create(tmp)
+	if err != nil {
+		return err
+	}
+	if _, err := io.Copy(out, in); err != nil {
+		_ = out.Close()
+		_ = os.Remove(tmp)
+		return err
+	}
+	if err := out.Close(); err != nil {
+		_ = os.Remove(tmp)
+		return err
+	}
+	return os.Rename(tmp, dest)
 }
 
 func downloadGPULibrary(url, dest string) error {
@@ -119,7 +184,7 @@ func downloadGPULibrary(url, dest string) error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("HTTP %d", resp.StatusCode)
 	}
@@ -130,12 +195,12 @@ func downloadGPULibrary(url, dest string) error {
 		return err
 	}
 	if _, err := io.Copy(f, resp.Body); err != nil {
-		f.Close()
-		os.Remove(tmp)
+		_ = f.Close()
+		_ = os.Remove(tmp)
 		return err
 	}
 	if err := f.Close(); err != nil {
-		os.Remove(tmp)
+		_ = os.Remove(tmp)
 		return err
 	}
 	return os.Rename(tmp, dest)

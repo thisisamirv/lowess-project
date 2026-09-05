@@ -56,10 +56,14 @@ gpu_asset_info <- function(version) {
         ext
     )
     repo <- "thisisamirv/lowess-project"
+    # GPU artifacts across all versions live in this one perpetual release
+    # instead of cluttering each version's own release page; the source
+    # version is embedded in the asset filename above instead.
+    gpu_release_tag <- "gpu-builds"
     url <- sprintf(
-        "https://github.com/%s/releases/download/v%s/%s",
+        "https://github.com/%s/releases/download/%s/%s",
         repo,
-        version,
+        gpu_release_tag,
         asset
     )
     list(asset = asset, repo = repo, url = url, ext = ext)
@@ -142,6 +146,11 @@ gpu_lib_dir <- function(
 #'
 #' @param yes Logical; skip the interactive \verb{y/N} confirmation prompt.
 #'   Must be \code{TRUE} when the session is not interactive.
+#' @param local_path Character; path to a GPU-enabled shared library already
+#'   built locally (e.g. via \code{WITH_GPU=1 make install} in
+#'   \code{benchmarks/}). When given, skips the GitHub Release lookup/download
+#'   and installs directly from this path — useful for testing the installer
+#'   itself, or installing an unreleased build.
 #' @return Invisibly, \code{TRUE} if a GPU-enabled library is available at
 #'   the printed path (already active, or freshly installed); \code{FALSE}
 #'   if the user aborted.
@@ -153,9 +162,42 @@ gpu_lib_dir <- function(
 #'     install_gpu()
 #' }
 #' @export
-install_gpu <- function(yes = FALSE) {
+install_gpu <- function(yes = FALSE, local_path = NULL) {
     if (gpu_available()) {
         message("GPU backend is already active.")
+        return(invisible(TRUE))
+    }
+
+    lib_dir <- gpu_lib_dir()
+
+    if (!is.null(local_path)) {
+        if (!file.exists(local_path)) {
+            stop("No such file: ", local_path, call. = FALSE)
+        }
+        if (!yes) {
+            if (!is_interactive()) {
+                stop(
+                    "install_gpu() requires confirmation. Pass yes = TRUE to ",
+                    "proceed non-interactively.",
+                    call. = FALSE
+                )
+            }
+            answer <- read_line(sprintf(
+                "Install %s in place of the current build? [y/N] ",
+                local_path
+            ))
+            if (!isTRUE(tolower(trimws(answer)) %in% c("y", "yes"))) {
+                message("Aborted.")
+                return(invisible(FALSE))
+            }
+        }
+
+        ext <- paste0(".", tools::file_ext(local_path))
+        dest <- file.path(lib_dir, paste0("rfastlowess", ext))
+        message("Installing ", local_path, " ...")
+        file.copy(local_path, dest, overwrite = TRUE)
+        message("GPU backend installed at ", dest, ".")
+        message("Restart R for the change to take effect.")
         return(invisible(TRUE))
     }
 
@@ -167,7 +209,6 @@ install_gpu <- function(yes = FALSE) {
         return(invisible(FALSE))
     }
 
-    lib_dir <- gpu_lib_dir()
     dest <- file.path(lib_dir, paste0("rfastlowess", info$ext))
 
     gpu_download_to(info$url, info$ext, dest)

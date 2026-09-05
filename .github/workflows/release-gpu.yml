@@ -5,9 +5,6 @@ on:
     types: [published]
   workflow_dispatch:
     inputs:
-      tag:
-        description: "Release tag to upload assets to (e.g. v3.0.0)"
-        required: true
       commit:
         description: "Commit SHA to build from (defaults to the workflow's own ref)"
         required: false
@@ -19,6 +16,10 @@ permissions:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  # GPU artifacts across all versions live in this one perpetual release
+  # instead of cluttering each version's own release page. The source
+  # version is embedded in every asset's filename instead.
+  GPU_RELEASE_TAG: gpu-builds
 
 jobs:
   # ============================================================================
@@ -267,7 +268,8 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist
-          cp target/release/libfastlowess_jl.so "dist/fastlowess_jl-gpu-${{ github.event.release.tag_name || 'dev' }}-linux-x86_64.so"
+          VERSION=$(grep "^version =" bindings/julia/julia/Project.toml | cut -d'"' -f2)
+          cp target/release/libfastlowess_jl.so "dist/fastlowess_jl-gpu-v$VERSION-linux-x86_64.so"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -293,7 +295,8 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist
-          cp target/release/libfastlowess_jl.dylib "dist/fastlowess_jl-gpu-${{ github.event.release.tag_name || 'dev' }}-macos-x86_64.dylib"
+          VERSION=$(grep "^version =" bindings/julia/julia/Project.toml | cut -d'"' -f2)
+          cp target/release/libfastlowess_jl.dylib "dist/fastlowess_jl-gpu-v$VERSION-macos-x86_64.dylib"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -319,7 +322,8 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist
-          cp target/release/libfastlowess_jl.dylib "dist/fastlowess_jl-gpu-${{ github.event.release.tag_name || 'dev' }}-macos-aarch64.dylib"
+          VERSION=$(grep "^version =" bindings/julia/julia/Project.toml | cut -d'"' -f2)
+          cp target/release/libfastlowess_jl.dylib "dist/fastlowess_jl-gpu-v$VERSION-macos-aarch64.dylib"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -345,8 +349,8 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          $tag = if ("${{ github.event.release.tag_name }}") { "${{ github.event.release.tag_name }}" } else { "dev" }
-          Copy-Item target/release/fastlowess_jl.dll "dist/fastlowess_jl-gpu-$tag-windows-x86_64.dll"
+          $version = (Select-String -Path bindings/julia/julia/Project.toml -Pattern '^version = "(.*)"').Matches[0].Groups[1].Value
+          Copy-Item target/release/fastlowess_jl.dll "dist/fastlowess_jl-gpu-v$version-windows-x86_64.dll"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -377,7 +381,8 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist
-          cp target/release/libfastlowess_jl.so "dist/fastlowess_jl-gpu-${{ github.event.release.tag_name || 'dev' }}-linux-aarch64.so"
+          VERSION=$(grep "^version =" bindings/julia/julia/Project.toml | cut -d'"' -f2)
+          cp target/release/libfastlowess_jl.so "dist/fastlowess_jl-gpu-v$VERSION-linux-aarch64.so"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -403,7 +408,8 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist
-          cp target/release/libfastlowess_cpp.so "dist/libfastlowess_cpp-gpu-${{ github.event.release.tag_name || 'dev' }}-linux-x86_64.so"
+          VERSION=$(grep '^version = ' bindings/cpp/Cargo.toml | head -1 | sed -E 's/version = "(.*)"/\1/')
+          cp target/release/libfastlowess_cpp.so "dist/libfastlowess_cpp-gpu-v$VERSION-linux-x86_64.so"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -429,7 +435,8 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist
-          cp target/release/libfastlowess_cpp.dylib "dist/libfastlowess_cpp-gpu-${{ github.event.release.tag_name || 'dev' }}-macos-x86_64.dylib"
+          VERSION=$(grep '^version = ' bindings/cpp/Cargo.toml | head -1 | sed -E 's/version = "(.*)"/\1/')
+          cp target/release/libfastlowess_cpp.dylib "dist/libfastlowess_cpp-gpu-v$VERSION-macos-x86_64.dylib"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -455,7 +462,8 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist
-          cp target/release/libfastlowess_cpp.dylib "dist/libfastlowess_cpp-gpu-${{ github.event.release.tag_name || 'dev' }}-macos-aarch64.dylib"
+          VERSION=$(grep '^version = ' bindings/cpp/Cargo.toml | head -1 | sed -E 's/version = "(.*)"/\1/')
+          cp target/release/libfastlowess_cpp.dylib "dist/libfastlowess_cpp-gpu-v$VERSION-macos-aarch64.dylib"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -481,8 +489,8 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          $tag = if ("${{ github.event.release.tag_name }}") { "${{ github.event.release.tag_name }}" } else { "dev" }
-          Copy-Item target/release/fastlowess_cpp.dll "dist/libfastlowess_cpp-gpu-$tag-windows-x86_64.dll"
+          $version = (Select-String -Path bindings/cpp/Cargo.toml -Pattern '^version = "(.*)"').Matches[0].Groups[1].Value
+          Copy-Item target/release/fastlowess_cpp.dll "dist/libfastlowess_cpp-gpu-v$version-windows-x86_64.dll"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -513,7 +521,8 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist
-          cp target/release/libfastlowess_cpp.so "dist/libfastlowess_cpp-gpu-${{ github.event.release.tag_name || 'dev' }}-linux-aarch64.so"
+          VERSION=$(grep '^version = ' bindings/cpp/Cargo.toml | head -1 | sed -E 's/version = "(.*)"/\1/')
+          cp target/release/libfastlowess_cpp.so "dist/libfastlowess_cpp-gpu-v$VERSION-linux-aarch64.so"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -544,8 +553,8 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          $tag = if ("${{ github.event.release.tag_name }}") { "${{ github.event.release.tag_name }}" } else { "dev" }
-          Copy-Item target/release/fastlowess_cpp.dll "dist/libfastlowess_cpp-gpu-$tag-windows-aarch64.dll"
+          $version = (Select-String -Path bindings/cpp/Cargo.toml -Pattern '^version = "(.*)"').Matches[0].Groups[1].Value
+          Copy-Item target/release/fastlowess_cpp.dll "dist/libfastlowess_cpp-gpu-v$version-windows-aarch64.dll"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -581,7 +590,8 @@ jobs:
         working-directory: bindings/nodejs
         run: |
           mkdir -p dist
-          cp fastlowess.node dist/fastlowess-gpu.linux-x64-gnu.node
+          VERSION=$(node -p "require('./package.json').version")
+          cp fastlowess.node dist/fastlowess-gpu-v$VERSION.linux-x64-gnu.node
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -617,7 +627,8 @@ jobs:
         working-directory: bindings/nodejs
         run: |
           mkdir -p dist
-          cp fastlowess.node dist/fastlowess-gpu.darwin-x64.node
+          VERSION=$(node -p "require('./package.json').version")
+          cp fastlowess.node dist/fastlowess-gpu-v$VERSION.darwin-x64.node
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -653,7 +664,8 @@ jobs:
         working-directory: bindings/nodejs
         run: |
           mkdir -p dist
-          cp fastlowess.node dist/fastlowess-gpu.darwin-arm64.node
+          VERSION=$(node -p "require('./package.json').version")
+          cp fastlowess.node dist/fastlowess-gpu-v$VERSION.darwin-arm64.node
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -690,7 +702,8 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          Copy-Item fastlowess.node dist/fastlowess-gpu.win32-x64-msvc.node
+          $version = node -p "require('./package.json').version"
+          Copy-Item fastlowess.node dist/fastlowess-gpu-v$version.win32-x64-msvc.node
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -737,7 +750,8 @@ jobs:
         working-directory: bindings/nodejs
         run: |
           mkdir -p dist
-          cp fastlowess.node dist/fastlowess-gpu.linux-x64-musl.node
+          VERSION=$(node -p "require('./package.json').version")
+          cp fastlowess.node dist/fastlowess-gpu-v$VERSION.linux-x64-musl.node
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -785,7 +799,8 @@ jobs:
         working-directory: bindings/nodejs
         run: |
           mkdir -p dist
-          cp fastlowess.node dist/fastlowess-gpu.linux-arm64-gnu.node
+          VERSION=$(node -p "require('./package.json').version")
+          cp fastlowess.node dist/fastlowess-gpu-v$VERSION.linux-arm64-gnu.node
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -830,7 +845,8 @@ jobs:
         working-directory: bindings/nodejs
         run: |
           mkdir -p dist
-          cp fastlowess.node dist/fastlowess-gpu.linux-arm64-musl.node
+          VERSION=$(node -p "require('./package.json').version")
+          cp fastlowess.node dist/fastlowess-gpu-v$VERSION.linux-arm64-musl.node
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -878,7 +894,8 @@ jobs:
         working-directory: bindings/nodejs
         run: |
           mkdir -p dist
-          cp fastlowess.node dist/fastlowess-gpu.linux-arm-gnueabihf.node
+          VERSION=$(node -p "require('./package.json').version")
+          cp fastlowess.node dist/fastlowess-gpu-v$VERSION.linux-arm-gnueabihf.node
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -921,7 +938,8 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          Copy-Item fastlowess.node dist/fastlowess-gpu.win32-arm64-msvc.node
+          $version = node -p "require('./package.json').version"
+          Copy-Item fastlowess.node dist/fastlowess-gpu-v$version.win32-arm64-msvc.node
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -953,7 +971,8 @@ jobs:
         run: |
           LIBDIR=$(Rscript -e 'cat(system.file("libs", package="rfastlowess"))')
           mkdir -p dist
-          cp "$LIBDIR/rfastlowess.so" "dist/librfastlowess-gpu-${{ github.event.release.tag_name || 'dev' }}-linux-x86_64.so"
+          VERSION=$(grep "^Version:" bindings/r/DESCRIPTION | sed 's/Version: //')
+          cp "$LIBDIR/rfastlowess.so" "dist/librfastlowess-gpu-v$VERSION-linux-x86_64.so"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -985,7 +1004,8 @@ jobs:
         run: |
           LIBDIR=$(Rscript -e 'cat(system.file("libs", package="rfastlowess"))')
           mkdir -p dist
-          cp "$LIBDIR/rfastlowess.so" "dist/librfastlowess-gpu-${{ github.event.release.tag_name || 'dev' }}-macos-x86_64.so"
+          VERSION=$(grep "^Version:" bindings/r/DESCRIPTION | sed 's/Version: //')
+          cp "$LIBDIR/rfastlowess.so" "dist/librfastlowess-gpu-v$VERSION-macos-x86_64.so"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -1017,7 +1037,8 @@ jobs:
         run: |
           LIBDIR=$(Rscript -e 'cat(system.file("libs", package="rfastlowess"))')
           mkdir -p dist
-          cp "$LIBDIR/rfastlowess.so" "dist/librfastlowess-gpu-${{ github.event.release.tag_name || 'dev' }}-macos-aarch64.so"
+          VERSION=$(grep "^Version:" bindings/r/DESCRIPTION | sed 's/Version: //')
+          cp "$LIBDIR/rfastlowess.so" "dist/librfastlowess-gpu-v$VERSION-macos-aarch64.so"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -1053,8 +1074,8 @@ jobs:
         run: |
           $libDir = Rscript -e "cat(system.file('libs', package='rfastlowess'))"
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          $tag = if ("${{ github.event.release.tag_name }}") { "${{ github.event.release.tag_name }}" } else { "dev" }
-          Copy-Item "$libDir/x64/rfastlowess.dll" "dist/librfastlowess-gpu-$tag-windows-x86_64.dll"
+          $version = (Select-String -Path bindings/r/DESCRIPTION -Pattern '^Version: (.*)').Matches[0].Groups[1].Value
+          Copy-Item "$libDir/x64/rfastlowess.dll" "dist/librfastlowess-gpu-v$version-windows-x86_64.dll"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -1080,7 +1101,8 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist
-          cp target/release/libfastlowess_go.a "dist/libfastlowess_go-gpu-${{ github.event.release.tag_name || 'dev' }}-linux-x86_64.a"
+          VERSION=$(grep 'const version' bindings/go/fastlowess/version.go | sed -E 's/.*"(.*)".*/\1/')
+          cp target/release/libfastlowess_go.a "dist/libfastlowess_go-gpu-v$VERSION-linux-x86_64.a"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -1106,7 +1128,8 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist
-          cp target/release/libfastlowess_go.a "dist/libfastlowess_go-gpu-${{ github.event.release.tag_name || 'dev' }}-macos-x86_64.a"
+          VERSION=$(grep 'const version' bindings/go/fastlowess/version.go | sed -E 's/.*"(.*)".*/\1/')
+          cp target/release/libfastlowess_go.a "dist/libfastlowess_go-gpu-v$VERSION-macos-x86_64.a"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -1132,7 +1155,8 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist
-          cp target/release/libfastlowess_go.a "dist/libfastlowess_go-gpu-${{ github.event.release.tag_name || 'dev' }}-macos-aarch64.a"
+          VERSION=$(grep 'const version' bindings/go/fastlowess/version.go | sed -E 's/.*"(.*)".*/\1/')
+          cp target/release/libfastlowess_go.a "dist/libfastlowess_go-gpu-v$VERSION-macos-aarch64.a"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -1163,8 +1187,8 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          $tag = if ("${{ github.event.release.tag_name }}") { "${{ github.event.release.tag_name }}" } else { "dev" }
-          Copy-Item target/x86_64-pc-windows-gnu/release/libfastlowess_go.a "dist/libfastlowess_go-gpu-$tag-windows-x86_64.a"
+          $version = (Select-String -Path bindings/go/fastlowess/version.go -Pattern 'const version = "(.*)"').Matches[0].Groups[1].Value
+          Copy-Item target/x86_64-pc-windows-gnu/release/libfastlowess_go.a "dist/libfastlowess_go-gpu-v$version-windows-x86_64.a"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -1195,7 +1219,8 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist
-          cp target/release/libfastlowess_go.a "dist/libfastlowess_go-gpu-${{ github.event.release.tag_name || 'dev' }}-linux-arm64.a"
+          VERSION=$(grep 'const version' bindings/go/fastlowess/version.go | sed -E 's/.*"(.*)".*/\1/')
+          cp target/release/libfastlowess_go.a "dist/libfastlowess_go-gpu-v$VERSION-linux-arm64.a"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -1237,8 +1262,8 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          $tag = if ("${{ github.event.release.tag_name }}") { "${{ github.event.release.tag_name }}" } else { "dev" }
-          Copy-Item target/aarch64-pc-windows-gnullvm/release/libfastlowess_go.a "dist/libfastlowess_go-gpu-$tag-windows-arm64.a"
+          $version = (Select-String -Path bindings/go/fastlowess/version.go -Pattern 'const version = "(.*)"').Matches[0].Groups[1].Value
+          Copy-Item target/aarch64-pc-windows-gnullvm/release/libfastlowess_go.a "dist/libfastlowess_go-gpu-v$version-windows-arm64.a"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -1264,7 +1289,8 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist
-          cp target/release/libfastlowess_java.so "dist/libfastlowess_java-gpu-${{ github.event.release.tag_name || 'dev' }}-linux-x86_64.so"
+          VERSION=$(grep -m1 '<version>' bindings/java/pom.xml | sed -E 's/.*<version>(.*)<\/version>.*/\1/')
+          cp target/release/libfastlowess_java.so "dist/libfastlowess_java-gpu-v$VERSION-linux-x86_64.so"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -1290,7 +1316,8 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist
-          cp target/release/libfastlowess_java.dylib "dist/libfastlowess_java-gpu-${{ github.event.release.tag_name || 'dev' }}-macos-x86_64.dylib"
+          VERSION=$(grep -m1 '<version>' bindings/java/pom.xml | sed -E 's/.*<version>(.*)<\/version>.*/\1/')
+          cp target/release/libfastlowess_java.dylib "dist/libfastlowess_java-gpu-v$VERSION-macos-x86_64.dylib"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -1316,7 +1343,8 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist
-          cp target/release/libfastlowess_java.dylib "dist/libfastlowess_java-gpu-${{ github.event.release.tag_name || 'dev' }}-macos-aarch64.dylib"
+          VERSION=$(grep -m1 '<version>' bindings/java/pom.xml | sed -E 's/.*<version>(.*)<\/version>.*/\1/')
+          cp target/release/libfastlowess_java.dylib "dist/libfastlowess_java-gpu-v$VERSION-macos-aarch64.dylib"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -1342,8 +1370,8 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          $tag = if ("${{ github.event.release.tag_name }}") { "${{ github.event.release.tag_name }}" } else { "dev" }
-          Copy-Item target/release/fastlowess_java.dll "dist/libfastlowess_java-gpu-$tag-windows-x86_64.dll"
+          $version = (Select-String -Path bindings/java/pom.xml -Pattern '<version>(.*)</version>').Matches[0].Groups[1].Value
+          Copy-Item target/release/fastlowess_java.dll "dist/libfastlowess_java-gpu-v$version-windows-x86_64.dll"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -1413,7 +1441,16 @@ jobs:
           path: dist
           merge-multiple: true
 
+      - name: Ensure the gpu-builds release exists
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view "$GPU_RELEASE_TAG" >/dev/null 2>&1 || gh release create "$GPU_RELEASE_TAG" \
+            --title "GPU builds" \
+            --notes "Prebuilt GPU-enabled artifacts for every language binding, across all released versions (the source version is embedded in each asset's filename). Fetched automatically by each binding's \`install_gpu()\`/\`installGpu()\` installer — see the GPU Backend guide in each binding's docs. Not meant to be downloaded manually." \
+            --prerelease
+
       - name: Upload wheels and libraries as release assets
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "${{ github.event.release.tag_name || github.event.inputs.tag }}" dist/*.whl dist/*.so dist/*.dylib dist/*.dll dist/*.node dist/*.a --clobber
+        run: gh release upload "$GPU_RELEASE_TAG" dist/*.whl dist/*.so dist/*.dylib dist/*.dll dist/*.node dist/*.a --clobber

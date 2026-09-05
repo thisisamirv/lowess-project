@@ -111,6 +111,10 @@ function __init__()
 end
 
 const _GPU_REPO = "thisisamirv/lowess-project"
+# GPU artifacts across all versions live in this one perpetual release
+# instead of cluttering each version's own release page; the source version
+# is embedded in each asset's filename instead.
+const _GPU_RELEASE_TAG = "gpu-builds"
 
 # Version string read straight from this package's own Project.toml so it
 # always matches the installed FastLOWESS.jl version, without depending on
@@ -145,7 +149,7 @@ function gpu_available()
 end
 
 """
-	install_gpu(; yes::Bool = false)
+	install_gpu(; yes::Bool = false, local_path::Union{String,Nothing} = nothing)
 
 Download and install the GPU-enabled FastLOWESS native library for this
 platform, then switch the current Julia session to use it immediately — no
@@ -156,15 +160,52 @@ this fetches a prebuilt library from the matching GitHub Release
 Set `yes=true` to skip the interactive `y/N` confirmation prompt (required
 when stdin is not an interactive terminal).
 
+Pass `local_path` to install a GPU-enabled library already built locally
+(e.g. via `cargo build --release --features gpu`) instead of downloading one
+— useful for testing the installer itself, or installing an unreleased
+build. Skips the GitHub Release lookup/download and the on-disk cache.
+
 Once downloaded, the library is cached under `~/.fastlowess/gpu/` and reused
 on subsequent calls without re-downloading or re-prompting. To use the GPU
 build automatically in future sessions (without calling `install_gpu()`
 again), set `ENV["FASTLOWESS_LIB"]` to the printed cache path in your Julia
 startup config.
 """
-function install_gpu(; yes::Bool = false)
+function install_gpu(; yes::Bool = false, local_path::Union{String,Nothing} = nothing)
     if gpu_available()
         println("GPU backend is already active.")
+        return nothing
+    end
+
+    if local_path !== nothing
+        if !isfile(local_path)
+            error("No such file: $(local_path)")
+        end
+        if !yes
+            if !isa(stdin, Base.TTY)
+                error(
+                    "install_gpu() requires confirmation. Pass yes=true to proceed non-interactively.",
+                )
+            end
+            print("Install $(local_path) in place of the current build? [y/N] ")
+            answer = lowercase(strip(readline()))
+            if answer != "y" && answer != "yes"
+                println("Aborted.")
+                return nothing
+            end
+        end
+
+        println("Installing $(local_path) ...")
+        previous = libfastlowess[]
+        libfastlowess[] = local_path
+        if !gpu_available()
+            libfastlowess[] = previous
+            error("$(local_path) does not report GPU support.")
+        end
+        println("GPU backend installed and active for this session.")
+        println(
+            "To use it automatically in future sessions: ENV[\"FASTLOWESS_LIB\"] = \"$(local_path)\"",
+        )
         return nothing
     end
 
@@ -173,7 +214,7 @@ function install_gpu(; yes::Bool = false)
     arch = _gpu_arch_tag()
     ext = Sys.iswindows() ? "dll" : Sys.isapple() ? "dylib" : "so"
     asset_name = "fastlowess_jl-gpu-v$(version)-$(platform)-$(arch).$(ext)"
-    url = "https://github.com/$(_GPU_REPO)/releases/download/v$(version)/$(asset_name)"
+    url = "https://github.com/$(_GPU_REPO)/releases/download/$(_GPU_RELEASE_TAG)/$(asset_name)"
 
     cache_dir = joinpath(homedir(), ".fastlowess", "gpu")
     mkpath(cache_dir)

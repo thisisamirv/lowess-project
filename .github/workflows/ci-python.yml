@@ -101,17 +101,22 @@ jobs:
           pip install maturin numpy
           maturin build --release -o dist
           pip install --force-reinstall dist/*.whl
-      - name: Test install_gpu()
+      - name: Precheck GPU inactive
         run: |
           cat > /tmp/gpu_precheck.py <<'PY'
           import fastlowess as fl
           assert not fl.gpu_available(), "GPU backend should not be active before install_gpu()"
           PY
           python /tmp/gpu_precheck.py
-
-          cat > /tmp/gpu_install.py <<'PY'
+      - name: Build GPU wheel (separate output dir)
+        working-directory: bindings/python
+        run: maturin build --release --features gpu -o dist-gpu
+      - name: Test install_gpu(local_path)
+        run: |
+          WHEEL=$(ls bindings/python/dist-gpu/*.whl)
+          cat > /tmp/gpu_install.py <<PY
           import fastlowess as fl
-          fl.install_gpu(yes=True)
+          fl.install_gpu(yes=True, local_path="$WHEEL")
           PY
           python /tmp/gpu_install.py
 

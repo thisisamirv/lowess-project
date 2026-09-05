@@ -27,6 +27,10 @@ public final class FastLowess {
     public static final String VERSION = "4.0.0";
 
     private static final String GPU_REPO = "thisisamirv/lowess-project";
+    // GPU artifacts across all versions live in this one perpetual release
+    // instead of cluttering each version's own release page; the source
+    // version is embedded in each asset's filename instead.
+    private static final String GPU_RELEASE_TAG = "gpu-builds";
 
     /**
      * Returns the version of this Java binding.
@@ -75,6 +79,29 @@ public final class FastLowess {
      * when stdin is not an interactive console
      */
     public static void installGpu(boolean yes) {
+        installGpu(yes, null);
+    }
+
+    /**
+     * Installs a GPU-enabled {@code fastlowess_java} native library for this
+     * platform, saving it to {@code ~/.fastlowess/gpu/} under the standard
+     * library name for this platform.
+     *
+     * <p>
+     * A running JVM cannot swap an already-loaded native library. Point a new
+     * JVM at the installed file via {@code -Dfastlowess.native.dir=<dir>} (or
+     * {@code -Dfastlowess.native.path=<path>}) instead of relying on
+     * {@code System.loadLibrary}.
+     *
+     * @param yes skip the interactive y/N confirmation prompt; must be true
+     * when stdin is not an interactive console
+     * @param localPath path to a GPU-enabled library already built locally
+     * (e.g. via {@code cargo build -p fastlowess-java --release --features
+     * gpu}). When given, skips the GitHub Release lookup/download and installs
+     * directly from this path — useful for testing the installer itself, or
+     * installing an unreleased build.
+     */
+    public static void installGpu(boolean yes, String localPath) {
         if (gpuEnabled()) {
             System.out.println("GPU backend is already active.");
             return;
@@ -89,8 +116,43 @@ public final class FastLowess {
                     + "cargo build -p fastlowess-java --release --features gpu");
         }
         String ext = libraryExt(platform);
+        Path dir = Paths.get(System.getProperty("user.home"), ".fastlowess", "gpu");
+        Path dest = dir.resolve(libraryFileName(platform, ext));
+
+        if (localPath != null) {
+            Path src = Paths.get(localPath);
+            if (!Files.isRegularFile(src)) {
+                throw new IllegalStateException("No such file: " + src);
+            }
+            if (!yes) {
+                if (System.console() == null) {
+                    throw new IllegalStateException(
+                            "installGpu() requires confirmation. Pass yes=true to proceed non-interactively.");
+                }
+                String answer = System.console().readLine(
+                        "Install %s in place of the current build? [y/N] ", src);
+                String trimmed = answer == null ? "" : answer.strip();
+                if (!"y".equalsIgnoreCase(trimmed) && !"yes".equalsIgnoreCase(trimmed)) {
+                    System.out.println("Aborted.");
+                    return;
+                }
+            }
+
+            System.out.println("Installing " + src + " ...");
+            try {
+                Files.createDirectories(dir);
+                Files.copy(src, dest, StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                throw new UncheckedIOException("Failed to copy " + src, e);
+            }
+            System.out.println("GPU backend installed at " + dest + ".");
+            System.out.println("Restart the JVM with -Dfastlowess.native.dir="
+                    + dir + " for the change to take effect.");
+            return;
+        }
+
         String assetName = "libfastlowess_java-gpu-v" + VERSION + "-" + platform + "-" + arch + "." + ext;
-        String url = "https://github.com/" + GPU_REPO + "/releases/download/v" + VERSION + "/" + assetName;
+        String url = "https://github.com/" + GPU_REPO + "/releases/download/" + GPU_RELEASE_TAG + "/" + assetName;
 
         if (!yes) {
             if (System.console() == null) {
@@ -100,14 +162,12 @@ public final class FastLowess {
             String answer = System.console().readLine(
                     "Download and install %s from github.com/%s? [y/N] ", assetName, GPU_REPO);
             String trimmed = answer == null ? "" : answer.strip();
-            if (!trimmed.equalsIgnoreCase("y") && !trimmed.equalsIgnoreCase("yes")) {
+            if (!"y".equalsIgnoreCase(trimmed) && !"yes".equalsIgnoreCase(trimmed)) {
                 System.out.println("Aborted.");
                 return;
             }
         }
 
-        Path dir = Paths.get(System.getProperty("user.home"), ".fastlowess", "gpu");
-        Path dest = dir.resolve(libraryFileName(platform, ext));
         System.out.println("Downloading " + url + " ...");
         try {
             Files.createDirectories(dir);
@@ -174,6 +234,6 @@ public final class FastLowess {
     }
 
     private static String libraryFileName(String platform, String ext) {
-        return platform.equals("windows") ? "fastlowess_java." + ext : "libfastlowess_java." + ext;
+        return "windows".equals(platform) ? "fastlowess_java." + ext : "libfastlowess_java." + ext;
     }
 }

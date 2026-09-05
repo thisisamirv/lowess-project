@@ -253,28 +253,31 @@ jobs:
       - name: Build CPU library
         working-directory: bindings/cpp
         run: cargo build --release
-      - name: Test install_gpu()
+      - name: Build GPU library (separate target-dir)
+        working-directory: bindings/cpp
+        run: cargo build --release --features gpu --target-dir "$GITHUB_WORKSPACE/target-gpu"
+      - name: Test install_gpu(local_path)
         run: |
           cat > /tmp/gpu_install.cpp <<'CPP'
           #include "fastlowess.hpp"
           #include <cstdio>
-          int main() {
+          int main(int argc, char **argv) {
             if (fastlowess::gpu::available()) { std::fprintf(stderr, "GPU should not be active before install()\n"); return 1; }
-            if (!fastlowess::gpu::install(true)) { std::fprintf(stderr, "install() failed\n"); return 1; }
-            std::printf("install() downloaded a GPU library\n");
+            if (!fastlowess::gpu::install(true, argv[1])) { std::fprintf(stderr, "install() failed\n"); return 1; }
+            std::printf("install() copied the local GPU library\n");
           }
           CPP
           g++ -O2 -std=c++17 /tmp/gpu_install.cpp -o /tmp/gpu_install \
             -I"${GITHUB_WORKSPACE}/bindings/cpp/include" \
             -L"${GITHUB_WORKSPACE}/target/release" \
             -lfastlowess_cpp -lpthread -ldl -lm
-          LD_LIBRARY_PATH="${GITHUB_WORKSPACE}/target/release" /tmp/gpu_install
+          LD_LIBRARY_PATH="${GITHUB_WORKSPACE}/target/release" /tmp/gpu_install "${GITHUB_WORKSPACE}/target-gpu/release/libfastlowess_cpp.so"
 
           GPU_LIB=$(ls "$HOME"/.fastlowess/gpu/*.so)
-          echo "Downloaded GPU library: $GPU_LIB"
+          echo "Installed GPU library: $GPU_LIB"
 
           # A running process can't swap an already-linked library, so the
-          # smoke test below relinks against the freshly downloaded one.
+          # smoke test below relinks against the freshly installed one.
           cat > /tmp/gpu_smoke.cpp <<'CPP'
           #include "fastlowess.hpp"
           #include <cmath>

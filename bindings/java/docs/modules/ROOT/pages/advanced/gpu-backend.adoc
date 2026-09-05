@@ -60,7 +60,7 @@ Requesting the GPU backend when it isn't available throws a clear `RuntimeExcept
 
 == Installing GPU Support
 
-Download and install a prebuilt GPU-enabled `fastlowess_java` native library for this platform from the matching https://github.com/thisisamirv/lowess-project/releases[GitHub Release] (built by `.github/workflows/release-gpu.yml` for Linux/macOS/Windows x86_64 and macOS arm64):
+Download and install a prebuilt GPU-enabled `fastlowess_java` native library for this platform from the https://github.com/thisisamirv/lowess-project/releases/tag/gpu-builds[`gpu-builds` release] (built by `.github/workflows/release-gpu.yml`) — a single perpetual release holding GPU artifacts for every version, so individual version release pages stay uncluttered; the source version is embedded in each asset's filename instead:
 
 [source,java]
 ----

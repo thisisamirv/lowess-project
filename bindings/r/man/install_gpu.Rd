@@ -4,11 +4,17 @@
 \alias{install_gpu}
 \title{Download and Install the GPU-Enabled Backend}
 \usage{
-install_gpu(yes = FALSE)
+install_gpu(yes = FALSE, local_path = NULL)
 }
 \arguments{
 \item{yes}{Logical; skip the interactive \verb{y/N} confirmation prompt.
 Must be \code{TRUE} when the session is not interactive.}
+
+\item{local_path}{Character; path to a GPU-enabled shared library already
+built locally (e.g. via \code{WITH_GPU=1 make install} in
+\code{benchmarks/}). When given, skips the GitHub Release lookup/download
+and installs directly from this path — useful for testing the installer
+itself, or installing an unreleased build.}
 }
 \value{
 Invisibly, \code{TRUE} if a GPU-enabled library is available at

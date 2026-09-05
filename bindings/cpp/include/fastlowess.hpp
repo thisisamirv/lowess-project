@@ -14,6 +14,7 @@
 #include <cstdio> // stdin, fileno / _fileno
 #include <cstdlib>
 #include <cstring>
+#include <fstream>
 #include <iostream>
 #include <limits>
 #include <stdexcept>
@@ -706,6 +707,20 @@ inline void makeDir(const std::string &dir) {
   std::system(cmd.c_str()); // NOLINT
 }
 
+inline bool fileExists(const std::string &path) {
+  std::ifstream file(path);
+  return file.good();
+}
+
+inline bool copyFile(const std::string &src, const std::string &dst) {
+#ifdef _WIN32
+  const std::string cmd = "copy /Y \"" + src + "\" \"" + dst + "\" >NUL";
+#else
+  const std::string cmd = "cp \"" + src + "\" \"" + dst + "\"";
+#endif
+  return std::system(cmd.c_str()) == 0; // NOLINT
+}
+
 } // namespace detail
 
 /// True if the currently loaded fastlowess_cpp library was built with the
@@ -713,7 +728,7 @@ inline void makeDir(const std::string &dir) {
 inline bool available() { return cpp_gpu_enabled() != 0; }
 
 /**
- * @brief Download the GPU-enabled fastlowess_cpp library for this platform.
+ * @brief Install the GPU-enabled fastlowess_cpp library for this platform.
  *
  * Fetches a prebuilt shared library (built with the `gpu` Cargo feature)
  * from the matching GitHub Release via `curl` (must be on PATH; ships with
@@ -725,13 +740,57 @@ inline bool available() { return cpp_gpu_enabled() != 0; }
  *
  * @param yes Skip the interactive y/N confirmation prompt. Must be true
  *            when stdin is not an interactive terminal.
+ * @param local_path Path to a GPU-enabled library already built locally
+ *            (e.g. via `cargo build --release --features gpu`). When
+ *            given, skips the GitHub Release lookup/download and installs
+ *            directly from this path — useful for testing the installer
+ *            itself, or installing an unreleased build.
  * @return true if a GPU-enabled library is available at the printed path
- *         (either already active, or freshly downloaded); false if the
- *         user aborted or the download failed.
+ *         (either already active, or freshly installed); false if the
+ *         user aborted or the download/copy failed.
  */
-inline bool install(bool yes = false) {
+inline bool install(bool yes = false, const std::string &local_path = "") {
   if (available()) {
     std::cout << "GPU backend is already active.\n";
+    return true;
+  }
+
+  const std::string dir = detail::cacheDir();
+  detail::makeDir(dir);
+
+  if (!local_path.empty()) {
+    if (!detail::fileExists(local_path)) {
+      std::cerr << "No such file: " << local_path << "\n";
+      return false;
+    }
+    if (!yes) {
+      if (!detail::stdinIsInteractive()) {
+        std::cerr << "install_gpu() requires confirmation; pass yes=true to "
+                     "proceed non-interactively."
+                  << "\n";
+        return false;
+      }
+      std::cout << "Install " << local_path
+                << " in place of the current build? [y/N] ";
+      std::string answer;
+      std::getline(std::cin, answer);
+      if (answer != "y" && answer != "Y" && answer != "yes") {
+        std::cout << "Aborted.\n";
+        return false;
+      }
+    }
+
+    const std::string dest =
+        dir + "/" + local_path.substr(local_path.find_last_of("/\\") + 1);
+    std::cout << "Installing " << local_path << " ...\n";
+    if (!detail::copyFile(local_path, dest)) {
+      std::cerr << "Failed to copy " << local_path << " to " << dest << "\n";
+      return false;
+    }
+    std::cout << "Installed to " << dest << "\n";
+    std::cout << "Relink your application against this library (or "
+                 "dlopen/LoadLibrary it) and restart to use the GPU backend."
+              << "\n";
     return true;
   }
 
@@ -739,9 +798,13 @@ inline bool install(bool yes = false) {
   const std::string asset = "libfastlowess_cpp-gpu-v" + version + "-" +
                             detail::platformTag() + "-" + detail::archTag() +
                             "." + detail::libraryExt();
+  // GPU artifacts across all versions live in this one perpetual release
+  // instead of cluttering each version's own release page; the source
+  // version is embedded in the asset filename above instead.
   const std::string url =
-      "https://github.com/thisisamirv/lowess-project/releases/download/v" +
-      version + "/" + asset;
+      "https://github.com/thisisamirv/lowess-project/releases/download/"
+      "gpu-builds/" +
+      asset;
 
   if (!yes) {
     if (!detail::stdinIsInteractive()) {
@@ -760,8 +823,6 @@ inline bool install(bool yes = false) {
     }
   }
 
-  const std::string dir = detail::cacheDir();
-  detail::makeDir(dir);
   const std::string dest = dir + "/" + asset;
 
   std::cout << "Downloading " << url << " ...\n";

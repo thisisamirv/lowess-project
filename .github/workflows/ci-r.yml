@@ -267,7 +267,7 @@ jobs:
         working-directory: benchmarks
         run: make install
 
-      - name: Test install_gpu()
+      - name: Precheck GPU inactive
         run: |
           cat > /tmp/gpu_precheck.R <<'R'
           library(rfastlowess)
@@ -275,9 +275,19 @@ jobs:
           R
           Rscript /tmp/gpu_precheck.R
 
-          cat > /tmp/gpu_install.R <<'R'
+      - name: Build GPU package (separate library)
+        working-directory: benchmarks
+        run: |
+          WITH_GPU=1 make build
+          mkdir -p /tmp/gpu-lib
+          R CMD INSTALL --library=/tmp/gpu-lib ../bindings/r/rfastlowess_*.tar.gz
+
+      - name: Test install_gpu(local_path)
+        run: |
+          GPU_SO=/tmp/gpu-lib/rfastlowess/libs/rfastlowess.so
+          cat > /tmp/gpu_install.R <<R
           library(rfastlowess)
-          install_gpu(yes = TRUE)
+          install_gpu(yes = TRUE, local_path = "$GPU_SO")
           R
           Rscript /tmp/gpu_install.R
 

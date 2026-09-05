@@ -53,7 +53,7 @@ fastlowess::gpu::available();
 
 ## Installing GPU Support
 
-Each binding (except Rust, where the `gpu` Cargo feature is enabled directly, and WebAssembly, which does not support the GPU backend) ships a one-time installer that downloads a prebuilt GPU-enabled build from the matching [GitHub Release](https://github.com/thisisamirv/lowess-project/releases) (built by `.github/workflows/release-gpu.yml` for Linux/macOS/Windows x86_64 and macOS arm64). Building from source with the `gpu` Cargo feature is always available as an alternative.
+Each binding (except Rust, where the `gpu` Cargo feature is enabled directly; WebAssembly, which does not support the GPU backend; and Go, which links the native library statically at build time) ships a one-time installer that downloads a prebuilt GPU-enabled build from the [`gpu-builds` release](https://github.com/thisisamirv/lowess-project/releases/tag/gpu-builds) (built by `.github/workflows/release-gpu.yml`) — a single perpetual release holding GPU artifacts for every version, so individual version release pages stay uncluttered; the source version is embedded in each asset's filename instead. Building from source with the `gpu` Cargo feature is always available as an alternative.
 
 Whether you need to **restart** afterwards depends on how each language loads its native library:
 

@@ -100,7 +100,7 @@ jobs:
         run: |
           npm install
           npm run build
-      - name: Test installGpu()
+      - name: Precheck GPU inactive
         working-directory: bindings/nodejs
         run: |
           cat > /tmp/gpu_precheck.js <<'JS'
@@ -108,9 +108,19 @@ jobs:
           if (fastlowess.gpu_enabled()) throw new Error("GPU should not be active before installGpu()");
           JS
           node /tmp/gpu_precheck.js
-
+      - name: Build GPU binary (separate copy)
+        working-directory: bindings/nodejs
+        run: |
+          npx napi build --release --platform --features gpu
+          cp fastlowess.*.node /tmp/fastlowess-gpu-built.node
+          npm run build
+      - name: Test installGpu(localPath)
+        working-directory: bindings/nodejs
+        run: |
           cat > /tmp/gpu_install.js <<'JS'
-          require(process.cwd()).installGpu({ yes: true }).catch((e) => { console.error(e); process.exit(1); });
+          require(process.cwd() + '/gpu-installer.js')
+              .installGpu({ yes: true, localPath: '/tmp/fastlowess-gpu-built.node' })
+              .catch((e) => { console.error(e); process.exit(1); });
           JS
           node /tmp/gpu_install.js
 

@@ -1,8 +1,10 @@
 """One-time downloader/installer for the opt-in GPU-enabled fastlowess build.
 
 The GPU backend (wgpu) is not included in the wheels published to PyPI. This
-module fetches a prebuilt GPU-enabled wheel from the matching GitHub Release
-and installs it in place of the current (CPU-only) installation.
+module fetches a prebuilt GPU-enabled wheel from the "gpu-builds" GitHub
+Release (a perpetual release holding GPU artifacts for every version, so
+individual version release pages stay uncluttered) and installs it in place
+of the current (CPU-only) installation.
 """
 
 from __future__ import annotations
@@ -19,7 +21,8 @@ from pathlib import Path
 from .__version__ import __version__
 
 _REPO = "thisisamirv/lowess-project"
-_API_URL = f"https://api.github.com/repos/{_REPO}/releases/tags/v{__version__}"
+_GPU_RELEASE_TAG = "gpu-builds"
+_API_URL = f"https://api.github.com/repos/{_REPO}/releases/tags/{_GPU_RELEASE_TAG}"
 _USER_AGENT = f"fastlowess/{__version__} (+https://github.com/{_REPO})"
 
 
@@ -86,10 +89,14 @@ def _fetch_release_assets() -> list[dict]:
             data = json.load(resp)
     except urllib.error.HTTPError as e:
         raise RuntimeError(
-            f"Could not find a GitHub release for fastlowess v{__version__} "
+            f"Could not find the '{_GPU_RELEASE_TAG}' GitHub release "
             f"({_API_URL}): {e}"
         ) from e
     return data.get("assets", [])
+
+
+def _asset_matches_version(name: str) -> bool:
+    return f"-gpu-{__version__}-" in name.lower()
 
 
 def _find_gpu_wheel_asset() -> dict:
@@ -98,36 +105,80 @@ def _find_gpu_wheel_asset() -> dict:
         a
         for a in assets
         if a["name"].endswith(".whl")
-        and "gpu" in a["name"].lower()
+        and _asset_matches_version(a["name"])
         and _asset_matches_python(a["name"])
         and _asset_matches_platform(a["name"])
     ]
     if not candidates:
         raise RuntimeError(
-            "No matching GPU wheel found in the fastlowess "
-            f"v{__version__} release for this platform/Python version. "
+            f"No matching GPU wheel found for fastlowess v{__version__} in the "
+            f"'{_GPU_RELEASE_TAG}' release for this platform/Python version. "
             "You may need to build it locally instead — see "
             "https://lowess.readthedocs.io/api/python/#gpu-acceleration"
         )
     return candidates[0]
 
 
-def install_gpu(yes: bool = False) -> None:
-    """Download and install the GPU-enabled fastlowess build for this platform.
+def install_gpu(yes: bool = False, local_path: str | None = None) -> None:
+    """Install the GPU-enabled fastlowess build for this platform.
 
-    Fetches a prebuilt wheel (built with the ``gpu`` Cargo feature) from the
-    matching GitHub Release over HTTPS and installs it in place of the
-    current (CPU-only) installation via pip. Restart the Python process
-    afterwards — a loaded native extension cannot be swapped in place.
+    Fetches a prebuilt wheel (built with the ``gpu`` Cargo feature) matching
+    this installation's version from the "gpu-builds" GitHub Release over
+    HTTPS and installs it in place of the current (CPU-only) installation
+    via pip. Restart the Python process afterwards — a loaded native
+    extension cannot be swapped in place.
 
     Parameters
     ----------
     yes : bool
         Skip the interactive confirmation prompt. Must be True when stdin
         is not an interactive terminal.
+    local_path : str, optional
+        Path to a GPU-enabled wheel already built locally (e.g. via
+        ``maturin build --release --features gpu``). When given, skips the
+        GitHub Release lookup/download and installs directly from this
+        path — useful for testing the installer itself, or installing an
+        unreleased build.
     """
     if gpu_available():
         print("GPU backend is already installed.")
+        return
+
+    if local_path is not None:
+        wheel_path = Path(local_path)
+        if not wheel_path.is_file():
+            raise RuntimeError(f"No such file: {wheel_path}")
+
+        if not yes:
+            if not sys.stdin.isatty():
+                raise RuntimeError(
+                    "install_gpu() requires confirmation. Pass yes=True to "
+                    "proceed non-interactively."
+                )
+            answer = input(
+                f"Install {wheel_path} in place of the current build? [y/N] "
+            )
+            if answer.strip().lower() not in ("y", "yes"):
+                print("Aborted.")
+                return
+
+        print(f"Installing {wheel_path} ...")
+        subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "pip",
+                "install",
+                "--force-reinstall",
+                "--no-deps",
+                str(wheel_path),
+            ],
+            check=True,
+        )
+        print(
+            "GPU backend installed. Restart your Python process/kernel for the "
+            "change to take effect."
+        )
         return
 
     asset = _find_gpu_wheel_asset()

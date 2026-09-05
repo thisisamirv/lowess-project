@@ -10,8 +10,12 @@ weight: 100
 
 * Added an "Ideas for Contribution" section to `CONTRIBUTING.md`, listing concrete Batch/Streaming/Online adapter feature gaps (out-of-sample prediction, exposing local slope/derivative, adaptive fraction selection, STL-style decomposition, bootstrap intervals, concurrent chunk processing, checkpointable streaming state, populating `OnlineOutput.standard_error`, time-based window eviction, configurable warm-up) to invite contributions.
 * `dev/bump_version.py` now also updates the example crate version in `CONTRIBUTING.md`'s "Individual crate Cargo.toml" snippet.
+* Every GPU installer (Python, Node.js, R, Julia, C++, Java, Go) now accepts a local path to an already-built GPU artifact, installing from it directly instead of downloading from a GitHub Release — useful for testing the installer itself or installing an unreleased build. `ci-*.yml`'s `gpu` jobs now build the `gpu` feature locally and exercise this path end-to-end instead of depending on a matching published release existing.
+* `release-gpu.yml` now uploads every GPU artifact (across all languages and all versions) to a single perpetual `gpu-builds` release instead of the release page for the version just published, so version release pages stay uncluttered; each asset's filename embeds its source version instead. Every installer's download URL updated to match.
 * Added a `ReturnSorted` option to `Options`.
 * Added a `Missing` option to `Options`, `StreamingOptions`, and `OnlineOptions`.
+* `release-gpu.yml` now also builds GPU libraries for `linux-arm64` and `windows-arm64` (the latter via the same llvm-mingw/gnullvm cross toolchain as `release-go.yml`), matching its platform coverage.
+* Added `fastlowess.InstallGPU()`, a one-time GPU downloader: fetches a prebuilt GPU-enabled static library from the matching GitHub Release to `~/.fastlowess/gpu/libfastlowess_go.a`. Since `cgo` links statically at build time, this only downloads the library — rebuild afterwards with `CGO_LDFLAGS` pointing at it (printed on success).
 
 ## Changed
 

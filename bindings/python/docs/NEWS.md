@@ -5,8 +5,11 @@
 
 * Added an "Ideas for Contribution" section to `CONTRIBUTING.md`, listing concrete Batch/Streaming/Online adapter feature gaps (out-of-sample prediction, exposing local slope/derivative, adaptive fraction selection, STL-style decomposition, bootstrap intervals, concurrent chunk processing, checkpointable streaming state, populating `OnlineOutput.standard_error`, time-based window eviction, configurable warm-up) to invite contributions.
 * `dev/bump_version.py` now also updates the example crate version in `CONTRIBUTING.md`'s "Individual crate Cargo.toml" snippet.
+* Every GPU installer (Python, Node.js, R, Julia, C++, Java, Go) now accepts a local path to an already-built GPU artifact, installing from it directly instead of downloading from a GitHub Release — useful for testing the installer itself or installing an unreleased build. `ci-*.yml`'s `gpu` jobs now build the `gpu` feature locally and exercise this path end-to-end instead of depending on a matching published release existing.
+* `release-gpu.yml` now uploads every GPU artifact (across all languages and all versions) to a single perpetual `gpu-builds` release instead of the release page for the version just published, so version release pages stay uncluttered; each asset's filename embeds its source version instead. Every installer's download URL updated to match.
 * Added a `return_sorted` option to `Lowess`.
 * Added a `missing` option to `Lowess`, `StreamingLowess`, and `OnlineLowess`.
+* `release-gpu.yml` now also builds GPU wheels for `linux-aarch64` and `windows-arm64`, matching `release-pypi.yml`'s platform coverage (previously only 4 of its 6 platforms had a GPU wheel).
 
 ## Changed
 
@@ -21,6 +24,7 @@
 
 * Fixed `CONTRIBUTING.md` stating a stale Go prerequisite (`1.21+`, actually `1.23+` per `go.mod`/CI), an inaccurate `air` auto-install target (claimed `make r`, actually `make r-dev`), and a stale example crate version (`2.0.0`) in the Workspace Structure section.
 * Fixed `_core.pyi` stating stale defaults that diverged from the actual PyO3 runtime (and every other binding): `StreamingLowess.fraction` (`0.3`→`0.67`), `OnlineLowess.fraction` (`0.2`→`0.67`), `OnlineLowess.window_capacity` (`100`→`1000`), and `OnlineLowess.update_mode` (`"full"`→`"incremental"`). Runtime behavior was already correct.
+* Fixed `install_gpu()` never finding a matching wheel: `release-gpu.yml`'s Python jobs uploaded the GPU wheel under its default maturin filename (identical to the CPU wheel, with no `gpu` marker), so `_find_gpu_wheel_asset()`'s filename filter never matched. Added the missing rename step, matching every other language's GPU job.
 
 # fastlowess (Python) 3.2.1
 

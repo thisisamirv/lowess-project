@@ -56,7 +56,7 @@ Requesting the GPU backend when it isn't available returns a clear error from `N
 
 ## Installing GPU Support
 
-Download and install a prebuilt GPU-enabled `fastlowess_go` static library for this platform from the matching [GitHub Release](https://github.com/thisisamirv/lowess-project/releases) (built by `.github/workflows/release-gpu.yml`):
+Download and install a prebuilt GPU-enabled `fastlowess_go` static library for this platform from the [`gpu-builds` release](https://github.com/thisisamirv/lowess-project/releases/tag/gpu-builds) (built by `.github/workflows/release-gpu.yml`) — a single perpetual release holding GPU artifacts for every version, so individual version release pages stay uncluttered; the source version is embedded in the asset's filename instead:
 
 ```go
 err := fastlowess.InstallGPU(false) // prompts for confirmation, then downloads

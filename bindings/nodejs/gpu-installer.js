@@ -15,10 +15,15 @@
 
 const path = require('path')
 const { execFileSync } = require('child_process')
-const { readFileSync } = require('fs')
+const { readFileSync, copyFileSync, existsSync } = require('fs')
 const gpuDownload = require('./gpu-download')
 
 const { version } = require('./package.json')
+
+// GPU artifacts across all versions live in this one perpetual release
+// instead of cluttering each version's own release page; the source version
+// is embedded in each asset's filename instead.
+const GPU_RELEASE_TAG = 'gpu-builds'
 
 // Musl detection, mirrored from the isMusl() helper napi-rs generates into
 // index.js (that copy gets wiped on every `napi build`, so it's duplicated
@@ -77,8 +82,8 @@ function gpuAvailable() {
 }
 
 /**
- * Download and install the GPU-enabled fastlowess native addon for this
- * platform, then restart Node.js to use it.
+ * Install the GPU-enabled fastlowess native addon for this platform, then
+ * restart Node.js to use it.
  *
  * Fetches a prebuilt `.node` addon (built with the `gpu` Cargo feature) from
  * the matching GitHub Release and saves it as `fastlowess.<platform>.node`
@@ -86,11 +91,15 @@ function gpuAvailable() {
  * already checks first. A running process cannot swap an already-loaded
  * native addon, so a restart is required afterwards.
  *
- * @param {{ yes?: boolean }} [options] Pass `{ yes: true }` to skip the
- *   interactive y/N confirmation prompt (required when stdin is not a TTY).
+ * @param {{ yes?: boolean, localPath?: string }} [options] Pass
+ *   `{ yes: true }` to skip the interactive y/N confirmation prompt
+ *   (required when stdin is not a TTY). Pass `{ localPath: '/path/to/addon.node' }`
+ *   to install an already-built `.node` file instead of downloading one —
+ *   useful for testing the installer itself, or installing an unreleased
+ *   build.
  */
 async function installGpu(options = {}) {
-    const { yes = false } = options
+    const { yes = false, localPath } = options
     if (gpuAvailable()) {
         console.log('GPU backend is already active.')
         return
@@ -104,9 +113,32 @@ async function installGpu(options = {}) {
         )
     }
 
-    const assetName = `fastlowess-gpu.${suffix}.node`
-    const url = `https://github.com/${gpuDownload.REPO}/releases/download/v${version}/${assetName}`
     const destPath = path.join(__dirname, `fastlowess.${suffix}.node`)
+
+    if (localPath !== undefined) {
+        if (!existsSync(localPath)) {
+            throw new Error(`No such file: ${localPath}`)
+        }
+
+        if (!yes) {
+            const ok = await gpuDownload.confirm(
+                `Install ${localPath} in place of the current build? [y/N] `
+            )
+            if (!ok) {
+                console.log('Aborted.')
+                return
+            }
+        }
+
+        console.log(`Installing ${localPath} ...`)
+        copyFileSync(localPath, destPath)
+        console.log(`GPU backend installed at ${destPath}.`)
+        console.log('Restart Node.js for the change to take effect.')
+        return
+    }
+
+    const assetName = `fastlowess-gpu-v${version}.${suffix}.node`
+    const url = `https://github.com/${gpuDownload.REPO}/releases/download/${GPU_RELEASE_TAG}/${assetName}`
 
     if (!yes) {
         const ok = await gpuDownload.confirm(

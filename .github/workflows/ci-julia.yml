@@ -118,11 +118,15 @@ jobs:
       - name: Build CPU library
         working-directory: bindings/julia
         run: cargo build --release
+      - name: Build GPU library (separate target-dir)
+        working-directory: bindings/julia
+        run: cargo build --release --features gpu --target-dir "$GITHUB_WORKSPACE/target-gpu"
       - name: Relax JLL dependency for CI
         uses: ./.github/actions/relax-julia-jll
-      - name: Test install_gpu()
+      - name: Test install_gpu(local_path)
         env:
           FASTLOWESS_LIB: target/release/libfastlowess_jl.so
+          GPU_LOCAL_PATH: target-gpu/release/libfastlowess_jl.so
         run: |
           cat > /tmp/gpu_install_test.jl <<'JL'
           using Pkg
@@ -130,7 +134,7 @@ jobs:
           Pkg.instantiate()
           using FastLOWESS
           @assert !gpu_available() "GPU backend should not be active before install_gpu()"
-          install_gpu(yes = true)
+          install_gpu(yes = true, local_path = ENV["GPU_LOCAL_PATH"])
           @assert gpu_available() "install_gpu() did not activate the GPU backend"
           x = collect(range(0, 1, length = 50))
           y = sin.(6 .* x) .+ 0.05
