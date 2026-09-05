@@ -100,7 +100,7 @@ fn main() -> Result<(), LowessError> {
 | `min_points(usize)` | `usize` | `2` | Min points before smoothing starts |
 | `update_mode(...)` | `update_mode` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
 
-Confidence/prediction intervals, standard errors, cross-validation, `return_sorted`, `return_diagnostics()`, and `return_residuals()` are Batch-only (or Batch/Streaming-only) and not available here; see [lowess](crate::doc::api) for those.
+Confidence/prediction intervals, standard errors, cross-validation, `custom_weights`, `return_sorted`, `return_diagnostics()`, and `return_residuals()` are Batch-only (or Batch/Streaming-only) and not available here; see [lowess](crate::doc::api) for those.
 
 ## Options
 
@@ -185,7 +185,7 @@ Convergence tolerance for early stopping of robustness iterations. `NaN` (defaul
 
 ### return_robustness_weights
 
-Include the robustness weight from the latest point's fit in the result.
+Include the robustness weight for the latest point (from the last robustness iteration) in the result.
 
 - `false` (default) — leaves `output.robustness_weight` as `None`
 - `true` — populates `output.robustness_weight`

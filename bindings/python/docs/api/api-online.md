@@ -164,7 +164,7 @@ Minimum number of points required before smoothing starts. `add_point()` returns
 
 ### update_mode
 
-*See: [Execution Modes](../guide/adapters.md)*
+*See: [Execution Modes](../guide/adapter-choice.md)*
 
 | Mode | Alias | Behavior | Speed |
 | --- | --- | --- | --- |

@@ -36,16 +36,16 @@ try (Lowess model = new Lowess(options)) {
 * `new Lowess(Options options)` creates a new batch model. Throws `RuntimeException` if any option is out of range (some validation is eager at construction, e.g. `iterations`; some is deferred to `fit`, e.g. `fraction`).
 * `options`: An `Options` instance. Use `Options.builder()` (pre-populated with recommended defaults) and override only the settings you need.
 
-*Methods:*
+==== `fit(x, y)` / `fit(x, y, customWeights)`
+
+`Lowess.fit(double[] x, double[] y) Result` and `Lowess.fit(double[] x, double[] y, double[] customWeights) Result` smooth `y` as a function of `x`. `x` and `y` must be non-empty and the same length. An optional `customWeights` array (same length) applies per-observation case weights; pass `null` (or use the two-argument overload) for uniform weights. Returns a `Result` containing the smoothed values and optional diagnostics.
 
 [source,java]
 ----
 Result result = model.fit(x, y);
 ----
 
-* `Lowess.fit(double[] x, double[] y) Result` and `Lowess.fit(double[] x, double[] y, double[] customWeights) Result` smooth `y` as a function of `x`. `x` and `y` must be non-empty and the same length. An optional `customWeights` array (same length) applies per-observation case weights; pass `null` (or use the two-argument overload) for uniform weights.
 * `Lowess.close()` releases native resources. Safe to call multiple times. Implements `AutoCloseable`, so prefer try-with-resources over relying on the garbage collector.
-* Returns a `Result` containing the smoothed values and optional diagnostics.
 
 == Options Structures
 

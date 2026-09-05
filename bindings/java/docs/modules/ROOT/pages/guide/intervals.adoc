@@ -8,7 +8,7 @@ image::intervals_comparison.svg[Confidence and Prediction Intervals]
 
 [NOTE]
 ====
-*Adapter support:* Confidence and prediction intervals are available in *Batch* (`Lowess`) mode only. `StreamingLowess` and `OnlineLowess` do not support intervals.
+*Adapter support:* Confidence and prediction intervals are available in *Batch* mode only. Streaming and Online modes do not support intervals.
 ====
 
 [cols="1,1,1,1",options="header"]
@@ -245,7 +245,7 @@ Point 2: SE = 0.0283
 
 [NOTE]
 ====
-*Batch Mode Only:* Confidence and prediction intervals are only available in *Batch* mode. `StreamingLowess` and `OnlineLowess` do not support intervals.
+*Batch Mode Only:* Confidence and prediction intervals are only available in *Batch* mode. Streaming and Online modes do not support intervals.
 ====
 
 [cols="1,1,1,1",options="header"]

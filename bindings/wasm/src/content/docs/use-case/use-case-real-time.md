@@ -26,25 +26,25 @@ const processor = new OnlineLowess(
     { window_capacity: 25, min_points: 5, update_mode: "incremental" }
 );
 
-let rt_printed = 0;
+let count = 0;
 for (let i = 0; i < 100; i++) {
     const xi = i;
     const yi = 20.0 + 5.0 * Math.sin(xi / 10.0) + Math.sin(xi * 1.7) * 0.5;
     const res = processor.add_point(xi, yi);
     if (res !== undefined && res !== null) {
-        if (rt_printed < 5) console.log("Smoothed y:", res.y.toFixed(4));
-        rt_printed++;
+        if (count < 5) console.log(`Time ${xi}: smoothed = ${res.y.toFixed(4)}`);
+        count++;
     }
 }
-console.log(`... (${rt_printed - 5} more)`);
+console.log(`... (${count - 5} more)`);
 ```
 
 ```output
-Smoothed y: 22.1941
-Smoothed y: 22.7964
-Smoothed y: 22.4733
-Smoothed y: 22.9120
-Smoothed y: 24.0164
+Time 4: smoothed = 22.1941
+Time 5: smoothed = 22.7964
+Time 6: smoothed = 22.4733
+Time 7: smoothed = 22.9120
+Time 8: smoothed = 24.0164
 ... (91 more)
 ```
 
@@ -72,7 +72,7 @@ const chunk2_y = Float64Array.from(chunk2_x, xi => Math.sin(xi) + 0.1);
 
 const processor = new StreamingLowess(
     { fraction: 0.1, iterations: 2 },
-    { chunk_size: 50, overlap: 10 }
+    { chunk_size: 50, overlap: 10, merge_strategy: "weighted_average" }
 );
 
 // Process chunks as they arrive

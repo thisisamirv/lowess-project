@@ -102,7 +102,7 @@ Fraction used: 0.5
 | `overlap(usize)` | `usize` | `chunk_size / 10` | Overlap between chunks |
 | `merge_strategy(...)` | `merge_strategy` | `"weighted_average"` | Strategy for blending overlap regions |
 
-Confidence/prediction intervals, standard errors, cross-validation, and `return_sorted` are Batch-only and not available here; see [lowess](crate::doc::api) for those.
+Confidence/prediction intervals, standard errors, cross-validation, `custom_weights`, and `return_sorted` are Batch-only and not available here; see [lowess](crate::doc::api) for those.
 
 ## Options
 
@@ -229,13 +229,6 @@ Number of points retained from the previous chunk as context, so the neighbourho
 | `"average"` | `"mean"` | Average overlapping values |
 | `"take_first"` | `"first"` | Keep left chunk values |
 | `"take_last"` | `"last"` | Keep right chunk values |
-
-![Merge Strategies](https://raw.githubusercontent.com/thisisamirv/lowess-project/main/crates/lowess/assets/diagrams/merge_comparison.svg)
-
----
-
-!!! warning "Always call finalize()"
-    The streaming adapter buffers overlap data. Call `finalize()` after the last chunk to retrieve the buffered tail.
 
 ## Result Structure
 

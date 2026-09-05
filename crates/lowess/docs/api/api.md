@@ -12,7 +12,7 @@ The Rust bindings provide the core implementation and high-performance extension
 
 ## Classes
 
-The `lowess` crate exposes three dedicated wrapper structs — `Lowess`, `StreamingLowess`, and `OnlineLowess` — that mirror the distinct classes available in other language bindings. Each struct wraps a `LowessBuilder<f64>` and its `build()` method delegates to the corresponding adapter. The `lowess` crate has no `parallel` or `gpu` feature — for CPU-parallel and GPU-accelerated execution, use the `fastLowess` crate instead.
+The `lowess` crate exposes a `Lowess` wrapper struct that mirrors the class available in other language bindings. It wraps a `LowessBuilder<f64>`, and its `build()` method delegates to the adapter. The `lowess` crate has no `parallel` or `gpu` feature — for CPU-parallel and GPU-accelerated execution, use the `fastLowess` crate instead.
 
 ### `Lowess`
 
@@ -30,7 +30,9 @@ fn main() -> Result<(), LowessError> {
 }
 ```
 
-**Methods:**
+#### `fit(x, y)`
+
+Fits the model to the provided `x` and `y` arrays. Returns `Result<LowessResult<T>, LowessError>`.
 
 ```rust
 use lowess::prelude::*;
@@ -55,9 +57,6 @@ Fraction used: 0.5
 Iterations used: None
 ```
 
-- Fits the model to the provided `x` and `y` arrays.
-- Returns `Result<LowessResult<T>, LowessError>`.
-
 ## Options Structures
 
 These chained methods configure the builder. They correspond to the "Options Structures" in other bindings.
@@ -77,9 +76,9 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `auto_converge(T)` | `T: Float` | `NaN` | Auto-convergence tolerance |
 | `confidence_intervals(T)` | `T: Float` | `NaN` | Confidence level (e.g., 0.95) |
 | `prediction_intervals(T)` | `T: Float` | `NaN` | Prediction level (e.g., 0.95) |
-| `return_diagnostics()` | `bool` | `false` | Compute RMSE, MAE, R2, AIC |
+| `return_diagnostics()` | `bool` | `false` | Include diagnostics in result |
 | `return_residuals()` | `bool` | `false` | Include residuals in result |
-| `return_robustness_weights()` | `bool` | `false` | Include robustness weights in result |
+| `return_robustness_weights()` | `bool` | `false` | Include weights in result |
 | `return_se()` | `bool` | `false` | Return standard errors |
 | `return_sorted()` | `bool` | `false` | Return results sorted ascending by `x` instead of in original input order |
 | `cv_method(str)` | `&str` | `"kfold"` | CV strategy: `"kfold"` (fast) or `"loocv"` (slow, exhaustive) — defaults to `"kfold"` when `cv_fractions` is provided |

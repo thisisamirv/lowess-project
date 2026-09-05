@@ -14,12 +14,12 @@
 #'
 #' Overlapping regions between chunks are reconciled via `merge_strategy`:
 #'
-#' | Strategy | Behavior |
-#' | --- | --- |
-#' | `"average"` | Arithmetic mean of both estimates |
-#' | `"weighted_average"` | Distance-weighted blend (recommended, default) |
-#' | `"take_first"` | Keep left-chunk estimate |
-#' | `"take_last"` | Keep right-chunk estimate |
+#' | Strategy | Alias | Behavior |
+#' | --- | --- | --- |
+#' | `"weighted_average"` (default) | `"weighted"` | Distance-weighted blend |
+#' | `"average"` | `"mean"` | Average overlapping values |
+#' | `"take_first"` | `"first"` | Keep left chunk values |
+#' | `"take_last"` | `"last"` | Keep right chunk values |
 #'
 #' @srrstats {G2.0} Input validation for fraction, chunk_size.
 #' @srrstats {G1.6} Memory-efficient streaming for large datasets.

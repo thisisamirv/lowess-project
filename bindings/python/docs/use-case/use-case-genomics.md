@@ -138,4 +138,4 @@ print(f"y[0]: {result.y[0]:.4f}")
 - [Robustness](../weighting/robustness.md) — Outlier downweighting in depth
 - [Merge Strategies](../advanced/merge.md) — Streaming chunk reconciliation
 - [Boundary Handling](../advanced/boundary.md) — Edge handling for sparse regions
-- [Real-Time Processing](real-time.md) — For sequencing runs
+- [Real-Time Processing](use-case-real-time.md) — For sequencing runs

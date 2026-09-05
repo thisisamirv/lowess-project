@@ -26,7 +26,9 @@ model = fl.Lowess(fraction=0.5, iterations=3)
 print(model)
 :::
 
-**Methods:**
+#### `fit(x, y)`
+
+Fits the model to the provided `x` and `y` array-like objects. `custom_weights` is an optional array of per-observation weights — all values must be ≥ 0 and length must match `x`. Returns a `LowessResult` object containing the smoothed values and optional diagnostics.
 
 :::{jupyter-execute}
 import fastlowess as fl
@@ -39,10 +41,6 @@ model = fl.Lowess(fraction=0.5)
 result = model.fit(x, y)
 print(result)
 :::
-
-- Fits the model to the provided `x` and `y` array-like objects.
-- `custom_weights`: Optional array of per-observation weights. All values must be ≥ 0 and length must match `x`.
-- Returns a `LowessResult` object containing the smoothed values and optional diagnostics.
 
 ## Options Structures
 

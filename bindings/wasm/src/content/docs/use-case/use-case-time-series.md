@@ -77,14 +77,15 @@ const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 const model = new Lowess({
     fraction: 0.2,
     iterations: 3,
+    confidence_intervals: 0.95,
     prediction_intervals: 0.95
 });
 const result = model.fit(x, y);
-console.log("Prediction lower[0]:", result.prediction_lower[0].toFixed(4));
+console.log(`95% PI: [${result.prediction_lower[0].toFixed(4)}, ${result.prediction_upper[0].toFixed(4)}]`);
 ```
 
 ```output
-Prediction lower[0]: 0.1580
+95% PI: [0.1580, 0.2909]
 ```
 
 ---

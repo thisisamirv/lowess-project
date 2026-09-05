@@ -73,7 +73,7 @@ Process large datasets in chunks with configurable overlap.
 | Parameter | Default | Description |
 | --- | --- | --- |
 | `chunk_size` | 5000 | Points per chunk |
-| `overlap` | 500 | Overlap between chunks |
+| `overlap` | `chunk_size / 10` | Overlap between chunks |
 | `merge_strategy` | `"weighted_average"` | How to merge overlaps |
 
 ### Merge Strategies
@@ -188,4 +188,5 @@ for xi, yi in zip(x, y):
 ## Next Steps
 
 - [API Reference](../api/api.md) — All configuration options
-- [Tutorials](../use-case/real-time.md) — Real-time processing guide
+- [Tutorials](../use-case/use-case-real-time.md) — Real-time processing guide
+</content>

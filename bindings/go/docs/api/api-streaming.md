@@ -76,7 +76,7 @@ result, err := model.Finalize()
 | `ReturnRobustnessWeights` | `bool` | `false` | Include weights in result |
 | `Parallel` | `bool` | `true` | Enable parallel execution |
 | `ChunkSize` | `int` | `5000` | Data chunk size |
-| `Overlap` | `int` | library default | Overlap between chunks (negative means "use the library default") |
+| `Overlap` | `int` | `chunk_size / 10` | Overlap between chunks |
 | `MergeStrategy` | `string` | `"weighted_average"` | Strategy for blending overlap regions |
 
 Confidence/prediction intervals, standard errors, cross-validation, GPU `Backend`, `CustomWeights`, and `ReturnSorted` are Batch-only and not available here; see [API](api.md) for those.
@@ -166,7 +166,7 @@ Convergence tolerance for early stopping of robustness iterations. `nil` (defaul
 
 *See: [`Diagnostics`](#diagnostics)*
 
-Include a `Diagnostics` object (RMSE, MAE, R², residual_sd) in the result. `EffectiveDF`/AIC/AICc require standard errors, which are Batch-only, so they're always `nil` here.
+Include a `Diagnostics` object (RMSE, MAE, R², residual_sd) in the result. `EffectiveDF`/`AIC`/`AICc` require standard errors, which are Batch-only, so they're always `nil` here.
 
 - `false` (default) — leaves `Result.Diagnostics` as `nil`
 - `true` — populates `Result.Diagnostics`
@@ -200,22 +200,19 @@ Number of points processed per chunk. Larger chunks reduce per-chunk overhead an
 
 Number of points retained from the previous chunk as context, so the neighbourhood at chunk boundaries isn't artificially truncated. Points inside the overlap zone are fitted twice (once by each chunk) and reconciled via `MergeStrategy`. A good starting point is 10–20% of `ChunkSize`: too little overlap causes visible boundary artefacts, while too much wastes computation refitting the same points twice.
 
+- `-1` (default) — computes `chunk_size / 10`, clamped to at least 1 and less than `ChunkSize`
+- Any integer `>= 1` and `< ChunkSize`
+
 ### MergeStrategy
 
 *See: [Merge Strategies](../advanced/merge.md)*
 
-| Strategy | Behavior |
-| --- | --- |
-| `"weighted_average"` (default) | Distance-weighted blend |
-| `"average"` | Average overlapping values |
-| `"take_first"` | Keep left chunk values |
-| `"take_last"` | Keep right chunk values |
-
-![Merge Strategies](../assets/diagrams/merge_comparison.svg)
-
----
-
-> **Always call Finalize():** The streaming adapter buffers overlap data. Call `Finalize` after the last chunk to retrieve the buffered tail.
+| Strategy | Alias | Behavior |
+| --- | --- | --- |
+| `"weighted_average"` (default) | `"weighted"` | Distance-weighted blend |
+| `"average"` | `"mean"` | Average overlapping values |
+| `"take_first"` | `"first"` | Keep left chunk values |
+| `"take_last"` | `"last"` | Keep right chunk values |
 
 ## Result Structure
 

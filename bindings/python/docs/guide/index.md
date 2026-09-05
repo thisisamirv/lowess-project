@@ -6,7 +6,7 @@ Adapter selection, uncertainty quantification, and parameter tuning.
 :maxdepth: 1
 :caption: Guide
 
-adapters
+adapter-choice
 intervals
 cross-validation
 :::

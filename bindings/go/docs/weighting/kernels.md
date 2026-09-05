@@ -11,6 +11,8 @@ Weight functions (kernels) determine how neighboring points contribute to each l
 
 ![Weight Functions](../assets/diagrams/kernel_comparison.svg)
 
+---
+
 ## Available Kernels
 
 | Kernel | Efficiency | Smoothness | Support |

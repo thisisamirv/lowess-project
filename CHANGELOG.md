@@ -56,6 +56,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Improved API docs for all bindings and crates significantly.
 - Fixed several bindings' docs showing a flat `500` default for `overlap` (Node.js, WASM, Go, Java, R) when the actual behavior is a dynamic `chunk_size / 10` (clamped to `[1, chunk_size - 10]`), matching every language binding's `build_streaming()` helper.
+- Renamed Python's `docs/guide/adapters.md` to `docs/guide/adapter-choice.md`, matching every other binding/crate's filename for the same page.
+- Renamed Python's `docs/use-case/{genomics,real-time,time-series}.md` to `docs/use-case/use-case-{genomics,real-time,time-series}.md`, matching every other binding/crate's filenames for the same pages.
 
 **lowess:**
 

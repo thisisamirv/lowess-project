@@ -7,6 +7,8 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+<!-- markdownlint-disable MD024 -->
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
@@ -15,14 +17,14 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 ![Confidence and prediction intervals](../man/figures/intervals_comparison.svg)
 
-> **Note:** Confidence and prediction intervals are available in **Batch** mode
-> only.
-> Streaming and Online modes do not support intervals.
+> **Adapter support:** Confidence and prediction intervals are available
+> in **Batch** mode only. Streaming and Online modes do not support
+> intervals.
 
 | Type | Represents | Width | Use |
 | --- | --- | --- | --- |
-| **Confidence** | Mean curve uncertainty | Narrow | Where is the true trend? |
-| **Prediction** | New-point uncertainty | Wide | Where will new data fall? |
+| **Confidence** | Uncertainty in mean curve | Narrow | Trend location |
+| **Prediction** | Uncertainty for new points | Wide | New data location |
 
 ---
 
@@ -45,13 +47,16 @@ plot(x, y, pch = 16, col = "gray",
 lines(result$x, result$y, col = "blue", lwd = 2)
 lines(result$x, result$confidence_lower, col = "blue", lty = 2)
 lines(result$x, result$confidence_upper, col = "blue", lty = 2)
+
+cat("95% CI at midpoint: [", result$confidence_lower[50], ", ",
+    result$confidence_upper[50], "]\n")
 ```
 
 ---
 
 ## Prediction Intervals
 
-Wider than confidence intervals — cover where new observations will fall.
+Estimate where new observations might fall.
 
 ```{r intervals_2}
 library(rfastlowess)
@@ -67,11 +72,16 @@ plot(x, y, pch = 16, col = "gray",
 lines(result$x, result$y, col = "blue", lwd = 2)
 lines(result$x, result$prediction_lower, col = "red", lty = 2)
 lines(result$x, result$prediction_upper, col = "red", lty = 2)
+
+cat("Prediction bounds: [", result$prediction_lower[1], ", ",
+    result$prediction_upper[1], "]\n")
 ```
 
 ---
 
-## Both Intervals Together
+## Both Intervals
+
+Request both types simultaneously:
 
 ```{r intervals_3}
 library(rfastlowess)
@@ -102,13 +112,16 @@ legend("topright",
         c("Data", "Smoothed", "95% CI", "95% PI"),
         pch = c(16, NA, NA, NA), lty = c(NA, 1, 2, 3),
         col = c("gray", "blue", "blue", "red"))
+
+cat("95% CI at midpoint: [", result$confidence_lower[50], ", ",
+    result$confidence_upper[50], "]\n")
 ```
 
 ---
 
-## Choosing a Coverage Level
+## Confidence Levels
 
-Pass any value between 0 and 1 (exclusive). Common choices:
+Common levels and their z-values:
 
 | Level | z-value | Interpretation |
 | --- | --- | --- |
@@ -117,12 +130,38 @@ Pass any value between 0 and 1 (exclusive). Common choices:
 | 0.99 | 2.576 | 99% of intervals contain true value |
 
 ```{r intervals_4}
-# 99% confidence intervals
+# 99% confidence interval
 model <- Lowess(fraction = 0.5, confidence_intervals = 0.99)
 result <- fit(model, x, y)
-cat("First 6 smoothed values (99% CI):\n")
-print(head(result$y))
+cat("99% CI at midpoint: [", result$confidence_lower[50], ", ",
+    result$confidence_upper[50], "]\n")
 ```
+
+---
+
+## Standard Errors
+
+Access standard errors directly (available when intervals are computed):
+
+```{r intervals_5}
+model <- Lowess(fraction = 0.5, return_se = TRUE)
+result <- fit(model, x, y)
+cat("Standard errors (first 5):", head(result$standard_errors, 5), "\n")
+```
+
+---
+
+## Availability
+
+> **Batch Mode Only:** Confidence and prediction intervals are only
+> available in **Batch** mode. Streaming and Online modes do not
+> support intervals.
+
+| Feature | Batch | Streaming | Online |
+| --- | --- | --- | --- |
+| Confidence intervals | ✓ | ✗ | ✗ |
+| Prediction intervals | ✓ | ✗ | ✗ |
+| Standard errors | ✓ | ✗ | ✗ |
 
 ```{r session-info}
 sessionInfo()

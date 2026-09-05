@@ -4,7 +4,7 @@ Residual scale estimation during robustness iterations.
 
 == Overview
 
-When `iterations > 0`, LOWESS computes robustness weights by comparing each residual to the current residual scale estimate. `scalingMethod` controls how that scale is measured.
+When `iterations > 0`, LOWESS computes robustness weights by comparing each residual to the current residual scale estimate. The `scalingMethod` parameter controls how that scale is measured.
 
 The robustness weight for point stem:[i] is:
 

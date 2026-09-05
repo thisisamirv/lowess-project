@@ -26,7 +26,7 @@ int main() {
     fastlowess::Lowess model({ .fraction = 0.3, .iterations = 3 });
     auto result = model.fit(x, y).value();
 
-    std::cout << "First smoothed: " << result.y_vector()[0]
+    std::cout << "First smoothed value: " << result.y_vector()[0]
               << "  (true: " << std::sin(x[0]) << ")\n";
     return 0;
 }
@@ -156,13 +156,13 @@ int main() {
         );
     }
     auto result = model.finalize().value();
-    std::cout << "Smoothed " << result.y_vector().size() << " points\n";
+    std::cout << "Smoothed " << result.y_vector().size() << " points in streaming mode\n";
     return 0;
 }
 ```
 
 ```output
-Smoothed 100 points
+Smoothed 100 points in streaming mode
 ```
 
 ---

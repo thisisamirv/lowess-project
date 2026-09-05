@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD036 -->
 # Concepts
 
 Understanding how LOWESS works and when to use it.
@@ -19,7 +20,7 @@ Unlike parametric methods (linear regression, polynomial fitting), LOWESS adapts
 
 ![LOWESS Smoothing Concept](../assets/lowess_concept.svg)
 
-LOWESS fits local weighted regressions at each point, using a focused local window around each evaluation point.
+*LOWESS fits local weighted regressions at each point, using a focused local window around each evaluation point*
 
 For each point in your data, LOWESS:
 
@@ -37,7 +38,7 @@ The `fraction` (also called bandwidth or span) is the most important parameter. 
 
 ![Fraction Effect](../assets/fraction_comparison.svg)
 
-Small fraction vs large fraction — bandwidth controls how closely the fit follows local structure.
+*Small fraction vs large fraction — bandwidth controls how closely the fit follows local structure*
 
 | Fraction | Effect | When to Use |
 | --- | --- | --- |
@@ -57,7 +58,7 @@ Standard LOWESS is sensitive to outliers. **Robustness iterations** downweight p
 
 ![Robustness Effect](../assets/robust_iter_comparison.svg)
 
-Non-robust LOWESS (iterations=0) vs robust LOWESS — outlier influence is suppressed through iterative reweighting.
+*Non-robust LOWESS (iterations=0) vs robust LOWESS — outlier influence is suppressed through iterative reweighting*
 
 | Iterations | Effect | When to Use |
 | --- | --- | --- |
@@ -72,7 +73,7 @@ Non-robust LOWESS (iterations=0) vs robust LOWESS — outlier influence is suppr
 
 ![Intervals](../assets/intervals_comparison.svg)
 
-Confidence intervals (narrow, mean curve uncertainty) vs Prediction intervals (wide, new-point uncertainty).
+*Confidence intervals (narrow, mean curve uncertainty) vs Prediction intervals (wide, new-point uncertainty)*
 
 | Interval Type | What It Represents | Width |
 | --- | --- | --- |

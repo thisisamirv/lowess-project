@@ -6,7 +6,7 @@ Domain-focused guides showing real-world applications with parameter-choice rati
 :maxdepth: 1
 :caption: Use Cases
 
-genomics
-time-series
-real-time
+use-case-genomics
+use-case-time-series
+use-case-real-time
 :::

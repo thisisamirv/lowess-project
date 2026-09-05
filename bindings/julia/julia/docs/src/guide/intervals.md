@@ -74,8 +74,7 @@ result = fit(
     Lowess(fraction=0.5, confidence_intervals=0.95, prediction_intervals=0.95),
     x, y
 )
-println("Confidence interval at point 50: [$(round(result.confidence_lower[50]; digits=3)), $(round(result.confidence_upper[50]; digits=3))]")
-println("Prediction interval at point 50: [$(round(result.prediction_lower[50]; digits=3)), $(round(result.prediction_upper[50]; digits=3))]")
+println("95% CI at midpoint: [$(round(result.confidence_lower[50]; digits=3)), $(round(result.confidence_upper[50]; digits=3))]")
 ```
 
 ---
@@ -101,7 +100,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 # 99% confidence interval
 model = Lowess(; confidence_intervals=0.99)
 result = fit(model, x, y)
-println("First smoothed value (99% CI): ", result.y[1])
+println("99% CI at midpoint: [$(round(result.confidence_lower[50]; digits=3)), $(round(result.confidence_upper[50]; digits=3))]")
 ```
 
 ---

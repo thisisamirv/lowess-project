@@ -164,7 +164,7 @@ Convergence tolerance for early stopping of robustness iterations. `null` (defau
 
 ### return_robustness_weights
 
-Include the robustness weight from the latest point's fit in the result.
+Include the robustness weight for the latest point (from the last robustness iteration) in the result.
 
 - `false` (default) — leaves `result.robustness_weight` as `undefined`
 - `true` — populates `result.robustness_weight`

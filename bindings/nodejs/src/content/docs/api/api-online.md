@@ -64,8 +64,6 @@ console.log("Smoothed y:", result.y);
 Smoothed y: 0.22659245357374927
 ```
 
-- Adds a single point to the sliding window and returns an `OnlineOutput` once enough points are available, or `null` while the window is still filling.
-
 ## Options Structure
 
 ### `OnlineSmoothOptions`
@@ -171,7 +169,7 @@ Convergence tolerance for early stopping of robustness iterations. `null` (defau
 
 ### return_robustness_weights
 
-Include the robustness weight from the latest point's fit in the result.
+Include the robustness weight for the latest point (from the last robustness iteration) in the result.
 
 - `false` (default) — leaves `result.robustness_weight` as `null`
 - `true` — populates `result.robustness_weight`

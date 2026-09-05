@@ -166,7 +166,7 @@ Convergence tolerance for early stopping of robustness iterations. `NaN` (defaul
 
 === returnRobustnessWeights
 
-Include the robustness weight from the latest point's fit in the result.
+Include the robustness weight for the latest point (from the last robustness iteration) in the result.
 
 * `false` (default) — leaves `robustnessWeight()` empty
 * `true` — populates `robustnessWeight()`
@@ -185,10 +185,10 @@ _See: xref:../guide/adapter-choice.adoc[Execution Modes]_
 
 [cols="1,1,1",options="header"]
 |===
-|Mode |Behavior |Speed
+|Mode |Alias |Behavior |Speed
 
-|`"incremental"` (default) |Update only affected fits |Faster
-|`"full"` |Recompute entire window |More accurate
+|`"incremental"` (default) |`"single"` |Update only affected fits |Faster
+|`"full"` |`"resmooth"` |Recompute entire window |More accurate
 |===
 
 == Result Structure

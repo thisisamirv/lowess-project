@@ -19,8 +19,8 @@ the robustness weight from the current iteration.
 
 :::note[Batch adapter only]
 `custom_weights` applies in **Batch** mode. It is silently ignored in
+Streaming and Online adapters.
 :::
-    Streaming and Online adapters.
 
 ---
 
@@ -140,11 +140,12 @@ for *known* bad points and robustness for *unknown* contamination.
 ```javascript
 const { Lowess } = require('fastlowess-wasm');
 
-const n = 100;
-const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+const x = Float64Array.from({length: 20}, (_, i) => i);
+const y = Float64Array.from({length: 20}, (_, i) => i * 1.5);
+y[3]  = -50.0;  // known bad
+y[12] = 80.0;   // unknown outlier
 
-const weights = new Float64Array(x.length).fill(1.0);
+const weights = new Float64Array(20).fill(1.0);
 weights[3] = 0.0;
 
 const model = new Lowess({fraction: 0.4, iterations: 3});
@@ -153,7 +154,7 @@ console.log("y[0]:", result.y[0].toFixed(4));
 ```
 
 ```output
-y[0]: 0.0809
+y[0]: 1.7984
 ```
 
 ---

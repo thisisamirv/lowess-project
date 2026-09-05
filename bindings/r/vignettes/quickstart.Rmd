@@ -7,14 +7,18 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+<!-- markdownlint-disable MD024 -->
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
+Get up and running with LOWESS in minutes.
+
 ## Basic Smoothing
 
-Smooth a noisy sine wave. `fraction = 0.3` and `iterations = 3` are good
-starting values for most signals.
+Smooth a noisy sine wave — the kind of signal where LOWESS shines. Each
+example recovers the underlying trend from 100 points of Gaussian noise.
 
 ```{r quickstart_1}
 library(rfastlowess)
@@ -33,10 +37,7 @@ cat(sprintf("First smoothed value: %.4f (true: %.4f)\n",
 
 ---
 
-## With Confidence and Prediction Intervals
-
-Set `confidence_intervals` and/or `prediction_intervals` to a coverage level
-(0–1).
+## With Confidence Intervals
 
 ```{r quickstart_2}
 library(rfastlowess)
@@ -53,10 +54,9 @@ model <- Lowess(
 )
 result <- fit(model, x, y)
 
-cat("Confidence lower bounds (first 5):\n")
-print(head(result$confidence_lower, 5))
-cat("Confidence upper bounds (first 5):\n")
-print(head(result$confidence_upper, 5))
+cat("Smoothed (first 5):", head(result$y, 5), "\n")
+cat("CI lower (first 5):", head(result$confidence_lower, 5), "\n")
+cat("CI upper (first 5):", head(result$confidence_upper, 5), "\n")
 cat("R2:", result$diagnostics$r_squared, "\n")
 ```
 
@@ -80,6 +80,7 @@ model <- Lowess(
 )
 result <- fit(model, x_out, y_with_outlier)
 
+# Outliers will have low robustness weights
 for (i in seq_along(result$robustness_weights)) {
     if (result$robustness_weights[i] < 0.5)
         cat(sprintf("Point %d is likely an outlier (weight: %.3f)\n",
@@ -91,81 +92,42 @@ for (i in seq_along(result$robustness_weights)) {
 
 ## Streaming Mode
 
-For large datasets (>100K points) that may not fit in memory.
+For datasets too large to fit in memory, stream them in fixed-size chunks with
+overlap.
 
 ```{r quickstart_4}
 library(rfastlowess)
 set.seed(42)
-x <- seq(0, 2 * pi, length.out = 10000)
-y <- sin(x) + rnorm(10000, sd = 0.3)
+x <- seq(0, 10 * pi, length.out = 5000)
+y <- sin(x / pi) * exp(-x / 30) + rnorm(5000, sd = 0.15)
 
 model <- StreamingLowess(
-    fraction = 0.3,
-    iterations = 2,
-    chunk_size = 5000,
-    overlap = 500,
+    fraction = 0.2,
+    chunk_size = 1000,
+    overlap = 100,
     merge_strategy = "weighted_average"
 )
 
-# Process one chunk at a time
-chunk_x <- x[1:5000]
-chunk_y <- y[1:5000]
-result <- process_chunk(model, chunk_x, chunk_y)
-
-# Finalize after all chunks
-final <- finalize(model)
-cat("First 6 smoothed values (streaming, weighted_average merge):\n")
-print(head(final$y))
-```
-
----
-
-## Online Mode
-
-For real-time / point-by-point processing.
-
-```{r quickstart_5}
-library(rfastlowess)
-set.seed(42)
-times <- 1:100
-temperatures <- 20 + 5 * sin(times / 10) + rnorm(100)
-
-model <- OnlineLowess(
-    fraction = 0.3,
-    window_capacity = 25,
-    min_points = 5,
-    update_mode = "incremental"
-)
-
-for (i in seq_along(times)) {
-    result <- add_point(model, times[i], temperatures[i])
-    if (!is.null(result))
-        cat(sprintf("Time %d: %.2f\n", times[i], result$y))
-    if (i >= 10) break  # print only the first few outputs
+chunk_size <- 1000
+for (start in seq(1, 4001, by = chunk_size)) {
+    end <- min(start + chunk_size - 1, length(x))
+    process_chunk(model, x[start:end], y[start:end])
 }
+result <- finalize(model)
+cat(sprintf("Smoothed %d points in streaming mode\n", length(result$y)))
 ```
 
 ---
 
-## Plotting Results
+## Next Steps
 
-```{r quickstart_6}
-library(rfastlowess)
-set.seed(42)
-x <- seq(0, 2 * pi, length.out = 100)
-y <- sin(x) + rnorm(100, sd = 0.3)
-
-model <- Lowess(fraction = 0.5, confidence_intervals = 0.95)
-result <- fit(model, x, y)
-
-plot(x, y, pch = 16, col = "gray", main = "LOWESS Smoothing")
-lines(result$x, result$y, col = "blue", lwd = 2)
-lines(result$x, result$confidence_lower, col = "blue", lty = 2)
-lines(result$x, result$confidence_upper, col = "blue", lty = 2)
-legend("topright", c("Data", "Smoothed", "95% CI"),
-        pch = c(16, NA, NA), lty = c(NA, 1, 2),
-        col = c("gray", "blue", "blue"))
-```
+| Topic | Link |
+| --- | --- |
+| How LOWESS works | [Concepts](concepts.html) |
+| All parameters explained | `?Lowess` |
+| Batch vs Streaming vs Online | [Execution Modes](adapter-choice.html) |
+| Edge handling | [Boundary](boundary.html) |
+| Outlier handling in depth | [Robustness](robustness.html) |
 
 ```{r session-info}
 sessionInfo()

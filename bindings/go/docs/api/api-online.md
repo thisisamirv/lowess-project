@@ -161,7 +161,7 @@ Convergence tolerance for early stopping of robustness iterations. `nil` (defaul
 
 ### ReturnRobustnessWeights
 
-Include the robustness weight from the latest point's fit in the result.
+Include the robustness weight for the latest point (from the last robustness iteration) in the result.
 
 - `false` (default) — leaves `PointResult.RobustnessWeight` as `NaN`
 - `true` — populates `PointResult.RobustnessWeight`
@@ -178,10 +178,10 @@ Minimum number of points required before smoothing starts. `AddPoint` returns `o
 
 *See: [Execution Modes](../guide/adapter-choice.md)*
 
-| Mode | Behavior | Speed |
-| --- | --- | --- |
-| `"incremental"` (default) | Update only affected fits | Faster |
-| `"full"` | Recompute entire window | More accurate |
+| Mode | Alias | Behavior | Speed |
+| --- | --- | --- | --- |
+| `"incremental"` (default) | `"single"` | Update only affected fits | Faster |
+| `"full"` | `"resmooth"` | Recompute entire window | More accurate |
 
 ## Result Structure
 

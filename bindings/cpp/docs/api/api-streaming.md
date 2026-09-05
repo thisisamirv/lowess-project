@@ -267,8 +267,8 @@ Number of points processed per chunk. Larger chunks reduce per-chunk overhead an
 
 Number of points retained from the previous chunk as context, so the neighbourhood at chunk boundaries isn't artificially truncated. Points inside the overlap zone are fitted twice (once by each chunk) and reconciled via `merge_strategy`. A good starting point is 10–20% of `chunk_size`: too little overlap causes visible boundary artefacts, while too much wastes computation refitting the same points twice.
 
-- `-1` (default) — uses the library default (`chunk_size / 10`, clamped to `[1, chunk_size - 10]`)
-- Any value `>= 0` and `< chunk_size`
+- `-1` (default) — computes `chunk_size / 10`, clamped to at least 1 and less than `chunk_size`
+- Any integer `>= 1` and `< chunk_size`
 
 ### merge_strategy
 
@@ -280,12 +280,6 @@ Number of points retained from the previous chunk as context, so the neighbourho
 | `"average"` | `"mean"` | Average overlapping values |
 | `"take_first"` | `"first"` | Keep left chunk values |
 | `"take_last"` | `"last"` | Keep right chunk values |
-
-![Merge Strategies](merge_comparison.svg)
-
----
-
-> **Always call finalize():** The streaming adapter buffers overlap data. Call `finalize()` after the last chunk to retrieve the buffered tail.
 
 ## Result Structure
 

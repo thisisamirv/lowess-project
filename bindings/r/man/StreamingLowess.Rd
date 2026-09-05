@@ -105,12 +105,12 @@ environments, or batch processing pipelines. For smaller datasets that fit
 in memory, see \code{\link{Lowess}}; for point-by-point real-time data,
 see \code{\link{OnlineLowess}}.
 
-Overlapping regions between chunks are reconciled via \code{merge_strategy}:\tabular{ll}{
-    Strategy \tab Behavior \cr
-    \code{"average"} \tab Arithmetic mean of both estimates \cr
-    \code{"weighted_average"} \tab Distance-weighted blend (recommended, default) \cr
-    \code{"take_first"} \tab Keep left-chunk estimate \cr
-    \code{"take_last"} \tab Keep right-chunk estimate \cr
+Overlapping regions between chunks are reconciled via \code{merge_strategy}:\tabular{lll}{
+    Strategy \tab Alias \tab Behavior \cr
+    \code{"weighted_average"} (default) \tab \code{"weighted"} \tab Distance-weighted blend \cr
+    \code{"average"} \tab \code{"mean"} \tab Average overlapping values \cr
+    \code{"take_first"} \tab \code{"first"} \tab Keep left chunk values \cr
+    \code{"take_last"} \tab \code{"last"} \tab Keep right chunk values \cr
 }
 }
 \examples{

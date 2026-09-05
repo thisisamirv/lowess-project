@@ -19,7 +19,7 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 const model = new Lowess({ fraction: 0.3, iterations: 3 });
 const result = model.fit(x, y);
 
-console.log(`First smoothed: ${result.y[0].toFixed(4)}  (true: ${Math.sin(x[0]).toFixed(4)})`);
+console.log(`First smoothed value: ${result.y[0].toFixed(4)}  (true: ${Math.sin(x[0]).toFixed(4)})`);
 ```
 
 ```output

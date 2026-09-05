@@ -201,7 +201,7 @@ Convergence tolerance for early stopping of robustness iterations. `NaN` (defaul
 
 ### return_robustness_weights
 
-Include the robustness weight from the latest point's fit in the result.
+Include the robustness weight for the latest point (from the last robustness iteration) in the result.
 
 - `false` (default) — leaves `robustness_weight()` as NaN
 - `true` — populates `robustness_weight()`

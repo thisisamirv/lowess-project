@@ -181,13 +181,17 @@ int main() {
         trends.push_back(result.y_vector());
     }
 
-    std::cout << "y[0]: " << trends[0][0] << "\n";
+    for (std::size_t i = 0; i < scales.size(); ++i) {
+        std::cout << "fraction=" << scales[i] << ": y[0] = " << trends[i][0] << "\n";
+    }
     return 0;
 }
 ```
 
 ```output
-y[0]: 0.131712
+fraction=0.05: y[0] = 0.131712
+fraction=0.2: y[0] = 0.224447
+fraction=0.5: y[0] = 0.33437
 ```
 
 ---
@@ -213,6 +217,7 @@ int main() {
     fastlowess::Lowess gene_model({
         .fraction = 0.3,
         .iterations = 3,
+        .confidence_intervals = 0.95,
         .return_diagnostics = true
     });
     auto result = gene_model.fit(hours, expression).value();

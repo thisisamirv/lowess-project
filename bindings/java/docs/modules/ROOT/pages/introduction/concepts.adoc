@@ -34,7 +34,11 @@ For each point in your data, LOWESS:
 
 == The Fraction Parameter
 
-`fraction` (also called bandwidth or span) is the most important parameter. It controls what proportion of data is used for each local fit.
+The `fraction` (also called bandwidth or span) is the most important parameter. It controls what proportion of data is used for each local fit.
+
+image::fraction_comparison.svg[Fraction Effect]
+
+_Small fraction vs large fraction — bandwidth controls how closely the fit follows local structure_
 
 [cols="1,1,1",options="header"]
 |===
@@ -45,10 +49,6 @@ For each point in your data, LOWESS:
 |*0.5–0.7* |Heavy smoothing |Noisy data, trend extraction
 |*0.7–1.0* |Very smooth |Strong noise, global trends
 |===
-
-image::fraction_comparison.svg[Fraction Effect]
-
-_Small fraction vs large fraction — bandwidth controls how closely the fit follows local structure_
 
 [NOTE]
 ====
@@ -61,6 +61,10 @@ _Small fraction vs large fraction — bandwidth controls how closely the fit fol
 
 Standard LOWESS is sensitive to outliers. *Robustness iterations* downweight points with large residuals:
 
+image::robust_iter_comparison.svg[Robustness Effect]
+
+_Non-robust LOWESS (iterations=0) vs robust LOWESS — outlier influence is suppressed through iterative reweighting_
+
 [cols="1,1,1",options="header"]
 |===
 |Iterations |Effect |When to Use
@@ -70,10 +74,6 @@ Standard LOWESS is sensitive to outliers. *Robustness iterations* downweight poi
 |*4–6* |Strong robustness |Data with outliers
 |*7+* |Very strong |Heavy contamination
 |===
-
-image::robust_iter_comparison.svg[Robustness Effect]
-
-_Non-robust LOWESS (iterations=0) vs robust LOWESS — outlier influence is suppressed through iterative reweighting_
 
 '''
 

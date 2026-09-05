@@ -33,17 +33,17 @@ const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 const model = new Lowess({fraction: 0.5, confidence_intervals: 0.95});
 const result = model.fit(x, y);
 
-result.y.slice(0, 3).forEach((y, i) => {
+result.y.slice(0, 5).forEach((y, i) => {
     console.log(`x=${result.x[i].toFixed(4)}: y=${y.toFixed(4)} [${result.confidence_lower[i].toFixed(4)}, ${result.confidence_upper[i].toFixed(4)}]`);
 });
-console.log(`... (${result.y.length - 3} more)`);
 ```
 
 ```output
 x=0.0000: y=0.3344 [0.2941, 0.3746]
 x=0.0635: y=0.3610 [0.3184, 0.4036]
 x=0.1269: y=0.3887 [0.3440, 0.4335]
-... (97 more)
+x=0.1904: y=0.4175 [0.3709, 0.4641]
+x=0.2539: y=0.4471 [0.3989, 0.4954]
 ```
 
 ---
@@ -140,7 +140,6 @@ const result = model.fit(x, y);
 result.standard_errors.slice(0, 5).forEach((se, i) => {
     console.log(`Point ${i}: SE = ${se.toFixed(4)}`);
 });
-console.log(`... (${result.standard_errors.length - 5} more)`);
 ```
 
 ```output
@@ -149,7 +148,6 @@ Point 1: SE = 0.0269
 Point 2: SE = 0.0283
 Point 3: SE = 0.0297
 Point 4: SE = 0.0309
-... (95 more)
 ```
 
 ---

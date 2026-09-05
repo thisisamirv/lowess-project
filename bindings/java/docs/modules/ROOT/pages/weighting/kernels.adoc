@@ -205,104 +205,16 @@ First smoothed value (biweight kernel): 0.3759030457029011
 
 '''
 
-== Uniform
-
-Equal weight within the window; no distance decay.
-
-[stem]
-++++
-w(u) = 1
-++++
-
-*Use when*: You want a simple moving-average-like behavior within the neighborhood.
-
-[source,java]
-----
-import fastlowess.Lowess;
-import fastlowess.Options;
-import fastlowess.Result;
-
-public class Example {
-    public static void main(String[] args) {
-        int n = 100;
-        double[] x = new double[n];
-        double[] y = new double[n];
-        for (int i = 0; i < n; i++) {
-            x[i] = i * 2 * Math.PI / (n - 1);
-            y[i] = Math.sin(x[i]) + 0.1;
-        }
-
-        Options options = Options.builder().weightFunction("uniform").build();
-
-        try (Lowess model = new Lowess(options)) {
-            Result result = model.fit(x, y);
-            System.out.println("First smoothed value (uniform kernel): " + result.y()[0]);
-        }
-    }
-}
-----
-
-[source,console]
-----
-First smoothed value (uniform kernel): 0.45083991221911446
-----
-
-'''
-
-== Triangle
-
-Linear decay to zero at the neighborhood edge.
-
-[stem]
-++++
-w(u) = 1 - |u|
-++++
-
-*Use when*: A simple, cheap-to-evaluate kernel with compact support is preferred.
-
-[source,java]
-----
-import fastlowess.Lowess;
-import fastlowess.Options;
-import fastlowess.Result;
-
-public class Example {
-    public static void main(String[] args) {
-        int n = 100;
-        double[] x = new double[n];
-        double[] y = new double[n];
-        for (int i = 0; i < n; i++) {
-            x[i] = i * 2 * Math.PI / (n - 1);
-            y[i] = Math.sin(x[i]) + 0.1;
-        }
-
-        Options options = Options.builder().weightFunction("triangle").build();
-
-        try (Lowess model = new Lowess(options)) {
-            Result result = model.fit(x, y);
-            System.out.println("First smoothed value (triangle kernel): " + result.y()[0]);
-        }
-    }
-}
-----
-
-[source,console]
-----
-First smoothed value (triangle kernel): 0.3816572331939023
-----
-
-'''
-
 == Cosine
 
-Smooth compact-support kernel, close in efficiency to Tricube.
+Smooth and computationally efficient.
 
 [stem]
 ++++
-w(u) = \cos\!\left(\frac{\pi u}{2}\right)
+w(u) = \cos(\pi u / 2)
 ++++
 
-*Use when*: An alternative smooth kernel to Tricube is desired.
+*Use when*: Want smooth kernel with simple form.
 
 [source,java]
 ----
@@ -337,16 +249,112 @@ First smoothed value (cosine kernel): 0.4008299554019581
 
 '''
 
+== Triangle
+
+Simple linear taper.
+
+[stem]
+++++
+w(u) = 1 - |u|
+++++
+
+*Use when*: Simple, interpretable weights.
+
+[source,java]
+----
+import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i < n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        Options options = Options.builder().weightFunction("triangle").build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y);
+            System.out.println("First smoothed value (triangle kernel): " + result.y()[0]);
+        }
+    }
+}
+----
+
+[source,console]
+----
+First smoothed value (triangle kernel): 0.3816572331939023
+----
+
+'''
+
+== Uniform
+
+Equal weights within window. Fastest but least smooth.
+
+[stem]
+++++
+w(u) = 1
+++++
+
+*Use when*: Speed is critical, smoothness less important.
+
+[source,java]
+----
+import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i < n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        Options options = Options.builder().weightFunction("uniform").build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y);
+            System.out.println("First smoothed value (uniform kernel): " + result.y()[0]);
+        }
+    }
+}
+----
+
+[source,console]
+----
+First smoothed value (uniform kernel): 0.45083991221911446
+----
+
+'''
+
 [#choosing-a-kernel]
 == Choosing a Kernel
 
+Choose the first row below whose condition applies:
+
 [cols="1,1",options="header"]
 |===
-|Situation |Recommended Kernel
+|Condition |Kernel
 
-|General purpose |`tricube` (default)
-|Theoretical MSE optimality |`epanechnikov`
-|Maximum smoothness, no boundary artifacts |`gaussian`
-|Simple, cheap alternative |`uniform`, `triangle`
+|Need maximum smoothness |`Gaussian`
+|Default is acceptable |`Tricube`
+|Need optimal asymptotic MSE |`Epanechnikov`
+|Speed is critical |`Uniform`
+|None of the above |`Biweight`
 |===
+
+[NOTE]
+====
+*Recommendation:* Stick with *Tricube* (default) unless you have specific requirements. The differences between kernels are usually small in practice.
+====
 

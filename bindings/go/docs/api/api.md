@@ -36,15 +36,15 @@ defer model.Close()
 - `fastlowess.NewLowess(opts Options) (*Lowess, error)` creates a new batch model. Returns an error if any option is out of range (some validation is eager at construction, e.g. `Iterations`; some is deferred to `Fit`, e.g. `Fraction`).
 - `opts`: An `Options` struct. Use `fastlowess.DefaultOptions()` and override only the fields you need.
 
-**Methods:**
+#### `Fit(x, y, customWeights...)`
+
+`(*Lowess) Fit(x, y []float64, customWeights ...[]float64) (Result, error)` smooths `y` as a function of `x`. `x` and `y` must be non-empty and the same length. An optional `customWeights` slice (same length) applies per-observation case weights. Returns a `Result` containing the smoothed values and optional diagnostics.
 
 ```go
 result, err := model.Fit(x, y)
 ```
 
-- `(*Lowess) Fit(x, y []float64, customWeights ...[]float64) (Result, error)` smooths `y` as a function of `x`. `x` and `y` must be non-empty and the same length. An optional `customWeights` slice (same length) applies per-observation case weights.
 - `(*Lowess) Close() error` releases native resources. Safe to call multiple times. A finalizer is registered as a safety net, but call `Close` explicitly (e.g. via `defer`) rather than relying on the garbage collector.
-- Returns a `Result` containing the smoothed values and optional diagnostics.
 
 ## Options Structures
 

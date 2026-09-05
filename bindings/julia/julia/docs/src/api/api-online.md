@@ -158,7 +158,7 @@ Convergence tolerance for early stopping of robustness iterations. `NaN` (defaul
 
 ### return_robustness_weights
 
-Include the robustness weight from the latest point's fit in the result.
+Include the robustness weight for the latest point (from the last robustness iteration) in the result.
 
 - `false` (default) — leaves `result.robustness_weight` as `nothing`
 - `true` — populates `result.robustness_weight`
@@ -175,10 +175,10 @@ Minimum number of points required before smoothing starts. `add_point` returns `
 
 *See: [Execution Modes](../guide/adapter-choice.md)*
 
-| Mode | Behavior | Speed |
-| --- | --- | --- |
-| `"incremental"` (default) | Update only affected fits | Faster |
-| `"full"` | Recompute entire window | More accurate |
+| Mode | Alias | Behavior | Speed |
+| --- | --- | --- | --- |
+| `"incremental"` (default) | `"single"` | Update only affected fits | Faster |
+| `"full"` | `"resmooth"` | Recompute entire window | More accurate |
 
 ## Result Structure
 
@@ -194,7 +194,7 @@ Returned by `add_point` once the window has enough points (`nothing` until then)
 | `robustness_weight` | `Union{Float64, Nothing}` | Robustness weight, if `return_robustness_weights` was set |
 | `iterations_used` | `Union{Int, Nothing}` | Robustness iterations performed |
 
-There is no `Diagnostics` object or `return_diagnostics` option for `OnlineLowess`: `OnlineOutput` carries no diagnostics field, since diagnostics like RMSE/R2 need more than one point's worth of history to be meaningful.
+There is no `Diagnostics` object or `return_diagnostics` option for `OnlineLowess`: `OnlineOutput` carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful.
 
 ## Example
 

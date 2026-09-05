@@ -25,7 +25,7 @@ fn main() -> Result<(), LowessError> {
         .build()?;
 
     let result = model.fit(&x, &y)?;
-    println!("First smoothed: {:.4}  (true: {:.4})", result.y[0], x[0].sin());
+    println!("First smoothed value: {:.4}  (true: {:.4})", result.y[0], x[0].sin());
     Ok(())
 }
 ```
@@ -144,13 +144,13 @@ fn main() -> Result<(), LowessError> {
         model.process_chunk(chunk.0, chunk.1)?;
     }
     let result = model.finalize()?;
-    println!("Smoothed {} points", result.y.len());
+    println!("Smoothed {} points in streaming mode", result.y.len());
     Ok(())
 }
 ```
 
 ```output
-Smoothed 100 points
+Smoothed 100 points in streaming mode
 ```
 
 ---

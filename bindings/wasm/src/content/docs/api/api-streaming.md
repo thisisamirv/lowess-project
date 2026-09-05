@@ -231,14 +231,6 @@ Number of points retained from the previous chunk as context, so the neighbourho
 | `"take_first"` | `"first"` | Keep left chunk values |
 | `"take_last"` | `"last"` | Keep right chunk values |
 
-![Merge Strategies](../../assets/diagrams/merge_comparison.svg)
-
----
-
-:::caution[Always call finalize()]
-The streaming adapter buffers overlap data. Call `finalize()` after the last chunk to retrieve the buffered tail.
-:::
-
 ## Result Structure
 
 ### `LowessResult`

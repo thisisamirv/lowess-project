@@ -13,7 +13,7 @@ Time series data often contains noise, seasonality, and trends. LOWESS provides 
 
 ## Basic Trend Extraction
 
-`Fraction = 0.1` sizes the neighbourhood as 10% of the data at each evaluation point — narrow enough to follow a slowly varying trend without smearing periodic variation. Three robustness `Iterations` down-weight noise spikes so they cannot bias the fitted curve.
+`Fraction = 0.1` sizes the neighbourhood as 10% of the data at each evaluation point — narrow enough to follow a slowly varying trend without smearing periodic variation. Three robustness `Iterations` down-weight noise spikes so they cannot bias the fitted curve; this is especially important when the signal-to-noise ratio is low or when occasional outliers are expected.
 
 ```go
 package main
@@ -63,7 +63,7 @@ y[0]: 11.32159092241617
 
 Remove trend to analyze residual patterns.
 
-Setting `ReturnResiduals = true` stores `observed − smoothed` alongside the smooth. A slightly wider `Fraction = 0.3` produces a smoother baseline trend, so short-duration oscillations end up in the residuals rather than being absorbed into the trend component.
+Setting `ReturnResiduals = true` stores `observed − smoothed` alongside the smooth. A slightly wider `Fraction = 0.3` produces a smoother baseline trend, so short-duration oscillations end up in the residuals rather than being absorbed into the trend component. The residual series is then ready for spectral analysis, seasonality detection, or change-point methods.
 
 ```go
 package main
@@ -112,7 +112,7 @@ residuals[0]: -0.15824361645514948
 
 ## Forecasting with Prediction Intervals
 
-Prediction intervals widen the uncertainty band to include both the uncertainty in the fitted curve (confidence interval) and the expected scatter of new observations around it. `Fraction = 0.2` offers a balance between local detail and stable interval width.
+Prediction intervals widen the uncertainty band to include both the uncertainty in the fitted curve (confidence interval) and the expected scatter of new observations around it. `Fraction = 0.2` offers a balance between local detail and stable interval width — too small a fraction produces jagged interval edges; too large a fraction underestimates local variance near turning points.
 
 ```go
 package main
@@ -285,6 +285,8 @@ func main() {
  opts := fastlowess.DefaultOptions()
  opts.Fraction = 0.3
  opts.Iterations = 3
+ ci := 0.95
+ opts.ConfidenceIntervals = &ci
  opts.ReturnDiagnostics = true
 
  model, err := fastlowess.NewLowess(opts)

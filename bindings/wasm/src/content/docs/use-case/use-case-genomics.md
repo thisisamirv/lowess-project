@@ -92,7 +92,7 @@ const yChunk = Float64Array.from(xChunk, p => 50 + Math.sin(p / 100) * 20 + 5.0)
 
 const processor = new StreamingLowess(
     { fraction: 0.05, iterations: 3 },
-    { chunk_size: 50, overlap: 10 }
+    { chunk_size: 50, overlap: 10, merge_strategy: "weighted_average" }
 );
 
 processor.process_chunk(xChunk, yChunk);

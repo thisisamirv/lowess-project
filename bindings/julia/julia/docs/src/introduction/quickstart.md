@@ -17,7 +17,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 model = Lowess(; fraction=0.3, iterations=3)
 result = fit(model, x, y)
 
-@printf "First smoothed: %.4f  (true: %.4f)\n" result.y[1] sin(x[1])
+@printf "First smoothed value: %.4f  (true: %.4f)\n" result.y[1] sin(x[1])
 ```
 
 ---

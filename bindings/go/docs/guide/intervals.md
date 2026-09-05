@@ -9,7 +9,7 @@ Confidence and prediction intervals for uncertainty quantification.
 
 ![Confidence and Prediction Intervals](../assets/diagrams/intervals_comparison.svg)
 
-> **Adapter support:** Confidence and prediction intervals are available in **Batch** (`Lowess`) mode only. `StreamingLowess` and `OnlineLowess` do not support intervals.
+> **Adapter support:** Confidence and prediction intervals are available in **Batch** mode only. Streaming and Online modes do not support intervals.
 
 | Type | Represents | Width | Use |
 | --- | --- | --- | --- |

@@ -7,6 +7,8 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+<!-- markdownlint-disable MD024 -->
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
@@ -27,7 +29,7 @@ smaller one makes it more aggressive.
 
 | Method | Formula | Robustness | Speed |
 | --- | --- | --- | --- |
-| `"mad"` | Median absolute deviation from median | Very robust | Moderate |
+| `"mad"` | Median \|r − median(r)\| | Very robust | Moderate |
 | `"mar"` | Median of \|residuals\| | Robust | Fast |
 | `"mean"` | Mean of \|residuals\| | Less robust | Fastest |
 
@@ -41,7 +43,7 @@ $$\hat{\sigma} = \text{median}(|r_i - \text{median}(r_i)|)$$
 
 First centers residuals at their median, then takes the median of the absolute
 deviations. Double use of the median makes it highly resistant to extreme
-outliers.
+outliers. This is the standard choice for robust regression.
 
 **Use when**: Data may contain outliers (default for most applications).
 
@@ -53,8 +55,7 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Lowess(iterations = 3, scaling_method = "mad")
 result <- fit(model, x, y)
-cat("First 6 smoothed values (MAD scaling):\n")
-print(head(result$y))
+cat("Smoothed y[0]:", result$y[1], "\n")
 ```
 
 ---
@@ -63,60 +64,49 @@ print(head(result$y))
 
 $$\hat{\sigma} = \text{median}(|r_i|)$$
 
-Slightly less robust than MAD because it does not center residuals first, but
-faster to compute.
+Uses the uncentered median — unlike MAD it does not subtract the residual
+median first. Still robust (median-based) but slightly less resistant than MAD
+when residuals are systematically shifted. Faster than MAD in practice because
+it requires only one partial sort.
 
-**Use when**: Residuals are roughly symmetric around zero; speed is a concern.
+**Use when**: Speed matters and data have minimal systematic bias in residuals.
 
 ```{r scaling_2}
 model <- Lowess(iterations = 3, scaling_method = "mar")
 result <- fit(model, x, y)
-cat("First 6 smoothed values (MAR scaling):\n")
-print(head(result$y))
+cat("Smoothed y[0]:", result$y[1], "\n")
 ```
 
 ---
 
-## Mean Absolute Residual
+## Mean — Mean Absolute Residual
 
 $$\hat{\sigma} = \frac{1}{n}\sum_i |r_i|$$
 
-Least robust — influenced by outliers. Matches classic OLS residual scale.
+Arithmetic mean of absolute residuals. Non-robust: a single extreme outlier
+inflates $\hat{\sigma}$, causing the algorithm to under-downweight it. Fastest
+to compute (no sort required). Useful when data are believed to be clean and
+speed is a priority.
 
-**Use when**: No outliers expected; comparisons with classical methods.
+**Use when**: Clean data with no outliers; maximum computation speed required.
 
 ```{r scaling_3}
 model <- Lowess(iterations = 3, scaling_method = "mean")
 result <- fit(model, x, y)
-cat("First 6 smoothed values (mean scaling):\n")
-print(head(result$y))
+cat("Smoothed y[0]:", result$y[1], "\n")
 ```
 
 ---
 
-## Comparing Scaling Methods
+## Choosing a Scaling Method
 
-```{r scaling_4}
-library(rfastlowess)
-set.seed(42)
-x <- 1:100
-y <- sin(x / 10) + rnorm(100, sd = 0.3)
-y[c(20, 50, 80)] <- y[c(20, 50, 80)] + 5  # outliers
+| Situation | Recommended Method |
+| --- | --- |
+| General purpose, possible outliers | `"mad"` (default) |
+| Speed matters; residuals have minimal systematic bias | `"mar"` |
+| Clean data, no outliers | `"mean"` |
 
-methods <- c("mad", "mar", "mean")
-colors  <- c("blue", "red", "green")
-
-plot(x, y, pch = 16, col = "gray",
-    main = "Scaling Method Comparison (with outliers)")
-
-for (i in seq_along(methods)) {
-    model  <- Lowess(iterations = 3, scaling_method = methods[i])
-    result <- fit(model, x, y)
-    lines(result$x, result$y, col = colors[i], lwd = 2)
-}
-
-legend("topright", methods, col = colors, lwd = 2)
-```
+See [Robustness](robustness.html) for a broader discussion of outlier handling.
 
 ```{r session-info}
 sessionInfo()

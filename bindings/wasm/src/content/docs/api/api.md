@@ -32,7 +32,9 @@ typeof fit: function
 
 - `options`: An object containing `LowessOptions` fields.
 
-**Methods:**
+#### `fit(x, y)`
+
+Fits the model to the provided `x` (`Float64Array` of input x values) and `y` (`Float64Array` of input y values). Returns: A `LowessResult` object.
 
 ```javascript
 const { Lowess } = require('fastlowess-wasm');
@@ -49,10 +51,6 @@ console.log("Fraction used:", result.fraction_used);
 ```output
 Fraction used: 0.5
 ```
-
-- `x`: `Float64Array` of input x values.
-- `y`: `Float64Array` of input y values.
-- Returns: A `LowessResult` object.
 
 ## Options Structures
 

@@ -28,6 +28,207 @@ image::adapter_comparison.svg[Adapter Comparison]
 
 '''
 
+== Batch Adapter
+
+Standard mode for complete datasets. **Supports all features.**
+
+=== When to Use
+
+* Dataset fits in memory
+* Need intervals, cross-validation, or diagnostics
+* Processing complete files
+
+=== Example
+
+[source,java]
+----
+import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i < n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        Options options = Options.builder()
+                .fraction(0.5)
+                .iterations(3)
+                .confidenceIntervals(0.95)
+                .predictionIntervals(0.95)
+                .returnDiagnostics(true)
+                .parallel(true)
+                .build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y);
+            int mid = n / 2;
+            System.out.printf("95%% CI at midpoint: [%.4f, %.4f]%n",
+                    result.confidenceLower().get()[mid], result.confidenceUpper().get()[mid]);
+            System.out.printf("R2: %.4f%n", result.diagnostics().get().rSquared());
+        }
+    }
+}
+----
+
+'''
+
+== Streaming Adapter
+
+Process large datasets in chunks with configurable overlap.
+
+=== When to Use
+
+* Dataset >100,000 points
+* Memory-constrained environments
+* Batch processing pipelines
+
+=== Parameters
+
+[cols="1,1,1",options="header"]
+|===
+|Parameter |Default |Description
+
+|`chunk_size` |5000 |Points per chunk
+|`overlap` |`chunk_size / 10` |Overlap between chunks
+|`merge_strategy` |`"weighted_average"` |How to merge overlaps
+|===
+
+=== Merge Strategies
+
+[cols="1,1",options="header"]
+|===
+|Strategy |Behavior
+
+|`"average"` |Average overlapping values
+|`"weighted_average"` |Distance-weighted blend
+|`"take_first"` |Keep left chunk values
+|`"take_last"` |Keep right chunk values
+|===
+
+=== Example
+
+[source,java]
+----
+import fastlowess.Result;
+import fastlowess.StreamingLowess;
+import fastlowess.StreamingOptions;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i < n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        StreamingOptions options = StreamingOptions.builder()
+                .fraction(0.3)
+                .iterations(2)
+                .chunkSize(5000)
+                .overlap(500)
+                .mergeStrategy("average")
+                .build();
+
+        try (StreamingLowess model = new StreamingLowess(options)) {
+            model.processChunk(x, y);
+            Result result = model.finish();
+            System.out.printf("Smoothed y[0]: %.4f%n", result.y()[0]);
+        }
+    }
+}
+----
+
+'''
+
+[CAUTION]
+.Always call finish()
+====
+Always call `model.finish()` after processing all chunks to retrieve buffered overlap data.
+====
+
+== Online Adapter
+
+Incremental updates with a sliding window for real-time data.
+
+=== When to Use
+
+* Data arrives incrementally (sensors, streams)
+* Need real-time smoothed values
+* Fixed memory budget
+
+=== Parameters
+
+[cols="1,1,1",options="header"]
+|===
+|Parameter |Default |Description
+
+|`window_capacity` |1000 |Max points in window
+|`min_points` |2 |Points before output starts
+|`update_mode` |`"incremental"` |Update strategy
+|===
+
+=== Update Modes
+
+[cols="1,1,1",options="header"]
+|===
+|Mode |Behavior |Speed
+
+|`"incremental"` |Update only affected fits |Faster
+|`"full"` |Recompute entire window |More accurate
+|===
+
+=== Example
+
+[source,java]
+----
+import fastlowess.OnlineLowess;
+import fastlowess.OnlineOptions;
+import fastlowess.PointResult;
+
+import java.util.Optional;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i < n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        OnlineOptions options = OnlineOptions.builder()
+                .fraction(0.2)
+                .iterations(1)
+                .windowCapacity(100)
+                .minPoints(5)
+                .updateMode("incremental")
+                .build();
+
+        try (OnlineLowess model = new OnlineLowess(options)) {
+            int shown = 0;
+            for (int i = 0; i < n && shown < 5; i++) {
+                Optional<PointResult> result = model.addPoint(x[i], y[i]);
+                if (result.isPresent()) {
+                    System.out.println(result.get().y());
+                    shown++;
+                }
+            }
+        }
+    }
+}
+----
+
+'''
+
 == Feature Comparison
 
 [cols="1,1,1,1",options="header"]

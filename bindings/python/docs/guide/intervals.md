@@ -101,11 +101,11 @@ rng = np.random.default_rng(42)
 x = np.linspace(0, 2 * np.pi, 100)
 y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-### 90% confidence interval (narrower)
+### 99% confidence interval (wider)
 
-model = fl.Lowess(confidence_intervals=0.90)
+model = fl.Lowess(confidence_intervals=0.99)
 result = model.fit(x, y)
-print(f"95% CI at midpoint: [{result.confidence_lower[50]:.4f}, {result.confidence_upper[50]:.4f}]")
+print(f"99% CI at midpoint: [{result.confidence_lower[50]:.4f}, {result.confidence_upper[50]:.4f}]")
 :::
 
 ---

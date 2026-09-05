@@ -238,13 +238,6 @@ Number of points retained from the previous chunk as context, so the neighbourho
 | `"take_first"` | `"first"` | Keep left chunk values |
 | `"take_last"` | `"last"` | Keep right chunk values |
 
-![Merge Strategies](https://raw.githubusercontent.com/thisisamirv/lowess-project/main/crates/fastLowess/assets/diagrams/merge_comparison.svg)
-
----
-
-!!! warning "Always call finalize()"
-    The streaming adapter buffers overlap data. Call `finalize()` after the last chunk to retrieve the buffered tail.
-
 ## Result Structure
 
 ### `LowessResult<T>`

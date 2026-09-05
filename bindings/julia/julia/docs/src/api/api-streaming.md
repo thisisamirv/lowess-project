@@ -204,19 +204,12 @@ Number of points retained from the previous chunk as context, so the neighbourho
 
 *See: [Merge Strategies](../advanced/merge.md)*
 
-| Strategy | Behavior |
-| --- | --- |
-| `"weighted_average"` (default) | Distance-weighted blend |
-| `"average"` | Average overlapping values |
-| `"take_first"` | Keep left chunk values |
-| `"take_last"` | Keep right chunk values |
-
-![Merge Strategies](../assets/merge_comparison.svg)
-
----
-
-!!! warning "Always call finalize()"
-    The streaming adapter buffers overlap data. Call `finalize(model)` after the last chunk to retrieve the buffered tail.
+| Strategy | Alias | Behavior |
+| --- | --- | --- |
+| `"weighted_average"` (default) | `"weighted"` | Distance-weighted blend |
+| `"average"` | `"mean"` | Average overlapping values |
+| `"take_first"` | `"first"` | Keep left chunk values |
+| `"take_last"` | `"last"` | Keep right chunk values |
 
 ## Result Structure
 

@@ -18,11 +18,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 const model = new Lowess({ fraction: 0.3, iterations: 3 });
 const result = model.fit(x, y);
 
-console.log(`First smoothed: ${result.y[0].toFixed(4)}`);
+console.log(`First smoothed value: ${result.y[0].toFixed(4)}  (true: ${Math.sin(x[0]).toFixed(4)})`);
 ```
 
 ```output
-First smoothed: 0.0278
+First smoothed value: 0.0278  (true: 0.0000)
 ```
 
 ---
@@ -118,11 +118,11 @@ for (let start = 0; start <= 4000; start += chunk_size) {
     model.process_chunk(x.slice(start, end), y.slice(start, end));
 }
 const result = model.finalize();
-console.log(`Smoothed ${result.y.length} points`);
+console.log(`Smoothed ${result.y.length} points in streaming mode`);
 ```
 
 ```output
-Smoothed 100 points
+Smoothed 100 points in streaming mode
 ```
 
 ---

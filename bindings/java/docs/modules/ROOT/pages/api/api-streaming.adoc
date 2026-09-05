@@ -77,7 +77,7 @@ Result result = model.finish();
 |`returnRobustnessWeights` |`boolean` |`false` |Include weights in result
 |`parallel` |`boolean` |`true` |Enable parallel execution
 |`chunkSize` |`int` |`5000` |Data chunk size
-|`overlap` |`int` |library default |Overlap between chunks (negative means "use the library default")
+|`overlap` |`int` |`chunk_size / 10` |Overlap between chunks
 |`mergeStrategy` |`String` |`"weighted_average"` |Strategy for blending overlap regions
 |===
 
@@ -209,6 +209,9 @@ Number of points processed per chunk. Larger chunks reduce per-chunk overhead an
 
 Number of points retained from the previous chunk as context, so the neighbourhood at chunk boundaries isn't artificially truncated. Points inside the overlap zone are fitted twice (once by each chunk) and reconciled via `mergeStrategy`. A good starting point is 10-20% of `chunkSize`: too little overlap causes visible boundary artefacts, while too much wastes computation refitting the same points twice.
 
+* `-1` (default) — computes `chunk_size / 10`, clamped to at least 1 and less than `chunkSize`
+* Any integer `>= 1` and `< chunkSize`
+
 === mergeStrategy
 
 _See: xref:../advanced/merge.adoc[Merge Strategies]_
@@ -222,14 +225,6 @@ _See: xref:../advanced/merge.adoc[Merge Strategies]_
 |`"take_first"` |Keep left chunk values
 |`"take_last"` |Keep right chunk values
 |===
-
-image::merge_comparison.svg[Merge Strategies]
-
-[CAUTION]
-.Always call finish()
-====
-The streaming adapter buffers overlap data. Call `finish()` after the last chunk to retrieve the buffered tail.
-====
 
 == Result Structure
 

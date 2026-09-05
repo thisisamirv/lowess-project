@@ -7,33 +7,38 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+<!-- markdownlint-disable MD024 -->
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
+Streaming and online LOWESS for live data.
+
 ## Overview
 
-When data arrives continuously from sensors, logs, or streaming pipelines, the
-Online adapter provides incremental smoothing without reprocessing the entire
+When data arrives continuously—from sensors, logs, or streaming pipelines—you
+need incremental smoothing that doesn't require reprocessing the entire
 dataset.
 
 ---
 
 ## Online Mode: Point-by-Point
 
+For true real-time applications where each point must be processed
+immediately.
+
 `window_capacity = 25` limits the internal buffer to the 25 most recent
 observations; each `add_point()` call costs O(window) rather than growing with
 total history. `min_points = 5` suppresses output until the window holds enough
-points for a stable fit. `update_mode = "incremental"` re-fits only the most
-recent point rather than the full window, halving typical latency.
+points for a stable fit — calls made before that threshold return `NULL`.
+`update_mode = "incremental"` re-fits only the most recent point rather than the
+full window, halving typical latency at a modest accuracy cost.
 
 ### Sensor Data Example
 
 ```{r use_case_real_time_1}
 library(rfastlowess)
-
-times <- 0:99
-temperatures <- 20 + 5 * sin(times / 10) + sin(times * 1.7) * 0.5
 
 model <- OnlineLowess(
     fraction = 0.3,
@@ -42,13 +47,15 @@ model <- OnlineLowess(
     min_points = 5,
     update_mode = "incremental"
 )
+
+# Simulate real-time data arrival
 count <- 0
-for (i in seq_along(times)) {
-    result <- add_point(model, times[i], temperatures[i])
+for (i in 0:99) {
+    yi <- 20.0 + 5.0 * sin(i / 10.0) + sin(i * 1.7) * 0.5
+
+    result <- add_point(model, i, yi)
     if (!is.null(result)) {
-        if (count < 5) {
-            cat(sprintf("Time %d: smoothed = %.4f\n", times[i], result$y))
-        }
+        if (count < 5) cat(sprintf("Time %d: smoothed = %.4f\n", i, result$y))
         count <- count + 1
     }
 }
@@ -57,117 +64,125 @@ cat(sprintf("... (%d more)\n", count - 5))
 
 ---
 
-## Accumulating Results
+## Streaming Mode: Chunk Processing
 
-Collect online smoothed values into a vector for downstream analysis or
-plotting.
+For large datasets that arrive in batches or files.
+
+`chunk_size` controls how many data points are processed in one pass; matching
+it to your file-read buffer or message-batch size avoids unnecessary copying.
+`overlap` retains that many points from the previous chunk as context so the
+neighbourhood at chunk boundaries is not artificially truncated.
+`merge_strategy = "weighted_average"` blends the overlapping region smoothly;
+use `"last"` if chunk boundaries are guaranteed to be well separated and no
+blending is needed.
+
+> **Always call finalize():** The streaming adapter buffers overlap data. Call
+> `finalize()` after the last chunk to retrieve the buffered tail.
+
+### Log File Processing
 
 ```{r use_case_real_time_2}
 library(rfastlowess)
-set.seed(42)
-n <- 200
-times <- seq_len(n)
-signal <- 10 + 2 * sin(times / 20) + rnorm(n, sd = 1)
-
-model <- OnlineLowess(
-    fraction       = 0.3,
-    window_capacity = 30,
-    min_points      = 5
-)
-
-smoothed_x <- numeric(n)
-smoothed_y <- numeric(n)
-n_out <- 0L
-
-for (i in seq_len(n)) {
-    result <- add_point(model, times[i], signal[i])
-    if (!is.null(result)) {
-        n_out <- n_out + 1L
-        smoothed_x[n_out] <- times[i]
-        smoothed_y[n_out] <- result$y
-    }
-}
-
-smoothed_x <- smoothed_x[seq_len(n_out)]
-smoothed_y <- smoothed_y[seq_len(n_out)]
-
-plot(times, signal, pch = 16, cex = 0.4, col = "gray",
-    xlab = "Time", ylab = "Value",
-    main = "Online LOWESS — Accumulated Output")
-lines(smoothed_x, smoothed_y, col = "blue", lwd = 2)
-```
-
----
-
-## Update Modes
-
-| Mode | Behaviour | Latency | Accuracy |
-| --- | --- | --- | --- |
-| `"incremental"` | Re-fits only the newest point | Low | Moderate |
-| `"full"` | Re-fits the entire window | Higher | Higher |
-
-```{r use_case_real_time_3}
-# Full-window refit (more accurate, slower)
-model_full <- OnlineLowess(
-    fraction       = 0.3,
-    window_capacity = 25,
-    update_mode     = "full"
-)
-
-smoothed_full_x <- numeric(n)
-smoothed_full_y <- numeric(n)
-n_full <- 0L
-
-for (i in seq_len(n)) {
-    result <- add_point(model_full, times[i], signal[i])
-    if (!is.null(result)) {
-        n_full <- n_full + 1L
-        smoothed_full_x[n_full] <- times[i]
-        smoothed_full_y[n_full] <- result$y
-    }
-}
-
-smoothed_full_x <- smoothed_full_x[seq_len(n_full)]
-smoothed_full_y <- smoothed_full_y[seq_len(n_full)]
-
-plot(times, signal, pch = 16, cex = 0.4, col = "gray",
-    xlab = "Time", ylab = "Value",
-    main = "Online LOWESS — Full-Window Refit")
-lines(smoothed_full_x, smoothed_full_y, col = "blue", lwd = 2)
-```
-
----
-
-## Streaming Mode for Large Batches
-
-> **Note:** Always call `finalize()` after the last chunk to flush any remaining
-> buffered points and produce output for the tail of the dataset.
-
-For large historical files arriving in chunks (not true real-time), the
-Streaming adapter is more efficient than Online:
-
-```{r use_case_real_time_4}
-library(rfastlowess)
-
-model <- StreamingLowess(
-    fraction       = 0.1,
-    iterations     = 2,
-    chunk_size     = 50,
-    overlap        = 10,
-    merge_strategy = "weighted_average"
-)
 
 chunk1_x <- 0:49
 chunk1_y <- sin(chunk1_x) + 0.1
 chunk2_x <- 50:99
 chunk2_y <- sin(chunk2_x) + 0.1
 
+model <- StreamingLowess(
+    fraction = 0.1,
+    iterations = 2,
+    chunk_size = 50,
+    overlap = 10,
+    merge_strategy = "weighted_average"
+)
+
+# Process chunks as they arrive
 process_chunk(model, chunk1_x, chunk1_y)
 process_chunk(model, chunk2_x, chunk2_y)
 
-final <- finalize(model)
-cat(sprintf("y[0]: %.6f\n", final$y[1]))
+# CRITICAL: Get buffered overlap data
+result <- finalize(model)
+cat(sprintf("y[0]: %.6f\n", result$y[1]))
 ```
+
+---
+
+## Real-Time Dashboard Example
+
+The dashboard pattern uses a plain LOWESS fit on a manually managed sliding
+window rather than `OnlineLowess`. This is the simplest approach when your UI
+framework already owns the data buffer and you only need the most recent
+smoothed value per frame. The trade-off is a full O(window^2) refit on every
+tick; for high-frequency streams prefer `OnlineLowess` with
+`update_mode = "incremental"` to bound per-frame cost.
+
+```{r use_case_real_time_3}
+library(rfastlowess)
+
+n <- 100
+x <- seq(0, 2 * pi, length.out = n)
+y <- sin(x) + 0.1
+
+window_x <- numeric(0)
+window_y <- numeric(0)
+last_smoothed <- 0
+
+for (i in seq_along(x)) {
+    window_x <- c(window_x, x[i])
+    window_y <- c(window_y, y[i])
+
+    if (length(window_x) > 50) {
+        window_x <- window_x[-1]
+        window_y <- window_y[-1]
+    }
+
+    if (length(window_x) < 2) next
+    model <- Lowess(fraction = 0.4)
+    result <- fit(model, window_x, window_y)
+    last_smoothed <- result$y[length(result$y)]
+}
+cat(sprintf("Smoothed (dashboard, latest tick): %.4f\n", last_smoothed))
+```
+
+---
+
+## Choosing Parameters
+
+### Online Mode
+
+| Parameter | Guidance |
+| --- | --- |
+| `window_capacity` | Enough history for `fraction` to work |
+| `min_points` | 2–5 typically; higher for stability |
+| `update_mode` | `"incremental"` for speed, `"full"` for accuracy |
+
+### Streaming Mode
+
+| Parameter | Guidance |
+| --- | --- |
+| `chunk_size` | Balance memory vs. processing overhead |
+| `overlap` | 10–20% of chunk_size for smooth transitions |
+| `merge_strategy` | `"weighted_average"` for quality, `"average"` otherwise |
+
+---
+
+## Performance Considerations
+
+| Mode | Memory | Latency | Use Case |
+| --- | --- | --- | --- |
+| **Online** | Fixed (window) | ~1ms/point | Sensors, dashboards |
+| **Streaming** | ~chunk_size | ~100ms/chunk | Large files, ETL |
+| **Batch** | Full dataset | N/A | Analysis, reports |
+
+---
+
+## See Also
+
+- [Execution Modes](adapter-choice.html) — Detailed mode comparison
+- [Merge Strategies](merge.html) — Chunk reconciliation in depth
+- [Scaling Methods](scaling.html) — Robustness scale estimation
+- [Time Series](use-case-time-series.html) — General time series analysis
 
 ```{r session-info}
 sessionInfo()

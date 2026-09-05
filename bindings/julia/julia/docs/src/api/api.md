@@ -27,7 +27,9 @@ println(typeof(model))
 
 - Keyword arguments configure the `Lowess` model; see [Options Structures](#options-structures) below.
 
-**Methods:**
+#### `fit(model, x, y; custom_weights=nothing)`
+
+Fits the model to the provided `x` and `y` vectors. `custom_weights` is an optional `Vector{Float64}` of per-observation weights — all values must be ≥ 0 and length must match `x`. Returns a `LowessResult` containing the smoothed values and optional diagnostics.
 
 ```@example batch
 using Random, Statistics
@@ -39,10 +41,6 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 result = fit(model, x, y)
 println("First smoothed value: ", result.y[1])
 ```
-
-- `fit(model, x, y; custom_weights=nothing)`: Fits the model to the provided `x` and `y` vectors.
-- `custom_weights`: Optional `Vector{Float64}` of per-observation weights. All values must be ≥ 0 and length must match `x`.
-- Returns a `LowessResult` containing the smoothed values and optional diagnostics.
 
 ## Options Structures
 

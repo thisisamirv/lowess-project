@@ -47,7 +47,9 @@ y[0]: 0.528325
 
 - `options`: A `LowessOptions` struct containing configuration parameters.
 
-**Methods:**
+#### `fit(x, y)` / `fit(x, y, custom_weights)`
+
+Fits the model to the provided `x` and `y` data vectors. The second overload applies `custom_weights` — non-negative per-observation weights of length `n`. Returns a `LowessResult` object containing the smoothed values and optional diagnostics.
 
 ```cpp
 #include <fastlowess.hpp>
@@ -82,10 +84,6 @@ int main() {
 -1
 ```
 
-- Fits the model to the provided `x` and `y` data vectors.
-- The second overload applies `custom_weights` — non-negative per-observation weights of length `n`. Batch only.
-- Returns a `LowessResult` object containing the smoothed values and optional diagnostics.
-
 ## Options Structures
 
 ### LowessOptions
@@ -103,9 +101,9 @@ int main() {
 | `auto_converge` | `double` | NaN | Auto-convergence tolerance |
 | `confidence_intervals` | `double` | NaN | Confidence level (e.g., 0.95) |
 | `prediction_intervals` | `double` | NaN | Prediction level (e.g., 0.95) |
-| `return_diagnostics` | `bool` | false | Compute RMSE, MAE, R2, AIC |
+| `return_diagnostics` | `bool` | false | Include diagnostics in result |
 | `return_residuals` | `bool` | false | Include residuals in result |
-| `return_robustness_weights` | `bool` | false | Include robustness weights in result |
+| `return_robustness_weights` | `bool` | false | Include weights in result |
 | `return_se` | `bool` | false | Return standard errors |
 | `return_sorted` | `bool` | false | Return results sorted ascending by `x` instead of in original input order |
 | `parallel` | `bool` | true | Enable parallel execution |
@@ -252,7 +250,7 @@ Enable multi-threaded execution via Rayon.
 
 ### backend
 
-The batch `fastlowess::Lowess` class can optionally run on a GPU-accelerated backend powered by `wgpu`, for high-throughput processing of large datasets (10k+ points). GPU support applies to `Lowess` (batch) only — `StreamingLowess`/`OnlineLowess` remain CPU-only. See the [GPU Backend guide](../advanced/gpu-backend.md) for installation, usage, supported features, and hardware requirements.
+The batch `fastlowess::Lowess` class can optionally run on a GPU-accelerated backend powered by `wgpu`, for high-throughput processing of large datasets (10k+ points). See the [GPU Backend guide](../advanced/gpu-backend.md) for installation, usage, supported features, and hardware requirements.
 
 ### CV Options
 

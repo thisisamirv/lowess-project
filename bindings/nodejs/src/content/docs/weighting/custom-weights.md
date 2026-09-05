@@ -19,8 +19,8 @@ the robustness weight from the current iteration.
 
 :::note[Batch adapter only]
 `custom_weights` applies in **Batch** mode. It is silently ignored in
+Streaming and Online adapters.
 :::
-    Streaming and Online adapters.
 
 ---
 

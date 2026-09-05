@@ -117,6 +117,16 @@ flowchart TD
 
 ---
 
+## Quick Decision Guide
+
+| Situation | Mode |
+| --- | --- |
+| Data fits in memory; needs intervals or CV | Batch |
+| Data too large for memory or arrives in chunks | Streaming |
+| Data arrives point-by-point in real time | Online |
+
+---
+
 ## Key Advantages
 
 | Feature | LOWESS | Polynomial Regression | Moving Average |

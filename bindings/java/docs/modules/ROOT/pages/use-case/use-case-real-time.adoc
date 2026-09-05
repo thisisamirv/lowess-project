@@ -70,7 +70,7 @@ Time 8.0: smoothed = 24.0164
 
 For large datasets that arrive in batches or files.
 
-`chunkSize` controls how many data points are processed in one pass; matching it to your file-read buffer or message-batch size avoids unnecessary copying. `overlap` retains that many points from the previous chunk as context so the neighbourhood at chunk boundaries is not artificially truncated. `mergeStrategy = "weighted_average"` blends the overlapping region smoothly.
+`chunkSize` controls how many data points are processed in one pass; matching it to your file-read buffer or message-batch size avoids unnecessary copying. `overlap` retains that many points from the previous chunk as context so the neighbourhood at chunk boundaries is not artificially truncated. `mergeStrategy = "weighted_average"` blends the overlapping region smoothly; use `"last"` if chunk boundaries are guaranteed to be well separated and no blending is needed.
 
 [NOTE]
 ====

@@ -15,7 +15,7 @@ When data arrives continuously—from sensors, logs, or streaming pipelines—yo
 
 For true real-time applications where each point must be processed immediately.
 
-`WindowCapacity = 25` limits the internal buffer to the 25 most recent observations; each `AddPoint` call costs O(window) rather than growing with total history. `MinPoints = 5` suppresses output until the window holds enough points for a stable fit. `UpdateMode = "incremental"` re-fits only the most recent point rather than the full window, halving typical latency at a modest accuracy cost.
+`WindowCapacity = 25` limits the internal buffer to the 25 most recent observations; each `AddPoint` call costs O(window) rather than growing with total history. `MinPoints = 5` suppresses output until the window holds enough points for a stable fit — calls made before that threshold return `ok == false`. `UpdateMode = "incremental"` re-fits only the most recent point rather than the full window, halving typical latency at a modest accuracy cost.
 
 ### Sensor Data Example
 
@@ -78,7 +78,7 @@ Time 8: smoothed = 24.0164
 
 For large datasets that arrive in batches or files.
 
-`ChunkSize` controls how many data points are processed in one pass; matching it to your file-read buffer or message-batch size avoids unnecessary copying. `Overlap` retains that many points from the previous chunk as context so the neighbourhood at chunk boundaries is not artificially truncated. `MergeStrategy = "weighted_average"` blends the overlapping region smoothly.
+`ChunkSize` controls how many data points are processed in one pass; matching it to your file-read buffer or message-batch size avoids unnecessary copying. `Overlap` retains that many points from the previous chunk as context so the neighbourhood at chunk boundaries is not artificially truncated. `MergeStrategy = "weighted_average"` blends the overlapping region smoothly; use `"last"` if chunk boundaries are guaranteed to be well separated and no blending is needed.
 
 > **Always call Finalize():** The streaming adapter buffers overlap data. Call `Finalize()` after the last chunk to retrieve the buffered tail.
 

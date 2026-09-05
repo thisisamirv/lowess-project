@@ -36,7 +36,9 @@ y[0]: 0.0000
 
 - `options`: An object containing `LowessOptions` fields.
 
-**Methods:**
+#### `fit(x, y, customWeights?)`
+
+Fits the model to the provided `x` and `y` typed arrays. `customWeights` is an optional `Float64Array` of per-observation weights — all values must be ≥ 0 and length must match `x`. Returns a `LowessResult` object containing the smoothed values and optional diagnostics.
 
 ```javascript
 const { Lowess } = require('fastlowess');
@@ -53,10 +55,6 @@ console.log("Fraction used:", result.fraction_used);
 ```output
 Fraction used: 0.5
 ```
-
-- Fits the model to the provided `x` and `y` typed arrays.
-- `customWeights`: Optional `Float64Array` of per-observation weights. All values must be ≥ 0 and length must match `x`.
-- Returns a `LowessResult` object containing the smoothed values and optional diagnostics.
 
 ## Options Structures
 
@@ -226,7 +224,7 @@ Enable multi-threaded execution via Rayon.
 
 *See: [GPU Backend](../advanced/gpu-backend.md)*
 
-The batch `Lowess` class can optionally run on a GPU-accelerated backend powered by `wgpu`, for high-throughput processing of large datasets (10k+ points). GPU support applies to `Lowess` (batch) only — `StreamingLowess`/`OnlineLowess` remain CPU-only.
+The batch `Lowess` class can optionally run on a GPU-accelerated backend powered by `wgpu`, for high-throughput processing of large datasets (10k+ points).
 
 - `"cpu"` (default)
 - `"gpu"` — requires the package to be built with the `gpu` Cargo feature

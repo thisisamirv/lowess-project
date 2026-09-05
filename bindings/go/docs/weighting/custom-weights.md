@@ -15,7 +15,7 @@ $$w_{ij} = \text{customWeights}_j \times K\!\left(\frac{d_{ij}}{h_i}\right) \tim
 
 where $K$ is the distance kernel, $h_i$ is the local bandwidth, and $r_j$ is the robustness weight from the current iteration.
 
-> **Batch adapter only:** `customWeights` applies in **Batch** (`Lowess`) mode. It is silently ignored in `StreamingLowess` and `OnlineLowess`.
+> **Batch adapter only:** `customWeights` applies in **Batch** mode. It is silently ignored in Streaming and Online adapters.
 
 ---
 

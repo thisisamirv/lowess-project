@@ -50,7 +50,7 @@ model = Lowess(; cv_method="loocv",
     cv_fractions=[0.2, 0.3, 0.5, 0.7]
 )
 result = fit(model, x, y)
-println("First smoothed value (LOOCV-selected fraction): ", result.y[1])
+println("Selected fraction (CV): ", result.fraction_used)
 ```
 
 ---
@@ -73,7 +73,7 @@ model = Lowess(; cv_method="kfold",
     cv_seed=42
 )
 result = fit(model, x, y)
-println("First smoothed value (k-fold CV, k=5): ", result.y[1])
+println("Selected fraction (CV): ", result.fraction_used)
 ```
 
 ---
@@ -123,7 +123,7 @@ result = fit(model, x, y)
 # 0.3       | 0.0231  ← Best
 # 0.5       | 0.0298
 # 0.7       | 0.0412  ← Oversmoothed
-println("First smoothed value (manually selected fraction=0.3): ", result.y[1])
+println("Selected fraction (CV): ", result.fraction_used)
 ```
 
 The fraction with **lowest CV score** is automatically selected.
