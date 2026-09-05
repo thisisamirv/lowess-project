@@ -185,6 +185,29 @@ Behavior when all neighborhood weights are zero:
 
 Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
 
+### return_diagnostics
+
+*See: [`Diagnostics`](crate::doc::api#diagnosticst)*
+
+Include a `Diagnostics` object (RMSE, MAE, R2, residual_sd) in the result. `effective_df`/`aic`/`aicc` require standard errors, which are Batch-only, so they're always `None` here.
+
+- `false` (default) — leaves `result.diagnostics` as `None`
+- `true` — populates `result.diagnostics`
+
+### return_residuals
+
+Include per-point residuals (`y - fitted`) in the result.
+
+- `false` (default) — leaves `result.residuals` as `None`
+- `true` — populates `result.residuals`
+
+### return_robustness_weights
+
+Include the final per-point robustness weights (from the last robustness iteration) in the result.
+
+- `false` (default) — leaves `result.robustness_weights` as `None`
+- `true` — populates `result.robustness_weights`
+
 ### chunk_size
 
 Number of points processed per chunk. Larger chunks reduce per-chunk overhead and give each local fit more surrounding context, at the cost of higher peak memory; smaller chunks bound memory tightly but increase the fraction of points that fall in overlap regions. A good starting point is balancing available memory against how much processing overhead per chunk is acceptable — match it to your file-read buffer or message-batch size to avoid unnecessary copying.

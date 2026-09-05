@@ -229,6 +229,36 @@ Behavior when all neighborhood weights are zero:
 
 Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
 
+### return_diagnostics
+
+*See: [`Diagnostics`](#fastlowessdiagnostics)*
+
+Include a `Diagnostics` object (RMSE, MAE, R², residual_sd) in the result. `effective_df`/`aic`/`aicc` require standard errors, which are Batch-only, so they're always empty/NaN here.
+
+- `false` (default) — leaves `diagnostics()` empty
+- `true` — populates `diagnostics()`
+
+### return_residuals
+
+Include per-point residuals (`y - fitted`) in the result.
+
+- `false` (default) — leaves `residuals()` empty
+- `true` — populates `residuals()`
+
+### return_robustness_weights
+
+Include the final per-point robustness weights (from the last robustness iteration) in the result.
+
+- `false` (default) — leaves `robustness_weights()` empty
+- `true` — populates `robustness_weights()`
+
+### parallel
+
+Enable multi-threaded execution via Rayon.
+
+- `true` (default) — parallelizes the local regression fits across CPU cores
+- `false` — forces single-threaded execution
+
 ### chunk_size
 
 Number of points processed per chunk. Larger chunks reduce per-chunk overhead and give each local fit more surrounding context, at the cost of higher peak memory; smaller chunks bound memory tightly but increase the fraction of points that fall in overlap regions. A good starting point is balancing available memory against how much processing overhead per chunk is acceptable — match it to your file-read buffer or message-batch size to avoid unnecessary copying.

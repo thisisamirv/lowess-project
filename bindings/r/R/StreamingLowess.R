@@ -28,8 +28,9 @@
 #' @param chunk_size Number of data points per processing chunk, at least 10.
 #'   Default: 5000.
 #' @param overlap Number of overlapping points between consecutive chunks,
-#'   less than \code{chunk_size}. \code{NULL} (default) uses the backend's
-#'   default of 500.
+#'   less than \code{chunk_size}. \code{NULL} (default) computes
+#'   \code{chunk_size / 10}, clamped to at least 1 and less than
+#'   \code{chunk_size}.
 #' @param merge_strategy Strategy for reconciling overlapping chunk regions:
 #'   \code{"weighted_average"} (default; alias: \code{"weighted"}),
 #'   \code{"average"} (alias: \code{"mean"}),

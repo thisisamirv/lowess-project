@@ -159,6 +159,13 @@ Behavior when all neighborhood weights are zero:
 
 Convergence tolerance for early stopping of robustness iterations. `nil` (default) disables early stopping.
 
+### ReturnRobustnessWeights
+
+Include the robustness weight from the latest point's fit in the result.
+
+- `false` (default) — leaves `PointResult.RobustnessWeight` as `NaN`
+- `true` — populates `PointResult.RobustnessWeight`
+
 ### WindowCapacity
 
 Maximum number of most recent points kept in the sliding window; older points are discarded as new ones arrive. Each `AddPoint` call costs O(`WindowCapacity`) rather than growing with total history.

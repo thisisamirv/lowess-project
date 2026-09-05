@@ -169,6 +169,13 @@ Behavior when all neighborhood weights are zero:
 
 Convergence tolerance for early stopping of robustness iterations. `null` (default) disables early stopping.
 
+### return_robustness_weights
+
+Include the robustness weight from the latest point's fit in the result.
+
+- `false` (default) — leaves `result.robustness_weight` as `null`
+- `true` — populates `result.robustness_weight`
+
 ### window_capacity
 
 Maximum number of most recent points kept in the sliding window; older points are discarded as new ones arrive. Each `add_point()` call costs O(`window_capacity`) rather than growing with total history.

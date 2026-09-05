@@ -164,6 +164,13 @@ _See: xref:../weighting/robustness.adoc#_auto_convergence[Robustness]_
 
 Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
 
+=== returnRobustnessWeights
+
+Include the robustness weight from the latest point's fit in the result.
+
+* `false` (default) — leaves `robustnessWeight()` empty
+* `true` — populates `robustnessWeight()`
+
 === windowCapacity
 
 Maximum number of most recent points kept in the sliding window; older points are discarded as new ones arrive. Each `addPoint` call costs O(`windowCapacity`) rather than growing with total history.

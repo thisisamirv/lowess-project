@@ -93,7 +93,7 @@ Fraction used: 0.5
 | `return_robustness_weights` | `boolean` | `false` | Include weights in result |
 | `parallel` | `boolean` | `true` | Enable parallel execution |
 | `chunk_size` | `number` | `5000` | Data chunk size |
-| `overlap` | `number` | `500` | Overlap between chunks |
+| `overlap` | `number` | `chunk_size / 10` | Overlap between chunks |
 | `merge_strategy` | `string` | `"weighted_average"` | Strategy for blending overlap regions |
 
 Confidence/prediction intervals, standard errors, cross-validation, GPU `backend`, `custom_weights`, and `return_sorted` are Batch-only and not available here; see [fastLowess](api.md) for those.
@@ -179,6 +179,36 @@ Behavior when all neighborhood weights are zero:
 
 Convergence tolerance for early stopping of robustness iterations. `null` (default) disables early stopping.
 
+### return_diagnostics
+
+*See: [`Diagnostics`](#diagnostics)*
+
+Include a `Diagnostics` object (RMSE, MAE, R², residual_sd) in the result. `effective_df`/`aic`/`aicc` require standard errors, which are Batch-only, so they're always `undefined` here.
+
+- `false` (default) — leaves `result.diagnostics` as `undefined`
+- `true` — populates `result.diagnostics`
+
+### return_residuals
+
+Include per-point residuals (`y - fitted`) in the result.
+
+- `false` (default) — leaves `result.residuals` as `undefined`
+- `true` — populates `result.residuals`
+
+### return_robustness_weights
+
+Include the final per-point robustness weights (from the last robustness iteration) in the result.
+
+- `false` (default) — leaves `result.robustness_weights` as `undefined`
+- `true` — populates `result.robustness_weights`
+
+### parallel
+
+Enable multi-threaded execution via the Rayon-based web worker pool.
+
+- `true` (default) — parallelizes the local regression fits
+- `false` — forces single-threaded execution
+
 ### chunk_size
 
 Number of points processed per chunk. Larger chunks reduce per-chunk overhead and give each local fit more surrounding context, at the cost of higher peak memory; smaller chunks bound memory tightly but increase the fraction of points that fall in overlap regions. A good starting point is balancing available memory against how much processing overhead per chunk is acceptable — match it to your file-read buffer or message-batch size to avoid unnecessary copying.
@@ -186,6 +216,9 @@ Number of points processed per chunk. Larger chunks reduce per-chunk overhead an
 ### overlap
 
 Number of points retained from the previous chunk as context, so the neighbourhood at chunk boundaries isn't artificially truncated. Points inside the overlap zone are fitted twice (once by each chunk) and reconciled via `merge_strategy`. A good starting point is 10–20% of `chunk_size`: too little overlap causes visible boundary artefacts, while too much wastes computation refitting the same points twice.
+
+- `null` (default) — computes `chunk_size / 10`, clamped to at least 1 and less than `chunk_size`
+- Any integer `>= 1` and `< chunk_size`
 
 ### merge_strategy
 

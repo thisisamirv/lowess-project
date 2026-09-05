@@ -98,7 +98,7 @@ int main() {
 
 ## Options Structure
 
-### OnlineOptions (inherits LowessOptions)
+### OnlineOptions
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -198,6 +198,13 @@ Behavior when all neighborhood weights are zero:
 *See: [Robustness](../weighting/robustness.md#auto-convergence)*
 
 Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
+
+### return_robustness_weights
+
+Include the robustness weight from the latest point's fit in the result.
+
+- `false` (default) — leaves `robustness_weight()` as NaN
+- `true` — populates `robustness_weight()`
 
 ### window_capacity
 

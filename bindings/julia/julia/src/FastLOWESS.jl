@@ -647,7 +647,7 @@ Stateful streaming LOWESS smoother.
 # Keyword Arguments
 - `fraction::Float64 = 0.67`: Smoothing fraction. See `Lowess` for guidance on choosing a value.
 - `chunk_size::Int = 5000`: Size of each processing chunk, at least 10
-- `overlap::Int = 500`: Overlap between adjacent chunks, less than `chunk_size`
+- `overlap::Int = -1`: Overlap between adjacent chunks, less than `chunk_size`. Negative (the default) means "use the library default" (`chunk_size / 10`, clamped to `[1, chunk_size - 10]`).
 - `iterations::Int = 3`: Number of robustness iterations. See `Lowess` for guidance on choosing a value.
 - `delta::Float64 = NaN`: Interpolation threshold (NaN auto-sets it to 0.0)
 - `weight_function::String = "tricube"`: Kernel function
@@ -669,7 +669,7 @@ mutable struct StreamingLowess
 	function StreamingLowess(;
 		fraction::Float64 = 0.67,
 		chunk_size::Int = 5000,
-		overlap::Int = 500,
+		overlap::Int = -1,
 		iterations::Int = 3,
 		delta::Float64 = NaN,
 		weight_function::String = "tricube",
@@ -770,11 +770,9 @@ Stateful online LOWESS smoother.
 - `update_mode::String = "incremental"`: Update strategy ("full" or "incremental")
 - `auto_converge::Float64 = NaN`: Auto-convergence tolerance
 - `return_robustness_weights::Bool = false`: Include weights
-- `return_diagnostics::Bool = false`: Compute diagnostics (RMSE, MAE, R2, etc.)
-- `return_residuals::Bool = false`: Include residuals in the result
 - `zero_weight_fallback::String = "use_local_mean"`: Zero weight handling. See `Lowess` for a description of each option.
-- `parallel::Bool = false`: Enable parallel execution (default `false` for online mode;
-  online LOWESS processes one point at a time and rarely benefits from parallelism)
+
+Confidence/prediction intervals, standard errors, cross-validation, `return_sorted`, `return_diagnostics`, `return_residuals`, and `parallel` are Batch-only (or Batch/Streaming-only) and have no equivalent here. Online always runs sequentially.
 """
 mutable struct OnlineLowess
 	handle::Ptr{Cvoid}

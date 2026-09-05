@@ -176,6 +176,29 @@ Confidence level for the confidence interval around the mean response (e.g. `0.9
 
 Confidence level for the prediction interval for new observations (e.g. `0.95`). `nil` (default) disables prediction intervals.
 
+### ReturnDiagnostics
+
+*See: [`Diagnostics`](#diagnostics)*
+
+Populate `Result.Diagnostics` (RMSE, MAE, R², AIC/AICc, effective degrees of freedom). AIC/AICc/`EffectiveDF` additionally require `ReturnSE: true` (or confidence/prediction intervals) to be populated, since they depend on hat-matrix statistics.
+
+- `false` (default) — leaves `Result.Diagnostics` as `nil`
+- `true` — populates `Result.Diagnostics`
+
+### ReturnResiduals
+
+Populate `Result.Residuals` (`Y - fitted`).
+
+- `false` (default) — leaves `Result.Residuals` as `nil`
+- `true` — populates `Result.Residuals`
+
+### ReturnRobustnessWeights
+
+Populate `Result.RobustnessWeights` (from the last robustness iteration).
+
+- `false` (default) — leaves `Result.RobustnessWeights` as `nil`
+- `true` — populates `Result.RobustnessWeights`
+
 ### ReturnSE
 
 *See: [Intervals](../guide/intervals.md#standard-errors)*
@@ -186,6 +209,13 @@ Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/d
 
 When set to `true`, it reorders every result field (residuals, intervals, etc.) by `X` in an ascending manner, instead of in original input order.
 To get both orderings, sort the default result client-side (e.g. via `sort.Slice`) instead of calling `Fit` twice.
+
+### Parallel
+
+Enable multi-threaded execution via Rayon.
+
+- `true` (default) — parallelizes the local regression fits across CPU cores
+- `false` — forces single-threaded execution (useful for benchmarking or deterministic profiling)
 
 ### Backend
 

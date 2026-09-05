@@ -34,7 +34,7 @@ defer model.Close()
 ```
 
 - `fastlowess.NewStreamingLowess(opts StreamingOptions) (*StreamingLowess, error)` creates a new streaming model with the given options.
-- `opts`: A `StreamingOptions` struct (embeds `Options`).
+- `opts`: A `StreamingOptions` struct.
 
 **Methods:**
 
@@ -58,7 +58,7 @@ result, err := model.Finalize()
 
 ## Options Structure
 
-### `StreamingOptions` (embeds `Options`)
+### `StreamingOptions`
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -161,6 +161,36 @@ Behavior when all neighborhood weights are zero:
 *See: [Robustness](../weighting/robustness.md#auto-convergence)*
 
 Convergence tolerance for early stopping of robustness iterations. `nil` (default) disables early stopping.
+
+### ReturnDiagnostics
+
+*See: [`Diagnostics`](#diagnostics)*
+
+Include a `Diagnostics` object (RMSE, MAE, R², residual_sd) in the result. `EffectiveDF`/AIC/AICc require standard errors, which are Batch-only, so they're always `nil` here.
+
+- `false` (default) — leaves `Result.Diagnostics` as `nil`
+- `true` — populates `Result.Diagnostics`
+
+### ReturnResiduals
+
+Include per-point residuals (`Y - fitted`) in the result.
+
+- `false` (default) — leaves `Result.Residuals` as `nil`
+- `true` — populates `Result.Residuals`
+
+### ReturnRobustnessWeights
+
+Include the final per-point robustness weights (from the last robustness iteration) in the result.
+
+- `false` (default) — leaves `Result.RobustnessWeights` as `nil`
+- `true` — populates `Result.RobustnessWeights`
+
+### Parallel
+
+Enable multi-threaded execution via Rayon.
+
+- `true` (default) — parallelizes the local regression fits across CPU cores
+- `false` — forces single-threaded execution
 
 ### ChunkSize
 

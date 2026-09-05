@@ -34,8 +34,9 @@ Default: 5000.}
 \item{...}{Not used; forces all subsequent arguments to be named.}
 
 \item{overlap}{Number of overlapping points between consecutive chunks,
-less than \code{chunk_size}. \code{NULL} (default) uses the backend's
-default of 500.}
+less than \code{chunk_size}. \code{NULL} (default) computes
+\code{chunk_size / 10}, clamped to at least 1 and less than
+\code{chunk_size}.}
 
 \item{iterations}{Number of robustness iterations, between 0 and 1000
 (inclusive). Default: 3.}
