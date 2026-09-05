@@ -263,12 +263,24 @@ jobs:
 
       - uses: ./.github/actions/setup-lavapipe
 
-      - name: Build and install with GPU feature
+      - name: Build and install CPU package
         working-directory: benchmarks
-        run: make WITH_GPU=1 install
+        run: make install
 
-      - name: GPU smoke test
+      - name: Test install_gpu()
         run: |
+          cat > /tmp/gpu_precheck.R <<'R'
+          library(rfastlowess)
+          stopifnot(!gpu_available())
+          R
+          Rscript /tmp/gpu_precheck.R
+
+          cat > /tmp/gpu_install.R <<'R'
+          library(rfastlowess)
+          install_gpu(yes = TRUE)
+          R
+          Rscript /tmp/gpu_install.R
+
           cat > /tmp/gpu_smoke.R <<'R'
           library(rfastlowess)
 
@@ -282,6 +294,6 @@ jobs:
 
           stopifnot(length(result$y) == length(x))
           stopifnot(all(is.finite(result$y)))
-          cat("R GPU backend OK\n")
+          cat("R install_gpu() OK\n")
           R
           Rscript /tmp/gpu_smoke.R

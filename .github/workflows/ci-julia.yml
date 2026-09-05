@@ -115,26 +115,28 @@ jobs:
         with:
           key: julia-gpu
       - uses: ./.github/actions/setup-lavapipe
-      - name: Build with GPU feature
+      - name: Build CPU library
         working-directory: bindings/julia
-        run: cargo build --release --features gpu
+        run: cargo build --release
       - name: Relax JLL dependency for CI
         uses: ./.github/actions/relax-julia-jll
-      - name: GPU smoke test
+      - name: Test install_gpu()
         env:
           FASTLOWESS_LIB: target/release/libfastlowess_jl.so
         run: |
-          cat > /tmp/gpu_smoke.jl <<'JL'
+          cat > /tmp/gpu_install_test.jl <<'JL'
           using Pkg
           Pkg.activate("bindings/julia/julia")
           Pkg.instantiate()
           using FastLOWESS
-          @assert gpu_available() "GPU backend not detected"
+          @assert !gpu_available() "GPU backend should not be active before install_gpu()"
+          install_gpu(yes = true)
+          @assert gpu_available() "install_gpu() did not activate the GPU backend"
           x = collect(range(0, 1, length = 50))
           y = sin.(6 .* x) .+ 0.05
           result = fit(Lowess(fraction = 0.3, backend = "gpu"), x, y)
           @assert length(result.y) == length(x)
           @assert all(isfinite, result.y)
-          println("Julia GPU OK")
+          println("Julia install_gpu() OK")
           JL
-          julia /tmp/gpu_smoke.jl
+          julia /tmp/gpu_install_test.jl

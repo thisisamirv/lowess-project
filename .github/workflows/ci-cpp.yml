@@ -250,18 +250,38 @@ jobs:
         with:
           key: cpp-gpu
       - uses: ./.github/actions/setup-lavapipe
-      - name: Build with GPU feature
+      - name: Build CPU library
         working-directory: bindings/cpp
-        run: cargo build --release --features gpu
-      - name: GPU smoke test
+        run: cargo build --release
+      - name: Test install_gpu()
         run: |
+          cat > /tmp/gpu_install.cpp <<'CPP'
+          #include "fastlowess.hpp"
+          #include <cstdio>
+          int main() {
+            if (fastlowess::gpu::available()) { std::fprintf(stderr, "GPU should not be active before install()\n"); return 1; }
+            if (!fastlowess::gpu::install(true)) { std::fprintf(stderr, "install() failed\n"); return 1; }
+            std::printf("install() downloaded a GPU library\n");
+          }
+          CPP
+          g++ -O2 -std=c++17 /tmp/gpu_install.cpp -o /tmp/gpu_install \
+            -I"${GITHUB_WORKSPACE}/bindings/cpp/include" \
+            -L"${GITHUB_WORKSPACE}/target/release" \
+            -lfastlowess_cpp -lpthread -ldl -lm
+          LD_LIBRARY_PATH="${GITHUB_WORKSPACE}/target/release" /tmp/gpu_install
+
+          GPU_LIB=$(ls "$HOME"/.fastlowess/gpu/*.so)
+          echo "Downloaded GPU library: $GPU_LIB"
+
+          # A running process can't swap an already-linked library, so the
+          # smoke test below relinks against the freshly downloaded one.
           cat > /tmp/gpu_smoke.cpp <<'CPP'
           #include "fastlowess.hpp"
           #include <cmath>
           #include <cstdio>
           #include <vector>
           int main() {
-            if (!fastlowess::gpu::available()) { std::fprintf(stderr, "GPU not detected\n"); return 1; }
+            if (!fastlowess::gpu::available()) { std::fprintf(stderr, "installed library does not report GPU support\n"); return 1; }
             constexpr std::size_t n = 50;
             std::vector<double> x(n), y(n);
             for (std::size_t i = 0; i < n; ++i) {
@@ -276,11 +296,10 @@ jobs:
             auto yf = result.value().y_vector();
             if (yf.size() != n) { std::fprintf(stderr, "bad output length\n"); return 1; }
             for (double v : yf) if (!std::isfinite(v)) { std::fprintf(stderr, "non-finite\n"); return 1; }
-            std::printf("C++ GPU OK\n");
+            std::printf("C++ install_gpu() OK\n");
           }
           CPP
           g++ -O3 -std=c++17 /tmp/gpu_smoke.cpp -o /tmp/gpu_smoke \
             -I"${GITHUB_WORKSPACE}/bindings/cpp/include" \
-            -L"${GITHUB_WORKSPACE}/target/release" \
-            -lfastlowess_cpp -lpthread -ldl -lm
-          LD_LIBRARY_PATH="${GITHUB_WORKSPACE}/target/release" /tmp/gpu_smoke
+            "$GPU_LIB" -lpthread -ldl -lm
+          LD_LIBRARY_PATH="$(dirname "$GPU_LIB")" /tmp/gpu_smoke

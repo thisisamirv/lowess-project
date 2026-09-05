@@ -94,24 +94,36 @@ jobs:
         with:
           key: python-gpu
       - uses: ./.github/actions/setup-lavapipe
-      - name: Build with GPU feature
+      - name: Build CPU wheel
         working-directory: bindings/python
         run: |
           python -m pip install --upgrade pip
           pip install maturin numpy
-          maturin build --release --features gpu -o dist
+          maturin build --release -o dist
           pip install --force-reinstall dist/*.whl
-      - name: GPU smoke test
+      - name: Test install_gpu()
         run: |
+          cat > /tmp/gpu_precheck.py <<'PY'
+          import fastlowess as fl
+          assert not fl.gpu_available(), "GPU backend should not be active before install_gpu()"
+          PY
+          python /tmp/gpu_precheck.py
+
+          cat > /tmp/gpu_install.py <<'PY'
+          import fastlowess as fl
+          fl.install_gpu(yes=True)
+          PY
+          python /tmp/gpu_install.py
+
           cat > /tmp/gpu_smoke.py <<'PY'
           import fastlowess as fl
           import numpy as np
-          assert fl.gpu_available(), "GPU backend not detected"
+          assert fl.gpu_available(), "install_gpu() did not activate the GPU backend"
           x = np.linspace(0, 1, 50)
           y = np.sin(6 * x) + 0.05
           result = fl.Lowess(fraction=0.3, backend="gpu").fit(x, y)
           assert len(result.y) == len(x)
           assert np.all(np.isfinite(result.y))
-          print("Python GPU OK")
+          print("Python install_gpu() OK")
           PY
           python /tmp/gpu_smoke.py

@@ -95,23 +95,34 @@ jobs:
         with:
           key: nodejs-gpu
       - uses: ./.github/actions/setup-lavapipe
-      - name: Build with GPU feature
+      - name: Build CPU binary
         working-directory: bindings/nodejs
         run: |
           npm install
-          npx napi build --release --platform --features gpu
-      - name: GPU smoke test
+          npm run build
+      - name: Test installGpu()
         working-directory: bindings/nodejs
         run: |
+          cat > /tmp/gpu_precheck.js <<'JS'
+          const fastlowess = require(process.cwd());
+          if (fastlowess.gpu_enabled()) throw new Error("GPU should not be active before installGpu()");
+          JS
+          node /tmp/gpu_precheck.js
+
+          cat > /tmp/gpu_install.js <<'JS'
+          require(process.cwd()).installGpu({ yes: true }).catch((e) => { console.error(e); process.exit(1); });
+          JS
+          node /tmp/gpu_install.js
+
           cat > /tmp/gpu_smoke.js <<'JS'
           const fastlowess = require(process.cwd());
-          if (!fastlowess.gpuAvailable()) throw new Error("GPU not detected");
+          if (!fastlowess.gpu_enabled()) throw new Error("installGpu() did not activate the GPU backend");
           const n = 50;
           const x = Float64Array.from({ length: n }, (_, i) => i / (n - 1));
           const y = Float64Array.from(x, xi => Math.sin(6 * xi) + 0.05);
           const result = new fastlowess.Lowess({ fraction: 0.3, backend: "gpu" }).fit(x, y);
           if (result.y.length !== n) throw new Error("unexpected output length");
           if (!Array.from(result.y).every(Number.isFinite)) throw new Error("non-finite values");
-          console.log("Node.js GPU OK");
+          console.log("Node.js installGpu() OK");
           JS
           node /tmp/gpu_smoke.js
