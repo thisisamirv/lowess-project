@@ -8,8 +8,8 @@
         "fastlowess-install-gpu": "./bin/install-gpu.js"
     },
     "scripts": {
-        "build": "napi build --release",
-        "build:debug": "napi build",
+        "build": "napi build --release --platform",
+        "build:debug": "napi build --platform",
         "test": "node --test tests/test_fastlowess.js",
         "lint": "oxlint index.js tests/test_fastlowess.js",
         "universal": "napi universal",
