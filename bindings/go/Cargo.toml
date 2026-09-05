@@ -1,6 +1,6 @@
 [package]
 name = "fastlowess-go"
-version = "3.2.1"
+version = "4.0.0"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
@@ -18,7 +18,7 @@ name = "fastlowess_go"
 crate-type = ["staticlib"]
 
 [dependencies]
-fastLowess = { path = "../../crates/fastLowess", version = "3.2", features = [
+fastLowess = { path = "../../crates/fastLowess", version = "4.0", features = [
     "cpu",
     "dev",
 ] }

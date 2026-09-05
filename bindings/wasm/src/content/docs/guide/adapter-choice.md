@@ -55,6 +55,11 @@ console.log(`95% CI at midpoint: [${result.confidence_lower[50].toFixed(4)}, ${r
 console.log(`R2: ${result.diagnostics.r_squared.toFixed(4)}`);
 ```
 
+```output
+95% CI at midpoint: [0.0393, 0.1077]
+R2: 0.9664
+```
+
 ---
 
 ## Streaming Adapter
@@ -99,6 +104,10 @@ const stream = new StreamingLowess(
 stream.process_chunk(x, y);
 const result = stream.finalize();
 console.log(`Smoothed y[0]: ${result.y[0].toFixed(4)}`);
+```
+
+```output
+Smoothed y[0]: 0.2578
 ```
 
 ---
@@ -152,6 +161,14 @@ for (let i = 0; i < x.length && shown < 5; i++) {
         shown++;
     }
 }
+```
+
+```output
+0.3511479871810792
+0.4120334456984871
+0.4716624556603275
+0.5297949120891716
+0.5861967361004687
 ```
 
 ---

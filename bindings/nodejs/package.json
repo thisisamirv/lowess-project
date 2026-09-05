@@ -1,6 +1,6 @@
 {
     "name": "fastlowess",
-    "version": "3.2.1",
+    "version": "4.0.0",
     "description": "High-performance LOWESS smoothing for Node.js",
     "main": "index.js",
     "types": "index.d.ts",
@@ -33,15 +33,15 @@
         ]
     },
     "optionalDependencies": {
-        "fastlowess-darwin-arm64": "^3.2.1",
-        "fastlowess-darwin-x64": "^3.2.1",
-        "fastlowess-linux-arm64-gnu": "^3.2.1",
-        "fastlowess-linux-arm64-musl": "^3.2.1",
-        "fastlowess-linux-arm-gnueabihf": "^3.2.1",
-        "fastlowess-linux-x64-gnu": "^3.2.1",
-        "fastlowess-linux-x64-musl": "^3.2.1",
-        "fastlowess-win32-arm64-msvc": "^3.2.1",
-        "fastlowess-win32-x64-msvc": "^3.2.1"
+        "fastlowess-darwin-arm64": "^4.0.0",
+        "fastlowess-darwin-x64": "^4.0.0",
+        "fastlowess-linux-arm64-gnu": "^4.0.0",
+        "fastlowess-linux-arm64-musl": "^4.0.0",
+        "fastlowess-linux-arm-gnueabihf": "^4.0.0",
+        "fastlowess-linux-x64-gnu": "^4.0.0",
+        "fastlowess-linux-x64-musl": "^4.0.0",
+        "fastlowess-win32-arm64-msvc": "^4.0.0",
+        "fastlowess-win32-x64-msvc": "^4.0.0"
     },
     "devDependencies": {
         "@astrojs/markdown-remark": "^7.3",

@@ -1,6 +1,6 @@
 {
     "name": "fastlowess-linux-arm64-gnu",
-    "version": "3.2.1",
+    "version": "4.0.0",
     "os": [
         "linux"
     ],

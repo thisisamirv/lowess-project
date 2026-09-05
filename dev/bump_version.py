@@ -106,6 +106,16 @@ def build_targets(
     for rel in CARGO_PACKAGE_FILES:
         targets.append((rel, cargo_pkg_pattern, f'version = "{new_version}"', 1))
 
+    # CONTRIBUTING.md's "Individual crate Cargo.toml" example snippet.
+    targets.append(
+        (
+            "CONTRIBUTING.md",
+            re.compile(r'(name = "lowess"\nversion = )"\d+\.\d+\.\d+"'),
+            rf'\g<1>"{new_version}"',
+            1,
+        )
+    )
+
     targets.append(
         (
             "crates/fastLowess/Cargo.toml",

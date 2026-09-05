@@ -1,21 +1,26 @@
 <!-- markdownlint-disable MD024 MD025 -->
-# FastLOWESS.jl Unreleased
+# FastLOWESS.jl 4.0.0
 
 ## Added
 
+* Added an "Ideas for Contribution" section to `CONTRIBUTING.md`, listing concrete Batch/Streaming/Online adapter feature gaps (out-of-sample prediction, exposing local slope/derivative, adaptive fraction selection, STL-style decomposition, bootstrap intervals, concurrent chunk processing, checkpointable streaming state, populating `OnlineOutput.standard_error`, time-based window eviction, configurable warm-up) to invite contributions.
+* `dev/bump_version.py` now also updates the example crate version in `CONTRIBUTING.md`'s "Individual crate Cargo.toml" snippet.
 * Added a `return_sorted` option to `Lowess`.
 * Added a `missing` option to `Lowess`, `StreamingLowess`, and `OnlineLowess`.
 
 ## Changed
 
-* `dev/runners/go.py`'s `run_go`/doc-snippet verification now batch-builds every Go snippet in one `go build ./...` (each snippet as its own `cmd/snippet_NNNN` package under a persistent module), instead of one `go run` per snippet in a fresh throwaway module. Avoids repeating module resolution and cgo compile/link overhead per snippet; built binaries then run concurrently. `verify_snippets.py`'s batch dispatch (previously Rust-only) is generalized via a `BATCH_RUNNERS` mapping to cover both `rust` and `go`.
-* `dev/runners/cpp.py`'s doc-snippet verification now resolves the shared compiler/library/MSVC-environment setup once per run, then compiles+links+runs every C++ snippet concurrently (previously strictly one g++/clang++/cl.exe invocation at a time), added to `BATCH_RUNNERS`. Fixed a resulting MSVC race where concurrent `cl.exe` invocations collided on a shared `snippet.obj` in the working directory, by pinning each snippet's intermediate object file (`/Fo`) and compiler `cwd` to its own temp dir.
+* Go doc-snippet verification now batch-builds every snippet in one `go build ./...` under a persistent module instead of one `go run` per snippet, then runs the binaries concurrently; `verify_snippets.py`'s `BATCH_RUNNERS` dispatch (previously Rust-only) now covers `go` too.
+* C++ doc-snippet verification now resolves the compiler/library/MSVC setup once, then compiles+links+runs every snippet concurrently instead of one at a time. Fixed an MSVC race from concurrent `cl.exe` invocations colliding on a shared `snippet.obj` by giving each snippet its own `/Fo` output and `cwd`.
 * Improved API docs for all bindings and crates significantly.
-* Fixed several bindings' docs showing a flat `500` default for `overlap` (Node.js, WASM, Go, Java, R) when the actual behavior is a dynamic `chunk_size / 10` (clamped to `[1, chunk_size - 10]`), matching every language binding's `build_streaming()` helper.
-* Renamed Python's `docs/guide/adapters.md` to `docs/guide/adapter-choice.md`, matching every other binding/crate's filename for the same page.
-* Renamed Python's `docs/use-case/{genomics,real-time,time-series}.md` to `docs/use-case/use-case-{genomics,real-time,time-series}.md`, matching every other binding/crate's filenames for the same pages.
+* Fixed several bindings' docs (Node.js, WASM, Go, Java, R) showing a flat `500` default for `overlap` instead of the actual dynamic `chunk_size / 10` (clamped to `[1, chunk_size - 10]`).
+* Renamed Python's `docs/guide/adapters.md` and `docs/use-case/{genomics,real-time,time-series}.md` to match every other binding/crate's filenames (`adapter-choice.md`, `use-case-*.md`).
 * Removed `return_diagnostics`, `return_residuals`, and `parallel` from `OnlineLowess`, same reason as Python. Breaking change.
-* `StreamingLowess`'s `overlap` keyword argument default changed from a fixed `500` to `-1` (a sentinel meaning "use the library default"), so it now resolves dynamically to `chunk_size / 10` like every other language binding, instead of always passing a concrete `500` regardless of `chunk_size`. Breaking change for callers relying on the previous flat default.
+* `StreamingLowess`'s `overlap` default changed from a fixed `500` to `-1` (sentinel for "use the library default"), resolving dynamically to `chunk_size / 10` like every other binding. Breaking change for customized `chunk_size` callers.
+
+## Fixed
+
+* Fixed `CONTRIBUTING.md` stating a stale Go prerequisite (`1.21+`, actually `1.23+` per `go.mod`/CI), an inaccurate `air` auto-install target (claimed `make r`, actually `make r-dev`), and a stale example crate version (`2.0.0`) in the Workspace Structure section.
 
 # FastLOWESS.jl 3.2.1
 

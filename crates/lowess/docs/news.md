@@ -1,9 +1,10 @@
 <!-- markdownlint-disable MD024 MD025 -->
-# lowess Unreleased
+# lowess 4.0.0
 
 ## Added
 
 * Added an "Ideas for Contribution" section to `CONTRIBUTING.md`, listing concrete Batch/Streaming/Online adapter feature gaps (out-of-sample prediction, exposing local slope/derivative, adaptive fraction selection, STL-style decomposition, bootstrap intervals, concurrent chunk processing, checkpointable streaming state, populating `OnlineOutput.standard_error`, time-based window eviction, configurable warm-up) to invite contributions.
+* `dev/bump_version.py` now also updates the example crate version in `CONTRIBUTING.md`'s "Individual crate Cargo.toml" snippet.
 * Added `.return_sorted()` to the batch builder, to return results sorted ascending by `x` instead of input order. Default `false`.
 * Added a `missing` option (`"error"` default, or `"drop"`) controlling non-finite (NaN/Inf) `x`/`y` handling: Batch/Streaming drop non-finite rows (and matching `custom_weights`); Online skips non-finite points, returning `Ok(None)`. Length mismatches always error.
 * Added `release-rust.yml` to publish to crates.io on release.

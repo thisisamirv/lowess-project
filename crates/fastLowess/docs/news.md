@@ -1,9 +1,10 @@
 <!-- markdownlint-disable MD024 MD025 -->
-# fastLowess Unreleased
+# fastLowess 4.0.0
 
 ## Added
 
 * Added an "Ideas for Contribution" section to `CONTRIBUTING.md`, listing concrete Batch/Streaming/Online adapter feature gaps (out-of-sample prediction, exposing local slope/derivative, adaptive fraction selection, STL-style decomposition, bootstrap intervals, concurrent chunk processing, checkpointable streaming state, populating `OnlineOutput.standard_error`, time-based window eviction, configurable warm-up) to invite contributions.
+* `dev/bump_version.py` now also updates the example crate version in `CONTRIBUTING.md`'s "Individual crate Cargo.toml" snippet.
 * Added `return_sorted` to `BuilderOptionSet`/`TypedBuilderOptionSet` and the `Lowess` (Batch) builder.
 * Added `missing` to `BuilderOptionSet`/`TypedBuilderOptionSet` and the `Lowess`/`StreamingLowess`/`OnlineLowess` builders.
 * Now published via `release-rust.yml`, 3 minutes after `lowess` to let the crates.io index catch up.

@@ -1,24 +1,31 @@
 \page news News
 
 <!-- markdownlint-disable MD024 MD025 -->
-# fastlowess (C++) Unreleased
+# fastlowess (C++) 4.0.0
 
 ## Added
 
+* Added an "Ideas for Contribution" section to `CONTRIBUTING.md`, listing concrete Batch/Streaming/Online adapter feature gaps (out-of-sample prediction, exposing local slope/derivative, adaptive fraction selection, STL-style decomposition, bootstrap intervals, concurrent chunk processing, checkpointable streaming state, populating `OnlineOutput.standard_error`, time-based window eviction, configurable warm-up) to invite contributions.
+* `dev/bump_version.py` now also updates the example crate version in `CONTRIBUTING.md`'s "Individual crate Cargo.toml" snippet.
 * Added a `return_sorted` option to `LowessOptions`.
 * Added a `missing` option to `LowessOptions` and `OnlineOptions` (inherited by `StreamingOptions`).
 
 ## Changed
 
+* Go doc-snippet verification now batch-builds every snippet in one `go build ./...` under a persistent module instead of one `go run` per snippet, then runs the binaries concurrently; `verify_snippets.py`'s `BATCH_RUNNERS` dispatch (previously Rust-only) now covers `go` too.
+* C++ doc-snippet verification now resolves the compiler/library/MSVC setup once, then compiles+links+runs every snippet concurrently instead of one at a time. Fixed an MSVC race from concurrent `cl.exe` invocations colliding on a shared `snippet.obj` by giving each snippet its own `/Fo` output and `cwd`.
 * Improved API docs for all bindings and crates significantly.
-* Fixed several bindings' docs showing a flat `500` default for `overlap` (Node.js, WASM, Go, Java, R) when the actual behavior is a dynamic `chunk_size / 10` (clamped to `[1, chunk_size - 10]`), matching every language binding's `build_streaming()` helper.
-* Renamed Python's `docs/guide/adapters.md` to `docs/guide/adapter-choice.md`, matching every other binding/crate's filename for the same page.
-* Renamed Python's `docs/use-case/{genomics,real-time,time-series}.md` to `docs/use-case/use-case-{genomics,real-time,time-series}.md`, matching every other binding/crate's filenames for the same pages.
+* Fixed several bindings' docs (Node.js, WASM, Go, Java, R) showing a flat `500` default for `overlap` instead of the actual dynamic `chunk_size / 10` (clamped to `[1, chunk_size - 10]`).
+* Renamed Python's `docs/guide/adapters.md` and `docs/use-case/{genomics,real-time,time-series}.md` to match every other binding/crate's filenames (`adapter-choice.md`, `use-case-*.md`).
 * Repinned the macOS x64 job in `release-cpp.yml` to `macos-15-intel`.
-* Removed `return_diagnostics`, `return_residuals`, and `parallel` from `OnlineOptions`, same reason as Python. Breaking change.
-* Removed `confidence_intervals` and `prediction_intervals` from `OnlineOptions`; `StreamingOptions` no longer forwards its inherited copies. Breaking change.
-* Removed the dead `custom_weights` field from `OnlineOptions` — declared but never read. Breaking change.
-* `StreamingOptions::overlap`'s default changed from a fixed `500` to `-1` (a sentinel meaning "use the library default"), so it now resolves dynamically to `chunk_size / 10` like every other language binding, instead of always passing a concrete `500` to the native constructor regardless of `chunk_size`. Breaking change for callers relying on the previous flat default.
+* Removed `return_diagnostics`/`return_residuals`/`parallel` from `OnlineOptions`, same reason as Python. Breaking change.
+* Removed `confidence_intervals`/`prediction_intervals` from `OnlineOptions`; `StreamingOptions` no longer forwards its inherited copies. Breaking change.
+* Removed the dead, never-read `custom_weights` field from `OnlineOptions`. Breaking change.
+* `StreamingOptions::overlap`'s default changed from a fixed `500` to `-1` (sentinel for "use the library default"), resolving dynamically to `chunk_size / 10`. Breaking change.
+
+## Fixed
+
+* Fixed `CONTRIBUTING.md` stating a stale Go prerequisite (`1.21+`, actually `1.23+` per `go.mod`/CI), an inaccurate `air` auto-install target (claimed `make r`, actually `make r-dev`), and a stale example crate version (`2.0.0`) in the Workspace Structure section.
 
 # fastlowess (C++) 3.2.1
 

@@ -1,6 +1,6 @@
 [package]
 name = "fastlowess-java"
-version = "3.2.1"
+version = "4.0.0"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
@@ -18,7 +18,7 @@ name = "fastlowess_java"
 crate-type = ["cdylib"]
 
 [dependencies]
-fastLowess = { path = "../../crates/fastLowess", version = "3.2", features = [
+fastLowess = { path = "../../crates/fastLowess", version = "4.0", features = [
     "cpu",
     "dev",
 ] }

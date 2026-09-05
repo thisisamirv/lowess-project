@@ -1,6 +1,6 @@
 [package]
 name = "rfastlowess"
-version = "3.2.1"
+version = "4.0.0"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"

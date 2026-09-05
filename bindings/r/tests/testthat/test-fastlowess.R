@@ -195,7 +195,11 @@ test_that("Lowess return_sorted = TRUE returns results sorted ascending by x", {
     unsorted_order <- order(unsorted_result$x)
     # Two independent fits with default parallel = TRUE; Rayon's reduction
     # order can differ minutely, so compare with tolerance, not identity.
-    expect_equal(result$y[sorted_order], unsorted_result$y[unsorted_order]) # nolint: expect_identical_linter.
+    expect_equal(
+        result$y[sorted_order],
+        unsorted_result$y[unsorted_order],
+        tolerance = 1e-10
+    )
 
     expect_length(result$residuals, length(x))
     expect_length(result$robustness_weights, length(x))

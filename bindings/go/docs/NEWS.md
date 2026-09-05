@@ -4,6 +4,30 @@ weight: 100
 ---
 
 <!-- markdownlint-disable MD024 MD025 -->
+# fastlowess (Go) 4.0.0
+
+## Added
+
+* Added an "Ideas for Contribution" section to `CONTRIBUTING.md`, listing concrete Batch/Streaming/Online adapter feature gaps (out-of-sample prediction, exposing local slope/derivative, adaptive fraction selection, STL-style decomposition, bootstrap intervals, concurrent chunk processing, checkpointable streaming state, populating `OnlineOutput.standard_error`, time-based window eviction, configurable warm-up) to invite contributions.
+* `dev/bump_version.py` now also updates the example crate version in `CONTRIBUTING.md`'s "Individual crate Cargo.toml" snippet.
+* Added a `ReturnSorted` option to `Options`.
+* Added a `Missing` option to `Options`, `StreamingOptions`, and `OnlineOptions`.
+
+## Changed
+
+* Go doc-snippet verification now batch-builds every snippet in one `go build ./...` under a persistent module instead of one `go run` per snippet, then runs the binaries concurrently; `verify_snippets.py`'s `BATCH_RUNNERS` dispatch (previously Rust-only) now covers `go` too.
+* C++ doc-snippet verification now resolves the compiler/library/MSVC setup once, then compiles+links+runs every snippet concurrently instead of one at a time. Fixed an MSVC race from concurrent `cl.exe` invocations colliding on a shared `snippet.obj` by giving each snippet its own `/Fo` output and `cwd`.
+* Improved API docs for all bindings and crates significantly.
+* Fixed several bindings' docs (Node.js, WASM, Go, Java, R) showing a flat `500` default for `overlap` instead of the actual dynamic `chunk_size / 10` (clamped to `[1, chunk_size - 10]`).
+* Renamed Python's `docs/guide/adapters.md` and `docs/use-case/{genomics,real-time,time-series}.md` to match every other binding/crate's filenames (`adapter-choice.md`, `use-case-*.md`).
+* Repinned the macOS x64 job in `release-go.yml` to `macos-15-intel`.
+* `OnlineOptions` no longer embeds `Options`; removed `ReturnDiagnostics`, `ReturnResiduals`, `Parallel`, and the never-read `Backend`. Breaking change.
+* `StreamingOptions` no longer embeds `Options` either; both lost `ConfidenceIntervals`/`PredictionIntervals`, and `StreamingOptions` also lost `ReturnSE`/`ReturnSorted`/`CVFractions`/`CVMethod`/`CVK`/`CVSeed`/`Backend`. Breaking change.
+
+## Fixed
+
+* Fixed `CONTRIBUTING.md` stating a stale Go prerequisite (`1.21+`, actually `1.23+` per `go.mod`/CI), an inaccurate `air` auto-install target (claimed `make r`, actually `make r-dev`), and a stale example crate version (`2.0.0`) in the Workspace Structure section.
+
 # fastlowess (Go) 3.2.1
 
 ## Added

@@ -227,7 +227,7 @@ Each crate defines its own version and all metadata independently:
 # Individual crate Cargo.toml
 [package]
 name = "lowess"
-version = "3.2.1"
+version = "4.0.0"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 rust-version = "1.89"

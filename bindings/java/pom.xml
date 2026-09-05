@@ -6,7 +6,7 @@
 
     <groupId>io.github.thisisamirv</groupId>
     <artifactId>fastlowess</artifactId>
-    <version>3.2.1</version>
+    <version>4.0.0</version>
     <packaging>jar</packaging>
 
     <name>fastlowess</name>
