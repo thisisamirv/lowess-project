@@ -280,7 +280,7 @@ jobs:
         run: |
           WITH_GPU=1 make build
           mkdir -p /tmp/gpu-lib
-          R CMD INSTALL --library=/tmp/gpu-lib ../bindings/r/rfastlowess_*.tar.gz
+          WITH_GPU=1 R CMD INSTALL --library=/tmp/gpu-lib ../bindings/r/rfastlowess_*.tar.gz
 
       - name: Test install_gpu(local_path)
         run: |
