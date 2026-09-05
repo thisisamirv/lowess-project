@@ -165,6 +165,10 @@ $(document).ready(function(){initNavTree('gpu_backend.html',''); initResizable()
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone">C++   </td><td class="markdownTableBodyNone">Yes (relink/rebuild)   </td><td class="markdownTableBodyNone">Your application links against the library at build/load time.    </td></tr>
 <tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Java   </td><td class="markdownTableBodyNone">Yes   </td><td class="markdownTableBodyNone">The native library is loaded once per JVM process.    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">Go   </td><td class="markdownTableBodyNone">Yes (rebuild)   </td><td class="markdownTableBodyNone"><code>cgo</code> links the static library at build time.    </td></tr>
+<tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone">Julia   </td><td class="markdownTableBodyNone"><b>No</b>   </td><td class="markdownTableBodyNone"><code>install_gpu()</code> re-points the internal library reference immediately.   </td></tr>
 </table>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;<a class="code" href="fastlowess_8hpp.html">fastlowess.hpp</a>&gt;</span></div>

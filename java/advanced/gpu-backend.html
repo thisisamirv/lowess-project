@@ -329,10 +329,21 @@
 </div>
 </div>
 <div class="sect1">
-<h2 id="building-with-gpu-support"><a class="anchor" href="#building-with-gpu-support"></a>Building with GPU Support</h2>
+<h2 id="installing-gpu-support"><a class="anchor" href="#installing-gpu-support"></a>Installing GPU Support</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Unlike the Python, Node.js, and R bindings, the Java binding does not ship a one-time GPU installer. Build the native library from source with the <code>gpu</code> Cargo feature instead:</p>
+<p>Download and install a prebuilt GPU-enabled <code>fastlowess_java</code> native library for this platform from the matching <a href="https://github.com/thisisamirv/lowess-project/releases">GitHub Release</a> (built by <code>.github/workflows/release-gpu.yml</code> for Linux/macOS/Windows x86_64 and macOS arm64):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">FastLowess.installGpu(); // prompts for confirmation, then downloads</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Non-interactively: <code>FastLowess.installGpu(true)</code>. The library is saved to <code>~/.fastlowess/gpu/</code> under the standard platform library name. A running JVM cannot swap an already-loaded native library — restart the JVM afterwards, pointing <code>NativeBridge</code> at the downloaded build via <code>-Dfastlowess.native.dir=&lt;dir printed above&gt;</code>.</p>
+</div>
+<div class="paragraph">
+<p>Building from source with the <code>gpu</code> Cargo feature is always available as an alternative:</p>
 </div>
 <div class="listingblock">
 <div class="content">
