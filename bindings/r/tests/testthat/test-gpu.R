@@ -6,14 +6,23 @@
 #   gpu_asset_info (all three platform branches, via mocking)
 #   gpu_confirm_download (both branches)
 #   gpu_download_to (success and failure, via mocking)
+#   gpu_replace_file (success and both failure branches, via mocking)
 #   gpu_lib_dir (windows multi-arch and default branches)
-#   install_gpu (already-active and needs-confirmation branches)
+#   gpu_confirm_local_install (both branches)
+#   install_gpu_local (missing file, declined, and confirmed branches)
+#   install_gpu (already-active, needs-confirmation, and local_path dispatch)
 
 check_gpu_backend <- getFromNamespace("check_gpu_backend", "rfastlowess")
 gpu_asset_info <- getFromNamespace("gpu_asset_info", "rfastlowess")
 gpu_confirm_download <- getFromNamespace("gpu_confirm_download", "rfastlowess")
+gpu_confirm_local_install <- getFromNamespace(
+    "gpu_confirm_local_install",
+    "rfastlowess"
+)
 gpu_download_to <- getFromNamespace("gpu_download_to", "rfastlowess")
+gpu_replace_file <- getFromNamespace("gpu_replace_file", "rfastlowess")
 gpu_lib_dir <- getFromNamespace("gpu_lib_dir", "rfastlowess")
+install_gpu_local <- getFromNamespace("install_gpu_local", "rfastlowess")
 read_line <- getFromNamespace("read_line", "rfastlowess")
 
 # ── read_line ─────────────────────────────────────────────────────────────────
@@ -182,6 +191,36 @@ test_that("gpu_download_to errors when the downloaded file is empty", {
     )
 })
 
+# ── gpu_replace_file ──────────────────────────────────────────────────────────
+
+test_that("gpu_replace_file errors when staging the copy fails", {
+    src <- tempfile()
+    writeLines("dummy", src)
+    on.exit(unlink(src), add = TRUE)
+    dest <- tempfile()
+    testthat::local_mocked_bindings(
+        `file.copy` = function(from, to, overwrite = FALSE) FALSE,
+        .package = "base"
+    )
+    expect_error(gpu_replace_file(src, dest), "Failed to stage install")
+})
+
+test_that("gpu_replace_file errors when rename and fallback copy both fail", {
+    src <- tempfile()
+    writeLines("dummy", src)
+    on.exit(unlink(src), add = TRUE)
+    dest <- tempfile()
+    testthat::local_mocked_bindings(
+        `file.rename` = function(from, to) FALSE,
+        # Staging (to != dest) succeeds; the fallback copy (to == dest) fails.
+        `file.copy` = function(from, to, overwrite = FALSE) {
+            !identical(to, dest)
+        },
+        .package = "base"
+    )
+    expect_error(gpu_replace_file(src, dest), "Failed to install to")
+})
+
 # ── install_gpu ──────────────────────────────────────────────────────────────
 
 test_that("gpu_lib_dir appends r_arch on windows multi-arch installs", {
@@ -238,4 +277,85 @@ test_that("install_gpu downloads and installs when confirmed", {
         "GPU backend installed at"
     )
     expect_true(isTRUE(result))
+})
+
+# ── gpu_confirm_local_install ─────────────────────────────────────────────────
+
+test_that("gpu_confirm_local_install returns TRUE when yes = TRUE", {
+    expect_true(gpu_confirm_local_install(TRUE, "/tmp/lib.so"))
+})
+
+test_that("gpu_confirm_local_install errors non-interactively", {
+    expect_error(
+        gpu_confirm_local_install(FALSE, "/tmp/lib.so"),
+        "install_gpu\\(\\) requires confirmation"
+    )
+})
+
+test_that("gpu_confirm_local_install accepts an interactive 'y' answer", {
+    testthat::local_mocked_bindings(
+        is_interactive = function() TRUE,
+        read_line = function(prompt) "y",
+        .package = "rfastlowess"
+    )
+    expect_true(gpu_confirm_local_install(FALSE, "/tmp/lib.so"))
+})
+
+test_that("gpu_confirm_local_install declines a non-'y' interactive answer", {
+    testthat::local_mocked_bindings(
+        is_interactive = function() TRUE,
+        read_line = function(prompt) "n",
+        .package = "rfastlowess"
+    )
+    expect_false(gpu_confirm_local_install(FALSE, "/tmp/lib.so"))
+})
+
+# ── install_gpu_local ─────────────────────────────────────────────────────────
+
+test_that("install_gpu_local errors when the file does not exist", {
+    expect_error(
+        install_gpu_local("/no/such/file.so", TRUE, tempdir()),
+        "No such file"
+    )
+})
+
+test_that("install_gpu_local aborts when confirmation is declined", {
+    src <- tempfile(fileext = ".so")
+    writeLines("dummy", src)
+    on.exit(unlink(src), add = TRUE)
+    testthat::local_mocked_bindings(
+        gpu_confirm_local_install = function(yes, local_path) FALSE
+    )
+    expect_message(
+        result <- install_gpu_local(src, FALSE, tempdir()),
+        "Aborted"
+    )
+    expect_false(isTRUE(result))
+})
+
+test_that("install_gpu_local installs when confirmed", {
+    src <- tempfile(fileext = ".so")
+    writeLines("dummy", src)
+    on.exit(unlink(src), add = TRUE)
+    lib_dir <- tempfile()
+    dir.create(lib_dir)
+    on.exit(unlink(lib_dir, recursive = TRUE), add = TRUE)
+
+    expect_message(
+        result <- install_gpu_local(src, TRUE, lib_dir),
+        "GPU backend installed at"
+    )
+    expect_true(isTRUE(result))
+    expect_true(file.exists(file.path(lib_dir, "rfastlowess.so")))
+})
+
+test_that("install_gpu dispatches to install_gpu_local for local_path", {
+    skip_if(gpu_available(), "GPU backend is active in this build")
+    src <- tempfile(fileext = ".so")
+    writeLines("dummy", src)
+    on.exit(unlink(src), add = TRUE)
+    testthat::local_mocked_bindings(
+        install_gpu_local = function(local_path, yes, lib_dir) "sentinel"
+    )
+    expect_identical(install_gpu(yes = TRUE, local_path = src), "sentinel")
 })
