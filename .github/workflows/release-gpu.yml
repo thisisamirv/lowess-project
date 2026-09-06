@@ -45,6 +45,8 @@ jobs:
         working-directory: bindings/python
         shell: bash
         run: |
+          # manylinux builds run as root in a Docker container, leaving dist/ root-owned
+          sudo chown -R "$(id -u):$(id -g)" dist
           for f in dist/*.whl; do
             mv "$f" "$(dirname "$f")/$(basename "$f" | sed -E 's/^fastlowess-/fastlowess-gpu-/')"
           done
@@ -199,6 +201,8 @@ jobs:
         working-directory: bindings/python
         shell: bash
         run: |
+          # manylinux builds run as root in a Docker container, leaving dist/ root-owned
+          sudo chown -R "$(id -u):$(id -g)" dist
           for f in dist/*.whl; do
             mv "$f" "$(dirname "$f")/$(basename "$f" | sed -E 's/^fastlowess-/fastlowess-gpu-/')"
           done
