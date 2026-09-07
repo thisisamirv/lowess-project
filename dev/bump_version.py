@@ -6,7 +6,10 @@ fastLowess/lowess path-dependency version requirements (major.minor), each
 binding's own version file (package.json, pyproject-adjacent __version__.py,
 pom.xml, DESCRIPTION, Project.toml (incl. the fastlowess_jll compat floor),
 version.go, CMakeLists.txt, FastLowess.java), CITATION.cff, and the Spack
-recipe's example `url`.
+recipe's example `url`. Also updates the Go module's `/vN` major-version
+suffix (go.mod files, doc snippets, README/docs badges, the doc-snippet
+runner) whenever a major version bump changes it -- see
+https://go.dev/ref/mod#major-version-suffixes.
 
 Does NOT touch: CHANGELOG.md (write that by hand), generated NEWS.md/docs-site
 content (regenerated via `make <lang>-dev` / dev/update_changelogs.py), or the
@@ -29,6 +32,18 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 VERSION_RE = re.compile(r"^\d+\.\d+\.\d+$")
+
+# Go requires any module tagged v2.0.0+ to end its module path with /vN, or
+# the Go toolchain (and pkg.go.dev) silently ignores those tags and falls
+# back to commit pseudo-versions. These are the files that reference the Go
+# module's import path and must be kept in sync with its current major.
+GO_MODULE_BASE_PATH = "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+GO_FASTLOWESS_GOMOD = "bindings/go/fastlowess/go.mod"
+GO_TESTS_GOMOD = "bindings/go/tests/go.mod"
+GO_TESTS_MAIN = "bindings/go/tests/lowess_test.go"
+GO_DOC_RUNNER = "dev/runners/go.py"
+GO_README = "bindings/go/README.md"
+GO_DOCS_INDEX = "bindings/go/docs/_index.md"
 
 # Cargo.toml files whose bare `[package]` `version = "X.Y.Z"` line should track
 # the release version 1:1.
@@ -94,6 +109,126 @@ def _replace(
     verb = "Would update" if dry_run else "Updated"
     print(f"  {verb} ({n}x): {rel}")
     return True
+
+
+def _replace_literal_all(
+    path: Path, old: str, new: str, dry_run: bool, required: bool = True
+) -> bool:
+    """Replace every literal occurrence of `old` with `new` in `path`.
+
+    When `required` is False, a file with no occurrences is not an error (used
+    for glob-discovered doc pages that may not contain the pattern at all).
+    """
+    rel = path.relative_to(REPO_ROOT)
+    if not path.exists():
+        print(f"  SKIP (missing): {rel}")
+        return False
+    text = path.read_text(encoding="utf-8")
+    count = text.count(old)
+    if count == 0:
+        if not required:
+            return True
+        print(f"  WARNING: no match in {rel}")
+        return False
+    if not dry_run:
+        path.write_text(text.replace(old, new), encoding="utf-8")
+    verb = "Would update" if dry_run else "Updated"
+    print(f"  {verb} ({count}x): {rel}")
+    return True
+
+
+def _current_go_module_suffix() -> str:
+    """Return the Go module's current major-version suffix, e.g. '/v4', or '' for v0/v1."""
+    gomod = REPO_ROOT / GO_FASTLOWESS_GOMOD
+    text = gomod.read_text(encoding="utf-8")
+    m = re.search(
+        rf"^module {re.escape(GO_MODULE_BASE_PATH)}(/v\d+)?$", text, re.MULTILINE
+    )
+    if m is None:
+        print(f"  WARNING: could not parse module line in {GO_FASTLOWESS_GOMOD}")
+        return ""
+    return m.group(1) or ""
+
+
+def apply_go_module_suffix(new_major: str, dry_run: bool) -> bool:
+    """Update the Go module's `/vN` major-version suffix if this bump crosses
+    a major version boundary (see https://go.dev/ref/mod#major-version-suffixes)."""
+    old_suffix = _current_go_module_suffix()
+    new_suffix = "" if new_major in ("0", "1") else f"/v{new_major}"
+    if old_suffix == new_suffix:
+        return True
+
+    old_path = GO_MODULE_BASE_PATH + old_suffix
+    new_path = GO_MODULE_BASE_PATH + new_suffix
+    placeholder = f"v{new_major}.0.0" if new_suffix else "v0.0.0"
+    print(
+        f"Go module major version suffix change: "
+        f"{old_suffix or '(none)'} -> {new_suffix or '(none)'}"
+    )
+
+    # Plain path-only files: one literal find/replace each.
+    files = [GO_FASTLOWESS_GOMOD, GO_TESTS_MAIN, GO_README, GO_DOCS_INDEX]
+    all_ok = True
+    for rel in files:
+        ok = _replace_literal_all(REPO_ROOT / rel, old_path, new_path, dry_run)
+        all_ok = all_ok and ok
+
+    # Doc pages: not every page has a Go snippet, so a page without the
+    # pattern is not an error. Skip GO_DOCS_INDEX (already handled above).
+    doc_files = sorted(
+        str(p.relative_to(REPO_ROOT))
+        for p in (REPO_ROOT / "bindings/go/docs").rglob("*.md")
+        if str(p.relative_to(REPO_ROOT)).replace("\\", "/") != GO_DOCS_INDEX
+    )
+    for rel in doc_files:
+        ok = _replace_literal_all(
+            REPO_ROOT / rel, old_path, new_path, dry_run, required=False
+        )
+        all_ok = all_ok and ok
+
+    # tests/go.mod's require line also carries a version number that must
+    # match the new major; match against `old_path` (not `new_path`) so this
+    # stays correct under --dry-run, where prior writes aren't persisted.
+    all_ok = (
+        _replace(
+            REPO_ROOT / GO_TESTS_GOMOD,
+            re.compile(
+                r"^require " + re.escape(old_path) + r" v\d+\.\d+\.\d+$", re.MULTILINE
+            ),
+            f"require {new_path} {placeholder}",
+            dry_run,
+        )
+        and all_ok
+    )
+    all_ok = (
+        _replace(
+            REPO_ROOT / GO_TESTS_GOMOD,
+            re.compile(
+                r"^replace " + re.escape(old_path) + r" => \.\./fastlowess$",
+                re.MULTILINE,
+            ),
+            f"replace {new_path} => ../fastlowess",
+            dry_run,
+        )
+        and all_ok
+    )
+
+    # dev/runners/go.py: MODULE_PATH constant, plus its hardcoded placeholder
+    # version on the generated `require {MODULE_PATH} vX.0.0` scaffold line.
+    all_ok = (
+        _replace_literal_all(REPO_ROOT / GO_DOC_RUNNER, old_path, new_path, dry_run)
+        and all_ok
+    )
+    all_ok = (
+        _replace(
+            REPO_ROOT / GO_DOC_RUNNER,
+            re.compile(r"(require \{MODULE_PATH\} )v\d+\.\d+\.\d+"),
+            rf"\g<1>{placeholder}",
+            dry_run,
+        )
+        and all_ok
+    )
+    return all_ok
 
 
 def build_targets(
@@ -302,6 +437,9 @@ def main() -> int:
     for rel, pattern, replacement, count in build_targets(new_version, new_major_minor):
         ok = _replace(REPO_ROOT / rel, pattern, replacement, args.dry_run, count=count)
         all_ok = all_ok and ok
+
+    print()
+    all_ok = apply_go_module_suffix(major, args.dry_run) and all_ok
 
     print()
     if not all_ok:

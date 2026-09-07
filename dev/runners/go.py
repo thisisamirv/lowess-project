@@ -14,7 +14,7 @@ from .base import REPO_ROOT, RunResult, Snippet, _find_exe
 
 GO_BINDING_DIR = REPO_ROOT / "bindings" / "go"
 GO_MODULE_DIR = GO_BINDING_DIR / "fastlowess"
-MODULE_PATH = "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+MODULE_PATH = "github.com/thisisamirv/lowess-project/bindings/go/fastlowess/v4"
 
 _GO_SNIPPET_DIR = REPO_ROOT / "target" / "doc-snippet-runner" / "go"
 _GO_BIN_DIR = REPO_ROOT / "target" / "doc-snippet-target" / "go"
@@ -46,7 +46,7 @@ def _ensure_go_snippet_module(names: list[str], snippets: list[Snippet]) -> None
     (_GO_SNIPPET_DIR / "go.mod").write_text(
         "module snippet\n\n"
         "go 1.23\n\n"
-        f"require {MODULE_PATH} v0.0.0\n\n"
+        f"require {MODULE_PATH} v4.0.0\n\n"
         f"replace {MODULE_PATH} => {GO_MODULE_DIR.as_posix()}\n",
         encoding="utf-8",
     )

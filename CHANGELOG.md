@@ -20,9 +20,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+**Monorepo:**
+
+- `dev/bump_version.py` now also updates the Go module's `/vN` major-version-suffix path across `go.mod` files, doc snippets, the doc-snippet runner, and README/docs badges whenever a version bump crosses a major version boundary, so this doesn't regress on the next major release.
+
 **lowess:**
 
 - Cleaned up `lowess::prelude` of accidentally-leaked internals: removed `LowessBuilder` and `Adapter::{Batch, Online, Streaming}` (use the `Lowess`/`StreamingLowess`/`OnlineLowess` type aliases directly - each already builds without needing `.adapter(...)`).
+
+**Go:**
+
+- Fixed the Go module's import path missing the required `/v4` major version suffix (Go's "major version suffix" rule: any module tagged `v2.0.0` or higher must end its module path with `/vN`, or the Go toolchain silently ignores all such tags and resolves only pseudo-versions). Changed `github.com/thisisamirv/lowess-project/bindings/go/fastlowess` to `.../fastlowess/v4` in `go.mod`, all doc snippets, the doc-snippet runner, and the test module. This is a **breaking change** for any code importing the old unsuffixed path; existing `v3.2.1`/`v4.0.0` tags were affected and require a new release for pkg.go.dev to resolve real (non-pseudo) versions correctly.
 
 ### Changed
 

@@ -266,7 +266,7 @@ import (
  "fmt"
  "log"
 
- "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess/v4"
 )
 
 func main() {

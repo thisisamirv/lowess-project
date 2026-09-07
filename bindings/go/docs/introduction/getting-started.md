@@ -8,7 +8,7 @@ weight: 10
 Add the module to your `go.mod`:
 
 ```sh
-go get github.com/thisisamirv/lowess-project/bindings/go/fastlowess
+go get github.com/thisisamirv/lowess-project/bindings/go/fastlowess/v4
 ```
 
 This package uses `cgo`, so `CGO_ENABLED=1` and a working C compiler (GCC or Clang; on Windows, a MinGW-w64 toolchain) are required at build time. See [installation.md](installation.md) for details on providing the native `fastlowess_go` library.
@@ -23,7 +23,7 @@ import (
  "log"
  "math"
 
- "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess/v4"
 )
 
 func main() {
@@ -91,7 +91,7 @@ import (
  "fmt"
  "log"
 
- "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess/v4"
 )
 
 func main() {
@@ -140,7 +140,7 @@ import (
  "log"
  "math"
 
- "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess/v4"
 )
 
 func main() {

@@ -314,7 +314,7 @@ package main
 import (
  "fmt"
 
- "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess/v4"
 )
 
 func main() {
