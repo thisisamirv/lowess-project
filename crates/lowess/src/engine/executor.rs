@@ -30,6 +30,7 @@ use crate::algorithms::defaults::*;
 use crate::algorithms::interpolation::interpolate_gap;
 use crate::algorithms::regression::{LinearFit, RegressionContext, WLSSolver, ZeroWeightFallback};
 use crate::algorithms::robustness::RobustnessMethod;
+use crate::engine::predict::{PredictPassFn, PredictState};
 use crate::evaluation::cv::CVKind;
 use crate::evaluation::intervals::IntervalMethod;
 use crate::math::boundary::{BoundaryPolicy, apply_boundary_policy};
@@ -135,6 +136,9 @@ pub struct ExecutorOutput<T> {
 
     // Prediction interval upper bounds (if intervals were computed).
     pub prediction_upper: Option<Vec<T>>,
+
+    // Retained fitted-model state for `LowessResult::predict()`, if `retain_model` was set.
+    pub predict_state: Option<PredictState<T>>,
 }
 
 // Configuration for LOWESS execution.
@@ -214,6 +218,14 @@ pub struct LowessConfig<T> {
     // Per-observation case weights. When provided, multiplies each local kernel weight:
     // `w_ij = custom_weights[j] * K(d_ij / h) * robustness_j`.
     pub custom_weights: Option<Vec<T>>,
+
+    // Whether to retain fitted-model state for later `LowessResult::predict()` calls (Batch only).
+    #[doc(hidden)]
+    pub retain_model: bool,
+
+    // Custom (e.g. parallel) predict pass function.
+    #[doc(hidden)]
+    pub custom_predict_pass: Option<PredictPassFn<T>>,
 }
 
 impl<T: Float> Default for LowessConfig<T> {
@@ -240,6 +252,8 @@ impl<T: Float> Default for LowessConfig<T> {
             parallel: false,
             backend: None,
             delegate_boundary_handling: false,
+            retain_model: false,
+            custom_predict_pass: None,
         }
     }
 }
@@ -309,6 +323,14 @@ pub struct LowessExecutor<T: Float> {
 
     // Per-observation case weights applied as `w_ij = custom_weights[j] * K(d_ij / h) * robustness_j`.
     pub custom_weights: Option<Vec<T>>,
+
+    // Whether to retain fitted-model state for later `LowessResult::predict()` calls (Batch only).
+    #[doc(hidden)]
+    pub retain_model: bool,
+
+    // Custom (e.g. parallel) predict pass function.
+    #[doc(hidden)]
+    pub custom_predict_pass: Option<PredictPassFn<T>>,
 }
 
 impl<T: Float> Default for LowessExecutor<T> {
@@ -339,6 +361,8 @@ impl<T: Float> LowessExecutor<T> {
             backend: None,
             delegate_boundary_handling: false,
             custom_weights: None,
+            retain_model: false,
+            custom_predict_pass: None,
         }
     }
 
@@ -366,6 +390,8 @@ impl<T: Float> LowessExecutor<T> {
             .parallel(config.parallel)
             .backend(config.backend)
             .delegate_boundary_handling(config.delegate_boundary_handling)
+            .retain_model(config.retain_model)
+            .custom_predict_pass(config.custom_predict_pass)
     }
 
     // Convert executor settings back to a `LowessConfig`.
@@ -401,6 +427,8 @@ impl<T: Float> LowessExecutor<T> {
             backend: self.backend,
             delegate_boundary_handling: self.delegate_boundary_handling,
             custom_weights: self.custom_weights.clone(),
+            retain_model: self.retain_model,
+            custom_predict_pass: self.custom_predict_pass,
         }
     }
 
@@ -508,6 +536,20 @@ impl<T: Float> LowessExecutor<T> {
         self
     }
 
+    // Set whether to retain fitted-model state for later `LowessResult::predict()` calls.
+    #[doc(hidden)]
+    pub fn retain_model(mut self, retain: bool) -> Self {
+        self.retain_model = retain;
+        self
+    }
+
+    // Set a custom (e.g. parallel) predict pass function.
+    #[doc(hidden)]
+    pub fn custom_predict_pass(mut self, predict_pass_fn: Option<PredictPassFn<T>>) -> Self {
+        self.custom_predict_pass = predict_pass_fn;
+        self
+    }
+
     // Set a custom iteration batch pass function (e.g., for GPU acceleration).
     #[doc(hidden)]
     pub fn custom_fit_pass(mut self, fit_pass_fn: Option<FitPassFn<T>>) -> Self {
@@ -577,6 +619,9 @@ impl<T: Float> LowessExecutor<T> {
                             .parallel(config.parallel)
                             .backend(config.backend)
                             .delegate_boundary_handling(config.delegate_boundary_handling)
+                            // CV candidate fits never need retained model state - only the
+                            // final fit (below) does, avoiding wasted clones per candidate.
+                            .retain_model(false)
                             .run(tx, ty, None)
                             .unwrap() // CV must succeed
                             .smoothed
@@ -652,6 +697,9 @@ impl<T: Float> LowessExecutor<T> {
                 confidence_upper: None,
                 prediction_lower: None,
                 prediction_upper: None,
+                // Out-of-sample prediction is not supported for the fraction >= 1.0
+                // (plain global OLS) special case; predict() will error if requested.
+                predict_state: None,
             });
         }
 
@@ -725,6 +773,24 @@ impl<T: Float> LowessExecutor<T> {
             buffer,
         )?;
 
+        // Capture retained model state (if requested) from the padded arrays/weights
+        // actually used for fitting, before they get sliced back to the original range.
+        // `residual_sd` is filled in below, once the unpadded residuals are available.
+        let mut predict_state = self.retain_model.then(|| PredictState {
+            x: x_in.clone(),
+            y: y_in.clone(),
+            y_smooth: smoothed.clone(),
+            robustness_weights: robustness_weights.clone(),
+            window_size,
+            weight_function: self.weight_function,
+            zero_weight_fallback: self.zero_weight_fallback,
+            custom_weights: effective_custom_weights.map(|w| w.to_vec()),
+            residual_sd: T::zero(),
+            train_min_x: x[0],
+            train_max_x: x[n - 1],
+            custom_predict_pass: self.custom_predict_pass,
+        });
+
         // Slice back to original range if padded
         if pad_len > 0 {
             Self::slice_results(
@@ -740,6 +806,18 @@ impl<T: Float> LowessExecutor<T> {
                 sliced.extend_from_slice(&resid[pad_len..n + pad_len]);
                 *resid = sliced;
             }
+        }
+
+        // Compute the global residual SD from the unpadded residuals (matching how
+        // `Diagnostics::compute` derives it in `adapters::batch`), for prediction intervals.
+        if let Some(ref mut state) = predict_state {
+            let unpadded_y = &y_in[pad_len..pad_len + n];
+            let unpadded_residuals: Vec<T> = unpadded_y
+                .iter()
+                .zip(smoothed.iter())
+                .map(|(&yi, &si)| yi - si)
+                .collect();
+            state.residual_sd = IntervalMethod::calculate_residual_sd(&unpadded_residuals);
         }
 
         Ok(ExecutorOutput {
@@ -758,6 +836,7 @@ impl<T: Float> LowessExecutor<T> {
             confidence_upper,
             prediction_lower,
             prediction_upper,
+            predict_state,
         })
     }
 

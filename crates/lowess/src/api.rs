@@ -25,6 +25,7 @@ use crate::adapters::batch::BatchLowessBuilder;
 use crate::adapters::online::OnlineLowessBuilder;
 use crate::adapters::streaming::StreamingLowessBuilder;
 use crate::engine::executor::{CVPassFn, IntervalPassFn, SmoothPassFn};
+use crate::engine::predict::PredictPassFn;
 use crate::evaluation::cv::CVKind;
 use crate::evaluation::intervals::IntervalMethod;
 use crate::primitives::backend::Backend;
@@ -35,6 +36,7 @@ pub use crate::adapters::streaming::MergeStrategy;
 pub use crate::algorithms::regression::ZeroWeightFallback;
 pub use crate::algorithms::robustness::RobustnessMethod;
 pub use crate::engine::output::LowessResult;
+pub use crate::engine::predict::{ExtrapolationPolicy, PredictOptions, PredictOutput};
 pub use crate::engine::validator::MissingPolicy;
 
 pub use crate::math::boundary::BoundaryPolicy;
@@ -204,6 +206,10 @@ pub struct LowessBuilder<T, Mode = BatchMode> {
     #[doc(hidden)]
     pub custom_interval_pass: Option<IntervalPassFn<T>>,
 
+    // Custom (e.g. parallel) predict pass function (Batch only).
+    #[doc(hidden)]
+    pub custom_predict_pass: Option<PredictPassFn<T>>,
+
     // Execution backend hint.
     #[doc(hidden)]
     pub backend: Option<Backend>,
@@ -223,6 +229,9 @@ pub struct LowessBuilder<T, Mode = BatchMode> {
     // Per-observation case weights. When provided, multiplies each local kernel weight:
     // `w_ij = custom_weights[j] * K(d_ij / h) * robustness_j`.
     pub custom_weights: Option<Vec<T>>,
+
+    // Whether `fit()` should retain the fitted model state needed by `predict()` (Batch only).
+    pub retain_model: Option<bool>,
 
     // Phantom mode marker (zero-sized; determines which build() variant to use).
     #[doc(hidden)]
@@ -277,11 +286,13 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
             custom_smooth_pass: None,
             custom_cv_pass: None,
             custom_interval_pass: None,
+            custom_predict_pass: None,
             backend: None,
             parallel: None,
             duplicate_param: None,
             parse_errors: Vec::new(),
             custom_weights: None,
+            retain_model: None,
             _mode: PhantomData,
         }
     }
@@ -553,6 +564,14 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
         self
     }
 
+    // Retain the fitted model state needed for a later `LowessResult::predict(new_x)`
+    // call (Batch only). Off by default since it keeps an extra copy of the (boundary-
+    // padded) training data alive for the lifetime of the result.
+    pub fn retain_model(mut self, retain: bool) -> Self {
+        self.retain_model = Some(retain);
+        self
+    }
+
     // Set the policy for handling non-finite (NaN/Inf) values in input data.
     pub fn missing(mut self, policy: impl IntoEnum<MissingPolicy>) -> Self {
         if self.missing.is_some() {
@@ -714,6 +733,9 @@ impl<T: Float> LowessAdapter<T> for Batch {
         if let Some(ip) = builder.custom_interval_pass {
             result.custom_interval_pass = Some(ip);
         }
+        if let Some(pp) = builder.custom_predict_pass {
+            result.custom_predict_pass = Some(pp);
+        }
         if let Some(b) = builder.backend {
             result.backend = Some(b);
         }
@@ -728,6 +750,10 @@ impl<T: Float> LowessAdapter<T> for Batch {
 
         if let Some(cw) = builder.custom_weights {
             result.custom_weights = Some(cw);
+        }
+
+        if let Some(rm) = builder.retain_model {
+            result.retain_model = rm;
         }
 
         result

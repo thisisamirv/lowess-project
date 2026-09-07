@@ -90,6 +90,7 @@ fn test_has_confidence_intervals_true() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: None,
+        fit_state: None,
     };
 
     assert!(
@@ -117,6 +118,7 @@ fn test_has_confidence_intervals_false() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: None,
+        fit_state: None,
     };
 
     assert!(
@@ -144,6 +146,7 @@ fn test_has_prediction_intervals_true() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: None,
+        fit_state: None,
     };
 
     assert!(
@@ -171,6 +174,7 @@ fn test_has_prediction_intervals_false() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: None,
+        fit_state: None,
     };
 
     assert!(
@@ -198,6 +202,7 @@ fn test_has_cv_scores_true() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: Some(vec![0.1, 0.2, 0.3]),
+        fit_state: None,
     };
 
     assert!(lr.has_cv_scores(), "Should have CV scores");
@@ -222,6 +227,7 @@ fn test_has_cv_scores_false() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: None,
+        fit_state: None,
     };
 
     assert!(!lr.has_cv_scores(), "Should not have CV scores");
@@ -251,6 +257,7 @@ fn test_smoothed_accessor() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: None,
+        fit_state: None,
     };
 
     assert_eq!(lr.smoothed(), &y_vals[..]);
@@ -275,6 +282,7 @@ fn test_best_cv_score_present() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: Some(vec![0.3, 0.1, 0.2, 0.5]),
+        fit_state: None,
     };
 
     let best = lr.best_cv_score();
@@ -301,6 +309,7 @@ fn test_best_cv_score_none() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: None,
+        fit_state: None,
     };
 
     assert!(lr.best_cv_score().is_none());
@@ -325,6 +334,7 @@ fn test_best_cv_score_single() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: Some(vec![0.42]),
+        fit_state: None,
     };
 
     let best = lr.best_cv_score();
@@ -355,6 +365,7 @@ fn test_confidence_width() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: None,
+        fit_state: None,
     };
 
     let widths = lr.confidence_width().expect("Should have widths");
@@ -383,6 +394,7 @@ fn test_confidence_width_none() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: None,
+        fit_state: None,
     };
 
     assert!(lr.confidence_width().is_none());
@@ -407,6 +419,7 @@ fn test_prediction_width() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: None,
+        fit_state: None,
     };
 
     let widths = lr.prediction_width().expect("Should have widths");
@@ -435,6 +448,7 @@ fn test_prediction_width_none() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: None,
+        fit_state: None,
     };
 
     assert!(lr.prediction_width().is_none());
@@ -459,6 +473,7 @@ fn test_prediction_wider_than_confidence() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: None,
+        fit_state: None,
     };
 
     let conf_w = lr.confidence_width().unwrap();
@@ -492,6 +507,7 @@ fn test_minimal_result() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: None,
+        fit_state: None,
     };
 
     assert!(!lr.has_confidence_intervals());
@@ -529,6 +545,7 @@ fn test_maximal_result() {
         iterations_used: Some(3),
         fraction_used: 0.5,
         cv_scores: Some(vec![0.1, 0.2]),
+        fit_state: None,
     };
 
     assert!(lr.has_confidence_intervals());
@@ -558,6 +575,7 @@ fn test_empty_cv_scores() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: Some(vec![]),
+        fit_state: None,
     };
 
     assert!(lr.has_cv_scores());
@@ -587,6 +605,7 @@ fn test_display_basic() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: None,
+        fit_state: None,
     };
 
     let output = format!("{}", lr);
@@ -618,6 +637,7 @@ fn test_best_cv_score_with_nan() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: Some(vec![0.5, f64::NAN, 0.3, 0.7]),
+        fit_state: None,
     };
 
     let best = result.best_cv_score();
@@ -642,6 +662,7 @@ fn test_best_cv_score_all_equal() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: Some(vec![0.5, 0.5, 0.5]),
+        fit_state: None,
     };
 
     let best = result.best_cv_score();
@@ -665,6 +686,7 @@ fn test_display_with_empty_vectors() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: None,
+        fit_state: None,
     };
 
     let display_str = format!("{}", result);
@@ -698,6 +720,7 @@ fn test_display_with_all_fields() {
         iterations_used: Some(3),
         fraction_used: 0.5,
         cv_scores: Some(vec![0.1, 0.2]),
+        fit_state: None,
     };
 
     let output = format!("{}", lr);
@@ -735,6 +758,7 @@ fn test_display_large_dataset() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: None,
+        fit_state: None,
     };
 
     let output = format!("{}", lr);

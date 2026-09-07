@@ -548,7 +548,31 @@ impl<'a, T: Float + WLSSolver> RegressionContext<'a, T> {
         }
 
         let x_current = self.x[self.idx];
-        let window_radius = self.window.max_distance(self.x, x_current);
+        let orig_y = self.y[self.idx];
+        self.eval_at(x_current, Some(orig_y)).map(|(y, _slope)| y)
+    }
+
+    // Evaluate the local WLS fit at an arbitrary out-of-sample query point, reusing the
+    // same weighting/model logic as `fit()`. Unlike `fit()`, there is no training
+    // observation at `x_query`, so `ZeroWeightFallback::ReturnOriginal` falls back to
+    // `UseLocalMean` instead (see `eval_at`). Returns `(y, slope)`, where `slope` is the
+    // local fit's derivative at `x_query` (0 for degenerate/fallback branches).
+    pub fn predict_at(&mut self, x_query: T) -> Option<(T, T)> {
+        let n = self.x.len();
+
+        if self.window.left >= n || self.window.right >= n {
+            return None;
+        }
+
+        self.eval_at(x_query, None)
+    }
+
+    // Shared local-WLS evaluation logic for `fit()` (in-sample, `orig_y = Some(y[idx])`)
+    // and `predict_at()` (out-of-sample, `orig_y = None`).
+    // Shared local-WLS evaluation logic for `fit()` (in-sample, `orig_y = Some(y[idx])`)
+    // and `predict_at()` (out-of-sample, `orig_y = None`).
+    fn eval_at(&mut self, x_pivot: T, orig_y: Option<T>) -> Option<(T, T)> {
+        let window_radius = self.window.max_distance(self.x, x_pivot);
 
         if window_radius <= T::zero() {
             let mut sum_w = T::zero();
@@ -571,7 +595,7 @@ impl<'a, T: Float + WLSSolver> RegressionContext<'a, T> {
             }
 
             if sum_w > T::zero() {
-                return Some(sum_wy / sum_w);
+                return Some((sum_wy / sum_w, T::zero()));
             } else {
                 return match self.zero_weight_fallback {
                     ZeroWeightFallback::UseLocalMean => {
@@ -581,15 +605,27 @@ impl<'a, T: Float + WLSSolver> RegressionContext<'a, T> {
                             .copied()
                             .fold(T::zero(), |acc, v| acc + v)
                             / T::from(window_size).unwrap_or(T::one());
-                        Some(mean)
+                        Some((mean, T::zero()))
                     }
-                    ZeroWeightFallback::ReturnOriginal => Some(self.y[self.idx]),
+                    // No original observation exists for an out-of-sample query point.
+                    ZeroWeightFallback::ReturnOriginal => match orig_y {
+                        Some(v) => Some((v, T::zero())),
+                        None => {
+                            let window_size = self.window.len();
+                            let mean = self.y[self.window.left..=self.window.right]
+                                .iter()
+                                .copied()
+                                .fold(T::zero(), |acc, v| acc + v)
+                                / T::from(window_size).unwrap_or(T::one());
+                            Some((mean, T::zero()))
+                        }
+                    },
                     ZeroWeightFallback::ReturnNone => None,
                 };
             }
         }
 
-        let weight_params = WeightParams::new(x_current, window_radius, self.use_robustness);
+        let weight_params = WeightParams::new(x_pivot, window_radius, self.use_robustness);
 
         let (mut weight_sum, rightmost_idx) = self.weight_function.compute_window_weights(
             self.x,
@@ -636,9 +672,24 @@ impl<'a, T: Float + WLSSolver> RegressionContext<'a, T> {
                         .copied()
                         .fold(T::zero(), |acc, v| acc + v)
                         / cnt;
-                    return Some(mean);
+                    return Some((mean, T::zero()));
                 }
-                ZeroWeightFallback::ReturnOriginal => return Some(self.y[self.idx]),
+                // No original observation exists for an out-of-sample query point.
+                ZeroWeightFallback::ReturnOriginal => {
+                    return match orig_y {
+                        Some(v) => Some((v, T::zero())),
+                        None => {
+                            let window_size = self.window.len();
+                            let cnt = T::from(window_size).unwrap_or(T::one());
+                            let mean = self.y[self.window.left..=self.window.right]
+                                .iter()
+                                .copied()
+                                .fold(T::zero(), |acc, v| acc + v)
+                                / cnt;
+                            Some((mean, T::zero()))
+                        }
+                    };
+                }
                 ZeroWeightFallback::ReturnNone => return None,
             }
         }
@@ -647,8 +698,7 @@ impl<'a, T: Float + WLSSolver> RegressionContext<'a, T> {
         let window_y = &self.y[self.window.left..=rightmost_idx];
         let window_weights = &self.weights[self.window.left..=rightmost_idx];
 
-        let model =
-            LinearFit::fit_wls(window_x, window_y, window_weights, x_current, window_radius);
-        Some(model.predict(x_current))
+        let model = LinearFit::fit_wls(window_x, window_y, window_weights, x_pivot, window_radius);
+        Some((model.predict(x_pivot), model.slope))
     }
 }

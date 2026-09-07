@@ -47,15 +47,20 @@ impl Window {
         Self { left, right }
     }
 
-    // Update boundaries to maintain nearest-neighbor centering.
+    // Update boundaries to maintain nearest-neighbor centering around a training index.
     #[inline]
     pub fn recenter<T: Float>(&mut self, x: &[T], current: usize, n: usize) {
         debug_assert!(current < n, "recenter: current index out of bounds");
+        self.recenter_at(x, x[current], n);
+    }
 
+    // Update boundaries to maintain nearest-neighbor centering around an arbitrary
+    // pivot value, which need not be one of the training points (used for out-of-sample
+    // prediction queries).
+    #[inline]
+    pub fn recenter_at<T: Float>(&mut self, x: &[T], x_current: T, n: usize) {
         self.left = self.left.min(n - 1);
         self.right = self.right.min(n - 1);
-
-        let x_current = x[current];
 
         // Search for the optimal window position (nearest neighbors)
         // Slide right: if the point after the window is closer than the leftmost point
@@ -83,6 +88,18 @@ impl Window {
             self.left -= 1;
             self.right -= 1;
         }
+    }
+
+    // Locate the insertion index of an arbitrary query value into a sorted slice
+    // (first index whose value is not less than `query`, clamped to the last valid
+    // index). Used to seed a window for an out-of-sample prediction query.
+    #[inline]
+    pub fn locate<T: Float>(x: &[T], query: T) -> usize {
+        let n = x.len();
+        if n == 0 {
+            return 0;
+        }
+        x.partition_point(|&xi| xi < query).min(n - 1)
     }
 
     // Compute the maximum distance from `x_current` to any point in the window.

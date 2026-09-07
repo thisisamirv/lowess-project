@@ -25,6 +25,7 @@ use crate::algorithms::robustness::RobustnessMethod;
 use crate::engine::executor::{CVPassFn, FitPassFn, IntervalPassFn, SmoothPassFn};
 use crate::engine::executor::{LowessConfig, LowessExecutor};
 use crate::engine::output::LowessResult;
+use crate::engine::predict::PredictPassFn;
 use crate::engine::validator::{MissingPolicy, Validator};
 use crate::evaluation::cv::CVKind;
 use crate::evaluation::diagnostics::Diagnostics;
@@ -135,6 +136,13 @@ pub struct BatchLowessBuilder<T: Float> {
     // Per-observation case weights. When provided, multiplies each local kernel weight:
     // `w_ij = custom_weights[j] * K(d_ij / h) * robustness_j`.
     pub custom_weights: Option<Vec<T>>,
+
+    // Whether to retain fitted-model state for later `LowessResult::predict()` calls.
+    pub retain_model: bool,
+
+    // Custom (e.g. parallel) predict pass function.
+    #[doc(hidden)]
+    pub custom_predict_pass: Option<PredictPassFn<T>>,
 }
 
 impl<T: Float> Default for BatchLowessBuilder<T> {
@@ -175,6 +183,8 @@ impl<T: Float> BatchLowessBuilder<T> {
             parallel: None,
             duplicate_param: None,
             custom_weights: None,
+            retain_model: DEFAULT_RETAIN_MODEL,
+            custom_predict_pass: None,
         }
     }
 
@@ -292,6 +302,8 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> BatchLowess<T> {
             backend: self.config.backend,
             delegate_boundary_handling: self.config.delegate_boundary_handling,
             custom_weights,
+            retain_model: self.config.retain_model,
+            custom_predict_pass: self.config.custom_predict_pass,
         };
 
         // Execute unified LOWESS
@@ -424,6 +436,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> BatchLowess<T> {
             iterations_used,
             cv_scores,
             diagnostics,
+            fit_state: result.predict_state,
         })
     }
 }

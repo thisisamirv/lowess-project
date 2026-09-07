@@ -12,3 +12,6 @@ pub mod validator;
 
 // Output types for LOWESS operations.
 pub mod output;
+
+// Out-of-sample prediction for fitted Batch models.
+pub mod predict;

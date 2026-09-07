@@ -1,4 +1,5 @@
 #![cfg(feature = "dev")]
+mod adapters_batch_predict_tests;
 mod adapters_batch_tests;
 mod adapters_online_tests;
 mod adapters_streaming_tests;

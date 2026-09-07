@@ -1,0 +1,346 @@
+//! Out-of-sample prediction for fitted Batch LOWESS models.
+//!
+//! This module holds the fitted-model state retained by `LowessResult::predict()`
+//! (Batch adapter only, opt-in via `.retain_model(true)`) and the logic that
+//! evaluates the local WLS fit at arbitrary query points not in the training set.
+
+// External dependencies
+#[cfg(not(feature = "std"))]
+use alloc::vec;
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
+use num_traits::Float;
+#[cfg(feature = "std")]
+use std::vec;
+#[cfg(feature = "std")]
+use std::vec::Vec;
+
+// Internal dependencies
+use crate::algorithms::regression::{RegressionContext, WLSSolver, ZeroWeightFallback};
+use crate::evaluation::intervals::IntervalMethod;
+use crate::math::kernel::WeightFunction;
+use crate::primitives::errors::LowessError;
+use crate::primitives::window::Window;
+
+// Policy for evaluating query points outside the retained training x-range.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum ExtrapolationPolicy {
+    // Clamp to the nearest boundary window (default; matches `predict()`'s original behavior).
+    #[default]
+    Clamp,
+
+    // Linearly extrapolate from the nearest boundary point's local fit and slope.
+    Linear,
+
+    // Fail the whole `predict()` call with `LowessError::PredictOutOfRange` if any query
+    // point falls outside `[min(x_train), max(x_train)]`.
+    Error,
+}
+
+// Options controlling a `LowessResult::predict()` call.
+#[derive(Debug, Clone, Copy)]
+pub struct PredictOptions<T> {
+    // Include standard errors in the output.
+    pub return_se: bool,
+
+    // Confidence interval coverage level (e.g. `Some(0.95)`), or `None` to skip.
+    pub confidence_level: Option<T>,
+
+    // Prediction interval coverage level (e.g. `Some(0.95)`), or `None` to skip.
+    pub prediction_level: Option<T>,
+
+    // Include the local WLS fit's derivative (slope) at each query point.
+    pub return_derivative: bool,
+
+    // Behavior for query points outside the training x-range.
+    pub extrapolation: ExtrapolationPolicy,
+}
+
+impl<T: Float> Default for PredictOptions<T> {
+    fn default() -> Self {
+        Self {
+            return_se: false,
+            confidence_level: None,
+            prediction_level: None,
+            return_derivative: false,
+            extrapolation: ExtrapolationPolicy::default(),
+        }
+    }
+}
+
+// Result of a `LowessResult::predict()` call.
+#[derive(Debug, Clone)]
+pub struct PredictOutput<T> {
+    // Predicted y-values, one per query point in `new_x`.
+    pub y: Vec<T>,
+
+    // Standard errors, if `return_se`/`confidence_level`/`prediction_level` was requested.
+    pub standard_errors: Option<Vec<T>>,
+
+    // Confidence interval bounds for the mean response, if `confidence_level` was set.
+    pub confidence_lower: Option<Vec<T>>,
+    pub confidence_upper: Option<Vec<T>>,
+
+    // Prediction interval bounds for a new observation, if `prediction_level` was set.
+    pub prediction_lower: Option<Vec<T>>,
+    pub prediction_upper: Option<Vec<T>>,
+
+    // Local WLS fit's derivative (slope) at each query point, if `return_derivative` was set.
+    pub derivative: Option<Vec<T>>,
+}
+
+// Per-point predict results before shared confidence/prediction interval math is applied:
+// `(y, optional derivative, optional standard error)`, one entry per query point.
+pub type RawPredictValues<T> = Result<(Vec<T>, Option<Vec<T>>, Option<Vec<T>>), LowessError>;
+
+// Signature for a custom (e.g. parallel) predict pass function. Computes only the
+// per-point values (y, optional derivative, optional standard error); the shared
+// confidence/prediction interval math is applied afterward by `predict_batch`.
+#[doc(hidden)]
+pub type PredictPassFn<T> = fn(
+    &PredictState<T>,
+    &[T], // new_x
+    &PredictOptions<T>,
+    bool, // need_se
+) -> RawPredictValues<T>;
+
+// Fitted-model state retained by a Batch `fit()` call when `.retain_model(true)` was set,
+// enabling `LowessResult::predict()` to evaluate the fit at out-of-sample query points.
+//
+// `x`/`y`/`y_smooth`/`robustness_weights`/`custom_weights` are the boundary-*padded* arrays
+// actually used for local fitting (not the shorter, unpadded arrays returned in
+// `LowessResult`), so that predictions near the edges of the training range are consistent
+// with `fit()`.
+#[derive(Debug, Clone)]
+pub struct PredictState<T> {
+    // Boundary-padded, sorted training x-values used during fitting.
+    pub x: Vec<T>,
+
+    // Boundary-padded training y-values, aligned with `x`.
+    pub y: Vec<T>,
+
+    // Boundary-padded smoothed (fitted) training y-values, aligned with `x`. Used to
+    // compute local residuals for standard errors at out-of-sample query points.
+    pub y_smooth: Vec<T>,
+
+    // Final (post-robustness-iteration) weights, aligned with `x`/`y`.
+    pub robustness_weights: Vec<T>,
+
+    // Neighbor window size (span), already resolved from `fraction`.
+    pub window_size: usize,
+
+    // Kernel weight function used during fitting.
+    pub weight_function: WeightFunction,
+
+    // Zero-weight fallback policy flag (see `ZeroWeightFallback::from_u8`).
+    pub zero_weight_fallback: u8,
+
+    // Per-observation case weights, aligned with `x`/`y`, if provided.
+    pub custom_weights: Option<Vec<T>>,
+
+    // Global residual standard deviation (MAD-based), matching `Diagnostics.residual_sd`.
+    // Used to widen prediction intervals beyond the local standard error.
+    pub residual_sd: T,
+
+    // Minimum/maximum of the REAL (unpadded) training x-range, used to decide whether a
+    // query point is out-of-range for `ExtrapolationPolicy`. `x`/`y` above are boundary-
+    // *padded* and can extend well beyond this range, so they must not be used for that
+    // check directly.
+    pub train_min_x: T,
+    pub train_max_x: T,
+
+    // Custom (e.g. parallel) predict pass, injected by extension crates like fastLowess.
+    #[doc(hidden)]
+    pub custom_predict_pass: Option<PredictPassFn<T>>,
+}
+
+// Manual `PartialEq` that ignores `custom_predict_pass` - function pointer comparisons
+// are not meaningful (addresses aren't guaranteed unique across codegen units).
+impl<T: PartialEq> PartialEq for PredictState<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.x == other.x
+            && self.y == other.y
+            && self.y_smooth == other.y_smooth
+            && self.robustness_weights == other.robustness_weights
+            && self.window_size == other.window_size
+            && self.weight_function == other.weight_function
+            && self.zero_weight_fallback == other.zero_weight_fallback
+            && self.custom_weights == other.custom_weights
+            && self.residual_sd == other.residual_sd
+            && self.train_min_x == other.train_min_x
+            && self.train_max_x == other.train_max_x
+    }
+}
+
+// Evaluate the fitted model at a single out-of-sample query point, returning
+// `(y, slope, standard_error)`. `weights_scratch` (sized to `state.x.len()`) is reusable
+// working space for kernel weights. `standard_error` is only computed when `need_se`.
+//
+// `pub` (hidden) so extension crates like fastLowess can reuse it for a parallel
+// `PredictPassFn` implementation.
+#[doc(hidden)]
+pub fn predict_one_full<T: Float + WLSSolver>(
+    state: &PredictState<T>,
+    x_query: T,
+    weights_scratch: &mut [T],
+    options: &PredictOptions<T>,
+    need_se: bool,
+) -> Result<(T, T, Option<T>), LowessError> {
+    let n = state.x.len();
+    if n == 0 {
+        return Ok((T::zero(), T::zero(), None));
+    }
+
+    let min_x = state.train_min_x;
+    let max_x = state.train_max_x;
+    let out_of_range = x_query < min_x || x_query > max_x;
+
+    if out_of_range && options.extrapolation == ExtrapolationPolicy::Error {
+        return Err(LowessError::PredictOutOfRange {
+            query: x_query.to_f64().unwrap_or(0.0),
+            min: min_x.to_f64().unwrap_or(0.0),
+            max: max_x.to_f64().unwrap_or(0.0),
+        });
+    }
+
+    // For `Linear` extrapolation, evaluate the local fit AT the boundary (clamped point)
+    // and extend it using that boundary fit's own slope; otherwise evaluate directly at
+    // `x_query` (the `Clamp` policy's window-clamping happens naturally via `Window`).
+    let extrapolate_linear = out_of_range && options.extrapolation == ExtrapolationPolicy::Linear;
+    let eval_point = if extrapolate_linear {
+        if x_query < min_x { min_x } else { max_x }
+    } else {
+        x_query
+    };
+
+    let seed = Window::locate(&state.x, eval_point);
+    let mut window = Window::initialize(seed, state.window_size, n);
+    window.recenter_at(&state.x, eval_point, n);
+
+    let mut ctx = RegressionContext {
+        x: &state.x,
+        y: &state.y,
+        idx: seed,
+        window,
+        use_robustness: true,
+        robustness_weights: &state.robustness_weights,
+        weights: weights_scratch,
+        weight_function: state.weight_function,
+        zero_weight_fallback: ZeroWeightFallback::from_u8(state.zero_weight_fallback),
+        custom_weights: state.custom_weights.as_deref(),
+    };
+
+    let (boundary_y, slope) = ctx.predict_at(eval_point).unwrap_or((T::zero(), T::zero()));
+
+    let y = if extrapolate_linear {
+        boundary_y + slope * (x_query - eval_point)
+    } else {
+        boundary_y
+    };
+
+    let se = if need_se {
+        Some(IntervalMethod::compute_se_at_query(
+            &state.x,
+            &state.y,
+            &state.y_smooth,
+            &window,
+            eval_point,
+            &state.robustness_weights,
+            &|u| state.weight_function.compute_weight(u),
+        ))
+    } else {
+        None
+    };
+
+    Ok((y, slope, se))
+}
+
+// Serial fallback for `predict_batch` when no `custom_predict_pass` is set.
+fn predict_batch_serial<T: Float + WLSSolver>(
+    state: &PredictState<T>,
+    new_x: &[T],
+    options: &PredictOptions<T>,
+    need_se: bool,
+) -> RawPredictValues<T> {
+    let mut scratch = vec![T::zero(); state.x.len().max(1)];
+    let mut y = Vec::with_capacity(new_x.len());
+    let mut derivative = options
+        .return_derivative
+        .then(|| Vec::with_capacity(new_x.len()));
+    let mut se = need_se.then(|| Vec::with_capacity(new_x.len()));
+
+    for &q in new_x {
+        let (yi, slope, sei) = predict_one_full(state, q, &mut scratch, options, need_se)?;
+        y.push(yi);
+        if let Some(d) = derivative.as_mut() {
+            d.push(slope);
+        }
+        if let Some(s) = se.as_mut() {
+            s.push(sei.unwrap_or(T::zero()));
+        }
+    }
+
+    Ok((y, derivative, se))
+}
+
+// Evaluate the fitted model at a batch of out-of-sample query points, per `options`.
+// Delegates the per-point work to `state.custom_predict_pass` if set (e.g. fastLowess's
+// Rayon-parallel implementation), otherwise evaluates serially; either way, the shared
+// confidence/prediction interval math is applied here. `new_x` need not be sorted - each
+// query point is independently located via binary search.
+pub fn predict_batch<T: Float + WLSSolver>(
+    state: &PredictState<T>,
+    new_x: &[T],
+    options: &PredictOptions<T>,
+) -> Result<PredictOutput<T>, LowessError> {
+    let need_se = options.return_se
+        || options.confidence_level.is_some()
+        || options.prediction_level.is_some();
+
+    let (y, derivative, se) = if let Some(pass) = state.custom_predict_pass {
+        pass(state, new_x, options, need_se)?
+    } else {
+        predict_batch_serial(state, new_x, options, need_se)?
+    };
+
+    let (confidence_lower, confidence_upper) = if let Some(level) = options.confidence_level {
+        let se_vals = se.as_deref().unwrap_or(&[]);
+        let z = IntervalMethod::<T>::approximate_z_score(level)
+            .map_err(|_| LowessError::InvalidIntervals(level.to_f64().unwrap_or(0.0)))?;
+        let lower: Vec<T> = y.iter().zip(se_vals).map(|(&yi, &s)| yi - z * s).collect();
+        let upper: Vec<T> = y.iter().zip(se_vals).map(|(&yi, &s)| yi + z * s).collect();
+        (Some(lower), Some(upper))
+    } else {
+        (None, None)
+    };
+
+    let (prediction_lower, prediction_upper) = if let Some(level) = options.prediction_level {
+        let se_vals = se.as_deref().unwrap_or(&[]);
+        let z = IntervalMethod::<T>::approximate_z_score(level)
+            .map_err(|_| LowessError::InvalidIntervals(level.to_f64().unwrap_or(0.0)))?;
+        let rsd_sq = state.residual_sd * state.residual_sd;
+        let lower: Vec<T> = y
+            .iter()
+            .zip(se_vals)
+            .map(|(&yi, &s)| yi - z * (s * s + rsd_sq).sqrt())
+            .collect();
+        let upper: Vec<T> = y
+            .iter()
+            .zip(se_vals)
+            .map(|(&yi, &s)| yi + z * (s * s + rsd_sq).sqrt())
+            .collect();
+        (Some(lower), Some(upper))
+    } else {
+        (None, None)
+    };
+
+    Ok(PredictOutput {
+        y,
+        standard_errors: se,
+        confidence_lower,
+        confidence_upper,
+        prediction_lower,
+        prediction_upper,
+        derivative,
+    })
+}

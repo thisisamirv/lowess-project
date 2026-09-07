@@ -122,6 +122,20 @@ pub enum LowessError {
     //
     // Collects all parse errors from string builder methods and reports them together at `build()`.
     ParseErrors(Vec<LowessError>),
+
+    // `LowessResult::predict()` was called without `.retain_model(true)` set before `fit()`.
+    PredictionUnavailable,
+
+    // `LowessResult::predict()` was called with `ExtrapolationPolicy::Error` and a query
+    // point outside the training x-range.
+    PredictOutOfRange {
+        // The out-of-range query x-value.
+        query: f64,
+        // Minimum training x-value.
+        min: f64,
+        // Maximum training x-value.
+        max: f64,
+    },
 }
 
 // Display Implementation
@@ -201,6 +215,14 @@ impl Display for LowessError {
                 }
                 Ok(())
             }
+            Self::PredictionUnavailable => write!(
+                f,
+                "predict() requires .retain_model(true) to be set before fit()"
+            ),
+            Self::PredictOutOfRange { query, min, max } => write!(
+                f,
+                "predict() query x={query} is outside the training range [{min}, {max}]; use a different ExtrapolationPolicy to allow this"
+            ),
         }
     }
 }

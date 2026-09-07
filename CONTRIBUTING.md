@@ -15,7 +15,6 @@ The Batch adapter already covers a comprehensive set of options (kernels, robust
 
 **Batch:**
 
-- **Out-of-sample prediction**: `fit(x, y)` only returns smoothed values at the input `x` positions; there's no way to evaluate the fitted curve at new x-values not in the training set (like R's `predict.loess(model, newdata)`). Would need `fit()` to retain the local-fit structure for a later `predict(new_x)` call.
 - **Expose local slope/derivative**: each point's local WLS fit already computes a slope internally ([regression.rs](crates/lowess/src/algorithms/regression.rs)), but only the fitted `y` is kept. A `return_derivative` option exposing that per-point slope would enable rate-of-change/turning-point analysis with minimal new computation.
 - **Adaptive/automatic fraction selection**: CV-based bandwidth selection currently requires hand-picking a `cv_fractions` grid. A continuous search (e.g. golden-section over `(0, 1]` minimizing CV error or AICc) would remove the hardest tuning decision.
 - **STL-style seasonal-trend decomposition**: Cleveland's STL is built from repeated LOWESS passes (trend + seasonal + remainder); none of the current adapters offer this, despite already having the necessary primitives.

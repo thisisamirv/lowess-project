@@ -6,6 +6,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Added
+
+**lowess:**
+
+- Added out-of-sample prediction to the Batch adapter: `.retain_model(true)` on the builder retains the fitted model's (boundary-padded) training data, smoothed values, final robustness weights, and residual SD, enabling a new `LowessResult::predict(new_x, options)` method that evaluates the local WLS fit at arbitrary x-values not in the training set (like R's `predict.loess(model, newdata)`). `PredictOptions` controls `return_se`/`confidence_level`/`prediction_level` (same z-score convention as `fit()`'s existing intervals), `return_derivative` (the local fit's slope at each query point), and `extrapolation` (`Clamp` default, `Linear`, or `Error` via the new `LowessError::PredictOutOfRange`) for query points outside the training x-range. Returns a `PredictOutput` struct and `LowessError::PredictionUnavailable` if called without `.retain_model(true)`, or if `fraction >= 1.0` (global regression) was used. Off by default (no extra memory/clone cost unless requested). Internally generalizes `Window`'s sliding-window search, `RegressionContext`'s local WLS fit, and `IntervalMethod`'s per-point standard-error formula (all previously index-bound to training points) to also support arbitrary out-of-sample query points.
+
+**fastLowess:**
+
+- Added a Rayon-parallel `custom_predict_pass` for `LowessResult::predict()`, wired into the Batch adapter's `fit()` alongside the existing parallel smooth/CV/interval passes; computes the same SE/derivative/extrapolation options in parallel.
+
 ## 4.0.0
 
 ### Added

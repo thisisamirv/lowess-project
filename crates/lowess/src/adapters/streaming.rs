@@ -279,6 +279,8 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
             backend: None,
             delegate_boundary_handling: false,
             custom_weights: None,
+            retain_model: false,
+            custom_predict_pass: None,
         };
         // Execute LOWESS on combined data
         // Use pre-allocated work_buffer to minimize allocations
@@ -425,6 +427,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
             iterations_used: Some(iterations),
             fraction_used: self.config.fraction,
             cv_scores: None,
+            fit_state: None,
         })
     }
 
@@ -445,6 +448,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
                 iterations_used: None,
                 fraction_used: self.config.fraction,
                 cv_scores: None,
+                fit_state: None,
             });
         }
 
@@ -487,6 +491,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
             iterations_used: None,
             fraction_used: self.config.fraction,
             cv_scores: None,
+            fit_state: None,
         };
 
         // Clear buffers

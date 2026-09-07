@@ -288,7 +288,8 @@ mod api;
 pub mod prelude {
     pub use crate::api::{
         Adapter::{Batch, Online, Streaming},
-        Lowess, LowessBuilder, LowessError, LowessResult, OnlineLowess, StreamingLowess,
+        ExtrapolationPolicy, Lowess, LowessBuilder, LowessError, LowessResult, OnlineLowess,
+        PredictOptions, PredictOutput, StreamingLowess,
     };
 }
 

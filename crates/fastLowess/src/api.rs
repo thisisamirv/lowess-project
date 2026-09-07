@@ -20,6 +20,7 @@ use lowess::internals::api::Streaming as BaseStreaming;
 // Publicly re-exported types
 pub use lowess::internals::api::{LowessAdapter, LowessBuilder};
 pub use lowess::internals::engine::output::LowessResult;
+pub use lowess::internals::engine::predict::{ExtrapolationPolicy, PredictOptions, PredictOutput};
 pub use lowess::internals::primitives::errors::LowessError;
 
 // Marker for parallel in-memory batch processing.
@@ -171,7 +172,6 @@ impl Lowess {
         self.0 = self.0.parallel(p);
         self
     }
-    // Execution backend: "cpu" (default) or "gpu" (requires the `gpu` Cargo feature).
     pub fn backend(mut self, s: &str) -> Self {
         self.0 = self.0.backend(s);
         self
@@ -208,12 +208,12 @@ impl Lowess {
         self.0 = self.0.cv_seed(s);
         self
     }
-
-    // Return results sorted ascending by x instead of in original input order.
-    // To get both orderings, sort the default (unsorted) result client-side
-    // instead of calling `fit()` twice.
     pub fn return_sorted(mut self) -> Self {
         self.0 = self.0.return_sorted();
+        self
+    }
+    pub fn retain_model(mut self, retain: bool) -> Self {
+        self.0 = self.0.retain_model(retain);
         self
     }
 

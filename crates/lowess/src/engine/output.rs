@@ -14,7 +14,10 @@ use num_traits::Float;
 use std::vec::Vec;
 
 // Internal dependencies
+use crate::algorithms::regression::WLSSolver;
+use crate::engine::predict::{PredictOptions, PredictOutput, PredictState, predict_batch};
 use crate::evaluation::diagnostics::Diagnostics;
+use crate::primitives::errors::LowessError;
 
 // Comprehensive LOWESS output containing smoothed values and diagnostics.
 #[derive(Debug, Clone, PartialEq)]
@@ -57,6 +60,11 @@ pub struct LowessResult<T> {
 
     // RMSE scores for each tested fraction during cross-validation.
     pub cv_scores: Option<Vec<T>>,
+
+    // Retained fitted-model state for `predict()`, populated only when the Batch
+    // adapter's `.retain_model(true)` was set before `fit()`.
+    #[doc(hidden)]
+    pub fit_state: Option<PredictState<T>>,
 }
 
 impl<T: Float> LowessResult<T> {
@@ -83,6 +91,23 @@ impl<T: Float> LowessResult<T> {
                 .copied()
                 .min_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal))
         })
+    }
+}
+
+impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> LowessResult<T> {
+    // Evaluate the fitted Batch model at out-of-sample x-values not in the training set,
+    // similar to R's `predict(model, newdata)`. Requires `.retain_model(true)` to have been
+    // set on the Batch builder before `fit()`; otherwise returns
+    // [`LowessError::PredictionUnavailable`].
+    pub fn predict(
+        &self,
+        new_x: &[T],
+        options: PredictOptions<T>,
+    ) -> core::result::Result<PredictOutput<T>, LowessError> {
+        match &self.fit_state {
+            Some(state) => predict_batch(state, new_x, &options),
+            None => Err(LowessError::PredictionUnavailable),
+        }
     }
 }
 

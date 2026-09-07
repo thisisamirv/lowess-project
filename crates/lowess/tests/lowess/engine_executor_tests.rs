@@ -148,6 +148,8 @@ fn test_config_custom() {
         cv_seed: None,
         delegate_boundary_handling: false,
         custom_weights: None,
+        retain_model: false,
+        custom_predict_pass: None,
     };
 
     assert_eq!(config.fraction, Some(0.5));
@@ -181,6 +183,7 @@ fn test_executor_output_basic() {
         confidence_upper: None,
         prediction_lower: None,
         prediction_upper: None,
+        predict_state: None,
     };
 
     assert_eq!(output.smoothed, vec![1.0, 2.0, 3.0]);
@@ -207,6 +210,7 @@ fn test_executor_output_complete() {
         confidence_upper: None,
         prediction_lower: None,
         prediction_upper: None,
+        predict_state: None,
     };
 
     assert_eq!(output.smoothed.len(), 3);
@@ -233,6 +237,7 @@ fn test_executor_output_empty() {
         confidence_upper: None,
         prediction_lower: None,
         prediction_upper: None,
+        predict_state: None,
     };
 
     assert!(output.smoothed.is_empty());
@@ -361,6 +366,8 @@ fn test_config_f32() {
         cv_seed: None,
         delegate_boundary_handling: false,
         custom_weights: None,
+        retain_model: false,
+        custom_predict_pass: None,
     };
 
     assert_eq!(config.fraction, Some(0.5f32));
@@ -383,6 +390,7 @@ fn test_output_f32() {
         confidence_upper: None,
         prediction_lower: None,
         prediction_upper: None,
+        predict_state: None,
     };
 
     assert_eq!(output.smoothed.len(), 3);
@@ -422,6 +430,8 @@ fn test_executor_convergence_zero_tolerance() {
         cv_seed: None,
         delegate_boundary_handling: false,
         custom_weights: None,
+        retain_model: false,
+        custom_predict_pass: None,
     };
 
     let output = LowessExecutor::run_with_config(&x, &y, config).unwrap();
@@ -461,6 +471,8 @@ fn test_executor_delta_equals_range() {
         cv_seed: None,
         delegate_boundary_handling: false,
         custom_weights: None,
+        retain_model: false,
+        custom_predict_pass: None,
     };
 
     let output = LowessExecutor::run_with_config(&x, &y, config).unwrap();
@@ -570,6 +582,7 @@ fn test_output_clone() {
         confidence_upper: None,
         prediction_lower: None,
         prediction_upper: None,
+        predict_state: None,
     };
 
     let output2 = output1.clone();

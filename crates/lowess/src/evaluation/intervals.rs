@@ -206,6 +206,47 @@ impl<T: Float> IntervalMethod<T> {
         }
     }
 
+    // Estimate the standard error of the fitted curve at an arbitrary out-of-sample query
+    // point, generalizing `compute_window_se`'s per-training-point formula (same leverage/
+    // local-residual-variance approach). There is no training observation exactly at
+    // `x_query`, so the leverage numerator uses the kernel weight at distance zero directly
+    // (`weight_fn(0)`), as if a point existed there, rather than
+    // `robustness_weights[idx] * weight_fn(0)`.
+    #[allow(clippy::too_many_arguments)]
+    pub fn compute_se_at_query<F>(
+        x: &[T],
+        y: &[T],
+        y_smooth: &[T],
+        window: &Window,
+        x_query: T,
+        robustness_weights: &[T],
+        weight_fn: &F,
+    ) -> T
+    where
+        F: Fn(T) -> T,
+    {
+        let bandwidth = window.max_distance(x, x_query);
+        if bandwidth <= T::zero() {
+            return T::zero();
+        }
+
+        let w_idx = weight_fn(T::zero());
+
+        let mut sum_w_r2 = T::zero();
+        let mut sum_w = T::zero();
+
+        for j in window.left..=window.right {
+            let dist = (x[j] - x_query).abs();
+            let u = dist / bandwidth;
+            let w = weight_fn(u) * robustness_weights[j];
+            let r = y[j] - y_smooth[j];
+            sum_w_r2 = sum_w_r2 + w * r * r;
+            sum_w = sum_w + w;
+        }
+
+        Self::compute_se(sum_w, sum_w_r2, w_idx)
+    }
+
     // Compute requested intervals (confidence and/or prediction).
     #[allow(clippy::type_complexity)]
     pub fn compute_intervals(
