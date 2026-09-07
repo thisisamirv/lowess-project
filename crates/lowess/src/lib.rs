@@ -56,7 +56,6 @@
 //! let model = Lowess::new()
 //!     .fraction(0.5)      // Use 50% of data for each local fit
 //!     .iterations(3)      // 3 robustness iterations
-//!     .adapter(Batch)
 //!     .build()?;
 //!
 //! // Fit the model to the data
@@ -109,7 +108,6 @@
 //!     .cv_k(5)                                         // Number of folds for k-fold CV
 //!     .cv_fractions(vec![0.3, 0.7])                   // Candidate bandwidth fractions to evaluate
 //!     .cv_seed(123)                                    // Reproducible fold splitting seed
-//!     .adapter(Batch)                                  // Batch adapter
 //!     .build()?;
 //!
 //! let result = model.fit(&x, &y)?;
@@ -159,7 +157,7 @@
 //! # let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
 //! # let y = vec![2.0, 4.1, 5.9, 8.2, 9.8];
 //!
-//! let model = Lowess::new().adapter(Batch).build()?;
+//! let model = Lowess::new().build()?;
 //!
 //! let result = model.fit(&x, &y)?;
 //! // or to be more explicit:
@@ -174,7 +172,7 @@
 //! # let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
 //! # let y = vec![2.0, 4.1, 5.9, 8.2, 9.8];
 //!
-//! let model = Lowess::new().adapter(Batch).build()?;
+//! let model = Lowess::new().build()?;
 //!
 //! match model.fit(&x, &y) {
 //!     Ok(result) => {
@@ -215,7 +213,6 @@
 //!     let model = Lowess::new()
 //!         .fraction(0.5)
 //!         .iterations(2)      // Fewer iterations for speed
-//!         .adapter(Batch)
 //!         .build()?;
 //!
 //!     // Fit the model
@@ -286,11 +283,7 @@ mod api;
 
 // Standard LOWESS prelude.
 pub mod prelude {
-    pub use crate::api::{
-        Adapter::{Batch, Online, Streaming},
-        ExtrapolationPolicy, Lowess, LowessBuilder, LowessError, LowessResult, OnlineLowess,
-        PredictOptions, PredictOutput, StreamingLowess,
-    };
+    pub use crate::api::{Lowess, LowessError, LowessResult, OnlineLowess, StreamingLowess};
 }
 
 // Internal modules for development and testing.

@@ -20,7 +20,6 @@ use lowess::internals::api::Streaming as BaseStreaming;
 // Publicly re-exported types
 pub use lowess::internals::api::{LowessAdapter, LowessBuilder};
 pub use lowess::internals::engine::output::LowessResult;
-pub use lowess::internals::engine::predict::{ExtrapolationPolicy, PredictOptions, PredictOutput};
 pub use lowess::internals::primitives::errors::LowessError;
 
 // Marker for parallel in-memory batch processing.

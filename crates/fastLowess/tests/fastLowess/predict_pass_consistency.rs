@@ -1,6 +1,7 @@
 #![cfg(feature = "dev")]
 use approx::assert_abs_diff_eq;
 use fastLowess::prelude::*;
+use lowess::internals::engine::predict::PredictOptions;
 
 /// Parallel and sequential predict() must produce identical results.
 #[test]

@@ -25,8 +25,8 @@ fn test_prelude_imports() {
     let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
     let y = vec![2.0, 4.0, 6.0, 8.0, 10.0];
 
-    // Verify Lowess (LowessBuilder), Adapter variants, and Result are useable
-    let result = Lowess::new().adapter(Batch).build().unwrap().fit(&x, &y);
+    // Verify Lowess (LowessBuilder) and Result are useable
+    let result = Lowess::new().build().unwrap().fit(&x, &y);
 
     assert!(result.is_ok(), "Basic fit should work with prelude imports");
 }
@@ -76,26 +76,22 @@ fn test_prelude_zero_weight_fallback() {
     let _ = Lowess::<f64>::new().zero_weight_fallback("return_none");
 }
 
-/// Test adapter types are available.
+/// Test that `Lowess`, `StreamingLowess`, and `OnlineLowess` are all directly buildable.
 ///
-/// Verifies that all adapter types are exported.
+/// Verifies the type aliases are exported and each builds without needing `.adapter(...)`.
 #[test]
 fn test_prelude_adapters() {
     let x = vec![1.0, 2.0, 3.0];
     let y = vec![2.0, 4.0, 6.0];
 
-    // Batch adapter
-    let _ = Lowess::<f64>::new()
-        .adapter(Batch)
-        .build()
-        .unwrap()
-        .fit(&x, &y);
+    // Batch
+    let _ = Lowess::<f64>::new().build().unwrap().fit(&x, &y);
 
-    // Streaming adapter
-    let _ = Lowess::<f64>::new().adapter(Streaming).build();
+    // Streaming
+    let _ = StreamingLowess::<f64>::new().build();
 
-    // Online adapter
-    let _ = Lowess::<f64>::new().adapter(Online).build();
+    // Online
+    let _ = OnlineLowess::<f64>::new().build();
 }
 
 /// Test complete workflow with prelude.
@@ -114,7 +110,6 @@ fn test_prelude_complete_workflow() {
         .confidence_intervals(0.95)
         .return_diagnostics()
         .return_residuals()
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -135,11 +130,7 @@ fn test_prelude_error_handling() {
     let x: Vec<f64> = vec![];
     let y: Vec<f64> = vec![];
 
-    let result = Lowess::<f64>::new()
-        .adapter(Batch)
-        .build()
-        .unwrap()
-        .fit(&x, &y);
+    let result = Lowess::<f64>::new().build().unwrap().fit(&x, &y);
 
     // Should be able to match on error types from prelude
     assert!(result.is_err());

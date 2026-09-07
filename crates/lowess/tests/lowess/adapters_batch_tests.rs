@@ -41,7 +41,6 @@ fn test_batch_basic_smoothing() {
     let result = Lowess::new()
         .fraction(0.25)
         .iterations(2)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -82,7 +81,6 @@ fn test_batch_with_robustness_weights() {
         .iterations(5)
         .robustness_method("bisquare")
         .return_robustness_weights()
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -119,7 +117,6 @@ fn test_batch_standard_errors() {
     let result = Lowess::new()
         .fraction(0.3)
         .confidence_intervals(0.95)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -151,7 +148,6 @@ fn test_batch_confidence_and_prediction_intervals() {
         .fraction(0.5)
         .confidence_intervals(0.95)
         .prediction_intervals(0.95)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -206,7 +202,6 @@ fn test_batch_diagnostics() {
         .fraction(0.5)
         .return_diagnostics()
         .return_residuals()
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -261,7 +256,6 @@ fn test_batch_cv_kfold() {
         .cv_method("kfold")
         .cv_k(3)
         .cv_fractions(fractions.clone())
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -299,7 +293,6 @@ fn test_batch_cv_reproducibility() {
         .cv_k(5)
         .cv_fractions(fractions.clone())
         .cv_seed(seed)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -311,7 +304,6 @@ fn test_batch_cv_reproducibility() {
         .cv_k(5)
         .cv_fractions(fractions.clone())
         .cv_seed(seed)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -323,7 +315,6 @@ fn test_batch_cv_reproducibility() {
         .cv_k(5)
         .cv_fractions(fractions.clone())
         .cv_seed(seed + 1)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -355,7 +346,6 @@ fn test_batch_cv_loocv() {
     let result = Lowess::new()
         .cv_method("loocv")
         .cv_fractions(fractions.clone())
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -390,7 +380,6 @@ fn test_batch_auto_converge() {
         .fraction(0.5)
         .iterations(5)
         .auto_converge(1e-12)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -425,7 +414,6 @@ fn test_batch_auto_converge_max_iterations() {
         .fraction(0.3)
         .iterations(max_iters)
         .auto_converge(1e-10)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -450,17 +438,14 @@ fn test_batch_auto_converge_max_iterations() {
 #[test]
 fn test_batch_builder_defaults() {
     // Defaults are validated at build time; verify the default builder succeeds.
-    let result = Lowess::<f64>::new().adapter(Batch).build();
+    let result = Lowess::<f64>::new().build();
     assert!(result.is_ok());
 }
 
 /// Test that configuration applied via LowessBuilder reaches the processor.
 #[test]
 fn test_batch_builder_setters() {
-    let result = Lowess::<f64>::new()
-        .boundary_policy("extend")
-        .adapter(Batch)
-        .build();
+    let result = Lowess::<f64>::new().boundary_policy("extend").build();
     assert!(result.is_ok());
 }
 
@@ -474,7 +459,6 @@ fn test_batch_minimum_dataset() {
 
     let result = Lowess::new()
         .fraction(0.67)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -502,7 +486,6 @@ fn test_batch_all_features_combined() {
         .return_diagnostics()
         .return_residuals()
         .return_robustness_weights()
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -551,7 +534,6 @@ fn test_batch_unsorted_data_large() {
 
     let result = Lowess::new()
         .fraction(0.3)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -575,7 +557,6 @@ fn test_batch_return_sorted_false_default() {
 
     let result = Lowess::new()
         .fraction(0.7)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -598,7 +579,6 @@ fn test_batch_return_sorted_true() {
         .return_residuals()
         .return_robustness_weights()
         .return_sorted()
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -619,7 +599,6 @@ fn test_batch_return_sorted_true() {
         .fraction(0.7)
         .return_residuals()
         .return_robustness_weights()
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -661,7 +640,7 @@ fn test_batch_missing_error_default_rejects_nan() {
     let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
     let y = vec![1.0, 2.0, f64::NAN, 4.0, 5.0];
 
-    let result = Lowess::new().adapter(Batch).build().unwrap().fit(&x, &y);
+    let result = Lowess::new().build().unwrap().fit(&x, &y);
 
     assert!(
         matches!(result, Err(LowessError::InvalidNumericValue(_))),
@@ -675,12 +654,7 @@ fn test_batch_missing_error_explicit_rejects_nan() {
     let x = vec![1.0, 2.0, f64::NAN, 4.0, 5.0];
     let y = vec![1.0, 2.0, 3.0, 4.0, 5.0];
 
-    let result = Lowess::new()
-        .missing("error")
-        .adapter(Batch)
-        .build()
-        .unwrap()
-        .fit(&x, &y);
+    let result = Lowess::new().missing("error").build().unwrap().fit(&x, &y);
 
     assert!(
         matches!(result, Err(LowessError::InvalidNumericValue(_))),
@@ -698,7 +672,6 @@ fn test_batch_missing_drop_removes_nan_rows() {
     let result = Lowess::new()
         .fraction(0.9)
         .missing("drop")
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -722,7 +695,6 @@ fn test_batch_missing_drop_filters_custom_weights_in_lockstep() {
         .fraction(0.9)
         .missing("drop")
         .custom_weights(weights)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y);
@@ -737,7 +709,7 @@ fn test_batch_missing_drop_filters_custom_weights_in_lockstep() {
 /// Test that an unrecognized `missing` string is rejected at build time.
 #[test]
 fn test_batch_missing_invalid_string_rejected() {
-    let result = Lowess::<f64>::new().missing("bogus").adapter(Batch).build();
+    let result = Lowess::<f64>::new().missing("bogus").build();
 
     match result {
         Err(e) => {
@@ -759,12 +731,7 @@ fn test_batch_missing_drop_still_rejects_mismatched_lengths() {
     let x = vec![1.0, 2.0, 3.0];
     let y = vec![1.0, 2.0];
 
-    let result = Lowess::new()
-        .missing("drop")
-        .adapter(Batch)
-        .build()
-        .unwrap()
-        .fit(&x, &y);
+    let result = Lowess::new().missing("drop").build().unwrap().fit(&x, &y);
 
     assert!(
         matches!(result, Err(LowessError::MismatchedInputs { .. })),
@@ -780,7 +747,6 @@ fn test_batch_all_identical_x() {
 
     let result = Lowess::new()
         .fraction(0.5)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -807,7 +773,6 @@ fn test_batch_all_identical_y() {
     let result = Lowess::new()
         .fraction(0.5)
         .iterations(3)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -828,7 +793,6 @@ fn test_batch_fraction_exactly_one() {
     let result = Lowess::new()
         .fraction(1.0)
         .iterations(0)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -851,7 +815,6 @@ fn test_batch_delta_zero_vs_auto() {
     let result_no_delta = Lowess::new()
         .fraction(0.3)
         .delta(0.0)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -860,7 +823,6 @@ fn test_batch_delta_zero_vs_auto() {
     // Test with auto delta (should use optimization)
     let result_auto_delta = Lowess::new()
         .fraction(0.3)
-        .adapter(Batch)
         // delta not set, will auto-compute
         .build()
         .unwrap()
@@ -890,7 +852,6 @@ fn test_batch_extreme_outliers() {
         .fraction(0.5)
         .iterations(3) // Use robustness to handle outliers
         .return_robustness_weights()
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -927,7 +888,6 @@ fn test_batch_custom_weights_zero_weight_reduces_influence() {
     let result_no_weights = Lowess::new()
         .fraction(0.5)
         .iterations(0)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -940,7 +900,6 @@ fn test_batch_custom_weights_zero_weight_reduces_influence() {
         .fraction(0.5)
         .iterations(0)
         .custom_weights(weights)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -967,7 +926,6 @@ fn test_batch_custom_weights_uniform_equals_no_weights() {
     let result_no_w = Lowess::new()
         .fraction(0.4)
         .iterations(2)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -977,7 +935,6 @@ fn test_batch_custom_weights_uniform_equals_no_weights() {
         .fraction(0.4)
         .iterations(2)
         .custom_weights(weights)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -1002,7 +959,6 @@ fn test_batch_custom_weights_high_weight_pulls_fit() {
         .fraction(0.6)
         .iterations(0)
         .custom_weights(weights)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -1011,7 +967,6 @@ fn test_batch_custom_weights_high_weight_pulls_fit() {
     let result_equal = Lowess::new()
         .fraction(0.6)
         .iterations(0)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -1036,7 +991,6 @@ fn test_batch_custom_weights_with_robustness() {
         .fraction(0.4)
         .iterations(3)
         .custom_weights(weights)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -1058,7 +1012,6 @@ fn test_batch_custom_weights_wrong_length_rejected() {
     let result = Lowess::new()
         .fraction(0.5)
         .custom_weights(weights)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y);
@@ -1078,7 +1031,6 @@ fn test_batch_custom_weights_duplicate_detected() {
     let result = Lowess::new()
         .custom_weights(vec![1.0, 1.0, 1.0])
         .custom_weights(vec![2.0, 2.0, 2.0])
-        .adapter(Batch)
         .build();
 
     assert!(

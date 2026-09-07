@@ -18,6 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added a Rayon-parallel `custom_predict_pass` for `LowessResult::predict()`, wired into the Batch adapter's `fit()` alongside the existing parallel smooth/CV/interval passes; computes the same SE/derivative/extrapolation options in parallel.
 
+### Fixed
+
+**lowess:**
+
+- Cleaned up `lowess::prelude` of accidentally-leaked internals: removed `LowessBuilder` and `Adapter::{Batch, Online, Streaming}` (use the `Lowess`/`StreamingLowess`/`OnlineLowess` type aliases directly - each already builds without needing `.adapter(...)`).
+
 ## 4.0.0
 
 ### Added

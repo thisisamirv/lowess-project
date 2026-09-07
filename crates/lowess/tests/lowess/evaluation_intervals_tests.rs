@@ -342,7 +342,6 @@ fn test_interval_edge_cases() {
     let lowess = Lowess::<f64>::new()
         .fraction(1.0)
         .confidence_intervals(0.95)
-        .adapter(Batch)
         .build()
         .unwrap();
 

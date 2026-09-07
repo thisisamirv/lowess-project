@@ -36,7 +36,6 @@ pub use crate::adapters::streaming::MergeStrategy;
 pub use crate::algorithms::regression::ZeroWeightFallback;
 pub use crate::algorithms::robustness::RobustnessMethod;
 pub use crate::engine::output::LowessResult;
-pub use crate::engine::predict::{ExtrapolationPolicy, PredictOptions, PredictOutput};
 pub use crate::engine::validator::MissingPolicy;
 
 pub use crate::math::boundary::BoundaryPolicy;
@@ -103,12 +102,6 @@ pub struct OnlineMode;
 pub type Lowess<T = f64> = LowessBuilder<T, BatchMode>;
 pub type StreamingLowess<T = f64> = LowessBuilder<T, StreamingMode>;
 pub type OnlineLowess<T = f64> = LowessBuilder<T, OnlineMode>;
-
-// Marker types for selecting execution adapters.
-#[allow(non_snake_case)]
-pub mod Adapter {
-    pub use super::{Batch, Online, Streaming};
-}
 
 // Fluent builder for configuring LOWESS parameters and execution modes.
 #[derive(Debug, Clone)]

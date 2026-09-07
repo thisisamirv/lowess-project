@@ -1,6 +1,6 @@
 #![cfg(feature = "dev")]
 
-use lowess::internals::api::{Adapter, BoundaryPolicy, Lowess};
+use lowess::internals::api::{BoundaryPolicy, Lowess};
 use lowess::internals::math::boundary::apply_boundary_policy;
 
 #[test]
@@ -19,7 +19,6 @@ fn test_boundary_policy_comparison() {
     let res_extend = base_builder
         .clone()
         .boundary_policy("extend")
-        .adapter(Adapter::Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -29,7 +28,6 @@ fn test_boundary_policy_comparison() {
     let res_reflect = base_builder
         .clone()
         .boundary_policy("reflect")
-        .adapter(Adapter::Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -39,7 +37,6 @@ fn test_boundary_policy_comparison() {
     let res_zero = base_builder
         .clone()
         .boundary_policy("zero")
-        .adapter(Adapter::Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -69,7 +66,6 @@ fn test_boundary_policy_zero_effect() {
         .iterations(0)
         .weight_function("uniform")
         .boundary_policy("zero")
-        .adapter(Adapter::Batch)
         .build()
         .unwrap()
         .fit(&x, &y)

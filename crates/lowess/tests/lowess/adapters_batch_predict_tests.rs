@@ -1,6 +1,7 @@
 #![cfg(feature = "dev")]
 //! Tests for Batch out-of-sample prediction (`.retain_model()` + `LowessResult::predict()`).
 
+use lowess::internals::engine::predict::{ExtrapolationPolicy, PredictOptions};
 use lowess::prelude::*;
 
 /// predict() must error when `.retain_model(true)` was not set before `fit()`.
@@ -11,7 +12,6 @@ fn test_predict_unavailable_without_retain_model() {
 
     let result = Lowess::new()
         .fraction(0.5)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -34,7 +34,6 @@ fn test_predict_matches_fit_at_training_points() {
     let result = Lowess::new()
         .fraction(0.3)
         .retain_model(true)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -64,7 +63,6 @@ fn test_predict_interpolates_smooth_function() {
     let result = Lowess::new()
         .fraction(0.3)
         .retain_model(true)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -100,7 +98,6 @@ fn test_predict_out_of_range_clamp_does_not_panic() {
     let result = Lowess::new()
         .fraction(0.4)
         .retain_model(true)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -122,7 +119,6 @@ fn test_predict_out_of_range_error_policy() {
     let result = Lowess::new()
         .fraction(0.4)
         .retain_model(true)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -155,7 +151,6 @@ fn test_predict_out_of_range_linear_policy() {
         .fraction(0.3)
         .boundary_policy("noboundary")
         .retain_model(true)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -194,7 +189,6 @@ fn test_predict_return_derivative() {
     let result = Lowess::new()
         .fraction(0.3)
         .retain_model(true)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -233,7 +227,6 @@ fn test_predict_se_and_intervals() {
     let result = Lowess::new()
         .fraction(0.3)
         .retain_model(true)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
