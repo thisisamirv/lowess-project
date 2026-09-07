@@ -24,6 +24,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Cleaned up `lowess::prelude` of accidentally-leaked internals: removed `LowessBuilder` and `Adapter::{Batch, Online, Streaming}` (use the `Lowess`/`StreamingLowess`/`OnlineLowess` type aliases directly - each already builds without needing `.adapter(...)`).
 
+### Changed
+
+**lowess:**
+
+- Flattened the `tests/lowess/` directories into `tests/` directly: each test file is now its own independent integration test binary instead of a submodule of a shared `main.rs`. No test behavior changes.
+
+**fastLowess:**
+
+- Flattened the `tests/fastLowess/` directories into `tests/` directly: each test file is now its own independent integration test binary instead of a submodule of a shared `main.rs`. No test behavior changes.
+
 ## 4.0.0
 
 ### Added
