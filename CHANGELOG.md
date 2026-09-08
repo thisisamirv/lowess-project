@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Monorepo:**
 
 - `dev/bump_version.py` now also updates the Go module's `/vN` major-version-suffix path across `go.mod` files, doc snippets, the doc-snippet runner, and README/docs badges whenever a version bump crosses a major version boundary, so this doesn't regress on the next major release.
+- `dev/bump_version.py` now also updates the Maven dependency example version in `bindings/java/docs/modules/ROOT/pages/introduction/installation.adoc`, which was previously left stale after a version bump.
 - Fixed inconsistent naming of the Node.js binding as "JavaScript" in the shared project intro sentence (root `README.md`, every binding/crate `README.md`, their generated doc-site home pages, and `CITATION.cff`) — now says "Node.js" everywhere, matching the CI badge, installation table, and directory name (`bindings/nodejs`).
 
 **lowess:**

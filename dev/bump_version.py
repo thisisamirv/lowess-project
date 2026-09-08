@@ -330,6 +330,18 @@ def build_targets(
         )
     )
 
+    # docs/installation.adoc's Maven dependency example snippet.
+    targets.append(
+        (
+            "bindings/java/docs/modules/ROOT/pages/introduction/installation.adoc",
+            re.compile(
+                r"(<artifactId>fastlowess</artifactId>\s*\n\s*)<version>\d+\.\d+\.\d+</version>"
+            ),
+            rf"\g<1><version>{new_version}</version>",
+            1,
+        )
+    )
+
     targets.append(
         (
             "bindings/r/DESCRIPTION",
