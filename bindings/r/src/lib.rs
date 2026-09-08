@@ -8,6 +8,8 @@
 #![allow(non_snake_case)]
 
 use extendr_api::prelude::*;
+use std::cell::RefCell;
+use std::sync::Arc;
 
 // Provide the Result alias that was removed from extendr_api::prelude in 0.9.0
 type Result<T> = std::result::Result<T, extendr_api::Error>;
@@ -52,6 +54,8 @@ fn require_non_negative_usize(name: &str, value: i32) -> Result<usize> {
 #[extendr]
 pub struct RLowess {
     builder: LowessBuilder<f64>,
+    // Set by `fit()` when `retain_model` was requested, enabling `predict()`.
+    predict_state: RefCell<Option<Arc<shared_parse::PredictState<f64>>>>,
 }
 
 #[extendr]
@@ -82,6 +86,7 @@ impl RLowess {
         return_sorted: bool,
         backend: &str,
         missing: &str,
+        retain_model: bool,
     ) -> Result<Self> {
         let fractions = match cv_fractions {
             NotNull(v) => Some(v),
@@ -132,11 +137,15 @@ impl RLowess {
                 cv_seed: seed,
                 backend: Some(backend),
                 missing: Some(missing),
+                retain_model: Some(retain_model),
                 ..Default::default()
             },
         ))?;
 
-        Ok(Self { builder })
+        Ok(Self {
+            builder,
+            predict_state: RefCell::new(None),
+        })
     }
 
     /// Fit the model to data
@@ -147,7 +156,78 @@ impl RLowess {
         };
         let model = map_runtime(shared_parse::build_batch(self.builder.clone(), cw))?;
         let result = map_runtime(model.fit(x, y))?;
+        *self.predict_state.borrow_mut() = result.fit_state.clone();
         lowess_result_to_list(result)
+    }
+
+    /// Evaluate the fitted model at out-of-sample query points not in the training set.
+    ///
+    /// Requires `retain_model = TRUE` to have been set on construction and `fit()` to
+    /// have been called first.
+    #[allow(clippy::too_many_arguments)]
+    fn predict(
+        &self,
+        new_x: &[f64],
+        return_se: bool,
+        confidence_level: Nullable<f64>,
+        prediction_level: Nullable<f64>,
+        return_derivative: bool,
+        extrapolation: &str,
+        max_extrapolation_distance: Nullable<f64>,
+        max_neighbor_distance: Nullable<f64>,
+    ) -> Result<List> {
+        let state_ref = self.predict_state.borrow();
+        let Some(state) = state_ref.as_ref() else {
+            return Err(to_r_error(shared_parse::BindingError::invalid_arg(
+                "predict() requires retain_model = TRUE and a prior call to fit()".to_string(),
+            )));
+        };
+        let output = map_invalid_arg(shared_parse::run_predict_state(
+            state,
+            new_x,
+            shared_parse::PredictOptionSet {
+                return_se,
+                confidence_level: match confidence_level {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
+                prediction_level: match prediction_level {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
+                return_derivative,
+                extrapolation: Some(extrapolation),
+                max_extrapolation_distance: match max_extrapolation_distance {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
+                max_neighbor_distance: match max_neighbor_distance {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
+            },
+        ))?;
+
+        let mut list_items: Vec<(&str, Robj)> = vec![("y", output.y.into_robj())];
+        if let Some(se) = output.standard_errors {
+            list_items.push(("standard_errors", se.into_robj()));
+        }
+        if let Some(cl) = output.confidence_lower {
+            list_items.push(("confidence_lower", cl.into_robj()));
+        }
+        if let Some(cu) = output.confidence_upper {
+            list_items.push(("confidence_upper", cu.into_robj()));
+        }
+        if let Some(pl) = output.prediction_lower {
+            list_items.push(("prediction_lower", pl.into_robj()));
+        }
+        if let Some(pu) = output.prediction_upper {
+            list_items.push(("prediction_upper", pu.into_robj()));
+        }
+        if let Some(d) = output.derivative {
+            list_items.push(("derivative", d.into_robj()));
+        }
+        Ok(List::from_pairs(list_items))
     }
 }
 

@@ -117,6 +117,54 @@ class LowessResult:
     def cv_scores(self) -> NDArray[np.float64] | None:
         """CV scores for tested fractions."""
 
+    def predict(
+        self,
+        new_x: ArrayLike,
+        *,
+        return_se: bool = False,
+        confidence_level: float | None = None,
+        prediction_level: float | None = None,
+        return_derivative: bool = False,
+        extrapolation: str = "clamp",
+        max_extrapolation_distance: float | None = None,
+        max_neighbor_distance: float | None = None,
+    ) -> PredictOutput:
+        """Evaluate the fitted model at out-of-sample query points.
+
+        Requires ``retain_model=True`` to have been set on the builder before ``fit()``.
+        """
+
+class PredictOutput:
+    """Result from `LowessResult.predict()`."""
+
+    @property
+    def y(self) -> NDArray[np.float64]:
+        """Predicted y values, one per query point."""
+
+    @property
+    def standard_errors(self) -> NDArray[np.float64] | None:
+        """Standard errors (if requested)."""
+
+    @property
+    def confidence_lower(self) -> NDArray[np.float64] | None:
+        """Lower confidence interval bounds (if requested)."""
+
+    @property
+    def confidence_upper(self) -> NDArray[np.float64] | None:
+        """Upper confidence interval bounds (if requested)."""
+
+    @property
+    def prediction_lower(self) -> NDArray[np.float64] | None:
+        """Lower prediction interval bounds (if requested)."""
+
+    @property
+    def prediction_upper(self) -> NDArray[np.float64] | None:
+        """Upper prediction interval bounds (if requested)."""
+
+    @property
+    def derivative(self) -> NDArray[np.float64] | None:
+        """Local fit's derivative (slope) at each query point (if requested)."""
+
 class Lowess:
     """Batch LOWESS model — configure once, fit many times."""
 
@@ -146,6 +194,7 @@ class Lowess:
         return_sorted: bool = False,
         backend: str = "cpu",
         missing: str = "error",
+        retain_model: bool = False,
     ) -> Self: ...
     def __init__(
         self,
@@ -173,6 +222,7 @@ class Lowess:
         return_sorted: bool = False,
         backend: str = "cpu",
         missing: str = "error",
+        retain_model: bool = False,
     ) -> None: ...
     def fit(
         self, x: ArrayLike, y: ArrayLike, custom_weights: ArrayLike | None = None

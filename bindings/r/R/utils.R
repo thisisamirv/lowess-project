@@ -165,6 +165,7 @@ param_types <- list(
     return_sorted = "logical",
     parallel = "logical",
     backend = "character",
+    retain_model = "logical",
     delta = "nullable",
     overlap = "nullable",
     confidence_intervals = "nullable",
@@ -226,7 +227,8 @@ lowess_params <- c(
     "return_se",
     "return_sorted",
     "backend",
-    "missing"
+    "missing",
+    "retain_model"
 )
 
 online_params <- c(

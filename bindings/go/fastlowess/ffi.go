@@ -145,6 +145,11 @@ type Result struct {
 
 	// Diagnostics is nil unless ReturnDiagnostics was requested.
 	Diagnostics *Diagnostics
+
+	// PredictModel is non-nil only if Options.RetainModel was set to true. Enables
+	// out-of-sample Predict() calls against this fitted model. Call Close (or let the
+	// garbage collector finalize it) when no longer needed.
+	PredictModel *PredictModel
 }
 
 func resultFromC(cres C.fastlowess_GoLowessResult) (Result, error) {
@@ -170,6 +175,7 @@ func resultFromC(cres C.fastlowess_GoLowessResult) (Result, error) {
 		CVScores:          cDoubleSliceToGo(cres.cv_scores, cvN),
 		FractionUsed:      float64(cres.fraction_used),
 		IterationsUsed:    int(cres.iterations_used),
+		PredictModel:      predictModelFromC(cres.predict_handle),
 	}
 
 	if !math.IsNaN(float64(cres.rmse)) {
@@ -185,6 +191,129 @@ func resultFromC(cres C.fastlowess_GoLowessResult) (Result, error) {
 	}
 
 	C.go_lowess_free_result(&cres)
+	return r, nil
+}
+
+// PredictModel is the retained fitted-model state enabling out-of-sample Predict()
+// calls, returned via Result.PredictModel when Options.RetainModel was set to true.
+//
+// PredictModel is not safe for concurrent use; each goroutine should use its own
+// instance, or callers must serialize access.
+type PredictModel struct {
+	ptr *C.fastlowess_GoPredictHandle
+}
+
+func predictModelFromC(handle *C.fastlowess_GoPredictHandle) *PredictModel {
+	if handle == nil {
+		return nil
+	}
+	pm := &PredictModel{ptr: handle}
+	runtime.SetFinalizer(pm, finalizePredictModel)
+	return pm
+}
+
+func finalizePredictModel(pm *PredictModel) {
+	_ = pm.Close()
+}
+
+// Close releases the native resources held by this model. Safe to call multiple
+// times. Relying on the garbage collector's finalizer instead delays releasing
+// native memory - call Close explicitly (e.g. via defer) when possible.
+func (pm *PredictModel) Close() error {
+	if pm != nil && pm.ptr != nil {
+		C.go_predict_handle_free(pm.ptr)
+		pm.ptr = nil
+		runtime.SetFinalizer(pm, nil)
+	}
+	return nil
+}
+
+// PredictOptions configures a PredictModel.Predict call.
+type PredictOptions struct {
+	// ReturnSE requests standard errors in the output.
+	ReturnSE bool
+	// ConfidenceLevel is the confidence interval coverage level (e.g. 0.95). Nil disables it.
+	ConfidenceLevel *float64
+	// PredictionLevel is the prediction interval coverage level (e.g. 0.95). Nil disables it.
+	PredictionLevel *float64
+	// ReturnDerivative requests the local fit's derivative (slope) at each query point.
+	ReturnDerivative bool
+	// Extrapolation is the behavior for query points outside the training range:
+	// "clamp" (default), "linear", or "error".
+	Extrapolation string
+	// MaxExtrapolationDistance caps how far "linear" extrapolation may extend beyond
+	// the training boundary before Predict errors instead of returning an unbounded
+	// value. Nil disables the cap.
+	MaxExtrapolationDistance *float64
+	// MaxNeighborDistance caps the distance to the farthest point in a query's
+	// local window before Predict errors, catching in-range-but-sparse query
+	// points. Nil disables the cap.
+	MaxNeighborDistance *float64
+}
+
+// PredictResult is the outcome of PredictModel.Predict.
+type PredictResult struct {
+	// Y is the predicted value for each query point.
+	Y []float64
+	// StandardErrors is nil unless ReturnSE/ConfidenceLevel/PredictionLevel was set.
+	StandardErrors []float64
+	// ConfidenceLower/ConfidenceUpper are nil unless ConfidenceLevel was set.
+	ConfidenceLower []float64
+	ConfidenceUpper []float64
+	// PredictionLower/PredictionUpper are nil unless PredictionLevel was set.
+	PredictionLower []float64
+	PredictionUpper []float64
+	// Derivative is nil unless ReturnDerivative was requested (one value per query point).
+	Derivative []float64
+}
+
+// Predict evaluates the fitted model at out-of-sample query points not in the
+// training set.
+func (pm *PredictModel) Predict(newX []float64, opts PredictOptions) (PredictResult, error) {
+	if pm == nil || pm.ptr == nil {
+		return PredictResult{}, errors.New("fastlowess: Predict called on a nil/closed PredictModel (was RetainModel set?)")
+	}
+	if len(newX) == 0 {
+		return PredictResult{}, errors.New("fastlowess: newX must be non-empty")
+	}
+
+	extrap := cStringOrNil(opts.Extrapolation)
+	defer freeCString(extrap)
+
+	cl, clSet := optPtr(opts.ConfidenceLevel)
+	pl, plSet := optPtr(opts.PredictionLevel)
+	maxExtrap, maxExtrapSet := optPtr(opts.MaxExtrapolationDistance)
+	maxNeighbor, maxNeighborSet := optPtr(opts.MaxNeighborDistance)
+	newXPtr, newXLen := cDoubles(newX)
+
+	cres := C.go_predict(
+		pm.ptr,
+		newXPtr, newXLen,
+		boolToCInt(opts.ReturnSE),
+		optFloat(cl, clSet),
+		optFloat(pl, plSet),
+		boolToCInt(opts.ReturnDerivative),
+		extrap,
+		optFloat(maxExtrap, maxExtrapSet),
+		optFloat(maxNeighbor, maxNeighborSet),
+	)
+	if cres.error != nil {
+		msg := C.GoString(cres.error)
+		C.go_predict_free_result(&cres)
+		return PredictResult{}, errors.New(msg)
+	}
+
+	n := int(cres.n)
+	r := PredictResult{
+		Y:               cDoubleSliceToGo(cres.y, n),
+		StandardErrors:  cDoubleSliceToGo(cres.standard_errors, n),
+		ConfidenceLower: cDoubleSliceToGo(cres.confidence_lower, n),
+		ConfidenceUpper: cDoubleSliceToGo(cres.confidence_upper, n),
+		PredictionLower: cDoubleSliceToGo(cres.prediction_lower, n),
+		PredictionUpper: cDoubleSliceToGo(cres.prediction_upper, n),
+		Derivative:      cDoubleSliceToGo(cres.derivative, n),
+	}
+	C.go_predict_free_result(&cres)
 	return r, nil
 }
 

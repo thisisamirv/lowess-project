@@ -12,6 +12,7 @@ from ._core import (
     LowessResult,
     OnlineLowess,
     OnlineOutput,
+    PredictOutput,
     StreamingLowess,
 )
 from ._gpu_installer import gpu_available, install_gpu
@@ -23,6 +24,7 @@ __all__ = [
     "LowessResult",
     "OnlineLowess",
     "OnlineOutput",
+    "PredictOutput",
     "StreamingLowess",
     "__version__",
     "gpu_available",

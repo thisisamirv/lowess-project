@@ -21,6 +21,8 @@ import java.util.OptionalInt;
  * @param iterationsUsed the number of robustness iterations actually performed,
  * if applicable
  * @param diagnostics fit diagnostics, if requested
+ * @param predictModel retained fitted-model state enabling out-of-sample
+ * {@code predict()}, if {@code retainModel} was requested
  */
 public record Result(
         double[] x,
@@ -35,7 +37,8 @@ public record Result(
         Optional<double[]> cvScores,
         double fractionUsed,
         OptionalInt iterationsUsed,
-        Optional<Diagnostics> diagnostics) {
+        Optional<Diagnostics> diagnostics,
+        Optional<PredictModel> predictModel) {
 
     static Result fromNative(NativeResult r) {
         return new Result(
@@ -51,6 +54,7 @@ public record Result(
                 Optional.ofNullable(r.cvScores),
                 r.fractionUsed,
                 r.iterationsUsed < 0 ? OptionalInt.empty() : OptionalInt.of(r.iterationsUsed),
-                r.hasDiagnostics ? Optional.of(Diagnostics.fromNative(r)) : Optional.empty());
+                r.hasDiagnostics ? Optional.of(Diagnostics.fromNative(r)) : Optional.empty(),
+                r.predictHandle == 0 ? Optional.empty() : Optional.of(new PredictModel(r.predictHandle)));
     }
 }

@@ -26,6 +26,7 @@ final class NativeResult {
     final double effectiveDf;
     final double residualSd;
     final boolean hasDiagnostics;
+    final long predictHandle;
 
     // Constructed exclusively by the native layer (JNI bypasses normal access checks).
     @SuppressWarnings("unused") // called by JNI
@@ -49,7 +50,8 @@ final class NativeResult {
             double aicc,
             double effectiveDf,
             double residualSd,
-            boolean hasDiagnostics) {
+            boolean hasDiagnostics,
+            long predictHandle) {
         this.x = x;
         this.y = y;
         this.standardErrors = standardErrors;
@@ -70,5 +72,6 @@ final class NativeResult {
         this.effectiveDf = effectiveDf;
         this.residualSd = residualSd;
         this.hasDiagnostics = hasDiagnostics;
+        this.predictHandle = predictHandle;
     }
 }

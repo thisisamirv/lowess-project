@@ -138,13 +138,27 @@ final class NativeBridge {
             boolean returnSe,
             boolean returnSorted,
             String backend,
-            String missing);
+            String missing,
+            boolean retainModel);
 
     static native void lowessSetCvSeed(long handle, long seed);
 
     static native NativeResult lowessFit(long handle, double[] x, double[] y, double[] customWeights);
 
     static native void lowessFree(long handle);
+
+    static native NativePredictResult predict(
+            long handle,
+            double[] newX,
+            boolean returnSe,
+            double confidenceLevel,
+            double predictionLevel,
+            boolean returnDerivative,
+            String extrapolation,
+            double maxExtrapolationDistance,
+            double maxNeighborDistance);
+
+    static native void predictHandleFree(long handle);
 
     static native long streamingNew(
             double fraction,

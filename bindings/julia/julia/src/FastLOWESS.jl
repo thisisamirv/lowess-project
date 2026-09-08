@@ -25,8 +25,8 @@ println("Smoothed values: ", result.y)
 module FastLOWESS
 
 export Lowess, StreamingLowess, OnlineLowess
-export fit, process_chunk, finalize, add_point
-export LowessResult, OnlineOutput, Diagnostics
+export fit, process_chunk, finalize, add_point, predict
+export LowessResult, OnlineOutput, Diagnostics, PredictModel, PredictResult
 export gpu_available, install_gpu
 
 import Base: finalize
@@ -302,6 +302,133 @@ struct Diagnostics
 	residual_sd::Float64
 end
 
+# C FFI result struct for predict() (must match Rust definition).
+struct CJlPredictResult
+	y::Ptr{Cdouble}
+	n::Culong
+	standard_errors::Ptr{Cdouble}
+	confidence_lower::Ptr{Cdouble}
+	confidence_upper::Ptr{Cdouble}
+	prediction_lower::Ptr{Cdouble}
+	prediction_upper::Ptr{Cdouble}
+	derivative::Ptr{Cdouble}
+	error::Ptr{Cchar}
+end
+
+"""
+	PredictResult
+
+Result from `predict(model, new_x)`.
+
+# Fields
+- `y::Vector{Float64}`: Predicted y values, one per query point
+- `standard_errors::Union{Vector{Float64}, Nothing}`: Standard errors (if requested)
+- `confidence_lower::Union{Vector{Float64}, Nothing}`: Lower confidence bounds (if requested)
+- `confidence_upper::Union{Vector{Float64}, Nothing}`: Upper confidence bounds (if requested)
+- `prediction_lower::Union{Vector{Float64}, Nothing}`: Lower prediction bounds (if requested)
+- `prediction_upper::Union{Vector{Float64}, Nothing}`: Upper prediction bounds (if requested)
+- `derivative::Union{Vector{Float64}, Nothing}`: Local fit's derivative (slope) at each query point (if requested)
+"""
+struct PredictResult
+	y::Vector{Float64}
+	standard_errors::Union{Vector{Float64}, Nothing}
+	confidence_lower::Union{Vector{Float64}, Nothing}
+	confidence_upper::Union{Vector{Float64}, Nothing}
+	prediction_lower::Union{Vector{Float64}, Nothing}
+	prediction_upper::Union{Vector{Float64}, Nothing}
+	derivative::Union{Vector{Float64}, Nothing}
+end
+
+"""
+	PredictModel
+
+Retained fitted-model state enabling out-of-sample `predict()`, obtained via
+`LowessResult.predict_model` when `retain_model=true` was passed to `Lowess`.
+"""
+mutable struct PredictModel
+	handle::Ptr{Cvoid}
+
+	function PredictModel(handle::Ptr{Cvoid})
+		obj = new(handle)
+		finalizer(
+			x -> begin
+				if x.handle != C_NULL
+					@ccall current_library().jl_predict_handle_free(x.handle::Ptr{Cvoid})::Cvoid
+				end
+			end,
+			obj,
+		)
+		return obj
+	end
+end
+
+"""
+	predict(model::PredictModel, new_x::Vector{Float64}; kwargs...) -> PredictResult
+
+Evaluate the fitted model at out-of-sample query points not in the training set.
+
+# Keyword Arguments
+- `return_se::Bool = false`
+- `confidence_level::Union{Float64, Nothing} = nothing`
+- `prediction_level::Union{Float64, Nothing} = nothing`
+- `return_derivative::Bool = false`
+- `extrapolation::String = "clamp"`: one of "clamp", "linear", "error".
+- `max_extrapolation_distance::Union{Float64, Nothing} = nothing`
+- `max_neighbor_distance::Union{Float64, Nothing} = nothing`
+"""
+function predict(
+	model::PredictModel,
+	new_x::Vector{Float64};
+	return_se::Bool = false,
+	confidence_level::Union{Float64, Nothing} = nothing,
+	prediction_level::Union{Float64, Nothing} = nothing,
+	return_derivative::Bool = false,
+	extrapolation::String = "clamp",
+	max_extrapolation_distance::Union{Float64, Nothing} = nothing,
+	max_neighbor_distance::Union{Float64, Nothing} = nothing,
+)
+	if model.handle == C_NULL
+		error("fastlowess error: predict() called on an invalid PredictModel (was retain_model set?)")
+	end
+
+	c_result = @ccall current_library().jl_predict(
+		model.handle::Ptr{Cvoid},
+		pointer(new_x)::Ptr{Cdouble},
+		Culong(length(new_x))::Culong,
+		Cint(return_se)::Cint,
+		(confidence_level === nothing ? NaN : confidence_level)::Cdouble,
+		(prediction_level === nothing ? NaN : prediction_level)::Cdouble,
+		Cint(return_derivative)::Cint,
+		extrapolation::Cstring,
+		(max_extrapolation_distance === nothing ? NaN : max_extrapolation_distance)::Cdouble,
+		(max_neighbor_distance === nothing ? NaN : max_neighbor_distance)::Cdouble,
+	)::CJlPredictResult
+
+	if c_result.error != C_NULL
+		error_msg = unsafe_string(Ptr{UInt8}(c_result.error))
+		@ccall current_library().jl_predict_free_result(
+			Ref(c_result)::Ptr{CJlPredictResult},
+		)::Cvoid
+		error("fastlowess error: $error_msg")
+	end
+
+	n = Int(c_result.n)
+
+	result = PredictResult(
+		ptr_to_vector(c_result.y, n),
+		ptr_to_vector(c_result.standard_errors, n),
+		ptr_to_vector(c_result.confidence_lower, n),
+		ptr_to_vector(c_result.confidence_upper, n),
+		ptr_to_vector(c_result.prediction_lower, n),
+		ptr_to_vector(c_result.prediction_upper, n),
+		ptr_to_vector(c_result.derivative, n),
+	)
+
+	@ccall current_library().jl_predict_free_result(Ref(c_result)::Ptr{CJlPredictResult})::Cvoid
+
+	return result
+end
+
 """
 	LowessResult
 
@@ -321,6 +448,8 @@ Result from LOWESS smoothing.
 - `fraction_used::Float64`: Fraction used for smoothing
 - `iterations_used::Union{Int, Nothing}`: Number of iterations performed (`nothing` if not applicable)
 - `diagnostics::Union{Diagnostics, Nothing}`: Diagnostic metrics
+- `predict_model::Union{PredictModel, Nothing}`: Retained fitted-model state, non-`nothing`
+  only if `retain_model=true` was passed to `Lowess`. Enables out-of-sample `predict()`.
 """
 struct LowessResult
 	x::Vector{Float64}
@@ -336,6 +465,7 @@ struct LowessResult
 	fraction_used::Float64
 	iterations_used::Union{Int, Nothing}
 	diagnostics::Union{Diagnostics, Nothing}
+	predict_model::Union{PredictModel, Nothing}
 end
 
 """
@@ -392,6 +522,7 @@ struct CJlLowessResult
 	aicc::Cdouble
 	effective_df::Cdouble
 	residual_sd::Cdouble
+	predict_handle::Ptr{Cvoid}
 	error::Ptr{Cchar}
 end
 
@@ -453,6 +584,12 @@ function convert_result(c_result::CJlLowessResult)
 		nothing
 	end
 
+	predict_model = if c_result.predict_handle != C_NULL
+		PredictModel(c_result.predict_handle)
+	else
+		nothing
+	end
+
 	result = LowessResult(
 		x,
 		y,
@@ -467,6 +604,7 @@ function convert_result(c_result::CJlLowessResult)
 		c_result.fraction_used,
 		c_result.iterations_used == -1 ? nothing : Int(c_result.iterations_used),
 		diagnostics,
+		predict_model,
 	)
 
 	# Free the C result
@@ -551,6 +689,8 @@ Stateful batch LOWESS smoother.
   capable GPU driver.
 - `missing::String = "error"`: Policy for non-finite (NaN/Inf) values in input
   data. See Notes for a description of each option.
+- `retain_model::Bool = false`: Retain the fitted model's training data, enabling
+  `LowessResult.predict_model` for out-of-sample prediction.
 
 # Notes
 `fraction` is the most important parameter: it controls the size of the local
@@ -622,6 +762,7 @@ mutable struct Lowess
 		return_sorted::Bool = false,
 		backend::String = "cpu",
 		missing::String = "error",
+		retain_model::Bool = false,
 	)
 		cv_ptr = isempty(cv_fractions) ? Ptr{Cdouble}(C_NULL) : pointer(cv_fractions)
 		cv_len = length(cv_fractions)
@@ -651,6 +792,7 @@ mutable struct Lowess
 			Cint(return_sorted)::Cint,
 			backend::Cstring,
 			missing::Cstring,
+			Cint(retain_model)::Cint,
 		)::Ptr{Cvoid}
 
 		if handle == C_NULL

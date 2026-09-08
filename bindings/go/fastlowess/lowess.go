@@ -89,6 +89,10 @@ type Options struct {
 	// "error" (default) returns an error, "drop" silently removes affected
 	// observations before fitting.
 	Missing string
+
+	// RetainModel retains the fitted model's training data, enabling
+	// Result.PredictModel for out-of-sample prediction. Batch model only.
+	RetainModel bool
 }
 
 // DefaultOptions returns the library's recommended defaults. Start from this
@@ -175,6 +179,7 @@ func NewLowess(opts Options) (*Lowess, error) {
 			boolToCInt(opts.ReturnSorted),
 			backend,
 			missing,
+			boolToCInt(opts.RetainModel),
 		)
 		if ptr == nil {
 			errMsg = lastError()

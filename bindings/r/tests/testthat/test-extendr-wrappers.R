@@ -28,7 +28,8 @@ test_that("RLowess generated accessors dispatch fit methods", {
         return_se = FALSE,
         return_sorted = FALSE,
         backend = "cpu",
-        missing = "error"
+        missing = "error",
+        retain_model = FALSE
     )
 
     x <- as.double(1:10)

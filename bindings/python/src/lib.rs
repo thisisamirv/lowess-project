@@ -87,6 +87,79 @@ pub struct PyLowessResult {
     inner: LowessResult<f64>,
 }
 
+/// Result from `LowessResult.predict()`.
+#[pyclass(name = "PredictOutput")]
+pub struct PyPredictOutput {
+    inner: binding_support::PredictOutput<f64>,
+}
+
+#[pymethods]
+impl PyPredictOutput {
+    /// Predicted y values, one per query point
+    #[getter]
+    fn y<'py>(&self, py: Python<'py>) -> Bound<'py, PyArray1<f64>> {
+        PyArray1::from_vec(py, self.inner.y.clone())
+    }
+
+    /// Standard errors (if requested)
+    #[getter]
+    fn standard_errors<'py>(&self, py: Python<'py>) -> Option<Bound<'py, PyArray1<f64>>> {
+        self.inner
+            .standard_errors
+            .as_ref()
+            .map(|v| PyArray1::from_vec(py, v.clone()))
+    }
+
+    /// Lower confidence interval bounds (if requested)
+    #[getter]
+    fn confidence_lower<'py>(&self, py: Python<'py>) -> Option<Bound<'py, PyArray1<f64>>> {
+        self.inner
+            .confidence_lower
+            .as_ref()
+            .map(|v| PyArray1::from_vec(py, v.clone()))
+    }
+
+    /// Upper confidence interval bounds (if requested)
+    #[getter]
+    fn confidence_upper<'py>(&self, py: Python<'py>) -> Option<Bound<'py, PyArray1<f64>>> {
+        self.inner
+            .confidence_upper
+            .as_ref()
+            .map(|v| PyArray1::from_vec(py, v.clone()))
+    }
+
+    /// Lower prediction interval bounds (if requested)
+    #[getter]
+    fn prediction_lower<'py>(&self, py: Python<'py>) -> Option<Bound<'py, PyArray1<f64>>> {
+        self.inner
+            .prediction_lower
+            .as_ref()
+            .map(|v| PyArray1::from_vec(py, v.clone()))
+    }
+
+    /// Upper prediction interval bounds (if requested)
+    #[getter]
+    fn prediction_upper<'py>(&self, py: Python<'py>) -> Option<Bound<'py, PyArray1<f64>>> {
+        self.inner
+            .prediction_upper
+            .as_ref()
+            .map(|v| PyArray1::from_vec(py, v.clone()))
+    }
+
+    /// Local fit's derivative (slope) at each query point (if requested)
+    #[getter]
+    fn derivative<'py>(&self, py: Python<'py>) -> Option<Bound<'py, PyArray1<f64>>> {
+        self.inner
+            .derivative
+            .as_ref()
+            .map(|v| PyArray1::from_vec(py, v.clone()))
+    }
+
+    fn __repr__(&self) -> String {
+        format!("PredictOutput(n={})", self.inner.y.len())
+    }
+}
+
 #[pymethods]
 impl PyLowessResult {
     /// x values, in the same order as the input
@@ -199,6 +272,71 @@ impl PyLowessResult {
             .map(|v| PyArray1::from_vec(py, v.clone()))
     }
 
+    /// Evaluate the fitted model at out-of-sample query points not in the training set.
+    ///
+    /// Requires `retain_model=True` to have been set on the builder before `fit()`.
+    ///
+    /// Parameters
+    /// ----------
+    /// new_x : array_like
+    ///     Query x-values.
+    /// return_se : bool, optional
+    /// confidence_level : float, optional
+    /// prediction_level : float, optional
+    /// return_derivative : bool, optional
+    /// extrapolation : str, optional
+    ///     One of "clamp" (default), "linear", "error".
+    /// max_extrapolation_distance : float, optional
+    /// max_neighbor_distance : float, optional
+    ///
+    /// Returns
+    /// -------
+    /// PredictOutput
+    #[pyo3(signature = (
+        new_x,
+        *,
+        return_se=false,
+        confidence_level=None,
+        prediction_level=None,
+        return_derivative=false,
+        extrapolation="clamp",
+        max_extrapolation_distance=None,
+        max_neighbor_distance=None,
+    ))]
+    #[allow(clippy::too_many_arguments)]
+    fn predict<'py>(
+        &self,
+        py: Python<'py>,
+        new_x: PyReadonlyArray1<'py, f64>,
+        return_se: bool,
+        confidence_level: Option<f64>,
+        prediction_level: Option<f64>,
+        return_derivative: bool,
+        extrapolation: &str,
+        max_extrapolation_distance: Option<f64>,
+        max_neighbor_distance: Option<f64>,
+    ) -> PyResult<PyPredictOutput> {
+        let new_x_vec = new_x.as_slice().map_err(to_py_invalid_arg_error)?.to_vec();
+        let output = py
+            .detach(move || {
+                binding_support::run_predict(
+                    &self.inner,
+                    &new_x_vec,
+                    binding_support::PredictOptionSet {
+                        return_se,
+                        confidence_level,
+                        prediction_level,
+                        return_derivative,
+                        extrapolation: Some(extrapolation),
+                        max_extrapolation_distance,
+                        max_neighbor_distance,
+                    },
+                )
+            })
+            .map_err(to_py_error)?;
+        Ok(PyPredictOutput { inner: output })
+    }
+
     fn __repr__(&self) -> String {
         format!(
             "LowessResult(n={}, fraction_used={:.4})",
@@ -295,6 +433,7 @@ impl PyStreamingLowess {
                 cv_k: None,
                 cv_seed: None,
                 backend: None,
+                retain_model: None,
             },
         ))?;
 
@@ -451,6 +590,7 @@ impl PyOnlineLowess {
                 cv_k: None,
                 cv_seed: None,
                 backend: None,
+                retain_model: None,
             },
         ))?;
 
@@ -523,7 +663,8 @@ impl PyLowess {
         return_se=false,
         return_sorted=false,
         backend="cpu",
-        missing="error"
+        missing="error",
+        retain_model=false
     ))]
     #[allow(clippy::too_many_arguments)]
     fn new(
@@ -550,6 +691,7 @@ impl PyLowess {
         return_sorted: bool,
         backend: &str,
         missing: &str,
+        retain_model: bool,
     ) -> PyResult<Self> {
         let builder = map_invalid_arg(binding_support::apply_builder_options(
             LowessBuilder::<f64>::new(),
@@ -583,6 +725,7 @@ impl PyLowess {
                 cv_method: Some(cv_method),
                 cv_k: Some(cv_k),
                 cv_seed,
+                retain_model: Some(retain_model),
             },
         ))?;
 
@@ -666,6 +809,7 @@ fn gpu_enabled() -> bool {
 #[pymodule]
 fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyLowessResult>()?;
+    m.add_class::<PyPredictOutput>()?;
     m.add_class::<PyDiagnostics>()?;
     m.add_class::<PyOnlineOutput>()?;
     m.add_class::<PyLowess>()?;

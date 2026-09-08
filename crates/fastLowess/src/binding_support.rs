@@ -48,6 +48,9 @@ impl_into_enum_for!(UpdateMode);
 impl_into_enum_for!(WeightFunction);
 impl_into_enum_for!(ZeroWeightFallback);
 use lowess::internals::adapters::online::OnlineOutput;
+pub use lowess::internals::engine::predict::{
+    ExtrapolationPolicy, PredictOptions, PredictOutput, PredictState, predict_batch,
+};
 use lowess::internals::evaluation::intervals::IntervalMethod;
 use lowess::internals::primitives::backend::Backend;
 use num_traits::Float;
@@ -67,6 +70,7 @@ use std::mem::forget;
 use std::os::raw::c_char;
 use std::ptr::{null_mut, slice_from_raw_parts_mut};
 use std::slice::from_raw_parts;
+use std::sync::Arc;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BindingErrorCategory {
@@ -120,6 +124,70 @@ pub fn map_lowess_result<T>(result: Result<T, LowessError>) -> Result<T, Binding
         LowessError::RuntimeError(_) => BindingError::runtime(err.to_string()),
         _ => BindingError::invalid_arg(err.to_string()),
     })
+}
+
+// Primitive-friendly, per-call options for `LowessResult::predict()`, mirroring
+// `BuilderOptionSet`'s role for the builder: every binding constructs one of these
+// from its own native option type and passes it to `run_predict`, instead of each
+// binding re-implementing extrapolation-policy string parsing/error mapping itself.
+#[derive(Default)]
+pub struct PredictOptionSet<'a> {
+    pub return_se: bool,
+    pub confidence_level: Option<f64>,
+    pub prediction_level: Option<f64>,
+    pub return_derivative: bool,
+    pub extrapolation: Option<&'a str>,
+    pub max_extrapolation_distance: Option<f64>,
+    pub max_neighbor_distance: Option<f64>,
+}
+
+pub fn parse_extrapolation_policy(name: &str) -> Result<ExtrapolationPolicy, String> {
+    alias::parse_extrapolation_policy(name).map_err(|e| e.to_string())
+}
+
+pub fn extrapolation_policy_str(value: ExtrapolationPolicy) -> &'static str {
+    alias::extrapolation_policy_str(value)
+}
+
+pub fn build_predict_options(
+    options: PredictOptionSet<'_>,
+) -> Result<PredictOptions<f64>, BindingError> {
+    let extrapolation = match options.extrapolation {
+        Some(s) => map_invalid_arg(parse_extrapolation_policy(s))?,
+        None => ExtrapolationPolicy::default(),
+    };
+    Ok(PredictOptions {
+        return_se: options.return_se,
+        confidence_level: options.confidence_level,
+        prediction_level: options.prediction_level,
+        return_derivative: options.return_derivative,
+        extrapolation,
+        max_extrapolation_distance: options.max_extrapolation_distance,
+        max_neighbor_distance: options.max_neighbor_distance,
+    })
+}
+
+// Evaluate a fitted Batch model at out-of-sample query points. Requires
+// `.retain_model(true)` to have been set on the builder before `fit()`.
+pub fn run_predict(
+    result: &LowessResult<f64>,
+    new_x: &[f64],
+    options: PredictOptionSet<'_>,
+) -> Result<PredictOutput<f64>, BindingError> {
+    let opts = build_predict_options(options)?;
+    map_lowess_result(result.predict(new_x, opts))
+}
+
+// Same as `run_predict`, for bindings (C++, Go, Julia, Java) that retain only the
+// lightweight `Arc<PredictState<f64>>` extracted from `LowessResult` at fit time,
+// instead of the full `LowessResult`.
+pub fn run_predict_state(
+    state: &PredictState<f64>,
+    new_x: &[f64],
+    options: PredictOptionSet<'_>,
+) -> Result<PredictOutput<f64>, BindingError> {
+    let opts = build_predict_options(options)?;
+    map_lowess_result(predict_batch(state, new_x, &opts))
 }
 
 pub const PANIC_FALLBACK_MESSAGE: &str = "Panic in Rust library";
@@ -345,6 +413,10 @@ pub struct FfiLowessResult {
     pub residual_sd: f64,
     pub cv_scores: *mut f64,
     pub cv_scores_len: usize,
+    // Retained model state, if `.retain_model(true)` was set on the builder. Bindings
+    // that support out-of-sample `predict()` (C++, Go, Julia, Java) hold on to this
+    // via an opaque handle instead of exposing it directly through the C ABI.
+    pub predict_state: Option<Arc<PredictState<f64>>>,
 }
 
 // Extract all fields from a LowessResult into an FfiLowessResult. All optional
@@ -376,6 +448,7 @@ pub fn extract_ffi_lowess_result(result: LowessResult<f64>) -> FfiLowessResult {
         residual_sd,
         cv_scores: opt_vec_to_raw_ptr(result.cv_scores),
         cv_scores_len,
+        predict_state: result.fit_state,
     }
 }
 
@@ -452,6 +525,8 @@ pub struct BuilderOptionSet<'a> {
     pub cv_method: Option<&'a str>,
     pub cv_k: Option<usize>,
     pub cv_seed: Option<u64>,
+    // Retain the fitted model's state for later out-of-sample `predict()` calls (Batch only).
+    pub retain_model: Option<bool>,
 }
 
 // Pre-parsed typed form of BuilderOptionSet.
@@ -494,6 +569,9 @@ pub struct TypedBuilderOptionSet {
     // Per-observation case weights. When provided, multiplies each local kernel weight:
     // `w_ij = custom_weights[j] * K(d_ij / h) * robustness_j`.
     pub custom_weights: Option<Vec<f64>>,
+
+    // Retain the fitted model's state for later out-of-sample `predict()` calls (Batch only).
+    pub retain_model: Option<bool>,
 }
 
 // ============================================================================
@@ -687,6 +765,7 @@ pub fn apply_builder_options(
         cv_seed: options.cv_seed,
         // custom_weights cannot be provided via string-based BuilderOptionSet
         custom_weights: None,
+        retain_model: options.retain_model,
     };
 
     apply_typed_builder_options(builder, typed)
@@ -776,6 +855,9 @@ pub fn apply_typed_builder_options(
     }
     if let Some(um) = options.update_mode {
         builder = builder.update_mode(um);
+    }
+    if let Some(rm) = options.retain_model {
+        builder = builder.retain_model(rm);
     }
 
     builder = apply_cross_validation(

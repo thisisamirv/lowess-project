@@ -26,7 +26,7 @@ use crate::adapters::defaults::default_overlap;
 use crate::adapters::online::OnlineLowessBuilder;
 use crate::adapters::streaming::StreamingLowessBuilder;
 use crate::engine::executor::{CVPassFn, IntervalPassFn, SmoothPassFn};
-use crate::engine::predict::PredictPassFn;
+use crate::engine::predict::{ExtrapolationPolicy, PredictPassFn};
 use crate::evaluation::cv::CVKind;
 use crate::evaluation::intervals::IntervalMethod;
 use crate::primitives::backend::Backend;
@@ -1130,6 +1130,25 @@ impl FromStr for UpdateMode {
     }
 }
 
+// ExtrapolationPolicy
+
+impl FromStr for ExtrapolationPolicy {
+    type Err = LowessError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "clamp" => Ok(ExtrapolationPolicy::Clamp),
+            "linear" => Ok(ExtrapolationPolicy::Linear),
+            "error" => Ok(ExtrapolationPolicy::Error),
+            _ => Err(LowessError::InvalidOption {
+                option: "extrapolation",
+                value: s.to_string(),
+                valid: "clamp, linear, error",
+            }),
+        }
+    }
+}
+
 // Binding helpers (only with the `dev` feature)
 //
 // Parse and canonical-name wrappers used by the binding layer.  Only compiled
@@ -1139,8 +1158,8 @@ impl FromStr for UpdateMode {
 #[cfg(feature = "dev")]
 pub mod helpers {
     use super::{
-        BoundaryPolicy, LowessError, MergeStrategy, MissingPolicy, RobustnessMethod, ScalingMethod,
-        UpdateMode, WeightFunction, ZeroWeightFallback,
+        BoundaryPolicy, ExtrapolationPolicy, LowessError, MergeStrategy, MissingPolicy,
+        RobustnessMethod, ScalingMethod, UpdateMode, WeightFunction, ZeroWeightFallback,
     };
 
     // Parse helpers
@@ -1174,6 +1193,10 @@ pub mod helpers {
     }
 
     pub fn parse_missing_policy(s: &str) -> Result<MissingPolicy, LowessError> {
+        s.parse()
+    }
+
+    pub fn parse_extrapolation_policy(s: &str) -> Result<ExtrapolationPolicy, LowessError> {
         s.parse()
     }
 
@@ -1246,6 +1269,14 @@ pub mod helpers {
         match v {
             MissingPolicy::Error => "error",
             MissingPolicy::Drop => "drop",
+        }
+    }
+
+    pub fn extrapolation_policy_str(v: ExtrapolationPolicy) -> &'static str {
+        match v {
+            ExtrapolationPolicy::Clamp => "clamp",
+            ExtrapolationPolicy::Linear => "linear",
+            ExtrapolationPolicy::Error => "error",
         }
     }
 }

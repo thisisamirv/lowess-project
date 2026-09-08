@@ -98,6 +98,9 @@
 #' @param missing Policy for non-finite (NaN/Infinity) values in input data:
 #'   \code{"error"} (default) raises an error, \code{"drop"} silently removes
 #'   affected observations before fitting.
+#' @param retain_model Logical; if \code{TRUE}, retain the fitted model's
+#'   training data, enabling \code{\link{predict.Lowess}} for out-of-sample
+#'   prediction. Default: \code{FALSE}.
 #'
 #' @return A Lowess object.
 #' @examples
@@ -132,7 +135,8 @@ Lowess <- function(
     return_se = FALSE,
     return_sorted = FALSE,
     backend = "cpu",
-    missing = "error"
+    missing = "error",
+    retain_model = FALSE
 ) {
     reject_extra_positional_args(sys.call(), "fraction")
     check_gpu_backend(backend)

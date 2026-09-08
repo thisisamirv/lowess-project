@@ -27,14 +27,18 @@ use jni::sys::{jboolean, jdouble, jint, jlong};
 use jni::{Env, errors::Error as JniError, jni_sig, jni_str};
 use std::error::Error;
 use std::fmt::{Display, Formatter};
+use std::sync::Arc;
 
 const RESULT_CLASS: &JNIStr = jni_str!("fastlowess/NativeResult");
 const ONLINE_OUTPUT_CLASS: &JNIStr = jni_str!("fastlowess/NativeOnlineOutput");
+const PREDICT_RESULT_CLASS: &JNIStr = jni_str!("fastlowess/NativePredictResult");
 // Keep in sync with NativeResult's constructor parameter list.
 const RESULT_CTOR_SIG: MethodSignature<'static, 'static> =
-    jni_sig!("([D[D[D[D[D[D[D[D[D[DDIDDDDDDDZ)V");
+    jni_sig!("([D[D[D[D[D[D[D[D[D[DDIDDDDDDDZJ)V");
 // Keep in sync with NativeOnlineOutput's constructor parameter list.
 const ONLINE_OUTPUT_CTOR_SIG: MethodSignature<'static, 'static> = jni_sig!("(ZDDDDI)V");
+// Keep in sync with NativePredictResult's constructor parameter list.
+const PREDICT_RESULT_CTOR_SIG: MethodSignature<'static, 'static> = jni_sig!("([D[D[D[D[D[D[D)V");
 
 /// Error type used by every native method's `with_env` closure. Any
 /// application-level failure (invalid arguments, runtime errors from the
@@ -136,6 +140,13 @@ fn result_to_jobject<'local>(
     let (rmse, mae, r_squared, aic, aicc, effective_df, residual_sd) =
         shared_parse::extract_diagnostics(&result);
     let has_diagnostics = result.diagnostics.is_some();
+    // Extracted before the field-by-field moves below (moving a struct field out of an
+    // owned value doesn't require the whole struct to still be intact afterward).
+    let predict_handle: jlong = result
+        .fit_state
+        .clone()
+        .map(|state| Box::into_raw(Box::new(JavaPredictHandle { state })) as jlong)
+        .unwrap_or(0);
 
     let x = vec_to_jdoublearray(env, &Some(result.x))?;
     let y = vec_to_jdoublearray(env, &Some(result.y))?;
@@ -175,6 +186,7 @@ fn result_to_jobject<'local>(
             JValue::Double(effective_df),
             JValue::Double(residual_sd),
             JValue::Bool(has_diagnostics as jboolean),
+            JValue::Long(predict_handle),
         ],
     )?;
     Ok(obj)
@@ -200,6 +212,13 @@ struct JavaLowess {
     cv_method: Option<String>,
     cv_k: usize,
     cv_seed: Option<u64>,
+}
+
+// Opaque handle retained by `lowessFit` (via `NativeResult.predictHandle`, non-zero only
+// if `retainModel` was set), enabling `predict()`. Wraps just the lightweight
+// `Arc<PredictState<f64>>` extracted from the fitted model, not the whole result.
+struct JavaPredictHandle {
+    state: Arc<shared_parse::PredictState<f64>>,
 }
 
 #[unsafe(no_mangle)]
@@ -229,6 +248,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_lowessNew<'local>(
     return_sorted: jboolean,
     backend: JString<'local>,
     missing: JString<'local>,
+    retain_model: jboolean,
 ) -> jlong {
     env.with_env(|env| -> AppResult<jlong> {
         let wf = jstring_or_default(env, &weight_function, shared_parse::DEFAULT_WEIGHT_FUNCTION);
@@ -273,6 +293,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_lowessNew<'local>(
                 parallel: Some(parallel),
                 backend: Some(&backend_str),
                 missing: Some(&missing_str),
+                retain_model: Some(retain_model),
                 ..Default::default()
             },
         )?;
@@ -347,6 +368,87 @@ pub extern "system" fn Java_fastlowess_NativeBridge_lowessFree(
 ) {
     if handle != 0 {
         unsafe { drop(Box::from_raw(handle as *mut JavaLowess)) };
+    }
+}
+
+/// Evaluate a fitted model (retained via `retainModel = true`) at out-of-sample query
+/// points not in the training set.
+#[unsafe(no_mangle)]
+#[allow(clippy::too_many_arguments)]
+pub extern "system" fn Java_fastlowess_NativeBridge_predict<'local>(
+    mut env: EnvUnowned<'local>,
+    _class: JClass<'local>,
+    handle: jlong,
+    new_x: JDoubleArray<'local>,
+    return_se: jboolean,
+    confidence_level: jdouble,
+    prediction_level: jdouble,
+    return_derivative: jboolean,
+    extrapolation: JString<'local>,
+    max_extrapolation_distance: jdouble,
+    max_neighbor_distance: jdouble,
+) -> JObject<'local> {
+    env.with_env(|env| -> AppResult<JObject<'local>> {
+        if handle == 0 {
+            return Err(shared_parse::MODEL_POINTER_IS_NULL.into());
+        }
+        let predict_handle = unsafe { &*(handle as *const JavaPredictHandle) };
+        let new_x_vec = jarray_to_vec(env, &new_x);
+        if new_x_vec.is_empty() {
+            return Err(shared_parse::INVALID_DATA_INPUTS.into());
+        }
+        let extrapolation_str = jstring_to_string(env, &extrapolation);
+
+        let output = shared_parse::run_predict_state(
+            &predict_handle.state,
+            &new_x_vec,
+            shared_parse::PredictOptionSet {
+                return_se,
+                confidence_level: opt_f64(confidence_level),
+                prediction_level: opt_f64(prediction_level),
+                return_derivative,
+                extrapolation: extrapolation_str.as_deref(),
+                max_extrapolation_distance: opt_f64(max_extrapolation_distance),
+                max_neighbor_distance: opt_f64(max_neighbor_distance),
+            },
+        )
+        .map_err(|e| e.message)?;
+
+        let y = vec_to_jdoublearray(env, &Some(output.y))?;
+        let standard_errors = vec_to_jdoublearray(env, &output.standard_errors)?;
+        let confidence_lower = vec_to_jdoublearray(env, &output.confidence_lower)?;
+        let confidence_upper = vec_to_jdoublearray(env, &output.confidence_upper)?;
+        let prediction_lower = vec_to_jdoublearray(env, &output.prediction_lower)?;
+        let prediction_upper = vec_to_jdoublearray(env, &output.prediction_upper)?;
+        let derivative = vec_to_jdoublearray(env, &output.derivative)?;
+
+        let class = env.find_class(PREDICT_RESULT_CLASS)?;
+        let obj = env.new_object(
+            class,
+            PREDICT_RESULT_CTOR_SIG,
+            &[
+                JValue::Object(&y),
+                JValue::Object(&standard_errors),
+                JValue::Object(&confidence_lower),
+                JValue::Object(&confidence_upper),
+                JValue::Object(&prediction_lower),
+                JValue::Object(&prediction_upper),
+                JValue::Object(&derivative),
+            ],
+        )?;
+        Ok(obj)
+    })
+    .resolve::<ThrowRuntimeExAndDefault>()
+}
+
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_fastlowess_NativeBridge_predictHandleFree(
+    _env: EnvUnowned,
+    _class: JClass,
+    handle: jlong,
+) {
+    if handle != 0 {
+        unsafe { drop(Box::from_raw(handle as *mut JavaPredictHandle)) };
     }
 }
 

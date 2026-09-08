@@ -13,7 +13,8 @@ RLowess$new <- function(
     return_diagnostics, return_residuals,
     return_robustness_weights, zero_weight_fallback,
     auto_converge, cv_fractions, cv_method, cv_k, parallel,
-    cv_seed, return_se, return_sorted, backend, missing
+    cv_seed, return_se, return_sorted, backend, missing,
+    retain_model
 ) {
     .Call(
         wrap__RLowess__new, fraction, iterations, delta, weight_function,
@@ -21,12 +22,17 @@ RLowess$new <- function(
         confidence_intervals, prediction_intervals, return_diagnostics,
         return_residuals, return_robustness_weights, zero_weight_fallback,
         auto_converge, cv_fractions, cv_method, cv_k, parallel,
-        cv_seed, return_se, return_sorted, backend, missing
+        cv_seed, return_se, return_sorted, backend, missing,
+        retain_model
     )
 }
 
 RLowess$fit <- function(x, y, custom_weights = NULL) {
     .Call(wrap__RLowess__fit, self, x, y, custom_weights)
+}
+
+RLowess$predict <- function(new_x, return_se, confidence_level, prediction_level, return_derivative, extrapolation, max_extrapolation_distance, max_neighbor_distance) {
+    .Call(wrap__RLowess__predict, self, new_x, return_se, confidence_level, prediction_level, return_derivative, extrapolation, max_extrapolation_distance, max_neighbor_distance)
 }
 
 #' @export

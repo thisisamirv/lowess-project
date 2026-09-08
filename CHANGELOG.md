@@ -18,6 +18,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added a Rayon-parallel `custom_predict_pass` for `LowessResult::predict()`, wired into the Batch adapter's `fit()` alongside the existing parallel smooth/CV/interval passes; computes the same SE/derivative/extrapolation options in parallel.
 
+**Python:**
+
+- Added a `retain_model` constructor option to `Lowess` and a `LowessResult.predict(new_x, ...)` method (returning a new `PredictOutput` class), exposing lowess's out-of-sample prediction feature.
+
+**R:**
+
+- Added a `retain_model` option to `Lowess()` and a `predict.Lowess(object, new_x, ...)` S3 method for out-of-sample prediction.
+
+**Julia:**
+
+- Added a `retain_model` keyword argument to `Lowess` and a `predict(model, new_x; kwargs...)` function, via a new `LowessResult.predict_model`/`PredictModel`/`PredictResult` type, for out-of-sample prediction.
+
+**Go:**
+
+- Added a `RetainModel` option to `Options` and a `Result.PredictModel.Predict(newX, options)` method, via new `PredictModel`/`PredictOptions`/`PredictResult` types, for out-of-sample prediction.
+
+**Java:**
+
+- Added a `retainModel` option to `Options` and a `Result.predictModel()` accessor returning a new `PredictModel` class with a `predict(newX, options)` method (plus new `PredictOptions`/`PredictResult` types), for out-of-sample prediction.
+
+**Node.js:**
+
+- Added a `retain_model` option to `SmoothOptions` and a `LowessResult.predict(newX, options)` method (returning new `PredictOptions`/`PredictOutput` types), for out-of-sample prediction.
+
+**WASM:**
+
+- Added a `retain_model` option to `SmoothOptions` and a `LowessResult.predict(newX, options)` method (returning new `PredictOptions`/`PredictOutput` TypeScript types), for out-of-sample prediction.
+
+**C++:**
+
+- Added a `retain_model` option to `LowessOptions`, a `LowessResult::predict_model()` accessor, and new `PredictModel`/`PredictOptions`/`PredictResult` RAII classes for out-of-sample prediction.
+
 **Monorepo:**
 
 - Added Linux musl (Alpine) release binaries alongside the existing glibc ones: Python (`release-pypi.yml` now publishes `musllinux_1_2` wheels for x86_64/aarch64), C++ (`release-cpp.yml` builds natively inside `alpine:latest` containers on `ubuntu-latest`/`ubuntu-24.04-arm`, publishing `libfastlowess-linux-{x64,arm64}-musl.so`), Go (`release-go.yml`, same container approach, publishing `libfastlowess_go-linux-{x64,arm64}-musl.a`), and Julia (removed the `libc(p) != "musl"` filter from `dev/build_tarballs_julia.jl`, letting Yggdrasil build musl JLLs again). GPU wheels/libraries (`release-gpu.yml`) are not covered by this change. Java is intentionally left as-is (no prebuilt natives for any platform yet).

@@ -34,6 +34,7 @@ public final class Options {
     final String cvMethod;
     final int cvK;
     final Long cvSeed;
+    final boolean retainModel;
 
     Options(Builder b) {
         this.fraction = b.fraction;
@@ -59,6 +60,7 @@ public final class Options {
         this.cvMethod = b.cvMethod;
         this.cvK = b.cvK;
         this.cvSeed = b.cvSeed;
+        this.retainModel = b.retainModel;
     }
 
     /**
@@ -98,6 +100,7 @@ public final class Options {
         String cvMethod = null;
         int cvK = 5;
         Long cvSeed = null;
+        boolean retainModel = false;
 
         Builder() {
         }
@@ -374,6 +377,19 @@ public final class Options {
          */
         public Builder cvSeed(long cvSeed) {
             this.cvSeed = cvSeed;
+            return this;
+        }
+
+        /**
+         * Retains the fitted model's training data, enabling
+         * {@link Result#predictModel()} for out-of-sample prediction (default
+         * {@code false}).
+         *
+         * @param retainModel whether to retain the fitted model
+         * @return this builder, for chaining
+         */
+        public Builder retainModel(boolean retainModel) {
+            this.retainModel = retainModel;
             return this;
         }
 

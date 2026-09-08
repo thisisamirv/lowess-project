@@ -155,6 +155,10 @@ struct LowessOptions {
   /// Per-observation case weights. When non-empty, must have the same length
   /// as the data passed to fit(). All values must be finite and non-negative.
   std::vector<double> custom_weights;
+
+  /// Retain the fitted model's training data, enabling
+  /// `LowessResult::predict_model()`.
+  bool retain_model = false;
 };
 
 /**
@@ -276,6 +280,197 @@ private:
   double aicc_ = NAN;
   double effective_df_ = NAN;
   double residual_sd_ = NAN;
+};
+
+/**
+ * @brief Options for `PredictModel::predict()`.
+ */
+struct PredictOptions {
+  bool return_se = false;
+  double confidence_level = NAN; ///< Confidence level (NaN = disabled)
+  double prediction_level = NAN; ///< Prediction level (NaN = disabled)
+  bool return_derivative = false;
+  /// Behavior for query points outside the training range ("clamp", "linear",
+  /// "error").
+  std::string extrapolation = "clamp";
+  /// Under "linear" extrapolation, the maximum allowed distance beyond the
+  /// training boundary before predict() errors instead of returning an
+  /// unbounded value (NaN = disabled).
+  double max_extrapolation_distance = NAN;
+  /// Maximum allowed distance to the farthest point in a query's local
+  /// window before predict() errors, catching in-range-but-sparse query
+  /// points (NaN = disabled).
+  double max_neighbor_distance = NAN;
+};
+
+/**
+ * @brief Result of `PredictModel::predict()`.
+ *
+ * RAII wrapper that automatically frees the underlying C result.
+ */
+class PredictResult {
+public:
+  PredictResult() = default;
+
+  explicit PredictResult(const fastlowess_CppPredictResult &c_result)
+      : result_(c_result) {}
+
+  ~PredictResult() {
+    if (result_.n > 0) {
+      cpp_predict_free_result(&result_);
+    }
+  }
+
+  // Move-only
+  PredictResult(const PredictResult &) = delete;
+  PredictResult &operator=(const PredictResult &) = delete;
+
+  PredictResult(PredictResult &&other) noexcept : result_(other.result_) {
+    other.result_ = fastlowess_CppPredictResult{};
+  }
+
+  PredictResult &operator=(PredictResult &&other) noexcept {
+    if (this != &other) {
+      if (result_.n > 0) {
+        cpp_predict_free_result(&result_);
+      }
+      result_ = other.result_;
+      other.result_ = fastlowess_CppPredictResult{};
+    }
+    return *this;
+  }
+
+  /// Number of query points
+  size_t size() const { return static_cast<size_t>(result_.n); }
+
+  /// Check if result is valid
+  bool valid() const { return result_.n > 0 && result_.error == nullptr; }
+
+  /// Get error message (empty if no error)
+  std::string error() const {
+    return result_.error != nullptr ? std::string(result_.error) : "";
+  }
+
+  /// Predicted y values, one per query point
+  std::vector<double> y() const {
+    return std::vector<double>(result_.y, result_.y + result_.n);
+  }
+
+  /// Standard errors (empty if not requested)
+  std::vector<double> standard_errors() const {
+    if (result_.standard_errors != nullptr) {
+      return std::vector<double>(result_.standard_errors,
+                                 result_.standard_errors + result_.n);
+    }
+    return {};
+  }
+
+  /// Lower confidence interval bounds (empty if not requested)
+  std::vector<double> confidence_lower() const {
+    if (result_.confidence_lower != nullptr) {
+      return std::vector<double>(result_.confidence_lower,
+                                 result_.confidence_lower + result_.n);
+    }
+    return {};
+  }
+
+  /// Upper confidence interval bounds (empty if not requested)
+  std::vector<double> confidence_upper() const {
+    if (result_.confidence_upper != nullptr) {
+      return std::vector<double>(result_.confidence_upper,
+                                 result_.confidence_upper + result_.n);
+    }
+    return {};
+  }
+
+  /// Lower prediction interval bounds (empty if not requested)
+  std::vector<double> prediction_lower() const {
+    if (result_.prediction_lower != nullptr) {
+      return std::vector<double>(result_.prediction_lower,
+                                 result_.prediction_lower + result_.n);
+    }
+    return {};
+  }
+
+  /// Upper prediction interval bounds (empty if not requested)
+  std::vector<double> prediction_upper() const {
+    if (result_.prediction_upper != nullptr) {
+      return std::vector<double>(result_.prediction_upper,
+                                 result_.prediction_upper + result_.n);
+    }
+    return {};
+  }
+
+  /// Local fit's derivative (slope) at each query point (empty if not
+  /// requested)
+  std::vector<double> derivative() const {
+    if (result_.derivative != nullptr) {
+      return std::vector<double>(result_.derivative,
+                                 result_.derivative + result_.n);
+    }
+    return {};
+  }
+
+private:
+  fastlowess_CppPredictResult result_ = {};
+};
+
+/**
+ * @brief Retained fitted-model state enabling out-of-sample `predict()`.
+ *
+ * Obtained via `LowessResult::predict_model()`, only available when
+ * `LowessOptions::retain_model` was set to `true` before `fit()`.
+ */
+class PredictModel {
+public:
+  PredictModel() = default;
+
+  explicit PredictModel(fastlowess_CppPredictHandle *handle) : ptr_(handle) {}
+
+  ~PredictModel() {
+    if (ptr_ != nullptr) {
+      cpp_predict_handle_free(ptr_);
+    }
+  }
+
+  // Non-copyable
+  PredictModel(const PredictModel &) = delete;
+  PredictModel &operator=(const PredictModel &) = delete;
+
+  // Move-able
+  PredictModel(PredictModel &&other) noexcept : ptr_(other.ptr_) {
+    other.ptr_ = nullptr;
+  }
+
+  PredictModel &operator=(PredictModel &&other) noexcept {
+    if (this != &other) {
+      if (ptr_ != nullptr) {
+        cpp_predict_handle_free(ptr_);
+      }
+      ptr_ = other.ptr_;
+      other.ptr_ = nullptr;
+    }
+    return *this;
+  }
+
+  /// True if this model was actually retained (`retain_model` was set).
+  bool valid() const { return ptr_ != nullptr; }
+
+  /// Evaluate the fitted model at out-of-sample query points not in the
+  /// training set.
+  PredictResult predict(const std::vector<double> &new_x,
+                        const PredictOptions &options = {}) const {
+    auto result = cpp_predict(
+        ptr_, new_x.data(), static_cast<unsigned long>(new_x.size()),
+        options.return_se ? 1 : 0, options.confidence_level,
+        options.prediction_level, options.return_derivative ? 1 : 0,
+        options.extrapolation.c_str(), options.max_extrapolation_distance,
+        options.max_neighbor_distance);
+    return PredictResult(result);
+  }
+
+private:
+  fastlowess_CppPredictHandle *ptr_ = nullptr;
 };
 
 /**
@@ -423,6 +618,16 @@ public:
   /// Get diagnostics
   Diagnostics diagnostics() const { return Diagnostics(result_); }
 
+  /// Extract the retained predict model (only available when
+  /// `LowessOptions::retain_model` was set to `true` before `fit()`).
+  /// Transfers ownership: subsequent calls return an invalid (empty)
+  /// `PredictModel`. Check `PredictModel::valid()` before use.
+  PredictModel predict_model() {
+    auto *handle = result_.predict_handle;
+    result_.predict_handle = nullptr;
+    return PredictModel(handle);
+  }
+
 private:
   fastlowess_CppLowessResult result_ = {};
 };
@@ -445,7 +650,8 @@ public:
         static_cast<unsigned long>(options.cv_fractions.size()),
         options.cv_method.c_str(), options.cv_k, options.parallel ? 1 : 0,
         options.return_se ? 1 : 0, options.return_sorted ? 1 : 0,
-        options.backend.c_str(), options.missing.c_str());
+        options.backend.c_str(), options.missing.c_str(),
+        options.retain_model ? 1 : 0);
     if (options.cv_seed > 0) {
       cpp_lowess_set_cv_seed(ptr_, static_cast<unsigned long>(options.cv_seed));
     }
