@@ -164,6 +164,7 @@ pub fn build_predict_options(
         extrapolation,
         max_extrapolation_distance: options.max_extrapolation_distance,
         max_neighbor_distance: options.max_neighbor_distance,
+        ..Default::default()
     })
 }
 

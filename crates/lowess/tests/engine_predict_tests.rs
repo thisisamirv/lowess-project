@@ -161,7 +161,7 @@ fn test_predict_out_of_range_error_policy() {
         ..PredictOptions::default()
     };
 
-    let err = result.predict(&[1000.0], options).unwrap_err();
+    let err = result.predict(&[1000.0], options.clone()).unwrap_err();
     assert!(matches!(err, LowessError::PredictOutOfRange { .. }));
 
     // In-range queries must still succeed under the same policy.
@@ -258,7 +258,7 @@ fn test_predict_extrapolation_linear_respects_max_distance() {
 
     // Within the cap: still succeeds.
     result
-        .predict(&[55.0], options)
+        .predict(&[55.0], options.clone())
         .expect("within max_extrapolation_distance should succeed");
 
     // Beyond the cap: errors instead of extrapolating unbounded.
@@ -306,7 +306,7 @@ fn test_predict_max_neighbor_distance_catches_1d_gap() {
         max_neighbor_distance: Some(5.0),
         ..PredictOptions::default()
     };
-    let err = result.predict(&[50.0], options).unwrap_err();
+    let err = result.predict(&[50.0], options.clone()).unwrap_err();
     assert!(matches!(err, LowessError::SparseNeighborhood { .. }));
 
     // A point actually near real training data has a tight local window and should

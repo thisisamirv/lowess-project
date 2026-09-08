@@ -37,7 +37,7 @@ fn test_predict_pass_consistency() {
         ..PredictOptions::default()
     };
 
-    let seq_pred = seq_res.predict(&new_x, options).unwrap();
+    let seq_pred = seq_res.predict(&new_x, options.clone()).unwrap();
     let par_pred = par_res.predict(&new_x, options).unwrap();
 
     for i in 0..new_x.len() {

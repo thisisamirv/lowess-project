@@ -113,8 +113,11 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> LowessResult<T> {
     pub fn predict(
         &self,
         new_x: &[T],
-        options: PredictOptions<T>,
+        mut options: PredictOptions<T>,
     ) -> Result<PredictOutput<T>, LowessError> {
+        if let Some(e) = options.take_pending_error() {
+            return Err(e);
+        }
         match &self.fit_state {
             Some(state) => predict_batch(state, new_x, &options),
             None => Err(LowessError::PredictionUnavailable),

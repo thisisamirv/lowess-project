@@ -88,6 +88,7 @@ impl_into_enum_for!(UpdateMode);
 impl_into_enum_for!(WeightFunction);
 impl_into_enum_for!(ZeroWeightFallback);
 impl_into_enum_for!(Backend);
+impl_into_enum_for!(ExtrapolationPolicy);
 
 // Mode markers for the type-alias-based builder API.
 #[derive(Debug, Clone, Copy, Default)]

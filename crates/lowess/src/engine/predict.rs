@@ -19,6 +19,7 @@ use std::vec::Vec;
 
 // Internal dependencies
 use crate::algorithms::regression::{RegressionContext, WLSSolver, ZeroWeightFallback};
+use crate::api::IntoEnum;
 use crate::evaluation::intervals::IntervalMethod;
 use crate::math::kernel::WeightFunction;
 use crate::primitives::errors::LowessError;
@@ -40,7 +41,7 @@ pub enum ExtrapolationPolicy {
 }
 
 // Options controlling a `LowessResult::predict()` call.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct PredictOptions<T> {
     // Include standard errors in the output.
     pub return_se: bool,
@@ -72,6 +73,10 @@ pub struct PredictOptions<T> {
     // regardless of `extrapolation`/whether the range check flagged the point as
     // out-of-range.
     pub max_neighbor_distance: Option<T>,
+
+    // Set by `extrapolation(...)` when given an invalid string; surfaced by `predict()`
+    // as soon as it is called, mirroring `LowessBuilder`'s deferred parse-error pattern.
+    pub pending_error: Option<LowessError>,
 }
 
 impl<T: Float> Default for PredictOptions<T> {
@@ -84,7 +89,64 @@ impl<T: Float> Default for PredictOptions<T> {
             extrapolation: ExtrapolationPolicy::default(),
             max_extrapolation_distance: None,
             max_neighbor_distance: None,
+            pending_error: None,
         }
+    }
+}
+
+impl<T: Float> PredictOptions<T> {
+    // Include standard errors in the output.
+    pub fn return_se(mut self) -> Self {
+        self.return_se = true;
+        self
+    }
+
+    // Request a confidence interval at the given coverage level (e.g. `0.95`).
+    pub fn confidence_level(mut self, level: T) -> Self {
+        self.confidence_level = Some(level);
+        self
+    }
+
+    // Request a prediction interval at the given coverage level (e.g. `0.95`).
+    pub fn prediction_level(mut self, level: T) -> Self {
+        self.prediction_level = Some(level);
+        self
+    }
+
+    // Include the local WLS fit's derivative (slope) at each query point.
+    pub fn return_derivative(mut self) -> Self {
+        self.return_derivative = true;
+        self
+    }
+
+    // Behavior for query points outside the training x-range: `"clamp"` (default),
+    // `"linear"`, `"error"`, or an `ExtrapolationPolicy` variant directly.
+    #[allow(private_bounds)]
+    pub fn extrapolation(mut self, policy: impl IntoEnum<ExtrapolationPolicy>) -> Self {
+        match policy.into_enum() {
+            Ok(p) => self.extrapolation = p,
+            Err(e) => self.pending_error = Some(e),
+        }
+        self
+    }
+
+    // Under `"linear"` extrapolation, the maximum allowed distance beyond the training
+    // boundary before `predict()` errors instead of returning an unbounded value.
+    pub fn max_extrapolation_distance(mut self, distance: T) -> Self {
+        self.max_extrapolation_distance = Some(distance);
+        self
+    }
+
+    // Maximum allowed distance to the farthest training point in a query's local window
+    // before `predict()` errors, catching in-range-but-sparse query points.
+    pub fn max_neighbor_distance(mut self, distance: T) -> Self {
+        self.max_neighbor_distance = Some(distance);
+        self
+    }
+
+    // Surface a pending parse error (from `extrapolation(...)`) set on this options value, if any.
+    pub(crate) fn take_pending_error(&mut self) -> Option<LowessError> {
+        self.pending_error.take()
     }
 }
 
