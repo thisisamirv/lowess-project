@@ -561,6 +561,12 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
     // Retain the fitted model state needed for a later `LowessResult::predict(new_x)`
     // call (Batch only). Off by default since it keeps an extra copy of the (boundary-
     // padded) training data alive for the lifetime of the result.
+    //
+    // Note: `predict()` always fits an exact local regression at each query point,
+    // regardless of `delta()`. `fit()` itself only fits exactly at anchor points spaced
+    // `delta` apart and linearly interpolates the rest, so `predict()` at an x already in
+    // the training set may not exactly reproduce that point's `fit()` output unless
+    // `delta(0.0)` was used.
     pub fn retain_model(mut self, retain: bool) -> Self {
         self.retain_model = Some(retain);
         self

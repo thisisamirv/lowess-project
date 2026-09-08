@@ -99,6 +99,11 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> LowessResult<T> {
     // similar to R's `predict(model, newdata)`. Requires `.retain_model(true)` to have been
     // set on the Batch builder before `fit()`; otherwise returns
     // [`LowessError::PredictionUnavailable`].
+    //
+    // Always fits an exact local regression at each query point, unlike `fit()` with the
+    // default `delta > 0` (which only fits exactly at anchor points spaced `delta` apart and
+    // linearly interpolates the rest). So predicting at an x already in the training set may
+    // not exactly reproduce that point's `fit()` output unless `delta(0.0)` was used.
     pub fn predict(
         &self,
         new_x: &[T],

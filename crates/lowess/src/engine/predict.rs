@@ -213,6 +213,20 @@ pub fn predict_one_full<T: Float + WLSSolver>(
         x_query
     };
 
+    let need_gradient = options.return_derivative || extrapolate_linear;
+
+    // Fast path: no exact regression slope/leverage needed - linearly interpolate the
+    // already-fitted `y_smooth` curve at `eval_point` instead of running a fresh local WLS
+    // fit. This is exactly how `fit()` itself fills in delta-skipped points, so it matches
+    // `fit()`'s own output at training points regardless of `delta()`.
+    if !need_gradient && !need_se {
+        return Ok((
+            interpolate_y_smooth(&state.x, &state.y_smooth, eval_point),
+            T::zero(),
+            None,
+        ));
+    }
+
     let seed = Window::locate(&state.x, eval_point);
     let mut window = Window::initialize(seed, state.window_size, n);
     window.recenter_at(&state.x, eval_point, n);
@@ -230,8 +244,11 @@ pub fn predict_one_full<T: Float + WLSSolver>(
         custom_weights: state.custom_weights.as_deref(),
     };
 
-    let (boundary_y, slope) = ctx.predict_at(eval_point).unwrap_or((T::zero(), T::zero()));
+    // Only `slope` is used below; the value comes from the already-fitted curve instead
+    // (see `interpolate_y_smooth` above), so it matches `fit()`'s own output.
+    let (_, slope) = ctx.predict_at(eval_point).unwrap_or((T::zero(), T::zero()));
 
+    let boundary_y = interpolate_y_smooth(&state.x, &state.y_smooth, eval_point);
     let y = if extrapolate_linear {
         boundary_y + slope * (x_query - eval_point)
     } else {
@@ -253,6 +270,30 @@ pub fn predict_one_full<T: Float + WLSSolver>(
     };
 
     Ok((y, slope, se))
+}
+
+// Linearly interpolate the already-fitted `y_smooth` curve at an arbitrary point within
+// (or exactly at) `x`'s range. `x` is sorted; `query` should already be clamped into
+// `[x[0], x[n - 1]]` by the caller. Since `fit()` fills every delta-skipped point by
+// linearly interpolating between its neighboring exact fits, any two adjacent entries of
+// `y_smooth` already lie on the correct line for the segment between them - so this always
+// reproduces `fit()`'s own value at (or between) training points, independent of `delta()`.
+fn interpolate_y_smooth<T: Float>(x: &[T], y_smooth: &[T], query: T) -> T {
+    let n = x.len();
+    if n == 0 {
+        return T::zero();
+    }
+    let right = Window::locate(x, query);
+    if right == 0 || x[right] <= query {
+        return y_smooth[right];
+    }
+    let left = right - 1;
+    let span = x[right] - x[left];
+    if span <= T::zero() {
+        return y_smooth[left];
+    }
+    let t = (query - x[left]) / span;
+    y_smooth[left] + t * (y_smooth[right] - y_smooth[left])
 }
 
 // Serial fallback for `predict_batch` when no `custom_predict_pass` is set.

@@ -52,6 +52,38 @@ fn test_predict_matches_fit_at_training_points() {
     }
 }
 
+/// Same as `test_predict_matches_fit_at_training_points`, but with a non-zero `delta`
+/// (the default `delta = 0.0` never skips points, so it never exercises delta-interpolated
+/// points). `predict()` reuses `fit()`'s own `y_smooth` curve for in-range points, so it
+/// should still exactly reproduce `fit()`'s output at training points regardless of delta.
+#[test]
+fn test_predict_matches_fit_at_training_points_with_delta() {
+    let n = 60;
+    let x: Vec<f64> = (0..n).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&v| (v * 0.1).sin() + v * 0.02).collect();
+
+    let result = Lowess::new()
+        .fraction(0.3)
+        .delta(2.0)
+        .retain_model(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .expect("fit should succeed");
+
+    let predicted = result
+        .predict(&x, PredictOptions::default())
+        .expect("predict should succeed");
+
+    for (fitted, pred) in result.y.iter().zip(predicted.y.iter()) {
+        assert!(
+            (fitted - pred).abs() < 1e-10,
+            "predict() at a training x should match fit()'s y even with delta-skipped \
+             points: {fitted} vs {pred}"
+        );
+    }
+}
+
 /// predict() at a midpoint between two training x-values should land close to the
 /// average of their fitted y-values, since LOWESS produces a locally smooth curve.
 #[test]
