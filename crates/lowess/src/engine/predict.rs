@@ -62,6 +62,16 @@ pub struct PredictOptions<T> {
     // instead of returning the first-order Taylor extension's unbounded value. `None`
     // (default) preserves the original, uncapped behavior. Ignored under `Clamp`/`Error`.
     pub max_extrapolation_distance: Option<T>,
+
+    // Maximum allowed distance to the farthest training point in a query's local window
+    // before `predict()` errors with `LowessError::SparseNeighborhood`. Guards against the
+    // `[min(x_train), max(x_train)]` range check's blind spot: a point can fall between
+    // two clusters of training data (e.g. training x in [0,10] and [90,100], query at
+    // x=50) and still pass that check, yet be far from any real training point. `None`
+    // (default) preserves the original behavior of silently predicting there. Applies
+    // regardless of `extrapolation`/whether the range check flagged the point as
+    // out-of-range.
+    pub max_neighbor_distance: Option<T>,
 }
 
 impl<T: Float> Default for PredictOptions<T> {
@@ -73,6 +83,7 @@ impl<T: Float> Default for PredictOptions<T> {
             return_derivative: false,
             extrapolation: ExtrapolationPolicy::default(),
             max_extrapolation_distance: None,
+            max_neighbor_distance: None,
         }
     }
 }
@@ -234,11 +245,16 @@ pub fn predict_one_full<T: Float + WLSSolver>(
 
     let need_gradient = options.return_derivative || extrapolate_linear;
 
+    // A requested neighbor-sparsity check needs a real local window to measure against,
+    // so it must bypass the y_smooth-interpolation fast path below even when nothing
+    // else would.
+    let need_neighborhood_check = options.max_neighbor_distance.is_some();
+
     // Fast path: no exact regression slope/leverage needed - linearly interpolate the
     // already-fitted `y_smooth` curve at `eval_point` instead of running a fresh local WLS
     // fit. This is exactly how `fit()` itself fills in delta-skipped points, so it matches
     // `fit()`'s own output at training points regardless of `delta()`.
-    if !need_gradient && !need_se {
+    if !need_gradient && !need_se && !need_neighborhood_check {
         return Ok((
             interpolate_y_smooth(&state.x, &state.y_smooth, eval_point),
             T::zero(),
@@ -249,6 +265,19 @@ pub fn predict_one_full<T: Float + WLSSolver>(
     let seed = Window::locate(&state.x, eval_point);
     let mut window = Window::initialize(seed, state.window_size, n);
     window.recenter_at(&state.x, eval_point, n);
+
+    if let Some(max_dist) = options.max_neighbor_distance {
+        let bandwidth = T::max(
+            eval_point - state.x[window.left],
+            state.x[window.right] - eval_point,
+        );
+        if bandwidth > max_dist {
+            return Err(LowessError::SparseNeighborhood {
+                distance: bandwidth.to_f64().unwrap_or(0.0),
+                max_distance: max_dist.to_f64().unwrap_or(0.0),
+            });
+        }
+    }
 
     let mut ctx = RegressionContext {
         x: &state.x,

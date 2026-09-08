@@ -148,6 +148,20 @@ pub enum LowessError {
         // The configured maximum allowed distance.
         max_distance: f64,
     },
+
+    // A `predict()` query point passed the `[min(x_train), max(x_train)]` range check (so
+    // it wasn't caught by `ExtrapolationPolicy`) but its actual local window is farther
+    // away than `PredictOptions::max_neighbor_distance` allows. That range check isn't a
+    // density check: a point can fall between two clusters of training data (e.g. training
+    // x in [0,10] and [90,100], query at x=50) and still pass it, yet be far from any real
+    // training point. This guard is opt-in (the option defaults to `None`, preserving the
+    // original silent-prediction behavior).
+    SparseNeighborhood {
+        // Distance to the farthest point in the query's local window.
+        distance: f64,
+        // The configured maximum allowed distance.
+        max_distance: f64,
+    },
 }
 
 // Display Implementation
@@ -242,6 +256,15 @@ impl Display for LowessError {
                 f,
                 "predict() query point is {distance} past the training boundary, exceeding \
                  max_extrapolation_distance ({max_distance}) (ExtrapolationPolicy::Linear)"
+            ),
+            Self::SparseNeighborhood {
+                distance,
+                max_distance,
+            } => write!(
+                f,
+                "predict() query point is within the training range, but its local window \
+                 extends {distance}, exceeding max_neighbor_distance ({max_distance}); the \
+                 point likely falls in a sparse region far from real training data"
             ),
         }
     }

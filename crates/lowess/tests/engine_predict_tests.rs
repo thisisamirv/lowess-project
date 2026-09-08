@@ -276,6 +276,46 @@ fn test_predict_extrapolation_linear_respects_max_distance() {
         .expect("max_extrapolation_distance should not apply under Clamp");
 }
 
+/// A query point can fall between two clusters of training data (a gap) and still pass
+/// the `[min(x_train), max(x_train)]` range check, yet be far from any real training
+/// point. `max_neighbor_distance` should catch this.
+#[test]
+fn test_predict_max_neighbor_distance_catches_1d_gap() {
+    // Training data clustered at [0, 10] and [90, 100]: x=50 is in-range but sits in an
+    // empty gap far from any actual training point.
+    let mut x: Vec<f64> = (0..11).map(|i| i as f64).collect();
+    x.extend((90..=100).map(|i| i as f64));
+    let y: Vec<f64> = x.iter().map(|&v| v * 2.0).collect();
+
+    let result = Lowess::new()
+        .fraction(0.3)
+        .retain_model(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .expect("fit should succeed");
+
+    // No cap: the gap is silently treated as in-range (original behavior).
+    result
+        .predict(&[50.0], PredictOptions::default())
+        .expect("uncapped predict should not error, even in the gap");
+
+    // With a cap: the gap's local window is much farther than a point actually near
+    // training data.
+    let options = PredictOptions {
+        max_neighbor_distance: Some(5.0),
+        ..PredictOptions::default()
+    };
+    let err = result.predict(&[50.0], options).unwrap_err();
+    assert!(matches!(err, LowessError::SparseNeighborhood { .. }));
+
+    // A point actually near real training data has a tight local window and should
+    // still succeed under the same cap.
+    result
+        .predict(&[5.0], options)
+        .expect("a point near real training data should have a tight local window");
+}
+
 /// `return_derivative` should expose the local slope, which for a linear function should
 /// closely match the true slope everywhere away from the boundary.
 #[test]
