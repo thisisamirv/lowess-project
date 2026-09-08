@@ -39,6 +39,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed the Go module's import path missing the required `/v4` major version suffix (Go's "major version suffix" rule: any module tagged `v2.0.0` or higher must end its module path with `/vN`, or the Go toolchain silently ignores all such tags and resolves only pseudo-versions). Changed `github.com/thisisamirv/lowess-project/bindings/go/fastlowess` to `.../fastlowess/v4` in `go.mod`, all doc snippets, the doc-snippet runner, and the test module. This is a **breaking change** for any code importing the old unsuffixed path; existing `v3.2.1`/`v4.0.0` tags were affected and require a new release for pkg.go.dev to resolve real (non-pseudo) versions correctly.
 
+**Monorepo:**
+
+- `make fastLowess-dev` now also lints/builds/tests the combined `gpu,dev` feature set, not just `cpu`/`gpu`/`dev` in isolation — code that only compiles with both features enabled together (e.g. `tests/gpu_tests.rs`, gated on `#![cfg(feature = "dev")] #![cfg(feature = "gpu")]`) was previously never linted by any `make` target.
+- `make lowess-dev`/`make fastLowess-dev` now also run `cargo test --doc` for each tested feature set; doctests in `.rs` source files were previously never checked by any `make` target (only markdown-doc code snippets are covered by `dev/verify_snippets.py`).
+- Fixed 6 clippy lints in `crates/fastLowess/tests/gpu_tests.rs` (`needless_range_loop`, `unnecessary_min_or_max`, and 3× `await_holding_lock` on the `GLOBAL_EXECUTOR` mutex, allowed with a comment since the test binary always runs single-threaded), only surfaced once the new `gpu,dev` combined lint check above was added.
+
 ### Changed
 
 **lowess:**

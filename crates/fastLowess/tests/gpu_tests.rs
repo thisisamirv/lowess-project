@@ -127,6 +127,7 @@ fn test_gpu_cv_reduction() {
 }
 
 #[test]
+#[allow(clippy::await_holding_lock)]
 fn test_gpu_padding_values() {
     let n = 10;
     let x: Vec<f32> = (0..n).map(|i| i as f32).collect();
@@ -813,7 +814,8 @@ fn test_cpu_gpu_zero_weight_fallback_equivalence() {
                         y[10], cpu_val, gpu_val
                     );
                     // Print surrounding values
-                    for j in (10 - 5).max(0)..(10 + 5).min(n) {
+                    #[allow(clippy::needless_range_loop)]
+                    for j in 5..(10 + 5).min(n) {
                         println!(
                             "  Index {}: y={}, cpu={}, gpu={}",
                             j, y[j], cpu_res.y[j], gpu_res.y[j]
@@ -915,6 +917,7 @@ fn test_cpu_gpu_interval_equivalence() {
 }
 
 #[test]
+#[allow(clippy::await_holding_lock)]
 fn test_gpu_median_diagnostic() {
     // Collect both median values while holding the lock, then assert after releasing it.
     // This prevents mutex poisoning from cascading to other tests if an assertion fails.
@@ -1039,6 +1042,7 @@ fn test_gpu_median_diagnostic() {
 }
 
 #[test]
+#[allow(clippy::await_holding_lock)]
 fn test_gpu_median_large() {
     #[cfg(feature = "gpu")]
     {
@@ -1105,8 +1109,8 @@ fn test_gpu_median_large() {
 
             // Fill reduction buffer with UNSORTED data (100..1)
             let mut data = vec![0.0f32; 1048576];
-            for i in 0..100 {
-                data[i] = (100 - i) as f32;
+            for (i, slot) in data.iter_mut().enumerate().take(100) {
+                *slot = (100 - i) as f32;
             }
 
             // Simulate dirty output buffer same as failing test

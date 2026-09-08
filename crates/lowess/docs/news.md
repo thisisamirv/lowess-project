@@ -1,4 +1,24 @@
 <!-- markdownlint-disable MD024 MD025 -->
+# lowess Unreleased
+
+## Added
+
+* Added out-of-sample prediction to the Batch adapter: `.retain_model(true)` on the builder retains the fitted model's (boundary-padded) training data, smoothed values, final robustness weights, and residual SD, enabling a new `LowessResult::predict(new_x, options)` method that evaluates the local WLS fit at arbitrary x-values not in the training set (like R's `predict.loess(model, newdata)`). `PredictOptions` controls `return_se`/`confidence_level`/`prediction_level` (same z-score convention as `fit()`'s existing intervals), `return_derivative` (the local fit's slope at each query point), and `extrapolation` (`Clamp` default, `Linear`, or `Error` via the new `LowessError::PredictOutOfRange`) for query points outside the training x-range. Returns a `PredictOutput` struct and `LowessError::PredictionUnavailable` if called without `.retain_model(true)`, or if `fraction >= 1.0` (global regression) was used. Off by default (no extra memory/clone cost unless requested). Internally generalizes `Window`'s sliding-window search, `RegressionContext`'s local WLS fit, and `IntervalMethod`'s per-point standard-error formula (all previously index-bound to training points) to also support arbitrary out-of-sample query points.
+* Added Linux musl (Alpine) release binaries alongside the existing glibc ones: Python (`release-pypi.yml` now publishes `musllinux_1_2` wheels for x86_64/aarch64), C++ (`release-cpp.yml` builds natively inside `alpine:latest` containers on `ubuntu-latest`/`ubuntu-24.04-arm`, publishing `libfastlowess-linux-{x64,arm64}-musl.so`), Go (`release-go.yml`, same container approach, publishing `libfastlowess_go-linux-{x64,arm64}-musl.a`), and Julia (removed the `libc(p) != "musl"` filter from `dev/build_tarballs_julia.jl`, letting Yggdrasil build musl JLLs again). GPU wheels/libraries (`release-gpu.yml`) are not covered by this change. Java is intentionally left as-is (no prebuilt natives for any platform yet).
+* Added prebuilt native libraries for the Java binding: `release-java.yml` now builds `fastlowess_java` for `linux-x86_64`, `linux-x86_64-musl` (Alpine), `linux-aarch64`, `linux-aarch64-musl` (Alpine), `macos-x86_64`, `macos-aarch64`, `windows-x86_64`, and `windows-aarch64`, and bundles all eight into the published jar under `src/main/resources/native/<os>-<arch>[-musl]/`. `NativeBridge` now also detects musl at runtime (checking Alpine's `/etc/alpine-release` and musl's `ld-musl-*` dynamic linker, since the JVM has no direct API for this) in addition to its existing (previously unused) `loadFromBundledResource()` auto-extraction, so `mvn`/Gradle users on any of those eight platforms no longer need to build the native library themselves.
+
+## Fixed
+
+* `dev/bump_version.py` now also updates the Go module's `/vN` major-version-suffix path across `go.mod` files, doc snippets, the doc-snippet runner, and README/docs badges whenever a version bump crosses a major version boundary, so this doesn't regress on the next major release.
+* `dev/bump_version.py` now also updates the Maven dependency example version in `bindings/java/docs/modules/ROOT/pages/introduction/installation.adoc`, which was previously left stale after a version bump.
+* Fixed inconsistent naming of the Node.js binding as "JavaScript" in the shared project intro sentence (root `README.md`, every binding/crate `README.md`, their generated doc-site home pages, and `CITATION.cff`) — now says "Node.js" everywhere, matching the CI badge, installation table, and directory name (`bindings/nodejs`).
+* Cleaned up `lowess::prelude` of accidentally-leaked internals: removed `LowessBuilder` and `Adapter::{Batch, Online, Streaming}` (use the `Lowess`/`StreamingLowess`/`OnlineLowess` type aliases directly - each already builds without needing `.adapter(...)`).
+
+## Changed
+
+* Flattened the `tests/lowess/` directories into `tests/` directly: each test file is now its own independent integration test binary instead of a submodule of a shared `main.rs`. No test behavior changes.
+* Hoisted inline fully-qualified paths (e.g. `crate::math::distance::DistanceLinalg`, `std::slice::from_raw_parts`) to top-level `use` imports across all crates and bindings, using the bare name in the body instead. Genuine name collisions (e.g. a module-local `Result<T>`/`StreamingLowess` type alias shadowing the standard one) are kept fully-qualified with an explanatory comment. No behavior changes.
+
 # lowess 4.0.0
 
 ## Added

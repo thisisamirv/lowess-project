@@ -78,23 +78,39 @@ dev:
 			RUSTDOCFLAGS="-D warnings" cargo doc -q -p $(FASTLOWESS_PKG) --no-deps --features $$feature || exit 1; \
 		fi; \
 	done
+	@echo "Checking $(FASTLOWESS_PKG) (gpu,dev)..."
+	@cargo clippy -q -p $(FASTLOWESS_PKG) --all-targets --features gpu,dev -- -D warnings || exit 1
+	@cargo build -q -p $(FASTLOWESS_PKG) --features gpu,dev || exit 1
+	@RUSTDOCFLAGS="-D warnings" cargo doc -q -p $(FASTLOWESS_PKG) --no-deps --features gpu,dev || exit 1
 	@echo "=============================================================================="
 	@echo "3. Testing..."
 	@echo "=============================================================================="
 	@echo "Testing (no-default-features)..."
-	@cargo test -q -p $(FASTLOWESS_PKG) --test $(FASTLOWESS_PKG) --no-default-features
+	@cargo test -q -p $(FASTLOWESS_PKG) --tests --no-default-features
 	@for feature in $(FASTLOWESS_FEATURES); do \
 		echo "Testing ($$feature)..."; \
 		if [ "$$feature" = "gpu" ]; then \
 			if [ "$(EFFECTIVE_RUN_GPU_TESTS)" = "true" ]; then \
-				cargo test -q -p $(FASTLOWESS_PKG) --test $(FASTLOWESS_PKG) --features $$feature -- --test-threads=1 || exit 1; \
+				cargo test -q -p $(FASTLOWESS_PKG) --tests --features $$feature -- --test-threads=1 || exit 1; \
 			else \
 				echo "Skipping GPU tests on $(HOST_PLATFORM); set RUN_GPU_TESTS=true to force them."; \
 			fi; \
 		else \
-			cargo test -q -p $(FASTLOWESS_PKG) --test $(FASTLOWESS_PKG) --features $$feature || exit 1; \
+			cargo test -q -p $(FASTLOWESS_PKG) --tests --features $$feature || exit 1; \
 		fi; \
+		echo "Doc tests ($$feature)..."; \
+		cargo test -q -p $(FASTLOWESS_PKG) --doc --features $$feature || exit 1; \
 	done
+	@echo "Testing (gpu,dev)..."
+	@if [ "$(EFFECTIVE_RUN_GPU_TESTS)" = "true" ]; then \
+		cargo test -q -p $(FASTLOWESS_PKG) --tests --features gpu,dev -- --test-threads=1 || exit 1; \
+	else \
+		echo "Skipping GPU tests on $(HOST_PLATFORM); set RUN_GPU_TESTS=true to force them."; \
+	fi
+	@echo "Doc tests (gpu,dev)..."
+	@cargo test -q -p $(FASTLOWESS_PKG) --doc --features gpu,dev || exit 1
+	@# Note: doc tests are not run under --no-default-features. lib.rs's ndarray-integration
+	@# examples require the (non-default-off) cpu feature, matching how the crate is documented.
 	@echo "=============================================================================="
 	@echo "Doc snippet tests (rust)..."
 	@echo "=============================================================================="
@@ -108,7 +124,7 @@ ensure-llvm-cov:
 
 coverage: ensure-llvm-cov
 	@echo "Running $(FASTLOWESS_PKG) coverage..."
-	@LLVM_COV=llvm-cov LLVM_PROFDATA=llvm-profdata cargo llvm-cov -p $(FASTLOWESS_PKG) --test $(FASTLOWESS_PKG) --all-features \
+	@LLVM_COV=llvm-cov LLVM_PROFDATA=llvm-profdata cargo llvm-cov -p $(FASTLOWESS_PKG) --tests --all-features \
 		--ignore-filename-regex 'crates[/\\]lowess[/\\]|bindings[/\\]|benchmarks[/\\]|examples[/\\]|tests[/\\]'
 
 clean:
