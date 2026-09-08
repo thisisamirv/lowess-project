@@ -13,6 +13,8 @@
 
 // External dependencies
 #[cfg(not(feature = "std"))]
+use alloc::sync::Arc;
+#[cfg(not(feature = "std"))]
 use alloc::vec;
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
@@ -20,6 +22,8 @@ use core::fmt::Debug;
 use core::iter::repeat_n;
 use core::mem::swap;
 use num_traits::Float;
+#[cfg(feature = "std")]
+use std::sync::Arc;
 #[cfg(feature = "std")]
 use std::vec;
 #[cfg(feature = "std")]
@@ -139,7 +143,7 @@ pub struct ExecutorOutput<T> {
     pub prediction_upper: Option<Vec<T>>,
 
     // Retained fitted-model state for `LowessResult::predict()`, if `retain_model` was set.
-    pub predict_state: Option<PredictState<T>>,
+    pub predict_state: Option<Arc<PredictState<T>>>,
 }
 
 // Configuration for LOWESS execution.
@@ -834,7 +838,10 @@ impl<T: Float> LowessExecutor<T> {
             confidence_upper,
             prediction_lower,
             prediction_upper,
-            predict_state,
+            // Wrapped here (once all mutations above are done) so cloning a `LowessResult`
+            // (e.g. to hand to multiple worker threads) is a cheap refcount bump instead of
+            // deep-copying the whole padded training set.
+            predict_state: predict_state.map(Arc::new),
         })
     }
 

@@ -6,10 +6,14 @@
 
 // External dependencies
 #[cfg(not(feature = "std"))]
+use alloc::sync::Arc;
+#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 use core::cmp::Ordering;
 use core::fmt::{Debug, Display, Formatter};
 use num_traits::Float;
+#[cfg(feature = "std")]
+use std::sync::Arc;
 #[cfg(feature = "std")]
 use std::vec::Vec;
 
@@ -62,9 +66,11 @@ pub struct LowessResult<T> {
     pub cv_scores: Option<Vec<T>>,
 
     // Retained fitted-model state for `predict()`, populated only when the Batch
-    // adapter's `.retain_model(true)` was set before `fit()`.
+    // adapter's `.retain_model(true)` was set before `fit()`. Wrapped in `Arc` so cloning
+    // a `LowessResult` (e.g. to hand to multiple worker threads) is a cheap refcount bump
+    // instead of deep-copying the whole padded training set.
     #[doc(hidden)]
-    pub fit_state: Option<PredictState<T>>,
+    pub fit_state: Option<Arc<PredictState<T>>>,
 }
 
 impl<T: Float> LowessResult<T> {
