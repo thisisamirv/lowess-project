@@ -23,11 +23,10 @@ use num_traits::Float;
 
 use lowess::internals::algorithms::robustness::RobustnessMethod;
 use lowess::internals::api::BoundaryPolicy;
-use lowess::internals::engine::executor::{
-    ExecutorOutput, LowessBuffer, LowessConfig, LowessExecutor,
-};
+use lowess::internals::engine::executor::{ExecutorOutput, LowessConfig, LowessExecutor};
 use lowess::internals::math::kernel::WeightFunction;
 use lowess::internals::math::scaling::ScalingMethod;
+use lowess::internals::primitives::buffer::LowessBuffer;
 
 // ============================================================================
 // Constructor Tests

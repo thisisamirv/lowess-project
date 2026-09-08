@@ -39,7 +39,7 @@ use crate::math::defaults::*;
 use crate::math::kernel::WeightFunction;
 use crate::math::scaling::ScalingMethod;
 use crate::primitives::backend::Backend;
-pub use crate::primitives::buffer::LowessBuffer;
+use crate::primitives::buffer::LowessBuffer;
 use crate::primitives::errors::LowessError;
 use crate::primitives::window::Window;
 

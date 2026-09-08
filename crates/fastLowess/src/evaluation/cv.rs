@@ -22,11 +22,11 @@ use std::fmt::Debug;
 #[cfg(feature = "cpu")]
 use lowess::internals::algorithms::regression::WLSSolver;
 #[cfg(feature = "cpu")]
-use lowess::internals::engine::executor::{LowessBuffer, LowessConfig, LowessExecutor};
+use lowess::internals::engine::executor::{LowessConfig, LowessExecutor};
 #[cfg(feature = "cpu")]
 use lowess::internals::evaluation::cv::CVKind;
 #[cfg(feature = "cpu")]
-use lowess::internals::primitives::buffer::CVBuffer;
+use lowess::internals::primitives::buffer::{CVBuffer, LowessBuffer};
 
 // Perform cross-validation to select the best fraction in parallel.
 #[cfg(feature = "cpu")]
