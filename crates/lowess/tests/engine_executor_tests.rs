@@ -22,8 +22,8 @@ use approx::assert_relative_eq;
 use num_traits::Float;
 
 use lowess::internals::algorithms::robustness::RobustnessMethod;
-use lowess::internals::api::BoundaryPolicy;
 use lowess::internals::engine::executor::{ExecutorOutput, LowessConfig, LowessExecutor};
+use lowess::internals::math::boundary::BoundaryPolicy;
 use lowess::internals::math::kernel::WeightFunction;
 use lowess::internals::math::scaling::ScalingMethod;
 use lowess::internals::primitives::buffer::LowessBuffer;

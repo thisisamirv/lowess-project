@@ -14,11 +14,12 @@ use num_traits::Float;
 
 // Import base marker types for delegation
 use lowess::internals::api::Batch as BaseBatch;
+use lowess::internals::api::LowessAdapter;
 use lowess::internals::api::Online as BaseOnline;
 use lowess::internals::api::Streaming as BaseStreaming;
 
 // Publicly re-exported types
-pub use lowess::internals::api::{LowessAdapter, LowessBuilder};
+pub use lowess::internals::api::LowessBuilder;
 pub use lowess::internals::engine::output::LowessResult;
 pub use lowess::internals::primitives::errors::LowessError;
 

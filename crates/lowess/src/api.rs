@@ -32,16 +32,16 @@ use crate::evaluation::intervals::IntervalMethod;
 use crate::primitives::backend::Backend;
 
 // Publicly re-exported types
-pub use crate::adapters::online::UpdateMode;
-pub use crate::adapters::streaming::MergeStrategy;
-pub use crate::algorithms::regression::ZeroWeightFallback;
-pub use crate::algorithms::robustness::RobustnessMethod;
+use crate::adapters::online::UpdateMode;
+use crate::adapters::streaming::MergeStrategy;
+use crate::algorithms::regression::ZeroWeightFallback;
+use crate::algorithms::robustness::RobustnessMethod;
 pub use crate::engine::output::LowessResult;
-pub use crate::engine::validator::MissingPolicy;
+use crate::engine::validator::MissingPolicy;
 
-pub use crate::math::boundary::BoundaryPolicy;
-pub use crate::math::kernel::WeightFunction;
-pub use crate::math::scaling::ScalingMethod;
+use crate::math::boundary::BoundaryPolicy;
+use crate::math::kernel::WeightFunction;
+use crate::math::scaling::ScalingMethod;
 pub use crate::primitives::errors::LowessError;
 
 // Converts a value into a typed enum, either infallibly (enum variant) or

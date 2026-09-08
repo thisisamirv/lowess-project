@@ -1,7 +1,7 @@
 #![cfg(feature = "dev")]
 
-use lowess::internals::api::{BoundaryPolicy, Lowess};
-use lowess::internals::math::boundary::apply_boundary_policy;
+use lowess::internals::api::Lowess;
+use lowess::internals::math::boundary::{BoundaryPolicy, apply_boundary_policy};
 
 #[test]
 fn test_boundary_policy_comparison() {
