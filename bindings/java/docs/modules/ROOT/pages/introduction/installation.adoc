@@ -17,7 +17,7 @@ Add the Maven coordinate to your `pom.xml`:
 </dependency>
 ----
 
-The published jar bundles prebuilt native libraries for `linux-x86_64`, `linux-aarch64`, `macos-x86_64`, `macos-aarch64`, `windows-x86_64`, and `windows-aarch64` (see `NativeBridge`'s `osArchDir()`); `NativeBridge` auto-detects your platform, extracts the matching one to a temp file, and loads it — no separate native library installation needed on any of those platforms. (musl/Alpine Linux isn't one of the bundled targets yet, since `NativeBridge` doesn't currently distinguish glibc from musl.)
+The published jar bundles prebuilt native libraries for `linux-x86_64`, `linux-x86_64-musl` (Alpine), `linux-aarch64`, `linux-aarch64-musl` (Alpine), `macos-x86_64`, `macos-aarch64`, `windows-x86_64`, and `windows-aarch64` (see `NativeBridge`'s `osArchDir()`); `NativeBridge` auto-detects your platform and libc (checking for Alpine's `/etc/alpine-release` and musl's `ld-musl-*` dynamic linker), extracts the matching one to a temp file, and loads it — no separate native library installation needed on any of those platforms.
 
 To override the bundled library (e.g. a custom or GPU-enabled build), either system property takes precedence:
 

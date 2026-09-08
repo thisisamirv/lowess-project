@@ -91,7 +91,27 @@ final class NativeBridge {
         String arch = System.getProperty("os.arch", "").toLowerCase();
         String osName = os.contains("win") ? "windows" : (os.contains("mac") ? "macos" : "linux");
         String archName = (arch.contains("aarch64") || arch.contains("arm64")) ? "aarch64" : "x86_64";
-        return osName + "-" + archName;
+        String libcSuffix = osName.equals("linux") && isMuslLibc() ? "-musl" : "";
+        return osName + "-" + archName + libcSuffix;
+    }
+
+    // musl-based distros (Alpine chief among them) don't ship glibc, so a
+    // glibc-linked .so fails to load there. There's no JVM API for "which libc
+    // is this", so this checks for well-known musl markers instead: Alpine's
+    // /etc/alpine-release file, and musl's dynamic linker (ld-musl-<arch>.so.1),
+    // which glibc systems never have.
+    private static boolean isMuslLibc() {
+        if (new File("/etc/alpine-release").isFile()) {
+            return true;
+        }
+        for (String dir : new String[]{"/lib", "/lib64", "/usr/lib", "/usr/lib64"}) {
+            File[] matches = new File(dir).listFiles(
+                    (d, name) -> name.startsWith("ld-musl-"));
+            if (matches != null && matches.length > 0) {
+                return true;
+            }
+        }
+        return false;
     }
 
     static native boolean gpuEnabled();

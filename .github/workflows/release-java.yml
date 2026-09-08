@@ -22,14 +22,23 @@ jobs:
   build-natives:
     name: Build native library (${{ matrix.dir }})
     runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container }}
     strategy:
       matrix:
         include:
           - os: ubuntu-latest
             dir: linux-x86_64
             lib_name: libfastlowess_java.so
+          - os: ubuntu-latest
+            container: "alpine:latest"
+            dir: linux-x86_64-musl
+            lib_name: libfastlowess_java.so
           - os: ubuntu-24.04-arm
             dir: linux-aarch64
+            lib_name: libfastlowess_java.so
+          - os: ubuntu-24.04-arm
+            container: "alpine:latest"
+            dir: linux-aarch64-musl
             lib_name: libfastlowess_java.so
           - os: macos-15-intel
             dir: macos-x86_64
@@ -44,6 +53,10 @@ jobs:
             dir: windows-aarch64
             lib_name: fastlowess_java.dll
     steps:
+      - name: Install Alpine build dependencies
+        if: matrix.container
+        run: apk add --no-cache build-base curl bash git
+
       - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.inputs.commit || github.sha }}
