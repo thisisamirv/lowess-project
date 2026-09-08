@@ -34,6 +34,8 @@ go build ./...
 
 On macOS, drop `-ldl -lpthread` (not needed). On Windows, use `-lws2_32 -luserenv -lbcrypt -lntdll -lpthread` instead, and ensure a MinGW-w64 `gcc.exe` is on `PATH`.
 
+Each release publishes `libfastlowess_go-<platform>.a` assets for `linux-x64`, `linux-x64-musl` (Alpine), `linux-arm64`, `linux-arm64-musl` (Alpine), `macos-x64`, `macos-arm64`, `win32-x64`, and `win32-arm64` — download the one matching your target `GOOS`/`GOARCH` and libc.
+
 Alternatively, build the native library yourself from the [`lowess-project`](https://github.com/thisisamirv/lowess-project) source:
 
 ```sh

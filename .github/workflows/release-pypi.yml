@@ -77,6 +77,62 @@ jobs:
           path: bindings/python/dist
 
   # ============================================================================
+  # BUILD WHEELS - Linux x86_64 musl (Alpine)
+  # ============================================================================
+  linux-x86_64-musl:
+    name: Build Linux x86_64 musl (py${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.8"]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.commit || github.sha }}
+
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          working-directory: bindings/python
+          target: x86_64
+          args: --release --out dist
+          manylinux: musllinux_1_2
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v7
+        with:
+          name: wheels-linux-x86_64-musl-py${{ matrix.python }}
+          path: bindings/python/dist
+
+  # ============================================================================
+  # BUILD WHEELS - Linux ARM64 musl (Alpine)
+  # ============================================================================
+  linux-aarch64-musl:
+    name: Build Linux ARM64 musl (py${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.8"]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.commit || github.sha }}
+
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          working-directory: bindings/python
+          target: aarch64
+          args: --release --out dist --interpreter python${{ matrix.python }}
+          manylinux: musllinux_1_2
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v7
+        with:
+          name: wheels-linux-aarch64-musl-py${{ matrix.python }}
+          path: bindings/python/dist
+
+  # ============================================================================
   # BUILD WHEELS - macOS x86_64 (Intel)
   # ============================================================================
   macos-x86_64:
@@ -252,6 +308,8 @@ jobs:
     needs:
       - linux-x86_64
       - linux-aarch64
+      - linux-x86_64-musl
+      - linux-aarch64-musl
       - macos-x86_64
       - macos-aarch64
       - windows-x86_64

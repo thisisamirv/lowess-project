@@ -22,8 +22,9 @@ permissions:
 
 jobs:
   build-and-upload:
-    name: Build ${{ matrix.os }}
+    name: Build ${{ matrix.os }}${{ matrix.container && ' (musl)' || '' }}
     runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container }}
     strategy:
       matrix:
         include:
@@ -31,9 +32,19 @@ jobs:
             artifact_name: libfastlowess.so
             asset_name: libfastlowess-linux-x64.so
             target_dir: target/release
+          - os: ubuntu-latest
+            container: "alpine:latest"
+            artifact_name: libfastlowess.so
+            asset_name: libfastlowess-linux-x64-musl.so
+            target_dir: target/release
           - os: ubuntu-24.04-arm
             artifact_name: libfastlowess.so
             asset_name: libfastlowess-linux-arm64.so
+            target_dir: target/release
+          - os: ubuntu-24.04-arm
+            container: "alpine:latest"
+            artifact_name: libfastlowess.so
+            asset_name: libfastlowess-linux-arm64-musl.so
             target_dir: target/release
           - os: windows-latest
             artifact_name: fastlowess.dll
@@ -53,6 +64,10 @@ jobs:
             target_dir: target/release
 
     steps:
+      - name: Install Alpine build dependencies
+        if: matrix.container
+        run: apk add --no-cache build-base curl bash git
+
       - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.inputs.commit || github.sha }}
@@ -86,7 +101,7 @@ jobs:
           files: ${{ matrix.asset_name }}
 
       - name: Upload Header to Release
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest' && !matrix.container
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.event.release.tag_name || github.event.inputs.tag }}

@@ -32,7 +32,6 @@ platforms = supported_platforms()
 
 # Filter out platforms not supported by Rust
 filter!(p -> !(Sys.iswindows(p) && arch(p) == "i686"), platforms)
-filter!(p -> libc(p) != "musl", platforms)
 filter!(p -> !Sys.isfreebsd(p), platforms)
 filter!(p -> arch(p) != "riscv64", platforms)
 
