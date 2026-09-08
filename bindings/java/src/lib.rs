@@ -311,15 +311,22 @@ pub extern "system" fn Java_fastlowess_NativeBridge_lowessNew<'local>(
 
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_fastlowess_NativeBridge_lowessSetCvSeed(
-    _env: EnvUnowned,
+    mut env: EnvUnowned,
     _class: JClass,
     handle: jlong,
     seed: jlong,
 ) {
-    if handle != 0 {
-        let lowess = unsafe { &mut *(handle as *mut JavaLowess) };
-        lowess.cv_seed = Some(seed as u64);
-    }
+    env.with_env(|_env| -> AppResult<()> {
+        if handle != 0 {
+            if seed < 0 {
+                return Err(format!("cv_seed must be non-negative, got {seed}").into());
+            }
+            let lowess = unsafe { &mut *(handle as *mut JavaLowess) };
+            lowess.cv_seed = Some(seed as u64);
+        }
+        Ok(())
+    })
+    .resolve::<ThrowRuntimeExAndDefault>()
 }
 
 #[unsafe(no_mangle)]

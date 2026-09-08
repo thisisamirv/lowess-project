@@ -464,6 +464,15 @@ pub struct OnlineSmoothOptions {
 fn batch_options_to_builder(opts: Option<&SmoothOptions>) -> Result<LowessBuilder<f64>> {
     let mut builder = LowessBuilder::<f64>::new();
     if let Some(opts) = opts {
+        let cv_seed = match opts.cv_seed {
+            Some(s) if s < 0 => {
+                return Err(to_napi_error(binding_support::BindingError::invalid_arg(
+                    format!("cv_seed must be non-negative, got {s}"),
+                )));
+            }
+            Some(s) => Some(s as u64),
+            None => None,
+        };
         builder = map_invalid_arg(binding_support::apply_builder_options(
             builder,
             binding_support::BuilderOptionSet {
@@ -489,7 +498,7 @@ fn batch_options_to_builder(opts: Option<&SmoothOptions>) -> Result<LowessBuilde
                 cv_fractions: opts.cv_fractions.as_deref(),
                 cv_method: opts.cv_method.as_deref(),
                 cv_k: opts.cv_k.map(|v| v as usize),
-                cv_seed: opts.cv_seed.map(|s| s as u64),
+                cv_seed,
                 retain_model: opts.retain_model,
                 ..Default::default()
             },

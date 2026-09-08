@@ -93,7 +93,7 @@ impl RLowess {
             Null => None,
         };
         let seed = match cv_seed {
-            NotNull(s) => Some(s as u64),
+            NotNull(s) => Some(require_non_negative_usize("cv_seed", s)? as u64),
             Null => None,
         };
         let iterations = require_non_negative_usize("iterations", iterations)?;
