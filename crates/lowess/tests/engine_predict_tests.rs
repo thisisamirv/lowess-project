@@ -234,6 +234,48 @@ fn test_predict_out_of_range_linear_policy() {
     );
 }
 
+/// `max_extrapolation_distance` should cap `ExtrapolationPolicy::Linear` instead of
+/// returning an unbounded first-order Taylor extension.
+#[test]
+fn test_predict_extrapolation_linear_respects_max_distance() {
+    let x: Vec<f64> = (0..50).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&v| 2.0 * v + 3.0).collect();
+
+    let result = Lowess::new()
+        .fraction(0.3)
+        .boundary_policy("noboundary")
+        .retain_model(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .expect("fit should succeed");
+
+    let options = PredictOptions {
+        extrapolation: ExtrapolationPolicy::Linear,
+        max_extrapolation_distance: Some(10.0),
+        ..PredictOptions::default()
+    };
+
+    // Within the cap: still succeeds.
+    result
+        .predict(&[55.0], options)
+        .expect("within max_extrapolation_distance should succeed");
+
+    // Beyond the cap: errors instead of extrapolating unbounded.
+    let err = result.predict(&[100.0], options).unwrap_err();
+    assert!(matches!(err, LowessError::ExtrapolationTooFar { .. }));
+
+    // The cap is ignored under Clamp.
+    let clamp_options = PredictOptions {
+        extrapolation: ExtrapolationPolicy::Clamp,
+        max_extrapolation_distance: Some(10.0),
+        ..PredictOptions::default()
+    };
+    result
+        .predict(&[100.0], clamp_options)
+        .expect("max_extrapolation_distance should not apply under Clamp");
+}
+
 /// `return_derivative` should expose the local slope, which for a linear function should
 /// closely match the true slope everywhere away from the boundary.
 #[test]

@@ -136,6 +136,18 @@ pub enum LowessError {
         // Maximum training x-value.
         max: f64,
     },
+
+    // A `predict()` query point under `ExtrapolationPolicy::Linear` fell farther beyond
+    // the training range than `PredictOptions::max_extrapolation_distance` allows. The
+    // first-order Taylor extension has no inherent cap, so an unbounded distance can
+    // produce arbitrarily extreme values; this guard is opt-in (the option defaults to
+    // `None`, preserving the original unbounded behavior).
+    ExtrapolationTooFar {
+        // Distance beyond the training boundary.
+        distance: f64,
+        // The configured maximum allowed distance.
+        max_distance: f64,
+    },
 }
 
 // Display Implementation
@@ -222,6 +234,14 @@ impl Display for LowessError {
             Self::PredictOutOfRange { query, min, max } => write!(
                 f,
                 "predict() query x={query} is outside the training range [{min}, {max}]; use a different ExtrapolationPolicy to allow this"
+            ),
+            Self::ExtrapolationTooFar {
+                distance,
+                max_distance,
+            } => write!(
+                f,
+                "predict() query point is {distance} past the training boundary, exceeding \
+                 max_extrapolation_distance ({max_distance}) (ExtrapolationPolicy::Linear)"
             ),
         }
     }

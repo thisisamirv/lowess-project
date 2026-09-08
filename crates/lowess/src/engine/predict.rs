@@ -56,6 +56,12 @@ pub struct PredictOptions<T> {
 
     // Behavior for query points outside the training x-range.
     pub extrapolation: ExtrapolationPolicy,
+
+    // Under `ExtrapolationPolicy::Linear`, the maximum allowed distance beyond the
+    // training boundary before `predict()` errors with `LowessError::ExtrapolationTooFar`,
+    // instead of returning the first-order Taylor extension's unbounded value. `None`
+    // (default) preserves the original, uncapped behavior. Ignored under `Clamp`/`Error`.
+    pub max_extrapolation_distance: Option<T>,
 }
 
 impl<T: Float> Default for PredictOptions<T> {
@@ -66,6 +72,7 @@ impl<T: Float> Default for PredictOptions<T> {
             prediction_level: None,
             return_derivative: false,
             extrapolation: ExtrapolationPolicy::default(),
+            max_extrapolation_distance: None,
         }
     }
 }
@@ -214,6 +221,16 @@ pub fn predict_one_full<T: Float + WLSSolver>(
     } else {
         x_query
     };
+
+    if extrapolate_linear && let Some(max_dist) = options.max_extrapolation_distance {
+        let dist = (x_query - eval_point).abs();
+        if dist > max_dist {
+            return Err(LowessError::ExtrapolationTooFar {
+                distance: dist.to_f64().unwrap_or(0.0),
+                max_distance: max_dist.to_f64().unwrap_or(0.0),
+            });
+        }
+    }
 
     let need_gradient = options.return_derivative || extrapolate_linear;
 
