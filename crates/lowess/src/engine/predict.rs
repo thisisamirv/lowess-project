@@ -6,6 +6,8 @@
 
 // External dependencies
 #[cfg(not(feature = "std"))]
+use alloc::format;
+#[cfg(not(feature = "std"))]
 use alloc::vec;
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
@@ -334,6 +336,16 @@ pub fn predict_batch<T: Float + WLSSolver>(
     new_x: &[T],
     options: &PredictOptions<T>,
 ) -> Result<PredictOutput<T>, LowessError> {
+    for (i, &val) in new_x.iter().enumerate() {
+        if !val.is_finite() {
+            return Err(LowessError::InvalidNumericValue(format!(
+                "new_x[{}]={}",
+                i,
+                val.to_f64().unwrap_or(f64::NAN)
+            )));
+        }
+    }
+
     let need_se = options.return_se
         || options.confidence_level.is_some()
         || options.prediction_level.is_some();
