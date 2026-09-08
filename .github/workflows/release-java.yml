@@ -14,8 +14,54 @@ permissions:
   contents: read
 
 jobs:
+  # Builds the native `fastlowess_java` library for every platform NativeBridge
+  # knows how to auto-extract (see bindings/java/src/main/java/fastlowess/
+  # NativeBridge.java's osArchDir()/mapLibraryName()), so the published jar
+  # bundles them all under src/main/resources/native/<os>-<arch>/<libname> and
+  # works out of the box on any of these platforms without a manual build.
+  build-natives:
+    name: Build native library (${{ matrix.dir }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            dir: linux-x86_64
+            lib_name: libfastlowess_java.so
+          - os: ubuntu-24.04-arm
+            dir: linux-aarch64
+            lib_name: libfastlowess_java.so
+          - os: macos-15-intel
+            dir: macos-x86_64
+            lib_name: libfastlowess_java.dylib
+          - os: macos-latest
+            dir: macos-aarch64
+            lib_name: libfastlowess_java.dylib
+          - os: windows-latest
+            dir: windows-x86_64
+            lib_name: fastlowess_java.dll
+          - os: windows-11-arm
+            dir: windows-aarch64
+            lib_name: fastlowess_java.dll
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.commit || github.sha }}
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Build native library
+        run: cargo build -p fastlowess-java --release
+
+      - name: Upload native library
+        uses: actions/upload-artifact@v7
+        with:
+          name: native-${{ matrix.dir }}
+          path: target/release/${{ matrix.lib_name }}
+
   publish-maven-central:
     name: Publish to Maven Central
+    needs: build-natives
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -29,11 +75,32 @@ jobs:
           key: release-java-central
 
       # Builds the native library for this job's own (Linux) runner only, needed to
-      # run the JUnit tests bound to the `deploy` goal's lifecycle. Users on other
-      # platforms build it themselves via `cargo build -p fastlowess-java --release`
-      # (see bindings/java/docs/installation.md).
+      # run the JUnit tests bound to the `deploy` goal's lifecycle.
       - name: Build native library
         run: cargo build -p fastlowess-java --release
+
+      # Bundles every platform's native library (built by build-natives above)
+      # into src/main/resources/native/<os>-<arch>/<libname>, so the resulting
+      # jar's NativeBridge.loadFromBundledResource() can auto-extract the right
+      # one at runtime on any platform, with no separate manual build required.
+      - name: Download all native libraries
+        uses: actions/download-artifact@v8
+        with:
+          path: bindings/java/src/main/resources/native
+          pattern: native-*
+
+      - name: Flatten bundled native library layout
+        working-directory: bindings/java/src/main/resources/native
+        shell: bash
+        run: |
+          for artifact_dir in native-*/; do
+            dir="${artifact_dir#native-}"
+            dir="${dir%/}"
+            mkdir -p "$dir"
+            mv "$artifact_dir"/* "$dir/"
+            rmdir "$artifact_dir"
+          done
+          find . -type f
 
       # server-id/server-username/server-password generate a <server> entry in
       # ~/.m2/settings.xml that central-publishing-maven-plugin's

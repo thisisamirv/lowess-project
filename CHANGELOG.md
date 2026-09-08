@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Monorepo:**
 
 - Added Linux musl (Alpine) release binaries alongside the existing glibc ones: Python (`release-pypi.yml` now publishes `musllinux_1_2` wheels for x86_64/aarch64), C++ (`release-cpp.yml` builds natively inside `alpine:latest` containers on `ubuntu-latest`/`ubuntu-24.04-arm`, publishing `libfastlowess-linux-{x64,arm64}-musl.so`), Go (`release-go.yml`, same container approach, publishing `libfastlowess_go-linux-{x64,arm64}-musl.a`), and Julia (removed the `libc(p) != "musl"` filter from `dev/build_tarballs_julia.jl`, letting Yggdrasil build musl JLLs again). GPU wheels/libraries (`release-gpu.yml`) are not covered by this change. Java is intentionally left as-is (no prebuilt natives for any platform yet).
+- Added prebuilt native libraries for the Java binding: `release-java.yml` now builds `fastlowess_java` for `linux-x86_64`, `linux-aarch64`, `macos-x86_64`, `macos-aarch64`, `windows-x86_64`, and `windows-aarch64`, and bundles all six into the published jar under `src/main/resources/native/<os>-<arch>/`. `NativeBridge`'s existing (previously unused) `loadFromBundledResource()` auto-detects the platform and extracts/loads the matching one, so `mvn`/Gradle users on any of those platforms no longer need to build the native library themselves. musl/Alpine isn't bundled yet, since `NativeBridge` doesn't currently distinguish glibc from musl.
 
 ### Fixed
 
