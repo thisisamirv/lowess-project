@@ -21,7 +21,8 @@ use core::marker::PhantomData;
 use num_traits::Float;
 
 // Internal dependencies
-use crate::adapters::batch::BatchLowessBuilder;
+use crate::adapters::batch::{BatchLowess, BatchLowessBuilder};
+use crate::adapters::defaults::default_overlap;
 use crate::adapters::online::OnlineLowessBuilder;
 use crate::adapters::streaming::StreamingLowessBuilder;
 use crate::engine::executor::{CVPassFn, IntervalPassFn, SmoothPassFn};
@@ -769,7 +770,7 @@ impl<T: Float> LowessAdapter<T> for Streaming {
         }
         result.overlap = builder
             .overlap
-            .unwrap_or_else(|| crate::adapters::defaults::default_overlap(result.chunk_size));
+            .unwrap_or_else(|| default_overlap(result.chunk_size));
         if let Some(fraction) = builder.fraction {
             result.fraction = fraction;
         }
@@ -845,17 +846,21 @@ pub struct Online;
 
 // Mode-specific build() methods — each delegates to the corresponding adapter.
 impl<T: Float> LowessBuilder<T, BatchMode> {
-    pub fn build(self) -> Result<crate::adapters::batch::BatchLowess<T>, LowessError> {
+    pub fn build(self) -> Result<BatchLowess<T>, LowessError> {
         Batch::convert(self).build()
     }
 }
 
+// Note: `crate::adapters::streaming::StreamingLowess` is used fully-qualified here to
+// disambiguate from this module's own `StreamingLowess` type alias.
 impl<T: Float> LowessBuilder<T, StreamingMode> {
     pub fn build(self) -> Result<crate::adapters::streaming::StreamingLowess<T>, LowessError> {
         Streaming::convert(self).build()
     }
 }
 
+// Note: `crate::adapters::online::OnlineLowess` is used fully-qualified here to
+// disambiguate from this module's own `OnlineLowess` type alias.
 impl<T: Float> LowessBuilder<T, OnlineMode> {
     pub fn build(self) -> Result<crate::adapters::online::OnlineLowess<T>, LowessError> {
         Online::convert(self).build()

@@ -17,6 +17,7 @@ use alloc::vec;
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 use core::fmt::Debug;
+use core::iter::repeat_n;
 use core::mem::swap;
 use num_traits::Float;
 #[cfg(feature = "std")]
@@ -728,12 +729,9 @@ impl<T: Float> LowessExecutor<T> {
                 self.custom_weights.as_ref().map(|cw| {
                     let padded_len = x_in.len();
                     let mut pv: Vec<T> = Vec::with_capacity(padded_len);
-                    pv.extend(core::iter::repeat_n(T::one(), pad_len));
+                    pv.extend(repeat_n(T::one(), pad_len));
                     pv.extend_from_slice(cw);
-                    pv.extend(core::iter::repeat_n(
-                        T::one(),
-                        padded_len - pad_len - cw.len(),
-                    ));
+                    pv.extend(repeat_n(T::one(), padded_len - pad_len - cw.len()));
                     pv
                 })
             })

@@ -49,6 +49,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Flattened the `tests/fastLowess/` directories into `tests/` directly: each test file is now its own independent integration test binary instead of a submodule of a shared `main.rs`. No test behavior changes.
 
+**Monorepo:**
+
+- Hoisted inline fully-qualified paths (e.g. `crate::math::distance::DistanceLinalg`, `std::slice::from_raw_parts`) to top-level `use` imports across all crates and bindings, using the bare name in the body instead. Genuine name collisions (e.g. a module-local `Result<T>`/`StreamingLowess` type alias shadowing the standard one) are kept fully-qualified with an explanatory comment. No behavior changes.
+
 ## 4.0.0
 
 ### Added

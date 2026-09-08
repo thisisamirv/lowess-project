@@ -17,6 +17,7 @@
 
 use approx::assert_relative_eq;
 use num_traits::Float;
+use std::panic::catch_unwind;
 
 use lowess::internals::algorithms::regression::{
     LinearFit, RegressionContext, WLSSolver, WeightParams, ZeroWeightFallback,
@@ -81,7 +82,7 @@ fn test_weight_params_construction() {
 fn test_weight_params_nonpositive_bandwidth() {
     if cfg!(debug_assertions) {
         // In debug, should panic
-        let result = std::panic::catch_unwind(|| {
+        let result = catch_unwind(|| {
             let _ = WeightParams::new(1.0f64, 0.0f64, false);
         });
         assert!(

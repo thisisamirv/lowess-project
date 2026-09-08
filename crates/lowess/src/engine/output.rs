@@ -8,7 +8,7 @@
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 use core::cmp::Ordering;
-use core::fmt::{Debug, Display, Formatter, Result};
+use core::fmt::{Debug, Display, Formatter};
 use num_traits::Float;
 #[cfg(feature = "std")]
 use std::vec::Vec;
@@ -103,7 +103,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> LowessResult<T> {
         &self,
         new_x: &[T],
         options: PredictOptions<T>,
-    ) -> core::result::Result<PredictOutput<T>, LowessError> {
+    ) -> Result<PredictOutput<T>, LowessError> {
         match &self.fit_state {
             Some(state) => predict_batch(state, new_x, &options),
             None => Err(LowessError::PredictionUnavailable),
@@ -112,7 +112,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> LowessResult<T> {
 }
 
 impl<T: Float + Display + Debug> Display for LowessResult<T> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         writeln!(f, "Summary:")?;
         writeln!(f, "  Data points: {}", self.x.len())?;
         writeln!(f, "  Fraction:    {}", self.fraction_used)?;

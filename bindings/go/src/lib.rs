@@ -13,6 +13,7 @@ use std::ffi::CString;
 use std::os::raw::{c_char, c_double, c_int, c_ulong};
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::ptr;
+use std::slice::from_raw_parts;
 
 use fastLowess::internals::adapters::online::ParallelOnlineLowess;
 use fastLowess::internals::adapters::streaming::ParallelStreamingLowess;
@@ -48,16 +49,12 @@ fn error_result_from(err: shared_parse::BindingError) -> GoLowessResult {
 }
 
 #[allow(clippy::result_large_err)]
-fn map_invalid_arg_result<T, E: ToString>(
-    result: std::result::Result<T, E>,
-) -> std::result::Result<T, GoLowessResult> {
+fn map_invalid_arg_result<T, E: ToString>(result: Result<T, E>) -> Result<T, GoLowessResult> {
     shared_parse::map_invalid_arg(result).map_err(error_result_from)
 }
 
 #[allow(clippy::result_large_err)]
-fn map_runtime_result<T, E: ToString>(
-    result: std::result::Result<T, E>,
-) -> std::result::Result<T, GoLowessResult> {
+fn map_runtime_result<T, E: ToString>(result: Result<T, E>) -> Result<T, GoLowessResult> {
     shared_parse::map_runtime(result).map_err(error_result_from)
 }
 
@@ -424,8 +421,8 @@ pub unsafe extern "C" fn go_lowess_fit(
         }
 
         let lowess = &mut *ptr;
-        let x_slice = std::slice::from_raw_parts(x_values, n as usize);
-        let y_slice = std::slice::from_raw_parts(y_values, n as usize);
+        let x_slice = from_raw_parts(x_values, n as usize);
+        let y_slice = from_raw_parts(y_values, n as usize);
 
         let cw = shared_parse::option_vec_from_ptr(custom_weights, custom_weights_len as usize);
 
@@ -588,8 +585,8 @@ pub unsafe extern "C" fn go_streaming_process(
         if x_values.is_null() || y_values.is_null() || n == 0 {
             return error_result(shared_parse::INVALID_DATA_INPUTS);
         }
-        let x_slice = std::slice::from_raw_parts(x_values, n as usize);
-        let y_slice = std::slice::from_raw_parts(y_values, n as usize);
+        let x_slice = from_raw_parts(x_values, n as usize);
+        let y_slice = from_raw_parts(y_values, n as usize);
 
         if let Some(model) = &mut lowess.model {
             match map_runtime_result(model.process_chunk(x_slice, y_slice)) {

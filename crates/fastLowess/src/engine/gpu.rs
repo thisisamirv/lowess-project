@@ -14,6 +14,7 @@ use std::borrow::Cow;
 use std::cmp::Ordering::Equal;
 use std::fmt::Debug;
 use std::mem::size_of;
+use std::slice::from_raw_parts;
 use std::sync::Mutex;
 use wgpu::util::DeviceExt;
 use wgpu::{
@@ -4091,7 +4092,7 @@ where
         let max_frac = fractions
             .iter()
             .cloned()
-            .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+            .max_by(|a, b| a.partial_cmp(b).unwrap_or(Equal))
             .unwrap_or(T::zero())
             .to_f32()
             .unwrap_or(0.0);
@@ -4455,7 +4456,7 @@ where
 {
     if TypeId::of::<T>() == TypeId::of::<f32>() {
         let ptr = slice.as_ptr() as *const f32;
-        let s = unsafe { std::slice::from_raw_parts(ptr, slice.len()) };
+        let s = unsafe { from_raw_parts(ptr, slice.len()) };
         Cow::Borrowed(s)
     } else {
         Cow::Owned(slice.iter().map(|v| v.to_f32().unwrap()).collect())

@@ -25,6 +25,8 @@ use jni::signature::MethodSignature;
 use jni::strings::JNIStr;
 use jni::sys::{jboolean, jdouble, jint, jlong};
 use jni::{Env, errors::Error as JniError, jni_sig, jni_str};
+use std::error::Error;
+use std::fmt::{Display, Formatter};
 
 const RESULT_CLASS: &JNIStr = jni_str!("fastlowess/NativeResult");
 const ONLINE_OUTPUT_CLASS: &JNIStr = jni_str!("fastlowess/NativeOnlineOutput");
@@ -41,13 +43,15 @@ const ONLINE_OUTPUT_CTOR_SIG: MethodSignature<'static, 'static> = jni_sig!("(ZDD
 #[derive(Debug)]
 struct AppError(String);
 
-impl std::fmt::Display for AppError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+// Note: return type is fully-qualified as `std::fmt::Result` to disambiguate from
+// this file's own `Result<T, E>` (std::result::Result) used throughout.
+impl Display for AppError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
     }
 }
 
-impl std::error::Error for AppError {}
+impl Error for AppError {}
 
 impl From<String> for AppError {
     fn from(s: String) -> Self {

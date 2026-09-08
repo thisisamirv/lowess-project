@@ -184,9 +184,7 @@ fn error_result_from(err: shared_parse::BindingError) -> JlLowessResult {
     error_result(&err.message)
 }
 
-fn map_runtime_result<T, E: ToString>(
-    result: std::result::Result<T, E>,
-) -> std::result::Result<T, Box<JlLowessResult>> {
+fn map_runtime_result<T, E: ToString>(result: Result<T, E>) -> Result<T, Box<JlLowessResult>> {
     shared_parse::map_runtime(result).map_err(|e| Box::new(error_result_from(e)))
 }
 

@@ -35,7 +35,7 @@ struct ResultData {
     fitted: Vec<f64>,
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<(), Box<dyn Error>> {
     let input_dir = Path::new("../output/r");
     let output_dir = Path::new("../output/fastLowess");
 

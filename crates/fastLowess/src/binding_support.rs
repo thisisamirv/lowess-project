@@ -62,7 +62,11 @@ pub use lowess::internals::math::boundary::BoundaryPolicy;
 pub use lowess::internals::math::kernel::WeightFunction;
 pub use lowess::internals::math::scaling::ScalingMethod;
 use std::ffi::{CStr, CString};
+use std::fmt::{Display, Formatter};
+use std::mem::forget;
 use std::os::raw::c_char;
+use std::ptr::{null_mut, slice_from_raw_parts_mut};
+use std::slice::from_raw_parts;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BindingErrorCategory {
@@ -92,8 +96,10 @@ impl BindingError {
     }
 }
 
-impl std::fmt::Display for BindingError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+// Note: return type is fully-qualified as `std::fmt::Result` to disambiguate from
+// this file's own `Result<T, E>` (std::result::Result) used throughout.
+impl Display for BindingError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.message)
     }
 }
@@ -196,7 +202,7 @@ pub fn dims_mismatch_message(x_len: usize, y_len: usize, dimensions: usize) -> S
 /// live for at least as long as the returned slice is used.
 pub unsafe fn option_slice_from_ptr<'a, T>(ptr: *const T, len: usize) -> Option<&'a [T]> {
     if !ptr.is_null() && len > 0 {
-        Some(unsafe { std::slice::from_raw_parts(ptr, len) })
+        Some(unsafe { from_raw_parts(ptr, len) })
     } else {
         None
     }
@@ -261,7 +267,7 @@ pub fn setter_unsupported_constructor_only_message(name: &str) -> String {
 pub fn vec_to_raw_ptr(v: Vec<f64>) -> *mut f64 {
     let mut boxed = v.into_boxed_slice();
     let ptr = boxed.as_mut_ptr();
-    std::mem::forget(boxed);
+    forget(boxed);
     ptr
 }
 
@@ -269,7 +275,7 @@ pub fn vec_to_raw_ptr(v: Vec<f64>) -> *mut f64 {
 pub fn opt_vec_to_raw_ptr(v: Option<Vec<f64>>) -> *mut f64 {
     match v {
         Some(vec) => vec_to_raw_ptr(vec),
-        None => std::ptr::null_mut(),
+        None => null_mut(),
     }
 }
 
@@ -383,7 +389,7 @@ pub fn extract_ffi_lowess_result(result: LowessResult<f64>) -> FfiLowessResult {
 pub unsafe fn free_raw_f64_buffer(ptr: *mut f64, len: usize) {
     if !ptr.is_null() {
         unsafe {
-            let _ = Box::from_raw(std::ptr::slice_from_raw_parts_mut(ptr, len));
+            let _ = Box::from_raw(slice_from_raw_parts_mut(ptr, len));
         }
     }
 }

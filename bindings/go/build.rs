@@ -1,4 +1,5 @@
 use std::env;
+use std::fs::{create_dir_all, read_to_string, write};
 use std::path::PathBuf;
 
 fn main() {
@@ -8,7 +9,7 @@ fn main() {
         .join("fastlowess_go.h");
 
     // Create include directory if it doesn't exist
-    std::fs::create_dir_all(PathBuf::from(&crate_dir).join("include")).unwrap();
+    create_dir_all(PathBuf::from(&crate_dir).join("include")).unwrap();
 
     // Generate C header
     cbindgen::Builder::new()
@@ -27,7 +28,7 @@ fn main() {
 }
 
 fn normalize_generated_header(output_file: &PathBuf) {
-    let header = std::fs::read_to_string(output_file).expect("Unable to read generated bindings");
+    let header = read_to_string(output_file).expect("Unable to read generated bindings");
 
     let normalized = header
         .replace(
@@ -46,6 +47,6 @@ fn normalize_generated_header(output_file: &PathBuf) {
         .replace("const double *y,", "const double *y_values,");
 
     if normalized != header {
-        std::fs::write(output_file, normalized).expect("Unable to write normalized bindings");
+        write(output_file, normalized).expect("Unable to write normalized bindings");
     }
 }

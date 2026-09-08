@@ -17,17 +17,18 @@
 //! 13. Auto-Convergence Comparison
 
 use fastLowess::prelude::*;
-use std::fs::File;
+use std::error::Error;
+use std::fs::{File, create_dir_all};
 use std::io::Write;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<(), Box<dyn Error>> {
     println!("Running All Visualization Examples...");
     println!("=====================================");
     println!();
 
     // Ensure output directory exists
     let output_dir = "../output/visual/";
-    std::fs::create_dir_all(output_dir)?;
+    create_dir_all(output_dir)?;
     println!("Output directory: {}", output_dir);
     println!();
 
@@ -78,7 +79,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// 2. Fraction Comparison
-fn run_fraction_comparison() -> Result<(), Box<dyn std::error::Error>> {
+fn run_fraction_comparison() -> Result<(), Box<dyn Error>> {
     let n = 150;
     let mut x = Vec::with_capacity(n);
     let mut y = Vec::with_capacity(n);
@@ -144,7 +145,7 @@ fn run_fraction_comparison() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// 3. Intervals Comparison
-fn run_intervals_comparison() -> Result<(), Box<dyn std::error::Error>> {
+fn run_intervals_comparison() -> Result<(), Box<dyn Error>> {
     let n = 100;
     let mut x = Vec::with_capacity(n);
     let mut y = Vec::with_capacity(n);
@@ -237,7 +238,7 @@ fn run_intervals_comparison() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// 4. Robustness Comparison
-fn run_robust_iter_comparison() -> Result<(), Box<dyn std::error::Error>> {
+fn run_robust_iter_comparison() -> Result<(), Box<dyn Error>> {
     let n = 150;
     let mut x = Vec::with_capacity(n);
     let mut y = Vec::with_capacity(n);
@@ -320,7 +321,7 @@ fn run_robust_iter_comparison() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// 5. LOWESS Concept
-fn run_lowess_concept() -> Result<(), Box<dyn std::error::Error>> {
+fn run_lowess_concept() -> Result<(), Box<dyn Error>> {
     let n = 80;
     let mut x = Vec::with_capacity(n);
     let mut y = Vec::with_capacity(n);
@@ -421,7 +422,7 @@ fn run_lowess_concept() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// 7. Kernel Comparison
-fn run_kernel_comparison() -> Result<(), Box<dyn std::error::Error>> {
+fn run_kernel_comparison() -> Result<(), Box<dyn Error>> {
     let n = 150;
     let mut x = Vec::with_capacity(n);
     let mut y = Vec::with_capacity(n);
@@ -482,7 +483,7 @@ fn run_kernel_comparison() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// 8. Robustness Method Comparison
-fn run_robust_method_comparison() -> Result<(), Box<dyn std::error::Error>> {
+fn run_robust_method_comparison() -> Result<(), Box<dyn Error>> {
     // 200 clean points across [0, 10] + 80 one-sided outliers concentrated in
     // [3, 7].  All outliers are pushed +5.5 above the true signal.
     //
@@ -600,7 +601,7 @@ fn run_robust_method_comparison() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// 9. Boundary Policy Comparison
-fn run_boundary_policy_comparison() -> Result<(), Box<dyn std::error::Error>> {
+fn run_boundary_policy_comparison() -> Result<(), Box<dyn Error>> {
     let n = 100;
     let mut x = Vec::with_capacity(n);
     let mut y = Vec::with_capacity(n);
@@ -658,7 +659,7 @@ fn run_boundary_policy_comparison() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// 12. Cross-Validation Comparison
-fn run_cv_comparison() -> Result<(), Box<dyn std::error::Error>> {
+fn run_cv_comparison() -> Result<(), Box<dyn Error>> {
     let n = 150;
     let pi = std::f64::consts::PI;
     let mut x = Vec::with_capacity(n);
@@ -753,7 +754,7 @@ fn run_cv_comparison() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// 13. Surface Mode Comparison
-fn run_surface_mode_comparison() -> Result<(), Box<dyn std::error::Error>> {
+fn run_surface_mode_comparison() -> Result<(), Box<dyn Error>> {
     let n = 200;
     let mut x = Vec::with_capacity(n);
     let mut y = Vec::with_capacity(n);
@@ -821,7 +822,7 @@ fn run_surface_mode_comparison() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// 14. Scaling Method Comparison
-fn run_scaling_method_comparison() -> Result<(), Box<dyn std::error::Error>> {
+fn run_scaling_method_comparison() -> Result<(), Box<dyn Error>> {
     // Two-tier contamination (40 % total, well under the 50 % breakdown point):
     //   • i%5 == 0 → moderate outlier  +1.5  (20 %)
     //   • i%5 == 1 → extreme  outlier  +6.0  (20 %)
@@ -967,7 +968,7 @@ fn run_scaling_method_comparison() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// 15. Zero Weight Fallback Comparison
-fn run_zero_weight_fallback_comparison() -> Result<(), Box<dyn std::error::Error>> {
+fn run_zero_weight_fallback_comparison() -> Result<(), Box<dyn Error>> {
     // Signal: sin(π·x/5) on [0,10], n=200
     // Anomalous zone x∈[4,6]: even indices → +6 spike, odd → clean
     // Talwar robustness, fraction=0.10, 2 iterations
@@ -1063,7 +1064,7 @@ fn run_zero_weight_fallback_comparison() -> Result<(), Box<dyn std::error::Error
 }
 
 /// 17. Streaming Adapter Comparison
-fn run_merge_comparison() -> Result<(), Box<dyn std::error::Error>> {
+fn run_merge_comparison() -> Result<(), Box<dyn Error>> {
     let n = 600;
     let chunk_size = 150;
     let overlap = 90; // 60 % overlap — large overlap zone = more points where strategies differ
@@ -1159,7 +1160,7 @@ fn run_merge_comparison() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// 18. Online Adapter Comparison
-fn run_online_comparison() -> Result<(), Box<dyn std::error::Error>> {
+fn run_online_comparison() -> Result<(), Box<dyn Error>> {
     let n = 600;
     let mut x = Vec::with_capacity(n);
     let mut y = Vec::with_capacity(n);
@@ -1236,7 +1237,7 @@ fn run_online_comparison() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// 19. Auto-Convergence Comparison
-fn run_adapter_comparison() -> Result<(), Box<dyn std::error::Error>> {
+fn run_adapter_comparison() -> Result<(), Box<dyn Error>> {
     // x ∈ [0, 4π]: two full sine periods over 200 evenly-spaced points.
     // fraction = 0.15 → window ≈ 30 pts ≈ 1.88 x-units ≈ 0.30 periods, so
     // a local-linear fit captures the sinusoidal shape well.
