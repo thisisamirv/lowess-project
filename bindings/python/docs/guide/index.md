@@ -9,4 +9,5 @@ Adapter selection, uncertainty quantification, and parameter tuning.
 adapter-choice
 intervals
 cross-validation
+predict
 :::

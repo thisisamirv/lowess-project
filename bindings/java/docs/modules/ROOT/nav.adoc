@@ -7,6 +7,7 @@
 ** xref:guide/adapter-choice.adoc[Execution Modes]
 ** xref:guide/intervals.adoc[Intervals]
 ** xref:guide/cross-validation.adoc[Cross-Validation]
+** xref:guide/predict.adoc[Predict]
 * API Reference
 ** xref:api/api.adoc[API]
 ** xref:api/api-streaming.adoc[StreamingLowess API]

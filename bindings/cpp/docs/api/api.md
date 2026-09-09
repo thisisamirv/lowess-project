@@ -114,6 +114,7 @@ int main() {
 | `cv_fractions` | `std::vector<double>` | `{}` | Fractions to test for cross-validation |
 | `cv_seed` | `uint64_t` | `0` | Random seed for CV shuffling (0 = random) |
 | `custom_weights` | `std::vector<double>` | `{}` | Per-observation case weights — passed to `fit()`, not the constructor |
+| `retain_model` | `bool` | `false` | Retain training data, enabling `LowessResult::predict_model()` |
 
 ## Options
 
@@ -279,6 +280,12 @@ The batch `fastlowess::Lowess` class can optionally run on a GPU-accelerated bac
 
 Per-observation weights, passed to `fit()` rather than the constructor.
 
+### retain_model
+
+*See: [Predict](../guide/predict.md)*
+
+Retains the fitted model's training data, enabling `LowessResult::predict_model()` to obtain a `PredictModel` for out-of-sample query points not in the training set. `false` (default) — no extra memory/copy cost unless requested.
+
 ## Result Structure
 
 ### fastlowess::LowessResult
@@ -314,6 +321,12 @@ All accessors are const methods (not public fields):
 | `effective_df()` | `double` | Effective degrees of freedom (NaN if not computed) |
 | `aic()` | `double` | AIC (NaN if not computed) |
 | `aicc()` | `double` | AICc (NaN if not computed) |
+
+## Predict
+
+### `fastlowess::PredictModel::predict(new_x, options) -> PredictResult`
+
+Obtained via `LowessResult::predict_model()` (moves the retained state out; only valid once, only when `retain_model = true` was set — check `PredictModel::valid()`). Evaluates the fitted model at out-of-sample query points.
 
 ## Example
 

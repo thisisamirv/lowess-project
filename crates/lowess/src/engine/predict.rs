@@ -204,10 +204,11 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> PredictQuery<T> {
     // Requires `.retain_model(true)` on the builder that produced `result` (Batch adapter
     // only); returns `LowessError::PredictionUnavailable` otherwise.
     //
-    // Always fits an exact local regression at each query point, unlike `fit()` with the
-    // default `delta > 0` (which only fits exactly at anchor points spaced `delta` apart
-    // and linearly interpolates the rest). So predicting at an x already in the training
-    // set may not exactly reproduce that point's `fit()` output unless `delta(0.0)` was used.
+    // Reuses `fit()`'s own (possibly delta-interpolated) smoothed curve for its `y`
+    // output, so it exactly reproduces `fit()`'s value at any x already in the training
+    // set, regardless of `delta()`. A fresh local WLS fit is only computed when
+    // `return_derivative`/`return_se`/an interval method/`max_neighbor_distance` needs
+    // the actual regression slope or standard error.
     pub fn call(
         &self,
         result: &LowessResult<T>,

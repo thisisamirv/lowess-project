@@ -78,6 +78,7 @@ Result result = model.fit(x, y);
 |`cvK` |`int` |`5` |Number of folds for k-fold CV.
 |`cvFractions` |`double[]` |`null` (disabled) |Candidate fractions for cross-validation.
 |`cvSeed` |`long` (boxed) |`null` (random) |RNG seed for reproducible k-fold splits.
+|`retainModel` |`boolean` |`false` |Retain training data, enabling `Result.predictModel()`.
 |===
 
 Use `Options.builder()` (pre-populated with recommended defaults) and override only the settings you need:
@@ -296,6 +297,12 @@ try (Lowess model = new Lowess(Options.builder().build())) {
 }
 ----
 
+=== retainModel
+
+_See: xref:../guide/predict.adoc[Predict]_
+
+Retains the fitted model's training data, populating `Result.predictModel()` with an `Optional<PredictModel>` usable to evaluate the fit at out-of-sample query points not in the training set. `false` (default) — no extra memory/copy cost unless requested.
+
 == Result Structure
 
 === `Result`
@@ -330,6 +337,14 @@ try (Lowess model = new Lowess(Options.builder().build())) {
 |`aic()` |`Optional<Double>` |AIC
 |`aicc()` |`Optional<Double>` |AICc
 |===
+
+== Predict
+
+_See: xref:../guide/predict.adoc[Predict]_
+
+=== `PredictModel.predict(double[] newX, PredictOptions options) PredictResult`
+
+Obtained via `Result.predictModel()`, only populated when `retainModel` was `true`. Evaluates the fitted model at out-of-sample query points.
 
 == Example
 

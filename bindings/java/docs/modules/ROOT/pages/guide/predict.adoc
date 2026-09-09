@@ -1,0 +1,111 @@
+= Out-of-Sample Prediction
+
+Evaluate a fitted Batch model at query points that were not in the training set.
+
+== Overview
+
+NOTE: Out-of-sample prediction is available in *Batch* mode only. Streaming and Online modes do not support it.
+
+`PredictModel.predict(newX, options)` evaluates the fit at arbitrary query points, like R's `predict(model, newdata)`.
+
+It reuses `fit`'s own (possibly `delta`-interpolated) smoothed curve for its `y` output — so predicting at a training `x` always exactly reproduces that point's `fit` output, regardless of `delta`. A fresh local fit is only run when `returnDerivative`, `returnSe` (or an interval level), or `maxNeighborDistance` needs the actual regression slope or standard error.
+
+`Result.predictModel()` returns an `Optional<PredictModel>`, populated only when `retainModel` was `true`.
+
+---
+
+== Options
+
+[cols="1,1,1,1",options="header"]
+|===
+|Setting |Type |Default |Description
+
+|`returnSe` |`boolean` |`false` |Include standard errors in the output.
+|`confidenceLevel` |`double` |`NaN` |Confidence interval coverage level (e.g. `0.95`; NaN to disable).
+|`predictionLevel` |`double` |`NaN` |Prediction interval coverage level (e.g. `0.95`; NaN to disable).
+|`returnDerivative` |`boolean` |`false` |Include the local fit's derivative (slope) at each query point.
+|`extrapolation` |`String` |`"clamp"` |Behavior for query points outside the training `x`-range.
+|`maxExtrapolationDistance` |`double` |`NaN` |Under `"linear"` extrapolation, the max allowed distance beyond the training boundary before erroring (NaN to disable).
+|`maxNeighborDistance` |`double` |`NaN` |Max allowed distance to the farthest training point in a query's local window before erroring (NaN to disable).
+|===
+
+=== returnSe
+
+Computes standard errors for each query point, using the retained model's residual scale and per-point leverage. Required for `confidenceLevel`/`predictionLevel` to be populated. `false` by default.
+
+=== confidenceLevel
+
+Confidence level for the confidence interval around the mean response at each query point (e.g. `0.95`). Uses the same z-score convention as `fit`'s own confidence intervals. `NaN` (default) disables it.
+
+=== predictionLevel
+
+Confidence level for the prediction interval for a new observation at each query point (e.g. `0.95`). Widens using the same MAD-based residual scale `fit` uses for its own intervals. `NaN` (default) disables it.
+
+=== returnDerivative
+
+Includes the local fit's derivative (slope) at each query point in the output. `false` by default.
+
+=== extrapolation
+
+Behavior for query points outside `[min(x_train), max(x_train)]`:
+
+[cols="1,1",options="header"]
+|===
+|Policy |Behavior
+
+|`"clamp"` (default) |Clamps the query to the nearest boundary window
+|`"linear"` |Linearly extrapolates from the nearest boundary point's local fit and slope
+|`"error"` |Fails the whole call with an exception
+|===
+
+=== maxExtrapolationDistance
+
+Under `"linear"` extrapolation, the maximum allowed distance beyond the training boundary before `predict` throws, instead of returning an unbounded value. `NaN` (default, uncapped).
+
+=== maxNeighborDistance
+
+Maximum allowed distance to the farthest training point in a query's local window before `predict` throws. Guards against an "empty range" blind spot: a query point can fall within `[min(x_train), max(x_train)]` yet still be far from any real training point (e.g. training `x` in `[0,10]` and `[90,100]`, query at `x=50`). `NaN` (default, uncapped); applies regardless of `extrapolation`.
+
+== Example
+
+=== Basic Usage
+
+[source,java]
+----
+double[] x = {1, 2, 3, 4, 5};
+double[] y = {2.1, 4.0, 6.2, 8.0, 10.1};
+
+Options options = Options.builder().fraction(0.7).retainModel(true).build();
+
+try (Lowess model = new Lowess(options)) {
+    Result result = model.fit(x, y);
+    try (PredictModel predictModel = result.predictModel().orElseThrow()) {
+        PredictResult prediction = predictModel.predict(new double[] { 1.5, 4.5 });
+        System.out.println(java.util.Arrays.toString(prediction.y()));
+    }
+}
+----
+
+[source,console]
+----
+[3.05, 9.05]
+----
+
+=== Standard Errors and Derivative
+
+[source,java]
+----
+PredictOptions options = PredictOptions.builder()
+        .returnSe(true)
+        .returnDerivative(true)
+        .build();
+PredictResult prediction = predictModel.predict(new double[] { 2.5 }, options);
+----
+
+=== Linear Extrapolation
+
+[source,java]
+----
+PredictOptions options = PredictOptions.builder().extrapolation("linear").build();
+PredictResult prediction = predictModel.predict(new double[] { 10.0 }, options);
+----

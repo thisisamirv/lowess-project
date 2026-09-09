@@ -72,6 +72,7 @@ println("First smoothed value: ", result.y[1])
 | `cv_fractions` | `Vector{Float64}` | `Float64[]` | Fractions to test for cross-validation |
 | `cv_seed` | `Union{Int, Nothing}` | `nothing` | Random seed for cross-validation shuffling |
 | `custom_weights` | `Vector{Float64}` | `nothing` | Per-observation case weights — passed to `fit`, not the constructor |
+| `retain_model` | `Bool` | `false` | Retain training data, enabling `predict(model, new_x; ...)` on the result |
 
 ## Options
 
@@ -241,6 +242,12 @@ The batch `Lowess` type can optionally run on a GPU-accelerated backend powered 
 *See: [Custom Weights](../weighting/custom-weights.md)*
 
 Per-observation weights, passed to `fit` rather than the constructor.
+
+### retain_model
+
+*See: [Predict](../guide/predict.md)*
+
+Retains the fitted model's training data, populating `result.predict_model` with a `PredictModel` usable to evaluate the fit at out-of-sample query points not in the training set. `false` (default) — no extra memory/copy cost unless requested.
 
 ## Result Structure
 

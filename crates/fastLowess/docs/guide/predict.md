@@ -10,7 +10,7 @@ Evaluate a fitted Batch model at query points that were not in the training set.
 
 `Predict::new()...build()?.call(&result, new_x)` evaluates the local WLS fit at arbitrary `x`-values, like R's `predict(model, newdata)`.
 
-It always fits an exact local regression at each query point, unlike `fit()`'s default `delta > 0` interpolation shortcut (which only fits exactly at anchor points and linearly interpolates the rest) — so predicting at a training `x` may not exactly reproduce that point's `fit()` output unless `delta(0.0)` was used.
+It reuses `fit()`'s own (possibly `delta`-interpolated) smoothed curve for its `y` output — so predicting at a training `x` always exactly reproduces that point's `fit()` output, regardless of `delta()`. A fresh local WLS fit is only run when `return_derivative`, `return_se` (or an interval method), or `max_neighbor_distance` needs the actual regression slope or standard error at the query point.
 
 Requires `.retain_model(true)` on the builder before `fit()`, otherwise `.call(...)` returns `LowessError::PredictionUnavailable`.
 

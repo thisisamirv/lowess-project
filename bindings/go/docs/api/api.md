@@ -75,6 +75,7 @@ result, err := model.Fit(x, y)
 | `CVK` | `int` | `5` | Number of folds for k-fold CV. |
 | `CVFractions` | `[]float64` | `nil` (disabled) | Candidate fractions for cross-validation. |
 | `CVSeed` | `*uint64` | `nil` (random) | RNG seed for reproducible k-fold splits. |
+| `RetainModel` | `bool` | `false` | Retain training data, enabling `Result.PredictModel` for out-of-sample prediction. |
 
 Use `fastlowess.DefaultOptions()` and override only the fields you need:
 
@@ -277,6 +278,12 @@ weights[0] = 5.0 // trust the first observation more
 result, err := model.Fit(x, y, weights)
 ```
 
+### RetainModel
+
+*See: [Predict](../guide/predict.md)*
+
+Retains the fitted model's training data, enabling `Result.PredictModel` to evaluate the fit at out-of-sample query points not in the training set. `false` (default) — no extra memory/copy cost unless requested.
+
 ## Result Structure
 
 ### `Result`
@@ -305,6 +312,12 @@ result, err := model.Fit(x, y, weights)
 | `EffectiveDF` | `float64` | Effective degrees of freedom |
 | `AIC` | `float64` | AIC |
 | `AICc` | `float64` | AICc |
+
+## Predict
+
+### `(*PredictModel) Predict(newX []float64, opts PredictOptions) (PredictResult, error)`
+
+`Result.PredictModel` is non-nil only when `Options.RetainModel` was set to `true`. Evaluates the fitted model at out-of-sample query points. Call `Close()` on it when done (or let its finalizer run).
 
 ## Example
 
