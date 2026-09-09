@@ -895,3 +895,76 @@ fn test_online_missing_drop_ignores_nan_point() {
     processor.add_point(2.0, 4.0).unwrap();
     assert_eq!(processor.window_size(), 2);
 }
+
+// ============================================================================
+// Derivative Tests
+// ============================================================================
+
+/// Test that `derivative` is `None` by default (not requested).
+#[test]
+fn test_online_derivative_none_by_default() {
+    let mut processor = OnlineLowess::new()
+        .fraction(1.0)
+        .window_capacity(5)
+        .min_points(2)
+        .build()
+        .unwrap();
+
+    let mut last = None;
+    for i in 0..5 {
+        last = processor.add_point(i as f64, 2.0 * i as f64 + 1.0).unwrap();
+    }
+    assert!(last.unwrap().derivative.is_none());
+}
+
+/// Test the exact two-point linear special case exposes the exact slope.
+#[test]
+fn test_online_derivative_two_point_exact() {
+    let mut processor = OnlineLowess::new()
+        .return_derivative()
+        .window_capacity(5)
+        .min_points(2)
+        .build()
+        .unwrap();
+
+    processor.add_point(0.0, 1.0).unwrap();
+    let output = processor.add_point(1.0, 4.0).unwrap().unwrap();
+    assert_relative_eq!(output.derivative.unwrap(), 3.0, epsilon = 1e-12);
+}
+
+/// Test `UpdateMode::Incremental` (the default) exposes the local fit slope.
+#[test]
+fn test_online_derivative_incremental_mode() {
+    let mut processor = OnlineLowess::new()
+        .fraction(1.0)
+        .return_derivative()
+        .window_capacity(20)
+        .min_points(2)
+        .build()
+        .unwrap();
+
+    let mut last = None;
+    for i in 0..10 {
+        last = processor.add_point(i as f64, 2.0 * i as f64 + 1.0).unwrap();
+    }
+    assert_relative_eq!(last.unwrap().derivative.unwrap(), 2.0, epsilon = 1e-9);
+}
+
+/// Test `UpdateMode::Full` exposes the local fit slope via `LowessExecutor::run_with_config`.
+#[test]
+fn test_online_derivative_full_mode() {
+    let mut processor = OnlineLowess::new()
+        .fraction(1.0)
+        .update_mode("full")
+        .return_derivative()
+        .window_capacity(20)
+        .min_points(2)
+        .build()
+        .unwrap();
+
+    let mut last = None;
+    for i in 0..10 {
+        last = processor.add_point(i as f64, 3.0 * i as f64 - 2.0).unwrap();
+    }
+    assert_relative_eq!(last.unwrap().derivative.unwrap(), 3.0, epsilon = 1e-9);
+}

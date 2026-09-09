@@ -255,6 +255,10 @@ impl StreamingLowess {
         self.0 = self.0.merge_strategy(s);
         self
     }
+    pub fn return_derivative(mut self) -> Self {
+        self.0 = self.0.return_derivative();
+        self
+    }
 
     pub fn build(self) -> Result<ParallelStreamingLowess<f64>, LowessError> {
         Streaming::convert(self.0).build()
@@ -275,6 +279,10 @@ impl OnlineLowess {
     }
     pub fn update_mode(mut self, s: &str) -> Self {
         self.0 = self.0.update_mode(s);
+        self
+    }
+    pub fn return_derivative(mut self) -> Self {
+        self.0 = self.0.return_derivative();
         self
     }
 

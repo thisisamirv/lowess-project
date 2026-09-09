@@ -99,6 +99,7 @@ Fraction used: 0.5
 | `return_diagnostics()` | `bool` | `false` | Include diagnostics in result |
 | `return_residuals()` | `bool` | `false` | Include residuals in result |
 | `return_robustness_weights()` | `bool` | `false` | Include weights in result |
+| `return_derivative()` | `bool` | `false` | Include the per-point local fit derivative (slope) in result |
 | `parallel(bool)` | `bool` | `true` | Enable parallel execution |
 | `chunk_size(usize)` | `usize` | `5000` | Data chunk size |
 | `overlap(usize)` | `usize` | `chunk_size / 10` | Overlap between chunks |
@@ -221,6 +222,13 @@ Include the final per-point robustness weights (from the last robustness iterati
 - `false` (default) — leaves `result.robustness_weights` as `None`
 - `true` — populates `result.robustness_weights`
 
+### return_derivative
+
+Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) in `LowessResult::derivative` at effectively no extra computation cost. Derivative values in the overlap region are merged across chunk boundaries the same way `y` is, via `merge_strategy`. Computed via the parallel `derivative_pass_parallel` when `parallel` is enabled.
+
+- `false` (default) — leaves `result.derivative` as `None`
+- `true` — populates it
+
 ### parallel
 
 Enable multi-threaded execution via Rayon.
@@ -271,6 +279,7 @@ Returned by `process_chunk()` and `finalize()`.
 | `robustness_weights` | `Option<Vec<T>>` | Robustness weights (if `return_robustness_weights()`) |
 | `cv_scores` | `Option<Vec<T>>` | Always `None` (Batch only) |
 | `diagnostics` | `Option<Diagnostics<T>>` | Fit metrics (if `return_diagnostics()`) |
+| `derivative` | `Option<Vec<T>>` | Per-point local fit derivative/slope (if `return_derivative()`) |
 
 ### `Diagnostics<T>`
 

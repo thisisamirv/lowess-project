@@ -134,6 +134,88 @@ fn test_streaming_adapter() {
 }
 
 #[test]
+fn test_streaming_adapter_return_derivative() {
+    let n = 30;
+    let x: Vec<f64> = (0..n).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| 2.0 * xi + 1.0).collect();
+
+    let mut processor = StreamingLowess::new()
+        .fraction(1.0)
+        .iterations(0)
+        .return_derivative()
+        .chunk_size(20)
+        .overlap(5)
+        .build()
+        .unwrap();
+
+    let res1 = processor.process_chunk(&x[0..20], &y[0..20]).unwrap();
+    let deriv1 = res1.derivative.expect("derivative should be present");
+    for &d in &deriv1 {
+        assert_abs_diff_eq!(d, 2.0, epsilon = 1e-9);
+    }
+
+    let res2 = processor.process_chunk(&x[20..n], &y[20..n]).unwrap();
+    let deriv2 = res2.derivative.expect("derivative should be present");
+    for &d in &deriv2 {
+        assert_abs_diff_eq!(d, 2.0, epsilon = 1e-9);
+    }
+
+    let res3 = processor.finalize().unwrap();
+    let deriv3 = res3.derivative.expect("derivative should be present");
+    for &d in &deriv3 {
+        assert_abs_diff_eq!(d, 2.0, epsilon = 1e-9);
+    }
+}
+
+#[test]
+fn test_streaming_return_derivative_parallel_matches_sequential() {
+    let n = 40;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 + (i as f64 * 0.37).sin()).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + xi / 5.0).collect();
+
+    let mut seq = StreamingLowess::new()
+        .fraction(0.4)
+        .return_derivative()
+        .parallel(false)
+        .chunk_size(20)
+        .overlap(5)
+        .build()
+        .unwrap();
+    let mut par = StreamingLowess::new()
+        .fraction(0.4)
+        .return_derivative()
+        .parallel(true)
+        .chunk_size(20)
+        .overlap(5)
+        .build()
+        .unwrap();
+
+    let seq1 = seq.process_chunk(&x[0..20], &y[0..20]).unwrap();
+    let par1 = par.process_chunk(&x[0..20], &y[0..20]).unwrap();
+    for (&s, &p) in seq1
+        .derivative
+        .as_ref()
+        .unwrap()
+        .iter()
+        .zip(par1.derivative.as_ref().unwrap().iter())
+    {
+        assert_abs_diff_eq!(s, p, epsilon = 1e-9);
+    }
+
+    let seq2 = seq.process_chunk(&x[20..n], &y[20..n]).unwrap();
+    let par2 = par.process_chunk(&x[20..n], &y[20..n]).unwrap();
+    for (&s, &p) in seq2
+        .derivative
+        .as_ref()
+        .unwrap()
+        .iter()
+        .zip(par2.derivative.as_ref().unwrap().iter())
+    {
+        assert_abs_diff_eq!(s, p, epsilon = 1e-9);
+    }
+}
+
+#[test]
 fn test_online_adapter() {
     let mut processor = OnlineLowess::new()
         .min_points(3)
@@ -162,6 +244,23 @@ fn test_online_adapter() {
     assert_eq!(results.len(), 2);
     assert!(results[0].is_some());
     assert!(results[1].is_some());
+}
+
+#[test]
+fn test_online_adapter_return_derivative() {
+    let mut processor = OnlineLowess::new()
+        .fraction(1.0)
+        .return_derivative()
+        .min_points(2)
+        .window_capacity(10)
+        .build()
+        .unwrap();
+
+    let mut last = None;
+    for i in 0..6 {
+        last = processor.add_point(i as f64, 2.0 * i as f64 + 1.0).unwrap();
+    }
+    assert_abs_diff_eq!(last.unwrap().derivative.unwrap(), 2.0, epsilon = 1e-9);
 }
 
 #[test]

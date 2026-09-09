@@ -84,6 +84,9 @@ pub struct OnlineLowessBuilder<T: Float> {
     // Whether to return robustness weights
     pub return_robustness_weights: bool,
 
+    // Include the per-point local fit derivative (slope) in the output.
+    pub return_derivative: bool,
+
     // Policy for handling non-finite (NaN/Inf) values in input data
     pub missing: MissingPolicy,
 
@@ -136,6 +139,7 @@ impl<T: Float> OnlineLowessBuilder<T> {
             boundary_policy: DEFAULT_BOUNDARY_POLICY_ENUM,
             scaling_method: DEFAULT_SCALING_METHOD_ENUM,
             return_robustness_weights: DEFAULT_RETURN_ROBUSTNESS_WEIGHTS,
+            return_derivative: DEFAULT_RETURN_DERIVATIVE,
             auto_converge: default_auto_converge(),
             missing: DEFAULT_MISSING_POLICY_ENUM,
             deferred_error: None,
@@ -193,6 +197,9 @@ pub struct OnlineOutput<T> {
 
     // Number of robustness iterations actually performed (if tracked).
     pub iterations_used: Option<usize>,
+
+    // Local fit derivative (slope) for the latest point (if requested).
+    pub derivative: Option<T>,
 }
 
 // Online LOWESS processor for streaming data.
@@ -250,12 +257,12 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
             let y0 = y_vec[0];
             let y1 = y_vec[1];
 
-            let smoothed = if x1 != x0 {
+            let (smoothed, slope) = if x1 != x0 {
                 let slope = (y1 - y0) / (x1 - x0);
-                y0 + slope * (x - x0)
+                (y0 + slope * (x - x0), slope)
             } else {
                 // Identical x: use mean for stability
-                (y0 + y1) / T::from(2.0).unwrap()
+                ((y0 + y1) / T::from(2.0).unwrap(), T::zero())
             };
 
             let residual = y - smoothed;
@@ -266,6 +273,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
                 residual: Some(residual),
                 robustness_weight: Some(T::one()),
                 iterations_used: Some(0),
+                derivative: self.config.return_derivative.then_some(slope),
             }));
         }
 
@@ -273,87 +281,96 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
         let zero_flag = self.config.zero_weight_fallback.to_u8();
 
         // Choose update strategy based on configuration
-        let (smoothed, std_err, rob_weight, iterations_used) = match self.config.update_mode {
-            UpdateMode::Incremental => {
-                // Incremental mode: fit only the latest point
-                let n = x_vec.len();
-                let window_size = (self.config.fraction * T::from(n).unwrap())
-                    .ceil()
-                    .to_usize()
-                    .unwrap_or(n)
-                    .max(2)
-                    .min(n);
+        let (smoothed, std_err, rob_weight, iterations_used, derivative) =
+            match self.config.update_mode {
+                UpdateMode::Incremental => {
+                    // Incremental mode: fit only the latest point
+                    let n = x_vec.len();
+                    let window_size = (self.config.fraction * T::from(n).unwrap())
+                        .ceil()
+                        .to_usize()
+                        .unwrap_or(n)
+                        .max(2)
+                        .min(n);
 
-                // Use pre-allocated scratch buffers
-                VecExt::assign(self.buffer.weights.as_vec_mut(), n, T::zero());
-                VecExt::assign(self.buffer.robustness_weights.as_vec_mut(), n, T::one());
+                    // Use pre-allocated scratch buffers
+                    VecExt::assign(self.buffer.weights.as_vec_mut(), n, T::zero());
+                    VecExt::assign(self.buffer.robustness_weights.as_vec_mut(), n, T::one());
 
-                let (smoothed_val, _slope, _) = LowessExecutor::fit_single_point(
-                    x_vec,
-                    y_vec,
-                    n - 1, // Latest point
-                    window_size,
-                    false, // No robustness for single point
-                    &self.buffer.robustness_weights,
-                    &mut self.buffer.weights,
-                    self.config.weight_function,
-                    self.config.zero_weight_fallback,
-                    None, // custom_weights not used in online incremental mode
-                );
+                    let (smoothed_val, slope, _) = LowessExecutor::fit_single_point(
+                        x_vec,
+                        y_vec,
+                        n - 1, // Latest point
+                        window_size,
+                        false, // No robustness for single point
+                        &self.buffer.robustness_weights,
+                        &mut self.buffer.weights,
+                        self.config.weight_function,
+                        self.config.zero_weight_fallback,
+                        None, // custom_weights not used in online incremental mode
+                    );
 
-                (smoothed_val, None, Some(T::one()), None)
-            }
-            UpdateMode::Full => {
-                // Full mode: re-smooth entire window
-                let config = LowessConfig {
-                    fraction: Some(self.config.fraction),
-                    iterations: self.config.iterations,
-                    delta: self.config.delta,
-                    weight_function: self.config.weight_function,
-                    robustness_method: self.config.robustness_method,
-                    zero_weight_fallback: zero_flag,
-                    boundary_policy: self.config.boundary_policy,
-                    scaling_method: self.config.scaling_method,
-                    auto_converge: self.config.auto_converge,
-                    cv_fractions: None,
-                    cv_kind: None,
-                    return_variance: None,
-                    cv_seed: None,
-                    return_derivative: false,
-                    // ++++++++++++++++++++++++++++++++++++++
-                    // +               DEV                  +
-                    // ++++++++++++++++++++++++++++++++++++++
-                    custom_smooth_pass: self.config.custom_smooth_pass,
-                    custom_cv_pass: self.config.custom_cv_pass,
-                    custom_interval_pass: self.config.custom_interval_pass,
-                    custom_derivative_pass: None,
-                    custom_fit_pass: self.config.custom_fit_pass,
-                    parallel: false,
-                    backend: None,
-                    delegate_boundary_handling: false,
-                    custom_weights: None,
-                    retain_model: false,
-                    custom_predict_pass: None,
-                };
+                    let deriv = self.config.return_derivative.then_some(slope);
+                    (smoothed_val, None, Some(T::one()), None, deriv)
+                }
+                UpdateMode::Full => {
+                    // Full mode: re-smooth entire window
+                    let config = LowessConfig {
+                        fraction: Some(self.config.fraction),
+                        iterations: self.config.iterations,
+                        delta: self.config.delta,
+                        weight_function: self.config.weight_function,
+                        robustness_method: self.config.robustness_method,
+                        zero_weight_fallback: zero_flag,
+                        boundary_policy: self.config.boundary_policy,
+                        scaling_method: self.config.scaling_method,
+                        auto_converge: self.config.auto_converge,
+                        cv_fractions: None,
+                        cv_kind: None,
+                        return_variance: None,
+                        cv_seed: None,
+                        return_derivative: self.config.return_derivative,
+                        // ++++++++++++++++++++++++++++++++++++++
+                        // +               DEV                  +
+                        // ++++++++++++++++++++++++++++++++++++++
+                        custom_smooth_pass: self.config.custom_smooth_pass,
+                        custom_cv_pass: self.config.custom_cv_pass,
+                        custom_interval_pass: self.config.custom_interval_pass,
+                        custom_derivative_pass: None,
+                        custom_fit_pass: self.config.custom_fit_pass,
+                        parallel: false,
+                        backend: None,
+                        delegate_boundary_handling: false,
+                        custom_weights: None,
+                        retain_model: false,
+                        custom_predict_pass: None,
+                    };
 
-                let result = LowessExecutor::run_with_config(x_vec, y_vec, config.clone())?;
-                let iterations_used_val = result.iterations;
-                let smoothed_vec = result.smoothed;
-                let se_vec = result.std_errors;
+                    let result = LowessExecutor::run_with_config(x_vec, y_vec, config.clone())?;
+                    let iterations_used_val = result.iterations;
+                    let smoothed_vec = result.smoothed;
+                    let se_vec = result.std_errors;
 
-                let smoothed_val = smoothed_vec.last().copied().ok_or_else(|| {
-                    LowessError::InvalidNumericValue("No smoothed output produced".into())
-                })?;
-                let std_err = se_vec.as_ref().and_then(|v| v.last().copied());
-                let rob_weight = if self.config.return_robustness_weights {
-                    result.robustness_weights.last().copied()
-                } else {
-                    None
-                };
+                    let smoothed_val = smoothed_vec.last().copied().ok_or_else(|| {
+                        LowessError::InvalidNumericValue("No smoothed output produced".into())
+                    })?;
+                    let std_err = se_vec.as_ref().and_then(|v| v.last().copied());
+                    let rob_weight = if self.config.return_robustness_weights {
+                        result.robustness_weights.last().copied()
+                    } else {
+                        None
+                    };
+                    let deriv = result.derivative.as_ref().and_then(|v| v.last().copied());
 
-                (smoothed_val, std_err, rob_weight, iterations_used_val)
-            }
-        };
+                    (
+                        smoothed_val,
+                        std_err,
+                        rob_weight,
+                        iterations_used_val,
+                        deriv,
+                    )
+                }
+            };
 
         let residual = y - smoothed;
 
@@ -363,6 +380,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
             residual: Some(residual),
             robustness_weight: rob_weight,
             iterations_used,
+            derivative,
         }))
     }
 

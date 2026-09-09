@@ -556,8 +556,9 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
         self
     }
 
-    // Include the per-point local fit derivative (slope) in output (Batch only). Each
-    // point's local WLS fit already computes this internally at effectively no extra cost.
+    // Include the per-point local fit derivative (slope) in output (Batch, Streaming, and
+    // Online). Each point's local WLS fit already computes this internally at effectively
+    // no extra cost.
     pub fn return_derivative(mut self) -> Self {
         self.return_derivative = Some(true);
         self
@@ -830,6 +831,9 @@ impl<T: Float> LowessAdapter<T> for Streaming {
         if let Some(cr) = builder.compute_residuals {
             result.compute_residuals = cr;
         }
+        if let Some(rd) = builder.return_derivative {
+            result.return_derivative = rd;
+        }
         if let Some(ac) = builder.auto_converge {
             result.auto_converge = Some(ac);
         }
@@ -932,6 +936,9 @@ impl<T: Float> LowessAdapter<T> for Online {
 
         if let Some(rw) = builder.return_robustness_weights {
             result.return_robustness_weights = rw;
+        }
+        if let Some(rd) = builder.return_derivative {
+            result.return_derivative = rd;
         }
         if let Some(ac) = builder.auto_converge {
             result.auto_converge = Some(ac);

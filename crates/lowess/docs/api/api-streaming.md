@@ -99,6 +99,7 @@ Fraction used: 0.5
 | `return_diagnostics()` | `bool` | `false` | Include diagnostics in result |
 | `return_residuals()` | `bool` | `false` | Include residuals in result |
 | `return_robustness_weights()` | `bool` | `false` | Include weights in result |
+| `return_derivative()` | `bool` | `false` | Include the per-point local fit derivative (slope) in result |
 | `chunk_size(usize)` | `usize` | `5000` | Data chunk size |
 | `overlap(usize)` | `usize` | `chunk_size / 10` | Overlap between chunks |
 | `merge_strategy(...)` | `merge_strategy` | `"weighted_average"` | Strategy for blending overlap regions |
@@ -220,6 +221,13 @@ Include the final per-point robustness weights (from the last robustness iterati
 - `false` (default) — leaves `result.robustness_weights` as `None`
 - `true` — populates `result.robustness_weights`
 
+### return_derivative
+
+Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) in `LowessResult::derivative` at effectively no extra computation cost. Derivative values in the overlap region are merged across chunk boundaries the same way `y` is, via `merge_strategy`.
+
+- `false` (default) — leaves `result.derivative` as `None`
+- `true` — populates it
+
 ### chunk_size
 
 Number of points processed per chunk. Larger chunks reduce per-chunk overhead and give each local fit more surrounding context, at the cost of higher peak memory; smaller chunks bound memory tightly but increase the fraction of points that fall in overlap regions. A good starting point is balancing available memory against how much processing overhead per chunk is acceptable — match it to your file-read buffer or message-batch size to avoid unnecessary copying.
@@ -263,6 +271,7 @@ Returned by `process_chunk()` and `finalize()`.
 | `robustness_weights` | `Option<Vec<T>>` | Robustness weights (if `return_robustness_weights()`) |
 | `cv_scores` | `Option<Vec<T>>` | Always `None` (Batch only) |
 | `diagnostics` | `Option<Diagnostics<T>>` | Fit metrics (if `return_diagnostics()`) |
+| `derivative` | `Option<Vec<T>>` | Per-point local fit derivative/slope (if `return_derivative()`) |
 
 ### `Diagnostics<T>`
 

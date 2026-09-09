@@ -97,6 +97,7 @@ fn main() -> Result<(), LowessError> {
 | `missing(...)` | `missing` | `"error"` | Policy for non-finite (NaN/Inf) values in each point |
 | `auto_converge(T)` | `T: Float` | `NaN` | Auto-convergence tolerance |
 | `return_robustness_weights()` | `bool` | `false` | Include `robustness_weight` in result |
+| `return_derivative()` | `bool` | `false` | Include the latest point's local fit derivative (slope) in result |
 | `window_capacity(usize)` | `usize` | `1000` | Max points in sliding window |
 | `min_points(usize)` | `usize` | `2` | Min points before smoothing starts |
 | `update_mode(...)` | `update_mode` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
@@ -200,6 +201,13 @@ Include the robustness weight for the latest point (from the last robustness ite
 - `false` (default) — leaves `output.robustness_weight` as `None`
 - `true` — populates `output.robustness_weight`
 
+### return_derivative
+
+Each point's local WLS fit already computes a slope internally; this exposes the latest point's slope (rate of change of the smoothed curve) in the result at effectively no extra computation cost.
+
+- `false` (default) — leaves `output.derivative` as `None`
+- `true` — populates `output.derivative`
+
 ### window_capacity
 
 Maximum number of most recent points kept in the sliding window; older points are discarded as new ones arrive. Each `add_point()` call costs O(`window_capacity`) rather than growing with total history.
@@ -230,5 +238,6 @@ Returned by `add_point()` inside `Option`. Is `None` while the window is still f
 | `residual` | `Option<T>` | Residual y − smoothed; always present (there is no `return_residuals()` option for Online) |
 | `robustness_weight` | `Option<T>` | Robustness weight, if `return_robustness_weights()` was set |
 | `iterations_used` | `Option<usize>` | Robustness iterations performed |
+| `derivative` | `Option<T>` | Local fit derivative/slope for the latest point, if `return_derivative()` was set |
 
 There is no `Diagnostics<T>` or `return_diagnostics()` option for `OnlineLowess`: `OnlineOutput<T>` carries no diagnostics field, since diagnostics like RMSE/R2 need more than one point's worth of history to be meaningful.

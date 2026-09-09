@@ -293,6 +293,9 @@ pub struct StreamingBuffer<T> {
     // Robustness weights for the overlap region.
     pub overlap_robustness_weights: Slot<T>,
 
+    // Local fit derivative (slope) for the overlap region.
+    pub overlap_derivative: Slot<T>,
+
     // Reusable work buffer for LOWESS operations on chunks.
     pub work_buffer: LowessBuffer<T>,
 }
@@ -304,6 +307,7 @@ impl<T> Default for StreamingBuffer<T> {
             overlap_y: Slot::default(),
             overlap_smoothed: Slot::default(),
             overlap_robustness_weights: Slot::default(),
+            overlap_derivative: Slot::default(),
             work_buffer: LowessBuffer::default(),
         }
     }
@@ -317,6 +321,7 @@ impl<T: Clone> StreamingBuffer<T> {
             overlap_y: Slot::new(overlap),
             overlap_smoothed: Slot::new(overlap),
             overlap_robustness_weights: Slot::new(overlap),
+            overlap_derivative: Slot::new(overlap),
             work_buffer: LowessBuffer::with_capacity(chunk_size),
         }
     }
@@ -327,5 +332,6 @@ impl<T: Clone> StreamingBuffer<T> {
         self.overlap_y.clear();
         self.overlap_smoothed.clear();
         self.overlap_robustness_weights.clear();
+        self.overlap_derivative.clear();
     }
 }

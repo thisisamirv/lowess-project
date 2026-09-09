@@ -23,7 +23,9 @@ use crate::adapters::defaults::*;
 use crate::algorithms::defaults::*;
 use crate::algorithms::regression::{WLSSolver, ZeroWeightFallback};
 use crate::algorithms::robustness::RobustnessMethod;
-use crate::engine::executor::{CVPassFn, FitPassFn, IntervalPassFn, SmoothPassFn};
+use crate::engine::executor::{
+    CVPassFn, DerivativePassFn, FitPassFn, IntervalPassFn, SmoothPassFn,
+};
 use crate::engine::executor::{LowessConfig, LowessExecutor};
 use crate::engine::output::LowessResult;
 use crate::engine::validator::{MissingPolicy, Validator};
@@ -102,6 +104,9 @@ pub struct StreamingLowessBuilder<T: Float> {
     // Whether to return robustness weights
     pub return_robustness_weights: bool,
 
+    // Include the per-point local fit derivative (slope) in the output.
+    pub return_derivative: bool,
+
     // Policy for handling non-finite (NaN/Inf) values in input data
     pub missing: MissingPolicy,
 
@@ -126,6 +131,10 @@ pub struct StreamingLowessBuilder<T: Float> {
     // Custom fit pass function.
     #[doc(hidden)]
     pub custom_fit_pass: Option<FitPassFn<T>>,
+
+    // Custom derivative pass function.
+    #[doc(hidden)]
+    pub custom_derivative_pass: Option<DerivativePassFn<T>>,
 
     // Parallel execution hint.
     #[doc(hidden)]
@@ -160,6 +169,7 @@ impl<T: Float> StreamingLowessBuilder<T> {
             scaling_method: DEFAULT_SCALING_METHOD_ENUM,
             return_diagnostics: DEFAULT_RETURN_DIAGNOSTICS,
             return_robustness_weights: DEFAULT_RETURN_ROBUSTNESS_WEIGHTS,
+            return_derivative: DEFAULT_RETURN_DERIVATIVE,
             auto_converge: default_auto_converge(),
             missing: DEFAULT_MISSING_POLICY_ENUM,
             deferred_error: None,
@@ -167,6 +177,7 @@ impl<T: Float> StreamingLowessBuilder<T> {
             custom_cv_pass: None,
             custom_interval_pass: None,
             custom_fit_pass: None,
+            custom_derivative_pass: None,
             parallel: None,
             duplicate_param: None,
         }
@@ -268,14 +279,14 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
             auto_converge: self.config.auto_converge,
             return_variance: None,
             cv_seed: None,
-            return_derivative: false,
+            return_derivative: self.config.return_derivative,
             // ++++++++++++++++++++++++++++++++++++++
             // +               DEV                  +
             // ++++++++++++++++++++++++++++++++++++++
             custom_smooth_pass: self.config.custom_smooth_pass,
             custom_cv_pass: self.config.custom_cv_pass,
             custom_interval_pass: self.config.custom_interval_pass,
-            custom_derivative_pass: None,
+            custom_derivative_pass: self.config.custom_derivative_pass,
             custom_fit_pass: self.config.custom_fit_pass,
             parallel: self.config.parallel.unwrap_or(false),
             backend: None,
@@ -293,6 +304,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
         )?;
         let smoothed = result.smoothed;
         let robustness_weights = result.robustness_weights;
+        let derivative = result.derivative;
         let iterations = result.iterations.unwrap_or(0);
         // Determine how much to return vs buffer
         let combined_len = combined_x.len();
@@ -353,11 +365,50 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
             }
         }
 
+        // Merge derivative if requested
+        let mut deriv_out: Option<Vec<T>> = if self.config.return_derivative {
+            Some(Vec::with_capacity(prev_overlap_len))
+        } else {
+            None
+        };
+
+        if let Some(ref mut d_out) = deriv_out
+            && prev_overlap_len > 0
+        {
+            let deriv = derivative
+                .as_ref()
+                .expect("derivative present when return_derivative is set");
+            let prev_deriv = self.buffer.overlap_derivative.as_vec();
+            for (i, (&prev_val, &curr_val)) in prev_deriv
+                .iter()
+                .zip(deriv.iter())
+                .take(prev_overlap_len)
+                .enumerate()
+            {
+                let merged = match self.config.merge_strategy {
+                    MergeStrategy::Average => (prev_val + curr_val) / T::from(2.0).unwrap(),
+                    MergeStrategy::WeightedAverage => {
+                        let weight = T::from(i as f64 / prev_overlap_len as f64).unwrap();
+                        prev_val * (T::one() - weight) + curr_val * weight
+                    }
+                    MergeStrategy::TakeFirst => prev_val,
+                    MergeStrategy::TakeLast => curr_val,
+                };
+                d_out.push(merged);
+            }
+        }
+
         // Add non-overlap portion
         if return_start < overlap_start {
             y_smooth_out.extend_from_slice(&smoothed[return_start..overlap_start]);
             if let Some(ref mut rw_out) = rob_weights_out {
                 rw_out.extend_from_slice(&robustness_weights[return_start..overlap_start]);
+            }
+            if let Some(ref mut d_out) = deriv_out {
+                let deriv = derivative
+                    .as_ref()
+                    .expect("derivative present when return_derivative is set");
+                d_out.extend_from_slice(&deriv[return_start..overlap_start]);
             }
         }
         // Calculate residuals for output
@@ -394,11 +445,18 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
                     &robustness_weights[overlap_start..],
                 );
             }
+            if let Some(ref deriv) = derivative {
+                VecExt::assign_slice(
+                    self.buffer.overlap_derivative.as_vec_mut(),
+                    &deriv[overlap_start..],
+                );
+            }
         } else {
             self.buffer.overlap_x.clear();
             self.buffer.overlap_y.clear();
             self.buffer.overlap_smoothed.clear();
             self.buffer.overlap_robustness_weights.clear();
+            self.buffer.overlap_derivative.clear();
         }
 
         // Note: We return results in sorted order (by x) for streaming chunks.
@@ -425,7 +483,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
             prediction_upper: None,
             residuals: residuals_out,
             robustness_weights: rob_weights_out,
-            derivative: None,
+            derivative: deriv_out,
             diagnostics,
             iterations_used: Some(iterations),
             fraction_used: self.config.fraction,
@@ -473,6 +531,12 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
             None
         };
 
+        let derivative = if self.config.return_derivative {
+            Some(take(&mut *self.buffer.overlap_derivative))
+        } else {
+            None
+        };
+
         // Update diagnostics for the final overlap
         let diagnostics = if let Some(ref mut state) = self.diagnostics_state {
             state.update(&self.buffer.overlap_y, &self.buffer.overlap_smoothed);
@@ -491,7 +555,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
             prediction_upper: None,
             residuals,
             robustness_weights,
-            derivative: None,
+            derivative,
             diagnostics,
             iterations_used: None,
             fraction_used: self.config.fraction,

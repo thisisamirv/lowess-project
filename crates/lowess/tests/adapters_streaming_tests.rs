@@ -798,3 +798,93 @@ fn test_streaming_missing_drop_removes_nan_rows() {
     // 9 finite rows in, minus 1 overlap held back = 8 returned.
     assert_eq!(result.y.len(), 8);
 }
+
+// ============================================================================
+// Derivative Tests
+// ============================================================================
+
+/// Test that `derivative` is `None` by default (not requested).
+#[test]
+fn test_streaming_derivative_none_by_default() {
+    let mut processor = StreamingLowess::new()
+        .fraction(1.0)
+        .chunk_size(10)
+        .overlap(2)
+        .build()
+        .expect("Builder should succeed");
+
+    let x = vec![0.0f64, 1.0, 2.0, 3.0, 4.0];
+    let y: Vec<f64> = x.iter().map(|xi| 2.0 * xi + 1.0).collect();
+
+    let result = processor.process_chunk(&x, &y).expect("process_chunk ok");
+    assert!(result.derivative.is_none());
+
+    let remaining = processor.finalize().expect("finalize ok");
+    assert!(remaining.derivative.is_none());
+}
+
+/// Test `.return_derivative()` on a single chunk (no overlap merging involved).
+#[test]
+fn test_streaming_return_derivative_single_chunk() {
+    let mut processor = StreamingLowess::new()
+        .fraction(1.0) // Global linear fit => exact slope for linear data
+        .iterations(0)
+        .return_derivative()
+        .chunk_size(10)
+        .overlap(2)
+        .build()
+        .expect("Builder should succeed");
+
+    let x = vec![0.0f64, 1.0, 2.0, 3.0, 4.0];
+    let y: Vec<f64> = x.iter().map(|xi| 2.0 * xi + 1.0).collect();
+
+    let result = processor.process_chunk(&x, &y).expect("process_chunk ok");
+    let deriv = result.derivative.expect("derivative should be present");
+    assert_eq!(deriv.len(), result.y.len());
+    for &d in &deriv {
+        assert_relative_eq!(d, 2.0, epsilon = 1e-9);
+    }
+
+    let remaining = processor.finalize().expect("finalize ok");
+    let remaining_deriv = remaining
+        .derivative
+        .expect("derivative should be present in finalize");
+    assert_eq!(remaining_deriv.len(), remaining.y.len());
+    for &d in &remaining_deriv {
+        assert_relative_eq!(d, 2.0, epsilon = 1e-9);
+    }
+}
+
+/// Test `.return_derivative()` across multiple chunks, exercising overlap merging.
+#[test]
+fn test_streaming_return_derivative_multi_chunk_overlap() {
+    let x_all: Vec<f64> = (0..15).map(|i| i as f64).collect();
+    let y_all: Vec<f64> = x_all.iter().map(|xi| 3.0 * xi - 5.0).collect();
+
+    let mut processor = StreamingLowess::new()
+        .fraction(1.0)
+        .iterations(0)
+        .return_derivative()
+        .chunk_size(10)
+        .overlap(2)
+        .build()
+        .expect("Builder should succeed");
+
+    let out_a = processor
+        .process_chunk(&x_all[0..10], &y_all[0..10])
+        .expect("process_chunk ok");
+    let deriv_a = out_a.derivative.expect("derivative should be present");
+    assert_eq!(deriv_a.len(), out_a.y.len());
+    for &d in &deriv_a {
+        assert_relative_eq!(d, 3.0, epsilon = 1e-9);
+    }
+
+    let out_b = processor
+        .process_chunk(&x_all[10..15], &y_all[10..15])
+        .expect("process_chunk ok");
+    let deriv_b = out_b.derivative.expect("derivative should be present");
+    assert_eq!(deriv_b.len(), out_b.y.len());
+    for &d in &deriv_b {
+        assert_relative_eq!(d, 3.0, epsilon = 1e-9);
+    }
+}
