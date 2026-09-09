@@ -528,3 +528,111 @@ fn test_local_wls_extreme_values() {
     let result = local_wls_helper(&x, &y, &weights, 0, 1, 5e9f64, 1e10f64);
     assert_relative_eq!(result, 5e9f64, epsilon = 1e-2); // Relaxed epsilon for large values
 }
+
+// ============================================================================
+// fit_with_derivative Tests
+// ============================================================================
+
+/// Test that `fit_with_derivative` recovers the exact slope for perfectly linear data.
+#[test]
+fn test_fit_with_derivative_linear_slope() {
+    // y = 2x + 1: the local WLS fit over the whole window should be exact.
+    let x: Vec<f64> = (0..10).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| 2.0 * xi + 1.0).collect();
+    let mut weights = vec![1.0f64; 10];
+    let robustness = vec![1.0f64; 10];
+    let window = Window { left: 0, right: 9 };
+
+    let mut ctx = RegressionContext {
+        x: &x,
+        y: &y,
+        weights: &mut weights,
+        idx: 4usize,
+        window,
+        use_robustness: false,
+        robustness_weights: &robustness,
+        weight_function: WeightFunction::Tricube,
+        zero_weight_fallback: ZeroWeightFallback::UseLocalMean,
+        custom_weights: None,
+    };
+
+    let (fitted, slope) = ctx
+        .fit_with_derivative()
+        .expect("Should produce a valid fit");
+
+    assert_relative_eq!(fitted, y[4], epsilon = 1e-9);
+    assert_relative_eq!(slope, 2.0, epsilon = 1e-9);
+}
+
+/// Test that `fit()` and `fit_with_derivative()` agree on the fitted `y` value.
+#[test]
+fn test_fit_matches_fit_with_derivative() {
+    let x = vec![0.0f64, 1.0, 2.0, 3.0, 4.0];
+    let y = vec![1.0f64, 2.0, 100.0, 4.0, 5.0]; // Outlier at index 2
+    let robustness = vec![1.0f64, 1.0, 0.1, 1.0, 1.0];
+    let window = Window { left: 0, right: 4 };
+
+    let mut weights_a = vec![1.0f64; 5];
+    let mut ctx_a = RegressionContext {
+        x: &x,
+        y: &y,
+        weights: &mut weights_a,
+        idx: 2usize,
+        window,
+        use_robustness: true,
+        robustness_weights: &robustness,
+        weight_function: WeightFunction::Tricube,
+        zero_weight_fallback: ZeroWeightFallback::UseLocalMean,
+        custom_weights: None,
+    };
+    let fitted_only = ctx_a.fit().expect("Should produce a valid fit");
+
+    let mut weights_b = vec![1.0f64; 5];
+    let mut ctx_b = RegressionContext {
+        x: &x,
+        y: &y,
+        weights: &mut weights_b,
+        idx: 2usize,
+        window,
+        use_robustness: true,
+        robustness_weights: &robustness,
+        weight_function: WeightFunction::Tricube,
+        zero_weight_fallback: ZeroWeightFallback::UseLocalMean,
+        custom_weights: None,
+    };
+    let (fitted_with_slope, _slope) = ctx_b
+        .fit_with_derivative()
+        .expect("Should produce a valid fit");
+
+    assert_relative_eq!(fitted_only, fitted_with_slope, epsilon = 1e-12);
+}
+
+/// Test that `fit_with_derivative` returns a zero slope for the degenerate
+/// zero-bandwidth case (weighted average fallback).
+#[test]
+fn test_fit_with_derivative_degenerate_bandwidth() {
+    let x = vec![1.0f64, 1.0, 1.0];
+    let y = vec![10.0f64, 20.0, 30.0];
+    let mut weights = vec![1.0f64, 1.0, 1.0];
+    let robustness = vec![1.0f64; 3];
+    let window = Window { left: 0, right: 2 };
+
+    let mut ctx = RegressionContext {
+        x: &x,
+        y: &y,
+        weights: &mut weights,
+        idx: 1usize,
+        window,
+        use_robustness: false,
+        robustness_weights: &robustness,
+        weight_function: WeightFunction::Tricube,
+        zero_weight_fallback: ZeroWeightFallback::UseLocalMean,
+        custom_weights: None,
+    };
+
+    let (_, slope) = ctx
+        .fit_with_derivative()
+        .expect("Should return weighted average");
+
+    assert_relative_eq!(slope, 0.0, epsilon = 1e-12);
+}

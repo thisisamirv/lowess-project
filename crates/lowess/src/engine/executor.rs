@@ -32,7 +32,7 @@ use std::vec::Vec;
 // Internal dependencies
 use crate::adapters::defaults::*;
 use crate::algorithms::defaults::*;
-use crate::algorithms::interpolation::interpolate_gap;
+use crate::algorithms::interpolation::{interpolate_gap, interpolate_gap_derivative};
 use crate::algorithms::regression::{LinearFit, RegressionContext, WLSSolver, ZeroWeightFallback};
 use crate::algorithms::robustness::RobustnessMethod;
 use crate::engine::predict::{PredictPassFn, PredictState};
@@ -83,6 +83,19 @@ pub type IntervalPassFn<T> = fn(
     WeightFunction,     // weight_function
     &IntervalMethod<T>, // interval configuration
 ) -> Vec<T>; // standard errors
+
+// Signature for custom derivative (local fit slope) estimation pass function
+#[doc(hidden)]
+pub type DerivativePassFn<T> = fn(
+    &[T],           // x
+    &[T],           // y
+    usize,          // window_size
+    T,              // delta
+    &[T],           // robustness_weights
+    WeightFunction, // weight_function
+    u8,             // zero_weight_flag
+    Option<&[T]>,   // custom_weights
+) -> Vec<T>; // derivative
 
 // Result tuple from an iteration loop or fit pass.
 #[allow(clippy::type_complexity)]
@@ -142,6 +155,9 @@ pub struct ExecutorOutput<T> {
     // Prediction interval upper bounds (if intervals were computed).
     pub prediction_upper: Option<Vec<T>>,
 
+    // Per-point local fit derivative (slope), if `return_derivative` was set.
+    pub derivative: Option<Vec<T>>,
+
     // Retained fitted-model state for `Predict::call()`, if `retain_model` was set.
     pub predict_state: Option<Arc<PredictState<T>>>,
 }
@@ -189,6 +205,9 @@ pub struct LowessConfig<T> {
     // Scaling method for robust scale estimation.
     pub scaling_method: ScalingMethod,
 
+    // Whether to compute per-point local fit derivative (slope) (Batch only).
+    pub return_derivative: bool,
+
     // ++++++++++++++++++++++++++++++++++++++
     // +               DEV                  +
     // ++++++++++++++++++++++++++++++++++++++
@@ -203,6 +222,10 @@ pub struct LowessConfig<T> {
     // Custom interval estimation pass function.
     #[doc(hidden)]
     pub custom_interval_pass: Option<IntervalPassFn<T>>,
+
+    // Custom derivative (local fit slope) estimation pass function.
+    #[doc(hidden)]
+    pub custom_derivative_pass: Option<DerivativePassFn<T>>,
 
     // Custom iteration batch pass function for GPU acceleration.
     #[doc(hidden)]
@@ -249,9 +272,11 @@ impl<T: Float> Default for LowessConfig<T> {
             return_variance: None,
             boundary_policy: DEFAULT_BOUNDARY_POLICY_ENUM,
             scaling_method: DEFAULT_SCALING_METHOD_ENUM,
+            return_derivative: false,
             custom_smooth_pass: None,
             custom_cv_pass: None,
             custom_interval_pass: None,
+            custom_derivative_pass: None,
             custom_weights: None,
             custom_fit_pass: None,
             parallel: false,
@@ -296,6 +321,9 @@ pub struct LowessExecutor<T: Float> {
     // Interval estimation method.
     pub interval_method: Option<IntervalMethod<T>>,
 
+    // Whether to compute per-point local fit derivative (slope) (Batch only).
+    pub return_derivative: bool,
+
     // ++++++++++++++++++++++++++++++++++++++
     // +               DEV                  +
     // ++++++++++++++++++++++++++++++++++++++
@@ -310,6 +338,10 @@ pub struct LowessExecutor<T: Float> {
     // Custom interval estimation pass function.
     #[doc(hidden)]
     pub custom_interval_pass: Option<IntervalPassFn<T>>,
+
+    // Custom derivative (local fit slope) estimation pass function.
+    #[doc(hidden)]
+    pub custom_derivative_pass: Option<DerivativePassFn<T>>,
 
     // Custom iteration batch pass function for GPU acceleration.
     #[doc(hidden)]
@@ -358,9 +390,11 @@ impl<T: Float> LowessExecutor<T> {
             scaling_method: DEFAULT_SCALING_METHOD_ENUM,
             auto_converge: default_auto_converge(),
             interval_method: None,
+            return_derivative: false,
             custom_smooth_pass: None,
             custom_cv_pass: None,
             custom_interval_pass: None,
+            custom_derivative_pass: None,
             custom_fit_pass: None,
             parallel: false,
             backend: None,
@@ -385,12 +419,14 @@ impl<T: Float> LowessExecutor<T> {
             .scaling_method(config.scaling_method)
             .auto_converge(config.auto_converge)
             .interval_method(config.return_variance)
+            .return_derivative(config.return_derivative)
             // ++++++++++++++++++++++++++++++++++++++
             // +               DEV                  +
             // ++++++++++++++++++++++++++++++++++++++
             .custom_smooth_pass(config.custom_smooth_pass)
             .custom_cv_pass(config.custom_cv_pass)
             .custom_interval_pass(config.custom_interval_pass)
+            .custom_derivative_pass(config.custom_derivative_pass)
             .custom_fit_pass(config.custom_fit_pass)
             .parallel(config.parallel)
             .backend(config.backend)
@@ -421,12 +457,14 @@ impl<T: Float> LowessExecutor<T> {
             return_variance: interval_method.cloned(),
             boundary_policy: self.boundary_policy,
             scaling_method: self.scaling_method,
+            return_derivative: self.return_derivative,
             // ++++++++++++++++++++++++++++++++++++++
             // +               DEV                  +
             // ++++++++++++++++++++++++++++++++++++++
             custom_smooth_pass: self.custom_smooth_pass,
             custom_cv_pass: self.custom_cv_pass,
             custom_interval_pass: self.custom_interval_pass,
+            custom_derivative_pass: self.custom_derivative_pass,
             custom_fit_pass: self.custom_fit_pass,
             parallel: self.parallel,
             backend: self.backend,
@@ -496,6 +534,12 @@ impl<T: Float> LowessExecutor<T> {
         self.interval_method = method;
         self
     }
+
+    // Set whether to compute per-point local fit derivative (slope).
+    pub fn return_derivative(mut self, return_derivative: bool) -> Self {
+        self.return_derivative = return_derivative;
+        self
+    }
     // ++++++++++++++++++++++++++++++++++++++
     // +               DEV                  +
     // ++++++++++++++++++++++++++++++++++++++
@@ -518,6 +562,16 @@ impl<T: Float> LowessExecutor<T> {
     #[doc(hidden)]
     pub fn custom_interval_pass(mut self, interval_pass_fn: Option<IntervalPassFn<T>>) -> Self {
         self.custom_interval_pass = interval_pass_fn;
+        self
+    }
+
+    // Set a custom derivative (local fit slope) estimation pass function.
+    #[doc(hidden)]
+    pub fn custom_derivative_pass(
+        mut self,
+        derivative_pass_fn: Option<DerivativePassFn<T>>,
+    ) -> Self {
+        self.custom_derivative_pass = derivative_pass_fn;
         self
     }
 
@@ -620,13 +674,16 @@ impl<T: Float> LowessExecutor<T> {
                             .custom_smooth_pass(config.custom_smooth_pass)
                             .custom_cv_pass(config.custom_cv_pass)
                             .custom_interval_pass(config.custom_interval_pass)
+                            .custom_derivative_pass(config.custom_derivative_pass)
                             .custom_fit_pass(config.custom_fit_pass)
                             .parallel(config.parallel)
                             .backend(config.backend)
                             .delegate_boundary_handling(config.delegate_boundary_handling)
-                            // CV candidate fits never need retained model state - only the
-                            // final fit (below) does, avoiding wasted clones per candidate.
+                            // CV candidate fits never need retained model state or a
+                            // per-point derivative - only the final fit (below) does,
+                            // avoiding wasted clones/compute per candidate.
                             .retain_model(false)
+                            .return_derivative(false)
                             .run(tx, ty, None)
                             .unwrap() // CV must succeed
                             .smoothed
@@ -651,6 +708,7 @@ impl<T: Float> LowessExecutor<T> {
                 .custom_smooth_pass(config.custom_smooth_pass)
                 .custom_cv_pass(config.custom_cv_pass)
                 .custom_interval_pass(config.custom_interval_pass)
+                .custom_derivative_pass(config.custom_derivative_pass)
                 .custom_fit_pass(config.custom_fit_pass)
                 .parallel(config.parallel)
                 .backend(config.backend)
@@ -702,6 +760,9 @@ impl<T: Float> LowessExecutor<T> {
                 confidence_upper: None,
                 prediction_lower: None,
                 prediction_upper: None,
+                // A global regression is a single line: its slope is the same
+                // constant everywhere, so this is exact (not an approximation).
+                derivative: self.return_derivative.then(|| vec![model.slope; n]),
                 // Out-of-sample prediction is not supported for the fraction >= 1.0
                 // (plain global OLS) special case; predict() will error if requested.
                 predict_state: None,
@@ -793,6 +854,22 @@ impl<T: Float> LowessExecutor<T> {
             custom_predict_pass: self.custom_predict_pass,
         });
 
+        // Compute per-point local fit derivative (slope), if requested, using the same
+        // padded arrays/final (pre-slice) robustness weights actually used for fitting.
+        let mut derivative = self.return_derivative.then(|| {
+            Self::compute_derivative(
+                x_ref,
+                y_ref,
+                window_size,
+                self.delta,
+                &robustness_weights,
+                self.weight_function,
+                self.zero_weight_fallback,
+                effective_custom_weights,
+                self.custom_derivative_pass,
+            )
+        });
+
         // Slice back to original range if padded
         if pad_len > 0 {
             Self::slice_results(
@@ -807,6 +884,11 @@ impl<T: Float> LowessExecutor<T> {
                 let mut sliced = Vec::with_capacity(n);
                 sliced.extend_from_slice(&resid[pad_len..n + pad_len]);
                 *resid = sliced;
+            }
+            if let Some(ref mut deriv) = derivative {
+                let mut sliced = Vec::with_capacity(n);
+                sliced.extend_from_slice(&deriv[pad_len..n + pad_len]);
+                *deriv = sliced;
             }
         }
 
@@ -838,6 +920,7 @@ impl<T: Float> LowessExecutor<T> {
             confidence_upper,
             prediction_lower,
             prediction_upper,
+            derivative,
             // Wrapped here (once all mutations above are done) so cloning a `LowessResult`
             // (e.g. to hand to multiple worker threads) is a cheap refcount bump instead of
             // deep-copying the whole padded training set.
@@ -1007,6 +1090,7 @@ impl<T: Float> LowessExecutor<T> {
             zero_weight_fallback,
             y_smooth,
             custom_weights,
+            None,
         );
 
         // Fit remaining points with interpolation
@@ -1022,6 +1106,7 @@ impl<T: Float> LowessExecutor<T> {
             y_smooth,
             window,
             custom_weights,
+            None,
         );
     }
 
@@ -1133,7 +1218,7 @@ impl<T: Float> LowessExecutor<T> {
         weight_function: WeightFunction,
         zero_weight_fallback: ZeroWeightFallback,
         custom_weights: Option<&[T]>,
-    ) -> (T, Window)
+    ) -> (T, T, Window)
     where
         T: WLSSolver,
     {
@@ -1154,10 +1239,12 @@ impl<T: Float> LowessExecutor<T> {
             custom_weights,
         };
 
-        (ctx.fit().unwrap_or_else(|| y[idx]), window)
+        let (val, slope) = ctx.fit_with_derivative().unwrap_or((y[idx], T::zero()));
+        (val, slope, window)
     }
 
-    // Fit the first point and initialize the smoothing window.
+    // Fit the first point and initialize the smoothing window. `derivative`, if `Some`,
+    // receives the local fit's slope at the first point (used by `compute_derivative`).
     #[allow(clippy::too_many_arguments)]
     pub fn fit_first_point(
         x: &[T],
@@ -1170,11 +1257,12 @@ impl<T: Float> LowessExecutor<T> {
         zero_weight_fallback: ZeroWeightFallback,
         y_smooth: &mut [T],
         custom_weights: Option<&[T]>,
+        derivative: Option<&mut [T]>,
     ) -> Window
     where
         T: WLSSolver,
     {
-        let (val, window) = Self::fit_single_point(
+        let (val, slope, window) = Self::fit_single_point(
             x,
             y,
             0,
@@ -1187,12 +1275,21 @@ impl<T: Float> LowessExecutor<T> {
             custom_weights,
         );
         y_smooth[0] = val;
+        if let Some(d) = derivative {
+            d[0] = slope;
+        }
         window
     }
 
     // Main fitting loop: iterate through remaining points with delta-skipping
-    // and linear interpolation.
+    // and linear interpolation. `derivative`, if `Some`, receives the local fit's slope
+    // at each anchor point and the constant interpolated slope for delta-skipped points
+    // (matching `y_smooth`'s own piecewise-linear interpolation there).
     #[allow(clippy::too_many_arguments)]
+    // `as_deref_mut()` reborrows `Option<&mut [T]>` on each use below (needed since the
+    // loop calls it repeatedly); clippy's `needless_option_as_deref` doesn't account for
+    // that and would otherwise suggest moving `derivative` out on first use.
+    #[allow(clippy::needless_option_as_deref)]
     fn fit_and_interpolate_remaining(
         x: &[T],
         y: &[T],
@@ -1205,6 +1302,7 @@ impl<T: Float> LowessExecutor<T> {
         y_smooth: &mut [T],
         mut window: Window,
         custom_weights: Option<&[T]>,
+        mut derivative: Option<&mut [T]>,
     ) where
         T: WLSSolver,
     {
@@ -1226,6 +1324,9 @@ impl<T: Float> LowessExecutor<T> {
             for i in (last_fitted + 1)..next_idx.min(n) {
                 if x[i] == x_last {
                     y_smooth[i] = y_smooth[last_fitted];
+                    if let Some(d) = derivative.as_deref_mut() {
+                        d[i] = d[last_fitted];
+                    }
                     tie_end = i;
                 } else {
                     break; // x is sorted, so no more ties
@@ -1261,10 +1362,17 @@ impl<T: Float> LowessExecutor<T> {
                 custom_weights,
             };
 
-            y_smooth[current] = ctx.fit().unwrap_or_else(|| y[current]);
+            let (val, slope) = ctx.fit_with_derivative().unwrap_or((y[current], T::zero()));
+            y_smooth[current] = val;
+            if let Some(d) = derivative.as_deref_mut() {
+                d[current] = slope;
+            }
 
             // Linearly interpolate between last fitted and current
             interpolate_gap(x, y_smooth, last_fitted, current);
+            if let Some(d) = derivative.as_deref_mut() {
+                interpolate_gap_derivative(x, y_smooth, d, last_fitted, current);
+            }
             last_fitted = current;
         }
 
@@ -1287,8 +1395,92 @@ impl<T: Float> LowessExecutor<T> {
                 custom_weights,
             };
 
-            y_smooth[final_idx] = ctx.fit().unwrap_or_else(|| y[final_idx]);
+            let (val, slope) = ctx
+                .fit_with_derivative()
+                .unwrap_or((y[final_idx], T::zero()));
+            y_smooth[final_idx] = val;
+            if let Some(d) = derivative.as_deref_mut() {
+                d[final_idx] = slope;
+            }
             interpolate_gap(x, y_smooth, last_fitted, final_idx);
+            if let Some(d) = derivative.as_deref_mut() {
+                interpolate_gap_derivative(x, y_smooth, d, last_fitted, final_idx);
+            }
         }
+    }
+
+    // Compute per-point local fit derivative (slope) using the FINAL (converged)
+    // robustness weights, reusing the same delta-skip anchor selection as the smoothing
+    // pass: anchors get an exact slope from their local WLS fit; skipped
+    // (delta-interpolated) points get the constant slope of the linear segment
+    // connecting their neighboring anchors, matching `y_smooth`'s own interpolation there.
+    #[allow(clippy::too_many_arguments)]
+    pub fn compute_derivative(
+        x: &[T],
+        y: &[T],
+        window_size: usize,
+        delta: T,
+        robustness_weights: &[T],
+        weight_function: WeightFunction,
+        zero_weight_flag: u8,
+        custom_weights: Option<&[T]>,
+        derivative_pass_fn: Option<DerivativePassFn<T>>,
+    ) -> Vec<T>
+    where
+        T: WLSSolver,
+    {
+        if let Some(callback) = derivative_pass_fn {
+            return callback(
+                x,
+                y,
+                window_size,
+                delta,
+                robustness_weights,
+                weight_function,
+                zero_weight_flag,
+                custom_weights,
+            );
+        }
+
+        let n = x.len();
+        let mut derivative = vec![T::zero(); n];
+        if n == 0 {
+            return derivative;
+        }
+
+        let zero_weight_fallback = ZeroWeightFallback::from_u8(zero_weight_flag);
+        let mut weights = vec![T::zero(); n];
+        let mut y_scratch = vec![T::zero(); n];
+
+        let window = Self::fit_first_point(
+            x,
+            y,
+            window_size,
+            true, // final robustness_weights already reflect the converged iteration
+            robustness_weights,
+            &mut weights,
+            weight_function,
+            zero_weight_fallback,
+            &mut y_scratch,
+            custom_weights,
+            Some(&mut derivative),
+        );
+
+        Self::fit_and_interpolate_remaining(
+            x,
+            y,
+            delta,
+            true,
+            robustness_weights,
+            &mut weights,
+            weight_function,
+            zero_weight_fallback,
+            &mut y_scratch,
+            window,
+            custom_weights,
+            Some(&mut derivative),
+        );
+
+        derivative
     }
 }

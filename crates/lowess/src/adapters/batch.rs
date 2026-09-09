@@ -22,7 +22,9 @@ use crate::algorithms::defaults::*;
 use crate::algorithms::interpolation::calculate_delta;
 use crate::algorithms::regression::{WLSSolver, ZeroWeightFallback};
 use crate::algorithms::robustness::RobustnessMethod;
-use crate::engine::executor::{CVPassFn, FitPassFn, IntervalPassFn, SmoothPassFn};
+use crate::engine::executor::{
+    CVPassFn, DerivativePassFn, FitPassFn, IntervalPassFn, SmoothPassFn,
+};
 use crate::engine::executor::{LowessConfig, LowessExecutor};
 use crate::engine::output::LowessResult;
 use crate::engine::predict::PredictPassFn;
@@ -83,6 +85,9 @@ pub struct BatchLowessBuilder<T: Float> {
     // Whether to return robustness weights
     pub return_robustness_weights: bool,
 
+    // Whether to return per-point local fit derivative (slope)
+    pub return_derivative: bool,
+
     // Whether to return results sorted ascending by x instead of in original input order
     pub return_sorted: bool,
 
@@ -112,6 +117,10 @@ pub struct BatchLowessBuilder<T: Float> {
     // Custom interval estimation pass function.
     #[doc(hidden)]
     pub custom_interval_pass: Option<IntervalPassFn<T>>,
+
+    // Custom derivative (local fit slope) estimation pass function.
+    #[doc(hidden)]
+    pub custom_derivative_pass: Option<DerivativePassFn<T>>,
 
     // Custom fit pass function.
     #[doc(hidden)]
@@ -169,6 +178,7 @@ impl<T: Float> BatchLowessBuilder<T> {
             return_diagnostics: DEFAULT_RETURN_DIAGNOSTICS,
             compute_residuals: DEFAULT_RETURN_RESIDUALS,
             return_robustness_weights: DEFAULT_RETURN_ROBUSTNESS_WEIGHTS,
+            return_derivative: DEFAULT_RETURN_DERIVATIVE,
             return_sorted: DEFAULT_RETURN_SORTED,
             missing: DEFAULT_MISSING_POLICY_ENUM,
             zero_weight_fallback: DEFAULT_ZERO_WEIGHT_FALLBACK_ENUM,
@@ -177,6 +187,7 @@ impl<T: Float> BatchLowessBuilder<T> {
             custom_smooth_pass: None,
             custom_cv_pass: None,
             custom_interval_pass: None,
+            custom_derivative_pass: None,
             custom_fit_pass: None,
             backend: None,
             delegate_boundary_handling: false,
@@ -290,6 +301,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> BatchLowess<T> {
             return_variance: self.config.interval_type,
             boundary_policy: self.config.boundary_policy,
             scaling_method: self.config.scaling_method,
+            return_derivative: self.config.return_derivative,
             cv_seed: self.config.cv_seed,
             // ++++++++++++++++++++++++++++++++++++++
             // +               DEV                  +
@@ -297,6 +309,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> BatchLowess<T> {
             custom_smooth_pass: self.config.custom_smooth_pass,
             custom_cv_pass: self.config.custom_cv_pass,
             custom_interval_pass: self.config.custom_interval_pass,
+            custom_derivative_pass: self.config.custom_derivative_pass,
             custom_fit_pass: self.config.custom_fit_pass,
             parallel: self.config.parallel.unwrap_or(false),
             backend: self.config.backend,
@@ -314,6 +327,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> BatchLowess<T> {
         let iterations_used = result.iterations;
         let fraction_used = result.used_fraction;
         let cv_scores = result.cv_scores;
+        let derivative = result.derivative;
 
         // Get residuals from backend or calculate them
         let residuals: Vec<T> = if let Some(r) = result.residuals {
@@ -376,6 +390,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> BatchLowess<T> {
             std_errors_out,
             residuals_out,
             rob_weights_out,
+            derivative_out,
             cl_out,
             cu_out,
             pl_out,
@@ -395,6 +410,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> BatchLowess<T> {
                 } else {
                     None
                 },
+                derivative,
                 conf_lower,
                 conf_upper,
                 pred_lower,
@@ -415,6 +431,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> BatchLowess<T> {
                 } else {
                     None
                 },
+                derivative.as_ref().map(|d| unsort(d, indices)),
                 conf_lower.as_ref().map(|v| unsort(v, indices)),
                 conf_upper.as_ref().map(|v| unsort(v, indices)),
                 pred_lower.as_ref().map(|v| unsort(v, indices)),
@@ -432,6 +449,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> BatchLowess<T> {
             prediction_upper: pu_out,
             residuals: residuals_out,
             robustness_weights: rob_weights_out,
+            derivative: derivative_out,
             fraction_used,
             iterations_used,
             cv_scores,

@@ -157,6 +157,9 @@ pub struct LowessBuilder<T, Mode = BatchMode> {
     // Return final robustness weights w_i.
     pub return_robustness_weights: Option<bool>,
 
+    // Return per-point local fit derivative (slope) (Batch only).
+    pub return_derivative: Option<bool>,
+
     // Return results sorted ascending by x instead of in original input order (Batch only).
     pub return_sorted: Option<bool>,
 
@@ -269,6 +272,7 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
             return_diagnostics: None,
             compute_residuals: None,
             return_robustness_weights: None,
+            return_derivative: None,
             return_sorted: None,
             missing: None,
             boundary_policy: None,
@@ -552,6 +556,13 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
         self
     }
 
+    // Include the per-point local fit derivative (slope) in output (Batch only). Each
+    // point's local WLS fit already computes this internally at effectively no extra cost.
+    pub fn return_derivative(mut self) -> Self {
+        self.return_derivative = Some(true);
+        self
+    }
+
     // Return results sorted ascending by x instead of in original input order
     // (Batch only). To get both orderings, sort the default (unsorted) result
     // client-side instead of calling `build().fit()` twice.
@@ -715,6 +726,9 @@ impl<T: Float> LowessAdapter<T> for Batch {
         }
         if let Some(cr) = builder.compute_residuals {
             result.compute_residuals = cr;
+        }
+        if let Some(rd) = builder.return_derivative {
+            result.return_derivative = rd;
         }
         if let Some(rs) = builder.return_sorted {
             result.return_sorted = rs;

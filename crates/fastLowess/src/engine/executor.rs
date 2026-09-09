@@ -602,3 +602,236 @@ where
 
     Ok((y, derivative, se))
 }
+
+// Compute per-point local fit derivative (slope) in parallel, using the same delta-skip
+// anchor selection as `smooth_pass_parallel`: anchors get an exact slope from their local
+// WLS fit (computed in parallel); skipped (delta-interpolated) points get the constant
+// slope of the linear segment connecting their neighboring anchors, matching `y_smooth`'s
+// own interpolation there. Injected as `LowessConfig::custom_derivative_pass` by the Batch
+// adapter's `fit()` when `.parallel(true)` is set and `.return_derivative()` was requested.
+#[allow(clippy::too_many_arguments)]
+#[cfg(feature = "cpu")]
+pub fn derivative_pass_parallel<T>(
+    x: &[T],
+    y: &[T],
+    window_size: usize,
+    delta: T,
+    robustness_weights: &[T],
+    weight_function: WeightFunction,
+    zero_weight_flag: u8,
+    custom_weights: Option<&[T]>,
+) -> Vec<T>
+where
+    T: Float + Send + Sync + WLSSolver,
+{
+    let n = x.len();
+    if n == 0 {
+        return Vec::new();
+    }
+
+    let zero_weight_fallback = ZeroWeightFallback::from_u8(zero_weight_flag);
+
+    if delta > T::zero() && n > 2 {
+        let anchors = compute_anchor_points(x, delta);
+        if anchors.is_empty() {
+            return fit_all_derivative_parallel(
+                x,
+                y,
+                window_size,
+                robustness_weights,
+                weight_function,
+                zero_weight_fallback,
+                custom_weights,
+            );
+        }
+
+        // Parallel fit anchor points, keeping both the fitted value (needed for gap
+        // slope calculations) and the local WLS fit's own slope.
+        let anchor_results: Vec<(usize, T, T)> = anchors
+            .par_iter()
+            .map_init(
+                || vec![T::zero(); n],
+                |weights, &i| {
+                    weights.fill(T::zero());
+
+                    let mut window = Window::initialize(i, window_size, n);
+                    window.recenter(x, i, n);
+
+                    let mut ctx = RegressionContext {
+                        x,
+                        y,
+                        idx: i,
+                        window,
+                        use_robustness: true,
+                        robustness_weights,
+                        weights,
+                        weight_function,
+                        zero_weight_fallback,
+                        custom_weights,
+                    };
+
+                    let (val, slope) = ctx.fit_with_derivative().unwrap_or((y[i], T::zero()));
+                    (i, val, slope)
+                },
+            )
+            .collect();
+
+        let mut y_scratch = vec![T::zero(); n];
+        let mut derivative = vec![T::zero(); n];
+
+        for &(idx, value, slope) in &anchor_results {
+            y_scratch[idx] = value;
+            derivative[idx] = slope;
+
+            // Handle potential ties following this anchor
+            let x_val = x[idx];
+            for i in (idx + 1)..n {
+                if x[i] == x_val {
+                    y_scratch[i] = value;
+                    derivative[i] = slope;
+                } else {
+                    break;
+                }
+            }
+        }
+
+        // Interpolate slope between consecutive anchors, mirroring y_smooth's own
+        // interpolation there.
+        for window in anchors.windows(2) {
+            let start = window[0];
+            let end = window[1];
+
+            let mut gap_start = start;
+            let x_start = x[start];
+            while gap_start < end && x[gap_start] == x_start {
+                gap_start += 1;
+            }
+
+            if gap_start < end {
+                interpolate_gap_derivative(x, &y_scratch, &mut derivative, gap_start - 1, end);
+            }
+        }
+
+        // Handle any remaining points after the last anchor
+        if let Some(&last_anchor) = anchors.last()
+            && last_anchor < n - 1
+        {
+            if x[n - 1] == x[last_anchor] {
+                y_scratch[n - 1] = y_scratch[last_anchor];
+                derivative[n - 1] = derivative[last_anchor];
+            } else {
+                let mut weights = vec![T::zero(); n];
+                let mut window = Window::initialize(n - 1, window_size, n);
+                window.recenter(x, n - 1, n);
+
+                let mut ctx = RegressionContext {
+                    x,
+                    y,
+                    idx: n - 1,
+                    window,
+                    use_robustness: true,
+                    robustness_weights,
+                    weights: &mut weights,
+                    weight_function,
+                    zero_weight_fallback,
+                    custom_weights,
+                };
+
+                let (val, slope) = ctx.fit_with_derivative().unwrap_or((y[n - 1], T::zero()));
+                y_scratch[n - 1] = val;
+                derivative[n - 1] = slope;
+            }
+
+            let mut gap_start = last_anchor;
+            let x_start = x[last_anchor];
+            while gap_start < n - 1 && x[gap_start] == x_start {
+                gap_start += 1;
+            }
+            if gap_start < n - 1 {
+                interpolate_gap_derivative(x, &y_scratch, &mut derivative, gap_start - 1, n - 1);
+            }
+        }
+
+        derivative
+    } else {
+        fit_all_derivative_parallel(
+            x,
+            y,
+            window_size,
+            robustness_weights,
+            weight_function,
+            zero_weight_fallback,
+            custom_weights,
+        )
+    }
+}
+
+// Fit the local WLS slope at every point in parallel (no delta optimization).
+#[cfg(feature = "cpu")]
+fn fit_all_derivative_parallel<T>(
+    x: &[T],
+    y: &[T],
+    window_size: usize,
+    robustness_weights: &[T],
+    weight_function: WeightFunction,
+    zero_weight_fallback: ZeroWeightFallback,
+    custom_weights: Option<&[T]>,
+) -> Vec<T>
+where
+    T: Float + Send + Sync + WLSSolver,
+{
+    let n = x.len();
+
+    (0..n)
+        .into_par_iter()
+        .map_init(
+            || vec![T::zero(); n],
+            |weights, i| {
+                weights.fill(T::zero());
+
+                let mut window = Window::initialize(i, window_size, n);
+                window.recenter(x, i, n);
+
+                let mut ctx = RegressionContext {
+                    x,
+                    y,
+                    idx: i,
+                    window,
+                    use_robustness: true,
+                    robustness_weights,
+                    weights,
+                    weight_function,
+                    zero_weight_fallback,
+                    custom_weights,
+                };
+
+                ctx.fit_with_derivative().unwrap_or((y[i], T::zero())).1
+            },
+        )
+        .collect()
+}
+
+// Fill in `derivative` for the gap between two anchor points with the constant slope of
+// the linear segment connecting them, mirroring `lowess`'s own
+// `interpolate_gap_derivative` (duplicated here since this module's `interpolate_gap`
+// above is also a local copy rather than importing from `lowess`).
+#[cfg(feature = "cpu")]
+fn interpolate_gap_derivative<T: Float>(
+    x: &[T],
+    y_smooth: &[T],
+    derivative: &mut [T],
+    start: usize,
+    end: usize,
+) {
+    if end <= start + 1 {
+        return;
+    }
+
+    let denom = x[end] - x[start];
+    let slope = if denom > T::zero() {
+        (y_smooth[end] - y_smooth[start]) / denom
+    } else {
+        T::zero()
+    };
+    derivative[(start + 1)..end].fill(slope);
+}

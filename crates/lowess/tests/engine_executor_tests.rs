@@ -136,11 +136,13 @@ fn test_config_custom() {
         cv_kind: None,
         auto_converge: Some(1e-6),
         return_variance: None,
+        return_derivative: false,
         boundary_policy: BoundaryPolicy::default(),
         scaling_method: ScalingMethod::default(),
         custom_smooth_pass: None,
         custom_cv_pass: None,
         custom_interval_pass: None,
+        custom_derivative_pass: None,
         custom_fit_pass: None,
         parallel: false,
         backend: None,
@@ -182,6 +184,7 @@ fn test_executor_output_basic() {
         confidence_upper: None,
         prediction_lower: None,
         prediction_upper: None,
+        derivative: None,
         predict_state: None,
     };
 
@@ -209,6 +212,7 @@ fn test_executor_output_complete() {
         confidence_upper: None,
         prediction_lower: None,
         prediction_upper: None,
+        derivative: None,
         predict_state: None,
     };
 
@@ -236,6 +240,7 @@ fn test_executor_output_empty() {
         confidence_upper: None,
         prediction_lower: None,
         prediction_upper: None,
+        derivative: None,
         predict_state: None,
     };
 
@@ -354,11 +359,13 @@ fn test_config_f32() {
         cv_kind: None,
         auto_converge: None,
         return_variance: None,
+        return_derivative: false,
         boundary_policy: BoundaryPolicy::default(),
         scaling_method: ScalingMethod::default(),
         custom_smooth_pass: None,
         custom_cv_pass: None,
         custom_interval_pass: None,
+        custom_derivative_pass: None,
         custom_fit_pass: None,
         parallel: false,
         backend: None,
@@ -389,6 +396,7 @@ fn test_output_f32() {
         confidence_upper: None,
         prediction_lower: None,
         prediction_upper: None,
+        derivative: None,
         predict_state: None,
     };
 
@@ -418,11 +426,13 @@ fn test_executor_convergence_zero_tolerance() {
         cv_kind: None,
         auto_converge: Some(0.0), // Zero tolerance
         return_variance: None,
+        return_derivative: false,
         boundary_policy: BoundaryPolicy::Extend,
         scaling_method: ScalingMethod::default(),
         custom_smooth_pass: None,
         custom_cv_pass: None,
         custom_interval_pass: None,
+        custom_derivative_pass: None,
         custom_fit_pass: None,
         parallel: false,
         backend: None,
@@ -459,11 +469,13 @@ fn test_executor_delta_equals_range() {
         cv_kind: None,
         auto_converge: None,
         return_variance: None,
+        return_derivative: false,
         boundary_policy: BoundaryPolicy::Extend,
         scaling_method: ScalingMethod::default(),
         custom_smooth_pass: None,
         custom_cv_pass: None,
         custom_interval_pass: None,
+        custom_derivative_pass: None,
         custom_fit_pass: None,
         parallel: false,
         backend: None,
@@ -581,6 +593,7 @@ fn test_output_clone() {
         confidence_upper: None,
         prediction_lower: None,
         prediction_upper: None,
+        derivative: None,
         predict_state: None,
     };
 

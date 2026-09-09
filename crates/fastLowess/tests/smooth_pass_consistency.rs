@@ -33,3 +33,42 @@ fn test_smooth_pass_consistency_robust() {
     }
     println!("Robust smooth pass consistency (3 iters): OK");
 }
+
+/// Verifies that the parallel `return_derivative` pass produces the same per-point
+/// local fit slope as the sequential implementation, including delta-skipped
+/// (interpolated) points.
+#[test]
+fn test_derivative_pass_consistency() {
+    let n = 80;
+    let x: Vec<f64> = (0..n).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| (xi * 0.1).sin() + xi * 0.02).collect();
+
+    let seq_res = Lowess::new()
+        .fraction(0.3)
+        .delta(3.0) // force some points to be delta-skipped/interpolated
+        .return_derivative()
+        .parallel(false)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    let par_res = Lowess::new()
+        .fraction(0.3)
+        .delta(3.0)
+        .return_derivative()
+        .parallel(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    let seq_derivative = seq_res.derivative.expect("sequential derivative");
+    let par_derivative = par_res.derivative.expect("parallel derivative");
+    assert_eq!(seq_derivative.len(), par_derivative.len());
+
+    for i in 0..n {
+        assert_abs_diff_eq!(seq_derivative[i], par_derivative[i], epsilon = 1e-9);
+    }
+    println!("Derivative pass consistency: OK");
+}

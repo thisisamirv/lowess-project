@@ -1,4 +1,4 @@
-﻿//! Batch adapter for standard LOWESS smoothing.
+//! Batch adapter for standard LOWESS smoothing.
 //!
 //! This module provides the batch execution adapter for LOWESS smoothing.
 //! It handles complete datasets in memory with optional parallel processing,
@@ -10,7 +10,9 @@
 
 // Internal dependencies
 #[cfg(feature = "cpu")]
-use crate::engine::executor::{predict_pass_parallel, smooth_pass_parallel};
+use crate::engine::executor::{
+    derivative_pass_parallel, predict_pass_parallel, smooth_pass_parallel,
+};
 #[cfg(feature = "gpu")]
 use crate::engine::gpu::{cross_validate_gpu, fit_pass_gpu};
 #[cfg(feature = "cpu")]
@@ -127,6 +129,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> ParallelBatchLowess<T
                         builder.custom_cv_pass = Some(cv_pass_parallel);
                         builder.custom_interval_pass = Some(interval_pass_parallel);
                         builder.custom_predict_pass = Some(predict_pass_parallel);
+                        builder.custom_derivative_pass = Some(derivative_pass_parallel);
                     } else {
                         // Resets - though they are None by default
                         // but explicitly clearing just in case
@@ -134,6 +137,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> ParallelBatchLowess<T
                         builder.custom_cv_pass = None;
                         builder.custom_interval_pass = None;
                         builder.custom_predict_pass = None;
+                        builder.custom_derivative_pass = None;
                     }
                 }
                 #[cfg(not(feature = "cpu"))]
@@ -143,6 +147,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> ParallelBatchLowess<T
                     builder.custom_cv_pass = None;
                     builder.custom_interval_pass = None;
                     builder.custom_predict_pass = None;
+                    builder.custom_derivative_pass = None;
                 }
             }
             Backend::GPU => {

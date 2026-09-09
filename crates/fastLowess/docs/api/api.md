@@ -81,6 +81,7 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `return_residuals()` | `bool` | `false` | Include residuals in result |
 | `return_robustness_weights()` | `bool` | `false` | Include weights in result |
 | `return_se()` | `bool` | `false` | Return standard errors |
+| `return_derivative()` | `bool` | `false` | Include the per-point local fit derivative (slope) in result (Batch only) |
 | `return_sorted()` | `bool` | `false` | Return results sorted ascending by `x` instead of in original input order |
 | `parallel(bool)` | `bool` | `true` | Enable parallel execution |
 | `backend(...)` | `Backend` | `CPU` | `fastLowess` only: `CPU` or `GPU` |
@@ -224,6 +225,13 @@ Include the final per-point robustness weights (from the last robustness iterati
 
 Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) in addition to standard errors.
 
+### return_derivative
+
+Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) in the result, enabling turning-point/rate-of-change analysis at effectively no extra computation cost. Computed in parallel (like the smoothing pass itself) when `parallel` is enabled. Batch only.
+
+- `false` (default) — leaves `result.derivative` as `None`
+- `true` — populates `result.derivative`
+
 ### return_sorted
 
 When set to `true`, it reorders every result field (residuals, intervals, etc.) by `x` in an ascending manner, instead of in original input order.
@@ -281,6 +289,7 @@ Retains the fitted model's training data, enabling `Predict::call(&result, new_x
 | `prediction_upper` | `Option<Array1<T>>` | Upper prediction bounds |
 | `residuals` | `Option<Array1<T>>` | Residuals (if `return_residuals`) |
 | `robustness_weights` | `Option<Array1<T>>` | Robustness weights (if `return_robustness_weights`) |
+| `derivative` | `Option<Array1<T>>` | Per-point local fit derivative/slope (if `return_derivative`) |
 | `cv_scores` | `Option<Array1<T>>` | CV score per tested fraction |
 | `diagnostics` | `Option<Diagnostics<T>>` | Fit metrics (if `return_diagnostics`) |
 

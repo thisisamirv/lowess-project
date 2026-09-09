@@ -541,6 +541,13 @@ pub struct RegressionContext<'a, T: Float> {
 impl<'a, T: Float + WLSSolver> RegressionContext<'a, T> {
     // Perform the local linear fit using the context configuration.
     pub fn fit(&mut self) -> Option<T> {
+        self.fit_with_derivative().map(|(y, _slope)| y)
+    }
+
+    // Same as `fit()`, but also returns the local fit's slope (derivative) at the fitted
+    // point. `eval_at` already computes this internally, so this is effectively free -
+    // `fit()` is just a thin wrapper that discards it.
+    pub fn fit_with_derivative(&mut self) -> Option<(T, T)> {
         let n = self.x.len();
 
         if self.idx >= n || self.window.left >= n || self.window.right >= n {
@@ -549,7 +556,7 @@ impl<'a, T: Float + WLSSolver> RegressionContext<'a, T> {
 
         let x_current = self.x[self.idx];
         let orig_y = self.y[self.idx];
-        self.eval_at(x_current, Some(orig_y)).map(|(y, _slope)| y)
+        self.eval_at(x_current, Some(orig_y))
     }
 
     // Evaluate the local WLS fit at an arbitrary out-of-sample query point, reusing the

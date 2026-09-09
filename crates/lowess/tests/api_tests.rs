@@ -595,6 +595,7 @@ fn test_lowess_result_helpers() {
         iterations_used: Some(0),
         fraction_used: 0.5,
         cv_scores: Some(vec![0.3, 0.1, 0.2]),
+        derivative: None,
         fit_state: None,
     };
 
@@ -622,6 +623,7 @@ fn test_has_cv_scores() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: Some(vec![0.1, 0.2]),
+        derivative: None,
         fit_state: None,
     };
     assert!(lr_with.has_cv_scores());

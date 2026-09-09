@@ -217,6 +217,10 @@ impl Lowess {
         self.0 = self.0.retain_model(retain);
         self
     }
+    pub fn return_derivative(mut self) -> Self {
+        self.0 = self.0.return_derivative();
+        self
+    }
 
     pub fn build(self) -> Result<ParallelBatchLowess<f64>, LowessError> {
         Batch::convert(self.0).build()

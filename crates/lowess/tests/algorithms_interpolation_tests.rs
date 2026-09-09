@@ -15,7 +15,9 @@
 
 use approx::assert_relative_eq;
 
-use lowess::internals::algorithms::interpolation::{calculate_delta, interpolate_gap};
+use lowess::internals::algorithms::interpolation::{
+    calculate_delta, interpolate_gap, interpolate_gap_derivative,
+};
 
 // ============================================================================
 // Delta Calculation Tests
@@ -127,4 +129,50 @@ fn test_interpolate_gap_nan_inf() {
     let mut y_nan = vec![f64::NAN, 0.0, 20.0];
     interpolate_gap(&x, &mut y_nan, 0, 2);
     assert!(y_nan[1].is_nan());
+}
+
+// ============================================================================
+// Gap Derivative Interpolation Tests
+// ============================================================================
+
+/// Test that `interpolate_gap_derivative` fills the gap with the constant slope
+/// of the linear segment connecting the two anchor points.
+#[test]
+fn test_interpolate_gap_derivative_linear() {
+    let x = vec![0.0f64, 1.0, 2.0, 3.0];
+    let y_smooth = vec![10.0f64, 13.333333333333334, 16.666666666666668, 20.0];
+    let mut derivative = vec![0.0f64; 4];
+
+    interpolate_gap_derivative(&x, &y_smooth, &mut derivative, 0, 3);
+
+    // Slope of the segment from (0,10) to (3,20) is 10/3.
+    let expected_slope = 10.0 / 3.0;
+    assert_relative_eq!(derivative[1], expected_slope, epsilon = 1e-9);
+    assert_relative_eq!(derivative[2], expected_slope, epsilon = 1e-9);
+}
+
+/// Test that `interpolate_gap_derivative` is a no-op when there is no gap to fill.
+#[test]
+fn test_interpolate_gap_derivative_no_gap() {
+    let x = vec![0.0f64, 1.0];
+    let y_smooth = vec![10.0f64, 20.0];
+    let mut derivative = vec![1.0f64, 2.0];
+
+    interpolate_gap_derivative(&x, &y_smooth, &mut derivative, 0, 1);
+
+    // Adjacent anchors: nothing in between to fill, values untouched.
+    assert_relative_eq!(derivative[0], 1.0, epsilon = 1e-12);
+    assert_relative_eq!(derivative[1], 2.0, epsilon = 1e-12);
+}
+
+/// Test that `interpolate_gap_derivative` falls back to zero for duplicate x values.
+#[test]
+fn test_interpolate_gap_derivative_duplicate_x() {
+    let x = vec![0.0f64, 0.0, 0.0];
+    let y_smooth = vec![5.0f64, 0.0, 5.0];
+    let mut derivative = vec![0.0f64; 3];
+
+    interpolate_gap_derivative(&x, &y_smooth, &mut derivative, 0, 2);
+
+    assert_relative_eq!(derivative[1], 0.0, epsilon = 1e-12);
 }

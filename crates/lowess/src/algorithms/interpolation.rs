@@ -59,3 +59,26 @@ pub fn interpolate_gap<T: Float>(x: &[T], y_smooth: &mut [T], last_fitted: usize
         y_smooth[k] = y0 + (x[k] - x0) * slope;
     }
 }
+
+// Fill in `derivative` for the gap between two anchor points with the constant slope of
+// the linear segment connecting them - the same slope `interpolate_gap` used to fill
+// `y_smooth`, so the returned derivative stays consistent with the smoothed curve there.
+pub fn interpolate_gap_derivative<T: Float>(
+    x: &[T],
+    y_smooth: &[T],
+    derivative: &mut [T],
+    last_fitted: usize,
+    current: usize,
+) {
+    if current <= last_fitted + 1 {
+        return;
+    }
+
+    let denom = x[current] - x[last_fitted];
+    let slope = if denom > T::zero() {
+        (y_smooth[current] - y_smooth[last_fitted]) / denom
+    } else {
+        T::zero()
+    };
+    derivative[(last_fitted + 1)..current].fill(slope);
+}

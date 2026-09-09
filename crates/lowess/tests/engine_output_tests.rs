@@ -90,6 +90,7 @@ fn test_has_confidence_intervals_true() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: None,
+        derivative: None,
         fit_state: None,
     };
 
@@ -118,6 +119,7 @@ fn test_has_confidence_intervals_false() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: None,
+        derivative: None,
         fit_state: None,
     };
 
@@ -146,6 +148,7 @@ fn test_has_prediction_intervals_true() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: None,
+        derivative: None,
         fit_state: None,
     };
 
@@ -174,6 +177,7 @@ fn test_has_prediction_intervals_false() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: None,
+        derivative: None,
         fit_state: None,
     };
 
@@ -202,6 +206,7 @@ fn test_has_cv_scores_true() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: Some(vec![0.1, 0.2, 0.3]),
+        derivative: None,
         fit_state: None,
     };
 
@@ -227,6 +232,7 @@ fn test_has_cv_scores_false() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: None,
+        derivative: None,
         fit_state: None,
     };
 
@@ -257,6 +263,7 @@ fn test_smoothed_accessor() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: None,
+        derivative: None,
         fit_state: None,
     };
 
@@ -282,6 +289,7 @@ fn test_best_cv_score_present() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: Some(vec![0.3, 0.1, 0.2, 0.5]),
+        derivative: None,
         fit_state: None,
     };
 
@@ -309,6 +317,7 @@ fn test_best_cv_score_none() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: None,
+        derivative: None,
         fit_state: None,
     };
 
@@ -334,6 +343,7 @@ fn test_best_cv_score_single() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: Some(vec![0.42]),
+        derivative: None,
         fit_state: None,
     };
 
@@ -365,6 +375,7 @@ fn test_confidence_width() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: None,
+        derivative: None,
         fit_state: None,
     };
 
@@ -394,6 +405,7 @@ fn test_confidence_width_none() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: None,
+        derivative: None,
         fit_state: None,
     };
 
@@ -419,6 +431,7 @@ fn test_prediction_width() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: None,
+        derivative: None,
         fit_state: None,
     };
 
@@ -448,6 +461,7 @@ fn test_prediction_width_none() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: None,
+        derivative: None,
         fit_state: None,
     };
 
@@ -473,6 +487,7 @@ fn test_prediction_wider_than_confidence() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: None,
+        derivative: None,
         fit_state: None,
     };
 
@@ -507,6 +522,7 @@ fn test_minimal_result() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: None,
+        derivative: None,
         fit_state: None,
     };
 
@@ -545,6 +561,7 @@ fn test_maximal_result() {
         iterations_used: Some(3),
         fraction_used: 0.5,
         cv_scores: Some(vec![0.1, 0.2]),
+        derivative: None,
         fit_state: None,
     };
 
@@ -575,6 +592,7 @@ fn test_empty_cv_scores() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: Some(vec![]),
+        derivative: None,
         fit_state: None,
     };
 
@@ -605,6 +623,7 @@ fn test_display_basic() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: None,
+        derivative: None,
         fit_state: None,
     };
 
@@ -637,6 +656,7 @@ fn test_best_cv_score_with_nan() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: Some(vec![0.5, f64::NAN, 0.3, 0.7]),
+        derivative: None,
         fit_state: None,
     };
 
@@ -662,6 +682,7 @@ fn test_best_cv_score_all_equal() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: Some(vec![0.5, 0.5, 0.5]),
+        derivative: None,
         fit_state: None,
     };
 
@@ -686,6 +707,7 @@ fn test_display_with_empty_vectors() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: None,
+        derivative: None,
         fit_state: None,
     };
 
@@ -720,6 +742,7 @@ fn test_display_with_all_fields() {
         iterations_used: Some(3),
         fraction_used: 0.5,
         cv_scores: Some(vec![0.1, 0.2]),
+        derivative: None,
         fit_state: None,
     };
 
@@ -758,6 +781,7 @@ fn test_display_large_dataset() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: None,
+        derivative: None,
         fit_state: None,
     };
 

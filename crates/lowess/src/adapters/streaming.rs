@@ -268,12 +268,14 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
             auto_converge: self.config.auto_converge,
             return_variance: None,
             cv_seed: None,
+            return_derivative: false,
             // ++++++++++++++++++++++++++++++++++++++
             // +               DEV                  +
             // ++++++++++++++++++++++++++++++++++++++
             custom_smooth_pass: self.config.custom_smooth_pass,
             custom_cv_pass: self.config.custom_cv_pass,
             custom_interval_pass: self.config.custom_interval_pass,
+            custom_derivative_pass: None,
             custom_fit_pass: self.config.custom_fit_pass,
             parallel: self.config.parallel.unwrap_or(false),
             backend: None,
@@ -423,6 +425,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
             prediction_upper: None,
             residuals: residuals_out,
             robustness_weights: rob_weights_out,
+            derivative: None,
             diagnostics,
             iterations_used: Some(iterations),
             fraction_used: self.config.fraction,
@@ -444,6 +447,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
                 prediction_upper: None,
                 residuals: None,
                 robustness_weights: None,
+                derivative: None,
                 diagnostics: None,
                 iterations_used: None,
                 fraction_used: self.config.fraction,
@@ -487,6 +491,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
             prediction_upper: None,
             residuals,
             robustness_weights,
+            derivative: None,
             diagnostics,
             iterations_used: None,
             fraction_used: self.config.fraction,

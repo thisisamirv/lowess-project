@@ -101,6 +101,110 @@ fn test_batch_with_robustness_weights() {
     );
 }
 
+/// Test that `return_derivative` is `None` by default.
+#[test]
+fn test_batch_derivative_none_by_default() {
+    let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+    let y = vec![2.1, 4.0, 6.2, 8.0, 10.1];
+
+    let result = Lowess::new()
+        .fraction(0.7)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .expect("Smoothing should succeed");
+
+    assert!(
+        result.derivative.is_none(),
+        "derivative should be None unless return_derivative() was requested"
+    );
+}
+
+/// Test that `return_derivative` populates a per-point local fit slope matching
+/// the exact slope of a perfectly linear dataset.
+#[test]
+fn test_batch_return_derivative_linear() {
+    let n = 50;
+    let x: Vec<f64> = (0..n).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| 3.0 * xi + 1.0).collect();
+
+    let result = Lowess::new()
+        .fraction(0.5)
+        .delta(0.0) // exact fit at every point
+        .boundary_policy("noboundary") // avoid distorting the perfectly linear data at the edges
+        .return_derivative()
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .expect("Smoothing should succeed");
+
+    let derivative = result
+        .derivative
+        .as_ref()
+        .expect("derivative should be populated when requested");
+    assert_eq!(derivative.len(), x.len());
+
+    // A weighted least squares fit of a perfectly linear function always has zero
+    // residual regardless of window/weights, so every point's slope should be exact.
+    for &slope in derivative {
+        assert_relative_eq!(slope, 3.0, epsilon = 1e-6);
+    }
+}
+
+/// Test that `return_derivative` also populates slopes for delta-skipped
+/// (interpolated) points, not just fitted anchor points.
+#[test]
+fn test_batch_return_derivative_with_delta_interpolation() {
+    let n = 60;
+    let x: Vec<f64> = (0..n).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| 2.0 * xi).collect();
+
+    let result = Lowess::new()
+        .fraction(0.3)
+        .delta(5.0) // force many points to be delta-skipped/interpolated
+        .boundary_policy("noboundary") // avoid distorting the perfectly linear data at the edges
+        .return_derivative()
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .expect("Smoothing should succeed");
+
+    let derivative = result.derivative.expect("derivative should be populated");
+    assert_eq!(derivative.len(), x.len());
+    assert!(
+        derivative.iter().all(|v| v.is_finite()),
+        "Every point (anchor or interpolated) should have a finite derivative"
+    );
+
+    // Every point's slope should closely match the line's true slope, whether
+    // it was an exact anchor fit or a delta-interpolated point.
+    for &slope in &derivative {
+        assert_relative_eq!(slope, 2.0, epsilon = 1e-6);
+    }
+}
+
+/// Test that `return_derivative` works for the `fraction >= 1.0` (global
+/// regression) special case, where the derivative is the single global slope.
+#[test]
+fn test_batch_return_derivative_global_regression() {
+    let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+    let y = vec![2.0, 4.0, 6.0, 8.0, 10.0];
+
+    let result = Lowess::new()
+        .fraction(1.0)
+        .return_derivative()
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .expect("Global regression should succeed");
+
+    let derivative = result.derivative.expect("derivative should be populated");
+    assert_eq!(derivative.len(), x.len());
+    for &slope in &derivative {
+        assert_relative_eq!(slope, 2.0, epsilon = 1e-9);
+    }
+}
+
 // ============================================================================
 // Intervals and Diagnostics Tests
 // ============================================================================

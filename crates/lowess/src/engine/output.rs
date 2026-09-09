@@ -51,6 +51,9 @@ pub struct LowessResult<T> {
     // Final robustness weights from the iterative refinement process.
     pub robustness_weights: Option<Vec<T>>,
 
+    // Per-point local fit derivative (slope), if `return_derivative` was set (Batch only).
+    pub derivative: Option<Vec<T>>,
+
     // Comprehensive diagnostic metrics (RMSE, R^2, AIC, etc.).
     pub diagnostics: Option<Diagnostics<T>>,
 

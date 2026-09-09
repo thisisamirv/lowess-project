@@ -288,7 +288,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
                 VecExt::assign(self.buffer.weights.as_vec_mut(), n, T::zero());
                 VecExt::assign(self.buffer.robustness_weights.as_vec_mut(), n, T::one());
 
-                let (smoothed_val, _) = LowessExecutor::fit_single_point(
+                let (smoothed_val, _slope, _) = LowessExecutor::fit_single_point(
                     x_vec,
                     y_vec,
                     n - 1, // Latest point
@@ -319,12 +319,14 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
                     cv_kind: None,
                     return_variance: None,
                     cv_seed: None,
+                    return_derivative: false,
                     // ++++++++++++++++++++++++++++++++++++++
                     // +               DEV                  +
                     // ++++++++++++++++++++++++++++++++++++++
                     custom_smooth_pass: self.config.custom_smooth_pass,
                     custom_cv_pass: self.config.custom_cv_pass,
                     custom_interval_pass: self.config.custom_interval_pass,
+                    custom_derivative_pass: None,
                     custom_fit_pass: self.config.custom_fit_pass,
                     parallel: false,
                     backend: None,
