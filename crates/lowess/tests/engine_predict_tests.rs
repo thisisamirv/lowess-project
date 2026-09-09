@@ -1,7 +1,7 @@
 #![cfg(feature = "dev")]
-//! Tests for Batch out-of-sample prediction (`.retain_model()` + `LowessResult::predict()`).
+//! Tests for Batch out-of-sample prediction (`.retain_model()` + `Predict::call()`).
 
-use lowess::internals::engine::predict::{ExtrapolationPolicy, PredictOptions};
+use lowess::internals::engine::predict::{ExtrapolationPolicy, Predict};
 use lowess::prelude::*;
 
 /// predict() must error when `.retain_model(true)` was not set before `fit()`.
@@ -17,9 +17,7 @@ fn test_predict_unavailable_without_retain_model() {
         .fit(&x, &y)
         .expect("fit should succeed");
 
-    let err = result
-        .predict(&[5.0], PredictOptions::default())
-        .unwrap_err();
+    let err = Predict::default().call(&result, &[5.0]).unwrap_err();
     assert_eq!(err, LowessError::PredictionUnavailable);
 }
 
@@ -39,8 +37,8 @@ fn test_predict_matches_fit_at_training_points() {
         .fit(&x, &y)
         .expect("fit should succeed");
 
-    let predicted = result
-        .predict(&x, PredictOptions::default())
+    let predicted = Predict::default()
+        .call(&result, &x)
         .expect("predict should succeed");
     assert_eq!(predicted.y.len(), x.len());
 
@@ -71,8 +69,8 @@ fn test_predict_matches_fit_at_training_points_with_delta() {
         .fit(&x, &y)
         .expect("fit should succeed");
 
-    let predicted = result
-        .predict(&x, PredictOptions::default())
+    let predicted = Predict::default()
+        .call(&result, &x)
         .expect("predict should succeed");
 
     for (fitted, pred) in result.y.iter().zip(predicted.y.iter()) {
@@ -102,8 +100,8 @@ fn test_predict_interpolates_smooth_function() {
 
     // Midpoints strictly between consecutive training x-values, away from the boundary.
     let mid_x: Vec<f64> = (20..n - 20).map(|i| (x[i] + x[i + 1]) / 2.0).collect();
-    let predicted = result
-        .predict(&mid_x, PredictOptions::default())
+    let predicted = Predict::default()
+        .call(&result, &mid_x)
         .expect("predict should succeed");
 
     let max_err = (20..n - 20)
@@ -135,8 +133,8 @@ fn test_predict_out_of_range_clamp_does_not_panic() {
         .fit(&x, &y)
         .expect("fit should succeed");
 
-    let predicted = result
-        .predict(&[-100.0, -1.0, 1000.0], PredictOptions::default())
+    let predicted = Predict::default()
+        .call(&result, &[-100.0, -1.0, 1000.0])
         .expect("predict should not error on out-of-range x under Clamp");
     assert!(predicted.y.iter().all(|v| v.is_finite()));
 }
@@ -156,17 +154,17 @@ fn test_predict_out_of_range_error_policy() {
         .fit(&x, &y)
         .expect("fit should succeed");
 
-    let options = PredictOptions {
+    let options = Predict {
         extrapolation: ExtrapolationPolicy::Error,
-        ..PredictOptions::default()
+        ..Predict::default()
     };
 
-    let err = result.predict(&[1000.0], options.clone()).unwrap_err();
+    let err = options.call(&result, &[1000.0]).unwrap_err();
     assert!(matches!(err, LowessError::PredictOutOfRange { .. }));
 
     // In-range queries must still succeed under the same policy.
-    result
-        .predict(&[5.0], options)
+    options
+        .call(&result, &[5.0])
         .expect("in-range query should succeed under Error policy");
 }
 
@@ -186,9 +184,7 @@ fn test_predict_rejects_non_finite_new_x() {
         .expect("fit should succeed");
 
     for bad in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
-        let err = result
-            .predict(&[5.0, bad], PredictOptions::default())
-            .unwrap_err();
+        let err = Predict::default().call(&result, &[5.0, bad]).unwrap_err();
         assert!(matches!(err, LowessError::InvalidNumericValue(_)));
     }
 }
@@ -211,13 +207,13 @@ fn test_predict_out_of_range_linear_policy() {
         .fit(&x, &y)
         .expect("fit should succeed");
 
-    let options = PredictOptions {
+    let options = Predict {
         extrapolation: ExtrapolationPolicy::Linear,
-        ..PredictOptions::default()
+        ..Predict::default()
     };
 
-    let predicted = result
-        .predict(&[60.0, 100.0], options)
+    let predicted = options
+        .call(&result, &[60.0, 100.0])
         .expect("predict should succeed under Linear policy");
 
     // The underlying function is exactly linear, so linear extrapolation should track
@@ -250,29 +246,29 @@ fn test_predict_extrapolation_linear_respects_max_distance() {
         .fit(&x, &y)
         .expect("fit should succeed");
 
-    let options = PredictOptions {
+    let options = Predict {
         extrapolation: ExtrapolationPolicy::Linear,
         max_extrapolation_distance: Some(10.0),
-        ..PredictOptions::default()
+        ..Predict::default()
     };
 
     // Within the cap: still succeeds.
-    result
-        .predict(&[55.0], options.clone())
+    options
+        .call(&result, &[55.0])
         .expect("within max_extrapolation_distance should succeed");
 
     // Beyond the cap: errors instead of extrapolating unbounded.
-    let err = result.predict(&[100.0], options).unwrap_err();
+    let err = options.call(&result, &[100.0]).unwrap_err();
     assert!(matches!(err, LowessError::ExtrapolationTooFar { .. }));
 
     // The cap is ignored under Clamp.
-    let clamp_options = PredictOptions {
+    let clamp_options = Predict {
         extrapolation: ExtrapolationPolicy::Clamp,
         max_extrapolation_distance: Some(10.0),
-        ..PredictOptions::default()
+        ..Predict::default()
     };
-    result
-        .predict(&[100.0], clamp_options)
+    clamp_options
+        .call(&result, &[100.0])
         .expect("max_extrapolation_distance should not apply under Clamp");
 }
 
@@ -296,23 +292,23 @@ fn test_predict_max_neighbor_distance_catches_1d_gap() {
         .expect("fit should succeed");
 
     // No cap: the gap is silently treated as in-range (original behavior).
-    result
-        .predict(&[50.0], PredictOptions::default())
+    Predict::default()
+        .call(&result, &[50.0])
         .expect("uncapped predict should not error, even in the gap");
 
     // With a cap: the gap's local window is much farther than a point actually near
     // training data.
-    let options = PredictOptions {
+    let options = Predict {
         max_neighbor_distance: Some(5.0),
-        ..PredictOptions::default()
+        ..Predict::default()
     };
-    let err = result.predict(&[50.0], options.clone()).unwrap_err();
+    let err = options.call(&result, &[50.0]).unwrap_err();
     assert!(matches!(err, LowessError::SparseNeighborhood { .. }));
 
     // A point actually near real training data has a tight local window and should
     // still succeed under the same cap.
-    result
-        .predict(&[5.0], options)
+    options
+        .call(&result, &[5.0])
         .expect("a point near real training data should have a tight local window");
 }
 
@@ -331,13 +327,13 @@ fn test_predict_return_derivative() {
         .fit(&x, &y)
         .expect("fit should succeed");
 
-    let options = PredictOptions {
+    let options = Predict {
         return_derivative: true,
-        ..PredictOptions::default()
+        ..Predict::default()
     };
 
-    let predicted = result
-        .predict(&[20.0, 30.0, 40.0], options)
+    let predicted = options
+        .call(&result, &[20.0, 30.0, 40.0])
         .expect("predict should succeed");
 
     let derivative = predicted.derivative.expect("derivative should be present");
@@ -369,16 +365,16 @@ fn test_predict_se_and_intervals() {
         .fit(&x, &y)
         .expect("fit should succeed");
 
-    let options = PredictOptions {
+    let options = Predict {
         return_se: true,
         confidence_level: Some(0.95),
         prediction_level: Some(0.95),
-        ..PredictOptions::default()
+        ..Predict::default()
     };
 
     let new_x = vec![10.0, 25.0, 40.0, 55.0, 70.0];
-    let predicted = result
-        .predict(&new_x, options)
+    let predicted = options
+        .call(&result, &new_x)
         .expect("predict should succeed");
 
     let se = predicted.standard_errors.expect("standard_errors present");

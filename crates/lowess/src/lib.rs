@@ -284,7 +284,7 @@ mod api;
 // Standard LOWESS prelude.
 pub mod prelude {
     pub use crate::api::{Lowess, LowessError, LowessResult, OnlineLowess, StreamingLowess};
-    pub use crate::engine::predict::PredictOptions;
+    pub use crate::engine::predict::Predict;
 }
 
 // Internal modules for development and testing.

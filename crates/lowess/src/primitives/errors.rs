@@ -123,10 +123,10 @@ pub enum LowessError {
     // Collects all parse errors from string builder methods and reports them together at `build()`.
     ParseErrors(Vec<LowessError>),
 
-    // `LowessResult::predict()` was called without `.retain_model(true)` set before `fit()`.
+    // `Predict::call()` was called without `.retain_model(true)` set before `fit()`.
     PredictionUnavailable,
 
-    // `LowessResult::predict()` was called with `ExtrapolationPolicy::Error` and a query
+    // `Predict::call()` was called with `ExtrapolationPolicy::Error` and a query
     // point outside the training x-range.
     PredictOutOfRange {
         // The out-of-range query x-value.
@@ -138,7 +138,7 @@ pub enum LowessError {
     },
 
     // A `predict()` query point under `ExtrapolationPolicy::Linear` fell farther beyond
-    // the training range than `PredictOptions::max_extrapolation_distance` allows. The
+    // the training range than `Predict::max_extrapolation_distance` allows. The
     // first-order Taylor extension has no inherent cap, so an unbounded distance can
     // produce arbitrarily extreme values; this guard is opt-in (the option defaults to
     // `None`, preserving the original unbounded behavior).
@@ -151,7 +151,7 @@ pub enum LowessError {
 
     // A `predict()` query point passed the `[min(x_train), max(x_train)]` range check (so
     // it wasn't caught by `ExtrapolationPolicy`) but its actual local window is farther
-    // away than `PredictOptions::max_neighbor_distance` allows. That range check isn't a
+    // away than `Predict::max_neighbor_distance` allows. That range check isn't a
     // density check: a point can fall between two clusters of training data (e.g. training
     // x in [0,10] and [90,100], query at x=50) and still pass it, yet be far from any real
     // training point. This guard is opt-in (the option defaults to `None`, preserving the

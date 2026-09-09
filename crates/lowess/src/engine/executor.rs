@@ -142,7 +142,7 @@ pub struct ExecutorOutput<T> {
     // Prediction interval upper bounds (if intervals were computed).
     pub prediction_upper: Option<Vec<T>>,
 
-    // Retained fitted-model state for `LowessResult::predict()`, if `retain_model` was set.
+    // Retained fitted-model state for `Predict::call()`, if `retain_model` was set.
     pub predict_state: Option<Arc<PredictState<T>>>,
 }
 
@@ -224,7 +224,7 @@ pub struct LowessConfig<T> {
     // `w_ij = custom_weights[j] * K(d_ij / h) * robustness_j`.
     pub custom_weights: Option<Vec<T>>,
 
-    // Whether to retain fitted-model state for later `LowessResult::predict()` calls (Batch only).
+    // Whether to retain fitted-model state for later `Predict::call()` calls (Batch only).
     #[doc(hidden)]
     pub retain_model: bool,
 
@@ -329,7 +329,7 @@ pub struct LowessExecutor<T: Float> {
     // Per-observation case weights applied as `w_ij = custom_weights[j] * K(d_ij / h) * robustness_j`.
     pub custom_weights: Option<Vec<T>>,
 
-    // Whether to retain fitted-model state for later `LowessResult::predict()` calls (Batch only).
+    // Whether to retain fitted-model state for later `Predict::call()` calls (Batch only).
     #[doc(hidden)]
     pub retain_model: bool,
 
@@ -541,7 +541,7 @@ impl<T: Float> LowessExecutor<T> {
         self
     }
 
-    // Set whether to retain fitted-model state for later `LowessResult::predict()` calls.
+    // Set whether to retain fitted-model state for later `Predict::call()` calls.
     #[doc(hidden)]
     pub fn retain_model(mut self, retain: bool) -> Self {
         self.retain_model = retain;

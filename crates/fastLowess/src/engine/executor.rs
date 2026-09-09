@@ -21,7 +21,7 @@ use rayon::prelude::*;
 use lowess::internals::algorithms::regression::{RegressionContext, WLSSolver, ZeroWeightFallback};
 #[cfg(feature = "cpu")]
 use lowess::internals::engine::predict::{
-    PredictOptions, PredictState, RawPredictValues, predict_one_full,
+    Predict, PredictState, RawPredictValues, predict_one_full,
 };
 #[cfg(feature = "cpu")]
 use lowess::internals::math::kernel::WeightFunction;
@@ -560,7 +560,7 @@ fn fit_all_points_tiled<T>(
 pub fn predict_pass_parallel<T>(
     state: &PredictState<T>,
     new_x: &[T],
-    options: &PredictOptions<T>,
+    options: &Predict<T>,
     need_se: bool,
 ) -> RawPredictValues<T>
 where

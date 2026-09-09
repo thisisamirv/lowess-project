@@ -1,7 +1,7 @@
 #![cfg(feature = "dev")]
 use approx::assert_abs_diff_eq;
 use fastLowess::prelude::*;
-use lowess::internals::engine::predict::PredictOptions;
+use lowess::internals::engine::predict::Predict;
 
 /// Parallel and sequential predict() must produce identical results.
 #[test]
@@ -29,16 +29,16 @@ fn test_predict_pass_consistency() {
         .fit(&x, &y)
         .unwrap();
 
-    let options = PredictOptions {
+    let options = Predict {
         return_se: true,
         return_derivative: true,
         confidence_level: Some(0.95),
         prediction_level: Some(0.95),
-        ..PredictOptions::default()
+        ..Predict::default()
     };
 
-    let seq_pred = seq_res.predict(&new_x, options.clone()).unwrap();
-    let par_pred = par_res.predict(&new_x, options).unwrap();
+    let seq_pred = options.call(&seq_res, &new_x).unwrap();
+    let par_pred = options.call(&par_res, &new_x).unwrap();
 
     for i in 0..new_x.len() {
         assert_abs_diff_eq!(seq_pred.y[i], par_pred.y[i], epsilon = 1e-12);

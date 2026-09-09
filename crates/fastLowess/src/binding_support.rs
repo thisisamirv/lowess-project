@@ -49,7 +49,7 @@ impl_into_enum_for!(WeightFunction);
 impl_into_enum_for!(ZeroWeightFallback);
 use lowess::internals::adapters::online::OnlineOutput;
 pub use lowess::internals::engine::predict::{
-    ExtrapolationPolicy, PredictOptions, PredictOutput, PredictState, predict_batch,
+    ExtrapolationPolicy, Predict, PredictOutput, PredictState, predict_batch,
 };
 use lowess::internals::evaluation::intervals::IntervalMethod;
 use lowess::internals::primitives::backend::Backend;
@@ -126,7 +126,7 @@ pub fn map_lowess_result<T>(result: Result<T, LowessError>) -> Result<T, Binding
     })
 }
 
-// Primitive-friendly, per-call options for `LowessResult::predict()`, mirroring
+// Primitive-friendly, per-call options for `Predict::call()`, mirroring
 // `BuilderOptionSet`'s role for the builder: every binding constructs one of these
 // from its own native option type and passes it to `run_predict`, instead of each
 // binding re-implementing extrapolation-policy string parsing/error mapping itself.
@@ -149,14 +149,12 @@ pub fn extrapolation_policy_str(value: ExtrapolationPolicy) -> &'static str {
     alias::extrapolation_policy_str(value)
 }
 
-pub fn build_predict_options(
-    options: PredictOptionSet<'_>,
-) -> Result<PredictOptions<f64>, BindingError> {
+pub fn build_predict_options(options: PredictOptionSet<'_>) -> Result<Predict<f64>, BindingError> {
     let extrapolation = match options.extrapolation {
         Some(s) => map_invalid_arg(parse_extrapolation_policy(s))?,
         None => ExtrapolationPolicy::default(),
     };
-    Ok(PredictOptions {
+    Ok(Predict {
         return_se: options.return_se,
         confidence_level: options.confidence_level,
         prediction_level: options.prediction_level,
@@ -176,7 +174,7 @@ pub fn run_predict(
     options: PredictOptionSet<'_>,
 ) -> Result<PredictOutput<f64>, BindingError> {
     let opts = build_predict_options(options)?;
-    map_lowess_result(result.predict(new_x, opts))
+    map_lowess_result(opts.call(result, new_x))
 }
 
 // Same as `run_predict`, for bindings (C++, Go, Julia, Java) that retain only the

@@ -559,7 +559,7 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
         self
     }
 
-    // Retain the fitted model state needed for a later `LowessResult::predict(new_x)`
+    // Retain the fitted model state needed for a later `Predict::call(&result, new_x)`
     // call (Batch only). Off by default since it keeps an extra copy of the (boundary-
     // padded) training data alive for the lifetime of the result.
     //

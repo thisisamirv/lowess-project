@@ -1,6 +1,6 @@
 //! Out-of-sample prediction for fitted Batch LOWESS models.
 //!
-//! This module holds the fitted-model state retained by `LowessResult::predict()`
+//! This module holds the fitted-model state retained by `Predict::call()`
 //! (Batch adapter only, opt-in via `.retain_model(true)`) and the logic that
 //! evaluates the local WLS fit at arbitrary query points not in the training set.
 
@@ -11,6 +11,7 @@ use alloc::format;
 use alloc::vec;
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
+use core::fmt::Debug;
 use num_traits::Float;
 #[cfg(feature = "std")]
 use std::vec;
@@ -20,6 +21,7 @@ use std::vec::Vec;
 // Internal dependencies
 use crate::algorithms::regression::{RegressionContext, WLSSolver, ZeroWeightFallback};
 use crate::api::IntoEnum;
+use crate::engine::output::LowessResult;
 use crate::evaluation::intervals::IntervalMethod;
 use crate::math::kernel::WeightFunction;
 use crate::primitives::errors::LowessError;
@@ -40,9 +42,9 @@ pub enum ExtrapolationPolicy {
     Error,
 }
 
-// Options controlling a `LowessResult::predict()` call.
+// Options controlling a `Predict::call()` invocation.
 #[derive(Debug, Clone)]
-pub struct PredictOptions<T> {
+pub struct Predict<T> {
     // Include standard errors in the output.
     pub return_se: bool,
 
@@ -79,7 +81,7 @@ pub struct PredictOptions<T> {
     pub pending_error: Option<LowessError>,
 }
 
-impl<T: Float> Default for PredictOptions<T> {
+impl<T: Float> Default for Predict<T> {
     fn default() -> Self {
         Self {
             return_se: false,
@@ -94,7 +96,23 @@ impl<T: Float> Default for PredictOptions<T> {
     }
 }
 
-impl<T: Float> PredictOptions<T> {
+impl<T: Float> Predict<T> {
+    // Create a new `Predict` with default values, matching `Lowess::new()`'s
+    // constructor-style entry point.
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    // Surface any pending parse error (from `extrapolation(...)`) immediately, mirroring
+    // `LowessBuilder::build()`'s fail-fast convention. Optional: `call()` checks this too,
+    // so skipping `build()` is safe but defers the error until the call itself.
+    pub fn build(self) -> Result<Self, LowessError> {
+        match &self.pending_error {
+            Some(e) => Err(e.clone()),
+            None => Ok(self),
+        }
+    }
+
     // Include standard errors in the output.
     pub fn return_se(mut self) -> Self {
         self.return_se = true;
@@ -131,26 +149,47 @@ impl<T: Float> PredictOptions<T> {
     }
 
     // Under `"linear"` extrapolation, the maximum allowed distance beyond the training
-    // boundary before `predict()` errors instead of returning an unbounded value.
+    // boundary before `call()` errors instead of returning an unbounded value.
     pub fn max_extrapolation_distance(mut self, distance: T) -> Self {
         self.max_extrapolation_distance = Some(distance);
         self
     }
 
     // Maximum allowed distance to the farthest training point in a query's local window
-    // before `predict()` errors, catching in-range-but-sparse query points.
+    // before `call()` errors, catching in-range-but-sparse query points.
     pub fn max_neighbor_distance(mut self, distance: T) -> Self {
         self.max_neighbor_distance = Some(distance);
         self
     }
+}
 
-    // Surface a pending parse error (from `extrapolation(...)`) set on this options value, if any.
-    pub(crate) fn take_pending_error(&mut self) -> Option<LowessError> {
-        self.pending_error.take()
+impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> Predict<T> {
+    // Evaluate `result` (a fitted Batch model) at out-of-sample x-values not in the
+    // training set, per these options, similar to R's `predict(model, newdata)`.
+    //
+    // Requires `.retain_model(true)` on the builder that produced `result` (Batch adapter
+    // only); returns `LowessError::PredictionUnavailable` otherwise.
+    //
+    // Always fits an exact local regression at each query point, unlike `fit()` with the
+    // default `delta > 0` (which only fits exactly at anchor points spaced `delta` apart
+    // and linearly interpolates the rest). So predicting at an x already in the training
+    // set may not exactly reproduce that point's `fit()` output unless `delta(0.0)` was used.
+    pub fn call(
+        &self,
+        result: &LowessResult<T>,
+        new_x: &[T],
+    ) -> Result<PredictOutput<T>, LowessError> {
+        if let Some(e) = &self.pending_error {
+            return Err(e.clone());
+        }
+        match &result.fit_state {
+            Some(state) => predict_batch(state, new_x, self),
+            None => Err(LowessError::PredictionUnavailable),
+        }
     }
 }
 
-// Result of a `LowessResult::predict()` call.
+// Result of a `Predict::call()` invocation.
 #[derive(Debug, Clone)]
 pub struct PredictOutput<T> {
     // Predicted y-values, one per query point in `new_x`.
@@ -182,12 +221,12 @@ pub type RawPredictValues<T> = Result<(Vec<T>, Option<Vec<T>>, Option<Vec<T>>), 
 pub type PredictPassFn<T> = fn(
     &PredictState<T>,
     &[T], // new_x
-    &PredictOptions<T>,
+    &Predict<T>,
     bool, // need_se
 ) -> RawPredictValues<T>;
 
 // Fitted-model state retained by a Batch `fit()` call when `.retain_model(true)` was set,
-// enabling `LowessResult::predict()` to evaluate the fit at out-of-sample query points.
+// enabling `Predict::call()` to evaluate the fit at out-of-sample query points.
 //
 // `x`/`y`/`y_smooth`/`robustness_weights`/`custom_weights` are the boundary-*padded* arrays
 // actually used for local fitting (not the shorter, unpadded arrays returned in
@@ -265,7 +304,7 @@ pub fn predict_one_full<T: Float + WLSSolver>(
     state: &PredictState<T>,
     x_query: T,
     weights_scratch: &mut [T],
-    options: &PredictOptions<T>,
+    options: &Predict<T>,
     need_se: bool,
 ) -> Result<(T, T, Option<T>), LowessError> {
     let n = state.x.len();
@@ -410,7 +449,7 @@ fn interpolate_y_smooth<T: Float>(x: &[T], y_smooth: &[T], query: T) -> T {
 fn predict_batch_serial<T: Float + WLSSolver>(
     state: &PredictState<T>,
     new_x: &[T],
-    options: &PredictOptions<T>,
+    options: &Predict<T>,
     need_se: bool,
 ) -> RawPredictValues<T> {
     let mut scratch = vec![T::zero(); state.x.len().max(1)];
@@ -442,7 +481,7 @@ fn predict_batch_serial<T: Float + WLSSolver>(
 pub fn predict_batch<T: Float + WLSSolver>(
     state: &PredictState<T>,
     new_x: &[T],
-    options: &PredictOptions<T>,
+    options: &Predict<T>,
 ) -> Result<PredictOutput<T>, LowessError> {
     for (i, &val) in new_x.iter().enumerate() {
         if !val.is_finite() {

@@ -18,10 +18,8 @@ use std::sync::Arc;
 use std::vec::Vec;
 
 // Internal dependencies
-use crate::algorithms::regression::WLSSolver;
-use crate::engine::predict::{PredictOptions, PredictOutput, PredictState, predict_batch};
+use crate::engine::predict::PredictState;
 use crate::evaluation::diagnostics::Diagnostics;
-use crate::primitives::errors::LowessError;
 
 // Comprehensive LOWESS output containing smoothed values and diagnostics.
 #[derive(Debug, Clone, PartialEq)]
@@ -97,31 +95,6 @@ impl<T: Float> LowessResult<T> {
                 .copied()
                 .min_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal))
         })
-    }
-}
-
-impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> LowessResult<T> {
-    // Evaluate the fitted Batch model at out-of-sample x-values not in the training set,
-    // similar to R's `predict(model, newdata)`. Requires `.retain_model(true)` to have been
-    // set on the Batch builder before `fit()`; otherwise returns
-    // [`LowessError::PredictionUnavailable`].
-    //
-    // Always fits an exact local regression at each query point, unlike `fit()` with the
-    // default `delta > 0` (which only fits exactly at anchor points spaced `delta` apart and
-    // linearly interpolates the rest). So predicting at an x already in the training set may
-    // not exactly reproduce that point's `fit()` output unless `delta(0.0)` was used.
-    pub fn predict(
-        &self,
-        new_x: &[T],
-        mut options: PredictOptions<T>,
-    ) -> Result<PredictOutput<T>, LowessError> {
-        if let Some(e) = options.take_pending_error() {
-            return Err(e);
-        }
-        match &self.fit_state {
-            Some(state) => predict_batch(state, new_x, &options),
-            None => Err(LowessError::PredictionUnavailable),
-        }
     }
 }
 

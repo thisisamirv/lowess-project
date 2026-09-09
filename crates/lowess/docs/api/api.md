@@ -87,7 +87,7 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `cv_fractions(Vec<f64>)` | `Vec<f64>` | `None` | Fraction grid for CV |
 | `cv_seed(u64)` | `u64` | `None` | RNG seed for CV |
 | `custom_weights(Vec<T>)` | `Vec<T: Float>` | `None` | Per-observation weights |
-| `retain_model(bool)` | `bool` | `false` | Retain training data, enabling `predict()` on the result |
+| `retain_model(bool)` | `bool` | `false` | Retain training data, enabling `Predict::call()` on the result |
 
 ## Options
 
@@ -246,7 +246,7 @@ To get both orderings, sort the default result client-side instead of calling `f
 
 *See: [Predict](crate::doc::guide::predict)*
 
-Retains the fitted model's training data, enabling `LowessResult::predict(new_x, options)` to evaluate the fit at out-of-sample query points not in the training set. Off by default (no extra memory/clone cost unless requested).
+Retains the fitted model's training data, enabling `Predict::call(&result, new_x)` to evaluate the fit at out-of-sample query points not in the training set. Off by default (no extra memory/clone cost unless requested).
 
 ## Result Structure
 
@@ -280,7 +280,7 @@ Retains the fitted model's training data, enabling `LowessResult::predict(new_x,
 | `aic` | `Option<T>` | AIC (`None` if not computed) |
 | `aicc` | `Option<T>` | AICc (`None` if not computed) |
 
-### `predict(new_x, options) -> PredictOutput<T>`
+### `Predict::call(&result, new_x) -> PredictOutput<T>`
 
 *See: [Predict](crate::doc::guide::predict)*
 

@@ -137,7 +137,7 @@ pub struct BatchLowessBuilder<T: Float> {
     // `w_ij = custom_weights[j] * K(d_ij / h) * robustness_j`.
     pub custom_weights: Option<Vec<T>>,
 
-    // Whether to retain fitted-model state for later `LowessResult::predict()` calls.
+    // Whether to retain fitted-model state for later `Predict::call()` calls.
     pub retain_model: bool,
 
     // Custom (e.g. parallel) predict pass function.

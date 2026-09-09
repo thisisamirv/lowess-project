@@ -6,11 +6,11 @@ Evaluate a fitted Batch model at query points that were not in the training set.
 ## Overview
 
 !!! note "Adapter support"
-    Out-of-sample prediction is available in **Batch** mode only. Streaming and Online modes do not support `predict()`.
+    Out-of-sample prediction is available in **Batch** mode only. Streaming and Online modes do not support it.
 
-`predict()` evaluates the local WLS fit at arbitrary `x`-values, similar to R's `predict(model, newdata)`. It always fits an exact local regression at each query point, unlike `fit()` with the default `delta > 0` (which only fits exactly at anchor points and linearly interpolates the rest) — so predicting at an `x` already in the training set may not exactly reproduce that point's `fit()` output unless `delta(0.0)` was used.
+`Predict::call(&result, new_x)` evaluates the local WLS fit at arbitrary `x`-values, similar to R's `predict(model, newdata)`. It always fits an exact local regression at each query point, unlike `fit()` with the default `delta > 0` (which only fits exactly at anchor points and linearly interpolates the rest) — so predicting at an `x` already in the training set may not exactly reproduce that point's `fit()` output unless `delta(0.0)` was used.
 
-Enable it by calling `.retain_model(true)` on the builder before `fit()`; this retains the fitted model's (boundary-padded) training data, smoothed values, final robustness weights, and residual SD. Calling `predict()` without `.retain_model(true)` returns `LowessError::PredictionUnavailable`.
+Enable it by calling `.retain_model(true)` on the builder before `fit()`; this retains the fitted model's (boundary-padded) training data, smoothed values, final robustness weights, and residual SD. Calling `.call(...)` without `.retain_model(true)` returns `LowessError::PredictionUnavailable`.
 
 ## Basic Usage
 
@@ -25,7 +25,7 @@ fn main() -> Result<(), LowessError> {
     let result = model.fit(&x, &y)?;
 
     let new_x = vec![1.5_f64, 4.5];
-    let prediction = result.predict(&new_x, PredictOptions::default())?;
+    let prediction = Predict::new().call(&result, &new_x)?;
     println!("Predicted y: {:?}", prediction.y);
 
     Ok(())
@@ -50,7 +50,7 @@ Predicted y: [3.05, 9.05]
 | `max_extrapolation_distance` | `T` | none | Under `"linear"` extrapolation, the max allowed distance beyond the training boundary before erroring |
 | `max_neighbor_distance` | `T` | none | Max allowed distance to the farthest training point in a query's local window before erroring |
 
-`PredictOptions` is configured the same way as the `Lowess` builder itself: chained setter methods, starting from `PredictOptions::default()`. Standard errors/intervals use the same z-score convention as `fit()`'s existing intervals.
+`Predict` is configured the same way as the `Lowess` builder itself: `Predict::new()` (or `::default()`), chained setter methods, and an optional `.build()?` to fail fast on an invalid string (e.g. `.extrapolation("bogus")`) instead of deferring the error until `.call(...)`. Standard errors/intervals use the same z-score convention as `fit()`'s existing intervals.
 
 ```rust
 use lowess::prelude::*;
@@ -62,8 +62,8 @@ fn main() -> Result<(), LowessError> {
     let model = Lowess::new().fraction(0.7).retain_model(true).build()?;
     let result = model.fit(&x, &y)?;
 
-    let options = PredictOptions::default().return_se().return_derivative();
-    let prediction = result.predict(&[2.5_f64], options)?;
+    let options = Predict::new().return_se().return_derivative().build()?;
+    let prediction = options.call(&result, &[2.5_f64])?;
 
     println!("y: {:?}", prediction.y);
     println!("SE: {:?}", prediction.standard_errors);
@@ -101,8 +101,8 @@ fn main() -> Result<(), LowessError> {
     let model = Lowess::new().fraction(0.7).retain_model(true).build()?;
     let result = model.fit(&x, &y)?;
 
-    let options = PredictOptions::default().extrapolation("linear");
-    let prediction = result.predict(&[10.0_f64], options)?;
+    let options = Predict::new().extrapolation("linear").build()?;
+    let prediction = options.call(&result, &[10.0_f64])?;
     println!("Extrapolated y: {:?}", prediction.y);
 
     Ok(())
@@ -113,18 +113,18 @@ fn main() -> Result<(), LowessError> {
 Extrapolated y: [10.1]
 ```
 
-Under `Linear`, `.max_extrapolation_distance(...)` caps how far beyond the boundary the extrapolation may extend before `predict()` fails with `LowessError::ExtrapolationTooFar`, instead of returning an unbounded value.
+Under `Linear`, `.max_extrapolation_distance(...)` caps how far beyond the boundary the extrapolation may extend before `.call(...)` fails with `LowessError::ExtrapolationTooFar`, instead of returning an unbounded value.
 
-`.max_neighbor_distance(...)` guards a separate blind spot: a query point can fall within `[min(x_train), max(x_train)]` yet still be far from any real training point (e.g. training `x` in `[0,10]` and `[90,100]`, query at `x=50`). Setting it makes `predict()` fail with `LowessError::SparseNeighborhood` instead of silently predicting there. It applies regardless of `extrapolation`.
+`.max_neighbor_distance(...)` guards a separate blind spot: a query point can fall within `[min(x_train), max(x_train)]` yet still be far from any real training point (e.g. training `x` in `[0,10]` and `[90,100]`, query at `x=50`). Setting it makes `.call(...)` fail with `LowessError::SparseNeighborhood` instead of silently predicting there. It applies regardless of `extrapolation`.
 
 ---
 
 ## Availability
 
 !!! warning "Batch Mode Only"
-    Out-of-sample prediction is only available in **Batch** mode. Streaming and Online modes do not support `predict()`.
+    Out-of-sample prediction is only available in **Batch** mode. Streaming and Online modes do not support it.
 
 | Feature | Batch | Streaming | Online |
 | --- | --- | --- | --- |
 | `retain_model` | ✓ | ✗ | ✗ |
-| `predict()` | ✓ | ✗ | ✗ |
+| `Predict::call()` | ✓ | ✗ | ✗ |
