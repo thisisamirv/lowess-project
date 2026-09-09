@@ -264,7 +264,9 @@ mod binding_support;
 
 // Standard fastLowess prelude.
 pub mod prelude {
-    pub use crate::api::{Lowess, LowessError, LowessResult, OnlineLowess, StreamingLowess};
+    pub use crate::api::{
+        Lowess, LowessError, LowessResult, OnlineLowess, Predict, StreamingLowess,
+    };
 }
 
 // Internal modules for development and testing.
