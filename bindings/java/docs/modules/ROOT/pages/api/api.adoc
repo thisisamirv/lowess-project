@@ -79,6 +79,7 @@ Result result = model.fit(x, y);
 |`cvFractions` |`double[]` |`null` (disabled) |Candidate fractions for cross-validation.
 |`cvSeed` |`long` (boxed) |`null` (random) |RNG seed for reproducible k-fold splits.
 |`retainModel` |`boolean` |`false` |Retain training data, enabling `Result.predictModel()`.
+|`returnDerivative` |`boolean` |`false` |Include the per-point local fit derivative (slope) in the result.
 |===
 
 Use `Options.builder()` (pre-populated with recommended defaults) and override only the settings you need:
@@ -303,6 +304,13 @@ _See: xref:../guide/predict.adoc[Predict]_
 
 Retains the fitted model's training data, populating `Result.predictModel()` with an `Optional<PredictModel>` usable to evaluate the fit at out-of-sample query points not in the training set. `false` (default) — no extra memory/copy cost unless requested.
 
+=== returnDerivative
+
+Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) via `Result.derivative()`, enabling turning-point/rate-of-change analysis at effectively no extra computation cost.
+
+* `false` (default) — leaves `Result.derivative()` empty
+* `true` — populates `Result.derivative()`
+
 == Result Structure
 
 === `Result`
@@ -321,6 +329,7 @@ Retains the fitted model's training data, populating `Result.predictModel()` wit
 |`fractionUsed()` |`double` |Always.
 |`iterationsUsed()` |`OptionalInt` |Always (empty if not available).
 |`diagnostics()` |`Optional<Diagnostics>` |`returnDiagnostics`
+|`derivative()` |`Optional<double[]>` |`returnDerivative`
 |===
 
 === `Diagnostics`

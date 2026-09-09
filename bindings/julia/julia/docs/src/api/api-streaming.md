@@ -76,6 +76,7 @@ println("First smoothed value: ", result.y[1])
 | `chunk_size` | `Int` | `5000` | Points per chunk |
 | `overlap` | `Int` | `chunk_size / 10` | Overlap between chunks |
 | `merge_strategy` | `String` | `"weighted_average"` | Strategy for blending overlap regions |
+| `return_derivative` | `Bool` | `false` | Include the per-point local fit derivative (slope) in result |
 
 Confidence/prediction intervals, standard errors, cross-validation, GPU `backend`, `custom_weights`, and `return_sorted` are Batch-only and not available here; see [Batch Adapter](api.md) for those.
 
@@ -223,6 +224,13 @@ Number of points retained from the previous chunk as context, so the neighbourho
 | `"take_first"` | `"first"` | Keep left chunk values |
 | `"take_last"` | `"last"` | Keep right chunk values |
 
+### return_derivative
+
+Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) in `result.derivative` at effectively no extra computation cost. Derivative values in the overlap region are merged across chunk boundaries the same way `y` is, via `merge_strategy`.
+
+- `false` (default) — leaves `result.derivative` as `nothing`
+- `true` — populates it
+
 ## Result Structure
 
 ### `LowessResult`
@@ -244,6 +252,7 @@ Returned by `process_chunk` and `finalize`.
 | `robustness_weights` | `Union{Vector{Float64}, Nothing}` | Robustness weights (if `return_robustness_weights`) |
 | `cv_scores` | `Union{Vector{Float64}, Nothing}` | Always `nothing` (Batch only) |
 | `diagnostics` | `Union{Diagnostics, Nothing}` | Fit metrics (if `return_diagnostics`) |
+| `derivative` | `Union{Vector{Float64}, Nothing}` | Per-point local fit derivative/slope (if `return_derivative`) |
 
 ### `Diagnostics`
 

@@ -79,6 +79,7 @@ result, err := model.Finalize()
 | `ChunkSize` | `int` | `5000` | Data chunk size |
 | `Overlap` | `int` | `chunk_size / 10` | Overlap between chunks |
 | `MergeStrategy` | `string` | `"weighted_average"` | Strategy for blending overlap regions |
+| `ReturnDerivative` | `bool` | `false` | Include the per-point local fit derivative (slope) in the result |
 
 Confidence/prediction intervals, standard errors, cross-validation, GPU `Backend`, `CustomWeights`, and `ReturnSorted` are Batch-only and not available here; see [API](api.md) for those.
 
@@ -226,6 +227,13 @@ Number of points retained from the previous chunk as context, so the neighbourho
 | `"take_first"` | `"first"` | Keep left chunk values |
 | `"take_last"` | `"last"` | Keep right chunk values |
 
+### ReturnDerivative
+
+Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) in `Result.Derivative` at effectively no extra computation cost. Derivative values in the overlap region are merged across chunk boundaries the same way `Y` is, via `MergeStrategy`.
+
+- `false` (default) — leaves `Result.Derivative` as `nil`
+- `true` — populates it
+
 ## Result Structure
 
 ### `Result`
@@ -244,6 +252,7 @@ Returned by `ProcessChunk` and `Finalize`.
 | `FractionUsed` | `float64` | Always. |
 | `IterationsUsed` | `int` | Always (`-1` if not available). |
 | `Diagnostics` | `*Diagnostics` | `ReturnDiagnostics` |
+| `Derivative` | `[]float64` | `ReturnDerivative` |
 
 ### `Diagnostics`
 

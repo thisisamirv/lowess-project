@@ -86,6 +86,7 @@ Fraction used: 0.5
 | `cv_fractions` | `number[]` | `null` | Fractions to test for cross-validation |
 | `cv_seed` | `number` | `null` | Random seed for cross-validation shuffling |
 | `custom_weights` | `Float64Array` | `null` | Per-observation case weights — passed to `fit()`, not the options object |
+| `return_derivative` | `boolean` | `false` | Include the per-point local fit derivative (slope) in result |
 
 ## Options
 
@@ -256,6 +257,13 @@ The batch `Lowess` class can optionally run on a GPU-accelerated backend powered
 
 Per-observation weights, passed to `fit()` rather than the options object.
 
+### return_derivative
+
+Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) in `LowessResult.derivative`, enabling turning-point/rate-of-change analysis at effectively no extra computation cost.
+
+- `false` (default) — leaves `result.derivative` as `null`
+- `true` — populates it
+
 ## Result Structure
 
 ### `LowessResult`
@@ -275,6 +283,7 @@ Per-observation weights, passed to `fit()` rather than the options object.
 | `robustness_weights` | `Float64Array \| null` | Robustness weights (if `return_robustness_weights`) |
 | `cv_scores` | `Float64Array \| null` | CV score per tested fraction |
 | `diagnostics` | `Diagnostics \| null` | Fit metrics (if `return_diagnostics`) |
+| `derivative` | `Float64Array \| null` | Per-point local fit derivative/slope (if `return_derivative`) |
 
 ### `Diagnostics`
 

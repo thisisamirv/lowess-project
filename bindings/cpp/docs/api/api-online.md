@@ -116,6 +116,7 @@ int main() {
 | `window_capacity` | `int` | 1000 | Max points in sliding window |
 | `min_points` | `int` | 2 | Min points before smoothing starts |
 | `update_mode` | `std::string` | "incremental" | Update mode (`"full"` or `"incremental"`) |
+| `return_derivative` | `bool` | false | Include the latest point's local fit derivative (slope) in the result |
 
 Confidence/prediction intervals, standard errors, cross-validation, GPU `backend`, `custom_weights`, `return_sorted`, `return_diagnostics`, `return_residuals`, and `parallel` are Batch-only (or Batch/Streaming-only) and not available here; see [fastLowess](api.md) for those.
 
@@ -233,6 +234,13 @@ Minimum number of points required before smoothing starts. `add_point()` returns
 | `"incremental"` (default) | `"single"` | Update only affected fits | Faster |
 | `"full"` | `"resmooth"` | Recompute entire window | More accurate |
 
+### return_derivative
+
+Each point's local WLS fit already computes a slope internally; this exposes the latest point's slope (rate of change of the smoothed curve) via `derivative()` at effectively no extra computation cost.
+
+- `false` (default) — leaves `derivative()` as NaN
+- `true` — populates `derivative()`
+
 ## Result Structure
 
 ### fastlowess::OnlineOutput
@@ -247,5 +255,6 @@ Returned (inside `Expected`) by `add_point()`. Check `has_value()` before readin
 | `residual()` | `double` | Residual y − smoothed; always populated (there is no `return_residuals` option for Online) |
 | `robustness_weight()` | `double` | Robustness weight, if `return_robustness_weights` was set |
 | `iterations_used()` | `int` | Robustness iterations performed (−1 if N/A) |
+| `derivative()` | `double` | Local fit derivative/slope for the latest point, if `return_derivative` was set (NaN otherwise) |
 
 There is no `Diagnostics` object or `return_diagnostics` option for `OnlineLowess`: `OnlineOutput` carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful.

@@ -79,6 +79,7 @@ print(final_result)
 | `chunk_size` | `int` | `5000` | Data chunk size |
 | `overlap` | `int` | `chunk_size / 10` | Overlap between chunks |
 | `merge_strategy` | `str` | `"weighted_average"` | Strategy for blending overlap regions |
+| `return_derivative` | `bool` | `False` | Include the per-point local fit derivative (slope) in result |
 
 Confidence/prediction intervals, standard errors, cross-validation, GPU `backend`, `custom_weights`, and `return_sorted` are Batch-only and not available here; see [fastLowess](api.md) for those.
 
@@ -226,6 +227,13 @@ Number of points retained from the previous chunk as context, so the neighbourho
 | `"take_first"` | `"first"` | Keep left chunk values |
 | `"take_last"` | `"last"` | Keep right chunk values |
 
+### return_derivative
+
+Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) in `LowessResult.derivative` at effectively no extra computation cost. Derivative values in the overlap region are merged across chunk boundaries the same way `y` is, via `merge_strategy`.
+
+- `False` (default) — leaves `result.derivative` as `None`
+- `True` — populates it
+
 ## Result Structure
 
 ### `LowessResult`
@@ -247,6 +255,7 @@ Returned by `process_chunk()` and `finalize()`.
 | `robustness_weights` | `ndarray \| None` | Robustness weights (if `return_robustness_weights`) |
 | `cv_scores` | `ndarray \| None` | Always `None` (Batch only) |
 | `diagnostics` | `Diagnostics \| None` | Fit metrics (if `return_diagnostics`) |
+| `derivative` | `ndarray \| None` | Per-point local fit derivative/slope (if `return_derivative`) |
 
 ### `Diagnostics`
 

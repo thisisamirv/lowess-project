@@ -79,6 +79,7 @@ Smoothed y: 0.22659245357374927
 | `window_capacity` | `number` | `1000` | Max points in sliding window |
 | `min_points` | `number` | `2` | Min points before smoothing starts |
 | `update_mode` | `string` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
+| `return_derivative` | `boolean` | `false` | Include the latest point's local fit derivative (slope) in result |
 
 Confidence/prediction intervals, standard errors, cross-validation, GPU `backend`, `custom_weights`, `return_sorted`, `return_diagnostics`, `return_residuals`, and `parallel` are Batch-only (or Batch/Streaming-only) and not available here; see [fastLowess](api.md) for those.
 
@@ -196,6 +197,13 @@ Minimum number of points required before smoothing starts. `add_point()` returns
 | `"incremental"` (default) | `"single"` | Update only affected fits | Faster |
 | `"full"` | `"resmooth"` | Recompute entire window | More accurate |
 
+### return_derivative
+
+Each point's local WLS fit already computes a slope internally; this exposes the latest point's slope (rate of change of the smoothed curve) in `OnlineOutput.derivative` at effectively no extra computation cost.
+
+- `false` (default) — leaves `result.derivative` as `undefined`
+- `true` — populates it
+
 ## Result Structure
 
 ### `OnlineOutput`
@@ -209,5 +217,6 @@ Returned by `add_point()` once the window has enough points (`null` until then).
 | `residual` | `number \| undefined` | Residual y − smoothed; always present (there is no `return_residuals` option for Online) |
 | `robustness_weight` | `number \| undefined` | Robustness weight, if `return_robustness_weights` was set |
 | `iterations_used` | `number \| undefined` | Robustness iterations performed |
+| `derivative` | `number \| undefined` | Local fit derivative/slope for the latest point, if `return_derivative` was set |
 
 There is no `Diagnostics` object or `return_diagnostics` option for `OnlineLowess`: `OnlineOutput` carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful.

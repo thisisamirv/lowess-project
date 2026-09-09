@@ -73,6 +73,7 @@ println("First smoothed value: ", result.y[1])
 | `cv_seed` | `Union{Int, Nothing}` | `nothing` | Random seed for cross-validation shuffling |
 | `custom_weights` | `Vector{Float64}` | `nothing` | Per-observation case weights — passed to `fit`, not the constructor |
 | `retain_model` | `Bool` | `false` | Retain training data, enabling `predict(model, new_x; ...)` on the result |
+| `return_derivative` | `Bool` | `false` | Include the per-point local fit derivative (slope) in result |
 
 ## Options
 
@@ -249,6 +250,13 @@ Per-observation weights, passed to `fit` rather than the constructor.
 
 Retains the fitted model's training data, populating `result.predict_model` with a `PredictModel` usable to evaluate the fit at out-of-sample query points not in the training set. `false` (default) — no extra memory/copy cost unless requested.
 
+### return_derivative
+
+Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) in `result.derivative`, enabling turning-point/rate-of-change analysis at effectively no extra computation cost.
+
+- `false` (default) — leaves `result.derivative` as `nothing`
+- `true` — populates it
+
 ## Result Structure
 
 ### `LowessResult`
@@ -268,6 +276,7 @@ Retains the fitted model's training data, populating `result.predict_model` with
 | `robustness_weights` | `Union{Vector{Float64}, Nothing}` | Robustness weights (if `return_robustness_weights`) |
 | `cv_scores` | `Union{Vector{Float64}, Nothing}` | CV score per tested fraction |
 | `diagnostics` | `Union{Diagnostics, Nothing}` | Fit metrics (if `return_diagnostics`) |
+| `derivative` | `Union{Vector{Float64}, Nothing}` | Per-point local fit derivative/slope (if `return_derivative`) |
 
 ### `Diagnostics`
 

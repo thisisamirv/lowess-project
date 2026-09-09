@@ -146,6 +146,7 @@ int main() {
 | `chunk_size` | `int` | 5000 | Data chunk size |
 | `overlap` | `int` | chunk_size / 10 | Overlap between chunks |
 | `merge_strategy` | `std::string` | "weighted_average" | Strategy for blending overlap regions |
+| `return_derivative` | `bool` | false | Include the per-point local fit derivative (slope) in the result |
 
 Confidence/prediction intervals, standard errors, cross-validation, GPU `backend`, `custom_weights`, and `return_sorted` are Batch-only and not available here; see [fastLowess](api.md) for those.
 
@@ -293,6 +294,13 @@ Number of points retained from the previous chunk as context, so the neighbourho
 | `"take_first"` | `"first"` | Keep left chunk values |
 | `"take_last"` | `"last"` | Keep right chunk values |
 
+### return_derivative
+
+Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) via `derivative()` at effectively no extra computation cost. Derivative values in the overlap region are merged across chunk boundaries the same way `y_vector()` is, via `merge_strategy`.
+
+- `false` (default) — leaves `derivative()` empty
+- `true` — populates `derivative()`
+
 ## Result Structure
 
 ### fastlowess::LowessResult
@@ -314,6 +322,7 @@ Returned (inside `Expected`) by `process_chunk()` and `finalize()`.
 | `robustness_weights()` | `std::vector<double>` | Robustness weights (if `return_robustness_weights`; empty if not) |
 | `cv_scores()` | `std::vector<double>` | Always empty (Batch only) |
 | `diagnostics()` | `Diagnostics` | Fit metrics — check `has_value()` (if `return_diagnostics`) |
+| `derivative()` | `std::vector<double>` | Per-point local fit derivative/slope (if `return_derivative`; empty if not computed) |
 
 ### fastlowess::Diagnostics
 

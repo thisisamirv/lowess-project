@@ -80,6 +80,7 @@ Result result = model.finish();
 |`chunkSize` |`int` |`5000` |Data chunk size
 |`overlap` |`int` |`chunk_size / 10` |Overlap between chunks
 |`mergeStrategy` |`String` |`"weighted_average"` |Strategy for blending overlap regions
+|`returnDerivative` |`boolean` |`false` |Include the per-point local fit derivative (slope) in the result
 |===
 
 Confidence/prediction intervals, standard errors, cross-validation, GPU `backend`, `customWeights`, and `returnSorted` are Batch-only and not available here; see xref:./api.adoc[API] for those.
@@ -241,6 +242,13 @@ _See: xref:../advanced/merge.adoc[Merge Strategies]_
 |`"take_last"` |Keep right chunk values
 |===
 
+=== returnDerivative
+
+Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) via `Result.derivative()` at effectively no extra computation cost. Derivative values in the overlap region are merged across chunk boundaries the same way `y()` is, via `mergeStrategy`.
+
+* `false` (default) — leaves `derivative()` empty
+* `true` — populates `derivative()`
+
 == Result Structure
 
 === `Result`
@@ -261,6 +269,7 @@ Returned by `processChunk` and `finish`.
 |`fractionUsed()` |`double` |Always.
 |`iterationsUsed()` |`OptionalInt` |Always (empty if not available).
 |`diagnostics()` |`Optional<Diagnostics>` |`returnDiagnostics`
+|`derivative()` |`Optional<double[]>` |`returnDerivative`
 |===
 
 === `Diagnostics`

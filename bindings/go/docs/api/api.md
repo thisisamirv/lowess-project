@@ -76,6 +76,7 @@ result, err := model.Fit(x, y)
 | `CVFractions` | `[]float64` | `nil` (disabled) | Candidate fractions for cross-validation. |
 | `CVSeed` | `*uint64` | `nil` (random) | RNG seed for reproducible k-fold splits. |
 | `RetainModel` | `bool` | `false` | Retain training data, enabling `Result.PredictModel` for out-of-sample prediction. |
+| `ReturnDerivative` | `bool` | `false` | Include the per-point local fit derivative (slope) in the result. |
 
 Use `fastlowess.DefaultOptions()` and override only the fields you need:
 
@@ -284,6 +285,13 @@ result, err := model.Fit(x, y, weights)
 
 Retains the fitted model's training data, enabling `Result.PredictModel` to evaluate the fit at out-of-sample query points not in the training set. `false` (default) — no extra memory/copy cost unless requested.
 
+### ReturnDerivative
+
+Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) in `Result.Derivative`, enabling turning-point/rate-of-change analysis at effectively no extra computation cost.
+
+- `false` (default) — leaves `Result.Derivative` as `nil`
+- `true` — populates it
+
 ## Result Structure
 
 ### `Result`
@@ -300,6 +308,7 @@ Retains the fitted model's training data, enabling `Result.PredictModel` to eval
 | `FractionUsed` | `float64` | Always. |
 | `IterationsUsed` | `int` | Always (`-1` if not available). |
 | `Diagnostics` | `*Diagnostics` | `ReturnDiagnostics` |
+| `Derivative` | `[]float64` | `ReturnDerivative` |
 
 ### `Diagnostics`
 

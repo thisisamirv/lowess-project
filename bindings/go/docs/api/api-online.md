@@ -76,6 +76,7 @@ if ok {
 | `WindowCapacity` | `int` | `1000` | Maximum number of recent points retained |
 | `MinPoints` | `int` | `2` | Minimum points required before output starts |
 | `UpdateMode` | `string` | `"incremental"` | How the window is updated as new points arrive |
+| `ReturnDerivative` | `bool` | `false` | Include the latest point's local fit derivative (slope) in the result |
 
 Confidence/prediction intervals, standard errors, cross-validation, GPU `Backend`, `CustomWeights`, `ReturnSorted`, `ReturnDiagnostics`, `ReturnResiduals`, and `Parallel` are Batch-only (or Batch/Streaming-only) and not available here; see [API](api.md) for those.
 
@@ -193,6 +194,13 @@ Minimum number of points required before smoothing starts. `AddPoint` returns `o
 | `"incremental"` (default) | `"single"` | Update only affected fits | Faster |
 | `"full"` | `"resmooth"` | Recompute entire window | More accurate |
 
+### ReturnDerivative
+
+Each point's local WLS fit already computes a slope internally; this exposes the latest point's slope (rate of change of the smoothed curve) in `PointResult.Derivative` at effectively no extra computation cost.
+
+- `false` (default) — leaves `PointResult.Derivative` as `NaN`
+- `true` — populates it
+
 ## Result Structure
 
 ### `PointResult`
@@ -206,6 +214,7 @@ Returned by `AddPoint` once the window has enough points (`ok == false` until th
 | `Residual` | `float64` | Residual y − smoothed; always populated (there is no `ReturnResiduals` option for Online). |
 | `RobustnessWeight` | `float64` | Robustness weight, if `ReturnRobustnessWeights` was set. |
 | `IterationsUsed` | `int` | Robustness iterations performed (`-1` if not applicable). |
+| `Derivative` | `float64` | Local fit derivative/slope for the latest point, if `ReturnDerivative` was set (`NaN` otherwise). |
 
 There is no diagnostics structure or `ReturnDiagnostics` option for `OnlineLowess`: `PointResult` carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful.
 

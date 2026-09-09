@@ -82,6 +82,7 @@ Fraction used: 0.5
 | `cv_seed` | `number` | `null` | Random seed for cross-validation shuffling |
 | `custom_weights` | `Float64Array` | `null` | Per-observation case weights — passed to `fit()`, not the options object |
 | `retain_model` | `boolean` | `false` | Retain training data, enabling `result.predict()` |
+| `return_derivative` | `boolean` | `false` | Include the per-point local fit derivative (slope) in result |
 
 ## Options
 
@@ -249,6 +250,13 @@ Per-observation weights, passed to `fit()` rather than the options object.
 
 Retains the fitted model's training data, enabling `result.predict(newX, options)` to evaluate the fit at out-of-sample query points not in the training set. `false` (default) — no extra memory/copy cost unless requested.
 
+### return_derivative
+
+Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) in `LowessResult.derivative`, enabling turning-point/rate-of-change analysis at effectively no extra computation cost.
+
+- `false` (default) — leaves `result.derivative` as `undefined`
+- `true` — populates it
+
 ## Result Structure
 
 ### `LowessResult`
@@ -268,6 +276,7 @@ Retains the fitted model's training data, enabling `result.predict(newX, options
 | `robustness_weights` | `Float64Array` \| `undefined` | Robustness weights (if `return_robustness_weights`) |
 | `cv_scores` | `Float64Array` \| `undefined` | CV score per tested fraction |
 | `diagnostics` | `Diagnostics` \| `undefined` | Fit metrics (if `return_diagnostics`) |
+| `derivative` | `Float64Array` \| `undefined` | Per-point local fit derivative/slope (if `return_derivative`) |
 
 ### `Diagnostics`
 

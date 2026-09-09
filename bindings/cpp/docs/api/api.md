@@ -115,6 +115,7 @@ int main() {
 | `cv_seed` | `uint64_t` | `0` | Random seed for CV shuffling (0 = random) |
 | `custom_weights` | `std::vector<double>` | `{}` | Per-observation case weights — passed to `fit()`, not the constructor |
 | `retain_model` | `bool` | `false` | Retain training data, enabling `LowessResult::predict_model()` |
+| `return_derivative` | `bool` | `false` | Include the per-point local fit derivative (slope) in the result |
 
 ## Options
 
@@ -286,6 +287,13 @@ Per-observation weights, passed to `fit()` rather than the constructor.
 
 Retains the fitted model's training data, enabling `LowessResult::predict_model()` to obtain a `PredictModel` for out-of-sample query points not in the training set. `false` (default) — no extra memory/copy cost unless requested.
 
+### return_derivative
+
+Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) via `derivative()`, enabling turning-point/rate-of-change analysis at effectively no extra computation cost.
+
+- `false` (default) — leaves `derivative()` empty
+- `true` — populates `derivative()`
+
 ## Result Structure
 
 ### fastlowess::LowessResult
@@ -307,6 +315,7 @@ A RAII wrapper around the C result struct `fastlowess_CppLowessResult`.
 | `robustness_weights()` | `std::vector<double>` | Robustness weights (if `return_robustness_weights`; empty if not computed) |
 | `cv_scores()` | `std::vector<double>` | CV score per tested fraction (empty if CV not run) |
 | `diagnostics()` | `Diagnostics` | Fit metrics — check `diagnostics().has_value()` before use (if `return_diagnostics`) |
+| `derivative()` | `std::vector<double>` | Per-point local fit derivative/slope (if `return_derivative`; empty if not computed) |
 
 ### fastlowess::Diagnostics
 

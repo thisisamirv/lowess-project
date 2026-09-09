@@ -71,6 +71,7 @@ result.ifPresent(r -> System.out.println(r.y()));
 |`windowCapacity` |`int` |`1000` |Maximum number of recent points retained
 |`minPoints` |`int` |`2` |Minimum points required before output starts
 |`updateMode` |`String` |`"incremental"` |How the window is updated as new points arrive: `incremental`, `full`
+|`returnDerivative` |`boolean` |`false` |Include the latest point's local fit derivative (slope) in the result
 |===
 
 Confidence/prediction intervals, standard errors, cross-validation, GPU `backend`, `customWeights`, `returnSorted`, `returnDiagnostics`, `returnResiduals`, and `parallel` are Batch-only (or Batch/Streaming-only) and not available here; see xref:./api.adoc[API] for those.
@@ -204,6 +205,13 @@ _See: xref:../guide/adapter-choice.adoc[Execution Modes]_
 |`"full"` |`"resmooth"` |Recompute entire window |More accurate
 |===
 
+=== returnDerivative
+
+Each point's local WLS fit already computes a slope internally; this exposes the latest point's slope (rate of change of the smoothed curve) via `PointResult.derivative()` at effectively no extra computation cost.
+
+* `false` (default) — leaves `derivative()` empty
+* `true` — populates `derivative()`
+
 == Result Structure
 
 === `PointResult`
@@ -219,6 +227,7 @@ Returned by `addPoint` once the window has enough points (`Optional.empty()` unt
 |`residual()` |`OptionalDouble` |Residual y minus smoothed; always populated (there is no `returnResiduals` option for Online).
 |`robustnessWeight()` |`OptionalDouble` |Robustness weight, if `returnRobustnessWeights` was set.
 |`iterationsUsed()` |`OptionalInt` |Robustness iterations performed.
+|`derivative()` |`OptionalDouble` |Local fit derivative/slope for the latest point, if `returnDerivative` was set.
 |===
 
 There is no diagnostics accessor or `returnDiagnostics` option for `OnlineLowess`: `PointResult` carries no diagnostics field, since diagnostics like RMSE/R^2^ need more than one point's worth of history to be meaningful.
