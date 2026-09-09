@@ -85,6 +85,14 @@ Predicted y: Float64Array(2) [ 3.05, 9.05 ]
 ### Standard Errors and Derivative
 
 ```javascript
+const { Lowess } = require('fastlowess-wasm');
+
+const x = new Float64Array([1, 2, 3, 4, 5]);
+const y = new Float64Array([2.1, 4.0, 6.2, 8.0, 10.1]);
+
+const model = new Lowess({ fraction: 0.7, retain_model: true });
+const result = model.fit(x, y);
+
 const prediction = result.predict(new Float64Array([2.5]), {
     return_se: true,
     return_derivative: true,
@@ -92,11 +100,27 @@ const prediction = result.predict(new Float64Array([2.5]), {
 console.log(prediction.y, prediction.standard_errors, prediction.derivative);
 ```
 
+```output
+Float64Array(1) [ 5.1 ] Float64Array(1) [ 0 ] Float64Array(1) [ 2.2 ]
+```
+
 ### Linear Extrapolation
 
 ```javascript
+const { Lowess } = require('fastlowess-wasm');
+
+const x = new Float64Array([1, 2, 3, 4, 5]);
+const y = new Float64Array([2.1, 4.0, 6.2, 8.0, 10.1]);
+
+const model = new Lowess({ fraction: 0.7, retain_model: true });
+const result = model.fit(x, y);
+
 const prediction = result.predict(new Float64Array([10.0]), {
     extrapolation: "linear",
 });
 console.log("Extrapolated y:", prediction.y);
+```
+
+```output
+Extrapolated y: Float64Array(1) [ 10.1 ]
 ```

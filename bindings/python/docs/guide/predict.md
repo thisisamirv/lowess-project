@@ -93,7 +93,7 @@ y = np.array([2.1, 4.0, 6.2, 8.0, 10.1])
 model = fl.Lowess(fraction=0.7, retain_model=True)
 result = model.fit(x, y)
 
-prediction = result.predict([2.5], return_se=True, return_derivative=True)
+prediction = result.predict(np.array([2.5]), return_se=True, return_derivative=True)
 print("y:", prediction.y)
 print("SE:", prediction.standard_errors)
 print("Derivative:", prediction.derivative)
@@ -111,6 +111,6 @@ y = np.array([2.1, 4.0, 6.2, 8.0, 10.1])
 model = fl.Lowess(fraction=0.7, retain_model=True)
 result = model.fit(x, y)
 
-prediction = result.predict([10.0], extrapolation="linear")
+prediction = result.predict(np.array([10.0]), extrapolation="linear")
 print("Extrapolated y:", prediction.y)
 :::

@@ -98,16 +98,50 @@ int main() {
 ### Standard Errors and Derivative
 
 ```cpp
-fastlowess::PredictOptions popts;
-popts.return_se = true;
-popts.return_derivative = true;
-auto prediction = predict_model.predict({2.5}, popts);
+#include <fastlowess.hpp>
+#include <iostream>
+#include <vector>
+
+int main() {
+    std::vector<double> x = {1, 2, 3, 4, 5};
+    std::vector<double> y = {2.1, 4.0, 6.2, 8.0, 10.1};
+
+    fastlowess::LowessOptions opts;
+    opts.fraction = 0.7;
+    opts.retain_model = true;
+    fastlowess::Lowess model(opts);
+    auto result = model.fit(x, y).value();
+
+    auto predict_model = result.predict_model();
+    fastlowess::PredictOptions popts;
+    popts.return_se = true;
+    popts.return_derivative = true;
+    auto prediction = predict_model.predict({2.5}, popts);
+    return 0;
+}
 ```
 
 ### Linear Extrapolation
 
 ```cpp
-fastlowess::PredictOptions popts;
-popts.extrapolation = "linear";
-auto prediction = predict_model.predict({10.0}, popts);
+#include <fastlowess.hpp>
+#include <iostream>
+#include <vector>
+
+int main() {
+    std::vector<double> x = {1, 2, 3, 4, 5};
+    std::vector<double> y = {2.1, 4.0, 6.2, 8.0, 10.1};
+
+    fastlowess::LowessOptions opts;
+    opts.fraction = 0.7;
+    opts.retain_model = true;
+    fastlowess::Lowess model(opts);
+    auto result = model.fit(x, y).value();
+
+    auto predict_model = result.predict_model();
+    fastlowess::PredictOptions popts;
+    popts.extrapolation = "linear";
+    auto prediction = predict_model.predict({10.0}, popts);
+    return 0;
+}
 ```
