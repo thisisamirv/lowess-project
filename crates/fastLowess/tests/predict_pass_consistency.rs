@@ -29,13 +29,13 @@ fn test_predict_pass_consistency() {
         .fit(&x, &y)
         .unwrap();
 
-    let options = Predict {
-        return_se: true,
-        return_derivative: true,
-        confidence_level: Some(0.95),
-        prediction_level: Some(0.95),
-        ..Predict::default()
-    };
+    let options = Predict::new()
+        .return_se()
+        .return_derivative()
+        .confidence_level(0.95)
+        .prediction_level(0.95)
+        .build()
+        .unwrap();
 
     let seq_pred = options.call(&seq_res, &new_x).unwrap();
     let par_pred = options.call(&par_res, &new_x).unwrap();

@@ -21,7 +21,7 @@ use rayon::prelude::*;
 use lowess::internals::algorithms::regression::{RegressionContext, WLSSolver, ZeroWeightFallback};
 #[cfg(feature = "cpu")]
 use lowess::internals::engine::predict::{
-    Predict, PredictState, RawPredictValues, predict_one_full,
+    PredictQuery, PredictState, RawPredictValues, predict_one_full,
 };
 #[cfg(feature = "cpu")]
 use lowess::internals::math::kernel::WeightFunction;
@@ -560,7 +560,7 @@ fn fit_all_points_tiled<T>(
 pub fn predict_pass_parallel<T>(
     state: &PredictState<T>,
     new_x: &[T],
-    options: &Predict<T>,
+    options: &PredictQuery<T>,
     need_se: bool,
 ) -> RawPredictValues<T>
 where
@@ -571,7 +571,7 @@ where
         let len = new_x.len();
         return Ok((
             vec![T::zero(); len],
-            options.return_derivative.then(|| vec![T::zero(); len]),
+            options.return_derivative().then(|| vec![T::zero(); len]),
             need_se.then(|| vec![T::zero(); len]),
         ));
     }
@@ -586,7 +586,7 @@ where
 
     let mut y = Vec::with_capacity(results.len());
     let mut derivative = options
-        .return_derivative
+        .return_derivative()
         .then(|| Vec::with_capacity(results.len()));
     let mut se = need_se.then(|| Vec::with_capacity(results.len()));
 

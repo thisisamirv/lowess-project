@@ -17,7 +17,11 @@ fn test_predict_unavailable_without_retain_model() {
         .fit(&x, &y)
         .expect("fit should succeed");
 
-    let err = Predict::default().call(&result, &[5.0]).unwrap_err();
+    let err = Predict::new()
+        .build()
+        .unwrap()
+        .call(&result, &[5.0])
+        .unwrap_err();
     assert_eq!(err, LowessError::PredictionUnavailable);
 }
 
@@ -37,7 +41,9 @@ fn test_predict_matches_fit_at_training_points() {
         .fit(&x, &y)
         .expect("fit should succeed");
 
-    let predicted = Predict::default()
+    let predicted = Predict::new()
+        .build()
+        .unwrap()
         .call(&result, &x)
         .expect("predict should succeed");
     assert_eq!(predicted.y.len(), x.len());
@@ -69,7 +75,9 @@ fn test_predict_matches_fit_at_training_points_with_delta() {
         .fit(&x, &y)
         .expect("fit should succeed");
 
-    let predicted = Predict::default()
+    let predicted = Predict::new()
+        .build()
+        .unwrap()
         .call(&result, &x)
         .expect("predict should succeed");
 
@@ -100,7 +108,9 @@ fn test_predict_interpolates_smooth_function() {
 
     // Midpoints strictly between consecutive training x-values, away from the boundary.
     let mid_x: Vec<f64> = (20..n - 20).map(|i| (x[i] + x[i + 1]) / 2.0).collect();
-    let predicted = Predict::default()
+    let predicted = Predict::new()
+        .build()
+        .unwrap()
         .call(&result, &mid_x)
         .expect("predict should succeed");
 
@@ -133,7 +143,9 @@ fn test_predict_out_of_range_clamp_does_not_panic() {
         .fit(&x, &y)
         .expect("fit should succeed");
 
-    let predicted = Predict::default()
+    let predicted = Predict::new()
+        .build()
+        .unwrap()
         .call(&result, &[-100.0, -1.0, 1000.0])
         .expect("predict should not error on out-of-range x under Clamp");
     assert!(predicted.y.iter().all(|v| v.is_finite()));
@@ -154,10 +166,10 @@ fn test_predict_out_of_range_error_policy() {
         .fit(&x, &y)
         .expect("fit should succeed");
 
-    let options = Predict {
-        extrapolation: ExtrapolationPolicy::Error,
-        ..Predict::default()
-    };
+    let options = Predict::new()
+        .extrapolation(ExtrapolationPolicy::Error)
+        .build()
+        .unwrap();
 
     let err = options.call(&result, &[1000.0]).unwrap_err();
     assert!(matches!(err, LowessError::PredictOutOfRange { .. }));
@@ -184,7 +196,11 @@ fn test_predict_rejects_non_finite_new_x() {
         .expect("fit should succeed");
 
     for bad in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
-        let err = Predict::default().call(&result, &[5.0, bad]).unwrap_err();
+        let err = Predict::new()
+            .build()
+            .unwrap()
+            .call(&result, &[5.0, bad])
+            .unwrap_err();
         assert!(matches!(err, LowessError::InvalidNumericValue(_)));
     }
 }
@@ -207,10 +223,10 @@ fn test_predict_out_of_range_linear_policy() {
         .fit(&x, &y)
         .expect("fit should succeed");
 
-    let options = Predict {
-        extrapolation: ExtrapolationPolicy::Linear,
-        ..Predict::default()
-    };
+    let options = Predict::new()
+        .extrapolation(ExtrapolationPolicy::Linear)
+        .build()
+        .unwrap();
 
     let predicted = options
         .call(&result, &[60.0, 100.0])
@@ -246,11 +262,11 @@ fn test_predict_extrapolation_linear_respects_max_distance() {
         .fit(&x, &y)
         .expect("fit should succeed");
 
-    let options = Predict {
-        extrapolation: ExtrapolationPolicy::Linear,
-        max_extrapolation_distance: Some(10.0),
-        ..Predict::default()
-    };
+    let options = Predict::new()
+        .extrapolation(ExtrapolationPolicy::Linear)
+        .max_extrapolation_distance(10.0)
+        .build()
+        .unwrap();
 
     // Within the cap: still succeeds.
     options
@@ -262,11 +278,11 @@ fn test_predict_extrapolation_linear_respects_max_distance() {
     assert!(matches!(err, LowessError::ExtrapolationTooFar { .. }));
 
     // The cap is ignored under Clamp.
-    let clamp_options = Predict {
-        extrapolation: ExtrapolationPolicy::Clamp,
-        max_extrapolation_distance: Some(10.0),
-        ..Predict::default()
-    };
+    let clamp_options = Predict::new()
+        .extrapolation(ExtrapolationPolicy::Clamp)
+        .max_extrapolation_distance(10.0)
+        .build()
+        .unwrap();
     clamp_options
         .call(&result, &[100.0])
         .expect("max_extrapolation_distance should not apply under Clamp");
@@ -292,16 +308,15 @@ fn test_predict_max_neighbor_distance_catches_1d_gap() {
         .expect("fit should succeed");
 
     // No cap: the gap is silently treated as in-range (original behavior).
-    Predict::default()
+    Predict::new()
+        .build()
+        .unwrap()
         .call(&result, &[50.0])
         .expect("uncapped predict should not error, even in the gap");
 
     // With a cap: the gap's local window is much farther than a point actually near
     // training data.
-    let options = Predict {
-        max_neighbor_distance: Some(5.0),
-        ..Predict::default()
-    };
+    let options = Predict::new().max_neighbor_distance(5.0).build().unwrap();
     let err = options.call(&result, &[50.0]).unwrap_err();
     assert!(matches!(err, LowessError::SparseNeighborhood { .. }));
 
@@ -327,10 +342,7 @@ fn test_predict_return_derivative() {
         .fit(&x, &y)
         .expect("fit should succeed");
 
-    let options = Predict {
-        return_derivative: true,
-        ..Predict::default()
-    };
+    let options = Predict::new().return_derivative().build().unwrap();
 
     let predicted = options
         .call(&result, &[20.0, 30.0, 40.0])
@@ -365,12 +377,12 @@ fn test_predict_se_and_intervals() {
         .fit(&x, &y)
         .expect("fit should succeed");
 
-    let options = Predict {
-        return_se: true,
-        confidence_level: Some(0.95),
-        prediction_level: Some(0.95),
-        ..Predict::default()
-    };
+    let options = Predict::new()
+        .return_se()
+        .confidence_level(0.95)
+        .prediction_level(0.95)
+        .build()
+        .unwrap();
 
     let new_x = vec![10.0, 25.0, 40.0, 55.0, 70.0];
     let predicted = options

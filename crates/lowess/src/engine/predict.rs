@@ -44,7 +44,7 @@ pub enum ExtrapolationPolicy {
 
 // Options controlling a `Predict::call()` invocation.
 #[derive(Debug, Clone)]
-pub struct Predict<T> {
+pub struct PredictBuilder<T> {
     // Include standard errors in the output.
     pub return_se: bool,
 
@@ -76,12 +76,11 @@ pub struct Predict<T> {
     // out-of-range.
     pub max_neighbor_distance: Option<T>,
 
-    // Set by `extrapolation(...)` when given an invalid string; surfaced by `predict()`
-    // as soon as it is called, mirroring `LowessBuilder`'s deferred parse-error pattern.
+    // Set by `extrapolation(...)` when given an invalid string; surfaced by `build()`.
     pub pending_error: Option<LowessError>,
 }
 
-impl<T: Float> Default for Predict<T> {
+impl<T: Float> Default for PredictBuilder<T> {
     fn default() -> Self {
         Self {
             return_se: false,
@@ -96,21 +95,11 @@ impl<T: Float> Default for Predict<T> {
     }
 }
 
-impl<T: Float> Predict<T> {
-    // Create a new `Predict` with default values, matching `Lowess::new()`'s
+impl<T: Float> PredictBuilder<T> {
+    // Create a new `PredictBuilder` with default values, matching `Lowess::new()`'s
     // constructor-style entry point.
     pub fn new() -> Self {
         Self::default()
-    }
-
-    // Surface any pending parse error (from `extrapolation(...)`) immediately, mirroring
-    // `LowessBuilder::build()`'s fail-fast convention. Optional: `call()` checks this too,
-    // so skipping `build()` is safe but defers the error until the call itself.
-    pub fn build(self) -> Result<Self, LowessError> {
-        match &self.pending_error {
-            Some(e) => Err(e.clone()),
-            None => Ok(self),
-        }
     }
 
     // Include standard errors in the output.
@@ -161,9 +150,54 @@ impl<T: Float> Predict<T> {
         self.max_neighbor_distance = Some(distance);
         self
     }
+
+    // Validates this configuration and produces a ready-to-call `PredictQuery`. Mandatory:
+    // `PredictQuery` has no public constructor of its own, so `.build()` is the only way to
+    // obtain one.
+    pub fn build(self) -> Result<PredictQuery<T>, LowessError> {
+        if let Some(e) = self.pending_error {
+            return Err(e);
+        }
+        Ok(PredictQuery {
+            return_se: self.return_se,
+            confidence_level: self.confidence_level,
+            prediction_level: self.prediction_level,
+            return_derivative: self.return_derivative,
+            extrapolation: self.extrapolation,
+            max_extrapolation_distance: self.max_extrapolation_distance,
+            max_neighbor_distance: self.max_neighbor_distance,
+        })
+    }
 }
 
-impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> Predict<T> {
+// `Predict::new()` is the friendly, common-case entry point for `PredictBuilder`, matching
+// `Lowess` being an alias for `LowessBuilder<T, BatchMode>`.
+pub type Predict<T = f64> = PredictBuilder<T>;
+
+// Validated, ready-to-call configuration for a `Predict::call()` invocation, produced by
+// `PredictBuilder::build()`. Fields are private; the only way to construct one is via the
+// builder, so a `.build()` call can never be skipped.
+#[derive(Debug, Clone)]
+pub struct PredictQuery<T> {
+    return_se: bool,
+    confidence_level: Option<T>,
+    prediction_level: Option<T>,
+    return_derivative: bool,
+    extrapolation: ExtrapolationPolicy,
+    max_extrapolation_distance: Option<T>,
+    max_neighbor_distance: Option<T>,
+}
+
+impl<T> PredictQuery<T> {
+    // Whether the local WLS fit's derivative is included in the output (used by
+    // fastLowess's parallel predict pass, which needs this outside `lowess` itself).
+    // No trait bounds needed: this just reads a plain `bool` field.
+    pub fn return_derivative(&self) -> bool {
+        self.return_derivative
+    }
+}
+
+impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> PredictQuery<T> {
     // Evaluate `result` (a fitted Batch model) at out-of-sample x-values not in the
     // training set, per these options, similar to R's `predict(model, newdata)`.
     //
@@ -179,9 +213,6 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> Predict<T> {
         result: &LowessResult<T>,
         new_x: &[T],
     ) -> Result<PredictOutput<T>, LowessError> {
-        if let Some(e) = &self.pending_error {
-            return Err(e.clone());
-        }
         match &result.fit_state {
             Some(state) => predict_batch(state, new_x, self),
             None => Err(LowessError::PredictionUnavailable),
@@ -221,7 +252,7 @@ pub type RawPredictValues<T> = Result<(Vec<T>, Option<Vec<T>>, Option<Vec<T>>), 
 pub type PredictPassFn<T> = fn(
     &PredictState<T>,
     &[T], // new_x
-    &Predict<T>,
+    &PredictQuery<T>,
     bool, // need_se
 ) -> RawPredictValues<T>;
 
@@ -304,7 +335,7 @@ pub fn predict_one_full<T: Float + WLSSolver>(
     state: &PredictState<T>,
     x_query: T,
     weights_scratch: &mut [T],
-    options: &Predict<T>,
+    options: &PredictQuery<T>,
     need_se: bool,
 ) -> Result<(T, T, Option<T>), LowessError> {
     let n = state.x.len();
@@ -449,7 +480,7 @@ fn interpolate_y_smooth<T: Float>(x: &[T], y_smooth: &[T], query: T) -> T {
 fn predict_batch_serial<T: Float + WLSSolver>(
     state: &PredictState<T>,
     new_x: &[T],
-    options: &Predict<T>,
+    options: &PredictQuery<T>,
     need_se: bool,
 ) -> RawPredictValues<T> {
     let mut scratch = vec![T::zero(); state.x.len().max(1)];
@@ -481,7 +512,7 @@ fn predict_batch_serial<T: Float + WLSSolver>(
 pub fn predict_batch<T: Float + WLSSolver>(
     state: &PredictState<T>,
     new_x: &[T],
-    options: &Predict<T>,
+    options: &PredictQuery<T>,
 ) -> Result<PredictOutput<T>, LowessError> {
     for (i, &val) in new_x.iter().enumerate() {
         if !val.is_finite() {

@@ -49,7 +49,7 @@ impl_into_enum_for!(WeightFunction);
 impl_into_enum_for!(ZeroWeightFallback);
 use lowess::internals::adapters::online::OnlineOutput;
 pub use lowess::internals::engine::predict::{
-    ExtrapolationPolicy, Predict, PredictOutput, PredictState, predict_batch,
+    ExtrapolationPolicy, PredictBuilder, PredictOutput, PredictQuery, PredictState, predict_batch,
 };
 use lowess::internals::evaluation::intervals::IntervalMethod;
 use lowess::internals::primitives::backend::Backend;
@@ -149,21 +149,26 @@ pub fn extrapolation_policy_str(value: ExtrapolationPolicy) -> &'static str {
     alias::extrapolation_policy_str(value)
 }
 
-pub fn build_predict_options(options: PredictOptionSet<'_>) -> Result<Predict<f64>, BindingError> {
+pub fn build_predict_options(
+    options: PredictOptionSet<'_>,
+) -> Result<PredictQuery<f64>, BindingError> {
     let extrapolation = match options.extrapolation {
         Some(s) => map_invalid_arg(parse_extrapolation_policy(s))?,
         None => ExtrapolationPolicy::default(),
     };
-    Ok(Predict {
-        return_se: options.return_se,
-        confidence_level: options.confidence_level,
-        prediction_level: options.prediction_level,
-        return_derivative: options.return_derivative,
-        extrapolation,
-        max_extrapolation_distance: options.max_extrapolation_distance,
-        max_neighbor_distance: options.max_neighbor_distance,
-        ..Default::default()
-    })
+    map_lowess_result(
+        PredictBuilder {
+            return_se: options.return_se,
+            confidence_level: options.confidence_level,
+            prediction_level: options.prediction_level,
+            return_derivative: options.return_derivative,
+            extrapolation,
+            max_extrapolation_distance: options.max_extrapolation_distance,
+            max_neighbor_distance: options.max_neighbor_distance,
+            ..Default::default()
+        }
+        .build(),
+    )
 }
 
 // Evaluate a fitted Batch model at out-of-sample query points. Requires

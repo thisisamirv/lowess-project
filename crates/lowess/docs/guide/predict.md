@@ -25,7 +25,7 @@ fn main() -> Result<(), LowessError> {
     let result = model.fit(&x, &y)?;
 
     let new_x = vec![1.5_f64, 4.5];
-    let prediction = Predict::new().call(&result, &new_x)?;
+    let prediction = Predict::new().build()?.call(&result, &new_x)?;
     println!("Predicted y: {:?}", prediction.y);
 
     Ok(())
@@ -46,11 +46,11 @@ Predicted y: [3.05, 9.05]
 | `confidence_level` | `Option<T>` | `None` | Confidence interval coverage level (e.g. `Some(0.95)`) |
 | `prediction_level` | `Option<T>` | `None` | Prediction interval coverage level (e.g. `Some(0.95)`) |
 | `return_derivative` | `bool` | `false` | Include the local fit's derivative (slope) at each query point |
-| `extrapolation` | `str` or `ExtrapolationPolicy` | `"clamp"` | Behavior for query points outside the training `x`-range |
+| `extrapolation` | `&str` | `"clamp"` | Behavior for query points outside the training `x`-range |
 | `max_extrapolation_distance` | `T` | none | Under `"linear"` extrapolation, the max allowed distance beyond the training boundary before erroring |
 | `max_neighbor_distance` | `T` | none | Max allowed distance to the farthest training point in a query's local window before erroring |
 
-`Predict` is configured the same way as the `Lowess` builder itself: `Predict::new()` (or `::default()`), chained setter methods, and an optional `.build()?` to fail fast on an invalid string (e.g. `.extrapolation("bogus")`) instead of deferring the error until `.call(...)`. Standard errors/intervals use the same z-score convention as `fit()`'s existing intervals.
+`Predict` is configured the same way as the `Lowess` builder itself: `Predict::new()` (or `::default()`), chained setter methods, and a mandatory `.build()?` to validate (e.g. an invalid `.extrapolation("bogus")` string) and obtain the ready-to-call configuration. Standard errors/intervals use the same z-score convention as `fit()`'s existing intervals.
 
 ```rust
 use lowess::prelude::*;
@@ -87,9 +87,9 @@ Behavior for query points outside `[min(x_train), max(x_train)]`:
 
 | Policy | Behavior |
 | --- | --- |
-| `Clamp` (default) | Clamps the query to the nearest boundary window |
-| `Linear` | Linearly extrapolates from the nearest boundary point's local fit and slope |
-| `Error` | Fails the whole call with `LowessError::PredictOutOfRange` |
+| `"clamp"` (default) | Clamps the query to the nearest boundary window |
+| `"linear"` | Linearly extrapolates from the nearest boundary point's local fit and slope |
+| `"error"` | Fails the whole call with `LowessError::PredictOutOfRange` |
 
 ```rust
 use lowess::prelude::*;
@@ -113,7 +113,7 @@ fn main() -> Result<(), LowessError> {
 Extrapolated y: [10.1]
 ```
 
-Under `Linear`, `.max_extrapolation_distance(...)` caps how far beyond the boundary the extrapolation may extend before `.call(...)` fails with `LowessError::ExtrapolationTooFar`, instead of returning an unbounded value.
+Under `"linear"`, `.max_extrapolation_distance(...)` caps how far beyond the boundary the extrapolation may extend before `.call(...)` fails with `LowessError::ExtrapolationTooFar`, instead of returning an unbounded value.
 
 `.max_neighbor_distance(...)` guards a separate blind spot: a query point can fall within `[min(x_train), max(x_train)]` yet still be far from any real training point (e.g. training `x` in `[0,10]` and `[90,100]`, query at `x=50`). Setting it makes `.call(...)` fail with `LowessError::SparseNeighborhood` instead of silently predicting there. It applies regardless of `extrapolation`.
 
