@@ -37,6 +37,7 @@ use crate::adapters::streaming::MergeStrategy;
 use crate::algorithms::regression::ZeroWeightFallback;
 use crate::algorithms::robustness::RobustnessMethod;
 pub use crate::engine::output::LowessResult;
+pub use crate::engine::predict::Predict;
 use crate::engine::validator::MissingPolicy;
 
 use crate::math::boundary::BoundaryPolicy;
