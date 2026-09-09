@@ -67,6 +67,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+**C++:**
+
+- Fixed `bindings/cpp/spack/package.py`'s `build()`/`install()` phases assuming Cargo's `target/release` output lives under `bindings/cpp`; since `bindings/cpp` is a member of the repo's Cargo workspace, the build output actually lands in `target/release` at the workspace root, causing `spack install fastlowess-cpp` to fail on every platform (reported via `spack/spack-packages` PR #6369 review). Now builds by package name (`cargo build -p fastlowess-cpp`) instead of `cd`'ing into `bindings/cpp`. Also dropped the recipe's repo-internal header comment (mirroring note + pyright suppression), which the same review flagged as not belonging in the builtin recipe; the pyright suppression now lives in a new root `pyrightconfig.json` instead, scoped to `bindings/cpp/spack`, so editing the recipe without a full Spack install stays warning-free without polluting the recipe itself.
+
 **Node.js:**
 
 - Fixed `cv_seed` silently accepting negative values and reinterpreting them as a huge unsigned seed (e.g. `-1` became `18446744073709551615`) instead of raising an error, since the `i64` value was cast to `u64` via Rust's unchecked `as` operator. Now validated and rejected with a clear error before the cast.

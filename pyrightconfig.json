@@ -1,0 +1,10 @@
+{
+    "executionEnvironments": [
+        {
+            "root": "bindings/cpp/spack",
+            "reportMissingImports": false,
+            "reportUndefinedVariable": false,
+            "reportCallIssue": false
+        }
+    ]
+}
