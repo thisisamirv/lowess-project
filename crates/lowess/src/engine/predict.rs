@@ -49,10 +49,10 @@ pub struct PredictBuilder<T> {
     pub return_se: bool,
 
     // Confidence interval coverage level (e.g. `Some(0.95)`), or `None` to skip.
-    pub confidence_level: Option<T>,
+    pub confidence_intervals: Option<T>,
 
     // Prediction interval coverage level (e.g. `Some(0.95)`), or `None` to skip.
-    pub prediction_level: Option<T>,
+    pub prediction_intervals: Option<T>,
 
     // Include the local WLS fit's derivative (slope) at each query point.
     pub return_derivative: bool,
@@ -84,8 +84,8 @@ impl<T: Float> Default for PredictBuilder<T> {
     fn default() -> Self {
         Self {
             return_se: false,
-            confidence_level: None,
-            prediction_level: None,
+            confidence_intervals: None,
+            prediction_intervals: None,
             return_derivative: false,
             extrapolation: ExtrapolationPolicy::default(),
             max_extrapolation_distance: None,
@@ -109,14 +109,14 @@ impl<T: Float> PredictBuilder<T> {
     }
 
     // Request a confidence interval at the given coverage level (e.g. `0.95`).
-    pub fn confidence_level(mut self, level: T) -> Self {
-        self.confidence_level = Some(level);
+    pub fn confidence_intervals(mut self, level: T) -> Self {
+        self.confidence_intervals = Some(level);
         self
     }
 
     // Request a prediction interval at the given coverage level (e.g. `0.95`).
-    pub fn prediction_level(mut self, level: T) -> Self {
-        self.prediction_level = Some(level);
+    pub fn prediction_intervals(mut self, level: T) -> Self {
+        self.prediction_intervals = Some(level);
         self
     }
 
@@ -160,8 +160,8 @@ impl<T: Float> PredictBuilder<T> {
         }
         Ok(PredictQuery {
             return_se: self.return_se,
-            confidence_level: self.confidence_level,
-            prediction_level: self.prediction_level,
+            confidence_intervals: self.confidence_intervals,
+            prediction_intervals: self.prediction_intervals,
             return_derivative: self.return_derivative,
             extrapolation: self.extrapolation,
             max_extrapolation_distance: self.max_extrapolation_distance,
@@ -180,8 +180,8 @@ pub type Predict<T = f64> = PredictBuilder<T>;
 #[derive(Debug, Clone)]
 pub struct PredictQuery<T> {
     return_se: bool,
-    confidence_level: Option<T>,
-    prediction_level: Option<T>,
+    confidence_intervals: Option<T>,
+    prediction_intervals: Option<T>,
     return_derivative: bool,
     extrapolation: ExtrapolationPolicy,
     max_extrapolation_distance: Option<T>,
@@ -226,14 +226,14 @@ pub struct PredictOutput<T> {
     // Predicted y-values, one per query point in `new_x`.
     pub y: Vec<T>,
 
-    // Standard errors, if `return_se`/`confidence_level`/`prediction_level` was requested.
+    // Standard errors, if `return_se`/`confidence_intervals`/`prediction_intervals` was requested.
     pub standard_errors: Option<Vec<T>>,
 
-    // Confidence interval bounds for the mean response, if `confidence_level` was set.
+    // Confidence interval bounds for the mean response, if `confidence_intervals` was set.
     pub confidence_lower: Option<Vec<T>>,
     pub confidence_upper: Option<Vec<T>>,
 
-    // Prediction interval bounds for a new observation, if `prediction_level` was set.
+    // Prediction interval bounds for a new observation, if `prediction_intervals` was set.
     pub prediction_lower: Option<Vec<T>>,
     pub prediction_upper: Option<Vec<T>>,
 
@@ -525,8 +525,8 @@ pub fn predict_batch<T: Float + WLSSolver>(
     }
 
     let need_se = options.return_se
-        || options.confidence_level.is_some()
-        || options.prediction_level.is_some();
+        || options.confidence_intervals.is_some()
+        || options.prediction_intervals.is_some();
 
     let (y, derivative, se) = if let Some(pass) = state.custom_predict_pass {
         pass(state, new_x, options, need_se)?
@@ -534,7 +534,7 @@ pub fn predict_batch<T: Float + WLSSolver>(
         predict_batch_serial(state, new_x, options, need_se)?
     };
 
-    let (confidence_lower, confidence_upper) = if let Some(level) = options.confidence_level {
+    let (confidence_lower, confidence_upper) = if let Some(level) = options.confidence_intervals {
         let se_vals = se.as_deref().unwrap_or(&[]);
         let z = IntervalMethod::<T>::approximate_z_score(level)
             .map_err(|_| LowessError::InvalidIntervals(level.to_f64().unwrap_or(0.0)))?;
@@ -545,7 +545,7 @@ pub fn predict_batch<T: Float + WLSSolver>(
         (None, None)
     };
 
-    let (prediction_lower, prediction_upper) = if let Some(level) = options.prediction_level {
+    let (prediction_lower, prediction_upper) = if let Some(level) = options.prediction_intervals {
         let se_vals = se.as_deref().unwrap_or(&[]);
         let z = IntervalMethod::<T>::approximate_z_score(level)
             .map_err(|_| LowessError::InvalidIntervals(level.to_f64().unwrap_or(0.0)))?;

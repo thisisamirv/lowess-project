@@ -357,7 +357,7 @@ fn test_predict_return_derivative() {
     }
 }
 
-/// `return_se`/`confidence_level`/`prediction_level` should populate the corresponding
+/// `return_se`/`confidence_intervals`/`prediction_intervals` should populate the corresponding
 /// output fields, with confidence intervals narrower than prediction intervals.
 #[test]
 fn test_predict_se_and_intervals() {
@@ -379,8 +379,8 @@ fn test_predict_se_and_intervals() {
 
     let options = Predict::new()
         .return_se()
-        .confidence_level(0.95)
-        .prediction_level(0.95)
+        .confidence_intervals(0.95)
+        .prediction_intervals(0.95)
         .build()
         .unwrap();
 

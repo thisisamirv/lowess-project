@@ -159,8 +159,8 @@ pub fn build_predict_options(
     map_lowess_result(
         PredictBuilder {
             return_se: options.return_se,
-            confidence_level: options.confidence_level,
-            prediction_level: options.prediction_level,
+            confidence_intervals: options.confidence_level,
+            prediction_intervals: options.prediction_level,
             return_derivative: options.return_derivative,
             extrapolation,
             max_extrapolation_distance: options.max_extrapolation_distance,
