@@ -68,6 +68,8 @@
 #'   result. Default: \code{FALSE}.
 #' @param return_robustness_weights Logical; if \code{TRUE}, return per-point
 #'   robustness weights. Default: \code{FALSE}.
+#' @param return_derivative Logical; if \code{TRUE}, return per-point local
+#'   fit derivative (slope) in the result. Default: \code{FALSE}.
 #' @param zero_weight_fallback Fallback policy when all robustness weights drop
 #'   to zero: \code{"use_local_mean"} (default; aliases: \code{"local_mean"},
 #'   \code{"mean"}), \code{"return_original"} (alias: \code{"original"}), or
@@ -125,6 +127,7 @@ Lowess <- function(
     return_diagnostics = FALSE,
     return_residuals = FALSE,
     return_robustness_weights = FALSE,
+    return_derivative = FALSE,
     zero_weight_fallback = "use_local_mean",
     auto_converge = NULL,
     cv_fractions = NULL,

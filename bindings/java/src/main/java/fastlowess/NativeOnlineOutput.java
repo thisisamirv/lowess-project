@@ -12,6 +12,7 @@ final class NativeOnlineOutput {
     final double residual;
     final double robustnessWeight;
     final int iterationsUsed;
+    final double derivative;
 
     @SuppressWarnings("unused") // called by JNI
     NativeOnlineOutput(
@@ -20,12 +21,14 @@ final class NativeOnlineOutput {
             double standardError,
             double residual,
             double robustnessWeight,
-            int iterationsUsed) {
+            int iterationsUsed,
+            double derivative) {
         this.hasValue = hasValue;
         this.y = y;
         this.standardError = standardError;
         this.residual = residual;
         this.robustnessWeight = robustnessWeight;
         this.iterationsUsed = iterationsUsed;
+        this.derivative = derivative;
     }
 }

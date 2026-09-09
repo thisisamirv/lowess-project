@@ -134,6 +134,8 @@ type Result struct {
 	Residuals []float64
 	// RobustnessWeights is nil unless ReturnRobustnessWeights was requested.
 	RobustnessWeights []float64
+	// Derivative is nil unless ReturnDerivative was requested (one value per output point).
+	Derivative []float64
 	// CVScores is nil unless cross-validation was configured.
 	CVScores []float64
 
@@ -172,6 +174,7 @@ func resultFromC(cres C.fastlowess_GoLowessResult) (Result, error) {
 		PredictionUpper:   cDoubleSliceToGo(cres.prediction_upper, n),
 		Residuals:         cDoubleSliceToGo(cres.residuals, n),
 		RobustnessWeights: cDoubleSliceToGo(cres.robustness_weights, n),
+		Derivative:        cDoubleSliceToGo(cres.derivative, n),
 		CVScores:          cDoubleSliceToGo(cres.cv_scores, cvN),
 		FractionUsed:      float64(cres.fraction_used),
 		IterationsUsed:    int(cres.iterations_used),
@@ -325,4 +328,5 @@ type PointResult struct {
 	Residual         float64 // NaN if not computed
 	RobustnessWeight float64 // NaN if not computed
 	IterationsUsed   int     // -1 if not applicable
+	Derivative       float64 // NaN if not computed
 }

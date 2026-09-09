@@ -703,6 +703,7 @@ module.exports = nativeBinding
 module.exports.Lowess = nativeBinding.Lowess
 module.exports.LowessResult = nativeBinding.LowessResult
 module.exports.OnlineLowess = nativeBinding.OnlineLowess
+module.exports.PredictOutput = nativeBinding.PredictOutput
 module.exports.StreamingLowess = nativeBinding.StreamingLowess
 module.exports.gpu_enabled = nativeBinding.gpu_enabled
 

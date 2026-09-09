@@ -16,6 +16,7 @@ final class NativeResult {
     final double[] residuals;
     final double[] robustnessWeights;
     final double[] cvScores;
+    final double[] derivative;
     final double fractionUsed;
     final int iterationsUsed;
     final double rmse;
@@ -41,6 +42,7 @@ final class NativeResult {
             double[] residuals,
             double[] robustnessWeights,
             double[] cvScores,
+            double[] derivative,
             double fractionUsed,
             int iterationsUsed,
             double rmse,
@@ -62,6 +64,7 @@ final class NativeResult {
         this.residuals = residuals;
         this.robustnessWeights = robustnessWeights;
         this.cvScores = cvScores;
+        this.derivative = derivative;
         this.fractionUsed = fractionUsed;
         this.iterationsUsed = iterationsUsed;
         this.rmse = rmse;

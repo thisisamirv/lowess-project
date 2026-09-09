@@ -62,6 +62,7 @@ StreamingLowess <- function(
     return_diagnostics = FALSE,
     return_residuals = FALSE,
     return_robustness_weights = FALSE,
+    return_derivative = FALSE,
     merge_strategy = "weighted_average",
     parallel = TRUE,
     missing = "error"

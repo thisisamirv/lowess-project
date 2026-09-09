@@ -118,6 +118,8 @@ pub struct GoOnlineOutput {
     pub residual: c_double,
     pub robustness_weight: c_double,
     pub iterations_used: c_int,
+    /// Latest point's local fit derivative (slope), NaN if not requested
+    pub derivative: c_double,
     pub error: *mut c_char, // NULL if no error
 }
 
@@ -146,6 +148,8 @@ pub struct GoLowessResult {
     pub residuals: *mut c_double,
     /// Robustness weights (NULL if not computed)
     pub robustness_weights: *mut c_double,
+    /// Per-point local fit derivative (slope), NULL if not requested
+    pub derivative: *mut c_double,
     /// Cross-validation scores (NULL if not computed, length = cv_scores_len)
     pub cv_scores: *mut c_double,
     /// Number of cross-validation scores
@@ -186,6 +190,7 @@ impl Default for GoLowessResult {
             prediction_upper: ptr::null_mut(),
             residuals: ptr::null_mut(),
             robustness_weights: ptr::null_mut(),
+            derivative: ptr::null_mut(),
             cv_scores: ptr::null_mut(),
             cv_scores_len: 0,
             fraction_used: 0.0,
@@ -220,13 +225,15 @@ impl Default for GoOnlineOutput {
             residual: f64::NAN,
             robustness_weight: f64::NAN,
             iterations_used: -1,
+            derivative: f64::NAN,
             error: ptr::null_mut(),
         }
     }
 }
 
 impl From<LowessResult<f64>> for GoLowessResult {
-    fn from(result: LowessResult<f64>) -> Self {
+    fn from(mut result: LowessResult<f64>) -> Self {
+        let derivative = result.derivative.take();
         let p = shared_parse::extract_ffi_lowess_result(result);
         GoLowessResult {
             x: p.x,
@@ -239,6 +246,7 @@ impl From<LowessResult<f64>> for GoLowessResult {
             prediction_upper: p.prediction_upper,
             residuals: p.residuals,
             robustness_weights: p.robustness_weights,
+            derivative: shared_parse::opt_vec_to_raw_ptr(derivative),
             cv_scores: p.cv_scores,
             cv_scores_len: p.cv_scores_len as c_ulong,
             fraction_used: p.fraction_used,
@@ -321,6 +329,7 @@ pub unsafe extern "C" fn go_lowess_new(
     backend: *const c_char,
     missing: *const c_char,
     retain_model: c_int,
+    return_derivative: c_int,
 ) -> *mut GoLowess {
     with_panic_ptr(|| {
         clear_last_error();
@@ -391,6 +400,12 @@ pub unsafe extern "C" fn go_lowess_new(
         ) {
             Ok(v) => v,
             Err(e) => return null_with_error(&e),
+        };
+
+        let builder = if return_derivative != 0 {
+            builder.return_derivative()
+        } else {
+            builder
         };
 
         Box::into_raw(Box::new(GoLowess {
@@ -660,6 +675,7 @@ pub unsafe extern "C" fn go_streaming_new(
     overlap: c_int,
     merge_strategy: *const c_char,
     missing: *const c_char,
+    return_derivative: c_int,
 ) -> *mut GoStreamingLowess {
     with_panic_ptr(|| {
         clear_last_error();
@@ -720,6 +736,12 @@ pub unsafe extern "C" fn go_streaming_new(
         ) {
             Ok(v) => v,
             Err(e) => return null_with_error(&e),
+        };
+
+        let builder = if return_derivative != 0 {
+            builder.return_derivative()
+        } else {
+            builder
         };
 
         let model = match shared_parse::build_streaming(
@@ -826,6 +848,7 @@ pub unsafe extern "C" fn go_online_new(
     min_points: c_int,
     update_mode: *const c_char,
     missing: *const c_char,
+    return_derivative: c_int,
 ) -> *mut GoOnlineLowess {
     with_panic_ptr(|| {
         clear_last_error();
@@ -893,6 +916,12 @@ pub unsafe extern "C" fn go_online_new(
             Err(e) => return null_with_error(&e),
         };
 
+        let builder = if return_derivative != 0 {
+            builder.return_derivative()
+        } else {
+            builder
+        };
+
         let model = match shared_parse::build_online(
             builder,
             Some(window_capacity),
@@ -945,6 +974,7 @@ pub unsafe extern "C" fn go_online_add_point(
                         residual,
                         robustness_weight,
                         iterations_used,
+                        derivative: o.derivative.unwrap_or(f64::NAN),
                         error: ptr::null_mut(),
                     }
                 }
@@ -1010,6 +1040,7 @@ pub unsafe extern "C" fn go_lowess_free_result(result: *mut GoLowessResult) {
         shared_parse::free_raw_f64_buffer(r.prediction_upper, n);
         shared_parse::free_raw_f64_buffer(r.residuals, n);
         shared_parse::free_raw_f64_buffer(r.robustness_weights, n);
+        shared_parse::free_raw_f64_buffer(r.derivative, n);
         shared_parse::free_raw_f64_buffer(r.cv_scores, cv_n);
         shared_parse::free_raw_c_string(r.error);
     });

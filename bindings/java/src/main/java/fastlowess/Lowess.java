@@ -27,6 +27,7 @@ public final class Lowess implements AutoCloseable {
                 options.returnDiagnostics,
                 options.returnResiduals,
                 options.returnRobustnessWeights,
+                options.returnDerivative,
                 options.zeroWeightFallback,
                 options.autoConverge,
                 options.cvFractions,

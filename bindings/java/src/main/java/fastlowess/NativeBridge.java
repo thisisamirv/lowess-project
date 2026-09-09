@@ -91,7 +91,7 @@ final class NativeBridge {
         String arch = System.getProperty("os.arch", "").toLowerCase();
         String osName = os.contains("win") ? "windows" : (os.contains("mac") ? "macos" : "linux");
         String archName = (arch.contains("aarch64") || arch.contains("arm64")) ? "aarch64" : "x86_64";
-        String libcSuffix = osName.equals("linux") && isMuslLibc() ? "-musl" : "";
+        String libcSuffix = "linux".equals(osName) && isMuslLibc() ? "-musl" : "";
         return osName + "-" + archName + libcSuffix;
     }
 
@@ -129,6 +129,7 @@ final class NativeBridge {
             boolean returnDiagnostics,
             boolean returnResiduals,
             boolean returnRobustnessWeights,
+            boolean returnDerivative,
             String zeroWeightFallback,
             double autoConverge,
             double[] cvFractions,
@@ -171,6 +172,7 @@ final class NativeBridge {
             boolean returnDiagnostics,
             boolean returnResiduals,
             boolean returnRobustnessWeights,
+            boolean returnDerivative,
             String zeroWeightFallback,
             double autoConverge,
             boolean parallel,
@@ -194,6 +196,7 @@ final class NativeBridge {
             String scalingMethod,
             String boundaryPolicy,
             boolean returnRobustnessWeights,
+            boolean returnDerivative,
             String zeroWeightFallback,
             double autoConverge,
             int windowCapacity,

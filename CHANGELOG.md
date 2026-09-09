@@ -23,34 +23,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Python:**
 
 - Added a `retain_model` constructor option to `Lowess` and a `LowessResult.predict(new_x, ...)` method (returning a new `PredictOutput` class), exposing lowess's out-of-sample prediction feature.
+- Added a `return_derivative` constructor option to `Lowess`, `StreamingLowess`, and `OnlineLowess`, exposing the per-point local fit derivative (slope) via `LowessResult.derivative` (a NumPy array) or `OnlineOutput.derivative` (a scalar float).
 
 **R:**
 
 - Added a `retain_model` option to `Lowess()` and a `predict.Lowess(object, new_x, ...)` S3 method for out-of-sample prediction.
+- Added a `return_derivative` option to `Lowess()`, `StreamingLowess()`, and `OnlineLowess()`, exposing the per-point local fit derivative (slope) as `derivative` in the result list/object.
 
 **Julia:**
 
 - Added a `retain_model` keyword argument to `Lowess` and a `predict(model, new_x; kwargs...)` function, via a new `LowessResult.predict_model`/`PredictModel`/`PredictResult` type, for out-of-sample prediction.
+- Added a `return_derivative` keyword argument to `Lowess`, `StreamingLowess`, and `OnlineLowess`, exposing the per-point local fit derivative (slope) as `LowessResult.derivative` or `OnlineOutput.derivative` (the latest point's slope).
 
 **Go:**
 
 - Added a `RetainModel` option to `Options` and a `Result.PredictModel.Predict(newX, options)` method, via new `PredictModel`/`PredictOptions`/`PredictResult` types, for out-of-sample prediction.
+- Added a `ReturnDerivative` option to `Options`, `StreamingOptions`, and `OnlineOptions`, exposing the per-point local fit derivative (slope) via `Result.Derivative` (`[]float64`) or `PointResult.Derivative` (a scalar `float64`).
 
 **Java:**
 
 - Added a `retainModel` option to `Options` and a `Result.predictModel()` accessor returning a new `PredictModel` class with a `predict(newX, options)` method (plus new `PredictOptions`/`PredictResult` types), for out-of-sample prediction.
+- Added a `returnDerivative(boolean)` builder option to `Options` and `OnlineOptions`, exposing the per-point local fit derivative (slope) via `Result.derivative()` (`Optional<double[]>`) or `PointResult.derivative()` (`OptionalDouble`).
 
 **Node.js:**
 
 - Added a `retain_model` option to `SmoothOptions` and a `LowessResult.predict(newX, options)` method (returning new `PredictOptions`/`PredictOutput` types), for out-of-sample prediction.
+- Added a `return_derivative` option to `SmoothOptions`, `StreamingOptions`, and `OnlineOptions`, exposing the per-point local fit derivative (slope) via `LowessResult.derivative` (a `Float64Array`) or `OnlineOutput.derivative` (a scalar `number`).
 
 **WASM:**
 
 - Added a `retain_model` option to `SmoothOptions` and a `LowessResult.predict(newX, options)` method (returning new `PredictOptions`/`PredictOutput` TypeScript types), for out-of-sample prediction.
+- Added a `return_derivative` option to `SmoothOptions`, `StreamingOptions`, and `OnlineOptions`, exposing the per-point local fit derivative (slope) via `LowessResult.derivative` (a `Float64Array`) or `OnlineOutput.derivative` (a scalar `number`).
 
 **C++:**
 
 - Added a `retain_model` option to `LowessOptions`, a `LowessResult::predict_model()` accessor, and new `PredictModel`/`PredictOptions`/`PredictResult` RAII classes for out-of-sample prediction.
+- Added a `return_derivative` option to `LowessOptions` (Batch/Streaming) and `OnlineOptions` (Online), exposing the per-point local fit derivative (slope) via `LowessResult::derivative()` (Batch/Streaming, a `std::vector<double>`) or `OnlineOutput::derivative()` (Online, a scalar `double`).
 
 **Monorepo:**
 

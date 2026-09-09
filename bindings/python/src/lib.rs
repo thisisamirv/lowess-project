@@ -237,6 +237,15 @@ impl PyLowessResult {
             .map(|v| PyArray1::from_vec(py, v.clone()))
     }
 
+    /// Per-point local fit derivative (slope), if requested
+    #[getter]
+    fn derivative<'py>(&self, py: Python<'py>) -> Option<Bound<'py, PyArray1<f64>>> {
+        self.inner
+            .derivative
+            .as_ref()
+            .map(|v| PyArray1::from_vec(py, v.clone()))
+    }
+
     /// Diagnostic metrics
     #[getter]
     fn diagnostics(&self) -> Option<PyDiagnostics> {
@@ -374,6 +383,7 @@ impl PyStreamingLowess {
         return_diagnostics=false,
         return_residuals=false,
         return_robustness_weights=false,
+        return_derivative=false,
         zero_weight_fallback="use_local_mean",
         parallel=true,
         merge_strategy="weighted_average",
@@ -394,6 +404,7 @@ impl PyStreamingLowess {
         return_diagnostics: bool,
         return_residuals: bool,
         return_robustness_weights: bool,
+        return_derivative: bool,
         zero_weight_fallback: &str,
         parallel: bool,
         merge_strategy: &str,
@@ -401,7 +412,7 @@ impl PyStreamingLowess {
     ) -> PyResult<Self> {
         let overlap_size = overlap.unwrap_or_else(|| binding_support::default_overlap(chunk_size));
 
-        let builder = map_invalid_arg(binding_support::apply_builder_options(
+        let mut builder = map_invalid_arg(binding_support::apply_builder_options(
             LowessBuilder::<f64>::new(),
             binding_support::BuilderOptionSet {
                 fraction: Some(fraction),
@@ -436,6 +447,9 @@ impl PyStreamingLowess {
                 retain_model: None,
             },
         ))?;
+        if return_derivative {
+            builder = builder.return_derivative();
+        }
 
         let processor = binding_support::map_lowess_result(builder.adapter(Streaming).build())
             .map_err(to_py_error)?;
@@ -506,6 +520,9 @@ pub struct PyOnlineOutput {
     /// Number of robustness iterations performed (if tracked)
     #[pyo3(get)]
     pub iterations_used: Option<usize>,
+    /// Local fit derivative (slope) for the latest point (if requested)
+    #[pyo3(get)]
+    pub derivative: Option<f64>,
 }
 
 #[pymethods]
@@ -538,6 +555,7 @@ impl PyOnlineLowess {
         update_mode="incremental",
         auto_converge=None,
         return_robustness_weights=false,
+        return_derivative=false,
         zero_weight_fallback="use_local_mean",
         missing="error"
     ))]
@@ -555,10 +573,11 @@ impl PyOnlineLowess {
         update_mode: &str,
         auto_converge: Option<f64>,
         return_robustness_weights: bool,
+        return_derivative: bool,
         zero_weight_fallback: &str,
         missing: &str,
     ) -> PyResult<Self> {
-        let builder = map_invalid_arg(binding_support::apply_builder_options(
+        let mut builder = map_invalid_arg(binding_support::apply_builder_options(
             LowessBuilder::<f64>::new(),
             binding_support::BuilderOptionSet {
                 fraction: Some(fraction),
@@ -593,6 +612,9 @@ impl PyOnlineLowess {
                 retain_model: None,
             },
         ))?;
+        if return_derivative {
+            builder = builder.return_derivative();
+        }
 
         let processor = binding_support::map_lowess_result(builder.adapter(Online).build())
             .map_err(to_py_error)?;
@@ -618,6 +640,7 @@ impl PyOnlineLowess {
             residual: o.residual,
             robustness_weight: o.robustness_weight,
             iterations_used: o.iterations_used,
+            derivative: o.derivative,
         }))
     }
 }
@@ -664,7 +687,8 @@ impl PyLowess {
         return_sorted=false,
         backend="cpu",
         missing="error",
-        retain_model=false
+        retain_model=false,
+        return_derivative=false
     ))]
     #[allow(clippy::too_many_arguments)]
     fn new(
@@ -692,8 +716,9 @@ impl PyLowess {
         backend: &str,
         missing: &str,
         retain_model: bool,
+        return_derivative: bool,
     ) -> PyResult<Self> {
-        let builder = map_invalid_arg(binding_support::apply_builder_options(
+        let mut builder = map_invalid_arg(binding_support::apply_builder_options(
             LowessBuilder::<f64>::new(),
             binding_support::BuilderOptionSet {
                 fraction: Some(fraction),
@@ -728,6 +753,9 @@ impl PyLowess {
                 retain_model: Some(retain_model),
             },
         ))?;
+        if return_derivative {
+            builder = builder.return_derivative();
+        }
 
         Ok(PyLowess {
             builder,

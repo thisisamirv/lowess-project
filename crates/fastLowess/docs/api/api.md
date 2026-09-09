@@ -81,7 +81,7 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `return_residuals()` | `bool` | `false` | Include residuals in result |
 | `return_robustness_weights()` | `bool` | `false` | Include weights in result |
 | `return_se()` | `bool` | `false` | Return standard errors |
-| `return_derivative()` | `bool` | `false` | Include the per-point local fit derivative (slope) in result (Batch, Streaming, and Online) |
+| `return_derivative()` | `bool` | `false` | Include the per-point local fit derivative (slope) in result |
 | `return_sorted()` | `bool` | `false` | Return results sorted ascending by `x` instead of in original input order |
 | `parallel(bool)` | `bool` | `true` | Enable parallel execution |
 | `backend(...)` | `Backend` | `CPU` | `fastLowess` only: `CPU` or `GPU` |
@@ -227,9 +227,9 @@ Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/d
 
 ### return_derivative
 
-Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) in the result, enabling turning-point/rate-of-change analysis at effectively no extra computation cost. In Batch and Streaming, this is computed in parallel (like the smoothing pass itself) when `parallel` is enabled; Online always runs sequentially. Supported by Batch (`LowessResult::derivative`), Streaming (`LowessResult::derivative`, merged across chunk overlaps like `y`), and Online (`OnlineOutput::derivative`, the latest point's slope).
+Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) in `LowessResult::derivative`, enabling turning-point/rate-of-change analysis at effectively no extra computation cost. Computed in parallel (like the smoothing pass itself) when `parallel` is enabled.
 
-- `false` (default) — leaves `result.derivative`/`OnlineOutput::derivative` as `None`
+- `false` (default) — leaves `result.derivative` as `None`
 - `true` — populates it
 
 ### return_sorted

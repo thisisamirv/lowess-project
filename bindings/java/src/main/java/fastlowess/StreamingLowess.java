@@ -25,6 +25,7 @@ public final class StreamingLowess implements AutoCloseable {
                 c.returnDiagnostics,
                 c.returnResiduals,
                 c.returnRobustnessWeights,
+                c.returnDerivative,
                 c.zeroWeightFallback,
                 c.autoConverge,
                 c.parallel,

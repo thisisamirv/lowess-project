@@ -18,6 +18,7 @@ test_that("RLowess generated accessors dispatch fit methods", {
         return_diagnostics = FALSE,
         return_residuals = FALSE,
         return_robustness_weights = FALSE,
+        return_derivative = FALSE,
         zero_weight_fallback = "use_local_mean",
         auto_converge = null_value,
         cv_fractions = null_value,
@@ -58,6 +59,7 @@ test_that("RStreamingLowess generated accessors dispatch chunked methods", {
         return_diagnostics = FALSE,
         return_residuals = FALSE,
         return_robustness_weights = FALSE,
+        return_derivative = FALSE,
         merge_strategy = "weighted_average",
         parallel = FALSE,
         delta = null_value,
@@ -89,6 +91,7 @@ test_that("ROnlineLowess generated accessors dispatch add_point", {
         update_mode = "incremental",
         auto_converge = null_value,
         return_robustness_weights = FALSE,
+        return_derivative = FALSE,
         delta = null_value,
         missing = "error"
     )
@@ -105,6 +108,7 @@ test_that("ROnlineLowess generated accessors dispatch add_point", {
         update_mode = "incremental",
         auto_converge = null_value,
         return_robustness_weights = FALSE,
+        return_derivative = FALSE,
         delta = null_value,
         missing = "error"
     )

@@ -150,6 +150,17 @@ public final class OnlineOptions {
         }
 
         /**
+         * @param returnDerivative whether to include the local fit's derivative
+         * (slope) in the result
+         * @return this builder, for chaining
+         * @see Options.Builder#returnDerivative(boolean)
+         */
+        public Builder returnDerivative(boolean returnDerivative) {
+            common.returnDerivative(returnDerivative);
+            return this;
+        }
+
+        /**
          * Maximum number of points retained in the sliding window (default
          * {@code 1000}).
          *

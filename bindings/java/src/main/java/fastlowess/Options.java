@@ -26,6 +26,7 @@ public final class Options {
     final boolean returnDiagnostics;
     final boolean returnResiduals;
     final boolean returnRobustnessWeights;
+    final boolean returnDerivative;
     final boolean parallel;
     final boolean returnSe;
     final boolean returnSorted;
@@ -52,6 +53,7 @@ public final class Options {
         this.returnDiagnostics = b.returnDiagnostics;
         this.returnResiduals = b.returnResiduals;
         this.returnRobustnessWeights = b.returnRobustnessWeights;
+        this.returnDerivative = b.returnDerivative;
         this.parallel = b.parallel;
         this.returnSe = b.returnSe;
         this.returnSorted = b.returnSorted;
@@ -92,6 +94,7 @@ public final class Options {
         boolean returnDiagnostics = false;
         boolean returnResiduals = false;
         boolean returnRobustnessWeights = false;
+        boolean returnDerivative = false;
         boolean parallel = true;
         boolean returnSe = false;
         boolean returnSorted = false;
@@ -282,6 +285,18 @@ public final class Options {
          */
         public Builder returnRobustnessWeights(boolean returnRobustnessWeights) {
             this.returnRobustnessWeights = returnRobustnessWeights;
+            return this;
+        }
+
+        /**
+         * Whether {@link Result#derivative()} should be populated.
+         *
+         * @param returnDerivative whether to include the per-point local fit
+         * derivative (slope) in the result
+         * @return this builder, for chaining
+         */
+        public Builder returnDerivative(boolean returnDerivative) {
+            this.returnDerivative = returnDerivative;
             return this;
         }
 

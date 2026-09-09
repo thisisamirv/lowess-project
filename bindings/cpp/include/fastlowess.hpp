@@ -134,6 +134,8 @@ struct LowessOptions {
   bool return_diagnostics = false;
   bool return_residuals = false;
   bool return_robustness_weights = false;
+  /// Include the per-point local fit derivative (slope) in the output.
+  bool return_derivative = false;
   bool return_se = false; ///< Return standard errors
   /// Return results sorted ascending by x instead of in original input order.
   bool return_sorted = false;
@@ -194,6 +196,9 @@ struct OnlineOptions {
   double auto_converge = NAN; ///< Auto-convergence threshold
 
   bool return_robustness_weights = false;
+  /// Include the local fit derivative (slope) for the latest point in the
+  /// output.
+  bool return_derivative = false;
 
   /// Policy for non-finite (NaN/Inf) `x`/`y` values passed to add_point():
   /// "error" (default) or "drop".
@@ -231,6 +236,9 @@ public:
   /// Number of robustness iterations performed (−1 if not applicable).
   int iterations_used() const { return iterations_used_; }
 
+  /// Local fit derivative (slope) for the latest point (NaN if not computed).
+  double derivative() const { return derivative_; }
+
 private:
   friend class OnlineLowess;
   template <typename U> friend class Expected;
@@ -240,7 +248,7 @@ private:
       : has_value_(raw.has_value != 0), y_(raw.y),
         standard_error_(raw.standard_error), residual_(raw.residual),
         robustness_weight_(raw.robustness_weight),
-        iterations_used_(raw.iterations_used) {}
+        iterations_used_(raw.iterations_used), derivative_(raw.derivative) {}
 
   bool has_value_ = false;
   double y_ = 0.0;
@@ -248,6 +256,7 @@ private:
   double residual_ = std::numeric_limits<double>::quiet_NaN();
   double robustness_weight_ = std::numeric_limits<double>::quiet_NaN();
   int iterations_used_ = -1;
+  double derivative_ = std::numeric_limits<double>::quiet_NaN();
 };
 
 /**
@@ -600,6 +609,15 @@ public:
     return {};
   }
 
+  /// Get the per-point local fit derivative (slope) (empty if not computed)
+  std::vector<double> derivative() const {
+    if (result_.derivative != nullptr) {
+      return std::vector<double>(result_.derivative,
+                                 result_.derivative + result_.n);
+    }
+    return {};
+  }
+
   /// Get cross-validation scores (empty if not computed)
   std::vector<double> cv_scores() const {
     if (result_.cv_scores != nullptr) {
@@ -645,7 +663,8 @@ public:
         options.confidence_intervals, options.prediction_intervals,
         options.return_diagnostics ? 1 : 0, options.return_residuals ? 1 : 0,
         options.return_robustness_weights ? 1 : 0,
-        options.zero_weight_fallback.c_str(), options.auto_converge,
+        options.return_derivative ? 1 : 0, options.zero_weight_fallback.c_str(),
+        options.auto_converge,
         options.cv_fractions.empty() ? nullptr : options.cv_fractions.data(),
         static_cast<unsigned long>(options.cv_fractions.size()),
         options.cv_method.c_str(), options.cv_k, options.parallel ? 1 : 0,
@@ -724,9 +743,10 @@ public:
         options.scaling_method.c_str(), options.boundary_policy.c_str(),
         options.return_diagnostics ? 1 : 0, options.return_residuals ? 1 : 0,
         options.return_robustness_weights ? 1 : 0,
-        options.zero_weight_fallback.c_str(), options.auto_converge,
-        options.parallel ? 1 : 0, options.chunk_size, options.overlap,
-        options.merge_strategy.c_str(), options.missing.c_str());
+        options.return_derivative ? 1 : 0, options.zero_weight_fallback.c_str(),
+        options.auto_converge, options.parallel ? 1 : 0, options.chunk_size,
+        options.overlap, options.merge_strategy.c_str(),
+        options.missing.c_str());
   }
 
   ~StreamingLowess() {
@@ -803,8 +823,8 @@ public:
         options.weight_function.c_str(), options.robustness_method.c_str(),
         options.scaling_method.c_str(), options.boundary_policy.c_str(),
         options.return_robustness_weights ? 1 : 0,
-        options.zero_weight_fallback.c_str(), options.auto_converge,
-        options.window_capacity, options.min_points,
+        options.return_derivative ? 1 : 0, options.zero_weight_fallback.c_str(),
+        options.auto_converge, options.window_capacity, options.min_points,
         options.update_mode.c_str(), options.missing.c_str());
   }
 

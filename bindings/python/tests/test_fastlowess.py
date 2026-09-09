@@ -96,6 +96,27 @@ class TestLowess:
         assert np.all(result.robustness_weights >= 0)
         assert np.all(result.robustness_weights <= 1)
 
+    def test_lowess_with_derivative(self):
+        """Test lowess with per-point derivative enabled."""
+        x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+        y = np.array([2.0, 4.1, 5.9, 8.2, 9.8])
+
+        lowess = fastlowess.Lowess(fraction=0.7, return_derivative=True)
+        result = lowess.fit(x, y)
+
+        assert result.derivative is not None
+        assert len(result.derivative) == len(x)
+
+    def test_lowess_without_derivative_is_none(self):
+        """Test lowess without return_derivative leaves derivative unset."""
+        x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+        y = np.array([2.0, 4.1, 5.9, 8.2, 9.8])
+
+        lowess = fastlowess.Lowess(fraction=0.7)
+        result = lowess.fit(x, y)
+
+        assert result.derivative is None
+
     def test_lowess_with_confidence_intervals(self):
         """Test lowess with confidence intervals."""
         np.random.seed(42)

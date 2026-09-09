@@ -14,13 +14,16 @@ import java.util.OptionalInt;
  * computed
  * @param iterationsUsed the number of robustness iterations performed, if
  * applicable
+ * @param derivative the local fit's derivative (slope) at this point, if
+ * computed
  */
 public record PointResult(
         double y,
         OptionalDouble standardError,
         OptionalDouble residual,
         OptionalDouble robustnessWeight,
-        OptionalInt iterationsUsed) {
+        OptionalInt iterationsUsed,
+        OptionalDouble derivative) {
 
     static PointResult fromNative(NativeOnlineOutput o) {
         return new PointResult(
@@ -28,7 +31,8 @@ public record PointResult(
                 optionalDouble(o.standardError),
                 optionalDouble(o.residual),
                 optionalDouble(o.robustnessWeight),
-                o.iterationsUsed < 0 ? OptionalInt.empty() : OptionalInt.of(o.iterationsUsed));
+                o.iterationsUsed < 0 ? OptionalInt.empty() : OptionalInt.of(o.iterationsUsed),
+                optionalDouble(o.derivative));
     }
 
     private static OptionalDouble optionalDouble(double value) {

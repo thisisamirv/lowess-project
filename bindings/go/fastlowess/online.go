@@ -48,6 +48,8 @@ type OnlineOptions struct {
 
 	// ReturnRobustnessWeights requests per-point robustness weights in the result.
 	ReturnRobustnessWeights bool
+	// ReturnDerivative requests the local fit's derivative (slope) for the latest point.
+	ReturnDerivative bool
 
 	// WindowCapacity is the maximum number of recent points retained.
 	// Default: 1000.
@@ -125,6 +127,7 @@ func NewOnlineLowess(opts OnlineOptions) (*OnlineLowess, error) {
 			C.int(opts.MinPoints),
 			um,
 			missing,
+			boolToCInt(opts.ReturnDerivative),
 		)
 		if ptr == nil {
 			errMsg = lastError()
@@ -167,6 +170,7 @@ func (o *OnlineLowess) AddPoint(x, y float64) (res PointResult, ok bool, err err
 		Residual:         float64(cout.residual),
 		RobustnessWeight: float64(cout.robustness_weight),
 		IterationsUsed:   int(cout.iterations_used),
+		Derivative:       float64(cout.derivative),
 	}
 	return res, true, nil
 }

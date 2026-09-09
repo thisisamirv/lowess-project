@@ -16,6 +16,7 @@ import java.util.OptionalInt;
  * @param residuals residuals, if computed
  * @param robustnessWeights robustness weights, if computed
  * @param cvScores cross-validation scores per tested fraction, if CV was run
+ * @param derivative per-point local fit derivative (slope), if computed
  * @param fractionUsed the fraction used (as set, or selected by
  * cross-validation)
  * @param iterationsUsed the number of robustness iterations actually performed,
@@ -35,6 +36,7 @@ public record Result(
         Optional<double[]> residuals,
         Optional<double[]> robustnessWeights,
         Optional<double[]> cvScores,
+        Optional<double[]> derivative,
         double fractionUsed,
         OptionalInt iterationsUsed,
         Optional<Diagnostics> diagnostics,
@@ -52,6 +54,7 @@ public record Result(
                 Optional.ofNullable(r.residuals),
                 Optional.ofNullable(r.robustnessWeights),
                 Optional.ofNullable(r.cvScores),
+                Optional.ofNullable(r.derivative),
                 r.fractionUsed,
                 r.iterationsUsed < 0 ? OptionalInt.empty() : OptionalInt.of(r.iterationsUsed),
                 r.hasDiagnostics ? Optional.of(Diagnostics.fromNative(r)) : Optional.empty(),

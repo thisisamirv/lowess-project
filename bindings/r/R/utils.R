@@ -161,6 +161,7 @@ param_types <- list(
     return_diagnostics = "logical",
     return_residuals = "logical",
     return_robustness_weights = "logical",
+    return_derivative = "logical",
     return_se = "logical",
     return_sorted = "logical",
     parallel = "logical",
@@ -217,6 +218,7 @@ lowess_params <- c(
     "return_diagnostics",
     "return_residuals",
     "return_robustness_weights",
+    "return_derivative",
     "zero_weight_fallback",
     "auto_converge",
     "cv_fractions",
@@ -244,6 +246,7 @@ online_params <- c(
     "update_mode",
     "auto_converge",
     "return_robustness_weights",
+    "return_derivative",
     "delta",
     "missing"
 )
@@ -262,6 +265,7 @@ streaming_params <- c(
     "return_diagnostics",
     "return_residuals",
     "return_robustness_weights",
+    "return_derivative",
     "merge_strategy",
     "parallel",
     "delta",

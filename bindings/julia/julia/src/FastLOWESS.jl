@@ -353,7 +353,9 @@ mutable struct PredictModel
 		finalizer(
 			x -> begin
 				if x.handle != C_NULL
-					@ccall current_library().jl_predict_handle_free(x.handle::Ptr{Cvoid})::Cvoid
+					@ccall current_library().jl_predict_handle_free(
+						x.handle::Ptr{Cvoid},
+					)::Cvoid
 				end
 			end,
 			obj,
@@ -388,7 +390,9 @@ function predict(
 	max_neighbor_distance::Union{Float64, Nothing} = nothing,
 )
 	if model.handle == C_NULL
-		error("fastlowess error: predict() called on an invalid PredictModel (was retain_model set?)")
+		error(
+			"fastlowess error: predict() called on an invalid PredictModel (was retain_model set?)",
+		)
 	end
 
 	c_result = @ccall current_library().jl_predict(
@@ -400,7 +404,9 @@ function predict(
 		(prediction_level === nothing ? NaN : prediction_level)::Cdouble,
 		Cint(return_derivative)::Cint,
 		extrapolation::Cstring,
-		(max_extrapolation_distance === nothing ? NaN : max_extrapolation_distance)::Cdouble,
+		(
+			max_extrapolation_distance === nothing ? NaN : max_extrapolation_distance
+		)::Cdouble,
 		(max_neighbor_distance === nothing ? NaN : max_neighbor_distance)::Cdouble,
 	)::CJlPredictResult
 
@@ -424,7 +430,9 @@ function predict(
 		ptr_to_vector(c_result.derivative, n),
 	)
 
-	@ccall current_library().jl_predict_free_result(Ref(c_result)::Ptr{CJlPredictResult})::Cvoid
+	@ccall current_library().jl_predict_free_result(
+		Ref(c_result)::Ptr{CJlPredictResult},
+	)::Cvoid
 
 	return result
 end
@@ -444,6 +452,8 @@ Result from LOWESS smoothing.
 - `prediction_upper::Union{Vector{Float64}, Nothing}`: Upper prediction bounds
 - `residuals::Union{Vector{Float64}, Nothing}`: Residuals
 - `robustness_weights::Union{Vector{Float64}, Nothing}`: Robustness weights
+- `derivative::Union{Vector{Float64}, Nothing}`: Per-point local fit derivative
+  (slope); only populated when `return_derivative=true` was passed to `Lowess`/`StreamingLowess`
 - `cv_scores::Union{Vector{Float64}, Nothing}`: Cross-validation scores for tested fractions
 - `fraction_used::Float64`: Fraction used for smoothing
 - `iterations_used::Union{Int, Nothing}`: Number of iterations performed (`nothing` if not applicable)
@@ -461,6 +471,7 @@ struct LowessResult
 	prediction_upper::Union{Vector{Float64}, Nothing}
 	residuals::Union{Vector{Float64}, Nothing}
 	robustness_weights::Union{Vector{Float64}, Nothing}
+	derivative::Union{Vector{Float64}, Nothing}
 	cv_scores::Union{Vector{Float64}, Nothing}
 	fraction_used::Float64
 	iterations_used::Union{Int, Nothing}
@@ -479,6 +490,8 @@ Result from a single `add_point` call.
 - `residual::Union{Float64, Nothing}`: Residual (raw input y minus this output's y) (if computed)
 - `robustness_weight::Union{Float64, Nothing}`: Robustness weight (if computed)
 - `iterations_used::Union{Int, Nothing}`: Number of robustness iterations
+- `derivative::Union{Float64, Nothing}`: Latest point's local fit derivative
+  (slope); only populated when `return_derivative=true` was passed to `OnlineLowess`
 """
 struct OnlineOutput
 	y::Float64
@@ -486,6 +499,7 @@ struct OnlineOutput
 	residual::Union{Float64, Nothing}
 	robustness_weight::Union{Float64, Nothing}
 	iterations_used::Union{Int, Nothing}
+	derivative::Union{Float64, Nothing}
 end
 
 # C FFI struct for per-point online output (must match Rust definition).
@@ -496,6 +510,7 @@ struct CJlOnlineOutput
 	residual::Cdouble
 	robustness_weight::Cdouble
 	iterations_used::Cint
+	derivative::Cdouble
 	error::Ptr{Cchar}
 end
 
@@ -511,6 +526,7 @@ struct CJlLowessResult
 	prediction_upper::Ptr{Cdouble}
 	residuals::Ptr{Cdouble}
 	robustness_weights::Ptr{Cdouble}
+	derivative::Ptr{Cdouble}
 	cv_scores::Ptr{Cdouble}
 	cv_scores_len::Culong
 	fraction_used::Cdouble
@@ -567,6 +583,7 @@ function convert_result(c_result::CJlLowessResult)
 	prediction_upper = ptr_to_vector(c_result.prediction_upper, n)
 	residuals = ptr_to_vector(c_result.residuals, n)
 	robustness_weights = ptr_to_vector(c_result.robustness_weights, n)
+	derivative = ptr_to_vector(c_result.derivative, n)
 	cv_scores = ptr_to_vector(c_result.cv_scores, Int(c_result.cv_scores_len))
 
 	# Extract diagnostics
@@ -600,6 +617,7 @@ function convert_result(c_result::CJlLowessResult)
 		prediction_upper,
 		residuals,
 		robustness_weights,
+		derivative,
 		cv_scores,
 		c_result.fraction_used,
 		c_result.iterations_used == -1 ? nothing : Int(c_result.iterations_used),
@@ -763,6 +781,7 @@ mutable struct Lowess
 		backend::String = "cpu",
 		missing::String = "error",
 		retain_model::Bool = false,
+		return_derivative::Bool = false,
 	)
 		cv_ptr = isempty(cv_fractions) ? Ptr{Cdouble}(C_NULL) : pointer(cv_fractions)
 		cv_len = length(cv_fractions)
@@ -793,6 +812,7 @@ mutable struct Lowess
 			backend::Cstring,
 			missing::Cstring,
 			Cint(retain_model)::Cint,
+			Cint(return_derivative)::Cint,
 		)::Ptr{Cvoid}
 
 		if handle == C_NULL
@@ -874,6 +894,8 @@ Stateful streaming LOWESS smoother.
 - `parallel::Bool = true`: Enable parallel execution
 - `missing::String = "error"`: Policy for non-finite (NaN/Inf) values in each chunk.
   See `Lowess` for a description of each option.
+- `return_derivative::Bool = false`: Whether to include the per-point local fit
+  derivative (slope) in the output.
 """
 mutable struct StreamingLowess
 	handle::Ptr{Cvoid}
@@ -896,6 +918,7 @@ mutable struct StreamingLowess
 		merge_strategy::String = "weighted_average",
 		parallel::Bool = true,
 		missing::String = "error",
+		return_derivative::Bool = false,
 	)
 		handle = @ccall current_library().jl_streaming_lowess_new(
 			fraction::Cdouble,
@@ -915,6 +938,7 @@ mutable struct StreamingLowess
 			merge_strategy::Cstring,
 			Cint(parallel)::Cint,
 			missing::Cstring,
+			Cint(return_derivative)::Cint,
 		)::Ptr{Cvoid}
 
 		if handle == C_NULL
@@ -988,6 +1012,8 @@ Stateful online LOWESS smoother.
 - `missing::String = "error"`: Policy for non-finite (NaN/Inf) `x`/`y` values passed
   to `add_point`. `"error"` (default) raises, `"drop"` silently ignores the point
   (returns `nothing` instead of adding it to the window).
+- `return_derivative::Bool = false`: Whether to include the latest point's local
+  fit derivative (slope) in the output.
 
 Confidence/prediction intervals, standard errors, cross-validation, `return_sorted`, `return_diagnostics`, `return_residuals`, and `parallel` are Batch-only (or Batch/Streaming-only) and have no equivalent here. Online always runs sequentially.
 """
@@ -1009,6 +1035,7 @@ mutable struct OnlineLowess
 		return_robustness_weights::Bool = false,
 		zero_weight_fallback::String = "use_local_mean",
 		missing::String = "error",
+		return_derivative::Bool = false,
 	)
 		handle = @ccall current_library().jl_online_lowess_new(
 			fraction::Cdouble,
@@ -1025,6 +1052,7 @@ mutable struct OnlineLowess
 			Cint(return_robustness_weights)::Cint,
 			zero_weight_fallback::Cstring,
 			missing::Cstring,
+			Cint(return_derivative)::Cint,
 		)::Ptr{Cvoid}
 
 		if handle == C_NULL
@@ -1074,6 +1102,7 @@ function add_point(o::OnlineLowess, x::Float64, y::Float64)
 		isnan(c_result.residual) ? nothing : c_result.residual,
 		isnan(c_result.robustness_weight) ? nothing : c_result.robustness_weight,
 		c_result.iterations_used == -1 ? nothing : Int(c_result.iterations_used),
+		isnan(c_result.derivative) ? nothing : c_result.derivative,
 	)
 end
 

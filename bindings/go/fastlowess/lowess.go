@@ -58,6 +58,8 @@ type Options struct {
 	ReturnResiduals bool
 	// ReturnRobustnessWeights requests per-point robustness weights in the result.
 	ReturnRobustnessWeights bool
+	// ReturnDerivative requests the per-point local fit derivative (slope) in the result.
+	ReturnDerivative bool
 	// ReturnSE requests hat-matrix statistics (effective degrees of freedom,
 	// leverage, standard errors). Batch model only.
 	ReturnSE bool
@@ -180,6 +182,7 @@ func NewLowess(opts Options) (*Lowess, error) {
 			backend,
 			missing,
 			boolToCInt(opts.RetainModel),
+			boolToCInt(opts.ReturnDerivative),
 		)
 		if ptr == nil {
 			errMsg = lastError()

@@ -79,6 +79,7 @@ pub struct JlOnlineOutput {
     pub residual: c_double,          // f64::NAN when not computed
     pub robustness_weight: c_double, // f64::NAN when not computed
     pub iterations_used: c_int,      // -1 when not computed
+    pub derivative: c_double,        // f64::NAN when not computed
     pub error: *mut c_char,          // NULL if no error
 }
 
@@ -91,6 +92,7 @@ impl Default for JlOnlineOutput {
             residual: f64::NAN,
             robustness_weight: f64::NAN,
             iterations_used: -1,
+            derivative: f64::NAN,
             error: ptr::null_mut(),
         }
     }
@@ -121,6 +123,8 @@ pub struct JlLowessResult {
     pub residuals: *mut c_double,
     /// Robustness weights (NULL if not computed)
     pub robustness_weights: *mut c_double,
+    /// Per-point local fit derivative (slope), NULL if not requested
+    pub derivative: *mut c_double,
 
     /// Cross-validation scores (NULL if not computed, length = cv_scores_len)
     pub cv_scores: *mut c_double,
@@ -162,6 +166,7 @@ impl Default for JlLowessResult {
             prediction_upper: null_mut(),
             residuals: null_mut(),
             robustness_weights: null_mut(),
+            derivative: null_mut(),
             cv_scores: null_mut(),
             cv_scores_len: 0,
             fraction_used: 0.0,
@@ -195,7 +200,9 @@ fn map_runtime_result<T, E: ToString>(result: Result<T, E>) -> Result<T, Box<JlL
 }
 
 // Convert LowessResult to JlLowessResult.
-fn lowess_result_to_jl(result: LowessResult<f64>) -> JlLowessResult {
+fn lowess_result_to_jl(mut result: LowessResult<f64>) -> JlLowessResult {
+    // Not part of FfiLowessResult (shared across bindings), so extracted separately.
+    let derivative = result.derivative.take();
     let p = shared_parse::extract_ffi_lowess_result(result);
     JlLowessResult {
         x: p.x,
@@ -208,6 +215,7 @@ fn lowess_result_to_jl(result: LowessResult<f64>) -> JlLowessResult {
         prediction_upper: p.prediction_upper,
         residuals: p.residuals,
         robustness_weights: p.robustness_weights,
+        derivative: shared_parse::opt_vec_to_raw_ptr(derivative),
         cv_scores: p.cv_scores,
         cv_scores_len: p.cv_scores_len as c_ulong,
         fraction_used: p.fraction_used,
@@ -289,6 +297,7 @@ pub unsafe extern "C" fn jl_lowess_new(
     backend: *const c_char,
     missing: *const c_char,
     retain_model: c_int,
+    return_derivative: c_int,
 ) -> *mut JlLowessConfig {
     clear_last_error_message();
     let result = catch_unwind(|| {
@@ -368,6 +377,12 @@ pub unsafe extern "C" fn jl_lowess_new(
         )) {
             Ok(b) => b,
             Err(e) => return null_with_last_error(&e.message),
+        };
+
+        let base_builder = if return_derivative != 0 {
+            base_builder.return_derivative()
+        } else {
+            base_builder
         };
 
         Box::into_raw(Box::new(JlLowessConfig { base_builder }))
@@ -459,6 +474,7 @@ pub unsafe extern "C" fn jl_lowess_free_result(result: *mut JlLowessResult) {
     shared_parse::free_raw_f64_buffer(res.prediction_upper, n);
     shared_parse::free_raw_f64_buffer(res.residuals, n);
     shared_parse::free_raw_f64_buffer(res.robustness_weights, n);
+    shared_parse::free_raw_f64_buffer(res.derivative, n);
     shared_parse::free_raw_f64_buffer(res.cv_scores, cv_n);
     shared_parse::free_raw_c_string(res.error);
 }
@@ -668,6 +684,7 @@ pub unsafe extern "C" fn jl_streaming_lowess_new(
     merge_strategy: *const c_char,
     parallel: c_int,
     missing: *const c_char,
+    return_derivative: c_int,
 ) -> *mut JlStreamingLowess {
     clear_last_error_message();
     let result = catch_unwind(|| {
@@ -744,6 +761,12 @@ pub unsafe extern "C" fn jl_streaming_lowess_new(
         )) {
             Ok(b) => b,
             Err(e) => return null_with_last_error(&e.message),
+        };
+
+        let builder = if return_derivative != 0 {
+            builder.return_derivative()
+        } else {
+            builder
         };
 
         let processor = match shared_parse::build_streaming(
@@ -868,6 +891,7 @@ pub unsafe extern "C" fn jl_online_lowess_new(
     return_robustness_weights: c_int,
     zero_weight_fallback: *const c_char,
     missing: *const c_char,
+    return_derivative: c_int,
 ) -> *mut JlOnlineLowess {
     clear_last_error_message();
     let result =
@@ -949,6 +973,12 @@ pub unsafe extern "C" fn jl_online_lowess_new(
                 Err(e) => return null_with_last_error(&e.message),
             };
 
+            let builder = if return_derivative != 0 {
+                builder.return_derivative()
+            } else {
+                builder
+            };
+
             let processor = match shared_parse::build_online(
                 builder,
                 Some(window_capacity_usize),
@@ -1011,6 +1041,7 @@ pub unsafe extern "C" fn jl_online_lowess_add_point(
                     residual,
                     robustness_weight,
                     iterations_used,
+                    derivative: o.derivative.unwrap_or(f64::NAN),
                     error: ptr::null_mut(),
                 }
             }

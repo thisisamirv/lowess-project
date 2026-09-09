@@ -49,6 +49,25 @@ class LowessTest {
     }
 
     @Test
+    void returnsDerivativeWhenRequested() {
+        double[] x = linspace(20);
+        double[] y = new double[20];
+        for (int i = 0; i < 20; i++) {
+            y[i] = x[i] * 2.0;
+        }
+
+        try (Lowess model = new Lowess(Options.builder().returnDerivative(true).build())) {
+            Result result = model.fit(x, y);
+            assertEquals(x.length, result.derivative().orElseThrow().length);
+        }
+
+        try (Lowess model = new Lowess(Options.builder().build())) {
+            Result result = model.fit(x, y);
+            assertTrue(result.derivative().isEmpty());
+        }
+    }
+
+    @Test
     void throwsOnEmptyInput() {
         try (Lowess model = new Lowess(Options.builder().build())) {
             RuntimeException ex = org.junit.jupiter.api.Assertions.assertThrows(

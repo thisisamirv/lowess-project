@@ -152,6 +152,22 @@ test_that("Lowess robustness weights work", {
     expect_lt(result$robustness_weights[25], median(result$robustness_weights))
 })
 
+test_that("Lowess return_derivative works", {
+    set.seed(42)
+    x <- seq(0, 10, length.out = 50)
+    y <- sin(x) + rnorm(50, sd = 0.1)
+
+    result <- fit(
+        Lowess(fraction = 0.5, return_derivative = TRUE),
+        as.double(x),
+        as.double(y)
+    )
+
+    expect_true("derivative" %in% names(result))
+    expect_length(result$derivative, length(y))
+    expect_type(result$derivative, "double")
+})
+
 test_that("Lowess return_sorted defaults to original input order", {
     x <- c(3.0, 1.0, 5.0, 2.0, 4.0)
     y <- c(6.0, 2.0, 10.0, 4.0, 8.0)

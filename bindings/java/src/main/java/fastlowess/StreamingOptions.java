@@ -173,6 +173,17 @@ public final class StreamingOptions {
         }
 
         /**
+         * @param returnDerivative whether to include the per-point local fit
+         * derivative (slope) in the result
+         * @return this builder, for chaining
+         * @see Options.Builder#returnDerivative(boolean)
+         */
+        public Builder returnDerivative(boolean returnDerivative) {
+            common.returnDerivative(returnDerivative);
+            return this;
+        }
+
+        /**
          * @param parallel whether to enable parallel execution
          * @return this builder, for chaining
          * @see Options.Builder#parallel(boolean)

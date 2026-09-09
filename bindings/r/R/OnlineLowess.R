@@ -51,6 +51,7 @@ OnlineLowess <- function(
     update_mode = "incremental",
     auto_converge = NULL,
     return_robustness_weights = FALSE,
+    return_derivative = FALSE,
     missing = "error"
 ) {
     reject_extra_positional_args(sys.call(), "min_points")

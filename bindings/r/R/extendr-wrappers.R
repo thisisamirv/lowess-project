@@ -11,7 +11,7 @@ RLowess$new <- function(
     robustness_method, scaling_method, boundary_policy,
     confidence_intervals, prediction_intervals,
     return_diagnostics, return_residuals,
-    return_robustness_weights, zero_weight_fallback,
+    return_robustness_weights, return_derivative, zero_weight_fallback,
     auto_converge, cv_fractions, cv_method, cv_k, parallel,
     cv_seed, return_se, return_sorted, backend, missing,
     retain_model
@@ -20,7 +20,8 @@ RLowess$new <- function(
         wrap__RLowess__new, fraction, iterations, delta, weight_function,
         robustness_method, scaling_method, boundary_policy,
         confidence_intervals, prediction_intervals, return_diagnostics,
-        return_residuals, return_robustness_weights, zero_weight_fallback,
+        return_residuals, return_robustness_weights, return_derivative,
+        zero_weight_fallback,
         auto_converge, cv_fractions, cv_method, cv_k, parallel,
         cv_seed, return_se, return_sorted, backend, missing,
         retain_model
@@ -52,6 +53,7 @@ RStreamingLowess$new <- function(
     weight_function, robustness_method,
     scaling_method, boundary_policy, zero_weight_fallback, auto_converge,
     return_diagnostics, return_residuals, return_robustness_weights,
+    return_derivative,
     merge_strategy, parallel,
     delta, missing
 ) {
@@ -60,6 +62,7 @@ RStreamingLowess$new <- function(
         weight_function, robustness_method, scaling_method,
         boundary_policy, zero_weight_fallback, auto_converge,
         return_diagnostics, return_residuals, return_robustness_weights,
+        return_derivative,
         merge_strategy, parallel,
         delta, missing
     )
@@ -89,14 +92,14 @@ ROnlineLowess$new <- function(
     fraction, window_capacity, min_points, iterations,
     weight_function, robustness_method,
     scaling_method, boundary_policy, zero_weight_fallback, update_mode,
-    auto_converge, return_robustness_weights,
+    auto_converge, return_robustness_weights, return_derivative,
     delta, missing
 ) {
     .Call(
         wrap__ROnlineLowess__new, fraction, window_capacity, min_points,
         iterations, weight_function, robustness_method, scaling_method,
         boundary_policy, zero_weight_fallback, update_mode, auto_converge,
-        return_robustness_weights, delta, missing
+        return_robustness_weights, return_derivative, delta, missing
     )
 }
 

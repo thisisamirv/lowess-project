@@ -118,6 +118,30 @@ test('return_sorted = true returns results sorted ascending by x', () => {
     assert.strictEqual(result.robustness_weights.length, x.length);
 });
 
+test('SmoothOptions: return_derivative returns per-point local fit slope', () => {
+    const x = new Float64Array([1, 2, 3, 4, 5]);
+    const y = new Float64Array([2, 4, 6, 8, 10]);
+
+    const model = new fastlowess.Lowess({
+        fraction: 0.7,
+        return_derivative: true,
+    });
+    const result = model.fit(x, y);
+
+    assert.ok(result.derivative !== null);
+    assert.strictEqual(result.derivative.length, x.length);
+});
+
+test('SmoothOptions: derivative is null when return_derivative not requested', () => {
+    const x = new Float64Array([1, 2, 3, 4, 5]);
+    const y = new Float64Array([2, 4, 6, 8, 10]);
+
+    const model = new fastlowess.Lowess({ fraction: 0.7 });
+    const result = model.fit(x, y);
+
+    assert.strictEqual(result.derivative, null);
+});
+
 test('async batch smoothing', async () => {
     const x = new Float64Array([1, 2, 3, 4, 5]);
     const y = new Float64Array([2, 4, 6, 8, 10]);

@@ -52,6 +52,10 @@ typedef struct fastlowess_GoLowessResult {
    */
   double *robustness_weights;
   /**
+   * Per-point local fit derivative (slope), NULL if not requested
+   */
+  double *derivative;
+  /**
    * Cross-validation scores (NULL if not computed, length = cv_scores_len)
    */
   double *cv_scores;
@@ -138,6 +142,10 @@ typedef struct fastlowess_GoOnlineOutput {
   double residual;
   double robustness_weight;
   int iterations_used;
+  /**
+   * Latest point's local fit derivative (slope), NaN if not requested
+   */
+  double derivative;
   char *error;
 } fastlowess_GoOnlineOutput;
 
@@ -177,7 +185,8 @@ struct fastlowess_GoLowess *go_lowess_new(double fraction,
                                           int return_sorted,
                                           const char *backend,
                                           const char *missing,
-                                          int retain_model);
+                                          int retain_model,
+                                          int return_derivative);
 
 /**
  * Set CV seed for reproducible K-fold splits.
@@ -267,7 +276,8 @@ struct fastlowess_GoStreamingLowess *go_streaming_new(double fraction,
                                                       int chunk_size,
                                                       int overlap,
                                                       const char *merge_strategy,
-                                                      const char *missing);
+                                                      const char *missing,
+                                                      int return_derivative);
 
 /**
  * Process a chunk of data.
@@ -316,7 +326,8 @@ struct fastlowess_GoOnlineLowess *go_online_new(double fraction,
                                                 int window_capacity,
                                                 int min_points,
                                                 const char *update_mode,
-                                                const char *missing);
+                                                const char *missing,
+                                                int return_derivative);
 
 /**
  * Add a single point to the model and return its smoothed value.

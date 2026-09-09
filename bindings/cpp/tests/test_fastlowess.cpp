@@ -251,6 +251,22 @@ void testLowessWithRobustnessWeights() {
   }
 }
 
+void testLowessWithDerivative() {
+  std::cout << "Running testLowessWithDerivative...\n";
+
+  const auto sample_x_values = toVector(k_sample_x_values);
+  const auto sample_y_values = toVector(k_sample_y_values);
+  fastlowess::LowessOptions options;
+  options.fraction = k_basic_fraction;
+  options.return_derivative = true;
+  fastlowess::Lowess lowess(options);
+  auto result = lowess.fit(sample_x_values, sample_y_values).value();
+
+  auto derivative = result.derivative();
+  assertTrue(derivative.size() == k_small_sample_size,
+             "Derivative count mismatch");
+}
+
 void testLowessReturnSorted() {
   std::cout << "Running testLowessReturnSorted...\n";
 
@@ -651,6 +667,7 @@ int main() {
     testLowessWithDiagnostics();
     testLowessWithResiduals();
     testLowessWithRobustnessWeights();
+    testLowessWithDerivative();
     testLowessReturnSorted();
     testLowessWithConfidenceIntervals();
     testLowessWithPredictionIntervals();

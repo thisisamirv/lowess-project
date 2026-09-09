@@ -75,6 +75,7 @@ impl RLowess {
         return_diagnostics: bool,
         return_residuals: bool,
         return_robustness_weights: bool,
+        return_derivative: bool,
         zero_weight_fallback: &str,
         auto_converge: Nullable<f64>,
         cv_fractions: Nullable<Vec<f64>>,
@@ -141,6 +142,11 @@ impl RLowess {
                 ..Default::default()
             },
         ))?;
+        let builder = if return_derivative {
+            builder.return_derivative()
+        } else {
+            builder
+        };
 
         Ok(Self {
             builder,
@@ -257,6 +263,7 @@ impl RStreamingLowess {
         return_diagnostics: bool,
         return_residuals: bool,
         return_robustness_weights: bool,
+        return_derivative: bool,
         merge_strategy: &str,
         parallel: bool,
         delta: Nullable<f64>,
@@ -297,6 +304,11 @@ impl RStreamingLowess {
                 ..Default::default()
             },
         ))?;
+        let builder = if return_derivative {
+            builder.return_derivative()
+        } else {
+            builder
+        };
 
         let model = map_runtime(shared_parse::build_streaming(
             builder,
@@ -343,6 +355,7 @@ impl ROnlineLowess {
         update_mode: &str,
         auto_converge: Nullable<f64>,
         return_robustness_weights: bool,
+        return_derivative: bool,
         delta: Nullable<f64>,
         missing: &str,
     ) -> Result<Self> {
@@ -378,6 +391,11 @@ impl ROnlineLowess {
                 ..Default::default()
             },
         ))?;
+        let builder = if return_derivative {
+            builder.return_derivative()
+        } else {
+            builder
+        };
 
         let model = map_runtime(shared_parse::build_online(
             builder,
@@ -403,6 +421,9 @@ impl ROnlineLowess {
                 }
                 if let Some(rw) = o.robustness_weight {
                     items.push(("robustness_weight", rw.into_robj()));
+                }
+                if let Some(d) = o.derivative {
+                    items.push(("derivative", d.into_robj()));
                 }
                 if let Some(iters) = o.iterations_used {
                     items.push(("iterations_used", (iters as i32).into_robj()));
@@ -444,6 +465,9 @@ fn lowess_result_to_list(result: LowessResult<f64>) -> Result<List> {
     }
     if let Some(rw) = result.robustness_weights {
         list_items.push(("robustness_weights", rw.into_robj()));
+    }
+    if let Some(d) = result.derivative {
+        list_items.push(("derivative", d.into_robj()));
     }
     if let Some(iters) = result.iterations_used {
         list_items.push(("iterations_used", (iters as i32).into_robj()));

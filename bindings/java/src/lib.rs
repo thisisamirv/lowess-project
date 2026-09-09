@@ -34,9 +34,9 @@ const ONLINE_OUTPUT_CLASS: &JNIStr = jni_str!("fastlowess/NativeOnlineOutput");
 const PREDICT_RESULT_CLASS: &JNIStr = jni_str!("fastlowess/NativePredictResult");
 // Keep in sync with NativeResult's constructor parameter list.
 const RESULT_CTOR_SIG: MethodSignature<'static, 'static> =
-    jni_sig!("([D[D[D[D[D[D[D[D[D[DDIDDDDDDDZJ)V");
+    jni_sig!("([D[D[D[D[D[D[D[D[D[D[DDIDDDDDDDZJ)V");
 // Keep in sync with NativeOnlineOutput's constructor parameter list.
-const ONLINE_OUTPUT_CTOR_SIG: MethodSignature<'static, 'static> = jni_sig!("(ZDDDDI)V");
+const ONLINE_OUTPUT_CTOR_SIG: MethodSignature<'static, 'static> = jni_sig!("(ZDDDDID)V");
 // Keep in sync with NativePredictResult's constructor parameter list.
 const PREDICT_RESULT_CTOR_SIG: MethodSignature<'static, 'static> = jni_sig!("([D[D[D[D[D[D[D)V");
 
@@ -158,6 +158,7 @@ fn result_to_jobject<'local>(
     let residuals = vec_to_jdoublearray(env, &result.residuals)?;
     let robustness_weights = vec_to_jdoublearray(env, &result.robustness_weights)?;
     let cv_scores = vec_to_jdoublearray(env, &result.cv_scores)?;
+    let derivative = vec_to_jdoublearray(env, &result.derivative)?;
     let fraction_used = result.fraction_used;
     let iterations_used = result.iterations_used.map(|i| i as jint).unwrap_or(-1);
 
@@ -176,6 +177,7 @@ fn result_to_jobject<'local>(
             JValue::Object(&residuals),
             JValue::Object(&robustness_weights),
             JValue::Object(&cv_scores),
+            JValue::Object(&derivative),
             JValue::Double(fraction_used),
             JValue::Int(iterations_used),
             JValue::Double(rmse),
@@ -238,6 +240,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_lowessNew<'local>(
     return_diagnostics: jboolean,
     return_residuals: jboolean,
     return_robustness_weights: jboolean,
+    return_derivative: jboolean,
     zero_weight_fallback: JString<'local>,
     auto_converge: jdouble,
     cv_fractions: JDoubleArray<'local>,
@@ -271,7 +274,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_lowessNew<'local>(
 
         let iterations = shared_parse::require_non_negative_usize("iterations", iterations)?;
 
-        let builder = shared_parse::apply_builder_options(
+        let mut builder = shared_parse::apply_builder_options(
             LowessBuilder::<f64>::new(),
             shared_parse::BuilderOptionSet {
                 fraction: Some(fraction),
@@ -297,6 +300,9 @@ pub extern "system" fn Java_fastlowess_NativeBridge_lowessNew<'local>(
                 ..Default::default()
             },
         )?;
+        if return_derivative {
+            builder = builder.return_derivative();
+        }
 
         Ok(Box::into_raw(Box::new(JavaLowess {
             builder: Some(builder),
@@ -482,6 +488,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_streamingNew<'local>(
     return_diagnostics: jboolean,
     return_residuals: jboolean,
     return_robustness_weights: jboolean,
+    return_derivative: jboolean,
     zero_weight_fallback: JString<'local>,
     auto_converge: jdouble,
     parallel: jboolean,
@@ -513,7 +520,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_streamingNew<'local>(
 
         let chunk_size = shared_parse::require_positive_usize("chunkSize", chunk_size)?;
 
-        let builder = shared_parse::apply_builder_options(
+        let mut builder = shared_parse::apply_builder_options(
             LowessBuilder::<f64>::new(),
             shared_parse::BuilderOptionSet {
                 fraction: Some(fraction),
@@ -535,6 +542,9 @@ pub extern "system" fn Java_fastlowess_NativeBridge_streamingNew<'local>(
                 ..Default::default()
             },
         )?;
+        if return_derivative {
+            builder = builder.return_derivative();
+        }
 
         let model = shared_parse::build_streaming(
             builder,
@@ -625,6 +635,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_onlineNew<'local>(
     scaling_method: JString<'local>,
     boundary_policy: JString<'local>,
     return_robustness_weights: jboolean,
+    return_derivative: jboolean,
     zero_weight_fallback: JString<'local>,
     auto_converge: jdouble,
     window_capacity: jint,
@@ -653,7 +664,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_onlineNew<'local>(
             shared_parse::require_positive_usize("windowCapacity", window_capacity)?;
         let min_points = shared_parse::require_positive_usize("minPoints", min_points)?;
 
-        let builder = shared_parse::apply_builder_options(
+        let mut builder = shared_parse::apply_builder_options(
             LowessBuilder::<f64>::new(),
             shared_parse::BuilderOptionSet {
                 fraction: Some(fraction),
@@ -675,6 +686,9 @@ pub extern "system" fn Java_fastlowess_NativeBridge_onlineNew<'local>(
                 ..Default::default()
             },
         )?;
+        if return_derivative {
+            builder = builder.return_derivative();
+        }
 
         let model =
             shared_parse::build_online(builder, Some(window_capacity), Some(min_points), Some(&um))
@@ -700,14 +714,22 @@ pub extern "system" fn Java_fastlowess_NativeBridge_onlineAddPoint<'local>(
         let online = unsafe { &mut *(handle as *mut JavaOnlineLowess) };
         let point = online.model.add_point(x, y).map_err(|e| e.to_string())?;
 
-        let (has_value, y_val, standard_error, residual, robustness_weight, iterations_used) =
-            match point {
-                None => (false, f64::NAN, f64::NAN, f64::NAN, f64::NAN, -1),
-                Some(o) => {
-                    let (se, res, rw, iters) = shared_parse::extract_online_output(&o);
-                    (true, o.y, se, res, rw, iters)
-                }
-            };
+        let (
+            has_value,
+            y_val,
+            standard_error,
+            residual,
+            robustness_weight,
+            iterations_used,
+            derivative,
+        ) = match point {
+            None => (false, f64::NAN, f64::NAN, f64::NAN, f64::NAN, -1, f64::NAN),
+            Some(o) => {
+                let (se, res, rw, iters) = shared_parse::extract_online_output(&o);
+                let deriv = o.derivative.unwrap_or(f64::NAN);
+                (true, o.y, se, res, rw, iters, deriv)
+            }
+        };
 
         let class = env.find_class(ONLINE_OUTPUT_CLASS)?;
         let obj = env.new_object(
@@ -720,6 +742,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_onlineAddPoint<'local>(
                 JValue::Double(residual),
                 JValue::Double(robustness_weight),
                 JValue::Int(iterations_used),
+                JValue::Double(derivative),
             ],
         )?;
         Ok(obj)

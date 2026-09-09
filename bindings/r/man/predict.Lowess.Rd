@@ -5,16 +5,16 @@
 \title{Predict from a fitted LOWESS model at out-of-sample points}
 \usage{
 \method{predict}{Lowess}(
-  object,
-  new_x,
-  return_se = FALSE,
-  confidence_level = NULL,
-  prediction_level = NULL,
-  return_derivative = FALSE,
-  extrapolation = "clamp",
-  max_extrapolation_distance = NULL,
-  max_neighbor_distance = NULL,
-  ...
+    object,
+    new_x,
+    return_se = FALSE,
+    confidence_level = NULL,
+    prediction_level = NULL,
+    return_derivative = FALSE,
+    extrapolation = "clamp",
+    max_extrapolation_distance = NULL,
+    max_neighbor_distance = NULL,
+    ...
 )
 }
 \arguments{

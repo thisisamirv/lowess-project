@@ -52,6 +52,8 @@ type StreamingOptions struct {
 	ReturnResiduals bool
 	// ReturnRobustnessWeights requests per-point robustness weights in the result.
 	ReturnRobustnessWeights bool
+	// ReturnDerivative requests the per-point local fit derivative (slope) in the result.
+	ReturnDerivative bool
 	// Parallel enables parallel processing. Default: true.
 	Parallel bool
 
@@ -134,6 +136,7 @@ func NewStreamingLowess(opts StreamingOptions) (*StreamingLowess, error) {
 			C.int(opts.Overlap),
 			ms,
 			missing,
+			boolToCInt(opts.ReturnDerivative),
 		)
 		if ptr == nil {
 			errMsg = lastError()

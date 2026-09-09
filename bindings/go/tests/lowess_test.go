@@ -157,6 +157,27 @@ func TestLowess(t *testing.T) {
 		}
 	})
 
+	t.Run("WithDerivative", func(t *testing.T) {
+		x, y := linearData(20, 2.0, 0.0)
+
+		opts := fastlowess.DefaultOptions()
+		opts.Fraction = 0.5
+		delta := 0.0
+		opts.Delta = &delta
+		opts.BoundaryPolicy = "noboundary"
+		opts.ReturnDerivative = true
+		res := fitOrFatal(t, opts, x, y)
+
+		if len(res.Derivative) != len(x) {
+			t.Fatalf("expected %d derivative values, got %d", len(x), len(res.Derivative))
+		}
+		for _, d := range res.Derivative {
+			if !approxEqual(d, 2.0, 1e-6) {
+				t.Fatalf("expected derivative close to slope 2.0, got %v", d)
+			}
+		}
+	})
+
 	t.Run("WithConfidenceIntervals", func(t *testing.T) {
 		x, y := linearData(20, 2.0, 0.0)
 

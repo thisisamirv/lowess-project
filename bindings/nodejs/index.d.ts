@@ -30,6 +30,8 @@ export declare class LowessResult {
   get prediction_upper(): Float64Array | null
   /** Get robustness weights (if requested). */
   get robustness_weights(): Float64Array | null
+  /** Get the per-point local fit derivative (slope) (if requested). */
+  get derivative(): Float64Array | null
   /** Get diagnostics (if requested). */
   get diagnostics(): Diagnostics | null
   /** Get cross-validation scores (if CV was performed). */
@@ -38,6 +40,12 @@ export declare class LowessResult {
   get fraction_used(): number
   /** Get the number of iterations performed. */
   get iterations_used(): number | null
+  /**
+   * Evaluate the fitted model at out-of-sample query points not in the training set.
+   *
+   * Requires `retain_model: true` to have been set on the builder before `fit()`.
+   */
+  predict(newX: Float64Array, options?: PredictOptions | undefined | null): PredictOutput
 }
 
 /** Online LOWESS smoother for real-time data. */
@@ -46,6 +54,24 @@ export declare class OnlineLowess {
   constructor(options?: OnlineSmoothOptions | undefined | null, onlineOpts?: OnlineOptions | undefined | null)
   /** Add a single point and get the smoothed value if enough points are available. */
   add_point(x: number, y: number): OnlineOutput | null
+}
+
+/** Result of `LowessResult.predict()`. */
+export declare class PredictOutput {
+  /** Predicted y values, one per query point. */
+  get y(): Float64Array
+  /** Standard errors (if requested). */
+  get standard_errors(): Float64Array | null
+  /** Lower confidence interval bounds (if requested). */
+  get confidence_lower(): Float64Array | null
+  /** Upper confidence interval bounds (if requested). */
+  get confidence_upper(): Float64Array | null
+  /** Lower prediction interval bounds (if requested). */
+  get prediction_lower(): Float64Array | null
+  /** Upper prediction interval bounds (if requested). */
+  get prediction_upper(): Float64Array | null
+  /** Local fit's derivative (slope) at each query point (if requested). */
+  get derivative(): Float64Array | null
 }
 
 /** Streaming LOWESS smoother for large datasets. */
@@ -101,6 +127,8 @@ export interface OnlineOutput {
   robustness_weight?: number
   /** Number of robustness iterations performed (if applicable). */
   iterations_used?: number
+  /** Local fit derivative (slope) for the latest point (if requested). */
+  derivative?: number
 }
 
 /**
@@ -136,8 +164,34 @@ export interface OnlineSmoothOptions {
   auto_converge?: number
   /** Return robustness weights in result. Default: false. */
   return_robustness_weights?: boolean
+  /** Return the per-point local fit derivative (slope) in result. Default: false. */
+  return_derivative?: boolean
   /** Policy for non-finite (NaN/Inf) `x`/`y` values passed to `addPoint` ("error", "drop"). Default: "error". */
   missing?: string
+}
+
+/** Options for `LowessResult.predict()`. */
+export interface PredictOptions {
+  /** Include standard errors in the output. Default: false. */
+  return_se?: boolean
+  /** Confidence interval coverage level (e.g. 0.95). Default: None. */
+  confidence_level?: number
+  /** Prediction interval coverage level (e.g. 0.95). Default: None. */
+  prediction_level?: number
+  /** Include the local fit's derivative (slope) in the output. Default: false. */
+  return_derivative?: boolean
+  /** Behavior for query points outside the training range ("clamp", "linear", "error"). Default: "clamp". */
+  extrapolation?: string
+  /**
+   * Under "linear" extrapolation, the maximum allowed distance beyond the training
+   * boundary before `predict()` errors instead of returning an unbounded value.
+   */
+  max_extrapolation_distance?: number
+  /**
+   * Maximum allowed distance to the farthest point in a query's local window
+   * before `predict()` errors, catching in-range-but-sparse query points.
+   */
+  max_neighbor_distance?: number
 }
 
 /** Configuration options for LOWESS smoothing. */
@@ -167,6 +221,8 @@ export interface SmoothOptions {
   return_residuals?: boolean
   /** Return robustness weights in result. Default: false. */
   return_robustness_weights?: boolean
+  /** Return the per-point local fit derivative (slope) in result. Default: false. */
+  return_derivative?: boolean
   /** Return diagnostics (RMSE, etc.). Default: false. */
   return_diagnostics?: boolean
   /** Calculate confidence intervals (e.g., 0.95). Default: None. */
@@ -197,6 +253,8 @@ export interface SmoothOptions {
   backend?: string
   /** Policy for non-finite (NaN/Inf) values in input data ("error", "drop"). Default: "error". */
   missing?: string
+  /** Retain the fitted model's training data, enabling `LowessResult.predict()`. Default: false. */
+  retain_model?: boolean
 }
 
 /** Configuration options for streaming processing. */
@@ -242,6 +300,8 @@ export interface StreamingSmoothOptions {
   return_residuals?: boolean
   /** Return robustness weights in result. Default: false. */
   return_robustness_weights?: boolean
+  /** Return the per-point local fit derivative (slope) in result. Default: false. */
+  return_derivative?: boolean
   /** Return diagnostics (RMSE, etc.). Default: false. */
   return_diagnostics?: boolean
   /** Enable parallel execution. Default: true. */

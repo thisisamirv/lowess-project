@@ -39,6 +39,8 @@ export interface SmoothOptions {
     return_residuals?: boolean;
     /** Include robustness weights in result. Default: false. */
     return_robustness_weights?: boolean;
+    /** Include the per-point local fit derivative (slope) in result. Default: false. */
+    return_derivative?: boolean;
     /** Compute diagnostics (RMSE, MAE, R2, etc.). Ignored by OnlineLowess (it has no diagnostics field). Default: false. */
     return_diagnostics?: boolean;
     /** Include standard errors in result. Batch (Lowess) only; ignored by StreamingLowess/OnlineLowess. Default: false. */
@@ -125,6 +127,8 @@ export interface StreamingSmoothOptions {
     return_residuals?: boolean;
     /** Include robustness weights in result. Default: false. */
     return_robustness_weights?: boolean;
+    /** Include the per-point local fit derivative (slope) in result. Default: false. */
+    return_derivative?: boolean;
     /** Compute diagnostics (RMSE, MAE, R2, etc.). Default: false. */
     return_diagnostics?: boolean;
     /** Enable parallel execution. Default: true. */
@@ -155,6 +159,8 @@ export interface OnlineSmoothOptions {
     auto_converge?: number;
     /** Include robustness weights in result. Default: false. */
     return_robustness_weights?: boolean;
+    /** Include the latest point's local fit derivative (slope) in result. Default: false. */
+    return_derivative?: boolean;
     /** Policy for non-finite (NaN/Inf) `x`/`y` values passed to `add_point` ("error", "drop"). Default: "error". */
     missing?: string;
 }
@@ -213,6 +219,7 @@ export class OnlineOutput {
     get residual(): number | undefined;
     get robustness_weight(): number | undefined;
     get iterations_used(): number | undefined;
+    get derivative(): number | undefined;
 }
 "#;
 
@@ -247,6 +254,7 @@ pub struct SmoothOptions {
     pub auto_converge: Option<f64>,
     pub return_residuals: Option<bool>,
     pub return_robustness_weights: Option<bool>,
+    pub return_derivative: Option<bool>,
     pub return_diagnostics: Option<bool>,
     pub return_se: Option<bool>,
     pub return_sorted: Option<bool>,
@@ -300,6 +308,7 @@ pub struct StreamingSmoothOptions {
     pub auto_converge: Option<f64>,
     pub return_residuals: Option<bool>,
     pub return_robustness_weights: Option<bool>,
+    pub return_derivative: Option<bool>,
     pub return_diagnostics: Option<bool>,
     pub parallel: Option<bool>,
     pub missing: Option<String>,
@@ -317,6 +326,7 @@ pub struct OnlineSmoothOptions {
     pub scaling_method: Option<String>,
     pub auto_converge: Option<f64>,
     pub return_robustness_weights: Option<bool>,
+    pub return_derivative: Option<bool>,
     pub missing: Option<String>,
 }
 
@@ -342,6 +352,7 @@ pub struct OnlineOutput {
     residual: Option<f64>,
     robustness_weight: Option<f64>,
     iterations_used: Option<usize>,
+    derivative: Option<f64>,
 }
 
 #[wasm_bindgen]
@@ -369,6 +380,11 @@ impl OnlineOutput {
     #[wasm_bindgen(getter, js_name = "iterations_used")]
     pub fn iterations_used(&self) -> Option<u32> {
         self.iterations_used.map(|i| i as u32)
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn derivative(&self) -> Option<f64> {
+        self.derivative
     }
 }
 
@@ -441,6 +457,14 @@ impl LowessResult {
     pub fn robustness_weights(&self) -> Option<Float64Array> {
         self.inner
             .robustness_weights
+            .as_ref()
+            .map(|v| unsafe { Float64Array::view(v) })
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn derivative(&self) -> Option<Float64Array> {
+        self.inner
+            .derivative
             .as_ref()
             .map(|v| unsafe { Float64Array::view(v) })
     }
@@ -651,6 +675,9 @@ fn batch_options_to_builder(opts: Option<SmoothOptions>) -> Result<LowessBuilder
                 ..Default::default()
             },
         ))?;
+        if opts.return_derivative.unwrap_or(false) {
+            builder = builder.return_derivative();
+        }
     }
     Ok(builder)
 }
@@ -681,6 +708,9 @@ fn streaming_options_to_builder(
                 ..Default::default()
             },
         ))?;
+        if opts.return_derivative.unwrap_or(false) {
+            builder = builder.return_derivative();
+        }
     }
     Ok(builder)
 }
@@ -708,6 +738,9 @@ fn online_options_to_builder(
                 ..Default::default()
             },
         ))?;
+        if opts.return_derivative.unwrap_or(false) {
+            builder = builder.return_derivative();
+        }
     }
     Ok(builder)
 }
@@ -841,6 +874,7 @@ impl OnlineLowess {
                 residual: o.residual,
                 robustness_weight: o.robustness_weight,
                 iterations_used: o.iterations_used,
+                derivative: o.derivative,
             }),
             None => JsValue::null(),
         })

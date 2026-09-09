@@ -114,6 +114,17 @@ using FastLOWESS
             @test all(result.robustness_weights .<= 1)
         end
 
+        @testset "with derivative" begin
+            x = [1.0, 2.0, 3.0, 4.0, 5.0]
+            y = [2.0, 4.1, 5.9, 8.2, 9.8]
+
+            model = Lowess(fraction = 0.7, return_derivative = true)
+            result = fit(model, x, y)
+
+            @test result.derivative !== nothing
+            @test length(result.derivative) == length(x)
+        end
+
         @testset "with confidence intervals" begin
             Random.seed!(42)
             x = collect(range(0, 10, length = 20))

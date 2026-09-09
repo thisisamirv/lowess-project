@@ -136,6 +136,15 @@ impl LowessResult {
             .map(|v| Float64Array::from(v.as_slice()))
     }
 
+    /// Get the per-point local fit derivative (slope) (if requested).
+    #[napi(getter, js_name = "derivative")]
+    pub fn get_derivative(&self) -> Option<Float64Array> {
+        self.inner
+            .derivative
+            .as_ref()
+            .map(|v| Float64Array::from(v.as_slice()))
+    }
+
     /// Get diagnostics (if requested).
     #[napi(getter)]
     pub fn get_diagnostics(&self) -> Option<Diagnostics> {
@@ -329,6 +338,9 @@ pub struct SmoothOptions {
     /// Return robustness weights in result. Default: false.
     #[napi(js_name = "return_robustness_weights")]
     pub return_robustness_weights: Option<bool>,
+    /// Return the per-point local fit derivative (slope) in result. Default: false.
+    #[napi(js_name = "return_derivative")]
+    pub return_derivative: Option<bool>,
     /// Return diagnostics (RMSE, etc.). Default: false.
     #[napi(js_name = "return_diagnostics")]
     pub return_diagnostics: Option<bool>,
@@ -408,6 +420,9 @@ pub struct StreamingSmoothOptions {
     /// Return robustness weights in result. Default: false.
     #[napi(js_name = "return_robustness_weights")]
     pub return_robustness_weights: Option<bool>,
+    /// Return the per-point local fit derivative (slope) in result. Default: false.
+    #[napi(js_name = "return_derivative")]
+    pub return_derivative: Option<bool>,
     /// Return diagnostics (RMSE, etc.). Default: false.
     #[napi(js_name = "return_diagnostics")]
     pub return_diagnostics: Option<bool>,
@@ -455,6 +470,9 @@ pub struct OnlineSmoothOptions {
     /// Return robustness weights in result. Default: false.
     #[napi(js_name = "return_robustness_weights")]
     pub return_robustness_weights: Option<bool>,
+    /// Return the per-point local fit derivative (slope) in result. Default: false.
+    #[napi(js_name = "return_derivative")]
+    pub return_derivative: Option<bool>,
     /// Policy for non-finite (NaN/Inf) `x`/`y` values passed to `addPoint` ("error", "drop"). Default: "error".
     #[napi(js_name = "missing")]
     pub missing: Option<String>,
@@ -503,6 +521,9 @@ fn batch_options_to_builder(opts: Option<&SmoothOptions>) -> Result<LowessBuilde
                 ..Default::default()
             },
         ))?;
+        if opts.return_derivative.unwrap_or(false) {
+            builder = builder.return_derivative();
+        }
     }
     Ok(builder)
 }
@@ -533,6 +554,9 @@ fn streaming_options_to_builder(
                 ..Default::default()
             },
         ))?;
+        if opts.return_derivative.unwrap_or(false) {
+            builder = builder.return_derivative();
+        }
     }
     Ok(builder)
 }
@@ -558,6 +582,9 @@ fn online_options_to_builder(opts: Option<&OnlineSmoothOptions>) -> Result<Lowes
                 ..Default::default()
             },
         ))?;
+        if opts.return_derivative.unwrap_or(false) {
+            builder = builder.return_derivative();
+        }
     }
     Ok(builder)
 }
@@ -734,6 +761,9 @@ pub struct OnlineOutput {
     /// Number of robustness iterations performed (if applicable).
     #[napi(js_name = "iterations_used")]
     pub iterations_used: Option<u32>,
+    /// Local fit derivative (slope) for the latest point (if requested).
+    #[napi(js_name = "derivative")]
+    pub derivative: Option<f64>,
 }
 
 /// Online LOWESS smoother for real-time data.
@@ -783,6 +813,7 @@ impl OnlineLowess {
             residual: o.residual,
             robustness_weight: o.robustness_weight,
             iterations_used: o.iterations_used.map(|i| i as u32),
+            derivative: o.derivative,
         }))
     }
 }
