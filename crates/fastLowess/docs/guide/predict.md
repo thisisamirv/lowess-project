@@ -69,7 +69,7 @@ Maximum allowed distance to the farthest training point in a query's local windo
 ### Basic Usage
 
 ```rust
-use lowess::prelude::*;
+use fastLowess::prelude::*;
 
 fn main() -> Result<(), LowessError> {
     let x = vec![1.0_f64, 2.0, 3.0, 4.0, 5.0];
@@ -93,7 +93,7 @@ Predicted y: [3.05, 9.05]
 ### Standard Errors and Derivative
 
 ```rust
-use lowess::prelude::*;
+use fastLowess::prelude::*;
 
 fn main() -> Result<(), LowessError> {
     let x = vec![1.0_f64, 2.0, 3.0, 4.0, 5.0];
@@ -122,7 +122,7 @@ Derivative: Some([2.2])
 ### Linear Extrapolation
 
 ```rust
-use lowess::prelude::*;
+use fastLowess::prelude::*;
 
 fn main() -> Result<(), LowessError> {
     let x = vec![1.0_f64, 2.0, 3.0, 4.0, 5.0];

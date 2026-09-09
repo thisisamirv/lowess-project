@@ -89,6 +89,7 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `cv_fractions(Vec<f64>)` | `Vec<f64>` | `None` | Fraction grid for CV |
 | `cv_seed(u64)` | `u64` | `None` | RNG seed for CV |
 | `custom_weights(Vec<T>)` | `Vec<T: Float>` | `None` | Per-observation weights |
+| `retain_model(bool)` | `bool` | `false` | Retain training data, enabling `Predict::call()` on the result |
 
 ## Options
 
@@ -257,6 +258,12 @@ The `fastLowess` crate provides an optional GPU-accelerated backend using `wgpu`
 
 **Note:** In other language bindings `custom_weights` is a `fit()` argument; in Rust it is a builder step because all configuration lives on the builder and `fit()` consumes `self`.
 
+### retain_model
+
+*See: [Predict](crate::doc::guide::predict)*
+
+Retains the fitted model's training data, enabling `Predict::call(&result, new_x)` to evaluate the fit at out-of-sample query points not in the training set. Off by default (no extra memory/clone cost unless requested).
+
 ## Result Structure
 
 ### `LowessResult<T>`
@@ -288,6 +295,14 @@ The `fastLowess` crate provides an optional GPU-accelerated backend using `wgpu`
 | `effective_df` | `Option<T>` | Effective degrees of freedom (`None` if not computed) |
 | `aic` | `Option<T>` | AIC (`None` if not computed) |
 | `aicc` | `Option<T>` | AICc (`None` if not computed) |
+
+## Predict
+
+*See: [Predict](crate::doc::guide::predict)*
+
+### `Predict::call(&result, new_x) -> PredictOutput<T>`
+
+Evaluates the fitted model at out-of-sample query points. Requires `.retain_model(true)` on the builder before `fit()`, otherwise returns `LowessError::PredictionUnavailable`.
 
 ## Example
 

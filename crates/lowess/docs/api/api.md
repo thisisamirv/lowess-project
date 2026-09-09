@@ -280,9 +280,11 @@ Retains the fitted model's training data, enabling `Predict::call(&result, new_x
 | `aic` | `Option<T>` | AIC (`None` if not computed) |
 | `aicc` | `Option<T>` | AICc (`None` if not computed) |
 
-### `Predict::call(&result, new_x) -> PredictOutput<T>`
+## Predict
 
 *See: [Predict](crate::doc::guide::predict)*
+
+### `Predict::call(&result, new_x) -> PredictOutput<T>`
 
 Evaluates the fitted model at out-of-sample query points. Requires `.retain_model(true)` on the builder before `fit()`, otherwise returns `LowessError::PredictionUnavailable`.
 

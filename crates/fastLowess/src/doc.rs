@@ -35,6 +35,10 @@ pub mod guide {
     pub mod cross_validation {
         #![doc = include_str!("../docs/guide/cross-validation.md")]
     }
+    /// Out-of-sample prediction at new query points.
+    pub mod predict {
+        #![doc = include_str!("../docs/guide/predict.md")]
+    }
 }
 
 /// Weight functions, outlier handling, and residual scaling.
