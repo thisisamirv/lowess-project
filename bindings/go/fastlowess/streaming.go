@@ -10,9 +10,8 @@ import (
 	"runtime"
 )
 
-// StreamingOptions configures a StreamingLowess model. Confidence/prediction
-// intervals, standard errors, cross-validation, and the GPU Backend are
-// Batch-only and have no effect here.
+// StreamingOptions configures a StreamingLowess model. Cross-validation and
+// the GPU Backend are Batch-only and have no effect here.
 type StreamingOptions struct {
 	// Fraction is the smoothing fraction, in (0, 1]. Default: 0.67.
 	Fraction float64
@@ -54,6 +53,14 @@ type StreamingOptions struct {
 	ReturnRobustnessWeights bool
 	// ReturnDerivative requests the per-point local fit derivative (slope) in the result.
 	ReturnDerivative bool
+	// ReturnSE requests standard errors in the result.
+	ReturnSE bool
+	// ConfidenceIntervals is the confidence level for confidence intervals,
+	// e.g. 0.95. Nil disables confidence intervals.
+	ConfidenceIntervals *float64
+	// PredictionIntervals is the confidence level for prediction intervals,
+	// e.g. 0.95. Nil disables prediction intervals.
+	PredictionIntervals *float64
 	// Parallel enables parallel processing. Default: true.
 	Parallel bool
 
@@ -117,6 +124,8 @@ func NewStreamingLowess(opts StreamingOptions) (*StreamingLowess, error) {
 
 	delta, deltaSet := optPtr(opts.Delta)
 	autoConverge, autoConvergeSet := optPtr(opts.AutoConverge)
+	ci, ciSet := optPtr(opts.ConfidenceIntervals)
+	pi, piSet := optPtr(opts.PredictionIntervals)
 
 	var ptr *C.fastlowess_GoStreamingLowess
 	var errMsg string
@@ -137,6 +146,9 @@ func NewStreamingLowess(opts StreamingOptions) (*StreamingLowess, error) {
 			ms,
 			missing,
 			boolToCInt(opts.ReturnDerivative),
+			boolToCInt(opts.ReturnSE),
+			optFloat(ci, ciSet),
+			optFloat(pi, piSet),
 		)
 		if ptr == nil {
 			errMsg = lastError()

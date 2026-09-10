@@ -5,25 +5,28 @@
 \title{LOWESS Streaming Smoothing}
 \usage{
 StreamingLowess(
-    fraction = 0.67,
-    chunk_size = 5000L,
-    ...,
-    overlap = NULL,
-    iterations = 3L,
-    delta = NULL,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    scaling_method = "mad",
-    boundary_policy = "extend",
-    zero_weight_fallback = "use_local_mean",
-    auto_converge = NULL,
-    return_diagnostics = FALSE,
-    return_residuals = FALSE,
-    return_robustness_weights = FALSE,
-    return_derivative = FALSE,
-    merge_strategy = "weighted_average",
-    parallel = TRUE,
-    missing = "error"
+  fraction = 0.67,
+  chunk_size = 5000L,
+  ...,
+  overlap = NULL,
+  iterations = 3L,
+  delta = NULL,
+  weight_function = "tricube",
+  robustness_method = "bisquare",
+  scaling_method = "mad",
+  boundary_policy = "extend",
+  zero_weight_fallback = "use_local_mean",
+  auto_converge = NULL,
+  return_diagnostics = FALSE,
+  return_residuals = FALSE,
+  return_robustness_weights = FALSE,
+  return_derivative = FALSE,
+  return_se = FALSE,
+  confidence_intervals = NULL,
+  prediction_intervals = NULL,
+  merge_strategy = "weighted_average",
+  parallel = TRUE,
+  missing = "error"
 )
 }
 \arguments{
@@ -87,6 +90,15 @@ robustness weights. Default: \code{FALSE}.}
 \item{return_derivative}{Logical; if \code{TRUE}, return per-point local
 fit derivative (slope) in the result. Default: \code{FALSE}.}
 
+\item{return_se}{Logical; include standard errors in the result. Default:
+\code{FALSE}.}
+
+\item{confidence_intervals}{Confidence level for confidence intervals
+(e.g. 0.95), or \code{NULL} (default) to disable.}
+
+\item{prediction_intervals}{Confidence level for prediction intervals
+(e.g. 0.95), or \code{NULL} (default) to disable.}
+
 \item{merge_strategy}{Strategy for reconciling overlapping chunk regions:
 \code{"weighted_average"} (default; alias: \code{"weighted"}),
 \code{"average"} (alias: \code{"mean"}),
@@ -115,11 +127,11 @@ in memory, see \code{\link{Lowess}}; for point-by-point real-time data,
 see \code{\link{OnlineLowess}}.
 
 Overlapping regions between chunks are reconciled via \code{merge_strategy}:\tabular{lll}{
-    Strategy \tab Alias \tab Behavior \cr
-    \code{"weighted_average"} (default) \tab \code{"weighted"} \tab Distance-weighted blend \cr
-    \code{"average"} \tab \code{"mean"} \tab Average overlapping values \cr
-    \code{"take_first"} \tab \code{"first"} \tab Keep left chunk values \cr
-    \code{"take_last"} \tab \code{"last"} \tab Keep right chunk values \cr
+   Strategy \tab Alias \tab Behavior \cr
+   \code{"weighted_average"} (default) \tab \code{"weighted"} \tab Distance-weighted blend \cr
+   \code{"average"} \tab \code{"mean"} \tab Average overlapping values \cr
+   \code{"take_first"} \tab \code{"first"} \tab Keep left chunk values \cr
+   \code{"take_last"} \tab \code{"last"} \tab Keep right chunk values \cr
 }
 }
 \examples{

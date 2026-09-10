@@ -744,28 +744,100 @@ fn test_online_full_mode_no_se_by_default() {
     }
 }
 
-/// `.return_se()` has no effect in the default `Incremental` update mode (only `Full`
-/// mode threads SE computation through), so `standard_error` should stay `None`.
+/// `.confidence_intervals(level)` should populate `confidence_lower`/`confidence_upper`
+/// (and `standard_error`, since it's needed to derive them) in `Full` update mode.
 #[test]
-fn test_online_incremental_mode_se_stays_none() {
+fn test_online_full_mode_confidence_intervals() {
     let mut processor = OnlineLowess::new()
+        .fraction(0.9)
+        .confidence_intervals(0.95)
+        .window_capacity(30)
+        .min_points(10)
+        .update_mode("full")
+        .build()
+        .expect("Builder should succeed");
+
+    let mut saw_bounds = false;
+    for i in 0..20 {
+        let x = i as f64;
+        let y = 2.0 * x + 1.0;
+        if let Some(output) = processor.add_point(x, y).expect("add_point ok")
+            && let (Some(lower), Some(upper)) = (output.confidence_lower, output.confidence_upper)
+        {
+            saw_bounds = true;
+            assert!(
+                lower <= output.y && output.y <= upper,
+                "y ({}) should fall within [{lower}, {upper}]",
+                output.y
+            );
+            assert!(
+                output.prediction_lower.is_none() && output.prediction_upper.is_none(),
+                "prediction bounds should stay None when only confidence_intervals() was set"
+            );
+        }
+    }
+    assert!(
+        saw_bounds,
+        "confidence_lower/upper should be populated at least once"
+    );
+}
+
+/// `.prediction_intervals(level)` should populate `prediction_lower`/`prediction_upper`
+/// in `Full` update mode.
+#[test]
+fn test_online_full_mode_prediction_intervals() {
+    let mut processor = OnlineLowess::new()
+        .fraction(0.9)
+        .prediction_intervals(0.95)
+        .window_capacity(30)
+        .min_points(10)
+        .update_mode("full")
+        .build()
+        .expect("Builder should succeed");
+
+    let mut saw_bounds = false;
+    for i in 0..20 {
+        let x = i as f64;
+        let y = 2.0 * x + 1.0;
+        if let Some(output) = processor.add_point(x, y).expect("add_point ok")
+            && let (Some(lower), Some(upper)) = (output.prediction_lower, output.prediction_upper)
+        {
+            saw_bounds = true;
+            assert!(
+                lower <= output.y && output.y <= upper,
+                "y ({}) should fall within [{lower}, {upper}]",
+                output.y
+            );
+            assert!(
+                output.confidence_lower.is_none() && output.confidence_upper.is_none(),
+                "confidence bounds should stay None when only prediction_intervals() was set"
+            );
+        }
+    }
+    assert!(
+        saw_bounds,
+        "prediction_lower/upper should be populated at least once"
+    );
+}
+
+/// `.return_se()` combined with anything other than `.update_mode("full")` (including the
+/// default `"incremental"` mode) now fails at `.build()` with
+/// `StandardErrorRequiresFullUpdateMode`, instead of silently building successfully and
+/// leaving `standard_error` as `None` on every `add_point()` call.
+#[test]
+fn test_online_incremental_mode_se_errors() {
+    let err = OnlineLowess::<f64>::new()
         .fraction(0.9)
         .return_se()
         .window_capacity(30)
         .min_points(10)
         .build()
-        .expect("Builder should succeed");
+        .err();
 
-    for i in 0..20 {
-        let x = i as f64;
-        let y = 2.0 * x + 1.0;
-        if let Some(output) = processor.add_point(x, y).expect("add_point ok") {
-            assert!(
-                output.standard_error.is_none(),
-                "standard_error should stay None in Incremental mode"
-            );
-        }
-    }
+    assert!(
+        matches!(err, Some(LowessError::StandardErrorRequiresFullUpdateMode)),
+        "expected StandardErrorRequiresFullUpdateMode, got {err:?}"
+    );
 }
 
 // ============================================================================

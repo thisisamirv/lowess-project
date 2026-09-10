@@ -179,7 +179,10 @@ final class NativeBridge {
             int chunkSize,
             int overlap,
             String mergeStrategy,
-            String missing);
+            String missing,
+            boolean returnSe,
+            double confidenceIntervals,
+            double predictionIntervals);
 
     static native NativeResult streamingProcess(long handle, double[] x, double[] y);
 
@@ -202,7 +205,10 @@ final class NativeBridge {
             int windowCapacity,
             int minPoints,
             String updateMode,
-            String missing);
+            String missing,
+            boolean returnSe,
+            double confidenceIntervals,
+            double predictionIntervals);
 
     static native NativeOnlineOutput onlineAddPoint(long handle, double x, double y);
 

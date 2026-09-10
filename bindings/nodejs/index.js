@@ -8,536 +8,536 @@ let nativeBinding = null
 const loadErrors = []
 
 const isMusl = () => {
-  let musl = false
-  if (process.platform === 'linux') {
-    musl = isMuslFromFilesystem()
-    if (musl === null) {
-      musl = isMuslFromReport()
+    let musl = false
+    if (process.platform === 'linux') {
+        musl = isMuslFromFilesystem()
+        if (musl === null) {
+            musl = isMuslFromReport()
+        }
+        if (musl === null) {
+            musl = isMuslFromChildProcess()
+        }
     }
-    if (musl === null) {
-      musl = isMuslFromChildProcess()
-    }
-  }
-  return musl
+    return musl
 }
 
 const isFileMusl = (f) => f.includes('libc.musl-') || f.includes('ld-musl-')
 
 const isMuslFromFilesystem = () => {
-  try {
-    return readFileSync('/usr/bin/ldd', 'utf-8').includes('musl')
-  } catch {
-    return null
-  }
+    try {
+        return readFileSync('/usr/bin/ldd', 'utf-8').includes('musl')
+    } catch {
+        return null
+    }
 }
 
 const isMuslFromReport = () => {
-  let report = null
-  if (process.report && typeof process.report.getReport === 'function') {
-    process.report.excludeNetwork = true
-    report = process.report.getReport()
-  }
-  if (!report) {
-    return null
-  }
-  if (report.header && report.header.glibcVersionRuntime) {
-    return false
-  }
-  if (Array.isArray(report.sharedObjects)) {
-    if (report.sharedObjects.some(isFileMusl)) {
-      return true
+    let report = null
+    if (process.report && typeof process.report.getReport === 'function') {
+        process.report.excludeNetwork = true
+        report = process.report.getReport()
     }
-  }
-  return false
+    if (!report) {
+        return null
+    }
+    if (report.header && report.header.glibcVersionRuntime) {
+        return false
+    }
+    if (Array.isArray(report.sharedObjects)) {
+        if (report.sharedObjects.some(isFileMusl)) {
+            return true
+        }
+    }
+    return false
 }
 
 const isMuslFromChildProcess = () => {
-  try {
-    return require('child_process').execSync('ldd --version', { encoding: 'utf8' }).includes('musl')
-  } catch (e) {
-    // If we reach this case, we don't know if the system is musl or not, so is better to just fallback to false
-    return false
-  }
+    try {
+        return require('child_process').execSync('ldd --version', { encoding: 'utf8' }).includes('musl')
+    } catch (e) {
+        // If we reach this case, we don't know if the system is musl or not, so is better to just fallback to false
+        return false
+    }
 }
 
 function requireNative() {
-  if (process.env.NAPI_RS_NATIVE_LIBRARY_PATH) {
-    try {
-      return require(process.env.NAPI_RS_NATIVE_LIBRARY_PATH);
-    } catch (err) {
-      loadErrors.push(err)
-    }
-  } else if (process.platform === 'android') {
-    if (process.arch === 'arm64') {
-      try {
-        return require('./fastlowess.android-arm64.node')
-      } catch (e) {
-        loadErrors.push(e)
-      }
-      try {
-        const binding = require('fastlowess-android-arm64')
-        const bindingPackageVersion = require('fastlowess-android-arm64/package.json').version
-        if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
-          throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
+    if (process.env.NAPI_RS_NATIVE_LIBRARY_PATH) {
+        try {
+            return require(process.env.NAPI_RS_NATIVE_LIBRARY_PATH);
+        } catch (err) {
+            loadErrors.push(err)
         }
-        return binding
-      } catch (e) {
-        loadErrors.push(e)
-      }
-    } else if (process.arch === 'arm') {
-      try {
-        return require('./fastlowess.android-arm-eabi.node')
-      } catch (e) {
-        loadErrors.push(e)
-      }
-      try {
-        const binding = require('fastlowess-android-arm-eabi')
-        const bindingPackageVersion = require('fastlowess-android-arm-eabi/package.json').version
-        if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
-          throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
+    } else if (process.platform === 'android') {
+        if (process.arch === 'arm64') {
+            try {
+                return require('./fastlowess.android-arm64.node')
+            } catch (e) {
+                loadErrors.push(e)
+            }
+            try {
+                const binding = require('fastlowess-android-arm64')
+                const bindingPackageVersion = require('fastlowess-android-arm64/package.json').version
+                if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
+                    throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
+                }
+                return binding
+            } catch (e) {
+                loadErrors.push(e)
+            }
+        } else if (process.arch === 'arm') {
+            try {
+                return require('./fastlowess.android-arm-eabi.node')
+            } catch (e) {
+                loadErrors.push(e)
+            }
+            try {
+                const binding = require('fastlowess-android-arm-eabi')
+                const bindingPackageVersion = require('fastlowess-android-arm-eabi/package.json').version
+                if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
+                    throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
+                }
+                return binding
+            } catch (e) {
+                loadErrors.push(e)
+            }
+        } else {
+            loadErrors.push(new Error(`Unsupported architecture on Android ${process.arch}`))
         }
-        return binding
-      } catch (e) {
-        loadErrors.push(e)
-      }
+    } else if (process.platform === 'win32') {
+        if (process.arch === 'x64') {
+            if ((process.config && process.config.variables && process.config.variables.shlib_suffix === 'dll.a') || (process.config && process.config.variables && process.config.variables.node_target_type === 'shared_library')) {
+                try {
+                    return require('./fastlowess.win32-x64-gnu.node')
+                } catch (e) {
+                    loadErrors.push(e)
+                }
+                try {
+                    const binding = require('fastlowess-win32-x64-gnu')
+                    const bindingPackageVersion = require('fastlowess-win32-x64-gnu/package.json').version
+                    if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
+                        throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
+                    }
+                    return binding
+                } catch (e) {
+                    loadErrors.push(e)
+                }
+            } else {
+                try {
+                    return require('./fastlowess.win32-x64-msvc.node')
+                } catch (e) {
+                    loadErrors.push(e)
+                }
+                try {
+                    const binding = require('fastlowess-win32-x64-msvc')
+                    const bindingPackageVersion = require('fastlowess-win32-x64-msvc/package.json').version
+                    if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
+                        throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
+                    }
+                    return binding
+                } catch (e) {
+                    loadErrors.push(e)
+                }
+            }
+        } else if (process.arch === 'ia32') {
+            try {
+                return require('./fastlowess.win32-ia32-msvc.node')
+            } catch (e) {
+                loadErrors.push(e)
+            }
+            try {
+                const binding = require('fastlowess-win32-ia32-msvc')
+                const bindingPackageVersion = require('fastlowess-win32-ia32-msvc/package.json').version
+                if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
+                    throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
+                }
+                return binding
+            } catch (e) {
+                loadErrors.push(e)
+            }
+        } else if (process.arch === 'arm64') {
+            try {
+                return require('./fastlowess.win32-arm64-msvc.node')
+            } catch (e) {
+                loadErrors.push(e)
+            }
+            try {
+                const binding = require('fastlowess-win32-arm64-msvc')
+                const bindingPackageVersion = require('fastlowess-win32-arm64-msvc/package.json').version
+                if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
+                    throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
+                }
+                return binding
+            } catch (e) {
+                loadErrors.push(e)
+            }
+        } else {
+            loadErrors.push(new Error(`Unsupported architecture on Windows: ${process.arch}`))
+        }
+    } else if (process.platform === 'darwin') {
+        try {
+            return require('./fastlowess.darwin-universal.node')
+        } catch (e) {
+            loadErrors.push(e)
+        }
+        try {
+            const binding = require('fastlowess-darwin-universal')
+            const bindingPackageVersion = require('fastlowess-darwin-universal/package.json').version
+            if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
+                throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
+            }
+            return binding
+        } catch (e) {
+            loadErrors.push(e)
+        }
+        if (process.arch === 'x64') {
+            try {
+                return require('./fastlowess.darwin-x64.node')
+            } catch (e) {
+                loadErrors.push(e)
+            }
+            try {
+                const binding = require('fastlowess-darwin-x64')
+                const bindingPackageVersion = require('fastlowess-darwin-x64/package.json').version
+                if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
+                    throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
+                }
+                return binding
+            } catch (e) {
+                loadErrors.push(e)
+            }
+        } else if (process.arch === 'arm64') {
+            try {
+                return require('./fastlowess.darwin-arm64.node')
+            } catch (e) {
+                loadErrors.push(e)
+            }
+            try {
+                const binding = require('fastlowess-darwin-arm64')
+                const bindingPackageVersion = require('fastlowess-darwin-arm64/package.json').version
+                if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
+                    throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
+                }
+                return binding
+            } catch (e) {
+                loadErrors.push(e)
+            }
+        } else {
+            loadErrors.push(new Error(`Unsupported architecture on macOS: ${process.arch}`))
+        }
+    } else if (process.platform === 'freebsd') {
+        if (process.arch === 'x64') {
+            try {
+                return require('./fastlowess.freebsd-x64.node')
+            } catch (e) {
+                loadErrors.push(e)
+            }
+            try {
+                const binding = require('fastlowess-freebsd-x64')
+                const bindingPackageVersion = require('fastlowess-freebsd-x64/package.json').version
+                if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
+                    throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
+                }
+                return binding
+            } catch (e) {
+                loadErrors.push(e)
+            }
+        } else if (process.arch === 'arm64') {
+            try {
+                return require('./fastlowess.freebsd-arm64.node')
+            } catch (e) {
+                loadErrors.push(e)
+            }
+            try {
+                const binding = require('fastlowess-freebsd-arm64')
+                const bindingPackageVersion = require('fastlowess-freebsd-arm64/package.json').version
+                if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
+                    throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
+                }
+                return binding
+            } catch (e) {
+                loadErrors.push(e)
+            }
+        } else {
+            loadErrors.push(new Error(`Unsupported architecture on FreeBSD: ${process.arch}`))
+        }
+    } else if (process.platform === 'linux') {
+        if (process.arch === 'x64') {
+            if (isMusl()) {
+                try {
+                    return require('./fastlowess.linux-x64-musl.node')
+                } catch (e) {
+                    loadErrors.push(e)
+                }
+                try {
+                    const binding = require('fastlowess-linux-x64-musl')
+                    const bindingPackageVersion = require('fastlowess-linux-x64-musl/package.json').version
+                    if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
+                        throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
+                    }
+                    return binding
+                } catch (e) {
+                    loadErrors.push(e)
+                }
+            } else {
+                try {
+                    return require('./fastlowess.linux-x64-gnu.node')
+                } catch (e) {
+                    loadErrors.push(e)
+                }
+                try {
+                    const binding = require('fastlowess-linux-x64-gnu')
+                    const bindingPackageVersion = require('fastlowess-linux-x64-gnu/package.json').version
+                    if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
+                        throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
+                    }
+                    return binding
+                } catch (e) {
+                    loadErrors.push(e)
+                }
+            }
+        } else if (process.arch === 'arm64') {
+            if (isMusl()) {
+                try {
+                    return require('./fastlowess.linux-arm64-musl.node')
+                } catch (e) {
+                    loadErrors.push(e)
+                }
+                try {
+                    const binding = require('fastlowess-linux-arm64-musl')
+                    const bindingPackageVersion = require('fastlowess-linux-arm64-musl/package.json').version
+                    if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
+                        throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
+                    }
+                    return binding
+                } catch (e) {
+                    loadErrors.push(e)
+                }
+            } else {
+                try {
+                    return require('./fastlowess.linux-arm64-gnu.node')
+                } catch (e) {
+                    loadErrors.push(e)
+                }
+                try {
+                    const binding = require('fastlowess-linux-arm64-gnu')
+                    const bindingPackageVersion = require('fastlowess-linux-arm64-gnu/package.json').version
+                    if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
+                        throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
+                    }
+                    return binding
+                } catch (e) {
+                    loadErrors.push(e)
+                }
+            }
+        } else if (process.arch === 'arm') {
+            if (isMusl()) {
+                try {
+                    return require('./fastlowess.linux-arm-musleabihf.node')
+                } catch (e) {
+                    loadErrors.push(e)
+                }
+                try {
+                    const binding = require('fastlowess-linux-arm-musleabihf')
+                    const bindingPackageVersion = require('fastlowess-linux-arm-musleabihf/package.json').version
+                    if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
+                        throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
+                    }
+                    return binding
+                } catch (e) {
+                    loadErrors.push(e)
+                }
+            } else {
+                try {
+                    return require('./fastlowess.linux-arm-gnueabihf.node')
+                } catch (e) {
+                    loadErrors.push(e)
+                }
+                try {
+                    const binding = require('fastlowess-linux-arm-gnueabihf')
+                    const bindingPackageVersion = require('fastlowess-linux-arm-gnueabihf/package.json').version
+                    if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
+                        throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
+                    }
+                    return binding
+                } catch (e) {
+                    loadErrors.push(e)
+                }
+            }
+        } else if (process.arch === 'loong64') {
+            if (isMusl()) {
+                try {
+                    return require('./fastlowess.linux-loong64-musl.node')
+                } catch (e) {
+                    loadErrors.push(e)
+                }
+                try {
+                    const binding = require('fastlowess-linux-loong64-musl')
+                    const bindingPackageVersion = require('fastlowess-linux-loong64-musl/package.json').version
+                    if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
+                        throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
+                    }
+                    return binding
+                } catch (e) {
+                    loadErrors.push(e)
+                }
+            } else {
+                try {
+                    return require('./fastlowess.linux-loong64-gnu.node')
+                } catch (e) {
+                    loadErrors.push(e)
+                }
+                try {
+                    const binding = require('fastlowess-linux-loong64-gnu')
+                    const bindingPackageVersion = require('fastlowess-linux-loong64-gnu/package.json').version
+                    if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
+                        throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
+                    }
+                    return binding
+                } catch (e) {
+                    loadErrors.push(e)
+                }
+            }
+        } else if (process.arch === 'riscv64') {
+            if (isMusl()) {
+                try {
+                    return require('./fastlowess.linux-riscv64-musl.node')
+                } catch (e) {
+                    loadErrors.push(e)
+                }
+                try {
+                    const binding = require('fastlowess-linux-riscv64-musl')
+                    const bindingPackageVersion = require('fastlowess-linux-riscv64-musl/package.json').version
+                    if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
+                        throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
+                    }
+                    return binding
+                } catch (e) {
+                    loadErrors.push(e)
+                }
+            } else {
+                try {
+                    return require('./fastlowess.linux-riscv64-gnu.node')
+                } catch (e) {
+                    loadErrors.push(e)
+                }
+                try {
+                    const binding = require('fastlowess-linux-riscv64-gnu')
+                    const bindingPackageVersion = require('fastlowess-linux-riscv64-gnu/package.json').version
+                    if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
+                        throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
+                    }
+                    return binding
+                } catch (e) {
+                    loadErrors.push(e)
+                }
+            }
+        } else if (process.arch === 'ppc64') {
+            try {
+                return require('./fastlowess.linux-ppc64-gnu.node')
+            } catch (e) {
+                loadErrors.push(e)
+            }
+            try {
+                const binding = require('fastlowess-linux-ppc64-gnu')
+                const bindingPackageVersion = require('fastlowess-linux-ppc64-gnu/package.json').version
+                if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
+                    throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
+                }
+                return binding
+            } catch (e) {
+                loadErrors.push(e)
+            }
+        } else if (process.arch === 's390x') {
+            try {
+                return require('./fastlowess.linux-s390x-gnu.node')
+            } catch (e) {
+                loadErrors.push(e)
+            }
+            try {
+                const binding = require('fastlowess-linux-s390x-gnu')
+                const bindingPackageVersion = require('fastlowess-linux-s390x-gnu/package.json').version
+                if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
+                    throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
+                }
+                return binding
+            } catch (e) {
+                loadErrors.push(e)
+            }
+        } else {
+            loadErrors.push(new Error(`Unsupported architecture on Linux: ${process.arch}`))
+        }
+    } else if (process.platform === 'openharmony') {
+        if (process.arch === 'arm64') {
+            try {
+                return require('./fastlowess.openharmony-arm64.node')
+            } catch (e) {
+                loadErrors.push(e)
+            }
+            try {
+                const binding = require('fastlowess-openharmony-arm64')
+                const bindingPackageVersion = require('fastlowess-openharmony-arm64/package.json').version
+                if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
+                    throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
+                }
+                return binding
+            } catch (e) {
+                loadErrors.push(e)
+            }
+        } else if (process.arch === 'x64') {
+            try {
+                return require('./fastlowess.openharmony-x64.node')
+            } catch (e) {
+                loadErrors.push(e)
+            }
+            try {
+                const binding = require('fastlowess-openharmony-x64')
+                const bindingPackageVersion = require('fastlowess-openharmony-x64/package.json').version
+                if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
+                    throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
+                }
+                return binding
+            } catch (e) {
+                loadErrors.push(e)
+            }
+        } else if (process.arch === 'arm') {
+            try {
+                return require('./fastlowess.openharmony-arm.node')
+            } catch (e) {
+                loadErrors.push(e)
+            }
+            try {
+                const binding = require('fastlowess-openharmony-arm')
+                const bindingPackageVersion = require('fastlowess-openharmony-arm/package.json').version
+                if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
+                    throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
+                }
+                return binding
+            } catch (e) {
+                loadErrors.push(e)
+            }
+        } else {
+            loadErrors.push(new Error(`Unsupported architecture on OpenHarmony: ${process.arch}`))
+        }
     } else {
-      loadErrors.push(new Error(`Unsupported architecture on Android ${process.arch}`))
+        loadErrors.push(new Error(`Unsupported OS: ${process.platform}, architecture: ${process.arch}`))
     }
-  } else if (process.platform === 'win32') {
-    if (process.arch === 'x64') {
-      if ((process.config && process.config.variables && process.config.variables.shlib_suffix === 'dll.a') || (process.config && process.config.variables && process.config.variables.node_target_type === 'shared_library')) {
-        try {
-        return require('./fastlowess.win32-x64-gnu.node')
-      } catch (e) {
-        loadErrors.push(e)
-      }
-      try {
-        const binding = require('fastlowess-win32-x64-gnu')
-        const bindingPackageVersion = require('fastlowess-win32-x64-gnu/package.json').version
-        if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
-          throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
-        }
-        return binding
-      } catch (e) {
-        loadErrors.push(e)
-      }
-      } else {
-        try {
-        return require('./fastlowess.win32-x64-msvc.node')
-      } catch (e) {
-        loadErrors.push(e)
-      }
-      try {
-        const binding = require('fastlowess-win32-x64-msvc')
-        const bindingPackageVersion = require('fastlowess-win32-x64-msvc/package.json').version
-        if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
-          throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
-        }
-        return binding
-      } catch (e) {
-        loadErrors.push(e)
-      }
-      }
-    } else if (process.arch === 'ia32') {
-      try {
-        return require('./fastlowess.win32-ia32-msvc.node')
-      } catch (e) {
-        loadErrors.push(e)
-      }
-      try {
-        const binding = require('fastlowess-win32-ia32-msvc')
-        const bindingPackageVersion = require('fastlowess-win32-ia32-msvc/package.json').version
-        if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
-          throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
-        }
-        return binding
-      } catch (e) {
-        loadErrors.push(e)
-      }
-    } else if (process.arch === 'arm64') {
-      try {
-        return require('./fastlowess.win32-arm64-msvc.node')
-      } catch (e) {
-        loadErrors.push(e)
-      }
-      try {
-        const binding = require('fastlowess-win32-arm64-msvc')
-        const bindingPackageVersion = require('fastlowess-win32-arm64-msvc/package.json').version
-        if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
-          throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
-        }
-        return binding
-      } catch (e) {
-        loadErrors.push(e)
-      }
-    } else {
-      loadErrors.push(new Error(`Unsupported architecture on Windows: ${process.arch}`))
-    }
-  } else if (process.platform === 'darwin') {
-    try {
-      return require('./fastlowess.darwin-universal.node')
-    } catch (e) {
-      loadErrors.push(e)
-    }
-    try {
-      const binding = require('fastlowess-darwin-universal')
-      const bindingPackageVersion = require('fastlowess-darwin-universal/package.json').version
-      if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
-        throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
-      }
-      return binding
-    } catch (e) {
-      loadErrors.push(e)
-    }
-    if (process.arch === 'x64') {
-      try {
-        return require('./fastlowess.darwin-x64.node')
-      } catch (e) {
-        loadErrors.push(e)
-      }
-      try {
-        const binding = require('fastlowess-darwin-x64')
-        const bindingPackageVersion = require('fastlowess-darwin-x64/package.json').version
-        if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
-          throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
-        }
-        return binding
-      } catch (e) {
-        loadErrors.push(e)
-      }
-    } else if (process.arch === 'arm64') {
-      try {
-        return require('./fastlowess.darwin-arm64.node')
-      } catch (e) {
-        loadErrors.push(e)
-      }
-      try {
-        const binding = require('fastlowess-darwin-arm64')
-        const bindingPackageVersion = require('fastlowess-darwin-arm64/package.json').version
-        if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
-          throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
-        }
-        return binding
-      } catch (e) {
-        loadErrors.push(e)
-      }
-    } else {
-      loadErrors.push(new Error(`Unsupported architecture on macOS: ${process.arch}`))
-    }
-  } else if (process.platform === 'freebsd') {
-    if (process.arch === 'x64') {
-      try {
-        return require('./fastlowess.freebsd-x64.node')
-      } catch (e) {
-        loadErrors.push(e)
-      }
-      try {
-        const binding = require('fastlowess-freebsd-x64')
-        const bindingPackageVersion = require('fastlowess-freebsd-x64/package.json').version
-        if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
-          throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
-        }
-        return binding
-      } catch (e) {
-        loadErrors.push(e)
-      }
-    } else if (process.arch === 'arm64') {
-      try {
-        return require('./fastlowess.freebsd-arm64.node')
-      } catch (e) {
-        loadErrors.push(e)
-      }
-      try {
-        const binding = require('fastlowess-freebsd-arm64')
-        const bindingPackageVersion = require('fastlowess-freebsd-arm64/package.json').version
-        if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
-          throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
-        }
-        return binding
-      } catch (e) {
-        loadErrors.push(e)
-      }
-    } else {
-      loadErrors.push(new Error(`Unsupported architecture on FreeBSD: ${process.arch}`))
-    }
-  } else if (process.platform === 'linux') {
-    if (process.arch === 'x64') {
-      if (isMusl()) {
-        try {
-          return require('./fastlowess.linux-x64-musl.node')
-        } catch (e) {
-          loadErrors.push(e)
-        }
-        try {
-          const binding = require('fastlowess-linux-x64-musl')
-          const bindingPackageVersion = require('fastlowess-linux-x64-musl/package.json').version
-          if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
-            throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
-          }
-          return binding
-        } catch (e) {
-          loadErrors.push(e)
-        }
-      } else {
-        try {
-          return require('./fastlowess.linux-x64-gnu.node')
-        } catch (e) {
-          loadErrors.push(e)
-        }
-        try {
-          const binding = require('fastlowess-linux-x64-gnu')
-          const bindingPackageVersion = require('fastlowess-linux-x64-gnu/package.json').version
-          if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
-            throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
-          }
-          return binding
-        } catch (e) {
-          loadErrors.push(e)
-        }
-      }
-    } else if (process.arch === 'arm64') {
-      if (isMusl()) {
-        try {
-          return require('./fastlowess.linux-arm64-musl.node')
-        } catch (e) {
-          loadErrors.push(e)
-        }
-        try {
-          const binding = require('fastlowess-linux-arm64-musl')
-          const bindingPackageVersion = require('fastlowess-linux-arm64-musl/package.json').version
-          if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
-            throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
-          }
-          return binding
-        } catch (e) {
-          loadErrors.push(e)
-        }
-      } else {
-        try {
-          return require('./fastlowess.linux-arm64-gnu.node')
-        } catch (e) {
-          loadErrors.push(e)
-        }
-        try {
-          const binding = require('fastlowess-linux-arm64-gnu')
-          const bindingPackageVersion = require('fastlowess-linux-arm64-gnu/package.json').version
-          if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
-            throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
-          }
-          return binding
-        } catch (e) {
-          loadErrors.push(e)
-        }
-      }
-    } else if (process.arch === 'arm') {
-      if (isMusl()) {
-        try {
-          return require('./fastlowess.linux-arm-musleabihf.node')
-        } catch (e) {
-          loadErrors.push(e)
-        }
-        try {
-          const binding = require('fastlowess-linux-arm-musleabihf')
-          const bindingPackageVersion = require('fastlowess-linux-arm-musleabihf/package.json').version
-          if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
-            throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
-          }
-          return binding
-        } catch (e) {
-          loadErrors.push(e)
-        }
-      } else {
-        try {
-          return require('./fastlowess.linux-arm-gnueabihf.node')
-        } catch (e) {
-          loadErrors.push(e)
-        }
-        try {
-          const binding = require('fastlowess-linux-arm-gnueabihf')
-          const bindingPackageVersion = require('fastlowess-linux-arm-gnueabihf/package.json').version
-          if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
-            throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
-          }
-          return binding
-        } catch (e) {
-          loadErrors.push(e)
-        }
-      }
-    } else if (process.arch === 'loong64') {
-      if (isMusl()) {
-        try {
-          return require('./fastlowess.linux-loong64-musl.node')
-        } catch (e) {
-          loadErrors.push(e)
-        }
-        try {
-          const binding = require('fastlowess-linux-loong64-musl')
-          const bindingPackageVersion = require('fastlowess-linux-loong64-musl/package.json').version
-          if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
-            throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
-          }
-          return binding
-        } catch (e) {
-          loadErrors.push(e)
-        }
-      } else {
-        try {
-          return require('./fastlowess.linux-loong64-gnu.node')
-        } catch (e) {
-          loadErrors.push(e)
-        }
-        try {
-          const binding = require('fastlowess-linux-loong64-gnu')
-          const bindingPackageVersion = require('fastlowess-linux-loong64-gnu/package.json').version
-          if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
-            throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
-          }
-          return binding
-        } catch (e) {
-          loadErrors.push(e)
-        }
-      }
-    } else if (process.arch === 'riscv64') {
-      if (isMusl()) {
-        try {
-          return require('./fastlowess.linux-riscv64-musl.node')
-        } catch (e) {
-          loadErrors.push(e)
-        }
-        try {
-          const binding = require('fastlowess-linux-riscv64-musl')
-          const bindingPackageVersion = require('fastlowess-linux-riscv64-musl/package.json').version
-          if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
-            throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
-          }
-          return binding
-        } catch (e) {
-          loadErrors.push(e)
-        }
-      } else {
-        try {
-          return require('./fastlowess.linux-riscv64-gnu.node')
-        } catch (e) {
-          loadErrors.push(e)
-        }
-        try {
-          const binding = require('fastlowess-linux-riscv64-gnu')
-          const bindingPackageVersion = require('fastlowess-linux-riscv64-gnu/package.json').version
-          if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
-            throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
-          }
-          return binding
-        } catch (e) {
-          loadErrors.push(e)
-        }
-      }
-    } else if (process.arch === 'ppc64') {
-      try {
-        return require('./fastlowess.linux-ppc64-gnu.node')
-      } catch (e) {
-        loadErrors.push(e)
-      }
-      try {
-        const binding = require('fastlowess-linux-ppc64-gnu')
-        const bindingPackageVersion = require('fastlowess-linux-ppc64-gnu/package.json').version
-        if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
-          throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
-        }
-        return binding
-      } catch (e) {
-        loadErrors.push(e)
-      }
-    } else if (process.arch === 's390x') {
-      try {
-        return require('./fastlowess.linux-s390x-gnu.node')
-      } catch (e) {
-        loadErrors.push(e)
-      }
-      try {
-        const binding = require('fastlowess-linux-s390x-gnu')
-        const bindingPackageVersion = require('fastlowess-linux-s390x-gnu/package.json').version
-        if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
-          throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
-        }
-        return binding
-      } catch (e) {
-        loadErrors.push(e)
-      }
-    } else {
-      loadErrors.push(new Error(`Unsupported architecture on Linux: ${process.arch}`))
-    }
-  } else if (process.platform === 'openharmony') {
-    if (process.arch === 'arm64') {
-      try {
-        return require('./fastlowess.openharmony-arm64.node')
-      } catch (e) {
-        loadErrors.push(e)
-      }
-      try {
-        const binding = require('fastlowess-openharmony-arm64')
-        const bindingPackageVersion = require('fastlowess-openharmony-arm64/package.json').version
-        if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
-          throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
-        }
-        return binding
-      } catch (e) {
-        loadErrors.push(e)
-      }
-    } else if (process.arch === 'x64') {
-      try {
-        return require('./fastlowess.openharmony-x64.node')
-      } catch (e) {
-        loadErrors.push(e)
-      }
-      try {
-        const binding = require('fastlowess-openharmony-x64')
-        const bindingPackageVersion = require('fastlowess-openharmony-x64/package.json').version
-        if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
-          throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
-        }
-        return binding
-      } catch (e) {
-        loadErrors.push(e)
-      }
-    } else if (process.arch === 'arm') {
-      try {
-        return require('./fastlowess.openharmony-arm.node')
-      } catch (e) {
-        loadErrors.push(e)
-      }
-      try {
-        const binding = require('fastlowess-openharmony-arm')
-        const bindingPackageVersion = require('fastlowess-openharmony-arm/package.json').version
-        if (bindingPackageVersion !== '4.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
-          throw new Error(`Native binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
-        }
-        return binding
-      } catch (e) {
-        loadErrors.push(e)
-      }
-    } else {
-      loadErrors.push(new Error(`Unsupported architecture on OpenHarmony: ${process.arch}`))
-    }
-  } else {
-    loadErrors.push(new Error(`Unsupported OS: ${process.platform}, architecture: ${process.arch}`))
-  }
 }
 
 function createLoadErrorChain(errors) {
-  return errors.reduce((previous, current) => {
-    let message
-    try {
-      message =
-        current && typeof current.message === 'string'
-          ? current.message
-          : String(current)
-    } catch {
-      message = 'Unknown error'
-    }
-    const error = new Error(message)
-    error.cause = previous
-    return error
-  }, null)
+    return errors.reduce((previous, current) => {
+        let message
+        try {
+            message =
+                current && typeof current.message === 'string'
+                    ? current.message
+                    : String(current)
+        } catch {
+            message = 'Unknown error'
+        }
+        const error = new Error(message)
+        error.cause = previous
+        return error
+    }, null)
 }
 
 // NAPI_RS_FORCE_WASI is a tri-state flag:
@@ -553,150 +553,150 @@ function createLoadErrorChain(errors) {
 const __napiWasiFlavors = ["wasm32-wasi"]
 const __napiWasiFlavor = process.env.NAPI_RS_WASI_FLAVOR
 const __napiWasiFlavorRequested =
-  typeof __napiWasiFlavor === 'string' && __napiWasiFlavor.length > 0
+    typeof __napiWasiFlavor === 'string' && __napiWasiFlavor.length > 0
 if (
-  __napiWasiFlavorRequested &&
-  __napiWasiFlavors.indexOf(__napiWasiFlavor) === -1
+    __napiWasiFlavorRequested &&
+    __napiWasiFlavors.indexOf(__napiWasiFlavor) === -1
 ) {
-  throw new Error(
-    'Unsupported WASI flavor "' +
-      __napiWasiFlavor +
-      '". Available flavors: ' +
-      __napiWasiFlavors.join(', '),
-  )
+    throw new Error(
+        'Unsupported WASI flavor "' +
+        __napiWasiFlavor +
+        '". Available flavors: ' +
+        __napiWasiFlavors.join(', '),
+    )
 }
 const forceWasiError = process.env.NAPI_RS_FORCE_WASI === 'error'
 const forceWasi =
-  process.env.NAPI_RS_FORCE_WASI === 'true' ||
-  forceWasiError ||
-  __napiWasiFlavorRequested
+    process.env.NAPI_RS_FORCE_WASI === 'true' ||
+    forceWasiError ||
+    __napiWasiFlavorRequested
 
 if (!forceWasi) {
-  nativeBinding = requireNative()
+    nativeBinding = requireNative()
 }
 
 if (!nativeBinding || forceWasi) {
-  let wasiBinding = null
-  let wasiBindingLoaded = false
-  const wasiBindingErrors = []
-  const __napiWasiResolveCandidate = (specifier, isPackage, localArtifacts) => {
-    try {
-      require.resolve(specifier)
-    } catch (resolveError) {
-      if (!resolveError || resolveError.code !== 'MODULE_NOT_FOUND') {
-        throw resolveError
-      }
-      if (isPackage) {
+    let wasiBinding = null
+    let wasiBindingLoaded = false
+    const wasiBindingErrors = []
+    const __napiWasiResolveCandidate = (specifier, isPackage, localArtifacts) => {
         try {
-          require.resolve(specifier + '/package.json')
-        } catch (packageError) {
-          if (packageError && packageError.code === 'MODULE_NOT_FOUND') {
-            return resolveError
-          }
-          // An exports restriction proves the package exists even when its
-          // package.json is not public. Preserve the root resolution failure.
-          throw resolveError
-        }
-        // The package exists but its main/export target is broken.
-        throw resolveError
-      }
-      return resolveError
-    }
-    if (localArtifacts) {
-      let artifactError = null
-      for (let i = 0; i < localArtifacts.length; i++) {
-        try {
-          require.resolve(localArtifacts[i])
-          return null
+            require.resolve(specifier)
         } catch (resolveError) {
-          if (!resolveError || resolveError.code !== 'MODULE_NOT_FOUND') {
-            throw resolveError
-          }
-          artifactError = resolveError
+            if (!resolveError || resolveError.code !== 'MODULE_NOT_FOUND') {
+                throw resolveError
+            }
+            if (isPackage) {
+                try {
+                    require.resolve(specifier + '/package.json')
+                } catch (packageError) {
+                    if (packageError && packageError.code === 'MODULE_NOT_FOUND') {
+                        return resolveError
+                    }
+                    // An exports restriction proves the package exists even when its
+                    // package.json is not public. Preserve the root resolution failure.
+                    throw resolveError
+                }
+                // The package exists but its main/export target is broken.
+                throw resolveError
+            }
+            return resolveError
         }
-      }
-      return artifactError
-    }
-    return null
-  }
-  if (!wasiBindingLoaded && (!__napiWasiFlavorRequested || __napiWasiFlavor === "wasm32-wasi")) {
-    let candidateError = null
-    let candidateFailed = false
-    try {
-      candidateError = __napiWasiResolveCandidate('./fastlowess.wasi.cjs', false, ["./fastlowess.wasm32-wasi.debug.wasm","./fastlowess.wasm32-wasi.wasm"])
-      candidateFailed = candidateError !== null
-      if (!candidateFailed) {
-        wasiBinding = require('./fastlowess.wasi.cjs')
-        nativeBinding = wasiBinding
-        wasiBindingLoaded = true
-      }
-    } catch (err) {
-      candidateError = err
-      candidateFailed = true
-    }
-    if (candidateFailed) {
-      wasiBindingErrors.push(candidateError)
-      loadErrors.push(candidateError)
-    }
-  }
-  if (!wasiBindingLoaded && (!__napiWasiFlavorRequested || __napiWasiFlavor === "wasm32-wasi")) {
-    let candidateError = null
-    let candidateFailed = false
-    try {
-      candidateError = __napiWasiResolveCandidate('fastlowess-wasm32-wasi', true, undefined)
-      candidateFailed = candidateError !== null
-      if (!candidateFailed) {
-        if (process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
-          const bindingPackageVersion = require('fastlowess-wasm32-wasi/package.json').version
-          if (bindingPackageVersion !== '4.0.0') {
-            throw new Error(`WASI binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
-          }
+        if (localArtifacts) {
+            let artifactError = null
+            for (let i = 0; i < localArtifacts.length; i++) {
+                try {
+                    require.resolve(localArtifacts[i])
+                    return null
+                } catch (resolveError) {
+                    if (!resolveError || resolveError.code !== 'MODULE_NOT_FOUND') {
+                        throw resolveError
+                    }
+                    artifactError = resolveError
+                }
+            }
+            return artifactError
         }
-        wasiBinding = require('fastlowess-wasm32-wasi')
-        nativeBinding = wasiBinding
-        wasiBindingLoaded = true
-      }
-    } catch (err) {
-      candidateError = err
-      candidateFailed = true
+        return null
     }
-    if (candidateFailed) {
-      wasiBindingErrors.push(candidateError)
-      loadErrors.push(candidateError)
+    if (!wasiBindingLoaded && (!__napiWasiFlavorRequested || __napiWasiFlavor === "wasm32-wasi")) {
+        let candidateError = null
+        let candidateFailed = false
+        try {
+            candidateError = __napiWasiResolveCandidate('./fastlowess.wasi.cjs', false, ["./fastlowess.wasm32-wasi.debug.wasm", "./fastlowess.wasm32-wasi.wasm"])
+            candidateFailed = candidateError !== null
+            if (!candidateFailed) {
+                wasiBinding = require('./fastlowess.wasi.cjs')
+                nativeBinding = wasiBinding
+                wasiBindingLoaded = true
+            }
+        } catch (err) {
+            candidateError = err
+            candidateFailed = true
+        }
+        if (candidateFailed) {
+            wasiBindingErrors.push(candidateError)
+            loadErrors.push(candidateError)
+        }
     }
-  }
-  if (
-    !wasiBindingLoaded &&
-    forceWasi &&
-    !forceWasiError &&
-    !__napiWasiFlavorRequested
-  ) {
-    nativeBinding = requireNative()
-  }
-  if ((forceWasiError || __napiWasiFlavorRequested) && !wasiBindingLoaded) {
-    const error = new Error(
-      __napiWasiFlavorRequested
-        ? 'WASI binding for flavor "' + __napiWasiFlavor + '" not found'
-        : 'WASI binding not found and NAPI_RS_FORCE_WASI is set to error',
-    )
-    error.cause = createLoadErrorChain(wasiBindingErrors)
-    throw error
-  }
+    if (!wasiBindingLoaded && (!__napiWasiFlavorRequested || __napiWasiFlavor === "wasm32-wasi")) {
+        let candidateError = null
+        let candidateFailed = false
+        try {
+            candidateError = __napiWasiResolveCandidate('fastlowess-wasm32-wasi', true, undefined)
+            candidateFailed = candidateError !== null
+            if (!candidateFailed) {
+                if (process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
+                    const bindingPackageVersion = require('fastlowess-wasm32-wasi/package.json').version
+                    if (bindingPackageVersion !== '4.0.0') {
+                        throw new Error(`WASI binding package version mismatch, expected 4.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
+                    }
+                }
+                wasiBinding = require('fastlowess-wasm32-wasi')
+                nativeBinding = wasiBinding
+                wasiBindingLoaded = true
+            }
+        } catch (err) {
+            candidateError = err
+            candidateFailed = true
+        }
+        if (candidateFailed) {
+            wasiBindingErrors.push(candidateError)
+            loadErrors.push(candidateError)
+        }
+    }
+    if (
+        !wasiBindingLoaded &&
+        forceWasi &&
+        !forceWasiError &&
+        !__napiWasiFlavorRequested
+    ) {
+        nativeBinding = requireNative()
+    }
+    if ((forceWasiError || __napiWasiFlavorRequested) && !wasiBindingLoaded) {
+        const error = new Error(
+            __napiWasiFlavorRequested
+                ? 'WASI binding for flavor "' + __napiWasiFlavor + '" not found'
+                : 'WASI binding not found and NAPI_RS_FORCE_WASI is set to error',
+        )
+        error.cause = createLoadErrorChain(wasiBindingErrors)
+        throw error
+    }
 }
 
 if (!nativeBinding) {
-  if (loadErrors.length > 0) {
-    const error = new Error(
-      `Cannot find native binding. ` +
-        `npm has a bug related to optional dependencies (https://github.com/npm/cli/issues/4828). ` +
-        'Please try `npm i` again after removing both package-lock.json and node_modules directory.',
-    )
-    // assign instead of the `new Error(message, { cause })` options form,
-    // which Node < 16.9 silently ignores
-    error.cause = createLoadErrorChain(loadErrors)
-    throw error
-  }
-  throw new Error(`Failed to load native binding`)
+    if (loadErrors.length > 0) {
+        const error = new Error(
+            `Cannot find native binding. ` +
+            `npm has a bug related to optional dependencies (https://github.com/npm/cli/issues/4828). ` +
+            'Please try `npm i` again after removing both package-lock.json and node_modules directory.',
+        )
+        // assign instead of the `new Error(message, { cause })` options form,
+        // which Node < 16.9 silently ignores
+        error.cause = createLoadErrorChain(loadErrors)
+        throw error
+    }
+    throw new Error(`Failed to load native binding`)
 }
 
 module.exports = nativeBinding

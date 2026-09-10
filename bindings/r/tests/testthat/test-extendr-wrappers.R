@@ -60,6 +60,9 @@ test_that("RStreamingLowess generated accessors dispatch chunked methods", {
         return_residuals = FALSE,
         return_robustness_weights = FALSE,
         return_derivative = FALSE,
+        return_se = FALSE,
+        confidence_intervals = null_value,
+        prediction_intervals = null_value,
         merge_strategy = "weighted_average",
         parallel = FALSE,
         delta = null_value,
@@ -92,6 +95,9 @@ test_that("ROnlineLowess generated accessors dispatch add_point", {
         auto_converge = null_value,
         return_robustness_weights = FALSE,
         return_derivative = FALSE,
+        return_se = FALSE,
+        confidence_intervals = null_value,
+        prediction_intervals = null_value,
         delta = null_value,
         missing = "error"
     )
@@ -109,6 +115,9 @@ test_that("ROnlineLowess generated accessors dispatch add_point", {
         auto_converge = null_value,
         return_robustness_weights = FALSE,
         return_derivative = FALSE,
+        return_se = FALSE,
+        confidence_intervals = null_value,
+        prediction_intervals = null_value,
         delta = null_value,
         missing = "error"
     )

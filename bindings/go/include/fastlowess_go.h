@@ -146,6 +146,22 @@ typedef struct fastlowess_GoOnlineOutput {
    * Latest point's local fit derivative (slope), NaN if not requested
    */
   double derivative;
+  /**
+   * Lower confidence interval bound for the latest point (NaN if not computed)
+   */
+  double confidence_lower;
+  /**
+   * Upper confidence interval bound for the latest point (NaN if not computed)
+   */
+  double confidence_upper;
+  /**
+   * Lower prediction interval bound for the latest point (NaN if not computed)
+   */
+  double prediction_lower;
+  /**
+   * Upper prediction interval bound for the latest point (NaN if not computed)
+   */
+  double prediction_upper;
   char *error;
 } fastlowess_GoOnlineOutput;
 
@@ -277,7 +293,10 @@ struct fastlowess_GoStreamingLowess *go_streaming_new(double fraction,
                                                       int overlap,
                                                       const char *merge_strategy,
                                                       const char *missing,
-                                                      int return_derivative);
+                                                      int return_derivative,
+                                                      int return_se,
+                                                      double confidence_intervals,
+                                                      double prediction_intervals);
 
 /**
  * Process a chunk of data.
@@ -327,7 +346,10 @@ struct fastlowess_GoOnlineLowess *go_online_new(double fraction,
                                                 int min_points,
                                                 const char *update_mode,
                                                 const char *missing,
-                                                int return_derivative);
+                                                int return_derivative,
+                                                int return_se,
+                                                double confidence_intervals,
+                                                double prediction_intervals);
 
 /**
  * Add a single point to the model and return its smoothed value.

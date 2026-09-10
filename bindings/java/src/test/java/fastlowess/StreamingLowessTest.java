@@ -49,4 +49,33 @@ class StreamingLowessTest {
             assertEquals(x.length - 1, chunkResult.x().length + finalResult.x().length);
         }
     }
+
+    @Test
+    void returnSeAndIntervals() {
+        double[] x = new double[200];
+        double[] y = new double[200];
+        for (int i = 0; i < 200; i++) {
+            x[i] = i;
+            y[i] = Math.sin(i / 10.0);
+        }
+
+        try (StreamingLowess model = new StreamingLowess(
+                StreamingOptions.builder()
+                        .fraction(0.2)
+                        .chunkSize(50)
+                        .returnSe(true)
+                        .confidenceIntervals(0.95)
+                        .predictionIntervals(0.95)
+                        .build())) {
+            Result chunkResult = model.processChunk(x, y);
+            Result finalResult = model.finish();
+
+            assertTrue(chunkResult.standardErrors().isPresent());
+            assertTrue(chunkResult.confidenceLower().isPresent());
+            assertTrue(chunkResult.confidenceUpper().isPresent());
+            assertTrue(chunkResult.predictionLower().isPresent());
+            assertTrue(chunkResult.predictionUpper().isPresent());
+            assertTrue(finalResult.standardErrors().isPresent());
+        }
+    }
 }

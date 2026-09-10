@@ -8,7 +8,7 @@ Confidence and prediction intervals for uncertainty quantification.
 
 ![Confidence and Prediction Intervals](intervals_comparison.svg)
 
-> **Adapter support:** Confidence and prediction intervals are available in **Batch** mode only. Streaming and Online modes do not support intervals.
+> **Adapter support:** Confidence and prediction intervals are available in **Batch** mode, **Streaming** mode (computed per chunk and merged across overlap boundaries via `merge_strategy`, like `y_vector()`/`derivative()`), and **Online** mode when `update_mode = "full"` is set (construction fails if combined with the default `"incremental"` mode).
 
 | Type | Represents | Width | Use |
 | --- | --- | --- | --- |
@@ -200,10 +200,10 @@ Point 2: SE = 0.0283
 
 ## Availability
 
-> **Batch Mode Only:** Confidence and prediction intervals are only available in **Batch** mode. Streaming and Online modes do not support intervals.
+> **Supported In All Three Adapters:** Confidence and prediction intervals are available in **Batch**, **Streaming**, and **Online** mode (`update_mode = "full"` only).
 
 | Feature | Batch | Streaming | Online |
 | --- | --- | --- | --- |
-| Confidence intervals | ✓ | ✗ | ✗ |
-| Prediction intervals | ✓ | ✗ | ✗ |
-| Standard errors | ✓ | ✗ | ✗ |
+| Confidence intervals | ✓ | ✓ | ✓ (`update_mode = "full"` only) |
+| Prediction intervals | ✓ | ✓ | ✓ (`update_mode = "full"` only) |
+| Standard errors | ✓ | ✓ | ✓ (`update_mode = "full"` only) |

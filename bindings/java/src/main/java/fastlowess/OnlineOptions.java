@@ -161,6 +161,45 @@ public final class OnlineOptions {
         }
 
         /**
+         * Include standard errors in the result. Requires
+         * {@code updateMode("full")}.
+         *
+         * @param returnSe whether to include standard errors in the result
+         * @return this builder, for chaining
+         * @see Options.Builder#returnSe(boolean)
+         */
+        public Builder returnSe(boolean returnSe) {
+            common.returnSe(returnSe);
+            return this;
+        }
+
+        /**
+         * Confidence level for confidence intervals (e.g. 0.95). Requires
+         * {@code updateMode("full")}.
+         *
+         * @param confidenceIntervals the confidence level
+         * @return this builder, for chaining
+         * @see Options.Builder#confidenceIntervals(double)
+         */
+        public Builder confidenceIntervals(double confidenceIntervals) {
+            common.confidenceIntervals(confidenceIntervals);
+            return this;
+        }
+
+        /**
+         * Confidence level for prediction intervals (e.g. 0.95). Requires
+         * {@code updateMode("full")}.
+         *
+         * @param predictionIntervals the prediction level
+         * @return this builder, for chaining
+         * @see Options.Builder#predictionIntervals(double)
+         */
+        public Builder predictionIntervals(double predictionIntervals) {
+            common.predictionIntervals(predictionIntervals);
+            return this;
+        }
+
+        /**
          * Maximum number of points retained in the sliding window (default
          * {@code 1000}).
          *

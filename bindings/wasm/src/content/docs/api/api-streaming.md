@@ -97,8 +97,11 @@ Fraction used: 0.5
 | `overlap` | `number` | `chunk_size / 10` | Overlap between chunks |
 | `merge_strategy` | `string` | `"weighted_average"` | Strategy for blending overlap regions |
 | `return_derivative` | `boolean` | `false` | Include the per-point local fit derivative (slope) in result |
+| `return_se` | `boolean` | `false` | Populate `standard_errors` in the result |
+| `confidence_intervals` | `number` | `null` | Confidence level (e.g., 0.95); populates `confidence_lower`/`confidence_upper` |
+| `prediction_intervals` | `number` | `null` | Prediction level (e.g., 0.95); populates `prediction_lower`/`prediction_upper` |
 
-Confidence/prediction intervals, standard errors, cross-validation, GPU `backend`, `custom_weights`, and `return_sorted` are Batch-only and not available here; see [fastLowess](api.md) for those.
+Cross-validation, GPU `backend`, `custom_weights`, and `return_sorted` are Batch-only and not available here; see [fastLowess](api.md) for those. Standard errors and confidence/prediction intervals are computed per chunk the same way Batch computes them, then blended across overlap regions via `merge_strategy` like `y`/`derivative` are.
 
 ## Options
 
@@ -196,7 +199,7 @@ Convergence tolerance for early stopping of robustness iterations. `null` (defau
 
 *See: [`Diagnostics`](#diagnostics)*
 
-Include a `Diagnostics` object (RMSE, MAE, R², residual_sd) in the result. `effective_df`/`aic`/`aicc` require standard errors, which are Batch-only, so they're always `undefined` here.
+Include a `Diagnostics` object (RMSE, MAE, R², residual_sd) in the result. `effective_df`/`aic`/`aicc` require per-chunk hat-matrix leverage to be threaded into the cumulative diagnostics computation across chunk boundaries, which isn't currently done (even with `return_se`/`confidence_intervals`/`prediction_intervals` set), so they're always `undefined` here.
 
 - `false` (default) — leaves `result.diagnostics` as `undefined`
 - `true` — populates `result.diagnostics`
@@ -251,6 +254,27 @@ Each point's local WLS fit already computes a slope internally; this exposes tha
 - `false` (default) — leaves `result.derivative` as `undefined`
 - `true` — populates it
 
+### return_se
+
+*See: [Intervals](../guide/intervals.md)*
+
+Computes standard errors per chunk the same way Batch does, then merges the overlap region across chunk boundaries the same way `y`/`derivative` are, via `merge_strategy`.
+
+- `false` (default) — leaves `result.standard_errors` as `undefined`
+- `true` — populates it
+
+### confidence_intervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the confidence interval around the mean response (e.g. `0.95`), populating `result.confidence_lower`/`result.confidence_upper`. Computed per chunk (same as Batch) and merged across overlap boundaries via `merge_strategy`. `null` (default) disables confidence intervals.
+
+### prediction_intervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the prediction interval for new observations (e.g. `0.95`), populating `result.prediction_lower`/`result.prediction_upper`. Same per-chunk computation and overlap-merging as `confidence_intervals`. `null` (default) disables prediction intervals.
+
 ## Result Structure
 
 ### `LowessResult`
@@ -263,11 +287,11 @@ Returned by `process_chunk()` and `finalize()`.
 | `y` | `Float64Array` | Smoothed y values |
 | `fraction_used` | `number` | Fraction used |
 | `iterations_used` | `number \| undefined` | Robustness iterations actually performed |
-| `standard_errors` | `Float64Array \| undefined` | Always `undefined` (Batch only) |
-| `confidence_lower` | `Float64Array \| undefined` | Always `undefined` (Batch only) |
-| `confidence_upper` | `Float64Array \| undefined` | Always `undefined` (Batch only) |
-| `prediction_lower` | `Float64Array \| undefined` | Always `undefined` (Batch only) |
-| `prediction_upper` | `Float64Array \| undefined` | Always `undefined` (Batch only) |
+| `standard_errors` | `Float64Array \| undefined` | Per-point standard errors (if `return_se`, `confidence_intervals`, or `prediction_intervals` was set) |
+| `confidence_lower` | `Float64Array \| undefined` | Lower confidence bounds (if `confidence_intervals` was set) |
+| `confidence_upper` | `Float64Array \| undefined` | Upper confidence bounds (if `confidence_intervals` was set) |
+| `prediction_lower` | `Float64Array \| undefined` | Lower prediction bounds (if `prediction_intervals` was set) |
+| `prediction_upper` | `Float64Array \| undefined` | Upper prediction bounds (if `prediction_intervals` was set) |
 | `residuals` | `Float64Array \| undefined` | Residuals (if `return_residuals`) |
 | `robustness_weights` | `Float64Array \| undefined` | Robustness weights (if `return_robustness_weights`) |
 | `cv_scores` | `Float64Array \| undefined` | Always `undefined` (Batch only) |
@@ -282,6 +306,6 @@ Returned by `process_chunk()` and `finalize()`.
 | `mae` | `number` | Mean Absolute Error |
 | `r_squared` | `number` | R-squared |
 | `residual_sd` | `number` | Residual standard deviation |
-| `effective_df` | `number \| undefined` | Always `undefined` (requires standard errors, Batch only) |
-| `aic` | `number \| undefined` | Always `undefined` (requires `effective_df`, Batch only) |
-| `aicc` | `number \| undefined` | Always `undefined` (requires `effective_df`, Batch only) |
+| `effective_df` | `number \| undefined` | Always `undefined` (cumulative diagnostics don't integrate per-chunk leverage; Batch only) |
+| `aic` | `number \| undefined` | Always `undefined` (requires `effective_df`; Batch only) |
+| `aicc` | `number \| undefined` | Always `undefined` (requires `effective_df`; Batch only) |

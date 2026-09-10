@@ -384,6 +384,9 @@ impl PyStreamingLowess {
         return_residuals=false,
         return_robustness_weights=false,
         return_derivative=false,
+        return_se=false,
+        confidence_intervals=None,
+        prediction_intervals=None,
         zero_weight_fallback="use_local_mean",
         parallel=true,
         merge_strategy="weighted_average",
@@ -405,6 +408,9 @@ impl PyStreamingLowess {
         return_residuals: bool,
         return_robustness_weights: bool,
         return_derivative: bool,
+        return_se: bool,
+        confidence_intervals: Option<f64>,
+        prediction_intervals: Option<f64>,
         zero_weight_fallback: &str,
         parallel: bool,
         merge_strategy: &str,
@@ -427,11 +433,11 @@ impl PyStreamingLowess {
                 return_residuals,
                 return_robustness_weights,
                 return_diagnostics,
-                return_se: false,
+                return_se,
                 return_sorted: false,
                 missing: Some(missing),
-                confidence_intervals: None,
-                prediction_intervals: None,
+                confidence_intervals,
+                prediction_intervals,
                 parallel: Some(parallel),
                 chunk_size: Some(chunk_size),
                 overlap: Some(overlap_size),
@@ -523,6 +529,18 @@ pub struct PyOnlineOutput {
     /// Local fit derivative (slope) for the latest point (if requested)
     #[pyo3(get)]
     pub derivative: Option<f64>,
+    /// Lower confidence interval bound for the latest point (if requested)
+    #[pyo3(get)]
+    pub confidence_lower: Option<f64>,
+    /// Upper confidence interval bound for the latest point (if requested)
+    #[pyo3(get)]
+    pub confidence_upper: Option<f64>,
+    /// Lower prediction interval bound for the latest point (if requested)
+    #[pyo3(get)]
+    pub prediction_lower: Option<f64>,
+    /// Upper prediction interval bound for the latest point (if requested)
+    #[pyo3(get)]
+    pub prediction_upper: Option<f64>,
 }
 
 #[pymethods]
@@ -556,6 +574,9 @@ impl PyOnlineLowess {
         auto_converge=None,
         return_robustness_weights=false,
         return_derivative=false,
+        return_se=false,
+        confidence_intervals=None,
+        prediction_intervals=None,
         zero_weight_fallback="use_local_mean",
         missing="error"
     ))]
@@ -574,6 +595,9 @@ impl PyOnlineLowess {
         auto_converge: Option<f64>,
         return_robustness_weights: bool,
         return_derivative: bool,
+        return_se: bool,
+        confidence_intervals: Option<f64>,
+        prediction_intervals: Option<f64>,
         zero_weight_fallback: &str,
         missing: &str,
     ) -> PyResult<Self> {
@@ -592,11 +616,11 @@ impl PyOnlineLowess {
                 return_residuals: false,
                 return_robustness_weights,
                 return_diagnostics: false,
-                return_se: false,
+                return_se,
                 return_sorted: false,
                 missing: Some(missing),
-                confidence_intervals: None,
-                prediction_intervals: None,
+                confidence_intervals,
+                prediction_intervals,
                 parallel: None,
                 chunk_size: None,
                 overlap: None,
@@ -641,6 +665,10 @@ impl PyOnlineLowess {
             robustness_weight: o.robustness_weight,
             iterations_used: o.iterations_used,
             derivative: o.derivative,
+            confidence_lower: o.confidence_lower,
+            confidence_upper: o.confidence_upper,
+            prediction_lower: o.prediction_lower,
+            prediction_upper: o.prediction_upper,
         }))
     }
 }

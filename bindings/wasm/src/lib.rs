@@ -103,7 +103,7 @@ export interface PredictOutput {
     readonly derivative: Float64Array | undefined;
 }
 
-/** Configuration options for streaming LOWESS smoothing. A subset of `SmoothOptions`: confidence/prediction intervals, standard errors, cross-validation, and `return_sorted` have no equivalent here. */
+/** Configuration options for streaming LOWESS smoothing. A subset of `SmoothOptions`: cross-validation and `return_sorted` have no equivalent here. */
 export interface StreamingSmoothOptions {
     /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
     fraction?: number;
@@ -131,13 +131,19 @@ export interface StreamingSmoothOptions {
     return_derivative?: boolean;
     /** Compute diagnostics (RMSE, MAE, R2, etc.). Default: false. */
     return_diagnostics?: boolean;
+    /** Compute standard errors. Default: false. */
+    return_se?: boolean;
+    /** Calculate confidence intervals (e.g., 0.95). Default: undefined. */
+    confidence_intervals?: number;
+    /** Calculate prediction intervals. Default: undefined. */
+    prediction_intervals?: number;
     /** Enable parallel execution. Default: true. */
     parallel?: boolean;
     /** Policy for non-finite (NaN/Inf) values in each chunk ("error", "drop"). Default: "error". */
     missing?: string;
 }
 
-/** Configuration options for online LOWESS smoothing. A subset of `SmoothOptions`: diagnostics, residuals, parallel execution, confidence/prediction intervals, standard errors, cross-validation, and `return_sorted` have no equivalent here. */
+/** Configuration options for online LOWESS smoothing. A subset of `SmoothOptions`: diagnostics, residuals, parallel execution, cross-validation, and `return_sorted` have no equivalent here. `return_se`/`confidence_intervals`/`prediction_intervals` require `update_mode = "full"`. */
 export interface OnlineSmoothOptions {
     /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
     fraction?: number;
@@ -163,6 +169,12 @@ export interface OnlineSmoothOptions {
     return_derivative?: boolean;
     /** Policy for non-finite (NaN/Inf) `x`/`y` values passed to `add_point` ("error", "drop"). Default: "error". */
     missing?: string;
+    /** Compute standard errors. Requires `update_mode = "full"`. Default: false. */
+    return_se?: boolean;
+    /** Calculate confidence intervals (e.g., 0.95). Requires `update_mode = "full"`. Default: undefined. */
+    confidence_intervals?: number;
+    /** Calculate prediction intervals. Requires `update_mode = "full"`. Default: undefined. */
+    prediction_intervals?: number;
 }
 
 /** Configuration options for streaming LOWESS. */
@@ -220,6 +232,10 @@ export class OnlineOutput {
     get robustness_weight(): number | undefined;
     get iterations_used(): number | undefined;
     get derivative(): number | undefined;
+    get confidence_lower(): number | undefined;
+    get confidence_upper(): number | undefined;
+    get prediction_lower(): number | undefined;
+    get prediction_upper(): number | undefined;
 }
 "#;
 
@@ -312,6 +328,9 @@ pub struct StreamingSmoothOptions {
     pub return_diagnostics: Option<bool>,
     pub parallel: Option<bool>,
     pub missing: Option<String>,
+    pub return_se: Option<bool>,
+    pub confidence_intervals: Option<f64>,
+    pub prediction_intervals: Option<f64>,
 }
 
 #[derive(Deserialize)]
@@ -328,6 +347,9 @@ pub struct OnlineSmoothOptions {
     pub return_robustness_weights: Option<bool>,
     pub return_derivative: Option<bool>,
     pub missing: Option<String>,
+    pub return_se: Option<bool>,
+    pub confidence_intervals: Option<f64>,
+    pub prediction_intervals: Option<f64>,
 }
 
 #[wasm_bindgen]
@@ -353,6 +375,10 @@ pub struct OnlineOutput {
     robustness_weight: Option<f64>,
     iterations_used: Option<usize>,
     derivative: Option<f64>,
+    confidence_lower: Option<f64>,
+    confidence_upper: Option<f64>,
+    prediction_lower: Option<f64>,
+    prediction_upper: Option<f64>,
 }
 
 #[wasm_bindgen]
@@ -385,6 +411,26 @@ impl OnlineOutput {
     #[wasm_bindgen(getter)]
     pub fn derivative(&self) -> Option<f64> {
         self.derivative
+    }
+
+    #[wasm_bindgen(getter, js_name = "confidence_lower")]
+    pub fn confidence_lower(&self) -> Option<f64> {
+        self.confidence_lower
+    }
+
+    #[wasm_bindgen(getter, js_name = "confidence_upper")]
+    pub fn confidence_upper(&self) -> Option<f64> {
+        self.confidence_upper
+    }
+
+    #[wasm_bindgen(getter, js_name = "prediction_lower")]
+    pub fn prediction_lower(&self) -> Option<f64> {
+        self.prediction_lower
+    }
+
+    #[wasm_bindgen(getter, js_name = "prediction_upper")]
+    pub fn prediction_upper(&self) -> Option<f64> {
+        self.prediction_upper
     }
 }
 
@@ -703,6 +749,9 @@ fn streaming_options_to_builder(
                 return_residuals: opts.return_residuals.unwrap_or(false),
                 return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
                 return_diagnostics: opts.return_diagnostics.unwrap_or(false),
+                return_se: opts.return_se.unwrap_or(false),
+                confidence_intervals: opts.confidence_intervals,
+                prediction_intervals: opts.prediction_intervals,
                 parallel: opts.parallel,
                 missing: opts.missing.as_deref(),
                 ..Default::default()
@@ -734,6 +783,9 @@ fn online_options_to_builder(
                 scaling_method: opts.scaling_method.as_deref(),
                 auto_converge: opts.auto_converge,
                 return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
+                return_se: opts.return_se.unwrap_or(false),
+                confidence_intervals: opts.confidence_intervals,
+                prediction_intervals: opts.prediction_intervals,
                 missing: opts.missing.as_deref(),
                 ..Default::default()
             },
@@ -875,6 +927,10 @@ impl OnlineLowess {
                 robustness_weight: o.robustness_weight,
                 iterations_used: o.iterations_used,
                 derivative: o.derivative,
+                confidence_lower: o.confidence_lower,
+                confidence_upper: o.confidence_upper,
+                prediction_lower: o.prediction_lower,
+                prediction_upper: o.prediction_upper,
             }),
             None => JsValue::null(),
         })

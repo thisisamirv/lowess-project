@@ -1230,6 +1230,30 @@ impl<T: Float> ParallelOnlineLowessBuilder<T> {
         }
         self
     }
+
+    // Enable confidence intervals at the specified level. Only takes effect when
+    // combined with `update_mode(UpdateMode::Full)`; the default `Incremental` mode
+    // never computes standard errors.
+    pub fn confidence_intervals(mut self, level: T) -> Self {
+        self.base.interval_type = Some(IntervalMethod::confidence(level));
+        self
+    }
+
+    // Enable prediction intervals at the specified level. Same `Full`-mode-only
+    // caveat as `confidence_intervals`.
+    pub fn prediction_intervals(mut self, level: T) -> Self {
+        self.base.interval_type = Some(IntervalMethod::prediction(level));
+        self
+    }
+
+    // Enable returning standard errors in the result. Same `Full`-mode-only caveat
+    // as `confidence_intervals`.
+    pub fn return_se(mut self, enabled: bool) -> Self {
+        if enabled && self.base.interval_type.is_none() {
+            self.base.interval_type = Some(IntervalMethod::se());
+        }
+        self
+    }
 }
 
 impl<T: Float> ParallelStreamingLowessBuilder<T> {
@@ -1350,6 +1374,28 @@ impl<T: Float> ParallelStreamingLowessBuilder<T> {
     // Enable returning diagnostics in the result.
     pub fn return_diagnostics(mut self, enabled: bool) -> Self {
         self.base.return_diagnostics = enabled;
+        self
+    }
+
+    // Enable confidence intervals at the specified level, computed per chunk and merged
+    // across overlap boundaries via `merge_strategy` (same as `y`/`derivative`).
+    pub fn confidence_intervals(mut self, level: T) -> Self {
+        self.base.interval_type = Some(IntervalMethod::confidence(level));
+        self
+    }
+
+    // Enable prediction intervals at the specified level. Same per-chunk computation and
+    // overlap-merging as `confidence_intervals`.
+    pub fn prediction_intervals(mut self, level: T) -> Self {
+        self.base.interval_type = Some(IntervalMethod::prediction(level));
+        self
+    }
+
+    // Enable returning standard errors in the result.
+    pub fn return_se(mut self, enabled: bool) -> Self {
+        if enabled && self.base.interval_type.is_none() {
+            self.base.interval_type = Some(IntervalMethod::se());
+        }
         self
     }
 }

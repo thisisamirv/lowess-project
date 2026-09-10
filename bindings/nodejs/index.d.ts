@@ -129,16 +129,24 @@ export interface OnlineOutput {
   iterations_used?: number
   /** Local fit derivative (slope) for the latest point (if requested). */
   derivative?: number
+  /** Lower confidence interval bound for the latest point (if requested). */
+  confidence_lower?: number
+  /** Upper confidence interval bound for the latest point (if requested). */
+  confidence_upper?: number
+  /** Lower prediction interval bound for the latest point (if requested). */
+  prediction_lower?: number
+  /** Upper prediction interval bound for the latest point (if requested). */
+  prediction_upper?: number
 }
 
 /**
  * Configuration options for online LOWESS smoothing.
  *
  * A subset of [`SmoothOptions`]: diagnostics, residuals, parallel execution,
- * confidence/prediction intervals, standard errors, cross-validation,
- * `return_sorted`, and `backend` are all no-ops for online processing (it
- * handles one point at a time and always returns a residual/SE inline), so
- * they aren't fields on this type.
+ * cross-validation, `return_sorted`, and `backend` are all no-ops for online
+ * processing (it handles one point at a time), so they aren't fields on
+ * this type. `return_se`/`confidence_intervals`/`prediction_intervals`
+ * require `update_mode = "full"`.
  */
 export interface OnlineSmoothOptions {
   /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
@@ -168,6 +176,12 @@ export interface OnlineSmoothOptions {
   return_derivative?: boolean
   /** Policy for non-finite (NaN/Inf) `x`/`y` values passed to `addPoint` ("error", "drop"). Default: "error". */
   missing?: string
+  /** Compute standard errors. Requires `update_mode = "full"`. Default: false. */
+  return_se?: boolean
+  /** Calculate confidence intervals (e.g., 0.95). Requires `update_mode = "full"`. Default: None. */
+  confidence_intervals?: number
+  /** Calculate prediction intervals. Requires `update_mode = "full"`. Default: None. */
+  prediction_intervals?: number
 }
 
 /** Options for `LowessResult.predict()`. */
@@ -270,9 +284,9 @@ export interface StreamingOptions {
 /**
  * Configuration options for streaming LOWESS smoothing.
  *
- * A subset of [`SmoothOptions`]: confidence/prediction intervals, standard
- * errors, cross-validation, `return_sorted`, and `backend` are Batch-only
- * and have no equivalent here, so they aren't fields on this type.
+ * A subset of [`SmoothOptions`]: cross-validation, `return_sorted`, and
+ * `backend` are Batch-only and have no equivalent here, so they aren't
+ * fields on this type.
  */
 export interface StreamingSmoothOptions {
   /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
@@ -304,6 +318,12 @@ export interface StreamingSmoothOptions {
   return_derivative?: boolean
   /** Return diagnostics (RMSE, etc.). Default: false. */
   return_diagnostics?: boolean
+  /** Compute standard errors. Default: false. */
+  return_se?: boolean
+  /** Calculate confidence intervals (e.g., 0.95). Default: None. */
+  confidence_intervals?: number
+  /** Calculate prediction intervals. Default: None. */
+  prediction_intervals?: number
   /** Enable parallel execution. Default: true. */
   parallel?: boolean
   /** Policy for non-finite (NaN/Inf) values in each chunk ("error", "drop"). Default: "error". */

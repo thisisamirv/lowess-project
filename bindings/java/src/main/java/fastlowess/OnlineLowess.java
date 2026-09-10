@@ -31,7 +31,10 @@ public final class OnlineLowess implements AutoCloseable {
                 options.windowCapacity,
                 options.minPoints,
                 options.updateMode,
-                c.missing);
+                c.missing,
+                c.returnSe,
+                c.confidenceIntervals,
+                c.predictionIntervals);
     }
 
     /**

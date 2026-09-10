@@ -492,6 +492,10 @@ Result from a single `add_point` call.
 - `iterations_used::Union{Int, Nothing}`: Number of robustness iterations
 - `derivative::Union{Float64, Nothing}`: Latest point's local fit derivative
   (slope); only populated when `return_derivative=true` was passed to `OnlineLowess`
+- `confidence_lower::Union{Float64, Nothing}`: Lower confidence interval bound (if requested)
+- `confidence_upper::Union{Float64, Nothing}`: Upper confidence interval bound (if requested)
+- `prediction_lower::Union{Float64, Nothing}`: Lower prediction interval bound (if requested)
+- `prediction_upper::Union{Float64, Nothing}`: Upper prediction interval bound (if requested)
 """
 struct OnlineOutput
 	y::Float64
@@ -500,6 +504,10 @@ struct OnlineOutput
 	robustness_weight::Union{Float64, Nothing}
 	iterations_used::Union{Int, Nothing}
 	derivative::Union{Float64, Nothing}
+	confidence_lower::Union{Float64, Nothing}
+	confidence_upper::Union{Float64, Nothing}
+	prediction_lower::Union{Float64, Nothing}
+	prediction_upper::Union{Float64, Nothing}
 end
 
 # C FFI struct for per-point online output (must match Rust definition).
@@ -511,6 +519,10 @@ struct CJlOnlineOutput
 	robustness_weight::Cdouble
 	iterations_used::Cint
 	derivative::Cdouble
+	confidence_lower::Cdouble
+	confidence_upper::Cdouble
+	prediction_lower::Cdouble
+	prediction_upper::Cdouble
 	error::Ptr{Cchar}
 end
 
@@ -896,6 +908,10 @@ Stateful streaming LOWESS smoother.
   See `Lowess` for a description of each option.
 - `return_derivative::Bool = false`: Whether to include the per-point local fit
   derivative (slope) in the output.
+- `return_se::Bool = false`: Include standard errors in the output.
+- `confidence_intervals::Float64 = NaN`: Confidence level (e.g. 0.95), NaN to disable.
+- `prediction_intervals::Float64 = NaN`: Confidence level for prediction intervals
+  (e.g. 0.95), NaN to disable.
 """
 mutable struct StreamingLowess
 	handle::Ptr{Cvoid}
@@ -919,6 +935,9 @@ mutable struct StreamingLowess
 		parallel::Bool = true,
 		missing::String = "error",
 		return_derivative::Bool = false,
+		return_se::Bool = false,
+		confidence_intervals::Float64 = NaN,
+		prediction_intervals::Float64 = NaN,
 	)
 		handle = @ccall current_library().jl_streaming_lowess_new(
 			fraction::Cdouble,
@@ -939,6 +958,9 @@ mutable struct StreamingLowess
 			Cint(parallel)::Cint,
 			missing::Cstring,
 			Cint(return_derivative)::Cint,
+			Cint(return_se)::Cint,
+			confidence_intervals::Cdouble,
+			prediction_intervals::Cdouble,
 		)::Ptr{Cvoid}
 
 		if handle == C_NULL
@@ -1014,8 +1036,16 @@ Stateful online LOWESS smoother.
   (returns `nothing` instead of adding it to the window).
 - `return_derivative::Bool = false`: Whether to include the latest point's local
   fit derivative (slope) in the output.
+- `return_se::Bool = false`: Include standard errors in the output. Requires
+  `update_mode = "full"`.
+- `confidence_intervals::Float64 = NaN`: Confidence level (e.g. 0.95), NaN to
+  disable. Requires `update_mode = "full"`.
+- `prediction_intervals::Float64 = NaN`: Confidence level for prediction intervals
+  (e.g. 0.95), NaN to disable. Requires `update_mode = "full"`.
 
-Confidence/prediction intervals, standard errors, cross-validation, `return_sorted`, `return_diagnostics`, `return_residuals`, and `parallel` are Batch-only (or Batch/Streaming-only) and have no equivalent here. Online always runs sequentially.
+Cross-validation, `return_sorted`, `return_diagnostics`, `return_residuals`, and
+`parallel` are Batch-only (or Batch/Streaming-only) and have no equivalent here.
+Online always runs sequentially.
 """
 mutable struct OnlineLowess
 	handle::Ptr{Cvoid}
@@ -1036,6 +1066,9 @@ mutable struct OnlineLowess
 		zero_weight_fallback::String = "use_local_mean",
 		missing::String = "error",
 		return_derivative::Bool = false,
+		return_se::Bool = false,
+		confidence_intervals::Float64 = NaN,
+		prediction_intervals::Float64 = NaN,
 	)
 		handle = @ccall current_library().jl_online_lowess_new(
 			fraction::Cdouble,
@@ -1053,6 +1086,9 @@ mutable struct OnlineLowess
 			zero_weight_fallback::Cstring,
 			missing::Cstring,
 			Cint(return_derivative)::Cint,
+			Cint(return_se)::Cint,
+			confidence_intervals::Cdouble,
+			prediction_intervals::Cdouble,
 		)::Ptr{Cvoid}
 
 		if handle == C_NULL
@@ -1103,6 +1139,10 @@ function add_point(o::OnlineLowess, x::Float64, y::Float64)
 		isnan(c_result.robustness_weight) ? nothing : c_result.robustness_weight,
 		c_result.iterations_used == -1 ? nothing : Int(c_result.iterations_used),
 		isnan(c_result.derivative) ? nothing : c_result.derivative,
+		isnan(c_result.confidence_lower) ? nothing : c_result.confidence_lower,
+		isnan(c_result.confidence_upper) ? nothing : c_result.confidence_upper,
+		isnan(c_result.prediction_lower) ? nothing : c_result.prediction_lower,
+		isnan(c_result.prediction_upper) ? nothing : c_result.prediction_upper,
 	)
 end
 

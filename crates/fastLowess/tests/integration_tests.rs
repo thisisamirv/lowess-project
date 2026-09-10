@@ -168,6 +168,41 @@ fn test_streaming_adapter_return_derivative() {
 }
 
 #[test]
+fn test_streaming_adapter_return_se_and_intervals() {
+    let n = 30;
+    let x: Vec<f64> = (0..n).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| 2.0 * xi + 1.0).collect();
+
+    let mut processor = StreamingLowess::new()
+        .fraction(0.9)
+        .return_se()
+        .confidence_intervals(0.95)
+        .prediction_intervals(0.95)
+        .chunk_size(20)
+        .overlap(5)
+        .build()
+        .unwrap();
+
+    let res1 = processor.process_chunk(&x[0..20], &y[0..20]).unwrap();
+    let se = res1.standard_errors.expect("standard_errors should be present");
+    let cl = res1.confidence_lower.expect("confidence_lower should be present");
+    let cu = res1.confidence_upper.expect("confidence_upper should be present");
+    let pl = res1.prediction_lower.expect("prediction_lower should be present");
+    let pu = res1.prediction_upper.expect("prediction_upper should be present");
+    assert_eq!(se.len(), res1.y.len());
+    for i in 0..res1.y.len() {
+        assert!(se[i].is_finite() && se[i] >= 0.0);
+        assert!(cl[i] <= res1.y[i] && res1.y[i] <= cu[i]);
+        assert!(pl[i] <= res1.y[i] && res1.y[i] <= pu[i]);
+    }
+
+    let res2 = processor.process_chunk(&x[20..n], &y[20..n]).unwrap();
+    assert!(res2.standard_errors.is_some());
+    assert!(res2.confidence_lower.is_some());
+    assert!(res2.prediction_lower.is_some());
+}
+
+#[test]
 fn test_streaming_return_derivative_parallel_matches_sequential() {
     let n = 40;
     let x: Vec<f64> = (0..n).map(|i| i as f64 + (i as f64 * 0.37).sin()).collect();
@@ -261,6 +296,52 @@ fn test_online_adapter_return_derivative() {
         last = processor.add_point(i as f64, 2.0 * i as f64 + 1.0).unwrap();
     }
     assert_abs_diff_eq!(last.unwrap().derivative.unwrap(), 2.0, epsilon = 1e-9);
+}
+
+#[test]
+fn test_online_adapter_return_se_and_intervals_full_mode() {
+    let mut processor = OnlineLowess::new()
+        .fraction(0.9)
+        .return_se()
+        .confidence_intervals(0.95)
+        .prediction_intervals(0.95)
+        .update_mode("full")
+        .min_points(10)
+        .window_capacity(30)
+        .build()
+        .unwrap();
+
+    let mut saw_all = false;
+    for i in 0..20 {
+        let x = i as f64;
+        let y = 2.0 * x + 1.0;
+        if let Some(output) = processor.add_point(x, y).unwrap()
+            && output.standard_error.is_some()
+            && output.confidence_lower.is_some()
+            && output.prediction_lower.is_some()
+        {
+            saw_all = true;
+        }
+    }
+    assert!(
+        saw_all,
+        "standard_error/confidence/prediction bounds should all be populated in Full mode"
+    );
+}
+
+#[test]
+fn test_online_adapter_se_requires_full_mode() {
+    let result = OnlineLowess::new()
+        .fraction(0.9)
+        .return_se()
+        .min_points(10)
+        .window_capacity(30)
+        .build();
+
+    assert!(
+        result.is_err(),
+        "return_se() without update_mode(\"full\") should fail to build"
+    );
 }
 
 #[test]

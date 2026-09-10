@@ -53,7 +53,7 @@ RStreamingLowess$new <- function(
     weight_function, robustness_method,
     scaling_method, boundary_policy, zero_weight_fallback, auto_converge,
     return_diagnostics, return_residuals, return_robustness_weights,
-    return_derivative,
+    return_derivative, return_se, confidence_intervals, prediction_intervals,
     merge_strategy, parallel,
     delta, missing
 ) {
@@ -62,7 +62,7 @@ RStreamingLowess$new <- function(
         weight_function, robustness_method, scaling_method,
         boundary_policy, zero_weight_fallback, auto_converge,
         return_diagnostics, return_residuals, return_robustness_weights,
-        return_derivative,
+        return_derivative, return_se, confidence_intervals, prediction_intervals,
         merge_strategy, parallel,
         delta, missing
     )
@@ -93,13 +93,15 @@ ROnlineLowess$new <- function(
     weight_function, robustness_method,
     scaling_method, boundary_policy, zero_weight_fallback, update_mode,
     auto_converge, return_robustness_weights, return_derivative,
+    return_se, confidence_intervals, prediction_intervals,
     delta, missing
 ) {
     .Call(
         wrap__ROnlineLowess__new, fraction, window_capacity, min_points,
         iterations, weight_function, robustness_method, scaling_method,
         boundary_policy, zero_weight_fallback, update_mode, auto_converge,
-        return_robustness_weights, return_derivative, delta, missing
+        return_robustness_weights, return_derivative,
+        return_se, confidence_intervals, prediction_intervals, delta, missing
     )
 }
 

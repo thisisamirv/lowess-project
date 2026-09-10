@@ -303,6 +303,17 @@ pub struct StreamingBuffer<T> {
     // Local fit derivative (slope) for the overlap region.
     pub overlap_derivative: Slot<T>,
 
+    // Standard errors for the overlap region.
+    pub overlap_std_errors: Slot<T>,
+
+    // Confidence interval bounds for the overlap region.
+    pub overlap_confidence_lower: Slot<T>,
+    pub overlap_confidence_upper: Slot<T>,
+
+    // Prediction interval bounds for the overlap region.
+    pub overlap_prediction_lower: Slot<T>,
+    pub overlap_prediction_upper: Slot<T>,
+
     // Reusable work buffer for LOWESS operations on chunks.
     pub work_buffer: LowessBuffer<T>,
 }
@@ -315,6 +326,11 @@ impl<T> Default for StreamingBuffer<T> {
             overlap_smoothed: Slot::default(),
             overlap_robustness_weights: Slot::default(),
             overlap_derivative: Slot::default(),
+            overlap_std_errors: Slot::default(),
+            overlap_confidence_lower: Slot::default(),
+            overlap_confidence_upper: Slot::default(),
+            overlap_prediction_lower: Slot::default(),
+            overlap_prediction_upper: Slot::default(),
             work_buffer: LowessBuffer::default(),
         }
     }
@@ -329,6 +345,11 @@ impl<T: Clone> StreamingBuffer<T> {
             overlap_smoothed: Slot::new(overlap),
             overlap_robustness_weights: Slot::new(overlap),
             overlap_derivative: Slot::new(overlap),
+            overlap_std_errors: Slot::new(overlap),
+            overlap_confidence_lower: Slot::new(overlap),
+            overlap_confidence_upper: Slot::new(overlap),
+            overlap_prediction_lower: Slot::new(overlap),
+            overlap_prediction_upper: Slot::new(overlap),
             work_buffer: LowessBuffer::with_capacity(chunk_size),
         }
     }
@@ -340,5 +361,10 @@ impl<T: Clone> StreamingBuffer<T> {
         self.overlap_smoothed.clear();
         self.overlap_robustness_weights.clear();
         self.overlap_derivative.clear();
+        self.overlap_std_errors.clear();
+        self.overlap_confidence_lower.clear();
+        self.overlap_confidence_upper.clear();
+        self.overlap_prediction_lower.clear();
+        self.overlap_prediction_upper.clear();
     }
 }

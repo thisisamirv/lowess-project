@@ -384,9 +384,9 @@ pub struct SmoothOptions {
 
 /// Configuration options for streaming LOWESS smoothing.
 ///
-/// A subset of [`SmoothOptions`]: confidence/prediction intervals, standard
-/// errors, cross-validation, `return_sorted`, and `backend` are Batch-only
-/// and have no equivalent here, so they aren't fields on this type.
+/// A subset of [`SmoothOptions`]: cross-validation, `return_sorted`, and
+/// `backend` are Batch-only and have no equivalent here, so they aren't
+/// fields on this type.
 #[napi(object)]
 pub struct StreamingSmoothOptions {
     /// Smoothing fraction (0 < fraction <= 1). Default: 0.67.
@@ -426,6 +426,15 @@ pub struct StreamingSmoothOptions {
     /// Return diagnostics (RMSE, etc.). Default: false.
     #[napi(js_name = "return_diagnostics")]
     pub return_diagnostics: Option<bool>,
+    /// Compute standard errors. Default: false.
+    #[napi(js_name = "return_se")]
+    pub return_se: Option<bool>,
+    /// Calculate confidence intervals (e.g., 0.95). Default: None.
+    #[napi(js_name = "confidence_intervals")]
+    pub confidence_intervals: Option<f64>,
+    /// Calculate prediction intervals. Default: None.
+    #[napi(js_name = "prediction_intervals")]
+    pub prediction_intervals: Option<f64>,
     /// Enable parallel execution. Default: true.
     pub parallel: Option<bool>,
     /// Policy for non-finite (NaN/Inf) values in each chunk ("error", "drop"). Default: "error".
@@ -436,10 +445,10 @@ pub struct StreamingSmoothOptions {
 /// Configuration options for online LOWESS smoothing.
 ///
 /// A subset of [`SmoothOptions`]: diagnostics, residuals, parallel execution,
-/// confidence/prediction intervals, standard errors, cross-validation,
-/// `return_sorted`, and `backend` are all no-ops for online processing (it
-/// handles one point at a time and always returns a residual/SE inline), so
-/// they aren't fields on this type.
+/// cross-validation, `return_sorted`, and `backend` are all no-ops for online
+/// processing (it handles one point at a time), so they aren't fields on
+/// this type. `return_se`/`confidence_intervals`/`prediction_intervals`
+/// require `update_mode = "full"`.
 #[napi(object)]
 pub struct OnlineSmoothOptions {
     /// Smoothing fraction (0 < fraction <= 1). Default: 0.67.
@@ -476,6 +485,15 @@ pub struct OnlineSmoothOptions {
     /// Policy for non-finite (NaN/Inf) `x`/`y` values passed to `addPoint` ("error", "drop"). Default: "error".
     #[napi(js_name = "missing")]
     pub missing: Option<String>,
+    /// Compute standard errors. Requires `update_mode = "full"`. Default: false.
+    #[napi(js_name = "return_se")]
+    pub return_se: Option<bool>,
+    /// Calculate confidence intervals (e.g., 0.95). Requires `update_mode = "full"`. Default: None.
+    #[napi(js_name = "confidence_intervals")]
+    pub confidence_intervals: Option<f64>,
+    /// Calculate prediction intervals. Requires `update_mode = "full"`. Default: None.
+    #[napi(js_name = "prediction_intervals")]
+    pub prediction_intervals: Option<f64>,
 }
 
 /// Build a `LowessBuilder` from Batch options, applying every field.
@@ -549,6 +567,9 @@ fn streaming_options_to_builder(
                 return_residuals: opts.return_residuals.unwrap_or(false),
                 return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
                 return_diagnostics: opts.return_diagnostics.unwrap_or(false),
+                return_se: opts.return_se.unwrap_or(false),
+                confidence_intervals: opts.confidence_intervals,
+                prediction_intervals: opts.prediction_intervals,
                 parallel: opts.parallel,
                 missing: opts.missing.as_deref(),
                 ..Default::default()
@@ -578,6 +599,9 @@ fn online_options_to_builder(opts: Option<&OnlineSmoothOptions>) -> Result<Lowes
                 scaling_method: opts.scaling_method.as_deref(),
                 auto_converge: opts.auto_converge,
                 return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
+                return_se: opts.return_se.unwrap_or(false),
+                confidence_intervals: opts.confidence_intervals,
+                prediction_intervals: opts.prediction_intervals,
                 missing: opts.missing.as_deref(),
                 ..Default::default()
             },
@@ -764,6 +788,18 @@ pub struct OnlineOutput {
     /// Local fit derivative (slope) for the latest point (if requested).
     #[napi(js_name = "derivative")]
     pub derivative: Option<f64>,
+    /// Lower confidence interval bound for the latest point (if requested).
+    #[napi(js_name = "confidence_lower")]
+    pub confidence_lower: Option<f64>,
+    /// Upper confidence interval bound for the latest point (if requested).
+    #[napi(js_name = "confidence_upper")]
+    pub confidence_upper: Option<f64>,
+    /// Lower prediction interval bound for the latest point (if requested).
+    #[napi(js_name = "prediction_lower")]
+    pub prediction_lower: Option<f64>,
+    /// Upper prediction interval bound for the latest point (if requested).
+    #[napi(js_name = "prediction_upper")]
+    pub prediction_upper: Option<f64>,
 }
 
 /// Online LOWESS smoother for real-time data.
@@ -814,6 +850,10 @@ impl OnlineLowess {
             robustness_weight: o.robustness_weight,
             iterations_used: o.iterations_used.map(|i| i as u32),
             derivative: o.derivative,
+            confidence_lower: o.confidence_lower,
+            confidence_upper: o.confidence_upper,
+            prediction_lower: o.prediction_lower,
+            prediction_upper: o.prediction_upper,
         }))
     }
 }

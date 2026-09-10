@@ -23,6 +23,14 @@
 #'   alias: \code{"single"}) updates only the newest point;
 #'   \code{"full"} (alias: \code{"resmooth"}) re-smooths all window points
 #'   after each addition.
+#' @param return_se Logical; include standard errors in the result. Requires
+#'   \code{update_mode = "full"}. Default: \code{FALSE}.
+#' @param confidence_intervals Confidence level for confidence intervals
+#'   (e.g. 0.95), or \code{NULL} (default) to disable. Requires
+#'   \code{update_mode = "full"}.
+#' @param prediction_intervals Confidence level for prediction intervals
+#'   (e.g. 0.95), or \code{NULL} (default) to disable. Requires
+#'   \code{update_mode = "full"}.
 #'
 #' @return An OnlineLowess object.
 #' @examples
@@ -52,6 +60,9 @@ OnlineLowess <- function(
     auto_converge = NULL,
     return_robustness_weights = FALSE,
     return_derivative = FALSE,
+    return_se = FALSE,
+    confidence_intervals = NULL,
+    prediction_intervals = NULL,
     missing = "error"
 ) {
     reject_extra_positional_args(sys.call(), "min_points")

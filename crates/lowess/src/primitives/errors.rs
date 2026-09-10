@@ -162,6 +162,14 @@ pub enum LowessError {
         // The configured maximum allowed distance.
         max_distance: f64,
     },
+
+    // `.return_se()`/`.confidence_intervals()`/`.prediction_intervals()` was requested on
+    // `OnlineLowess` but `update_mode` isn't `"full"` (the default `"incremental"` mode
+    // bypasses the full executor pipeline for speed, so standard errors are never
+    // computed there). Previously this combination silently left `standard_error` as
+    // `None`; surfaced as an error instead, since it's easy to set `.return_se()`, forget
+    // `.update_mode("full")`, and not notice the silently-empty result.
+    StandardErrorRequiresFullUpdateMode,
 }
 
 // Display Implementation
@@ -265,6 +273,12 @@ impl Display for LowessError {
                 "predict() query point is within the training range, but its local window \
                  extends {distance}, exceeding max_neighbor_distance ({max_distance}); the \
                  point likely falls in a sparse region far from real training data"
+            ),
+            Self::StandardErrorRequiresFullUpdateMode => write!(
+                f,
+                "return_se()/confidence_intervals()/prediction_intervals() requires \
+                 update_mode(\"full\") on OnlineLowess; the default \"incremental\" mode \
+                 never computes standard errors"
             ),
         }
     }

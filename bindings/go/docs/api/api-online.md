@@ -77,8 +77,11 @@ if ok {
 | `MinPoints` | `int` | `2` | Minimum points required before output starts |
 | `UpdateMode` | `string` | `"incremental"` | How the window is updated as new points arrive |
 | `ReturnDerivative` | `bool` | `false` | Include the latest point's local fit derivative (slope) in the result |
+| `ReturnSE` | `bool` | `false` | Populate `StandardError` in the result (requires `UpdateMode = "full"`; errors if combined with `"incremental"`) |
+| `ConfidenceIntervals` | `*float64` | `nil` | Confidence level (e.g., 0.95); populates `ConfidenceLower`/`ConfidenceUpper` (requires `UpdateMode = "full"`) |
+| `PredictionIntervals` | `*float64` | `nil` | Prediction level (e.g., 0.95); populates `PredictionLower`/`PredictionUpper` (requires `UpdateMode = "full"`) |
 
-Confidence/prediction intervals, standard errors, cross-validation, GPU `Backend`, `CustomWeights`, `ReturnSorted`, `ReturnDiagnostics`, `ReturnResiduals`, and `Parallel` are Batch-only (or Batch/Streaming-only) and not available here; see [API](api.md) for those.
+Cross-validation, GPU `Backend`, `CustomWeights`, `ReturnSorted`, `ReturnDiagnostics`, `ReturnResiduals`, and `Parallel` are Batch-only (or Batch/Streaming-only) and not available here; see [API](api.md) for those.
 
 ## Options
 
@@ -201,6 +204,27 @@ Each point's local WLS fit already computes a slope internally; this exposes the
 - `false` (default) — leaves `PointResult.Derivative` as `NaN`
 - `true` — populates it
 
+### ReturnSE
+
+*See: [Intervals](../guide/intervals.md)*
+
+Populates `StandardError` — but only when combined with `UpdateMode = "full"`. The fast `"incremental"` path (the default) never computes standard errors, so combining `ReturnSE` (or `ConfidenceIntervals`/`PredictionIntervals`) with anything other than `"full"` returns an error from `NewOnlineLowess`, rather than silently leaving `StandardError` as `NaN`.
+
+- `false` (default) — leaves `StandardError` as `NaN`
+- `true` — populates `StandardError`, and requires `UpdateMode = "full"`
+
+### ConfidenceIntervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the confidence interval around the mean response at the latest point (e.g. `0.95`), populating `ConfidenceLower`/`ConfidenceUpper`. Same `UpdateMode = "full"` requirement as `ReturnSE`. `nil` (default) disables confidence intervals.
+
+### PredictionIntervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the prediction interval for a new observation at the latest point (e.g. `0.95`), populating `PredictionLower`/`PredictionUpper`. Same `UpdateMode = "full"` requirement as `ReturnSE`. `nil` (default) disables prediction intervals.
+
 ## Result Structure
 
 ### `PointResult`
@@ -210,7 +234,9 @@ Returned by `AddPoint` once the window has enough points (`ok == false` until th
 | Field | Type | Notes |
 | --- | --- | --- |
 | `Y` | `float64` | Smoothed value for the latest point. |
-| `StandardError` | `float64` | Always `NaN` — standard errors require `ReturnSE`/confidence intervals, which are Batch-only. |
+| `StandardError` | `float64` | Populated when `ReturnSE` is set (requires `UpdateMode = "full"`); `NaN` otherwise. |
+| `ConfidenceLower` / `ConfidenceUpper` | `float64` | Confidence interval bounds around the mean response, if `ConfidenceIntervals` was set (requires `UpdateMode = "full"`); `NaN` otherwise. |
+| `PredictionLower` / `PredictionUpper` | `float64` | Prediction interval bounds for a new observation, if `PredictionIntervals` was set (requires `UpdateMode = "full"`); `NaN` otherwise. |
 | `Residual` | `float64` | Residual y − smoothed; always populated (there is no `ReturnResiduals` option for Online). |
 | `RobustnessWeight` | `float64` | Robustness weight, if `ReturnRobustnessWeights` was set. |
 | `IterationsUsed` | `int` | Robustness iterations performed (`-1` if not applicable). |

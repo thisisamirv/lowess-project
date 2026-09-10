@@ -147,8 +147,11 @@ int main() {
 | `overlap` | `int` | chunk_size / 10 | Overlap between chunks |
 | `merge_strategy` | `std::string` | "weighted_average" | Strategy for blending overlap regions |
 | `return_derivative` | `bool` | false | Include the per-point local fit derivative (slope) in the result |
+| `return_se` | `bool` | false | Populate `standard_errors()` in the result |
+| `confidence_intervals` | `double` | NaN | Confidence level (e.g., 0.95); populates `confidence_lower()`/`confidence_upper()` |
+| `prediction_intervals` | `double` | NaN | Prediction level (e.g., 0.95); populates `prediction_lower()`/`prediction_upper()` |
 
-Confidence/prediction intervals, standard errors, cross-validation, GPU `backend`, `custom_weights`, and `return_sorted` are Batch-only and not available here; see [fastLowess](api.md) for those.
+Cross-validation, GPU `backend`, `custom_weights`, and `return_sorted` are Batch-only and not available here; see [fastLowess](api.md) for those. Standard errors and confidence/prediction intervals are computed per chunk the same way Batch computes them, then blended across overlap regions via `merge_strategy` like `y_vector()`/`derivative()` are.
 
 ## Options
 
@@ -246,7 +249,7 @@ Convergence tolerance for early stopping of robustness iterations. `NaN` (defaul
 
 *See: [`Diagnostics`](#fastlowessdiagnostics)*
 
-Include a `Diagnostics` object (RMSE, MAE, R², residual_sd) in the result. `effective_df`/`aic`/`aicc` require standard errors, which are Batch-only, so they're always empty/NaN here.
+Include a `Diagnostics` object (RMSE, MAE, R², residual_sd) in the result. `effective_df`/`aic`/`aicc` require per-chunk hat-matrix leverage to be threaded into the cumulative diagnostics computation across chunk boundaries, which isn't currently done (even with `return_se`/`confidence_intervals`/`prediction_intervals` set), so they're always empty/NaN here.
 
 - `false` (default) — leaves `diagnostics()` empty
 - `true` — populates `diagnostics()`
@@ -301,6 +304,27 @@ Each point's local WLS fit already computes a slope internally; this exposes tha
 - `false` (default) — leaves `derivative()` empty
 - `true` — populates `derivative()`
 
+### return_se
+
+*See: [Intervals](../guide/intervals.md)*
+
+Computes standard errors per chunk the same way Batch does, then merges the overlap region across chunk boundaries the same way `y_vector()`/`derivative()` are, via `merge_strategy`.
+
+- `false` (default) — leaves `standard_errors()` empty
+- `true` — populates it
+
+### confidence_intervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the confidence interval around the mean response (e.g. `0.95`), populating `confidence_lower()`/`confidence_upper()`. Computed per chunk (same as Batch) and merged across overlap boundaries via `merge_strategy`. NaN (default) disables confidence intervals.
+
+### prediction_intervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the prediction interval for new observations (e.g. `0.95`), populating `prediction_lower()`/`prediction_upper()`. Same per-chunk computation and overlap-merging as `confidence_intervals`. NaN (default) disables prediction intervals.
+
 ## Result Structure
 
 ### fastlowess::LowessResult
@@ -313,11 +337,11 @@ Returned (inside `Expected`) by `process_chunk()` and `finalize()`.
 | `y_vector()` | `std::vector<double>` | Smoothed y values |
 | `fraction_used()` | `double` | Fraction used |
 | `iterations_used()` | `int` | Robustness iterations (-1 = N/A) |
-| `standard_errors()` | `std::vector<double>` | Always empty (Batch only) |
-| `confidence_lower()` | `std::vector<double>` | Always empty (Batch only) |
-| `confidence_upper()` | `std::vector<double>` | Always empty (Batch only) |
-| `prediction_lower()` | `std::vector<double>` | Always empty (Batch only) |
-| `prediction_upper()` | `std::vector<double>` | Always empty (Batch only) |
+| `standard_errors()` | `std::vector<double>` | Populated if `return_se`, `confidence_intervals`, or `prediction_intervals` was set (empty otherwise) |
+| `confidence_lower()` | `std::vector<double>` | Populated if `confidence_intervals` was set (empty otherwise) |
+| `confidence_upper()` | `std::vector<double>` | Populated if `confidence_intervals` was set (empty otherwise) |
+| `prediction_lower()` | `std::vector<double>` | Populated if `prediction_intervals` was set (empty otherwise) |
+| `prediction_upper()` | `std::vector<double>` | Populated if `prediction_intervals` was set (empty otherwise) |
 | `residuals()` | `std::vector<double>` | Residuals (if `return_residuals`; empty if not) |
 | `robustness_weights()` | `std::vector<double>` | Robustness weights (if `return_robustness_weights`; empty if not) |
 | `cv_scores()` | `std::vector<double>` | Always empty (Batch only) |
@@ -332,6 +356,6 @@ Returned (inside `Expected`) by `process_chunk()` and `finalize()`.
 | `mae()` | `double` | Mean Absolute Error |
 | `r_squared()` | `double` | R-squared |
 | `residual_sd()` | `double` | Residual standard deviation |
-| `effective_df()` | `double` | Always NaN (requires standard errors, Batch only) |
-| `aic()` | `double` | Always NaN (requires `effective_df`, Batch only) |
-| `aicc()` | `double` | Always NaN (requires `effective_df`, Batch only) |
+| `effective_df()` | `double` | Always NaN (cumulative diagnostics don't integrate per-chunk leverage; Batch only) |
+| `aic()` | `double` | Always NaN (requires `effective_df`; Batch only) |
+| `aicc()` | `double` | Always NaN (requires `effective_df`; Batch only) |

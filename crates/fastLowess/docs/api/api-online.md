@@ -98,11 +98,14 @@ fn main() -> Result<(), LowessError> {
 | `auto_converge(T)` | `T: Float` | `NaN` | Auto-convergence tolerance |
 | `return_robustness_weights()` | `bool` | `false` | Include `robustness_weight` in result |
 | `return_derivative()` | `bool` | `false` | Include the latest point's local fit derivative (slope) in result |
+| `return_se()` | `bool` | `false` | Populate `standard_error` in the result (requires `update_mode("full")`; `.build()` errors if combined with `"incremental"`) |
+| `confidence_intervals(T)` | `T: Float` | `NaN` | Confidence level (e.g., 0.95); populates `confidence_lower`/`confidence_upper` (requires `update_mode("full")`) |
+| `prediction_intervals(T)` | `T: Float` | `NaN` | Prediction level (e.g., 0.95); populates `prediction_lower`/`prediction_upper` (requires `update_mode("full")`) |
 | `window_capacity(usize)` | `usize` | `1000` | Max points in sliding window |
 | `min_points(usize)` | `usize` | `2` | Min points before smoothing starts |
 | `update_mode(...)` | `update_mode` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
 
-Confidence/prediction intervals, standard errors, cross-validation, GPU `backend`, `custom_weights`, `return_sorted`, `return_diagnostics()`, `return_residuals()`, and `parallel()` are Batch-only (or Batch/Streaming-only) and not available here; see [fastLowess](crate::doc::api) for those.
+Cross-validation, GPU `backend`, `custom_weights`, `return_sorted`, `return_diagnostics()`, `return_residuals()`, and `parallel()` are Batch-only (or Batch/Streaming-only) and not available here; see [fastLowess](crate::doc::api) for those.
 
 ## Options
 
@@ -208,6 +211,27 @@ Each point's local WLS fit already computes a slope internally; this exposes the
 - `false` (default) — leaves `output.derivative` as `None`
 - `true` — populates `output.derivative`
 
+### return_se
+
+*See: [Intervals](crate::doc::guide::intervals)*
+
+Populates `output.standard_error` — but only when combined with `.update_mode("full")`. The fast `"incremental"` path (the default) bypasses the full executor pipeline for speed and never computes standard errors, so combining `.return_se()` (or `.confidence_intervals()`/`.prediction_intervals()`) with anything other than `"full"` fails at `.build()` with `LowessError::StandardErrorRequiresFullUpdateMode`, rather than silently leaving `standard_error` as `None`.
+
+- `false` (default) — leaves `output.standard_error` as `None`
+- `true` — populates `output.standard_error`, and requires `update_mode("full")`
+
+### confidence_intervals
+
+*See: [Intervals](crate::doc::guide::intervals)*
+
+Confidence level for the confidence interval around the mean response at the latest point (e.g. `0.95`), populating `output.confidence_lower`/`output.confidence_upper`. Same `update_mode("full")` requirement as `return_se()` (enforced at `.build()` with `LowessError::StandardErrorRequiresFullUpdateMode`). `NaN` (default) disables confidence intervals.
+
+### prediction_intervals
+
+*See: [Intervals](crate::doc::guide::intervals)*
+
+Confidence level for the prediction interval for a new observation at the latest point (e.g. `0.95`), populating `output.prediction_lower`/`output.prediction_upper`. Same `update_mode("full")` requirement as `return_se()`. `NaN` (default) disables prediction intervals.
+
 ### window_capacity
 
 Maximum number of most recent points kept in the sliding window; older points are discarded as new ones arrive. Each `add_point()` call costs O(`window_capacity`) rather than growing with total history.
@@ -234,7 +258,9 @@ Returned by `add_point()` inside `Option`. Is `None` while the window is still f
 | Field | Type | Description |
 | --- | --- | --- |
 | `y` | `T` | Smoothed value for the latest point |
-| `standard_error` | `Option<T>` | Always `None` — standard errors require `return_se()`/confidence intervals, which are Batch-only |
+| `standard_error` | `Option<T>` | Populated when `return_se()` is set (requires `update_mode("full")`, enforced at `.build()`); otherwise always `None` |
+| `confidence_lower` / `confidence_upper` | `Option<T>` | Confidence interval bounds around the mean response, if `confidence_intervals(level)` was set (requires `update_mode("full")`) |
+| `prediction_lower` / `prediction_upper` | `Option<T>` | Prediction interval bounds for a new observation, if `prediction_intervals(level)` was set (requires `update_mode("full")`) |
 | `residual` | `Option<T>` | Residual y − smoothed; always present (there is no `return_residuals()` option for Online) |
 | `robustness_weight` | `Option<T>` | Robustness weight, if `return_robustness_weights()` was set |
 | `iterations_used` | `Option<usize>` | Robustness iterations performed |

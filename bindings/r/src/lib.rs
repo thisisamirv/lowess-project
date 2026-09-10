@@ -264,6 +264,9 @@ impl RStreamingLowess {
         return_residuals: bool,
         return_robustness_weights: bool,
         return_derivative: bool,
+        return_se: bool,
+        confidence_intervals: Nullable<f64>,
+        prediction_intervals: Nullable<f64>,
         merge_strategy: &str,
         parallel: bool,
         delta: Nullable<f64>,
@@ -297,8 +300,15 @@ impl RStreamingLowess {
                 return_residuals,
                 return_robustness_weights,
                 return_diagnostics,
-                confidence_intervals: None,
-                prediction_intervals: None,
+                return_se,
+                confidence_intervals: match confidence_intervals {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
+                prediction_intervals: match prediction_intervals {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
                 parallel: Some(parallel),
                 missing: Some(missing),
                 ..Default::default()
@@ -356,6 +366,9 @@ impl ROnlineLowess {
         auto_converge: Nullable<f64>,
         return_robustness_weights: bool,
         return_derivative: bool,
+        return_se: bool,
+        confidence_intervals: Nullable<f64>,
+        prediction_intervals: Nullable<f64>,
         delta: Nullable<f64>,
         missing: &str,
     ) -> Result<Self> {
@@ -384,8 +397,15 @@ impl ROnlineLowess {
                 return_residuals: false,
                 return_robustness_weights,
                 return_diagnostics: false,
-                confidence_intervals: None,
-                prediction_intervals: None,
+                return_se,
+                confidence_intervals: match confidence_intervals {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
+                prediction_intervals: match prediction_intervals {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
                 parallel: None,
                 missing: Some(missing),
                 ..Default::default()
@@ -424,6 +444,18 @@ impl ROnlineLowess {
                 }
                 if let Some(d) = o.derivative {
                     items.push(("derivative", d.into_robj()));
+                }
+                if let Some(cl) = o.confidence_lower {
+                    items.push(("confidence_lower", cl.into_robj()));
+                }
+                if let Some(cu) = o.confidence_upper {
+                    items.push(("confidence_upper", cu.into_robj()));
+                }
+                if let Some(pl) = o.prediction_lower {
+                    items.push(("prediction_lower", pl.into_robj()));
+                }
+                if let Some(pu) = o.prediction_upper {
+                    items.push(("prediction_upper", pu.into_robj()));
                 }
                 if let Some(iters) = o.iterations_used {
                     items.push(("iterations_used", (iters as i32).into_robj()));

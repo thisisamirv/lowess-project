@@ -36,7 +36,7 @@ const PREDICT_RESULT_CLASS: &JNIStr = jni_str!("fastlowess/NativePredictResult")
 const RESULT_CTOR_SIG: MethodSignature<'static, 'static> =
     jni_sig!("([D[D[D[D[D[D[D[D[D[D[DDIDDDDDDDZJ)V");
 // Keep in sync with NativeOnlineOutput's constructor parameter list.
-const ONLINE_OUTPUT_CTOR_SIG: MethodSignature<'static, 'static> = jni_sig!("(ZDDDDID)V");
+const ONLINE_OUTPUT_CTOR_SIG: MethodSignature<'static, 'static> = jni_sig!("(ZDDDDIDDDDD)V");
 // Keep in sync with NativePredictResult's constructor parameter list.
 const PREDICT_RESULT_CTOR_SIG: MethodSignature<'static, 'static> = jni_sig!("([D[D[D[D[D[D[D)V");
 
@@ -496,6 +496,9 @@ pub extern "system" fn Java_fastlowess_NativeBridge_streamingNew<'local>(
     overlap: jint,
     merge_strategy: JString<'local>,
     missing: JString<'local>,
+    return_se: jboolean,
+    confidence_intervals: jdouble,
+    prediction_intervals: jdouble,
 ) -> jlong {
     env.with_env(|env| -> AppResult<jlong> {
         let wf = jstring_or_default(env, &weight_function, shared_parse::DEFAULT_WEIGHT_FUNCTION);
@@ -535,8 +538,9 @@ pub extern "system" fn Java_fastlowess_NativeBridge_streamingNew<'local>(
                 return_residuals,
                 return_robustness_weights,
                 return_diagnostics,
-                confidence_intervals: None,
-                prediction_intervals: None,
+                return_se,
+                confidence_intervals: opt_f64(confidence_intervals),
+                prediction_intervals: opt_f64(prediction_intervals),
                 parallel: Some(parallel),
                 missing: Some(&missing_str),
                 ..Default::default()
@@ -642,6 +646,9 @@ pub extern "system" fn Java_fastlowess_NativeBridge_onlineNew<'local>(
     min_points: jint,
     update_mode: JString<'local>,
     missing: JString<'local>,
+    return_se: jboolean,
+    confidence_intervals: jdouble,
+    prediction_intervals: jdouble,
 ) -> jlong {
     env.with_env(|env| -> AppResult<jlong> {
         let wf = jstring_or_default(env, &weight_function, shared_parse::DEFAULT_WEIGHT_FUNCTION);
@@ -679,8 +686,9 @@ pub extern "system" fn Java_fastlowess_NativeBridge_onlineNew<'local>(
                 return_residuals: false,
                 return_robustness_weights,
                 return_diagnostics: false,
-                confidence_intervals: None,
-                prediction_intervals: None,
+                return_se,
+                confidence_intervals: opt_f64(confidence_intervals),
+                prediction_intervals: opt_f64(prediction_intervals),
                 parallel: None,
                 missing: Some(&missing_str),
                 ..Default::default()
@@ -722,12 +730,40 @@ pub extern "system" fn Java_fastlowess_NativeBridge_onlineAddPoint<'local>(
             robustness_weight,
             iterations_used,
             derivative,
+            confidence_lower,
+            confidence_upper,
+            prediction_lower,
+            prediction_upper,
         ) = match point {
-            None => (false, f64::NAN, f64::NAN, f64::NAN, f64::NAN, -1, f64::NAN),
+            None => (
+                false,
+                f64::NAN,
+                f64::NAN,
+                f64::NAN,
+                f64::NAN,
+                -1,
+                f64::NAN,
+                f64::NAN,
+                f64::NAN,
+                f64::NAN,
+                f64::NAN,
+            ),
             Some(o) => {
                 let (se, res, rw, iters) = shared_parse::extract_online_output(&o);
                 let deriv = o.derivative.unwrap_or(f64::NAN);
-                (true, o.y, se, res, rw, iters, deriv)
+                (
+                    true,
+                    o.y,
+                    se,
+                    res,
+                    rw,
+                    iters,
+                    deriv,
+                    o.confidence_lower.unwrap_or(f64::NAN),
+                    o.confidence_upper.unwrap_or(f64::NAN),
+                    o.prediction_lower.unwrap_or(f64::NAN),
+                    o.prediction_upper.unwrap_or(f64::NAN),
+                )
             }
         };
 
@@ -743,6 +779,10 @@ pub extern "system" fn Java_fastlowess_NativeBridge_onlineAddPoint<'local>(
                 JValue::Double(robustness_weight),
                 JValue::Int(iterations_used),
                 JValue::Double(derivative),
+                JValue::Double(confidence_lower),
+                JValue::Double(confidence_upper),
+                JValue::Double(prediction_lower),
+                JValue::Double(prediction_upper),
             ],
         )?;
         Ok(obj)

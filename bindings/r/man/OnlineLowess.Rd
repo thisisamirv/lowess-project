@@ -5,22 +5,25 @@
 \title{LOWESS Online Smoothing}
 \usage{
 OnlineLowess(
-    fraction = 0.67,
-    window_capacity = 1000L,
-    min_points = 2L,
-    ...,
-    iterations = 3L,
-    delta = NULL,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    scaling_method = "mad",
-    boundary_policy = "extend",
-    zero_weight_fallback = "use_local_mean",
-    update_mode = "incremental",
-    auto_converge = NULL,
-    return_robustness_weights = FALSE,
-    return_derivative = FALSE,
-    missing = "error"
+  fraction = 0.67,
+  window_capacity = 1000L,
+  min_points = 2L,
+  ...,
+  iterations = 3L,
+  delta = NULL,
+  weight_function = "tricube",
+  robustness_method = "bisquare",
+  scaling_method = "mad",
+  boundary_policy = "extend",
+  zero_weight_fallback = "use_local_mean",
+  update_mode = "incremental",
+  auto_converge = NULL,
+  return_robustness_weights = FALSE,
+  return_derivative = FALSE,
+  return_se = FALSE,
+  confidence_intervals = NULL,
+  prediction_intervals = NULL,
+  missing = "error"
 )
 }
 \arguments{
@@ -80,6 +83,17 @@ robustness weights. Default: \code{FALSE}.}
 
 \item{return_derivative}{Logical; if \code{TRUE}, return per-point local
 fit derivative (slope) in the result. Default: \code{FALSE}.}
+
+\item{return_se}{Logical; include standard errors in the result. Requires
+\code{update_mode = "full"}. Default: \code{FALSE}.}
+
+\item{confidence_intervals}{Confidence level for confidence intervals
+(e.g. 0.95), or \code{NULL} (default) to disable. Requires
+\code{update_mode = "full"}.}
+
+\item{prediction_intervals}{Confidence level for prediction intervals
+(e.g. 0.95), or \code{NULL} (default) to disable. Requires
+\code{update_mode = "full"}.}
 
 \item{missing}{Policy for non-finite (NaN/Infinity) values in input data:
 \code{"error"} (default) raises an error, \code{"drop"} silently removes

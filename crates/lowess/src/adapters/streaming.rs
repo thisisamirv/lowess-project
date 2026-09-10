@@ -30,6 +30,7 @@ use crate::engine::executor::{LowessConfig, LowessExecutor};
 use crate::engine::output::LowessResult;
 use crate::engine::validator::{MissingPolicy, Validator};
 use crate::evaluation::diagnostics::DiagnosticsState;
+use crate::evaluation::intervals::IntervalMethod;
 use crate::math::boundary::BoundaryPolicy;
 use crate::math::defaults::*;
 use crate::math::kernel::WeightFunction;
@@ -107,6 +108,9 @@ pub struct StreamingLowessBuilder<T: Float> {
     // Include the per-point local fit derivative (slope) in the output.
     pub return_derivative: bool,
 
+    // Interval estimation method (standard errors/confidence/prediction intervals).
+    pub interval_type: Option<IntervalMethod<T>>,
+
     // Policy for handling non-finite (NaN/Inf) values in input data
     pub missing: MissingPolicy,
 
@@ -170,6 +174,7 @@ impl<T: Float> StreamingLowessBuilder<T> {
             return_diagnostics: DEFAULT_RETURN_DIAGNOSTICS,
             return_robustness_weights: DEFAULT_RETURN_ROBUSTNESS_WEIGHTS,
             return_derivative: DEFAULT_RETURN_DERIVATIVE,
+            interval_type: None,
             auto_converge: default_auto_converge(),
             missing: DEFAULT_MISSING_POLICY_ENUM,
             deferred_error: None,
@@ -230,6 +235,36 @@ pub struct StreamingLowess<T: Float> {
     diagnostics_state: Option<DiagnosticsState<T>>,
 }
 
+// Merge one overlap-region value pair per `merge_strategy`, shared by every
+// per-point quantity (y, robustness weights, derivative, SE, interval bounds)
+// that needs the same overlap-blending treatment.
+fn merge_overlap<T: Float>(
+    prev: &[T],
+    curr: &[T],
+    prev_overlap_len: usize,
+    merge_strategy: MergeStrategy,
+) -> Vec<T> {
+    let mut out = Vec::with_capacity(prev_overlap_len);
+    for (i, (&prev_val, &curr_val)) in prev
+        .iter()
+        .zip(curr.iter())
+        .take(prev_overlap_len)
+        .enumerate()
+    {
+        let merged = match merge_strategy {
+            MergeStrategy::Average => (prev_val + curr_val) / T::from(2.0).unwrap(),
+            MergeStrategy::WeightedAverage => {
+                let weight = T::from(i as f64 / prev_overlap_len as f64).unwrap();
+                prev_val * (T::one() - weight) + curr_val * weight
+            }
+            MergeStrategy::TakeFirst => prev_val,
+            MergeStrategy::TakeLast => curr_val,
+        };
+        out.push(merged);
+    }
+    out
+}
+
 impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
     // Process a chunk of data.
     pub fn process_chunk(&mut self, x: &[T], y: &[T]) -> Result<LowessResult<T>, LowessError> {
@@ -277,7 +312,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
             cv_fractions: None,
             cv_kind: None,
             auto_converge: self.config.auto_converge,
-            return_variance: None,
+            return_variance: self.config.interval_type,
             cv_seed: None,
             return_derivative: self.config.return_derivative,
             // ++++++++++++++++++++++++++++++++++++++
@@ -305,7 +340,24 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
         let smoothed = result.smoothed;
         let robustness_weights = result.robustness_weights;
         let derivative = result.derivative;
+        let std_errors = result.std_errors;
         let iterations = result.iterations.unwrap_or(0);
+
+        // Confidence/prediction interval bounds over the whole combined (overlap +
+        // new) array, computed the same way Batch does (`IntervalMethod::compute_intervals`,
+        // needing residuals over that same combined array regardless of whether
+        // `compute_residuals` was requested for output).
+        let (conf_lower_full, conf_upper_full, pred_lower_full, pred_upper_full) =
+            if let (Some(method), Some(se)) = (&self.config.interval_type, std_errors.as_ref()) {
+                let interval_residuals: Vec<T> = combined_y
+                    .iter()
+                    .zip(smoothed.iter())
+                    .map(|(&yi, &si)| yi - si)
+                    .collect();
+                method.compute_intervals(&smoothed, se, &interval_residuals)?
+            } else {
+                (None, None, None, None)
+            };
         // Determine how much to return vs buffer
         let combined_len = combined_x.len();
         let overlap_start = combined_len.saturating_sub(self.config.overlap);
@@ -398,6 +450,68 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
             }
         }
 
+        // Merge standard errors / confidence / prediction interval bounds, if present,
+        // using the shared `merge_overlap` helper (same per-point blend as y/robustness
+        // weights/derivative above).
+        let mut se_out: Option<Vec<T>> = std_errors
+            .as_ref()
+            .map(|_| Vec::with_capacity(prev_overlap_len));
+        let mut cl_out: Option<Vec<T>> = conf_lower_full
+            .as_ref()
+            .map(|_| Vec::with_capacity(prev_overlap_len));
+        let mut cu_out: Option<Vec<T>> = conf_upper_full
+            .as_ref()
+            .map(|_| Vec::with_capacity(prev_overlap_len));
+        let mut pl_out: Option<Vec<T>> = pred_lower_full
+            .as_ref()
+            .map(|_| Vec::with_capacity(prev_overlap_len));
+        let mut pu_out: Option<Vec<T>> = pred_upper_full
+            .as_ref()
+            .map(|_| Vec::with_capacity(prev_overlap_len));
+
+        if prev_overlap_len > 0 {
+            if let (Some(out), Some(curr)) = (&mut se_out, &std_errors) {
+                out.extend(merge_overlap(
+                    self.buffer.overlap_std_errors.as_vec(),
+                    curr,
+                    prev_overlap_len,
+                    self.config.merge_strategy,
+                ));
+            }
+            if let (Some(out), Some(curr)) = (&mut cl_out, &conf_lower_full) {
+                out.extend(merge_overlap(
+                    self.buffer.overlap_confidence_lower.as_vec(),
+                    curr,
+                    prev_overlap_len,
+                    self.config.merge_strategy,
+                ));
+            }
+            if let (Some(out), Some(curr)) = (&mut cu_out, &conf_upper_full) {
+                out.extend(merge_overlap(
+                    self.buffer.overlap_confidence_upper.as_vec(),
+                    curr,
+                    prev_overlap_len,
+                    self.config.merge_strategy,
+                ));
+            }
+            if let (Some(out), Some(curr)) = (&mut pl_out, &pred_lower_full) {
+                out.extend(merge_overlap(
+                    self.buffer.overlap_prediction_lower.as_vec(),
+                    curr,
+                    prev_overlap_len,
+                    self.config.merge_strategy,
+                ));
+            }
+            if let (Some(out), Some(curr)) = (&mut pu_out, &pred_upper_full) {
+                out.extend(merge_overlap(
+                    self.buffer.overlap_prediction_upper.as_vec(),
+                    curr,
+                    prev_overlap_len,
+                    self.config.merge_strategy,
+                ));
+            }
+        }
+
         // Add non-overlap portion
         if return_start < overlap_start {
             y_smooth_out.extend_from_slice(&smoothed[return_start..overlap_start]);
@@ -409,6 +523,29 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
                     .as_ref()
                     .expect("derivative present when return_derivative is set");
                 d_out.extend_from_slice(&deriv[return_start..overlap_start]);
+            }
+            if let Some(ref mut out) = se_out {
+                out.extend_from_slice(&std_errors.as_ref().unwrap()[return_start..overlap_start]);
+            }
+            if let Some(ref mut out) = cl_out {
+                out.extend_from_slice(
+                    &conf_lower_full.as_ref().unwrap()[return_start..overlap_start],
+                );
+            }
+            if let Some(ref mut out) = cu_out {
+                out.extend_from_slice(
+                    &conf_upper_full.as_ref().unwrap()[return_start..overlap_start],
+                );
+            }
+            if let Some(ref mut out) = pl_out {
+                out.extend_from_slice(
+                    &pred_lower_full.as_ref().unwrap()[return_start..overlap_start],
+                );
+            }
+            if let Some(ref mut out) = pu_out {
+                out.extend_from_slice(
+                    &pred_upper_full.as_ref().unwrap()[return_start..overlap_start],
+                );
             }
         }
         // Calculate residuals for output
@@ -451,12 +588,47 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
                     &deriv[overlap_start..],
                 );
             }
+            if let Some(ref se) = std_errors {
+                VecExt::assign_slice(
+                    self.buffer.overlap_std_errors.as_vec_mut(),
+                    &se[overlap_start..],
+                );
+            }
+            if let Some(ref cl) = conf_lower_full {
+                VecExt::assign_slice(
+                    self.buffer.overlap_confidence_lower.as_vec_mut(),
+                    &cl[overlap_start..],
+                );
+            }
+            if let Some(ref cu) = conf_upper_full {
+                VecExt::assign_slice(
+                    self.buffer.overlap_confidence_upper.as_vec_mut(),
+                    &cu[overlap_start..],
+                );
+            }
+            if let Some(ref pl) = pred_lower_full {
+                VecExt::assign_slice(
+                    self.buffer.overlap_prediction_lower.as_vec_mut(),
+                    &pl[overlap_start..],
+                );
+            }
+            if let Some(ref pu) = pred_upper_full {
+                VecExt::assign_slice(
+                    self.buffer.overlap_prediction_upper.as_vec_mut(),
+                    &pu[overlap_start..],
+                );
+            }
         } else {
             self.buffer.overlap_x.clear();
             self.buffer.overlap_y.clear();
             self.buffer.overlap_smoothed.clear();
             self.buffer.overlap_robustness_weights.clear();
             self.buffer.overlap_derivative.clear();
+            self.buffer.overlap_std_errors.clear();
+            self.buffer.overlap_confidence_lower.clear();
+            self.buffer.overlap_confidence_upper.clear();
+            self.buffer.overlap_prediction_lower.clear();
+            self.buffer.overlap_prediction_upper.clear();
         }
 
         // Note: We return results in sorted order (by x) for streaming chunks.
@@ -476,11 +648,11 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
         Ok(LowessResult {
             x: x_out,
             y: y_smooth_out,
-            standard_errors: None,
-            confidence_lower: None,
-            confidence_upper: None,
-            prediction_lower: None,
-            prediction_upper: None,
+            standard_errors: se_out,
+            confidence_lower: cl_out,
+            confidence_upper: cu_out,
+            prediction_lower: pl_out,
+            prediction_upper: pu_out,
             residuals: residuals_out,
             robustness_weights: rob_weights_out,
             derivative: deriv_out,
@@ -537,6 +709,33 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
             None
         };
 
+        let has_intervals = self.config.interval_type.is_some();
+        let standard_errors = has_intervals.then(|| take(&mut *self.buffer.overlap_std_errors));
+        let confidence_lower = self
+            .config
+            .interval_type
+            .as_ref()
+            .is_some_and(|m| m.confidence)
+            .then(|| take(&mut *self.buffer.overlap_confidence_lower));
+        let confidence_upper = self
+            .config
+            .interval_type
+            .as_ref()
+            .is_some_and(|m| m.confidence)
+            .then(|| take(&mut *self.buffer.overlap_confidence_upper));
+        let prediction_lower = self
+            .config
+            .interval_type
+            .as_ref()
+            .is_some_and(|m| m.prediction)
+            .then(|| take(&mut *self.buffer.overlap_prediction_lower));
+        let prediction_upper = self
+            .config
+            .interval_type
+            .as_ref()
+            .is_some_and(|m| m.prediction)
+            .then(|| take(&mut *self.buffer.overlap_prediction_upper));
+
         // Update diagnostics for the final overlap
         let diagnostics = if let Some(ref mut state) = self.diagnostics_state {
             state.update(&self.buffer.overlap_y, &self.buffer.overlap_smoothed);
@@ -548,11 +747,11 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
         let result = LowessResult {
             x: self.buffer.overlap_x.as_vec().clone(),
             y: self.buffer.overlap_smoothed.as_vec().clone(),
-            standard_errors: None,
-            confidence_lower: None,
-            confidence_upper: None,
-            prediction_lower: None,
-            prediction_upper: None,
+            standard_errors,
+            confidence_lower,
+            confidence_upper,
+            prediction_lower,
+            prediction_upper,
             residuals,
             robustness_weights,
             derivative,

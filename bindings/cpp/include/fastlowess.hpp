@@ -180,7 +180,8 @@ struct StreamingOptions : public LowessOptions {
  *
  * Online LOWESS processes one point at a time, so it has no `parallel` or
  * `backend` option, and diagnostics/residuals are always computed for free.
- * Confidence/prediction intervals also aren't available here (Batch-only).
+ * `return_se`/`confidence_intervals`/`prediction_intervals` require
+ * `update_mode = "full"`.
  */
 struct OnlineOptions {
   double fraction = detail::k_default_fraction; ///< Smoothing fraction (0, 1]
@@ -199,6 +200,12 @@ struct OnlineOptions {
   /// Include the local fit derivative (slope) for the latest point in the
   /// output.
   bool return_derivative = false;
+  /// Return standard errors. Requires `update_mode = "full"`.
+  bool return_se = false;
+  double confidence_intervals = NAN; ///< Confidence level (NaN = disabled).
+                                     ///< Requires `update_mode = "full"`.
+  double prediction_intervals = NAN; ///< Prediction level (NaN = disabled).
+                                     ///< Requires `update_mode = "full"`.
 
   /// Policy for non-finite (NaN/Inf) `x`/`y` values passed to add_point():
   /// "error" (default) or "drop".
@@ -239,6 +246,22 @@ public:
   /// Local fit derivative (slope) for the latest point (NaN if not computed).
   double derivative() const { return derivative_; }
 
+  /// Lower confidence interval bound for the latest point (NaN if not
+  /// computed).
+  double confidence_lower() const { return confidence_lower_; }
+
+  /// Upper confidence interval bound for the latest point (NaN if not
+  /// computed).
+  double confidence_upper() const { return confidence_upper_; }
+
+  /// Lower prediction interval bound for the latest point (NaN if not
+  /// computed).
+  double prediction_lower() const { return prediction_lower_; }
+
+  /// Upper prediction interval bound for the latest point (NaN if not
+  /// computed).
+  double prediction_upper() const { return prediction_upper_; }
+
 private:
   friend class OnlineLowess;
   template <typename U> friend class Expected;
@@ -248,7 +271,11 @@ private:
       : has_value_(raw.has_value != 0), y_(raw.y),
         standard_error_(raw.standard_error), residual_(raw.residual),
         robustness_weight_(raw.robustness_weight),
-        iterations_used_(raw.iterations_used), derivative_(raw.derivative) {}
+        iterations_used_(raw.iterations_used), derivative_(raw.derivative),
+        confidence_lower_(raw.confidence_lower),
+        confidence_upper_(raw.confidence_upper),
+        prediction_lower_(raw.prediction_lower),
+        prediction_upper_(raw.prediction_upper) {}
 
   bool has_value_ = false;
   double y_ = 0.0;
@@ -257,6 +284,10 @@ private:
   double robustness_weight_ = std::numeric_limits<double>::quiet_NaN();
   int iterations_used_ = -1;
   double derivative_ = std::numeric_limits<double>::quiet_NaN();
+  double confidence_lower_ = std::numeric_limits<double>::quiet_NaN();
+  double confidence_upper_ = std::numeric_limits<double>::quiet_NaN();
+  double prediction_lower_ = std::numeric_limits<double>::quiet_NaN();
+  double prediction_upper_ = std::numeric_limits<double>::quiet_NaN();
 };
 
 /**
@@ -746,7 +777,8 @@ public:
         options.return_derivative ? 1 : 0, options.zero_weight_fallback.c_str(),
         options.auto_converge, options.parallel ? 1 : 0, options.chunk_size,
         options.overlap, options.merge_strategy.c_str(),
-        options.missing.c_str());
+        options.missing.c_str(), options.return_se ? 1 : 0,
+        options.confidence_intervals, options.prediction_intervals);
   }
 
   ~StreamingLowess() {
@@ -825,7 +857,9 @@ public:
         options.return_robustness_weights ? 1 : 0,
         options.return_derivative ? 1 : 0, options.zero_weight_fallback.c_str(),
         options.auto_converge, options.window_capacity, options.min_points,
-        options.update_mode.c_str(), options.missing.c_str());
+        options.update_mode.c_str(), options.missing.c_str(),
+        options.return_se ? 1 : 0, options.confidence_intervals,
+        options.prediction_intervals);
   }
 
   ~OnlineLowess() {

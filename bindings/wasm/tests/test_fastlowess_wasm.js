@@ -222,3 +222,68 @@ test('WASM online missing: "drop" ignores non-finite point', () => {
     const res = online.add_point(1, NaN);
     assert.ok(res === undefined || res === null);
 });
+
+test('WASM streaming: return_se/confidence_intervals/prediction_intervals', () => {
+    const streamer = new fastlowess.StreamingLowess({
+        fraction: 0.2,
+        return_se: true,
+        confidence_intervals: 0.95,
+        prediction_intervals: 0.95
+    }, {
+        chunk_size: 50
+    });
+
+    const n = 200;
+    const x = new Float64Array(Array.from({ length: n }, (_, i) => i));
+    const y = new Float64Array(Array.from({ length: n }, (_, i) => Math.sin(i / 10)));
+
+    const result = streamer.process_chunk(x, y);
+    const finalResult = streamer.finalize();
+
+    assert.ok(result.standard_errors !== undefined);
+    assert.ok(result.confidence_lower !== undefined);
+    assert.ok(result.confidence_upper !== undefined);
+    assert.ok(result.prediction_lower !== undefined);
+    assert.ok(result.prediction_upper !== undefined);
+    assert.ok(finalResult.standard_errors !== undefined);
+});
+
+test('WASM online: return_se/confidence_intervals/prediction_intervals requires update_mode "full"', () => {
+    assert.throws(() => {
+        new fastlowess.OnlineLowess({
+            fraction: 0.5,
+            return_se: true
+        }, {
+            window_capacity: 10,
+            min_points: 3
+        });
+    });
+});
+
+test('WASM online: return_se/confidence_intervals/prediction_intervals', () => {
+    const online = new fastlowess.OnlineLowess({
+        fraction: 0.5,
+        return_se: true,
+        confidence_intervals: 0.95,
+        prediction_intervals: 0.95
+    }, {
+        window_capacity: 10,
+        min_points: 3,
+        update_mode: 'full'
+    });
+
+    let last = null;
+    for (let i = 0; i < 10; i++) {
+        const res = online.add_point(i, i * 2);
+        if (res !== null && res !== undefined) {
+            last = res;
+        }
+    }
+
+    assert.ok(last !== null);
+    assert.ok(last.standard_error !== undefined);
+    assert.ok(last.confidence_lower !== undefined);
+    assert.ok(last.confidence_upper !== undefined);
+    assert.ok(last.prediction_lower !== undefined);
+    assert.ok(last.prediction_upper !== undefined);
+});

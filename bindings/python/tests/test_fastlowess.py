@@ -350,6 +350,28 @@ class TestStreamingLowess:
         total_points = len(chunk_result.y) + len(final_result.y)
         assert total_points == len(x) - 1
 
+    def test_streaming_return_se_and_intervals(self):
+        """Test streaming with return_se/confidence_intervals/prediction_intervals."""
+        x = np.linspace(0, 100, 200)
+        y = np.sin(x / 10)
+
+        streaming = fastlowess.StreamingLowess(
+            fraction=0.2,
+            chunk_size=50,
+            return_se=True,
+            confidence_intervals=0.95,
+            prediction_intervals=0.95,
+        )
+        chunk_result = streaming.process_chunk(x, y)
+        final_result = streaming.finalize()
+
+        assert chunk_result.standard_errors is not None
+        assert chunk_result.confidence_lower is not None
+        assert chunk_result.confidence_upper is not None
+        assert chunk_result.prediction_lower is not None
+        assert chunk_result.prediction_upper is not None
+        assert final_result.standard_errors is not None
+
 
 class TestOnlineLowess:
     """Tests for the OnlineLowess class."""
@@ -415,6 +437,42 @@ class TestOnlineLowess:
         results = [online.add_point(xi, yi) for xi, yi in zip(x, y)]
 
         assert any(r is not None for r in results)
+
+    def test_online_return_se_and_intervals_requires_full_mode(self):
+        """Test online return_se/CI/PI require update_mode="full"."""
+        with pytest.raises(ValueError):
+            fastlowess.OnlineLowess(
+                fraction=0.5, window_capacity=10, min_points=3, return_se=True
+            )
+
+    def test_online_return_se_and_intervals(self):
+        """Test online with return_se/confidence_intervals/prediction_intervals."""
+        x = np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0])
+        y = np.array([2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0])
+
+        online = fastlowess.OnlineLowess(
+            fraction=0.5,
+            window_capacity=10,
+            min_points=3,
+            update_mode="full",
+            return_se=True,
+            confidence_intervals=0.95,
+            prediction_intervals=0.95,
+        )
+
+        results = []
+        for x_value, y_value in zip(x, y):
+            result = online.add_point(float(x_value), float(y_value))
+            if result is not None:
+                results.append(result)
+
+        assert len(results) > 0
+        last = results[-1]
+        assert last.standard_error is not None
+        assert last.confidence_lower is not None
+        assert last.confidence_upper is not None
+        assert last.prediction_lower is not None
+        assert last.prediction_upper is not None
 
 
 class TestLowessResult:

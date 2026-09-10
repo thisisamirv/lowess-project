@@ -888,3 +888,97 @@ fn test_streaming_return_derivative_multi_chunk_overlap() {
         assert_relative_eq!(d, 3.0, epsilon = 1e-9);
     }
 }
+
+/// `.return_se()` should populate `standard_errors` on a single chunk.
+#[test]
+fn test_streaming_return_se_single_chunk() {
+    let mut processor = StreamingLowess::new()
+        .fraction(0.9)
+        .return_se()
+        .chunk_size(20)
+        .overlap(3)
+        .build()
+        .expect("Builder should succeed");
+
+    let x: Vec<f64> = (0..20).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|xi| 2.0 * xi + 1.0).collect();
+
+    let result = processor.process_chunk(&x, &y).expect("process_chunk ok");
+    let se = result
+        .standard_errors
+        .expect("standard_errors should be present");
+    assert_eq!(se.len(), result.y.len());
+    for &s in &se {
+        assert!(
+            s.is_finite() && s >= 0.0,
+            "SE should be finite and non-negative, got {s}"
+        );
+    }
+}
+
+/// `.confidence_intervals()`/`.prediction_intervals()` should populate bounds across
+/// multiple chunks, exercising overlap merging (mirroring `return_derivative`'s own
+/// multi-chunk test).
+#[test]
+fn test_streaming_confidence_and_prediction_intervals_multi_chunk() {
+    let x_all: Vec<f64> = (0..15).map(|i| i as f64).collect();
+    let y_all: Vec<f64> = x_all.iter().map(|xi| 3.0 * xi - 5.0).collect();
+
+    let mut processor = StreamingLowess::new()
+        .fraction(0.9)
+        .confidence_intervals(0.95)
+        .prediction_intervals(0.95)
+        .chunk_size(10)
+        .overlap(2)
+        .build()
+        .expect("Builder should succeed");
+
+    let out_a = processor
+        .process_chunk(&x_all[0..10], &y_all[0..10])
+        .expect("process_chunk ok");
+    let cl = out_a.confidence_lower.expect("confidence_lower present");
+    let cu = out_a.confidence_upper.expect("confidence_upper present");
+    let pl = out_a.prediction_lower.expect("prediction_lower present");
+    let pu = out_a.prediction_upper.expect("prediction_upper present");
+    assert_eq!(cl.len(), out_a.y.len());
+    for i in 0..out_a.y.len() {
+        assert!(cl[i] <= out_a.y[i] && out_a.y[i] <= cu[i]);
+        assert!(pl[i] <= out_a.y[i] && out_a.y[i] <= pu[i]);
+        // Prediction intervals are always at least as wide as confidence intervals.
+        assert!(pu[i] - pl[i] >= cu[i] - cl[i] - 1e-9);
+    }
+
+    let out_b = processor
+        .process_chunk(&x_all[10..15], &y_all[10..15])
+        .expect("process_chunk ok");
+    assert!(out_b.confidence_lower.is_some());
+    assert!(out_b.prediction_lower.is_some());
+
+    let remaining = processor.finalize().expect("finalize ok");
+    if !remaining.y.is_empty() {
+        assert!(remaining.confidence_lower.is_some());
+        assert!(remaining.prediction_lower.is_some());
+    }
+}
+
+/// Without `.return_se()`/`.confidence_intervals()`/`.prediction_intervals()`, all
+/// interval-related fields should stay `None`.
+#[test]
+fn test_streaming_no_intervals_by_default() {
+    let mut processor = StreamingLowess::new()
+        .fraction(0.9)
+        .chunk_size(10)
+        .overlap(2)
+        .build()
+        .expect("Builder should succeed");
+
+    let x: Vec<f64> = (0..10).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|xi| 2.0 * xi + 1.0).collect();
+
+    let result = processor.process_chunk(&x, &y).expect("process_chunk ok");
+    assert!(result.standard_errors.is_none());
+    assert!(result.confidence_lower.is_none());
+    assert!(result.confidence_upper.is_none());
+    assert!(result.prediction_lower.is_none());
+    assert!(result.prediction_upper.is_none());
+}

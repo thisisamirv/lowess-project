@@ -16,6 +16,10 @@ import java.util.OptionalInt;
  * applicable
  * @param derivative the local fit's derivative (slope) at this point, if
  * computed
+ * @param confidenceLower the lower confidence interval bound, if computed
+ * @param confidenceUpper the upper confidence interval bound, if computed
+ * @param predictionLower the lower prediction interval bound, if computed
+ * @param predictionUpper the upper prediction interval bound, if computed
  */
 public record PointResult(
         double y,
@@ -23,7 +27,11 @@ public record PointResult(
         OptionalDouble residual,
         OptionalDouble robustnessWeight,
         OptionalInt iterationsUsed,
-        OptionalDouble derivative) {
+        OptionalDouble derivative,
+        OptionalDouble confidenceLower,
+        OptionalDouble confidenceUpper,
+        OptionalDouble predictionLower,
+        OptionalDouble predictionUpper) {
 
     static PointResult fromNative(NativeOnlineOutput o) {
         return new PointResult(
@@ -32,7 +40,11 @@ public record PointResult(
                 optionalDouble(o.residual),
                 optionalDouble(o.robustnessWeight),
                 o.iterationsUsed < 0 ? OptionalInt.empty() : OptionalInt.of(o.iterationsUsed),
-                optionalDouble(o.derivative));
+                optionalDouble(o.derivative),
+                optionalDouble(o.confidenceLower),
+                optionalDouble(o.confidenceUpper),
+                optionalDouble(o.predictionLower),
+                optionalDouble(o.predictionUpper));
     }
 
     private static OptionalDouble optionalDouble(double value) {

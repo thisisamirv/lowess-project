@@ -135,3 +135,26 @@ test_that("StreamingLowess missing = \"drop\" removes non-finite rows", {
 
     expect_length(result$y, length(x) - 1)
 })
+
+test_that("StreamingLowess return_se/confidence_intervals/prediction_intervals work", {
+    set.seed(42)
+    x <- seq(0, 10, length.out = 200)
+    y <- sin(x) + rnorm(200, sd = 0.1)
+
+    sl <- StreamingLowess(
+        fraction = 0.2,
+        chunk_size = 50,
+        return_se = TRUE,
+        confidence_intervals = 0.95,
+        prediction_intervals = 0.95
+    )
+    chunk_result <- process_chunk(sl, as.double(x), as.double(y))
+    final_result <- finalize(sl)
+
+    expect_false(is.null(chunk_result$standard_errors))
+    expect_false(is.null(chunk_result$confidence_lower))
+    expect_false(is.null(chunk_result$confidence_upper))
+    expect_false(is.null(chunk_result$prediction_lower))
+    expect_false(is.null(chunk_result$prediction_upper))
+    expect_false(is.null(final_result$standard_errors))
+})

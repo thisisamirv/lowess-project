@@ -66,6 +66,22 @@ class OnlineOutput:
     def derivative(self) -> float | None:
         """Local fit derivative (slope) for the latest point (None if not requested)."""
 
+    @property
+    def confidence_lower(self) -> float | None:
+        """Lower confidence interval bound for the latest point (None if not requested)."""
+
+    @property
+    def confidence_upper(self) -> float | None:
+        """Upper confidence interval bound for the latest point (None if not requested)."""
+
+    @property
+    def prediction_lower(self) -> float | None:
+        """Lower prediction interval bound for the latest point (None if not requested)."""
+
+    @property
+    def prediction_upper(self) -> float | None:
+        """Upper prediction interval bound for the latest point (None if not requested)."""
+
 class LowessResult:
     """Result from LOWESS smoothing."""
 
@@ -258,6 +274,9 @@ class StreamingLowess:
         return_residuals: bool = False,
         return_robustness_weights: bool = False,
         return_derivative: bool = False,
+        return_se: bool = False,
+        confidence_intervals: float | None = None,
+        prediction_intervals: float | None = None,
         zero_weight_fallback: str = "use_local_mean",
         parallel: bool = True,
         merge_strategy: str = "weighted_average",
@@ -285,6 +304,9 @@ class OnlineLowess:
         auto_converge: float | None = None,
         return_robustness_weights: bool = False,
         return_derivative: bool = False,
+        return_se: bool = False,
+        confidence_intervals: float | None = None,
+        prediction_intervals: float | None = None,
         zero_weight_fallback: str = "use_local_mean",
         missing: str = "error",
     ) -> None: ...

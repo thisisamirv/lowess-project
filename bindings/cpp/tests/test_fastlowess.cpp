@@ -36,6 +36,8 @@ constexpr std::size_t k_streaming_accuracy_point_count = 200U;
 constexpr std::size_t k_streaming_accuracy_chunk_size = 1000U;
 constexpr std::size_t k_online_window_capacity = 10U;
 constexpr std::size_t k_online_min_points = 3U;
+constexpr double k_online_return_se_test_y = 2.0;
+constexpr int k_online_return_se_point_count = 10;
 constexpr std::size_t k_streaming_missing_nan_idx = 5U;
 constexpr int k_robust_iterations = 3;
 constexpr std::size_t k_cw_uniform_point_count = 20U;
@@ -658,6 +660,94 @@ void testOnlineMissingDropIgnoresNonFinitePoint() {
              "missing=drop should ignore the non-finite point");
 }
 
+void testStreamingReturnSeAndIntervals() {
+  std::cout << "Running testStreamingReturnSeAndIntervals...\n";
+
+  std::vector<double> x_values(k_streaming_accuracy_point_count);
+  std::vector<double> y_values(k_streaming_accuracy_point_count);
+  for (std::size_t i = 0; i < k_streaming_accuracy_point_count; ++i) {
+    x_values[i] = static_cast<double>(i);
+    y_values[i] = std::sin(x_values[i] / k_streaming_basic_sine_divisor);
+  }
+
+  fastlowess::StreamingOptions options;
+  options.fraction = k_streaming_basic_fraction;
+  options.chunk_size = k_streaming_accuracy_chunk_size;
+  options.return_se = true;
+  options.confidence_intervals = k_confidence_level;
+  options.prediction_intervals = k_confidence_level;
+  fastlowess::StreamingLowess stream(options);
+
+  auto chunk_result = stream.process_chunk(x_values, y_values).value();
+  auto final_result = stream.finalize().value();
+
+  assertTrue(!chunk_result.standard_errors().empty(),
+             "streaming standard_errors should be present");
+  assertTrue(!chunk_result.confidence_lower().empty(),
+             "streaming confidence_lower should be present");
+  assertTrue(!chunk_result.prediction_lower().empty(),
+             "streaming prediction_lower should be present");
+  assertTrue(!final_result.standard_errors().empty(),
+             "finalize standard_errors should be present");
+}
+
+void testOnlineReturnSeAndIntervalsRequiresFullMode() {
+  std::cout << "Running testOnlineReturnSeAndIntervalsRequiresFullMode...\n";
+
+  fastlowess::OnlineOptions options;
+  options.fraction = k_basic_fraction;
+  options.window_capacity = k_online_window_capacity;
+  options.return_se = true;
+  fastlowess::OnlineLowess online_lowess(options);
+
+  bool caught = false;
+  try {
+    auto result =
+        online_lowess.add_point(1.0, k_online_return_se_test_y).value();
+  } catch (...) {
+    caught = true;
+  }
+  assertTrue(caught,
+             "return_se without update_mode=full should fail at construction");
+}
+
+void testOnlineReturnSeAndIntervals() {
+  std::cout << "Running testOnlineReturnSeAndIntervals...\n";
+
+  fastlowess::OnlineOptions options;
+  options.fraction = k_basic_fraction;
+  options.window_capacity = k_online_window_capacity;
+  options.update_mode = "full";
+  options.return_se = true;
+  options.confidence_intervals = k_confidence_level;
+  options.prediction_intervals = k_confidence_level;
+  fastlowess::OnlineLowess online_lowess(options);
+
+  bool checked = false;
+  double last_se = std::nan("");
+  double last_cl = std::nan("");
+  double last_pl = std::nan("");
+  for (int i = 0; i < k_online_return_se_point_count; ++i) {
+    auto result = online_lowess
+                      .add_point(static_cast<double>(i),
+                                 static_cast<double>(i) * k_linear_slope)
+                      .value();
+    if (result.has_value()) {
+      last_se = result.standard_error();
+      last_cl = result.confidence_lower();
+      last_pl = result.prediction_lower();
+      checked = true;
+    }
+  }
+
+  assertTrue(checked, "online should have produced at least one result");
+  assertTrue(!std::isnan(last_se), "online standard_error should be computed");
+  assertTrue(!std::isnan(last_cl),
+             "online confidence_lower should be computed");
+  assertTrue(!std::isnan(last_pl),
+             "online prediction_lower should be computed");
+}
+
 } // namespace
 
 int main() {
@@ -684,6 +774,9 @@ int main() {
     testMissingDropRemovesNonFiniteRows();
     testStreamingMissingDropRemovesNonFiniteRows();
     testOnlineMissingDropIgnoresNonFinitePoint();
+    testStreamingReturnSeAndIntervals();
+    testOnlineReturnSeAndIntervalsRequiresFullMode();
+    testOnlineReturnSeAndIntervals();
 
     std::cout << "All C++ tests passed!\n";
   } catch (const std::exception &exception) {

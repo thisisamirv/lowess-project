@@ -184,6 +184,36 @@ public final class StreamingOptions {
         }
 
         /**
+         * @param returnSe whether to include standard errors in the result
+         * @return this builder, for chaining
+         * @see Options.Builder#returnSe(boolean)
+         */
+        public Builder returnSe(boolean returnSe) {
+            common.returnSe(returnSe);
+            return this;
+        }
+
+        /**
+         * @param confidenceIntervals the confidence level (e.g. 0.95)
+         * @return this builder, for chaining
+         * @see Options.Builder#confidenceIntervals(double)
+         */
+        public Builder confidenceIntervals(double confidenceIntervals) {
+            common.confidenceIntervals(confidenceIntervals);
+            return this;
+        }
+
+        /**
+         * @param predictionIntervals the prediction level (e.g. 0.95)
+         * @return this builder, for chaining
+         * @see Options.Builder#predictionIntervals(double)
+         */
+        public Builder predictionIntervals(double predictionIntervals) {
+            common.predictionIntervals(predictionIntervals);
+            return this;
+        }
+
+        /**
          * @param parallel whether to enable parallel execution
          * @return this builder, for chaining
          * @see Options.Builder#parallel(boolean)

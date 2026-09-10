@@ -124,6 +124,14 @@ pub struct CppOnlineOutput {
     pub iterations_used: c_int,
     /// Local fit derivative (slope) for the latest point (NaN if not computed)
     pub derivative: c_double,
+    /// Lower confidence interval bound for the latest point (NaN if not computed)
+    pub confidence_lower: c_double,
+    /// Upper confidence interval bound for the latest point (NaN if not computed)
+    pub confidence_upper: c_double,
+    /// Lower prediction interval bound for the latest point (NaN if not computed)
+    pub prediction_lower: c_double,
+    /// Upper prediction interval bound for the latest point (NaN if not computed)
+    pub prediction_upper: c_double,
     pub error: *mut c_char, // NULL if no error
 }
 
@@ -230,6 +238,10 @@ impl Default for CppOnlineOutput {
             robustness_weight: f64::NAN,
             iterations_used: -1,
             derivative: f64::NAN,
+            confidence_lower: f64::NAN,
+            confidence_upper: f64::NAN,
+            prediction_lower: f64::NAN,
+            prediction_upper: f64::NAN,
             error: ptr::null_mut(),
         }
     }
@@ -679,6 +691,9 @@ pub unsafe extern "C" fn cpp_streaming_new(
     overlap: c_int,
     merge_strategy: *const c_char,
     missing: *const c_char,
+    return_se: c_int,
+    confidence_intervals: c_double,
+    prediction_intervals: c_double,
 ) -> *mut CppStreamingLowess {
     with_panic_ptr(|| {
         clear_last_error();
@@ -730,8 +745,11 @@ pub unsafe extern "C" fn cpp_streaming_new(
                 return_residuals: return_residuals != 0,
                 return_robustness_weights: return_robustness_weights != 0,
                 return_diagnostics: return_diagnostics != 0,
-                confidence_intervals: None,
-                prediction_intervals: None,
+                return_se: return_se != 0,
+                confidence_intervals: (!confidence_intervals.is_nan())
+                    .then_some(confidence_intervals),
+                prediction_intervals: (!prediction_intervals.is_nan())
+                    .then_some(prediction_intervals),
                 parallel: Some(parallel != 0),
                 missing: Some(missing_str),
                 ..Default::default()
@@ -851,6 +869,9 @@ pub unsafe extern "C" fn cpp_online_new(
     min_points: c_int,
     update_mode: *const c_char,
     missing: *const c_char,
+    return_se: c_int,
+    confidence_intervals: c_double,
+    prediction_intervals: c_double,
 ) -> *mut CppOnlineLowess {
     with_panic_ptr(|| {
         clear_last_error();
@@ -907,8 +928,11 @@ pub unsafe extern "C" fn cpp_online_new(
                 return_residuals: false,
                 return_robustness_weights: return_robustness_weights != 0,
                 return_diagnostics: false,
-                confidence_intervals: None,
-                prediction_intervals: None,
+                return_se: return_se != 0,
+                confidence_intervals: (!confidence_intervals.is_nan())
+                    .then_some(confidence_intervals),
+                prediction_intervals: (!prediction_intervals.is_nan())
+                    .then_some(prediction_intervals),
                 parallel: None,
                 missing: Some(missing_str),
                 ..Default::default()
@@ -976,6 +1000,10 @@ pub unsafe extern "C" fn cpp_online_add_point(
                         robustness_weight,
                         iterations_used,
                         derivative: o.derivative.unwrap_or(f64::NAN),
+                        confidence_lower: o.confidence_lower.unwrap_or(f64::NAN),
+                        confidence_upper: o.confidence_upper.unwrap_or(f64::NAN),
+                        prediction_lower: o.prediction_lower.unwrap_or(f64::NAN),
+                        prediction_upper: o.prediction_upper.unwrap_or(f64::NAN),
                         error: ptr::null_mut(),
                     }
                 }

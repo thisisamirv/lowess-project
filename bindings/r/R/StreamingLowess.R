@@ -36,6 +36,12 @@
 #'   \code{"average"} (alias: \code{"mean"}),
 #'   \code{"take_first"} (alias: \code{"first"}), or
 #'   \code{"take_last"} (alias: \code{"last"}).
+#' @param return_se Logical; include standard errors in the result. Default:
+#'   \code{FALSE}.
+#' @param confidence_intervals Confidence level for confidence intervals
+#'   (e.g. 0.95), or \code{NULL} (default) to disable.
+#' @param prediction_intervals Confidence level for prediction intervals
+#'   (e.g. 0.95), or \code{NULL} (default) to disable.
 #'
 #' @return A StreamingLowess object.
 #' @examples
@@ -63,6 +69,9 @@ StreamingLowess <- function(
     return_residuals = FALSE,
     return_robustness_weights = FALSE,
     return_derivative = FALSE,
+    return_se = FALSE,
+    confidence_intervals = NULL,
+    prediction_intervals = NULL,
     merge_strategy = "weighted_average",
     parallel = TRUE,
     missing = "error"

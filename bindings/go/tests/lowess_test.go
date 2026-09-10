@@ -566,6 +566,48 @@ func TestStreamingLowess(t *testing.T) {
 			t.Fatalf("expected %d total points after dropping non-finite row, got %d", len(x)-1, total)
 		}
 	})
+
+	t.Run("ReturnSEAndIntervals", func(t *testing.T) {
+		x, y := sineData(200)
+		for i := range x {
+			x[i] *= 100
+			y[i] = math.Sin(x[i] / 100)
+		}
+
+		opts := fastlowess.DefaultStreamingOptions()
+		opts.Fraction = 0.2
+		opts.ChunkSize = 50
+		opts.ReturnSE = true
+		ci := 0.95
+		opts.ConfidenceIntervals = &ci
+		opts.PredictionIntervals = &ci
+		model, err := fastlowess.NewStreamingLowess(opts)
+		if err != nil {
+			t.Fatalf("NewStreamingLowess failed: %v", err)
+		}
+		defer model.Close()
+
+		chunkRes, err := model.ProcessChunk(x, y)
+		if err != nil {
+			t.Fatalf("ProcessChunk failed: %v", err)
+		}
+		finalRes, err := model.Finalize()
+		if err != nil {
+			t.Fatalf("Finalize failed: %v", err)
+		}
+		if chunkRes.StandardErrors == nil {
+			t.Fatalf("expected StandardErrors to be populated")
+		}
+		if chunkRes.ConfidenceLower == nil || chunkRes.ConfidenceUpper == nil {
+			t.Fatalf("expected ConfidenceLower/Upper to be populated")
+		}
+		if chunkRes.PredictionLower == nil || chunkRes.PredictionUpper == nil {
+			t.Fatalf("expected PredictionLower/Upper to be populated")
+		}
+		if finalRes.StandardErrors == nil {
+			t.Fatalf("expected finalize StandardErrors to be populated")
+		}
+	})
 }
 
 // ---------------------------------------------------------------------------
@@ -726,6 +768,59 @@ func TestOnlineLowess(t *testing.T) {
 		}
 		if !sawValue {
 			t.Fatal("expected at least one point result once the window filled")
+		}
+	})
+
+	t.Run("ReturnSEAndIntervalsRequiresFullMode", func(t *testing.T) {
+		opts := fastlowess.DefaultOnlineOptions()
+		opts.Fraction = 0.5
+		opts.WindowCapacity = 10
+		opts.MinPoints = 3
+		opts.ReturnSE = true
+		if _, err := fastlowess.NewOnlineLowess(opts); err == nil {
+			t.Fatal("expected an error when combining ReturnSE with the default (incremental) UpdateMode")
+		}
+	})
+
+	t.Run("ReturnSEAndIntervals", func(t *testing.T) {
+		opts := fastlowess.DefaultOnlineOptions()
+		opts.Fraction = 0.5
+		opts.WindowCapacity = 10
+		opts.MinPoints = 3
+		opts.UpdateMode = "full"
+		opts.ReturnSE = true
+		ci := 0.95
+		opts.ConfidenceIntervals = &ci
+		opts.PredictionIntervals = &ci
+		model, err := fastlowess.NewOnlineLowess(opts)
+		if err != nil {
+			t.Fatalf("NewOnlineLowess failed: %v", err)
+		}
+		defer model.Close()
+
+		var last fastlowess.PointResult
+		sawValue := false
+		for i := 0; i < 10; i++ {
+			res, ok, err := model.AddPoint(float64(i), float64(i)*2.0)
+			if err != nil {
+				t.Fatalf("AddPoint failed at i=%d: %v", i, err)
+			}
+			if ok {
+				last = res
+				sawValue = true
+			}
+		}
+		if !sawValue {
+			t.Fatal("expected at least one point result")
+		}
+		if math.IsNaN(last.StandardError) {
+			t.Fatal("expected StandardError to be computed")
+		}
+		if math.IsNaN(last.ConfidenceLower) || math.IsNaN(last.ConfidenceUpper) {
+			t.Fatal("expected ConfidenceLower/Upper to be computed")
+		}
+		if math.IsNaN(last.PredictionLower) || math.IsNaN(last.PredictionUpper) {
+			t.Fatal("expected PredictionLower/Upper to be computed")
 		}
 	})
 }

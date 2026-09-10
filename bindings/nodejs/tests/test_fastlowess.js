@@ -265,3 +265,68 @@ test('online missing: "drop" ignores non-finite point', () => {
     const res = online.add_point(1, NaN);
     assert.strictEqual(res, null);
 });
+
+test('streaming: return_se/confidence_intervals/prediction_intervals', () => {
+    const streamer = new fastlowess.StreamingLowess({
+        fraction: 0.2,
+        return_se: true,
+        confidence_intervals: 0.95,
+        prediction_intervals: 0.95
+    }, {
+        chunk_size: 50
+    });
+
+    const n = 200;
+    const x = new Float64Array(Array.from({ length: n }, (_, i) => i));
+    const y = new Float64Array(Array.from({ length: n }, (_, i) => Math.sin(i / 10)));
+
+    const result = streamer.process_chunk(x, y);
+    const finalResult = streamer.finalize();
+
+    assert.ok(result.standard_errors !== null);
+    assert.ok(result.confidence_lower !== null);
+    assert.ok(result.confidence_upper !== null);
+    assert.ok(result.prediction_lower !== null);
+    assert.ok(result.prediction_upper !== null);
+    assert.ok(finalResult.standard_errors !== null);
+});
+
+test('online: return_se/confidence_intervals/prediction_intervals requires update_mode "full"', () => {
+    assert.throws(() => {
+        new fastlowess.OnlineLowess({
+            fraction: 0.5,
+            return_se: true
+        }, {
+            window_capacity: 10,
+            min_points: 3
+        });
+    });
+});
+
+test('online: return_se/confidence_intervals/prediction_intervals', () => {
+    const online = new fastlowess.OnlineLowess({
+        fraction: 0.5,
+        return_se: true,
+        confidence_intervals: 0.95,
+        prediction_intervals: 0.95
+    }, {
+        window_capacity: 10,
+        min_points: 3,
+        update_mode: 'full'
+    });
+
+    let last = null;
+    for (let i = 0; i < 10; i++) {
+        const res = online.add_point(i, i * 2);
+        if (res !== null) {
+            last = res;
+        }
+    }
+
+    assert.ok(last !== null);
+    assert.ok(last.standard_error !== null);
+    assert.ok(last.confidence_lower !== null);
+    assert.ok(last.confidence_upper !== null);
+    assert.ok(last.prediction_lower !== null);
+    assert.ok(last.prediction_upper !== null);
+});

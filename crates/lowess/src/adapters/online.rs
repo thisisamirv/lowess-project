@@ -183,6 +183,10 @@ impl<T: Float> OnlineLowessBuilder<T> {
         Validator::validate_window_capacity(self.window_capacity, 3)?;
         Validator::validate_min_points(self.min_points, self.window_capacity)?;
 
+        // Validate that return_se()/confidence_intervals()/prediction_intervals() is
+        // only combined with update_mode("full")
+        Validator::validate_online_se_update_mode(self.interval_type, self.update_mode)?;
+
         let capacity = self.window_capacity;
         Ok(OnlineLowess {
             config: self,
@@ -204,6 +208,16 @@ pub struct OnlineOutput<T> {
 
     // Residual (raw input y minus this output's y)
     pub residual: Option<T>,
+
+    // Confidence interval bounds around the mean response for the latest point (`Full`
+    // update mode only, via `.confidence_intervals(level)`).
+    pub confidence_lower: Option<T>,
+    pub confidence_upper: Option<T>,
+
+    // Prediction interval bounds for a new observation at the latest point (`Full`
+    // update mode only, via `.prediction_intervals(level)`).
+    pub prediction_lower: Option<T>,
+    pub prediction_upper: Option<T>,
 
     // Robustness weight for the latest point (if computed)
     pub robustness_weight: Option<T>,
@@ -284,6 +298,10 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
                 y: smoothed,
                 standard_error: None,
                 residual: Some(residual),
+                confidence_lower: None,
+                confidence_upper: None,
+                prediction_lower: None,
+                prediction_upper: None,
                 robustness_weight: Some(T::one()),
                 iterations_used: Some(0),
                 derivative: self.config.return_derivative.then_some(slope),
@@ -294,7 +312,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
         let zero_flag = self.config.zero_weight_fallback.to_u8();
 
         // Choose update strategy based on configuration
-        let (smoothed, std_err, rob_weight, iterations_used, derivative) =
+        let (smoothed, std_err, ci_bounds, rob_weight, iterations_used, derivative) =
             match self.config.update_mode {
                 UpdateMode::Incremental => {
                     // Incremental mode: fit only the latest point
@@ -324,7 +342,14 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
                     );
 
                     let deriv = self.config.return_derivative.then_some(slope);
-                    (smoothed_val, None, Some(T::one()), None, deriv)
+                    (
+                        smoothed_val,
+                        None,
+                        (None, None, None, None),
+                        Some(T::one()),
+                        None,
+                        deriv,
+                    )
                 }
                 UpdateMode::Full => {
                     // Full mode: re-smooth entire window
@@ -375,9 +400,34 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
                     };
                     let deriv = result.derivative.as_ref().and_then(|v| v.last().copied());
 
+                    // Confidence/prediction interval bounds for the latest point, computed
+                    // from the whole window's smoothed values/SE/residuals the same way
+                    // Batch does (`IntervalMethod::compute_intervals`), then taking the
+                    // last element - the executor itself only produces plain std_errors.
+                    let ci_bounds = if let (Some(method), Some(se)) =
+                        (&self.config.interval_type, se_vec.as_ref())
+                    {
+                        let residuals: Vec<T> = y_vec
+                            .iter()
+                            .zip(smoothed_vec.iter())
+                            .map(|(&yi, &si)| yi - si)
+                            .collect();
+                        let (cl, cu, pl, pu) =
+                            method.compute_intervals(&smoothed_vec, se, &residuals)?;
+                        (
+                            cl.as_ref().and_then(|v| v.last().copied()),
+                            cu.as_ref().and_then(|v| v.last().copied()),
+                            pl.as_ref().and_then(|v| v.last().copied()),
+                            pu.as_ref().and_then(|v| v.last().copied()),
+                        )
+                    } else {
+                        (None, None, None, None)
+                    };
+
                     (
                         smoothed_val,
                         std_err,
+                        ci_bounds,
                         rob_weight,
                         iterations_used_val,
                         deriv,
@@ -387,10 +437,16 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
 
         let residual = y - smoothed;
 
+        let (confidence_lower, confidence_upper, prediction_lower, prediction_upper) = ci_bounds;
+
         Ok(Some(OnlineOutput {
             y: smoothed,
             standard_error: std_err,
             residual: Some(residual),
+            confidence_lower,
+            confidence_upper,
+            prediction_lower,
+            prediction_upper,
             robustness_weight: rob_weight,
             iterations_used,
             derivative,

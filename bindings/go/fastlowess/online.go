@@ -50,6 +50,15 @@ type OnlineOptions struct {
 	ReturnRobustnessWeights bool
 	// ReturnDerivative requests the local fit's derivative (slope) for the latest point.
 	ReturnDerivative bool
+	// ReturnSE requests the standard error for the latest point. Requires
+	// UpdateMode = "full".
+	ReturnSE bool
+	// ConfidenceIntervals is the confidence level for confidence intervals,
+	// e.g. 0.95. Nil disables confidence intervals. Requires UpdateMode = "full".
+	ConfidenceIntervals *float64
+	// PredictionIntervals is the confidence level for prediction intervals,
+	// e.g. 0.95. Nil disables prediction intervals. Requires UpdateMode = "full".
+	PredictionIntervals *float64
 
 	// WindowCapacity is the maximum number of recent points retained.
 	// Default: 1000.
@@ -111,6 +120,8 @@ func NewOnlineLowess(opts OnlineOptions) (*OnlineLowess, error) {
 
 	delta, deltaSet := optPtr(opts.Delta)
 	autoConverge, autoConvergeSet := optPtr(opts.AutoConverge)
+	ci, ciSet := optPtr(opts.ConfidenceIntervals)
+	pi, piSet := optPtr(opts.PredictionIntervals)
 
 	var ptr *C.fastlowess_GoOnlineLowess
 	var errMsg string
@@ -128,6 +139,9 @@ func NewOnlineLowess(opts OnlineOptions) (*OnlineLowess, error) {
 			um,
 			missing,
 			boolToCInt(opts.ReturnDerivative),
+			boolToCInt(opts.ReturnSE),
+			optFloat(ci, ciSet),
+			optFloat(pi, piSet),
 		)
 		if ptr == nil {
 			errMsg = lastError()
@@ -171,6 +185,10 @@ func (o *OnlineLowess) AddPoint(x, y float64) (res PointResult, ok bool, err err
 		RobustnessWeight: float64(cout.robustness_weight),
 		IterationsUsed:   int(cout.iterations_used),
 		Derivative:       float64(cout.derivative),
+		ConfidenceLower:  float64(cout.confidence_lower),
+		ConfidenceUpper:  float64(cout.confidence_upper),
+		PredictionLower:  float64(cout.prediction_lower),
+		PredictionUpper:  float64(cout.prediction_upper),
 	}
 	return res, true, nil
 }

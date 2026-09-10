@@ -117,8 +117,11 @@ int main() {
 | `min_points` | `int` | 2 | Min points before smoothing starts |
 | `update_mode` | `std::string` | "incremental" | Update mode (`"full"` or `"incremental"`) |
 | `return_derivative` | `bool` | false | Include the latest point's local fit derivative (slope) in the result |
+| `return_se` | `bool` | false | Populate `standard_error()` in the result (requires `update_mode = "full"`; construction fails if combined with `"incremental"`) |
+| `confidence_intervals` | `double` | NaN | Confidence level (e.g., 0.95); populates `confidence_lower()`/`confidence_upper()` (requires `update_mode = "full"`) |
+| `prediction_intervals` | `double` | NaN | Prediction level (e.g., 0.95); populates `prediction_lower()`/`prediction_upper()` (requires `update_mode = "full"`) |
 
-Confidence/prediction intervals, standard errors, cross-validation, GPU `backend`, `custom_weights`, `return_sorted`, `return_diagnostics`, `return_residuals`, and `parallel` are Batch-only (or Batch/Streaming-only) and not available here; see [fastLowess](api.md) for those.
+Cross-validation, GPU `backend`, `custom_weights`, `return_sorted`, `return_diagnostics`, `return_residuals`, and `parallel` are Batch-only (or Batch/Streaming-only) and not available here; see [fastLowess](api.md) for those.
 
 ## Options
 
@@ -241,6 +244,27 @@ Each point's local WLS fit already computes a slope internally; this exposes the
 - `false` (default) — leaves `derivative()` as NaN
 - `true` — populates `derivative()`
 
+### return_se
+
+*See: [Intervals](../guide/intervals.md)*
+
+Populates `standard_error()` — but only when combined with `update_mode = "full"`. The fast `"incremental"` path (the default) never computes standard errors, so combining `return_se` (or `confidence_intervals`/`prediction_intervals`) with anything other than `"full"` makes construction fail, rather than silently leaving `standard_error()` as NaN.
+
+- `false` (default) — leaves `standard_error()` as NaN
+- `true` — populates `standard_error()`, and requires `update_mode = "full"`
+
+### confidence_intervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the confidence interval around the mean response at the latest point (e.g. `0.95`), populating `confidence_lower()`/`confidence_upper()`. Same `update_mode = "full"` requirement as `return_se`. NaN (default) disables confidence intervals.
+
+### prediction_intervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the prediction interval for a new observation at the latest point (e.g. `0.95`), populating `prediction_lower()`/`prediction_upper()`. Same `update_mode = "full"` requirement as `return_se`. NaN (default) disables prediction intervals.
+
 ## Result Structure
 
 ### fastlowess::OnlineOutput
@@ -251,7 +275,9 @@ Returned (inside `Expected`) by `add_point()`. Check `has_value()` before readin
 | --- | --- | --- |
 | `has_value()` | `bool` | `false` while window fills; `true` when output is ready |
 | `y()` | `double` | Smoothed value for the latest point |
-| `standard_error()` | `double` | Always NaN — standard errors require `return_se`/confidence intervals, which are Batch-only |
+| `standard_error()` | `double` | Populated when `return_se` is set (requires `update_mode = "full"`); NaN otherwise |
+| `confidence_lower()` / `confidence_upper()` | `double` | Confidence interval bounds around the mean response, if `confidence_intervals` was set (requires `update_mode = "full"`) |
+| `prediction_lower()` / `prediction_upper()` | `double` | Prediction interval bounds for a new observation, if `prediction_intervals` was set (requires `update_mode = "full"`) |
 | `residual()` | `double` | Residual y − smoothed; always populated (there is no `return_residuals` option for Online) |
 | `robustness_weight()` | `double` | Robustness weight, if `return_robustness_weights` was set |
 | `iterations_used()` | `int` | Robustness iterations performed (−1 if N/A) |

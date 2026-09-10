@@ -329,4 +329,8 @@ type PointResult struct {
 	RobustnessWeight float64 // NaN if not computed
 	IterationsUsed   int     // -1 if not applicable
 	Derivative       float64 // NaN if not computed
+	ConfidenceLower  float64 // NaN if not computed
+	ConfidenceUpper  float64 // NaN if not computed
+	PredictionLower  float64 // NaN if not computed
+	PredictionUpper  float64 // NaN if not computed
 }
