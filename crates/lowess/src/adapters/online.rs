@@ -21,7 +21,9 @@ use crate::adapters::defaults::*;
 use crate::algorithms::defaults::*;
 use crate::algorithms::regression::{WLSSolver, ZeroWeightFallback};
 use crate::algorithms::robustness::RobustnessMethod;
-use crate::engine::executor::{CVPassFn, FitPassFn, IntervalPassFn, SmoothPassFn};
+use crate::engine::executor::{
+    CVPassFn, DerivativePassFn, FitPassFn, IntervalPassFn, SmoothPassFn,
+};
 use crate::engine::executor::{LowessConfig, LowessExecutor};
 use crate::engine::validator::{MissingPolicy, Validator};
 use crate::math::boundary::BoundaryPolicy;
@@ -108,6 +110,10 @@ pub struct OnlineLowessBuilder<T: Float> {
     #[doc(hidden)]
     pub custom_interval_pass: Option<IntervalPassFn<T>>,
 
+    // Custom derivative (local fit slope) estimation pass function.
+    #[doc(hidden)]
+    pub custom_derivative_pass: Option<DerivativePassFn<T>>,
+
     // Custom fit pass function.
     #[doc(hidden)]
     pub custom_fit_pass: Option<FitPassFn<T>>,
@@ -146,6 +152,7 @@ impl<T: Float> OnlineLowessBuilder<T> {
             custom_smooth_pass: None,
             custom_cv_pass: None,
             custom_interval_pass: None,
+            custom_derivative_pass: None,
             custom_fit_pass: None,
             duplicate_param: None,
         }
@@ -336,7 +343,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
                         custom_smooth_pass: self.config.custom_smooth_pass,
                         custom_cv_pass: self.config.custom_cv_pass,
                         custom_interval_pass: self.config.custom_interval_pass,
-                        custom_derivative_pass: None,
+                        custom_derivative_pass: self.config.custom_derivative_pass,
                         custom_fit_pass: self.config.custom_fit_pass,
                         parallel: false,
                         backend: None,
