@@ -809,15 +809,18 @@ impl<T: Float> LowessExecutor<T> {
 
         // Run the iteration loop
         let (
-            mut smoothed,
-            mut std_errors,
-            iterations,
-            mut robustness_weights,
-            mut residuals,
-            confidence_lower,
-            confidence_upper,
-            prediction_lower,
-            prediction_upper,
+            (
+                mut smoothed,
+                mut std_errors,
+                iterations,
+                mut robustness_weights,
+                mut residuals,
+                confidence_lower,
+                confidence_upper,
+                prediction_lower,
+                prediction_upper,
+            ),
+            inline_derivative,
         ) = self.iteration_loop_with_callback(
             x_ref,
             y_ref,
@@ -854,20 +857,24 @@ impl<T: Float> LowessExecutor<T> {
             custom_predict_pass: self.custom_predict_pass,
         });
 
-        // Compute per-point local fit derivative (slope), if requested, using the same
-        // padded arrays/final (pre-slice) robustness weights actually used for fitting.
-        let mut derivative = self.return_derivative.then(|| {
-            Self::compute_derivative(
-                x_ref,
-                y_ref,
-                window_size,
-                self.delta,
-                &robustness_weights,
-                self.weight_function,
-                self.zero_weight_fallback,
-                effective_custom_weights,
-                self.custom_derivative_pass,
-            )
+        // Per-point local fit derivative (slope), if requested. `iteration_loop_with_callback`
+        // already captures this for free during its final smoothing iteration when possible;
+        // only fall back to a separate re-fit pass when that wasn't possible (a custom smooth
+        // or derivative pass is in play).
+        let mut derivative = inline_derivative.or_else(|| {
+            self.return_derivative.then(|| {
+                Self::compute_derivative(
+                    x_ref,
+                    y_ref,
+                    window_size,
+                    self.delta,
+                    &robustness_weights,
+                    self.weight_function,
+                    self.zero_weight_fallback,
+                    effective_custom_weights,
+                    self.custom_derivative_pass,
+                )
+            })
         });
 
         // Slice back to original range if padded
@@ -947,13 +954,13 @@ impl<T: Float> LowessExecutor<T> {
         interval_pass_fn: Option<IntervalPassFn<T>>,
         custom_weights: Option<&[T]>,
         buffer: Option<&mut LowessBuffer<T>>,
-    ) -> Result<IterationResult<T>, LowessError>
+    ) -> Result<(IterationResult<T>, Option<Vec<T>>), LowessError>
     where
         T: Float + WLSSolver + Debug + Send + Sync + 'static,
     {
         if let Some(fit_pass) = self.custom_fit_pass {
             let config = self.to_config(Some(eff_fraction), convergence_tolerance, interval_method);
-            return fit_pass(x, y, &config);
+            return fit_pass(x, y, &config).map(|r| (r, None));
         }
 
         let n = x.len();
@@ -967,6 +974,14 @@ impl<T: Float> LowessExecutor<T> {
             &mut internal_buffers
         };
         let mut iterations_performed = 0;
+
+        // Whether the final smoothing pass below can capture the local fit's derivative
+        // for free (it's already computed alongside `y` in the same regression solve),
+        // avoiding a separate re-fit pass in `run()` afterward. Not possible when a custom
+        // smooth or derivative pass is in play, since those don't go through this capture.
+        let capture_derivative_inline = self.return_derivative
+            && smooth_pass_fn.is_none()
+            && self.custom_derivative_pass.is_none();
 
         // Copy initial y values to y_smooth
         buffers.y_smooth.copy_from_slice(y);
@@ -1007,6 +1022,12 @@ impl<T: Float> LowessExecutor<T> {
                     &mut buffers.weights,
                     zero_weight_flag,
                     custom_weights,
+                    // Every iteration keeps overwriting the same scratch slot (cheap - the
+                    // slope is already produced by the same solve as `y`); whichever
+                    // iteration turns out to be the last (whether via convergence break
+                    // or exhausting `niter`) leaves the correct final-iteration slope.
+                    capture_derivative_inline
+                        .then(|| buffers.derivative.as_vec_mut().as_mut_slice()),
                 );
             }
 
@@ -1046,20 +1067,30 @@ impl<T: Float> LowessExecutor<T> {
             )
         });
 
+        let inline_derivative =
+            capture_derivative_inline.then(|| buffers.derivative.as_vec().clone());
+
         Ok((
-            buffers.y_smooth.as_vec().clone(),
-            std_errors,
-            iterations_performed,
-            buffers.robustness_weights.as_vec().clone(),
-            None, // Residuals are not returned by the CPU executor
-            None, // Confidence intervals are not returned by the CPU executor
-            None, // Prediction intervals are not returned by the CPU executor
-            None, // Confidence intervals are not returned by the CPU executor
-            None, // Prediction intervals are not returned by the CPU executor
+            (
+                buffers.y_smooth.as_vec().clone(),
+                std_errors,
+                iterations_performed,
+                buffers.robustness_weights.as_vec().clone(),
+                None, // Residuals are not returned by the CPU executor
+                None, // Confidence intervals are not returned by the CPU executor
+                None, // Prediction intervals are not returned by the CPU executor
+                None, // Confidence intervals are not returned by the CPU executor
+                None, // Prediction intervals are not returned by the CPU executor
+            ),
+            inline_derivative,
         ))
     }
 
-    // Perform a single smoothing pass over all points.
+    // Perform a single smoothing pass over all points. `derivative`, if `Some`, is filled
+    // in with the local fit's slope at no extra cost (`fit_with_derivative()` already
+    // computes it alongside the smoothed value in the same regression solve) - this lets
+    // the final iteration double as the derivative-collection pass, avoiding a separate
+    // re-fit afterward.
     #[allow(clippy::too_many_arguments)]
     pub fn smooth_pass(
         x: &[T],
@@ -1073,6 +1104,7 @@ impl<T: Float> LowessExecutor<T> {
         weights: &mut [T],
         zero_weight_flag: u8,
         custom_weights: Option<&[T]>,
+        mut derivative: Option<&mut [T]>,
     ) where
         T: WLSSolver,
     {
@@ -1090,7 +1122,7 @@ impl<T: Float> LowessExecutor<T> {
             zero_weight_fallback,
             y_smooth,
             custom_weights,
-            None,
+            derivative.as_deref_mut(),
         );
 
         // Fit remaining points with interpolation
@@ -1106,7 +1138,7 @@ impl<T: Float> LowessExecutor<T> {
             y_smooth,
             window,
             custom_weights,
-            None,
+            derivative,
         );
     }
 
