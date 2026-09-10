@@ -940,6 +940,9 @@ impl<T: Float> LowessAdapter<T> for Online {
         if let Some(rd) = builder.return_derivative {
             result.return_derivative = rd;
         }
+        if let Some(it) = builder.interval_type {
+            result.interval_type = Some(it);
+        }
         if let Some(ac) = builder.auto_converge {
             result.auto_converge = Some(ac);
         }

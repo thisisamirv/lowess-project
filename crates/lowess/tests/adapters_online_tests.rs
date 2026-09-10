@@ -689,6 +689,85 @@ fn test_online_with_robustness_weights() {
     }
 }
 
+/// `.return_se()` should populate `standard_error` in `Full` update mode.
+#[test]
+fn test_online_full_mode_return_se() {
+    let mut processor = OnlineLowess::new()
+        .fraction(0.9)
+        .return_se()
+        .window_capacity(30)
+        .min_points(10)
+        .update_mode("full")
+        .build()
+        .expect("Builder should succeed");
+
+    let mut saw_se = false;
+    for i in 0..20 {
+        let x = i as f64;
+        let y = 2.0 * x + 1.0;
+        if let Some(output) = processor.add_point(x, y).expect("add_point ok")
+            && let Some(se) = output.standard_error
+        {
+            saw_se = true;
+            assert!(
+                se.is_finite() && se >= 0.0,
+                "SE should be finite and non-negative, got {se}"
+            );
+        }
+    }
+    assert!(
+        saw_se,
+        "standard_error should be populated at least once when .return_se() is set"
+    );
+}
+
+/// Without `.return_se()`, `standard_error` should stay `None` even in `Full` mode.
+#[test]
+fn test_online_full_mode_no_se_by_default() {
+    let mut processor = OnlineLowess::new()
+        .fraction(0.9)
+        .window_capacity(30)
+        .min_points(10)
+        .update_mode("full")
+        .build()
+        .expect("Builder should succeed");
+
+    for i in 0..20 {
+        let x = i as f64;
+        let y = 2.0 * x + 1.0;
+        if let Some(output) = processor.add_point(x, y).expect("add_point ok") {
+            assert!(
+                output.standard_error.is_none(),
+                "standard_error should stay None without .return_se()"
+            );
+        }
+    }
+}
+
+/// `.return_se()` has no effect in the default `Incremental` update mode (only `Full`
+/// mode threads SE computation through), so `standard_error` should stay `None`.
+#[test]
+fn test_online_incremental_mode_se_stays_none() {
+    let mut processor = OnlineLowess::new()
+        .fraction(0.9)
+        .return_se()
+        .window_capacity(30)
+        .min_points(10)
+        .build()
+        .expect("Builder should succeed");
+
+    for i in 0..20 {
+        let x = i as f64;
+        let y = 2.0 * x + 1.0;
+        if let Some(output) = processor.add_point(x, y).expect("add_point ok") {
+            assert!(
+                output.standard_error.is_none(),
+                "standard_error should stay None in Incremental mode"
+            );
+        }
+    }
+}
+
 // ============================================================================
 // Additional Edge Cases
 // ============================================================================

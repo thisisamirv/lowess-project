@@ -26,6 +26,7 @@ use crate::engine::executor::{
 };
 use crate::engine::executor::{LowessConfig, LowessExecutor};
 use crate::engine::validator::{MissingPolicy, Validator};
+use crate::evaluation::intervals::IntervalMethod;
 use crate::math::boundary::BoundaryPolicy;
 use crate::math::defaults::*;
 use crate::math::kernel::WeightFunction;
@@ -89,6 +90,10 @@ pub struct OnlineLowessBuilder<T: Float> {
     // Include the per-point local fit derivative (slope) in the output.
     pub return_derivative: bool,
 
+    // Interval estimation method (standard error only - `Full` update mode only;
+    // `OnlineOutput` has no confidence/prediction bounds, just `standard_error`).
+    pub interval_type: Option<IntervalMethod<T>>,
+
     // Policy for handling non-finite (NaN/Inf) values in input data
     pub missing: MissingPolicy,
 
@@ -146,6 +151,7 @@ impl<T: Float> OnlineLowessBuilder<T> {
             scaling_method: DEFAULT_SCALING_METHOD_ENUM,
             return_robustness_weights: DEFAULT_RETURN_ROBUSTNESS_WEIGHTS,
             return_derivative: DEFAULT_RETURN_DERIVATIVE,
+            interval_type: None,
             auto_converge: default_auto_converge(),
             missing: DEFAULT_MISSING_POLICY_ENUM,
             deferred_error: None,
@@ -334,7 +340,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
                         auto_converge: self.config.auto_converge,
                         cv_fractions: None,
                         cv_kind: None,
-                        return_variance: None,
+                        return_variance: self.config.interval_type,
                         cv_seed: None,
                         return_derivative: self.config.return_derivative,
                         // ++++++++++++++++++++++++++++++++++++++

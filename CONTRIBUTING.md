@@ -27,7 +27,6 @@ The Batch adapter already covers a comprehensive set of options (kernels, robust
 
 **Online:**
 
-- **Populate `standard_error`**: `OnlineOutput.standard_error` exists in the struct but is always `None` — the fast `Incremental` path never computes it, and the `Full` path builds its `LowessConfig` with `return_variance: None`, so it's never populated there either. Wiring up real standard errors (at least for `Full` mode) would give real-time uncertainty for dashboards.
 - **Time/x-range-based window eviction**: `window_capacity` is a point-count cap; for irregularly-sampled real-time data (e.g. sensor gaps), a "keep points within the last N x-units" policy would be a useful alternative.
 - **Configurable warm-up behavior**: `add_point()` returns `None` until `min_points` is reached; an option to return an early, lower-confidence estimate immediately (e.g. a running mean) instead of a gap could help dashboards that don't want to show blanks.
 
