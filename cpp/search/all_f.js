@@ -1,9 +1,17 @@
 var searchData=
 [
   ['parallel_0',['parallel',['../structfastlowess_1_1LowessOptions.html#a689dba738384297e91479aa158dc2e45',1,'fastlowess::LowessOptions']]],
-  ['prediction_5fintervals_1',['prediction_intervals',['../structfastlowess_1_1LowessOptions.html#a48d749c4b025fc0467ef40c62ce6a939',1,'fastlowess::LowessOptions']]],
-  ['prediction_5flower_2',['prediction_lower',['../classfastlowess_1_1LowessResult.html#a42811d23a313b27caf306b4bb70a5d92',1,'fastlowess::LowessResult']]],
-  ['prediction_5fupper_3',['prediction_upper',['../classfastlowess_1_1LowessResult.html#ac0cdc67bf75ce4ca783c0be54ca2b72d',1,'fastlowess::LowessResult']]],
-  ['process_5fchunk_4',['process_chunk',['../classfastlowess_1_1StreamingLowess.html#add63b1329c184527f5f85be31b6710d5',1,'fastlowess::StreamingLowess']]],
-  ['processing_5',['Real-Time Processing',['../use_case_real_time.html',1,'use_case']]]
+  ['predict_1',['predict',['../classfastlowess_1_1PredictModel.html#a724df1181a3f0da7d687b19448c67bd8',1,'fastlowess::PredictModel']]],
+  ['predict_2emd_2',['predict.md',['../predict_8md.html',1,'']]],
+  ['predict_5fmodel_3',['predict_model',['../classfastlowess_1_1LowessResult.html#aff201069b230e1a0ec130a51f4cce720',1,'fastlowess::LowessResult']]],
+  ['prediction_4',['Out-of-Sample Prediction',['../guide_predict.html',1,'']]],
+  ['prediction_5fintervals_5',['prediction_intervals',['../structfastlowess_1_1LowessOptions.html#a48d749c4b025fc0467ef40c62ce6a939',1,'fastlowess::LowessOptions::prediction_intervals'],['../structfastlowess_1_1OnlineOptions.html#aa1e4b6076f7ce0b2835aa1fa57040426',1,'fastlowess::OnlineOptions::prediction_intervals']]],
+  ['prediction_5flevel_6',['prediction_level',['../structfastlowess_1_1PredictOptions.html#ae0c166e9dea8f7c2a2455cd7e08d9847',1,'fastlowess::PredictOptions']]],
+  ['prediction_5flower_7',['prediction_lower',['../classfastlowess_1_1OnlineOutput.html#a81cc77bcf0cc1a942f94cb79fbaad794',1,'fastlowess::OnlineOutput::prediction_lower()'],['../classfastlowess_1_1PredictResult.html#a22f9e584a79fff8530e78a54265ede41',1,'fastlowess::PredictResult::prediction_lower()'],['../classfastlowess_1_1LowessResult.html#a42811d23a313b27caf306b4bb70a5d92',1,'fastlowess::LowessResult::prediction_lower()']]],
+  ['prediction_5fupper_8',['prediction_upper',['../classfastlowess_1_1OnlineOutput.html#a750353a6de90ccfa4c74660028065cdb',1,'fastlowess::OnlineOutput::prediction_upper()'],['../classfastlowess_1_1PredictResult.html#abbb60cc854de6dd19046a5340ec36693',1,'fastlowess::PredictResult::prediction_upper()'],['../classfastlowess_1_1LowessResult.html#ac0cdc67bf75ce4ca783c0be54ca2b72d',1,'fastlowess::LowessResult::prediction_upper()']]],
+  ['predictmodel_9',['predictmodel',['../classfastlowess_1_1PredictModel.html#a3b82fd0ab33c83422a52be66d83d7960',1,'fastlowess::PredictModel::PredictModel(fastlowess_CppPredictHandle *handle)'],['../classfastlowess_1_1PredictModel.html#aa6f8554701ba172504c075adab82dc1b',1,'fastlowess::PredictModel::PredictModel(PredictModel &amp;&amp;other) noexcept'],['../classfastlowess_1_1PredictModel.html#a047915e9715d60908ec248d40d2b306b',1,'fastlowess::PredictModel::PredictModel(const PredictModel &amp;)=delete'],['../classfastlowess_1_1PredictModel.html#af227cee02246a4b4d18f09ccbf0f4ff1',1,'fastlowess::PredictModel::PredictModel()=default'],['../classfastlowess_1_1PredictModel.html',1,'fastlowess::PredictModel']]],
+  ['predictoptions_10',['PredictOptions',['../structfastlowess_1_1PredictOptions.html',1,'fastlowess']]],
+  ['predictresult_11',['predictresult',['../classfastlowess_1_1PredictResult.html#a9a15868d413daa85f35d11aa0667d949',1,'fastlowess::PredictResult::PredictResult()=default'],['../classfastlowess_1_1PredictResult.html#a6150452dfda418ae440490c5ed265f2a',1,'fastlowess::PredictResult::PredictResult(const fastlowess_CppPredictResult &amp;c_result)'],['../classfastlowess_1_1PredictResult.html#a6968b10047734f4c085d6fb5cc36b40f',1,'fastlowess::PredictResult::PredictResult(const PredictResult &amp;)=delete'],['../classfastlowess_1_1PredictResult.html#ab9d00cb6756e8877f99d223558a3319c',1,'fastlowess::PredictResult::PredictResult(PredictResult &amp;&amp;other) noexcept'],['../classfastlowess_1_1PredictResult.html',1,'fastlowess::PredictResult']]],
+  ['process_5fchunk_12',['process_chunk',['../classfastlowess_1_1StreamingLowess.html#add63b1329c184527f5f85be31b6710d5',1,'fastlowess::StreamingLowess']]],
+  ['processing_13',['Real-Time Processing',['../use_case_real_time.html',1,'use_case']]]
 ];

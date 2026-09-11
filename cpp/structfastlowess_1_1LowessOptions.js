@@ -15,6 +15,8 @@ var structfastlowess_1_1LowessOptions =
     [ "missing", "structfastlowess_1_1LowessOptions.html#a3521ff4161c3135d1b6a61ee06bba7cb", null ],
     [ "parallel", "structfastlowess_1_1LowessOptions.html#a689dba738384297e91479aa158dc2e45", null ],
     [ "prediction_intervals", "structfastlowess_1_1LowessOptions.html#a48d749c4b025fc0467ef40c62ce6a939", null ],
+    [ "retain_model", "structfastlowess_1_1LowessOptions.html#aa5c94de852f5bba792743f75778ffd83", null ],
+    [ "return_derivative", "structfastlowess_1_1LowessOptions.html#afa6802f36591c7b3d068d2a99c7c5405", null ],
     [ "return_diagnostics", "structfastlowess_1_1LowessOptions.html#a1afdf08dc8d17bf1820edf63b25fd84e", null ],
     [ "return_residuals", "structfastlowess_1_1LowessOptions.html#a90450e39a90a6211fdbb7c2812cce131", null ],
     [ "return_robustness_weights", "structfastlowess_1_1LowessOptions.html#a0e2eb41d4d35c6b037c6a767e0848c2b", null ],

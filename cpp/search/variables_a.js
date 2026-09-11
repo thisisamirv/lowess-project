@@ -1,9 +1,6 @@
 var searchData=
 [
-  ['return_5fdiagnostics_0',['return_diagnostics',['../structfastlowess_1_1LowessOptions.html#a1afdf08dc8d17bf1820edf63b25fd84e',1,'fastlowess::LowessOptions']]],
-  ['return_5fresiduals_1',['return_residuals',['../structfastlowess_1_1LowessOptions.html#a90450e39a90a6211fdbb7c2812cce131',1,'fastlowess::LowessOptions']]],
-  ['return_5frobustness_5fweights_2',['return_robustness_weights',['../structfastlowess_1_1LowessOptions.html#a0e2eb41d4d35c6b037c6a767e0848c2b',1,'fastlowess::LowessOptions::return_robustness_weights'],['../structfastlowess_1_1OnlineOptions.html#a8e6114b58afa71fcbb1228e7a9854aa2',1,'fastlowess::OnlineOptions::return_robustness_weights']]],
-  ['return_5fse_3',['return_se',['../structfastlowess_1_1LowessOptions.html#a6b1d86216ff15cd283112a762fc0d302',1,'fastlowess::LowessOptions']]],
-  ['return_5fsorted_4',['return_sorted',['../structfastlowess_1_1LowessOptions.html#aa37000981a16b3bc74215b4ca56e13c7',1,'fastlowess::LowessOptions']]],
-  ['robustness_5fmethod_5',['robustness_method',['../structfastlowess_1_1LowessOptions.html#a503bd268254dd2f6cba9c14d73c3c4a8',1,'fastlowess::LowessOptions::robustness_method'],['../structfastlowess_1_1OnlineOptions.html#a9a7d45c8ecd00f75d3240bb8548be754',1,'fastlowess::OnlineOptions::robustness_method']]]
+  ['parallel_0',['parallel',['../structfastlowess_1_1LowessOptions.html#a689dba738384297e91479aa158dc2e45',1,'fastlowess::LowessOptions']]],
+  ['prediction_5fintervals_1',['prediction_intervals',['../structfastlowess_1_1LowessOptions.html#a48d749c4b025fc0467ef40c62ce6a939',1,'fastlowess::LowessOptions::prediction_intervals'],['../structfastlowess_1_1OnlineOptions.html#aa1e4b6076f7ce0b2835aa1fa57040426',1,'fastlowess::OnlineOptions::prediction_intervals']]],
+  ['prediction_5flevel_2',['prediction_level',['../structfastlowess_1_1PredictOptions.html#ae0c166e9dea8f7c2a2455cd7e08d9847',1,'fastlowess::PredictOptions']]]
 ];

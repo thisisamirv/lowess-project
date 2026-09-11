@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Out-of-Sample Prediction :: fastlowess (Java)</title>
+    <link rel="canonical" href="https://thisisamirv.github.io/lowess-project/java/guide/predict.html">
+    <meta name="generator" content="Antora 3.2.0">
+    <link rel="stylesheet" href="../_/css/site.css">
+  </head>
+  <body class="article">
+<header class="header">
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <a class="navbar-item" href="https://thisisamirv.github.io/lowess-project/java">fastlowess (Java)</a>
+            <button class="navbar-burger" aria-controls="topbar-nav" aria-expanded="false"
+                aria-label="Toggle main menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+        <div id="topbar-nav" class="navbar-menu">
+            <div class="navbar-end">
+                <a class="navbar-item" href="#">Home</a>
+                <div class="navbar-item">
+                    <span class="control">
+                        <a class="button is-primary" href="#">Download</a>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </nav>
+</header><div class="body">
+<div class="nav-container" data-component="ROOT" data-version="">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <button class="nav-menu-toggle" aria-label="Toggle expand/collapse all" style="display: none"></button>
+    <h3 class="title"><a href="../index.html">fastlowess (Java)</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">fastlowess (Java)</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Introduction</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../introduction/getting-started.html">Getting Started</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../introduction/installation.html">Installation</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../introduction/concepts.html">Concepts</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">User Guide</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="adapter-choice.html">Execution Modes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="intervals.html">Intervals</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="cross-validation.html">Cross-Validation</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="predict.html">Predict</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">API Reference</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api.html">API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-streaming.html">StreamingLowess API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-online.html">OnlineLowess API</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Weight &amp; Robustness</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/kernels.html">Weight Functions</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/robustness.html">Robustness</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/scaling.html">Scaling Methods</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/custom-weights.html">Custom Weights</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Advanced</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../advanced/boundary.html">Boundary Handling</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../advanced/merge.html">Merge Strategies</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../advanced/gpu-backend.html">GPU Backend</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Use Cases</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../use-case/use-case-genomics.html">Genomic Data Smoothing</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../use-case/use-case-real-time.html">Real-Time Processing</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../use-case/use-case-time-series.html">Time Series Analysis</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../benchmarks.html">Benchmarks</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../NEWS.html">News</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">fastlowess (Java)</span>
+    <span class="version"></span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <div class="title"><a href="../index.html">fastlowess (Java)</a></div>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">fastlowess (Java)</a></li>
+    <li>User Guide</li>
+    <li><a href="predict.html">Predict</a></li>
+  </ul>
+</nav>
+<div class="edit-this-page"><a href="https://github.com/thisisamirv/lowess-project/edit/main/bindings/java/docs/modules/ROOT/pages/guide/predict.adoc">Edit this Page</a></div>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Out-of-Sample Prediction</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Evaluate a fitted Batch model at query points that were not in the training set.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="overview"><a class="anchor" href="#overview"></a>Overview</h2>
+<div class="sectionbody">
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Out-of-sample prediction is available in <strong>Batch</strong> mode only. Streaming and Online modes do not support it.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><code>PredictModel.predict(newX, options)</code> evaluates the fit at arbitrary query points, like R&#8217;s <code>predict(model, newdata)</code>.</p>
+</div>
+<div class="paragraph">
+<p>It reuses <code>fit&#8217;s own (possibly `delta</code>-interpolated) smoothed curve for its <code>y</code> output — so predicting at a training <code>x</code> always exactly reproduces that point&#8217;s <code>fit</code> output, regardless of <code>delta</code>. A fresh local fit is only run when <code>returnDerivative</code>, <code>returnSe</code> (or an interval level), or <code>maxNeighborDistance</code> needs the actual regression slope or standard error.</p>
+</div>
+<div class="paragraph">
+<p><code>Result.predictModel()</code> returns an <code>Optional&lt;PredictModel&gt;</code>, populated only when <code>retainModel</code> was <code>true</code>.</p>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="options"><a class="anchor" href="#options"></a>Options</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Setting</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnSe</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Include standard errors in the output.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>confidenceLevel</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>NaN</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Confidence interval coverage level (e.g. <code>0.95</code>; NaN to disable).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>predictionLevel</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>NaN</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Prediction interval coverage level (e.g. <code>0.95</code>; NaN to disable).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnDerivative</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Include the local fit&#8217;s derivative (slope) at each query point.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>extrapolation</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"clamp"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Behavior for query points outside the training <code>x</code>-range.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>maxExtrapolationDistance</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>NaN</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Under <code>"linear"</code> extrapolation, the max allowed distance beyond the training boundary before erroring (NaN to disable).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>maxNeighborDistance</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>NaN</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Max allowed distance to the farthest training point in a query&#8217;s local window before erroring (NaN to disable).</p></td>
+</tr>
+</tbody>
+</table>
+<div class="sect2">
+<h3 id="returnse"><a class="anchor" href="#returnse"></a>returnSe</h3>
+<div class="paragraph">
+<p>Computes standard errors for each query point, using the retained model&#8217;s residual scale and per-point leverage. Required for <code>confidenceLevel</code>/<code>predictionLevel</code> to be populated. <code>false</code> by default.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="confidencelevel"><a class="anchor" href="#confidencelevel"></a>confidenceLevel</h3>
+<div class="paragraph">
+<p>Confidence level for the confidence interval around the mean response at each query point (e.g. <code>0.95</code>). Uses the same z-score convention as <code>fit&#8217;s own confidence intervals. `NaN</code> (default) disables it.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="predictionlevel"><a class="anchor" href="#predictionlevel"></a>predictionLevel</h3>
+<div class="paragraph">
+<p>Confidence level for the prediction interval for a new observation at each query point (e.g. <code>0.95</code>). Widens using the same MAD-based residual scale <code>fit</code> uses for its own intervals. <code>NaN</code> (default) disables it.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="returnderivative"><a class="anchor" href="#returnderivative"></a>returnDerivative</h3>
+<div class="paragraph">
+<p>Includes the local fit&#8217;s derivative (slope) at each query point in the output. <code>false</code> by default.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="extrapolation"><a class="anchor" href="#extrapolation"></a>extrapolation</h3>
+<div class="paragraph">
+<p>Behavior for query points outside <code>[min(x_train), max(x_train)]</code>:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Policy</th>
+<th class="tableblock halign-left valign-top">Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"clamp"</code> (default)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Clamps the query to the nearest boundary window</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"linear"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Linearly extrapolates from the nearest boundary point&#8217;s local fit and slope</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"error"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Fails the whole call with an exception</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="maxextrapolationdistance"><a class="anchor" href="#maxextrapolationdistance"></a>maxExtrapolationDistance</h3>
+<div class="paragraph">
+<p>Under <code>"linear"</code> extrapolation, the maximum allowed distance beyond the training boundary before <code>predict</code> throws, instead of returning an unbounded value. <code>NaN</code> (default, uncapped).</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="maxneighbordistance"><a class="anchor" href="#maxneighbordistance"></a>maxNeighborDistance</h3>
+<div class="paragraph">
+<p>Maximum allowed distance to the farthest training point in a query&#8217;s local window before <code>predict</code> throws. Guards against an "empty range" blind spot: a query point can fall within <code>[min(x_train), max(x_train)]</code> yet still be far from any real training point (e.g. training <code>x</code> in <code>[0,10]</code> and <code>[90,100]</code>, query at <code>x=50</code>). <code>NaN</code> (default, uncapped); applies regardless of <code>extrapolation</code>.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="example"><a class="anchor" href="#example"></a>Example</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="basic-usage"><a class="anchor" href="#basic-usage"></a>Basic Usage</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">double[] x = {1, 2, 3, 4, 5};
+double[] y = {2.1, 4.0, 6.2, 8.0, 10.1};
+
+Options options = Options.builder().fraction(0.7).retainModel(true).build();
+
+try (Lowess model = new Lowess(options)) {
+    Result result = model.fit(x, y);
+    try (PredictModel predictModel = result.predictModel().orElseThrow()) {
+        PredictResult prediction = predictModel.predict(new double[] { 1.5, 4.5 });
+        System.out.println(java.util.Arrays.toString(prediction.y()));
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">[3.05, 9.05]</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="standard-errors-and-derivative"><a class="anchor" href="#standard-errors-and-derivative"></a>Standard Errors and Derivative</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">PredictOptions options = PredictOptions.builder()
+        .returnSe(true)
+        .returnDerivative(true)
+        .build();
+PredictResult prediction = predictModel.predict(new double[] { 2.5 }, options);</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="linear-extrapolation"><a class="anchor" href="#linear-extrapolation"></a>Linear Extrapolation</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">PredictOptions options = PredictOptions.builder().extrapolation("linear").build();
+PredictResult prediction = predictModel.predict(new double[] { 10.0 }, options);</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <p>This page was built using the Antora default UI.</p>
+  <p>The source code for this UI is licensed under the terms of the MPL-2.0 license.</p>
+</footer>
+<script id="site-script" src="../_/js/site.js" data-ui-root-path="../_"></script>
+<script async src="../_/js/vendor/highlight.js"></script>
+<script>
+    window.MathJax = {
+        tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+        options: { ignoreHtmlClass: 'nostem|nolatexmath' }
+    };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js"></script>  </body>
+</html>

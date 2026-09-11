@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['iterations_0',['iterations',['../structfastlowess_1_1LowessOptions.html#a3a9b03636d3cb266eb345e3f405ba66b',1,'fastlowess::LowessOptions::iterations'],['../structfastlowess_1_1OnlineOptions.html#a2c8c2dd03559f291a428467d8d231790',1,'fastlowess::OnlineOptions::iterations']]]
+  ['fraction_0',['fraction',['../structfastlowess_1_1LowessOptions.html#ac4c7e581cd561fc11a928f9901bb5ec6',1,'fastlowess::LowessOptions::fraction'],['../structfastlowess_1_1OnlineOptions.html#a6acb9ee334a76cd3701228b0cab4ac62',1,'fastlowess::OnlineOptions::fraction']]]
 ];

@@ -1,6 +1,9 @@
 var searchData=
 [
-  ['merge_5fstrategy_0',['merge_strategy',['../structfastlowess_1_1StreamingOptions.html#a5c33b791424c7b5f6aa95e1f8e8a6121',1,'fastlowess::StreamingOptions']]],
-  ['min_5fpoints_1',['min_points',['../structfastlowess_1_1OnlineOptions.html#a749706bb2b58779a0ef79c22d0683d32',1,'fastlowess::OnlineOptions']]],
-  ['missing_2',['missing',['../structfastlowess_1_1LowessOptions.html#a3521ff4161c3135d1b6a61ee06bba7cb',1,'fastlowess::LowessOptions::missing'],['../structfastlowess_1_1OnlineOptions.html#aa0d36b5f54febd5315b162d7fabe1b2b',1,'fastlowess::OnlineOptions::missing']]]
+  ['k_5fdefault_5fchunk_5fsize_0',['k_default_chunk_size',['../namespacefastlowess_1_1detail.html#a59395fbc126884e972f950ea475927f8',1,'fastlowess::detail']]],
+  ['k_5fdefault_5fcv_5fk_1',['k_default_cv_k',['../namespacefastlowess_1_1detail.html#a5eb3a6d91be5b909dd7c62048d9b8495',1,'fastlowess::detail']]],
+  ['k_5fdefault_5ffraction_2',['k_default_fraction',['../namespacefastlowess_1_1detail.html#a5fc83238a1904dec0d45c19ead8497f2',1,'fastlowess::detail']]],
+  ['k_5fdefault_5fmin_5fpoints_3',['k_default_min_points',['../namespacefastlowess_1_1detail.html#a31bddea1fe97f0be85b41979195e88a1',1,'fastlowess::detail']]],
+  ['k_5fdefault_5foverlap_4',['k_default_overlap',['../namespacefastlowess_1_1detail.html#a39f4c1131a05b5752d76de552794e37e',1,'fastlowess::detail']]],
+  ['k_5fdefault_5fwindow_5fcapacity_5',['k_default_window_capacity',['../namespacefastlowess_1_1detail.html#afa163c018568540f591596db74c4b96a',1,'fastlowess::detail']]]
 ];

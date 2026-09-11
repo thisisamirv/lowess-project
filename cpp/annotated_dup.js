@@ -10,6 +10,9 @@ var annotated_dup =
       [ "OnlineLowess", "classfastlowess_1_1OnlineLowess.html", "classfastlowess_1_1OnlineLowess" ],
       [ "OnlineOptions", "structfastlowess_1_1OnlineOptions.html", "structfastlowess_1_1OnlineOptions" ],
       [ "OnlineOutput", "classfastlowess_1_1OnlineOutput.html", "classfastlowess_1_1OnlineOutput" ],
+      [ "PredictModel", "classfastlowess_1_1PredictModel.html", "classfastlowess_1_1PredictModel" ],
+      [ "PredictOptions", "structfastlowess_1_1PredictOptions.html", "structfastlowess_1_1PredictOptions" ],
+      [ "PredictResult", "classfastlowess_1_1PredictResult.html", "classfastlowess_1_1PredictResult" ],
       [ "StreamingLowess", "classfastlowess_1_1StreamingLowess.html", "classfastlowess_1_1StreamingLowess" ],
       [ "StreamingOptions", "structfastlowess_1_1StreamingOptions.html", "structfastlowess_1_1StreamingOptions" ]
     ] ]

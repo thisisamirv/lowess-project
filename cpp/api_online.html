@@ -143,12 +143,12 @@ Online Adapter</div></div>
 <div class="line">    <span class="keywordflow">if</span> (r3.has_value()) { std::cout &lt;&lt; <span class="stringliteral">&quot;y: &quot;</span> &lt;&lt; r3.y() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>; }</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-<div class="ttc" id="aclassfastlowess_1_1OnlineLowess_html"><div class="ttname"><a href="classfastlowess_1_1OnlineLowess.html">fastlowess::OnlineLowess</a></div><div class="ttdoc">Online LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:592</div></div>
+<div class="ttc" id="aclassfastlowess_1_1OnlineLowess_html"><div class="ttname"><a href="classfastlowess_1_1OnlineLowess.html">fastlowess::OnlineLowess</a></div><div class="ttdoc">Online LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:850</div></div>
 <div class="ttc" id="afastlowess_8hpp_html"><div class="ttname"><a href="fastlowess_8hpp.html">fastlowess.hpp</a></div><div class="ttdoc">C++ wrapper for fastLowess library.</div></div>
-<div class="ttc" id="astructfastlowess_1_1OnlineOptions_html"><div class="ttname"><a href="structfastlowess_1_1OnlineOptions.html">fastlowess::OnlineOptions</a></div><div class="ttdoc">Options for online LOWESS.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:179</div></div>
-<div class="ttc" id="astructfastlowess_1_1OnlineOptions_html_a6acb9ee334a76cd3701228b0cab4ac62"><div class="ttname"><a href="structfastlowess_1_1OnlineOptions.html#a6acb9ee334a76cd3701228b0cab4ac62">fastlowess::OnlineOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdoc">Smoothing fraction (0, 1].</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:180</div></div>
-<div class="ttc" id="astructfastlowess_1_1OnlineOptions_html_a749706bb2b58779a0ef79c22d0683d32"><div class="ttname"><a href="structfastlowess_1_1OnlineOptions.html#a749706bb2b58779a0ef79c22d0683d32">fastlowess::OnlineOptions::min_points</a></div><div class="ttdeci">int min_points</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:199</div></div>
-<div class="ttc" id="astructfastlowess_1_1OnlineOptions_html_ab1a4b461877e41a676ab9b555995bfab"><div class="ttname"><a href="structfastlowess_1_1OnlineOptions.html#ab1a4b461877e41a676ab9b555995bfab">fastlowess::OnlineOptions::window_capacity</a></div><div class="ttdeci">int window_capacity</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:198</div></div>
+<div class="ttc" id="astructfastlowess_1_1OnlineOptions_html"><div class="ttname"><a href="structfastlowess_1_1OnlineOptions.html">fastlowess::OnlineOptions</a></div><div class="ttdoc">Options for online LOWESS.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:186</div></div>
+<div class="ttc" id="astructfastlowess_1_1OnlineOptions_html_a6acb9ee334a76cd3701228b0cab4ac62"><div class="ttname"><a href="structfastlowess_1_1OnlineOptions.html#a6acb9ee334a76cd3701228b0cab4ac62">fastlowess::OnlineOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdoc">Smoothing fraction (0, 1].</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:187</div></div>
+<div class="ttc" id="astructfastlowess_1_1OnlineOptions_html_a749706bb2b58779a0ef79c22d0683d32"><div class="ttname"><a href="structfastlowess_1_1OnlineOptions.html#a749706bb2b58779a0ef79c22d0683d32">fastlowess::OnlineOptions::min_points</a></div><div class="ttdeci">int min_points</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:215</div></div>
+<div class="ttc" id="astructfastlowess_1_1OnlineOptions_html_ab1a4b461877e41a676ab9b555995bfab"><div class="ttname"><a href="structfastlowess_1_1OnlineOptions.html#ab1a4b461877e41a676ab9b555995bfab">fastlowess::OnlineOptions::window_capacity</a></div><div class="ttdeci">int window_capacity</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:214</div></div>
 </div><!-- fragment --><div class="fragment"><div class="line">y: 0.226592</div>
 </div><!-- fragment --><ul>
 <li><code>options</code>: An <code>OnlineOptions</code> struct (inherits from <code>LowessOptions</code>) with <code>window_capacity</code>, <code>min_points</code>, and <code>update_mode</code>.</li>
@@ -219,9 +219,17 @@ Online Adapter</div></div>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>min_points</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone">2   </td><td class="markdownTableBodyNone">Min points before smoothing starts    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>update_mode</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone">"incremental"   </td><td class="markdownTableBodyNone">Update mode (<code>"full"</code> or <code>"incremental"</code>)   </td></tr>
+<td class="markdownTableBodyNone"><code>update_mode</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone">"incremental"   </td><td class="markdownTableBodyNone">Update mode (<code>"full"</code> or <code>"incremental"</code>)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>return_derivative</code>   </td><td class="markdownTableBodyNone"><code>bool</code>   </td><td class="markdownTableBodyNone">false   </td><td class="markdownTableBodyNone">Include the latest point's local fit derivative (slope) in the result    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>return_se</code>   </td><td class="markdownTableBodyNone"><code>bool</code>   </td><td class="markdownTableBodyNone">false   </td><td class="markdownTableBodyNone">Populate <code>standard_error()</code> in the result (requires <code>update_mode = "full"</code>; construction fails if combined with <code>"incremental"</code>)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>confidence_intervals</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">NaN   </td><td class="markdownTableBodyNone">Confidence level (e.g., 0.95); populates <code>confidence_lower()</code>/<code>confidence_upper()</code> (requires <code>update_mode = "full"</code>)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>prediction_intervals</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">NaN   </td><td class="markdownTableBodyNone">Prediction level (e.g., 0.95); populates <code>prediction_lower()</code>/<code>prediction_upper()</code> (requires <code>update_mode = "full"</code>)   </td></tr>
 </table>
-<p>Confidence/prediction intervals, standard errors, cross-validation, GPU <code>backend</code>, <code>custom_weights</code>, <code>return_sorted</code>, <code>return_diagnostics</code>, <code>return_residuals</code>, and <code>parallel</code> are Batch-only (or Batch/Streaming-only) and not available here; see <a class="el" href="api_8md.html">fastLowess</a> for those.</p>
+<p>Cross-validation, GPU <code>backend</code>, <code>custom_weights</code>, <code>return_sorted</code>, <code>return_diagnostics</code>, <code>return_residuals</code>, and <code>parallel</code> are Batch-only (or Batch/Streaming-only) and not available here; see <a class="el" href="api_8md.html">fastLowess</a> for those.</p>
 <h2>Options</h2>
 <h3>fraction</h3>
 <p><code>fraction</code> is the most important parameter: it controls the size of the local neighbourhood used at each point.</p>
@@ -331,6 +339,25 @@ Online Adapter</div></div>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>"full"</code>   </td><td class="markdownTableBodyNone"><code>"resmooth"</code>   </td><td class="markdownTableBodyNone">Recompute entire window   </td><td class="markdownTableBodyNone">More accurate   </td></tr>
 </table>
+<h3>return_derivative</h3>
+<p>Each point's local WLS fit already computes a slope internally; this exposes the latest point's slope (rate of change of the smoothed curve) via <code>derivative()</code> at effectively no extra computation cost.</p>
+<ul>
+<li><code>false</code> (default) — leaves <code>derivative()</code> as NaN</li>
+<li><code>true</code> — populates <code>derivative()</code></li>
+</ul>
+<h3>return_se</h3>
+<p><em>See: <a class="el" href="intervals_8md.html">Intervals</a></em></p>
+<p>Populates <code>standard_error()</code> — but only when combined with <code>update_mode = "full"</code>. The fast <code>"incremental"</code> path (the default) never computes standard errors, so combining <code>return_se</code> (or <code>confidence_intervals</code>/<code>prediction_intervals</code>) with anything other than <code>"full"</code> makes construction fail, rather than silently leaving <code>standard_error()</code> as NaN.</p>
+<ul>
+<li><code>false</code> (default) — leaves <code>standard_error()</code> as NaN</li>
+<li><code>true</code> — populates <code>standard_error()</code>, and requires <code>update_mode = "full"</code></li>
+</ul>
+<h3>confidence_intervals</h3>
+<p><em>See: <a class="el" href="intervals_8md.html">Intervals</a></em></p>
+<p>Confidence level for the confidence interval around the mean response at the latest point (e.g. <code>0.95</code>), populating <code>confidence_lower()</code>/<code>confidence_upper()</code>. Same <code>update_mode = "full"</code> requirement as <code>return_se</code>. NaN (default) disables confidence intervals.</p>
+<h3>prediction_intervals</h3>
+<p><em>See: <a class="el" href="intervals_8md.html">Intervals</a></em></p>
+<p>Confidence level for the prediction interval for a new observation at the latest point (e.g. <code>0.95</code>), populating <code>prediction_lower()</code>/<code>prediction_upper()</code>. Same <code>update_mode = "full"</code> requirement as <code>return_se</code>. NaN (default) disables prediction intervals.</p>
 <h2>Result Structure</h2>
 <h3><a class="el" href="classfastlowess_1_1OnlineOutput.html" title="Result of a single online update step.">fastlowess::OnlineOutput</a></h3>
 <p>Returned (inside <code>Expected</code>) by <code>add_point()</code>. Check <code>has_value()</code> before reading fields.</p>
@@ -342,13 +369,19 @@ Online Adapter</div></div>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>y()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Smoothed value for the latest point    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>standard_error()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Always NaN — standard errors require <code>return_se</code>/confidence intervals, which are Batch-only    </td></tr>
+<td class="markdownTableBodyNone"><code>standard_error()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Populated when <code>return_se</code> is set (requires <code>update_mode = "full"</code>); NaN otherwise    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>confidence_lower()</code> / <code>confidence_upper()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Confidence interval bounds around the mean response, if <code>confidence_intervals</code> was set (requires <code>update_mode = "full"</code>)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>prediction_lower()</code> / <code>prediction_upper()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Prediction interval bounds for a new observation, if <code>prediction_intervals</code> was set (requires <code>update_mode = "full"</code>)    </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>residual()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Residual y − smoothed; always populated (there is no <code>return_residuals</code> option for Online)    </td></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>robustness_weight()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Robustness weight, if <code>return_robustness_weights</code> was set    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>iterations_used()</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone">Robustness iterations performed (−1 if N/A)   </td></tr>
+<td class="markdownTableBodyNone"><code>iterations_used()</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone">Robustness iterations performed (−1 if N/A)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>derivative()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Local fit derivative/slope for the latest point, if <code>return_derivative</code> was set (NaN otherwise)   </td></tr>
 </table>
 <p>There is no <code>Diagnostics</code> object or <code>return_diagnostics</code> option for <code>OnlineLowess</code>: <code>OnlineOutput</code> carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful. </p>
 </div></div><!-- contents -->

@@ -137,11 +137,11 @@ $(document).ready(function(){initNavTree('api_streaming.html',''); initResizable
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-<div class="ttc" id="aclassfastlowess_1_1StreamingLowess_html"><div class="ttname"><a href="classfastlowess_1_1StreamingLowess.html">fastlowess::StreamingLowess</a></div><div class="ttdoc">Streaming LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:512</div></div>
+<div class="ttc" id="aclassfastlowess_1_1StreamingLowess_html"><div class="ttname"><a href="classfastlowess_1_1StreamingLowess.html">fastlowess::StreamingLowess</a></div><div class="ttdoc">Streaming LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:768</div></div>
 <div class="ttc" id="afastlowess_8hpp_html"><div class="ttname"><a href="fastlowess_8hpp.html">fastlowess.hpp</a></div><div class="ttdoc">C++ wrapper for fastLowess library.</div></div>
-<div class="ttc" id="astructfastlowess_1_1StreamingOptions_html"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html">fastlowess::StreamingOptions</a></div><div class="ttdoc">Options for streaming LOWESS.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:163</div></div>
-<div class="ttc" id="astructfastlowess_1_1StreamingOptions_html_a493fdf1cc257a60df0d57efc7e9f7cc5"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html#a493fdf1cc257a60df0d57efc7e9f7cc5">fastlowess::StreamingOptions::overlap</a></div><div class="ttdeci">int overlap</div><div class="ttdoc">Negative (the default) means &quot;use the library default&quot; (chunk_size / 10, clamped to [1,...</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:167</div></div>
-<div class="ttc" id="astructfastlowess_1_1StreamingOptions_html_aef557d1b8515c43f5027f0afea85018a"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html#aef557d1b8515c43f5027f0afea85018a">fastlowess::StreamingOptions::chunk_size</a></div><div class="ttdeci">int chunk_size</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:164</div></div>
+<div class="ttc" id="astructfastlowess_1_1StreamingOptions_html"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html">fastlowess::StreamingOptions</a></div><div class="ttdoc">Options for streaming LOWESS.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:169</div></div>
+<div class="ttc" id="astructfastlowess_1_1StreamingOptions_html_a493fdf1cc257a60df0d57efc7e9f7cc5"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html#a493fdf1cc257a60df0d57efc7e9f7cc5">fastlowess::StreamingOptions::overlap</a></div><div class="ttdeci">int overlap</div><div class="ttdoc">Negative (the default) means &quot;use the library default&quot; (chunk_size / 10, clamped to [1,...</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:173</div></div>
+<div class="ttc" id="astructfastlowess_1_1StreamingOptions_html_aef557d1b8515c43f5027f0afea85018a"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html#aef557d1b8515c43f5027f0afea85018a">fastlowess::StreamingOptions::chunk_size</a></div><div class="ttdeci">int chunk_size</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:170</div></div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 17.6391</div>
 </div><!-- fragment --><ul>
 <li><code>options</code>: A <code>StreamingOptions</code> struct (inherits from <code>LowessOptions</code>) with additional <code>chunk_size</code>, <code>overlap</code>, and <code>merge_strategy</code> parameters.</li>
@@ -242,9 +242,17 @@ $(document).ready(function(){initNavTree('api_streaming.html',''); initResizable
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>overlap</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone">chunk_size / 10   </td><td class="markdownTableBodyNone">Overlap between chunks    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>merge_strategy</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone">"weighted_average"   </td><td class="markdownTableBodyNone">Strategy for blending overlap regions   </td></tr>
+<td class="markdownTableBodyNone"><code>merge_strategy</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone">"weighted_average"   </td><td class="markdownTableBodyNone">Strategy for blending overlap regions    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>return_derivative</code>   </td><td class="markdownTableBodyNone"><code>bool</code>   </td><td class="markdownTableBodyNone">false   </td><td class="markdownTableBodyNone">Include the per-point local fit derivative (slope) in the result    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>return_se</code>   </td><td class="markdownTableBodyNone"><code>bool</code>   </td><td class="markdownTableBodyNone">false   </td><td class="markdownTableBodyNone">Populate <code>standard_errors()</code> in the result    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>confidence_intervals</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">NaN   </td><td class="markdownTableBodyNone">Confidence level (e.g., 0.95); populates <code>confidence_lower()</code>/<code>confidence_upper()</code>    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>prediction_intervals</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">NaN   </td><td class="markdownTableBodyNone">Prediction level (e.g., 0.95); populates <code>prediction_lower()</code>/<code>prediction_upper()</code>   </td></tr>
 </table>
-<p>Confidence/prediction intervals, standard errors, cross-validation, GPU <code>backend</code>, <code>custom_weights</code>, and <code>return_sorted</code> are Batch-only and not available here; see <a class="el" href="api_8md.html">fastLowess</a> for those.</p>
+<p>Cross-validation, GPU <code>backend</code>, <code>custom_weights</code>, and <code>return_sorted</code> are Batch-only and not available here; see <a class="el" href="api_8md.html">fastLowess</a> for those. Standard errors and confidence/prediction intervals are computed per chunk the same way Batch computes them, then blended across overlap regions via <code>merge_strategy</code> like <code>y_vector()</code>/<code>derivative()</code> are.</p>
 <h2>Options</h2>
 <h3>fraction</h3>
 <p><code>fraction</code> is the most important parameter: it controls the size of the local neighbourhood used at each point.</p>
@@ -337,7 +345,7 @@ $(document).ready(function(){initNavTree('api_streaming.html',''); initResizable
 <p>Convergence tolerance for early stopping of robustness iterations. <code>NaN</code> (default) disables early stopping.</p>
 <h3>return_diagnostics</h3>
 <p>*See: `Diagnostics`*</p>
-<p>Include a <code>Diagnostics</code> object (RMSE, MAE, R², residual_sd) in the result. <code>effective_df</code>/<code>aic</code>/<code>aicc</code> require standard errors, which are Batch-only, so they're always empty/NaN here.</p>
+<p>Include a <code>Diagnostics</code> object (RMSE, MAE, R², residual_sd) in the result. <code>effective_df</code>/<code>aic</code>/<code>aicc</code> require per-chunk hat-matrix leverage to be threaded into the cumulative diagnostics computation across chunk boundaries, which isn't currently done (even with <code>return_se</code>/<code>confidence_intervals</code>/<code>prediction_intervals</code> set), so they're always empty/NaN here.</p>
 <ul>
 <li><code>false</code> (default) — leaves <code>diagnostics()</code> empty</li>
 <li><code>true</code> — populates <code>diagnostics()</code></li>
@@ -382,6 +390,25 @@ $(document).ready(function(){initNavTree('api_streaming.html',''); initResizable
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>"take_last"</code>   </td><td class="markdownTableBodyNone"><code>"last"</code>   </td><td class="markdownTableBodyNone">Keep right chunk values   </td></tr>
 </table>
+<h3>return_derivative</h3>
+<p>Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) via <code>derivative()</code> at effectively no extra computation cost. Derivative values in the overlap region are merged across chunk boundaries the same way <code>y_vector()</code> is, via <code>merge_strategy</code>.</p>
+<ul>
+<li><code>false</code> (default) — leaves <code>derivative()</code> empty</li>
+<li><code>true</code> — populates <code>derivative()</code></li>
+</ul>
+<h3>return_se</h3>
+<p><em>See: <a class="el" href="intervals_8md.html">Intervals</a></em></p>
+<p>Computes standard errors per chunk the same way Batch does, then merges the overlap region across chunk boundaries the same way <code>y_vector()</code>/<code>derivative()</code> are, via <code>merge_strategy</code>.</p>
+<ul>
+<li><code>false</code> (default) — leaves <code>standard_errors()</code> empty</li>
+<li><code>true</code> — populates it</li>
+</ul>
+<h3>confidence_intervals</h3>
+<p><em>See: <a class="el" href="intervals_8md.html">Intervals</a></em></p>
+<p>Confidence level for the confidence interval around the mean response (e.g. <code>0.95</code>), populating <code>confidence_lower()</code>/<code>confidence_upper()</code>. Computed per chunk (same as Batch) and merged across overlap boundaries via <code>merge_strategy</code>. NaN (default) disables confidence intervals.</p>
+<h3>prediction_intervals</h3>
+<p><em>See: <a class="el" href="intervals_8md.html">Intervals</a></em></p>
+<p>Confidence level for the prediction interval for new observations (e.g. <code>0.95</code>), populating <code>prediction_lower()</code>/<code>prediction_upper()</code>. Same per-chunk computation and overlap-merging as <code>confidence_intervals</code>. NaN (default) disables prediction intervals.</p>
 <h2>Result Structure</h2>
 <h3><a class="el" href="classfastlowess_1_1LowessResult.html" title="Result of LOWESS smoothing operation.">fastlowess::LowessResult</a></h3>
 <p>Returned (inside <code>Expected</code>) by <code>process_chunk()</code> and <code>finalize()</code>.</p>
@@ -397,15 +424,15 @@ $(document).ready(function(){initNavTree('api_streaming.html',''); initResizable
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>iterations_used()</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone">Robustness iterations (-1 = N/A)    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>standard_errors()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Always empty (Batch only)    </td></tr>
+<td class="markdownTableBodyNone"><code>standard_errors()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Populated if <code>return_se</code>, <code>confidence_intervals</code>, or <code>prediction_intervals</code> was set (empty otherwise)    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>confidence_lower()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Always empty (Batch only)    </td></tr>
+<td class="markdownTableBodyNone"><code>confidence_lower()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Populated if <code>confidence_intervals</code> was set (empty otherwise)    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>confidence_upper()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Always empty (Batch only)    </td></tr>
+<td class="markdownTableBodyNone"><code>confidence_upper()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Populated if <code>confidence_intervals</code> was set (empty otherwise)    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>prediction_lower()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Always empty (Batch only)    </td></tr>
+<td class="markdownTableBodyNone"><code>prediction_lower()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Populated if <code>prediction_intervals</code> was set (empty otherwise)    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>prediction_upper()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Always empty (Batch only)    </td></tr>
+<td class="markdownTableBodyNone"><code>prediction_upper()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Populated if <code>prediction_intervals</code> was set (empty otherwise)    </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>residuals()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Residuals (if <code>return_residuals</code>; empty if not)    </td></tr>
 <tr class="markdownTableRowOdd">
@@ -413,7 +440,9 @@ $(document).ready(function(){initNavTree('api_streaming.html',''); initResizable
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>cv_scores()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Always empty (Batch only)    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>diagnostics()</code>   </td><td class="markdownTableBodyNone"><code>Diagnostics</code>   </td><td class="markdownTableBodyNone">Fit metrics — check <code>has_value()</code> (if <code>return_diagnostics</code>)   </td></tr>
+<td class="markdownTableBodyNone"><code>diagnostics()</code>   </td><td class="markdownTableBodyNone"><code>Diagnostics</code>   </td><td class="markdownTableBodyNone">Fit metrics — check <code>has_value()</code> (if <code>return_diagnostics</code>)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>derivative()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Per-point local fit derivative/slope (if <code>return_derivative</code>; empty if not computed)   </td></tr>
 </table>
 <h3><a class="el" href="classfastlowess_1_1Diagnostics.html" title="Diagnostics from LOWESS fitting.">fastlowess::Diagnostics</a></h3>
 <table class="markdownTable">
@@ -428,11 +457,11 @@ $(document).ready(function(){initNavTree('api_streaming.html',''); initResizable
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>residual_sd()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Residual standard deviation    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>effective_df()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Always NaN (requires standard errors, Batch only)    </td></tr>
+<td class="markdownTableBodyNone"><code>effective_df()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Always NaN (cumulative diagnostics don't integrate per-chunk leverage; Batch only)    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>aic()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Always NaN (requires <code>effective_df</code>, Batch only)    </td></tr>
+<td class="markdownTableBodyNone"><code>aic()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Always NaN (requires <code>effective_df</code>; Batch only)    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>aicc()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Always NaN (requires <code>effective_df</code>, Batch only)   </td></tr>
+<td class="markdownTableBodyNone"><code>aicc()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Always NaN (requires <code>effective_df</code>; Batch only)   </td></tr>
 </table>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->

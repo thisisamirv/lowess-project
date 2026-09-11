@@ -132,6 +132,21 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ab895dec754b68f10ca75863ff07c19fc" id="r_ab895dec754b68f10ca75863ff07c19fc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">int</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastlowess_1_1OnlineOutput.html#ab895dec754b68f10ca75863ff07c19fc">iterations_used</a> () <a class="el" href="classfastlowess_1_1Expected.html">const</a></td></tr>
 <tr class="memdesc:ab895dec754b68f10ca75863ff07c19fc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of robustness iterations performed (−1 if not applicable).  <br /></td></tr>
 <tr class="separator:ab895dec754b68f10ca75863ff07c19fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a51e2ff6021b3c4387636c5e673c54afd" id="r_a51e2ff6021b3c4387636c5e673c54afd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">double</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastlowess_1_1OnlineOutput.html#a51e2ff6021b3c4387636c5e673c54afd">derivative</a> () <a class="el" href="classfastlowess_1_1Expected.html">const</a></td></tr>
+<tr class="memdesc:a51e2ff6021b3c4387636c5e673c54afd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Local fit derivative (slope) for the latest point (NaN if not computed).  <br /></td></tr>
+<tr class="separator:a51e2ff6021b3c4387636c5e673c54afd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7537908e6afa6ba0b81b806f000feb20" id="r_a7537908e6afa6ba0b81b806f000feb20"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">double</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastlowess_1_1OnlineOutput.html#a7537908e6afa6ba0b81b806f000feb20">confidence_lower</a> () <a class="el" href="classfastlowess_1_1Expected.html">const</a></td></tr>
+<tr class="memdesc:a7537908e6afa6ba0b81b806f000feb20"><td class="mdescLeft">&#160;</td><td class="mdescRight">Lower confidence interval bound for the latest point (NaN if not computed).  <br /></td></tr>
+<tr class="separator:a7537908e6afa6ba0b81b806f000feb20"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3168096a0851bfa318b951cf892d503d" id="r_a3168096a0851bfa318b951cf892d503d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">double</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastlowess_1_1OnlineOutput.html#a3168096a0851bfa318b951cf892d503d">confidence_upper</a> () <a class="el" href="classfastlowess_1_1Expected.html">const</a></td></tr>
+<tr class="memdesc:a3168096a0851bfa318b951cf892d503d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Upper confidence interval bound for the latest point (NaN if not computed).  <br /></td></tr>
+<tr class="separator:a3168096a0851bfa318b951cf892d503d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a81cc77bcf0cc1a942f94cb79fbaad794" id="r_a81cc77bcf0cc1a942f94cb79fbaad794"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">double</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastlowess_1_1OnlineOutput.html#a81cc77bcf0cc1a942f94cb79fbaad794">prediction_lower</a> () <a class="el" href="classfastlowess_1_1Expected.html">const</a></td></tr>
+<tr class="memdesc:a81cc77bcf0cc1a942f94cb79fbaad794"><td class="mdescLeft">&#160;</td><td class="mdescRight">Lower prediction interval bound for the latest point (NaN if not computed).  <br /></td></tr>
+<tr class="separator:a81cc77bcf0cc1a942f94cb79fbaad794"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a750353a6de90ccfa4c74660028065cdb" id="r_a750353a6de90ccfa4c74660028065cdb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">double</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastlowess_1_1OnlineOutput.html#a750353a6de90ccfa4c74660028065cdb">prediction_upper</a> () <a class="el" href="classfastlowess_1_1Expected.html">const</a></td></tr>
+<tr class="memdesc:a750353a6de90ccfa4c74660028065cdb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Upper prediction interval bound for the latest point (NaN if not computed).  <br /></td></tr>
+<tr class="separator:a750353a6de90ccfa4c74660028065cdb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="friends" name="friends"></a>
 Friends</h2></td></tr>
@@ -145,6 +160,87 @@ Friends</h2></td></tr>
 <div class="textblock"><p>Result of a single online update step. </p>
 <p>Call <a class="el" href="classfastlowess_1_1OnlineOutput.html#af9ee53d7c3732342c2eb7dce5ec490da" title="True when the window has enough points to produce a smoothed estimate.">has_value()</a> to check if the window is ready. When false, the window is still filling and no smoothed estimate is available yet. All optional fields are NaN when not computed. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="a7537908e6afa6ba0b81b806f000feb20" name="a7537908e6afa6ba0b81b806f000feb20"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7537908e6afa6ba0b81b806f000feb20">&#9670;&#160;</a></span>confidence_lower()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classfastlowess_1_1Expected.html">double</a> fastlowess::OnlineOutput::confidence_lower </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Lower confidence interval bound for the latest point (NaN if not computed). </p>
+
+</div>
+</div>
+<a id="a3168096a0851bfa318b951cf892d503d" name="a3168096a0851bfa318b951cf892d503d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3168096a0851bfa318b951cf892d503d">&#9670;&#160;</a></span>confidence_upper()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classfastlowess_1_1Expected.html">double</a> fastlowess::OnlineOutput::confidence_upper </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Upper confidence interval bound for the latest point (NaN if not computed). </p>
+
+</div>
+</div>
+<a id="a51e2ff6021b3c4387636c5e673c54afd" name="a51e2ff6021b3c4387636c5e673c54afd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a51e2ff6021b3c4387636c5e673c54afd">&#9670;&#160;</a></span>derivative()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classfastlowess_1_1Expected.html">double</a> fastlowess::OnlineOutput::derivative </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Local fit derivative (slope) for the latest point (NaN if not computed). </p>
+
+</div>
+</div>
 <a id="af9ee53d7c3732342c2eb7dce5ec490da" name="af9ee53d7c3732342c2eb7dce5ec490da"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#af9ee53d7c3732342c2eb7dce5ec490da">&#9670;&#160;</a></span>has_value()</h2>
 
@@ -196,6 +292,60 @@ Friends</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Number of robustness iterations performed (−1 if not applicable). </p>
+
+</div>
+</div>
+<a id="a81cc77bcf0cc1a942f94cb79fbaad794" name="a81cc77bcf0cc1a942f94cb79fbaad794"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a81cc77bcf0cc1a942f94cb79fbaad794">&#9670;&#160;</a></span>prediction_lower()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classfastlowess_1_1Expected.html">double</a> fastlowess::OnlineOutput::prediction_lower </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Lower prediction interval bound for the latest point (NaN if not computed). </p>
+
+</div>
+</div>
+<a id="a750353a6de90ccfa4c74660028065cdb" name="a750353a6de90ccfa4c74660028065cdb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a750353a6de90ccfa4c74660028065cdb">&#9670;&#160;</a></span>prediction_upper()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classfastlowess_1_1Expected.html">double</a> fastlowess::OnlineOutput::prediction_upper </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Upper prediction interval bound for the latest point (NaN if not computed). </p>
 
 </div>
 </div>

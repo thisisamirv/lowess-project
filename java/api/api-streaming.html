@@ -73,6 +73,9 @@
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../guide/cross-validation.html">Cross-Validation</a>
   </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/predict.html">Predict</a>
+  </li>
 </ul>
   </li>
   <li class="nav-item" data-depth="1">
@@ -400,6 +403,12 @@ try (StreamingLowess model = new StreamingLowess(options)) {
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>"weighted_average"</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Strategy for blending overlap regions</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnDerivative</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Include the per-point local fit derivative (slope) in the result</p></td>
 </tr>
 </tbody>
 </table>
@@ -796,6 +805,22 @@ A length mismatch between <code>x</code> and <code>y</code> always throws, even 
 </tbody>
 </table>
 </div>
+<div class="sect2">
+<h3 id="returnderivative"><a class="anchor" href="#returnderivative"></a>returnDerivative</h3>
+<div class="paragraph">
+<p>Each point&#8217;s local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) via <code>Result.derivative()</code> at effectively no extra computation cost. Derivative values in the overlap region are merged across chunk boundaries the same way <code>y()</code> is, via <code>mergeStrategy</code>.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>false</code> (default) — leaves <code>derivative()</code> empty</p>
+</li>
+<li>
+<p><code>true</code> — populates <code>derivative()</code></p>
+</li>
+</ul>
+</div>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -869,6 +894,11 @@ A length mismatch between <code>x</code> and <code>y</code> always throws, even 
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>diagnostics()</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;Diagnostics&gt;</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnDiagnostics</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>derivative()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;double[]&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnDerivative</code></p></td>
 </tr>
 </tbody>
 </table>

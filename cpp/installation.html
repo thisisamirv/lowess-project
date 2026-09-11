@@ -112,6 +112,14 @@ $(document).ready(function(){initNavTree('installation.html',''); initResizable(
 <div class="fragment"><div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-linux-arm64.so</div>
 <div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp</div>
 <div class="line">g++ -o myapp myapp.cpp -L. -lfastlowess-linux-arm64</div>
+</div><!-- fragment --><h2>Pre-built Binaries (Linux (x64), musl/Alpine)</h2>
+<div class="fragment"><div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-linux-x64-musl.so</div>
+<div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp</div>
+<div class="line">g++ -o myapp myapp.cpp -L. -lfastlowess-linux-x64-musl</div>
+</div><!-- fragment --><h2>Pre-built Binaries (Linux (ARM64), musl/Alpine)</h2>
+<div class="fragment"><div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-linux-arm64-musl.so</div>
+<div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp</div>
+<div class="line">g++ -o myapp myapp.cpp -L. -lfastlowess-linux-arm64-musl</div>
 </div><!-- fragment --><h2>Pre-built Binaries (macOS (x64))</h2>
 <div class="fragment"><div class="line">curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-macos-x64.dylib</div>
 <div class="line">curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp</div>
@@ -161,8 +169,8 @@ $(document).ready(function(){initNavTree('installation.html',''); initResizable(
 <div class="line"><span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 <div class="ttc" id="aclassfastlowess_1_1Expected_html_aeb88e40ff81b811771e6e2013fad7a6c"><div class="ttname"><a href="classfastlowess_1_1Expected.html#aeb88e40ff81b811771e6e2013fad7a6c">fastlowess::Expected::value</a></div><div class="ttdeci">T &amp; value() &amp;</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:75</div></div>
-<div class="ttc" id="aclassfastlowess_1_1Lowess_html"><div class="ttname"><a href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a></div><div class="ttdoc">Batch LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:433</div></div>
-<div class="ttc" id="aclassfastlowess_1_1Lowess_html_a504a722970109b32ab8318352d224a2e"><div class="ttname"><a href="classfastlowess_1_1Lowess.html#a504a722970109b32ab8318352d224a2e">fastlowess::Lowess::fit</a></div><div class="ttdeci">Expected&lt; LowessResult &gt; fit(const std::vector&lt; double &gt; &amp;x_values, const std::vector&lt; double &gt; &amp;y_values, const std::vector&lt; double &gt; &amp;custom_weights={})</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:478</div></div>
+<div class="ttc" id="aclassfastlowess_1_1Lowess_html"><div class="ttname"><a href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a></div><div class="ttdoc">Batch LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:687</div></div>
+<div class="ttc" id="aclassfastlowess_1_1Lowess_html_a504a722970109b32ab8318352d224a2e"><div class="ttname"><a href="classfastlowess_1_1Lowess.html#a504a722970109b32ab8318352d224a2e">fastlowess::Lowess::fit</a></div><div class="ttdeci">Expected&lt; LowessResult &gt; fit(const std::vector&lt; double &gt; &amp;x_values, const std::vector&lt; double &gt; &amp;y_values, const std::vector&lt; double &gt; &amp;custom_weights={})</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:734</div></div>
 <div class="ttc" id="afastlowess_8hpp_html"><div class="ttname"><a href="fastlowess_8hpp.html">fastlowess.hpp</a></div><div class="ttdoc">C++ wrapper for fastLowess library.</div></div>
 </div><!-- fragment --><div class="fragment"><div class="line">Installed successfully!</div>
 </div><!-- fragment --> </div></div><!-- contents -->

@@ -156,6 +156,9 @@ Public Attributes</h2></td></tr>
 <tr class="separator:a90450e39a90a6211fdbb7c2812cce131"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0e2eb41d4d35c6b037c6a767e0848c2b" id="r_a0e2eb41d4d35c6b037c6a767e0848c2b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1LowessOptions.html#a0e2eb41d4d35c6b037c6a767e0848c2b">return_robustness_weights</a> = <a class="el" href="classfastlowess_1_1Expected.html">false</a></td></tr>
 <tr class="separator:a0e2eb41d4d35c6b037c6a767e0848c2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afa6802f36591c7b3d068d2a99c7c5405" id="r_afa6802f36591c7b3d068d2a99c7c5405"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1LowessOptions.html#afa6802f36591c7b3d068d2a99c7c5405">return_derivative</a> = <a class="el" href="classfastlowess_1_1Expected.html">false</a></td></tr>
+<tr class="memdesc:afa6802f36591c7b3d068d2a99c7c5405"><td class="mdescLeft">&#160;</td><td class="mdescRight">Include the per-point local fit derivative (slope) in the output.  <br /></td></tr>
+<tr class="separator:afa6802f36591c7b3d068d2a99c7c5405"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6b1d86216ff15cd283112a762fc0d302" id="r_a6b1d86216ff15cd283112a762fc0d302"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1LowessOptions.html#a6b1d86216ff15cd283112a762fc0d302">return_se</a> = <a class="el" href="classfastlowess_1_1Expected.html">false</a></td></tr>
 <tr class="memdesc:a6b1d86216ff15cd283112a762fc0d302"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return standard errors.  <br /></td></tr>
 <tr class="separator:a6b1d86216ff15cd283112a762fc0d302"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -182,6 +185,9 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a1c46edade7f9e883483994d12a49e0da" id="r_a1c46edade7f9e883483994d12a49e0da"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="classfastlowess_1_1Expected.html">double</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1LowessOptions.html#a1c46edade7f9e883483994d12a49e0da">custom_weights</a></td></tr>
 <tr class="memdesc:a1c46edade7f9e883483994d12a49e0da"><td class="mdescLeft">&#160;</td><td class="mdescRight">Per-observation case weights.  <br /></td></tr>
 <tr class="separator:a1c46edade7f9e883483994d12a49e0da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa5c94de852f5bba792743f75778ffd83" id="r_aa5c94de852f5bba792743f75778ffd83"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1LowessOptions.html#aa5c94de852f5bba792743f75778ffd83">retain_model</a> = <a class="el" href="classfastlowess_1_1Expected.html">false</a></td></tr>
+<tr class="memdesc:aa5c94de852f5bba792743f75778ffd83"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retain the fitted model's training data, enabling <code><a class="el" href="classfastlowess_1_1LowessResult.html#aff201069b230e1a0ec130a51f4cce720" title="Extract the retained predict model (only available when LowessOptions::retain_model was set to true b...">LowessResult::predict_model()</a></code>.  <br /></td></tr>
+<tr class="separator:aa5c94de852f5bba792743f75778ffd83"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Options for configuring LOWESS smoothing. </p>
@@ -414,6 +420,38 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Prediction level (NaN = disabled) </p>
+
+</div>
+</div>
+<a id="aa5c94de852f5bba792743f75778ffd83" name="aa5c94de852f5bba792743f75778ffd83"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa5c94de852f5bba792743f75778ffd83">&#9670;&#160;</a></span>retain_model</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classfastlowess_1_1Expected.html">bool</a> fastlowess::LowessOptions::retain_model = <a class="el" href="classfastlowess_1_1Expected.html">false</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Retain the fitted model's training data, enabling <code><a class="el" href="classfastlowess_1_1LowessResult.html#aff201069b230e1a0ec130a51f4cce720" title="Extract the retained predict model (only available when LowessOptions::retain_model was set to true b...">LowessResult::predict_model()</a></code>. </p>
+
+</div>
+</div>
+<a id="afa6802f36591c7b3d068d2a99c7c5405" name="afa6802f36591c7b3d068d2a99c7c5405"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afa6802f36591c7b3d068d2a99c7c5405">&#9670;&#160;</a></span>return_derivative</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classfastlowess_1_1Expected.html">bool</a> fastlowess::LowessOptions::return_derivative = <a class="el" href="classfastlowess_1_1Expected.html">false</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Include the per-point local fit derivative (slope) in the output. </p>
 
 </div>
 </div>

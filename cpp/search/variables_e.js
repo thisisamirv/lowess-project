@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['zero_5fweight_5ffallback_0',['zero_weight_fallback',['../structfastlowess_1_1LowessOptions.html#a9dda3a3571f061d44f818bc923ef7c2f',1,'fastlowess::LowessOptions::zero_weight_fallback'],['../structfastlowess_1_1OnlineOptions.html#af193adb5933264354e490b75e33f69f5',1,'fastlowess::OnlineOptions::zero_weight_fallback']]]
+  ['weight_5ffunction_0',['weight_function',['../structfastlowess_1_1LowessOptions.html#a73dba24a8c056492b21bf2215a1c253f',1,'fastlowess::LowessOptions::weight_function'],['../structfastlowess_1_1OnlineOptions.html#a7e39e17c0be1d7c223eb7347b40fcba1',1,'fastlowess::OnlineOptions::weight_function']]],
+  ['window_5fcapacity_1',['window_capacity',['../structfastlowess_1_1OnlineOptions.html#ab1a4b461877e41a676ab9b555995bfab',1,'fastlowess::OnlineOptions']]]
 ];

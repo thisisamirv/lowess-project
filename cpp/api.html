@@ -135,7 +135,7 @@ $(document).ready(function(){initNavTree('api.html',''); initResizable(); });
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-<div class="ttc" id="aclassfastlowess_1_1Lowess_html"><div class="ttname"><a href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a></div><div class="ttdoc">Batch LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:433</div></div>
+<div class="ttc" id="aclassfastlowess_1_1Lowess_html"><div class="ttname"><a href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a></div><div class="ttdoc">Batch LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:687</div></div>
 <div class="ttc" id="afastlowess_8hpp_html"><div class="ttname"><a href="fastlowess_8hpp.html">fastlowess.hpp</a></div><div class="ttdoc">C++ wrapper for fastLowess library.</div></div>
 <div class="ttc" id="astructfastlowess_1_1LowessOptions_html"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html">fastlowess::LowessOptions</a></div><div class="ttdoc">Options for configuring LOWESS smoothing.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:119</div></div>
 <div class="ttc" id="astructfastlowess_1_1LowessOptions_html_ac4c7e581cd561fc11a928f9901bb5ec6"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#ac4c7e581cd561fc11a928f9901bb5ec6">fastlowess::LowessOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdoc">Smoothing fraction (0, 1].</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:120</div></div>
@@ -224,7 +224,11 @@ $(document).ready(function(){initNavTree('api.html',''); initResizable(); });
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>cv_seed</code>   </td><td class="markdownTableBodyNone"><code>uint64_t</code>   </td><td class="markdownTableBodyNone"><code>0</code>   </td><td class="markdownTableBodyNone">Random seed for CV shuffling (0 = random)    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>custom_weights</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone"><code>{}</code>   </td><td class="markdownTableBodyNone">Per-observation case weights — passed to <code>fit()</code>, not the constructor   </td></tr>
+<td class="markdownTableBodyNone"><code>custom_weights</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone"><code>{}</code>   </td><td class="markdownTableBodyNone">Per-observation case weights — passed to <code>fit()</code>, not the constructor    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>retain_model</code>   </td><td class="markdownTableBodyNone"><code>bool</code>   </td><td class="markdownTableBodyNone"><code>false</code>   </td><td class="markdownTableBodyNone">Retain training data, enabling <code>LowessResult::predict_model()</code>    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>return_derivative</code>   </td><td class="markdownTableBodyNone"><code>bool</code>   </td><td class="markdownTableBodyNone"><code>false</code>   </td><td class="markdownTableBodyNone">Include the per-point local fit derivative (slope) in the result   </td></tr>
 </table>
 <h2>Options</h2>
 <h3>fraction</h3>
@@ -365,6 +369,15 @@ $(document).ready(function(){initNavTree('api.html',''); initResizable(); });
 <h3>custom_weights</h3>
 <p><em>See: <a class="el" href="custom-weights_8md.html">Custom Weights</a></em></p>
 <p>Per-observation weights, passed to <code>fit()</code> rather than the constructor.</p>
+<h3>retain_model</h3>
+<p><em>See: <a class="el" href="predict_8md.html">Predict</a></em></p>
+<p>Retains the fitted model's training data, enabling <code>LowessResult::predict_model()</code> to obtain a <code>PredictModel</code> for out-of-sample query points not in the training set. <code>false</code> (default) — no extra memory/copy cost unless requested.</p>
+<h3>return_derivative</h3>
+<p>Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) via <code>derivative()</code>, enabling turning-point/rate-of-change analysis at effectively no extra computation cost.</p>
+<ul>
+<li><code>false</code> (default) — leaves <code>derivative()</code> empty</li>
+<li><code>true</code> — populates <code>derivative()</code></li>
+</ul>
 <h2>Result Structure</h2>
 <h3><a class="el" href="classfastlowess_1_1LowessResult.html" title="Result of LOWESS smoothing operation.">fastlowess::LowessResult</a></h3>
 <p>A RAII wrapper around the C result struct <code>fastlowess_CppLowessResult</code>.</p>
@@ -396,7 +409,9 @@ $(document).ready(function(){initNavTree('api.html',''); initResizable(); });
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>cv_scores()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">CV score per tested fraction (empty if CV not run)    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>diagnostics()</code>   </td><td class="markdownTableBodyNone"><code>Diagnostics</code>   </td><td class="markdownTableBodyNone">Fit metrics — check <code>diagnostics().has_value()</code> before use (if <code>return_diagnostics</code>)   </td></tr>
+<td class="markdownTableBodyNone"><code>diagnostics()</code>   </td><td class="markdownTableBodyNone"><code>Diagnostics</code>   </td><td class="markdownTableBodyNone">Fit metrics — check <code>diagnostics().has_value()</code> before use (if <code>return_diagnostics</code>)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>derivative()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Per-point local fit derivative/slope (if <code>return_derivative</code>; empty if not computed)   </td></tr>
 </table>
 <h3><a class="el" href="classfastlowess_1_1Diagnostics.html" title="Diagnostics from LOWESS fitting.">fastlowess::Diagnostics</a></h3>
 <p>All accessors are const methods (not public fields):</p>
@@ -418,6 +433,9 @@ $(document).ready(function(){initNavTree('api.html',''); initResizable(); });
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>aicc()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">AICc (NaN if not computed)   </td></tr>
 </table>
+<h2>Predict</h2>
+<h3><code>fastlowess::PredictModel::predict(new_x, options) -&gt; PredictResult</code></h3>
+<p>Obtained via <code>LowessResult::predict_model()</code> (moves the retained state out; only valid once, only when <code>retain_model = true</code> was set — check <code>PredictModel::valid()</code>). Evaluates the fitted model at out-of-sample query points.</p>
 <h2>Example</h2>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;<a class="code" href="fastlowess_8hpp.html">fastlowess.hpp</a>&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>

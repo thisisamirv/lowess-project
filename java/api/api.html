@@ -73,6 +73,9 @@
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../guide/cross-validation.html">Cross-Validation</a>
   </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/predict.html">Predict</a>
+  </li>
 </ul>
   </li>
   <li class="nav-item" data-depth="1">
@@ -433,6 +436,18 @@ try (Lowess model = new Lowess(options)) {
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>long</code> (boxed)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>null</code> (random)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">RNG seed for reproducible k-fold splits.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>retainModel</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Retain training data, enabling <code>Result.predictModel()</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnDerivative</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Include the per-point local fit derivative (slope) in the result.</p></td>
 </tr>
 </tbody>
 </table>
@@ -890,6 +905,31 @@ try (Lowess model = new Lowess(Options.builder().build())) {
 </div>
 </div>
 </div>
+<div class="sect2">
+<h3 id="retainmodel"><a class="anchor" href="#retainmodel"></a>retainModel</h3>
+<div class="paragraph">
+<p><em>See: <a href="../guide/predict.html" class="xref page">Predict</a></em></p>
+</div>
+<div class="paragraph">
+<p>Retains the fitted model&#8217;s training data, populating <code>Result.predictModel()</code> with an <code>Optional&lt;PredictModel&gt;</code> usable to evaluate the fit at out-of-sample query points not in the training set. <code>false</code> (default) — no extra memory/copy cost unless requested.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="returnderivative"><a class="anchor" href="#returnderivative"></a>returnDerivative</h3>
+<div class="paragraph">
+<p>Each point&#8217;s local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) via <code>Result.derivative()</code>, enabling turning-point/rate-of-change analysis at effectively no extra computation cost.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>false</code> (default) — leaves <code>Result.derivative()</code> empty</p>
+</li>
+<li>
+<p><code>true</code> — populates <code>Result.derivative()</code></p>
+</li>
+</ul>
+</div>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -961,6 +1001,11 @@ try (Lowess model = new Lowess(Options.builder().build())) {
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;Diagnostics&gt;</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnDiagnostics</code></p></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>derivative()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;double[]&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnDerivative</code></p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -1017,6 +1062,20 @@ try (Lowess model = new Lowess(Options.builder().build())) {
 </tr>
 </tbody>
 </table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="predict"><a class="anchor" href="#predict"></a>Predict</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><em>See: <a href="../guide/predict.html" class="xref page">Predict</a></em></p>
+</div>
+<div class="sect2">
+<h3 id="predictmodel-predictdouble-newx-predictoptions-options-predictresult"><a class="anchor" href="#predictmodel-predictdouble-newx-predictoptions-options-predictresult"></a><code>PredictModel.predict(double[] newX, PredictOptions options) PredictResult</code></h3>
+<div class="paragraph">
+<p>Obtained via <code>Result.predictModel()</code>, only populated when <code>retainModel</code> was <code>true</code>. Evaluates the fitted model at out-of-sample query points.</p>
+</div>
 </div>
 </div>
 </div>

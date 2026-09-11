@@ -11,6 +11,9 @@ var hierarchy =
     [ "fastlowess::OnlineLowess", "classfastlowess_1_1OnlineLowess.html", null ],
     [ "fastlowess::OnlineOptions", "structfastlowess_1_1OnlineOptions.html", null ],
     [ "fastlowess::OnlineOutput", "classfastlowess_1_1OnlineOutput.html", null ],
+    [ "fastlowess::PredictModel", "classfastlowess_1_1PredictModel.html", null ],
+    [ "fastlowess::PredictOptions", "structfastlowess_1_1PredictOptions.html", null ],
+    [ "fastlowess::PredictResult", "classfastlowess_1_1PredictResult.html", null ],
     [ "std::runtime_error", null, [
       [ "fastlowess::LowessError", "classfastlowess_1_1LowessError.html", null ]
     ] ],

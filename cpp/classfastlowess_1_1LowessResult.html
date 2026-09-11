@@ -169,6 +169,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ac30cbf210940f36ce0fe65718be08af2" id="r_ac30cbf210940f36ce0fe65718be08af2"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="classfastlowess_1_1Expected.html">double</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastlowess_1_1LowessResult.html#ac30cbf210940f36ce0fe65718be08af2">robustness_weights</a> () <a class="el" href="classfastlowess_1_1Expected.html">const</a></td></tr>
 <tr class="memdesc:ac30cbf210940f36ce0fe65718be08af2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get robustness weights (empty if not computed)  <br /></td></tr>
 <tr class="separator:ac30cbf210940f36ce0fe65718be08af2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac0a9c64abfac49e2676c1f547b198675" id="r_ac0a9c64abfac49e2676c1f547b198675"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="classfastlowess_1_1Expected.html">double</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastlowess_1_1LowessResult.html#ac0a9c64abfac49e2676c1f547b198675">derivative</a> () <a class="el" href="classfastlowess_1_1Expected.html">const</a></td></tr>
+<tr class="memdesc:ac0a9c64abfac49e2676c1f547b198675"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the per-point local fit derivative (slope) (empty if not computed)  <br /></td></tr>
+<tr class="separator:ac0a9c64abfac49e2676c1f547b198675"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3b17fc407779aadd0581d5b94e922946" id="r_a3b17fc407779aadd0581d5b94e922946"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="classfastlowess_1_1Expected.html">double</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastlowess_1_1LowessResult.html#a3b17fc407779aadd0581d5b94e922946">cv_scores</a> () <a class="el" href="classfastlowess_1_1Expected.html">const</a></td></tr>
 <tr class="memdesc:a3b17fc407779aadd0581d5b94e922946"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get cross-validation scores (empty if not computed)  <br /></td></tr>
 <tr class="separator:a3b17fc407779aadd0581d5b94e922946"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -181,6 +184,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a92eb3b49b1fffe732a26b5d6db1007c4" id="r_a92eb3b49b1fffe732a26b5d6db1007c4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Diagnostics.html">Diagnostics</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastlowess_1_1LowessResult.html#a92eb3b49b1fffe732a26b5d6db1007c4">diagnostics</a> () <a class="el" href="classfastlowess_1_1Expected.html">const</a></td></tr>
 <tr class="memdesc:a92eb3b49b1fffe732a26b5d6db1007c4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get diagnostics.  <br /></td></tr>
 <tr class="separator:a92eb3b49b1fffe732a26b5d6db1007c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aff201069b230e1a0ec130a51f4cce720" id="r_aff201069b230e1a0ec130a51f4cce720"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1PredictModel.html">PredictModel</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastlowess_1_1LowessResult.html#aff201069b230e1a0ec130a51f4cce720">predict_model</a> ()</td></tr>
+<tr class="memdesc:aff201069b230e1a0ec130a51f4cce720"><td class="mdescLeft">&#160;</td><td class="mdescRight">Extract the retained predict model (only available when <code><a class="el" href="structfastlowess_1_1LowessOptions.html#aa5c94de852f5bba792743f75778ffd83" title="Retain the fitted model&#39;s training data, enabling LowessResult::predict_model().">LowessOptions::retain_model</a></code> was set to <code>true</code> before <code>fit()</code>).  <br /></td></tr>
+<tr class="separator:aff201069b230e1a0ec130a51f4cce720"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Result of LOWESS smoothing operation. </p>
@@ -396,6 +402,33 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="ac0a9c64abfac49e2676c1f547b198675" name="ac0a9c64abfac49e2676c1f547b198675"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac0a9c64abfac49e2676c1f547b198675">&#9670;&#160;</a></span>derivative()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt; <a class="el" href="classfastlowess_1_1Expected.html">double</a> &gt; fastlowess::LowessResult::derivative </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Get the per-point local fit derivative (slope) (empty if not computed) </p>
+
+</div>
+</div>
 <a id="a92eb3b49b1fffe732a26b5d6db1007c4" name="a92eb3b49b1fffe732a26b5d6db1007c4"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a92eb3b49b1fffe732a26b5d6db1007c4">&#9670;&#160;</a></span>diagnostics()</h2>
 
@@ -553,6 +586,34 @@ Public Member Functions</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+
+</div>
+</div>
+<a id="aff201069b230e1a0ec130a51f4cce720" name="aff201069b230e1a0ec130a51f4cce720"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aff201069b230e1a0ec130a51f4cce720">&#9670;&#160;</a></span>predict_model()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classfastlowess_1_1PredictModel.html">PredictModel</a> fastlowess::LowessResult::predict_model </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Extract the retained predict model (only available when <code><a class="el" href="structfastlowess_1_1LowessOptions.html#aa5c94de852f5bba792743f75778ffd83" title="Retain the fitted model&#39;s training data, enabling LowessResult::predict_model().">LowessOptions::retain_model</a></code> was set to <code>true</code> before <code>fit()</code>). </p>
+<p>Transfers ownership: subsequent calls return an invalid (empty) <code><a class="el" href="classfastlowess_1_1PredictModel.html" title="Retained fitted-model state enabling out-of-sample predict().">PredictModel</a></code>. Check <code><a class="el" href="classfastlowess_1_1PredictModel.html#aa460d381eaf937aafe842c34bedecd6c" title="True if this model was actually retained (retain_model was set).">PredictModel::valid()</a></code> before use. </p>
 
 </div>
 </div>

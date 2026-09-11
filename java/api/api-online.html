@@ -73,6 +73,9 @@
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../guide/cross-validation.html">Cross-Validation</a>
   </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/predict.html">Predict</a>
+  </li>
 </ul>
   </li>
   <li class="nav-item" data-depth="1">
@@ -377,6 +380,12 @@ result.ifPresent(r -&gt; System.out.println(r.y()));</code></pre>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>"incremental"</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">How the window is updated as new points arrive: <code>incremental</code>, <code>full</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnDerivative</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Include the latest point&#8217;s local fit derivative (slope) in the result</p></td>
 </tr>
 </tbody>
 </table>
@@ -704,6 +713,22 @@ result.ifPresent(r -&gt; System.out.println(r.y()));</code></pre>
 </tbody>
 </table>
 </div>
+<div class="sect2">
+<h3 id="returnderivative"><a class="anchor" href="#returnderivative"></a>returnDerivative</h3>
+<div class="paragraph">
+<p>Each point&#8217;s local WLS fit already computes a slope internally; this exposes the latest point&#8217;s slope (rate of change of the smoothed curve) via <code>PointResult.derivative()</code> at effectively no extra computation cost.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>false</code> (default) — leaves <code>derivative()</code> empty</p>
+</li>
+<li>
+<p><code>true</code> — populates <code>derivative()</code></p>
+</li>
+</ul>
+</div>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -752,6 +777,11 @@ result.ifPresent(r -&gt; System.out.println(r.y()));</code></pre>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>iterationsUsed()</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>OptionalInt</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Robustness iterations performed.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>derivative()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>OptionalDouble</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Local fit derivative/slope for the latest point, if <code>returnDerivative</code> was set.</p></td>
 </tr>
 </tbody>
 </table>

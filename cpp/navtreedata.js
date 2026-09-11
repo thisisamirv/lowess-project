@@ -40,6 +40,7 @@ var NAVTREE =
       [ "Intervals", "intervals.html", null ],
       [ "Cross-Validation", "cross_validation.html", null ]
     ] ],
+    [ "Out-of-Sample Prediction", "guide_predict.html", null ],
     [ "Getting Started", "getting_started.html", [
       [ "Installation", "installation.html", null ],
       [ "Quick Start", "quickstart.html", null ],
@@ -84,7 +85,7 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "adapter_choice.html",
-"structfastlowess_1_1LowessOptions.html#a689dba738384297e91479aa158dc2e45"
+"dir_9523be61e9135eaf598ebde0dc88dbe8.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
