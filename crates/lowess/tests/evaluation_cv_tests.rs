@@ -34,6 +34,31 @@ fn test_interpolate_prediction_basic() {
     assert_relative_eq!(pred, 7.0, epsilon = 1e-12);
 }
 
+/// The batch interpolator must handle unordered `x_new` (as produced by a seeded
+/// k-fold permutation), matching the scalar binary-search interpolator point-for-point.
+#[test]
+fn test_interpolate_prediction_batch_unordered() {
+    let tx = vec![0.0f64, 1.0, 2.0, 3.0];
+    let ty = vec![0.0f64, 1.0, 4.0, 9.0];
+    let x_new = vec![2.5f64, 0.5];
+
+    let mut batch = vec![0.0f64; 2];
+    CVKind::interpolate_prediction_batch(&tx, &ty, &x_new, &mut batch);
+
+    let scalar: Vec<f64> = x_new
+        .iter()
+        .map(|&t| CVKind::interpolate_prediction(&tx, &ty, t))
+        .collect();
+
+    // Correct piecewise-linear values: y(2.5)=6.5 (between 2=>4 and 3=>9),
+    // y(0.5)=0.5 (between 0=>0 and 1=>1).
+    assert_relative_eq!(batch[0], 6.5, epsilon = 1e-12);
+    assert_relative_eq!(batch[1], 0.5, epsilon = 1e-12);
+    // Batch and scalar interpolators must agree on unordered input.
+    assert_relative_eq!(batch[0], scalar[0], epsilon = 1e-12);
+    assert_relative_eq!(batch[1], scalar[1], epsilon = 1e-12);
+}
+
 /// Test extrapolation beyond data range.
 ///
 /// Verifies that extrapolation uses nearest value.

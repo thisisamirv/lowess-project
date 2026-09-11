@@ -176,61 +176,19 @@ impl CVKind {
     }
 
     // Predict values at multiple new x points using linear interpolation.
+    //
+    // Each query point is located independently via binary search (the same path as
+    // `interpolate_prediction`), so `x_new` need not be sorted. This matters for
+    // k-fold CV with a seeded fold permutation, where the test-fold x values are
+    // shuffled: a monotone scan pointer would extrapolate from the wrong bracket.
     pub fn interpolate_prediction_batch<T: Float>(
         x_train: &[T],
         y_train: &[T],
         x_new: &[T],
         y_pred: &mut [T],
     ) {
-        let n_train = x_train.len();
-        let n_new = x_new.len();
-
-        if n_new == 0 {
-            return;
-        }
-
-        if n_train == 0 {
-            y_pred.fill(T::zero());
-            return;
-        }
-
-        if n_train == 1 {
-            y_pred.fill(y_train[0]);
-            return;
-        }
-
-        let mut left = 0;
-        for i in 0..n_new {
-            let xi = x_new[i];
-
-            // Boundary handling: constant extrapolation
-            if xi <= x_train[0] {
-                y_pred[i] = y_train[0];
-                continue;
-            }
-            if xi >= x_train[n_train - 1] {
-                y_pred[i] = y_train[n_train - 1];
-                continue;
-            }
-
-            // Linear scan forward to find bracket
-            while left + 1 < n_train && x_train[left + 1] <= xi {
-                left += 1;
-            }
-
-            let right = left + 1;
-            let x0 = x_train[left];
-            let x1 = x_train[right];
-            let y0 = y_train[left];
-            let y1 = y_train[right];
-
-            let denom = x1 - x0;
-            if denom <= T::zero() {
-                y_pred[i] = (y0 + y1) / T::from(2.0).unwrap();
-            } else {
-                let alpha = (xi - x0) / denom;
-                y_pred[i] = y0 + alpha * (y1 - y0);
-            }
+        for (i, &xi) in x_new.iter().enumerate() {
+            y_pred[i] = Self::interpolate_prediction(x_train, y_train, xi);
         }
     }
 
