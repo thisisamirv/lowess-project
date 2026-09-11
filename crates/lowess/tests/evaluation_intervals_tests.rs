@@ -116,6 +116,36 @@ fn test_compute_se_zero_weights() {
     assert_eq!(std_errors[0], 0.0, "SE should be zero for zero weights");
 }
 
+/// A fully down-weighted point (robustness weight 0) must still have a positive
+/// standard error. The leverage term comes from the local design (kernel weight),
+/// not from the point's own robustness weight, so a down-weighted observation's
+/// interval must not collapse to zero width.
+#[test]
+fn test_compute_se_downweighted_point_has_positive_se() {
+    let x = vec![0.0f64, 1.0, 2.0, 3.0, 4.0];
+    let y = vec![1.0f64, 0.0, 100.0, 0.0, 1.0];
+    let y_smooth = vec![0.0f64, 0.0, 0.0, 0.0, 0.0];
+    // Point 2 is a gross outlier, fully down-weighted by robustness iterations.
+    let robustness = vec![1.0f64, 1.0, 0.0, 1.0, 1.0];
+
+    let est = IntervalMethod::se();
+    let mut std_errors = vec![0.0; x.len()];
+
+    est.compute_window_se(
+        &x,
+        &y,
+        &y_smooth,
+        5,
+        &robustness,
+        &mut std_errors,
+        &uniform_weight_fn,
+    );
+
+    // SE must not collapse to zero: the design leverage (kernel weight) is 1, so
+    // SE = sqrt(variance * leverage) = sqrt(1.0 * 1/4) = 0.5.
+    assert_relative_eq!(std_errors[2], 0.5, epsilon = 1e-12);
+}
+
 /// Test SE with insufficient degrees of freedom.
 ///
 /// Verifies that df <= 0 produces zero SE.

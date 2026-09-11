@@ -892,12 +892,14 @@ fn compute_se(
             let df = sum_w - LINEAR_PARAMS;
             let variance = sum_wr2 / df;
             
-            // Find kernel weight for current point (distance = 0)
-            // u=0 -> kernel_weight=1.0 usually but let's call function
+            // Find kernel weight for current point (distance = 0). The leverage
+            // numerator uses the design kernel weight directly (not the
+            // robustness-weighted kernel): a point whose robustness weight is zero
+            // is exactly where the local fit is least certain, so its interval
+            // must not collapse to zero width.
             let w_idx_kern = get_kernel_weight(0.0, 0.0);
-            let w_idx = w_idx_kern * robustness_weights[i];
             
-            let leverage = w_idx / sum_w;
+            let leverage = w_idx_kern / sum_w;
             std_errors[i] = sqrt(variance * leverage);
         } else {
             std_errors[i] = 0.0;

@@ -77,6 +77,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+**Monorepo:**
+
+- `dev/bump_version.py` now also updates the Go module's `/vN` major-version-suffix path across `go.mod` files, doc snippets, the doc-snippet runner, and README/docs badges whenever a version bump crosses a major version boundary, so this doesn't regress on the next major release.
+- `dev/bump_version.py` now also updates the Maven dependency example version in `bindings/java/docs/modules/ROOT/pages/introduction/installation.adoc`, which was previously left stale after a version bump.
+
 **C++:**
 
 - Fixed `bindings/cpp/spack/package.py` building from the wrong directory; it now builds by package name and keeps the pyright suppression at the repo root.
@@ -94,23 +99,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `dev/bump_version.py` now updates the Go `/vN` path and the Java Maven example version.
 - Fixed inconsistent Node.js naming in READMEs, doc-site home pages, and `CITATION.cff`.
 
-- `dev/bump_version.py` now also updates the Go module's `/vN` major-version-suffix path across `go.mod` files, doc snippets, the doc-snippet runner, and README/docs badges whenever a version bump crosses a major version boundary, so this doesn't regress on the next major release.
-- `dev/bump_version.py` now also updates the Maven dependency example version in `bindings/java/docs/modules/ROOT/pages/introduction/installation.adoc`, which was previously left stale after a version bump.
-- Cleaned up `lowess::prelude` by removing leaked builder and adapter markers.
-
 **lowess:**
 
-- Fixed the Go module's import path to include the required `/v4` suffix. Breaking change for old unsuffixed imports.
+- Cleaned up `lowess::prelude` by removing leaked builder and adapter markers.
+- Fixed standard errors collapsing to exactly `0` (and confidence intervals collapsing to a `1e-12` fallback width) for observations whose robustness weight reaches zero: `compute_se`'s leverage term now uses the local design's kernel weight rather than the point's own robustness-weighted kernel, so down-weighted outliers keep a positive standard error.
+- Removed unused `pub use` re-exports and updated the few callers that used them.
+
+**fastLowess:**
+
+- Fixed the same zero standard-error collapse in the parallel interval path (`interval_pass_parallel`) and the GPU `compute_se` shader, which multiplied the leverage numerator by the point's own robustness weight.
+- `make fastLowess-dev` now also covers the combined `gpu,dev` feature set.
 
 **Go:**
 
-- `make fastLowess-dev` now also covers the combined `gpu,dev` feature set.
-- `make lowess-dev`/`make fastLowess-dev` now also run `cargo test --doc`.
-- Fixed 6 clippy lints in `crates/fastLowess/tests/gpu_tests.rs`.
-
-- `make fastLowess-dev` now also lints/builds/tests the combined `gpu,dev` feature set, not just `cpu`/`gpu`/`dev` in isolation — code that only compiles with both features enabled together (e.g. `tests/gpu_tests.rs`, gated on `#![cfg(feature = "dev")] #![cfg(feature = "gpu")]`) was previously never linted by any `make` target.
-- `make lowess-dev`/`make fastLowess-dev` now also run `cargo test --doc` for each tested feature set; doctests in `.rs` source files were previously never checked by any `make` target (only markdown-doc code snippets are covered by `dev/verify_snippets.py`).
-- Fixed 6 clippy lints in `crates/fastLowess/tests/gpu_tests.rs` (`needless_range_loop`, `unnecessary_min_or_max`, and 3× `await_holding_lock` on the `GLOBAL_EXECUTOR` mutex, allowed with a comment since the test binary always runs single-threaded), only surfaced once the new `gpu,dev` combined lint check above was added.
+- Fixed the Go module's import path to include the required `/v4` suffix. Breaking change for old unsuffixed imports.
 
 ### Changed
 
@@ -127,7 +129,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Monorepo:**
 
 - Hoisted fully-qualified imports to top-level `use` statements across crates and bindings.
-- Removed unused `pub use` re-exports and updated the few callers that used them.
 
 ## 4.0.0
 

@@ -70,7 +70,8 @@ where
 
             // Compute weight for current point (distance = 0)
             let u_idx = T::zero();
-            let w_idx = weight_function.compute_weight(u_idx) * robustness_weights[idx];
+            let kernel_val = weight_function.compute_weight(u_idx);
+            let w_idx = kernel_val * robustness_weights[idx];
 
             // Accumulate weighted residual variance
             let mut sum_w_r2 = T::zero();
@@ -90,7 +91,7 @@ where
                 sum_w = sum_w + w;
             }
 
-            IntervalMethod::compute_se(sum_w, sum_w_r2, w_idx)
+            IntervalMethod::compute_se(sum_w, sum_w_r2, kernel_val)
         })
         .collect()
 }

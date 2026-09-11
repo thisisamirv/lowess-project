@@ -118,8 +118,13 @@ impl<T: Float> IntervalMethod<T> {
     // Core mathematical function for computing standard error at a point.
     // SE = sqrt(sigma_local^2 * l_ii), where
     // sigma_local^2 = (sum w_k r_k^2) / ((sum w_k) - 2) and
-    // l_ii = w_i / sum w_k.
-    pub fn compute_se(sum_w: T, sum_w_r2: T, w_idx: T) -> T {
+    // l_ii = leverage_weight / sum w_k.
+    //
+    // `leverage_weight` is the local *design* leverage (the kernel weight at the
+    // point), NOT the robustness-weighted kernel. A point whose robustness weight
+    // is zero is exactly where the local fit is least certain, so its interval
+    // must not collapse to zero width on account of its own downweighting.
+    pub fn compute_se(sum_w: T, sum_w_r2: T, leverage_weight: T) -> T {
         // Effective degrees of freedom for weighted regression
         if sum_w <= T::zero() {
             return T::zero();
@@ -133,7 +138,7 @@ impl<T: Float> IntervalMethod<T> {
         }
 
         let variance = sum_w_r2 / df;
-        let leverage = w_idx / sum_w; // Normalized leverage
+        let leverage = leverage_weight / sum_w; // Normalized leverage
 
         (variance * leverage).sqrt()
     }
@@ -202,7 +207,7 @@ impl<T: Float> IntervalMethod<T> {
                 sum_w = sum_w + w;
             }
 
-            *se = Self::compute_se(sum_w, sum_w_r2, w_idx);
+            *se = Self::compute_se(sum_w, sum_w_r2, kernel_val);
         }
     }
 
