@@ -55,9 +55,9 @@ jobs:
       - name: Test (lowess)
         shell: bash
         run: |
-          cargo test -q -p lowess --test lowess --features dev
+          cargo test -q -p lowess --tests --features dev
           if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
-            cargo test -q -p lowess --test lowess --features dev --no-default-features
+            cargo test -q -p lowess --tests --features dev --no-default-features
           fi
 
       - name: Build (fastLowess)
@@ -73,9 +73,9 @@ jobs:
         shell: bash
         run: |
           if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
-            cargo test -q -p fastLowess --test fastLowess --features gpu,dev
+            cargo test -q -p fastLowess --tests --features gpu,dev
           else
-            cargo test -q -p fastLowess --test fastLowess --features cpu,dev
+            cargo test -q -p fastLowess --tests --features cpu,dev
           fi
 
       - name: Docs
@@ -110,7 +110,7 @@ jobs:
         run: |
           cargo test \
             -Zbuild-std --target x86_64-unknown-linux-gnu \
-            -p lowess --test lowess
+            -p lowess --tests --features dev
           cargo test \
             -Zbuild-std --target x86_64-unknown-linux-gnu \
-            -p fastLowess --test fastLowess --features cpu
+            -p fastLowess --tests --features cpu,dev
