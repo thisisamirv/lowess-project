@@ -32,7 +32,7 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
 
 **Use when**: Chunks are large and the overlap region has uniform data density.
 
-```@example merge
+```@example merge-average
 using FastLOWESS
 using Random, Statistics
 
@@ -55,7 +55,7 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
 
 **Use when**: You need final output values immediately after each chunk (no look-ahead revision); left-chunk data quality is higher.
 
-```@example merge
+```@example merge-take-first
 using FastLOWESS
 using Random, Statistics
 
@@ -77,7 +77,7 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
 
 **Use when**: Right-chunk context improves overlap quality; you are post-processing complete data rather than streaming live.
 
-```@example merge
+```@example merge-take-last
 using FastLOWESS
 using Random, Statistics
 
@@ -103,7 +103,7 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
 
 **Use when**: Minimising boundary artefacts is more important than speed; moderate overlap (10–20 % of chunk size).
 
-```@example merge
+```@example merge-weighted-average
 using FastLOWESS
 using Random, Statistics
 

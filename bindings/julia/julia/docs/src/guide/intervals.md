@@ -20,7 +20,7 @@ Confidence and prediction intervals for uncertainty quantification.
 
 Estimate uncertainty in the smoothed curve itself.
 
-```@example intervals
+```@example intervals-confidence
 using FastLOWESS
 using Random, Statistics
 
@@ -42,7 +42,7 @@ println("CI Upper (first 5): ", result.confidence_upper[1:5])
 
 Estimate where new observations might fall.
 
-```@example intervals
+```@example intervals-prediction
 using FastLOWESS
 using Random, Statistics
 
@@ -62,7 +62,7 @@ println("Prediction bounds: [$(result.prediction_lower[1]), $(result.prediction_
 
 Request both types simultaneously:
 
-```@example intervals
+```@example intervals-both
 using FastLOWESS
 using Random, Statistics
 
@@ -89,7 +89,7 @@ Common levels and their z-values:
 | 0.95 | 1.960 | 95% of intervals contain true value |
 | 0.99 | 2.576 | 99% of intervals contain true value |
 
-```@example intervals
+```@example intervals-levels
 using FastLOWESS
 using Random, Statistics
 
@@ -109,7 +109,7 @@ println("99% CI at midpoint: [$(round(result.confidence_lower[50]; digits=3)), $
 
 Access standard errors directly (available when intervals are computed):
 
-```@example intervals
+```@example intervals-se
 using FastLOWESS
 using Random, Statistics
 

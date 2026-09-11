@@ -55,7 +55,7 @@ outliers that remain.
 Set the weight to `0` at the bad point — it is excluded from every local fit
 that would otherwise include it.
 
-```@example custom-weights
+```@example weights-suppress
 using FastLOWESS
 using Random, Statistics
 
@@ -82,7 +82,7 @@ println("First smoothed value (outlier excluded with zero weight): ", result.y[1
 Assign high weights to measurements you trust most — calibration standards,
 reference instruments, or low-noise observations.
 
-```@example custom-weights
+```@example weights-emphasize
 using FastLOWESS
 using Random, Statistics
 
@@ -107,7 +107,7 @@ If each observation has a known standard deviation $\sigma_i$, set
 $w_i = 1 / \sigma_i^2$ to give the fit information-theoretically optimal
 weighting.
 
-```@example custom-weights
+```@example weights-uncertainty
 using FastLOWESS
 using Random, Statistics
 
@@ -129,7 +129,7 @@ println("First smoothed value (inverse-variance weights): ", result.y[1])
 Custom weights and robustness iterations compose naturally: use custom weights
 for *known* bad points and robustness for *unknown* contamination.
 
-```@example custom-weights
+```@example weights-robust-combo
 using FastLOWESS
 using Random, Statistics
 

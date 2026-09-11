@@ -184,11 +184,21 @@ fn test_streaming_adapter_return_se_and_intervals() {
         .unwrap();
 
     let res1 = processor.process_chunk(&x[0..20], &y[0..20]).unwrap();
-    let se = res1.standard_errors.expect("standard_errors should be present");
-    let cl = res1.confidence_lower.expect("confidence_lower should be present");
-    let cu = res1.confidence_upper.expect("confidence_upper should be present");
-    let pl = res1.prediction_lower.expect("prediction_lower should be present");
-    let pu = res1.prediction_upper.expect("prediction_upper should be present");
+    let se = res1
+        .standard_errors
+        .expect("standard_errors should be present");
+    let cl = res1
+        .confidence_lower
+        .expect("confidence_lower should be present");
+    let cu = res1
+        .confidence_upper
+        .expect("confidence_upper should be present");
+    let pl = res1
+        .prediction_lower
+        .expect("prediction_lower should be present");
+    let pu = res1
+        .prediction_upper
+        .expect("prediction_upper should be present");
     assert_eq!(se.len(), res1.y.len());
     for i in 0..res1.y.len() {
         assert!(se[i].is_finite() && se[i] >= 0.0);

@@ -11,6 +11,8 @@
 // External dependencies
 #[cfg(not(feature = "std"))]
 use alloc::collections::VecDeque;
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
 use core::fmt::Debug;
 use num_traits::Float;
 #[cfg(feature = "std")]

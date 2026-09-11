@@ -4,7 +4,7 @@ furo>=2025.12.19
 myst-parser>=4.0.1
 jupyter-sphinx>=0.5.3
 sphinx-copybutton>=0.5.2
-sphinxcontrib-mermaid>=2.1.0
+sphinxcontrib-mermaid>=2.1.1
 ipykernel>=7.3.0
 matplotlib>=3.10.9
 fastlowess

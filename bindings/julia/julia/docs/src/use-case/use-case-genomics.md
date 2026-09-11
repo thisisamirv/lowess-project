@@ -18,7 +18,7 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
 
 A small `fraction = 0.1` lets LOWESS follow fine-scale spatial structure without smearing the transitions between methylated and unmethylated regions. `confidence_intervals = 0.95` produces uncertainty bands that naturally widen at positions with sparser CpG coverage, making low-confidence segments immediately apparent in the plot.
 
-```@example use-case-genomics
+```@example genomics-methylation
 using FastLOWESS
 
 positions = collect(0.0:1000.0:99000.0)
@@ -47,7 +47,7 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOWESS can help identi
 
 `fraction = 0.05` provides high spatial resolution — important for resolving narrow binding peaks that would otherwise be smeared into the background. The larger `iterations = 5` is deliberate: Poisson-distributed read counts produce tall, isolated spikes, and extra robustness iterations progressively down-weight them so the estimated background level is not inflated by a handful of extreme counts.
 
-```@example use-case-genomics
+```@example genomics-chipseq
 using FastLOWESS
 
 positions = collect(0.0:1000.0:99000.0)
@@ -69,7 +69,7 @@ println("Peak count: ", peak_count)
 
 For whole-genome data that doesn't fit in memory:
 
-```@example use-case-genomics
+```@example genomics-streaming
 using FastLOWESS
 
 positions = collect(0.0:10.0:10000.0)

@@ -13,7 +13,7 @@ Add the Maven coordinate to your `pom.xml`:
 <dependency>
     <groupId>io.github.thisisamirv</groupId>
     <artifactId>fastlowess</artifactId>
-    <version>4.0.0</version>
+    <version>4.1.0</version>
 </dependency>
 ----
 

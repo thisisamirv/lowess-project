@@ -292,7 +292,7 @@ Each point's local WLS fit already computes a slope internally; this exposes tha
 
 ## Example
 
-```@example batch
+```@example batch-example
 using FastLOWESS
 using Random, Statistics
 

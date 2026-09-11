@@ -16,7 +16,7 @@ For true real-time applications where each point must be processed immediately.
 
 ### Sensor Data Example
 
-```@example use-case-real-time
+```@example realtime-online
 using FastLOWESS
 
 # Simulate sensor readings
@@ -57,7 +57,7 @@ For large datasets that arrive in batches or files.
 
 ### Log File Processing
 
-```@example use-case-real-time
+```@example realtime-streaming
 using FastLOWESS
 
 chunk1_x = collect(Float64, 0:49)
@@ -85,7 +85,7 @@ println("y[0]: ", result.y[1])
 
 The dashboard pattern uses a plain LOWESS fit on a manually managed sliding window rather than `OnlineLowess`. This is the simplest approach when your UI framework already owns the data buffer and you only need the most recent smoothed value per frame. The trade-off is a full O(window^2) refit on every tick; for high-frequency streams prefer `OnlineLowess` with `update_mode = "incremental"` to bound per-frame cost.
 
-```@example use-case-real-time
+```@example realtime-dashboard
 using FastLOWESS
 
 n = 100

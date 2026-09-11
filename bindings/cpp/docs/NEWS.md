@@ -1,28 +1,24 @@
 \page news News
 
 <!-- markdownlint-disable MD024 MD025 -->
-# fastlowess (C++) Unreleased
+# fastlowess (C++) 4.1.0
 
 ## Added
 
-* Added a `retain_model` option to `LowessOptions`, a `LowessResult::predict_model()` accessor, and new `PredictModel`/`PredictOptions`/`PredictResult` RAII classes for out-of-sample prediction.
-* Added a `return_derivative` option to `LowessOptions` (Batch/Streaming) and `OnlineOptions` (Online), exposing the per-point local fit derivative (slope) via `LowessResult::derivative()` (Batch/Streaming, a `std::vector<double>`) or `OnlineOutput::derivative()` (Online, a scalar `double`).
-* Added Linux musl (Alpine) release binaries alongside the existing glibc ones: Python (`release-pypi.yml` now publishes `musllinux_1_2` wheels for x86_64/aarch64), C++ (`release-cpp.yml` builds natively inside `alpine:latest` containers on `ubuntu-latest`/`ubuntu-24.04-arm`, publishing `libfastlowess-linux-{x64,arm64}-musl.so`), Go (`release-go.yml`, same container approach, publishing `libfastlowess_go-linux-{x64,arm64}-musl.a`), and Julia (removed the `libc(p) != "musl"` filter from `dev/build_tarballs_julia.jl`, letting Yggdrasil build musl JLLs again). GPU wheels/libraries (`release-gpu.yml`) are not covered by this change. Java is intentionally left as-is (no prebuilt natives for any platform yet).
-* Added prebuilt native libraries for the Java binding: `release-java.yml` now builds `fastlowess_java` for `linux-x86_64`, `linux-x86_64-musl` (Alpine), `linux-aarch64`, `linux-aarch64-musl` (Alpine), `macos-x86_64`, `macos-aarch64`, `windows-x86_64`, and `windows-aarch64`, and bundles all eight into the published jar under `src/main/resources/native/<os>-<arch>[-musl]/`. `NativeBridge` now also detects musl at runtime (checking Alpine's `/etc/alpine-release` and musl's `ld-musl-*` dynamic linker, since the JVM has no direct API for this) in addition to its existing (previously unused) `loadFromBundledResource()` auto-extraction, so `mvn`/Gradle users on any of those eight platforms no longer need to build the native library themselves.
+* Added `retain_model`, `LowessResult::predict_model()`, and prediction RAII types.
+* Added `return_derivative` to `LowessOptions` and `OnlineOptions`.
+* Added `return_se`/`confidence_intervals`/`prediction_intervals` to `StreamingOptions` and `OnlineOptions`; Online requires `update_mode = "full"`.
+* Added musl release binaries for Python, C++, Go, and Julia.
+* Added bundled native libraries for the Java binding across 8 platforms, with runtime musl detection and auto-extraction.
 
 ## Fixed
 
-* `dev/bump_version.py` now also updates the Go module's `/vN` major-version-suffix path across `go.mod` files, doc snippets, the doc-snippet runner, and README/docs badges whenever a version bump crosses a major version boundary, so this doesn't regress on the next major release.
-* `dev/bump_version.py` now also updates the Maven dependency example version in `bindings/java/docs/modules/ROOT/pages/introduction/installation.adoc`, which was previously left stale after a version bump.
-* Fixed inconsistent naming of the Node.js binding as "JavaScript" in the shared project intro sentence (root `README.md`, every binding/crate `README.md`, their generated doc-site home pages, and `CITATION.cff`) — now says "Node.js" everywhere, matching the CI badge, installation table, and directory name (`bindings/nodejs`).
-* `make fastLowess-dev` now also lints/builds/tests the combined `gpu,dev` feature set, not just `cpu`/`gpu`/`dev` in isolation — code that only compiles with both features enabled together (e.g. `tests/gpu_tests.rs`, gated on `#![cfg(feature = "dev")] #![cfg(feature = "gpu")]`) was previously never linted by any `make` target.
-* `make lowess-dev`/`make fastLowess-dev` now also run `cargo test --doc` for each tested feature set; doctests in `.rs` source files were previously never checked by any `make` target (only markdown-doc code snippets are covered by `dev/verify_snippets.py`).
-* Fixed 6 clippy lints in `crates/fastLowess/tests/gpu_tests.rs` (`needless_range_loop`, `unnecessary_min_or_max`, and 3× `await_holding_lock` on the `GLOBAL_EXECUTOR` mutex, allowed with a comment since the test binary always runs single-threaded), only surfaced once the new `gpu,dev` combined lint check above was added.
+* Fixed `bindings/cpp/spack/package.py` building from the wrong directory; it now builds by package name and keeps the pyright suppression at the repo root.
 
 ## Changed
 
-* Hoisted inline fully-qualified paths (e.g. `crate::math::distance::DistanceLinalg`, `std::slice::from_raw_parts`) to top-level `use` imports across all crates and bindings, using the bare name in the body instead. Genuine name collisions (e.g. a module-local `Result<T>`/`StreamingLowess` type alias shadowing the standard one) are kept fully-qualified with an explanatory comment. No behavior changes.
-* Removed unnecessary `pub use` re-exports across `lowess`/`fastLowess` (`api.rs`, `binding_support.rs`, `engine/executor.rs`) that had no consumer via their re-exported path — every actual caller already imported the type directly from its origin module (e.g. `math::boundary::BoundaryPolicy`, `primitives::buffer::LowessBuffer`). Changed to plain `use` (or removed), and updated the handful of test/adapter files that had been relying on the now-removed re-export path to import directly instead. No behavior changes.
+* Hoisted fully-qualified imports to top-level `use` statements across crates and bindings.
+* Removed unused `pub use` re-exports and updated the few callers that used them.
 
 # fastlowess (C++) 4.0.0
 

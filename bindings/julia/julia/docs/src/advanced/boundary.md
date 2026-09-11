@@ -23,7 +23,7 @@ Pads beyond both endpoints by replicating the first and last observed values. Pr
 
 **Use when**: No strong prior on boundary behaviour; general-purpose smoothing.
 
-```@example boundary
+```@example boundary-extend
 using FastLOWESS
 using Random, Statistics
 
@@ -44,7 +44,7 @@ Mirrors the data about both endpoints before fitting, then discards the reflecte
 
 **Use when**: Circular data (e.g., angle, day-of-year), symmetric physical quantities, or when the derivative at the boundary should be near zero.
 
-```@example boundary
+```@example boundary-reflect
 using FastLOWESS
 using Random, Statistics
 
@@ -65,7 +65,7 @@ Pads with zeros beyond both endpoints. Appropriate when the underlying process i
 
 **Use when**: Signal decays to zero at both ends; zero is a meaningful boundary value.
 
-```@example boundary
+```@example boundary-zero
 using FastLOWESS
 using Random, Statistics
 
@@ -89,7 +89,7 @@ Applies no padding. Each local fit uses only the points that are actually availa
 !!! note
     Without padding, boundary fits can have higher variance and visible edge artefacts, particularly with small `fraction` values.
 
-```@example boundary
+```@example boundary-noboundary
 using FastLOWESS
 using Random, Statistics
 

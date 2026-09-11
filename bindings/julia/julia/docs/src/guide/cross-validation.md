@@ -14,7 +14,7 @@ Cross-validation helps select optimal parameters (especially `fraction`) by eval
 
 Split data into K folds, train on K-1, validate on 1.
 
-```@example cross-validation
+```@example cv-kfold
 using FastLOWESS
 using Random, Statistics
 
@@ -38,7 +38,7 @@ println("CV scores: ", result.cv_scores)
 
 Each point is held out once. Most thorough but slowest.
 
-```@example cross-validation
+```@example cv-loocv
 using FastLOWESS
 using Random, Statistics
 
@@ -59,7 +59,7 @@ println("Selected fraction (CV): ", result.fraction_used)
 
 Set a seed for reproducible fold assignments:
 
-```@example cross-validation
+```@example cv-seeded
 using FastLOWESS
 using Random, Statistics
 

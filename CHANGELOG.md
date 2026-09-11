@@ -6,110 +6,107 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 4.1.0
 
 ### Added
 
 **lowess:**
 
-- Added `.return_se()`/`.confidence_intervals()`/`.prediction_intervals()` support to the Online adapter's builder: `OnlineOutput::standard_error` was previously always `None` (the fast `Incremental` path never computed it, and `Full` mode's inner `LowessConfig` hardcoded `return_variance: None`). Now wired through so `Full` update mode populates real standard errors (extracted from the already-existing `LowessExecutor` interval computation). `OnlineOutput` also gained `confidence_lower`/`confidence_upper`/`prediction_lower`/`prediction_upper` fields (scalars, for the latest point), populated via `.confidence_intervals(level)`/`.prediction_intervals(level)` the same way Batch derives them (`IntervalMethod::compute_intervals` over the window, then taking the last point). Combining any of `.return_se()`/`.confidence_intervals()`/`.prediction_intervals()` with anything other than `.update_mode("full")` (including the default `"incremental"`) now fails at `.build()` with the new `LowessError::StandardErrorRequiresFullUpdateMode`, instead of silently building successfully and leaving these fields as `None` on every `add_point()` call.
-- Added `.return_se()`/`.confidence_intervals()`/`.prediction_intervals()` support to the Streaming adapter's builder: previously these had no effect on Streaming at all (`interval_type` didn't exist on `StreamingLowessBuilder`, and the per-chunk `LowessConfig` hardcoded `return_variance: None`). Now computed per chunk the same way Batch computes them (`IntervalMethod::compute_intervals`, using residuals over the whole combined overlap+new-data array), and merged across chunk-overlap boundaries via `merge_strategy` the same way `y`/`derivative`/`robustness_weights` already are. `StreamingBuffer` gained 5 new overlap scratch slots (`overlap_std_errors`, `overlap_confidence_lower/upper`, `overlap_prediction_lower/upper`) to carry the tail across `process_chunk()` calls, and `finalize()` now also returns the buffered tail's interval values. No `update_mode`-style restriction needed (Streaming has no such concept) — unlike Online, these just work whenever requested.
-- Added a `return_derivative` option to the Batch, Streaming, and Online adapters' builders: each point's local WLS fit already computes a slope internally, but only the fitted `y` was kept; `.return_derivative()` exposes that per-point slope in `LowessResult::derivative` (Batch/Streaming) or `OnlineOutput::derivative` (Online, the latest point's slope), enabling rate-of-change/turning-point analysis at effectively no extra computation cost. For delta-skipped (interpolated) points in Batch, the slope is the constant slope of the linear segment connecting the neighboring anchor points, matching how `y` itself is interpolated there. In Streaming, derivative values in the overlap region are merged across chunk boundaries the same way `y` is, via `merge_strategy`. `false` by default.
-- Added out-of-sample prediction to the Batch adapter: `.retain_model(true)` on the builder retains the fitted model's (boundary-padded) training data, smoothed values, final robustness weights, and residual SD, enabling `Predict::new()...build()?` and `.call(&result, new_x)` to evaluate the local WLS fit at arbitrary x-values not in the training set (like R's `predict.loess(model, newdata)`). `Predict` is a fluent, string-based builder (an alias for `PredictBuilder`, mirroring `Lowess`/`LowessBuilder`'s convention, e.g. `.extrapolation("linear")`) controlling `return_se`/`confidence_intervals`/`prediction_intervals` (same z-score convention as `fit()`'s existing intervals, and same naming as `Lowess`'s own `confidence_intervals`/`prediction_intervals` builder methods), `return_derivative` (the local fit's slope at each query point), and `extrapolation` (`"clamp"` default, `"linear"`, or `"error"` via the new `LowessError::PredictOutOfRange`) for query points outside the training x-range. `.build()` is mandatory: it validates (failing fast on an invalid string) and produces the ready-to-call configuration, which has no public constructor of its own. `.call()` returns a `PredictOutput` struct and `LowessError::PredictionUnavailable` if called without `.retain_model(true)`, or if `fraction >= 1.0` (global regression) was used. Off by default (no extra memory/clone cost unless requested). `Predict` is exported from `lowess::prelude`. Internally generalizes `Window`'s sliding-window search, `RegressionContext`'s local WLS fit, and `IntervalMethod`'s per-point standard-error formula (all previously index-bound to training points) to also support arbitrary out-of-sample query points.
+- Added Online `return_se`/`confidence_intervals`/`prediction_intervals` support, with `OnlineOutput` now populating `standard_error` and the four interval bounds in `Full` mode. Using them without `update_mode("full")` now fails at `.build()` with `LowessError::StandardErrorRequiresFullUpdateMode`.
+- Added Streaming `return_se`/`confidence_intervals`/`prediction_intervals` support, computed per chunk and merged across overlaps. `StreamingBuffer` now carries interval scratch state through `process_chunk()`/`finalize()`.
+- Added `return_derivative` to the Batch, Streaming, and Online builders, exposing each point's local slope via `LowessResult::derivative` or `OnlineOutput::derivative`.
+- Added out-of-sample prediction to Batch via `.retain_model(true)` and `Predict::call()`, with configurable standard errors, intervals, derivative output, and extrapolation.
 
 **fastLowess:**
 
-- Added `.return_se()`/`.confidence_intervals(level)`/`.prediction_intervals(level)` to the `OnlineLowess` entry-point struct and `ParallelOnlineLowessBuilder` (mirroring `Lowess`/`ParallelBatchLowessBuilder`'s existing methods), forwarding to `lowess`'s newly-wired Online interval support. Same `update_mode("full")` requirement as the underlying `lowess` crate.
-- Added `.return_se()`/`.confidence_intervals(level)`/`.prediction_intervals(level)` to the `StreamingLowess` entry-point struct and `ParallelStreamingLowessBuilder`, forwarding to `lowess`'s newly-wired Streaming interval support. No `update_mode` restriction (Streaming has no such concept).
-- Added a Rayon-parallel `custom_derivative_pass` implementing the Batch and Streaming adapters' new `return_derivative` option, mirroring the existing anchor-based parallel smoothing pass (including delta-skip/interpolation handling) and wired in alongside the other parallel passes when `.parallel(true)` is set.
-- Added a Rayon-parallel `custom_predict_pass` for `Predict::call()`, wired into the Batch adapter's `fit()` alongside the existing parallel smooth/CV/interval passes; computes the same SE/derivative/extrapolation options in parallel.
+- Added parallel wiring for Online/Streaming interval support, mirroring the new `lowess` builder methods and `update_mode("full")` requirement.
+- Added `custom_derivative_pass` and `custom_predict_pass` for the Batch and Streaming parallel paths.
 
 **Python:**
 
-- Added a `retain_model` constructor option to `Lowess` and a `LowessResult.predict(new_x, ...)` method (returning a new `PredictOutput` class), exposing lowess's out-of-sample prediction feature.
-- Added a `return_derivative` constructor option to `Lowess`, `StreamingLowess`, and `OnlineLowess`, exposing the per-point local fit derivative (slope) via `LowessResult.derivative` (a NumPy array) or `OnlineOutput.derivative` (a scalar float).
-- Added `return_se`/`confidence_intervals`/`prediction_intervals` constructor options to `StreamingLowess` and `OnlineLowess`, exposing standard errors and confidence/prediction interval bounds via `LowessResult.standard_errors`/`confidence_lower`/`confidence_upper`/`prediction_lower`/`prediction_upper` (Streaming) or `OnlineOutput.standard_error`/`confidence_lower`/`confidence_upper`/`prediction_lower`/`prediction_upper` (Online, scalars for the latest point). For `OnlineLowess`, these require `update_mode="full"`.
+- Added `retain_model` and `LowessResult.predict(new_x, ...)` for out-of-sample prediction.
+- Added `return_derivative` to `Lowess`, `StreamingLowess`, and `OnlineLowess`, exposing the local slope.
+- Added `return_se`/`confidence_intervals`/`prediction_intervals` to `StreamingLowess` and `OnlineLowess`; Online requires `update_mode="full"`.
 
 **R:**
 
-- Added a `retain_model` option to `Lowess()` and a `predict.Lowess(object, new_x, ...)` S3 method for out-of-sample prediction.
-- Added a `return_derivative` option to `Lowess()`, `StreamingLowess()`, and `OnlineLowess()`, exposing the per-point local fit derivative (slope) as `derivative` in the result list/object.
-- Added `return_se`/`confidence_intervals`/`prediction_intervals` options to `StreamingLowess()` and `OnlineLowess()`, exposing standard errors and confidence/prediction interval bounds as `standard_errors`/`confidence_lower`/`confidence_upper`/`prediction_lower`/`prediction_upper` in the result. For `OnlineLowess()`, these require `update_mode = "full"`.
+- Added `retain_model` and `predict.Lowess()` for out-of-sample prediction.
+- Added `return_derivative` to `Lowess()`, `StreamingLowess()`, and `OnlineLowess()`.
+- Added `return_se`/`confidence_intervals`/`prediction_intervals` to `StreamingLowess()` and `OnlineLowess()`; Online requires `update_mode = "full"`.
 
 **Julia:**
 
-- Added a `retain_model` keyword argument to `Lowess` and a `predict(model, new_x; kwargs...)` function, via a new `LowessResult.predict_model`/`PredictModel`/`PredictResult` type, for out-of-sample prediction.
-- Added a `return_derivative` keyword argument to `Lowess`, `StreamingLowess`, and `OnlineLowess`, exposing the per-point local fit derivative (slope) as `LowessResult.derivative` or `OnlineOutput.derivative` (the latest point's slope).
-- Added `return_se`/`confidence_intervals`/`prediction_intervals` keyword arguments to `StreamingLowess` and `OnlineLowess`, exposing standard errors and confidence/prediction interval bounds as `LowessResult.standard_errors`/`confidence_lower`/`confidence_upper`/`prediction_lower`/`prediction_upper` (Streaming) or `OnlineOutput.standard_error`/`confidence_lower`/`confidence_upper`/`prediction_lower`/`prediction_upper` (Online, scalars for the latest point). For `OnlineLowess`, these require `update_mode = "full"`.
+- Added `retain_model` and `predict(model, new_x; kwargs...)` for out-of-sample prediction.
+- Added `return_derivative` to `Lowess`, `StreamingLowess`, and `OnlineLowess`.
+- Added `return_se`/`confidence_intervals`/`prediction_intervals` to `StreamingLowess` and `OnlineLowess`; Online requires `update_mode = "full"`.
 
 **Go:**
 
-- Added a `RetainModel` option to `Options` and a `Result.PredictModel.Predict(newX, options)` method, via new `PredictModel`/`PredictOptions`/`PredictResult` types, for out-of-sample prediction.
-- Added a `ReturnDerivative` option to `Options`, `StreamingOptions`, and `OnlineOptions`, exposing the per-point local fit derivative (slope) via `Result.Derivative` (`[]float64`) or `PointResult.Derivative` (a scalar `float64`).
-- Added `ReturnSE`/`ConfidenceIntervals`/`PredictionIntervals` options to `StreamingOptions` and `OnlineOptions`, exposing standard errors and confidence/prediction interval bounds via `Result.StandardErrors`/`ConfidenceLower`/`ConfidenceUpper`/`PredictionLower`/`PredictionUpper` (Streaming) or `PointResult.StandardError`/`ConfidenceLower`/`ConfidenceUpper`/`PredictionLower`/`PredictionUpper` (Online). For `OnlineOptions`, these require `UpdateMode = "full"`.
+- Added `RetainModel` and `Result.PredictModel.Predict(newX, options)` for prediction.
+- Added `ReturnDerivative` to `Options`, `StreamingOptions`, and `OnlineOptions`.
+- Added `ReturnSE`/`ConfidenceIntervals`/`PredictionIntervals` to `StreamingOptions` and `OnlineOptions`; Online requires `UpdateMode = "full"`.
 
 **Java:**
 
-- Added a `retainModel` option to `Options` and a `Result.predictModel()` accessor returning a new `PredictModel` class with a `predict(newX, options)` method (plus new `PredictOptions`/`PredictResult` types), for out-of-sample prediction.
-- Added a `returnDerivative(boolean)` builder option to `Options` and `OnlineOptions`, exposing the per-point local fit derivative (slope) via `Result.derivative()` (`Optional<double[]>`) or `PointResult.derivative()` (`OptionalDouble`).
-- Added `returnSe(boolean)`/`confidenceIntervals(double)`/`predictionIntervals(double)` builder options to `StreamingOptions` and `OnlineOptions`, exposing standard errors and confidence/prediction interval bounds via `Result.standardErrors()`/`confidenceLower()`/`confidenceUpper()`/`predictionLower()`/`predictionUpper()` (Streaming) or `PointResult.standardError()`/`confidenceLower()`/`confidenceUpper()`/`predictionLower()`/`predictionUpper()` (Online, all `OptionalDouble`). For `OnlineOptions`, these require `updateMode("full")`.
+- Added `retainModel` and `Result.predictModel()` for prediction.
+- Added `returnDerivative(boolean)` to `Options` and `OnlineOptions`.
+- Added `returnSe(boolean)`/`confidenceIntervals(double)`/`predictionIntervals(double)` to `StreamingOptions` and `OnlineOptions`; Online requires `updateMode("full")`.
 
 **Node.js:**
 
-- Added a `retain_model` option to `SmoothOptions` and a `LowessResult.predict(newX, options)` method (returning new `PredictOptions`/`PredictOutput` types), for out-of-sample prediction.
-- Added a `return_derivative` option to `SmoothOptions`, `StreamingOptions`, and `OnlineOptions`, exposing the per-point local fit derivative (slope) via `LowessResult.derivative` (a `Float64Array`) or `OnlineOutput.derivative` (a scalar `number`).
-- Added `return_se`/`confidence_intervals`/`prediction_intervals` options to `StreamingOptions` and `OnlineOptions`, exposing standard errors and confidence/prediction interval bounds via `LowessResult.standard_errors`/`confidence_lower`/`confidence_upper`/`prediction_lower`/`prediction_upper` (Streaming) or `OnlineOutput.standard_error`/`confidence_lower`/`confidence_upper`/`prediction_lower`/`prediction_upper` (Online, scalars). For `OnlineOptions`, these require `update_mode: "full"`.
+- Added `retain_model` and `LowessResult.predict(newX, options)` for prediction.
+- Added `return_derivative` to `SmoothOptions`, `StreamingOptions`, and `OnlineOptions`.
+- Added `return_se`/`confidence_intervals`/`prediction_intervals` to `StreamingOptions` and `OnlineOptions`; Online requires `update_mode: "full"`.
 
 **WASM:**
 
-- Added a `retain_model` option to `SmoothOptions` and a `LowessResult.predict(newX, options)` method (returning new `PredictOptions`/`PredictOutput` TypeScript types), for out-of-sample prediction.
-- Added a `return_derivative` option to `SmoothOptions`, `StreamingOptions`, and `OnlineOptions`, exposing the per-point local fit derivative (slope) via `LowessResult.derivative` (a `Float64Array`) or `OnlineOutput.derivative` (a scalar `number`).
-- Added `return_se`/`confidence_intervals`/`prediction_intervals` options to `StreamingOptions` and `OnlineOptions`, exposing standard errors and confidence/prediction interval bounds via `LowessResult.standard_errors`/`confidence_lower`/`confidence_upper`/`prediction_lower`/`prediction_upper` (Streaming) or `OnlineOutput.standard_error`/`confidence_lower`/`confidence_upper`/`prediction_lower`/`prediction_upper` (Online, scalars). For `OnlineOptions`, these require `update_mode: "full"`.
+- Added `retain_model` and `LowessResult.predict(newX, options)` for prediction.
+- Added `return_derivative` to `SmoothOptions`, `StreamingOptions`, and `OnlineOptions`.
+- Added `return_se`/`confidence_intervals`/`prediction_intervals` to `StreamingOptions` and `OnlineOptions`; Online requires `update_mode: "full"`.
 
 **C++:**
 
-- Added a `retain_model` option to `LowessOptions`, a `LowessResult::predict_model()` accessor, and new `PredictModel`/`PredictOptions`/`PredictResult` RAII classes for out-of-sample prediction.
-- Added a `return_derivative` option to `LowessOptions` (Batch/Streaming) and `OnlineOptions` (Online), exposing the per-point local fit derivative (slope) via `LowessResult::derivative()` (Batch/Streaming, a `std::vector<double>`) or `OnlineOutput::derivative()` (Online, a scalar `double`).
-- Added `return_se`/`confidence_intervals`/`prediction_intervals` options to `StreamingOptions` (inherited from `LowessOptions`) and new fields on `OnlineOptions`, exposing standard errors and confidence/prediction interval bounds via `LowessResult::standard_errors()`/`confidence_lower()`/`confidence_upper()`/`prediction_lower()`/`prediction_upper()` (Streaming) or `OnlineOutput::standard_error()`/`confidence_lower()`/`confidence_upper()`/`prediction_lower()`/`prediction_upper()` (Online, scalar `double`s). For `OnlineOptions`, these require `update_mode = "full"`.
+- Added `retain_model`, `LowessResult::predict_model()`, and prediction RAII types.
+- Added `return_derivative` to `LowessOptions` and `OnlineOptions`.
+- Added `return_se`/`confidence_intervals`/`prediction_intervals` to `StreamingOptions` and `OnlineOptions`; Online requires `update_mode = "full"`.
 
 **Monorepo:**
 
-- Added Linux musl (Alpine) release binaries alongside the existing glibc ones: Python (`release-pypi.yml` now publishes `musllinux_1_2` wheels for x86_64/aarch64), C++ (`release-cpp.yml` builds natively inside `alpine:latest` containers on `ubuntu-latest`/`ubuntu-24.04-arm`, publishing `libfastlowess-linux-{x64,arm64}-musl.so`), Go (`release-go.yml`, same container approach, publishing `libfastlowess_go-linux-{x64,arm64}-musl.a`), and Julia (removed the `libc(p) != "musl"` filter from `dev/build_tarballs_julia.jl`, letting Yggdrasil build musl JLLs again). GPU wheels/libraries (`release-gpu.yml`) are not covered by this change. Java is intentionally left as-is (no prebuilt natives for any platform yet).
-- Added prebuilt native libraries for the Java binding: `release-java.yml` now builds `fastlowess_java` for `linux-x86_64`, `linux-x86_64-musl` (Alpine), `linux-aarch64`, `linux-aarch64-musl` (Alpine), `macos-x86_64`, `macos-aarch64`, `windows-x86_64`, and `windows-aarch64`, and bundles all eight into the published jar under `src/main/resources/native/<os>-<arch>[-musl]/`. `NativeBridge` now also detects musl at runtime (checking Alpine's `/etc/alpine-release` and musl's `ld-musl-*` dynamic linker, since the JVM has no direct API for this) in addition to its existing (previously unused) `loadFromBundledResource()` auto-extraction, so `mvn`/Gradle users on any of those eight platforms no longer need to build the native library themselves.
+- Added musl release binaries for Python, C++, Go, and Julia.
+- Added bundled native libraries for the Java binding across 8 platforms, with runtime musl detection and auto-extraction.
 
 ### Fixed
 
 **C++:**
 
-- Fixed `bindings/cpp/spack/package.py`'s `build()`/`install()` phases assuming Cargo's `target/release` output lives under `bindings/cpp`; since `bindings/cpp` is a member of the repo's Cargo workspace, the build output actually lands in `target/release` at the workspace root, causing `spack install fastlowess-cpp` to fail on every platform (reported via `spack/spack-packages` PR #6369 review). Now builds by package name (`cargo build -p fastlowess-cpp`) instead of `cd`'ing into `bindings/cpp`. Also dropped the recipe's repo-internal header comment (mirroring note + pyright suppression), which the same review flagged as not belonging in the builtin recipe; the pyright suppression now lives in a new root `pyrightconfig.json` instead, scoped to `bindings/cpp/spack`, so editing the recipe without a full Spack install stays warning-free without polluting the recipe itself.
+- Fixed `bindings/cpp/spack/package.py` building from the wrong directory; it now builds by package name and keeps the pyright suppression at the repo root.
 
 **Node.js:**
 
-- Fixed `cv_seed` silently accepting negative values and reinterpreting them as a huge unsigned seed (e.g. `-1` became `18446744073709551615`) instead of raising an error, since the `i64` value was cast to `u64` via Rust's unchecked `as` operator. Now validated and rejected with a clear error before the cast.
+- Fixed `cv_seed` silently accepting negative values; they are now rejected before casting.
 
 **Java:**
 
-- Fixed the same `cv_seed` negative-value cast bug in `Options.Builder.cvSeed(long)` / `NativeBridge.lowessSetCvSeed`.
+- Fixed the same `cv_seed` negative-value cast bug in `Lowess()`.
 
 **R:**
 
-- Fixed the same `cv_seed` negative-value cast bug in `Lowess()`.
-
-**Monorepo:**
+- `dev/bump_version.py` now updates the Go `/vN` path and the Java Maven example version.
+- Fixed inconsistent Node.js naming in READMEs, doc-site home pages, and `CITATION.cff`.
 
 - `dev/bump_version.py` now also updates the Go module's `/vN` major-version-suffix path across `go.mod` files, doc snippets, the doc-snippet runner, and README/docs badges whenever a version bump crosses a major version boundary, so this doesn't regress on the next major release.
 - `dev/bump_version.py` now also updates the Maven dependency example version in `bindings/java/docs/modules/ROOT/pages/introduction/installation.adoc`, which was previously left stale after a version bump.
-- Fixed inconsistent naming of the Node.js binding as "JavaScript" in the shared project intro sentence (root `README.md`, every binding/crate `README.md`, their generated doc-site home pages, and `CITATION.cff`) — now says "Node.js" everywhere, matching the CI badge, installation table, and directory name (`bindings/nodejs`).
+- Cleaned up `lowess::prelude` by removing leaked builder and adapter markers.
 
 **lowess:**
 
-- Cleaned up `lowess::prelude` of accidentally-leaked internals: removed `LowessBuilder` and `Adapter::{Batch, Online, Streaming}` (use the `Lowess`/`StreamingLowess`/`OnlineLowess` type aliases directly - each already builds without needing `.adapter(...)`).
+- Fixed the Go module's import path to include the required `/v4` suffix. Breaking change for old unsuffixed imports.
 
 **Go:**
 
-- Fixed the Go module's import path missing the required `/v4` major version suffix (Go's "major version suffix" rule: any module tagged `v2.0.0` or higher must end its module path with `/vN`, or the Go toolchain silently ignores all such tags and resolves only pseudo-versions). Changed `github.com/thisisamirv/lowess-project/bindings/go/fastlowess` to `.../fastlowess/v4` in `go.mod`, all doc snippets, the doc-snippet runner, and the test module. This is a **breaking change** for any code importing the old unsuffixed path; existing `v3.2.1`/`v4.0.0` tags were affected and require a new release for pkg.go.dev to resolve real (non-pseudo) versions correctly.
-
-**Monorepo:**
+- `make fastLowess-dev` now also covers the combined `gpu,dev` feature set.
+- `make lowess-dev`/`make fastLowess-dev` now also run `cargo test --doc`.
+- Fixed 6 clippy lints in `crates/fastLowess/tests/gpu_tests.rs`.
 
 - `make fastLowess-dev` now also lints/builds/tests the combined `gpu,dev` feature set, not just `cpu`/`gpu`/`dev` in isolation — code that only compiles with both features enabled together (e.g. `tests/gpu_tests.rs`, gated on `#![cfg(feature = "dev")] #![cfg(feature = "gpu")]`) was previously never linted by any `make` target.
 - `make lowess-dev`/`make fastLowess-dev` now also run `cargo test --doc` for each tested feature set; doctests in `.rs` source files were previously never checked by any `make` target (only markdown-doc code snippets are covered by `dev/verify_snippets.py`).
@@ -120,15 +117,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **lowess:**
 
 - Flattened the `tests/lowess/` directories into `tests/` directly: each test file is now its own independent integration test binary instead of a submodule of a shared `main.rs`. No test behavior changes.
+- Bumped the vendored KaTeX CDN version from `0.18.5` to `0.18.7`, updating SRI hashes to match.
 
 **fastLowess:**
 
 - Flattened the `tests/fastLowess/` directories into `tests/` directly: each test file is now its own independent integration test binary instead of a submodule of a shared `main.rs`. No test behavior changes.
+- Bumped the vendored KaTeX CDN version from `0.18.5` to `0.18.7`, updating SRI hashes to match.
 
 **Monorepo:**
 
-- Hoisted inline fully-qualified paths (e.g. `crate::math::distance::DistanceLinalg`, `std::slice::from_raw_parts`) to top-level `use` imports across all crates and bindings, using the bare name in the body instead. Genuine name collisions (e.g. a module-local `Result<T>`/`StreamingLowess` type alias shadowing the standard one) are kept fully-qualified with an explanatory comment. No behavior changes.
-- Removed unnecessary `pub use` re-exports across `lowess`/`fastLowess` (`api.rs`, `binding_support.rs`, `engine/executor.rs`) that had no consumer via their re-exported path — every actual caller already imported the type directly from its origin module (e.g. `math::boundary::BoundaryPolicy`, `primitives::buffer::LowessBuffer`). Changed to plain `use` (or removed), and updated the handful of test/adapter files that had been relying on the now-removed re-export path to import directly instead. No behavior changes.
+- Hoisted fully-qualified imports to top-level `use` statements across crates and bindings.
+- Removed unused `pub use` re-exports and updated the few callers that used them.
 
 ## 4.0.0
 

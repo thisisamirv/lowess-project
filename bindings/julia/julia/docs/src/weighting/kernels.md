@@ -34,7 +34,7 @@ $$w(u) = (1 - |u|^3)^3$$
 
 **Use when**: Default choice for most applications.
 
-```@example kernels
+```@example kernel-tricube
 using FastLOWESS
 using Random, Statistics
 
@@ -57,7 +57,7 @@ $$w(u) = \frac{3}{4}(1 - u^2)$$
 
 **Use when**: Optimal MSE properties desired.
 
-```@example kernels
+```@example kernel-epanechnikov
 using FastLOWESS
 using Random, Statistics
 
@@ -80,7 +80,7 @@ $$w(u) = \exp(-u^2/2)$$
 
 **Use when**: Maximum smoothness needed, computational cost acceptable.
 
-```@example kernels
+```@example kernel-gaussian
 using FastLOWESS
 using Random, Statistics
 
@@ -103,7 +103,7 @@ $$w(u) = (1 - u^2)^2$$
 
 **Use when**: Alternative to Tricube with slightly different properties.
 
-```@example kernels
+```@example kernel-biweight
 using FastLOWESS
 using Random, Statistics
 
@@ -126,7 +126,7 @@ $$w(u) = \cos(\pi u / 2)$$
 
 **Use when**: Want smooth kernel with simple form.
 
-```@example kernels
+```@example kernel-cosine
 using FastLOWESS
 using Random, Statistics
 
@@ -149,7 +149,7 @@ $$w(u) = 1 - |u|$$
 
 **Use when**: Simple, interpretable weights.
 
-```@example kernels
+```@example kernel-triangle
 using FastLOWESS
 using Random, Statistics
 
@@ -172,7 +172,7 @@ $$w(u) = 1$$
 
 **Use when**: Speed is critical, smoothness less important.
 
-```@example kernels
+```@example kernel-uniform
 using FastLOWESS
 using Random, Statistics
 

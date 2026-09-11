@@ -30,7 +30,7 @@ First centers residuals at their median, then takes the median of the absolute d
 
 **Use when**: Data may contain outliers (default for most applications).
 
-```@example scaling
+```@example scaling-mad
 using FastLOWESS
 using Random, Statistics
 
@@ -53,7 +53,7 @@ Uses the uncentered median — unlike MAD it does not subtract the residual medi
 
 **Use when**: Speed matters and data have minimal systematic bias in residuals.
 
-```@example scaling
+```@example scaling-mar
 using FastLOWESS
 using Random, Statistics
 
@@ -76,7 +76,7 @@ Arithmetic mean of absolute residuals. Non-robust: a single extreme outlier infl
 
 **Use when**: Clean data with no outliers; maximum computation speed required.
 
-```@example scaling
+```@example scaling-mean
 using FastLOWESS
 using Random, Statistics
 

@@ -2,7 +2,7 @@ package fastlowess
 
 // version is the released version of this Go binding (bindings/go), tracked
 // independently of the underlying fastLowess Rust core's crate version.
-const version = "4.0.0"
+const version = "4.1.0"
 
 // Version returns the version of this Go binding package.
 func Version() string {

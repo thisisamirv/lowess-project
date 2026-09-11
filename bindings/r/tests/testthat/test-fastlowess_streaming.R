@@ -136,7 +136,7 @@ test_that("StreamingLowess missing = \"drop\" removes non-finite rows", {
     expect_length(result$y, length(x) - 1)
 })
 
-test_that("StreamingLowess return_se/confidence_intervals/prediction_intervals work", {
+test_that("StreamingLowess return_se/ci/pi work", {
     set.seed(42)
     x <- seq(0, 10, length.out = 200)
     y <- sin(x) + rnorm(200, sd = 0.1)

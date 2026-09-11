@@ -12,7 +12,7 @@ Time series data often contains noise, seasonality, and trends. LOWESS provides 
 
 `fraction = 0.1` sizes the neighbourhood as 10% of the data at each evaluation point — narrow enough to follow a slowly varying trend without smearing periodic variation. Three robustness `iterations` down-weight noise spikes so they cannot bias the fitted curve; this is especially important when the signal-to-noise ratio is low or when occasional outliers are expected.
 
-```@example use-case-time-series
+```@example ts-trend
 using FastLOWESS
 
 n = 500
@@ -34,7 +34,7 @@ Remove trend to analyze residual patterns.
 
 Setting `return_residuals = True` stores `observed − smoothed` alongside the smooth. A slightly wider `fraction = 0.3` produces a smoother baseline trend, so short-duration oscillations end up in the residuals rather than being absorbed into the trend component. The residual series is then ready for spectral analysis, seasonality detection, or change-point methods.
 
-```@example use-case-time-series
+```@example ts-detrend
 using FastLOWESS
 
 n = 100
@@ -57,7 +57,7 @@ println("residuals[0]: ", detrended[1])
 
 Prediction intervals widen the uncertainty band to include both the uncertainty in the fitted curve (confidence interval) and the expected scatter of new observations around it. `fraction = 0.2` offers a balance between local detail and stable interval width — too small a fraction produces jagged interval edges; too large a fraction underestimates local variance near turning points.
 
-```@example use-case-time-series
+```@example ts-forecast
 using FastLOWESS
 
 n = 100
@@ -82,7 +82,7 @@ println("95% PI: [$(result.prediction_lower[1]), $(result.prediction_upper[1])]"
 
 LOWESS naturally handles irregular time sampling:
 
-```@example use-case-time-series
+```@example ts-missing
 using FastLOWESS
 
 t_irregular = [i * 1.0 + mod(i * 31, 10) * 0.1 for i in 0:99]
@@ -100,7 +100,7 @@ println("y[0]: ", result.y[1])
 
 Use different fractions to extract features at different scales:
 
-```@example use-case-time-series
+```@example ts-multiscale
 using FastLOWESS
 
 n = 100
@@ -124,7 +124,7 @@ end
 
 Biological application:
 
-```@example use-case-time-series
+```@example ts-gene-expression
 using FastLOWESS
 
 hours = collect(0.0:0.5:24.0)[1:49]

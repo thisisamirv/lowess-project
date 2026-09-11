@@ -1,4 +1,19 @@
 <!-- markdownlint-disable MD024 MD025 -->
+# fastlowess (Python) 4.1.0
+
+## Added
+
+* Added `retain_model` and `LowessResult.predict(new_x, ...)` for out-of-sample prediction.
+* Added `return_derivative` to `Lowess`, `StreamingLowess`, and `OnlineLowess`, exposing the local slope.
+* Added `return_se`/`confidence_intervals`/`prediction_intervals` to `StreamingLowess` and `OnlineLowess`; Online requires `update_mode="full"`.
+* Added musl release binaries for Python, C++, Go, and Julia.
+* Added bundled native libraries for the Java binding across 8 platforms, with runtime musl detection and auto-extraction.
+
+## Changed
+
+* Hoisted fully-qualified imports to top-level `use` statements across crates and bindings.
+* Removed unused `pub use` re-exports and updated the few callers that used them.
+
 # fastlowess (Python) 4.0.0
 
 ## Added

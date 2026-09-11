@@ -28,6 +28,7 @@
 //! - **Analysis**
 //!   - [Intervals](doc::guide::intervals)
 //!   - [Cross-Validation](doc::guide::cross_validation)
+//!   - [Prediction](doc::guide::predict)
 //! - **Customization**
 //!   - [Kernels](doc::weighting::kernels)
 //!   - [Robustness](doc::weighting::robustness)
@@ -99,11 +100,17 @@
 //!     .boundary_policy("extend")                       // Boundary handling policy
 //!     .scaling_method("mad")                           // Robust scale estimation
 //!     .auto_converge(1e-6)                             // Auto-convergence threshold
+//!     .missing("error")                                // Reject non-finite (NaN/Inf) input
+//!     .custom_weights(vec![1.0; 8])                    // Per-observation case weights
+//!     .return_se()                                     // Standard errors
 //!     .confidence_intervals(0.95)                      // 95% confidence intervals
 //!     .prediction_intervals(0.95)                      // 95% prediction intervals
 //!     .return_diagnostics()                            // Fit quality metrics
 //!     .return_residuals()                              // Include residuals
 //!     .return_robustness_weights()                     // Include robustness weights
+//!     .return_derivative()                             // Include per-point local slope
+//!     .return_sorted()                                 // Sort output ascending by x
+//!     .retain_model(true)                              // Retain state for out-of-sample predict()
 //!     .cv_method("kfold")                              // Cross-validation method: "kfold" or "loocv"
 //!     .cv_k(5)                                         // Number of folds for k-fold CV
 //!     .cv_fractions(vec![0.3, 0.7])                   // Candidate bandwidth fractions to evaluate

@@ -157,7 +157,7 @@ test_that("OnlineLowess missing = \"drop\" ignores non-finite point", {
     expect_null(result)
 })
 
-test_that("OnlineLowess return_se/confidence_intervals/prediction_intervals requires full mode", {
+test_that("OnlineLowess return_se/ci/pi requires full mode", {
     expect_error(
         OnlineLowess(
             fraction = 0.5,
@@ -168,7 +168,7 @@ test_that("OnlineLowess return_se/confidence_intervals/prediction_intervals requ
     )
 })
 
-test_that("OnlineLowess return_se/confidence_intervals/prediction_intervals work", {
+test_that("OnlineLowess return_se/ci/pi work", {
     set.seed(42)
     x <- as.double(1:30)
     y <- sin(x / 10) + rnorm(30, sd = 0.1)
@@ -185,7 +185,7 @@ test_that("OnlineLowess return_se/confidence_intervals/prediction_intervals work
     results <- lapply(seq_along(x), function(i) add_point(ol, x[[i]], y[[i]]))
     non_null <- Filter(Negate(is.null), results)
 
-    expect_true(length(non_null) > 0)
+    expect_gt(length(non_null), 0)
     last <- non_null[[length(non_null)]]
     expect_false(is.null(last$standard_error))
     expect_false(is.null(last$confidence_lower))

@@ -24,7 +24,7 @@ public final class FastLowess {
      * The released version of this Java binding (bindings/java), tracked
      * independently of the underlying fastLowess Rust core's crate version.
      */
-    public static final String VERSION = "4.0.0";
+    public static final String VERSION = "4.1.0";
 
     private static final String GPU_REPO = "thisisamirv/lowess-project";
     // GPU artifacts across all versions live in this one perpetual release

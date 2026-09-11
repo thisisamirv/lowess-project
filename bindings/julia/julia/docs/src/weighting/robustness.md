@@ -28,7 +28,7 @@ $$w(u) = \begin{cases} (1 - u^2)^2 & |u| < 1 \\ 0 & |u| \geq 1 \end{cases}$$
 
 **Use when**: General purpose, balanced approach.
 
-```@example robustness
+```@example robust-bisquare
 using FastLOWESS
 using Random, Statistics
 
@@ -51,7 +51,7 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}$$
 
 **Use when**: Moderate outliers, want to retain some influence.
 
-```@example robustness
+```@example robust-huber
 using FastLOWESS
 using Random, Statistics
 
@@ -74,7 +74,7 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
 
 **Use when**: Extreme outliers, want binary exclusion.
 
-```@example robustness
+```@example robust-talwar
 using FastLOWESS
 using Random, Statistics
 
@@ -103,7 +103,7 @@ println("First smoothed value (talwar robustness): ", result.y[1])
 
 Use robustness weights to identify potential outliers:
 
-```@example robustness
+```@example robust-detect-outliers
 using FastLOWESS
 using Random, Statistics
 
@@ -138,7 +138,7 @@ Residuals are scaled before computing robustness weights. Two methods:
 
 ![Scaling Methods Comparison](../assets/scaling_comparison.svg)
 
-```@example robustness
+```@example robust-scaling
 using FastLOWESS
 using Random, Statistics
 
@@ -160,7 +160,7 @@ Stop iterations early when weights stabilize:
 !!! tip "Performance"
     Auto-convergence can significantly reduce computation when weights stabilize before reaching max iterations.
 
-```@example robustness
+```@example robust-auto-converge
 using FastLOWESS
 using Random, Statistics
 

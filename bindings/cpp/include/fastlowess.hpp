@@ -968,7 +968,7 @@ inline void makeDir(const std::string &dir) {
 }
 
 inline bool fileExists(const std::string &path) {
-  std::ifstream file(path);
+  const std::ifstream file(path);
   return file.good();
 }
 

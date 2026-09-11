@@ -539,6 +539,7 @@ pub struct RegressionContext<'a, T: Float> {
 }
 
 impl<'a, T: Float + WLSSolver> RegressionContext<'a, T> {
+    #[allow(dead_code)]
     // Perform the local linear fit using the context configuration.
     pub fn fit(&mut self) -> Option<T> {
         self.fit_with_derivative().map(|(y, _slope)| y)
