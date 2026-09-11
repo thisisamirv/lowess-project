@@ -223,7 +223,7 @@ jobs:
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           working-directory: bindings/r
-          extra-packages: any::pkgdown any::devtools
+          extra-packages: any::pkgdown any::devtools any::srr
 
       - uses: ./.github/actions/prepare-r-source
 
