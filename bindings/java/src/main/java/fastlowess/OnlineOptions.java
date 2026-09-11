@@ -37,6 +37,12 @@ public final class OnlineOptions {
         int minPoints = 2;
         String updateMode = null;
 
+        {
+            // Online's default "incremental" mode performs a non-robust
+            // single-point fit; robustness iterations require updateMode("full").
+            common.iterations(0);
+        }
+
         /**
          * @param fraction the fraction of points used to compute each local
          * regression

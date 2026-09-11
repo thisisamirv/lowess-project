@@ -63,7 +63,7 @@ if ok {
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `Fraction` | `float64` | `0.67` | Smoothing fraction (bandwidth) |
-| `Iterations` | `int` | `3` | Number of robustifying iterations |
+| `Iterations` | `int` | `0` | Number of robustifying iterations (requires `UpdateMode = "full"`) |
 | `Delta` | `*float64` | `nil` | Interpolation distance (`nil` auto-sets it to 0.0 in Online, i.e. interpolation disabled) |
 | `WeightFunction` | `string` | `"tricube"` | Weight function name |
 | `RobustnessMethod` | `string` | `"bisquare"` | Robustness method name |
@@ -98,7 +98,7 @@ Cross-validation, GPU `Backend`, `CustomWeights`, `ReturnSorted`, `ReturnDiagnos
 
 ### Iterations
 
-`Iterations` controls robustness to outliers, at the cost of speed.
+`Iterations` controls robustness to outliers, at the cost of speed. Requires `UpdateMode = "full"`; the default `"incremental"` mode performs a non-robust single-point fit.
 
 | Value | Effect | Performance |
 | --- | --- | --- |

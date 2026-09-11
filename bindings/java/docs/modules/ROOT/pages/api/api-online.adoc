@@ -58,7 +58,7 @@ result.ifPresent(r -> System.out.println(r.y()));
 |Setting |Type |Default |Description
 
 |`fraction` |`double` |`0.67` |Smoothing fraction (bandwidth)
-|`iterations` |`int` |`3` |Number of robustifying iterations
+|`iterations` |`int` |`0` |Number of robustifying iterations (requires `updateMode("full")`)
 |`delta` |`double` |`NaN` |Interpolation distance (`NaN` auto-sets it to 0.0 in Online, i.e. interpolation disabled)
 |`weightFunction` |`String` |`"tricube"` |Weight function name
 |`robustnessMethod` |`String` |`"bisquare"` |Robustness method name
@@ -94,7 +94,7 @@ Confidence/prediction intervals, standard errors, cross-validation, GPU `backend
 
 === iterations
 
-`iterations` controls robustness to outliers, at the cost of speed.
+`iterations` controls robustness to outliers, at the cost of speed. Requires `updateMode("full")`; the default `"incremental"` mode performs a non-robust single-point fit.
 
 [cols="1,1,1",options="header"]
 |===

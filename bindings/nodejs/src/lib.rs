@@ -453,7 +453,7 @@ pub struct StreamingSmoothOptions {
 pub struct OnlineSmoothOptions {
     /// Smoothing fraction (0 < fraction <= 1). Default: 0.67.
     pub fraction: Option<f64>,
-    /// Number of robustness iterations. Default: 3.
+    /// Number of robustness iterations. Requires `update_mode = "full"`. Default: 0.
     pub iterations: Option<u32>,
     /// Delta for interpolation speedup. Default: NaN (auto).
     /// Set to 0.0 to disable interpolation.

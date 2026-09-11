@@ -9,7 +9,7 @@ OnlineLowess(
     window_capacity = 1000L,
     min_points = 2L,
     ...,
-    iterations = 3L,
+    iterations = 0L,
     delta = NULL,
     weight_function = "tricube",
     robustness_method = "bisquare",
@@ -38,8 +38,9 @@ begins, between 2 and \code{window_capacity}. Default: 2.}
 
 \item{...}{Not used; forces all subsequent arguments to be named.}
 
-\item{iterations}{Number of robustness iterations, between 0 and 1000
-(inclusive). Default: 3.}
+\item{iterations}{Number of robustness iterations. Requires
+\code{update_mode = "full"}; the default \code{"incremental"} mode is a
+non-robust single-point fit that ignores robustness iterations. Default: 0.}
 
 \item{delta}{Interpolation distance threshold, as a non-negative fraction
 of the x range; points within \code{delta} of each other on x share the

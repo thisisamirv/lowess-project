@@ -71,7 +71,7 @@ Smoothed y: 0.22659245357374927
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `fraction` | `number` | `0.67` | Smoothing fraction (bandwidth) |
-| `iterations` | `number` | `3` | Number of robustifying iterations |
+| `iterations` | `number` | `0` | Number of robustifying iterations (requires `update_mode = "full"`) |
 | `delta` | `number` | `NaN` | Interpolation distance (`NaN` auto-sets it to 0.0 in Online, i.e. interpolation disabled) |
 | `weight_function` | `string` | `"tricube"` | Weight function name |
 | `robustness_method` | `string` | `"bisquare"` | Robustness method name |
@@ -106,7 +106,7 @@ Cross-validation, GPU `backend`, `custom_weights`, `return_sorted`, `return_diag
 
 ### iterations
 
-`iterations` controls robustness to outliers, at the cost of speed.
+`iterations` controls robustness to outliers, at the cost of speed. Requires `update_mode = "full"`; the default `"incremental"` mode performs a non-robust single-point fit.
 
 | Value | Effect | Performance |
 | --- | --- | --- |

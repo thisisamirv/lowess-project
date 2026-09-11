@@ -152,7 +152,7 @@ export interface OnlineOutput {
 export interface OnlineSmoothOptions {
   /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
   fraction?: number
-  /** Number of robustness iterations. Default: 3. */
+  /** Number of robustness iterations. Requires `update_mode = "full"`. Default: 0. */
   iterations?: number
   /**
    * Delta for interpolation speedup. Default: NaN (auto).

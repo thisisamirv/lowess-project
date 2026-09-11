@@ -185,7 +185,7 @@ struct StreamingOptions : public LowessOptions {
  */
 struct OnlineOptions {
   double fraction = detail::k_default_fraction; ///< Smoothing fraction (0, 1]
-  int iterations = 3;                           ///< Robustness iterations
+  int iterations = 0; ///< Robustness iterations (requires update_mode = "full")
   double delta = NAN; ///< Interpolation threshold (NaN = auto)
 
   std::string weight_function = "tricube";

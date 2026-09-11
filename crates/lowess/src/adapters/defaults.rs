@@ -29,6 +29,11 @@ pub const DEFAULT_ONLINE_UPDATE_MODE_ENUM: UpdateMode = UpdateMode::Incremental;
 #[cfg(feature = "dev")]
 pub const DEFAULT_ONLINE_UPDATE_MODE: &str = "incremental";
 
+// Default number of robustness iterations for the **Online** adapter. `0` because the
+// default `"incremental"` update mode performs a non-robust single-point fit; robustness
+// iterations require `update_mode("full")`.
+pub const DEFAULT_ONLINE_ITERATIONS: usize = 0;
+
 // Default smoothing fraction. Approximately Cleveland's original recommendation of 2/3.
 pub const DEFAULT_FRACTION: f64 = 0.67;
 

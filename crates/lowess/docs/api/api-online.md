@@ -87,7 +87,7 @@ fn main() -> Result<(), LowessError> {
 | Method | Argument Type | Default | Description |
 | --- | --- | --- | --- |
 | `fraction(T)` | `T: Float` | `0.67` | Smoothing fraction (bandwidth) |
-| `iterations(usize)` | `usize` | `3` | Number of robustifying iterations |
+| `iterations(usize)` | `usize` | `0` | Number of robustifying iterations (requires `update_mode("full")`) |
 | `delta(T)` | `T: Float` | `NaN` | Interpolation distance (`NaN` auto-sets it to 0.0 in Online, i.e. interpolation disabled) |
 | `weight_function(...)` | `weight_function` | `"tricube"` | Weight function name |
 | `robustness_method(...)` | `robustness_method` | `"bisquare"` | Robustness method name |
@@ -122,7 +122,7 @@ Cross-validation, `custom_weights`, `return_sorted`, `return_diagnostics()`, and
 
 ### iterations
 
-`iterations` controls robustness to outliers, at the cost of speed.
+`iterations` controls robustness to outliers, at the cost of speed. Requires `update_mode("full")`; the default `"incremental"` mode performs a non-robust single-point fit.
 
 | Value | Effect | Performance |
 | --- | --- | --- |

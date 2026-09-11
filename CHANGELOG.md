@@ -81,6 +81,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `dev/bump_version.py` now also updates the Go module's `/vN` major-version-suffix path across `go.mod` files, doc snippets, the doc-snippet runner, and README/docs badges whenever a version bump crosses a major version boundary, so this doesn't regress on the next major release.
 - `dev/bump_version.py` now also updates the Maven dependency example version in `bindings/java/docs/modules/ROOT/pages/introduction/installation.adoc`, which was previously left stale after a version bump.
+- Changed the `iterations` default for `OnlineLowess` from `3` to `0` across every binding (R, Python, Julia, C++, Go, Java, Node.js, WASM), matching the default `update_mode = "incremental"` non-robust single-point fit; robustness iterations now require `update_mode = "full"`.
 
 **C++:**
 
@@ -105,6 +106,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed standard errors collapsing to exactly `0` (and confidence intervals collapsing to a `1e-12` fallback width) for observations whose robustness weight reaches zero: `compute_se`'s leverage term now uses the local design's kernel weight rather than the point's own robustness-weighted kernel, so down-weighted outliers keep a positive standard error.
 - Fixed `fraction >= 1.0` (the global OLS branch) returning a vector of zeros for standard errors, which collapsed every confidence interval to the `1e-12` fallback width; it now computes OLS standard errors using the classical simple-linear-regression formula `sigma_hat * sqrt(1/n + (x0 - xbar)^2 / Sxx)`, matching `stats::lm`'s `se.fit`.
 - Removed unused `pub use` re-exports and updated the few callers that used them.
+- Fixed `OnlineLowess`'s default `"incremental"` mode silently ignoring robustness iterations: `iterations > 0` is now rejected at `.build()` (`RobustnessIterationsRequireFullUpdateMode`) unless `update_mode("full")` is set, the Online `iterations` default is now `0`, and `iterations_used` is reported even without auto-convergence.
 
 **fastLowess:**
 

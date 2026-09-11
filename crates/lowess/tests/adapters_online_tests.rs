@@ -155,7 +155,7 @@ fn test_online_window_eviction() {
 fn test_online_sliding_window() {
     let mut processor = OnlineLowess::new()
         .fraction(0.5)
-        .iterations(1)
+        .iterations(0)
         .window_capacity(10)
         .min_points(3)
         .build()
@@ -306,7 +306,7 @@ fn test_online_invalid_min_points() {
 fn test_online_valid_builder() {
     let result = OnlineLowess::new()
         .fraction(0.5)
-        .iterations(2)
+        .iterations(0)
         .window_capacity(10)
         .min_points(3)
         .build();
@@ -449,6 +449,7 @@ fn test_online_robustness_methods() {
             .fraction(0.5)
             .iterations(3)
             .robustness_method(method)
+            .update_mode("full")
             .window_capacity(10)
             .min_points(3)
             .build()
@@ -478,7 +479,7 @@ fn test_online_robustness_methods() {
 fn test_online_with_residuals() {
     let mut processor = OnlineLowess::new()
         .fraction(0.5)
-        .iterations(2)
+        .iterations(0)
         .return_residuals()
         .window_capacity(10)
         .min_points(3)
@@ -837,6 +838,86 @@ fn test_online_incremental_mode_se_errors() {
     assert!(
         matches!(err, Some(LowessError::StandardErrorRequiresFullUpdateMode)),
         "expected StandardErrorRequiresFullUpdateMode, got {err:?}"
+    );
+}
+
+/// `.iterations(n)` with `n > 0` combined with anything other than `.update_mode("full")`
+/// (including the default `"incremental"` mode) now fails at `.build()` with
+/// `RobustnessIterationsRequireFullUpdateMode`, instead of silently ignoring the
+/// robustness iterations.
+#[test]
+fn test_online_incremental_iterations_errors() {
+    let err = OnlineLowess::<f64>::new()
+        .fraction(0.9)
+        .iterations(3)
+        .window_capacity(30)
+        .min_points(10)
+        .build()
+        .err();
+
+    assert!(
+        matches!(
+            err,
+            Some(LowessError::RobustnessIterationsRequireFullUpdateMode)
+        ),
+        "expected RobustnessIterationsRequireFullUpdateMode, got {err:?}"
+    );
+
+    // iterations == 0 is accepted with the default incremental mode.
+    assert!(
+        OnlineLowess::<f64>::new()
+            .fraction(0.9)
+            .iterations(0)
+            .window_capacity(30)
+            .min_points(10)
+            .build()
+            .is_ok()
+    );
+
+    // iterations > 0 is accepted with full mode.
+    assert!(
+        OnlineLowess::<f64>::new()
+            .fraction(0.9)
+            .iterations(3)
+            .update_mode("full")
+            .window_capacity(30)
+            .min_points(10)
+            .build()
+            .is_ok()
+    );
+}
+
+/// `iterations_used` is reported in full mode even when auto-convergence is disabled.
+#[test]
+fn test_online_full_mode_iterations_used() {
+    let mut processor = OnlineLowess::<f64>::new()
+        .fraction(0.9)
+        .iterations(3)
+        .update_mode("full")
+        .window_capacity(30)
+        .min_points(5)
+        .return_robustness_weights()
+        .build()
+        .expect("build ok");
+
+    let mut last = None;
+    for i in 0..20 {
+        let x = i as f64;
+        let y = if i == 10 { 100.0 } else { 2.0 * x + 1.0 };
+        if let Some(out) = processor.add_point(x, y).expect("add_point ok") {
+            last = Some(out);
+        }
+    }
+
+    let out = last.expect("at least one output");
+    assert_eq!(
+        out.iterations_used,
+        Some(3),
+        "iterations_used should report the configured robustness iterations"
+    );
+    assert!(
+        out.robustness_weight.is_some(),
+        "robustness_weight should be reported in full mode"
     );
 }
 

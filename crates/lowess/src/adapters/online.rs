@@ -144,7 +144,7 @@ impl<T: Float> OnlineLowessBuilder<T> {
             min_points: DEFAULT_ONLINE_MIN_POINTS,
             fraction: T::from(DEFAULT_FRACTION).unwrap(),
             delta: T::from(DEFAULT_DELTA).unwrap(),
-            iterations: DEFAULT_ITERATIONS,
+            iterations: DEFAULT_ONLINE_ITERATIONS,
             weight_function: DEFAULT_WEIGHT_FUNCTION_ENUM,
             update_mode: DEFAULT_ONLINE_UPDATE_MODE_ENUM,
             robustness_method: DEFAULT_ROBUSTNESS_METHOD_ENUM,
@@ -188,6 +188,9 @@ impl<T: Float> OnlineLowessBuilder<T> {
         // Validate that return_se()/confidence_intervals()/prediction_intervals() is
         // only combined with update_mode("full")
         Validator::validate_online_se_update_mode(self.interval_type, self.update_mode)?;
+
+        // Validate that robustness iterations are only combined with update_mode("full")
+        Validator::validate_online_iterations_update_mode(self.iterations, self.update_mode)?;
 
         let capacity = self.window_capacity;
         Ok(OnlineLowess {

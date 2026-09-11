@@ -1116,7 +1116,7 @@ Stateful online LOWESS smoother.
 - `fraction::Float64 = 0.67`: Smoothing fraction. See `Lowess` for guidance on choosing a value.
 - `window_capacity::Int = 1000`: Maximum points to retain in window, at least 3
 - `min_points::Int = 2`: Minimum points before smoothing starts, between 2 and `window_capacity`
-- `iterations::Int = 3`: Number of robustness iterations. See `Lowess` for guidance on choosing a value.
+- `iterations::Int = 0`: Number of robustness iterations. Requires `update_mode = "full"`; the default `"incremental"` mode performs a non-robust single-point fit.
 - `delta::Float64 = NaN`: Interpolation threshold (NaN auto-sets it to 0.0)
 - `weight_function::String = "tricube"`: Kernel function
 - `robustness_method::String = "bisquare"`: Robustness method
@@ -1149,7 +1149,7 @@ mutable struct OnlineLowess
         fraction::Float64 = 0.67,
         window_capacity::Int = 1000,
         min_points::Int = 2,
-        iterations::Int = 3,
+        iterations::Int = 0,
         delta::Float64 = NaN,
         weight_function::String = "tricube",
         robustness_method::String = "bisquare",

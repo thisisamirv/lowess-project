@@ -564,7 +564,7 @@ impl PyOnlineLowess {
         window_capacity=1000,
         min_points=2,
         *,
-        iterations=3,
+        iterations=0,
         delta=None,
         weight_function="tricube",
         robustness_method="bisquare",

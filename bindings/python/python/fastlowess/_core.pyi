@@ -294,7 +294,7 @@ class OnlineLowess:
         window_capacity: int = 1000,
         min_points: int = 2,
         *,
-        iterations: int = 3,
+        iterations: int = 0,
         delta: float | None = None,
         weight_function: str = "tricube",
         robustness_method: str = "bisquare",

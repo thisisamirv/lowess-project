@@ -910,11 +910,7 @@ impl<T: Float> LowessExecutor<T> {
         Ok(ExecutorOutput {
             smoothed,
             std_errors,
-            iterations: if tolerance.is_some() {
-                Some(iterations)
-            } else {
-                None
-            },
+            iterations: Some(iterations),
             used_fraction: eff_fraction,
             cv_scores: None,
             robustness_weights,

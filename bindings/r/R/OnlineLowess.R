@@ -20,9 +20,9 @@
 #' @param min_points Minimum number of points required before smoothing
 #'   begins, between 2 and \code{window_capacity}. Default: 2.
 #' @param update_mode Window update strategy: \code{"incremental"} (default;
-#'   alias: \code{"single"}) updates only the newest point;
-#'   \code{"full"} (alias: \code{"resmooth"}) re-smooths all window points
-#'   after each addition.
+#'   alias: \code{"single"}) updates only the newest point and does not run
+#'   robustness iterations; \code{"full"} (alias: \code{"resmooth"}) re-smooths
+#'   all window points after each addition and supports robustness iterations.
 #' @param return_se Logical; include standard errors in the result. Requires
 #'   \code{update_mode = "full"}. Default: \code{FALSE}.
 #' @param confidence_intervals Confidence level for confidence intervals
@@ -31,6 +31,9 @@
 #' @param prediction_intervals Confidence level for prediction intervals
 #'   (e.g. 0.95), or \code{NULL} (default) to disable. Requires
 #'   \code{update_mode = "full"}.
+#' @param iterations Number of robustness iterations. Requires
+#'   \code{update_mode = "full"}; the default \code{"incremental"} mode is a
+#'   non-robust single-point fit that ignores robustness iterations. Default: 0.
 #'
 #' @return An OnlineLowess object.
 #' @examples
@@ -49,7 +52,7 @@ OnlineLowess <- function(
     window_capacity = 1000L,
     min_points = 2L,
     ...,
-    iterations = 3L,
+    iterations = 0L,
     delta = NULL,
     weight_function = "tricube",
     robustness_method = "bisquare",

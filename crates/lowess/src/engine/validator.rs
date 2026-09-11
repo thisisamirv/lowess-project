@@ -19,6 +19,7 @@ use num_traits::Float;
 use std::vec::Vec;
 
 // Internal dependencies
+use crate::adapters::online::UpdateMode;
 use crate::primitives::errors::LowessError;
 
 // Policy for handling non-finite (NaN/Inf) values in input data.
@@ -261,6 +262,20 @@ impl Validator {
     ) -> Result<(), LowessError> {
         if interval_type.is_some() && update_mode != crate::adapters::online::UpdateMode::Full {
             return Err(LowessError::StandardErrorRequiresFullUpdateMode);
+        }
+        Ok(())
+    }
+
+    // Validate that `OnlineLowess`'s robustness iterations (`iterations > 0`) are only
+    // combined with `update_mode("full")`. The default `"incremental"` mode fits only the
+    // latest point and never runs robustness iterations, so `iterations > 0` would be
+    // silently ignored.
+    pub fn validate_online_iterations_update_mode(
+        iterations: usize,
+        update_mode: UpdateMode,
+    ) -> Result<(), LowessError> {
+        if iterations > 0 && update_mode != UpdateMode::Full {
+            return Err(LowessError::RobustnessIterationsRequireFullUpdateMode);
         }
         Ok(())
     }
