@@ -746,11 +746,7 @@ impl<T: Float> LowessExecutor<T> {
             let smoothed = x.iter().map(|&xi| model.predict(xi)).collect();
             return Ok(ExecutorOutput {
                 smoothed,
-                std_errors: if confidence_method.is_some() {
-                    Some(vec![T::zero(); n])
-                } else {
-                    None
-                },
+                std_errors: confidence_method.map(|_| model.ols_std_errors(x, y)),
                 iterations: None,
                 used_fraction: eff_fraction,
                 cv_scores: None,

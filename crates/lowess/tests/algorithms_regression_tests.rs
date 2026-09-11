@@ -636,3 +636,26 @@ fn test_fit_with_derivative_degenerate_bandwidth() {
 
     assert_relative_eq!(slope, 0.0, epsilon = 1e-12);
 }
+
+/// OLS standard errors (used by the `fraction >= 1.0` global branch) must match
+/// the classical simple-linear-regression formula
+/// `sigma_hat * sqrt(1/n + (x0 - xbar)^2 / Sxx)`, i.e. R's
+/// `predict(lm(y ~ x), se.fit = TRUE)`.
+#[test]
+fn test_ols_std_errors_match_lm_se_fit() {
+    let n = 40;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * 0.25).collect();
+    let y: Vec<f64> = x
+        .iter()
+        .enumerate()
+        .map(|(i, &xi)| 2.0 * xi + 1.0 + if i % 2 == 0 { 0.9 } else { -0.9 })
+        .collect();
+
+    let model = LinearFit::fit_ols(&x, &y);
+    let se = model.ols_std_errors(&x, &y);
+
+    // Non-zero standard errors (the bug returned a vector of zeros).
+    assert!(se.iter().all(|&s| s > 0.0));
+    // se(x[0]) matches R's `predict(lm(y ~ x), ..., se.fit = TRUE)`.
+    assert_relative_eq!(se[0], 0.286_338_4, epsilon = 1e-6);
+}

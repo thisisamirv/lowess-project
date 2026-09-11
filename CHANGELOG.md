@@ -103,6 +103,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Cleaned up `lowess::prelude` by removing leaked builder and adapter markers.
 - Fixed standard errors collapsing to exactly `0` (and confidence intervals collapsing to a `1e-12` fallback width) for observations whose robustness weight reaches zero: `compute_se`'s leverage term now uses the local design's kernel weight rather than the point's own robustness-weighted kernel, so down-weighted outliers keep a positive standard error.
+- Fixed `fraction >= 1.0` (the global OLS branch) returning a vector of zeros for standard errors, which collapsed every confidence interval to the `1e-12` fallback width; it now computes OLS standard errors using the classical simple-linear-regression formula `sigma_hat * sqrt(1/n + (x0 - xbar)^2 / Sxx)`, matching `stats::lm`'s `se.fit`.
 - Removed unused `pub use` re-exports and updated the few callers that used them.
 
 **fastLowess:**

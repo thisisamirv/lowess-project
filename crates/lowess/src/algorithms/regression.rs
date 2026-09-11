@@ -466,6 +466,60 @@ impl<T: Float> LinearFit<T> {
             y_mean,
         }
     }
+
+    // Compute the OLS standard error of the fitted value at each observed `x`.
+    //
+    // For simple linear regression the standard error of the mean response at
+    // `x0` is `sigma_hat * sqrt(1/n + (x0 - x_mean)^2 / Sxx)`, where
+    // `sigma_hat^2 = SSE / (n - 2)` and `Sxx = sum((x_i - x_mean)^2)`. This
+    // matches `stats::lm`'s `se.fit` for the same model.
+    pub fn ols_std_errors(&self, x: &[T], y: &[T]) -> Vec<T> {
+        let n = x.len();
+        if n == 0 {
+            return Vec::new();
+        }
+
+        let n_t = T::from(n).unwrap_or(T::one());
+
+        // Residual sum of squares and corrected sum of squares of x.
+        let mut sse = T::zero();
+        let mut sxx = T::zero();
+        for i in 0..n {
+            let r = y[i] - self.predict(x[i]);
+            sse = sse + r * r;
+            let dx = x[i] - self.x_mean;
+            sxx = sxx + dx * dx;
+        }
+
+        let tol = T::from(1e-12).unwrap_or_else(T::epsilon);
+        let inv_n = T::one() / n_t;
+
+        if sxx <= tol {
+            // Degenerate design (all x equal): the fit is a constant with a
+            // single parameter, so the standard error is sigma_hat * sqrt(1/n).
+            let df = n_t - T::one();
+            if df <= T::zero() {
+                return vec![T::zero(); n];
+            }
+            let se = (sse / df).sqrt() * inv_n.sqrt();
+            return vec![se; n];
+        }
+
+        // Two-parameter linear model: sigma_hat^2 = SSE / (n - 2).
+        let df = n_t - T::from(2).unwrap();
+        if df <= T::zero() {
+            return vec![T::zero(); n];
+        }
+        let sigma_hat = (sse / df).sqrt();
+
+        x.iter()
+            .map(|&xi| {
+                let dx = xi - self.x_mean;
+                let leverage = inv_n + (dx * dx) / sxx;
+                sigma_hat * leverage.sqrt()
+            })
+            .collect()
+    }
 }
 
 impl<T: Float + WLSSolver> LinearFit<T> {
