@@ -817,6 +817,11 @@ fn finalize_reduction_generic() {
 struct SeSums {
     w: f32,
     wr2: f32,
+    s1: f32,
+    s2: f32,
+    t0: f32,
+    t1: f32,
+    t2: f32,
 }
 var<workgroup> s_se: array<SeSums, 256>;
 
@@ -848,6 +853,11 @@ fn compute_se(
 
     var my_w = 0.0;
     var my_wr2 = 0.0;
+    var my_s1 = 0.0;
+    var my_s2 = 0.0;
+    var my_t0 = 0.0;
+    var my_t1 = 0.0;
+    var my_t2 = 0.0;
     let d_max_val = max(d_max, 1e-9);
     let inv_d_max = 1.0 / d_max_val;
     
@@ -866,19 +876,36 @@ fn compute_se(
             let kernel_w = get_kernel_weight(u, u2);
             
             let combined_w = rw * kernel_w;
+            let dx = xj - x_i;
+            let w2 = combined_w * combined_w;
             my_w += combined_w;
             my_wr2 += combined_w * r * r;
+            my_s1 += combined_w * dx;
+            my_s2 += combined_w * dx * dx;
+            my_t0 += w2;
+            my_t1 += w2 * dx;
+            my_t2 += w2 * dx * dx;
         }
     }
 
     s_se[tid].w = my_w;
     s_se[tid].wr2 = my_wr2;
+    s_se[tid].s1 = my_s1;
+    s_se[tid].s2 = my_s2;
+    s_se[tid].t0 = my_t0;
+    s_se[tid].t1 = my_t1;
+    s_se[tid].t2 = my_t2;
     workgroupBarrier();
     
     for (var s = 128u; s > 0u; s >>= 1u) {
         if (tid < s) {
             s_se[tid].w += s_se[tid + s].w;
             s_se[tid].wr2 += s_se[tid + s].wr2;
+            s_se[tid].s1 += s_se[tid + s].s1;
+            s_se[tid].s2 += s_se[tid + s].s2;
+            s_se[tid].t0 += s_se[tid + s].t0;
+            s_se[tid].t1 += s_se[tid + s].t1;
+            s_se[tid].t2 += s_se[tid + s].t2;
         }
         workgroupBarrier();
     }
@@ -886,21 +913,27 @@ fn compute_se(
     if (tid == 0u) {
         let sum_w = s_se[0].w;
         let sum_wr2 = s_se[0].wr2;
+        let s1 = s_se[0].s1;
+        let s2 = s_se[0].s2;
+        let t0 = s_se[0].t0;
+        let t1 = s_se[0].t1;
+        let t2 = s_se[0].t2;
         
         let LINEAR_PARAMS = 2.0;
-        if (sum_w > LINEAR_PARAMS + 1e-6) {
-            let df = sum_w - LINEAR_PARAMS;
-            let variance = sum_wr2 / df;
+        let det = sum_w * s2 - s1 * s1;
+        if (sum_w > 1e-12 && det > 1e-12) {
+            // Exact local-linear variance multiplier (squared equivalent-kernel
+            // norm): e1'(X'WX)^-1 (X'W^2 X) (X'WX)^-1 e1.
+            let leverage = (s2 * s2 * t0 - 2.0 * s1 * s2 * t1 + s1 * s1 * t2) / (det * det);
+            // Kernel-corrected residual degrees of freedom.
+            let df = sum_w - LINEAR_PARAMS + t0 / sum_w;
             
-            // Find kernel weight for current point (distance = 0). The leverage
-            // numerator uses the design kernel weight directly (not the
-            // robustness-weighted kernel): a point whose robustness weight is zero
-            // is exactly where the local fit is least certain, so its interval
-            // must not collapse to zero width.
-            let w_idx_kern = get_kernel_weight(0.0, 0.0);
-            
-            let leverage = w_idx_kern / sum_w;
-            std_errors[i] = sqrt(variance * leverage);
+            if (leverage > 0.0 && df > 0.0) {
+                let variance = sum_wr2 / df;
+                std_errors[i] = sqrt(variance * leverage);
+            } else {
+                std_errors[i] = 0.0;
+            }
         } else {
             std_errors[i] = 0.0;
         }

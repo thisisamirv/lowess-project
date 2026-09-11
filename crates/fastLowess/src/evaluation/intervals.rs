@@ -73,9 +73,14 @@ where
             let kernel_val = weight_function.compute_weight(u_idx);
             let w_idx = kernel_val * robustness_weights[idx];
 
-            // Accumulate weighted residual variance
+            // Accumulate weighted residual variance and local design moments.
             let mut sum_w_r2 = T::zero();
             let mut sum_w = T::zero();
+            let mut s1 = T::zero();
+            let mut s2 = T::zero();
+            let mut t0 = T::zero();
+            let mut t1 = T::zero();
+            let mut t2 = T::zero();
 
             for j in left..=right {
                 let dist = (x[j] - x_current).abs();
@@ -87,11 +92,17 @@ where
                 };
 
                 let r = y[j] - y_smooth[j];
+                let dx = x[j] - x_current;
                 sum_w_r2 = sum_w_r2 + w * r * r;
                 sum_w = sum_w + w;
+                s1 = s1 + w * dx;
+                s2 = s2 + w * dx * dx;
+                t0 = t0 + w * w;
+                t1 = t1 + w * w * dx;
+                t2 = t2 + w * w * dx * dx;
             }
 
-            IntervalMethod::compute_se(sum_w, sum_w_r2, kernel_val)
+            IntervalMethod::compute_se(sum_w, sum_w_r2, s1, s2, t0, t1, t2)
         })
         .collect()
 }

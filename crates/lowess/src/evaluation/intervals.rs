@@ -115,30 +115,57 @@ impl<T: Float> IntervalMethod<T> {
         }
     }
 
-    // Core mathematical function for computing standard error at a point.
-    // SE = sqrt(sigma_local^2 * l_ii), where
-    // sigma_local^2 = (sum w_k r_k^2) / ((sum w_k) - 2) and
-    // l_ii = leverage_weight / sum w_k.
+    // Core mathematical function for computing the standard error of the local
+    // *linear* fit at a point, from the local design moments.
     //
-    // `leverage_weight` is the local *design* leverage (the kernel weight at the
-    // point), NOT the robustness-weighted kernel. A point whose robustness weight
-    // is zero is exactly where the local fit is least certain, so its interval
-    // must not collapse to zero width on account of its own downweighting.
-    pub fn compute_se(sum_w: T, sum_w_r2: T, leverage_weight: T) -> T {
-        // Effective degrees of freedom for weighted regression
+    // The pointwise variance multiplier is the exact local-linear (sandwich /
+    // squared equivalent-kernel) form
+    //     e1' (X'WX)^-1 (X'W^2 X) (X'WX)^-1 e1
+    // where the design is centered at the point of interest, `dx = x_j - x0`,
+    // `w_j` are the combined kernel/robustness weights, and `X = [1, dx]`. This
+    // equals `sum_k l_k^2`, the squared norm of the equivalent-kernel row, and is
+    // the variance of the local linear estimator under independent errors. The
+    // simpler `w_i / sum(w)` "local constant" weight is only correct for a
+    // uniform kernel on a symmetric window: it understates the leverage at
+    // boundary/extrapolating points (where it should be much larger) and
+    // overstates it on a symmetric interior window (where `sum_k l_k^2 =
+    // sum(w^2)/sum(w)^2 < 1/sum(w)`).
+    //
+    // `s1`, `s2` are the first/second design moments with weights `w` (the
+    // `X'WX` block) and `t0`, `t1`, `t2` the same moments with weights `w^2` (the
+    // `X'W^2 X` block).
+    //
+    // The residual variance uses `sum(w r^2) / df` with the effective residual
+    // degrees of freedom `df = sum(w) - 2 + sum(w^2)/sum(w)`. For a local linear
+    // fit the weighted residual sum of squares has expectation
+    //     sigma^2 * (sum(w) - 2 + sum(w^2)/sum(w)),
+    // so the usual ordinary-least-squares denominator `sum(w) - 2` (which mixes a
+    // sum of kernel weights with a parameter count) inflates the variance.
+    pub fn compute_se(sum_w: T, sum_w_r2: T, s1: T, s2: T, t0: T, t1: T, t2: T) -> T {
         if sum_w <= T::zero() {
             return T::zero();
         }
 
-        let effective_n = sum_w;
-        let df = effective_n - T::from(Self::LINEAR_PARAMS).unwrap();
+        let two = T::from(Self::LINEAR_PARAMS).unwrap();
 
+        let det = sum_w * s2 - s1 * s1;
+        if det <= T::zero() {
+            return T::zero();
+        }
+
+        // Squared norm of the equivalent-kernel row (exact variance multiplier).
+        let leverage = (s2 * s2 * t0 - two * s1 * s2 * t1 + s1 * s1 * t2) / (det * det);
+        if leverage <= T::zero() {
+            return T::zero();
+        }
+
+        // Effective residual degrees of freedom (kernel-corrected).
+        let df = sum_w - two + t0 / sum_w;
         if df <= T::zero() {
             return T::zero();
         }
 
         let variance = sum_w_r2 / df;
-        let leverage = leverage_weight / sum_w; // Normalized leverage
 
         (variance * leverage).sqrt()
     }
@@ -189,9 +216,14 @@ impl<T: Float> IntervalMethod<T> {
             let kernel_val = weight_fn(u_idx);
             let w_idx = kernel_val * robustness_weights[idx];
 
-            // Accumulate weighted residual variance
+            // Accumulate weighted residual variance and local design moments.
             let mut sum_w_r2 = T::zero();
             let mut sum_w = T::zero();
+            let mut s1 = T::zero();
+            let mut s2 = T::zero();
+            let mut t0 = T::zero();
+            let mut t1 = T::zero();
+            let mut t2 = T::zero();
 
             for j in left..=right {
                 let dist = (x[j] - x_current).abs();
@@ -203,20 +235,25 @@ impl<T: Float> IntervalMethod<T> {
                 };
 
                 let r = y[j] - y_smooth[j];
+                let dx = x[j] - x_current;
                 sum_w_r2 = sum_w_r2 + w * r * r;
                 sum_w = sum_w + w;
+                s1 = s1 + w * dx;
+                s2 = s2 + w * dx * dx;
+                t0 = t0 + w * w;
+                t1 = t1 + w * w * dx;
+                t2 = t2 + w * w * dx * dx;
             }
 
-            *se = Self::compute_se(sum_w, sum_w_r2, kernel_val);
+            *se = Self::compute_se(sum_w, sum_w_r2, s1, s2, t0, t1, t2);
         }
     }
 
     // Estimate the standard error of the fitted curve at an arbitrary out-of-sample query
-    // point, generalizing `compute_window_se`'s per-training-point formula (same leverage/
-    // local-residual-variance approach). There is no training observation exactly at
-    // `x_query`, so the leverage numerator uses the kernel weight at distance zero directly
-    // (`weight_fn(0)`), as if a point existed there, rather than
-    // `robustness_weights[idx] * weight_fn(0)`.
+    // point, generalizing `compute_window_se`'s per-training-point formula (same local-linear
+    // design-moment leverage and local-residual-variance approach). There is no training
+    // observation exactly at `x_query`, so the design is centered on the query point and the
+    // moments are accumulated over the surrounding window.
     #[allow(clippy::too_many_arguments)]
     pub fn compute_se_at_query<F>(
         x: &[T],
@@ -235,21 +272,30 @@ impl<T: Float> IntervalMethod<T> {
             return T::zero();
         }
 
-        let w_idx = weight_fn(T::zero());
-
         let mut sum_w_r2 = T::zero();
         let mut sum_w = T::zero();
+        let mut s1 = T::zero();
+        let mut s2 = T::zero();
+        let mut t0 = T::zero();
+        let mut t1 = T::zero();
+        let mut t2 = T::zero();
 
         for j in window.left..=window.right {
             let dist = (x[j] - x_query).abs();
             let u = dist / bandwidth;
             let w = weight_fn(u) * robustness_weights[j];
             let r = y[j] - y_smooth[j];
+            let dx = x[j] - x_query;
             sum_w_r2 = sum_w_r2 + w * r * r;
             sum_w = sum_w + w;
+            s1 = s1 + w * dx;
+            s2 = s2 + w * dx * dx;
+            t0 = t0 + w * w;
+            t1 = t1 + w * w * dx;
+            t2 = t2 + w * w * dx * dx;
         }
 
-        Self::compute_se(sum_w, sum_w_r2, w_idx)
+        Self::compute_se(sum_w, sum_w_r2, s1, s2, t0, t1, t2)
     }
 
     // Compute requested intervals (confidence and/or prediction).

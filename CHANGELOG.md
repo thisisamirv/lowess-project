@@ -103,7 +103,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **lowess:**
 
 - Cleaned up `lowess::prelude` by removing leaked builder and adapter markers.
-- Fixed standard errors collapsing to exactly `0` (and confidence intervals collapsing to a `1e-12` fallback width) for observations whose robustness weight reaches zero: `compute_se`'s leverage term now uses the local design's kernel weight rather than the point's own robustness-weighted kernel, so down-weighted outliers keep a positive standard error.
+- Fixed standard errors collapsing to exactly `0` (and confidence intervals collapsing to a `1e-12` fallback width) for observations whose robustness weight reaches zero: `compute_se` now derives the leverage from the local *linear* design's equivalent kernel rather than the point's own robustness-weighted kernel, so down-weighted outliers keep a positive standard error.
+- Fixed systematic over-estimation (roughly 10-35% too wide) of confidence-interval standard errors: `compute_se` used the local-*constant* leverage `w_i / sum(w)` and divided the weighted residual sum of squares by `sum(w) - 2`, mixing a kernel-weight sum with a parameter count. It now uses the exact local-linear variance multiplier `e1'(X'WX)^-1 (X'W^2 X) (X'WX)^-1 e1` (the squared equivalent-kernel norm `sum_k l_k^2`) and the kernel-corrected residual degrees of freedom `sum(w) - 2 + sum(w^2)/sum(w)`. Reported standard errors now match the Monte-Carlo standard error to within a few percent on linear truth at typical fractions (new `calibration_tests` regression test).
 - Fixed `fraction >= 1.0` (the global OLS branch) returning a vector of zeros for standard errors, which collapsed every confidence interval to the `1e-12` fallback width; it now computes OLS standard errors using the classical simple-linear-regression formula `sigma_hat * sqrt(1/n + (x0 - xbar)^2 / Sxx)`, matching `stats::lm`'s `se.fit`.
 - Removed unused `pub use` re-exports and updated the few callers that used them.
 - Fixed `OnlineLowess`'s default `"incremental"` mode silently ignoring robustness iterations: `iterations > 0` is now rejected at `.build()` (`RobustnessIterationsRequireFullUpdateMode`) unless `update_mode("full")` is set, the Online `iterations` default is now `0`, and `iterations_used` is reported even without auto-convergence.
@@ -111,7 +112,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **fastLowess:**
 
-- Fixed the same zero standard-error collapse in the parallel interval path (`interval_pass_parallel`) and the GPU `compute_se` shader, which multiplied the leverage numerator by the point's own robustness weight.
+- Fixed the same zero standard-error collapse in the parallel interval path (`interval_pass_parallel`) and the GPU `compute_se` shader, which multiplied the leverage numerator by the point's own robustness weight. Both paths now also use the exact local-linear variance multiplier and kernel-corrected residual degrees of freedom as the serial path, so their standard errors match it.
 - `make fastLowess-dev` now also covers the combined `gpu,dev` feature set.
 
 **Go:**

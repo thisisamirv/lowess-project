@@ -59,7 +59,11 @@ fn test_compute_point_se_center() {
     );
 
     let se = std_errors[1];
-    let expected = (1.0f64 / 3.0f64).sqrt();
+    // Uniform weights on a symmetric 3-point window: the exact local-linear
+    // variance multiplier is sum_k l_k^2 = 1/3 (each l_k = 1/3) and the
+    // kernel-corrected residual df is sum(w) - 2 + sum(w^2)/sum(w) = 3 - 2 + 1 = 2,
+    // so SE = sqrt((1/2) * (1/3)) = sqrt(1/6).
+    let expected = (1.0f64 / 6.0f64).sqrt();
 
     assert_relative_eq!(se, expected, epsilon = 1e-12);
 }
@@ -141,9 +145,11 @@ fn test_compute_se_downweighted_point_has_positive_se() {
         &uniform_weight_fn,
     );
 
-    // SE must not collapse to zero: the design leverage (kernel weight) is 1, so
-    // SE = sqrt(variance * leverage) = sqrt(1.0 * 1/4) = 0.5.
-    assert_relative_eq!(std_errors[2], 0.5, epsilon = 1e-12);
+    // SE must not collapse to zero. The exact local-linear variance multiplier is
+    // sum_k l_k^2 = 1/4 here (symmetric window, the down-weighted centre point
+    // contributes nothing to the design), and df = sum(w) - 2 + sum(w^2)/sum(w)
+    // = 4 - 2 + 4/4 = 3, so SE = sqrt((2/3) * (1/4)) = sqrt(1/6).
+    assert_relative_eq!(std_errors[2], (1.0f64 / 6.0f64).sqrt(), epsilon = 1e-12);
 }
 
 /// Test SE with insufficient degrees of freedom.
@@ -153,13 +159,14 @@ fn test_compute_se_downweighted_point_has_positive_se() {
 fn test_compute_se_insufficient_df() {
     let x = vec![0.0f64, 1.0];
     let y = vec![0.0f64, 1.0];
-    let ys = vec![0.0f64, 1.0];
+    let ys = vec![0.0f64, 0.0];
     let robustness_ones = vec![1.0f64; 2];
 
     let est = IntervalMethod::se();
     let mut std_errors = vec![0.0; x.len()];
 
-    // With n=2 and p=2 (local linear), df = 0 => SE = 0
+    // With two points and constant weight 0.4: sum(w) = 0.8, sum(w^2) = 0.32, so
+    // the kernel-corrected df = 0.8 - 2 + 0.32/0.8 = -0.8 <= 0 => SE = 0.
     est.compute_window_se(
         &x,
         &y,
@@ -167,7 +174,7 @@ fn test_compute_se_insufficient_df() {
         2,
         &robustness_ones,
         &mut std_errors,
-        &|_: f64| 1.0,
+        &|_: f64| 0.4,
     );
 
     assert_eq!(std_errors[0], 0.0, "SE should be zero for df <= 0");
@@ -195,8 +202,10 @@ fn test_compute_window_se_vector() {
         &uniform_weight_fn,
     );
 
-    // Middle element should match expected value
-    let expected_mid = (1.0f64 / 3.0f64).sqrt();
+    // Middle element should match expected value. Uniform weights on a symmetric
+    // 3-point window give variance multiplier 1/3 and df = 3 - 2 + 1 = 2, so
+    // SE = sqrt((1/2) * (1/3)) = sqrt(1/6).
+    let expected_mid = (1.0f64 / 6.0f64).sqrt();
     assert_relative_eq!(std_err[1], expected_mid, epsilon = 1e-12);
     assert_eq!(std_err.len(), 3, "SE vector should have correct length");
 }
@@ -349,7 +358,9 @@ fn test_interval_method_workflow() {
         &uniform_weight_fn,
     );
 
-    let expected_se_mid = (1.0f64 / 3.0f64).sqrt();
+    // Uniform weights on a symmetric 3-point window: variance multiplier 1/3 and
+    // df = 3 - 2 + 1 = 2, so SE = sqrt((1/2) * (1/3)) = sqrt(1/6).
+    let expected_se_mid = (1.0f64 / 6.0f64).sqrt();
     assert_relative_eq!(std_errors[1], expected_se_mid, epsilon = 1e-12);
 
     // Compute intervals
