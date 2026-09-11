@@ -604,9 +604,10 @@ fn fit_anchors(
              let y_mean = sum_wy / sum_w;
              let variance = sum_wxx - (sum_wx * sum_wx) / sum_w;
              
-             let abs_tol: f32 = 1e-7;
-             let rel_tol: f32 = 1.1920929e-7 * d_max_val * d_max_val;
-             let tol = max(abs_tol, rel_tol);
+             // Degeneracy tolerance relative to the design's own x-scale (mirrors
+             // the CPU `fit_wls`); an absolute tolerance silently zeroed the slope
+             // for small-magnitude x-values.
+             let tol = 1.1920929e-7 * sum_w * d_max_val * d_max_val;
 
              if (variance <= tol) {
                  anchor_output[anchor_id] = y_mean;
@@ -921,7 +922,9 @@ fn compute_se(
         
         let LINEAR_PARAMS = 2.0;
         let det = sum_w * s2 - s1 * s1;
-        if (sum_w > 1e-12 && det > 1e-12) {
+        // Consistent with the CPU `compute_se`: only structurally degenerate designs
+        // (non-positive determinant / weight sum) collapse to a zero SE.
+        if (sum_w > 0.0 && det > 0.0) {
             // Exact local-linear variance multiplier (squared equivalent-kernel
             // norm): e1'(X'WX)^-1 (X'W^2 X) (X'WX)^-1 e1.
             let leverage = (s2 * s2 * t0 - 2.0 * s1 * s2 * t1 + s1 * s1 * t2) / (det * det);

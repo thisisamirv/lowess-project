@@ -16,6 +16,8 @@
 // @srrstats {G2.4} Numeric tolerance (1e-12) used for near-zero variance detection.
 
 // External dependencies
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
 use core::fmt::Debug;
 use num_traits::Float;
 use wide::{f32x8, f64x2};
@@ -427,10 +429,12 @@ impl<T: Float> LinearFit<T> {
 
         let mut sum_x = T::zero();
         let mut sum_y = T::zero();
+        let mut sum_x_sq = T::zero();
 
         for i in 0..n {
             sum_x = sum_x + x[i];
             sum_y = sum_y + y[i];
+            sum_x_sq = sum_x_sq + x[i] * x[i];
         }
 
         let x_mean = sum_x / n_t;
@@ -446,7 +450,10 @@ impl<T: Float> LinearFit<T> {
             covariance = covariance + dx * dy;
         }
 
-        let tol = T::from(1e-12).unwrap_or_else(T::epsilon);
+        // Relative degeneracy tolerance (see `fit_wls`): `variance` is bounded by
+        // `sum(x_i^2)`, so scaling by it tolerates any x magnitude instead of
+        // silently treating small-magnitude x-values as a degenerate design.
+        let tol = T::epsilon() * sum_x_sq;
         if variance <= tol {
             return Self {
                 slope: T::zero(),
@@ -484,14 +491,17 @@ impl<T: Float> LinearFit<T> {
         // Residual sum of squares and corrected sum of squares of x.
         let mut sse = T::zero();
         let mut sxx = T::zero();
+        let mut sum_x_sq = T::zero();
         for i in 0..n {
             let r = y[i] - self.predict(x[i]);
             sse = sse + r * r;
             let dx = x[i] - self.x_mean;
             sxx = sxx + dx * dx;
+            sum_x_sq = sum_x_sq + x[i] * x[i];
         }
 
-        let tol = T::from(1e-12).unwrap_or_else(T::epsilon);
+        // Relative degeneracy tolerance (see `fit_wls`).
+        let tol = T::epsilon() * sum_x_sq;
         let inv_n = T::one() / n_t;
 
         if sxx <= tol {
@@ -533,10 +543,14 @@ impl<T: Float + WLSSolver> LinearFit<T> {
         // SIMD-optimized single-pass accumulation with centering
         let (sum_w, sum_wx, sum_wy, sum_wxx, sum_wxy) = T::accumulate_wls(x, y, weights, x_current);
 
-        // Numerical stability tolerance
-        let abs_tol = T::from(1e-7).unwrap_or_else(T::epsilon);
-        let rel_tol = T::epsilon() * window_radius * window_radius;
-        let tol = abs_tol.max(rel_tol);
+        // Degeneracy tolerance for the centred weighted x-variance. This must be
+        // *relative* to the design's own x-scale, not an absolute constant: an
+        // absolute tolerance silently zeroed the slope whenever the x-values were
+        // small in magnitude (e.g. x in [0, 1e-4]), degrading the local-linear fit
+        // to a local mean. `sum_w * window_radius^2` bounds `sum_wxx`, and the
+        // weighted x-variance is a fixed fraction (~1/5) of that for the standard
+        // kernels, so an epsilon-scaled threshold never rejects a valid design.
+        let tol = T::epsilon() * sum_w * window_radius * window_radius;
 
         // Solve for slope and centered intercept
         match T::solve_wls(sum_w, sum_wx, sum_wy, sum_wxx, sum_wxy, tol) {

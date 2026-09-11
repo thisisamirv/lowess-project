@@ -109,10 +109,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed unused `pub use` re-exports and updated the few callers that used them.
 - Fixed `OnlineLowess`'s default `"incremental"` mode silently ignoring robustness iterations: `iterations > 0` is now rejected at `.build()` (`RobustnessIterationsRequireFullUpdateMode`) unless `update_mode("full")` is set, the Online `iterations` default is now `0`, and `iterations_used` is reported even without auto-convergence.
 - Fixed seeded k-fold CV (`cv_seed` set) producing inflated scores and selecting the wrong fraction: `interpolate_prediction_batch` used a monotone scan pointer that can't rewind for the shuffled (unordered) test fold, so it now locates each query point via binary search (matching the LOOCV interpolator).
+- Fixed the WLS solver silently zeroing the slope for small-magnitude `x`: `fit_wls` used an *absolute* degeneracy tolerance (`1e-7`) on the centred weighted x-variance, so any dataset whose x-range was below roughly `1e-4` was fitted as a local mean instead of a local line (interior derivatives came out as `0`). The tolerance is now relative to the design's own x-scale. The same absolute-tolerance defect in the `fraction >= 1.0` global OLS path (`fit_ols` and `ols_std_errors`) is fixed the same way.
+- Fixed k-fold cross-validation aggregating the *mean of per-fold RMSEs* instead of pooling: it now pools every test point's squared error and takes one square root, matching LOOCV. Previously `k`-fold with `k == n` (identical to leave-one-out) returned the mean absolute error instead of the RMSE and disagreed with `cv_method("loocv")`.
 
 **fastLowess:**
 
 - Fixed the same zero standard-error collapse in the parallel interval path (`interval_pass_parallel`) and the GPU `compute_se` shader, which multiplied the leverage numerator by the point's own robustness weight. Both paths now also use the exact local-linear variance multiplier and kernel-corrected residual degrees of freedom as the serial path, so their standard errors match it.
+- Fixed the GPU `fit_anchors` shader carrying the same absolute degeneracy tolerance (`1e-7`) as the CPU WLS solver, which zeroed the local-linear slope for small-magnitude `x`; it now matches the CPU's scale-relative tolerance. The GPU `compute_se` shader's absolute `det > 1e-12` guard (which could null out standard errors for small-magnitude `x`) now matches the CPU's structural `det > 0` check.
 - `make fastLowess-dev` now also covers the combined `gpu,dev` feature set.
 
 **Go:**

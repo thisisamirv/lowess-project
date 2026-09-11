@@ -332,22 +332,25 @@ impl CVKind {
             }
         }
 
-        // Aggregate results across folds
+        // Aggregate results across folds. Pool every test point's squared error and
+        // take the square root, matching the LOOCV path and the usual k-fold RMSE.
+        // (Averaging the per-fold RMSEs instead would weight small folds more
+        // heavily and, when k == n, give the mean absolute error rather than the
+        // leave-one-out RMSE - so k-fold and LOOCV disagreed on identical folds.)
         for (frac_idx, _) in fractions.iter().enumerate() {
-            let mut total_rmse = T::zero();
-            let mut count = 0;
+            let mut total_sse = T::zero();
+            let mut total_points = 0usize;
             for (fold, &fold_size_val) in fold_sizes.iter().enumerate().take(k) {
                 if fold_size_val > 0 {
-                    let mse = fold_errors[frac_idx][fold] / T::from(fold_size_val).unwrap();
-                    total_rmse = total_rmse + mse.sqrt();
-                    count += 1;
+                    total_sse = total_sse + fold_errors[frac_idx][fold];
+                    total_points += fold_size_val;
                 }
             }
-            if count > 0 {
-                cv_scores[frac_idx] = total_rmse / T::from(count).unwrap();
+            cv_scores[frac_idx] = if total_points > 0 {
+                (total_sse / T::from(total_points).unwrap()).sqrt()
             } else {
-                cv_scores[frac_idx] = T::infinity();
-            }
+                T::infinity()
+            };
         }
 
         Self::select_best_fraction(fractions, &cv_scores)
