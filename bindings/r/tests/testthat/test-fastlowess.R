@@ -18,7 +18,7 @@ test_that("Lowess basic functionality works", {
     result <- fit(Lowess(fraction = 0.67), as.double(x), as.double(y))
 
     expect_type(result, "list")
-    expect_named(result, c("x", "y", "fraction_used"))
+    expect_named(result, c("x", "y", "fraction_used", "iterations_used"))
     expect_length(result$x, length(x))
     expect_length(result$y, length(y))
     expect_type(result$x, "double")

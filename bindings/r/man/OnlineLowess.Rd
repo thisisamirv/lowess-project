@@ -72,9 +72,9 @@ to zero: \code{"use_local_mean"} (default; aliases: \code{"local_mean"},
 \code{"return_none"} (alias: \code{"none"}).}
 
 \item{update_mode}{Window update strategy: \code{"incremental"} (default;
-alias: \code{"single"}) updates only the newest point;
-\code{"full"} (alias: \code{"resmooth"}) re-smooths all window points
-after each addition.}
+alias: \code{"single"}) updates only the newest point and does not run
+robustness iterations; \code{"full"} (alias: \code{"resmooth"}) re-smooths
+all window points after each addition and supports robustness iterations.}
 
 \item{auto_converge}{Convergence tolerance for early stopping of robustness
 iterations. \code{NULL} (default) disables early stopping.}

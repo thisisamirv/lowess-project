@@ -154,7 +154,6 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.OnlineLowess(
     fraction=0.2,
-    iterations=1,
     window_capacity=100,
     min_points=5,
     update_mode="incremental"

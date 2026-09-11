@@ -12,14 +12,24 @@
 
 ## Fixed
 
-* Fixed the Go module's import path to include the required `/v4` suffix. Breaking change for old unsuffixed imports.
+* `dev/bump_version.py` now also updates the Go module's `/vN` major-version-suffix path across `go.mod` files, doc snippets, the doc-snippet runner, and README/docs badges whenever a version bump crosses a major version boundary, so this doesn't regress on the next major release.
+* `dev/bump_version.py` now also updates the Maven dependency example version in `bindings/java/docs/modules/ROOT/pages/introduction/installation.adoc`, which was previously left stale after a version bump.
+* Changed the `iterations` default for `OnlineLowess` from `3` to `0` across every binding (R, Python, Julia, C++, Go, Java, Node.js, WASM), matching the default `update_mode = "incremental"` non-robust single-point fit; robustness iterations now require `update_mode = "full"`.
+* Cleaned up `lowess::prelude` by removing leaked builder and adapter markers.
+* Fixed standard errors collapsing to exactly `0` (and confidence intervals collapsing to a `1e-12` fallback width) for observations whose robustness weight reaches zero: `compute_se` now derives the leverage from the local *linear* design's equivalent kernel rather than the point's own robustness-weighted kernel, so down-weighted outliers keep a positive standard error.
+* Fixed systematic over-estimation (roughly 10-35% too wide) of confidence-interval standard errors: `compute_se` used the local-*constant* leverage `w_i / sum(w)` and divided the weighted residual sum of squares by `sum(w) - 2`, mixing a kernel-weight sum with a parameter count. It now uses the exact local-linear variance multiplier `e1'(X'WX)^-1 (X'W^2 X) (X'WX)^-1 e1` (the squared equivalent-kernel norm `sum_k l_k^2`) and the kernel-corrected residual degrees of freedom `sum(w) - 2 + sum(w^2)/sum(w)`. Reported standard errors now match the Monte-Carlo standard error to within a few percent on linear truth at typical fractions (new `calibration_tests` regression test).
+* Fixed `fraction >= 1.0` (the global OLS branch) returning a vector of zeros for standard errors, which collapsed every confidence interval to the `1e-12` fallback width; it now computes OLS standard errors using the classical simple-linear-regression formula `sigma_hat * sqrt(1/n + (x0 - xbar)^2 / Sxx)`, matching `stats::lm`'s `se.fit`.
+* Removed unused `pub use` re-exports and updated the few callers that used them.
+* Fixed `OnlineLowess`'s default `"incremental"` mode silently ignoring robustness iterations: `iterations > 0` is now rejected at `.build()` (`RobustnessIterationsRequireFullUpdateMode`) unless `update_mode("full")` is set, the Online `iterations` default is now `0`, and `iterations_used` is reported even without auto-convergence.
+* Fixed seeded k-fold CV (`cv_seed` set) producing inflated scores and selecting the wrong fraction: `interpolate_prediction_batch` used a monotone scan pointer that can't rewind for the shuffled (unordered) test fold, so it now locates each query point via binary search (matching the LOOCV interpolator).
+* Fixed the WLS solver silently zeroing the slope for small-magnitude `x`: `fit_wls` used an *absolute* degeneracy tolerance (`1e-7`) on the centred weighted x-variance, so any dataset whose x-range was below roughly `1e-4` was fitted as a local mean instead of a local line (interior derivatives came out as `0`). The tolerance is now relative to the design's own x-scale. The same absolute-tolerance defect in the `fraction >= 1.0` global OLS path (`fit_ols` and `ols_std_errors`) is fixed the same way.
+* Fixed k-fold cross-validation aggregating the *mean of per-fold RMSEs* instead of pooling: it now pools every test point's squared error and takes one square root, matching LOOCV. Previously `k`-fold with `k == n` (identical to leave-one-out) returned the mean absolute error instead of the RMSE and disagreed with `cv_method("loocv")`.
 
 ## Changed
 
 * Flattened the `tests/lowess/` directories into `tests/` directly: each test file is now its own independent integration test binary instead of a submodule of a shared `main.rs`. No test behavior changes.
 * Bumped the vendored KaTeX CDN version from `0.18.5` to `0.18.7`, updating SRI hashes to match.
 * Hoisted fully-qualified imports to top-level `use` statements across crates and bindings.
-* Removed unused `pub use` re-exports and updated the few callers that used them.
 
 # lowess 4.0.0
 

@@ -11,16 +11,15 @@
 
 ## Fixed
 
-* `dev/bump_version.py` now updates the Go `/vN` path and the Java Maven example version.
-* Fixed inconsistent Node.js naming in READMEs, doc-site home pages, and `CITATION.cff`.
 * `dev/bump_version.py` now also updates the Go module's `/vN` major-version-suffix path across `go.mod` files, doc snippets, the doc-snippet runner, and README/docs badges whenever a version bump crosses a major version boundary, so this doesn't regress on the next major release.
 * `dev/bump_version.py` now also updates the Maven dependency example version in `bindings/java/docs/modules/ROOT/pages/introduction/installation.adoc`, which was previously left stale after a version bump.
-* Cleaned up `lowess::prelude` by removing leaked builder and adapter markers.
+* Changed the `iterations` default for `OnlineLowess` from `3` to `0` across every binding (R, Python, Julia, C++, Go, Java, Node.js, WASM), matching the default `update_mode = "incremental"` non-robust single-point fit; robustness iterations now require `update_mode = "full"`.
+* `dev/bump_version.py` now updates the Go `/vN` path and the Java Maven example version.
+* Fixed inconsistent Node.js naming in READMEs, doc-site home pages, and `CITATION.cff`.
 
 ## Changed
 
 * Hoisted fully-qualified imports to top-level `use` statements across crates and bindings.
-* Removed unused `pub use` re-exports and updated the few callers that used them.
 
 # rfastlowess 4.0.0
 

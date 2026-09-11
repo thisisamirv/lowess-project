@@ -54,7 +54,7 @@ fn main() -> Result<(), LowessError> {
 
 ```output
 Fraction used: 0.5
-Iterations used: None
+Iterations used: Some(3)
 ```
 
 ## Options Structures

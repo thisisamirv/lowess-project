@@ -16,17 +16,14 @@ weight: 100
 
 ## Fixed
 
-* `make fastLowess-dev` now also covers the combined `gpu,dev` feature set.
-* `make lowess-dev`/`make fastLowess-dev` now also run `cargo test --doc`.
-* Fixed 6 clippy lints in `crates/fastLowess/tests/gpu_tests.rs`.
-* `make fastLowess-dev` now also lints/builds/tests the combined `gpu,dev` feature set, not just `cpu`/`gpu`/`dev` in isolation — code that only compiles with both features enabled together (e.g. `tests/gpu_tests.rs`, gated on `#![cfg(feature = "dev")] #![cfg(feature = "gpu")]`) was previously never linted by any `make` target.
-* `make lowess-dev`/`make fastLowess-dev` now also run `cargo test --doc` for each tested feature set; doctests in `.rs` source files were previously never checked by any `make` target (only markdown-doc code snippets are covered by `dev/verify_snippets.py`).
-* Fixed 6 clippy lints in `crates/fastLowess/tests/gpu_tests.rs` (`needless_range_loop`, `unnecessary_min_or_max`, and 3× `await_holding_lock` on the `GLOBAL_EXECUTOR` mutex, allowed with a comment since the test binary always runs single-threaded), only surfaced once the new `gpu,dev` combined lint check above was added.
+* `dev/bump_version.py` now also updates the Go module's `/vN` major-version-suffix path across `go.mod` files, doc snippets, the doc-snippet runner, and README/docs badges whenever a version bump crosses a major version boundary, so this doesn't regress on the next major release.
+* `dev/bump_version.py` now also updates the Maven dependency example version in `bindings/java/docs/modules/ROOT/pages/introduction/installation.adoc`, which was previously left stale after a version bump.
+* Changed the `iterations` default for `OnlineLowess` from `3` to `0` across every binding (R, Python, Julia, C++, Go, Java, Node.js, WASM), matching the default `update_mode = "incremental"` non-robust single-point fit; robustness iterations now require `update_mode = "full"`.
+* Fixed the Go module's import path to include the required `/v4` suffix. Breaking change for old unsuffixed imports.
 
 ## Changed
 
 * Hoisted fully-qualified imports to top-level `use` statements across crates and bindings.
-* Removed unused `pub use` re-exports and updated the few callers that used them.
 
 # fastlowess (Go) 4.0.0
 

@@ -24,7 +24,6 @@ fn main() -> Result<(), LowessError> {
 
     let mut processor = OnlineLowess::new()
         .fraction(0.3)
-        .iterations(1)
         .window_capacity(25)
         .min_points(5)
         .update_mode("incremental")

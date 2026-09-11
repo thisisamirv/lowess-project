@@ -68,7 +68,7 @@ int main() {
 ```
 
 ```output
-95% CI at midpoint: [0.0393153, 0.10767]
+95% CI at midpoint: [0.0432732, 0.103712]
 R2: 0.966427
 ```
 
@@ -183,7 +183,6 @@ int main() {
 
     fastlowess::OnlineOptions opts;
     opts.fraction = 0.2;
-    opts.iterations = 1;
     opts.window_capacity = 100;
     opts.min_points = 5;
     opts.update_mode = "incremental";

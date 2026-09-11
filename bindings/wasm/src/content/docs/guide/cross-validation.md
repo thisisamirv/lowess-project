@@ -35,12 +35,12 @@ console.log("CV scores:", result.cv_scores);
 ```
 
 ```output
-Selected fraction: 0.2
+Selected fraction: 0.3
 CV scores: Float64Array(4) [
-  0.26600659254341497,
-  0.2666373347613506,
-  0.36243048571062475,
-  0.4466813477111353
+  0.34433112995894766,
+  0.34360221980836014,
+  0.399777871492262,
+  0.4753222259752891
 ]
 ```
 
@@ -93,7 +93,7 @@ console.log("Fraction used:", result.fraction_used);
 ```
 
 ```output
-Fraction used: 0.7
+Fraction used: 0.3
 ```
 
 ---

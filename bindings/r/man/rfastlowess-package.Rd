@@ -48,5 +48,10 @@ Authors:
     (\href{https://orcid.org/0000-0001-5983-8527}{ORCID}) [funder]
 }
 
+Other contributors:
+\itemize{
+    \item Aleksei Chirkunov (Reviewed the package for rOpenSci (GitHub: @alexzerg), see <https://github.com/ropensci/software-review/issues/769>) [reviewer]
+}
+
 }
 \keyword{internal}

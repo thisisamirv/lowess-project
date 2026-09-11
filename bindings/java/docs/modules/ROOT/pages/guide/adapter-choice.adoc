@@ -78,7 +78,7 @@ public class Example {
 
 [source,console]
 ----
-95% CI at midpoint: [0.0393, 0.1077]
+95% CI at midpoint: [0.0433, 0.1037]
 R2: 0.9664
 ----
 
@@ -218,7 +218,6 @@ public class Example {
 
         OnlineOptions options = OnlineOptions.builder()
                 .fraction(0.2)
-                .iterations(1)
                 .windowCapacity(100)
                 .minPoints(5)
                 .updateMode("incremental")

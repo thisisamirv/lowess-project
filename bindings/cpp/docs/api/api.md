@@ -81,7 +81,7 @@ int main() {
 
 ```output
 0.5
--1
+3
 ```
 
 ## Options Structures

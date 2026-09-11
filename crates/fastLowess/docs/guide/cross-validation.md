@@ -45,8 +45,8 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-Selected fraction: 0.2
-CV scores: [0.266006592543415, 0.26663733476135054, 0.36243048571062464, 0.4466813477111353]
+Selected fraction: 0.3
+CV scores: [0.3443311299589477, 0.3436022198083601, 0.39977787149226196, 0.4753222259752891]
 ```
 
 ---
@@ -108,7 +108,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-Selected fraction (CV): 0.7
+Selected fraction (CV): 0.3
 ```
 
 ---

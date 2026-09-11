@@ -46,7 +46,7 @@ int main() {
 ```
 
 ```output
-Selected fraction: 0.2
+Selected fraction: 0.3
 ```
 
 ---
@@ -120,7 +120,7 @@ int main() {
 ```
 
 ```output
-Fraction used: 0.7
+Fraction used: 0.3
 ```
 
 ---

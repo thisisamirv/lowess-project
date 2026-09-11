@@ -41,7 +41,7 @@ console.log("95% CI: [" + result.confidence_lower[0].toFixed(4) + ", " + result.
 ```
 
 ```output
-95% CI: [51.6773, 68.7372]
+95% CI: [53.2753, 67.1392]
 ```
 
 ---

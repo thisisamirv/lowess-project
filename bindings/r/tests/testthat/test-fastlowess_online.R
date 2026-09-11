@@ -135,7 +135,8 @@ test_that("OnlineLowess robustness works", {
     ol_robust <- OnlineLowess(
         fraction = 0.3,
         window_capacity = 25,
-        iterations = 3
+        iterations = 3,
+        update_mode = "full"
     )
     results_robust <- lapply(
         seq_along(x),

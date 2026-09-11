@@ -66,7 +66,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-95% CI at midpoint: [0.0393, 0.1077]
+95% CI at midpoint: [0.0433, 0.1037]
 R2: 0.9664
 ```
 
@@ -172,7 +172,6 @@ fn main() -> Result<(), LowessError> {
 
     let mut processor = OnlineLowess::new()
         .fraction(0.2f64)
-        .iterations(1usize)
         .window_capacity(100usize)
         .min_points(5usize)
         .update_mode("incremental")

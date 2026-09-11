@@ -39,11 +39,11 @@ result.y.slice(0, 5).forEach((y, i) => {
 ```
 
 ```output
-x=0.0000: y=0.3344 [0.2941, 0.3746]
-x=0.0635: y=0.3610 [0.3184, 0.4036]
-x=0.1269: y=0.3887 [0.3440, 0.4335]
-x=0.1904: y=0.4175 [0.3709, 0.4641]
-x=0.2539: y=0.4471 [0.3989, 0.4954]
+x=0.0000: y=0.3344 [0.2948, 0.3739]
+x=0.0635: y=0.3610 [0.3208, 0.4012]
+x=0.1269: y=0.3887 [0.3478, 0.4296]
+x=0.1904: y=0.4175 [0.3759, 0.4591]
+x=0.2539: y=0.4471 [0.4048, 0.4895]
 ```
 
 ---
@@ -65,7 +65,7 @@ console.log(`Prediction bounds: [${result.prediction_lower[0]}, ${result.predict
 ```
 
 ```output
-Prediction bounds: [-0.04010394906290443, 0.7088446698987356]
+Prediction bounds: [-0.04003068058981607, 0.7087714014256472]
 ```
 
 ---
@@ -89,7 +89,7 @@ console.log("95% CI: [" + result.confidence_lower[0].toFixed(4) + ", " + result.
 ```
 
 ```output
-95% CI: [0.2941, 0.3746]
+95% CI: [0.2948, 0.3739]
 ```
 
 ---
@@ -118,7 +118,7 @@ console.log("99% CI: [" + result.confidence_lower[0].toFixed(4) + ", " + result.
 ```
 
 ```output
-99% CI: [0.3171, 0.4481]
+99% CI: [0.3193, 0.4460]
 ```
 
 ---
@@ -143,11 +143,11 @@ result.standard_errors.slice(0, 5).forEach((se, i) => {
 ```
 
 ```output
-Point 0: SE = 0.0254
-Point 1: SE = 0.0269
-Point 2: SE = 0.0283
-Point 3: SE = 0.0297
-Point 4: SE = 0.0309
+Point 0: SE = 0.0246
+Point 1: SE = 0.0252
+Point 2: SE = 0.0259
+Point 3: SE = 0.0265
+Point 4: SE = 0.0272
 ```
 
 ---

@@ -53,7 +53,7 @@ fn main() -> Result<(), LowessError> {
 ```output
 x=0.00: y=0.33 [0.29, 0.37]
 x=0.06: y=0.36 [0.32, 0.40]
-x=0.13: y=0.39 [0.34, 0.43]
+x=0.13: y=0.39 [0.35, 0.43]
 ```
 
 ---
@@ -120,7 +120,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-First point 95% CI: [0.29412988645250643, 0.3746108343833247]
+First point 95% CI: [0.2948175249759787, 0.37392319585985245]
 ```
 
 ---
@@ -158,7 +158,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-First lower CI bound (99%): 0.31714272639100155
+First lower CI bound (99%): 0.31926203242453505
 ```
 
 ---
@@ -190,9 +190,9 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-Point 0: SE = 0.0254
-Point 1: SE = 0.0269
-Point 2: SE = 0.0283
+Point 0: SE = 0.0246
+Point 1: SE = 0.0252
+Point 2: SE = 0.0259
 ```
 
 ---

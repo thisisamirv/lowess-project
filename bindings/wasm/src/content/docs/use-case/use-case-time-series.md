@@ -85,7 +85,7 @@ console.log(`95% PI: [${result.prediction_lower[0].toFixed(4)}, ${result.predict
 ```
 
 ```output
-95% PI: [0.1580, 0.2909]
+95% PI: [0.1531, 0.2958]
 ```
 
 ---

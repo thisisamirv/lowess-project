@@ -8,12 +8,20 @@
 * Added musl release binaries for Python, C++, Go, and Julia.
 * Added bundled native libraries for the Java binding across 8 platforms, with runtime musl detection and auto-extraction.
 
+## Fixed
+
+* `dev/bump_version.py` now also updates the Go module's `/vN` major-version-suffix path across `go.mod` files, doc snippets, the doc-snippet runner, and README/docs badges whenever a version bump crosses a major version boundary, so this doesn't regress on the next major release.
+* `dev/bump_version.py` now also updates the Maven dependency example version in `bindings/java/docs/modules/ROOT/pages/introduction/installation.adoc`, which was previously left stale after a version bump.
+* Changed the `iterations` default for `OnlineLowess` from `3` to `0` across every binding (R, Python, Julia, C++, Go, Java, Node.js, WASM), matching the default `update_mode = "incremental"` non-robust single-point fit; robustness iterations now require `update_mode = "full"`.
+* Fixed the same zero standard-error collapse in the parallel interval path (`interval_pass_parallel`) and the GPU `compute_se` shader, which multiplied the leverage numerator by the point's own robustness weight. Both paths now also use the exact local-linear variance multiplier and kernel-corrected residual degrees of freedom as the serial path, so their standard errors match it.
+* Fixed the GPU `fit_anchors` shader carrying the same absolute degeneracy tolerance (`1e-7`) as the CPU WLS solver, which zeroed the local-linear slope for small-magnitude `x`; it now matches the CPU's scale-relative tolerance. The GPU `compute_se` shader's absolute `det > 1e-12` guard (which could null out standard errors for small-magnitude `x`) now matches the CPU's structural `det > 0` check.
+* `make fastLowess-dev` now also covers the combined `gpu,dev` feature set.
+
 ## Changed
 
 * Flattened the `tests/fastLowess/` directories into `tests/` directly: each test file is now its own independent integration test binary instead of a submodule of a shared `main.rs`. No test behavior changes.
 * Bumped the vendored KaTeX CDN version from `0.18.5` to `0.18.7`, updating SRI hashes to match.
 * Hoisted fully-qualified imports to top-level `use` statements across crates and bindings.
-* Removed unused `pub use` re-exports and updated the few callers that used them.
 
 # fastLowess 4.0.0
 

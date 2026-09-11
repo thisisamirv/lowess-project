@@ -33,7 +33,6 @@ import (
 func main() {
  opts := fastlowess.DefaultOnlineOptions()
  opts.Fraction = 0.3
- opts.Iterations = 1
  opts.WindowCapacity = 25
  opts.MinPoints = 5
  opts.UpdateMode = "incremental"

@@ -56,7 +56,7 @@ console.log(`R2: ${result.diagnostics.r_squared.toFixed(4)}`);
 ```
 
 ```output
-95% CI at midpoint: [0.0393, 0.1077]
+95% CI at midpoint: [0.0433, 0.1037]
 R2: 0.9664
 ```
 
@@ -150,7 +150,7 @@ const x = Float64Array.from({ length: 100 }, (_, i) => i * 2 * Math.PI / 99);
 const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
 const online = new OnlineLowess(
-    { fraction: 0.2, iterations: 1 },
+    { fraction: 0.2 },
     { window_capacity: 100, min_points: 5, update_mode: "incremental" }
 );
 let shown = 0;

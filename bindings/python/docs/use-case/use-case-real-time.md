@@ -29,7 +29,6 @@ temperatures = 20.0 + 5.0 *np.sin(times / 10.0) + np.sin(times* 1.7) * 0.5
 
 online = fl.OnlineLowess(
     fraction=0.3,
-    iterations=1,
     window_capacity=25,    # Keep last 25 points
     min_points=5,          # Wait for 5 points before output
     update_mode="incremental"

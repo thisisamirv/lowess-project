@@ -60,8 +60,8 @@ func main() {
 ```
 
 ```output
-Selected fraction: 0.2
-CV scores: [0.2660065925434152 0.26663733476135054 0.36243048571062464 0.4466813477111355]
+Selected fraction: 0.3
+CV scores: [0.3443311299589477 0.3436022198083601 0.3997778714922619 0.4753222259752891]
 ```
 
 ---
@@ -160,7 +160,7 @@ func main() {
 ```
 
 ```output
-Selected fraction (CV): 0.7
+Selected fraction (CV): 0.3
 ```
 
 ---

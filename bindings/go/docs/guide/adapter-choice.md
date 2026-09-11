@@ -84,7 +84,7 @@ func main() {
 ```
 
 ```output
-95% CI at midpoint: [0.0393, 0.1077]
+95% CI at midpoint: [0.0433, 0.1037]
 R2: 0.9664
 ```
 
@@ -220,7 +220,6 @@ func main() {
 
  opts := fastlowess.DefaultOnlineOptions()
  opts.Fraction = 0.2
- opts.Iterations = 1
  opts.WindowCapacity = 100
  opts.MinPoints = 5
  opts.UpdateMode = "incremental"

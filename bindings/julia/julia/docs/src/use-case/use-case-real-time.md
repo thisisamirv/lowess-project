@@ -26,7 +26,6 @@ temperatures = 20.0 .+ 5.0 .* sin.(times ./ 10.0) .+ sin.(times .* 1.7) .* 0.5
 # Process with online mode
 model = OnlineLowess(;
     fraction=0.3,
-    iterations=1,
     window_capacity=25,
     min_points=5,
     update_mode="incremental"
