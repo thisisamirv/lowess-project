@@ -42,10 +42,10 @@ jobs:
             asset_name: libfastlowess-linux-arm64.so
             target_dir: target/release
           - os: ubuntu-24.04-arm
-            container: "alpine:latest"
             artifact_name: libfastlowess.so
             asset_name: libfastlowess-linux-arm64-musl.so
-            target_dir: target/release
+            target_dir: target/aarch64-unknown-linux-musl/release
+            cargo_target: "--target aarch64-unknown-linux-musl"
           - os: windows-latest
             artifact_name: fastlowess.dll
             asset_name: fastlowess-win32-x64.dll
@@ -77,22 +77,31 @@ jobs:
         with:
           toolchain: stable
 
+      - name: Install musl toolchain + target (Linux aarch64 musl)
+        if: matrix.cargo_target != ''
+        run: |
+          rustup target add aarch64-unknown-linux-musl
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
+          echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=musl-gcc" >> "$GITHUB_ENV"
+          echo "CC_aarch64_unknown_linux_musl=musl-gcc" >> "$GITHUB_ENV"
+
       - name: Build C++ Library
         working-directory: bindings/cpp
-        run: cargo build --release --lib
+        run: cargo build --release --lib ${{ matrix.cargo_target }}
 
       - name: Prepare Assets (Unix)
         if: runner.os != 'Windows'
         run: |
           # Rust/Cargo naming: libfastlowess_cpp.so or .dylib
-          mv target/release/libfastlowess_cpp.so ${{ matrix.asset_name }} 2>/dev/null || mv target/release/libfastlowess_cpp.dylib ${{ matrix.asset_name }}
+          mv ${{ matrix.target_dir }}/libfastlowess_cpp.so ${{ matrix.asset_name }} 2>/dev/null || mv ${{ matrix.target_dir }}/libfastlowess_cpp.dylib ${{ matrix.asset_name }}
 
       - name: Prepare Assets (Windows)
         if: runner.os == 'Windows'
         shell: bash
         run: |
           # Windows: fastlowess_cpp.dll
-          mv target/release/fastlowess_cpp.dll ${{ matrix.asset_name }}
+          mv ${{ matrix.target_dir }}/fastlowess_cpp.dll ${{ matrix.asset_name }}
 
       - name: Upload Binaries to Release
         uses: softprops/action-gh-release@v3

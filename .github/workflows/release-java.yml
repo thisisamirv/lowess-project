@@ -37,9 +37,10 @@ jobs:
             dir: linux-aarch64
             lib_name: libfastlowess_java.so
           - os: ubuntu-24.04-arm
-            container: "alpine:latest"
             dir: linux-aarch64-musl
             lib_name: libfastlowess_java.so
+            cargo_target: aarch64-unknown-linux-musl
+            target_dir: target/aarch64-unknown-linux-musl/release
           - os: macos-15-intel
             dir: macos-x86_64
             lib_name: libfastlowess_java.dylib
@@ -63,14 +64,30 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
+      - name: Install musl toolchain + target (Linux aarch64 musl)
+        if: matrix.cargo_target != ''
+        run: |
+          rustup target add aarch64-unknown-linux-musl
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
+          echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=musl-gcc" >> "$GITHUB_ENV"
+          echo "CC_aarch64_unknown_linux_musl=musl-gcc" >> "$GITHUB_ENV"
+
       - name: Build native library
-        run: cargo build -p fastlowess-java --release
+        env:
+          CARGO_TARGET: ${{ matrix.cargo_target }}
+        run: |
+          if [ -n "$CARGO_TARGET" ]; then
+            cargo build -p fastlowess-java --release --target "$CARGO_TARGET"
+          else
+            cargo build -p fastlowess-java --release
+          fi
 
       - name: Upload native library
         uses: actions/upload-artifact@v7
         with:
           name: native-${{ matrix.dir }}
-          path: target/release/${{ matrix.lib_name }}
+          path: ${{ matrix.target_dir || 'target/release' }}/${{ matrix.lib_name }}
 
   publish-maven-central:
     name: Publish to Maven Central
