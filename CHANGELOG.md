@@ -6,6 +6,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+**R:**
+
+- Added explicit tests for RE7.0/RE7.0a (noiseless exact predictor relationships, including identical-x and degenerate cases) and RE7.1/RE7.1a (noiseless exact y = f(x) relationships with timing comparison) in `tests/testthat/test-validation.R`. Removed incorrect `@srrstatsNA` tags and added proper `@srrstats` claims in `R/srr-stats-standards.R` and test headers. These tests confirm graceful handling of perfectly noiseless input and that exact data fits at least as fast as noisy equivalents.
+
 ## 4.1.0
 
 ### Added
@@ -34,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `return_derivative` to `Lowess()`, `StreamingLowess()`, and `OnlineLowess()`.
 - Added `return_se`/`confidence_intervals`/`prediction_intervals` to `StreamingLowess()` and `OnlineLowess()`; Online requires `update_mode = "full"`.
 - Added stored golden reference fixtures under `tests/testthat/fixtures/` (with a `make_reference.R` regeneration script and a `PROVENANCE.txt` provenance stamp) pinning the output of engine paths with no external reference — the default `boundary_policy = "extend"`, intervals, robustness weights, streaming, and online — verified by `test-golden.R` within a `1e-10` tolerance (srrstats G5.4c).
+- Added explicit G5.9a test: `.Machine$double.eps` scale noise on input `y` produces no meaningful change in smoothed output (verified via `expect_equal(..., tolerance = 1e-10)`).
 
 **Julia:**
 
