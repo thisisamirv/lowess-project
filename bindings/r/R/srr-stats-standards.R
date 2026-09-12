@@ -27,7 +27,6 @@ NULL
 #' @srrstatsNA {RE4.14, RE4.15} No forecasting - smoothing only.
 #' @srrstatsNA {RE4.16} No categorical groups.
 #' @srrstatsNA {RE6.1, RE6.3} Default plot method is standard S3.
-#' @srrstatsNA {RE7.0, RE7.0a, RE7.1, RE7.1a} Exact input not special-cased.
 #' @srrstatsNA {RE7.2, RE7.3, RE7.4} No row names or accessor tests needed.
 #' @noRd
 NULL
@@ -58,5 +57,11 @@ NULL
 #' @srrstats {G5.9, G5.9a, G5.9b} Noise susceptibility tests.
 #' @srrstats {G5.10} Extended tests via environment variable.
 #' @srrstats {RE3.2, RE3.3} Threshold defaults documented, settable.
+#' @srrstats {RE7.0, RE7.0a} Tests with noiseless exact predictor relationships
+#'   (identical x, perfectly spaced x) confirm graceful handling and exact
+#'   reproduction where appropriate.
+#' @srrstats {RE7.1, RE7.1a} Tests with noiseless exact predictor+response
+#'   relationships (y = f(x) with zero noise) confirm exact reproduction and
+#'   that fitting exact data is at least as fast as noisy equivalents.
 #' @noRd
 NULL

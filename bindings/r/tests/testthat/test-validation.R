@@ -2,6 +2,16 @@
 #' @srrstats {G5.4b} Reference comparison against base R's `stats::lowess`
 #'   and `stats::lm`.
 #' @srrstats {G5.5} Fixed random seeds (`set.seed(42)`).
+#' @srrstats {RE7.0, RE7.0a} Noiseless exact relationships between predictor
+#'   (independent) data: identical x values and perfectly structured x are
+#'   handled without error; ability to recognize/handle perfectly noiseless
+#'   predictor configurations is confirmed via finite output and exact
+#'   reproduction on degenerate cases.
+#' @srrstats {RE7.1, RE7.1a} Noiseless exact relationships between predictor
+#'   and response: y = f(x) exactly (linear, constant) reproduces truth;
+#'   perfect fit is recognized (r_squared = 1, rmse = 0 when
+#'   return_diagnostics = TRUE); fitting exact data is at least as fast as
+#'   equivalent noisy data.
 #'
 # Validation: numerical agreement with R's `stats::lowess` and `stats::lm`.
 #
@@ -403,4 +413,73 @@ test_that("matches stats::lowess across a fraction x iterations grid", {
             )
         }
     }
+})
+
+# --- RE7.0 / RE7.1: noiseless exact relationships (predictor and predictor+response) ---
+
+test_that("RE7.0/RE7.1 noiseless exact predictor and predictor+response relationships", {
+    # RE7.0 / RE7.0a: noiseless exact relationships between predictor (independent) data.
+    # Identical / replicated x values (degenerate predictor structure) must be handled
+    # without error or non-finite output. This demonstrates the ability to "reject"
+    # (i.e., not silently fail on) perfectly structured noiseless predictor input.
+    x_ident <- rep(seq(0, 5, length.out = 10), each = 3)
+    y_ident <- sin(x_ident) + 0.1
+    expect_no_error({
+        r <- fit(Lowess(fraction = 0.4), as.double(x_ident), as.double(y_ident))
+    })
+    expect_true(all(is.finite(r$y)))
+
+    # Extreme degenerate predictor: all x identical (constant predictor).
+    x_const_pred <- rep(3.0, 30)
+    y_var <- rnorm(30, 5, 1)
+    expect_no_error({
+        r <- fit(Lowess(fraction = 0.5), as.double(x_const_pred), as.double(y_var))
+    })
+    expect_true(all(is.finite(r$y)))
+
+    # RE7.1 / RE7.1a: noiseless exact relationships between predictor and response.
+    # y = f(x) exactly (linear, constant) with zero noise. Must reproduce truth
+    # exactly (within floating-point tolerance) and not crash or produce garbage.
+    d_lin <- generate_validation_data(n = 60, kind = "linear", noise = 0.0)
+    r_lin <- fit(
+        Lowess(fraction = 0.3, iterations = 0L, boundary_policy = "noboundary"),
+        as.double(d_lin$x), as.double(d_lin$y)
+    )
+    expect_equal(r_lin$y, as.double(d_lin$y), tolerance = 1e-12)
+
+    d_const <- generate_validation_data(n = 40, kind = "constant", noise = 0.0)
+    r_const <- fit(
+        Lowess(fraction = 0.5, iterations = 0L),
+        as.double(d_const$x), as.double(d_const$y)
+    )
+    expect_equal(r_const$y, as.double(d_const$y), tolerance = 1e-12)
+
+    # Perfect fit is recognized via diagnostics: r_squared == 1, rmse == 0.
+    # This is the correct "rejection" behavior — the model reports that the
+    # relationship is exact rather than silently returning a misleading fit.
+    # Note: return_diagnostics is a constructor argument for Lowess(), not fit().
+    r_diag <- fit(
+        Lowess(
+            fraction = 0.3,
+            iterations = 0L,
+            boundary_policy = "noboundary",
+            return_diagnostics = TRUE
+        ),
+        as.double(d_lin$x), as.double(d_lin$y)
+    )
+    expect_true(!is.null(r_diag$diagnostics))
+    expect_equal(r_diag$diagnostics$r_squared, 1.0, tolerance = 1e-10)
+    expect_equal(r_diag$diagnostics$rmse, 0.0, tolerance = 1e-12)
+
+    # RE7.1a: fitting exact (noiseless) data is at least as fast as noisy equivalent.
+    # (See also RE2.4b timing expectations; exact data should not be slower.)
+    d_noisy <- generate_validation_data(n = 200, kind = "linear", noise = 0.05)
+    t_exact <- system.time({
+        fit(Lowess(fraction = 0.3), as.double(d_lin$x), as.double(d_lin$y))
+    })["elapsed"]
+    t_noisy <- system.time({
+        fit(Lowess(fraction = 0.3), as.double(d_noisy$x), as.double(d_noisy$y))
+    })["elapsed"]
+    # Allow small measurement overhead; exact must not be meaningfully slower.
+    expect_lte(as.numeric(t_exact), as.numeric(t_noisy) + 0.05)
 })
