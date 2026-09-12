@@ -22,7 +22,17 @@ def skip_reason(snippet: Snippet) -> str | None:
     return None
 
 
-_msvc_env_cache: dict[str, str] | None = None
+# Cached vcvarsall environments, keyed by (vcvarsall path, target arch).
+_msvc_env_cache: dict[tuple[str, str], dict[str, str]] = {}
+
+# MSVC host\target toolchain directories, most-preferred first, per target arch.
+# Windows on ARM ships a native Hostarm64\arm64 toolchain; an x64 host can also
+# cross-compile to arm64 via Hostx64\arm64. Building against the wrong arch
+# fails to link the library, so the arch must follow the built library.
+_MSVC_HOST_DIRS: dict[str, list[str]] = {
+    "arm64": [r"Hostarm64\arm64", r"Hostx64\arm64", r"Hostx64\x64"],
+    "x64": [r"Hostx64\x64", r"Hostarm64\x64"],
+}
 
 
 def _find_cpp_compiler() -> str | None:
@@ -33,38 +43,56 @@ def _find_cpp_compiler() -> str | None:
     return None
 
 
-def _find_msvc_compiler() -> str | None:
-    if (cl := _find_exe("cl")) is not None:
-        return cl
+def _find_msvc_compiler(arch: str = "x64") -> str | None:
+    """Locate an ``cl.exe`` whose host/target toolchain matches ``arch``."""
+    host_dirs = _MSVC_HOST_DIRS.get(arch, _MSVC_HOST_DIRS["x64"])
     vswhere = r"C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe"
     if os.path.exists(vswhere):
-        try:
-            result = subprocess.run(
-                [vswhere, "-all", "-find", r"VC\Tools\MSVC\**\bin\Hostx64\x64\cl.exe"],
-                capture_output=True,
-                encoding="utf-8",
-                errors="replace",
-                check=False,
-                timeout=10,
-            )
-            for line in result.stdout.splitlines():
-                path = line.strip()
-                if path and os.path.exists(path):
-                    return path
-        except (OSError, subprocess.TimeoutExpired):
-            pass
-    for pattern in [
-        r"C:\Program Files (x86)\Microsoft Visual Studio\*\*\VC\Tools\MSVC\*\bin\Hostx64\x64\cl.exe",
-        r"C:\Program Files\Microsoft Visual Studio\*\*\VC\Tools\MSVC\*\bin\Hostx64\x64\cl.exe",
-    ]:
-        matches = sorted(_glob.glob(pattern))
-        if matches:
-            return matches[-1]
-    return None
+        for host_dir in host_dirs:
+            try:
+                result = subprocess.run(
+                    [
+                        vswhere,
+                        "-all",
+                        "-find",
+                        rf"VC\Tools\MSVC\**\bin\{host_dir}\cl.exe",
+                    ],
+                    capture_output=True,
+                    encoding="utf-8",
+                    errors="replace",
+                    check=False,
+                    timeout=10,
+                )
+                for line in result.stdout.splitlines():
+                    path = line.strip()
+                    if path and os.path.exists(path):
+                        return path
+            except (OSError, subprocess.TimeoutExpired):
+                pass
+    for host_dir in host_dirs:
+        for pattern in [
+            rf"C:\Program Files (x86)\Microsoft Visual Studio\*\*\VC\Tools\MSVC\*\bin\{host_dir}\cl.exe",
+            rf"C:\Program Files\Microsoft Visual Studio\*\*\VC\Tools\MSVC\*\bin\{host_dir}\cl.exe",
+        ]:
+            matches = sorted(_glob.glob(pattern))
+            if matches:
+                return matches[-1]
+    # Last resort: whatever `cl` happens to be on PATH (may be the wrong arch).
+    return _find_exe("cl")
 
 
 def _is_msvc_library(lib_dir: Path) -> bool:
     return "windows-msvc" in str(lib_dir)
+
+
+def _cpp_target_arch(lib_dir: Path) -> str | None:
+    """Infer the target architecture ("arm64" or "x64") from a library path."""
+    parts = [part.lower() for part in lib_dir.parts]
+    if any("aarch64" in part or "arm64" in part for part in parts):
+        return "arm64"
+    if any("x86_64" in part or "amd64" in part or "i686" in part for part in parts):
+        return "x64"
+    return None
 
 
 def _find_vcvarsall(compiler_path: str) -> str | None:
@@ -78,16 +106,16 @@ def _find_vcvarsall(compiler_path: str) -> str | None:
     return None
 
 
-def _get_msvc_env(vcvarsall: str) -> dict[str, str]:
-    """Return the environment after sourcing vcvarsall.bat x64."""
-    global _msvc_env_cache
-    if _msvc_env_cache is not None:
-        return _msvc_env_cache
+def _get_msvc_env(vcvarsall: str, arch: str = "x64") -> dict[str, str]:
+    """Return the environment after sourcing vcvarsall.bat for ``arch``."""
+    cache_key = (vcvarsall, arch)
+    if cache_key in _msvc_env_cache:
+        return _msvc_env_cache[cache_key]
     try:
         # `call` is required: without it, vcvarsall.bat's GOTO :EOF causes cmd.exe
         # to exit entirely, so `&& set` never runs and the env is never captured.
         result = subprocess.run(
-            f'call "{vcvarsall}" x64 > nul 2>&1 && set',
+            f'call "{vcvarsall}" {arch} > nul 2>&1 && set',
             shell=True,
             capture_output=True,
             encoding="utf-8",
@@ -100,15 +128,16 @@ def _get_msvc_env(vcvarsall: str) -> dict[str, str]:
             key, sep, value = line.partition("=")
             if sep:
                 env[key] = value
-        _msvc_env_cache = env if env else dict(os.environ)
+        _msvc_env_cache[cache_key] = env if env else dict(os.environ)
     except (OSError, subprocess.TimeoutExpired):
-        _msvc_env_cache = dict(os.environ)
-    return _msvc_env_cache
+        _msvc_env_cache[cache_key] = dict(os.environ)
+    return _msvc_env_cache[cache_key]
 
 
 def _find_cpp_library() -> Path | None:
     candidates = [
         REPO_ROOT / "target" / "x86_64-pc-windows-msvc" / "release-c",
+        REPO_ROOT / "target" / "aarch64-pc-windows-msvc" / "release-c",
         REPO_ROOT / "target" / "x86_64-pc-windows-gnu" / "release-c",
         REPO_ROOT / "target" / "aarch64-pc-windows-gnu" / "release-c",
         REPO_ROOT / "target" / "release-c",
@@ -167,7 +196,8 @@ def run_cpp_batch(snippets: list[Snippet], timeout: int) -> list[RunResult]:
     use_msvc = os.name == "nt" and _is_msvc_library(lib_dir)
 
     if use_msvc:
-        compiler = _find_msvc_compiler()
+        target_arch = _cpp_target_arch(lib_dir) or "x64"
+        compiler = _find_msvc_compiler(target_arch)
         if compiler is None:
             return [
                 RunResult(
@@ -179,7 +209,9 @@ def run_cpp_batch(snippets: list[Snippet], timeout: int) -> list[RunResult]:
                 for s in snippets
             ]
         vcvarsall = _find_vcvarsall(compiler)
-        msvc_env = _get_msvc_env(vcvarsall) if vcvarsall else dict(os.environ)
+        msvc_env = (
+            _get_msvc_env(vcvarsall, target_arch) if vcvarsall else dict(os.environ)
+        )
         _env_path = msvc_env.get("Path") or msvc_env.get("PATH", "")
         _cl = shutil.which("cl", path=_env_path) if _env_path else None
         if _cl:

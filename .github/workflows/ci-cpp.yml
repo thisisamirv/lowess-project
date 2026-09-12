@@ -66,7 +66,7 @@ jobs:
 
       - name: Install cppcheck (Linux)
         if: runner.os == 'Linux'
-        run: sudo apt-get install -y cppcheck
+        run: sudo apt-get install -y cppcheck valgrind
 
       - name: Install clang-tidy and cppcheck (macOS)
         if: runner.os == 'macOS'
@@ -130,7 +130,7 @@ jobs:
         with:
           components: rustfmt, clippy
       - name: Install clang and cppcheck
-        run: sudo apt-get install -y --no-install-recommends clang cppcheck
+        run: sudo apt-get install -y --no-install-recommends clang cppcheck valgrind
       - uses: Swatinem/rust-cache@v2
         with:
           key: cpp-clang-linux
@@ -185,7 +185,7 @@ jobs:
         with:
           key: cpp-intel-oneapi
       - name: Install cppcheck
-        run: sudo apt-get install -y cppcheck
+        run: sudo apt-get install -y cppcheck valgrind
       - name: Install Intel oneAPI C++ compiler
         run: |
           wget -qO- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB \

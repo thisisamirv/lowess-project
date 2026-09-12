@@ -89,6 +89,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **C++:**
 
 - Fixed `bindings/cpp/spack/package.py` building from the wrong directory; it now builds by package name and keeps the pyright suppression at the repo root.
+- Fixed the C++ valgrind memory check silently skipping on Linux CI because `valgrind` was never installed; all three Linux jobs in `.github/workflows/ci-cpp.yml` (ci matrix, clang-linux, intel-oneapi) now install it alongside `cppcheck`, as does `bindings/cpp/Makefile`'s `install-tools` target.
+- Fixed C++ doc-snippet verification skipping every snippet on Windows-on-ARM: `dev/runners/cpp.py` now detects the MSVC host/target architecture from the built library (`arm64` vs `x64`), adds the `aarch64-pc-windows-msvc` library candidate, and caches the `vcvarsall.bat` environment per `(path, arch)` so snippets compile, link, and run instead of being silently skipped.
 
 **Node.js:**
 
