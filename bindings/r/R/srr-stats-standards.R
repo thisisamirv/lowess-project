@@ -46,7 +46,11 @@ NULL
 #' @srrstats {G5.1} Test datasets exported in examples.
 #' @srrstats {G5.2, G5.2a, G5.2b} Error/warning tests in tests/.
 #' @srrstats {G5.3} No NA/NaN in outputs tested.
-#' @srrstats {G5.4, G5.4a, G5.4b, G5.4c} Correctness tests vs stats::lowess.
+#' @srrstats {G5.4, G5.4a, G5.4b} Correctness tests vs stats::lowess (and
+#'   stats::lm) in tests/testthat/test-validation.R.
+#' @srrstats {G5.4c} Stored reference fixtures in
+#'   tests/testthat/fixtures/, verified against a fresh fit in
+#'   tests/testthat/test-golden.R.
 #' @srrstats {G5.5} Fixed random seeds in tests.
 #' @srrstats {G5.6, G5.6a, G5.6b} Parameter recovery within tolerance.
 #' @srrstats {G5.7} Algorithm performance scales with data size.

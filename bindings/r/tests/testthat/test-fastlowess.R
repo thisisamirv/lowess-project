@@ -1,7 +1,6 @@
 #' @srrstats {G5.0} Tests use standard data patterns (sin, linear, constant).
 #' @srrstats {G5.1} Test datasets are reproducible via set.seed().
 #' @srrstats {G5.3} Tests verify no NA/NaN in outputs.
-#' @srrstats {G5.4, G5.4a} Correctness tests against expected behavior.
 #' @srrstats {G5.5} Fixed random seeds in all tests.
 #' @srrstats {G5.6, G5.6a} Parameter recovery within tolerance.
 #' @srrstats {G5.7} Performance tests (parallel vs serial).

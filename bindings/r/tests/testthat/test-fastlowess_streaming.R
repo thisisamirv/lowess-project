@@ -1,4 +1,3 @@
-#' @srrstats {G5.4} Correctness tests for streaming/chunked mode.
 #' @srrstats {G5.5} Fixed random seeds.
 #' @srrstats {G5.7} Parallel vs serial performance comparison.
 #' @srrstats {G5.8} Edge cases: small data, chunk > data.

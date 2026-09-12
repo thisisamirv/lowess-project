@@ -1,4 +1,3 @@
-#' @srrstats {G5.4} Correctness tests for online/sliding window mode.
 #' @srrstats {G5.5} Fixed random seeds.
 #' @srrstats {G5.8} Edge cases: min data, window > data.
 #' @srrstats {RE4.0} Robustness iterations tested.

@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `retain_model` and `predict.Lowess()` for out-of-sample prediction.
 - Added `return_derivative` to `Lowess()`, `StreamingLowess()`, and `OnlineLowess()`.
 - Added `return_se`/`confidence_intervals`/`prediction_intervals` to `StreamingLowess()` and `OnlineLowess()`; Online requires `update_mode = "full"`.
+- Added stored golden reference fixtures under `tests/testthat/fixtures/` (with a `make_reference.R` regeneration script and a `PROVENANCE.txt` provenance stamp) pinning the output of engine paths with no external reference — the default `boundary_policy = "extend"`, intervals, robustness weights, streaming, and online — verified by `test-golden.R` within a `1e-10` tolerance (srrstats G5.4c).
 
 **Julia:**
 

@@ -29,6 +29,8 @@ bindings/r/src/vendor/
 bindings/r/src/.cargo/
 bindings/r/docs/
 bindings/r/doc/
+bindings/r/tests/testthat/_problems/
+bindings/r/tests/testthat/testthat-problems.rds
 bindings/r/Meta/
 bindings/r/README.html
 bindings/r/src/Makevars

@@ -25,16 +25,16 @@ run_scenario <- function(
 
     # R's lowess default delta is 0.01 * diff(range(x)).
     # If we want "direct" computation (exact), we set delta = 0.
-    
+
     args <- list(...)
     is_direct <- FALSE
     if (!is.null(args$surface) && args$surface == "direct") {
         is_direct <- TRUE
     }
-    
+
     # If delta is not provided explicitly, check if we want direct
     val_delta <- if (!is.null(delta)) {
-        delta 
+        delta
     } else if (is_direct) {
         0.0
     } else {
@@ -51,7 +51,7 @@ run_scenario <- function(
     } else {
         fit <- lowess(x, y, f = frac, iter = iter, delta = val_delta)
     }
-    
+
     fitted <- fit$y # These are the smoothed values
 
     # Create output structure
@@ -126,77 +126,77 @@ main <- function() {
     data <- generate_data(n = 10, kind = "linear")
     run_scenario("01_tiny_linear", data$x, data$y, frac = 0.8, iter = 0)
 
-    # 3. Sine Standard
+    # 2. Sine Standard
     data <- generate_data(n = 100, kind = "sine", noise = 0.1)
-    run_scenario("03_sine_standard", data$x, data$y, frac = 0.3, iter = 0)
+    run_scenario("02_sine_standard", data$x, data$y, frac = 0.3, iter = 0)
 
-    # 4. Sine Robust
+    # 3. Sine Robust
     data <- generate_data(n = 100, kind = "sine", outlier_ratio = 0.05)
-    run_scenario("04_sine_robust", data$x, data$y, frac = 0.3, iter = 4)
+    run_scenario("03_sine_robust", data$x, data$y, frac = 0.3, iter = 4)
 
-    # 6. Large scale
+    # 4. Large scale
     data <- generate_data(n = 500, kind = "sine")
-    run_scenario("06_large_scale", data$x, data$y, frac = 0.1, iter = 0)
+    run_scenario("04_large_scale", data$x, data$y, frac = 0.1, iter = 0)
 
-    # 7. High Smoothness
+    # 5. High Smoothness
     data <- generate_data(n = 100, kind = "linear", noise = 0.5)
-    run_scenario("07_high_smoothness", data$x, data$y, frac = 0.9, iter = 0)
+    run_scenario("05_high_smoothness", data$x, data$y, frac = 0.9, iter = 0)
 
-    # 8. Low Smoothness
+    # 6. Low Smoothness
     data <- generate_data(n = 100, kind = "sine")
-    run_scenario("08_low_smoothness", data$x, data$y,
+    run_scenario("06_low_smoothness", data$x, data$y,
         frac = 0.05, iter = 0,
         surface = "direct"
     )
 
-    # 10. Constant Function
+    # 7. Constant Function
     data <- generate_data(n = 50, kind = "constant")
-    run_scenario("10_constant", data$x, data$y, frac = 0.5, iter = 0)
+    run_scenario("07_constant", data$x, data$y, frac = 0.5, iter = 0)
 
-    # 11. Step Function
+    # 8. Step Function
     data <- generate_data(n = 100, kind = "step")
-    run_scenario("11_step_func", data$x, data$y, frac = 0.4, iter = 0)
+    run_scenario("08_step_func", data$x, data$y, frac = 0.4, iter = 0)
 
-    # 12. End-effects Left
+    # 9. End-effects Left
     data <- generate_data(n = 50, kind = "linear", noise = 0.1)
-    run_scenario("12_end_effects_left", data$x, data$y,
+    run_scenario("09_end_effects_left", data$x, data$y,
         frac = 0.3, iter = 0,
         notes = "Check left boundary"
     )
 
-    # 13. End-effects Right (same data, just naming)
-    run_scenario("13_end_effects_right", data$x, data$y,
+    # 10. End-effects Right (same data, just naming)
+    run_scenario("10_end_effects_right", data$x, data$y,
         frac = 0.3, iter = 0,
         notes = "Check right boundary"
     )
 
-    # 14. Sparse Data
+    # 11. Sparse Data
     data <- generate_data(
         n = 20,
         range_max = 100.0,
         kind = "linear",
         noise = 1.0
     )
-    run_scenario("14_sparse_data", data$x, data$y, frac = 0.6, iter = 0)
+    run_scenario("11_sparse_data", data$x, data$y, frac = 0.6, iter = 0)
 
-    # 15. Dense Data
+    # 12. Dense Data
     data <- generate_data(n = 1000, kind = "sine", noise = 0.1)
-    run_scenario("15_dense_data", data$x, data$y,
+    run_scenario("12_dense_data", data$x, data$y,
         frac = 0.01, iter = 0,
         surface = "direct"
     )
 
-    # 18. Iter 2 Check
+    # 13. Iter 2 Check
     data <- generate_data(n = 100, kind = "sine", outlier_ratio = 0.05)
-    run_scenario("18_iter_2", data$x, data$y, frac = 0.4, iter = 2)
+    run_scenario("13_iter_2", data$x, data$y, frac = 0.4, iter = 2)
 
-    # 19. Interpolate Exact
+    # 14. Interpolate Exact
     data <- generate_data(n = 50, kind = "linear")
-    run_scenario("19_interpolate_exact", data$x, data$y, frac = 0.5, iter = 0)
+    run_scenario("14_interpolate_exact", data$x, data$y, frac = 0.5, iter = 0)
 
-    # 20. Zero Variance
+    # 15. Zero Variance
     data <- generate_data(n = 10, kind = "constant") # all 5.0
-    run_scenario("20_zero_variance", data$x, data$y, frac = 0.5, iter = 0)
+    run_scenario("15_zero_variance", data$x, data$y, frac = 0.5, iter = 0)
 
     cat("\nAll supported lowess scenarios completed successfully!\n")
 }
