@@ -481,12 +481,20 @@ test_that("RE7.0/RE7.1 noiseless exact predictor and predictor+response", {
     # RE7.1a: fitting exact data is at least as fast as noisy equivalent.
     # (See also RE2.4b timing expectations; exact data should not be slower.)
     d_noisy <- generate_validation_data(n = 200, kind = "linear", noise = 0.05)
-    t_exact <- system.time({
+
+    # Warm up both paths so JIT/tier compilation isn't charged to a measurement.
+    fit(Lowess(fraction = 0.3), as.double(d_lin$x), as.double(d_lin$y))
+    fit(Lowess(fraction = 0.3), as.double(d_noisy$x), as.double(d_noisy$y))
+
+    # Minimum elapsed over several repetitions filters out GC pauses and
+    # scheduler noise that a single `system.time()` cannot distinguish from a
+    # real slowdown (this test flaked on CI from an 11 ms measurement jitter).
+    t_exact <- min(replicate(5L, system.time(
         fit(Lowess(fraction = 0.3), as.double(d_lin$x), as.double(d_lin$y))
-    })["elapsed"]
-    t_noisy <- system.time({
+    )["elapsed"]))
+    t_noisy <- min(replicate(5L, system.time(
         fit(Lowess(fraction = 0.3), as.double(d_noisy$x), as.double(d_noisy$y))
-    })["elapsed"]
+    )["elapsed"]))
     # Allow small measurement overhead; exact must not be meaningfully slower.
     expect_lte(as.numeric(t_exact), as.numeric(t_noisy) + 0.05)
 })
