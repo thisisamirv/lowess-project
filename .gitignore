@@ -131,6 +131,7 @@ Manifest.toml
 # C++
 compile_flags.txt
 *.obj
+spack/
 
 # Hugo (Go docs)
 bindings/go/docs-site/public/

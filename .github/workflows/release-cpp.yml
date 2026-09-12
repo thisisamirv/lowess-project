@@ -85,6 +85,11 @@ jobs:
           sudo apt-get install -y musl-tools
           echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=musl-gcc" >> "$GITHUB_ENV"
           echo "CC_aarch64_unknown_linux_musl=musl-gcc" >> "$GITHUB_ENV"
+          # The default static-musl target drops the `cdylib` crate type (a
+          # fully-static build has no dynamic library to emit), which would
+          # silently produce no `.so`. Disable crt-static so musl-gcc links a
+          # dynamic library, matching the Alpine-based x64 musl build.
+          echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_RUSTFLAGS=-C target-feature=-crt-static" >> "$GITHUB_ENV"
 
       - name: Build C++ Library
         working-directory: bindings/cpp
