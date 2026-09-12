@@ -17,6 +17,8 @@ Objects returned by fit methods and helper functions.
 
 - [`fit()`](https://thisisamirv.github.io/lowess-project/r/reference/fit.md)
   : Fit a LOWESS model to data
+- [`predict(`*`<Lowess>`*`)`](https://thisisamirv.github.io/lowess-project/r/reference/predict.Lowess.md)
+  : Predict from a fitted LOWESS model at out-of-sample points
 - [`process_chunk()`](https://thisisamirv.github.io/lowess-project/r/reference/process_chunk.md)
   : Process a data chunk through a streaming LOWESS model
 - [`finalize()`](https://thisisamirv.github.io/lowess-project/r/reference/finalize.md)

@@ -27,6 +27,10 @@ StreamingLowess(
     return_diagnostics = FALSE,
     return_residuals = FALSE,
     return_robustness_weights = FALSE,
+    return_derivative = FALSE,
+    return_se = FALSE,
+    confidence_intervals = NULL,
+    prediction_intervals = NULL,
     merge_strategy = "weighted_average",
     parallel = TRUE,
     missing = "error"
@@ -116,6 +120,25 @@ StreamingLowess(
 
   Logical; if `TRUE`, return per-point robustness weights. Default:
   `FALSE`.
+
+- return_derivative:
+
+  Logical; if `TRUE`, return per-point local fit derivative (slope) in
+  the result. Default: `FALSE`.
+
+- return_se:
+
+  Logical; include standard errors in the result. Default: `FALSE`.
+
+- confidence_intervals:
+
+  Confidence level for confidence intervals (e.g. 0.95), or `NULL`
+  (default) to disable.
+
+- prediction_intervals:
+
+  Confidence level for prediction intervals (e.g. 0.95), or `NULL`
+  (default) to disable.
 
 - merge_strategy:
 

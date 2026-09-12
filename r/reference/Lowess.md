@@ -21,6 +21,7 @@ Lowess(
     return_diagnostics = FALSE,
     return_residuals = FALSE,
     return_robustness_weights = FALSE,
+    return_derivative = FALSE,
     zero_weight_fallback = "use_local_mean",
     auto_converge = NULL,
     cv_fractions = NULL,
@@ -31,7 +32,8 @@ Lowess(
     return_se = FALSE,
     return_sorted = FALSE,
     backend = "cpu",
-    missing = "error"
+    missing = "error",
+    retain_model = FALSE
 )
 ```
 
@@ -106,6 +108,11 @@ Lowess(
   Logical; if `TRUE`, return per-point robustness weights. Default:
   `FALSE`.
 
+- return_derivative:
+
+  Logical; if `TRUE`, return per-point local fit derivative (slope) in
+  the result. Default: `FALSE`.
+
 - zero_weight_fallback:
 
   Fallback policy when all robustness weights drop to zero:
@@ -166,6 +173,12 @@ Lowess(
   Policy for non-finite (NaN/Infinity) values in input data: `"error"`
   (default) raises an error, `"drop"` silently removes affected
   observations before fitting.
+
+- retain_model:
+
+  Logical; if `TRUE`, retain the fitted model's training data, enabling
+  [`predict.Lowess`](https://thisisamirv.github.io/lowess-project/r/reference/predict.Lowess.md)
+  for out-of-sample prediction. Default: `FALSE`.
 
 ## Value
 

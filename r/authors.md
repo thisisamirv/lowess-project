@@ -5,19 +5,23 @@
 - **Amir Valizadeh**. Author, maintainer, funder.
   [](https://orcid.org/0000-0001-5983-8527)
 
+- **Aleksei Chirkunov**. Reviewer.  
+  Reviewed the package for rOpenSci (GitHub: @alexzerg), see
+  \<<https://github.com/ropensci/software-review/issues/769>\>
+
 ## Citation
 
 Source:
 [`inst/CITATION`](https://github.com/thisisamirv/lowess-project/blob/main/inst/CITATION)
 
 Valizadeh A (2026). *High-Performance LOWESS Smoothing for R*. R package
-version 4.0.0, <https://github.com/thisisamirv/lowess-project>.
+version 4.1.0, <https://github.com/thisisamirv/lowess-project>.
 
     @Manual{,
       title = {High-Performance LOWESS Smoothing for R},
       author = {Amir Valizadeh},
       year = {2026},
-      note = {R package version 4.0.0},
+      note = {R package version 4.1.0},
       url = {https://github.com/thisisamirv/lowess-project},
     }
 
@@ -97,7 +101,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Alexis Beingessner <a.beingessner@gmail.com>
     License: Apache-2.0 OR MIT
     ----------------------------------------
-    Package: bitflags (2.13.1)
+    Package: bitflags (2.13.2)
     Authors: The Rust Project Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
@@ -113,7 +117,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Lokathor <zefria@gmail.com>
     License: Zlib OR Apache-2.0 OR MIT
     ----------------------------------------
-    Package: bytemuck_derive (1.12.0)
+    Package: bytemuck_derive (1.12.1)
     Authors: Lokathor <zefria@gmail.com>
     License: Zlib OR Apache-2.0 OR MIT
     ----------------------------------------
@@ -169,7 +173,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Nick Fitzgerald <fitzgen@gmail.com>
     License: Apache-2.0/MIT
     ----------------------------------------
-    Package: convert_case (0.11.0)
+    Package: convert_case (0.12.0)
     Authors: rutrum <dave@rutrum.net>
     License: MIT
     ----------------------------------------
@@ -365,23 +369,23 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: gfx-rs developers
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: napi (3.12.2)
+    Package: napi (3.12.4)
     Authors: Nathan Sobo <nathan@github.com>, Yinan Long <lynweklm@gmail.com>
     License: MIT
     ----------------------------------------
-    Package: napi-build (2.4.1)
+    Package: napi-build (2.4.2)
     Authors: LongYinan <lynweklm@gmail.com>
     License: MIT
     ----------------------------------------
-    Package: napi-derive (3.6.3)
+    Package: napi-derive (3.6.5)
     Authors: LongYinan <lynweklm@gmail.com>, Forehalo <forehalo@gmail.com>
     License: MIT
     ----------------------------------------
-    Package: napi-derive-backend (6.1.2)
+    Package: napi-derive-backend (6.1.3)
     Authors:
     License: MIT
     ----------------------------------------
-    Package: napi-sys (3.3.0)
+    Package: napi-sys (3.3.1)
     Authors: LongYinan <lynweklm@gmail.com>
     License: MIT
     ----------------------------------------
@@ -625,7 +629,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Carl Lerche <me@carllerche.com>
     License: MIT
     ----------------------------------------
-    Package: smallvec (1.16.0)
+    Package: smallvec (1.16.1)
     Authors: The Servo Project Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
@@ -825,11 +829,11 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors:
     License: MIT
     ----------------------------------------
-    Package: zerocopy (0.8.56)
+    Package: zerocopy (0.8.57)
     Authors:
     License: BSD-2-Clause OR Apache-2.0 OR MIT
     ----------------------------------------
-    Package: zerocopy-derive (0.8.56)
+    Package: zerocopy-derive (0.8.57)
     Authors:
     License: BSD-2-Clause OR Apache-2.0 OR MIT
     ----------------------------------------

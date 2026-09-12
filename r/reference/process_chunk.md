@@ -43,5 +43,5 @@ process_chunk(model, x[1:50], y[1:50])
 #> <LowessResult>
 #>   Points:            45 
 #>   Fraction Used:     0.2 
-#>   Iterations Used:   0 
+#>   Iterations Used:   3 
 ```

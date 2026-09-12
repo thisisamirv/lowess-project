@@ -12,7 +12,7 @@ OnlineLowess(
     window_capacity = 1000L,
     min_points = 2L,
     ...,
-    iterations = 3L,
+    iterations = 0L,
     delta = NULL,
     weight_function = "tricube",
     robustness_method = "bisquare",
@@ -22,6 +22,10 @@ OnlineLowess(
     update_mode = "incremental",
     auto_converge = NULL,
     return_robustness_weights = FALSE,
+    return_derivative = FALSE,
+    return_se = FALSE,
+    confidence_intervals = NULL,
+    prediction_intervals = NULL,
     missing = "error"
 )
 ```
@@ -49,8 +53,9 @@ OnlineLowess(
 
 - iterations:
 
-  Number of robustness iterations, between 0 and 1000 (inclusive).
-  Default: 3.
+  Number of robustness iterations. Requires `update_mode = "full"`; the
+  default `"incremental"` mode is a non-robust single-point fit that
+  ignores robustness iterations. Default: 0.
 
 - delta:
 
@@ -93,8 +98,9 @@ OnlineLowess(
 - update_mode:
 
   Window update strategy: `"incremental"` (default; alias: `"single"`)
-  updates only the newest point; `"full"` (alias: `"resmooth"`)
-  re-smooths all window points after each addition.
+  updates only the newest point and does not run robustness iterations;
+  `"full"` (alias: `"resmooth"`) re-smooths all window points after each
+  addition and supports robustness iterations.
 
 - auto_converge:
 
@@ -105,6 +111,26 @@ OnlineLowess(
 
   Logical; if `TRUE`, return per-point robustness weights. Default:
   `FALSE`.
+
+- return_derivative:
+
+  Logical; if `TRUE`, return per-point local fit derivative (slope) in
+  the result. Default: `FALSE`.
+
+- return_se:
+
+  Logical; include standard errors in the result. Requires
+  `update_mode = "full"`. Default: `FALSE`.
+
+- confidence_intervals:
+
+  Confidence level for confidence intervals (e.g. 0.95), or `NULL`
+  (default) to disable. Requires `update_mode = "full"`.
+
+- prediction_intervals:
+
+  Confidence level for prediction intervals (e.g. 0.95), or `NULL`
+  (default) to disable. Requires `update_mode = "full"`.
 
 - missing:
 

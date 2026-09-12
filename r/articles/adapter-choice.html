@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rfastlowess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">4.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">4.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -165,7 +165,7 @@ features.</strong></p>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"95% CI at midpoint: ["</span>, <span class="va">result</span><span class="op">$</span><span class="va">confidence_lower</span><span class="op">[</span><span class="fl">50</span><span class="op">]</span>, <span class="st">", "</span>,</span>
 <span>    <span class="va">result</span><span class="op">$</span><span class="va">confidence_upper</span><span class="op">[</span><span class="fl">50</span><span class="op">]</span>, <span class="st">"]\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; 95% CI at midpoint: [ -0.04604079 ,  0.1249563 ]</span></span></code></pre></div>
+<span><span class="co">#&gt; 95% CI at midpoint: [ -0.03641244 ,  0.1153279 ]</span></span></code></pre></div>
 <hr>
 </div>
 </div>
@@ -257,7 +257,7 @@ features.</strong></p>
 <span><span class="co">#&gt; &lt;LowessResult&gt;</span></span>
 <span><span class="co">#&gt;   Points:            0 </span></span>
 <span><span class="co">#&gt;   Fraction Used:     0.3 </span></span>
-<span><span class="co">#&gt;   Iterations Used:   0</span></span>
+<span><span class="co">#&gt;   Iterations Used:   2</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/finalize.html">finalize</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Smoothed y[0]:"</span>, <span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="st">"\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Smoothed y[0]: 0.2578452</span></span></code></pre></div>
@@ -343,7 +343,6 @@ chunk to retrieve the buffered tail.</p>
 <span></span>
 <span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/OnlineLowess.html">OnlineLowess</a></span><span class="op">(</span></span>
 <span>    fraction <span class="op">=</span> <span class="fl">0.2</span>,</span>
-<span>    iterations <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>    window_capacity <span class="op">=</span> <span class="fl">100</span>,</span>
 <span>    min_points <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>    update_mode <span class="op">=</span> <span class="st">"incremental"</span></span>
@@ -423,7 +422,7 @@ chunk to retrieve the buffered tail.</p>
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
-<span><span class="co">#&gt; Running under: Ubuntu 24.04.4 LTS</span></span>
+<span><span class="co">#&gt; Running under: Ubuntu 24.04.5 LTS</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Matrix products: default</span></span>
 <span><span class="co">#&gt; BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
@@ -442,11 +441,11 @@ chunk to retrieve the buffered tail.</p>
 <span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; other attached packages:</span></span>
-<span><span class="co">#&gt; [1] rfastlowess_4.0.0</span></span>
+<span><span class="co">#&gt; [1] rfastlowess_4.1.0</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
 <span><span class="co">#&gt;  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    </span></span>
-<span><span class="co">#&gt;  [5] xfun_0.60         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  </span></span>
+<span><span class="co">#&gt;  [5] xfun_0.60         cachem_1.1.0      knitr_1.52        htmltools_0.5.9  </span></span>
 <span><span class="co">#&gt;  [9] rmarkdown_2.32    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      </span></span>
 <span><span class="co">#&gt; [13] pkgdown_2.2.1     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2</span></span>
 <span><span class="co">#&gt; [17] compiler_4.6.1    tools_4.6.1       ragg_1.5.2        bslib_0.12.0     </span></span>

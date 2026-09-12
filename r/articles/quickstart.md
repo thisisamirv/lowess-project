@@ -47,9 +47,9 @@ result <- fit(model, x, y)
 cat("Smoothed (first 5):", head(result$y, 5), "\n")
 #> Smoothed (first 5): 0.4722882 0.4822189 0.4927151 0.5037882 0.5153461
 cat("CI lower (first 5):", head(result$confidence_lower, 5), "\n")
-#> CI lower (first 5): 0.4029128 0.4444254 0.4229649 0.4249155 0.4334419
+#> CI lower (first 5): 0.4119072 0.41897 0.4265719 0.4347548 0.4434627
 cat("CI upper (first 5):", head(result$confidence_upper, 5), "\n")
-#> CI upper (first 5): 0.5416635 0.5200124 0.5624654 0.5826608 0.5972503
+#> CI upper (first 5): 0.5326692 0.5454677 0.5588584 0.5728215 0.5872295
 cat("R2:", result$diagnostics$r_squared, "\n")
 #> R2: 0.7841212
 ```
@@ -132,7 +132,7 @@ cat(sprintf("Smoothed %d points in streaming mode\n", length(result$y)))
 sessionInfo()
 #> R version 4.6.1 (2026-06-24)
 #> Platform: x86_64-pc-linux-gnu
-#> Running under: Ubuntu 24.04.4 LTS
+#> Running under: Ubuntu 24.04.5 LTS
 #> 
 #> Matrix products: default
 #> BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
@@ -151,11 +151,11 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] rfastlowess_4.0.0
+#> [1] rfastlowess_4.1.0
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    
-#>  [5] xfun_0.60         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
+#>  [5] xfun_0.60         cachem_1.1.0      knitr_1.52        htmltools_0.5.9  
 #>  [9] rmarkdown_2.32    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      
 #> [13] pkgdown_2.2.1     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2
 #> [17] compiler_4.6.1    tools_4.6.1       ragg_1.5.2        bslib_0.12.0     

@@ -62,7 +62,7 @@ cat(sprintf(
     "95%% CI: [%.4f, %.4f]\n",
     result$confidence_lower[1], result$confidence_upper[1]
 ))
-#> 95% CI: [51.6773, 68.7372]
+#> 95% CI: [53.2753, 67.1392]
 ```
 
 ------------------------------------------------------------------------
@@ -127,7 +127,7 @@ process_chunk(model, positions, coverage)
 #> <LowessResult>
 #>   Points:            991 
 #>   Fraction Used:     0.05 
-#>   Iterations Used:   0
+#>   Iterations Used:   3
 result <- finalize(model)
 cat(sprintf("y[0]: %.4f\n", result$y[1]))
 #> y[0]: 41.2977
@@ -170,7 +170,7 @@ cat(sprintf("y[0]: %.4f\n", result$y[1]))
 sessionInfo()
 #> R version 4.6.1 (2026-06-24)
 #> Platform: x86_64-pc-linux-gnu
-#> Running under: Ubuntu 24.04.4 LTS
+#> Running under: Ubuntu 24.04.5 LTS
 #> 
 #> Matrix products: default
 #> BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
@@ -189,11 +189,11 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] rfastlowess_4.0.0
+#> [1] rfastlowess_4.1.0
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    
-#>  [5] xfun_0.60         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
+#>  [5] xfun_0.60         cachem_1.1.0      knitr_1.52        htmltools_0.5.9  
 #>  [9] rmarkdown_2.32    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      
 #> [13] pkgdown_2.2.1     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2
 #> [17] compiler_4.6.1    tools_4.6.1       ragg_1.5.2        bslib_0.12.0     

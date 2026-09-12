@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rfastlowess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">4.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">4.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -34,6 +34,35 @@
       <small>Source: <a href="https://github.com/thisisamirv/lowess-project/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="4.1.0" id="rfastlowess-410">rfastlowess 4.1.0<a class="anchor" aria-label="anchor" href="#rfastlowess-410"></a></h2>
+<div class="section level3">
+<h3 id="added-4-1-0">Added<a class="anchor" aria-label="anchor" href="#added-4-1-0"></a></h3>
+<ul><li>Added <code>retain_model</code> and <code><a href="../reference/predict.Lowess.html">predict.Lowess()</a></code> for out-of-sample prediction.</li>
+<li>Added <code>return_derivative</code> to <code><a href="../reference/Lowess.html">Lowess()</a></code>, <code><a href="../reference/StreamingLowess.html">StreamingLowess()</a></code>, and <code><a href="../reference/OnlineLowess.html">OnlineLowess()</a></code>.</li>
+<li>Added <code>return_se</code>/<code>confidence_intervals</code>/<code>prediction_intervals</code> to <code><a href="../reference/StreamingLowess.html">StreamingLowess()</a></code> and <code><a href="../reference/OnlineLowess.html">OnlineLowess()</a></code>; Online requires <code>update_mode = "full"</code>.</li>
+<li>Added stored golden reference fixtures under <code>tests/testthat/fixtures/</code> (with a <code>make_reference.R</code> regeneration script and a <code>PROVENANCE.txt</code> provenance stamp) pinning the output of engine paths with no external reference — the default <code>boundary_policy = "extend"</code>, intervals, robustness weights, streaming, and online — verified by <code>test-golden.R</code> within a <code>1e-10</code> tolerance (srrstats G5.4c).</li>
+<li>Added explicit G5.9a test: <code>.Machine$double.eps</code> scale noise on input <code>y</code> produces no meaningful change in smoothed output (verified via <code>expect_equal(..., tolerance = 1e-10)</code>).</li>
+<li>Added explicit tests for RE7.0/RE7.0a (noiseless exact predictor relationships, including identical-x and degenerate cases) and RE7.1/RE7.1a (noiseless exact y = f(x) relationships with timing comparison) in <code>tests/testthat/test-validation.R</code>. Removed incorrect <code>@srrstatsNA</code> tags and added proper <code>@srrstats</code> claims in <code>R/srr-stats-standards.R</code> and test headers. These tests confirm graceful handling of perfectly noiseless input and that exact data fits at least as fast as noisy equivalents.</li>
+<li>Added musl release binaries for Python, C++, Go, and Julia.</li>
+<li>Added bundled native libraries for the Java binding across 8 platforms, with runtime musl detection and auto-extraction.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="fixed-4-1-0">Fixed<a class="anchor" aria-label="anchor" href="#fixed-4-1-0"></a></h3>
+<ul><li>
+<code>dev/bump_version.py</code> now also updates the Go module’s <code>/vN</code> major-version-suffix path across <code>go.mod</code> files, doc snippets, the doc-snippet runner, and README/docs badges whenever a version bump crosses a major version boundary, so this doesn’t regress on the next major release.</li>
+<li>
+<code>dev/bump_version.py</code> now also updates the Maven dependency example version in <code>bindings/java/docs/modules/ROOT/pages/introduction/installation.adoc</code>, which was previously left stale after a version bump.</li>
+<li>Changed the <code>iterations</code> default for <code>OnlineLowess</code> from <code>3</code> to <code>0</code> across every binding (R, Python, Julia, C++, Go, Java, Node.js, WASM), matching the default <code>update_mode = "incremental"</code> non-robust single-point fit; robustness iterations now require <code>update_mode = "full"</code>.</li>
+<li>
+<code>dev/bump_version.py</code> now updates the Go <code>/vN</code> path and the Java Maven example version.</li>
+<li>Fixed inconsistent Node.js naming in READMEs, doc-site home pages, and <code>CITATION.cff</code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changed-4-1-0">Changed<a class="anchor" aria-label="anchor" href="#changed-4-1-0"></a></h3>
+<ul><li>Hoisted fully-qualified imports to top-level <code>use</code> statements across crates and bindings.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="4.0.0" id="rfastlowess-400">rfastlowess 4.0.0<a class="anchor" aria-label="anchor" href="#rfastlowess-400"></a></h2>
 <div class="section level3">
@@ -150,7 +179,7 @@
 <li>Simplified <code>bindings/r/Makefile</code>: replaced <code>Cargo.toml.orig</code> save/restore vendoring with <code>src/vendor-update.sh</code>; made <code>[workspace]</code> permanent in <code>src/Cargo.toml</code>; removed Bioconductor dependencies, redundant <code>cargo fmt --check</code>, <code>NAMESPACE</code> indentation post-processing, and <code><a href="https://pkgdown.r-lib.org/reference/build_site.html" class="external-link">pkgdown::build_site</a></code> from the dev workflow.</li>
 <li>Moved R documentation from ReadTheDocs to GitHub Pages, served by pkgdown at <a href="https://thisisamirv.github.io/lowess-project/r/" class="uri">https://thisisamirv.github.io/lowess-project/r/</a>. The ReadTheDocs site no longer includes R-specific content.</li>
 <li>Changed R version dependency to 4.4.0 due to issues with installing Bioconducter packages on R &lt; 4.4.0.</li>
-<li>Replaced the multi-step <code>install.packages</code> / <code><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">BiocManager::install</a></code> package installation logic in <code>bindings/r/Makefile</code> with a single <a href="https://pak.r-lib.org/" class="external-link"><code>pak</code></a>-based block. <code>pak</code> handles RSPM binary vs source selection automatically (including Linux), skips already-installed packages, and installs CRAN, Bioconductor (<code>bioc::</code> prefix), and R-universe packages in one call.</li>
+<li>Replaced the multi-step <code>install.packages</code> / <code>BiocManager::install</code> package installation logic in <code>bindings/r/Makefile</code> with a single <a href="https://pak.r-lib.org/" class="external-link"><code>pak</code></a>-based block. <code>pak</code> handles RSPM binary vs source selection automatically (including Linux), skips already-installed packages, and installs CRAN, Bioconductor (<code>bioc::</code> prefix), and R-universe packages in one call.</li>
 <li>
 <code>make r</code> (<code>default:</code>) now runs <code>R CMD INSTALL $(R_DIR)</code> directly; R’s <code>configure</code> script handles Rust compilation from the committed <code>vendor.tar.xz</code>. The full dev workflow moves to <code>make r-dev</code>.</li>
 </ul></div>

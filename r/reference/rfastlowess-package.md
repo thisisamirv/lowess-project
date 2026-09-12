@@ -34,6 +34,13 @@ Authors:
 - Amir Valizadeh <thisisamirv@gmail.com>
   ([ORCID](https://orcid.org/0000-0001-5983-8527)) \[funder\]
 
+Other contributors:
+
+- Aleksei Chirkunov (Reviewed the package for rOpenSci (GitHub:
+  @alexzerg), see
+  \<https://github.com/ropensci/software-review/issues/769\>)
+  \[reviewer\]
+
 ## Examples
 
 ``` r

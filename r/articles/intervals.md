@@ -8,8 +8,10 @@ intervals](../reference/figures/intervals_comparison.svg)
 Confidence and prediction intervals
 
 > **Adapter support:** Confidence and prediction intervals are available
-> in **Batch** mode only. Streaming and Online modes do not support
-> intervals.
+> in **Batch** mode, **Streaming** mode (computed per chunk and merged
+> across overlap boundaries via `merge_strategy`, like
+> `y`/`derivative`), and **Online** mode when `update_mode = "full"` is
+> set (errors if combined with the default `"incremental"` mode).
 
 | Type           | Represents                 | Width  | Use               |
 |----------------|----------------------------|--------|-------------------|
@@ -47,7 +49,7 @@ lines(result$x, result$confidence_upper, col = "blue", lty = 2)
 
 cat("95% CI at midpoint: [", result$confidence_lower[50], ", ",
     result$confidence_upper[50], "]\n")
-#> 95% CI at midpoint: [ -0.04604079 ,  0.1249563 ]
+#> 95% CI at midpoint: [ -0.03641244 ,  0.1153279 ]
 ```
 
 ------------------------------------------------------------------------
@@ -80,7 +82,7 @@ lines(result$x, result$prediction_upper, col = "red", lty = 2)
 
 cat("Prediction bounds: [", result$prediction_lower[1], ", ",
     result$prediction_upper[1], "]\n")
-#> Prediction bounds: [ -0.1534391 ,  1.098015 ]
+#> Prediction bounds: [ -0.1525059 ,  1.097082 ]
 ```
 
 ------------------------------------------------------------------------
@@ -128,7 +130,7 @@ legend("topright",
 
 cat("95% CI at midpoint: [", result$confidence_lower[50], ", ",
     result$confidence_upper[50], "]\n")
-#> 95% CI at midpoint: [ -0.04604079 ,  0.1249563 ]
+#> 95% CI at midpoint: [ -0.03641244 ,  0.1153279 ]
 ```
 
 ------------------------------------------------------------------------
@@ -150,7 +152,7 @@ model <- Lowess(fraction = 0.5, confidence_intervals = 0.99)
 result <- fit(model, x, y)
 cat("99% CI at midpoint: [", result$confidence_lower[50], ", ",
     result$confidence_upper[50], "]\n")
-#> 99% CI at midpoint: [ -0.07291176 ,  0.1518273 ]
+#> 99% CI at midpoint: [ -0.06025736 ,  0.1391729 ]
 ```
 
 ------------------------------------------------------------------------
@@ -164,29 +166,29 @@ Access standard errors directly (available when intervals are computed):
 model <- Lowess(fraction = 0.5, return_se = TRUE)
 result <- fit(model, x, y)
 cat("Standard errors (first 5):", head(result$standard_errors, 5), "\n")
-#> Standard errors (first 5): 0.0353956 0.0192824 0.03558686 0.04024116 0.04178786
+#> Standard errors (first 5): 0.03080664 0.03226983 0.03374655 0.03522111 0.03667521
 ```
 
 ------------------------------------------------------------------------
 
 ## Availability
 
-> **Batch Mode Only:** Confidence and prediction intervals are only
-> available in **Batch** mode. Streaming and Online modes do not support
-> intervals.
+> **Supported In All Three Adapters:** Confidence and prediction
+> intervals are available in **Batch**, **Streaming**, and **Online**
+> mode (`update_mode = "full"` only).
 
-| Feature              | Batch | Streaming | Online |
-|----------------------|-------|-----------|--------|
-| Confidence intervals | ✓     | ✗         | ✗      |
-| Prediction intervals | ✓     | ✗         | ✗      |
-| Standard errors      | ✓     | ✗         | ✗      |
+| Feature              | Batch | Streaming | Online                          |
+|----------------------|-------|-----------|---------------------------------|
+| Confidence intervals | ✓     | ✓         | ✓ (`update_mode = "full"` only) |
+| Prediction intervals | ✓     | ✓         | ✓ (`update_mode = "full"` only) |
+| Standard errors      | ✓     | ✓         | ✓ (`update_mode = "full"` only) |
 
 ``` r
 
 sessionInfo()
 #> R version 4.6.1 (2026-06-24)
 #> Platform: x86_64-pc-linux-gnu
-#> Running under: Ubuntu 24.04.4 LTS
+#> Running under: Ubuntu 24.04.5 LTS
 #> 
 #> Matrix products: default
 #> BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
@@ -205,11 +207,11 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] rfastlowess_4.0.0
+#> [1] rfastlowess_4.1.0
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    
-#>  [5] xfun_0.60         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
+#>  [5] xfun_0.60         cachem_1.1.0      knitr_1.52        htmltools_0.5.9  
 #>  [9] rmarkdown_2.32    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      
 #> [13] pkgdown_2.2.1     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2
 #> [17] compiler_4.6.1    tools_4.6.1       ragg_1.5.2        bslib_0.12.0     

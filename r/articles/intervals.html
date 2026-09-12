@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rfastlowess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">4.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">4.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -70,8 +70,12 @@
 </div>
 <blockquote>
 <p><strong>Adapter support:</strong> Confidence and prediction intervals
-are available in <strong>Batch</strong> mode only. Streaming and Online
-modes do not support intervals.</p>
+are available in <strong>Batch</strong> mode, <strong>Streaming</strong>
+mode (computed per chunk and merged across overlap boundaries via
+<code>merge_strategy</code>, like
+<code>y</code>/<code>derivative</code>), and <strong>Online</strong>
+mode when <code>update_mode = "full"</code> is set (errors if combined
+with the default <code>"incremental"</code> mode).</p>
 </blockquote>
 <table class="table">
 <colgroup>
@@ -127,7 +131,7 @@ modes do not support intervals.</p>
 <code class="sourceCode R"><span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"95% CI at midpoint: ["</span>, <span class="va">result</span><span class="op">$</span><span class="va">confidence_lower</span><span class="op">[</span><span class="fl">50</span><span class="op">]</span>, <span class="st">", "</span>,</span>
 <span>    <span class="va">result</span><span class="op">$</span><span class="va">confidence_upper</span><span class="op">[</span><span class="fl">50</span><span class="op">]</span>, <span class="st">"]\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; 95% CI at midpoint: [ -0.04604079 ,  0.1249563 ]</span></span></code></pre></div>
+<span><span class="co">#&gt; 95% CI at midpoint: [ -0.03641244 ,  0.1153279 ]</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -153,7 +157,7 @@ modes do not support intervals.</p>
 <code class="sourceCode R"><span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Prediction bounds: ["</span>, <span class="va">result</span><span class="op">$</span><span class="va">prediction_lower</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="st">", "</span>,</span>
 <span>    <span class="va">result</span><span class="op">$</span><span class="va">prediction_upper</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="st">"]\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Prediction bounds: [ -0.1534391 ,  1.098015 ]</span></span></code></pre></div>
+<span><span class="co">#&gt; Prediction bounds: [ -0.1525059 ,  1.097082 ]</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -194,7 +198,7 @@ modes do not support intervals.</p>
 <code class="sourceCode R"><span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"95% CI at midpoint: ["</span>, <span class="va">result</span><span class="op">$</span><span class="va">confidence_lower</span><span class="op">[</span><span class="fl">50</span><span class="op">]</span>, <span class="st">", "</span>,</span>
 <span>    <span class="va">result</span><span class="op">$</span><span class="va">confidence_upper</span><span class="op">[</span><span class="fl">50</span><span class="op">]</span>, <span class="st">"]\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; 95% CI at midpoint: [ -0.04604079 ,  0.1249563 ]</span></span></code></pre></div>
+<span><span class="co">#&gt; 95% CI at midpoint: [ -0.03641244 ,  0.1153279 ]</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -231,7 +235,7 @@ modes do not support intervals.</p>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"99% CI at midpoint: ["</span>, <span class="va">result</span><span class="op">$</span><span class="va">confidence_lower</span><span class="op">[</span><span class="fl">50</span><span class="op">]</span>, <span class="st">", "</span>,</span>
 <span>    <span class="va">result</span><span class="op">$</span><span class="va">confidence_upper</span><span class="op">[</span><span class="fl">50</span><span class="op">]</span>, <span class="st">"]\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; 99% CI at midpoint: [ -0.07291176 ,  0.1518273 ]</span></span></code></pre></div>
+<span><span class="co">#&gt; 99% CI at midpoint: [ -0.06025736 ,  0.1391729 ]</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -243,16 +247,17 @@ computed):</p>
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Lowess.html">Lowess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.5</span>, return_se <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Standard errors (first 5):"</span>, <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">standard_errors</span>, <span class="fl">5</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Standard errors (first 5): 0.0353956 0.0192824 0.03558686 0.04024116 0.04178786</span></span></code></pre></div>
+<span><span class="co">#&gt; Standard errors (first 5): 0.03080664 0.03226983 0.03374655 0.03522111 0.03667521</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
 <h2 id="availability">Availability<a class="anchor" aria-label="anchor" href="#availability"></a>
 </h2>
 <blockquote>
-<p><strong>Batch Mode Only:</strong> Confidence and prediction intervals
-are only available in <strong>Batch</strong> mode. Streaming and Online
-modes do not support intervals.</p>
+<p><strong>Supported In All Three Adapters:</strong> Confidence and
+prediction intervals are available in <strong>Batch</strong>,
+<strong>Streaming</strong>, and <strong>Online</strong> mode
+(<code>update_mode = "full"</code> only).</p>
 </blockquote>
 <table class="table">
 <thead><tr class="header">
@@ -265,20 +270,20 @@ modes do not support intervals.</p>
 <tr class="odd">
 <td>Confidence intervals</td>
 <td>✓</td>
-<td>✗</td>
-<td>✗</td>
+<td>✓</td>
+<td>✓ (<code>update_mode = "full"</code> only)</td>
 </tr>
 <tr class="even">
 <td>Prediction intervals</td>
 <td>✓</td>
-<td>✗</td>
-<td>✗</td>
+<td>✓</td>
+<td>✓ (<code>update_mode = "full"</code> only)</td>
 </tr>
 <tr class="odd">
 <td>Standard errors</td>
 <td>✓</td>
-<td>✗</td>
-<td>✗</td>
+<td>✓</td>
+<td>✓ (<code>update_mode = "full"</code> only)</td>
 </tr>
 </tbody>
 </table>
@@ -286,7 +291,7 @@ modes do not support intervals.</p>
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
-<span><span class="co">#&gt; Running under: Ubuntu 24.04.4 LTS</span></span>
+<span><span class="co">#&gt; Running under: Ubuntu 24.04.5 LTS</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Matrix products: default</span></span>
 <span><span class="co">#&gt; BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
@@ -305,11 +310,11 @@ modes do not support intervals.</p>
 <span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; other attached packages:</span></span>
-<span><span class="co">#&gt; [1] rfastlowess_4.0.0</span></span>
+<span><span class="co">#&gt; [1] rfastlowess_4.1.0</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
 <span><span class="co">#&gt;  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    </span></span>
-<span><span class="co">#&gt;  [5] xfun_0.60         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  </span></span>
+<span><span class="co">#&gt;  [5] xfun_0.60         cachem_1.1.0      knitr_1.52        htmltools_0.5.9  </span></span>
 <span><span class="co">#&gt;  [9] rmarkdown_2.32    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      </span></span>
 <span><span class="co">#&gt; [13] pkgdown_2.2.1     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2</span></span>
 <span><span class="co">#&gt; [17] compiler_4.6.1    tools_4.6.1       ragg_1.5.2        bslib_0.12.0     </span></span>

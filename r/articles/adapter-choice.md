@@ -54,7 +54,7 @@ model <- Lowess(
 result <- fit(model, x, y)
 cat("95% CI at midpoint: [", result$confidence_lower[50], ", ",
     result$confidence_upper[50], "]\n")
-#> 95% CI at midpoint: [ -0.04604079 ,  0.1249563 ]
+#> 95% CI at midpoint: [ -0.03641244 ,  0.1153279 ]
 ```
 
 ------------------------------------------------------------------------
@@ -105,7 +105,7 @@ process_chunk(model, x, y)
 #> <LowessResult>
 #>   Points:            0 
 #>   Fraction Used:     0.3 
-#>   Iterations Used:   0
+#>   Iterations Used:   2
 result <- finalize(model)
 cat("Smoothed y[0]:", result$y[1], "\n")
 #> Smoothed y[0]: 0.2578452
@@ -152,7 +152,6 @@ y <- sin(x) + 0.1
 
 model <- OnlineLowess(
     fraction = 0.2,
-    iterations = 1,
     window_capacity = 100,
     min_points = 5,
     update_mode = "incremental"
@@ -191,7 +190,7 @@ for (i in seq_along(x)) {
 sessionInfo()
 #> R version 4.6.1 (2026-06-24)
 #> Platform: x86_64-pc-linux-gnu
-#> Running under: Ubuntu 24.04.4 LTS
+#> Running under: Ubuntu 24.04.5 LTS
 #> 
 #> Matrix products: default
 #> BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
@@ -210,11 +209,11 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] rfastlowess_4.0.0
+#> [1] rfastlowess_4.1.0
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    
-#>  [5] xfun_0.60         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
+#>  [5] xfun_0.60         cachem_1.1.0      knitr_1.52        htmltools_0.5.9  
 #>  [9] rmarkdown_2.32    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      
 #> [13] pkgdown_2.2.1     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2
 #> [17] compiler_4.6.1    tools_4.6.1       ragg_1.5.2        bslib_0.12.0     

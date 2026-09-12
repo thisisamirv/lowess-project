@@ -1,5 +1,70 @@
 # Changelog
 
+## rfastlowess 4.1.0
+
+### Added
+
+- Added `retain_model` and
+  [`predict.Lowess()`](https://thisisamirv.github.io/lowess-project/r/reference/predict.Lowess.md)
+  for out-of-sample prediction.
+- Added `return_derivative` to
+  [`Lowess()`](https://thisisamirv.github.io/lowess-project/r/reference/Lowess.md),
+  [`StreamingLowess()`](https://thisisamirv.github.io/lowess-project/r/reference/StreamingLowess.md),
+  and
+  [`OnlineLowess()`](https://thisisamirv.github.io/lowess-project/r/reference/OnlineLowess.md).
+- Added `return_se`/`confidence_intervals`/`prediction_intervals` to
+  [`StreamingLowess()`](https://thisisamirv.github.io/lowess-project/r/reference/StreamingLowess.md)
+  and
+  [`OnlineLowess()`](https://thisisamirv.github.io/lowess-project/r/reference/OnlineLowess.md);
+  Online requires `update_mode = "full"`.
+- Added stored golden reference fixtures under
+  `tests/testthat/fixtures/` (with a `make_reference.R` regeneration
+  script and a `PROVENANCE.txt` provenance stamp) pinning the output of
+  engine paths with no external reference — the default
+  `boundary_policy = "extend"`, intervals, robustness weights,
+  streaming, and online — verified by `test-golden.R` within a `1e-10`
+  tolerance (srrstats G5.4c).
+- Added explicit G5.9a test: `.Machine$double.eps` scale noise on input
+  `y` produces no meaningful change in smoothed output (verified via
+  `expect_equal(..., tolerance = 1e-10)`).
+- Added explicit tests for RE7.0/RE7.0a (noiseless exact predictor
+  relationships, including identical-x and degenerate cases) and
+  RE7.1/RE7.1a (noiseless exact y = f(x) relationships with timing
+  comparison) in `tests/testthat/test-validation.R`. Removed incorrect
+  `@srrstatsNA` tags and added proper `@srrstats` claims in
+  `R/srr-stats-standards.R` and test headers. These tests confirm
+  graceful handling of perfectly noiseless input and that exact data
+  fits at least as fast as noisy equivalents.
+- Added musl release binaries for Python, C++, Go, and Julia.
+- Added bundled native libraries for the Java binding across 8
+  platforms, with runtime musl detection and auto-extraction.
+
+### Fixed
+
+- `dev/bump_version.py` now also updates the Go module’s `/vN`
+  major-version-suffix path across `go.mod` files, doc snippets, the
+  doc-snippet runner, and README/docs badges whenever a version bump
+  crosses a major version boundary, so this doesn’t regress on the next
+  major release.
+- `dev/bump_version.py` now also updates the Maven dependency example
+  version in
+  `bindings/java/docs/modules/ROOT/pages/introduction/installation.adoc`,
+  which was previously left stale after a version bump.
+- Changed the `iterations` default for `OnlineLowess` from `3` to `0`
+  across every binding (R, Python, Julia, C++, Go, Java, Node.js, WASM),
+  matching the default `update_mode = "incremental"` non-robust
+  single-point fit; robustness iterations now require
+  `update_mode = "full"`.
+- `dev/bump_version.py` now updates the Go `/vN` path and the Java Maven
+  example version.
+- Fixed inconsistent Node.js naming in READMEs, doc-site home pages, and
+  `CITATION.cff`.
+
+### Changed
+
+- Hoisted fully-qualified imports to top-level `use` statements across
+  crates and bindings.
+
 ## rfastlowess 4.0.0
 
 ### Added
@@ -361,8 +426,7 @@
   ReadTheDocs site no longer includes R-specific content.
 - Changed R version dependency to 4.4.0 due to issues with installing
   Bioconducter packages on R \< 4.4.0.
-- Replaced the multi-step `install.packages` /
-  [`BiocManager::install`](https://bioconductor.github.io/BiocManager/reference/install.html)
+- Replaced the multi-step `install.packages` / `BiocManager::install`
   package installation logic in `bindings/r/Makefile` with a single
   [`pak`](https://pak.r-lib.org/)-based block. `pak` handles RSPM binary
   vs source selection automatically (including Linux), skips

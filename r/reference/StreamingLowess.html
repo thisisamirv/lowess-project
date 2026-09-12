@@ -13,7 +13,7 @@ flushes any remaining buffered points after the last chunk."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">rfastlowess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">4.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">4.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -66,6 +66,10 @@ flushes any remaining buffered points after the last chunk.</p>
 <span>    return_diagnostics <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>    return_residuals <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>    return_robustness_weights <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>    return_derivative <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>    return_se <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>    confidence_intervals <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>    prediction_intervals <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>    merge_strategy <span class="op">=</span> <span class="st">"weighted_average"</span>,</span>
 <span>    parallel <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>    missing <span class="op">=</span> <span class="st">"error"</span></span>
@@ -161,6 +165,26 @@ result. Default: <code>FALSE</code>.</p></dd>
 <dt id="arg-return-robustness-weights">return_robustness_weights<a class="anchor" aria-label="anchor" href="#arg-return-robustness-weights"></a></dt>
 <dd><p>Logical; if <code>TRUE</code>, return per-point
 robustness weights. Default: <code>FALSE</code>.</p></dd>
+
+
+<dt id="arg-return-derivative">return_derivative<a class="anchor" aria-label="anchor" href="#arg-return-derivative"></a></dt>
+<dd><p>Logical; if <code>TRUE</code>, return per-point local
+fit derivative (slope) in the result. Default: <code>FALSE</code>.</p></dd>
+
+
+<dt id="arg-return-se">return_se<a class="anchor" aria-label="anchor" href="#arg-return-se"></a></dt>
+<dd><p>Logical; include standard errors in the result. Default:
+<code>FALSE</code>.</p></dd>
+
+
+<dt id="arg-confidence-intervals">confidence_intervals<a class="anchor" aria-label="anchor" href="#arg-confidence-intervals"></a></dt>
+<dd><p>Confidence level for confidence intervals
+(e.g. 0.95), or <code>NULL</code> (default) to disable.</p></dd>
+
+
+<dt id="arg-prediction-intervals">prediction_intervals<a class="anchor" aria-label="anchor" href="#arg-prediction-intervals"></a></dt>
+<dd><p>Confidence level for prediction intervals
+(e.g. 0.95), or <code>NULL</code> (default) to disable.</p></dd>
 
 
 <dt id="arg-merge-strategy">merge_strategy<a class="anchor" aria-label="anchor" href="#arg-merge-strategy"></a></dt>

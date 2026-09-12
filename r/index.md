@@ -13,7 +13,7 @@ All](https://raw.githubusercontent.com/thisisamirv/lowess-project/main/dev/logo.
 
 The fastest, most robust, and most feature-complete language-agnostic
 LOWESS (Locally Weighted Scatterplot Smoothing) implementation for
-**Rust**, **Python**, **R**, **Julia**, **JavaScript**, **C++**, **Go**,
+**Rust**, **Python**, **R**, **Julia**, **Node.js**, **C++**, **Go**,
 **Java**, and **WebAssembly**.
 
 The `lowess-project` also offers bindings for Rust, Python, R, Julia,

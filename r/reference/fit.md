@@ -48,4 +48,5 @@ fit(model, x, y)
 #> <LowessResult>
 #>   Points:            100 
 #>   Fraction Used:     0.2 
+#>   Iterations Used:   3 
 ```

@@ -34,4 +34,5 @@ print(result)
 #> <LowessResult>
 #>   Points:            50 
 #>   Fraction Used:     0.3 
+#>   Iterations Used:   3 
 ```
