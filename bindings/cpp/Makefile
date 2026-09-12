@@ -227,6 +227,6 @@ install-tools:
 		grep -qxF "$$EXPORT_LINE" ~/.zshrc 2>/dev/null || echo "$$EXPORT_LINE" >> ~/.zshrc; \
 		echo "Added clang-tidy to ~/.zshrc — re-open your shell or run: export PATH=\"$$LLVM_BIN:\$$PATH\""; \
 	else \
-		sudo apt-get install -y clang-tidy cppcheck valgrind; \
+		sudo apt-get update && sudo apt-get install -y clang-tidy cppcheck valgrind; \
 	fi
 	@echo "Done."
