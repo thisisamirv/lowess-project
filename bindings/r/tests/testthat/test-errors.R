@@ -23,6 +23,12 @@ test_that("Lowess rejects invalid inputs", {
         "iterations must be a non-negative integer"
     )
 
+    # Invalid cv_seed (negative rejected by require_non_negative_usize)
+    expect_error(
+        Lowess(cv_seed = -1),
+        "cv_seed must be non-negative"
+    )
+
     # Mismatched lengths at fit time
     expect_error(
         fit(Lowess(fraction = 0.5), as.double(1:10), as.double(1:5)),

@@ -5,7 +5,7 @@
 #' @srrstats {G5.6, G5.6a} Parameter recovery within tolerance.
 #' @srrstats {G5.7} Performance tests (parallel vs serial).
 #' @srrstats {G5.8c, G5.8d} Edge cases: minimum points, constant values.
-#' @srrstats {G5.9a} Noise susceptibility via rnorm() variations.
+#' @srrstats {G5.9a} Trivial noise does not meaningfully change results.
 #' @srrstats {RE4.10} Residuals tested in Lowess residuals test.
 #' @srrstats {RE4.11} Goodness-of-fit tested in diagnostics test.
 #' @srrstats {RE5.0} Confidence/prediction intervals tested.
@@ -238,6 +238,98 @@ test_that("Lowess cross-validation works", {
     expect_true("cv_scores" %in% names(result))
     expect_length(result$cv_scores, 4)
     expect_true(result$fraction_used %in% c(0.2, 0.3, 0.5, 0.7))
+})
+
+test_that("Lowess cross-validation respects cv_seed for reproducibility", {
+    set.seed(123)
+    x <- seq(0, 10, length.out = 60)
+    y <- sin(x) + rnorm(60, sd = 0.15)
+
+    # Same seed must -> same fold assignments, cv_scores and fraction_used
+    result1 <- fit(
+        Lowess(
+            cv_fractions = c(0.3, 0.5, 0.7),
+            cv_method = "kfold",
+            cv_k = 5,
+            cv_seed = 42L
+        ),
+        as.double(x),
+        as.double(y)
+    )
+
+    result2 <- fit(
+        Lowess(
+            cv_fractions = c(0.3, 0.5, 0.7),
+            cv_method = "kfold",
+            cv_k = 5,
+            cv_seed = 42L
+        ),
+        as.double(x),
+        as.double(y)
+    )
+
+    expect_true("cv_scores" %in% names(result1))
+    expect_identical(result1$cv_scores, result2$cv_scores)
+    expect_identical(result1$fraction_used, result2$fraction_used)
+
+    # Different seed must diverge (different fold splits)
+    result3 <- fit(
+        Lowess(
+            cv_fractions = c(0.3, 0.5, 0.7),
+            cv_method = "kfold",
+            cv_k = 5,
+            cv_seed = 43L
+        ),
+        as.double(x),
+        as.double(y)
+    )
+
+    # At least one of scores or selected fraction should differ
+    scores_differ <- !isTRUE(all.equal(result1$cv_scores, result3$cv_scores))
+    fraction_differ <- !isTRUE(
+        all.equal(result1$fraction_used, result3$fraction_used)
+    )
+    expect_true(scores_differ || fraction_differ)
+
+    # Explicit NULL seed path must succeed (random each run)
+    result_null <- fit(
+        Lowess(
+            cv_fractions = c(0.3, 0.5, 0.7),
+            cv_method = "kfold",
+            cv_k = 5,
+            cv_seed = NULL
+        ),
+        as.double(x),
+        as.double(y)
+    )
+    expect_true("cv_scores" %in% names(result_null))
+    expect_length(result_null$cv_scores, 3)
+})
+
+test_that("Lowess output is stable under .Machine$double.eps scale noise", {
+    set.seed(99)
+    x <- seq(0, 10, length.out = 60)
+    y <- sin(x) + rnorm(60, sd = 0.12)
+
+    eps <- .Machine$double.eps
+    # Add trivial noise at machine epsilon scale (uniform tiny perturbation)
+    y_tiny <- y + eps
+
+    result <- fit(
+        Lowess(fraction = 0.4, iterations = 2),
+        as.double(x),
+        as.double(y)
+    )
+    result_tiny <- fit(
+        Lowess(fraction = 0.4, iterations = 2),
+        as.double(x),
+        as.double(y_tiny)
+    )
+
+    # Smoothed output must not change meaningfully
+    expect_equal(result$y, result_tiny$y, tolerance = 1e-10)
+    expect_identical(result$fraction_used, result_tiny$fraction_used)
+    expect_identical(result$iterations_used, result_tiny$iterations_used)
 })
 
 test_that("Lowess handles edge cases", {

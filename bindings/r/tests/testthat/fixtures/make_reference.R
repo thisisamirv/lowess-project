@@ -13,7 +13,7 @@
 # matter.
 
 args <- commandArgs(trailingOnly = FALSE)
-self <- sub("^--file=", "", args[grep("^--file=", args)])
+self <- sub("^--file=", "", grep("^--file=", args, value = TRUE))
 fixture_dir <- normalizePath(dirname(self))
 testthat_dir <- normalizePath(file.path(fixture_dir, ".."))
 

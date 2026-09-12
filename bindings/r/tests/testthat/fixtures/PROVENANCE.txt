@@ -1,5 +1,5 @@
 generated_by: tests/testthat/fixtures/make_reference.R
-generated_at: 2026-09-11 23:51:35 UTC
+generated_at: 2026-09-12 02:15:59 UTC
 r_version: 4.6.1
 rfastlowess_version: 4.1.0
 platform: x86_64-w64-mingw32
