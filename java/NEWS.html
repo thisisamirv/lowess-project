@@ -192,6 +192,12 @@
 <div class="ulist">
 <ul>
 <li>
+<p>Added musl release binaries for Python, C++, Go, and Julia.</p>
+</li>
+<li>
+<p>Added bundled native libraries for the Java binding across 8 platforms, with runtime musl detection and auto-extraction.</p>
+</li>
+<li>
 <p>Added <code>retainModel</code> and <code>Result.predictModel()</code> for prediction.</p>
 </li>
 <li>
@@ -200,11 +206,15 @@
 <li>
 <p>Added <code>returnSe(boolean)</code>/<code>confidenceIntervals(double)</code>/<code>predictionIntervals(double)</code> to <code>StreamingOptions</code> and <code>OnlineOptions</code>; Online requires <code>updateMode("full")</code>.</p>
 </li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="changed"><a class="anchor" href="#changed"></a>Changed</h3>
+<div class="ulist">
+<ul>
 <li>
-<p>Added musl release binaries for Python, C++, Go, and Julia.</p>
-</li>
-<li>
-<p>Added bundled native libraries for the Java binding across 8 platforms, with runtime musl detection and auto-extraction.</p>
+<p>Hoisted fully-qualified imports to top-level <code>use</code> statements across crates and bindings.</p>
 </li>
 </ul>
 </div>
@@ -225,15 +235,8 @@
 <li>
 <p>Fixed the same <code>cv_seed</code> negative-value cast bug in <code>Lowess()</code>.</p>
 </li>
-</ul>
-</div>
-</div>
-<div class="sect2">
-<h3 id="changed"><a class="anchor" href="#changed"></a>Changed</h3>
-<div class="ulist">
-<ul>
 <li>
-<p>Hoisted fully-qualified imports to top-level <code>use</code> statements across crates and bindings.</p>
+<p>Fixed <code>mvn clean test</code> intermittently failing on macOS with <code>Failed to read artifact descriptor for commons-io:commons-io:jar:2.6</code>: Maven&#8217;s default <code>clean</code> binding (<code>maven-clean-plugin:3.2.0</code>) depends on <code>maven-shared-utils</code>, which transitively pulls in the old <code>commons-io:2.6</code> artifact whose POM sometimes fails to resolve. <code>bindings/java/pom.xml</code> now pins <code>maven-clean-plugin</code> to <code>3.5.0</code>, which drops <code>maven-shared-utils</code>/<code>commons-io</code> in favor of <code>plexus-utils</code>, removing the flaky transitive dependency.</p>
 </li>
 </ul>
 </div>

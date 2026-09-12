@@ -4,6 +4,9 @@
 
 ### Added
 
+- Added musl release binaries for Python, C++, Go, and Julia.
+- Added bundled native libraries for the Java binding across 8
+  platforms, with runtime musl detection and auto-extraction.
 - Added `retain_model` and
   [`predict.Lowess()`](https://thisisamirv.github.io/lowess-project/r/reference/predict.Lowess.md)
   for out-of-sample prediction.
@@ -35,9 +38,11 @@
   `R/srr-stats-standards.R` and test headers. These tests confirm
   graceful handling of perfectly noiseless input and that exact data
   fits at least as fast as noisy equivalents.
-- Added musl release binaries for Python, C++, Go, and Julia.
-- Added bundled native libraries for the Java binding across 8
-  platforms, with runtime musl detection and auto-extraction.
+
+### Changed
+
+- Hoisted fully-qualified imports to top-level `use` statements across
+  crates and bindings.
 
 ### Fixed
 
@@ -59,11 +64,6 @@
   example version.
 - Fixed inconsistent Node.js naming in READMEs, doc-site home pages, and
   `CITATION.cff`.
-
-### Changed
-
-- Hoisted fully-qualified imports to top-level `use` statements across
-  crates and bindings.
 
 ## rfastlowess 4.0.0
 

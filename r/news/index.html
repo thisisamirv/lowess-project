@@ -38,14 +38,18 @@
 <h2 class="pkg-version" data-toc-text="4.1.0" id="rfastlowess-410">rfastlowess 4.1.0<a class="anchor" aria-label="anchor" href="#rfastlowess-410"></a></h2>
 <div class="section level3">
 <h3 id="added-4-1-0">Added<a class="anchor" aria-label="anchor" href="#added-4-1-0"></a></h3>
-<ul><li>Added <code>retain_model</code> and <code><a href="../reference/predict.Lowess.html">predict.Lowess()</a></code> for out-of-sample prediction.</li>
+<ul><li>Added musl release binaries for Python, C++, Go, and Julia.</li>
+<li>Added bundled native libraries for the Java binding across 8 platforms, with runtime musl detection and auto-extraction.</li>
+<li>Added <code>retain_model</code> and <code><a href="../reference/predict.Lowess.html">predict.Lowess()</a></code> for out-of-sample prediction.</li>
 <li>Added <code>return_derivative</code> to <code><a href="../reference/Lowess.html">Lowess()</a></code>, <code><a href="../reference/StreamingLowess.html">StreamingLowess()</a></code>, and <code><a href="../reference/OnlineLowess.html">OnlineLowess()</a></code>.</li>
 <li>Added <code>return_se</code>/<code>confidence_intervals</code>/<code>prediction_intervals</code> to <code><a href="../reference/StreamingLowess.html">StreamingLowess()</a></code> and <code><a href="../reference/OnlineLowess.html">OnlineLowess()</a></code>; Online requires <code>update_mode = "full"</code>.</li>
 <li>Added stored golden reference fixtures under <code>tests/testthat/fixtures/</code> (with a <code>make_reference.R</code> regeneration script and a <code>PROVENANCE.txt</code> provenance stamp) pinning the output of engine paths with no external reference — the default <code>boundary_policy = "extend"</code>, intervals, robustness weights, streaming, and online — verified by <code>test-golden.R</code> within a <code>1e-10</code> tolerance (srrstats G5.4c).</li>
 <li>Added explicit G5.9a test: <code>.Machine$double.eps</code> scale noise on input <code>y</code> produces no meaningful change in smoothed output (verified via <code>expect_equal(..., tolerance = 1e-10)</code>).</li>
 <li>Added explicit tests for RE7.0/RE7.0a (noiseless exact predictor relationships, including identical-x and degenerate cases) and RE7.1/RE7.1a (noiseless exact y = f(x) relationships with timing comparison) in <code>tests/testthat/test-validation.R</code>. Removed incorrect <code>@srrstatsNA</code> tags and added proper <code>@srrstats</code> claims in <code>R/srr-stats-standards.R</code> and test headers. These tests confirm graceful handling of perfectly noiseless input and that exact data fits at least as fast as noisy equivalents.</li>
-<li>Added musl release binaries for Python, C++, Go, and Julia.</li>
-<li>Added bundled native libraries for the Java binding across 8 platforms, with runtime musl detection and auto-extraction.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changed-4-1-0">Changed<a class="anchor" aria-label="anchor" href="#changed-4-1-0"></a></h3>
+<ul><li>Hoisted fully-qualified imports to top-level <code>use</code> statements across crates and bindings.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="fixed-4-1-0">Fixed<a class="anchor" aria-label="anchor" href="#fixed-4-1-0"></a></h3>
@@ -57,10 +61,6 @@
 <li>
 <code>dev/bump_version.py</code> now updates the Go <code>/vN</code> path and the Java Maven example version.</li>
 <li>Fixed inconsistent Node.js naming in READMEs, doc-site home pages, and <code>CITATION.cff</code>.</li>
-</ul></div>
-<div class="section level3">
-<h3 id="changed-4-1-0">Changed<a class="anchor" aria-label="anchor" href="#changed-4-1-0"></a></h3>
-<ul><li>Hoisted fully-qualified imports to top-level <code>use</code> statements across crates and bindings.</li>
 </ul></div>
 </div>
     <div class="section level2">
