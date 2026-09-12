@@ -99,6 +99,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Java:**
 
 - Fixed the same `cv_seed` negative-value cast bug in `Lowess()`.
+- Fixed `mvn clean test` intermittently failing on macOS with `Failed to read artifact descriptor for commons-io:commons-io:jar:2.6`: Maven's default `clean` binding (`maven-clean-plugin:3.2.0`) depends on `maven-shared-utils`, which transitively pulls in the old `commons-io:2.6` artifact whose POM sometimes fails to resolve. `bindings/java/pom.xml` now pins `maven-clean-plugin` to `3.5.0`, which drops `maven-shared-utils`/`commons-io` in favor of `plexus-utils`, removing the flaky transitive dependency.
 
 **R:**
 
