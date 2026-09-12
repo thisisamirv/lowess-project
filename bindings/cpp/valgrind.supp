@@ -1,0 +1,22 @@
+# Valgrind suppressions for known, benign false positives in the C++ test suite.
+#
+# Rayon's global thread pool lazily spawns worker threads on first parallel
+# use. The glibc thread-local-storage (TLS) blocks allocated for those
+# still-live, detached worker threads are reported by Valgrind as "possibly
+# lost" at exit, because the blocks belong to threads the leak checker cannot
+# prove are reachable from the main thread's root set. This is not a leak in
+# fastlowess — the memory is owned and managed by the runtime/thread teardown.
+#
+# Only "possible" leaks are suppressed; "definitely lost" and "indirectly
+# lost" blocks still fail the run via `--error-exitcode=1`.
+{
+   rayon-global-threadpool-glibc-TLS
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   fun:allocate_dtv
+   fun:_dl_allocate_tls
+   fun:allocate_stack
+   fun:pthread_create*
+   ...
+}
