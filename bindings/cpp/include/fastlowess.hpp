@@ -500,7 +500,7 @@ public:
   /// training set.
   PredictResult predict(const std::vector<double> &new_x,
                         const PredictOptions &options = {}) const {
-    auto result = cpp_predict(
+    const auto result = cpp_predict(
         ptr_, new_x.data(), static_cast<unsigned long>(new_x.size()),
         options.return_se ? 1 : 0, options.confidence_level,
         options.prediction_level, options.return_derivative ? 1 : 0,

@@ -54,22 +54,22 @@ constexpr double k_cw_outlier_value = 100.0;
 constexpr double k_cw_slope = 2.0;
 
 constexpr std::array<double, k_small_sample_size> k_sample_x_values = {
-    1.0, 2.0, 3.0, 4.0, 5.0,
+    1.0, 2.0, 3.0, 4.0, 5.0
 };
 constexpr std::array<double, k_small_sample_size> k_sample_y_values = {
-    2.0, 4.1, 5.9, 8.2, 9.8,
+    2.0, 4.1, 5.9, 8.2, 9.8
 };
 constexpr std::array<double, k_small_sample_size> k_outlier_y_values = {
-    2.0, 4.1, 100.0, 8.2, 9.8,
+    2.0, 4.1, 100.0, 8.2, 9.8
 };
 constexpr std::array<double, k_small_sample_size> k_reuse_x_values = {
-    10.0, 20.0, 30.0, 40.0, 50.0,
+    10.0, 20.0, 30.0, 40.0, 50.0
 };
 constexpr std::array<double, k_small_sample_size> k_reuse_y_values = {
-    20.0, 40.0, 60.0, 80.0, 100.0,
+    20.0, 40.0, 60.0, 80.0, 100.0
 };
 constexpr std::array<double, k_online_window_capacity> k_online_x_values = {
-    1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0,
+    1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0
 };
 constexpr std::array<double, k_online_window_capacity> k_online_y_values = {
     2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0,
@@ -464,7 +464,7 @@ void testOnlineBasic() {
   int point_count_with_output = 0;
   for (std::size_t point_index = 0; point_index < k_online_x_values.size();
        ++point_index) {
-    auto result = online_lowess
+    const auto result = online_lowess
                       .add_point(k_online_x_values[point_index],
                                  k_online_y_values[point_index])
                       .value();
@@ -519,7 +519,7 @@ void testCustomWeightsUniformMatchesNoWeights() {
   opts.iterations = 2;
 
   fastlowess::Lowess model(opts);
-  auto result_no_w = model.fit(x_values, y_values).value();
+  const auto result_no_w = model.fit(x_values, y_values).value();
   auto result_unit_w = model.fit(x_values, y_values, weights).value();
 
   const auto y_no_w = result_no_w.y_vector();
@@ -548,11 +548,11 @@ void testCustomWeightsZeroWeightReducesOutlierInfluence() {
   opts.iterations = 0;
 
   fastlowess::Lowess model(opts);
-  auto result_no_w = model.fit(x_values, y_values).value();
+  const auto result_no_w = model.fit(x_values, y_values).value();
 
   std::vector<double> weights(point_count, 1.0);
   weights[k_cw_outlier_idx] = 0.0;
-  auto result_zero_w = model.fit(x_values, y_values, weights).value();
+  const auto result_zero_w = model.fit(x_values, y_values, weights).value();
 
   const double true_val = static_cast<double>(k_cw_outlier_idx) * k_cw_slope;
   const double err_no_w =
@@ -583,8 +583,8 @@ void testCustomWeightsHighWeightPullsFit() {
   weights_high[k_cw_spike_idx] = k_cw_high_weight;
 
   fastlowess::Lowess model(opts);
-  auto result_high = model.fit(x_values, y_values, weights_high).value();
-  auto result_equal = model.fit(x_values, y_values).value();
+  const auto result_high = model.fit(x_values, y_values, weights_high).value();
+  const auto result_equal = model.fit(x_values, y_values).value();
 
   assertTrue(result_high.y_value(k_cw_spike_idx) >
                  result_equal.y_value(k_cw_spike_idx),
@@ -600,7 +600,7 @@ void testMissingDefaultErrorsOnNan() {
   fastlowess::LowessOptions options;
   options.fraction = k_basic_fraction;
   fastlowess::Lowess lowess(options);
-  auto result = lowess.fit(x_values, y_values);
+  const auto result = lowess.fit(x_values, y_values);
 
   assertTrue(!result.has_value(),
              "Expected error result for default missing policy");
@@ -616,7 +616,7 @@ void testMissingDropRemovesNonFiniteRows() {
   options.fraction = k_basic_fraction;
   options.missing = "drop";
   fastlowess::Lowess lowess(options);
-  auto result = lowess.fit(x_values, y_values).value();
+  const auto result = lowess.fit(x_values, y_values).value();
 
   assertTrue(result.size() == x_values.size() - 1,
              "missing=drop should remove the non-finite row");
@@ -639,8 +639,8 @@ void testStreamingMissingDropRemovesNonFiniteRows() {
   options.missing = "drop";
   fastlowess::StreamingLowess stream(options);
 
-  auto chunk_result = stream.process_chunk(x_values, y_values).value();
-  auto final_result = stream.finalize().value();
+  const auto chunk_result = stream.process_chunk(x_values, y_values).value();
+  const auto final_result = stream.finalize().value();
 
   assertTrue(chunk_result.size() + final_result.size() == x_values.size() - 1,
              "missing=drop should remove the non-finite row in streaming");
@@ -655,7 +655,7 @@ void testOnlineMissingDropIgnoresNonFinitePoint() {
   options.missing = "drop";
   fastlowess::OnlineLowess online_lowess(options);
 
-  auto result = online_lowess.add_point(1.0, std::nan("")).value();
+  const auto result = online_lowess.add_point(1.0, std::nan("")).value();
   assertTrue(!result.has_value(),
              "missing=drop should ignore the non-finite point");
 }
@@ -678,8 +678,8 @@ void testStreamingReturnSeAndIntervals() {
   options.prediction_intervals = k_confidence_level;
   fastlowess::StreamingLowess stream(options);
 
-  auto chunk_result = stream.process_chunk(x_values, y_values).value();
-  auto final_result = stream.finalize().value();
+  const auto chunk_result = stream.process_chunk(x_values, y_values).value();
+  const auto final_result = stream.finalize().value();
 
   assertTrue(!chunk_result.standard_errors().empty(),
              "streaming standard_errors should be present");
@@ -702,7 +702,7 @@ void testOnlineReturnSeAndIntervalsRequiresFullMode() {
 
   bool caught = false;
   try {
-    auto result =
+    const auto result =
         online_lowess.add_point(1.0, k_online_return_se_test_y).value();
   } catch (...) {
     caught = true;
@@ -728,7 +728,7 @@ void testOnlineReturnSeAndIntervals() {
   double last_cl = std::nan("");
   double last_pl = std::nan("");
   for (int i = 0; i < k_online_return_se_point_count; ++i) {
-    auto result = online_lowess
+    const auto result = online_lowess
                       .add_point(static_cast<double>(i),
                                  static_cast<double>(i) * k_linear_slope)
                       .value();
