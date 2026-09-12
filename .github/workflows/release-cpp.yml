@@ -95,7 +95,10 @@ jobs:
           # fully-static build has no dynamic library to emit), which would
           # silently produce no `.so`. Disable crt-static so musl-gcc links a
           # dynamic library, matching the Alpine-based x64 musl build.
-          echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_RUSTFLAGS=-C target-feature=-crt-static" >> "$GITHUB_ENV"
+          # Disabling crt-static also makes rustc request dynamic `-lgcc_s`,
+          # but this cross musl-gcc's specs don't expose libgcc_s.so.1 on the
+          # linker search path, so link it statically instead.
+          echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_RUSTFLAGS=-C target-feature=-crt-static -C link-arg=-static-libgcc" >> "$GITHUB_ENV"
 
       - name: Build C++ Library
         working-directory: bindings/cpp
