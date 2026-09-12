@@ -44,6 +44,8 @@ public final class OnlineOptions {
         }
 
         /**
+         * The fraction of points used to compute each local regression.
+         *
          * @param fraction the fraction of points used to compute each local
          * regression
          * @return this builder, for chaining
@@ -55,6 +57,8 @@ public final class OnlineOptions {
         }
 
         /**
+         * The number of robustifying iterations.
+         *
          * @param iterations the number of robustifying iterations
          * @return this builder, for chaining
          * @see Options.Builder#iterations(int)
@@ -65,6 +69,9 @@ public final class OnlineOptions {
         }
 
         /**
+         * Skips recomputation for points within this distance of the last fit
+         * point.
+         *
          * @param delta the interpolation distance
          * @return this builder, for chaining
          * @see Options.Builder#delta(double)
@@ -75,6 +82,9 @@ public final class OnlineOptions {
         }
 
         /**
+         * One of
+         * {@code "tricube"}, {@code "epanechnikov"}, {@code "gaussian"}, {@code "uniform"}, {@code "biweight"}, {@code "triangle"}, {@code "cosine"}.
+         *
          * @param weightFunction the weight function name
          * @return this builder, for chaining
          * @see Options.Builder#weightFunction(String)
@@ -85,6 +95,8 @@ public final class OnlineOptions {
         }
 
         /**
+         * One of {@code "bisquare"}, {@code "huber"}, {@code "talwar"}.
+         *
          * @param robustnessMethod the robustness method name
          * @return this builder, for chaining
          * @see Options.Builder#robustnessMethod(String)
@@ -95,6 +107,8 @@ public final class OnlineOptions {
         }
 
         /**
+         * One of {@code "mad"}, {@code "mar"}, {@code "mean"}.
+         *
          * @param scalingMethod the residual scaling method name
          * @return this builder, for chaining
          * @see Options.Builder#scalingMethod(String)
@@ -105,6 +119,9 @@ public final class OnlineOptions {
         }
 
         /**
+         * One of
+         * {@code "extend"}, {@code "reflect"}, {@code "zero"}, {@code "noboundary"}.
+         *
          * @param boundaryPolicy the boundary handling policy name
          * @return this builder, for chaining
          * @see Options.Builder#boundaryPolicy(String)
@@ -115,6 +132,8 @@ public final class OnlineOptions {
         }
 
         /**
+         * How to handle all-zero local weight windows.
+         *
          * @param zeroWeightFallback the zero-weight handling strategy name
          * @return this builder, for chaining
          * @see Options.Builder#zeroWeightFallback(String)
@@ -125,6 +144,10 @@ public final class OnlineOptions {
         }
 
         /**
+         * Policy for non-finite (NaN/Infinity) values in input data:
+         * {@code "error"} throws, {@code "drop"} silently removes affected
+         * observations before fitting.
+         *
          * @param missing the missing-value handling policy name
          * @return this builder, for chaining
          * @see Options.Builder#missing(String)
@@ -135,6 +158,9 @@ public final class OnlineOptions {
         }
 
         /**
+         * Stops iterating early once the relative change in fitted values drops
+         * below this value.
+         *
          * @param autoConverge the auto-convergence tolerance
          * @return this builder, for chaining
          * @see Options.Builder#autoConverge(double)
@@ -145,6 +171,8 @@ public final class OnlineOptions {
         }
 
         /**
+         * Whether {@link Result#robustnessWeights()} should be populated.
+         *
          * @param returnRobustnessWeights whether to include robustness weights
          * in the result
          * @return this builder, for chaining
@@ -156,6 +184,8 @@ public final class OnlineOptions {
         }
 
         /**
+         * Whether {@link Result#derivative()} should be populated.
+         *
          * @param returnDerivative whether to include the local fit's derivative
          * (slope) in the result
          * @return this builder, for chaining

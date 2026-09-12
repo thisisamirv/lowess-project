@@ -41,6 +41,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * The fraction of points used to compute each local regression.
+         *
          * @param fraction the fraction of points used to compute each local
          * regression
          * @return this builder, for chaining
@@ -52,6 +54,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * The number of robustifying iterations.
+         *
          * @param iterations the number of robustifying iterations
          * @return this builder, for chaining
          * @see Options.Builder#iterations(int)
@@ -62,6 +66,9 @@ public final class StreamingOptions {
         }
 
         /**
+         * Skips recomputation for points within this distance of the last fit
+         * point.
+         *
          * @param delta the interpolation distance
          * @return this builder, for chaining
          * @see Options.Builder#delta(double)
@@ -72,6 +79,9 @@ public final class StreamingOptions {
         }
 
         /**
+         * One of
+         * {@code "tricube"}, {@code "epanechnikov"}, {@code "gaussian"}, {@code "uniform"}, {@code "biweight"}, {@code "triangle"}, {@code "cosine"}.
+         *
          * @param weightFunction the weight function name
          * @return this builder, for chaining
          * @see Options.Builder#weightFunction(String)
@@ -82,6 +92,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * One of {@code "bisquare"}, {@code "huber"}, {@code "talwar"}.
+         *
          * @param robustnessMethod the robustness method name
          * @return this builder, for chaining
          * @see Options.Builder#robustnessMethod(String)
@@ -92,6 +104,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * One of {@code "mad"}, {@code "mar"}, {@code "mean"}.
+         *
          * @param scalingMethod the residual scaling method name
          * @return this builder, for chaining
          * @see Options.Builder#scalingMethod(String)
@@ -102,6 +116,9 @@ public final class StreamingOptions {
         }
 
         /**
+         * One of
+         * {@code "extend"}, {@code "reflect"}, {@code "zero"}, {@code "noboundary"}.
+         *
          * @param boundaryPolicy the boundary handling policy name
          * @return this builder, for chaining
          * @see Options.Builder#boundaryPolicy(String)
@@ -112,6 +129,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * How to handle all-zero local weight windows.
+         *
          * @param zeroWeightFallback the zero-weight handling strategy name
          * @return this builder, for chaining
          * @see Options.Builder#zeroWeightFallback(String)
@@ -122,6 +141,10 @@ public final class StreamingOptions {
         }
 
         /**
+         * Policy for non-finite (NaN/Infinity) values in input data:
+         * {@code "error"} throws, {@code "drop"} silently removes affected
+         * observations before fitting.
+         *
          * @param missing the missing-value handling policy name
          * @return this builder, for chaining
          * @see Options.Builder#missing(String)
@@ -132,6 +155,9 @@ public final class StreamingOptions {
         }
 
         /**
+         * Stops iterating early once the relative change in fitted values drops
+         * below this value.
+         *
          * @param autoConverge the auto-convergence tolerance
          * @return this builder, for chaining
          * @see Options.Builder#autoConverge(double)
@@ -142,6 +168,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * Whether {@link Result#diagnostics()} should be populated.
+         *
          * @param returnDiagnostics whether to compute diagnostics
          * @return this builder, for chaining
          * @see Options.Builder#returnDiagnostics(boolean)
@@ -152,6 +180,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * Whether {@link Result#residuals()} should be populated.
+         *
          * @param returnResiduals whether to include residuals in the result
          * @return this builder, for chaining
          * @see Options.Builder#returnResiduals(boolean)
@@ -162,6 +192,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * Whether {@link Result#robustnessWeights()} should be populated.
+         *
          * @param returnRobustnessWeights whether to include robustness weights
          * in the result
          * @return this builder, for chaining
@@ -173,6 +205,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * Whether {@link Result#derivative()} should be populated.
+         *
          * @param returnDerivative whether to include the per-point local fit
          * derivative (slope) in the result
          * @return this builder, for chaining
@@ -184,6 +218,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * Whether {@link Result#standardErrors()} should be populated.
+         *
          * @param returnSe whether to include standard errors in the result
          * @return this builder, for chaining
          * @see Options.Builder#returnSe(boolean)
@@ -194,6 +230,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * Requests confidence intervals at the given level (e.g. {@code 0.95}).
+         *
          * @param confidenceIntervals the confidence level (e.g. 0.95)
          * @return this builder, for chaining
          * @see Options.Builder#confidenceIntervals(double)
@@ -204,6 +242,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * Requests prediction intervals at the given level (e.g. {@code 0.95}).
+         *
          * @param predictionIntervals the prediction level (e.g. 0.95)
          * @return this builder, for chaining
          * @see Options.Builder#predictionIntervals(double)
@@ -214,6 +254,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * Whether to use the multi-threaded execution path.
+         *
          * @param parallel whether to enable parallel execution
          * @return this builder, for chaining
          * @see Options.Builder#parallel(boolean)

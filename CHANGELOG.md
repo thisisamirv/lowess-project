@@ -6,6 +6,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+**Java:**
+
+- Fixed `javadoc` "no main description" warnings in `OnlineOptions` and `StreamingOptions` builder methods by adding a leading description sentence to each Javadoc block.
+- Fixed `maven-javadoc-plugin` silently ignoring javadoc warnings (`make dev`'s "Javadoc" step) due to a `pom.xml` typo: the parameter is `failOnWarnings`, not `failOnWarning`.
+
 ## 4.1.0
 
 ### Added
