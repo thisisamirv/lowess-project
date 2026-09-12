@@ -44,6 +44,7 @@ GO_TESTS_MAIN = "bindings/go/tests/lowess_test.go"
 GO_DOC_RUNNER = "dev/runners/go.py"
 GO_README = "bindings/go/README.md"
 GO_DOCS_INDEX = "bindings/go/docs/_index.md"
+ROOT_README = "README.md"
 
 # Cargo.toml files whose bare `[package]` `version = "X.Y.Z"` line should track
 # the release version 1:1.
@@ -167,7 +168,7 @@ def apply_go_module_suffix(new_major: str, dry_run: bool) -> bool:
     )
 
     # Plain path-only files: one literal find/replace each.
-    files = [GO_FASTLOWESS_GOMOD, GO_TESTS_MAIN, GO_README, GO_DOCS_INDEX]
+    files = [GO_FASTLOWESS_GOMOD, GO_TESTS_MAIN, GO_README, GO_DOCS_INDEX, ROOT_README]
     all_ok = True
     for rel in files:
         ok = _replace_literal_all(REPO_ROOT / rel, old_path, new_path, dry_run)

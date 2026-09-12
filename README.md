@@ -10,7 +10,7 @@
   <a href="https://juliahub.com/ui/Packages/General/FastLOWESS"><img src="https://img.shields.io/badge/Julia-9558B2?logo=julia&logoColor=white" alt="Julia"></a>
   <a href="https://www.npmjs.com/package/fastlowess-wasm"><img src="https://img.shields.io/badge/WASM-654FF0?logo=webassembly&logoColor=white" alt="WASM"></a>
   <a href="https://github.com/thisisamirv/lowess-project/releases/latest"><img src="https://img.shields.io/badge/C++-00599C?logo=cplusplus&logoColor=white" alt="C++"></a>
-  <a href="https://pkg.go.dev/github.com/thisisamirv/lowess-project/bindings/go/fastlowess"><img src="https://img.shields.io/badge/Go-00ADD8?logo=go&logoColor=white" alt="Go"></a>
+  <a href="https://pkg.go.dev/github.com/thisisamirv/lowess-project/bindings/go/fastlowess/v4"><img src="https://img.shields.io/badge/Go-00ADD8?logo=go&logoColor=white" alt="Go"></a>
   <a href="https://central.sonatype.com/artifact/io.github.thisisamirv/fastlowess"><img src="https://img.shields.io/badge/Java-007396?logo=openjdk&logoColor=white" alt="Java"></a>
   <br>
   <a href="https://anaconda.org/conda-forge/fastlowess"><img src="https://img.shields.io/badge/fastlowess_(Python)-44A833?logo=anaconda&logoColor=white" alt="fastlowess (Python)"></a>
@@ -49,7 +49,7 @@ The fastest, most robust, and most feature-complete language-agnostic LOWESS (Lo
 > - **[`Node.js bindings`](https://www.npmjs.com/package/fastlowess)** - Node.js binding
 > - **[`WebAssembly bindings`](https://www.npmjs.com/package/fastlowess-wasm)** - WASM binding
 > - **[`C++ bindings`](https://github.com/thisisamirv/lowess-project/releases/latest)** - Native C++ binding with CMake integration
-> - **[`Go bindings`](https://pkg.go.dev/github.com/thisisamirv/lowess-project/bindings/go/fastlowess)** - cgo-based Go binding
+> - **[`Go bindings`](https://pkg.go.dev/github.com/thisisamirv/lowess-project/bindings/go/fastlowess/v4)** - cgo-based Go binding
 > - **[`Java bindings`](https://central.sonatype.com/artifact/io.github.thisisamirv/fastlowess)** - JNI-based Java binding
 
 ---

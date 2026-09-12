@@ -5,7 +5,7 @@ weight: 15
 
 ## Requirements
 
-- Go 1.21+
+- Go 1.23+
 - `CGO_ENABLED=1` and a C compiler:
   - Linux/macOS: GCC or Clang (usually already present)
   - Windows: a MinGW-w64 toolchain (e.g. via [MSYS2](https://www.msys2.org/) or [WinLibs](https://winlibs.com/)), since Go's `cgo` invokes `gcc` on Windows, not MSVC's `cl.exe`

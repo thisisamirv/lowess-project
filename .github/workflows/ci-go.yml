@@ -126,7 +126,7 @@ jobs:
               "fmt"
               "os"
 
-              "github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+              "github.com/thisisamirv/lowess-project/bindings/go/fastlowess/v4"
           )
 
           func main() {
@@ -153,9 +153,9 @@ jobs:
 
           go 1.23
 
-          require github.com/thisisamirv/lowess-project/bindings/go/fastlowess v0.0.0
+          require github.com/thisisamirv/lowess-project/bindings/go/fastlowess/v4 v0.0.0
 
-          replace github.com/thisisamirv/lowess-project/bindings/go/fastlowess => $GITHUB_WORKSPACE/bindings/go/fastlowess
+          replace github.com/thisisamirv/lowess-project/bindings/go/fastlowess/v4 => $GITHUB_WORKSPACE/bindings/go/fastlowess
           MOD
           cd /tmp/gputest
           go mod tidy
