@@ -41,6 +41,10 @@ Other contributors:
   \<https://github.com/ropensci/software-review/issues/769\>)
   \[reviewer\]
 
+- Etienne Bacher (Edited the package for rOpenSci (GitHub:
+  @etiennebacher), see
+  \<https://github.com/ropensci/software-review/issues/769\>) \[editor\]
+
 ## Examples
 
 ``` r

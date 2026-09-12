@@ -9,6 +9,10 @@
   Reviewed the package for rOpenSci (GitHub: @alexzerg), see
   \<<https://github.com/ropensci/software-review/issues/769>\>
 
+- **Etienne Bacher**. Editor.  
+  Edited the package for rOpenSci (GitHub: @etiennebacher), see
+  \<<https://github.com/ropensci/software-review/issues/769>\>
+
 ## Citation
 
 Source:
