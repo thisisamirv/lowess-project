@@ -195,7 +195,7 @@ Online Adapter</div></div>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>fraction</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">0.67   </td><td class="markdownTableBodyNone">Smoothing fraction (bandwidth)    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>iterations</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone">3   </td><td class="markdownTableBodyNone">Number of robustifying iterations    </td></tr>
+<td class="markdownTableBodyNone"><code>iterations</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone">0   </td><td class="markdownTableBodyNone">Number of robustifying iterations (requires <code>update_mode = "full"</code>)    </td></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>delta</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">NaN   </td><td class="markdownTableBodyNone">Interpolation distance (<code>NaN</code> auto-sets it to 0.0 in Online, i.e. interpolation disabled)    </td></tr>
 <tr class="markdownTableRowEven">
@@ -246,7 +246,7 @@ Online Adapter</div></div>
 <td class="markdownTableBodyNone">0.7-1.0   </td><td class="markdownTableBodyNone">Very smooth   </td><td class="markdownTableBodyNone">Trend extraction   </td></tr>
 </table>
 <h3>iterations</h3>
-<p><code>iterations</code> controls robustness to outliers, at the cost of speed.</p>
+<p><code>iterations</code> controls robustness to outliers, at the cost of speed. Requires <code>update_mode = "full"</code>; the default <code>"incremental"</code> mode performs a non-robust single-point fit.</p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Value   </th><th class="markdownTableHeadNone">Effect   </th><th class="markdownTableHeadNone">Performance    </th></tr>

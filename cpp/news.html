@@ -113,12 +113,14 @@ $(document).ready(function(){initNavTree('news.html',''); initResizable(); });
 </ul>
 <h2>Fixed</h2>
 <ul>
+<li><code>dev/bump_version.py</code> now also updates the Go module's <code>/vN</code> major-version-suffix path across <code>go.mod</code> files, doc snippets, the doc-snippet runner, and README/docs badges whenever a version bump crosses a major version boundary, so this doesn't regress on the next major release.</li>
+<li><code>dev/bump_version.py</code> now also updates the Maven dependency example version in <code>bindings/java/docs/modules/ROOT/pages/introduction/installation.adoc</code>, which was previously left stale after a version bump.</li>
+<li>Changed the <code>iterations</code> default for <code>OnlineLowess</code> from <code>3</code> to <code>0</code> across every binding (R, Python, Julia, C++, Go, Java, Node.js, WASM), matching the default <code>update_mode = "incremental"</code> non-robust single-point fit; robustness iterations now require <code>update_mode = "full"</code>.</li>
 <li>Fixed <code>bindings/cpp/spack/package.py</code> building from the wrong directory; it now builds by package name and keeps the pyright suppression at the repo root.</li>
 </ul>
 <h2>Changed</h2>
 <ul>
 <li>Hoisted fully-qualified imports to top-level <code>use</code> statements across crates and bindings.</li>
-<li>Removed unused <code>pub use</code> re-exports and updated the few callers that used them.</li>
 </ul>
 <h1>fastlowess (C++) 4.0.0</h1>
 <h2>Added</h2>

@@ -116,8 +116,8 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a6acb9ee334a76cd3701228b0cab4ac62" id="r_a6acb9ee334a76cd3701228b0cab4ac62"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">double</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1OnlineOptions.html#a6acb9ee334a76cd3701228b0cab4ac62">fraction</a> = <a class="el" href="namespacefastlowess_1_1detail.html#a5fc83238a1904dec0d45c19ead8497f2">detail::k_default_fraction</a></td></tr>
 <tr class="memdesc:a6acb9ee334a76cd3701228b0cab4ac62"><td class="mdescLeft">&#160;</td><td class="mdescRight">Smoothing fraction (0, 1].  <br /></td></tr>
 <tr class="separator:a6acb9ee334a76cd3701228b0cab4ac62"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2c8c2dd03559f291a428467d8d231790" id="r_a2c8c2dd03559f291a428467d8d231790"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">int</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1OnlineOptions.html#a2c8c2dd03559f291a428467d8d231790">iterations</a> = 3</td></tr>
-<tr class="memdesc:a2c8c2dd03559f291a428467d8d231790"><td class="mdescLeft">&#160;</td><td class="mdescRight">Robustness iterations.  <br /></td></tr>
+<tr class="memitem:a2c8c2dd03559f291a428467d8d231790" id="r_a2c8c2dd03559f291a428467d8d231790"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">int</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1OnlineOptions.html#a2c8c2dd03559f291a428467d8d231790">iterations</a> = 0</td></tr>
+<tr class="memdesc:a2c8c2dd03559f291a428467d8d231790"><td class="mdescLeft">&#160;</td><td class="mdescRight">Robustness iterations (requires update_mode = "full")  <br /></td></tr>
 <tr class="separator:a2c8c2dd03559f291a428467d8d231790"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8b26c64dd4324ef3ad73e6f411fb4542" id="r_a8b26c64dd4324ef3ad73e6f411fb4542"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">double</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1OnlineOptions.html#a8b26c64dd4324ef3ad73e6f411fb4542">delta</a> = <a class="el" href="classfastlowess_1_1Expected.html">NAN</a></td></tr>
 <tr class="memdesc:a8b26c64dd4324ef3ad73e6f411fb4542"><td class="mdescLeft">&#160;</td><td class="mdescRight">Interpolation threshold (NaN = auto)  <br /></td></tr>
@@ -249,12 +249,12 @@ Public Attributes</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classfastlowess_1_1Expected.html">int</a> fastlowess::OnlineOptions::iterations = 3</td>
+          <td class="memname"><a class="el" href="classfastlowess_1_1Expected.html">int</a> fastlowess::OnlineOptions::iterations = 0</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>Robustness iterations. </p>
+<p>Robustness iterations (requires update_mode = "full") </p>
 
 </div>
 </div>

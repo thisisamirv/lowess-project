@@ -214,6 +214,15 @@
 <div class="ulist">
 <ul>
 <li>
+<p><code>dev/bump_version.py</code> now also updates the Go module&#8217;s <code>/vN</code> major-version-suffix path across <code>go.mod</code> files, doc snippets, the doc-snippet runner, and README/docs badges whenever a version bump crosses a major version boundary, so this doesn&#8217;t regress on the next major release.</p>
+</li>
+<li>
+<p><code>dev/bump_version.py</code> now also updates the Maven dependency example version in <code>bindings/java/docs/modules/ROOT/pages/introduction/installation.adoc</code>, which was previously left stale after a version bump.</p>
+</li>
+<li>
+<p>Changed the <code>iterations</code> default for <code>OnlineLowess</code> from <code>3</code> to <code>0</code> across every binding (R, Python, Julia, C++, Go, Java, Node.js, WASM), matching the default <code>update_mode = "incremental"</code> non-robust single-point fit; robustness iterations now require <code>update_mode = "full"</code>.</p>
+</li>
+<li>
 <p>Fixed the same <code>cv_seed</code> negative-value cast bug in <code>Lowess()</code>.</p>
 </li>
 </ul>
@@ -225,9 +234,6 @@
 <ul>
 <li>
 <p>Hoisted fully-qualified imports to top-level <code>use</code> statements across crates and bindings.</p>
-</li>
-<li>
-<p>Removed unused <code>pub use</code> re-exports and updated the few callers that used them.</p>
 </li>
 </ul>
 </div>
