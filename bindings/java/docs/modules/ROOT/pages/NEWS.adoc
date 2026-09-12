@@ -4,11 +4,15 @@
 
 === Added
 
+* Added musl release binaries for Python, C++, Go, and Julia.
+* Added bundled native libraries for the Java binding across 8 platforms, with runtime musl detection and auto-extraction.
 * Added `retainModel` and `Result.predictModel()` for prediction.
 * Added `returnDerivative(boolean)` to `Options` and `OnlineOptions`.
 * Added `returnSe(boolean)`/`confidenceIntervals(double)`/`predictionIntervals(double)` to `StreamingOptions` and `OnlineOptions`; Online requires `updateMode("full")`.
-* Added musl release binaries for Python, C++, Go, and Julia.
-* Added bundled native libraries for the Java binding across 8 platforms, with runtime musl detection and auto-extraction.
+
+=== Changed
+
+* Hoisted fully-qualified imports to top-level `use` statements across crates and bindings.
 
 === Fixed
 
@@ -16,10 +20,7 @@
 * `dev/bump_version.py` now also updates the Maven dependency example version in `bindings/java/docs/modules/ROOT/pages/introduction/installation.adoc`, which was previously left stale after a version bump.
 * Changed the `iterations` default for `OnlineLowess` from `3` to `0` across every binding (R, Python, Julia, C++, Go, Java, Node.js, WASM), matching the default `update_mode = "incremental"` non-robust single-point fit; robustness iterations now require `update_mode = "full"`.
 * Fixed the same `cv_seed` negative-value cast bug in `Lowess()`.
-
-=== Changed
-
-* Hoisted fully-qualified imports to top-level `use` statements across crates and bindings.
+* Fixed `mvn clean test` intermittently failing on macOS with `Failed to read artifact descriptor for commons-io:commons-io:jar:2.6`: Maven's default `clean` binding (`maven-clean-plugin:3.2.0`) depends on `maven-shared-utils`, which transitively pulls in the old `commons-io:2.6` artifact whose POM sometimes fails to resolve. `bindings/java/pom.xml` now pins `maven-clean-plugin` to `3.5.0`, which drops `maven-shared-utils`/`commons-io` in favor of `plexus-utils`, removing the flaky transitive dependency.
 
 == fastlowess (Java) 4.0.0
 

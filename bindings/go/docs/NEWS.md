@@ -8,11 +8,15 @@ weight: 100
 
 ## Added
 
+* Added musl release binaries for Python, C++, Go, and Julia.
+* Added bundled native libraries for the Java binding across 8 platforms, with runtime musl detection and auto-extraction.
 * Added `RetainModel` and `Result.PredictModel.Predict(newX, options)` for prediction.
 * Added `ReturnDerivative` to `Options`, `StreamingOptions`, and `OnlineOptions`.
 * Added `ReturnSE`/`ConfidenceIntervals`/`PredictionIntervals` to `StreamingOptions` and `OnlineOptions`; Online requires `UpdateMode = "full"`.
-* Added musl release binaries for Python, C++, Go, and Julia.
-* Added bundled native libraries for the Java binding across 8 platforms, with runtime musl detection and auto-extraction.
+
+## Changed
+
+* Hoisted fully-qualified imports to top-level `use` statements across crates and bindings.
 
 ## Fixed
 
@@ -20,10 +24,6 @@ weight: 100
 * `dev/bump_version.py` now also updates the Maven dependency example version in `bindings/java/docs/modules/ROOT/pages/introduction/installation.adoc`, which was previously left stale after a version bump.
 * Changed the `iterations` default for `OnlineLowess` from `3` to `0` across every binding (R, Python, Julia, C++, Go, Java, Node.js, WASM), matching the default `update_mode = "incremental"` non-robust single-point fit; robustness iterations now require `update_mode = "full"`.
 * Fixed the Go module's import path to include the required `/v4` suffix. Breaking change for old unsuffixed imports.
-
-## Changed
-
-* Hoisted fully-qualified imports to top-level `use` statements across crates and bindings.
 
 # fastlowess (Go) 4.0.0
 

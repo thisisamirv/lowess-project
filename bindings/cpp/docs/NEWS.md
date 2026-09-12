@@ -5,11 +5,15 @@
 
 ## Added
 
+* Added musl release binaries for Python, C++, Go, and Julia.
+* Added bundled native libraries for the Java binding across 8 platforms, with runtime musl detection and auto-extraction.
 * Added `retain_model`, `LowessResult::predict_model()`, and prediction RAII types.
 * Added `return_derivative` to `LowessOptions` and `OnlineOptions`.
 * Added `return_se`/`confidence_intervals`/`prediction_intervals` to `StreamingOptions` and `OnlineOptions`; Online requires `update_mode = "full"`.
-* Added musl release binaries for Python, C++, Go, and Julia.
-* Added bundled native libraries for the Java binding across 8 platforms, with runtime musl detection and auto-extraction.
+
+## Changed
+
+* Hoisted fully-qualified imports to top-level `use` statements across crates and bindings.
 
 ## Fixed
 
@@ -17,10 +21,8 @@
 * `dev/bump_version.py` now also updates the Maven dependency example version in `bindings/java/docs/modules/ROOT/pages/introduction/installation.adoc`, which was previously left stale after a version bump.
 * Changed the `iterations` default for `OnlineLowess` from `3` to `0` across every binding (R, Python, Julia, C++, Go, Java, Node.js, WASM), matching the default `update_mode = "incremental"` non-robust single-point fit; robustness iterations now require `update_mode = "full"`.
 * Fixed `bindings/cpp/spack/package.py` building from the wrong directory; it now builds by package name and keeps the pyright suppression at the repo root.
-
-## Changed
-
-* Hoisted fully-qualified imports to top-level `use` statements across crates and bindings.
+* Fixed the C++ valgrind memory check silently skipping on Linux CI because `valgrind` was never installed; all three Linux jobs in `.github/workflows/ci-cpp.yml` (ci matrix, clang-linux, intel-oneapi) now install it alongside `cppcheck`, as does `bindings/cpp/Makefile`'s `install-tools` target.
+* Fixed C++ doc-snippet verification skipping every snippet on Windows-on-ARM: `dev/runners/cpp.py` now detects the MSVC host/target architecture from the built library (`arm64` vs `x64`), adds the `aarch64-pc-windows-msvc` library candidate, and caches the `vcvarsall.bat` environment per `(path, arch)` so snippets compile, link, and run instead of being silently skipped.
 
 # fastlowess (C++) 4.0.0
 

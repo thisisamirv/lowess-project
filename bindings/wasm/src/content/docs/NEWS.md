@@ -6,21 +6,22 @@ title: News
 
 ## Added
 
+* Added musl release binaries for Python, C++, Go, and Julia.
+* Added bundled native libraries for the Java binding across 8 platforms, with runtime musl detection and auto-extraction.
 * Added `retain_model` and `LowessResult.predict(newX, options)` for prediction.
 * Added `return_derivative` to `SmoothOptions`, `StreamingOptions`, and `OnlineOptions`.
 * Added `return_se`/`confidence_intervals`/`prediction_intervals` to `StreamingOptions` and `OnlineOptions`; Online requires `update_mode: "full"`.
-* Added musl release binaries for Python, C++, Go, and Julia.
-* Added bundled native libraries for the Java binding across 8 platforms, with runtime musl detection and auto-extraction.
+
+## Changed
+
+* Hoisted fully-qualified imports to top-level `use` statements across crates and bindings.
+* Updated `oxlint` dev dependency to v1.82.
 
 ## Fixed
 
 * `dev/bump_version.py` now also updates the Go module's `/vN` major-version-suffix path across `go.mod` files, doc snippets, the doc-snippet runner, and README/docs badges whenever a version bump crosses a major version boundary, so this doesn't regress on the next major release.
 * `dev/bump_version.py` now also updates the Maven dependency example version in `bindings/java/docs/modules/ROOT/pages/introduction/installation.adoc`, which was previously left stale after a version bump.
 * Changed the `iterations` default for `OnlineLowess` from `3` to `0` across every binding (R, Python, Julia, C++, Go, Java, Node.js, WASM), matching the default `update_mode = "incremental"` non-robust single-point fit; robustness iterations now require `update_mode = "full"`.
-
-## Changed
-
-* Hoisted fully-qualified imports to top-level `use` statements across crates and bindings.
 
 # fastlowess-wasm 4.0.0
 

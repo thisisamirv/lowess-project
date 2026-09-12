@@ -51,7 +51,7 @@
         "@napi-rs/cli": "^3.9",
         "astro": "^7.3",
         "katex": "^0.18",
-        "oxlint": "^1.80",
+        "oxlint": "^1.82",
         "rehype-katex": "^7.0",
         "remark-math": "^6.0",
         "typedoc": "^0.28",

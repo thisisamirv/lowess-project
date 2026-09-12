@@ -3,10 +3,16 @@
 
 ## Added
 
-* Added parallel wiring for Online/Streaming interval support, mirroring the new `lowess` builder methods and `update_mode("full")` requirement.
-* Added `custom_derivative_pass` and `custom_predict_pass` for the Batch and Streaming parallel paths.
 * Added musl release binaries for Python, C++, Go, and Julia.
 * Added bundled native libraries for the Java binding across 8 platforms, with runtime musl detection and auto-extraction.
+* Added parallel wiring for Online/Streaming interval support, mirroring the new `lowess` builder methods and `update_mode("full")` requirement.
+* Added `custom_derivative_pass` and `custom_predict_pass` for the Batch and Streaming parallel paths.
+
+## Changed
+
+* Hoisted fully-qualified imports to top-level `use` statements across crates and bindings.
+* Flattened the `tests/fastLowess/` directories into `tests/` directly: each test file is now its own independent integration test binary instead of a submodule of a shared `main.rs`. No test behavior changes.
+* Bumped the vendored KaTeX CDN version from `0.18.5` to `0.18.7`, updating SRI hashes to match.
 
 ## Fixed
 
@@ -16,12 +22,6 @@
 * Fixed the same zero standard-error collapse in the parallel interval path (`interval_pass_parallel`) and the GPU `compute_se` shader, which multiplied the leverage numerator by the point's own robustness weight. Both paths now also use the exact local-linear variance multiplier and kernel-corrected residual degrees of freedom as the serial path, so their standard errors match it.
 * Fixed the GPU `fit_anchors` shader carrying the same absolute degeneracy tolerance (`1e-7`) as the CPU WLS solver, which zeroed the local-linear slope for small-magnitude `x`; it now matches the CPU's scale-relative tolerance. The GPU `compute_se` shader's absolute `det > 1e-12` guard (which could null out standard errors for small-magnitude `x`) now matches the CPU's structural `det > 0` check.
 * `make fastLowess-dev` now also covers the combined `gpu,dev` feature set.
-
-## Changed
-
-* Flattened the `tests/fastLowess/` directories into `tests/` directly: each test file is now its own independent integration test binary instead of a submodule of a shared `main.rs`. No test behavior changes.
-* Bumped the vendored KaTeX CDN version from `0.18.5` to `0.18.7`, updating SRI hashes to match.
-* Hoisted fully-qualified imports to top-level `use` statements across crates and bindings.
 
 # fastLowess 4.0.0
 

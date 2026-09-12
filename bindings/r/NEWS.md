@@ -3,14 +3,18 @@
 
 ## Added
 
+* Added musl release binaries for Python, C++, Go, and Julia.
+* Added bundled native libraries for the Java binding across 8 platforms, with runtime musl detection and auto-extraction.
 * Added `retain_model` and `predict.Lowess()` for out-of-sample prediction.
 * Added `return_derivative` to `Lowess()`, `StreamingLowess()`, and `OnlineLowess()`.
 * Added `return_se`/`confidence_intervals`/`prediction_intervals` to `StreamingLowess()` and `OnlineLowess()`; Online requires `update_mode = "full"`.
 * Added stored golden reference fixtures under `tests/testthat/fixtures/` (with a `make_reference.R` regeneration script and a `PROVENANCE.txt` provenance stamp) pinning the output of engine paths with no external reference — the default `boundary_policy = "extend"`, intervals, robustness weights, streaming, and online — verified by `test-golden.R` within a `1e-10` tolerance (srrstats G5.4c).
 * Added explicit G5.9a test: `.Machine$double.eps` scale noise on input `y` produces no meaningful change in smoothed output (verified via `expect_equal(..., tolerance = 1e-10)`).
 * Added explicit tests for RE7.0/RE7.0a (noiseless exact predictor relationships, including identical-x and degenerate cases) and RE7.1/RE7.1a (noiseless exact y = f(x) relationships with timing comparison) in `tests/testthat/test-validation.R`. Removed incorrect `@srrstatsNA` tags and added proper `@srrstats` claims in `R/srr-stats-standards.R` and test headers. These tests confirm graceful handling of perfectly noiseless input and that exact data fits at least as fast as noisy equivalents.
-* Added musl release binaries for Python, C++, Go, and Julia.
-* Added bundled native libraries for the Java binding across 8 platforms, with runtime musl detection and auto-extraction.
+
+## Changed
+
+* Hoisted fully-qualified imports to top-level `use` statements across crates and bindings.
 
 ## Fixed
 
@@ -19,10 +23,6 @@
 * Changed the `iterations` default for `OnlineLowess` from `3` to `0` across every binding (R, Python, Julia, C++, Go, Java, Node.js, WASM), matching the default `update_mode = "incremental"` non-robust single-point fit; robustness iterations now require `update_mode = "full"`.
 * `dev/bump_version.py` now updates the Go `/vN` path and the Java Maven example version.
 * Fixed inconsistent Node.js naming in READMEs, doc-site home pages, and `CITATION.cff`.
-
-## Changed
-
-* Hoisted fully-qualified imports to top-level `use` statements across crates and bindings.
 
 # rfastlowess 4.0.0
 

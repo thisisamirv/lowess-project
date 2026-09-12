@@ -106,6 +106,7 @@ npm-debug.log
 *.node
 *.node.bak
 build/
+_snippet*
 
 # Starlight / Astro docs
 bindings/nodejs/dist/

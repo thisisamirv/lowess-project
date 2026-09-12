@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+**Monorepo:**
+
+- Added musl release binaries for Python, C++, Go, and Julia.
+- Added bundled native libraries for the Java binding across 8 platforms, with runtime musl detection and auto-extraction.
+
 **lowess:**
 
 - Added Online `return_se`/`confidence_intervals`/`prediction_intervals` support, with `OnlineOutput` now populating `standard_error` and the four interval bounds in `Full` mode. Using them without `update_mode("full")` now fails at `.build()` with `LowessError::StandardErrorRequiresFullUpdateMode`.
@@ -73,10 +78,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `return_derivative` to `LowessOptions` and `OnlineOptions`.
 - Added `return_se`/`confidence_intervals`/`prediction_intervals` to `StreamingOptions` and `OnlineOptions`; Online requires `update_mode = "full"`.
 
+### Changed
+
 **Monorepo:**
 
-- Added musl release binaries for Python, C++, Go, and Julia.
-- Added bundled native libraries for the Java binding across 8 platforms, with runtime musl detection and auto-extraction.
+- Hoisted fully-qualified imports to top-level `use` statements across crates and bindings.
+
+**lowess:**
+
+- Flattened the `tests/lowess/` directories into `tests/` directly: each test file is now its own independent integration test binary instead of a submodule of a shared `main.rs`. No test behavior changes.
+- Bumped the vendored KaTeX CDN version from `0.18.5` to `0.18.7`, updating SRI hashes to match.
+
+**fastLowess:**
+
+- Flattened the `tests/fastLowess/` directories into `tests/` directly: each test file is now its own independent integration test binary instead of a submodule of a shared `main.rs`. No test behavior changes.
+- Bumped the vendored KaTeX CDN version from `0.18.5` to `0.18.7`, updating SRI hashes to match.
+
+**Node.js:**
+
+- Updated `oxlint` dev dependency to v1.82.
+
+**WASM:**
+
+- Updated `oxlint` dev dependency to v1.82.
 
 ### Fixed
 
@@ -127,22 +151,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Go:**
 
 - Fixed the Go module's import path to include the required `/v4` suffix. Breaking change for old unsuffixed imports.
-
-### Changed
-
-**lowess:**
-
-- Flattened the `tests/lowess/` directories into `tests/` directly: each test file is now its own independent integration test binary instead of a submodule of a shared `main.rs`. No test behavior changes.
-- Bumped the vendored KaTeX CDN version from `0.18.5` to `0.18.7`, updating SRI hashes to match.
-
-**fastLowess:**
-
-- Flattened the `tests/fastLowess/` directories into `tests/` directly: each test file is now its own independent integration test binary instead of a submodule of a shared `main.rs`. No test behavior changes.
-- Bumped the vendored KaTeX CDN version from `0.18.5` to `0.18.7`, updating SRI hashes to match.
-
-**Monorepo:**
-
-- Hoisted fully-qualified imports to top-level `use` statements across crates and bindings.
 
 ## 4.0.0
 

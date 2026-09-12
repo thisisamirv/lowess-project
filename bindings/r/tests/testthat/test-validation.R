@@ -489,12 +489,22 @@ test_that("RE7.0/RE7.1 noiseless exact predictor and predictor+response", {
     # Minimum elapsed over several repetitions filters out GC pauses and
     # scheduler noise that a single `system.time()` cannot distinguish from a
     # real slowdown (this test flaked on CI from an 11 ms measurement jitter).
-    t_exact <- min(replicate(5L, system.time(
-        fit(Lowess(fraction = 0.3), as.double(d_lin$x), as.double(d_lin$y))
-    )["elapsed"]))
-    t_noisy <- min(replicate(5L, system.time(
-        fit(Lowess(fraction = 0.3), as.double(d_noisy$x), as.double(d_noisy$y))
-    )["elapsed"]))
+    t_exact <- min(replicate(
+        5L,
+        system.time(
+            fit(Lowess(fraction = 0.3), as.double(d_lin$x), as.double(d_lin$y))
+        )["elapsed"]
+    ))
+    t_noisy <- min(replicate(
+        5L,
+        system.time(
+            fit(
+                Lowess(fraction = 0.3),
+                as.double(d_noisy$x),
+                as.double(d_noisy$y)
+            )
+        )["elapsed"]
+    ))
     # Allow small measurement overhead; exact must not be meaningfully slower.
     expect_lte(as.numeric(t_exact), as.numeric(t_noisy) + 0.05)
 })

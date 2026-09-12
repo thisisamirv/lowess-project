@@ -3,12 +3,18 @@
 
 ## Added
 
+* Added musl release binaries for Python, C++, Go, and Julia.
+* Added bundled native libraries for the Java binding across 8 platforms, with runtime musl detection and auto-extraction.
 * Added Online `return_se`/`confidence_intervals`/`prediction_intervals` support, with `OnlineOutput` now populating `standard_error` and the four interval bounds in `Full` mode. Using them without `update_mode("full")` now fails at `.build()` with `LowessError::StandardErrorRequiresFullUpdateMode`.
 * Added Streaming `return_se`/`confidence_intervals`/`prediction_intervals` support, computed per chunk and merged across overlaps. `StreamingBuffer` now carries interval scratch state through `process_chunk()`/`finalize()`.
 * Added `return_derivative` to the Batch, Streaming, and Online builders, exposing each point's local slope via `LowessResult::derivative` or `OnlineOutput::derivative`.
 * Added out-of-sample prediction to Batch via `.retain_model(true)` and `Predict::call()`, with configurable standard errors, intervals, derivative output, and extrapolation.
-* Added musl release binaries for Python, C++, Go, and Julia.
-* Added bundled native libraries for the Java binding across 8 platforms, with runtime musl detection and auto-extraction.
+
+## Changed
+
+* Hoisted fully-qualified imports to top-level `use` statements across crates and bindings.
+* Flattened the `tests/lowess/` directories into `tests/` directly: each test file is now its own independent integration test binary instead of a submodule of a shared `main.rs`. No test behavior changes.
+* Bumped the vendored KaTeX CDN version from `0.18.5` to `0.18.7`, updating SRI hashes to match.
 
 ## Fixed
 
@@ -24,12 +30,6 @@
 * Fixed seeded k-fold CV (`cv_seed` set) producing inflated scores and selecting the wrong fraction: `interpolate_prediction_batch` used a monotone scan pointer that can't rewind for the shuffled (unordered) test fold, so it now locates each query point via binary search (matching the LOOCV interpolator).
 * Fixed the WLS solver silently zeroing the slope for small-magnitude `x`: `fit_wls` used an *absolute* degeneracy tolerance (`1e-7`) on the centred weighted x-variance, so any dataset whose x-range was below roughly `1e-4` was fitted as a local mean instead of a local line (interior derivatives came out as `0`). The tolerance is now relative to the design's own x-scale. The same absolute-tolerance defect in the `fraction >= 1.0` global OLS path (`fit_ols` and `ols_std_errors`) is fixed the same way.
 * Fixed k-fold cross-validation aggregating the *mean of per-fold RMSEs* instead of pooling: it now pools every test point's squared error and takes one square root, matching LOOCV. Previously `k`-fold with `k == n` (identical to leave-one-out) returned the mean absolute error instead of the RMSE and disagreed with `cv_method("loocv")`.
-
-## Changed
-
-* Flattened the `tests/lowess/` directories into `tests/` directly: each test file is now its own independent integration test binary instead of a submodule of a shared `main.rs`. No test behavior changes.
-* Bumped the vendored KaTeX CDN version from `0.18.5` to `0.18.7`, updating SRI hashes to match.
-* Hoisted fully-qualified imports to top-level `use` statements across crates and bindings.
 
 # lowess 4.0.0
 
