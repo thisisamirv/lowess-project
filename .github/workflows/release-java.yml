@@ -56,7 +56,13 @@ jobs:
     steps:
       - name: Install Alpine build dependencies
         if: matrix.container
-        run: apk add --no-cache build-base curl bash git
+        run: |
+          apk add --no-cache build-base curl bash git
+          # Alpine's Rust host triple (x86_64-unknown-linux-musl) defaults to
+          # fully-static crt, which cannot emit a `cdylib`. Disable crt-static so
+          # the JNI .so links dynamically against Alpine's musl, matching what a
+          # native dynamic library needs.
+          echo "RUSTFLAGS=-C target-feature=-crt-static" >> "$GITHUB_ENV"
 
       - uses: actions/checkout@v7
         with:
