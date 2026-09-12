@@ -173,7 +173,7 @@ void testBasicSmooth() {
   fastlowess::LowessOptions options;
   options.fraction = k_basic_fraction;
   fastlowess::Lowess lowess(options);
-  auto result = lowess.fit(sample_x_values, sample_y_values).value();
+  const auto result = lowess.fit(sample_x_values, sample_y_values).value();
 
   assertTrue(result.valid(), "Result should be valid");
   assertTrue(result.y_vector().size() == k_small_sample_size,
@@ -192,7 +192,7 @@ void testBasicSmoothSerial() {
   options.fraction = k_basic_fraction;
   options.parallel = false;
   fastlowess::Lowess lowess(options);
-  auto result = lowess.fit(sample_x_values, sample_y_values).value();
+  const auto result = lowess.fit(sample_x_values, sample_y_values).value();
 
   assertTrue(result.valid(), "Serial result should be valid");
   assertTrue(result.y_vector().size() == k_small_sample_size,
@@ -208,9 +208,9 @@ void testLowessWithDiagnostics() {
   options.fraction = k_basic_fraction;
   options.return_diagnostics = true;
   fastlowess::Lowess lowess(options);
-  auto result = lowess.fit(sample_x_values, sample_y_values).value();
+  const auto result = lowess.fit(sample_x_values, sample_y_values).value();
 
-  auto diagnostics = result.diagnostics();
+  const auto diagnostics = result.diagnostics();
   assertTrue(diagnostics.rmse() >= 0.0, "RMSE negative");
   assertTrue(diagnostics.mae() >= 0.0, "MAE negative");
   assertTrue(diagnostics.r_squared() >= 0.0 && diagnostics.r_squared() <= 1.0,
@@ -226,7 +226,7 @@ void testLowessWithResiduals() {
   options.fraction = k_basic_fraction;
   options.return_residuals = true;
   fastlowess::Lowess lowess(options);
-  auto result = lowess.fit(sample_x_values, sample_y_values).value();
+  const auto result = lowess.fit(sample_x_values, sample_y_values).value();
 
   assertTrue(result.residuals().size() == k_small_sample_size,
              "Residuals missing");
@@ -242,9 +242,9 @@ void testLowessWithRobustnessWeights() {
   options.iterations = k_robust_iterations;
   options.return_robustness_weights = true;
   fastlowess::Lowess lowess(options);
-  auto result = lowess.fit(sample_x_values, outlier_y_values).value();
+  const auto result = lowess.fit(sample_x_values, outlier_y_values).value();
 
-  auto robustness_weights = result.robustness_weights();
+  const auto robustness_weights = result.robustness_weights();
   assertTrue(robustness_weights.size() == k_small_sample_size,
              "Robustness weight count mismatch");
   for (const double weight_value : robustness_weights) {
@@ -262,9 +262,9 @@ void testLowessWithDerivative() {
   options.fraction = k_basic_fraction;
   options.return_derivative = true;
   fastlowess::Lowess lowess(options);
-  auto result = lowess.fit(sample_x_values, sample_y_values).value();
+  const auto result = lowess.fit(sample_x_values, sample_y_values).value();
 
-  auto derivative = result.derivative();
+  const auto derivative = result.derivative();
   assertTrue(derivative.size() == k_small_sample_size,
              "Derivative count mismatch");
 }
@@ -278,7 +278,7 @@ void testLowessReturnSorted() {
   fastlowess::LowessOptions default_options;
   default_options.fraction = k_robust_fraction;
   fastlowess::Lowess default_lowess(default_options);
-  auto default_result = default_lowess.fit(unsorted_x, unsorted_y).value();
+  const auto default_result = default_lowess.fit(unsorted_x, unsorted_y).value();
   assertTrue(default_result.x_vector() == unsorted_x,
              "return_sorted should default to original input order");
 
@@ -288,7 +288,7 @@ void testLowessReturnSorted() {
   sorted_options.return_robustness_weights = true;
   sorted_options.return_sorted = true;
   fastlowess::Lowess sorted_lowess(sorted_options);
-  auto sorted_result = sorted_lowess.fit(unsorted_x, unsorted_y).value();
+  const auto sorted_result = sorted_lowess.fit(unsorted_x, unsorted_y).value();
 
   const auto sorted_x = sorted_result.x_vector();
   assertTrue(std::is_sorted(sorted_x.begin(), sorted_x.end()),
@@ -312,7 +312,7 @@ void testLowessWithConfidenceIntervals() {
   options.fraction = k_basic_fraction;
   options.confidence_intervals = k_confidence_level;
   fastlowess::Lowess lowess(options);
-  auto result = lowess.fit(linear_data.x_values, linear_data.y_values).value();
+  const auto result = lowess.fit(linear_data.x_values, linear_data.y_values).value();
 
   auto confidence_lower = result.confidence_lower();
   auto confidence_upper = result.confidence_upper();
@@ -338,7 +338,7 @@ void testLowessWithPredictionIntervals() {
   options.fraction = k_basic_fraction;
   options.prediction_intervals = k_confidence_level;
   fastlowess::Lowess lowess(options);
-  auto result = lowess.fit(linear_data.x_values, linear_data.y_values).value();
+  const auto result = lowess.fit(linear_data.x_values, linear_data.y_values).value();
 
   assertTrue(result.prediction_lower().size() == k_interval_point_count,
              "Prediction lower size mismatch");
@@ -358,8 +358,8 @@ void testLowessReuse() {
   options.return_diagnostics = true;
   fastlowess::Lowess lowess(options);
 
-  auto first_result = lowess.fit(sample_x_values, sample_y_values).value();
-  auto second_result = lowess.fit(reuse_x_values, reuse_y_values).value();
+  const auto first_result = lowess.fit(sample_x_values, sample_y_values).value();
+  const auto second_result = lowess.fit(reuse_x_values, reuse_y_values).value();
 
   assertTrue(first_result.y_vector().size() == k_small_sample_size,
              "First reuse result size mismatch");
@@ -496,7 +496,7 @@ void testMismatchedLengths() {
   assertTrue(threw_exception, "Should have thrown");
   assertTrue(!exception_message.empty(), "Exception message should be present");
 
-  auto result = lowess.fit(mismatched_x_values, mismatched_y_values);
+  const auto result = lowess.fit(mismatched_x_values, mismatched_y_values);
   assertTrue(!result.has_value(),
              "Expected error result for mismatched lengths");
   assertTrue(!result.error().empty(), "Expected non-empty error message");
@@ -520,7 +520,7 @@ void testCustomWeightsUniformMatchesNoWeights() {
 
   fastlowess::Lowess model(opts);
   const auto result_no_w = model.fit(x_values, y_values).value();
-  auto result_unit_w = model.fit(x_values, y_values, weights).value();
+  const auto result_unit_w = model.fit(x_values, y_values, weights).value();
 
   const auto y_no_w = result_no_w.y_vector();
   const auto y_unit_w = result_unit_w.y_vector();
