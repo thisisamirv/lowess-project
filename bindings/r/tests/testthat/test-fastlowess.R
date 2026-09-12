@@ -6,6 +6,7 @@
 #' @srrstats {G5.7} Performance tests (parallel vs serial).
 #' @srrstats {G5.8c, G5.8d} Edge cases: minimum points, constant values.
 #' @srrstats {G5.9a} Trivial noise does not meaningfully change results.
+#' @srrstats {G5.9b} CV-selected fraction is stable across different seeds.
 #' @srrstats {RE4.10} Residuals tested in Lowess residuals test.
 #' @srrstats {RE4.11} Goodness-of-fit tested in diagnostics test.
 #' @srrstats {RE5.0} Confidence/prediction intervals tested.
@@ -304,6 +305,33 @@ test_that("Lowess cross-validation respects cv_seed for reproducibility", {
     )
     expect_true("cv_scores" %in% names(result_null))
     expect_length(result_null$cv_scores, 3)
+})
+
+test_that("G5.9b CV-selected fraction is stable across different seeds", {
+    set.seed(2026)
+    x <- seq(0, 10, length.out = 200)
+    y <- sin(x) + rnorm(200, sd = 0.25)
+
+    fractions <- vapply(
+        c(1L, 2L, 3L, 4L, 5L),
+        function(s) {
+            fit(
+                Lowess(
+                    cv_fractions = c(0.2, 0.3, 0.4, 0.5),
+                    cv_method = "kfold",
+                    cv_k = 5,
+                    cv_seed = s
+                ),
+                as.double(x),
+                as.double(y)
+            )$fraction_used
+        },
+        numeric(1)
+    )
+
+    # Different fold splits (different seeds) must not visibly flip the
+    # selected bandwidth: results do not meaningfully change across seeds.
+    expect_length(unique(round(fractions, 12)), 1)
 })
 
 test_that("Lowess output is stable under .Machine$double.eps scale noise", {

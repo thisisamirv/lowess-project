@@ -1,6 +1,7 @@
 #' @srrstats {G5.5} Fixed random seeds.
 #' @srrstats {G5.8} Edge cases: min data, window > data.
 #' @srrstats {RE4.0} Robustness iterations tested.
+#' @srrstats {G5.6, G5.6a} Parameter recovery in online full mode.
 test_that("OnlineLowess basic functionality works", {
     set.seed(42)
     x <- as.double(1:100)
@@ -144,6 +145,59 @@ test_that("OnlineLowess robustness works", {
 
     expect_false(all(vapply(results_no_robust, is.null, logical(1))))
     expect_false(all(vapply(results_robust, is.null, logical(1))))
+})
+
+test_that("G5.6 OnlineLowess full mode recovers a noiseless signal", {
+    x <- as.double(seq(0, 10, length.out = 40))
+    y <- as.double(2 * x + 1)
+
+    # update_mode = "full" with iterations > 0 recovers the noiseless
+    # expected smoothed values exactly.
+    full <- OnlineLowess(
+        fraction = 0.3,
+        window_capacity = 12L,
+        min_points = 4L,
+        update_mode = "full",
+        iterations = 2L
+    )
+    out_full <- lapply(
+        seq_along(x),
+        function(i) add_point(full, x[[i]], y[[i]])
+    )
+    yhat_full <- vapply(
+        out_full,
+        function(r) if (is.null(r)) NA_real_ else r$y,
+        numeric(1)
+    )
+    valid <- !is.na(yhat_full)
+    expect_true(any(valid))
+    expect_equal(yhat_full[valid], as.double(y[valid]), tolerance = 1e-12)
+
+    # update_mode = "incremental" with iterations > 0 is rejected at build
+    # time rather than silently ignoring the robustness setting.
+    expect_error(
+        OnlineLowess(
+            fraction = 0.3,
+            window_capacity = 12L,
+            min_points = 4L,
+            update_mode = "incremental",
+            iterations = 2L
+        ),
+        "iterations > 0 requires update_mode"
+    )
+
+    # update_mode = "incremental" with iterations = 0 is the correctly
+    # specified non-robust path and runs without error.
+    incr <- OnlineLowess(
+        fraction = 0.3,
+        window_capacity = 12L,
+        min_points = 4L,
+        update_mode = "incremental",
+        iterations = 0L
+    )
+    expect_no_error(
+        lapply(seq_along(x), function(i) add_point(incr, x[[i]], y[[i]]))
+    )
 })
 
 test_that("OnlineLowess missing = \"drop\" ignores non-finite point", {

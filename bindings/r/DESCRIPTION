@@ -3,7 +3,8 @@ Title: High-Performance LOWESS Smoothing for R
 Version: 4.1.0
 Authors@R: c(
     person("Amir", "Valizadeh", email = "thisisamirv@gmail.com", role = c("aut", "cre", "fnd"), comment = c(ORCID = "0000-0001-5983-8527")),
-    person("Aleksei", "Chirkunov", role = "rev", comment = "Reviewed the package for rOpenSci (GitHub: @alexzerg), see <https://github.com/ropensci/software-review/issues/769>")
+    person("Aleksei", "Chirkunov", role = "rev", comment = "Reviewed the package for rOpenSci (GitHub: @alexzerg), see <https://github.com/ropensci/software-review/issues/769>"),
+    person("Etienne", "Bacher", role = "edt", comment = "Edited the package for rOpenSci (GitHub: @etiennebacher), see <https://github.com/ropensci/software-review/issues/769>")
     )
 Description: Provides high-performance LOWESS smoothing (Locally Weighted Scatterplot Smoothing) 
     using a 'Rust' backend. Supports various weight functions, robustness iterations, 
