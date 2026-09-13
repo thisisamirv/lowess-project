@@ -37,6 +37,9 @@ public final class OnlineOptions {
         int minPoints = 2;
         String updateMode = null;
 
+        Builder() {
+        }
+
         {
             // Online's default "incremental" mode performs a non-robust
             // single-point fit; robustness iterations require updateMode("full").
