@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed `javadoc` "no main description" warnings in `OnlineOptions` and `StreamingOptions` builder methods by adding a leading description sentence to each Javadoc block.
 - Fixed `maven-javadoc-plugin` silently ignoring javadoc warnings (`make dev`'s "Javadoc" step) due to a `pom.xml` typo: the parameter is `failOnWarnings`, not `failOnWarning`.
 
+**Monorepo:**
+
+- Fixed C++ release CI's "Commit updated recipe" step failing with "paths are ignored" because the repo's blanket `.gitignore` `spack/` rule matches `bindings/cpp/spack/`; `git add` now force-adds the tracked recipe file.
+
 ## 4.1.0
 
 ### Added
