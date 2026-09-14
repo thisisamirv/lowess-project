@@ -16,6 +16,9 @@ documentation = "https://docs.rs/lowess"
 keywords = ["lowess", "smoothing", "statistics", "regression", "bioinformatics"]
 categories = ["science", "algorithms"]
 
+# JP: why do assets need to be included into the build? Is this strictly for docs?
+# if so then the docs should be compiled with a docs flag this will bloat the install
+# unecessarily
 # Build
 include = [
     "src/**/*",

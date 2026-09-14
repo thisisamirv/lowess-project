@@ -119,6 +119,9 @@ pub type FitPassFn<T> = fn(
     &LowessConfig<T>, // full configuration
 ) -> Result<IterationResult<T>, LowessError>;
 
+// JP: T should probably be bound to num-traits for correctness but doesn't really matter
+// EDIT: i see num-traits below for the implementation.
+
 // Output from LOWESS execution.
 #[derive(Debug, Clone)]
 pub struct ExecutorOutput<T> {
@@ -207,6 +210,12 @@ pub struct LowessConfig<T> {
 
     // Whether to compute per-point local fit derivative (slope) (Batch only).
     pub return_derivative: bool,
+
+    // JP: feels really weird to have development fields marked as public internally
+    // these should probably be masked with a cfg! or an env! and set to _override_ the values
+    // not be part of the actual public interface.
+    //
+    // This is a code smell.
 
     // ++++++++++++++++++++++++++++++++++++++
     // +               DEV                  +
@@ -324,6 +333,10 @@ pub struct LowessExecutor<T: Float> {
     // Whether to compute per-point local fit derivative (slope) (Batch only).
     pub return_derivative: bool,
 
+    // JP: again, make these pub(crate) or make a better design decision for setting the
+    // overrides. This back door can lead to a dev build that makes you think you've
+    // made a nice fix that isn't actually represented in the publicAPI
+
     // ++++++++++++++++++++++++++++++++++++++
     // +               DEV                  +
     // ++++++++++++++++++++++++++++++++++++++
@@ -377,6 +390,7 @@ impl<T: Float> Default for LowessExecutor<T> {
 }
 
 impl<T: Float> LowessExecutor<T> {
+    // JP: im always of the mind that a default method should be used and not a `new()` method as that is more idiomatic.
     // Create a new executor with default parameters.
     pub fn new() -> Self {
         Self {
@@ -420,6 +434,7 @@ impl<T: Float> LowessExecutor<T> {
             .auto_converge(config.auto_converge)
             .interval_method(config.return_variance)
             .return_derivative(config.return_derivative)
+            // JP: same thing
             // ++++++++++++++++++++++++++++++++++++++
             // +               DEV                  +
             // ++++++++++++++++++++++++++++++++++++++
@@ -439,6 +454,7 @@ impl<T: Float> LowessExecutor<T> {
     #[doc(hidden)]
     pub fn to_config(
         &self,
+        // JP: fraction is part of the LowessConfig why does it need another argument?
         fraction: Option<T>,
         tolerance: Option<T>,
         interval_method: Option<&IntervalMethod<T>>,
@@ -540,6 +556,8 @@ impl<T: Float> LowessExecutor<T> {
         self.return_derivative = return_derivative;
         self
     }
+
+    // JP: echo again
     // ++++++++++++++++++++++++++++++++++++++
     // +               DEV                  +
     // ++++++++++++++++++++++++++++++++++++++
@@ -685,6 +703,7 @@ impl<T: Float> LowessExecutor<T> {
                             .retain_model(false)
                             .return_derivative(false)
                             .run(tx, ty, None)
+                            // JP: this needs to be handled.
                             .unwrap() // CV must succeed
                             .smoothed
                     },
@@ -927,6 +946,7 @@ impl<T: Float> LowessExecutor<T> {
         })
     }
 
+    // JP: nit—im' with clippy on tis one.
     // Perform the full LOWESS iteration loop.
     #[allow(clippy::too_many_arguments)]
     pub fn iteration_loop_with_callback(
@@ -984,6 +1004,9 @@ impl<T: Float> LowessExecutor<T> {
 
             // Swap buffers if checking convergence (save previous state)
             if convergence_tolerance.is_some() && iter > 0 {
+                // JP: **important** double check the memory safey and correctness of this.
+                // almost any time that a mem swap needs to take place there is a better
+                // API and safe way of doing this. This really converns me
                 swap(&mut buffers.y_smooth, &mut buffers.y_prev);
             }
 

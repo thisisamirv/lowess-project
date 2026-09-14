@@ -7,12 +7,9 @@
 
 #![allow(non_snake_case)]
 
-use extendr_api::prelude::*;
+use extendr_api::{error::Result, prelude::*};
 use std::cell::RefCell;
 use std::sync::Arc;
-
-// Provide the Result alias that was removed from extendr_api::prelude in 0.9.0
-type Result<T> = std::result::Result<T, extendr_api::Error>;
 
 use fastLowess::internals::api::{LowessBuilder, LowessResult};
 use fastLowess::internals::binding_support as shared_parse;
@@ -21,6 +18,9 @@ use fastLowess::internals::binding_support as shared_parse;
 // Helper Functions
 // ============================================================================
 
+// JP: this is a ton of indirection in error types.
+// Anything implementing std err can be returned.
+// Maybe impl std Error trait or ue anyhow, but nontheless this is a nit
 fn to_r_error(err: shared_parse::BindingError) -> Error {
     let prefix = match err.category {
         shared_parse::BindingErrorCategory::InvalidArg => "[invalid-arg]",
@@ -58,6 +58,9 @@ pub struct RLowess {
     predict_state: RefCell<Option<Arc<shared_parse::PredictState<f64>>>>,
 }
 
+// JP this is a design choice, obviously, but as an R user i'd _hate_ to get this many arguments lol!
+// i'd want `return = c("diagnostics", "residuals", "weights", "derivatives")` as an arg
+// all cv args to be a list of opts like `cv = cv_opts()` which is default or fallback
 #[extendr]
 impl RLowess {
     /// Create a new Lowess model
@@ -156,6 +159,7 @@ impl RLowess {
 
     /// Fit the model to data
     fn fit(&self, x: &[f64], y: &[f64], custom_weights: Nullable<Vec<f64>>) -> Result<List> {
+        // JP: add lenght validation here unless done inside
         let cw = match custom_weights {
             NotNull(w) => Some(w),
             Null => None,
@@ -512,6 +516,7 @@ fn lowess_result_to_list(result: LowessResult<f64>) -> Result<List> {
             rmse = diag.rmse,
             mae = diag.mae,
             r_squared = diag.r_squared,
+            // JP use NA here instead of NaN as NA conceptually covers None and not a not-a-number
             aic = diag.aic.unwrap_or(f64::NAN),
             aicc = diag.aicc.unwrap_or(f64::NAN),
             effective_df = diag.effective_df.unwrap_or(f64::NAN),
@@ -524,6 +529,7 @@ fn lowess_result_to_list(result: LowessResult<f64>) -> Result<List> {
     let names: Vec<&str> = list_items.iter().map(|(k, _)| *k).collect();
     let values: Vec<Robj> = list_items.into_iter().map(|(_, v)| v).collect();
     let mut list = List::from_names_and_values(names, values)?;
+    // JP set the List baseclass
     list.set_class(&["LowessResult"])?;
     Ok(list)
 }
@@ -535,6 +541,8 @@ fn lowess_result_to_list(result: LowessResult<f64>) -> Result<List> {
 /// True if this shared library was built with the `gpu` Cargo feature enabled.
 #[extendr]
 fn gpu_enabled() -> bool {
+    // JP: hopefull this is the default feature? Seems liek a big deal
+    // making it not available to R users would be </3
     cfg!(feature = "gpu")
 }
 
