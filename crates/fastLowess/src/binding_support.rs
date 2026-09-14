@@ -333,7 +333,11 @@ pub fn setter_unsupported_eager_message(name: &str) -> String {
 pub fn setter_unsupported_constructor_only_message(name: &str) -> String {
     format!("{name} is not supported: configure model options at construction time")
 }
-
+// JP: there is a good chance this leads to a memory leak.
+// Based on this alone i would be hesitent to use this crate.
+// Probably best to use a box and into raw mutable pointer.
+//
+//
 // Converts a Vec<f64> into a heap-allocated raw pointer.
 // The caller is responsible for freeing the memory via Box::from_raw / Vec::from_raw_parts.
 pub fn vec_to_raw_ptr(v: Vec<f64>) -> *mut f64 {

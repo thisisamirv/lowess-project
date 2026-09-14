@@ -93,6 +93,7 @@ const UNIFORM_PROPERTIES: KernelProperties = KernelProperties {
     roughness: 2.0,
 };
 
+// JP:  This should be non-exhaustive as ther are more weights than this.
 // Weight function (kernel) for LOWESS smoothing.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum WeightFunction {
