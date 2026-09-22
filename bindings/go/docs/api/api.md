@@ -309,9 +309,9 @@ Each point's local WLS fit already computes a slope internally; this exposes tha
 | `MAE` | `float64` | Mean Absolute Error |
 | `RSquared` | `float64` | R-squared |
 | `ResidualSD` | `float64` | Residual standard deviation |
-| `EffectiveDF` | `float64` | Effective degrees of freedom |
-| `AIC` | `float64` | AIC |
-| `AICc` | `float64` | AICc |
+| `EffectiveDF` | `*float64` | Effective degrees of freedom, or `nil` if unavailable |
+| `AIC` | `*float64` | AIC, or `nil` if unavailable |
+| `AICc` | `*float64` | AICc, or `nil` if unavailable |
 
 ## Predict
 

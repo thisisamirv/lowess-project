@@ -115,6 +115,9 @@ func TestLowess(t *testing.T) {
 			t.Fatal("expected Diagnostics to be populated")
 		}
 		diag := res.Diagnostics
+		if diag.AIC != nil || diag.AICc != nil || diag.EffectiveDF != nil {
+			t.Fatal("expected unavailable information criteria to be nil")
+		}
 		if diag.RMSE < 0 || diag.MAE < 0 || diag.ResidualSD < 0 {
 			t.Fatalf("expected non-negative error metrics, got %+v", diag)
 		}

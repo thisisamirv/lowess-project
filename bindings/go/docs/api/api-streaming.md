@@ -286,9 +286,9 @@ Returned by `ProcessChunk` and `Finalize`.
 | `MAE` | `float64` | Mean Absolute Error |
 | `RSquared` | `float64` | R-squared |
 | `ResidualSD` | `float64` | Residual standard deviation |
-| `EffectiveDF` | `float64` | Always `NaN` (cumulative diagnostics don't integrate per-chunk leverage; Batch only) |
-| `AIC` | `float64` | Always `NaN` (requires `EffectiveDF`; Batch only) |
-| `AICc` | `float64` | Always `NaN` (requires `EffectiveDF`; Batch only) |
+| `EffectiveDF` | `*float64` | `nil` (cumulative diagnostics don't integrate per-chunk leverage; Batch only) |
+| `AIC` | `*float64` | `nil` (requires `EffectiveDF`; Batch only) |
+| `AICc` | `*float64` | `nil` (requires `EffectiveDF`; Batch only) |
 
 ## Example
 

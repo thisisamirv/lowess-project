@@ -327,9 +327,9 @@ All accessors are const methods (not public fields):
 | `mae()` | `double` | Mean Absolute Error |
 | `r_squared()` | `double` | R-squared |
 | `residual_sd()` | `double` | Residual standard deviation |
-| `effective_df()` | `double` | Effective degrees of freedom (NaN if not computed) |
-| `aic()` | `double` | AIC (NaN if not computed) |
-| `aicc()` | `double` | AICc (NaN if not computed) |
+| `effective_df()` | `std::optional<double>` | Effective degrees of freedom, if computed |
+| `aic()` | `std::optional<double>` | AIC, if computed |
+| `aicc()` | `std::optional<double>` | AICc, if computed |
 
 ## Predict
 

@@ -105,13 +105,23 @@ func cDoubleSliceToGo(ptr *C.double, n int) []float64 {
 // Diagnostics holds goodness-of-fit metrics, populated when ReturnDiagnostics
 // is enabled.
 type Diagnostics struct {
-	RMSE        float64
-	MAE         float64
-	RSquared    float64
-	AIC         float64
-	AICc        float64
-	EffectiveDF float64
+	RMSE     float64
+	MAE      float64
+	RSquared float64
+	AIC      *float64
+	// AICc is nil when it was not computed.
+	AICc *float64
+	// EffectiveDF is nil when it was not computed.
+	EffectiveDF *float64
 	ResidualSD  float64
+}
+
+func optionalFloat(value C.double) *float64 {
+	if math.IsNaN(float64(value)) {
+		return nil
+	}
+	result := float64(value)
+	return &result
 }
 
 // Result is the outcome of a batch fit, streaming chunk/finalize, or is
@@ -186,9 +196,9 @@ func resultFromC(cres C.fastlowess_GoLowessResult) (Result, error) {
 			RMSE:        float64(cres.rmse),
 			MAE:         float64(cres.mae),
 			RSquared:    float64(cres.r_squared),
-			AIC:         float64(cres.aic),
-			AICc:        float64(cres.aicc),
-			EffectiveDF: float64(cres.effective_df),
+			AIC:         optionalFloat(cres.aic),
+			AICc:        optionalFloat(cres.aicc),
+			EffectiveDF: optionalFloat(cres.effective_df),
 			ResidualSD:  float64(cres.residual_sd),
 		}
 	}

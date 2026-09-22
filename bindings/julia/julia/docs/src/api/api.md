@@ -279,9 +279,9 @@ Each point's local WLS fit already computes a slope internally; this exposes tha
 | `mae` | `Float64` | Mean Absolute Error |
 | `r_squared` | `Float64` | R-squared |
 | `residual_sd` | `Float64` | Residual standard deviation |
-| `effective_df` | `Float64` | Effective degrees of freedom |
-| `aic` | `Float64` | AIC |
-| `aicc` | `Float64` | AICc |
+| `effective_df` | `Union{Float64, Nothing}` | Effective degrees of freedom, or `nothing` if unavailable |
+| `aic` | `Union{Float64, Nothing}` | AIC, or `nothing` if unavailable |
+| `aicc` | `Union{Float64, Nothing}` | AICc, or `nothing` if unavailable |
 
 ## Example
 

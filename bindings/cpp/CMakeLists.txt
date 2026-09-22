@@ -20,6 +20,9 @@ corrosion_import_crate(MANIFEST_PATH Cargo.toml)
 
 set_target_properties(fastlowess_cpp PROPERTIES EXPORT_NAME fastlowess)
 
+# The public C++ wrapper uses std::optional and requires C++17.
+target_compile_features(fastlowess_cpp INTERFACE cxx_std_17)
+
 # Configure include directories
 # This ensures that #include "fastlowess.hpp" works for consumers
 target_include_directories(

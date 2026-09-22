@@ -18,6 +18,7 @@
 #include <fstream>
 #include <iostream>
 #include <limits>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -301,26 +302,35 @@ public:
 
   explicit Diagnostics(const fastlowess_CppLowessResult &result)
       : rmse_(result.rmse), mae_(result.mae), r_squared_(result.r_squared),
-        aic_(result.aic), aicc_(result.aicc),
-        effective_df_(result.effective_df), residual_sd_(result.residual_sd) {}
+        aic_(std::isnan(result.aic) ? std::nullopt
+                                    : std::optional<double>(result.aic)),
+        aicc_(std::isnan(result.aicc) ? std::nullopt
+                                      : std::optional<double>(result.aicc)),
+        effective_df_(std::isnan(result.effective_df)
+                          ? std::nullopt
+                          : std::optional<double>(result.effective_df)),
+        residual_sd_(result.residual_sd) {}
 
   bool has_value() const { return !std::isnan(rmse_); }
 
   double rmse() const { return rmse_; }
   double mae() const { return mae_; }
   double r_squared() const { return r_squared_; }
-  double aic() const { return aic_; }
-  double aicc() const { return aicc_; }
-  double effective_df() const { return effective_df_; }
   double residual_sd() const { return residual_sd_; }
+  /// Akaike Information Criterion, if computed.
+  std::optional<double> aic() const { return aic_; }
+  /// Corrected AIC, if computed.
+  std::optional<double> aicc() const { return aicc_; }
+  /// Effective degrees of freedom, if computed.
+  std::optional<double> effective_df() const { return effective_df_; }
 
 private:
   double rmse_ = NAN;
   double mae_ = NAN;
   double r_squared_ = NAN;
-  double aic_ = NAN;
-  double aicc_ = NAN;
-  double effective_df_ = NAN;
+  std::optional<double> aic_;
+  std::optional<double> aicc_;
+  std::optional<double> effective_df_;
   double residual_sd_ = NAN;
 };
 

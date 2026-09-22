@@ -209,6 +209,10 @@ void testLowessWithDiagnostics() {
   assertTrue(diagnostics.mae() >= 0.0, "MAE negative");
   assertTrue(diagnostics.r_squared() >= 0.0 && diagnostics.r_squared() <= 1.0,
              "R2 out of range");
+  assertTrue(!diagnostics.aic().has_value(), "AIC should be unavailable");
+  assertTrue(!diagnostics.aicc().has_value(), "AICc should be unavailable");
+  assertTrue(!diagnostics.effective_df().has_value(),
+             "Effective DF should be unavailable");
 }
 
 void testLowessWithResiduals() {

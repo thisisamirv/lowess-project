@@ -286,9 +286,9 @@ Returned by `process_chunk` and `finalize`.
 | `mae` | `Float64` | Mean Absolute Error |
 | `r_squared` | `Float64` | R-squared |
 | `residual_sd` | `Float64` | Residual standard deviation |
-| `effective_df` | `Float64` | Always `NaN` (cumulative diagnostics don't integrate per-chunk leverage; Batch only) |
-| `aic` | `Float64` | Always `NaN` (requires `effective_df`; Batch only) |
-| `aicc` | `Float64` | Always `NaN` (requires `effective_df`; Batch only) |
+| `effective_df` | `Union{Float64, Nothing}` | `nothing` (cumulative diagnostics don't integrate per-chunk leverage; Batch only) |
+| `aic` | `Union{Float64, Nothing}` | `nothing` (requires `effective_df`; Batch only) |
+| `aicc` | `Union{Float64, Nothing}` | `nothing` (requires `effective_df`; Batch only) |
 
 ## Example
 

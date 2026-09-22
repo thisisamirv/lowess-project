@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Go:**
 
 - Added grouped `Outputs []string`, `CV *CVOptions`, and prediction `Outputs []string` options; legacy flat fields remain accepted for compatibility while callers migrate.
+- Represent unavailable diagnostic metrics as `nil` optional values instead of `NaN` sentinels.
 
 **Java:**
 
@@ -33,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added grouped `outputs = ["diagnostics", "residuals", "weights", "derivative", "se", "sorted"]` and `cv = (fractions = ..., method = "kfold", k = 5, seed = 123)` keywords for `Lowess`, plus grouped outputs for Streaming/Online constructors.
 - Added grouped `outputs = ["se", "derivative"]` support to `predict` for retained Julia models.
+- Represent unavailable diagnostic metrics as `nothing` instead of `NaN` sentinels.
 
 **Node.js/WASM:**
 
@@ -82,6 +84,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **C++:**
 
 - **Breaking:** replaced flat `return_*` and `cv_*` fields on `LowessOptions`/related options with grouped `outputs = {"diagnostics", "residuals", "weights", "derivative", "se", "sorted"}` and nested `cv.method`/`cv.k`/`cv.fractions`/`cv.seed`; `PredictOptions` now uses `outputs = {"se", "derivative"}`.
+- Declared the public C++ wrapper's C++17 requirement for `std::optional` in CMake and clangd configuration.
+- Represent unavailable diagnostic metrics as empty `std::optional<double>` values instead of `NaN` sentinels.
 
 ## 4.1.0
 

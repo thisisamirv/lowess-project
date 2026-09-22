@@ -356,6 +356,6 @@ Returned (inside `Expected`) by `process_chunk()` and `finalize()`.
 | `mae()` | `double` | Mean Absolute Error |
 | `r_squared()` | `double` | R-squared |
 | `residual_sd()` | `double` | Residual standard deviation |
-| `effective_df()` | `double` | Always NaN (cumulative diagnostics don't integrate per-chunk leverage; Batch only) |
-| `aic()` | `double` | Always NaN (requires `effective_df`; Batch only) |
-| `aicc()` | `double` | Always NaN (requires `effective_df`; Batch only) |
+| `effective_df()` | `std::optional<double>` | Empty (cumulative diagnostics don't integrate per-chunk leverage; Batch only) |
+| `aic()` | `std::optional<double>` | Empty (requires `effective_df`; Batch only) |
+| `aicc()` | `std::optional<double>` | Empty (requires `effective_df`; Batch only) |
