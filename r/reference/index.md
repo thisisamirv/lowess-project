@@ -17,22 +17,36 @@ Objects returned by fit methods and helper functions.
 
 - [`fit()`](https://thisisamirv.github.io/lowess-project/r/reference/fit.md)
   : Fit a LOWESS model to data
+
+- [`cv_opts()`](https://thisisamirv.github.io/lowess-project/r/reference/cv_opts.md)
+  :
+
+  Cross-validation options for `Lowess`
+
 - [`predict(`*`<Lowess>`*`)`](https://thisisamirv.github.io/lowess-project/r/reference/predict.Lowess.md)
   : Predict from a fitted LOWESS model at out-of-sample points
+
 - [`process_chunk()`](https://thisisamirv.github.io/lowess-project/r/reference/process_chunk.md)
   : Process a data chunk through a streaming LOWESS model
+
 - [`finalize()`](https://thisisamirv.github.io/lowess-project/r/reference/finalize.md)
   : Finalize a streaming LOWESS model
+
 - [`add_point()`](https://thisisamirv.github.io/lowess-project/r/reference/add_point.md)
   : Add a single point to an online LOWESS model
+
 - [`plot(`*`<LowessResult>`*`)`](https://thisisamirv.github.io/lowess-project/r/reference/plot.LowessResult.md)
   : Plot Lowess Result
+
 - [`print(`*`<Lowess>`*`)`](https://thisisamirv.github.io/lowess-project/r/reference/print.Lowess.md)
   : Print Lowess Model
+
 - [`print(`*`<LowessResult>`*`)`](https://thisisamirv.github.io/lowess-project/r/reference/print.LowessResult.md)
   : Print Lowess Result
+
 - [`print(`*`<OnlineLowess>`*`)`](https://thisisamirv.github.io/lowess-project/r/reference/print.OnlineLowess.md)
   : Print OnlineLowess Model
+
 - [`print(`*`<StreamingLowess>`*`)`](https://thisisamirv.github.io/lowess-project/r/reference/print.StreamingLowess.md)
   : Print StreamingLowess Model
 

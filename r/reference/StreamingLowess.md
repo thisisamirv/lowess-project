@@ -24,16 +24,12 @@ StreamingLowess(
     boundary_policy = "extend",
     zero_weight_fallback = "use_local_mean",
     auto_converge = NULL,
-    return_diagnostics = FALSE,
-    return_residuals = FALSE,
-    return_robustness_weights = FALSE,
-    return_derivative = FALSE,
-    return_se = FALSE,
     confidence_intervals = NULL,
     prediction_intervals = NULL,
     merge_strategy = "weighted_average",
     parallel = TRUE,
-    missing = "error"
+    missing = "error",
+    outputs = NULL
 )
 ```
 
@@ -107,29 +103,6 @@ StreamingLowess(
   Convergence tolerance for early stopping of robustness iterations.
   `NULL` (default) disables early stopping.
 
-- return_diagnostics:
-
-  Logical; if `TRUE`, return fit-quality metrics (RMSE, MAE, R-squared,
-  AIC, etc.). Default: `FALSE`.
-
-- return_residuals:
-
-  Logical; if `TRUE`, return residuals in the result. Default: `FALSE`.
-
-- return_robustness_weights:
-
-  Logical; if `TRUE`, return per-point robustness weights. Default:
-  `FALSE`.
-
-- return_derivative:
-
-  Logical; if `TRUE`, return per-point local fit derivative (slope) in
-  the result. Default: `FALSE`.
-
-- return_se:
-
-  Logical; include standard errors in the result. Default: `FALSE`.
-
 - confidence_intervals:
 
   Confidence level for confidence intervals (e.g. 0.95), or `NULL`
@@ -156,6 +129,13 @@ StreamingLowess(
   Policy for non-finite (NaN/Infinity) values in input data: `"error"`
   (default) raises an error, `"drop"` silently removes affected
   observations before fitting.
+
+- outputs:
+
+  Character vector selecting optional output components:
+  `"diagnostics"`, `"residuals"`, `"weights"` (robustness weights),
+  `"derivative"`, and/or `"se"` (standard errors). `NULL` (default)
+  returns only the core result.
 
 ## Value
 

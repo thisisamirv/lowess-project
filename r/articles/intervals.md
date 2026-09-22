@@ -163,7 +163,7 @@ Access standard errors directly (available when intervals are computed):
 
 ``` r
 
-model <- Lowess(fraction = 0.5, return_se = TRUE)
+model <- Lowess(fraction = 0.5, outputs = "se")
 result <- fit(model, x, y)
 cat("Standard errors (first 5):", head(result$standard_errors, 5), "\n")
 #> Standard errors (first 5): 0.03080664 0.03226983 0.03374655 0.03522111 0.03667521
@@ -211,7 +211,7 @@ sessionInfo()
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    
-#>  [5] xfun_0.60         cachem_1.1.0      knitr_1.52        htmltools_0.5.9  
+#>  [5] xfun_0.61         cachem_1.1.0      knitr_1.52        htmltools_0.5.9  
 #>  [9] rmarkdown_2.32    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      
 #> [13] pkgdown_2.2.1     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2
 #> [17] compiler_4.6.1    tools_4.6.1       ragg_1.5.2        bslib_0.12.0     

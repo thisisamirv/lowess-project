@@ -18,22 +18,14 @@ Lowess(
     boundary_policy = "extend",
     confidence_intervals = NULL,
     prediction_intervals = NULL,
-    return_diagnostics = FALSE,
-    return_residuals = FALSE,
-    return_robustness_weights = FALSE,
-    return_derivative = FALSE,
     zero_weight_fallback = "use_local_mean",
     auto_converge = NULL,
-    cv_fractions = NULL,
-    cv_method = "kfold",
-    cv_k = 5L,
     parallel = TRUE,
-    cv_seed = NULL,
-    return_se = FALSE,
-    return_sorted = FALSE,
     backend = "cpu",
     missing = "error",
-    retain_model = FALSE
+    retain_model = FALSE,
+    outputs = NULL,
+    cv = NULL
 )
 ```
 
@@ -94,25 +86,6 @@ Lowess(
   Confidence level for prediction intervals, greater than 0 and less
   than 1 (e.g., 0.95). `NULL` (default) disables prediction intervals.
 
-- return_diagnostics:
-
-  Logical; if `TRUE`, return fit-quality metrics (RMSE, MAE, R-squared,
-  AIC, etc.). Default: `FALSE`.
-
-- return_residuals:
-
-  Logical; if `TRUE`, return residuals in the result. Default: `FALSE`.
-
-- return_robustness_weights:
-
-  Logical; if `TRUE`, return per-point robustness weights. Default:
-  `FALSE`.
-
-- return_derivative:
-
-  Logical; if `TRUE`, return per-point local fit derivative (slope) in
-  the result. Default: `FALSE`.
-
 - zero_weight_fallback:
 
   Fallback policy when all robustness weights drop to zero:
@@ -125,41 +98,9 @@ Lowess(
   Convergence tolerance for early stopping of robustness iterations.
   `NULL` (default) disables early stopping.
 
-- cv_fractions:
-
-  Numeric vector of candidate fractions for cross-validation. `NULL`
-  (default) disables CV.
-
-- cv_method:
-
-  Cross-validation method: `"kfold"` (default) or `"loocv"`.
-
-- cv_k:
-
-  Number of folds for k-fold CV. Default: 5.
-
 - parallel:
 
   Logical; enable parallel processing. Default: `TRUE`.
-
-- cv_seed:
-
-  Integer seed for the cross-validation random number generator. `NULL`
-  (default) uses a random seed.
-
-- return_se:
-
-  Logical; if `TRUE`, compute hat-matrix statistics (effective degrees
-  of freedom, leverage, standard errors). Default: `FALSE`.
-
-- return_sorted:
-
-  Logical; if `TRUE`, return results sorted ascending by `x` instead of
-  in the original input order. Default: `FALSE`. To get both orderings
-  without re-fitting, sort the default (unsorted) result client-side
-  (e.g. `order(result$x)`) rather than calling
-  [`fit()`](https://thisisamirv.github.io/lowess-project/r/reference/fit.md)
-  twice.
 
 - backend:
 
@@ -179,6 +120,20 @@ Lowess(
   Logical; if `TRUE`, retain the fitted model's training data, enabling
   [`predict.Lowess`](https://thisisamirv.github.io/lowess-project/r/reference/predict.Lowess.md)
   for out-of-sample prediction. Default: `FALSE`.
+
+- outputs:
+
+  Character vector selecting optional output components:
+  `"diagnostics"`, `"residuals"`, `"weights"` (robustness weights),
+  `"derivative"`, `"se"` (standard errors), and/or `"sorted"`. `NULL`
+  (default) returns only the core result (`x`, `y`, and fit metadata).
+
+- cv:
+
+  Cross-validation options, created with
+  [`cv_opts`](https://thisisamirv.github.io/lowess-project/r/reference/cv_opts.md):
+  e.g. `cv = cv_opts(fractions = c(0.2, 0.3, 0.5))`. `NULL` (default)
+  disables cross-validation.
 
 ## Value
 

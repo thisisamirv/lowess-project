@@ -23,9 +23,7 @@ x <- seq(0, 2 * pi, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Lowess(
-    cv_method = "kfold",
-    cv_k = 5,
-    cv_fractions = c(0.2, 0.3, 0.5, 0.7)
+    cv = cv_opts(fractions = c(0.2, 0.3, 0.5, 0.7), method = "kfold", k = 5)
 )
 result <- fit(model, x, y)
 
@@ -49,8 +47,7 @@ x <- seq(0, 2 * pi, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Lowess(
-    cv_method = "loocv",
-    cv_fractions = c(0.2, 0.3, 0.5, 0.7)
+    cv = cv_opts(fractions = c(0.2, 0.3, 0.5, 0.7), method = "loocv")
 )
 result <- fit(model, x, y)
 
@@ -72,10 +69,12 @@ x <- seq(0, 2 * pi, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Lowess(
-    cv_method = "kfold",
-    cv_k = 5,
-    cv_fractions = c(0.3, 0.5, 0.7),
-    cv_seed = 42L
+    cv = cv_opts(
+        fractions = c(0.3, 0.5, 0.7),
+        method = "kfold",
+        k = 5,
+        seed = 42L
+    )
 )
 result <- fit(model, x, y)
 cat("Selected fraction (CV):", result$fraction_used, "\n")
@@ -123,7 +122,7 @@ x <- seq(0, 2 * pi, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.3)
 
 fractions <- c(0.1, 0.3, 0.5, 0.7)
-model <- Lowess(cv_method = "kfold", cv_k = 5, cv_fractions = fractions)
+model <- Lowess(cv = cv_opts(fractions = fractions, method = "kfold", k = 5))
 result <- fit(model, x, y)
 
 plot(fractions, result$cv_scores, type = "b",
@@ -190,7 +189,7 @@ sessionInfo()
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    
-#>  [5] xfun_0.60         cachem_1.1.0      knitr_1.52        htmltools_0.5.9  
+#>  [5] xfun_0.61         cachem_1.1.0      knitr_1.52        htmltools_0.5.9  
 #>  [9] rmarkdown_2.32    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      
 #> [13] pkgdown_2.2.1     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2
 #> [17] compiler_4.6.1    tools_4.6.1       ragg_1.5.2        bslib_0.12.0     

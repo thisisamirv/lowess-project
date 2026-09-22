@@ -58,22 +58,14 @@ mode: it processes the entire dataset at once and supports every feature
 <span>    boundary_policy <span class="op">=</span> <span class="st">"extend"</span>,</span>
 <span>    confidence_intervals <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>    prediction_intervals <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>    return_diagnostics <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>    return_residuals <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>    return_robustness_weights <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>    return_derivative <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>    zero_weight_fallback <span class="op">=</span> <span class="st">"use_local_mean"</span>,</span>
 <span>    auto_converge <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>    cv_fractions <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>    cv_method <span class="op">=</span> <span class="st">"kfold"</span>,</span>
-<span>    cv_k <span class="op">=</span> <span class="fl">5L</span>,</span>
 <span>    parallel <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>    cv_seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>    return_se <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>    return_sorted <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>    backend <span class="op">=</span> <span class="st">"cpu"</span>,</span>
 <span>    missing <span class="op">=</span> <span class="st">"error"</span>,</span>
-<span>    retain_model <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>    retain_model <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>    outputs <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>    cv <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -141,26 +133,6 @@ greater than 0 and less than 1 (e.g., 0.95). <code>NULL</code> (default)
 disables prediction intervals.</p></dd>
 
 
-<dt id="arg-return-diagnostics">return_diagnostics<a class="anchor" aria-label="anchor" href="#arg-return-diagnostics"></a></dt>
-<dd><p>Logical; if <code>TRUE</code>, return fit-quality
-metrics (RMSE, MAE, R-squared, AIC, etc.). Default: <code>FALSE</code>.</p></dd>
-
-
-<dt id="arg-return-residuals">return_residuals<a class="anchor" aria-label="anchor" href="#arg-return-residuals"></a></dt>
-<dd><p>Logical; if <code>TRUE</code>, return residuals in the
-result. Default: <code>FALSE</code>.</p></dd>
-
-
-<dt id="arg-return-robustness-weights">return_robustness_weights<a class="anchor" aria-label="anchor" href="#arg-return-robustness-weights"></a></dt>
-<dd><p>Logical; if <code>TRUE</code>, return per-point
-robustness weights. Default: <code>FALSE</code>.</p></dd>
-
-
-<dt id="arg-return-derivative">return_derivative<a class="anchor" aria-label="anchor" href="#arg-return-derivative"></a></dt>
-<dd><p>Logical; if <code>TRUE</code>, return per-point local
-fit derivative (slope) in the result. Default: <code>FALSE</code>.</p></dd>
-
-
 <dt id="arg-zero-weight-fallback">zero_weight_fallback<a class="anchor" aria-label="anchor" href="#arg-zero-weight-fallback"></a></dt>
 <dd><p>Fallback policy when all robustness weights drop
 to zero: <code>"use_local_mean"</code> (default; aliases: <code>"local_mean"</code>,
@@ -173,41 +145,8 @@ to zero: <code>"use_local_mean"</code> (default; aliases: <code>"local_mean"</co
 iterations. <code>NULL</code> (default) disables early stopping.</p></dd>
 
 
-<dt id="arg-cv-fractions">cv_fractions<a class="anchor" aria-label="anchor" href="#arg-cv-fractions"></a></dt>
-<dd><p>Numeric vector of candidate fractions for
-cross-validation. <code>NULL</code> (default) disables CV.</p></dd>
-
-
-<dt id="arg-cv-method">cv_method<a class="anchor" aria-label="anchor" href="#arg-cv-method"></a></dt>
-<dd><p>Cross-validation method: <code>"kfold"</code> (default) or
-<code>"loocv"</code>.</p></dd>
-
-
-<dt id="arg-cv-k">cv_k<a class="anchor" aria-label="anchor" href="#arg-cv-k"></a></dt>
-<dd><p>Number of folds for k-fold CV. Default: 5.</p></dd>
-
-
 <dt id="arg-parallel">parallel<a class="anchor" aria-label="anchor" href="#arg-parallel"></a></dt>
 <dd><p>Logical; enable parallel processing. Default: <code>TRUE</code>.</p></dd>
-
-
-<dt id="arg-cv-seed">cv_seed<a class="anchor" aria-label="anchor" href="#arg-cv-seed"></a></dt>
-<dd><p>Integer seed for the cross-validation random number
-generator. <code>NULL</code> (default) uses a random seed.</p></dd>
-
-
-<dt id="arg-return-se">return_se<a class="anchor" aria-label="anchor" href="#arg-return-se"></a></dt>
-<dd><p>Logical; if <code>TRUE</code>, compute hat-matrix statistics
-(effective degrees of freedom, leverage, standard errors).
-Default: <code>FALSE</code>.</p></dd>
-
-
-<dt id="arg-return-sorted">return_sorted<a class="anchor" aria-label="anchor" href="#arg-return-sorted"></a></dt>
-<dd><p>Logical; if <code>TRUE</code>, return results sorted
-ascending by <code>x</code> instead of in the original input order. Default:
-<code>FALSE</code>. To get both orderings without re-fitting, sort the default
-(unsorted) result client-side (e.g. <code>order(result$x)</code>) rather than
-calling <code><a href="fit.html">fit()</a></code> twice.</p></dd>
 
 
 <dt id="arg-backend">backend<a class="anchor" aria-label="anchor" href="#arg-backend"></a></dt>
@@ -228,6 +167,20 @@ affected observations before fitting.</p></dd>
 <dd><p>Logical; if <code>TRUE</code>, retain the fitted model's
 training data, enabling <code><a href="predict.Lowess.html">predict.Lowess</a></code> for out-of-sample
 prediction. Default: <code>FALSE</code>.</p></dd>
+
+
+<dt id="arg-outputs">outputs<a class="anchor" aria-label="anchor" href="#arg-outputs"></a></dt>
+<dd><p>Character vector selecting optional output components:
+<code>"diagnostics"</code>, <code>"residuals"</code>, <code>"weights"</code> (robustness
+weights), <code>"derivative"</code>, <code>"se"</code> (standard errors), and/or
+<code>"sorted"</code>. <code>NULL</code> (default) returns only the core result
+(<code>x</code>, <code>y</code>, and fit metadata).</p></dd>
+
+
+<dt id="arg-cv">cv<a class="anchor" aria-label="anchor" href="#arg-cv"></a></dt>
+<dd><p>Cross-validation options, created with <code><a href="cv_opts.html">cv_opts</a></code>:
+e.g. <code>cv = cv_opts(fractions = c(0.2, 0.3, 0.5))</code>. <code>NULL</code>
+(default) disables cross-validation.</p></dd>
 
 </dl></div>
     <div class="section level2">

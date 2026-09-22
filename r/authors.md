@@ -9,6 +9,11 @@
   Reviewed the package for rOpenSci (GitHub: @alexzerg), see
   \<<https://github.com/ropensci/software-review/issues/769>\>
 
+- **Josiah Parry**. Reviewer.
+  [](https://orcid.org/0000-0001-9910-865X)  
+  Reviewed the package for rOpenSci (GitHub: @JosiahParry), see
+  \<<https://github.com/ropensci/software-review/issues/769>\>
+
 - **Etienne Bacher**. Editor.  
   Edited the package for rOpenSci (GitHub: @etiennebacher), see
   \<<https://github.com/ropensci/software-review/issues/769>\>
@@ -137,11 +142,11 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Emilio Cobos Álvarez <emilio@crisal.io>, Jeff Muizelaar <jmuizelaar@mozilla.com>, Kartikaya Gupta <kats@mozilla.com>, Ryan Hunt <rhunt@eqrion.net>
     License: MPL-2.0
     ----------------------------------------
-    Package: cc (1.4.6)
+    Package: cc (1.4.7)
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: cfg-if (1.0.4)
+    Package: cfg-if (1.0.5)
     Authors: Alex Crichton <alex@alexcrichton.com>
     License: MIT OR Apache-2.0
     ----------------------------------------
@@ -149,15 +154,15 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Zicklag <zicklag@katharostech.com>
     License: MIT
     ----------------------------------------
-    Package: clap (4.6.6)
+    Package: clap (4.6.7)
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: clap_builder (4.6.6)
+    Package: clap_builder (4.6.7)
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: clap_lex (1.1.0)
+    Package: clap_lex (1.1.1)
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
@@ -225,7 +230,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Stjepan Glavina <stjepang@gmail.com>
     License: Apache-2.0 OR MIT
     ----------------------------------------
-    Package: find-msvc-tools (0.1.12)
+    Package: find-msvc-tools (0.1.13)
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
@@ -373,23 +378,23 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: gfx-rs developers
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: napi (3.12.4)
+    Package: napi (3.13.0)
     Authors: Nathan Sobo <nathan@github.com>, Yinan Long <lynweklm@gmail.com>
     License: MIT
     ----------------------------------------
-    Package: napi-build (2.4.2)
+    Package: napi-build (2.5.0)
     Authors: LongYinan <lynweklm@gmail.com>
     License: MIT
     ----------------------------------------
-    Package: napi-derive (3.6.5)
+    Package: napi-derive (3.6.9)
     Authors: LongYinan <lynweklm@gmail.com>, Forehalo <forehalo@gmail.com>
     License: MIT
     ----------------------------------------
-    Package: napi-derive-backend (6.1.3)
+    Package: napi-derive-backend (6.1.4)
     Authors:
     License: MIT
     ----------------------------------------
-    Package: napi-sys (3.3.1)
+    Package: napi-sys (3.3.2)
     Authors: LongYinan <lynweklm@gmail.com>
     License: MIT
     ----------------------------------------
@@ -569,7 +574,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: rustix (1.1.4)
+    Package: rustix (1.1.5)
     Authors: Dan Gohman <dev@sunfishcode.online>, Jakub Konka <kubkon@jakubkonka.com>
     License: Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT
     ----------------------------------------
@@ -689,7 +694,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: unicode-ident (1.0.24)
+    Package: unicode-ident (1.0.26)
     Authors: David Tolnay <dtolnay@gmail.com>
     License: (MIT OR Apache-2.0) AND Unicode-3.0
     ----------------------------------------
@@ -773,7 +778,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: gfx-rs developers
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: wide (1.7.0)
+    Package: wide (1.7.1)
     Authors: Lokathor <zefria@gmail.com>
     License: Zlib OR Apache-2.0 OR MIT
     ----------------------------------------

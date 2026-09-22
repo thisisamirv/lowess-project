@@ -21,12 +21,10 @@ OnlineLowess(
     zero_weight_fallback = "use_local_mean",
     update_mode = "incremental",
     auto_converge = NULL,
-    return_robustness_weights = FALSE,
-    return_derivative = FALSE,
-    return_se = FALSE,
     confidence_intervals = NULL,
     prediction_intervals = NULL,
-    missing = "error"
+    missing = "error",
+    outputs = NULL
 )
 ```
 
@@ -107,21 +105,6 @@ OnlineLowess(
   Convergence tolerance for early stopping of robustness iterations.
   `NULL` (default) disables early stopping.
 
-- return_robustness_weights:
-
-  Logical; if `TRUE`, return per-point robustness weights. Default:
-  `FALSE`.
-
-- return_derivative:
-
-  Logical; if `TRUE`, return per-point local fit derivative (slope) in
-  the result. Default: `FALSE`.
-
-- return_se:
-
-  Logical; include standard errors in the result. Requires
-  `update_mode = "full"`. Default: `FALSE`.
-
 - confidence_intervals:
 
   Confidence level for confidence intervals (e.g. 0.95), or `NULL`
@@ -137,6 +120,12 @@ OnlineLowess(
   Policy for non-finite (NaN/Infinity) values in input data: `"error"`
   (default) raises an error, `"drop"` silently removes affected
   observations before fitting.
+
+- outputs:
+
+  Character vector selecting optional output components: `"weights"`
+  (robustness weights), `"derivative"`, and/or `"se"` (standard errors).
+  `NULL` (default) returns only the core result.
 
 ## Value
 

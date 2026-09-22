@@ -61,12 +61,10 @@ sliding window and processes each incoming point immediately via
 <span>    zero_weight_fallback <span class="op">=</span> <span class="st">"use_local_mean"</span>,</span>
 <span>    update_mode <span class="op">=</span> <span class="st">"incremental"</span>,</span>
 <span>    auto_converge <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>    return_robustness_weights <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>    return_derivative <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>    return_se <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>    confidence_intervals <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>    prediction_intervals <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>    missing <span class="op">=</span> <span class="st">"error"</span></span>
+<span>    missing <span class="op">=</span> <span class="st">"error"</span>,</span>
+<span>    outputs <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -152,21 +150,6 @@ all window points after each addition and supports robustness iterations.</p></d
 iterations. <code>NULL</code> (default) disables early stopping.</p></dd>
 
 
-<dt id="arg-return-robustness-weights">return_robustness_weights<a class="anchor" aria-label="anchor" href="#arg-return-robustness-weights"></a></dt>
-<dd><p>Logical; if <code>TRUE</code>, return per-point
-robustness weights. Default: <code>FALSE</code>.</p></dd>
-
-
-<dt id="arg-return-derivative">return_derivative<a class="anchor" aria-label="anchor" href="#arg-return-derivative"></a></dt>
-<dd><p>Logical; if <code>TRUE</code>, return per-point local
-fit derivative (slope) in the result. Default: <code>FALSE</code>.</p></dd>
-
-
-<dt id="arg-return-se">return_se<a class="anchor" aria-label="anchor" href="#arg-return-se"></a></dt>
-<dd><p>Logical; include standard errors in the result. Requires
-<code>update_mode = "full"</code>. Default: <code>FALSE</code>.</p></dd>
-
-
 <dt id="arg-confidence-intervals">confidence_intervals<a class="anchor" aria-label="anchor" href="#arg-confidence-intervals"></a></dt>
 <dd><p>Confidence level for confidence intervals
 (e.g. 0.95), or <code>NULL</code> (default) to disable. Requires
@@ -183,6 +166,13 @@ fit derivative (slope) in the result. Default: <code>FALSE</code>.</p></dd>
 <dd><p>Policy for non-finite (NaN/Infinity) values in input data:
 <code>"error"</code> (default) raises an error, <code>"drop"</code> silently removes
 affected observations before fitting.</p></dd>
+
+
+<dt id="arg-outputs">outputs<a class="anchor" aria-label="anchor" href="#arg-outputs"></a></dt>
+<dd><p>Character vector selecting optional output components:
+<code>"weights"</code> (robustness weights), <code>"derivative"</code>, and/or
+<code>"se"</code> (standard errors). <code>NULL</code> (default) returns only the
+core result.</p></dd>
 
 </dl></div>
     <div class="section level2">

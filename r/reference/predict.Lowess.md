@@ -9,10 +9,9 @@ Predict from a fitted LOWESS model at out-of-sample points
 predict(
     object,
     new_x,
-    return_se = FALSE,
+    outputs = NULL,
     confidence_level = NULL,
     prediction_level = NULL,
-    return_derivative = FALSE,
     extrapolation = "clamp",
     max_extrapolation_distance = NULL,
     max_neighbor_distance = NULL,
@@ -33,9 +32,10 @@ predict(
 
   Numeric vector of out-of-sample query points.
 
-- return_se:
+- outputs:
 
-  Logical; include standard errors in the output. Default: `FALSE`.
+  Character vector selecting optional prediction components: `"se"`
+  and/or `"derivative"`. `NULL` (default) returns only predicted values.
 
 - confidence_level:
 
@@ -46,11 +46,6 @@ predict(
 
   Prediction interval coverage level (e.g. 0.95). `NULL` (default)
   disables it.
-
-- return_derivative:
-
-  Logical; include the local fit's derivative (slope) in the output.
-  Default: `FALSE`.
 
 - extrapolation:
 

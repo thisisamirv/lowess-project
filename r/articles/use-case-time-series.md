@@ -44,7 +44,7 @@ cat(sprintf("y[0]: %.4f\n", result$y[1]))
 
 Remove trend to analyze residual patterns.
 
-Setting `return_residuals = TRUE` stores `observed - smoothed` alongside
+Setting `outputs = "residuals"` stores `observed - smoothed` alongside
 the smooth. A slightly wider `fraction = 0.3` produces a smoother
 baseline trend, so short-duration oscillations end up in the residuals
 rather than being absorbed into the trend component. The residual series
@@ -62,7 +62,7 @@ y <- sin(t) + 0.1
 model <- Lowess(
     fraction = 0.3,
     iterations = 3,
-    return_residuals = TRUE
+    outputs = "residuals"
 )
 result <- fit(model, t, y)
 
@@ -170,7 +170,7 @@ model <- Lowess(
     fraction = 0.3,
     iterations = 3,
     confidence_intervals = 0.95,
-    return_diagnostics = TRUE
+    outputs = "diagnostics"
 )
 result <- fit(model, hours, expression)
 cat(sprintf("R2: %.3f\n", result$diagnostics$r_squared))
@@ -232,7 +232,7 @@ sessionInfo()
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    
-#>  [5] xfun_0.60         cachem_1.1.0      knitr_1.52        htmltools_0.5.9  
+#>  [5] xfun_0.61         cachem_1.1.0      knitr_1.52        htmltools_0.5.9  
 #>  [9] rmarkdown_2.32    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      
 #> [13] pkgdown_2.2.1     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2
 #> [17] compiler_4.6.1    tools_4.6.1       ragg_1.5.2        bslib_0.12.0     
