@@ -116,6 +116,19 @@ test_that("Lowess diagnostics work", {
     expect_lte(result$diagnostics$r_squared, 1)
 })
 
+test_that("unavailable diagnostic values are represented as NA", {
+    x <- as.double(1:10)
+    y <- as.double(1:10)
+    result <- fit(Lowess(fraction = 0.5, outputs = "diagnostics"), x, y)
+
+    expect_true(is.na(result$diagnostics$aic))
+    expect_true(is.na(result$diagnostics$aicc))
+    expect_true(is.na(result$diagnostics$effective_df))
+    expect_false(is.nan(result$diagnostics$aic))
+    expect_false(is.nan(result$diagnostics$aicc))
+    expect_false(is.nan(result$diagnostics$effective_df))
+})
+
 test_that("Lowess residuals work", {
     set.seed(42)
     x <- seq(0, 10, length.out = 50)

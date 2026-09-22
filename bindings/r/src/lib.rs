@@ -153,6 +153,8 @@ impl RLowess {
 
     /// Fit the model to data
     fn fit(&self, x: &[f64], y: &[f64], custom_weights: Nullable<Vec<f64>>) -> Result<List> {
+        // Lowess::fit validates custom_weights after applying the missing-value
+        // policy, so validation stays consistent across all language bindings.
         let cw = match custom_weights {
             NotNull(w) => Some(w),
             Null => None,
@@ -509,9 +511,12 @@ fn lowess_result_to_list(result: LowessResult<f64>) -> Result<List> {
             rmse = diag.rmse,
             mae = diag.mae,
             r_squared = diag.r_squared,
-            aic = diag.aic.unwrap_or(f64::NAN),
-            aicc = diag.aicc.unwrap_or(f64::NAN),
-            effective_df = diag.effective_df.unwrap_or(f64::NAN),
+            aic = diag.aic.map(Rfloat::from).unwrap_or_else(Rfloat::na),
+            aicc = diag.aicc.map(Rfloat::from).unwrap_or_else(Rfloat::na),
+            effective_df = diag
+                .effective_df
+                .map(Rfloat::from)
+                .unwrap_or_else(Rfloat::na),
             residual_sd = diag.residual_sd
         );
         list_items.push(("diagnostics", diag_list.into_robj()));
