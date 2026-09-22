@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Removed redundant `#[doc(hidden)]` attributes from the `engine` and `adapters` modules (62 attributes across `engine/executor.rs`, `engine/predict.rs`, and `adapters/{batch,online,streaming}.rs`). These modules are already private and only re-exported through the `dev`-gated `internals` module, so the attributes were redundant; `#[doc(hidden)]` is retained on public-API items (`api.rs` builder DEV fields and `LowessResult::fit_state`).
 
+**R:**
+
+- Replaced the local `type Result<T> = std::result::Result<T, extendr_api::Error>` alias with `extendr_api::error::Result`, which is still exported in `extendr-api 0.9.0` (only the prelude re-export was removed).
+
 **fastLowess:**
 
 - Replaced `std::mem::forget` with the idiomatic `Box::into_raw` in `binding_support::vec_to_raw_ptr` so the FFI ownership transfer to language bindings is explicit. The allocation was never a leak (each binding frees it via `free_raw_f64_buffer`), but `Box::into_raw` expresses that transfer without a bare `mem::forget`.

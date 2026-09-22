@@ -7,12 +7,9 @@
 
 #![allow(non_snake_case)]
 
-use extendr_api::prelude::*;
+use extendr_api::{error::Result, prelude::*};
 use std::cell::RefCell;
 use std::sync::Arc;
-
-// Provide the Result alias that was removed from extendr_api::prelude in 0.9.0
-type Result<T> = std::result::Result<T, extendr_api::Error>;
 
 use fastLowess::internals::api::{LowessBuilder, LowessResult};
 use fastLowess::internals::binding_support as shared_parse;
