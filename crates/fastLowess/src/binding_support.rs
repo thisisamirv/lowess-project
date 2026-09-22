@@ -66,7 +66,6 @@ use lowess::internals::math::kernel::WeightFunction;
 use lowess::internals::math::scaling::ScalingMethod;
 use std::ffi::{CStr, CString};
 use std::fmt::{Display, Formatter};
-use std::mem::forget;
 use std::os::raw::c_char;
 use std::ptr::{null_mut, slice_from_raw_parts_mut};
 use std::slice::from_raw_parts;
@@ -334,13 +333,17 @@ pub fn setter_unsupported_constructor_only_message(name: &str) -> String {
     format!("{name} is not supported: configure model options at construction time")
 }
 
-// Converts a Vec<f64> into a heap-allocated raw pointer.
-// The caller is responsible for freeing the memory via Box::from_raw / Vec::from_raw_parts.
+// Converts a Vec<f64> into a heap-allocated raw pointer, transferring ownership
+// to the FFI caller. The allocation is intentionally NOT freed here; the caller
+// must release it via free_raw_f64_buffer (Box::from_raw) with the same length.
+//
+// `Box::into_raw` is used instead of `mem::forget` so the ownership transfer is
+// explicit: `into_boxed_slice` moves the buffer into a Box, and `into_raw`
+// leaks that Box (by design), returning the pointer without running the Box's
+// destructor. This is the canonical Rust FFI pattern for handing a heap buffer
+// to foreign code and is not a leak, since the caller frees it symmetrically.
 pub fn vec_to_raw_ptr(v: Vec<f64>) -> *mut f64 {
-    let mut boxed = v.into_boxed_slice();
-    let ptr = boxed.as_mut_ptr();
-    forget(boxed);
-    ptr
+    Box::into_raw(v.into_boxed_slice()) as *mut f64
 }
 
 // Same as vec_to_raw_ptr but for an Option, returning null for None.
