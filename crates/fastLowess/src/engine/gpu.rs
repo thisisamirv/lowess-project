@@ -3848,6 +3848,11 @@ where
             WeightFunction::Triangle => 4,
             WeightFunction::Tricube => 5,
             WeightFunction::Uniform => 6,
+            _ => {
+                return Err(LowessError::InvalidInput(
+                    "unsupported weight function for GPU backend".into(),
+                ));
+            }
         };
         let fallback_id = config.zero_weight_fallback as u32;
         let boundary_id = match config.boundary_policy {
@@ -4197,6 +4202,11 @@ where
             WeightFunction::Triangle => 4,
             WeightFunction::Tricube => 5,
             WeightFunction::Uniform => 6,
+            _ => {
+                return Err(LowessError::InvalidInput(
+                    "unsupported weight function for GPU cross-validation".into(),
+                ));
+            }
         };
         let fallback_id = config.zero_weight_fallback as u32;
         let boundary_id = match config.boundary_policy {

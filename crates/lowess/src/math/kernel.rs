@@ -95,6 +95,7 @@ const UNIFORM_PROPERTIES: KernelProperties = KernelProperties {
 
 // Weight function (kernel) for LOWESS smoothing.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[non_exhaustive]
 pub enum WeightFunction {
     // Cosine kernel: K(u) = cos(pi * u / 2) for |u| < 1.
     Cosine,
