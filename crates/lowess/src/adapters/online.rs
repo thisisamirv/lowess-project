@@ -106,27 +106,21 @@ pub struct OnlineLowessBuilder<T: Float> {
     // +               DEV                  +
     // ++++++++++++++++++++++++++++++++++++++
     // Custom smooth pass function.
-    #[doc(hidden)]
     pub custom_smooth_pass: Option<SmoothPassFn<T>>,
 
     // Custom cross-validation pass function.
-    #[doc(hidden)]
     pub custom_cv_pass: Option<CVPassFn<T>>,
 
     // Custom interval estimation pass function.
-    #[doc(hidden)]
     pub custom_interval_pass: Option<IntervalPassFn<T>>,
 
     // Custom derivative (local fit slope) estimation pass function.
-    #[doc(hidden)]
     pub custom_derivative_pass: Option<DerivativePassFn<T>>,
 
     // Custom fit pass function.
-    #[doc(hidden)]
     pub custom_fit_pass: Option<FitPassFn<T>>,
 
     // Tracks if any parameter was set multiple times (for validation)
-    #[doc(hidden)]
     pub(crate) duplicate_param: Option<&'static str>,
 }
 

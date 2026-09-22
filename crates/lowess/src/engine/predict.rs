@@ -249,7 +249,6 @@ pub type RawPredictValues<T> = Result<(Vec<T>, Option<Vec<T>>, Option<Vec<T>>), 
 // Signature for a custom (e.g. parallel) predict pass function. Computes only the
 // per-point values (y, optional derivative, optional standard error); the shared
 // confidence/prediction interval math is applied afterward by `predict_batch`.
-#[doc(hidden)]
 pub type PredictPassFn<T> = fn(
     &PredictState<T>,
     &[T], // new_x
@@ -303,7 +302,6 @@ pub struct PredictState<T> {
     pub train_max_x: T,
 
     // Custom (e.g. parallel) predict pass, injected by extension crates like fastLowess.
-    #[doc(hidden)]
     pub custom_predict_pass: Option<PredictPassFn<T>>,
 }
 
@@ -331,7 +329,6 @@ impl<T: PartialEq> PartialEq for PredictState<T> {
 //
 // `pub` (hidden) so extension crates like fastLowess can reuse it for a parallel
 // `PredictPassFn` implementation.
-#[doc(hidden)]
 pub fn predict_one_full<T: Float + WLSSolver>(
     state: &PredictState<T>,
     x_query: T,

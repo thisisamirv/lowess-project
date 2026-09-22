@@ -8,17 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-
-**fastLowess:**
-
-- Replaced `std::mem::forget` with the idiomatic `Box::into_raw` in `binding_support::vec_to_raw_ptr` so the FFI ownership transfer to language bindings is explicit. The allocation was never a leak (each binding frees it via `free_raw_f64_buffer`), but `Box::into_raw` expresses that transfer without a bare `mem::forget`.
-
 ### Added
 
 **fastLowess:**
 
 - Added `tests/binding_support_tests.rs` (gated on the `dev` feature) covering the `vec_to_raw_ptr`/`opt_vec_to_raw_ptr`/`free_raw_f64_buffer` round trip: repeated allocate/read/free cycles, `Some`/`None` handling, and null-pointer freeing.
+
+### Changed
+
+**lowess:**
+
+- Removed redundant `#[doc(hidden)]` attributes from the `engine` and `adapters` modules (62 attributes across `engine/executor.rs`, `engine/predict.rs`, and `adapters/{batch,online,streaming}.rs`). These modules are already private and only re-exported through the `dev`-gated `internals` module, so the attributes were redundant; `#[doc(hidden)]` is retained on public-API items (`api.rs` builder DEV fields and `LowessResult::fit_state`).
+
+**fastLowess:**
+
+- Replaced `std::mem::forget` with the idiomatic `Box::into_raw` in `binding_support::vec_to_raw_ptr` so the FFI ownership transfer to language bindings is explicit. The allocation was never a leak (each binding frees it via `free_raw_f64_buffer`), but `Box::into_raw` expresses that transfer without a bare `mem::forget`.
 
 ### Fixed
 

@@ -48,7 +48,6 @@ use crate::primitives::errors::LowessError;
 use crate::primitives::window::Window;
 
 // Signature for custom smooth pass function
-#[doc(hidden)]
 pub type SmoothPassFn<T> = fn(
     &[T],           // x
     &[T],           // y
@@ -63,7 +62,6 @@ pub type SmoothPassFn<T> = fn(
 );
 
 // Signature for custom cross-validation pass function
-#[doc(hidden)]
 pub type CVPassFn<T> = fn(
     &[T],             // x
     &[T],             // y
@@ -73,7 +71,6 @@ pub type CVPassFn<T> = fn(
 ) -> (T, Vec<T>); // (best_fraction, scores)
 
 // Signature for custom interval estimation pass function
-#[doc(hidden)]
 pub type IntervalPassFn<T> = fn(
     &[T],               // x
     &[T],               // y
@@ -85,7 +82,6 @@ pub type IntervalPassFn<T> = fn(
 ) -> Vec<T>; // standard errors
 
 // Signature for custom derivative (local fit slope) estimation pass function
-#[doc(hidden)]
 pub type DerivativePassFn<T> = fn(
     &[T],           // x
     &[T],           // y
@@ -112,7 +108,6 @@ pub type IterationResult<T> = (
 );
 
 // Signature for custom iteration batch pass function (GPU acceleration).
-#[doc(hidden)]
 pub type FitPassFn<T> = fn(
     &[T],             // x
     &[T],             // y
@@ -212,35 +207,27 @@ pub struct LowessConfig<T> {
     // +               DEV                  +
     // ++++++++++++++++++++++++++++++++++++++
     // Custom smooth pass function (enables parallel execution).
-    #[doc(hidden)]
     pub custom_smooth_pass: Option<SmoothPassFn<T>>,
 
     // Custom cross-validation pass function.
-    #[doc(hidden)]
     pub custom_cv_pass: Option<CVPassFn<T>>,
 
     // Custom interval estimation pass function.
-    #[doc(hidden)]
     pub custom_interval_pass: Option<IntervalPassFn<T>>,
 
     // Custom derivative (local fit slope) estimation pass function.
-    #[doc(hidden)]
     pub custom_derivative_pass: Option<DerivativePassFn<T>>,
 
     // Custom iteration batch pass function for GPU acceleration.
-    #[doc(hidden)]
     pub custom_fit_pass: Option<FitPassFn<T>>,
 
     // Execution backend hint for extension crates.
-    #[doc(hidden)]
     pub backend: Option<Backend>,
 
     // Whether to use parallel execution
-    #[doc(hidden)]
     pub parallel: bool,
 
     // Whether to delegate boundary handling (padding) to the custom_fit_pass
-    #[doc(hidden)]
     pub delegate_boundary_handling: bool,
 
     // Per-observation case weights. When provided, multiplies each local kernel weight:
@@ -248,11 +235,9 @@ pub struct LowessConfig<T> {
     pub custom_weights: Option<Vec<T>>,
 
     // Whether to retain fitted-model state for later `Predict::call()` calls (Batch only).
-    #[doc(hidden)]
     pub retain_model: bool,
 
     // Custom (e.g. parallel) predict pass function.
-    #[doc(hidden)]
     pub custom_predict_pass: Option<PredictPassFn<T>>,
 }
 
@@ -328,45 +313,35 @@ pub struct LowessExecutor<T: Float> {
     // +               DEV                  +
     // ++++++++++++++++++++++++++++++++++++++
     // Custom smooth pass function (e.g., for parallel execution).
-    #[doc(hidden)]
     pub custom_smooth_pass: Option<SmoothPassFn<T>>,
 
     // Custom cross-validation pass function.
-    #[doc(hidden)]
     pub custom_cv_pass: Option<CVPassFn<T>>,
 
     // Custom interval estimation pass function.
-    #[doc(hidden)]
     pub custom_interval_pass: Option<IntervalPassFn<T>>,
 
     // Custom derivative (local fit slope) estimation pass function.
-    #[doc(hidden)]
     pub custom_derivative_pass: Option<DerivativePassFn<T>>,
 
     // Custom iteration batch pass function for GPU acceleration.
-    #[doc(hidden)]
     pub custom_fit_pass: Option<FitPassFn<T>>,
 
     // Execution backend hint for extension crates.
-    #[doc(hidden)]
     pub backend: Option<Backend>,
 
     // Whether to use parallel execution
-    #[doc(hidden)]
     pub parallel: bool,
 
-    #[doc(hidden)]
     pub delegate_boundary_handling: bool,
 
     // Per-observation case weights applied as `w_ij = custom_weights[j] * K(d_ij / h) * robustness_j`.
     pub custom_weights: Option<Vec<T>>,
 
     // Whether to retain fitted-model state for later `Predict::call()` calls (Batch only).
-    #[doc(hidden)]
     pub retain_model: bool,
 
     // Custom (e.g. parallel) predict pass function.
-    #[doc(hidden)]
     pub custom_predict_pass: Option<PredictPassFn<T>>,
 }
 
@@ -436,7 +411,6 @@ impl<T: Float> LowessExecutor<T> {
     }
 
     // Convert executor settings back to a `LowessConfig`.
-    #[doc(hidden)]
     pub fn to_config(
         &self,
         fraction: Option<T>,
@@ -545,28 +519,24 @@ impl<T: Float> LowessExecutor<T> {
     // ++++++++++++++++++++++++++++++++++++++
 
     // Set a custom smooth pass function (e.g., for parallelization).
-    #[doc(hidden)]
     pub fn custom_smooth_pass(mut self, smooth_pass_fn: Option<SmoothPassFn<T>>) -> Self {
         self.custom_smooth_pass = smooth_pass_fn;
         self
     }
 
     // Set a custom cross-validation pass function.
-    #[doc(hidden)]
     pub fn custom_cv_pass(mut self, cv_pass_fn: Option<CVPassFn<T>>) -> Self {
         self.custom_cv_pass = cv_pass_fn;
         self
     }
 
     // Set a custom interval estimation pass function.
-    #[doc(hidden)]
     pub fn custom_interval_pass(mut self, interval_pass_fn: Option<IntervalPassFn<T>>) -> Self {
         self.custom_interval_pass = interval_pass_fn;
         self
     }
 
     // Set a custom derivative (local fit slope) estimation pass function.
-    #[doc(hidden)]
     pub fn custom_derivative_pass(
         mut self,
         derivative_pass_fn: Option<DerivativePassFn<T>>,
@@ -576,41 +546,35 @@ impl<T: Float> LowessExecutor<T> {
     }
 
     // Set whether to use parallel execution.
-    #[doc(hidden)]
     pub fn parallel(mut self, parallel: bool) -> Self {
         self.parallel = parallel;
         self
     }
 
     // Set the execution backend hint.
-    #[doc(hidden)]
     pub fn backend(mut self, backend: Option<Backend>) -> Self {
         self.backend = backend;
         self
     }
 
-    #[doc(hidden)]
     pub fn delegate_boundary_handling(mut self, delegate: bool) -> Self {
         self.delegate_boundary_handling = delegate;
         self
     }
 
     // Set whether to retain fitted-model state for later `Predict::call()` calls.
-    #[doc(hidden)]
     pub fn retain_model(mut self, retain: bool) -> Self {
         self.retain_model = retain;
         self
     }
 
     // Set a custom (e.g. parallel) predict pass function.
-    #[doc(hidden)]
     pub fn custom_predict_pass(mut self, predict_pass_fn: Option<PredictPassFn<T>>) -> Self {
         self.custom_predict_pass = predict_pass_fn;
         self
     }
 
     // Set a custom iteration batch pass function (e.g., for GPU acceleration).
-    #[doc(hidden)]
     pub fn custom_fit_pass(mut self, fit_pass_fn: Option<FitPassFn<T>>) -> Self {
         self.custom_fit_pass = fit_pass_fn;
         self
