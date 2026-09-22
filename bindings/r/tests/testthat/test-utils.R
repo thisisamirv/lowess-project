@@ -52,11 +52,11 @@ test_that("cv_opts returns coerced cross-validation options", {
 test_that("parse_outputs_flags handles NULL and valid output names", {
     valid <- c("diagnostics", "residuals", "weights")
 
-    expect_equal(
+    expect_identical(
         parse_outputs_flags(NULL, valid),
         setNames(c(FALSE, FALSE, FALSE), valid)
     )
-    expect_equal(
+    expect_identical(
         parse_outputs_flags(c("weights", "diagnostics"), valid),
         setNames(c(TRUE, FALSE, TRUE), valid)
     )

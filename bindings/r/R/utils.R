@@ -157,8 +157,8 @@ parse_outputs_flags <- function(outputs, valid) {
         stop(
             sprintf(
                 "Invalid `outputs` value(s): %s. Allowed: %s",
-                paste(sprintf("'%s'", unknown), collapse = ", "),
-                paste(sprintf("'%s'", valid), collapse = ", ")
+                paste0(sprintf("'%s'", unknown), collapse = ", "),
+                paste0(sprintf("'%s'", valid), collapse = ", ")
             ),
             call. = FALSE
         )
@@ -226,8 +226,7 @@ env_args <- function(param_names) {
         if (is.null(type)) {
             return(val)
         }
-        switch(
-            type,
+        switch(type,
             double = as.double(val),
             integer = as.integer(val),
             character = as.character(val),
