@@ -345,6 +345,21 @@ pub struct LowessExecutor<T: Float> {
     pub custom_predict_pass: Option<PredictPassFn<T>>,
 }
 
+struct IterationLoopOptions<'a, T: Float> {
+    eff_fraction: T,
+    window_size: usize,
+    niter: usize,
+    delta: T,
+    weight_function: WeightFunction,
+    zero_weight_flag: u8,
+    robustness_updater: &'a RobustnessMethod,
+    interval_method: Option<&'a IntervalMethod<T>>,
+    convergence_tolerance: Option<T>,
+    smooth_pass_fn: Option<SmoothPassFn<T>>,
+    interval_pass_fn: Option<IntervalPassFn<T>>,
+    custom_weights: Option<&'a [T]>,
+}
+
 impl<T: Float> Default for LowessExecutor<T> {
     fn default() -> Self {
         Self::new()
@@ -783,18 +798,20 @@ impl<T: Float> LowessExecutor<T> {
         ) = self.iteration_loop_with_callback(
             x_ref,
             y_ref,
-            eff_fraction,
-            window_size,
-            target_iterations,
-            self.delta,
-            self.weight_function,
-            self.zero_weight_fallback,
-            &self.robustness_method,
-            confidence_method,
-            tolerance,
-            self.custom_smooth_pass,
-            self.custom_interval_pass,
-            effective_custom_weights,
+            IterationLoopOptions {
+                eff_fraction,
+                window_size,
+                niter: target_iterations,
+                delta: self.delta,
+                weight_function: self.weight_function,
+                zero_weight_flag: self.zero_weight_fallback,
+                robustness_updater: &self.robustness_method,
+                interval_method: confidence_method,
+                convergence_tolerance: tolerance,
+                smooth_pass_fn: self.custom_smooth_pass,
+                interval_pass_fn: self.custom_interval_pass,
+                custom_weights: effective_custom_weights,
+            },
             buffer,
         )?;
 
@@ -891,28 +908,31 @@ impl<T: Float> LowessExecutor<T> {
     }
 
     // Perform the full LOWESS iteration loop.
-    #[allow(clippy::too_many_arguments)]
-    pub fn iteration_loop_with_callback(
+    fn iteration_loop_with_callback(
         &self,
         x: &[T],
         y: &[T],
-        eff_fraction: T,
-        window_size: usize,
-        niter: usize,
-        delta: T,
-        weight_function: WeightFunction,
-        zero_weight_flag: u8,
-        robustness_updater: &RobustnessMethod,
-        interval_method: Option<&IntervalMethod<T>>,
-        convergence_tolerance: Option<T>,
-        smooth_pass_fn: Option<SmoothPassFn<T>>,
-        interval_pass_fn: Option<IntervalPassFn<T>>,
-        custom_weights: Option<&[T]>,
+        options: IterationLoopOptions<'_, T>,
         buffer: Option<&mut LowessBuffer<T>>,
     ) -> Result<(IterationResult<T>, Option<Vec<T>>), LowessError>
     where
         T: Float + WLSSolver + Debug + Send + Sync + 'static,
     {
+        let IterationLoopOptions {
+            eff_fraction,
+            window_size,
+            niter,
+            delta,
+            weight_function,
+            zero_weight_flag,
+            robustness_updater,
+            interval_method,
+            convergence_tolerance,
+            smooth_pass_fn,
+            interval_pass_fn,
+            custom_weights,
+        } = options;
+
         if let Some(fit_pass) = self.custom_fit_pass {
             let config = self.to_config(Some(eff_fraction), convergence_tolerance, interval_method);
             return fit_pass(x, y, &config).map(|r| (r, None));
