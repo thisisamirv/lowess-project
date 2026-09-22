@@ -35,13 +35,15 @@ fn to_py_invalid_arg_error(e: impl Display) -> PyErr {
     to_py_error(binding_support::BindingError::invalid_arg(e.to_string()))
 }
 
+type ParsedCvOptions = (Option<Vec<f64>>, String, usize, Option<u64>);
+
 fn parse_cv_options(
     cv: Option<&Bound<'_, PyDict>>,
     legacy_fractions: Option<Vec<f64>>,
     legacy_method: &str,
     legacy_k: usize,
     legacy_seed: Option<u64>,
-) -> PyResult<(Option<Vec<f64>>, String, usize, Option<u64>)> {
+) -> PyResult<ParsedCvOptions> {
     let Some(cv) = cv else {
         return Ok((
             legacy_fractions,

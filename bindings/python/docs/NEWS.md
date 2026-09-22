@@ -1,4 +1,19 @@
 <!-- markdownlint-disable MD024 MD025 -->
+# fastlowess (Python) (development version)
+
+## Added
+
+* Added grouped `outputs` and nested `cv` constructor options, plus grouped prediction outputs, while preserving legacy keyword arguments. Nested CV mappings now validate and forward `fractions`, `method`, `k`, and `seed`; Python stubs, guides, and binding tests cover the grouped API.
+
+## Changed
+
+* Refactored the internal `parse_cv_options` helper to return a named `ParsedCvOptions` alias, reducing signature type complexity so strict clippy (`-D warnings`) passes in `python-dev`.
+* Updated the vendored `doxygen-awesome-css` theme to v2.5.0 and the Hugo docs build to v0.166.0.
+
+## Fixed
+
+* Fixed C++ release CI's "Commit updated recipe" step failing with "paths are ignored" because the repo's blanket `.gitignore` `spack/` rule matches `bindings/cpp/spack/`; `git add` now force-adds the tracked recipe file.
+
 # fastlowess (Python) 4.1.0
 
 ## Added

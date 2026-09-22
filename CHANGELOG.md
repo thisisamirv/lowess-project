@@ -66,6 +66,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a regression comparison for unsorted input against `stats::lowess`, covering both preserved input order and explicit `outputs = "sorted"` behavior.
 - Added committed `statsmodels.lowess` reference fixtures for independent R cross-language validation.
 
+**Python:**
+
+- Refactored the internal `parse_cv_options` helper to return a named `ParsedCvOptions` alias, reducing signature type complexity so strict clippy (`-D warnings`) passes in `python-dev`.
+
 **fastLowess:**
 
 - Replaced `std::mem::forget` with the idiomatic `Box::into_raw` in `binding_support::vec_to_raw_ptr` so the FFI ownership transfer to language bindings is explicit. The allocation was never a leak (each binding frees it via `free_raw_f64_buffer`), but `Box::into_raw` expresses that transfer without a bare `mem::forget`.
