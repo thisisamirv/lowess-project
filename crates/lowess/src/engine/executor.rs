@@ -68,7 +68,7 @@ pub type CVPassFn<T> = fn(
     &[T],             // candidate fractions
     CVKind,           // CV strategy
     &LowessConfig<T>, // Config for internal fits
-) -> (T, Vec<T>); // (best_fraction, scores)
+) -> Result<(T, Vec<T>), LowessError>; // (best_fraction, scores)
 
 // Signature for custom interval estimation pass function
 pub type IntervalPassFn<T> = fn(
@@ -614,7 +614,7 @@ impl<T: Float> LowessExecutor<T> {
 
             // Run CV to find best fraction
             let (best_frac, scores) = if let Some(callback) = config.custom_cv_pass {
-                callback(x, y, cv_fracs, cv_kind, &config)
+                callback(x, y, cv_fracs, cv_kind, &config)?
             } else {
                 use crate::primitives::buffer::CVBuffer;
                 let mut cv_buffer = CVBuffer::new();
@@ -649,12 +649,11 @@ impl<T: Float> LowessExecutor<T> {
                             .retain_model(false)
                             .return_derivative(false)
                             .run(tx, ty, None)
-                            .unwrap() // CV must succeed
-                            .smoothed
+                            .map(|output| output.smoothed)
                     },
                     None::<fn(&[T], &[T], &[T], T) -> Vec<T>>,
                     &mut cv_buffer,
-                )
+                )?
             };
 
             // Run final pass with best fraction

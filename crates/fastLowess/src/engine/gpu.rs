@@ -4098,14 +4098,14 @@ pub fn cross_validate_gpu<T>(
     fractions: &[T],
     method: CVKind,
     config: &LowessConfig<T>,
-) -> (T, Vec<T>)
+) -> Result<(T, Vec<T>), LowessError>
 where
     T: Float + Debug + Send + Sync + 'static,
 {
     #[cfg(feature = "gpu")]
     {
         if fractions.is_empty() {
-            return (T::zero(), Vec::new());
+            return Ok((T::zero(), Vec::new()));
         }
 
         let mut guard = match GLOBAL_EXECUTOR.lock() {
@@ -4116,7 +4116,7 @@ where
         if guard.is_none() {
             match block_on(GpuExecutor::new()) {
                 Ok(exec) => *guard = Some(exec),
-                Err(_) => return (T::zero(), vec![T::zero(); fractions.len()]),
+                Err(_) => return Ok((T::zero(), vec![T::zero(); fractions.len()])),
             }
         }
         let exec = guard.as_mut().unwrap();
@@ -4479,7 +4479,7 @@ where
             .map(|(i, _)| i)
             .unwrap_or(0);
 
-        (fractions[best_idx], scores)
+        Ok((fractions[best_idx], scores))
     }
     #[cfg(not(feature = "gpu"))]
     {

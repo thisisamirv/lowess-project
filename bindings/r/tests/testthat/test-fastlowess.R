@@ -23,6 +23,7 @@ test_that("Lowess basic functionality works", {
     expect_length(result$y, length(y))
     expect_type(result$x, "double")
     expect_type(result$y, "double")
+    expect_s3_class(result, "LowessResult")
 })
 
 test_that("Lowess handles different fractions", {

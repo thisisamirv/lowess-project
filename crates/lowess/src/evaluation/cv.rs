@@ -20,6 +20,7 @@ use std::vec::Vec;
 
 // Internal dependencies
 use crate::primitives::buffer::CVBuffer;
+use crate::primitives::errors::LowessError;
 
 // Minimal PRNG for no-std shuffling.
 // Uses an LCG (Linear Congruential Generator) with constants from PCG/MQL.
@@ -63,10 +64,10 @@ impl CVKind {
         mut smoother: F,
         mut predictor: Option<P>,
         cv_buffer: &mut CVBuffer<T>,
-    ) -> (T, Vec<T>)
+    ) -> Result<(T, Vec<T>), LowessError>
     where
         T: Float + Debug + Send + Sync + 'static,
-        F: FnMut(&[T], &[T], T) -> Vec<T>,
+        F: FnMut(&[T], &[T], T) -> Result<Vec<T>, LowessError>,
         P: FnMut(&[T], &[T], &[T], T) -> Vec<T>,
     {
         match self {
@@ -220,18 +221,18 @@ impl CVKind {
         smoother: &mut F,
         mut predictor: Option<&mut P>,
         cv_buffer: &mut CVBuffer<T>,
-    ) -> (T, Vec<T>)
+    ) -> Result<(T, Vec<T>), LowessError>
     where
         T: Float + Debug + Send + Sync + 'static,
-        F: FnMut(&[T], &[T], T) -> Vec<T>,
+        F: FnMut(&[T], &[T], T) -> Result<Vec<T>, LowessError>,
         P: FnMut(&[T], &[T], &[T], T) -> Vec<T>,
     {
         let n = x.len() / dims;
         if n < k || k < 2 {
-            return (
+            return Ok((
                 fractions.first().copied().unwrap_or(T::zero()),
                 vec![T::zero(); fractions.len()],
-            );
+            ));
         }
 
         let fold_size = n / k;
@@ -311,7 +312,7 @@ impl CVKind {
                     p_fn(tx, ty, tex, frac)
                 } else {
                     let train_smooth =
-                        smoother(&cv_buffer.sorted_train_x, &cv_buffer.sorted_train_y, frac);
+                        smoother(&cv_buffer.sorted_train_x, &cv_buffer.sorted_train_y, frac)?;
                     let mut preds = vec![T::zero(); tex.len() / dims];
                     Self::interpolate_prediction_batch(
                         &cv_buffer.sorted_train_x,
@@ -353,7 +354,7 @@ impl CVKind {
             };
         }
 
-        Self::select_best_fraction(fractions, &cv_scores)
+        Ok(Self::select_best_fraction(fractions, &cv_scores))
     }
 
     // Perform leave-one-out cross-validation (LOOCV).
@@ -365,10 +366,10 @@ impl CVKind {
         smoother: &mut F,
         mut predictor: Option<&mut P>,
         cv_buffer: &mut CVBuffer<T>,
-    ) -> (T, Vec<T>)
+    ) -> Result<(T, Vec<T>), LowessError>
     where
         T: Float + Debug + Send + Sync + 'static,
-        F: FnMut(&[T], &[T], T) -> Vec<T>,
+        F: FnMut(&[T], &[T], T) -> Result<Vec<T>, LowessError>,
         P: FnMut(&[T], &[T], &[T], T) -> Vec<T>,
     {
         let n = x.len() / dims;
@@ -405,7 +406,7 @@ impl CVKind {
                     let preds = p_fn(tx, ty, &test_point, frac);
                     preds[0]
                 } else {
-                    let train_smooth = smoother(tx, ty, frac);
+                    let train_smooth = smoother(tx, ty, frac)?;
                     Self::interpolate_prediction(tx, &train_smooth, test_point[0])
                 };
 
@@ -417,6 +418,6 @@ impl CVKind {
             cv_scores[frac_idx] = (total_error / T::from(n).unwrap()).sqrt();
         }
 
-        Self::select_best_fraction(fractions, &cv_scores)
+        Ok(Self::select_best_fraction(fractions, &cv_scores))
     }
 }

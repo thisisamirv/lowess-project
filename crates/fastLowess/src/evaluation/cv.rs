@@ -27,6 +27,8 @@ use lowess::internals::engine::executor::{LowessConfig, LowessExecutor};
 use lowess::internals::evaluation::cv::CVKind;
 #[cfg(feature = "cpu")]
 use lowess::internals::primitives::buffer::{CVBuffer, LowessBuffer};
+#[cfg(feature = "cpu")]
+use lowess::internals::primitives::errors::LowessError;
 
 // Perform cross-validation to select the best fraction in parallel.
 #[cfg(feature = "cpu")]
@@ -36,12 +38,12 @@ pub fn cv_pass_parallel<T>(
     fractions: &[T],
     method: CVKind,
     config: &LowessConfig<T>,
-) -> (T, Vec<T>)
+) -> Result<(T, Vec<T>), LowessError>
 where
     T: Float + Send + Sync + Debug + WLSSolver + 'static,
 {
     if fractions.is_empty() {
-        return (T::zero(), Vec::new());
+        return Ok((T::zero(), Vec::new()));
     }
 
     // Parallelize over candidate fractions
@@ -49,7 +51,7 @@ where
         .par_iter()
         .map_init(
             || (CVBuffer::new(), LowessBuffer::default()),
-            |init, &frac| {
+            |init, &frac| -> Result<T, LowessError> {
                 let (cv_buffer, lowess_buffer) = init;
                 // Use the base CV logic for a single fraction
                 // This ensures exact consistency with the sequential implementation in 'lowess'
@@ -65,15 +67,17 @@ where
                         fold_config.cv_fractions = None;
 
                         let executor = LowessExecutor::from_config(&fold_config);
-                        executor.run(tx, ty, Some(lowess_buffer)).unwrap().smoothed
+                        executor
+                            .run(tx, ty, Some(lowess_buffer))
+                            .map(|output| output.smoothed)
                     },
                     Option::<&mut fn(&[T], &[T], &[T], T) -> Vec<T>>::None,
                     cv_buffer,
-                );
-                s[0]
+                )?;
+                Ok(s[0])
             },
         )
-        .collect();
+        .collect::<Result<Vec<_>, _>>()?;
 
     let best_idx = scores
         .iter()
@@ -82,5 +86,5 @@ where
         .map(|(i, _)| i)
         .unwrap_or(0);
 
-    (fractions[best_idx], scores)
+    Ok((fractions[best_idx], scores))
 }

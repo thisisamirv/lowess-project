@@ -277,23 +277,25 @@ fn test_interpolate_unsorted() {
 /// Test CVKind::run with various edge cases for k and fractions.
 #[test]
 fn test_cv_method_run_edge_cases() {
-    let smoother = |_: &[f64], _: &[f64], _: f64| vec![0.0; 5];
+    let smoother = |_: &[f64], _: &[f64], _: f64| Ok(vec![0.0; 5]);
 
     // 1. n < 2 in LOOCV
     let x_mini = vec![1.0];
     let y_mini = vec![2.0];
     use lowess::internals::primitives::buffer::CVBuffer;
     let mut cv_buffer = CVBuffer::new();
-    let (best_mini, _) = CVKind::LOOCV.run(
-        &x_mini,
-        &y_mini,
-        1,
-        &[0.5, 0.8],
-        None,
-        smoother,
-        None::<fn(&[f64], &[f64], &[f64], f64) -> Vec<f64>>,
-        &mut cv_buffer,
-    );
+    let (best_mini, _) = CVKind::LOOCV
+        .run(
+            &x_mini,
+            &y_mini,
+            1,
+            &[0.5, 0.8],
+            None,
+            smoother,
+            None::<fn(&[f64], &[f64], &[f64], f64) -> Vec<f64>>,
+            &mut cv_buffer,
+        )
+        .unwrap();
     assert_eq!(best_mini, 0.5);
 }
 
@@ -303,7 +305,7 @@ fn test_kfold_insufficient_data() {
     let x = vec![1.0, 2.0, 3.0];
     let y = vec![2.0, 4.0, 6.0];
     let fractions = vec![0.5, 0.8];
-    let smoother = |_: &[f64], _: &[f64], _: f64| vec![0.0; 3];
+    let smoother = |_: &[f64], _: &[f64], _: f64| Ok(vec![0.0; 3]);
 
     // k=5 > n=3. This should work as the last fold will just cover the remaining points (which might be empty or small).
     // The implementation n/k = 0 for k > n.
@@ -312,16 +314,18 @@ fn test_kfold_insufficient_data() {
     // Last fold (k-1): test_start = 0, test_end = 3.
     use lowess::internals::primitives::buffer::CVBuffer;
     let mut cv_buffer = CVBuffer::new();
-    let (best, scores) = CVKind::KFold(5).run(
-        &x,
-        &y,
-        1,
-        &fractions,
-        None,
-        smoother,
-        None::<fn(&[f64], &[f64], &[f64], f64) -> Vec<f64>>,
-        &mut cv_buffer,
-    );
+    let (best, scores) = CVKind::KFold(5)
+        .run(
+            &x,
+            &y,
+            1,
+            &fractions,
+            None,
+            smoother,
+            None::<fn(&[f64], &[f64], &[f64], f64) -> Vec<f64>>,
+            &mut cv_buffer,
+        )
+        .unwrap();
     assert!(best > 0.0);
     assert_eq!(scores.len(), 2);
 }
@@ -334,20 +338,22 @@ fn test_loocv_minimal_data() {
     let fractions = vec![0.5];
 
     // Smoother returns original y
-    let smoother = |_: &[f64], y: &[f64], _: f64| y.to_vec();
+    let smoother = |_: &[f64], y: &[f64], _: f64| Ok(y.to_vec());
 
     use lowess::internals::primitives::buffer::CVBuffer;
     let mut cv_buffer = CVBuffer::new();
-    let (best, scores) = CVKind::LOOCV.run(
-        &x,
-        &y,
-        1,
-        &fractions,
-        None,
-        smoother,
-        None::<fn(&[f64], &[f64], &[f64], f64) -> Vec<f64>>,
-        &mut cv_buffer,
-    );
+    let (best, scores) = CVKind::LOOCV
+        .run(
+            &x,
+            &y,
+            1,
+            &fractions,
+            None,
+            smoother,
+            None::<fn(&[f64], &[f64], &[f64], f64) -> Vec<f64>>,
+            &mut cv_buffer,
+        )
+        .unwrap();
     assert_eq!(best, 0.5);
     assert_eq!(scores.len(), 1);
 
