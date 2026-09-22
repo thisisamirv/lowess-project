@@ -54,7 +54,7 @@ cat(sprintf("y[0]: %.4f\n", result$y[1]))
 
 Remove trend to analyze residual patterns.
 
-Setting `return_residuals = TRUE` stores `observed - smoothed` alongside the
+Setting `outputs = "residuals"` stores `observed - smoothed` alongside the
 smooth. A slightly wider `fraction = 0.3` produces a smoother baseline trend, so
 short-duration oscillations end up in the residuals rather than being absorbed
 into the trend component. The residual series is then ready for spectral
@@ -70,7 +70,7 @@ y <- sin(t) + 0.1
 model <- Lowess(
     fraction = 0.3,
     iterations = 3,
-    return_residuals = TRUE
+    outputs = "residuals"
 )
 result <- fit(model, t, y)
 
@@ -170,7 +170,7 @@ model <- Lowess(
     fraction = 0.3,
     iterations = 3,
     confidence_intervals = 0.95,
-    return_diagnostics = TRUE
+    outputs = "diagnostics"
 )
 result <- fit(model, hours, expression)
 cat(sprintf("R2: %.3f\n", result$diagnostics$r_squared))

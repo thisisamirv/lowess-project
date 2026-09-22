@@ -4,6 +4,16 @@ weight: 100
 ---
 
 <!-- markdownlint-disable MD024 MD025 -->
+# fastlowess (Go) (development version)
+
+## Added
+
+* Added grouped `Outputs []string`, `CV *CVOptions`, and prediction `Outputs []string` options; legacy flat fields remain accepted for compatibility while callers migrate.
+
+## Fixed
+
+* Fixed C++ release CI's "Commit updated recipe" step failing with "paths are ignored" because the repo's blanket `.gitignore` `spack/` rule matches `bindings/cpp/spack/`; `git add` now force-adds the tracked recipe file.
+
 # fastlowess (Go) 4.1.0
 
 ## Added

@@ -38,9 +38,7 @@ func main() {
  }
 
  opts := fastlowess.DefaultOptions()
- opts.CVMethod = "kfold"
- opts.CVK = 5
- opts.CVFractions = []float64{0.2, 0.3, 0.5, 0.7}
+ opts.CV = &fastlowess.CVOptions{Method: "kfold", K: 5, Fractions: []float64{0.2, 0.3, 0.5, 0.7}}
 
  model, err := fastlowess.NewLowess(opts)
  if err != nil {
@@ -91,8 +89,7 @@ func main() {
  }
 
  opts := fastlowess.DefaultOptions()
- opts.CVMethod = "loocv"
- opts.CVFractions = []float64{0.2, 0.3, 0.5, 0.7}
+ opts.CV = &fastlowess.CVOptions{Method: "loocv", Fractions: []float64{0.2, 0.3, 0.5, 0.7}}
 
  model, err := fastlowess.NewLowess(opts)
  if err != nil {
@@ -139,11 +136,9 @@ func main() {
  }
 
  opts := fastlowess.DefaultOptions()
- opts.CVMethod = "kfold"
- opts.CVK = 5
- opts.CVFractions = []float64{0.3, 0.5, 0.7}
+ opts.CV = &fastlowess.CVOptions{Method: "kfold", K: 5, Fractions: []float64{0.3, 0.5, 0.7}}
  seed := uint64(42)
- opts.CVSeed = &seed
+ opts.CV.Seed = &seed
 
  model, err := fastlowess.NewLowess(opts)
  if err != nil {
@@ -212,9 +207,7 @@ func main() {
  }
 
  opts := fastlowess.DefaultOptions()
- opts.CVMethod = "kfold"
- opts.CVK = 5
- opts.CVFractions = []float64{0.1, 0.3, 0.5, 0.7}
+ opts.CV = &fastlowess.CVOptions{Method: "kfold", K: 5, Fractions: []float64{0.1, 0.3, 0.5, 0.7}}
 
  // Fraction  | CV Score (MSE)
  // 0.1       | 0.0542  <- Undersmoothed

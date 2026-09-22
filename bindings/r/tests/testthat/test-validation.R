@@ -10,7 +10,7 @@
 #' @srrstats {RE7.1, RE7.1a} Noiseless exact relationships between predictor
 #'   and response: y = f(x) exactly (linear, constant) reproduces truth;
 #'   perfect fit is recognized (r_squared = 1, rmse = 0 when
-#'   return_diagnostics = TRUE); fitting exact data is at least as fast as
+#'   outputs = "diagnostics"); fitting exact data is at least as fast as
 #'   equivalent noisy data.
 #'
 # Validation: numerical agreement with R's `stats::lowess` and `stats::lm`.
@@ -463,13 +463,13 @@ test_that("RE7.0/RE7.1 noiseless exact predictor and predictor+response", {
     # Perfect fit is recognized via diagnostics: r_squared == 1, rmse == 0.
     # This is the correct "rejection" behavior — the model reports that the
     # relationship is exact rather than silently returning a misleading fit.
-    # Note: return_diagnostics is a constructor argument for Lowess(), not fit()
+    # `outputs` belongs to Lowess(), not fit().
     r_diag <- fit(
         Lowess(
             fraction = 0.3,
             iterations = 0L,
             boundary_policy = "noboundary",
-            return_diagnostics = TRUE
+            outputs = "diagnostics"
         ),
         as.double(d_lin$x),
         as.double(d_lin$y)

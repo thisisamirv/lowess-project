@@ -1,6 +1,13 @@
 \page news News
 
 <!-- markdownlint-disable MD024 MD025 -->
+# fastlowess (C++) (development version)
+
+## Fixed
+
+* Fixed C++ release CI's "Commit updated recipe" step failing with "paths are ignored" because the repo's blanket `.gitignore` `spack/` rule matches `bindings/cpp/spack/`; `git add` now force-adds the tracked recipe file.
+* **Breaking:** replaced flat `return_*` and `cv_*` fields on `LowessOptions`/related options with grouped `outputs = {"diagnostics", "residuals", "weights", "derivative", "se", "sorted"}` and nested `cv.method`/`cv.k`/`cv.fractions`/`cv.seed`; `PredictOptions` now uses `outputs = {"se", "derivative"}`.
+
 # fastlowess (C++) 4.1.0
 
 ## Added

@@ -17,16 +17,12 @@ StreamingLowess(
     boundary_policy = "extend",
     zero_weight_fallback = "use_local_mean",
     auto_converge = NULL,
-    return_diagnostics = FALSE,
-    return_residuals = FALSE,
-    return_robustness_weights = FALSE,
-    return_derivative = FALSE,
-    return_se = FALSE,
     confidence_intervals = NULL,
     prediction_intervals = NULL,
     merge_strategy = "weighted_average",
     parallel = TRUE,
-    missing = "error"
+    missing = "error",
+    outputs = NULL
 )
 }
 \arguments{
@@ -78,21 +74,6 @@ to zero: \code{"use_local_mean"} (default; aliases: \code{"local_mean"},
 \item{auto_converge}{Convergence tolerance for early stopping of robustness
 iterations. \code{NULL} (default) disables early stopping.}
 
-\item{return_diagnostics}{Logical; if \code{TRUE}, return fit-quality
-metrics (RMSE, MAE, R-squared, AIC, etc.). Default: \code{FALSE}.}
-
-\item{return_residuals}{Logical; if \code{TRUE}, return residuals in the
-result. Default: \code{FALSE}.}
-
-\item{return_robustness_weights}{Logical; if \code{TRUE}, return per-point
-robustness weights. Default: \code{FALSE}.}
-
-\item{return_derivative}{Logical; if \code{TRUE}, return per-point local
-fit derivative (slope) in the result. Default: \code{FALSE}.}
-
-\item{return_se}{Logical; include standard errors in the result. Default:
-\code{FALSE}.}
-
 \item{confidence_intervals}{Confidence level for confidence intervals
 (e.g. 0.95), or \code{NULL} (default) to disable.}
 
@@ -110,6 +91,11 @@ fit derivative (slope) in the result. Default: \code{FALSE}.}
 \item{missing}{Policy for non-finite (NaN/Infinity) values in input data:
 \code{"error"} (default) raises an error, \code{"drop"} silently removes
 affected observations before fitting.}
+
+\item{outputs}{Character vector selecting optional output components:
+\code{"diagnostics"}, \code{"residuals"}, \code{"weights"} (robustness
+weights), \code{"derivative"}, and/or \code{"se"} (standard errors).
+\code{NULL} (default) returns only the core result.}
 }
 \value{
 A StreamingLowess object.

@@ -24,7 +24,7 @@ The `Lowess` type allows configuring the LOWESS parameters once and fitting mult
 ```go
 opts := fastlowess.DefaultOptions()
 opts.Fraction = 0.3
-opts.ReturnDiagnostics = true
+opts.Outputs = []string{"diagnostics"}
 
 model, err := fastlowess.NewLowess(opts)
 if err != nil {
@@ -64,17 +64,10 @@ result, err := model.Fit(x, y)
 | `ConfidenceIntervals` | `*float64` | `nil` (disabled) | Confidence level in (0, 1), e.g. `0.95`. |
 | `PredictionIntervals` | `*float64` | `nil` (disabled) | Confidence level in (0, 1), e.g. `0.95`. |
 | `AutoConverge` | `*float64` | `nil` (disabled) | Convergence tolerance for early stopping. |
-| `ReturnDiagnostics` | `bool` | `false` | Populate `Result.Diagnostics`. |
-| `ReturnResiduals` | `bool` | `false` | Populate `Result.Residuals`. |
-| `ReturnRobustnessWeights` | `bool` | `false` | Populate `Result.RobustnessWeights`. |
-| `ReturnSE` | `bool` | `false` | Populate `Result.StandardErrors` (hat-matrix statistics). |
-| `ReturnSorted` | `bool` | `false` | Return results sorted ascending by `X` instead of in original input order. |
+| `Outputs` | `[]string` | `nil` | Optional components: `diagnostics`, `residuals`, `weights`, `derivative`, `se`, `sorted`. |
 | `Parallel` | `bool` | `true` | Enable parallel processing. |
 | `Backend` | `string` | `"cpu"` | `cpu` or `gpu` (requires a `gpu`-feature build of the native library). |
-| `CVMethod` | `string` | `"kfold"` | `kfold` or `loocv`. |
-| `CVK` | `int` | `5` | Number of folds for k-fold CV. |
-| `CVFractions` | `[]float64` | `nil` (disabled) | Candidate fractions for cross-validation. |
-| `CVSeed` | `*uint64` | `nil` (random) | RNG seed for reproducible k-fold splits. |
+| `CV` | `*CVOptions` | `nil` (disabled) | Grouped cross-validation configuration. |
 | `RetainModel` | `bool` | `false` | Retain training data, enabling `Result.PredictModel` for out-of-sample prediction. |
 | `ReturnDerivative` | `bool` | `false` | Include the per-point local fit derivative (slope) in the result. |
 
@@ -83,7 +76,7 @@ Use `fastlowess.DefaultOptions()` and override only the fields you need:
 ```go
 opts := fastlowess.DefaultOptions()
 opts.Fraction = 0.3
-opts.ReturnDiagnostics = true
+opts.Outputs = []string{"diagnostics"}
 ```
 
 ## Options
@@ -244,18 +237,16 @@ The batch `Lowess` type can optionally run on a GPU-accelerated backend powered 
 
 *See: [Cross-Validation](../guide/cross-validation.md)*
 
-- `CVMethod`: `"kfold"` (default) — fast, evaluates each candidate fraction over `CVK` folds; `"loocv"` — slow, exhaustive leave-one-out cross-validation
-- `CVK`: Number of folds for k-fold CV. Ignored when `CVMethod="loocv"`.
-- `CVFractions`: Candidate fractions to evaluate. Cross-validation is disabled unless this is set.
-- `CVSeed`: Seed for reproducible k-fold shuffling. `nil` (default) uses a random seed.
+- `CV.Method`: `"kfold"` (default) — fast, evaluates each candidate fraction over `CV.K` folds; `"loocv"` — slow, exhaustive leave-one-out cross-validation.
+- `CV.K`: Number of folds for k-fold CV. Ignored when `CV.Method="loocv"`.
+- `CV.Fractions`: Candidate fractions to evaluate. Cross-validation is disabled when `CV` is nil.
+- `CV.Seed`: Seed for reproducible k-fold shuffling. Nil uses a random seed.
 
 ```go
 opts := fastlowess.DefaultOptions()
-opts.CVFractions = []float64{0.1, 0.2, 0.3, 0.5}
-opts.CVMethod = "kfold"
-opts.CVK = 5
+opts.CV = &fastlowess.CVOptions{Method: "kfold", K: 5, Fractions: []float64{0.1, 0.2, 0.3, 0.5}}
 seed := uint64(42)
-opts.CVSeed = &seed
+opts.CV.Seed = &seed
 
 model, _ := fastlowess.NewLowess(opts)
 defer model.Close()

@@ -47,7 +47,7 @@ First smoothed value (fraction=0.1): 11.321590922416165
 
 Remove trend to analyze residual patterns.
 
-Setting `return_residuals = True` stores `observed − smoothed` alongside the smooth. A slightly wider `fraction = 0.3` produces a smoother baseline trend, so short-duration oscillations end up in the residuals rather than being absorbed into the trend component. The residual series is then ready for spectral analysis, seasonality detection, or change-point methods.
+Setting `.outputs(["residuals"])` stores `observed − smoothed` alongside the smooth. A slightly wider `fraction = 0.3` produces a smoother baseline trend, so short-duration oscillations end up in the residuals rather than being absorbed into the trend component. The residual series is then ready for spectral analysis, seasonality detection, or change-point methods.
 
 ```rust
 use lowess::prelude::*;
@@ -61,7 +61,7 @@ fn main() -> Result<(), LowessError> {
     let model = Lowess::new()
         .fraction(0.3)
         .iterations(3)
-        .return_residuals()
+        .outputs(["residuals"])
         .build()?;
 
     let result = model.fit(&t, &y)?;
@@ -200,7 +200,7 @@ fn main() -> Result<(), LowessError> {
         .fraction(0.3)
         .iterations(3)
         .confidence_intervals(0.95)
-        .return_diagnostics()
+        .outputs(["diagnostics"])
         .build()?;
 
     let result = model.fit(&hours, &expression)?;

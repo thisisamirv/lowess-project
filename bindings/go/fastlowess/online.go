@@ -47,6 +47,8 @@ type OnlineOptions struct {
 	// AutoConverge is the convergence tolerance for early stopping of
 	// robustness iterations. Nil disables early stopping.
 	AutoConverge *float64
+	// Outputs selects optional result components: "weights", "derivative", and "se".
+	Outputs []string
 
 	// ReturnRobustnessWeights requests per-point robustness weights in the result.
 	ReturnRobustnessWeights bool
@@ -133,15 +135,15 @@ func NewOnlineLowess(opts OnlineOptions) (*OnlineLowess, error) {
 			C.int(opts.Iterations),
 			optFloat(delta, deltaSet),
 			wf, rm, sm, bp,
-			boolToCInt(opts.ReturnRobustnessWeights),
+			boolToCInt(opts.ReturnRobustnessWeights || hasOutput(opts.Outputs, "weights")),
 			zwf,
 			optFloat(autoConverge, autoConvergeSet),
 			C.int(opts.WindowCapacity),
 			C.int(opts.MinPoints),
 			um,
 			missing,
-			boolToCInt(opts.ReturnDerivative),
-			boolToCInt(opts.ReturnSE),
+			boolToCInt(opts.ReturnDerivative || hasOutput(opts.Outputs, "derivative")),
+			boolToCInt(opts.ReturnSE || hasOutput(opts.Outputs, "se")),
 			optFloat(ci, ciSet),
 			optFloat(pi, piSet),
 		)

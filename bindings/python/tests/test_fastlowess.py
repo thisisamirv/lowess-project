@@ -190,6 +190,19 @@ class TestLowess:
         result = lowess.fit(x, y)
         assert len(result.y) == len(x)
 
+    def test_grouped_prediction_outputs(self):
+        """Test selecting prediction outputs as a group."""
+        x = np.linspace(0, 10, 30)
+        y = np.sin(x)
+
+        result = fastlowess.Lowess(fraction=0.5, retain_model=True).fit(x, y)
+        prediction = result.predict(
+            np.array([1.0, 5.0, 9.0]), outputs=["se", "derivative"]
+        )
+
+        assert prediction.standard_errors is not None
+        assert prediction.derivative is not None
+
     def test_lowess_iterations(self):
         """Test lowess with different iteration counts."""
         x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
@@ -590,6 +603,36 @@ class TestErrorHandling:
         with pytest.raises(ValueError):
             lowess = fastlowess.Lowess(cv_fractions=[0.5], cv_method="invalid")
             lowess.fit(x, y)
+
+    def test_grouped_outputs(self):
+        """Test selecting optional fit outputs as a group."""
+        x = np.linspace(0, 10, 30)
+        y = np.sin(x)
+
+        result = fastlowess.Lowess(outputs=["diagnostics", "residuals", "weights"]).fit(
+            x, y
+        )
+
+        assert result.diagnostics is not None
+        assert result.residuals is not None
+        assert result.robustness_weights is not None
+
+    def test_nested_cv_options(self):
+        """Test configuring cross-validation with a nested mapping."""
+        x = np.linspace(0, 10, 30)
+        y = x**2
+
+        result = fastlowess.Lowess(
+            cv={"method": "kfold", "k": 5, "fractions": [0.3, 0.5], "seed": 42}
+        ).fit(x, y)
+
+        assert result.fraction_used in [0.3, 0.5]
+        assert result.cv_scores is not None
+
+    def test_invalid_nested_cv_options(self):
+        """Test malformed nested CV values raise ValueError."""
+        with pytest.raises(ValueError):
+            fastlowess.Lowess(cv={"fractions": "invalid"})
 
     def test_invalid_missing_policy(self):
         """Test error on invalid missing policy."""

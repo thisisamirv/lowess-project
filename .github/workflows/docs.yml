@@ -78,7 +78,7 @@ jobs:
           cache-dependency-path: bindings/go/docs-site/go.sum
 
       - name: Install Hugo
-        run: go install github.com/gohugoio/hugo@v0.165.0
+        run: go install github.com/gohugoio/hugo@v0.166.0
 
       - name: Build docs
         run: hugo --gc --minify

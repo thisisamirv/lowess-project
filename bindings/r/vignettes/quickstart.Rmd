@@ -50,7 +50,7 @@ model <- Lowess(
     iterations = 3,
     confidence_intervals = 0.95,
     prediction_intervals = 0.95,
-    return_diagnostics = TRUE
+    outputs = "diagnostics"
 )
 result <- fit(model, x, y)
 
@@ -76,7 +76,7 @@ model <- Lowess(
     fraction = 0.7,
     iterations = 5,
     robustness_method = "bisquare",
-    return_robustness_weights = TRUE
+    outputs = "weights"
 )
 result <- fit(model, x_out, y_with_outlier)
 

@@ -8,11 +8,15 @@
 #[cfg(not(feature = "std"))]
 use alloc::format;
 #[cfg(not(feature = "std"))]
+use alloc::string::ToString;
+#[cfg(not(feature = "std"))]
 use alloc::vec;
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 use core::fmt::Debug;
 use num_traits::Float;
+#[cfg(feature = "std")]
+use std::string::ToString;
 #[cfg(feature = "std")]
 use std::vec;
 #[cfg(feature = "std")]
@@ -123,6 +127,29 @@ impl<T: Float> PredictBuilder<T> {
     // Include the local WLS fit's derivative (slope) at each query point.
     pub fn return_derivative(mut self) -> Self {
         self.return_derivative = true;
+        self
+    }
+
+    // Select optional prediction output components: "se" and/or "derivative".
+    // Unknown names are deferred to `build()` through the existing pending error path.
+    pub fn outputs<I, S>(mut self, names: I) -> Self
+    where
+        I: IntoIterator<Item = S>,
+        S: AsRef<str>,
+    {
+        for name in names {
+            match name.as_ref() {
+                "se" => self.return_se = true,
+                "derivative" => self.return_derivative = true,
+                other => {
+                    self.pending_error = Some(LowessError::InvalidOption {
+                        option: "predict_outputs",
+                        value: other.to_string(),
+                        valid: "se, derivative",
+                    });
+                }
+            }
+        }
         self
     }
 

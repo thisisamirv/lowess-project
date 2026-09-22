@@ -106,6 +106,75 @@ pub type Lowess<T = f64> = LowessBuilder<T, BatchMode>;
 pub type StreamingLowess<T = f64> = LowessBuilder<T, StreamingMode>;
 pub type OnlineLowess<T = f64> = LowessBuilder<T, OnlineMode>;
 
+// Intermediate cross-validation builder produced by `CVBuilder::method(...)`:
+// carries the method, fold count, and seed while awaiting the (required)
+// candidate fractions. Finalized with `.fractions(...)` into a `CVOptions`.
+#[derive(Debug, Clone)]
+pub struct CVBuilder {
+    method: String,
+    k: usize,
+    seed: Option<u64>,
+}
+
+impl CVBuilder {
+    // Start a cross-validation options chain. Accepts the same case-insensitive
+    // strings as `cv_method`: "kfold" (or "k_fold", "k-fold"), "loocv" (or
+    // "loo_cv", "loo-cv").
+    pub fn method(name: &str) -> Self {
+        Self {
+            method: name.to_string(),
+            k: 5,
+            seed: None,
+        }
+    }
+
+    // Set the number of folds for k-fold cross-validation.
+    pub fn k(mut self, k: usize) -> Self {
+        self.k = k;
+        self
+    }
+
+    // Set a random seed for reproducible fold assignment.
+    pub fn seed(mut self, seed: u64) -> Self {
+        self.seed = Some(seed);
+        self
+    }
+
+    // Provide the candidate fractions and produce the final `CVOptions`.
+    pub fn fractions<T: Float>(self, fractions: Vec<T>) -> CVOptions<T> {
+        CVOptions {
+            method: self.method,
+            k: self.k,
+            seed: self.seed,
+            fractions,
+        }
+    }
+}
+
+// Fully-specified cross-validation options, passed to `LowessBuilder::cv`.
+// Produced by `CVBuilder::fractions(...)`; callers never name this type.
+#[derive(Debug, Clone)]
+pub struct CVOptions<T> {
+    method: String,
+    k: usize,
+    seed: Option<u64>,
+    fractions: Vec<T>,
+}
+
+impl<T: Float> CVOptions<T> {
+    // Set the number of folds for k-fold cross-validation.
+    pub fn k(mut self, k: usize) -> Self {
+        self.k = k;
+        self
+    }
+
+    // Set a random seed for reproducible fold assignment.
+    pub fn seed(mut self, seed: u64) -> Self {
+        self.seed = Some(seed);
+        self
+    }
+}
+
 // Fluent builder for configuring LOWESS parameters and execution modes.
 #[derive(Debug, Clone)]
 pub struct LowessBuilder<T, Mode = BatchMode> {
@@ -518,6 +587,19 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
         self
     }
 
+    // Configure cross-validation from a `CVOptions` built via `CVBuilder`,
+    // e.g. `.cv(CVBuilder::method("kfold").k(5).fractions(vec![0.3, 0.7]).seed(123))`.
+    pub fn cv(mut self, options: CVOptions<T>) -> Self {
+        if self.cv_fractions.is_some() || self.cv_method_str.is_some() {
+            self.duplicate_param = Some("cv");
+        }
+        self.cv_method_str = Some(options.method);
+        self.cv_k_val = options.k;
+        self.cv_fractions = Some(options.fractions);
+        self.cv_seed = options.seed;
+        self
+    }
+
     // Enable automatic convergence detection based on relative change.
     pub fn auto_converge(mut self, tolerance: T) -> Self {
         if self.auto_converge.is_some() {
@@ -569,6 +651,38 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
     // client-side instead of calling `build().fit()` twice.
     pub fn return_sorted(mut self) -> Self {
         self.return_sorted = Some(true);
+        self
+    }
+
+    // Enable one or more optional output components by name:
+    // "diagnostics", "residuals", "weights" (robustness weights), "derivative",
+    // "se" (standard errors), "sorted". Unknown names are collected and reported
+    // together by `build()`. Accepts an array/slice of strings, e.g.
+    // `.outputs(["diagnostics", "se"])`.
+    pub fn outputs<I, S>(mut self, names: I) -> Self
+    where
+        I: IntoIterator<Item = S>,
+        S: AsRef<str>,
+    {
+        for name in names {
+            match name.as_ref() {
+                "diagnostics" => self.return_diagnostics = Some(true),
+                "residuals" => self.compute_residuals = Some(true),
+                "weights" => self.return_robustness_weights = Some(true),
+                "derivative" => self.return_derivative = Some(true),
+                "se" => {
+                    if self.interval_type.is_none() {
+                        self.interval_type = Some(IntervalMethod::se());
+                    }
+                }
+                "sorted" => self.return_sorted = Some(true),
+                other => self.parse_errors.push(LowessError::InvalidOption {
+                    option: "outputs",
+                    value: other.to_string(),
+                    valid: "diagnostics, residuals, weights, derivative, se, sorted",
+                }),
+            }
+        }
         self
     }
 

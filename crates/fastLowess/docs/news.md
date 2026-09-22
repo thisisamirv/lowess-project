@@ -1,4 +1,20 @@
 <!-- markdownlint-disable MD024 MD025 -->
+# fastLowess (development version)
+
+## Added
+
+* Added `tests/binding_support_tests.rs` (gated on the `dev` feature) covering the `vec_to_raw_ptr`/`opt_vec_to_raw_ptr`/`free_raw_f64_buffer` round trip: repeated allocate/read/free cycles, `Some`/`None` handling, and null-pointer freeing.
+* **Breaking:** migrated fastLowess's wrapper, tests, binding option translation, and docs from individual `return_*`/`cv_*` calls to `.outputs([...])` and `.cv(CVBuilder::method(...).k(...).fractions(...).seed(...))`. `CVBuilder` is available from the fastLowess prelude.
+
+## Changed
+
+* Replaced `std::mem::forget` with the idiomatic `Box::into_raw` in `binding_support::vec_to_raw_ptr` so the FFI ownership transfer to language bindings is explicit. The allocation was never a leak (each binding frees it via `free_raw_f64_buffer`), but `Box::into_raw` expresses that transfer without a bare `mem::forget`.
+* Implemented `std::error::Error` for `BindingError` (it already implemented `Display`), so bindings can treat it as a first-class error type.
+
+## Fixed
+
+* Fixed C++ release CI's "Commit updated recipe" step failing with "paths are ignored" because the repo's blanket `.gitignore` `spack/` rule matches `bindings/cpp/spack/`; `git add` now force-adds the tracked recipe file.
+
 # fastLowess 4.1.0
 
 ## Added

@@ -74,17 +74,10 @@ Fraction used: 0.5
 | `auto_converge` | `number` | `null` | Auto-convergence tolerance |
 | `confidence_intervals` | `number` | `null` | Confidence level (e.g., 0.95) |
 | `prediction_intervals` | `number` | `null` | Prediction level (e.g., 0.95) |
-| `return_diagnostics` | `boolean` | `false` | Include diagnostics in result |
-| `return_residuals` | `boolean` | `false` | Include residuals in result |
-| `return_robustness_weights` | `boolean` | `false` | Include weights in result |
-| `return_se` | `boolean` | `false` | Return standard errors |
-| `return_sorted` | `boolean` | `false` | Return results sorted ascending by `x` instead of in original input order |
+| `outputs` | `string[]` | `[]` | Select `diagnostics`, `residuals`, `weights`, `derivative`, `se`, and/or `sorted` |
 | `parallel` | `boolean` | `true` | Enable parallel execution |
 | `backend` | `string` | `"cpu"` | Execution backend (`"cpu"` or `"gpu"`); GPU requires the package to be built with the `gpu` Cargo feature |
-| `cv_method` | `string` | `"kfold"` | CV method (`"kfold"` fast or `"loocv"` slow, exhaustive) |
-| `cv_k` | `number` | `5` | Number of folds for k-fold CV |
-| `cv_fractions` | `number[]` | `null` | Fractions to test for cross-validation |
-| `cv_seed` | `number` | `null` | Random seed for cross-validation shuffling |
+| `cv` | `object` | `null` | Grouped CV options: `fractions`, `method`, `k`, and `seed` |
 | `custom_weights` | `Float64Array` | `null` | Per-observation case weights — passed to `fit()`, not the options object |
 | `return_derivative` | `boolean` | `false` | Include the per-point local fit derivative (slope) in result |
 

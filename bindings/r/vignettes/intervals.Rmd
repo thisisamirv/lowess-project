@@ -146,7 +146,7 @@ cat("99% CI at midpoint: [", result$confidence_lower[50], ", ",
 Access standard errors directly (available when intervals are computed):
 
 ```{r intervals_5}
-model <- Lowess(fraction = 0.5, return_se = TRUE)
+model <- Lowess(fraction = 0.5, outputs = "se")
 result <- fit(model, x, y)
 cat("Standard errors (first 5):", head(result$standard_errors, 5), "\n")
 ```

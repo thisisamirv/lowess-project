@@ -53,7 +53,7 @@ fn main() -> Result<(), LowessError> {
         .iterations(3)
         .confidence_intervals(0.95)  // 95% CI
         .prediction_intervals(0.95)  // 95% PI
-        .return_diagnostics()
+        .outputs(["diagnostics"])
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -94,7 +94,7 @@ fn main() -> Result<(), LowessError> {
         .fraction(0.7)
         .iterations(5)                    // More iterations for outliers
         .robustness_method("bisquare")    // Default, smooth downweighting
-        .return_robustness_weights()      // See which points were downweighted
+        .outputs(["weights"])             // See which points were downweighted
         .build()?;
 
     let result = model.fit(&x, &y_with_outlier)?;

@@ -21,7 +21,7 @@ It reuses `Fit`'s own (possibly `Delta`-interpolated) smoothed curve for its `Y`
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `ReturnSE` | `bool` | `false` | Include standard errors in the output |
+| `Outputs` | `[]string` | `nil` | Select `se` and/or `derivative` |
 | `ConfidenceLevel` | `*float64` | `nil` | Confidence interval coverage level (e.g. `0.95`) |
 | `PredictionLevel` | `*float64` | `nil` | Prediction interval coverage level (e.g. `0.95`) |
 | `ReturnDerivative` | `bool` | `false` | Include the local fit's derivative (slope) at each query point |
@@ -92,8 +92,8 @@ fmt.Println(prediction.Y)
 
 ```go
 prediction, _ := result.PredictModel.Predict([]float64{2.5}, fastlowess.PredictOptions{
- ReturnSE:         true,
- ReturnDerivative: true,
+ Outputs:          []string{"se", "derivative"},
+ Outputs: []string{"se", "derivative"},
 })
 fmt.Println(prediction.Y, prediction.StandardErrors, prediction.Derivative)
 ```

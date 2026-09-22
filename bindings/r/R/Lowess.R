@@ -62,36 +62,21 @@
 #' @param prediction_intervals Confidence level for prediction intervals,
 #'   greater than 0 and less than 1 (e.g., 0.95). \code{NULL} (default)
 #'   disables prediction intervals.
-#' @param return_diagnostics Logical; if \code{TRUE}, return fit-quality
-#'   metrics (RMSE, MAE, R-squared, AIC, etc.). Default: \code{FALSE}.
-#' @param return_residuals Logical; if \code{TRUE}, return residuals in the
-#'   result. Default: \code{FALSE}.
-#' @param return_robustness_weights Logical; if \code{TRUE}, return per-point
-#'   robustness weights. Default: \code{FALSE}.
-#' @param return_derivative Logical; if \code{TRUE}, return per-point local
-#'   fit derivative (slope) in the result. Default: \code{FALSE}.
+#' @param outputs Character vector selecting optional output components:
+#'   \code{"diagnostics"}, \code{"residuals"}, \code{"weights"} (robustness
+#'   weights), \code{"derivative"}, \code{"se"} (standard errors), and/or
+#'   \code{"sorted"}. \code{NULL} (default) returns only the core result
+#'   (\code{x}, \code{y}, and fit metadata).
 #' @param zero_weight_fallback Fallback policy when all robustness weights drop
 #'   to zero: \code{"use_local_mean"} (default; aliases: \code{"local_mean"},
 #'   \code{"mean"}), \code{"return_original"} (alias: \code{"original"}), or
 #'   \code{"return_none"} (alias: \code{"none"}).
 #' @param auto_converge Convergence tolerance for early stopping of robustness
 #'   iterations. \code{NULL} (default) disables early stopping.
-#' @param cv_fractions Numeric vector of candidate fractions for
-#'   cross-validation. \code{NULL} (default) disables CV.
-#' @param cv_method Cross-validation method: \code{"kfold"} (default) or
-#'   \code{"loocv"}.
-#' @param cv_k Number of folds for k-fold CV. Default: 5.
+#' @param cv Cross-validation options, created with \code{\link{cv_opts}}:
+#'   e.g. \code{cv = cv_opts(fractions = c(0.2, 0.3, 0.5))}. \code{NULL}
+#'   (default) disables cross-validation.
 #' @param parallel Logical; enable parallel processing. Default: \code{TRUE}.
-#' @param cv_seed Integer seed for the cross-validation random number
-#'   generator. \code{NULL} (default) uses a random seed.
-#' @param return_se Logical; if \code{TRUE}, compute hat-matrix statistics
-#'   (effective degrees of freedom, leverage, standard errors).
-#'   Default: \code{FALSE}.
-#' @param return_sorted Logical; if \code{TRUE}, return results sorted
-#'   ascending by \code{x} instead of in the original input order. Default:
-#'   \code{FALSE}. To get both orderings without re-fitting, sort the default
-#'   (unsorted) result client-side (e.g. \code{order(result$x)}) rather than
-#'   calling \code{fit()} twice.
 #' @param backend Execution backend: \code{"cpu"} (default) or \code{"gpu"}.
 #'   GPU support requires the package to be built locally with
 #'   \code{WITH_GPU=1} (see \code{bindings/r/Makefile}) and a
@@ -124,26 +109,44 @@ Lowess <- function(
     boundary_policy = "extend",
     confidence_intervals = NULL,
     prediction_intervals = NULL,
-    return_diagnostics = FALSE,
-    return_residuals = FALSE,
-    return_robustness_weights = FALSE,
-    return_derivative = FALSE,
     zero_weight_fallback = "use_local_mean",
     auto_converge = NULL,
-    cv_fractions = NULL,
-    cv_method = "kfold",
-    cv_k = 5L,
     parallel = TRUE,
-    cv_seed = NULL,
-    return_se = FALSE,
-    return_sorted = FALSE,
     backend = "cpu",
     missing = "error",
-    retain_model = FALSE
+    retain_model = FALSE,
+    outputs = NULL,
+    cv = NULL
 ) {
     reject_extra_positional_args(sys.call(), "fraction")
     check_gpu_backend(backend)
     validate_params(fraction = fraction, iterations = iterations)
+
+    # Expand `return` into the flat boolean flags the Rust FFI expects.
+    flags <- parse_outputs_flags(
+        outputs,
+        c("diagnostics", "residuals", "weights", "derivative", "se", "sorted")
+    )
+    return_diagnostics <- flags[["diagnostics"]]
+    return_residuals <- flags[["residuals"]]
+    return_robustness_weights <- flags[["weights"]]
+    return_derivative <- flags[["derivative"]]
+    return_se <- flags[["se"]]
+    return_sorted <- flags[["sorted"]]
+
+    # Expand `cv` into the flat FFI args.
+    if (is.null(cv)) {
+        cv_fractions <- NULL
+        cv_method <- "kfold"
+        cv_k <- 5L
+        cv_seed <- NULL
+    } else {
+        cv_fractions <- cv$fractions
+        cv_method <- if (is.null(cv$method)) "kfold" else cv$method
+        cv_k <- if (is.null(cv$k)) 5L else cv$k
+        cv_seed <- if (is.null(cv$seed)) NULL else cv$seed
+    }
+
     handle <- do.call(RLowess$new, env_args(lowess_params))
 
     structure(
@@ -159,5 +162,46 @@ Lowess <- function(
             )
         ),
         class = "Lowess"
+    )
+}
+
+#' Cross-validation options for \code{\link{Lowess}}
+#'
+#' @description
+#' Build a cross-validation options list to pass to
+#' \code{Lowess(cv = ...)}. Cross-validation is disabled by default
+#' (\code{cv = NULL}); supplying \code{cv_opts()} enables it and lets the
+#' model pick the best smoothing fraction from the candidates.
+#'
+#' @param fractions Numeric vector of candidate smoothing fractions, each
+#'   greater than 0 and up to 1 (e.g. \code{c(0.2, 0.3, 0.5)}).
+#' @param method Cross-validation method: \code{"kfold"} (default) or
+#'   \code{"loocv"}.
+#' @param k Number of folds for k-fold cross-validation. Default: 5.
+#' @param seed Integer seed for reproducible fold assignment. \code{NULL}
+#'   (default) uses a random seed.
+#'
+#' @return A \code{cv_opts} list for \code{Lowess(cv = ...)}.
+#' @examples
+#' model <- Lowess(cv = cv_opts(fractions = c(0.2, 0.3, 0.5)))
+#' @export
+cv_opts <- function(fractions, method = "kfold", k = 5L, seed = NULL) {
+    if (missing(fractions) || is.null(fractions)) {
+        stop(
+            "`fractions` must be a numeric vector of candidate fractions",
+            call. = FALSE
+        )
+    }
+    if (!is.numeric(fractions) || length(fractions) == 0L) {
+        stop("`fractions` must be a non-empty numeric vector", call. = FALSE)
+    }
+    structure(
+        list(
+            fractions = as.double(fractions),
+            method = as.character(method),
+            k = as.integer(k),
+            seed = seed
+        ),
+        class = "cv_opts"
     )
 }

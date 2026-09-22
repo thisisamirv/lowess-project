@@ -338,6 +338,51 @@ public final class Options {
         }
 
         /**
+         * Selects optional result components: {@code "diagnostics"},
+         * {@code "residuals"}, {@code "weights"}, {@code "derivative"},
+         * {@code "se"}, and {@code "sorted"}.
+         *
+         * @param outputs optional output component names
+         * @return this builder, for chaining
+         */
+        public Builder outputs(String... outputs) {
+            for (String output : outputs) {
+                switch (output) {
+                    case "diagnostics" ->
+                        this.returnDiagnostics = true;
+                    case "residuals" ->
+                        this.returnResiduals = true;
+                    case "weights" ->
+                        this.returnRobustnessWeights = true;
+                    case "derivative" ->
+                        this.returnDerivative = true;
+                    case "se" ->
+                        this.returnSe = true;
+                    case "sorted" ->
+                        this.returnSorted = true;
+                    default ->
+                        throw new IllegalArgumentException(
+                                "Unknown output: " + output);
+                }
+            }
+            return this;
+        }
+
+        /**
+         * Configures grouped cross-validation.
+         *
+         * @param cv cross-validation configuration
+         * @return this builder, for chaining
+         */
+        public Builder cv(CVOptions cv) {
+            this.cvFractions = cv.fractions.clone();
+            this.cvMethod = cv.method;
+            this.cvK = cv.k;
+            this.cvSeed = cv.seed;
+            return this;
+        }
+
+        /**
          * One of {@code "cpu"}, {@code "gpu"} (default {@code "cpu"}).
          *
          * @param backend the execution backend name

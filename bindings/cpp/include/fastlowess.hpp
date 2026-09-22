@@ -9,6 +9,7 @@
 #ifndef FASTLOWESS_HPP
 #define FASTLOWESS_HPP
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <cstdio> // stdin, fileno / _fileno
@@ -43,6 +44,19 @@ constexpr int k_default_overlap = -1;
 constexpr int k_default_window_capacity = 1000;
 constexpr int k_default_min_points = 2;
 } // namespace detail
+
+struct CVOptions {
+  std::vector<double> fractions;
+  std::string method = "kfold";
+  int k = detail::k_default_cv_k;
+  /// Zero means no seed (random fold assignment).
+  uint64_t seed = 0;
+};
+
+inline bool hasOutput(const std::vector<std::string> &outputs,
+                      const char *name) {
+  return std::find(outputs.begin(), outputs.end(), name) != outputs.end();
+}
 
 /**
  * @brief Exception thrown when LOWESS operation fails.
@@ -131,14 +145,9 @@ struct LowessOptions {
   double prediction_intervals = NAN; ///< Prediction level (NaN = disabled)
   double auto_converge = NAN;        ///< Auto-convergence threshold
 
-  bool return_diagnostics = false;
-  bool return_residuals = false;
-  bool return_robustness_weights = false;
-  /// Include the per-point local fit derivative (slope) in the output.
-  bool return_derivative = false;
-  bool return_se = false; ///< Return standard errors
-  /// Return results sorted ascending by x instead of in original input order.
-  bool return_sorted = false;
+  /// Optional result components: diagnostics, residuals, weights, derivative,
+  /// se, and sorted.
+  std::vector<std::string> outputs;
   bool parallel = true;
   /// Execution backend: "cpu" (default) or "gpu" (requires the library to be
   /// built with the `gpu` Cargo feature and a Vulkan/Metal/DX12-capable GPU).
@@ -147,12 +156,8 @@ struct LowessOptions {
   /// or "drop".
   std::string missing = "error";
 
-  // Cross-validation options
-  std::vector<double> cv_fractions;
-  std::string cv_method = "kfold";
-  int cv_k = detail::k_default_cv_k;
-  /// Seed for cross-validation RNG (0 = unset / random).
-  uint64_t cv_seed = 0;
+  /// Cross-validation configuration. Empty fractions disable CV.
+  CVOptions cv;
 
   /// Per-observation case weights. When non-empty, must have the same length
   /// as the data passed to fit(). All values must be finite and non-negative.
@@ -196,12 +201,9 @@ struct OnlineOptions {
 
   double auto_converge = NAN; ///< Auto-convergence threshold
 
-  bool return_robustness_weights = false;
-  /// Include the local fit derivative (slope) for the latest point in the
-  /// output.
-  bool return_derivative = false;
-  /// Return standard errors. Requires `update_mode = "full"`.
-  bool return_se = false;
+  /// Optional result components: "weights", "derivative", and/or "se".
+  /// "se" requires `update_mode = "full"`.
+  std::vector<std::string> outputs;
   double confidence_intervals = NAN; ///< Confidence level (NaN = disabled).
                                      ///< Requires `update_mode = "full"`.
   double prediction_intervals = NAN; ///< Prediction level (NaN = disabled).
@@ -326,10 +328,10 @@ private:
  * @brief Options for `PredictModel::predict()`.
  */
 struct PredictOptions {
-  bool return_se = false;
+  /// Optional prediction components: "se" and/or "derivative".
+  std::vector<std::string> outputs;
   double confidence_level = NAN; ///< Confidence level (NaN = disabled)
   double prediction_level = NAN; ///< Prediction level (NaN = disabled)
-  bool return_derivative = false;
   /// Behavior for query points outside the training range ("clamp", "linear",
   /// "error").
   std::string extrapolation = "clamp";
@@ -502,8 +504,9 @@ public:
                         const PredictOptions &options = {}) const {
     const auto result = cpp_predict(
         ptr_, new_x.data(), static_cast<unsigned long>(new_x.size()),
-        options.return_se ? 1 : 0, options.confidence_level,
-        options.prediction_level, options.return_derivative ? 1 : 0,
+        hasOutput(options.outputs, "se") ? 1 : 0, options.confidence_level,
+        options.prediction_level,
+        hasOutput(options.outputs, "derivative") ? 1 : 0,
         options.extrapolation.c_str(), options.max_extrapolation_distance,
         options.max_neighbor_distance);
     return PredictResult(result);
@@ -692,18 +695,19 @@ public:
         options.weight_function.c_str(), options.robustness_method.c_str(),
         options.scaling_method.c_str(), options.boundary_policy.c_str(),
         options.confidence_intervals, options.prediction_intervals,
-        options.return_diagnostics ? 1 : 0, options.return_residuals ? 1 : 0,
-        options.return_robustness_weights ? 1 : 0,
-        options.return_derivative ? 1 : 0, options.zero_weight_fallback.c_str(),
-        options.auto_converge,
-        options.cv_fractions.empty() ? nullptr : options.cv_fractions.data(),
-        static_cast<unsigned long>(options.cv_fractions.size()),
-        options.cv_method.c_str(), options.cv_k, options.parallel ? 1 : 0,
-        options.return_se ? 1 : 0, options.return_sorted ? 1 : 0,
-        options.backend.c_str(), options.missing.c_str(),
-        options.retain_model ? 1 : 0);
-    if (options.cv_seed > 0) {
-      cpp_lowess_set_cv_seed(ptr_, static_cast<unsigned long>(options.cv_seed));
+        hasOutput(options.outputs, "diagnostics") ? 1 : 0,
+        hasOutput(options.outputs, "residuals") ? 1 : 0,
+        hasOutput(options.outputs, "weights") ? 1 : 0,
+        hasOutput(options.outputs, "derivative") ? 1 : 0,
+        options.zero_weight_fallback.c_str(), options.auto_converge,
+        options.cv.fractions.empty() ? nullptr : options.cv.fractions.data(),
+        static_cast<unsigned long>(options.cv.fractions.size()),
+        options.cv.method.c_str(), options.cv.k, options.parallel ? 1 : 0,
+        hasOutput(options.outputs, "se") ? 1 : 0,
+        hasOutput(options.outputs, "sorted") ? 1 : 0, options.backend.c_str(),
+        options.missing.c_str(), options.retain_model ? 1 : 0);
+    if (options.cv.seed > 0) {
+      cpp_lowess_set_cv_seed(ptr_, static_cast<unsigned long>(options.cv.seed));
     }
   }
 
@@ -772,13 +776,15 @@ public:
         options.fraction, options.iterations, options.delta,
         options.weight_function.c_str(), options.robustness_method.c_str(),
         options.scaling_method.c_str(), options.boundary_policy.c_str(),
-        options.return_diagnostics ? 1 : 0, options.return_residuals ? 1 : 0,
-        options.return_robustness_weights ? 1 : 0,
-        options.return_derivative ? 1 : 0, options.zero_weight_fallback.c_str(),
-        options.auto_converge, options.parallel ? 1 : 0, options.chunk_size,
-        options.overlap, options.merge_strategy.c_str(),
-        options.missing.c_str(), options.return_se ? 1 : 0,
-        options.confidence_intervals, options.prediction_intervals);
+        hasOutput(options.outputs, "diagnostics") ? 1 : 0,
+        hasOutput(options.outputs, "residuals") ? 1 : 0,
+        hasOutput(options.outputs, "weights") ? 1 : 0,
+        hasOutput(options.outputs, "derivative") ? 1 : 0,
+        options.zero_weight_fallback.c_str(), options.auto_converge,
+        options.parallel ? 1 : 0, options.chunk_size, options.overlap,
+        options.merge_strategy.c_str(), options.missing.c_str(),
+        hasOutput(options.outputs, "se") ? 1 : 0, options.confidence_intervals,
+        options.prediction_intervals);
   }
 
   ~StreamingLowess() {
@@ -854,11 +860,12 @@ public:
         options.fraction, options.iterations, options.delta,
         options.weight_function.c_str(), options.robustness_method.c_str(),
         options.scaling_method.c_str(), options.boundary_policy.c_str(),
-        options.return_robustness_weights ? 1 : 0,
-        options.return_derivative ? 1 : 0, options.zero_weight_fallback.c_str(),
-        options.auto_converge, options.window_capacity, options.min_points,
+        hasOutput(options.outputs, "weights") ? 1 : 0,
+        hasOutput(options.outputs, "derivative") ? 1 : 0,
+        options.zero_weight_fallback.c_str(), options.auto_converge,
+        options.window_capacity, options.min_points,
         options.update_mode.c_str(), options.missing.c_str(),
-        options.return_se ? 1 : 0, options.confidence_intervals,
+        hasOutput(options.outputs, "se") ? 1 : 0, options.confidence_intervals,
         options.prediction_intervals);
   }
 

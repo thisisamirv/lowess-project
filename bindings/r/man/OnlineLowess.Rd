@@ -18,12 +18,10 @@ OnlineLowess(
     zero_weight_fallback = "use_local_mean",
     update_mode = "incremental",
     auto_converge = NULL,
-    return_robustness_weights = FALSE,
-    return_derivative = FALSE,
-    return_se = FALSE,
     confidence_intervals = NULL,
     prediction_intervals = NULL,
-    missing = "error"
+    missing = "error",
+    outputs = NULL
 )
 }
 \arguments{
@@ -79,15 +77,6 @@ all window points after each addition and supports robustness iterations.}
 \item{auto_converge}{Convergence tolerance for early stopping of robustness
 iterations. \code{NULL} (default) disables early stopping.}
 
-\item{return_robustness_weights}{Logical; if \code{TRUE}, return per-point
-robustness weights. Default: \code{FALSE}.}
-
-\item{return_derivative}{Logical; if \code{TRUE}, return per-point local
-fit derivative (slope) in the result. Default: \code{FALSE}.}
-
-\item{return_se}{Logical; include standard errors in the result. Requires
-\code{update_mode = "full"}. Default: \code{FALSE}.}
-
 \item{confidence_intervals}{Confidence level for confidence intervals
 (e.g. 0.95), or \code{NULL} (default) to disable. Requires
 \code{update_mode = "full"}.}
@@ -99,6 +88,11 @@ fit derivative (slope) in the result. Default: \code{FALSE}.}
 \item{missing}{Policy for non-finite (NaN/Infinity) values in input data:
 \code{"error"} (default) raises an error, \code{"drop"} silently removes
 affected observations before fitting.}
+
+\item{outputs}{Character vector selecting optional output components:
+\code{"weights"} (robustness weights), \code{"derivative"}, and/or
+\code{"se"} (standard errors). \code{NULL} (default) returns only the
+core result.}
 }
 \value{
 An OnlineLowess object.

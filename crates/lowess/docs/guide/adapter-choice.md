@@ -49,7 +49,7 @@ fn main() -> Result<(), LowessError> {
         .iterations(3usize)
         .confidence_intervals(0.95f64)
         .prediction_intervals(0.95f64)
-        .return_diagnostics()
+        .outputs(["diagnostics"])
         .build()?;
     let result = model.fit(&x, &y)?;
     let mid = n / 2;

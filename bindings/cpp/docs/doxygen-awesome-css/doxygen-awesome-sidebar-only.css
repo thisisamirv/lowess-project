@@ -37,8 +37,7 @@ html {
         overflow: visible;
     }
 
-    #nav-tree,
-    #side-nav {
+    #nav-tree, #side-nav {
         height: calc(100vh - var(--top-height)) !important;
     }
 
@@ -50,6 +49,7 @@ html {
         max-width: var(--side-nav-fixed-width);
         overflow: hidden;
         background: var(--side-nav-background);
+        border-right: 1px solid var(--separator-color);
     }
 
     #main-nav {

@@ -49,9 +49,7 @@ test_that("print.LowessResult shows cv_scores when present", {
     y <- sin(x) + rnorm(100, 0, 0.2)
     result <- fit(
         Lowess(
-            cv_fractions = c(0.2, 0.3, 0.5),
-            cv_method = "kfold",
-            cv_k = 5L
+            cv = cv_opts(fractions = c(0.2, 0.3, 0.5), method = "kfold", k = 5L)
         ),
         x,
         y
@@ -159,7 +157,7 @@ test_that("predict.Lowess return_se returns standard errors", {
     model <- Lowess(fraction = 0.3, retain_model = TRUE)
     invisible(fit(model, x, y))
 
-    pred <- predict(model, c(2.5, 7.5), return_se = TRUE)
+    pred <- predict(model, c(2.5, 7.5), outputs = "se")
 
     expect_true("standard_errors" %in% names(pred))
     expect_length(pred$standard_errors, 2)
@@ -206,7 +204,7 @@ test_that("predict.Lowess return_derivative returns local slopes", {
     model <- Lowess(fraction = 0.3, retain_model = TRUE)
     invisible(fit(model, x, y))
 
-    pred <- predict(model, c(20, 30, 40), return_derivative = TRUE)
+    pred <- predict(model, c(20, 30, 40), outputs = "derivative")
 
     expect_true("derivative" %in% names(pred))
     expect_length(pred$derivative, 3)

@@ -48,7 +48,7 @@ model = fl.Lowess(
     iterations=3,
     confidence_intervals=0.95,
     prediction_intervals=0.95,
-    return_diagnostics=True,
+    outputs=["diagnostics"],
     parallel=True
 )
 result = model.fit(x, y)

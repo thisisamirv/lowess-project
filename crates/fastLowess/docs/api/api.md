@@ -77,18 +77,10 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `auto_converge(T)` | `T: Float` | `NaN` | Auto-convergence tolerance |
 | `confidence_intervals(T)` | `T: Float` | `NaN` | Confidence level (e.g., 0.95) |
 | `prediction_intervals(T)` | `T: Float` | `NaN` | Prediction level (e.g., 0.95) |
-| `return_diagnostics()` | `bool` | `false` | Include diagnostics in result |
-| `return_residuals()` | `bool` | `false` | Include residuals in result |
-| `return_robustness_weights()` | `bool` | `false` | Include weights in result |
-| `return_se()` | `bool` | `false` | Return standard errors |
-| `return_derivative()` | `bool` | `false` | Include the per-point local fit derivative (slope) in result |
-| `return_sorted()` | `bool` | `false` | Return results sorted ascending by `x` instead of in original input order |
+| `outputs([&str])` | `&[&str]` | `[]` | Select optional result components: `"diagnostics"`, `"residuals"`, `"weights"`, `"derivative"`, `"se"`, `"sorted"` |
 | `parallel(bool)` | `bool` | `true` | Enable parallel execution |
 | `backend(...)` | `Backend` | `CPU` | `fastLowess` only: `CPU` or `GPU` |
-| `cv_method(str)` | `&str` | `"kfold"` | CV strategy: `"kfold"` (fast) or `"loocv"` (slow, exhaustive) — defaults to `"kfold"` when `cv_fractions` is provided |
-| `cv_k(usize)` | `usize` | `5` | K for k-fold CV |
-| `cv_fractions(Vec<f64>)` | `Vec<f64>` | `None` | Fraction grid for CV |
-| `cv_seed(u64)` | `u64` | `None` | RNG seed for CV |
+| `cv(CVOptions)` | `CVOptions` | disabled | CV config built with `CVBuilder::method("kfold"\|"loocv").k(n).fractions(vec![..]).seed(n)` |
 | `custom_weights(Vec<T>)` | `Vec<T: Float>` | `None` | Per-observation weights |
 | `retain_model(bool)` | `bool` | `false` | Retain training data, enabling `Predict::call()` on the result |
 
@@ -196,43 +188,43 @@ Confidence level for the confidence interval around the mean response (e.g. `0.9
 
 Confidence level for the prediction interval for new observations (e.g. `0.95`). `NaN` (default) disables prediction intervals.
 
-### return_diagnostics
+### outputs
 
 *See: [`Diagnostics`](#diagnosticst)*
 
-Include a `Diagnostics` object (RMSE, MAE, R2, AIC/AICc, effective degrees of freedom) in the result. AIC/AICc/`effective_df` additionally require `return_se(true)` (or confidence/prediction intervals) to be populated, since they depend on hat-matrix statistics.
+Use `.outputs(["diagnostics"])` to include a `Diagnostics` object (RMSE, MAE, R2, AIC/AICc, effective degrees of freedom). AIC/AICc/`effective_df` additionally require `"se"` (or confidence/prediction intervals) to be populated, since they depend on hat-matrix statistics.
 
 - `false` (default) — leaves `result.diagnostics` as `None`
 - `true` — populates `result.diagnostics`
 
-### return_residuals
+### Output names
 
 Include per-point residuals (`y - fitted`) in the result.
 
 - `false` (default) — leaves `result.residuals` as `None`
 - `true` — populates `result.residuals`
 
-### return_robustness_weights
+The `"residuals"` name includes per-point residuals, and `"weights"` includes final robustness weights.
 
 Include the final per-point robustness weights (from the last robustness iteration) in the result.
 
 - `false` (default) — leaves `result.robustness_weights` as `None`
 - `true` — populates `result.robustness_weights`
 
-### return_se
+The `"se"` name computes standard errors and hat-matrix statistics.
 
 *See: [Intervals](crate::doc::guide::intervals)*
 
 Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) in addition to standard errors.
 
-### return_derivative
+The `"derivative"` name exposes the per-point local fit slope.
 
 Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) in `LowessResult::derivative`, enabling turning-point/rate-of-change analysis at effectively no extra computation cost. Computed in parallel (like the smoothing pass itself) when `parallel` is enabled.
 
 - `false` (default) — leaves `result.derivative` as `None`
 - `true` — populates it
 
-### return_sorted
+The `"sorted"` name reorders every result field by ascending `x`.
 
 When set to `true`, it reorders every result field (residuals, intervals, etc.) by `x` in an ascending manner, instead of in original input order.
 To get both orderings, sort the default result client-side instead of calling `fit()` twice.
@@ -255,10 +247,10 @@ The `fastLowess` crate provides an optional GPU-accelerated backend using `wgpu`
 
 *See: [Cross-Validation](crate::doc::guide::cross_validation)*
 
-- `cv_method`: `"kfold"` (default) — fast, evaluates each candidate fraction over `cv_k` folds; `"loocv"` — slow, exhaustive leave-one-out cross-validation
-- `cv_k`: Number of folds for k-fold CV. Ignored when `cv_method="loocv"`.
-- `cv_fractions`: Candidate fractions to evaluate. Cross-validation is disabled unless this is set.
-- `cv_seed`: Seed for reproducible k-fold shuffling. `None` (default) uses a random seed.
+- `CVBuilder::method("kfold" | "loocv")`: CV strategy; `"kfold"` is fast and `"loocv"` is exhaustive.
+- `.k(n)`: Number of folds for k-fold CV; ignored for `"loocv"`.
+- `.fractions(vec![..])`: Candidate fractions to evaluate; required.
+- `.seed(n)`: Seed for reproducible k-fold shuffling; ignored for `"loocv"`.
 
 ### custom_weights
 
@@ -287,11 +279,11 @@ Retains the fitted model's training data, enabling `Predict::call(&result, new_x
 | `confidence_upper` | `Option<Array1<T>>` | Upper confidence bounds |
 | `prediction_lower` | `Option<Array1<T>>` | Lower prediction bounds |
 | `prediction_upper` | `Option<Array1<T>>` | Upper prediction bounds |
-| `residuals` | `Option<Array1<T>>` | Residuals (if `return_residuals`) |
-| `robustness_weights` | `Option<Array1<T>>` | Robustness weights (if `return_robustness_weights`) |
-| `derivative` | `Option<Array1<T>>` | Per-point local fit derivative/slope (if `return_derivative`) |
+| `residuals` | `Option<Array1<T>>` | Residuals (if `"residuals"` was requested) |
+| `robustness_weights` | `Option<Array1<T>>` | Robustness weights (if `"weights"` was requested) |
+| `derivative` | `Option<Array1<T>>` | Per-point local fit derivative/slope (if `"derivative"` was requested) |
 | `cv_scores` | `Option<Array1<T>>` | CV score per tested fraction |
-| `diagnostics` | `Option<Diagnostics<T>>` | Fit metrics (if `return_diagnostics`) |
+| `diagnostics` | `Option<Diagnostics<T>>` | Fit metrics (if `"diagnostics"` was requested) |
 
 ### `Diagnostics<T>`
 

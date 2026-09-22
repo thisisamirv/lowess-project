@@ -60,17 +60,10 @@ print(result)
 | `auto_converge` | `float` | `None` | Auto-convergence tolerance |
 | `confidence_intervals` | `float` | `None` | Confidence level (e.g., 0.95) |
 | `prediction_intervals` | `float` | `None` | Prediction level (e.g., 0.95) |
-| `return_diagnostics` | `bool` | `False` | Include diagnostics in result |
-| `return_residuals` | `bool` | `False` | Include residuals in result |
-| `return_robustness_weights` | `bool` | `False` | Include weights in result |
-| `return_se` | `bool` | `False` | Return standard errors |
-| `return_sorted` | `bool` | `False` | Return results sorted ascending by `x` instead of in original input order |
+| `outputs` | `Sequence[str]` | `[]` | Select `diagnostics`, `residuals`, `weights`, `derivative`, `se`, and/or `sorted` |
 | `parallel` | `bool` | `True` | Enable parallel execution |
 | `backend` | `str` | `"cpu"` | Execution backend (`"cpu"` or `"gpu"`); GPU requires the package to be built with the `gpu` Cargo feature |
-| `cv_method` | `str` | `"kfold"` | CV method (`"kfold"` fast or `"loocv"` slow, exhaustive) |
-| `cv_k` | `int` | `5` | Number of folds for k-fold CV |
-| `cv_fractions` | `list[float]` | `None` | Fractions to test for cross-validation |
-| `cv_seed` | `int` | `None` | Random seed for cross-validation shuffling |
+| `cv` | `dict` | `None` | Grouped CV options: `fractions`, `method`, `k`, and `seed` |
 | `custom_weights` | `list[float]` | `None` | Per-observation case weights — passed to `fit()`, not the constructor |
 | `retain_model` | `bool` | `False` | Retain training data, enabling `predict()` on the result |
 | `return_derivative` | `bool` | `False` | Include the per-point local fit derivative (slope) in result |
@@ -179,39 +172,19 @@ Confidence level for the confidence interval around the mean response (e.g. `0.9
 
 Confidence level for the prediction interval for new observations (e.g. `0.95`). `None` (default) disables prediction intervals.
 
-### return_diagnostics
+### outputs
 
 *See: [`Diagnostics`](#diagnostics)*
 
-Include a `Diagnostics` object (RMSE, MAE, R², AIC/AICc, effective degrees of freedom) in the result. AIC/AICc/`effective_df` additionally require `return_se=True` (or confidence/prediction intervals) to be populated, since they depend on hat-matrix statistics.
+Use `outputs=["diagnostics", "residuals", "weights", "derivative", "se", "sorted"]` to select optional result components. AIC/AICc/`effective_df` additionally require `"se"` (or confidence/prediction intervals) to be populated.
 
-- `False` (default) — leaves `result.diagnostics` as `None`
-- `True` — populates `result.diagnostics`
-
-### return_residuals
-
-Include per-point residuals (`y - fitted`) in the result.
-
-- `False` (default) — leaves `result.residuals` as `None`
-- `True` — populates `result.residuals`
-
-### return_robustness_weights
-
-Include the final per-point robustness weights (from the last robustness iteration) in the result.
-
-- `False` (default) — leaves `result.robustness_weights` as `None`
-- `True` — populates `result.robustness_weights`
-
-### return_se
+### outputs: se
 
 *See: [Intervals](../guide/intervals.md#standard-errors)*
 
 Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) in addition to standard errors.
 
-### return_sorted
-
-When set to `True`, it reorders every result field (residuals, intervals, etc.) by `x` in an ascending manner, instead of in original input order.
-To get both orderings, sort the default result client-side (e.g. `np.argsort(result.x)`) instead of calling `fit()` twice.
+The `"sorted"` output reorders every result field by ascending `x` instead of preserving input order.
 
 ### parallel
 
@@ -233,10 +206,7 @@ The batch `Lowess` class can optionally run on a GPU-accelerated backend powered
 
 *See: [Cross-Validation](../guide/cross-validation.md)*
 
-- `cv_method`: `"kfold"` (default) — fast, evaluates each candidate fraction over `cv_k` folds; `"loocv"` — slow, exhaustive leave-one-out cross-validation
-- `cv_k`: Number of folds for k-fold CV. Ignored when `cv_method="loocv"`.
-- `cv_fractions`: Candidate fractions to evaluate. Cross-validation is disabled unless this is set.
-- `cv_seed`: Seed for reproducible k-fold shuffling. `None` (default) uses a random seed.
+- `cv={"method": "kfold", "k": 5, "fractions": [0.2, 0.3, 0.5], "seed": 42}` groups all CV settings.
 
 ### custom_weights
 
@@ -272,10 +242,10 @@ Each point's local WLS fit already computes a slope internally; this exposes tha
 | `confidence_upper` | `ndarray \| None` | Upper confidence bounds |
 | `prediction_lower` | `ndarray \| None` | Lower prediction bounds |
 | `prediction_upper` | `ndarray \| None` | Upper prediction bounds |
-| `residuals` | `ndarray \| None` | Residuals (if `return_residuals`) |
-| `robustness_weights` | `ndarray \| None` | Robustness weights (if `return_robustness_weights`) |
+| `residuals` | `ndarray \| None` | Residuals (if `"residuals"` was requested) |
+| `robustness_weights` | `ndarray \| None` | Robustness weights (if `"weights"` was requested) |
 | `cv_scores` | `ndarray \| None` | CV score per tested fraction |
-| `diagnostics` | `Diagnostics \| None` | Fit metrics (if `return_diagnostics`) |
+| `diagnostics` | `Diagnostics \| None` | Fit metrics (if `"diagnostics"` was requested) |
 | `derivative` | `ndarray \| None` | Per-point local fit derivative/slope (if `return_derivative`) |
 
 ### `Diagnostics`

@@ -55,7 +55,7 @@ int main() {
     opts.iterations = 3;
     opts.confidence_intervals = 0.95;
     opts.prediction_intervals = 0.95;
-    opts.return_diagnostics = true;
+    opts.outputs = {"diagnostics"};
     opts.parallel = true;
     fastlowess::Lowess model(opts);
     auto result = model.fit(x, y).value();

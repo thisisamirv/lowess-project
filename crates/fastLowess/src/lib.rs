@@ -107,20 +107,24 @@
 //!     .missing("error")                                // Reject non-finite (NaN/Inf) input
 //!     .custom_weights(vec![1.0; 8])                    // Per-observation case weights
 //!     .parallel(true)                                  // Rayon-parallel execution (default)
-//!     .backend("cpu")                                  // Execution backend
-//!     .return_se()                                     // Standard errors
+//!     .backend("cpu")                                  // Execution backend                          // Retain state for out-of-sample predict()
+//!     .outputs([
+//!         "se",                                        // Standard errors
+//!         "diagnostics",                               // Fit quality metrics
+//!         "residuals",                                 // Include residuals
+//!         "weights",                                   // Include robustness weights
+//!         "derivative",                                // Include per-point local slope
+//!         "sorted"                                     // Sort output ascending by x
+//!     ])
 //!     .confidence_intervals(0.95)                      // 95% confidence intervals
 //!     .prediction_intervals(0.95)                      // 95% prediction intervals
-//!     .return_diagnostics()                            // Fit quality metrics
-//!     .return_residuals()                              // Include residuals
-//!     .return_robustness_weights()                     // Include robustness weights
-//!     .return_derivative()                             // Include per-point local slope
-//!     .return_sorted()                                 // Sort output ascending by x
 //!     .retain_model(true)                              // Retain state for out-of-sample predict()
-//!     .cv_method("kfold")                              // Cross-validation method: "kfold" or "loocv"
-//!     .cv_k(5)                                         // Number of folds for k-fold CV
-//!     .cv_fractions(vec![0.3, 0.7])                   // Candidate bandwidth fractions to evaluate
-//!     .cv_seed(123)                                    // Reproducible fold splitting seed
+//!     .cv(
+//!         CVBuilder::method("kfold").                 // Cross-validation method: "kfold" or "loocv"
+//!         k(5).                                       // Number of folds for k-fold CV
+//!         fractions(vec![0.3, 0.7]).                  // Candidate bandwidth fractions to evaluate
+//!         seed(123)                                   // Reproducible fold splitting seed
+//!     )
 //!     .build()?;
 //!
 //! let result = model.fit(&x, &y)?;
@@ -277,7 +281,7 @@ mod binding_support;
 // Standard fastLowess prelude.
 pub mod prelude {
     pub use crate::api::{
-        Lowess, LowessError, LowessResult, OnlineLowess, Predict, StreamingLowess,
+        CVBuilder, Lowess, LowessError, LowessResult, OnlineLowess, Predict, StreamingLowess,
     };
 }
 

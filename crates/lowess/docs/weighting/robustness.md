@@ -151,7 +151,7 @@ fn main() -> Result<(), LowessError> {
 
     let model = Lowess::new()
         .iterations(5)
-        .return_robustness_weights()
+        .outputs(["weights"])
         .build()?;
 
     let result = model.fit(&x, &y)?;

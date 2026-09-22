@@ -275,6 +275,25 @@ public final class OnlineOptions {
         }
 
         /**
+         * Selects optional result components: {@code "weights"},
+         * {@code "derivative"}, and {@code "se"}.
+         *
+         * @param outputs optional output component names
+         * @return this builder, for chaining
+         */
+        public Builder outputs(String... outputs) {
+            for (String output : outputs) {
+                switch (output) {
+                    case "weights", "derivative", "se" ->
+                        this.common.outputs(output);
+                    default ->
+                        throw new IllegalArgumentException("Unknown output: " + output);
+                }
+            }
+            return this;
+        }
+
+        /**
          * Builds the immutable {@link OnlineOptions}.
          *
          * @return the constructed options

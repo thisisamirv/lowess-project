@@ -111,7 +111,7 @@ rng = np.random.default_rng(42)
 x = np.linspace(0, 2 * np.pi, 100)
 y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-model = fl.Lowess(iterations=5, return_robustness_weights=True)
+model = fl.Lowess(iterations=5, outputs=["weights"])
 result = model.fit(x, y)
 
 shown = 0

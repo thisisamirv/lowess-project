@@ -1,4 +1,20 @@
 <!-- markdownlint-disable MD024 MD025 -->
+# lowess (development version)
+
+## Added
+
+* Added `LowessBuilder::outputs(names)`, a grouped replacement for the individual `.return_diagnostics()`/`.return_residuals()`/`.return_robustness_weights()`/`.return_derivative()`/`.return_se()`/`.return_sorted()` toggles: `.outputs(["diagnostics", "residuals", "weights", "derivative", "se", "sorted"])`. Unknown names are collected and reported together by `.build()`.
+* Added grouped cross-validation configuration via `CVBuilder` (in the prelude) and `.cv(...)`: `.cv(CVBuilder::method("kfold").k(5).fractions(vec![0.3, 0.7]).seed(123))`. `CVOptions` is exported at the crate root but kept out of the prelude since callers never name it.
+* Added `PredictBuilder::outputs(names)` in both Rust crates, supporting `"se"` and `"derivative"` as a grouped replacement for `.return_se()` and `.return_derivative()`.
+
+## Changed
+
+* Removed redundant `#[doc(hidden)]` attributes from the `engine` and `adapters` modules (62 attributes across `engine/executor.rs`, `engine/predict.rs`, and `adapters/{batch,online,streaming}.rs`). These modules are already private and only re-exported through the `dev`-gated `internals` module, so the attributes were redundant; `#[doc(hidden)]` is retained on public-API items (`api.rs` builder DEV fields and `LowessResult::fit_state`).
+
+## Fixed
+
+* Fixed C++ release CI's "Commit updated recipe" step failing with "paths are ignored" because the repo's blanket `.gitignore` `spack/` rule matches `bindings/cpp/spack/`; `git add` now force-adds the tracked recipe file.
+
 # lowess 4.1.0
 
 ## Added

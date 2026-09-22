@@ -68,7 +68,7 @@ int main() {
     fastlowess::Lowess model({
         .fraction = 0.3,
         .iterations = 3,
-        .return_residuals = true
+        .outputs = {"residuals"}
     });
     auto result = model.fit(t, y).value();
 
@@ -218,7 +218,7 @@ int main() {
         .fraction = 0.3,
         .iterations = 3,
         .confidence_intervals = 0.95,
-        .return_diagnostics = true
+        .outputs = {"diagnostics"}
     });
     auto result = gene_model.fit(hours, expression).value();
 

@@ -11,6 +11,69 @@ validate_common_args <- getFromNamespace("validate_common_args", "rfastlowess")
 validate_params <- getFromNamespace("validate_params", "rfastlowess")
 coerce_nullable <- getFromNamespace("coerce_nullable", "rfastlowess")
 env_args <- getFromNamespace("env_args", "rfastlowess")
+cv_opts <- getFromNamespace("cv_opts", "rfastlowess")
+parse_outputs_flags <- getFromNamespace("parse_outputs_flags", "rfastlowess")
+
+# ── cv_opts ──────────────────────────────────────────────────────────────────
+
+test_that("cv_opts validates required and non-empty fractions", {
+    expect_error(
+        cv_opts(),
+        "`fractions` must be a numeric vector of candidate fractions"
+    )
+    expect_error(
+        cv_opts(NULL),
+        "`fractions` must be a numeric vector of candidate fractions"
+    )
+    expect_error(
+        cv_opts("0.5"),
+        "`fractions` must be a non-empty numeric vector"
+    )
+    expect_error(
+        cv_opts(numeric()),
+        "`fractions` must be a non-empty numeric vector"
+    )
+})
+
+test_that("cv_opts returns coerced cross-validation options", {
+    result <- cv_opts(c(0.2, 0.5),
+        method = factor("kfold"), k = 3.8,
+        seed = 42L
+    )
+
+    expect_s3_class(result, "cv_opts")
+    expect_type(result$fractions, "double")
+    expect_identical(result$fractions, c(0.2, 0.5))
+    expect_identical(result$method, "kfold")
+    expect_identical(result$k, 3L)
+    expect_identical(result$seed, 42L)
+})
+
+test_that("parse_outputs_flags handles NULL and valid output names", {
+    valid <- c("diagnostics", "residuals", "weights")
+
+    expect_equal(
+        parse_outputs_flags(NULL, valid),
+        setNames(c(FALSE, FALSE, FALSE), valid)
+    )
+    expect_equal(
+        parse_outputs_flags(c("weights", "diagnostics"), valid),
+        setNames(c(TRUE, FALSE, TRUE), valid)
+    )
+})
+
+test_that("parse_outputs_flags rejects invalid output values", {
+    valid <- c("diagnostics", "residuals", "weights")
+
+    expect_error(
+        parse_outputs_flags(1L, valid),
+        "must be a character vector or NULL"
+    )
+    expect_error(
+        parse_outputs_flags("unknown", valid),
+        "Invalid `outputs` value"
+    )
+})
 
 # ── validate_common_args ────────────────────────────────────────────────────
 

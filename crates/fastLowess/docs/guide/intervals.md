@@ -176,7 +176,7 @@ fn main() -> Result<(), LowessError> {
     let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
     let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    let model = Lowess::new().return_se().build()?;
+    let model = Lowess::new().outputs(["se"]).build()?;
     let result = model.fit(&x, &y)?;
 
     if let Some(standard_errors) = &result.standard_errors {

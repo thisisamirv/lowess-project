@@ -22,10 +22,8 @@ rng = np.random.default_rng(42)
 x = np.linspace(0, 2 * np.pi, 100)
 y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-model = fl.Lowess(cv_method="kfold",
-    cv_k=5,
-    cv_fractions=[0.2, 0.3, 0.5, 0.7]
-)
+model = fl.Lowess(cv={"method": "kfold", "k": 5,
+    "fractions": [0.2, 0.3, 0.5, 0.7]})
 result = model.fit(x, y)
 
 print(f"Selected fraction: {result.fraction_used}")
@@ -46,9 +44,8 @@ rng = np.random.default_rng(42)
 x = np.linspace(0, 2 * np.pi, 100)
 y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-model = fl.Lowess(cv_method="loocv",
-    cv_fractions=[0.2, 0.3, 0.5, 0.7]
-)
+model = fl.Lowess(cv={"method": "loocv",
+    "fractions": [0.2, 0.3, 0.5, 0.7]})
 result = model.fit(x, y)
 print(f"Selected fraction (CV): {result.fraction_used}")
 :::
@@ -67,11 +64,8 @@ rng = np.random.default_rng(42)
 x = np.linspace(0, 2 * np.pi, 100)
 y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-model = fl.Lowess(cv_method="kfold",
-    cv_k=5,
-    cv_fractions=[0.3, 0.5, 0.7],
-    cv_seed=42
-)
+model = fl.Lowess(cv={"method": "kfold", "k": 5,
+    "fractions": [0.3, 0.5, 0.7], "seed": 42})
 result = model.fit(x, y)
 print(f"Selected fraction (CV): {result.fraction_used}")
 :::
@@ -114,8 +108,8 @@ rng = np.random.default_rng(42)
 x = np.linspace(0, 2 * np.pi, 100)
 y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-model = fl.Lowess(cv_method="kfold", cv_k=5,
-                   cv_fractions=[0.1, 0.3, 0.5, 0.7])
+model = fl.Lowess(cv={"method": "kfold", "k": 5,
+                   "fractions": [0.1, 0.3, 0.5, 0.7]})
 result = model.fit(x, y)
 
 print(f"Selected fraction (CV): {result.fraction_used}")

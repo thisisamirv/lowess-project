@@ -217,7 +217,7 @@ test_that("OnlineLowess return_se/ci/pi requires full mode", {
             fraction = 0.5,
             window_capacity = 10,
             min_points = 3,
-            return_se = TRUE
+            outputs = "se"
         )
     )
 })
@@ -232,7 +232,7 @@ test_that("OnlineLowess return_se/ci/pi work", {
         window_capacity = 10,
         min_points = 3,
         update_mode = "full",
-        return_se = TRUE,
+        outputs = "se",
         confidence_intervals = 0.95,
         prediction_intervals = 0.95
     )

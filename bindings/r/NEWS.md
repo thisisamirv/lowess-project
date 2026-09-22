@@ -1,4 +1,19 @@
 <!-- markdownlint-disable MD024 MD025 -->
+# rfastlowess (development version)
+
+## Added
+
+* Added `cv_opts()` to build cross-validation options for `Lowess(cv = ...)`, grouping the former `cv_fractions`/`cv_method`/`cv_k`/`cv_seed` arguments.
+
+## Changed
+
+* Replaced the local `type Result<T> = std::result::Result<T, extendr_api::Error>` alias with `extendr_api::error::Result`, which is still exported in `extendr-api 0.9.0` (only the prelude re-export was removed).
+* **Breaking:** replaced the six `return_*` boolean arguments in `Lowess()` (and the `return_*` booleans in `StreamingLowess()`/`OnlineLowess()`) with a single `return` character vector (`c("diagnostics", "residuals", "weights", "derivative", "se", "sorted")`), and replaced the four `cv_*` arguments in `Lowess()` with `cv = cv_opts(...)`.
+
+## Fixed
+
+* Fixed C++ release CI's "Commit updated recipe" step failing with "paths are ignored" because the repo's blanket `.gitignore` `spack/` rule matches `bindings/cpp/spack/`; `git add` now force-adds the tracked recipe file.
+
 # rfastlowess 4.1.0
 
 ## Added

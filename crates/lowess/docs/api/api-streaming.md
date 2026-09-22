@@ -96,18 +96,14 @@ Fraction used: 0.5
 | `zero_weight_fallback(...)` | `zero_weight_fallback` | `"use_local_mean"` | Zero-weight handling |
 | `missing(...)` | `missing` | `"error"` | Policy for non-finite (NaN/Inf) values in each chunk |
 | `auto_converge(T)` | `T: Float` | `NaN` | Auto-convergence tolerance |
-| `return_diagnostics()` | `bool` | `false` | Include diagnostics in result |
-| `return_residuals()` | `bool` | `false` | Include residuals in result |
-| `return_robustness_weights()` | `bool` | `false` | Include weights in result |
-| `return_derivative()` | `bool` | `false` | Include the per-point local fit derivative (slope) in result |
-| `return_se()` | `bool` | `false` | Populate `standard_errors` in the result |
+| `outputs([&str])` | `&[&str]` | `[]` | Select optional result components: `"diagnostics"`, `"residuals"`, `"weights"`, `"derivative"`, `"se"` |
 | `confidence_intervals(T)` | `T: Float` | `NaN` | Confidence level (e.g., 0.95); populates `confidence_lower`/`confidence_upper` |
 | `prediction_intervals(T)` | `T: Float` | `NaN` | Prediction level (e.g., 0.95); populates `prediction_lower`/`prediction_upper` |
 | `chunk_size(usize)` | `usize` | `5000` | Data chunk size |
 | `overlap(usize)` | `usize` | `chunk_size / 10` | Overlap between chunks |
 | `merge_strategy(...)` | `merge_strategy` | `"weighted_average"` | Strategy for blending overlap regions |
 
-Cross-validation, `custom_weights`, and `return_sorted` are Batch-only and not available here; see [lowess](crate::doc::api) for those. Standard errors and confidence/prediction intervals are computed per chunk the same way Batch computes them, then blended across overlap regions via `merge_strategy` like `y`/`derivative` are.
+Cross-validation, `custom_weights`, and `"sorted"` are Batch-only and not available here; see [lowess](crate::doc::api) for those. Standard errors and confidence/prediction intervals are computed per chunk the same way Batch computes them, then blended across overlap regions via `merge_strategy` like `y`/`derivative` are.
 
 ## Options
 
@@ -201,44 +197,25 @@ Policy for handling non-finite (NaN/Inf) values within each chunk:
 
 Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
 
-### return_diagnostics
+### outputs
 
-*See: [`Diagnostics`](crate::doc::api#diagnosticst)*
+Select which optional result components to include, via a single `.outputs([...])` call:
 
-Include a `Diagnostics` object (RMSE, MAE, R2, residual_sd) in the result. `effective_df`/`aic`/`aicc` require per-chunk hat-matrix leverage to be threaded into the cumulative diagnostics computation across chunk boundaries, which the current `DiagnosticsState` doesn't do (even with `return_se()`/`confidence_intervals()`/`prediction_intervals()` set), so they're always `None` here.
+```rust
+use lowess::prelude::*;
 
-- `false` (default) — leaves `result.diagnostics` as `None`
-- `true` — populates `result.diagnostics`
+StreamingLowess::<f64>::new().outputs(["diagnostics", "residuals", "weights", "derivative", "se"]);
+```
 
-### return_residuals
+| Name | Populates | Notes |
+| --- | --- | --- |
+| `"diagnostics"` | `result.diagnostics` | `effective_df`/`aic`/`aicc` are always `None` here (per-chunk hat-matrix threading isn't implemented) |
+| `"residuals"` | `result.residuals` | Per-point `y - fitted` |
+| `"weights"` | `result.robustness_weights` | Final per-point robustness weights |
+| `"derivative"` | `result.derivative` | Merged across overlap via `merge_strategy`, like `y` |
+| `"se"` | `result.standard_errors` | Merged across overlap via `merge_strategy`, like `y` |
 
-Include per-point residuals (`y - fitted`) in the result.
-
-- `false` (default) — leaves `result.residuals` as `None`
-- `true` — populates `result.residuals`
-
-### return_robustness_weights
-
-Include the final per-point robustness weights (from the last robustness iteration) in the result.
-
-- `false` (default) — leaves `result.robustness_weights` as `None`
-- `true` — populates `result.robustness_weights`
-
-### return_derivative
-
-Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) in `LowessResult::derivative` at effectively no extra computation cost. Derivative values in the overlap region are merged across chunk boundaries the same way `y` is, via `merge_strategy`.
-
-- `false` (default) — leaves `result.derivative` as `None`
-- `true` — populates it
-
-### return_se
-
-*See: [Intervals](crate::doc::guide::intervals)*
-
-Computes standard errors per chunk the same way Batch does, then merges the overlap region across chunk boundaries the same way `y`/`derivative` are, via `merge_strategy`.
-
-- `false` (default) — leaves `result.standard_errors` as `None`
-- `true` — populates it
+Unknown names are collected and reported together by `.build()` as `LowessError::ParseErrors`.
 
 ### confidence_intervals
 
@@ -286,16 +263,16 @@ Returned by `process_chunk()` and `finalize()`.
 | `y` | `Vec<T>` | Smoothed y values |
 | `fraction_used` | `T` | Fraction used |
 | `iterations_used` | `Option<usize>` | Robustness iterations actually performed |
-| `standard_errors` | `Option<Vec<T>>` | Per-point standard errors (if `return_se()`, `confidence_intervals()`, or `prediction_intervals()` was set) |
+| `standard_errors` | `Option<Vec<T>>` | Per-point standard errors (if `"se"`, `confidence_intervals()`, or `prediction_intervals()` was requested) |
 | `confidence_lower` | `Option<Vec<T>>` | Lower confidence bounds (if `confidence_intervals()` was set) |
 | `confidence_upper` | `Option<Vec<T>>` | Upper confidence bounds (if `confidence_intervals()` was set) |
 | `prediction_lower` | `Option<Vec<T>>` | Lower prediction bounds (if `prediction_intervals()` was set) |
 | `prediction_upper` | `Option<Vec<T>>` | Upper prediction bounds (if `prediction_intervals()` was set) |
-| `residuals` | `Option<Vec<T>>` | Residuals (if `return_residuals()`) |
-| `robustness_weights` | `Option<Vec<T>>` | Robustness weights (if `return_robustness_weights()`) |
+| `residuals` | `Option<Vec<T>>` | Residuals (if `"residuals"` was requested) |
+| `robustness_weights` | `Option<Vec<T>>` | Robustness weights (if `"weights"` was requested) |
 | `cv_scores` | `Option<Vec<T>>` | Always `None` (Batch only) |
-| `diagnostics` | `Option<Diagnostics<T>>` | Fit metrics (if `return_diagnostics()`) |
-| `derivative` | `Option<Vec<T>>` | Per-point local fit derivative/slope (if `return_derivative()`) |
+| `diagnostics` | `Option<Diagnostics<T>>` | Fit metrics (if `"diagnostics"` was requested) |
+| `derivative` | `Option<Vec<T>>` | Per-point local fit derivative/slope (if `"derivative"` was requested) |
 
 ### `Diagnostics<T>`
 

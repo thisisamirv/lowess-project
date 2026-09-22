@@ -253,7 +253,7 @@ func main() {
  }
 
  opts := fastlowess.DefaultOptions()
- opts.ReturnSE = true
+ opts.Outputs = []string{"se"}
  model, err := fastlowess.NewLowess(opts)
  if err != nil {
   log.Fatal(err)

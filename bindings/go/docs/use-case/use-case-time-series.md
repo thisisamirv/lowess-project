@@ -88,7 +88,7 @@ func main() {
  opts := fastlowess.DefaultOptions()
  opts.Fraction = 0.3
  opts.Iterations = 3
- opts.ReturnResiduals = true
+ opts.Outputs = []string{"residuals"}
 
  model, err := fastlowess.NewLowess(opts)
  if err != nil {
@@ -287,7 +287,7 @@ func main() {
  opts.Iterations = 3
  ci := 0.95
  opts.ConfidenceIntervals = &ci
- opts.ReturnDiagnostics = true
+ opts.Outputs = []string{"diagnostics"}
 
  model, err := fastlowess.NewLowess(opts)
  if err != nil {

@@ -46,7 +46,7 @@ fn test_derivative_pass_consistency() {
     let seq_res = Lowess::new()
         .fraction(0.3)
         .delta(3.0) // force some points to be delta-skipped/interpolated
-        .return_derivative()
+        .outputs(["derivative"])
         .parallel(false)
         .build()
         .unwrap()
@@ -56,7 +56,7 @@ fn test_derivative_pass_consistency() {
     let par_res = Lowess::new()
         .fraction(0.3)
         .delta(3.0)
-        .return_derivative()
+        .outputs(["derivative"])
         .parallel(true)
         .build()
         .unwrap()

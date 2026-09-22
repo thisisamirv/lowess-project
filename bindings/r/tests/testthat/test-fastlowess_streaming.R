@@ -76,7 +76,7 @@ test_that("StreamingLowess diagnostics work", {
         y,
         fraction = 0.3,
         chunk_size = 100,
-        return_diagnostics = TRUE
+        outputs = "diagnostics"
     )
 
     expect_true("diagnostics" %in% names(result))
@@ -143,7 +143,7 @@ test_that("StreamingLowess return_se/ci/pi work", {
     sl <- StreamingLowess(
         fraction = 0.2,
         chunk_size = 50,
-        return_se = TRUE,
+        outputs = "se",
         confidence_intervals = 0.95,
         prediction_intervals = 0.95
     )

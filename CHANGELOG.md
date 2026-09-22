@@ -10,9 +10,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+**lowess:**
+
+- Added `LowessBuilder::outputs(names)`, a grouped replacement for the individual `.return_diagnostics()`/`.return_residuals()`/`.return_robustness_weights()`/`.return_derivative()`/`.return_se()`/`.return_sorted()` toggles: `.outputs(["diagnostics", "residuals", "weights", "derivative", "se", "sorted"])`. Unknown names are collected and reported together by `.build()`.
+- Added grouped cross-validation configuration via `CVBuilder` (in the prelude) and `.cv(...)`: `.cv(CVBuilder::method("kfold").k(5).fractions(vec![0.3, 0.7]).seed(123))`. `CVOptions` is exported at the crate root but kept out of the prelude since callers never name it.
+- Added `PredictBuilder::outputs(names)` in both Rust crates, supporting `"se"` and `"derivative"` as a grouped replacement for `.return_se()` and `.return_derivative()`.
+
+**R:**
+
+- Added `cv_opts()` to build cross-validation options for `Lowess(cv = ...)`, grouping the former `cv_fractions`/`cv_method`/`cv_k`/`cv_seed` arguments.
+- Added unit coverage for `cv_opts()` and output-flag parsing, bringing R package line coverage to 100%; wrapped the long cross-validation vignette example for readability.
+
+**Go:**
+
+- Added grouped `Outputs []string`, `CV *CVOptions`, and prediction `Outputs []string` options; legacy flat fields remain accepted for compatibility while callers migrate.
+
+**Java:**
+
+- Added grouped `outputs("diagnostics", "residuals", "weights", "derivative", "se", "sorted")`, `cv(CVOptions...)`, and `PredictOptions.Builder.outputs("se", "derivative")` APIs while preserving the existing native option mapping.
+
+**Julia:**
+
+- Added grouped `outputs = ["diagnostics", "residuals", "weights", "derivative", "se", "sorted"]` and `cv = (fractions = ..., method = "kfold", k = 5, seed = 123)` keywords for `Lowess`, plus grouped outputs for Streaming/Online constructors.
+- Added grouped `outputs = ["se", "derivative"]` support to `predict` for retained Julia models.
+
+**Node.js/WASM:**
+
+- Added grouped `outputs` arrays and nested `cv` option objects for batch, streaming, online, and prediction configuration while preserving legacy option fields.
+
+**Python:**
+
+- Added grouped `outputs` and nested `cv` constructor options, plus grouped prediction outputs, while preserving legacy keyword arguments. Nested CV mappings now validate and forward `fractions`, `method`, `k`, and `seed`; Python stubs, guides, and binding tests cover the grouped API.
+
 **fastLowess:**
 
 - Added `tests/binding_support_tests.rs` (gated on the `dev` feature) covering the `vec_to_raw_ptr`/`opt_vec_to_raw_ptr`/`free_raw_f64_buffer` round trip: repeated allocate/read/free cycles, `Some`/`None` handling, and null-pointer freeing.
+- **Breaking:** migrated fastLowess's wrapper, tests, binding option translation, and docs from individual `return_*`/`cv_*` calls to `.outputs([...])` and `.cv(CVBuilder::method(...).k(...).fractions(...).seed(...))`. `CVBuilder` is available from the fastLowess prelude.
 
 ### Changed
 
@@ -23,11 +56,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **R:**
 
 - Replaced the local `type Result<T> = std::result::Result<T, extendr_api::Error>` alias with `extendr_api::error::Result`, which is still exported in `extendr-api 0.9.0` (only the prelude re-export was removed).
+- **Breaking:** replaced the six `return_*` boolean arguments in `Lowess()` (and the `return_*` booleans in `StreamingLowess()`/`OnlineLowess()`) with a single `return` character vector (`c("diagnostics", "residuals", "weights", "derivative", "se", "sorted")`), and replaced the four `cv_*` arguments in `Lowess()` with `cv = cv_opts(...)`.
 
 **fastLowess:**
 
 - Replaced `std::mem::forget` with the idiomatic `Box::into_raw` in `binding_support::vec_to_raw_ptr` so the FFI ownership transfer to language bindings is explicit. The allocation was never a leak (each binding frees it via `free_raw_f64_buffer`), but `Box::into_raw` expresses that transfer without a bare `mem::forget`.
 - Implemented `std::error::Error` for `BindingError` (it already implemented `Display`), so bindings can treat it as a first-class error type.
+
+**Monorepo:**
+
+- Updated the vendored `doxygen-awesome-css` theme to v2.5.0 and the Hugo docs build to v0.166.0.
 
 ### Fixed
 
@@ -39,6 +77,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Monorepo:**
 
 - Fixed C++ release CI's "Commit updated recipe" step failing with "paths are ignored" because the repo's blanket `.gitignore` `spack/` rule matches `bindings/cpp/spack/`; `git add` now force-adds the tracked recipe file.
+
+**C++:**
+
+- **Breaking:** replaced flat `return_*` and `cv_*` fields on `LowessOptions`/related options with grouped `outputs = {"diagnostics", "residuals", "weights", "derivative", "se", "sorted"}` and nested `cv.method`/`cv.k`/`cv.fractions`/`cv.seed`; `PredictOptions` now uses `outputs = {"se", "derivative"}`.
 
 ## 4.1.0
 

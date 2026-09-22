@@ -132,6 +132,42 @@ validate_params <- function(
     validate_optional_count(chunk_size, "chunk_size", allow_zero = FALSE)
 }
 
+#' Expand an `outputs` character vector into named logical flags
+#'
+#' Maps the user-facing `outputs = c("diagnostics", "residuals", ...)` argument
+#' to the individual `return_*` booleans the Rust FFI expects. `NULL` (the
+#' default) means "no optional components" (all `FALSE`). Unknown values are
+#' rejected with the list of allowed names.
+#'
+#' @param outputs A character vector or `NULL`.
+#' @param valid Character vector of allowed component names.
+#' @return A named logical vector, one element per entry in `valid`.
+#' @noRd
+parse_outputs_flags <- function(outputs, valid) {
+    if (is.null(outputs)) {
+        result <- rep(FALSE, length(valid))
+        names(result) <- valid
+        return(result)
+    }
+    if (!is.character(outputs)) {
+        stop("`outputs` must be a character vector or NULL", call. = FALSE)
+    }
+    unknown <- setdiff(outputs, valid)
+    if (length(unknown) > 0L) {
+        stop(
+            sprintf(
+                "Invalid `outputs` value(s): %s. Allowed: %s",
+                paste(sprintf("'%s'", unknown), collapse = ", "),
+                paste(sprintf("'%s'", valid), collapse = ", ")
+            ),
+            call. = FALSE
+        )
+    }
+    result <- valid %in% outputs
+    names(result) <- valid
+    result
+}
+
 #' Coerce optional values to Nullable
 #' @noRd
 #' @srrstats {RE1.2} Numeric vector inputs documented and validated.

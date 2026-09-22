@@ -2,7 +2,7 @@
 
 # pylint: disable=unnecessary-ellipsis,unused-argument
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -145,6 +145,7 @@ class LowessResult:
         self,
         new_x: ArrayLike,
         *,
+        outputs: Sequence[str] | None = None,
         return_se: bool = False,
         confidence_level: float | None = None,
         prediction_level: float | None = None,
@@ -204,6 +205,8 @@ class Lowess:
         boundary_policy: str = "extend",
         confidence_intervals: float | None = None,
         prediction_intervals: float | None = None,
+        outputs: Sequence[str] | None = None,
+        cv: Mapping[str, object] | None = None,
         return_diagnostics: bool = False,
         return_residuals: bool = False,
         return_robustness_weights: bool = False,
@@ -233,6 +236,8 @@ class Lowess:
         boundary_policy: str = "extend",
         confidence_intervals: float | None = None,
         prediction_intervals: float | None = None,
+        outputs: Sequence[str] | None = None,
+        cv: Mapping[str, object] | None = None,
         return_diagnostics: bool = False,
         return_residuals: bool = False,
         return_robustness_weights: bool = False,
@@ -270,6 +275,7 @@ class StreamingLowess:
         scaling_method: str = "mad",
         boundary_policy: str = "extend",
         auto_converge: float | None = None,
+        outputs: Sequence[str] | None = None,
         return_diagnostics: bool = False,
         return_residuals: bool = False,
         return_robustness_weights: bool = False,
@@ -302,6 +308,7 @@ class OnlineLowess:
         boundary_policy: str = "extend",
         update_mode: str = "incremental",
         auto_converge: float | None = None,
+        outputs: Sequence[str] | None = None,
         return_robustness_weights: bool = False,
         return_derivative: bool = False,
         return_se: bool = False,

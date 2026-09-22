@@ -25,7 +25,7 @@ The `Lowess` class allows configuring the LOWESS parameters once and fitting mul
 ----
 Options options = Options.builder()
         .fraction(0.3)
-        .returnDiagnostics(true)
+        .outputs("diagnostics")
         .build();
 
 try (Lowess model = new Lowess(options)) {
@@ -67,19 +67,12 @@ Result result = model.fit(x, y);
 |`confidenceIntervals` |`double` |`NaN` (disabled) |Confidence level in (0, 1), e.g. `0.95`.
 |`predictionIntervals` |`double` |`NaN` (disabled) |Confidence level in (0, 1), e.g. `0.95`.
 |`autoConverge` |`double` |`NaN` (disabled) |Convergence tolerance for early stopping.
-|`returnDiagnostics` |`boolean` |`false` |Populate `Result.diagnostics()`.
-|`returnResiduals` |`boolean` |`false` |Populate `Result.residuals()`.
-|`returnRobustnessWeights` |`boolean` |`false` |Populate `Result.robustnessWeights()`.
-|`returnSe` |`boolean` |`false` |Populate `Result.standardErrors()` (hat-matrix statistics).
-|`returnSorted` |`boolean` |`false` |Return results sorted ascending by `x` instead of in original input order.
+|`outputs(String...)` |`String...` |empty |Select `diagnostics`, `residuals`, `weights`, `derivative`, `se`, and/or `sorted`.
 |`parallel` |`boolean` |`true` |Enable parallel processing.
 |`backend` |`String` |`"cpu"` |`cpu` or `gpu` (requires a `gpu`-feature build of the native library).
-|`cvMethod` |`String` |`"kfold"` |`kfold` or `loocv`.
-|`cvK` |`int` |`5` |Number of folds for k-fold CV.
-|`cvFractions` |`double[]` |`null` (disabled) |Candidate fractions for cross-validation.
-|`cvSeed` |`long` (boxed) |`null` (random) |RNG seed for reproducible k-fold splits.
+|`cv(CVOptions)` |`CVOptions` |`null` (disabled) |Grouped cross-validation configuration.
 |`retainModel` |`boolean` |`false` |Retain training data, enabling `Result.predictModel()`.
-|`returnDerivative` |`boolean` |`false` |Include the per-point local fit derivative (slope) in the result.
+|`outputs(String...)` |`String...` |empty |Includes the per-point local fit derivative when `"derivative"` is selected.
 |===
 
 Use `Options.builder()` (pre-populated with recommended defaults) and override only the settings you need:
@@ -88,7 +81,7 @@ Use `Options.builder()` (pre-populated with recommended defaults) and override o
 ----
 Options options = Options.builder()
         .fraction(0.3)
-        .returnDiagnostics(true)
+        .outputs("diagnostics")
         .build();
 ----
 
@@ -268,10 +261,8 @@ _See: xref:../guide/cross-validation.adoc[Cross-Validation]_
 [source,java]
 ----
 Options options = Options.builder()
-        .cvFractions(new double[] { 0.1, 0.2, 0.3, 0.5 })
-        .cvMethod("kfold")
-        .cvK(5)
-        .cvSeed(42L)
+        .cv(CVOptions.builder().method("kfold").k(5)
+            .fractions(0.1, 0.2, 0.3, 0.5).seed(42L).build())
         .build();
 
 try (Lowess model = new Lowess(options)) {

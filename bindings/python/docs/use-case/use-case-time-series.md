@@ -49,7 +49,7 @@ print(f"y[0]: {result.y[0]:.4f}")
 
 Remove trend to analyze residual patterns.
 
-Setting `return_residuals = True` stores `observed − smoothed` alongside the smooth. A slightly wider `fraction = 0.3` produces a smoother baseline trend, so short-duration oscillations end up in the residuals rather than being absorbed into the trend component. The residual series is then ready for spectral analysis, seasonality detection, or change-point methods.
+Setting `outputs=["residuals"]` stores `observed − smoothed` alongside the smooth. A slightly wider `fraction = 0.3` produces a smoother baseline trend, so short-duration oscillations end up in the residuals rather than being absorbed into the trend component. The residual series is then ready for spectral analysis, seasonality detection, or change-point methods.
 
 :::{jupyter-execute}
 import fastlowess as fl
@@ -62,7 +62,7 @@ y = np.sin(t) + 0.1
 
 ## Smooth to get trend
 
-model = fl.Lowess(fraction=0.3, iterations=3, return_residuals=True)
+model = fl.Lowess(fraction=0.3, iterations=3, outputs=["residuals"])
 result = model.fit(t, y)
 
 trend = result.y
@@ -194,7 +194,7 @@ model = fl.Lowess(
     fraction=0.3,
     iterations=3,
     confidence_intervals=0.95,
-    return_diagnostics=True
+    outputs=["diagnostics"]
 )
 result = model.fit(hours, expression)
 

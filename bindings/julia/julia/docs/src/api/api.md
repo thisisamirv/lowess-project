@@ -60,17 +60,10 @@ println("First smoothed value: ", result.y[1])
 | `auto_converge` | `Float64` | `NaN` | Auto-convergence tolerance |
 | `confidence_intervals` | `Float64` | `NaN` | Confidence level (e.g., 0.95) |
 | `prediction_intervals` | `Float64` | `NaN` | Prediction level (e.g., 0.95) |
-| `return_diagnostics` | `Bool` | `false` | Include diagnostics in result |
-| `return_residuals` | `Bool` | `false` | Include residuals in result |
-| `return_robustness_weights` | `Bool` | `false` | Include weights in result |
-| `return_se` | `Bool` | `false` | Return standard errors |
-| `return_sorted` | `Bool` | `false` | Return results sorted ascending by `x` instead of in original input order |
+| `outputs` | `Vector{String}` | `String[]` | Select `diagnostics`, `residuals`, `weights`, `derivative`, `se`, and/or `sorted` |
 | `parallel` | `Bool` | `true` | Enable parallel execution |
 | `backend` | `String` | `"cpu"` | Execution backend (`"cpu"` or `"gpu"`); GPU requires the library to be built with the `gpu` Cargo feature |
-| `cv_method` | `String` | `"kfold"` | CV method (`"kfold"` fast or `"loocv"` slow, exhaustive) |
-| `cv_k` | `Int` | `5` | Number of folds for k-fold CV |
-| `cv_fractions` | `Vector{Float64}` | `Float64[]` | Fractions to test for cross-validation |
-| `cv_seed` | `Union{Int, Nothing}` | `nothing` | Random seed for cross-validation shuffling |
+| `cv` | `NamedTuple` | `nothing` | Grouped CV options: `fractions`, `method`, `k`, and `seed` |
 | `custom_weights` | `Vector{Float64}` | `nothing` | Per-observation case weights — passed to `fit`, not the constructor |
 | `retain_model` | `Bool` | `false` | Retain training data, enabling `predict(model, new_x; ...)` on the result |
 | `return_derivative` | `Bool` | `false` | Include the per-point local fit derivative (slope) in result |
@@ -305,7 +298,7 @@ model = Lowess(;
     iterations=3,
     confidence_intervals=0.95,
     prediction_intervals=0.95,
-    return_diagnostics=true,
+    outputs=["diagnostics"],
     parallel=true
 )
 result = fit(model, x, y)

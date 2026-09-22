@@ -48,6 +48,7 @@ impl_into_enum_for!(UpdateMode);
 impl_into_enum_for!(WeightFunction);
 impl_into_enum_for!(ZeroWeightFallback);
 use lowess::internals::adapters::online::OnlineOutput;
+use lowess::internals::api::CVBuilder;
 pub use lowess::internals::engine::predict::{
     ExtrapolationPolicy, PredictBuilder, PredictOutput, PredictQuery, PredictState, predict_batch,
 };
@@ -692,20 +693,21 @@ pub fn apply_cross_validation(
 
     match method.to_lowercase().as_str() {
         "simple" | "loo" | "loocv" | "leave_one_out" => {
-            builder = builder.cv_method("loocv");
-            builder = builder.cv_fractions(fractions.to_vec());
+            let mut options = CVBuilder::method("loocv").fractions(fractions.to_vec());
             if let Some(s) = seed {
-                builder = builder.cv_seed(s);
+                options = options.seed(s);
             }
+            builder = builder.cv(options);
             Ok(builder)
         }
         "kfold" | "k_fold" | "k-fold" => {
-            builder = builder.cv_method("kfold");
-            builder = builder.cv_k(k);
-            builder = builder.cv_fractions(fractions.to_vec());
+            let mut options = CVBuilder::method("kfold")
+                .k(k)
+                .fractions(fractions.to_vec());
             if let Some(s) = seed {
-                builder = builder.cv_seed(s);
+                options = options.seed(s);
             }
+            builder = builder.cv(options);
             Ok(builder)
         }
         _ => Err(format!(
@@ -817,20 +819,24 @@ pub fn apply_typed_builder_options(
     if let Some(ac) = options.auto_converge {
         builder = builder.auto_converge(ac);
     }
+    let mut outputs = Vec::new();
     if options.return_residuals {
-        builder = builder.return_residuals();
+        outputs.push("residuals");
     }
     if options.return_robustness_weights {
-        builder = builder.return_robustness_weights();
+        outputs.push("weights");
     }
     if options.return_diagnostics {
-        builder = builder.return_diagnostics();
+        outputs.push("diagnostics");
     }
     if options.return_se {
-        builder = builder.return_se();
+        outputs.push("se");
     }
     if options.return_sorted {
-        builder = builder.return_sorted();
+        outputs.push("sorted");
+    }
+    if !outputs.is_empty() {
+        builder = builder.outputs(outputs);
     }
     if let Some(m) = options.missing {
         builder = builder.missing(m);

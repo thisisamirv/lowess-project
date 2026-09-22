@@ -47,7 +47,7 @@ const model = new Lowess({
     iterations: 3,
     confidence_intervals: 0.95,
     prediction_intervals: 0.95,
-    return_diagnostics: true,
+    outputs: ["diagnostics"],
     parallel: true
 });
 const result = model.fit(x, y);

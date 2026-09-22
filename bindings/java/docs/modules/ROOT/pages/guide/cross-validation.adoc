@@ -19,6 +19,7 @@ Split data into K folds, train on K-1, validate on 1.
 import fastlowess.Lowess;
 import fastlowess.Options;
 import fastlowess.Result;
+import fastlowess.CVOptions;
 
 public class Example {
     public static void main(String[] args) {
@@ -31,9 +32,8 @@ public class Example {
         }
 
         Options options = Options.builder()
-                .cvMethod("kfold")
-                .cvK(5)
-                .cvFractions(new double[] { 0.2, 0.3, 0.5, 0.7 })
+                .cv(CVOptions.builder().method("kfold").k(5)
+                    .fractions(0.2, 0.3, 0.5, 0.7).build())
                 .build();
 
         try (Lowess model = new Lowess(options)) {
@@ -64,6 +64,7 @@ Each point is held out once. Most thorough but slowest.
 import fastlowess.Lowess;
 import fastlowess.Options;
 import fastlowess.Result;
+import fastlowess.CVOptions;
 
 public class Example {
     public static void main(String[] args) {
@@ -76,8 +77,8 @@ public class Example {
         }
 
         Options options = Options.builder()
-                .cvMethod("loocv")
-                .cvFractions(new double[] { 0.2, 0.3, 0.5, 0.7 })
+                .cv(CVOptions.builder().method("loocv")
+                    .fractions(0.2, 0.3, 0.5, 0.7).build())
                 .build();
 
         try (Lowess model = new Lowess(options)) {
@@ -104,6 +105,7 @@ Set a seed for reproducible fold assignments:
 import fastlowess.Lowess;
 import fastlowess.Options;
 import fastlowess.Result;
+import fastlowess.CVOptions;
 
 public class Example {
     public static void main(String[] args) {
@@ -116,10 +118,8 @@ public class Example {
         }
 
         Options options = Options.builder()
-                .cvMethod("kfold")
-                .cvK(5)
-                .cvFractions(new double[] { 0.3, 0.5, 0.7 })
-                .cvSeed(42L)
+                .cv(CVOptions.builder().method("kfold").k(5)
+                    .fractions(0.3, 0.5, 0.7).seed(42L).build())
                 .build();
 
         try (Lowess model = new Lowess(options)) {

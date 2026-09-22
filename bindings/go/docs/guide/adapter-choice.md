@@ -64,7 +64,7 @@ func main() {
  opts.ConfidenceIntervals = &ci
  pi := 0.95
  opts.PredictionIntervals = &pi
- opts.ReturnDiagnostics = true
+ opts.Outputs = []string{"diagnostics"}
  opts.Parallel = true
 
  model, err := fastlowess.NewLowess(opts)

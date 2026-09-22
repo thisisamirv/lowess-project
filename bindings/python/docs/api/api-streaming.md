@@ -72,19 +72,17 @@ print(final_result)
 | `zero_weight_fallback` | `str` | `"use_local_mean"` | Zero-weight handling strategy |
 | `missing` | `str` | `"error"` | Policy for non-finite (NaN/Inf) values in each chunk |
 | `auto_converge` | `float` | `None` | Auto-convergence tolerance |
-| `return_diagnostics` | `bool` | `False` | Include diagnostics in result |
-| `return_residuals` | `bool` | `False` | Include residuals in result |
-| `return_robustness_weights` | `bool` | `False` | Include weights in result |
+| `outputs` | `Sequence[str]` | `[]` | Select `diagnostics`, `residuals`, `weights`, `derivative`, and/or `se` |
 | `parallel` | `bool` | `True` | Enable parallel execution |
 | `chunk_size` | `int` | `5000` | Data chunk size |
 | `overlap` | `int` | `chunk_size / 10` | Overlap between chunks |
 | `merge_strategy` | `str` | `"weighted_average"` | Strategy for blending overlap regions |
 | `return_derivative` | `bool` | `False` | Include the per-point local fit derivative (slope) in result |
-| `return_se` | `bool` | `False` | Populate `standard_errors` in the result |
+| `outputs` | `Sequence[str]` | `[]` | Select optional output components |
 | `confidence_intervals` | `float` | `None` | Confidence level (e.g., 0.95); populates `confidence_lower`/`confidence_upper` |
 | `prediction_intervals` | `float` | `None` | Prediction level (e.g., 0.95); populates `prediction_lower`/`prediction_upper` |
 
-Cross-validation, GPU `backend`, `custom_weights`, and `return_sorted` are Batch-only and not available here; see [fastLowess](api.md) for those. Standard errors and confidence/prediction intervals are computed per chunk the same way Batch computes them, then blended across overlap regions via `merge_strategy` like `y`/`derivative` are.
+Cross-validation, GPU `backend`, `custom_weights`, and `"sorted"` are Batch-only and not available here; see [fastLowess](api.md) for those. Standard errors and confidence/prediction intervals are computed per chunk the same way Batch computes them, then blended across overlap regions via `merge_strategy` like `y`/`derivative` are.
 
 ## Options
 
@@ -178,23 +176,23 @@ Policy for handling non-finite (NaN/Inf) values within each chunk:
 
 Convergence tolerance for early stopping of robustness iterations. `None` (default) disables early stopping.
 
-### return_diagnostics
+### outputs
 
 *See: [`Diagnostics`](#diagnostics)*
 
-Include a `Diagnostics` object (RMSE, MAE, R², residual_sd) in the result. `effective_df`/`aic`/`aicc` require per-chunk hat-matrix leverage to be threaded into the cumulative diagnostics computation across chunk boundaries, which isn't currently done (even with `return_se`/`confidence_intervals`/`prediction_intervals` set), so they're always `None` here.
+Use `outputs=["diagnostics", "residuals", "weights", "derivative", "se"]` to select optional components. `effective_df`/`aic`/`aicc` remain unavailable per chunk.
 
 - `False` (default) — leaves `result.diagnostics` as `None`
 - `True` — populates `result.diagnostics`
 
-### return_residuals
+### outputs: residuals
 
 Include per-point residuals (`y - fitted`) in the result.
 
 - `False` (default) — leaves `result.residuals` as `None`
 - `True` — populates `result.residuals`
 
-### return_robustness_weights
+### outputs: weights
 
 Include the final per-point robustness weights (from the last robustness iteration) in the result.
 
@@ -237,7 +235,7 @@ Each point's local WLS fit already computes a slope internally; this exposes tha
 - `False` (default) — leaves `result.derivative` as `None`
 - `True` — populates it
 
-### return_se
+### outputs: se
 
 *See: [Intervals](../guide/intervals.md)*
 
@@ -270,15 +268,15 @@ Returned by `process_chunk()` and `finalize()`.
 | `y` | `ndarray` | Smoothed y values |
 | `fraction_used` | `float` | Fraction used |
 | `iterations_used` | `int \| None` | Robustness iterations actually performed |
-| `standard_errors` | `ndarray \| None` | Per-point standard errors (if `return_se`, `confidence_intervals`, or `prediction_intervals` was set) |
+| `standard_errors` | `ndarray \| None` | Per-point standard errors (if `"se"`, confidence, or prediction intervals were requested) |
 | `confidence_lower` | `ndarray \| None` | Lower confidence bounds (if `confidence_intervals` was set) |
 | `confidence_upper` | `ndarray \| None` | Upper confidence bounds (if `confidence_intervals` was set) |
 | `prediction_lower` | `ndarray \| None` | Lower prediction bounds (if `prediction_intervals` was set) |
 | `prediction_upper` | `ndarray \| None` | Upper prediction bounds (if `prediction_intervals` was set) |
-| `residuals` | `ndarray \| None` | Residuals (if `return_residuals`) |
-| `robustness_weights` | `ndarray \| None` | Robustness weights (if `return_robustness_weights`) |
+| `residuals` | `ndarray \| None` | Residuals (if `"residuals"` was requested) |
+| `robustness_weights` | `ndarray \| None` | Robustness weights (if `"weights"` was requested) |
 | `cv_scores` | `ndarray \| None` | Always `None` (Batch only) |
-| `diagnostics` | `Diagnostics \| None` | Fit metrics (if `return_diagnostics`) |
+| `diagnostics` | `Diagnostics \| None` | Fit metrics (if `"diagnostics"` was requested) |
 | `derivative` | `ndarray \| None` | Per-point local fit derivative/slope (if `return_derivative`) |
 
 ### `Diagnostics`

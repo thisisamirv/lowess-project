@@ -25,7 +25,7 @@ test_that("Lowess rejects invalid inputs", {
 
     # Invalid cv_seed (negative rejected by require_non_negative_usize)
     expect_error(
-        Lowess(cv_seed = -1),
+        Lowess(cv = cv_opts(fractions = c(0.3, 0.5), seed = -1)),
         "cv_seed must be non-negative"
     )
 

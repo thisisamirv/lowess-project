@@ -6,6 +6,7 @@ use ScalingMethod::Mean;
 use WeightFunction::{Biweight, Cosine, Epanechnikov, Gaussian, Triangle, Tricube, Uniform};
 use approx::assert_abs_diff_eq;
 use fastLowess::internals::engine::gpu::{GLOBAL_EXECUTOR, GpuConfig, GpuExecutor};
+use fastLowess::prelude::CVBuilder;
 use lowess::internals::algorithms::robustness::RobustnessMethod;
 use lowess::internals::math::boundary::BoundaryPolicy;
 use lowess::internals::math::kernel::WeightFunction;
@@ -91,9 +92,9 @@ fn test_gpu_cv_reduction() {
     // GPU Build
     let model = Lowess::new()
         .backend(GPU)
-        .cv_method("kfold")
-        .cv_k(5)
-        .cv_fractions(vec![0.1, 0.2, 0.5])
+        .cv(CVBuilder::method("kfold")
+            .k(5)
+            .fractions(vec![0.1, 0.2, 0.5]))
         .delta(0.0) // Force exact fit
         .build()
         .unwrap();
@@ -106,9 +107,9 @@ fn test_gpu_cv_reduction() {
         // CPU Build to compare
         let cpu_model = Lowess::new()
             .backend(CPU)
-            .cv_method("kfold")
-            .cv_k(5)
-            .cv_fractions(vec![0.1, 0.2, 0.5])
+            .cv(CVBuilder::method("kfold")
+                .k(5)
+                .fractions(vec![0.1, 0.2, 0.5]))
             .build()
             .unwrap();
         let cpu_res = cpu_model.fit(&x, &y).unwrap();
@@ -718,7 +719,7 @@ fn test_cpu_gpu_zero_weight_fallback_equivalence() {
                 .zero_weight_fallback(method)
                 .delta(0.0)
                 .backend(CPU)
-                .return_robustness_weights()
+                .outputs(["weights"])
                 .build()
                 .unwrap()
                 .fit(&x, &y)
@@ -730,7 +731,7 @@ fn test_cpu_gpu_zero_weight_fallback_equivalence() {
                 .zero_weight_fallback(method)
                 .delta(0.0)
                 .backend(GPU)
-                .return_robustness_weights()
+                .outputs(["weights"])
                 .build()
                 .unwrap()
                 .fit(&x, &y)
@@ -1148,10 +1149,10 @@ fn test_gpu_cv() {
     // GPU Cross Validation using 5-fold CV with 2 candidate fractions
     let model = Lowess::new()
         .backend(GPU)
-        .cv_method("kfold")
-        .cv_k(5)
-        .cv_fractions(vec![0.3, 0.7])
-        .cv_seed(42)
+        .cv(CVBuilder::method("kfold")
+            .k(5)
+            .fractions(vec![0.3, 0.7])
+            .seed(42))
         .build()
         .unwrap();
 

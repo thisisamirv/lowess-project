@@ -5,6 +5,7 @@ use numpy::{PyArray1, PyReadonlyArray1};
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
+use pyo3::types::PyDict;
 use std::fmt::Display;
 use std::sync::Mutex;
 
@@ -32,6 +33,51 @@ fn map_invalid_arg<T, E: Display>(result: Result<T, E>) -> PyResult<T> {
 
 fn to_py_invalid_arg_error(e: impl Display) -> PyErr {
     to_py_error(binding_support::BindingError::invalid_arg(e.to_string()))
+}
+
+fn parse_cv_options(
+    cv: Option<&Bound<'_, PyDict>>,
+    legacy_fractions: Option<Vec<f64>>,
+    legacy_method: &str,
+    legacy_k: usize,
+    legacy_seed: Option<u64>,
+) -> PyResult<(Option<Vec<f64>>, String, usize, Option<u64>)> {
+    let Some(cv) = cv else {
+        return Ok((
+            legacy_fractions,
+            legacy_method.to_owned(),
+            legacy_k,
+            legacy_seed,
+        ));
+    };
+
+    let fractions = match cv.get_item("fractions")? {
+        Some(value) => Some(
+            value
+                .extract::<Vec<f64>>()
+                .map_err(to_py_invalid_arg_error)?,
+        ),
+        None => legacy_fractions,
+    };
+    if fractions.is_none() {
+        return Err(PyValueError::new_err("cv requires a 'fractions' sequence"));
+    }
+    let method = match cv.get_item("method")? {
+        Some(value) => value.extract::<String>().map_err(to_py_invalid_arg_error)?,
+        None => legacy_method.to_owned(),
+    };
+    let k = match cv.get_item("k")? {
+        Some(value) => value.extract::<usize>().map_err(to_py_invalid_arg_error)?,
+        None => legacy_k,
+    };
+    let seed = match cv.get_item("seed")? {
+        Some(value) if !value.is_none() => {
+            Some(value.extract::<u64>().map_err(to_py_invalid_arg_error)?)
+        }
+        _ => legacy_seed,
+    };
+
+    Ok((fractions, method, k, seed))
 }
 
 // ============================================================================
@@ -289,7 +335,8 @@ impl PyLowessResult {
     /// ----------
     /// new_x : array_like
     ///     Query x-values.
-    /// return_se : bool, optional
+    /// outputs : sequence[str], optional
+    ///     Select "se" and/or "derivative".
     /// confidence_level : float, optional
     /// prediction_level : float, optional
     /// return_derivative : bool, optional
@@ -304,10 +351,9 @@ impl PyLowessResult {
     #[pyo3(signature = (
         new_x,
         *,
-        return_se=false,
+        outputs=None,
         confidence_level=None,
         prediction_level=None,
-        return_derivative=false,
         extrapolation="clamp",
         max_extrapolation_distance=None,
         max_neighbor_distance=None,
@@ -317,10 +363,9 @@ impl PyLowessResult {
         &self,
         py: Python<'py>,
         new_x: PyReadonlyArray1<'py, f64>,
-        return_se: bool,
+        outputs: Option<Vec<String>>,
         confidence_level: Option<f64>,
         prediction_level: Option<f64>,
-        return_derivative: bool,
         extrapolation: &str,
         max_extrapolation_distance: Option<f64>,
         max_neighbor_distance: Option<f64>,
@@ -332,10 +377,14 @@ impl PyLowessResult {
                     &self.inner,
                     &new_x_vec,
                     binding_support::PredictOptionSet {
-                        return_se,
+                        return_se: outputs
+                            .as_ref()
+                            .is_some_and(|v| v.iter().any(|x| x == "se")),
                         confidence_level,
                         prediction_level,
-                        return_derivative,
+                        return_derivative: outputs
+                            .as_ref()
+                            .is_some_and(|v| v.iter().any(|x| x == "derivative")),
                         extrapolation: Some(extrapolation),
                         max_extrapolation_distance,
                         max_neighbor_distance,
@@ -380,6 +429,7 @@ impl PyStreamingLowess {
         scaling_method="mad",
         boundary_policy="extend",
         auto_converge=None,
+        outputs=None,
         return_diagnostics=false,
         return_residuals=false,
         return_robustness_weights=false,
@@ -404,6 +454,7 @@ impl PyStreamingLowess {
         scaling_method: &str,
         boundary_policy: &str,
         auto_converge: Option<f64>,
+        outputs: Option<Vec<String>>,
         return_diagnostics: bool,
         return_residuals: bool,
         return_robustness_weights: bool,
@@ -430,10 +481,22 @@ impl PyStreamingLowess {
                 boundary_policy: Some(boundary_policy),
                 zero_weight_fallback: Some(zero_weight_fallback),
                 auto_converge,
-                return_residuals,
-                return_robustness_weights,
-                return_diagnostics,
-                return_se,
+                return_residuals: return_residuals
+                    || outputs
+                        .as_ref()
+                        .is_some_and(|v| v.iter().any(|x| x == "residuals")),
+                return_robustness_weights: return_robustness_weights
+                    || outputs
+                        .as_ref()
+                        .is_some_and(|v| v.iter().any(|x| x == "weights")),
+                return_diagnostics: return_diagnostics
+                    || outputs
+                        .as_ref()
+                        .is_some_and(|v| v.iter().any(|x| x == "diagnostics")),
+                return_se: return_se
+                    || outputs
+                        .as_ref()
+                        .is_some_and(|v| v.iter().any(|x| x == "se")),
                 return_sorted: false,
                 missing: Some(missing),
                 confidence_intervals,
@@ -453,7 +516,11 @@ impl PyStreamingLowess {
                 retain_model: None,
             },
         ))?;
-        if return_derivative {
+        if return_derivative
+            || outputs
+                .as_ref()
+                .is_some_and(|v| v.iter().any(|x| x == "derivative"))
+        {
             builder = builder.return_derivative();
         }
 
@@ -572,6 +639,7 @@ impl PyOnlineLowess {
         boundary_policy="extend",
         update_mode="incremental",
         auto_converge=None,
+        outputs=None,
         return_robustness_weights=false,
         return_derivative=false,
         return_se=false,
@@ -593,6 +661,7 @@ impl PyOnlineLowess {
         boundary_policy: &str,
         update_mode: &str,
         auto_converge: Option<f64>,
+        outputs: Option<Vec<String>>,
         return_robustness_weights: bool,
         return_derivative: bool,
         return_se: bool,
@@ -614,7 +683,10 @@ impl PyOnlineLowess {
                 zero_weight_fallback: Some(zero_weight_fallback),
                 auto_converge,
                 return_residuals: false,
-                return_robustness_weights,
+                return_robustness_weights: return_robustness_weights
+                    || outputs
+                        .as_ref()
+                        .is_some_and(|v| v.iter().any(|x| x == "weights")),
                 return_diagnostics: false,
                 return_se,
                 return_sorted: false,
@@ -636,7 +708,11 @@ impl PyOnlineLowess {
                 retain_model: None,
             },
         ))?;
-        if return_derivative {
+        if return_derivative
+            || outputs
+                .as_ref()
+                .is_some_and(|v| v.iter().any(|x| x == "derivative"))
+        {
             builder = builder.return_derivative();
         }
 
@@ -701,6 +777,8 @@ impl PyLowess {
         boundary_policy="extend",
         confidence_intervals=None,
         prediction_intervals=None,
+        outputs=None,
+            cv=None,
         return_diagnostics=false,
         return_residuals=false,
         return_robustness_weights=false,
@@ -729,6 +807,8 @@ impl PyLowess {
         boundary_policy: &str,
         confidence_intervals: Option<f64>,
         prediction_intervals: Option<f64>,
+        outputs: Option<Vec<String>>,
+        cv: Option<Bound<'_, PyDict>>,
         return_diagnostics: bool,
         return_residuals: bool,
         return_robustness_weights: bool,
@@ -746,6 +826,13 @@ impl PyLowess {
         retain_model: bool,
         return_derivative: bool,
     ) -> PyResult<Self> {
+        let (cv_fractions, cv_method, cv_k, cv_seed) =
+            parse_cv_options(cv.as_ref(), cv_fractions, cv_method, cv_k, cv_seed)?;
+        let output = |name: &str| {
+            outputs
+                .as_ref()
+                .is_some_and(|v| v.iter().any(|x| x == name))
+        };
         let mut builder = map_invalid_arg(binding_support::apply_builder_options(
             LowessBuilder::<f64>::new(),
             binding_support::BuilderOptionSet {
@@ -758,11 +845,11 @@ impl PyLowess {
                 boundary_policy: Some(boundary_policy),
                 zero_weight_fallback: Some(zero_weight_fallback),
                 auto_converge,
-                return_residuals,
-                return_robustness_weights,
-                return_diagnostics,
-                return_se,
-                return_sorted,
+                return_residuals: return_residuals || output("residuals"),
+                return_robustness_weights: return_robustness_weights || output("weights"),
+                return_diagnostics: return_diagnostics || output("diagnostics"),
+                return_se: return_se || output("se"),
+                return_sorted: return_sorted || output("sorted"),
                 missing: Some(missing),
                 confidence_intervals,
                 prediction_intervals,
@@ -775,7 +862,7 @@ impl PyLowess {
                 min_points: None,
                 update_mode: None,
                 cv_fractions: cv_fractions.as_deref(),
-                cv_method: Some(cv_method),
+                cv_method: Some(&cv_method),
                 cv_k: Some(cv_k),
                 cv_seed,
                 retain_model: Some(retain_model),

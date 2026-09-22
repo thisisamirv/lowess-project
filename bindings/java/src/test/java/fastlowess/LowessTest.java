@@ -41,7 +41,7 @@ class LowessTest {
             y[i] = Math.sin(x[i] / 5.0);
         }
 
-        try (Lowess model = new Lowess(Options.builder().returnDiagnostics(true).build())) {
+        try (Lowess model = new Lowess(Options.builder().outputs("diagnostics").build())) {
             Result result = model.fit(x, y);
             assertTrue(result.diagnostics().isPresent());
             assertTrue(result.diagnostics().get().rmse() >= 0.0);

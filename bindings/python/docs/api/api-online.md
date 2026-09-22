@@ -60,16 +60,16 @@ print(result)
 | `zero_weight_fallback` | `str` | `"use_local_mean"` | Zero-weight handling strategy |
 | `missing` | `str` | `"error"` | Policy for non-finite (NaN/Inf) values in each point |
 | `auto_converge` | `float` | `None` | Auto-convergence tolerance |
-| `return_robustness_weights` | `bool` | `False` | Include `robustness_weight` in result |
+| `outputs` | `Sequence[str]` | `[]` | Select `weights`, `derivative`, and/or `se` |
 | `window_capacity` | `int` | `1000` | Max points in sliding window |
 | `min_points` | `int` | `2` | Min points before smoothing starts |
 | `update_mode` | `str` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
 | `return_derivative` | `bool` | `False` | Include the latest point's local fit derivative (slope) in result |
-| `return_se` | `bool` | `False` | Populate `standard_error` in the result (requires `update_mode="full"`; raises if combined with `"incremental"`) |
+| `outputs` | `Sequence[str]` | `[]` | `"se"` requires `update_mode="full"` |
 | `confidence_intervals` | `float` | `None` | Confidence level (e.g., 0.95); populates `confidence_lower`/`confidence_upper` (requires `update_mode="full"`) |
 | `prediction_intervals` | `float` | `None` | Prediction level (e.g., 0.95); populates `prediction_lower`/`prediction_upper` (requires `update_mode="full"`) |
 
-Cross-validation, GPU `backend`, `custom_weights`, `return_sorted`, `return_diagnostics`, `return_residuals`, and `parallel` are Batch-only (or Batch/Streaming-only) and not available here; see [fastLowess](api.md) for those.
+Cross-validation, GPU `backend`, `custom_weights`, `"sorted"`, `"diagnostics"`, `"residuals"`, and `parallel` are Batch-only and not available here; see [fastLowess](api.md) for those.
 
 ## Options
 
@@ -161,7 +161,7 @@ Policy for handling a non-finite (NaN/Inf) `x` or `y` value passed to `add_point
 
 Convergence tolerance for early stopping of robustness iterations. `None` (default) disables early stopping.
 
-### return_robustness_weights
+### outputs
 
 Include the robustness weight for the latest point (from the last robustness iteration) in the result.
 
@@ -192,11 +192,11 @@ Each point's local WLS fit already computes a slope internally; this exposes the
 - `False` (default) — leaves `derivative` as `None`
 - `True` — populates `derivative`
 
-### return_se
+`outputs=["weights", "derivative", "se"]` selects optional online output components. `"se"` requires `update_mode="full"`.
 
 *See: [Intervals](../guide/intervals.md)*
 
-Populates `standard_error` — but only when combined with `update_mode="full"`. The fast `"incremental"` path (the default) never computes standard errors, so combining `return_se` (or `confidence_intervals`/`prediction_intervals`) with anything other than `"full"` raises at construction time, rather than silently leaving `standard_error` as `None`.
+Populates `standard_error` — but only when combined with `update_mode="full"`. The fast `"incremental"` path (the default) never computes standard errors, so combining `"se"` (or `confidence_intervals`/`prediction_intervals`) with anything other than `"full"` raises at construction time, rather than silently leaving `standard_error` as `None`.
 
 - `False` (default) — leaves `standard_error` as `None`
 - `True` — populates `standard_error`, and requires `update_mode="full"`
@@ -205,13 +205,13 @@ Populates `standard_error` — but only when combined with `update_mode="full"`.
 
 *See: [Intervals](../guide/intervals.md)*
 
-Confidence level for the confidence interval around the mean response at the latest point (e.g. `0.95`), populating `confidence_lower`/`confidence_upper`. Same `update_mode="full"` requirement as `return_se`. `None` (default) disables confidence intervals.
+Confidence level for the confidence interval around the mean response at the latest point (e.g. `0.95`), populating `confidence_lower`/`confidence_upper`. Same `update_mode="full"` requirement as `"se"`. `None` (default) disables confidence intervals.
 
 ### prediction_intervals
 
 *See: [Intervals](../guide/intervals.md)*
 
-Confidence level for the prediction interval for a new observation at the latest point (e.g. `0.95`), populating `prediction_lower`/`prediction_upper`. Same `update_mode="full"` requirement as `return_se`. `None` (default) disables prediction intervals.
+Confidence level for the prediction interval for a new observation at the latest point (e.g. `0.95`), populating `prediction_lower`/`prediction_upper`. Same `update_mode="full"` requirement as `"se"`. `None` (default) disables prediction intervals.
 
 ## Result Structure
 
@@ -222,12 +222,12 @@ Returned by `add_point()` once the window has enough points (`None` until then).
 | Field | Type | Description |
 | --- | --- | --- |
 | `y` | `float` | Smoothed value for the latest point |
-| `standard_error` | `float \| None` | Populated when `return_se` is set (requires `update_mode="full"`); otherwise always `None` |
+| `standard_error` | `float \| None` | Populated when `"se"` is set (requires `update_mode="full"`); otherwise always `None` |
 | `confidence_lower` / `confidence_upper` | `float \| None` | Confidence interval bounds around the mean response, if `confidence_intervals` was set (requires `update_mode="full"`) |
 | `prediction_lower` / `prediction_upper` | `float \| None` | Prediction interval bounds for a new observation, if `prediction_intervals` was set (requires `update_mode="full"`) |
-| `residual` | `float \| None` | Residual y − smoothed; always present (there is no `return_residuals` option for Online) |
-| `robustness_weight` | `float \| None` | Robustness weight, if `return_robustness_weights` was set |
+| `residual` | `float \| None` | Residual y − smoothed; always present (there is no `"residuals"` output for Online) |
+| `robustness_weight` | `float \| None` | Robustness weight, if `"weights"` was set |
 | `iterations_used` | `int \| None` | Robustness iterations performed |
 | `derivative` | `float \| None` | Local fit derivative/slope for the latest point, if `return_derivative` was set |
 
-There is no `Diagnostics` object or `return_diagnostics` option for `OnlineLowess`: `OnlineOutput` carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful.
+There is no `Diagnostics` object or `"diagnostics"` output for `OnlineLowess`: `OnlineOutput` carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful.

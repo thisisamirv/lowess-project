@@ -36,8 +36,10 @@
 #'   \code{"average"} (alias: \code{"mean"}),
 #'   \code{"take_first"} (alias: \code{"first"}), or
 #'   \code{"take_last"} (alias: \code{"last"}).
-#' @param return_se Logical; include standard errors in the result. Default:
-#'   \code{FALSE}.
+#' @param outputs Character vector selecting optional output components:
+#'   \code{"diagnostics"}, \code{"residuals"}, \code{"weights"} (robustness
+#'   weights), \code{"derivative"}, and/or \code{"se"} (standard errors).
+#'   \code{NULL} (default) returns only the core result.
 #' @param confidence_intervals Confidence level for confidence intervals
 #'   (e.g. 0.95), or \code{NULL} (default) to disable.
 #' @param prediction_intervals Confidence level for prediction intervals
@@ -65,19 +67,26 @@ StreamingLowess <- function(
     boundary_policy = "extend",
     zero_weight_fallback = "use_local_mean",
     auto_converge = NULL,
-    return_diagnostics = FALSE,
-    return_residuals = FALSE,
-    return_robustness_weights = FALSE,
-    return_derivative = FALSE,
-    return_se = FALSE,
     confidence_intervals = NULL,
     prediction_intervals = NULL,
     merge_strategy = "weighted_average",
     parallel = TRUE,
-    missing = "error"
+    missing = "error",
+    outputs = NULL
 ) {
     reject_extra_positional_args(sys.call(), "chunk_size")
     validate_params(fraction = fraction, chunk_size = chunk_size)
+
+    flags <- parse_outputs_flags(
+        outputs,
+        c("diagnostics", "residuals", "weights", "derivative", "se")
+    )
+    return_diagnostics <- flags[["diagnostics"]]
+    return_residuals <- flags[["residuals"]]
+    return_robustness_weights <- flags[["weights"]]
+    return_derivative <- flags[["derivative"]]
+    return_se <- flags[["se"]]
+
     handle <- do.call(RStreamingLowess$new, env_args(streaming_params))
 
     structure(

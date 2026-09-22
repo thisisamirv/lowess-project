@@ -2,6 +2,16 @@
 title: News
 ---
 <!-- markdownlint-disable MD024 MD025 -->
+# fastlowess (Node.js) (development version)
+
+## Changed
+
+* Updated the vendored `doxygen-awesome-css` theme to v2.5.0 and the Hugo docs build to v0.166.0.
+
+## Fixed
+
+* Fixed C++ release CI's "Commit updated recipe" step failing with "paths are ignored" because the repo's blanket `.gitignore` `spack/` rule matches `bindings/cpp/spack/`; `git add` now force-adds the tracked recipe file.
+
 # fastlowess (Node.js) 4.1.0
 
 ## Added

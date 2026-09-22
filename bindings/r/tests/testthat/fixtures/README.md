@@ -7,7 +7,7 @@ appears as a reviewable diff in `git`.
 | File | Engine | What is stored |
 | --- | --- | --- |
 | `batch_default.csv` | `Lowess()` default config | `x`, `y`, `yhat` (the default `boundary_policy = "extend"` path, which R has no analogue for) |
-| `batch_intervals.csv` | `Lowess()` with `return_se`, CI/PI, derivative | `x`, `y`, `yhat`, `se`, `ci_lower/upper`, `pi_lower/upper`, `derivative` |
+| `batch_intervals.csv` | `Lowess()` with `outputs = c("se", "derivative")`, CI/PI | `x`, `y`, `yhat`, `se`, `ci_lower/upper`, `pi_lower/upper`, `derivative` |
 | `batch_robust.csv` | `Lowess()` with two outliers + robustness | `x`, `y`, `yhat`, `robustness_weight` |
 | `streaming_chunked.csv` | `StreamingLowess()` | `x`, `y`, `yhat` |
 | `online_full.csv` | `OnlineLowess()` full mode | `x`, `y`, `yhat` |
@@ -57,8 +57,8 @@ y <- sin(x) * x + rnorm(60, 0, 0.25)
 | Case | Config |
 | --- | --- |
 | `batch_default` | `Lowess(fraction = 0.67, iterations = 3L, boundary_policy = "extend", parallel = FALSE)` |
-| `batch_intervals` | `Lowess(fraction = 0.3, iterations = 2L, boundary_policy = "extend", return_se = TRUE, confidence_intervals = 0.9, prediction_intervals = 0.9, return_derivative = TRUE, parallel = FALSE)` |
-| `batch_robust` | `Lowess(fraction = 0.4, iterations = 5L, boundary_policy = "extend", return_robustness_weights = TRUE, parallel = FALSE)`; `y[9]` and `y[33]` get a `+4` outlier |
+| `batch_intervals` | `Lowess(fraction = 0.3, iterations = 2L, boundary_policy = "extend", outputs = c("se", "derivative"), confidence_intervals = 0.9, prediction_intervals = 0.9, parallel = FALSE)` |
+| `batch_robust` | `Lowess(fraction = 0.4, iterations = 5L, boundary_policy = "extend", outputs = "weights", parallel = FALSE)`; `y[9]` and `y[33]` get a `+4` outlier |
 | `streaming_chunked` | `StreamingLowess(fraction = 0.3, chunk_size = 20L, overlap = 0L, iterations = 1L, parallel = FALSE)` |
 | `online_full` | `OnlineLowess(fraction = 0.3, window_capacity = 16L, min_points = 4L, update_mode = "full", iterations = 2L)` |
 

@@ -19,6 +19,7 @@ use lowess::internals::api::Online as BaseOnline;
 use lowess::internals::api::Streaming as BaseStreaming;
 
 // Publicly re-exported types
+pub use lowess::internals::api::CVBuilder;
 pub use lowess::internals::api::LowessBuilder;
 pub use lowess::internals::engine::output::LowessResult;
 pub use lowess::internals::engine::predict::Predict;
@@ -148,9 +149,12 @@ macro_rules! impl_common_builder {
                 self.0 = self.0.auto_converge(tol);
                 self
             }
-            // flag options (no argument)
-            pub fn return_robustness_weights(mut self) -> Self {
-                self.0 = self.0.return_robustness_weights();
+            pub fn outputs<I, S>(mut self, names: I) -> Self
+            where
+                I: IntoIterator<Item = S>,
+                S: AsRef<str>,
+            {
+                self.0 = self.0.outputs(names);
                 self
             }
         }
@@ -161,14 +165,6 @@ macro_rules! impl_common_builder {
 pub struct Lowess(LowessBuilder<f64>);
 impl_common_builder!(Lowess);
 impl Lowess {
-    pub fn return_diagnostics(mut self) -> Self {
-        self.0 = self.0.return_diagnostics();
-        self
-    }
-    pub fn return_residuals(mut self) -> Self {
-        self.0 = self.0.return_residuals();
-        self
-    }
     pub fn parallel(mut self, p: bool) -> Self {
         self.0 = self.0.parallel(p);
         self
@@ -189,39 +185,14 @@ impl Lowess {
         self.0 = self.0.prediction_intervals(level);
         self
     }
-    pub fn return_se(mut self) -> Self {
-        self.0 = self.0.return_se();
-        self
-    }
-    pub fn cv_method(mut self, m: &str) -> Self {
-        self.0 = self.0.cv_method(m);
-        self
-    }
-    pub fn cv_k(mut self, k: usize) -> Self {
-        self.0 = self.0.cv_k(k);
-        self
-    }
-    pub fn cv_fractions(mut self, f: Vec<f64>) -> Self {
-        self.0 = self.0.cv_fractions(f);
-        self
-    }
-    pub fn cv_seed(mut self, s: u64) -> Self {
-        self.0 = self.0.cv_seed(s);
-        self
-    }
-    pub fn return_sorted(mut self) -> Self {
-        self.0 = self.0.return_sorted();
+    pub fn cv(mut self, options: lowess::CVOptions<f64>) -> Self {
+        self.0 = self.0.cv(options);
         self
     }
     pub fn retain_model(mut self, retain: bool) -> Self {
         self.0 = self.0.retain_model(retain);
         self
     }
-    pub fn return_derivative(mut self) -> Self {
-        self.0 = self.0.return_derivative();
-        self
-    }
-
     pub fn build(self) -> Result<ParallelBatchLowess<f64>, LowessError> {
         Batch::convert(self.0).build()
     }
@@ -231,14 +202,6 @@ impl Lowess {
 pub struct StreamingLowess(LowessBuilder<f64>);
 impl_common_builder!(StreamingLowess);
 impl StreamingLowess {
-    pub fn return_diagnostics(mut self) -> Self {
-        self.0 = self.0.return_diagnostics();
-        self
-    }
-    pub fn return_residuals(mut self) -> Self {
-        self.0 = self.0.return_residuals();
-        self
-    }
     pub fn parallel(mut self, p: bool) -> Self {
         self.0 = self.0.parallel(p);
         self
@@ -253,14 +216,6 @@ impl StreamingLowess {
     }
     pub fn merge_strategy(mut self, s: &str) -> Self {
         self.0 = self.0.merge_strategy(s);
-        self
-    }
-    pub fn return_derivative(mut self) -> Self {
-        self.0 = self.0.return_derivative();
-        self
-    }
-    pub fn return_se(mut self) -> Self {
-        self.0 = self.0.return_se();
         self
     }
     pub fn confidence_intervals(mut self, level: f64) -> Self {
@@ -291,14 +246,6 @@ impl OnlineLowess {
     }
     pub fn update_mode(mut self, s: &str) -> Self {
         self.0 = self.0.update_mode(s);
-        self
-    }
-    pub fn return_derivative(mut self) -> Self {
-        self.0 = self.0.return_derivative();
-        self
-    }
-    pub fn return_se(mut self) -> Self {
-        self.0 = self.0.return_se();
         self
     }
     pub fn confidence_intervals(mut self, level: f64) -> Self {

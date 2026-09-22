@@ -168,7 +168,7 @@ int main() {
     y[80] += 5.0;
 
     fastlowess::Lowess model({ .iterations = 5,
-        .return_robustness_weights = true
+        .outputs = {"weights"}
      });
     auto result = model.fit(x, y).value();
 

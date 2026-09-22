@@ -57,13 +57,8 @@ fn test_prelude_weight_function() {
 /// Verifies that CrossValidationStrategy enum is exported.
 #[test]
 fn test_prelude_cross_validation() {
-    let _ = Lowess::<f64>::new()
-        .cv_method("kfold")
-        .cv_k(5)
-        .cv_fractions(vec![0.5f64]);
-    let _ = Lowess::<f64>::new()
-        .cv_method("loocv")
-        .cv_fractions(vec![0.5f64]);
+    let _ = Lowess::<f64>::new().cv(CVBuilder::method("kfold").k(5).fractions(vec![0.5f64]));
+    let _ = Lowess::<f64>::new().cv(CVBuilder::method("loocv").fractions(vec![0.5f64]));
 }
 
 /// Test ZeroWeightFallback is available.
@@ -108,8 +103,7 @@ fn test_prelude_complete_workflow() {
         .robustness_method("bisquare")
         .weight_function("tricube")
         .confidence_intervals(0.95)
-        .return_diagnostics()
-        .return_residuals()
+        .outputs(["diagnostics", "residuals"])
         .build()
         .unwrap()
         .fit(&x, &y)

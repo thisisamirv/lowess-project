@@ -693,8 +693,7 @@ fn run_cv_comparison() -> Result<(), Box<dyn Error>> {
 
     // 1. LOOCV
     let loocv_result = Lowess::new()
-        .cv_method("loocv")
-        .cv_fractions(candidate_fractions.to_vec())
+        .cv(CVBuilder::method("loocv").fractions(candidate_fractions.to_vec()))
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -703,10 +702,10 @@ fn run_cv_comparison() -> Result<(), Box<dyn Error>> {
 
     // 2. K-Fold (5 folds)
     let kfold_result = Lowess::new()
-        .cv_method("kfold")
-        .cv_k(5)
-        .cv_fractions(candidate_fractions.to_vec())
-        .cv_seed(42)
+        .cv(CVBuilder::method("kfold")
+            .k(5)
+            .fractions(candidate_fractions.to_vec())
+            .seed(42))
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -1014,7 +1013,7 @@ fn run_zero_weight_fallback_comparison() -> Result<(), Box<dyn Error>> {
             .robustness_method("talwar")
             .zero_weight_fallback(fallback)
             .boundary_policy("noboundary")
-            .return_robustness_weights()
+            .outputs(["weights"])
             .build()
             .unwrap()
             .fit(&x, &y)

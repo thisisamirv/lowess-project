@@ -80,7 +80,7 @@ fn test_batch_with_robustness_weights() {
         .fraction(0.5)
         .iterations(5)
         .robustness_method("bisquare")
-        .return_robustness_weights()
+        .outputs(["weights"])
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -132,7 +132,7 @@ fn test_batch_return_derivative_linear() {
         .fraction(0.5)
         .delta(0.0) // exact fit at every point
         .boundary_policy("noboundary") // avoid distorting the perfectly linear data at the edges
-        .return_derivative()
+        .outputs(["derivative"])
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -163,7 +163,7 @@ fn test_batch_return_derivative_with_delta_interpolation() {
         .fraction(0.3)
         .delta(5.0) // force many points to be delta-skipped/interpolated
         .boundary_policy("noboundary") // avoid distorting the perfectly linear data at the edges
-        .return_derivative()
+        .outputs(["derivative"])
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -192,7 +192,7 @@ fn test_batch_return_derivative_global_regression() {
 
     let result = Lowess::new()
         .fraction(1.0)
-        .return_derivative()
+        .outputs(["derivative"])
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -304,8 +304,7 @@ fn test_batch_diagnostics() {
 
     let result = Lowess::new()
         .fraction(0.5)
-        .return_diagnostics()
-        .return_residuals()
+        .outputs(["diagnostics", "residuals"])
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -357,9 +356,7 @@ fn test_batch_cv_kfold() {
     let fractions = vec![0.2, 0.5, 0.8];
 
     let result = Lowess::new()
-        .cv_method("kfold")
-        .cv_k(3)
-        .cv_fractions(fractions.clone())
+        .cv(CVBuilder::method("kfold").k(3).fractions(fractions.clone()))
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -393,10 +390,10 @@ fn test_batch_cv_reproducibility() {
 
     // Run 1
     let result1 = Lowess::new()
-        .cv_method("kfold")
-        .cv_k(5)
-        .cv_fractions(fractions.clone())
-        .cv_seed(seed)
+        .cv(CVBuilder::method("kfold")
+            .k(5)
+            .fractions(fractions.clone())
+            .seed(seed))
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -404,10 +401,10 @@ fn test_batch_cv_reproducibility() {
 
     // Run 2 (same seed)
     let result2 = Lowess::new()
-        .cv_method("kfold")
-        .cv_k(5)
-        .cv_fractions(fractions.clone())
-        .cv_seed(seed)
+        .cv(CVBuilder::method("kfold")
+            .k(5)
+            .fractions(fractions.clone())
+            .seed(seed))
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -415,10 +412,10 @@ fn test_batch_cv_reproducibility() {
 
     // Run 3 (different seed)
     let result3 = Lowess::new()
-        .cv_method("kfold")
-        .cv_k(5)
-        .cv_fractions(fractions.clone())
-        .cv_seed(seed + 1)
+        .cv(CVBuilder::method("kfold")
+            .k(5)
+            .fractions(fractions.clone())
+            .seed(seed + 1))
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -448,8 +445,7 @@ fn test_batch_cv_loocv() {
     let fractions = vec![0.5, 0.8];
 
     let result = Lowess::new()
-        .cv_method("loocv")
-        .cv_fractions(fractions.clone())
+        .cv(CVBuilder::method("loocv").fractions(fractions.clone()))
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -587,9 +583,7 @@ fn test_batch_all_features_combined() {
         .robustness_method("bisquare")
         .confidence_intervals(0.95)
         .prediction_intervals(0.95)
-        .return_diagnostics()
-        .return_residuals()
-        .return_robustness_weights()
+        .outputs(["diagnostics", "residuals", "weights"])
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -680,9 +674,7 @@ fn test_batch_return_sorted_true() {
 
     let result = Lowess::new()
         .fraction(0.7)
-        .return_residuals()
-        .return_robustness_weights()
-        .return_sorted()
+        .outputs(["residuals", "weights", "sorted"])
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -701,8 +693,7 @@ fn test_batch_return_sorted_true() {
     // Same (x, y) pairs as the unsorted-order fit, just reordered.
     let unsorted_result = Lowess::new()
         .fraction(0.7)
-        .return_residuals()
-        .return_robustness_weights()
+        .outputs(["residuals", "weights"])
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -955,7 +946,7 @@ fn test_batch_extreme_outliers() {
     let result = Lowess::new()
         .fraction(0.5)
         .iterations(3) // Use robustness to handle outliers
-        .return_robustness_weights()
+        .outputs(["weights"])
         .build()
         .unwrap()
         .fit(&x, &y)

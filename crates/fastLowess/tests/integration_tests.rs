@@ -142,7 +142,7 @@ fn test_streaming_adapter_return_derivative() {
     let mut processor = StreamingLowess::new()
         .fraction(1.0)
         .iterations(0)
-        .return_derivative()
+        .outputs(["derivative"])
         .chunk_size(20)
         .overlap(5)
         .build()
@@ -175,7 +175,7 @@ fn test_streaming_adapter_return_se_and_intervals() {
 
     let mut processor = StreamingLowess::new()
         .fraction(0.9)
-        .return_se()
+        .outputs(["se"])
         .confidence_intervals(0.95)
         .prediction_intervals(0.95)
         .chunk_size(20)
@@ -220,7 +220,7 @@ fn test_streaming_return_derivative_parallel_matches_sequential() {
 
     let mut seq = StreamingLowess::new()
         .fraction(0.4)
-        .return_derivative()
+        .outputs(["derivative"])
         .parallel(false)
         .chunk_size(20)
         .overlap(5)
@@ -228,7 +228,7 @@ fn test_streaming_return_derivative_parallel_matches_sequential() {
         .unwrap();
     let mut par = StreamingLowess::new()
         .fraction(0.4)
-        .return_derivative()
+        .outputs(["derivative"])
         .parallel(true)
         .chunk_size(20)
         .overlap(5)
@@ -295,7 +295,7 @@ fn test_online_adapter() {
 fn test_online_adapter_return_derivative() {
     let mut processor = OnlineLowess::new()
         .fraction(1.0)
-        .return_derivative()
+        .outputs(["derivative"])
         .min_points(2)
         .window_capacity(10)
         .build()
@@ -312,7 +312,7 @@ fn test_online_adapter_return_derivative() {
 fn test_online_adapter_return_se_and_intervals_full_mode() {
     let mut processor = OnlineLowess::new()
         .fraction(0.9)
-        .return_se()
+        .outputs(["se"])
         .confidence_intervals(0.95)
         .prediction_intervals(0.95)
         .update_mode("full")
@@ -343,7 +343,7 @@ fn test_online_adapter_return_se_and_intervals_full_mode() {
 fn test_online_adapter_se_requires_full_mode() {
     let result = OnlineLowess::new()
         .fraction(0.9)
-        .return_se()
+        .outputs(["se"])
         .min_points(10)
         .window_capacity(30)
         .build();

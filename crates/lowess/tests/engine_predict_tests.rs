@@ -327,7 +327,7 @@ fn test_predict_max_neighbor_distance_catches_1d_gap() {
         .expect("a point near real training data should have a tight local window");
 }
 
-/// `return_derivative` should expose the local slope, which for a linear function should
+/// `outputs(["derivative"])` should expose the local slope, which for a linear function should
 /// closely match the true slope everywhere away from the boundary.
 #[test]
 fn test_predict_return_derivative() {
@@ -342,7 +342,7 @@ fn test_predict_return_derivative() {
         .fit(&x, &y)
         .expect("fit should succeed");
 
-    let options = Predict::new().return_derivative().build().unwrap();
+    let options = Predict::new().outputs(["derivative"]).build().unwrap();
 
     let predicted = options
         .call(&result, &[20.0, 30.0, 40.0])
@@ -357,7 +357,7 @@ fn test_predict_return_derivative() {
     }
 }
 
-/// `return_se`/`confidence_intervals`/`prediction_intervals` should populate the corresponding
+/// `"se"`/`confidence_intervals`/`prediction_intervals` should populate the corresponding
 /// output fields, with confidence intervals narrower than prediction intervals.
 #[test]
 fn test_predict_se_and_intervals() {
@@ -378,7 +378,7 @@ fn test_predict_se_and_intervals() {
         .expect("fit should succeed");
 
     let options = Predict::new()
-        .return_se()
+        .outputs(["se"])
         .confidence_intervals(0.95)
         .prediction_intervals(0.95)
         .build()

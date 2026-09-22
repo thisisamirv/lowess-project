@@ -106,7 +106,7 @@ x <- seq(0, 2 * pi, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.3)
 y[c(20, 50, 80)] <- y[c(20, 50, 80)] + 5  # inject outliers
 
-model <- Lowess(iterations = 5, return_robustness_weights = TRUE)
+model <- Lowess(iterations = 5, outputs = "weights")
 result <- fit(model, x, y)
 
 shown <- 0

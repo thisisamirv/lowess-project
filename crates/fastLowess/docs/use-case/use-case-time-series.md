@@ -61,7 +61,7 @@ fn main() -> Result<(), LowessError> {
     let model = Lowess::new()
         .fraction(0.3)
         .iterations(3)
-        .return_residuals()
+        .outputs(["residuals"])
         .build()?;
 
     let result = model.fit(&t, &y)?;
@@ -200,7 +200,7 @@ fn main() -> Result<(), LowessError> {
         .fraction(0.3)
         .iterations(3)
         .confidence_intervals(0.95)
-        .return_diagnostics()
+        .outputs(["diagnostics"])
         .build()?;
 
     let result = model.fit(&hours, &expression)?;

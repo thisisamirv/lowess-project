@@ -42,7 +42,7 @@ const model = new Lowess({
     iterations: 3,
     confidence_intervals: 0.95,
     prediction_intervals: 0.95,
-    return_diagnostics: true
+    outputs: ["diagnostics"]
 });
 const result = model.fit(x, y);
 
@@ -75,7 +75,7 @@ const model = new Lowess({
     fraction: 0.7,
     iterations: 5,
     robustness_method: "bisquare",
-    return_robustness_weights: true
+    outputs: ["weights"]
 });
 const result = model.fit(xOut, yWithOutlier);
 

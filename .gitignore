@@ -66,7 +66,7 @@ compile_commands.json
 *.swo
 *~
 *.todo
-.response.md
+response.md
 
 # OS / System
 .DS_Store

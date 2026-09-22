@@ -96,11 +96,7 @@ Fraction used: 0.5
 | `zero_weight_fallback(...)` | `zero_weight_fallback` | `"use_local_mean"` | Zero-weight handling |
 | `missing(...)` | `missing` | `"error"` | Policy for non-finite (NaN/Inf) values in each chunk |
 | `auto_converge(T)` | `T: Float` | `NaN` | Auto-convergence tolerance |
-| `return_diagnostics()` | `bool` | `false` | Include diagnostics in result |
-| `return_residuals()` | `bool` | `false` | Include residuals in result |
-| `return_robustness_weights()` | `bool` | `false` | Include weights in result |
-| `return_derivative()` | `bool` | `false` | Include the per-point local fit derivative (slope) in result |
-| `return_se()` | `bool` | `false` | Populate `standard_errors` in the result |
+| `outputs([&str])` | `&[&str]` | `[]` | Select optional result components: `"diagnostics"`, `"residuals"`, `"weights"`, `"derivative"`, `"se"` |
 | `confidence_intervals(T)` | `T: Float` | `NaN` | Confidence level (e.g., 0.95); populates `confidence_lower`/`confidence_upper` |
 | `prediction_intervals(T)` | `T: Float` | `NaN` | Prediction level (e.g., 0.95); populates `prediction_lower`/`prediction_upper` |
 | `parallel(bool)` | `bool` | `true` | Enable parallel execution |
@@ -108,7 +104,7 @@ Fraction used: 0.5
 | `overlap(usize)` | `usize` | `chunk_size / 10` | Overlap between chunks |
 | `merge_strategy(...)` | `merge_strategy` | `"weighted_average"` | Strategy for blending overlap regions |
 
-Cross-validation, GPU `backend`, `custom_weights`, and `return_sorted` are Batch-only and not available here; see [fastLowess](crate::doc::api) for those. Standard errors and confidence/prediction intervals are computed per chunk the same way Batch computes them, then blended across overlap regions via `merge_strategy` like `y`/`derivative` are.
+Cross-validation, GPU `backend`, `custom_weights`, and `"sorted"` are Batch-only and not available here; see [fastLowess](crate::doc::api) for those. Standard errors and confidence/prediction intervals are computed per chunk the same way Batch computes them, then blended across overlap regions via `merge_strategy` like `y`/`derivative` are.
 
 ## Options
 

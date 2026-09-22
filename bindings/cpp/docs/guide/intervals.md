@@ -178,7 +178,7 @@ int main() {
     }
 
     fastlowess::LowessOptions opts;
-    opts.return_se = true;
+    opts.outputs = {"se"};
     fastlowess::Lowess model(opts);
     auto result = model.fit(x, y).value();
 

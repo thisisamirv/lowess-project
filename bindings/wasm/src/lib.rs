@@ -17,6 +17,10 @@ pub fn init_panic_hook() {
 const TS_TYPES: &'static str = r#"
 /** Configuration options for LOWESS smoothing. */
 export interface SmoothOptions {
+    /** Optional output components: diagnostics, residuals, weights, derivative, se, sorted. */
+    outputs?: string[];
+    /** Grouped cross-validation configuration. */
+    cv?: { fractions: number[]; method?: string; k?: number; seed?: number };
     /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
     fraction?: number;
     /** Number of robustness iterations. Default: 3. */
@@ -69,6 +73,8 @@ export interface SmoothOptions {
 
 /** Options for `LowessResult.predict()`. */
 export interface PredictOptions {
+    /** Optional prediction components: se and/or derivative. */
+    outputs?: string[];
     /** Include standard errors in the output. Default: false. */
     return_se?: boolean;
     /** Confidence interval coverage level (e.g. 0.95). Disabled when absent. */
@@ -257,6 +263,10 @@ fn map_runtime<T, E: ToString>(result: Result<T, E>) -> Result<T, JsValue> {
     shared_parse::map_runtime(result).map_err(to_js_error)
 }
 
+fn has_output(outputs: Option<&Vec<String>>, name: &str) -> bool {
+    outputs.is_some_and(|values| values.iter().any(|value| value == name))
+}
+
 #[derive(Deserialize)]
 pub struct SmoothOptions {
     pub fraction: Option<f64>,
@@ -268,6 +278,8 @@ pub struct SmoothOptions {
     pub boundary_policy: Option<String>,
     pub scaling_method: Option<String>,
     pub auto_converge: Option<f64>,
+    pub outputs: Option<Vec<String>>,
+    pub cv: Option<CVOptionsJs>,
     pub return_residuals: Option<bool>,
     pub return_robustness_weights: Option<bool>,
     pub return_derivative: Option<bool>,
@@ -287,7 +299,16 @@ pub struct SmoothOptions {
 }
 
 #[derive(Deserialize)]
+pub struct CVOptionsJs {
+    pub fractions: Vec<f64>,
+    pub method: Option<String>,
+    pub k: Option<u32>,
+    pub seed: Option<u64>,
+}
+
+#[derive(Deserialize)]
 pub struct PredictOptionsJs {
+    pub outputs: Option<Vec<String>>,
     pub return_se: Option<bool>,
     pub confidence_level: Option<f64>,
     pub prediction_level: Option<f64>,
@@ -322,6 +343,7 @@ pub struct StreamingSmoothOptions {
     pub boundary_policy: Option<String>,
     pub scaling_method: Option<String>,
     pub auto_converge: Option<f64>,
+    pub outputs: Option<Vec<String>>,
     pub return_residuals: Option<bool>,
     pub return_robustness_weights: Option<bool>,
     pub return_derivative: Option<bool>,
@@ -344,6 +366,7 @@ pub struct OnlineSmoothOptions {
     pub boundary_policy: Option<String>,
     pub scaling_method: Option<String>,
     pub auto_converge: Option<f64>,
+    pub outputs: Option<Vec<String>>,
     pub return_robustness_weights: Option<bool>,
     pub return_derivative: Option<bool>,
     pub missing: Option<String>,
@@ -557,6 +580,7 @@ impl LowessResult {
     ) -> Result<PredictOutput, JsValue> {
         let opts: PredictOptionsJs = if options.is_undefined() || options.is_null() {
             PredictOptionsJs {
+                outputs: None,
                 return_se: None,
                 confidence_level: None,
                 prediction_level: None,
@@ -573,10 +597,12 @@ impl LowessResult {
             &self.inner,
             &new_x_vec,
             shared_parse::PredictOptionSet {
-                return_se: opts.return_se.unwrap_or(false),
+                return_se: opts.return_se.unwrap_or(false)
+                    || has_output(opts.outputs.as_ref(), "se"),
                 confidence_level: opts.confidence_level,
                 prediction_level: opts.prediction_level,
-                return_derivative: opts.return_derivative.unwrap_or(false),
+                return_derivative: opts.return_derivative.unwrap_or(false)
+                    || has_output(opts.outputs.as_ref(), "derivative"),
                 extrapolation: opts.extrapolation.as_deref(),
                 max_extrapolation_distance: opts.max_extrapolation_distance,
                 max_neighbor_distance: opts.max_neighbor_distance,
@@ -691,6 +717,18 @@ impl Lowess {
 fn batch_options_to_builder(opts: Option<SmoothOptions>) -> Result<LowessBuilder<f64>, JsValue> {
     let mut builder = LowessBuilder::<f64>::new();
     if let Some(opts) = opts {
+        let cv = opts.cv.as_ref();
+        let cv_fractions = cv
+            .map(|value| value.fractions.as_slice())
+            .or(opts.cv_fractions.as_deref());
+        let cv_method = cv
+            .and_then(|value| value.method.as_deref())
+            .or(opts.cv_method.as_deref());
+        let cv_k = cv
+            .and_then(|value| value.k)
+            .map(|value| value as usize)
+            .or(opts.cv_k.map(|value| value as usize));
+        let cv_seed = cv.and_then(|value| value.seed).or(opts.cv_seed);
         builder = map_invalid_arg(shared_parse::apply_builder_options(
             builder,
             shared_parse::BuilderOptionSet {
@@ -703,25 +741,32 @@ fn batch_options_to_builder(opts: Option<SmoothOptions>) -> Result<LowessBuilder
                 boundary_policy: opts.boundary_policy.as_deref(),
                 scaling_method: opts.scaling_method.as_deref(),
                 auto_converge: opts.auto_converge,
-                return_residuals: opts.return_residuals.unwrap_or(false),
-                return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
-                return_diagnostics: opts.return_diagnostics.unwrap_or(false),
-                return_se: opts.return_se.unwrap_or(false),
-                return_sorted: opts.return_sorted.unwrap_or(false),
+                return_residuals: opts.return_residuals.unwrap_or(false)
+                    || has_output(opts.outputs.as_ref(), "residuals"),
+                return_robustness_weights: opts.return_robustness_weights.unwrap_or(false)
+                    || has_output(opts.outputs.as_ref(), "weights"),
+                return_diagnostics: opts.return_diagnostics.unwrap_or(false)
+                    || has_output(opts.outputs.as_ref(), "diagnostics"),
+                return_se: opts.return_se.unwrap_or(false)
+                    || has_output(opts.outputs.as_ref(), "se"),
+                return_sorted: opts.return_sorted.unwrap_or(false)
+                    || has_output(opts.outputs.as_ref(), "sorted"),
                 confidence_intervals: opts.confidence_intervals,
                 prediction_intervals: opts.prediction_intervals,
                 parallel: opts.parallel,
                 backend: None,
                 missing: opts.missing.as_deref(),
-                cv_fractions: opts.cv_fractions.as_deref(),
-                cv_method: opts.cv_method.as_deref(),
-                cv_k: opts.cv_k.map(|v| v as usize),
-                cv_seed: opts.cv_seed,
+                cv_fractions,
+                cv_method,
+                cv_k,
+                cv_seed,
                 retain_model: opts.retain_model,
                 ..Default::default()
             },
         ))?;
-        if opts.return_derivative.unwrap_or(false) {
+        if opts.return_derivative.unwrap_or(false)
+            || has_output(opts.outputs.as_ref(), "derivative")
+        {
             builder = builder.return_derivative();
         }
     }
@@ -746,10 +791,14 @@ fn streaming_options_to_builder(
                 boundary_policy: opts.boundary_policy.as_deref(),
                 scaling_method: opts.scaling_method.as_deref(),
                 auto_converge: opts.auto_converge,
-                return_residuals: opts.return_residuals.unwrap_or(false),
-                return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
-                return_diagnostics: opts.return_diagnostics.unwrap_or(false),
-                return_se: opts.return_se.unwrap_or(false),
+                return_residuals: opts.return_residuals.unwrap_or(false)
+                    || has_output(opts.outputs.as_ref(), "residuals"),
+                return_robustness_weights: opts.return_robustness_weights.unwrap_or(false)
+                    || has_output(opts.outputs.as_ref(), "weights"),
+                return_diagnostics: opts.return_diagnostics.unwrap_or(false)
+                    || has_output(opts.outputs.as_ref(), "diagnostics"),
+                return_se: opts.return_se.unwrap_or(false)
+                    || has_output(opts.outputs.as_ref(), "se"),
                 confidence_intervals: opts.confidence_intervals,
                 prediction_intervals: opts.prediction_intervals,
                 parallel: opts.parallel,
@@ -757,7 +806,9 @@ fn streaming_options_to_builder(
                 ..Default::default()
             },
         ))?;
-        if opts.return_derivative.unwrap_or(false) {
+        if opts.return_derivative.unwrap_or(false)
+            || has_output(opts.outputs.as_ref(), "derivative")
+        {
             builder = builder.return_derivative();
         }
     }

@@ -101,6 +101,28 @@ public record PredictOptions(
         }
 
         /**
+         * Selects optional prediction components: {@code "se"} and/or
+         * {@code "derivative"}.
+         *
+         * @param outputs optional prediction component names
+         * @return this builder, for chaining
+         */
+        public Builder outputs(String... outputs) {
+            for (String output : outputs) {
+                switch (output) {
+                    case "se" ->
+                        this.returnSe = true;
+                    case "derivative" ->
+                        this.returnDerivative = true;
+                    default ->
+                        throw new IllegalArgumentException("Unknown output: " + output);
+                }
+
+            }
+            return this;
+        }
+
+        /**
          * Behavior for query points outside the training range: one of
          * {@code "clamp"} (default), {@code "linear"}, {@code "error"}.
          *

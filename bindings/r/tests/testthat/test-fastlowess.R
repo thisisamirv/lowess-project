@@ -102,7 +102,7 @@ test_that("Lowess diagnostics work", {
     x <- seq(0, 10, length.out = 50)
     y <- 2 * x + rnorm(50, sd = 0.5)
 
-    model <- Lowess(fraction = 0.5, return_diagnostics = TRUE)
+    model <- Lowess(fraction = 0.5, outputs = "diagnostics")
     result <- fit(model, as.double(x), as.double(y))
 
     expect_true("diagnostics" %in% names(result))
@@ -121,7 +121,7 @@ test_that("Lowess residuals work", {
     x <- seq(0, 10, length.out = 50)
     y <- sin(x) + rnorm(50, sd = 0.1)
 
-    model <- Lowess(fraction = 0.5, return_residuals = TRUE)
+    model <- Lowess(fraction = 0.5, outputs = "residuals")
     result <- fit(model, as.double(x), as.double(y))
 
     expect_true("residuals" %in% names(result))
@@ -139,7 +139,7 @@ test_that("Lowess robustness weights work", {
         Lowess(
             fraction = 0.5,
             iterations = 3,
-            return_robustness_weights = TRUE
+            outputs = "weights"
         ),
         as.double(x),
         as.double(y)
@@ -158,7 +158,7 @@ test_that("Lowess return_derivative works", {
     y <- sin(x) + rnorm(50, sd = 0.1)
 
     result <- fit(
-        Lowess(fraction = 0.5, return_derivative = TRUE),
+        Lowess(fraction = 0.5, outputs = "derivative"),
         as.double(x),
         as.double(y)
     )
@@ -184,9 +184,7 @@ test_that("Lowess return_sorted = TRUE returns results sorted ascending by x", {
     result <- fit(
         Lowess(
             fraction = 0.7,
-            return_residuals = TRUE,
-            return_robustness_weights = TRUE,
-            return_sorted = TRUE
+            outputs = c("residuals", "weights", "sorted")
         ),
         x,
         y
@@ -200,8 +198,7 @@ test_that("Lowess return_sorted = TRUE returns results sorted ascending by x", {
     unsorted_result <- fit(
         Lowess(
             fraction = 0.7,
-            return_residuals = TRUE,
-            return_robustness_weights = TRUE
+            outputs = c("residuals", "weights")
         ),
         x,
         y
@@ -228,9 +225,11 @@ test_that("Lowess cross-validation works", {
 
     result <- fit(
         Lowess(
-            cv_fractions = c(0.2, 0.3, 0.5, 0.7),
-            cv_method = "kfold",
-            cv_k = 5
+            cv = cv_opts(
+                fractions = c(0.2, 0.3, 0.5, 0.7),
+                method = "kfold",
+                k = 5
+            )
         ),
         as.double(x),
         as.double(y)
@@ -249,10 +248,12 @@ test_that("Lowess cross-validation respects cv_seed for reproducibility", {
     # Same seed must -> same fold assignments, cv_scores and fraction_used
     result1 <- fit(
         Lowess(
-            cv_fractions = c(0.3, 0.5, 0.7),
-            cv_method = "kfold",
-            cv_k = 5,
-            cv_seed = 42L
+            cv = cv_opts(
+                fractions = c(0.3, 0.5, 0.7),
+                method = "kfold",
+                k = 5,
+                seed = 42L
+            )
         ),
         as.double(x),
         as.double(y)
@@ -260,10 +261,12 @@ test_that("Lowess cross-validation respects cv_seed for reproducibility", {
 
     result2 <- fit(
         Lowess(
-            cv_fractions = c(0.3, 0.5, 0.7),
-            cv_method = "kfold",
-            cv_k = 5,
-            cv_seed = 42L
+            cv = cv_opts(
+                fractions = c(0.3, 0.5, 0.7),
+                method = "kfold",
+                k = 5,
+                seed = 42L
+            )
         ),
         as.double(x),
         as.double(y)
@@ -276,10 +279,12 @@ test_that("Lowess cross-validation respects cv_seed for reproducibility", {
     # Different seed must diverge (different fold splits)
     result3 <- fit(
         Lowess(
-            cv_fractions = c(0.3, 0.5, 0.7),
-            cv_method = "kfold",
-            cv_k = 5,
-            cv_seed = 43L
+            cv = cv_opts(
+                fractions = c(0.3, 0.5, 0.7),
+                method = "kfold",
+                k = 5,
+                seed = 43L
+            )
         ),
         as.double(x),
         as.double(y)
@@ -295,10 +300,12 @@ test_that("Lowess cross-validation respects cv_seed for reproducibility", {
     # Explicit NULL seed path must succeed (random each run)
     result_null <- fit(
         Lowess(
-            cv_fractions = c(0.3, 0.5, 0.7),
-            cv_method = "kfold",
-            cv_k = 5,
-            cv_seed = NULL
+            cv = cv_opts(
+                fractions = c(0.3, 0.5, 0.7),
+                method = "kfold",
+                k = 5,
+                seed = NULL
+            )
         ),
         as.double(x),
         as.double(y)
@@ -317,10 +324,12 @@ test_that("G5.9b CV-selected fraction is stable across different seeds", {
         function(s) {
             fit(
                 Lowess(
-                    cv_fractions = c(0.2, 0.3, 0.4, 0.5),
-                    cv_method = "kfold",
-                    cv_k = 5,
-                    cv_seed = s
+                    cv = cv_opts(
+                        fractions = c(0.2, 0.3, 0.4, 0.5),
+                        method = "kfold",
+                        k = 5,
+                        seed = s
+                    )
                 ),
                 as.double(x),
                 as.double(y)

@@ -25,7 +25,7 @@ use approx::assert_relative_eq;
 use std::fmt::Write;
 
 use lowess::internals::algorithms::robustness::RobustnessMethod;
-use lowess::internals::api::{Batch, Lowess, Online, Streaming};
+use lowess::internals::api::{Batch, CVBuilder, Lowess, Online, Streaming};
 use lowess::internals::engine::output::LowessResult;
 use lowess::internals::engine::validator::Validator;
 use lowess::internals::evaluation::diagnostics::Diagnostics;
@@ -163,9 +163,7 @@ fn test_validate_empty_cv_fractions() {
     // K-Fold with empty fractions
     let fracs: [f64; 0] = [];
     let res = Lowess::<f64>::new()
-        .cv_method("kfold")
-        .cv_k(3)
-        .cv_fractions(fracs.to_vec())
+        .cv(CVBuilder::method("kfold").k(3).fractions(fracs.to_vec()))
         .adapter(Batch)
         .build();
 
@@ -182,18 +180,14 @@ fn test_validate_empty_cv_fractions() {
 fn test_validate_invalid_fractions() {
     // Fraction <= 0
     let bad1 = Lowess::<f64>::new()
-        .cv_method("kfold")
-        .cv_k(3)
-        .cv_fractions(vec![0.0f64])
+        .cv(CVBuilder::method("kfold").k(3).fractions(vec![0.0f64]))
         .adapter(Batch)
         .build();
     assert!(matches!(bad1, Err(LowessError::InvalidFraction(_))));
 
     // Fraction > 1
     let bad2 = Lowess::<f64>::new()
-        .cv_method("kfold")
-        .cv_k(3)
-        .cv_fractions(vec![1.5f64])
+        .cv(CVBuilder::method("kfold").k(3).fractions(vec![1.5f64]))
         .adapter(Batch)
         .build();
     assert!(matches!(bad2, Err(LowessError::InvalidFraction(_))));
@@ -298,8 +292,7 @@ fn test_robustness_bisquare() {
     let res = Lowess::<f64>::new()
         .fraction(0.15)
         .iterations(5)
-        .return_residuals()
-        .return_robustness_weights()
+        .outputs(["residuals", "weights"])
         .robustness_method("bisquare")
         .adapter(Batch)
         .build()
@@ -332,8 +325,7 @@ fn test_robustness_huber() {
     let res = Lowess::<f64>::new()
         .fraction(0.15)
         .iterations(5)
-        .return_residuals()
-        .return_robustness_weights()
+        .outputs(["residuals", "weights"])
         .robustness_method("huber")
         .adapter(Batch)
         .build()
@@ -365,8 +357,7 @@ fn test_robustness_talwar() {
     let res = Lowess::<f64>::new()
         .fraction(0.15)
         .iterations(5)
-        .return_residuals()
-        .return_robustness_weights()
+        .outputs(["residuals", "weights"])
         .robustness_method("talwar")
         .adapter(Batch)
         .build()
@@ -394,7 +385,7 @@ fn test_robustness_weights_zero_iterations() {
     let y: Vec<f64> = x.iter().map(|xi| 2.0 * xi + 1.0).collect();
 
     let res = Lowess::<f64>::new()
-        .return_robustness_weights()
+        .outputs(["weights"])
         .iterations(0)
         .adapter(Batch)
         .build()
@@ -423,8 +414,7 @@ fn test_fit_with_intervals_and_diagnostics() {
         .fraction(1.0)
         .confidence_intervals(0.95)
         .prediction_intervals(0.95)
-        .return_diagnostics()
-        .return_residuals()
+        .outputs(["diagnostics", "residuals"])
         .iterations(0)
         .adapter(Batch)
         .build()
@@ -531,7 +521,7 @@ fn test_fit_with_residuals() {
 
     let res = Lowess::<f64>::new()
         .fraction(1.0)
-        .return_residuals()
+        .outputs(["residuals"])
         .iterations(0)
         .adapter(Batch)
         .build()
@@ -649,9 +639,7 @@ fn test_cross_validate_kfold() {
     let fracs = vec![0.2, 0.4];
 
     let res = Lowess::<f64>::new()
-        .cv_method("kfold")
-        .cv_k(3)
-        .cv_fractions(fracs.clone())
+        .cv(CVBuilder::method("kfold").k(3).fractions(fracs.clone()))
         .iterations(0)
         .adapter(Batch)
         .build()
@@ -674,8 +662,7 @@ fn test_cross_validate_loocv() {
     let fractions = vec![0.3, 0.6];
 
     let res = Lowess::<f64>::new()
-        .cv_method("loocv")
-        .cv_fractions(fractions.clone())
+        .cv(CVBuilder::method("loocv").fractions(fractions.clone()))
         .iterations(0)
         .adapter(Batch)
         .build()
@@ -845,12 +832,9 @@ fn test_builder_all_parameters_set() {
         .delta(0.05)
         .weight_function("tricube")
         .robustness_method("bisquare")
-        .return_se()
+        .outputs(["se", "residuals", "weights", "diagnostics"])
         .confidence_intervals(0.95)
         .prediction_intervals(0.95)
-        .return_residuals()
-        .return_robustness_weights()
-        .return_diagnostics()
         .adapter(Batch)
         .build()
         .unwrap()
@@ -993,6 +977,77 @@ fn test_interval_level_boundaries() {
         .fit(&x, &y)
         .unwrap();
     assert!(result_high.confidence_lower.is_some());
+}
+
+// ============================================================================
+// `.outputs([...])` grouped output selection
+// ============================================================================
+
+/// `.outputs(["diagnostics"])` enables diagnostics in the result.
+#[test]
+fn test_outputs_diagnostics() {
+    let (x, y) = linear_series(50, 2.0, 1.0);
+    let result = Lowess::new()
+        .fraction(0.5)
+        .outputs(["diagnostics"])
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+    assert!(result.diagnostics.is_some());
+    assert!(result.residuals.is_none());
+    assert!(result.standard_errors.is_none());
+}
+
+/// `.outputs(["se", "residuals", "weights", "derivative"])` enables all of them.
+#[test]
+fn test_outputs_multiple() {
+    let (x, y) = linear_series(50, 2.0, 1.0);
+    let result = Lowess::new()
+        .fraction(0.5)
+        .outputs(["se", "residuals", "weights", "derivative"])
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+    assert!(result.standard_errors.is_some());
+    assert!(result.residuals.is_some());
+    assert!(result.robustness_weights.is_some());
+    assert!(result.derivative.is_some());
+}
+
+/// Unknown output names are collected and reported at `build()`.
+#[test]
+fn test_outputs_unknown_name_errors() {
+    let res = Lowess::<f64>::new()
+        .outputs(["diagnostics", "bogus"])
+        .adapter(Batch)
+        .build();
+    assert!(
+        matches!(res, Err(LowessError::ParseErrors(_))),
+        "Unknown output name should produce a ParseErrors error"
+    );
+}
+
+/// `.cv(CVBuilder::method("kfold").k(5).fractions(...).seed(123))` runs k-fold CV.
+#[test]
+fn test_cv_builder_grouped() {
+    let (x, y) = linear_series(100, 2.0, 1.0);
+    let result = Lowess::new()
+        .fraction(0.5)
+        .cv(CVBuilder::method("kfold")
+            .k(5)
+            .fractions(vec![0.3, 0.5, 0.7])
+            .seed(123))
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+    assert!(result.cv_scores.is_some());
+    assert_eq!(result.cv_scores.unwrap().len(), 3);
 }
 
 /// Test zero iterations with different robustness methods.

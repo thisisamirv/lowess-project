@@ -32,9 +32,9 @@ int main() {
 
 
     fastlowess::LowessOptions opts;
-    opts.cv_fractions = {0.2, 0.3, 0.5, 0.7};
-    opts.cv_method = "kfold";
-    opts.cv_k = 5;
+    opts.cv.method = "kfold";
+    opts.cv.k = 5;
+    opts.cv.fractions = {0.2, 0.3, 0.5, 0.7};
 
     fastlowess::Lowess model(opts);
     auto result = model.fit(x, y).value();
@@ -70,8 +70,8 @@ int main() {
     }
 
     fastlowess::LowessOptions cv_opts;
-    cv_opts.cv_method = "loocv";
-    cv_opts.cv_fractions = {0.2, 0.3, 0.5, 0.7};
+    cv_opts.cv.method = "loocv";
+    cv_opts.cv.fractions = {0.2, 0.3, 0.5, 0.7};
     fastlowess::Lowess model(cv_opts);
     auto result = model.fit(x, y).value();
 
@@ -106,10 +106,10 @@ int main() {
 
 
     fastlowess::LowessOptions opts;
-    opts.cv_fractions = {0.3, 0.5, 0.7};
-    opts.cv_method = "kfold";
-    opts.cv_k = 5;
-    opts.cv_seed = 42;
+    opts.cv.method = "kfold";
+    opts.cv.k = 5;
+    opts.cv.fractions = {0.3, 0.5, 0.7};
+    opts.cv.seed = 42;
 
     fastlowess::Lowess model(opts);
     auto result = model.fit(x, y).value();
@@ -167,9 +167,9 @@ int main() {
 
     // Example output
     fastlowess::LowessOptions cv_opts;
-    cv_opts.cv_fractions = {0.1, 0.3, 0.5, 0.7};
-    cv_opts.cv_method = "kfold";
-    cv_opts.cv_k = 5;
+    cv_opts.cv.method = "kfold";
+    cv_opts.cv.k = 5;
+    cv_opts.cv.fractions = {0.1, 0.3, 0.5, 0.7};
     fastlowess::Lowess model(cv_opts);
     auto result = model.fit(x, y).value();
 

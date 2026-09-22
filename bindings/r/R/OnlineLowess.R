@@ -23,8 +23,10 @@
 #'   alias: \code{"single"}) updates only the newest point and does not run
 #'   robustness iterations; \code{"full"} (alias: \code{"resmooth"}) re-smooths
 #'   all window points after each addition and supports robustness iterations.
-#' @param return_se Logical; include standard errors in the result. Requires
-#'   \code{update_mode = "full"}. Default: \code{FALSE}.
+#' @param outputs Character vector selecting optional output components:
+#'   \code{"weights"} (robustness weights), \code{"derivative"}, and/or
+#'   \code{"se"} (standard errors). \code{NULL} (default) returns only the
+#'   core result.
 #' @param confidence_intervals Confidence level for confidence intervals
 #'   (e.g. 0.95), or \code{NULL} (default) to disable. Requires
 #'   \code{update_mode = "full"}.
@@ -61,12 +63,10 @@ OnlineLowess <- function(
     zero_weight_fallback = "use_local_mean",
     update_mode = "incremental",
     auto_converge = NULL,
-    return_robustness_weights = FALSE,
-    return_derivative = FALSE,
-    return_se = FALSE,
     confidence_intervals = NULL,
     prediction_intervals = NULL,
-    missing = "error"
+    missing = "error",
+    outputs = NULL
 ) {
     reject_extra_positional_args(sys.call(), "min_points")
     validate_params(
@@ -74,6 +74,12 @@ OnlineLowess <- function(
         window_capacity = window_capacity,
         min_points = min_points
     )
+
+    flags <- parse_outputs_flags(outputs, c("weights", "derivative", "se"))
+    return_robustness_weights <- flags[["weights"]]
+    return_derivative <- flags[["derivative"]]
+    return_se <- flags[["se"]]
+
     handle <- do.call(ROnlineLowess$new, env_args(online_params))
 
     structure(

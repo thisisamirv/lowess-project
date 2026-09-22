@@ -39,7 +39,7 @@ fn wls_slope_is_scale_invariant() {
         let res = Lowess::new()
             .fraction(0.3)
             .iterations(0)
-            .return_derivative()
+            .outputs(["derivative"])
             .build()
             .unwrap()
             .fit(&x, &y)
@@ -65,7 +65,7 @@ fn ols_slope_is_scale_invariant() {
         let y: Vec<f64> = x.iter().map(|&xi| slope * xi).collect();
         let res = Lowess::new()
             .fraction(1.0)
-            .return_derivative()
+            .outputs(["derivative"])
             .build()
             .unwrap()
             .fit(&x, &y)
@@ -135,16 +135,13 @@ fn kfold_with_k_equal_n_matches_loocv() {
         .collect();
 
     let loo = Lowess::new()
-        .cv_fractions(vec![0.3])
-        .cv_method("loocv")
+        .cv(CVBuilder::method("loocv").fractions(vec![0.3]))
         .build()
         .unwrap()
         .fit(&x, &y)
         .unwrap();
     let kfold = Lowess::new()
-        .cv_fractions(vec![0.3])
-        .cv_method("kfold")
-        .cv_k(n)
+        .cv(CVBuilder::method("kfold").k(n).fractions(vec![0.3]))
         .build()
         .unwrap()
         .fit(&x, &y)

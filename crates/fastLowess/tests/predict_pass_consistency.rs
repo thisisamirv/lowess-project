@@ -30,8 +30,7 @@ fn test_predict_pass_consistency() {
         .unwrap();
 
     let options = Predict::new()
-        .return_se()
-        .return_derivative()
+        .outputs(["se", "derivative"])
         .confidence_intervals(0.95)
         .prediction_intervals(0.95)
         .build()

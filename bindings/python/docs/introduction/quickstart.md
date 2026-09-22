@@ -39,7 +39,7 @@ model = fl.Lowess(
     iterations=3,
     confidence_intervals=0.95,
     prediction_intervals=0.95,
-    return_diagnostics=True
+    outputs=["diagnostics"]
 )
 result = model.fit(x, y)
 
@@ -72,7 +72,7 @@ model = fl.Lowess(
     fraction=0.7,
     iterations=5,
     robustness_method="bisquare",
-    return_robustness_weights=True
+    outputs=["weights"]
 )
 result = model.fit(x_out, y_with_outlier)
 

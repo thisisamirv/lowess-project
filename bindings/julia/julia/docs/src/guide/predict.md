@@ -18,7 +18,7 @@ It reuses `fit`'s own (possibly `delta`-interpolated) smoothed curve for its `y`
 
 | Keyword Argument | Type | Default | Description |
 | --- | --- | --- | --- |
-| `return_se` | `Bool` | `false` | Include standard errors in the output |
+| `outputs` | `Vector{String}` | `String[]` | Select `"se"` and/or `"derivative"` |
 | `confidence_level` | `Union{Float64, Nothing}` | `nothing` | Confidence interval coverage level (e.g. `0.95`) |
 | `prediction_level` | `Union{Float64, Nothing}` | `nothing` | Prediction interval coverage level (e.g. `0.95`) |
 | `return_derivative` | `Bool` | `false` | Include the local fit's derivative (slope) at each query point |
@@ -80,7 +80,7 @@ println("Predicted y: ", prediction.y)
 ### Standard Errors and Derivative
 
 ```@example predict
-prediction = predict(result.predict_model, [2.5]; return_se=true, return_derivative=true)
+prediction = predict(result.predict_model, [2.5]; outputs=["se", "derivative"])
 println("y: ", prediction.y)
 println("SE: ", prediction.standard_errors)
 println("Derivative: ", prediction.derivative)

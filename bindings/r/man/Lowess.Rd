@@ -15,22 +15,14 @@ Lowess(
     boundary_policy = "extend",
     confidence_intervals = NULL,
     prediction_intervals = NULL,
-    return_diagnostics = FALSE,
-    return_residuals = FALSE,
-    return_robustness_weights = FALSE,
-    return_derivative = FALSE,
     zero_weight_fallback = "use_local_mean",
     auto_converge = NULL,
-    cv_fractions = NULL,
-    cv_method = "kfold",
-    cv_k = 5L,
     parallel = TRUE,
-    cv_seed = NULL,
-    return_se = FALSE,
-    return_sorted = FALSE,
     backend = "cpu",
     missing = "error",
-    retain_model = FALSE
+    retain_model = FALSE,
+    outputs = NULL,
+    cv = NULL
 )
 }
 \arguments{
@@ -74,18 +66,6 @@ disables confidence intervals.}
 greater than 0 and less than 1 (e.g., 0.95). \code{NULL} (default)
 disables prediction intervals.}
 
-\item{return_diagnostics}{Logical; if \code{TRUE}, return fit-quality
-metrics (RMSE, MAE, R-squared, AIC, etc.). Default: \code{FALSE}.}
-
-\item{return_residuals}{Logical; if \code{TRUE}, return residuals in the
-result. Default: \code{FALSE}.}
-
-\item{return_robustness_weights}{Logical; if \code{TRUE}, return per-point
-robustness weights. Default: \code{FALSE}.}
-
-\item{return_derivative}{Logical; if \code{TRUE}, return per-point local
-fit derivative (slope) in the result. Default: \code{FALSE}.}
-
 \item{zero_weight_fallback}{Fallback policy when all robustness weights drop
 to zero: \code{"use_local_mean"} (default; aliases: \code{"local_mean"},
 \code{"mean"}), \code{"return_original"} (alias: \code{"original"}), or
@@ -94,28 +74,7 @@ to zero: \code{"use_local_mean"} (default; aliases: \code{"local_mean"},
 \item{auto_converge}{Convergence tolerance for early stopping of robustness
 iterations. \code{NULL} (default) disables early stopping.}
 
-\item{cv_fractions}{Numeric vector of candidate fractions for
-cross-validation. \code{NULL} (default) disables CV.}
-
-\item{cv_method}{Cross-validation method: \code{"kfold"} (default) or
-\code{"loocv"}.}
-
-\item{cv_k}{Number of folds for k-fold CV. Default: 5.}
-
 \item{parallel}{Logical; enable parallel processing. Default: \code{TRUE}.}
-
-\item{cv_seed}{Integer seed for the cross-validation random number
-generator. \code{NULL} (default) uses a random seed.}
-
-\item{return_se}{Logical; if \code{TRUE}, compute hat-matrix statistics
-(effective degrees of freedom, leverage, standard errors).
-Default: \code{FALSE}.}
-
-\item{return_sorted}{Logical; if \code{TRUE}, return results sorted
-ascending by \code{x} instead of in the original input order. Default:
-\code{FALSE}. To get both orderings without re-fitting, sort the default
-(unsorted) result client-side (e.g. \code{order(result$x)}) rather than
-calling \code{fit()} twice.}
 
 \item{backend}{Execution backend: \code{"cpu"} (default) or \code{"gpu"}.
 GPU support requires the package to be built locally with
@@ -130,6 +89,16 @@ affected observations before fitting.}
 \item{retain_model}{Logical; if \code{TRUE}, retain the fitted model's
 training data, enabling \code{\link{predict.Lowess}} for out-of-sample
 prediction. Default: \code{FALSE}.}
+
+\item{outputs}{Character vector selecting optional output components:
+\code{"diagnostics"}, \code{"residuals"}, \code{"weights"} (robustness
+weights), \code{"derivative"}, \code{"se"} (standard errors), and/or
+\code{"sorted"}. \code{NULL} (default) returns only the core result
+(\code{x}, \code{y}, and fit metadata).}
+
+\item{cv}{Cross-validation options, created with \code{\link{cv_opts}}:
+e.g. \code{cv = cv_opts(fractions = c(0.2, 0.3, 0.5))}. \code{NULL}
+(default) disables cross-validation.}
 }
 \value{
 A Lowess object.

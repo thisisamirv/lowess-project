@@ -29,6 +29,31 @@ export fit, process_chunk, finalize, add_point, predict
 export LowessResult, OnlineOutput, Diagnostics, PredictModel, PredictResult
 export gpu_available, install_gpu
 
+function _output_flags(outputs)
+    allowed = ("diagnostics", "residuals", "weights", "derivative", "se", "sorted")
+    unknown = setdiff(String.(outputs), collect(allowed))
+    isempty(unknown) || throw(ArgumentError("Unknown outputs: $(join(unknown, ", "))"))
+    return (
+        diagnostics = "diagnostics" in outputs,
+        residuals = "residuals" in outputs,
+        weights = "weights" in outputs,
+        derivative = "derivative" in outputs,
+        se = "se" in outputs,
+        sorted = "sorted" in outputs,
+    )
+end
+
+function _cv_options(cv)
+    cv === nothing &&
+        return (fractions = Float64[], method = "kfold", k = 5, seed = nothing)
+    return (
+        fractions = Float64.(get(cv, :fractions, Float64[])),
+        method = String(get(cv, :method, "kfold")),
+        k = Int(get(cv, :k, 5)),
+        seed = get(cv, :seed, nothing),
+    )
+end
+
 import Base: finalize
 using Downloads: download
 
@@ -373,6 +398,8 @@ end
 Evaluate the fitted model at out-of-sample query points not in the training set.
 
 # Keyword Arguments
+- `outputs::Vector{String} = String[]`: optional output components, including
+    `"se"` and/or `"derivative"`.
 - `return_se::Bool = false`
 - `confidence_level::Union{Float64, Nothing} = nothing`
 - `prediction_level::Union{Float64, Nothing} = nothing`
@@ -384,6 +411,7 @@ Evaluate the fitted model at out-of-sample query points not in the training set.
 function predict(
     model::PredictModel,
     new_x::Vector{Float64};
+    outputs::Vector{String} = String[],
     return_se::Bool = false,
     confidence_level::Union{Float64,Nothing} = nothing,
     prediction_level::Union{Float64,Nothing} = nothing,
@@ -392,6 +420,10 @@ function predict(
     max_extrapolation_distance::Union{Float64,Nothing} = nothing,
     max_neighbor_distance::Union{Float64,Nothing} = nothing,
 )
+    flags = _output_flags(outputs)
+    return_se = return_se || flags.se
+    return_derivative = return_derivative || flags.derivative
+
     if model.handle == C_NULL
         error(
             "fastlowess error: predict() called on an invalid PredictModel (was retain_model set?)",
@@ -808,6 +840,8 @@ mutable struct Lowess
         boundary_policy::String = "extend",
         confidence_intervals::Float64 = NaN,
         prediction_intervals::Float64 = NaN,
+        outputs = String[],
+        cv = nothing,
         return_diagnostics::Bool = false,
         return_residuals::Bool = false,
         return_robustness_weights::Bool = false,
@@ -825,6 +859,12 @@ mutable struct Lowess
         retain_model::Bool = false,
         return_derivative::Bool = false,
     )
+        flags = _output_flags(outputs)
+        cv_options = _cv_options(cv)
+        cv_fractions = isempty(cv_options.fractions) ? cv_fractions : cv_options.fractions
+        cv_method = cv === nothing ? cv_method : cv_options.method
+        cv_k = cv === nothing ? cv_k : cv_options.k
+        cv_seed = cv === nothing ? cv_seed : cv_options.seed
         cv_ptr = isempty(cv_fractions) ? Ptr{Cdouble}(C_NULL) : pointer(cv_fractions)
         cv_len = length(cv_fractions)
 
@@ -868,9 +908,9 @@ mutable struct Lowess
             boundary_policy,
             confidence_intervals,
             prediction_intervals,
-            Cint(return_diagnostics),
-            Cint(return_residuals),
-            Cint(return_robustness_weights),
+            Cint(return_diagnostics || flags.diagnostics),
+            Cint(return_residuals || flags.residuals),
+            Cint(return_robustness_weights || flags.weights),
             zero_weight_fallback,
             auto_converge,
             cv_ptr,
@@ -879,12 +919,12 @@ mutable struct Lowess
             Cint(cv_k),
             Cint(parallel),
             Culong(cv_seed !== nothing ? cv_seed : 0),
-            Cint(return_se),
-            Cint(return_sorted),
+            Cint(return_se || flags.se),
+            Cint(return_sorted || flags.sorted),
             backend,
             missing,
             Cint(retain_model),
-            Cint(return_derivative),
+            Cint(return_derivative || flags.derivative),
         )
 
         if handle == C_NULL
@@ -988,6 +1028,7 @@ mutable struct StreamingLowess
         scaling_method::String = "mad",
         boundary_policy::String = "extend",
         auto_converge::Float64 = NaN,
+        outputs = String[],
         return_diagnostics::Bool = false,
         return_residuals::Bool = false,
         return_robustness_weights::Bool = false,
@@ -1000,6 +1041,7 @@ mutable struct StreamingLowess
         confidence_intervals::Float64 = NaN,
         prediction_intervals::Float64 = NaN,
     )
+        flags = _output_flags(outputs)
         handle = ccall(
             (:jl_streaming_lowess_new, libfastlowess),
             Ptr{Cvoid},
@@ -1036,15 +1078,15 @@ mutable struct StreamingLowess
             scaling_method,
             boundary_policy,
             auto_converge,
-            Cint(return_diagnostics),
-            Cint(return_residuals),
-            Cint(return_robustness_weights),
+            Cint(return_diagnostics || flags.diagnostics),
+            Cint(return_residuals || flags.residuals),
+            Cint(return_robustness_weights || flags.weights),
             zero_weight_fallback,
             merge_strategy,
             Cint(parallel),
             missing,
-            Cint(return_derivative),
-            Cint(return_se),
+            Cint(return_derivative || flags.derivative),
+            Cint(return_se || flags.se),
             confidence_intervals,
             prediction_intervals,
         )
@@ -1157,6 +1199,7 @@ mutable struct OnlineLowess
         boundary_policy::String = "extend",
         update_mode::String = "incremental",
         auto_converge::Float64 = NaN,
+        outputs = String[],
         return_robustness_weights::Bool = false,
         zero_weight_fallback::String = "use_local_mean",
         missing::String = "error",
@@ -1165,6 +1208,7 @@ mutable struct OnlineLowess
         confidence_intervals::Float64 = NaN,
         prediction_intervals::Float64 = NaN,
     )
+        flags = _output_flags(outputs)
         handle = ccall(
             (:jl_online_lowess_new, libfastlowess),
             Ptr{Cvoid},
@@ -1199,11 +1243,11 @@ mutable struct OnlineLowess
             boundary_policy,
             update_mode,
             auto_converge,
-            Cint(return_robustness_weights),
+            Cint(return_robustness_weights || flags.weights),
             zero_weight_fallback,
             missing,
-            Cint(return_derivative),
-            Cint(return_se),
+            Cint(return_derivative || flags.derivative),
+            Cint(return_se || flags.se),
             confidence_intervals,
             prediction_intervals,
         )

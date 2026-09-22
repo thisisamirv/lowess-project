@@ -10,7 +10,7 @@ Out-of-sample prediction is available in **Batch** mode only. Streaming and Onli
 
 `fastlowess::PredictModel::predict(new_x, options)` evaluates the fit at arbitrary query points, like R's `predict(model, newdata)`.
 
-It reuses `fit()`'s own (possibly `delta`-interpolated) smoothed curve for its `y` output — so predicting at a training `x` always exactly reproduces that point's `fit()` output, regardless of `delta`. A fresh local fit is only run when `return_derivative`, `return_se` (or an interval level), or `max_neighbor_distance` needs the actual regression slope or standard error.
+It reuses `fit()`'s own (possibly `delta`-interpolated) smoothed curve for its `y` output — so predicting at a training `x` always exactly reproduces that point's `fit()` output, regardless of `delta`. A fresh local fit is only run when `"derivative"`, `"se"` (or an interval level), or `max_neighbor_distance` needs the actual regression slope or standard error.
 
 Requires `retain_model = true` on `LowessOptions` before `fit()`; obtain the `PredictModel` via `LowessResult::predict_model()` (moves the retained state out — only valid once, check `PredictModel::valid()`).
 
@@ -114,8 +114,7 @@ int main() {
 
     auto predict_model = result.predict_model();
     fastlowess::PredictOptions popts;
-    popts.return_se = true;
-    popts.return_derivative = true;
+        popts.outputs = {"se", "derivative"};
     auto prediction = predict_model.predict({2.5}, popts);
     return 0;
 }

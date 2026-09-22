@@ -53,7 +53,7 @@ const y = Float64Array.from(t, ti => Math.sin(ti) + 0.1);
 const model = new fl.Lowess({
     fraction: 0.3,
     iterations: 3,
-    return_residuals: true
+    outputs: ["residuals"]
 });
 const result = model.fit(t, y);
 
@@ -157,7 +157,7 @@ const model = new fl.Lowess({
     fraction: 0.3,
     iterations: 3,
     confidence_intervals: 0.95,
-    return_diagnostics: true
+    outputs: ["diagnostics"]
 });
 const result = model.fit(hours, expression);
 

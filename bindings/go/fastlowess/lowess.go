@@ -10,6 +10,18 @@ import (
 	"runtime"
 )
 
+// CVOptions configures batch cross-validation. Nil disables CV.
+type CVOptions struct {
+	// Fractions is the candidate smoothing-fraction grid.
+	Fractions []float64
+	// Method is "kfold" (default) or "loocv".
+	Method string
+	// K is the number of k-fold splits. Ignored for loocv.
+	K int
+	// Seed makes k-fold split assignment reproducible. Nil uses a random seed.
+	Seed *uint64
+}
+
 // Options configures a Lowess, StreamingLowess, or OnlineLowess model.
 // Use DefaultOptions and override only the fields you need.
 type Options struct {
@@ -51,6 +63,12 @@ type Options struct {
 	// AutoConverge is the convergence tolerance for early stopping of
 	// robustness iterations. Nil disables early stopping.
 	AutoConverge *float64
+
+	// Outputs selects optional result components: "diagnostics", "residuals",
+	// "weights", "derivative", "se", and "sorted".
+	Outputs []string
+	// CV groups cross-validation configuration. Nil disables CV.
+	CV *CVOptions
 
 	// ReturnDiagnostics requests fit-quality metrics (RMSE, MAE, R-squared, AIC, etc.).
 	ReturnDiagnostics bool
@@ -95,6 +113,15 @@ type Options struct {
 	// RetainModel retains the fitted model's training data, enabling
 	// Result.PredictModel for out-of-sample prediction. Batch model only.
 	RetainModel bool
+}
+
+func hasOutput(outputs []string, name string) bool {
+	for _, output := range outputs {
+		if output == name {
+			return true
+		}
+	}
+	return false
 }
 
 // DefaultOptions returns the library's recommended defaults. Start from this
@@ -145,7 +172,11 @@ func NewLowess(opts Options) (*Lowess, error) {
 	defer freeCString(bp)
 	zwf := cStringOrNil(opts.ZeroWeightFallback)
 	defer freeCString(zwf)
-	cvMethod := cStringOrNil(opts.CVMethod)
+	cvMethodName, cvK, cvFractions, cvSeed := opts.CVMethod, opts.CVK, opts.CVFractions, opts.CVSeed
+	if opts.CV != nil {
+		cvMethodName, cvK, cvFractions, cvSeed = opts.CV.Method, opts.CV.K, opts.CV.Fractions, opts.CV.Seed
+	}
+	cvMethod := cStringOrNil(cvMethodName)
 	defer freeCString(cvMethod)
 	backend := cStringOrNil(opts.Backend)
 	defer freeCString(backend)
@@ -156,7 +187,7 @@ func NewLowess(opts Options) (*Lowess, error) {
 	pi, piSet := optPtr(opts.PredictionIntervals)
 	delta, deltaSet := optPtr(opts.Delta)
 	autoConverge, autoConvergeSet := optPtr(opts.AutoConverge)
-	cvFracPtr, cvFracLen := cDoubles(opts.CVFractions)
+	cvFracPtr, cvFracLen := cDoubles(cvFractions)
 
 	var ptr *C.fastlowess_GoLowess
 	var errMsg string
@@ -168,21 +199,21 @@ func NewLowess(opts Options) (*Lowess, error) {
 			wf, rm, sm, bp,
 			optFloat(ci, ciSet),
 			optFloat(pi, piSet),
-			boolToCInt(opts.ReturnDiagnostics),
-			boolToCInt(opts.ReturnResiduals),
-			boolToCInt(opts.ReturnRobustnessWeights),
+			boolToCInt(opts.ReturnDiagnostics || hasOutput(opts.Outputs, "diagnostics")),
+			boolToCInt(opts.ReturnResiduals || hasOutput(opts.Outputs, "residuals")),
+			boolToCInt(opts.ReturnRobustnessWeights || hasOutput(opts.Outputs, "weights")),
 			zwf,
 			optFloat(autoConverge, autoConvergeSet),
 			cvFracPtr, cvFracLen,
 			cvMethod,
-			C.int(opts.CVK),
+			C.int(cvK),
 			boolToCInt(opts.Parallel),
-			boolToCInt(opts.ReturnSE),
-			boolToCInt(opts.ReturnSorted),
+			boolToCInt(opts.ReturnSE || hasOutput(opts.Outputs, "se")),
+			boolToCInt(opts.ReturnSorted || hasOutput(opts.Outputs, "sorted")),
 			backend,
 			missing,
 			boolToCInt(opts.RetainModel),
-			boolToCInt(opts.ReturnDerivative),
+			boolToCInt(opts.ReturnDerivative || hasOutput(opts.Outputs, "derivative")),
 		)
 		if ptr == nil {
 			errMsg = lastError()
@@ -192,8 +223,8 @@ func NewLowess(opts Options) (*Lowess, error) {
 		return nil, errors.New(errMsg)
 	}
 
-	if opts.CVSeed != nil {
-		C.go_lowess_set_cv_seed(ptr, C.ulong(*opts.CVSeed))
+	if cvSeed != nil {
+		C.go_lowess_set_cv_seed(ptr, C.ulong(*cvSeed))
 	}
 
 	l := &Lowess{ptr: ptr}

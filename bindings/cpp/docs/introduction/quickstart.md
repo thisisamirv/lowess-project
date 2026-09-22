@@ -59,7 +59,7 @@ int main() {
     options.iterations = 3;
     options.confidence_intervals = 0.95;
     options.prediction_intervals = 0.95;
-    options.return_diagnostics = true;
+    options.outputs = {"diagnostics"};
 
     fastlowess::Lowess model(options);
     auto result = model.fit(x, y).value();
@@ -99,7 +99,7 @@ int main() {
     options.fraction = 0.7;
     options.iterations = 5;
     options.robustness_method = "bisquare";
-    options.return_robustness_weights = true;
+    options.outputs = {"weights"};
 
     fastlowess::Lowess model(options);
     auto result = model.fit(x_out, y_outlier).value();

@@ -480,7 +480,7 @@ fn test_online_with_residuals() {
     let mut processor = OnlineLowess::new()
         .fraction(0.5)
         .iterations(0)
-        .return_residuals()
+        .outputs(["residuals"])
         .window_capacity(10)
         .min_points(3)
         .build()
@@ -650,7 +650,7 @@ fn test_online_with_robustness_weights() {
     let mut processor = OnlineLowess::new()
         .fraction(0.99)
         .iterations(3)
-        .return_robustness_weights()
+        .outputs(["weights"])
         .window_capacity(30)
         .min_points(10)
         .update_mode("full")
@@ -690,12 +690,12 @@ fn test_online_with_robustness_weights() {
     }
 }
 
-/// `.return_se()` should populate `standard_error` in `Full` update mode.
+/// `.outputs(["se"])` should populate `standard_error` in `Full` update mode.
 #[test]
 fn test_online_full_mode_return_se() {
     let mut processor = OnlineLowess::new()
         .fraction(0.9)
-        .return_se()
+        .outputs(["se"])
         .window_capacity(30)
         .min_points(10)
         .update_mode("full")
@@ -718,11 +718,11 @@ fn test_online_full_mode_return_se() {
     }
     assert!(
         saw_se,
-        "standard_error should be populated at least once when .return_se() is set"
+        "standard_error should be populated at least once when `\"se\"` is set"
     );
 }
 
-/// Without `.return_se()`, `standard_error` should stay `None` even in `Full` mode.
+/// Without `"se"`, `standard_error` should stay `None` even in `Full` mode.
 #[test]
 fn test_online_full_mode_no_se_by_default() {
     let mut processor = OnlineLowess::new()
@@ -739,7 +739,7 @@ fn test_online_full_mode_no_se_by_default() {
         if let Some(output) = processor.add_point(x, y).expect("add_point ok") {
             assert!(
                 output.standard_error.is_none(),
-                "standard_error should stay None without .return_se()"
+                "standard_error should stay None without `\"se\"`"
             );
         }
     }
@@ -821,7 +821,7 @@ fn test_online_full_mode_prediction_intervals() {
     );
 }
 
-/// `.return_se()` combined with anything other than `.update_mode("full")` (including the
+/// `.outputs(["se"])` combined with anything other than `.update_mode("full")` (including the
 /// default `"incremental"` mode) now fails at `.build()` with
 /// `StandardErrorRequiresFullUpdateMode`, instead of silently building successfully and
 /// leaving `standard_error` as `None` on every `add_point()` call.
@@ -829,7 +829,7 @@ fn test_online_full_mode_prediction_intervals() {
 fn test_online_incremental_mode_se_errors() {
     let err = OnlineLowess::<f64>::new()
         .fraction(0.9)
-        .return_se()
+        .outputs(["se"])
         .window_capacity(30)
         .min_points(10)
         .build()
@@ -896,7 +896,7 @@ fn test_online_full_mode_iterations_used() {
         .update_mode("full")
         .window_capacity(30)
         .min_points(5)
-        .return_robustness_weights()
+        .outputs(["weights"])
         .build()
         .expect("build ok");
 
@@ -1153,7 +1153,7 @@ fn test_online_derivative_none_by_default() {
 #[test]
 fn test_online_derivative_two_point_exact() {
     let mut processor = OnlineLowess::new()
-        .return_derivative()
+        .outputs(["derivative"])
         .window_capacity(5)
         .min_points(2)
         .build()
@@ -1169,7 +1169,7 @@ fn test_online_derivative_two_point_exact() {
 fn test_online_derivative_incremental_mode() {
     let mut processor = OnlineLowess::new()
         .fraction(1.0)
-        .return_derivative()
+        .outputs(["derivative"])
         .window_capacity(20)
         .min_points(2)
         .build()
@@ -1188,7 +1188,7 @@ fn test_online_derivative_full_mode() {
     let mut processor = OnlineLowess::new()
         .fraction(1.0)
         .update_mode("full")
-        .return_derivative()
+        .outputs(["derivative"])
         .window_capacity(20)
         .min_points(2)
         .build()

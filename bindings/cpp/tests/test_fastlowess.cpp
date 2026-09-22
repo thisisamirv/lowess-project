@@ -54,23 +54,17 @@ constexpr double k_cw_outlier_value = 100.0;
 constexpr double k_cw_slope = 2.0;
 
 constexpr std::array<double, k_small_sample_size> k_sample_x_values = {
-    1.0, 2.0, 3.0, 4.0, 5.0
-};
+    1.0, 2.0, 3.0, 4.0, 5.0};
 constexpr std::array<double, k_small_sample_size> k_sample_y_values = {
-    2.0, 4.1, 5.9, 8.2, 9.8
-};
+    2.0, 4.1, 5.9, 8.2, 9.8};
 constexpr std::array<double, k_small_sample_size> k_outlier_y_values = {
-    2.0, 4.1, 100.0, 8.2, 9.8
-};
+    2.0, 4.1, 100.0, 8.2, 9.8};
 constexpr std::array<double, k_small_sample_size> k_reuse_x_values = {
-    10.0, 20.0, 30.0, 40.0, 50.0
-};
+    10.0, 20.0, 30.0, 40.0, 50.0};
 constexpr std::array<double, k_small_sample_size> k_reuse_y_values = {
-    20.0, 40.0, 60.0, 80.0, 100.0
-};
+    20.0, 40.0, 60.0, 80.0, 100.0};
 constexpr std::array<double, k_online_window_capacity> k_online_x_values = {
-    1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0
-};
+    1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0};
 constexpr std::array<double, k_online_window_capacity> k_online_y_values = {
     2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0,
 };
@@ -206,7 +200,7 @@ void testLowessWithDiagnostics() {
   const auto sample_y_values = toVector(k_sample_y_values);
   fastlowess::LowessOptions options;
   options.fraction = k_basic_fraction;
-  options.return_diagnostics = true;
+  options.outputs = {"diagnostics"};
   fastlowess::Lowess lowess(options);
   const auto result = lowess.fit(sample_x_values, sample_y_values).value();
 
@@ -224,7 +218,7 @@ void testLowessWithResiduals() {
   const auto sample_y_values = toVector(k_sample_y_values);
   fastlowess::LowessOptions options;
   options.fraction = k_basic_fraction;
-  options.return_residuals = true;
+  options.outputs = {"residuals"};
   fastlowess::Lowess lowess(options);
   const auto result = lowess.fit(sample_x_values, sample_y_values).value();
 
@@ -240,7 +234,7 @@ void testLowessWithRobustnessWeights() {
   fastlowess::LowessOptions options;
   options.fraction = k_robust_fraction;
   options.iterations = k_robust_iterations;
-  options.return_robustness_weights = true;
+  options.outputs = {"weights"};
   fastlowess::Lowess lowess(options);
   const auto result = lowess.fit(sample_x_values, outlier_y_values).value();
 
@@ -260,7 +254,7 @@ void testLowessWithDerivative() {
   const auto sample_y_values = toVector(k_sample_y_values);
   fastlowess::LowessOptions options;
   options.fraction = k_basic_fraction;
-  options.return_derivative = true;
+  options.outputs = {"derivative"};
   fastlowess::Lowess lowess(options);
   const auto result = lowess.fit(sample_x_values, sample_y_values).value();
 
@@ -278,15 +272,14 @@ void testLowessReturnSorted() {
   fastlowess::LowessOptions default_options;
   default_options.fraction = k_robust_fraction;
   fastlowess::Lowess default_lowess(default_options);
-  const auto default_result = default_lowess.fit(unsorted_x, unsorted_y).value();
+  const auto default_result =
+      default_lowess.fit(unsorted_x, unsorted_y).value();
   assertTrue(default_result.x_vector() == unsorted_x,
              "return_sorted should default to original input order");
 
   fastlowess::LowessOptions sorted_options;
   sorted_options.fraction = k_robust_fraction;
-  sorted_options.return_residuals = true;
-  sorted_options.return_robustness_weights = true;
-  sorted_options.return_sorted = true;
+  sorted_options.outputs = {"residuals", "weights", "sorted"};
   fastlowess::Lowess sorted_lowess(sorted_options);
   const auto sorted_result = sorted_lowess.fit(unsorted_x, unsorted_y).value();
 
@@ -312,7 +305,8 @@ void testLowessWithConfidenceIntervals() {
   options.fraction = k_basic_fraction;
   options.confidence_intervals = k_confidence_level;
   fastlowess::Lowess lowess(options);
-  const auto result = lowess.fit(linear_data.x_values, linear_data.y_values).value();
+  const auto result =
+      lowess.fit(linear_data.x_values, linear_data.y_values).value();
 
   auto confidence_lower = result.confidence_lower();
   auto confidence_upper = result.confidence_upper();
@@ -338,7 +332,8 @@ void testLowessWithPredictionIntervals() {
   options.fraction = k_basic_fraction;
   options.prediction_intervals = k_confidence_level;
   fastlowess::Lowess lowess(options);
-  const auto result = lowess.fit(linear_data.x_values, linear_data.y_values).value();
+  const auto result =
+      lowess.fit(linear_data.x_values, linear_data.y_values).value();
 
   assertTrue(result.prediction_lower().size() == k_interval_point_count,
              "Prediction lower size mismatch");
@@ -355,10 +350,11 @@ void testLowessReuse() {
   const auto reuse_y_values = toVector(k_reuse_y_values);
   fastlowess::LowessOptions options;
   options.fraction = k_basic_fraction;
-  options.return_diagnostics = true;
+  options.outputs = {"diagnostics"};
   fastlowess::Lowess lowess(options);
 
-  const auto first_result = lowess.fit(sample_x_values, sample_y_values).value();
+  const auto first_result =
+      lowess.fit(sample_x_values, sample_y_values).value();
   const auto second_result = lowess.fit(reuse_x_values, reuse_y_values).value();
 
   assertTrue(first_result.y_vector().size() == k_small_sample_size,
@@ -465,9 +461,9 @@ void testOnlineBasic() {
   for (std::size_t point_index = 0; point_index < k_online_x_values.size();
        ++point_index) {
     const auto result = online_lowess
-                      .add_point(k_online_x_values[point_index],
-                                 k_online_y_values[point_index])
-                      .value();
+                            .add_point(k_online_x_values[point_index],
+                                       k_online_y_values[point_index])
+                            .value();
     if (result.has_value()) {
       ++point_count_with_output;
     }
@@ -673,7 +669,7 @@ void testStreamingReturnSeAndIntervals() {
   fastlowess::StreamingOptions options;
   options.fraction = k_streaming_basic_fraction;
   options.chunk_size = k_streaming_accuracy_chunk_size;
-  options.return_se = true;
+  options.outputs = {"se"};
   options.confidence_intervals = k_confidence_level;
   options.prediction_intervals = k_confidence_level;
   fastlowess::StreamingLowess stream(options);
@@ -697,7 +693,7 @@ void testOnlineReturnSeAndIntervalsRequiresFullMode() {
   fastlowess::OnlineOptions options;
   options.fraction = k_basic_fraction;
   options.window_capacity = k_online_window_capacity;
-  options.return_se = true;
+  options.outputs = {"se"};
   fastlowess::OnlineLowess online_lowess(options);
 
   bool caught = false;
@@ -718,7 +714,7 @@ void testOnlineReturnSeAndIntervals() {
   options.fraction = k_basic_fraction;
   options.window_capacity = k_online_window_capacity;
   options.update_mode = "full";
-  options.return_se = true;
+  options.outputs = {"se"};
   options.confidence_intervals = k_confidence_level;
   options.prediction_intervals = k_confidence_level;
   fastlowess::OnlineLowess online_lowess(options);
@@ -729,9 +725,9 @@ void testOnlineReturnSeAndIntervals() {
   double last_pl = std::nan("");
   for (int i = 0; i < k_online_return_se_point_count; ++i) {
     const auto result = online_lowess
-                      .add_point(static_cast<double>(i),
-                                 static_cast<double>(i) * k_linear_slope)
-                      .value();
+                            .add_point(static_cast<double>(i),
+                                       static_cast<double>(i) * k_linear_slope)
+                            .value();
     if (result.has_value()) {
       last_se = result.standard_error();
       last_cl = result.confidence_lower();

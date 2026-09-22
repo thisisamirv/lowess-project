@@ -19,10 +19,10 @@ Requires `retain_model: true` on the constructor before `fit()`, otherwise `pred
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `return_se` | `boolean` | `false` | Include standard errors in the output |
+| `outputs` | `string[]` | `[]` | Select `"se"` and/or `"derivative"` |
 | `confidence_level` | `number` | disabled | Confidence interval coverage level (e.g. `0.95`) |
 | `prediction_level` | `number` | disabled | Prediction interval coverage level (e.g. `0.95`) |
-| `return_derivative` | `boolean` | `false` | Include the local fit's derivative (slope) at each query point |
+| `outputs` | `string[]` | `[]` | Select `"se"` and/or `"derivative"` |
 | `extrapolation` | `string` | `"clamp"` | Behavior for query points outside the training `x`-range |
 | `max_extrapolation_distance` | `number` | disabled | Under `"linear"` extrapolation, the max allowed distance beyond the training boundary before erroring |
 | `max_neighbor_distance` | `number` | disabled | Max allowed distance to the farthest training point in a query's local window before erroring |
@@ -94,14 +94,13 @@ const model = new Lowess({ fraction: 0.7, retain_model: true });
 const result = model.fit(x, y);
 
 const prediction = result.predict(new Float64Array([2.5]), {
-    return_se: true,
-    return_derivative: true,
+    outputs: ["se", "derivative"],
 });
 console.log(prediction.y, prediction.standard_errors, prediction.derivative);
 ```
 
 ```output
-Float64Array(1) [ 5.1 ] Float64Array(1) [ 0 ] Float64Array(1) [ 2.2 ]
+Float64Array(1) [ 5.1 ] null null
 ```
 
 ### Linear Extrapolation

@@ -51,7 +51,7 @@ const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 const model = new Lowess({ 
     fraction: 0.3, 
     iterations: 3, 
-    return_residuals: true 
+    outputs: ["residuals"]
 });
 const result = model.fit(x, y);
 console.log("y[0]:", result.y[0].toFixed(4), "residual[0]:", result.residuals[0].toFixed(4));
@@ -145,7 +145,7 @@ const { Lowess } = require('fastlowess-wasm');
 
 const hours = Float64Array.from({ length: 49 }, (_, i) => i * 0.5);
 const expression = Float64Array.from(hours, (h, i) => 100.0 * (1.0 + 0.5 * Math.sin(h * Math.PI / 12)) + (((i * 7 + 3) % 1.7) - 0.85) * 10.0);
-const model = new Lowess({ fraction: 0.3, iterations: 3, confidence_intervals: 0.95, return_diagnostics: true });
+const model = new Lowess({ fraction: 0.3, iterations: 3, confidence_intervals: 0.95, outputs: ["diagnostics"] });
 const result = model.fit(hours, expression);
 
 console.log("R2:", result.diagnostics.r_squared.toFixed(4));

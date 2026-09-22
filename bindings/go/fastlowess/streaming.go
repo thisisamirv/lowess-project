@@ -44,6 +44,9 @@ type StreamingOptions struct {
 	// AutoConverge is the convergence tolerance for early stopping of
 	// robustness iterations. Nil disables early stopping.
 	AutoConverge *float64
+	// Outputs selects optional result components: "diagnostics", "residuals",
+	// "weights", "derivative", and "se".
+	Outputs []string
 
 	// ReturnDiagnostics requests fit-quality metrics (RMSE, MAE, R-squared, AIC, etc.).
 	ReturnDiagnostics bool
@@ -135,9 +138,9 @@ func NewStreamingLowess(opts StreamingOptions) (*StreamingLowess, error) {
 			C.int(opts.Iterations),
 			optFloat(delta, deltaSet),
 			wf, rm, sm, bp,
-			boolToCInt(opts.ReturnDiagnostics),
-			boolToCInt(opts.ReturnResiduals),
-			boolToCInt(opts.ReturnRobustnessWeights),
+			boolToCInt(opts.ReturnDiagnostics || hasOutput(opts.Outputs, "diagnostics")),
+			boolToCInt(opts.ReturnResiduals || hasOutput(opts.Outputs, "residuals")),
+			boolToCInt(opts.ReturnRobustnessWeights || hasOutput(opts.Outputs, "weights")),
 			zwf,
 			optFloat(autoConverge, autoConvergeSet),
 			boolToCInt(opts.Parallel),
@@ -145,8 +148,8 @@ func NewStreamingLowess(opts StreamingOptions) (*StreamingLowess, error) {
 			C.int(opts.Overlap),
 			ms,
 			missing,
-			boolToCInt(opts.ReturnDerivative),
-			boolToCInt(opts.ReturnSE),
+			boolToCInt(opts.ReturnDerivative || hasOutput(opts.Outputs, "derivative")),
+			boolToCInt(opts.ReturnSE || hasOutput(opts.Outputs, "se")),
 			optFloat(ci, ciSet),
 			optFloat(pi, piSet),
 		)

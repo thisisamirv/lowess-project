@@ -7,10 +7,9 @@
 \method{predict}{Lowess}(
     object,
     new_x,
-    return_se = FALSE,
+    outputs = NULL,
     confidence_level = NULL,
     prediction_level = NULL,
-    return_derivative = FALSE,
     extrapolation = "clamp",
     max_extrapolation_distance = NULL,
     max_neighbor_distance = NULL,
@@ -23,17 +22,15 @@
 
 \item{new_x}{Numeric vector of out-of-sample query points.}
 
-\item{return_se}{Logical; include standard errors in the output. Default:
-\code{FALSE}.}
+\item{outputs}{Character vector selecting optional prediction components:
+\code{"se"} and/or \code{"derivative"}. \code{NULL} (default)
+returns only predicted values.}
 
 \item{confidence_level}{Confidence interval coverage level (e.g. 0.95).
 \code{NULL} (default) disables it.}
 
 \item{prediction_level}{Prediction interval coverage level (e.g. 0.95).
 \code{NULL} (default) disables it.}
-
-\item{return_derivative}{Logical; include the local fit's derivative
-(slope) in the output. Default: \code{FALSE}.}
 
 \item{extrapolation}{Behavior for query points outside the training range:
 \code{"clamp"} (default), \code{"linear"}, or \code{"error"}.}

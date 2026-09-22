@@ -341,7 +341,7 @@ fn test_streaming_robustness_merge() {
     let mut model = StreamingLowess::<f64>::new()
         .fraction(0.2)
         .iterations(1)
-        .return_robustness_weights()
+        .outputs(["weights"])
         .merge_strategy("average")
         .chunk_size(20)
         .overlap(10)
@@ -447,7 +447,7 @@ fn test_streaming_with_residuals() {
     let mut processor = StreamingLowess::new()
         .fraction(0.5)
         .iterations(2)
-        .return_residuals()
+        .outputs(["residuals"])
         .chunk_size(15)
         .overlap(3)
         .build()
@@ -525,7 +525,7 @@ fn test_streaming_with_robustness_weights() {
     let mut processor = StreamingLowess::new()
         .fraction(0.5)
         .iterations(2)
-        .return_robustness_weights()
+        .outputs(["weights"])
         .chunk_size(15)
         .overlap(3)
         .build()
@@ -582,7 +582,7 @@ fn test_streaming_with_robustness_weights() {
 fn test_streaming_with_diagnostics() {
     let mut processor = StreamingLowess::new()
         .fraction(0.5)
-        .return_diagnostics()
+        .outputs(["diagnostics"])
         .chunk_size(15)
         .overlap(3)
         .build()
@@ -823,13 +823,13 @@ fn test_streaming_derivative_none_by_default() {
     assert!(remaining.derivative.is_none());
 }
 
-/// Test `.return_derivative()` on a single chunk (no overlap merging involved).
+/// Test `.outputs(["derivative"])` on a single chunk (no overlap merging involved).
 #[test]
 fn test_streaming_return_derivative_single_chunk() {
     let mut processor = StreamingLowess::new()
         .fraction(1.0) // Global linear fit => exact slope for linear data
         .iterations(0)
-        .return_derivative()
+        .outputs(["derivative"])
         .chunk_size(10)
         .overlap(2)
         .build()
@@ -855,7 +855,7 @@ fn test_streaming_return_derivative_single_chunk() {
     }
 }
 
-/// Test `.return_derivative()` across multiple chunks, exercising overlap merging.
+/// Test `.outputs(["derivative"])` across multiple chunks, exercising overlap merging.
 #[test]
 fn test_streaming_return_derivative_multi_chunk_overlap() {
     let x_all: Vec<f64> = (0..15).map(|i| i as f64).collect();
@@ -864,7 +864,7 @@ fn test_streaming_return_derivative_multi_chunk_overlap() {
     let mut processor = StreamingLowess::new()
         .fraction(1.0)
         .iterations(0)
-        .return_derivative()
+        .outputs(["derivative"])
         .chunk_size(10)
         .overlap(2)
         .build()
@@ -889,12 +889,12 @@ fn test_streaming_return_derivative_multi_chunk_overlap() {
     }
 }
 
-/// `.return_se()` should populate `standard_errors` on a single chunk.
+/// `.outputs(["se"])` should populate `standard_errors` on a single chunk.
 #[test]
 fn test_streaming_return_se_single_chunk() {
     let mut processor = StreamingLowess::new()
         .fraction(0.9)
-        .return_se()
+        .outputs(["se"])
         .chunk_size(20)
         .overlap(3)
         .build()
@@ -961,7 +961,7 @@ fn test_streaming_confidence_and_prediction_intervals_multi_chunk() {
     }
 }
 
-/// Without `.return_se()`/`.confidence_intervals()`/`.prediction_intervals()`, all
+/// Without `"se"`/`.confidence_intervals()`/`.prediction_intervals()`, all
 /// interval-related fields should stay `None`.
 #[test]
 fn test_streaming_no_intervals_by_default() {

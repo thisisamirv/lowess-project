@@ -10,7 +10,7 @@ Out-of-sample prediction is available in **Batch** mode only. Streaming and Onli
 
 `LowessResult.predict(new_x, ...)` evaluates the fit at arbitrary query points, like R's `predict(model, newdata)`.
 
-It reuses `fit()`'s own (possibly `delta`-interpolated) smoothed curve for its `y` output — so predicting at a training `x` always exactly reproduces that point's `fit()` output, regardless of `delta`. A fresh local fit is only run when `return_derivative`, `return_se` (or an interval level), or `max_neighbor_distance` needs the actual regression slope or standard error.
+It reuses `fit()`'s own (possibly `delta`-interpolated) smoothed curve for its `y` output — so predicting at a training `x` always exactly reproduces that point's `fit()` output, regardless of `delta`. A fresh local fit is only run when `"derivative"`, `"se"` (or an interval level), or `max_neighbor_distance` needs the actual regression slope or standard error.
 
 Requires `retain_model=True` on the constructor before `fit()`, otherwise `predict()` raises `LowessError`.
 
@@ -20,17 +20,17 @@ Requires `retain_model=True` on the constructor before `fit()`, otherwise `predi
 
 | Parameter | Type | Default | Description |
 | --- | --- | --- | --- |
-| `return_se` | `bool` | `False` | Include standard errors in the output |
+| `outputs` | `Sequence[str]` | `[]` | Select `"se"` and/or `"derivative"` |
 | `confidence_level` | `float \| None` | `None` | Confidence interval coverage level (e.g. `0.95`) |
 | `prediction_level` | `float \| None` | `None` | Prediction interval coverage level (e.g. `0.95`) |
-| `return_derivative` | `bool` | `False` | Include the local fit's derivative (slope) at each query point |
+| `outputs` | `Sequence[str]` | `[]` | Select `"se"` and/or `"derivative"` |
 | `extrapolation` | `str` | `"clamp"` | Behavior for query points outside the training `x`-range |
 | `max_extrapolation_distance` | `float \| None` | `None` | Under `"linear"` extrapolation, the max allowed distance beyond the training boundary before erroring |
 | `max_neighbor_distance` | `float \| None` | `None` | Max allowed distance to the farthest training point in a query's local window before erroring |
 
-### return_se
+### outputs
 
-Computes standard errors for each query point, using the retained model's residual scale and per-point leverage. Required for `confidence_level`/`prediction_level` to be populated. `False` by default.
+Use `outputs=["se", "derivative"]` to select optional prediction components. `"se"` computes standard errors for each query point and is required for intervals.
 
 ### confidence_level
 
@@ -40,9 +40,7 @@ Confidence level for the confidence interval around the mean response at each qu
 
 Confidence level for the prediction interval for a new observation at each query point (e.g. `0.95`). Widens using the same MAD-based residual scale `fit()` uses for its own intervals. `None` (default) disables it.
 
-### return_derivative
-
-Includes the local fit's derivative (slope) at each query point in the output. `False` by default.
+`"derivative"` includes the local fit's derivative (slope) at each query point.
 
 ### extrapolation
 
@@ -93,7 +91,7 @@ y = np.array([2.1, 4.0, 6.2, 8.0, 10.1])
 model = fl.Lowess(fraction=0.7, retain_model=True)
 result = model.fit(x, y)
 
-prediction = result.predict(np.array([2.5]), return_se=True, return_derivative=True)
+prediction = result.predict(np.array([2.5]), outputs=["se", "derivative"])
 print("y:", prediction.y)
 print("SE:", prediction.standard_errors)
 print("Derivative:", prediction.derivative)
