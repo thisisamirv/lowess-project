@@ -107,6 +107,11 @@ impl Display for BindingError {
     }
 }
 
+// `BindingError` is `Display + Debug`, so it can be a proper `std::error::Error`.
+// This lets bindings use it with `?`/`.context()`-style helpers (e.g. anyhow) and
+// treat it as a first-class error type rather than a bespoke string wrapper.
+impl std::error::Error for BindingError {}
+
 pub fn map_invalid_arg<T, E: ToString>(result: Result<T, E>) -> Result<T, BindingError> {
     result.map_err(|e| BindingError::invalid_arg(e.to_string()))
 }
