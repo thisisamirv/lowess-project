@@ -415,6 +415,67 @@ test_that("matches stats::lowess across a fraction x iterations grid", {
     }
 })
 
+test_that("matches stats::lowess for unsorted input with sorted output", {
+    x <- c(0.92113464, -4.53794094, 0, 3.89630243, -1.20512830)
+    y <- c(1.23863738, -4.5717619, 2.23168736, 1.35353460, 0.31884629)
+    fraction <- 0.582587
+    iterations <- 181L
+
+    result <- fit(
+        Lowess(
+            fraction = fraction,
+            iterations = iterations,
+            boundary_policy = "noboundary",
+            scaling_method = "mar"
+        ),
+        x,
+        y
+    )
+    sorted_result <- fit(
+        Lowess(
+            fraction = fraction,
+            iterations = iterations,
+            boundary_policy = "noboundary",
+            scaling_method = "mar",
+            outputs = "sorted"
+        ),
+        x,
+        y
+    )
+    reference <- stats::lowess(x, y, f = fraction, iter = iterations)
+
+    expect_identical(result$x, as.double(x))
+    expect_equal(sorted_result$x, reference$x, tolerance = 1e-12)
+    expect_equal(sorted_result$y, reference$y, tolerance = 1e-10)
+})
+
+test_that("matches committed statsmodels.lowess reference fixtures", {
+    fixture <- utils::read.csv(
+        testthat::test_path("fixtures", "statsmodels_lowess.csv")
+    )
+    settings <- list(
+        basic = list(fraction = 0.3, iterations = 0L, delta = 0),
+        linear = list(fraction = 0.6, iterations = 0L, delta = 0),
+        delta_basic = list(fraction = 0.3, iterations = 0L, delta = 0.25),
+        delta_fraction = list(fraction = 0.55, iterations = 0L, delta = 0.4)
+    )
+
+    for (case_name in names(settings)) {
+        rows <- fixture[fixture$case == case_name, ]
+        options <- c(
+            settings[[case_name]],
+            list(
+                boundary_policy = "noboundary",
+                outputs = "sorted"
+            )
+        )
+        result <- fit(do.call(Lowess, options), rows$x, rows$y)
+
+        expect_equal(result$x, rows$x, tolerance = 1e-12)
+        expect_equal(result$y, rows$yhat, tolerance = 1e-12)
+    }
+})
+
 # --- RE7.0 / RE7.1: noiseless exact relationships ---
 
 test_that("RE7.0/RE7.1 noiseless exact predictor and predictor+response", {

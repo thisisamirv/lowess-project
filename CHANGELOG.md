@@ -63,6 +63,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replaced the local `type Result<T> = std::result::Result<T, extendr_api::Error>` alias with `extendr_api::error::Result`, which is still exported in `extendr-api 0.9.0` (only the prelude re-export was removed).
 - **Breaking:** replaced the six `return_*` boolean arguments in `Lowess()` (and the `return_*` booleans in `StreamingLowess()`/`OnlineLowess()`) with a single `return` character vector (`c("diagnostics", "residuals", "weights", "derivative", "se", "sorted")`), and replaced the four `cv_*` arguments in `Lowess()` with `cv = cv_opts(...)`.
 - Represent unavailable diagnostic metrics as R `NA` rather than generic `NaN` values.
+- Added a regression comparison for unsorted input against `stats::lowess`, covering both preserved input order and explicit `outputs = "sorted"` behavior.
+- Added committed `statsmodels.lowess` reference fixtures for independent R cross-language validation.
 
 **fastLowess:**
 
