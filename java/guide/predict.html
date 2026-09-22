@@ -211,7 +211,7 @@ Out-of-sample prediction is available in <strong>Batch</strong> mode only. Strea
 <p><code>PredictModel.predict(newX, options)</code> evaluates the fit at arbitrary query points, like R&#8217;s <code>predict(model, newdata)</code>.</p>
 </div>
 <div class="paragraph">
-<p>It reuses <code>fit&#8217;s own (possibly `delta</code>-interpolated) smoothed curve for its <code>y</code> output — so predicting at a training <code>x</code> always exactly reproduces that point&#8217;s <code>fit</code> output, regardless of <code>delta</code>. A fresh local fit is only run when <code>returnDerivative</code>, <code>returnSe</code> (or an interval level), or <code>maxNeighborDistance</code> needs the actual regression slope or standard error.</p>
+<p>It reuses <code>fit&#8217;s own (possibly `delta</code>-interpolated) smoothed curve for its <code>y</code> output — so predicting at a training <code>x</code> always exactly reproduces that point&#8217;s <code>fit</code> output, regardless of <code>delta</code>. A fresh local fit is only run when <code>"derivative"</code>, <code>"se"</code> (or an interval level), or <code>maxNeighborDistance</code> needs the actual regression slope or standard error.</p>
 </div>
 <div class="paragraph">
 <p><code>Result.predictModel()</code> returns an <code>Optional&lt;PredictModel&gt;</code>, populated only when <code>retainModel</code> was <code>true</code>.</p>
@@ -239,10 +239,10 @@ Out-of-sample prediction is available in <strong>Batch</strong> mode only. Strea
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnSe</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Include standard errors in the output.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>outputs(String&#8230;&#8203;)</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String&#8230;&#8203;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">empty</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Select <code>"se"</code> and/or <code>"derivative"</code>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>confidenceLevel</code></p></td>
@@ -384,8 +384,7 @@ try (Lowess model = new Lowess(options)) {
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">PredictOptions options = PredictOptions.builder()
-        .returnSe(true)
-        .returnDerivative(true)
+        .outputs("se", "derivative")
         .build();
 PredictResult prediction = predictModel.predict(new double[] { 2.5 }, options);</code></pre>
 </div>

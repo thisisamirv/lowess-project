@@ -102,7 +102,13 @@ $(document).ready(function(){initNavTree('news.html',''); initResizable(); });
   <div class="headertitle"><div class="title">News</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1>fastlowess (C++) 4.1.0</h1>
+<div class="textblock"><h1>fastlowess (C++) (development version)</h1>
+<h2>Fixed</h2>
+<ul>
+<li>Fixed C++ release CI's "Commit updated recipe" step failing with "paths are ignored" because the repo's blanket <code>.gitignore</code> <code>spack/</code> rule matches <code>bindings/cpp/spack/</code>; <code>git add</code> now force-adds the tracked recipe file.</li>
+<li><b>Breaking:</b> replaced flat <code>return_*</code> and <code>cv_*</code> fields on <code>LowessOptions</code>/related options with grouped <code>outputs = {"diagnostics", "residuals", "weights", "derivative", "se", "sorted"}</code> and nested <code>cv.method</code>/<code>cv.k</code>/<code>cv.fractions</code>/<code>cv.seed</code>; <code>PredictOptions</code> now uses <code>outputs = {"se", "derivative"}</code>.</li>
+</ul>
+<h1>fastlowess (C++) 4.1.0</h1>
 <h2>Added</h2>
 <ul>
 <li>Added musl release binaries for Python, C++, Go, and Julia.</li>

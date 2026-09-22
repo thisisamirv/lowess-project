@@ -1,6 +1,7 @@
 var searchData=
 [
-  ['onlinelowess_0',['OnlineLowess',['../classfastlowess_1_1OnlineLowess.html',1,'fastlowess']]],
-  ['onlineoptions_1',['OnlineOptions',['../structfastlowess_1_1OnlineOptions.html',1,'fastlowess']]],
-  ['onlineoutput_2',['OnlineOutput',['../classfastlowess_1_1OnlineOutput.html',1,'fastlowess']]]
+  ['lowess_0',['Lowess',['../classfastlowess_1_1Lowess.html',1,'fastlowess']]],
+  ['lowesserror_1',['LowessError',['../classfastlowess_1_1LowessError.html',1,'fastlowess']]],
+  ['lowessoptions_2',['LowessOptions',['../structfastlowess_1_1LowessOptions.html',1,'fastlowess']]],
+  ['lowessresult_3',['LowessResult',['../classfastlowess_1_1LowessResult.html',1,'fastlowess']]]
 ];

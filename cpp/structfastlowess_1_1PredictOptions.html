@@ -113,16 +113,15 @@ $(document).ready(function(){initNavTree('structfastlowess_1_1PredictOptions.htm
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a7bc2e9fc26658336756c0928ffd54212" id="r_a7bc2e9fc26658336756c0928ffd54212"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1PredictOptions.html#a7bc2e9fc26658336756c0928ffd54212">return_se</a> = <a class="el" href="classfastlowess_1_1Expected.html">false</a></td></tr>
-<tr class="separator:a7bc2e9fc26658336756c0928ffd54212"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a305accd25711dd3a179a7cf3459adeab" id="r_a305accd25711dd3a179a7cf3459adeab"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1PredictOptions.html#a305accd25711dd3a179a7cf3459adeab">outputs</a></td></tr>
+<tr class="memdesc:a305accd25711dd3a179a7cf3459adeab"><td class="mdescLeft">&#160;</td><td class="mdescRight">Optional prediction components: "se" and/or "derivative".  <br /></td></tr>
+<tr class="separator:a305accd25711dd3a179a7cf3459adeab"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a609d772756178317fa079a367c987ccd" id="r_a609d772756178317fa079a367c987ccd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">double</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1PredictOptions.html#a609d772756178317fa079a367c987ccd">confidence_level</a> = <a class="el" href="classfastlowess_1_1Expected.html">NAN</a></td></tr>
 <tr class="memdesc:a609d772756178317fa079a367c987ccd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Confidence level (NaN = disabled)  <br /></td></tr>
 <tr class="separator:a609d772756178317fa079a367c987ccd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae0c166e9dea8f7c2a2455cd7e08d9847" id="r_ae0c166e9dea8f7c2a2455cd7e08d9847"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">double</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1PredictOptions.html#ae0c166e9dea8f7c2a2455cd7e08d9847">prediction_level</a> = <a class="el" href="classfastlowess_1_1Expected.html">NAN</a></td></tr>
 <tr class="memdesc:ae0c166e9dea8f7c2a2455cd7e08d9847"><td class="mdescLeft">&#160;</td><td class="mdescRight">Prediction level (NaN = disabled)  <br /></td></tr>
 <tr class="separator:ae0c166e9dea8f7c2a2455cd7e08d9847"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad685807c3b7969d0a41743f2118f770a" id="r_ad685807c3b7969d0a41743f2118f770a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1PredictOptions.html#ad685807c3b7969d0a41743f2118f770a">return_derivative</a> = <a class="el" href="classfastlowess_1_1Expected.html">false</a></td></tr>
-<tr class="separator:ad685807c3b7969d0a41743f2118f770a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac91e50da36de9e0d880fe59b1c5370a2" id="r_ac91e50da36de9e0d880fe59b1c5370a2"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1PredictOptions.html#ac91e50da36de9e0d880fe59b1c5370a2">extrapolation</a> = &quot;clamp&quot;</td></tr>
 <tr class="memdesc:ac91e50da36de9e0d880fe59b1c5370a2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Behavior for query points outside the training range ("clamp", "linear", "error").  <br /></td></tr>
 <tr class="separator:ac91e50da36de9e0d880fe59b1c5370a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -200,6 +199,22 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a305accd25711dd3a179a7cf3459adeab" name="a305accd25711dd3a179a7cf3459adeab"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a305accd25711dd3a179a7cf3459adeab">&#9670;&#160;</a></span>outputs</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;std::string&gt; fastlowess::PredictOptions::outputs</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Optional prediction components: "se" and/or "derivative". </p>
+
+</div>
+</div>
 <a id="ae0c166e9dea8f7c2a2455cd7e08d9847" name="ae0c166e9dea8f7c2a2455cd7e08d9847"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ae0c166e9dea8f7c2a2455cd7e08d9847">&#9670;&#160;</a></span>prediction_level</h2>
 
@@ -213,34 +228,6 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Prediction level (NaN = disabled) </p>
-
-</div>
-</div>
-<a id="ad685807c3b7969d0a41743f2118f770a" name="ad685807c3b7969d0a41743f2118f770a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad685807c3b7969d0a41743f2118f770a">&#9670;&#160;</a></span>return_derivative</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="classfastlowess_1_1Expected.html">bool</a> fastlowess::PredictOptions::return_derivative = <a class="el" href="classfastlowess_1_1Expected.html">false</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a7bc2e9fc26658336756c0928ffd54212" name="a7bc2e9fc26658336756c0928ffd54212"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7bc2e9fc26658336756c0928ffd54212">&#9670;&#160;</a></span>return_se</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="classfastlowess_1_1Expected.html">bool</a> fastlowess::PredictOptions::return_se = <a class="el" href="classfastlowess_1_1Expected.html">false</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
 
 </div>
 </div>

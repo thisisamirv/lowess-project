@@ -135,14 +135,9 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a6950c44ed0571eed6219ecd34e78b0bd" id="r_a6950c44ed0571eed6219ecd34e78b0bd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">double</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1OnlineOptions.html#a6950c44ed0571eed6219ecd34e78b0bd">auto_converge</a> = <a class="el" href="classfastlowess_1_1Expected.html">NAN</a></td></tr>
 <tr class="memdesc:a6950c44ed0571eed6219ecd34e78b0bd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Auto-convergence threshold.  <br /></td></tr>
 <tr class="separator:a6950c44ed0571eed6219ecd34e78b0bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8e6114b58afa71fcbb1228e7a9854aa2" id="r_a8e6114b58afa71fcbb1228e7a9854aa2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1OnlineOptions.html#a8e6114b58afa71fcbb1228e7a9854aa2">return_robustness_weights</a> = <a class="el" href="classfastlowess_1_1Expected.html">false</a></td></tr>
-<tr class="separator:a8e6114b58afa71fcbb1228e7a9854aa2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a277fb041b635bfc89737ef15d0765067" id="r_a277fb041b635bfc89737ef15d0765067"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1OnlineOptions.html#a277fb041b635bfc89737ef15d0765067">return_derivative</a> = <a class="el" href="classfastlowess_1_1Expected.html">false</a></td></tr>
-<tr class="memdesc:a277fb041b635bfc89737ef15d0765067"><td class="mdescLeft">&#160;</td><td class="mdescRight">Include the local fit derivative (slope) for the latest point in the output.  <br /></td></tr>
-<tr class="separator:a277fb041b635bfc89737ef15d0765067"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a77f72a81658547c8e2585ab3b870a299" id="r_a77f72a81658547c8e2585ab3b870a299"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1OnlineOptions.html#a77f72a81658547c8e2585ab3b870a299">return_se</a> = <a class="el" href="classfastlowess_1_1Expected.html">false</a></td></tr>
-<tr class="memdesc:a77f72a81658547c8e2585ab3b870a299"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return standard errors. Requires <code>update_mode = "full"</code>.  <br /></td></tr>
-<tr class="separator:a77f72a81658547c8e2585ab3b870a299"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a30b598e6e445ada09a699cb5d55b0817" id="r_a30b598e6e445ada09a699cb5d55b0817"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1OnlineOptions.html#a30b598e6e445ada09a699cb5d55b0817">outputs</a></td></tr>
+<tr class="memdesc:a30b598e6e445ada09a699cb5d55b0817"><td class="mdescLeft">&#160;</td><td class="mdescRight">Optional result components: "weights", "derivative", and/or "se".  <br /></td></tr>
+<tr class="separator:a30b598e6e445ada09a699cb5d55b0817"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a43c217d2eb8782d3dd1965c2298f348c" id="r_a43c217d2eb8782d3dd1965c2298f348c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">double</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1OnlineOptions.html#a43c217d2eb8782d3dd1965c2298f348c">confidence_intervals</a> = <a class="el" href="classfastlowess_1_1Expected.html">NAN</a></td></tr>
 <tr class="memdesc:a43c217d2eb8782d3dd1965c2298f348c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Confidence level (NaN = disabled).  <br /></td></tr>
 <tr class="separator:a43c217d2eb8782d3dd1965c2298f348c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -288,6 +283,23 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a30b598e6e445ada09a699cb5d55b0817" name="a30b598e6e445ada09a699cb5d55b0817"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a30b598e6e445ada09a699cb5d55b0817">&#9670;&#160;</a></span>outputs</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;std::string&gt; fastlowess::OnlineOptions::outputs</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Optional result components: "weights", "derivative", and/or "se". </p>
+<p>"se" requires <code>update_mode = "full"</code>. </p>
+
+</div>
+</div>
 <a id="aa1e4b6076f7ce0b2835aa1fa57040426" name="aa1e4b6076f7ce0b2835aa1fa57040426"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aa1e4b6076f7ce0b2835aa1fa57040426">&#9670;&#160;</a></span>prediction_intervals</h2>
 
@@ -302,52 +314,6 @@ Public Attributes</h2></td></tr>
 
 <p>Prediction level (NaN = disabled). </p>
 <p>Requires <code>update_mode = "full"</code>. </p>
-
-</div>
-</div>
-<a id="a277fb041b635bfc89737ef15d0765067" name="a277fb041b635bfc89737ef15d0765067"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a277fb041b635bfc89737ef15d0765067">&#9670;&#160;</a></span>return_derivative</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="classfastlowess_1_1Expected.html">bool</a> fastlowess::OnlineOptions::return_derivative = <a class="el" href="classfastlowess_1_1Expected.html">false</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Include the local fit derivative (slope) for the latest point in the output. </p>
-
-</div>
-</div>
-<a id="a8e6114b58afa71fcbb1228e7a9854aa2" name="a8e6114b58afa71fcbb1228e7a9854aa2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8e6114b58afa71fcbb1228e7a9854aa2">&#9670;&#160;</a></span>return_robustness_weights</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="classfastlowess_1_1Expected.html">bool</a> fastlowess::OnlineOptions::return_robustness_weights = <a class="el" href="classfastlowess_1_1Expected.html">false</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a77f72a81658547c8e2585ab3b870a299" name="a77f72a81658547c8e2585ab3b870a299"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a77f72a81658547c8e2585ab3b870a299">&#9670;&#160;</a></span>return_se</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="classfastlowess_1_1Expected.html">bool</a> fastlowess::OnlineOptions::return_se = <a class="el" href="classfastlowess_1_1Expected.html">false</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Return standard errors. Requires <code>update_mode = "full"</code>. </p>
 
 </div>
 </div>

@@ -239,7 +239,7 @@
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Options options = Options.builder()
         .fraction(0.3)
-        .returnDiagnostics(true)
+        .outputs("diagnostics")
         .build();
 
 try (Lowess model = new Lowess(options)) {
@@ -372,34 +372,10 @@ try (Lowess model = new Lowess(options)) {
 <td class="tableblock halign-left valign-top"><p class="tableblock">Convergence tolerance for early stopping.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnDiagnostics</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Populate <code>Result.diagnostics()</code>.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnResiduals</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Populate <code>Result.residuals()</code>.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnRobustnessWeights</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Populate <code>Result.robustnessWeights()</code>.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnSe</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Populate <code>Result.standardErrors()</code> (hat-matrix statistics).</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnSorted</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Return results sorted ascending by <code>x</code> instead of in original input order.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>outputs(String&#8230;&#8203;)</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String&#8230;&#8203;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">empty</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Select <code>diagnostics</code>, <code>residuals</code>, <code>weights</code>, <code>derivative</code>, <code>se</code>, and/or <code>sorted</code>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>parallel</code></p></td>
@@ -414,28 +390,10 @@ try (Lowess model = new Lowess(options)) {
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>cpu</code> or <code>gpu</code> (requires a <code>gpu</code>-feature build of the native library).</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cvMethod</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"kfold"</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>kfold</code> or <code>loocv</code>.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cvK</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>int</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>5</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Number of folds for k-fold CV.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cvFractions</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double[]</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cv(CVOptions)</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>CVOptions</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>null</code> (disabled)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Candidate fractions for cross-validation.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cvSeed</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>long</code> (boxed)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>null</code> (random)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">RNG seed for reproducible k-fold splits.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Grouped cross-validation configuration.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>retainModel</code></p></td>
@@ -444,10 +402,10 @@ try (Lowess model = new Lowess(options)) {
 <td class="tableblock halign-left valign-top"><p class="tableblock">Retain training data, enabling <code>Result.predictModel()</code>.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnDerivative</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Include the per-point local fit derivative (slope) in the result.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>outputs(String&#8230;&#8203;)</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String&#8230;&#8203;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">empty</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Includes the per-point local fit derivative when <code>"derivative"</code> is selected.</p></td>
 </tr>
 </tbody>
 </table>
@@ -458,7 +416,7 @@ try (Lowess model = new Lowess(options)) {
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Options options = Options.builder()
         .fraction(0.3)
-        .returnDiagnostics(true)
+        .outputs("diagnostics")
         .build();</code></pre>
 </div>
 </div>
@@ -871,10 +829,8 @@ To get both orderings, sort the default result client-side (e.g. via a <code>Com
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Options options = Options.builder()
-        .cvFractions(new double[] { 0.1, 0.2, 0.3, 0.5 })
-        .cvMethod("kfold")
-        .cvK(5)
-        .cvSeed(42L)
+        .cv(CVOptions.builder().method("kfold").k(5)
+            .fractions(0.1, 0.2, 0.3, 0.5).seed(42L).build())
         .build();
 
 try (Lowess model = new Lowess(options)) {

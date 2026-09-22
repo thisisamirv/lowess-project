@@ -217,6 +217,7 @@
 <pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
 import fastlowess.Options;
 import fastlowess.Result;
+import fastlowess.CVOptions;
 
 public class Example {
     public static void main(String[] args) {
@@ -229,9 +230,8 @@ public class Example {
         }
 
         Options options = Options.builder()
-                .cvMethod("kfold")
-                .cvK(5)
-                .cvFractions(new double[] { 0.2, 0.3, 0.5, 0.7 })
+                .cv(CVOptions.builder().method("kfold").k(5)
+                    .fractions(0.2, 0.3, 0.5, 0.7).build())
                 .build();
 
         try (Lowess model = new Lowess(options)) {
@@ -265,6 +265,7 @@ CV scores: [0.34433112995894766, 0.34360221980836003, 0.3997778714922619, 0.4753
 <pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
 import fastlowess.Options;
 import fastlowess.Result;
+import fastlowess.CVOptions;
 
 public class Example {
     public static void main(String[] args) {
@@ -277,8 +278,8 @@ public class Example {
         }
 
         Options options = Options.builder()
-                .cvMethod("loocv")
-                .cvFractions(new double[] { 0.2, 0.3, 0.5, 0.7 })
+                .cv(CVOptions.builder().method("loocv")
+                    .fractions(0.2, 0.3, 0.5, 0.7).build())
                 .build();
 
         try (Lowess model = new Lowess(options)) {
@@ -308,6 +309,7 @@ public class Example {
 <pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
 import fastlowess.Options;
 import fastlowess.Result;
+import fastlowess.CVOptions;
 
 public class Example {
     public static void main(String[] args) {
@@ -320,10 +322,8 @@ public class Example {
         }
 
         Options options = Options.builder()
-                .cvMethod("kfold")
-                .cvK(5)
-                .cvFractions(new double[] { 0.3, 0.5, 0.7 })
-                .cvSeed(42L)
+                .cv(CVOptions.builder().method("kfold").k(5)
+                    .fractions(0.3, 0.5, 0.7).seed(42L).build())
                 .build();
 
         try (Lowess model = new Lowess(options)) {

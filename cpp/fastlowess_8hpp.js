@@ -1,5 +1,6 @@
 var fastlowess_8hpp =
 [
+    [ "fastlowess::CVOptions", "structfastlowess_1_1CVOptions.html", "structfastlowess_1_1CVOptions" ],
     [ "fastlowess::LowessError", "classfastlowess_1_1LowessError.html", "classfastlowess_1_1LowessError" ],
     [ "fastlowess::Expected< T >", "classfastlowess_1_1Expected.html", "classfastlowess_1_1Expected" ],
     [ "fastlowess::Expected< T >::ErrorTag", "structfastlowess_1_1Expected_1_1ErrorTag.html", null ],
@@ -15,6 +16,7 @@ var fastlowess_8hpp =
     [ "fastlowess::Lowess", "classfastlowess_1_1Lowess.html", "classfastlowess_1_1Lowess" ],
     [ "fastlowess::StreamingLowess", "classfastlowess_1_1StreamingLowess.html", "classfastlowess_1_1StreamingLowess" ],
     [ "fastlowess::OnlineLowess", "classfastlowess_1_1OnlineLowess.html", "classfastlowess_1_1OnlineLowess" ],
+    [ "hasOutput", "fastlowess_8hpp.html#abaf563498cf7cfe83bce50a7c3c10518", null ],
     [ "k_default_chunk_size", "fastlowess_8hpp.html#a59395fbc126884e972f950ea475927f8", null ],
     [ "k_default_cv_k", "fastlowess_8hpp.html#a5eb3a6d91be5b909dd7c62048d9b8495", null ],
     [ "k_default_fraction", "fastlowess_8hpp.html#a5fc83238a1904dec0d45c19ead8497f2", null ],

@@ -10,5 +10,6 @@ var searchData=
   ['fit_7',['fit',['../classfastlowess_1_1Lowess.html#a504a722970109b32ab8318352d224a2e',1,'fastlowess::Lowess']]],
   ['fraction_8',['fraction',['../structfastlowess_1_1LowessOptions.html#ac4c7e581cd561fc11a928f9901bb5ec6',1,'fastlowess::LowessOptions::fraction'],['../structfastlowess_1_1OnlineOptions.html#a6acb9ee334a76cd3701228b0cab4ac62',1,'fastlowess::OnlineOptions::fraction']]],
   ['fraction_5fused_9',['fraction_used',['../classfastlowess_1_1LowessResult.html#a80b7486011abac87056d6449ed80209b',1,'fastlowess::LowessResult']]],
-  ['functions_10',['Weight Functions',['../kernels.html',1,'weighting']]]
+  ['fractions_10',['fractions',['../structfastlowess_1_1CVOptions.html#aaf2092553ba939b353fb8b23b5287871',1,'fastlowess::CVOptions']]],
+  ['functions_11',['Weight Functions',['../kernels.html',1,'weighting']]]
 ];

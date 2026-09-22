@@ -1,5 +1,6 @@
 var hierarchy =
 [
+    [ "fastlowess::CVOptions", "structfastlowess_1_1CVOptions.html", null ],
     [ "fastlowess::Diagnostics", "classfastlowess_1_1Diagnostics.html", null ],
     [ "fastlowess::Expected< T >::ErrorTag", "structfastlowess_1_1Expected_1_1ErrorTag.html", null ],
     [ "fastlowess::Expected< T >", "classfastlowess_1_1Expected.html", null ],

@@ -481,7 +481,7 @@ public class Example {
             y[i] = Math.sin(x[i]) + 0.1;
         }
 
-        Options options = Options.builder().returnSe(true).build();
+        Options options = Options.builder().outputs("se").build();
 
         try (Lowess model = new Lowess(options)) {
             Result result = model.fit(x, y);

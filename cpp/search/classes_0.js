@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['diagnostics_0',['Diagnostics',['../classfastlowess_1_1Diagnostics.html',1,'fastlowess']]]
+  ['cvoptions_0',['CVOptions',['../structfastlowess_1_1CVOptions.html',1,'fastlowess']]]
 ];

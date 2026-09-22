@@ -1,6 +1,7 @@
 var annotated_dup =
 [
     [ "fastlowess", "namespacefastlowess.html", [
+      [ "CVOptions", "structfastlowess_1_1CVOptions.html", "structfastlowess_1_1CVOptions" ],
       [ "Diagnostics", "classfastlowess_1_1Diagnostics.html", "classfastlowess_1_1Diagnostics" ],
       [ "Expected", "classfastlowess_1_1Expected.html", "classfastlowess_1_1Expected" ],
       [ "Lowess", "classfastlowess_1_1Lowess.html", "classfastlowess_1_1Lowess" ],
