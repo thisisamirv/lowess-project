@@ -670,11 +670,11 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Andrew Gallant <jamslam@gmail.com>
     License: Unlicense OR MIT
     ----------------------------------------
-    Package: thiserror (2.0.20)
+    Package: thiserror (2.0.21)
     Authors: David Tolnay <dtolnay@gmail.com>
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: thiserror-impl (2.0.20)
+    Package: thiserror-impl (2.0.21)
     Authors: David Tolnay <dtolnay@gmail.com>
     License: MIT OR Apache-2.0
     ----------------------------------------
