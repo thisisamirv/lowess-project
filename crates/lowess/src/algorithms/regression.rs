@@ -534,7 +534,7 @@ impl<T: Float> LinearFit<T> {
 
 impl<T: Float + WLSSolver> LinearFit<T> {
     // Fit Weighted Least Squares (WLS) regression using SIMD-optimized accumulation.
-    pub fn fit_wls(x: &[T], y: &[T], weights: &[T], x_current: T, window_radius: T) -> Self {
+    pub fn fit_wls(x: &[T], y: &[T], weights: &[T], x_current: T, global_x_range: T) -> Self {
         let n = x.len();
         if n == 0 {
             return Self::zero();
@@ -543,14 +543,12 @@ impl<T: Float + WLSSolver> LinearFit<T> {
         // SIMD-optimized single-pass accumulation with centering
         let (sum_w, sum_wx, sum_wy, sum_wxx, sum_wxy) = T::accumulate_wls(x, y, weights, x_current);
 
-        // Degeneracy tolerance for the centred weighted x-variance. This must be
-        // *relative* to the design's own x-scale, not an absolute constant: an
-        // absolute tolerance silently zeroed the slope whenever the x-values were
-        // small in magnitude (e.g. x in [0, 1e-4]), degrading the local-linear fit
-        // to a local mean. `sum_w * window_radius^2` bounds `sum_wxx`, and the
-        // weighted x-variance is a fixed fraction (~1/5) of that for the standard
-        // kernels, so an epsilon-scaled threshold never rejects a valid design.
-        let tol = T::epsilon() * sum_w * window_radius * window_radius;
+        // Match Cleveland/R's `lowest()` degeneracy check: after normalising
+        // weights, use a linear term only when the local weighted x-spread is
+        // more than 0.001 of the full x range. `solve_wls` receives unnormalised
+        // sums, so scale the squared-spread threshold by `sum_w`.
+        let min_spread = T::from(0.001).unwrap_or_else(T::epsilon) * global_x_range;
+        let tol = sum_w * min_spread * min_spread;
 
         // Solve for slope and centered intercept
         match T::solve_wls(sum_w, sum_wx, sum_wy, sum_wxx, sum_wxy, tol) {
@@ -774,7 +772,8 @@ impl<'a, T: Float + WLSSolver> RegressionContext<'a, T> {
         let window_y = &self.y[self.window.left..=rightmost_idx];
         let window_weights = &self.weights[self.window.left..=rightmost_idx];
 
-        let model = LinearFit::fit_wls(window_x, window_y, window_weights, x_pivot, window_radius);
+        let global_x_range = self.x[self.x.len() - 1] - self.x[0];
+        let model = LinearFit::fit_wls(window_x, window_y, window_weights, x_pivot, global_x_range);
         Some((model.predict(x_pivot), model.slope))
     }
 }

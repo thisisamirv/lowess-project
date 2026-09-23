@@ -135,6 +135,63 @@ fn test_batch_matches_r_lowess_high_iterations_mar_scaling() {
     }
 }
 
+/// Regression test for `stats::lowess`'s local-linear degeneracy rule.
+///
+/// R suppresses the local linear slope when the weighted local x-spread is less
+/// than 0.001 of the full x range. Previously, `lowess` used a window-relative
+/// tolerance, so a huge x outlier plus a tight cluster could keep an unstable
+/// edge slope and diverge even with `iterations = 0`. Values below are R's
+/// `stats::lowess(x, y, f = 0.525, iter = 0)` output; higher `iter` values are
+/// identical because R stops robustification immediately for this data.
+#[test]
+fn test_batch_matches_r_lowess_global_range_linear_degeneracy() {
+    let x = vec![
+        0.0,
+        -1.1140250,
+        1.0403659,
+        1.1147600,
+        1.1694133,
+        -26.3808799,
+        -0.5127245,
+    ];
+    let y = vec![0.0, 0.0, 0.0, 0.0, -0.09623042, 0.0, 0.0];
+
+    let result = Lowess::new()
+        .fraction(0.525)
+        .iterations(258)
+        .boundary_policy("noboundary")
+        .scaling_method("mar")
+        .outputs(["sorted"])
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .expect("Smoothing should succeed");
+
+    let expected_x = [
+        -26.3808799,
+        -1.1140250,
+        -0.5127245,
+        0.0,
+        1.0403659,
+        1.1147600,
+        1.1694133,
+    ];
+    let expected_y = [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        -0.031009526271678804,
+        -0.053_790_539_042_637_06,
+    ];
+
+    for i in 0..expected_x.len() {
+        assert_relative_eq!(result.x[i], expected_x[i], epsilon = 1e-9);
+        assert_relative_eq!(result.y[i], expected_y[i], epsilon = 1e-9);
+    }
+}
+
 /// Test that `return_derivative` is `None` by default.
 #[test]
 fn test_batch_derivative_none_by_default() {

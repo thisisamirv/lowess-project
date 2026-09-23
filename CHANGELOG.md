@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added `cv_opts()` to build cross-validation options for `Lowess(cv = ...)`, grouping the former `cv_fractions`/`cv_method`/`cv_k`/`cv_seed` arguments.
 - Added unit coverage for `cv_opts()` and output-flag parsing, bringing R package line coverage to 100%; wrapped the long cross-validation vignette example for readability.
-- Added a `quickcheck`-based property test (`test-property-lowess.R`, gated behind `skip_if_not_installed()`/`skip_on_cran()`) that fuzzes `x`/`y`/`fraction`/`iterations` and checks agreement with `stats::lowess`; randomized fuzzing over many combinations is what surfaced the high-iteration `scaling_method = "mar"` divergence fixed below, rather than any single hand-picked case. `expect_matches_stats_lowess()` was extracted from `test-validation.R` into a shared `helper-validation.R` so both the fixed and property-based scenarios can use it. `hedgehog` is now listed in `Suggests` because the test explicitly calls `hedgehog::discard()` for invalid generated inputs.
+- Added a `quickcheck`-based property test (`test-property-lowess.R`, gated behind `skip_if_not_installed()`/`skip_on_cran()`) that fuzzes `x`/`y`/`fraction`/`iterations` inputs and checks agreement with `stats::lowess`; randomized fuzzing over many combinations is what surfaced the high-iteration `scaling_method = "mar"` divergence and the global-range local-linear degeneracy mismatch fixed below, rather than any single hand-picked case. `expect_matches_stats_lowess()` was extracted from `test-validation.R` into a shared `helper-validation.R` so both the fixed and property-based scenarios can use it. `hedgehog` is now listed in `Suggests` because the test explicitly calls `hedgehog::discard()` for invalid generated inputs.
 - Added an "Alternative Software" vignette (`vignette("alternative-software")`) explaining how to reproduce `stats::lowess()` exactly (`boundary_policy = "noboundary"`, `scaling_method = "mar"`), why this package's own defaults differ, and what it adds beyond it.
 
 **Go:**
@@ -89,6 +89,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **lowess:**
 
 - Fixed `RobustnessMethod::apply_robustness_weights` continuing to reweight on a substituted scale when `ScalingMethod::MAR`/`Mean` collapsed to ~zero (e.g. a majority-zero-residual fit with a few large residuals), instead of stopping robustification like `stats::lowess`'s "cmad < 1e-7 * sc" early exit. This caused `Lowess(..., scaling_method = "mar")` fits with many robustness iterations to diverge from `stats::lowess` on some inputs (reproduced with `outputs = "sorted"`); the MAD -> mean-absolute-residual fallback substitution now only applies to `ScalingMethod::MAD`, and a genuinely degenerate scale now halts robustness iterations and keeps the current fit.
+- Fixed the local weighted-linear fit's degeneracy check to match `stats::lowess`/Cleveland's `lowest()` rule: suppress the slope when the local weighted x-spread is less than `0.001 * (max(x) - min(x))`. The previous window-relative tolerance could keep an unstable edge slope when a huge x outlier made the global range large but the local neighborhood was tightly clustered, causing the `quickcheck` property test to find real `stats::lowess` mismatches even with `iterations = 0`.
 
 **Java:**
 
