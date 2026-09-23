@@ -65,7 +65,7 @@ console.log(`Prediction bounds: [${result.prediction_lower[0]}, ${result.predict
 ```
 
 ```output
-Prediction bounds: [-0.04003068058981607, 0.7087714014256472]
+Prediction bounds: [-0.04003068058981635, 0.7087714014256479]
 ```
 
 ---

@@ -44,7 +44,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-First smoothed value (extend boundary): 0.3826077643664416
+First smoothed value (extend boundary): 0.3826077643664414
 ```
 
 ---
@@ -75,7 +75,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-First smoothed value (reflect boundary): 0.7127616908322945
+First smoothed value (reflect boundary): 0.7127616908322948
 ```
 
 ---
@@ -106,7 +106,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-First smoothed value (zero boundary): 0.33560979416463516
+First smoothed value (zero boundary): 0.3356097941646353
 ```
 
 ---
@@ -140,7 +140,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-First smoothed value (noboundary boundary): 0.6938276370262515
+First smoothed value (noboundary boundary): 0.6938276370262514
 ```
 
 ---

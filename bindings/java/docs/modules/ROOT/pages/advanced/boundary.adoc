@@ -54,7 +54,7 @@ public class Example {
 
 [source,console]
 ----
-First smoothed value (extend boundary): 0.38260776436644134
+First smoothed value (extend boundary): 0.3826077643664414
 ----
 
 '''
@@ -93,7 +93,7 @@ public class Example {
 
 [source,console]
 ----
-First smoothed value (reflect boundary): 0.712761690832294
+First smoothed value (reflect boundary): 0.7127616908322947
 ----
 
 '''
@@ -132,7 +132,7 @@ public class Example {
 
 [source,console]
 ----
-First smoothed value (zero boundary): 0.3356097941646352
+First smoothed value (zero boundary): 0.3356097941646353
 ----
 
 '''
@@ -176,7 +176,7 @@ public class Example {
 
 [source,console]
 ----
-First smoothed value (noboundary boundary): 0.6938276370262506
+First smoothed value (noboundary boundary): 0.6938276370262514
 ----
 
 '''

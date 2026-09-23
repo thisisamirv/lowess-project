@@ -158,7 +158,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-First smoothed value (custom weights): 0.15222198032224565
+First smoothed value (custom weights): 0.1522219803222456
 ```
 
 ---
@@ -198,7 +198,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-First smoothed value (custom weights): 1.7983966900445219
+First smoothed value (custom weights): 1.7983966900445223
 ```
 
 ---

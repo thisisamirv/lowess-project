@@ -55,7 +55,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-First smoothed value (tricube kernel): 0.3826077643664416
+First smoothed value (tricube kernel): 0.3826077643664414
 ```
 
 ---
@@ -88,7 +88,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-First smoothed value (epanechnikov kernel): 0.4067277784431657
+First smoothed value (epanechnikov kernel): 0.4067277784431656
 ```
 
 ---
@@ -154,7 +154,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-First smoothed value (biweight kernel): 0.3759030457029011
+First smoothed value (biweight kernel): 0.3759030457029012
 ```
 
 ---
@@ -187,7 +187,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-First smoothed value (cosine kernel): 0.40082995540195776
+First smoothed value (cosine kernel): 0.4008299554019579
 ```
 
 ---
@@ -220,7 +220,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-First smoothed value (triangle kernel): 0.3816572331939023
+First smoothed value (triangle kernel): 0.38165723319390216
 ```
 
 ---

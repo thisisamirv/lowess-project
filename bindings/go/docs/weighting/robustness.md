@@ -120,7 +120,7 @@ func main() {
 ```
 
 ```output
-First smoothed value (huber robustness): 0.38170495877281807
+First smoothed value (huber robustness): 0.38170495877281785
 ```
 
 ---
@@ -171,7 +171,7 @@ func main() {
 ```
 
 ```output
-First smoothed value (talwar robustness): 0.37877937542419027
+First smoothed value (talwar robustness): 0.3787793754241902
 ```
 
 ---
@@ -349,5 +349,5 @@ func main() {
 ```
 
 ```output
-First smoothed value (auto-converge): 0.3826022035717678
+First smoothed value (auto-converge): 0.3826022035717676
 ```

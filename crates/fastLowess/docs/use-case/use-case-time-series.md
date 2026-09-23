@@ -38,7 +38,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-First smoothed value (fraction=0.1): 11.321590922416167
+First smoothed value (fraction=0.1): 11.32159092241617
 ```
 
 ---
@@ -76,7 +76,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-First residual: -0.15824361645514942
+First residual: -0.15824361645514926
 ```
 
 ---
@@ -112,7 +112,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-95% PI: [0.15311435602040468, 0.29577882767881664]
+95% PI: [0.1531143560204049, 0.2957788276788172]
 ```
 
 ---
@@ -141,7 +141,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-First smoothed value (fraction=0.2): 11.327309510259996
+First smoothed value (fraction=0.2): 11.327309510259992
 ```
 
 ---
@@ -174,8 +174,8 @@ fn main() -> Result<(), LowessError> {
 
 ```output
 First smoothed value (fraction=0.05): 0.13171195982828227
-First smoothed value (fraction=0.2): 0.22444659184961066
-First smoothed value (fraction=0.5): 0.33437036041791574
+First smoothed value (fraction=0.2): 0.22444659184961105
+First smoothed value (fraction=0.5): 0.3343703604179158
 ```
 
 ---

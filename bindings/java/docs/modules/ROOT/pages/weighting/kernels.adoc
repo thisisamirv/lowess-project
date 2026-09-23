@@ -68,7 +68,7 @@ public class Example {
 
 [source,console]
 ----
-First smoothed value (tricube kernel): 0.38260776436644134
+First smoothed value (tricube kernel): 0.3826077643664414
 ----
 
 '''
@@ -112,7 +112,7 @@ public class Example {
 
 [source,console]
 ----
-First smoothed value (epanechnikov kernel): 0.40672777844316566
+First smoothed value (epanechnikov kernel): 0.4067277784431657
 ----
 
 '''
@@ -156,7 +156,7 @@ public class Example {
 
 [source,console]
 ----
-First smoothed value (gaussian kernel): 0.435767018911707
+First smoothed value (gaussian kernel): 0.4357670189117068
 ----
 
 '''
@@ -200,7 +200,7 @@ public class Example {
 
 [source,console]
 ----
-First smoothed value (biweight kernel): 0.3759030457029011
+First smoothed value (biweight kernel): 0.3759030457029012
 ----
 
 '''
@@ -244,7 +244,7 @@ public class Example {
 
 [source,console]
 ----
-First smoothed value (cosine kernel): 0.4008299554019581
+First smoothed value (cosine kernel): 0.4008299554019579
 ----
 
 '''
@@ -288,7 +288,7 @@ public class Example {
 
 [source,console]
 ----
-First smoothed value (triangle kernel): 0.3816572331939023
+First smoothed value (triangle kernel): 0.38165723319390227
 ----
 
 '''
@@ -332,7 +332,7 @@ public class Example {
 
 [source,console]
 ----
-First smoothed value (uniform kernel): 0.45083991221911446
+First smoothed value (uniform kernel): 0.4508399122191143
 ----
 
 '''

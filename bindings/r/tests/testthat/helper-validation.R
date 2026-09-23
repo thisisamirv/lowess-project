@@ -142,8 +142,8 @@ check_stats_lowess <- function(
                     "fraction: %.17g; iterations: %d)"
                 ),
                 max_diff,
-                paste(sprintf("%.17g", x), collapse = ", "),
-                paste(sprintf("%.17g", y), collapse = ", "),
+                paste0(sprintf("%.17g", x), collapse = ", "),
+                paste0(sprintf("%.17g", y), collapse = ", "),
                 fraction,
                 iterations
             ),

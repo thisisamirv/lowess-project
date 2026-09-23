@@ -196,7 +196,7 @@ func main() {
 ```
 
 ```output
-Smoothed (dashboard, latest tick): -0.06634730089857399
+Smoothed (dashboard, latest tick): -0.06634730089857549
 ```
 
 ---

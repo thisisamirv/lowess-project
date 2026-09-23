@@ -52,7 +52,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-First smoothed value (mad scaling): 0.3826077643664416
+First smoothed value (mad scaling): 0.3826077643664414
 ```
 
 ---
@@ -86,7 +86,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-First smoothed value (mar scaling): 0.38260776436644156
+First smoothed value (mar scaling): 0.3826077643664414
 ```
 
 ---
@@ -120,7 +120,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-First smoothed value (mean scaling): 0.3821886150146138
+First smoothed value (mean scaling): 0.38218861501461393
 ```
 
 ---
