@@ -119,7 +119,7 @@ public class AltSoftwareRobustness {
 Max abs difference: 5.629133400497643E-4
 ----
 
-The reason: `LoessInterpolator`'s bisquare weight is a simplified variant of Cleveland's original formula. Given `arg = residual / (6 * medianAbsoluteResidual)`, it applies `w = (1 - arg^2)^2` directly for every point with `arg < 1` (and `w = 0` otherwise). `fastlowess` (like R's `stats::lowess()`) additionally clamps very small residuals to exactly `w = 1` and very large ones (but still under the cutoff) with a smoothed transition, via the `c1 = 0.001 * cmad` / `c9 = 0.999 * cmad` boundary zones described in xref:weighting/robustness.adoc[Robustness]. `LoessInterpolator` also uses a different (and simpler) criterion for detecting a degenerate residual scale: an absolute `accuracy` threshold (default `1e-12`) on the median residual itself, rather than `fastlowess`'s scale-relative check (see xref:weighting/scaling.adoc[Scaling Methods]).
+The reason: `LoessInterpolator`'s bisquare weight is a simplified variant of Cleveland's original formula. Given `arg = residual / (6 * medianAbsoluteResidual)`, it applies `w = (1 - arg^2)^2` directly for every point with `arg < 1` (and `w = 0` otherwise). `fastlowess` (like R's `stats::lowess()`) additionally clamps very small residuals to exactly `w = 1` and very large ones (but still under the cutoff) with a smoothed transition, via the `c1 = 0.001 * cmad` / `c9 = 0.999 * cmad` boundary zones described in xref:../weighting/robustness.adoc[Robustness]. `LoessInterpolator` also uses a different (and simpler) criterion for detecting a degenerate residual scale: an absolute `accuracy` threshold (default `1e-12`) on the median residual itself, rather than `fastlowess`'s scale-relative check (see xref:../weighting/scaling.adoc[Scaling Methods]).
 
 '''
 
@@ -168,4 +168,4 @@ The reason: `LoessInterpolator`'s bisquare weight is a simplified variant of Cle
 | no
 |===
 
-See the xref:introduction/concepts.adoc[Concepts] page for an overview of these, or the xref:benchmarks.adoc[Benchmarks] page for performance comparisons.
+See the xref:../introduction/concepts.adoc[Concepts] page for an overview of these, or the xref:../benchmarks.adoc[Benchmarks] page for performance comparisons.

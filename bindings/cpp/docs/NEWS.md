@@ -3,10 +3,17 @@
 <!-- markdownlint-disable MD024 MD025 -->
 # fastlowess (C++) (development version)
 
+## Changed
+
+* Updated the vendored `doxygen-awesome-css` theme to v2.5.0 and the Hugo docs build to v0.166.0.
+
 ## Fixed
 
+* Fixed `dev/verify_snippets.py` failing on any doc snippet that imports the optional, comparison-only `statsmodels` package when it isn't installed in the target Python environment; such snippets are now skipped (rather than failed) when `statsmodels` can't be imported by the runner's Python interpreter.
 * Fixed C++ release CI's "Commit updated recipe" step failing with "paths are ignored" because the repo's blanket `.gitignore` `spack/` rule matches `bindings/cpp/spack/`; `git add` now force-adds the tracked recipe file.
 * **Breaking:** replaced flat `return_*` and `cv_*` fields on `LowessOptions`/related options with grouped `outputs = {"diagnostics", "residuals", "weights", "derivative", "se", "sorted"}` and nested `cv.method`/`cv.k`/`cv.fractions`/`cv.seed`; `PredictOptions` now uses `outputs = {"se", "derivative"}`.
+* Declared the public C++ wrapper's C++17 requirement for `std::optional` in CMake and clangd configuration.
+* Represent unavailable diagnostic metrics as empty `std::optional<double>` values instead of `NaN` sentinels.
 
 # fastlowess (C++) 4.1.0
 

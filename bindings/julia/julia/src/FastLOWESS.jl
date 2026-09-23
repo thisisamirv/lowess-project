@@ -30,28 +30,28 @@ export LowessResult, OnlineOutput, Diagnostics, PredictModel, PredictResult
 export gpu_available, install_gpu
 
 function _output_flags(outputs)
-	allowed = ("diagnostics", "residuals", "weights", "derivative", "se", "sorted")
-	unknown = setdiff(String.(outputs), collect(allowed))
-	isempty(unknown) || throw(ArgumentError("Unknown outputs: $(join(unknown, ", "))"))
-	return (
-		diagnostics = "diagnostics" in outputs,
-		residuals = "residuals" in outputs,
-		weights = "weights" in outputs,
-		derivative = "derivative" in outputs,
-		se = "se" in outputs,
-		sorted = "sorted" in outputs,
-	)
+    allowed = ("diagnostics", "residuals", "weights", "derivative", "se", "sorted")
+    unknown = setdiff(String.(outputs), collect(allowed))
+    isempty(unknown) || throw(ArgumentError("Unknown outputs: $(join(unknown, ", "))"))
+    return (
+        diagnostics = "diagnostics" in outputs,
+        residuals = "residuals" in outputs,
+        weights = "weights" in outputs,
+        derivative = "derivative" in outputs,
+        se = "se" in outputs,
+        sorted = "sorted" in outputs,
+    )
 end
 
 function _cv_options(cv)
-	cv === nothing &&
-		return (fractions = Float64[], method = "kfold", k = 5, seed = nothing)
-	return (
-		fractions = Float64.(get(cv, :fractions, Float64[])),
-		method = String(get(cv, :method, "kfold")),
-		k = Int(get(cv, :k, 5)),
-		seed = get(cv, :seed, nothing),
-	)
+    cv === nothing &&
+        return (fractions = Float64[], method = "kfold", k = 5, seed = nothing)
+    return (
+        fractions = Float64.(get(cv, :fractions, Float64[])),
+        method = String(get(cv, :method, "kfold")),
+        k = Int(get(cv, :k, 5)),
+        seed = get(cv, :seed, nothing),
+    )
 end
 
 import Base: finalize
@@ -59,80 +59,80 @@ using Downloads: download
 
 # Try to import JLL package first
 try
-	using fastlowess_jll
+    using fastlowess_jll
 catch e
-	# JLL not available, will use fallback
+    # JLL not available, will use fallback
 end
 
 # Library name varies by platform
 const LIBNAME =
-	Sys.iswindows() ? "fastlowess_jl.dll" :
-	Sys.isapple() ? "libfastlowess_jl.dylib" : "libfastlowess_jl.so"
+    Sys.iswindows() ? "fastlowess_jl.dll" :
+    Sys.isapple() ? "libfastlowess_jl.dylib" : "libfastlowess_jl.so"
 
 # Try to load from JLL package first, fall back to local build
 function find_library()
-	# Option 1: Check environment variable (PRIORITY)
-	if haskey(ENV, "FASTLOWESS_LIB")
-		lib = ENV["FASTLOWESS_LIB"]
-		@info "Using library from FASTLOWESS_LIB: $lib"
-		return lib
-	end
+    # Option 1: Check environment variable (PRIORITY)
+    if haskey(ENV, "FASTLOWESS_LIB")
+        lib = ENV["FASTLOWESS_LIB"]
+        @info "Using library from FASTLOWESS_LIB: $lib"
+        return lib
+    end
 
-	# Option 2: Use JLL package if available (for registered package)
-	if @isdefined(fastlowess_jll)
-		try
-			if hasproperty(fastlowess_jll, :libfastlowess_jl)
-				lib = fastlowess_jll.libfastlowess_jl
-				@info "Using fastlowess_jll library: $lib"
-				return lib
-			end
-		catch e
-			@warn "Failed to load from fastlowess_jll" exception = e
-		end
-	end
+    # Option 2: Use JLL package if available (for registered package)
+    if @isdefined(fastlowess_jll)
+        try
+            if hasproperty(fastlowess_jll, :libfastlowess_jl)
+                lib = fastlowess_jll.libfastlowess_jl
+                @info "Using fastlowess_jll library: $lib"
+                return lib
+            end
+        catch e
+            @warn "Failed to load from fastlowess_jll" exception = e
+        end
+    end
 
-	# Option 3: Check relative paths (development mode)
-	# Path: julia/src/fastlowess.jl -> julia/ -> bindings/julia/ -> bindings/ -> lowess-project/
-	src_dir = @__DIR__                        # julia/src/
-	julia_dir = dirname(src_dir)              # julia/
-	bindings_julia_dir = dirname(julia_dir)   # bindings/julia/
-	bindings_dir = dirname(bindings_julia_dir)# bindings/
-	workspace_root = dirname(bindings_dir)    # lowess-project/
+    # Option 3: Check relative paths (development mode)
+    # Path: julia/src/fastlowess.jl -> julia/ -> bindings/julia/ -> bindings/ -> lowess-project/
+    src_dir = @__DIR__                        # julia/src/
+    julia_dir = dirname(src_dir)              # julia/
+    bindings_julia_dir = dirname(julia_dir)   # bindings/julia/
+    bindings_dir = dirname(bindings_julia_dir)# bindings/
+    workspace_root = dirname(bindings_dir)    # lowess-project/
 
-	candidates = [
-		# Workspace root target (most common for workspace members)
-		joinpath(workspace_root, "target", "release", LIBNAME),
-		joinpath(workspace_root, "target", "debug", LIBNAME),
-		# Local target (if built standalone)
-		joinpath(bindings_julia_dir, "target", "release", LIBNAME),
-		joinpath(bindings_julia_dir, "target", "debug", LIBNAME),
-		# Same directory as module
-		joinpath(julia_dir, LIBNAME),
-	]
+    candidates = [
+        # Workspace root target (most common for workspace members)
+        joinpath(workspace_root, "target", "release", LIBNAME),
+        joinpath(workspace_root, "target", "debug", LIBNAME),
+        # Local target (if built standalone)
+        joinpath(bindings_julia_dir, "target", "release", LIBNAME),
+        joinpath(bindings_julia_dir, "target", "debug", LIBNAME),
+        # Same directory as module
+        joinpath(julia_dir, LIBNAME),
+    ]
 
-	for path ∈ candidates
-		if isfile(path)
-			@info "Using local library: $path"
-			return path
-		end
-	end
+    for path ∈ candidates
+        if isfile(path)
+            @info "Using local library: $path"
+            return path
+        end
+    end
 
-	# Fall back to system path
-	@warn "Library not found in JLL or local paths, falling back to system path"
-	return LIBNAME
+    # Fall back to system path
+    @warn "Library not found in JLL or local paths, falling back to system path"
+    return LIBNAME
 end
 
 libfastlowess = ""  # plain String global: Julia 1.13+ ccall rejects Ref/call library names
 
 function current_library()
-	if isempty(libfastlowess)
-		global libfastlowess = find_library()
-	end
-	return libfastlowess
+    if isempty(libfastlowess)
+        global libfastlowess = find_library()
+    end
+    return libfastlowess
 end
 
 function __init__()
-	global libfastlowess = find_library()
+    global libfastlowess = find_library()
 end
 
 const _GPU_REPO = "thisisamirv/lowess-project"
@@ -145,22 +145,22 @@ const _GPU_RELEASE_TAG = "gpu-builds"
 # always matches the installed FastLOWESS.jl version, without depending on
 # `pkgversion` (Julia 1.9+) given this package supports Julia 1.6+.
 function _package_version()
-	project_file = joinpath(dirname(@__DIR__), "Project.toml")
-	m = match(r"^version\s*=\s*\"([^\"]+)\""m, read(project_file, String))
-	return m === nothing ? "unknown" : m.captures[1]
+    project_file = joinpath(dirname(@__DIR__), "Project.toml")
+    m = match(r"^version\s*=\s*\"([^\"]+)\""m, read(project_file, String))
+    return m === nothing ? "unknown" : m.captures[1]
 end
 
 function _gpu_platform_tag()
-	Sys.iswindows() && return "windows"
-	Sys.isapple() && return "macos"
-	return "linux"
+    Sys.iswindows() && return "windows"
+    Sys.isapple() && return "macos"
+    return "linux"
 end
 
 function _gpu_arch_tag()
-	arch = string(Sys.ARCH)
-	(arch == "x86_64") && return "x86_64"
-	(arch == "aarch64" || arch == "arm64") && return "aarch64"
-	return arch
+    arch = string(Sys.ARCH)
+    (arch == "x86_64") && return "x86_64"
+    (arch == "aarch64" || arch == "arm64") && return "aarch64"
+    return arch
 end
 
 """
@@ -170,7 +170,7 @@ Return `true` if the currently loaded FastLOWESS native library was built
 with the GPU backend enabled.
 """
 function gpu_available()
-	return (ccall((:jl_gpu_enabled, libfastlowess), Cint, ())) != 0
+    return (ccall((:jl_gpu_enabled, libfastlowess), Cint, ())) != 0
 end
 
 # Checks a candidate library's GPU support in a fresh Julia subprocess rather
@@ -179,14 +179,14 @@ end
 # already-compiled call (like gpu_available() above, called at the top of
 # install_gpu()) won't pick up a library swapped in mid-session.
 function _check_gpu_support(lib_path::String)
-	julia_bin = joinpath(Sys.BINDIR, Base.julia_exename())
-	script = "print(ccall((:jl_gpu_enabled, raw\"$(lib_path)\"), Cint, ()) != 0)"
-	try
-		out = read(`$julia_bin --startup-file=no -e $script`, String)
-		return strip(out) == "true"
-	catch
-		return false
-	end
+    julia_bin = joinpath(Sys.BINDIR, Base.julia_exename())
+    script = "print(ccall((:jl_gpu_enabled, raw\"$(lib_path)\"), Cint, ()) != 0)"
+    try
+        out = read(`$julia_bin --startup-file=no -e $script`, String)
+        return strip(out) == "true"
+    catch
+        return false
+    end
 end
 
 """
@@ -215,92 +215,92 @@ on subsequent calls without re-downloading or re-prompting. Set
 `ENV["FASTLOWESS_LIB"]` to the printed path in your Julia startup config to
 use it automatically in future sessions.
 """
-function install_gpu(; yes::Bool = false, local_path::Union{String, Nothing} = nothing)
-	if gpu_available()
-		println("GPU backend is already active.")
-		return nothing
-	end
+function install_gpu(; yes::Bool = false, local_path::Union{String,Nothing} = nothing)
+    if gpu_available()
+        println("GPU backend is already active.")
+        return nothing
+    end
 
-	if local_path !== nothing
-		if !isfile(local_path)
-			error("No such file: $(local_path)")
-		end
-		if !yes
-			if !isa(stdin, Base.TTY)
-				error(
-					"install_gpu() requires confirmation. Pass yes=true to proceed non-interactively.",
-				)
-			end
-			print("Install $(local_path) in place of the current build? [y/N] ")
-			answer = lowercase(strip(readline()))
-			if answer != "y" && answer != "yes"
-				println("Aborted.")
-				return nothing
-			end
-		end
+    if local_path !== nothing
+        if !isfile(local_path)
+            error("No such file: $(local_path)")
+        end
+        if !yes
+            if !isa(stdin, Base.TTY)
+                error(
+                    "install_gpu() requires confirmation. Pass yes=true to proceed non-interactively.",
+                )
+            end
+            print("Install $(local_path) in place of the current build? [y/N] ")
+            answer = lowercase(strip(readline()))
+            if answer != "y" && answer != "yes"
+                println("Aborted.")
+                return nothing
+            end
+        end
 
-		println("Installing $(local_path) ...")
-		if !_check_gpu_support(local_path)
-			error("$(local_path) does not report GPU support.")
-		end
-		global libfastlowess = local_path
-		println("GPU backend installed at $(local_path).")
-		println("Restart Julia for the change to take effect, setting: ")
-		println("  ENV[\"FASTLOWESS_LIB\"] = \"$(local_path)\"")
-		return nothing
-	end
+        println("Installing $(local_path) ...")
+        if !_check_gpu_support(local_path)
+            error("$(local_path) does not report GPU support.")
+        end
+        global libfastlowess = local_path
+        println("GPU backend installed at $(local_path).")
+        println("Restart Julia for the change to take effect, setting: ")
+        println("  ENV[\"FASTLOWESS_LIB\"] = \"$(local_path)\"")
+        return nothing
+    end
 
-	version = _package_version()
-	platform = _gpu_platform_tag()
-	arch = _gpu_arch_tag()
-	ext = Sys.iswindows() ? "dll" : Sys.isapple() ? "dylib" : "so"
-	asset_name = "fastlowess_jl-gpu-v$(version)-$(platform)-$(arch).$(ext)"
-	url = "https://github.com/$(_GPU_REPO)/releases/download/$(_GPU_RELEASE_TAG)/$(asset_name)"
+    version = _package_version()
+    platform = _gpu_platform_tag()
+    arch = _gpu_arch_tag()
+    ext = Sys.iswindows() ? "dll" : Sys.isapple() ? "dylib" : "so"
+    asset_name = "fastlowess_jl-gpu-v$(version)-$(platform)-$(arch).$(ext)"
+    url = "https://github.com/$(_GPU_REPO)/releases/download/$(_GPU_RELEASE_TAG)/$(asset_name)"
 
-	cache_dir = joinpath(homedir(), ".fastlowess", "gpu")
-	mkpath(cache_dir)
-	dest = joinpath(cache_dir, asset_name)
+    cache_dir = joinpath(homedir(), ".fastlowess", "gpu")
+    mkpath(cache_dir)
+    dest = joinpath(cache_dir, asset_name)
 
-	if isfile(dest)
-		println("Using cached GPU build at $(dest)")
-	else
-		if !yes
-			if !isa(stdin, Base.TTY)
-				error(
-					"install_gpu() requires confirmation. Pass yes=true to proceed non-interactively.",
-				)
-			end
-			print("Download and install $(asset_name) from github.com/$(_GPU_REPO)? [y/N] ")
-			answer = lowercase(strip(readline()))
-			if answer != "y" && answer != "yes"
-				println("Aborted.")
-				return nothing
-			end
-		end
+    if isfile(dest)
+        println("Using cached GPU build at $(dest)")
+    else
+        if !yes
+            if !isa(stdin, Base.TTY)
+                error(
+                    "install_gpu() requires confirmation. Pass yes=true to proceed non-interactively.",
+                )
+            end
+            print("Download and install $(asset_name) from github.com/$(_GPU_REPO)? [y/N] ")
+            answer = lowercase(strip(readline()))
+            if answer != "y" && answer != "yes"
+                println("Aborted.")
+                return nothing
+            end
+        end
 
-		println("Downloading $(url) ...")
-		try
-			download(url, dest)
-		catch e
-			rm(dest, force = true)
-			error(
-				"Failed to download $(url): $(e)\nA matching GPU build may not exist for this platform/version yet.",
-			)
-		end
-	end
+        println("Downloading $(url) ...")
+        try
+            download(url, dest)
+        catch e
+            rm(dest, force = true)
+            error(
+                "Failed to download $(url): $(e)\nA matching GPU build may not exist for this platform/version yet.",
+            )
+        end
+    end
 
-	if !_check_gpu_support(dest)
-		rm(dest, force = true)
-		error(
-			"Downloaded library does not report GPU support. The download may be corrupted or mismatched; try again.",
-		)
-	end
+    if !_check_gpu_support(dest)
+        rm(dest, force = true)
+        error(
+            "Downloaded library does not report GPU support. The download may be corrupted or mismatched; try again.",
+        )
+    end
 
-	global libfastlowess = dest
-	println("GPU backend installed at $(dest).")
-	println("Restart Julia for the change to take effect, setting: ")
-	println("  ENV[\"FASTLOWESS_LIB\"] = \"$(dest)\"")
-	return nothing
+    global libfastlowess = dest
+    println("GPU backend installed at $(dest).")
+    println("Restart Julia for the change to take effect, setting: ")
+    println("  ENV[\"FASTLOWESS_LIB\"] = \"$(dest)\"")
+    return nothing
 end
 
 """
@@ -320,26 +320,26 @@ Diagnostic statistics for LOWESS fit quality.
 - `residual_sd::Float64`: Residual standard deviation
 """
 struct Diagnostics
-	rmse::Float64
-	mae::Float64
-	r_squared::Float64
-	aic::Union{Float64, Nothing}
-	aicc::Union{Float64, Nothing}
-	effective_df::Union{Float64, Nothing}
-	residual_sd::Float64
+    rmse::Float64
+    mae::Float64
+    r_squared::Float64
+    aic::Union{Float64,Nothing}
+    aicc::Union{Float64,Nothing}
+    effective_df::Union{Float64,Nothing}
+    residual_sd::Float64
 end
 
 # C FFI result struct for predict() (must match Rust definition).
 struct CJlPredictResult
-	y::Ptr{Cdouble}
-	n::Culong
-	standard_errors::Ptr{Cdouble}
-	confidence_lower::Ptr{Cdouble}
-	confidence_upper::Ptr{Cdouble}
-	prediction_lower::Ptr{Cdouble}
-	prediction_upper::Ptr{Cdouble}
-	derivative::Ptr{Cdouble}
-	error::Ptr{Cchar}
+    y::Ptr{Cdouble}
+    n::Culong
+    standard_errors::Ptr{Cdouble}
+    confidence_lower::Ptr{Cdouble}
+    confidence_upper::Ptr{Cdouble}
+    prediction_lower::Ptr{Cdouble}
+    prediction_upper::Ptr{Cdouble}
+    derivative::Ptr{Cdouble}
+    error::Ptr{Cchar}
 end
 
 """
@@ -357,13 +357,13 @@ Result from `predict(model, new_x)`.
 - `derivative::Union{Vector{Float64}, Nothing}`: Local fit's derivative (slope) at each query point (if requested)
 """
 struct PredictResult
-	y::Vector{Float64}
-	standard_errors::Union{Vector{Float64}, Nothing}
-	confidence_lower::Union{Vector{Float64}, Nothing}
-	confidence_upper::Union{Vector{Float64}, Nothing}
-	prediction_lower::Union{Vector{Float64}, Nothing}
-	prediction_upper::Union{Vector{Float64}, Nothing}
-	derivative::Union{Vector{Float64}, Nothing}
+    y::Vector{Float64}
+    standard_errors::Union{Vector{Float64},Nothing}
+    confidence_lower::Union{Vector{Float64},Nothing}
+    confidence_upper::Union{Vector{Float64},Nothing}
+    prediction_lower::Union{Vector{Float64},Nothing}
+    prediction_upper::Union{Vector{Float64},Nothing}
+    derivative::Union{Vector{Float64},Nothing}
 end
 
 """
@@ -373,25 +373,25 @@ Retained fitted-model state enabling out-of-sample `predict()`, obtained via
 `LowessResult.predict_model` when `retain_model=true` was passed to `Lowess`.
 """
 mutable struct PredictModel
-	handle::Ptr{Cvoid}
+    handle::Ptr{Cvoid}
 
-	function PredictModel(handle::Ptr{Cvoid})
-		obj = new(handle)
-		finalizer(
-			x -> begin
-				if x.handle != C_NULL
-					ccall(
-						(:jl_predict_handle_free, libfastlowess),
-						Cvoid,
-						(Ptr{Cvoid},),
-						x.handle,
-					)
-				end
-			end,
-			obj,
-		)
-		return obj
-	end
+    function PredictModel(handle::Ptr{Cvoid})
+        obj = new(handle)
+        finalizer(
+            x -> begin
+                if x.handle != C_NULL
+                    ccall(
+                        (:jl_predict_handle_free, libfastlowess),
+                        Cvoid,
+                        (Ptr{Cvoid},),
+                        x.handle,
+                    )
+                end
+            end,
+            obj,
+        )
+        return obj
+    end
 end
 
 """
@@ -411,85 +411,85 @@ Evaluate the fitted model at out-of-sample query points not in the training set.
 - `max_neighbor_distance::Union{Float64, Nothing} = nothing`
 """
 function predict(
-	model::PredictModel,
-	new_x::Vector{Float64};
-	outputs::Vector{String} = String[],
-	return_se::Bool = false,
-	confidence_level::Union{Float64, Nothing} = nothing,
-	prediction_level::Union{Float64, Nothing} = nothing,
-	return_derivative::Bool = false,
-	extrapolation::String = "clamp",
-	max_extrapolation_distance::Union{Float64, Nothing} = nothing,
-	max_neighbor_distance::Union{Float64, Nothing} = nothing,
+    model::PredictModel,
+    new_x::Vector{Float64};
+    outputs::Vector{String} = String[],
+    return_se::Bool = false,
+    confidence_level::Union{Float64,Nothing} = nothing,
+    prediction_level::Union{Float64,Nothing} = nothing,
+    return_derivative::Bool = false,
+    extrapolation::String = "clamp",
+    max_extrapolation_distance::Union{Float64,Nothing} = nothing,
+    max_neighbor_distance::Union{Float64,Nothing} = nothing,
 )
-	flags = _output_flags(outputs)
-	return_se = return_se || flags.se
-	return_derivative = return_derivative || flags.derivative
+    flags = _output_flags(outputs)
+    return_se = return_se || flags.se
+    return_derivative = return_derivative || flags.derivative
 
-	if model.handle == C_NULL
-		error(
-			"fastlowess error: predict() called on an invalid PredictModel (was retain_model set?)",
-		)
-	end
+    if model.handle == C_NULL
+        error(
+            "fastlowess error: predict() called on an invalid PredictModel (was retain_model set?)",
+        )
+    end
 
-	c_result = ccall(
-		(:jl_predict, libfastlowess),
-		CJlPredictResult,
-		(
-			Ptr{Cvoid},
-			Ptr{Cdouble},
-			Culong,
-			Cint,
-			Cdouble,
-			Cdouble,
-			Cint,
-			Cstring,
-			Cdouble,
-			Cdouble,
-		),
-		model.handle,
-		pointer(new_x),
-		Culong(length(new_x)),
-		Cint(return_se),
-		(confidence_level === nothing ? NaN : confidence_level),
-		(prediction_level === nothing ? NaN : prediction_level),
-		Cint(return_derivative),
-		extrapolation,
-		(max_extrapolation_distance === nothing ? NaN : max_extrapolation_distance),
-		(max_neighbor_distance === nothing ? NaN : max_neighbor_distance),
-	)
+    c_result = ccall(
+        (:jl_predict, libfastlowess),
+        CJlPredictResult,
+        (
+            Ptr{Cvoid},
+            Ptr{Cdouble},
+            Culong,
+            Cint,
+            Cdouble,
+            Cdouble,
+            Cint,
+            Cstring,
+            Cdouble,
+            Cdouble,
+        ),
+        model.handle,
+        pointer(new_x),
+        Culong(length(new_x)),
+        Cint(return_se),
+        (confidence_level === nothing ? NaN : confidence_level),
+        (prediction_level === nothing ? NaN : prediction_level),
+        Cint(return_derivative),
+        extrapolation,
+        (max_extrapolation_distance === nothing ? NaN : max_extrapolation_distance),
+        (max_neighbor_distance === nothing ? NaN : max_neighbor_distance),
+    )
 
-	if c_result.error != C_NULL
-		error_msg = unsafe_string(Ptr{UInt8}(c_result.error))
-		ccall(
-			(:jl_predict_free_result, libfastlowess),
-			Cvoid,
-			(Ptr{CJlPredictResult},),
-			Ref(c_result),
-		)
-		error("fastlowess error: $error_msg")
-	end
+    if c_result.error != C_NULL
+        error_msg = unsafe_string(Ptr{UInt8}(c_result.error))
+        ccall(
+            (:jl_predict_free_result, libfastlowess),
+            Cvoid,
+            (Ptr{CJlPredictResult},),
+            Ref(c_result),
+        )
+        error("fastlowess error: $error_msg")
+    end
 
-	n = Int(c_result.n)
+    n = Int(c_result.n)
 
-	result = PredictResult(
-		ptr_to_vector(c_result.y, n),
-		ptr_to_vector(c_result.standard_errors, n),
-		ptr_to_vector(c_result.confidence_lower, n),
-		ptr_to_vector(c_result.confidence_upper, n),
-		ptr_to_vector(c_result.prediction_lower, n),
-		ptr_to_vector(c_result.prediction_upper, n),
-		ptr_to_vector(c_result.derivative, n),
-	)
+    result = PredictResult(
+        ptr_to_vector(c_result.y, n),
+        ptr_to_vector(c_result.standard_errors, n),
+        ptr_to_vector(c_result.confidence_lower, n),
+        ptr_to_vector(c_result.confidence_upper, n),
+        ptr_to_vector(c_result.prediction_lower, n),
+        ptr_to_vector(c_result.prediction_upper, n),
+        ptr_to_vector(c_result.derivative, n),
+    )
 
-	ccall(
-		(:jl_predict_free_result, libfastlowess),
-		Cvoid,
-		(Ptr{CJlPredictResult},),
-		Ref(c_result),
-	)
+    ccall(
+        (:jl_predict_free_result, libfastlowess),
+        Cvoid,
+        (Ptr{CJlPredictResult},),
+        Ref(c_result),
+    )
 
-	return result
+    return result
 end
 
 """
@@ -517,21 +517,21 @@ Result from LOWESS smoothing.
   only if `retain_model=true` was passed to `Lowess`. Enables out-of-sample `predict()`.
 """
 struct LowessResult
-	x::Vector{Float64}
-	y::Vector{Float64}
-	standard_errors::Union{Vector{Float64}, Nothing}
-	confidence_lower::Union{Vector{Float64}, Nothing}
-	confidence_upper::Union{Vector{Float64}, Nothing}
-	prediction_lower::Union{Vector{Float64}, Nothing}
-	prediction_upper::Union{Vector{Float64}, Nothing}
-	residuals::Union{Vector{Float64}, Nothing}
-	robustness_weights::Union{Vector{Float64}, Nothing}
-	derivative::Union{Vector{Float64}, Nothing}
-	cv_scores::Union{Vector{Float64}, Nothing}
-	fraction_used::Float64
-	iterations_used::Union{Int, Nothing}
-	diagnostics::Union{Diagnostics, Nothing}
-	predict_model::Union{PredictModel, Nothing}
+    x::Vector{Float64}
+    y::Vector{Float64}
+    standard_errors::Union{Vector{Float64},Nothing}
+    confidence_lower::Union{Vector{Float64},Nothing}
+    confidence_upper::Union{Vector{Float64},Nothing}
+    prediction_lower::Union{Vector{Float64},Nothing}
+    prediction_upper::Union{Vector{Float64},Nothing}
+    residuals::Union{Vector{Float64},Nothing}
+    robustness_weights::Union{Vector{Float64},Nothing}
+    derivative::Union{Vector{Float64},Nothing}
+    cv_scores::Union{Vector{Float64},Nothing}
+    fraction_used::Float64
+    iterations_used::Union{Int,Nothing}
+    diagnostics::Union{Diagnostics,Nothing}
+    predict_model::Union{PredictModel,Nothing}
 end
 
 """
@@ -553,160 +553,160 @@ Result from a single `add_point` call.
 - `prediction_upper::Union{Float64, Nothing}`: Upper prediction interval bound (if requested)
 """
 struct OnlineOutput
-	y::Float64
-	standard_error::Union{Float64, Nothing}
-	residual::Union{Float64, Nothing}
-	robustness_weight::Union{Float64, Nothing}
-	iterations_used::Union{Int, Nothing}
-	derivative::Union{Float64, Nothing}
-	confidence_lower::Union{Float64, Nothing}
-	confidence_upper::Union{Float64, Nothing}
-	prediction_lower::Union{Float64, Nothing}
-	prediction_upper::Union{Float64, Nothing}
+    y::Float64
+    standard_error::Union{Float64,Nothing}
+    residual::Union{Float64,Nothing}
+    robustness_weight::Union{Float64,Nothing}
+    iterations_used::Union{Int,Nothing}
+    derivative::Union{Float64,Nothing}
+    confidence_lower::Union{Float64,Nothing}
+    confidence_upper::Union{Float64,Nothing}
+    prediction_lower::Union{Float64,Nothing}
+    prediction_upper::Union{Float64,Nothing}
 end
 
 # C FFI struct for per-point online output (must match Rust definition).
 struct CJlOnlineOutput
-	has_value::Cint
-	y::Cdouble
-	standard_error::Cdouble
-	residual::Cdouble
-	robustness_weight::Cdouble
-	iterations_used::Cint
-	derivative::Cdouble
-	confidence_lower::Cdouble
-	confidence_upper::Cdouble
-	prediction_lower::Cdouble
-	prediction_upper::Cdouble
-	error::Ptr{Cchar}
+    has_value::Cint
+    y::Cdouble
+    standard_error::Cdouble
+    residual::Cdouble
+    robustness_weight::Cdouble
+    iterations_used::Cint
+    derivative::Cdouble
+    confidence_lower::Cdouble
+    confidence_upper::Cdouble
+    prediction_lower::Cdouble
+    prediction_upper::Cdouble
+    error::Ptr{Cchar}
 end
 
 # C FFI result struct (must match Rust definition)
 struct CJlLowessResult
-	x::Ptr{Cdouble}
-	y::Ptr{Cdouble}
-	n::Culong
-	standard_errors::Ptr{Cdouble}
-	confidence_lower::Ptr{Cdouble}
-	confidence_upper::Ptr{Cdouble}
-	prediction_lower::Ptr{Cdouble}
-	prediction_upper::Ptr{Cdouble}
-	residuals::Ptr{Cdouble}
-	robustness_weights::Ptr{Cdouble}
-	derivative::Ptr{Cdouble}
-	cv_scores::Ptr{Cdouble}
-	cv_scores_len::Culong
-	fraction_used::Cdouble
-	iterations_used::Cint
-	rmse::Cdouble
-	mae::Cdouble
-	r_squared::Cdouble
-	aic::Cdouble
-	aicc::Cdouble
-	effective_df::Cdouble
-	residual_sd::Cdouble
-	predict_handle::Ptr{Cvoid}
-	error::Ptr{Cchar}
+    x::Ptr{Cdouble}
+    y::Ptr{Cdouble}
+    n::Culong
+    standard_errors::Ptr{Cdouble}
+    confidence_lower::Ptr{Cdouble}
+    confidence_upper::Ptr{Cdouble}
+    prediction_lower::Ptr{Cdouble}
+    prediction_upper::Ptr{Cdouble}
+    residuals::Ptr{Cdouble}
+    robustness_weights::Ptr{Cdouble}
+    derivative::Ptr{Cdouble}
+    cv_scores::Ptr{Cdouble}
+    cv_scores_len::Culong
+    fraction_used::Cdouble
+    iterations_used::Cint
+    rmse::Cdouble
+    mae::Cdouble
+    r_squared::Cdouble
+    aic::Cdouble
+    aicc::Cdouble
+    effective_df::Cdouble
+    residual_sd::Cdouble
+    predict_handle::Ptr{Cvoid}
+    error::Ptr{Cchar}
 end
 
 function ptr_to_vector(ptr::Ptr{Cdouble}, n::Int)
-	if ptr == C_NULL
-		return nothing
-	end
-	return unsafe_wrap(Array, ptr, n, own = false) |> copy
+    if ptr == C_NULL
+        return nothing
+    end
+    return unsafe_wrap(Array, ptr, n, own = false) |> copy
 end
 
 function convert_result(c_result::CJlLowessResult)
-	# Check for error
-	if c_result.error != Ptr{Cchar}(C_NULL)
-		error_msg = unsafe_string(Ptr{UInt8}(c_result.error))
-		# Free the result before throwing
-		ccall(
-			(:jl_lowess_free_result, libfastlowess),
-			Cvoid,
-			(Ptr{CJlLowessResult},),
-			Ref(c_result),
-		)
-		error("fastlowess error: $error_msg")
-	end
+    # Check for error
+    if c_result.error != Ptr{Cchar}(C_NULL)
+        error_msg = unsafe_string(Ptr{UInt8}(c_result.error))
+        # Free the result before throwing
+        ccall(
+            (:jl_lowess_free_result, libfastlowess),
+            Cvoid,
+            (Ptr{CJlLowessResult},),
+            Ref(c_result),
+        )
+        error("fastlowess error: $error_msg")
+    end
 
-	n = Int(c_result.n)
+    n = Int(c_result.n)
 
-	# Extract arrays
-	x = ptr_to_vector(c_result.x, n)
-	y = ptr_to_vector(c_result.y, n)
+    # Extract arrays
+    x = ptr_to_vector(c_result.x, n)
+    y = ptr_to_vector(c_result.y, n)
 
-	if x === nothing || y === nothing
-		ccall(
-			(:jl_lowess_free_result, libfastlowess),
-			Cvoid,
-			(Ptr{CJlLowessResult},),
-			Ref(c_result),
-		)
-		error("fastlowess error: result arrays are null")
-	end
+    if x === nothing || y === nothing
+        ccall(
+            (:jl_lowess_free_result, libfastlowess),
+            Cvoid,
+            (Ptr{CJlLowessResult},),
+            Ref(c_result),
+        )
+        error("fastlowess error: result arrays are null")
+    end
 
-	x = x::Vector{Float64}
-	y = y::Vector{Float64}
+    x = x::Vector{Float64}
+    y = y::Vector{Float64}
 
-	standard_errors = ptr_to_vector(c_result.standard_errors, n)
-	confidence_lower = ptr_to_vector(c_result.confidence_lower, n)
-	confidence_upper = ptr_to_vector(c_result.confidence_upper, n)
-	prediction_lower = ptr_to_vector(c_result.prediction_lower, n)
-	prediction_upper = ptr_to_vector(c_result.prediction_upper, n)
-	residuals = ptr_to_vector(c_result.residuals, n)
-	robustness_weights = ptr_to_vector(c_result.robustness_weights, n)
-	derivative = ptr_to_vector(c_result.derivative, n)
-	cv_scores = ptr_to_vector(c_result.cv_scores, Int(c_result.cv_scores_len))
+    standard_errors = ptr_to_vector(c_result.standard_errors, n)
+    confidence_lower = ptr_to_vector(c_result.confidence_lower, n)
+    confidence_upper = ptr_to_vector(c_result.confidence_upper, n)
+    prediction_lower = ptr_to_vector(c_result.prediction_lower, n)
+    prediction_upper = ptr_to_vector(c_result.prediction_upper, n)
+    residuals = ptr_to_vector(c_result.residuals, n)
+    robustness_weights = ptr_to_vector(c_result.robustness_weights, n)
+    derivative = ptr_to_vector(c_result.derivative, n)
+    cv_scores = ptr_to_vector(c_result.cv_scores, Int(c_result.cv_scores_len))
 
-	# Extract diagnostics
-	diagnostics = if !isnan(c_result.rmse)
-		Diagnostics(
-			c_result.rmse,
-			c_result.mae,
-			c_result.r_squared,
-			isnan(c_result.aic) ? nothing : c_result.aic,
-			isnan(c_result.aicc) ? nothing : c_result.aicc,
-			isnan(c_result.effective_df) ? nothing : c_result.effective_df,
-			c_result.residual_sd,
-		)
-	else
-		nothing
-	end
+    # Extract diagnostics
+    diagnostics = if !isnan(c_result.rmse)
+        Diagnostics(
+            c_result.rmse,
+            c_result.mae,
+            c_result.r_squared,
+            isnan(c_result.aic) ? nothing : c_result.aic,
+            isnan(c_result.aicc) ? nothing : c_result.aicc,
+            isnan(c_result.effective_df) ? nothing : c_result.effective_df,
+            c_result.residual_sd,
+        )
+    else
+        nothing
+    end
 
-	predict_model = if c_result.predict_handle != C_NULL
-		PredictModel(c_result.predict_handle)
-	else
-		nothing
-	end
+    predict_model = if c_result.predict_handle != C_NULL
+        PredictModel(c_result.predict_handle)
+    else
+        nothing
+    end
 
-	result = LowessResult(
-		x,
-		y,
-		standard_errors,
-		confidence_lower,
-		confidence_upper,
-		prediction_lower,
-		prediction_upper,
-		residuals,
-		robustness_weights,
-		derivative,
-		cv_scores,
-		c_result.fraction_used,
-		c_result.iterations_used == -1 ? nothing : Int(c_result.iterations_used),
-		diagnostics,
-		predict_model,
-	)
+    result = LowessResult(
+        x,
+        y,
+        standard_errors,
+        confidence_lower,
+        confidence_upper,
+        prediction_lower,
+        prediction_upper,
+        residuals,
+        robustness_weights,
+        derivative,
+        cv_scores,
+        c_result.fraction_used,
+        c_result.iterations_used == -1 ? nothing : Int(c_result.iterations_used),
+        diagnostics,
+        predict_model,
+    )
 
-	# Free the C result
-	ccall(
-		(:jl_lowess_free_result, libfastlowess),
-		Cvoid,
-		(Ptr{CJlLowessResult},),
-		Ref(c_result),
-	)
+    # Free the C result
+    ccall(
+        (:jl_lowess_free_result, libfastlowess),
+        Cvoid,
+        (Ptr{CJlLowessResult},),
+        Ref(c_result),
+    )
 
-	return result
+    return result
 end
 
 """
@@ -715,35 +715,35 @@ end
 Append the results from `b` to `a`. This modifies `a` in place.
 """
 function Base.append!(a::LowessResult, b::LowessResult)
-	append!(a.x, b.x)
-	append!(a.y, b.y)
+    append!(a.x, b.x)
+    append!(a.y, b.y)
 
-	if a.standard_errors !== nothing && b.standard_errors !== nothing
-		append!(a.standard_errors, b.standard_errors)
-	end
-	if a.confidence_lower !== nothing && b.confidence_lower !== nothing
-		append!(a.confidence_lower, b.confidence_lower)
-	end
-	if a.confidence_upper !== nothing && b.confidence_upper !== nothing
-		append!(a.confidence_upper, b.confidence_upper)
-	end
-	if a.prediction_lower !== nothing && b.prediction_lower !== nothing
-		append!(a.prediction_lower, b.prediction_lower)
-	end
-	if a.prediction_upper !== nothing && b.prediction_upper !== nothing
-		append!(a.prediction_upper, b.prediction_upper)
-	end
-	if a.residuals !== nothing && b.residuals !== nothing
-		append!(a.residuals, b.residuals)
-	end
-	if a.robustness_weights !== nothing && b.robustness_weights !== nothing
-		append!(a.robustness_weights, b.robustness_weights)
-	end
+    if a.standard_errors !== nothing && b.standard_errors !== nothing
+        append!(a.standard_errors, b.standard_errors)
+    end
+    if a.confidence_lower !== nothing && b.confidence_lower !== nothing
+        append!(a.confidence_lower, b.confidence_lower)
+    end
+    if a.confidence_upper !== nothing && b.confidence_upper !== nothing
+        append!(a.confidence_upper, b.confidence_upper)
+    end
+    if a.prediction_lower !== nothing && b.prediction_lower !== nothing
+        append!(a.prediction_lower, b.prediction_lower)
+    end
+    if a.prediction_upper !== nothing && b.prediction_upper !== nothing
+        append!(a.prediction_upper, b.prediction_upper)
+    end
+    if a.residuals !== nothing && b.residuals !== nothing
+        append!(a.residuals, b.residuals)
+    end
+    if a.robustness_weights !== nothing && b.robustness_weights !== nothing
+        append!(a.robustness_weights, b.robustness_weights)
+    end
 
-	# Update fraction_used and iterations_used if they differ?
-	# Streaming usually keeps them constant. We'll keep a's values.
+    # Update fraction_used and iterations_used if they differ?
+    # Streaming usually keeps them constant. We'll keep a's values.
 
-	return a
+    return a
 end
 
 
@@ -830,116 +830,116 @@ result = fit(l, x, y)
 ```
 """
 mutable struct Lowess
-	handle::Ptr{Cvoid}
+    handle::Ptr{Cvoid}
 
-	function Lowess(;
-		fraction::Float64 = 0.67,
-		iterations::Int = 3,
-		delta::Float64 = NaN,
-		weight_function::String = "tricube",
-		robustness_method::String = "bisquare",
-		scaling_method::String = "mad",
-		boundary_policy::String = "extend",
-		confidence_intervals::Float64 = NaN,
-		prediction_intervals::Float64 = NaN,
-		outputs = String[],
-		cv = nothing,
-		return_diagnostics::Bool = false,
-		return_residuals::Bool = false,
-		return_robustness_weights::Bool = false,
-		zero_weight_fallback::String = "use_local_mean",
-		auto_converge::Float64 = NaN,
-		cv_fractions::Vector{Float64} = Float64[],
-		cv_method::String = "kfold",
-		cv_k::Int = 5,
-		parallel::Bool = true,
-		cv_seed::Union{Int, Nothing} = nothing,
-		return_se::Bool = false,
-		return_sorted::Bool = false,
-		backend::String = "cpu",
-		missing::String = "error",
-		retain_model::Bool = false,
-		return_derivative::Bool = false,
-	)
-		flags = _output_flags(outputs)
-		cv_options = _cv_options(cv)
-		cv_fractions = isempty(cv_options.fractions) ? cv_fractions : cv_options.fractions
-		cv_method = cv === nothing ? cv_method : cv_options.method
-		cv_k = cv === nothing ? cv_k : cv_options.k
-		cv_seed = cv === nothing ? cv_seed : cv_options.seed
-		cv_ptr = isempty(cv_fractions) ? Ptr{Cdouble}(C_NULL) : pointer(cv_fractions)
-		cv_len = length(cv_fractions)
+    function Lowess(;
+        fraction::Float64 = 0.67,
+        iterations::Int = 3,
+        delta::Float64 = NaN,
+        weight_function::String = "tricube",
+        robustness_method::String = "bisquare",
+        scaling_method::String = "mad",
+        boundary_policy::String = "extend",
+        confidence_intervals::Float64 = NaN,
+        prediction_intervals::Float64 = NaN,
+        outputs = String[],
+        cv = nothing,
+        return_diagnostics::Bool = false,
+        return_residuals::Bool = false,
+        return_robustness_weights::Bool = false,
+        zero_weight_fallback::String = "use_local_mean",
+        auto_converge::Float64 = NaN,
+        cv_fractions::Vector{Float64} = Float64[],
+        cv_method::String = "kfold",
+        cv_k::Int = 5,
+        parallel::Bool = true,
+        cv_seed::Union{Int,Nothing} = nothing,
+        return_se::Bool = false,
+        return_sorted::Bool = false,
+        backend::String = "cpu",
+        missing::String = "error",
+        retain_model::Bool = false,
+        return_derivative::Bool = false,
+    )
+        flags = _output_flags(outputs)
+        cv_options = _cv_options(cv)
+        cv_fractions = isempty(cv_options.fractions) ? cv_fractions : cv_options.fractions
+        cv_method = cv === nothing ? cv_method : cv_options.method
+        cv_k = cv === nothing ? cv_k : cv_options.k
+        cv_seed = cv === nothing ? cv_seed : cv_options.seed
+        cv_ptr = isempty(cv_fractions) ? Ptr{Cdouble}(C_NULL) : pointer(cv_fractions)
+        cv_len = length(cv_fractions)
 
-		handle = ccall(
-			(:jl_lowess_new, libfastlowess),
-			Ptr{Cvoid},
-			(
-				Cdouble,
-				Cint,
-				Cdouble,
-				Cstring,
-				Cstring,
-				Cstring,
-				Cstring,
-				Cdouble,
-				Cdouble,
-				Cint,
-				Cint,
-				Cint,
-				Cstring,
-				Cdouble,
-				Ptr{Cdouble},
-				Culong,
-				Cstring,
-				Cint,
-				Cint,
-				Culong,
-				Cint,
-				Cint,
-				Cstring,
-				Cstring,
-				Cint,
-				Cint,
-			),
-			fraction,
-			Cint(iterations),
-			delta,
-			weight_function,
-			robustness_method,
-			scaling_method,
-			boundary_policy,
-			confidence_intervals,
-			prediction_intervals,
-			Cint(return_diagnostics || flags.diagnostics),
-			Cint(return_residuals || flags.residuals),
-			Cint(return_robustness_weights || flags.weights),
-			zero_weight_fallback,
-			auto_converge,
-			cv_ptr,
-			Culong(cv_len),
-			cv_method,
-			Cint(cv_k),
-			Cint(parallel),
-			Culong(cv_seed !== nothing ? cv_seed : 0),
-			Cint(return_se || flags.se),
-			Cint(return_sorted || flags.sorted),
-			backend,
-			missing,
-			Cint(retain_model),
-			Cint(return_derivative || flags.derivative),
-		)
+        handle = ccall(
+            (:jl_lowess_new, libfastlowess),
+            Ptr{Cvoid},
+            (
+                Cdouble,
+                Cint,
+                Cdouble,
+                Cstring,
+                Cstring,
+                Cstring,
+                Cstring,
+                Cdouble,
+                Cdouble,
+                Cint,
+                Cint,
+                Cint,
+                Cstring,
+                Cdouble,
+                Ptr{Cdouble},
+                Culong,
+                Cstring,
+                Cint,
+                Cint,
+                Culong,
+                Cint,
+                Cint,
+                Cstring,
+                Cstring,
+                Cint,
+                Cint,
+            ),
+            fraction,
+            Cint(iterations),
+            delta,
+            weight_function,
+            robustness_method,
+            scaling_method,
+            boundary_policy,
+            confidence_intervals,
+            prediction_intervals,
+            Cint(return_diagnostics || flags.diagnostics),
+            Cint(return_residuals || flags.residuals),
+            Cint(return_robustness_weights || flags.weights),
+            zero_weight_fallback,
+            auto_converge,
+            cv_ptr,
+            Culong(cv_len),
+            cv_method,
+            Cint(cv_k),
+            Cint(parallel),
+            Culong(cv_seed !== nothing ? cv_seed : 0),
+            Cint(return_se || flags.se),
+            Cint(return_sorted || flags.sorted),
+            backend,
+            missing,
+            Cint(retain_model),
+            Cint(return_derivative || flags.derivative),
+        )
 
-		if handle == C_NULL
-			error("Failed to create Lowess configuration")
-		end
+        if handle == C_NULL
+            error("Failed to create Lowess configuration")
+        end
 
-		obj = new(handle)
-		finalizer(
-			x -> ccall((:jl_lowess_free, libfastlowess), Cvoid, (Ptr{Cvoid},), x.handle),
-			obj,
-		)
-		return obj
-	end
+        obj = new(handle)
+        finalizer(
+            x -> ccall((:jl_lowess_free, libfastlowess), Cvoid, (Ptr{Cvoid},), x.handle),
+            obj,
+        )
+        return obj
+    end
 end
 
 """
@@ -953,35 +953,35 @@ Fit the LOWESS model to data.
   finite and non-negative. Pass `nothing` (default) to disable.
 """
 function fit(
-	l::Lowess,
-	x::Vector{Float64},
-	y::Vector{Float64};
-	custom_weights::Union{Vector{Float64}, Nothing} = nothing,
+    l::Lowess,
+    x::Vector{Float64},
+    y::Vector{Float64};
+    custom_weights::Union{Vector{Float64},Nothing} = nothing,
 )
-	n = length(x)
-	if n != length(y)
-		throw(ArgumentError("x and y must have the same length"))
-	end
+    n = length(x)
+    if n != length(y)
+        throw(ArgumentError("x and y must have the same length"))
+    end
 
-	if custom_weights !== nothing
-		if length(custom_weights) != n
-			throw(ArgumentError("custom_weights must have the same length as y"))
-		end
-	end
+    if custom_weights !== nothing
+        if length(custom_weights) != n
+            throw(ArgumentError("custom_weights must have the same length as y"))
+        end
+    end
 
-	c_result = ccall(
-		(:jl_lowess_fit, libfastlowess),
-		CJlLowessResult,
-		(Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Culong, Ptr{Cdouble}, Culong),
-		l.handle,
-		x,
-		y,
-		Culong(n),
-		(custom_weights !== nothing ? pointer(custom_weights) : Ptr{Cdouble}(C_NULL)),
-		Culong(custom_weights !== nothing ? length(custom_weights) : 0),
-	)
+    c_result = ccall(
+        (:jl_lowess_fit, libfastlowess),
+        CJlLowessResult,
+        (Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Culong, Ptr{Cdouble}, Culong),
+        l.handle,
+        x,
+        y,
+        Culong(n),
+        (custom_weights !== nothing ? pointer(custom_weights) : Ptr{Cdouble}(C_NULL)),
+        Culong(custom_weights !== nothing ? length(custom_weights) : 0),
+    )
 
-	return convert_result(c_result)
+    return convert_result(c_result)
 end
 
 """
@@ -1017,98 +1017,98 @@ Stateful streaming LOWESS smoother.
   (e.g. 0.95), NaN to disable.
 """
 mutable struct StreamingLowess
-	handle::Ptr{Cvoid}
+    handle::Ptr{Cvoid}
 
-	function StreamingLowess(;
-		fraction::Float64 = 0.67,
-		chunk_size::Int = 5000,
-		overlap::Int = -1,
-		iterations::Int = 3,
-		delta::Float64 = NaN,
-		weight_function::String = "tricube",
-		robustness_method::String = "bisquare",
-		scaling_method::String = "mad",
-		boundary_policy::String = "extend",
-		auto_converge::Float64 = NaN,
-		outputs = String[],
-		return_diagnostics::Bool = false,
-		return_residuals::Bool = false,
-		return_robustness_weights::Bool = false,
-		zero_weight_fallback::String = "use_local_mean",
-		merge_strategy::String = "weighted_average",
-		parallel::Bool = true,
-		missing::String = "error",
-		return_derivative::Bool = false,
-		return_se::Bool = false,
-		confidence_intervals::Float64 = NaN,
-		prediction_intervals::Float64 = NaN,
-	)
-		flags = _output_flags(outputs)
-		handle = ccall(
-			(:jl_streaming_lowess_new, libfastlowess),
-			Ptr{Cvoid},
-			(
-				Cdouble,
-				Cint,
-				Cint,
-				Cint,
-				Cdouble,
-				Cstring,
-				Cstring,
-				Cstring,
-				Cstring,
-				Cdouble,
-				Cint,
-				Cint,
-				Cint,
-				Cstring,
-				Cstring,
-				Cint,
-				Cstring,
-				Cint,
-				Cint,
-				Cdouble,
-				Cdouble,
-			),
-			fraction,
-			Cint(chunk_size),
-			Cint(overlap),
-			Cint(iterations),
-			delta,
-			weight_function,
-			robustness_method,
-			scaling_method,
-			boundary_policy,
-			auto_converge,
-			Cint(return_diagnostics || flags.diagnostics),
-			Cint(return_residuals || flags.residuals),
-			Cint(return_robustness_weights || flags.weights),
-			zero_weight_fallback,
-			merge_strategy,
-			Cint(parallel),
-			missing,
-			Cint(return_derivative || flags.derivative),
-			Cint(return_se || flags.se),
-			confidence_intervals,
-			prediction_intervals,
-		)
+    function StreamingLowess(;
+        fraction::Float64 = 0.67,
+        chunk_size::Int = 5000,
+        overlap::Int = -1,
+        iterations::Int = 3,
+        delta::Float64 = NaN,
+        weight_function::String = "tricube",
+        robustness_method::String = "bisquare",
+        scaling_method::String = "mad",
+        boundary_policy::String = "extend",
+        auto_converge::Float64 = NaN,
+        outputs = String[],
+        return_diagnostics::Bool = false,
+        return_residuals::Bool = false,
+        return_robustness_weights::Bool = false,
+        zero_weight_fallback::String = "use_local_mean",
+        merge_strategy::String = "weighted_average",
+        parallel::Bool = true,
+        missing::String = "error",
+        return_derivative::Bool = false,
+        return_se::Bool = false,
+        confidence_intervals::Float64 = NaN,
+        prediction_intervals::Float64 = NaN,
+    )
+        flags = _output_flags(outputs)
+        handle = ccall(
+            (:jl_streaming_lowess_new, libfastlowess),
+            Ptr{Cvoid},
+            (
+                Cdouble,
+                Cint,
+                Cint,
+                Cint,
+                Cdouble,
+                Cstring,
+                Cstring,
+                Cstring,
+                Cstring,
+                Cdouble,
+                Cint,
+                Cint,
+                Cint,
+                Cstring,
+                Cstring,
+                Cint,
+                Cstring,
+                Cint,
+                Cint,
+                Cdouble,
+                Cdouble,
+            ),
+            fraction,
+            Cint(chunk_size),
+            Cint(overlap),
+            Cint(iterations),
+            delta,
+            weight_function,
+            robustness_method,
+            scaling_method,
+            boundary_policy,
+            auto_converge,
+            Cint(return_diagnostics || flags.diagnostics),
+            Cint(return_residuals || flags.residuals),
+            Cint(return_robustness_weights || flags.weights),
+            zero_weight_fallback,
+            merge_strategy,
+            Cint(parallel),
+            missing,
+            Cint(return_derivative || flags.derivative),
+            Cint(return_se || flags.se),
+            confidence_intervals,
+            prediction_intervals,
+        )
 
-		if handle == C_NULL
-			error("Failed to create StreamingLowess")
-		end
+        if handle == C_NULL
+            error("Failed to create StreamingLowess")
+        end
 
-		obj = new(handle)
-		finalizer(
-			x -> ccall(
-				(:jl_streaming_lowess_free, libfastlowess),
-				Cvoid,
-				(Ptr{Cvoid},),
-				x.handle,
-			),
-			obj,
-		)
-		return obj
-	end
+        obj = new(handle)
+        finalizer(
+            x -> ccall(
+                (:jl_streaming_lowess_free, libfastlowess),
+                Cvoid,
+                (Ptr{Cvoid},),
+                x.handle,
+            ),
+            obj,
+        )
+        return obj
+    end
 end
 
 """
@@ -1117,22 +1117,22 @@ end
 Process a chunk of data.
 """
 function process_chunk(s::StreamingLowess, x::Vector{Float64}, y::Vector{Float64})
-	n = length(x)
-	if n != length(y)
-		throw(ArgumentError("x and y must have the same length"))
-	end
+    n = length(x)
+    if n != length(y)
+        throw(ArgumentError("x and y must have the same length"))
+    end
 
-	c_result = ccall(
-		(:jl_streaming_lowess_process_chunk, libfastlowess),
-		CJlLowessResult,
-		(Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Culong),
-		s.handle,
-		x,
-		y,
-		Culong(n),
-	)
+    c_result = ccall(
+        (:jl_streaming_lowess_process_chunk, libfastlowess),
+        CJlLowessResult,
+        (Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Culong),
+        s.handle,
+        x,
+        y,
+        Culong(n),
+    )
 
-	return convert_result(c_result)
+    return convert_result(c_result)
 end
 
 """
@@ -1141,14 +1141,14 @@ end
 Finalize streaming and return remaining buffered data.
 """
 function finalize(s::StreamingLowess)
-	c_result = ccall(
-		(:jl_streaming_lowess_finalize, libfastlowess),
-		CJlLowessResult,
-		(Ptr{Cvoid},),
-		s.handle,
-	)
+    c_result = ccall(
+        (:jl_streaming_lowess_finalize, libfastlowess),
+        CJlLowessResult,
+        (Ptr{Cvoid},),
+        s.handle,
+    )
 
-	return convert_result(c_result)
+    return convert_result(c_result)
 end
 
 """
@@ -1187,89 +1187,89 @@ Cross-validation, `return_sorted`, `return_diagnostics`, `return_residuals`, and
 Online always runs sequentially.
 """
 mutable struct OnlineLowess
-	handle::Ptr{Cvoid}
+    handle::Ptr{Cvoid}
 
-	function OnlineLowess(;
-		fraction::Float64 = 0.67,
-		window_capacity::Int = 1000,
-		min_points::Int = 2,
-		iterations::Int = 0,
-		delta::Float64 = NaN,
-		weight_function::String = "tricube",
-		robustness_method::String = "bisquare",
-		scaling_method::String = "mad",
-		boundary_policy::String = "extend",
-		update_mode::String = "incremental",
-		auto_converge::Float64 = NaN,
-		outputs = String[],
-		return_robustness_weights::Bool = false,
-		zero_weight_fallback::String = "use_local_mean",
-		missing::String = "error",
-		return_derivative::Bool = false,
-		return_se::Bool = false,
-		confidence_intervals::Float64 = NaN,
-		prediction_intervals::Float64 = NaN,
-	)
-		flags = _output_flags(outputs)
-		handle = ccall(
-			(:jl_online_lowess_new, libfastlowess),
-			Ptr{Cvoid},
-			(
-				Cdouble,
-				Cint,
-				Cint,
-				Cint,
-				Cdouble,
-				Cstring,
-				Cstring,
-				Cstring,
-				Cstring,
-				Cstring,
-				Cdouble,
-				Cint,
-				Cstring,
-				Cstring,
-				Cint,
-				Cint,
-				Cdouble,
-				Cdouble,
-			),
-			fraction,
-			Cint(window_capacity),
-			Cint(min_points),
-			Cint(iterations),
-			delta,
-			weight_function,
-			robustness_method,
-			scaling_method,
-			boundary_policy,
-			update_mode,
-			auto_converge,
-			Cint(return_robustness_weights || flags.weights),
-			zero_weight_fallback,
-			missing,
-			Cint(return_derivative || flags.derivative),
-			Cint(return_se || flags.se),
-			confidence_intervals,
-			prediction_intervals,
-		)
+    function OnlineLowess(;
+        fraction::Float64 = 0.67,
+        window_capacity::Int = 1000,
+        min_points::Int = 2,
+        iterations::Int = 0,
+        delta::Float64 = NaN,
+        weight_function::String = "tricube",
+        robustness_method::String = "bisquare",
+        scaling_method::String = "mad",
+        boundary_policy::String = "extend",
+        update_mode::String = "incremental",
+        auto_converge::Float64 = NaN,
+        outputs = String[],
+        return_robustness_weights::Bool = false,
+        zero_weight_fallback::String = "use_local_mean",
+        missing::String = "error",
+        return_derivative::Bool = false,
+        return_se::Bool = false,
+        confidence_intervals::Float64 = NaN,
+        prediction_intervals::Float64 = NaN,
+    )
+        flags = _output_flags(outputs)
+        handle = ccall(
+            (:jl_online_lowess_new, libfastlowess),
+            Ptr{Cvoid},
+            (
+                Cdouble,
+                Cint,
+                Cint,
+                Cint,
+                Cdouble,
+                Cstring,
+                Cstring,
+                Cstring,
+                Cstring,
+                Cstring,
+                Cdouble,
+                Cint,
+                Cstring,
+                Cstring,
+                Cint,
+                Cint,
+                Cdouble,
+                Cdouble,
+            ),
+            fraction,
+            Cint(window_capacity),
+            Cint(min_points),
+            Cint(iterations),
+            delta,
+            weight_function,
+            robustness_method,
+            scaling_method,
+            boundary_policy,
+            update_mode,
+            auto_converge,
+            Cint(return_robustness_weights || flags.weights),
+            zero_weight_fallback,
+            missing,
+            Cint(return_derivative || flags.derivative),
+            Cint(return_se || flags.se),
+            confidence_intervals,
+            prediction_intervals,
+        )
 
-		if handle == C_NULL
-			error("Failed to create OnlineLowess")
-		end
+        if handle == C_NULL
+            error("Failed to create OnlineLowess")
+        end
 
-		obj = new(handle)
-		finalizer(
-			x -> ccall(
-				(:jl_online_lowess_free, libfastlowess),
-				Cvoid,
-				(Ptr{Cvoid},),
-				x.handle,
-			),
-			obj,
-		)
-		return obj
-	end
+        obj = new(handle)
+        finalizer(
+            x -> ccall(
+                (:jl_online_lowess_free, libfastlowess),
+                Cvoid,
+                (Ptr{Cvoid},),
+                x.handle,
+            ),
+            obj,
+        )
+        return obj
+    end
 end
 
 """
@@ -1280,42 +1280,42 @@ Returns `nothing` while the window is still filling (fewer than `min_points`
 have been seen), and an `OnlineOutput` once smoothing begins.
 """
 function add_point(o::OnlineLowess, x::Float64, y::Float64)
-	c_result = ccall(
-		(:jl_online_lowess_add_point, libfastlowess),
-		CJlOnlineOutput,
-		(Ptr{Cvoid}, Cdouble, Cdouble),
-		o.handle,
-		x,
-		y,
-	)
+    c_result = ccall(
+        (:jl_online_lowess_add_point, libfastlowess),
+        CJlOnlineOutput,
+        (Ptr{Cvoid}, Cdouble, Cdouble),
+        o.handle,
+        x,
+        y,
+    )
 
-	if c_result.error != Ptr{Cchar}(C_NULL)
-		error_msg = unsafe_string(Ptr{UInt8}(c_result.error))
-		ccall(
-			(:jl_online_free_output, libfastlowess),
-			Cvoid,
-			(Ptr{CJlOnlineOutput},),
-			Ref(c_result),
-		)
-		error("fastlowess error: $error_msg")
-	end
+    if c_result.error != Ptr{Cchar}(C_NULL)
+        error_msg = unsafe_string(Ptr{UInt8}(c_result.error))
+        ccall(
+            (:jl_online_free_output, libfastlowess),
+            Cvoid,
+            (Ptr{CJlOnlineOutput},),
+            Ref(c_result),
+        )
+        error("fastlowess error: $error_msg")
+    end
 
-	if c_result.has_value == 0
-		return nothing
-	end
+    if c_result.has_value == 0
+        return nothing
+    end
 
-	return OnlineOutput(
-		c_result.y,
-		isnan(c_result.standard_error) ? nothing : c_result.standard_error,
-		isnan(c_result.residual) ? nothing : c_result.residual,
-		isnan(c_result.robustness_weight) ? nothing : c_result.robustness_weight,
-		c_result.iterations_used == -1 ? nothing : Int(c_result.iterations_used),
-		isnan(c_result.derivative) ? nothing : c_result.derivative,
-		isnan(c_result.confidence_lower) ? nothing : c_result.confidence_lower,
-		isnan(c_result.confidence_upper) ? nothing : c_result.confidence_upper,
-		isnan(c_result.prediction_lower) ? nothing : c_result.prediction_lower,
-		isnan(c_result.prediction_upper) ? nothing : c_result.prediction_upper,
-	)
+    return OnlineOutput(
+        c_result.y,
+        isnan(c_result.standard_error) ? nothing : c_result.standard_error,
+        isnan(c_result.residual) ? nothing : c_result.residual,
+        isnan(c_result.robustness_weight) ? nothing : c_result.robustness_weight,
+        c_result.iterations_used == -1 ? nothing : Int(c_result.iterations_used),
+        isnan(c_result.derivative) ? nothing : c_result.derivative,
+        isnan(c_result.confidence_lower) ? nothing : c_result.confidence_lower,
+        isnan(c_result.confidence_upper) ? nothing : c_result.confidence_upper,
+        isnan(c_result.prediction_lower) ? nothing : c_result.prediction_lower,
+        isnan(c_result.prediction_upper) ? nothing : c_result.prediction_upper,
+    )
 end
 
 end # module FastLOWESS

@@ -10,6 +10,7 @@ title: News
 
 ## Fixed
 
+* Fixed `dev/verify_snippets.py` failing on any doc snippet that imports the optional, comparison-only `statsmodels` package when it isn't installed in the target Python environment; such snippets are now skipped (rather than failed) when `statsmodels` can't be imported by the runner's Python interpreter.
 * Fixed C++ release CI's "Commit updated recipe" step failing with "paths are ignored" because the repo's blanket `.gitignore` `spack/` rule matches `bindings/cpp/spack/`; `git add` now force-adds the tracked recipe file.
 
 # fastlowess-wasm 4.1.0

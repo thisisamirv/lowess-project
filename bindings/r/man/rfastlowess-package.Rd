@@ -51,6 +51,7 @@ Authors:
 Other contributors:
 \itemize{
     \item Aleksei Chirkunov (Reviewed the package for rOpenSci (GitHub: @alexzerg), see <https://github.com/ropensci/software-review/issues/769>) [reviewer]
+    \item Josiah Parry (\href{https://orcid.org/0000-0001-9910-865X}{ORCID}) (Reviewed the package for rOpenSci (GitHub: @JosiahParry), see <https://github.com/ropensci/software-review/issues/769>) [reviewer]
     \item Etienne Bacher (Edited the package for rOpenSci (GitHub: @etiennebacher), see <https://github.com/ropensci/software-review/issues/769>) [editor]
 }
 
