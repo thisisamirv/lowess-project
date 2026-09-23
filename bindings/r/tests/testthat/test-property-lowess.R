@@ -61,7 +61,7 @@ test_that("matches stats::lowess for randomized inputs (property-based)", {
             y,
             fraction = fraction,
             iterations = iterations,
-            tolerance = 1e-8
+            tolerance = 1e-6
         ))
     }
 
@@ -99,7 +99,7 @@ test_that("matches stats::lowess for randomized sorted output", {
             fraction = fraction,
             iterations = iterations,
             sorted = TRUE,
-            tolerance = 1e-8
+            tolerance = 1e-6
         ))
     }
 
@@ -120,13 +120,11 @@ test_that("matches initial stats::lowess fits for sparse one-spike responses", {
     testthat::skip_if_not_installed("quickcheck")
     testthat::skip_on_cran()
 
-    property <- function(
-        x,
-        spike_position,
-        spike_magnitude,
-        spike_negative,
-        fraction
-    ) {
+    property <- function(x,
+                         spike_position,
+                         spike_magnitude,
+                         spike_negative,
+                         fraction) {
         if (!usable_x(x)) {
             return(expect_true(TRUE))
         }

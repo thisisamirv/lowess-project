@@ -260,6 +260,48 @@ fn test_batch_matches_r_lowess_even_zero_mar_stop() {
     }
 }
 
+/// Regression test for an even-length robustness cycle.
+///
+/// R alternates between two fits for this sparse input; an even iteration
+/// count returns the initial-like fit. The weighted-mean/slope evaluation must
+/// preserve the same roundoff residuals so the cycle is not stopped early.
+#[test]
+fn test_batch_matches_r_lowess_even_robustness_cycle() {
+    let x = vec![
+        1.5725028, -0.2113145, 0.0, 55.2777357, 55.1774183, 29.3813480,
+    ];
+    let y = vec![0.0, 0.0, 1.282067, 0.0, 1.011657, 0.0];
+
+    let result = Lowess::new()
+        .fraction(0.525)
+        .iterations(258)
+        .boundary_policy("noboundary")
+        .scaling_method("mar")
+        .zero_weight_fallback("return_original")
+        .outputs(["sorted"])
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .expect("Smoothing should succeed");
+
+    let expected_x = [
+        -0.2113145, 0.0, 1.5725028, 29.3813480, 55.1774183, 55.2777357,
+    ];
+    let expected_y = [
+        0.0,
+        1.282067,
+        0.0,
+        1.2400894777645133e-6,
+        0.50582854475255,
+        0.5058284560223183,
+    ];
+
+    for i in 0..expected_x.len() {
+        assert_relative_eq!(result.x[i], expected_x[i], epsilon = 1e-12);
+        assert_relative_eq!(result.y[i], expected_y[i], epsilon = 1e-6);
+    }
+}
+
 /// Test that `return_derivative` is `None` by default.
 #[test]
 fn test_batch_derivative_none_by_default() {

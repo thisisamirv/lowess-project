@@ -118,7 +118,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed MAR/mean robustness continuing from a substituted near-zero scale instead of taking `stats::lowess`'s degenerate-scale early exit. The fallback now applies only to centered MAD.
 - Matched Cleveland/R's local-linear degeneracy rule: suppress the slope when weighted local x-spread is below `0.001 * (max(x) - min(x))`.
 - Removed the absolute `1e-12` bisquare scale floor so roundoff-sized residuals are reweighted at their actual scale.
-- Matched R's local WLS operation order, including weight normalization and weighted centering, so robustness receives compatible floating-point residuals.
+- Matched R's weight normalization and weighted centering, then evaluated fitted values through weighted mean plus slope displacement to preserve cancellation residuals used by robustness.
+- Distinguished true zero-MAR fits from roundoff-only zeros using the response scale, while preserving R's exact-zero stopping behavior.
+- Preserved sparse-fit robustness cycles found by `quickcheck`; long-iteration comparisons allow bounded floating-point drift while fixed regressions pin each branch.
 
 **Java:**
 

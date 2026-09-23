@@ -94,13 +94,9 @@ impl RobustnessMethod {
 
         let n = residuals.len();
         let mut sum_abs = T::zero();
-        let mut min_positive_abs = T::infinity();
         for &r in residuals {
             let abs_r = r.abs();
             sum_abs = sum_abs + abs_r;
-            if abs_r > T::zero() {
-                min_positive_abs = min_positive_abs.min(abs_r);
-            }
         }
         let mean_abs = sum_abs / T::from(n).unwrap_or(T::one());
         let roundoff_limit =
@@ -111,7 +107,7 @@ impl RobustnessMethod {
             && mean_abs > T::zero()
             && mean_abs <= roundoff_limit
         {
-            base_scale = min_positive_abs;
+            base_scale = mean_abs;
         }
         let tuned_scale = base_scale * c_t;
         let degenerate_threshold =

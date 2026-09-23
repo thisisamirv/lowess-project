@@ -563,18 +563,13 @@ impl<T: Float + WLSSolver> LinearFit<T> {
 
         let min_spread = T::from(0.001).unwrap_or_else(T::epsilon) * global_x_range;
         let use_linear = spread.sqrt() > min_spread;
-        let adjustment = if use_linear {
-            (x_current - x_mean) / spread
-        } else {
-            T::zero()
-        };
 
-        let mut fitted = T::zero();
+        let mut y_mean = T::zero();
         let mut covariance = T::zero();
         for i in 0..n {
             let normalized_weight = weights[i] / sum_w;
             let dx = x[i] - x_mean;
-            fitted = fitted + normalized_weight * (T::one() + adjustment * dx) * y[i];
+            y_mean = y_mean + normalized_weight * y[i];
             covariance = covariance + normalized_weight * dx * y[i];
         }
 
@@ -583,12 +578,13 @@ impl<T: Float + WLSSolver> LinearFit<T> {
         } else {
             T::zero()
         };
+        let fitted = y_mean + slope * (x_current - x_mean);
 
         Self {
             slope,
             intercept: fitted - slope * x_current,
             x_mean,
-            y_mean: fitted,
+            y_mean,
         }
     }
 }
