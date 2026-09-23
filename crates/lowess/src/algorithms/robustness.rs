@@ -40,17 +40,14 @@ impl RobustnessMethod {
     // Default tuning constant for Talwar weights.
     const DEFAULT_TALWAR_C: f64 = 2.5;
 
-    // Minimum scale threshold relative to mean absolute residual.
+    // R's effective-zero threshold for the tuned median residual scale.
     const SCALE_THRESHOLD: f64 = 1e-7;
 
     // Minimum tuned-scale absolute epsilon to avoid division by zero.
     const MIN_TUNED_SCALE: f64 = 1e-12;
 
-    // Apply robustness weights using the configured method. Returns `true` if the
-    // residual scale collapsed to ~zero relative to the mean absolute residual (mirrors
-    // `stats::lowess`'s "cmad < 1e-7 * sc" check): callers should stop robustifying and
-    // keep the current fit rather than trust weights computed from a near-zero scale,
-    // which would otherwise zero out almost every point instead of leaving them alone.
+    // Apply robustness weights using the configured method. R's LOWESS stops
+    // when the tuned median residual is effectively zero relative to the mean.
     pub fn apply_robustness_weights<T: Float>(
         &self,
         residuals: &[T],
@@ -58,32 +55,11 @@ impl RobustnessMethod {
         scaling_method: ScalingMethod,
         scratch: &mut [T],
     ) -> bool {
-        self.apply_robustness_weights_with_response_scale(
-            residuals,
-            weights,
-            scaling_method,
-            scratch,
-            T::zero(),
-        )
-    }
-
-    // Apply robustness weights with the original response magnitude available
-    // to distinguish a truly degenerate MAR scale from floating-point-only
-    // residuals produced by an otherwise exact local fit.
-    pub fn apply_robustness_weights_with_response_scale<T: Float>(
-        &self,
-        residuals: &[T],
-        weights: &mut [T],
-        scaling_method: ScalingMethod,
-        scratch: &mut [T],
-        response_scale: T,
-    ) -> bool {
         if residuals.is_empty() {
             return false;
         }
 
-        let mut base_scale = self.compute_scale(residuals, scaling_method, scratch);
-
+        let base_scale = self.compute_scale(residuals, scaling_method, scratch);
         let (method_type, tuning_constant) = match self {
             Self::Bisquare => (0, Self::DEFAULT_BISQUARE_C),
             Self::Huber => (1, Self::DEFAULT_HUBER_C),
@@ -92,27 +68,14 @@ impl RobustnessMethod {
 
         let c_t = T::from(tuning_constant).unwrap_or(T::one());
 
-        let n = residuals.len();
-        let mut sum_abs = T::zero();
-        for &r in residuals {
-            let abs_r = r.abs();
-            sum_abs = sum_abs + abs_r;
-        }
-        let mean_abs = sum_abs / T::from(n).unwrap_or(T::one());
-        let roundoff_limit =
-            T::epsilon() * T::from(100.0).unwrap_or(T::one()) * response_scale.max(T::one());
-        if matches!(scaling_method, ScalingMethod::MAR)
-            && residuals.len() % 2 == 1
-            && base_scale == T::zero()
-            && mean_abs > T::zero()
-            && mean_abs <= roundoff_limit
-        {
-            base_scale = mean_abs;
-        }
+        let mean_abs = residuals
+            .iter()
+            .fold(T::zero(), |sum, residual| sum + residual.abs())
+            / T::from(residuals.len()).unwrap_or(T::one());
         let tuned_scale = base_scale * c_t;
-        let degenerate_threshold =
-            T::from(Self::SCALE_THRESHOLD).unwrap_or_else(T::epsilon) * mean_abs;
-        if tuned_scale < degenerate_threshold {
+        if matches!(scaling_method, ScalingMethod::MAR)
+            && tuned_scale < T::from(Self::SCALE_THRESHOLD).unwrap_or_else(T::epsilon) * mean_abs
+        {
             return true;
         }
 
@@ -155,12 +118,9 @@ impl RobustnessMethod {
             sum_abs = sum_abs + r.abs();
         }
         let mean_abs = sum_abs / T::from(n).unwrap_or(T::one());
-        let relative_threshold =
-            T::from(Self::SCALE_THRESHOLD).unwrap_or_else(T::epsilon) * mean_abs;
         let absolute_threshold = T::from(Self::MIN_TUNED_SCALE).unwrap_or_else(T::epsilon);
-        let scale_threshold = relative_threshold.max(absolute_threshold);
 
-        if scale <= scale_threshold {
+        if scale <= absolute_threshold {
             // MAD collapsed to ~zero: fall back to the mean absolute residual.
             mean_abs.max(scale)
         } else {

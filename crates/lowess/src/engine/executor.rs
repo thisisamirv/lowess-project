@@ -360,6 +360,12 @@ struct IterationLoopOptions<'a, T: Float> {
     custom_weights: Option<&'a [T]>,
 }
 
+struct RobustnessUpdateBuffers<'a, T> {
+    residuals: &'a mut [T],
+    robustness_weights: &'a mut [T],
+    scratch: &'a mut [T],
+}
+
 impl<T: Float> Default for LowessExecutor<T> {
     fn default() -> Self {
         Self::new()
@@ -1022,11 +1028,13 @@ impl<T: Float> LowessExecutor<T> {
                 && Self::update_robustness_weights(
                     y,
                     &buffers.y_smooth,
-                    &mut buffers.residuals,
-                    &mut buffers.robustness_weights,
+                    RobustnessUpdateBuffers {
+                        residuals: &mut buffers.residuals,
+                        robustness_weights: &mut buffers.robustness_weights,
+                        scratch: &mut buffers.weights,
+                    },
                     robustness_updater,
                     self.scaling_method,
-                    &mut buffers.weights,
                 )
             {
                 break;
@@ -1179,29 +1187,22 @@ impl<T: Float> LowessExecutor<T> {
     // was found to be degenerate (see `RobustnessMethod::apply_robustness_weights`), in
     // which case `robustness_weights` was left unchanged and the caller should stop
     // robustifying.
-    pub fn update_robustness_weights(
+    fn update_robustness_weights(
         y: &[T],
         y_smooth: &[T],
-        residuals: &mut [T],
-        robustness_weights: &mut [T],
+        buffers: RobustnessUpdateBuffers<'_, T>,
         robustness_updater: &RobustnessMethod,
         scaling_method: ScalingMethod,
-        scratch: &mut [T],
     ) -> bool {
         // Inline compute_residuals: residuals[i] = y[i] - y_smooth[i]
         for i in 0..y.len() {
-            residuals[i] = y[i] - y_smooth[i];
+            buffers.residuals[i] = y[i] - y_smooth[i];
         }
-        let response_scale = y
-            .iter()
-            .copied()
-            .fold(T::zero(), |scale, value| scale.max(value.abs()));
-        robustness_updater.apply_robustness_weights_with_response_scale(
-            residuals,
-            robustness_weights,
+        robustness_updater.apply_robustness_weights(
+            buffers.residuals,
+            buffers.robustness_weights,
             scaling_method,
-            scratch,
-            response_scale,
+            buffers.scratch,
         )
     }
 

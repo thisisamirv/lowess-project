@@ -131,12 +131,21 @@ check_stats_lowess <- function(
     ) {
         stop("x does not match stats::lowess sorted output", call. = FALSE)
     }
-    if (!isTRUE(all.equal(result$y, reference$y, tolerance = tolerance))) {
-        max_diff <- max(abs(result$y - reference$y))
+    max_diff <- max(abs(result$y - reference$y))
+    comparison_scale <- max(1, abs(result$y), abs(reference$y))
+    if (max_diff > tolerance * comparison_scale) {
         stop(
             sprintf(
-                "y does not match stats::lowess output (max abs diff: %.17g)",
-                max_diff
+                paste0(
+                    "y does not match stats::lowess output ",
+                    "(max abs diff: %.17g; x: %s; y: %s; ",
+                    "fraction: %.17g; iterations: %d)"
+                ),
+                max_diff,
+                paste(sprintf("%.17g", x), collapse = ", "),
+                paste(sprintf("%.17g", y), collapse = ", "),
+                fraction,
+                iterations
             ),
             call. = FALSE
         )

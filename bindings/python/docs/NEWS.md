@@ -3,6 +3,7 @@
 
 ## Added
 
+* Added self-contained R and original Cleveland LOWESS references under `validation/reference/`, with provenance, dependency, precision, and build notes.
 * Added grouped `outputs` and nested `cv` constructor options, plus grouped prediction outputs, while preserving legacy keyword arguments.
 * Added an "Alternative Software" guide comparing `fastlowess` with `statsmodels.lowess()`.
 * Added comparison-only `statsmodels` documentation dependency for executable examples.

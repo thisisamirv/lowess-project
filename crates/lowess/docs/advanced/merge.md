@@ -55,7 +55,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-First smoothed value (average merge): 0.38260776436644134
+First smoothed value (average merge): 0.3826077643664416
 ```
 
 ---
@@ -88,7 +88,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-First smoothed value (take_first merge): 0.38260776436644134
+First smoothed value (take_first merge): 0.3826077643664416
 ```
 
 ---
@@ -121,7 +121,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-First smoothed value (take_last merge): 0.38260776436644134
+First smoothed value (take_last merge): 0.3826077643664416
 ```
 
 ---
@@ -158,7 +158,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-First smoothed value (weighted_average merge): 0.38260776436644134
+First smoothed value (weighted_average merge): 0.3826077643664416
 ```
 
 ---

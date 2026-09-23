@@ -399,6 +399,9 @@ pub struct LinearFit<T: Float> {
 
     // Weighted mean of y-values
     pub y_mean: T,
+
+    // Fitted value at the pivot used for the local WLS solve.
+    pub fitted: T,
 }
 
 impl<T: Float> LinearFit<T> {
@@ -409,6 +412,7 @@ impl<T: Float> LinearFit<T> {
             intercept: T::zero(),
             x_mean: T::zero(),
             y_mean: T::zero(),
+            fitted: T::zero(),
         }
     }
 
@@ -460,6 +464,7 @@ impl<T: Float> LinearFit<T> {
                 intercept: y_mean,
                 x_mean,
                 y_mean,
+                fitted: y_mean,
             };
         }
 
@@ -471,6 +476,7 @@ impl<T: Float> LinearFit<T> {
             intercept,
             x_mean,
             y_mean,
+            fitted: y_mean,
         }
     }
 
@@ -534,7 +540,7 @@ impl<T: Float> LinearFit<T> {
 
 impl<T: Float + WLSSolver> LinearFit<T> {
     // Fit weighted least squares using Cleveland/R `lowest()` arithmetic order.
-    pub fn fit_wls(x: &[T], y: &[T], weights: &[T], x_current: T, global_x_range: T) -> Self {
+    pub fn fit_wls(x: &[T], y: &[T], weights: &mut [T], x_current: T, global_x_range: T) -> Self {
         let n = x.len();
         if n == 0 {
             return Self::zero();
@@ -545,46 +551,51 @@ impl<T: Float + WLSSolver> LinearFit<T> {
             return Self::zero();
         }
 
-        // R first normalises each weight, then computes the weighted x-centre
-        // in the original coordinate system. This operation order matters:
-        // robustness iterations consume the tiny roundoff residuals from this
-        // fit, so an algebraically equivalent centred solve can take a
-        // different branch on sparse/exactly-interpolated data.
+        for weight in weights.iter_mut() {
+            *weight = *weight / sum_w;
+        }
+
         let mut x_mean = T::zero();
         for i in 0..n {
-            x_mean = x_mean + (weights[i] / sum_w) * x[i];
+            x_mean = x_mean + weights[i] * x[i];
         }
 
         let mut spread = T::zero();
         for i in 0..n {
             let dx = x[i] - x_mean;
-            spread = spread + (weights[i] / sum_w) * (dx * dx);
+            spread = spread + weights[i] * dx * dx;
         }
 
         let min_spread = T::from(0.001).unwrap_or_else(T::epsilon) * global_x_range;
         let use_linear = spread.sqrt() > min_spread;
 
+        let target_adjustment = if use_linear {
+            (x_current - x_mean) / spread
+        } else {
+            T::zero()
+        };
+        let mut fitted = T::zero();
         let mut y_mean = T::zero();
         let mut covariance = T::zero();
         for i in 0..n {
-            let normalized_weight = weights[i] / sum_w;
             let dx = x[i] - x_mean;
-            y_mean = y_mean + normalized_weight * y[i];
-            covariance = covariance + normalized_weight * dx * y[i];
+            y_mean = y_mean + weights[i] * y[i];
+            covariance = covariance + weights[i] * dx * y[i];
+            weights[i] = weights[i] * (T::one() + target_adjustment * dx);
+            fitted = fitted + weights[i] * y[i];
         }
-
         let slope = if use_linear {
             covariance / spread
         } else {
             T::zero()
         };
-        let fitted = y_mean + slope * (x_current - x_mean);
 
         Self {
             slope,
             intercept: fitted - slope * x_current,
             x_mean,
             y_mean,
+            fitted,
         }
     }
 }
@@ -789,10 +800,10 @@ impl<'a, T: Float + WLSSolver> RegressionContext<'a, T> {
 
         let window_x = &self.x[self.window.left..=rightmost_idx];
         let window_y = &self.y[self.window.left..=rightmost_idx];
-        let window_weights = &self.weights[self.window.left..=rightmost_idx];
+        let window_weights = &mut self.weights[self.window.left..=rightmost_idx];
 
         let global_x_range = self.x[self.x.len() - 1] - self.x[0];
         let model = LinearFit::fit_wls(window_x, window_y, window_weights, x_pivot, global_x_range);
-        Some((model.predict(x_pivot), model.slope))
+        Some((model.fitted, model.slope))
     }
 }

@@ -3,6 +3,10 @@
 <!-- markdownlint-disable MD024 MD025 -->
 # fastlowess (C++) (development version)
 
+## Added
+
+* Added self-contained R and original Cleveland LOWESS references under `validation/reference/`, with provenance, dependency, precision, and build notes.
+
 ## Changed
 
 * Updated the vendored `doxygen-awesome-css` theme to v2.5.0 and the Hugo docs build to v0.166.0.

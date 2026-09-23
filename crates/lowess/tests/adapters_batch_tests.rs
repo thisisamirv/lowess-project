@@ -229,6 +229,205 @@ fn test_batch_matches_r_lowess_roundoff_scale_robustness() {
     }
 }
 
+/// Regression test for zero-MAR stopping after the first robust pass.
+///
+/// The initial fit has a nonzero residual scale, but the first reweighted fit
+/// leaves an exact zero median residual. R stops there instead of applying the
+/// initial-fit roundoff rescue again.
+#[test]
+fn test_batch_matches_r_lowess_zero_mar_after_robust_pass() {
+    let x = vec![
+        0.0,
+        2.7863911632448435,
+        -1.0194359831511974,
+        2.021249094977975,
+        -4.309166733175516,
+        -4.288570925593376,
+        -1.6026182863861322,
+    ];
+    let y = vec![
+        0.0,
+        36.7024937197566,
+        0.0,
+        26.858608847483993,
+        0.0,
+        0.0,
+        -17.123421056196094,
+    ];
+
+    let result = Lowess::new()
+        .fraction(0.6475157842156477)
+        .iterations(63)
+        .boundary_policy("noboundary")
+        .scaling_method("mar")
+        .zero_weight_fallback("return_original")
+        .outputs(["sorted"])
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .expect("Smoothing should succeed");
+
+    let expected_y = [
+        0.0,
+        0.0,
+        -17.123421056196094,
+        0.0,
+        0.0,
+        26.858608847484003,
+        36.7024937197566,
+    ];
+
+    for (actual, expected) in result.y.iter().zip(expected_y) {
+        assert_relative_eq!(actual, &expected, epsilon = 1e-12);
+    }
+}
+
+#[test]
+fn test_batch_matches_r_lowess_exact_zero_after_robust_pass() {
+    let x = vec![
+        69.3306816779077,
+        -35.485061567276716,
+        20.071472693234682,
+        21.08545009791851,
+        23.086728494614363,
+        19.862130144611,
+    ];
+    let y = vec![0.0, 0.0, 0.0, 0.0, 50.805957010015845, -1.433574667200446];
+
+    let result = Lowess::new()
+        .fraction(0.525)
+        .iterations(214)
+        .boundary_policy("noboundary")
+        .scaling_method("mar")
+        .zero_weight_fallback("return_original")
+        .outputs(["sorted"])
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .expect("Smoothing should succeed");
+
+    let expected_y = [
+        0.0,
+        -1.433574667200446,
+        0.0,
+        0.0,
+        50.805957010015845,
+        -1.2063189846893752e-15,
+    ];
+    for (actual, expected) in result.y.iter().zip(expected_y) {
+        assert_relative_eq!(actual, &expected, epsilon = 1e-12);
+    }
+}
+
+#[test]
+fn test_batch_matches_r_lowess_even_roundoff_cycle() {
+    let x = vec![
+        90.02088531851769,
+        89.72872025333345,
+        9.936689188703895,
+        -71.60690852813423,
+        -70.5401444658637,
+        -69.710927573964,
+    ];
+    let y = vec![0.0, -1.190286960452795, 0.0, 0.0, 0.0, -0.7642881479114294];
+
+    let result = Lowess::new()
+        .fraction(0.525)
+        .iterations(126)
+        .boundary_policy("noboundary")
+        .scaling_method("mar")
+        .zero_weight_fallback("return_original")
+        .outputs(["sorted"])
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .expect("Smoothing should succeed");
+
+    let expected_y = [
+        0.0,
+        -4.138748386302167e-15,
+        -0.7642881479114294,
+        -8.117071650082022e-8,
+        -0.5951434362821931,
+        -0.5951434369990422,
+    ];
+    for (actual, expected) in result.y.iter().zip(expected_y) {
+        assert_relative_eq!(actual, &expected, epsilon = 1e-6);
+    }
+}
+
+#[test]
+fn test_batch_matches_r_lowess_exact_zero_one_spike_cycle() {
+    let x = vec![
+        -1.7297727297991514,
+        0.0,
+        54.60651760734618,
+        -54.374764017760754,
+        37.06409892439842,
+        36.86200965754688,
+    ];
+    let y = vec![0.0, 0.0, 0.0, 0.0, 1.8184073213487864, 0.0];
+
+    let result = Lowess::new()
+        .fraction(0.525)
+        .iterations(54)
+        .boundary_policy("noboundary")
+        .scaling_method("mar")
+        .zero_weight_fallback("return_original")
+        .outputs(["sorted"])
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .expect("Smoothing should succeed");
+
+    let expected_y = [
+        0.0,
+        0.0,
+        0.0,
+        0.9092016460660994,
+        0.9092057453965459,
+        7.008249821798301e-5,
+    ];
+    for (actual, expected) in result.y.iter().zip(expected_y) {
+        assert_relative_eq!(actual, &expected, epsilon = 1e-9);
+    }
+}
+
+#[test]
+fn test_batch_matches_r_lowess_odd_exact_zero_stop() {
+    let x = vec![
+        -3.117825483903289,
+        -75.69760708324611,
+        40.400580363348126,
+        -0.23143524304032326,
+        0.0,
+    ];
+    let y = vec![1.051443710923195, 0.0, 0.0, 0.0, -1.9515871945768595];
+
+    let result = Lowess::new()
+        .fraction(0.683341812028084)
+        .iterations(62)
+        .boundary_policy("noboundary")
+        .scaling_method("mar")
+        .zero_weight_fallback("return_original")
+        .outputs(["sorted"])
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .expect("Smoothing should succeed");
+
+    let expected_y = [
+        3.702938456513119e-17,
+        1.051443710923195,
+        0.0,
+        -1.9515871945768595,
+        0.0,
+    ];
+    for (actual, expected) in result.y.iter().zip(expected_y) {
+        assert_relative_eq!(actual, &expected, epsilon = 1e-12);
+    }
+}
+
 /// Regression test for an even-length zero-MAR residual set.
 ///
 /// With an even number of observations, both middle absolute residuals are

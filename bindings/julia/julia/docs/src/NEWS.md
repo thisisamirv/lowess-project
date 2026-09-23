@@ -3,6 +3,7 @@
 
 ## Added
 
+* Added self-contained R and original Cleveland LOWESS references under `validation/reference/`, with provenance, dependency, precision, and build notes.
 * Added grouped `outputs` and `cv` keywords for `Lowess`, plus grouped outputs for Streaming/Online constructors and retained-model prediction.
 * Added an "Alternative Software" guide comparing LOWESS in `FastLOWESS.jl` with the more general LOESS implementation in `Loess.jl`.
 * Added optional `Loess.jl` handling to the Julia snippet runner; comparison snippets are skipped when unavailable.

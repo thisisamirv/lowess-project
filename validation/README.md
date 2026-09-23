@@ -2,6 +2,12 @@
 
 Validates `fastLowess` (Rust) output against R's `stats::lowess` as the reference implementation across scenarios covering a wide range of inputs and parameter combinations.
 
+## Reference sources
+
+[`reference/`](reference/) contains self-contained source references for R's
+current C LOWESS engine and Cleveland's original 1985 Fortran implementation,
+including provenance, build instructions, and behavioral differences.
+
 ## Scenarios
 
 | # | Name | n | Fraction | Iterations | Notes |

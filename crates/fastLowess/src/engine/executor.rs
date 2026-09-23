@@ -20,6 +20,8 @@ use rayon::prelude::*;
 #[cfg(feature = "cpu")]
 use lowess::internals::algorithms::regression::{RegressionContext, WLSSolver, ZeroWeightFallback};
 #[cfg(feature = "cpu")]
+use lowess::internals::engine::executor::LowessExecutor;
+#[cfg(feature = "cpu")]
 use lowess::internals::engine::predict::{
     PredictQuery, PredictState, RawPredictValues, predict_one_full,
 };
@@ -53,6 +55,28 @@ pub fn smooth_pass_parallel<T>(
     }
 
     let zero_weight_fallback = ZeroWeightFallback::from_u8(zero_weight_flag);
+
+    // Preserve the serial delta scan for inputs too small to benefit from
+    // Rayon. Its arithmetic order also determines roundoff-scale robustness.
+    const PARALLEL_DELTA_THRESHOLD: usize = 1024;
+    if delta > T::zero() && n < PARALLEL_DELTA_THRESHOLD {
+        let mut weights = vec![T::zero(); n];
+        LowessExecutor::smooth_pass(
+            x,
+            y,
+            window_size,
+            delta,
+            use_robustness,
+            robustness_weights,
+            y_smooth,
+            weight_function,
+            &mut weights,
+            zero_weight_flag,
+            custom_weights,
+            None,
+        );
+        return;
+    }
 
     // If delta > 0, use delta optimization with anchor points
     if delta > T::zero() && n > 2 {

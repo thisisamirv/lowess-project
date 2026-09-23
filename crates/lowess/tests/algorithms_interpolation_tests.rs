@@ -120,10 +120,10 @@ fn test_interpolate_gap_minimal() {
 fn test_interpolate_gap_nan_inf() {
     let x = vec![0.0f64, 1.0, 2.0];
 
-    // y0 is Inf, y1 is finite => Inf - Inf => NaN
+    // R-order weighted interpolation propagates the infinite endpoint.
     let mut y_inf = vec![f64::INFINITY, 0.0, 20.0];
     interpolate_gap(&x, &mut y_inf, 0, 2);
-    assert!(y_inf[1].is_nan());
+    assert!(y_inf[1].is_infinite());
 
     // y0 is NaN
     let mut y_nan = vec![f64::NAN, 0.0, 20.0];

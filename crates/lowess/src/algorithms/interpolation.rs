@@ -53,10 +53,11 @@ pub fn interpolate_gap<T: Float>(x: &[T], y_smooth: &mut [T], last_fitted: usize
         return;
     }
 
-    // Linear interpolation: y = y0 + (xi - x0) * slope
-    let slope = (y1 - y0) / denom;
+    // Cleveland/R interpolation order. The algebraically equivalent slope
+    // form can erase roundoff residuals used by later robustness passes.
     for k in (last_fitted + 1)..current {
-        y_smooth[k] = y0 + (x[k] - x0) * slope;
+        let alpha = (x[k] - x0) / denom;
+        y_smooth[k] = alpha * y1 + (T::one() - alpha) * y0;
     }
 }
 

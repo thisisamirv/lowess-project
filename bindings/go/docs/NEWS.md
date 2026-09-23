@@ -8,6 +8,7 @@ weight: 100
 
 ## Added
 
+* Added self-contained R and original Cleveland LOWESS references under `validation/reference/`, with provenance, dependency, precision, and build notes.
 * Added grouped `Outputs []string`, `CV *CVOptions`, and prediction `Outputs []string` options; legacy flat fields remain accepted during migration.
 
 ## Changed

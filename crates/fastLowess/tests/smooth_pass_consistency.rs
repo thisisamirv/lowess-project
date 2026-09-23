@@ -34,6 +34,57 @@ fn test_smooth_pass_consistency_robust() {
     println!("Robust smooth pass consistency (3 iters): OK");
 }
 
+/// Pins both fastLowess paths to the sparse initial fit produced by
+/// `stats::lowess(x, y, f = 0.525, iter = 0)`.
+#[test]
+fn test_parallel_matches_r_sparse_initial_fit() {
+    let x = vec![3.572503, -6.211315, 0.0, 55.277736, 55.177418, 30.381348];
+    let y = vec![0.0, 0.0, 1.282067, 0.0, 1.011657, 0.0];
+
+    let sequential = Lowess::new()
+        .fraction(0.525)
+        .iterations(0)
+        .boundary_policy("noboundary")
+        .scaling_method("mar")
+        .zero_weight_fallback("return_original")
+        .outputs(["sorted"])
+        .parallel(false)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    let result = Lowess::new()
+        .fraction(0.525)
+        .iterations(0)
+        .boundary_policy("noboundary")
+        .scaling_method("mar")
+        .zero_weight_fallback("return_original")
+        .outputs(["sorted"])
+        .parallel(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    let expected_x = [-6.211315, 0.0, 3.572503, 30.381348, 55.177418, 55.277736];
+    let expected_y = [
+        0.0,
+        1.282067,
+        0.0,
+        1.765_511_178_753_244e-6,
+        0.5058285502438145,
+        0.5058284503611018,
+    ];
+    for i in 0..expected_x.len() {
+        assert_abs_diff_eq!(sequential.x[i], expected_x[i], epsilon = 1e-12);
+        assert_abs_diff_eq!(sequential.y[i], expected_y[i], epsilon = 1e-6);
+        assert_abs_diff_eq!(result.x[i], expected_x[i], epsilon = 1e-12);
+        assert_abs_diff_eq!(result.y[i], expected_y[i], epsilon = 1e-6);
+    }
+    assert_eq!(result.y, sequential.y);
+}
+
 /// Verifies that the parallel `return_derivative` pass produces the same per-point
 /// local fit slope as the sequential implementation, including delta-skipped
 /// (interpolated) points.

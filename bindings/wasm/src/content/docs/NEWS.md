@@ -6,6 +6,7 @@ title: News
 
 ## Added
 
+* Added self-contained R and original Cleveland LOWESS references under `validation/reference/`, with provenance, dependency, precision, and build notes.
 * Added grouped `outputs` arrays and nested `cv` option objects for batch, streaming, online, and prediction configuration while preserving legacy fields.
 
 ## Changed

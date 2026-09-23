@@ -3,6 +3,7 @@
 
 ## Added
 
+* Added self-contained R and original Cleveland LOWESS references under `validation/reference/`, with provenance, dependency, precision, and build notes.
 * Added `LowessBuilder::outputs(names)` as a grouped replacement for the individual output toggles. Unknown names are collected and reported together by `.build()`.
 * Added grouped cross-validation configuration through `CVBuilder` and `.cv(...)`. `CVBuilder` is in the prelude; the internal `CVOptions` result type remains at the crate root.
 * Added `PredictBuilder::outputs(names)` in both Rust crates, supporting `"se"` and `"derivative"` as a grouped replacement for `.return_se()` and `.return_derivative()`.
@@ -19,11 +20,11 @@
 
 * Skip comparison snippets when the optional `statsmodels` dependency is unavailable instead of failing verification.
 * Fixed C++ release CI staging the tracked Spack recipe despite the repository's broad `spack/` ignore rule.
-* Fixed MAR/mean robustness continuing from a substituted near-zero scale instead of taking `stats::lowess`'s degenerate-scale early exit. The fallback now applies only to centered MAD.
+* Matched R's effective-zero robustness guard: stop when `6 * median(abs(residuals)) < 1e-7 * mean(abs(residuals))`; centered MAD retains its separate fallback.
 * Matched Cleveland/R's local-linear degeneracy rule: suppress the slope when weighted local x-spread is below `0.001 * (max(x) - min(x))`.
 * Removed the absolute `1e-12` bisquare scale floor so roundoff-sized residuals are reweighted at their actual scale.
-* Matched R's weight normalization and weighted centering, then evaluated fitted values through weighted mean plus slope displacement to preserve cancellation residuals used by robustness.
-* Distinguished true zero-MAR fits from roundoff-only zeros using the response scale, while preserving R's exact-zero stopping behavior.
+* Matched R's normalized adjusted-weight fitted-value accumulation without parity-, sparsity-, or response-scale-specific branches.
+* Matched Cleveland/R's delta interpolation order (`alpha * y1 + (1 - alpha) * y0`) so interpolated roundoff residuals preserve the correct robustness-cycle phase.
 * Preserved sparse-fit robustness cycles found by `quickcheck`; long-iteration comparisons allow bounded floating-point drift while fixed regressions pin each branch.
 
 # lowess 4.1.0

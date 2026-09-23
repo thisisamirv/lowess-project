@@ -3,6 +3,7 @@
 
 ## Added
 
+* Added self-contained R and original Cleveland LOWESS references under `validation/reference/`, with provenance, dependency, precision, and build notes.
 * Added `tests/binding_support_tests.rs` (gated on the `dev` feature) covering repeated FFI buffer allocate/read/free cycles, optional buffers, and null-pointer freeing.
 
 ## Changed
@@ -16,6 +17,7 @@
 
 * Skip comparison snippets when the optional `statsmodels` dependency is unavailable instead of failing verification.
 * Fixed C++ release CI staging the tracked Spack recipe despite the repository's broad `spack/` ignore rule.
+* Used the serial delta scan below the parallel-benefit threshold so small inputs preserve the exact arithmetic order required by `stats::lowess` robustness edge cases.
 
 # fastLowess 4.1.0
 

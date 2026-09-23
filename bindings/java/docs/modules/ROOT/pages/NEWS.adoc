@@ -4,6 +4,7 @@
 
 === Added
 
+* Added self-contained R and original Cleveland LOWESS references under `validation/reference/`, with provenance, dependency, precision, and build notes.
 * Added grouped `outputs(...)`, `cv(CVOptions...)`, and prediction-output APIs while preserving native option mapping.
 * Added an "Alternative Software" guide comparing `fastlowess` with Apache Commons Math's `LoessInterpolator`.
 * Added optional `commons-math3` support to the Java snippet runner; unavailable downloads are skipped.
