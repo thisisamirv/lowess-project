@@ -58,11 +58,31 @@ impl RobustnessMethod {
         scaling_method: ScalingMethod,
         scratch: &mut [T],
     ) -> bool {
+        self.apply_robustness_weights_with_response_scale(
+            residuals,
+            weights,
+            scaling_method,
+            scratch,
+            T::zero(),
+        )
+    }
+
+    // Apply robustness weights with the original response magnitude available
+    // to distinguish a truly degenerate MAR scale from floating-point-only
+    // residuals produced by an otherwise exact local fit.
+    pub fn apply_robustness_weights_with_response_scale<T: Float>(
+        &self,
+        residuals: &[T],
+        weights: &mut [T],
+        scaling_method: ScalingMethod,
+        scratch: &mut [T],
+        response_scale: T,
+    ) -> bool {
         if residuals.is_empty() {
             return false;
         }
 
-        let base_scale = self.compute_scale(residuals, scaling_method, scratch);
+        let mut base_scale = self.compute_scale(residuals, scaling_method, scratch);
 
         let (method_type, tuning_constant) = match self {
             Self::Bisquare => (0, Self::DEFAULT_BISQUARE_C),
@@ -74,10 +94,25 @@ impl RobustnessMethod {
 
         let n = residuals.len();
         let mut sum_abs = T::zero();
+        let mut min_positive_abs = T::infinity();
         for &r in residuals {
-            sum_abs = sum_abs + r.abs();
+            let abs_r = r.abs();
+            sum_abs = sum_abs + abs_r;
+            if abs_r > T::zero() {
+                min_positive_abs = min_positive_abs.min(abs_r);
+            }
         }
         let mean_abs = sum_abs / T::from(n).unwrap_or(T::one());
+        let roundoff_limit =
+            T::epsilon() * T::from(100.0).unwrap_or(T::one()) * response_scale.max(T::one());
+        if matches!(scaling_method, ScalingMethod::MAR)
+            && residuals.len() % 2 == 1
+            && base_scale == T::zero()
+            && mean_abs > T::zero()
+            && mean_abs <= roundoff_limit
+        {
+            base_scale = min_positive_abs;
+        }
         let tuned_scale = base_scale * c_t;
         let degenerate_threshold =
             T::from(Self::SCALE_THRESHOLD).unwrap_or_else(T::epsilon) * mean_abs;
@@ -154,11 +189,13 @@ impl RobustnessMethod {
             return T::one();
         }
 
-        let min_eps = T::from(Self::MIN_TUNED_SCALE).unwrap_or_else(T::epsilon);
-        // Ensure c is at least min_eps so tuned_scale isn't zero
-        let c_clamped = c.max(min_eps);
-        // cmad = c * scale (e.g., 6.0 * MAR)
-        let cmad = (scale * c_clamped).max(min_eps);
+        // cmad = c * scale (e.g., 6.0 * MAR). Do not impose an absolute
+        // floor here: Cleveland/R applies robustness at the data's scale,
+        // including roundoff-sized residuals after an almost-exact fit.
+        let cmad = scale * c;
+        if cmad <= T::zero() {
+            return T::one();
+        }
 
         // Boundary thresholds
         let c1 = T::from(0.001).unwrap_or_else(T::epsilon) * cmad;

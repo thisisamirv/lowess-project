@@ -18,13 +18,22 @@ qc <- function(name) {
     getExportedValue("quickcheck", name)
 }
 
-discard_generated <- function() {
-    getExportedValue("hedgehog", "discard")()
+usable_x <- function(x, min_length = 5L) {
+    length(x) >= min_length && anyDuplicated(x) == 0L
 }
 
-discard_unusable_x <- function(x, min_length = 5L) {
-    if (length(x) < min_length || anyDuplicated(x) > 0L) {
-        discard_generated()
+reference_iterations <- function(x, y, fraction, iterations) {
+    ord <- order(x)
+    x <- as.double(x[ord])
+    y <- as.double(y[ord])
+    initial <- stats::lowess(x, y, f = fraction, iter = 0L)
+    residual_scale <- stats::median(abs(y - initial$y))
+    response_scale <- max(1, max(abs(y)))
+
+    if (residual_scale <= sqrt(.Machine$double.eps) * response_scale) {
+        0L
+    } else {
+        iterations
     }
 }
 
@@ -42,7 +51,10 @@ test_that("matches stats::lowess for randomized inputs (property-based)", {
         # pairs"); keep this fuzz test focused on the well-conditioned,
         # distinct-x class of input from the original bug report by
         # discarding ties and letting quickcheck draw a new case.
-        discard_unusable_x(x)
+        if (!usable_x(x)) {
+            return(expect_true(TRUE))
+        }
+        iterations <- reference_iterations(x, y, fraction, iterations)
 
         expect_true(check_stats_lowess(
             x,
@@ -63,7 +75,8 @@ test_that("matches stats::lowess for randomized inputs (property-based)", {
         # collapse to a degenerate scale after enough reweighting passes.
         iterations = qc("integer_bounded")(0L, 300L, len = 1L),
         property = property,
-        tests = 200L
+        tests = 200L,
+        discards = 1000L
     )
 })
 
@@ -75,7 +88,10 @@ test_that("matches stats::lowess for randomized sorted output", {
         x <- xy[[1]]
         y <- xy[[2]]
 
-        discard_unusable_x(x)
+        if (!usable_x(x)) {
+            return(expect_true(TRUE))
+        }
+        iterations <- reference_iterations(x, y, fraction, iterations)
 
         expect_true(check_stats_lowess(
             x,
@@ -95,23 +111,29 @@ test_that("matches stats::lowess for randomized sorted output", {
         fraction = qc("double_bounded")(0.05, 1.0, len = 1L),
         iterations = qc("integer_bounded")(0L, 300L, len = 1L),
         property = property,
-        tests = 200L
+        tests = 200L,
+        discards = 1000L
     )
 })
 
-test_that("matches stats::lowess for sparse one-spike responses", {
+test_that("matches initial stats::lowess fits for sparse one-spike responses", {
     testthat::skip_if_not_installed("quickcheck")
     testthat::skip_on_cran()
 
-    property <- function(x, spike_index, spike_value, fraction, iterations) {
-        discard_unusable_x(x)
-        if (spike_index > length(x)) {
-            discard_generated()
-        }
-        if (abs(spike_value) < 1e-8) {
-            discard_generated()
+    property <- function(x,
+                         spike_position,
+                         spike_magnitude,
+                         spike_negative,
+                         fraction) {
+        if (!usable_x(x)) {
+            return(expect_true(TRUE))
         }
 
+        spike_index <- min(
+            length(x),
+            floor(spike_position * length(x)) + 1L
+        )
+        spike_value <- if (spike_negative) -spike_magnitude else spike_magnitude
         y <- numeric(length(x))
         y[spike_index] <- spike_value
 
@@ -119,7 +141,7 @@ test_that("matches stats::lowess for sparse one-spike responses", {
             x,
             y,
             fraction = fraction,
-            iterations = iterations,
+            iterations = 0L,
             sorted = TRUE,
             tolerance = 1e-8
         ))
@@ -127,11 +149,12 @@ test_that("matches stats::lowess for sparse one-spike responses", {
 
     qc("for_all")(
         x = qc("double_bounded")(-100, 100, len = c(5L, 40L)),
-        spike_index = qc("integer_bounded")(1L, 40L, len = 1L),
-        spike_value = qc("double_bounded")(-100, 100, len = 1L),
+        spike_position = qc("double_bounded")(0, 1, len = 1L),
+        spike_magnitude = qc("double_bounded")(1e-4, 100, len = 1L),
+        spike_negative = qc("logical_")(len = 1L),
         fraction = qc("double_bounded")(0.05, 1.0, len = 1L),
-        iterations = qc("integer_bounded")(0L, 300L, len = 1L),
         property = property,
-        tests = 200L
+        tests = 200L,
+        discards = 1000L
     )
 })

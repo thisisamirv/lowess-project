@@ -192,6 +192,74 @@ fn test_batch_matches_r_lowess_global_range_linear_degeneracy() {
     }
 }
 
+/// Regression test for roundoff-sized MAR robustness scales.
+///
+/// A 3-point local window can interpolate sparse responses almost exactly,
+/// leaving only floating-point residuals. R still applies bisquare robustness
+/// at that tiny scale; an absolute 1e-12 floor previously made every `lowess`
+/// robustness weight equal to one instead. Values below are R's
+/// `stats::lowess(x, y, f = 0.525, iter = 276)` output.
+#[test]
+fn test_batch_matches_r_lowess_roundoff_scale_robustness() {
+    let x = vec![
+        0.0, 1.7876875, -1.8145216, 1.0461841, 1.9411914, -0.3201505, 1.9778380,
+    ];
+    let y = vec![0.0, 0.0, 0.0, 0.0, 0.0, -1.975711, 1.932023];
+
+    let result = Lowess::new()
+        .fraction(0.525)
+        .iterations(276)
+        .boundary_policy("noboundary")
+        .scaling_method("mar")
+        .zero_weight_fallback("return_original")
+        .outputs(["sorted"])
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .expect("Smoothing should succeed");
+
+    let expected_x = [
+        -1.8145216, -0.3201505, 0.0, 1.0461841, 1.7876875, 1.9411914, 1.9778380,
+    ];
+    let expected_y = [0.0, -1.975711, 0.0, 0.0, 0.0, 0.0, 0.0];
+
+    for i in 0..expected_x.len() {
+        assert_relative_eq!(result.x[i], expected_x[i], epsilon = 1e-12);
+        assert_relative_eq!(result.y[i], expected_y[i], epsilon = 1e-12);
+    }
+}
+
+/// Regression test for an even-length zero-MAR residual set.
+///
+/// With an even number of observations, both middle absolute residuals are
+/// exactly zero here, so R stops robustness and preserves the initial fit.
+/// The odd-length roundoff rescue must not run for this case.
+#[test]
+fn test_batch_matches_r_lowess_even_zero_mar_stop() {
+    let x = vec![1.238452, 0.0, 1.194356, 1.137173, -1.298059, -1.248941];
+    let y = vec![0.0, 0.0, 0.0, 0.0, 0.0, -0.9396225];
+
+    let result = Lowess::new()
+        .fraction(0.525)
+        .iterations(203)
+        .boundary_policy("noboundary")
+        .scaling_method("mar")
+        .zero_weight_fallback("return_original")
+        .outputs(["sorted"])
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .expect("Smoothing should succeed");
+
+    let expected_x = [-1.298059, -1.248941, 0.0, 1.137173, 1.194356, 1.238452];
+    let expected_y = [0.0, -0.9396225, 0.0, 0.0, 0.0, 0.0];
+
+    for i in 0..expected_x.len() {
+        assert_relative_eq!(result.x[i], expected_x[i], epsilon = 1e-12);
+        assert_relative_eq!(result.y[i], expected_y[i], epsilon = 1e-12);
+    }
+}
+
 /// Test that `return_derivative` is `None` by default.
 #[test]
 fn test_batch_derivative_none_by_default() {

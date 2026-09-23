@@ -533,39 +533,62 @@ impl<T: Float> LinearFit<T> {
 }
 
 impl<T: Float + WLSSolver> LinearFit<T> {
-    // Fit Weighted Least Squares (WLS) regression using SIMD-optimized accumulation.
+    // Fit weighted least squares using Cleveland/R `lowest()` arithmetic order.
     pub fn fit_wls(x: &[T], y: &[T], weights: &[T], x_current: T, global_x_range: T) -> Self {
         let n = x.len();
         if n == 0 {
             return Self::zero();
         }
 
-        // SIMD-optimized single-pass accumulation with centering
-        let (sum_w, sum_wx, sum_wy, sum_wxx, sum_wxy) = T::accumulate_wls(x, y, weights, x_current);
+        let sum_w = weights.iter().copied().fold(T::zero(), |sum, w| sum + w);
+        if sum_w <= T::zero() {
+            return Self::zero();
+        }
 
-        // Match Cleveland/R's `lowest()` degeneracy check: after normalising
-        // weights, use a linear term only when the local weighted x-spread is
-        // more than 0.001 of the full x range. `solve_wls` receives unnormalised
-        // sums, so scale the squared-spread threshold by `sum_w`.
+        // R first normalises each weight, then computes the weighted x-centre
+        // in the original coordinate system. This operation order matters:
+        // robustness iterations consume the tiny roundoff residuals from this
+        // fit, so an algebraically equivalent centred solve can take a
+        // different branch on sparse/exactly-interpolated data.
+        let mut x_mean = T::zero();
+        for i in 0..n {
+            x_mean = x_mean + (weights[i] / sum_w) * x[i];
+        }
+
+        let mut spread = T::zero();
+        for i in 0..n {
+            let dx = x[i] - x_mean;
+            spread = spread + (weights[i] / sum_w) * (dx * dx);
+        }
+
         let min_spread = T::from(0.001).unwrap_or_else(T::epsilon) * global_x_range;
-        let tol = sum_w * min_spread * min_spread;
+        let use_linear = spread.sqrt() > min_spread;
+        let adjustment = if use_linear {
+            (x_current - x_mean) / spread
+        } else {
+            T::zero()
+        };
 
-        // Solve for slope and centered intercept
-        match T::solve_wls(sum_w, sum_wx, sum_wy, sum_wxx, sum_wxy, tol) {
-            Some((slope, intercept_at_center, x_mean, y_mean)) => {
-                // Convert centered intercept to original intercept at x=0
-                // y = int_c + slope * (x - x_curr)
-                // y = (int_c - slope * x_curr) + slope * x
-                let intercept_at_zero = intercept_at_center - slope * x_current;
+        let mut fitted = T::zero();
+        let mut covariance = T::zero();
+        for i in 0..n {
+            let normalized_weight = weights[i] / sum_w;
+            let dx = x[i] - x_mean;
+            fitted = fitted + normalized_weight * (T::one() + adjustment * dx) * y[i];
+            covariance = covariance + normalized_weight * dx * y[i];
+        }
 
-                Self {
-                    slope,
-                    intercept: intercept_at_zero,
-                    x_mean: x_mean + x_current, // Adjust mean back to original coordinates if needed
-                    y_mean,
-                }
-            }
-            None => Self::zero(),
+        let slope = if use_linear {
+            covariance / spread
+        } else {
+            T::zero()
+        };
+
+        Self {
+            slope,
+            intercept: fitted - slope * x_current,
+            x_mean,
+            y_mean: fitted,
         }
     }
 }

@@ -1192,11 +1192,16 @@ impl<T: Float> LowessExecutor<T> {
         for i in 0..y.len() {
             residuals[i] = y[i] - y_smooth[i];
         }
-        robustness_updater.apply_robustness_weights(
+        let response_scale = y
+            .iter()
+            .copied()
+            .fold(T::zero(), |scale, value| scale.max(value.abs()));
+        robustness_updater.apply_robustness_weights_with_response_scale(
             residuals,
             robustness_weights,
             scaling_method,
             scratch,
+            response_scale,
         )
     }
 

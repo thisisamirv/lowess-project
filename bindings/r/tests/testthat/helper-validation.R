@@ -38,7 +38,8 @@ expect_matches_stats_lowess <- function(
         iterations = as.integer(iterations),
         delta = delta,
         boundary_policy = "noboundary",
-        scaling_method = "mar"
+        scaling_method = "mar",
+        zero_weight_fallback = "return_original"
     )
     result <- fit(model, x, y)
 
@@ -79,6 +80,7 @@ expect_stats_lowess_sorted <- function(
         delta = delta,
         boundary_policy = "noboundary",
         scaling_method = "mar",
+        zero_weight_fallback = "return_original",
         outputs = "sorted"
     )
     result <- fit(model, x, y)
@@ -118,6 +120,7 @@ check_stats_lowess <- function(
         iterations = as.integer(iterations),
         boundary_policy = "noboundary",
         scaling_method = "mar",
+        zero_weight_fallback = "return_original",
         outputs = if (sorted) "sorted" else NULL
     )
     result <- fit(model, x_fit, y_fit)
@@ -129,7 +132,14 @@ check_stats_lowess <- function(
         stop("x does not match stats::lowess sorted output", call. = FALSE)
     }
     if (!isTRUE(all.equal(result$y, reference$y, tolerance = tolerance))) {
-        stop("y does not match stats::lowess output", call. = FALSE)
+        max_diff <- max(abs(result$y - reference$y))
+        stop(
+            sprintf(
+                "y does not match stats::lowess output (max abs diff: %.17g)",
+                max_diff
+            ),
+            call. = FALSE
+        )
     }
     if (!identical(result$fraction_used, fraction)) {
         stop("fraction_used does not match requested fraction", call. = FALSE)

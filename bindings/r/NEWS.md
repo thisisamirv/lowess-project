@@ -5,7 +5,10 @@
 
 * Added `cv_opts()` to build cross-validation options for `Lowess(cv = ...)`, grouping the former `cv_fractions`/`cv_method`/`cv_k`/`cv_seed` arguments.
 * Added unit coverage for `cv_opts()` and output-flag parsing, bringing R package line coverage to 100%; wrapped the long cross-validation vignette example for readability.
-* Added `quickcheck`-based property tests (`test-property-lowess.R`, gated behind `skip_if_not_installed()`/`skip_on_cran()`) that fuzz `x`/`y`/`fraction`/`iterations` inputs and check agreement with `stats::lowess`; coverage now includes the default input-order return path, `outputs = "sorted"`, and sparse one-spike response vectors. Randomized fuzzing over many combinations is what surfaced the high-iteration `scaling_method = "mar"` divergence and the global-range local-linear degeneracy mismatch fixed below, rather than any single hand-picked case. `expect_matches_stats_lowess()` was extracted from `test-validation.R` into a shared `helper-validation.R` so both the fixed and property-based scenarios can use it. The fuzzing packages are intentionally optional at check time: the tests skip when `quickcheck` is unavailable and use dynamic lookup instead of static `quickcheck::`/`hedgehog::` calls, avoiding hard `Suggests` requirements on submission checks; `make r-dev` now installs `quickcheck` and `hedgehog` into its local dev library so those property tests run during local development.
+* Added `quickcheck`-based property tests (`test-property-lowess.R`) that fuzz `x`, `y`, `fraction`, and `iterations` against `stats::lowess`, covering input-order output, `outputs = "sorted"`, and sparse one-spike initial fits.
+* Limited randomized robustness iterations to numerically stable initial reference fits; compiler-dependent exact-interpolation roundoff branches are covered by fixed regression cases instead.
+* Randomized fuzzing surfaced the high-iteration `scaling_method = "mar"` divergence, global-range local-linear degeneracy mismatch, and roundoff-scale bisquare floor fixed below.
+* Extracted `expect_matches_stats_lowess()` into `helper-validation.R` so fixed and property-based scenarios share reference logic. Property tests are gated by `skip_if_not_installed()`/`skip_on_cran()` and use dynamic package lookup to avoid hard `Suggests` requirements; `make r-dev` installs `quickcheck` and `hedgehog` locally.
 * Added an "Alternative Software" vignette (`vignette("alternative-software")`) explaining how to reproduce `stats::lowess()` exactly (`boundary_policy = "noboundary"`, `scaling_method = "mar"`), why this package's own defaults differ, and what it adds beyond it.
 
 ## Changed
@@ -15,6 +18,7 @@
 * Represent unavailable diagnostic metrics as R `NA` rather than generic `NaN` values.
 * Added a regression comparison for unsorted input against `stats::lowess`, covering both preserved input order and explicit `outputs = "sorted"` behavior.
 * Added committed `statsmodels.lowess` reference fixtures for independent R cross-language validation.
+* Made `make r-dev` recover from transient Windows `pak` binary-install move failures (observed with `data.table`) by clearing partial local cache/lock state and retrying the required dev-package plan once with a single worker.
 * Updated the vendored `doxygen-awesome-css` theme to v2.5.0 and the Hugo docs build to v0.166.0.
 
 ## Fixed
