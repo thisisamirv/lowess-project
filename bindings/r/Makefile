@@ -99,14 +99,15 @@ dev:
 	@echo "=============================================================================="
 	@echo "1. Installing R development packages..."
 	@echo "=============================================================================="
-	@echo "Installing R required packages (styler, testthat, rmarkdown, knitr, lintr, roxygen2, pkgdown, remotes)..."
+	@echo "Installing R required packages (styler, testthat, rmarkdown, knitr, lintr, roxygen2, pkgdown, remotes, quickcheck, hedgehog)..."
 	@echo "This may take a while depending on your internet connection and system performance."
 	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript \
 	  -e "lib <- Sys.getenv('R_LIBS_USER'); dir.create(lib, recursive = TRUE, showWarnings = FALSE); .libPaths(c(lib, .libPaths()))" \
 	  -e "# Bootstrap pak; it handles RSPM binary vs source selection automatically" \
 	  -e "if (!requireNamespace('pak', quietly = TRUE, lib.loc = lib)) { options(install.lock = FALSE); install.packages('pak', lib = lib, repos = 'https://r-lib.github.io/p/pak/stable/') }" \
 	  -e "# Required packages (CRAN)" \
-	  -e "pak::pkg_install(c('styler', 'testthat', 'rmarkdown', 'knitr', 'lintr', 'roxygen2', 'pkgdown', 'remotes'), lib = lib, ask = FALSE)" \
+	  -e "required <- c('styler', 'testthat', 'rmarkdown', 'knitr', 'lintr', 'roxygen2', 'pkgdown', 'remotes', 'quickcheck', 'hedgehog')" \
+	  -e "tryCatch(pak::pkg_install(required, lib = lib, ask = FALSE), error = function(err) { message('pak install failed; clearing partial local cache and retrying once: ', conditionMessage(err)); unlink(c(Sys.glob(file.path(lib, '00LOCK*')), file.path(lib, '_cache'), file.path(lib, 'data.table')), recursive = TRUE, force = TRUE); Sys.setenv(PKG_NUM_WORKERS = '1'); pak::pkg_install(required, lib = lib, ask = FALSE) })" \
 	  -e "# srr lives on its own R-universe; optional so a dead mirror doesn't break the build" \
 	  -e "options(repos = c(ropenscireviewtools = 'https://ropensci-review-tools.r-universe.dev', CRAN = 'https://cloud.r-project.org')); try(pak::pkg_install('srr', lib = lib, ask = FALSE), silent = TRUE)" \
 	  -e "# Optional: rOpenSci tooling and local dev helpers" \

@@ -157,8 +157,8 @@ parse_outputs_flags <- function(outputs, valid) {
         stop(
             sprintf(
                 "Invalid `outputs` value(s): %s. Allowed: %s",
-                paste0(sprintf("'%s'", unknown), collapse = ", "),
-                paste0(sprintf("'%s'", valid), collapse = ", ")
+                toString(sprintf("'%s'", unknown)),
+                toString(sprintf("'%s'", valid))
             ),
             call. = FALSE
         )
