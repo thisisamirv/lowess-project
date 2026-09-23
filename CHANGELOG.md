@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `cv_opts()` to build cross-validation options for `Lowess(cv = ...)`, grouping the former `cv_fractions`/`cv_method`/`cv_k`/`cv_seed` arguments.
 - Added unit coverage for `cv_opts()` and output-flag parsing, bringing R package line coverage to 100%; wrapped the long cross-validation vignette example for readability.
 - Added a `quickcheck`-based property test (`test-property-lowess.R`, gated behind `skip_if_not_installed()`/`skip_on_cran()`) that fuzzes `x`/`y`/`fraction`/`iterations` and checks agreement with `stats::lowess`; randomized fuzzing over many combinations is what surfaced the high-iteration `scaling_method = "mar"` divergence fixed below, rather than any single hand-picked case. `expect_matches_stats_lowess()` was extracted from `test-validation.R` into a shared `helper-validation.R` so both the fixed and property-based scenarios can use it.
+- Added an "Alternative Software" vignette (`vignette("alternative-software")`) explaining how to reproduce `stats::lowess()` exactly (`boundary_policy = "noboundary"`, `scaling_method = "mar"`), why this package's own defaults differ, and what it adds beyond it.
 
 **Go:**
 
@@ -36,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added grouped `outputs = ["diagnostics", "residuals", "weights", "derivative", "se", "sorted"]` and `cv = (fractions = ..., method = "kfold", k = 5, seed = 123)` keywords for `Lowess`, plus grouped outputs for Streaming/Online constructors.
 - Added grouped `outputs = ["se", "derivative"]` support to `predict` for retained Julia models.
 - Represent unavailable diagnostic metrics as `nothing` instead of `NaN` sentinels.
+- Added an "Alternative Software" guide page comparing `FastLOWESS.jl` against `Loess.jl`: how the two methods (LOWESS vs. the more general LOESS) differ algorithmically, a runnable comparison showing they only agree approximately (not to floating-point precision like the R/Python packages' own reference reproductions), and a feature comparison table. `dev/runners/julia.py` now skips (rather than fails) snippets that `using Loess` when it isn't installed, mirroring the Python `statsmodels` optional-dependency handling.
 
 **Node.js/WASM:**
 
@@ -44,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Python:**
 
 - Added grouped `outputs` and nested `cv` constructor options, plus grouped prediction outputs, while preserving legacy keyword arguments. Nested CV mappings now validate and forward `fractions`, `method`, `k`, and `seed`; Python stubs, guides, and binding tests cover the grouped API.
+- Added an "Alternative Software" guide page explaining how to reproduce `statsmodels.lowess()` exactly (`boundary_policy="noboundary"`, `scaling_method="mar"`), why this package's own defaults differ, and what it adds beyond it. Added `statsmodels` to `docs/requirements.txt` (comparison-only, needed for the new page's executable examples on the real ReadTheDocs build).
 
 **fastLowess:**
 
@@ -93,6 +96,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Monorepo:**
 
+- Fixed `dev/verify_snippets.py` failing on any doc snippet that imports the optional, comparison-only `statsmodels` package when it isn't installed in the target Python environment; such snippets are now skipped (rather than failed) when `statsmodels` can't be imported by the runner's Python interpreter.
 - Fixed C++ release CI's "Commit updated recipe" step failing with "paths are ignored" because the repo's blanket `.gitignore` `spack/` rule matches `bindings/cpp/spack/`; `git add` now force-adds the tracked recipe file.
 
 **C++:**

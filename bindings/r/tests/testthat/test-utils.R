@@ -36,8 +36,10 @@ test_that("cv_opts validates required and non-empty fractions", {
 })
 
 test_that("cv_opts returns coerced cross-validation options", {
-    result <- cv_opts(c(0.2, 0.5),
-        method = factor("kfold"), k = 3.8,
+    result <- cv_opts(
+        c(0.2, 0.5),
+        method = factor("kfold"),
+        k = 3.8,
         seed = 42L
     )
 

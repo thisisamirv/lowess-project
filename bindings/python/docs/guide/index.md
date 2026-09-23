@@ -10,4 +10,5 @@ adapter-choice
 intervals
 cross-validation
 predict
+alternative-software
 :::

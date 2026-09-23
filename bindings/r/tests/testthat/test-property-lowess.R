@@ -1,8 +1,8 @@
 #' @srrstats {G5.4, G5.4b} Reference comparison against base R's
 #'   `stats::lowess`, generalized here to randomized inputs.
-#' @srrstats {G5.10, G5.11} Extended/property-based tests, gated behind
-#'   `skip_if_not_installed()` so they only run when `quickcheck` is
-#'   available (not a hard package dependency) and are skipped on CRAN.
+#' @srrstats {G5.10} Extended/property-based test, gated behind
+#'   `skip_if_not_installed()` so it only runs when `quickcheck` is
+#'   available (not a hard package dependency) and is skipped on CRAN.
 #'
 # Property-based regression test: fuzzes x/y/fraction/iterations and checks
 # that this package's output matches `stats::lowess` (via

@@ -14,6 +14,20 @@ from .base import RunResult, Snippet
 # Set to a venv python that has fastlowess installed (overridden by main()).
 PYTHON_BIN: str = sys.executable
 
+_optional_module_cache: dict[str, bool] = {}
+
+
+def _module_importable(module: str) -> bool:
+    """Whether `module` can be imported by `PYTHON_BIN`, cached per module."""
+    if module not in _optional_module_cache:
+        proc = subprocess.run(
+            [PYTHON_BIN, "-c", f"import {module}"],
+            capture_output=True,
+            check=False,
+        )
+        _optional_module_cache[module] = proc.returncode == 0
+    return _optional_module_cache[module]
+
 
 def skip_reason(snippet: Snippet) -> str | None:
     code = snippet.code
@@ -30,6 +44,13 @@ def skip_reason(snippet: Snippet) -> str | None:
         return "fastlowess not imported (snippet is not self-contained)"
     if re.search(r"\binstall_gpu\s*\(|backend\s*=\s*[\"']gpu[\"']", code):
         return "requires gpu feature (not enabled in CI build)"
+    # statsmodels is an optional comparison-only dependency (used in the
+    # alternative-software vignette), not a hard requirement of any binding's
+    # dev environment, so skip rather than fail where it isn't installed.
+    if re.search(r"\bimport\s+statsmodels\b", code) and not _module_importable(
+        "statsmodels"
+    ):
+        return "statsmodels not installed (optional comparison-only dependency)"
     return None
 
 

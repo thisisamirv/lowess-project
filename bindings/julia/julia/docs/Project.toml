@@ -1,7 +1,9 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 FastLOWESS = "5d760c97-4851-4f57-8eaf-1b3e829bbf83"
+Loess = "4345ca2d-374a-55d4-8d30-97f9976e7612"
 
 [compat]
 Documenter = "1"
+Loess = "0.6"
 julia = "1.6"

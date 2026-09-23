@@ -4,6 +4,7 @@
 ## Added
 
 * Added grouped `outputs` and nested `cv` constructor options, plus grouped prediction outputs, while preserving legacy keyword arguments. Nested CV mappings now validate and forward `fractions`, `method`, `k`, and `seed`; Python stubs, guides, and binding tests cover the grouped API.
+* Added an "Alternative Software" guide page explaining how to reproduce `statsmodels.lowess()` exactly (`boundary_policy="noboundary"`, `scaling_method="mar"`), why this package's own defaults differ, and what it adds beyond it. Added `statsmodels` to `docs/requirements.txt` (comparison-only, needed for the new page's executable examples on the real ReadTheDocs build).
 
 ## Changed
 
@@ -12,6 +13,7 @@
 
 ## Fixed
 
+* Fixed `dev/verify_snippets.py` failing on any doc snippet that imports the optional, comparison-only `statsmodels` package when it isn't installed in the target Python environment; such snippets are now skipped (rather than failed) when `statsmodels` can't be imported by the runner's Python interpreter.
 * Fixed C++ release CI's "Commit updated recipe" step failing with "paths are ignored" because the repo's blanket `.gitignore` `spack/` rule matches `bindings/cpp/spack/`; `git add` now force-adds the tracked recipe file.
 
 # fastlowess (Python) 4.1.0

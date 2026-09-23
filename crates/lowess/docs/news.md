@@ -10,9 +10,15 @@
 ## Changed
 
 * Removed redundant `#[doc(hidden)]` attributes from the `engine` and `adapters` modules (62 attributes across `engine/executor.rs`, `engine/predict.rs`, and `adapters/{batch,online,streaming}.rs`). These modules are already private and only re-exported through the `dev`-gated `internals` module, so the attributes were redundant; `#[doc(hidden)]` is retained on public-API items (`api.rs` builder DEV fields and `LowessResult::fit_state`).
+* Replaced the cross-validation candidate-fit `unwrap()` with error propagation through sequential CPU, parallel CPU, and GPU CV paths.
+* Replaced the `iteration_loop_with_callback` clippy suppression with a typed options bundle for its iteration controls and callbacks.
+* Marked `WeightFunction` as non-exhaustive and made GPU handling reject unsupported future kernels explicitly.
+* Updated the vendored `doxygen-awesome-css` theme to v2.5.0 and the Hugo docs build to v0.166.0.
 
 ## Fixed
 
+* Fixed `RobustnessMethod::apply_robustness_weights` continuing to reweight on a substituted scale when `ScalingMethod::MAR`/`Mean` collapsed to ~zero (e.g. a majority-zero-residual fit with a few large residuals), instead of stopping robustification like `stats::lowess`'s "cmad < 1e-7 * sc" early exit. This caused `Lowess(..., scaling_method = "mar")` fits with many robustness iterations to diverge from `stats::lowess` on some inputs (reproduced with `outputs = "sorted"`); the MAD -> mean-absolute-residual fallback substitution now only applies to `ScalingMethod::MAD`, and a genuinely degenerate scale now halts robustness iterations and keeps the current fit.
+* Fixed `dev/verify_snippets.py` failing on any doc snippet that imports the optional, comparison-only `statsmodels` package when it isn't installed in the target Python environment; such snippets are now skipped (rather than failed) when `statsmodels` can't be imported by the runner's Python interpreter.
 * Fixed C++ release CI's "Commit updated recipe" step failing with "paths are ignored" because the repo's blanket `.gitignore` `spack/` rule matches `bindings/cpp/spack/`; `git add` now force-adds the tracked recipe file.
 
 # lowess 4.1.0

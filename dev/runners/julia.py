@@ -11,6 +11,31 @@ import time
 
 from .base import REPO_ROOT, RunResult, Snippet, _find_exe
 
+_optional_package_cache: dict[str, bool] = {}
+
+
+def _package_importable(package: str) -> bool:
+    """Whether `package` can be `using`'d, cached per package.
+
+    Checked against the global Julia environment (not `bindings/julia/julia`'s
+    own Project.toml, which intentionally doesn't depend on comparison-only
+    packages like `Loess`) — the same env this runner's snippets already fall
+    back to via Julia's default `LOAD_PATH` stacking.
+    """
+    if package not in _optional_package_cache:
+        julia_bin = _find_exe("julia")
+        proc = (
+            subprocess.run(
+                [julia_bin, "--startup-file=no", "-e", f"using {package}"],
+                capture_output=True,
+                check=False,
+            )
+            if julia_bin is not None
+            else None
+        )
+        _optional_package_cache[package] = proc is not None and proc.returncode == 0
+    return _optional_package_cache[package]
+
 
 def skip_reason(snippet: Snippet) -> str | None:
     code = snippet.code
@@ -22,6 +47,13 @@ def skip_reason(snippet: Snippet) -> str | None:
         )
     if re.search(r"\binstall_gpu\s*\(|backend\s*=\s*[\"']gpu[\"']", code):
         return "requires gpu feature (not enabled in CI build)"
+    # Loess.jl is an optional comparison-only dependency (used in the
+    # alternative-software guide page, declared under docs/Project.toml, not
+    # bindings/julia/julia's own Project.toml), not a hard requirement of the
+    # package's dev environment, so skip rather than fail where it isn't
+    # installed.
+    if re.search(r"\busing\s+Loess\b", code) and not _package_importable("Loess"):
+        return "Loess.jl not installed (optional comparison-only dependency)"
     return None
 
 

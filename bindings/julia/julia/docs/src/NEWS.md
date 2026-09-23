@@ -1,4 +1,22 @@
 <!-- markdownlint-disable MD024 MD025 -->
+# FastLOWESS.jl (development version)
+
+## Added
+
+* Added grouped `outputs = ["diagnostics", "residuals", "weights", "derivative", "se", "sorted"]` and `cv = (fractions = ..., method = "kfold", k = 5, seed = 123)` keywords for `Lowess`, plus grouped outputs for Streaming/Online constructors.
+* Added grouped `outputs = ["se", "derivative"]` support to `predict` for retained Julia models.
+* Represent unavailable diagnostic metrics as `nothing` instead of `NaN` sentinels.
+* Added an "Alternative Software" guide page comparing `FastLOWESS.jl` against `Loess.jl`: how the two methods (LOWESS vs. the more general LOESS) differ algorithmically, a runnable comparison showing they only agree approximately (not to floating-point precision like the R/Python packages' own reference reproductions), and a feature comparison table. `dev/runners/julia.py` now skips (rather than fails) snippets that `using Loess` when it isn't installed, mirroring the Python `statsmodels` optional-dependency handling.
+
+## Changed
+
+* Updated the vendored `doxygen-awesome-css` theme to v2.5.0 and the Hugo docs build to v0.166.0.
+
+## Fixed
+
+* Fixed `dev/verify_snippets.py` failing on any doc snippet that imports the optional, comparison-only `statsmodels` package when it isn't installed in the target Python environment; such snippets are now skipped (rather than failed) when `statsmodels` can't be imported by the runner's Python interpreter.
+* Fixed C++ release CI's "Commit updated recipe" step failing with "paths are ignored" because the repo's blanket `.gitignore` `spack/` rule matches `bindings/cpp/spack/`; `git add` now force-adds the tracked recipe file.
+
 # FastLOWESS.jl 4.1.0
 
 ## Added

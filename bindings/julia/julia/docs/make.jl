@@ -96,6 +96,7 @@ try
                 "guide/intervals.md",
                 "guide/cross-validation.md",
                 "guide/predict.md",
+                "guide/alternative-software.md",
             ],
             "Weight & Robustness" => [
                 "weighting/kernels.md",
