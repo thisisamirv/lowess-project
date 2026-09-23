@@ -39,16 +39,24 @@
 <div class="section level3">
 <h3 id="added-development-version">Added<a class="anchor" aria-label="anchor" href="#added-development-version"></a></h3>
 <ul><li>Added <code><a href="../reference/cv_opts.html">cv_opts()</a></code> to build cross-validation options for <code>Lowess(cv = ...)</code>, grouping the former <code>cv_fractions</code>/<code>cv_method</code>/<code>cv_k</code>/<code>cv_seed</code> arguments.</li>
+<li>Added unit coverage for <code><a href="../reference/cv_opts.html">cv_opts()</a></code> and output-flag parsing, bringing R package line coverage to 100%; wrapped the long cross-validation vignette example for readability.</li>
+<li>Added a <code>quickcheck</code>-based property test (<code>test-property-lowess.R</code>, gated behind <code>skip_if_not_installed()</code>/<code>skip_on_cran()</code>) that fuzzes <code>x</code>/<code>y</code>/<code>fraction</code>/<code>iterations</code> and checks agreement with <code><a href="https://rdrr.io/r/stats/lowess.html" class="external-link">stats::lowess</a></code>; randomized fuzzing over many combinations is what surfaced the high-iteration <code>scaling_method = "mar"</code> divergence fixed below, rather than any single hand-picked case. <code>expect_matches_stats_lowess()</code> was extracted from <code>test-validation.R</code> into a shared <code>helper-validation.R</code> so both the fixed and property-based scenarios can use it.</li>
+<li>Added an “Alternative Software” vignette (<code><a href="../articles/alternative-software.html">vignette("alternative-software")</a></code>) explaining how to reproduce <code><a href="https://rdrr.io/r/stats/lowess.html" class="external-link">stats::lowess()</a></code> exactly (<code>boundary_policy = "noboundary"</code>, <code>scaling_method = "mar"</code>), why this package’s own defaults differ, and what it adds beyond it.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="changed-development-version">Changed<a class="anchor" aria-label="anchor" href="#changed-development-version"></a></h3>
 <ul><li>Replaced the local <code>type Result&lt;T&gt; = std::result::Result&lt;T, extendr_api::Error&gt;</code> alias with <code>extendr_api::error::Result</code>, which is still exported in <code>extendr-api 0.9.0</code> (only the prelude re-export was removed).</li>
 <li>
 <strong>Breaking:</strong> replaced the six <code>return_*</code> boolean arguments in <code><a href="../reference/Lowess.html">Lowess()</a></code> (and the <code>return_*</code> booleans in <code><a href="../reference/StreamingLowess.html">StreamingLowess()</a></code>/<code><a href="../reference/OnlineLowess.html">OnlineLowess()</a></code>) with a single <code>return</code> character vector (<code>c("diagnostics", "residuals", "weights", "derivative", "se", "sorted")</code>), and replaced the four <code>cv_*</code> arguments in <code><a href="../reference/Lowess.html">Lowess()</a></code> with <code>cv = cv_opts(...)</code>.</li>
+<li>Represent unavailable diagnostic metrics as R <code>NA</code> rather than generic <code>NaN</code> values.</li>
+<li>Added a regression comparison for unsorted input against <code><a href="https://rdrr.io/r/stats/lowess.html" class="external-link">stats::lowess</a></code>, covering both preserved input order and explicit <code>outputs = "sorted"</code> behavior.</li>
+<li>Added committed <code>statsmodels.lowess</code> reference fixtures for independent R cross-language validation.</li>
+<li>Updated the vendored <code>doxygen-awesome-css</code> theme to v2.5.0 and the Hugo docs build to v0.166.0.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="fixed-development-version">Fixed<a class="anchor" aria-label="anchor" href="#fixed-development-version"></a></h3>
-<ul><li>Fixed C++ release CI’s “Commit updated recipe” step failing with “paths are ignored” because the repo’s blanket <code>.gitignore</code> <code>spack/</code> rule matches <code>bindings/cpp/spack/</code>; <code>git add</code> now force-adds the tracked recipe file.</li>
+<ul><li>Fixed <code>dev/verify_snippets.py</code> failing on any doc snippet that imports the optional, comparison-only <code>statsmodels</code> package when it isn’t installed in the target Python environment; such snippets are now skipped (rather than failed) when <code>statsmodels</code> can’t be imported by the runner’s Python interpreter.</li>
+<li>Fixed C++ release CI’s “Commit updated recipe” step failing with “paths are ignored” because the repo’s blanket <code>.gitignore</code> <code>spack/</code> rule matches <code>bindings/cpp/spack/</code>; <code>git add</code> now force-adds the tracked recipe file.</li>
 </ul></div>
 </div>
     <div class="section level2">

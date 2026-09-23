@@ -8,6 +8,25 @@
   [`cv_opts()`](https://thisisamirv.github.io/lowess-project/r/reference/cv_opts.md)
   to build cross-validation options for `Lowess(cv = ...)`, grouping the
   former `cv_fractions`/`cv_method`/`cv_k`/`cv_seed` arguments.
+- Added unit coverage for
+  [`cv_opts()`](https://thisisamirv.github.io/lowess-project/r/reference/cv_opts.md)
+  and output-flag parsing, bringing R package line coverage to 100%;
+  wrapped the long cross-validation vignette example for readability.
+- Added a `quickcheck`-based property test (`test-property-lowess.R`,
+  gated behind `skip_if_not_installed()`/`skip_on_cran()`) that fuzzes
+  `x`/`y`/`fraction`/`iterations` and checks agreement with
+  [`stats::lowess`](https://rdrr.io/r/stats/lowess.html); randomized
+  fuzzing over many combinations is what surfaced the high-iteration
+  `scaling_method = "mar"` divergence fixed below, rather than any
+  single hand-picked case. `expect_matches_stats_lowess()` was extracted
+  from `test-validation.R` into a shared `helper-validation.R` so both
+  the fixed and property-based scenarios can use it.
+- Added an “Alternative Software” vignette
+  ([`vignette("alternative-software")`](https://thisisamirv.github.io/lowess-project/r/articles/alternative-software.md))
+  explaining how to reproduce
+  [`stats::lowess()`](https://rdrr.io/r/stats/lowess.html) exactly
+  (`boundary_policy = "noboundary"`, `scaling_method = "mar"`), why this
+  package’s own defaults differ, and what it adds beyond it.
 
 ### Changed
 
@@ -24,9 +43,23 @@
   and replaced the four `cv_*` arguments in
   [`Lowess()`](https://thisisamirv.github.io/lowess-project/r/reference/Lowess.md)
   with `cv = cv_opts(...)`.
+- Represent unavailable diagnostic metrics as R `NA` rather than generic
+  `NaN` values.
+- Added a regression comparison for unsorted input against
+  [`stats::lowess`](https://rdrr.io/r/stats/lowess.html), covering both
+  preserved input order and explicit `outputs = "sorted"` behavior.
+- Added committed `statsmodels.lowess` reference fixtures for
+  independent R cross-language validation.
+- Updated the vendored `doxygen-awesome-css` theme to v2.5.0 and the
+  Hugo docs build to v0.166.0.
 
 ### Fixed
 
+- Fixed `dev/verify_snippets.py` failing on any doc snippet that imports
+  the optional, comparison-only `statsmodels` package when it isn’t
+  installed in the target Python environment; such snippets are now
+  skipped (rather than failed) when `statsmodels` can’t be imported by
+  the runner’s Python interpreter.
 - Fixed C++ release CI’s “Commit updated recipe” step failing with
   “paths are ignored” because the repo’s blanket `.gitignore` `spack/`
   rule matches `bindings/cpp/spack/`; `git add` now force-adds the

@@ -41,6 +41,11 @@ Other contributors:
   \<https://github.com/ropensci/software-review/issues/769\>)
   \[reviewer\]
 
+- Josiah Parry ([ORCID](https://orcid.org/0000-0001-9910-865X))
+  (Reviewed the package for rOpenSci (GitHub: @JosiahParry), see
+  \<https://github.com/ropensci/software-review/issues/769\>)
+  \[reviewer\]
+
 - Etienne Bacher (Edited the package for rOpenSci (GitHub:
   @etiennebacher), see
   \<https://github.com/ropensci/software-review/issues/769\>) \[editor\]

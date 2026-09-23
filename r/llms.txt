@@ -285,3 +285,8 @@ Check for and install the optional GPU-accelerated backend.
 ### Performance
 
 - [Benchmarks](https://thisisamirv.github.io/lowess-project/r/articles/benchmarks.md):
+
+### Alternative Software
+
+- [Alternative
+  Software](https://thisisamirv.github.io/lowess-project/r/articles/alternative-software.md):

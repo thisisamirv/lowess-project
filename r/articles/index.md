@@ -47,3 +47,8 @@
 ### Performance
 
 - [Benchmarks](https://thisisamirv.github.io/lowess-project/r/articles/benchmarks.md):
+
+### Alternative Software
+
+- [Alternative
+  Software](https://thisisamirv.github.io/lowess-project/r/articles/alternative-software.md):
