@@ -3,25 +3,26 @@
 
 ## Added
 
-* Added `LowessBuilder::outputs(names)`, a grouped replacement for the individual `.return_diagnostics()`/`.return_residuals()`/`.return_robustness_weights()`/`.return_derivative()`/`.return_se()`/`.return_sorted()` toggles: `.outputs(["diagnostics", "residuals", "weights", "derivative", "se", "sorted"])`. Unknown names are collected and reported together by `.build()`.
-* Added grouped cross-validation configuration via `CVBuilder` (in the prelude) and `.cv(...)`: `.cv(CVBuilder::method("kfold").k(5).fractions(vec![0.3, 0.7]).seed(123))`. `CVOptions` is exported at the crate root but kept out of the prelude since callers never name it.
+* Added `LowessBuilder::outputs(names)` as a grouped replacement for the individual output toggles. Unknown names are collected and reported together by `.build()`.
+* Added grouped cross-validation configuration through `CVBuilder` and `.cv(...)`. `CVBuilder` is in the prelude; the internal `CVOptions` result type remains at the crate root.
 * Added `PredictBuilder::outputs(names)` in both Rust crates, supporting `"se"` and `"derivative"` as a grouped replacement for `.return_se()` and `.return_derivative()`.
 
 ## Changed
 
-* Removed redundant `#[doc(hidden)]` attributes from the `engine` and `adapters` modules (62 attributes across `engine/executor.rs`, `engine/predict.rs`, and `adapters/{batch,online,streaming}.rs`). These modules are already private and only re-exported through the `dev`-gated `internals` module, so the attributes were redundant; `#[doc(hidden)]` is retained on public-API items (`api.rs` builder DEV fields and `LowessResult::fit_state`).
+* Updated the vendored `doxygen-awesome-css` theme to v2.5.0 and the Hugo docs build to v0.166.0.
+* Removed 62 redundant `#[doc(hidden)]` attributes from private engine/adapter modules; public-API annotations remain unchanged.
 * Replaced the cross-validation candidate-fit `unwrap()` with error propagation through sequential CPU, parallel CPU, and GPU CV paths.
 * Replaced the `iteration_loop_with_callback` clippy suppression with a typed options bundle for its iteration controls and callbacks.
 * Marked `WeightFunction` as non-exhaustive and made GPU handling reject unsupported future kernels explicitly.
-* Updated the vendored `doxygen-awesome-css` theme to v2.5.0 and the Hugo docs build to v0.166.0.
 
 ## Fixed
 
-* Fixed `RobustnessMethod::apply_robustness_weights` continuing to reweight on a substituted scale when `ScalingMethod::MAR`/`Mean` collapsed to ~zero (e.g. a majority-zero-residual fit with a few large residuals), instead of stopping robustification like `stats::lowess`'s "cmad < 1e-7 * sc" early exit. This caused `Lowess(..., scaling_method = "mar")` fits with many robustness iterations to diverge from `stats::lowess` on some inputs (reproduced with `outputs = "sorted"`); the MAD -> mean-absolute-residual fallback substitution now only applies to `ScalingMethod::MAD`, and a genuinely degenerate scale now halts robustness iterations and keeps the current fit.
-* Fixed the local weighted-linear fit's degeneracy check to match `stats::lowess`/Cleveland's `lowest()` rule: suppress the slope when the local weighted x-spread is less than `0.001 * (max(x) - min(x))`. The previous window-relative tolerance could keep an unstable edge slope when a huge x outlier made the global range large but the local neighborhood was tightly clustered, causing the `quickcheck` property test to find real `stats::lowess` mismatches even with `iterations = 0`.
-* Fixed bisquare robustness at roundoff-sized residual scales by removing an absolute `1e-12` tuned-scale floor and matching Cleveland/R's scale-relative arithmetic. The floor previously forced every robustness weight to one after an almost-exact sparse fit, while `stats::lowess` continued reweighting and rejected isolated spikes. Local WLS now also follows R's normalization/weighted-centre operation order so the residuals feeding robustness agree at floating-point scale.
-* Fixed `dev/verify_snippets.py` failing on any doc snippet that imports the optional, comparison-only `statsmodels` package when it isn't installed in the target Python environment; such snippets are now skipped (rather than failed) when `statsmodels` can't be imported by the runner's Python interpreter.
-* Fixed C++ release CI's "Commit updated recipe" step failing with "paths are ignored" because the repo's blanket `.gitignore` `spack/` rule matches `bindings/cpp/spack/`; `git add` now force-adds the tracked recipe file.
+* Skip comparison snippets when the optional `statsmodels` dependency is unavailable instead of failing verification.
+* Fixed C++ release CI staging the tracked Spack recipe despite the repository's broad `spack/` ignore rule.
+* Fixed MAR/mean robustness continuing from a substituted near-zero scale instead of taking `stats::lowess`'s degenerate-scale early exit. The fallback now applies only to centered MAD.
+* Matched Cleveland/R's local-linear degeneracy rule: suppress the slope when weighted local x-spread is below `0.001 * (max(x) - min(x))`.
+* Removed the absolute `1e-12` bisquare scale floor so roundoff-sized residuals are reweighted at their actual scale.
+* Matched R's local WLS operation order, including weight normalization and weighted centering, so robustness receives compatible floating-point residuals.
 
 # lowess 4.1.0
 

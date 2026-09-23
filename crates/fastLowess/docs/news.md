@@ -3,19 +3,19 @@
 
 ## Added
 
-* Added `tests/binding_support_tests.rs` (gated on the `dev` feature) covering the `vec_to_raw_ptr`/`opt_vec_to_raw_ptr`/`free_raw_f64_buffer` round trip: repeated allocate/read/free cycles, `Some`/`None` handling, and null-pointer freeing.
-* **Breaking:** migrated fastLowess's wrapper, tests, binding option translation, and docs from individual `return_*`/`cv_*` calls to `.outputs([...])` and `.cv(CVBuilder::method(...).k(...).fractions(...).seed(...))`. `CVBuilder` is available from the fastLowess prelude.
+* Added `tests/binding_support_tests.rs` (gated on the `dev` feature) covering repeated FFI buffer allocate/read/free cycles, optional buffers, and null-pointer freeing.
 
 ## Changed
 
-* Replaced `std::mem::forget` with the idiomatic `Box::into_raw` in `binding_support::vec_to_raw_ptr` so the FFI ownership transfer to language bindings is explicit. The allocation was never a leak (each binding frees it via `free_raw_f64_buffer`), but `Box::into_raw` expresses that transfer without a bare `mem::forget`.
-* Implemented `std::error::Error` for `BindingError` (it already implemented `Display`), so bindings can treat it as a first-class error type.
 * Updated the vendored `doxygen-awesome-css` theme to v2.5.0 and the Hugo docs build to v0.166.0.
+* **Breaking:** migrated wrappers and binding translation from individual `return_*`/`cv_*` calls to grouped `.outputs([...])` and `.cv(CVBuilder...)` configuration.
+* Replaced `std::mem::forget` with `Box::into_raw` in `vec_to_raw_ptr`, making the FFI ownership transfer explicit; bindings still release it through `free_raw_f64_buffer`.
+* Implemented `std::error::Error` for `BindingError`.
 
 ## Fixed
 
-* Fixed `dev/verify_snippets.py` failing on any doc snippet that imports the optional, comparison-only `statsmodels` package when it isn't installed in the target Python environment; such snippets are now skipped (rather than failed) when `statsmodels` can't be imported by the runner's Python interpreter.
-* Fixed C++ release CI's "Commit updated recipe" step failing with "paths are ignored" because the repo's blanket `.gitignore` `spack/` rule matches `bindings/cpp/spack/`; `git add` now force-adds the tracked recipe file.
+* Skip comparison snippets when the optional `statsmodels` dependency is unavailable instead of failing verification.
+* Fixed C++ release CI staging the tracked Spack recipe despite the repository's broad `spack/` ignore rule.
 
 # fastLowess 4.1.0
 

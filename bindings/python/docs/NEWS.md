@@ -3,18 +3,19 @@
 
 ## Added
 
-* Added grouped `outputs` and nested `cv` constructor options, plus grouped prediction outputs, while preserving legacy keyword arguments. Nested CV mappings now validate and forward `fractions`, `method`, `k`, and `seed`; Python stubs, guides, and binding tests cover the grouped API.
-* Added an "Alternative Software" guide page explaining how to reproduce `statsmodels.lowess()` exactly (`boundary_policy="noboundary"`, `scaling_method="mar"`), why this package's own defaults differ, and what it adds beyond it. Added `statsmodels` to `docs/requirements.txt` (comparison-only, needed for the new page's executable examples on the real ReadTheDocs build).
+* Added grouped `outputs` and nested `cv` constructor options, plus grouped prediction outputs, while preserving legacy keyword arguments.
+* Added an "Alternative Software" guide comparing `fastlowess` with `statsmodels.lowess()`.
+* Added comparison-only `statsmodels` documentation dependency for executable examples.
 
 ## Changed
 
-* Refactored the internal `parse_cv_options` helper to return a named `ParsedCvOptions` alias, reducing signature type complexity so strict clippy (`-D warnings`) passes in `python-dev`.
 * Updated the vendored `doxygen-awesome-css` theme to v2.5.0 and the Hugo docs build to v0.166.0.
+* Refactored the internal `parse_cv_options` helper to return a named `ParsedCvOptions` alias, reducing signature type complexity so strict clippy (`-D warnings`) passes in `python-dev`.
 
 ## Fixed
 
-* Fixed `dev/verify_snippets.py` failing on any doc snippet that imports the optional, comparison-only `statsmodels` package when it isn't installed in the target Python environment; such snippets are now skipped (rather than failed) when `statsmodels` can't be imported by the runner's Python interpreter.
-* Fixed C++ release CI's "Commit updated recipe" step failing with "paths are ignored" because the repo's blanket `.gitignore` `spack/` rule matches `bindings/cpp/spack/`; `git add` now force-adds the tracked recipe file.
+* Skip comparison snippets when the optional `statsmodels` dependency is unavailable instead of failing verification.
+* Fixed C++ release CI staging the tracked Spack recipe despite the repository's broad `spack/` ignore rule.
 
 # fastlowess (Python) 4.1.0
 

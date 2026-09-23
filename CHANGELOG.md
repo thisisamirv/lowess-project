@@ -12,105 +12,118 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **lowess:**
 
-- Added `LowessBuilder::outputs(names)`, a grouped replacement for the individual `.return_diagnostics()`/`.return_residuals()`/`.return_robustness_weights()`/`.return_derivative()`/`.return_se()`/`.return_sorted()` toggles: `.outputs(["diagnostics", "residuals", "weights", "derivative", "se", "sorted"])`. Unknown names are collected and reported together by `.build()`.
-- Added grouped cross-validation configuration via `CVBuilder` (in the prelude) and `.cv(...)`: `.cv(CVBuilder::method("kfold").k(5).fractions(vec![0.3, 0.7]).seed(123))`. `CVOptions` is exported at the crate root but kept out of the prelude since callers never name it.
+- Added `LowessBuilder::outputs(names)` as a grouped replacement for the individual output toggles. Unknown names are collected and reported together by `.build()`.
+- Added grouped cross-validation configuration through `CVBuilder` and `.cv(...)`. `CVBuilder` is in the prelude; the internal `CVOptions` result type remains at the crate root.
 - Added `PredictBuilder::outputs(names)` in both Rust crates, supporting `"se"` and `"derivative"` as a grouped replacement for `.return_se()` and `.return_derivative()`.
 
-**R:**
+**fastLowess:**
 
-- Added `cv_opts()` to build cross-validation options for `Lowess(cv = ...)`, grouping the former `cv_fractions`/`cv_method`/`cv_k`/`cv_seed` arguments.
-- Added unit coverage for `cv_opts()` and output-flag parsing, bringing R package line coverage to 100%; wrapped the long cross-validation vignette example for readability.
-- Added `quickcheck`-based property tests (`test-property-lowess.R`) that fuzz `x`, `y`, `fraction`, and `iterations` against `stats::lowess`, covering input-order output, `outputs = "sorted"`, and sparse one-spike initial fits.
-- Limited randomized robustness iterations to numerically stable initial reference fits; compiler-dependent exact-interpolation roundoff branches are covered by fixed regression cases instead.
-- Randomized fuzzing surfaced the high-iteration `scaling_method = "mar"` divergence, global-range local-linear degeneracy mismatch, and roundoff-scale bisquare floor fixed below.
-- Extracted `expect_matches_stats_lowess()` into `helper-validation.R` so fixed and property-based scenarios share reference logic. Property tests are gated by `skip_if_not_installed()`/`skip_on_cran()` and use dynamic package lookup to avoid hard `Suggests` requirements; `make r-dev` installs `quickcheck` and `hedgehog` locally.
-- Added an "Alternative Software" vignette (`vignette("alternative-software")`) explaining how to reproduce `stats::lowess()` exactly (`boundary_policy = "noboundary"`, `scaling_method = "mar"`), why this package's own defaults differ, and what it adds beyond it.
+- Added `tests/binding_support_tests.rs` (gated on the `dev` feature) covering repeated FFI buffer allocate/read/free cycles, optional buffers, and null-pointer freeing.
 
 **Go:**
 
-- Added grouped `Outputs []string`, `CV *CVOptions`, and prediction `Outputs []string` options; legacy flat fields remain accepted for compatibility while callers migrate.
-- Represent unavailable diagnostic metrics as `nil` optional values instead of `NaN` sentinels.
+- Added grouped `Outputs []string`, `CV *CVOptions`, and prediction `Outputs []string` options; legacy flat fields remain accepted during migration.
 
 **Java:**
 
-- Added grouped `outputs("diagnostics", "residuals", "weights", "derivative", "se", "sorted")`, `cv(CVOptions...)`, and `PredictOptions.Builder.outputs("se", "derivative")` APIs while preserving the existing native option mapping.
-- Added an "Alternative Software" guide page comparing `fastlowess` against Apache Commons Math's `LoessInterpolator`: with no robustness iterations the two match to floating-point precision (both are local-linear tricube-weighted regression), but diverge slightly (~1e-4) once robustness iterations are enabled, because `LoessInterpolator`'s bisquare reweighting omits the `c1`/`c9` smoothing zones `fastlowess` (and R's `stats::lowess()`) use. `dev/runners/java.py` now lazily downloads and caches a comparison-only `commons-math3` jar for this page's snippets, skipping them if the download is unavailable.
+- Added grouped `outputs(...)`, `cv(CVOptions...)`, and prediction-output APIs while preserving native option mapping.
+- Added an "Alternative Software" guide comparing `fastlowess` with Apache Commons Math's `LoessInterpolator`.
+- Added optional `commons-math3` support to the Java snippet runner; unavailable downloads are skipped.
 
 **Julia:**
 
-- Added grouped `outputs = ["diagnostics", "residuals", "weights", "derivative", "se", "sorted"]` and `cv = (fractions = ..., method = "kfold", k = 5, seed = 123)` keywords for `Lowess`, plus grouped outputs for Streaming/Online constructors.
-- Added grouped `outputs = ["se", "derivative"]` support to `predict` for retained Julia models.
-- Represent unavailable diagnostic metrics as `nothing` instead of `NaN` sentinels.
-- Added an "Alternative Software" guide page comparing `FastLOWESS.jl` against `Loess.jl`: how the two methods (LOWESS vs. the more general LOESS) differ algorithmically, a runnable comparison showing they only agree approximately (not to floating-point precision like the R/Python packages' own reference reproductions), and a feature comparison table. `dev/runners/julia.py` now skips (rather than fails) snippets that `using Loess` when it isn't installed, mirroring the Python `statsmodels` optional-dependency handling.
+- Added grouped `outputs` and `cv` keywords for `Lowess`, plus grouped outputs for Streaming/Online constructors and retained-model prediction.
+- Added an "Alternative Software" guide comparing LOWESS in `FastLOWESS.jl` with the more general LOESS implementation in `Loess.jl`.
+- Added optional `Loess.jl` handling to the Julia snippet runner; comparison snippets are skipped when unavailable.
 
-**Node.js/WASM:**
+**Node.js:**
 
-- Added grouped `outputs` arrays and nested `cv` option objects for batch, streaming, online, and prediction configuration while preserving legacy option fields.
+- Added grouped `outputs` arrays and nested `cv` option objects for batch, streaming, online, and prediction configuration while preserving legacy fields.
 
 **Python:**
 
-- Added grouped `outputs` and nested `cv` constructor options, plus grouped prediction outputs, while preserving legacy keyword arguments. Nested CV mappings now validate and forward `fractions`, `method`, `k`, and `seed`; Python stubs, guides, and binding tests cover the grouped API.
-- Added an "Alternative Software" guide page explaining how to reproduce `statsmodels.lowess()` exactly (`boundary_policy="noboundary"`, `scaling_method="mar"`), why this package's own defaults differ, and what it adds beyond it. Added `statsmodels` to `docs/requirements.txt` (comparison-only, needed for the new page's executable examples on the real ReadTheDocs build).
-
-**fastLowess:**
-
-- Added `tests/binding_support_tests.rs` (gated on the `dev` feature) covering the `vec_to_raw_ptr`/`opt_vec_to_raw_ptr`/`free_raw_f64_buffer` round trip: repeated allocate/read/free cycles, `Some`/`None` handling, and null-pointer freeing.
-- **Breaking:** migrated fastLowess's wrapper, tests, binding option translation, and docs from individual `return_*`/`cv_*` calls to `.outputs([...])` and `.cv(CVBuilder::method(...).k(...).fractions(...).seed(...))`. `CVBuilder` is available from the fastLowess prelude.
-
-### Changed
-
-**lowess:**
-
-- Removed redundant `#[doc(hidden)]` attributes from the `engine` and `adapters` modules (62 attributes across `engine/executor.rs`, `engine/predict.rs`, and `adapters/{batch,online,streaming}.rs`). These modules are already private and only re-exported through the `dev`-gated `internals` module, so the attributes were redundant; `#[doc(hidden)]` is retained on public-API items (`api.rs` builder DEV fields and `LowessResult::fit_state`).
-- Replaced the cross-validation candidate-fit `unwrap()` with error propagation through sequential CPU, parallel CPU, and GPU CV paths.
-- Replaced the `iteration_loop_with_callback` clippy suppression with a typed options bundle for its iteration controls and callbacks.
-- Marked `WeightFunction` as non-exhaustive and made GPU handling reject unsupported future kernels explicitly.
+- Added grouped `outputs` and nested `cv` constructor options, plus grouped prediction outputs, while preserving legacy keyword arguments.
+- Added an "Alternative Software" guide comparing `fastlowess` with `statsmodels.lowess()`.
+- Added comparison-only `statsmodels` documentation dependency for executable examples.
 
 **R:**
 
-- Replaced the local `type Result<T> = std::result::Result<T, extendr_api::Error>` alias with `extendr_api::error::Result`, which is still exported in `extendr-api 0.9.0` (only the prelude re-export was removed).
-- **Breaking:** replaced the six `return_*` boolean arguments in `Lowess()` (and the `return_*` booleans in `StreamingLowess()`/`OnlineLowess()`) with a single `return` character vector (`c("diagnostics", "residuals", "weights", "derivative", "se", "sorted")`), and replaced the four `cv_*` arguments in `Lowess()` with `cv = cv_opts(...)`.
-- Represent unavailable diagnostic metrics as R `NA` rather than generic `NaN` values.
-- Added a regression comparison for unsorted input against `stats::lowess`, covering both preserved input order and explicit `outputs = "sorted"` behavior.
-- Added committed `statsmodels.lowess` reference fixtures for independent R cross-language validation.
-- Made `make r-dev` recover from transient Windows `pak` binary-install move failures (observed with `data.table`) by clearing partial local cache/lock state and retrying the required dev-package plan once with a single worker.
+- Added `cv_opts()` to build grouped cross-validation options for `Lowess(cv = ...)`.
+- Added unit coverage for `cv_opts()` and output-flag parsing, bringing R package line coverage to 100%.
+- Added `quickcheck` properties covering input-order output, `outputs = "sorted"`, and sparse one-spike initial fits against `stats::lowess`.
+- Limited randomized robustness iterations to numerically stable initial reference fits; compiler-dependent roundoff branches use fixed regressions.
+- Extracted shared `stats::lowess` reference helpers into `helper-validation.R`.
+- Kept fuzzing dependencies optional for package checks; `make r-dev` installs `quickcheck` and `hedgehog` locally.
+- Added an "Alternative Software" vignette comparing `rfastlowess` with `stats::lowess()`.
 
-**Python:**
+**WASM:**
 
-- Refactored the internal `parse_cv_options` helper to return a named `ParsedCvOptions` alias, reducing signature type complexity so strict clippy (`-D warnings`) passes in `python-dev`.
+- Added grouped `outputs` arrays and nested `cv` option objects for batch, streaming, online, and prediction configuration while preserving legacy fields.
 
-**fastLowess:**
-
-- Replaced `std::mem::forget` with the idiomatic `Box::into_raw` in `binding_support::vec_to_raw_ptr` so the FFI ownership transfer to language bindings is explicit. The allocation was never a leak (each binding frees it via `free_raw_f64_buffer`), but `Box::into_raw` expresses that transfer without a bare `mem::forget`.
-- Implemented `std::error::Error` for `BindingError` (it already implemented `Display`), so bindings can treat it as a first-class error type.
+### Changed
 
 **Monorepo:**
 
 - Updated the vendored `doxygen-awesome-css` theme to v2.5.0 and the Hugo docs build to v0.166.0.
 
+**lowess:**
+
+- Removed 62 redundant `#[doc(hidden)]` attributes from private engine/adapter modules; public-API annotations remain unchanged.
+- Replaced the cross-validation candidate-fit `unwrap()` with error propagation through sequential CPU, parallel CPU, and GPU CV paths.
+- Replaced the `iteration_loop_with_callback` clippy suppression with a typed options bundle for its iteration controls and callbacks.
+- Marked `WeightFunction` as non-exhaustive and made GPU handling reject unsupported future kernels explicitly.
+
+**fastLowess:**
+
+- **Breaking:** migrated wrappers and binding translation from individual `return_*`/`cv_*` calls to grouped `.outputs([...])` and `.cv(CVBuilder...)` configuration.
+- Replaced `std::mem::forget` with `Box::into_raw` in `vec_to_raw_ptr`, making the FFI ownership transfer explicit; bindings still release it through `free_raw_f64_buffer`.
+- Implemented `std::error::Error` for `BindingError`.
+
+**C++:**
+
+- **Breaking:** replaced flat `return_*`/`cv_*` fields with grouped `outputs` and nested `cv` options; prediction outputs are grouped as well.
+- Declared the public wrapper's C++17 requirement for `std::optional`.
+- Represent unavailable diagnostics as empty `std::optional<double>` values instead of `NaN` sentinels.
+
+**Go:**
+
+- Represent unavailable diagnostic metrics as `nil` optional values instead of `NaN` sentinels.
+
+**Julia:**
+
+- Represent unavailable diagnostic metrics as `nothing` instead of `NaN` sentinels.
+
+**Python:**
+
+- Refactored the internal `parse_cv_options` helper to return a named `ParsedCvOptions` alias, reducing signature type complexity so strict clippy (`-D warnings`) passes in `python-dev`.
+
+**R:**
+
+- Replaced the local result alias with `extendr_api::error::Result`, which remains exported outside the prelude in `extendr-api 0.9.0`.
+- **Breaking:** replaced individual `return_*` arguments with grouped `outputs`, and replaced `Lowess()`'s four `cv_*` arguments with `cv = cv_opts(...)`.
+- Represent unavailable diagnostic metrics as R `NA` rather than generic `NaN` values.
+- Added regression comparisons with `stats::lowess` for input-order and sorted output.
+- Added committed `statsmodels.lowess` reference fixtures for cross-language validation.
+- Made `make r-dev` retry transient Windows `pak` move failures after clearing partial local cache/lock state.
+
 ### Fixed
+
+**Monorepo:**
+
+- Skip comparison snippets when the optional `statsmodels` dependency is unavailable instead of failing verification.
+- Fixed C++ release CI staging the tracked Spack recipe despite the repository's broad `spack/` ignore rule.
 
 **lowess:**
 
-- Fixed `RobustnessMethod::apply_robustness_weights` continuing to reweight on a substituted scale when `ScalingMethod::MAR`/`Mean` collapsed to ~zero (e.g. a majority-zero-residual fit with a few large residuals), instead of stopping robustification like `stats::lowess`'s "cmad < 1e-7 * sc" early exit. This caused `Lowess(..., scaling_method = "mar")` fits with many robustness iterations to diverge from `stats::lowess` on some inputs (reproduced with `outputs = "sorted"`); the MAD -> mean-absolute-residual fallback substitution now only applies to `ScalingMethod::MAD`, and a genuinely degenerate scale now halts robustness iterations and keeps the current fit.
-- Fixed the local weighted-linear fit's degeneracy check to match `stats::lowess`/Cleveland's `lowest()` rule: suppress the slope when the local weighted x-spread is less than `0.001 * (max(x) - min(x))`. The previous window-relative tolerance could keep an unstable edge slope when a huge x outlier made the global range large but the local neighborhood was tightly clustered, causing the `quickcheck` property test to find real `stats::lowess` mismatches even with `iterations = 0`.
-- Fixed bisquare robustness at roundoff-sized residual scales by removing an absolute `1e-12` tuned-scale floor and matching Cleveland/R's scale-relative arithmetic. The floor previously forced every robustness weight to one after an almost-exact sparse fit, while `stats::lowess` continued reweighting and rejected isolated spikes. Local WLS now also follows R's normalization/weighted-centre operation order so the residuals feeding robustness agree at floating-point scale.
+- Fixed MAR/mean robustness continuing from a substituted near-zero scale instead of taking `stats::lowess`'s degenerate-scale early exit. The fallback now applies only to centered MAD.
+- Matched Cleveland/R's local-linear degeneracy rule: suppress the slope when weighted local x-spread is below `0.001 * (max(x) - min(x))`.
+- Removed the absolute `1e-12` bisquare scale floor so roundoff-sized residuals are reweighted at their actual scale.
+- Matched R's local WLS operation order, including weight normalization and weighted centering, so robustness receives compatible floating-point residuals.
 
 **Java:**
 
 - Fixed `javadoc` "no main description" warnings in `OnlineOptions` and `StreamingOptions` builder methods by adding a leading description sentence to each Javadoc block.
-- Fixed `maven-javadoc-plugin` silently ignoring javadoc warnings (`make dev`'s "Javadoc" step) due to a `pom.xml` typo: the parameter is `failOnWarnings`, not `failOnWarning`.
-
-**Monorepo:**
-
-- Fixed `dev/verify_snippets.py` failing on any doc snippet that imports the optional, comparison-only `statsmodels` package when it isn't installed in the target Python environment; such snippets are now skipped (rather than failed) when `statsmodels` can't be imported by the runner's Python interpreter.
-- Fixed C++ release CI's "Commit updated recipe" step failing with "paths are ignored" because the repo's blanket `.gitignore` `spack/` rule matches `bindings/cpp/spack/`; `git add` now force-adds the tracked recipe file.
-
-**C++:**
-
-- **Breaking:** replaced flat `return_*` and `cv_*` fields on `LowessOptions`/related options with grouped `outputs = {"diagnostics", "residuals", "weights", "derivative", "se", "sorted"}` and nested `cv.method`/`cv.k`/`cv.fractions`/`cv.seed`; `PredictOptions` now uses `outputs = {"se", "derivative"}`.
-- Declared the public C++ wrapper's C++17 requirement for `std::optional` in CMake and clangd configuration.
-- Represent unavailable diagnostic metrics as empty `std::optional<double>` values instead of `NaN` sentinels.
+- Fixed `maven-javadoc-plugin` silently ignoring warnings because `pom.xml` used `failOnWarning` instead of `failOnWarnings`.
 
 ## 4.1.0
 

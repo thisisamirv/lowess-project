@@ -3,28 +3,28 @@
 
 ## Added
 
-* Added `cv_opts()` to build cross-validation options for `Lowess(cv = ...)`, grouping the former `cv_fractions`/`cv_method`/`cv_k`/`cv_seed` arguments.
-* Added unit coverage for `cv_opts()` and output-flag parsing, bringing R package line coverage to 100%; wrapped the long cross-validation vignette example for readability.
-* Added `quickcheck`-based property tests (`test-property-lowess.R`) that fuzz `x`, `y`, `fraction`, and `iterations` against `stats::lowess`, covering input-order output, `outputs = "sorted"`, and sparse one-spike initial fits.
-* Limited randomized robustness iterations to numerically stable initial reference fits; compiler-dependent exact-interpolation roundoff branches are covered by fixed regression cases instead.
-* Randomized fuzzing surfaced the high-iteration `scaling_method = "mar"` divergence, global-range local-linear degeneracy mismatch, and roundoff-scale bisquare floor fixed below.
-* Extracted `expect_matches_stats_lowess()` into `helper-validation.R` so fixed and property-based scenarios share reference logic. Property tests are gated by `skip_if_not_installed()`/`skip_on_cran()` and use dynamic package lookup to avoid hard `Suggests` requirements; `make r-dev` installs `quickcheck` and `hedgehog` locally.
-* Added an "Alternative Software" vignette (`vignette("alternative-software")`) explaining how to reproduce `stats::lowess()` exactly (`boundary_policy = "noboundary"`, `scaling_method = "mar"`), why this package's own defaults differ, and what it adds beyond it.
+* Added `cv_opts()` to build grouped cross-validation options for `Lowess(cv = ...)`.
+* Added unit coverage for `cv_opts()` and output-flag parsing, bringing R package line coverage to 100%.
+* Added `quickcheck` properties covering input-order output, `outputs = "sorted"`, and sparse one-spike initial fits against `stats::lowess`.
+* Limited randomized robustness iterations to numerically stable initial reference fits; compiler-dependent roundoff branches use fixed regressions.
+* Extracted shared `stats::lowess` reference helpers into `helper-validation.R`.
+* Kept fuzzing dependencies optional for package checks; `make r-dev` installs `quickcheck` and `hedgehog` locally.
+* Added an "Alternative Software" vignette comparing `rfastlowess` with `stats::lowess()`.
 
 ## Changed
 
-* Replaced the local `type Result<T> = std::result::Result<T, extendr_api::Error>` alias with `extendr_api::error::Result`, which is still exported in `extendr-api 0.9.0` (only the prelude re-export was removed).
-* **Breaking:** replaced the six `return_*` boolean arguments in `Lowess()` (and the `return_*` booleans in `StreamingLowess()`/`OnlineLowess()`) with a single `return` character vector (`c("diagnostics", "residuals", "weights", "derivative", "se", "sorted")`), and replaced the four `cv_*` arguments in `Lowess()` with `cv = cv_opts(...)`.
-* Represent unavailable diagnostic metrics as R `NA` rather than generic `NaN` values.
-* Added a regression comparison for unsorted input against `stats::lowess`, covering both preserved input order and explicit `outputs = "sorted"` behavior.
-* Added committed `statsmodels.lowess` reference fixtures for independent R cross-language validation.
-* Made `make r-dev` recover from transient Windows `pak` binary-install move failures (observed with `data.table`) by clearing partial local cache/lock state and retrying the required dev-package plan once with a single worker.
 * Updated the vendored `doxygen-awesome-css` theme to v2.5.0 and the Hugo docs build to v0.166.0.
+* Replaced the local result alias with `extendr_api::error::Result`, which remains exported outside the prelude in `extendr-api 0.9.0`.
+* **Breaking:** replaced individual `return_*` arguments with grouped `outputs`, and replaced `Lowess()`'s four `cv_*` arguments with `cv = cv_opts(...)`.
+* Represent unavailable diagnostic metrics as R `NA` rather than generic `NaN` values.
+* Added regression comparisons with `stats::lowess` for input-order and sorted output.
+* Added committed `statsmodels.lowess` reference fixtures for cross-language validation.
+* Made `make r-dev` retry transient Windows `pak` move failures after clearing partial local cache/lock state.
 
 ## Fixed
 
-* Fixed `dev/verify_snippets.py` failing on any doc snippet that imports the optional, comparison-only `statsmodels` package when it isn't installed in the target Python environment; such snippets are now skipped (rather than failed) when `statsmodels` can't be imported by the runner's Python interpreter.
-* Fixed C++ release CI's "Commit updated recipe" step failing with "paths are ignored" because the repo's blanket `.gitignore` `spack/` rule matches `bindings/cpp/spack/`; `git add` now force-adds the tracked recipe file.
+* Skip comparison snippets when the optional `statsmodels` dependency is unavailable instead of failing verification.
+* Fixed C++ release CI staging the tracked Spack recipe despite the repository's broad `spack/` ignore rule.
 
 # rfastlowess 4.1.0
 

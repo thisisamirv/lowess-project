@@ -8,17 +8,17 @@ weight: 100
 
 ## Added
 
-* Added grouped `Outputs []string`, `CV *CVOptions`, and prediction `Outputs []string` options; legacy flat fields remain accepted for compatibility while callers migrate.
-* Represent unavailable diagnostic metrics as `nil` optional values instead of `NaN` sentinels.
+* Added grouped `Outputs []string`, `CV *CVOptions`, and prediction `Outputs []string` options; legacy flat fields remain accepted during migration.
 
 ## Changed
 
 * Updated the vendored `doxygen-awesome-css` theme to v2.5.0 and the Hugo docs build to v0.166.0.
+* Represent unavailable diagnostic metrics as `nil` optional values instead of `NaN` sentinels.
 
 ## Fixed
 
-* Fixed `dev/verify_snippets.py` failing on any doc snippet that imports the optional, comparison-only `statsmodels` package when it isn't installed in the target Python environment; such snippets are now skipped (rather than failed) when `statsmodels` can't be imported by the runner's Python interpreter.
-* Fixed C++ release CI's "Commit updated recipe" step failing with "paths are ignored" because the repo's blanket `.gitignore` `spack/` rule matches `bindings/cpp/spack/`; `git add` now force-adds the tracked recipe file.
+* Skip comparison snippets when the optional `statsmodels` dependency is unavailable instead of failing verification.
+* Fixed C++ release CI staging the tracked Spack recipe despite the repository's broad `spack/` ignore rule.
 
 # fastlowess (Go) 4.1.0
 
