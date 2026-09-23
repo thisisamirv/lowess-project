@@ -46,16 +46,20 @@ impl RobustnessMethod {
     // Minimum tuned-scale absolute epsilon to avoid division by zero.
     const MIN_TUNED_SCALE: f64 = 1e-12;
 
-    // Apply robustness weights using the configured method.
+    // Apply robustness weights using the configured method. Returns `true` if the
+    // residual scale collapsed to ~zero relative to the mean absolute residual (mirrors
+    // `stats::lowess`'s "cmad < 1e-7 * sc" check): callers should stop robustifying and
+    // keep the current fit rather than trust weights computed from a near-zero scale,
+    // which would otherwise zero out almost every point instead of leaving them alone.
     pub fn apply_robustness_weights<T: Float>(
         &self,
         residuals: &[T],
         weights: &mut [T],
         scaling_method: ScalingMethod,
         scratch: &mut [T],
-    ) {
+    ) -> bool {
         if residuals.is_empty() {
-            return;
+            return false;
         }
 
         let base_scale = self.compute_scale(residuals, scaling_method, scratch);
@@ -68,6 +72,19 @@ impl RobustnessMethod {
 
         let c_t = T::from(tuning_constant).unwrap_or(T::one());
 
+        let n = residuals.len();
+        let mut sum_abs = T::zero();
+        for &r in residuals {
+            sum_abs = sum_abs + r.abs();
+        }
+        let mean_abs = sum_abs / T::from(n).unwrap_or(T::one());
+        let tuned_scale = base_scale * c_t;
+        let degenerate_threshold =
+            T::from(Self::SCALE_THRESHOLD).unwrap_or_else(T::epsilon) * mean_abs;
+        if tuned_scale < degenerate_threshold {
+            return true;
+        }
+
         for (i, &r) in residuals.iter().enumerate() {
             weights[i] = match method_type {
                 0 => Self::bisquare_weight(r, base_scale, c_t),
@@ -75,9 +92,18 @@ impl RobustnessMethod {
                 _ => Self::talwar_weight(r, base_scale, c_t),
             };
         }
+        false
     }
 
-    // Compute robust scale estimate with MAD fallback.
+    // Compute robust scale estimate, with a `MAD` -> mean-absolute-residual fallback.
+    //
+    // `MAD` (centered) commonly collapses to exactly zero on data with tied/symmetric
+    // residuals even when the residuals aren't actually degenerate, so it alone is
+    // rescued here. `MAR`/`Mean` are used as computed: an (uncentered) near-zero result
+    // from either one is itself the degenerate case that `apply_robustness_weights`
+    // detects above, so substituting a fallback here would mask it instead of correctly
+    // signalling that robustifying should stop (matching `stats::lowess`, whose default
+    // algorithm is equivalent to bisquare + `MAR`).
     fn compute_scale<T: Float>(
         &self,
         residuals: &[T],
@@ -88,7 +114,10 @@ impl RobustnessMethod {
         scratch.copy_from_slice(residuals);
         let scale = scaling_method.compute(scratch);
 
-        // Compute MAR (Mean Absolute Residual) inline as fallback
+        if !matches!(scaling_method, ScalingMethod::MAD) {
+            return scale;
+        }
+
         let n = residuals.len();
         let mut sum_abs = T::zero();
         for &r in residuals {
@@ -101,7 +130,7 @@ impl RobustnessMethod {
         let scale_threshold = relative_threshold.max(absolute_threshold);
 
         if scale <= scale_threshold {
-            // Scale is too small, use MAR as fallback
+            // MAD collapsed to ~zero: fall back to the mean absolute residual.
             mean_abs.max(scale)
         } else {
             scale

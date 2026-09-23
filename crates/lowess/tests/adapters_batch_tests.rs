@@ -101,6 +101,40 @@ fn test_batch_with_robustness_weights() {
     );
 }
 
+/// Regression test for a `scaling_method("mar")` divergence from `stats::lowess` at high
+/// robustness iteration counts.
+///
+/// With `outputs = ["sorted"]`, a majority-zero-residual fit with a couple of large
+/// residuals could drive the MAR scale to ~0 while the mean absolute residual stayed
+/// nonzero. Previously this substituted a fallback scale and kept reweighting, which
+/// (over hundreds of iterations) zeroed out a point that `stats::lowess` - which instead
+/// stops robustifying once its "cmad < 1e-7 * sc" degeneracy check trips - keeps nonzero.
+/// Values below are R's `stats::lowess(x, y, f = 0.6614, iter = 285)` output.
+#[test]
+fn test_batch_matches_r_lowess_high_iterations_mar_scaling() {
+    let x = vec![0.0, 1.0933, 0.7099, 1.2401, 1.4323];
+    let y = vec![-0.3535, 0.0, 0.0, -0.5071, 0.0];
+
+    let result = Lowess::new()
+        .fraction(0.6614)
+        .iterations(285)
+        .boundary_policy("noboundary")
+        .scaling_method("mar")
+        .outputs(["sorted"])
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .expect("Smoothing should succeed");
+
+    let expected_x = [0.0, 0.7099, 1.0933, 1.2401, 1.4323];
+    let expected_y = [-0.3535, 0.0, 0.0, -0.5071, 0.0];
+
+    for i in 0..5 {
+        assert_relative_eq!(result.x[i], expected_x[i], epsilon = 1e-9);
+        assert_relative_eq!(result.y[i], expected_y[i], epsilon = 1e-9);
+    }
+}
+
 /// Test that `return_derivative` is `None` by default.
 #[test]
 fn test_batch_derivative_none_by_default() {

@@ -533,3 +533,36 @@ fn test_robustness_nan_inf_residuals() {
     // but they shouldn't break the high-level invariants.
     assert!(weights[0].is_finite());
 }
+
+/// Test that a degenerate (~zero) MAR/Mean scale is reported to the caller instead of
+/// being silently substituted, mirroring `stats::lowess`'s "cmad < 1e-7 * sc" early exit.
+///
+/// Regression test: previously, `ScalingMethod::MAR`/`Mean` went through the same
+/// MAD-only fallback as `ScalingMethod::MAD`, substituting the mean absolute residual and
+/// continuing to reweight instead of signalling degeneracy. That masked a real
+/// `stats::lowess` divergence where a majority-zero-residual fit with a few large
+/// residuals should stop robustifying (see `Lowess`'s `outputs = "sorted"` doctest fix).
+#[test]
+fn test_mar_degenerate_scale_reports_true() {
+    // median(|r|) == 0 (three zeros out of five), but the mean absolute residual is
+    // clearly nonzero, so this is the case `stats::lowess` treats as "effectively zero".
+    let residuals = vec![0.0, 0.0, 0.0, 5.0, 5.0];
+    let mut weights = vec![1.0; 5];
+    let mut scratch = vec![0.0f64; residuals.len()];
+
+    let degenerate = RobustnessMethod::Bisquare.apply_robustness_weights(
+        &residuals,
+        &mut weights,
+        ScalingMethod::MAR,
+        &mut scratch,
+    );
+
+    assert!(
+        degenerate,
+        "MAR scale of ~0 should be reported as degenerate"
+    );
+    // Weights must be left untouched when degenerate is reported.
+    for &w in &weights {
+        assert_relative_eq!(w, 1.0, epsilon = 1e-12);
+    }
+}

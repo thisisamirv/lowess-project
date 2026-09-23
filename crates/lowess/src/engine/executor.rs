@@ -1014,9 +1014,12 @@ impl<T: Float> LowessExecutor<T> {
                 break;
             }
 
-            // Update robustness weights for next iteration (skip last)
-            if iter < niter {
-                Self::update_robustness_weights(
+            // Update robustness weights for next iteration (skip last). If the residual
+            // scale has collapsed to ~zero (mirrors `stats::lowess`'s early exit), stop
+            // robustifying here and keep this iteration's fit rather than reweight from
+            // an unreliable near-zero scale.
+            if iter < niter
+                && Self::update_robustness_weights(
                     y,
                     &buffers.y_smooth,
                     &mut buffers.residuals,
@@ -1024,7 +1027,9 @@ impl<T: Float> LowessExecutor<T> {
                     robustness_updater,
                     self.scaling_method,
                     &mut buffers.weights,
-                );
+                )
+            {
+                break;
             }
         }
 
@@ -1170,7 +1175,10 @@ impl<T: Float> LowessExecutor<T> {
         max_change <= tolerance
     }
 
-    // Update robustness weights based on residuals.
+    // Update robustness weights based on residuals. Returns `true` if the residual scale
+    // was found to be degenerate (see `RobustnessMethod::apply_robustness_weights`), in
+    // which case `robustness_weights` was left unchanged and the caller should stop
+    // robustifying.
     pub fn update_robustness_weights(
         y: &[T],
         y_smooth: &[T],
@@ -1179,7 +1187,7 @@ impl<T: Float> LowessExecutor<T> {
         robustness_updater: &RobustnessMethod,
         scaling_method: ScalingMethod,
         scratch: &mut [T],
-    ) {
+    ) -> bool {
         // Inline compute_residuals: residuals[i] = y[i] - y_smooth[i]
         for i in 0..y.len() {
             residuals[i] = y[i] - y_smooth[i];
@@ -1189,7 +1197,7 @@ impl<T: Float> LowessExecutor<T> {
             robustness_weights,
             scaling_method,
             scratch,
-        );
+        )
     }
 
     // Helper to slice result buffers back to original data length when padding was used.
