@@ -1,5 +1,23 @@
 = News
 
+== fastlowess (Java) (development version)
+
+=== Added
+
+* Added grouped `outputs("diagnostics", "residuals", "weights", "derivative", "se", "sorted")`, `cv(CVOptions...)`, and `PredictOptions.Builder.outputs("se", "derivative")` APIs while preserving the existing native option mapping.
+* Added an "Alternative Software" guide page comparing `fastlowess` against Apache Commons Math's `LoessInterpolator`: with no robustness iterations the two match to floating-point precision (both are local-linear tricube-weighted regression), but diverge slightly (~1e-4) once robustness iterations are enabled, because `LoessInterpolator`'s bisquare reweighting omits the `c1`/`c9` smoothing zones `fastlowess` (and R's `stats::lowess()`) use. `dev/runners/java.py` now lazily downloads and caches a comparison-only `commons-math3` jar for this page's snippets, skipping them if the download is unavailable.
+
+=== Changed
+
+* Updated the vendored `doxygen-awesome-css` theme to v2.5.0 and the Hugo docs build to v0.166.0.
+
+=== Fixed
+
+* Fixed `javadoc` "no main description" warnings in `OnlineOptions` and `StreamingOptions` builder methods by adding a leading description sentence to each Javadoc block.
+* Fixed `maven-javadoc-plugin` silently ignoring javadoc warnings (`make dev`'s "Javadoc" step) due to a `pom.xml` typo: the parameter is `failOnWarnings`, not `failOnWarning`.
+* Fixed `dev/verify_snippets.py` failing on any doc snippet that imports the optional, comparison-only `statsmodels` package when it isn't installed in the target Python environment; such snippets are now skipped (rather than failed) when `statsmodels` can't be imported by the runner's Python interpreter.
+* Fixed C++ release CI's "Commit updated recipe" step failing with "paths are ignored" because the repo's blanket `.gitignore` `spack/` rule matches `bindings/cpp/spack/`; `git add` now force-adds the tracked recipe file.
+
 == fastlowess (Java) 4.1.0
 
 === Added

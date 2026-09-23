@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Java:**
 
 - Added grouped `outputs("diagnostics", "residuals", "weights", "derivative", "se", "sorted")`, `cv(CVOptions...)`, and `PredictOptions.Builder.outputs("se", "derivative")` APIs while preserving the existing native option mapping.
+- Added an "Alternative Software" guide page comparing `fastlowess` against Apache Commons Math's `LoessInterpolator`: with no robustness iterations the two match to floating-point precision (both are local-linear tricube-weighted regression), but diverge slightly (~1e-4) once robustness iterations are enabled, because `LoessInterpolator`'s bisquare reweighting omits the `c1`/`c9` smoothing zones `fastlowess` (and R's `stats::lowess()`) use. `dev/runners/java.py` now lazily downloads and caches a comparison-only `commons-math3` jar for this page's snippets, skipping them if the download is unavailable.
 
 **Julia:**
 

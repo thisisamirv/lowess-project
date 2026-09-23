@@ -8,6 +8,7 @@
 ** xref:guide/intervals.adoc[Intervals]
 ** xref:guide/cross-validation.adoc[Cross-Validation]
 ** xref:guide/predict.adoc[Predict]
+** xref:guide/alternative-software.adoc[Alternative Software]
 * API Reference
 ** xref:api/api.adoc[API]
 ** xref:api/api-streaming.adoc[StreamingLowess API]

@@ -1,0 +1,171 @@
+= Alternative Software
+
+`fastlowess` is presented throughout this package's documentation as a faster, more feature-rich alternative to https://commons.apache.org/proper/commons-math/[Apache Commons Math]'s `LoessInterpolator`, the closest thing to a standard local regression implementation in the Java ecosystem. This page is for readers who already use `LoessInterpolator` and want to know: *can I get the same numbers out of `fastlowess`, and if not, why not?*
+
+In short:
+
+* Both implement the same method — LOWESS (Cleveland, 1979): local *linear* fits with iterative robustness reweighting, no k-d tree or quadratic option. With no robustness iterations (`iterations=0`/`robustnessIters=0`), the two match to floating-point precision. See <<_comparing_the_two_libraries,Comparing the two libraries>> below.
+* With robustness iterations enabled, the two diverge slightly (on the order of 1e-4 in the example below), because `LoessInterpolator`'s bisquare reweighting formula is a simplified variant of Cleveland's original — see <<_why_they_diverge_with_robustness_iterations,Why they diverge with robustness iterations>>.
+* `fastlowess` supports a number of features `LoessInterpolator` doesn't have — see <<_what_this_package_adds,What this package adds>>.
+
+NOTE: For a full LOESS implementation, use https://central.sonatype.com/artifact/io.github.thisisamirv/fastloess[`FastLOESS`].
+
+'''
+
+== Comparing the two libraries
+
+With `iterations=0` (no robustness reweighting) and `boundaryPolicy("noboundary")` (`LoessInterpolator` doesn't pad the edges), the two libraries' local-linear tricube-weighted regression agree to within floating-point rounding:
+
+[source,java]
+----
+import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+import org.apache.commons.math3.analysis.interpolation.LoessInterpolator;
+
+import java.util.Random;
+
+public class AltSoftwareNoRobustness {
+    public static void main(String[] args) {
+        int n = 60;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        Random rng = new Random(42);
+        for (int i = 0; i < n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + rng.nextGaussian() * 0.2;
+        }
+
+        Options options = Options.builder()
+                .fraction(2.0 / 3.0)
+                .iterations(0)
+                .boundaryPolicy("noboundary")
+                .delta(0.0)
+                .build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y);
+
+            LoessInterpolator loess = new LoessInterpolator(2.0 / 3.0, 0);
+            double[] commonsMathY = loess.smooth(x, y);
+
+            double maxDiff = 0.0;
+            for (int i = 0; i < n; i++) {
+                maxDiff = Math.max(maxDiff, Math.abs(result.y()[i] - commonsMathY[i]));
+            }
+            System.out.println("Max abs difference: " + maxDiff);
+        }
+    }
+}
+----
+
+[source,console]
+----
+Max abs difference: 4.3298697960381105E-15
+----
+
+'''
+
+== Why they diverge with robustness iterations
+
+Enabling robustness iterations (`iterations=3`/`robustnessIters=3`, matching R's/Python's default) introduces a small but real divergence:
+
+[source,java]
+----
+import fastlowess.Lowess;
+import fastlowess.Options;
+import fastlowess.Result;
+import org.apache.commons.math3.analysis.interpolation.LoessInterpolator;
+
+import java.util.Random;
+
+public class AltSoftwareRobustness {
+    public static void main(String[] args) {
+        int n = 60;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        Random rng = new Random(42);
+        for (int i = 0; i < n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + rng.nextGaussian() * 0.2;
+        }
+
+        Options options = Options.builder()
+                .fraction(2.0 / 3.0)
+                .iterations(3)
+                .boundaryPolicy("noboundary")
+                .scalingMethod("mar")
+                .delta(0.0)
+                .build();
+
+        try (Lowess model = new Lowess(options)) {
+            Result result = model.fit(x, y);
+
+            LoessInterpolator loess = new LoessInterpolator(2.0 / 3.0, 3);
+            double[] commonsMathY = loess.smooth(x, y);
+
+            double maxDiff = 0.0;
+            for (int i = 0; i < n; i++) {
+                maxDiff = Math.max(maxDiff, Math.abs(result.y()[i] - commonsMathY[i]));
+            }
+            System.out.println("Max abs difference: " + maxDiff);
+        }
+    }
+}
+----
+
+[source,console]
+----
+Max abs difference: 5.629133400497643E-4
+----
+
+The reason: `LoessInterpolator`'s bisquare weight is a simplified variant of Cleveland's original formula. Given `arg = residual / (6 * medianAbsoluteResidual)`, it applies `w = (1 - arg^2)^2` directly for every point with `arg < 1` (and `w = 0` otherwise). `fastlowess` (like R's `stats::lowess()`) additionally clamps very small residuals to exactly `w = 1` and very large ones (but still under the cutoff) with a smoothed transition, via the `c1 = 0.001 * cmad` / `c9 = 0.999 * cmad` boundary zones described in xref:weighting/robustness.adoc[Robustness]. `LoessInterpolator` also uses a different (and simpler) criterion for detecting a degenerate residual scale: an absolute `accuracy` threshold (default `1e-12`) on the median residual itself, rather than `fastlowess`'s scale-relative check (see xref:weighting/scaling.adoc[Scaling Methods]).
+
+'''
+
+== What this package adds
+
+`LoessInterpolator`'s API is intentionally minimal (`smooth()` / `interpolate()`); it doesn't support:
+
+[cols="1,1,1", options="header"]
+|===
+| Feature | `fastlowess` | `LoessInterpolator`
+
+| Kernel functions
+| 7 options
+| tricube only
+
+| Robustness weighting
+| 3 methods
+| bisquare only (simplified)
+
+| Scale estimation
+| MAD, MAR, mean
+| median absolute residual only
+
+| Boundary padding
+| 4 policies
+| none
+
+| Confidence / prediction intervals
+| yes
+| no
+
+| Cross-validation for `fraction`
+| K-fold, LOOCV
+| no
+
+| Streaming / online modes
+| yes
+| no
+
+| Custom per-observation weights
+| yes
+| no
+
+| Parallel / GPU execution
+| yes
+| no
+|===
+
+See the xref:introduction/concepts.adoc[Concepts] page for an overview of these, or the xref:benchmarks.adoc[Benchmarks] page for performance comparisons.
