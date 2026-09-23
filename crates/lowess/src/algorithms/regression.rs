@@ -563,7 +563,7 @@ impl<T: Float + WLSSolver> LinearFit<T> {
         let mut spread = T::zero();
         for i in 0..n {
             let dx = x[i] - x_mean;
-            spread = spread + weights[i] * dx * dx;
+            spread = spread + weights[i] * (dx * dx);
         }
 
         let min_spread = T::from(0.001).unwrap_or_else(T::epsilon) * global_x_range;
@@ -676,6 +676,7 @@ impl<'a, T: Float + WLSSolver> RegressionContext<'a, T> {
     // Shared local-WLS evaluation logic for `fit()` (in-sample, `orig_y = Some(y[idx])`)
     // and `predict_at()` (out-of-sample, `orig_y = None`).
     fn eval_at(&mut self, x_pivot: T, orig_y: Option<T>) -> Option<(T, T)> {
+        let n = self.x.len();
         let window_radius = self.window.max_distance(self.x, x_pivot);
 
         if window_radius <= T::zero() {
@@ -734,7 +735,7 @@ impl<'a, T: Float + WLSSolver> RegressionContext<'a, T> {
         let (mut weight_sum, rightmost_idx) = self.weight_function.compute_window_weights(
             self.x,
             self.window.left,
-            self.window.right,
+            n - 1,
             weight_params.x_current,
             weight_params.window_radius,
             weight_params.h1,

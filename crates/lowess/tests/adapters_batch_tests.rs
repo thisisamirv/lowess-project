@@ -105,10 +105,7 @@ fn test_batch_with_robustness_weights() {
 /// robustness iteration counts.
 ///
 /// With `outputs = ["sorted"]`, a majority-zero-residual fit with a couple of large
-/// residuals could drive the MAR scale to ~0 while the mean absolute residual stayed
-/// nonzero. Previously this substituted a fallback scale and kept reweighting, which
-/// (over hundreds of iterations) zeroed out a point that `stats::lowess` - which instead
-/// stops robustifying once its "cmad < 1e-7 * sc" degeneracy check trips - keeps nonzero.
+/// residuals exercises R's `cmad < 1e-7 * sc` guard and sparse robustness behavior.
 /// Values below are R's `stats::lowess(x, y, f = 0.6614, iter = 285)` output.
 #[test]
 fn test_batch_matches_r_lowess_high_iterations_mar_scaling() {
@@ -127,7 +124,7 @@ fn test_batch_matches_r_lowess_high_iterations_mar_scaling() {
         .expect("Smoothing should succeed");
 
     let expected_x = [0.0, 0.7099, 1.0933, 1.2401, 1.4323];
-    let expected_y = [-0.3535, 0.0, 0.0, -0.5071, 0.0];
+    let expected_y = [-0.3535, 0.0, 0.0, 0.0, 0.0];
 
     for i in 0..5 {
         assert_relative_eq!(result.x[i], expected_x[i], epsilon = 1e-9);
@@ -425,6 +422,44 @@ fn test_batch_matches_r_lowess_odd_exact_zero_stop() {
     ];
     for (actual, expected) in result.y.iter().zip(expected_y) {
         assert_relative_eq!(actual, &expected, epsilon = 1e-12);
+    }
+}
+
+#[test]
+fn test_batch_matches_r_lowess_right_scan_beyond_nominal_window() {
+    let x = vec![
+        0.0,
+        -1.2644937671720982,
+        -4.879491005092859,
+        2.3679921496659517,
+        -7.227668074890971,
+    ];
+    let y = vec![2.648286558687687, 0.0, 0.0, 0.0, 14.855136847123504];
+
+    let result = Lowess::new()
+        .fraction(0.7507510667783208)
+        .iterations(3)
+        .boundary_policy("noboundary")
+        .scaling_method("mar")
+        .zero_weight_fallback("return_original")
+        .outputs(["sorted"])
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .expect("Smoothing should succeed");
+
+    let expected_x = [
+        -7.227668074890971,
+        -4.879491005092859,
+        -1.2644937671720982,
+        0.0,
+        2.3679921496659517,
+    ];
+    let expected_y = [14.855136847123504, 0.0, 0.0, 2.6482865586876865, 0.0];
+
+    for i in 0..expected_x.len() {
+        assert_relative_eq!(result.x[i], expected_x[i], epsilon = 1e-12);
+        assert_relative_eq!(result.y[i], expected_y[i], epsilon = 1e-12);
     }
 }
 

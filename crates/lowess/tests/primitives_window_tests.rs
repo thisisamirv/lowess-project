@@ -317,6 +317,11 @@ fn test_calculate_span_edge_fractions() {
 
     let span = Window::calculate_span(n, 1.5);
     assert_eq!(span, n, "Fraction > 1.0 should be clamped to n");
+
+    // R truncates `(f * n + 1e-7)`, so a value 5e-6 below the next integer
+    // must not round up to the larger neighborhood.
+    let span = Window::calculate_span(n, 0.02999995);
+    assert_eq!(span, 2, "Span epsilon should match R's 1e-7 adjustment");
 }
 
 /// Test Window::calculate_span with small n.

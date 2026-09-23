@@ -72,7 +72,17 @@ impl RobustnessMethod {
             .iter()
             .fold(T::zero(), |sum, residual| sum + residual.abs())
             / T::from(residuals.len()).unwrap_or(T::one());
-        let tuned_scale = base_scale * c_t;
+        let tuned_scale = if method_type == 0 && matches!(scaling_method, ScalingMethod::MAR) {
+            let mid = scratch.len() / 2;
+            if scratch.len().is_multiple_of(2) {
+                let lower = scratch[..mid].iter().copied().fold(T::zero(), T::max);
+                T::from(3.0).unwrap_or(T::one()) * (lower + scratch[mid])
+            } else {
+                c_t * scratch[mid]
+            }
+        } else {
+            base_scale * c_t
+        };
         if matches!(scaling_method, ScalingMethod::MAR)
             && tuned_scale < T::from(Self::SCALE_THRESHOLD).unwrap_or_else(T::epsilon) * mean_abs
         {
@@ -81,7 +91,7 @@ impl RobustnessMethod {
 
         for (i, &r) in residuals.iter().enumerate() {
             weights[i] = match method_type {
-                0 => Self::bisquare_weight(r, base_scale, c_t),
+                0 => Self::bisquare_weight(r, tuned_scale),
                 1 => Self::huber_weight(r, base_scale, c_t),
                 _ => Self::talwar_weight(r, base_scale, c_t),
             };
@@ -140,15 +150,7 @@ impl RobustnessMethod {
     // w = (1 - (r/cmad)^2)^2     if c1 < |r| <= c9
     // w = 0.0                    if |r| > c9
     #[inline]
-    fn bisquare_weight<T: Float>(residual: T, scale: T, c: T) -> T {
-        if scale <= T::zero() {
-            return T::one();
-        }
-
-        // cmad = c * scale (e.g., 6.0 * MAR). Do not impose an absolute
-        // floor here: Cleveland/R applies robustness at the data's scale,
-        // including roundoff-sized residuals after an almost-exact fit.
-        let cmad = scale * c;
+    fn bisquare_weight<T: Float>(residual: T, cmad: T) -> T {
         if cmad <= T::zero() {
             return T::one();
         }
