@@ -574,14 +574,19 @@ impl<T: Float + WLSSolver> LinearFit<T> {
         } else {
             T::zero()
         };
-        let mut fitted = T::zero();
         let mut y_mean = T::zero();
         let mut covariance = T::zero();
         for i in 0..n {
             let dx = x[i] - x_mean;
             y_mean = y_mean + weights[i] * y[i];
             covariance = covariance + weights[i] * dx * y[i];
+        }
+        for i in 0..n {
+            let dx = x[i] - x_mean;
             weights[i] = weights[i] * (T::one() + target_adjustment * dx);
+        }
+        let mut fitted = T::zero();
+        for i in 0..n {
             fitted = fitted + weights[i] * y[i];
         }
         let slope = if use_linear {

@@ -7,7 +7,7 @@ version = v"1.3.0"
 
 # Update the commit hash when releasing a new version
 sources = [
-	GitSource("https://github.com/thisisamirv/lowess-project.git", "1e1c71b3e0c20323a4b1dc229f60f0368cda91a4"),
+	GitSource("https://github.com/thisisamirv/lowess-project.git", "ab764d842bc3114342cc715476138c2e86329903"),
 ]
 
 # Build script

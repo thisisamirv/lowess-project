@@ -463,6 +463,70 @@ fn test_batch_matches_r_lowess_right_scan_beyond_nominal_window() {
     }
 }
 
+#[test]
+fn test_batch_matches_r_lowess_ci_sparse_robustness_cases() {
+    let cases = [
+        (
+            vec![
+                -1.223_854_547_366_5,
+                0.0,
+                1.8667703326791525,
+                1.3440157659351826,
+                1.253_623_178_228_736,
+                1.7515924870967865,
+            ],
+            vec![0.0, 0.0, 0.0, 0.0, -0.02235669642686844, 1.2979496661573648],
+            10,
+            vec![
+                0.0,
+                0.0,
+                -0.02235669642686844,
+                6.553163368391215e-18,
+                1.2979496661573648,
+                0.0,
+            ],
+        ),
+        (
+            vec![
+                -1.3956062216311693,
+                0.0,
+                -1.908623619005084,
+                -0.9495306480675936,
+                1.6228566858917475,
+                -0.3441123068332672,
+            ],
+            vec![0.0, 0.0, 0.0, -0.774141451343894, 0.0, -1.637501435354352],
+            2,
+            vec![
+                0.0,
+                -0.774141451343894,
+                -0.774141451343894,
+                -1.637501435354352,
+                -5.239522976817595e-17,
+                0.0,
+            ],
+        ),
+    ];
+
+    for (x, y, iterations, expected_y) in cases {
+        let result = Lowess::new()
+            .fraction(0.525)
+            .iterations(iterations)
+            .boundary_policy("noboundary")
+            .scaling_method("mar")
+            .zero_weight_fallback("return_original")
+            .outputs(["sorted"])
+            .build()
+            .unwrap()
+            .fit(&x, &y)
+            .expect("Smoothing should succeed");
+
+        for (actual, expected) in result.y.iter().zip(expected_y) {
+            assert_relative_eq!(actual, &expected, epsilon = 1e-12);
+        }
+    }
+}
+
 /// Regression test for an even-length zero-MAR residual set.
 ///
 /// With an even number of observations, both middle absolute residuals are
