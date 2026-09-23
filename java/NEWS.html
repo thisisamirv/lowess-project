@@ -195,10 +195,16 @@
 <div class="ulist">
 <ul>
 <li>
-<p>Added grouped <code>outputs("diagnostics", "residuals", "weights", "derivative", "se", "sorted")</code>, <code>cv(CVOptions&#8230;&#8203;)</code>, and <code>PredictOptions.Builder.outputs("se", "derivative")</code> APIs while preserving the existing native option mapping.</p>
+<p>Added self-contained R and original Cleveland LOWESS references under <code>validation/reference/</code>, with provenance, dependency, precision, and build notes.</p>
 </li>
 <li>
-<p>Added an "Alternative Software" guide page comparing <code>fastlowess</code> against Apache Commons Math&#8217;s <code>LoessInterpolator</code>: with no robustness iterations the two match to floating-point precision (both are local-linear tricube-weighted regression), but diverge slightly (~1e-4) once robustness iterations are enabled, because <code>LoessInterpolator&#8217;s bisquare reweighting omits the `c1</code>/<code>c9</code> smoothing zones <code>fastlowess</code> (and R&#8217;s <code>stats::lowess()</code>) use. <code>dev/runners/java.py</code> now lazily downloads and caches a comparison-only <code>commons-math3</code> jar for this page&#8217;s snippets, skipping them if the download is unavailable.</p>
+<p>Added grouped <code>outputs(&#8230;&#8203;)</code>, <code>cv(CVOptions&#8230;&#8203;)</code>, and prediction-output APIs while preserving native option mapping.</p>
+</li>
+<li>
+<p>Added an "Alternative Software" guide comparing <code>fastlowess</code> with Apache Commons Math&#8217;s <code>LoessInterpolator</code>.</p>
+</li>
+<li>
+<p>Added optional <code>commons-math3</code> support to the Java snippet runner; unavailable downloads are skipped.</p>
 </li>
 </ul>
 </div>
@@ -218,16 +224,16 @@
 <div class="ulist">
 <ul>
 <li>
+<p>Skip comparison snippets when the optional <code>statsmodels</code> dependency is unavailable instead of failing verification.</p>
+</li>
+<li>
+<p>Fixed C++ release CI staging the tracked Spack recipe despite the repository&#8217;s broad <code>spack/</code> ignore rule.</p>
+</li>
+<li>
 <p>Fixed <code>javadoc</code> "no main description" warnings in <code>OnlineOptions</code> and <code>StreamingOptions</code> builder methods by adding a leading description sentence to each Javadoc block.</p>
 </li>
 <li>
-<p>Fixed <code>maven-javadoc-plugin</code> silently ignoring javadoc warnings (<code>make dev&#8217;s "Javadoc" step) due to a `pom.xml</code> typo: the parameter is <code>failOnWarnings</code>, not <code>failOnWarning</code>.</p>
-</li>
-<li>
-<p>Fixed <code>dev/verify_snippets.py</code> failing on any doc snippet that imports the optional, comparison-only <code>statsmodels</code> package when it isn&#8217;t installed in the target Python environment; such snippets are now skipped (rather than failed) when <code>statsmodels</code> can&#8217;t be imported by the runner&#8217;s Python interpreter.</p>
-</li>
-<li>
-<p>Fixed C++ release CI&#8217;s "Commit updated recipe" step failing with "paths are ignored" because the repo&#8217;s blanket <code>.gitignore</code> <code>spack/</code> rule matches <code>bindings/cpp/spack/</code>; <code>git add</code> now force-adds the tracked recipe file.</p>
+<p>Fixed <code>maven-javadoc-plugin</code> silently ignoring warnings because <code>pom.xml</code> used <code>failOnWarning</code> instead of <code>failOnWarnings</code>.</p>
 </li>
 </ul>
 </div>

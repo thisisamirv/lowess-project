@@ -64,7 +64,7 @@ model <- Lowess(
 result <- fit(model, x, y)
 
 cat("Max abs difference:", max(abs(result$y - reference$y)), "\n")
-#> Max abs difference: 1.44329e-15
+#> Max abs difference: 0
 ```
 
 If your `x` is not already sorted, add `outputs = "sorted"` to get
@@ -93,7 +93,7 @@ result <- fit(model, x_unsorted, y_unsorted)
 cat("x is sorted ascending:", all(diff(result$x) >= 0), "\n")
 #> x is sorted ascending: TRUE
 cat("Max abs difference:", max(abs(result$y - reference$y)), "\n")
-#> Max abs difference: 1.554312e-15
+#> Max abs difference: 0
 ```
 
 Without `outputs = "sorted"`,

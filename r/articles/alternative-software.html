@@ -156,7 +156,7 @@ rounding):</p>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Max abs difference:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span> <span class="op">-</span> <span class="va">reference</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Max abs difference: 1.44329e-15</span></span></code></pre></div>
+<span><span class="co">#&gt; Max abs difference: 0</span></span></code></pre></div>
 <p>If your <code>x</code> is not already sorted, add
 <code>outputs = "sorted"</code> to get results ordered the same way
 <code><a href="https://rdrr.io/r/stats/lowess.html" class="external-link">stats::lowess()</a></code> returns them (ascending by
@@ -181,7 +181,7 @@ rounding):</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"x is sorted ascending:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diff.html" class="external-link">diff</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">x</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="fl">0</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; x is sorted ascending: TRUE</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Max abs difference:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span> <span class="op">-</span> <span class="va">reference</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Max abs difference: 1.554312e-15</span></span></code></pre></div>
+<span><span class="co">#&gt; Max abs difference: 0</span></span></code></pre></div>
 <p>Without <code>outputs = "sorted"</code>, <code><a href="../reference/Lowess.html">Lowess()</a></code> still
 fits on sorted <code>x</code> internally (as
 <code><a href="https://rdrr.io/r/stats/lowess.html" class="external-link">stats::lowess()</a></code> requires) but returns values reordered back

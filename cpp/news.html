@@ -103,17 +103,21 @@ $(document).ready(function(){initNavTree('news.html',''); initResizable(); });
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><h1>fastlowess (C++) (development version)</h1>
+<h2>Added</h2>
+<ul>
+<li>Added self-contained R and original Cleveland LOWESS references under <code>validation/reference/</code>, with provenance, dependency, precision, and build notes.</li>
+</ul>
 <h2>Changed</h2>
 <ul>
 <li>Updated the vendored <code>doxygen-awesome-css</code> theme to v2.5.0 and the Hugo docs build to v0.166.0.</li>
+<li><b>Breaking:</b> replaced flat <code>return_*</code>/<code>cv_*</code> fields with grouped <code>outputs</code> and nested <code>cv</code> options; prediction outputs are grouped as well.</li>
+<li>Declared the public wrapper's C++17 requirement for <code>std::optional</code>.</li>
+<li>Represent unavailable diagnostics as empty <code>std::optional&lt;double&gt;</code> values instead of <code>NaN</code> sentinels.</li>
 </ul>
 <h2>Fixed</h2>
 <ul>
-<li>Fixed <code>dev/verify_snippets.py</code> failing on any doc snippet that imports the optional, comparison-only <code>statsmodels</code> package when it isn't installed in the target Python environment; such snippets are now skipped (rather than failed) when <code>statsmodels</code> can't be imported by the runner's Python interpreter.</li>
-<li>Fixed C++ release CI's "Commit updated recipe" step failing with "paths are ignored" because the repo's blanket <code>.gitignore</code> <code>spack/</code> rule matches <code>bindings/cpp/spack/</code>; <code>git add</code> now force-adds the tracked recipe file.</li>
-<li><b>Breaking:</b> replaced flat <code>return_*</code> and <code>cv_*</code> fields on <code>LowessOptions</code>/related options with grouped <code>outputs = {"diagnostics", "residuals", "weights", "derivative", "se", "sorted"}</code> and nested <code>cv.method</code>/<code>cv.k</code>/<code>cv.fractions</code>/<code>cv.seed</code>; <code>PredictOptions</code> now uses <code>outputs = {"se", "derivative"}</code>.</li>
-<li>Declared the public C++ wrapper's C++17 requirement for <code>std::optional</code> in CMake and clangd configuration.</li>
-<li>Represent unavailable diagnostic metrics as empty <code>std::optional&lt;double&gt;</code> values instead of <code>NaN</code> sentinels.</li>
+<li>Skip comparison snippets when the optional <code>statsmodels</code> dependency is unavailable instead of failing verification.</li>
+<li>Fixed C++ release CI staging the tracked Spack recipe despite the repository's broad <code>spack/</code> ignore rule.</li>
 </ul>
 <h1>fastlowess (C++) 4.1.0</h1>
 <h2>Added</h2>
