@@ -14,13 +14,17 @@
   wrapped the long cross-validation vignette example for readability.
 - Added a `quickcheck`-based property test (`test-property-lowess.R`,
   gated behind `skip_if_not_installed()`/`skip_on_cran()`) that fuzzes
-  `x`/`y`/`fraction`/`iterations` and checks agreement with
+  `x`/`y`/`fraction`/`iterations` inputs and checks agreement with
   [`stats::lowess`](https://rdrr.io/r/stats/lowess.html); randomized
   fuzzing over many combinations is what surfaced the high-iteration
-  `scaling_method = "mar"` divergence fixed below, rather than any
-  single hand-picked case. `expect_matches_stats_lowess()` was extracted
-  from `test-validation.R` into a shared `helper-validation.R` so both
-  the fixed and property-based scenarios can use it.
+  `scaling_method = "mar"` divergence and the global-range local-linear
+  degeneracy mismatch fixed below, rather than any single hand-picked
+  case. `expect_matches_stats_lowess()` was extracted from
+  `test-validation.R` into a shared `helper-validation.R` so both the
+  fixed and property-based scenarios can use it. `hedgehog` is now
+  listed in `Suggests` because the test explicitly calls
+  [`hedgehog::discard()`](https://rdrr.io/pkg/hedgehog/man/discard.html)
+  for invalid generated inputs.
 - Added an “Alternative Software” vignette
   ([`vignette("alternative-software")`](https://thisisamirv.github.io/lowess-project/r/articles/alternative-software.md))
   explaining how to reproduce
