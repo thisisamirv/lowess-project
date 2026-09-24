@@ -76,6 +76,7 @@ R_PKG_VERSION = $(shell grep "^Version:" bindings/r/DESCRIPTION | sed 's/Version
 R_PKG_TARBALL = $(R_PKG_NAME)_$(R_PKG_VERSION).tar.gz
 R_DIR := bindings/r
 R_LIB_DIR := $(R_DIR)/.r-lib
+R_PROPERTY_TEST_RUNS ?= 30
 R_CARGO_TARGET :=
 R_CROSS_ENV :=
 ifeq ($(OS),Windows_NT)
@@ -83,7 +84,7 @@ ifeq ($(OS),Windows_NT)
 	R_CROSS_ENV    := PATH="/c/rtools45/x86_64-w64-mingw32.static.posix/bin:$$PATH"
 endif
 
-.PHONY: default dev clean coverage
+.PHONY: default dev tests clean coverage
 
 default:
 	@WITH_GPU=$(WITH_GPU) R CMD INSTALL $(R_DIR)
@@ -172,15 +173,7 @@ dev:
 	@echo "=============================================================================="
 	@echo "8. Testing..."
 	@echo "=============================================================================="
-	@if [ ! -d $(R_DIR)/src/vendor ]; then (cd $(R_DIR)/src && tar -xf vendor.tar.xz); fi
-	@mkdir -p $(R_DIR)/src/.cargo && cp $(R_DIR)/src/cargo-config.toml $(R_DIR)/src/.cargo/config.toml
-	@if [ -n "$(R_CARGO_TARGET)" ]; then \
-		GCC_LIBDIR="c:/rtools45/x86_64-w64-mingw32.static.posix/lib/gcc/x86_64-w64-mingw32.static.posix/14.3.0"; \
-		test -f "$$GCC_LIBDIR/libgcc_eh.a" || x86_64-w64-mingw32.static.posix-ar rcs "$$GCC_LIBDIR/libgcc_eh.a"; \
-	fi
-	@cd $(R_DIR)/src && $(R_CROSS_ENV) cargo test -q --no-run $(R_CARGO_TARGET)
-	@rm -rf $(R_DIR)/src/.cargo
-	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "Sys.setenv(NOT_CRAN='true'); testthat::test_dir('$(R_DIR)/tests/testthat', package = 'rfastlowess')"
+	@$(MAKE) -f $(THIS_MK) tests
 	@echo "=============================================================================="
 	@echo "9. Submission checks..."
 	@echo "=============================================================================="
@@ -196,6 +189,31 @@ dev:
 	@$(PYTHON) dev/check_links.py --lang r
 	@$(PYTHON) dev/verify_snippets.py --lang r --timeout 120
 	@echo "All $(R_PKG_NAME) checks completed successfully!"
+
+tests:
+	@echo "Running $(R_PKG_NAME) tests..."
+	@if [ ! -d $(R_DIR)/src/vendor ]; then (cd $(R_DIR)/src && tar -xf vendor.tar.xz); fi
+	@mkdir -p $(R_DIR)/src/.cargo && cp $(R_DIR)/src/cargo-config.toml $(R_DIR)/src/.cargo/config.toml
+	@if [ -n "$(R_CARGO_TARGET)" ]; then \
+		GCC_LIBDIR="c:/rtools45/x86_64-w64-mingw32.static.posix/lib/gcc/x86_64-w64-mingw32.static.posix/14.3.0"; \
+		test -f "$$GCC_LIBDIR/libgcc_eh.a" || x86_64-w64-mingw32.static.posix-ar rcs "$$GCC_LIBDIR/libgcc_eh.a"; \
+	fi
+	@cd $(R_DIR)/src && $(R_CROSS_ENV) cargo test -q --no-run $(R_CARGO_TARGET)
+	@rm -rf $(R_DIR)/src/.cargo
+	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "Sys.setenv(NOT_CRAN='true'); testthat::test_dir('$(R_DIR)/tests/testthat', package = 'rfastlowess')"
+	@echo "Running $(R_PROPERTY_TEST_RUNS) parallel LOWESS property-test runs..."
+	@tmp_dir=$$(mktemp -d); status=0; pids=""; run=1; \
+	while [ $$run -le $(R_PROPERTY_TEST_RUNS) ]; do \
+		R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "Sys.setenv(NOT_CRAN='true'); testthat::test_dir('$(R_DIR)/tests/testthat', package = 'rfastlowess', filter = 'property-lowess', reporter = 'silent')" >"$$tmp_dir/run-$$run.log" 2>&1 & \
+		pids="$$pids $$!"; run=$$((run + 1)); \
+	done; \
+	for pid in $$pids; do \
+		if wait $$pid; then :; else status=1; fi; \
+		done; \
+	if [ $$status -ne 0 ]; then \
+		cat "$$tmp_dir"/*.log; rm -rf "$$tmp_dir"; exit $$status; \
+	fi; \
+	rm -rf "$$tmp_dir"; echo "All $(R_PROPERTY_TEST_RUNS) LOWESS property-test runs passed."
 
 coverage:
 	@echo "Calculating $(R_PKG_NAME) coverage..."

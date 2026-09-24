@@ -21,6 +21,7 @@
 * Added regression comparisons with `stats::lowess` for input-order and sorted output.
 * Added committed `statsmodels.lowess` reference fixtures for cross-language validation.
 * Made `make r-dev` retry transient Windows `pak` move failures after clearing partial local cache/lock state.
+* Made `make r-dev` run the LOWESS property-test suite 30 times in parallel.
 
 ## Fixed
 

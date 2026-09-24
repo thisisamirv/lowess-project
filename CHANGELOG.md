@@ -109,6 +109,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added regression comparisons with `stats::lowess` for input-order and sorted output.
 - Added committed `statsmodels.lowess` reference fixtures for cross-language validation.
 - Made `make r-dev` retry transient Windows `pak` move failures after clearing partial local cache/lock state.
+- Added `make r-tests` for the R test phase; `make r-dev` invokes it and runs the LOWESS property suite 30 times in parallel.
 
 ### Fixed
 
