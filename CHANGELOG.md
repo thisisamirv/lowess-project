@@ -57,7 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `quickcheck` properties covering input-order output, `outputs = "sorted"`, and sparse one-spike initial fits against `stats::lowess`.
 - Bounded broad randomized robustness checks to 12 passes, where branch differences already emerge, while fixed regressions pin long-run roundoff cycles at their original iteration counts.
 - Extracted shared `stats::lowess` reference helpers into `helper-validation.R`.
-- Kept fuzzing dependencies optional for package checks; `make r-dev` installs `quickcheck` and `hedgehog` locally.
+- Added `quickcheck` to `Suggests` and run the LOWESS property tests in the standard suite. It is not a runtime dependency. `make r-dev` still installs `quickcheck` locally.
 - Added an "Alternative Software" vignette comparing `rfastlowess` with `stats::lowess()`.
 
 **WASM:**

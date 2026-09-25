@@ -1,9 +1,11 @@
 #' @srrstats {G5.4, G5.4b} Reference comparison against base R's
 #'   `stats::lowess`, generalized here to randomized inputs.
-#' @srrstats {G5.10} Extended/property-based test, gated behind
-#'   `skip_if_not_installed()` so it only runs when `quickcheck` is
-#'   available (not a hard package dependency) and is skipped on CRAN.
-#'
+#' @srrstats {G5.10} Property-based tests run in the standard suite.
+#'   `quickcheck` is a Suggests test dependency, not a package dependency.
+#' @noRd
+
+library(quickcheck)
+
 # Property-based regression test: fuzzes x/y/fraction/iterations and checks
 # that this package's output matches `stats::lowess` (via
 # `expect_matches_stats_lowess()` in helper-validation.R), pinning R's
@@ -16,7 +18,6 @@
 # regression divergence at high robustness-iteration counts (see NEWS/
 # CHANGELOG) was only found by randomized fuzzing over many (x, y,
 # fraction, iterations) combinations, not by any single hand-picked case.
-#' @noRd
 qc <- function(name) {
     getExportedValue("quickcheck", name)
 }
@@ -26,9 +27,6 @@ usable_x <- function(x, min_length = 5L) {
 }
 
 test_that("matches stats::lowess for randomized inputs (property-based)", {
-    testthat::skip_if_not_installed("quickcheck")
-    testthat::skip_on_cran()
-
     property <- function(xy, fraction, iterations) {
         x <- xy[[1]]
         y <- xy[[2]]
@@ -68,9 +66,6 @@ test_that("matches stats::lowess for randomized inputs (property-based)", {
 })
 
 test_that("matches stats::lowess for randomized sorted output", {
-    testthat::skip_if_not_installed("quickcheck")
-    testthat::skip_on_cran()
-
     property <- function(xy, fraction, iterations) {
         x <- xy[[1]]
         y <- xy[[2]]
@@ -103,14 +98,13 @@ test_that("matches stats::lowess for randomized sorted output", {
 })
 
 test_that("matches initial stats::lowess fits for sparse one-spike responses", {
-    testthat::skip_if_not_installed("quickcheck")
-    testthat::skip_on_cran()
-
-    property <- function(x,
-                         spike_position,
-                         spike_magnitude,
-                         spike_negative,
-                         fraction) {
+    property <- function(
+        x,
+        spike_position,
+        spike_magnitude,
+        spike_negative,
+        fraction
+    ) {
         if (!usable_x(x)) {
             return(expect_true(TRUE))
         }

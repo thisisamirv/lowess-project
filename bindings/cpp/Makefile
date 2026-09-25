@@ -99,7 +99,7 @@ TEMP ?= /tmp
 
 default:
 	@if ! command -v clang-tidy >/dev/null 2>&1 || ! command -v cppcheck >/dev/null 2>&1; then \
-		$(MAKE) -f $(THIS_MK) install-tools; \
+		"$(MAKE)" -f "$(THIS_MK)" install-tools; \
 	fi
 	@if [ -n "$(CPP_CARGO_TARGET)" ]; then \
 		_rust_target=$$(echo "$(CPP_CARGO_TARGET)" | sed 's/--target //'); \

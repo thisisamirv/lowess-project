@@ -55,7 +55,8 @@ NULL
 #' @srrstats {G5.7} Algorithm performance scales with data size.
 #' @srrstats {G5.8, G5.8a, G5.8b, G5.8c, G5.8d} Edge condition tests.
 #' @srrstats {G5.9, G5.9a, G5.9b} Noise susceptibility tests.
-#' @srrstats {G5.10} Extended tests via environment variable.
+#' @srrstats {G5.10} Property-based tests run in the standard test suite.
+#'   `quickcheck` is declared in Suggests and is not a runtime dependency.
 #' @srrstats {RE3.2, RE3.3} Threshold defaults documented, settable.
 #' @srrstats {RE7.0, RE7.0a} Tests with noiseless exact predictor relationships
 #'   (identical x, perfectly spaced x) confirm graceful handling and exact
