@@ -7,7 +7,10 @@
 # Property-based regression test: fuzzes x/y/fraction/iterations and checks
 # that this package's output matches `stats::lowess` (via
 # `expect_matches_stats_lowess()` in helper-validation.R), pinning R's
-# defaults (`boundary_policy = "noboundary"`, `scaling_method = "mar"`).
+# comparison settings (`boundary_policy = "noboundary"`,
+# `scaling_method = "mar"`, `zero_weight_fallback = "return_original"`).
+# The package default remains `"use_local_mean"`; these comparisons opt into
+# R's fallback explicitly.
 #
 # This complements the fixed scenarios in test-validation.R: a fixed
 # regression divergence at high robustness-iteration counts (see NEWS/
@@ -44,6 +47,7 @@ test_that("matches stats::lowess for randomized inputs (property-based)", {
             y,
             fraction = fraction,
             iterations = iterations,
+            zero_weight_fallback = "return_original",
             tolerance = 1e-5
         ))
     }
@@ -80,6 +84,7 @@ test_that("matches stats::lowess for randomized sorted output", {
             fraction = fraction,
             iterations = iterations,
             sorted = TRUE,
+            zero_weight_fallback = "return_original",
             tolerance = 1e-5
         ))
     }
@@ -101,13 +106,11 @@ test_that("matches initial stats::lowess fits for sparse one-spike responses", {
     testthat::skip_if_not_installed("quickcheck")
     testthat::skip_on_cran()
 
-    property <- function(
-        x,
-        spike_position,
-        spike_magnitude,
-        spike_negative,
-        fraction
-    ) {
+    property <- function(x,
+                         spike_position,
+                         spike_magnitude,
+                         spike_negative,
+                         fraction) {
         if (!usable_x(x)) {
             return(expect_true(TRUE))
         }
@@ -126,6 +129,7 @@ test_that("matches initial stats::lowess fits for sparse one-spike responses", {
             fraction = fraction,
             iterations = 0L,
             sorted = TRUE,
+            zero_weight_fallback = "return_original",
             tolerance = 1e-8
         ))
     }

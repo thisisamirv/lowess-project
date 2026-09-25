@@ -4,13 +4,17 @@
 
 #' Assert that this package reproduces `stats::lowess` on a fixed dataset.
 #'
-#' Pins R's defaults: no boundary padding (`"noboundary"`) and MAR residual
-#' scaling (`"mar"`). `x` is sorted ascending first, as `stats::lowess`
-#' assumes.
+#' Pins R's comparison settings: no boundary padding (`"noboundary"`),
+#' MAR residual scaling (`"mar"`), and R's zero-weight behavior
+#' (`zero_weight_fallback = "return_original"`). The package default remains
+#' `"use_local_mean"`; comparisons must opt into R's fallback explicitly.
+#' `x` is sorted ascending first, as `stats::lowess` assumes.
 #'
 #' @param direct If `TRUE`, request an exact (non-interpolated) surface by
 #'   setting `delta = 0` on both sides; otherwise each side uses its default
 #'   (1% of the x-range).
+#' @param zero_weight_fallback Fallback used for the `stats::lowess`
+#'   comparison. Must stay `"return_original"` to match R.
 #' @param tolerance Relative tolerance; observed agreement is ~1e-15.
 #' @noRd
 expect_matches_stats_lowess <- function(
@@ -19,6 +23,7 @@ expect_matches_stats_lowess <- function(
     fraction,
     iterations,
     direct = FALSE,
+    zero_weight_fallback = "return_original",
     tolerance = 1e-10
 ) {
     ord <- order(x)
@@ -39,7 +44,7 @@ expect_matches_stats_lowess <- function(
         delta = delta,
         boundary_policy = "noboundary",
         scaling_method = "mar",
-        zero_weight_fallback = "return_original"
+        zero_weight_fallback = zero_weight_fallback
     )
     result <- fit(model, x, y)
 
@@ -61,6 +66,7 @@ expect_stats_lowess_sorted <- function(
     fraction,
     iterations,
     direct = FALSE,
+    zero_weight_fallback = "return_original",
     tolerance = 1e-10
 ) {
     x <- as.double(x)
@@ -80,7 +86,7 @@ expect_stats_lowess_sorted <- function(
         delta = delta,
         boundary_policy = "noboundary",
         scaling_method = "mar",
-        zero_weight_fallback = "return_original",
+        zero_weight_fallback = zero_weight_fallback,
         outputs = "sorted"
     )
     result <- fit(model, x, y)
@@ -103,6 +109,7 @@ check_stats_lowess <- function(
     fraction,
     iterations,
     sorted = FALSE,
+    zero_weight_fallback = "return_original",
     tolerance = 1e-10
 ) {
     if (sorted) {
@@ -120,7 +127,7 @@ check_stats_lowess <- function(
         iterations = as.integer(iterations),
         boundary_policy = "noboundary",
         scaling_method = "mar",
-        zero_weight_fallback = "return_original",
+        zero_weight_fallback = zero_weight_fallback,
         outputs = if (sorted) "sorted" else NULL
     )
     result <- fit(model, x_fit, y_fit)

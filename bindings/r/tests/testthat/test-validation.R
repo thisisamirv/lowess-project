@@ -31,6 +31,9 @@
 #     (Cleveland original); this package defaults to `"extend"`.
 #   * `scaling_method = "mar"` - R scales residuals by MAR
 #     (`6 * median(|resid|)`); this package defaults to `"mad"`.
+#   * `zero_weight_fallback = "return_original"` - R returns the original
+#     `y` when a neighborhood has no positive robustness weight. This
+#     package defaults to `"use_local_mean"`, so comparisons must opt in.
 #   * `delta` - R's default is `0.01 * diff(range(x))`, matching this
 #     package's default (`NULL` -> 1% of the x-range), so `NULL` is passed
 #     through. Scenarios requesting an exact surface pass `delta = 0`.
@@ -164,26 +167,6 @@ test_that("robustness iterations are a no-op on an exact fit", {
         as.double(y)
     )
 
-    test_that("stats::lowess comparison uses explicit return_original fallback", {
-        x <- c(-1.931272, -1.688085, 0, 0, -3.542724)
-        y <- c(1.959219, -0.769967, 0, 0, 0)
-        reference <- stats::lowess(x, y, f = 0.7808, iter = 116L)
-        result <- fit(
-            Lowess(
-                fraction = 0.7808,
-                iterations = 116L,
-                boundary_policy = "noboundary",
-                scaling_method = "mar",
-                zero_weight_fallback = "return_original",
-                outputs = "sorted"
-            ),
-            x,
-            y
-        )
-
-        expect_equal(result$x, reference$x, tolerance = 1e-12)
-        expect_equal(result$y, reference$y, tolerance = 1e-12)
-    })
     robust <- fit(
         Lowess(
             fraction = 0.4,
@@ -197,6 +180,27 @@ test_that("robustness iterations are a no-op on an exact fit", {
     # Zero residuals leave every bisquare weight at 1, so reweighting
     # cannot move the fit.
     expect_equal(robust$y, base$y, tolerance = 1e-10)
+})
+
+test_that("stats::lowess comparison uses explicit return_original fallback", {
+    x <- c(-1.931272, -1.688085, 0, 0, -3.542724)
+    y <- c(1.959219, -0.769967, 0, 0, 0)
+    reference <- stats::lowess(x, y, f = 0.7808, iter = 116L)
+    result <- fit(
+        Lowess(
+            fraction = 0.7808,
+            iterations = 116L,
+            boundary_policy = "noboundary",
+            scaling_method = "mar",
+            zero_weight_fallback = "return_original",
+            outputs = "sorted"
+        ),
+        x,
+        y
+    )
+
+    expect_equal(result$x, reference$x, tolerance = 1e-12)
+    expect_equal(result$y, reference$y, tolerance = 1e-12)
 })
 
 # --- Ported validation scenarios ---
@@ -401,7 +405,8 @@ test_that("matches stats::lowess for unsorted input with sorted output", {
             fraction = fraction,
             iterations = iterations,
             boundary_policy = "noboundary",
-            scaling_method = "mar"
+            scaling_method = "mar",
+            zero_weight_fallback = "return_original"
         ),
         x,
         y
@@ -412,6 +417,7 @@ test_that("matches stats::lowess for unsorted input with sorted output", {
             iterations = iterations,
             boundary_policy = "noboundary",
             scaling_method = "mar",
+            zero_weight_fallback = "return_original",
             outputs = "sorted"
         ),
         x,
