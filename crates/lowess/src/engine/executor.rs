@@ -1031,7 +1031,7 @@ impl<T: Float> LowessExecutor<T> {
                     RobustnessUpdateBuffers {
                         residuals: &mut buffers.residuals,
                         robustness_weights: &mut buffers.robustness_weights,
-                        scratch: &mut buffers.weights,
+                        scratch: &mut buffers.scale_scratch,
                     },
                     robustness_updater,
                     self.scaling_method,
@@ -1198,12 +1198,13 @@ impl<T: Float> LowessExecutor<T> {
         for i in 0..y.len() {
             buffers.residuals[i] = y[i] - y_smooth[i];
         }
-        robustness_updater.apply_robustness_weights(
+        let stopped = robustness_updater.apply_robustness_weights(
             buffers.residuals,
             buffers.robustness_weights,
             scaling_method,
             buffers.scratch,
-        )
+        );
+        stopped
     }
 
     // Helper to slice result buffers back to original data length when padding was used.

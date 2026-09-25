@@ -163,6 +163,27 @@ test_that("robustness iterations are a no-op on an exact fit", {
         as.double(x),
         as.double(y)
     )
+
+    test_that("stats::lowess comparison uses explicit return_original fallback", {
+        x <- c(-1.931272, -1.688085, 0, 0, -3.542724)
+        y <- c(1.959219, -0.769967, 0, 0, 0)
+        reference <- stats::lowess(x, y, f = 0.7808, iter = 116L)
+        result <- fit(
+            Lowess(
+                fraction = 0.7808,
+                iterations = 116L,
+                boundary_policy = "noboundary",
+                scaling_method = "mar",
+                zero_weight_fallback = "return_original",
+                outputs = "sorted"
+            ),
+            x,
+            y
+        )
+
+        expect_equal(result$x, reference$x, tolerance = 1e-12)
+        expect_equal(result$y, reference$y, tolerance = 1e-12)
+    })
     robust <- fit(
         Lowess(
             fraction = 0.4,

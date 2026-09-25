@@ -125,6 +125,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed the absolute `1e-12` bisquare scale floor so roundoff-sized residuals are reweighted at their actual scale.
 - Matched R's normalized adjusted-weight fitted-value accumulation without parity-, sparsity-, or response-scale-specific branches.
 - Separated local-weight adjustment and fitted-response accumulation into R's original loop order, avoiding platform-dependent cancellation in sparse robust fits.
+- Separated robustness scale scratch storage from local kernel weights so median selection cannot contaminate the next R-equivalent smoothing pass.
 - Matched R's `w * ((x - mean_x) * (x - mean_x))` spread parenthesization, preserving cancellation-scale endpoint fits during robust passes.
 - Matched R's even-length `cmad = 3 * (lower + upper)` operation order instead of scaling an averaged median.
 - Extended local kernel scans beyond the nominal right window edge until R's `0.999 * h` cutoff, matching `lowest()` on asymmetric neighborhoods.

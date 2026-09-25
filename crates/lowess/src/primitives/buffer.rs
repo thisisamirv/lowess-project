@@ -157,6 +157,9 @@ pub struct LowessBuffer<T> {
     // Kernel weights scratch buffer.
     pub weights: Slot<T>,
 
+    // Independent scratch buffer for robustness scale estimation.
+    pub scale_scratch: Slot<T>,
+
     // Local fit derivative (slope), captured for free during the final smoothing
     // iteration instead of requiring a separate re-fit pass afterward.
     pub derivative: Slot<T>,
@@ -170,6 +173,7 @@ impl<T> Default for LowessBuffer<T> {
             robustness_weights: Slot::default(),
             residuals: Slot::default(),
             weights: Slot::default(),
+            scale_scratch: Slot::default(),
             derivative: Slot::default(),
         }
     }
@@ -184,6 +188,7 @@ impl<T: Clone> LowessBuffer<T> {
             robustness_weights: Slot::new(n),
             residuals: Slot::new(n),
             weights: Slot::new(n),
+            scale_scratch: Slot::new(n),
             derivative: Slot::new(n),
         }
     }
@@ -206,6 +211,7 @@ impl<T: Clone> LowessBuffer<T> {
         self.robustness_weights.as_vec_mut().assign(n, T::one());
         self.residuals.as_vec_mut().assign(n, T::zero());
         self.weights.as_vec_mut().assign(n, T::zero());
+        self.scale_scratch.as_vec_mut().assign(n, T::zero());
         self.derivative.as_vec_mut().assign(n, T::zero());
     }
 }
