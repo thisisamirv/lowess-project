@@ -144,6 +144,4 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ## 0.99.8
 
-### Added
-
 * Initial implementation of the C++ library.
