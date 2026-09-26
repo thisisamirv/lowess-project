@@ -1198,13 +1198,12 @@ impl<T: Float> LowessExecutor<T> {
         for i in 0..y.len() {
             buffers.residuals[i] = y[i] - y_smooth[i];
         }
-        let stopped = robustness_updater.apply_robustness_weights(
+        robustness_updater.apply_robustness_weights(
             buffers.residuals,
             buffers.robustness_weights,
             scaling_method,
             buffers.scratch,
-        );
-        stopped
+        )
     }
 
     // Helper to slice result buffers back to original data length when padding was used.

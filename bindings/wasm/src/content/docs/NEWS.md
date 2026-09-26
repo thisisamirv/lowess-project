@@ -14,11 +14,16 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ## 4.1.0
 
-### Added
+### Changed
+
+* Raised the minimum supported Rust version to 1.89 for source builds.
 
 * Added `retain_model` and `LowessResult.predict(newX, options)` for prediction.
 * Added `return_derivative` to `SmoothOptions`, `StreamingOptions`, and `OnlineOptions`.
-* Added standard errors and confidence/prediction intervals to `StreamingOptions` and `OnlineOptions`; online intervals require `update_mode: "full"`.
+
+### Fixed
+
+* Fixed reported vulnerabilities in WASM dependencies.
 
 ### Fixed
 
@@ -60,7 +65,10 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ## 3.1.0
 
-### Changed
+### Fixed
+
+* Fixed the `Extend` boundary policy not being applied and improved numerical precision through coordinate centering.
+* Fixed adapter execution errors being silently ignored instead of propagated.
 
 * Moved WASM documentation to GitHub Pages and updated the README with package-specific guidance.
 
@@ -92,11 +100,15 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ## 1.3.0
 
-* Under-the-hood maintenance; no changes to the public API or runtime behavior.
+### Changed
+
+* Raised the minimum supported Rust version to 1.89 for source builds.
 
 ## 1.2.0
 
-* Under-the-hood maintenance; no changes to the public API or runtime behavior.
+### Fixed
+
+* Fixed reported vulnerabilities in WASM dependencies.
 
 ## 1.1.2
 
@@ -108,7 +120,10 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ## 1.1.0
 
-* Under-the-hood maintenance; no changes to the public API or runtime behavior.
+### Fixed
+
+* Fixed the `Extend` boundary policy not being applied and improved numerical precision through coordinate centering.
+* Fixed adapter execution errors being silently ignored instead of propagated.
 
 ## 1.0.0
 

@@ -119,11 +119,20 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ## 1.1.1
 
-* Under-the-hood maintenance; no changes to the public API or runtime behavior.
+### Fixed
+
+* Fixed GPU configuration and initialization problems, and improved recovery after missing hardware/drivers or earlier GPU execution errors.
 
 ## 1.1.0
 
-* Under-the-hood maintenance; no changes to the public API or runtime behavior.
+### Added
+
+* Expanded GPU fitting support to selectable kernels, robustness and scaling methods, boundary policies, automatic convergence, prediction, and cross-validation.
+
+### Fixed
+
+* Fixed the `Extend` boundary policy not being applied and improved numerical precision through coordinate centering.
+* Fixed GPU integer overflow, initialization failures, and resource exhaustion.
 
 ## 1.0.0
 
@@ -152,11 +161,15 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ## 0.99.7
 
-* Under-the-hood maintenance; no changes to the public API or runtime behavior.
+### Fixed
+
+* Fixed links in the shared project README.
 
 ## 0.99.6
 
-* Under-the-hood maintenance; no changes to the public API or runtime behavior.
+### Fixed
+
+* Fixed formatting and links in the shared project README.
 
 ## 0.99.5
 
@@ -181,7 +194,9 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ## 0.99.1
 
-* Under-the-hood maintenance; no changes to the public API or runtime behavior.
+### Changed
+
+* Prepared the R package for Bioconductor submission.
 
 ## 0.99.0
 
@@ -195,15 +210,29 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ## 0.7.0
 
-* Under-the-hood maintenance; no changes to the public API or runtime behavior.
+### Added
+
+* Added `NoBoundary` handling and `MAD`/`MAR` scaling methods to the underlying LOWESS core.
+
+### Changed
+
+* Improved fitting and cross-validation performance through SIMD accumulation, reusable buffers, and optimized window and scale calculations.
 
 ## 0.6.0
 
-* Under-the-hood maintenance; no changes to the public API or runtime behavior.
+### Added
+
+* Added a seed option for reproducible k-fold cross-validation.
+
+### Fixed
+
+* Fixed Batch and Streaming adapter conversion behavior in the LOWESS core.
 
 ## 0.5.3
 
-* Under-the-hood maintenance; no changes to the public API or runtime behavior.
+### Changed
+
+* Improved fitting and cross-validation performance by optimizing sorting, window operations, robust scale estimation, regression, and delta interpolation.
 
 ## 0.4.0
 

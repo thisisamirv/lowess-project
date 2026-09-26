@@ -116,7 +116,9 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ## 1.2.0
 
-* Under-the-hood maintenance; no changes to the public API or runtime behavior.
+### Fixed
+
+* Fixed reported vulnerabilities in Node.js dependencies.
 
 ## 1.1.2
 
@@ -124,11 +126,20 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ## 1.1.1
 
-* Under-the-hood maintenance; no changes to the public API or runtime behavior.
+### Fixed
+
+* Fixed GPU configuration and initialization problems, and improved recovery after missing hardware/drivers or earlier GPU execution errors.
 
 ## 1.1.0
 
-* Under-the-hood maintenance; no changes to the public API or runtime behavior.
+### Added
+
+* Expanded GPU fitting support to selectable kernels, robustness and scaling methods, boundary policies, automatic convergence, prediction, and cross-validation.
+
+### Fixed
+
+* Fixed the `Extend` boundary policy not being applied and improved numerical precision through coordinate centering.
+* Fixed GPU integer overflow, initialization failures, and resource exhaustion.
 
 ## 1.0.0
 

@@ -92,11 +92,13 @@ test_that("matches stats::lowess for randomized sorted output", {
 })
 
 test_that("matches initial stats::lowess fits for sparse one-spike responses", {
-    property <- function(x,
-                         spike_position,
-                         spike_magnitude,
-                         spike_negative,
-                         fraction) {
+    property <- function(
+        x,
+        spike_position,
+        spike_magnitude,
+        spike_negative,
+        fraction
+    ) {
         if (!usable_x(x)) {
             return(expect_true(TRUE))
         }
