@@ -142,7 +142,7 @@ check_stats_lowess <- function(
     comparison_scale <- max(1, abs(result$y), abs(reference$y))
     if (max_diff > tolerance * comparison_scale) {
         iteration_counts <- seq.int(0L, as.integer(iterations))
-        iteration_diffs <- vapply(iteration_counts, function(n_iter) {
+        iteration_fits <- lapply(iteration_counts, function(n_iter) {
             reference_iter <- stats::lowess(x_fit, y_fit, f = fraction, iter = n_iter)
             model_iter <- Lowess(
                 fraction = fraction,
@@ -153,32 +153,54 @@ check_stats_lowess <- function(
                 outputs = if (sorted) "sorted" else NULL
             )
             result_iter <- fit(model_iter, x_fit, y_fit)
-            max(abs(result_iter$y - reference_iter$y))
+            list(reference = reference_iter$y, package = result_iter$y)
+        })
+        iteration_diffs <- vapply(iteration_fits, function(fits) {
+            max(abs(fits$package - fits$reference))
         }, numeric(1))
+        first_divergence <- which(iteration_diffs > tolerance)[1]
         iteration_summary <- paste(
             sprintf("%d=%.17g", iteration_counts, iteration_diffs),
             collapse = ", "
         )
-        stop(
-            sprintf(
-                paste0(
-                    "y does not match stats::lowess output ",
-                    "(max abs diff: %.17g; x: %s; y: %s; ",
-                    "reference y: %s; package y: %s; ",
-                    "fraction: %.17g; iterations: %d; ",
-                    "per-iteration max diffs [iter=diff]: %s)"
-                ),
-                max_diff,
-                toString(sprintf("%.17g", x)),
-                toString(sprintf("%.17g", y)),
-                toString(sprintf("%.17g", reference$y)),
-                toString(sprintf("%.17g", result$y)),
-                fraction,
-                iterations,
-                iteration_summary
+        failure_message <- sprintf(
+            paste0(
+                "y does not match stats::lowess output ",
+                "(max abs diff: %.17g; x: %s; y: %s; ",
+                "reference y: %s; package y: %s; ",
+                "fraction: %.17g; iterations: %d; ",
+                "per-iteration max diffs [iter=diff]: %s)"
             ),
-            call. = FALSE
+            max_diff,
+            toString(sprintf("%.17g", x)),
+            toString(sprintf("%.17g", y)),
+            toString(sprintf("%.17g", reference$y)),
+            toString(sprintf("%.17g", result$y)),
+            fraction,
+            iterations,
+            iteration_summary
         )
+        if (length(first_divergence) > 0L && first_divergence > 1L) {
+            previous_fits <- iteration_fits[[first_divergence - 1L]]
+            failure_message <- paste0(
+                failure_message,
+                sprintf(
+                    "; last agreeing iteration %d reference fit: [%s]; ",
+                    iteration_counts[first_divergence - 1L],
+                    toString(sprintf("%.17g", previous_fits$reference))
+                ),
+                sprintf(
+                    "package fit: [%s]; reference abs residuals: [%s]; ",
+                    toString(sprintf("%.17g", previous_fits$package)),
+                    toString(sprintf("%.17g", abs(y_fit - previous_fits$reference)))
+                ),
+                sprintf(
+                    "package abs residuals: [%s]",
+                    toString(sprintf("%.17g", abs(y_fit - previous_fits$package)))
+                )
+            )
+        }
+        stop(failure_message, call. = FALSE)
     }
     if (!identical(result$fraction_used, fraction)) {
         stop("fraction_used does not match requested fraction", call. = FALSE)
