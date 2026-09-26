@@ -11,8 +11,8 @@ suffix (go.mod files, doc snippets, README/docs badges, the doc-snippet
 runner) whenever a major version bump changes it -- see
 https://go.dev/ref/mod#major-version-suffixes.
 
-Does NOT touch: CHANGELOG.md (write that by hand), generated NEWS.md/docs-site
-content (regenerated via `make <lang>-dev` / dev/update_changelogs.py), or the
+Does NOT touch: CHANGELOG.md (write that by hand), NEWS.md/docs-site content
+(maintain those separately), or the
 Spack recipe's `version()`/`sha256` block and the conda-forge feedstock -- those
 require a published release tarball to hash, so release-cpp.yml/release-conda.yml
 update them after the fact, not before.
@@ -464,9 +464,7 @@ def main() -> int:
 
     print(f"Done{' (dry run)' if args.dry_run else ''}. Next steps:")
     print("  1. Add a new section to CHANGELOG.md for this version.")
-    print(
-        "  2. Run `python dev/update_changelogs.py <lang>` (or `make <lang>-dev`) to regenerate each binding's NEWS.md."
-    )
+    print("  2. Update each binding's NEWS.md from CHANGELOG.md.")
     return 0
 
 

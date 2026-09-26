@@ -207,7 +207,6 @@ dev:
 	@echo "Doc snippet tests (cpp)..."
 	@$(PYTHON) dev/check_links.py --lang cpp
 	@$(PYTHON) dev/verify_snippets.py --lang cpp --timeout 120 --update-outputs
-	@$(PYTHON) dev/update_changelogs.py cpp
 	@echo "$(CPP_PKG) checks completed successfully!"
 
 clean:

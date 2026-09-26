@@ -69,6 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Monorepo:**
 
 - Updated the vendored `doxygen-awesome-css` theme to v2.5.0 and the Hugo docs build to v0.166.0.
+- Removed automatic changelog updating script (`update_changelogs.py`) in order to manually write high quality changelogs.
 
 **lowess:**
 
