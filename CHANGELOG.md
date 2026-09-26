@@ -366,44 +366,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Go doc-snippet verification now batch-builds every snippet in one `go build ./...` under a persistent module instead of one `go run` per snippet, then runs the binaries concurrently; `verify_snippets.py`'s `BATCH_RUNNERS` dispatch (previously Rust-only) now covers `go` too.
 - C++ doc-snippet verification now resolves the compiler/library/MSVC setup once, then compiles+links+runs every snippet concurrently instead of one at a time. Fixed an MSVC race from concurrent `cl.exe` invocations colliding on a shared `snippet.obj` by giving each snippet its own `/Fo` output and `cwd`.
 
-**docs:**
-
-- Improved API docs for all bindings and crates significantly.
-- Fixed several bindings' docs (Node.js, WASM, Go, Java, R) showing a flat `500` default for `overlap` instead of the actual dynamic `chunk_size / 10` (clamped to `[1, chunk_size - 10]`).
-- Renamed Python's `docs/guide/adapters.md` and `docs/use-case/{genomics,real-time,time-series}.md` to match every other binding/crate's filenames (`adapter-choice.md`, `use-case-*.md`).
-
 **lowess:**
 
 - Removed the dead, unreachable `compute_residuals`/`parallel`/`backend` fields from `OnlineLowessBuilder`; `StreamingLowessBuilder` lost its unused `backend` field too.
 - `Streaming::convert()` no longer resolves `overlap` to a flat `500` when unset; it now resolves dynamically to `chunk_size / 10` (clamped to `[1, chunk_size - 10]`). Breaking change for callers relying on the previous flat default with a customized `chunk_size`.
+- Improved API documentation for the lowess crate significantly.
 
 **fastLowess:**
 
 - Removed the same dead `compute_residuals`/`parallel`/`backend` fields as `lowess`.
 - Removed `.confidence_intervals()`, `.prediction_intervals()`, and `.return_se()` from the `StreamingLowess`/`OnlineLowess` wrapper structs — leaked in via the shared builder macro and silently ignored. Breaking change; `Lowess` is unaffected.
 - Fixed a stale comment on `binding_support::default_overlap()` referencing the now-removed flat `DEFAULT_STREAMING_OVERLAP` constant in `lowess`.
+- Improved API documentation for the fastLowess crate significantly.
 
 **Python:**
 
 - Removed `return_diagnostics`, `return_residuals`, and `parallel` from `OnlineLowess`'s constructor — accepted but had no effect. Breaking change; `Lowess`/`StreamingLowess` are unaffected.
+- Improved API documentation for Python significantly.
+- Renamed `docs/guide/adapters.md` and `docs/use-case/{genomics,real-time,time-series}.md` to `adapter-choice.md` and `use-case-*.md` for consistency with the other bindings.
 
 **R:**
 
 - Removed `return_diagnostics`, `return_residuals`, and `parallel` from `OnlineLowess()`'s constructor, same reason as Python. Breaking change.
 - Removed `confidence_intervals` and `prediction_intervals` from `OnlineLowess()`'s and `StreamingLowess()`'s constructors — never actually computed. Breaking change; `Lowess()` is unaffected.
+- Improved API documentation for R significantly.
+- Updated R documentation to show the dynamic overlap default `chunk_size / 10`, clamped to `[1, chunk_size - 10]`, instead of a flat `500`.
 
 **Julia:**
 
 - Removed `return_diagnostics`, `return_residuals`, and `parallel` from `OnlineLowess`, same reason as Python. Breaking change.
 - `StreamingLowess`'s `overlap` default changed from a fixed `500` to `-1` (sentinel for "use the library default"), resolving dynamically to `chunk_size / 10` like every other binding. Breaking change for customized `chunk_size` callers.
+- Improved API documentation for Julia significantly.
 
 **Node.js:**
 
 - Split `SmoothOptions` into `SmoothOptions` (Batch), `StreamingSmoothOptions`, and `OnlineSmoothOptions`. Passing Batch-only fields to `StreamingLowess`/`OnlineLowess` is now a TypeScript compile-time error instead of a silent no-op. Breaking change; `Lowess` is unaffected.
+- Improved API documentation for Node.js significantly.
+- Updated Node.js documentation to show the dynamic overlap default `chunk_size / 10`, clamped to `[1, chunk_size - 10]`, instead of a flat `500`.
 
 **WASM:**
 
 - Same `SmoothOptions` split as Node.js, for the same reason. Breaking change.
+- Improved API documentation for WASM significantly.
+- Updated WASM documentation to show the dynamic overlap default `chunk_size / 10`, clamped to `[1, chunk_size - 10]`, instead of a flat `500`.
 
 **C++:**
 
@@ -412,17 +417,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed `confidence_intervals`/`prediction_intervals` from `OnlineOptions`; `StreamingOptions` no longer forwards its inherited copies. Breaking change.
 - Removed the dead, never-read `custom_weights` field from `OnlineOptions`. Breaking change.
 - `StreamingOptions::overlap`'s default changed from a fixed `500` to `-1` (sentinel for "use the library default"), resolving dynamically to `chunk_size / 10`. Breaking change.
+- Improved API documentation for C++ significantly.
 
 **Go:**
 
 - Repinned the macOS x64 job in `release-go.yml` to `macos-15-intel`.
 - `OnlineOptions` no longer embeds `Options`; removed `ReturnDiagnostics`, `ReturnResiduals`, `Parallel`, and the never-read `Backend`. Breaking change.
 - `StreamingOptions` no longer embeds `Options` either; both lost `ConfidenceIntervals`/`PredictionIntervals`, and `StreamingOptions` also lost `ReturnSE`/`ReturnSorted`/`CVFractions`/`CVMethod`/`CVK`/`CVSeed`/`Backend`. Breaking change.
+- Improved API documentation for Go significantly.
+- Updated Go documentation to show the dynamic overlap default `chunk_size / 10`, clamped to `[1, chunk_size - 10]`, instead of a flat `500`.
 
 **Java:**
 
 - Removed `returnDiagnostics`, `returnResiduals`, and `parallel` from `OnlineOptions.Builder`, same reason as Python. Breaking change.
 - Removed `confidenceIntervals` and `predictionIntervals` from `OnlineOptions.Builder` and `StreamingOptions.Builder`. Breaking change.
+- Improved API documentation for Java significantly.
+- Updated Java documentation to show the dynamic overlap default `chunk_size / 10`, clamped to `[1, chunk_size - 10]`, instead of a flat `500`.
 
 ### Fixed
 
@@ -587,20 +597,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Modified `verify_snippets.py` to verify snippets and also add the output of the snippets to the markdown file.
 - Added a `large` benchmark category (n = 50000) to `benchmarks/rfastlowess.R` and `benchmarks/stats_lowess.R`, since every existing category ran in well under 100ms. Covers 4 scenarios (`large_delta_0`, `large_delta_0.1`, `large_high_iter`, `large_high_fraction`) stressing `delta`, iteration count, and fraction. `benchmarks/compare.py`'s plot grid grew from 5x2 to 7x2 to fit them.
 - Added `.gitattributes`, normalizing all text files to LF line endings (`* text=auto eol=lf`) and marking binary formats (images, archives, compiled libraries, `.rds`/`.RData`, etc.) so Git never treats them as text.
-
-**docs:**
-
-- Consolidated every crate/binding README: merged the "Installation" and "Documentation" sections, replaced GitHub-only alert syntax with plain blockquotes, removed the redundant "API Reference" and "Changelog" sections (each now has its own docs-site page), shortened the "GPU Backend" blurb, and added a "Read more" link to the Concepts page. The top-level repository README is unchanged, since it's only ever viewed on GitHub.
-- Renamed the batch adapter's "When to Use" heading to "When to Use Batch Adapter" across every binding/crate's API docs.
-- Vendored the [doxygen-awesome-css](https://github.com/jothepro/doxygen-awesome-css) theme (v2.4.2) for a modern, sidebar-only cpp Doxygen site with automatic dark mode.
-- Added `dev/update_changelogs.py`, which regenerates a per-binding/crate `NEWS.md`/`news.md` from the root `CHANGELOG.md`. Wired into every docs site's navigation, the Rust crates' rustdoc module tree, and every `Makefile` `dev` target.
-- Replaced `kernels.md`'s "Choosing a Kernel" mermaid flowchart (every binding/crate) with an equivalent decision table, since Doxygen and rustdoc don't render mermaid and the deeply-nested diamond chain was hard to read even where it did render.
-- Replaced `adapter-choice.md`/`adapters.md`'s "Overview" flowchart (mermaid in most bindings/crates, ASCII art in the C++ docs) with an equivalent decision table, unifying on a single rendering-agnostic format across every binding/crate.
-- Moved the duplicated "GPU Acceleration" section out of `api.md` (C++, Node.js, Python, `fastLowess`) into each one's dedicated `gpu-backend.md` guide, which also gained "Hardware Requirements"/"Performance Considerations"; `api.md` now just links to it. Removed the section entirely from the `lowess` crate, which has no `gpu` feature.
-- Consolidated `parameters.md`/the auto-generated parameter reference across every binding and crate: merged its unique content (fraction/iterations guidance, `delta` defaults, `zero_weight_fallback` behavior) into each `api.md`'s option tables, then removed `parameters.md` and its nav entries/rustdoc module — the option lists and examples it duplicated already live on their own pages.
-- Standardized docs across all bindings and crates.
-- Replaced the Unicode superscript `²` character with plain ASCII throughout every doc page and doc-comment (`R²` → `R2`; `(y_true - y_pred)²`/`O(window²)` → `^2`), including the `wasm` binding's JSDoc comments, the Julia docstrings in `FastLOWESS.jl`, and the `fastLowess`/`lowess` crates' rustdoc examples. Also changed the `lowess` crate's `Diagnostics` `Display` impl to print `R2` instead of `R²` so the `fastLowess` doc example showing its captured output stays accurate.
-- Harmonized the docs-site directory structure across every binding/crate to mirror Go's layout (`introduction/`, `guide/`, `weighting/`, `advanced/`, `use-case/`, `api/`, each grouped under a hub page): Node.js/WASM (Starlight `sidebar`), Python (Sphinx toctree, also removed the dead `mkdocs.yml`), Julia (`Documenter.jl` `pages=[...]`, switched to recursive `walkdir`), and `fastLowess`/`lowess` (nested `#[cfg(doc)]` modules). C++'s Doxygen pages were physically moved to match (`RECURSIVE: YES`), with two hub pages renamed for parity. Java already matched this layout and now carries it into its new Antora site. R's `vignettes/` stays flat (CRAN/pkgdown requirement).
+- Added `dev/update_changelogs.py` to generate per-package NEWS files from `CHANGELOG.md` and wired it into documentation navigation, Rust docs, and development Makefiles.
 
 **C++:**
 
@@ -608,6 +605,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a Spack recipe (`bindings/cpp/spack/package.py`, a `CargoPackage` with custom `build()`/`install()` phases). `release-cpp.yml` now updates its `version()`/`sha256` on every release and opens a PR to `spack/spack-packages`, so `fastlowess-cpp` stays installable via `spack install fastlowess-cpp`.
 - Bumped the vendored Corrosion CMake module from `v0.5.1` to `v0.6.1`.
 - Added CI coverage for more compilers: Clang on Linux and clang-cl on Windows (`make cpp-dev CPP_CMAKE_TOOLSET="-T ClangCL"`) now gate CI; MinGW-w64 and Intel oneAPI (`icpx`) run as non-blocking jobs. See `bindings/cpp/CMAKE.md`'s new "Compiler Support" table.
+- Standardized C++ documentation: consolidated README setup content and parameter guidance, renamed the batch-adapter heading, replaced flowcharts with decision tables, standardized API examples and page structure, and converted superscripts to ASCII.
+- Vendored `doxygen-awesome-css` v2.4.2 for a modern, sidebar-only Doxygen site.
+- Moved C++ GPU acceleration guidance from the API page to a dedicated GPU Backend guide with hardware requirements and performance considerations.
 
 **R:**
 
@@ -615,6 +615,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed `_pkgdown.yml` describing the core interface as "R6 classes" when the package actually uses S3 classes.
 - Merged `vignettes/parameters.Rmd`'s parameter reference (ranges, defaults, and fraction-choice guidance) into the `@param`/`@details` roxygen docs of `Lowess()`, `StreamingLowess()`, and `OnlineLowess()`, and removed the now-redundant vignette.
 - Merged `vignettes/batch.Rmd`, `streaming.Rmd`, and `online.Rmd`'s unique content (When to Use guidance, merge strategy comparison) into the `@description`/`@details` roxygen docs of `Lowess()`, `StreamingLowess()`, and `OnlineLowess()`, and removed the now-redundant vignettes and their orphaned `gap_handling.svg`/`online_comparison.svg` diagrams.
+- Standardized R documentation: consolidated README setup content and parameter guidance, renamed the batch-adapter heading, replaced flowcharts with decision tables, standardized API examples and page structure, and converted superscripts to ASCII.
 
 **Node.js:**
 
@@ -623,15 +624,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated `napi-build` to v2.4.
 - Updated `typedoc-plugin-markdown` to v4.13.
 - `make nodejs-dev` now runs `npm update` after `npm install`, so dependencies are kept current.
+- Standardized Node.js documentation: consolidated README setup content and parameter guidance, renamed the batch-adapter heading, replaced flowcharts with decision tables, standardized API examples and page structure, and converted superscripts to ASCII.
+- Moved Node.js GPU acceleration guidance from the API page to a dedicated GPU Backend guide with hardware requirements and performance considerations.
 
 **WASM:**
 
 - Updated `typedoc-plugin-markdown` to v4.13.
 - `make wasm-dev` now runs `npm update` after `npm install`, so dependencies are kept current.
+- Standardized WASM documentation: consolidated README setup content and parameter guidance, renamed the batch-adapter heading, replaced flowcharts with decision tables, standardized API examples and page structure, and converted superscripts to ASCII.
 
 **lowess:**
 
 - Updated `wide` to v1.7.
+- Standardized the lowess crate documentation: consolidated README setup content and parameter guidance, renamed the batch-adapter heading, replaced flowcharts with decision tables, standardized API examples and page structure, and converted superscripts to ASCII.
+- Removed the GPU acceleration section from the API docs because the lowess crate has no GPU feature.
+- Updated `Diagnostics` display output to use `R2` instead of the Unicode superscript form.
+
+**fastLowess:**
+
+- Standardized the fastLowess crate documentation: consolidated README setup content and parameter guidance, renamed the batch-adapter heading, replaced flowcharts with decision tables, standardized API examples and page structure, and converted superscripts to ASCII.
+- Moved the fastLowess crate GPU acceleration guidance from the API page to a dedicated GPU Backend guide with hardware requirements and performance considerations.
+
+**Go:**
+
+- Standardized Go documentation: consolidated README setup content and parameter guidance, renamed the batch-adapter heading, replaced flowcharts with decision tables, standardized API examples and page structure, and converted superscripts to ASCII.
+
+**Java:**
+
+- Standardized Java documentation: consolidated README setup content and parameter guidance, renamed the batch-adapter heading, replaced flowcharts with decision tables, standardized API examples and page structure, and converted superscripts to ASCII.
+
+**Julia:**
+
+- Standardized Julia documentation: consolidated README setup content and parameter guidance, renamed the batch-adapter heading, replaced flowcharts with decision tables, standardized API examples and page structure, and converted superscripts to ASCII.
+
+**Python:**
+
+- Standardized Python documentation: consolidated README setup content and parameter guidance, renamed the batch-adapter heading, replaced flowcharts with decision tables, standardized API examples and page structure, and converted superscripts to ASCII.
+- Moved Python GPU acceleration guidance from the API page to a dedicated GPU Backend guide with hardware requirements and performance considerations.
 
 ### Fixed
 
@@ -641,22 +670,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed `docs.yml`'s reliance on GitHub's legacy branch-based Pages deployment, which auto-triggered an unpinned "pages build and deployment" job on every `gh-pages` push. The former `deploy` job is now `build` (still pushes `_site` to `gh-pages` as a cache); publishing now goes through `actions/upload-pages-artifact` and a new `deploy` job using `actions/deploy-pages`. Requires the repo's Pages source set to "GitHub Actions".
 - Fixed every benchmark category in `benchmarks/rfastlowess.R` failing with `attempt to apply non-function`: it called the R6-style `model$fit(x, y)`, but `fit` is an S3 generic (`fit(model, x, y)`), not a field on the `Lowess` object. Also fixed `benchmarks/stats_lowess.R` resolving its `output/` directory relative to the current working directory instead of the script's own location (unlike `rfastlowess.R`, which already did this correctly), so results could land outside `benchmarks/output/` depending on how the script was invoked.
 
-**docs:**
-
-- Fixed the "Handling Outliers" quickstart example (every binding, `lowess`/`fastLowess`) printing nothing: with only 6 points and `fraction = 0.5`, tricube weighting left just 2 effectively-weighted points, which a degree-1 fit reproduces exactly (zero residual). Bumped to `fraction = 0.7`, which correctly downweights the injected outlier.
-- Fixed the R `OnlineLowess()` roxygen example printing one line per point (48 lines for a 50-point loop); it now collects the smoothed values and prints only `head(smoothed, 5)`.
-- Fixed the R `add_point()` roxygen example always printing `NULL`, since a single call never reaches the default `min_points = 3`; it now uses `min_points = 2L` and shows the second (non-`NULL`) call's result.
-- Fixed the R `robustness.Rmd` "Detecting Outliers" example printing 22 lines at the `weight < 0.5` threshold, most of them incidental noise rather than the 3 deliberately injected outliers; tightened to `weight < 0.05`, which isolates the points effectively excluded by the fit.
-- Fixed the R `merge.Rmd` "Choosing Chunk Size and Overlap" example constructing a `StreamingLowess` model but never printing anything; it now prints the computed overlap size and its percentage of `chunk_size`.
-- Fixed the R `use-case-genomics.Rmd` ChIP-seq example never calling `fit()`, so `result` referenced a stale variable from an earlier chunk and the smoothed line either failed to plot or didn't align with the current example's x-range; added the missing `result <- fit(model, positions, signal_noisy)` call.
-- Fixed the R `use-case-real-time.Rmd` "Update Modes" example constructing a `"full"`-mode `OnlineLowess` model but never feeding it data or plotting a result; it now runs the same accumulate-and-plot pattern as the preceding example.
-- Fixed the "Detecting Outliers" example's `robustness.md` page (C++, Node.js, WASM, and the `lowess`/`fastLowess` crates) printing an unbounded number of "is likely an outlier" lines; capped output at 5 lines, matching the already-capped Julia and Python versions and the R vignette fix above.
-- Fixed the Julia `intervals.md` "Confidence Intervals" and "Standard Errors" examples each looping over all 100 points instead of a short sample; switched to `result.y[1:5]`/`result.confidence_lower[1:5]`/`result.standard_errors[1:5]`-style slicing, matching the already-concise Python version.
-
 **fastLowess:**
 
 - Fixed `cargo doc` failing with `unresolved link to`crate::doc::gpu_backend`` whenever documenting with a feature set that excludes `gpu` (e.g. `--features cpu`): `api.md`'s GPU Backend link isn't itself feature-gated, but the `gpu_backend` doc module was gated behind `#[cfg(all(doc, feature = "gpu"))]`. Changed to `#[cfg(doc)]` (matching every other doc submodule), since it's a plain Markdown page with no dependency on the `gpu` feature's actual code.
 - Fixed a misleading comment on `binding_support::default_overlap()` claiming wasm/nodejs use a flat `500`-point overlap while others use `chunk_size / 10`; every binding actually computes `chunk_size / 10` via the same `build_streaming()` helper. No behavior changed, only the comment.
+- Fixed the Handling Outliers quickstart example in the fastLowess crate: increased `fraction` from `0.5` to `0.7` because the six-point example otherwise fit the injected outlier exactly instead of downweighting it.
+- Capped the fastLowess crate Detecting Outliers example output at five lines.
 
 **C++:**
 
@@ -666,6 +685,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed `ci-cpp.yml`'s Windows job installing `cppcheck` via Chocolatey, whose package is missing its `cfg/std.cfg` library files, causing `make cpp-dev`'s static analysis pass to be silently skipped; it now installs `cppcheck` via `winget` instead (matching the already-working `install-tools` target), with its install directory added to `$GITHUB_PATH`.
 - Fixed `Doxyfile`'s `PROJECT_NAME` showing `"fastLowess"` (the separate Rust crate's name) instead of the actual CMake project/library name; changed to `"fastlowess-cpp"`.
 - Fixed `Doxyfile`'s `FILE_PATTERNS` missing a space (`*.hpp*.h`), which Doxygen parses as a single malformed glob instead of two separate `*.hpp`/`*.h` patterns; changed to `*.hpp *.h *.md`.
+- Fixed the Handling Outliers quickstart example in C++: increased `fraction` from `0.5` to `0.7` because the six-point example otherwise fit the injected outlier exactly instead of downweighting it.
+- Capped the C++ Detecting Outliers example output at five lines.
 
 **Julia:**
 
@@ -673,6 +694,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed the Documenter homepage: it was a stale, separately maintained `index.md` instead of the README, and the README's centered badge/logo HTML and markdownlint comment rendered as literal text. `make.jl` now regenerates `index.md` from `README.md` on every build.
 - Fixed `release-julia-register.yml` extracting the matching version section from the root `CHANGELOG.md`, which includes every binding/crate's entries; it now extracts from the already Julia-filtered `bindings/julia/julia/docs/src/NEWS.md` instead, so the JuliaRegistrator release notes only cover Julia-relevant changes.
 - Fixed `make julia-dev` failing with "empty intersection between `fastlowess_jll@X.Y.Z` and project compatibility ..." whenever a locally cached `Manifest.toml` still pinned an older `fastlowess_jll` version after a new one was published: `Pkg.resolve()` treats an already-pinned manifest entry as fixed and won't search the registry for an upgrade, even when the relaxed compat bound requires one. The `dev` target now runs `Pkg.update("fastlowess_jll")` before `Pkg.resolve()` to actively pick up the newly published version.
+- Fixed the Handling Outliers quickstart example in Julia: increased `fraction` from `0.5` to `0.7` because the six-point example otherwise fit the injected outlier exactly instead of downweighting it.
+- Shortened the confidence-interval and standard-error examples to display only the first five values instead of all 100.
 
 **Node.js:**
 
@@ -680,6 +703,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed the docs build always emitting a `[@astrojs/sitemap] The Sitemap integration requires the site astro.config option` warning when the `SITE` environment variable isn't set (e.g. local builds); `astro.config.mjs` now falls back to the production GitHub Pages URL.
 - Fixed every link on the "API Reference" page 404ing: TypeDoc preserves original casing (e.g. `classes/Lowess.md`) but Starlight lowercases route slugs and never strips `.md`. A new `dev/lowercase-typedoc-refs.js` script lowercases generated file names and rewrites internal links after `typedoc` runs, wired into `npm run docs`.
 - Fixed `custom-weights.md`'s "Zero-weight windows" `:::caution` admonition closing one line early, leaving its second sentence rendered as plain, oddly-indented text below the callout instead of inside it.
+- Fixed the Handling Outliers quickstart example in Node.js: increased `fraction` from `0.5` to `0.7` because the six-point example otherwise fit the injected outlier exactly instead of downweighting it.
+- Capped the Node.js Detecting Outliers example output at five lines.
 
 **WASM:**
 
@@ -689,20 +714,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed the same `@astrojs/sitemap` warning as Node.js, with the same fallback in `astro.config.mjs`.
 - Fixed the same "API Reference" 404s as Node.js, via the same `dev/lowercase-typedoc-refs.js` script.
 - Fixed the same `custom-weights.md` "Zero-weight windows" admonition closing early as Node.js.
+- Fixed the Handling Outliers quickstart example in WASM: increased `fraction` from `0.5` to `0.7` because the six-point example otherwise fit the injected outlier exactly instead of downweighting it.
+- Capped the WASM Detecting Outliers example output at five lines.
 
 **Python:**
 
 - Fixed `StreamingLowess`'s `fraction` default (was `0.3`, should be `0.67`) and `OnlineLowess`'s `fraction` (was `0.2`), `window_capacity` (was `100`), and `update_mode` (was `"full"`) defaults (should be `0.67`, `1000`, and `"incremental"` respectively) diverging from the Rust core and the batch `Lowess` default.
 - Fixed the "API Reference" page rendering empty: its `api/index.md` toctree still referenced the pre-rename `python`/`python-streaming`/`python-online` document names; updated to `api`/`api-streaming`/`api-online`, matching the files' current names. Sphinx toctree entries omit the `.md` extension, so this was missed by the earlier rename's link verification.
+- Fixed the Handling Outliers quickstart example in Python: increased `fraction` from `0.5` to `0.7` because the six-point example otherwise fit the injected outlier exactly instead of downweighting it.
 
 **R:**
 
 - Fixed `OnlineLowess()`'s `min_points` (was `3L`, should be `2L`) and `update_mode` (was `"full"`, should be `"incremental"`) defaults diverging from the Rust core; updated the roxygen docs and `man/OnlineLowess.Rd` to match.
+- Fixed the Handling Outliers quickstart example in R: increased `fraction` from `0.5` to `0.7` because the six-point example otherwise fit the injected outlier exactly instead of downweighting it.
+- Fixed the `OnlineLowess()` roxygen example printing one line per point by collecting results and printing only `head(smoothed, 5)`.
+- Fixed the `add_point()` roxygen example always printing `NULL` by using `min_points = 2L` and showing the second call.
+- Fixed the robustness vignette outlier example printing incidental noise by tightening its threshold from `weight < 0.5` to `weight < 0.05`.
+- Fixed the merge vignette example to print the computed overlap size and its percentage of `chunk_size`.
+- Fixed the genomics vignette by fitting the current example data before plotting.
+- Fixed the real-time vignette Update Modes example by feeding data to the model and plotting its results.
 
 **Rust:**
 
 - Fixed inline/display LaTeX math rendering as literal text on docs.rs; added a `katex-header.html` that renders it client-side with KaTeX.
 - Fixed every cross-reference link across the `lowess`/`fastLowess` crate docs leading nowhere: these pages are embedded into rustdoc via `#![doc = include_str!(...)]`, so plain relative links render verbatim instead of resolving. Converted them to proper intra-doc links (e.g. `crate::doc::concepts`), validated with `cargo doc --all-features -D warnings`.
+
+**lowess:**
+
+- Fixed the Handling Outliers quickstart example in the lowess crate: increased `fraction` from `0.5` to `0.7` because the six-point example otherwise fit the injected outlier exactly instead of downweighting it.
+- Capped the lowess crate Detecting Outliers example output at five lines.
+
+**Go:**
+
+- Fixed the Handling Outliers quickstart example in Go: increased `fraction` from `0.5` to `0.7` because the six-point example otherwise fit the injected outlier exactly instead of downweighting it.
+
+**Java:**
+
+- Fixed the Handling Outliers quickstart example in Java: increased `fraction` from `0.5` to `0.7` because the six-point example otherwise fit the injected outlier exactly instead of downweighting it.
 
 ## 3.1.0
 
@@ -740,11 +788,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Split the monolithic `.github/workflows/ci.yml` into seven per-language workflow files: `ci-rust.yml`, `ci-python.yml`, `ci-julia.yml`, `ci-nodejs.yml`, `ci-wasm.yml`, `ci-cpp.yml`, and `ci-r.yml`. Each file carries the relevant `ci` (multi-OS matrix), `asan`, and `gpu` jobs for its language.
 - Each crate/binding sub-Makefile now runs `dev/verify_snippets.py --lang <lang>` for its own language as the final step of `make default`. The root `docs-test` target remains as a convenience to run all languages at once.
 - Split `dev/verify_snippets.py` into a lean orchestrator and a `dev/runners/` package. Each language has its own module (`python.py`, `julia.py`, `nodejs.py`, `r.py`, `wasm.py`, `rust.py`, `cpp.py`) containing its `run_<lang>()` function and a `skip_reason()` predicate. Shared types (`Snippet`, `RunResult`) and utilities live in `runners/base.py`; the registry (`RUNNERS`, `SKIP_CHECKS`) is exported from `runners/__init__.py`.
-
-**docs:**
-
-- Moved CHANGELOG and CONTRIBUTING guides to project root.
-- Updated README files to be binding/crate specific instead of one generic README for all bindings/crates.
+- Moved `CHANGELOG.md` and `CONTRIBUTING.md` to the repository root.
 
 **R:**
 
@@ -753,22 +797,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed R version dependency to 4.4.0 due to issues with installing Bioconducter packages on R < 4.4.0.
 - Replaced the multi-step `install.packages` / `BiocManager::install` package installation logic in `bindings/r/Makefile` with a single [`pak`](https://pak.r-lib.org/)-based block. `pak` handles RSPM binary vs source selection automatically (including Linux), skips already-installed packages, and installs CRAN, Bioconductor (`bioc::` prefix), and R-universe packages in one call.
 - `make r` (`default:`) now runs `R CMD INSTALL $(R_DIR)` directly; R's `configure` script handles Rust compilation from the committed `vendor.tar.xz`. The full dev workflow moves to `make r-dev`.
+- Updated the R README to be package-specific instead of using the generic shared README.
 
 **Python:**
 
 - Migrated Python documentation from MkDocs to Sphinx (with MyST-Parser and jupyter-sphinx). Code blocks now execute and embed output automatically via `jupyter-sphinx`.
 - `make python` (`default:`) now installs to the user Python environment via `pip install --user`. The full dev workflow (venv setup, formatting, linting, testing, doc-snippet verification) moves to `make python-dev`.
+- Updated the Python README to be package-specific instead of using the generic shared README.
 
 **Julia:**
 
 - Moved Julia documentation from ReadTheDocs to GitHub Pages, served by Documenter.jl at <https://thisisamirv.github.io/lowess-project/julia/stable/>. The ReadTheDocs site no longer includes Julia-specific content. Code blocks use Documenter.jl `@example` sections, which execute and embed output automatically during the docs build.
 - `make julia` (`default:`) now builds the Rust library and installs the Julia package via `Pkg.develop`. The full dev workflow moves to `make julia-dev`.
+- Updated the Julia README to be package-specific instead of using the generic shared README.
 
 **Node.js:**
 
 - Moved Node.js documentation from ReadTheDocs to GitHub Pages, served by Starlight at <https://thisisamirv.github.io/lowess-project/nodejs/>. The ReadTheDocs site no longer includes Node.js-specific content. `dev/add-nodejs-outputs.js` runs as part of `make nodejs-dev`, executing each JavaScript code block in the docs and injecting its output back into the Markdown source.
 - `make nodejs` (`default:`) now builds the native addon and links it globally via `npm link`. The full dev workflow moves to `make nodejs-dev`.
 - Updated `oxlint` dependency to 1.80.
+- Updated the Node.js README to be package-specific instead of using the generic shared README.
 
 **WASM:**
 
@@ -776,21 +824,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `make wasm` (`default:`) now builds both the Node.js and web WASM targets and links the Node.js package globally via `npm link`. The full dev workflow moves to `make wasm-dev`.
 - Updated `oxlint` dependency to 1.80.
 - Replace the outdated `jetli/wasm-pack-action` workflow with `taiki-e/install-action`.
+- Updated the WASM README to be package-specific instead of using the generic shared README.
 
 **C++:**
 
 - Moved C++ documentation from ReadTheDocs to GitHub Pages, served by Doxygen at <https://thisisamirv.github.io/lowess-project/cpp/>. The ReadTheDocs site no longer includes C++-specific content.
 - `make cpp` (`default:`) now only runs `cargo build`. The full dev workflow (formatting, linting, cbindgen idempotency, symbol export verification, cmake tests, valgrind, doc-snippet verification) moves to `make cpp-dev`.
+- Updated the C++ README to be package-specific instead of using the generic shared README.
 
 **fastLowess:**
 
 - Moved crate documentation from ReadTheDocs to <https://docs.rs/fastLowess>.
 - `make fastLowess` (`default:`) now only runs `cargo build`. The full dev workflow moves to `make fastLowess-dev`.
+- Updated the fastLowess crate README to be package-specific instead of using the generic shared README.
 
 **lowess:**
 
 - Moved crate documentation from ReadTheDocs to <https://docs.rs/lowess>.
 - `make lowess` (`default:`) now only runs `cargo build`. The full dev workflow moves to `make lowess-dev`.
+- Updated the lowess crate README to be package-specific instead of using the generic shared README.
 
 ### Fixed
 
@@ -822,6 +874,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Python:**
 
 - Exposed a `backend` option (`"cpu"` default, `"gpu"`) on `Lowess`, gated behind an opt-in `gpu` Cargo feature not enabled in published wheels. Run `fastlowess.install_gpu()` to download a prebuilt GPU wheel, or build locally with `maturin develop --features gpu`.
+- Added `*See: ...*` cross-reference links after option headings in the Python API docs, pointing to the corresponding user guide.
 
 **R:**
 
@@ -829,22 +882,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Introduced S3 generics `fit()`, `process_chunk()`, `finalize()`, and `add_point()`, replacing the previous list-closure API.
 - `bindings/r/Makefile` now auto-installs [Air](https://posit-dev.github.io/air/) if missing, before running `air format`.
 - Added a `reject_extra_positional_args()` helper to reject extra unnamed arguments.
+- Added `*See: ...*` cross-reference links after option headings in the R API docs, pointing to the corresponding user guide.
 
 **Julia:**
 
 - Exposed a `backend` option (`"cpu"` default, `"gpu"`) on `Lowess`, gated behind an opt-in `gpu` Cargo feature not enabled in published JLL artifacts. Run `install_gpu()` to download a prebuilt GPU library, or build locally with `cargo build --release --features gpu`.
+- Added `*See: ...*` cross-reference links after option headings in the Julia API docs, pointing to the corresponding user guide.
 
 **Node.js:**
 
 - Exposed a `backend` option (`"cpu"` default, `"gpu"`) on `Lowess`, gated behind an opt-in `gpu` Cargo feature not enabled in published npm binaries. Run `await fastlowess.installGpu()` to download a prebuilt GPU addon (requires restarting Node.js), or build locally with `napi build --features gpu`.
+- Added `*See: ...*` cross-reference links after option headings in the Node.js API docs, pointing to the corresponding user guide.
 
 **C++:**
 
 - Exposed a `backend` option (`"cpu"` default, `"gpu"`) on `Lowess`, gated behind an opt-in `gpu` Cargo feature not enabled by default. Call `fastlowess::gpu::install()` to download a prebuilt GPU library, or build locally with `cargo build --features gpu`.
+- Added `*See: ...*` cross-reference links after option headings in the C++ API docs, pointing to the corresponding user guide.
 
-**Docs:**
+**lowess:**
 
-- Added `*See: …*` cross-reference links after every option heading in `docs/api/` files, pointing to the corresponding user-guide page.
+- Added `*See: ...*` cross-reference links after option headings in the lowess crate API docs, pointing to the corresponding user guide.
+
+**fastLowess:**
+
+- Added `*See: ...*` cross-reference links after option headings in the fastLowess crate API docs, pointing to the corresponding user guide.
+
+**WASM:**
+
+- Added `*See: ...*` cross-reference links after option headings in the WASM API docs, pointing to the corresponding user guide.
 
 ### Fixed
 
@@ -860,9 +925,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed `OnlineLowess.add_point()` returning `undefined` instead of `null` when the sliding window has not yet accumulated enough points.
 
-**Docs:**
+**lowess:**
 
-- Fixed `docs/api/rust.md` showing Rust enum variant names instead of the string option values that the API actually accepts.
+- Fixed `docs/api/rust.md` showing Rust enum variants instead of the string option values accepted by the API.
+
+**fastLowess:**
+
+- Fixed `docs/api/rust.md` showing Rust enum variants instead of the string option values accepted by the API.
 
 ### Changed
 
@@ -876,16 +945,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Renamed `OnlineOutput`'s `smoothed` and `std_error` fields to `y` and `standard_error`, matching `LowessResult`. This is a **breaking change**.
 - Updated `wide` to v1.6.
+- Split Streaming/Online content from the lowess crate API reference into dedicated pages, moved tutorials into the user-guide use-cases section, and standardized API examples with expected output.
 
 **fastLowess:**
 
 - Renamed `OnlineOutput`'s `smoothed` and `std_error` fields to `y` and `standard_error`, matching `LowessResult`. This is a **breaking change**.
 - Disabled wgpu's default `dx12` and `gles` features (keeping `vulkan`/`metal`) — both pulled in Windows DLLs not present on every system, causing `--features gpu` builds to fail to even load rather than just failing to find a GPU adapter.
 - Exposed GPU backend in `binding_support.rs`.
+- Split Streaming/Online content from the fastLowess crate API reference into dedicated pages, moved tutorials into the user-guide use-cases section, and standardized API examples with expected output.
 
 **Python:**
 
 - Renamed `OnlineOutput`'s `smoothed` and `std_error` properties to `y` and `standard_error`. This is a **breaking change**.
+- Split Streaming/Online content from the Python API reference into dedicated pages, moved tutorials into the user-guide use-cases section, and standardized API examples with expected output.
 
 **R:**
 
@@ -896,32 +968,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `Depends: R (>= 4.6)` to `DESCRIPTION` and a matching CI matrix entry.
 - Expanded roxygen2 `@param` docs and added a `See Also` section linking to <https://lowess.readthedocs.io/>.
 - Expanded `rfastlowess-intro.Rmd` vignettes.
+- Split Streaming/Online content from the R API reference into dedicated pages, moved tutorials into the user-guide use-cases section, and standardized API examples with expected output.
+- Extended `dev/verify_snippets.py` to execute R code chunks in vignettes.
 
 **Julia:**
 
 - Renamed `OnlineOutput`'s `smoothed` and `std_error` fields to `y` and `standard_error`. This is a **breaking change**.
 - Removed `dev/format_julia.jl`; formatting is now inlined in `bindings/julia/Makefile`.
+- Split Streaming/Online content from the Julia API reference into dedicated pages, moved tutorials into the user-guide use-cases section, and standardized API examples with expected output.
 
 **Node.js:**
 
 - Renamed `OnlineOutput`'s `smoothed` and `std_error` fields to `y` and `standard_error`. This is a **breaking change**.
 - Updated `@napi-rs/cli` to v3.8 and `oxlint` to v1.79.
+- Split Streaming/Online content from the Node.js API reference into dedicated pages, moved tutorials into the user-guide use-cases section, and standardized API examples with expected output.
 
 **WASM:**
 
 - Renamed `OnlineOutput`'s `smoothed` and `std_error` getters to `y` and `standard_error`. This is a **breaking change**.
 - Updated `oxlint` to v1.79.
+- Split Streaming/Online content from the WASM API reference into dedicated pages, moved tutorials into the user-guide use-cases section, and standardized API examples with expected output.
 
 **C++:**
 
 - Renamed `OnlineOutput`'s `smoothed()` and `std_error()` methods to `y()` and `standard_error()`. This is a **breaking change**.
-
-**Docs:**
-
-- Split `StreamingLowess`/`OnlineLowess` content out of each binding's main API reference page into dedicated `{lang}-streaming.md`/`{lang}-online.md` files.
-- Moved the `tutorials/` pages into a new `user-guide/use-cases/` section.
-- Standardized `docs/api/` code examples across every binding, with expected output comments.
-- `dev/verify_snippets.py` now also runs the R code chunks in vignettes.
+- Split Streaming/Online content from the C++ API reference into dedicated pages, moved tutorials into the user-guide use-cases section, and standardized API examples with expected output.
 
 ## 2.0.0
 
@@ -1598,6 +1669,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated `prelude` to export enum variants directly
 - Reorganized `src/engine/executor.rs` into unified logical flow
 - Hidden internal-only fields from public documentation
+- Removed unused `GLSModel::local_wls` method
+- Removed `CVMethod` and `CrossValidationStrategy` enums
+- Removed type exports from `prelude` that caused ambiguity
+- Removed `.cargo/config.toml`
 
 ### Fixed
 
@@ -1606,15 +1681,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Various broken documentation links
 - `WeightParams` struct to remove unused field
 - Bug in `Batch` and `Streaming` adapter conversion logic
-
-### Removed
-
-**lowess:**
-
-- Unused `GLSModel::local_wls` method
-- `CVMethod` and `CrossValidationStrategy` enums
-- Type exports from `prelude` that caused ambiguity
-- `.cargo/config.toml`
 
 ## 0.5.3
 
@@ -1657,6 +1723,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved performance from 4-16× to 4-29× faster than statsmodels
 - Changed license from MIT to dual AGPL-3.0 and Commercial License
 - Reduced LOC from 3863 to 3263
+- Removed validation and comparison code
+- Removed benchmarking code
+- Removed convenience re-exports
 
 **fastLowess:**
 
@@ -1675,14 +1744,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Changed license from AGPL-3.0-or-later to dual MIT OR Apache-2.0
 - Updated documentation
-
-### Removed
-
-**lowess:**
-
-- Validation and comparison code
-- Benchmarking code
-- Convenience re-exports
 
 ## 0.3.0
 
@@ -1714,6 +1775,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Migrated `parallel` field to core `lowess` crate
 - Updated `lowess` dependency to v0.6.0
 - Made `ndarray` and `rayon` optional dependencies
+- Removed `.cargo/config.toml`
+- Removed type exports from `prelude` that shadowed std types
+- Removed Sequential, parallel, and ndarray adaptors
 
 **Python:**
 
@@ -1740,14 +1804,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **R:**
 
 - Automated vendor checksum fixing for CI builds
-
-### Removed
-
-**fastLowess:**
-
-- `.cargo/config.toml`
-- Type exports from `prelude` that shadowed std types
-- Sequential, parallel, and ndarray adaptors
 
 ## 0.2.0
 
