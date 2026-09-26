@@ -1,7 +1,11 @@
 <!-- markdownlint-disable MD024 MD025 -->
-# rfastlowess (development version)
+# Changelog
 
-## Added
+This changelog includes end-user changes only. For internal development notes, see the [repository changelog](https://github.com/thisisamirv/lowess-project/blob/main/CHANGELOG.md).
+
+## rfastlowess (development version)
+
+### Added
 
 * Added self-contained R and original Cleveland LOWESS references under `validation/reference/`, with provenance, dependency, precision, and build notes.
 * Added `cv_opts()` to build grouped cross-validation options for `Lowess(cv = ...)`.
@@ -12,7 +16,7 @@
 * Added `quickcheck` to `Suggests` and run the LOWESS property tests in the standard suite. It is not a runtime dependency. `make r-dev` still installs `quickcheck` locally.
 * Added an "Alternative Software" vignette comparing `rfastlowess` with `stats::lowess()`.
 
-## Changed
+### Changed
 
 * Updated the vendored `doxygen-awesome-css` theme to v2.5.0 and the Hugo docs build to v0.166.0.
 * Replaced the local result alias with `extendr_api::error::Result`, which remains exported outside the prelude in `extendr-api 0.9.0`.
@@ -23,14 +27,14 @@
 * Made `make r-dev` retry transient Windows `pak` move failures after clearing partial local cache/lock state.
 * Added `make r-tests` for the R test phase; `make r-dev` invokes it and runs the LOWESS property suite 30 times in parallel.
 
-## Fixed
+### Fixed
 
 * Skip comparison snippets when the optional `statsmodels` dependency is unavailable instead of failing verification.
 * Fixed C++ release CI staging the tracked Spack recipe despite the repository's broad `spack/` ignore rule.
 
-# rfastlowess 4.1.0
+## rfastlowess 4.1.0
 
-## Added
+### Added
 
 * Added musl release binaries for Python, C++, Go, and Julia.
 * Added bundled native libraries for the Java binding across 8 platforms, with runtime musl detection and auto-extraction.
@@ -41,11 +45,11 @@
 * Added explicit G5.9a test: `.Machine$double.eps` scale noise on input `y` produces no meaningful change in smoothed output (verified via `expect_equal(..., tolerance = 1e-10)`).
 * Added explicit tests for RE7.0/RE7.0a (noiseless exact predictor relationships, including identical-x and degenerate cases) and RE7.1/RE7.1a (noiseless exact y = f(x) relationships with timing comparison) in `tests/testthat/test-validation.R`. Removed incorrect `@srrstatsNA` tags and added proper `@srrstats` claims in `R/srr-stats-standards.R` and test headers. These tests confirm graceful handling of perfectly noiseless input and that exact data fits at least as fast as noisy equivalents.
 
-## Changed
+### Changed
 
 * Hoisted fully-qualified imports to top-level `use` statements across crates and bindings.
 
-## Fixed
+### Fixed
 
 * `dev/bump_version.py` now also updates the Go module's `/vN` major-version-suffix path across `go.mod` files, doc snippets, the doc-snippet runner, and README/docs badges whenever a version bump crosses a major version boundary, so this doesn't regress on the next major release.
 * `dev/bump_version.py` now also updates the Maven dependency example version in `bindings/java/docs/modules/ROOT/pages/introduction/installation.adoc`, which was previously left stale after a version bump.
@@ -53,9 +57,9 @@
 * `dev/bump_version.py` now updates the Go `/vN` path and the Java Maven example version.
 * Fixed inconsistent Node.js naming in READMEs, doc-site home pages, and `CITATION.cff`.
 
-# rfastlowess 4.0.0
+## rfastlowess 4.0.0
 
-## Added
+### Added
 
 * Added an "Ideas for Contribution" section to `CONTRIBUTING.md`, listing concrete Batch/Streaming/Online adapter feature gaps (out-of-sample prediction, exposing local slope/derivative, adaptive fraction selection, STL-style decomposition, bootstrap intervals, concurrent chunk processing, checkpointable streaming state, populating `OnlineOutput.standard_error`, time-based window eviction, configurable warm-up) to invite contributions.
 * `dev/bump_version.py` now also updates the example crate version in `CONTRIBUTING.md`'s "Individual crate Cargo.toml" snippet.
@@ -64,7 +68,7 @@
 * Added a `return_sorted` option to `Lowess()`.
 * Added a `missing` option to `Lowess()`, `StreamingLowess()`, and `OnlineLowess()`.
 
-## Changed
+### Changed
 
 * Go doc-snippet verification now batch-builds every snippet in one `go build ./...` under a persistent module instead of one `go run` per snippet, then runs the binaries concurrently; `verify_snippets.py`'s `BATCH_RUNNERS` dispatch (previously Rust-only) now covers `go` too.
 * C++ doc-snippet verification now resolves the compiler/library/MSVC setup once, then compiles+links+runs every snippet concurrently instead of one at a time. Fixed an MSVC race from concurrent `cl.exe` invocations colliding on a shared `snippet.obj` by giving each snippet its own `/Fo` output and `cwd`.
@@ -73,26 +77,26 @@
 * Improved API documentation for R significantly.
 * Updated R documentation to show the dynamic overlap default `chunk_size / 10`, clamped to `[1, chunk_size - 10]`, instead of a flat `500`.
 
-## Fixed
+### Fixed
 
 * Fixed `CONTRIBUTING.md` stating a stale Go prerequisite (`1.21+`, actually `1.23+` per `go.mod`/CI), an inaccurate `air` auto-install target (claimed `make r`, actually `make r-dev`), and a stale example crate version (`2.0.0`) in the Workspace Structure section.
 * Fixed `use-case-real-time.Rmd`'s dashboard example crashing at 2 data points: the internal `validate_common_args()` hardcoded a stricter `min_points = 3L` than the Rust core's actual minimum of 2. Lowered its default to `2L` to match every other binding.
 * Fixed `install_gpu()` segfaulting: it overwrote the currently-loaded shared library in place (`file.copy(overwrite = TRUE)`), which can corrupt a still memory-mapped file and crash later when an unfaulted page is read back from the now-modified file on disk. It now installs via a same-directory temp file plus an atomic `file.rename()`.
 
-# rfastlowess 3.2.1
+## rfastlowess 3.2.1
 
-## Added
+### Added
 
 * Added `dev/bump_version.py --version X.Y.Z` to bump every crate/binding's version files, `CITATION.cff`, and the Spack recipe in one pass (supports `--dry-run`); now also bumps `Project.toml`'s `fastlowess_jll` compat floor (safe pre-publish since `make julia-dev`/CI relax it to an OR-list at test-time).
 * Added an optional `commit` input to every release workflow's `workflow_dispatch` trigger, to pin the built commit for manual runs.
 * Added an `aarch64-pc-windows-gnullvm` linker entry to the root `.cargo/config.toml`, matching the existing `x86_64-pc-windows-gnu` one; makes local arm64 Windows builds work without a manual env var.
 
-## Changed
+### Changed
 
 * Added four new pins to `dev/check_pinned_versions.py`: R's `rextendr`/`roxygen2` versions and the vendored KaTeX CDN version in both Rust crates.
 * Changed `check-versions.yml` to open/update a GitHub issue instead of failing CI when a pin goes stale or unreachable.
 
-## Fixed
+### Fixed
 
 * Fixed a handful of `R²`/`O(n²)` Unicode superscripts the earlier ASCII-fication pass missed (added/edited after it ran) — R tests and several `lowess` crate doc-comments — replaced with `R2`/`O(n^2)`.
 * Fixed `release-conda.yml`'s `sed` patterns for the feedstock's new rattler-build `recipe/recipe.yaml` format, removing now-dead R-package-name-fix/Python-dependency-injection/`build_r.sh` steps.
@@ -100,15 +104,15 @@
 * Fixed every binding's/crate's docs and doc-comments describing `LowessResult.x` (and equivalents) as "Sorted x values"; it's actually returned in the same order as the input `x` (the algorithm sorts internally, then un-sorts every output field back to the original order). Also strengthened Python's `test_unsorted_input` to assert this instead of only checking output length.
 * Fixed `.github/dependabot.yml`'s `cargo` entry for `/bindings/r/src`, which could never succeed: its `fastLowess = { path = "vendor/fastLowess" }` path dependency is only committed as `vendor.tar.xz`, never as loose files Dependabot can read. Removed the entry and added `extendr-api`'s version to `dev/check_pinned_versions.py` instead, which also uncovered and fixed a version-comparison bug there: comparing raw tuples treated a shorthand pin like `"0.9"` as older than `"0.9.0"` due to tuple-length tiebreaking; now padded to equal length first.
 
-# rfastlowess 3.2.0
+## rfastlowess 3.2.0
 
-## Added
+### Added
 
 * Added `dev/add-readme-to-docs.py`, which auto-detects the Hugo (Go, Java) vs Starlight (Node.js, WASM) docs-site flavor and embeds `README.md` accordingly; wired into the corresponding Makefiles and `package.json` scripts.
 * Added `.github/dependabot.yml`, covering every dependency ecosystem in the repo (`github-actions`, `cargo`, `npm`, `pip`, `maven`, `gomod`). Each directory is grouped so all its updates, including majors, land in a single weekly PR.
 * Added `dev/check_pinned_versions.py` and a weekly `.github/workflows/check-versions.yml`, which check hardcoded tool/library version pins that Dependabot can't see (Corrosion's CMake `FetchContent` tag, the vendored doxygen-awesome-css theme, the Checkstyle jar, golangci-lint, and Hugo) against their latest GitHub release and fail CI if any are outdated. Read-only: it never opens PRs or edits files itself.
 
-## Changed
+### Changed
 
 * Modified `verify_snippets.py` to verify snippets and also add the output of the snippets to the markdown file.
 * Added a `large` benchmark category (n = 50000) to `benchmarks/rfastlowess.R` and `benchmarks/stats_lowess.R`, since every existing category ran in well under 100ms. Covers 4 scenarios (`large_delta_0`, `large_delta_0.1`, `large_high_iter`, `large_high_fraction`) stressing `delta`, iteration count, and fraction. `benchmarks/compare.py`'s plot grid grew from 5x2 to 7x2 to fit them.
@@ -119,7 +123,7 @@
 * Merged `vignettes/batch.Rmd`, `streaming.Rmd`, and `online.Rmd`'s unique content (When to Use guidance, merge strategy comparison) into the `@description`/`@details` roxygen docs of `Lowess()`, `StreamingLowess()`, and `OnlineLowess()`, and removed the now-redundant vignettes and their orphaned `gap_handling.svg`/`online_comparison.svg` diagrams.
 * Standardized R documentation: consolidated README setup content and parameter guidance, renamed the batch-adapter heading, replaced flowcharts with decision tables, standardized API examples and page structure, and converted superscripts to ASCII.
 
-## Fixed
+### Fixed
 
 * Fixed `docs.yml` triggering GitHub's "pages build and deployment" once per docs job; per-language jobs now upload artifacts, and a single final `deploy` job pushes to `gh-pages` once per run.
 * Fixed `docs.yml`'s reliance on GitHub's legacy branch-based Pages deployment, which auto-triggered an unpinned "pages build and deployment" job on every `gh-pages` push. The former `deploy` job is now `build` (still pushes `_site` to `gh-pages` as a cache); publishing now goes through `actions/upload-pages-artifact` and a new `deploy` job using `actions/deploy-pages`. Requires the repo's Pages source set to "GitHub Actions".
@@ -133,15 +137,15 @@
 * Fixed the genomics vignette by fitting the current example data before plotting.
 * Fixed the real-time vignette Update Modes example by feeding data to the model and plotting its results.
 
-# rfastlowess 3.1.0
+## rfastlowess 3.1.0
 
-## Added
+### Added
 
 * Added a GitHub Pages landing page at the repository root, built from `README.md` via pandoc and deployed by `docs.yml`.
 * Added a GitHub workflow for running validation scripts.
 * Added `lenght` gaurds for extra arguments.
 
-## Changed
+### Changed
 
 * Split the monolithic `.github/workflows/ci.yml` into seven per-language workflow files: `ci-rust.yml`, `ci-python.yml`, `ci-julia.yml`, `ci-nodejs.yml`, `ci-wasm.yml`, `ci-cpp.yml`, and `ci-r.yml`. Each file carries the relevant `ci` (multi-OS matrix), `asan`, and `gpu` jobs for its language.
 * Each crate/binding sub-Makefile now runs `dev/verify_snippets.py --lang <lang>` for its own language as the final step of `make default`. The root `docs-test` target remains as a convenience to run all languages at once.
@@ -154,7 +158,7 @@
 * `make r` (`default:`) now runs `R CMD INSTALL $(R_DIR)` directly; R's `configure` script handles Rust compilation from the committed `vendor.tar.xz`. The full dev workflow moves to `make r-dev`.
 * Updated the R README to be package-specific instead of using the generic shared README.
 
-## Fixed
+### Fixed
 
 * Fixed `.cargo/config.toml` hardcoding absolute `c:/rtools45/...` paths for the `x86_64-pc-windows-gnu` linker and ar tool. Replaced with bare tool names resolved via `PATH`, matching the existing fix in `bindings/r/src/cargo-config.toml`.
 * Fixed Windows arm64 (R-Universe) build: `ar x` without a member name correctly resolves long-name archive entries (>16 chars stored as `/<offset>`); named extraction silently fails for such entries. Used `objcopy --remove-section=.idata$4` on each extracted `.dll` stub to strip the invalid relocations that lld 19 rejects, then `ar r` to re-insert.
@@ -163,9 +167,9 @@
 * Fixed CRAN Windows build (`cannot find -lgcc_eh`): the Rtools gcc lib directory is not writable on CRAN's server, and config-file `rustflags` does not reach build-script linker invocations. `Makevars.win` creates an empty stub via `touch` in `$(TARGET_DIR)/libgcc_mock/` and passes `LIBRARY_PATH` inline on `cargo build`. The path is resolved to an absolute path via `$(pwd)` at shell execution time — a relative path silently fails because Cargo invokes GCC to link build scripts from its own temp directory, not from `src/`.
 * Fixed `Lowess(fraction = 0.3, 4)` incorrectly succeeding: `reject_extra_positional_args()` counted unnamed arguments but did not check their position, so a single unnamed arg in any non-first slot passed validation. The check now rejects any unnamed argument that is not in position 1.
 
-# rfastlowess 3.0.0
+## rfastlowess 3.0.0
 
-## Added
+### Added
 
 * Exposed a `backend` option (`"cpu"` default, `"gpu"`) on `Lowess`, gated behind an opt-in `gpu` Cargo feature not enabled in CRAN/Bioconductor releases. Run `install_gpu()` to download a prebuilt GPU library (requires restarting R), or build locally with `make -f bindings/r/Makefile WITH_GPU=1`.
 * Introduced S3 generics `fit()`, `process_chunk()`, `finalize()`, and `add_point()`, replacing the previous list-closure API.
@@ -173,11 +177,11 @@
 * Added a `reject_extra_positional_args()` helper to reject extra unnamed arguments.
 * Added `See: ...` cross-reference links after option headings in the R API docs, pointing to the corresponding user guide.
 
-## Fixed
+### Fixed
 
 * Fixed incorrect URLs in R binding docs.
 
-## Changed
+### Changed
 
 * Removed `dev/isolate_cargo.py`, `dev/check_root_cargo.py`, `dev/fix_doc_snippets.py`, and `check_js_licenses.js` — workspace isolation, doc-snippet transformation, and license checks are no longer needed.
 * Split the monolithic root `Makefile` into per-crate/binding sub-Makefiles (e.g. `crates/lowess/Makefile`, `bindings/r/Makefile`), each invokable directly via `make -f path/Makefile`. The root `Makefile` now only aggregates (`docs`, `check-msrv`, `all*`).
@@ -192,13 +196,13 @@
 * Split Streaming/Online content from the R API reference into dedicated pages, moved tutorials into the user-guide use-cases section, and standardized API examples with expected output.
 * Extended `dev/verify_snippets.py` to execute R code chunks in vignettes.
 
-# rfastlowess 2.0.0
+## rfastlowess 2.0.0
 
-## Added
+### Added
 
 * Added `custom_weights` parameter to `fit(Lowess, )`. Accepts a numeric vector of non-negative per-observation weights. Batch only.
 
-## Changed
+### Changed
 
 * Breaking change: Renamed all public API method and option names from camelCase to snake_case across every binding and all documentation. The public APIs for C++, Node.js, and WASM have changed.
 * Converted all documentation tables to compact single-space format.
@@ -211,9 +215,9 @@
 * Major documentation improvements.
 * Breaking change: Replaced `$add_points(x, y)` (vector inputs returning a list result) on `OnlineLowess` with `$add_point(x, y)` (scalar inputs returning `numeric` or `NULL`). The method now processes one point at a time and returns `NULL` until enough points have been accumulated.
 
-# rfastlowess 1.3.0
+## rfastlowess 1.3.0
 
-## Added
+### Added
 
 * Added prerequisites for different bindings and platforms to `CONTRIBUTING.md`
 * Updated `docs/assets/diagrams/lowess_smoothing_concept.svg` to correctly illustrate LOWESS concepts (robustness iterations, bisquare re-weighting, outlier downweighting) instead of the generic LOESS algorithm it previously depicted.
@@ -227,13 +231,13 @@
 * Added automatic copying of shared tests from the project root into the R package within `dev/prepare_cran.sh`, ensuring `R CMD build` is self-contained.
 * Added direct `extendr` wrapper coverage tests plus extra validation-path tests in the R package, lifting `covr::package_coverage()` to 100% and clearing the package-level `pkgcheck`/`goodpractice` coverage complaints.
 
-## Changed
+### Changed
 
 * Refactored the R binding validation helpers to reuse `validate_common_args()` and `coerce_nullable()` in production code, split `validate_params()` into smaller helper validators, and consolidated duplicated constructor parameter documentation with `@inheritParams` before regenerating the Rd files.
 * Updated MSRV to 1.89 to access the significant improvements made in `wide` since version 0.7.
 * Abides by new rOpenSci standards.
 
-## Fixed
+### Fixed
 
 * Fixed R ASAN tests failing to compile vignettes by passing `--no-build-vignettes` to `rcmdcheck`.
 * Upgraded ASAN test environment to use modern `rocker/r-devel-san:latest` image and `RDscript` to resolve outdated `readelf` warnings.
@@ -256,9 +260,9 @@
 * Fixed compilation error by providing the `Result` alias that was removed from `extendr_api::prelude` in `0.9.0`.
 * Fixed the remaining SRR/pkgcheck findings in the R package by removing dead internal helper paths, reducing `validate_params()` cyclomatic complexity, eliminating duplicated roxygen parameter blocks, and covering the generated `extendr-wrappers.R` dispatch paths.
 
-# rfastlowess 1.2.0
+## rfastlowess 1.2.0
 
-## Added
+### Added
 
 * Added new tests.
 * Added a reference to the `CONTRIBUTING.md` file.
@@ -266,52 +270,52 @@
 * Added test coverage evaluation.
 * Added missing srr tags.
 
-## Changed
+### Changed
 
 * Removed the `coerce_params` dead code.
 * Spread srr tags to different files and removed extra tags from `srr-stats-standards.R`.
 
-## Fixed
+### Fixed
 
 * Fixed project logo.
 
-# rfastlowess 1.0.0
+## rfastlowess 1.0.0
 
-## Added
+### Added
 
 * Added `mean` scaling method (Mean Absolute Deviation)
 * Implemented `print` and `plot` methods for `LowessResult` objects
 * Added srr tags
 
-## Changed
+### Changed
 
 * Return results as `LowessResult` S3 objects instead of raw vectors
 
-# rfastlowess 0.99.9
+## rfastlowess 0.99.9
 
-## Changed
+### Changed
 
 * Bump rust version to 1.88 for better stability
 * Change function-based builder pattern in the bindings to class-based builder pattern, allowing true streaming and online processing
 * Improve API docs
 * Package is now available on conda-forge (r-rfastlowess)
 
-# rfastlowess 0.99.7
+## rfastlowess 0.99.7
 
-## Fixed
+### Fixed
 
 * Fix README file links
 * Fix Makefile bug with R versioning
 
-# rfastlowess 0.99.6
+## rfastlowess 0.99.6
 
-## Fixed
+### Fixed
 
 * Fix README file formats and links
 
-# rfastlowess 0.99.5
+## rfastlowess 0.99.5
 
-## Changed
+### Changed
 
 * Reduced package size significantly by removing unnecessary dev files and docs from the final package.
 * Implemented comprehensive Cargo workspace inheritance pattern
@@ -324,15 +328,15 @@
 * Created unified `.gitignore` for all crates/packages
 * Added comprehensive badges from all packages
 
-# rfastlowess 0.99.2
+## rfastlowess 0.99.2
 
-## Changed
+### Changed
 
 * Prepared package for rOpenSci Software Peer Review
 * Renamed main functions to avoid conflicts with base R:
 * Updated documentation to reflect new API and rOpenSci guidelines
 
-## Added
+### Added
 
 * Documentation website using `pkgdown` with automated deployment
 * Comprehensive function documentation with examples and cross-references
@@ -341,68 +345,68 @@
 * Expanded test suite achieving >96% coverage
 * Codecov CI workflow and badge
 
-## Fixed
+### Fixed
 
 * Documentation URLs
 * Package startup messages
 * `pkgcheck` workflow to run on host runner
 
-# rfastlowess 0.99.1
+## rfastlowess 0.99.1
 
-## Changed
+### Changed
 
 * Modified package for Bioconductor submission
 
-# rfastlowess 0.99.0
+## rfastlowess 0.99.0
 
-## Added
+### Added
 
 * Support for new features in `fastLowess` v0.4.0, including `NoBoundary` boundary policy and `MAD`/`MAR` scaling methods
 
-## Changed
+### Changed
 
 * Changed license from AGPL-3.0-or-later to dual MIT OR Apache-2.0
 * Updated documentation
 
-# rfastlowess 0.4.0
+## rfastlowess 0.4.0
 
-## Added
+### Added
 
 * Support for new features in `fastLowess` v0.4.0
 
-## Changed
+### Changed
 
 * Changed license from AGPL-3.0-or-later to dual MIT OR Apache-2.0
 * Updated documentation
 
-# rfastlowess 0.3.0
+## rfastlowess 0.3.0
 
-## Added
+### Added
 
 * Option to install from R-universe without Rust
 
-## Changed
+### Changed
 
 * Updated to `fastLowess` v0.3.0 and `lowess` v0.6.0
 * Updated cross-validation API
 
-## Fixed
+### Fixed
 
 * Automated vendor checksum fixing for CI builds
 
-# rfastlowess 0.2.0
+## rfastlowess 0.2.0
 
-## Added
+### Added
 
 * Support for new features in `fastLowess` v0.2.0
 
-## Changed
+### Changed
 
 * Improved documentation
 
-# rfastlowess 0.1.0
+## rfastlowess 0.1.0
 
-## Added
+### Added
 
 * R binding for `fastLowess`
 

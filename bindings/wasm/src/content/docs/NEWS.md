@@ -2,25 +2,29 @@
 title: News
 ---
 <!-- markdownlint-disable MD024 MD025 -->
-# fastlowess-wasm (development version)
+# Changelog
 
-## Added
+This changelog includes end-user changes only. For internal development notes, see the [repository changelog](https://github.com/thisisamirv/lowess-project/blob/main/CHANGELOG.md).
+
+## fastlowess-wasm (development version)
+
+### Added
 
 * Added self-contained R and original Cleveland LOWESS references under `validation/reference/`, with provenance, dependency, precision, and build notes.
 * Added grouped `outputs` arrays and nested `cv` option objects for batch, streaming, online, and prediction configuration while preserving legacy fields.
 
-## Changed
+### Changed
 
 * Updated the vendored `doxygen-awesome-css` theme to v2.5.0 and the Hugo docs build to v0.166.0.
 
-## Fixed
+### Fixed
 
 * Skip comparison snippets when the optional `statsmodels` dependency is unavailable instead of failing verification.
 * Fixed C++ release CI staging the tracked Spack recipe despite the repository's broad `spack/` ignore rule.
 
-# fastlowess-wasm 4.1.0
+## fastlowess-wasm 4.1.0
 
-## Added
+### Added
 
 * Added musl release binaries for Python, C++, Go, and Julia.
 * Added bundled native libraries for the Java binding across 8 platforms, with runtime musl detection and auto-extraction.
@@ -28,20 +32,20 @@ title: News
 * Added `return_derivative` to `SmoothOptions`, `StreamingOptions`, and `OnlineOptions`.
 * Added `return_se`/`confidence_intervals`/`prediction_intervals` to `StreamingOptions` and `OnlineOptions`; Online requires `update_mode: "full"`.
 
-## Changed
+### Changed
 
 * Hoisted fully-qualified imports to top-level `use` statements across crates and bindings.
 * Updated `oxlint` dev dependency to v1.82.
 
-## Fixed
+### Fixed
 
 * `dev/bump_version.py` now also updates the Go module's `/vN` major-version-suffix path across `go.mod` files, doc snippets, the doc-snippet runner, and README/docs badges whenever a version bump crosses a major version boundary, so this doesn't regress on the next major release.
 * `dev/bump_version.py` now also updates the Maven dependency example version in `bindings/java/docs/modules/ROOT/pages/introduction/installation.adoc`, which was previously left stale after a version bump.
 * Changed the `iterations` default for `OnlineLowess` from `3` to `0` across every binding (R, Python, Julia, C++, Go, Java, Node.js, WASM), matching the default `update_mode = "incremental"` non-robust single-point fit; robustness iterations now require `update_mode = "full"`.
 
-# fastlowess-wasm 4.0.0
+## fastlowess-wasm 4.0.0
 
-## Added
+### Added
 
 * Added an "Ideas for Contribution" section to `CONTRIBUTING.md`, listing concrete Batch/Streaming/Online adapter feature gaps (out-of-sample prediction, exposing local slope/derivative, adaptive fraction selection, STL-style decomposition, bootstrap intervals, concurrent chunk processing, checkpointable streaming state, populating `OnlineOutput.standard_error`, time-based window eviction, configurable warm-up) to invite contributions.
 * `dev/bump_version.py` now also updates the example crate version in `CONTRIBUTING.md`'s "Individual crate Cargo.toml" snippet.
@@ -50,7 +54,7 @@ title: News
 * Added a `return_sorted` option to `Lowess`'s `SmoothOptions`.
 * Added a `missing` option to `SmoothOptions`, `StreamingSmoothOptions`, and `OnlineSmoothOptions`.
 
-## Changed
+### Changed
 
 * Go doc-snippet verification now batch-builds every snippet in one `go build ./...` under a persistent module instead of one `go run` per snippet, then runs the binaries concurrently; `verify_snippets.py`'s `BATCH_RUNNERS` dispatch (previously Rust-only) now covers `go` too.
 * C++ doc-snippet verification now resolves the compiler/library/MSVC setup once, then compiles+links+runs every snippet concurrently instead of one at a time. Fixed an MSVC race from concurrent `cl.exe` invocations colliding on a shared `snippet.obj` by giving each snippet its own `/Fo` output and `cwd`.
@@ -58,26 +62,26 @@ title: News
 * Improved API documentation for WASM significantly.
 * Updated WASM documentation to show the dynamic overlap default `chunk_size / 10`, clamped to `[1, chunk_size - 10]`, instead of a flat `500`.
 
-## Fixed
+### Fixed
 
 * Fixed `CONTRIBUTING.md` stating a stale Go prerequisite (`1.21+`, actually `1.23+` per `go.mod`/CI), an inaccurate `air` auto-install target (claimed `make r`, actually `make r-dev`), and a stale example crate version (`2.0.0`) in the Workspace Structure section.
 * Fixed stale doc-comment defaults: `StreamingOptions.overlap` stated a flat `500` instead of the dynamic `chunk_size / 10`, and `OnlineOptions.window_capacity`/`update_mode` stated `100`/`"full"` instead of `1000`/`"incremental"`.
 
-# fastlowess-wasm 3.2.1
+## fastlowess-wasm 3.2.1
 
-## Added
+### Added
 
 * Added `dev/bump_version.py --version X.Y.Z` to bump every crate/binding's version files, `CITATION.cff`, and the Spack recipe in one pass (supports `--dry-run`); now also bumps `Project.toml`'s `fastlowess_jll` compat floor (safe pre-publish since `make julia-dev`/CI relax it to an OR-list at test-time).
 * Added an optional `commit` input to every release workflow's `workflow_dispatch` trigger, to pin the built commit for manual runs.
 * Added an `aarch64-pc-windows-gnullvm` linker entry to the root `.cargo/config.toml`, matching the existing `x86_64-pc-windows-gnu` one; makes local arm64 Windows builds work without a manual env var.
 
-## Changed
+### Changed
 
 * Added four new pins to `dev/check_pinned_versions.py`: R's `rextendr`/`roxygen2` versions and the vendored KaTeX CDN version in both Rust crates.
 * Changed `check-versions.yml` to open/update a GitHub issue instead of failing CI when a pin goes stale or unreachable.
 * Updated `@astrojs/starlight` to v0.42 and `astro` to v7.3.
 
-## Fixed
+### Fixed
 
 * Fixed a handful of `R²`/`O(n²)` Unicode superscripts the earlier ASCII-fication pass missed (added/edited after it ran) — R tests and several `lowess` crate doc-comments — replaced with `R2`/`O(n^2)`.
 * Fixed `release-conda.yml`'s `sed` patterns for the feedstock's new rattler-build `recipe/recipe.yaml` format, removing now-dead R-package-name-fix/Python-dependency-injection/`build_r.sh` steps.
@@ -86,15 +90,15 @@ title: News
 * Fixed `.github/dependabot.yml`'s `cargo` entry for `/bindings/r/src`, which could never succeed: its `fastLowess = { path = "vendor/fastLowess" }` path dependency is only committed as `vendor.tar.xz`, never as loose files Dependabot can read. Removed the entry and added `extendr-api`'s version to `dev/check_pinned_versions.py` instead, which also uncovered and fixed a version-comparison bug there: comparing raw tuples treated a shorthand pin like `"0.9"` as older than `"0.9.0"` due to tuple-length tiebreaking; now padded to equal length first.
 * Fixed `astro build` failing since Astro 7 no longer bundles `@astrojs/markdown-remark` by default, which the KaTeX plugins need; added it as an explicit devDependency in both.
 
-# fastlowess-wasm 3.2.0
+## fastlowess-wasm 3.2.0
 
-## Added
+### Added
 
 * Added `dev/add-readme-to-docs.py`, which auto-detects the Hugo (Go, Java) vs Starlight (Node.js, WASM) docs-site flavor and embeds `README.md` accordingly; wired into the corresponding Makefiles and `package.json` scripts.
 * Added `.github/dependabot.yml`, covering every dependency ecosystem in the repo (`github-actions`, `cargo`, `npm`, `pip`, `maven`, `gomod`). Each directory is grouped so all its updates, including majors, land in a single weekly PR.
 * Added `dev/check_pinned_versions.py` and a weekly `.github/workflows/check-versions.yml`, which check hardcoded tool/library version pins that Dependabot can't see (Corrosion's CMake `FetchContent` tag, the vendored doxygen-awesome-css theme, the Checkstyle jar, golangci-lint, and Hugo) against their latest GitHub release and fail CI if any are outdated. Read-only: it never opens PRs or edits files itself.
 
-## Changed
+### Changed
 
 * Modified `verify_snippets.py` to verify snippets and also add the output of the snippets to the markdown file.
 * Added a `large` benchmark category (n = 50000) to `benchmarks/rfastlowess.R` and `benchmarks/stats_lowess.R`, since every existing category ran in well under 100ms. Covers 4 scenarios (`large_delta_0`, `large_delta_0.1`, `large_high_iter`, `large_high_fraction`) stressing `delta`, iteration count, and fraction. `benchmarks/compare.py`'s plot grid grew from 5x2 to 7x2 to fit them.
@@ -103,7 +107,7 @@ title: News
 * `make wasm-dev` now runs `npm update` after `npm install`, so dependencies are kept current.
 * Standardized WASM documentation: consolidated README setup content and parameter guidance, renamed the batch-adapter heading, replaced flowcharts with decision tables, standardized API examples and page structure, and converted superscripts to ASCII.
 
-## Fixed
+### Fixed
 
 * Fixed `docs.yml` triggering GitHub's "pages build and deployment" once per docs job; per-language jobs now upload artifacts, and a single final `deploy` job pushes to `gh-pages` once per run.
 * Fixed `docs.yml`'s reliance on GitHub's legacy branch-based Pages deployment, which auto-triggered an unpinned "pages build and deployment" job on every `gh-pages` push. The former `deploy` job is now `build` (still pushes `_site` to `gh-pages` as a cache); publishing now goes through `actions/upload-pages-artifact` and a new `deploy` job using `actions/deploy-pages`. Requires the repo's Pages source set to "GitHub Actions".
@@ -117,15 +121,15 @@ title: News
 * Fixed the Handling Outliers quickstart example in WASM: increased `fraction` from `0.5` to `0.7` because the six-point example otherwise fit the injected outlier exactly instead of downweighting it.
 * Capped the WASM Detecting Outliers example output at five lines.
 
-# fastlowess-wasm 3.1.0
+## fastlowess-wasm 3.1.0
 
-## Added
+### Added
 
 * Added a GitHub Pages landing page at the repository root, built from `README.md` via pandoc and deployed by `docs.yml`.
 * Added a GitHub workflow for running validation scripts.
 * Added `npm run lint` to the `Lint` step in `ci-wasm.yml`, so JavaScript source and test files are linted via `oxlint` on every CI run.
 
-## Changed
+### Changed
 
 * Split the monolithic `.github/workflows/ci.yml` into seven per-language workflow files: `ci-rust.yml`, `ci-python.yml`, `ci-julia.yml`, `ci-nodejs.yml`, `ci-wasm.yml`, `ci-cpp.yml`, and `ci-r.yml`. Each file carries the relevant `ci` (multi-OS matrix), `asan`, and `gpu` jobs for its language.
 * Each crate/binding sub-Makefile now runs `dev/verify_snippets.py --lang <lang>` for its own language as the final step of `make default`. The root `docs-test` target remains as a convenience to run all languages at once.
@@ -137,21 +141,21 @@ title: News
 * Replace the outdated `jetli/wasm-pack-action` workflow with `taiki-e/install-action`.
 * Updated the WASM README to be package-specific instead of using the generic shared README.
 
-## Fixed
+### Fixed
 
 * Fixed `.cargo/config.toml` hardcoding absolute `c:/rtools45/...` paths for the `x86_64-pc-windows-gnu` linker and ar tool. Replaced with bare tool names resolved via `PATH`, matching the existing fix in `bindings/r/src/cargo-config.toml`.
 
-# fastlowess-wasm 3.0.0
+## fastlowess-wasm 3.0.0
 
-## Added
+### Added
 
 * Added `See: ...` cross-reference links after option headings in the WASM API docs, pointing to the corresponding user guide.
 
-## Fixed
+### Fixed
 
 * Fixed `OnlineLowess.add_point()` returning `undefined` instead of `null` when the sliding window has not yet accumulated enough points.
 
-## Changed
+### Changed
 
 * Removed `dev/isolate_cargo.py`, `dev/check_root_cargo.py`, `dev/fix_doc_snippets.py`, and `check_js_licenses.js` — workspace isolation, doc-snippet transformation, and license checks are no longer needed.
 * Split the monolithic root `Makefile` into per-crate/binding sub-Makefiles (e.g. `crates/lowess/Makefile`, `bindings/r/Makefile`), each invokable directly via `make -f path/Makefile`. The root `Makefile` now only aggregates (`docs`, `check-msrv`, `all*`).
@@ -160,13 +164,13 @@ title: News
 * Updated `oxlint` to v1.79.
 * Split Streaming/Online content from the WASM API reference into dedicated pages, moved tutorials into the user-guide use-cases section, and standardized API examples with expected output.
 
-# fastlowess-wasm 2.0.0
+## fastlowess-wasm 2.0.0
 
-## Added
+### Added
 
 * Added `custom_weights` field to `LowessOptions` (passed in the options object to `smooth()`). Accepts a `Float64Array` of non-negative per-observation weights. Batch only.
 
-## Changed
+### Changed
 
 * Breaking change: Renamed all public API method and option names from camelCase to snake_case across every binding and all documentation. The public APIs for C++, Node.js, and WASM have changed.
 * Converted all documentation tables to compact single-space format.
@@ -182,9 +186,9 @@ title: News
 * Breaking change: Renamed the `update(x: number, y: number)` method on `OnlineLowess` to `add_point(x: number, y: number)`.
 * Updated `oxlint` dependency to v1.73.
 
-# fastlowess-wasm 1.3.0
+## fastlowess-wasm 1.3.0
 
-## Added
+### Added
 
 * Added prerequisites for different bindings and platforms to `CONTRIBUTING.md`
 * Updated `docs/assets/diagrams/lowess_smoothing_concept.svg` to correctly illustrate LOWESS concepts (robustness iterations, bisquare re-weighting, outlier downweighting) instead of the generic LOESS algorithm it previously depicted.
@@ -194,11 +198,11 @@ title: News
 * Added sanitizer check for all bindings and crates.
 * Upgraded `oxlint` to 1.63.
 
-## Changed
+### Changed
 
 * Updated MSRV to 1.89 to access the significant improvements made in `wide` since version 0.7.
 
-## Fixed
+### Fixed
 
 * Fixed R ASAN tests failing to compile vignettes by passing `--no-build-vignettes` to `rcmdcheck`.
 * Upgraded ASAN test environment to use modern `rocker/r-devel-san:latest` image and `RDscript` to resolve outdated `readelf` warnings.
@@ -208,9 +212,9 @@ title: News
 * Fixed deprecated JavaScript license-audit warnings by replacing the transient `npx license-checker` usage in the `Makefile` with a repo-local Node.js license summary script that still fails on GPL-family licenses.
 * Linted the source code.
 
-# fastlowess-wasm 1.2.0
+## fastlowess-wasm 1.2.0
 
-## Added
+### Added
 
 * Added advanced License Compliance check.
 * Added advanced dependency check.
@@ -218,60 +222,60 @@ title: News
 * Added advanced lock file check.
 * Added WASM size check.
 
-## Changed
+### Changed
 
 * Switched from `eslint` to `oxlint` to remove vulnerabilities.
 
-## Fixed
+### Fixed
 
 * Fixed project logo.
 * Fixed vulnerabilities.
 * Fixed license.
 
-# fastlowess-wasm 1.0.0
+## fastlowess-wasm 1.0.0
 
-## Added
+### Added
 
 * Added `mean` scaling method (Mean Absolute Deviation)
 * Added an `init_panic_hook` function in `src/lib.rs` to be called by JS users during startup.
 * Added JSDoc documentation to `lib.rs`
 * Refactored the verbose `Reflect::get` boilerplate using `serde` and `serde-wasm-bindgen`. This allows us to define a Rust struct `SmoothOptions` and have `wasm-bindgen` automatically unpack the JS object into it.
 
-## Changed
+### Changed
 
 * Updated `eslint/js`, `eslint`, `globals`, and `eslint-plugin-html` packages to their latest versions.
 
-# fastlowess-wasm 0.99.9
+## fastlowess-wasm 0.99.9
 
-## Changed
+### Changed
 
 * Bump rust version to 1.88 for better stability
 * Change function-based builder pattern in the bindings to class-based builder pattern, allowing true streaming and online processing
 * Improve API docs
 * Package is now available on npm (fastlowess-wasm)
 
-# fastlowess-wasm 0.99.8
+## fastlowess-wasm 0.99.8
 
-## Added
+### Added
 
 * Initial implementation
 
-# fastlowess-wasm 0.99.7
+## fastlowess-wasm 0.99.7
 
-## Fixed
+### Fixed
 
 * Fix README file links
 * Fix Makefile bug with R versioning
 
-# fastlowess-wasm 0.99.6
+## fastlowess-wasm 0.99.6
 
-## Fixed
+### Fixed
 
 * Fix README file formats and links
 
-# fastlowess-wasm 0.99.5
+## fastlowess-wasm 0.99.5
 
-## Changed
+### Changed
 
 * Reduced package size significantly by removing unnecessary dev files and docs from the final package.
 * Implemented comprehensive Cargo workspace inheritance pattern

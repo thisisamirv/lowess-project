@@ -1,14 +1,18 @@
 <!-- markdownlint-disable MD024 MD025 -->
-# lowess (development version)
+# Changelog
 
-## Added
+This changelog includes end-user changes only. For internal development notes, see the [repository changelog](https://github.com/thisisamirv/lowess-project/blob/main/CHANGELOG.md).
+
+## lowess (development version)
+
+### Added
 
 * Added self-contained R and original Cleveland LOWESS references under `validation/reference/`, with provenance, dependency, precision, and build notes.
 * Added `LowessBuilder::outputs(names)` as a grouped replacement for the individual output toggles. Unknown names are collected and reported together by `.build()`.
 * Added grouped cross-validation configuration through `CVBuilder` and `.cv(...)`. `CVBuilder` is in the prelude; the internal `CVOptions` result type remains at the crate root.
 * Added `PredictBuilder::outputs(names)` in both Rust crates, supporting `"se"` and `"derivative"` as a grouped replacement for `.return_se()` and `.return_derivative()`.
 
-## Changed
+### Changed
 
 * Updated the vendored `doxygen-awesome-css` theme to v2.5.0 and the Hugo docs build to v0.166.0.
 * Removed 62 redundant `#[doc(hidden)]` attributes from private engine/adapter modules; public-API annotations remain unchanged.
@@ -16,7 +20,7 @@
 * Replaced the `iteration_loop_with_callback` clippy suppression with a typed options bundle for its iteration controls and callbacks.
 * Marked `WeightFunction` as non-exhaustive and made GPU handling reject unsupported future kernels explicitly.
 
-## Fixed
+### Fixed
 
 * Skip comparison snippets when the optional `statsmodels` dependency is unavailable instead of failing verification.
 * Fixed C++ release CI staging the tracked Spack recipe despite the repository's broad `spack/` ignore rule.
@@ -34,9 +38,9 @@
 * Matched Cleveland/R's delta interpolation order (`alpha * y1 + (1 - alpha) * y0`) so interpolated roundoff residuals preserve the correct robustness-cycle phase.
 * Preserved sparse-fit robustness cycles found by `quickcheck`; long-iteration comparisons allow bounded floating-point drift while fixed regressions pin each branch.
 
-# lowess 4.1.0
+## lowess 4.1.0
 
-## Added
+### Added
 
 * Added musl release binaries for Python, C++, Go, and Julia.
 * Added bundled native libraries for the Java binding across 8 platforms, with runtime musl detection and auto-extraction.
@@ -45,13 +49,13 @@
 * Added `return_derivative` to the Batch, Streaming, and Online builders, exposing each point's local slope via `LowessResult::derivative` or `OnlineOutput::derivative`.
 * Added out-of-sample prediction to Batch via `.retain_model(true)` and `Predict::call()`, with configurable standard errors, intervals, derivative output, and extrapolation.
 
-## Changed
+### Changed
 
 * Hoisted fully-qualified imports to top-level `use` statements across crates and bindings.
 * Flattened the `tests/lowess/` directories into `tests/` directly: each test file is now its own independent integration test binary instead of a submodule of a shared `main.rs`. No test behavior changes.
 * Bumped the vendored KaTeX CDN version from `0.18.5` to `0.18.7`, updating SRI hashes to match.
 
-## Fixed
+### Fixed
 
 * `dev/bump_version.py` now also updates the Go module's `/vN` major-version-suffix path across `go.mod` files, doc snippets, the doc-snippet runner, and README/docs badges whenever a version bump crosses a major version boundary, so this doesn't regress on the next major release.
 * `dev/bump_version.py` now also updates the Maven dependency example version in `bindings/java/docs/modules/ROOT/pages/introduction/installation.adoc`, which was previously left stale after a version bump.
@@ -66,9 +70,9 @@
 * Fixed the WLS solver silently zeroing the slope for small-magnitude `x`: `fit_wls` used an absolute degeneracy tolerance (`1e-7`) on the centred weighted x-variance, so any dataset whose x-range was below roughly `1e-4` was fitted as a local mean instead of a local line (interior derivatives came out as `0`). The tolerance is now relative to the design's own x-scale. The same absolute-tolerance defect in the `fraction >= 1.0` global OLS path (`fit_ols` and `ols_std_errors`) is fixed the same way.
 * Fixed k-fold cross-validation aggregating the mean of per-fold RMSEs instead of pooling: it now pools every test point's squared error and takes one square root, matching LOOCV. Previously `k`-fold with `k == n` (identical to leave-one-out) returned the mean absolute error instead of the RMSE and disagreed with `cv_method("loocv")`.
 
-# lowess 4.0.0
+## lowess 4.0.0
 
-## Added
+### Added
 
 * Added an "Ideas for Contribution" section to `CONTRIBUTING.md`, listing concrete Batch/Streaming/Online adapter feature gaps (out-of-sample prediction, exposing local slope/derivative, adaptive fraction selection, STL-style decomposition, bootstrap intervals, concurrent chunk processing, checkpointable streaming state, populating `OnlineOutput.standard_error`, time-based window eviction, configurable warm-up) to invite contributions.
 * `dev/bump_version.py` now also updates the example crate version in `CONTRIBUTING.md`'s "Individual crate Cargo.toml" snippet.
@@ -78,7 +82,7 @@
 * Added a `missing` option (`"error"` default, or `"drop"`) controlling non-finite (NaN/Inf) `x`/`y` handling: Batch/Streaming drop non-finite rows (and matching `custom_weights`); Online skips non-finite points, returning `Ok(None)`. Length mismatches always error.
 * Added `release-rust.yml` to publish to crates.io on release.
 
-## Changed
+### Changed
 
 * Go doc-snippet verification now batch-builds every snippet in one `go build ./...` under a persistent module instead of one `go run` per snippet, then runs the binaries concurrently; `verify_snippets.py`'s `BATCH_RUNNERS` dispatch (previously Rust-only) now covers `go` too.
 * C++ doc-snippet verification now resolves the compiler/library/MSVC setup once, then compiles+links+runs every snippet concurrently instead of one at a time. Fixed an MSVC race from concurrent `cl.exe` invocations colliding on a shared `snippet.obj` by giving each snippet its own `/Fo` output and `cwd`.
@@ -86,25 +90,25 @@
 * Breaking change: `Streaming::convert()` no longer resolves `overlap` to a flat `500` when unset; it now resolves dynamically to `chunk_size / 10` (clamped to `[1, chunk_size - 10]`). This affects callers relying on the previous flat default with a customized `chunk_size`.
 * Improved API documentation for the lowess crate significantly.
 
-## Fixed
+### Fixed
 
 * Fixed `CONTRIBUTING.md` stating a stale Go prerequisite (`1.21+`, actually `1.23+` per `go.mod`/CI), an inaccurate `air` auto-install target (claimed `make r`, actually `make r-dev`), and a stale example crate version (`2.0.0`) in the Workspace Structure section.
 
-# lowess 3.2.1
+## lowess 3.2.1
 
-## Added
+### Added
 
 * Added `dev/bump_version.py --version X.Y.Z` to bump every crate/binding's version files, `CITATION.cff`, and the Spack recipe in one pass (supports `--dry-run`); now also bumps `Project.toml`'s `fastlowess_jll` compat floor (safe pre-publish since `make julia-dev`/CI relax it to an OR-list at test-time).
 * Added an optional `commit` input to every release workflow's `workflow_dispatch` trigger, to pin the built commit for manual runs.
 * Added an `aarch64-pc-windows-gnullvm` linker entry to the root `.cargo/config.toml`, matching the existing `x86_64-pc-windows-gnu` one; makes local arm64 Windows builds work without a manual env var.
 
-## Changed
+### Changed
 
 * Added four new pins to `dev/check_pinned_versions.py`: R's `rextendr`/`roxygen2` versions and the vendored KaTeX CDN version in both Rust crates.
 * Changed `check-versions.yml` to open/update a GitHub issue instead of failing CI when a pin goes stale or unreachable.
 * Bumped the vendored KaTeX CDN version from `0.18.4` to `0.18.5`, updating SRI hashes to match.
 
-## Fixed
+### Fixed
 
 * Fixed a handful of `R²`/`O(n²)` Unicode superscripts the earlier ASCII-fication pass missed (added/edited after it ran) — R tests and several `lowess` crate doc-comments — replaced with `R2`/`O(n^2)`.
 * Fixed `release-conda.yml`'s `sed` patterns for the feedstock's new rattler-build `recipe/recipe.yaml` format, removing now-dead R-package-name-fix/Python-dependency-injection/`build_r.sh` steps.
@@ -112,15 +116,15 @@
 * Fixed every binding's/crate's docs and doc-comments describing `LowessResult.x` (and equivalents) as "Sorted x values"; it's actually returned in the same order as the input `x` (the algorithm sorts internally, then un-sorts every output field back to the original order). Also strengthened Python's `test_unsorted_input` to assert this instead of only checking output length.
 * Fixed `.github/dependabot.yml`'s `cargo` entry for `/bindings/r/src`, which could never succeed: its `fastLowess = { path = "vendor/fastLowess" }` path dependency is only committed as `vendor.tar.xz`, never as loose files Dependabot can read. Removed the entry and added `extendr-api`'s version to `dev/check_pinned_versions.py` instead, which also uncovered and fixed a version-comparison bug there: comparing raw tuples treated a shorthand pin like `"0.9"` as older than `"0.9.0"` due to tuple-length tiebreaking; now padded to equal length first.
 
-# lowess 3.2.0
+## lowess 3.2.0
 
-## Added
+### Added
 
 * Added `dev/add-readme-to-docs.py`, which auto-detects the Hugo (Go, Java) vs Starlight (Node.js, WASM) docs-site flavor and embeds `README.md` accordingly; wired into the corresponding Makefiles and `package.json` scripts.
 * Added `.github/dependabot.yml`, covering every dependency ecosystem in the repo (`github-actions`, `cargo`, `npm`, `pip`, `maven`, `gomod`). Each directory is grouped so all its updates, including majors, land in a single weekly PR.
 * Added `dev/check_pinned_versions.py` and a weekly `.github/workflows/check-versions.yml`, which check hardcoded tool/library version pins that Dependabot can't see (Corrosion's CMake `FetchContent` tag, the vendored doxygen-awesome-css theme, the Checkstyle jar, golangci-lint, and Hugo) against their latest GitHub release and fail CI if any are outdated. Read-only: it never opens PRs or edits files itself.
 
-## Changed
+### Changed
 
 * Modified `verify_snippets.py` to verify snippets and also add the output of the snippets to the markdown file.
 * Added a `large` benchmark category (n = 50000) to `benchmarks/rfastlowess.R` and `benchmarks/stats_lowess.R`, since every existing category ran in well under 100ms. Covers 4 scenarios (`large_delta_0`, `large_delta_0.1`, `large_high_iter`, `large_high_fraction`) stressing `delta`, iteration count, and fraction. `benchmarks/compare.py`'s plot grid grew from 5x2 to 7x2 to fit them.
@@ -130,7 +134,7 @@
 * Removed the GPU acceleration section from the API docs because the lowess crate has no GPU feature.
 * Updated `Diagnostics` display output to use `R2` instead of the Unicode superscript form.
 
-## Fixed
+### Fixed
 
 * Fixed `docs.yml` triggering GitHub's "pages build and deployment" once per docs job; per-language jobs now upload artifacts, and a single final `deploy` job pushes to `gh-pages` once per run.
 * Fixed `docs.yml`'s reliance on GitHub's legacy branch-based Pages deployment, which auto-triggered an unpinned "pages build and deployment" job on every `gh-pages` push. The former `deploy` job is now `build` (still pushes `_site` to `gh-pages` as a cache); publishing now goes through `actions/upload-pages-artifact` and a new `deploy` job using `actions/deploy-pages`. Requires the repo's Pages source set to "GitHub Actions".
@@ -140,14 +144,14 @@
 * Fixed the Handling Outliers quickstart example in the lowess crate: increased `fraction` from `0.5` to `0.7` because the six-point example otherwise fit the injected outlier exactly instead of downweighting it.
 * Capped the lowess crate Detecting Outliers example output at five lines.
 
-# lowess 3.1.0
+## lowess 3.1.0
 
-## Added
+### Added
 
 * Added a GitHub Pages landing page at the repository root, built from `README.md` via pandoc and deployed by `docs.yml`.
 * Added a GitHub workflow for running validation scripts.
 
-## Changed
+### Changed
 
 * Split the monolithic `.github/workflows/ci.yml` into seven per-language workflow files: `ci-rust.yml`, `ci-python.yml`, `ci-julia.yml`, `ci-nodejs.yml`, `ci-wasm.yml`, `ci-cpp.yml`, and `ci-r.yml`. Each file carries the relevant `ci` (multi-OS matrix), `asan`, and `gpu` jobs for its language.
 * Each crate/binding sub-Makefile now runs `dev/verify_snippets.py --lang <lang>` for its own language as the final step of `make default`. The root `docs-test` target remains as a convenience to run all languages at once.
@@ -157,21 +161,21 @@
 * `make lowess` (`default:`) now only runs `cargo build`. The full dev workflow moves to `make lowess-dev`.
 * Updated the lowess crate README to be package-specific instead of using the generic shared README.
 
-## Fixed
+### Fixed
 
 * Fixed `.cargo/config.toml` hardcoding absolute `c:/rtools45/...` paths for the `x86_64-pc-windows-gnu` linker and ar tool. Replaced with bare tool names resolved via `PATH`, matching the existing fix in `bindings/r/src/cargo-config.toml`.
 
-# lowess 3.0.0
+## lowess 3.0.0
 
-## Added
+### Added
 
 * Added `See: ...` cross-reference links after option headings in the lowess crate API docs, pointing to the corresponding user guide.
 
-## Fixed
+### Fixed
 
 * Fixed `docs/api/rust.md` showing Rust enum variants instead of the string option values accepted by the API.
 
-## Changed
+### Changed
 
 * Removed `dev/isolate_cargo.py`, `dev/check_root_cargo.py`, `dev/fix_doc_snippets.py`, and `check_js_licenses.js` — workspace isolation, doc-snippet transformation, and license checks are no longer needed.
 * Split the monolithic root `Makefile` into per-crate/binding sub-Makefiles (e.g. `crates/lowess/Makefile`, `bindings/r/Makefile`), each invokable directly via `make -f path/Makefile`. The root `Makefile` now only aggregates (`docs`, `check-msrv`, `all*`).
@@ -180,9 +184,9 @@
 * Updated `wide` to v1.6.
 * Split Streaming/Online content from the lowess crate API reference into dedicated pages, moved tutorials into the user-guide use-cases section, and standardized API examples with expected output.
 
-# lowess 2.0.0
+## lowess 2.0.0
 
-## Added
+### Added
 
 * Added `iterations_used: Option<usize>` field to `OnlineOutput<T>`, reporting the number of robustness iterations performed when `UpdateMode::Full` is active. Returns `Some(0)` for the degenerate two-point linear fit and `None` when `UpdateMode::Incremental` is used.
 * Added `ParseErrors(Vec<LowessError>)` variant to `LowessError`, which collects all string-parse failures that accumulate in the builder and reports them together when `build()` is called.
@@ -192,7 +196,7 @@
 * Centralized all `impl FromStr` blocks for the seven option enums (`WeightFunction`, `BoundaryPolicy`, `ScalingMethod`, `RobustnessMethod`, `ZeroWeightFallback`, `MergeStrategy`, `UpdateMode`) directly in `api.rs`, consolidating previously scattered implementations into a single source of truth. Parse and canonical-name helpers are exposed via `lowess::internals::alias` (requires `dev` feature), allowing `fastLowess::binding_support` to delegate all string-to-enum parsing through that path.
 * Added module-level `defaults.rs` files within each sub-module (`math/`, `algorithms/`, `adapters/`) to centralize default values close to the types they govern, propagating them from a single source of truth to ensure consistency across bindings and crates.
 
-## Changed
+### Changed
 
 * Breaking change: Renamed all public API method and option names from camelCase to snake_case across every binding and all documentation. The public APIs for C++, Node.js, and WASM have changed.
 * Converted all documentation tables to compact single-space format.
@@ -214,9 +218,9 @@
 * Made the `IntoEnum<E>` trait `pub(crate)` in both `lowess` and `fastLowess`, restricting it to crate-internal use. Callers do not need to name this trait; builder methods continue to accept both enum variants and string literals unchanged.
 * Updated `wide` dependency to v1.5, `wgpu` to v30.0, and `pollster` to v1.0.
 
-# lowess 1.3.0
+## lowess 1.3.0
 
-## Added
+### Added
 
 * Added prerequisites for different bindings and platforms to `CONTRIBUTING.md`
 * Updated `docs/assets/diagrams/lowess_smoothing_concept.svg` to correctly illustrate LOWESS concepts (robustness iterations, bisquare re-weighting, outlier downweighting) instead of the generic LOESS algorithm it previously depicted.
@@ -226,11 +230,11 @@
 * Added sanitizer check for all bindings and crates.
 * Upgraded `wide` to version 1.4.
 
-## Changed
+### Changed
 
 * Updated MSRV to 1.89 to access the significant improvements made in `wide` since version 0.7.
 
-## Fixed
+### Fixed
 
 * Fixed R ASAN tests failing to compile vignettes by passing `--no-build-vignettes` to `rcmdcheck`.
 * Upgraded ASAN test environment to use modern `rocker/r-devel-san:latest` image and `RDscript` to resolve outdated `readelf` warnings.
@@ -238,66 +242,66 @@
 * Fixed accidental root `Cargo.toml` workspace isolation leaks by adding checked-in `pre-commit` and `pre-push` git hook guards that restore `Cargo.toml.bak` when present and fail loudly if required workspace members are still commented out.
 * Added a repo-local `.cargo/config.toml` that sets `CC=clang-cl` for `x86_64-pc-windows-msvc`, fixing Criterion 0.8 benchmark builds on Windows when `cc-rs` would otherwise pick `clang.exe` and fail to link `alloca`.
 
-# lowess 1.2.0
+## lowess 1.2.0
 
-## Fixed
+### Fixed
 
 * Fixed project logo.
 * Fixed documentation.
 * Fixed SRR tags.
 
-# lowess 1.1.1
+## lowess 1.1.1
 
-## Added
+### Added
 
 * Added srr tags
 
-# lowess 1.1.0
+## lowess 1.1.0
 
-## Added
+### Added
 
 * Added `Mean` scaling method (Mean Absolute Deviation)
 * Added hooks for custom fitting backends
 * Added hooks for delegating boundary handling to the executor
 
-## Fixed
+### Fixed
 
 * `FitPassFn` now returns `Result` to allow error propagation from custom fitting backends (e.g. GPU).
 * Adapters (Batch, Streaming, Online) now propagate errors from the executor instead of assuming success.
 * Fixed a bug where the `Extend` boundary policy was never applied.
 * Implemented Coordinate Centering to preserve precision during accumulation.
 
-# lowess 1.0.0
+## lowess 1.0.0
 
-## Changed
+### Changed
 
 * Refactored the constants to make the library robust safely against custom numeric types.
 * Minor improvements to the documentation.
 
-# lowess 0.99.9
+## lowess 0.99.9
 
-## Changed
+### Changed
 
 * Bump rust version to 1.88 for better stability
 * Change function-based builder pattern in the bindings to class-based builder pattern, allowing true streaming and online processing
 * Improve API docs
 
-# lowess 0.99.7
+## lowess 0.99.7
 
-## Fixed
+### Fixed
 
 * Fix README file links
 * Fix Makefile bug with R versioning
 
-# lowess 0.99.6
+## lowess 0.99.6
 
-## Fixed
+### Fixed
 
 * Fix README file formats and links
 
-# lowess 0.99.5
+## lowess 0.99.5
 
-## Changed
+### Changed
 
 * Reduced package size significantly by removing unnecessary dev files and docs from the final package.
 * Implemented comprehensive Cargo workspace inheritance pattern
@@ -310,16 +314,16 @@
 * Created unified `.gitignore` for all crates/packages
 * Added comprehensive badges from all packages
 
-## Fixed
+### Fixed
 
 * Fixed `StreamingAdapter` indexing bug that caused merged overlap points to be skipped in output
 * Simplified `StreamingAdapter` API: user now provides contiguous, non-overlapping chunks while the adapter handles internal buffering and merging
 * Standardized `OnlineLowess` default `min_points` to 2 (enabling smoothing after just one point)
 * Sanitized residual output to avoid "negative zero" (`-0.0000`) display for near-zero values
 
-# lowess 0.7.0
+## lowess 0.7.0
 
-## Added
+### Added
 
 * `NoBoundary` variant to `BoundaryPolicy` enum (original Cleveland behavior)
 * `ScalingMethod` enum with `MAR` and `MAD` variants for configurable robust scale estimation
@@ -329,7 +333,7 @@
 * `VecExt` trait for efficient vector reuse
 * Persistent scratch buffers to `OnlineBuffer` and `StreamingBuffer`
 
-## Changed
+### Changed
 
 * Changed license from AGPL-3.0-or-later to dual MIT OR Apache-2.0
 * Refactored partition-related types
@@ -340,16 +344,16 @@
 * Refactored `LowessExecutor` to accept optional external buffers
 * Optimized K-Fold Cross-Validation performance
 
-# lowess 0.6.0
+## lowess 0.6.0
 
-## Added
+### Added
 
 * `cv_seed` field to `CVConfig` for reproducible K-Fold cross-validation
 * `Backend` enum (`CPU`, `GPU`) as placeholder for GPU acceleration
 * Development-only fields: `custom_fit_pass`, `custom_cv_pass`, `custom_interval_pass`, `backend`, `parallel`
 * `from_config` and `to_config` methods to `LowessExecutor`
 
-## Changed
+### Changed
 
 * Refactored `cross_validate` API to use `CVConfig` struct
 * Refactored `Window::recenter` to be bidirectional
@@ -361,15 +365,15 @@
 * Removed type exports from `prelude` that caused ambiguity
 * Removed `.cargo/config.toml`
 
-## Fixed
+### Fixed
 
 * Various broken documentation links
 * `WeightParams` struct to remove unused field
 * Bug in `Batch` and `Streaming` adapter conversion logic
 
-# lowess 0.5.3
+## lowess 0.5.3
 
-## Changed
+### Changed
 
 * Consolidated validation logic into `src/engine/validator.rs`
 * Optimized sorting, window operations, MAD computation, and regression
@@ -377,9 +381,9 @@
 * Optimized interpolation and cross-validation
 * Optimized delta interpolation with binary search
 
-# lowess 0.4.0
+## lowess 0.4.0
 
-## Changed
+### Changed
 
 * Transformed into core LOWESS implementation
 * Removed `rayon` and `ndarray` dependencies
@@ -390,21 +394,21 @@
 * Removed benchmarking code
 * Removed convenience re-exports
 
-# lowess 0.3.0
+## lowess 0.3.0
 
-## Changed
+### Changed
 
 * Updated Rust version to 1.86.0
 * Modified features: default std mode includes ndarray/std and rayon
 * Improved documentation
 
-## Fixed
+### Fixed
 
 * no-std build now compiles successfully
 
-# lowess 0.2.0
+## lowess 0.2.0
 
-## Changed
+### Changed
 
 * Restructured project to reduce intra-module dependencies
 * Renamed "quartic" kernel to "biweight"
@@ -412,9 +416,9 @@
 * Online LOWESS performs O(span) incremental updates
 * Numerous performance optimizations and numerical stability improvements
 
-# lowess 0.1.0
+## lowess 0.1.0
 
-## Added
+### Added
 
 * Initial LOWESS implementation based on Cleveland (1979)
 * Type-safe builder pattern API

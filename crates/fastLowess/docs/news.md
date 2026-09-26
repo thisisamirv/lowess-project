@@ -1,40 +1,44 @@
 <!-- markdownlint-disable MD024 MD025 -->
-# fastLowess (development version)
+# Changelog
 
-## Added
+This changelog includes end-user changes only. For internal development notes, see the [repository changelog](https://github.com/thisisamirv/lowess-project/blob/main/CHANGELOG.md).
+
+## fastLowess (development version)
+
+### Added
 
 * Added self-contained R and original Cleveland LOWESS references under `validation/reference/`, with provenance, dependency, precision, and build notes.
 * Added `tests/binding_support_tests.rs` (gated on the `dev` feature) covering repeated FFI buffer allocate/read/free cycles, optional buffers, and null-pointer freeing.
 
-## Changed
+### Changed
 
 * Updated the vendored `doxygen-awesome-css` theme to v2.5.0 and the Hugo docs build to v0.166.0.
 * Breaking change: migrated wrappers and binding translation from individual `return_*`/`cv_*` calls to grouped `.outputs([...])` and `.cv(CVBuilder...)` configuration.
 * Replaced `std::mem::forget` with `Box::into_raw` in `vec_to_raw_ptr`, making the FFI ownership transfer explicit; bindings still release it through `free_raw_f64_buffer`.
 * Implemented `std::error::Error` for `BindingError`.
 
-## Fixed
+### Fixed
 
 * Skip comparison snippets when the optional `statsmodels` dependency is unavailable instead of failing verification.
 * Fixed C++ release CI staging the tracked Spack recipe despite the repository's broad `spack/` ignore rule.
 * Used the serial delta scan below the parallel-benefit threshold so small inputs preserve the exact arithmetic order required by `stats::lowess` robustness edge cases.
 
-# fastLowess 4.1.0
+## fastLowess 4.1.0
 
-## Added
+### Added
 
 * Added musl release binaries for Python, C++, Go, and Julia.
 * Added bundled native libraries for the Java binding across 8 platforms, with runtime musl detection and auto-extraction.
 * Added parallel wiring for Online/Streaming interval support, mirroring the new `lowess` builder methods and `update_mode("full")` requirement.
 * Added `custom_derivative_pass` and `custom_predict_pass` for the Batch and Streaming parallel paths.
 
-## Changed
+### Changed
 
 * Hoisted fully-qualified imports to top-level `use` statements across crates and bindings.
 * Flattened the `tests/fastLowess/` directories into `tests/` directly: each test file is now its own independent integration test binary instead of a submodule of a shared `main.rs`. No test behavior changes.
 * Bumped the vendored KaTeX CDN version from `0.18.5` to `0.18.7`, updating SRI hashes to match.
 
-## Fixed
+### Fixed
 
 * `dev/bump_version.py` now also updates the Go module's `/vN` major-version-suffix path across `go.mod` files, doc snippets, the doc-snippet runner, and README/docs badges whenever a version bump crosses a major version boundary, so this doesn't regress on the next major release.
 * `dev/bump_version.py` now also updates the Maven dependency example version in `bindings/java/docs/modules/ROOT/pages/introduction/installation.adoc`, which was previously left stale after a version bump.
@@ -43,9 +47,9 @@
 * Fixed the GPU `fit_anchors` shader carrying the same absolute degeneracy tolerance (`1e-7`) as the CPU WLS solver, which zeroed the local-linear slope for small-magnitude `x`; it now matches the CPU's scale-relative tolerance. The GPU `compute_se` shader's absolute `det > 1e-12` guard (which could null out standard errors for small-magnitude `x`) now matches the CPU's structural `det > 0` check.
 * `make fastLowess-dev` now also covers the combined `gpu,dev` feature set.
 
-# fastLowess 4.0.0
+## fastLowess 4.0.0
 
-## Added
+### Added
 
 * Added an "Ideas for Contribution" section to `CONTRIBUTING.md`, listing concrete Batch/Streaming/Online adapter feature gaps (out-of-sample prediction, exposing local slope/derivative, adaptive fraction selection, STL-style decomposition, bootstrap intervals, concurrent chunk processing, checkpointable streaming state, populating `OnlineOutput.standard_error`, time-based window eviction, configurable warm-up) to invite contributions.
 * `dev/bump_version.py` now also updates the example crate version in `CONTRIBUTING.md`'s "Individual crate Cargo.toml" snippet.
@@ -55,7 +59,7 @@
 * Added `missing` to `BuilderOptionSet`/`TypedBuilderOptionSet` and the `Lowess`/`StreamingLowess`/`OnlineLowess` builders.
 * Now published via `release-rust.yml`, 3 minutes after `lowess` to let the crates.io index catch up.
 
-## Changed
+### Changed
 
 * Go doc-snippet verification now batch-builds every snippet in one `go build ./...` under a persistent module instead of one `go run` per snippet, then runs the binaries concurrently; `verify_snippets.py`'s `BATCH_RUNNERS` dispatch (previously Rust-only) now covers `go` too.
 * C++ doc-snippet verification now resolves the compiler/library/MSVC setup once, then compiles+links+runs every snippet concurrently instead of one at a time. Fixed an MSVC race from concurrent `cl.exe` invocations colliding on a shared `snippet.obj` by giving each snippet its own `/Fo` output and `cwd`.
@@ -64,25 +68,25 @@
 * Fixed a stale comment on `binding_support::default_overlap()` referencing the now-removed flat `DEFAULT_STREAMING_OVERLAP` constant in `lowess`.
 * Improved API documentation for the fastLowess crate significantly.
 
-## Fixed
+### Fixed
 
 * Fixed `CONTRIBUTING.md` stating a stale Go prerequisite (`1.21+`, actually `1.23+` per `go.mod`/CI), an inaccurate `air` auto-install target (claimed `make r`, actually `make r-dev`), and a stale example crate version (`2.0.0`) in the Workspace Structure section.
 
-# fastLowess 3.2.1
+## fastLowess 3.2.1
 
-## Added
+### Added
 
 * Added `dev/bump_version.py --version X.Y.Z` to bump every crate/binding's version files, `CITATION.cff`, and the Spack recipe in one pass (supports `--dry-run`); now also bumps `Project.toml`'s `fastlowess_jll` compat floor (safe pre-publish since `make julia-dev`/CI relax it to an OR-list at test-time).
 * Added an optional `commit` input to every release workflow's `workflow_dispatch` trigger, to pin the built commit for manual runs.
 * Added an `aarch64-pc-windows-gnullvm` linker entry to the root `.cargo/config.toml`, matching the existing `x86_64-pc-windows-gnu` one; makes local arm64 Windows builds work without a manual env var.
 
-## Changed
+### Changed
 
 * Added four new pins to `dev/check_pinned_versions.py`: R's `rextendr`/`roxygen2` versions and the vendored KaTeX CDN version in both Rust crates.
 * Changed `check-versions.yml` to open/update a GitHub issue instead of failing CI when a pin goes stale or unreachable.
 * Bumped the vendored KaTeX CDN version from `0.18.4` to `0.18.5`, updating SRI hashes to match.
 
-## Fixed
+### Fixed
 
 * Fixed a handful of `R²`/`O(n²)` Unicode superscripts the earlier ASCII-fication pass missed (added/edited after it ran) — R tests and several `lowess` crate doc-comments — replaced with `R2`/`O(n^2)`.
 * Fixed `release-conda.yml`'s `sed` patterns for the feedstock's new rattler-build `recipe/recipe.yaml` format, removing now-dead R-package-name-fix/Python-dependency-injection/`build_r.sh` steps.
@@ -90,15 +94,15 @@
 * Fixed every binding's/crate's docs and doc-comments describing `LowessResult.x` (and equivalents) as "Sorted x values"; it's actually returned in the same order as the input `x` (the algorithm sorts internally, then un-sorts every output field back to the original order). Also strengthened Python's `test_unsorted_input` to assert this instead of only checking output length.
 * Fixed `.github/dependabot.yml`'s `cargo` entry for `/bindings/r/src`, which could never succeed: its `fastLowess = { path = "vendor/fastLowess" }` path dependency is only committed as `vendor.tar.xz`, never as loose files Dependabot can read. Removed the entry and added `extendr-api`'s version to `dev/check_pinned_versions.py` instead, which also uncovered and fixed a version-comparison bug there: comparing raw tuples treated a shorthand pin like `"0.9"` as older than `"0.9.0"` due to tuple-length tiebreaking; now padded to equal length first.
 
-# fastLowess 3.2.0
+## fastLowess 3.2.0
 
-## Added
+### Added
 
 * Added `dev/add-readme-to-docs.py`, which auto-detects the Hugo (Go, Java) vs Starlight (Node.js, WASM) docs-site flavor and embeds `README.md` accordingly; wired into the corresponding Makefiles and `package.json` scripts.
 * Added `.github/dependabot.yml`, covering every dependency ecosystem in the repo (`github-actions`, `cargo`, `npm`, `pip`, `maven`, `gomod`). Each directory is grouped so all its updates, including majors, land in a single weekly PR.
 * Added `dev/check_pinned_versions.py` and a weekly `.github/workflows/check-versions.yml`, which check hardcoded tool/library version pins that Dependabot can't see (Corrosion's CMake `FetchContent` tag, the vendored doxygen-awesome-css theme, the Checkstyle jar, golangci-lint, and Hugo) against their latest GitHub release and fail CI if any are outdated. Read-only: it never opens PRs or edits files itself.
 
-## Changed
+### Changed
 
 * Modified `verify_snippets.py` to verify snippets and also add the output of the snippets to the markdown file.
 * Added a `large` benchmark category (n = 50000) to `benchmarks/rfastlowess.R` and `benchmarks/stats_lowess.R`, since every existing category ran in well under 100ms. Covers 4 scenarios (`large_delta_0`, `large_delta_0.1`, `large_high_iter`, `large_high_fraction`) stressing `delta`, iteration count, and fraction. `benchmarks/compare.py`'s plot grid grew from 5x2 to 7x2 to fit them.
@@ -106,7 +110,7 @@
 * Standardized the fastLowess crate documentation: consolidated README setup content and parameter guidance, renamed the batch-adapter heading, replaced flowcharts with decision tables, standardized API examples and page structure, and converted superscripts to ASCII.
 * Moved the fastLowess crate GPU acceleration guidance from the API page to a dedicated GPU Backend guide with hardware requirements and performance considerations.
 
-## Fixed
+### Fixed
 
 * Fixed `docs.yml` triggering GitHub's "pages build and deployment" once per docs job; per-language jobs now upload artifacts, and a single final `deploy` job pushes to `gh-pages` once per run.
 * Fixed `docs.yml`'s reliance on GitHub's legacy branch-based Pages deployment, which auto-triggered an unpinned "pages build and deployment" job on every `gh-pages` push. The former `deploy` job is now `build` (still pushes `_site` to `gh-pages` as a cache); publishing now goes through `actions/upload-pages-artifact` and a new `deploy` job using `actions/deploy-pages`. Requires the repo's Pages source set to "GitHub Actions".
@@ -118,14 +122,14 @@
 * Fixed inline/display LaTeX math rendering as literal text on docs.rs; added a `katex-header.html` that renders it client-side with KaTeX.
 * Fixed every cross-reference link across the `lowess`/`fastLowess` crate docs leading nowhere: these pages are embedded into rustdoc via `#![doc = include_str!(...)]`, so plain relative links render verbatim instead of resolving. Converted them to proper intra-doc links (e.g. `crate::doc::concepts`), validated with `cargo doc --all-features -D warnings`.
 
-# fastLowess 3.1.0
+## fastLowess 3.1.0
 
-## Added
+### Added
 
 * Added a GitHub Pages landing page at the repository root, built from `README.md` via pandoc and deployed by `docs.yml`.
 * Added a GitHub workflow for running validation scripts.
 
-## Changed
+### Changed
 
 * Split the monolithic `.github/workflows/ci.yml` into seven per-language workflow files: `ci-rust.yml`, `ci-python.yml`, `ci-julia.yml`, `ci-nodejs.yml`, `ci-wasm.yml`, `ci-cpp.yml`, and `ci-r.yml`. Each file carries the relevant `ci` (multi-OS matrix), `asan`, and `gpu` jobs for its language.
 * Each crate/binding sub-Makefile now runs `dev/verify_snippets.py --lang <lang>` for its own language as the final step of `make default`. The root `docs-test` target remains as a convenience to run all languages at once.
@@ -135,21 +139,21 @@
 * `make fastLowess` (`default:`) now only runs `cargo build`. The full dev workflow moves to `make fastLowess-dev`.
 * Updated the fastLowess crate README to be package-specific instead of using the generic shared README.
 
-## Fixed
+### Fixed
 
 * Fixed `.cargo/config.toml` hardcoding absolute `c:/rtools45/...` paths for the `x86_64-pc-windows-gnu` linker and ar tool. Replaced with bare tool names resolved via `PATH`, matching the existing fix in `bindings/r/src/cargo-config.toml`.
 
-# fastLowess 3.0.0
+## fastLowess 3.0.0
 
-## Added
+### Added
 
 * Added `See: ...` cross-reference links after option headings in the fastLowess crate API docs, pointing to the corresponding user guide.
 
-## Fixed
+### Fixed
 
 * Fixed `docs/api/rust.md` showing Rust enum variants instead of the string option values accepted by the API.
 
-## Changed
+### Changed
 
 * Removed `dev/isolate_cargo.py`, `dev/check_root_cargo.py`, `dev/fix_doc_snippets.py`, and `check_js_licenses.js` — workspace isolation, doc-snippet transformation, and license checks are no longer needed.
 * Split the monolithic root `Makefile` into per-crate/binding sub-Makefiles (e.g. `crates/lowess/Makefile`, `bindings/r/Makefile`), each invokable directly via `make -f path/Makefile`. The root `Makefile` now only aggregates (`docs`, `check-msrv`, `all*`).
@@ -159,9 +163,9 @@
 * Exposed GPU backend in `binding_support.rs`.
 * Split Streaming/Online content from the fastLowess crate API reference into dedicated pages, moved tutorials into the user-guide use-cases section, and standardized API examples with expected output.
 
-# fastLowess 2.0.0
+## fastLowess 2.0.0
 
-## Added
+### Added
 
 * Added `iterations_used: Option<usize>` field to `OnlineOutput<T>`, reporting the number of robustness iterations performed when `UpdateMode::Full` is active. Returns `Some(0)` for the degenerate two-point linear fit and `None` when `UpdateMode::Incremental` is used.
 * Added `ParseErrors(Vec<LowessError>)` variant to `LowessError`, which collects all string-parse failures that accumulate in the builder and reports them together when `build()` is called.
@@ -171,7 +175,7 @@
 * Centralized all `impl FromStr` blocks for the seven option enums (`WeightFunction`, `BoundaryPolicy`, `ScalingMethod`, `RobustnessMethod`, `ZeroWeightFallback`, `MergeStrategy`, `UpdateMode`) directly in `api.rs`, consolidating previously scattered implementations into a single source of truth. Parse and canonical-name helpers are exposed via `lowess::internals::alias` (requires `dev` feature), allowing `fastLowess::binding_support` to delegate all string-to-enum parsing through that path.
 * Added module-level `defaults.rs` files within each sub-module (`math/`, `algorithms/`, `adapters/`) to centralize default values close to the types they govern, propagating them from a single source of truth to ensure consistency across bindings and crates.
 
-## Changed
+### Changed
 
 * Breaking change: Renamed all public API method and option names from camelCase to snake_case across every binding and all documentation. The public APIs for C++, Node.js, and WASM have changed.
 * Converted all documentation tables to compact single-space format.
@@ -195,9 +199,9 @@
 * Breaking change: `Lowess`, `StreamingLowess`, and `OnlineLowess` are now dedicated wrapper structs around `LowessBuilder<f64>` with string-accepting forwarding methods, rather than type aliases re-exported from the base `lowess` crate. Each wrapper's `build()` delegates to the corresponding parallel adapter and defaults to parallel execution. Migration: replace `.adapter(Batch).build()` with `.build()`, `Lowess::new().adapter(Streaming)` with `StreamingLowess::new()`, and `Lowess::new().adapter(Online)` with `OnlineLowess::new()`.
 * Breaking change: The `fastLowess` prelude now exports only `{Lowess, LowessError, LowessResult, OnlineLowess, StreamingLowess}`, removing `LowessBuilder`, `Adapter::{Batch, Online, Streaming}`, and `Backend::{CPU, GPU}`. Code relying on the removed prelude exports must import the needed names directly.
 
-# fastLowess 1.3.0
+## fastLowess 1.3.0
 
-## Added
+### Added
 
 * Added prerequisites for different bindings and platforms to `CONTRIBUTING.md`
 * Updated `docs/assets/diagrams/lowess_smoothing_concept.svg` to correctly illustrate LOWESS concepts (robustness iterations, bisquare re-weighting, outlier downweighting) instead of the generic LOESS algorithm it previously depicted.
@@ -208,11 +212,11 @@
 * Upgraded `rayon` to version 1.12.
 * Upgraded `wgpu` to version 29.0.
 
-## Changed
+### Changed
 
 * Updated MSRV to 1.89 to access the significant improvements made in `wide` since version 0.7.
 
-## Fixed
+### Fixed
 
 * Fixed R ASAN tests failing to compile vignettes by passing `--no-build-vignettes` to `rcmdcheck`.
 * Upgraded ASAN test environment to use modern `rocker/r-devel-san:latest` image and `RDscript` to resolve outdated `readelf` warnings.
@@ -221,33 +225,33 @@
 * Added a repo-local `.cargo/config.toml` that sets `CC=clang-cl` for `x86_64-pc-windows-msvc`, fixing Criterion 0.8 benchmark builds on Windows when `cc-rs` would otherwise pick `clang.exe` and fail to link `alloca`.
 * Fixed GPU execution under `wgpu` 29 by updating instance and pipeline layout setup, separating shader-written indirect dispatch data from the actual indirect dispatch buffer, stabilizing GPU buffer downloads, and correcting batched cross-validation dispatch offsets so the GPU integration test suite passes again.
 
-# fastLowess 1.2.0
+## fastLowess 1.2.0
 
-## Changed
+### Changed
 
 * Updated `wgpu` to v27.0 from v26.0.
 
-## Fixed
+### Fixed
 
 * Fixed project logo.
 
-# fastLowess 1.1.2
+## fastLowess 1.1.2
 
-## Added
+### Added
 
 * Added srr tags
 
-# fastLowess 1.1.1
+## fastLowess 1.1.1
 
-## Fixed
+### Fixed
 
 * Fixed memory layout mismatch in the `GpuConfig` struct
 * Refactored the `GpuExecutor` initialization in both the engine (`gpu.rs`) and tests (`gpu_tests.rs`) to handle missing hardware/drivers gracefully.
 * Improved the global executor lock handling to automatically recover from "poisoned" states. This prevents a single test crash from disabling the entire GPU backend for the remainder of the session.
 
-# fastLowess 1.1.0
+## fastLowess 1.1.0
 
-## Added
+### Added
 
 * Added `Mean` scaling method (Mean Absolute Deviation)
 * Added support for different kernels to the GPU backend
@@ -259,37 +263,37 @@
 * Added support for predictiona and confidence interval calculation to the GPU backend
 * Added support for cross-validation to the GPU backend
 
-## Fixed
+### Fixed
 
 * Fixed potential integer overflow in GPU engine when dataset size exceeds `u32::MAX`.
 * Fixed panic in GPU initialization by propagating errors to the caller.
 * Fixed inefficient memory allocation in `fit_all_points_tiled` by reusing scratch buffers across tiles.
 * Fixed resource exhaustion in GPU backend by using a global `Mutex` for the executor instead of thread-local storage.
 
-# fastLowess 0.99.9
+## fastLowess 0.99.9
 
-## Changed
+### Changed
 
 * Bump rust version to 1.88 for better stability
 * Change function-based builder pattern in the bindings to class-based builder pattern, allowing true streaming and online processing
 * Improve API docs
 
-# fastLowess 0.99.7
+## fastLowess 0.99.7
 
-## Fixed
+### Fixed
 
 * Fix README file links
 * Fix Makefile bug with R versioning
 
-# fastLowess 0.99.6
+## fastLowess 0.99.6
 
-## Fixed
+### Fixed
 
 * Fix README file formats and links
 
-# fastLowess 0.99.5
+## fastLowess 0.99.5
 
-## Changed
+### Changed
 
 * Reduced package size significantly by removing unnecessary dev files and docs from the final package.
 * Implemented comprehensive Cargo workspace inheritance pattern
@@ -302,9 +306,9 @@
 * Created unified `.gitignore` for all crates/packages
 * Added comprehensive badges from all packages
 
-# fastLowess 0.4.0
+## fastLowess 0.4.0
 
-## Added
+### Added
 
 * Zero-allocation parallel fitting via `fit_all_points_parallel`
 * Parallel CV memory reuse via `cv_pass_parallel`
@@ -312,7 +316,7 @@
 * Parallel anchor precomputation for large datasets
 * Cache-oblivious tile-based processing
 
-## Changed
+### Changed
 
 * Changed license from AGPL-3.0-or-later to dual MIT OR Apache-2.0
 * Updated `lowess` dependency to v0.7.0
@@ -320,9 +324,9 @@
 * Added intelligent buffer capacity management for GPU
 * Refactored GPU compute kernel with shared memory tiling
 
-# fastLowess 0.3.0
+## fastLowess 0.3.0
 
-## Added
+### Added
 
 * `cpu` (default) and `gpu` Cargo features
 * GPU execution engine in `src/engine/gpu.rs`
@@ -330,7 +334,7 @@
 * `backend()` setter method to all builders
 * Tests for GPU engine and parallel execution consistency
 
-## Changed
+### Changed
 
 * Renamed builders: `Extended*LowessBuilder` → `Parallel*LowessBuilder`
 * Migrated `parallel` field to core `lowess` crate
@@ -340,17 +344,17 @@
 * Removed type exports from `prelude` that shadowed std types
 * Removed Sequential, parallel, and ndarray adaptors
 
-# fastLowess 0.2.0
+## fastLowess 0.2.0
 
-## Changed
+### Changed
 
 * Replaced linear scan with binary search in `compute_anchor_points`
 * Eliminated per-iteration division in `interpolate_gap`
 * Aligned with `lowess` crate v0.5.3 optimizations
 
-# fastLowess 0.1.0
+## fastLowess 0.1.0
 
-## Added
+### Added
 
 * Initial release with parallel execution support
 

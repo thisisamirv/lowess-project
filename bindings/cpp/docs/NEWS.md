@@ -1,27 +1,31 @@
 \page news News
 
 <!-- markdownlint-disable MD024 MD025 -->
-# fastlowess (C++) (development version)
+# Changelog
 
-## Added
+This changelog includes end-user changes only. For internal development notes, see the [repository changelog](https://github.com/thisisamirv/lowess-project/blob/main/CHANGELOG.md).
+
+## fastlowess (C++) (development version)
+
+### Added
 
 * Added self-contained R and original Cleveland LOWESS references under `validation/reference/`, with provenance, dependency, precision, and build notes.
 
-## Changed
+### Changed
 
 * Updated the vendored `doxygen-awesome-css` theme to v2.5.0 and the Hugo docs build to v0.166.0.
 * Breaking change: replaced flat `return_*`/`cv_*` fields with grouped `outputs` and nested `cv` options; prediction outputs are grouped as well.
 * Declared the public wrapper's C++17 requirement for `std::optional`.
 * Represent unavailable diagnostics as empty `std::optional<double>` values instead of `NaN` sentinels.
 
-## Fixed
+### Fixed
 
 * Skip comparison snippets when the optional `statsmodels` dependency is unavailable instead of failing verification.
 * Fixed C++ release CI staging the tracked Spack recipe despite the repository's broad `spack/` ignore rule.
 
-# fastlowess (C++) 4.1.0
+## fastlowess (C++) 4.1.0
 
-## Added
+### Added
 
 * Added musl release binaries for Python, C++, Go, and Julia.
 * Added bundled native libraries for the Java binding across 8 platforms, with runtime musl detection and auto-extraction.
@@ -29,11 +33,11 @@
 * Added `return_derivative` to `LowessOptions` and `OnlineOptions`.
 * Added `return_se`/`confidence_intervals`/`prediction_intervals` to `StreamingOptions` and `OnlineOptions`; Online requires `update_mode = "full"`.
 
-## Changed
+### Changed
 
 * Hoisted fully-qualified imports to top-level `use` statements across crates and bindings.
 
-## Fixed
+### Fixed
 
 * `dev/bump_version.py` now also updates the Go module's `/vN` major-version-suffix path across `go.mod` files, doc snippets, the doc-snippet runner, and README/docs badges whenever a version bump crosses a major version boundary, so this doesn't regress on the next major release.
 * `dev/bump_version.py` now also updates the Maven dependency example version in `bindings/java/docs/modules/ROOT/pages/introduction/installation.adoc`, which was previously left stale after a version bump.
@@ -42,9 +46,9 @@
 * Fixed the C++ valgrind memory check silently skipping on Linux CI because `valgrind` was never installed; all three Linux jobs in `.github/workflows/ci-cpp.yml` (ci matrix, clang-linux, intel-oneapi) now install it alongside `cppcheck`, as does `bindings/cpp/Makefile`'s `install-tools` target.
 * Fixed C++ doc-snippet verification skipping every snippet on Windows-on-ARM: `dev/runners/cpp.py` now detects the MSVC host/target architecture from the built library (`arm64` vs `x64`), adds the `aarch64-pc-windows-msvc` library candidate, and caches the `vcvarsall.bat` environment per `(path, arch)` so snippets compile, link, and run instead of being silently skipped.
 
-# fastlowess (C++) 4.0.0
+## fastlowess (C++) 4.0.0
 
-## Added
+### Added
 
 * Added an "Ideas for Contribution" section to `CONTRIBUTING.md`, listing concrete Batch/Streaming/Online adapter feature gaps (out-of-sample prediction, exposing local slope/derivative, adaptive fraction selection, STL-style decomposition, bootstrap intervals, concurrent chunk processing, checkpointable streaming state, populating `OnlineOutput.standard_error`, time-based window eviction, configurable warm-up) to invite contributions.
 * `dev/bump_version.py` now also updates the example crate version in `CONTRIBUTING.md`'s "Individual crate Cargo.toml" snippet.
@@ -54,7 +58,7 @@
 * Added a `missing` option to `LowessOptions` and `OnlineOptions` (inherited by `StreamingOptions`).
 * `release-gpu.yml` now also builds GPU libraries for `linux-arm64` and `windows-arm64`, matching `release-cpp.yml`'s platform coverage.
 
-## Changed
+### Changed
 
 * Go doc-snippet verification now batch-builds every snippet in one `go build ./...` under a persistent module instead of one `go run` per snippet, then runs the binaries concurrently; `verify_snippets.py`'s `BATCH_RUNNERS` dispatch (previously Rust-only) now covers `go` too.
 * C++ doc-snippet verification now resolves the compiler/library/MSVC setup once, then compiles+links+runs every snippet concurrently instead of one at a time. Fixed an MSVC race from concurrent `cl.exe` invocations colliding on a shared `snippet.obj` by giving each snippet its own `/Fo` output and `cwd`.
@@ -65,25 +69,25 @@
 * Breaking change: `StreamingOptions::overlap`'s default changed from a fixed `500` to `-1` (sentinel for "use the library default"), resolving dynamically to `chunk_size / 10`.
 * Improved API documentation for C++ significantly.
 
-## Fixed
+### Fixed
 
 * Fixed `CONTRIBUTING.md` stating a stale Go prerequisite (`1.21+`, actually `1.23+` per `go.mod`/CI), an inaccurate `air` auto-install target (claimed `make r`, actually `make r-dev`), and a stale example crate version (`2.0.0`) in the Workspace Structure section.
 
-# fastlowess (C++) 3.2.1
+## fastlowess (C++) 3.2.1
 
-## Added
+### Added
 
 * Added `dev/bump_version.py --version X.Y.Z` to bump every crate/binding's version files, `CITATION.cff`, and the Spack recipe in one pass (supports `--dry-run`); now also bumps `Project.toml`'s `fastlowess_jll` compat floor (safe pre-publish since `make julia-dev`/CI relax it to an OR-list at test-time).
 * Added an optional `commit` input to every release workflow's `workflow_dispatch` trigger, to pin the built commit for manual runs.
 * Added an `aarch64-pc-windows-gnullvm` linker entry to the root `.cargo/config.toml`, matching the existing `x86_64-pc-windows-gnu` one; makes local arm64 Windows builds work without a manual env var.
 * Added ARM64 release binaries to `release-cpp.yml` (Linux, Windows, macOS); the macOS x64 job is now pinned to `macos-13` instead of `macos-latest`, which has been Apple Silicon since 2024 and was silently shipping an arm64 binary mislabeled as x64.
 
-## Changed
+### Changed
 
 * Added four new pins to `dev/check_pinned_versions.py`: R's `rextendr`/`roxygen2` versions and the vendored KaTeX CDN version in both Rust crates.
 * Changed `check-versions.yml` to open/update a GitHub issue instead of failing CI when a pin goes stale or unreachable.
 
-## Fixed
+### Fixed
 
 * Fixed a handful of `R²`/`O(n²)` Unicode superscripts the earlier ASCII-fication pass missed (added/edited after it ran) — R tests and several `lowess` crate doc-comments — replaced with `R2`/`O(n^2)`.
 * Fixed `release-conda.yml`'s `sed` patterns for the feedstock's new rattler-build `recipe/recipe.yaml` format, removing now-dead R-package-name-fix/Python-dependency-injection/`build_r.sh` steps.
@@ -93,16 +97,16 @@
 * Fixed `release-cpp.yml`'s `spack-release` job failing to `git push` from a detached HEAD; now checks out and pushes to the default branch explicitly.
 * Fixed `bindings/cpp/spack/package.py`'s example `url` going stale (only `version()`/`sha256` were auto-updated); `dev/bump_version.py` now refreshes it too.
 
-# fastlowess (C++) 3.2.0
+## fastlowess (C++) 3.2.0
 
-## Added
+### Added
 
 * Added `dev/add-readme-to-docs.py`, which auto-detects the Hugo (Go, Java) vs Starlight (Node.js, WASM) docs-site flavor and embeds `README.md` accordingly; wired into the corresponding Makefiles and `package.json` scripts.
 * Added `.github/dependabot.yml`, covering every dependency ecosystem in the repo (`github-actions`, `cargo`, `npm`, `pip`, `maven`, `gomod`). Each directory is grouped so all its updates, including majors, land in a single weekly PR.
 * Added `dev/check_pinned_versions.py` and a weekly `.github/workflows/check-versions.yml`, which check hardcoded tool/library version pins that Dependabot can't see (Corrosion's CMake `FetchContent` tag, the vendored doxygen-awesome-css theme, the Checkstyle jar, golangci-lint, and Hugo) against their latest GitHub release and fail CI if any are outdated. Read-only: it never opens PRs or edits files itself.
 * Library is now available on Spack (`fastlowess-cpp`).
 
-## Changed
+### Changed
 
 * Modified `verify_snippets.py` to verify snippets and also add the output of the snippets to the markdown file.
 * Added a `large` benchmark category (n = 50000) to `benchmarks/rfastlowess.R` and `benchmarks/stats_lowess.R`, since every existing category ran in well under 100ms. Covers 4 scenarios (`large_delta_0`, `large_delta_0.1`, `large_high_iter`, `large_high_fraction`) stressing `delta`, iteration count, and fraction. `benchmarks/compare.py`'s plot grid grew from 5x2 to 7x2 to fit them.
@@ -115,7 +119,7 @@
 * Vendored `doxygen-awesome-css` v2.4.2 for a modern, sidebar-only Doxygen site.
 * Moved C++ GPU acceleration guidance from the API page to a dedicated GPU Backend guide with hardware requirements and performance considerations.
 
-## Fixed
+### Fixed
 
 * Fixed `docs.yml` triggering GitHub's "pages build and deployment" once per docs job; per-language jobs now upload artifacts, and a single final `deploy` job pushes to `gh-pages` once per run.
 * Fixed `docs.yml`'s reliance on GitHub's legacy branch-based Pages deployment, which auto-triggered an unpinned "pages build and deployment" job on every `gh-pages` push. The former `deploy` job is now `build` (still pushes `_site` to `gh-pages` as a cache); publishing now goes through `actions/upload-pages-artifact` and a new `deploy` job using `actions/deploy-pages`. Requires the repo's Pages source set to "GitHub Actions".
@@ -129,15 +133,15 @@
 * Fixed the Handling Outliers quickstart example in C++: increased `fraction` from `0.5` to `0.7` because the six-point example otherwise fit the injected outlier exactly instead of downweighting it.
 * Capped the C++ Detecting Outliers example output at five lines.
 
-# fastlowess (C++) 3.1.0
+## fastlowess (C++) 3.1.0
 
-## Added
+### Added
 
 * Added a GitHub Pages landing page at the repository root, built from `README.md` via pandoc and deployed by `docs.yml`.
 * Added a GitHub workflow for running validation scripts.
 * Added clang-tidy and cppcheck installation to Makefile.
 
-## Changed
+### Changed
 
 * Split the monolithic `.github/workflows/ci.yml` into seven per-language workflow files: `ci-rust.yml`, `ci-python.yml`, `ci-julia.yml`, `ci-nodejs.yml`, `ci-wasm.yml`, `ci-cpp.yml`, and `ci-r.yml`. Each file carries the relevant `ci` (multi-OS matrix), `asan`, and `gpu` jobs for its language.
 * Each crate/binding sub-Makefile now runs `dev/verify_snippets.py --lang <lang>` for its own language as the final step of `make default`. The root `docs-test` target remains as a convenience to run all languages at once.
@@ -147,20 +151,20 @@
 * `make cpp` (`default:`) now only runs `cargo build`. The full dev workflow (formatting, linting, cbindgen idempotency, symbol export verification, cmake tests, valgrind, doc-snippet verification) moves to `make cpp-dev`.
 * Updated the C++ README to be package-specific instead of using the generic shared README.
 
-## Fixed
+### Fixed
 
 * Fixed `.cargo/config.toml` hardcoding absolute `c:/rtools45/...` paths for the `x86_64-pc-windows-gnu` linker and ar tool. Replaced with bare tool names resolved via `PATH`, matching the existing fix in `bindings/r/src/cargo-config.toml`.
 * Fixed `make cpp` Windows CI failure (`cannot find -lgcc_eh`): the C++ binding's Makefile detected MinGW via `gcc -dumpmachine` and selected the GNU target, which then used the Rtools cross-compiler from the workspace `.cargo/config.toml`; that compiler delegated to `C:\mingw64\bin\ld.exe`, which lacks `lgcc_eh`. Fixed by always targeting `x86_64-pc-windows-msvc` on Windows, removing the MinGW detection branch entirely.
 * Fixed clang-tidy warnings in `bindings/cpp/include/fastlowess.hpp`: replaced all `#if defined(_WIN32)` with `#ifdef _WIN32`, added `#include <cstdio>` for `stdin`/`fileno`/`_fileno`, replaced deprecated `std::getenv("USERPROFILE")` with `_dupenv_s` on Windows, and added `const` to `base` and `cmd` local variables.
 
-# fastlowess (C++) 3.0.0
+## fastlowess (C++) 3.0.0
 
-## Added
+### Added
 
 * Exposed a `backend` option (`"cpu"` default, `"gpu"`) on `Lowess`, gated behind an opt-in `gpu` Cargo feature not enabled by default. Call `fastlowess::gpu::install()` to download a prebuilt GPU library, or build locally with `cargo build --features gpu`.
 * Added `See: ...` cross-reference links after option headings in the C++ API docs, pointing to the corresponding user guide.
 
-## Changed
+### Changed
 
 * Removed `dev/isolate_cargo.py`, `dev/check_root_cargo.py`, `dev/fix_doc_snippets.py`, and `check_js_licenses.js` — workspace isolation, doc-snippet transformation, and license checks are no longer needed.
 * Split the monolithic root `Makefile` into per-crate/binding sub-Makefiles (e.g. `crates/lowess/Makefile`, `bindings/r/Makefile`), each invokable directly via `make -f path/Makefile`. The root `Makefile` now only aggregates (`docs`, `check-msrv`, `all*`).
@@ -168,13 +172,13 @@
 * Breaking change: Renamed `OnlineOutput`'s `smoothed()` and `std_error()` methods to `y()` and `standard_error()`.
 * Split Streaming/Online content from the C++ API reference into dedicated pages, moved tutorials into the user-guide use-cases section, and standardized API examples with expected output.
 
-# fastlowess (C++) 2.0.0
+## fastlowess (C++) 2.0.0
 
-## Added
+### Added
 
 * Added `custom_weights` field to `LowessOptions` and a second overload of `Lowess::fit()` that accepts a `const std::vector<double>& custom_weights` argument. Values must be non-negative and length must match the input data. Batch only.
 
-## Changed
+### Changed
 
 * Breaking change: Renamed all public API method and option names from camelCase to snake_case across every binding and all documentation. The public APIs for C++, Node.js, and WASM have changed.
 * Converted all documentation tables to compact single-space format.
@@ -188,13 +192,13 @@
 * Renamed all public member functions to snake_case: `make_error()`, `has_value()`, `r_squared()`, `effective_df()`, `residual_sd()`, `x_value()`, `y_value()`, `x_vector()`, `y_vector()`, `standard_errors()`, `confidence_lower()`, `confidence_upper()`, `prediction_lower()`, `prediction_upper()`, `robustness_weights()`, `fraction_used()`, `iterations_used()`, `process_chunk()`, `add_points()`.
 * Breaking change: Replaced `Expected<LowessResult> OnlineLowess::add_points(const std::vector<double>&, const std::vector<double>&)` with `Expected<std::optional<double>> OnlineLowess::add_point(double x, double y)`. The method now processes a single point and returns only that point's smoothed value, or `std::nullopt` if not enough points have been accumulated yet. The underlying C FFI symbol is renamed from `cpp_online_add_points` to `cpp_online_add_point`.
 
-## Fixed
+### Fixed
 
 * Fixed remaining `yVector()` call in `testBasicSmoothSerial` that was missed during the snake_case rename (now `y_vector()`).
 
-# fastlowess (C++) 1.3.0
+## fastlowess (C++) 1.3.0
 
-## Added
+### Added
 
 * Added prerequisites for different bindings and platforms to `CONTRIBUTING.md`
 * Updated `docs/assets/diagrams/lowess_smoothing_concept.svg` to correctly illustrate LOWESS concepts (robustness iterations, bisquare re-weighting, outlier downweighting) instead of the generic LOESS algorithm it previously depicted.
@@ -204,12 +208,12 @@
 * Added sanitizer check for all bindings and crates.
 * Added dedicated CMake packaging documentation in `bindings/cpp/CMAKE.md` for Windows installation, `find_package(fastlowess CONFIG REQUIRED)`, and build-tree package discovery.
 
-## Changed
+### Changed
 
 * Removed the legacy snake_case compatibility layer; the public C++ method API now uses camelBack, while variables and constants follow lower_case.
 * Updated MSRV to 1.89 to access the significant improvements made in `wide` since version 0.7.
 
-## Fixed
+### Fixed
 
 * Fixed R ASAN tests failing to compile vignettes by passing `--no-build-vignettes` to `rcmdcheck`.
 * Upgraded ASAN test environment to use modern `rocker/r-devel-san:latest` image and `RDscript` to resolve outdated `readelf` warnings.
@@ -224,56 +228,56 @@
 * Fixed MSVC `size_t` to `unsigned long` narrowing warnings in the C++ wrapper at the FFI boundary with explicit conversions.
 * Fixed C++ CMake package integration by generating and installing `fastlowessConfig.cmake` and related package export files for downstream `find_package` use.
 
-# fastlowess (C++) 1.2.0
+## fastlowess (C++) 1.2.0
 
-## Fixed
+### Fixed
 
 * Fixed project logo.
 * Fixed memory leak in `OnlineLowess`.
 
-# fastlowess (C++) 1.0.0
+## fastlowess (C++) 1.0.0
 
-## Added
+### Added
 
 * Added `mean` scaling method (Mean Absolute Deviation)
 
-## Changed
+### Changed
 
 * Replaced exception-based error handling with a type-safe `Expected<T>` result type for all core methods (`fit`, `process_chunk`, `finalize`, `add_points`).
 * Refactored the internal FFI layer to use the idiomatic Rust `From` trait for converting result types.
 * Updated all C++ examples and tests to use the new `Expected` pattern, aligning the library with modern C++ practices.
 
-# fastlowess (C++) 0.99.9
+## fastlowess (C++) 0.99.9
 
-## Changed
+### Changed
 
 * Bump rust version to 1.88 for better stability
 * Change function-based builder pattern in the bindings to class-based builder pattern, allowing true streaming and online processing
 * Improve API docs
 * Library is now available on conda-forge (libfastlowess)
 
-# fastlowess (C++) 0.99.8
+## fastlowess (C++) 0.99.8
 
-## Added
+### Added
 
 * Initial implementation
 
-# fastlowess (C++) 0.99.7
+## fastlowess (C++) 0.99.7
 
-## Fixed
+### Fixed
 
 * Fix README file links
 * Fix Makefile bug with R versioning
 
-# fastlowess (C++) 0.99.6
+## fastlowess (C++) 0.99.6
 
-## Fixed
+### Fixed
 
 * Fix README file formats and links
 
-# fastlowess (C++) 0.99.5
+## fastlowess (C++) 0.99.5
 
-## Changed
+### Changed
 
 * Reduced package size significantly by removing unnecessary dev files and docs from the final package.
 * Implemented comprehensive Cargo workspace inheritance pattern

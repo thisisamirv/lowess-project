@@ -1,26 +1,30 @@
 <!-- markdownlint-disable MD024 MD025 -->
-# fastlowess (Python) (development version)
+# Changelog
 
-## Added
+This changelog includes end-user changes only. For internal development notes, see the [repository changelog](https://github.com/thisisamirv/lowess-project/blob/main/CHANGELOG.md).
+
+## fastlowess (Python) (development version)
+
+### Added
 
 * Added self-contained R and original Cleveland LOWESS references under `validation/reference/`, with provenance, dependency, precision, and build notes.
 * Added grouped `outputs` and nested `cv` constructor options, plus grouped prediction outputs, while preserving legacy keyword arguments.
 * Added an "Alternative Software" guide comparing `fastlowess` with `statsmodels.lowess()`.
 * Added comparison-only `statsmodels` documentation dependency for executable examples.
 
-## Changed
+### Changed
 
 * Updated the vendored `doxygen-awesome-css` theme to v2.5.0 and the Hugo docs build to v0.166.0.
 * Refactored the internal `parse_cv_options` helper to return a named `ParsedCvOptions` alias, reducing signature type complexity so strict clippy (`-D warnings`) passes in `python-dev`.
 
-## Fixed
+### Fixed
 
 * Skip comparison snippets when the optional `statsmodels` dependency is unavailable instead of failing verification.
 * Fixed C++ release CI staging the tracked Spack recipe despite the repository's broad `spack/` ignore rule.
 
-# fastlowess (Python) 4.1.0
+## fastlowess (Python) 4.1.0
 
-## Added
+### Added
 
 * Added musl release binaries for Python, C++, Go, and Julia.
 * Added bundled native libraries for the Java binding across 8 platforms, with runtime musl detection and auto-extraction.
@@ -28,19 +32,19 @@
 * Added `return_derivative` to `Lowess`, `StreamingLowess`, and `OnlineLowess`, exposing the local slope.
 * Added `return_se`/`confidence_intervals`/`prediction_intervals` to `StreamingLowess` and `OnlineLowess`; Online requires `update_mode="full"`.
 
-## Changed
+### Changed
 
 * Hoisted fully-qualified imports to top-level `use` statements across crates and bindings.
 
-## Fixed
+### Fixed
 
 * `dev/bump_version.py` now also updates the Go module's `/vN` major-version-suffix path across `go.mod` files, doc snippets, the doc-snippet runner, and README/docs badges whenever a version bump crosses a major version boundary, so this doesn't regress on the next major release.
 * `dev/bump_version.py` now also updates the Maven dependency example version in `bindings/java/docs/modules/ROOT/pages/introduction/installation.adoc`, which was previously left stale after a version bump.
 * Changed the `iterations` default for `OnlineLowess` from `3` to `0` across every binding (R, Python, Julia, C++, Go, Java, Node.js, WASM), matching the default `update_mode = "incremental"` non-robust single-point fit; robustness iterations now require `update_mode = "full"`.
 
-# fastlowess (Python) 4.0.0
+## fastlowess (Python) 4.0.0
 
-## Added
+### Added
 
 * Added an "Ideas for Contribution" section to `CONTRIBUTING.md`, listing concrete Batch/Streaming/Online adapter feature gaps (out-of-sample prediction, exposing local slope/derivative, adaptive fraction selection, STL-style decomposition, bootstrap intervals, concurrent chunk processing, checkpointable streaming state, populating `OnlineOutput.standard_error`, time-based window eviction, configurable warm-up) to invite contributions.
 * `dev/bump_version.py` now also updates the example crate version in `CONTRIBUTING.md`'s "Individual crate Cargo.toml" snippet.
@@ -50,7 +54,7 @@
 * Added a `missing` option to `Lowess`, `StreamingLowess`, and `OnlineLowess`.
 * `release-gpu.yml` now also builds GPU wheels for `linux-aarch64` and `windows-arm64`, matching `release-pypi.yml`'s platform coverage (previously only 4 of its 6 platforms had a GPU wheel).
 
-## Changed
+### Changed
 
 * Go doc-snippet verification now batch-builds every snippet in one `go build ./...` under a persistent module instead of one `go run` per snippet, then runs the binaries concurrently; `verify_snippets.py`'s `BATCH_RUNNERS` dispatch (previously Rust-only) now covers `go` too.
 * C++ doc-snippet verification now resolves the compiler/library/MSVC setup once, then compiles+links+runs every snippet concurrently instead of one at a time. Fixed an MSVC race from concurrent `cl.exe` invocations colliding on a shared `snippet.obj` by giving each snippet its own `/Fo` output and `cwd`.
@@ -58,27 +62,27 @@
 * Improved API documentation for Python significantly.
 * Renamed `docs/guide/adapters.md` and `docs/use-case/{genomics,real-time,time-series}.md` to `adapter-choice.md` and `use-case-*.md` for consistency with the other bindings.
 
-## Fixed
+### Fixed
 
 * Fixed `CONTRIBUTING.md` stating a stale Go prerequisite (`1.21+`, actually `1.23+` per `go.mod`/CI), an inaccurate `air` auto-install target (claimed `make r`, actually `make r-dev`), and a stale example crate version (`2.0.0`) in the Workspace Structure section.
 * Fixed `_core.pyi` stating stale defaults that diverged from the actual PyO3 runtime (and every other binding): `StreamingLowess.fraction` (`0.3`→`0.67`), `OnlineLowess.fraction` (`0.2`→`0.67`), `OnlineLowess.window_capacity` (`100`→`1000`), and `OnlineLowess.update_mode` (`"full"`→`"incremental"`). Runtime behavior was already correct.
 * Fixed `install_gpu()` never finding a matching wheel: `release-gpu.yml`'s Python jobs uploaded the GPU wheel under its default maturin filename (identical to the CPU wheel, with no `gpu` marker), so `_find_gpu_wheel_asset()`'s filename filter never matched. Added the missing rename step, matching every other language's GPU job.
 
-# fastlowess (Python) 3.2.1
+## fastlowess (Python) 3.2.1
 
-## Added
+### Added
 
 * Added `dev/bump_version.py --version X.Y.Z` to bump every crate/binding's version files, `CITATION.cff`, and the Spack recipe in one pass (supports `--dry-run`); now also bumps `Project.toml`'s `fastlowess_jll` compat floor (safe pre-publish since `make julia-dev`/CI relax it to an OR-list at test-time).
 * Added an optional `commit` input to every release workflow's `workflow_dispatch` trigger, to pin the built commit for manual runs.
 * Added an `aarch64-pc-windows-gnullvm` linker entry to the root `.cargo/config.toml`, matching the existing `x86_64-pc-windows-gnu` one; makes local arm64 Windows builds work without a manual env var.
 * Added a Windows ARM64 wheel-build job to `release-pypi.yml` (Linux/macOS ARM64 wheels already existed), using Python 3.11 as the build interpreter since python.org only ships win-arm64 installers from 3.11 onward; the wheel remains `abi3-py38`-compatible regardless.
 
-## Changed
+### Changed
 
 * Added four new pins to `dev/check_pinned_versions.py`: R's `rextendr`/`roxygen2` versions and the vendored KaTeX CDN version in both Rust crates.
 * Changed `check-versions.yml` to open/update a GitHub issue instead of failing CI when a pin goes stale or unreachable.
 
-## Fixed
+### Fixed
 
 * Fixed a handful of `R²`/`O(n²)` Unicode superscripts the earlier ASCII-fication pass missed (added/edited after it ran) — R tests and several `lowess` crate doc-comments — replaced with `R2`/`O(n^2)`.
 * Fixed `release-conda.yml`'s `sed` patterns for the feedstock's new rattler-build `recipe/recipe.yaml` format, removing now-dead R-package-name-fix/Python-dependency-injection/`build_r.sh` steps.
@@ -87,15 +91,15 @@
 * Fixed `.github/dependabot.yml`'s `cargo` entry for `/bindings/r/src`, which could never succeed: its `fastLowess = { path = "vendor/fastLowess" }` path dependency is only committed as `vendor.tar.xz`, never as loose files Dependabot can read. Removed the entry and added `extendr-api`'s version to `dev/check_pinned_versions.py` instead, which also uncovered and fixed a version-comparison bug there: comparing raw tuples treated a shorthand pin like `"0.9"` as older than `"0.9.0"` due to tuple-length tiebreaking; now padded to equal length first.
 * Fixed `release-pypi.yml`/`release-gpu.yml`'s macOS/Windows jobs printing a pip version-check notice on every run; added `PIP_DISABLE_PIP_VERSION_CHECK: "1"`.
 
-# fastlowess (Python) 3.2.0
+## fastlowess (Python) 3.2.0
 
-## Added
+### Added
 
 * Added `dev/add-readme-to-docs.py`, which auto-detects the Hugo (Go, Java) vs Starlight (Node.js, WASM) docs-site flavor and embeds `README.md` accordingly; wired into the corresponding Makefiles and `package.json` scripts.
 * Added `.github/dependabot.yml`, covering every dependency ecosystem in the repo (`github-actions`, `cargo`, `npm`, `pip`, `maven`, `gomod`). Each directory is grouped so all its updates, including majors, land in a single weekly PR.
 * Added `dev/check_pinned_versions.py` and a weekly `.github/workflows/check-versions.yml`, which check hardcoded tool/library version pins that Dependabot can't see (Corrosion's CMake `FetchContent` tag, the vendored doxygen-awesome-css theme, the Checkstyle jar, golangci-lint, and Hugo) against their latest GitHub release and fail CI if any are outdated. Read-only: it never opens PRs or edits files itself.
 
-## Changed
+### Changed
 
 * Modified `verify_snippets.py` to verify snippets and also add the output of the snippets to the markdown file.
 * Added a `large` benchmark category (n = 50000) to `benchmarks/rfastlowess.R` and `benchmarks/stats_lowess.R`, since every existing category ran in well under 100ms. Covers 4 scenarios (`large_delta_0`, `large_delta_0.1`, `large_high_iter`, `large_high_fraction`) stressing `delta`, iteration count, and fraction. `benchmarks/compare.py`'s plot grid grew from 5x2 to 7x2 to fit them.
@@ -103,7 +107,7 @@
 * Standardized Python documentation: consolidated README setup content and parameter guidance, renamed the batch-adapter heading, replaced flowcharts with decision tables, standardized API examples and page structure, and converted superscripts to ASCII.
 * Moved Python GPU acceleration guidance from the API page to a dedicated GPU Backend guide with hardware requirements and performance considerations.
 
-## Fixed
+### Fixed
 
 * Fixed `docs.yml` triggering GitHub's "pages build and deployment" once per docs job; per-language jobs now upload artifacts, and a single final `deploy` job pushes to `gh-pages` once per run.
 * Fixed `docs.yml`'s reliance on GitHub's legacy branch-based Pages deployment, which auto-triggered an unpinned "pages build and deployment" job on every `gh-pages` push. The former `deploy` job is now `build` (still pushes `_site` to `gh-pages` as a cache); publishing now goes through `actions/upload-pages-artifact` and a new `deploy` job using `actions/deploy-pages`. Requires the repo's Pages source set to "GitHub Actions".
@@ -112,14 +116,14 @@
 * Fixed the "API Reference" page rendering empty: its `api/index.md` toctree still referenced the pre-rename `python`/`python-streaming`/`python-online` document names; updated to `api`/`api-streaming`/`api-online`, matching the files' current names. Sphinx toctree entries omit the `.md` extension, so this was missed by the earlier rename's link verification.
 * Fixed the Handling Outliers quickstart example in Python: increased `fraction` from `0.5` to `0.7` because the six-point example otherwise fit the injected outlier exactly instead of downweighting it.
 
-# fastlowess (Python) 3.1.0
+## fastlowess (Python) 3.1.0
 
-## Added
+### Added
 
 * Added a GitHub Pages landing page at the repository root, built from `README.md` via pandoc and deployed by `docs.yml`.
 * Added a GitHub workflow for running validation scripts.
 
-## Changed
+### Changed
 
 * Split the monolithic `.github/workflows/ci.yml` into seven per-language workflow files: `ci-rust.yml`, `ci-python.yml`, `ci-julia.yml`, `ci-nodejs.yml`, `ci-wasm.yml`, `ci-cpp.yml`, and `ci-r.yml`. Each file carries the relevant `ci` (multi-OS matrix), `asan`, and `gpu` jobs for its language.
 * Each crate/binding sub-Makefile now runs `dev/verify_snippets.py --lang <lang>` for its own language as the final step of `make default`. The root `docs-test` target remains as a convenience to run all languages at once.
@@ -129,19 +133,19 @@
 * `make python` (`default:`) now installs to the user Python environment via `pip install --user`. The full dev workflow (venv setup, formatting, linting, testing, doc-snippet verification) moves to `make python-dev`.
 * Updated the Python README to be package-specific instead of using the generic shared README.
 
-## Fixed
+### Fixed
 
 * Fixed `.cargo/config.toml` hardcoding absolute `c:/rtools45/...` paths for the `x86_64-pc-windows-gnu` linker and ar tool. Replaced with bare tool names resolved via `PATH`, matching the existing fix in `bindings/r/src/cargo-config.toml`.
 * Enforced keyword-only arguments beyond the first positional allowance in `Lowess`, `StreamingLowess`, and `OnlineLowess`, matching R's behaviour: `Lowess(fraction, *, ...)`, `StreamingLowess(fraction, chunk_size, *, ...)`, `OnlineLowess(fraction, window_capacity, min_points, *, ...)`. The `.pyi` stubs were updated with the same `*` separator.
 
-# fastlowess (Python) 3.0.0
+## fastlowess (Python) 3.0.0
 
-## Added
+### Added
 
 * Exposed a `backend` option (`"cpu"` default, `"gpu"`) on `Lowess`, gated behind an opt-in `gpu` Cargo feature not enabled in published wheels. Run `fastlowess.install_gpu()` to download a prebuilt GPU wheel, or build locally with `maturin develop --features gpu`.
 * Added `See: ...` cross-reference links after option headings in the Python API docs, pointing to the corresponding user guide.
 
-## Changed
+### Changed
 
 * Removed `dev/isolate_cargo.py`, `dev/check_root_cargo.py`, `dev/fix_doc_snippets.py`, and `check_js_licenses.js` — workspace isolation, doc-snippet transformation, and license checks are no longer needed.
 * Split the monolithic root `Makefile` into per-crate/binding sub-Makefiles (e.g. `crates/lowess/Makefile`, `bindings/r/Makefile`), each invokable directly via `make -f path/Makefile`. The root `Makefile` now only aggregates (`docs`, `check-msrv`, `all*`).
@@ -149,15 +153,15 @@
 * Breaking change: Renamed `OnlineOutput`'s `smoothed` and `std_error` properties to `y` and `standard_error`.
 * Split Streaming/Online content from the Python API reference into dedicated pages, moved tutorials into the user-guide use-cases section, and standardized API examples with expected output.
 
-# fastlowess (Python) 2.0.0
+## fastlowess (Python) 2.0.0
 
-## Added
+### Added
 
 * Added `OnlineOutput` class to the Python binding. `OnlineLowess.add_point()` now returns `OnlineOutput | None` instead of `float | None`, exposing `smoothed`, `std_error`, `residual`, `robustness_weight`, and `iterations_used`.
 * Added `custom_weights` parameter to the `Lowess.fit(x, y, custom_weights=None)` method. Accepts a `list[float]` of non-negative per-observation weights. Batch only.
 * Removed `smooth()`, `smooth_streaming()`, and `smooth_online()` convenience function stubs from `_core.pyi`.
 
-## Changed
+### Changed
 
 * Breaking change: Renamed all public API method and option names from camelCase to snake_case across every binding and all documentation. The public APIs for C++, Node.js, and WASM have changed.
 * Converted all documentation tables to compact single-space format.
@@ -171,9 +175,9 @@
 * Breaking change: Renamed the `update(x, y)` method on `OnlineLowess` to `add_point(x, y)` and removed the separate array-based `add_points(x, y)` method. `add_point` processes a single point and returns the smoothed value as `float | None`.
 * Updated `pyo3` and `numpy` dependencies to v0.29.
 
-# fastlowess (Python) 1.3.0
+## fastlowess (Python) 1.3.0
 
-## Added
+### Added
 
 * Added prerequisites for different bindings and platforms to `CONTRIBUTING.md`
 * Updated `docs/assets/diagrams/lowess_smoothing_concept.svg` to correctly illustrate LOWESS concepts (robustness iterations, bisquare re-weighting, outlier downweighting) instead of the generic LOESS algorithm it previously depicted.
@@ -182,11 +186,11 @@
 * Modified Makefile to be truely cross-platform.
 * Added sanitizer check for all bindings and crates.
 
-## Changed
+### Changed
 
 * Updated MSRV to 1.89 to access the significant improvements made in `wide` since version 0.7.
 
-## Fixed
+### Fixed
 
 * Fixed R ASAN tests failing to compile vignettes by passing `--no-build-vignettes` to `rcmdcheck`.
 * Upgraded ASAN test environment to use modern `rocker/r-devel-san:latest` image and `RDscript` to resolve outdated `readelf` warnings.
@@ -199,55 +203,55 @@
 * Fixed Python wrapper analyzer issues by switching native extension lookups to runtime imports, avoiding wrapper class name shadowing in `TYPE_CHECKING`, and adding explicit wrapper docstrings.
 * Fixed false-positive Pylint warnings in `bindings/python/python/fastlowess/_core.pyi` by marking stub-only ellipsis bodies and signature arguments as intentional.
 
-# fastlowess (Python) 1.2.0
+## fastlowess (Python) 1.2.0
 
-## Changed
+### Changed
 
 * Updated `pyo3` to v0.28 from v0.27.
 * Updated `numpy` to v0.28 from v0.27.
 
-## Fixed
+### Fixed
 
 * Fixed project logo.
 
-# fastlowess (Python) 1.0.0
+## fastlowess (Python) 1.0.0
 
-## Added
+### Added
 
 * Added `mean` scaling method (Mean Absolute Deviation)
 
-## Changed
+### Changed
 
 * Wrapped the heavy computation logic in `py.allow_threads` to allow Python to release the GIL during computation.
 
-# fastlowess (Python) 0.99.9
+## fastlowess (Python) 0.99.9
 
-## Changed
+### Changed
 
 * Bump rust version to 1.88 for better stability
 * Change function-based builder pattern in the bindings to class-based builder pattern, allowing true streaming and online processing
 * Improve API docs
 
-# fastlowess (Python) 0.99.7
+## fastlowess (Python) 0.99.7
 
-## Changed
+### Changed
 
 * Switch to Stable ABI for CPython
 
-## Fixed
+### Fixed
 
 * Fix README file links
 * Fix Makefile bug with R versioning
 
-# fastlowess (Python) 0.99.6
+## fastlowess (Python) 0.99.6
 
-## Fixed
+### Fixed
 
 * Fix README file formats and links
 
-# fastlowess (Python) 0.99.5
+## fastlowess (Python) 0.99.5
 
-## Changed
+### Changed
 
 * Reduced package size significantly by removing unnecessary dev files and docs from the final package.
 * Implemented comprehensive Cargo workspace inheritance pattern
@@ -260,44 +264,44 @@
 * Created unified `.gitignore` for all crates/packages
 * Added comprehensive badges from all packages
 
-# fastlowess (Python) 0.4.0
+## fastlowess (Python) 0.4.0
 
-## Added
+### Added
 
 * Support for new features in `fastLowess` v0.4.0
 
-## Changed
+### Changed
 
 * Changed license from AGPL-3.0-or-later to dual MIT OR Apache-2.0
 * Updated documentation
 
-# fastlowess (Python) 0.3.0
+## fastlowess (Python) 0.3.0
 
-## Changed
+### Changed
 
 * Updated `fastLowess` dependency to v0.3.0
 * Refactored internal API usage
 * Updated cross-validation parameter handling
 
-## Fixed
+### Fixed
 
 * Documentation build errors
 * Bug where `parallel` argument was not exposed
 
-# fastlowess (Python) 0.2.0
+## fastlowess (Python) 0.2.0
 
-## Added
+### Added
 
 * Support for new features in `fastLowess` v0.2.0
 
-## Changed
+### Changed
 
 * Updated documentation
 * Changed module name from `fastLowess` to `fastlowess`
 
-# fastlowess (Python) 0.1.0
+## fastlowess (Python) 0.1.0
 
-## Added
+### Added
 
 * Python binding for `fastLowess`
 * Support for Python 3.14
