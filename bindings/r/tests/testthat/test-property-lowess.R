@@ -12,10 +12,9 @@
 # The package default remains `"use_local_mean"`; these comparisons opt into
 # R's fallback explicitly.
 #
-# This complements the fixed scenarios in test-validation.R: a fixed
-# regression divergence at high robustness-iteration counts (see NEWS/
-# CHANGELOG) was only found by randomized fuzzing over many (x, y,
-# fraction, iterations) combinations, not by any single hand-picked case.
+# This complements the fixed scenarios in test-validation.R: randomized
+# comparisons can expose divergences at iteration counts not covered by any
+# single hand-picked case.
 usable_x <- function(x, min_length = 5L) {
     length(x) >= min_length && anyDuplicated(x) == 0L
 }

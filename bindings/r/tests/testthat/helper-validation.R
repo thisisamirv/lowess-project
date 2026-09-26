@@ -146,11 +146,14 @@ check_stats_lowess <- function(
                 paste0(
                     "y does not match stats::lowess output ",
                     "(max abs diff: %.17g; x: %s; y: %s; ",
+                    "reference y: %s; package y: %s; ",
                     "fraction: %.17g; iterations: %d)"
                 ),
                 max_diff,
                 toString(sprintf("%.17g", x)),
                 toString(sprintf("%.17g", y)),
+                toString(sprintf("%.17g", reference$y)),
+                toString(sprintf("%.17g", result$y)),
                 fraction,
                 iterations
             ),
