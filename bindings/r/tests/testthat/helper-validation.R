@@ -127,7 +127,10 @@ expect_stats_lowess_sorted <- function(
 #'
 #' The perturbation signs are drawn from a fixed seed per trial so the
 #' decision is a deterministic function of `(x, y, fraction, iterations)`
-#' and does not introduce run-to-run flakiness of its own.
+#' and does not introduce run-to-run flakiness of its own. A few hundred
+#' trials are needed in practice: only specific sign combinations flip the
+#' cutoff decision, and this only runs on the (rare) comparison-failure
+#' path, so the extra `stats::lowess()` calls are not a performance concern.
 #' @noRd
 reference_is_ulp_unstable <- function(
     x,
@@ -136,7 +139,7 @@ reference_is_ulp_unstable <- function(
     iterations,
     base_fit,
     tolerance,
-    trials = 20L
+    trials = 1000L
 ) {
     n <- length(x)
     eps <- .Machine$double.eps
