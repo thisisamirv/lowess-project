@@ -141,13 +141,32 @@ check_stats_lowess <- function(
     max_diff <- max(abs(result$y - reference$y))
     comparison_scale <- max(1, abs(result$y), abs(reference$y))
     if (max_diff > tolerance * comparison_scale) {
+        iteration_counts <- seq.int(0L, as.integer(iterations))
+        iteration_diffs <- vapply(iteration_counts, function(n_iter) {
+            reference_iter <- stats::lowess(x_fit, y_fit, f = fraction, iter = n_iter)
+            model_iter <- Lowess(
+                fraction = fraction,
+                iterations = n_iter,
+                boundary_policy = "noboundary",
+                scaling_method = "mar",
+                zero_weight_fallback = zero_weight_fallback,
+                outputs = if (sorted) "sorted" else NULL
+            )
+            result_iter <- fit(model_iter, x_fit, y_fit)
+            max(abs(result_iter$y - reference_iter$y))
+        }, numeric(1))
+        iteration_summary <- paste(
+            sprintf("%d=%.17g", iteration_counts, iteration_diffs),
+            collapse = ", "
+        )
         stop(
             sprintf(
                 paste0(
                     "y does not match stats::lowess output ",
                     "(max abs diff: %.17g; x: %s; y: %s; ",
                     "reference y: %s; package y: %s; ",
-                    "fraction: %.17g; iterations: %d)"
+                    "fraction: %.17g; iterations: %d; ",
+                    "per-iteration max diffs [iter=diff]: %s)"
                 ),
                 max_diff,
                 toString(sprintf("%.17g", x)),
@@ -155,7 +174,8 @@ check_stats_lowess <- function(
                 toString(sprintf("%.17g", reference$y)),
                 toString(sprintf("%.17g", result$y)),
                 fraction,
-                iterations
+                iterations,
+                iteration_summary
             ),
             call. = FALSE
         )
