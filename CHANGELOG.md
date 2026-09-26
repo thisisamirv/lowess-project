@@ -164,6 +164,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added parallel wiring for Online/Streaming interval support, mirroring the new `lowess` builder methods and `update_mode("full")` requirement.
 - Added `custom_derivative_pass` and `custom_predict_pass` for the Batch and Streaming parallel paths.
 
+**C++:**
+
+- Added `retain_model`, `LowessResult::predict_model()`, and prediction RAII types.
+- Added `return_derivative` to `LowessOptions` and `OnlineOptions`.
+- Added `return_se`/`confidence_intervals`/`prediction_intervals` to `StreamingOptions` and `OnlineOptions`; Online requires `update_mode = "full"`.
+
+**Go:**
+
+- Added `RetainModel` and `Result.PredictModel.Predict(newX, options)` for prediction.
+- Added `ReturnDerivative` to `Options`, `StreamingOptions`, and `OnlineOptions`.
+- Added `ReturnSE`/`ConfidenceIntervals`/`PredictionIntervals` to `StreamingOptions` and `OnlineOptions`; Online requires `UpdateMode = "full"`.
+
+**Java:**
+
+- Added `retainModel` and `Result.predictModel()` for prediction.
+- Added `returnDerivative(boolean)` to `Options` and `OnlineOptions`.
+- Added `returnSe(boolean)`/`confidenceIntervals(double)`/`predictionIntervals(double)` to `StreamingOptions` and `OnlineOptions`; Online requires `updateMode("full")`.
+
+**Julia:**
+
+- Added `retain_model` and `predict(model, new_x; kwargs...)` for out-of-sample prediction.
+- Added `return_derivative` to `Lowess`, `StreamingLowess`, and `OnlineLowess`.
+- Added `return_se`/`confidence_intervals`/`prediction_intervals` to `StreamingLowess` and `OnlineLowess`; Online requires `update_mode = "full"`.
+
+**Node.js:**
+
+- Added `retain_model` and `LowessResult.predict(newX, options)` for prediction.
+- Added `return_derivative` to `SmoothOptions`, `StreamingOptions`, and `OnlineOptions`.
+- Added `return_se`/`confidence_intervals`/`prediction_intervals` to `StreamingOptions` and `OnlineOptions`; Online requires `update_mode: "full"`.
+
 **Python:**
 
 - Added `retain_model` and `LowessResult.predict(new_x, ...)` for out-of-sample prediction.
@@ -179,41 +209,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added explicit G5.9a test: `.Machine$double.eps` scale noise on input `y` produces no meaningful change in smoothed output (verified via `expect_equal(..., tolerance = 1e-10)`).
 - Added explicit tests for RE7.0/RE7.0a (noiseless exact predictor relationships, including identical-x and degenerate cases) and RE7.1/RE7.1a (noiseless exact y = f(x) relationships with timing comparison) in `tests/testthat/test-validation.R`. Removed incorrect `@srrstatsNA` tags and added proper `@srrstats` claims in `R/srr-stats-standards.R` and test headers. These tests confirm graceful handling of perfectly noiseless input and that exact data fits at least as fast as noisy equivalents.
 
-**Julia:**
-
-- Added `retain_model` and `predict(model, new_x; kwargs...)` for out-of-sample prediction.
-- Added `return_derivative` to `Lowess`, `StreamingLowess`, and `OnlineLowess`.
-- Added `return_se`/`confidence_intervals`/`prediction_intervals` to `StreamingLowess` and `OnlineLowess`; Online requires `update_mode = "full"`.
-
-**Go:**
-
-- Added `RetainModel` and `Result.PredictModel.Predict(newX, options)` for prediction.
-- Added `ReturnDerivative` to `Options`, `StreamingOptions`, and `OnlineOptions`.
-- Added `ReturnSE`/`ConfidenceIntervals`/`PredictionIntervals` to `StreamingOptions` and `OnlineOptions`; Online requires `UpdateMode = "full"`.
-
-**Java:**
-
-- Added `retainModel` and `Result.predictModel()` for prediction.
-- Added `returnDerivative(boolean)` to `Options` and `OnlineOptions`.
-- Added `returnSe(boolean)`/`confidenceIntervals(double)`/`predictionIntervals(double)` to `StreamingOptions` and `OnlineOptions`; Online requires `updateMode("full")`.
-
-**Node.js:**
-
-- Added `retain_model` and `LowessResult.predict(newX, options)` for prediction.
-- Added `return_derivative` to `SmoothOptions`, `StreamingOptions`, and `OnlineOptions`.
-- Added `return_se`/`confidence_intervals`/`prediction_intervals` to `StreamingOptions` and `OnlineOptions`; Online requires `update_mode: "full"`.
-
 **WASM:**
 
 - Added `retain_model` and `LowessResult.predict(newX, options)` for prediction.
 - Added `return_derivative` to `SmoothOptions`, `StreamingOptions`, and `OnlineOptions`.
 - Added `return_se`/`confidence_intervals`/`prediction_intervals` to `StreamingOptions` and `OnlineOptions`; Online requires `update_mode: "full"`.
-
-**C++:**
-
-- Added `retain_model`, `LowessResult::predict_model()`, and prediction RAII types.
-- Added `return_derivative` to `LowessOptions` and `OnlineOptions`.
-- Added `return_se`/`confidence_intervals`/`prediction_intervals` to `StreamingOptions` and `OnlineOptions`; Online requires `update_mode = "full"`.
 
 ### Changed
 
@@ -247,26 +247,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `dev/bump_version.py` now also updates the Maven dependency example version in `bindings/java/docs/modules/ROOT/pages/introduction/installation.adoc`, which was previously left stale after a version bump.
 - Changed the `iterations` default for `OnlineLowess` from `3` to `0` across every binding (R, Python, Julia, C++, Go, Java, Node.js, WASM), matching the default `update_mode = "incremental"` non-robust single-point fit; robustness iterations now require `update_mode = "full"`.
 
-**C++:**
-
-- Fixed `bindings/cpp/spack/package.py` building from the wrong directory; it now builds by package name and keeps the pyright suppression at the repo root.
-- Fixed the C++ valgrind memory check silently skipping on Linux CI because `valgrind` was never installed; all three Linux jobs in `.github/workflows/ci-cpp.yml` (ci matrix, clang-linux, intel-oneapi) now install it alongside `cppcheck`, as does `bindings/cpp/Makefile`'s `install-tools` target.
-- Fixed C++ doc-snippet verification skipping every snippet on Windows-on-ARM: `dev/runners/cpp.py` now detects the MSVC host/target architecture from the built library (`arm64` vs `x64`), adds the `aarch64-pc-windows-msvc` library candidate, and caches the `vcvarsall.bat` environment per `(path, arch)` so snippets compile, link, and run instead of being silently skipped.
-
-**Node.js:**
-
-- Fixed `cv_seed` silently accepting negative values; they are now rejected before casting.
-
-**Java:**
-
-- Fixed the same `cv_seed` negative-value cast bug in `Lowess()`.
-- Fixed `mvn clean test` intermittently failing on macOS with `Failed to read artifact descriptor for commons-io:commons-io:jar:2.6`: Maven's default `clean` binding (`maven-clean-plugin:3.2.0`) depends on `maven-shared-utils`, which transitively pulls in the old `commons-io:2.6` artifact whose POM sometimes fails to resolve. `bindings/java/pom.xml` now pins `maven-clean-plugin` to `3.5.0`, which drops `maven-shared-utils`/`commons-io` in favor of `plexus-utils`, removing the flaky transitive dependency.
-
-**R:**
-
-- `dev/bump_version.py` now updates the Go `/vN` path and the Java Maven example version.
-- Fixed inconsistent Node.js naming in READMEs, doc-site home pages, and `CITATION.cff`.
-
 **lowess:**
 
 - Cleaned up `lowess::prelude` by removing leaked builder and adapter markers.
@@ -285,9 +265,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed the GPU `fit_anchors` shader carrying the same absolute degeneracy tolerance (`1e-7`) as the CPU WLS solver, which zeroed the local-linear slope for small-magnitude `x`; it now matches the CPU's scale-relative tolerance. The GPU `compute_se` shader's absolute `det > 1e-12` guard (which could null out standard errors for small-magnitude `x`) now matches the CPU's structural `det > 0` check.
 - `make fastLowess-dev` now also covers the combined `gpu,dev` feature set.
 
+**C++:**
+
+- Fixed `bindings/cpp/spack/package.py` building from the wrong directory; it now builds by package name and keeps the pyright suppression at the repo root.
+- Fixed the C++ valgrind memory check silently skipping on Linux CI because `valgrind` was never installed; all three Linux jobs in `.github/workflows/ci-cpp.yml` (ci matrix, clang-linux, intel-oneapi) now install it alongside `cppcheck`, as does `bindings/cpp/Makefile`'s `install-tools` target.
+- Fixed C++ doc-snippet verification skipping every snippet on Windows-on-ARM: `dev/runners/cpp.py` now detects the MSVC host/target architecture from the built library (`arm64` vs `x64`), adds the `aarch64-pc-windows-msvc` library candidate, and caches the `vcvarsall.bat` environment per `(path, arch)` so snippets compile, link, and run instead of being silently skipped.
+
 **Go:**
 
 - Fixed the Go module's import path to include the required `/v4` suffix. Breaking change for old unsuffixed imports.
+
+**Java:**
+
+- Fixed the same `cv_seed` negative-value cast bug in `Lowess()`.
+- Fixed `mvn clean test` intermittently failing on macOS with `Failed to read artifact descriptor for commons-io:commons-io:jar:2.6`: Maven's default `clean` binding (`maven-clean-plugin:3.2.0`) depends on `maven-shared-utils`, which transitively pulls in the old `commons-io:2.6` artifact whose POM sometimes fails to resolve. `bindings/java/pom.xml` now pins `maven-clean-plugin` to `3.5.0`, which drops `maven-shared-utils`/`commons-io` in favor of `plexus-utils`, removing the flaky transitive dependency.
+
+**Node.js:**
+
+- Fixed `cv_seed` silently accepting negative values; they are now rejected before casting.
+
+**R:**
+
+- `dev/bump_version.py` now updates the Go `/vN` path and the Java Maven example version.
+- Fixed inconsistent Node.js naming in READMEs, doc-site home pages, and `CITATION.cff`.
 
 ## 4.0.0
 
@@ -312,34 +312,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `missing` to `BuilderOptionSet`/`TypedBuilderOptionSet` and the `Lowess`/`StreamingLowess`/`OnlineLowess` builders.
 - Now published via `release-rust.yml`, 3 minutes after `lowess` to let the crates.io index catch up.
 
-**Python:**
-
-- Added a `return_sorted` option to `Lowess`.
-- Added a `missing` option to `Lowess`, `StreamingLowess`, and `OnlineLowess`.
-- `release-gpu.yml` now also builds GPU wheels for `linux-aarch64` and `windows-arm64`, matching `release-pypi.yml`'s platform coverage (previously only 4 of its 6 platforms had a GPU wheel).
-
-**R:**
-
-- Added a `return_sorted` option to `Lowess()`.
-- Added a `missing` option to `Lowess()`, `StreamingLowess()`, and `OnlineLowess()`.
-
-**Julia:**
-
-- Added a `return_sorted` option to `Lowess`.
-- Added a `missing` option to `Lowess`, `StreamingLowess`, and `OnlineLowess`.
-- `release-gpu.yml` now also builds a `linux-aarch64` GPU library.
-
-**Node.js:**
-
-- Added a `return_sorted` option to `Lowess`'s `SmoothOptions`.
-- Added a `missing` option to `SmoothOptions`, `StreamingSmoothOptions`, and `OnlineSmoothOptions`.
-- Expanded `release-gpu.yml`'s Node.js GPU binary builds from 4 platforms to all 9 the regular npm release covers (added `linux-x64-musl`, `linux-arm64-gnu`, `linux-arm64-musl`, `linux-arm-gnueabihf`, `win32-arm64-msvc`); `installGpu()` now detects all of them too.
-
-**WASM:**
-
-- Added a `return_sorted` option to `Lowess`'s `SmoothOptions`.
-- Added a `missing` option to `SmoothOptions`, `StreamingSmoothOptions`, and `OnlineSmoothOptions`.
-
 **C++:**
 
 - Added a `return_sorted` option to `LowessOptions`.
@@ -358,6 +330,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a `returnSorted` option to `Options`.
 - Added a `missing` option to `Options.Builder` (shared by `Options`, `StreamingOptions`, and `OnlineOptions`).
 - Added `FastLowess.installGpu()`, a one-time GPU installer matching Python/Node.js/R/C++/Julia: downloads a prebuilt GPU-enabled native library from the matching GitHub Release to `~/.fastlowess/gpu/`; point `NativeBridge` at it via `-Dfastlowess.native.dir`.
+
+**Julia:**
+
+- Added a `return_sorted` option to `Lowess`.
+- Added a `missing` option to `Lowess`, `StreamingLowess`, and `OnlineLowess`.
+- `release-gpu.yml` now also builds a `linux-aarch64` GPU library.
+
+**Node.js:**
+
+- Added a `return_sorted` option to `Lowess`'s `SmoothOptions`.
+- Added a `missing` option to `SmoothOptions`, `StreamingSmoothOptions`, and `OnlineSmoothOptions`.
+- Expanded `release-gpu.yml`'s Node.js GPU binary builds from 4 platforms to all 9 the regular npm release covers (added `linux-x64-musl`, `linux-arm64-gnu`, `linux-arm64-musl`, `linux-arm-gnueabihf`, `win32-arm64-msvc`); `installGpu()` now detects all of them too.
+
+**Python:**
+
+- Added a `return_sorted` option to `Lowess`.
+- Added a `missing` option to `Lowess`, `StreamingLowess`, and `OnlineLowess`.
+- `release-gpu.yml` now also builds GPU wheels for `linux-aarch64` and `windows-arm64`, matching `release-pypi.yml`'s platform coverage (previously only 4 of its 6 platforms had a GPU wheel).
+
+**R:**
+
+- Added a `return_sorted` option to `Lowess()`.
+- Added a `missing` option to `Lowess()`, `StreamingLowess()`, and `OnlineLowess()`.
+
+**WASM:**
+
+- Added a `return_sorted` option to `Lowess`'s `SmoothOptions`.
+- Added a `missing` option to `SmoothOptions`, `StreamingSmoothOptions`, and `OnlineSmoothOptions`.
 
 ### Changed
 
@@ -378,37 +378,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed `.confidence_intervals()`, `.prediction_intervals()`, and `.return_se()` from the `StreamingLowess`/`OnlineLowess` wrapper structs — leaked in via the shared builder macro and silently ignored. Breaking change; `Lowess` is unaffected.
 - Fixed a stale comment on `binding_support::default_overlap()` referencing the now-removed flat `DEFAULT_STREAMING_OVERLAP` constant in `lowess`.
 - Improved API documentation for the fastLowess crate significantly.
-
-**Python:**
-
-- Removed `return_diagnostics`, `return_residuals`, and `parallel` from `OnlineLowess`'s constructor — accepted but had no effect. Breaking change; `Lowess`/`StreamingLowess` are unaffected.
-- Improved API documentation for Python significantly.
-- Renamed `docs/guide/adapters.md` and `docs/use-case/{genomics,real-time,time-series}.md` to `adapter-choice.md` and `use-case-*.md` for consistency with the other bindings.
-
-**R:**
-
-- Removed `return_diagnostics`, `return_residuals`, and `parallel` from `OnlineLowess()`'s constructor, same reason as Python. Breaking change.
-- Removed `confidence_intervals` and `prediction_intervals` from `OnlineLowess()`'s and `StreamingLowess()`'s constructors — never actually computed. Breaking change; `Lowess()` is unaffected.
-- Improved API documentation for R significantly.
-- Updated R documentation to show the dynamic overlap default `chunk_size / 10`, clamped to `[1, chunk_size - 10]`, instead of a flat `500`.
-
-**Julia:**
-
-- Removed `return_diagnostics`, `return_residuals`, and `parallel` from `OnlineLowess`, same reason as Python. Breaking change.
-- `StreamingLowess`'s `overlap` default changed from a fixed `500` to `-1` (sentinel for "use the library default"), resolving dynamically to `chunk_size / 10` like every other binding. Breaking change for customized `chunk_size` callers.
-- Improved API documentation for Julia significantly.
-
-**Node.js:**
-
-- Split `SmoothOptions` into `SmoothOptions` (Batch), `StreamingSmoothOptions`, and `OnlineSmoothOptions`. Passing Batch-only fields to `StreamingLowess`/`OnlineLowess` is now a TypeScript compile-time error instead of a silent no-op. Breaking change; `Lowess` is unaffected.
-- Improved API documentation for Node.js significantly.
-- Updated Node.js documentation to show the dynamic overlap default `chunk_size / 10`, clamped to `[1, chunk_size - 10]`, instead of a flat `500`.
-
-**WASM:**
-
-- Same `SmoothOptions` split as Node.js, for the same reason. Breaking change.
-- Improved API documentation for WASM significantly.
-- Updated WASM documentation to show the dynamic overlap default `chunk_size / 10`, clamped to `[1, chunk_size - 10]`, instead of a flat `500`.
 
 **C++:**
 
@@ -434,16 +403,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved API documentation for Java significantly.
 - Updated Java documentation to show the dynamic overlap default `chunk_size / 10`, clamped to `[1, chunk_size - 10]`, instead of a flat `500`.
 
+**Julia:**
+
+- Removed `return_diagnostics`, `return_residuals`, and `parallel` from `OnlineLowess`, same reason as Python. Breaking change.
+- `StreamingLowess`'s `overlap` default changed from a fixed `500` to `-1` (sentinel for "use the library default"), resolving dynamically to `chunk_size / 10` like every other binding. Breaking change for customized `chunk_size` callers.
+- Improved API documentation for Julia significantly.
+
+**Node.js:**
+
+- Split `SmoothOptions` into `SmoothOptions` (Batch), `StreamingSmoothOptions`, and `OnlineSmoothOptions`. Passing Batch-only fields to `StreamingLowess`/`OnlineLowess` is now a TypeScript compile-time error instead of a silent no-op. Breaking change; `Lowess` is unaffected.
+- Improved API documentation for Node.js significantly.
+- Updated Node.js documentation to show the dynamic overlap default `chunk_size / 10`, clamped to `[1, chunk_size - 10]`, instead of a flat `500`.
+
+**Python:**
+
+- Removed `return_diagnostics`, `return_residuals`, and `parallel` from `OnlineLowess`'s constructor — accepted but had no effect. Breaking change; `Lowess`/`StreamingLowess` are unaffected.
+- Improved API documentation for Python significantly.
+- Renamed `docs/guide/adapters.md` and `docs/use-case/{genomics,real-time,time-series}.md` to `adapter-choice.md` and `use-case-*.md` for consistency with the other bindings.
+
+**R:**
+
+- Removed `return_diagnostics`, `return_residuals`, and `parallel` from `OnlineLowess()`'s constructor, same reason as Python. Breaking change.
+- Removed `confidence_intervals` and `prediction_intervals` from `OnlineLowess()`'s and `StreamingLowess()`'s constructors — never actually computed. Breaking change; `Lowess()` is unaffected.
+- Improved API documentation for R significantly.
+- Updated R documentation to show the dynamic overlap default `chunk_size / 10`, clamped to `[1, chunk_size - 10]`, instead of a flat `500`.
+
+**WASM:**
+
+- Same `SmoothOptions` split as Node.js, for the same reason. Breaking change.
+- Improved API documentation for WASM significantly.
+- Updated WASM documentation to show the dynamic overlap default `chunk_size / 10`, clamped to `[1, chunk_size - 10]`, instead of a flat `500`.
+
 ### Fixed
 
 **Monorepo:**
 
 - Fixed `CONTRIBUTING.md` stating a stale Go prerequisite (`1.21+`, actually `1.23+` per `go.mod`/CI), an inaccurate `air` auto-install target (claimed `make r`, actually `make r-dev`), and a stale example crate version (`2.0.0`) in the Workspace Structure section.
 
-**Python:**
+**Java:**
 
-- Fixed `_core.pyi` stating stale defaults that diverged from the actual PyO3 runtime (and every other binding): `StreamingLowess.fraction` (`0.3`→`0.67`), `OnlineLowess.fraction` (`0.2`→`0.67`), `OnlineLowess.window_capacity` (`100`→`1000`), and `OnlineLowess.update_mode` (`"full"`→`"incremental"`). Runtime behavior was already correct.
-- Fixed `install_gpu()` never finding a matching wheel: `release-gpu.yml`'s Python jobs uploaded the GPU wheel under its default maturin filename (identical to the CPU wheel, with no `gpu` marker), so `_find_gpu_wheel_asset()`'s filename filter never matched. Added the missing rename step, matching every other language's GPU job.
+- Fixed `StreamingOptions.Builder.overlap()`'s Javadoc stating a stale flat `500` default; it's actually dynamic (`chunk_size / 10`, clamped to `[1, chunk_size - 10]`).
+
+**Julia:**
+
+- Fixed `install_gpu()` claiming the GPU backend was "active for this session, no restart required". It now correctly state a restart is required, like every other language.
 
 **Node.js:**
 
@@ -451,22 +454,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed `npm run build`/`build:debug` emitting only the generic `fastlowess.node`, which the loader in `index.js` never checks; added the missing `--platform` flag.
 - Fixed `installGpu()` being non-functional: it lived inside the auto-generated `index.js`, which `napi build` fully rewrites, silently discarding it. Moved it to `gpu-installer.js`, re-attached via a new `postbuild` step. Also fixed it downloading to the wrong filename (the loader never checked it) and an `EBUSY` error on Windows from locking the file it was trying to overwrite.
 
-**WASM:**
+**Python:**
 
-- Fixed the same class of stale doc-comment defaults as Node.js: `StreamingOptions.overlap` stated a flat `500` instead of the dynamic `chunk_size / 10`, and `OnlineOptions.window_capacity`/`update_mode` stated `100`/`"full"` instead of `1000`/`"incremental"`.
-
-**Java:**
-
-- Fixed `StreamingOptions.Builder.overlap()`'s Javadoc stating a stale flat `500` default; it's actually dynamic (`chunk_size / 10`, clamped to `[1, chunk_size - 10]`).
+- Fixed `_core.pyi` stating stale defaults that diverged from the actual PyO3 runtime (and every other binding): `StreamingLowess.fraction` (`0.3`→`0.67`), `OnlineLowess.fraction` (`0.2`→`0.67`), `OnlineLowess.window_capacity` (`100`→`1000`), and `OnlineLowess.update_mode` (`"full"`→`"incremental"`). Runtime behavior was already correct.
+- Fixed `install_gpu()` never finding a matching wheel: `release-gpu.yml`'s Python jobs uploaded the GPU wheel under its default maturin filename (identical to the CPU wheel, with no `gpu` marker), so `_find_gpu_wheel_asset()`'s filename filter never matched. Added the missing rename step, matching every other language's GPU job.
 
 **R:**
 
 - Fixed `use-case-real-time.Rmd`'s dashboard example crashing at 2 data points: the internal `validate_common_args()` hardcoded a stricter `min_points = 3L` than the Rust core's actual minimum of 2. Lowered its default to `2L` to match every other binding.
 - Fixed `install_gpu()` segfaulting: it overwrote the currently-loaded shared library in place (`file.copy(overwrite = TRUE)`), which can corrupt a still memory-mapped file and crash later when an unfaulted page is read back from the now-modified file on disk. It now installs via a same-directory temp file plus an atomic `file.rename()`.
 
-**Julia:**
+**WASM:**
 
-- Fixed `install_gpu()` claiming the GPU backend was "active for this session, no restart required". It now correctly state a restart is required, like every other language.
+- Fixed the same class of stale doc-comment defaults as Node.js: `StreamingOptions.overlap` stated a flat `500` instead of the dynamic `chunk_size / 10`, and `OnlineOptions.window_capacity`/`update_mode` stated `100`/`"full"` instead of `1000`/`"incremental"`.
 
 ## 3.2.1
 
@@ -478,10 +478,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added an optional `commit` input to every release workflow's `workflow_dispatch` trigger, to pin the built commit for manual runs.
 - Added an `aarch64-pc-windows-gnullvm` linker entry to the root `.cargo/config.toml`, matching the existing `x86_64-pc-windows-gnu` one; makes local arm64 Windows builds work without a manual env var.
 
-**Node.js:**
-
-- Added `aarch64-unknown-linux-musl` and `armv7-unknown-linux-gnueabihf` prebuilt targets with matching optional npm subpackages.
-
 **C++:**
 
 - Added ARM64 release binaries to `release-cpp.yml` (Linux, Windows, macOS); the macOS x64 job is now pinned to `macos-13` instead of `macos-latest`, which has been Apple Silicon since 2024 and was silently shipping an arm64 binary mislabeled as x64.
@@ -491,6 +487,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a `dev/check_pinned_versions.py` pin for the docs-site MathJax CDN version.
 - Added ARM64 release binaries to `release-go.yml` (native Linux, cross-compiled Windows via `aarch64-pc-windows-gnullvm` + llvm-mingw), with the same macOS x64/`macos-13` mislabeling fix as C++.
 - Added an arm64 job to `ci-go.yml` using the same llvm-mingw toolchain, so arm64 support is verified on every push.
+
+**Node.js:**
+
+- Added `aarch64-unknown-linux-musl` and `armv7-unknown-linux-gnueabihf` prebuilt targets with matching optional npm subpackages.
 
 **Python:**
 
@@ -503,9 +503,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added four new pins to `dev/check_pinned_versions.py`: R's `rextendr`/`roxygen2` versions and the vendored KaTeX CDN version in both Rust crates.
 - Changed `check-versions.yml` to open/update a GitHub issue instead of failing CI when a pin goes stale or unreachable.
 
-**lowess/fastLowess:**
+**lowess:**
 
 - Bumped the vendored KaTeX CDN version from `0.18.4` to `0.18.5`, updating SRI hashes to match.
+
+**fastLowess:**
+
+- Bumped the vendored KaTeX CDN version from `0.18.4` to `0.18.5`, updating SRI hashes to match.
+
+**Go:**
+
+- Bumped docs-site MathJax CDN version from `3.2.2` to `4.1.3`, updating `dev/check_pinned_versions.py`'s pattern for MathJax 4's CDN layout.
+
+**Java:**
+
+- Pinned the docs-site's jsDelivr MathJax CDN reference to `mathjax@4.1.3` (was the rolling `@3`).
+- Bumped `maven-compiler-plugin` to 3.16.0 and `maven-surefire-plugin` to 3.6.0.
 
 **Node.js:**
 
@@ -514,15 +527,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **WASM:**
 
 - Updated `@astrojs/starlight` to v0.42 and `astro` to v7.3.
-
-**Java:**
-
-- Pinned the docs-site's jsDelivr MathJax CDN reference to `mathjax@4.1.3` (was the rolling `@3`).
-- Bumped `maven-compiler-plugin` to 3.16.0 and `maven-surefire-plugin` to 3.6.0.
-
-**Go:**
-
-- Bumped docs-site MathJax CDN version from `3.2.2` to `4.1.3`, updating `dev/check_pinned_versions.py`'s pattern for MathJax 4's CDN layout.
 
 ### Fixed
 
@@ -534,15 +538,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed every binding's/crate's docs and doc-comments describing `LowessResult.x` (and equivalents) as "Sorted x values"; it's actually returned in the same order as the input `x` (the algorithm sorts internally, then un-sorts every output field back to the original order). Also strengthened Python's `test_unsorted_input` to assert this instead of only checking output length.
 - Fixed `.github/dependabot.yml`'s `cargo` entry for `/bindings/r/src`, which could never succeed: its `fastLowess = { path = "vendor/fastLowess" }` path dependency is only committed as `vendor.tar.xz`, never as loose files Dependabot can read. Removed the entry and added `extendr-api`'s version to `dev/check_pinned_versions.py` instead, which also uncovered and fixed a version-comparison bug there: comparing raw tuples treated a shorthand pin like `"0.9"` as older than `"0.9.0"` due to tuple-length tiebreaking; now padded to equal length first.
 
+**C++:**
+
+- Fixed `release-cpp.yml`'s `spack-release` job failing to `git push` from a detached HEAD; now checks out and pushes to the default branch explicitly.
+- Fixed `bindings/cpp/spack/package.py`'s example `url` going stale (only `version()`/`sha256` were auto-updated); `dev/bump_version.py` now refreshes it too.
+
 **Go:**
 
 - Fixed pkg.go.dev showing "License: None detected" and failing tagged/stable checks: `LICENSE-MIT`/`LICENSE-APACHE` lived one directory above the actual Go module. Copied both into `bindings/go/fastlowess`; `release-go.yml` now also pushes a nested-module `vX.Y.Z` tag.
 - Fixed `OnlineOptions`'s `MinPoints`/`UpdateMode` defaults (`3`/`"full"`) diverging from every other binding and the Rust core; now `2`/`"incremental"`.
 - Fixed `bindings/go/Makefile` and `ffi.go`'s cgo `LDFLAGS` both unconditionally targeting the x64 GNU build on any Windows host, which would have cross-compiled/linked for the wrong architecture on arm64.
-
-**Julia:**
-
-- Project version not bumped, resulting in unsuccessful release of version 3.2.0.
 
 **Java:**
 
@@ -551,16 +556,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed ~100 `mvn javadoc:jar` warnings (missing tags/undocumented methods); `maven-javadoc-plugin` now sets `failOnWarning` as a dedicated `make java-dev` check step.
 - Fixed `OnlineOptions.Builder()` never calling `parallel(false)`, silently defaulting online mode's `parallel` to `true` unlike every other binding.
 
+**Julia:**
+
+- Project version not bumped, resulting in unsuccessful release of version 3.2.0.
+
+**Node.js:**
+
+- Fixed `astro build` failing since Astro 7 no longer bundles `@astrojs/markdown-remark` by default, which the KaTeX plugins need; added it as an explicit devDependency in both.
+
 **Python:**
 
 - Fixed `release-pypi.yml`/`release-gpu.yml`'s macOS/Windows jobs printing a pip version-check notice on every run; added `PIP_DISABLE_PIP_VERSION_CHECK: "1"`.
 
-**C++:**
-
-- Fixed `release-cpp.yml`'s `spack-release` job failing to `git push` from a detached HEAD; now checks out and pushes to the default branch explicitly.
-- Fixed `bindings/cpp/spack/package.py`'s example `url` going stale (only `version()`/`sha256` were auto-updated); `dev/bump_version.py` now refreshes it too.
-
-**Node.js/WASM:**
+**WASM:**
 
 - Fixed `astro build` failing since Astro 7 no longer bundles `@astrojs/markdown-remark` by default, which the KaTeX plugins need; added it as an explicit devDependency in both.
 
@@ -599,40 +607,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `.gitattributes`, normalizing all text files to LF line endings (`* text=auto eol=lf`) and marking binary formats (images, archives, compiled libraries, `.rds`/`.RData`, etc.) so Git never treats them as text.
 - Added `dev/update_changelogs.py` to generate per-package NEWS files from `CHANGELOG.md` and wired it into documentation navigation, Rust docs, and development Makefiles.
 
-**C++:**
-
-- Restructured the Doxygen site's navigation (previously ~20 flat pages) into six nested hub pages (`Getting Started`, `User Guide`, `Weight & Robustness`, `Advanced`, `Use Cases`, `API`) via `\subpage`, matching every other binding's docs site. Updated `README.md`'s hardcoded Doxygen URLs to match.
-- Added a Spack recipe (`bindings/cpp/spack/package.py`, a `CargoPackage` with custom `build()`/`install()` phases). `release-cpp.yml` now updates its `version()`/`sha256` on every release and opens a PR to `spack/spack-packages`, so `fastlowess-cpp` stays installable via `spack install fastlowess-cpp`.
-- Bumped the vendored Corrosion CMake module from `v0.5.1` to `v0.6.1`.
-- Added CI coverage for more compilers: Clang on Linux and clang-cl on Windows (`make cpp-dev CPP_CMAKE_TOOLSET="-T ClangCL"`) now gate CI; MinGW-w64 and Intel oneAPI (`icpx`) run as non-blocking jobs. See `bindings/cpp/CMAKE.md`'s new "Compiler Support" table.
-- Standardized C++ documentation: consolidated README setup content and parameter guidance, renamed the batch-adapter heading, replaced flowcharts with decision tables, standardized API examples and page structure, and converted superscripts to ASCII.
-- Vendored `doxygen-awesome-css` v2.4.2 for a modern, sidebar-only Doxygen site.
-- Moved C++ GPU acceleration guidance from the API page to a dedicated GPU Backend guide with hardware requirements and performance considerations.
-
-**R:**
-
-- Removed the `rfastlowess-package` pkgdown topic, which duplicated the adapter class list, and unexported the internal `Nullable()` helper.
-- Fixed `_pkgdown.yml` describing the core interface as "R6 classes" when the package actually uses S3 classes.
-- Merged `vignettes/parameters.Rmd`'s parameter reference (ranges, defaults, and fraction-choice guidance) into the `@param`/`@details` roxygen docs of `Lowess()`, `StreamingLowess()`, and `OnlineLowess()`, and removed the now-redundant vignette.
-- Merged `vignettes/batch.Rmd`, `streaming.Rmd`, and `online.Rmd`'s unique content (When to Use guidance, merge strategy comparison) into the `@description`/`@details` roxygen docs of `Lowess()`, `StreamingLowess()`, and `OnlineLowess()`, and removed the now-redundant vignettes and their orphaned `gap_handling.svg`/`online_comparison.svg` diagrams.
-- Standardized R documentation: consolidated README setup content and parameter guidance, renamed the batch-adapter heading, replaced flowcharts with decision tables, standardized API examples and page structure, and converted superscripts to ASCII.
-
-**Node.js:**
-
-- Updated `napi` to v3.12.
-- Updated `napi-derive` to v3.6.
-- Updated `napi-build` to v2.4.
-- Updated `typedoc-plugin-markdown` to v4.13.
-- `make nodejs-dev` now runs `npm update` after `npm install`, so dependencies are kept current.
-- Standardized Node.js documentation: consolidated README setup content and parameter guidance, renamed the batch-adapter heading, replaced flowcharts with decision tables, standardized API examples and page structure, and converted superscripts to ASCII.
-- Moved Node.js GPU acceleration guidance from the API page to a dedicated GPU Backend guide with hardware requirements and performance considerations.
-
-**WASM:**
-
-- Updated `typedoc-plugin-markdown` to v4.13.
-- `make wasm-dev` now runs `npm update` after `npm install`, so dependencies are kept current.
-- Standardized WASM documentation: consolidated README setup content and parameter guidance, renamed the batch-adapter heading, replaced flowcharts with decision tables, standardized API examples and page structure, and converted superscripts to ASCII.
-
 **lowess:**
 
 - Updated `wide` to v1.7.
@@ -644,6 +618,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Standardized the fastLowess crate documentation: consolidated README setup content and parameter guidance, renamed the batch-adapter heading, replaced flowcharts with decision tables, standardized API examples and page structure, and converted superscripts to ASCII.
 - Moved the fastLowess crate GPU acceleration guidance from the API page to a dedicated GPU Backend guide with hardware requirements and performance considerations.
+
+**C++:**
+
+- Restructured the Doxygen site's navigation (previously ~20 flat pages) into six nested hub pages (`Getting Started`, `User Guide`, `Weight & Robustness`, `Advanced`, `Use Cases`, `API`) via `\subpage`, matching every other binding's docs site. Updated `README.md`'s hardcoded Doxygen URLs to match.
+- Added a Spack recipe (`bindings/cpp/spack/package.py`, a `CargoPackage` with custom `build()`/`install()` phases). `release-cpp.yml` now updates its `version()`/`sha256` on every release and opens a PR to `spack/spack-packages`, so `fastlowess-cpp` stays installable via `spack install fastlowess-cpp`.
+- Bumped the vendored Corrosion CMake module from `v0.5.1` to `v0.6.1`.
+- Added CI coverage for more compilers: Clang on Linux and clang-cl on Windows (`make cpp-dev CPP_CMAKE_TOOLSET="-T ClangCL"`) now gate CI; MinGW-w64 and Intel oneAPI (`icpx`) run as non-blocking jobs. See `bindings/cpp/CMAKE.md`'s new "Compiler Support" table.
+- Standardized C++ documentation: consolidated README setup content and parameter guidance, renamed the batch-adapter heading, replaced flowcharts with decision tables, standardized API examples and page structure, and converted superscripts to ASCII.
+- Vendored `doxygen-awesome-css` v2.4.2 for a modern, sidebar-only Doxygen site.
+- Moved C++ GPU acceleration guidance from the API page to a dedicated GPU Backend guide with hardware requirements and performance considerations.
 
 **Go:**
 
@@ -657,10 +641,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Standardized Julia documentation: consolidated README setup content and parameter guidance, renamed the batch-adapter heading, replaced flowcharts with decision tables, standardized API examples and page structure, and converted superscripts to ASCII.
 
+**Node.js:**
+
+- Updated `napi` to v3.12.
+- Updated `napi-derive` to v3.6.
+- Updated `napi-build` to v2.4.
+- Updated `typedoc-plugin-markdown` to v4.13.
+- `make nodejs-dev` now runs `npm update` after `npm install`, so dependencies are kept current.
+- Standardized Node.js documentation: consolidated README setup content and parameter guidance, renamed the batch-adapter heading, replaced flowcharts with decision tables, standardized API examples and page structure, and converted superscripts to ASCII.
+- Moved Node.js GPU acceleration guidance from the API page to a dedicated GPU Backend guide with hardware requirements and performance considerations.
+
 **Python:**
 
 - Standardized Python documentation: consolidated README setup content and parameter guidance, renamed the batch-adapter heading, replaced flowcharts with decision tables, standardized API examples and page structure, and converted superscripts to ASCII.
 - Moved Python GPU acceleration guidance from the API page to a dedicated GPU Backend guide with hardware requirements and performance considerations.
+
+**R:**
+
+- Removed the `rfastlowess-package` pkgdown topic, which duplicated the adapter class list, and unexported the internal `Nullable()` helper.
+- Fixed `_pkgdown.yml` describing the core interface as "R6 classes" when the package actually uses S3 classes.
+- Merged `vignettes/parameters.Rmd`'s parameter reference (ranges, defaults, and fraction-choice guidance) into the `@param`/`@details` roxygen docs of `Lowess()`, `StreamingLowess()`, and `OnlineLowess()`, and removed the now-redundant vignette.
+- Merged `vignettes/batch.Rmd`, `streaming.Rmd`, and `online.Rmd`'s unique content (When to Use guidance, merge strategy comparison) into the `@description`/`@details` roxygen docs of `Lowess()`, `StreamingLowess()`, and `OnlineLowess()`, and removed the now-redundant vignettes and their orphaned `gap_handling.svg`/`online_comparison.svg` diagrams.
+- Standardized R documentation: consolidated README setup content and parameter guidance, renamed the batch-adapter heading, replaced flowcharts with decision tables, standardized API examples and page structure, and converted superscripts to ASCII.
+
+**WASM:**
+
+- Updated `typedoc-plugin-markdown` to v4.13.
+- `make wasm-dev` now runs `npm update` after `npm install`, so dependencies are kept current.
+- Standardized WASM documentation: consolidated README setup content and parameter guidance, renamed the batch-adapter heading, replaced flowcharts with decision tables, standardized API examples and page structure, and converted superscripts to ASCII.
 
 ### Fixed
 
@@ -670,12 +678,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed `docs.yml`'s reliance on GitHub's legacy branch-based Pages deployment, which auto-triggered an unpinned "pages build and deployment" job on every `gh-pages` push. The former `deploy` job is now `build` (still pushes `_site` to `gh-pages` as a cache); publishing now goes through `actions/upload-pages-artifact` and a new `deploy` job using `actions/deploy-pages`. Requires the repo's Pages source set to "GitHub Actions".
 - Fixed every benchmark category in `benchmarks/rfastlowess.R` failing with `attempt to apply non-function`: it called the R6-style `model$fit(x, y)`, but `fit` is an S3 generic (`fit(model, x, y)`), not a field on the `Lowess` object. Also fixed `benchmarks/stats_lowess.R` resolving its `output/` directory relative to the current working directory instead of the script's own location (unlike `rfastlowess.R`, which already did this correctly), so results could land outside `benchmarks/output/` depending on how the script was invoked.
 
+**lowess:**
+
+- Fixed inline/display LaTeX math rendering as literal text on docs.rs; added a `katex-header.html` that renders it client-side with KaTeX.
+- Fixed every cross-reference link across the `lowess`/`fastLowess` crate docs leading nowhere: these pages are embedded into rustdoc via `#![doc = include_str!(...)]`, so plain relative links render verbatim instead of resolving. Converted them to proper intra-doc links (e.g. `crate::doc::concepts`), validated with `cargo doc --all-features -D warnings`.
+
+- Fixed the Handling Outliers quickstart example in the lowess crate: increased `fraction` from `0.5` to `0.7` because the six-point example otherwise fit the injected outlier exactly instead of downweighting it.
+- Capped the lowess crate Detecting Outliers example output at five lines.
+
 **fastLowess:**
 
 - Fixed `cargo doc` failing with `unresolved link to`crate::doc::gpu_backend`` whenever documenting with a feature set that excludes `gpu` (e.g. `--features cpu`): `api.md`'s GPU Backend link isn't itself feature-gated, but the `gpu_backend` doc module was gated behind `#[cfg(all(doc, feature = "gpu"))]`. Changed to `#[cfg(doc)]` (matching every other doc submodule), since it's a plain Markdown page with no dependency on the `gpu` feature's actual code.
 - Fixed a misleading comment on `binding_support::default_overlap()` claiming wasm/nodejs use a flat `500`-point overlap while others use `chunk_size / 10`; every binding actually computes `chunk_size / 10` via the same `build_streaming()` helper. No behavior changed, only the comment.
 - Fixed the Handling Outliers quickstart example in the fastLowess crate: increased `fraction` from `0.5` to `0.7` because the six-point example otherwise fit the injected outlier exactly instead of downweighting it.
 - Capped the fastLowess crate Detecting Outliers example output at five lines.
+
+- Fixed inline/display LaTeX math rendering as literal text on docs.rs; added a `katex-header.html` that renders it client-side with KaTeX.
+- Fixed every cross-reference link across the `lowess`/`fastLowess` crate docs leading nowhere: these pages are embedded into rustdoc via `#![doc = include_str!(...)]`, so plain relative links render verbatim instead of resolving. Converted them to proper intra-doc links (e.g. `crate::doc::concepts`), validated with `cargo doc --all-features -D warnings`.
 
 **C++:**
 
@@ -687,6 +706,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed `Doxyfile`'s `FILE_PATTERNS` missing a space (`*.hpp*.h`), which Doxygen parses as a single malformed glob instead of two separate `*.hpp`/`*.h` patterns; changed to `*.hpp *.h *.md`.
 - Fixed the Handling Outliers quickstart example in C++: increased `fraction` from `0.5` to `0.7` because the six-point example otherwise fit the injected outlier exactly instead of downweighting it.
 - Capped the C++ Detecting Outliers example output at five lines.
+
+**Go:**
+
+- Fixed the Handling Outliers quickstart example in Go: increased `fraction` from `0.5` to `0.7` because the six-point example otherwise fit the injected outlier exactly instead of downweighting it.
+
+**Java:**
+
+- Fixed the Handling Outliers quickstart example in Java: increased `fraction` from `0.5` to `0.7` because the six-point example otherwise fit the injected outlier exactly instead of downweighting it.
 
 **Julia:**
 
@@ -706,17 +733,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed the Handling Outliers quickstart example in Node.js: increased `fraction` from `0.5` to `0.7` because the six-point example otherwise fit the injected outlier exactly instead of downweighting it.
 - Capped the Node.js Detecting Outliers example output at five lines.
 
-**WASM:**
-
-- Same fix as Node.js: `README.md` is now embedded via `dev/add-readme-to-docs.js`, wired into `npm run docs` and `make wasm-dev`.
-- Fixed `concepts.md` figures (MkDocs-only `<figure>`/attr_list syntax) not rendering; converted to plain images with italicized captions.
-- Fixed inline/display LaTeX math rendering as literal text; wired `remark-math`/`rehype-katex` into `astro.config.mjs`.
-- Fixed the same `@astrojs/sitemap` warning as Node.js, with the same fallback in `astro.config.mjs`.
-- Fixed the same "API Reference" 404s as Node.js, via the same `dev/lowercase-typedoc-refs.js` script.
-- Fixed the same `custom-weights.md` "Zero-weight windows" admonition closing early as Node.js.
-- Fixed the Handling Outliers quickstart example in WASM: increased `fraction` from `0.5` to `0.7` because the six-point example otherwise fit the injected outlier exactly instead of downweighting it.
-- Capped the WASM Detecting Outliers example output at five lines.
-
 **Python:**
 
 - Fixed `StreamingLowess`'s `fraction` default (was `0.3`, should be `0.67`) and `OnlineLowess`'s `fraction` (was `0.2`), `window_capacity` (was `100`), and `update_mode` (was `"full"`) defaults (should be `0.67`, `1000`, and `"incremental"` respectively) diverging from the Rust core and the batch `Lowess` default.
@@ -734,23 +750,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed the genomics vignette by fitting the current example data before plotting.
 - Fixed the real-time vignette Update Modes example by feeding data to the model and plotting its results.
 
-**Rust:**
+**WASM:**
 
-- Fixed inline/display LaTeX math rendering as literal text on docs.rs; added a `katex-header.html` that renders it client-side with KaTeX.
-- Fixed every cross-reference link across the `lowess`/`fastLowess` crate docs leading nowhere: these pages are embedded into rustdoc via `#![doc = include_str!(...)]`, so plain relative links render verbatim instead of resolving. Converted them to proper intra-doc links (e.g. `crate::doc::concepts`), validated with `cargo doc --all-features -D warnings`.
-
-**lowess:**
-
-- Fixed the Handling Outliers quickstart example in the lowess crate: increased `fraction` from `0.5` to `0.7` because the six-point example otherwise fit the injected outlier exactly instead of downweighting it.
-- Capped the lowess crate Detecting Outliers example output at five lines.
-
-**Go:**
-
-- Fixed the Handling Outliers quickstart example in Go: increased `fraction` from `0.5` to `0.7` because the six-point example otherwise fit the injected outlier exactly instead of downweighting it.
-
-**Java:**
-
-- Fixed the Handling Outliers quickstart example in Java: increased `fraction` from `0.5` to `0.7` because the six-point example otherwise fit the injected outlier exactly instead of downweighting it.
+- Same fix as Node.js: `README.md` is now embedded via `dev/add-readme-to-docs.js`, wired into `npm run docs` and `make wasm-dev`.
+- Fixed `concepts.md` figures (MkDocs-only `<figure>`/attr_list syntax) not rendering; converted to plain images with italicized captions.
+- Fixed inline/display LaTeX math rendering as literal text; wired `remark-math`/`rehype-katex` into `astro.config.mjs`.
+- Fixed the same `@astrojs/sitemap` warning as Node.js, with the same fallback in `astro.config.mjs`.
+- Fixed the same "API Reference" 404s as Node.js, via the same `dev/lowercase-typedoc-refs.js` script.
+- Fixed the same `custom-weights.md` "Zero-weight windows" admonition closing early as Node.js.
+- Fixed the Handling Outliers quickstart example in WASM: increased `fraction` from `0.5` to `0.7` because the six-point example otherwise fit the injected outlier exactly instead of downweighting it.
+- Capped the WASM Detecting Outliers example output at five lines.
 
 ## 3.1.0
 
@@ -761,25 +770,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a GitHub Pages landing page at the repository root, built from `README.md` via pandoc and deployed by `docs.yml`.
 - Added a GitHub workflow for running validation scripts.
 
+**C++:**
+
+- Added clang-tidy and cppcheck installation to Makefile.
+
 **Julia:**
 
 - `release-julia-register.yml` now automatically extracts the matching changelog section and appends it as release notes in the JuliaRegistrator comment, enabling auto-merge on major version bumps.
-
-**R:**
-
-- Added `lenght` gaurds for extra arguments.
 
 **Node.js:**
 
 - Added `npm run lint` to the `Lint` step in `ci-nodejs.yml`, so JavaScript source and test files are linted via `oxlint` on every CI run.
 
+**R:**
+
+- Added `lenght` gaurds for extra arguments.
+
 **WASM:**
 
 - Added `npm run lint` to the `Lint` step in `ci-wasm.yml`, so JavaScript source and test files are linted via `oxlint` on every CI run.
-
-**C++:**
-
-- Added clang-tidy and cppcheck installation to Makefile.
 
 ### Changed
 
@@ -790,20 +799,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Split `dev/verify_snippets.py` into a lean orchestrator and a `dev/runners/` package. Each language has its own module (`python.py`, `julia.py`, `nodejs.py`, `r.py`, `wasm.py`, `rust.py`, `cpp.py`) containing its `run_<lang>()` function and a `skip_reason()` predicate. Shared types (`Snippet`, `RunResult`) and utilities live in `runners/base.py`; the registry (`RUNNERS`, `SKIP_CHECKS`) is exported from `runners/__init__.py`.
 - Moved `CHANGELOG.md` and `CONTRIBUTING.md` to the repository root.
 
-**R:**
+**lowess:**
 
-- Simplified `bindings/r/Makefile`: replaced `Cargo.toml.orig` save/restore vendoring with `src/vendor-update.sh`; made `[workspace]` permanent in `src/Cargo.toml`; removed Bioconductor dependencies, redundant `cargo fmt --check`, `NAMESPACE` indentation post-processing, and `pkgdown::build_site` from the dev workflow.
-- Moved R documentation from ReadTheDocs to GitHub Pages, served by pkgdown at <https://thisisamirv.github.io/lowess-project/r/>. The ReadTheDocs site no longer includes R-specific content.
-- Changed R version dependency to 4.4.0 due to issues with installing Bioconducter packages on R < 4.4.0.
-- Replaced the multi-step `install.packages` / `BiocManager::install` package installation logic in `bindings/r/Makefile` with a single [`pak`](https://pak.r-lib.org/)-based block. `pak` handles RSPM binary vs source selection automatically (including Linux), skips already-installed packages, and installs CRAN, Bioconductor (`bioc::` prefix), and R-universe packages in one call.
-- `make r` (`default:`) now runs `R CMD INSTALL $(R_DIR)` directly; R's `configure` script handles Rust compilation from the committed `vendor.tar.xz`. The full dev workflow moves to `make r-dev`.
-- Updated the R README to be package-specific instead of using the generic shared README.
+- Moved crate documentation from ReadTheDocs to <https://docs.rs/lowess>.
+- `make lowess` (`default:`) now only runs `cargo build`. The full dev workflow moves to `make lowess-dev`.
+- Updated the lowess crate README to be package-specific instead of using the generic shared README.
 
-**Python:**
+**fastLowess:**
 
-- Migrated Python documentation from MkDocs to Sphinx (with MyST-Parser and jupyter-sphinx). Code blocks now execute and embed output automatically via `jupyter-sphinx`.
-- `make python` (`default:`) now installs to the user Python environment via `pip install --user`. The full dev workflow (venv setup, formatting, linting, testing, doc-snippet verification) moves to `make python-dev`.
-- Updated the Python README to be package-specific instead of using the generic shared README.
+- Moved crate documentation from ReadTheDocs to <https://docs.rs/fastLowess>.
+- `make fastLowess` (`default:`) now only runs `cargo build`. The full dev workflow moves to `make fastLowess-dev`.
+- Updated the fastLowess crate README to be package-specific instead of using the generic shared README.
+
+**C++:**
+
+- Moved C++ documentation from ReadTheDocs to GitHub Pages, served by Doxygen at <https://thisisamirv.github.io/lowess-project/cpp/>. The ReadTheDocs site no longer includes C++-specific content.
+- `make cpp` (`default:`) now only runs `cargo build`. The full dev workflow (formatting, linting, cbindgen idempotency, symbol export verification, cmake tests, valgrind, doc-snippet verification) moves to `make cpp-dev`.
+- Updated the C++ README to be package-specific instead of using the generic shared README.
 
 **Julia:**
 
@@ -818,6 +830,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated `oxlint` dependency to 1.80.
 - Updated the Node.js README to be package-specific instead of using the generic shared README.
 
+**Python:**
+
+- Migrated Python documentation from MkDocs to Sphinx (with MyST-Parser and jupyter-sphinx). Code blocks now execute and embed output automatically via `jupyter-sphinx`.
+- `make python` (`default:`) now installs to the user Python environment via `pip install --user`. The full dev workflow (venv setup, formatting, linting, testing, doc-snippet verification) moves to `make python-dev`.
+- Updated the Python README to be package-specific instead of using the generic shared README.
+
+**R:**
+
+- Simplified `bindings/r/Makefile`: replaced `Cargo.toml.orig` save/restore vendoring with `src/vendor-update.sh`; made `[workspace]` permanent in `src/Cargo.toml`; removed Bioconductor dependencies, redundant `cargo fmt --check`, `NAMESPACE` indentation post-processing, and `pkgdown::build_site` from the dev workflow.
+- Moved R documentation from ReadTheDocs to GitHub Pages, served by pkgdown at <https://thisisamirv.github.io/lowess-project/r/>. The ReadTheDocs site no longer includes R-specific content.
+- Changed R version dependency to 4.4.0 due to issues with installing Bioconducter packages on R < 4.4.0.
+- Replaced the multi-step `install.packages` / `BiocManager::install` package installation logic in `bindings/r/Makefile` with a single [`pak`](https://pak.r-lib.org/)-based block. `pak` handles RSPM binary vs source selection automatically (including Linux), skips already-installed packages, and installs CRAN, Bioconductor (`bioc::` prefix), and R-universe packages in one call.
+- `make r` (`default:`) now runs `R CMD INSTALL $(R_DIR)` directly; R's `configure` script handles Rust compilation from the committed `vendor.tar.xz`. The full dev workflow moves to `make r-dev`.
+- Updated the R README to be package-specific instead of using the generic shared README.
+
 **WASM:**
 
 - Moved WASM documentation from ReadTheDocs to GitHub Pages, served by Starlight at <https://thisisamirv.github.io/lowess-project/wasm/>. The ReadTheDocs site no longer includes WASM-specific content. `dev/add-wasm-outputs.js` runs as part of `make wasm-dev`, executing each JavaScript code block in the docs and injecting its output back into the Markdown source.
@@ -825,24 +852,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated `oxlint` dependency to 1.80.
 - Replace the outdated `jetli/wasm-pack-action` workflow with `taiki-e/install-action`.
 - Updated the WASM README to be package-specific instead of using the generic shared README.
-
-**C++:**
-
-- Moved C++ documentation from ReadTheDocs to GitHub Pages, served by Doxygen at <https://thisisamirv.github.io/lowess-project/cpp/>. The ReadTheDocs site no longer includes C++-specific content.
-- `make cpp` (`default:`) now only runs `cargo build`. The full dev workflow (formatting, linting, cbindgen idempotency, symbol export verification, cmake tests, valgrind, doc-snippet verification) moves to `make cpp-dev`.
-- Updated the C++ README to be package-specific instead of using the generic shared README.
-
-**fastLowess:**
-
-- Moved crate documentation from ReadTheDocs to <https://docs.rs/fastLowess>.
-- `make fastLowess` (`default:`) now only runs `cargo build`. The full dev workflow moves to `make fastLowess-dev`.
-- Updated the fastLowess crate README to be package-specific instead of using the generic shared README.
-
-**lowess:**
-
-- Moved crate documentation from ReadTheDocs to <https://docs.rs/lowess>.
-- `make lowess` (`default:`) now only runs `cargo build`. The full dev workflow moves to `make lowess-dev`.
-- Updated the lowess crate README to be package-specific instead of using the generic shared README.
 
 ### Fixed
 
@@ -855,6 +864,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed `make cpp` Windows CI failure (`cannot find -lgcc_eh`): the C++ binding's Makefile detected MinGW via `gcc -dumpmachine` and selected the GNU target, which then used the Rtools cross-compiler from the workspace `.cargo/config.toml`; that compiler delegated to `C:\mingw64\bin\ld.exe`, which lacks `lgcc_eh`. Fixed by always targeting `x86_64-pc-windows-msvc` on Windows, removing the MinGW detection branch entirely.
 - Fixed clang-tidy warnings in `bindings/cpp/include/fastlowess.hpp`: replaced all `#if defined(_WIN32)` with `#ifdef _WIN32`, added `#include <cstdio>` for `stdin`/`fileno`/`_fileno`, replaced deprecated `std::getenv("USERPROFILE")` with `_dupenv_s` on Windows, and added `const` to `base` and `cmd` local variables.
 
+**Python:**
+
+- Enforced keyword-only arguments beyond the first positional allowance in `Lowess`, `StreamingLowess`, and `OnlineLowess`, matching R's behaviour: `Lowess(fraction, *, ...)`, `StreamingLowess(fraction, chunk_size, *, ...)`, `OnlineLowess(fraction, window_capacity, min_points, *, ...)`. The `.pyi` stubs were updated with the same `*` separator.
+
 **R:**
 
 - Fixed Windows arm64 (R-Universe) build: `ar x` without a member name correctly resolves long-name archive entries (>16 chars stored as `/<offset>`); named extraction silently fails for such entries. Used `objcopy --remove-section=.idata$4` on each extracted `.dll` stub to strip the invalid relocations that lld 19 rejects, then `ar r` to re-insert.
@@ -863,13 +876,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed CRAN Windows build (`cannot find -lgcc_eh`): the Rtools gcc lib directory is not writable on CRAN's server, and config-file `rustflags` does not reach build-script linker invocations. `Makevars.win` creates an empty stub via `touch` in `$(TARGET_DIR)/libgcc_mock/` and passes `LIBRARY_PATH` inline on `cargo build`. The path is resolved to an absolute path via `$(pwd)` at shell execution time — a relative path silently fails because Cargo invokes GCC to link build scripts from its own temp directory, not from `src/`.
 - Fixed `Lowess(fraction = 0.3, 4)` incorrectly succeeding: `reject_extra_positional_args()` counted unnamed arguments but did not check their position, so a single unnamed arg in any non-first slot passed validation. The check now rejects any unnamed argument that is not in position 1.
 
-**Python:**
-
-- Enforced keyword-only arguments beyond the first positional allowance in `Lowess`, `StreamingLowess`, and `OnlineLowess`, matching R's behaviour: `Lowess(fraction, *, ...)`, `StreamingLowess(fraction, chunk_size, *, ...)`, `OnlineLowess(fraction, window_capacity, min_points, *, ...)`. The `.pyi` stubs were updated with the same `*` separator.
-
 ## 3.0.0
 
 ### Added
+
+**lowess:**
+
+- Added `*See: ...*` cross-reference links after option headings in the lowess crate API docs, pointing to the corresponding user guide.
+
+**fastLowess:**
+
+- Added `*See: ...*` cross-reference links after option headings in the fastLowess crate API docs, pointing to the corresponding user guide.
+
+**C++:**
+
+- Exposed a `backend` option (`"cpu"` default, `"gpu"`) on `Lowess`, gated behind an opt-in `gpu` Cargo feature not enabled by default. Call `fastlowess::gpu::install()` to download a prebuilt GPU library, or build locally with `cargo build --features gpu`.
+- Added `*See: ...*` cross-reference links after option headings in the C++ API docs, pointing to the corresponding user guide.
+
+**Julia:**
+
+- Exposed a `backend` option (`"cpu"` default, `"gpu"`) on `Lowess`, gated behind an opt-in `gpu` Cargo feature not enabled in published JLL artifacts. Run `install_gpu()` to download a prebuilt GPU library, or build locally with `cargo build --release --features gpu`.
+- Added `*See: ...*` cross-reference links after option headings in the Julia API docs, pointing to the corresponding user guide.
+
+**Node.js:**
+
+- Exposed a `backend` option (`"cpu"` default, `"gpu"`) on `Lowess`, gated behind an opt-in `gpu` Cargo feature not enabled in published npm binaries. Run `await fastlowess.installGpu()` to download a prebuilt GPU addon (requires restarting Node.js), or build locally with `napi build --features gpu`.
+- Added `*See: ...*` cross-reference links after option headings in the Node.js API docs, pointing to the corresponding user guide.
 
 **Python:**
 
@@ -884,47 +916,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a `reject_extra_positional_args()` helper to reject extra unnamed arguments.
 - Added `*See: ...*` cross-reference links after option headings in the R API docs, pointing to the corresponding user guide.
 
-**Julia:**
-
-- Exposed a `backend` option (`"cpu"` default, `"gpu"`) on `Lowess`, gated behind an opt-in `gpu` Cargo feature not enabled in published JLL artifacts. Run `install_gpu()` to download a prebuilt GPU library, or build locally with `cargo build --release --features gpu`.
-- Added `*See: ...*` cross-reference links after option headings in the Julia API docs, pointing to the corresponding user guide.
-
-**Node.js:**
-
-- Exposed a `backend` option (`"cpu"` default, `"gpu"`) on `Lowess`, gated behind an opt-in `gpu` Cargo feature not enabled in published npm binaries. Run `await fastlowess.installGpu()` to download a prebuilt GPU addon (requires restarting Node.js), or build locally with `napi build --features gpu`.
-- Added `*See: ...*` cross-reference links after option headings in the Node.js API docs, pointing to the corresponding user guide.
-
-**C++:**
-
-- Exposed a `backend` option (`"cpu"` default, `"gpu"`) on `Lowess`, gated behind an opt-in `gpu` Cargo feature not enabled by default. Call `fastlowess::gpu::install()` to download a prebuilt GPU library, or build locally with `cargo build --features gpu`.
-- Added `*See: ...*` cross-reference links after option headings in the C++ API docs, pointing to the corresponding user guide.
-
-**lowess:**
-
-- Added `*See: ...*` cross-reference links after option headings in the lowess crate API docs, pointing to the corresponding user guide.
-
-**fastLowess:**
-
-- Added `*See: ...*` cross-reference links after option headings in the fastLowess crate API docs, pointing to the corresponding user guide.
-
 **WASM:**
 
 - Added `*See: ...*` cross-reference links after option headings in the WASM API docs, pointing to the corresponding user guide.
 
 ### Fixed
 
-**R:**
-
-- Fixed incorrect URLs in R binding docs.
-
-**Julia:**
-
-- Fixed `LowessResult.iterations_used` returning the raw FFI sentinel `-1` instead of `nothing` when robustness iterations were not applicable.
-
-**WASM:**
-
-- Fixed `OnlineLowess.add_point()` returning `undefined` instead of `null` when the sliding window has not yet accumulated enough points.
-
 **lowess:**
 
 - Fixed `docs/api/rust.md` showing Rust enum variants instead of the string option values accepted by the API.
@@ -932,6 +929,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **fastLowess:**
 
 - Fixed `docs/api/rust.md` showing Rust enum variants instead of the string option values accepted by the API.
+
+**Julia:**
+
+- Fixed `LowessResult.iterations_used` returning the raw FFI sentinel `-1` instead of `nothing` when robustness iterations were not applicable.
+
+**R:**
+
+- Fixed incorrect URLs in R binding docs.
+
+**WASM:**
+
+- Fixed `OnlineLowess.add_point()` returning `undefined` instead of `null` when the sliding window has not yet accumulated enough points.
 
 ### Changed
 
@@ -954,6 +963,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Exposed GPU backend in `binding_support.rs`.
 - Split Streaming/Online content from the fastLowess crate API reference into dedicated pages, moved tutorials into the user-guide use-cases section, and standardized API examples with expected output.
 
+**C++:**
+
+- Renamed `OnlineOutput`'s `smoothed()` and `std_error()` methods to `y()` and `standard_error()`. This is a **breaking change**.
+- Split Streaming/Online content from the C++ API reference into dedicated pages, moved tutorials into the user-guide use-cases section, and standardized API examples with expected output.
+
+**Julia:**
+
+- Renamed `OnlineOutput`'s `smoothed` and `std_error` fields to `y` and `standard_error`. This is a **breaking change**.
+- Removed `dev/format_julia.jl`; formatting is now inlined in `bindings/julia/Makefile`.
+- Split Streaming/Online content from the Julia API reference into dedicated pages, moved tutorials into the user-guide use-cases section, and standardized API examples with expected output.
+
+**Node.js:**
+
+- Renamed `OnlineOutput`'s `smoothed` and `std_error` fields to `y` and `standard_error`. This is a **breaking change**.
+- Updated `@napi-rs/cli` to v3.8 and `oxlint` to v1.79.
+- Split Streaming/Online content from the Node.js API reference into dedicated pages, moved tutorials into the user-guide use-cases section, and standardized API examples with expected output.
+
 **Python:**
 
 - Renamed `OnlineOutput`'s `smoothed` and `std_error` properties to `y` and `standard_error`. This is a **breaking change**.
@@ -971,34 +997,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Split Streaming/Online content from the R API reference into dedicated pages, moved tutorials into the user-guide use-cases section, and standardized API examples with expected output.
 - Extended `dev/verify_snippets.py` to execute R code chunks in vignettes.
 
-**Julia:**
-
-- Renamed `OnlineOutput`'s `smoothed` and `std_error` fields to `y` and `standard_error`. This is a **breaking change**.
-- Removed `dev/format_julia.jl`; formatting is now inlined in `bindings/julia/Makefile`.
-- Split Streaming/Online content from the Julia API reference into dedicated pages, moved tutorials into the user-guide use-cases section, and standardized API examples with expected output.
-
-**Node.js:**
-
-- Renamed `OnlineOutput`'s `smoothed` and `std_error` fields to `y` and `standard_error`. This is a **breaking change**.
-- Updated `@napi-rs/cli` to v3.8 and `oxlint` to v1.79.
-- Split Streaming/Online content from the Node.js API reference into dedicated pages, moved tutorials into the user-guide use-cases section, and standardized API examples with expected output.
-
 **WASM:**
 
 - Renamed `OnlineOutput`'s `smoothed` and `std_error` getters to `y` and `standard_error`. This is a **breaking change**.
 - Updated `oxlint` to v1.79.
 - Split Streaming/Online content from the WASM API reference into dedicated pages, moved tutorials into the user-guide use-cases section, and standardized API examples with expected output.
 
-**C++:**
-
-- Renamed `OnlineOutput`'s `smoothed()` and `std_error()` methods to `y()` and `standard_error()`. This is a **breaking change**.
-- Split Streaming/Online content from the C++ API reference into dedicated pages, moved tutorials into the user-guide use-cases section, and standardized API examples with expected output.
-
 ## 2.0.0
 
 ### Added
 
-**lowess and fastLowess:**
+**lowess:**
 
 - Added `iterations_used: Option<usize>` field to `OnlineOutput<T>`, reporting the number of robustness iterations performed when `UpdateMode::Full` is active. Returns `Some(0)` for the degenerate two-point linear fit and `None` when `UpdateMode::Incremental` is used.
 - Added `ParseErrors(Vec<LowessError>)` variant to `LowessError`, which collects all string-parse failures that accumulate in the builder and reports them together when `build()` is called.
@@ -1008,15 +1017,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Centralized all `impl FromStr` blocks for the seven option enums (`WeightFunction`, `BoundaryPolicy`, `ScalingMethod`, `RobustnessMethod`, `ZeroWeightFallback`, `MergeStrategy`, `UpdateMode`) directly in `api.rs`, consolidating previously scattered implementations into a single source of truth. Parse and canonical-name helpers are exposed via `lowess::internals::alias` (requires `dev` feature), allowing `fastLowess::binding_support` to delegate all string-to-enum parsing through that path.
 - Added module-level `defaults.rs` files within each sub-module (`math/`, `algorithms/`, `adapters/`) to centralize default values close to the types they govern, propagating them from a single source of truth to ensure consistency across bindings and crates.
 
-**Python:**
+**fastLowess:**
 
-- Added `OnlineOutput` class to the Python binding. `OnlineLowess.add_point()` now returns `OnlineOutput | None` instead of `float | None`, exposing `smoothed`, `std_error`, `residual`, `robustness_weight`, and `iterations_used`.
-- Added `custom_weights` parameter to the `Lowess.fit(x, y, custom_weights=None)` method. Accepts a `list[float]` of non-negative per-observation weights. Batch only.
-- Removed `smooth()`, `smooth_streaming()`, and `smooth_online()` convenience function stubs from `_core.pyi`.
+- Added `iterations_used: Option<usize>` field to `OnlineOutput<T>`, reporting the number of robustness iterations performed when `UpdateMode::Full` is active. Returns `Some(0)` for the degenerate two-point linear fit and `None` when `UpdateMode::Incremental` is used.
+- Added `ParseErrors(Vec<LowessError>)` variant to `LowessError`, which collects all string-parse failures that accumulate in the builder and reports them together when `build()` is called.
+- Added `"take_first"` and `"take_last"` as accepted string aliases for `MergeStrategy::TakeFirst` and `MergeStrategy::TakeLast`.
+- Added `"resmooth"` as an accepted string alias for `UpdateMode::Full` and `"single"` as an alias for `UpdateMode::Incremental`, aligning string-parse behaviour with the `loess-rs` crate.
+- Added `custom_weights(Vec<T>)` builder method on `LowessBuilder` (Batch adapter only). Accepts a vector of non-negative per-observation weights that are multiplied into the distance and robustness weights before each local regression, allowing known-bad points to be suppressed (`0.0`) or high-quality measurements to be emphasised.
+- Centralized all `impl FromStr` blocks for the seven option enums (`WeightFunction`, `BoundaryPolicy`, `ScalingMethod`, `RobustnessMethod`, `ZeroWeightFallback`, `MergeStrategy`, `UpdateMode`) directly in `api.rs`, consolidating previously scattered implementations into a single source of truth. Parse and canonical-name helpers are exposed via `lowess::internals::alias` (requires `dev` feature), allowing `fastLowess::binding_support` to delegate all string-to-enum parsing through that path.
+- Added module-level `defaults.rs` files within each sub-module (`math/`, `algorithms/`, `adapters/`) to centralize default values close to the types they govern, propagating them from a single source of truth to ensure consistency across bindings and crates.
 
-**R:**
+**C++:**
 
-- Added `custom_weights` parameter to `fit(Lowess, )`. Accepts a numeric vector of non-negative per-observation weights. Batch only.
+- Added `custom_weights` field to `LowessOptions` and a second overload of `Lowess::fit()` that accepts a `const std::vector<double>& custom_weights` argument. Values must be non-negative and length must match the input data. Batch only.
 
 **Julia:**
 
@@ -1029,13 +1042,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `customWeights` as an optional per-call argument to `fit(x, y, customWeights?)` and `fit_async(x, y, customWeights?)`. Accepts a `Float64Array` of non-negative per-observation weights. Includes pre-flight length-mismatch and non-negative validation. Batch only.
 - Added JavaScript-layer option key validation: unknown keys in `SmoothOptions`, `StreamingOptions`, or `OnlineOptions` now throw a `TypeError` listing all valid keys, via wrapper classes around the native NAPI exports.
 
-**WebAssembly:**
+**Python:**
+
+- Added `OnlineOutput` class to the Python binding. `OnlineLowess.add_point()` now returns `OnlineOutput | None` instead of `float | None`, exposing `smoothed`, `std_error`, `residual`, `robustness_weight`, and `iterations_used`.
+- Added `custom_weights` parameter to the `Lowess.fit(x, y, custom_weights=None)` method. Accepts a `list[float]` of non-negative per-observation weights. Batch only.
+- Removed `smooth()`, `smooth_streaming()`, and `smooth_online()` convenience function stubs from `_core.pyi`.
+
+**R:**
+
+- Added `custom_weights` parameter to `fit(Lowess, )`. Accepts a numeric vector of non-negative per-observation weights. Batch only.
+
+**WASM:**
 
 - Added `custom_weights` field to `LowessOptions` (passed in the options object to `smooth()`). Accepts a `Float64Array` of non-negative per-observation weights. Batch only.
-
-**C++:**
-
-- Added `custom_weights` field to `LowessOptions` and a second overload of `Lowess::fit()` that accepts a `const std::vector<double>& custom_weights` argument. Values must be non-negative and length must match the input data. Batch only.
 
 ### Changed
 
@@ -1051,7 +1070,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Split the Julia release CI workflow into two separate workflows: `release-julia-jll.yml` (triggered on release, opens the Yggdrasil PR) and `release-julia-register.yml` (manual dispatch, triggers JuliaRegistrator once the JLL PR is merged).
 - Major documentation improvements.
 
-**lowess and fastLowess:**
+**lowess:**
 
 - Added `Lowess<T>`, `StreamingLowess<T>`, and `OnlineLowess<T>` type aliases as the primary user-facing constructors (e.g. `StreamingLowess::new().chunk_size(50).build()`). Mode-specific builder methods (`chunk_size`, `overlap`, `window_capacity`, `min_points`, `update_mode`) are now called directly on the type alias rather than after `.adapter()`.
 - Made `BatchLowessBuilder`, `StreamingLowessBuilder`, and `OnlineLowessBuilder` internal-only: all public setter methods have been removed from these types. All smoothing configuration now flows through `LowessBuilder<T, Mode>` (exposed via the type aliases above). This is a **breaking change** for any code that called setter methods on an adapter builder directly.
@@ -1066,6 +1085,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **fastLowess:**
 
+- Added `Lowess<T>`, `StreamingLowess<T>`, and `OnlineLowess<T>` type aliases as the primary user-facing constructors (e.g. `StreamingLowess::new().chunk_size(50).build()`). Mode-specific builder methods (`chunk_size`, `overlap`, `window_capacity`, `min_points`, `update_mode`) are now called directly on the type alias rather than after `.adapter()`.
+- Made `BatchLowessBuilder`, `StreamingLowessBuilder`, and `OnlineLowessBuilder` internal-only: all public setter methods have been removed from these types. All smoothing configuration now flows through `LowessBuilder<T, Mode>` (exposed via the type aliases above). This is a **breaking change** for any code that called setter methods on an adapter builder directly.
+- Changed all enum-typed builder methods to accept strings instead: `weight_function`, `robustness_method`, `scaling_method`, `boundary_policy`, `zero_weight_fallback`, `merge_strategy`, and `update_mode` now take `impl IntoEnum<T>` (accepting both enum variants and strings such as `.weight_function("tricube")`) rather than requiring enum variants to be imported. This is a **breaking change** for any code passing enum variants directly.
+- Inlined the `IntoEnum<E>` trait and its macro-generated impls for all enum-typed builder parameters directly into `api.rs` (`lowess`) and `binding_support.rs` (`fastLowess`), eliminating a previously separate `parse` module. This allows builder methods to accept either a typed enum value (e.g. `.weight_function(WeightFunction::Tricube)`) or a string (e.g. `.weight_function("tricube")`) interchangeably.
+- Replaced the `cross_validate(CVConfig)` builder method (which required importing `KFold` or `LOOCV` types) with a string-based cross-validation API: `.cv_method("kfold")` / `.cv_method("loocv")`, `.cv_k(n)`, `.cv_fractions(vec![...])`, and `.cv_seed(n)`. `KFold` and `LOOCV` are no longer exported from the prelude. This is a **breaking change** for any code using the old `cross_validate` API.
+- Added a `binding_support` module providing shared helpers for all language binding frontends: string-to-enum parse functions (`parse_weight_function`, `parse_robustness_method`, `parse_scaling_method`, `parse_boundary_policy`, `parse_zero_weight_fallback`, `parse_merge_strategy`, `parse_update_mode`), matching canonical-string display functions, `BuilderOptionSet` / `TypedBuilderOptionSet` structs, and `apply_builder_options` / `apply_typed_builder_options` / `apply_cross_validation` helpers. This consolidates previously duplicated logic that was scattered across every binding into a single source of truth.
+- Renamed the internal `auto_convergence` struct field to `auto_converge` on `BatchLowessBuilder`, `OnlineLowessBuilder`, `StreamingLowessBuilder`, and the executor config types, making the field name consistent with the existing `auto_converge()` setter method. This is a **breaking change** for any code that accessed these fields directly.
+- Changed `build()` to wrap all accumulated string-parse errors in a `LowessError::ParseErrors(Vec<LowessError>)` value instead of surfacing only the first error. This is a **breaking change** for code that matched on `LowessError::InvalidOption` as the error returned from `build()`.
+- Made the `IntoEnum<E>` trait `pub(crate)` in both `lowess` and `fastLowess`, restricting it to crate-internal use. Callers do not need to name this trait; builder methods continue to accept both enum variants and string literals unchanged.
+- Updated `wide` dependency to v1.5, `wgpu` to v30.0, and `pollster` to v1.0.
+
 - `Lowess`, `StreamingLowess`, and `OnlineLowess` are now dedicated wrapper structs around `LowessBuilder<f64>` with string-accepting forwarding methods, rather than type aliases re-exported from the base `lowess` crate. Each wrapper's `build()` delegates to the corresponding parallel adapter and defaults to parallel execution. This is a **breaking change**: replace `.adapter(Batch).build()` with `.build()`, `Lowess::new().adapter(Streaming)` with `StreamingLowess::new()`, and `Lowess::new().adapter(Online)` with `OnlineLowess::new()`.
 - The `fastLowess` prelude now exports only `{Lowess, LowessError, LowessResult, OnlineLowess, StreamingLowess}`, removing `LowessBuilder`, `Adapter::{Batch, Online, Streaming}`, and `Backend::{CPU, GPU}`. This is a **breaking change** for code that relied on those names being in scope via `use fastLowess::prelude::*`.
 
@@ -1073,6 +1103,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Renamed all public member functions to snake_case: `make_error()`, `has_value()`, `r_squared()`, `effective_df()`, `residual_sd()`, `x_value()`, `y_value()`, `x_vector()`, `y_vector()`, `standard_errors()`, `confidence_lower()`, `confidence_upper()`, `prediction_lower()`, `prediction_upper()`, `robustness_weights()`, `fraction_used()`, `iterations_used()`, `process_chunk()`, `add_points()`.
 - Replaced `Expected<LowessResult> OnlineLowess::add_points(const std::vector<double>&, const std::vector<double>&)` with `Expected<std::optional<double>> OnlineLowess::add_point(double x, double y)`. The method now processes a single point and returns only that point's smoothed value, or `std::nullopt` if not enough points have been accumulated yet. The underlying C FFI symbol is renamed from `cpp_online_add_points` to `cpp_online_add_point`. This is a **breaking change**.
+
+**Julia:**
+
+- Replaced `add_points(online, x::Vector{Float64}, y::Vector{Float64}) :: LowessResult` with `add_point(online, x::Float64, y::Float64) :: Union{Float64, Nothing}`. The function now processes a single point and returns the smoothed value, or `nothing` if not enough points have been accumulated yet. The underlying C FFI symbol is renamed from `jl_online_lowess_add_points` to `jl_online_lowess_add_point`. This is a **breaking change**.
 
 **Node.js:**
 
@@ -1085,13 +1119,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `OnlineLowess` now forwards all `SmoothOptions` fields to the underlying builder (previously only `fraction`, `iterations`, and `parallel` were forwarded; all other fields were hardcoded to `None`/`false`).
 - Updated `napi-rs/cli` dependency to v3.7 and `oxlint` to v1.73.
 
-**WASM:**
-
-- Renamed all JS-facing option keys to snake_case by removing `#[serde(rename = "camelCase")]` attributes from `SmoothOptions`, `StreamingOptions`, and `OnlineOptions`. JSON passed from JavaScript must now use snake_case keys.
-- Updated `Diagnostics` getter names to snake_case: `r_squared`, `effective_df`, `residual_sd`.
-- Renamed the `update(x: number, y: number)` method on `OnlineLowess` to `add_point(x: number, y: number)`. This is a **breaking change**.
-- Updated `oxlint` dependency to v1.73.
-
 **Python:**
 
 - Renamed the `update(x, y)` method on `OnlineLowess` to `add_point(x, y)` and removed the separate array-based `add_points(x, y)` method. `add_point` processes a single point and returns the smoothed value as `float | None`. This is a **breaking change**.
@@ -1101,9 +1128,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced `$add_points(x, y)` (vector inputs returning a list result) on `OnlineLowess` with `$add_point(x, y)` (scalar inputs returning `numeric` or `NULL`). The method now processes one point at a time and returns `NULL` until enough points have been accumulated. This is a **breaking change**.
 
-**Julia:**
+**WASM:**
 
-- Replaced `add_points(online, x::Vector{Float64}, y::Vector{Float64}) :: LowessResult` with `add_point(online, x::Float64, y::Float64) :: Union{Float64, Nothing}`. The function now processes a single point and returns the smoothed value, or `nothing` if not enough points have been accumulated yet. The underlying C FFI symbol is renamed from `jl_online_lowess_add_points` to `jl_online_lowess_add_point`. This is a **breaking change**.
+- Renamed all JS-facing option keys to snake_case by removing `#[serde(rename = "camelCase")]` attributes from `SmoothOptions`, `StreamingOptions`, and `OnlineOptions`. JSON passed from JavaScript must now use snake_case keys.
+- Updated `Diagnostics` getter names to snake_case: `r_squared`, `effective_df`, `residual_sd`.
+- Renamed the `update(x: number, y: number)` method on `OnlineLowess` to `add_point(x: number, y: number)`. This is a **breaking change**.
+- Updated `oxlint` dependency to v1.73.
 
 ### Fixed
 
@@ -1137,6 +1167,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added dedicated CMake packaging documentation in `bindings/cpp/CMAKE.md` for Windows installation, `find_package(fastlowess CONFIG REQUIRED)`, and build-tree package discovery.
 
+**Node.js:**
+
+- Upgraded `oxlint` to 1.63.
+- Upgraded `napi-rs/cli` to 3.6.
+
 **R:**
 
 - Upgraded `rextendr` scaffold to 0.5.0: bumped `Config/rextendr/version` in `DESCRIPTION` and updated `entrypoint.c` to register the extendr panic hook (`register_extendr_panic_hook()`), so Rust panics now surface as R errors instead of crashing the session.
@@ -1149,11 +1184,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Upgraded `oxlint` to 1.63.
 
-**Node.js:**
-
-- Upgraded `oxlint` to 1.63.
-- Upgraded `napi-rs/cli` to 3.6.
-
 ### Changed
 
 **lowess:**
@@ -1164,13 +1194,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated MSRV to 1.89 to access the significant improvements made in `wide` since version 0.7.
 
-**R:**
+**C++:**
 
-- Refactored the R binding validation helpers to reuse `validate_common_args()` and `coerce_nullable()` in production code, split `validate_params()` into smaller helper validators, and consolidated duplicated constructor parameter documentation with `@inheritParams` before regenerating the Rd files.
+- Removed the legacy snake_case compatibility layer; the public C++ method API now uses camelBack, while variables and constants follow lower_case.
 - Updated MSRV to 1.89 to access the significant improvements made in `wide` since version 0.7.
-- Abides by new rOpenSci standards.
 
-**Python:**
+**Julia:**
 
 - Updated MSRV to 1.89 to access the significant improvements made in `wide` since version 0.7.
 
@@ -1178,17 +1207,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated MSRV to 1.89 to access the significant improvements made in `wide` since version 0.7.
 
-**Julia:**
+**Python:**
 
 - Updated MSRV to 1.89 to access the significant improvements made in `wide` since version 0.7.
+
+**R:**
+
+- Refactored the R binding validation helpers to reuse `validate_common_args()` and `coerce_nullable()` in production code, split `validate_params()` into smaller helper validators, and consolidated duplicated constructor parameter documentation with `@inheritParams` before regenerating the Rd files.
+- Updated MSRV to 1.89 to access the significant improvements made in `wide` since version 0.7.
+- Abides by new rOpenSci standards.
 
 **WASM:**
 
-- Updated MSRV to 1.89 to access the significant improvements made in `wide` since version 0.7.
-
-**C++:**
-
-- Removed the legacy snake_case compatibility layer; the public C++ method API now uses camelBack, while variables and constants follow lower_case.
 - Updated MSRV to 1.89 to access the significant improvements made in `wide` since version 0.7.
 
 ### Fixed
@@ -1200,6 +1230,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed `Makefile` idempotency checks on Linux by providing a default `/tmp` fallback for the `TEMP` directory variable.
 - Fixed accidental root `Cargo.toml` workspace isolation leaks by adding checked-in `pre-commit` and `pre-push` git hook guards that restore `Cargo.toml.bak` when present and fail loudly if required workspace members are still commented out.
 - Added a repo-local `.cargo/config.toml` that sets `CC=clang-cl` for `x86_64-pc-windows-msvc`, fixing Criterion 0.8 benchmark builds on Windows when `cc-rs` would otherwise pick `clang.exe` and fail to link `alloca`.
+
+**fastLowess:**
+
+- Fixed GPU execution under `wgpu` 29 by updating instance and pipeline layout setup, separating shader-written indirect dispatch data from the actual indirect dispatch buffer, stabilizing GPU buffer downloads, and correcting batched cross-validation dispatch offsets so the GPU integration test suite passes again.
+
+**C++:**
+
+- Fixed `cbindgen` idempotency check failure by adding automatic installation of the `cbindgen` CLI tool if missing.
+- Fixed explicit pointer checks, braces, named constants, and value-semantic result ownerships with compatibility wrappers.
+- Fixed all clang-tidy findings.
+- Fixed regenerated `fastlowess.h` clang-tidy regressions by normalizing the auto-generated header during the C++ bindings build, so FFI parameter naming and unused generated includes no longer come back after regeneration.
+- Fixed `make cpp` on Windows by making C++ symbol-export verification, CMake test execution, DLL runtime resolution, and Unix-specific test steps platform-aware.
+- Fixed MSVC `size_t` to `unsigned long` narrowing warnings in the C++ wrapper at the FFI boundary with explicit conversions.
+- Fixed C++ CMake package integration by generating and installing `fastlowessConfig.cmake` and related package export files for downstream `find_package` use.
+
+**Julia:**
+
+- Fixed Windows local Julia runs by exporting an absolute `FASTLOWESS_LIB` path from the `Makefile` and moving DLL discovery in `FastLOWESS.jl` to runtime (`__init__()` plus runtime `ccall`), preventing stale precompiled library paths from being reused.
+- Linted the source code.
+
+**Node.js:**
+
+- Fixed `make nodejs` on Windows when `/bin/bash` could not launch `npm` from `C:/Program Files/nodejs` by using `npm.cmd`/`npx.cmd` in the `Makefile`.
+- Fixed deprecated JavaScript license-audit warnings by replacing the transient `npx license-checker` usage in the `Makefile` with a repo-local Node.js license summary script that still fails on GPL-family licenses.
+- Fixed `.build()` errors incorrectly using `Status::GenericFailure`; they now return `Status::InvalidArg` since build failures originate from invalid configuration (accumulated parse errors), not from runtime execution.
+- Linted the source code.
+
+**Python:**
+
+- Fixed `make python` failing when `ruff` is not installed globally by bootstrapping `ruff` inside the Python virtual environment before formatting and linting.
+- Fixed `make python` on Windows by selecting the correct virtual environment activation script (`.venv/Scripts/activate` instead of the Unix-only `.venv/bin/activate`).
+- Fixed the Python public API to actually accept documented array-like inputs by coercing `Lowess.fit()`, `StreamingLowess.process_chunk()`, and `OnlineLowess.add_points()` arguments via `np.asarray(..., dtype=np.float64)` before calling the native extension.
+- Fixed Python wrapper analyzer issues by switching native extension lookups to runtime imports, avoiding wrapper class name shadowing in `TYPE_CHECKING`, and adding explicit wrapper docstrings.
+- Fixed false-positive Pylint warnings in `bindings/python/python/fastlowess/_core.pyi` by marking stub-only ellipsis bodies and signature arguments as intentional.
 
 **R:**
 
@@ -1219,56 +1283,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed compilation error by providing the `Result` alias that was removed from `extendr_api::prelude` in `0.9.0`.
 - Fixed the remaining SRR/pkgcheck findings in the R package by removing dead internal helper paths, reducing `validate_params()` cyclomatic complexity, eliminating duplicated roxygen parameter blocks, and covering the generated `extendr-wrappers.R` dispatch paths.
 
-**Python:**
-
-- Fixed `make python` failing when `ruff` is not installed globally by bootstrapping `ruff` inside the Python virtual environment before formatting and linting.
-- Fixed `make python` on Windows by selecting the correct virtual environment activation script (`.venv/Scripts/activate` instead of the Unix-only `.venv/bin/activate`).
-- Fixed the Python public API to actually accept documented array-like inputs by coercing `Lowess.fit()`, `StreamingLowess.process_chunk()`, and `OnlineLowess.add_points()` arguments via `np.asarray(..., dtype=np.float64)` before calling the native extension.
-- Fixed Python wrapper analyzer issues by switching native extension lookups to runtime imports, avoiding wrapper class name shadowing in `TYPE_CHECKING`, and adding explicit wrapper docstrings.
-- Fixed false-positive Pylint warnings in `bindings/python/python/fastlowess/_core.pyi` by marking stub-only ellipsis bodies and signature arguments as intentional.
-
-**C++:**
-
-- Fixed `cbindgen` idempotency check failure by adding automatic installation of the `cbindgen` CLI tool if missing.
-- Fixed explicit pointer checks, braces, named constants, and value-semantic result ownerships with compatibility wrappers.
-- Fixed all clang-tidy findings.
-- Fixed regenerated `fastlowess.h` clang-tidy regressions by normalizing the auto-generated header during the C++ bindings build, so FFI parameter naming and unused generated includes no longer come back after regeneration.
-- Fixed `make cpp` on Windows by making C++ symbol-export verification, CMake test execution, DLL runtime resolution, and Unix-specific test steps platform-aware.
-- Fixed MSVC `size_t` to `unsigned long` narrowing warnings in the C++ wrapper at the FFI boundary with explicit conversions.
-- Fixed C++ CMake package integration by generating and installing `fastlowessConfig.cmake` and related package export files for downstream `find_package` use.
-
-**fastLowess:**
-
-- Fixed GPU execution under `wgpu` 29 by updating instance and pipeline layout setup, separating shader-written indirect dispatch data from the actual indirect dispatch buffer, stabilizing GPU buffer downloads, and correcting batched cross-validation dispatch offsets so the GPU integration test suite passes again.
-
-**Julia:**
-
-- Fixed Windows local Julia runs by exporting an absolute `FASTLOWESS_LIB` path from the `Makefile` and moving DLL discovery in `FastLOWESS.jl` to runtime (`__init__()` plus runtime `ccall`), preventing stale precompiled library paths from being reused.
-- Linted the source code.
-
 **WASM:**
 
 - Fixed deprecated JavaScript license-audit warnings by replacing the transient `npx license-checker` usage in the `Makefile` with a repo-local Node.js license summary script that still fails on GPL-family licenses.
 - Linted the source code.
 
-**Node.js:**
-
-- Fixed `make nodejs` on Windows when `/bin/bash` could not launch `npm` from `C:/Program Files/nodejs` by using `npm.cmd`/`npx.cmd` in the `Makefile`.
-- Fixed deprecated JavaScript license-audit warnings by replacing the transient `npx license-checker` usage in the `Makefile` with a repo-local Node.js license summary script that still fails on GPL-family licenses.
-- Fixed `.build()` errors incorrectly using `Status::GenericFailure`; they now return `Status::InvalidArg` since build failures originate from invalid configuration (accumulated parse errors), not from runtime execution.
-- Linted the source code.
-
 ## 1.2.0
 
 ### Added
-
-**R:**
-
-- Added new tests.
-- Added a reference to the `CONTRIBUTING.md` file.
-- Added new examples for the `print` and `plot` methods.
-- Added test coverage evaluation.
-- Added missing srr tags.
 
 **Node.js:**
 
@@ -1277,6 +1299,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added advanced outdated dependency check.
 - Added advanced lock file check.
 - Added advanced TypeScript check.
+
+**R:**
+
+- Added new tests.
+- Added a reference to the `CONTRIBUTING.md` file.
+- Added new examples for the `print` and `plot` methods.
+- Added test coverage evaluation.
+- Added missing srr tags.
 
 **WASM:**
 
@@ -1292,6 +1322,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated `wgpu` to v27.0 from v26.0.
 
+**Node.js:**
+
+- Switched from `eslint` to `oxlint` to remove vulnerabilities.
+
 **Python:**
 
 - Updated `pyo3` to v0.28 from v0.27.
@@ -1301,10 +1335,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Removed the `coerce_params` dead code.
 - Spread srr tags to different files and removed extra tags from `srr-stats-standards.R`.
-
-**Node.js:**
-
-- Switched from `eslint` to `oxlint` to remove vulnerabilities.
 
 **WASM:**
 
@@ -1321,6 +1351,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed documentation.
 - Fixed SRR tags.
 
+**C++:**
+
+- Fixed memory leak in `OnlineLowess`.
+
 **Julia:**
 
 - Linted examples.
@@ -1333,10 +1367,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed vulnerabilities.
 - Fixed license.
-
-**C++:**
-
-- Fixed memory leak in `OnlineLowess`.
 
 ## 1.1.2
 
@@ -1404,21 +1434,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-**Julia:**
-
-- Added `mean` scaling method (Mean Absolute Deviation)
-
 **C++:**
 
 - Added `mean` scaling method (Mean Absolute Deviation)
 
-**R:**
-
-- Added `mean` scaling method (Mean Absolute Deviation)
-- Implemented `print` and `plot` methods for `LowessResult` objects
-- Added srr tags
-
-**Python:**
+**Julia:**
 
 - Added `mean` scaling method (Mean Absolute Deviation)
 
@@ -1427,6 +1447,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `mean` scaling method (Mean Absolute Deviation)
 - Added JSDoc documentation to `lib.rs` for napi-rs generation
 - Added asynchronous support for batch processing
+
+**Python:**
+
+- Added `mean` scaling method (Mean Absolute Deviation)
+
+**R:**
+
+- Added `mean` scaling method (Mean Absolute Deviation)
+- Implemented `print` and `plot` methods for `LowessResult` objects
+- Added srr tags
 
 **WASM:**
 
@@ -1452,10 +1482,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Wrapped all FFI functions in std::panic::catch_unwind. This ensures that if the Rust library panics (e.g., due to an internal assertion), it will be caught and reported as an error to Julia.
 
-**WASM:**
-
-- Updated `eslint/js`, `eslint`, `globals`, and `eslint-plugin-html` packages to their latest versions.
-
 **Node.js:**
 
 - Updated `eslint/js`, `eslint`, and `globals` packages to their latest versions.
@@ -1468,6 +1494,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Return results as `LowessResult` S3 objects instead of raw vectors
 
+**WASM:**
+
+- Updated `eslint/js`, `eslint`, `globals`, and `eslint-plugin-html` packages to their latest versions.
+
 ## 0.99.9
 
 ### Changed
@@ -1478,21 +1508,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Change function-based builder pattern in the bindings to class-based builder pattern, allowing true streaming and online processing
 - Improve API docs
 
-**Julia:**
-
-- Package is now registered on JuliaRegistries
-
 **C++:**
 
 - Library is now available on conda-forge (libfastlowess)
 
-**R:**
+**Julia:**
 
-- Package is now available on conda-forge (r-rfastlowess)
+- Package is now registered on JuliaRegistries
 
 **Node.js:**
 
 - Package is now available on npm (fastlowess)
+
+**R:**
+
+- Package is now available on conda-forge (r-rfastlowess)
 
 **WASM:**
 
@@ -1502,6 +1532,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+**C++:**
+
+- Initial implementation
+
 **Julia:**
 
 - Initial implementation
@@ -1511,10 +1545,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial implementation
 
 **WASM:**
-
-- Initial implementation
-
-**C++:**
 
 - Initial implementation
 
