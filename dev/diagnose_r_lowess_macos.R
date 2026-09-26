@@ -58,10 +58,12 @@ run_case <- function(label, x_raw, y_raw, fraction, iterations) {
     unstable <- reference_is_ulp_unstable(
         x, y, fraction, iterations, reference$y, tolerance = 1e-5
     )
+    noise_floor <- cmad_is_noise_floor(x, y, fraction, iterations)
     cat(sprintf(
         "stats::lowess() itself unstable under 1-ULP input perturbation: %s\n",
         unstable
     ))
+    cat(sprintf("stats::lowess() cmad is at the floating-point noise floor: %s\n", noise_floor))
 
     ok <- tryCatch(
         {

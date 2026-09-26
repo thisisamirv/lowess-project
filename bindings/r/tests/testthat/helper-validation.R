@@ -98,6 +98,50 @@ expect_stats_lowess_sorted <- function(
     invisible(result)
 }
 
+#' Check whether `stats::lowess()`'s own bisquare scale is noise, not signal.
+#'
+#' Companion to `reference_is_ulp_unstable()`: that function empirically
+#' searches for a 1-ULP input perturbation that flips the fit, but for some
+#' counterexamples the flipping perturbation is very specific and can be
+#' missed by a bounded random search (confirmed on a real macos-latest/R
+#' release runner: 1000 random trials failed to find it for a known-bad
+#' case, even though the underlying instability is real and reproducible).
+#'
+#' This is a direct, deterministic check on the actual mechanism: at each
+#' reweighting step from iteration `k` to `k + 1`, `stats::lowess()`
+#' computes `cmad` (the median-absolute-residual-derived bisquare scale)
+#' from the current fit's residuals, then classifies each residual against
+#' hard cutoffs `0.001 * cmad` / `0.999 * cmad`. If `cmad` itself is smaller
+#' than a generous multiple of the response's own floating-point precision,
+#' every residual at that step is rounding noise from an already-exact fit,
+#' not a real signal - so which side of the cutoff each residual falls on
+#' is decided by whichever compiler/platform computed the fit, and there is
+#' no well-defined answer to compare a second implementation against.
+#' @noRd
+cmad_is_noise_floor <- function(x, y, fraction, iterations, guard = 100) {
+    if (iterations < 1L) {
+        return(FALSE)
+    }
+    n <- length(x)
+    eps <- .Machine$double.eps
+    scale <- max(1, max(abs(y)))
+    m1 <- n %/% 2L
+    for (k in 0:(iterations - 1L)) {
+        fit_k <- stats::lowess(x, y, f = fraction, iter = k)$y
+        s <- sort(abs(y - fit_k))
+        cmad <- if (n %% 2L == 0L) {
+            m2 <- n - m1 - 1L
+            3 * (s[m1 + 1L] + s[m2 + 1L])
+        } else {
+            6 * s[m1 + 1L]
+        }
+        if (cmad < guard * eps * scale) {
+            return(TRUE)
+        }
+    }
+    FALSE
+}
+
 #' Check whether `stats::lowess()` itself is stable under 1-ULP input noise.
 #'
 #' The bisquare robustness reweighting in `stats::lowess()` (and this
@@ -218,14 +262,15 @@ check_stats_lowess <- function(
     comparison_scale <- max(1, abs(result$y), abs(reference$y))
     if (max_diff > tolerance * comparison_scale) {
         if (
-            reference_is_ulp_unstable(
-                x_fit,
-                y_fit,
-                fraction,
-                iterations,
-                reference$y,
-                tolerance
-            )
+            cmad_is_noise_floor(x_fit, y_fit, fraction, iterations) ||
+                reference_is_ulp_unstable(
+                    x_fit,
+                    y_fit,
+                    fraction,
+                    iterations,
+                    reference$y,
+                    tolerance
+                )
         ) {
             # `stats::lowess()` itself does not reproduce this fit when its
             # own inputs are perturbed by a single ULP: the bisquare hard
